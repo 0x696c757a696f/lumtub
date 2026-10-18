@@ -15,12 +15,15 @@ jobs:
 
       - name: Verify latest shinchiro x86_64-v3 libmpv update
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = 'Stop'
           $ProgressPreference = 'SilentlyContinue'
           $headers = @{
             Accept = 'application/vnd.github+json'
             'User-Agent' = 'YTPlus-GitHub-Actions'
+            Authorization = "Bearer $env:GITHUB_TOKEN"
           }
           $release = Invoke-RestMethod `
             -Uri 'https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest' `

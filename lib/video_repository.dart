@@ -6,7 +6,8 @@ import 'models.dart';
 
 class VideoRepository {
   final String ytDlpPath;
-  VideoRepository(this.ytDlpPath);
+  final String? cacheDirectory;
+  VideoRepository(this.ytDlpPath, {this.cacheDirectory});
 
   Future<List<VideoItem>> search(String query) async {
     final q = query.trim();
@@ -16,6 +17,7 @@ class VideoRepository {
       [
         '--no-warnings',
         '--skip-download',
+        if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
         '--flat-playlist',
         '--dump-json',
         '--playlist-end', '20',
@@ -23,6 +25,13 @@ class VideoRepository {
       ],
       stdoutEncoding: utf8,
       stderrEncoding: utf8,
+      environment: {
+        ...Platform.environment,
+        if (cacheDirectory != null) ...{
+          'TMP': '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp',
+          'TEMP': '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp',
+        },
+      },
     ).timeout(const Duration(seconds: 100));
     final items = VideoItem.fromJsonLines(result.stdout.toString());
     if (items.isEmpty) {

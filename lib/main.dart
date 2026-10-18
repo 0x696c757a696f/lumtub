@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import 'app_directories.dart';
+import 'cache_manager.dart';
 import 'models.dart';
+import 'player_option_applicator.dart';
+import 'player_settings.dart';
 import 'tool_manager.dart';
 import 'video_repository.dart';
 import 'windows_env.dart';
@@ -59,6 +63,13 @@ class _HomePageState extends State<HomePage> {
   final _searchText = TextEditingController();
   HistoryStore? _history;
   AppDirectories? _directories;
+  CacheManager? _cacheManager;
+  int _cacheBytes = 0;
+  final Map<String, String> _decodeStates = {'h264': '尚未验证', 'vp9': '尚未验证', 'av1': '尚未验证'};
+  String _currentCodec = '尚未播放视频';
+  String _currentHwdec = '尚未验证';
+  PlayerSettingsStore? _settingsStore;
+  PlayerSettings _settings = const PlayerSettings();
   ToolManager? _tools;
   VideoRepository? _repository;
   Player? _player;
@@ -85,6 +96,11 @@ class _HomePageState extends State<HomePage> {
       final directories = await AppDirectories.create();
       final history = HistoryStore(directories);
       await history.initialize();
+      final settingsStore = PlayerSettingsStore(directories);
+      final settings = await settingsStore.load();
+      final cacheManager = CacheManager(directories);
+      await cacheManager.prepare(settings);
+      final cacheBytes = await cacheManager.size(settings);
       final manager = ToolManager(directories, (message) {
         if (mounted) setState(() => _status = message);
       });
@@ -93,8 +109,9 @@ class _HomePageState extends State<HomePage> {
       final paths = await manager.ensureReady();
       addToWindowsPath(paths.executableDirectories);
       MediaKit.ensureInitialized(libmpv: paths.mpv);
-      final player = Player(configuration: const PlayerConfiguration(bufferSize: 16 * 1024 * 1024));
-      final controller = VideoController(player, configuration: const VideoControllerConfiguration(hwdec: 'auto-safe'));
+      final player = Player(configuration: PlayerConfiguration(bufferSize: settings.cacheMemoryMb * 1024 * 1024));
+      final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
+      final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
       // yt-dlp and Deno are on PATH before libmpv starts, so ytdl_hook can find them.
       if (!mounted) {
         await player.dispose();
@@ -103,12 +120,16 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _paths = paths;
         _directories = directories;
+        _cacheManager = cacheManager;
+        _cacheBytes = cacheBytes;
+        _settingsStore = settingsStore;
+        _settings = settings;
         _history = history;
-        _repository = VideoRepository(paths.ytDlp);
+        _repository = VideoRepository(paths.ytDlp, cacheDirectory: '${cacheManager.rootFor(settings).path}${Platform.pathSeparator}yt-dlp');
         _player = player;
         _videoController = controller;
         _ready = true;
-        _status = '就绪 · GPU 硬解已启用';
+        _status = ignoredOptions.isEmpty ? '就绪 · 解码方式将在播放时验证' : '就绪 · 已忽略不支持的设置：${ignoredOptions.join(', ')}';
         _error = null;
       });
       // Do not block the UI while checking newer releases.
@@ -175,6 +196,7 @@ class _HomePageState extends State<HomePage> {
     try {
       await _player!.open(Media(item.url));
       await _history?.record(item);
+      unawaited(_inspectCurrentDecoder());
       if (mounted) setState(() {});
     } catch (e) {
       if (mounted) setState(() => _error = '播放失败：$e');
@@ -199,6 +221,96 @@ class _HomePageState extends State<HomePage> {
       if (mounted) setState(() => _checking = false);
     }
   }
+
+  Future<void> _saveSettings(PlayerSettings settings) async {
+    final store = _settingsStore;
+    final player = _player;
+    if (store == null || player == null) return;
+    final oldSettings = _settings;
+    final requiresNextVideo = settings.hwdec != oldSettings.hwdec || settings.interpolation != oldSettings.interpolation;
+    final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+    await store.save(settings);
+    if (!mounted) return;
+    setState(() {
+      _settings = settings;
+      if (_paths != null && settings.cachePath != oldSettings.cachePath) {
+        _repository = VideoRepository(_paths!.ytDlp, cacheDirectory: '${(_cacheManager?.rootFor(settings).path ?? '')}${Platform.pathSeparator}yt-dlp');
+      }
+      _status = ignoredOptions.isEmpty
+          ? '播放器设置已保存${requiresNextVideo ? '；硬件解码和帧插值在下一段视频生效。' : '。'}'
+          : '已保存；此 libmpv 不支持：${ignoredOptions.join(', ')}。';
+    });
+  }
+
+  Future<void> _inspectCurrentDecoder() async {
+    final platform = _player?.platform;
+    if (platform is! NativePlayer) {
+      _notice('当前播放器无法读取 libmpv 解码状态。');
+      return;
+    }
+    try {
+      await Future<void>.delayed(const Duration(seconds: 2));
+      final codec = (await platform.getProperty('video-codec')).trim().toLowerCase();
+      final hwdec = (await platform.getProperty('hwdec-current')).trim();
+      if (!mounted) return;
+      final normalized = codec.contains('av1') ? 'av1' : codec.contains('vp9') ? 'vp9' : codec.contains('h264') || codec.contains('avc') ? 'h264' : null;
+      setState(() {
+        _currentCodec = codec.isEmpty ? '尚未验证' : codec;
+        _currentHwdec = hwdec.isEmpty || hwdec == 'no' || hwdec == 'none' ? '软件解码已验证' : hwdec;
+        if (normalized != null) _decodeStates[normalized] = _currentHwdec;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _currentHwdec = '尚未验证');
+    }
+  }
+
+  Future<void> _changeCacheLocation() async {
+    final directories = _directories;
+    final manager = _cacheManager;
+    if (directories == null || manager == null) return;
+    if (_playing != null) {
+      _notice('请先返回列表并停止当前视频，再迁移缓存。');
+      return;
+    }
+    final selected = await getDirectoryPath(initialDirectory: manager.rootFor(_settings).path);
+    if (selected == null) return;
+    final target = Directory('$selected${Platform.pathSeparator}YTPlusCache');
+    final next = _settings.copyWith(cachePath: target.path);
+    try {
+      await manager.prepare(next);
+      if (!mounted) return;
+      final migrate = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
+        title: const Text('迁移现有缓存？'),
+        content: Text('新位置：${target.path}\n\n只迁移 YTPlus 创建的缩略图、临时文件、yt-dlp 和 mpv 缓存目录。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('不迁移')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('迁移')),
+        ],
+      ));
+      if (migrate == true) await manager.migrate(_settings, next);
+      await _saveSettings(next);
+      if (!mounted) return;
+      setState(() => _cacheBytes = 0);
+      _notice('缓存位置已保存。yt-dlp 缓存在下一次搜索时使用新位置。');
+    } on FileSystemException catch (error) {
+      _notice('新缓存位置不可用，继续使用原位置：${error.message}');
+    }
+  }
+
+  Future<void> _clearCache() async {
+    final manager = _cacheManager;
+    if (manager == null) return;
+    if (_playing != null) {
+      _notice('正在播放时不会清理缓存。请先返回列表。');
+      return;
+    }
+    await manager.clear(_settings);
+    if (!mounted) return;
+    setState(() => _cacheBytes = 0);
+    _notice('已清理 YTPlus 管理的缓存文件。');
+  }
+
+  void _notice(String message) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 
   @override
   void dispose() {
@@ -448,37 +560,131 @@ class _HomePageState extends State<HomePage> {
     return ListView(padding: const EdgeInsets.fromLTRB(28, 12, 28, 28), children: [
       const Text('设置', style: TextStyle(fontSize: 27, fontWeight: FontWeight.w800)),
       const SizedBox(height: 20),
-      _settingsCard(
-        icon: Icons.play_circle_outline,
-        title: '播放与性能',
-        detail: '硬件解码、缓存、字幕和解码能力检测会在播放器阶段提供。',
-      ),
+      const Text('播放与性能', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+      const SizedBox(height: 10),
+      _preferenceCard(Column(children: [
+        _choice('硬件解码', _settings.hwdec, const {'auto-safe': '自动（推荐）', 'd3d11va': 'D3D11VA', 'no': '软件解码'}, (value) => _saveSettings(_settings.copyWith(hwdec: value))),
+        const Divider(height: 1),
+        _choice('视频缩放算法', _settings.scale, const {'spline36': '默认', 'bilinear': 'Bilinear', 'lanczos': 'Lanczos'}, (value) => _saveSettings(_settings.copyWith(scale: value))),
+        SwitchListTile.adaptive(contentPadding: const EdgeInsets.symmetric(horizontal: 18), title: const Text('色带消除'), subtitle: const Text('降低渐变中的色带，可能略增 GPU 负载。'), value: _settings.deband, onChanged: (value) => _saveSettings(_settings.copyWith(deband: value))),
+        SwitchListTile.adaptive(contentPadding: const EdgeInsets.symmetric(horizontal: 18), title: const Text('帧插值'), subtitle: const Text('下一段视频生效；会增加 GPU 负载。'), value: _settings.interpolation, onChanged: (value) => _saveSettings(_settings.copyWith(interpolation: value))),
+        _slider('字幕大小', _settings.subtitleScale, 0.5, 3, '${_settings.subtitleScale.toStringAsFixed(1)}×', (value) => _saveSettings(_settings.copyWith(subtitleScale: value))),
+        _slider('字幕位置', _settings.subtitlePosition.toDouble(), 0, 100, '${_settings.subtitlePosition}%', (value) => _saveSettings(_settings.copyWith(subtitlePosition: value.round()))),
+      ])),
+      const SizedBox(height: 18),
+      const Text('视频缓存', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+      const SizedBox(height: 10),
+      _preferenceCard(Column(children: [
+        _choice('网络缓存', _settings.cacheMode, const {'auto': '自动（推荐）', 'yes': '启用', 'no': '禁用'}, (value) => _saveSettings(_settings.copyWith(cacheMode: value))),
+        _slider('预读时间', _settings.cacheSeconds.toDouble(), 1, 300, '${_settings.cacheSeconds} 秒', (value) => _saveSettings(_settings.copyWith(cacheSeconds: value.round()))),
+        _slider('内存上限', _settings.cacheMemoryMb.toDouble(), 16, 512, '${_settings.cacheMemoryMb} MB', (value) => _saveSettings(_settings.copyWith(cacheMemoryMb: value.round()))),
+        const Padding(padding: EdgeInsets.fromLTRB(18, 2, 18, 14), child: Text('这里控制 libmpv 的内存网络缓存。它不会移动 RAM 缓存到磁盘。', style: TextStyle(color: Colors.white54, fontSize: 12))),
+      ])),
+      const SizedBox(height: 18),
+      const Text('解码与格式', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+      const SizedBox(height: 10),
+      _preferenceCard(SwitchListTile.adaptive(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+        title: const Text('自动选择最省资源的视频编码'),
+        subtitle: const Text('只会影响自动格式选择，不会降低手动指定的画质。'),
+        value: _settings.autoSelectCodec,
+        onChanged: (value) => _saveSettings(_settings.copyWith(autoSelectCodec: value)),
+      )),
+      const SizedBox(height: 10),
+      _preferenceCard(Column(children: [
+        ListTile(
+          leading: const Icon(Icons.memory_outlined, color: _accent),
+          title: const Text('当前实际解码方式'),
+          subtitle: Text('视频：$_currentCodec\n方式：$_currentHwdec'),
+          isThreeLine: true,
+          trailing: OutlinedButton(onPressed: _playing == null ? null : _inspectCurrentDecoder, child: const Text('检测')),
+        ),
+        const Divider(height: 1),
+        _decoderRow('H.264', _decodeStates['h264']!),
+        _decoderRow('VP9', _decodeStates['vp9']!),
+        _decoderRow('AV1', _decodeStates['av1']!),
+        const Padding(padding: EdgeInsets.fromLTRB(18, 4, 18, 14), child: Text('状态只会在实际播放对应编码后更新；自动模式本身不代表硬件解码已成功。', style: TextStyle(color: Colors.white54, fontSize: 12))),
+      ])),
       const SizedBox(height: 14),
-      _settingsCard(
-        icon: Icons.folder_outlined,
-        title: '存储与缓存',
-        detail: directories == null ? '正在准备本地目录…' : '缓存：${directories.cache.path}',
-      ),
-      const SizedBox(height: 14),
-      _settingsCard(
-        icon: Icons.extension_outlined,
-        title: '组件',
-        detail: directories == null ? '正在准备…' : 'yt-dlp、Deno：${directories.components.path}',
-      ),
+      _preferenceCard(ExpansionTile(
+        leading: const Icon(Icons.tune, color: _accent),
+        title: const Text('高级 libmpv 参数'),
+        subtitle: const Text('只展示不会改变 media_kit 视频输出的选项。'),
+        children: [
+          _optionInfo('hwdec', _settings.hwdec, '硬件解码方式', '下一段视频'),
+          _optionInfo('scale', _settings.scale, '视频缩放算法', '立即'),
+          _optionInfo('deband', _settings.deband ? 'yes' : 'no', '色带消除', '立即'),
+          _optionInfo('interpolation', _settings.interpolation ? 'yes' : 'no', '帧插值', '下一段视频'),
+          _optionInfo('cache', _settings.cacheMode, '网络缓存模式', '立即'),
+          _optionInfo('cache-secs', '${_settings.cacheSeconds}', '缓存预读时间', '立即'),
+          _optionInfo('demuxer-max-bytes', '${_settings.cacheMemoryMb}MiB', '缓存内存上限', '立即'),
+          Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.fromLTRB(16, 4, 16, 16), child: OutlinedButton.icon(onPressed: () => _saveSettings(const PlayerSettings()), icon: const Icon(Icons.restart_alt), label: const Text('恢复全部播放器默认设置'))),),
+        ],
+      )),
+      const SizedBox(height: 18),
+      const Text('存储与缓存', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+      const SizedBox(height: 10),
+      _preferenceCard(Column(children: [
+        ListTile(
+          leading: const Icon(Icons.folder_outlined, color: _accent),
+          title: const Text('当前应用缓存位置'),
+          subtitle: Text(_settings.cachePath ?? (directories == null ? '正在准备…' : directories.cache.path)),
+          trailing: TextButton(onPressed: _changeCacheLocation, child: const Text('选择文件夹')),
+        ),
+        const Divider(height: 1),
+        ListTile(
+          leading: const Icon(Icons.cleaning_services_outlined, color: _accent),
+          title: const Text('缓存占用'),
+          subtitle: Text('${_formatBytes(_cacheBytes)} · 只清理 YTPlus 创建的缓存目录'),
+          trailing: OutlinedButton(onPressed: _clearCache, child: const Text('清理')),
+        ),
+      ])),
       const SizedBox(height: 20),
       const Text('YTPlus 只会写入自己的 LocalAppData 目录；安装和首次启动不要求管理员权限。', style: TextStyle(color: Colors.white54, height: 1.5)),
     ]);
   }
 
-  Widget _settingsCard({required IconData icon, required String title, required String detail}) => Card(
+  Widget _preferenceCard(Widget child) => Card(
         color: _surface,
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-          leading: Icon(icon, color: _accent),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-          subtitle: Padding(padding: const EdgeInsets.only(top: 5), child: Text(detail, style: const TextStyle(color: Colors.white54))),
-        ),
+        margin: EdgeInsets.zero,
+        child: child,
       );
+
+  Widget _choice(String label, String selected, Map<String, String> choices, ValueChanged<String> onChanged) => Padding(
+        padding: const EdgeInsets.fromLTRB(18, 9, 18, 9),
+        child: Row(children: [
+          Expanded(child: Text(label)),
+          const SizedBox(width: 18),
+          DropdownButton<String>(value: selected, underline: const SizedBox.shrink(), onChanged: (value) { if (value != null) onChanged(value); }, items: choices.entries.map((entry) => DropdownMenuItem(value: entry.key, child: Text(entry.value))).toList()),
+        ]),
+      );
+
+  Widget _slider(String label, double value, double min, double max, String description, ValueChanged<double> onChanged) => Padding(
+        padding: const EdgeInsets.fromLTRB(18, 9, 18, 5),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [Text(label), const Spacer(), Text(description, style: const TextStyle(color: Colors.white54))]),
+          Slider(value: value.clamp(min, max).toDouble(), min: min, max: max, divisions: ((max - min) * (label == '字幕大小' ? 10 : 1)).round(), onChanged: onChanged),
+        ]),
+      );
+
+  Widget _optionInfo(String name, String value, String description, String applies) => ListTile(
+        dense: true,
+        title: Text(name, style: const TextStyle(fontFamily: 'monospace')),
+        subtitle: Text('$description · $applies生效'),
+        trailing: Text(value, style: const TextStyle(color: _accent, fontFamily: 'monospace')),
+      );
+
+  Widget _decoderRow(String codec, String status) => ListTile(
+        dense: true,
+        title: Text(codec),
+        trailing: Text(status, style: TextStyle(color: status == '尚未验证' ? Colors.white54 : _accent)),
+      );
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+  }
 
   Widget _errorBanner() => Container(
         margin: const EdgeInsets.fromLTRB(28, 0, 28, 12), padding: const EdgeInsets.all(14),

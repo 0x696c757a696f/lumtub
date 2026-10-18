@@ -14,6 +14,7 @@ import 'player_settings.dart';
 import 'tool_manager.dart';
 import 'video_repository.dart';
 import 'windows_env.dart';
+import 'windows_video_info.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,6 +69,7 @@ class _HomePageState extends State<HomePage> {
   final Map<String, String> _decodeStates = {'h264': '尚未验证', 'vp9': '尚未验证', 'av1': '尚未验证'};
   String _currentCodec = '尚未播放视频';
   String _currentHwdec = '尚未验证';
+  WindowsVideoInfo _windowsVideoInfo = const WindowsVideoInfo();
   PlayerSettingsStore? _settingsStore;
   PlayerSettings _settings = const PlayerSettings();
   ToolManager? _tools;
@@ -134,6 +136,7 @@ class _HomePageState extends State<HomePage> {
       });
       // Do not block the UI while checking newer releases.
       unawaited(manager.checkUpdates());
+      unawaited(_readWindowsVideoInfo());
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -261,6 +264,19 @@ class _HomePageState extends State<HomePage> {
       });
     } catch (_) {
       if (mounted) setState(() => _currentHwdec = '尚未验证');
+    }
+  }
+
+  Future<void> _readWindowsVideoInfo() async {
+    final info = await WindowsVideoInfo.read();
+    if (mounted) setState(() => _windowsVideoInfo = info);
+  }
+
+  Future<void> _openStore(String url) async {
+    try {
+      await Process.start('explorer.exe', [url]);
+    } catch (_) {
+      _notice('无法打开 Microsoft Store 链接。');
     }
   }
 
@@ -716,6 +732,13 @@ class _HomePageState extends State<HomePage> {
       const SizedBox(height: 10),
       _preferenceCard(Column(children: [
         ListTile(
+          leading: const Icon(Icons.developer_board_outlined, color: _accent),
+          title: const Text('GPU'),
+          subtitle: Text(_windowsVideoInfo.gpuNames.isEmpty ? '尚未检测到或无法读取' : _windowsVideoInfo.gpuNames.join('\n')),
+          isThreeLine: _windowsVideoInfo.gpuNames.length > 1,
+        ),
+        const Divider(height: 1),
+        ListTile(
           leading: const Icon(Icons.memory_outlined, color: _accent),
           title: const Text('当前实际解码方式'),
           subtitle: Text('视频：$_currentCodec\n方式：$_currentHwdec'),
@@ -726,7 +749,11 @@ class _HomePageState extends State<HomePage> {
         _decoderRow('H.264', _decodeStates['h264']!),
         _decoderRow('VP9', _decodeStates['vp9']!),
         _decoderRow('AV1', _decodeStates['av1']!),
+        const Divider(height: 1),
+        _extensionRow('VP9 Video Extensions', _windowsVideoInfo.vp9Extension, 'https://apps.microsoft.com/detail/9n4d0msmp0pt'),
+        _extensionRow('AV1 Video Extension', _windowsVideoInfo.av1Extension, 'https://apps.microsoft.com/detail/9mvzqvxjbq9v'),
         const Padding(padding: EdgeInsets.fromLTRB(18, 4, 18, 14), child: Text('状态只会在实际播放对应编码后更新；自动模式本身不代表硬件解码已成功。', style: TextStyle(color: Colors.white54, fontSize: 12))),
+        const Padding(padding: EdgeInsets.fromLTRB(18, 0, 18, 14), child: Text('商店扩展是 Windows Media Foundation 组件，不是 YTPlus 或 libmpv 的必需依赖；安装它也不能让不支持的 GPU 获得硬件解码。', style: TextStyle(color: Colors.white54, fontSize: 12))),
       ])),
       const SizedBox(height: 14),
       _preferenceCard(ExpansionTile(
@@ -802,6 +829,22 @@ class _HomePageState extends State<HomePage> {
         title: Text(codec),
         trailing: Text(status, style: TextStyle(color: status == '尚未验证' ? Colors.white54 : _accent)),
       );
+
+  Widget _extensionRow(String title, ExtensionStatus status, String storeUrl) {
+    final label = switch (status) {
+      ExtensionStatus.present => '已安装',
+      ExtensionStatus.missing => '未安装',
+      ExtensionStatus.unknown => '尚未验证',
+    };
+    return ListTile(
+      dense: true,
+      title: Text(title),
+      subtitle: const Text('Windows Media Foundation 扩展'),
+      trailing: status == ExtensionStatus.missing
+          ? TextButton(onPressed: () => _openStore(storeUrl), child: const Text('在商店查看'))
+          : Text(label, style: TextStyle(color: status == ExtensionStatus.present ? _accent : Colors.white54)),
+    );
+  }
 
   String _formatBytes(int bytes) {
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';

@@ -11,6 +11,7 @@ import 'cache_manager.dart';
 import 'models.dart';
 import 'player_option_applicator.dart';
 import 'player_settings.dart';
+import 'video_format_selector.dart';
 import 'tool_manager.dart';
 import 'video_repository.dart';
 import 'windows_env.dart';
@@ -198,6 +199,10 @@ class _HomePageState extends State<HomePage> {
       _error = null;
     });
     try {
+      final platform = _player!.platform;
+      if (platform is NativePlayer) {
+        await platform.setProperty('ytdl-format', VideoFormatSelector.expressionFor(_settings));
+      }
       await _player!.open(Media(item.url));
       await _history?.record(item);
       unawaited(_inspectCurrentDecoder());

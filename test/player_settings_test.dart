@@ -20,4 +20,11 @@ void main() {
     expect(PlayerSettings.isSafeCustomOption('vo', 'gpu-next'), isFalse);
     expect(PlayerSettings.isSafeCustomOption('cache', 'yes; quit'), isFalse);
   });
+
+  test('keeps only recorded results for supported codecs', () {
+    final settings = PlayerSettings.fromJson({
+      'decoderResults': {'vp9': 'd3d11va', 'av1': '软件解码已验证', 'hevc': 'unsupported'},
+    });
+    expect(settings.decoderResults, {'vp9': 'd3d11va', 'av1': '软件解码已验证'});
+  });
 }

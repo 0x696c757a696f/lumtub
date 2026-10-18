@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
   AppDirectories? _directories;
   CacheManager? _cacheManager;
   int _cacheBytes = 0;
-  final Map<String, String> _decodeStates = {'h264': '尚未验证', 'vp9': '尚未验证', 'av1': '尚未验证'};
+  Map<String, String> _decodeStates = {'h264': '尚未验证', 'vp9': '尚未验证', 'av1': '尚未验证'};
   String _currentCodec = '尚未播放视频';
   String _currentHwdec = '尚未验证';
   WindowsVideoInfo _windowsVideoInfo = const WindowsVideoInfo();
@@ -126,6 +126,7 @@ class _HomePageState extends State<HomePage> {
         _cacheBytes = cacheBytes;
         _settingsStore = settingsStore;
         _settings = settings;
+        _decodeStates = {'h264': '尚未验证', 'vp9': '尚未验证', 'av1': '尚未验证', ...settings.decoderResults};
         _history = history;
         _repository = VideoRepository(paths.ytDlp, cacheDirectory: '${cacheManager.rootFor(settings).path}${Platform.pathSeparator}yt-dlp');
         _player = player;
@@ -262,6 +263,11 @@ class _HomePageState extends State<HomePage> {
         _currentHwdec = hwdec.isEmpty || hwdec == 'no' || hwdec == 'none' ? '软件解码已验证' : hwdec;
         if (normalized != null) _decodeStates[normalized] = _currentHwdec;
       });
+      if (normalized != null) {
+        final updated = _settings.copyWith(decoderResults: _decodeStates);
+        _settings = updated;
+        unawaited(_settingsStore?.save(updated));
+      }
     } catch (_) {
       if (mounted) setState(() => _currentHwdec = '尚未验证');
     }

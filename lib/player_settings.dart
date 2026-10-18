@@ -17,6 +17,7 @@ class PlayerSettings {
   final String? cachePath;
   final int? cacheLimitGb;
   final Map<String, String> customOptions;
+  final Map<String, String> decoderResults;
 
   const PlayerSettings({
     this.hwdec = 'auto-safe',
@@ -32,6 +33,7 @@ class PlayerSettings {
     this.cachePath,
     this.cacheLimitGb,
     this.customOptions = const {},
+    this.decoderResults = const {},
   });
 
   PlayerSettings copyWith({
@@ -50,6 +52,7 @@ class PlayerSettings {
     int? cacheLimitGb,
     bool clearCacheLimit = false,
     Map<String, String>? customOptions,
+    Map<String, String>? decoderResults,
   }) => PlayerSettings(
         hwdec: hwdec ?? this.hwdec,
         scale: scale ?? this.scale,
@@ -64,6 +67,7 @@ class PlayerSettings {
         cachePath: clearCachePath ? null : cachePath ?? this.cachePath,
         cacheLimitGb: clearCacheLimit ? null : cacheLimitGb ?? this.cacheLimitGb,
         customOptions: customOptions ?? this.customOptions,
+        decoderResults: decoderResults ?? this.decoderResults,
       );
 
   Map<String, dynamic> toJson() => {
@@ -80,6 +84,7 @@ class PlayerSettings {
         if (cachePath != null) 'cachePath': cachePath,
         if (cacheLimitGb != null) 'cacheLimitGb': cacheLimitGb,
         'customOptions': customOptions,
+        'decoderResults': decoderResults,
       };
 
   factory PlayerSettings.fromJson(Object? raw) {
@@ -100,11 +105,19 @@ class PlayerSettings {
       return parsed == null ? fallback : parsed.clamp(min, max).toDouble();
     }
     final options = <String, String>{};
+    final results = <String, String>{};
     if (raw['customOptions'] is Map) {
       for (final entry in (raw['customOptions'] as Map).entries) {
         final key = entry.key.toString();
         final value = entry.value.toString();
         if (isSafeCustomOption(key, value)) options[key] = value;
+      }
+    }
+    if (raw['decoderResults'] is Map) {
+      for (final entry in (raw['decoderResults'] as Map).entries) {
+        final codec = entry.key.toString().toLowerCase();
+        final status = entry.value.toString();
+        if ({'h264', 'vp9', 'av1'}.contains(codec) && status.length <= 80) results[codec] = status;
       }
     }
     final path = raw['cachePath']?.toString();
@@ -122,6 +135,7 @@ class PlayerSettings {
       cachePath: path != null && path.trim().isNotEmpty ? path : null,
       cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),
       customOptions: options,
+      decoderResults: results,
     );
   }
 

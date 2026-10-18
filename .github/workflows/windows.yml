@@ -77,7 +77,13 @@ jobs:
           $flutterBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Generate Windows runner
-        run: flutter create --platforms=windows --project-name ytplus .
+        shell: pwsh
+        run: |
+          flutter create --platforms=windows --project-name ytplus .
+          $cmakeFile = 'windows/CMakeLists.txt'
+          $cmake = Get-Content -LiteralPath $cmakeFile -Raw
+          $cmake = $cmake -replace '(cmake_minimum_required\([^)]+\)\r?\n)', ('$1set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE BOOL "" FORCE)' + [Environment]::NewLine)
+          Set-Content -LiteralPath $cmakeFile -Value $cmake -NoNewline
 
       - name: Remove Flutter's generated sample test
         shell: pwsh

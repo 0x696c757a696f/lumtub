@@ -41,6 +41,9 @@ For traceable, incremental adaptation, `vendor/pilinara-settings/` contains an
 unmodified GPLv3 source snapshot of PiliNara's settings module. It is not a
 YTPlus build dependency; only adapted components moved into `lib/` are built.
 
+`vendor/pilinara-player/` contains the same type of source snapshot for
+PiliNara's media_kit/libmpv player. It will be adapted for YouTube incrementally.
+
 External packages and runtime assets retain their upstream licenses. Review
 bundled notices before redistributing the executable.
 

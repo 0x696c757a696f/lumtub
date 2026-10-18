@@ -9,9 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  media_kit: 1.1.11
-  media_kit_video: 1.2.5
-  media_kit_libs_video: 1.0.5
+  media_kit: ^1.2.6
+  media_kit_video: ^2.0.1
+  media_kit_libs_video: ^1.0.7
   path_provider: ^2.1.5
   http: ^1.5.0
   crypto: ^3.0.6

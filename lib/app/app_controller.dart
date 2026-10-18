@@ -1,0 +1,323 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
+
+import '../app_directories.dart';
+import '../cache_manager.dart';
+import '../decoder_status.dart';
+import '../models.dart';
+import '../player_option_applicator.dart';
+import '../player_settings.dart';
+import '../tool_manager.dart';
+import '../video_format_selector.dart';
+import '../video_repository.dart';
+import '../windows_env.dart';
+import '../windows_video_info.dart';
+
+enum PageMode { home, explore, subscriptions, history, playlists, settings }
+
+/// Application state and actions, kept separate from the widgets that show them.
+class AppController extends ChangeNotifier {
+  HistoryStore? _history;
+  AppDirectories? directories;
+  CacheManager? _cacheManager;
+  PlayerSettingsStore? _settingsStore;
+  ToolManager? _tools;
+  VideoRepository? _repository;
+  ToolPaths? paths;
+
+  Player? player;
+  VideoController? videoController;
+
+  int cacheBytes = 0;
+  Map<String, DecoderStatus> decodeStates = const {};
+  String currentCodec = '尚未播放视频';
+  String currentHwdec = '尚未验证';
+  WindowsVideoInfo windowsVideoInfo = const WindowsVideoInfo();
+  PlayerSettings settings = const PlayerSettings();
+  List<VideoItem> results = [];
+  VideoItem? playing;
+  PageMode mode = PageMode.home;
+  bool ready = false;
+  bool searching = false;
+  bool checking = false;
+  String status = '正在准备 Windows 原生播放器…';
+  String? error;
+
+  int _searchSerial = 0;
+  bool _disposed = false;
+  final _notices = StreamController<String>.broadcast();
+
+  /// One-off messages the UI shows as snack bars.
+  Stream<String> get notices => _notices.stream;
+
+  List<VideoItem> get history => _history?.items ?? const [];
+
+  Directory? get cacheRoot => _cacheManager?.rootFor(settings);
+
+  void _update(VoidCallback change) {
+    if (_disposed) return;
+    change();
+    notifyListeners();
+  }
+
+  void _notice(String message) {
+    if (!_disposed) _notices.add(message);
+  }
+
+  Future<void> initialize() async {
+    try {
+      final directories = await AppDirectories.create();
+      final history = HistoryStore(directories);
+      await history.initialize();
+      final settingsStore = PlayerSettingsStore(directories);
+      final settings = await settingsStore.load();
+      final cacheManager = CacheManager(directories);
+      await cacheManager.prepare(settings);
+      final cacheBytes = await cacheManager.size(settings);
+      final manager = ToolManager(directories, (message) => _update(() => status = message));
+      _tools = manager;
+      await manager.initialize();
+      final paths = await manager.ensureReady();
+      addToWindowsPath(paths.executableDirectories);
+      MediaKit.ensureInitialized(libmpv: paths.mpv);
+      final player = Player(configuration: PlayerConfiguration(bufferSize: settings.cacheMemoryMb * 1024 * 1024));
+      final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
+      final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      // yt-dlp and Deno are on PATH before libmpv starts, so ytdl_hook can find them.
+      if (_disposed) {
+        await player.dispose();
+        return;
+      }
+      _update(() {
+        this.paths = paths;
+        this.directories = directories;
+        _cacheManager = cacheManager;
+        this.cacheBytes = cacheBytes;
+        _settingsStore = settingsStore;
+        this.settings = settings;
+        decodeStates = {...settings.decoderResults};
+        _history = history;
+        _repository = _repositoryFor(paths, cacheManager, settings);
+        this.player = player;
+        videoController = controller;
+        ready = true;
+        status = ignoredOptions.isEmpty ? '就绪 · 解码方式将在播放时验证' : '就绪 · 已忽略不支持的设置：${ignoredOptions.join(', ')}';
+        error = null;
+      });
+      // Do not block the UI while checking newer releases.
+      unawaited(manager.checkUpdates());
+      unawaited(_readWindowsVideoInfo());
+    } catch (e) {
+      _update(() {
+        error = e.toString();
+        status = '初始化失败';
+      });
+    }
+  }
+
+  void retryInitialize() {
+    _update(() {
+      error = null;
+      status = '重新安装组件…';
+    });
+    unawaited(initialize());
+  }
+
+  VideoRepository _repositoryFor(ToolPaths paths, CacheManager cacheManager, PlayerSettings settings) =>
+      VideoRepository(paths.ytDlp, cacheDirectory: '${cacheManager.rootFor(settings).path}${Platform.pathSeparator}yt-dlp');
+
+  Future<void> search(String value) async {
+    final query = value.trim();
+    if (query.isEmpty || !ready) return;
+    final asUrl = parseYoutubeId(query);
+    if (asUrl != null) {
+      await play(VideoItem(id: asUrl, title: 'YouTube 视频 · $asUrl', channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$asUrl'));
+      return;
+    }
+    final serial = ++_searchSerial;
+    player?.pause();
+    _update(() {
+      mode = PageMode.explore;
+      playing = null;
+      searching = true;
+      error = null;
+    });
+    try {
+      final found = await _repository!.search(query);
+      if (serial != _searchSerial) return;
+      _update(() => results = found);
+    } catch (e) {
+      if (serial == _searchSerial) _update(() => error = '搜索失败：$e');
+    } finally {
+      if (serial == _searchSerial) _update(() => searching = false);
+    }
+  }
+
+  static String? parseYoutubeId(String input) {
+    final url = Uri.tryParse(input);
+    if (url == null || !url.hasScheme || url.scheme != 'https') return null;
+    if (url.host == 'youtu.be') {
+      final id = url.pathSegments.isNotEmpty ? url.pathSegments.first : '';
+      return RegExp(r'^[\w-]{11}$').hasMatch(id) ? id : null;
+    }
+    if (url.host == 'youtube.com' || url.host == 'www.youtube.com' || url.host == 'm.youtube.com') {
+      final id = url.queryParameters['v'] ??
+          ((url.pathSegments.length >= 2 && (url.pathSegments.first == 'shorts' || url.pathSegments.first == 'live')) ? url.pathSegments[1] : '');
+      return RegExp(r'^[\w-]{11}$').hasMatch(id) ? id : null;
+    }
+    return null;
+  }
+
+  Future<void> play(VideoItem item) async {
+    final player = this.player;
+    if (player == null) return;
+    _update(() {
+      playing = item;
+      mode = PageMode.explore;
+      error = null;
+    });
+    try {
+      final platform = player.platform;
+      if (platform is NativePlayer) {
+        await platform.setProperty('ytdl-format', VideoFormatSelector.expressionFor(settings));
+      }
+      await player.open(Media(item.url));
+      await _history?.record(item);
+      unawaited(inspectCurrentDecoder());
+      _update(() {});
+    } catch (e) {
+      _update(() => error = '播放失败：$e');
+    }
+  }
+
+  void stopWatching() {
+    _update(() => playing = null);
+    player?.pause();
+  }
+
+  void navigate(PageMode target) {
+    _update(() {
+      mode = target;
+      playing = null;
+      error = null;
+    });
+    player?.pause();
+  }
+
+  Future<void> checkUpdates() async {
+    if (checking || _tools == null) return;
+    _update(() => checking = true);
+    try {
+      await _tools!.checkUpdates(force: true);
+    } finally {
+      _update(() => checking = false);
+    }
+  }
+
+  Future<void> saveSettings(PlayerSettings next) async {
+    final store = _settingsStore;
+    final player = this.player;
+    if (store == null || player == null) return;
+    final oldSettings = settings;
+    final requiresNextVideo = next.hwdec != oldSettings.hwdec || next.interpolation != oldSettings.interpolation;
+    final ignoredOptions = await PlayerOptionApplicator.apply(player, next);
+    await store.save(next);
+    _update(() {
+      settings = next;
+      final paths = this.paths;
+      final cacheManager = _cacheManager;
+      if (paths != null && cacheManager != null && next.cachePath != oldSettings.cachePath) {
+        _repository = _repositoryFor(paths, cacheManager, next);
+      }
+      status = ignoredOptions.isEmpty
+          ? '播放器设置已保存${requiresNextVideo ? '；硬件解码和帧插值在下一段视频生效。' : '。'}'
+          : '已保存；此 libmpv 不支持：${ignoredOptions.join(', ')}。';
+    });
+  }
+
+  Future<void> inspectCurrentDecoder() async {
+    final platform = player?.platform;
+    if (platform is! NativePlayer) {
+      _notice('当前播放器无法读取 libmpv 解码状态。');
+      return;
+    }
+    try {
+      await Future<void>.delayed(const Duration(seconds: 2));
+      final codec = (await platform.getProperty('video-codec')).trim().toLowerCase();
+      final decoder = DecoderStatus.fromMpv(await platform.getProperty('hwdec-current'));
+      final normalized = DecoderStatus.codecKey(codec);
+      _update(() {
+        currentCodec = codec.isEmpty ? '尚未验证' : codec;
+        currentHwdec = decoder.label;
+        if (normalized != null) decodeStates = {...decodeStates, normalized: decoder};
+      });
+      if (normalized != null) {
+        settings = settings.copyWith(decoderResults: decodeStates);
+        unawaited(_settingsStore?.save(settings));
+      }
+    } catch (_) {
+      _update(() => currentHwdec = '尚未验证');
+    }
+  }
+
+  Future<void> _readWindowsVideoInfo() async {
+    final info = await WindowsVideoInfo.read();
+    _update(() => windowsVideoInfo = info);
+  }
+
+  Future<void> openStore(String url) async {
+    try {
+      await Process.start('explorer.exe', [url]);
+    } catch (_) {
+      _notice('无法打开 Microsoft Store 链接。');
+    }
+  }
+
+  /// Moves the managed cache under [selectedFolder]. [confirmMigrate] asks
+  /// whether existing cache folders should move with it.
+  Future<void> changeCacheLocation(String selectedFolder, Future<bool?> Function(String targetPath) confirmMigrate) async {
+    final manager = _cacheManager;
+    if (directories == null || manager == null) return;
+    final target = Directory('$selectedFolder${Platform.pathSeparator}YTPlusCache');
+    final next = settings.copyWith(cachePath: target.path);
+    try {
+      await manager.prepare(next);
+      final migrate = await confirmMigrate(target.path);
+      if (migrate == true) await manager.migrate(settings, next);
+      await saveSettings(next);
+      _update(() => cacheBytes = 0);
+      _notice('缓存位置已保存。yt-dlp 缓存在下一次搜索时使用新位置。');
+    } on FileSystemException catch (error) {
+      _notice('新缓存位置不可用，继续使用原位置：${error.message}');
+    }
+  }
+
+  bool ensureNotPlaying(String message) {
+    if (playing == null) return true;
+    _notice(message);
+    return false;
+  }
+
+  Future<void> clearCache() async {
+    final manager = _cacheManager;
+    if (manager == null) return;
+    if (!ensureNotPlaying('正在播放时不会清理缓存。请先返回列表。')) return;
+    await manager.clear(settings);
+    _update(() => cacheBytes = 0);
+    _notice('已清理 YTPlus 管理的缓存文件。');
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    ++_searchSerial;
+    unawaited(player?.dispose());
+    _tools?.dispose();
+    unawaited(_notices.close());
+    super.dispose();
+  }
+}

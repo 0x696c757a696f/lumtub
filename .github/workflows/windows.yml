@@ -65,6 +65,13 @@ jobs:
       - name: Generate Windows runner
         run: flutter create --platforms=windows --project-name ytplus .
 
+      - name: Remove Flutter's generated sample test
+        shell: pwsh
+        run: |
+          if (Test-Path -LiteralPath 'test/widget_test.dart') {
+            Remove-Item -LiteralPath 'test/widget_test.dart'
+          }
+
       - name: Get packages
         run: flutter pub get
 

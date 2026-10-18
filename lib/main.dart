@@ -97,13 +97,7 @@ class _HomePageState extends State<HomePage> {
       }
       final player = Player(configuration: const PlayerConfiguration(bufferSize: 16 * 1024 * 1024));
       final controller = VideoController(player, configuration: const VideoControllerConfiguration(hwdec: 'auto-safe'));
-      // Ensure mpv's builtin ytdl_hook locates the auto-managed yt-dlp.exe.
-      // PATH is also updated above, so that yt-dlp can discover Deno.
-      try {
-        await player.setProperty('script-opts', 'ytdl_hook-ytdl_path=${paths.ytDlp}');
-      } catch (_) {
-        // PATH-based discovery is the compatible fallback.
-      }
+      // yt-dlp and Deno are on PATH before libmpv starts, so ytdl_hook can find them.
       if (!mounted) {
         await player.dispose();
         return;
@@ -120,10 +114,12 @@ class _HomePageState extends State<HomePage> {
       // Do not block the UI while checking newer releases.
       unawaited(manager.checkUpdates());
     } catch (e) {
-      if (mounted) setState(() {
-        _error = e.toString();
-        _status = '初始化失败';
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _status = '初始化失败';
+        });
+      }
     }
   }
 

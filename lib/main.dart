@@ -16,6 +16,7 @@ import 'tool_manager.dart';
 import 'video_repository.dart';
 import 'windows_env.dart';
 import 'windows_video_info.dart';
+import 'widgets/pilinara_playback_controls.dart';
 import 'widgets/pilinara_settings_tiles.dart';
 
 void main() {
@@ -547,65 +548,10 @@ class _HomePageState extends State<HomePage> {
     )));
   }
 
-  Widget _playbackControls() {
-    final player = _player!;
-    return StreamBuilder<Duration>(
-      stream: player.stream.position,
-      builder: (context, snapshot) {
-        final position = snapshot.data ?? player.state.position;
-        final duration = player.state.duration;
-        final maximum = duration.inMilliseconds <= 0 ? 1.0 : duration.inMilliseconds.toDouble();
-        final value = position.inMilliseconds.clamp(0, maximum.toInt()).toDouble();
-        return Card(
-          color: _surface,
-          margin: EdgeInsets.zero,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            child: Column(children: [
-              Slider(
-                value: value,
-                max: maximum,
-                onChanged: duration.inMilliseconds <= 0 ? null : (milliseconds) => player.seek(Duration(milliseconds: milliseconds.round())),
-              ),
-              Row(children: [
-                StreamBuilder<bool>(
-                  stream: player.stream.playing,
-                  builder: (context, playing) => IconButton(
-                    tooltip: playing.data == true ? '暂停' : '播放',
-                    icon: Icon(playing.data == true ? Icons.pause_rounded : Icons.play_arrow_rounded),
-                    onPressed: () => playing.data == true ? player.pause() : player.play(),
-                  ),
-                ),
-                IconButton(tooltip: '快退 5 秒', icon: const Icon(Icons.replay_5_rounded), onPressed: () => player.seek(position - const Duration(seconds: 5))),
-                IconButton(tooltip: '快进 5 秒', icon: const Icon(Icons.forward_5_rounded), onPressed: () => player.seek(position + const Duration(seconds: 5))),
-                Text('${_timeLabel(position)} / ${_timeLabel(duration)}', style: const TextStyle(color: Colors.white60)),
-                const Spacer(),
-                PopupMenuButton<double>(
-                  tooltip: '播放速度',
-                  initialValue: player.state.rate,
-                  onSelected: player.setRate,
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(value: 0.5, child: Text('0.5×')),
-                    PopupMenuItem(value: 0.75, child: Text('0.75×')),
-                    PopupMenuItem(value: 1.0, child: Text('正常速度')),
-                    PopupMenuItem(value: 1.25, child: Text('1.25×')),
-                    PopupMenuItem(value: 1.5, child: Text('1.5×')),
-                    PopupMenuItem(value: 2.0, child: Text('2×')),
-                  ],
-                  child: const Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Icon(Icons.speed_rounded)),
-                ),
-                IconButton(
-                  tooltip: player.state.volume == 0 ? '取消静音' : '静音',
-                  icon: Icon(player.state.volume == 0 ? Icons.volume_off_rounded : Icons.volume_up_rounded),
-                  onPressed: () => player.setVolume(player.state.volume == 0 ? 100 : 0),
-                ),
-              ]),
-            ]),
-          ),
-        );
-      },
-    );
-  }
+  Widget _playbackControls() => PiliNaraPlaybackControls(
+        player: _player!,
+        timeLabel: _timeLabel,
+      );
 
   Widget _trackSelectors() {
     final player = _player!;

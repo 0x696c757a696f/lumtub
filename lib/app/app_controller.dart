@@ -6,6 +6,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app_directories.dart';
+import '../appearance_settings.dart';
 import '../cache_manager.dart';
 import '../decoder_status.dart';
 import '../models.dart';
@@ -46,9 +47,23 @@ class AppController extends ChangeNotifier {
   bool hasMoreResults = false;
   bool checking = false;
   String status = '正在准备 Windows 原生播放器…';
+  /// Startup failure; the setup screen shows it with a retry button.
   String? error;
+  String? searchError;
+  String? playbackError;
+
+  /// The list the current video was opened from, shown as the play queue.
+  List<VideoItem> queue = const [];
+  VideoDetails? details;
+  bool loadingDetails = false;
+
+  AppearanceSettings appearance;
+  final AppearanceSettingsStore? _appearanceStore;
+
+  AppController({this.appearance = const AppearanceSettings(), AppearanceSettingsStore? appearanceStore}) : _appearanceStore = appearanceStore;
 
   int _searchSerial = 0;
+  int _playSerial = 0;
   String? _query;
   StreamSubscription<VideoItem>? _searchSubscription;
   bool _disposed = false;
@@ -58,6 +73,12 @@ class AppController extends ChangeNotifier {
   Stream<String> get notices => _notices.stream;
 
   List<VideoItem> get history => _history?.items ?? const [];
+
+  /// The text of the current or last search, if any.
+  String? get query => _query;
+
+  @visibleForTesting
+  set debugQuery(String? value) => _query = value;
 
   Directory? get cacheRoot => _cacheManager?.rootFor(settings);
 
@@ -153,15 +174,19 @@ class AppController extends ChangeNotifier {
       results = [];
       _query = query;
       hasMoreResults = false;
-      error = null;
+      searchError = null;
     });
     _loadPage(query, 1);
   }
 
   /// Fetches the next page of the current search, if there is one.
-  void loadMoreResults() {
+  /// Fetches the next page. After a failed page, scrolling does not retry on
+  /// its own; [retry] comes from the retry button.
+  void loadMoreResults({bool retry = false}) {
     final query = _query;
     if (query == null || searching || !hasMoreResults) return;
+    if (searchError != null && !retry) return;
+    _update(() => searchError = null);
     _loadPage(query, results.length + 1);
   }
 
@@ -170,6 +195,7 @@ class AppController extends ChangeNotifier {
     unawaited(_searchSubscription?.cancel());
     final seen = {for (final item in results) item.id};
     var received = 0;
+    var failed = false;
     _update(() => searching = true);
     _searchSubscription = _repository!.search(query, start: start).listen(
       (item) {
@@ -178,13 +204,15 @@ class AppController extends ChangeNotifier {
         if (seen.add(item.id)) _update(() => results = [...results, item]);
       },
       onError: (Object e) {
-        if (serial == _searchSerial) _update(() => error = '搜索失败：$e');
+        failed = true;
+        if (serial == _searchSerial) _update(() => searchError = '$e');
       },
       onDone: () {
         if (serial != _searchSerial) return;
         _update(() {
           searching = false;
-          hasMoreResults = received >= VideoRepository.pageSize;
+          // A failed page after the first can be retried from the banner.
+          hasMoreResults = received >= VideoRepository.pageSize || (failed && results.isNotEmpty);
         });
       },
       cancelOnError: false,
@@ -215,15 +243,20 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
-  Future<void> play(VideoItem item) async {
+  /// Plays [item]; [from] is the list it was picked from and becomes the queue.
+  Future<void> play(VideoItem item, {List<VideoItem>? from}) async {
     final player = this.player;
     if (player == null) return;
+    final serial = ++_playSerial;
     _update(() {
       _cancelSearch();
       playing = item;
-      mode = PageMode.explore;
-      error = null;
+      if (from != null) queue = List.unmodifiable(from);
+      playbackError = null;
+      details = null;
+      loadingDetails = true;
     });
+    unawaited(_loadDetails(item, serial));
     try {
       final platform = player.platform;
       if (platform is NativePlayer) {
@@ -234,23 +267,73 @@ class AppController extends ChangeNotifier {
       unawaited(inspectCurrentDecoder());
       _update(() {});
     } catch (e) {
-      _update(() => error = '播放失败：$e');
+      if (serial == _playSerial) _update(() => playbackError = '$e');
     }
   }
 
+  Future<void> retryPlayback() async {
+    final item = playing;
+    if (item != null) await play(item);
+  }
+
+  Future<void> _loadDetails(VideoItem item, int serial) async {
+    try {
+      final loaded = await _repository!.details(item.id);
+      if (serial == _playSerial) _update(() => details = loaded);
+    } catch (_) {
+      // The page still shows what the list already knew about the video.
+    } finally {
+      if (serial == _playSerial) _update(() => loadingDetails = false);
+    }
+  }
+
+  /// Videos after the current one in the queue, or the whole queue when the
+  /// current video was opened from elsewhere.
+  List<VideoItem> get upNext {
+    final current = playing;
+    if (current == null) return const [];
+    final index = queue.indexWhere((item) => item.id == current.id);
+    return index < 0 ? queue : queue.sublist(index + 1);
+  }
+
   void stopWatching() {
-    _update(() => playing = null);
+    ++_playSerial;
+    _update(() {
+      playing = null;
+      playbackError = null;
+    });
     player?.pause();
   }
 
   void navigate(PageMode target) {
+    ++_playSerial;
     _update(() {
       if (target != PageMode.explore) _cancelSearch();
       mode = target;
       playing = null;
-      error = null;
+      playbackError = null;
     });
     player?.pause();
+  }
+
+  void retrySearch() {
+    final last = _query;
+    if (last != null) unawaited(search(last));
+  }
+
+  Future<void> clearHistory() async {
+    await _history?.clear();
+    _update(() {});
+    _notice('观看历史已清空。');
+  }
+
+  Future<void> saveAppearance(AppearanceSettings next) async {
+    _update(() => appearance = next);
+    try {
+      await _appearanceStore?.save(next);
+    } on FileSystemException {
+      _notice('外观设置未能保存，本次运行仍然生效。');
+    }
   }
 
   Future<void> checkUpdates() async {

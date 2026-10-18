@@ -90,6 +90,33 @@ class VideoRepository {
     return output.stream;
   }
 
+  /// yt-dlp arguments for watch-page metadata. Skipping the player JS keeps
+  /// this cheaper than the extraction libmpv runs for playback; formats are
+  /// not needed here.
+  List<String> detailsArguments(String videoId) => [
+        '--no-warnings',
+        '--skip-download',
+        if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
+        '--no-playlist',
+        '--ignore-no-formats-error',
+        '--extractor-args', 'youtube:player_skip=js',
+        '--dump-json',
+        '--', 'https://www.youtube.com/watch?v=$videoId',
+      ];
+
+  Future<VideoDetails> details(String videoId) async {
+    final result = await Process.run(ytDlpPath, detailsArguments(videoId), stdoutEncoding: utf8, stderrEncoding: utf8, environment: _environment)
+        .timeout(const Duration(seconds: 45));
+    final output = result.stdout.toString().trim();
+    if (result.exitCode != 0 || output.isEmpty) {
+      final err = result.stderr.toString().trim();
+      throw StateError(err.isEmpty ? 'yt-dlp exited with code ${result.exitCode}' : err);
+    }
+    final data = jsonDecode(const LineSplitter().convert(output).last);
+    if (data is! Map<String, dynamic>) throw const FormatException('Unexpected yt-dlp output');
+    return VideoDetails.fromJson(data);
+  }
+
   Map<String, String> get _environment => {
         ...Platform.environment,
         if (cacheDirectory != null) ...{
@@ -119,6 +146,11 @@ class HistoryStore {
         }
       }
     } catch (_) {}
+  }
+
+  Future<void> clear() async {
+    items.clear();
+    await file.writeAsString('[]', flush: true);
   }
 
   Future<void> record(VideoItem item) async {

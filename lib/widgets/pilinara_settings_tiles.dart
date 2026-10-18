@@ -82,7 +82,9 @@ class PiliNaraSettingChoice extends StatelessWidget {
       );
 }
 
-class PiliNaraSettingSlider extends StatelessWidget {
+/// Slider that follows the pointer locally and reports the value once the
+/// drag ends, so settings are not saved and applied on every frame.
+class PiliNaraSettingSlider extends StatefulWidget {
   const PiliNaraSettingSlider({
     super.key,
     required this.title,
@@ -98,25 +100,41 @@ class PiliNaraSettingSlider extends StatelessWidget {
   final double value;
   final double min;
   final double max;
-  final String description;
+
+  /// Label for a value, shown at the end of the title row.
+  final String Function(double value) description;
   final int divisions;
   final ValueChanged<double> onChanged;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(18, 9, 18, 5),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [Text(title), const Spacer(), Text(description, style: const TextStyle(color: Colors.white54))]),
-            Slider(
-              value: value.clamp(min, max).toDouble(),
-              min: min,
-              max: max,
-              divisions: divisions,
-              onChanged: onChanged,
-            ),
-          ],
-        ),
-      );
+  State<PiliNaraSettingSlider> createState() => _PiliNaraSettingSliderState();
+}
+
+class _PiliNaraSettingSliderState extends State<PiliNaraSettingSlider> {
+  double? _dragging;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = (_dragging ?? widget.value).clamp(widget.min, widget.max).toDouble();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 9, 18, 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [Text(widget.title), const Spacer(), Text(widget.description(value), style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))]),
+          Slider(
+            value: value,
+            min: widget.min,
+            max: widget.max,
+            divisions: widget.divisions,
+            onChanged: (next) => setState(() => _dragging = next),
+            onChangeEnd: (next) {
+              setState(() => _dragging = null);
+              widget.onChanged(next);
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'app_directories.dart';
+import 'decoder_status.dart';
 
 class PlayerSettings {
   final String hwdec;
@@ -17,7 +18,7 @@ class PlayerSettings {
   final String? cachePath;
   final int? cacheLimitGb;
   final Map<String, String> customOptions;
-  final Map<String, String> decoderResults;
+  final Map<String, DecoderStatus> decoderResults;
 
   const PlayerSettings({
     this.hwdec = 'auto-safe',
@@ -52,7 +53,7 @@ class PlayerSettings {
     int? cacheLimitGb,
     bool clearCacheLimit = false,
     Map<String, String>? customOptions,
-    Map<String, String>? decoderResults,
+    Map<String, DecoderStatus>? decoderResults,
   }) => PlayerSettings(
         hwdec: hwdec ?? this.hwdec,
         scale: scale ?? this.scale,
@@ -84,7 +85,7 @@ class PlayerSettings {
         if (cachePath != null) 'cachePath': cachePath,
         if (cacheLimitGb != null) 'cacheLimitGb': cacheLimitGb,
         'customOptions': customOptions,
-        'decoderResults': decoderResults,
+        'decoderResults': decoderResults.map((codec, status) => MapEntry(codec, status.toJson())),
       };
 
   factory PlayerSettings.fromJson(Object? raw) {
@@ -105,7 +106,7 @@ class PlayerSettings {
       return parsed == null ? fallback : parsed.clamp(min, max).toDouble();
     }
     final options = <String, String>{};
-    final results = <String, String>{};
+    final results = <String, DecoderStatus>{};
     if (raw['customOptions'] is Map) {
       for (final entry in (raw['customOptions'] as Map).entries) {
         final key = entry.key.toString();
@@ -116,8 +117,8 @@ class PlayerSettings {
     if (raw['decoderResults'] is Map) {
       for (final entry in (raw['decoderResults'] as Map).entries) {
         final codec = entry.key.toString().toLowerCase();
-        final status = entry.value.toString();
-        if ({'h264', 'vp9', 'av1'}.contains(codec) && status.length <= 80) results[codec] = status;
+        final status = DecoderStatus.fromJson(entry.value);
+        if (DecoderStatus.codecs.contains(codec) && status != null) results[codec] = status;
       }
     }
     final path = raw['cachePath']?.toString();

@@ -8,6 +8,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import 'app_directories.dart';
 import 'cache_manager.dart';
+import 'decoder_status.dart';
 import 'models.dart';
 import 'player_option_applicator.dart';
 import 'player_settings.dart';
@@ -69,7 +70,7 @@ class _HomePageState extends State<HomePage> {
   AppDirectories? _directories;
   CacheManager? _cacheManager;
   int _cacheBytes = 0;
-  Map<String, String> _decodeStates = {'h264': '尚未验证', 'vp9': '尚未验证', 'av1': '尚未验证'};
+  Map<String, DecoderStatus> _decodeStates = const {};
   String _currentCodec = '尚未播放视频';
   String _currentHwdec = '尚未验证';
   WindowsVideoInfo _windowsVideoInfo = const WindowsVideoInfo();
@@ -129,7 +130,7 @@ class _HomePageState extends State<HomePage> {
         _cacheBytes = cacheBytes;
         _settingsStore = settingsStore;
         _settings = settings;
-        _decodeStates = {'h264': '尚未验证', 'vp9': '尚未验证', 'av1': '尚未验证', ...settings.decoderResults};
+        _decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = VideoRepository(paths.ytDlp, cacheDirectory: '${cacheManager.rootFor(settings).path}${Platform.pathSeparator}yt-dlp');
         _player = player;
@@ -262,13 +263,13 @@ class _HomePageState extends State<HomePage> {
     try {
       await Future<void>.delayed(const Duration(seconds: 2));
       final codec = (await platform.getProperty('video-codec')).trim().toLowerCase();
-      final hwdec = (await platform.getProperty('hwdec-current')).trim();
+      final status = DecoderStatus.fromMpv(await platform.getProperty('hwdec-current'));
       if (!mounted) return;
-      final normalized = codec.contains('av1') ? 'av1' : codec.contains('vp9') ? 'vp9' : codec.contains('h264') || codec.contains('avc') ? 'h264' : null;
+      final normalized = DecoderStatus.codecKey(codec);
       setState(() {
         _currentCodec = codec.isEmpty ? '尚未验证' : codec;
-        _currentHwdec = hwdec.isEmpty || hwdec == 'no' || hwdec == 'none' ? '软件解码已验证' : hwdec;
-        if (normalized != null) _decodeStates[normalized] = _currentHwdec;
+        _currentHwdec = status.label;
+        if (normalized != null) _decodeStates = {..._decodeStates, normalized: status};
       });
       if (normalized != null) {
         final updated = _settings.copyWith(decoderResults: _decodeStates);
@@ -703,9 +704,9 @@ class _HomePageState extends State<HomePage> {
           trailing: OutlinedButton(onPressed: _playing == null ? null : _inspectCurrentDecoder, child: const Text('检测')),
         ),
         const Divider(height: 1),
-        _decoderRow('H.264', _decodeStates['h264']!),
-        _decoderRow('VP9', _decodeStates['vp9']!),
-        _decoderRow('AV1', _decodeStates['av1']!),
+        _decoderRow('H.264', _decodeStates['h264']),
+        _decoderRow('VP9', _decodeStates['vp9']),
+        _decoderRow('AV1', _decodeStates['av1']),
         const Divider(height: 1),
         _extensionRow('VP9 Video Extensions', _windowsVideoInfo.vp9Extension, 'https://apps.microsoft.com/detail/9n4d0msmp0pt'),
         _extensionRow('AV1 Video Extension', _windowsVideoInfo.av1Extension, 'https://apps.microsoft.com/detail/9mvzqvxjbq9v'),
@@ -781,11 +782,14 @@ class _HomePageState extends State<HomePage> {
         trailing: Text(value, style: const TextStyle(color: _accent, fontFamily: 'monospace')),
       );
 
-  Widget _decoderRow(String codec, String status) => ListTile(
-        dense: true,
-        title: Text(codec),
-        trailing: Text(status, style: TextStyle(color: status == '尚未验证' ? Colors.white54 : _accent)),
-      );
+  Widget _decoderRow(String codec, DecoderStatus? status) {
+    final value = status ?? const DecoderStatus.unverified();
+    return ListTile(
+      dense: true,
+      title: Text(codec),
+      trailing: Text(value.label, style: TextStyle(color: value.isVerified ? _accent : Colors.white54)),
+    );
+  }
 
   Widget _extensionRow(String title, ExtensionStatus status, String storeUrl) {
     final label = switch (status) {

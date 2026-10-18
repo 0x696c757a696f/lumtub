@@ -505,6 +505,8 @@ class _HomePageState extends State<HomePage> {
           AspectRatio(aspectRatio: 16 / 9, child: ClipRRect(borderRadius: BorderRadius.circular(15), child: ColoredBox(color: Colors.black, child: Video(controller: _videoController!)))),
           const SizedBox(height: 8),
           _playbackControls(),
+          const SizedBox(height: 8),
+          _trackSelectors(),
           const SizedBox(height: 20),
           Text(current.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 22)),
           const SizedBox(height: 8),
@@ -575,6 +577,58 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  Widget _trackSelectors() {
+    final player = _player!;
+    return StreamBuilder<Tracks>(
+      stream: player.stream.tracks,
+      initialData: player.state.tracks,
+      builder: (context, snapshot) {
+        final tracks = snapshot.data ?? player.state.tracks;
+        final selected = player.state.track;
+        final audio = [...tracks.audio];
+        final subtitles = [...tracks.subtitle];
+        if (!audio.contains(selected.audio)) audio.insert(0, selected.audio);
+        if (!subtitles.contains(selected.subtitle)) subtitles.insert(0, selected.subtitle);
+        return Card(
+          color: _surface,
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+            child: LayoutBuilder(builder: (context, constraints) {
+              final compact = constraints.maxWidth < 620;
+              final audioMenu = DropdownButton<AudioTrack>(
+                value: selected.audio,
+                isExpanded: true,
+                underline: const SizedBox.shrink(),
+                items: audio.map((track) => DropdownMenuItem(value: track, child: Text(_trackLabel(track.id, track.title, track.language), overflow: TextOverflow.ellipsis))).toList(),
+                onChanged: (track) { if (track != null) player.setAudioTrack(track); },
+              );
+              final subtitleMenu = DropdownButton<SubtitleTrack>(
+                value: selected.subtitle,
+                isExpanded: true,
+                underline: const SizedBox.shrink(),
+                items: subtitles.map((track) => DropdownMenuItem(value: track, child: Text(_trackLabel(track.id, track.title, track.language), overflow: TextOverflow.ellipsis))).toList(),
+                onChanged: (track) { if (track != null) player.setSubtitleTrack(track); },
+              );
+              final children = [
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('音轨', style: TextStyle(fontSize: 12, color: Colors.white54)), audioMenu])),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('字幕', style: TextStyle(fontSize: 12, color: Colors.white54)), subtitleMenu])),
+              ];
+              return compact ? Column(children: children) : Row(children: [children.first, const SizedBox(width: 18), children.last]);
+            }),
+          ),
+        );
+      },
+    );
+  }
+
+  String _trackLabel(String id, String? title, String? language) {
+    if (id == 'auto') return '自动';
+    if (id == 'no') return '关闭';
+    final parts = [if (title != null && title.isNotEmpty) title, if (language != null && language.isNotEmpty) language];
+    return parts.isEmpty ? '轨道 $id' : parts.join(' · ');
   }
 
   String _timeLabel(Duration value) {

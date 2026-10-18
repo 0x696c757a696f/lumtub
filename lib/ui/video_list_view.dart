@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../app/app_controller.dart';
 import '../models.dart';
+import '../thumbnail_cache.dart';
 import 'common.dart';
 import 'theme.dart';
 
@@ -27,11 +30,20 @@ class VideoListView extends StatelessWidget {
       if (controller.error != null) ErrorBanner(controller.error!),
       Expanded(child: list.isEmpty ? _EmptyView(history: mode == PageMode.history) : LayoutBuilder(builder: (context, constraints) {
         final columns = constraints.maxWidth > 1320 ? 4 : constraints.maxWidth > 930 ? 3 : constraints.maxWidth > 550 ? 2 : 1;
-        return GridView.builder(
+        final grid = GridView.builder(
           padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: columns, mainAxisSpacing: 19, crossAxisSpacing: 19, childAspectRatio: 1.40),
           itemCount: list.length,
-          itemBuilder: (context, i) => VideoCard(item: list[i], onTap: () => controller.play(list[i])),
+          itemBuilder: (context, i) => VideoCard(item: list[i], thumbnails: controller.thumbnailDirectory, onTap: () => controller.play(list[i])),
+        );
+        if (mode == PageMode.history) return grid;
+        // Fetch the next page shortly before the end of the results is reached.
+        return NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification.metrics.extentAfter < 600) controller.loadMoreResults();
+            return false;
+          },
+          child: grid,
         );
       })),
     ]);
@@ -46,9 +58,12 @@ class VideoListView extends StatelessWidget {
 }
 
 class VideoCard extends StatelessWidget {
-  const VideoCard({super.key, required this.item, required this.onTap});
+  const VideoCard({super.key, required this.item, required this.onTap, this.thumbnails});
   final VideoItem item;
   final VoidCallback onTap;
+
+  /// The thumbnail cache folder; without it images load from the network only.
+  final Directory? thumbnails;
 
   @override
   Widget build(BuildContext context) => InkWell(
@@ -58,7 +73,9 @@ class VideoCard extends StatelessWidget {
           Expanded(child: ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: Stack(fit: StackFit.expand, children: [
-              Image.network(item.thumbnail, fit: BoxFit.cover, cacheWidth: 520,
+              Image(
+                image: ResizeImage.resizeIfNeeded(520, null, thumbnails == null ? NetworkImage(item.thumbnail) : CachedThumbnail(item.thumbnail, CachedThumbnail.fileFor(thumbnails!, item.id))),
+                fit: BoxFit.cover,
                 errorBuilder: (context, _, __) => const ColoredBox(color: AppColors.surface, child: Icon(Icons.ondemand_video_outlined, size: 46, color: Colors.white30))),
               if (item.durationLabel.isNotEmpty)
                 Positioned(bottom: 8, right: 9, child: DecoratedBox(decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(5)), child: Padding(padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3), child: Text(item.durationLabel, style: const TextStyle(fontSize: 11))))),

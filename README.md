@@ -4,7 +4,8 @@ YTPlus is a lightweight, non-Electron YouTube search and playback app built with
 
 ## Features
 
-- Search YouTube and show video cards with channel and duration.
+- Search YouTube and show video cards with channel and duration. Results appear as yt-dlp finds them, and scrolling to the end loads the next 20.
+- Cache thumbnails in the YTPlus cache folder so scrolling back and later visits need no network request.
 - Play search results or HTTPS YouTube video links in the app.
 - Keep the 60 most recent videos in local history.
 - On first start, create user-writable `config`, `data`, `cache`, `components`, and `logs` folders under `%LOCALAPPDATA%\\YTPlus`; no administrator rights are required.
@@ -14,7 +15,7 @@ YTPlus is a lightweight, non-Electron YouTube search and playback app built with
 
 ## Build on GitHub
 
-The `.github/workflows/windows.yml` workflow runs on pushes to `main` and can also be started from **Actions → Build YTPlus Windows → Run workflow**. On a Windows GitHub runner it verifies the latest shinchiro x86_64-v3 libmpv release, replaces the old bundled DLL with only `libmpv-2.dll`, analyzes the Flutter sources, runs the unit tests, builds a release version, and uploads the `YTPlus-Windows-x64` artifact. On first launch, YTPlus downloads `yt-dlp` and Deno.
+The Windows runner (`windows/`) is part of the repository, so the window title, icon, size and title bar can be changed there. The `.github/workflows/windows.yml` workflow runs on pushes and pull requests to `main` and can also be started from **Actions → Build YTPlus Windows → Run workflow**. On a Windows GitHub runner it verifies the latest shinchiro x86_64-v3 libmpv release, replaces the old bundled DLL with only `libmpv-2.dll`, analyzes the Flutter sources, runs the unit tests, builds a release version, and uploads the `YTPlus-Windows-x64` artifact. On first launch, YTPlus downloads `yt-dlp` and Deno.
 
 ## First launch
 

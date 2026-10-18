@@ -43,11 +43,14 @@ class AppController extends ChangeNotifier {
   PageMode mode = PageMode.home;
   bool ready = false;
   bool searching = false;
+  bool hasMoreResults = false;
   bool checking = false;
   String status = '正在准备 Windows 原生播放器…';
   String? error;
 
   int _searchSerial = 0;
+  String? _query;
+  StreamSubscription<VideoItem>? _searchSubscription;
   bool _disposed = false;
   final _notices = StreamController<String>.broadcast();
 
@@ -57,6 +60,11 @@ class AppController extends ChangeNotifier {
   List<VideoItem> get history => _history?.items ?? const [];
 
   Directory? get cacheRoot => _cacheManager?.rootFor(settings);
+
+  Directory? get thumbnailDirectory {
+    final root = cacheRoot;
+    return root == null ? null : Directory('${root.path}${Platform.pathSeparator}thumbnails');
+  }
 
   void _update(VoidCallback change) {
     if (_disposed) return;
@@ -138,23 +146,58 @@ class AppController extends ChangeNotifier {
       await play(VideoItem(id: asUrl, title: 'YouTube 视频 · $asUrl', channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$asUrl'));
       return;
     }
-    final serial = ++_searchSerial;
     player?.pause();
     _update(() {
       mode = PageMode.explore;
       playing = null;
-      searching = true;
+      results = [];
+      _query = query;
+      hasMoreResults = false;
       error = null;
     });
-    try {
-      final found = await _repository!.search(query);
-      if (serial != _searchSerial) return;
-      _update(() => results = found);
-    } catch (e) {
-      if (serial == _searchSerial) _update(() => error = '搜索失败：$e');
-    } finally {
-      if (serial == _searchSerial) _update(() => searching = false);
-    }
+    _loadPage(query, 1);
+  }
+
+  /// Fetches the next page of the current search, if there is one.
+  void loadMoreResults() {
+    final query = _query;
+    if (query == null || searching || !hasMoreResults) return;
+    _loadPage(query, results.length + 1);
+  }
+
+  void _loadPage(String query, int start) {
+    final serial = ++_searchSerial;
+    unawaited(_searchSubscription?.cancel());
+    final seen = {for (final item in results) item.id};
+    var received = 0;
+    _update(() => searching = true);
+    _searchSubscription = _repository!.search(query, start: start).listen(
+      (item) {
+        if (serial != _searchSerial) return;
+        received++;
+        if (seen.add(item.id)) _update(() => results = [...results, item]);
+      },
+      onError: (Object e) {
+        if (serial == _searchSerial) _update(() => error = '搜索失败：$e');
+      },
+      onDone: () {
+        if (serial != _searchSerial) return;
+        _update(() {
+          searching = false;
+          hasMoreResults = received >= VideoRepository.pageSize;
+        });
+      },
+      cancelOnError: false,
+    );
+  }
+
+  void _cancelSearch() {
+    // An interrupted page can be fetched again by scrolling to the end.
+    if (searching && _query != null) hasMoreResults = true;
+    ++_searchSerial;
+    unawaited(_searchSubscription?.cancel());
+    _searchSubscription = null;
+    searching = false;
   }
 
   static String? parseYoutubeId(String input) {
@@ -176,6 +219,7 @@ class AppController extends ChangeNotifier {
     final player = this.player;
     if (player == null) return;
     _update(() {
+      _cancelSearch();
       playing = item;
       mode = PageMode.explore;
       error = null;
@@ -201,6 +245,7 @@ class AppController extends ChangeNotifier {
 
   void navigate(PageMode target) {
     _update(() {
+      if (target != PageMode.explore) _cancelSearch();
       mode = target;
       playing = null;
       error = null;
@@ -314,7 +359,7 @@ class AppController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
-    ++_searchSerial;
+    _cancelSearch();
     unawaited(player?.dispose());
     _tools?.dispose();
     unawaited(_notices.close());

@@ -56,15 +56,20 @@ class VideoItem {
     final results = <VideoItem>[];
     final seen = <String>{};
     for (final line in const LineSplitter().convert(stdout)) {
-      try {
-        final data = jsonDecode(line);
-        if (data is! Map<String, dynamic>) continue;
-        final item = VideoItem.fromJson(data);
-        if (seen.add(item.id)) results.add(item);
-      } catch (_) {
-        // yt-dlp may output notices or some non-video entries.
-      }
+      final item = tryParseLine(line);
+      if (item != null && seen.add(item.id)) results.add(item);
     }
     return results;
+  }
+
+  /// Parses one `--dump-json` line, or returns null for notices and
+  /// non-video entries that yt-dlp may also print.
+  static VideoItem? tryParseLine(String line) {
+    try {
+      final data = jsonDecode(line);
+      return data is Map<String, dynamic> ? VideoItem.fromJson(data) : null;
+    } catch (_) {
+      return null;
+    }
   }
 }

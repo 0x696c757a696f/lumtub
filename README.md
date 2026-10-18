@@ -37,6 +37,10 @@ and remain available under GPL-3.0-or-later.  They have been connected to
 YTPlus's existing settings store; no PiliNara Bilibili client, data source, or
 storage framework is included.
 
+For traceable, incremental adaptation, `vendor/pilinara-settings/` contains an
+unmodified GPLv3 source snapshot of PiliNara's settings module. It is not a
+YTPlus build dependency; only adapted components moved into `lib/` are built.
+
 External packages and runtime assets retain their upstream licenses. Review
 bundled notices before redistributing the executable.
 

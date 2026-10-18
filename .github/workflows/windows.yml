@@ -63,7 +63,10 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          cache: true
+          # A corrupted hosted cache left consecutive builds stuck before
+          # Flutter starts. A clean GitHub runner is slower on first setup but
+          # reliably reaches analysis and the Windows build.
+          cache: false
 
       - name: Generate Windows runner
         run: flutter create --platforms=windows --project-name ytplus .

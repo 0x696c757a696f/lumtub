@@ -91,7 +91,8 @@ class PlayerSettings {
     int number(String key, int fallback, int min, int max) {
       final value = raw[key];
       final parsed = value is num ? value.toInt() : int.tryParse(value?.toString() ?? '');
-      return parsed == null ? fallback : parsed.clamp(min, max).toInt();
+      if (parsed == null || parsed < min) return fallback;
+      return parsed.clamp(min, max).toInt();
     }
     double decimal(String key, double fallback, double min, double max) {
       final value = raw[key];

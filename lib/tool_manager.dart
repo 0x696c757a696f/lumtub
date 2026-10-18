@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
+
+import 'app_directories.dart';
 
 class ToolPaths {
   final String mpv;
@@ -19,14 +20,15 @@ class ToolPaths {
 
 /// Downloads GitHub release assets to versioned directories and checks SHA-256.
 class ToolManager {
+  final AppDirectories directories;
   final void Function(String) status;
-  ToolManager(this.status);
+  ToolManager(this.directories, this.status);
 
   late final Directory root;
   final http.Client _client = http.Client();
 
   Future<void> initialize() async {
-    root = Directory('${(await getApplicationSupportDirectory()).path}${Platform.pathSeparator}tools');
+    root = directories.components;
     await root.create(recursive: true);
   }
 

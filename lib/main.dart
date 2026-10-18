@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import 'app_directories.dart';
 import 'models.dart';
 import 'tool_manager.dart';
 import 'video_repository.dart';
@@ -46,7 +47,7 @@ class YtPlusApp extends StatelessWidget {
   }
 }
 
-enum PageMode { discover, history }
+enum PageMode { home, explore, subscriptions, history, playlists, settings }
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -56,7 +57,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _searchText = TextEditingController();
-  final _history = HistoryStore();
+  HistoryStore? _history;
+  AppDirectories? _directories;
   ToolManager? _tools;
   VideoRepository? _repository;
   Player? _player;
@@ -64,7 +66,7 @@ class _HomePageState extends State<HomePage> {
   ToolPaths? _paths;
   List<VideoItem> _results = [];
   VideoItem? _playing;
-  PageMode _mode = PageMode.discover;
+  PageMode _mode = PageMode.home;
   bool _ready = false;
   bool _searching = false;
   bool _checking = false;
@@ -80,8 +82,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _initialize() async {
     try {
-      await _history.initialize();
-      final manager = ToolManager((message) {
+      final directories = await AppDirectories.create();
+      final history = HistoryStore(directories);
+      await history.initialize();
+      final manager = ToolManager(directories, (message) {
         if (mounted) setState(() => _status = message);
       });
       _tools = manager;
@@ -98,6 +102,8 @@ class _HomePageState extends State<HomePage> {
       }
       setState(() {
         _paths = paths;
+        _directories = directories;
+        _history = history;
         _repository = VideoRepository(paths.ytDlp);
         _player = player;
         _videoController = controller;
@@ -128,7 +134,7 @@ class _HomePageState extends State<HomePage> {
     final serial = ++_searchSerial;
     _player?.pause();
     setState(() {
-      _mode = PageMode.discover;
+      _mode = PageMode.explore;
       _playing = null;
       _searching = true;
       _error = null;
@@ -163,12 +169,12 @@ class _HomePageState extends State<HomePage> {
     if (_player == null) return;
     setState(() {
       _playing = item;
-      _mode = PageMode.discover;
+      _mode = PageMode.explore;
       _error = null;
     });
     try {
       await _player!.open(Media(item.url));
-      await _history.record(item);
+      await _history?.record(item);
       if (mounted) setState(() {});
     } catch (e) {
       if (mounted) setState(() => _error = '播放失败：$e');
@@ -217,11 +223,18 @@ class _HomePageState extends State<HomePage> {
           ])),
         ]),
         bottomNavigationBar: wide ? null : NavigationBar(
-          selectedIndex: _mode == PageMode.discover ? 0 : 1,
-          onDestinationSelected: (i) => _navigate(i == 0 ? PageMode.discover : PageMode.history),
+          selectedIndex: _mobileNavigationIndex,
+          onDestinationSelected: (i) => _navigate(switch (i) {
+            0 => PageMode.home,
+            1 => PageMode.explore,
+            2 => PageMode.history,
+            _ => PageMode.settings,
+          }),
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.explore_outlined), label: '发现'),
+            NavigationDestination(icon: Icon(Icons.home_outlined), label: '首页'),
+            NavigationDestination(icon: Icon(Icons.explore_outlined), label: '探索'),
             NavigationDestination(icon: Icon(Icons.history), label: '历史'),
+            NavigationDestination(icon: Icon(Icons.settings_outlined), label: '设置'),
           ],
         ),
       );
@@ -241,9 +254,13 @@ class _HomePageState extends State<HomePage> {
               const Text('YTPlus', style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold)),
             ]),
           ),
-          _navItem(Icons.explore_outlined, '发现视频', PageMode.discover),
+          _navItem(Icons.home_outlined, '首页', PageMode.home),
+          _navItem(Icons.explore_outlined, '探索', PageMode.explore),
+          _navItem(Icons.subscriptions_outlined, '订阅', PageMode.subscriptions),
           _navItem(Icons.history_rounded, '观看历史', PageMode.history),
+          _navItem(Icons.queue_music_outlined, '播放列表', PageMode.playlists),
           const Spacer(),
+          _navItem(Icons.settings_outlined, '设置', PageMode.settings),
           const Padding(padding: EdgeInsets.all(12), child: Text('Windows · Flutter + libmpv\n无 Electron · 原生播放', style: TextStyle(color: Colors.white38, fontSize: 11, height: 1.7))),
         ]),
       );
@@ -289,6 +306,11 @@ class _HomePageState extends State<HomePage> {
             onPressed: _ready && !_checking ? _checkUpdates : null,
             icon: _checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.system_update_alt_rounded),
           ),
+          IconButton(
+            tooltip: '账户（即将推出）',
+            onPressed: null,
+            icon: const Icon(Icons.account_circle_outlined),
+          ),
         ]),
       );
 
@@ -313,12 +335,14 @@ class _HomePageState extends State<HomePage> {
 
   Widget _content() {
     if (_playing != null && _videoController != null) return _watchView();
-    final list = _mode == PageMode.history ? _history.items : _results;
+    if (_mode == PageMode.settings) return _settingsView();
+    if (_mode == PageMode.subscriptions || _mode == PageMode.playlists) return _plannedView();
+    final list = _mode == PageMode.history ? _history?.items ?? const <VideoItem>[] : _results;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(28, 12, 28, 18),
         child: Row(children: [
-          Text(_mode == PageMode.history ? '观看历史' : '发现视频', style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w800)),
+          Text(_pageTitle, style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w800)),
           const Spacer(),
           if (list.isNotEmpty) Text('共 ${list.length} 项', style: const TextStyle(color: Colors.white38)),
         ]),
@@ -382,11 +406,79 @@ class _HomePageState extends State<HomePage> {
   Widget _emptyView() => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(_mode == PageMode.history ? Icons.history_rounded : Icons.play_circle_outline_rounded, size: 60, color: Colors.white24),
         const SizedBox(height: 16),
-        Text(_mode == PageMode.history ? '还没有观看记录' : '搜索你想看的 YouTube 视频', style: const TextStyle(fontSize: 18, color: Colors.white60)),
+          Text(_mode == PageMode.history ? '还没有观看记录' : '搜索你想看的 YouTube 视频', style: const TextStyle(fontSize: 18, color: Colors.white60)),
         const SizedBox(height: 8),
-        if (_mode == PageMode.discover)
+        if (_mode != PageMode.history)
           const Text('也可以粘贴 youtube.com 或 youtu.be 链接', style: TextStyle(color: Colors.white38)),
       ]));
+
+  int get _mobileNavigationIndex => switch (_mode) {
+        PageMode.home => 0,
+        PageMode.explore => 1,
+        PageMode.history => 2,
+        _ => 3,
+      };
+
+  String get _pageTitle => switch (_mode) {
+        PageMode.home => '首页',
+        PageMode.explore => '探索视频',
+        PageMode.history => '观看历史',
+        _ => '',
+      };
+
+  Widget _plannedView() {
+    final subscriptions = _mode == PageMode.subscriptions;
+    return Center(child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 520),
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(subscriptions ? Icons.subscriptions_outlined : Icons.queue_music_outlined, size: 58, color: Colors.white24),
+          const SizedBox(height: 16),
+          Text(subscriptions ? '订阅会保存在本机' : '播放列表会保存在本机', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          const Text('这个区域已预留在界面中，等本地订阅和播放列表功能完成后显示内容。', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54, height: 1.5)),
+        ]),
+      ),
+    ));
+  }
+
+  Widget _settingsView() {
+    final directories = _directories;
+    return ListView(padding: const EdgeInsets.fromLTRB(28, 12, 28, 28), children: [
+      const Text('设置', style: TextStyle(fontSize: 27, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 20),
+      _settingsCard(
+        icon: Icons.play_circle_outline,
+        title: '播放与性能',
+        detail: '硬件解码、缓存、字幕和解码能力检测会在播放器阶段提供。',
+      ),
+      const SizedBox(height: 14),
+      _settingsCard(
+        icon: Icons.folder_outlined,
+        title: '存储与缓存',
+        detail: directories == null ? '正在准备本地目录…' : '缓存：${directories.cache.path}',
+      ),
+      const SizedBox(height: 14),
+      _settingsCard(
+        icon: Icons.extension_outlined,
+        title: '组件',
+        detail: directories == null ? '正在准备…' : 'yt-dlp、Deno：${directories.components.path}',
+      ),
+      const SizedBox(height: 20),
+      const Text('YTPlus 只会写入自己的 LocalAppData 目录；安装和首次启动不要求管理员权限。', style: TextStyle(color: Colors.white54, height: 1.5)),
+    ]);
+  }
+
+  Widget _settingsCard({required IconData icon, required String title, required String detail}) => Card(
+        color: _surface,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+          leading: Icon(icon, color: _accent),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: Padding(padding: const EdgeInsets.only(top: 5), child: Text(detail, style: const TextStyle(color: Colors.white54))),
+        ),
+      );
 
   Widget _errorBanner() => Container(
         margin: const EdgeInsets.fromLTRB(28, 0, 28, 12), padding: const EdgeInsets.all(14),

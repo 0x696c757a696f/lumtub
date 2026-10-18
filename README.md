@@ -7,6 +7,7 @@ YTPlus is a lightweight, non-Electron YouTube search and playback app built with
 - Search YouTube and show video cards with channel and duration.
 - Play search results or HTTPS YouTube video links in the app.
 - Keep the 60 most recent videos in local history.
+- On first start, create user-writable `config`, `data`, `cache`, `components`, and `logs` folders under `%LOCALAPPDATA%\\YTPlus`; no administrator rights are required.
 - Bundle the latest shinchiro x86_64-v3 `libmpv-2.dll` in the Windows release. The GitHub build replaces media_kit's DLL with this single file.
 - Download current `yt-dlp` and Deno releases into versioned app-support folders. SHA-256 digests from GitHub Releases are checked before activation.
 - Check `yt-dlp` and Deno for updates in the background no more than once every 24 hours, or from the update button. New versions take effect after restarting YTPlus.
@@ -17,7 +18,7 @@ The `.github/workflows/windows.yml` workflow runs on pushes to `main` and can al
 
 ## First launch
 
-First launch needs internet access to download `yt-dlp` and Deno. The current libmpv DLL is included in the release ZIP; newer libmpv builds arrive with a new Windows artifact. A firewall or network restrictions may prevent setup or video playback.
+First launch creates the YTPlus LocalAppData folders and needs internet access to download `yt-dlp`; it also attempts to install Deno for YouTube JavaScript challenge paths. The current libmpv DLL is included in the release ZIP; newer libmpv builds arrive with a new Windows artifact. A firewall or network restrictions may prevent setup or video playback.
 
 ## Limits
 

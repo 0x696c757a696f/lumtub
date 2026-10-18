@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:path_provider/path_provider.dart';
+import 'app_directories.dart';
 import 'models.dart';
 
 class VideoRepository {
@@ -34,12 +34,14 @@ class VideoRepository {
 }
 
 class HistoryStore {
+  final AppDirectories directories;
+  HistoryStore(this.directories);
+
   late File file;
   final List<VideoItem> items = [];
 
   Future<void> initialize() async {
-    final root = await getApplicationSupportDirectory();
-    file = File('${root.path}${Platform.pathSeparator}watch_history.json');
+    file = File('${directories.data.path}${Platform.pathSeparator}watch_history.json');
     if (!await file.exists()) return;
     try {
       final data = jsonDecode(await file.readAsString());

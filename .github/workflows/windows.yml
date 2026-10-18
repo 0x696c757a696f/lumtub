@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   windows:
@@ -75,22 +77,6 @@ jobs:
           $flutterBin = Join-Path $destination 'flutter/bin'
           if (-not (Test-Path -LiteralPath $flutterBin)) { throw 'Flutter SDK did not contain flutter/bin.' }
           $flutterBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Generate Windows runner
-        shell: pwsh
-        run: |
-          flutter create --platforms=windows --project-name ytplus .
-          $cmakeFile = 'windows/CMakeLists.txt'
-          $cmake = Get-Content -LiteralPath $cmakeFile -Raw
-          $cmake = $cmake -replace '(cmake_minimum_required\([^)]+\)\r?\n)', ('$1set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE BOOL "" FORCE)' + [Environment]::NewLine)
-          Set-Content -LiteralPath $cmakeFile -Value $cmake -NoNewline
-
-      - name: Remove Flutter's generated sample test
-        shell: pwsh
-        run: |
-          if (Test-Path -LiteralPath 'test/widget_test.dart') {
-            Remove-Item -LiteralPath 'test/widget_test.dart'
-          }
 
       - name: Get packages
         run: flutter pub get

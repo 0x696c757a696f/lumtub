@@ -27,7 +27,18 @@ First launch creates the YTPlus LocalAppData folders and needs internet access t
 - The app currently targets Windows x64 and the x86_64-v3 libmpv build. There is no baseline x64 fallback yet.
 - This is a prototype. The GitHub workflow provides a real Windows build and component-feed check, but video playback still needs a smoke test on a Windows machine.
 
-The interface is original Flutter UI, broadly inspired by PiliNara's usability; no PiliNara source code is included. External packages and runtime assets retain their upstream licenses. Review bundled notices before redistributing the executable.
+## License and attribution
+
+YTPlus is licensed under the GNU General Public License, version 3 or later
+(`GPL-3.0-or-later`).  The reusable settings tiles in
+`lib/widgets/pilinara_settings_tiles.dart` are adapted from
+[PiliNara](https://github.com/Starfallan/PiliNara), copyright its contributors,
+and remain available under GPL-3.0-or-later.  They have been connected to
+YTPlus's existing settings store; no PiliNara Bilibili client, data source, or
+storage framework is included.
+
+External packages and runtime assets retain their upstream licenses. Review
+bundled notices before redistributing the executable.
 
 Upstream components:
 

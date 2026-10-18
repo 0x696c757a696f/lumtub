@@ -16,6 +16,7 @@ import 'tool_manager.dart';
 import 'video_repository.dart';
 import 'windows_env.dart';
 import 'windows_video_info.dart';
+import 'widgets/pilinara_settings_tiles.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -716,8 +717,8 @@ class _HomePageState extends State<HomePage> {
         _choice('硬件解码', _settings.hwdec, const {'auto-safe': '自动（推荐）', 'd3d11va': 'D3D11VA', 'no': '软件解码'}, (value) => _saveSettings(_settings.copyWith(hwdec: value))),
         const Divider(height: 1),
         _choice('视频缩放算法', _settings.scale, const {'spline36': '默认', 'bilinear': 'Bilinear', 'lanczos': 'Lanczos'}, (value) => _saveSettings(_settings.copyWith(scale: value))),
-        SwitchListTile.adaptive(contentPadding: const EdgeInsets.symmetric(horizontal: 18), title: const Text('色带消除'), subtitle: const Text('降低渐变中的色带，可能略增 GPU 负载。'), value: _settings.deband, onChanged: (value) => _saveSettings(_settings.copyWith(deband: value))),
-        SwitchListTile.adaptive(contentPadding: const EdgeInsets.symmetric(horizontal: 18), title: const Text('帧插值'), subtitle: const Text('下一段视频生效；会增加 GPU 负载。'), value: _settings.interpolation, onChanged: (value) => _saveSettings(_settings.copyWith(interpolation: value))),
+        PiliNaraSettingSwitch(title: '色带消除', subtitle: '降低渐变中的色带，可能略增 GPU 负载。', value: _settings.deband, onChanged: (value) => _saveSettings(_settings.copyWith(deband: value))),
+        PiliNaraSettingSwitch(title: '帧插值', subtitle: '下一段视频生效；会增加 GPU 负载。', value: _settings.interpolation, onChanged: (value) => _saveSettings(_settings.copyWith(interpolation: value))),
         _slider('字幕大小', _settings.subtitleScale, 0.5, 3, '${_settings.subtitleScale.toStringAsFixed(1)}×', (value) => _saveSettings(_settings.copyWith(subtitleScale: value))),
         _slider('字幕位置', _settings.subtitlePosition.toDouble(), 0, 100, '${_settings.subtitlePosition}%', (value) => _saveSettings(_settings.copyWith(subtitlePosition: value.round()))),
       ])),
@@ -733,10 +734,9 @@ class _HomePageState extends State<HomePage> {
       const SizedBox(height: 18),
       const Text('解码与格式', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
       const SizedBox(height: 10),
-      _preferenceCard(SwitchListTile.adaptive(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-        title: const Text('自动选择最省资源的视频编码'),
-        subtitle: const Text('只会影响自动格式选择，不会降低手动指定的画质。'),
+      _preferenceCard(PiliNaraSettingSwitch(
+        title: '自动选择最省资源的视频编码',
+        subtitle: '只会影响自动格式选择，不会降低手动指定的画质。',
         value: _settings.autoSelectCodec,
         onChanged: (value) => _saveSettings(_settings.copyWith(autoSelectCodec: value)),
       )),
@@ -811,21 +811,21 @@ class _HomePageState extends State<HomePage> {
         child: child,
       );
 
-  Widget _choice(String label, String selected, Map<String, String> choices, ValueChanged<String> onChanged) => Padding(
-        padding: const EdgeInsets.fromLTRB(18, 9, 18, 9),
-        child: Row(children: [
-          Expanded(child: Text(label)),
-          const SizedBox(width: 18),
-          DropdownButton<String>(value: selected, underline: const SizedBox.shrink(), onChanged: (value) { if (value != null) onChanged(value); }, items: choices.entries.map((entry) => DropdownMenuItem(value: entry.key, child: Text(entry.value))).toList()),
-        ]),
+  Widget _choice(String label, String selected, Map<String, String> choices, ValueChanged<String> onChanged) => PiliNaraSettingChoice(
+        title: label,
+        value: selected,
+        choices: choices,
+        onSelected: onChanged,
       );
 
-  Widget _slider(String label, double value, double min, double max, String description, ValueChanged<double> onChanged) => Padding(
-        padding: const EdgeInsets.fromLTRB(18, 9, 18, 5),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [Text(label), const Spacer(), Text(description, style: const TextStyle(color: Colors.white54))]),
-          Slider(value: value.clamp(min, max).toDouble(), min: min, max: max, divisions: ((max - min) * (label == '字幕大小' ? 10 : 1)).round(), onChanged: onChanged),
-        ]),
+  Widget _slider(String label, double value, double min, double max, String description, ValueChanged<double> onChanged) => PiliNaraSettingSlider(
+        title: label,
+        value: value,
+        min: min,
+        max: max,
+        description: description,
+        divisions: ((max - min) * (label == '字幕大小' ? 10 : 1)).round(),
+        onChanged: onChanged,
       );
 
   Widget _optionInfo(String name, String value, String description, String applies) => ListTile(

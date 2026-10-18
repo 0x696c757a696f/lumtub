@@ -1,0 +1,8 @@
+YTPlus contains settings UI adapted from PiliNara.
+
+PiliNara: https://github.com/Starfallan/PiliNara
+Copyright (C) PiliNara contributors.
+Licensed under GNU General Public License version 3 or later.
+
+The adapted source is lib/widgets/pilinara_settings_tiles.dart. It is kept
+separate from YTPlus's media_kit/libmpv player and settings persistence code.

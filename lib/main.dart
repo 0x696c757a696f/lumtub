@@ -88,13 +88,7 @@ class _HomePageState extends State<HomePage> {
       await manager.initialize();
       final paths = await manager.ensureReady();
       addToWindowsPath(paths.executableDirectories);
-      try {
-        MediaKit.ensureInitialized(libmpv: paths.mpv);
-      } catch (e) {
-        // Incompatible nightly DLL: try the stable copy bundled by media_kit.
-        if (mounted) setState(() => _status = '新 DLL 无法加载，尝试随应用提供的备用版本：$e');
-        MediaKit.ensureInitialized();
-      }
+      MediaKit.ensureInitialized(libmpv: paths.mpv);
       final player = Player(configuration: const PlayerConfiguration(bufferSize: 16 * 1024 * 1024));
       final controller = VideoController(player, configuration: const VideoControllerConfiguration(hwdec: 'auto-safe'));
       // yt-dlp and Deno are on PATH before libmpv starts, so ytdl_hook can find them.
@@ -291,7 +285,7 @@ class _HomePageState extends State<HomePage> {
           )),
           const SizedBox(width: 8),
           IconButton(
-            tooltip: '检查 mpv / yt-dlp 更新',
+            tooltip: '检查 yt-dlp / Deno 更新',
             onPressed: _ready && !_checking ? _checkUpdates : null,
             icon: _checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.system_update_alt_rounded),
           ),
@@ -378,7 +372,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 8),
           Text(current.channel, style: const TextStyle(color: Colors.white60)),
           const SizedBox(height: 17),
-          const Text('使用 libmpv 直接播放；播放失败时可以检查右上角的组件更新。', style: TextStyle(color: Colors.white38, fontSize: 12)),
+          const Text('使用 libmpv 直接播放；播放异常时可以检查 yt-dlp / Deno 更新。', style: TextStyle(color: Colors.white38, fontSize: 12)),
           if (_error != null) _errorBanner(),
         ]),
       ),

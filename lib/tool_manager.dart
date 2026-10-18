@@ -17,8 +17,7 @@ class ToolPaths {
       ];
 }
 
-/// Downloads GitHub release assets to versioned directories, checks SHA-256,
-/// and activates new versions only on a future app launch.
+/// Downloads GitHub release assets to versioned directories and checks SHA-256.
 class ToolManager {
   final void Function(String) status;
   ToolManager(this.status);
@@ -33,13 +32,9 @@ class ToolManager {
 
   Future<ToolPaths> ensureReady() async {
     if (!Platform.isWindows) throw UnsupportedError('This prototype currently targets Windows x64.');
-    var current = discover();
-    if (current?.mpv.isNotEmpty != true) {
-      status('首次启动：安装 libmpv（shinchiro x64-v3）…');
-      await _installMpv();
-    }
-    current = discover();
-    if (current?.ytDlp.isNotEmpty != true) {
+    final mpv = _bundledMpv;
+    if (!File(mpv).existsSync()) throw StateError('Bundled libmpv-2.dll is missing. Re-download the YTPlus package.');
+    if (discover()?.ytDlp.isNotEmpty != true) {
       status('首次启动：安装 yt-dlp…');
       await _installYtDlp();
     }
@@ -53,15 +48,18 @@ class ToolManager {
       }
     }
     final ready = discover();
-    if (ready == null || ready.mpv.isEmpty || ready.ytDlp.isEmpty) {
+    if (ready == null || ready.ytDlp.isEmpty) {
       throw StateError('Required components could not be installed.');
     }
-    return ready;
+    return ToolPaths(mpv: mpv, ytDlp: ready.ytDlp, deno: ready.deno);
   }
+
+  String get _bundledMpv => '${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}libmpv-2.dll';
 
   ToolPaths? discover() {
     if (!root.existsSync()) return null;
-    final mpv = _findNewest('mpv', 'libmpv-2.dll');
+    final bundledMpv = _bundledMpv;
+    final mpv = File(bundledMpv).existsSync() ? bundledMpv : null;
     final yt = _findNewest('yt-dlp', 'yt-dlp.exe');
     final deno = _findNewest('deno', 'deno.exe');
     if (mpv == null && yt == null) return null;
@@ -75,7 +73,6 @@ class ToolManager {
       ..sort((a, b) => b.path.compareTo(a.path));
     for (final folder in dirs) {
       try {
-        // Extracted mpv-dev archives may put the DLL in a nested directory.
         for (final item in folder.listSync(recursive: true, followLinks: false)) {
           if (item is File && item.uri.pathSegments.last.toLowerCase() == fileName.toLowerCase()) return item.path;
         }
@@ -92,7 +89,7 @@ class ToolManager {
     }
     final errors = <String>[];
     for (final task in <(String, Future<void> Function())>[
-      ('libmpv', _installMpv), ('yt-dlp', _installYtDlp), ('Deno', _installDeno),
+      ('yt-dlp', _installYtDlp), ('Deno', _installDeno),
     ]) {
       try {
         status('检查 ${task.$1} 更新…');
@@ -189,33 +186,10 @@ class ToolManager {
     if (await partial.exists()) await partial.delete(recursive: true);
     await partial.create(recursive: true);
     try {
-      await _extract(archive, partial, isSevenZip: false);
+      await _extractZip(archive, partial);
       if (!await File('${partial.path}${Platform.pathSeparator}deno.exe').exists()) {
         throw StateError('Deno release did not contain deno.exe');
       }
-      await dest.parent.create(recursive: true);
-      await partial.rename(dest.path);
-    } catch (_) {
-      if (await partial.exists()) await partial.delete(recursive: true);
-      rethrow;
-    }
-  }
-
-  Future<void> _installMpv() async {
-    final release = await _release('shinchiro/mpv-winbuild-cmake');
-    final tag = _safeTag(release['tag_name']);
-    final asset = _asset(release, (name) => RegExp(r'^mpv-dev-x86_64-v3-.*\.7z$').hasMatch(name));
-    final dest = Directory('${root.path}${Platform.pathSeparator}mpv${Platform.pathSeparator}$tag');
-    if (await File('${dest.path}${Platform.pathSeparator}libmpv-2.dll').exists()) return;
-    status('下载 shinchiro x86-64-v3 libmpv $tag…');
-    final archive = await _downloadVerified(asset, Directory('${root.path}${Platform.pathSeparator}downloads'));
-    final partial = Directory('${dest.path}.partial');
-    if (await partial.exists()) await partial.delete(recursive: true);
-    await partial.create(recursive: true);
-    try {
-      await _extract(archive, partial, isSevenZip: true);
-      final found = partial.listSync(recursive: true).whereType<File>().where((e) => e.uri.pathSegments.last == 'libmpv-2.dll');
-      if (found.isEmpty) throw const FormatException('libmpv-2.dll not found in archive');
       await dest.parent.create(recursive: true);
       await partial.rename(dest.path);
     } catch (_) {
@@ -230,26 +204,11 @@ class ToolManager {
     return tag;
   }
 
-  Future<void> _extract(File archive, Directory into, {required bool isSevenZip}) async {
-    // Windows' bundled bsdtar can extract ZIP; some builds can extract 7z too.
-    try {
-      final result = await Process.run('tar.exe', ['-xf', archive.path, '-C', into.path]);
-      if (result.exitCode == 0) return;
-    } catch (_) {}
-    if (!isSevenZip) throw const ProcessException('tar.exe', [], 'Could not extract downloaded ZIP');
-    // 7zr.exe is the tiny official stand-alone .7z decoder (not Electron).
-    final decoder = File('${root.path}${Platform.pathSeparator}7zr.exe');
-    if (!await decoder.exists()) {
-      status('下载 7-Zip 独立解压器…');
-      final uri = Uri.parse('https://www.7-zip.org/a/7zr.exe');
-      final response = await _client.get(uri).timeout(const Duration(seconds: 40));
-      if (response.statusCode != 200 || response.bodyBytes.length < 10000 || response.bodyBytes.length > 2000000) {
-        throw StateError('Cannot download official 7zr.exe');
-      }
-      await decoder.writeAsBytes(response.bodyBytes, flush: true);
+  Future<void> _extractZip(File archive, Directory into) async {
+    final result = await Process.run('tar.exe', ['-xf', archive.path, '-C', into.path]);
+    if (result.exitCode != 0) {
+      throw ProcessException('tar.exe', ['-xf', archive.path, '-C', into.path], result.stderr.toString(), result.exitCode);
     }
-    final result = await Process.run(decoder.path, ['x', '-y', '-o${into.path}', archive.path]);
-    if (result.exitCode != 0) throw ProcessException(decoder.path, ['x'], result.stderr.toString(), result.exitCode);
   }
 
   void dispose() => _client.close();

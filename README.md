@@ -7,16 +7,17 @@ YTPlus is a lightweight, non-Electron YouTube search and playback app built with
 - Search YouTube and show video cards with channel and duration.
 - Play search results or HTTPS YouTube video links in the app.
 - Keep the 60 most recent videos in local history.
-- Download current `yt-dlp`, Deno, and shinchiro x86_64-v3 libmpv releases into versioned app-support folders. SHA-256 digests from GitHub Releases are checked before activation.
-- Check for updates in the background no more than once every 24 hours, or from the update button. New versions take effect after restarting YTPlus.
+- Bundle the latest shinchiro x86_64-v3 `libmpv-2.dll` in the Windows release. The GitHub build replaces media_kit's DLL with this single file.
+- Download current `yt-dlp` and Deno releases into versioned app-support folders. SHA-256 digests from GitHub Releases are checked before activation.
+- Check `yt-dlp` and Deno for updates in the background no more than once every 24 hours, or from the update button. New versions take effect after restarting YTPlus.
 
 ## Build on GitHub
 
-The `.github/workflows/windows.yml` workflow runs on pushes to `main` and can also be started from **Actions → Build YTPlus Windows → Run workflow**. On a Windows GitHub runner it verifies and extracts the latest shinchiro x86_64-v3 libmpv release, analyzes the Flutter sources, runs the unit tests, builds a release version, and uploads the `YTPlus-Windows-x64` artifact. The ZIP contains the Windows runner output; on first launch, YTPlus downloads its current runtime components.
+The `.github/workflows/windows.yml` workflow runs on pushes to `main` and can also be started from **Actions → Build YTPlus Windows → Run workflow**. On a Windows GitHub runner it verifies the latest shinchiro x86_64-v3 libmpv release, replaces the old bundled DLL with only `libmpv-2.dll`, analyzes the Flutter sources, runs the unit tests, builds a release version, and uploads the `YTPlus-Windows-x64` artifact. On first launch, YTPlus downloads `yt-dlp` and Deno.
 
 ## First launch
 
-First launch needs internet access to download libmpv, `yt-dlp`, and Deno. If Windows `tar.exe` cannot unpack the libmpv 7z archive, YTPlus downloads the standalone 7-Zip decoder. The downloads are kept under the Windows application-support directory. A firewall or network restrictions may prevent setup or video playback.
+First launch needs internet access to download `yt-dlp` and Deno. The current libmpv DLL is included in the release ZIP; newer libmpv builds arrive with a new Windows artifact. A firewall or network restrictions may prevent setup or video playback.
 
 ## Limits
 

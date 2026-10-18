@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Verify latest shinchiro x86_64-v3 libmpv update
         shell: pwsh
@@ -84,12 +84,30 @@ jobs:
       - name: Release build
         run: flutter build windows --release
 
+      - name: Replace bundled libmpv with the latest DLL
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $extractDir = Join-Path $env:RUNNER_TEMP 'ytplus-mpv-check'
+          $library = Get-ChildItem -LiteralPath $extractDir -Filter 'libmpv-2.dll' -File -Recurse |
+            Select-Object -First 1
+          if (-not $library) { throw 'Verified libmpv-2.dll is missing.' }
+          $destination = Join-Path 'build/windows/x64/runner/Release' 'libmpv-2.dll'
+          if (-not (Test-Path -LiteralPath $destination)) {
+            throw 'The release build does not contain media_kit libmpv-2.dll to replace.'
+          }
+          Copy-Item -LiteralPath $library.FullName -Destination $destination -Force
+          $sourceHash = (Get-FileHash -LiteralPath $library.FullName -Algorithm SHA256).Hash
+          $targetHash = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash
+          if ($sourceHash -ne $targetHash) { throw 'The bundled libmpv replacement did not verify.' }
+          Write-Host "Replaced the bundled DLL with $($library.FullName)"
+
       - name: Package Windows distribution
         shell: pwsh
         run: Compress-Archive -Path 'build/windows/x64/runner/Release/*' -DestinationPath 'YTPlus_Windows_x64.zip'
 
       - name: Upload downloadable Windows ZIP
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: YTPlus-Windows-x64
           path: YTPlus_Windows_x64.zip

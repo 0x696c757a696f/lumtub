@@ -51,17 +51,13 @@ class AppController extends ChangeNotifier {
   String currentHwdec = '尚未验证';
   WindowsVideoInfo windowsVideoInfo = const WindowsVideoInfo();
   PlayerSettings settings = const PlayerSettings();
-  List<VideoItem> results = [];
   VideoItem? playing;
   PageMode mode = PageMode.home;
   bool ready = false;
-  bool searching = false;
-  bool hasMoreResults = false;
   bool checking = false;
   String status = '正在准备 Windows 原生播放器…';
   /// Startup failure; the setup screen shows it with a retry button.
   String? error;
-  String? searchError;
   String? playbackError;
 
   /// Favorites, playlists, followed channels and progress; set once ready.
@@ -73,6 +69,8 @@ class AppController extends ChangeNotifier {
   /// The open channel page and its uploads.
   ChannelRef? channel;
   VideoListLoader? channelVideos;
+  /// What the channel page is searching for; null lists the uploads.
+  String? channelQuery;
   /// The id of the open playlist page: a [LocalPlaylist] id, or
   /// [favoritesPlaylistId].
   String? openPlaylistId;
@@ -112,10 +110,8 @@ class AppController extends ChangeNotifier {
     videoCardMinWidth = appearance.cardWidth;
   }
 
-  int _searchSerial = 0;
   int _playSerial = 0;
   String? _query;
-  StreamSubscription<VideoItem>? _searchSubscription;
   final _playerSubscriptions = <StreamSubscription<Object>>[];
   double _volumeBeforeMute = 100;
   bool _libmpvConfirmed = false;
@@ -143,6 +139,15 @@ class AppController extends ChangeNotifier {
 
   /// The text of the current or last search, if any.
   String? get query => _query;
+
+  /// The current search's results; null before the first search.
+  VideoListLoader? searchResults;
+  SearchFilter searchFilter = SearchFilter.all;
+
+  List<VideoItem> get results => searchResults?.items ?? const [];
+  List<ChannelResult> get channelResults => searchResults?.channels ?? const [];
+  bool get searching => searchResults?.loading ?? false;
+  String? get searchError => searchResults?.error;
 
   @visibleForTesting
   set debugQuery(String? value) => _query = value;
@@ -234,6 +239,7 @@ class AppController extends ChangeNotifier {
         status = ignoredOptions.isEmpty ? '就绪 · 解码方式将在播放时验证' : '就绪 · 已忽略不支持的设置：${ignoredOptions.join(', ')}';
         error = null;
       });
+      if (mode == PageMode.explore) _loadExplore();
       // Do not block the UI while checking newer releases.
       if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
       unawaited(_readWindowsVideoInfo());
@@ -259,7 +265,7 @@ class AppController extends ChangeNotifier {
   VideoRepository _repositoryFor(ToolPaths paths, CacheManager cacheManager, PlayerSettings settings) =>
       VideoRepository(paths.ytDlp, cacheDirectory: '${cacheManager.rootFor(settings).path}${Platform.pathSeparator}yt-dlp');
 
-  Future<void> search(String value) async {
+  Future<void> search(String value, {SearchFilter? filter}) async {
     final query = value.trim();
     if (query.isEmpty || !ready) return;
     final asUrl = parseYoutubeId(query);
@@ -268,64 +274,81 @@ class AppController extends ChangeNotifier {
       return;
     }
     player?.pause();
+    final repository = _repository!;
+    final chosen = filter ?? searchFilter;
     _update(() {
       mode = PageMode.explore;
       playing = null;
-      results = [];
       _query = query;
-      hasMoreResults = false;
-      searchError = null;
+      searchFilter = chosen;
+      searchResults?.dispose();
+      searchResults = VideoListLoader(() => repository.search(query, filter: chosen))
+        ..addListener(notifyListeners)
+        ..loadMore();
     });
-    _loadPage(query, 1);
   }
 
-  /// Fetches the next page of the current search, if there is one.
-  /// Fetches the next page. After a failed page, scrolling does not retry on
-  /// its own; [retry] comes from the retry button.
-  void loadMoreResults({bool retry = false}) {
-    final query = _query;
-    if (query == null || searching || !hasMoreResults) return;
-    if (searchError != null && !retry) return;
-    _update(() => searchError = null);
-    _loadPage(query, results.length + 1);
+  /// Fetches the next page of the current search. After a failed page,
+  /// scrolling does not retry on its own; [retry] comes from the retry button.
+  void loadMoreResults({bool retry = false}) => searchResults?.loadMore(retry: retry);
+
+  /// Leaves search results for the explore topics.
+  void clearSearch() {
+    _update(() {
+      _query = null;
+      searchResults?.dispose();
+      searchResults = null;
+    });
+    _loadExplore();
   }
 
-  void _loadPage(String query, int start) {
-    final serial = ++_searchSerial;
-    unawaited(_searchSubscription?.cancel());
-    final seen = {for (final item in results) item.id};
-    var received = 0;
-    var failed = false;
-    _update(() => searching = true);
-    _searchSubscription = _repository!.search(query, start: start).listen(
-      (item) {
-        if (serial != _searchSerial) return;
-        received++;
-        if (seen.add(item.id)) _update(() => results = [...results, item]);
-      },
-      onError: (Object e) {
-        failed = true;
-        if (serial == _searchSerial) _update(() => searchError = '$e');
-      },
-      onDone: () {
-        if (serial != _searchSerial) return;
-        _update(() {
-          searching = false;
-          // A failed page after the first can be retried from the banner.
-          hasMoreResults = received >= VideoRepository.pageSize || (failed && results.isNotEmpty);
-        });
-      },
-      cancelOnError: false,
-    );
+  /// Topics on the explore page: a label and the query searched for.
+  static const exploreTopics = [
+    ('音乐', '音乐'),
+    ('游戏', '游戏'),
+    ('科技', '科技 数码'),
+    ('新闻', '新闻'),
+    ('体育', '体育'),
+    ('动画', '动画'),
+    ('电影', '电影 预告片'),
+    ('美食', '美食'),
+    ('旅行', '旅行 vlog'),
+    ('知识', '科普'),
+  ];
+
+  /// YouTube's filter for videos uploaded this month, most viewed first.
+  static const exploreFilter = 'CAMSBAgEEAE%253D';
+
+  int exploreTopic = 0;
+  /// The chosen topic's videos.
+  VideoListLoader? explore;
+
+  /// Opens the explore page on its topics.
+  void openExplore() {
+    if (_query != null) {
+      _query = null;
+      searchResults?.dispose();
+      searchResults = null;
+    }
+    navigate(PageMode.explore);
+    _loadExplore();
   }
 
-  void _cancelSearch() {
-    // An interrupted page can be fetched again by scrolling to the end.
-    if (searching && _query != null) hasMoreResults = true;
-    ++_searchSerial;
-    unawaited(_searchSubscription?.cancel());
-    _searchSubscription = null;
-    searching = false;
+  void setExploreTopic(int index) {
+    if (index == exploreTopic && explore != null) return;
+    exploreTopic = index;
+    explore?.dispose();
+    explore = null;
+    _loadExplore();
+  }
+
+  void _loadExplore() {
+    final repository = _repository;
+    if (repository == null || explore != null) return;
+    final query = exploreTopics[exploreTopic].$2;
+    _update(() => explore = VideoListLoader(() => repository.search(query, sp: exploreFilter))
+      ..addListener(notifyListeners)
+      ..loadMore());
   }
 
   static String? parseYoutubeId(String input) {
@@ -353,7 +376,6 @@ class AppController extends ChangeNotifier {
     final resume = preferences.resumePlayback ? library?.progressOf(item.id) : null;
     final start = resume != null && resume.resumable ? resume.position : null;
     _update(() {
-      _cancelSearch();
       playing = item;
       if (from != null) queue = List.unmodifiable(from);
       playbackError = null;
@@ -664,9 +686,10 @@ class AppController extends ChangeNotifier {
     // Long titles make poor queries; the first words carry the topic.
     final query = title.length > 60 ? title.substring(0, 60) : title;
     final loader = VideoListLoader(
-      (start) => repository.search(query, start: start, count: 13).where((other) => other.id != item.id),
-      pageSize: 12,
+      () => repository.search(query, filter: SearchFilter.videos),
+      pageSize: 13,
       limit: 12,
+      where: (other) => other.id != item.id,
     )..addListener(notifyListeners);
     loader.loadMore();
     return loader;
@@ -709,7 +732,6 @@ class AppController extends ChangeNotifier {
       unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
     }
     _update(() {
-      if (target != PageMode.explore) _cancelSearch();
       if (_isDetail(target) && !_isDetail(mode)) _returnMode = mode;
       mode = target;
       playing = null;
@@ -726,10 +748,27 @@ class AppController extends ChangeNotifier {
     if (repository == null) return;
     channelVideos?.dispose();
     channel = ref;
-    channelVideos = VideoListLoader((start) => repository.channelVideos(ref, start: start))
+    channelQuery = null;
+    channelVideos = VideoListLoader(() => repository.channelVideos(ref))
       ..addListener(notifyListeners)
       ..loadMore();
     navigate(PageMode.channel);
+  }
+
+  /// Searches the open channel's videos for [query]; an empty query lists
+  /// the uploads again.
+  void searchChannel(String query) {
+    final repository = _repository;
+    final ref = channel;
+    if (repository == null || ref == null) return;
+    final text = query.trim();
+    _update(() {
+      channelVideos?.dispose();
+      channelQuery = text.isEmpty ? null : text;
+      channelVideos = VideoListLoader(() => text.isEmpty ? repository.channelVideos(ref) : repository.channelSearch(ref, text))
+        ..addListener(notifyListeners)
+        ..loadMore();
+    });
   }
 
   void openPlaylist(String id) {
@@ -743,6 +782,12 @@ class AppController extends ChangeNotifier {
   void retrySearch() {
     final last = _query;
     if (last != null) unawaited(search(last));
+  }
+
+  /// Shows the current search's results of another kind.
+  void setSearchFilter(SearchFilter filter) {
+    final last = _query;
+    if (last != null && filter != searchFilter) unawaited(search(last, filter: filter));
   }
 
   Future<void> clearHistory() async {
@@ -1021,7 +1066,6 @@ class AppController extends ChangeNotifier {
     _disposed = true;
     _stallTimer?.cancel();
     _sleepTimer?.cancel();
-    _cancelSearch();
     for (final subscription in _playerSubscriptions) {
       unawaited(subscription.cancel());
     }
@@ -1029,6 +1073,8 @@ class AppController extends ChangeNotifier {
     account?.dispose();
     library?.dispose();
     channelVideos?.dispose();
+    searchResults?.dispose();
+    explore?.dispose();
     related?.dispose();
     _http.close();
     if (!_shutDown) unawaited(player?.dispose());

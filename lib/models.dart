@@ -133,6 +133,59 @@ class ChannelRef {
   int get hashCode => id.hashCode;
 }
 
+/// A channel found by a search, with what the result listed about it.
+class ChannelResult {
+  const ChannelResult(this.ref, {this.subscribers, this.handle, this.avatar, this.description = ''});
+  final ChannelRef ref;
+  /// YouTube's own subscriber text, such as "123万位订阅者"; search results
+  /// often carry the handle in its place.
+  final String? subscribers;
+  final String? handle;
+  final String? avatar;
+  final String description;
+
+  /// Reads a flat `--dump-json` channel entry, or returns null for
+  /// anything else.
+  static ChannelResult? tryParse(Map<String, dynamic> map) {
+    final id = (map['channel_id'] ?? map['id'])?.toString() ?? '';
+    if (map['ie_key'] != 'YoutubeTab' || !ChannelRef.isValidId(id)) return null;
+    final followers = map['channel_follower_count'];
+    final thumbnails = map['thumbnails'];
+    String? avatar;
+    if (thumbnails is List) {
+      for (final t in thumbnails.whereType<Map>()) {
+        final url = t['url']?.toString() ?? '';
+        if (url.isNotEmpty) avatar = url.startsWith('//') ? 'https:$url' : url;
+      }
+    }
+    return ChannelResult(
+      ChannelRef(id, (map['channel'] ?? map['title'] ?? '').toString()),
+      subscribers: followers is num ? '${formatCount(followers.toInt())} 位订阅者' : null,
+      handle: map['uploader_id']?.toString(),
+      avatar: avatar != null && avatar.startsWith('https://') ? avatar : null,
+      description: map['description']?.toString() ?? '',
+    );
+  }
+}
+
+/// One entry of a listing: a [VideoItem] or a [ChannelResult].
+Object? parseListingEntry(String line) {
+  final Object? data;
+  try {
+    data = jsonDecode(line);
+  } catch (_) {
+    return null;
+  }
+  if (data is! Map<String, dynamic>) return null;
+  final channel = ChannelResult.tryParse(data);
+  if (channel != null) return channel;
+  try {
+    return VideoItem.fromJson(data);
+  } catch (_) {
+    return null;
+  }
+}
+
 /// Formats a count the way Chinese YouTube does: 9,999 / 1.2万 / 3.4亿.
 String formatCount(int value) {
   if (value < 10000) return '$value';

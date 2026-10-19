@@ -50,9 +50,10 @@ void main() {
     expect(merged.map((item) => item.id), ['c', 'a', 'b']);
   });
 
-  test('lists a channel\'s uploads by item range', () {
-    final arguments = VideoRepository('yt-dlp.exe').channelArguments(channel, start: 21, count: 20);
-    expect(arguments, containsAllInOrder(['--flat-playlist', '--playlist-items', '21:40']));
+  test('lists a channel\'s uploads lazily from one process', () {
+    final arguments = VideoRepository('yt-dlp.exe').listingArguments('${channel.url}/videos');
+    expect(arguments, containsAllInOrder(['--flat-playlist', '--lazy-playlist', '--dump-json']));
+    expect(arguments, isNot(contains('--playlist-items')));
     expect(arguments.sublist(arguments.length - 2), ['--', 'https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/videos']);
   });
 

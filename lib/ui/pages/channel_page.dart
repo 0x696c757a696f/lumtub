@@ -27,6 +27,16 @@ class ChannelPage extends StatelessWidget {
       },
       child: CustomScrollView(slivers: [
         SliverToBoxAdapter(child: ChannelHeader(controller: controller, channel: channel, onBack: controller.goBack)),
+        SliverToBoxAdapter(child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
+          child: Row(children: [
+            Expanded(child: Text(
+              controller.channelQuery == null ? '最新上传' : '频道内搜索“${controller.channelQuery}”',
+              style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            )),
+            SizedBox(width: 260, child: _ChannelSearchField(key: ValueKey(channel.id), controller: controller)),
+          ]),
+        )),
         if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
         if (loader.loading) ...[
           if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
@@ -38,11 +48,58 @@ class ChannelPage extends StatelessWidget {
             child: ErrorBanner(items.isEmpty ? '无法加载频道视频：$error' : '加载更多失败：$error', onRetry: () => loader.loadMore(retry: true)),
           )),
         if (items.isEmpty && !loader.loading && error == null)
-          const SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.video_library_outlined, title: '这个频道还没有视频')),
+          SliverFillRemaining(hasScrollBody: false, child: controller.channelQuery == null
+              ? const StatusView(icon: Icons.video_library_outlined, title: '这个频道还没有视频')
+              : const StatusView(icon: Icons.search_off_rounded, title: '频道里没有找到相关视频', message: '换个关键词试试。')),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );
   }
+}
+
+/// Searches the open channel's videos; clearing it lists the uploads again.
+class _ChannelSearchField extends StatefulWidget {
+  const _ChannelSearchField({super.key, required this.controller});
+  final AppController controller;
+
+  @override
+  State<_ChannelSearchField> createState() => _ChannelSearchFieldState();
+}
+
+class _ChannelSearchFieldState extends State<_ChannelSearchField> {
+  late final _text = TextEditingController(text: widget.controller.channelQuery ?? '');
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => TextField(
+        controller: _text,
+        textInputAction: TextInputAction.search,
+        onSubmitted: widget.controller.searchChannel,
+        decoration: InputDecoration(
+          isDense: true,
+          hintText: '在频道内搜索',
+          prefixIcon: const Icon(Icons.search_rounded, size: 20),
+          suffixIcon: ListenableBuilder(
+            listenable: _text,
+            builder: (context, _) => _text.text.isEmpty
+                ? const SizedBox.shrink()
+                : IconButton(
+                    tooltip: '清除',
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    onPressed: () {
+                      _text.clear();
+                      widget.controller.searchChannel('');
+                    },
+                  ),
+          ),
+          border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
+        ),
+      );
 }
 
 /// Channel name, follow button and a link to the channel on YouTube.
@@ -66,7 +123,7 @@ class ChannelHeader extends StatelessWidget {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
-          Text('最新上传', style: TextStyle(color: colors.onSurfaceVariant)),
+          Text('YouTube 频道', style: TextStyle(color: colors.onSurfaceVariant)),
         ])),
         FollowButton(controller: controller, channel: channel),
         const SizedBox(width: 8),
@@ -76,22 +133,65 @@ class ChannelHeader extends StatelessWidget {
   }
 }
 
-/// A round avatar with the first letter of the channel's name; YouTube's
-/// avatar images would need an extra request per channel.
+/// A round avatar: the channel's picture when a search listed one, else the
+/// first letter of its name.
 class ChannelAvatar extends StatelessWidget {
-  const ChannelAvatar({super.key, required this.name, this.radius = 18});
+  const ChannelAvatar({super.key, required this.name, this.radius = 18, this.image});
   final String name;
   final double radius;
+  final String? image;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final letter = name.trim().isEmpty ? '?' : String.fromCharCode(name.trim().runes.first).toUpperCase();
-    return CircleAvatar(
+    final fallback = CircleAvatar(
       radius: radius,
       backgroundColor: colors.primaryContainer,
       child: Text(letter, style: TextStyle(fontSize: radius * 0.85, fontWeight: FontWeight.w600, color: colors.onPrimaryContainer)),
     );
+    final url = image;
+    if (url == null) return fallback;
+    return ClipOval(child: Image.network(
+      url,
+      width: radius * 2,
+      height: radius * 2,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stack) => fallback,
+    ));
+  }
+}
+
+/// A channel in search results: avatar, name, subscribers and follow button.
+class ChannelResultTile extends StatelessWidget {
+  const ChannelResultTile({super.key, required this.controller, required this.result});
+  final AppController controller;
+  final ChannelResult result;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final ref = result.ref;
+    final name = ref.name.isEmpty ? 'YouTube 频道' : ref.name;
+    final meta = [if (result.handle != null) result.handle!, if (result.subscribers != null) result.subscribers!].join(' · ');
+    return Card(child: InkWell(
+      onTap: () => controller.openChannel(ref),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Row(children: [
+          ChannelAvatar(name: name, radius: 30, image: result.avatar),
+          const SizedBox(width: 16),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            if (meta.isNotEmpty) Text(meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13)),
+            if (result.description.isNotEmpty)
+              Text(result.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13)),
+          ])),
+          const SizedBox(width: 12),
+          FollowButton(controller: controller, channel: ref),
+        ]),
+      ),
+    ));
   }
 }
 

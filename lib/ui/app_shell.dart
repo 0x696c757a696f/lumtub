@@ -70,6 +70,15 @@ class _AppShellState extends State<AppShell> {
     unawaited(_controller.search(value));
   }
 
+  void _select(int index) {
+    final target = _destinations[index].$1;
+    if (target == PageMode.explore) {
+      _controller.openExplore();
+    } else {
+      _controller.navigate(target);
+    }
+  }
+
   /// Leaves the watch page, or a channel or playlist page.
   void _back() {
     if (_controller.playing != null) {
@@ -120,7 +129,7 @@ class _AppShellState extends State<AppShell> {
                         labelType: NavigationRailLabelType.all,
                         minWidth: 76,
                         groupAlignment: -1,
-                        onDestinationSelected: (i) => _controller.navigate(_destinations[i].$1),
+                        onDestinationSelected: _select,
                         destinations: [
                           for (final d in _destinations)
                             NavigationRailDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: Text(d.$4)),
@@ -136,7 +145,7 @@ class _AppShellState extends State<AppShell> {
                 bottomNavigationBar: rail ? null : NavigationBar(
                   height: 64,
                   selectedIndex: _selectedIndex ?? 0,
-                  onDestinationSelected: (i) => _controller.navigate(_destinations[i].$1),
+                  onDestinationSelected: _select,
                   destinations: [
                     for (final d in _destinations) NavigationDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: d.$4),
                   ],
@@ -159,7 +168,7 @@ class _AppShellState extends State<AppShell> {
     if (controller.playing != null && controller.videoController != null) return WatchPage(controller: controller);
     return switch (controller.mode) {
       PageMode.home => HomeFeedPage(controller: controller, onFocusSearch: _focusSearch),
-      PageMode.explore => SearchResultsPage(controller: controller, onFocusSearch: _focusSearch),
+      PageMode.explore => controller.query == null ? ExplorePage(controller: controller) : SearchResultsPage(controller: controller, onFocusSearch: _focusSearch),
       PageMode.history => HistoryPage(controller: controller),
       PageMode.subscriptions => SubscriptionsPage(controller: controller),
       PageMode.playlists => PlaylistsPage(controller: controller),

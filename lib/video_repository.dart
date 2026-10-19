@@ -5,6 +5,61 @@ import 'dart:io';
 import 'app_directories.dart';
 import 'models.dart';
 
+enum SearchFilter { all, videos, channels }
+
+/// A listing read a page at a time from one source, such as one yt-dlp
+/// process. Each page continues where the last stopped, so scrolling through
+/// n results costs O(n) instead of re-fetching earlier pages.
+class Listing {
+  Listing(this._open, {this.channel, this.timeout = const Duration(seconds: 60)});
+
+  final Stream<String> Function() _open;
+  /// Filled in on videos, for listings that leave the channel out.
+  final ChannelRef? channel;
+  final Duration timeout;
+
+  StreamIterator<String>? _lines;
+  int _found = 0;
+  bool _done = false;
+
+  bool get done => _done;
+
+  /// Up to [count] more entries, each a [VideoItem] or [ChannelResult].
+  /// Fails when the source ends with an error before listing anything or
+  /// stalls; other errors after the first entries end the listing.
+  Stream<Object> next(int count) async* {
+    if (_done) return;
+    final lines = _lines ??= StreamIterator(_open());
+    var taken = 0;
+    while (taken < count) {
+      final bool more;
+      try {
+        more = await lines.moveNext().timeout(timeout, onTimeout: () => throw TimeoutException('yt-dlp 加载超时'));
+      } catch (e) {
+        close();
+        if (_found == 0 || e is TimeoutException) rethrow;
+        return;
+      }
+      if (!more) {
+        _done = true;
+        return;
+      }
+      var entry = parseListingEntry(lines.current);
+      if (entry == null) continue;
+      final ref = channel;
+      if (entry is VideoItem && ref != null) entry = entry.withChannel(ref);
+      _found++;
+      taken++;
+      yield entry;
+    }
+  }
+
+  void close() {
+    _done = true;
+    unawaited(_lines?.cancel());
+  }
+}
+
 class VideoRepository {
   final String ytDlpPath;
   final String? cacheDirectory;
@@ -12,103 +67,64 @@ class VideoRepository {
 
   static const pageSize = 20;
 
-  /// yt-dlp arguments for one page of search results, 1-based [start].
-  List<String> searchArguments(String query, {int start = 1, int count = pageSize}) {
-    final end = start + count - 1;
-    return [
-      '--no-warnings',
-      '--skip-download',
-      if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
-      '--flat-playlist',
-      '--dump-json',
-      '--playlist-items', '$start:$end',
-      '--', 'ytsearch$end:$query',
-    ];
+  /// What a search looks for.
+  static const searchFilters = {
+    SearchFilter.all: null,
+    SearchFilter.videos: 'EgIQAQ%253D%253D',
+    SearchFilter.channels: 'EgIQAg%253D%253D',
+  };
+
+  /// YouTube's results page for [query], which lists channels as well as
+  /// videos; `sp` is YouTube's own filter parameter.
+  static String searchUrl(String query, {SearchFilter filter = SearchFilter.all, String? sp}) {
+    final params = sp ?? searchFilters[filter];
+    return 'https://www.youtube.com/results?search_query=${Uri.encodeQueryComponent(query)}${params == null ? '' : '&sp=$params'}';
   }
 
-  /// Streams search results as yt-dlp prints them, so the first cards appear
-  /// before the whole page has been fetched. Cancelling the subscription
-  /// stops yt-dlp.
-  Stream<VideoItem> search(String query, {int start = 1, int count = pageSize}) {
-    final q = query.trim();
-    if (q.isEmpty) return const Stream.empty();
-    return _listing(searchArguments(q, start: start, count: count), firstPage: start == 1);
-  }
-
-  /// yt-dlp arguments for one page of a channel's uploads, newest first.
-  List<String> channelArguments(ChannelRef channel, {int start = 1, int count = pageSize}) => [
+  /// yt-dlp arguments that print a listing's entries one per line as they
+  /// arrive. `--lazy-playlist` matters: without it yt-dlp collects the whole
+  /// listing before printing anything.
+  List<String> listingArguments(String url) => [
         '--no-warnings',
         '--skip-download',
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
         '--flat-playlist',
+        '--lazy-playlist',
         '--dump-json',
-        '--playlist-items', '$start:${start + count - 1}',
-        '--', '${channel.url}/videos',
+        '--', url,
       ];
 
-  /// A page of [channel]'s uploads. Channel listings do not repeat the
-  /// channel on every entry, so it is filled in here.
-  Stream<VideoItem> channelVideos(ChannelRef channel, {int start = 1, int count = pageSize}) =>
-      _listing(channelArguments(channel, start: start, count: count), firstPage: start == 1)
-          .map((item) => item.withChannel(channel));
+  /// Search results; one yt-dlp process serves every page.
+  Listing search(String query, {SearchFilter filter = SearchFilter.all, String? sp}) =>
+      _listing(searchUrl(query.trim(), filter: filter, sp: sp));
 
-  Stream<VideoItem> _listing(List<String> arguments, {required bool firstPage}) {
-    late final StreamController<VideoItem> output;
-    Process? process;
-    Timer? timeout;
-    var found = 0;
-    var finished = false;
+  /// [channel]'s uploads, newest first.
+  Listing channelVideos(ChannelRef channel) => _listing('${channel.url}/videos', channel: channel);
 
-    void finish([Object? error]) {
-      if (finished) return;
-      finished = true;
-      timeout?.cancel();
-      process?.kill();
-      if (error != null) output.addError(error);
-      unawaited(output.close());
+  /// Videos of [channel] matching [query].
+  Listing channelSearch(ChannelRef channel, String query) =>
+      _listing('${channel.url}/search?query=${Uri.encodeQueryComponent(query.trim())}', channel: channel);
+
+  Listing _listing(String url, {ChannelRef? channel}) =>
+      Listing(() => _lines(listingArguments(url)), channel: channel);
+
+  Stream<String> _lines(List<String> arguments) async* {
+    final process = await Process.start(ytDlpPath, arguments, environment: _environment);
+    final stderr = StringBuffer();
+    final errors = process.stderr.transform(utf8.decoder).listen(stderr.write);
+    try {
+      // Reading pauses while the page is full, which pauses yt-dlp through
+      // the pipe until the next page is asked for.
+      yield* process.stdout.transform(utf8.decoder).transform(const LineSplitter());
+      final exitCode = await process.exitCode;
+      await errors.cancel();
+      if (exitCode != 0) {
+        final err = stderr.toString().trim();
+        throw StateError(err.isEmpty ? 'yt-dlp exited with code $exitCode' : err);
+      }
+    } finally {
+      process.kill();
     }
-
-    output = StreamController<VideoItem>(
-      onListen: () async {
-        try {
-          process = await Process.start(ytDlpPath, arguments, environment: _environment);
-        } catch (e) {
-          finish(e);
-          return;
-        }
-        if (finished) {
-          process!.kill();
-          return;
-        }
-        timeout = Timer(const Duration(seconds: 60), () => finish(TimeoutException('yt-dlp 加载超时')));
-        final stderr = StringBuffer();
-        final errors = process!.stderr.transform(utf8.decoder).listen(stderr.write);
-        try {
-          await for (final line in process!.stdout.transform(utf8.decoder).transform(const LineSplitter())) {
-            if (finished) break;
-            final item = VideoItem.tryParseLine(line);
-            if (item == null) continue;
-            found++;
-            output.add(item);
-          }
-          final exitCode = await process!.exitCode;
-          await errors.cancel();
-          if (found == 0 && firstPage) {
-            final err = stderr.toString().trim();
-            finish(StateError(err.isEmpty ? 'YouTube did not return any results.' : err));
-          } else if (found == 0 && exitCode != 0) {
-            final err = stderr.toString().trim();
-            finish(StateError(err.isEmpty ? 'yt-dlp exited with code $exitCode' : err));
-          } else {
-            finish();
-          }
-        } catch (e) {
-          finish(e);
-        }
-      },
-      onCancel: () => finish(),
-    );
-    return output.stream;
   }
 
   /// yt-dlp arguments for watch-page metadata. Skipping the player JS keeps

@@ -1,37 +1,53 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/video_list_loader.dart';
-import 'package:ytplus/models.dart';
+import 'package:ytplus/video_repository.dart';
 
-VideoItem _video(int i) => VideoItem(id: 'video$i'.padRight(11, '0'), title: '$i', channel: '', url: '');
+String _video(int i) => jsonEncode({'id': 'video$i'.padRight(11, '0'), 'title': '$i', 'channel': ''});
+
+/// A source that records how many lines were read from it.
+class _Source {
+  _Source(this.lines);
+  final List<String> lines;
+  int read = 0;
+  int opened = 0;
+
+  Stream<String> open() async* {
+    opened++;
+    for (final line in lines) {
+      read++;
+      yield line;
+    }
+  }
+}
 
 void main() {
-  test('pages until a short page arrives', () async {
-    final starts = <int>[];
-    final loader = VideoListLoader((start) {
-      starts.add(start);
-      final count = start == 1 ? 2 : 1;
-      return Stream.fromIterable([for (var i = start; i < start + count; i++) _video(i)]);
-    }, pageSize: 2);
+  test('pages continue one listing instead of starting over', () async {
+    final source = _Source([for (var i = 0; i < 5; i++) _video(i)]);
+    final loader = VideoListLoader(() => Listing(source.open), pageSize: 2);
     addTearDown(loader.dispose);
 
     loader.loadMore();
     await pumpEventQueue();
     expect(loader.items, hasLength(2));
-    expect(loader.hasMore, isTrue);
+    expect(source.read, lessThanOrEqualTo(3), reason: '读取在一页满后暂停');
     loader.loadMore();
     await pumpEventQueue();
-    expect(starts, [1, 3]);
-    expect(loader.items, hasLength(3));
+    loader.loadMore();
+    await pumpEventQueue();
+    expect(loader.items.map((v) => v.title), ['0', '1', '2', '3', '4']);
+    expect(source.opened, 1);
+    expect(source.read, 5);
     expect(loader.hasMore, isFalse);
   });
 
   test('after an error only an explicit retry loads again', () async {
     var calls = 0;
-    final loader = VideoListLoader((start) {
+    final loader = VideoListLoader(() {
       calls++;
-      return calls == 1 ? Stream.error(StateError('offline')) : Stream.value(_video(1));
+      return Listing(() => calls == 1 ? Stream.error(StateError('offline')) : Stream.value(_video(1)));
     });
     addTearDown(loader.dispose);
 
@@ -48,12 +64,35 @@ void main() {
     expect(loader.items, hasLength(1));
   });
 
-  test('stops at the limit', () async {
-    final loader = VideoListLoader((start) => Stream.fromIterable([for (var i = 0; i < 5; i++) _video(i)]), pageSize: 5, limit: 3);
+  test('stops at the limit and skips filtered videos', () async {
+    final loader = VideoListLoader(
+      () => Listing(() => Stream.fromIterable([for (var i = 0; i < 6; i++) _video(i)])),
+      pageSize: 6,
+      limit: 3,
+      where: (item) => item.title != '0',
+    );
     addTearDown(loader.dispose);
     loader.loadMore();
     await pumpEventQueue();
-    expect(loader.items, hasLength(3));
+    expect(loader.items.map((v) => v.title), ['1', '2', '3']);
     expect(loader.hasMore, isFalse);
+  });
+
+  test('keeps channels apart from videos', () async {
+    final channel = jsonEncode({
+      '_type': 'url', 'ie_key': 'YoutubeTab', 'id': 'UCsXVk37bltHxD1rDPwtNM8Q', 'title': 'Kurzgesagt',
+      'channel_follower_count': 24000000, 'uploader_id': '@kurzgesagt',
+      'thumbnails': [{'url': '//yt3.ggpht.com/a=s88'}, {'url': '//yt3.ggpht.com/a=s176'}],
+    });
+    final loader = VideoListLoader(() => Listing(() => Stream.fromIterable([channel, _video(1), 'not json'])));
+    addTearDown(loader.dispose);
+    loader.loadMore();
+    await pumpEventQueue();
+    expect(loader.items, hasLength(1));
+    final result = loader.channels.single;
+    expect(result.ref.name, 'Kurzgesagt');
+    expect(result.subscribers, '2400万 位订阅者');
+    expect(result.handle, '@kurzgesagt');
+    expect(result.avatar, 'https://yt3.ggpht.com/a=s176');
   });
 }

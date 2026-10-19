@@ -173,7 +173,12 @@ class LibraryController extends ChangeNotifier {
         try {
           final repository = this.repository;
           if (repository == null) throw StateError('yt-dlp is not ready');
-          return await repository.channelVideos(channel, count: 10).toList();
+          final listing = repository.channelVideos(channel);
+          try {
+            return (await listing.next(10).toList()).whereType<VideoItem>().toList();
+          } finally {
+            listing.close();
+          }
         } catch (_) {
           failures.add(channel.name.isEmpty ? channel.id : channel.name);
           return const <VideoItem>[];

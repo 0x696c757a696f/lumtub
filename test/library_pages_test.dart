@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,12 +13,13 @@ import 'package:ytplus/ui/pages/channel_page.dart';
 import 'package:ytplus/ui/pages/library_pages.dart';
 import 'package:ytplus/ui/theme.dart';
 import 'package:ytplus/ui/video_card.dart';
+import 'package:ytplus/video_repository.dart';
 
 void main() {
   const channel = ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick Astley');
   final videos = [
     for (var i = 0; i < 6; i++)
-      VideoItem(id: 'video${i}xxxx', title: '视频 $i', channel: 'Rick Astley', url: 'https://www.youtube.com/watch?v=video${i}xxxx', duration: 200, channelId: channel.id),
+      VideoItem(id: 'video${i}xxxxx', title: '视频 $i', channel: 'Rick Astley', url: 'https://www.youtube.com/watch?v=video${i}xxxxx', duration: 200, channelId: channel.id),
   ];
 
   late AppController controller;
@@ -88,12 +90,14 @@ void main() {
 
   testWidgets('channel page lists uploads and follows the channel', (tester) async {
     controller.channel = channel;
-    controller.channelVideos = VideoListLoader((start) => Stream.fromIterable(start == 1 ? videos : const []))..loadMore();
+    controller.channelVideos = VideoListLoader(() => Listing(() => Stream.fromIterable([for (final v in videos) jsonEncode(v.toJson())])))..loadMore();
     addTearDown(controller.channelVideos!.dispose);
     await pump(tester, ChannelPage(controller: controller));
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
     await tester.pump();
     expect(find.text('Rick Astley'), findsWidgets);
     expect(find.text('视频 5'), findsOneWidget);
+    expect(find.text('在频道内搜索'), findsOneWidget);
     await tester.tap(find.text('关注'));
     await tester.pump();
     expect(library.isFollowing(channel.id), isTrue);

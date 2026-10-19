@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../../models.dart';
+import '../../video_repository.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../video_card.dart';
+import 'channel_page.dart';
 
 /// Home: a search prompt and the most recently watched videos.
 class HomeFeedPage extends StatelessWidget {
@@ -78,7 +80,8 @@ class _Welcome extends StatelessWidget {
   }
 }
 
-/// Search results with skeletons, error and empty states, and paging.
+/// Search results with kind filters, channels, skeletons, error and empty
+/// states, and paging.
 class SearchResultsPage extends StatelessWidget {
   const SearchResultsPage({super.key, required this.controller, required this.onFocusSearch});
   final AppController controller;
@@ -87,28 +90,32 @@ class SearchResultsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final query = controller.query;
-    final results = controller.visible(controller.results);
-    final error = controller.searchError;
     if (query == null) {
       return StatusView(
         icon: Icons.explore_outlined,
-        title: '搜索 YouTube 视频',
+        title: '搜索 YouTube',
         message: '输入关键词，或粘贴 youtube.com / youtu.be 链接。',
         action: FilledButton.tonalIcon(onPressed: onFocusSearch, icon: const Icon(Icons.search_rounded), label: const Text('开始搜索')),
       );
     }
-    if (results.isEmpty && error != null && !controller.searching) {
-      return StatusView(
+    final results = controller.visible(controller.results);
+    final channels = controller.channelResults;
+    final error = controller.searchError;
+    final filter = controller.searchFilter;
+    final empty = results.isEmpty && channels.isEmpty;
+    Widget? status;
+    if (empty && error != null && !controller.searching) {
+      status = StatusView(
         icon: Icons.cloud_off_rounded,
         error: true,
         title: '搜索失败',
         message: error,
         action: FilledButton.tonalIcon(onPressed: controller.retrySearch, icon: const Icon(Icons.refresh_rounded), label: const Text('重试')),
       );
+    } else if (empty && !controller.searching) {
+      status = StatusView(icon: Icons.search_off_rounded, title: filter == SearchFilter.channels ? '没有找到相关频道' : '没有找到相关视频', message: '换个关键词试试。');
     }
-    if (results.isEmpty && !controller.searching) {
-      return StatusView(icon: Icons.search_off_rounded, title: '没有找到相关视频', message: '换个关键词试试。');
-    }
+    final count = filter == SearchFilter.channels ? '${channels.length} 个频道' : '${results.length} 个视频${channels.isEmpty ? '' : '，${channels.length} 个频道'}';
     return NotificationListener<ScrollNotification>(
       // Fetch the next page shortly before the end of the results is reached.
       onNotification: (notification) {
@@ -116,17 +123,84 @@ class SearchResultsPage extends StatelessWidget {
         return false;
       },
       child: CustomScrollView(slivers: [
-        SliverToBoxAdapter(child: PageHeader('“$query”', subtitle: controller.searching ? '正在搜索…' : '${results.length} 个结果')),
-        if (results.isNotEmpty) SliverVideoGrid(items: results, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: results)),
-        if (controller.searching) ...[
-          if (results.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
-          SliverSkeletonGrid(rows: results.isEmpty ? 3 : 1),
+        SliverToBoxAdapter(child: PageHeader(
+          '“$query”',
+          subtitle: controller.searching ? '正在搜索…' : count,
+          trailing: IconButton(tooltip: '返回探索', onPressed: controller.clearSearch, icon: const Icon(Icons.close_rounded)),
+        )),
+        SliverToBoxAdapter(child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
+          child: Wrap(spacing: 8, children: [
+            for (final (value, label) in const [(SearchFilter.all, '全部'), (SearchFilter.videos, '视频'), (SearchFilter.channels, '频道')])
+              ChoiceChip(label: Text(label), selected: filter == value, onSelected: (_) => controller.setSearchFilter(value)),
+          ]),
+        )),
+        if (status != null)
+          SliverFillRemaining(hasScrollBody: false, child: status)
+        else ...[
+          if (channels.isNotEmpty)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
+              sliver: SliverList.separated(
+                itemCount: channels.length,
+                separatorBuilder: (context, i) => const SizedBox(height: 8),
+                itemBuilder: (context, i) => ChannelResultTile(controller: controller, result: channels[i]),
+              ),
+            ),
+          if (results.isNotEmpty) SliverVideoGrid(items: results, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: results)),
+          if (controller.searching) ...[
+            if (!empty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
+            SliverSkeletonGrid(rows: empty ? 3 : 1),
+          ],
+          if (error != null && !empty)
+            SliverToBoxAdapter(child: Padding(
+              padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
+              child: ErrorBanner('加载更多失败：$error', onRetry: () => controller.loadMoreResults(retry: true)),
+            )),
         ],
-        if (error != null && results.isNotEmpty)
+        const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
+      ]),
+    );
+  }
+}
+
+/// Explore: popular videos of the month for a few topics.
+class ExplorePage extends StatelessWidget {
+  const ExplorePage({super.key, required this.controller});
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final loader = controller.explore;
+    final items = controller.visible(loader?.items ?? const []);
+    final error = loader?.error;
+    final loading = loader == null || loader.loading;
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.extentAfter < 800) loader?.loadMore();
+        return false;
+      },
+      child: CustomScrollView(slivers: [
+        const SliverToBoxAdapter(child: PageHeader('探索', subtitle: '各个分类本月观看最多的视频')),
+        SliverToBoxAdapter(child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
+          child: Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final (i, (label, _)) in AppController.exploreTopics.indexed)
+              ChoiceChip(label: Text(label), selected: controller.exploreTopic == i, onSelected: (_) => controller.setExploreTopic(i)),
+          ]),
+        )),
+        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
+        if (loading) ...[
+          if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
+          SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),
+        ],
+        if (error != null)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-            child: ErrorBanner('加载更多失败：$error', onRetry: () => controller.loadMoreResults(retry: true)),
+            child: ErrorBanner(items.isEmpty ? '无法加载：$error' : '加载更多失败：$error', onRetry: () => loader?.loadMore(retry: true)),
           )),
+        if (items.isEmpty && !loading && error == null)
+          const SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.explore_outlined, title: '这个分类暂时没有视频')),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );

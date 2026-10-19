@@ -66,6 +66,8 @@ class AppController extends ChangeNotifier {
   int _playSerial = 0;
   String? _query;
   StreamSubscription<VideoItem>? _searchSubscription;
+  final _playerSubscriptions = <StreamSubscription<Object>>[];
+  double _volumeBeforeMute = 100;
   bool _disposed = false;
   final _notices = StreamController<String>.broadcast();
 
@@ -133,6 +135,7 @@ class AppController extends ChangeNotifier {
         _repository = _repositoryFor(paths, cacheManager, settings);
         this.player = player;
         videoController = controller;
+        _listenTo(player);
         ready = true;
         status = ignoredOptions.isEmpty ? '就绪 · 解码方式将在播放时验证' : '就绪 · 已忽略不支持的设置：${ignoredOptions.join(', ')}';
         error = null;
@@ -257,17 +260,24 @@ class AppController extends ChangeNotifier {
       loadingDetails = true;
     });
     unawaited(_loadDetails(item, serial));
+    if (await _open(item, serial)) await _history?.record(item);
+  }
+
+  /// Opens [item] with the current format settings, from [start] if given.
+  Future<bool> _open(VideoItem item, int serial, {Duration? start}) async {
+    final player = this.player!;
     try {
       final platform = player.platform;
       if (platform is NativePlayer) {
         await platform.setProperty('ytdl-format', VideoFormatSelector.expressionFor(settings));
       }
-      await player.open(Media(item.url));
-      await _history?.record(item);
+      await player.open(Media(item.url, start: start));
       unawaited(inspectCurrentDecoder());
       _update(() {});
+      return true;
     } catch (e) {
       if (serial == _playSerial) _update(() => playbackError = '$e');
+      return false;
     }
   }
 
@@ -275,6 +285,69 @@ class AppController extends ChangeNotifier {
     final item = playing;
     if (item != null) await play(item);
   }
+
+  void _listenTo(Player player) {
+    _playerSubscriptions.addAll([
+      player.stream.completed.listen((done) {
+        if (done && playing != null && settings.autoplayNext) unawaited(playNext());
+      }),
+      // libmpv reports failures that happen after open() returned, such as
+      // yt-dlp finding no playable format, only through this stream. Errors
+      // once the video has loaded (a broken subtitle track) are not fatal.
+      player.stream.error.listen((message) {
+        if (playing != null && message.isNotEmpty && player.state.duration == Duration.zero) _update(() => playbackError = message);
+      }),
+    ]);
+  }
+
+  /// Plays the next video in the queue, if there is one.
+  Future<void> playNext() async {
+    final next = upNext;
+    if (next.isNotEmpty) await play(next.first);
+  }
+
+  /// Seeks by [offset], staying inside the video.
+  Future<void> seekBy(Duration offset) async {
+    final player = this.player;
+    if (player == null) return;
+    var target = player.state.position + offset;
+    final duration = player.state.duration;
+    if (target < Duration.zero) target = Duration.zero;
+    if (duration > Duration.zero && target > duration) target = duration;
+    await player.seek(target);
+  }
+
+  Future<void> changeVolume(double delta) async {
+    final player = this.player;
+    if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, 100.0).toDouble());
+  }
+
+  Future<void> toggleMute() async {
+    final player = this.player;
+    if (player == null) return;
+    final volume = player.state.volume;
+    if (volume > 0) {
+      _volumeBeforeMute = volume;
+      await player.setVolume(0);
+    } else {
+      await player.setVolume(_volumeBeforeMute);
+    }
+  }
+
+  /// Saves the quality limit and reloads the current video where it was.
+  Future<void> setMaxHeight(int height) async {
+    if (height == settings.maxHeight) return;
+    await saveSettings(settings.copyWith(maxHeight: height));
+    final item = playing;
+    final player = this.player;
+    if (item == null || player == null) return;
+    final position = player.state.position;
+    final wasPlaying = player.state.playing;
+    _update(() => playbackError = null);
+    if (await _open(item, _playSerial, start: position) && !wasPlaying) await player.pause();
+  }
+
+  Future<void> setAutoplayNext(bool value) => saveSettings(settings.copyWith(autoplayNext: value));
 
   Future<void> _loadDetails(VideoItem item, int serial) async {
     try {
@@ -443,6 +516,9 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _cancelSearch();
+    for (final subscription in _playerSubscriptions) {
+      unawaited(subscription.cancel());
+    }
     unawaited(player?.dispose());
     _tools?.dispose();
     unawaited(_notices.close());

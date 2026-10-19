@@ -4,6 +4,9 @@ import 'dart:io';
 import 'app_directories.dart';
 import 'decoder_status.dart';
 
+/// Heights offered in the quality menu; 0 means automatic.
+const qualityHeights = [0, 2160, 1440, 1080, 720, 480, 360];
+
 class PlayerSettings {
   final String hwdec;
   final String scale;
@@ -15,6 +18,9 @@ class PlayerSettings {
   final int cacheSeconds;
   final int cacheMemoryMb;
   final bool autoSelectCodec;
+  /// Highest video height to request, or 0 for no limit.
+  final int maxHeight;
+  final bool autoplayNext;
   final String? cachePath;
   final int? cacheLimitGb;
   final Map<String, String> customOptions;
@@ -31,6 +37,8 @@ class PlayerSettings {
     this.cacheSeconds = 30,
     this.cacheMemoryMb = 64,
     this.autoSelectCodec = true,
+    this.maxHeight = 0,
+    this.autoplayNext = true,
     this.cachePath,
     this.cacheLimitGb,
     this.customOptions = const {},
@@ -48,6 +56,8 @@ class PlayerSettings {
     int? cacheSeconds,
     int? cacheMemoryMb,
     bool? autoSelectCodec,
+    int? maxHeight,
+    bool? autoplayNext,
     String? cachePath,
     bool clearCachePath = false,
     int? cacheLimitGb,
@@ -65,6 +75,8 @@ class PlayerSettings {
         cacheSeconds: cacheSeconds ?? this.cacheSeconds,
         cacheMemoryMb: cacheMemoryMb ?? this.cacheMemoryMb,
         autoSelectCodec: autoSelectCodec ?? this.autoSelectCodec,
+        maxHeight: maxHeight ?? this.maxHeight,
+        autoplayNext: autoplayNext ?? this.autoplayNext,
         cachePath: clearCachePath ? null : cachePath ?? this.cachePath,
         cacheLimitGb: clearCacheLimit ? null : cacheLimitGb ?? this.cacheLimitGb,
         customOptions: customOptions ?? this.customOptions,
@@ -82,6 +94,8 @@ class PlayerSettings {
         'cacheSeconds': cacheSeconds,
         'cacheMemoryMb': cacheMemoryMb,
         'autoSelectCodec': autoSelectCodec,
+        'maxHeight': maxHeight,
+        'autoplayNext': autoplayNext,
         if (cachePath != null) 'cachePath': cachePath,
         if (cacheLimitGb != null) 'cacheLimitGb': cacheLimitGb,
         'customOptions': customOptions,
@@ -133,6 +147,8 @@ class PlayerSettings {
       cacheSeconds: number('cacheSeconds', 30, 1, 600),
       cacheMemoryMb: number('cacheMemoryMb', 64, 16, 1024),
       autoSelectCodec: raw['autoSelectCodec'] != false,
+      maxHeight: qualityHeights.contains(raw['maxHeight']) ? raw['maxHeight'] as int : 0,
+      autoplayNext: raw['autoplayNext'] != false,
       cachePath: path != null && path.trim().isNotEmpty ? path : null,
       cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),
       customOptions: options,

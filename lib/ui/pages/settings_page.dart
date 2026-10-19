@@ -55,7 +55,7 @@ class SettingsPage extends StatelessWidget {
           const _SectionTitle('解码与格式'),
           PreferenceCard(child: PiliNaraSettingSwitch(
             title: '自动选择最省资源的视频编码',
-            subtitle: '只影响自动格式选择，不会降低手动指定的画质。',
+            subtitle: '优先 H.264，确认显卡能硬解 VP9 后改用 VP9；不会自动选择解码最吃力的 AV1。画质上限在播放页的“画质”菜单里设置。',
             value: _settings.autoSelectCodec,
             onChanged: (value) => _save(_settings.copyWith(autoSelectCodec: value)),
           )),

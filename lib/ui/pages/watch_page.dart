@@ -7,54 +7,107 @@ import '../../app/app_controller.dart';
 import '../../models.dart';
 import '../../widgets/pilinara_playback_controls.dart';
 import '../common.dart';
+import '../player_shortcuts.dart';
 import '../skeleton.dart';
 import '../theme.dart';
 import '../video_card.dart';
 
 /// Player, video details and the up-next list. Side by side on wide windows,
 /// stacked on narrow ones.
-class WatchPage extends StatelessWidget {
+class WatchPage extends StatefulWidget {
   const WatchPage({super.key, required this.controller});
   final AppController controller;
 
+  @override
+  State<WatchPage> createState() => _WatchPageState();
+}
+
+class _WatchPageState extends State<WatchPage> {
   static const _sidePanelWidth = 380.0;
+  final _video = GlobalKey<VideoState>();
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 1080;
-        final mainWidth = wide ? constraints.maxWidth - _sidePanelWidth - AppStyle.pagePadding * 3 : constraints.maxWidth - AppStyle.pagePadding * 2;
-        // Keep the whole player visible: never taller than the window allows.
-        final playerWidth = min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
-        final main = <Widget>[
-          _BackRow(onBack: controller.stopWatching),
-          Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller))),
-          const SizedBox(height: 12),
-          PiliNaraPlayerToolbar(player: controller.player!, trailing: [
-            IconButton(tooltip: '复制链接', icon: const Icon(Icons.link_rounded), onPressed: () => copyText(context, controller.playing!.url, '链接已复制')),
-            IconButton(tooltip: '在浏览器中打开', icon: const Icon(Icons.open_in_new_rounded), onPressed: () => openExternal(controller.playing!.url)),
-          ]),
-          if (controller.playbackError != null) ...[
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+    final shortcuts = playerShortcuts(controller, _video);
+    // The same bindings work anywhere on the page and inside the fullscreen
+    // route, where media_kit's controls hold focus.
+    return CallbackShortcuts(
+      bindings: shortcuts,
+      child: Focus(
+        autofocus: true,
+        child: LayoutBuilder(builder: (context, constraints) {
+          final wide = constraints.maxWidth >= 1080;
+          final mainWidth = wide ? constraints.maxWidth - _sidePanelWidth - AppStyle.pagePadding * 3 : constraints.maxWidth - AppStyle.pagePadding * 2;
+          // Keep the whole player visible: never taller than the window allows.
+          final playerWidth = min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
+          final main = <Widget>[
+            _BackRow(onBack: controller.stopWatching),
+            Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, shortcuts: shortcuts))),
             const SizedBox(height: 12),
-            ErrorBanner('播放失败：${controller.playbackError}', onRetry: controller.retryPlayback),
-          ],
-          const SizedBox(height: 16),
-          _Details(controller: controller),
-        ];
-        if (!wide) {
-          return ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: [
-            ...main,
-            const SizedBox(height: 24),
-            _UpNext(controller: controller, shrinkWrap: true),
+            _Toolbar(controller: controller),
+            if (controller.playbackError != null) ...[
+              const SizedBox(height: 12),
+              ErrorBanner('播放失败：${controller.playbackError}', onRetry: controller.retryPlayback),
+            ],
+            const SizedBox(height: 16),
+            _Details(controller: controller),
+          ];
+          if (!wide) {
+            return ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: [
+              ...main,
+              const SizedBox(height: 24),
+              _UpNext(controller: controller, shrinkWrap: true),
+            ]);
+          }
+          return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: main)),
+            SizedBox(width: _sidePanelWidth, child: Padding(
+              padding: const EdgeInsets.only(right: AppStyle.pagePadding, top: 48),
+              child: _UpNext(controller: controller),
+            )),
           ]);
-        }
-        return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: main)),
-          SizedBox(width: _sidePanelWidth, child: Padding(
-            padding: const EdgeInsets.only(right: AppStyle.pagePadding, top: 48),
-            child: _UpNext(controller: controller),
-          )),
-        ]);
-      });
+        }),
+      ),
+    );
+  }
+}
+
+class _Toolbar extends StatelessWidget {
+  const _Toolbar({required this.controller});
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final item = controller.playing!;
+    final settings = controller.settings;
+    final decoded = controller.currentCodec != '尚未播放视频';
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      PiliNaraPlayerToolbar(
+        player: controller.player!,
+        maxHeight: settings.maxHeight,
+        onQualitySelected: controller.setMaxHeight,
+        trailing: [
+          FilterChip(
+            avatar: const Icon(Icons.playlist_play_rounded, size: 18),
+            label: const Text('自动连播'),
+            selected: settings.autoplayNext,
+            showCheckmark: false,
+            onSelected: controller.setAutoplayNext,
+          ),
+          IconButton(tooltip: '下一个 (Shift+N)', icon: const Icon(Icons.skip_next_rounded), onPressed: controller.upNext.isEmpty ? null : controller.playNext),
+          IconButton(tooltip: '复制链接', icon: const Icon(Icons.link_rounded), onPressed: () => copyText(context, item.url, '链接已复制')),
+          IconButton(tooltip: '在浏览器中打开', icon: const Icon(Icons.open_in_new_rounded), onPressed: () => openExternal(item.url)),
+          IconButton(tooltip: '快捷键', icon: const Icon(Icons.keyboard_outlined), onPressed: () => showShortcutHelp(context)),
+        ],
+      ),
+      if (decoded)
+        Padding(
+          padding: const EdgeInsets.only(top: 8, left: 4),
+          child: Text('解码：${controller.currentCodec} · ${controller.currentHwdec}', style: TextStyle(fontSize: 12, color: context.colors.outline)),
+        ),
+    ]);
+  }
 }
 
 class _BackRow extends StatelessWidget {
@@ -72,17 +125,29 @@ class _BackRow extends StatelessWidget {
 }
 
 class _Player extends StatelessWidget {
-  const _Player({required this.controller});
+  const _Player({required this.controller, required this.videoKey, required this.shortcuts});
   final AppController controller;
+  final GlobalKey<VideoState> videoKey;
+  final Map<ShortcutActivator, VoidCallback> shortcuts;
 
   @override
-  Widget build(BuildContext context) => AspectRatio(
-        aspectRatio: 16 / 9,
-        child: ClipRRect(
-          borderRadius: AppStyle.cardRadius,
-          child: ColoredBox(color: Colors.black, child: Video(controller: controller.videoController!)),
+  Widget build(BuildContext context) {
+    final controls = MaterialDesktopVideoControlsThemeData(keyboardShortcuts: shortcuts);
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: ClipRRect(
+        borderRadius: AppStyle.cardRadius,
+        child: ColoredBox(
+          color: Colors.black,
+          child: MaterialDesktopVideoControlsTheme(
+            normal: controls,
+            fullscreen: controls,
+            child: Video(key: videoKey, controller: controller.videoController!),
+          ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _Details extends StatelessWidget {

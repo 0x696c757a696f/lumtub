@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 
-/// Player toolbar below the video: speed, audio track and subtitle menus.
+import '../player_settings.dart';
+
+/// Player toolbar below the video: quality, speed, audio track and subtitle
+/// menus.
 ///
 /// The speed menu and compact buttons are adapted from PiliNara's
 /// media_kit/libmpv player. Copyright (C) PiliNara contributors.
 /// Adapted for YTPlus under GPL-3.0-or-later without Bilibili or GetX state.
 /// Play, seek, volume and fullscreen live in media_kit's on-video controls.
 class PiliNaraPlayerToolbar extends StatelessWidget {
-  const PiliNaraPlayerToolbar({super.key, required this.player, this.trailing = const []});
+  const PiliNaraPlayerToolbar({super.key, required this.player, required this.maxHeight, required this.onQualitySelected, this.trailing = const []});
 
   final Player player;
+  /// The quality limit, 0 for automatic.
+  final int maxHeight;
+  final ValueChanged<int> onQualitySelected;
   final List<Widget> trailing;
 
   static const _speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
@@ -28,6 +34,23 @@ class PiliNaraPlayerToolbar extends StatelessWidget {
             final audio = tracks.audio.where((t) => t.id != 'no').toList();
             final subtitles = tracks.subtitle;
             return Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+              StreamBuilder<int?>(
+                stream: player.stream.height,
+                initialData: player.state.height,
+                builder: (context, snapshot) {
+                  final height = snapshot.data ?? 0;
+                  final current = height > 0 ? '${height}p' : null;
+                  return _MenuChip<int>(
+                    icon: Icons.high_quality_outlined,
+                    label: maxHeight == 0 ? (current == null ? '自动' : '自动 · $current') : (current ?? '${maxHeight}p'),
+                    tooltip: '画质',
+                    selected: maxHeight,
+                    values: qualityHeights,
+                    labelOf: (value) => value == 0 ? '自动' : '${value}p',
+                    onSelected: onQualitySelected,
+                  );
+                },
+              ),
               StreamBuilder<double>(
                 stream: player.stream.rate,
                 initialData: player.state.rate,

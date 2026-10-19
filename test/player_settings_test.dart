@@ -51,4 +51,17 @@ void main() {
     final restored = PlayerSettings.fromJson(jsonDecode(jsonEncode(original.toJson())));
     expect(restored.decoderResults, original.decoderResults);
   });
+
+  test('quality limit and autoplay survive a round trip', () {
+    const original = PlayerSettings(maxHeight: 720, autoplayNext: false);
+    final restored = PlayerSettings.fromJson(jsonDecode(jsonEncode(original.toJson())));
+    expect(restored.maxHeight, 720);
+    expect(restored.autoplayNext, isFalse);
+  });
+
+  test('unknown quality limits fall back to automatic', () {
+    expect(PlayerSettings.fromJson({'maxHeight': 999}).maxHeight, 0);
+    expect(PlayerSettings.fromJson({'maxHeight': '720'}).maxHeight, 0);
+    expect(PlayerSettings.fromJson(const {}).autoplayNext, isTrue);
+  });
 }

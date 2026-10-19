@@ -1,0 +1,141 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
+import 'models.dart';
+
+/// A playlist of the signed-in account.
+class RemotePlaylist {
+  const RemotePlaylist(this.id, this.title, this.count);
+  final String id;
+  final String title;
+  final int count;
+}
+
+/// The parts of the YouTube Data API that YTPlus reads for a signed-in user.
+/// Every call costs one unit of the client's daily quota.
+class YouTubeAccountApi {
+  YouTubeAccountApi(this._client, this._accessToken);
+  final http.Client _client;
+  final Future<String> Function() _accessToken;
+
+  /// Playlists larger than this are cut, to keep syncing quick and cheap.
+  static const maxPlaylistItems = 500;
+
+  /// The account's channel name and its "liked videos" playlist.
+  Future<({String name, String? likes})> me() async {
+    final data = await _get('channels', {'part': 'snippet,contentDetails', 'mine': 'true'});
+    final items = data['items'];
+    if (items is! List || items.isEmpty || items.first is! Map) return (name: 'YouTube 账号', likes: null);
+    final channel = items.first as Map;
+    final likes = (channel['contentDetails'] as Map?)?['relatedPlaylists']?['likes'];
+    return (name: (channel['snippet'] as Map?)?['title']?.toString() ?? 'YouTube 账号', likes: likes is String && likes.isNotEmpty ? likes : null);
+  }
+
+  Future<List<ChannelRef>> subscriptions() async {
+    final channels = <ChannelRef>[];
+    await _pages('subscriptions', {'part': 'snippet', 'mine': 'true', 'order': 'alphabetical'}, (item) {
+      final channel = parseSubscription(item);
+      if (channel != null) channels.add(channel);
+    });
+    return channels;
+  }
+
+  Future<List<RemotePlaylist>> playlists() async {
+    final playlists = <RemotePlaylist>[];
+    await _pages('playlists', {'part': 'snippet,contentDetails', 'mine': 'true'}, (item) {
+      final playlist = parsePlaylist(item);
+      if (playlist != null) playlists.add(playlist);
+    });
+    return playlists;
+  }
+
+  Future<List<VideoItem>> playlistItems(String playlistId) async {
+    final videos = <VideoItem>[];
+    await _pages('playlistItems', {'part': 'snippet,contentDetails', 'playlistId': playlistId}, (item) {
+      final video = parsePlaylistItem(item);
+      if (video != null) videos.add(video);
+    }, limit: maxPlaylistItems);
+    return videos;
+  }
+
+  static ChannelRef? parseSubscription(Map item) {
+    final snippet = item['snippet'];
+    if (snippet is! Map) return null;
+    final id = (snippet['resourceId'] as Map?)?['channelId']?.toString() ?? '';
+    return ChannelRef.isValidId(id) ? ChannelRef(id, snippet['title']?.toString() ?? '') : null;
+  }
+
+  static RemotePlaylist? parsePlaylist(Map item) {
+    final id = item['id'];
+    if (id is! String || id.isEmpty) return null;
+    final count = (item['contentDetails'] as Map?)?['itemCount'];
+    return RemotePlaylist(id, (item['snippet'] as Map?)?['title']?.toString() ?? '播放列表', count is num ? count.toInt() : 0);
+  }
+
+  /// Deleted and private videos stay in playlists without an owner; they
+  /// cannot be played, so they are left out.
+  static VideoItem? parsePlaylistItem(Map item) {
+    final snippet = item['snippet'];
+    if (snippet is! Map) return null;
+    final resource = snippet['resourceId'];
+    final id = (item['contentDetails'] as Map?)?['videoId'] ?? (resource is Map ? resource['videoId'] : null);
+    if (id is! String || !RegExp(r'^[\w-]{11}$').hasMatch(id)) return null;
+    final ownerId = snippet['videoOwnerChannelId']?.toString();
+    if (ownerId == null) return null;
+    return VideoItem(
+      id: id,
+      title: snippet['title']?.toString() ?? '',
+      channel: snippet['videoOwnerChannelTitle']?.toString() ?? '',
+      url: 'https://www.youtube.com/watch?v=$id',
+      channelId: ChannelRef.isValidId(ownerId) ? ownerId : null,
+    );
+  }
+
+  Future<void> _pages(String resource, Map<String, String> query, void Function(Map item) onItem, {int? limit}) async {
+    String? pageToken;
+    var seen = 0;
+    do {
+      final data = await _get(resource, {...query, 'maxResults': '50', if (pageToken != null) 'pageToken': pageToken});
+      for (final item in data['items'] is List ? data['items'] as List : const []) {
+        if (item is Map) onItem(item);
+        if (limit != null && ++seen >= limit) return;
+      }
+      pageToken = data['nextPageToken'] is String ? data['nextPageToken'] as String : null;
+    } while (pageToken != null);
+  }
+
+  Future<Map<String, dynamic>> _get(String resource, Map<String, String> query) async {
+    final uri = Uri.https('www.googleapis.com', '/youtube/v3/$resource', query);
+    final response = await _client.get(uri, headers: {'Authorization': 'Bearer ${await _accessToken()}'}).timeout(const Duration(seconds: 20));
+    // Always UTF-8, whatever the headers say, so titles keep their characters.
+    final body = utf8.decode(response.bodyBytes, allowMalformed: true);
+    if (response.statusCode != 200) throw YouTubeApiException(response.statusCode, errorReason(body));
+    final data = jsonDecode(body);
+    return data is Map<String, dynamic> ? data : const {};
+  }
+
+  static String? errorReason(String body) {
+    try {
+      final errors = (jsonDecode(body) as Map)['error']['errors'] as List;
+      return (errors.first as Map)['reason']?.toString();
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+class YouTubeApiException implements Exception {
+  const YouTubeApiException(this.status, this.reason);
+  final int status;
+  final String? reason;
+
+  @override
+  String toString() => switch (reason) {
+        'quotaExceeded' || 'dailyLimitExceeded' => 'YouTube API 今日配额已用完，请明天再同步',
+        'accessNotConfigured' => '这个 Google 客户端还没有启用 YouTube Data API v3',
+        'youtubeSignupRequired' => '这个 Google 账号还没有 YouTube 频道',
+        _ when status == 401 => '登录已失效，请重新登录',
+        _ => 'YouTube API 请求失败（HTTP $status${reason == null ? '' : ' · $reason'}）',
+      };
+}

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
 import 'common.dart';
+import 'pages/account_settings.dart';
 import 'pages/channel_page.dart';
 import 'pages/library_pages.dart';
 import 'pages/settings_page.dart';
@@ -217,11 +218,7 @@ class _TopBar extends StatelessWidget {
             icon: const Icon(Icons.settings_outlined),
             selectedIcon: const Icon(Icons.settings_rounded),
           ),
-          const SizedBox(width: 4),
-          Tooltip(
-            message: '账户（即将推出）',
-            child: CircleAvatar(radius: 16, backgroundColor: colors.surfaceContainerHighest, child: Icon(Icons.person_outline_rounded, size: 20, color: colors.onSurfaceVariant)),
-          ),
+          AccountButton(account: controller.account, onOpenSettings: () => controller.navigate(PageMode.settings)),
         ]),
       ),
     );

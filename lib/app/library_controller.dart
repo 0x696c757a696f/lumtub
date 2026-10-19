@@ -112,6 +112,44 @@ class LibraryController extends ChangeNotifier {
     return following;
   }
 
+  /// Follows each of [channels] not yet followed; returns how many were new.
+  int followAll(List<ChannelRef> channels) {
+    var added = 0;
+    for (final channel in channels) {
+      if (store.isFollowing(channel.id)) continue;
+      store.channels.add(channel);
+      added++;
+    }
+    if (added > 0) {
+      _feedLoadedAt = null;
+      _changed();
+    }
+    return added;
+  }
+
+  /// Playlists copied from the YouTube account have ids starting with this.
+  static const remotePrefix = 'yt:';
+
+  static bool isRemote(LocalPlaylist playlist) => playlist.id.startsWith(remotePrefix);
+
+  /// Replaces the copies of the account's playlists with [remote], keyed by
+  /// YouTube playlist id. Copies of playlists deleted on YouTube go too;
+  /// the user's own playlists are not touched.
+  void mirrorRemotePlaylists(Map<String, ({String name, List<VideoItem> items})> remote) {
+    final playlists = store.playlists;
+    playlists.removeWhere((playlist) => isRemote(playlist) && !remote.containsKey(playlist.id.substring(remotePrefix.length)));
+    for (final MapEntry(key: id, value: (:name, :items)) in remote.entries) {
+      final index = playlists.indexWhere((playlist) => playlist.id == '$remotePrefix$id');
+      final copy = LocalPlaylist(id: '$remotePrefix$id', name: name, items: List.of(items));
+      if (index < 0) {
+        playlists.add(copy);
+      } else {
+        playlists[index] = copy;
+      }
+    }
+    _changed();
+  }
+
   /// Loads the newest uploads of every followed channel, at most every ten
   /// minutes unless [force]d. Each channel's feed is tried first; yt-dlp is
   /// the fallback when YouTube's feed is unavailable.

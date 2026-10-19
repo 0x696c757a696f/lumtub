@@ -93,7 +93,13 @@ jobs:
         run: flutter test
 
       - name: Release build
-        run: flutter build windows --release
+        # The optional Google sign-in client comes from repository secrets;
+        # without them the app asks the user for their own client.
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
+        shell: bash
+        run: flutter build windows --release --dart-define=YTPLUS_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=YTPLUS_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET"
 
       - name: Check that the video plugin is delay-loaded
         shell: pwsh

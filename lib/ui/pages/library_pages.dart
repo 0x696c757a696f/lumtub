@@ -22,10 +22,13 @@ class SubscriptionsPage extends StatelessWidget {
     if (library == null) return const SizedBox.shrink();
     final channels = library.channels;
     if (channels.isEmpty) {
-      return const StatusView(
+      return StatusView(
         icon: Icons.subscriptions_outlined,
         title: '还没有关注频道',
-        message: '在播放页或频道页点“关注”，频道的新视频就会出现在这里。关注列表只保存在本机。',
+        message: '在播放页或频道页点“关注”，频道的新视频就会出现在这里。也可以登录 Google 账号，导入 YouTube 订阅。关注列表只保存在本机。',
+        action: controller.account?.signedIn ?? false
+            ? null
+            : FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: const Icon(Icons.login_rounded), label: const Text('登录并导入订阅')),
       );
     }
     final feed = library.feed;
@@ -75,7 +78,7 @@ class PlaylistsPage extends StatelessWidget {
     if (library == null) return const SizedBox.shrink();
     final entries = [
       (AppController.favoritesPlaylistId, '收藏', library.favorites, Icons.favorite_rounded),
-      for (final playlist in library.playlists) (playlist.id, playlist.name, playlist.items, Icons.playlist_play_rounded),
+      for (final playlist in library.playlists) (playlist.id, playlist.name, playlist.items, LibraryController.isRemote(playlist) ? Icons.smart_display_outlined : Icons.playlist_play_rounded),
     ];
     return CustomScrollView(slivers: [
       SliverToBoxAdapter(child: PageHeader(
@@ -225,7 +228,10 @@ class PlaylistDetailPage extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
-            Text('${items.length} 个视频 · 仅保存在本机', style: TextStyle(color: context.colors.onSurfaceVariant)),
+            Text(
+              playlist != null && LibraryController.isRemote(playlist) ? '${items.length} 个视频 · 来自 YouTube 账号，同步时会更新' : '${items.length} 个视频 · 仅保存在本机',
+              style: TextStyle(color: context.colors.onSurfaceVariant),
+            ),
           ])),
           FilledButton.icon(
             onPressed: items.isEmpty ? null : () => controller.play(items.first, from: items),

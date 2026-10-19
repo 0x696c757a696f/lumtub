@@ -9,6 +9,7 @@ import '../../windows_video_info.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../common.dart';
 import '../theme.dart';
+import 'account_settings.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key, required this.controller});
@@ -30,6 +31,9 @@ class SettingsPage extends StatelessWidget {
         child: ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, AppStyle.pagePadding), children: [
           Text('设置', style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 20),
+          const _SectionTitle('账号'),
+          PreferenceCard(child: AccountSettings(account: controller.account, note: note)),
+          const SizedBox(height: 24),
           const _SectionTitle('外观'),
           PreferenceCard(child: _AppearanceSettings(controller: controller)),
           const SizedBox(height: 24),

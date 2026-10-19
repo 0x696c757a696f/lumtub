@@ -8,6 +8,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app_directories.dart';
 import '../library_store.dart';
+import '../secure_store.dart';
 import '../sponsor_block.dart';
 import '../appearance_settings.dart';
 import '../cache_manager.dart';
@@ -20,6 +21,7 @@ import '../video_format_selector.dart';
 import '../video_repository.dart';
 import '../windows_env.dart';
 import '../windows_video_info.dart';
+import 'account_controller.dart';
 import 'library_controller.dart';
 import 'video_list_loader.dart';
 
@@ -59,6 +61,9 @@ class AppController extends ChangeNotifier {
 
   /// Favorites, playlists, followed channels and progress; set once ready.
   LibraryController? library;
+
+  /// The optional Google sign-in for importing subscriptions and playlists.
+  AccountController? account;
 
   /// The open channel page and its uploads.
   ChannelRef? channel;
@@ -164,9 +169,16 @@ class AppController extends ChangeNotifier {
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
-        library = LibraryController(libraryStore, client: _http)
+        final library = this.library = LibraryController(libraryStore, client: _http)
           ..repository = _repository
           ..addListener(notifyListeners);
+        account = AccountController(
+          clientFile: File('${directories.data.path}${Platform.pathSeparator}google-client.json'),
+          credentials: SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}google-account.bin'), DpapiProtector()),
+          client: _http,
+          library: library,
+          notice: _notice,
+        )..addListener(notifyListeners);
         this.player = player;
         videoController = controller;
         _listenTo(player);
@@ -177,6 +189,7 @@ class AppController extends ChangeNotifier {
       // Do not block the UI while checking newer releases.
       unawaited(manager.checkUpdates());
       unawaited(_readWindowsVideoInfo());
+      unawaited(account?.load());
     } catch (e) {
       _update(() {
         error = e.toString();
@@ -697,6 +710,7 @@ class AppController extends ChangeNotifier {
       unawaited(subscription.cancel());
     }
     _saveProgress();
+    account?.dispose();
     library?.dispose();
     channelVideos?.dispose();
     related?.dispose();

@@ -7,6 +7,10 @@ class VideoItem {
   final int? duration;
   final String url;
   final int? viewCount;
+  /// The channel's `UC…` id, when the source listed it.
+  final String? channelId;
+  /// Upload time, known for subscription feed entries.
+  final DateTime? published;
 
   const VideoItem({
     required this.id,
@@ -15,7 +19,23 @@ class VideoItem {
     this.duration,
     required this.url,
     this.viewCount,
+    this.channelId,
+    this.published,
   });
+
+  /// This video credited to [ref], keeping the known name when [ref] has none.
+  VideoItem withChannel(ChannelRef ref) => VideoItem(
+        id: id,
+        title: title,
+        channel: channel.isNotEmpty ? channel : ref.name,
+        duration: duration,
+        url: url,
+        viewCount: viewCount,
+        channelId: ref.id,
+        published: published,
+      );
+
+  ChannelRef? get channelRef => channelId == null ? null : ChannelRef(channelId!, channel);
 
   String get thumbnail => 'https://i.ytimg.com/vi/$id/hqdefault.jpg';
 
@@ -35,6 +55,8 @@ class VideoItem {
         'duration': duration,
         'url': url,
         if (viewCount != null) 'view_count': viewCount,
+        if (channelId != null) 'channel_id': channelId,
+        if (published != null) 'published': published!.toUtc().toIso8601String(),
       };
 
   factory VideoItem.fromJson(Map<String, dynamic> map) {
@@ -47,6 +69,7 @@ class VideoItem {
     final name = map['channel'] ?? map['uploader'] ?? map['uploader_id'] ?? '';
     final value = map['duration'];
     final views = map['view_count'];
+    final channelId = map['channel_id']?.toString();
     return VideoItem(
       id: id,
       title: map['title']?.toString() ?? 'Untitled video',
@@ -54,6 +77,8 @@ class VideoItem {
       duration: value is num ? value.toInt() : null,
       url: 'https://www.youtube.com/watch?v=$id',
       viewCount: views is num ? views.toInt() : null,
+      channelId: channelId != null && ChannelRef.isValidId(channelId) ? channelId : null,
+      published: DateTime.tryParse(map['published']?.toString() ?? ''),
     );
   }
 
@@ -79,6 +104,31 @@ class VideoItem {
   }
 }
 
+/// A YouTube channel, identified by its `UC…` id.
+class ChannelRef {
+  const ChannelRef(this.id, this.name);
+  final String id;
+  final String name;
+
+  String get url => 'https://www.youtube.com/channel/$id';
+
+  static bool isValidId(String id) => RegExp(r'^UC[\w-]{22}$').hasMatch(id);
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+
+  static ChannelRef? fromJson(Object? raw) {
+    if (raw is! Map) return null;
+    final id = raw['id']?.toString() ?? '';
+    return isValidId(id) ? ChannelRef(id, raw['name']?.toString() ?? '') : null;
+  }
+
+  @override
+  bool operator ==(Object other) => other is ChannelRef && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
 /// Formats a count the way Chinese YouTube does: 9,999 / 1.2万 / 3.4亿.
 String formatCount(int value) {
   if (value < 10000) return '$value';
@@ -93,6 +143,7 @@ class VideoDetails {
   final String title;
   final String channel;
   final String? channelUrl;
+  final String? channelId;
   final DateTime? uploadDate;
   final int? viewCount;
   final int? likeCount;
@@ -102,6 +153,7 @@ class VideoDetails {
     required this.title,
     required this.channel,
     this.channelUrl,
+    this.channelId,
     this.uploadDate,
     this.viewCount,
     this.likeCount,
@@ -116,6 +168,7 @@ class VideoDetails {
       title: map['title']?.toString() ?? '',
       channel: (map['channel'] ?? map['uploader'] ?? '').toString(),
       channelUrl: map['channel_url']?.toString(),
+      channelId: ChannelRef.isValidId(map['channel_id']?.toString() ?? '') ? map['channel_id'].toString() : null,
       uploadDate: match == null ? null : DateTime(int.parse(match[1]!), int.parse(match[2]!), int.parse(match[3]!)),
       viewCount: number('view_count'),
       likeCount: number('like_count'),

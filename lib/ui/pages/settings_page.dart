@@ -44,6 +44,14 @@ class SettingsPage extends StatelessWidget {
             PiliNaraSettingSlider(title: '字幕位置', value: _settings.subtitlePosition.toDouble(), min: 0, max: 100, divisions: 100, description: (value) => '${value.round()}%', onChanged: (value) => _save(_settings.copyWith(subtitlePosition: value.round()))),
           ])),
           const SizedBox(height: 24),
+          const _SectionTitle('跳过片段'),
+          PreferenceCard(child: PiliNaraSettingSwitch(
+            title: '用 SponsorBlock 自动跳过赞助广告',
+            subtitle: '跳过社区标记的赞助广告、自我推广和求赞求订阅片段，下一段视频生效。开启后每播放一个视频，会向第三方服务器 sponsor.ajay.app 发送视频编号哈希的前 4 位（不发送完整编号、历史或账号信息）。',
+            value: _settings.sponsorBlock,
+            onChanged: (value) => _save(_settings.copyWith(sponsorBlock: value)),
+          )),
+          const SizedBox(height: 24),
           const _SectionTitle('视频缓存'),
           PreferenceCard(child: Column(children: [
             _choice('网络缓存', _settings.cacheMode, const {'auto': '自动（推荐）', 'yes': '启用', 'no': '禁用'}, (value) => _save(_settings.copyWith(cacheMode: value))),

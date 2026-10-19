@@ -32,6 +32,27 @@ class VideoRepository {
   Stream<VideoItem> search(String query, {int start = 1, int count = pageSize}) {
     final q = query.trim();
     if (q.isEmpty) return const Stream.empty();
+    return _listing(searchArguments(q, start: start, count: count), firstPage: start == 1);
+  }
+
+  /// yt-dlp arguments for one page of a channel's uploads, newest first.
+  List<String> channelArguments(ChannelRef channel, {int start = 1, int count = pageSize}) => [
+        '--no-warnings',
+        '--skip-download',
+        if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
+        '--flat-playlist',
+        '--dump-json',
+        '--playlist-items', '$start:${start + count - 1}',
+        '--', '${channel.url}/videos',
+      ];
+
+  /// A page of [channel]'s uploads. Channel listings do not repeat the
+  /// channel on every entry, so it is filled in here.
+  Stream<VideoItem> channelVideos(ChannelRef channel, {int start = 1, int count = pageSize}) =>
+      _listing(channelArguments(channel, start: start, count: count), firstPage: start == 1)
+          .map((item) => item.withChannel(channel));
+
+  Stream<VideoItem> _listing(List<String> arguments, {required bool firstPage}) {
     late final StreamController<VideoItem> output;
     Process? process;
     Timer? timeout;
@@ -50,7 +71,7 @@ class VideoRepository {
     output = StreamController<VideoItem>(
       onListen: () async {
         try {
-          process = await Process.start(ytDlpPath, searchArguments(q, start: start, count: count), environment: _environment);
+          process = await Process.start(ytDlpPath, arguments, environment: _environment);
         } catch (e) {
           finish(e);
           return;
@@ -59,7 +80,7 @@ class VideoRepository {
           process!.kill();
           return;
         }
-        timeout = Timer(const Duration(seconds: 60), () => finish(TimeoutException('yt-dlp 搜索超时')));
+        timeout = Timer(const Duration(seconds: 60), () => finish(TimeoutException('yt-dlp 加载超时')));
         final stderr = StringBuffer();
         final errors = process!.stderr.transform(utf8.decoder).listen(stderr.write);
         try {
@@ -72,7 +93,7 @@ class VideoRepository {
           }
           final exitCode = await process!.exitCode;
           await errors.cancel();
-          if (found == 0 && start == 1) {
+          if (found == 0 && firstPage) {
             final err = stderr.toString().trim();
             finish(StateError(err.isEmpty ? 'YouTube did not return any results.' : err));
           } else if (found == 0 && exitCode != 0) {

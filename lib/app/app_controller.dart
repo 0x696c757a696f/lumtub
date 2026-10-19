@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app_directories.dart';
+import '../library_store.dart';
+import '../sponsor_block.dart';
 import '../appearance_settings.dart';
 import '../cache_manager.dart';
 import '../decoder_status.dart';
@@ -17,8 +20,10 @@ import '../video_format_selector.dart';
 import '../video_repository.dart';
 import '../windows_env.dart';
 import '../windows_video_info.dart';
+import 'library_controller.dart';
+import 'video_list_loader.dart';
 
-enum PageMode { home, explore, subscriptions, history, playlists, settings }
+enum PageMode { home, explore, subscriptions, history, playlists, settings, channel, playlist }
 
 /// Application state and actions, kept separate from the widgets that show them.
 class AppController extends ChangeNotifier {
@@ -52,6 +57,21 @@ class AppController extends ChangeNotifier {
   String? searchError;
   String? playbackError;
 
+  /// Favorites, playlists, followed channels and progress; set once ready.
+  LibraryController? library;
+
+  /// The open channel page and its uploads.
+  ChannelRef? channel;
+  VideoListLoader? channelVideos;
+  /// The id of the open playlist page: a [LocalPlaylist] id, or
+  /// [favoritesPlaylistId].
+  String? openPlaylistId;
+  static const favoritesPlaylistId = 'favorites';
+  PageMode _returnMode = PageMode.home;
+
+  /// Videos like the one playing, found by searching for its title.
+  VideoListLoader? related;
+
   /// The list the current video was opened from, shown as the play queue.
   List<VideoItem> queue = const [];
   VideoDetails? details;
@@ -69,6 +89,14 @@ class AppController extends ChangeNotifier {
   final _playerSubscriptions = <StreamSubscription<Object>>[];
   double _volumeBeforeMute = 100;
   bool _libmpvConfirmed = false;
+  /// The video whose position is being recorded; null while switching, so
+  /// positions of the previous file are not credited to the next.
+  VideoItem? _tracking;
+  DateTime _lastProgressSave = DateTime(0);
+  List<SkipSegment> _segments = const [];
+  final _skipped = <SkipSegment>{};
+  final _http = http.Client();
+  late final _sponsorBlock = SponsorBlock(_http);
   bool _disposed = false;
   final _notices = StreamController<String>.broadcast();
 
@@ -105,6 +133,8 @@ class AppController extends ChangeNotifier {
       final directories = await AppDirectories.create();
       final history = HistoryStore(directories);
       await history.initialize();
+      final libraryStore = LibraryStore(File('${directories.data.path}${Platform.pathSeparator}library.json'));
+      await libraryStore.load();
       final settingsStore = PlayerSettingsStore(directories);
       final settings = await settingsStore.load();
       final cacheManager = CacheManager(directories);
@@ -134,6 +164,9 @@ class AppController extends ChangeNotifier {
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
+        library = LibraryController(libraryStore, client: _http)
+          ..repository = _repository
+          ..addListener(notifyListeners);
         this.player = player;
         videoController = controller;
         _listenTo(player);
@@ -251,7 +284,10 @@ class AppController extends ChangeNotifier {
   Future<void> play(VideoItem item, {List<VideoItem>? from}) async {
     final player = this.player;
     if (player == null) return;
+    _saveProgress();
     final serial = ++_playSerial;
+    final resume = library?.progressOf(item.id);
+    final start = resume != null && resume.resumable ? resume.position : null;
     _update(() {
       _cancelSearch();
       playing = item;
@@ -259,9 +295,54 @@ class AppController extends ChangeNotifier {
       playbackError = null;
       details = null;
       loadingDetails = true;
+      related?.dispose();
+      related = null;
+      _segments = const [];
+      _skipped.clear();
     });
     unawaited(_loadDetails(item, serial));
-    if (await _open(item, serial)) await _history?.record(item);
+    if (settings.sponsorBlock) unawaited(_loadSegments(item, serial));
+    if (await _open(item, serial, start: start)) {
+      await _history?.record(item);
+      if (start != null) _notice('从 ${_clock(start)} 继续播放');
+    }
+  }
+
+  static String _clock(Duration d) {
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return d.inHours > 0 ? '${d.inHours}:${d.inMinutes.remainder(60).toString().padLeft(2, '0')}:$seconds' : '${d.inMinutes}:$seconds';
+  }
+
+  /// Records where the current video is, so it can resume later.
+  /// [now] writes it to disk at once, for when playback stops.
+  void _saveProgress({bool now = false}) {
+    final item = _tracking;
+    final player = this.player;
+    if (item == null || player == null) return;
+    final duration = player.state.duration;
+    if (duration <= Duration.zero) return;
+    library?.recordProgress(item.id, player.state.position, duration);
+    if (now) unawaited(library?.flush());
+  }
+
+  Future<void> _loadSegments(VideoItem item, int serial) async {
+    try {
+      final segments = await _sponsorBlock.segments(item.id);
+      if (serial == _playSerial) _segments = segments;
+    } catch (_) {
+      // Playback does not depend on SponsorBlock being reachable.
+    }
+  }
+
+  void _skipSegments(Duration position) {
+    for (final segment in _segments) {
+      if (_skipped.contains(segment) || !segment.contains(position)) continue;
+      // Each segment is skipped once, so seeking back into it plays it.
+      _skipped.add(segment);
+      unawaited(player?.seek(segment.end));
+      _notice('已跳过${sponsorCategories[segment.category] ?? '片段'}');
+      return;
+    }
   }
 
   /// Opens [item] with the current format settings, from [start] if given.
@@ -273,7 +354,9 @@ class AppController extends ChangeNotifier {
       if (platform is NativePlayer) {
         await platform.setProperty('ytdl-format', VideoFormatSelector.expressionFor(settings));
       }
+      _tracking = null;
       await player.open(Media(item.url, start: start));
+      if (serial == _playSerial) _tracking = item;
       unawaited(inspectCurrentDecoder());
       _update(() {});
       return true;
@@ -292,12 +375,21 @@ class AppController extends ChangeNotifier {
     _playerSubscriptions.addAll([
       // A second of playback proves a downloaded libmpv works on this PC.
       player.stream.position.listen((position) {
+        if (_tracking == null) return;
+        if (_segments.isNotEmpty) _skipSegments(position);
+        final now = DateTime.now();
+        if (now.difference(_lastProgressSave) > const Duration(seconds: 5)) {
+          _lastProgressSave = now;
+          _saveProgress();
+        }
         if (_libmpvConfirmed || position < const Duration(seconds: 1)) return;
         _libmpvConfirmed = true;
         unawaited(_tools?.libmpv.confirm());
       }),
       player.stream.completed.listen((done) {
-        if (done && playing != null && settings.autoplayNext) unawaited(playNext());
+        if (!done || playing == null) return;
+        _saveProgress();
+        if (settings.autoplayNext) unawaited(playNext());
       }),
       // libmpv reports failures that happen after open() returned, such as
       // yt-dlp finding no playable format, only through this stream. Errors
@@ -311,8 +403,14 @@ class AppController extends ChangeNotifier {
   /// Plays the next video in the queue, if there is one.
   Future<void> playNext() async {
     final next = upNext;
-    if (next.isNotEmpty) await play(next.first);
+    if (next.isNotEmpty) {
+      await play(next.first);
+    } else if (related?.items.isNotEmpty ?? false) {
+      await play(related!.items.first, from: related!.items);
+    }
   }
+
+  bool get hasNext => upNext.isNotEmpty || (related?.items.isNotEmpty ?? false);
 
   /// Seeks by [offset], staying inside the video.
   Future<void> seekBy(Duration offset) async {
@@ -360,12 +458,39 @@ class AppController extends ChangeNotifier {
   Future<void> _loadDetails(VideoItem item, int serial) async {
     try {
       final loaded = await _repository!.details(item.id);
-      if (serial == _playSerial) _update(() => details = loaded);
+      if (serial == _playSerial) {
+        _update(() {
+          details = loaded;
+          related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
+        });
+      }
     } catch (_) {
       // The page still shows what the list already knew about the video.
     } finally {
       if (serial == _playSerial) _update(() => loadingDetails = false);
     }
+  }
+
+  VideoListLoader _relatedTo(VideoItem item, String title) {
+    final repository = _repository!;
+    // Long titles make poor queries; the first words carry the topic.
+    final query = title.length > 60 ? title.substring(0, 60) : title;
+    final loader = VideoListLoader(
+      (start) => repository.search(query, start: start, count: 13).where((other) => other.id != item.id),
+      pageSize: 12,
+      limit: 12,
+    )..addListener(notifyListeners);
+    loader.loadMore();
+    return loader;
+  }
+
+  /// The channel of the playing video, once known.
+  ChannelRef? get playingChannel {
+    final item = playing;
+    if (item == null) return null;
+    final id = details?.channelId;
+    if (id != null) return ChannelRef(id, details!.channel.isNotEmpty ? details!.channel : item.channel);
+    return item.channelRef;
   }
 
   /// Videos after the current one in the queue, or the whole queue when the
@@ -378,6 +503,8 @@ class AppController extends ChangeNotifier {
   }
 
   void stopWatching() {
+    _saveProgress(now: true);
+    _tracking = null;
     ++_playSerial;
     _update(() {
       playing = null;
@@ -387,15 +514,41 @@ class AppController extends ChangeNotifier {
   }
 
   void navigate(PageMode target) {
+    _saveProgress(now: true);
+    _tracking = null;
     ++_playSerial;
+    if (target == PageMode.subscriptions) unawaited(library?.refreshFeed());
     _update(() {
       if (target != PageMode.explore) _cancelSearch();
+      if (_isDetail(target) && !_isDetail(mode)) _returnMode = mode;
       mode = target;
       playing = null;
       playbackError = null;
     });
     player?.pause();
   }
+
+  static bool _isDetail(PageMode mode) => mode == PageMode.channel || mode == PageMode.playlist;
+
+  /// Opens [ref]'s page with its uploads.
+  void openChannel(ChannelRef ref) {
+    final repository = _repository;
+    if (repository == null) return;
+    channelVideos?.dispose();
+    channel = ref;
+    channelVideos = VideoListLoader((start) => repository.channelVideos(ref, start: start))
+      ..addListener(notifyListeners)
+      ..loadMore();
+    navigate(PageMode.channel);
+  }
+
+  void openPlaylist(String id) {
+    openPlaylistId = id;
+    navigate(PageMode.playlist);
+  }
+
+  /// Leaves a channel or playlist page for the page it was opened from.
+  void goBack() => navigate(_returnMode);
 
   void retrySearch() {
     final last = _query;
@@ -456,6 +609,7 @@ class AppController extends ChangeNotifier {
       final cacheManager = _cacheManager;
       if (paths != null && cacheManager != null && next.cachePath != oldSettings.cachePath) {
         _repository = _repositoryFor(paths, cacheManager, next);
+        library?.repository = _repository;
       }
       status = ignoredOptions.isEmpty
           ? '播放器设置已保存${requiresNextVideo ? '；硬件解码和帧插值在下一段视频生效。' : '。'}'
@@ -542,6 +696,11 @@ class AppController extends ChangeNotifier {
     for (final subscription in _playerSubscriptions) {
       unawaited(subscription.cancel());
     }
+    _saveProgress();
+    library?.dispose();
+    channelVideos?.dispose();
+    related?.dispose();
+    _http.close();
     unawaited(player?.dispose());
     _tools?.dispose();
     unawaited(_notices.close());

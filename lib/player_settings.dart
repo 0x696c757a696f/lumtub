@@ -21,6 +21,9 @@ class PlayerSettings {
   /// Highest video height to request, or 0 for no limit.
   final int maxHeight;
   final bool autoplayNext;
+  /// Skip segments marked on SponsorBlock. Off by default because it asks a
+  /// third-party server, even if only by an anonymous hash prefix.
+  final bool sponsorBlock;
   final String? cachePath;
   final int? cacheLimitGb;
   final Map<String, String> customOptions;
@@ -39,6 +42,7 @@ class PlayerSettings {
     this.autoSelectCodec = true,
     this.maxHeight = 0,
     this.autoplayNext = true,
+    this.sponsorBlock = false,
     this.cachePath,
     this.cacheLimitGb,
     this.customOptions = const {},
@@ -58,6 +62,7 @@ class PlayerSettings {
     bool? autoSelectCodec,
     int? maxHeight,
     bool? autoplayNext,
+    bool? sponsorBlock,
     String? cachePath,
     bool clearCachePath = false,
     int? cacheLimitGb,
@@ -77,6 +82,7 @@ class PlayerSettings {
         autoSelectCodec: autoSelectCodec ?? this.autoSelectCodec,
         maxHeight: maxHeight ?? this.maxHeight,
         autoplayNext: autoplayNext ?? this.autoplayNext,
+        sponsorBlock: sponsorBlock ?? this.sponsorBlock,
         cachePath: clearCachePath ? null : cachePath ?? this.cachePath,
         cacheLimitGb: clearCacheLimit ? null : cacheLimitGb ?? this.cacheLimitGb,
         customOptions: customOptions ?? this.customOptions,
@@ -96,6 +102,7 @@ class PlayerSettings {
         'autoSelectCodec': autoSelectCodec,
         'maxHeight': maxHeight,
         'autoplayNext': autoplayNext,
+        'sponsorBlock': sponsorBlock,
         if (cachePath != null) 'cachePath': cachePath,
         if (cacheLimitGb != null) 'cacheLimitGb': cacheLimitGb,
         'customOptions': customOptions,
@@ -149,6 +156,7 @@ class PlayerSettings {
       autoSelectCodec: raw['autoSelectCodec'] != false,
       maxHeight: qualityHeights.contains(raw['maxHeight']) ? raw['maxHeight'] as int : 0,
       autoplayNext: raw['autoplayNext'] != false,
+      sponsorBlock: raw['sponsorBlock'] == true,
       cachePath: path != null && path.trim().isNotEmpty ? path : null,
       cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),
       customOptions: options,

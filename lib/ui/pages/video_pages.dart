@@ -15,8 +15,17 @@ class HomeFeedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final recent = controller.history.take(12).toList();
+    final library = controller.library;
+    final unfinished = library == null
+        ? const <VideoItem>[]
+        : controller.history.where((item) => library.progressOf(item.id)?.resumable ?? false).take(8).toList();
     return CustomScrollView(slivers: [
       SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
+      if (unfinished.isNotEmpty) ...[
+        const SliverToBoxAdapter(child: PageHeader('继续观看', subtitle: '从上次停下的地方接着看')),
+        SliverVideoGrid(items: unfinished, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: unfinished)),
+        const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
+      ],
       if (recent.isNotEmpty) ...[
         SliverToBoxAdapter(child: PageHeader(
           '最近观看',
@@ -156,17 +165,4 @@ class HistoryPage extends StatelessWidget {
     ));
     if (confirmed == true) await controller.clearHistory();
   }
-}
-
-/// Sections whose local storage is not implemented yet.
-class PlannedPage extends StatelessWidget {
-  const PlannedPage({super.key, required this.subscriptions});
-  final bool subscriptions;
-
-  @override
-  Widget build(BuildContext context) => StatusView(
-        icon: subscriptions ? Icons.subscriptions_outlined : Icons.playlist_play_rounded,
-        title: subscriptions ? '订阅即将推出' : '播放列表即将推出',
-        message: subscriptions ? '以后可以在本机订阅频道，登录后也能同步 YouTube 订阅。' : '以后可以把视频收藏到本机播放列表，并按顺序连续播放。',
-      );
 }

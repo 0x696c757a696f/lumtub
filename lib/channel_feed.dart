@@ -1,0 +1,50 @@
+import 'package:http/http.dart' as http;
+
+import 'models.dart';
+
+/// Reads a channel's public Atom feed, which lists its latest 15 uploads with
+/// their publish times in one small request, without yt-dlp.
+class ChannelFeed {
+  ChannelFeed(this._client);
+  final http.Client _client;
+
+  static Uri feedUri(ChannelRef channel) => Uri.https('www.youtube.com', '/feeds/videos.xml', {'channel_id': channel.id});
+
+  Future<List<VideoItem>> latest(ChannelRef channel) async {
+    final response = await _client.get(feedUri(channel), headers: {'User-Agent': 'YTPlus-Windows/0.1'}).timeout(const Duration(seconds: 20));
+    if (response.statusCode != 200) throw StateError('频道订阅源返回 HTTP ${response.statusCode}');
+    return parse(response.body, channel);
+  }
+
+  /// Parses the feed. The format is fixed and small, so a few patterns are
+  /// enough and no XML package is needed.
+  static List<VideoItem> parse(String xml, ChannelRef channel) {
+    final items = <VideoItem>[];
+    for (final entry in RegExp(r'<entry>([\s\S]*?)</entry>').allMatches(xml)) {
+      final body = entry.group(1)!;
+      String? field(String pattern) => RegExp(pattern).firstMatch(body)?.group(1);
+      final id = field(r'<yt:videoId>([\w-]{11})</yt:videoId>');
+      if (id == null) continue;
+      final views = field(r'<media:statistics views="(\d+)"');
+      items.add(VideoItem(
+        id: id,
+        title: _unescape(field(r'<title>([\s\S]*?)</title>') ?? ''),
+        channel: channel.name.isNotEmpty ? channel.name : _unescape(field(r'<name>([\s\S]*?)</name>') ?? ''),
+        url: 'https://www.youtube.com/watch?v=$id',
+        viewCount: views == null ? null : int.tryParse(views),
+        channelId: channel.id,
+        published: DateTime.tryParse(field(r'<published>([^<]+)</published>') ?? ''),
+      ));
+    }
+    return items;
+  }
+
+  static String _unescape(String text) => text
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&#39;', "'")
+      .replaceAll('&apos;', "'")
+      .replaceAll('&amp;', '&')
+      .trim();
+}

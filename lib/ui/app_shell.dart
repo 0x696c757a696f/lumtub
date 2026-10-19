@@ -6,10 +6,13 @@ import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
 import 'common.dart';
+import 'pages/channel_page.dart';
+import 'pages/library_pages.dart';
 import 'pages/settings_page.dart';
 import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
 import 'theme.dart';
+import 'video_card.dart';
 
 const appName = 'YTPlus';
 
@@ -65,6 +68,15 @@ class _AppShellState extends State<AppShell> {
     unawaited(_controller.search(value));
   }
 
+  /// Leaves the watch page, or a channel or playlist page.
+  void _back() {
+    if (_controller.playing != null) {
+      _controller.stopWatching();
+    } else if (_controller.mode == PageMode.channel || _controller.mode == PageMode.playlist) {
+      _controller.goBack();
+    }
+  }
+
   int? get _selectedIndex {
     final index = _destinations.indexWhere((d) => d.$1 == _controller.mode);
     return index < 0 ? null : index;
@@ -74,14 +86,12 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) => CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.keyK, control: true): _focusSearch,
-          const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): () {
-            if (_controller.playing != null) _controller.stopWatching();
-          },
+          const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): _back,
         },
         child: Listener(
           // The mouse "back" button leaves the watch page.
           onPointerDown: (event) {
-            if (event.buttons == kBackMouseButton && _controller.playing != null) _controller.stopWatching();
+            if (event.buttons == kBackMouseButton) _back();
           },
           child: ListenableBuilder(
             listenable: _controller,
@@ -111,7 +121,7 @@ class _AppShellState extends State<AppShell> {
                       ),
                     Expanded(child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 160),
-                      child: KeyedSubtree(key: ValueKey(_pageKey), child: _content()),
+                      child: KeyedSubtree(key: ValueKey(_pageKey), child: VideoActions(controller: _controller, child: _content())),
                     )),
                   ])),
                   _StatusBar(controller: _controller),
@@ -130,7 +140,11 @@ class _AppShellState extends State<AppShell> {
         ),
       );
 
-  String get _pageKey => !_controller.ready ? 'setup' : _controller.playing != null ? 'watch' : _controller.mode.name;
+  String get _pageKey => !_controller.ready ? 'setup' : _controller.playing != null ? 'watch' : switch (_controller.mode) {
+        PageMode.channel => 'channel:${_controller.channel?.id}',
+        PageMode.playlist => 'playlist:${_controller.openPlaylistId}',
+        final mode => mode.name,
+      };
 
   Widget _content() {
     final controller = _controller;
@@ -140,8 +154,10 @@ class _AppShellState extends State<AppShell> {
       PageMode.home => HomeFeedPage(controller: controller, onFocusSearch: _focusSearch),
       PageMode.explore => SearchResultsPage(controller: controller, onFocusSearch: _focusSearch),
       PageMode.history => HistoryPage(controller: controller),
-      PageMode.subscriptions => const PlannedPage(subscriptions: true),
-      PageMode.playlists => const PlannedPage(subscriptions: false),
+      PageMode.subscriptions => SubscriptionsPage(controller: controller),
+      PageMode.playlists => PlaylistsPage(controller: controller),
+      PageMode.channel => ChannelPage(controller: controller),
+      PageMode.playlist => PlaylistDetailPage(controller: controller),
       PageMode.settings => SettingsPage(controller: controller),
     };
   }

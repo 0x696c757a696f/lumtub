@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../app/app_controller.dart';
+import '../library_store.dart';
 import '../models.dart';
 import '../thumbnail_cache.dart';
 import 'common.dart';
@@ -27,13 +29,28 @@ ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 4
   return (columns: columns, itemHeight: itemWidth * 9 / 16 + _cardInfoHeight);
 }
 
+/// Makes the app's library actions (favorites, playlists, channels, watch
+/// progress) available to every card below it without passing them down.
+class VideoActions extends InheritedWidget {
+  const VideoActions({super.key, required this.controller, required super.child});
+  final AppController controller;
+
+  static AppController? of(BuildContext context) => context.getInheritedWidgetOfExactType<VideoActions>()?.controller;
+
+  // Cards rebuild with their pages whenever the controller notifies.
+  @override
+  bool updateShouldNotify(VideoActions oldWidget) => false;
+}
+
 /// A lazily built grid of video cards as a sliver, so pages can put headers
 /// above it in the same scroll view.
 class SliverVideoGrid extends StatelessWidget {
-  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails});
+  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove});
   final List<VideoItem> items;
   final void Function(VideoItem item) onOpen;
   final Directory? thumbnails;
+  /// Adds a "remove" entry to each card's menu, for playlists.
+  final void Function(VideoItem item)? onRemove;
 
   @override
   Widget build(BuildContext context) => SliverPadding(
@@ -48,7 +65,7 @@ class SliverVideoGrid extends StatelessWidget {
               mainAxisExtent: layout.itemHeight,
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, i) => VideoCard(item: items[i], thumbnails: thumbnails, onOpen: () => onOpen(items[i])),
+              (context, i) => VideoCard(item: items[i], thumbnails: thumbnails, onOpen: () => onOpen(items[i]), onRemove: onRemove == null ? null : () => onRemove!(items[i])),
               childCount: items.length,
             ),
           );
@@ -100,10 +117,11 @@ class _CardSkeleton extends StatelessWidget {
 
 /// Thumbnail-on-top video card with hover zoom and a right-click menu.
 class VideoCard extends StatefulWidget {
-  const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails});
+  const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails, this.onRemove});
   final VideoItem item;
   final VoidCallback onOpen;
   final Directory? thumbnails;
+  final VoidCallback? onRemove;
 
   @override
   State<VideoCard> createState() => _VideoCardState();
@@ -124,7 +142,7 @@ class _VideoCardState extends State<VideoCard> {
       child: InkWell(
         onTap: widget.onOpen,
         onHover: (value) => setState(() => _hovered = value),
-        onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: widget.onOpen),
+        onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: widget.onOpen, onRemove: widget.onRemove),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           AspectRatio(
             aspectRatio: 16 / 9,
@@ -144,6 +162,7 @@ class _VideoCardState extends State<VideoCard> {
                   ),
                 ),
                 if (item.durationLabel.isNotEmpty) Positioned(right: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
+                _ProgressBar(item: item),
               ]),
             ),
           ),
@@ -204,6 +223,7 @@ class CompactVideoTile extends StatelessWidget {
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                   ),
                   if (item.durationLabel.isNotEmpty) Positioned(right: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
+                  _ProgressBar(item: item),
                 ]),
               ),
             ),
@@ -220,24 +240,119 @@ class CompactVideoTile extends StatelessWidget {
   }
 }
 
-Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position, {required VoidCallback onOpen}) async {
+/// How much of [item] was watched, as a bar along the thumbnail's bottom.
+class _ProgressBar extends StatelessWidget {
+  const _ProgressBar({required this.item});
+  final VideoItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = VideoActions.of(context)?.library?.progressOf(item.id);
+    if (progress == null || progress.fraction < 0.02) return const SizedBox.shrink();
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: LinearProgressIndicator(value: progress.fraction, minHeight: 3, backgroundColor: Colors.black45, color: context.colors.primary),
+    );
+  }
+}
+
+Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position, {required VoidCallback onOpen, VoidCallback? onRemove}) async {
+  final controller = VideoActions.of(context);
+  final library = controller?.library;
+  final channel = item.channelRef;
+  final favorite = library?.isFavorite(item.id) ?? false;
   final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+  PopupMenuItem<String> entry(String value, IconData icon, String label) =>
+      PopupMenuItem(value: value, child: ListTile(dense: true, leading: Icon(icon), title: Text(label)));
   final choice = await showMenu<String>(
     context: context,
     position: RelativeRect.fromRect(position & const Size(1, 1), Offset.zero & overlay.size),
-    items: const [
-      PopupMenuItem(value: 'play', child: ListTile(dense: true, leading: Icon(Icons.play_arrow_rounded), title: Text('播放'))),
-      PopupMenuItem(value: 'copy', child: ListTile(dense: true, leading: Icon(Icons.link_rounded), title: Text('复制链接'))),
-      PopupMenuItem(value: 'browser', child: ListTile(dense: true, leading: Icon(Icons.open_in_new_rounded), title: Text('在浏览器中打开'))),
+    items: [
+      entry('play', Icons.play_arrow_rounded, '播放'),
+      if (library != null) ...[
+        entry('favorite', favorite ? Icons.favorite_rounded : Icons.favorite_border_rounded, favorite ? '取消收藏' : '收藏'),
+        entry('playlist', Icons.playlist_add_rounded, '添加到播放列表…'),
+      ],
+      if (controller != null && channel != null) entry('channel', Icons.account_circle_outlined, '查看频道'),
+      if (onRemove != null) entry('remove', Icons.remove_circle_outline_rounded, '从此列表移除'),
+      const PopupMenuDivider(),
+      entry('copy', Icons.link_rounded, '复制链接'),
+      entry('browser', Icons.open_in_new_rounded, '在浏览器中打开'),
     ],
   );
   if (!context.mounted) return;
   switch (choice) {
     case 'play':
       onOpen();
+    case 'favorite':
+      final added = library!.toggleFavorite(item);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '已收藏' : '已取消收藏')));
+    case 'playlist':
+      await showAddToPlaylist(context, controller!, item);
+    case 'channel':
+      controller!.openChannel(channel!);
+    case 'remove':
+      onRemove!();
     case 'copy':
       await copyText(context, item.url, '链接已复制');
     case 'browser':
       await openExternal(item.url);
   }
+}
+
+/// Lets the user pick a playlist for [item], or create one.
+Future<void> showAddToPlaylist(BuildContext context, AppController controller, VideoItem item) async {
+  final library = controller.library;
+  if (library == null) return;
+  const create = '\u0000new';
+  final choice = await showDialog<String>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: const Text('添加到播放列表'),
+      children: [
+        for (final playlist in library.playlists)
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, playlist.id),
+            child: ListTile(leading: const Icon(Icons.playlist_play_rounded), title: Text(playlist.name), subtitle: Text('${playlist.items.length} 个视频')),
+          ),
+        SimpleDialogOption(
+          onPressed: () => Navigator.pop(context, create),
+          child: const ListTile(leading: Icon(Icons.add_rounded), title: Text('新建播放列表')),
+        ),
+      ],
+    ),
+  );
+  if (choice == null || !context.mounted) return;
+  final playlist = choice == create ? await _createPlaylist(context, controller) : library.playlist(choice);
+  if (playlist == null || !context.mounted) return;
+  final added = library.addToPlaylist(playlist, item);
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '已添加到“${playlist.name}”' : '“${playlist.name}”里已经有这个视频')));
+}
+
+Future<LocalPlaylist?> _createPlaylist(BuildContext context, AppController controller) async {
+  final name = await promptText(context, title: '新建播放列表', hint: '播放列表名称', confirm: '创建');
+  return name == null ? null : controller.library?.createPlaylist(name);
+}
+
+/// Asks for one line of text; null when cancelled.
+Future<String?> promptText(BuildContext context, {required String title, required String hint, required String confirm, String initial = ''}) {
+  final text = TextEditingController(text: initial);
+  return showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: TextField(
+        controller: text,
+        autofocus: true,
+        decoration: InputDecoration(hintText: hint),
+        onSubmitted: (value) => Navigator.pop(context, value),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+        FilledButton(onPressed: () => Navigator.pop(context, text.text), child: Text(confirm)),
+      ],
+    ),
+  ).whenComplete(text.dispose);
 }

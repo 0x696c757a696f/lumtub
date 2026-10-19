@@ -11,6 +11,7 @@ import '../player_shortcuts.dart';
 import '../skeleton.dart';
 import '../theme.dart';
 import '../video_card.dart';
+import 'channel_page.dart';
 
 /// Player, video details and the up-next list. Side by side on wide windows,
 /// stacked on narrow ones.
@@ -82,6 +83,8 @@ class _Toolbar extends StatelessWidget {
     final item = controller.playing!;
     final settings = controller.settings;
     final decoded = controller.currentCodec != '尚未播放视频';
+    final library = controller.library;
+    final favorite = library?.isFavorite(item.id) ?? false;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       PiliNaraPlayerToolbar(
         player: controller.player!,
@@ -95,7 +98,17 @@ class _Toolbar extends StatelessWidget {
             showCheckmark: false,
             onSelected: controller.setAutoplayNext,
           ),
-          IconButton(tooltip: '下一个 (Shift+N)', icon: const Icon(Icons.skip_next_rounded), onPressed: controller.upNext.isEmpty ? null : controller.playNext),
+          IconButton(tooltip: '下一个 (Shift+N)', icon: const Icon(Icons.skip_next_rounded), onPressed: controller.hasNext ? controller.playNext : null),
+          if (library != null) ...[
+            IconButton(
+              tooltip: favorite ? '取消收藏' : '收藏',
+              isSelected: favorite,
+              icon: const Icon(Icons.favorite_border_rounded),
+              selectedIcon: Icon(Icons.favorite_rounded, color: context.colors.primary),
+              onPressed: () => library.toggleFavorite(item),
+            ),
+            IconButton(tooltip: '添加到播放列表', icon: const Icon(Icons.playlist_add_rounded), onPressed: () => showAddToPlaylist(context, controller, item)),
+          ],
           IconButton(tooltip: '复制链接', icon: const Icon(Icons.link_rounded), onPressed: () => copyText(context, item.url, '链接已复制')),
           IconButton(tooltip: '在浏览器中打开', icon: const Icon(Icons.open_in_new_rounded), onPressed: () => openExternal(item.url)),
           IconButton(tooltip: '快捷键', icon: const Icon(Icons.keyboard_outlined), onPressed: () => showShortcutHelp(context)),
@@ -158,7 +171,6 @@ class _Details extends StatelessWidget {
   Widget build(BuildContext context) {
     final item = controller.playing!;
     final details = controller.details;
-    final colors = context.colors;
     final views = details?.viewCount ?? item.viewCount;
     final meta = [
       if (views != null) '${formatCount(views)}次观看',
@@ -166,18 +178,20 @@ class _Details extends StatelessWidget {
       if (details?.likeCount != null) '${formatCount(details!.likeCount!)} 赞',
     ].join(' · ');
     final channel = details?.channel.isNotEmpty == true ? details!.channel : item.channel;
+    final channelRef = controller.playingChannel;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       SelectableText(details?.title.isNotEmpty == true ? details!.title : item.title, style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600, height: 1.3)),
       const SizedBox(height: 12),
       Row(children: [
-        CircleAvatar(
-          radius: 18,
-          backgroundColor: colors.primaryContainer,
-          child: Text(channel.isEmpty ? 'Y' : channel.characters.first.toUpperCase(), style: TextStyle(color: colors.onPrimaryContainer, fontWeight: FontWeight.w600)),
-        ),
+        ChannelAvatar(name: channel.isEmpty ? 'YouTube' : channel),
         const SizedBox(width: 12),
-        Expanded(child: Text(channel.isEmpty ? 'YouTube' : channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall)),
-        if (details?.channelUrl != null)
+        Flexible(child: Text(channel.isEmpty ? 'YouTube' : channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall)),
+        const SizedBox(width: 8),
+        if (channelRef != null) ...[
+          TextButton(onPressed: () => controller.openChannel(channelRef), child: const Text('查看频道')),
+          const Spacer(),
+          FollowButton(controller: controller, channel: channelRef),
+        ] else if (details?.channelUrl != null)
           TextButton(onPressed: () => openExternal(details!.channelUrl!), child: const Text('查看频道')),
       ]),
       const SizedBox(height: 12),
@@ -253,35 +267,43 @@ class _UpNext extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = controller.upNext;
-    final header = Padding(
-      padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
-      child: Row(children: [
-        Text('接下来播放', style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-        const Spacer(),
-        if (items.isNotEmpty) Text('${items.length} 个', style: TextStyle(color: context.colors.outline, fontSize: 12)),
-      ]),
-    );
-    if (items.isEmpty) {
-      return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-        header,
+    final related = controller.related;
+    final relatedItems = related?.items ?? const <VideoItem>[];
+    final children = <Widget>[
+      _header(context, '接下来播放', items.isEmpty ? null : '${items.length} 个'),
+      if (items.isEmpty)
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Text('播放队列已经到底了。播放搜索结果或观看历史中的视频时，后面的视频会显示在这里。', style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5)),
-        ),
-      ]);
-    }
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: shrinkWrap ? MainAxisSize.min : MainAxisSize.max, children: [
-      header,
-      if (shrinkWrap)
-        for (final item in items.take(20)) _tile(item)
+          padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
+          child: Text(
+            relatedItems.isEmpty ? '播放队列已经到底了。播放搜索结果、播放列表或观看历史中的视频时，后面的视频会显示在这里。' : '播放队列已经到底了，自动连播会接着播放下面的相关视频。',
+            style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5),
+          ),
+        )
       else
-        Expanded(child: ListView.builder(
-          padding: const EdgeInsets.only(bottom: AppStyle.pagePadding),
-          itemCount: items.length,
-          itemBuilder: (context, i) => _tile(items[i]),
-        )),
-    ]);
+        for (final item in shrinkWrap ? items.take(20) : items) _tile(item, null),
+      if (related != null) ...[
+        const SizedBox(height: 16),
+        _header(context, '相关视频', '按标题搜索'),
+        for (final item in relatedItems) _tile(item, relatedItems),
+        if (related.loading && relatedItems.isEmpty)
+          const Padding(padding: EdgeInsets.all(12), child: LinearProgressIndicator())
+        else if (related.error != null)
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: ErrorBanner('无法加载相关视频', onRetry: () => related.loadMore(retry: true))),
+      ],
+    ];
+    if (shrinkWrap) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: children);
+    return ListView(padding: const EdgeInsets.only(bottom: AppStyle.pagePadding), children: children);
   }
 
-  Widget _tile(VideoItem item) => CompactVideoTile(item: item, thumbnails: controller.thumbnailDirectory, onOpen: () => controller.play(item));
+  Widget _header(BuildContext context, String title, String? note) => Padding(
+        padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
+        child: Row(children: [
+          Text(title, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+          const Spacer(),
+          if (note != null) Text(note, style: TextStyle(color: context.colors.outline, fontSize: 12)),
+        ]),
+      );
+
+  Widget _tile(VideoItem item, List<VideoItem>? list) =>
+      CompactVideoTile(item: item, thumbnails: controller.thumbnailDirectory, onOpen: () => controller.play(item, from: list));
 }

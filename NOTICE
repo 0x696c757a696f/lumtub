@@ -1,4 +1,4 @@
-YTPlus contains settings UI adapted from PiliNara.
+YTPlus contains settings and player UI adapted from PiliNara.
 
 PiliNara: https://github.com/Starfallan/PiliNara
 Copyright (C) PiliNara contributors.
@@ -6,6 +6,9 @@ Licensed under GNU General Public License version 3 or later.
 
 The adapted sources are lib/widgets/pilinara_settings_tiles.dart (setting
 rows, choice, slider and list dialogs, colour palette and colour picker),
-lib/ui/pages/settings_page.dart (the grouped settings layout with search)
-and lib/ui/pages/settings_subpages.dart (speed, theme colour, font, log and
-about pages). They are kept separate from YTPlus's media_kit/libmpv player and settings persistence code.
+lib/ui/pages/settings_page.dart (the grouped settings layout with search),
+lib/ui/pages/settings_subpages.dart (speed, theme colour, font, log and
+about pages), lib/ui/player_controls.dart (the control layer over the
+video: title and bottom bars, menus and the "more" sheet) and
+lib/widgets/video_progress_bar.dart (the desktop progress bar). Playback
+itself is YTPlus's own media_kit/libmpv code.

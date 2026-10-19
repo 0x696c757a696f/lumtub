@@ -23,14 +23,21 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) => [
       ('Ctrl + K', '搜索'),
     ];
 
-/// Player key bindings, used both on the watch page and inside media_kit's
-/// controls, which keep focus while the video is fullscreen.
-Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, GlobalKey<VideoState> video) {
-  final player = controller.player!;
+/// Player key bindings, used both on the watch page and inside the player
+/// controls, which keep focus while the video is fullscreen. [onFeedback]
+/// is told what a key did, for the indicator over the video.
+Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, VideoState? Function() video, {void Function(IconData icon, String text)? onFeedback}) {
+  final player = controller.player;
   final prefs = controller.preferences;
-  if (!prefs.keyboardShortcuts) return const {};
+  if (player == null || !prefs.keyboardShortcuts) return const {};
   final volume = prefs.volumeStep.toDouble();
-  void seek(int seconds) => unawaited(controller.seekBy(Duration(seconds: seconds)));
+  void seek(int seconds) {
+    unawaited(controller.seekBy(Duration(seconds: seconds)));
+    onFeedback?.call(seconds < 0 ? Icons.fast_rewind_rounded : Icons.fast_forward_rounded, seconds < 0 ? '快退${-seconds}秒' : '快进$seconds秒');
+  }
+  void changeVolume(double delta) {
+    unawaited(controller.changeVolume(delta).then((_) => onFeedback?.call(Icons.volume_up_rounded, '${player.state.volume.round()}%')));
+  }
   void playOrPause() => unawaited(player.playOrPause());
   return {
     const SingleActivator(LogicalKeyboardKey.space): playOrPause,
@@ -42,12 +49,17 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, G
     const SingleActivator(LogicalKeyboardKey.arrowRight): () => seek(prefs.seekSeconds),
     const SingleActivator(LogicalKeyboardKey.keyJ): () => seek(-prefs.longSeekSeconds),
     const SingleActivator(LogicalKeyboardKey.keyL): () => seek(prefs.longSeekSeconds),
-    const SingleActivator(LogicalKeyboardKey.arrowUp): () => unawaited(controller.changeVolume(volume)),
-    const SingleActivator(LogicalKeyboardKey.arrowDown): () => unawaited(controller.changeVolume(-volume)),
-    const SingleActivator(LogicalKeyboardKey.keyM): () => unawaited(controller.toggleMute()),
-    const SingleActivator(LogicalKeyboardKey.keyF): () => unawaited(video.currentState?.toggleFullscreen()),
+    const SingleActivator(LogicalKeyboardKey.arrowUp): () => changeVolume(volume),
+    const SingleActivator(LogicalKeyboardKey.arrowDown): () => changeVolume(-volume),
+    const SingleActivator(LogicalKeyboardKey.keyM): () {
+      unawaited(controller.toggleMute().then((_) {
+        final muted = player.state.volume == 0;
+        onFeedback?.call(muted ? Icons.volume_off_rounded : Icons.volume_up_rounded, muted ? '静音' : '${player.state.volume.round()}%');
+      }));
+    },
+    const SingleActivator(LogicalKeyboardKey.keyF): () => unawaited(video()?.toggleFullscreen()),
     const SingleActivator(LogicalKeyboardKey.escape): () {
-      final state = video.currentState;
+      final state = video();
       if (state != null && state.isFullscreen()) unawaited(state.exitFullscreen());
     },
     const SingleActivator(LogicalKeyboardKey.keyN, shift: true): () => unawaited(controller.playNext()),

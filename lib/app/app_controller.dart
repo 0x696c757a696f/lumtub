@@ -189,7 +189,13 @@ class AppController extends ChangeNotifier {
       final paths = await manager.ensureReady();
       addToWindowsPath(paths.executableDirectories);
       MediaKit.ensureInitialized(libmpv: paths.mpv);
-      final player = Player(configuration: PlayerConfiguration(bufferSize: settings.cacheMemoryMb * 1024 * 1024));
+      final player = Player(configuration: PlayerConfiguration(
+        bufferSize: settings.cacheMemoryMb * 1024 * 1024,
+        // libmpv draws the subtitles so the 字幕设置 options (sub-scale,
+        // sub-pos, border and background) apply; the Flutter subtitle view
+        // is turned off on the watch page.
+        libass: true,
+      ));
       final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
       await player.setVolume(settings.defaultVolume.toDouble());
@@ -387,7 +393,7 @@ class AppController extends ChangeNotifier {
   Future<void> _loadSegments(VideoItem item, int serial) async {
     try {
       final segments = await _sponsorBlock.segments(item.id, settings.sponsorCategories);
-      if (serial == _playSerial) _segments = segments;
+      if (serial == _playSerial) _update(() => _segments = segments);
     } catch (_) {
       // Playback does not depend on SponsorBlock being reachable.
     }
@@ -510,6 +516,11 @@ class AppController extends ChangeNotifier {
   /// Follows [PlayerSettings.playOrder] once a video ends. Single cycle is
   /// mpv's loop-file, so a looping video never ends.
   Future<void> _playAfterEnd() async {
+    if (sleepAfterCurrent) {
+      _update(() => sleepAfterCurrent = false);
+      _notice('定时关闭：当前视频已播完');
+      return;
+    }
     switch (settings.playOrder) {
       case PlayOrder.pause || PlayOrder.singleCycle:
         return;
@@ -537,6 +548,40 @@ class AppController extends ChangeNotifier {
     } else if (suggestions.isNotEmpty) {
       await play(suggestions.first, from: suggestions);
     }
+  }
+
+  /// Whether nothing will play once the current video ends.
+  bool get stopsAfterEnd =>
+      sleepAfterCurrent ||
+      switch (settings.playOrder) {
+        PlayOrder.pause => true,
+        PlayOrder.singleCycle || PlayOrder.listCycle => false,
+        PlayOrder.listOrder => upNext.isEmpty,
+        PlayOrder.autoPlayRelated => !hasNext,
+      };
+
+  /// SponsorBlock segments of the playing video, for the progress bar.
+  List<SkipSegment> get segments => _segments;
+
+  /// When the sleep timer pauses playback; null when it is off.
+  DateTime? sleepAt;
+  /// Pause once the current video ends instead of at [sleepAt].
+  bool sleepAfterCurrent = false;
+  Timer? _sleepTimer;
+
+  /// Pauses playback after [after], or at the end of the current video when
+  /// [afterCurrent]; null turns the timer off. From PiliNara's 定时关闭.
+  void setSleepTimer(Duration? after, {bool afterCurrent = false}) {
+    _sleepTimer?.cancel();
+    _sleepTimer = after == null ? null : Timer(after, () {
+      unawaited(player?.pause());
+      _update(() => sleepAt = null);
+      _notice('定时关闭：已暂停播放');
+    });
+    _update(() {
+      sleepAt = after == null ? null : DateTime.now().add(after);
+      sleepAfterCurrent = afterCurrent;
+    });
   }
 
   bool get hasNext => upNext.isNotEmpty || relatedItems.isNotEmpty;
@@ -575,7 +620,13 @@ class AppController extends ChangeNotifier {
   /// Saves the quality limit and reloads the current video where it was.
   Future<void> setMaxHeight(int height) async {
     if (height == settings.maxHeight) return;
-    await saveSettings(settings.copyWith(maxHeight: height));
+    await reloadVideo(settings.copyWith(maxHeight: height));
+  }
+
+  /// Saves [next], if given, and reopens the current video where it was,
+  /// so format choices take effect at once.
+  Future<void> reloadVideo([PlayerSettings? next]) async {
+    if (next != null) await saveSettings(next);
     final item = playing;
     final player = this.player;
     if (item == null || player == null) return;
@@ -957,6 +1008,7 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _stallTimer?.cancel();
+    _sleepTimer?.cancel();
     _cancelSearch();
     for (final subscription in _playerSubscriptions) {
       unawaited(subscription.cancel());

@@ -6,10 +6,9 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../../app/app_controller.dart';
 import '../../models.dart';
 import '../../player_settings.dart';
-import '../../widgets/pilinara_playback_controls.dart';
 import '../common.dart';
+import '../player_controls.dart';
 import '../player_shortcuts.dart';
-import '../player_stats.dart';
 import '../skeleton.dart';
 import '../theme.dart';
 import '../video_card.dart';
@@ -28,6 +27,18 @@ class WatchPage extends StatefulWidget {
 class _WatchPageState extends State<WatchPage> {
   static const _sidePanelWidth = 380.0;
   final _video = GlobalKey<VideoState>();
+  String? _fullscreenFor;
+
+  /// Enters fullscreen once per video when 自动全屏 is on.
+  void _autoFullscreen(AppController controller) {
+    final id = controller.playing?.id;
+    if (id == null || id == _fullscreenFor || !controller.preferences.autoFullscreen) return;
+    _fullscreenFor = id;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = _video.currentState;
+      if (mounted && state != null && !state.isFullscreen()) state.enterFullscreen();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +51,8 @@ class _WatchPageState extends State<WatchPage> {
   }
 
   Widget _page(BuildContext context, AppController controller) {
-    final shortcuts = playerShortcuts(controller, _video);
+    _autoFullscreen(controller);
+    final shortcuts = playerShortcuts(controller, () => _video.currentState);
     // The same bindings work anywhere on the page and inside the fullscreen
     // route, where media_kit's controls hold focus.
     return CallbackShortcuts(
@@ -54,7 +66,7 @@ class _WatchPageState extends State<WatchPage> {
           final playerWidth = min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
           final main = <Widget>[
             _BackRow(onBack: controller.stopWatching),
-            Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video, shortcuts: shortcuts))),
+            Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
             const SizedBox(height: 12),
             _Toolbar(controller: controller),
             if (controller.playbackError != null) ...[
@@ -96,12 +108,11 @@ class _Toolbar extends StatelessWidget {
     final library = controller.library;
     final favorite = library?.isFavorite(item.id) ?? false;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      PiliNaraPlayerToolbar(
-        player: controller.player!,
-        maxHeight: settings.maxHeight,
-        onQualitySelected: controller.setMaxHeight,
-        speeds: settings.speeds,
-        trailing: [
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
           PopupMenuButton<PlayOrder>(
             tooltip: '播放顺序',
             initialValue: settings.playOrder,
@@ -111,7 +122,6 @@ class _Toolbar extends StatelessWidget {
             ],
             child: Chip(avatar: const Icon(Icons.repeat_rounded, size: 18), label: Text(settings.playOrder.label)),
           ),
-          IconButton(tooltip: '下一个 (Shift+N)', icon: const Icon(Icons.skip_next_rounded), onPressed: controller.hasNext ? controller.playNext : null),
           if (library != null) ...[
             IconButton(
               tooltip: favorite ? '取消收藏' : '收藏',
@@ -124,12 +134,6 @@ class _Toolbar extends StatelessWidget {
           ],
           IconButton(tooltip: '复制链接', icon: const Icon(Icons.link_rounded), onPressed: () => copyText(context, item.url, '链接已复制')),
           IconButton(tooltip: '在浏览器中打开', icon: const Icon(Icons.open_in_new_rounded), onPressed: () => openExternal(item.url)),
-          IconButton(
-            tooltip: '播放统计 (I)',
-            isSelected: controller.showStats,
-            icon: const Icon(Icons.query_stats_rounded),
-            onPressed: controller.toggleStats,
-          ),
           IconButton(tooltip: '快捷键', icon: const Icon(Icons.keyboard_outlined), onPressed: () => showShortcutHelp(context, controller.preferences)),
         ],
       ),
@@ -157,32 +161,27 @@ class _BackRow extends StatelessWidget {
 }
 
 class _Player extends StatelessWidget {
-  const _Player({required this.controller, required this.videoKey, required this.shortcuts});
+  const _Player({required this.controller, required this.videoKey});
   final AppController controller;
   final GlobalKey<VideoState> videoKey;
-  final Map<ShortcutActivator, VoidCallback> shortcuts;
 
   @override
-  Widget build(BuildContext context) {
-    final controls = MaterialDesktopVideoControlsThemeData(keyboardShortcuts: shortcuts);
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: ClipRRect(
-        borderRadius: AppStyle.cardRadius,
-        child: ColoredBox(
-          color: Colors.black,
-          child: MaterialDesktopVideoControlsTheme(
-            normal: controls,
-            fullscreen: controls,
-            child: Stack(fit: StackFit.expand, children: [
-              Video(key: videoKey, controller: controller.videoController!),
-              if (controller.showStats) Positioned(left: 12, top: 12, child: PlayerStats(player: controller.player!)),
-            ]),
+  Widget build(BuildContext context) => AspectRatio(
+        aspectRatio: 16 / 9,
+        child: ClipRRect(
+          borderRadius: AppStyle.cardRadius,
+          child: ColoredBox(
+            color: Colors.black,
+            child: Video(
+              key: videoKey,
+              controller: controller.videoController!,
+              controls: (state) => PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
+              // libmpv draws the subtitles; see AppController's player setup.
+              subtitleViewConfiguration: const SubtitleViewConfiguration(visible: false),
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _Details extends StatelessWidget {

@@ -17,7 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Verify latest shinchiro x86_64-v3 libmpv update
+      # The bundled DLL is the baseline x86-64 build, which runs on every
+      # x86-64 CPU; the app downloads the faster x86-64-v3 build at runtime
+      # when the CPU supports AVX2.
+      - name: Verify latest shinchiro x86_64 libmpv
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -33,9 +36,9 @@ jobs:
             -Uri 'https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest' `
             -Headers $headers
           $asset = $release.assets |
-            Where-Object { $_.name -match '^mpv-dev-x86_64-v3-.*\.7z$' } |
+            Where-Object { $_.name -match '^mpv-dev-x86_64-(?!v3-).*\.7z$' } |
             Select-Object -First 1
-          if (-not $asset) { throw 'Latest release has no x86_64-v3 development archive.' }
+          if (-not $asset) { throw 'Latest release has no x86_64 development archive.' }
           if ($asset.digest -notmatch '^sha256:([0-9a-fA-F]{64})$') {
             throw "Latest libmpv asset has no SHA-256 digest: $($asset.name)"
           }
@@ -62,6 +65,8 @@ jobs:
               Select-Object -First 1
           }
           if (-not $library) { throw 'The latest libmpv archive does not contain libmpv-2.dll.' }
+          if ($release.tag_name -notmatch '^[0-9A-Za-z._]{1,40}$') { throw "Unexpected libmpv tag: $($release.tag_name)" }
+          $release.tag_name | Out-File -FilePath (Join-Path $env:RUNNER_TEMP 'libmpv-tag.txt') -Encoding ascii -NoNewline
           Write-Host "Verified $($release.tag_name): $($asset.name), SHA-256, and $($library.FullName)"
 
       - name: Install Flutter stable SDK
@@ -90,6 +95,22 @@ jobs:
       - name: Release build
         run: flutter build windows --release
 
+      - name: Check that the video plugin is delay-loaded
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # windows/runner/libmpv_loader.cpp only works if media_kit_video_plugin.dll
+          # (which imports libmpv-2.dll) loads after main() starts.
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $dumpbin = & $vswhere -latest -products * -find 'VC\Tools\MSVC\**\bin\Hostx64\x64\dumpbin.exe' | Select-Object -First 1
+          if (-not $dumpbin) { throw 'dumpbin.exe not found.' }
+          $imports = & $dumpbin /imports 'build/windows/x64/runner/Release/ytplus.exe' | Out-String
+          $delayed = $imports.IndexOf('Section contains the following delay load imports')
+          if ($delayed -lt 0 -or $imports.IndexOf('media_kit_video_plugin.dll', $delayed) -lt 0) {
+            throw 'media_kit_video_plugin.dll is not delay-loaded.'
+          }
+          Write-Host 'media_kit_video_plugin.dll is delay-loaded.'
+
       - name: Replace bundled libmpv with the latest DLL
         shell: pwsh
         run: |
@@ -106,6 +127,9 @@ jobs:
           $sourceHash = (Get-FileHash -LiteralPath $library.FullName -Algorithm SHA256).Hash
           $targetHash = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash
           if ($sourceHash -ne $targetHash) { throw 'The bundled libmpv replacement did not verify.' }
+          # Read by lib/libmpv_updates.dart to decide whether a download is newer.
+          $tag = Get-Content -Raw (Join-Path $env:RUNNER_TEMP 'libmpv-tag.txt')
+          "$tag`nx86_64`n" | Out-File -FilePath 'build/windows/x64/runner/Release/libmpv-version.txt' -Encoding ascii -NoNewline
           Write-Host "Replaced the bundled DLL with $($library.FullName)"
 
       - name: Package Windows distribution

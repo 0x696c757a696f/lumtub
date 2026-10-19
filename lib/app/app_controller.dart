@@ -68,6 +68,7 @@ class AppController extends ChangeNotifier {
   StreamSubscription<VideoItem>? _searchSubscription;
   final _playerSubscriptions = <StreamSubscription<Object>>[];
   double _volumeBeforeMute = 100;
+  bool _libmpvConfirmed = false;
   bool _disposed = false;
   final _notices = StreamController<String>.broadcast();
 
@@ -267,6 +268,7 @@ class AppController extends ChangeNotifier {
   Future<bool> _open(VideoItem item, int serial, {Duration? start}) async {
     final player = this.player!;
     try {
+      if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       final platform = player.platform;
       if (platform is NativePlayer) {
         await platform.setProperty('ytdl-format', VideoFormatSelector.expressionFor(settings));
@@ -288,6 +290,12 @@ class AppController extends ChangeNotifier {
 
   void _listenTo(Player player) {
     _playerSubscriptions.addAll([
+      // A second of playback proves a downloaded libmpv works on this PC.
+      player.stream.position.listen((position) {
+        if (_libmpvConfirmed || position < const Duration(seconds: 1)) return;
+        _libmpvConfirmed = true;
+        unawaited(_tools?.libmpv.confirm());
+      }),
       player.stream.completed.listen((done) {
         if (done && playing != null && settings.autoplayNext) unawaited(playNext());
       }),
@@ -407,6 +415,21 @@ class AppController extends ChangeNotifier {
     } on FileSystemException {
       _notice('外观设置未能保存，本次运行仍然生效。');
     }
+  }
+
+  ToolManager? get tools => _tools;
+
+  /// Goes back to the libmpv shipped with YTPlus from the next launch on.
+  Future<void> rollBackLibmpv() async {
+    await _tools?.libmpv.rollBack();
+    _update(() {});
+    _notice('已改回内置 libmpv，重启 YTPlus 后生效。');
+  }
+
+  Future<void> rollBackYtDlp() async {
+    await _tools?.rollBackYtDlp();
+    _update(() {});
+    _notice('已改回上一个 yt-dlp，重启 YTPlus 后生效。');
   }
 
   Future<void> checkUpdates() async {

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -191,7 +190,7 @@ class _TopBar extends StatelessWidget {
           ))),
           const SizedBox(width: 16),
           IconButton(
-            tooltip: '检查 yt-dlp / Deno 更新',
+            tooltip: '检查组件更新',
             onPressed: ready && !controller.checking ? controller.checkUpdates : null,
             icon: controller.checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.system_update_alt_rounded),
           ),
@@ -292,7 +291,7 @@ class _StatusBar extends StatelessWidget {
     final status = controller.status;
     final paths = controller.paths;
     final text = controller.ready && paths != null
-        ? 'libmpv: ${File(paths.mpv).parent.path.split(Platform.pathSeparator).lastWhere((part) => part.isNotEmpty)}  ·  $status'
+        ? 'libmpv ${controller.tools?.libmpv.current?.label ?? '内置'}  ·  $status'
         : status;
     return Container(
       width: double.infinity,

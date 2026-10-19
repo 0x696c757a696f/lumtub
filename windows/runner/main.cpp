@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "flutter_window.h"
+#include "libmpv_loader.h"
 #include "utils.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
@@ -19,6 +20,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // Initialize COM, so that it is available for use in the library and/or
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
+  // Before the engine starts and plugins load.
+  LoadPreferredLibmpv();
 
   flutter::DartProject project(L"data");
 

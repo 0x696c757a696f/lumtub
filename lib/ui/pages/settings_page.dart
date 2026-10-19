@@ -102,6 +102,9 @@ class SettingsPage extends StatelessWidget {
             ],
           )),
           const SizedBox(height: 24),
+          const _SectionTitle('组件'),
+          PreferenceCard(child: _Components(controller: controller, note: note)),
+          const SizedBox(height: 24),
           const _SectionTitle('存储与缓存'),
           PreferenceCard(child: Column(children: [
             ListTile(
@@ -240,4 +243,61 @@ class _SectionTitle extends StatelessWidget {
         padding: const EdgeInsets.only(left: 4, bottom: 10),
         child: Text(text, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: context.colors.primary)),
       );
+}
+
+/// Versions of libmpv, yt-dlp and Deno, with updates and rollback.
+class _Components extends StatelessWidget {
+  const _Components({required this.controller, required this.note});
+  final AppController controller;
+  final TextStyle note;
+
+  @override
+  Widget build(BuildContext context) {
+    final tools = controller.tools;
+    if (tools == null || !controller.ready) return const ListTile(title: Text('正在准备组件…'));
+    final libmpv = tools.libmpv;
+    final current = libmpv.current;
+    final next = libmpv.selected;
+    final pendingRestart = next != null && next != current;
+    final colors = context.colors;
+    return Column(children: [
+      ListTile(
+        leading: Icon(Icons.movie_outlined, color: colors.primary),
+        title: const Text('libmpv'),
+        subtitle: Text([
+          '${libmpv.usesDownload ? '已更新' : '内置'}：${current?.label ?? '未知版本'}',
+          if (pendingRestart) '重启后使用 ${next.label}',
+        ].join('\n')),
+        trailing: libmpv.usesDownload || pendingRestart ? TextButton(onPressed: controller.rollBackLibmpv, child: const Text('改回内置')) : null,
+      ),
+      const Divider(),
+      ListTile(
+        leading: Icon(Icons.terminal_rounded, color: colors.primary),
+        title: const Text('yt-dlp'),
+        subtitle: Text(tools.ytDlpVersion ?? '未安装'),
+        trailing: tools.canRollBackYtDlp ? TextButton(onPressed: controller.rollBackYtDlp, child: const Text('回退上一版')) : null,
+      ),
+      const Divider(),
+      ListTile(
+        leading: Icon(Icons.code_rounded, color: colors.primary),
+        title: const Text('Deno'),
+        subtitle: Text(tools.denoVersion ?? '未安装'),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(18, 4, 18, 8),
+        child: Text('每天自动检查一次，只从官方 GitHub Release 下载并校验 SHA-256。新版本在重启后启用；新 libmpv 第一次播放失败或导致崩溃时，下次启动会自动改回内置版本。没有网络时继续使用已安装的版本。', style: note),
+      ),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: OutlinedButton.icon(
+            onPressed: controller.checking ? null : controller.checkUpdates,
+            icon: const Icon(Icons.system_update_alt_rounded),
+            label: Text(controller.checking ? '正在检查…' : '立即检查更新'),
+          ),
+        ),
+      ),
+    ]);
+  }
 }

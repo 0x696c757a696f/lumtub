@@ -74,6 +74,82 @@ class SliverVideoGrid extends StatelessWidget {
       );
 }
 
+/// YouTube playlists as a grid of cards.
+class SliverPlaylistGrid extends StatelessWidget {
+  const SliverPlaylistGrid({super.key, required this.items, required this.onOpen});
+  final List<PlaylistResult> items;
+  final void Function(PlaylistResult item) onOpen;
+
+  @override
+  Widget build(BuildContext context) => SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
+        sliver: SliverLayoutBuilder(builder: (context, constraints) {
+          final layout = gridLayoutFor(constraints.crossAxisExtent);
+          return SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: layout.columns,
+              mainAxisSpacing: AppStyle.cardSpacing,
+              crossAxisSpacing: AppStyle.cardSpacing,
+              mainAxisExtent: layout.itemHeight,
+            ),
+            delegate: SliverChildBuilderDelegate((context, i) => PlaylistCard(item: items[i], onOpen: () => onOpen(items[i])), childCount: items.length),
+          );
+        }),
+      );
+}
+
+/// A YouTube playlist: its cover with the video count, title and channel.
+class PlaylistCard extends StatelessWidget {
+  const PlaylistCard({super.key, required this.item, required this.onOpen});
+  final PlaylistResult item;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final cover = item.thumbnail;
+    return Card(
+      child: InkWell(
+        onTap: onOpen,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: ClipRRect(
+              borderRadius: AppStyle.thumbnailRadius,
+              child: Stack(fit: StackFit.expand, children: [
+                if (cover != null)
+                  Image.network(cover, fit: BoxFit.cover, errorBuilder: (context, error, stack) => ColoredBox(color: colors.surfaceContainerHighest))
+                else
+                  ColoredBox(color: colors.surfaceContainerHighest),
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 96,
+                  child: ColoredBox(
+                    color: Colors.black.withValues(alpha: 0.65),
+                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      const Icon(Icons.playlist_play_rounded, color: Colors.white, size: 28),
+                      if (item.count != null) Text('${item.count} 个视频', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                    ]),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+          Expanded(child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(child: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
+              Text(item.channel.isEmpty ? '播放列表' : '${item.channel} · 播放列表', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
+            ]),
+          )),
+        ]),
+      ),
+    );
+  }
+}
+
 /// Placeholder cards shown while results load.
 class SliverSkeletonGrid extends StatelessWidget {
   const SliverSkeletonGrid({super.key, this.rows = 3});
@@ -177,7 +253,10 @@ class _VideoCardState extends State<VideoCard> {
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(Icons.ondemand_video_rounded, size: 40, color: colors.outline)),
                   ),
                 ),
-                if (item.durationLabel.isNotEmpty) Positioned(right: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
+                if (item.isLive || item.isUpcoming)
+                  Positioned(right: 8, bottom: 8, child: DurationBadge(item.isLive ? '直播中' : '即将直播', color: item.isLive ? const Color(0xFFCC0000) : null))
+                else if (item.durationLabel.isNotEmpty)
+                  Positioned(right: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
                 _ProgressBar(item: item),
               ]),
             ),
@@ -196,12 +275,13 @@ class _VideoCardState extends State<VideoCard> {
 }
 
 class DurationBadge extends StatelessWidget {
-  const DurationBadge(this.label, {super.key});
+  const DurationBadge(this.label, {super.key, this.color});
   final String label;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(4)),
+        decoration: BoxDecoration(color: color ?? Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(4)),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           child: Text(label, style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w500, fontFeatures: [FontFeature.tabularFigures()])),

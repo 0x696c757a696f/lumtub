@@ -13,6 +13,7 @@ import 'pages/library_pages.dart';
 import 'pages/settings_page.dart';
 import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
+import 'pages/youtube_playlist_page.dart';
 import 'theme.dart';
 import 'video_card.dart';
 
@@ -83,7 +84,7 @@ class _AppShellState extends State<AppShell> {
   void _back() {
     if (_controller.playing != null) {
       _controller.stopWatching();
-    } else if (_controller.mode == PageMode.channel || _controller.mode == PageMode.playlist) {
+    } else if (_controller.mode == PageMode.channel || _controller.mode == PageMode.playlist || _controller.mode == PageMode.youtubePlaylist) {
       _controller.goBack();
     }
   }
@@ -159,6 +160,7 @@ class _AppShellState extends State<AppShell> {
   String get _pageKey => !_controller.ready ? 'setup' : _controller.playing != null ? 'watch' : switch (_controller.mode) {
         PageMode.channel => 'channel:${_controller.channel?.id}',
         PageMode.playlist => 'playlist:${_controller.openPlaylistId}',
+        PageMode.youtubePlaylist => 'yt-playlist:${_controller.youtubePlaylist?.id}',
         final mode => mode.name,
       };
 
@@ -174,6 +176,7 @@ class _AppShellState extends State<AppShell> {
       PageMode.playlists => PlaylistsPage(controller: controller),
       PageMode.channel => ChannelPage(controller: controller),
       PageMode.playlist => PlaylistDetailPage(controller: controller),
+      PageMode.youtubePlaylist => YoutubePlaylistPage(controller: controller),
       PageMode.settings => SettingsPage(controller: controller),
     };
   }

@@ -23,7 +23,9 @@ import '../player_option_applicator.dart';
 import '../player_settings.dart';
 import '../tool_manager.dart';
 import '../video_format_selector.dart';
+import '../community_posts.dart';
 import '../stream_resolver.dart';
+import 'posts_loader.dart';
 import '../video_repository.dart';
 import '../windows_env.dart';
 import '../windows_video_info.dart';
@@ -31,7 +33,7 @@ import 'account_controller.dart';
 import 'library_controller.dart';
 import 'video_list_loader.dart';
 
-enum PageMode { home, explore, subscriptions, history, playlists, settings, channel, playlist }
+enum PageMode { home, explore, subscriptions, history, playlists, settings, channel, playlist, youtubePlaylist }
 
 /// Application state and actions, kept separate from the widgets that show them.
 class AppController extends ChangeNotifier {
@@ -76,7 +78,17 @@ class AppController extends ChangeNotifier {
   /// [favoritesPlaylistId].
   String? openPlaylistId;
   static const favoritesPlaylistId = 'favorites';
-  PageMode _returnMode = PageMode.home;
+  /// Pages to go back to from channel and playlist pages, newest last.
+  final _backStack = <PageMode>[];
+
+  /// The open YouTube playlist and its videos.
+  PlaylistResult? youtubePlaylist;
+  VideoListLoader? youtubePlaylistVideos;
+
+  /// The channel page's tab, and its posts when that tab is open.
+  ChannelTab channelTab = ChannelTab.videos;
+  PostsLoader? channelPosts;
+  late final _posts = CommunityPosts(_http);
 
   /// Whether the statistics overlay is shown over the video.
   bool showStats = false;
@@ -163,6 +175,7 @@ class AppController extends ChangeNotifier {
 
   List<VideoItem> get results => searchResults?.items ?? const [];
   List<ChannelResult> get channelResults => searchResults?.channels ?? const [];
+  List<PlaylistResult> get playlistResults => searchResults?.playlists ?? const [];
   bool get searching => searchResults?.loading ?? false;
   String? get searchError => searchResults?.error;
 
@@ -812,7 +825,7 @@ class AppController extends ChangeNotifier {
     player?.pause();
   }
 
-  void navigate(PageMode target) {
+  void navigate(PageMode target, {bool back = false}) {
     _saveProgress(now: true);
     _tracking = null;
     ++_playSerial;
@@ -820,7 +833,13 @@ class AppController extends ChangeNotifier {
       unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
     }
     _update(() {
-      if (_isDetail(target) && !_isDetail(mode)) _returnMode = mode;
+      if (!back) {
+        if (!_isDetail(target)) {
+          _backStack.clear();
+        } else if (target != mode) {
+          _backStack.add(mode);
+        }
+      }
       mode = target;
       playing = null;
       playbackError = null;
@@ -828,19 +847,57 @@ class AppController extends ChangeNotifier {
     player?.pause();
   }
 
-  static bool _isDetail(PageMode mode) => mode == PageMode.channel || mode == PageMode.playlist;
+  static bool _isDetail(PageMode mode) => mode == PageMode.channel || mode == PageMode.playlist || mode == PageMode.youtubePlaylist;
 
   /// Opens [ref]'s page with its uploads.
   void openChannel(ChannelRef ref) {
     final repository = _repository;
     if (repository == null) return;
     channelVideos?.dispose();
+    channelPosts?.dispose();
+    channelPosts = null;
     channel = ref;
     channelQuery = null;
+    channelTab = ChannelTab.videos;
     channelVideos = VideoListLoader(() => repository.channelVideos(ref))
       ..addListener(notifyListeners)
       ..loadMore();
     navigate(PageMode.channel);
+  }
+
+  /// Shows another tab of the open channel.
+  void setChannelTab(ChannelTab tab) {
+    final repository = _repository;
+    final ref = channel;
+    if (repository == null || ref == null) return;
+    _update(() {
+      channelTab = tab;
+      channelQuery = null;
+      channelVideos?.dispose();
+      channelVideos = null;
+      channelPosts?.dispose();
+      channelPosts = null;
+      if (tab == ChannelTab.posts) {
+        channelPosts = PostsLoader(_posts, ref)..addListener(notifyListeners);
+        unawaited(channelPosts!.loadMore());
+      } else {
+        channelVideos = VideoListLoader(() => repository.channelTab(ref, tab))
+          ..addListener(notifyListeners)
+          ..loadMore();
+      }
+    });
+  }
+
+  /// Opens a YouTube playlist's page.
+  void openYoutubePlaylist(PlaylistResult playlist) {
+    final repository = _repository;
+    if (repository == null) return;
+    youtubePlaylistVideos?.dispose();
+    youtubePlaylist = playlist;
+    youtubePlaylistVideos = VideoListLoader(() => repository.playlist(playlist.id), pageSize: 50)
+      ..addListener(notifyListeners)
+      ..loadMore();
+    navigate(PageMode.youtubePlaylist);
   }
 
   /// Searches the open channel's videos for [query]; an empty query lists
@@ -852,8 +909,12 @@ class AppController extends ChangeNotifier {
     final text = query.trim();
     _update(() {
       channelVideos?.dispose();
+      channelPosts?.dispose();
+      channelPosts = null;
+      if (channelTab == ChannelTab.posts || channelTab == ChannelTab.playlists) channelTab = ChannelTab.videos;
       channelQuery = text.isEmpty ? null : text;
-      channelVideos = VideoListLoader(() => text.isEmpty ? repository.channelVideos(ref) : repository.channelSearch(ref, text))
+      final tab = channelTab;
+      channelVideos = VideoListLoader(() => text.isEmpty ? repository.channelTab(ref, tab) : repository.channelSearch(ref, text))
         ..addListener(notifyListeners)
         ..loadMore();
     });
@@ -865,7 +926,7 @@ class AppController extends ChangeNotifier {
   }
 
   /// Leaves a channel or playlist page for the page it was opened from.
-  void goBack() => navigate(_returnMode);
+  void goBack() => navigate(_backStack.isEmpty ? PageMode.home : _backStack.removeLast(), back: true);
 
   void retrySearch() {
     final last = _query;
@@ -1185,6 +1246,8 @@ class AppController extends ChangeNotifier {
     channelVideos?.dispose();
     searchResults?.dispose();
     explore?.dispose();
+    channelPosts?.dispose();
+    youtubePlaylistVideos?.dispose();
     related?.dispose();
     _http.close();
     if (!_shutDown) unawaited(player?.dispose());

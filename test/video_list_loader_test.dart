@@ -95,4 +95,20 @@ void main() {
     expect(result.handle, '@kurzgesagt');
     expect(result.avatar, 'https://yt3.ggpht.com/a=s176');
   });
+
+  test('keeps playlists apart and reads live status', () async {
+    final playlist = jsonEncode({
+      '_type': 'url', 'ie_key': 'YoutubeTab', 'id': 'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI',
+      'url': 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI', 'title': 'Hits', 'playlist_count': 42,
+    });
+    final live = jsonEncode({'id': 'jfKfPfyJRdk', 'title': 'lofi radio', 'live_status': 'is_live'});
+    final loader = VideoListLoader(() => Listing(() => Stream.fromIterable([playlist, live])));
+    addTearDown(loader.dispose);
+    loader.loadMore();
+    await pumpEventQueue();
+    expect(loader.playlists.single.title, 'Hits');
+    expect(loader.playlists.single.count, 42);
+    expect(loader.items.single.isLive, isTrue);
+  });
 }
+

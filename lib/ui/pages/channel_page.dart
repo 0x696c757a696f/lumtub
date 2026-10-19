@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
+import '../../app/posts_loader.dart';
+import '../../app/video_list_loader.dart';
+import '../../community_posts.dart';
 import '../../models.dart';
+import '../../video_repository.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../video_card.dart';
 
-/// A channel's uploads, newest first, with a follow button.
+/// A channel's page: header with follow button, tabs for videos, Shorts,
+/// live streams, playlists and posts, and a search inside the channel.
 class ChannelPage extends StatelessWidget {
   const ChannelPage({super.key, required this.controller});
   final AppController controller;
@@ -15,14 +20,18 @@ class ChannelPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final channel = controller.channel;
     final loader = controller.channelVideos;
-    if (channel == null || loader == null) {
+    final posts = controller.channelPosts;
+    if (channel == null || (loader == null && posts == null)) {
       return const StatusView(icon: Icons.account_circle_outlined, title: '没有打开的频道');
     }
-    final items = loader.items;
-    final error = loader.error;
+    final tab = controller.channelTab;
+    final searching = controller.channelQuery != null;
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification.metrics.extentAfter < 800) loader.loadMore();
+        if (notification.metrics.extentAfter < 800) {
+          loader?.loadMore();
+          posts?.loadMore();
+        }
         return false;
       },
       child: CustomScrollView(slivers: [
@@ -30,30 +39,148 @@ class ChannelPage extends StatelessWidget {
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
           child: Row(children: [
-            Expanded(child: Text(
-              controller.channelQuery == null ? '最新上传' : '频道内搜索“${controller.channelQuery}”',
-              style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-            )),
-            SizedBox(width: 260, child: _ChannelSearchField(key: ValueKey(channel.id), controller: controller)),
+            Expanded(child: searching
+                ? Text('频道内搜索“${controller.channelQuery}”', style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))
+                : Wrap(spacing: 8, runSpacing: 8, children: [
+                    for (final value in ChannelTab.values)
+                      ChoiceChip(label: Text(value.label), selected: tab == value, onSelected: (_) => controller.setChannelTab(value)),
+                  ])),
+            const SizedBox(width: 12),
+            SizedBox(width: 240, child: _ChannelSearchField(key: ValueKey(channel.id), controller: controller)),
           ]),
         )),
-        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
-        if (loader.loading) ...[
-          if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
-          SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),
-        ],
-        if (error != null)
-          SliverToBoxAdapter(child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-            child: ErrorBanner(items.isEmpty ? '无法加载频道视频：$error' : '加载更多失败：$error', onRetry: () => loader.loadMore(retry: true)),
-          )),
-        if (items.isEmpty && !loader.loading && error == null)
-          SliverFillRemaining(hasScrollBody: false, child: controller.channelQuery == null
-              ? const StatusView(icon: Icons.video_library_outlined, title: '这个频道还没有视频')
-              : const StatusView(icon: Icons.search_off_rounded, title: '频道里没有找到相关视频', message: '换个关键词试试。')),
+        if (posts != null) ..._postSlivers(context, posts) else ..._listingSlivers(context, loader!, tab, searching),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );
+  }
+
+  List<Widget> _listingSlivers(BuildContext context, VideoListLoader loader, ChannelTab tab, bool searching) {
+    final items = loader.items;
+    final playlists = loader.playlists;
+    final error = loader.error;
+    final empty = items.isEmpty && playlists.isEmpty;
+    return [
+      if (playlists.isNotEmpty) ...[
+        SliverPlaylistGrid(items: playlists, onOpen: controller.openYoutubePlaylist),
+        if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
+      ],
+      if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
+      if (loader.loading) ...[
+        if (!empty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
+        SliverSkeletonGrid(rows: empty ? 3 : 1),
+      ],
+      if (error != null)
+        SliverToBoxAdapter(child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
+          child: ErrorBanner(empty ? '无法加载：$error' : '加载更多失败：$error', onRetry: () => loader.loadMore(retry: true)),
+        )),
+      if (empty && !loader.loading && error == null)
+        SliverFillRemaining(hasScrollBody: false, child: searching
+            ? const StatusView(icon: Icons.search_off_rounded, title: '频道里没有找到相关内容', message: '换个关键词试试。')
+            : StatusView(icon: Icons.video_library_outlined, title: '这个频道没有${tab.label}')),
+    ];
+  }
+
+  List<Widget> _postSlivers(BuildContext context, PostsLoader loader) {
+    final posts = loader.posts;
+    final error = loader.error;
+    return [
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
+        sliver: SliverList.separated(
+          itemCount: posts.length,
+          separatorBuilder: (context, i) => const SizedBox(height: AppStyle.cardSpacing),
+          itemBuilder: (context, i) => Align(
+            alignment: Alignment.topLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: PostCard(post: posts[i], channel: controller.channel!, onPlay: (video) => controller.play(video)),
+            ),
+          ),
+        ),
+      ),
+      if (loader.loading)
+        const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))),
+      if (error != null)
+        SliverToBoxAdapter(child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
+          child: ErrorBanner(posts.isEmpty ? '无法加载社区帖子：$error' : '加载更多失败：$error', onRetry: () => loader.loadMore(retry: true)),
+        )),
+      if (posts.isEmpty && !loader.loading && error == null)
+        const SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.forum_outlined, title: '这个频道还没有社区帖子')),
+    ];
+  }
+}
+
+/// One community post: text, images, an attached video or poll, likes.
+class PostCard extends StatelessWidget {
+  const PostCard({super.key, required this.post, required this.channel, required this.onPlay});
+  final CommunityPost post;
+  final ChannelRef channel;
+  final void Function(VideoItem video) onPlay;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final video = post.video;
+    return Card(child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          ChannelAvatar(name: channel.name, radius: 16),
+          const SizedBox(width: 10),
+          Expanded(child: Text(channel.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600))),
+          Text(post.published, style: TextStyle(color: colors.outline, fontSize: 12)),
+        ]),
+        if (post.text.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          SelectableText(post.text, style: const TextStyle(height: 1.5)),
+        ],
+        if (post.images.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 240,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: post.images.length,
+              separatorBuilder: (context, i) => const SizedBox(width: 8),
+              itemBuilder: (context, i) => ClipRRect(
+                borderRadius: AppStyle.thumbnailRadius,
+                child: Image.network(post.images[i], fit: BoxFit.cover, errorBuilder: (context, error, stack) => const SizedBox(width: 240)),
+              ),
+            ),
+          ),
+        ],
+        if (post.poll.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          for (final choice in post.poll)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(border: Border.all(color: colors.outlineVariant), borderRadius: BorderRadius.circular(8)),
+              child: Text(choice),
+            ),
+        ],
+        if (video != null) ...[
+          const SizedBox(height: 10),
+          CompactVideoTile(item: video, onOpen: () => onPlay(video)),
+        ],
+        const SizedBox(height: 8),
+        Row(children: [
+          Icon(Icons.thumb_up_outlined, size: 16, color: colors.outline),
+          const SizedBox(width: 6),
+          Text(post.likes.isEmpty ? '0' : post.likes, style: TextStyle(color: colors.outline, fontSize: 12)),
+          const SizedBox(width: 16),
+          Icon(Icons.comment_outlined, size: 16, color: colors.outline),
+          const SizedBox(width: 6),
+          Text(post.comments.isEmpty ? '评论' : post.comments, style: TextStyle(color: colors.outline, fontSize: 12)),
+          const Spacer(),
+          TextButton.icon(onPressed: () => openExternal(post.url), icon: const Icon(Icons.open_in_new_rounded, size: 16), label: const Text('在浏览器中查看')),
+        ]),
+      ]),
+    ));
   }
 }
 
@@ -82,7 +209,7 @@ class _ChannelSearchFieldState extends State<_ChannelSearchField> {
         onSubmitted: widget.controller.searchChannel,
         decoration: InputDecoration(
           isDense: true,
-          hintText: '在频道内搜索',
+          hintText: '搜索频道内的视频',
           prefixIcon: const Icon(Icons.search_rounded, size: 20),
           suffixIcon: ListenableBuilder(
             listenable: _text,

@@ -100,9 +100,10 @@ class SearchResultsPage extends StatelessWidget {
     }
     final results = controller.visible(controller.results);
     final channels = controller.channelResults;
+    final playlists = controller.playlistResults;
     final error = controller.searchError;
     final filter = controller.searchFilter;
-    final empty = results.isEmpty && channels.isEmpty;
+    final empty = results.isEmpty && channels.isEmpty && playlists.isEmpty;
     Widget? status;
     if (empty && error != null && !controller.searching) {
       status = StatusView(
@@ -113,9 +114,13 @@ class SearchResultsPage extends StatelessWidget {
         action: FilledButton.tonalIcon(onPressed: controller.retrySearch, icon: const Icon(Icons.refresh_rounded), label: const Text('重试')),
       );
     } else if (empty && !controller.searching) {
-      status = StatusView(icon: Icons.search_off_rounded, title: filter == SearchFilter.channels ? '没有找到相关频道' : '没有找到相关视频', message: '换个关键词试试。');
+      status = StatusView(icon: Icons.search_off_rounded, title: filter == SearchFilter.all ? '没有找到相关内容' : '没有找到相关${filter.label}', message: '换个关键词试试。');
     }
-    final count = filter == SearchFilter.channels ? '${channels.length} 个频道' : '${results.length} 个视频${channels.isEmpty ? '' : '，${channels.length} 个频道'}';
+    final count = [
+      if (results.isNotEmpty) '${results.length} 个视频',
+      if (channels.isNotEmpty) '${channels.length} 个频道',
+      if (playlists.isNotEmpty) '${playlists.length} 个播放列表',
+    ].join('，');
     return NotificationListener<ScrollNotification>(
       // Fetch the next page shortly before the end of the results is reached.
       onNotification: (notification) {
@@ -125,14 +130,14 @@ class SearchResultsPage extends StatelessWidget {
       child: CustomScrollView(slivers: [
         SliverToBoxAdapter(child: PageHeader(
           '“$query”',
-          subtitle: controller.searching ? '正在搜索…' : count,
+          subtitle: controller.searching ? '正在搜索…' : (count.isEmpty ? null : count),
           trailing: IconButton(tooltip: '返回探索', onPressed: controller.clearSearch, icon: const Icon(Icons.close_rounded)),
         )),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
-          child: Wrap(spacing: 8, children: [
-            for (final (value, label) in const [(SearchFilter.all, '全部'), (SearchFilter.videos, '视频'), (SearchFilter.channels, '频道')])
-              ChoiceChip(label: Text(label), selected: filter == value, onSelected: (_) => controller.setSearchFilter(value)),
+          child: Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final value in SearchFilter.values)
+              ChoiceChip(label: Text(value.label), selected: filter == value, onSelected: (_) => controller.setSearchFilter(value)),
           ]),
         )),
         if (status != null)
@@ -147,6 +152,10 @@ class SearchResultsPage extends StatelessWidget {
                 itemBuilder: (context, i) => ChannelResultTile(controller: controller, result: channels[i]),
               ),
             ),
+          if (playlists.isNotEmpty) ...[
+            SliverPlaylistGrid(items: playlists, onOpen: controller.openYoutubePlaylist),
+            const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
+          ],
           if (results.isNotEmpty) SliverVideoGrid(items: results, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: results)),
           if (controller.searching) ...[
             if (!empty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),

@@ -11,6 +11,11 @@ class VideoItem {
   final String? channelId;
   /// Upload time, known for subscription feed entries.
   final DateTime? published;
+  /// yt-dlp's live_status: is_live, is_upcoming or was_live; null otherwise.
+  final String? liveStatus;
+
+  bool get isLive => liveStatus == 'is_live';
+  bool get isUpcoming => liveStatus == 'is_upcoming';
 
   const VideoItem({
     required this.id,
@@ -21,6 +26,7 @@ class VideoItem {
     this.viewCount,
     this.channelId,
     this.published,
+    this.liveStatus,
   });
 
   /// This video credited to [ref], keeping the known name when [ref] has none.
@@ -33,6 +39,7 @@ class VideoItem {
         viewCount: viewCount,
         channelId: ref.id,
         published: published,
+        liveStatus: liveStatus,
       );
 
   ChannelRef? get channelRef => channelId == null ? null : ChannelRef(channelId!, channel);
@@ -61,6 +68,7 @@ class VideoItem {
         if (viewCount != null) 'view_count': viewCount,
         if (channelId != null) 'channel_id': channelId,
         if (published != null) 'published': published!.toUtc().toIso8601String(),
+        if (liveStatus != null) 'live_status': liveStatus,
       };
 
   factory VideoItem.fromJson(Map<String, dynamic> map) {
@@ -83,6 +91,7 @@ class VideoItem {
       viewCount: views is num ? views.toInt() : null,
       channelId: channelId != null && ChannelRef.isValidId(channelId) ? channelId : null,
       published: DateTime.tryParse(map['published']?.toString() ?? ''),
+      liveStatus: const {'is_live', 'is_upcoming', 'was_live'}.contains(map['live_status']) ? map['live_status'] as String : null,
     );
   }
 
@@ -168,7 +177,45 @@ class ChannelResult {
   }
 }
 
-/// One entry of a listing: a [VideoItem] or a [ChannelResult].
+/// A YouTube playlist found by a search or on a channel's playlists tab.
+class PlaylistResult {
+  const PlaylistResult({required this.id, required this.title, this.channel = '', this.count, this.thumbnail});
+  final String id;
+  final String title;
+  final String channel;
+  final int? count;
+  final String? thumbnail;
+
+  String get url => 'https://www.youtube.com/playlist?list=$id';
+
+  static bool isValidId(String id) => RegExp(r'^[\w-]{10,64}$').hasMatch(id) && !ChannelRef.isValidId(id);
+
+  /// Reads a flat `--dump-json` playlist entry, or returns null.
+  static PlaylistResult? tryParse(Map<String, dynamic> map) {
+    if (map['ie_key'] != 'YoutubeTab') return null;
+    final url = map['url']?.toString() ?? '';
+    final id = Uri.tryParse(url)?.queryParameters['list'] ?? map['id']?.toString() ?? '';
+    if (!url.contains('list=') || !isValidId(id)) return null;
+    final count = map['playlist_count'];
+    String? thumbnail;
+    final thumbnails = map['thumbnails'];
+    if (thumbnails is List) {
+      for (final t in thumbnails.whereType<Map>()) {
+        final u = t['url']?.toString() ?? '';
+        if (u.isNotEmpty) thumbnail = u.startsWith('//') ? 'https:$u' : u;
+      }
+    }
+    return PlaylistResult(
+      id: id,
+      title: map['title']?.toString() ?? '播放列表',
+      channel: (map['channel'] ?? map['uploader'] ?? '').toString(),
+      count: count is num ? count.toInt() : null,
+      thumbnail: thumbnail != null && thumbnail.startsWith('https://') ? thumbnail : null,
+    );
+  }
+}
+
+/// One entry of a listing: a [VideoItem], [ChannelResult] or [PlaylistResult].
 Object? parseListingEntry(String line) {
   final Object? data;
   try {
@@ -179,6 +226,8 @@ Object? parseListingEntry(String line) {
   if (data is! Map<String, dynamic>) return null;
   final channel = ChannelResult.tryParse(data);
   if (channel != null) return channel;
+  final playlist = PlaylistResult.tryParse(data);
+  if (playlist != null) return playlist;
   try {
     return VideoItem.fromJson(data);
   } catch (_) {

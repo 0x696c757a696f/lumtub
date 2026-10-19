@@ -97,7 +97,7 @@ void main() {
     await tester.pump();
     expect(find.text('Rick Astley'), findsWidgets);
     expect(find.text('视频 5'), findsOneWidget);
-    expect(find.text('在频道内搜索'), findsOneWidget);
+    expect(find.text('搜索频道内的视频'), findsOneWidget);
     await tester.tap(find.text('关注'));
     await tester.pump();
     expect(library.isFollowing(channel.id), isTrue);

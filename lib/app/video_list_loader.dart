@@ -22,6 +22,8 @@ class VideoListLoader extends ChangeNotifier {
   List<VideoItem> items = const [];
   /// Channels the listing found; only searches list them.
   List<ChannelResult> channels = const [];
+  /// Playlists the listing found.
+  List<PlaylistResult> playlists = const [];
   bool loading = false;
   bool hasMore = true;
   String? error;
@@ -54,6 +56,9 @@ class VideoListLoader extends ChangeNotifier {
         if (entry is ChannelResult) {
           if (!_seen.add(entry.ref.id)) return;
           channels = [...channels, entry];
+        } else if (entry is PlaylistResult) {
+          if (!_seen.add(entry.id)) return;
+          playlists = [...playlists, entry];
         } else if (entry is VideoItem) {
           if (where?.call(entry) == false || !_seen.add(entry.id)) return;
           if (limit != null && items.length >= limit!) return;

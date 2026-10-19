@@ -6,7 +6,33 @@ import 'app_directories.dart';
 import 'models.dart';
 import 'stream_resolver.dart';
 
-enum SearchFilter { all, videos, channels }
+enum SearchFilter {
+  all('全部', null),
+  videos('视频', 'EgIQAQ%253D%253D'),
+  shorts('Shorts', 'EgIQCQ%253D%253D'),
+  live('直播', 'EgJAAQ%253D%253D'),
+  channels('频道', 'EgIQAg%253D%253D'),
+  playlists('播放列表', 'EgIQAw%253D%253D');
+
+  const SearchFilter(this.label, this.sp);
+  final String label;
+  /// YouTube's own filter parameter, as its results page URL carries it.
+  final String? sp;
+}
+
+/// The tabs of a channel page; [path] is the channel URL's tab, null for
+/// posts, which yt-dlp does not list.
+enum ChannelTab {
+  videos('视频', '/videos'),
+  shorts('Shorts', '/shorts'),
+  live('直播', '/streams'),
+  playlists('播放列表', '/playlists'),
+  posts('社区', null);
+
+  const ChannelTab(this.label, this.path);
+  final String label;
+  final String? path;
+}
 
 /// A listing read a page at a time from one source, such as one yt-dlp
 /// process. Each page continues where the last stopped, so scrolling through
@@ -78,17 +104,10 @@ class VideoRepository {
 
   static const pageSize = 20;
 
-  /// What a search looks for.
-  static const searchFilters = {
-    SearchFilter.all: null,
-    SearchFilter.videos: 'EgIQAQ%253D%253D',
-    SearchFilter.channels: 'EgIQAg%253D%253D',
-  };
-
   /// YouTube's results page for [query], which lists channels as well as
   /// videos; `sp` is YouTube's own filter parameter.
   static String searchUrl(String query, {SearchFilter filter = SearchFilter.all, String? sp}) {
-    final params = sp ?? searchFilters[filter];
+    final params = sp ?? filter.sp;
     return 'https://www.youtube.com/results?search_query=${Uri.encodeQueryComponent(query)}${params == null ? '' : '&sp=$params'}';
   }
 
@@ -110,7 +129,13 @@ class VideoRepository {
       _listing(searchUrl(query.trim(), filter: filter, sp: sp));
 
   /// [channel]'s uploads, newest first.
-  Listing channelVideos(ChannelRef channel) => _listing('${channel.url}/videos', channel: channel);
+  Listing channelVideos(ChannelRef channel) => channelTab(channel, ChannelTab.videos);
+
+  /// One tab of [channel]: uploads, Shorts, live streams or playlists.
+  Listing channelTab(ChannelRef channel, ChannelTab tab) => _listing('${channel.url}${tab.path ?? '/videos'}', channel: channel);
+
+  /// The videos of a YouTube playlist.
+  Listing playlist(String id) => _listing('https://www.youtube.com/playlist?list=$id');
 
   /// Videos of [channel] matching [query].
   Listing channelSearch(ChannelRef channel, String query) =>

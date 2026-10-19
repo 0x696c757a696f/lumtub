@@ -401,7 +401,7 @@ Future<void> openFontSettings(BuildContext context, AppController controller) =>
               ),
             ),
             SizedBox(width: 48, child: Text('${(appearance.textScale * 100).round()}%')),
-            TextButton(onPressed: () => save(controller.appearance.copyWith(textScale: 1, clearFontFamily: true)), child: const Text('重置')),
+            TextButton(onPressed: () => save(controller.appearance.copyWith(textScale: 1, fontFamily: bundledFont)), child: const Text('重置')),
           ]),
         ),
         _header(context, '预览'),
@@ -415,9 +415,102 @@ Future<void> openFontSettings(BuildContext context, AppController controller) =>
             Text('频道名称 · 12 万次观看 · 3 天前', style: theme.textTheme.labelMedium!.copyWith(color: context.colors.outline)),
           ]),
         ),
-        _tip(context, '注：只列出 Windows 自带的中文字体，部分字体可能缺少某些字重。'),
+        _tip(context, '注：Noto Sans CJK SC 随 YTPlus 安装（SIL OFL 1.1 许可），其余是 Windows 自带的中文字体，部分字体可能缺少某些字重。'),
       ];
     });
+
+// 视频设置 › 画面与音画同步调节 (PiliNara's video picture panel)
+
+Future<void> openPictureSettings(BuildContext context, AppController controller) => Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (context) => _PictureSettingsPage(controller: controller)),
+    );
+
+class _PictureSettingsPage extends StatefulWidget {
+  const _PictureSettingsPage({required this.controller});
+  final AppController controller;
+
+  @override
+  State<_PictureSettingsPage> createState() => _PictureSettingsPageState();
+}
+
+class _PictureSettingsPageState extends State<_PictureSettingsPage> {
+  late final Map<String, int> _picture = {...widget.controller.settings.picture};
+  late int _audioDelay = widget.controller.settings.audioDelayMs;
+
+  void _save() => widget.controller.saveSettings(widget.controller.settings.copyWith(picture: {
+        for (final entry in _picture.entries)
+          if (entry.value != 0) entry.key: entry.value,
+      }, audioDelayMs: _audioDelay));
+
+  Widget _slider(String label, int value, int min, int max, String suffix, ValueChanged<int> onChanged, VoidCallback onReset) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
+        child: Row(children: [
+          SizedBox(width: 72, child: Text(label)),
+          Expanded(
+            child: Slider(
+              value: value.toDouble(),
+              min: min.toDouble(),
+              max: max.toDouble(),
+              divisions: max - min,
+              label: '$value$suffix',
+              onChanged: (v) => onChanged(v.round()),
+              onChangeEnd: (_) => _save(),
+            ),
+          ),
+          SizedBox(width: 64, child: Text('$value$suffix', textAlign: TextAlign.end)),
+          IconButton(tooltip: '重置', icon: const Icon(Icons.restart_alt_rounded, size: 20), onPressed: value == 0 ? null : onReset),
+        ]),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('画面与音画同步调节'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _picture.clear();
+                _audioDelay = 0;
+              });
+              for (final (key, _) in pictureProperties) {
+                controller.previewProperty(key, '0');
+              }
+              controller.previewProperty('audio-delay', '0');
+              _save();
+            },
+            child: const Text('全部重置'),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
+        _header(context, '画面'),
+        for (final (key, label) in pictureProperties)
+          _slider(label, _picture[key] ?? 0, -100, 100, '', (v) {
+            setState(() => _picture[key] = v);
+            controller.previewProperty(key, '$v');
+          }, () {
+            setState(() => _picture[key] = 0);
+            controller.previewProperty(key, '0');
+            _save();
+          }),
+        _header(context, '音画同步'),
+        _slider('音频延迟', _audioDelay, -2000, 2000, ' ms', (v) {
+          setState(() => _audioDelay = (v / 10).round() * 10);
+          controller.previewProperty('audio-delay', '${_audioDelay / 1000}');
+        }, () {
+          setState(() => _audioDelay = 0);
+          controller.previewProperty('audio-delay', '0');
+          _save();
+        }),
+        _tip(context, '拖动时立即在正在播放的视频上预览。音频延迟为正时声音推后，为负时声音提前。这些值对之后的所有视频都生效。'),
+      ]),
+    );
+  }
+}
 
 // 其它设置 › 组件管理
 

@@ -38,6 +38,8 @@ ThemeData buildAppTheme(
   return ThemeData(
     useMaterial3: true,
     fontFamily: fontFamily,
+    // Characters a chosen Windows font lacks come from the bundled one.
+    fontFamilyFallback: fontFamily == bundledFont ? null : const [bundledFont],
     colorScheme: scheme,
     scaffoldBackgroundColor: scheme.surface,
     visualDensity: VisualDensity.standard,

@@ -457,6 +457,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               pickFromDialog<PlayOrder>(context, title: '播放顺序', value: settings.playOrder, values: [for (final o in PlayOrder.values) (o, o.label)], onSelected: _controller.setPlayOrder);
             }),
             item(Icons.subtitles_outlined, '字幕设置', '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}', () => openSubtitleSettings(context, _controller)),
+            item(Icons.tune_rounded, '画面与音画同步调节', null, () => openPictureSettings(context, _controller)),
             item(Icons.bedtime_outlined, '定时关闭', sleepLabel(), () => _pickSleepTimer(context)),
             item(Icons.info_outline_rounded, '播放信息', _controller.showStats ? '显示中' : null, _controller.toggleStats),
             item(Icons.refresh_rounded, '重载视频', '从当前位置重新加载', () => unawaited(_controller.reloadVideo())),

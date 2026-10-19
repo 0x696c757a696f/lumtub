@@ -67,13 +67,107 @@ enum SubtitleLanguage {
   final String mpvLangs;
 }
 
+/// mpv's `--video-sync` modes, as PiliNara lists them.
 enum VideoSync {
-  audio('跟随音频（默认）'),
-  displayResample('跟随显示器刷新率（更平滑）');
+  audio('audio', '跟随音频（默认）'),
+  displayResample('display-resample', '按显示器刷新率重采样（更平滑）'),
+  displayResampleVdrop('display-resample-vdrop', '重采样，必要时丢帧'),
+  displayResampleDesync('display-resample-desync', '重采样，不同步音频'),
+  displayTempo('display-tempo', '按显示器刷新率变速音频'),
+  displayVdrop('display-vdrop', '跟随显示器，丢弃或重复视频帧'),
+  displayAdrop('display-adrop', '跟随显示器，丢弃或重复音频'),
+  displayDesync('display-desync', '跟随显示器，不同步音频'),
+  desync('desync', '不同步（仅调试用）');
 
-  const VideoSync(this.label);
+  const VideoSync(this.mpvValue, this.label);
+  final String mpvValue;
   final String label;
-  String get mpvValue => this == audio ? 'audio' : 'display-resample';
+}
+
+/// mpv's `--hwdec` decoders that exist on Windows, from PiliNara's
+/// `HwDecType`. The setting is an ordered list; mpv tries them in turn.
+const hwdecChoices = <(String, String)>[
+  ('no', '软件解码'),
+  ('auto', '任意可用的硬件解码器'),
+  ('auto-safe', '最佳且稳定的硬件解码器（默认）'),
+  ('auto-copy', '带拷贝的最佳硬件解码器'),
+  ('d3d12va', 'DirectX 12（Windows 10 及以上）'),
+  ('d3d12va-copy', 'DirectX 12（非直通）'),
+  ('d3d11va', 'DirectX 11（Windows 8 及以上）'),
+  ('d3d11va-copy', 'DirectX 11（非直通）'),
+  ('dxva2', 'DXVA2（Windows 7 及以上）'),
+  ('dxva2-copy', 'DXVA2（非直通）'),
+  ('nvdec', 'NVDEC（NVIDIA 独占）'),
+  ('nvdec-copy', 'NVDEC（NVIDIA 独占，非直通）'),
+  ('vulkan', 'Vulkan（实验性）'),
+  ('vulkan-copy', 'Vulkan（实验性，非直通）'),
+  ('cuda', 'CUDA（NVIDIA 独占，过时）'),
+  ('cuda-copy', 'CUDA（NVIDIA 独占，过时，非直通）'),
+  ('amf', 'AMF（AMD 独占）'),
+  ('amf-copy', 'AMF（AMD 独占，非直通）'),
+  ('qsv', 'Quick Sync Video（Intel 独占）'),
+  ('qsv-copy', 'Quick Sync Video（Intel 独占，非直通）'),
+];
+
+/// Codecs offered for `--hwdec-codecs`.
+const hwdecCodecChoices = ['h264', 'hevc', 'vp8', 'vp9', 'av1', 'vc1', 'mpeg2video', 'mpeg4', 'wmv3', 'prores', 'prores_raw', 'ffv1', 'dpx'];
+const defaultHwdecCodecs = 'h264,vc1,hevc,vp8,vp9,av1,prores,ffv1';
+
+/// PiliNara's 音量均衡 presets, as mpv `--af` filters.
+const audioFilterPresets = <(String, String)>[
+  ('', '关闭'),
+  ('dynaudnorm=g=5:f=250:r=0.9:p=0.5', '预设 dynaudnorm（动态均衡）'),
+  ('loudnorm=I=-16:LRA=11:TP=-1.5', '预设 loudnorm（响度标准化）'),
+];
+
+/// Picture adjustments PiliNara offers in its player, as mpv properties.
+const pictureProperties = [('brightness', '亮度'), ('contrast', '对比度'), ('saturation', '饱和度'), ('gamma', '伽马'), ('hue', '色调')];
+
+/// Options a custom line may not set: ones that load code or files, write
+/// files, or would break media_kit's rendering and playback control.
+const _blockedOptions = {
+  'vo', 'wid', 'include', 'config', 'config-dir', 'ytdl', 'ytdl-path', 'idle', 'keep-open', 'force-window',
+  'log-file', 'o', 'of', 'ofopts', 'ovc', 'ovcopts', 'oac', 'oacopts', 'stream-record', 'record-file',
+  'input-conf', 'use-filedir-conf', 'watch-later-dir', 'watch-later-directory', 'screenshot-directory', 'screenshot-dir',
+};
+const _blockedPrefixes = ['script', 'load-', 'input-ipc', 'dump-', 'glsl-shader', 'lua'];
+
+/// One line of a custom mpv.conf that was not applied, and why.
+typedef RejectedOption = (String line, String reason);
+
+/// Reads mpv.conf syntax: `key=value`, `key = value`, `--key=value`, a bare
+/// `key` for yes and `no-key` for no, with `#` comments.
+(Map<String, String>, List<RejectedOption>) parseMpvConf(String text) {
+  final options = <String, String>{};
+  final rejected = <RejectedOption>[];
+  for (final raw in const LineSplitter().convert(text)) {
+    var line = raw.trim();
+    if (line.isEmpty || line.startsWith('#')) continue;
+    final comment = line.indexOf(RegExp(r'\s#'));
+    if (comment >= 0) line = line.substring(0, comment).trim();
+    if (line.startsWith('[')) {
+      rejected.add((raw.trim(), '不支持配置组（profile）'));
+      continue;
+    }
+    if (line.startsWith('--')) line = line.substring(2);
+    final eq = line.indexOf('=');
+    var key = (eq < 0 ? line : line.substring(0, eq)).trim().toLowerCase();
+    var value = eq < 0 ? 'yes' : line.substring(eq + 1).trim();
+    if (eq < 0 && key.startsWith('no-') && key.length > 3) {
+      key = key.substring(3);
+      value = 'no';
+    }
+    if (value.length >= 2 && ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))) {
+      value = value.substring(1, value.length - 1);
+    }
+    final reason = PlayerSettings.customOptionProblem(key, value);
+    if (reason == null) {
+      options[key] = value;
+    } else {
+      rejected.add((raw.trim(), reason));
+    }
+  }
+  return (options, rejected);
 }
 
 T _enumByName<T extends Enum>(List<T> values, Object? name, T fallback) =>
@@ -115,8 +209,25 @@ class PlayerSettings {
   final bool sponsorNotice;
   final String? cachePath;
   final int? cacheLimitGb;
-  final Map<String, String> customOptions;
+  /// Extra libmpv options in mpv.conf syntax, applied after all others.
+  final String mpvConf;
   final Map<String, DecoderStatus> decoderResults;
+  /// `--hwdec-codecs`: codecs hardware decoding is tried for.
+  final String hwdecCodecs;
+  /// `--d3d11va-zero-copy`.
+  final bool d3d11vaZeroCopy;
+  /// `--vd-lavc-dr`: auto, yes or no.
+  final String directRendering;
+  /// `--autosync`; 0 turns it off.
+  final int autosync;
+  /// `--af`, such as a loudness filter; empty for none.
+  final String audioFilter;
+  /// Brightness, contrast, saturation, gamma and hue, -100 to 100.
+  final Map<String, int> picture;
+  final int audioDelayMs;
+
+  /// The usable lines of [mpvConf].
+  Map<String, String> get customOptions => parseMpvConf(mpvConf).$1;
 
   static const defaultSponsorCategories = {'sponsor', 'selfpromo', 'interaction'};
 
@@ -150,8 +261,15 @@ class PlayerSettings {
     this.sponsorNotice = true,
     this.cachePath,
     this.cacheLimitGb,
-    this.customOptions = const {},
+    this.mpvConf = '',
     this.decoderResults = const {},
+    this.hwdecCodecs = defaultHwdecCodecs,
+    this.d3d11vaZeroCopy = false,
+    this.directRendering = 'auto',
+    this.autosync = 0,
+    this.audioFilter = '',
+    this.picture = const {},
+    this.audioDelayMs = 0,
   });
 
   /// Whether a finished video is followed by another one.
@@ -189,8 +307,15 @@ class PlayerSettings {
     bool clearCachePath = false,
     int? cacheLimitGb,
     bool clearCacheLimit = false,
-    Map<String, String>? customOptions,
+    String? mpvConf,
     Map<String, DecoderStatus>? decoderResults,
+    String? hwdecCodecs,
+    bool? d3d11vaZeroCopy,
+    String? directRendering,
+    int? autosync,
+    String? audioFilter,
+    Map<String, int>? picture,
+    int? audioDelayMs,
   }) => PlayerSettings(
         hwdec: hwdec ?? this.hwdec,
         scale: scale ?? this.scale,
@@ -221,8 +346,15 @@ class PlayerSettings {
         sponsorNotice: sponsorNotice ?? this.sponsorNotice,
         cachePath: clearCachePath ? null : cachePath ?? this.cachePath,
         cacheLimitGb: clearCacheLimit ? null : cacheLimitGb ?? this.cacheLimitGb,
-        customOptions: customOptions ?? this.customOptions,
+        mpvConf: mpvConf ?? this.mpvConf,
         decoderResults: decoderResults ?? this.decoderResults,
+        hwdecCodecs: hwdecCodecs ?? this.hwdecCodecs,
+        d3d11vaZeroCopy: d3d11vaZeroCopy ?? this.d3d11vaZeroCopy,
+        directRendering: directRendering ?? this.directRendering,
+        autosync: autosync ?? this.autosync,
+        audioFilter: audioFilter ?? this.audioFilter,
+        picture: picture ?? this.picture,
+        audioDelayMs: audioDelayMs ?? this.audioDelayMs,
       );
 
   Map<String, dynamic> toJson() => {
@@ -255,7 +387,14 @@ class PlayerSettings {
         'sponsorNotice': sponsorNotice,
         if (cachePath != null) 'cachePath': cachePath,
         if (cacheLimitGb != null) 'cacheLimitGb': cacheLimitGb,
-        'customOptions': customOptions,
+        'mpvConf': mpvConf,
+        'hwdecCodecs': hwdecCodecs,
+        'd3d11vaZeroCopy': d3d11vaZeroCopy,
+        'directRendering': directRendering,
+        'autosync': autosync,
+        'audioFilter': audioFilter,
+        'picture': picture,
+        'audioDelayMs': audioDelayMs,
         'decoderResults': decoderResults.map((codec, status) => MapEntry(codec, status.toJson())),
       };
 
@@ -276,15 +415,22 @@ class PlayerSettings {
       final parsed = value is num ? value.toDouble() : double.tryParse(value?.toString() ?? '');
       return parsed == null ? fallback : parsed.clamp(min, max).toDouble();
     }
-    final options = <String, String>{};
     final results = <String, DecoderStatus>{};
-    if (raw['customOptions'] is Map) {
-      for (final entry in (raw['customOptions'] as Map).entries) {
-        final key = entry.key.toString();
-        final value = entry.value.toString();
-        if (isSafeCustomOption(key, value)) options[key] = value;
+    // Earlier builds kept custom options as a map.
+    var conf = raw['mpvConf'] is String ? raw['mpvConf'] as String : '';
+    if (conf.isEmpty && raw['customOptions'] is Map) {
+      conf = [for (final entry in (raw['customOptions'] as Map).entries) '${entry.key}=${entry.value}'].join('\n');
+    }
+    if (conf.length > 20000) conf = '';
+    final picture = <String, int>{};
+    if (raw['picture'] is Map) {
+      for (final (key, _) in pictureProperties) {
+        final value = (raw['picture'] as Map)[key];
+        if (value is num && value != 0) picture[key] = value.toInt().clamp(-100, 100);
       }
     }
+    final codecs = (raw['hwdecCodecs']?.toString() ?? defaultHwdecCodecs).split(',').map((c) => c.trim()).where(hwdecCodecChoices.contains).toList();
+    final filter = raw['audioFilter']?.toString() ?? '';
     if (raw['decoderResults'] is Map) {
       for (final entry in (raw['decoderResults'] as Map).entries) {
         final codec = entry.key.toString().toLowerCase();
@@ -309,7 +455,7 @@ class PlayerSettings {
     final path = raw['cachePath']?.toString();
     final device = raw['audioDevice']?.toString() ?? 'auto';
     return PlayerSettings(
-      hwdec: choice('hwdec', {'auto-safe', 'd3d11va', 'd3d11va-copy', 'dxva2-copy', 'no'}, 'auto-safe'),
+      hwdec: validHwdec(raw['hwdec']?.toString()) ?? 'auto-safe',
       scale: choice('scale', {'spline36', 'bilinear', 'lanczos', 'ewa_lanczossharp'}, 'spline36'),
       deband: raw['deband'] == true,
       interpolation: raw['interpolation'] == true,
@@ -338,15 +484,36 @@ class PlayerSettings {
       sponsorNotice: raw['sponsorNotice'] != false,
       cachePath: path != null && path.trim().isNotEmpty ? path : null,
       cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),
-      customOptions: options,
+      mpvConf: conf,
       decoderResults: results,
+      hwdecCodecs: codecs.isEmpty ? defaultHwdecCodecs : codecs.join(','),
+      d3d11vaZeroCopy: raw['d3d11vaZeroCopy'] == true,
+      directRendering: choice('directRendering', {'auto', 'yes', 'no'}, 'auto'),
+      autosync: number('autosync', 0, 0, 100),
+      audioFilter: filter.length > 300 || filter.contains(RegExp(r'[\r\n]')) ? '' : filter,
+      picture: picture,
+      audioDelayMs: number('audioDelayMs', 0, -5000, 5000),
     );
   }
 
-  static bool isSafeCustomOption(String key, String value) {
-    const supported = {'deband', 'interpolation', 'scale', 'cscale', 'dscale', 'cache', 'cache-secs', 'demuxer-max-bytes', 'sub-scale', 'sub-pos', 'hwdec'};
-    return supported.contains(key) && value.isNotEmpty && value.length <= 80 && !RegExp(r'[\r\n;,]').hasMatch(value);
+  /// [value] if it is a comma list of known decoders, else null.
+  static String? validHwdec(String? value) {
+    if (value == null) return null;
+    final known = {for (final (name, _) in hwdecChoices) name};
+    final parts = value.split(',').map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty || parts.any((p) => !known.contains(p)) || parts.toSet().length != parts.length) return null;
+    return parts.join(',');
   }
+
+  /// Why a custom option cannot be applied, or null when it can.
+  static String? customOptionProblem(String key, String value) {
+    if (!RegExp(r'^[a-z0-9][a-z0-9_\-/]*$').hasMatch(key)) return '参数名无效';
+    if (_blockedOptions.contains(key) || _blockedPrefixes.any(key.startsWith)) return 'YTPlus 不允许设置此参数';
+    if (value.length > 500 || value.contains(RegExp(r'[\r\n;]'))) return '参数值无效';
+    return null;
+  }
+
+  static bool isSafeCustomOption(String key, String value) => customOptionProblem(key, value) == null;
 }
 
 /// SponsorBlock's categories with the names PiliNara shows for them.

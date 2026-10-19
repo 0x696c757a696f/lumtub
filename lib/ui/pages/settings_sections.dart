@@ -52,7 +52,6 @@ class SettingEntry {
 
 String qualityLabel(int height) => height == 0 ? '自动（不限制）' : '${height}p';
 
-const hwdecModes = [('auto-safe', '自动（推荐）'), ('d3d11va', 'D3D11VA'), ('d3d11va-copy', 'D3D11VA 复制模式'), ('dxva2-copy', 'DXVA2 复制模式')];
 const _scaleModes = [('spline36', 'Spline36（默认）'), ('bilinear', 'Bilinear（最省资源）'), ('lanczos', 'Lanczos（更锐利）'), ('ewa_lanczossharp', 'EWA Lanczos Sharp（最清晰，GPU 负载高）')];
 const _cacheModes = [('auto', '自动（推荐）'), ('yes', '启用'), ('no', '禁用')];
 const themeModes = [(ThemeMode.system, '跟随系统'), (ThemeMode.light, '浅色'), (ThemeMode.dark, '深色')];
@@ -205,11 +204,56 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: '硬件解码 hwdec'),
         SettingEntry('硬解模式', (context) => NormalItem(
               title: '硬解模式',
-              subtitle: hardware ? '当前：${labelOf(hwdecModes, settings.hwdec)}' : '已关闭硬解',
+              subtitle: hardware ? '当前：${settings.hwdec}（此项即 mpv 的 --hwdec，按顺序尝试）' : '已关闭硬解',
               leading: _icon(Icons.developer_board_outlined),
               enabled: hardware,
-              onTap: () => pickFromDialog<String>(context, title: '硬解模式', value: settings.hwdec, values: hwdecModes, onSelected: (value) => save(settings.copyWith(hwdec: value))),
-            ), subtitle: 'D3D11VA DXVA2'),
+              onTap: () async {
+                final result = await showDialog<List<String>>(
+                  context: context,
+                  builder: (context) => OrderedMultiSelectDialog<String>(
+                    title: '硬解模式',
+                    initValues: settings.hwdec.split(','),
+                    values: [for (final (name, label) in hwdecChoices) (name, name, label)],
+                  ),
+                );
+                if (result != null && result.isNotEmpty) save(controller.settings.copyWith(hwdec: result.join(',')));
+              },
+            ), subtitle: 'hwdec D3D11VA D3D12VA DXVA2 NVDEC Vulkan AMF QSV'),
+        SettingEntry('硬解编码', (context) => NormalItem(
+              title: '硬解编码',
+              subtitle: '当前：${settings.hwdecCodecs}（此项即 mpv 的 --hwdec-codecs）',
+              leading: _icon(Icons.video_file_outlined),
+              enabled: hardware,
+              onTap: () async {
+                final result = await showDialog<List<String>>(
+                  context: context,
+                  builder: (context) => OrderedMultiSelectDialog<String>(
+                    title: '只对这些编码尝试硬解',
+                    ordered: false,
+                    initValues: settings.hwdecCodecs.split(','),
+                    values: [for (final codec in hwdecCodecChoices) (codec, codec, null)],
+                  ),
+                );
+                if (result != null && result.isNotEmpty) {
+                  save(controller.settings.copyWith(hwdecCodecs: [for (final c in hwdecCodecChoices) if (result.contains(c)) c].join(',')));
+                }
+              },
+            ), subtitle: 'hwdec-codecs h264 hevc vp9 av1'),
+        SettingEntry('D3D11VA 零拷贝', (context) => SwitchItem(
+              title: 'D3D11VA 零拷贝',
+              subtitle: '此项即 mpv 的 --d3d11va-zero-copy，省去一次显存拷贝，个别显卡可能花屏',
+              leading: _icon(Icons.bolt_outlined),
+              enabled: hardware,
+              value: settings.d3d11vaZeroCopy,
+              onChanged: (v) => save(settings.copyWith(d3d11vaZeroCopy: v)),
+            ), subtitle: 'd3d11va-zero-copy'),
+        SettingEntry('直接解码到显存', (context) => PopupItem<String>(
+              title: '直接解码到显存（vd-lavc-dr）',
+              leading: _icon(Icons.memory_rounded),
+              value: settings.directRendering,
+              values: const [('auto', 'auto（默认）'), ('yes', 'yes'), ('no', 'no')],
+              onSelected: (v) => save(settings.copyWith(directRendering: v)),
+            ), subtitle: 'vd-lavc-dr direct rendering'),
         SettingEntry('默认画质', (context) => NormalItem(
               title: '默认画质',
               subtitle: '当前：${qualityLabel(settings.maxHeight)}',
@@ -258,6 +302,18 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ),
           );
         }, subtitle: '声卡 耳机 音箱'),
+        SettingEntry('音量均衡', (context) => NormalItem(
+              title: '音量均衡',
+              subtitle: '当前：${audioFilterPresets.where((p) => p.$1 == settings.audioFilter).map((p) => p.$2).firstOrNull ?? '自定义 ${settings.audioFilter}'}',
+              leading: _icon(Icons.equalizer_rounded),
+              onTap: () => _pickAudioFilter(context, controller),
+            ), subtitle: 'loudnorm dynaudnorm af 响度'),
+        SettingEntry('画面与音画同步调节', (context) => NormalItem(
+              title: '画面与音画同步调节',
+              subtitle: settings.picture.isEmpty && settings.audioDelayMs == 0 ? '亮度、对比度、饱和度、伽马、色调、音频延迟' : '已调整',
+              leading: _icon(Icons.tune_rounded),
+              onTap: () => openPictureSettings(context, controller),
+            ), subtitle: '亮度 对比度 饱和度 伽马 色调 音频延迟 audio-delay'),
         SettingEntry('缓冲模式', (context) => NormalItem(
               title: '缓冲模式',
               subtitle: '当前：${labelOf(_cacheModes, settings.cacheMode)}。只使用内存，不写入磁盘',
@@ -278,7 +334,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: '预读时间'),
         SettingEntry('视频同步', (context) => NormalItem(
               title: '视频同步',
-              subtitle: '当前：${settings.videoSync.label}',
+              subtitle: '当前：${settings.videoSync.mpvValue}，${settings.videoSync.label}（此项即 mpv 的 --video-sync）',
               leading: _icon(Icons.sync_alt_rounded),
               onTap: () => pickFromDialog<VideoSync>(
                 context,
@@ -288,6 +344,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 onSelected: (v) => save(settings.copyWith(videoSync: v)),
               ),
             ), subtitle: 'video-sync display-resample'),
+        SettingEntry('自动同步', (context) => NormalItem(
+              title: '自动同步',
+              subtitle: '当前：${settings.autosync == 0 ? '关闭' : settings.autosync}（此项即 mpv 的 --autosync，0 为关闭）',
+              leading: _icon(Icons.sync_rounded),
+              onTap: () => pickWithSlider(context, title: '自动同步', value: settings.autosync.toDouble(), min: 0, max: 30, divisions: 30, suffix: '', onSelected: (v) => save(controller.settings.copyWith(autosync: v.round()))),
+            ), subtitle: 'autosync'),
         SettingEntry('视频缩放算法', (context) => NormalItem(
               title: '视频缩放算法',
               subtitle: '当前：${labelOf(_scaleModes, settings.scale)}',
@@ -309,6 +371,15 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               onChanged: (value) => save(settings.copyWith(interpolation: value)),
             ), subtitle: 'interpolation'),
         SettingEntry('解码状态', (context) => _DecoderStatus(controller: controller), subtitle: 'GPU 当前解码方式 VP9 AV1 视频扩展'),
+        SettingEntry('自定义 mpv 参数', (context) {
+          final (options, rejected) = parseMpvConf(settings.mpvConf);
+          return NormalItem(
+            title: '自定义 mpv 参数',
+            subtitle: options.isEmpty ? '按 mpv.conf 格式填写，例如 d3d11va-zero-copy=yes' : '已设置 ${options.length} 项${rejected.isEmpty ? '' : '，${rejected.length} 行无法使用'}',
+            leading: _icon(Icons.code_rounded),
+            onTap: () => _editMpvConf(context, controller),
+          );
+        }, subtitle: 'mpv.conf 自定义参数'),
         SettingEntry('高级 libmpv 参数', (context) => _AdvancedOptions(settings: settings, onReset: () => save(PlayerSettings(cachePath: settings.cachePath, decoderResults: settings.decoderResults))), subtitle: '恢复默认设置'),
       ],
     SettingsCategory.play => [
@@ -710,7 +781,13 @@ class _AdvancedOptions extends StatelessWidget {
         option('scale', settings.scale, '视频缩放算法', '立即'),
         option('deband', settings.deband ? 'yes' : 'no', '色带消除', '立即'),
         option('interpolation', settings.interpolation ? 'yes' : 'no', '帧插值', '下一段视频'),
+        option('hwdec-codecs', settings.hwdecCodecs, '硬解编码', '下一段视频'),
+        option('d3d11va-zero-copy', settings.d3d11vaZeroCopy ? 'yes' : 'no', 'D3D11VA 零拷贝', '下一段视频'),
+        option('vd-lavc-dr', settings.directRendering, '直接解码到显存', '下一段视频'),
         option('video-sync', settings.videoSync.mpvValue, '视频同步', '立即'),
+        option('autosync', settings.autosync == 0 ? 'no' : '${settings.autosync}', '自动同步', '立即'),
+        option('af', settings.audioFilter.isEmpty ? '（无）' : settings.audioFilter, '音频滤镜', '立即'),
+        for (final (key, value) in settings.customOptions.entries.map((e) => (e.key, e.value))) option(key, value, '自定义参数', '立即或下一段视频'),
         option('cache', settings.cacheMode, '网络缓存模式', '立即'),
         option('cache-secs', '${settings.cacheSeconds}', '缓存预读时间', '立即'),
         option('demuxer-max-bytes', '${settings.cacheMemoryMb}MiB', '缓存内存上限', '立即'),
@@ -726,6 +803,52 @@ class _AdvancedOptions extends StatelessWidget {
       ],
     );
   }
+}
+
+Future<void> _pickAudioFilter(BuildContext context, AppController controller) async {
+  const custom = '\u0000custom';
+  final current = controller.settings.audioFilter;
+  final preset = audioFilterPresets.any((p) => p.$1 == current);
+  final chosen = await showDialog<String>(
+    context: context,
+    builder: (context) => SelectDialog<String>(
+      title: '音量均衡',
+      value: preset ? current : custom,
+      values: [...audioFilterPresets, (custom, preset ? '自定义' : '自定义：$current')],
+    ),
+  );
+  if (chosen == null || !context.mounted) return;
+  if (chosen != custom) {
+    await controller.saveSettings(controller.settings.copyWith(audioFilter: chosen));
+    return;
+  }
+  final text = await showDialog<String>(
+    context: context,
+    builder: (context) => TextEditDialog(title: '自定义音频滤镜', initialText: preset ? '' : current, hintText: '例如 loudnorm=I=-14:LRA=7:TP=-2', monospace: true),
+  );
+  if (text != null) await controller.saveSettings(controller.settings.copyWith(audioFilter: text.trim().replaceAll(RegExp(r'[\r\n]'), '')));
+}
+
+Future<void> _editMpvConf(BuildContext context, AppController controller) async {
+  final text = await showDialog<String>(
+    context: context,
+    builder: (context) => TextEditDialog(
+      title: '自定义 mpv 参数',
+      initialText: controller.settings.mpvConf,
+      hintText: '# 每行一个，和 mpv.conf 相同\nd3d11va-zero-copy=yes\nhwdec-codecs = h264,vc1,hevc,vp8,vp9,av1,prores,ffv1\nvd-lavc-dr = auto',
+      monospace: true,
+      maxLines: 14,
+      helper: (text) {
+        final (options, rejected) = parseMpvConf(text);
+        final colors = context.colors;
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('可用 ${options.length} 项，在其它设置之后应用。部分参数下一段视频或重启后生效。', style: TextStyle(fontSize: 12, color: colors.outline)),
+          for (final (line, reason) in rejected) Text('不会应用：$line（$reason）', style: TextStyle(fontSize: 12, color: colors.error)),
+        ]);
+      },
+    ),
+  );
+  if (text != null) await controller.saveSettings(controller.settings.copyWith(mpvConf: text));
 }
 
 TextStyle _subtitle(BuildContext context) => Theme.of(context).textTheme.labelMedium!.copyWith(color: context.colors.outline);

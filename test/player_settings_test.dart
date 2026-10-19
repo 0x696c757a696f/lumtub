@@ -89,4 +89,60 @@ void main() {
     expect(restored.sponsorCategories, {'sponsor', 'intro'});
     expect(restored.videoSync, VideoSync.displayResample);
   });
+
+  test('reads mpv.conf lines and refuses unsafe ones', () {
+    final (options, rejected) = parseMpvConf("""
+d3d11va-zero-copy=yes
+
+# 只对这些常见编码尝试硬解
+hwdec-codecs = h264,vc1,hevc,vp8,vp9,av1,prores,ffv1
+
+# 允许直接解码到 GPU 显存
+vd-lavc-dr = auto
+--deband
+no-interpolation
+scale="ewa_lanczossharp"  # sharper
+script=evil.lua
+vo=gpu-next
+[profile]
+""");
+    expect(options, {
+      'd3d11va-zero-copy': 'yes',
+      'hwdec-codecs': 'h264,vc1,hevc,vp8,vp9,av1,prores,ffv1',
+      'vd-lavc-dr': 'auto',
+      'deband': 'yes',
+      'interpolation': 'no',
+      'scale': 'ewa_lanczossharp',
+    });
+    expect(rejected.map((r) => r.$1), ['script=evil.lua', 'vo=gpu-next', '[profile]']);
+  });
+
+  test('hwdec is an ordered list of known decoders', () {
+    expect(PlayerSettings.fromJson({'hwdec': 'd3d11va,nvdec,auto-safe'}).hwdec, 'd3d11va,nvdec,auto-safe');
+    expect(PlayerSettings.fromJson({'hwdec': 'd3d11va,unknown'}).hwdec, 'auto-safe');
+    expect(PlayerSettings.fromJson({'hwdec': 'no'}).hwdec, 'no');
+  });
+
+  test('earlier custom options become mpv.conf lines', () {
+    final settings = PlayerSettings.fromJson({'customOptions': {'scale': 'lanczos', 'vo': 'gpu-next'}});
+    expect(settings.mpvConf, 'scale=lanczos\nvo=gpu-next');
+    expect(settings.customOptions, {'scale': 'lanczos'});
+  });
+
+  test('PiliNara mpv options survive a round trip', () {
+    const original = PlayerSettings(
+      hwdec: 'd3d12va,d3d11va',
+      hwdecCodecs: 'h264,av1',
+      d3d11vaZeroCopy: true,
+      directRendering: 'yes',
+      autosync: 30,
+      audioFilter: 'loudnorm=I=-16:LRA=11:TP=-1.5',
+      picture: {'brightness': 10, 'gamma': -5},
+      audioDelayMs: -120,
+      videoSync: VideoSync.displayTempo,
+      mpvConf: 'deband=yes',
+    );
+    final restored = PlayerSettings.fromJson(jsonDecode(jsonEncode(original.toJson())));
+    expect(restored.toJson(), original.toJson());
+  });
 }

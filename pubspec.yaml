@@ -25,3 +25,13 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    # Noto Sans SC is Google Fonts' build of Noto Sans CJK SC (SIL OFL 1.1,
+    # assets/fonts/OFL.txt).
+    - family: Noto Sans CJK SC
+      fonts:
+        - asset: assets/fonts/NotoSansSC-Regular.ttf
+        - asset: assets/fonts/NotoSansSC-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/NotoSansSC-Bold.ttf
+          weight: 700

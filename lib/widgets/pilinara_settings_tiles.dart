@@ -1,4 +1,5 @@
 // Settings widgets adapted from PiliNara (lib/pages/setting/widgets/,
+// including ordered_multi_select_dialog.dart,
 // lib/pages/setting/slide_color_picker.dart and
 // lib/common/widgets/color_palette.dart).
 //
@@ -541,3 +542,132 @@ Future<bool> confirmDialog(BuildContext context, {required String title, require
       ),
     ) ??
     false;
+
+/// Picks several values in order; tapping numbers them 1, 2, 3… From
+/// PiliNara's `OrderedMultiSelectDialog`, used for mpv's hwdec list.
+class OrderedMultiSelectDialog<T> extends StatefulWidget {
+  const OrderedMultiSelectDialog({super.key, required this.title, required this.initValues, required this.values, this.ordered = true});
+  final String title;
+  final Iterable<T> initValues;
+  /// Each value with its title and description.
+  final List<(T, String, String?)> values;
+  /// False for a plain multi-select whose order does not matter.
+  final bool ordered;
+
+  @override
+  State<OrderedMultiSelectDialog<T>> createState() => _OrderedMultiSelectDialogState<T>();
+}
+
+class _OrderedMultiSelectDialogState<T> extends State<OrderedMultiSelectDialog<T>> {
+  late final List<T> _chosen = widget.initValues.toList();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AlertDialog(
+      clipBehavior: Clip.hardEdge,
+      title: Text(widget.title),
+      contentPadding: const EdgeInsets.only(top: 12),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            for (final (value, title, description) in widget.values)
+              ListTile(
+                dense: true,
+                onTap: () => setState(() => _chosen.contains(value) ? _chosen.remove(value) : _chosen.add(value)),
+                leading: _OrderBox(position: _chosen.contains(value) ? _chosen.indexOf(value) + 1 : null, ordered: widget.ordered),
+                title: Text(title, style: theme.textTheme.titleSmall),
+                subtitle: description == null ? null : Text(description, style: _subtitleStyle(theme)),
+              ),
+          ]),
+        ),
+      ),
+      actionsPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text('取消', style: TextStyle(color: theme.colorScheme.outline))),
+        TextButton(onPressed: _chosen.isEmpty ? null : () => Navigator.pop(context, List<T>.of(_chosen)), child: const Text('确定')),
+      ],
+    );
+  }
+}
+
+/// PiliNara's `OrderedCheckboxListTile` box: the position when chosen.
+class _OrderBox extends StatelessWidget {
+  const _OrderBox({required this.position, required this.ordered});
+  final int? position;
+  final bool ordered;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final chosen = position != null;
+    return Container(
+      width: 22,
+      height: 22,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: chosen ? colors.primary : null,
+        border: chosen ? null : Border.all(color: colors.onSurfaceVariant, width: 2),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: !chosen
+          ? null
+          : ordered
+              ? Text('$position', style: TextStyle(color: colors.onPrimary, fontSize: 12, fontWeight: FontWeight.bold))
+              : Icon(Icons.check_rounded, size: 16, color: colors.onPrimary),
+    );
+  }
+}
+
+/// A multi-line text editor in a dialog; pops with the text.
+class TextEditDialog extends StatefulWidget {
+  const TextEditDialog({super.key, required this.title, required this.initialText, this.hintText, this.helper, this.monospace = false, this.maxLines = 1});
+  final String title;
+  final String initialText;
+  final String? hintText;
+  /// Shown under the field; may change as the text changes.
+  final Widget Function(String text)? helper;
+  final bool monospace;
+  final int maxLines;
+
+  @override
+  State<TextEditDialog> createState() => _TextEditDialogState();
+}
+
+class _TextEditDialogState extends State<TextEditDialog> {
+  late final _text = TextEditingController(text: widget.initialText);
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SizedBox(
+        width: 520,
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          TextField(
+            controller: _text,
+            autofocus: true,
+            minLines: widget.maxLines > 1 ? 6 : 1,
+            maxLines: widget.maxLines,
+            onChanged: (_) => setState(() {}),
+            style: widget.monospace ? const TextStyle(fontFamily: 'Consolas', fontSize: 13) : null,
+            decoration: InputDecoration(hintText: widget.hintText, border: const OutlineInputBorder(), isDense: true),
+          ),
+          if (widget.helper != null) ...[const SizedBox(height: 8), widget.helper!(_text.text)],
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text('取消', style: TextStyle(color: theme.colorScheme.outline))),
+        TextButton(onPressed: () => Navigator.pop(context, _text.text), child: const Text('保存')),
+      ],
+    );
+  }
+}

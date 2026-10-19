@@ -8,6 +8,13 @@ class PlayerOptionApplicator {
     final language = settings.subtitleLanguage;
     return {
       'hwdec': settings.hwdec,
+      'hwdec-codecs': settings.hwdecCodecs,
+      'd3d11va-zero-copy': settings.d3d11vaZeroCopy ? 'yes' : 'no',
+      'vd-lavc-dr': settings.directRendering,
+      'autosync': settings.autosync == 0 ? 'no' : settings.autosync.toString(),
+      'af': settings.audioFilter,
+      for (final (key, _) in pictureProperties) key: (settings.picture[key] ?? 0).toString(),
+      'audio-delay': (settings.audioDelayMs / 1000).toString(),
       'scale': settings.scale,
       'deband': settings.deband ? 'yes' : 'no',
       'interpolation': settings.interpolation ? 'yes' : 'no',

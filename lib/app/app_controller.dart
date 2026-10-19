@@ -896,6 +896,18 @@ class AppController extends ChangeNotifier {
     });
   }
 
+  /// Sets one libmpv property without saving, for live previews such as
+  /// the picture sliders.
+  Future<void> previewProperty(String name, String value) async {
+    final platform = player?.platform;
+    if (platform is! NativePlayer) return;
+    try {
+      await platform.setProperty(name, value);
+    } catch (_) {
+      // A preview that libmpv rejects changes nothing.
+    }
+  }
+
   Future<void> inspectCurrentDecoder() async {
     final platform = player?.platform;
     if (platform is! NativePlayer) {

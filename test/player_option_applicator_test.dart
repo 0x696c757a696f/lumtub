@@ -31,4 +31,24 @@ void main() {
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(playOrder: PlayOrder.singleCycle))['loop-file'], 'inf');
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['loop-file'], 'no');
   });
+
+  test('PiliNara mpv options and custom lines reach libmpv, custom lines win', () {
+    const settings = PlayerSettings(
+      d3d11vaZeroCopy: true,
+      autosync: 30,
+      audioFilter: 'dynaudnorm=g=5:f=250:r=0.9:p=0.5',
+      picture: {'contrast': 12},
+      audioDelayMs: 250,
+      mpvConf: 'vd-lavc-dr=yes\nhwdec-codecs=h264,av1',
+    );
+    final options = PlayerOptionApplicator.optionsFor(settings);
+    expect(options['d3d11va-zero-copy'], 'yes');
+    expect(options['autosync'], '30');
+    expect(options['af'], 'dynaudnorm=g=5:f=250:r=0.9:p=0.5');
+    expect(options['contrast'], '12');
+    expect(options['brightness'], '0');
+    expect(options['audio-delay'], '0.25');
+    expect(options['vd-lavc-dr'], 'yes');
+    expect(options['hwdec-codecs'], 'h264,av1');
+  });
 }

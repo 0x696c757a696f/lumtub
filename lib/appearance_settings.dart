@@ -73,8 +73,13 @@ enum ThumbnailQuality {
   final String label;
 }
 
-/// Fonts that ship with Windows and cover Chinese; null is the system UI font.
+/// The font bundled with YTPlus and used by default.
+const bundledFont = 'Noto Sans CJK SC';
+
+/// Fonts offered in Settings: the bundled one, then fonts that ship with
+/// Windows and cover Chinese; null is the system UI font.
 const fontChoices = <(String?, String)>[
+  (bundledFont, 'Noto Sans CJK SC（默认，内置）'),
   (null, '系统默认'),
   ('Microsoft YaHei UI', '微软雅黑'),
   ('DengXian', '等线'),
@@ -115,7 +120,7 @@ class AppearanceSettings {
     this.systemAccent = false,
     this.schemeVariant = DynamicSchemeVariant.tonalSpot,
     this.pureBlack = false,
-    this.fontFamily,
+    this.fontFamily = bundledFont,
     this.textScale = 1.0,
     this.transition = PageTransition.fade,
     this.navigation = NavigationStyle.auto,
@@ -174,7 +179,7 @@ class AppearanceSettings {
         'systemAccent': systemAccent,
         'schemeVariant': schemeVariant.name,
         'pureBlack': pureBlack,
-        if (fontFamily != null) 'fontFamily': fontFamily,
+        'fontFamily': fontFamily ?? 'system',
         'textScale': textScale,
         'transition': transition.name,
         'navigation': navigation.name,
@@ -199,7 +204,9 @@ class AppearanceSettings {
       systemAccent: raw['systemAccent'] == true,
       schemeVariant: _byName(DynamicSchemeVariant.values, raw['schemeVariant'], DynamicSchemeVariant.tonalSpot),
       pureBlack: raw['pureBlack'] == true,
-      fontFamily: fontChoices.any((f) => f.$1 != null && f.$1 == font) ? font : null,
+      // Earlier builds wrote nothing for the system font; it now defaults to
+      // the bundled one.
+      fontFamily: font == 'system' ? null : fontChoices.any((f) => f.$1 != null && f.$1 == font) ? font : bundledFont,
       textScale: scale is num ? scale.toDouble().clamp(0.8, 1.4) : 1.0,
       transition: _byName(PageTransition.values, raw['transition'], PageTransition.fade),
       navigation: _byName(NavigationStyle.values, raw['navigation'], NavigationStyle.auto),

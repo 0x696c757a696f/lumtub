@@ -11,6 +11,9 @@ class WatchProgress {
 
   double get fraction => duration > Duration.zero ? (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0) : 0;
 
+  /// Watched to the credits.
+  bool get finished => fraction >= 0.95;
+
   /// Worth resuming: past the first seconds and not at the credits.
   bool get resumable => position >= const Duration(seconds: 10) && fraction < 0.95;
 }
@@ -92,18 +95,21 @@ class LibraryStore {
     await temp.rename(file.path);
   }
 
+  /// Forgets every position, for the privacy settings.
+  void clearProgress() => _progress.clear();
+
   WatchProgress? progressOf(String id) {
     final value = _progress[id];
     return value == null ? null : WatchProgress(Duration(seconds: value.$1), Duration(seconds: value.$2));
   }
 
-  /// Remembers where [id] stopped; a finished video is forgotten so it
-  /// starts from the beginning next time.
+  /// Remembers where [id] stopped. A finished video is kept as watched to
+  /// the end, which is not resumable, so it starts from the beginning.
   void setProgress(String id, Duration position, Duration duration) {
     _progress.remove(id);
-    final progress = WatchProgress(position, duration);
-    if (duration <= Duration.zero || progress.fraction >= 0.95) return;
-    _progress[id] = (position.inSeconds, duration.inSeconds);
+    if (duration <= Duration.zero) return;
+    final finished = WatchProgress(position, duration).fraction >= 0.95;
+    _progress[id] = (finished ? duration.inSeconds : position.inSeconds, duration.inSeconds);
     while (_progress.length > _maxProgress) {
       _progress.remove(_progress.keys.first);
     }

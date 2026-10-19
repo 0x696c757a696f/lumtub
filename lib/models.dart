@@ -37,7 +37,11 @@ class VideoItem {
 
   ChannelRef? get channelRef => channelId == null ? null : ChannelRef(channelId!, channel);
 
-  String get thumbnail => 'https://i.ytimg.com/vi/$id/hqdefault.jpg';
+  /// The thumbnail size to load, a YouTube file name such as `hqdefault`;
+  /// set from the appearance settings.
+  static String thumbnailFile = 'hqdefault';
+
+  String get thumbnail => 'https://i.ytimg.com/vi/$id/$thumbnailFile.jpg';
 
   String get durationLabel {
     if (duration == null) return '';

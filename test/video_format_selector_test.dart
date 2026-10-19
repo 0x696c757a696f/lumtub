@@ -33,7 +33,12 @@ void main() {
   });
 
   test('applies the height cap when codec selection is off', () {
-    expect(VideoFormatSelector.expressionFor(const PlayerSettings(autoSelectCodec: false)), 'ytdl');
-    expect(VideoFormatSelector.expressionFor(const PlayerSettings(autoSelectCodec: false, maxHeight: 480)), startsWith('bestvideo[height<=?480]'));
+    expect(VideoFormatSelector.expressionFor(const PlayerSettings(codec: CodecPreference.any)), 'ytdl');
+    expect(VideoFormatSelector.expressionFor(const PlayerSettings(codec: CodecPreference.any, maxHeight: 480)), startsWith('bestvideo[height<=?480]'));
+  });
+  test('asks for the chosen codec and audio quality first', () {
+    final expression = VideoFormatSelector.expressionFor(const PlayerSettings(codec: CodecPreference.av01, audioQuality: AudioQuality.low));
+    expect(expression, startsWith('bestvideo[vcodec^=av01]+bestaudio[abr<=?64]/bestvideo[vcodec^=vp9]+bestaudio[abr<=?64]/'));
+    expect(expression, endsWith('/bestvideo+bestaudio/best/best'));
   });
 }

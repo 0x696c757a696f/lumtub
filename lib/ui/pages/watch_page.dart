@@ -5,6 +5,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../app/app_controller.dart';
 import '../../models.dart';
+import '../../player_settings.dart';
 import '../../widgets/pilinara_playback_controls.dart';
 import '../common.dart';
 import '../player_shortcuts.dart';
@@ -31,6 +32,14 @@ class _WatchPageState extends State<WatchPage> {
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
+    final appearance = controller.appearance;
+    final page = _page(context, controller);
+    if (!appearance.darkWatchPage || Theme.of(context).brightness == Brightness.dark) return page;
+    final dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.fontFamily);
+    return Theme(data: dark, child: Material(color: dark.colorScheme.surface, child: page));
+  }
+
+  Widget _page(BuildContext context, AppController controller) {
     final shortcuts = playerShortcuts(controller, _video);
     // The same bindings work anywhere on the page and inside the fullscreen
     // route, where media_kit's controls hold focus.
@@ -91,13 +100,16 @@ class _Toolbar extends StatelessWidget {
         player: controller.player!,
         maxHeight: settings.maxHeight,
         onQualitySelected: controller.setMaxHeight,
+        speeds: settings.speeds,
         trailing: [
-          FilterChip(
-            avatar: const Icon(Icons.playlist_play_rounded, size: 18),
-            label: const Text('自动连播'),
-            selected: settings.autoplayNext,
-            showCheckmark: false,
-            onSelected: controller.setAutoplayNext,
+          PopupMenuButton<PlayOrder>(
+            tooltip: '播放顺序',
+            initialValue: settings.playOrder,
+            onSelected: controller.setPlayOrder,
+            itemBuilder: (context) => [
+              for (final order in PlayOrder.values) CheckedPopupMenuItem(value: order, checked: order == settings.playOrder, child: Text(order.label)),
+            ],
+            child: Chip(avatar: const Icon(Icons.repeat_rounded, size: 18), label: Text(settings.playOrder.label)),
           ),
           IconButton(tooltip: '下一个 (Shift+N)', icon: const Icon(Icons.skip_next_rounded), onPressed: controller.hasNext ? controller.playNext : null),
           if (library != null) ...[
@@ -118,7 +130,7 @@ class _Toolbar extends StatelessWidget {
             icon: const Icon(Icons.query_stats_rounded),
             onPressed: controller.toggleStats,
           ),
-          IconButton(tooltip: '快捷键', icon: const Icon(Icons.keyboard_outlined), onPressed: () => showShortcutHelp(context)),
+          IconButton(tooltip: '快捷键', icon: const Icon(Icons.keyboard_outlined), onPressed: () => showShortcutHelp(context, controller.preferences)),
         ],
       ),
       if (decoded)
@@ -216,23 +228,25 @@ class _Details extends StatelessWidget {
           SkeletonBox(width: 260, height: 12),
         ]))
       else if (meta.isNotEmpty || (details?.description.isNotEmpty ?? false))
-        _Description(meta: meta, description: details?.description ?? ''),
+        _Description(meta: meta, description: details?.description ?? '', expanded: controller.preferences.expandDescription),
     ]);
   }
 }
 
 /// Collapsible description card, three lines until expanded.
 class _Description extends StatefulWidget {
-  const _Description({required this.meta, required this.description});
+  const _Description({required this.meta, required this.description, this.expanded = false});
   final String meta;
   final String description;
+  /// Whether it starts expanded.
+  final bool expanded;
 
   @override
   State<_Description> createState() => _DescriptionState();
 }
 
 class _DescriptionState extends State<_Description> {
-  bool _expanded = false;
+  late bool _expanded = widget.expanded;
 
   @override
   Widget build(BuildContext context) {
@@ -278,7 +292,7 @@ class _UpNext extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = controller.upNext;
     final related = controller.related;
-    final relatedItems = related?.items ?? const <VideoItem>[];
+    final relatedItems = controller.relatedItems;
     final children = <Widget>[
       _header(context, '接下来播放', items.isEmpty ? null : '${items.length} 个'),
       if (items.isEmpty)

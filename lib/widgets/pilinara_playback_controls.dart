@@ -11,15 +11,15 @@ import '../player_settings.dart';
 /// Adapted for YTPlus under GPL-3.0-or-later without Bilibili or GetX state.
 /// Play, seek, volume and fullscreen live in media_kit's on-video controls.
 class PiliNaraPlayerToolbar extends StatelessWidget {
-  const PiliNaraPlayerToolbar({super.key, required this.player, required this.maxHeight, required this.onQualitySelected, this.trailing = const []});
+  const PiliNaraPlayerToolbar({super.key, required this.player, required this.maxHeight, required this.onQualitySelected, this.speeds = defaultSpeeds, this.trailing = const []});
 
   final Player player;
   /// The quality limit, 0 for automatic.
   final int maxHeight;
   final ValueChanged<int> onQualitySelected;
+  /// The choices of the speed menu, from Settings › 倍速设置.
+  final List<double> speeds;
   final List<Widget> trailing;
-
-  static const _speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
   @override
   Widget build(BuildContext context) => StreamBuilder<Tracks>(
@@ -61,7 +61,7 @@ class PiliNaraPlayerToolbar extends StatelessWidget {
                     label: rate == 1.0 ? '倍速' : '${_trimRate(rate)}×',
                     tooltip: '播放速度',
                     selected: rate,
-                    values: _speeds,
+                    values: speeds,
                     labelOf: (value) => value == 1.0 ? '正常' : '${_trimRate(value)}×',
                     onSelected: player.setRate,
                   );

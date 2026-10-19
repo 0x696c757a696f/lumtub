@@ -21,8 +21,10 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
 
   /// The cache file for [videoId]; ids are validated YouTube ids, so they are
   /// safe as file names.
-  static File fileFor(Directory directory, String videoId) =>
-      File('${directory.path}${Platform.pathSeparator}$videoId.jpg');
+  /// Sizes other than the default `hqdefault` are cached under their own
+  /// name, so switching sizes never shows a stale image.
+  static File fileFor(Directory directory, String videoId, [String size = 'hqdefault']) =>
+      File('${directory.path}${Platform.pathSeparator}$videoId${size == 'hqdefault' ? '' : '_$size'}.jpg');
 
   @override
   Future<CachedThumbnail> obtainKey(ImageConfiguration configuration) => SynchronousFuture(this);
@@ -39,7 +41,11 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
       bytes = null;
     }
     if (bytes == null || bytes.isEmpty) {
-      final response = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 20));
+      var response = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 20));
+      // The larger sizes exist only for some videos; hqdefault always does.
+      if (response.statusCode == 404 && RegExp(r'/(maxresdefault|sddefault)\.jpg$').hasMatch(url)) {
+        response = await _client.get(Uri.parse(url.replaceFirst(RegExp(r'(maxresdefault|sddefault)\.jpg$'), 'hqdefault.jpg'))).timeout(const Duration(seconds: 20));
+      }
       if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
         throw HttpException('Thumbnail HTTP ${response.statusCode}', uri: Uri.parse(url));
       }

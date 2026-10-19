@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
+import '../appearance_settings.dart';
 import 'common.dart';
 import 'pages/account_settings.dart';
 import 'pages/channel_page.dart';
@@ -98,6 +99,11 @@ class _AppShellState extends State<AppShell> {
             listenable: _controller,
             builder: (context, _) => LayoutBuilder(builder: (context, constraints) {
               final wide = constraints.maxWidth >= 720;
+              final rail = switch (_controller.appearance.navigation) {
+                NavigationStyle.auto => wide,
+                NavigationStyle.rail => true,
+                NavigationStyle.bottom => false,
+              };
               return Scaffold(
                 body: Column(children: [
                   _TopBar(
@@ -108,7 +114,7 @@ class _AppShellState extends State<AppShell> {
                     onSubmit: _submitSearch,
                   ),
                   Expanded(child: Row(children: [
-                    if (wide)
+                    if (rail)
                       NavigationRail(
                         selectedIndex: _selectedIndex,
                         labelType: NavigationRailLabelType.all,
@@ -125,9 +131,9 @@ class _AppShellState extends State<AppShell> {
                       child: KeyedSubtree(key: ValueKey(_pageKey), child: VideoActions(controller: _controller, child: _content())),
                     )),
                   ])),
-                  _StatusBar(controller: _controller),
+                  if (_controller.appearance.showStatusBar) _StatusBar(controller: _controller),
                 ]),
-                bottomNavigationBar: wide ? null : NavigationBar(
+                bottomNavigationBar: rail ? null : NavigationBar(
                   height: 64,
                   selectedIndex: _selectedIndex ?? 0,
                   onDestinationSelected: (i) => _controller.navigate(_destinations[i].$1),

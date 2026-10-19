@@ -67,6 +67,11 @@ class LibraryController extends ChangeNotifier {
     _saveTimer ??= Timer(const Duration(seconds: 30), () => unawaited(flush()));
   }
 
+  void clearProgress() {
+    store.clearProgress();
+    _changed();
+  }
+
   bool toggleFavorite(VideoItem item) {
     final added = store.toggleFavorite(item);
     _changed();
@@ -150,13 +155,13 @@ class LibraryController extends ChangeNotifier {
     _changed();
   }
 
-  /// Loads the newest uploads of every followed channel, at most every ten
-  /// minutes unless [force]d. Each channel's feed is tried first; yt-dlp is
+  /// Loads the newest uploads of every followed channel, at most once per
+  /// [interval] unless [force]d. Each channel's feed is tried first; yt-dlp is
   /// the fallback when YouTube's feed is unavailable.
-  Future<void> refreshFeed({bool force = false}) async {
+  Future<void> refreshFeed({bool force = false, Duration interval = const Duration(minutes: 10)}) async {
     if (loadingFeed) return;
     final loadedAt = _feedLoadedAt;
-    if (!force && loadedAt != null && DateTime.now().difference(loadedAt) < const Duration(minutes: 10)) return;
+    if (!force && loadedAt != null && DateTime.now().difference(loadedAt) < interval) return;
     final channels = List.of(store.channels);
     loadingFeed = true;
     notifyListeners();

@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
+import '../../widgets/pilinara_settings_tiles.dart';
 import '../theme.dart';
 import 'settings_sections.dart';
 
@@ -50,7 +51,12 @@ class _SettingsPageState extends State<SettingsPage> {
         ]);
       });
 
-  Widget _list(BuildContext context, {required bool wide}) {
+  Widget _list(BuildContext context, {required bool wide}) => ListenableBuilder(
+        listenable: Listenable.merge([_controller, _controller.account]),
+        builder: (context, _) => _listBody(context, wide: wide),
+      );
+
+  Widget _listBody(BuildContext context, {required bool wide}) {
     final theme = Theme.of(context);
     final searching = _query.isNotEmpty;
     return ListView(padding: const EdgeInsets.only(bottom: 24), children: [
@@ -83,31 +89,51 @@ class _SettingsPageState extends State<SettingsPage> {
       // them in the detail pane.
       if (searching && !wide)
         ..._SearchResults.rows(context, _controller, _query)
-      else
+      else ...[
         for (final category in SettingsCategory.values)
+          if (category != SettingsCategory.account && category != SettingsCategory.about) _tile(context, category, wide: wide, subtitle: category.subtitle),
+        // Like PiliNara, the account and about rows sit at the bottom
+        // without a subtitle, with sign-out between them when signed in.
+        _tile(context, SettingsCategory.account, wide: wide),
+        if (_controller.account?.signedIn ?? false)
           ListTile(
-            tileColor: wide && !searching && category == _category ? theme.colorScheme.onInverseSurface : null,
-            leading: Icon(category.icon),
-            title: Text(category.title, style: theme.textTheme.titleMedium),
-            subtitle: Text(category.subtitle, style: theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.outline)),
-            onTap: () {
-              if (wide) {
-                setState(() {
-                  _category = category;
-                  _search.clear();
-                  _query = '';
-                });
-              } else {
-                Navigator.of(context).push(MaterialPageRoute<void>(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text(category.title)),
-                    body: _Entries(controller: _controller, category: category),
-                  ),
-                ));
+            leading: const Icon(Icons.logout_outlined),
+            title: Text('退出登录', style: theme.textTheme.titleMedium),
+            onTap: () async {
+              if (await confirmDialog(context, title: '退出登录？', content: '本机保存的 Google 登录凭据会被删除，订阅和播放列表保留在本机。', confirm: '退出登录')) {
+                await _controller.account?.signOut();
               }
             },
           ),
+        _tile(context, SettingsCategory.about, wide: wide),
+      ],
     ]);
+  }
+
+  Widget _tile(BuildContext context, SettingsCategory category, {required bool wide, String? subtitle}) {
+    final theme = Theme.of(context);
+    return ListTile(
+      tileColor: wide && _query.isEmpty && category == _category ? theme.colorScheme.onInverseSurface : null,
+      leading: Icon(category.icon),
+      title: Text(category.title, style: theme.textTheme.titleMedium),
+      subtitle: subtitle == null ? null : Text(subtitle, style: theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.outline)),
+      onTap: () {
+        if (wide) {
+          setState(() {
+            _category = category;
+            _search.clear();
+            _query = '';
+          });
+        } else {
+          Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (context) => Scaffold(
+              appBar: AppBar(title: Text(category.title)),
+              body: _Entries(controller: _controller, category: category),
+            ),
+          ));
+        }
+      },
+    );
   }
 }
 

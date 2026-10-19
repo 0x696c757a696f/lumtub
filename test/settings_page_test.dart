@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/app_controller.dart';
+import 'package:ytplus/models.dart';
 import 'package:ytplus/ui/pages/settings_page.dart';
 import 'package:ytplus/ui/pages/settings_sections.dart';
 import 'package:ytplus/ui/theme.dart';
@@ -55,14 +56,67 @@ void main() {
     expect(find.text('没有找到相关设置'), findsOneWidget);
   });
 
-  testWidgets('a choice dialog changes the theme mode', (tester) async {
+  testWidgets('the theme mode menu changes the theme mode', (tester) async {
     await pump(tester);
     await tester.tap(find.text(SettingsCategory.style.title));
     await tester.pump();
     await tester.tap(find.text('主题模式'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('深色'));
+    // The menu item's text sits under its ink; the tap still lands on the item.
+    await tester.tap(find.text('深色'), warnIfMissed: false);
     await tester.pumpAndSettle();
     expect(controller.appearance.themeMode, ThemeMode.dark);
+  });
+
+  Future<void> openRow(WidgetTester tester, SettingsCategory category, String row) async {
+    await tester.tap(find.text(category.title));
+    await tester.pump();
+    await tester.scrollUntilVisible(find.text(row), 200, scrollable: find.byType(Scrollable).last);
+    await tester.tap(find.text(row));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('sub-pages open from their rows', (tester) async {
+    await pump(tester);
+    for (final (category, row, title, content) in [
+      (SettingsCategory.play, '倍速设置', '倍速设置', '倍速列表'),
+      (SettingsCategory.play, '字幕设置', '字幕设置', '首选字幕语言'),
+      (SettingsCategory.style, '应用主题', '选择应用主题', '调色板风格'),
+      (SettingsCategory.style, 'App 字体设置', 'App 字体设置', '微软雅黑'),
+      (SettingsCategory.extra, '组件管理', '组件管理', '正在准备组件…'),
+      (SettingsCategory.about, '错误日志', '日志', '暂无日志'),
+    ]) {
+      await openRow(tester, category, row);
+      expect(find.widgetWithText(AppBar, title), findsOneWidget, reason: row);
+      expect(find.text(content), findsWidgets, reason: row);
+      expect(tester.takeException(), isNull);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+    }
+  });
+
+  testWidgets('the SponsorBlock row opens its categories and keeps its switch', (tester) async {
+    await pump(tester);
+    await openRow(tester, SettingsCategory.extra, '空降助手');
+    expect(find.text('跳过的片段类型'), findsOneWidget);
+    expect(find.byType(CheckboxListTile), findsNWidgets(8));
+  });
+
+  testWidgets('blocked channels can be removed', (tester) async {
+    await controller.savePreferences(controller.preferences.copyWith(blockedChannels: const [ChannelRef('UC0123456789abcdefghijkl', '测试频道')]));
+    await pump(tester);
+    await openRow(tester, SettingsCategory.privacy, '屏蔽频道');
+    expect(find.text('测试频道'), findsOneWidget);
+    await tester.tap(find.text('移除'));
+    await tester.pumpAndSettle();
+    expect(controller.preferences.blockedChannels, isEmpty);
+    expect(find.textContaining('还没有屏蔽任何频道'), findsOneWidget);
+  });
+
+  testWidgets('account and about sit at the bottom without a subtitle', (tester) async {
+    await pump(tester);
+    expect(find.text(SettingsCategory.video.subtitle), findsOneWidget);
+    expect(find.text(SettingsCategory.about.subtitle), findsNothing);
+    expect(find.text('退出登录'), findsNothing);
   });
 }

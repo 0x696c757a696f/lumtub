@@ -22,8 +22,11 @@ void main() {
     library.setProgress(video.id, const Duration(seconds: 90), const Duration(minutes: 3));
     expect(library.progressOf(video.id)!.resumable, isTrue);
     expect(library.progressOf(video.id)!.fraction, closeTo(0.5, 0.001));
-    // A finished video starts over next time.
+    // A finished video starts over next time, but stays marked as watched.
     library.setProgress(video.id, const Duration(seconds: 175), const Duration(minutes: 3));
+    expect(library.progressOf(video.id)!.resumable, isFalse);
+    expect(library.progressOf(video.id)!.finished, isTrue);
+    library.clearProgress();
     expect(library.progressOf(video.id), isNull);
   });
 

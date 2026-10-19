@@ -5,5 +5,7 @@ Copyright (C) PiliNara contributors.
 Licensed under GNU General Public License version 3 or later.
 
 The adapted sources are lib/widgets/pilinara_settings_tiles.dart (setting
-rows, choice and slider dialogs) and lib/ui/pages/settings_page.dart (the
-grouped settings layout with search). They are kept separate from YTPlus's media_kit/libmpv player and settings persistence code.
+rows, choice, slider and list dialogs, colour palette and colour picker),
+lib/ui/pages/settings_page.dart (the grouped settings layout with search)
+and lib/ui/pages/settings_subpages.dart (speed, theme colour, font, log and
+about pages). They are kept separate from YTPlus's media_kit/libmpv player and settings persistence code.

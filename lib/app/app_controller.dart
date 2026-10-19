@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show Color;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app_directories.dart';
 import '../app_log.dart';
+import '../app_preferences.dart';
 import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
@@ -91,8 +94,23 @@ class AppController extends ChangeNotifier {
 
   AppearanceSettings appearance;
   final AppearanceSettingsStore? _appearanceStore;
+  /// The Windows accent colour, once read, for [AppearanceSettings.systemAccent].
+  Color? windowsAccent;
 
-  AppController({this.appearance = const AppearanceSettings(), AppearanceSettingsStore? appearanceStore}) : _appearanceStore = appearanceStore;
+  AppPreferences preferences = const AppPreferences();
+  AppPreferencesStore? _preferencesStore;
+
+  AppController({this.appearance = const AppearanceSettings(), AppearanceSettingsStore? appearanceStore}) : _appearanceStore = appearanceStore {
+    _applyAppearanceGlobals(appearance);
+  }
+
+  /// The seed colour the theme is built from.
+  Color get accentColor => appearance.systemAccent && windowsAccent != null ? windowsAccent! : appearance.accent;
+
+  static void _applyAppearanceGlobals(AppearanceSettings appearance) {
+    VideoItem.thumbnailFile = appearance.thumbnailQuality.file;
+    videoCardMinWidth = appearance.cardWidth;
+  }
 
   int _searchSerial = 0;
   int _playSerial = 0;
@@ -157,6 +175,8 @@ class AppController extends ChangeNotifier {
       await libraryStore.load();
       final settingsStore = PlayerSettingsStore(directories);
       final settings = await settingsStore.load();
+      final preferencesStore = AppPreferencesStore(directories);
+      final preferences = await preferencesStore.load();
       final cacheManager = CacheManager(directories);
       await cacheManager.prepare(settings);
       final cacheBytes = await cacheManager.size(settings);
@@ -172,6 +192,7 @@ class AppController extends ChangeNotifier {
       final player = Player(configuration: PlayerConfiguration(bufferSize: settings.cacheMemoryMb * 1024 * 1024));
       final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      await player.setVolume(settings.defaultVolume.toDouble());
       // yt-dlp and Deno are on PATH before libmpv starts, so ytdl_hook can find them.
       if (_disposed) {
         await player.dispose();
@@ -184,6 +205,9 @@ class AppController extends ChangeNotifier {
         this.cacheBytes = cacheBytes;
         _settingsStore = settingsStore;
         this.settings = settings;
+        _preferencesStore = preferencesStore;
+        this.preferences = preferences;
+        mode = PageMode.values.where((m) => m.name == preferences.startPage).firstOrNull ?? PageMode.home;
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
@@ -205,7 +229,7 @@ class AppController extends ChangeNotifier {
         error = null;
       });
       // Do not block the UI while checking newer releases.
-      unawaited(manager.checkUpdates());
+      if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
       unawaited(_readWindowsVideoInfo());
       unawaited(account?.load());
       logInfo('组件就绪 · libmpv ${manager.libmpv.current?.label ?? '内置'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
@@ -320,7 +344,7 @@ class AppController extends ChangeNotifier {
     _saveProgress();
     final serial = ++_playSerial;
     _recovery.reset();
-    final resume = library?.progressOf(item.id);
+    final resume = preferences.resumePlayback ? library?.progressOf(item.id) : null;
     final start = resume != null && resume.resumable ? resume.position : null;
     _update(() {
       _cancelSearch();
@@ -336,8 +360,9 @@ class AppController extends ChangeNotifier {
     });
     unawaited(_loadDetails(item, serial));
     if (settings.sponsorBlock) unawaited(_loadSegments(item, serial));
-    if (await _open(item, serial, start: start)) {
-      await _history?.record(item);
+    if (await _open(item, serial, start: start, play: preferences.autoPlay)) {
+      if (settings.defaultSpeed != player.state.rate) await player.setRate(settings.defaultSpeed);
+      if (preferences.recordHistory) await _history?.record(item);
       if (start != null) _notice('从 ${_clock(start)} 继续播放');
     }
   }
@@ -352,7 +377,7 @@ class AppController extends ChangeNotifier {
   void _saveProgress({bool now = false}) {
     final item = _tracking;
     final player = this.player;
-    if (item == null || player == null) return;
+    if (item == null || player == null || !preferences.recordProgress) return;
     final duration = player.state.duration;
     if (duration <= Duration.zero) return;
     library?.recordProgress(item.id, player.state.position, duration);
@@ -361,7 +386,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> _loadSegments(VideoItem item, int serial) async {
     try {
-      final segments = await _sponsorBlock.segments(item.id);
+      final segments = await _sponsorBlock.segments(item.id, settings.sponsorCategories);
       if (serial == _playSerial) _segments = segments;
     } catch (_) {
       // Playback does not depend on SponsorBlock being reachable.
@@ -374,13 +399,13 @@ class AppController extends ChangeNotifier {
       // Each segment is skipped once, so seeking back into it plays it.
       _skipped.add(segment);
       unawaited(player?.seek(segment.end));
-      _notice('已跳过${sponsorCategories[segment.category] ?? '片段'}');
+      if (settings.sponsorNotice) _notice('已跳过${sponsorCategories[segment.category] ?? '片段'}');
       return;
     }
   }
 
   /// Opens [item] with the current format settings, from [start] if given.
-  Future<bool> _open(VideoItem item, int serial, {Duration? start}) async {
+  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true}) async {
     final player = this.player!;
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
@@ -390,7 +415,7 @@ class AppController extends ChangeNotifier {
       }
       _tracking = null;
       _lastPosition = start ?? Duration.zero;
-      await player.open(Media(item.url, start: start));
+      await player.open(Media(item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       unawaited(inspectCurrentDecoder());
       _update(() {});
@@ -457,7 +482,7 @@ class AppController extends ChangeNotifier {
           return;
         }
         _saveProgress();
-        if (settings.autoplayNext) unawaited(playNext());
+        unawaited(_playAfterEnd());
       }),
       // libmpv reports failures that happen after open() returned, such as
       // yt-dlp finding no playable format, only through this stream. Errors
@@ -482,17 +507,42 @@ class AppController extends ChangeNotifier {
     ]);
   }
 
-  /// Plays the next video in the queue, if there is one.
-  Future<void> playNext() async {
-    final next = upNext;
-    if (next.isNotEmpty) {
-      await play(next.first);
-    } else if (related?.items.isNotEmpty ?? false) {
-      await play(related!.items.first, from: related!.items);
+  /// Follows [PlayerSettings.playOrder] once a video ends. Single cycle is
+  /// mpv's loop-file, so a looping video never ends.
+  Future<void> _playAfterEnd() async {
+    switch (settings.playOrder) {
+      case PlayOrder.pause || PlayOrder.singleCycle:
+        return;
+      case PlayOrder.listOrder:
+        if (upNext.isNotEmpty) await play(upNext.first);
+      case PlayOrder.listCycle:
+        if (upNext.isNotEmpty) {
+          await play(upNext.first);
+        } else if (queue.isNotEmpty) {
+          await play(queue.first);
+        } else if (playing != null) {
+          await play(playing!);
+        }
+      case PlayOrder.autoPlayRelated:
+        await playNext();
     }
   }
 
-  bool get hasNext => upNext.isNotEmpty || (related?.items.isNotEmpty ?? false);
+  /// Plays the next video in the queue, if there is one.
+  Future<void> playNext() async {
+    final next = upNext;
+    final suggestions = relatedItems;
+    if (next.isNotEmpty) {
+      await play(next.first);
+    } else if (suggestions.isNotEmpty) {
+      await play(suggestions.first, from: suggestions);
+    }
+  }
+
+  bool get hasNext => upNext.isNotEmpty || relatedItems.isNotEmpty;
+
+  /// Related videos that pass the content filters.
+  List<VideoItem> get relatedItems => visible(related?.items ?? const []);
 
   /// Seeks by [offset], staying inside the video.
   Future<void> seekBy(Duration offset) async {
@@ -507,7 +557,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> changeVolume(double delta) async {
     final player = this.player;
-    if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, 100.0).toDouble());
+    if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, settings.volumeMax.toDouble()).toDouble());
   }
 
   Future<void> toggleMute() async {
@@ -535,7 +585,12 @@ class AppController extends ChangeNotifier {
     if (await _open(item, _playSerial, start: position) && !wasPlaying) await player.pause();
   }
 
-  Future<void> setAutoplayNext(bool value) => saveSettings(settings.copyWith(autoplayNext: value));
+  Future<void> setAutoplayNext(bool value) => setPlayOrder(value ? PlayOrder.autoPlayRelated : PlayOrder.pause);
+
+  Future<void> setPlayOrder(PlayOrder order) => saveSettings(settings.copyWith(playOrder: order));
+
+  /// The audio outputs libmpv reports, "auto" first.
+  List<AudioDevice> get audioDevices => player?.state.audioDevices ?? const [];
 
   Future<void> _loadDetails(VideoItem item, int serial) async {
     try {
@@ -543,7 +598,7 @@ class AppController extends ChangeNotifier {
       if (serial == _playSerial) {
         _update(() {
           details = loaded;
-          related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
+          if (preferences.showRelated) related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
         });
       }
     } catch (_) {
@@ -599,7 +654,9 @@ class AppController extends ChangeNotifier {
     _saveProgress(now: true);
     _tracking = null;
     ++_playSerial;
-    if (target == PageMode.subscriptions) unawaited(library?.refreshFeed());
+    if (target == PageMode.subscriptions && preferences.feedAutoRefresh) {
+      unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
+    }
     _update(() {
       if (target != PageMode.explore) _cancelSearch();
       if (_isDetail(target) && !_isDetail(mode)) _returnMode = mode;
@@ -643,7 +700,96 @@ class AppController extends ChangeNotifier {
     _notice('观看历史已清空。');
   }
 
+  /// Videos of [items] that pass the privacy and content filters. The
+  /// subscriptions feed is filtered only when [AppPreferences.filterSubscriptions].
+  List<VideoItem> visible(List<VideoItem> items, {bool subscriptions = false}) {
+    final prefs = preferences;
+    if (subscriptions && !prefs.filterSubscriptions) return items.where((item) => !prefs.isBlocked(item.channelId)).toList();
+    final library = this.library;
+    return items.where((item) => prefs.shows(item, watched: library?.progressOf(item.id)?.finished ?? false)).toList();
+  }
+
+  Future<void> savePreferences(AppPreferences next) async {
+    _update(() => preferences = next);
+    try {
+      await _preferencesStore?.save(next);
+    } on FileSystemException {
+      _notice('设置未能保存，本次运行仍然生效。');
+    }
+  }
+
+  void blockChannel(ChannelRef channel) {
+    if (preferences.isBlocked(channel.id)) return;
+    unawaited(savePreferences(preferences.copyWith(blockedChannels: [...preferences.blockedChannels, channel])));
+    _notice('已屏蔽“${channel.name.isEmpty ? channel.id : channel.name}”，可在 设置 › 隐私设置 中解除');
+  }
+
+  void unblockChannel(String id) =>
+      unawaited(savePreferences(preferences.copyWith(blockedChannels: preferences.blockedChannels.where((c) => c.id != id).toList())));
+
+  void clearProgress() {
+    library?.clearProgress();
+    _notice('播放进度已清空。');
+  }
+
+  /// Reads the Windows accent colour for [AppearanceSettings.systemAccent].
+  Future<void> refreshWindowsAccent() async {
+    final color = await readWindowsAccent();
+    if (color != null && color != windowsAccent) _update(() => windowsAccent = color);
+  }
+
+  /// Settings as one JSON document, for backup. Values that belong to this
+  /// computer (cache folder, audio output, decoder results) are left out.
+  String exportSettings() => const JsonEncoder.withIndent('  ').convert({
+        'app': 'YTPlus',
+        'version': 1,
+        'exported': DateTime.now().toIso8601String(),
+        'player': settings.toJson()
+          ..remove('cachePath')
+          ..remove('cacheLimitGb')
+          ..remove('audioDevice')
+          ..remove('decoderResults'),
+        'appearance': appearance.toJson(),
+        'preferences': preferences.toJson(),
+      });
+
+  /// Applies settings exported by [exportSettings]; false when [text] is not
+  /// such a file. This computer's own values are kept.
+  Future<bool> importSettings(String text) async {
+    final Object? data;
+    try {
+      data = jsonDecode(text);
+    } on FormatException {
+      return false;
+    }
+    if (data is! Map || data['app'] != 'YTPlus') return false;
+    final player = PlayerSettings.fromJson(data['player']).copyWith(
+      cachePath: settings.cachePath,
+      clearCachePath: settings.cachePath == null,
+      cacheLimitGb: settings.cacheLimitGb,
+      clearCacheLimit: settings.cacheLimitGb == null,
+      audioDevice: settings.audioDevice,
+      decoderResults: settings.decoderResults,
+    );
+    await saveSettings(player);
+    await saveAppearance(AppearanceSettings.fromJson(data['appearance']));
+    await savePreferences(AppPreferences.fromJson(data['preferences']));
+    logInfo('已导入设置');
+    return true;
+  }
+
+  /// Restores every default except this computer's cache folder and
+  /// decoder results.
+  Future<void> resetSettings() async {
+    await saveSettings(PlayerSettings(cachePath: settings.cachePath, cacheLimitGb: settings.cacheLimitGb, decoderResults: settings.decoderResults));
+    await saveAppearance(const AppearanceSettings());
+    await savePreferences(const AppPreferences());
+    _notice('已恢复默认设置。');
+  }
+
   Future<void> saveAppearance(AppearanceSettings next) async {
+    _applyAppearanceGlobals(next);
+    if (next.systemAccent && windowsAccent == null) unawaited(refreshWindowsAccent());
     _update(() => appearance = next);
     try {
       await _appearanceStore?.save(next);
@@ -801,7 +947,7 @@ class AppController extends ChangeNotifier {
       'yt-dlp ${tools?.ytDlpVersion ?? '未安装'}',
       'Deno ${tools?.denoVersion ?? '未安装'}',
       '硬件解码设置 ${settings.hwdec} · 当前 $currentCodec · $currentHwdec',
-      '画质上限 ${settings.maxHeight == 0 ? '自动' : '${settings.maxHeight}p'} · 自动选择编码 ${settings.autoSelectCodec ? '开' : '关'}',
+      '画质上限 ${settings.maxHeight == 0 ? '自动' : '${settings.maxHeight}p'} · 编码 ${settings.codec.label} · 音质 ${settings.audioQuality.label}',
       '缓存 ${settings.cacheMode} · ${settings.cacheSeconds} 秒 · ${settings.cacheMemoryMb} MB',
       '数据目录 ${directories?.root.path ?? '未知'}',
     ].join('\n');

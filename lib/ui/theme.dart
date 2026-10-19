@@ -1,4 +1,7 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
+
+import '../appearance_settings.dart';
 
 /// Shared spacing and shapes, following PiliNara's compact card layout.
 abstract final class AppStyle {
@@ -12,11 +15,29 @@ abstract final class AppStyle {
 
 /// Material 3 theme built from one seed colour, with PiliNara's flat cards,
 /// rounded menus and quiet tooltips.
-ThemeData buildAppTheme(Color seed, Brightness brightness) {
-  final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness);
+ThemeData buildAppTheme(
+  Color seed,
+  Brightness brightness, {
+  DynamicSchemeVariant variant = DynamicSchemeVariant.tonalSpot,
+  bool pureBlack = false,
+  String? fontFamily,
+  PageTransition transition = PageTransition.fade,
+}) {
   final dark = brightness == Brightness.dark;
+  var scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness, dynamicSchemeVariant: variant);
+  if (dark && pureBlack) {
+    scheme = scheme.copyWith(surface: Colors.black, surfaceContainerLowest: Colors.black, surfaceContainerLow: const Color(0xFF0E0E0E));
+  }
+  final builder = switch (transition) {
+    PageTransition.fade => const FadeForwardsPageTransitionsBuilder(),
+    PageTransition.zoom => const ZoomPageTransitionsBuilder(),
+    PageTransition.slide => const FadeUpwardsPageTransitionsBuilder(),
+    PageTransition.cupertino => const CupertinoPageTransitionsBuilder(),
+    PageTransition.none => const _NoTransitionsBuilder(),
+  };
   return ThemeData(
     useMaterial3: true,
+    fontFamily: fontFamily,
     colorScheme: scheme,
     scaffoldBackgroundColor: scheme.surface,
     visualDensity: VisualDensity.standard,
@@ -71,11 +92,18 @@ ThemeData buildAppTheme(Color seed, Brightness brightness) {
     ),
     dividerTheme: DividerThemeData(color: scheme.outlineVariant.withValues(alpha: 0.5), space: 1),
     expansionTileTheme: const ExpansionTileThemeData(shape: Border(), collapsedShape: Border()),
-    pageTransitionsTheme: const PageTransitionsTheme(builders: {
-      TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
-      TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+    pageTransitionsTheme: PageTransitionsTheme(builders: {
+      TargetPlatform.windows: builder,
+      TargetPlatform.linux: builder,
     }),
   );
+}
+
+class _NoTransitionsBuilder extends PageTransitionsBuilder {
+  const _NoTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(PageRoute<T> route, BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) => child;
 }
 
 extension ThemeShortcuts on BuildContext {

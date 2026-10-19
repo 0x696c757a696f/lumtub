@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../app/app_controller.dart';
+import '../appearance_settings.dart';
 import '../library_store.dart';
 import '../models.dart';
 import '../thumbnail_cache.dart';
@@ -14,17 +15,16 @@ import 'theme.dart';
 /// Height of the text below a card's thumbnail: two title lines and one
 /// channel line.
 const _cardInfoHeight = 82.0;
-const _minCardWidth = 250.0;
 
 ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 480}) => ResizeImage.resizeIfNeeded(
       width,
       null,
-      thumbnails == null ? NetworkImage(item.thumbnail) : CachedThumbnail(item.thumbnail, CachedThumbnail.fileFor(thumbnails, item.id)),
+      thumbnails == null ? NetworkImage(item.thumbnail) : CachedThumbnail(item.thumbnail, CachedThumbnail.fileFor(thumbnails, item.id, VideoItem.thumbnailFile)),
     );
 
 /// Column count and card height for a grid [width] wide.
 ({int columns, double itemHeight}) gridLayoutFor(double width) {
-  final columns = max(1, ((width + AppStyle.cardSpacing) / (_minCardWidth + AppStyle.cardSpacing)).floor());
+  final columns = max(1, ((width + AppStyle.cardSpacing) / (videoCardMinWidth + AppStyle.cardSpacing)).floor());
   final itemWidth = (width - AppStyle.cardSpacing * (columns - 1)) / columns;
   return (columns: columns, itemHeight: itemWidth * 9 / 16 + _cardInfoHeight);
 }
@@ -275,7 +275,10 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
         entry('favorite', favorite ? Icons.favorite_rounded : Icons.favorite_border_rounded, favorite ? '取消收藏' : '收藏'),
         entry('playlist', Icons.playlist_add_rounded, '添加到播放列表…'),
       ],
-      if (controller != null && channel != null) entry('channel', Icons.account_circle_outlined, '查看频道'),
+      if (controller != null && channel != null) ...[
+        entry('channel', Icons.account_circle_outlined, '查看频道'),
+        entry('block', Icons.block_rounded, '屏蔽此频道'),
+      ],
       if (onRemove != null) entry('remove', Icons.remove_circle_outline_rounded, '从此列表移除'),
       const PopupMenuDivider(),
       entry('copy', Icons.link_rounded, '复制链接'),
@@ -293,6 +296,8 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
       await showAddToPlaylist(context, controller!, item);
     case 'channel':
       controller!.openChannel(channel!);
+    case 'block':
+      controller!.blockChannel(channel!);
     case 'remove':
       onRemove!();
     case 'copy':

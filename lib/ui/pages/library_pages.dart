@@ -31,7 +31,7 @@ class SubscriptionsPage extends StatelessWidget {
             : FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: const Icon(Icons.login_rounded), label: const Text('登录并导入订阅')),
       );
     }
-    final feed = library.feed;
+    final feed = controller.visible(library.feed, subscriptions: true);
     return CustomScrollView(slivers: [
       SliverToBoxAdapter(child: PageHeader(
         '订阅',

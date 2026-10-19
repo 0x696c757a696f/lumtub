@@ -14,9 +14,10 @@ class HomeFeedPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final recent = controller.history.take(12).toList();
+    final prefs = controller.preferences;
+    final recent = prefs.homeShowRecent ? controller.history.take(12).toList() : const <VideoItem>[];
     final library = controller.library;
-    final unfinished = library == null
+    final unfinished = library == null || !prefs.homeShowContinue
         ? const <VideoItem>[]
         : controller.history.where((item) => library.progressOf(item.id)?.resumable ?? false).take(8).toList();
     return CustomScrollView(slivers: [
@@ -86,7 +87,7 @@ class SearchResultsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final query = controller.query;
-    final results = controller.results;
+    final results = controller.visible(controller.results);
     final error = controller.searchError;
     if (query == null) {
       return StatusView(

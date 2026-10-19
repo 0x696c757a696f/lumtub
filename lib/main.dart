@@ -44,29 +44,56 @@ class YtPlusApp extends StatefulWidget {
 
 class _YtPlusAppState extends State<YtPlusApp> {
   // Building a ColorScheme from a seed is not free; the controller notifies on
-  // every search result, so themes are rebuilt only when the accent changes.
-  Color? _themeAccent;
+  // every search result, so themes are rebuilt only when their inputs change.
+  Object? _themeKey;
   late ThemeData _light;
   late ThemeData _dark;
   late final AppLifecycleListener _lifecycle;
+  bool _pausedByMinimize = false;
 
-  void _updateThemes(Color accent) {
-    if (accent == _themeAccent) return;
-    _themeAccent = accent;
-    _light = buildAppTheme(accent, Brightness.light);
-    _dark = buildAppTheme(accent, Brightness.dark);
+  void _updateThemes(AppearanceSettings appearance, Color accent) {
+    final key = appearance.themeKey(accent);
+    if (key == _themeKey) return;
+    _themeKey = key;
+    ThemeData build(Brightness brightness) => buildAppTheme(
+          accent,
+          brightness,
+          variant: appearance.schemeVariant,
+          pureBlack: appearance.pureBlack,
+          fontFamily: appearance.fontFamily,
+          transition: appearance.transition,
+        );
+    _light = build(Brightness.light);
+    _dark = build(Brightness.dark);
   }
 
   @override
   void initState() {
     super.initState();
-    unawaited(widget.controller.initialize());
+    final controller = widget.controller;
+    unawaited(controller.initialize());
+    if (controller.appearance.systemAccent) unawaited(controller.refreshWindowsAccent());
     // Closing the window ends the process without disposing widgets, so the
     // player and unsaved progress are released here first.
-    _lifecycle = AppLifecycleListener(onExitRequested: () async {
-      await widget.controller.shutdown();
-      return AppExitResponse.exit;
-    });
+    _lifecycle = AppLifecycleListener(
+      onExitRequested: () async {
+        await controller.shutdown();
+        return AppExitResponse.exit;
+      },
+      // Minimising hides the window; "pause on minimise" resumes only what it
+      // paused itself.
+      onHide: () {
+        final player = controller.player;
+        if (!controller.preferences.pauseOnMinimize || player == null || !player.state.playing) return;
+        _pausedByMinimize = true;
+        unawaited(player.pause());
+      },
+      onShow: () {
+        if (!_pausedByMinimize) return;
+        _pausedByMinimize = false;
+        unawaited(controller.player?.play());
+      },
+    );
   }
 
   @override
@@ -81,16 +108,42 @@ class _YtPlusAppState extends State<YtPlusApp> {
         listenable: widget.controller,
         builder: (context, child) {
           final appearance = widget.controller.appearance;
-          _updateThemes(appearance.accent);
+          _updateThemes(appearance, widget.controller.accentColor);
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: appName,
             themeMode: appearance.themeMode,
             theme: _light,
             darkTheme: _dark,
+            // The font size setting scales on top of Windows' text size.
+            builder: (context, child) {
+              final media = MediaQuery.of(context);
+              return MediaQuery(
+                data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale)),
+                child: child!,
+              );
+            },
             home: child,
           );
         },
         child: AppShell(controller: widget.controller),
       );
+}
+
+class _ScaledTextScaler extends TextScaler {
+  const _ScaledTextScaler(this.base, this.factor);
+  final TextScaler base;
+  final double factor;
+
+  @override
+  double scale(double fontSize) => base.scale(fontSize) * factor;
+
+  @override
+  double get textScaleFactor => base.scale(1) * factor;
+
+  @override
+  bool operator ==(Object other) => other is _ScaledTextScaler && other.base == base && other.factor == factor;
+
+  @override
+  int get hashCode => Object.hash(base, factor);
 }

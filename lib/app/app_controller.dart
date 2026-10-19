@@ -295,7 +295,12 @@ class AppController extends ChangeNotifier {
   }
 
   VideoRepository _repositoryFor(ToolPaths paths, CacheManager cacheManager, PlayerSettings settings) =>
-      VideoRepository(paths.ytDlp, cacheDirectory: '${cacheManager.rootFor(settings).path}${Platform.pathSeparator}yt-dlp');
+      VideoRepository(
+        paths.ytDlp,
+        cacheDirectory: '${cacheManager.rootFor(settings).path}${Platform.pathSeparator}yt-dlp',
+        deno: paths.deno,
+        toolDirectories: paths.executableDirectories,
+      );
 
   Future<void> search(String value, {SearchFilter? filter}) async {
     final query = value.trim();

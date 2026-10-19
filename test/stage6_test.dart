@@ -79,6 +79,7 @@ void main() {
       'display-fps': '60',
       'video-bitrate': '2512000',
       'demuxer-cache-duration': '31.37',
+      'cache-speed': '3145728',
     }).map((row) => MapEntry(row.$1, row.$2)));
     expect(rows['分辨率'], '1920x1080');
     expect(rows['解码'], '硬件 d3d11va');
@@ -87,6 +88,7 @@ void main() {
     expect(rows['音画偏差'], '-12 ms · 显示 60 Hz');
     expect(rows['码率'], '视频 2512 kbps · 音频 —');
     expect(rows['缓冲'], '31.4 秒');
+    expect(rows['下载速度'], '3.0 MB/s');
     expect(Map.fromEntries(statsRows({'hwdec-current': 'no'}).map((r) => MapEntry(r.$1, r.$2)))['解码'], '软件解码');
   });
 }

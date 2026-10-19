@@ -88,4 +88,22 @@ void main() {
     await expectLater(resolver.resolve('dQw4w9WgXcQ', 'ytdl'), throwsA(isA<StateError>()));
     await expectLater(resolver.resolve('dQw4w9WgXcQ', 'ytdl'), throwsA(isA<StateError>()));
   });
+
+  test('points yt-dlp at Deno and retries a network error once', () async {
+    expect(StreamResolver('yt-dlp', deno: r'C:\tools\deno.exe', infoDirectory: Directory('x')).arguments('dQw4w9WgXcQ', 'ytdl'),
+        containsAllInOrder(['--js-runtimes', r'deno:C:\tools\deno.exe']));
+    if (Platform.isWindows) return;
+    final dir = await Directory.systemTemp.createTemp('ytplus_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final count = File('${dir.path}/count');
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\necho x >> ${count.path}\n'
+        'if [ \$(wc -l < ${count.path}) -eq 1 ]; then echo "ERROR: HTTP Error 503: Service Unavailable" >&2; exit 1; fi\n'
+        'echo "WARNING: n challenge solving failed" >&2\n'
+        'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final video = await StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info')).resolve('dQw4w9WgXcQ', 'ytdl');
+    expect(video.info['title'], 'Never Gonna Give You Up');
+    expect(count.readAsLinesSync(), hasLength(2));
+  });
 }

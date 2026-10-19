@@ -79,11 +79,14 @@ class ResolvedVideo {
 /// menu and playback share one extraction, and a card the pointer rests on
 /// can be resolved before it is clicked.
 class StreamResolver {
-  StreamResolver(this.ytDlpPath, {this.cacheDirectory, required this.infoDirectory, Map<String, String>? environment})
+  StreamResolver(this.ytDlpPath, {this.cacheDirectory, this.deno, required this.infoDirectory, Map<String, String>? environment})
       : _environment = environment;
 
   final String ytDlpPath;
   final String? cacheDirectory;
+  /// The Deno yt-dlp solves YouTube's JavaScript challenges with. Without
+  /// it the stream addresses are throttled to a crawl or left out.
+  final String? deno;
   /// Where info files for `--load-info-json` are kept.
   final Directory infoDirectory;
   final Map<String, String>? _environment;
@@ -95,8 +98,9 @@ class StreamResolver {
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
 
   List<String> arguments(String videoId, String format) => [
-        '--no-warnings',
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
+        if (deno != null) ...['--js-runtimes', 'deno:${deno!}'],
+        '--extractor-retries', '3',
         '--no-playlist',
         '--dump-single-json',
         '--format', expressionOf(format),
@@ -136,15 +140,26 @@ class StreamResolver {
     return future;
   }
 
+  /// Errors a second attempt can get past, unlike a private or removed video.
+  static final _transient = RegExp(r'HTTP Error 5\d\d|timed out|Connection (reset|aborted|refused)|Remote end closed|getaddrinfo|IncompleteRead', caseSensitive: false);
+
   Future<ResolvedVideo> _run(String videoId, String format) async {
     final watch = Stopwatch()..start();
-    final result = await Process.run(ytDlpPath, arguments(videoId, format), stdoutEncoding: utf8, stderrEncoding: utf8, environment: _environment)
-        .timeout(const Duration(seconds: 45));
+    var result = await _ytDlp(videoId, format);
+    if (_failed(result) && _transient.hasMatch(result.stderr.toString())) {
+      logInfo('解析 $videoId 遇到网络错误，重试一次');
+      await Future<void>.delayed(const Duration(seconds: 2));
+      result = await _ytDlp(videoId, format);
+    }
     final output = result.stdout.toString().trim();
-    if (result.exitCode != 0 || output.isEmpty) {
-      final err = result.stderr.toString().trim();
+    final err = result.stderr.toString().trim();
+    if (_failed(result)) {
       throw StateError(err.isEmpty ? 'yt-dlp exited with code ${result.exitCode}' : err);
     }
+    // Warnings such as a failed JavaScript challenge explain slow or
+    // missing streams, so they go to the log.
+    final warnings = const LineSplitter().convert(err).where((line) => line.startsWith('WARNING')).take(5).toList();
+    if (warnings.isNotEmpty) logInfo('yt-dlp 解析 $videoId 的警告：\n${warnings.join('\n')}');
     final data = jsonDecode(const LineSplitter().convert(output).last);
     if (data is! Map<String, dynamic>) throw const FormatException('Unexpected yt-dlp output');
     await infoDirectory.create(recursive: true);
@@ -153,4 +168,10 @@ class StreamResolver {
     logInfo('已解析 $videoId，用时 ${watch.elapsedMilliseconds} ms');
     return ResolvedVideo(data, file, format);
   }
+
+  bool _failed(ProcessResult result) => result.exitCode != 0 || result.stdout.toString().trim().isEmpty;
+
+  Future<ProcessResult> _ytDlp(String videoId, String format) =>
+      Process.run(ytDlpPath, arguments(videoId, format), stdoutEncoding: utf8, stderrEncoding: utf8, environment: _environment)
+          .timeout(const Duration(seconds: 45));
 }

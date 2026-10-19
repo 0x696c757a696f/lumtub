@@ -21,6 +21,7 @@ const _properties = [
   'audio-codec-name',
   'audio-bitrate',
   'demuxer-cache-duration',
+  'cache-speed',
 ];
 
 /// Live decoder and network figures over the video, refreshed every second.
@@ -99,6 +100,12 @@ List<(String, String)> statsRows(Map<String, String> v) {
     return bits == null || bits <= 0 ? '—' : '${(bits / 1000).round()} kbps';
   }
 
+  String speed(String raw) {
+    final bytes = double.tryParse(raw);
+    if (bytes == null) return '—';
+    return bytes >= 1 << 20 ? '${(bytes / (1 << 20)).toStringAsFixed(1)} MB/s' : '${(bytes / 1024).round()} KB/s';
+  }
+
   final width = value('video-params/w');
   final height = value('video-params/h');
   final hwdec = value('hwdec-current');
@@ -112,5 +119,6 @@ List<(String, String)> statsRows(Map<String, String> v) {
     ('码率', '视频 ${kbps('video-bitrate')} · 音频 ${kbps('audio-bitrate')}'),
     ('音频', or(value('audio-codec-name'))),
     ('缓冲', value('demuxer-cache-duration').isEmpty ? '—' : '${number('demuxer-cache-duration', digits: 1)} 秒'),
+    ('下载速度', speed(value('cache-speed'))),
   ];
 }

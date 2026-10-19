@@ -90,12 +90,19 @@ class Listing {
 class VideoRepository {
   final String ytDlpPath;
   final String? cacheDirectory;
-  VideoRepository(this.ytDlpPath, {this.cacheDirectory});
+  /// Deno for YouTube's JavaScript challenges.
+  final String? deno;
+  /// Put before PATH for yt-dlp, so it finds Deno and ffmpeg even though
+  /// [Platform.environment] still holds the PATH from before the app
+  /// added them.
+  final List<String> toolDirectories;
+  VideoRepository(this.ytDlpPath, {this.cacheDirectory, this.deno, this.toolDirectories = const []});
 
   /// Resolves videos for playback ahead of libmpv.
   late final StreamResolver streams = StreamResolver(
     ytDlpPath,
     cacheDirectory: cacheDirectory,
+    deno: deno,
     infoDirectory: Directory(cacheDirectory == null
         ? '${Directory.systemTemp.path}${Platform.pathSeparator}ytplus-info'
         : '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp${Platform.pathSeparator}info'),
@@ -118,6 +125,7 @@ class VideoRepository {
         '--no-warnings',
         '--skip-download',
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
+        '--extractor-retries', '3',
         '--flat-playlist',
         '--lazy-playlist',
         '--dump-json',
@@ -190,13 +198,19 @@ class VideoRepository {
     return VideoDetails.fromJson(data);
   }
 
-  Map<String, String> get _environment => {
-        ...Platform.environment,
-        if (cacheDirectory != null) ...{
-          'TMP': '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp',
-          'TEMP': '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp',
-        },
-      };
+  Map<String, String> get _environment {
+    // Windows names it "Path"; keep one entry under its own spelling.
+    final pathKey = Platform.environment.keys.firstWhere((key) => key.toUpperCase() == 'PATH', orElse: () => 'PATH');
+    return {
+      ...Platform.environment,
+      if (toolDirectories.isNotEmpty)
+        pathKey: [...toolDirectories, Platform.environment[pathKey] ?? ''].join(Platform.isWindows ? ';' : ':'),
+      if (cacheDirectory != null) ...{
+        'TMP': '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp',
+        'TEMP': '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp',
+      },
+    };
+  }
 }
 
 class HistoryStore {

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../app_log.dart';
 import '../google_auth.dart';
 import '../models.dart';
 import '../secure_store.dart';
@@ -102,6 +103,7 @@ class AccountController extends ChangeNotifier {
       notice('已登录 ${me.name}');
       unawaited(sync(likes: me.likes));
     } catch (e) {
+      logError('Google 登录失败', e);
       _tokens = null;
       _refreshToken = null;
       state = AccountState.signedOut;
@@ -151,8 +153,10 @@ class AccountController extends ChangeNotifier {
       library.mirrorRemotePlaylists(mirrored);
       lastSync = DateTime.now();
       await _save();
+      logInfo('YouTube 同步完成：${channels.length} 个订阅，${mirrored.length} 个播放列表');
       notice('同步完成：${channels.length} 个订阅（新增 $added 个），${mirrored.length} 个播放列表');
     } catch (e) {
+      logError('YouTube 同步失败', e);
       error = '$e';
       if (e is OAuthException && e.revoked) await signOut();
     } finally {

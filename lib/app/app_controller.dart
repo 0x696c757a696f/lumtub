@@ -7,6 +7,8 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app_directories.dart';
+import '../app_log.dart';
+import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
 import '../sponsor_block.dart';
@@ -74,6 +76,11 @@ class AppController extends ChangeNotifier {
   static const favoritesPlaylistId = 'favorites';
   PageMode _returnMode = PageMode.home;
 
+  /// Whether the statistics overlay is shown over the video.
+  bool showStats = false;
+
+  void toggleStats() => _update(() => showStats = !showStats);
+
   /// Videos like the one playing, found by searching for its title.
   VideoListLoader? related;
 
@@ -101,6 +108,12 @@ class AppController extends ChangeNotifier {
   List<SkipSegment> _segments = const [];
   final _skipped = <SkipSegment>{};
   final _http = http.Client();
+  final _recovery = PlaybackRecovery();
+  /// The last position actually played, which survives a failed stream.
+  Duration _lastPosition = Duration.zero;
+  Timer? _stallTimer;
+  bool _recovering = false;
+  bool _shutDown = false;
   late final _sponsorBlock = SponsorBlock(_http);
   bool _disposed = false;
   final _notices = StreamController<String>.broadcast();
@@ -136,6 +149,8 @@ class AppController extends ChangeNotifier {
   Future<void> initialize() async {
     try {
       final directories = await AppDirectories.create();
+      await AppLog.open(directories.logs);
+      logInfo('YTPlus $appVersion 启动 · ${Platform.operatingSystemVersion}');
       final history = HistoryStore(directories);
       await history.initialize();
       final libraryStore = LibraryStore(File('${directories.data.path}${Platform.pathSeparator}library.json'));
@@ -145,7 +160,10 @@ class AppController extends ChangeNotifier {
       final cacheManager = CacheManager(directories);
       await cacheManager.prepare(settings);
       final cacheBytes = await cacheManager.size(settings);
-      final manager = ToolManager(directories, (message) => _update(() => status = message));
+      final manager = ToolManager(directories, (message) {
+        logInfo(message);
+        _update(() => status = message);
+      });
       _tools = manager;
       await manager.initialize();
       final paths = await manager.ensureReady();
@@ -190,10 +208,12 @@ class AppController extends ChangeNotifier {
       unawaited(manager.checkUpdates());
       unawaited(_readWindowsVideoInfo());
       unawaited(account?.load());
+      logInfo('组件就绪 · libmpv ${manager.libmpv.current?.label ?? '内置'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
       _update(() {
         error = e.toString();
         status = '初始化失败';
+        logError('初始化失败', e);
       });
     }
   }
@@ -299,6 +319,7 @@ class AppController extends ChangeNotifier {
     if (player == null) return;
     _saveProgress();
     final serial = ++_playSerial;
+    _recovery.reset();
     final resume = library?.progressOf(item.id);
     final start = resume != null && resume.resumable ? resume.position : null;
     _update(() {
@@ -368,14 +389,39 @@ class AppController extends ChangeNotifier {
         await platform.setProperty('ytdl-format', VideoFormatSelector.expressionFor(settings));
       }
       _tracking = null;
+      _lastPosition = start ?? Duration.zero;
       await player.open(Media(item.url, start: start));
       if (serial == _playSerial) _tracking = item;
       unawaited(inspectCurrentDecoder());
       _update(() {});
       return true;
     } catch (e) {
+      logError('无法打开视频 ${item.id}', e);
       if (serial == _playSerial) _update(() => playbackError = '$e');
       return false;
+    }
+  }
+
+  /// Reopens the current video where it stopped after the network failed,
+  /// or shows [message] once the attempts are used up.
+  Future<void> _recover(String message) async {
+    final item = _tracking;
+    if (item == null || _recovering) return;
+    final position = _lastPosition;
+    if (!_recovery.tryAttempt()) {
+      logError('播放中断，已放弃自动重连 ${item.id}：$message');
+      _update(() => playbackError = message);
+      return;
+    }
+    logInfo('播放中断，从 ${_clock(position)} 重新连接 ${item.id}：$message');
+    _notice('网络中断，正在从 ${_clock(position)} 重新连接…');
+    _recovering = true;
+    try {
+      // A new open also asks yt-dlp again, which replaces stream addresses
+      // that expired while the video sat paused.
+      await _open(item, _playSerial, start: position);
+    } finally {
+      _recovering = false;
     }
   }
 
@@ -389,6 +435,11 @@ class AppController extends ChangeNotifier {
       // A second of playback proves a downloaded libmpv works on this PC.
       player.stream.position.listen((position) {
         if (_tracking == null) return;
+        if (position > Duration.zero) {
+          // Ten seconds of playback after a reconnect means it worked.
+          if (position - _lastPosition > const Duration(seconds: 10)) _recovery.reset();
+          if (!_recovering) _lastPosition = position;
+        }
         if (_segments.isNotEmpty) _skipSegments(position);
         final now = DateTime.now();
         if (now.difference(_lastProgressSave) > const Duration(seconds: 5)) {
@@ -401,6 +452,10 @@ class AppController extends ChangeNotifier {
       }),
       player.stream.completed.listen((done) {
         if (!done || playing == null) return;
+        if (_tracking != null && PlaybackRecovery.endedEarly(_lastPosition, player.state.duration)) {
+          unawaited(_recover('视频在 ${_clock(_lastPosition)} 意外结束'));
+          return;
+        }
         _saveProgress();
         if (settings.autoplayNext) unawaited(playNext());
       }),
@@ -408,7 +463,21 @@ class AppController extends ChangeNotifier {
       // yt-dlp finding no playable format, only through this stream. Errors
       // once the video has loaded (a broken subtitle track) are not fatal.
       player.stream.error.listen((message) {
-        if (playing != null && message.isNotEmpty && player.state.duration == Duration.zero) _update(() => playbackError = message);
+        if (playing == null || message.isEmpty) return;
+        if (player.state.duration == Duration.zero) {
+          logError('播放失败 ${playing!.id}：$message');
+          _update(() => playbackError = message);
+        } else if (PlaybackRecovery.isNetworkError(message)) {
+          unawaited(_recover(message));
+        }
+      }),
+      // A stream that stops delivering data leaves mpv buffering forever.
+      player.stream.buffering.listen((buffering) {
+        _stallTimer?.cancel();
+        if (!buffering || _tracking == null) return;
+        _stallTimer = Timer(PlaybackRecovery.stallTimeout, () {
+          if (player.state.buffering && player.state.playing) unawaited(_recover('缓冲超过 ${PlaybackRecovery.stallTimeout.inSeconds} 秒没有进展'));
+        });
       }),
     ]);
   }
@@ -702,9 +771,46 @@ class AppController extends ChangeNotifier {
     _notice('已清理 YTPlus 管理的缓存文件。');
   }
 
+  /// Saves everything and releases the player before the window closes;
+  /// dispose() alone does not run when Windows ends the process.
+  Future<void> shutdown() async {
+    if (_shutDown) return;
+    _shutDown = true;
+    _saveProgress();
+    await library?.flush();
+    for (final subscription in _playerSubscriptions) {
+      await subscription.cancel();
+    }
+    _playerSubscriptions.clear();
+    _stallTimer?.cancel();
+    await player?.pause();
+    await player?.dispose();
+    logInfo('YTPlus 正常退出');
+  }
+
+  /// A summary for bug reports; it names no account, video or file
+  /// contents, only versions and settings.
+  String diagnostics() {
+    final tools = _tools;
+    return [
+      'YTPlus $appVersion',
+      'Windows ${Platform.operatingSystemVersion}',
+      'CPU 核心 ${Platform.numberOfProcessors}',
+      'GPU ${windowsVideoInfo.gpuNames.isEmpty ? '未知' : windowsVideoInfo.gpuNames.join(' / ')}',
+      'libmpv ${tools?.libmpv.current?.label ?? '内置'}',
+      'yt-dlp ${tools?.ytDlpVersion ?? '未安装'}',
+      'Deno ${tools?.denoVersion ?? '未安装'}',
+      '硬件解码设置 ${settings.hwdec} · 当前 $currentCodec · $currentHwdec',
+      '画质上限 ${settings.maxHeight == 0 ? '自动' : '${settings.maxHeight}p'} · 自动选择编码 ${settings.autoSelectCodec ? '开' : '关'}',
+      '缓存 ${settings.cacheMode} · ${settings.cacheSeconds} 秒 · ${settings.cacheMemoryMb} MB',
+      '数据目录 ${directories?.root.path ?? '未知'}',
+    ].join('\n');
+  }
+
   @override
   void dispose() {
     _disposed = true;
+    _stallTimer?.cancel();
     _cancelSearch();
     for (final subscription in _playerSubscriptions) {
       unawaited(subscription.cancel());
@@ -715,7 +821,7 @@ class AppController extends ChangeNotifier {
     channelVideos?.dispose();
     related?.dispose();
     _http.close();
-    unawaited(player?.dispose());
+    if (!_shutDown) unawaited(player?.dispose());
     _tools?.dispose();
     unawaited(_notices.close());
     super.dispose();

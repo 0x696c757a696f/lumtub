@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    # A pushed tag such as v0.2.0 also publishes a GitHub release.
+    tags: ['v*']
   pull_request:
     branches: [main]
 
@@ -92,6 +94,21 @@ jobs:
       - name: Unit tests
         run: flutter test
 
+      # Tag builds use the tag (v0.2.0 -> 0.2.0); other builds add the
+      # commit so a test build is never mistaken for a release.
+      - name: Work out the version
+        shell: bash
+        run: |
+          base=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            version="$base-${GITHUB_SHA::7}"
+          fi
+          [[ "$version" =~ ^[0-9A-Za-z.+-]+$ ]] || { echo "Unexpected version: $version"; exit 1; }
+          echo "YTPLUS_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Version $version"
+
       - name: Release build
         # The optional Google sign-in client comes from repository secrets;
         # without them the app asks the user for their own client.
@@ -99,7 +116,7 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
         shell: bash
-        run: flutter build windows --release --dart-define=YTPLUS_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=YTPLUS_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET"
+        run: flutter build windows --release --dart-define=YTPLUS_VERSION="$YTPLUS_VERSION" --dart-define=YTPLUS_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=YTPLUS_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET"
 
       - name: Check that the video plugin is delay-loaded
         shell: pwsh
@@ -141,14 +158,55 @@ jobs:
       - name: Package Windows distribution
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           $package = 'YTPlus-Windows-x64'
           New-Item -ItemType Directory -Force -Path $package | Out-Null
           Copy-Item -Recurse -Force 'build/windows/x64/runner/Release/*' $package
           Copy-Item LICENSE, NOTICE $package
-          Compress-Archive -Path "$package/*" -DestinationPath 'YTPlus_Windows_x64.zip'
+          Compress-Archive -Path "$package/*" -DestinationPath "YTPlus_Windows_x64_$env:YTPLUS_VERSION.zip"
 
-      - name: Upload downloadable Windows ZIP
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $iscc = Get-Command iscc.exe -ErrorAction SilentlyContinue
+          if (-not $iscc) {
+            $default = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+            if (-not (Test-Path -LiteralPath $default)) { choco install innosetup -y --no-progress | Out-Null }
+            $iscc = Get-Item -LiteralPath $default
+          }
+          $source = (Resolve-Path 'YTPlus-Windows-x64').Path
+          $output = Join-Path (Get-Location) 'installer'
+          & $iscc.Source "/DAppVersion=$env:YTPLUS_VERSION" "/DSourceDir=$source" "/DOutputDir=$output" 'windows/installer/ytplus.iss'
+          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed.' }
+          Move-Item (Join-Path $output 'YTPlus_Setup_x64.exe') "YTPlus_Setup_x64_$env:YTPLUS_VERSION.exe"
+
+      - name: Upload portable ZIP
         uses: actions/upload-artifact@v7
         with:
           name: YTPlus-Windows-x64
-          path: YTPlus_Windows_x64.zip
+          path: YTPlus_Windows_x64_*.zip
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v7
+        with:
+          name: YTPlus-Setup-x64
+          path: YTPlus_Setup_x64_*.exe
+
+  # Only this job can write to the repository, and only for version tags.
+  release:
+    needs: windows
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "YTPlus $TAG" --generate-notes

@@ -2,6 +2,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
+import '../../app_log.dart';
 import '../../appearance_settings.dart';
 import '../../decoder_status.dart';
 import '../../player_settings.dart';
@@ -133,6 +134,9 @@ class SettingsPage extends StatelessWidget {
               trailing: OutlinedButton(onPressed: controller.clearCache, child: const Text('清理')),
             ),
           ])),
+          const SizedBox(height: 24),
+          const _SectionTitle('关于与诊断'),
+          PreferenceCard(child: _About(controller: controller, note: note)),
           const SizedBox(height: 20),
           Text('YTPlus 只会写入自己的 LocalAppData 目录；安装和首次启动不要求管理员权限。', style: note),
         ]),
@@ -309,6 +313,47 @@ class _Components extends StatelessWidget {
             label: Text(controller.checking ? '正在检查…' : '立即检查更新'),
           ),
         ),
+      ),
+    ]);
+  }
+}
+
+/// Version, log folder and a copyable summary for bug reports.
+class _About extends StatelessWidget {
+  const _About({required this.controller, required this.note});
+  final AppController controller;
+  final TextStyle note;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final logs = controller.directories?.logs;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      ListTile(
+        leading: Icon(Icons.info_outline_rounded, color: colors.primary),
+        title: const Text('YTPlus'),
+        subtitle: Text('版本 $appVersion'),
+        trailing: TextButton(onPressed: () => openExternal('https://github.com/0x696c757a696f/ytplus/releases'), child: const Text('查看发布页')),
+      ),
+      const Divider(),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        child: Wrap(spacing: 8, runSpacing: 8, children: [
+          FilledButton.tonalIcon(
+            onPressed: () => copyText(context, controller.diagnostics(), '诊断信息已复制'),
+            icon: const Icon(Icons.content_copy_rounded),
+            label: const Text('复制诊断信息'),
+          ),
+          OutlinedButton.icon(
+            onPressed: logs == null ? null : () => openExternal(logs.path),
+            icon: const Icon(Icons.folder_open_outlined),
+            label: const Text('打开日志文件夹'),
+          ),
+        ]),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
+        child: Text('反馈问题时请附上诊断信息和 ytplus.log。日志只保存在本机，不会自动上传，也不记录登录凭据和视频流地址。播放时按 I 可以显示解码、丢帧和缓冲统计。', style: note),
       ),
     ]);
   }

@@ -8,6 +8,7 @@ import '../../models.dart';
 import '../../widgets/pilinara_playback_controls.dart';
 import '../common.dart';
 import '../player_shortcuts.dart';
+import '../player_stats.dart';
 import '../skeleton.dart';
 import '../theme.dart';
 import '../video_card.dart';
@@ -111,6 +112,12 @@ class _Toolbar extends StatelessWidget {
           ],
           IconButton(tooltip: '复制链接', icon: const Icon(Icons.link_rounded), onPressed: () => copyText(context, item.url, '链接已复制')),
           IconButton(tooltip: '在浏览器中打开', icon: const Icon(Icons.open_in_new_rounded), onPressed: () => openExternal(item.url)),
+          IconButton(
+            tooltip: '播放统计 (I)',
+            isSelected: controller.showStats,
+            icon: const Icon(Icons.query_stats_rounded),
+            onPressed: controller.toggleStats,
+          ),
           IconButton(tooltip: '快捷键', icon: const Icon(Icons.keyboard_outlined), onPressed: () => showShortcutHelp(context)),
         ],
       ),
@@ -155,7 +162,10 @@ class _Player extends StatelessWidget {
           child: MaterialDesktopVideoControlsTheme(
             normal: controls,
             fullscreen: controls,
-            child: Video(key: videoKey, controller: controller.videoController!),
+            child: Stack(fit: StackFit.expand, children: [
+              Video(key: videoKey, controller: controller.videoController!),
+              if (controller.showStats) Positioned(left: 12, top: 12, child: PlayerStats(player: controller.player!)),
+            ]),
           ),
         ),
       ),

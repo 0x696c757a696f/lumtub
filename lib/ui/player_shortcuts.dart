@@ -16,6 +16,7 @@ const playerShortcutHelp = [
   ('F', '全屏'),
   ('Esc', '退出全屏'),
   ('Shift + N', '下一个视频'),
+  ('I', '显示或隐藏播放统计'),
   ('Alt + ← / 鼠标后退键', '返回上一页'),
   ('Ctrl + K', '搜索'),
 ];
@@ -46,6 +47,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, G
     },
     const SingleActivator(LogicalKeyboardKey.keyN, shift: true): () => unawaited(controller.playNext()),
     const SingleActivator(LogicalKeyboardKey.mediaTrackNext): () => unawaited(controller.playNext()),
+    const SingleActivator(LogicalKeyboardKey.keyI): controller.toggleStats,
   };
 }
 

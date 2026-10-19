@@ -216,6 +216,9 @@ class PlayerSettings {
   final String hwdecCodecs;
   /// `--d3d11va-zero-copy`.
   final bool d3d11vaZeroCopy;
+  /// libmpv draws subtitles itself (libass), so the mpv subtitle options
+  /// apply; off, Flutter draws them over the video. Takes effect on restart.
+  final bool libassSubtitles;
   /// `--vd-lavc-dr`: auto, yes or no.
   final String directRendering;
   /// `--autosync`; 0 turns it off.
@@ -265,6 +268,7 @@ class PlayerSettings {
     this.decoderResults = const {},
     this.hwdecCodecs = defaultHwdecCodecs,
     this.d3d11vaZeroCopy = false,
+    this.libassSubtitles = false,
     this.directRendering = 'auto',
     this.autosync = 0,
     this.audioFilter = '',
@@ -311,6 +315,7 @@ class PlayerSettings {
     Map<String, DecoderStatus>? decoderResults,
     String? hwdecCodecs,
     bool? d3d11vaZeroCopy,
+    bool? libassSubtitles,
     String? directRendering,
     int? autosync,
     String? audioFilter,
@@ -350,6 +355,7 @@ class PlayerSettings {
         decoderResults: decoderResults ?? this.decoderResults,
         hwdecCodecs: hwdecCodecs ?? this.hwdecCodecs,
         d3d11vaZeroCopy: d3d11vaZeroCopy ?? this.d3d11vaZeroCopy,
+        libassSubtitles: libassSubtitles ?? this.libassSubtitles,
         directRendering: directRendering ?? this.directRendering,
         autosync: autosync ?? this.autosync,
         audioFilter: audioFilter ?? this.audioFilter,
@@ -390,6 +396,7 @@ class PlayerSettings {
         'mpvConf': mpvConf,
         'hwdecCodecs': hwdecCodecs,
         'd3d11vaZeroCopy': d3d11vaZeroCopy,
+        'libassSubtitles': libassSubtitles,
         'directRendering': directRendering,
         'autosync': autosync,
         'audioFilter': audioFilter,
@@ -488,6 +495,7 @@ class PlayerSettings {
       decoderResults: results,
       hwdecCodecs: codecs.isEmpty ? defaultHwdecCodecs : codecs.join(','),
       d3d11vaZeroCopy: raw['d3d11vaZeroCopy'] == true,
+      libassSubtitles: raw['libassSubtitles'] == true,
       directRendering: choice('directRendering', {'auto', 'yes', 'no'}, 'auto'),
       autosync: number('autosync', 0, 0, 100),
       audioFilter: filter.length > 300 || filter.contains(RegExp(r'[\r\n]')) ? '' : filter,

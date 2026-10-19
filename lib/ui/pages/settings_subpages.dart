@@ -198,6 +198,13 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           onSelected: (v) => save(settings.copyWith(subtitleLanguage: v)),
         ),
         _header(context, '样式'),
+        SwitchItem(
+          title: '由 mpv 绘制字幕（libass）',
+          subtitle: '支持特效字幕；关闭时由界面绘制，更省资源。重启后生效',
+          leading: const Icon(Icons.layers_outlined),
+          value: settings.libassSubtitles,
+          onChanged: (v) => save(settings.copyWith(libassSubtitles: v)),
+        ),
         NormalItem(
           title: '字幕大小',
           subtitle: '当前：${settings.subtitleScale.toStringAsFixed(1)}×',

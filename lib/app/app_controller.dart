@@ -122,6 +122,10 @@ class AppController extends ChangeNotifier {
   List<SkipSegment> _segments = const [];
   final _skipped = <SkipSegment>{};
   final _http = http.Client();
+  int _mpvLogLines = 0;
+  int _lastDrops = 0;
+  DateTime _lastDropLog = DateTime(0);
+  Timer? _dropTimer;
   final _recovery = PlaybackRecovery();
   /// The last position actually played, which survives a failed stream.
   Duration _lastPosition = Duration.zero;
@@ -196,10 +200,11 @@ class AppController extends ChangeNotifier {
       MediaKit.ensureInitialized(libmpv: paths.mpv);
       final player = Player(configuration: PlayerConfiguration(
         bufferSize: settings.cacheMemoryMb * 1024 * 1024,
-        // libmpv draws the subtitles so the 字幕设置 options (sub-scale,
-        // sub-pos, border and background) apply; the Flutter subtitle view
-        // is turned off on the watch page.
-        libass: true,
+        // With libass, libmpv draws the subtitles and the Flutter subtitle
+        // view is turned off on the watch page. It is off by default: the
+        // build that turned it on for everyone also brought dropped frames.
+        libass: settings.libassSubtitles,
+        logLevel: MPVLogLevel.warn,
       ));
       final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
@@ -235,6 +240,7 @@ class AppController extends ChangeNotifier {
         this.player = player;
         videoController = controller;
         _listenTo(player);
+        _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
         ready = true;
         status = ignoredOptions.isEmpty ? '就绪 · 解码方式将在播放时验证' : '就绪 · 已忽略不支持的设置：${ignoredOptions.join(', ')}';
         error = null;
@@ -445,6 +451,8 @@ class AppController extends ChangeNotifier {
       _lastPosition = start ?? Duration.zero;
       await player.open(Media(item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
+      _mpvLogLines = 0;
+      _lastDrops = 0;
       unawaited(inspectCurrentDecoder());
       _update(() {});
       return true;
@@ -523,6 +531,13 @@ class AppController extends ChangeNotifier {
         } else if (PlaybackRecovery.isNetworkError(message)) {
           unawaited(_recover(message));
         }
+      }),
+      // libmpv's warnings go to the log, a limited number per video, so
+      // problems such as dropped frames can be read after the fact.
+      player.stream.log.listen((log) {
+        if (_mpvLogLines >= 200) return;
+        _mpvLogLines++;
+        logInfo('mpv [${log.prefix}] ${log.level}: ${log.text.trim()}');
       }),
       // A stream that stops delivering data leaves mpv buffering forever.
       player.stream.buffering.listen((buffering) {
@@ -978,6 +993,27 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  /// Logs playback timing when frames are being dropped, at most once a
+  /// minute, so the log shows why a video stutters.
+  Future<void> _checkDrops() async {
+    final platform = player?.platform;
+    if (platform is! NativePlayer || _tracking == null || !(player?.state.playing ?? false)) return;
+    try {
+      final drops = int.tryParse(await platform.getProperty('frame-drop-count')) ?? 0;
+      final added = drops - _lastDrops;
+      _lastDrops = drops;
+      if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) return;
+      _lastDropLog = DateTime.now();
+      final values = <String>[];
+      for (final name in ['avsync', 'estimated-vf-fps', 'container-fps', 'display-fps', 'vo-delayed-frame-count', 'mistimed-frame-count', 'decoder-frame-drop-count', 'hwdec-current', 'video-sync', 'speed', 'video-params/w', 'video-params/h']) {
+        values.add('$name=${await platform.getProperty(name)}');
+      }
+      logInfo('10 秒内丢帧 $added（共 $drops）：${values.join(' ')}');
+    } catch (_) {
+      // Statistics are best effort.
+    }
+  }
+
   Future<void> _readWindowsVideoInfo() async {
     final info = await WindowsVideoInfo.read();
     _update(() => windowsVideoInfo = info);
@@ -1066,6 +1102,7 @@ class AppController extends ChangeNotifier {
     _disposed = true;
     _stallTimer?.cancel();
     _sleepTimer?.cancel();
+    _dropTimer?.cancel();
     for (final subscription in _playerSubscriptions) {
       unawaited(subscription.cancel());
     }

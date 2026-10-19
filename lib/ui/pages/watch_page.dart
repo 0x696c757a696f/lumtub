@@ -176,8 +176,7 @@ class _Player extends StatelessWidget {
               key: videoKey,
               controller: controller.videoController!,
               controls: (state) => PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
-              // libmpv draws the subtitles; see AppController's player setup.
-              subtitleViewConfiguration: const SubtitleViewConfiguration(visible: false),
+              subtitleViewConfiguration: subtitleViewFor(controller.settings),
             ),
           ),
         ),
@@ -329,4 +328,27 @@ class _UpNext extends StatelessWidget {
 
   Widget _tile(VideoItem item, List<VideoItem>? list) =>
       CompactVideoTile(item: item, thumbnails: controller.thumbnailDirectory, onOpen: () => controller.play(item, from: list));
+}
+
+/// Flutter's subtitle view styled from 字幕设置, or hidden when libmpv draws
+/// the subtitles (see AppController's player setup).
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings) {
+  if (settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
+  final border = settings.subtitleBorder;
+  return SubtitleViewConfiguration(
+    style: TextStyle(
+      height: 1.4,
+      fontSize: 32 * settings.subtitleScale,
+      letterSpacing: 0.0,
+      wordSpacing: 0.0,
+      color: Colors.white,
+      fontWeight: settings.subtitleBold ? FontWeight.w700 : FontWeight.normal,
+      backgroundColor: settings.subtitleBackground ? const Color(0xAA000000) : null,
+      shadows: settings.subtitleBackground || border == 0
+          ? null
+          : [for (final (dx, dy) in const [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)]) Shadow(color: Colors.black, offset: Offset(dx * border / 2, dy * border / 2), blurRadius: border / 2)],
+    ),
+    // sub-pos counts from the top; 100 is the bottom edge.
+    padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + (100 - settings.subtitlePosition) * 4.0),
+  );
 }

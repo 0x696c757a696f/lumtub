@@ -1,0 +1,156 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'app_log.dart';
+import 'models.dart';
+
+/// What yt-dlp found for one video: every format, the ones picked for
+/// [format], and the metadata the watch page shows.
+class ResolvedVideo {
+  ResolvedVideo(this.info, this.file, this.format, {DateTime? now}) : fetched = now ?? DateTime.now();
+
+  final Map<String, dynamic> info;
+  /// [info] saved for `--load-info-json`.
+  final File file;
+  /// The yt-dlp format expression [info] was resolved with.
+  final String format;
+  final DateTime fetched;
+
+  /// Stream addresses carry their expiry time; they are used well before it.
+  DateTime get expires {
+    final limit = fetched.add(const Duration(hours: 1));
+    final expire = int.tryParse(Uri.tryParse(_tracks.firstOrNull?['url']?.toString() ?? '')?.queryParameters['expire'] ?? '');
+    if (expire == null) return limit;
+    final at = DateTime.fromMillisecondsSinceEpoch(expire * 1000).subtract(const Duration(minutes: 15));
+    return at.isBefore(limit) ? at : limit;
+  }
+
+  bool get fresh => DateTime.now().isBefore(expires);
+
+  VideoDetails get details => VideoDetails.fromJson(info);
+
+  /// Video heights this video offers, highest first.
+  List<int> get heights {
+    final formats = info['formats'];
+    if (formats is! List) return const [];
+    final heights = <int>{
+      for (final f in formats.whereType<Map>())
+        if (f['vcodec'] != null && f['vcodec'] != 'none' && f['height'] is int && (f['height'] as int) > 0) f['height'] as int,
+    };
+    return heights.toList()..sort((a, b) => b.compareTo(a));
+  }
+
+  List<Map<String, dynamic>> get _tracks {
+    final requested = info['requested_formats'];
+    if (requested is List && requested.isNotEmpty) return requested.whereType<Map<String, dynamic>>().toList();
+    return info['url'] is String ? [info] : const [];
+  }
+
+  /// An mpv EDL address that plays the picked formats directly, the way
+  /// mpv's ytdl_hook builds it, or null when only ytdl_hook can play them
+  /// (live streams, fragmented formats).
+  String? get directUrl {
+    if (info['is_live'] == true || info['live_status'] == 'is_live') return null;
+    final tracks = _tracks;
+    if (tracks.isEmpty) return null;
+    final streams = <String>[];
+    for (final track in tracks) {
+      final url = track['url']?.toString() ?? '';
+      final protocol = track['protocol']?.toString() ?? '';
+      if (track['fragments'] != null || !(protocol == 'https' || protocol == 'http') || !url.startsWith('http')) return null;
+      streams.add('!new_stream;!no_clip;!no_chapters;%${utf8.encode(url).length}%$url');
+    }
+    return 'edl://${streams.join(';')}';
+  }
+
+  /// The User-Agent the stream addresses were issued for.
+  String? get userAgent {
+    for (final track in [..._tracks, info]) {
+      final headers = track['http_headers'];
+      if (headers is Map && headers['User-Agent'] != null) return headers['User-Agent'].toString();
+    }
+    return null;
+  }
+}
+
+/// Runs yt-dlp once per video ahead of playback and keeps the result, so
+/// libmpv does not have to extract it again: the watch page, the quality
+/// menu and playback share one extraction, and a card the pointer rests on
+/// can be resolved before it is clicked.
+class StreamResolver {
+  StreamResolver(this.ytDlpPath, {this.cacheDirectory, required this.infoDirectory, Map<String, String>? environment})
+      : _environment = environment;
+
+  final String ytDlpPath;
+  final String? cacheDirectory;
+  /// Where info files for `--load-info-json` are kept.
+  final Directory infoDirectory;
+  final Map<String, String>? _environment;
+
+  static const _keep = 12;
+  final _results = <String, Future<ResolvedVideo>>{};
+
+  /// mpv's own default when no format was chosen.
+  static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
+
+  List<String> arguments(String videoId, String format) => [
+        '--no-warnings',
+        if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
+        '--no-playlist',
+        '--dump-single-json',
+        '--format', expressionOf(format),
+        '--', 'https://www.youtube.com/watch?v=$videoId',
+      ];
+
+  /// The resolved video, from the cache while it is fresh.
+  Future<ResolvedVideo> resolve(String videoId, String format) {
+    final cached = _results[videoId];
+    if (cached != null) {
+      return cached.then((video) => video.fresh ? video : _start(videoId, format), onError: (_) => _start(videoId, format));
+    }
+    return _start(videoId, format);
+  }
+
+  /// Starts resolving [videoId] in the background, if not already done.
+  void prefetch(String videoId, String format) {
+    if (_results.containsKey(videoId)) return;
+    unawaited(_start(videoId, format).then((_) {}, onError: (_) {}));
+  }
+
+  /// Drops what is known about [videoId], for example after its streams
+  /// failed to play.
+  void forget(String videoId) => _results.remove(videoId);
+
+  Future<ResolvedVideo> _start(String videoId, String format) {
+    final future = _run(videoId, format);
+    _results.remove(videoId);
+    _results[videoId] = future;
+    while (_results.length > _keep) {
+      _results.remove(_results.keys.first);
+    }
+    // A failure is not kept, so the next attempt runs yt-dlp again.
+    future.then((_) {}, onError: (_) {
+      if (identical(_results[videoId], future)) _results.remove(videoId);
+    });
+    return future;
+  }
+
+  Future<ResolvedVideo> _run(String videoId, String format) async {
+    final watch = Stopwatch()..start();
+    final result = await Process.run(ytDlpPath, arguments(videoId, format), stdoutEncoding: utf8, stderrEncoding: utf8, environment: _environment)
+        .timeout(const Duration(seconds: 45));
+    final output = result.stdout.toString().trim();
+    if (result.exitCode != 0 || output.isEmpty) {
+      final err = result.stderr.toString().trim();
+      throw StateError(err.isEmpty ? 'yt-dlp exited with code ${result.exitCode}' : err);
+    }
+    final data = jsonDecode(const LineSplitter().convert(output).last);
+    if (data is! Map<String, dynamic>) throw const FormatException('Unexpected yt-dlp output');
+    await infoDirectory.create(recursive: true);
+    final file = File('${infoDirectory.path}${Platform.pathSeparator}$videoId.json');
+    await file.writeAsString(output);
+    logInfo('已解析 $videoId，用时 ${watch.elapsedMilliseconds} ms');
+    return ResolvedVideo(data, file, format);
+  }
+}

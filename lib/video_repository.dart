@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'app_directories.dart';
 import 'models.dart';
+import 'stream_resolver.dart';
 
 enum SearchFilter { all, videos, channels }
 
@@ -64,6 +65,16 @@ class VideoRepository {
   final String ytDlpPath;
   final String? cacheDirectory;
   VideoRepository(this.ytDlpPath, {this.cacheDirectory});
+
+  /// Resolves videos for playback ahead of libmpv.
+  late final StreamResolver streams = StreamResolver(
+    ytDlpPath,
+    cacheDirectory: cacheDirectory,
+    infoDirectory: Directory(cacheDirectory == null
+        ? '${Directory.systemTemp.path}${Platform.pathSeparator}ytplus-info'
+        : '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp${Platform.pathSeparator}info'),
+    environment: _environment,
+  );
 
   static const pageSize = 20;
 

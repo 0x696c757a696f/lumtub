@@ -241,7 +241,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: 'hwdec-codecs h264 hevc vp9 av1'),
         SettingEntry('D3D11VA 零拷贝', (context) => SwitchItem(
               title: 'D3D11VA 零拷贝',
-              subtitle: '此项即 mpv 的 --d3d11va-zero-copy，省去一次显存拷贝，个别显卡可能花屏',
+              subtitle: '此项即 mpv 的 --d3d11va-zero-copy，只对 d3d11va 有效；其他解码器选不带 -copy 的模式即为零拷贝',
               leading: _icon(Icons.bolt_outlined),
               enabled: hardware,
               value: settings.d3d11vaZeroCopy,

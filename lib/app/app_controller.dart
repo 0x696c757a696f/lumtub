@@ -23,6 +23,7 @@ import '../player_option_applicator.dart';
 import '../player_settings.dart';
 import '../tool_manager.dart';
 import '../video_format_selector.dart';
+import '../stream_resolver.dart';
 import '../video_repository.dart';
 import '../windows_env.dart';
 import '../windows_video_info.dart';
@@ -89,6 +90,17 @@ class AppController extends ChangeNotifier {
   List<VideoItem> queue = const [];
   VideoDetails? details;
   bool loadingDetails = false;
+  /// Heights the playing video offers, highest first; empty until known.
+  List<int> availableHeights = const [];
+  /// Heights for the quality menu: automatic, then what the playing video
+  /// offers (the usual steps until that is known), and the saved limit.
+  List<int> get qualityChoices {
+    final heights = availableHeights.isEmpty ? qualityHeights.where((h) => h > 0) : availableHeights;
+    return {0, ...heights, if (settings.maxHeight > 0) settings.maxHeight}.toList()..sort((a, b) => a == 0 ? -1 : b == 0 ? 1 : b.compareTo(a));
+  }
+
+  /// The video opened from addresses resolved ahead of libmpv, if any.
+  String? _openedResolved;
 
   AppearanceSettings appearance;
   final AppearanceSettingsStore? _appearanceStore;
@@ -122,6 +134,7 @@ class AppController extends ChangeNotifier {
   List<SkipSegment> _segments = const [];
   final _skipped = <SkipSegment>{};
   final _http = http.Client();
+  bool _decoderPending = false;
   int _mpvLogLines = 0;
   int _lastDrops = 0;
   DateTime _lastDropLog = DateTime(0);
@@ -387,6 +400,7 @@ class AppController extends ChangeNotifier {
       playbackError = null;
       details = null;
       loadingDetails = true;
+      availableHeights = const [];
       related?.dispose();
       related = null;
       _segments = const [];
@@ -398,6 +412,8 @@ class AppController extends ChangeNotifier {
       if (settings.defaultSpeed != player.state.rate) await player.setRate(settings.defaultSpeed);
       if (preferences.recordHistory) await _history?.record(item);
       if (start != null) _notice('从 ${_clock(start)} 继续播放');
+      final next = upNext.firstOrNull;
+      if (next != null) prefetch(next);
     }
   }
 
@@ -439,21 +455,47 @@ class AppController extends ChangeNotifier {
   }
 
   /// Opens [item] with the current format settings, from [start] if given.
-  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true}) async {
+  ///
+  /// The video is resolved by yt-dlp first, usually already done for the
+  /// watch page or while the pointer rested on its card. libmpv then plays
+  /// the picked streams directly, or has its ytdl_hook pick formats and
+  /// subtitles from the saved extraction without asking YouTube again.
+  /// [resolved] false, or a failed resolution, leaves everything to
+  /// ytdl_hook as before.
+  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true}) async {
     final player = this.player!;
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
+      final format = _format;
+      ResolvedVideo? video;
+      if (resolved) {
+        try {
+          video = await _repository!.streams.resolve(item.id, format);
+        } catch (e) {
+          logError('预先解析 ${item.id} 失败，改由 libmpv 解析', e);
+        }
+        if (serial != _playSerial) return false;
+      }
+      final subtitles = settings.subtitleMode != SubtitleMode.off;
+      final direct = video != null && video.format == format && !subtitles ? video.directUrl : null;
       final platform = player.platform;
       if (platform is NativePlayer) {
-        await platform.setProperty('ytdl-format', VideoFormatSelector.expressionFor(settings));
+        await platform.setProperty('ytdl-format', format);
+        await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null));
+        final agent = video?.userAgent;
+        if (direct != null && agent != null) await platform.setProperty('user-agent', agent);
       }
       _tracking = null;
       _lastPosition = start ?? Duration.zero;
-      await player.open(Media(item.url, start: start), play: play);
+      _openedResolved = video == null ? null : item.id;
+      if (video != null) _update(() => availableHeights = video!.heights);
+      await player.open(Media(direct ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;
-      unawaited(inspectCurrentDecoder());
+      // The decoder is known once frames are shown; resolving the video
+      // can take longer than any fixed delay.
+      _decoderPending = true;
       _update(() {});
       return true;
     } catch (e) {
@@ -480,6 +522,7 @@ class AppController extends ChangeNotifier {
     try {
       // A new open also asks yt-dlp again, which replaces stream addresses
       // that expired while the video sat paused.
+      _repository?.streams.forget(item.id);
       await _open(item, _playSerial, start: position);
     } finally {
       _recovering = false;
@@ -500,6 +543,10 @@ class AppController extends ChangeNotifier {
           // Ten seconds of playback after a reconnect means it worked.
           if (position - _lastPosition > const Duration(seconds: 10)) _recovery.reset();
           if (!_recovering) _lastPosition = position;
+        }
+        if (_decoderPending && position > const Duration(milliseconds: 500) && (player.state.width ?? 0) > 0) {
+          _decoderPending = false;
+          unawaited(inspectCurrentDecoder(delay: const Duration(milliseconds: 500)));
         }
         if (_segments.isNotEmpty) _skipSegments(position);
         final now = DateTime.now();
@@ -526,6 +573,16 @@ class AppController extends ChangeNotifier {
       player.stream.error.listen((message) {
         if (playing == null || message.isEmpty) return;
         if (player.state.duration == Duration.zero) {
+          final item = playing!;
+          if (_openedResolved == item.id) {
+            // Addresses resolved ahead may have gone stale; let libmpv's
+            // ytdl_hook resolve the video itself once.
+            _openedResolved = null;
+            _repository?.streams.forget(item.id);
+            logInfo('预先解析的地址无法播放（$message），改由 libmpv 重新解析 ${item.id}');
+            unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
+            return;
+          }
           logError('播放失败 ${playing!.id}：$message');
           _update(() => playbackError = message);
         } else if (PlaybackRecovery.isNetworkError(message)) {
@@ -680,9 +737,25 @@ class AppController extends ChangeNotifier {
   /// The audio outputs libmpv reports, "auto" first.
   List<AudioDevice> get audioDevices => player?.state.audioDevices ?? const [];
 
+  String get _format => VideoFormatSelector.expressionFor(settings);
+
+  /// Starts resolving [item] before it is opened, such as when the pointer
+  /// rests on its card.
+  void prefetch(VideoItem item) {
+    if (ready && playing?.id != item.id) _repository?.streams.prefetch(item.id, _format);
+  }
+
   Future<void> _loadDetails(VideoItem item, int serial) async {
     try {
-      final loaded = await _repository!.details(item.id);
+      VideoDetails loaded;
+      try {
+        // The extraction playback uses carries the details too.
+        final resolved = await _repository!.streams.resolve(item.id, _format);
+        loaded = resolved.details;
+        if (serial == _playSerial) _update(() => availableHeights = resolved.heights);
+      } catch (_) {
+        loaded = await _repository!.details(item.id);
+      }
       if (serial == _playSerial) {
         _update(() {
           details = loaded;
@@ -968,14 +1041,14 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  Future<void> inspectCurrentDecoder() async {
+  Future<void> inspectCurrentDecoder({Duration delay = Duration.zero}) async {
     final platform = player?.platform;
     if (platform is! NativePlayer) {
       _notice('当前播放器无法读取 libmpv 解码状态。');
       return;
     }
     try {
-      await Future<void>.delayed(const Duration(seconds: 2));
+      await Future<void>.delayed(delay);
       final codec = (await platform.getProperty('video-codec')).trim().toLowerCase();
       final decoder = DecoderStatus.fromMpv(await platform.getProperty('hwdec-current'));
       final normalized = DecoderStatus.codecKey(codec);

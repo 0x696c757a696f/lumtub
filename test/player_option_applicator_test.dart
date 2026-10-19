@@ -25,6 +25,11 @@ void main() {
     final options = PlayerOptionApplicator.optionsFor(const PlayerSettings(subtitleMode: SubtitleMode.always, subtitleLanguage: SubtitleLanguage.en));
     expect(options['slang'], startsWith('en,'));
     expect(options['ytdl-raw-options'], 'sub-langs=en.*,write-auto-subs=');
+    expect(
+      PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), infoJson: r'C:\Users\A,B\info\dQw4w9WgXcQ.json'),
+      r'load-info-json=%34%C:\Users\A,B\info\dQw4w9WgXcQ.json',
+    );
+    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), infoJson: '/tmp/x.json'), 'load-info-json=/tmp/x.json');
   });
 
   test('single cycle loops the file in mpv', () {

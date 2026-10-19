@@ -347,7 +347,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 tooltip: '画质',
                 label: height > 0 ? '${height}P' : (max == 0 ? '自动' : '${max}P'),
                 value: max,
-                values: [for (final h in qualityHeights) (h, h == 0 ? '自动' : '${h}P')],
+                values: [for (final h in _controller.qualityChoices) (h, h == 0 ? '自动' : '${h}P')],
                 onSelected: (h) => unawaited(_controller.setMaxHeight(h)),
                 onOpened: _menuOpened,
                 onClosed: _menuClosed,
@@ -423,7 +423,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         return SafeArea(
           child: ListView(shrinkWrap: true, padding: const EdgeInsets.symmetric(vertical: 12), children: [
             item(Icons.high_quality_outlined, '选择画质', qualityLabel(settings.maxHeight), () {
-              pickFromDialog<int>(context, title: '选择画质', value: settings.maxHeight, values: [for (final h in qualityHeights) (h, qualityLabel(h))], onSelected: _controller.setMaxHeight);
+              pickFromDialog<int>(context, title: '选择画质', value: settings.maxHeight, values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h))], onSelected: _controller.setMaxHeight);
             }),
             item(Icons.music_note_outlined, '选择音质', settings.audioQuality.label, () {
               pickFromDialog<AudioQuality>(

@@ -86,27 +86,29 @@ enum VideoSync {
 
 /// mpv's `--hwdec` decoders that exist on Windows, from PiliNara's
 /// `HwDecType`. The setting is an ordered list; mpv tries them in turn.
+/// Decoders without "-copy" hand frames to the renderer in GPU memory (zero
+/// copy); "-copy" ones copy them back to system memory first.
 const hwdecChoices = <(String, String)>[
   ('no', '软件解码'),
   ('auto', '任意可用的硬件解码器'),
   ('auto-safe', '最佳且稳定的硬件解码器（默认）'),
   ('auto-copy', '带拷贝的最佳硬件解码器'),
-  ('d3d12va', 'DirectX 12（Windows 10 及以上）'),
-  ('d3d12va-copy', 'DirectX 12（非直通）'),
-  ('d3d11va', 'DirectX 11（Windows 8 及以上）'),
-  ('d3d11va-copy', 'DirectX 11（非直通）'),
-  ('dxva2', 'DXVA2（Windows 7 及以上）'),
-  ('dxva2-copy', 'DXVA2（非直通）'),
-  ('nvdec', 'NVDEC（NVIDIA 独占）'),
-  ('nvdec-copy', 'NVDEC（NVIDIA 独占，非直通）'),
-  ('vulkan', 'Vulkan（实验性）'),
-  ('vulkan-copy', 'Vulkan（实验性，非直通）'),
-  ('cuda', 'CUDA（NVIDIA 独占，过时）'),
-  ('cuda-copy', 'CUDA（NVIDIA 独占，过时，非直通）'),
-  ('amf', 'AMF（AMD 独占）'),
-  ('amf-copy', 'AMF（AMD 独占，非直通）'),
-  ('qsv', 'Quick Sync Video（Intel 独占）'),
-  ('qsv-copy', 'Quick Sync Video（Intel 独占，非直通）'),
+  ('d3d12va', 'DirectX 12（Windows 10 及以上，零拷贝）'),
+  ('d3d12va-copy', 'DirectX 12（回拷）'),
+  ('d3d11va', 'DirectX 11（Windows 8 及以上，零拷贝）'),
+  ('d3d11va-copy', 'DirectX 11（回拷）'),
+  ('dxva2', 'DXVA2（Windows 7 及以上，零拷贝）'),
+  ('dxva2-copy', 'DXVA2（回拷）'),
+  ('nvdec', 'NVDEC（NVIDIA 独占，零拷贝）'),
+  ('nvdec-copy', 'NVDEC（NVIDIA 独占，回拷）'),
+  ('vulkan', 'Vulkan（实验性，零拷贝）'),
+  ('vulkan-copy', 'Vulkan（实验性，回拷）'),
+  ('cuda', 'CUDA（NVIDIA 独占，过时，零拷贝）'),
+  ('cuda-copy', 'CUDA（NVIDIA 独占，过时，回拷）'),
+  ('amf', 'AMF（AMD 独占，零拷贝）'),
+  ('amf-copy', 'AMF（AMD 独占，回拷）'),
+  ('qsv', 'Quick Sync Video（Intel 独占，零拷贝）'),
+  ('qsv-copy', 'Quick Sync Video（Intel 独占，回拷）'),
 ];
 
 /// Codecs offered for `--hwdec-codecs`.
@@ -475,7 +477,7 @@ class PlayerSettings {
       audioQuality: _enumByName(AudioQuality.values, raw['audioQuality'], AudioQuality.best),
       audioDevice: device.isEmpty || device.length > 200 || device.contains(RegExp(r'[\r\n]')) ? 'auto' : device,
       videoSync: _enumByName(VideoSync.values, raw['videoSync'], VideoSync.audio),
-      maxHeight: qualityHeights.contains(raw['maxHeight']) ? raw['maxHeight'] as int : 0,
+      maxHeight: raw['maxHeight'] is int && (raw['maxHeight'] as int) >= 0 && (raw['maxHeight'] as int) <= 4320 ? raw['maxHeight'] as int : 0,
       playOrder: playOrder,
       defaultSpeed: decimal('defaultSpeed', 1.0, 0.1, 8),
       speeds: speeds.isEmpty ? defaultSpeeds : speeds,

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:media_kit/media_kit.dart';
 
 import 'player_settings.dart';
@@ -29,9 +31,7 @@ class PlayerOptionApplicator {
       'slang': subtitles ? language.mpvLangs : '',
       // Without sub-langs mpv's ytdl_hook asks yt-dlp for every manual
       // subtitle; automatic captions must be requested by name.
-      'ytdl-raw-options': subtitles
-          ? ['sub-langs=${language.ytDlpLangs}', if (settings.subtitleMode == SubtitleMode.always) 'write-auto-subs='].join(',')
-          : '',
+      'ytdl-raw-options': ytdlRawOptions(settings),
       'cache': settings.cacheMode,
       'cache-secs': settings.cacheSeconds.toString(),
       'demuxer-max-bytes': '${settings.cacheMemoryMb}MiB',
@@ -40,6 +40,21 @@ class PlayerOptionApplicator {
       'loop-file': settings.playOrder == PlayOrder.singleCycle ? 'inf' : 'no',
       ...settings.customOptions,
     };
+  }
+
+  /// Options mpv's ytdl_hook passes to yt-dlp. [infoJson] is a file from an
+  /// earlier extraction: yt-dlp then picks formats and subtitles from it
+  /// without asking YouTube again.
+  static String ytdlRawOptions(PlayerSettings settings, {String? infoJson}) {
+    final subtitles = settings.subtitleMode != SubtitleMode.off;
+    // mpv's %length% quoting keeps a comma or equals sign, as a path may
+    // have, from splitting the option.
+    String quote(String value) => value.contains(RegExp('[,=%]')) || value.startsWith(RegExp(r'["\[]')) ? '%${utf8.encode(value).length}%$value' : value;
+    return [
+      if (subtitles) 'sub-langs=${quote(settings.subtitleLanguage.ytDlpLangs)}',
+      if (subtitles && settings.subtitleMode == SubtitleMode.always) 'write-auto-subs=',
+      if (infoJson != null) 'load-info-json=${quote(infoJson)}',
+    ].join(',');
   }
 
   /// Returns unsupported or rejected options without interrupting the player.

@@ -59,8 +59,9 @@ void main() {
     expect(restored.autoplayNext, isFalse);
   });
 
-  test('unknown quality limits fall back to automatic', () {
-    expect(PlayerSettings.fromJson({'maxHeight': 999}).maxHeight, 0);
+  test('quality limits outside 0 to 4320 fall back to automatic', () {
+    expect(PlayerSettings.fromJson({'maxHeight': 9999}).maxHeight, 0);
+    expect(PlayerSettings.fromJson({'maxHeight': 240}).maxHeight, 240);
     expect(PlayerSettings.fromJson({'maxHeight': '720'}).maxHeight, 0);
     expect(PlayerSettings.fromJson(const {}).autoplayNext, isTrue);
   });

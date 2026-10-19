@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -129,6 +130,21 @@ class VideoCard extends StatefulWidget {
 
 class _VideoCardState extends State<VideoCard> {
   bool _hovered = false;
+  Timer? _prefetch;
+
+  /// A pointer resting on a card starts resolving the video, so a click
+  /// that follows starts playback sooner.
+  void _hover(bool value) {
+    setState(() => _hovered = value);
+    _prefetch?.cancel();
+    if (value) _prefetch = Timer(const Duration(milliseconds: 400), () => VideoActions.of(context)?.prefetch(widget.item));
+  }
+
+  @override
+  void dispose() {
+    _prefetch?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +157,7 @@ class _VideoCardState extends State<VideoCard> {
     return Card(
       child: InkWell(
         onTap: widget.onOpen,
-        onHover: (value) => setState(() => _hovered = value),
+        onHover: _hover,
         onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: widget.onOpen, onRemove: widget.onRemove),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           AspectRatio(

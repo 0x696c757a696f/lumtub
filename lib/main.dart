@@ -128,7 +128,7 @@ class _YtPlusAppState extends State<YtPlusApp> {
             // Material's own text (tooltips, dialogs) in the language chosen
             // at start.
             locale: currentLanguage.locale,
-            supportedLocales: [for (final l in AppLanguage.values) if (l.locale case final locale?) locale],
+            supportedLocales: [for (final l in AppLanguage.selectable) if (l.locale case final locale?) locale],
             localizationsDelegates: GlobalMaterialLocalizations.delegates,
             theme: _light,
             darkTheme: _dark,

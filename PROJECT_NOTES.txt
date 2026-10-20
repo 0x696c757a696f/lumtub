@@ -1,4 +1,4 @@
 YTPLUS
 ======
-See README.md (简体中文) or README.en.md (English) for features, building
+See README.md for features, building
 and licensing.

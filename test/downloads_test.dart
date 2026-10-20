@@ -114,18 +114,27 @@ void main() {
 
     Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 80));
 
+    /// Waits for [done], for at most a few seconds: file writes can be slow
+    /// while the whole suite runs.
+    Future<void> until(bool Function() done) async {
+      for (var i = 0; i < 100 && !done(); i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+      }
+    }
+
     test('runs at most two downloads at once and starts the next when one ends', () async {
       final m = manager();
       for (final id in ['aaaaaaaaaaa', 'bbbbbbbbbbb', 'ccccccccccc']) {
         m.add(video(id), DownloadQuality.best);
       }
+      await until(() => processes.length >= 2);
       await settle();
       expect(processes, hasLength(2));
       // Oldest first.
       expect(started[0].last, endsWith('aaaaaaaaaaa'));
       expect(m.taskFor('ccccccccccc')!.status, DownloadStatus.queued);
       await processes[0].exit(1);
-      await settle();
+      await until(() => processes.length >= 3);
       expect(processes, hasLength(3));
       expect(m.taskFor('aaaaaaaaaaa')!.status, DownloadStatus.failed);
       expect(m.taskFor('ccccccccccc')!.status, DownloadStatus.downloading);

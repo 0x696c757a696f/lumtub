@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/home_feed.dart';
+import 'package:ytplus/library_store.dart' show WatchProgress;
 import 'package:ytplus/models.dart';
 import 'package:ytplus/recommendations.dart';
 import 'package:ytplus/youtube_related.dart';
@@ -46,7 +47,7 @@ void main() {
         Candidate(video('keys', title: '机械键盘 轴体 评测', channelId: 'UCkeys'), RecommendSource.related),
         Candidate(video('h1', title: '机械键盘 评测', channelId: 'UCkeys'), RecommendSource.related),
         Candidate(video('bad', channelId: 'UCbad'), RecommendSource.related),
-      ], taste: taste, exclude: {video('h1').id}, notInterested: notInterested);
+      ], taste: taste, exclude: {video('h1').id}, notInterested: notInterested).map((r) => r.item).toList();
       expect(ranked.map((v) => v.id.replaceAll('_', '')), ['keys', 'cook']);
     });
 
@@ -54,7 +55,7 @@ void main() {
       final ranked = recommend([
         for (var i = 0; i < 10; i++) Candidate(video('k$i', title: '机械键盘 评测', channelId: 'UCkeys'), RecommendSource.related),
         for (var i = 0; i < 4; i++) Candidate(video('o$i', title: '别的', channelId: 'UCo$i'), RecommendSource.topic),
-      ], taste: taste, count: 8);
+      ], taste: taste, count: 8).map((r) => r.item).toList();
       final fromKeys = ranked.where((v) => v.channelId == 'UCkeys').length;
       expect(fromKeys, lessThan(8));
       expect(ranked.length, 8);
@@ -65,15 +66,15 @@ void main() {
         Candidate(video('twice', channelId: 'UCa'), RecommendSource.topic),
         Candidate(video('twice', channelId: 'UCa'), RecommendSource.channel),
         Candidate(video('once', channelId: 'UCb'), RecommendSource.channel),
-      ], taste: taste);
+      ], taste: taste).map((r) => r.item).toList();
       expect(ranked.length, 2);
       expect(ranked.first.id, video('twice').id);
     });
 
     test('a different seed changes the order a little, not the set', () {
       final candidates = [for (var i = 0; i < 20; i++) Candidate(video('v$i', channelId: 'UC$i'), RecommendSource.topic)];
-      final a = recommend(candidates, taste: taste, seed: 1);
-      final b = recommend(candidates, taste: taste, seed: 2);
+      final a = recommend(candidates, taste: taste, seed: 1).map((r) => r.item).toList();
+      final b = recommend(candidates, taste: taste, seed: 2).map((r) => r.item).toList();
       expect(a.map((v) => v.id).toSet(), b.map((v) => v.id).toSet());
       expect(a.map((v) => v.id).toList(), isNot(b.map((v) => v.id).toList()));
     });
@@ -226,6 +227,43 @@ void main() {
       expect(items, hasLength(1));
       final item = items.single;
       expect((item.id, item.title, item.channel, item.channelId, item.duration, item.viewCount), ('ABCDEFGHIJK', 'Lockup 标题', 'Some Channel', 'UCyyyyyyyyyyyyyyyyyyyyyy', 3723, 34000));
+    });
+  });
+
+  group('taste details', () {
+    test('words in every title count less than distinctive ones', () {
+      final taste = TasteProfile.from(history: [
+        video('a', title: '教程 机械键盘'),
+        video('b', title: '教程 剪辑'),
+        video('c', title: '教程 摄影'),
+      ]);
+      expect(taste.words['教程']! / 3, lessThan(taste.words['键盘']!));
+    });
+
+    test('a video left within seconds counts against its channel', () {
+      final taste = TasteProfile.from(
+        history: [video('a', channelId: 'UCskip', title: '不喜欢'), video('b', channelId: 'UCgood', title: '喜欢')],
+        progressOf: (id) => id.startsWith('a')
+            ? const WatchProgress(Duration(seconds: 5), Duration(minutes: 10))
+            : const WatchProgress(Duration(minutes: 9), Duration(minutes: 10)),
+      );
+      expect(taste.channelAffinity(video('x', channelId: 'UCskip')), lessThan(0));
+      expect(taste.channelAffinity(video('x', channelId: 'UCgood')), 1);
+      expect(taste.words.containsKey('不喜'), isFalse);
+    });
+
+    test('searches count as interests', () {
+      final taste = TasteProfile.from(history: const [], searches: ['露营装备']);
+      expect(taste.titleMatch(video('x', title: '露营装备推荐')), greaterThan(0.5));
+    });
+
+    test('keeps the reason of the stronger source', () {
+      final taste = TasteProfile.from(history: const []);
+      final picked = recommend([
+        Candidate(video('v', channelId: 'UCa'), RecommendSource.topic, reason: '热门'),
+        Candidate(video('v', channelId: 'UCa'), RecommendSource.related, reason: '看过《A》的人也在看'),
+      ], taste: taste);
+      expect(picked.single.reason, '看过《A》的人也在看');
     });
   });
 }

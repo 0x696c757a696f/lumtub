@@ -1267,6 +1267,7 @@ class AppController extends ChangeNotifier {
         favorites: [...?library?.favorites, ...?account?.likedVideos.take(50)],
         followed: library?.channels ?? const [],
         subscriptions: library?.feed ?? const [],
+        searches: preferences.recordHistory ? await searchHistory?.items() ?? const [] : const [],
         related: relatedVideos.forVideo,
         channelUploads: library?.uploadsOf ?? (_) async => const [],
         search: (query) async {

@@ -21,75 +21,135 @@ enum RecommendSource {
 }
 
 class Candidate {
-  const Candidate(this.item, this.source, {this.seedWeight = 1});
+  const Candidate(this.item, this.source, {this.seedWeight = 1, this.reason = ''});
   final VideoItem item;
   final RecommendSource source;
   /// How much the video it came from counts: recent and finished videos
   /// count more.
   final double seedWeight;
+  /// Why it is suggested, shown on its card.
+  final String reason;
 }
 
-/// What the watch history says about taste: how much each channel is
-/// watched and which words the titles share. Built on this computer only.
+/// A picked video and why.
+class Recommendation {
+  const Recommendation(this.item, this.reason);
+  final VideoItem item;
+  final String reason;
+}
+
+/// What the history says about taste, worked out on this computer only:
+/// how much each channel is watched (skipped videos count against it) and
+/// which words matter, weighted TF-IDF style so words in every title count
+/// for little.
 class TasteProfile {
-  TasteProfile._(this.channels, this.words);
+  TasteProfile._(this.channels, this.words, this._idf, this._defaultIdf);
 
-  /// Channel id (or name, when the id is unknown) to affinity.
+  /// Channel id (or name, when the id is unknown) to affinity; negative
+  /// for channels mostly skipped.
   final Map<String, double> channels;
+  /// Word to interest, already multiplied by the word's IDF.
   final Map<String, double> words;
+  final Map<String, double> _idf;
+  final double _defaultIdf;
+  late final double _wordsNorm = sqrt(words.values.fold(0.0, (sum, v) => sum + v * v));
+  late final double _maxChannel = channels.values.fold(0.0, max);
 
+  /// [searches] are the words typed into search, newest first.
   factory TasteProfile.from({
     required List<VideoItem> history,
     WatchProgress? Function(String id)? progressOf,
     List<VideoItem> favorites = const [],
     Set<String> followed = const {},
+    List<String> searches = const [],
   }) {
     final channels = <String, double>{};
-    final words = <String, double>{};
-    void count(VideoItem item, double weight) {
-      channels.update(channelKey(item), (v) => v + weight, ifAbsent: () => weight);
-      for (final word in titleWords(item.title)) {
-        words.update(word, (v) => v + weight, ifAbsent: () => weight);
-      }
-    }
-
+    final documents = <(Set<String>, double)>[];
     for (final (i, item) in history.indexed) {
       final progress = progressOf?.call(item.id);
-      // Finished videos say more than ones left after a few seconds.
-      final watched = progress == null || progress.duration <= Duration.zero ? 0.5 : progress.fraction;
-      count(item, pow(0.93, i) * (0.3 + 0.7 * watched));
+      final recency = pow(0.93, i).toDouble();
+      final known = progress != null && progress.duration > Duration.zero;
+      // Left within the first seconds: a sign against, not for.
+      if (known && progress.fraction < 0.15 && progress.position < const Duration(seconds: 45)) {
+        channels.update(channelKey(item), (v) => v - 0.5 * recency, ifAbsent: () => -0.5 * recency);
+        continue;
+      }
+      final weight = recency * (0.3 + 0.7 * (known ? progress.fraction : 0.5));
+      channels.update(channelKey(item), (v) => v + weight, ifAbsent: () => weight);
+      documents.add((titleWords(item.title), weight));
     }
     for (final item in favorites) {
-      count(item, 1);
+      channels.update(channelKey(item), (v) => v + 1, ifAbsent: () => 1);
+      documents.add((titleWords(item.title), 1));
+    }
+    for (final (i, query) in searches.take(20).indexed) {
+      documents.add((titleWords(query), 0.6 * pow(0.9, i)));
     }
     for (final id in followed) {
       channels.update(id, (v) => v + 1.5, ifAbsent: () => 1.5);
     }
-    return TasteProfile._(channels, words);
+    final count = documents.length;
+    final df = <String, int>{};
+    for (final (words, _) in documents) {
+      for (final word in words) {
+        df.update(word, (v) => v + 1, ifAbsent: () => 1);
+      }
+    }
+    double idfOf(int seen) => log((count + 1) / (seen + 1)) + 1;
+    final idf = {for (final entry in df.entries) entry.key: idfOf(entry.value)};
+    final words = <String, double>{};
+    for (final (titleWords, weight) in documents) {
+      for (final word in titleWords) {
+        words.update(word, (v) => v + weight * idf[word]!, ifAbsent: () => weight * idf[word]!);
+      }
+    }
+    return TasteProfile._(channels, words, idf, idfOf(0));
   }
 
-  double get _maxChannel => channels.values.fold(0.0, max);
-
-  /// 0 to 1: how much [item]'s channel is watched.
+  /// -1 to 1: how much [item]'s channel is watched, below 0 when mostly
+  /// skipped.
   double channelAffinity(VideoItem item) {
     final top = _maxChannel;
-    return top <= 0 ? 0 : (channels[channelKey(item)] ?? 0) / top;
+    final value = channels[channelKey(item)] ?? 0;
+    if (value < 0) return max(-1, value);
+    return top <= 0 ? 0 : value / top;
   }
 
-  /// 0 to 1: how much [item]'s title shares words with the history.
+  /// 0 to 1: the cosine between [item]'s title and the history's words.
   double titleMatch(VideoItem item) {
-    if (words.isEmpty) return 0;
-    final top = words.values.fold(0.0, max);
-    var sum = 0.0;
+    if (_wordsNorm == 0) return 0;
+    var dot = 0.0;
+    var norm = 0.0;
     for (final word in titleWords(item.title)) {
-      sum += (words[word] ?? 0) / top;
+      final idf = _idf[word] ?? _defaultIdf;
+      dot += (words[word] ?? 0) * idf;
+      norm += idf * idf;
     }
-    return min(1, sum / 3);
+    if (norm == 0) return 0;
+    // Short titles against a long history give small cosines; scaled up so
+    // a clear match reaches about 1.
+    return min(1, 3 * dot / (_wordsNorm * sqrt(norm)));
+  }
+
+  /// The history's interest [item] belongs to most: its title word that
+  /// weighs most in the history, if any weighs enough.
+  String? interestOf(VideoItem item) {
+    String? best;
+    var bestWeight = 0.0;
+    final top = words.values.fold(0.0, max);
+    for (final word in titleWords(item.title)) {
+      final weight = words[word] ?? 0;
+      if (weight > bestWeight) {
+        bestWeight = weight;
+        best = word;
+      }
+    }
+    return top > 0 && bestWeight >= 0.2 * top ? best : null;
   }
 
   /// The channels watched most, most first.
   List<String> topChannels(int count) =>
-      (channels.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).take(count).map((e) => e.key).toList();
+      (channels.entries.where((e) => e.value > 0).toList()..sort((a, b) => b.value.compareTo(a.value))).take(count).map((e) => e.key).toList();
 
   /// The words the history is most about, most first.
   List<String> topWords(int count) =>
@@ -112,7 +172,7 @@ class TasteProfile {
       final word = match.group(0)!;
       if (!_stopWords.contains(word)) result.add(word);
     }
-    for (final run in RegExp(r'[぀-ヿ㐀-鿿가-힯]{2,}').allMatches(title)) {
+    for (final run in RegExp(r'[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]{2,}').allMatches(title)) {
       final text = run.group(0)!;
       for (var i = 0; i + 1 < text.length; i++) {
         result.add(text.substring(i, i + 2));
@@ -175,11 +235,11 @@ class NotInterested {
 }
 
 /// Orders [candidates] for the home page, like a video site's feed: videos
-/// near what was watched, from channels watched often, fresh and popular,
-/// with no more than a few from one channel near the top and a little
-/// chance mixed in so the feed does not narrow. [seed] changes the chance
-/// for 换一批.
-List<VideoItem> recommend(
+/// near what was watched, from channels watched often, fresh and popular.
+/// Near the top no channel and no interest repeats much, and a little
+/// chance is mixed in so the feed does not narrow. [seed] changes the
+/// chance for 换一批.
+List<Recommendation> recommend(
   List<Candidate> candidates, {
   required TasteProfile taste,
   Set<String> exclude = const {},
@@ -190,7 +250,7 @@ List<VideoItem> recommend(
 }) {
   final clock = now ?? DateTime.now();
   final random = Random(seed);
-  final byId = <String, ({VideoItem item, double score, int sources})>{};
+  final byId = <String, ({VideoItem item, double score, String reason})>{};
   for (final candidate in candidates) {
     final item = candidate.item;
     if (exclude.contains(item.id) || (notInterested?.videos.contains(item.id) ?? false) || item.isUpcoming) continue;
@@ -208,28 +268,37 @@ List<VideoItem> recommend(
     score -= 0.6 * (notInterested?.channels[TasteProfile.channelKey(item)] ?? 0);
     final known = byId[item.id];
     if (known == null) {
-      byId[item.id] = (item: item, score: score, sources: 1);
+      byId[item.id] = (item: item, score: score, reason: candidate.reason);
     } else {
-      // Suggested from more than one place: a stronger sign.
-      byId[item.id] = (item: known.item, score: max(known.score, score) + 0.3, sources: known.sources + 1);
+      // Suggested from more than one place: a stronger sign. The stronger
+      // source gives the reason.
+      byId[item.id] = (item: known.item, score: max(known.score, score) + 0.3, reason: score > known.score ? candidate.reason : known.reason);
     }
   }
-  final pool = [for (final entry in byId.values) (item: entry.item, score: entry.score + random.nextDouble() * 0.35)];
-  final picked = <VideoItem>[];
+  final pool = [
+    for (final entry in byId.values)
+      (item: entry.item, score: entry.score + random.nextDouble() * 0.35, reason: entry.reason, interest: taste.interestOf(entry.item)),
+  ];
+  final picked = <Recommendation>[];
   final perChannel = <String, int>{};
+  final perInterest = <String, int>{};
   while (picked.length < count && pool.isNotEmpty) {
     var best = 0;
     var bestScore = double.negativeInfinity;
     for (final (i, entry) in pool.indexed) {
-      final score = entry.score - 0.45 * (perChannel[TasteProfile.channelKey(entry.item)] ?? 0);
+      final interest = entry.interest;
+      final score = entry.score -
+          0.45 * (perChannel[TasteProfile.channelKey(entry.item)] ?? 0) -
+          (interest == null ? 0 : 0.2 * (perInterest[interest] ?? 0));
       if (score > bestScore) {
         bestScore = score;
         best = i;
       }
     }
-    final chosen = pool.removeAt(best).item;
-    picked.add(chosen);
-    perChannel.update(TasteProfile.channelKey(chosen), (v) => v + 1, ifAbsent: () => 1);
+    final chosen = pool.removeAt(best);
+    picked.add(Recommendation(chosen.item, chosen.reason));
+    perChannel.update(TasteProfile.channelKey(chosen.item), (v) => v + 1, ifAbsent: () => 1);
+    if (chosen.interest case final interest?) perInterest.update(interest, (v) => v + 1, ifAbsent: () => 1);
   }
   return picked;
 }

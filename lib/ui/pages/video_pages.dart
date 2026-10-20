@@ -34,7 +34,7 @@ class HomeFeedPage extends StatelessWidget {
       if (prefs.homeShowRecommended && feed != null && (feed.items.isNotEmpty || feed.loading || feed.error != null)) ...[
         SliverToBoxAdapter(child: PageHeader(
           '为你推荐',
-          subtitle: feed.loading && feed.items.isEmpty ? '正在根据观看记录挑选…' : '根据观看记录、收藏和关注，在本机挑选',
+          subtitle: feed.loading && feed.items.isEmpty ? '正在根据观看记录挑选…' : '根据观看记录、搜索、收藏和关注，在本机挑选；右键可选“不感兴趣”',
           trailing: Row(mainAxisSize: MainAxisSize.min, children: [
             TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(Icons.shuffle_rounded, size: 18), label: const Text('换一批')),
             IconButton(
@@ -51,6 +51,7 @@ class HomeFeedPage extends StatelessWidget {
             onOpen: (item) => controller.play(item, from: feed.items),
             onRemove: controller.dismissRecommendation,
             removeLabel: '不感兴趣',
+            reasons: feed.reasons,
           )
         else if (feed.loading)
           const SliverSkeletonGrid(rows: 2)

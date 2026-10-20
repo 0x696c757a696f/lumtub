@@ -25,6 +25,9 @@ ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 4
     );
 
 /// Column count and card height for a grid [width] wide.
+/// The 推荐原因 line under a recommended card.
+const _reasonHeight = 20.0;
+
 ({int columns, double itemHeight}) gridLayoutFor(double width) {
   final columns = max(1, ((width + AppStyle.cardSpacing) / (videoCardMinWidth + AppStyle.cardSpacing)).floor());
   final itemWidth = (width - AppStyle.cardSpacing * (columns - 1)) / columns;
@@ -47,13 +50,15 @@ class VideoActions extends InheritedWidget {
 /// A lazily built grid of video cards as a sliver, so pages can put headers
 /// above it in the same scroll view.
 class SliverVideoGrid extends StatelessWidget {
-  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel});
+  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reasons});
   final List<VideoItem> items;
   final void Function(VideoItem item) onOpen;
   final Directory? thumbnails;
   /// Adds a "remove" entry to each card's menu, for playlists.
   final void Function(VideoItem item)? onRemove;
   final String? removeLabel;
+  /// A line under each card saying why it is there, by video id.
+  final Map<String, String>? reasons;
 
   @override
   Widget build(BuildContext context) => SliverPadding(
@@ -65,10 +70,17 @@ class SliverVideoGrid extends StatelessWidget {
               crossAxisCount: layout.columns,
               mainAxisSpacing: AppStyle.cardSpacing,
               crossAxisSpacing: AppStyle.cardSpacing,
-              mainAxisExtent: layout.itemHeight,
+              mainAxisExtent: layout.itemHeight + (reasons == null ? 0 : _reasonHeight),
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, i) => VideoCard(item: items[i], thumbnails: thumbnails, onOpen: () => onOpen(items[i]), onRemove: onRemove == null ? null : () => onRemove!(items[i]), removeLabel: removeLabel),
+              (context, i) => VideoCard(
+                item: items[i],
+                thumbnails: thumbnails,
+                onOpen: () => onOpen(items[i]),
+                onRemove: onRemove == null ? null : () => onRemove!(items[i]),
+                removeLabel: removeLabel,
+                reason: reasons == null ? null : reasons![items[i].id] ?? '',
+              ),
               childCount: items.length,
             ),
           );
@@ -196,13 +208,15 @@ class _CardSkeleton extends StatelessWidget {
 
 /// Thumbnail-on-top video card with hover zoom and a right-click menu.
 class VideoCard extends StatefulWidget {
-  const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel});
+  const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason});
   final VideoItem item;
   final VoidCallback onOpen;
   final Directory? thumbnails;
   final VoidCallback? onRemove;
   /// The menu entry for [onRemove]; 从此列表移除 unless given.
   final String? removeLabel;
+  /// Why the card is recommended; null leaves the line out.
+  final String? reason;
 
   @override
   State<VideoCard> createState() => _VideoCardState();
@@ -313,6 +327,17 @@ class _VideoCardState extends State<VideoCard> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
               Text(meta.isEmpty ? 'YouTube' : meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
+              if (widget.reason case final reason?)
+                SizedBox(
+                  height: _reasonHeight,
+                  child: Row(children: [
+                    if (reason.isNotEmpty) ...[
+                      Icon(Icons.auto_awesome_outlined, size: 12, color: colors.primary),
+                      const SizedBox(width: 4),
+                    ],
+                    Expanded(child: Text(reason, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary))),
+                  ]),
+                ),
             ]),
           )),
         ]),

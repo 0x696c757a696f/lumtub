@@ -18,6 +18,7 @@ class HomeFeedSources {
     this.favorites = const [],
     this.followed = const [],
     this.subscriptions = const [],
+    this.searches = const [],
   });
 
   final List<VideoItem> history;
@@ -26,6 +27,8 @@ class HomeFeedSources {
   final List<ChannelRef> followed;
   /// The followed channels' newest videos, already loaded.
   final List<VideoItem> subscriptions;
+  /// Words searched for, newest first; they count as interests.
+  final List<String> searches;
   /// YouTube's suggestions next to a video.
   final Future<List<VideoItem>> Function(String videoId) related;
   /// A channel's newest videos.
@@ -44,6 +47,8 @@ class HomeFeed extends ChangeNotifier {
   final NotInterested notInterested;
 
   List<VideoItem> items = const [];
+  /// Why each of [items] is suggested, by video id.
+  Map<String, String> reasons = const {};
   bool loading = false;
   String? error;
   DateTime? loadedAt;
@@ -72,17 +77,18 @@ class HomeFeed extends ChangeNotifier {
       progressOf: sources.progressOf,
       favorites: sources.favorites,
       followed: {for (final c in sources.followed) c.id},
+      searches: sources.searches,
     );
     final followed = {for (final c in sources.followed) c.id};
     final candidates = <Candidate>[
-      for (final item in sources.subscriptions.take(60)) Candidate(item, RecommendSource.subscription),
+      for (final item in sources.subscriptions.take(60)) Candidate(item, RecommendSource.subscription, reason: '你关注的 ${item.channel}'),
     ];
     final jobs = <Future<void>>[];
     var failures = 0;
-    Future<void> gather(Future<List<VideoItem>> Function() load, RecommendSource source, double weight, int limit) async {
+    Future<void> gather(Future<List<VideoItem>> Function() load, RecommendSource source, double weight, int limit, String Function(VideoItem item) reason) async {
       try {
         final found = await load();
-        candidates.addAll(found.take(limit).map((item) => Candidate(item, source, seedWeight: weight)));
+        candidates.addAll(found.take(limit).map((item) => Candidate(item, source, seedWeight: weight, reason: reason(item))));
       } catch (e) {
         failures++;
         logInfo('推荐来源失败：$e');
@@ -93,22 +99,29 @@ class HomeFeed extends ChangeNotifier {
     final seeds = <VideoItem>[...sources.history.take(relatedSeeds), ...sources.favorites.take(2)];
     for (final (i, seed) in seeds.indexed) {
       final weight = (1 - i * 0.08).clamp(0.4, 1.0);
-      jobs.add(gather(() => sources.related(seed.id), RecommendSource.related, weight, 12));
+      final title = seed.title.length > 24 ? '${seed.title.substring(0, 24)}…' : seed.title;
+      jobs.add(gather(() => sources.related(seed.id), RecommendSource.related, weight, 12, (_) => '看过《$title》的人也在看'));
     }
     var channels = 0;
     for (final key in taste.topChannels(10)) {
       if (channels >= channelSeeds || key.startsWith('name:') || followed.contains(key)) continue;
       final name = sources.history.firstWhere((item) => item.channelId == key, orElse: () => VideoItem(id: '', title: '', channel: '', url: '')).channel;
       channels++;
-      jobs.add(gather(() => sources.channelUploads(ChannelRef(key, name)), RecommendSource.channel, 1, 8));
+      jobs.add(gather(() => sources.channelUploads(ChannelRef(key, name)), RecommendSource.channel, 1, 8, (item) => '你常看 ${item.channel.isEmpty ? name : item.channel}'));
     }
-    final words = taste.topWords(topicSeeds * 2);
-    for (var i = 0; i + 1 < words.length && i < topicSeeds * 2; i += 2) {
-      final query = '${words[i]} ${words[i + 1]}';
-      jobs.add(gather(() => sources.search(query), RecommendSource.topic, 1, 10));
+    // Topics: the newest search, then the history's strongest words.
+    final topics = <String>[
+      if (sources.searches.isNotEmpty) sources.searches.first,
+      ...() {
+        final words = taste.topWords(topicSeeds * 2);
+        return [for (var i = 0; i + 1 < words.length; i += 2) '${words[i]} ${words[i + 1]}'];
+      }(),
+    ].take(topicSeeds);
+    for (final query in topics) {
+      jobs.add(gather(() => sources.search(query), RecommendSource.topic, 1, 10, (_) => '“$query”相关的本周热门'));
     }
     // Nothing watched or followed yet: start from what is popular.
-    if (jobs.isEmpty && candidates.isEmpty) jobs.add(gather(() => sources.search('热门'), RecommendSource.topic, 1, 24));
+    if (jobs.isEmpty && candidates.isEmpty) jobs.add(gather(() => sources.search('热门'), RecommendSource.topic, 1, 24, (_) => '本周热门'));
     await Future.wait(jobs);
     if (generation != _generation || _disposed) return;
     _taste = taste;
@@ -148,7 +161,9 @@ class HomeFeed extends ChangeNotifier {
 
   void _rank(List<VideoItem> Function(List<VideoItem>)? filter) {
     final ranked = recommend(_candidates, taste: _taste!, exclude: _exclude, notInterested: notInterested, count: 48, seed: _seed);
-    items = (filter?.call(ranked) ?? ranked).take(24).toList();
+    final videos = ranked.map((r) => r.item).toList();
+    items = (filter?.call(videos) ?? videos).take(24).toList();
+    reasons = {for (final r in ranked) r.item.id: r.reason};
   }
 
   void _notify() {

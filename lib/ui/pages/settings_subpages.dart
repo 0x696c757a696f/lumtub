@@ -150,7 +150,6 @@ Future<void> _addBlockedChannel(BuildContext context, AppController controller) 
 Future<void> openBlockedGroups(BuildContext context, AppController controller) => _push(context, controller, tr('屏蔽争议宗教团体'), (context) {
       final prefs = controller.preferences;
       void save(AppPreferences next) => controller.savePreferences(next);
-      final allowed = prefs.allowedGroups.toSet();
       return [
         SwitchListTile(
           secondary: const Icon(Icons.block_rounded),
@@ -161,23 +160,14 @@ Future<void> openBlockedGroups(BuildContext context, AppController controller) =
         ),
         _tip(context, tr('搜索时输入完全正确的频道名（区分大小写，多一个字或少一个字都不行），仍能找到这个频道和它的视频。关注的频道照常出现在订阅里。')),
         _header(context, tr('屏蔽哪些')),
-        for (final group in blockedGroups)
-          CheckboxListTile(
-            dense: true,
-            enabled: prefs.blockGroups,
-            title: Text(group.label),
-            subtitle: Text(group.words.take(6).join('、'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 12)),
-            value: !allowed.contains(group.name),
-            onChanged: (on) => save(prefs.copyWith(allowedGroups: on == true ? (allowed..remove(group.name)).toList() : [...allowed, group.name])),
-          ),
-        _tip(context, tr('按名称匹配标题和频道名，名单只保存在本机。还想屏蔽别的，可以用 首页与搜索设置 › 标题关键词过滤，或 隐私设置 › 屏蔽频道。')),
+        ..._groupTiles(context, controller, blockedGroups, media: false),
+        _tip(context, tr('点一个团体可以看它的完整名单，逐项取消。按名称匹配标题和频道名，名单只保存在本机。还想屏蔽别的，可以用 首页与搜索设置 › 标题关键词过滤，或 隐私设置 › 屏蔽频道。')),
       ];
     });
 
 Future<void> openStateMedia(BuildContext context, AppController controller) => _push(context, controller, tr('屏蔽官方宣传媒体'), (context) {
       final prefs = controller.preferences;
       void save(AppPreferences next) => controller.savePreferences(next);
-      final allowed = prefs.allowedMedia.toSet();
       return [
         SwitchListTile(
           secondary: const Icon(Icons.campaign_outlined),
@@ -188,18 +178,100 @@ Future<void> openStateMedia(BuildContext context, AppController controller) => _
         ),
         _tip(context, tr('只按频道名判断，别的频道转载或报道它们的视频照常显示。BBC、NHK、PBS 这类编辑独立的公共媒体不在其中。搜索完全正确的频道名（区分大小写）仍能找到。')),
         _header(context, tr('屏蔽哪些')),
-        for (final group in stateMedia)
-          CheckboxListTile(
-            dense: true,
-            enabled: prefs.blockStateMedia,
-            title: Text(group.label),
-            subtitle: Text(group.words.take(6).join('、'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 12)),
-            value: !allowed.contains(group.name),
-            onChanged: (on) => save(prefs.copyWith(allowedMedia: on == true ? (allowed..remove(group.name)).toList() : [...allowed, group.name])),
-          ),
+        ..._groupTiles(context, controller, stateMedia, media: true),
         _tip(context, tr('名单只保存在本机。漏掉的频道可以在 隐私设置 › 屏蔽频道 里自己加。')),
       ];
     });
+
+/// [prefs] with [group] ticked or not.
+AppPreferences _withGroup(AppPreferences prefs, BlockedGroup group, bool on, {required bool media}) {
+  List<String> toggled(List<String> list, bool add) => add ? {...list, group.name}.toList() : [...list.where((n) => n != group.name)];
+  if (!group.onByDefault) return prefs.copyWith(enabledGroups: toggled(prefs.enabledGroups, on));
+  return media ? prefs.copyWith(allowedMedia: toggled(prefs.allowedMedia, !on)) : prefs.copyWith(allowedGroups: toggled(prefs.allowedGroups, !on));
+}
+
+/// One row per group: a tick for the whole group, and a tap for its list.
+List<Widget> _groupTiles(BuildContext context, AppController controller, List<BlockedGroup> groups, {required bool media}) {
+  final prefs = controller.preferences;
+  final enabled = media ? prefs.blockStateMedia : prefs.blockGroups;
+  final allowed = prefs.allowedEntries.toSet();
+  final kind = media ? BlockKind.channel : BlockKind.word;
+  return [
+    for (final group in groups)
+      Builder(builder: (context) {
+        final entries = group.entries(kind);
+        final off = entries.where((e) => allowed.contains(e.key)).length;
+        return ListTile(
+          dense: true,
+          enabled: enabled,
+          leading: Checkbox(
+            value: prefs.groupOn(group, media: media),
+            onChanged: enabled ? (on) => controller.savePreferences(_withGroup(prefs, group, on == true, media: media)) : null,
+          ),
+          title: Text(group.label),
+          subtitle: Text(
+            [
+              tr('{0} 项', [entries.length]),
+              if (off > 0) tr('{0} 项已取消', [off]),
+              if (!group.onByDefault) tr('关系待核实，默认不屏蔽'),
+              entries.take(4).map((e) => e.label).join('、'),
+            ].join(' · '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: context.colors.outline, fontSize: 12),
+          ),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => _openGroupEntries(context, controller, group, media: media),
+        );
+      }),
+  ];
+}
+
+/// Everything [group] blocks, each tickable on its own.
+Future<void> _openGroupEntries(BuildContext context, AppController controller, BlockedGroup group, {required bool media}) {
+  final entries = group.entries(media ? BlockKind.channel : BlockKind.word);
+  void setAll(bool on) {
+    final keys = {for (final e in entries) e.key};
+    final rest = controller.preferences.allowedEntries.where((k) => !keys.contains(k));
+    controller.savePreferences(controller.preferences.copyWith(allowedEntries: [...rest, if (!on) ...keys]));
+  }
+
+  return _push(context, controller, group.label, (context) {
+    final prefs = controller.preferences;
+    final allowed = prefs.allowedEntries.toSet();
+    final groupOn = prefs.groupOn(group, media: media) && (media ? prefs.blockStateMedia : prefs.blockGroups);
+    return [
+      SwitchListTile(
+        title: Text(tr('屏蔽这一组')),
+        subtitle: Text(media ? tr('需要先打开“屏蔽官方宣传媒体”') : tr('需要先打开“屏蔽争议宗教团体”')),
+        value: prefs.groupOn(group, media: media),
+        onChanged: (on) => controller.savePreferences(_withGroup(prefs, group, on, media: media)),
+      ),
+      for (final kind in BlockKind.values)
+        if (entries.where((e) => e.kind == kind).toList() case final list when list.isNotEmpty) ...[
+          _header(context, '${kind.label} · ${list.length}'),
+          for (final entry in list)
+            CheckboxListTile(
+              dense: true,
+              enabled: groupOn,
+              title: Text(entry.label),
+              subtitle: entry.forms.length > 1 ? Text(entry.forms.skip(1).join('、'), style: TextStyle(color: context.colors.outline, fontSize: 12)) : null,
+              value: !allowed.contains(entry.key),
+              onChanged: (on) => controller.savePreferences(prefs.copyWith(
+                allowedEntries: on == true ? [...prefs.allowedEntries.where((k) => k != entry.key)] : [...prefs.allowedEntries, entry.key],
+              )),
+            ),
+        ],
+      _tip(context, switch (media) {
+        true => tr('频道名是这几个字，或以它开头（后面接空格或符号），就会被屏蔽。'),
+        false => tr('“标题和频道名里的词”出现在标题或频道名里就屏蔽；“频道名”只看频道名，是这几个字或以它开头才屏蔽；@账号和频道 ID 要完全一致。'),
+      }),
+    ];
+  }, actions: [
+    TextButton(onPressed: () => setAll(true), child: Text(tr('全选'))),
+    TextButton(onPressed: () => setAll(false), child: Text(tr('全不选'))),
+  ]);
+}
 
 // 播放设置 › 倍速设置 (PiliNara's play_speed_set.dart)
 

@@ -32,7 +32,9 @@ class AppPreferences {
     this.blockGroups = true,
     this.allowedGroups = const [],
     this.blockStateMedia = false,
-    this.allowedMedia = stateMediaOffByDefault,
+    this.allowedMedia = const [],
+    this.enabledGroups = const [],
+    this.allowedEntries = const [],
     this.blockedChannelNames = const [],
     this.filterSubscriptions = true,
     this.homeShowContinue = true,
@@ -89,6 +91,10 @@ class AppPreferences {
   final bool blockStateMedia;
   /// state_media.dart group names the user unticked.
   final List<String> allowedMedia;
+  /// Groups of either list that start unticked and the user ticked.
+  final List<String> enabledGroups;
+  /// [BlockEntry.key]s the user unticked inside a ticked group.
+  final List<String> allowedEntries;
   /// Channels the user typed in by name; a video whose channel is called
   /// exactly this, apart from letter case, is hidden like a blocked one.
   final List<String> blockedChannelNames;
@@ -126,13 +132,28 @@ class AppPreferences {
   bool isBlockedName(String name) => blockedChannelNames.any((n) => n.trim().toLowerCase() == name.trim().toLowerCase());
 
   /// Whether [text] names a group the user blocks.
-  bool blocksGroupIn(String text) => blockGroups && textNamesBlockedGroup(text, allowedGroups.toSet());
+  bool blocksGroupIn(String text) => blockGroups && _matchers.groups.text(text);
+
+  /// Whether a channel called [name], with [id] or [handle] if known, is
+  /// one the user blocks by group or as state media.
+  bool blocksChannel(String name, {String? id, String? handle}) =>
+      (blockGroups && _matchers.groups.channel(name, id: id, handle: handle)) || blocksMediaChannel(name);
+
+  /// Whether [group] of either list is ticked.
+  bool groupOn(BlockedGroup group, {bool media = false}) =>
+      group.onByDefault ? !(media ? allowedMedia : allowedGroups).contains(group.name) : enabledGroups.contains(group.name);
+
+  ({BlockMatcher groups, BlockMatcher media}) get _matchers => _matcherCache[this] ??= (
+        groups: BlockMatcher([for (final g in blockedGroups) if (groupOn(g)) g], allowedEntries: allowedEntries.toSet()),
+        media: BlockMatcher([for (final g in stateMedia) if (groupOn(g, media: true)) g], allowedEntries: allowedEntries.toSet(), wordKind: BlockKind.channel),
+      );
+  static final _matcherCache = Expando<({BlockMatcher groups, BlockMatcher media})>();
 
   /// Whether a channel called [name] is state media the user blocks.
-  bool blocksMediaChannel(String name) => blockStateMedia && isStateMediaChannel(name, allowedMedia.toSet());
+  bool blocksMediaChannel(String name) => blockStateMedia && _matchers.media.channel(name);
 
   /// Whether [item]'s title or channel names a group the user blocks.
-  bool blocksGroup(VideoItem item) => blocksGroupIn('${item.title}\n${item.channel}') || blocksMediaChannel(item.channel);
+  bool blocksGroup(VideoItem item) => blocksGroupIn('${item.title}\n${item.channel}') || blocksChannel(item.channel, id: item.channelId);
 
   /// Whether [item] passes the privacy and content filters. [watched] says
   /// whether it was watched to the end.
@@ -166,6 +187,8 @@ class AppPreferences {
     List<String>? allowedGroups,
     bool? blockStateMedia,
     List<String>? allowedMedia,
+    List<String>? enabledGroups,
+    List<String>? allowedEntries,
     List<String>? blockedChannelNames,
     bool? filterSubscriptions,
     bool? homeShowContinue,
@@ -207,6 +230,8 @@ class AppPreferences {
         allowedGroups: allowedGroups ?? this.allowedGroups,
         blockStateMedia: blockStateMedia ?? this.blockStateMedia,
         allowedMedia: allowedMedia ?? this.allowedMedia,
+        enabledGroups: enabledGroups ?? this.enabledGroups,
+        allowedEntries: allowedEntries ?? this.allowedEntries,
         blockedChannelNames: blockedChannelNames ?? this.blockedChannelNames,
         filterSubscriptions: filterSubscriptions ?? this.filterSubscriptions,
         homeShowContinue: homeShowContinue ?? this.homeShowContinue,
@@ -249,6 +274,8 @@ class AppPreferences {
         'allowedGroups': allowedGroups,
         'blockStateMedia': blockStateMedia,
         'allowedMedia': allowedMedia,
+        'enabledGroups': enabledGroups,
+        'allowedEntries': allowedEntries,
         'blockedChannelNames': blockedChannelNames,
         'filterSubscriptions': filterSubscriptions,
         'homeShowContinue': homeShowContinue,
@@ -314,7 +341,9 @@ class AppPreferences {
       blockedKeywords: strings('blockedKeywords'),
       unrecommendedChannels: channelList('unrecommendedChannels'),
       allowedGroups: strings('allowedGroups'),
-      allowedMedia: strings('allowedMedia', d.allowedMedia),
+      allowedMedia: strings('allowedMedia'),
+      enabledGroups: strings('enabledGroups'),
+      allowedEntries: strings('allowedEntries'),
       blockedChannelNames: strings('blockedChannelNames'),
       exploreCustomTopics: topics,
       exploreOrder: keyLists('exploreOrder'),

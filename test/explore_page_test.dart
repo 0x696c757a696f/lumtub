@@ -146,12 +146,34 @@ void main() {
     expect(ids(controller.visible(items)), 'bcd');
     controller.debugQuery = 'CGTN';
     expect(ids(controller.visible(items, search: true)), 'abcd');
-    controller.preferences = controller.preferences.copyWith(allowedMedia: []);
+    controller.preferences = controller.preferences.copyWith(enabledGroups: ['美国政府国际广播']);
     expect(ids(controller.visible(items)), 'bd');
+    // One entry can be unticked on its own.
+    final cgtn = stateMedia.first.entries(BlockKind.channel).firstWhere((e) => e.label == 'CGTN');
+    controller.preferences = controller.preferences.copyWith(allowedEntries: [cgtn.key]);
+    expect(ids(controller.visible(items)), 'abd');
     final restored = AppPreferences.fromJson(jsonDecode(jsonEncode(controller.preferences.toJson())));
     expect(restored.blockStateMedia, isTrue);
-    expect(restored.allowedMedia, isEmpty);
-    expect(AppPreferences.fromJson(<String, Object?>{}).allowedMedia, stateMediaOffByDefault);
+    expect(restored.enabledGroups, ['美国政府国际广播']);
+    expect(restored.allowedEntries, [cgtn.key]);
+  });
+
+  test('Falun Gong channels are blocked by name, @handle and id; unproven ones only when ticked', () {
+    final prefs = const AppPreferences();
+    expect(prefs.blocksChannel('文昭談古論今 -Wen Zhao Official'), isTrue);
+    expect(prefs.blocksChannel('江峰时刻'), isTrue);
+    expect(prefs.blocksChannel('Some host', handle: '@WenZhaoOfficial'), isTrue);
+    expect(prefs.blocksChannel('', id: 'UCAk-SBMZp79a4k2CAqqoDLQ'), isTrue);
+    expect(prefs.blocksChannel('China Uncensored'), isTrue);
+    // A title naming a host is not enough; only his channel is.
+    expect(prefs.blocksGroupIn('采访文昭谈古论今'), isFalse);
+    expect(prefs.blocksChannel('石涛聚焦'), isFalse);
+    expect(prefs.copyWith(enabledGroups: ['法轮功相关（待核实）']).blocksChannel('石濤聚焦'), isTrue);
+    final wenzhao = blockedGroups.firstWhere((g) => g.name == '法轮功相关自媒体').entries().firstWhere((e) => e.label == '文昭谈古论今');
+    expect(wenzhao.forms, contains('文昭談古論今'));
+    expect(prefs.copyWith(allowedEntries: [wenzhao.key]).blocksChannel('文昭談古論今'), isFalse);
+    expect(prefs.copyWith(allowedGroups: ['法轮功相关自媒体']).blocksChannel('江峰时刻'), isFalse);
+    expect(prefs.blocksChannel('BBC News 中文'), isFalse);
   });
 
   test('channels not to recommend stay in searches; typed channels are blocked by id or exact name', () async {

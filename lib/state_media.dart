@@ -15,28 +15,15 @@ const stateMedia = <BlockedGroup>[
   BlockedGroup('朝鲜官方媒体', ['Uriminzokkiri', '우리민족끼리', 'KCTV', '조선중앙TV', '조선중앙텔레비죤', 'KCNA', '조선중앙통신', 'DPRK Today', '朝鲜中央电视台', '朝鮮中央電視台']),
   BlockedGroup('白俄罗斯官方媒体', ['Belarus 24', 'Беларусь 1', 'Беларусь 24', 'БелТА', 'BelTA', 'ОНТ']),
   BlockedGroup('委内瑞拉和古巴官方媒体', ['teleSUR', 'TeleSUR', 'VTV', 'Venezolana de Televisión', 'Cubadebate', 'Canal Caribe', 'Granma', 'Prensa Latina']),
-  BlockedGroup('美国政府国际广播', ['VOA', 'Voice of America', '美国之音', '美國之音', 'Radio Free Asia', 'RFA', '自由亚洲电台', '自由亞洲電台', 'Radio Free Europe', 'RFE/RL', 'Radio Liberty', 'Радио Свобода', 'Current Time', 'Настоящее время', 'Alhurra']),
+  // YouTube labels these government funded too, but whether they are
+  // propaganda is argued, so they start unticked.
+  BlockedGroup('美国政府国际广播', onByDefault: false, ['VOA', 'Voice of America', '美国之音', '美國之音', 'Radio Free Asia', 'RFA', '自由亚洲电台', '自由亞洲電台', 'Radio Free Europe', 'RFE/RL', 'Radio Liberty', 'Радио Свобода', 'Current Time', 'Настоящее время', 'Alhurra']),
 ];
 
-/// The groups left unticked until the user ticks them: YouTube labels
-/// these government funded too, but whether they are propaganda is argued.
-const stateMediaOffByDefault = ['美国政府国际广播'];
 
-final _lowered = {for (final group in stateMedia) group.name: [for (final word in group.words) word.toLowerCase()]};
-final _letter = RegExp(r'[\p{L}\p{N}]', unicode: true);
+final _all = BlockMatcher(stateMedia.where((g) => g.onByDefault).toList(), wordKind: BlockKind.channel);
 
 /// Whether a channel called [channel] is one of [stateMedia], other than
 /// the groups the user [allowed].
-bool isStateMediaChannel(String channel, [Set<String> allowed = const {}]) {
-  final name = channel.trim().toLowerCase();
-  if (name.isEmpty) return false;
-  bool matches(String word) {
-    if (!name.startsWith(word)) return false;
-    if (name.length == word.length) return true;
-    // "RT Documentary" but not "RTL"; a Chinese name may run on ("央视新闻").
-    final last = word.codeUnitAt(word.length - 1);
-    return last > 0x2E7F || !_letter.hasMatch(name[word.length]);
-  }
-
-  return _lowered.entries.any((group) => !allowed.contains(group.key) && group.value.any(matches));
-}
+bool isStateMediaChannel(String channel, [Set<String>? allowed]) =>
+    (allowed == null ? _all : BlockMatcher(stateMedia, allowedGroups: allowed, wordKind: BlockKind.channel)).channel(channel);

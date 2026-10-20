@@ -158,7 +158,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('屏蔽争议宗教团体'), (context) => NormalItem(
               title: tr('屏蔽争议宗教团体'),
               subtitle: prefs.blockGroups
-                  ? tr('已开启，屏蔽 {0} 个团体；输入完全正确的频道名仍能搜到', [blockedGroups.length - prefs.allowedGroups.length])
+                  ? tr('已开启，屏蔽 {0} 个团体；输入完全正确的频道名仍能搜到', [blockedGroups.where(prefs.groupOn).length])
                   : tr('已关闭'),
               leading: _icon(Icons.block_rounded),
               onTap: () => openBlockedGroups(context, controller),
@@ -166,7 +166,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('屏蔽官方宣传媒体'), (context) => NormalItem(
               title: tr('屏蔽官方宣传媒体'),
               subtitle: prefs.blockStateMedia
-                  ? tr('已开启，屏蔽 {0} 类媒体', [stateMedia.where((g) => !prefs.allowedMedia.contains(g.name)).length])
+                  ? tr('已开启，屏蔽 {0} 类媒体', [stateMedia.where((g) => prefs.groupOn(g, media: true)).length])
                   : tr('已关闭'),
               leading: _icon(Icons.campaign_outlined),
               onTap: () => openStateMedia(context, controller),

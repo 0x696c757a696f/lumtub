@@ -4,6 +4,7 @@ import 'package:ytplus/app/app_controller.dart';
 import 'package:ytplus/models.dart';
 import 'package:ytplus/ui/pages/settings_page.dart';
 import 'package:ytplus/ui/pages/settings_sections.dart';
+import 'package:ytplus/ui/pages/settings_subpages.dart';
 import 'package:ytplus/ui/theme.dart';
 
 void main() {
@@ -118,5 +119,33 @@ void main() {
     expect(find.text(SettingsCategory.video.subtitle), findsOneWidget);
     expect(find.text(SettingsCategory.about.subtitle), findsNothing);
     expect(find.text('退出登录'), findsNothing);
+  });
+
+  testWidgets('block lists open to their entries, each tickable', (tester) async {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(Colors.red, Brightness.light),
+      home: Builder(builder: (context) => Scaffold(body: TextButton(onPressed: () => openBlockedGroups(context, controller), child: const Text('open')))),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('法轮功相关（待核实）'), findsOneWidget);
+    await tester.tap(find.text('法轮功相关自媒体'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('频道名 · '), findsOneWidget);
+    await tester.tap(find.widgetWithText(CheckboxListTile, '文昭谈古论今'));
+    await tester.pump();
+    expect(controller.preferences.allowedEntries.single, endsWith('/channel/文昭谈古论今'));
+    expect(controller.preferences.blocksChannel('文昭談古論今'), isFalse);
+    expect(controller.preferences.blocksChannel('江峰时刻'), isTrue);
+    await tester.tap(find.text('全不选'));
+    await tester.pump();
+    expect(controller.preferences.blocksChannel('江峰时刻'), isFalse);
+    await tester.tap(find.text('全选'));
+    await tester.pump();
+    expect(controller.preferences.allowedEntries, isEmpty);
+    expect(tester.takeException(), isNull);
   });
 }

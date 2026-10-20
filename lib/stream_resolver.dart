@@ -50,7 +50,11 @@ class ResolvedVideo {
   /// An mpv EDL address that plays the picked formats directly, the way
   /// mpv's ytdl_hook builds it, or null when only ytdl_hook can play them
   /// (live streams, fragmented formats).
-  String? get directUrl {
+  String? get directUrl => directAddress();
+
+  /// [directUrl] with each stream address passed through [relay], which
+  /// may return another address for it (see `ChunkedRelay`).
+  String? directAddress({String? Function(String url, int? size)? relay}) {
     if (info['is_live'] == true || info['live_status'] == 'is_live') return null;
     final tracks = _tracks;
     if (tracks.isEmpty) return null;
@@ -59,7 +63,9 @@ class ResolvedVideo {
       final url = track['url']?.toString() ?? '';
       final protocol = track['protocol']?.toString() ?? '';
       if (track['fragments'] != null || !(protocol == 'https' || protocol == 'http') || !url.startsWith('http')) return null;
-      streams.add('!new_stream;!no_clip;!no_chapters;%${utf8.encode(url).length}%$url');
+      final size = track['filesize'] is int ? track['filesize'] as int : null;
+      final address = relay?.call(url, size) ?? url;
+      streams.add('!new_stream;!no_clip;!no_chapters;%${utf8.encode(address).length}%$address');
     }
     return 'edl://${streams.join(';')}';
   }

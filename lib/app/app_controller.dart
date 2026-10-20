@@ -21,6 +21,7 @@ import '../decoder_status.dart';
 import '../models.dart';
 import '../network_proxy.dart';
 import '../piped_streams.dart';
+import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
 import '../player_settings.dart';
 import '../tool_manager.dart';
@@ -119,6 +120,8 @@ class AppController extends ChangeNotifier {
   /// YouTube once.
   String? _openedPiped;
   late final _piped = PipedStreams(_http);
+  /// Serves YouTube streams to libmpv in pieces YouTube does not throttle.
+  ChunkedRelay? _relay;
 
   AppearanceSettings appearance;
   final AppearanceSettingsStore? _appearanceStore;
@@ -244,6 +247,13 @@ class AppController extends ChangeNotifier {
       final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
       await _applyProxy(player);
+      try {
+        _relay = ChunkedRelay();
+        await _relay!.start();
+      } catch (e) {
+        _relay = null;
+        logError('无法启动本地分块转发，视频流将直接连接', e);
+      }
       // Measures the Piped servers while the app starts, not on the first click.
       if (settings.playbackSource == PlaybackSource.pipedAuto) unawaited(_piped.servers());
       await player.setVolume(settings.defaultVolume.toDouble());
@@ -553,12 +563,17 @@ class AppController extends ChangeNotifier {
         if (serial != _playSerial) return false;
       }
       final subtitles = settings.subtitleMode != SubtitleMode.off;
-      final direct = video != null && video.format == format && !subtitles ? video.directUrl : null;
+      // Through the relay when the app's own connections reach YouTube the
+      // way libmpv's would: directly or through an HTTP proxy.
+      final relay = proxy.url == null || proxy.isHttp ? _relay : null;
+      final agent = video?.userAgent;
+      final direct = video != null && video.format == format && !subtitles
+          ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent))
+          : null;
       final platform = player.platform;
       if (platform is NativePlayer) {
         await platform.setProperty('ytdl-format', format);
         await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null, proxy: proxy.ytDlpValue(settings.proxyMode)));
-        final agent = video?.userAgent;
         if (direct != null && agent != null) await platform.setProperty('user-agent', agent);
       }
       _tracking = null;
@@ -1328,6 +1343,7 @@ class AppController extends ChangeNotifier {
       unawaited(subscription.cancel());
     }
     _saveProgress();
+    unawaited(_relay?.close());
     account?.dispose();
     library?.dispose();
     channelVideos?.dispose();

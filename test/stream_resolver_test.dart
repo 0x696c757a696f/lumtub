@@ -36,6 +36,9 @@ void main() {
       '!new_stream;!no_clip;!no_chapters;%${utf8.encode(tracks[1]).length}%${tracks[1]}',
     );
     expect(video.userAgent, 'UA/1');
+    final relayed = video.directAddress(relay: (url, size) => url.contains('itag=137') ? 'http://127.0.0.1:9/a' : null)!;
+    expect(relayed, contains('%20%http://127.0.0.1:9/a;'));
+    expect(relayed, contains(tracks[1]));
     expect(video.heights, [1080, 720]);
     expect(video.details.channelId, 'UCuAXFkgsw1L7xaCfnd5JJOw');
   });

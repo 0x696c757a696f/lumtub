@@ -69,7 +69,12 @@ void main() {
     }
     library.toggleFollow(channel);
     library.feed = videos;
+    // A wide window lists the channels in a column on the left.
     await pump(tester, SubscriptionsPage(controller: controller));
+    expect(tester.getTopLeft(find.text('Rick Astley').first).dx, lessThan(100));
+    expect(find.text('全部 101 个'), findsOneWidget);
+
+    await pump(tester, SubscriptionsPage(controller: controller), width: 900);
     final strip = find.byWidgetPredicate((w) => w is ListView && w.scrollDirection == Axis.horizontal);
     Finder inStrip(String text) => find.descendant(of: strip, matching: find.text(text));
     // The channel that just posted comes right after 全部, in the same row.

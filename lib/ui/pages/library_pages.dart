@@ -11,6 +11,7 @@ import '../common.dart';
 import '../theme.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
+import 'explore_page.dart';
 import '../../l10n/l10n.dart';
 
 /// Newest uploads of the channels followed on this computer, under a row of
@@ -49,6 +50,31 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
     final selected = channels.contains(_selected) ? _selected : null;
     final all = controller.visible(library.feed, subscriptions: true);
     final feed = selected == null ? all : [for (final item in all) if (item.channelId == selected.id) item];
+    Widget strip({bool vertical = false}) => _ChannelStrip(
+          vertical: vertical,
+          channels: channels,
+          feed: library.feed,
+          selected: selected,
+          thumbnails: controller.thumbnailDirectory,
+          onSelect: _select,
+          onShowAll: () => showDialog<void>(
+            context: context,
+            builder: (_) => _AllChannels(channels: channels, thumbnails: controller.thumbnailDirectory, onSelect: _select, onOpen: controller.openChannel),
+          ),
+        );
+    // A wide window lists the channels down the left, as Bilibili's 动态 does.
+    return LayoutBuilder(builder: (context, constraints) {
+      final wide = constraints.maxWidth >= ExplorePage.wideLayout;
+      final page = _page(context, library, channels, selected, feed, wide ? null : strip());
+      if (!wide) return page;
+      return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        SizedBox(width: _ChannelStrip.railWidth, child: strip(vertical: true)),
+        Expanded(child: page),
+      ]);
+    });
+  }
+
+  Widget _page(BuildContext context, LibraryController library, List<ChannelRef> channels, ChannelRef? selected, List<VideoItem> feed, Widget? strip) {
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
         tr('订阅'),
@@ -57,17 +83,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
             ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
             : TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: const Icon(Icons.refresh_rounded), label: Text(tr('刷新'))),
       )),
-      SliverToBoxAdapter(child: _ChannelStrip(
-        channels: channels,
-        feed: library.feed,
-        selected: selected,
-        thumbnails: controller.thumbnailDirectory,
-        onSelect: _select,
-        onShowAll: () => showDialog<void>(
-          context: context,
-          builder: (_) => _AllChannels(channels: channels, thumbnails: controller.thumbnailDirectory, onSelect: _select, onOpen: controller.openChannel),
-        ),
-      )),
+      if (strip != null) SliverToBoxAdapter(child: strip),
       if (selected != null)
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
@@ -120,13 +136,17 @@ File? _avatarFile(Directory? thumbnails, ChannelRef channel) =>
 /// mouse wheel too. Those that posted most recently come first, and a dot
 /// marks an upload in the last two days.
 class _ChannelStrip extends StatefulWidget {
-  const _ChannelStrip({required this.channels, required this.feed, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll});
+  const _ChannelStrip({this.vertical = false, required this.channels, required this.feed, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll});
   final List<ChannelRef> channels;
   final List<VideoItem> feed;
   final ChannelRef? selected;
   final Directory? thumbnails;
   final ValueChanged<ChannelRef?> onSelect;
   final VoidCallback onShowAll;
+
+  /// A column down the left of a wide page instead of a row.
+  final bool vertical;
+  static const railWidth = 92.0;
 
   /// How many avatars the row holds; the rest are in the full list.
   static const shown = 60;
@@ -162,20 +182,50 @@ class _ChannelStripState extends State<_ChannelStrip> {
         ..insert(0, selected);
     }
     final fresh = DateTime.now().subtract(const Duration(days: 2));
+    final showAll = _StripItem(
+      label: tr('全部 {0} 个', [widget.channels.length]),
+      selected: false,
+      onTap: widget.onShowAll,
+      avatar: (radius) => CircleAvatar(radius: radius, child: Icon(Icons.manage_search_rounded, size: radius)),
+    );
+    if (widget.vertical) {
+      // The full list stays in reach at the bottom, however long the column.
+      return Column(children: [
+        Expanded(child: ListView(
+          controller: _scroll,
+          padding: const EdgeInsets.only(top: 8),
+          children: _items(ordered, selected, latest, fresh),
+        )),
+        const Divider(height: 1, indent: 16, endIndent: 16),
+        SizedBox(height: 88, child: showAll),
+      ]);
+    }
     // The full list stays in reach at the right, however long the row.
     return Row(children: [
       Expanded(child: _row(ordered, selected, latest, fresh)),
       Padding(
         padding: const EdgeInsets.only(right: AppStyle.pagePadding - 6),
-        child: _StripItem(
-          label: tr('全部 {0} 个', [widget.channels.length]),
-          selected: false,
-          onTap: widget.onShowAll,
-          avatar: (radius) => CircleAvatar(radius: radius, child: Icon(Icons.manage_search_rounded, size: radius)),
-        ),
+        child: showAll,
       ),
     ]);
   }
+
+  List<Widget> _items(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest, DateTime fresh) => [
+        _StripItem(
+          label: tr('全部'),
+          selected: selected == null,
+          onTap: () => widget.onSelect(null),
+          avatar: (radius) => CircleAvatar(radius: radius, child: Icon(Icons.dynamic_feed_rounded, size: radius)),
+        ),
+        for (final channel in ordered.take(_ChannelStrip.shown))
+          _StripItem(
+            label: channel.name.isEmpty ? channel.id : channel.name,
+            selected: channel == selected,
+            fresh: latest[channel.id]?.isAfter(fresh) ?? false,
+            onTap: () => widget.onSelect(channel),
+            avatar: (radius) => ChannelAvatar(name: channel.name, radius: radius, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel)),
+          ),
+      ];
 
   Widget _row(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest, DateTime fresh) {
     return Listener(
@@ -196,22 +246,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
             controller: _scroll,
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.only(left: AppStyle.pagePadding - 6),
-            children: [
-              _StripItem(
-                label: tr('全部'),
-                selected: selected == null,
-                onTap: () => widget.onSelect(null),
-                avatar: (radius) => CircleAvatar(radius: radius, child: Icon(Icons.dynamic_feed_rounded, size: radius)),
-              ),
-              for (final channel in ordered.take(_ChannelStrip.shown))
-                _StripItem(
-                  label: channel.name.isEmpty ? channel.id : channel.name,
-                  selected: channel == selected,
-                  fresh: latest[channel.id]?.isAfter(fresh) ?? false,
-                  onTap: () => widget.onSelect(channel),
-                  avatar: (radius) => ChannelAvatar(name: channel.name, radius: radius, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel)),
-                ),
-            ],
+            children: _items(ordered, selected, latest, fresh),
           ),
         ),
       ),
@@ -239,6 +274,7 @@ class _StripItem extends StatelessWidget {
         child: SizedBox(
           width: 72,
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            const SizedBox(height: 6),
             Stack(clipBehavior: Clip.none, children: [
               Container(
                 padding: const EdgeInsets.all(2),
@@ -263,6 +299,7 @@ class _StripItem extends StatelessWidget {
                 style: TextStyle(fontSize: 12, color: selected ? colors.primary : colors.onSurfaceVariant, fontWeight: selected ? FontWeight.w600 : null),
               ),
             ),
+            const SizedBox(height: 6),
           ]),
         ),
       ),

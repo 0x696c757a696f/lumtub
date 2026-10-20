@@ -13,8 +13,9 @@ import 'package:ytplus/search_options.dart';
 import 'package:ytplus/state_media.dart';
 import 'package:ytplus/ui/pages/explore_page.dart';
 
-Future<AppController> _open(WidgetTester tester) async {
-  tester.view.physicalSize = const Size(1280, 800);
+/// Narrower than [ExplorePage.wideLayout], so zones are in a row on top.
+Future<AppController> _open(WidgetTester tester, {double width = 950}) async {
+  tester.view.physicalSize = Size(width, 800);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final controller = AppController()..ready = true;
@@ -32,9 +33,11 @@ Future<void> _reveal(WidgetTester tester, String label) async {
     final found = find.text(label);
     if (found.evaluate().isEmpty) return false;
     final rect = tester.getRect(found.last);
-    return rect.left > 40 && rect.right < 1240;
+    return rect.left > 40 && rect.right < 910;
   }
 
+  // The arrows appear a frame after the strip is laid out.
+  await tester.pump();
   for (var turn = 0; turn < 20 && !inView(); turn++) {
     await tester.tap(find.byIcon(Icons.chevron_right_rounded));
     for (var i = 0; i < 5; i++) {
@@ -358,6 +361,20 @@ void main() {
     expect(controller.exploreSection, ExploreSection.popular);
     expect(controller.exploreMode, ExploreMode.popular);
     expect(controller.exploreTopicNow.label, '知识教育');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a wide window lists the zones down the left', (tester) async {
+    final controller = await _open(tester, width: 1280);
+    final first = tester.getTopLeft(find.text('推荐').first);
+    final second = tester.getTopLeft(find.text('全部').first);
+    expect(first.dx, lessThan(TopicStrip.railWidth));
+    expect(second.dx, first.dx);
+    expect(second.dy, greaterThan(first.dy));
+    expect(find.text('管理'), findsOneWidget);
+    await tester.tap(find.text('全部').first);
+    await tester.pump();
+    expect(controller.exploreTopicNow.label, '全部');
     expect(tester.takeException(), isNull);
   });
 

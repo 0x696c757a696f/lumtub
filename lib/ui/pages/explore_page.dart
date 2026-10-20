@@ -11,6 +11,7 @@ import '../theme.dart';
 import '../video_card.dart';
 import '../../widgets/pilinara_settings_tiles.dart' show confirmDialog;
 import '../../l10n/l10n.dart';
+import '../../models.dart';
 
 /// Explore, in zones as Bilibili's 分区: videos, live streams or the tabs of
 /// 宗教与信仰, a zone and one of its sub-categories, how they are picked, and
@@ -28,10 +29,7 @@ class ExplorePage extends StatelessWidget {
     final section = controller.exploreSection;
     final topic = controller.exploreTopicNow;
     final mode = controller.exploreMode;
-    final live = section.isLive;
-    final sub = controller.exploreSub;
     final subNow = controller.exploreSubNow;
-    final leaf = controller.exploreLeaf;
     final name = [topic.label, if (subNow != null) subNow.label, if (controller.exploreLeafNow case final leafNow?) leafNow.label].join(' · ');
     final subtitle = switch (mode) {
       ExploreMode.curated => tr('{0} · 相关度高的完整内容，少标题党，每个频道最多 3 个', [name]),
@@ -47,6 +45,41 @@ class ExplorePage extends StatelessWidget {
       ExploreMode.liveUpcoming => tr('{0} · 即将开始的直播', [name]),
       ExploreMode.liveReplay => tr('{0} · 最近的直播回放', [name]),
     };
+    Widget strip({bool vertical = false}) => TopicStrip(
+          key: ValueKey((section, vertical)),
+          vertical: vertical,
+          topics: controller.exploreTopicsFor(section),
+          selected: controller.exploreTopic,
+          onSelected: (i) => controller.setExplore(topic: i),
+          onAdd: () => _addTopic(context, section),
+          onManage: () => _manageTopics(context, section),
+          onRemove: (topic) => _removeTopic(context, section, topic),
+        );
+    // A wide window lists the zones down the left, as Bilibili's 分区 does,
+    // leaving the full width below the filters to the videos.
+    return LayoutBuilder(builder: (context, constraints) {
+      final wide = constraints.maxWidth >= wideLayout;
+      final page = _page(context, items: items, error: error, loading: loading, subtitle: subtitle, strip: wide ? null : strip());
+      if (!wide) return page;
+      return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        SizedBox(width: TopicStrip.railWidth, child: strip(vertical: true)),
+        Expanded(child: page),
+      ]);
+    });
+  }
+
+  /// The width from which zones and followed channels move to a left column.
+  static const wideLayout = 960.0;
+
+  Widget _page(BuildContext context, {required List<VideoItem> items, required String? error, required bool loading, required String subtitle, required Widget? strip}) {
+    final loader = controller.explore;
+    final section = controller.exploreSection;
+    final topic = controller.exploreTopicNow;
+    final mode = controller.exploreMode;
+    final live = section.isLive;
+    final sub = controller.exploreSub;
+    final subNow = controller.exploreSubNow;
+    final leaf = controller.exploreLeaf;
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification.depth == 0 && notification.metrics.axis == Axis.vertical && notification.metrics.extentAfter < 800) loader?.loadMore();
@@ -86,15 +119,7 @@ class ExplorePage extends StatelessWidget {
               ),
             ]),
           )),
-        SliverToBoxAdapter(child: TopicStrip(
-          key: ValueKey(section),
-          topics: controller.exploreTopicsFor(section),
-          selected: controller.exploreTopic,
-          onSelected: (i) => controller.setExplore(topic: i),
-          onAdd: () => _addTopic(context, section),
-          onManage: () => _manageTopics(context, section),
-          onRemove: (topic) => _removeTopic(context, section, topic),
-        )),
+        if (strip != null) SliverToBoxAdapter(child: strip),
         if (topic.subs.isNotEmpty)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 4, AppStyle.pagePadding, 0),
@@ -394,7 +419,10 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
 /// A row of category icons that scrolls sideways, with the mouse wheel or
 /// the arrows at its ends.
 class TopicStrip extends StatefulWidget {
-  const TopicStrip({super.key, required this.topics, required this.selected, required this.onSelected, this.onAdd, this.onManage, this.onRemove});
+  const TopicStrip({super.key, required this.topics, required this.selected, required this.onSelected, this.onAdd, this.onManage, this.onRemove, this.vertical = false});
+  /// A column down the left of a wide page instead of a row across the top.
+  final bool vertical;
+  static const railWidth = 128.0;
   final List<ExploreTopic> topics;
   final int selected;
   final ValueChanged<int> onSelected;
@@ -443,8 +471,35 @@ class _TopicStripState extends State<TopicStrip> {
     _scroll.animateTo(target, duration: const Duration(milliseconds: 220), curve: Curves.easeOutCubic);
   }
 
+  Widget _rail(BuildContext context) {
+    final remove = widget.onRemove;
+    // Adding and managing stay in reach below the list, however long it is.
+    return Column(children: [
+      Expanded(child: ListView(
+        controller: _scroll,
+        padding: const EdgeInsets.fromLTRB(8, 12, 4, 8),
+        children: [
+          for (final (i, topic) in widget.topics.indexed)
+            _RailTile(
+              topic: topic,
+              selected: i == widget.selected,
+              onTap: () => widget.onSelected(i),
+              onRemove: topic.custom && remove != null ? () => remove(topic) : null,
+            ),
+        ],
+      )),
+      if (_extras.isNotEmpty) ...[
+        const Divider(height: 1, indent: 12, endIndent: 12),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 4, 4, 8),
+          child: Column(children: [for (final (topic, onTap) in _extras) _RailTile(topic: topic, selected: false, onTap: onTap, quiet: true)]),
+        ),
+      ],
+    ]);
+  }
+
   @override
-  Widget build(BuildContext context) => SizedBox(
+  Widget build(BuildContext context) => widget.vertical ? _rail(context) : SizedBox(
         height: 84,
         child: Row(children: [
           const SizedBox(width: AppStyle.pagePadding - 12),
@@ -493,6 +548,57 @@ class _TopicStripState extends State<TopicStrip> {
           const SizedBox(width: AppStyle.pagePadding - 12),
         ]),
       );
+}
+
+/// One zone in the left column: a bar marks the one shown.
+class _RailTile extends StatelessWidget {
+  const _RailTile({required this.topic, required this.selected, required this.onTap, this.onRemove, this.quiet = false});
+  final ExploreTopic topic;
+  final bool selected;
+  final VoidCallback onTap;
+  final VoidCallback? onRemove;
+  /// Add and manage, drawn fainter than the zones.
+  final bool quiet;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final color = selected ? colors.primary : quiet ? colors.onSurfaceVariant : colors.onSurface;
+    return Tooltip(
+      message: onRemove == null ? topic.label : tr('{0}（右键或长按删除）', [topic.label]),
+      waitDuration: const Duration(milliseconds: 600),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        onLongPress: onRemove,
+        onSecondaryTap: onRemove,
+        child: Container(
+          height: 42,
+          decoration: BoxDecoration(
+            color: selected ? colors.primary.withValues(alpha: 0.10) : null,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              width: 3,
+              height: selected ? 20 : 0,
+              decoration: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(width: 9),
+            Icon(topic.icon, size: 18, color: color),
+            const SizedBox(width: 10),
+            Expanded(child: Text(
+              topic.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 14, color: color, fontWeight: selected ? FontWeight.w600 : null),
+            )),
+          ]),
+        ),
+      ),
+    );
+  }
 }
 
 class _Arrow extends StatelessWidget {

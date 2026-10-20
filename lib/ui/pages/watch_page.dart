@@ -172,11 +172,18 @@ class _Player extends StatelessWidget {
           borderRadius: AppStyle.cardRadius,
           child: ColoredBox(
             color: Colors.black,
-            child: Video(
-              key: videoKey,
-              controller: controller.videoController!,
-              controls: (state) => PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
-              subtitleViewConfiguration: subtitleViewFor(controller.settings),
+            // As in PiliNara: the video and its controls repaint apart, so
+            // pointer movement over the controls does not redraw the video
+            // texture, which flashes black on some Windows GPUs.
+            child: RepaintBoundary(
+              child: Video(
+                key: videoKey,
+                controller: controller.videoController!,
+                controls: (state) => RepaintBoundary(
+                  child: PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
+                ),
+                subtitleViewConfiguration: subtitleViewFor(controller.settings),
+              ),
             ),
           ),
         ),

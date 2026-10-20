@@ -292,14 +292,22 @@ void VideoOutput::Resize(int64_t required_width, int64_t required_height) {
             }
           }
         });
+    // YTPlus: under the lock, so Flutter's texture callback sees 0 and
+    // returns no frame instead of reading the textures freed below.
+    std::lock_guard<std::mutex> lock(textures_mutex_);
     texture_id_ = 0;
   }
   // H/W
   if (surface_manager_ != nullptr) {
     // Destroy internal ID3D11Texture2D & EGLSurface & create new with updated
     // dimensions while preserving previous EGLDisplay & EGLContext.
-    surface_manager_->SetSize(static_cast<int32_t>(required_width),
-                              static_cast<int32_t>(required_height));
+    {
+      // YTPlus: Flutter's raster thread copies from these textures in
+      // |Read|; freeing them meanwhile crashed the app.
+      std::lock_guard<std::mutex> lock(textures_mutex_);
+      surface_manager_->SetSize(static_cast<int32_t>(required_width),
+                                static_cast<int32_t>(required_height));
+    }
     auto texture = std::make_unique<FlutterDesktopGpuSurfaceDescriptor>();
     texture->struct_size = sizeof(FlutterDesktopGpuSurfaceDescriptor);
     texture->handle = surface_manager_->handle();
@@ -312,19 +320,23 @@ void VideoOutput::Resize(int64_t required_width, int64_t required_height) {
         std::make_unique<flutter::TextureVariant>(flutter::GpuSurfaceTexture(
             kFlutterDesktopGpuSurfaceTypeDxgiSharedHandle, [&](auto, auto) {
               std::lock_guard<std::mutex> lock(textures_mutex_);
-              if (texture_id_) {
+              // YTPlus: find, not at(). Between registering a texture and
+              // storing its descriptor, at() threw and ended the app.
+              auto it = textures_.find(texture_id_);
+              if (texture_id_ && it != textures_.end()) {
                 surface_manager_->Read();
-                return textures_.at(texture_id_).get();
+                return it->second.get();
               } else {
                 return (FlutterDesktopGpuSurfaceDescriptor*)nullptr;
               }
             }));
     // Register new texture.
-    texture_id_ =
+    auto id =
         registrar_->texture_registrar()->RegisterTexture(texture_variant.get());
-    std::cout << "media_kit: VideoOutput: Create Texture: " << texture_id_
+    std::cout << "media_kit: VideoOutput: Create Texture: " << id
               << std::endl;
     std::lock_guard<std::mutex> lock(textures_mutex_);
+    texture_id_ = id;
     textures_.emplace(std::make_pair(texture_id_, std::move(texture)));
     texture_variants_.emplace(
         std::make_pair(texture_id_, std::move(texture_variant)));

@@ -286,6 +286,9 @@ class VideoDetails {
   final int? likeCount;
   final String description;
   final List<Chapter> chapters;
+  /// Every subtitle YouTube offers: uploaded ones, then automatic captions
+  /// and their machine translations.
+  final List<SubtitleOption> subtitles;
 
   const VideoDetails({
     required this.title,
@@ -297,6 +300,7 @@ class VideoDetails {
     this.likeCount,
     this.description = '',
     this.chapters = const [],
+    this.subtitles = const [],
   });
 
   factory VideoDetails.fromJson(Map<String, dynamic> map) {
@@ -313,6 +317,76 @@ class VideoDetails {
       likeCount: number('like_count'),
       description: map['description']?.toString() ?? '',
       chapters: Chapter.listFrom(map['chapters']),
+      subtitles: SubtitleOption.listFrom(map['subtitles'], map['automatic_captions']),
     );
   }
 }
+
+/// A subtitle track of a video that can be added to the player by URL.
+class SubtitleOption {
+  const SubtitleOption({required this.language, required this.name, required this.url, this.kind = SubtitleKind.uploaded});
+  final String language;
+  final String name;
+  final String url;
+  final SubtitleKind kind;
+
+  /// The label shown in menus, such as "中文（简体） · zh-Hans".
+  String get label => '${languageName(language, name)}${kind == SubtitleKind.uploaded ? '' : kind == SubtitleKind.automatic ? '（自动生成）' : '（自动翻译）'}';
+
+  /// yt-dlp's `subtitles` and `automatic_captions` maps. Automatic
+  /// captions in the video's own language (yt-dlp's "-orig" entries, or
+  /// those named "(Original)") come before the machine translations.
+  static List<SubtitleOption> listFrom(Object? uploaded, Object? automatic) {
+    List<SubtitleOption> read(Object? raw, bool auto) {
+      if (raw is! Map) return const [];
+      return [
+        for (final MapEntry(:key, :value) in raw.entries)
+          if (key != 'live_chat' && value is List)
+            if (_vtt(value) case (final url, final name))
+              SubtitleOption(
+                language: '$key'.replaceFirst(RegExp(r'-orig$'), ''),
+                name: name,
+                url: url,
+                kind: !auto
+                    ? SubtitleKind.uploaded
+                    : '$key'.endsWith('-orig') || name.contains('(Original)') || name.contains('原始')
+                        ? SubtitleKind.automatic
+                        : SubtitleKind.translated,
+              ),
+      ];
+    }
+
+    final auto = read(automatic, true);
+    final original = auto.where((s) => s.kind == SubtitleKind.automatic).toList();
+    // yt-dlp lists the original language twice: as "xx-orig" and as "xx".
+    final originalLanguages = {for (final s in original) s.language};
+    return [
+      ...read(uploaded, false),
+      ...{for (final s in original) s.language: s}.values,
+      ...auto.where((s) => s.kind == SubtitleKind.translated && !originalLanguages.contains(s.language)),
+    ];
+  }
+
+  static (String, String)? _vtt(List formats) {
+    final maps = formats.whereType<Map>().where((f) => '${f['url'] ?? ''}'.startsWith('https://')).toList();
+    final pick = maps.where((f) => f['ext'] == 'vtt').firstOrNull ?? maps.where((f) => f['ext'] == 'srt' || f['ext'] == 'ass').firstOrNull;
+    return pick == null ? null : ('${pick['url']}', '${pick['name'] ?? ''}');
+  }
+
+  static const _names = {
+    'zh-Hans': '中文（简体）', 'zh-CN': '中文（中国）', 'zh-Hant': '中文（繁體）', 'zh-TW': '中文（台灣）', 'zh-HK': '中文（香港）', 'zh': '中文',
+    'en': '英语', 'en-US': '英语（美国）', 'en-GB': '英语（英国）', 'ja': '日语', 'ko': '韩语', 'fr': '法语', 'de': '德语', 'es': '西班牙语',
+    'pt': '葡萄牙语', 'pt-BR': '葡萄牙语（巴西）', 'ru': '俄语', 'it': '意大利语', 'vi': '越南语', 'th': '泰语', 'id': '印尼语', 'ms': '马来语',
+    'ar': '阿拉伯语', 'hi': '印地语', 'tr': '土耳其语', 'nl': '荷兰语', 'pl': '波兰语', 'uk': '乌克兰语', 'fil': '菲律宾语',
+  };
+
+  /// A Chinese name for [code], else YouTube's own [name], else the code.
+  static String languageName(String code, [String name = '']) {
+    final known = _names[code];
+    if (known != null) return known;
+    final cleaned = name.replaceAll(RegExp(r'\s*\((Original|原始)\)'), '').trim();
+    return cleaned.isEmpty ? code : '$cleaned · $code';
+  }
+}
+
+enum SubtitleKind { uploaded, automatic, translated }

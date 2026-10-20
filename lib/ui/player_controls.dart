@@ -20,7 +20,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
-import '../models.dart' show Chapter;
+import '../models.dart' show Chapter, SubtitleKind, SubtitleOption;
 import '../player_settings.dart';
 import '../widgets/pilinara_settings_tiles.dart';
 import '../widgets/video_progress_bar.dart';
@@ -433,12 +433,24 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           final tracks = _player.state.tracks.subtitle.where((t) => t.id != 'auto' && t.id != 'no').toList();
           final current = _player.state.track.subtitle;
           final on = current.id != 'no' && current.id != 'auto';
-          if (tracks.isEmpty) return const SizedBox.shrink();
+          final offered = _controller.details?.subtitles ?? const <SubtitleOption>[];
+          if (tracks.isEmpty && offered.isEmpty) return const SizedBox.shrink();
+          const more = '\u0000more';
           return _PopupMenu<String>(
             tooltip: '字幕',
             value: current.id,
-            items: [('no', '关闭字幕'), for (final t in tracks) (t.id, _trackLabel(t.id, t.title, t.language))],
-            onSelected: (id) => unawaited(_player.setSubtitleTrack(id == 'no' ? SubtitleTrack.no() : tracks.firstWhere((t) => t.id == id))),
+            items: [
+              ('no', '关闭字幕'),
+              for (final t in tracks) (t.id, _trackLabel(t.id, t.title, t.language)),
+              if (offered.isNotEmpty) (more, '全部字幕（${offered.length}）…'),
+            ],
+            onSelected: (id) {
+              if (id == more) {
+                unawaited(_pickSubtitle(context, offered));
+              } else {
+                unawaited(_player.setSubtitleTrack(id == 'no' ? SubtitleTrack.no() : tracks.firstWhere((t) => t.id == id)));
+              }
+            },
             onOpened: _menuOpened,
             onClosed: _menuClosed,
             child: SizedBox(
@@ -548,6 +560,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         }
       },
     );
+  }
+
+  /// Every subtitle the video offers, with a filter; the pick is added to
+  /// the player.
+  Future<void> _pickSubtitle(BuildContext context, List<SubtitleOption> offered) async {
+    _menuOpened();
+    final picked = await showDialog<SubtitleOption>(context: context, builder: (context) => _SubtitlePicker(options: offered));
+    _menuClosed();
+    if (picked != null) await _controller.showSubtitle(picked);
   }
 
   static String _trackLabel(String id, String? title, String? language) {
@@ -781,4 +802,52 @@ class _FeedbackBubble extends StatelessWidget {
           Text(text, style: const TextStyle(color: Colors.white, fontSize: 13)),
         ]),
       );
+}
+
+/// Lists [options] by kind, with a filter by language name or code.
+class _SubtitlePicker extends StatefulWidget {
+  const _SubtitlePicker({required this.options});
+  final List<SubtitleOption> options;
+
+  @override
+  State<_SubtitlePicker> createState() => _SubtitlePickerState();
+}
+
+class _SubtitlePickerState extends State<_SubtitlePicker> {
+  String _query = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _query.trim().toLowerCase();
+    final shown = widget.options.where((o) => query.isEmpty || o.label.toLowerCase().contains(query) || o.language.toLowerCase().contains(query) || o.name.toLowerCase().contains(query)).toList();
+    const headings = {SubtitleKind.uploaded: '上传的字幕', SubtitleKind.automatic: '自动生成', SubtitleKind.translated: '自动翻译'};
+    return AlertDialog(
+      title: const Text('选择字幕'),
+      contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      content: SizedBox(
+        width: 420,
+        height: 520,
+        child: Column(children: [
+          TextField(
+            autofocus: true,
+            decoration: const InputDecoration(isDense: true, prefixIcon: Icon(Icons.search_rounded, size: 20), hintText: '搜索语言，如 中文、ja'),
+            onChanged: (v) => setState(() => _query = v),
+          ),
+          const SizedBox(height: 8),
+          Expanded(child: ListView(children: [
+            for (final kind in SubtitleKind.values)
+              if (shown.where((o) => o.kind == kind).toList() case final group when group.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                  child: Text(headings[kind]!, style: Theme.of(context).textTheme.labelLarge!.copyWith(color: Theme.of(context).colorScheme.primary)),
+                ),
+                for (final option in group) ListTile(dense: true, title: Text(option.label), subtitle: Text(option.language), onTap: () => Navigator.of(context).pop(option)),
+              ],
+            if (shown.isEmpty) const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('没有匹配的语言'))),
+          ])),
+        ]),
+      ),
+      actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('取消'))],
+    );
+  }
 }

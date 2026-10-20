@@ -56,9 +56,22 @@ enum SubtitleMode {
 }
 
 enum SubtitleLanguage {
-  zh('中文优先', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng'),
-  en('英文优先', 'en.*', 'en,eng,en-US,en-GB'),
-  ja('日文优先', '(ja|en).*', 'ja,jpn,en,eng');
+  zh('简体中文优先', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng'),
+  zhHant('繁體中文優先', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng'),
+  en('英语优先', 'en.*', 'en,eng,en-US,en-GB'),
+  ja('日语优先', '(ja|en).*', 'ja,jpn,en,eng'),
+  ko('韩语优先', '(ko|en).*', 'ko,kor,en,eng'),
+  fr('法语优先', '(fr|en).*', 'fr,fre,fra,en,eng'),
+  de('德语优先', '(de|en).*', 'de,ger,deu,en,eng'),
+  es('西班牙语优先', '(es|en).*', 'es,spa,en,eng'),
+  pt('葡萄牙语优先', '(pt|en).*', 'pt,pt-BR,por,en,eng'),
+  ru('俄语优先', '(ru|en).*', 'ru,rus,en,eng'),
+  it('意大利语优先', '(it|en).*', 'it,ita,en,eng'),
+  vi('越南语优先', '(vi|en).*', 'vi,vie,en,eng'),
+  th('泰语优先', '(th|en).*', 'th,tha,en,eng'),
+  id('印尼语优先', '(id|en).*', 'id,ind,en,eng'),
+  ar('阿拉伯语优先', '(ar|en).*', 'ar,ara,en,eng'),
+  hi('印地语优先', '(hi|en).*', 'hi,hin,en,eng');
 
   const SubtitleLanguage(this.label, this.ytDlpLangs, this.mpvLangs);
   final String label;

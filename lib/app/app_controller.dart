@@ -673,6 +673,24 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  /// Shows [option], adding it to the player first if it is not loaded.
+  Future<void> showSubtitle(SubtitleOption option) async {
+    final player = this.player;
+    final platform = player?.platform;
+    if (player == null || platform is! NativePlayer) return;
+    final loaded = player.state.tracks.subtitle.where((t) => t.title == option.label).firstOrNull;
+    try {
+      if (loaded != null) {
+        await player.setSubtitleTrack(loaded);
+      } else {
+        await platform.command(['sub-add', option.url, 'select', option.label, option.language]);
+      }
+    } catch (e) {
+      logError('无法加载字幕 ${option.language}', e);
+      _notice('无法加载这条字幕');
+    }
+  }
+
   Future<void> retryPlayback() async {
     final item = playing;
     if (item != null) await play(item);

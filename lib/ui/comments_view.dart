@@ -170,9 +170,14 @@ class _CommentTile extends StatelessWidget {
           LinkedText(comment.text, style: const TextStyle(height: 1.45), onTime: onSeek ?? (_) {}, onLink: openExternal),
           const SizedBox(height: 4),
           Row(children: [
-            Icon(Icons.thumb_up_outlined, size: 14, color: colors.outline),
-            const SizedBox(width: 4),
-            Text(comment.likes.isEmpty ? '0' : comment.likes, style: small),
+            Tooltip(
+              message: tr('点赞数。YouTube 官方接口不支持给评论点赞'),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.thumb_up_outlined, size: 14, color: colors.outline),
+                const SizedBox(width: 4),
+                Text(comment.likes.isEmpty ? '0' : comment.likes, style: small),
+              ]),
+            ),
             if (comment.hearted) ...[
               const SizedBox(width: 12),
               Tooltip(message: tr('作者喜欢'), child: Icon(Icons.favorite_rounded, size: 14, color: colors.error)),

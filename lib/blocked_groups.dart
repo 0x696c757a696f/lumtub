@@ -48,11 +48,16 @@ const blockedGroups = <BlockedGroup>[
 
 /// One group: the name shown in settings, and the words that name it.
 class BlockedGroup {
-  const BlockedGroup(this.name, this.words, {this.onByDefault = true});
+  const BlockedGroup(this.name, this.words, {this.onByDefault = true, this.exact = const [], this.note});
   /// Saved in the preferences when the user ticks or unticks it.
   final String name;
   String get label => tr(name);
   final List<String> words;
+  /// Channel names matched only in full: abbreviations such as RT, AA or
+  /// NTV would otherwise catch unrelated channels that start with them.
+  final List<String> exact;
+  /// How the group's members relate to a government, shown in settings.
+  final String? note;
   /// Groups that are not proven to belong start unticked.
   final bool onByDefault;
 
@@ -62,6 +67,7 @@ class BlockedGroup {
     final channels = blockedChannels[name];
     return [
       for (final word in words) BlockEntry(name, wordKind, [word]),
+      for (final word in exact) BlockEntry(name, BlockKind.exact, [word]),
       if (channels != null) ...[
         for (final forms in channels.names) BlockEntry(name, BlockKind.channel, forms),
         for (final handle in channels.handles) BlockEntry(name, BlockKind.handle, [handle]),
@@ -77,6 +83,8 @@ enum BlockKind {
   word('标题和频道名里的词'),
   /// A channel's name, or the start of it ("RT Documentary" for RT).
   channel('频道名'),
+  /// A channel's whole name and nothing longer.
+  exact('完整频道名'),
   handle('@账号'),
   id('频道 ID');
 
@@ -111,6 +119,8 @@ class BlockMatcher {
             _words.addAll(forms);
           case BlockKind.channel:
             _channels.addAll(forms);
+          case BlockKind.exact:
+            _exact.addAll(forms);
           case BlockKind.handle:
             _handles.addAll(forms);
           case BlockKind.id:
@@ -122,10 +132,11 @@ class BlockMatcher {
 
   final _words = <String>[];
   final _channels = <String>[];
+  final _exact = <String>{};
   final _handles = <String>{};
   final _ids = <String>{};
 
-  bool get isEmpty => _words.isEmpty && _channels.isEmpty && _handles.isEmpty && _ids.isEmpty;
+  bool get isEmpty => _words.isEmpty && _channels.isEmpty && _exact.isEmpty && _handles.isEmpty && _ids.isEmpty;
 
   /// Whether [text] contains a word.
   bool text(String text) {
@@ -140,7 +151,7 @@ class BlockMatcher {
     if (id != null && _ids.contains(id)) return true;
     if (handle != null && handle.isNotEmpty && _handles.contains((handle.startsWith('@') ? handle : '@$handle').toLowerCase())) return true;
     final lower = name.trim().toLowerCase();
-    return lower.isNotEmpty && _channels.any((word) => channelNameStartsWith(lower, word));
+    return lower.isNotEmpty && (_exact.contains(lower) || _channels.any((word) => channelNameStartsWith(lower, word)));
   }
 }
 

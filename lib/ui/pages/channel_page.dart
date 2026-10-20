@@ -282,9 +282,14 @@ class PostCard extends StatelessWidget {
         ],
         const SizedBox(height: 8),
         Row(children: [
-          Icon(Icons.thumb_up_outlined, size: 16, color: colors.outline),
-          const SizedBox(width: 6),
-          Text(post.likes.isEmpty ? '0' : post.likes, style: TextStyle(color: colors.outline, fontSize: 12)),
+          Tooltip(
+            message: tr('点赞数。YouTube 官方接口不支持给帖子点赞或评论'),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.thumb_up_outlined, size: 16, color: colors.outline),
+              const SizedBox(width: 6),
+              Text(post.likes.isEmpty ? '0' : post.likes, style: TextStyle(color: colors.outline, fontSize: 12)),
+            ]),
+          ),
           const SizedBox(width: 16),
           TextButton.icon(
             onPressed: onComments,

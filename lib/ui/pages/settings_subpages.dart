@@ -211,12 +211,15 @@ List<Widget> _groupTiles(BuildContext context, AppController controller, List<Bl
           title: Text(group.label),
           subtitle: Text(
             [
-              tr('{0} 项', [entries.length]),
-              if (off > 0) tr('{0} 项已取消', [off]),
-              if (!group.onByDefault) tr('默认不屏蔽'),
-              entries.take(4).map((e) => e.label).join('、'),
-            ].join(' · '),
-            maxLines: 1,
+              if (group.note case final note?) tr(note),
+              [
+                tr('{0} 项', [entries.length]),
+                if (off > 0) tr('{0} 项已取消', [off]),
+                if (!group.onByDefault) tr('默认不屏蔽'),
+                entries.take(4).map((e) => e.label).join('、'),
+              ].join(' · '),
+            ].join('\n'),
+            maxLines: group.note == null ? 1 : 3,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(color: context.colors.outline, fontSize: 12),
           ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -7,6 +9,7 @@ import '../../app/app_controller.dart';
 import '../../models.dart';
 import '../../player_settings.dart';
 import '../common.dart';
+import '../linked_text.dart';
 import '../player_controls.dart';
 import '../player_shortcuts.dart';
 import '../skeleton.dart';
@@ -233,14 +236,15 @@ class _Details extends StatelessWidget {
           SkeletonBox(width: 260, height: 12),
         ]))
       else if (meta.isNotEmpty || (details?.description.isNotEmpty ?? false))
-        _Description(meta: meta, description: details?.description ?? '', expanded: controller.preferences.expandDescription),
+        _Description(meta: meta, description: details?.description ?? '', expanded: controller.preferences.expandDescription, controller: controller),
     ]);
   }
 }
 
 /// Collapsible description card, three lines until expanded.
 class _Description extends StatefulWidget {
-  const _Description({required this.meta, required this.description, this.expanded = false});
+  const _Description({required this.meta, required this.description, this.expanded = false, required this.controller});
+  final AppController controller;
   final String meta;
   final String description;
   /// Whether it starts expanded.
@@ -252,6 +256,8 @@ class _Description extends StatefulWidget {
 
 class _DescriptionState extends State<_Description> {
   late bool _expanded = widget.expanded;
+
+  void _seek(Duration time) => unawaited(widget.controller.player?.seek(time));
 
   @override
   Widget build(BuildContext context) {
@@ -272,9 +278,11 @@ class _DescriptionState extends State<_Description> {
               AnimatedSize(
                 duration: const Duration(milliseconds: 180),
                 alignment: Alignment.topCenter,
+                // Times seek the video and links open in the browser, as in
+                // PiliNara; the expanded text can still be selected.
                 child: _expanded
-                    ? SelectableText(widget.description, style: const TextStyle(height: 1.5))
-                    : Text(widget.description, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(height: 1.5)),
+                    ? SelectionArea(child: LinkedText(widget.description, style: const TextStyle(height: 1.5), onTime: _seek, onLink: openExternal))
+                    : LinkedText(widget.description, maxLines: 3, style: const TextStyle(height: 1.5), onTime: _seek, onLink: openExternal),
               ),
               if (hasMore) ...[
                 const SizedBox(height: 4),

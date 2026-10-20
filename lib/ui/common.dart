@@ -110,10 +110,13 @@ String formatPlaybackTime(Duration value) {
 
 String formatDate(DateTime date) => '${date.year}年${date.month}月${date.day}日';
 
-/// Opens a link in the default browser.
+/// Opens a web link in the default browser.
 Future<void> openExternal(String url) async {
-  if (!Platform.isWindows) return;
-  await Process.start('explorer.exe', [url]);
+  final uri = Uri.tryParse(url);
+  if (!Platform.isWindows || uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) return;
+  // rundll32 passes the whole address on; explorer.exe can drop everything
+  // after the first '&'.
+  await Process.start('rundll32.exe', ['url.dll,FileProtocolHandler', uri.toString()]);
 }
 
 Future<void> copyText(BuildContext context, String text, String notice) async {

@@ -147,4 +147,52 @@ void main() {
     expect(loader.items.map((v) => v.title), ['2', '0', '6', '4']);
     expect(loader.loading, isFalse);
   });
+
+  test('a failed list retries on its own, at once when another list loads', () async {
+    final saved = VideoListLoader.retryDelays;
+    addTearDown(() => VideoListLoader.retryDelays = saved);
+    VideoListLoader.retryDelays = const [Duration(milliseconds: 20), Duration(hours: 1)];
+    var fail = true;
+    Stream<String> flaky() async* {
+      if (fail) throw StateError('network down');
+      yield _video(1);
+    }
+
+    final loader = VideoListLoader(() => Listing(flaky));
+    addTearDown(loader.dispose);
+    loader.loadMore();
+    await pumpEventQueue();
+    expect(loader.error, contains('network down'));
+    fail = false;
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    await pumpEventQueue();
+    expect(loader.error, isNull);
+    expect(loader.items, hasLength(1));
+
+    // The second retry waits an hour, unless another list gets through.
+    fail = true;
+    final other = VideoListLoader(() => Listing(flaky));
+    addTearDown(other.dispose);
+    other.loadMore();
+    await pumpEventQueue();
+    expect(other.error, isNotNull);
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    await pumpEventQueue();
+    expect(other.error, isNotNull);
+    fail = false;
+    final third = VideoListLoader(() => Listing(flaky));
+    addTearDown(third.dispose);
+    third.loadMore();
+    await pumpEventQueue();
+    expect(other.error, isNull);
+    expect(other.items, hasLength(1));
+
+    // Being rate limited is not retried.
+    final limited = VideoListLoader(() => Listing(() => Stream.error(StateError('HTTP Error 429: Too Many Requests'))));
+    addTearDown(limited.dispose);
+    limited.loadMore();
+    await pumpEventQueue();
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    expect(limited.error, contains('429'));
+  });
 }

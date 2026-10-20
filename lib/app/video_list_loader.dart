@@ -41,11 +41,51 @@ class VideoListLoader extends ChangeNotifier {
   final _seen = <String>{};
   bool _disposed = false;
 
+  /// Waits before each automatic retry after a failure, longer each time;
+  /// once they are used up only the 重试 button tries again.
+  static List<Duration> retryDelays = const [Duration(seconds: 5), Duration(seconds: 15), Duration(seconds: 45), Duration(minutes: 2)];
+
+  /// Loaders waiting to retry. When any loader gets an answer the network
+  /// is back, so these retry at once instead of waiting their turn.
+  static final _failing = <VideoListLoader>{};
+  int _retries = 0;
+  Timer? _retryTimer;
+
+  /// Errors a retry would only make worse, or cannot fix.
+  static final _noRetry = RegExp(r'429|Too Many Requests|Sign in to confirm|not a bot|Private video|unavailable', caseSensitive: false);
+
+  void _scheduleRetry() {
+    final message = error;
+    if (_disposed || message == null || _noRetry.hasMatch(message) || _retries >= retryDelays.length) return;
+    _failing.add(this);
+    _retryTimer?.cancel();
+    _retryTimer = Timer(retryDelays[_retries++], _retryNow);
+  }
+
+  void _retryNow() {
+    _retryTimer?.cancel();
+    _retryTimer = null;
+    _failing.remove(this);
+    if (!_disposed && error != null) loadMore(retry: true);
+  }
+
+  void _succeeded() {
+    _retries = 0;
+    if (_failing.isEmpty) return;
+    for (final other in _failing.toList()) {
+      if (other != this) other._retryNow();
+    }
+  }
+
   /// Fetches the next page. After a failure only [retry] fetches again, so
   /// scrolling does not hammer a failing source; a retry starts the listing
-  /// over and skips what is already shown.
+  /// over and skips what is already shown. Failures are retried a few
+  /// times on their own, sooner when another list loads again.
   void loadMore({bool retry = false}) {
     if (loading || !hasMore || (error != null && !retry)) return;
+    _retryTimer?.cancel();
+    _retryTimer = null;
+    _failing.remove(this);
     // A listing that ended with an error starts over and has to get past
     // everything already shown.
     var count = pageSize;
@@ -104,6 +144,11 @@ class VideoListLoader extends ChangeNotifier {
         }
         loading = false;
         hasMore = !full && (error != null || more);
+        if (error == null) {
+          if (fresh > 0) _succeeded();
+        } else {
+          _scheduleRetry();
+        }
         _notify();
       },
     );
@@ -116,6 +161,8 @@ class VideoListLoader extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _retryTimer?.cancel();
+    _failing.remove(this);
     unawaited(_subscription?.cancel());
     _listing?.close();
     super.dispose();

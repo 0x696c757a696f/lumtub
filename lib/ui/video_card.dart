@@ -21,17 +21,20 @@ import '../l10n/l10n.dart';
 const _cardInfoHeight = 82.0;
 
 /// [item]'s thumbnail, or DeArrow's frame for it when that is on and one
-/// was chosen.
-ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 480}) {
+/// was chosen. [size] is a smaller YouTube file for small tiles, so they
+/// do not download the large one the grid uses (newtube does the same).
+ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 480, String? size}) {
   final frame = deArrow.thumbnailOf(item.id);
+  final file = size ?? VideoItem.thumbnailFile;
+  final url = size == null ? item.thumbnail : 'https://i.ytimg.com/vi/${item.id}/$size.jpg';
   return ResizeImage.resizeIfNeeded(
     width,
     null,
     switch ((thumbnails, frame)) {
-      (null, null) => NetworkImage(item.thumbnail),
+      (null, null) => NetworkImage(url),
       (null, final frame?) => NetworkImage(frame.toString()),
-      (final dir?, null) => CachedThumbnail(item.thumbnail, CachedThumbnail.fileFor(dir, item.id, VideoItem.thumbnailFile)),
-      (final dir?, final frame?) => CachedThumbnail(frame.toString(), CachedThumbnail.fileFor(dir, item.id, 'dearrow_${frame.queryParameters['time']}'), fallback: item.thumbnail),
+      (final dir?, null) => CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file)),
+      (final dir?, final frame?) => CachedThumbnail(frame.toString(), CachedThumbnail.fileFor(dir, item.id, 'dearrow_${frame.queryParameters['time']}'), fallback: url),
     },
   );
 }
@@ -415,7 +418,7 @@ class CompactVideoTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 child: Stack(fit: StackFit.expand, children: [
                   Image(
-                    image: thumbnailFor(item, thumbnails, width: 320),
+                    image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
                     fit: BoxFit.cover,
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                   ),

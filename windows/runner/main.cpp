@@ -8,6 +8,7 @@
 #include "flutter_window.h"
 #include "libmpv_loader.h"
 #include "utils.h"
+#include "window_placement.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
@@ -49,6 +50,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   if (!window.Create(L"YTPlus", origin, size)) {
     return EXIT_FAILURE;
   }
+  window.SetStartMaximized(RestoreWindowPlacement(window.GetHandle()));
   window.SetQuitOnClose(true);
 
   ::MSG msg;

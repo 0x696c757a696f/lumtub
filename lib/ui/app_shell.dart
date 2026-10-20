@@ -138,7 +138,9 @@ class _AppShellState extends State<AppShell> {
                       ),
                     Expanded(child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 160),
-                      child: KeyedSubtree(key: ValueKey(_pageKey), child: VideoActions(controller: _controller, child: _content())),
+                      // Keyed per page so each page's list keeps its scroll position
+                      // (PageStorage) when the user comes back to it.
+                      child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _content())),
                     )),
                   ])),
                   if (_controller.appearance.showStatusBar) _StatusBar(controller: _controller),
@@ -161,6 +163,7 @@ class _AppShellState extends State<AppShell> {
         PageMode.channel => 'channel:${_controller.channel?.id}',
         PageMode.playlist => 'playlist:${_controller.openPlaylistId}',
         PageMode.youtubePlaylist => 'yt-playlist:${_controller.youtubePlaylist?.id}',
+        PageMode.explore when _controller.query != null => 'search:${_controller.query}',
         final mode => mode.name,
       };
 

@@ -25,7 +25,7 @@ class YoutubePlaylistPage extends StatelessWidget {
         if (notification.metrics.extentAfter < 800) loader.loadMore();
         return false;
       },
-      child: CustomScrollView(slivers: [
+      child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 20),
           child: Row(children: [

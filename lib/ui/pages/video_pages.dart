@@ -22,7 +22,7 @@ class HomeFeedPage extends StatelessWidget {
     final unfinished = library == null || !prefs.homeShowContinue
         ? const <VideoItem>[]
         : controller.history.where((item) => library.progressOf(item.id)?.resumable ?? false).take(8).toList();
-    return CustomScrollView(slivers: [
+    return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
       if (unfinished.isNotEmpty) ...[
         const SliverToBoxAdapter(child: PageHeader('继续观看', subtitle: '从上次停下的地方接着看')),
@@ -127,7 +127,7 @@ class SearchResultsPage extends StatelessWidget {
         if (notification.metrics.extentAfter < 800) controller.loadMoreResults();
         return false;
       },
-      child: CustomScrollView(slivers: [
+      child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: PageHeader(
           '“$query”',
           subtitle: controller.searching ? '正在搜索…' : (count.isEmpty ? null : count),
@@ -189,7 +189,7 @@ class ExplorePage extends StatelessWidget {
         if (notification.metrics.extentAfter < 800) loader?.loadMore();
         return false;
       },
-      child: CustomScrollView(slivers: [
+      child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         const SliverToBoxAdapter(child: PageHeader('探索', subtitle: '各个分类本月观看最多的视频')),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
@@ -227,7 +227,7 @@ class HistoryPage extends StatelessWidget {
       return const StatusView(icon: Icons.history_rounded, title: '还没有观看记录', message: '播放过的视频会保存在本机，最多保留 60 条。');
     }
     final snapshot = List<VideoItem>.of(items);
-    return CustomScrollView(slivers: [
+    return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
         '观看历史',
         subtitle: '${items.length} 个视频 · 仅保存在本机',

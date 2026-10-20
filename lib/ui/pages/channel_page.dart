@@ -34,7 +34,7 @@ class ChannelPage extends StatelessWidget {
         }
         return false;
       },
-      child: CustomScrollView(slivers: [
+      child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: ChannelHeader(controller: controller, channel: channel, onBack: controller.goBack)),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),

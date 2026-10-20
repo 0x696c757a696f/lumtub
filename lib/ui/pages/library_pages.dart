@@ -32,7 +32,7 @@ class SubscriptionsPage extends StatelessWidget {
       );
     }
     final feed = controller.visible(library.feed, subscriptions: true);
-    return CustomScrollView(slivers: [
+    return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
         '订阅',
         subtitle: '${channels.length} 个频道 · 仅保存在本机',
@@ -80,7 +80,7 @@ class PlaylistsPage extends StatelessWidget {
       (AppController.favoritesPlaylistId, '收藏', library.favorites, Icons.favorite_rounded),
       for (final playlist in library.playlists) (playlist.id, playlist.name, playlist.items, LibraryController.isRemote(playlist) ? Icons.smart_display_outlined : Icons.playlist_play_rounded),
     ];
-    return CustomScrollView(slivers: [
+    return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
         '播放列表',
         subtitle: '仅保存在本机',
@@ -220,7 +220,7 @@ class PlaylistDetailPage extends StatelessWidget {
     final items = List<VideoItem>.of(favorites ? library.favorites : playlist!.items);
     final name = favorites ? '收藏' : playlist!.name;
     void remove(VideoItem item) => favorites ? library.toggleFavorite(item) : library.removeFromPlaylist(playlist!, item);
-    return CustomScrollView(slivers: [
+    return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
         child: Row(children: [

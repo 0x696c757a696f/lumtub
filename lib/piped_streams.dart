@@ -126,20 +126,33 @@ class PipedStreams {
   PipedStreams(this._client);
   final http.Client _client;
 
-  /// Public API servers to fall back on when the live list cannot be read.
+  /// Public API servers checked first, without waiting for the live list;
+  /// those that do not answer are simply left out.
   static const knownServers = [
     'https://pipedapi.kavin.rocks',
+    'https://pipedapi-libre.kavin.rocks',
     'https://pipedapi.adminforge.de',
     'https://api.piped.private.coffee',
     'https://pipedapi.leptons.xyz',
     'https://pipedapi.nosebs.ru',
     'https://pipedapi.reallyaweso.me',
+    'https://piped-api.lunar.icu',
+    'https://pipedapi.tokhmi.xyz',
+    'https://pipedapi.moomoo.me',
+    'https://api.looleh.xyz',
+    'https://piped-api.cfe.re',
+    'https://pipedapi.r4fo.com',
+    'https://pa.mint.lgbt',
+    'https://piped-api.privacy.com.de',
+    'https://api.piped.projectsegfau.lt',
+    'https://pa.il.ax',
   ];
   static const _instanceList = 'https://piped-instances.kavin.rocks/';
 
   List<String>? _ranked;
   DateTime _rankedAt = DateTime(0);
   Future<List<String>>? _ranking;
+  final _timings = <String, int>{};
 
   /// Servers to try, fastest first, re-measured every few hours.
   Future<List<String>> servers() {
@@ -148,31 +161,49 @@ class PipedStreams {
     return _ranking ??= _rank().whenComplete(() => _ranking = null);
   }
 
+  /// Ranks the known servers at once; servers only the live list names are
+  /// measured in the background and join the ranking when they answer, so
+  /// a slow list does not hold up the first video. When no known server
+  /// answers, the live list is all there is, so it is waited for.
   Future<List<String>> _rank() async {
-    var candidates = knownServers;
+    _timings.clear();
+    final others = _liveServers().then((servers) => _measure(servers.where((s) => !knownServers.contains(s))));
+    await _measure(knownServers);
+    if (_timings.isEmpty) {
+      await others;
+    } else {
+      unawaited(others.then((_) => _publish()));
+    }
+    return _publish();
+  }
+
+  Future<List<String>> _liveServers() async {
     try {
       final response = await _client.get(Uri.parse(_instanceList)).timeout(const Duration(seconds: 8));
       final list = jsonDecode(utf8.decode(response.bodyBytes));
       if (list is List) {
-        final live = [
+        return [
           for (final entry in list.whereType<Map>())
             if (entry['api_url'] is String && (entry['api_url'] as String).startsWith('https://') && entry['up_to_date'] != false) entry['api_url'] as String,
         ];
-        if (live.isNotEmpty) candidates = {...live, ...knownServers}.toList();
       }
     } catch (e) {
-      logInfo('读取 Piped 服务器列表失败，使用内置列表：$e');
+      logInfo('读取 Piped 服务器列表失败，只用内置列表：$e');
     }
-    final timings = <String, int>{};
-    await Future.wait(candidates.map((server) async {
-      final watch = Stopwatch()..start();
-      try {
-        final response = await _client.get(Uri.parse('$server/healthcheck')).timeout(const Duration(seconds: 5));
-        if (response.statusCode == 200) timings[server] = watch.elapsedMilliseconds;
-      } catch (_) {}
-    }));
-    final ranked = timings.keys.toList()..sort((a, b) => timings[a]!.compareTo(timings[b]!));
-    logInfo(ranked.isEmpty ? 'Piped 服务器都无法连接' : 'Piped 服务器（按速度）：${ranked.take(5).map((s) => '$s ${timings[s]} ms').join('，')}');
+    return const [];
+  }
+
+  Future<void> _measure(Iterable<String> servers) => Future.wait(servers.map((server) async {
+        final watch = Stopwatch()..start();
+        try {
+          final response = await _client.get(Uri.parse('$server/healthcheck')).timeout(const Duration(seconds: 5));
+          if (response.statusCode == 200) _timings[server] = watch.elapsedMilliseconds;
+        } catch (_) {}
+      }));
+
+  List<String> _publish() {
+    final ranked = _timings.keys.toList()..sort((a, b) => _timings[a]!.compareTo(_timings[b]!));
+    logInfo(ranked.isEmpty ? 'Piped 服务器都无法连接' : 'Piped 服务器（按速度）：${ranked.take(5).map((s) => '$s ${_timings[s]} ms').join('，')}');
     _ranked = ranked;
     _rankedAt = DateTime.now();
     return ranked;

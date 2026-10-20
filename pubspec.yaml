@@ -23,6 +23,11 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
 
+# A copy of media_kit_video with one Windows fix; see vendor/media_kit_video/YTPLUS.md.
+dependency_overrides:
+  media_kit_video:
+    path: vendor/media_kit_video
+
 flutter:
   uses-material-design: true
   fonts:

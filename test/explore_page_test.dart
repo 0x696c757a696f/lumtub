@@ -78,8 +78,8 @@ void main() {
         }
       }
     }
-    // Faith has its own entry now, not a zone among the videos.
-    expect(popularTopics.map((t) => t.label), isNot(contains('宗教信仰')));
+    // Among the video zones, 宗教信仰 opens the tabs.
+    expect(popularTopics.singleWhere((t) => t.label == '宗教信仰').opens, ExploreSection.faith);
     expect(ExploreMode.of(ExploreSection.faith).first, ExploreMode.curated);
     expect(ExploreMode.of(ExploreSection.popular), isNot(contains(ExploreMode.curated)));
     expect(ExploreMode.of(ExploreSection.faithLive), [ExploreMode.liveViewers, ExploreMode.liveLatest, ExploreMode.liveUpcoming, ExploreMode.liveReplay]);
@@ -247,7 +247,10 @@ void main() {
 
   testWidgets('宗教与信仰: tabs, three levels, filters and stream states', (tester) async {
     final controller = await _open(tester);
-    await tester.tap(find.text('宗教与信仰'));
+    await tester.tap(find.text('数学'));
+    await tester.pump();
+    await _reveal(tester, '宗教信仰');
+    await tester.tap(find.text('宗教信仰'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreSection, ExploreSection.faith);
     expect(controller.exploreMode, ExploreMode.curated);
@@ -289,10 +292,12 @@ void main() {
     expect(controller.exploreMode, ExploreMode.liveUpcoming);
     expect(controller.exploreQuery, 'Holy Mass live 弥撒 直播');
 
-    await tester.tap(find.text('视频').first);
+    // Back to the video zones, on the one shown before.
+    await tester.tap(find.text('全部分区'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreSection, ExploreSection.popular);
     expect(controller.exploreMode, ExploreMode.popular);
+    expect(controller.exploreTopicNow.label, '知识教育');
     expect(tester.takeException(), isNull);
   });
 
@@ -329,10 +334,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('管理视频分区'), findsOneWidget);
 
-    // Hide the first zone, then pin 科学探索 to the front.
+    // Hide the first zone, then pin 播客访谈 to the front.
     await tester.tap(find.byType(Switch).first);
     await tester.pump();
-    final faith = find.ancestor(of: find.text('科学探索'), matching: find.byType(ListTile));
+    final faith = find.ancestor(of: find.text('播客访谈'), matching: find.byType(ListTile));
     await tester.ensureVisible(faith);
     await tester.pump();
     await tester.tap(find.descendant(of: faith, matching: find.byTooltip('置顶')));
@@ -341,11 +346,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     final topics = controller.exploreTopicsFor(ExploreSection.popular);
-    expect(topics.first.label, '科学探索');
+    expect(topics.first.label, '播客访谈');
     expect(topics.map((t) => t.label), isNot(contains('知识教育')));
     expect(controller.preferences.exploreHidden['popular'], ['知识教育']);
     // The zone shown was hidden, so the strip starts over on its first.
-    expect(controller.exploreTopicNow.label, '科学探索');
+    expect(controller.exploreTopicNow.label, '播客访谈');
     expect(tester.takeException(), isNull);
   });
 }

@@ -58,26 +58,30 @@ class ExplorePage extends StatelessWidget {
             segments: [
               ButtonSegment(value: ExploreSection.popular, label: Text(ExploreSection.popular.label), icon: const Icon(Icons.video_library_rounded, size: 18)),
               ButtonSegment(value: ExploreSection.live, label: Text(ExploreSection.live.label), icon: const Icon(Icons.sensors_rounded, size: 18)),
-              ButtonSegment(value: ExploreSection.faith, label: Text(tr('宗教与信仰')), icon: const Icon(Icons.church_rounded, size: 18)),
             ],
-            selected: {section.isFaith ? ExploreSection.faith : section},
-            onSelectionChanged: (value) {
-              if (!(value.first.isFaith && section.isFaith)) controller.setExplore(section: value.first);
-            },
+            // 宗教与信仰 is one of the video zones.
+            selected: {section.isFaith ? ExploreSection.popular : section},
+            onSelectionChanged: (value) => controller.setExplore(section: value.first),
           ),
         )),
         if (section.isFaith)
           SliverToBoxAdapter(child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: SegmentedButton<ExploreSection>(
+            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 0, AppStyle.pagePadding, 4),
+            child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+              TextButton.icon(
+                onPressed: controller.leaveFaith,
+                icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                label: Text(tr('全部分区')),
+              ),
+              Text(tr('宗教信仰'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              const SizedBox(width: 8),
+              SegmentedButton<ExploreSection>(
                 showSelectedIcon: false,
                 segments: [for (final s in ExploreSection.faithTabs) ButtonSegment(value: s, label: Text(s.label))],
                 selected: {section},
                 onSelectionChanged: (value) => controller.setExplore(section: value.first),
               ),
-            ),
+            ]),
           )),
         SliverToBoxAdapter(child: TopicStrip(
           key: ValueKey(section),

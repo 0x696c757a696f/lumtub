@@ -75,7 +75,8 @@ void main() {
     expect(find.text('Explore'), findsOneWidget);
     expect(find.text('Popular'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    await tester.tap(find.text('Religion & faith'));
+    expect(popularTopics.singleWhere((t) => t.opens != null).label, 'Religion & faith');
+    controller.setExplore(section: ExploreSection.faith);
     await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.text('Catholic'));
     await tester.pump();

@@ -40,7 +40,7 @@ class ExploreSub {
 /// One explore zone, as Bilibili's 分区: what it is called, the search
 /// behind it and its sub-categories.
 class ExploreTopic {
-  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false});
+  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false, this.opens});
   final String _label;
   /// The name shown; a user's own is shown as typed.
   String get label => custom ? _label : tr(_label);
@@ -49,6 +49,9 @@ class ExploreTopic {
   final List<ExploreSub> subs;
   /// Added by the user; it can be removed.
   final bool custom;
+  /// A zone that leads to another part of the page, as 宗教信仰 leads to
+  /// the tabs of 宗教与信仰, rather than searching itself.
+  final ExploreSection? opens;
 
   /// Names the zone in the saved order and hidden lists; custom zones as
   /// `custom:<label>`.
@@ -138,6 +141,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('人物采访', '人物专访 interview'),
     ExploreSub('脱口秀', '脱口秀 talk show'),
   ]),
+  ExploreTopic('宗教信仰', Icons.church_rounded, '宗教 信仰', opens: ExploreSection.faith),
   ExploreTopic('科学探索', Icons.science_rounded, '科学', subs: [
     ExploreSub('物理', '物理'),
     ExploreSub('宇宙', '宇宙 天文'),

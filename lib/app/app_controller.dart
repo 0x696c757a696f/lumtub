@@ -546,6 +546,18 @@ class AppController extends ChangeNotifier {
     _loadExplore();
   }
 
+  (ExploreSection, int) _topicBeforeFaith = (ExploreSection.popular, 0);
+
+  /// Leaves 宗教与信仰 for the video zones, on the zone shown before.
+  void leaveFaith() {
+    final (section, topic) = _topicBeforeFaith;
+    final topics = exploreTopicsFor(section);
+    final index = topic.clamp(0, topics.length - 1);
+    // Not back into 宗教信仰 itself, say when it is pinned first.
+    final back = topics[index].opens == null ? index : topics.indexWhere((t) => t.opens == null);
+    if (back >= 0) setExplore(section: section, topic: back);
+  }
+
   /// Shows another part, zone, sub-category, mode, period or filter of the
   /// explore page. A new part starts on its first zone, and on its usual
   /// mode unless the one shown also suits it; a new zone on all of it.
@@ -563,7 +575,16 @@ class AppController extends ChangeNotifier {
   }) {
     final nextSection = section ?? exploreSection;
     final newSection = nextSection != exploreSection;
-    final nextTopic = (topic ?? (newSection ? 0 : exploreTopic)).clamp(0, exploreTopicsFor(nextSection).length - 1);
+    final topics = exploreTopicsFor(nextSection);
+    final nextTopic = (topic ?? (newSection ? 0 : exploreTopic)).clamp(0, topics.length - 1);
+    // 宗教信仰 among the video zones opens 宗教与信仰's tabs; leaving them
+    // goes back to the zone shown before.
+    final opens = topics[nextTopic].opens;
+    if (opens != null) {
+      if (!exploreSection.isFaith) _topicBeforeFaith = (exploreSection, exploreTopic);
+      setExplore(section: opens);
+      return;
+    }
     final nextSub = sub ?? (newSection || nextTopic != exploreTopic ? 0 : exploreSub);
     final nextLeaf = leaf ?? (newSection || nextTopic != exploreTopic || nextSub != exploreSub ? 0 : exploreLeaf);
     final modes = ExploreMode.of(nextSection);
@@ -611,6 +632,10 @@ class AppController extends ChangeNotifier {
   void _loadExplore() {
     final repository = _repository;
     if (repository == null || explore != null) return;
+    if (exploreTopicNow.opens case final opens?) {
+      setExplore(section: opens);
+      return;
+    }
     final query = exploreQuery;
     final mode = exploreMode;
     final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);

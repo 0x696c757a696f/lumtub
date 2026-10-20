@@ -1883,7 +1883,6 @@ const stringsEn = <String, String>{
   '骑行': 'Cycling',
   '鸟类': 'Birds',
   '麦地那': 'Medina',
-<<<<<<< HEAD
   '应用内小窗': 'In-app mini player',
   '离开播放页时让视频继续在小窗里播放；关闭则停止播放': 'Keep the video playing in the mini player when leaving the watch page; off stops playback',
   '小窗 离开播放页 悬浮': 'mini player leave watch page floating',
@@ -1898,7 +1897,6 @@ const stringsEn = <String, String>{
   '停止投屏': 'Stop casting',
   '暂停': 'Pause',
   '投屏': 'Cast',
-=======
   '稍后观看': 'Watch later',
   '从稍后观看移除': 'Remove from Watch later',
   '已加入稍后观看': 'Added to Watch later',
@@ -1925,5 +1923,4 @@ const stringsEn = <String, String>{
   '搜索历史标题或频道': 'Search history by title or channel',
   '没有匹配的历史记录': 'No matching history',
   '从历史记录中删除': 'Delete from history',
->>>>>>> 6882f82 (Add Watch later, history search and multi-select delete, and a play queue)
 };

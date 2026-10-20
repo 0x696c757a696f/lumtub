@@ -19,17 +19,7 @@ class VideoFormatSelector {
     if (settings.codec == CodecPreference.any) {
       return height.isEmpty && settings.audioQuality == AudioQuality.best ? 'ytdl' : 'bestvideo$height+$audio/best$height/best';
     }
-    final vp9Hardware = settings.decoderResults['vp9']?.isHardware ?? false;
-    final codecs = switch (settings.codec) {
-      CodecPreference.avc1 => ['avc1', if (settings.maxHeight > 1080 || settings.maxHeight == 0) 'vp9'],
-      CodecPreference.vp9 => ['vp9', 'avc1'],
-      CodecPreference.av01 => ['av01', 'vp9', 'avc1'],
-      _ => [
-          if (vp9Hardware || settings.maxHeight > 1080) 'vp9',
-          if (settings.maxHeight > 1080) 'av01',
-          'avc1',
-        ],
-    };
+    final codecs = codecOrder(settings);
     return [
       for (final codec in codecs) 'bestvideo[vcodec^=$codec]$height+$audio',
       'bestvideo$height+$audio',
@@ -37,5 +27,21 @@ class VideoFormatSelector {
       'best$height',
       'best',
     ].join('/');
+  }
+
+  /// Video codecs to try, most preferred first, for [settings].
+  static List<String> codecOrder(PlayerSettings settings) {
+    final vp9Hardware = settings.decoderResults['vp9']?.isHardware ?? false;
+    return switch (settings.codec) {
+      CodecPreference.avc1 => ['avc1', if (settings.maxHeight > 1080 || settings.maxHeight == 0) 'vp9'],
+      CodecPreference.vp9 => ['vp9', 'avc1'],
+      CodecPreference.av01 => ['av01', 'vp9', 'avc1'],
+      CodecPreference.any => ['vp9', 'av01', 'avc1'],
+      _ => [
+          if (vp9Hardware || settings.maxHeight > 1080) 'vp9',
+          if (settings.maxHeight > 1080) 'av01',
+          'avc1',
+        ],
+    };
   }
 }

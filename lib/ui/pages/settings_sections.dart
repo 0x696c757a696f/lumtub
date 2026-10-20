@@ -10,6 +10,7 @@ import '../../app_preferences.dart';
 import '../../appearance_settings.dart';
 import '../../decoder_status.dart';
 import '../../network_proxy.dart';
+import '../../piped_streams.dart';
 import '../../player_settings.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../../windows_video_info.dart';
@@ -315,6 +316,22 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(Icons.tune_rounded),
               onTap: () => openPictureSettings(context, controller),
             ), subtitle: '亮度 对比度 饱和度 伽马 色调 音频延迟 audio-delay'),
+        SettingEntry('播放来源', (context) => NormalItem(
+              title: '播放来源',
+              subtitle: '当前：${settings.playbackSource.label}${settings.playbackSource == PlaybackSource.pipedCustom ? ' ${settings.pipedServer}' : ''}。'
+                  'Piped 服务器替你从 YouTube 取视频，可避开限速，但它会知道你看了哪个视频；失败、直播或开着字幕时直接连接 YouTube',
+              leading: _icon(Icons.dns_outlined),
+              onTap: () => pickFromDialog<PlaybackSource>(
+                context,
+                title: '播放来源',
+                value: settings.playbackSource,
+                values: _enumValues(PlaybackSource.values, (s) => s.label),
+                onSelected: (source) async {
+                  if (source != PlaybackSource.pipedCustom) return save(settings.copyWith(playbackSource: source));
+                  await _editPipedServer(context, controller);
+                },
+              ),
+            ), subtitle: 'Piped 服务器 限速 实例 instance'),
         SettingEntry('网络代理', (context) {
           final proxy = controller.proxy;
           final now = proxy.url == null ? '当前直接连接' : '当前使用 ${proxy.url}${proxy.isHttp ? '' : '（视频流不支持此类代理，视频流直接连接）'}';
@@ -847,6 +864,24 @@ Future<void> _pickAudioFilter(BuildContext context, AppController controller) as
     builder: (context) => TextEditDialog(title: '自定义音频滤镜', initialText: preset ? '' : current, hintText: '例如 loudnorm=I=-14:LRA=7:TP=-2', monospace: true),
   );
   if (text != null) await controller.saveSettings(controller.settings.copyWith(audioFilter: text.trim().replaceAll(RegExp(r'[\r\n]'), '')));
+}
+
+Future<void> _editPipedServer(BuildContext context, AppController controller) async {
+  final text = await showDialog<String>(
+    context: context,
+    builder: (context) => TextEditDialog(
+      title: 'Piped 服务器',
+      initialText: controller.settings.pipedServer,
+      hintText: '例如 https://pipedapi.kavin.rocks',
+      helper: (text) {
+        final colors = context.colors;
+        final server = normalizePipedServer(text);
+        return Text(server == null ? '请填写 Piped 的 API 地址（https://…）' : '将使用 $server', style: TextStyle(fontSize: 12, color: server == null ? colors.error : colors.outline));
+      },
+    ),
+  );
+  final server = text == null ? null : normalizePipedServer(text);
+  if (server != null) await controller.saveSettings(controller.settings.copyWith(playbackSource: PlaybackSource.pipedCustom, pipedServer: server));
 }
 
 Future<void> _editProxy(BuildContext context, AppController controller) async {

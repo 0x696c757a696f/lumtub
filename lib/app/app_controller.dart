@@ -20,6 +20,7 @@ import '../cache_manager.dart';
 import '../decoder_status.dart';
 import '../models.dart';
 import '../network_proxy.dart';
+import '../piped_streams.dart';
 import '../player_option_applicator.dart';
 import '../player_settings.dart';
 import '../tool_manager.dart';
@@ -114,6 +115,10 @@ class AppController extends ChangeNotifier {
 
   /// The video opened from addresses resolved ahead of libmpv, if any.
   String? _openedResolved;
+  /// The video last opened from a Piped server, so a failure falls back to
+  /// YouTube once.
+  String? _openedPiped;
+  late final _piped = PipedStreams(_http);
 
   AppearanceSettings appearance;
   final AppearanceSettingsStore? _appearanceStore;
@@ -239,6 +244,8 @@ class AppController extends ChangeNotifier {
       final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
       await _applyProxy(player);
+      // Measures the Piped servers while the app starts, not on the first click.
+      if (settings.playbackSource == PlaybackSource.pipedAuto) unawaited(_piped.servers());
       await player.setVolume(settings.defaultVolume.toDouble());
       // yt-dlp and Deno are on PATH before libmpv starts, so ytdl_hook can find them.
       if (_disposed) {
@@ -510,12 +517,32 @@ class AppController extends ChangeNotifier {
   /// subtitles from the saved extraction without asking YouTube again.
   /// [resolved] false, or a failed resolution, leaves everything to
   /// ytdl_hook as before.
-  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true}) async {
+  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true}) async {
     final player = this.player!;
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
       final format = _format;
+      _openedPiped = null;
+      // Piped first, as chosen in 播放来源; it has no subtitle tracks for
+      // libmpv, so videos with subtitles turned on come from YouTube.
+      if (piped && settings.playbackSource.isPiped && settings.subtitleMode == SubtitleMode.off && !item.isLive) {
+        final address = await _pipedAddress(item);
+        if (serial != _playSerial) return false;
+        if (address != null) {
+          _tracking = null;
+          _lastPosition = start ?? Duration.zero;
+          _openedResolved = null;
+          _openedPiped = item.id;
+          await player.open(Media(address, start: start), play: play);
+          if (serial == _playSerial) _tracking = item;
+          _mpvLogLines = 0;
+          _lastDrops = 0;
+          _decoderPending = true;
+          _update(() {});
+          return true;
+        }
+      }
       ResolvedVideo? video;
       if (resolved) {
         try {
@@ -551,6 +578,23 @@ class AppController extends ChangeNotifier {
       logError('无法打开视频 ${item.id}', e);
       if (serial == _playSerial) _update(() => playbackError = '$e');
       return false;
+    }
+  }
+
+  /// The Piped address for [item], or null to play it from YouTube.
+  Future<String?> _pipedAddress(VideoItem item) async {
+    final watch = Stopwatch()..start();
+    try {
+      final server = settings.playbackSource == PlaybackSource.pipedCustom && settings.pipedServer.isNotEmpty ? settings.pipedServer : null;
+      final video = await _piped.fetch(item.id, server: server);
+      final address = video.edl(settings);
+      if (address == null) return null;
+      _update(() => availableHeights = video.heights);
+      logInfo('从 Piped ${video.server} 播放 ${item.id}，用时 ${watch.elapsedMilliseconds} ms');
+      return address;
+    } catch (e) {
+      logInfo('$e，改为直接连接 YouTube');
+      return null;
     }
   }
 
@@ -623,6 +667,12 @@ class AppController extends ChangeNotifier {
         if (playing == null || message.isEmpty) return;
         if (player.state.duration == Duration.zero) {
           final item = playing!;
+          if (_openedPiped == item.id) {
+            _openedPiped = null;
+            logInfo('Piped 的地址无法播放（$message），改为直接连接 YouTube');
+            unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, piped: false));
+            return;
+          }
           if (_openedResolved == item.id) {
             // Addresses resolved ahead may have gone stale; let libmpv's
             // ytdl_hook resolve the video itself once.

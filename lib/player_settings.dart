@@ -4,6 +4,7 @@ import 'dart:io';
 import 'app_directories.dart';
 import 'decoder_status.dart';
 import 'network_proxy.dart';
+import 'piped_streams.dart';
 
 /// Heights offered in the quality menu; 0 means automatic.
 const qualityHeights = [0, 2160, 1440, 1080, 720, 480, 360];
@@ -226,6 +227,10 @@ class PlayerSettings {
   final ProxyMode proxyMode;
   /// The proxy for [ProxyMode.custom], such as `127.0.0.1:7890`.
   final String proxyAddress;
+  /// Where playback streams come from; Piped by default, the user's choice.
+  final PlaybackSource playbackSource;
+  /// The Piped API server for [PlaybackSource.pipedCustom].
+  final String pipedServer;
   /// `--vd-lavc-dr`: auto, yes or no.
   final String directRendering;
   /// `--autosync`; 0 turns it off.
@@ -278,6 +283,8 @@ class PlayerSettings {
     this.libassSubtitles = false,
     this.proxyMode = ProxyMode.system,
     this.proxyAddress = '',
+    this.playbackSource = PlaybackSource.pipedAuto,
+    this.pipedServer = '',
     this.directRendering = 'auto',
     this.autosync = 0,
     this.audioFilter = '',
@@ -327,6 +334,8 @@ class PlayerSettings {
     bool? libassSubtitles,
     ProxyMode? proxyMode,
     String? proxyAddress,
+    PlaybackSource? playbackSource,
+    String? pipedServer,
     String? directRendering,
     int? autosync,
     String? audioFilter,
@@ -369,6 +378,8 @@ class PlayerSettings {
         libassSubtitles: libassSubtitles ?? this.libassSubtitles,
         proxyMode: proxyMode ?? this.proxyMode,
         proxyAddress: proxyAddress ?? this.proxyAddress,
+        playbackSource: playbackSource ?? this.playbackSource,
+        pipedServer: pipedServer ?? this.pipedServer,
         directRendering: directRendering ?? this.directRendering,
         autosync: autosync ?? this.autosync,
         audioFilter: audioFilter ?? this.audioFilter,
@@ -413,6 +424,8 @@ class PlayerSettings {
         'libassSubtitles': libassSubtitles,
         'proxyMode': proxyMode.name,
         'proxyAddress': proxyAddress,
+        'playbackSource': playbackSource.name,
+        'pipedServer': pipedServer,
         'directRendering': directRendering,
         'autosync': autosync,
         'audioFilter': audioFilter,
@@ -517,6 +530,8 @@ class PlayerSettings {
       libassSubtitles: raw['libassSubtitles'] == true,
       proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),
       proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
+      playbackSource: _enumByName(PlaybackSource.values, raw['playbackSource'], PlaybackSource.pipedAuto),
+      pipedServer: normalizePipedServer(raw['pipedServer']?.toString() ?? '') ?? '',
       directRendering: choice('directRendering', {'auto', 'yes', 'no'}, 'auto'),
       autosync: number('autosync', 0, 0, 100),
       audioFilter: filter.length > 300 || filter.contains(RegExp(r'[\r\n]')) ? '' : filter,

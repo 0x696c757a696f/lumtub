@@ -1,26 +1,40 @@
 import 'package:flutter/widgets.dart' show IconData;
 import 'package:flutter/material.dart' show Icons;
 
+import 'faith_topics.dart';
 import 'l10n/l10n.dart';
 import 'search_options.dart';
 import 'video_repository.dart';
 
-/// The two halves of the explore page.
+/// The parts of the explore page: videos, live streams, and the four tabs
+/// of 宗教与信仰.
 enum ExploreSection {
   popular('视频'),
-  live('直播');
+  live('直播', isLive: true),
+  faith('宗教传统', isFaith: true),
+  faithStudy('宗教学术', isFaith: true),
+  faithArts('文化艺术', isFaith: true),
+  faithLive('宗教直播', isLive: true, isFaith: true);
 
-  const ExploreSection(this._label);
+  const ExploreSection(this._label, {this.isLive = false, this.isFaith = false});
   final String _label;
   String get label => tr(_label);
+  /// Shows streams rather than videos.
+  final bool isLive;
+  /// One of 宗教与信仰's tabs.
+  final bool isFaith;
+
+  static const faithTabs = [faith, faithStudy, faithArts, faithLive];
 }
 
-/// A sub-category of a zone: its name and the words searched for.
+/// A sub-category of a zone: its name, the words searched for, and its own
+/// sub-categories, if it is split further.
 class ExploreSub {
-  const ExploreSub(this._label, this.query);
+  const ExploreSub(this._label, this.query, {this.subs = const []});
   final String _label;
   String get label => tr(_label);
   final String query;
+  final List<ExploreSub> subs;
 }
 
 /// One explore zone, as Bilibili's 分区: what it is called, the search
@@ -124,15 +138,6 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('人物采访', '人物专访 interview'),
     ExploreSub('脱口秀', '脱口秀 talk show'),
   ]),
-  ExploreTopic('宗教信仰', Icons.church_rounded, '宗教 信仰', subs: [
-    ExploreSub('天主教', '天主教'),
-    ExploreSub('弥撒', '弥撒 Holy Mass'),
-    ExploreSub('圣经', '圣经 讲解'),
-    ExploreSub('圣歌', '天主教 圣歌'),
-    ExploreSub('教宗', '教宗 Pope'),
-    ExploreSub('基督教', '基督教 讲道'),
-    ExploreSub('佛教', '佛教 佛法'),
-  ]),
   ExploreTopic('科学探索', Icons.science_rounded, '科学', subs: [
     ExploreSub('物理', '物理'),
     ExploreSub('宇宙', '宇宙 天文'),
@@ -231,13 +236,6 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('发布会', '新闻发布会 直播'),
     ExploreSub('重大事件', 'breaking news live'),
   ]),
-  ExploreTopic('宗教礼仪', Icons.church_rounded, '弥撒 直播 Holy Mass', subs: [
-    ExploreSub('弥撒', 'Holy Mass live 弥撒'),
-    ExploreSub('玫瑰经', 'rosary live 玫瑰经'),
-    ExploreSub('梵蒂冈', 'Vatican live'),
-    ExploreSub('朝拜圣体', 'Eucharistic adoration live'),
-    ExploreSub('祈祷', 'prayer live 祈祷'),
-  ]),
   ExploreTopic('科技活动', Icons.memory_rounded, '科技 发布会 直播', subs: [
     ExploreSub('新品发布会', 'launch event live'),
     ExploreSub('开发者大会', 'developer conference keynote live'),
@@ -271,6 +269,10 @@ List<ExploreTopic> exploreTopicsOf(ExploreSection section, [List<CustomTopic> cu
       ...switch (section) {
         ExploreSection.popular => popularTopics,
         ExploreSection.live => liveTopics,
+        ExploreSection.faith => faithTraditionTopics,
+        ExploreSection.faithStudy => faithStudyTopics,
+        ExploreSection.faithArts => faithArtsTopics,
+        ExploreSection.faithLive => faithLiveTopics,
       },
       for (final topic in custom)
         if (topic.section == section) topic.topic,
@@ -297,21 +299,30 @@ List<ExploreTopic> arrangeTopics(List<ExploreTopic> topics, List<String> order, 
 
 /// How the explore page picks and orders a zone's videos.
 enum ExploreMode {
+  curated('精选', live: false),
   forYou('为你推荐', live: false),
   popular('热门', live: false),
   latest('最新', live: false),
   gems('冷门宝藏', live: false),
   long('长视频', live: false),
   liveViewers('观看最多', live: true),
-  liveLatest('最新开播', live: true);
+  liveLatest('最新开播', live: true),
+  liveUpcoming('即将开播', live: true),
+  liveReplay('直播回放', live: true);
 
   const ExploreMode(this._label, {required this.live});
   final String _label;
   String get label => tr(_label);
   final bool live;
 
-  static List<ExploreMode> of(ExploreSection section) => values.where((m) => m.live == (section == ExploreSection.live)).toList();
-  static ExploreMode defaultOf(ExploreSection section) => section == ExploreSection.live ? liveViewers : popular;
+  /// The modes [section] offers; 精选 is only for 宗教与信仰.
+  static List<ExploreMode> of(ExploreSection section) =>
+      values.where((m) => m.live == section.isLive && (m != curated || section.isFaith)).toList();
+  static ExploreMode defaultOf(ExploreSection section) => section.isLive
+      ? liveViewers
+      : section.isFaith
+          ? curated
+          : popular;
 
   /// Whether the period chips apply.
   bool get hasPeriod => this == popular;
@@ -324,8 +335,10 @@ const gemMaxViews = 50000;
 const explorePeriods = [SearchUploadDate.today, SearchUploadDate.week, SearchUploadDate.month, SearchUploadDate.year];
 
 /// YouTube's `sp` for a zone shown by [mode]: the most viewed of [period],
-/// the newest, the most relevant of the year (ranked or filtered here
-/// afterwards), long videos, or live streams.
+/// the newest, the most relevant (of the year, or of all time for 精选;
+/// ranked or filtered here afterwards), long videos, or live streams. Search
+/// cannot ask for upcoming or past streams, so those come from the newest
+/// videos, kept here by their live status.
 String exploreParams(
   ExploreMode mode, {
   SearchUploadDate period = SearchUploadDate.month,
@@ -333,6 +346,7 @@ String exploreParams(
   SearchQuality quality = SearchQuality.any,
 }) =>
     switch (mode) {
+      ExploreMode.curated => searchParams(type: SearchFilter.videos, duration: duration, quality: quality)!,
       ExploreMode.popular => searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: period, duration: duration, quality: quality)!,
       ExploreMode.latest => searchParams(type: SearchFilter.videos, sort: SearchSort.date, duration: duration, quality: quality)!,
       ExploreMode.forYou => searchParams(type: SearchFilter.videos, date: SearchUploadDate.month, duration: duration, quality: quality)!,
@@ -340,4 +354,5 @@ String exploreParams(
       ExploreMode.long => searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: SearchUploadDate.year, duration: SearchDuration.long, quality: quality)!,
       ExploreMode.liveViewers => searchParams(type: SearchFilter.live, sort: SearchSort.views, quality: quality)!,
       ExploreMode.liveLatest => searchParams(type: SearchFilter.live, sort: SearchSort.date, quality: quality)!,
+      ExploreMode.liveUpcoming || ExploreMode.liveReplay => searchParams(type: SearchFilter.videos, sort: SearchSort.date, quality: quality)!,
     };

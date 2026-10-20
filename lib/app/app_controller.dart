@@ -35,6 +35,7 @@ import '../tool_manager.dart';
 import '../video_format_selector.dart';
 import '../community_posts.dart';
 import '../explore_topics.dart';
+import '../faith_topics.dart';
 import '../stream_resolver.dart';
 import 'posts_loader.dart';
 import '../video_repository.dart';
@@ -417,15 +418,20 @@ class AppController extends ChangeNotifier {
     _loadExplore();
   }
 
-  /// The explore page: its half, zone, sub-category (0 for all of the
-  /// zone), how videos are picked, and the filters.
+  /// The explore page: its part, zone, sub-category (0 for all of the
+  /// zone) and the sub-category's own (0 for all of it), how videos are
+  /// picked, and the filters.
   ExploreSection exploreSection = ExploreSection.popular;
   int exploreTopic = 0;
   int exploreSub = 0;
+  int exploreLeaf = 0;
   ExploreMode exploreMode = ExploreMode.popular;
   SearchUploadDate explorePeriod = SearchUploadDate.month;
   SearchDuration exploreDuration = SearchDuration.any;
   SearchQuality exploreQuality = SearchQuality.any;
+  /// 宗教与信仰's 类型 and 视角 filters.
+  FaithFormat exploreFormat = FaithFormat.any;
+  FaithView exploreView = FaithView.any;
   /// The chosen zone's videos.
   VideoListLoader? explore;
 
@@ -444,11 +450,27 @@ class AppController extends ChangeNotifier {
     return topics[exploreTopic.clamp(0, topics.length - 1)];
   }
 
-  /// The words searched for: the sub-category's, or the whole zone's.
-  String get exploreQuery {
-    final topic = exploreTopicNow;
-    return exploreSub > 0 && exploreSub <= topic.subs.length ? topic.subs[exploreSub - 1].query : topic.query;
+  /// The sub-category shown, if one is.
+  ExploreSub? get exploreSubNow {
+    final subs = exploreTopicNow.subs;
+    return exploreSub > 0 && exploreSub <= subs.length ? subs[exploreSub - 1] : null;
   }
+
+  /// The sub-category's own sub-category shown, if one is.
+  ExploreSub? get exploreLeafNow {
+    final subs = exploreSubNow?.subs ?? const [];
+    return exploreLeaf > 0 && exploreLeaf <= subs.length ? subs[exploreLeaf - 1] : null;
+  }
+
+  /// Whether 宗教与信仰's 类型 and 视角 filters apply.
+  bool get exploreFaithFilters => exploreSection.isFaith && !exploreSection.isLive;
+
+  /// The words searched for: the narrowest sub-category's, or the whole
+  /// zone's, with 宗教与信仰's filter words.
+  String get exploreQuery => [
+        (exploreLeafNow ?? exploreSubNow)?.query ?? exploreTopicNow.query,
+        if (exploreFaithFilters) ...[exploreFormat.words, exploreView.words],
+      ].where((w) => w.isNotEmpty).join(' ');
 
   /// Adds a category of the user's own and shows it.
   Future<void> addExploreTopic(CustomTopic topic) async {
@@ -515,37 +537,48 @@ class AppController extends ChangeNotifier {
     _loadExplore();
   }
 
-  /// Shows another half, zone, sub-category, mode, period or filter of the
-  /// explore page. A new half starts on its first zone and usual mode; a
-  /// new zone on all of it.
+  /// Shows another part, zone, sub-category, mode, period or filter of the
+  /// explore page. A new part starts on its first zone, and on its usual
+  /// mode unless the one shown also suits it; a new zone on all of it.
   void setExplore({
     ExploreSection? section,
     int? topic,
     int? sub,
+    int? leaf,
     ExploreMode? mode,
     SearchUploadDate? period,
     SearchDuration? duration,
     SearchQuality? quality,
+    FaithFormat? format,
+    FaithView? view,
   }) {
     final nextSection = section ?? exploreSection;
     final newSection = nextSection != exploreSection;
     final nextTopic = (topic ?? (newSection ? 0 : exploreTopic)).clamp(0, exploreTopicsFor(nextSection).length - 1);
     final nextSub = sub ?? (newSection || nextTopic != exploreTopic ? 0 : exploreSub);
-    final nextMode = mode != null && mode.live == (nextSection == ExploreSection.live)
+    final nextLeaf = leaf ?? (newSection || nextTopic != exploreTopic || nextSub != exploreSub ? 0 : exploreLeaf);
+    final modes = ExploreMode.of(nextSection);
+    final sameKind = nextSection.isFaith == exploreSection.isFaith && nextSection.isLive == exploreSection.isLive;
+    final nextMode = mode != null && modes.contains(mode)
         ? mode
-        : newSection
-            ? ExploreMode.defaultOf(nextSection)
-            : exploreMode;
+        : !newSection || (sameKind && modes.contains(exploreMode))
+            ? exploreMode
+            : ExploreMode.defaultOf(nextSection);
     final nextPeriod = period ?? explorePeriod;
     final nextDuration = duration ?? exploreDuration;
     final nextQuality = quality ?? exploreQuality;
+    final nextFormat = format ?? exploreFormat;
+    final nextView = view ?? exploreView;
     if (!newSection &&
         nextTopic == exploreTopic &&
         nextSub == exploreSub &&
+        nextLeaf == exploreLeaf &&
         nextMode == exploreMode &&
         nextPeriod == explorePeriod &&
         nextDuration == exploreDuration &&
         nextQuality == exploreQuality &&
+        nextFormat == exploreFormat &&
+        nextView == exploreView &&
         explore != null) {
       return;
     }
@@ -553,6 +586,9 @@ class AppController extends ChangeNotifier {
       exploreSection = nextSection;
       exploreTopic = nextTopic;
       exploreSub = nextSub;
+      exploreLeaf = nextLeaf;
+      exploreFormat = nextFormat;
+      exploreView = nextView;
       exploreMode = nextMode;
       explorePeriod = nextPeriod;
       exploreDuration = nextDuration;
@@ -571,21 +607,30 @@ class AppController extends ChangeNotifier {
     final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);
     final taste = mode == ExploreMode.forYou ? _exploreTaste() : null;
     final notInterested = homeFeed?.notInterested;
+    final faith = exploreSection.isFaith ? faithFilter() : null;
     bool where(VideoItem item) {
       if (notInterested != null && notInterested.videos.contains(item.id)) return false;
       if (taste != null && taste.channelAffinity(item) < -0.3) return false;
+      if (mode == ExploreMode.liveUpcoming && !item.isUpcoming) return false;
+      if (mode == ExploreMode.liveReplay && item.liveStatus != 'was_live') return false;
+      final seconds = item.duration;
       if (mode == ExploreMode.gems) {
         final views = item.viewCount;
-        final seconds = item.duration;
-        return views != null && views <= gemMaxViews && seconds != null && seconds >= 240;
+        if (views == null || views > gemMaxViews || seconds == null || seconds < 240) return false;
       }
-      return true;
+      if (mode == ExploreMode.curated && seconds != null && seconds < 240) return false;
+      // Last, as it counts the videos that show.
+      return faith == null || faith(item);
     }
 
     _update(() => explore = VideoListLoader(
           () => repository.search(query, sp: sp),
           where: where,
-          fill: mode == ExploreMode.gems ? 8 : 1,
+          fill: switch (mode) {
+            ExploreMode.gems || ExploreMode.liveReplay => 8,
+            ExploreMode.liveUpcoming => 4,
+            _ => faith != null ? 8 : 1,
+          },
           rank: taste == null ? null : (item) => exploreScore(taste, item),
         )
           ..addListener(notifyListeners)

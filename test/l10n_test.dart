@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/app_controller.dart';
 import 'package:ytplus/explore_topics.dart';
+import 'package:ytplus/faith_topics.dart';
 import 'package:ytplus/l10n/l10n.dart';
 import 'package:ytplus/l10n/strings_en.dart';
 import 'package:ytplus/models.dart';
@@ -55,13 +56,14 @@ void main() {
     setLanguage(AppLanguage.en);
     const custom = CustomTopic('额我略圣歌', 'Gregorian chant', ExploreSection.popular);
     expect(custom.topic.label, '额我略圣歌');
-    final faith = popularTopics.singleWhere((t) => t.key == '宗教信仰');
-    expect(faith.label, 'Religion & faith');
+    final faith = faithTraditionTopics.first;
+    expect(faith.key, '基督宗教');
+    expect(faith.label, 'Christianity');
   });
 
   testWidgets('the explore page lays out in English', (tester) async {
     setLanguage(AppLanguage.en);
-    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.physicalSize = const Size(1000, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final controller = AppController()..ready = true;
@@ -72,6 +74,17 @@ void main() {
     await tester.pump();
     expect(find.text('Explore'), findsOneWidget);
     expect(find.text('Popular'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Religion & faith'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('Catholic'));
+    await tester.pump();
+    expect(find.text('All Catholic'), findsOneWidget);
+    expect(find.text('Selected'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Live').last);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Upcoming'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

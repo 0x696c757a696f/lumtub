@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../../explore_topics.dart';
+import '../../faith_topics.dart';
 import '../common.dart';
 import '../../search_options.dart';
 import '../theme.dart';
@@ -10,8 +11,9 @@ import '../video_card.dart';
 import '../../widgets/pilinara_settings_tiles.dart' show confirmDialog;
 import '../../l10n/l10n.dart';
 
-/// Explore, in zones as Bilibili's 分区: videos or live streams, a zone and
-/// one of its sub-categories, how they are picked, and filters.
+/// Explore, in zones as Bilibili's 分区: videos, live streams or the tabs of
+/// 宗教与信仰, a zone and one of its sub-categories, how they are picked, and
+/// filters.
 class ExplorePage extends StatelessWidget {
   const ExplorePage({super.key, required this.controller});
   final AppController controller;
@@ -25,10 +27,13 @@ class ExplorePage extends StatelessWidget {
     final section = controller.exploreSection;
     final topic = controller.exploreTopicNow;
     final mode = controller.exploreMode;
-    final live = section == ExploreSection.live;
+    final live = section.isLive;
     final sub = controller.exploreSub;
-    final name = [topic.label, if (sub > 0 && sub <= topic.subs.length) topic.subs[sub - 1].label].join(' · ');
+    final subNow = controller.exploreSubNow;
+    final leaf = controller.exploreLeaf;
+    final name = [topic.label, if (subNow != null) subNow.label, if (controller.exploreLeafNow case final leafNow?) leafNow.label].join(' · ');
     final subtitle = switch (mode) {
+      ExploreMode.curated => tr('{0} · 相关度高的完整内容，少标题党，每个频道最多 3 个', [name]),
       ExploreMode.popular => tr('{0} · {1}观看最多', [name, controller.explorePeriod.label]),
       ExploreMode.forYou => tr('{0} · 按你的观看记录排列', [name]),
       ExploreMode.gems => tr('{0} · 播放不到 5 万的好视频', [name]),
@@ -36,6 +41,8 @@ class ExplorePage extends StatelessWidget {
       ExploreMode.latest => tr('{0} · 最新上传', [name]),
       ExploreMode.liveViewers => tr('{0}直播 · 按观看人数排列', [name]),
       ExploreMode.liveLatest => tr('{0}直播 · 最新开播', [name]),
+      ExploreMode.liveUpcoming => tr('{0} · 即将开始的直播', [name]),
+      ExploreMode.liveReplay => tr('{0} · 最近的直播回放', [name]),
     };
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
@@ -49,13 +56,29 @@ class ExplorePage extends StatelessWidget {
           trailing: SegmentedButton<ExploreSection>(
             showSelectedIcon: false,
             segments: [
-              for (final s in ExploreSection.values)
-                ButtonSegment(value: s, label: Text(s.label), icon: Icon(s == ExploreSection.live ? Icons.sensors_rounded : Icons.video_library_rounded, size: 18)),
+              ButtonSegment(value: ExploreSection.popular, label: Text(ExploreSection.popular.label), icon: const Icon(Icons.video_library_rounded, size: 18)),
+              ButtonSegment(value: ExploreSection.live, label: Text(ExploreSection.live.label), icon: const Icon(Icons.sensors_rounded, size: 18)),
+              ButtonSegment(value: ExploreSection.faith, label: Text(tr('宗教与信仰')), icon: const Icon(Icons.church_rounded, size: 18)),
             ],
-            selected: {section},
-            onSelectionChanged: (value) => controller.setExplore(section: value.first),
+            selected: {section.isFaith ? ExploreSection.faith : section},
+            onSelectionChanged: (value) {
+              if (!(value.first.isFaith && section.isFaith)) controller.setExplore(section: value.first);
+            },
           ),
         )),
+        if (section.isFaith)
+          SliverToBoxAdapter(child: Padding(
+            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: SegmentedButton<ExploreSection>(
+                showSelectedIcon: false,
+                segments: [for (final s in ExploreSection.faithTabs) ButtonSegment(value: s, label: Text(s.label))],
+                selected: {section},
+                onSelectionChanged: (value) => controller.setExplore(section: value.first),
+              ),
+            ),
+          )),
         SliverToBoxAdapter(child: TopicStrip(
           key: ValueKey(section),
           topics: controller.exploreTopicsFor(section),
@@ -71,6 +94,20 @@ class ExplorePage extends StatelessWidget {
             child: Wrap(spacing: 8, runSpacing: 8, children: [
               for (final (i, label) in [tr('全部'), for (final s in topic.subs) s.label].indexed)
                 ChoiceChip(label: Text(label), selected: sub == i, onSelected: (_) => controller.setExplore(sub: i)),
+            ]),
+          )),
+        if (subNow != null && subNow.subs.isNotEmpty)
+          SliverToBoxAdapter(child: Padding(
+            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 0),
+            child: Wrap(spacing: 6, runSpacing: 6, children: [
+              for (final (i, label) in [tr('全部{0}', [subNow.label]), for (final s in subNow.subs) s.label].indexed)
+                FilterChip(
+                  label: Text(label),
+                  visualDensity: VisualDensity.compact,
+                  showCheckmark: false,
+                  selected: leaf == i,
+                  onSelected: (_) => controller.setExplore(leaf: i),
+                ),
             ]),
           )),
         SliverToBoxAdapter(child: Padding(
@@ -93,6 +130,26 @@ class ExplorePage extends StatelessWidget {
                 changed: false,
                 onSelected: (v) => controller.setExplore(period: v),
               ),
+            if (controller.exploreFaithFilters) ...[
+              OptionChip(
+                icon: Icons.category_outlined,
+                value: controller.exploreFormat,
+                values: FaithFormat.values,
+                label: (v) => v == FaithFormat.any ? tr('类型') : v.label,
+                item: (v) => v.label,
+                changed: controller.exploreFormat != FaithFormat.any,
+                onSelected: (v) => controller.setExplore(format: v),
+              ),
+              OptionChip(
+                icon: Icons.visibility_outlined,
+                value: controller.exploreView,
+                values: FaithView.values,
+                label: (v) => v == FaithView.any ? tr('视角') : v.label,
+                item: (v) => v.label,
+                changed: controller.exploreView != FaithView.any,
+                onSelected: (v) => controller.setExplore(view: v),
+              ),
+            ],
             if (!live && mode != ExploreMode.long)
               OptionChip(
                 icon: Icons.timer_outlined,
@@ -125,7 +182,11 @@ class ExplorePage extends StatelessWidget {
             child: ErrorBanner(items.isEmpty ? tr('无法加载：{0}', [error]) : tr('加载更多失败：{0}', [error]), onRetry: () => loader?.loadMore(retry: true)),
           )),
         if (items.isEmpty && !loading && error == null)
-          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.explore_outlined, title: live ? tr('这个分类现在没有直播') : tr('这个分类暂时没有视频'))),
+          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.explore_outlined, title: switch (mode) {
+            ExploreMode.liveUpcoming => tr('这个分类暂时没有即将开始的直播'),
+            ExploreMode.liveReplay => tr('这个分类暂时没有直播回放'),
+            _ => live ? tr('这个分类现在没有直播') : tr('这个分类暂时没有视频'),
+          })),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );
@@ -206,7 +267,10 @@ class _AddTopicDialogState extends State<_AddTopicDialog> {
             const SizedBox(height: 16),
             SegmentedButton<ExploreSection>(
               showSelectedIcon: false,
-              segments: [for (final s in ExploreSection.values) ButtonSegment(value: s, label: Text(s.label))],
+              segments: [
+                for (final s in widget.section.isFaith ? ExploreSection.faithTabs : const [ExploreSection.popular, ExploreSection.live])
+                  ButtonSegment(value: s, label: Text(s.label)),
+              ],
               selected: {_section},
               onSelectionChanged: (value) => setState(() => _section = value.first),
             ),

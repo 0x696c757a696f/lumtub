@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -32,6 +33,28 @@ String? normalizePipedServer(String text) {
   if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) return null;
   final path = uri.path.endsWith('/') ? uri.path.substring(0, uri.path.length - 1) : uri.path;
   return 'https://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}$path';
+}
+
+/// The API servers named in [text]: kavin.rocks's JSON status list, or the
+/// Markdown table of the Piped documentation's public-instances page.
+List<String> parsePipedInstanceList(String text) {
+  try {
+    final list = jsonDecode(text);
+    return [
+      if (list is List)
+        for (final entry in list.whereType<Map>())
+          if (entry['up_to_date'] != false)
+            if (normalizePipedServer('${entry['api_url']}') case final server?) server,
+    ];
+  } on FormatException {
+    return {
+      for (final line in const LineSplitter().convert(text))
+        if (line.contains('|'))
+          for (final cell in line.split('|'))
+            if (RegExp(r'^\s*https://[^\s()\[\]]+\s*$').hasMatch(cell))
+              if (normalizePipedServer(cell.trim()) case final server?) server,
+    }.toList();
+  }
 }
 
 /// One stream a Piped server lists for a video.
@@ -147,12 +170,36 @@ class PipedStreams {
     'https://api.piped.projectsegfau.lt',
     'https://pa.il.ax',
   ];
-  static const _instanceList = 'https://piped-instances.kavin.rocks/';
+  /// The Piped project's table of public instances, and kavin.rocks's live
+  /// status list; servers either names are measured with the known ones.
+  static const instanceLists = [
+    'https://raw.githubusercontent.com/TeamPiped/documentation/main/content/docs/public-instances/index.md',
+    'https://piped-instances.kavin.rocks/',
+  ];
+
+  /// Where the downloaded list is kept between runs; null keeps it in memory.
+  File? catalogFile;
+  List<String> _catalog = const [];
+  DateTime _catalogAt = DateTime(0);
+  bool _catalogLoaded = false;
 
   List<String>? _ranked;
   DateTime _rankedAt = DateTime(0);
   Future<List<String>>? _ranking;
   final _timings = <String, int>{};
+  final _tried = <String>{};
+
+  /// The built-in servers and those from the last downloaded list.
+  List<String> get catalog => {...knownServers, ..._catalog}.toList();
+
+  /// When the list was last downloaded, or null if it never was.
+  DateTime? get catalogUpdatedAt => _catalogAt.year > 2000 ? _catalogAt : null;
+
+  /// The last measured response time of [server] in ms; null when it was not
+  /// measured or did not answer (see [wasTried]).
+  int? timingOf(String server) => _timings[server];
+  bool wasTried(String server) => _tried.contains(server);
+  bool get isRanking => _ranking != null;
 
   /// Servers to try, fastest first, re-measured every few hours.
   Future<List<String>> servers() {
@@ -161,14 +208,24 @@ class PipedStreams {
     return _ranking ??= _rank().whenComplete(() => _ranking = null);
   }
 
-  /// Ranks the known servers at once; servers only the live list names are
-  /// measured in the background and join the ranking when they answer, so
-  /// a slow list does not hold up the first video. When no known server
-  /// answers, the live list is all there is, so it is waited for.
+  /// Measures every server again now.
+  Future<List<String>> remeasure() {
+    _ranked = null;
+    return servers();
+  }
+
+  /// Measures the servers already known at once. A list older than a day is
+  /// downloaded meanwhile, and servers new in it are measured when it comes
+  /// in, so a slow list does not hold up the first video. When no known
+  /// server answers, the new list is all there is, so it is waited for.
   Future<List<String>> _rank() async {
+    await _loadCatalog();
+    final update = DateTime.now().difference(_catalogAt) > const Duration(days: 1) ? updateCatalog() : Future.value(catalog);
     _timings.clear();
-    final others = _liveServers().then((servers) => _measure(servers.where((s) => !knownServers.contains(s))));
-    await _measure(knownServers);
+    _tried.clear();
+    final before = catalog;
+    final others = update.then((all) => _measure(all.where((s) => !before.contains(s))));
+    await _measure(before);
     if (_timings.isEmpty) {
       await others;
     } else {
@@ -177,20 +234,47 @@ class PipedStreams {
     return _publish();
   }
 
-  Future<List<String>> _liveServers() async {
-    try {
-      final response = await _client.get(Uri.parse(_instanceList)).timeout(const Duration(seconds: 8));
-      final list = jsonDecode(utf8.decode(response.bodyBytes));
-      if (list is List) {
-        return [
-          for (final entry in list.whereType<Map>())
-            if (entry['api_url'] is String && (entry['api_url'] as String).startsWith('https://') && entry['up_to_date'] != false) entry['api_url'] as String,
-        ];
+  /// Downloads [instanceLists] and keeps the servers they name; returns the
+  /// whole [catalog]. On failure the previous list stays.
+  Future<List<String>> updateCatalog() async {
+    await _loadCatalog();
+    final found = <String>{};
+    await Future.wait(instanceLists.map((url) async {
+      try {
+        final response = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+        if (response.statusCode == 200) found.addAll(parsePipedInstanceList(utf8.decode(response.bodyBytes)));
+      } catch (e) {
+        logInfo('读取 Piped 服务器列表 $url 失败：$e');
       }
-    } catch (e) {
-      logInfo('读取 Piped 服务器列表失败，只用内置列表：$e');
+    }));
+    if (found.isNotEmpty) {
+      _catalog = found.toList();
+      _catalogAt = DateTime.now();
+      logInfo('Piped 服务器列表已更新，共 ${catalog.length} 个');
+      try {
+        await catalogFile?.parent.create(recursive: true);
+        await catalogFile?.writeAsString(jsonEncode({'updated': _catalogAt.toIso8601String(), 'servers': _catalog}));
+      } catch (e) {
+        logInfo('无法保存 Piped 服务器列表：$e');
+      }
     }
-    return const [];
+    return catalog;
+  }
+
+  Future<void> _loadCatalog() async {
+    if (_catalogLoaded) return;
+    _catalogLoaded = true;
+    final file = catalogFile;
+    if (file == null || !await file.exists()) return;
+    try {
+      final data = jsonDecode(await file.readAsString());
+      if (data is! Map) return;
+      _catalog = [
+        for (final s in data['servers'] is List ? data['servers'] as List : const [])
+          if (normalizePipedServer('$s') case final server?) server,
+      ];
+      _catalogAt = DateTime.tryParse('${data['updated']}') ?? DateTime(0);
+    } catch (_) {}
   }
 
   Future<void> _measure(Iterable<String> servers) => Future.wait(servers.map((server) async {
@@ -199,6 +283,7 @@ class PipedStreams {
           final response = await _client.get(Uri.parse('$server/healthcheck')).timeout(const Duration(seconds: 5));
           if (response.statusCode == 200) _timings[server] = watch.elapsedMilliseconds;
         } catch (_) {}
+        _tried.add(server);
       }));
 
   List<String> _publish() {

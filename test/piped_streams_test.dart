@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -93,5 +94,58 @@ void main() {
     final before = calls;
     await expectLater(piped.fetch('dQw4w9WgXcQ', server: 'https://p.example'), throwsStateError);
     expect(calls, before);
+  });
+
+  test('reads the documentation table and the JSON status list', () {
+    const table = '''
+Instance Name | Instance API URL | Instance Location(s) | CDN | Registered Users
+--- | --- | --- | --- | ---
+kavin.rocks (Official) | https://pipedapi.kavin.rocks | 🇺🇸, 🇮🇳 | Yes | ![](https://pipedapi.kavin.rocks/registered/badge)
+piped.yt | https://api.piped.yt | 🇩🇪 | No | ![](https://api.piped.yt/registered/badge)
+''';
+    expect(parsePipedInstanceList(table), ['https://pipedapi.kavin.rocks', 'https://api.piped.yt']);
+    expect(
+      parsePipedInstanceList(jsonEncode([
+        {'api_url': 'https://a.example/', 'up_to_date': true},
+        {'api_url': 'https://old.example', 'up_to_date': false},
+        {'api_url': 'http://insecure.example'},
+      ])),
+      ['https://a.example'],
+    );
+    expect(parsePipedInstanceList('{"message": "x"}'), isEmpty);
+  });
+
+  test('keeps the downloaded list and updates it once a day', () async {
+    final dir = await Directory.systemTemp.createTemp('piped');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = File('${dir.path}/piped_servers.json');
+    var listRequests = 0;
+    PipedStreams make() => PipedStreams(MockClient((request) async {
+          final url = request.url.toString();
+          if (PipedStreams.instanceLists.contains(url)) {
+            listRequests++;
+            return http.Response('| new | https://new.example | x |', 200);
+          }
+          return http.Response('OK', url.startsWith('https://new.example') ? 200 : 503);
+        }))
+      ..catalogFile = file;
+
+    expect(await make().servers(), ['https://new.example']);
+    expect(listRequests, 2);
+    final saved = jsonDecode(await file.readAsString()) as Map;
+    expect(saved['servers'], ['https://new.example']);
+
+    // A fresh list is used as it is.
+    final next = make();
+    expect(await next.servers(), ['https://new.example']);
+    expect(listRequests, 2);
+    expect(next.catalog, containsAll([...PipedStreams.knownServers, 'https://new.example']));
+    expect(next.timingOf('https://new.example'), isNotNull);
+    expect((next.wasTried('https://pipedapi.kavin.rocks'), next.timingOf('https://pipedapi.kavin.rocks')), (true, null));
+
+    // A day-old one is downloaded again.
+    await file.writeAsString(jsonEncode({...saved, 'updated': DateTime.now().subtract(const Duration(days: 2)).toIso8601String()}));
+    await make().servers();
+    expect(listRequests, 4);
   });
 }

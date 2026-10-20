@@ -18,6 +18,7 @@ import '../common.dart';
 import '../player_shortcuts.dart';
 import '../theme.dart';
 import 'account_settings.dart';
+import 'piped_servers_page.dart';
 import 'settings_subpages.dart';
 
 /// The groups in the settings list, in display order, named and ordered
@@ -328,10 +329,16 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 values: _enumValues(PlaybackSource.values, (s) => s.label),
                 onSelected: (source) async {
                   if (source != PlaybackSource.pipedCustom) return save(settings.copyWith(playbackSource: source));
-                  await _editPipedServer(context, controller);
+                  if (context.mounted) await openPipedServers(context, controller);
                 },
               ),
             ), subtitle: 'Piped 服务器 限速 实例 instance'),
+        SettingEntry('Piped 服务器', (context) => NormalItem(
+              title: 'Piped 服务器',
+              subtitle: settings.playbackSource == PlaybackSource.pipedCustom ? '当前：${settings.pipedServer}' : '当前：自动选择最快的服务器。可测速、手动选择，列表每天自动更新',
+              leading: _icon(Icons.speed_rounded),
+              onTap: () => openPipedServers(context, controller),
+            ), subtitle: 'Piped 服务器 测速 列表 更新 instance'),
         SettingEntry('网络代理', (context) {
           final proxy = controller.proxy;
           final now = proxy.url == null ? '当前直接连接' : '当前使用 ${proxy.url}${proxy.isHttp ? '' : '（视频流不支持此类代理，视频流直接连接）'}';
@@ -866,7 +873,7 @@ Future<void> _pickAudioFilter(BuildContext context, AppController controller) as
   if (text != null) await controller.saveSettings(controller.settings.copyWith(audioFilter: text.trim().replaceAll(RegExp(r'[\r\n]'), '')));
 }
 
-Future<void> _editPipedServer(BuildContext context, AppController controller) async {
+Future<void> editPipedServer(BuildContext context, AppController controller) async {
   final text = await showDialog<String>(
     context: context,
     builder: (context) => TextEditDialog(

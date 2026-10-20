@@ -118,6 +118,9 @@ class AppController extends ChangeNotifier {
   /// YouTube once.
   String? _openedPiped;
   late final _piped = PipedStreams(_http);
+
+  /// The Piped servers, for 设置 › Piped 服务器.
+  PipedStreams get piped => _piped;
   /// Serves YouTube streams to libmpv in pieces YouTube does not throttle.
   ChunkedRelay? _relay;
 
@@ -258,6 +261,7 @@ class AppController extends ChangeNotifier {
         _relay = null;
         logError('无法启动本地分块转发，视频流将直接连接', e);
       }
+      _piped.catalogFile = File('${directories.config.path}${Platform.pathSeparator}piped_servers.json');
       // Measures the Piped servers while the app starts, not on the first click.
       if (settings.playbackSource == PlaybackSource.pipedAuto) unawaited(_piped.servers());
       await player.setVolume(settings.defaultVolume.toDouble());

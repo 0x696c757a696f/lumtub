@@ -25,6 +25,7 @@ import '../cache_manager.dart';
 import '../decoder_status.dart';
 import '../models.dart';
 import '../network_proxy.dart';
+import '../invidious_streams.dart';
 import '../piped_streams.dart';
 import '../search_options.dart';
 import '../search_suggestions.dart';
@@ -183,13 +184,20 @@ class AppController extends ChangeNotifier {
 
   /// The video opened from addresses resolved ahead of libmpv, if any.
   String? _openedResolved;
-  /// The video last opened from a Piped server, so a failure falls back to
-  /// YouTube once.
-  String? _openedPiped;
+  /// The video last opened from a Piped or Invidious server, so a failure
+  /// falls back to YouTube (or the other one) once.
+  String? _openedVia;
+  /// The servers tried for the video being opened, and the 429 YouTube
+  /// answered it with, which lets both be tried whatever 播放来源 says.
+  final _relaysTried = <RelayKind>{};
+  PlaybackFailure? _rateLimited;
   late final _piped = PipedStreams(_http);
+  late final _invidious = InvidiousStreams(_http);
 
   /// The Piped servers, for 设置 › Piped 服务器.
   PipedStreams get piped => _piped;
+  /// The Invidious instances, for 设置 › Invidious 实例.
+  InvidiousStreams get invidious => _invidious;
   /// Serves YouTube streams to libmpv in pieces YouTube does not throttle.
   ChunkedRelay? _relay;
 
@@ -352,7 +360,14 @@ class AppController extends ChangeNotifier {
       }
       _piped.catalogFile = File('${directories.config.path}${Platform.pathSeparator}piped_servers.json');
       // Measures the Piped servers while the app starts, not on the first click.
-      if (settings.playbackSource == PlaybackSource.pipedAuto) unawaited(_piped.servers());
+      _invidious.catalogFile = File('${directories.config.path}${Platform.pathSeparator}invidious_servers.json');
+      switch (settings.playbackSource) {
+        case PlaybackSource.pipedAuto:
+          unawaited(_piped.servers());
+        case PlaybackSource.invidiousAuto:
+          unawaited(_invidious.servers());
+        default:
+      }
       await player.setVolume(settings.defaultVolume.toDouble());
       // yt-dlp and Deno are on PATH before libmpv starts, so ytdl_hook can find them.
       if (_disposed) {
@@ -914,26 +929,16 @@ class AppController extends ChangeNotifier {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
       final format = _format;
-      _openedPiped = null;
-      if (resolved && piped) _recentErrors.clear();
-      // Piped first, as chosen in 播放来源; it has no subtitle tracks for
-      // libmpv, so videos with subtitles turned on come from YouTube.
-      if (piped && settings.playbackSource.isPiped && settings.subtitleMode == SubtitleMode.off && !item.isLive) {
-        final address = await _pipedAddress(item);
+      _openedVia = null;
+      if (resolved && piped) {
+        _recentErrors.clear();
+        _relaysTried.clear();
+        _rateLimited = null;
+      }
+      // Piped or Invidious first, as chosen in 播放来源.
+      if (piped) {
+        if (await _openViaRelays(item, serial, start: start, play: play)) return true;
         if (serial != _playSerial) return false;
-        if (address != null) {
-          _tracking = null;
-          _lastPosition = start ?? Duration.zero;
-          _openedResolved = null;
-          _openedPiped = item.id;
-          await player.open(Media(address, start: start), play: play);
-          if (serial == _playSerial) _tracking = item;
-          _mpvLogLines = 0;
-          _lastDrops = 0;
-          _decoderPending = true;
-          _update(() {});
-          return true;
-        }
       }
       ResolvedVideo? video;
       if (resolved) {
@@ -944,6 +949,7 @@ class AppController extends ChangeNotifier {
           final failure = PlaybackFailure.classify(['$e']);
           if (!failure.retryable) {
             // libmpv's ytdl_hook would ask YouTube again and fail the same way.
+            if (failure.kind == FailureKind.rateLimited) return await _fallBackFromRateLimit(item, serial, failure, start: start, play: play);
             if (serial == _playSerial) _fail(item, failure);
             return false;
           }
@@ -989,19 +995,70 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  /// The Piped address for [item], or null to play it from YouTube.
-  Future<String?> _pipedAddress(VideoItem item) async {
+  /// The server network to try next for [item], or null for YouTube.
+  /// Normally the one 播放来源 names, and only without subtitles, which
+  /// these servers do not give libmpv. After YouTube answered 429 both are
+  /// tried (that one first), subtitles or not, since playing beats failing.
+  RelayKind? _nextRelay(VideoItem item) {
+    if (item.isLive) return null;
+    final preferred = settings.playbackSource.relay;
+    final candidates = _rateLimited != null
+        ? [if (preferred != null) preferred, ...RelayKind.values.where((k) => k != preferred)]
+        : [if (preferred != null && settings.subtitleMode == SubtitleMode.off) preferred];
+    return candidates.where((k) => !_relaysTried.contains(k)).firstOrNull;
+  }
+
+  /// Opens [item] from the next server [_nextRelay] names, moving on to the
+  /// one after when a server cannot resolve it; false when none plays it.
+  Future<bool> _openViaRelays(VideoItem item, int serial, {Duration? start, bool play = true}) async {
+    final player = this.player!;
+    while (true) {
+      final kind = _nextRelay(item);
+      if (kind == null) return false;
+      _relaysTried.add(kind);
+      final address = await _relayAddress(item, kind);
+      if (serial != _playSerial) return false;
+      if (address == null) continue;
+      _tracking = null;
+      _lastPosition = start ?? Duration.zero;
+      _openedResolved = null;
+      _openedVia = item.id;
+      await player.open(Media(address, start: start), play: play);
+      if (serial == _playSerial) _tracking = item;
+      _mpvLogLines = 0;
+      _lastDrops = 0;
+      _decoderPending = true;
+      _update(() {});
+      return true;
+    }
+  }
+
+  /// YouTube answered 429 for [item]: plays it from the Piped or Invidious
+  /// server not yet tried, and only when there is none shows the error.
+  Future<bool> _fallBackFromRateLimit(VideoItem item, int serial, PlaybackFailure failure, {Duration? start, bool play = true}) async {
+    _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
+    _rateLimited = failure;
+    if (await _openViaRelays(item, serial, start: start, play: play)) return true;
+    if (serial == _playSerial) _fail(item, PlaybackFailure(failure.kind, failure.detail, tried: [for (final k in _relaysTried) k == RelayKind.piped ? 'Piped' : 'Invidious']));
+    return false;
+  }
+
+  /// The play address for [item] from a [kind] server, or null to go on.
+  Future<String?> _relayAddress(VideoItem item, RelayKind kind) async {
     final watch = Stopwatch()..start();
+    final name = kind == RelayKind.piped ? 'Piped' : 'Invidious';
     try {
-      final server = settings.playbackSource == PlaybackSource.pipedCustom && settings.pipedServer.isNotEmpty ? settings.pipedServer : null;
-      final video = await _piped.fetch(item.id, server: server);
+      final source = settings.playbackSource;
+      final named = source.relay == kind && source.isCustom ? (kind == RelayKind.piped ? settings.pipedServer : settings.invidiousServer) : '';
+      final server = named.isEmpty ? null : named;
+      final video = await (kind == RelayKind.piped ? _piped.fetch(item.id, server: server) : _invidious.fetch(item.id, server: server));
       final address = video.edl(settings);
       if (address == null) return null;
       _update(() => availableHeights = video.heights);
-      logInfo('从 Piped ${video.server} 播放 ${item.id}，用时 ${watch.elapsedMilliseconds} ms');
+      logInfo('从 $name ${video.server} 播放 ${item.id}，用时 ${watch.elapsedMilliseconds} ms');
       return address;
     } catch (e) {
-      logInfo('$e，改为直接连接 YouTube');
+      logInfo('$e，不使用 $name');
       return null;
     }
   }
@@ -1122,15 +1179,27 @@ class AppController extends ChangeNotifier {
         if (playing == null || message.isEmpty) return;
         if (player.state.duration == Duration.zero) {
           final item = playing!;
-          final failure = PlaybackFailure.classify([message, ..._recentErrors]);
-          if (!failure.retryable) {
-            _fail(item, failure);
+          final viaRelay = _openedVia == item.id;
+          _openedVia = null;
+          // What a server's address says is not what YouTube said earlier.
+          final failure = PlaybackFailure.classify(viaRelay ? [message] : [message, ..._recentErrors]);
+          final position = _lastPosition > Duration.zero ? _lastPosition : null;
+          if (viaRelay) {
+            if (!failure.retryable && failure.kind != FailureKind.rateLimited) {
+              _fail(item, failure);
+              return;
+            }
+            final limited = _rateLimited;
+            logInfo('Piped 或 Invidious 的地址无法播放（$message），改${limited != null ? '用下一个服务器' : '为直接连接 YouTube'}');
+            unawaited(limited != null ? _fallBackFromRateLimit(item, _playSerial, limited, start: position) : _open(item, _playSerial, start: position, piped: false));
             return;
           }
-          if (_openedPiped == item.id) {
-            _openedPiped = null;
-            logInfo('Piped 的地址无法播放（$message），改为直接连接 YouTube');
-            unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, piped: false));
+          if (failure.kind == FailureKind.rateLimited) {
+            unawaited(_fallBackFromRateLimit(item, _playSerial, failure, start: position));
+            return;
+          }
+          if (!failure.retryable) {
+            _fail(item, failure);
             return;
           }
           if (_openedResolved == item.id) {

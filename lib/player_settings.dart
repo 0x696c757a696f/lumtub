@@ -276,6 +276,8 @@ class PlayerSettings {
   final PlaybackSource playbackSource;
   /// The Piped API server for [PlaybackSource.pipedCustom].
   final String pipedServer;
+  /// The Invidious instance for [PlaybackSource.invidiousCustom].
+  final String invidiousServer;
   /// `--vd-lavc-dr`: auto, yes or no.
   final String directRendering;
   /// `--autosync`; 0 turns it off.
@@ -333,6 +335,7 @@ class PlayerSettings {
     this.proxyAddress = '',
     this.playbackSource = PlaybackSource.pipedAuto,
     this.pipedServer = '',
+    this.invidiousServer = '',
     this.directRendering = 'auto',
     this.autosync = 0,
     this.audioFilter = '',
@@ -387,6 +390,7 @@ class PlayerSettings {
     String? proxyAddress,
     PlaybackSource? playbackSource,
     String? pipedServer,
+    String? invidiousServer,
     String? directRendering,
     int? autosync,
     String? audioFilter,
@@ -434,6 +438,7 @@ class PlayerSettings {
         proxyAddress: proxyAddress ?? this.proxyAddress,
         playbackSource: playbackSource ?? this.playbackSource,
         pipedServer: pipedServer ?? this.pipedServer,
+        invidiousServer: invidiousServer ?? this.invidiousServer,
         directRendering: directRendering ?? this.directRendering,
         autosync: autosync ?? this.autosync,
         audioFilter: audioFilter ?? this.audioFilter,
@@ -483,6 +488,7 @@ class PlayerSettings {
         'proxyAddress': proxyAddress,
         'playbackSource': playbackSource.name,
         'pipedServer': pipedServer,
+        'invidiousServer': invidiousServer,
         'directRendering': directRendering,
         'autosync': autosync,
         'audioFilter': audioFilter,
@@ -596,6 +602,7 @@ class PlayerSettings {
       proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
       playbackSource: _enumByName(PlaybackSource.values, raw['playbackSource'], PlaybackSource.pipedAuto),
       pipedServer: normalizePipedServer(raw['pipedServer']?.toString() ?? '') ?? '',
+      invidiousServer: normalizePipedServer(raw['invidiousServer']?.toString() ?? '') ?? '',
       directRendering: choice('directRendering', {'auto', 'yes', 'no'}, 'auto'),
       autosync: number('autosync', 0, 0, 100),
       audioFilter: filter.length > 300 || filter.contains(RegExp(r'[\r\n]')) ? '' : filter,

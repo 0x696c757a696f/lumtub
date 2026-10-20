@@ -22,7 +22,7 @@ import '../common.dart';
 import '../player_shortcuts.dart';
 import '../theme.dart';
 import 'account_settings.dart';
-import 'piped_servers_page.dart';
+import 'relay_servers_page.dart';
 import 'settings_subpages.dart';
 import '../../l10n/l10n.dart';
 
@@ -387,7 +387,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('亮度 对比度 饱和度 伽马 色调 音频延迟 audio-delay')),
         SettingEntry(tr('播放来源'), (context) => NormalItem(
               title: tr('播放来源'),
-              subtitle: tr('当前：{0}{1}。Piped 服务器替你从 YouTube 取视频，可避开限速，但它会知道你看了哪个视频；失败、直播或开着字幕时直接连接 YouTube', [settings.playbackSource.label, settings.playbackSource == PlaybackSource.pipedCustom ? ' ${settings.pipedServer}' : '']),
+              subtitle: tr('当前：{0}{1}。Piped、Invidious 服务器替你从 YouTube 取视频，可避开限速，但它们会知道你看了哪个视频；失败、直播或开着字幕时直接连接 YouTube；YouTube 返回 429 时会自动试用它们', [settings.playbackSource.label, switch (settings.playbackSource) { PlaybackSource.pipedCustom => ' ${settings.pipedServer}', PlaybackSource.invidiousCustom => ' ${settings.invidiousServer}', _ => '' }]),
               leading: _icon(Icons.dns_outlined),
               onTap: () => pickFromDialog<PlaybackSource>(
                 context,
@@ -395,17 +395,23 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 value: settings.playbackSource,
                 values: _enumValues(PlaybackSource.values, (s) => s.label),
                 onSelected: (source) async {
-                  if (source != PlaybackSource.pipedCustom) return save(settings.copyWith(playbackSource: source));
-                  if (context.mounted) await openPipedServers(context, controller);
+                  if (!source.isCustom) return save(settings.copyWith(playbackSource: source));
+                  if (context.mounted) await openRelayServers(context, controller, source.relay!);
                 },
               ),
-            ), subtitle: tr('Piped 服务器 限速 实例 instance')),
+            ), subtitle: tr('Piped Invidious 服务器 限速 实例 instance 429')),
         SettingEntry(tr('Piped 服务器'), (context) => NormalItem(
               title: tr('Piped 服务器'),
               subtitle: settings.playbackSource == PlaybackSource.pipedCustom ? tr('当前：{0}', [settings.pipedServer]) : tr('当前：自动选择最快的服务器。可测速、手动选择，列表每天自动更新'),
               leading: _icon(Icons.speed_rounded),
-              onTap: () => openPipedServers(context, controller),
+              onTap: () => openRelayServers(context, controller, RelayKind.piped),
             ), subtitle: tr('Piped 服务器 测速 列表 更新 instance')),
+        SettingEntry(tr('Invidious 实例'), (context) => NormalItem(
+              title: tr('Invidious 实例'),
+              subtitle: settings.playbackSource == PlaybackSource.invidiousCustom ? tr('当前：{0}', [settings.invidiousServer]) : tr('当前：自动选择最快的实例。可测速、手动选择，列表每天自动更新'),
+              leading: _icon(Icons.speed_rounded),
+              onTap: () => openRelayServers(context, controller, RelayKind.invidious),
+            ), subtitle: tr('Invidious 实例 测速 列表 更新 instance')),
         SettingEntry(tr('网络代理'), (context) {
           final proxy = controller.proxy;
           final now = proxy.url == null ? tr('当前直接连接') : tr('当前使用 {0}{1}', [proxy.url, proxy.isHttp ? '' : tr('（视频流不支持此类代理，视频流直接连接）')]);
@@ -979,22 +985,27 @@ Future<void> _pickAudioFilter(BuildContext context, AppController controller) as
   if (text != null) await controller.saveSettings(controller.settings.copyWith(audioFilter: text.trim().replaceAll(RegExp(r'[\r\n]'), '')));
 }
 
-Future<void> editPipedServer(BuildContext context, AppController controller) async {
+Future<void> editRelayServer(BuildContext context, AppController controller, RelayKind kind) async {
+  final piped = kind == RelayKind.piped;
   final text = await showDialog<String>(
     context: context,
     builder: (context) => TextEditDialog(
-      title: tr('Piped 服务器'),
-      initialText: controller.settings.pipedServer,
-      hintText: tr('例如 https://pipedapi.kavin.rocks'),
+      title: piped ? tr('Piped 服务器') : tr('Invidious 实例'),
+      initialText: piped ? controller.settings.pipedServer : controller.settings.invidiousServer,
+      hintText: piped ? tr('例如 https://pipedapi.kavin.rocks') : tr('例如 https://yewtu.be'),
       helper: (text) {
         final colors = context.colors;
         final server = normalizePipedServer(text);
-        return Text(server == null ? tr('请填写 Piped 的 API 地址（https://…）') : tr('将使用 {0}', [server]), style: TextStyle(fontSize: 12, color: server == null ? colors.error : colors.outline));
+        return Text(server == null ? (piped ? tr('请填写 Piped 的 API 地址（https://…）') : tr('请填写 Invidious 实例的地址（https://…）')) : tr('将使用 {0}', [server]), style: TextStyle(fontSize: 12, color: server == null ? colors.error : colors.outline));
       },
     ),
   );
   final server = text == null ? null : normalizePipedServer(text);
-  if (server != null) await controller.saveSettings(controller.settings.copyWith(playbackSource: PlaybackSource.pipedCustom, pipedServer: server));
+  if (server == null) return;
+  final settings = controller.settings;
+  await controller.saveSettings(piped
+      ? settings.copyWith(playbackSource: PlaybackSource.pipedCustom, pipedServer: server)
+      : settings.copyWith(playbackSource: PlaybackSource.invidiousCustom, invidiousServer: server));
 }
 
 Future<void> _editProxy(BuildContext context, AppController controller) async {

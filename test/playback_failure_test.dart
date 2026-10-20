@@ -24,4 +24,11 @@ void main() {
     expect(PlaybackFailure.classify(['HTTP Error 429']).message, startsWith('YouTube 暂时限制了请求频率'));
     expect(PlaybackFailure.classify(['odd']).message, 'odd');
   });
+
+  test('says which servers were tried after a 429', () {
+    final limited = PlaybackFailure.classify(['HTTP Error 429']);
+    final tried = PlaybackFailure(limited.kind, limited.detail, tried: const ['Piped', 'Invidious']);
+    expect(tried.message, contains('改用 Piped、Invidious 也没有成功'));
+    expect(limited.message, isNot(contains('改用')));
+  });
 }

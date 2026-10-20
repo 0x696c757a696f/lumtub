@@ -4,25 +4,28 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../../piped_streams.dart';
+import '../../relay_servers.dart';
 import '../theme.dart';
 import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
 
-/// 设置 › Piped 服务器: choose automatic selection or one server, measure
-/// them all, and download the public list again.
-Future<void> openPipedServers(BuildContext context, AppController controller) =>
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => _PipedServersPage(controller: controller)));
+/// 设置 › Piped 服务器 / Invidious 实例: choose automatic selection or one
+/// server, measure them all, and download the public list again.
+Future<void> openRelayServers(BuildContext context, AppController controller, RelayKind kind) =>
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => _RelayServersPage(controller: controller, kind: kind)));
 
-class _PipedServersPage extends StatefulWidget {
-  const _PipedServersPage({required this.controller});
+class _RelayServersPage extends StatefulWidget {
+  const _RelayServersPage({required this.controller, required this.kind});
   final AppController controller;
+  final RelayKind kind;
 
   @override
-  State<_PipedServersPage> createState() => _PipedServersPageState();
+  State<_RelayServersPage> createState() => _RelayServersPageState();
 }
 
-class _PipedServersPageState extends State<_PipedServersPage> {
-  PipedStreams get _piped => widget.controller.piped;
+class _RelayServersPageState extends State<_RelayServersPage> {
+  bool get _isPiped => widget.kind == RelayKind.piped;
+  RelayServers get _piped => _isPiped ? widget.controller.piped : widget.controller.invidious;
   String? _busy;
 
   @override
@@ -48,9 +51,12 @@ class _PipedServersPageState extends State<_PipedServersPage> {
 
   Future<void> _choose(String? server) {
     final settings = widget.controller.settings;
-    return widget.controller.saveSettings(server == null
-        ? settings.copyWith(playbackSource: PlaybackSource.pipedAuto)
-        : settings.copyWith(playbackSource: PlaybackSource.pipedCustom, pipedServer: server));
+    return widget.controller.saveSettings(switch ((_isPiped, server)) {
+      (true, null) => settings.copyWith(playbackSource: PlaybackSource.pipedAuto),
+      (true, final server?) => settings.copyWith(playbackSource: PlaybackSource.pipedCustom, pipedServer: server),
+      (false, null) => settings.copyWith(playbackSource: PlaybackSource.invidiousAuto),
+      (false, final server?) => settings.copyWith(playbackSource: PlaybackSource.invidiousCustom, invidiousServer: server),
+    });
   }
 
   /// Answering servers fastest first, then unmeasured, then unreachable.
@@ -64,7 +70,7 @@ class _PipedServersPageState extends State<_PipedServersPage> {
     final colors = context.colors;
     final updated = _piped.catalogUpdatedAt;
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Piped 服务器')), actions: [
+      appBar: AppBar(title: Text(_isPiped ? tr('Piped 服务器') : tr('Invidious 实例')), actions: [
         IconButton(tooltip: tr('测速'), icon: const Icon(Icons.speed_rounded), onPressed: _busy == null ? () => _run(tr('正在测速…'), _piped.remeasure) : null),
         IconButton(tooltip: tr('更新列表'), icon: const Icon(Icons.refresh_rounded), onPressed: _busy == null ? _update : null),
       ]),
@@ -72,8 +78,9 @@ class _PipedServersPageState extends State<_PipedServersPage> {
         listenable: widget.controller,
         builder: (context, _) {
           final settings = widget.controller.settings;
-          final custom = settings.playbackSource == PlaybackSource.pipedCustom ? settings.pipedServer : null;
-          final auto = settings.playbackSource == PlaybackSource.pipedAuto;
+          final source = settings.playbackSource;
+          final custom = source == (_isPiped ? PlaybackSource.pipedCustom : PlaybackSource.invidiousCustom) ? (_isPiped ? settings.pipedServer : settings.invidiousServer) : null;
+          final auto = source == (_isPiped ? PlaybackSource.pipedAuto : PlaybackSource.invidiousAuto);
           final servers = _sorted();
           Widget option({required bool selected, required String title, String? subtitle, Widget? trailing, required VoidCallback onTap}) => ListTile(
                 leading: Icon(selected ? Icons.radio_button_checked : Icons.radio_button_unchecked, color: selected ? colors.primary : colors.outline),
@@ -90,7 +97,7 @@ class _PipedServersPageState extends State<_PipedServersPage> {
             option(
               selected: false,
               title: tr('手动填写地址…'),
-              onTap: () => editPipedServer(context, widget.controller),
+              onTap: () => editRelayServer(context, widget.controller, widget.kind),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
@@ -111,7 +118,9 @@ class _PipedServersPageState extends State<_PipedServersPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Text(
-                tr('列表每天从 Piped 官方文档（public-instances）和 piped-instances.kavin.rocks 自动更新。测速只访问各服务器的 /healthcheck；能连接不代表能播放，YouTube 经常拦截公共服务器，这时会自动改为直接连接 YouTube。'),
+                _isPiped
+                    ? tr('列表每天从 Piped 官方文档（public-instances）和 piped-instances.kavin.rocks 自动更新。测速只访问各服务器的 /healthcheck；能连接不代表能播放，YouTube 经常拦截公共服务器，这时会自动改为直接连接 YouTube。')
+                    : tr('列表每天从 api.invidious.io 自动更新，只保留开启了 API 的 https 实例。测速会让实例解析一个公开的短视频，能解析才算可连接；YouTube 常拦截公共实例，失败时会自动改为直接连接 YouTube。'),
                 style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5),
               ),
             ),

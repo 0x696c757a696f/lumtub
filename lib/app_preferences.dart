@@ -131,9 +131,6 @@ class AppPreferences {
   /// Whether a channel called [name] was blocked by name.
   bool isBlockedName(String name) => blockedChannelNames.any((n) => n.trim().toLowerCase() == name.trim().toLowerCase());
 
-  /// Whether [text] names a group the user blocks.
-  bool blocksGroupIn(String text) => blockGroups && _matchers.groups.text(text);
-
   /// Whether a channel called [name], with [id] or [handle] if known, is
   /// one the user blocks by group or as state media.
   bool blocksChannel(String name, {String? id, String? handle}) =>
@@ -145,23 +142,30 @@ class AppPreferences {
 
   ({BlockMatcher groups, BlockMatcher media}) get _matchers => _matcherCache[this] ??= (
         groups: BlockMatcher([for (final g in blockedGroups) if (groupOn(g)) g], allowedEntries: allowedEntries.toSet()),
-        media: BlockMatcher([for (final g in stateMedia) if (groupOn(g, media: true)) g], allowedEntries: allowedEntries.toSet(), wordKind: BlockKind.channel),
+        media: BlockMatcher([for (final g in stateMedia) if (groupOn(g, media: true)) g], allowedEntries: allowedEntries.toSet()),
       );
   static final _matcherCache = Expando<({BlockMatcher groups, BlockMatcher media})>();
 
   /// Whether a channel called [name] is state media the user blocks.
   bool blocksMediaChannel(String name) => blockStateMedia && _matchers.media.channel(name);
 
-  /// Whether [item]'s title or channel names a group the user blocks.
-  /// Remembered per video for these preferences: lists are filtered again
-  /// on every rebuild, and the block lists run to hundreds of names.
+  /// Whether [item] comes from a channel the user blocks as a group or state
+  /// media. Its title and description are never looked at. Remembered per
+  /// channel for these preferences: lists are filtered again on every
+  /// rebuild, and the block lists run to hundreds of names.
   bool blocksGroup(VideoItem item) {
     final memo = _blockMemo[this] ??= <String, bool>{};
     if (memo.length > 20000) memo.clear();
-    return memo['${item.id}\n${item.title}'] ??= blocksGroupIn('${item.title}\n${item.channel}') || blocksChannel(item.channel, id: item.channelId);
+    return memo['${item.channelId}
+${item.channel}'] ??= blocksChannel(item.channel, id: item.channelId);
   }
 
   static final _blockMemo = Expando<Map<String, bool>>();
+
+  /// Whether a comment by [author] (a name or @handle) with channel [id] is
+  /// by a channel the user blocks. Its text is never looked at.
+  bool blocksCommenter(String author, String? id) =>
+      isBlocked(id) || isBlockedName(author) || blocksChannel(author, id: id, handle: author.startsWith('@') ? author : null);
 
   /// Whether [item] passes the privacy and content filters. [watched] says
   /// whether it was watched to the end.

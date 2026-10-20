@@ -350,7 +350,7 @@ class _SearchFieldState extends State<_SearchField> {
     return [
       for (final q in recent) _SearchOption(q, recent: true),
       for (final q in suggested)
-        if (!recent.contains(q) && !widget.app.preferences.blocksGroupIn(q)) _SearchOption(q),
+        if (!recent.contains(q)) _SearchOption(q),
     ].take(12);
   }
 

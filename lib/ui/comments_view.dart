@@ -117,7 +117,8 @@ class _CommentsSectionState extends State<CommentsSection> {
             ]),
             const SizedBox(height: 8),
             if (_canWrite) CommentComposer(hint: tr('添加评论…'), onSubmit: _post),
-            for (final comment in loader.comments) ..._thread(context, comment),
+            for (final comment in loader.comments)
+              if (!widget.controller.preferences.blocksCommenter(comment.author, comment.channelId)) ..._thread(context, comment),
             if (loader.loading)
               const Padding(padding: EdgeInsets.all(16), child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))))
             else if (error != null)

@@ -42,6 +42,8 @@ import '../explore_filters.dart';
 import '../explore_topics.dart';
 import '../faith_topics.dart';
 import '../stream_resolver.dart';
+import '../subtitle_translation.dart';
+import '../translation.dart';
 import 'posts_loader.dart';
 import '../video_repository.dart';
 import '../windows_env.dart';
@@ -224,6 +226,10 @@ class AppController extends ChangeNotifier {
   List<SkipSegment> _segments = const [];
   final _skipped = <SkipSegment>{};
   final _http = http.Client();
+  /// Behind 翻译 buttons; called only when one is tapped.
+  late Translator translator = GoogleTranslator(_http);
+  /// The subtitle shown above the main one (双语字幕), if any.
+  SubtitleOption? secondarySubtitle;
   bool _decoderPending = false;
   int _mpvLogLines = 0;
   /// yt-dlp and libmpv error lines for the video being opened, which name
@@ -960,6 +966,10 @@ class AppController extends ChangeNotifier {
         if (direct != null && agent != null) await platform.setProperty('user-agent', agent);
       }
       _tracking = null;
+      if (secondarySubtitle != null) {
+        secondarySubtitle = null;
+        if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
+      }
       _lastPosition = start ?? Duration.zero;
       _openedResolved = video == null ? null : item.id;
       if (video != null) _update(() => availableHeights = video!.heights);
@@ -1050,6 +1060,19 @@ class AppController extends ChangeNotifier {
       }
     } catch (e) {
       logError('无法加载字幕 ${option.language}', e);
+      _notice(tr('无法加载这条字幕'));
+    }
+  }
+
+  /// Shows [option] (null: none) above the main subtitle.
+  Future<void> setSecondarySubtitle(SubtitleOption? option) async {
+    final player = this.player;
+    if (player == null) return;
+    try {
+      if (!await SecondarySubtitle.set(player, option)) throw StateError('字幕未加载');
+      _update(() => secondarySubtitle = option);
+    } catch (e) {
+      logError('无法设置副字幕 ${option?.language}', e);
       _notice(tr('无法加载这条字幕'));
     }
   }

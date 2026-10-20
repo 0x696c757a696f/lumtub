@@ -25,6 +25,8 @@ class PlayerOptionApplicator {
       'video-sync': settings.videoSync.mpvValue,
       'sub-scale': settings.subtitleScale.toStringAsFixed(1),
       'sub-pos': settings.subtitlePosition.toString(),
+      // The secondary subtitle (libass) sits just above the main one.
+      'secondary-sub-pos': (settings.subtitlePosition - 8).clamp(0, 100).toString(),
       'sub-border-size': settings.subtitleBorder.toStringAsFixed(1),
       'sub-border-style': settings.subtitleBackground ? 'background-box' : 'outline-and-shadow',
       'sub-bold': settings.subtitleBold ? 'yes' : 'no',

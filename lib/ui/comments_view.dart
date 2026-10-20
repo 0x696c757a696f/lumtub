@@ -8,6 +8,7 @@ import 'common.dart';
 import 'linked_text.dart';
 import 'pages/channel_page.dart';
 import 'theme.dart';
+import 'translatable.dart';
 import '../l10n/l10n.dart';
 
 /// The comments under a video or a post: sort order, comments with their
@@ -168,7 +169,11 @@ class _CommentTile extends StatelessWidget {
             Text(comment.published, style: small),
           ]),
           const SizedBox(height: 4),
-          LinkedText(comment.text, style: const TextStyle(height: 1.45), onTime: onSeek ?? (_) {}, onLink: openExternal),
+          Translatable(
+            controller: controller,
+            text: comment.text,
+            builder: (context, text) => LinkedText(text, style: const TextStyle(height: 1.45), onTime: onSeek ?? (_) {}, onLink: openExternal),
+          ),
           const SizedBox(height: 4),
           Row(children: [
             Tooltip(

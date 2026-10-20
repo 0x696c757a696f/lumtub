@@ -8,6 +8,7 @@ import 'explore_filters.dart';
 import 'feed_quality.dart';
 import 'explore_topics.dart';
 import 'models.dart';
+import 'translation.dart';
 import 'l10n/l10n.dart';
 
 /// Pages the app can open on start, in navigation order.
@@ -61,6 +62,7 @@ class AppPreferences {
     this.showRelated = true,
     this.expandDescription = false,
     this.autoCheckUpdates = true,
+    this.translateLanguage = 'zh-CN',
   });
 
   final bool recordHistory;
@@ -133,6 +135,8 @@ class AppPreferences {
   final bool showRelated;
   final bool expandDescription;
   final bool autoCheckUpdates;
+  /// The language 翻译 and the translated subtitle turn text into (a TranslationLanguage code).
+  final String translateLanguage;
 
   bool isBlocked(String? channelId) => channelId != null && blockedChannels.any((c) => c.id == channelId);
 
@@ -235,6 +239,7 @@ class AppPreferences {
     bool? showRelated,
     bool? expandDescription,
     bool? autoCheckUpdates,
+    String? translateLanguage,
   }) =>
       AppPreferences(
         recordHistory: recordHistory ?? this.recordHistory,
@@ -281,6 +286,7 @@ class AppPreferences {
         showRelated: showRelated ?? this.showRelated,
         expandDescription: expandDescription ?? this.expandDescription,
         autoCheckUpdates: autoCheckUpdates ?? this.autoCheckUpdates,
+        translateLanguage: translateLanguage ?? this.translateLanguage,
       );
 
   Map<String, dynamic> toJson() => {
@@ -328,6 +334,7 @@ class AppPreferences {
         'showRelated': showRelated,
         'expandDescription': expandDescription,
         'autoCheckUpdates': autoCheckUpdates,
+        'translateLanguage': translateLanguage,
       };
 
   factory AppPreferences.fromJson(Object? raw) {
@@ -409,6 +416,7 @@ class AppPreferences {
       showRelated: flag('showRelated', d.showRelated),
       expandDescription: flag('expandDescription', d.expandDescription),
       autoCheckUpdates: flag('autoCheckUpdates', d.autoCheckUpdates),
+      translateLanguage: TranslationLanguage.byCode(raw['translateLanguage']).code,
     );
   }
 }

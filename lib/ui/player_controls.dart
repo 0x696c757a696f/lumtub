@@ -21,6 +21,8 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
 import '../models.dart' show Chapter, SubtitleKind, SubtitleOption;
+import '../subtitle_translation.dart';
+import '../translation.dart';
 import '../player_settings.dart';
 import '../widgets/pilinara_settings_tiles.dart';
 import '../widgets/video_progress_bar.dart';
@@ -489,6 +491,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           final offered = _controller.details?.subtitles ?? const <SubtitleOption>[];
           if (tracks.isEmpty && offered.isEmpty) return const SizedBox.shrink();
           const more = '\u0000more';
+          const translate = '\u0000translate';
+          const bilingual = '\u0000bilingual';
+          const secondary = '\u0000secondary';
+          final target = TranslationLanguage.byCode(_controller.preferences.translateLanguage);
+          final translation = translationOf(offered, target);
+          final secondaryOn = _controller.secondarySubtitle != null;
           return _PopupMenu<String>(
             tooltip: tr('字幕'),
             value: current.id,
@@ -496,10 +504,19 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               ('no', tr('关闭字幕')),
               for (final t in tracks) (t.id, _trackLabel(t.id, t.title, t.language)),
               if (offered.isNotEmpty) (more, tr('全部字幕（{0}）…', [offered.length])),
+              if (translation != null) (translate, tr('翻译字幕为{0}', [target.label])),
+              if (translation != null || secondaryOn) (bilingual, secondaryOn ? tr('关闭双语字幕') : tr('双语字幕（加{0}副字幕）', [target.label])),
+              if (offered.isNotEmpty) (secondary, tr('副字幕…')),
             ],
             onSelected: (id) {
               if (id == more) {
                 unawaited(_pickSubtitle(context, offered));
+              } else if (id == secondary) {
+                unawaited(_pickSubtitle(context, offered, secondary: true));
+              } else if (id == translate) {
+                unawaited(_controller.showSubtitle(translation!));
+              } else if (id == bilingual) {
+                unawaited(_controller.setSecondarySubtitle(secondaryOn ? null : translation));
               } else {
                 unawaited(_player.setSubtitleTrack(id == 'no' ? SubtitleTrack.no() : tracks.firstWhere((t) => t.id == id)));
               }
@@ -617,11 +634,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   /// Every subtitle the video offers, with a filter; the pick is added to
   /// the player.
-  Future<void> _pickSubtitle(BuildContext context, List<SubtitleOption> offered) async {
+  Future<void> _pickSubtitle(BuildContext context, List<SubtitleOption> offered, {bool secondary = false}) async {
     _menuOpened();
-    final picked = await showDialog<SubtitleOption>(context: context, builder: (context) => _SubtitlePicker(options: offered));
+    final picked = await showDialog<SubtitleOption>(context: context, builder: (context) => _SubtitlePicker(options: offered, title: secondary ? tr('副字幕（显示在主字幕上方）') : null));
     _menuClosed();
-    if (picked != null) await _controller.showSubtitle(picked);
+    if (picked != null) await (secondary ? _controller.setSecondarySubtitle(picked) : _controller.showSubtitle(picked));
   }
 
   static String _trackLabel(String id, String? title, String? language) {
@@ -861,8 +878,9 @@ class _FeedbackBubble extends StatelessWidget {
 
 /// Lists [options] by kind, with a filter by language name or code.
 class _SubtitlePicker extends StatefulWidget {
-  const _SubtitlePicker({required this.options});
+  const _SubtitlePicker({required this.options, this.title});
   final List<SubtitleOption> options;
+  final String? title;
 
   @override
   State<_SubtitlePicker> createState() => _SubtitlePickerState();
@@ -877,7 +895,7 @@ class _SubtitlePickerState extends State<_SubtitlePicker> {
     final shown = widget.options.where((o) => query.isEmpty || o.label.toLowerCase().contains(query) || o.language.toLowerCase().contains(query) || o.name.toLowerCase().contains(query)).toList();
     final headings = {SubtitleKind.uploaded: tr('上传的字幕'), SubtitleKind.automatic: tr('自动生成'), SubtitleKind.translated: tr('自动翻译')};
     return AlertDialog(
-      title: Text(tr('选择字幕')),
+      title: Text(widget.title ?? tr('选择字幕')),
       contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       content: SizedBox(
         width: 420,

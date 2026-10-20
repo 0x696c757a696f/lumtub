@@ -15,6 +15,7 @@ import '../../decoder_status.dart';
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
+import '../../translation.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../../windows_video_info.dart';
 import '../common.dart';
@@ -727,6 +728,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.expandDescription,
               onChanged: (v) => savePrefs(prefs.copyWith(expandDescription: v)),
             )),
+        SettingEntry(tr('翻译目标语言'), (context) => PopupItem<String>(
+              title: tr('翻译目标语言'),
+              leading: _icon(Icons.translate_rounded),
+              value: prefs.translateLanguage,
+              values: [for (final l in TranslationLanguage.all) (l.code, l.label)],
+              onSelected: (v) => savePrefs(prefs.copyWith(translateLanguage: v)),
+            ), subtitle: '翻译 字幕 双语 语言 translate Google'),
         SettingEntry(tr('自动检查组件更新'), (context) => SwitchItem(
               title: tr('自动检查组件更新'),
               subtitle: tr('每天检查一次 libmpv、yt-dlp 和 Deno'),

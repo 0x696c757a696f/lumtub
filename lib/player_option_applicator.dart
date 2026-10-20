@@ -33,6 +33,11 @@ class PlayerOptionApplicator {
       // subtitle; automatic captions must be requested by name.
       'ytdl-raw-options': ytdlRawOptions(settings),
       'cache': settings.cacheMode,
+      // media_kit turns on mpv's disk cache, which libmpv here cannot create
+      // ("Failed to create file cache" for every video); the cache is memory.
+      'cache-on-disk': 'no',
+      // media_kit's 5 s gives up on a slow proxy before it answers.
+      'network-timeout': '20',
       'cache-secs': settings.cacheSeconds.toString(),
       'demuxer-max-bytes': '${settings.cacheMemoryMb}MiB',
       'volume-max': settings.volumeMax.toString(),

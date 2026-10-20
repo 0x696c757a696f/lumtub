@@ -222,10 +222,17 @@ class YouTubeApiException implements Exception {
   final int status;
   final String? reason;
 
+  /// Where a Google Cloud project turns the YouTube Data API on.
+  static const enableApiUrl = 'https://console.cloud.google.com/apis/library/youtube.googleapis.com';
+
+  /// What [toString] says when the client's project has not turned the
+  /// API on, so the settings page can offer a way there.
+  static String get apiNotEnabled => tr('这个 Google 客户端所在的 Google Cloud 项目还没有启用 YouTube Data API v3。点“去启用”，确认顶部选中的是创建这个客户端的项目，点“启用”，等几分钟后再登录。');
+
   @override
   String toString() => switch (reason) {
         'quotaExceeded' || 'dailyLimitExceeded' => tr('YouTube API 今日配额已用完，请明天再同步'),
-        'accessNotConfigured' => tr('这个 Google 客户端还没有启用 YouTube Data API v3'),
+        'accessNotConfigured' => apiNotEnabled,
         'youtubeSignupRequired' => tr('这个 Google 账号还没有 YouTube 频道'),
         'insufficientPermissions' || 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' => tr('登录时没有授予修改权限，请重新登录 Google 账号'),
         'commentsDisabled' => tr('这个视频关闭了评论'),

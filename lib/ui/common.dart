@@ -46,9 +46,11 @@ class StatusView extends StatelessWidget {
 
 /// Inline error with an optional retry, for errors below existing content.
 class ErrorBanner extends StatelessWidget {
-  const ErrorBanner(this.message, {super.key, this.onRetry});
+  const ErrorBanner(this.message, {super.key, this.onRetry, this.retryLabel});
   final String message;
   final VoidCallback? onRetry;
+  /// What the button says, when it does something other than retry.
+  final String? retryLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +62,7 @@ class ErrorBanner extends StatelessWidget {
         Icon(Icons.error_outline_rounded, color: colors.onErrorContainer, size: 20),
         const SizedBox(width: 12),
         Expanded(child: Text(message, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onErrorContainer))),
-        if (onRetry != null) TextButton(onPressed: onRetry, child: Text(tr('重试'))),
+        if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('重试'))),
       ]),
     );
   }

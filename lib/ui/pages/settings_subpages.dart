@@ -213,7 +213,7 @@ List<Widget> _groupTiles(BuildContext context, AppController controller, List<Bl
             [
               tr('{0} 项', [entries.length]),
               if (off > 0) tr('{0} 项已取消', [off]),
-              if (!group.onByDefault) tr('关系待核实，默认不屏蔽'),
+              if (!group.onByDefault) tr('默认不屏蔽'),
               entries.take(4).map((e) => e.label).join('、'),
             ].join(' · '),
             maxLines: 1,

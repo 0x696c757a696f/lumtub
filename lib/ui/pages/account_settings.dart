@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/account_controller.dart';
 import '../../google_auth.dart';
+import '../../youtube_account.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../../l10n/l10n.dart';
@@ -63,7 +64,13 @@ class AccountSettings extends StatelessWidget {
             ),
           ),
       },
-      if (error != null) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: ErrorBanner(error)),
+      if (error != null)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: error == YouTubeApiException.apiNotEnabled
+              ? ErrorBanner(error, onRetry: () => openExternal(YouTubeApiException.enableApiUrl), retryLabel: tr('去启用'))
+              : ErrorBanner(error),
+        ),
       Padding(
         padding: const EdgeInsets.fromLTRB(18, 4, 18, 12),
         child: Text(
@@ -127,15 +134,22 @@ class _ClientSettingsState extends State<_ClientSettings> {
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          tr('1. 在 Google Cloud 控制台新建项目，并启用 YouTube Data API v3。\n2. 配置 OAuth 同意屏幕，用户类型选“外部”，把自己的 Google 账号加为测试用户。\n3. 在“凭据”里创建 OAuth 客户端 ID，应用类型选“桌面应用”，把客户端 ID 和密钥填到下面。'),
+          tr('1. 在 Google Cloud 控制台新建项目，然后在这个项目里启用 YouTube Data API v3（下面第一个按钮，打开后确认顶部选中的是这个项目，再点“启用”）。没有启用的话，登录后会提示“还没有启用 YouTube Data API v3”。\n2. 配置 OAuth 同意屏幕，用户类型选“外部”，把自己的 Google 账号加为测试用户。\n3. 在“凭据”里创建 OAuth 客户端 ID，应用类型选“桌面应用”，把客户端 ID 和密钥填到下面。'),
           style: widget.note,
         ),
         const SizedBox(height: 4),
-        TextButton.icon(
-          onPressed: () => openExternal('https://console.cloud.google.com/apis/credentials'),
-          icon: const Icon(Icons.open_in_new_rounded, size: 18),
-          label: Text(tr('打开 Google Cloud 控制台')),
-        ),
+        Wrap(spacing: 8, children: [
+          TextButton.icon(
+            onPressed: () => openExternal(YouTubeApiException.enableApiUrl),
+            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+            label: Text(tr('启用 YouTube Data API v3')),
+          ),
+          TextButton.icon(
+            onPressed: () => openExternal('https://console.cloud.google.com/apis/credentials'),
+            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+            label: Text(tr('创建 OAuth 客户端')),
+          ),
+        ]),
         const SizedBox(height: 8),
         // Each field gets its own storage key: a text field scrolls, and
         // without one its scroll offset would be read back from the

@@ -37,7 +37,9 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 # dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
-# The media overlay uses C++/WinRT (headers from the Windows SDK).
+# The media overlay uses C++/WinRT (headers from the Windows SDK), which needs
+# C++20 coroutines; without it the SDK falls back to the removed /await ones.
+target_compile_features(${BINARY_NAME} PRIVATE cxx_std_20)
 target_link_libraries(${BINARY_NAME} PRIVATE "windowsapp.lib" "shell32.lib")
 
 # Load media_kit's video plugin on first use, after LoadPreferredLibmpv() has

@@ -190,26 +190,38 @@ class LibraryController extends ChangeNotifier {
     loadingFeed = true;
     notifyListeners();
     final failures = <String>[];
-    final results = await Future.wait(channels.map((channel) async {
+    // A few requests at a time: hundreds of imported subscriptions would
+    // otherwise open hundreds of connections at once and, where the feed
+    // fails, start as many yt-dlp processes.
+    final results = await mapLimited(channels, feedConcurrency, (channel) async {
       try {
         return await _feed.latest(channel);
       } catch (_) {
-        try {
-          final repository = this.repository;
-          if (repository == null) throw StateError('yt-dlp is not ready');
-          final listing = repository.channelVideos(channel);
-          try {
-            return (await listing.next(10).toList()).whereType<VideoItem>().toList();
-          } finally {
-            listing.close();
-          }
-        } catch (_) {
-          failures.add(channel.name.isEmpty ? channel.id : channel.name);
-          return const <VideoItem>[];
-        }
+        return null;
       }
-    }));
-    feed = mergeFeeds(results);
+    });
+    final missing = [for (final (i, list) in results.indexed) if (list == null) i];
+    // yt-dlp is the slow, heavy fallback: two at a time, for a few channels.
+    final fallback = await mapLimited(missing.take(maxFeedFallbacks).toList(), 2, (i) async {
+      try {
+        final repository = this.repository;
+        if (repository == null) throw StateError('yt-dlp is not ready');
+        final listing = repository.channelVideos(channels[i]);
+        try {
+          return (await listing.next(10).toList()).whereType<VideoItem>().toList();
+        } finally {
+          listing.close();
+        }
+      } catch (_) {
+        return null;
+      }
+    });
+    for (final (n, i) in missing.indexed) {
+      final list = n < fallback.length ? fallback[n] : null;
+      results[i] = list;
+      if (list == null) failures.add(channels[i].name.isEmpty ? channels[i].id : channels[i].name);
+    }
+    feed = mergeFeeds([for (final list in results) if (list != null) list]).take(maxFeedItems).toList();
     feedFailures = failures;
     loadingFeed = false;
     _feedLoadedAt = DateTime.now();
@@ -221,6 +233,13 @@ class LibraryController extends ChangeNotifier {
 
   /// Newest first; videos without a date keep their channel's order after
   /// the dated ones.
+  /// Feed requests in flight at once.
+  static const feedConcurrency = 8;
+  /// Channels whose feed failed that yt-dlp is asked about, per refresh.
+  static const maxFeedFallbacks = 12;
+  /// The newest videos kept from all the feeds together.
+  static const maxFeedItems = 1500;
+
   static List<VideoItem> mergeFeeds(List<List<VideoItem>> perChannel) {
     final seen = <String>{};
     final all = [for (final list in perChannel) ...list].where((item) => seen.add(item.id)).toList();
@@ -233,4 +252,19 @@ class LibraryController extends ChangeNotifier {
     if (_saveTimer != null) unawaited(flush());
     super.dispose();
   }
+}
+
+/// [work] on each of [items], at most [limit] at a time, results in order.
+Future<List<R>> mapLimited<T, R>(List<T> items, int limit, Future<R> Function(T item) work) async {
+  final results = List<R?>.filled(items.length, null);
+  var next = 0;
+  Future<void> worker() async {
+    while (next < items.length) {
+      final i = next++;
+      results[i] = await work(items[i]);
+    }
+  }
+
+  await Future.wait([for (var i = 0; i < limit && i < items.length; i++) worker()]);
+  return results.cast<R>();
 }

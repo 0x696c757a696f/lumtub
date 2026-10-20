@@ -18,12 +18,14 @@ class YoutubeRelated {
     'Content-Type': 'application/json',
   };
 
-  final _cache = <String, Future<Object?>>{};
+  /// What was read from each response, not the response itself: a `/next`
+  /// response decodes to megabytes of maps, of which a few fields are used.
+  final _cache = <String, Future<({List<VideoItem> related, ({String title, String description, int? likes})? text})>>{};
 
   /// YouTube's `/next` response for [videoId], in the interface language;
   /// the related videos and the translated title both come from it.
-  Future<Object?> _next(String videoId) {
-    if (_cache.length > 100) _cache.clear();
+  Future<({List<VideoItem> related, ({String title, String description, int? likes})? text})> _next(String videoId) {
+    if (_cache.length > 40) _cache.remove(_cache.keys.first);
     return _cache[videoId] ??= () async {
       final response = await _client
           .post(
@@ -38,14 +40,15 @@ class YoutubeRelated {
           )
           .timeout(const Duration(seconds: 15));
       if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-      return jsonDecode(utf8.decode(response.bodyBytes));
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return (related: parse(data), text: localized(data));
     }()
       ..ignore();
   }
 
   Future<List<VideoItem>> forVideo(String videoId) async {
     try {
-      return parse(await _next(videoId)).where((item) => item.id != videoId).toList();
+      return (await _next(videoId)).related.where((item) => item.id != videoId).toList();
     } catch (_) {
       _cache.remove(videoId);
       rethrow;
@@ -56,7 +59,7 @@ class YoutubeRelated {
   /// interface language: the uploader's translation where there is one.
   Future<({String title, String description, int? likes})?> textFor(String videoId) async {
     try {
-      return localized(await _next(videoId));
+      return (await _next(videoId)).text;
     } catch (_) {
       _cache.remove(videoId);
       return null;

@@ -42,6 +42,9 @@ class PlayerOptionApplicator {
       'network-timeout': '20',
       'cache-secs': settings.cacheSeconds.toString(),
       'demuxer-max-bytes': '${settings.cacheMemoryMb}MiB',
+      // What was played is kept for seeking back; mpv keeps 50 MiB, which
+      // goes on top of the forward cache above.
+      'demuxer-max-back-bytes': '${(settings.cacheMemoryMb ~/ 4).clamp(16, 50)}MiB',
       'volume-max': settings.volumeMax.toString(),
       'audio-device': settings.audioDevice,
       'loop-file': settings.playOrder == PlayOrder.singleCycle ? 'inf' : 'no',

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/library_controller.dart';
 import 'package:ytplus/channel_feed.dart';
@@ -62,5 +63,17 @@ void main() {
     expect(item.channelRef, channel);
     expect(VideoItem.fromJson({'id': 'dQw4w9WgXcQ', 'title': 'x', 'channel_id': 'bad'}).channelRef, isNull);
     expect(const VideoItem(id: 'dQw4w9WgXcQ', title: 'x', channel: '', url: '').withChannel(channel).channel, 'Rick Astley');
+  });
+
+  test('feeds are fetched a few at a time, results in order', () async {
+    var running = 0, most = 0;
+    final out = await mapLimited(List.generate(40, (i) => i), 8, (i) async {
+      most = max(most, ++running);
+      await Future<void>.delayed(Duration(milliseconds: i % 3));
+      running--;
+      return i * 2;
+    });
+    expect(out, List.generate(40, (i) => i * 2));
+    expect(most, 8);
   });
 }

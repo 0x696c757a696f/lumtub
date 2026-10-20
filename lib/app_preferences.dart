@@ -153,7 +153,15 @@ class AppPreferences {
   bool blocksMediaChannel(String name) => blockStateMedia && _matchers.media.channel(name);
 
   /// Whether [item]'s title or channel names a group the user blocks.
-  bool blocksGroup(VideoItem item) => blocksGroupIn('${item.title}\n${item.channel}') || blocksChannel(item.channel, id: item.channelId);
+  /// Remembered per video for these preferences: lists are filtered again
+  /// on every rebuild, and the block lists run to hundreds of names.
+  bool blocksGroup(VideoItem item) {
+    final memo = _blockMemo[this] ??= <String, bool>{};
+    if (memo.length > 20000) memo.clear();
+    return memo['${item.id}\n${item.title}'] ??= blocksGroupIn('${item.title}\n${item.channel}') || blocksChannel(item.channel, id: item.channelId);
+  }
+
+  static final _blockMemo = Expando<Map<String, bool>>();
 
   /// Whether [item] passes the privacy and content filters. [watched] says
   /// whether it was watched to the end.

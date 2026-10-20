@@ -185,6 +185,15 @@ class _AppShellState extends State<AppShell> {
   }
 }
 
+/// Opens 设置. While a video is open it goes over the watch page, so the
+/// video keeps playing and 返回 comes back to it.
+void openSettings(BuildContext context, AppController controller) {
+  if (controller.playing == null) return controller.navigate(PageMode.settings);
+  unawaited(Navigator.of(context).push(MaterialPageRoute<void>(
+    builder: (context) => Scaffold(appBar: AppBar(title: const Text('设置')), body: SettingsPage(controller: controller)),
+  )));
+}
+
 class _TopBar extends StatelessWidget {
   const _TopBar({required this.wide, required this.controller, required this.searchText, required this.searchFocus, required this.onSubmit});
   final bool wide;
@@ -235,11 +244,11 @@ class _TopBar extends StatelessWidget {
           IconButton(
             tooltip: '设置',
             isSelected: controller.mode == PageMode.settings && controller.playing == null,
-            onPressed: () => controller.navigate(PageMode.settings),
+            onPressed: () => openSettings(context, controller),
             icon: const Icon(Icons.settings_outlined),
             selectedIcon: const Icon(Icons.settings_rounded),
           ),
-          AccountButton(account: controller.account, onOpenSettings: () => controller.navigate(PageMode.settings)),
+          AccountButton(account: controller.account, onOpenSettings: () => openSettings(context, controller)),
         ]),
       ),
     );

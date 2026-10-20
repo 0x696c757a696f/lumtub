@@ -118,6 +118,7 @@ class _ClientSettingsState extends State<_ClientSettings> {
     final custom = account.customClient != null;
     final candidate = OAuthClientConfig(_id.text.trim(), _secret.text.trim());
     return ExpansionTile(
+      key: const PageStorageKey('expand:client'),
       leading: const Icon(Icons.key_outlined),
       title: const Text('自定义 Google 客户端'),
       subtitle: Text(custom ? '正在使用你自己的客户端' : account.client == null ? '未设置' : '正在使用内置客户端'),

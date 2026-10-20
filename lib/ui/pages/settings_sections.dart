@@ -759,6 +759,9 @@ class _DecoderStatus extends StatelessWidget {
     final info = controller.windowsVideoInfo;
     final colors = context.colors;
     return ExpansionTile(
+      // Its own key: an unkeyed tile shares the page's PageStorage slot with
+      // the list's scroll offset, and reads that double as its open state.
+      key: const PageStorageKey('expand:decoder'),
       leading: const Icon(Icons.speed_rounded),
       title: Text('解码状态', style: Theme.of(context).textTheme.titleMedium),
       subtitle: Text('当前：${controller.currentCodec} · ${controller.currentHwdec}', style: _subtitle(context)),
@@ -817,6 +820,7 @@ class _AdvancedOptions extends StatelessWidget {
           trailing: Text(value, style: TextStyle(color: context.colors.primary, fontFamily: 'monospace')),
         );
     return ExpansionTile(
+      key: const PageStorageKey('expand:mpv'),
       leading: const Icon(Icons.tune_rounded),
       title: Text('高级 libmpv 参数', style: Theme.of(context).textTheme.titleMedium),
       subtitle: Text('查看实际传给 libmpv 的参数，或恢复默认', style: _subtitle(context)),

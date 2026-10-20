@@ -1,11 +1,26 @@
 import 'dart:ffi';
+import 'dart:math';
 import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 
-/// The main window's always-on-top state and the small picture-in-picture
-/// window, through user32 directly: Flutter's Windows embedder has no API
-/// for either, and a plugin for two calls is more than they need.
+/// The picture-in-picture window's ratio for a video [aspect] (width over
+/// height): 16:9 when unknown, and never extreme.
+double pipAspectOf(double aspect) => aspect.isFinite && aspect > 0 ? aspect.clamp(0.4, 3.0) : 16 / 9;
+
+/// The picture-in-picture picture's size in logical pixels: [shortSide] on
+/// its short side, the other side from [aspect] (as PiliNara's 280).
+({double width, double height}) pipSizeFor(double aspect, {double shortSide = 280}) {
+  final a = pipAspectOf(aspect);
+  return a >= 1 ? (width: shortSide * a, height: shortSide) : (width: shortSide, height: shortSide / a);
+}
+
+/// The main window's always-on-top state and the picture-in-picture window,
+/// through user32 directly: Flutter's Windows embedder has no API for
+/// either, and a plugin for a few calls is more than they need.
+/// Picture in picture follows PiliNara's desktop one (GPLv3,
+/// lib/plugin/pl_player/controller.dart): 280 on the short side, always on
+/// top, the ratio kept, the last place remembered.
 class AppWindow {
   AppWindow._();
 
@@ -23,11 +38,20 @@ class AppWindow {
   static final _getMonitorInfo = _user32?.lookupFunction<Int32 Function(IntPtr, Pointer<_MonitorInfo>), int Function(int, Pointer<_MonitorInfo>)>('GetMonitorInfoW');
   static final _getDpiForWindow = _user32?.lookupFunction<Uint32 Function(IntPtr), int Function(int)>('GetDpiForWindow');
   static final _setProp = _user32?.lookupFunction<Int32 Function(IntPtr, Pointer<Utf16>, IntPtr), int Function(int, Pointer<Utf16>, int)>('SetPropW');
+  static final _getClientRect = _user32?.lookupFunction<Int32 Function(IntPtr, Pointer<_Rect>), int Function(int, Pointer<_Rect>)>('GetClientRect');
+  static final _getWindowLongPtr = _user32?.lookupFunction<IntPtr Function(IntPtr, Int32), int Function(int, int)>('GetWindowLongPtrW');
+  static final _setWindowLongPtr = _user32?.lookupFunction<IntPtr Function(IntPtr, Int32, IntPtr), int Function(int, int, int)>('SetWindowLongPtrW');
+  static final _sendMessage = _user32?.lookupFunction<IntPtr Function(IntPtr, Uint32, IntPtr, IntPtr), int Function(int, int, int, int)>('SendMessageW');
+  static final _releaseCapture = _user32?.lookupFunction<Int32 Function(), int Function()>('ReleaseCapture');
   static final _removeProp = _user32?.lookupFunction<IntPtr Function(IntPtr, Pointer<Utf16>), int Function(int, Pointer<Utf16>)>('RemovePropW');
 
   static const _topmost = -1, _notTopmost = -2;
   static const _noSize = 0x1, _noMove = 0x2, _noActivate = 0x10;
+  static const _noZOrder = 0x4, _frameChanged = 0x20;
   static const _restore = 9, _maximize = 3;
+  static const _gwlStyle = -16;
+  static const _wsCaption = 0xC00000, _wsMaximizeBox = 0x10000, _wsMinimizeBox = 0x20000, _wsSysMenu = 0x80000;
+  static const _wmNcLButtonDown = 0xA1, _htCaption = 2, _htBottomRight = 17;
 
   static int? _handle;
 
@@ -58,54 +82,133 @@ class AppWindow {
     return _setWindowPos!(window, on ? _topmost : _notTopmost, 0, 0, 0, 0, _noMove | _noSize | _noActivate) != 0;
   }
 
-  static ({int left, int top, int width, int height, bool maximized})? _before;
+  static ({int left, int top, int width, int height, bool maximized, int style})? _before;
 
-  /// Shrinks the window to a 16:9 picture of [width] logical pixels in the
-  /// bottom-right corner of its monitor's work area, above other windows.
-  static bool enterPip({int width = 480}) {
+  /// Where the picture-in-picture window was last left: its corner and
+  /// width in logical pixels, so it comes back there next time.
+  static ({int left, int top, double width})? _lastPip;
+
+  /// 画中画, as PiliNara's desktop one: no title bar or caption, above the
+  /// other windows, a picture of the video's [aspect] ratio whose short side
+  /// is [shortSide] logical pixels. The runner keeps the ratio while it is
+  /// resized (window_placement.cpp, flutter_window.cpp). Returns false when
+  /// the window is not there.
+  static bool enterPip({required double aspect, double shortSide = 280}) {
     final window = handle;
-    if (window == null) return false;
+    if (window == null || _before != null) return false;
     final rect = calloc<_Rect>();
+    final client = calloc<_Rect>();
     final monitor = calloc<_MonitorInfo>()..ref.size = sizeOf<_MonitorInfo>();
     final name = _pipProperty.toNativeUtf16();
     try {
       final maximized = _isZoomed!(window) != 0;
       if (maximized) _showWindow!(window, _restore);
       if (_getWindowRect!(window, rect) == 0) return false;
-      _before ??= (left: rect.ref.left, top: rect.ref.top, width: rect.ref.right - rect.ref.left, height: rect.ref.bottom - rect.ref.top, maximized: maximized);
+      final style = _getWindowLongPtr!(window, _gwlStyle);
+      _before = (left: rect.ref.left, top: rect.ref.top, width: rect.ref.right - rect.ref.left, height: rect.ref.bottom - rect.ref.top, maximized: maximized, style: style);
       if (_getMonitorInfo!(_monitorFromWindow!(window, 2), monitor) == 0) return false;
-      final scale = (_getDpiForWindow!(window) == 0 ? 96 : _getDpiForWindow!(window)) / 96;
-      final w = (width * scale).round();
-      // The caption bar stays, so the window can still be moved and sized.
-      final h = (width * 9 / 16 * scale + 32 * scale).round();
-      final margin = (16 * scale).round();
+      final scale = _scaleOf(window);
+      // The ratio and this marker are read by the runner; placement is not
+      // saved while it is on, so the next launch opens at the usual size.
+      _setProp!(window, name, (pipAspectOf(aspect) * 1000).round());
+      _setWindowLongPtr!(window, _gwlStyle, style & ~(_wsCaption | _wsMaximizeBox | _wsMinimizeBox | _wsSysMenu));
+      _setWindowPos!(window, _topmost, 0, 0, 0, 0, _noMove | _noSize | _noActivate | _frameChanged);
+      final (:width, :height) = pipSizeFor(aspect, shortSide: shortSide);
+      final (:extraWidth, :extraHeight) = _frameOf(window, rect, client);
+      final w = (width * scale).round() + extraWidth;
+      final h = (height * scale).round() + extraHeight;
       final area = monitor.ref.work;
-      // Window placement is not saved while this marker is on, so the next
-      // launch opens at the usual size.
-      _setProp!(window, name, 1);
-      return _setWindowPos!(window, _topmost, area.right - w - margin, area.bottom - h - margin, w, h, 0) != 0;
+      final margin = (16 * scale).round();
+      final last = _lastPip;
+      var left = area.right - w - margin, top = area.bottom - h - margin;
+      if (last != null) {
+        // The same corner as last time, kept on the screen.
+        left = last.left.clamp(area.left, max(area.left, area.right - w));
+        top = last.top.clamp(area.top, max(area.top, area.bottom - h));
+      }
+      return _setWindowPos!(window, _topmost, left, top, w, h, _frameChanged) != 0;
     } finally {
       calloc.free(rect);
+      calloc.free(client);
       calloc.free(monitor);
       calloc.free(name);
     }
   }
 
-  /// Puts the window back where and how it was before [enterPip].
+  /// A different video: the same width, the height of its new [aspect].
+  static bool setPipAspect(double aspect) {
+    final window = handle;
+    if (window == null || _before == null) return false;
+    final rect = calloc<_Rect>();
+    final client = calloc<_Rect>();
+    final name = _pipProperty.toNativeUtf16();
+    try {
+      _setProp!(window, name, (pipAspectOf(aspect) * 1000).round());
+      final (:extraWidth, :extraHeight) = _frameOf(window, rect, client);
+      final width = client.ref.right - client.ref.left;
+      return _setWindowPos!(window, 0, 0, 0, width + extraWidth, (width / pipAspectOf(aspect)).round() + extraHeight, _noMove | _noActivate | _noZOrder) != 0;
+    } finally {
+      calloc.free(rect);
+      calloc.free(client);
+      calloc.free(name);
+    }
+  }
+
+  /// Frame size around the client area, of the window now.
+  static ({int extraWidth, int extraHeight}) _frameOf(int window, Pointer<_Rect> rect, Pointer<_Rect> client) {
+    _getWindowRect!(window, rect);
+    _getClientRect!(window, client);
+    return (
+      extraWidth: rect.ref.right - rect.ref.left - (client.ref.right - client.ref.left),
+      extraHeight: rect.ref.bottom - rect.ref.top - (client.ref.bottom - client.ref.top),
+    );
+  }
+
+  static double _scaleOf(int window) {
+    final dpi = _getDpiForWindow!(window);
+    return (dpi == 0 ? 96 : dpi) / 96;
+  }
+
+  /// Puts the window back where and how it was before [enterPip]: its
+  /// caption, size, position and maximized state.
   static bool exitPip({bool keepOnTop = false}) {
     final window = handle;
     final before = _before;
     if (window == null || before == null) return false;
     _before = null;
+    final rect = calloc<_Rect>();
+    final client = calloc<_Rect>();
     final name = _pipProperty.toNativeUtf16();
     try {
+      if (_getWindowRect!(window, rect) != 0 && _getClientRect!(window, client) != 0) {
+        _lastPip = (left: rect.ref.left, top: rect.ref.top, width: (client.ref.right - client.ref.left) / _scaleOf(window));
+      }
       _removeProp!(window, name);
+      _setWindowLongPtr!(window, _gwlStyle, before.style);
+      final ok = _setWindowPos!(window, keepOnTop ? _topmost : _notTopmost, before.left, before.top, before.width, before.height, _frameChanged) != 0;
+      if (before.maximized) _showWindow!(window, _maximize);
+      return ok;
     } finally {
+      calloc.free(rect);
+      calloc.free(client);
       calloc.free(name);
     }
-    final ok = _setWindowPos!(window, keepOnTop ? _topmost : _notTopmost, before.left, before.top, before.width, before.height, 0) != 0;
-    if (before.maximized) _showWindow!(window, _maximize);
-    return ok;
+  }
+
+  /// Lets the user drag the window by pressing on the picture, as on a
+  /// title bar. Call it from a pointer-down; it returns when the button is
+  /// released.
+  static void startDrag() => _startNonClient(_htCaption);
+
+  /// The same for resizing from the bottom-right corner; the runner keeps
+  /// the video's ratio.
+  static void startResize() => _startNonClient(_htBottomRight);
+
+  static void _startNonClient(int hit) {
+    final window = handle;
+    if (window == null) return;
+    _releaseCapture!();
+    _sendMessage!(window, _wmNcLButtonDown, hit, 0);
   }
 
   /// Read by the runner's window_placement.cpp; keep the two in step.

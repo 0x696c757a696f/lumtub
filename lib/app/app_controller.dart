@@ -122,8 +122,8 @@ class AppController extends ChangeNotifier {
 
   /// 置顶: the window stays above the others.
   bool pinned = false;
-  /// 画中画: the window is a small picture in a corner, above the others,
-  /// showing only the video.
+  /// 画中画: a small borderless window above the others, showing only the
+  /// video in its own ratio (ui/pip_view.dart).
   bool pip = false;
   /// 听视频: mpv decodes no picture, which saves power and bandwidth.
   bool audioOnly = false;
@@ -135,9 +135,22 @@ class AppController extends ChangeNotifier {
 
   void setPip(bool on) {
     if (on == pip) return;
-    final ok = on ? AppWindow.enterPip() : AppWindow.exitPip(keepOnTop: pinned);
+    final ok = on ? AppWindow.enterPip(aspect: videoAspect) : AppWindow.exitPip(keepOnTop: pinned);
     if (on && !ok) return _notice(tr('无法进入画中画'));
     _update(() => pip = on);
+  }
+
+  /// The playing video's width over height, 16:9 until it is known.
+  double get videoAspect {
+    final state = player?.state;
+    final width = state?.width ?? 0, height = state?.height ?? 0;
+    return width > 0 && height > 0 ? width / height : 16 / 9;
+  }
+
+  /// The next video may have another ratio: the picture-in-picture window
+  /// follows it.
+  void updatePipAspect() {
+    if (pip) AppWindow.setPipAspect(videoAspect);
   }
 
   Future<void> toggleAudioOnly() async {

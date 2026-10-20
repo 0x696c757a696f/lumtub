@@ -15,6 +15,7 @@ import 'pages/settings_page.dart';
 import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
 import 'pages/youtube_playlist_page.dart';
+import 'pip_view.dart';
 import 'theme.dart';
 import 'video_card.dart';
 import '../l10n/l10n.dart';
@@ -108,7 +109,7 @@ class _AppShellState extends State<AppShell> {
             builder: (context, _) => LayoutBuilder(builder: (context, constraints) {
               // Picture in picture shows the video alone.
               if (_controller.pip && _controller.playing != null && _controller.videoController != null) {
-                return Scaffold(backgroundColor: Colors.black, body: WatchPage(controller: _controller));
+                return PipView(controller: _controller);
               }
               final wide = constraints.maxWidth >= 720;
               final rail = switch (_controller.appearance.navigation) {

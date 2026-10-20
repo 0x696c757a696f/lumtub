@@ -1,9 +1,21 @@
 #include "flutter_window.h"
 
+#include <cmath>
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
 #include "window_placement.h"
+
+namespace {
+
+// The video's width over height while the picture-in-picture window
+// (lib/app_window.dart) is shown, otherwise 0. The window property holds the
+// ratio times 1000.
+double PictureInPictureAspect(HWND window) {
+  return reinterpret_cast<uintptr_t>(::GetProp(window, L"YTPlusPictureInPicture")) / 1000.0;
+}
+
+}  // namespace
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -63,6 +75,44 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
 
   switch (message) {
+    // Picture in picture may be small, and keeps the video's ratio.
+    case WM_GETMINMAXINFO: {
+      if (PictureInPictureAspect(hwnd) <= 0) break;
+      auto info = reinterpret_cast<MINMAXINFO*>(lparam);
+      const double scale = ::GetDpiForWindow(hwnd) / 96.0;
+      info->ptMinTrackSize.x = static_cast<LONG>(160 * scale);
+      info->ptMinTrackSize.y = static_cast<LONG>(90 * scale);
+      return 0;
+    }
+    case WM_SIZING: {
+      const double aspect = PictureInPictureAspect(hwnd);
+      if (aspect <= 0) break;
+      RECT window{}, client{};
+      ::GetWindowRect(hwnd, &window);
+      ::GetClientRect(hwnd, &client);
+      const LONG extra_w = (window.right - window.left) - client.right;
+      const LONG extra_h = (window.bottom - window.top) - client.bottom;
+      auto rect = reinterpret_cast<RECT*>(lparam);
+      const LONG width = rect->right - rect->left - extra_w;
+      const LONG height = rect->bottom - rect->top - extra_h;
+      switch (wparam) {
+        case WMSZ_LEFT:
+        case WMSZ_RIGHT:
+          rect->bottom = rect->top + extra_h + std::lround(width / aspect);
+          break;
+        case WMSZ_TOP:
+        case WMSZ_BOTTOM:
+          rect->right = rect->left + extra_w + std::lround(height * aspect);
+          break;
+        case WMSZ_TOPLEFT:
+        case WMSZ_TOPRIGHT:
+          rect->top = rect->bottom - extra_h - std::lround(width / aspect);
+          break;
+        default:
+          rect->bottom = rect->top + extra_h + std::lround(width / aspect);
+      }
+      return TRUE;
+    }
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;

@@ -309,13 +309,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       );
 
   /// Laid out as PiliNara's: 返回 and 主页 on the left, the title, then a
-  /// row of switches. The small picture-in-picture window keeps only the
-  /// title and the way back.
+  /// row of switches.
   Widget _topBar(BuildContext context, bool fullscreen) {
     final item = _controller.playing;
     final details = _controller.details;
     final title = details?.title.isNotEmpty == true ? details!.title : item?.title ?? '';
-    final pip = _controller.pip;
     Future<void> leaveFullscreen() async {
       if (fullscreen) await widget.state?.exitFullscreen();
     }
@@ -323,65 +321,59 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     return Padding(
       padding: EdgeInsets.fromLTRB(fullscreen ? 8 : 6, fullscreen ? 10 : 4, 8, 16),
       child: Row(children: [
-        if (!pip) ...[
-          _IconButton(
-            tooltip: fullscreen ? tr('退出全屏') : tr('返回'),
-            icon: Icons.arrow_back_rounded,
-            size: 20,
-            onTap: () => fullscreen ? unawaited(leaveFullscreen()) : _controller.goBack(),
-          ),
-          _IconButton(
-            tooltip: tr('主页'),
-            icon: Icons.home_rounded,
-            size: 20,
-            onTap: () async {
-              await leaveFullscreen();
-              _controller.navigate(PageMode.home);
-            },
-          ),
-          const SizedBox(width: 6),
-        ],
+        _IconButton(
+          tooltip: fullscreen ? tr('退出全屏') : tr('返回'),
+          icon: Icons.arrow_back_rounded,
+          size: 20,
+          onTap: () => fullscreen ? unawaited(leaveFullscreen()) : _controller.goBack(),
+        ),
+        _IconButton(
+          tooltip: tr('主页'),
+          icon: Icons.home_rounded,
+          size: 20,
+          onTap: () async {
+            await leaveFullscreen();
+            _controller.navigate(PageMode.home);
+          },
+        ),
+        const SizedBox(width: 6),
         Expanded(
           child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: fullscreen ? 16 : 14)),
         ),
         if (_controller.sleepAt != null || _controller.sleepAfterCurrent)
           Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Tooltip(message: tr('定时关闭已开启'), child: Icon(Icons.bedtime_outlined, color: Colors.white, size: 18))),
-        if (pip)
-          _IconButton(tooltip: tr('退出画中画'), icon: Icons.open_in_full_rounded, size: 19, onTap: () => _controller.setPip(false))
-        else ...[
-          _IconButton(
-            tooltip: _controller.pinned ? tr('取消置顶') : tr('窗口置顶'),
-            icon: _controller.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
-            size: 19,
-            active: _controller.pinned,
-            onTap: _controller.togglePinned,
-          ),
-          _IconButton(
-            tooltip: _controller.audioOnly ? tr('恢复画面') : tr('听视频（只放声音）'),
-            icon: Icons.headphones_rounded,
-            size: 19,
-            active: _controller.audioOnly,
-            onTap: () => unawaited(_controller.toggleAudioOnly()),
-          ),
-          _IconButton(
-            tooltip: _controller.settings.sponsorBlock ? tr('SponsorBlock 已开启，点击关闭') : tr('SponsorBlock 已关闭，点击开启'),
-            icon: _controller.settings.sponsorBlock ? Icons.shield_rounded : Icons.shield_outlined,
-            size: 19,
-            active: _controller.settings.sponsorBlock,
-            onTap: () => unawaited(_controller.toggleSponsorBlock()),
-          ),
-          _IconButton(
-            tooltip: tr('画中画'),
-            icon: Icons.picture_in_picture_alt_rounded,
-            size: 19,
-            onTap: () async {
-              await leaveFullscreen();
-              _controller.setPip(true);
-            },
-          ),
-          _IconButton(tooltip: tr('播放信息 (I)'), icon: Icons.info_outline_rounded, size: 19, active: _controller.showStats, onTap: _controller.toggleStats),
-          _IconButton(tooltip: tr('更多设置'), icon: Icons.more_vert_rounded, size: 20, onTap: () => _showMore(context)),
-        ],
+        _IconButton(
+          tooltip: _controller.pinned ? tr('取消置顶') : tr('窗口置顶'),
+          icon: _controller.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+          size: 19,
+          active: _controller.pinned,
+          onTap: _controller.togglePinned,
+        ),
+        _IconButton(
+          tooltip: _controller.audioOnly ? tr('恢复画面') : tr('听视频（只放声音）'),
+          icon: Icons.headphones_rounded,
+          size: 19,
+          active: _controller.audioOnly,
+          onTap: () => unawaited(_controller.toggleAudioOnly()),
+        ),
+        _IconButton(
+          tooltip: _controller.settings.sponsorBlock ? tr('SponsorBlock 已开启，点击关闭') : tr('SponsorBlock 已关闭，点击开启'),
+          icon: _controller.settings.sponsorBlock ? Icons.shield_rounded : Icons.shield_outlined,
+          size: 19,
+          active: _controller.settings.sponsorBlock,
+          onTap: () => unawaited(_controller.toggleSponsorBlock()),
+        ),
+        _IconButton(
+          tooltip: tr('画中画'),
+          icon: Icons.picture_in_picture_alt_rounded,
+          size: 19,
+          onTap: () async {
+            await leaveFullscreen();
+            _controller.setPip(true);
+          },
+        ),
+        _IconButton(tooltip: tr('播放信息 (I)'), icon: Icons.info_outline_rounded, size: 19, active: _controller.showStats, onTap: _controller.toggleStats),
+        _IconButton(tooltip: tr('更多设置'), icon: Icons.more_vert_rounded, size: 20, onTap: () => _showMore(context)),
       ]),
     );
   }
@@ -425,64 +417,61 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
             ),
           ),
-          if (_chapters.isNotEmpty && !_controller.pip) Flexible(child: _chapterMenu()),
+          if (_chapters.isNotEmpty) Flexible(child: _chapterMenu()),
           const Spacer(),
           _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
-          // The picture-in-picture window is too narrow for the rest.
-          if (!_controller.pip) ...[
-            ValueListenableBuilder(
-              valueListenable: videoFit,
-              builder: (context, fit, _) => _TextMenu<VideoFit>(
-                tooltip: tr('画面比例'),
-                label: fit.label,
-                value: fit,
-                values: [for (final f in VideoFit.values) (f, f.label)],
-                onSelected: (f) => videoFit.value = f,
+          ValueListenableBuilder(
+            valueListenable: videoFit,
+            builder: (context, fit, _) => _TextMenu<VideoFit>(
+              tooltip: tr('画面比例'),
+              label: fit.label,
+              value: fit,
+              values: [for (final f in VideoFit.values) (f, f.label)],
+              onSelected: (f) => videoFit.value = f,
+              onOpened: _menuOpened,
+              onClosed: _menuClosed,
+            ),
+          ),
+          _subtitleMenu(width),
+          StreamBuilder<double>(
+            stream: _player.stream.rate,
+            initialData: _player.state.rate,
+            builder: (context, _) => _TextMenu<double>(
+              tooltip: tr('倍速'),
+              label: '${trimSpeed(_player.state.rate)}X',
+              value: _player.state.rate,
+              values: [for (final speed in _controller.settings.speeds) (speed, '${trimSpeed(speed)}X')],
+              onSelected: (speed) => unawaited(_player.setRate(speed)),
+              onOpened: _menuOpened,
+              onClosed: _menuClosed,
+            ),
+          ),
+          StreamBuilder<int?>(
+            stream: _player.stream.height,
+            initialData: _player.state.height,
+            builder: (context, _) {
+              final height = _player.state.height ?? 0;
+              final max = _controller.settings.maxHeight;
+              final choices = _controller.qualityChoices;
+              return _TextMenu<int>(
+                tooltip: tr('画质'),
+                label: height > 0 ? '${height}P' : (max == 0 ? tr('自动') : '${max}P'),
+                // A limit above what this video offers plays its highest.
+                value: choices.contains(max) ? max : height,
+                values: [for (final h in choices) (h, h == 0 ? tr('自动') : '${h}P')],
+                onSelected: (h) => unawaited(_controller.setMaxHeight(h)),
                 onOpened: _menuOpened,
                 onClosed: _menuClosed,
-              ),
-            ),
-            _subtitleMenu(width),
-            StreamBuilder<double>(
-              stream: _player.stream.rate,
-              initialData: _player.state.rate,
-              builder: (context, _) => _TextMenu<double>(
-                tooltip: tr('倍速'),
-                label: '${trimSpeed(_player.state.rate)}X',
-                value: _player.state.rate,
-                values: [for (final speed in _controller.settings.speeds) (speed, '${trimSpeed(speed)}X')],
-                onSelected: (speed) => unawaited(_player.setRate(speed)),
-                onOpened: _menuOpened,
-                onClosed: _menuClosed,
-              ),
-            ),
-            StreamBuilder<int?>(
-              stream: _player.stream.height,
-              initialData: _player.state.height,
-              builder: (context, _) {
-                final height = _player.state.height ?? 0;
-                final max = _controller.settings.maxHeight;
-                final choices = _controller.qualityChoices;
-                return _TextMenu<int>(
-                  tooltip: tr('画质'),
-                  label: height > 0 ? '${height}P' : (max == 0 ? tr('自动') : '${max}P'),
-                  // A limit above what this video offers plays its highest.
-                  value: choices.contains(max) ? max : height,
-                  values: [for (final h in choices) (h, h == 0 ? tr('自动') : '${h}P')],
-                  onSelected: (h) => unawaited(_controller.setMaxHeight(h)),
-                  onOpened: _menuOpened,
-                  onClosed: _menuClosed,
-                );
-              },
-            ),
-            _IconButton(
-              tooltip: fullscreen ? tr('退出全屏 (F)') : tr('全屏 (F)'),
-              icon: fullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
-              size: 24,
-              width: width,
-              onTap: () => unawaited(widget.state?.toggleFullscreen()),
-            ),
-          ],
+              );
+            },
+          ),
+          _IconButton(
+            tooltip: fullscreen ? tr('退出全屏 (F)') : tr('全屏 (F)'),
+            icon: fullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
+            size: 24,
+            width: width,
+            onTap: () => unawaited(widget.state?.toggleFullscreen()),
+          ),
         ]),
       ]),
     );

@@ -120,11 +120,22 @@ class LibraryController extends ChangeNotifier {
   /// Follows each of [channels] not yet followed; returns how many were new.
   int followAll(List<ChannelRef> channels) {
     var added = 0;
+    var updated = false;
     for (final channel in channels) {
-      if (store.isFollowing(channel.id)) continue;
+      final at = store.channels.indexOf(channel);
+      if (at >= 0) {
+        // Keep pictures and names current for channels already followed.
+        final known = store.channels[at];
+        if (channel.avatar != null && (channel.avatar != known.avatar || channel.name != known.name)) {
+          store.channels[at] = channel;
+          updated = true;
+        }
+        continue;
+      }
       store.channels.add(channel);
       added++;
     }
+    if (updated && added == 0) _changed();
     if (added > 0) {
       _feedLoadedAt = null;
       _changed();

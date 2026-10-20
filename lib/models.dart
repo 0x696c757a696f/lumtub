@@ -121,20 +121,23 @@ class VideoItem {
 
 /// A YouTube channel, identified by its `UC…` id.
 class ChannelRef {
-  const ChannelRef(this.id, this.name);
+  const ChannelRef(this.id, this.name, [this.avatar]);
   final String id;
   final String name;
+  /// The channel's picture, when a subscription import or search listed one.
+  final String? avatar;
 
   String get url => 'https://www.youtube.com/channel/$id';
 
   static bool isValidId(String id) => RegExp(r'^UC[\w-]{22}$').hasMatch(id);
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, if (avatar != null) 'avatar': avatar};
 
   static ChannelRef? fromJson(Object? raw) {
     if (raw is! Map) return null;
     final id = raw['id']?.toString() ?? '';
-    return isValidId(id) ? ChannelRef(id, raw['name']?.toString() ?? '') : null;
+    final avatar = raw['avatar'];
+    return isValidId(id) ? ChannelRef(id, raw['name']?.toString() ?? '', avatar is String && avatar.startsWith('https://') ? avatar : null) : null;
   }
 
   @override

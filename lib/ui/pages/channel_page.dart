@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -6,6 +8,7 @@ import '../../app/posts_loader.dart';
 import '../../app/video_list_loader.dart';
 import '../../community_posts.dart';
 import '../../models.dart';
+import '../../thumbnail_cache.dart';
 import '../../video_repository.dart';
 import '../comments_view.dart';
 import '../common.dart';
@@ -383,10 +386,13 @@ class ChannelHeader extends StatelessWidget {
 /// A round avatar: the channel's picture when a search listed one, else the
 /// first letter of its name.
 class ChannelAvatar extends StatelessWidget {
-  const ChannelAvatar({super.key, required this.name, this.radius = 18, this.image});
+  const ChannelAvatar({super.key, required this.name, this.radius = 18, this.image, this.cacheFile});
   final String name;
   final double radius;
   final String? image;
+  /// Where the picture is kept once downloaded, so a long list of
+  /// subscriptions does not fetch every picture again on each visit.
+  final File? cacheFile;
 
   @override
   Widget build(BuildContext context) {
@@ -399,8 +405,9 @@ class ChannelAvatar extends StatelessWidget {
     );
     final url = image;
     if (url == null) return fallback;
-    return ClipOval(child: Image.network(
-      url,
+    final file = cacheFile;
+    return ClipOval(child: Image(
+      image: ResizeImage.resizeIfNeeded((radius * 4).round(), null, file == null ? NetworkImage(url) : CachedThumbnail(url, file)),
       width: radius * 2,
       height: radius * 2,
       fit: BoxFit.cover,
@@ -435,7 +442,7 @@ class ChannelResultTile extends StatelessWidget {
               Text(result.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13)),
           ])),
           const SizedBox(width: 12),
-          FollowButton(controller: controller, channel: ref),
+          FollowButton(controller: controller, channel: ChannelRef(ref.id, ref.name, result.avatar ?? ref.avatar)),
         ]),
       ),
     ));

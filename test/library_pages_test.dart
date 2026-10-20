@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/app_controller.dart';
@@ -14,6 +15,7 @@ import 'package:ytplus/ui/pages/library_pages.dart';
 import 'package:ytplus/ui/theme.dart';
 import 'package:ytplus/ui/video_card.dart';
 import 'package:ytplus/video_repository.dart';
+import 'package:ytplus/youtube_account.dart';
 
 void main() {
   const channel = ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick Astley');
@@ -54,33 +56,69 @@ void main() {
     library.feed = videos;
     for (final width in [1280.0, 600.0]) {
       await pump(tester, SubscriptionsPage(controller: controller), width: width);
-      expect(find.widgetWithText(ActionChip, 'Rick Astley'), findsOneWidget);
+      expect(find.text('Rick Astley'), findsWidgets);
       expect(find.text('视频 0'), findsOneWidget);
       expect(tester.takeException(), isNull);
     }
     unawaited(library.flush());
   });
 
-  testWidgets('many subscriptions fit in one row with a searchable full list', (tester) async {
+  testWidgets('many subscriptions fit in one row; picking one narrows the feed', (tester) async {
     for (var i = 0; i < 100; i++) {
       library.toggleFollow(ChannelRef('UC${'$i'.padLeft(22, '0')}', '频道 $i'));
     }
     library.toggleFollow(channel);
     library.feed = videos;
     await pump(tester, SubscriptionsPage(controller: controller));
-    // The channel that just posted comes first; the rest wait in the list.
-    final chips = find.byType(ActionChip);
-    expect(find.descendant(of: chips.at(1), matching: find.text('Rick Astley')), findsOneWidget);
-    expect(tester.getTopLeft(chips.at(2)).dy, tester.getTopLeft(chips.at(1)).dy);
+    final strip = find.byWidgetPredicate((w) => w is ListView && w.scrollDirection == Axis.horizontal);
+    Finder inStrip(String text) => find.descendant(of: strip, matching: find.text(text));
+    // The channel that just posted comes right after 全部, in the same row.
+    final rick = tester.getTopLeft(inStrip('Rick Astley'));
+    expect(tester.getTopLeft(find.text('全部')).dx, lessThan(rick.dx));
     expect(find.text('视频 0'), findsOneWidget);
 
+    await tester.tap(find.text('频道 3'));
+    await tester.pump();
+    expect(find.text('视频 0'), findsNothing);
+    expect(find.text('这个频道最近没有新视频'), findsOneWidget);
+    await tester.tap(inStrip('Rick Astley'));
+    await tester.pump();
+    expect(find.text('Rick Astley 的新视频'), findsOneWidget);
+    expect(find.text('视频 0'), findsOneWidget);
+
+    // A mouse wheel scrolls the row sideways.
+    final pointer = TestPointer(1, PointerDeviceKind.mouse)..hover(tester.getCenter(strip));
+    final before = tester.getTopLeft(inStrip('频道 3')).dx;
+    await tester.sendEventToBinding(pointer.scroll(const Offset(0, 300)));
+    await tester.pump();
+    expect(tester.getTopLeft(inStrip('频道 3')).dx, lessThan(before));
+
+    // The full list searches by name and narrows the page to the pick.
     await tester.tap(find.text('全部 101 个'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), '频道 42');
     await tester.pump();
-    expect(find.widgetWithText(ListTile, '频道 42'), findsOneWidget);
     expect(find.widgetWithText(ListTile, '频道 7'), findsNothing);
+    await tester.tap(find.widgetWithText(ListTile, '频道 42'));
+    await tester.pumpAndSettle();
+    expect(find.text('频道 42 的新视频'), findsOneWidget);
     expect(tester.takeException(), isNull);
+    unawaited(library.flush());
+  });
+
+  test('imported subscriptions keep their pictures', () {
+    final ref = YouTubeAccountApi.parseSubscription({
+      'snippet': {
+        'title': 'Rick Astley',
+        'resourceId': {'channelId': channel.id},
+        'thumbnails': {'default': {'url': 'https://yt3.ggpht.com/a=s88'}, 'medium': {'url': 'https://yt3.ggpht.com/a=s240'}},
+      },
+    })!;
+    expect(ref.avatar, 'https://yt3.ggpht.com/a=s240');
+    expect(ChannelRef.fromJson(ref.toJson())!.avatar, ref.avatar);
+    library.toggleFollow(channel);
+    library.followAll([ref]);
+    expect(library.channels.single.avatar, ref.avatar);
     unawaited(library.flush());
   });
 

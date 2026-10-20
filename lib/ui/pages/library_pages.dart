@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 
 import '../../app/app_controller.dart';
 import '../../app/library_controller.dart';
@@ -12,10 +13,23 @@ import '../video_card.dart';
 import 'channel_page.dart';
 import '../../l10n/l10n.dart';
 
-/// Newest uploads of the channels followed on this computer.
-class SubscriptionsPage extends StatelessWidget {
+/// Newest uploads of the channels followed on this computer, under a row of
+/// their avatars, the ones that posted most recently first. Picking an
+/// avatar narrows the videos to that channel without leaving the page.
+class SubscriptionsPage extends StatefulWidget {
   const SubscriptionsPage({super.key, required this.controller});
   final AppController controller;
+
+  @override
+  State<SubscriptionsPage> createState() => _SubscriptionsPageState();
+}
+
+class _SubscriptionsPageState extends State<SubscriptionsPage> {
+  ChannelRef? _selected;
+
+  AppController get controller => widget.controller;
+
+  void _select(ChannelRef? channel) => setState(() => _selected = channel == _selected ? null : channel);
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +46,9 @@ class SubscriptionsPage extends StatelessWidget {
             : FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: const Icon(Icons.login_rounded), label: Text(tr('登录并导入订阅'))),
       );
     }
-    final feed = controller.visible(library.feed, subscriptions: true);
+    final selected = channels.contains(_selected) ? _selected : null;
+    final all = controller.visible(library.feed, subscriptions: true);
+    final feed = selected == null ? all : [for (final item in all) if (item.channelId == selected.id) item];
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
         tr('订阅'),
@@ -41,8 +57,36 @@ class SubscriptionsPage extends StatelessWidget {
             ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
             : TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: const Icon(Icons.refresh_rounded), label: Text(tr('刷新'))),
       )),
-      SliverToBoxAdapter(child: _ChannelStrip(controller: controller, channels: channels, feed: library.feed)),
-      if (library.feedFailures.isNotEmpty)
+      SliverToBoxAdapter(child: _ChannelStrip(
+        channels: channels,
+        feed: library.feed,
+        selected: selected,
+        thumbnails: controller.thumbnailDirectory,
+        onSelect: _select,
+        onShowAll: () => showDialog<void>(
+          context: context,
+          builder: (_) => _AllChannels(channels: channels, thumbnails: controller.thumbnailDirectory, onSelect: _select, onOpen: controller.openChannel),
+        ),
+      )),
+      if (selected != null)
+        SliverToBoxAdapter(child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
+          child: Row(children: [
+            Expanded(child: Text(
+              tr('{0} 的新视频', [selected.name.isEmpty ? selected.id : selected.name]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            )),
+            TextButton(onPressed: () => _select(null), child: Text(tr('显示全部'))),
+            FilledButton.tonalIcon(
+              onPressed: () => controller.openChannel(selected),
+              icon: const Icon(Icons.chevron_right_rounded),
+              label: Text(tr('进入频道')),
+            ),
+          ]),
+        )),
+      if (library.feedFailures.isNotEmpty && selected == null)
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
           child: ErrorBanner(
@@ -56,6 +100,12 @@ class SubscriptionsPage extends StatelessWidget {
         SliverVideoGrid(items: feed, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: feed))
       else if (library.loadingFeed)
         const SliverSkeletonGrid()
+      else if (selected != null)
+        SliverFillRemaining(hasScrollBody: false, child: StatusView(
+          icon: Icons.inbox_outlined,
+          title: tr('这个频道最近没有新视频'),
+          action: FilledButton.tonal(onPressed: () => controller.openChannel(selected), child: Text(tr('进入频道看全部视频'))),
+        ))
       else
         SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.inbox_outlined, title: tr('暂时没有新视频'))),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
@@ -63,56 +113,171 @@ class SubscriptionsPage extends StatelessWidget {
   }
 }
 
-/// One scrolling row of the followed channels, the ones that posted most
-/// recently first, and a button for the whole list. Hundreds of imported
-/// subscriptions would otherwise push the videos off the page.
-class _ChannelStrip extends StatelessWidget {
-  const _ChannelStrip({required this.controller, required this.channels, required this.feed});
-  final AppController controller;
+File? _avatarFile(Directory? thumbnails, ChannelRef channel) =>
+    thumbnails == null || channel.avatar == null ? null : File('${thumbnails.path}${Platform.pathSeparator}avatar_${channel.id}.jpg');
+
+/// The followed channels as a row of avatars with names, scrolled by the
+/// mouse wheel too. Those that posted most recently come first, and a dot
+/// marks an upload in the last two days.
+class _ChannelStrip extends StatefulWidget {
+  const _ChannelStrip({required this.channels, required this.feed, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll});
   final List<ChannelRef> channels;
   final List<VideoItem> feed;
+  final ChannelRef? selected;
+  final Directory? thumbnails;
+  final ValueChanged<ChannelRef?> onSelect;
+  final VoidCallback onShowAll;
 
-  static const shown = 40;
+  /// How many avatars the row holds; the rest are in the full list.
+  static const shown = 60;
+
+  @override
+  State<_ChannelStrip> createState() => _ChannelStripState();
+}
+
+class _ChannelStripState extends State<_ChannelStrip> {
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final recent = <String>{for (final item in feed) if (item.channelId != null) item.channelId!};
-    final rank = {for (final (i, id) in recent.indexed) id: i};
-    final ordered = [...channels]..sort((a, b) => (rank[a.id] ?? recent.length).compareTo(rank[b.id] ?? recent.length));
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppStyle.cardSpacing),
+    final latest = <String, DateTime?>{};
+    for (final item in widget.feed) {
+      final id = item.channelId;
+      if (id != null && !latest.containsKey(id)) latest[id] = item.published;
+    }
+    final rank = {for (final (i, id) in latest.keys.indexed) id: i};
+    final ordered = [...widget.channels]..sort((a, b) => (rank[a.id] ?? latest.length).compareTo(rank[b.id] ?? latest.length));
+    final selected = widget.selected;
+    // A channel picked from the full list shows up front, so the row says
+    // what the videos below are narrowed to.
+    if (selected != null && ordered.indexOf(selected) >= _ChannelStrip.shown) {
+      ordered
+        ..remove(selected)
+        ..insert(0, selected);
+    }
+    final fresh = DateTime.now().subtract(const Duration(days: 2));
+    // The full list stays in reach at the right, however long the row.
+    return Row(children: [
+      Expanded(child: _row(ordered, selected, latest, fresh)),
+      Padding(
+        padding: const EdgeInsets.only(right: AppStyle.pagePadding - 6),
+        child: _StripItem(
+          label: tr('全部 {0} 个', [widget.channels.length]),
+          selected: false,
+          onTap: widget.onShowAll,
+          avatar: (radius) => CircleAvatar(radius: radius, child: Icon(Icons.manage_search_rounded, size: radius)),
+        ),
+      ),
+    ]);
+  }
+
+  Widget _row(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest, DateTime fresh) {
+    return Listener(
+      // A mouse wheel turns vertically; the row moves sideways with it.
+      onPointerSignal: (event) {
+        if (event is! PointerScrollEvent || !_scroll.hasClients || event.scrollDelta.dy == 0) return;
+        final position = _scroll.position;
+        if (position.maxScrollExtent <= 0) return;
+        GestureBinding.instance.pointerSignalResolver.register(event, (_) {
+          _scroll.jumpTo((position.pixels + event.scrollDelta.dy).clamp(0, position.maxScrollExtent));
+        });
+      },
       child: SizedBox(
-        height: 40,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-          children: [
-            ActionChip(
-              avatar: const Icon(Icons.list_rounded, size: 18),
-              label: Text(tr('全部 {0} 个', [channels.length])),
-              onPressed: () => showDialog<void>(context: context, builder: (_) => _AllChannels(controller: controller, channels: channels)),
-            ),
-            for (final channel in ordered.take(shown))
-              Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: ActionChip(
-                  avatar: ChannelAvatar(name: channel.name, radius: 12),
-                  label: Text(channel.name.isEmpty ? channel.id : channel.name),
-                  onPressed: () => controller.openChannel(channel),
-                ),
+        height: 96,
+        child: Scrollbar(
+          controller: _scroll,
+          child: ListView(
+            controller: _scroll,
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(left: AppStyle.pagePadding - 6),
+            children: [
+              _StripItem(
+                label: tr('全部'),
+                selected: selected == null,
+                onTap: () => widget.onSelect(null),
+                avatar: (radius) => CircleAvatar(radius: radius, child: Icon(Icons.dynamic_feed_rounded, size: radius)),
               ),
-          ],
+              for (final channel in ordered.take(_ChannelStrip.shown))
+                _StripItem(
+                  label: channel.name.isEmpty ? channel.id : channel.name,
+                  selected: channel == selected,
+                  fresh: latest[channel.id]?.isAfter(fresh) ?? false,
+                  onTap: () => widget.onSelect(channel),
+                  avatar: (radius) => ChannelAvatar(name: channel.name, radius: radius, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel)),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// Every followed channel, in a list that can be searched by name.
+class _StripItem extends StatelessWidget {
+  const _StripItem({required this.label, required this.selected, required this.onTap, required this.avatar, this.fresh = false});
+  final String label;
+  final bool selected;
+  final bool fresh;
+  final VoidCallback onTap;
+  final Widget Function(double radius) avatar;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Tooltip(
+      message: label,
+      waitDuration: const Duration(milliseconds: 600),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 72,
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Stack(clipBehavior: Clip.none, children: [
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: selected ? colors.primary : Colors.transparent, width: 2)),
+                child: avatar(22),
+              ),
+              if (fresh)
+                Positioned(right: 2, top: 2, child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(color: colors.primary, shape: BoxShape.circle, border: Border.all(color: colors.surface, width: 2)),
+                )),
+            ]),
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: selected ? colors.primary : colors.onSurfaceVariant, fontWeight: selected ? FontWeight.w600 : null),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+/// Every followed channel, in a list that can be searched by name. Picking
+/// one narrows the subscriptions page to it; the arrow opens its page.
 class _AllChannels extends StatefulWidget {
-  const _AllChannels({required this.controller, required this.channels});
-  final AppController controller;
+  const _AllChannels({required this.channels, required this.thumbnails, required this.onSelect, required this.onOpen});
   final List<ChannelRef> channels;
+  final Directory? thumbnails;
+  final ValueChanged<ChannelRef> onSelect;
+  final ValueChanged<ChannelRef> onOpen;
 
   @override
   State<_AllChannels> createState() => _AllChannelsState();
@@ -127,7 +292,7 @@ class _AllChannelsState extends State<_AllChannels> {
     final matches = [
       for (final channel in widget.channels)
         if (query.isEmpty || channel.name.toLowerCase().contains(query)) channel,
-    ];
+    ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return Dialog(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520, maxHeight: 640),
@@ -151,11 +316,19 @@ class _AllChannelsState extends State<_AllChannels> {
                     itemBuilder: (context, i) {
                       final channel = matches[i];
                       return ListTile(
-                        leading: ChannelAvatar(name: channel.name, radius: 16),
+                        leading: ChannelAvatar(name: channel.name, radius: 18, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel)),
                         title: Text(channel.name.isEmpty ? channel.id : channel.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        trailing: IconButton(
+                          tooltip: tr('进入频道'),
+                          icon: const Icon(Icons.open_in_new_rounded),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            widget.onOpen(channel);
+                          },
+                        ),
                         onTap: () {
                           Navigator.pop(context);
-                          widget.controller.openChannel(channel);
+                          widget.onSelect(channel);
                         },
                       );
                     },

@@ -96,13 +96,22 @@ class VideoRepository {
   /// [Platform.environment] still holds the PATH from before the app
   /// added them.
   final List<String> toolDirectories;
-  VideoRepository(this.ytDlpPath, {this.cacheDirectory, this.deno, this.toolDirectories = const []});
+  /// yt-dlp's `--proxy` value at the time of each call, see
+  /// `NetworkProxy.ytDlpValue`.
+  final String? Function()? proxy;
+  VideoRepository(this.ytDlpPath, {this.cacheDirectory, this.deno, this.toolDirectories = const [], this.proxy});
+
+  List<String> get _proxyArguments {
+    final value = proxy?.call();
+    return value == null ? const [] : ['--proxy', value];
+  }
 
   /// Resolves videos for playback ahead of libmpv.
   late final StreamResolver streams = StreamResolver(
     ytDlpPath,
     cacheDirectory: cacheDirectory,
     deno: deno,
+    proxy: proxy,
     infoDirectory: Directory(cacheDirectory == null
         ? '${Directory.systemTemp.path}${Platform.pathSeparator}ytplus-info'
         : '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp${Platform.pathSeparator}info'),
@@ -125,6 +134,7 @@ class VideoRepository {
         '--no-warnings',
         '--skip-download',
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
+        ..._proxyArguments,
         '--extractor-retries', '3',
         '--flat-playlist',
         '--lazy-playlist',
@@ -179,6 +189,7 @@ class VideoRepository {
         '--skip-download',
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
         '--no-playlist',
+        ..._proxyArguments,
         '--ignore-no-formats-error',
         '--extractor-args', 'youtube:player_skip=js',
         '--dump-json',

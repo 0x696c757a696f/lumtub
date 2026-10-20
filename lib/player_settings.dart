@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'app_directories.dart';
 import 'decoder_status.dart';
+import 'network_proxy.dart';
 
 /// Heights offered in the quality menu; 0 means automatic.
 const qualityHeights = [0, 2160, 1440, 1080, 720, 480, 360];
@@ -221,6 +222,10 @@ class PlayerSettings {
   /// libmpv draws subtitles itself (libass), so the mpv subtitle options
   /// apply; off, Flutter draws them over the video. Takes effect on restart.
   final bool libassSubtitles;
+  /// How yt-dlp, libmpv and the app reach YouTube.
+  final ProxyMode proxyMode;
+  /// The proxy for [ProxyMode.custom], such as `127.0.0.1:7890`.
+  final String proxyAddress;
   /// `--vd-lavc-dr`: auto, yes or no.
   final String directRendering;
   /// `--autosync`; 0 turns it off.
@@ -244,8 +249,8 @@ class PlayerSettings {
     this.subtitleScale = 1.0,
     this.subtitlePosition = 100,
     this.cacheMode = 'auto',
-    this.cacheSeconds = 30,
-    this.cacheMemoryMb = 64,
+    this.cacheSeconds = 60,
+    this.cacheMemoryMb = 150,
     this.codec = CodecPreference.auto,
     this.audioQuality = AudioQuality.best,
     this.audioDevice = 'auto',
@@ -271,6 +276,8 @@ class PlayerSettings {
     this.hwdecCodecs = defaultHwdecCodecs,
     this.d3d11vaZeroCopy = false,
     this.libassSubtitles = false,
+    this.proxyMode = ProxyMode.system,
+    this.proxyAddress = '',
     this.directRendering = 'auto',
     this.autosync = 0,
     this.audioFilter = '',
@@ -318,6 +325,8 @@ class PlayerSettings {
     String? hwdecCodecs,
     bool? d3d11vaZeroCopy,
     bool? libassSubtitles,
+    ProxyMode? proxyMode,
+    String? proxyAddress,
     String? directRendering,
     int? autosync,
     String? audioFilter,
@@ -358,6 +367,8 @@ class PlayerSettings {
         hwdecCodecs: hwdecCodecs ?? this.hwdecCodecs,
         d3d11vaZeroCopy: d3d11vaZeroCopy ?? this.d3d11vaZeroCopy,
         libassSubtitles: libassSubtitles ?? this.libassSubtitles,
+        proxyMode: proxyMode ?? this.proxyMode,
+        proxyAddress: proxyAddress ?? this.proxyAddress,
         directRendering: directRendering ?? this.directRendering,
         autosync: autosync ?? this.autosync,
         audioFilter: audioFilter ?? this.audioFilter,
@@ -375,6 +386,7 @@ class PlayerSettings {
         'cacheMode': cacheMode,
         'cacheSeconds': cacheSeconds,
         'cacheMemoryMb': cacheMemoryMb,
+        'bufferDefaults': 2,
         'codec': codec.name,
         'audioQuality': audioQuality.name,
         'audioDevice': audioDevice,
@@ -399,6 +411,8 @@ class PlayerSettings {
         'hwdecCodecs': hwdecCodecs,
         'd3d11vaZeroCopy': d3d11vaZeroCopy,
         'libassSubtitles': libassSubtitles,
+        'proxyMode': proxyMode.name,
+        'proxyAddress': proxyAddress,
         'directRendering': directRendering,
         'autosync': autosync,
         'audioFilter': audioFilter,
@@ -463,6 +477,7 @@ class PlayerSettings {
         : raw['autoplayNext'] == false ? PlayOrder.pause : PlayOrder.autoPlayRelated;
     final path = raw['cachePath']?.toString();
     final device = raw['audioDevice']?.toString() ?? 'auto';
+    final oldBuffer = raw['bufferDefaults'] != 2;
     return PlayerSettings(
       hwdec: validHwdec(raw['hwdec']?.toString()) ?? 'auto-safe',
       scale: choice('scale', {'spline36', 'bilinear', 'lanczos', 'ewa_lanczossharp'}, 'spline36'),
@@ -471,8 +486,10 @@ class PlayerSettings {
       subtitleScale: decimal('subtitleScale', 1.0, 0.5, 3.0),
       subtitlePosition: number('subtitlePosition', 100, 0, 100),
       cacheMode: choice('cacheMode', {'auto', 'yes', 'no'}, 'auto'),
-      cacheSeconds: number('cacheSeconds', 30, 1, 600),
-      cacheMemoryMb: number('cacheMemoryMb', 64, 16, 1024),
+      // Builds before bufferDefaults 2 saved 30 s / 64 MB even when untouched;
+      // those move to the larger defaults that ride out network hiccups.
+      cacheSeconds: oldBuffer && raw['cacheSeconds'] == 30 ? 60 : number('cacheSeconds', 60, 1, 600),
+      cacheMemoryMb: oldBuffer && raw['cacheMemoryMb'] == 64 ? 150 : number('cacheMemoryMb', 150, 16, 1024),
       codec: codec,
       audioQuality: _enumByName(AudioQuality.values, raw['audioQuality'], AudioQuality.best),
       audioDevice: device.isEmpty || device.length > 200 || device.contains(RegExp(r'[\r\n]')) ? 'auto' : device,
@@ -498,6 +515,8 @@ class PlayerSettings {
       hwdecCodecs: codecs.isEmpty ? defaultHwdecCodecs : codecs.join(','),
       d3d11vaZeroCopy: raw['d3d11vaZeroCopy'] == true,
       libassSubtitles: raw['libassSubtitles'] == true,
+      proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),
+      proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
       directRendering: choice('directRendering', {'auto', 'yes', 'no'}, 'auto'),
       autosync: number('autosync', 0, 0, 100),
       audioFilter: filter.length > 300 || filter.contains(RegExp(r'[\r\n]')) ? '' : filter,

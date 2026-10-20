@@ -13,7 +13,7 @@ void main() {
       'customOptions': {'vo': 'gpu-next', 'scale': 'lanczos'},
     });
     expect(settings.hwdec, 'auto-safe');
-    expect(settings.cacheSeconds, 30);
+    expect(settings.cacheSeconds, 60);
     expect(settings.subtitleScale, 3.0);
     expect(settings.customOptions, {'scale': 'lanczos'});
   });

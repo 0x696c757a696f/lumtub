@@ -79,7 +79,7 @@ class ResolvedVideo {
 /// menu and playback share one extraction, and a card the pointer rests on
 /// can be resolved before it is clicked.
 class StreamResolver {
-  StreamResolver(this.ytDlpPath, {this.cacheDirectory, this.deno, required this.infoDirectory, Map<String, String>? environment})
+  StreamResolver(this.ytDlpPath, {this.cacheDirectory, this.deno, this.proxy, required this.infoDirectory, Map<String, String>? environment})
       : _environment = environment;
 
   final String ytDlpPath;
@@ -87,6 +87,8 @@ class StreamResolver {
   /// The Deno yt-dlp solves YouTube's JavaScript challenges with. Without
   /// it the stream addresses are throttled to a crawl or left out.
   final String? deno;
+  /// yt-dlp's `--proxy` value at the time of each call.
+  final String? Function()? proxy;
   /// Where info files for `--load-info-json` are kept.
   final Directory infoDirectory;
   final Map<String, String>? _environment;
@@ -97,7 +99,10 @@ class StreamResolver {
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
 
-  List<String> arguments(String videoId, String format) => [
+  List<String> arguments(String videoId, String format) {
+    final proxy = this.proxy?.call();
+    return [
+      if (proxy != null) ...['--proxy', proxy],
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
         if (deno != null) ...['--js-runtimes', 'deno:${deno!}'],
         '--extractor-retries', '3',
@@ -106,6 +111,7 @@ class StreamResolver {
         '--format', expressionOf(format),
         '--', 'https://www.youtube.com/watch?v=$videoId',
       ];
+  }
 
   /// The resolved video, from the cache while it is fresh.
   Future<ResolvedVideo> resolve(String videoId, String format) {

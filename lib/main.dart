@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -7,11 +8,14 @@ import 'app/app_controller.dart';
 import 'app_directories.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
+import 'network_proxy.dart';
 import 'ui/app_shell.dart';
 import 'ui/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Before any HTTP client exists, so all of them follow the proxy setting.
+  HttpOverrides.global = appHttpOverrides;
   final reportFlutterError = FlutterError.onError;
   FlutterError.onError = (details) {
     logError('界面错误', details.exception, details.stack);

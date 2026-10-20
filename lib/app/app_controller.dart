@@ -19,6 +19,7 @@ import '../appearance_settings.dart';
 import '../cache_manager.dart';
 import '../decoder_status.dart';
 import '../models.dart';
+import '../network_proxy.dart';
 import '../player_option_applicator.dart';
 import '../player_settings.dart';
 import '../tool_manager.dart';
@@ -210,6 +211,9 @@ class AppController extends ChangeNotifier {
       await libraryStore.load();
       final settingsStore = PlayerSettingsStore(directories);
       final settings = await settingsStore.load();
+      this.settings = settings;
+      // Before the component downloads, which go through the proxy too.
+      await _refreshProxy();
       final preferencesStore = AppPreferencesStore(directories);
       final preferences = await preferencesStore.load();
       final cacheManager = CacheManager(directories);
@@ -234,6 +238,7 @@ class AppController extends ChangeNotifier {
       ));
       final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      await _applyProxy(player);
       await player.setVolume(settings.defaultVolume.toDouble());
       // yt-dlp and Deno are on PATH before libmpv starts, so ytdl_hook can find them.
       if (_disposed) {
@@ -300,7 +305,32 @@ class AppController extends ChangeNotifier {
         cacheDirectory: '${cacheManager.rootFor(settings).path}${Platform.pathSeparator}yt-dlp',
         deno: paths.deno,
         toolDirectories: paths.executableDirectories,
+        proxy: () => proxy.ytDlpValue(this.settings.proxyMode),
       );
+
+  /// The proxy everything currently goes through.
+  NetworkProxy proxy = NetworkProxy.direct;
+  DateTime _proxyRead = DateTime(0);
+
+  /// Reads the proxy setting again; for 跟随系统 also the Windows proxy,
+  /// which a proxy tool may have turned on or off since.
+  Future<void> _refreshProxy({bool ifStale = false}) async {
+    final now = DateTime.now();
+    if (ifStale && now.difference(_proxyRead) < const Duration(seconds: 30)) return;
+    _proxyRead = now;
+    final next = await NetworkProxy.resolve(settings.proxyMode, settings.proxyAddress);
+    appHttpOverrides.proxy = next;
+    if (next.url != proxy.url) logInfo(next.url == null ? '网络：直接连接' : '网络：使用代理 ${next.url}');
+    proxy = next;
+    final player = this.player;
+    if (player != null) await _applyProxy(player);
+  }
+
+  /// libmpv's streams can only use an HTTP proxy.
+  Future<void> _applyProxy(Player player) async {
+    final platform = player.platform;
+    if (platform is NativePlayer) await platform.setProperty('http-proxy', proxy.isHttp ? proxy.url! : '');
+  }
 
   Future<void> search(String value, {SearchFilter? filter}) async {
     final query = value.trim();
@@ -484,6 +514,7 @@ class AppController extends ChangeNotifier {
     final player = this.player!;
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
+      if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
       final format = _format;
       ResolvedVideo? video;
       if (resolved) {
@@ -499,7 +530,7 @@ class AppController extends ChangeNotifier {
       final platform = player.platform;
       if (platform is NativePlayer) {
         await platform.setProperty('ytdl-format', format);
-        await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null));
+        await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null, proxy: proxy.ytDlpValue(settings.proxyMode)));
         final agent = video?.userAgent;
         if (direct != null && agent != null) await platform.setProperty('user-agent', agent);
       }
@@ -1081,8 +1112,9 @@ class AppController extends ChangeNotifier {
     final requiresNextVideo = next.hwdec != oldSettings.hwdec || next.interpolation != oldSettings.interpolation;
     final ignoredOptions = await PlayerOptionApplicator.apply(player, next);
     await store.save(next);
+    _update(() => settings = next);
+    if (next.proxyMode != oldSettings.proxyMode || next.proxyAddress != oldSettings.proxyAddress) await _refreshProxy();
     _update(() {
-      settings = next;
       final paths = this.paths;
       final cacheManager = _cacheManager;
       if (paths != null && cacheManager != null && next.cachePath != oldSettings.cachePath) {

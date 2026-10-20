@@ -9,6 +9,7 @@ import '../../app_log.dart';
 import '../../app_preferences.dart';
 import '../../appearance_settings.dart';
 import '../../decoder_status.dart';
+import '../../network_proxy.dart';
 import '../../player_settings.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../../windows_video_info.dart';
@@ -314,6 +315,25 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(Icons.tune_rounded),
               onTap: () => openPictureSettings(context, controller),
             ), subtitle: '亮度 对比度 饱和度 伽马 色调 音频延迟 audio-delay'),
+        SettingEntry('网络代理', (context) {
+          final proxy = controller.proxy;
+          final now = proxy.url == null ? '当前直接连接' : '当前使用 ${proxy.url}${proxy.isHttp ? '' : '（视频流不支持此类代理，视频流直接连接）'}';
+          return NormalItem(
+            title: '网络代理',
+            subtitle: '${settings.proxyMode.label}。$now',
+            leading: _icon(Icons.vpn_lock_outlined),
+            onTap: () => pickFromDialog<ProxyMode>(
+              context,
+              title: '网络代理',
+              value: settings.proxyMode,
+              values: _enumValues(ProxyMode.values, (m) => m.label),
+              onSelected: (mode) async {
+                if (mode != ProxyMode.custom) return save(settings.copyWith(proxyMode: mode));
+                await _editProxy(context, controller);
+              },
+            ),
+          );
+        }, subtitle: 'proxy 代理 Clash v2rayN 系统代理 http-proxy'),
         SettingEntry('缓冲模式', (context) => NormalItem(
               title: '缓冲模式',
               subtitle: '当前：${labelOf(_cacheModes, settings.cacheMode)}。只使用内存，不写入磁盘',
@@ -827,6 +847,27 @@ Future<void> _pickAudioFilter(BuildContext context, AppController controller) as
     builder: (context) => TextEditDialog(title: '自定义音频滤镜', initialText: preset ? '' : current, hintText: '例如 loudnorm=I=-14:LRA=7:TP=-2', monospace: true),
   );
   if (text != null) await controller.saveSettings(controller.settings.copyWith(audioFilter: text.trim().replaceAll(RegExp(r'[\r\n]'), '')));
+}
+
+Future<void> _editProxy(BuildContext context, AppController controller) async {
+  final text = await showDialog<String>(
+    context: context,
+    builder: (context) => TextEditDialog(
+      title: '代理地址',
+      initialText: controller.settings.proxyAddress,
+      hintText: '例如 127.0.0.1:7890 或 socks5://127.0.0.1:7891',
+      helper: (text) {
+        final colors = context.colors;
+        final address = NetworkProxy.normalize(text);
+        return Text(
+          address == null ? '请填写 主机:端口，可加 http:// 或 socks5:// 前缀' : '将使用 $address${address.startsWith('http://') ? '' : '。视频流只支持 HTTP 代理，会直接连接'}',
+          style: TextStyle(fontSize: 12, color: address == null ? colors.error : colors.outline),
+        );
+      },
+    ),
+  );
+  final address = text == null ? null : NetworkProxy.normalize(text);
+  if (address != null) await controller.saveSettings(controller.settings.copyWith(proxyMode: ProxyMode.custom, proxyAddress: address));
 }
 
 Future<void> _editMpvConf(BuildContext context, AppController controller) async {

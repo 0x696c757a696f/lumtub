@@ -35,7 +35,8 @@ class ExplorePage extends StatelessWidget {
     final name = [topic.label, if (subNow != null) subNow.label, if (controller.exploreLeafNow case final leafNow?) leafNow.label].join(' · ');
     final subtitle = switch (mode) {
       ExploreMode.curated => tr('{0} · 相关度高的完整内容，少标题党，每个频道最多 3 个', [name]),
-      ExploreMode.popular when topic.mix => tr('推荐 · 你的兴趣和各分区{0}观看最多的视频，每个频道最多 2 个', [controller.explorePeriod.label]),
+      ExploreMode.popular when topic.personal => tr('推荐 · 你的兴趣和各分区{0}观看最多的视频，每个频道最多 2 个', [controller.explorePeriod.label]),
+      ExploreMode.popular when topic.mix => tr('全部 · 各分区{0}观看最多的视频，每个频道最多 2 个', [controller.explorePeriod.label]),
       ExploreMode.popular => tr('{0} · {1}观看最多', [name, controller.explorePeriod.label]),
       ExploreMode.forYou => tr('{0} · 按你的观看记录排列', [name]),
       ExploreMode.gems => tr('{0} · 播放不到 5 万的好视频', [name]),
@@ -61,8 +62,8 @@ class ExplorePage extends StatelessWidget {
               ButtonSegment(value: ExploreSection.popular, label: Text(ExploreSection.popular.label), icon: const Icon(Icons.video_library_rounded, size: 18)),
               ButtonSegment(value: ExploreSection.live, label: Text(ExploreSection.live.label), icon: const Icon(Icons.sensors_rounded, size: 18)),
             ],
-            // 宗教与信仰 is one of the video zones.
-            selected: {section.isFaith ? ExploreSection.popular : section},
+            // 宗教与信仰 shows as part of the half it was opened from.
+            selected: {controller.exploreHalf},
             onSelectionChanged: (value) => controller.setExplore(section: value.first),
           ),
         )),

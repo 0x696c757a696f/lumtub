@@ -268,7 +268,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreSection, ExploreSection.live);
     expect(controller.exploreMode, ExploreMode.liveViewers);
-    expect(find.text('全部直播 · 按观看人数排列'), findsOneWidget);
+    expect(find.text('推荐直播 · 按观看人数排列'), findsOneWidget);
+    expect(find.text('换一批'), findsOneWidget);
     expect(find.text('本月'), findsNothing);
 
     await _reveal(tester, '电台助眠');
@@ -371,10 +372,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('管理视频分区'), findsOneWidget);
 
-    // Hide the first zone, then pin 播客访谈 to the front.
+    // Hide the first zone, then pin 游戏 to the front.
     await tester.tap(find.byType(Switch).first);
     await tester.pump();
-    final faith = find.ancestor(of: find.text('播客访谈'), matching: find.byType(ListTile));
+    final faith = find.ancestor(of: find.text('游戏'), matching: find.byType(ListTile));
     await tester.ensureVisible(faith);
     await tester.pump();
     await tester.tap(find.descendant(of: faith, matching: find.byTooltip('置顶')));
@@ -383,11 +384,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     final topics = controller.exploreTopicsFor(ExploreSection.popular);
-    expect(topics.first.label, '播客访谈');
+    expect(topics.first.label, '游戏');
     expect(topics.map((t) => t.label), isNot(contains('推荐')));
     expect(controller.preferences.exploreHidden['popular'], ['推荐']);
     // The zone shown was hidden, so the strip starts over on its first.
-    expect(controller.exploreTopicNow.label, '播客访谈');
+    expect(controller.exploreTopicNow.label, '游戏');
     expect(tester.takeException(), isNull);
   });
 }

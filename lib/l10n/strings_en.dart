@@ -304,6 +304,7 @@ const stringsEn = <String, String>{
   '全屏 (F)': 'Fullscreen (F)',
   '全能神': 'Church of Almighty God',
   '全部': 'All',
+  '全部 · 各分区{0}观看最多的视频，每个频道最多 2 个': 'All · most watched {0} across the zones, at most 2 per channel',
   '全部{0}': 'All {0}',
   '全部分区': 'All categories',
   '全部地区': 'All regions',

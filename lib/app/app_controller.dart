@@ -556,6 +556,9 @@ class AppController extends ChangeNotifier {
   (ExploreSection, int) _topicBeforeFaith = (ExploreSection.popular, 0);
 
   /// Leaves 宗教与信仰 for the video zones, on the zone shown before.
+  /// 视频 or 直播, whichever 宗教信仰 was opened from while its tabs show.
+  ExploreSection get exploreHalf => exploreSection.isFaith ? _topicBeforeFaith.$1 : exploreSection;
+
   void leaveFaith() {
     final (section, topic) = _topicBeforeFaith;
     final topics = exploreTopicsFor(section);
@@ -657,7 +660,8 @@ class AppController extends ChangeNotifier {
     final language = preferences.exploreLanguage;
     final perChannel = <String, int>{};
     final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);
-    final taste = mode == ExploreMode.forYou ? _exploreTaste() : null;
+    // 推荐 always goes by the history, whatever order it is shown in.
+    final taste = mode == ExploreMode.forYou || exploreTopicNow.personal ? _exploreTaste() : null;
     final notInterested = homeFeed?.notInterested;
     final faith = exploreSection.isFaith ? faithFilter() : null;
     bool where(VideoItem item) {
@@ -681,7 +685,7 @@ class AppController extends ChangeNotifier {
     }
 
     _update(() => explore = VideoListLoader(
-          () => mix ? repository.searchMix(_exploreMixQueries(taste ?? _exploreTaste()), sp: sp, region: region) : repository.search(query, sp: sp, region: region),
+          () => mix ? repository.searchMix(_exploreMixQueries(exploreSection, exploreTopicNow.personal ? taste ?? _exploreTaste() : null), sp: sp, region: region) : repository.search(query, sp: sp, region: region),
           where: where,
           fill: switch (mode) {
             ExploreMode.gems || ExploreMode.liveReplay => 8,
@@ -694,12 +698,13 @@ class AppController extends ChangeNotifier {
           ..loadMore());
   }
 
-  /// 推荐's searches: a few of the history's interests, the rest zones of
-  /// 视频 picked at random each time, so every visit brings other videos.
-  List<String> _exploreMixQueries(TasteProfile taste, {Random? random}) {
-    final interests = taste.topWords(8)..shuffle(random);
+  /// 推荐 and 全部's searches: zones of [section] picked at random each
+  /// time, so every visit brings others, and for 推荐 a few of the
+  /// history's interests ([taste]) in place of two of them.
+  List<String> _exploreMixQueries(ExploreSection section, TasteProfile? taste, {Random? random}) {
+    final interests = (taste?.topWords(8) ?? <String>[])..shuffle(random);
     final zones = [
-      for (final topic in exploreTopicsFor(ExploreSection.popular))
+      for (final topic in exploreTopicsFor(section))
         if (!topic.mix && topic.opens == null) topic.subs.isEmpty ? topic.query : (topic.subs.toList()..shuffle(random)).first.query,
     ]..shuffle(random);
     final picked = interests.take(2).toList();

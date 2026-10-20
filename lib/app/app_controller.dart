@@ -11,6 +11,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../app_directories.dart';
 import '../app_log.dart';
 import '../app_preferences.dart';
+import '../playback_failure.dart';
 import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
@@ -157,6 +158,12 @@ class AppController extends ChangeNotifier {
   final _http = http.Client();
   bool _decoderPending = false;
   int _mpvLogLines = 0;
+  /// yt-dlp and libmpv error lines for the video being opened, which name
+  /// the cause libmpv's own error message usually leaves out.
+  final _recentErrors = <String>[];
+  /// No prefetching until then, after YouTube answered 429.
+  DateTime _rateLimitedUntil = DateTime(0);
+  bool _updateCheckedForChallenge = false;
   int _lastDrops = 0;
   DateTime _lastDropLog = DateTime(0);
   Timer? _dropTimer;
@@ -534,6 +541,7 @@ class AppController extends ChangeNotifier {
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
       final format = _format;
       _openedPiped = null;
+      if (resolved && piped) _recentErrors.clear();
       // Piped first, as chosen in 播放来源; it has no subtitle tracks for
       // libmpv, so videos with subtitles turned on come from YouTube.
       if (piped && settings.playbackSource.isPiped && settings.subtitleMode == SubtitleMode.off && !item.isLive) {
@@ -558,6 +566,13 @@ class AppController extends ChangeNotifier {
         try {
           video = await _repository!.streams.resolve(item.id, format);
         } catch (e) {
+          _recentErrors.add('$e');
+          final failure = PlaybackFailure.classify(['$e']);
+          if (!failure.retryable) {
+            // libmpv's ytdl_hook would ask YouTube again and fail the same way.
+            if (serial == _playSerial) _fail(item, failure);
+            return false;
+          }
           logError('预先解析 ${item.id} 失败，改由 libmpv 解析', e);
         }
         if (serial != _playSerial) return false;
@@ -591,7 +606,7 @@ class AppController extends ChangeNotifier {
       return true;
     } catch (e) {
       logError('无法打开视频 ${item.id}', e);
-      if (serial == _playSerial) _update(() => playbackError = '$e');
+      if (serial == _playSerial) _fail(item, PlaybackFailure.classify(['$e', ..._recentErrors]));
       return false;
     }
   }
@@ -613,6 +628,22 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  /// Shows why [item] cannot play and acts on the cause.
+  void _fail(VideoItem item, PlaybackFailure failure) {
+    logError('播放失败 ${item.id}（${failure.kind.name}）：${failure.detail}');
+    switch (failure.kind) {
+      case FailureKind.rateLimited:
+        _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
+      case FailureKind.challenge:
+        if (!_updateCheckedForChallenge) {
+          _updateCheckedForChallenge = true;
+          unawaited(checkUpdates());
+        }
+      default:
+    }
+    _update(() => playbackError = failure.message);
+  }
+
   /// Reopens the current video where it stopped after the network failed,
   /// or shows [message] once the attempts are used up.
   Future<void> _recover(String message) async {
@@ -621,7 +652,7 @@ class AppController extends ChangeNotifier {
     final position = _lastPosition;
     if (!_recovery.tryAttempt()) {
       logError('播放中断，已放弃自动重连 ${item.id}：$message');
-      _update(() => playbackError = message);
+      _fail(item, PlaybackFailure.classify([message, ..._recentErrors]));
       return;
     }
     logInfo('播放中断，从 ${_clock(position)} 重新连接 ${item.id}：$message');
@@ -682,6 +713,11 @@ class AppController extends ChangeNotifier {
         if (playing == null || message.isEmpty) return;
         if (player.state.duration == Duration.zero) {
           final item = playing!;
+          final failure = PlaybackFailure.classify([message, ..._recentErrors]);
+          if (!failure.retryable) {
+            _fail(item, failure);
+            return;
+          }
           if (_openedPiped == item.id) {
             _openedPiped = null;
             logInfo('Piped 的地址无法播放（$message），改为直接连接 YouTube');
@@ -697,10 +733,14 @@ class AppController extends ChangeNotifier {
             unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
             return;
           }
-          logError('播放失败 ${playing!.id}：$message');
-          _update(() => playbackError = message);
+          _fail(item, failure);
         } else if (PlaybackRecovery.isNetworkError(message)) {
-          unawaited(_recover(message));
+          final failure = PlaybackFailure.classify([message, ..._recentErrors]);
+          if (failure.retryable) {
+            unawaited(_recover(message));
+          } else {
+            _fail(playing!, failure);
+          }
         }
       }),
       // libmpv's warnings go to the log, a limited number per video, so
@@ -708,7 +748,9 @@ class AppController extends ChangeNotifier {
       player.stream.log.listen((log) {
         if (_mpvLogLines >= 200) return;
         _mpvLogLines++;
-        logInfo('mpv [${log.prefix}] ${log.level}: ${log.text.trim()}');
+        final text = log.text.trim();
+        logInfo('mpv [${log.prefix}] ${log.level}: $text');
+        if ((log.level == 'error' || log.prefix == 'ytdl_hook') && _recentErrors.length < 20) _recentErrors.add(text);
       }),
       // A stream that stops delivering data leaves mpv buffering forever.
       player.stream.buffering.listen((buffering) {
@@ -856,7 +898,7 @@ class AppController extends ChangeNotifier {
   /// Starts resolving [item] before it is opened, such as when the pointer
   /// rests on its card.
   void prefetch(VideoItem item) {
-    if (ready && playing?.id != item.id) _repository?.streams.prefetch(item.id, _format);
+    if (ready && playing?.id != item.id && DateTime.now().isAfter(_rateLimitedUntil)) _repository?.streams.prefetch(item.id, _format);
   }
 
   Future<void> _loadDetails(VideoItem item, int serial) async {

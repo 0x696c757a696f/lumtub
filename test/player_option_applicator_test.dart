@@ -37,6 +37,10 @@ void main() {
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['loop-file'], 'no');
   });
 
+  test('autosync off is 0, not no, which mpv reads as -1', () {
+    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['autosync'], '0');
+  });
+
   test('PiliNara mpv options and custom lines reach libmpv, custom lines win', () {
     const settings = PlayerSettings(
       d3d11vaZeroCopy: true,

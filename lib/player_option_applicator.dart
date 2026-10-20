@@ -13,7 +13,9 @@ class PlayerOptionApplicator {
       'hwdec-codecs': settings.hwdecCodecs,
       'd3d11va-zero-copy': settings.d3d11vaZeroCopy ? 'yes' : 'no',
       'vd-lavc-dr': settings.directRendering,
-      'autosync': settings.autosync == 0 ? 'no' : settings.autosync.toString(),
+      // Not 'no': mpv reads that as -1, which inverts the audio clock
+      // smoothing and makes the picture run ahead of the sound.
+      'autosync': settings.autosync.toString(),
       'af': settings.audioFilter,
       for (final (key, _) in pictureProperties) key: (settings.picture[key] ?? 0).toString(),
       'audio-delay': (settings.audioDelayMs / 1000).toString(),

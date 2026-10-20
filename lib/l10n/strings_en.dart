@@ -1592,4 +1592,5 @@ const stringsEn = <String, String>{
   '（视频流不支持此类代理，视频流直接连接）': '(Video streams don\'t support this proxy type and connect directly)',
   '，{0} 行无法使用': ', {0} lines couldn\'t be used',
   '；硬件解码和帧插值在下一段视频生效。': '; hardware decoding and frame interpolation take effect on the next video.',
+  '跟随系统语言': 'Follow Windows language',
 };

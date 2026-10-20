@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'app_directories.dart';
 import 'decoder_status.dart';
@@ -61,8 +62,9 @@ enum SubtitleMode {
 }
 
 enum SubtitleLanguage {
-  /// The interface language's: simplified, traditional Chinese or English.
-  auto('跟随界面语言', '', ''),
+  /// Windows' language: simplified, traditional Chinese or English. Not the
+  /// interface's, which is English for now.
+  auto('跟随系统语言', '', ''),
   zh('简体中文优先', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng'),
   zhHant('繁體中文優先', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng'),
   en('英语优先', 'en.*', 'en,eng,en-US,en-GB'),
@@ -94,10 +96,11 @@ enum SubtitleLanguage {
   /// [auto] as the language it stands for.
   SubtitleLanguage get resolved => this != auto
       ? this
-      : switch (currentLanguage) {
-          AppLanguage.en => en,
-          AppLanguage.zhHant => zhHant,
-          _ => zh,
+      : switch (PlatformDispatcher.instance.locale) {
+          Locale(languageCode: 'zh', scriptCode: 'Hant') => zhHant,
+          Locale(languageCode: 'zh', countryCode: 'TW' || 'HK' || 'MO') => zhHant,
+          Locale(languageCode: 'zh') => zh,
+          _ => en,
         };
 }
 

@@ -1468,6 +1468,37 @@ class AppController extends ChangeNotifier {
     return true;
   }
 
+  /// The video before the current one in the queue, if it was opened from one.
+  VideoItem? get previousInQueue {
+    final current = playing;
+    if (current == null) return null;
+    final index = queue.indexWhere((item) => item.id == current.id);
+    return index > 0 ? queue[index - 1] : null;
+  }
+
+  Future<void> playPrevious() async {
+    final previous = previousInQueue;
+    if (previous != null) await play(previous);
+  }
+
+  bool _backgroundAudioOnly = false;
+
+  /// While the window is minimised or in the tray with the setting on, mpv
+  /// decodes no picture; [hidden] false brings it back. A user's own 听视频
+  /// choice is left alone.
+  Future<void> setBackgroundAudioOnly(bool hidden) async {
+    final platform = player?.platform;
+    if (platform is! NativePlayer) return;
+    if (hidden) {
+      if (!preferences.audioOnlyInBackground || audioOnly || _backgroundAudioOnly || !player!.state.playing) return;
+      _backgroundAudioOnly = true;
+      await platform.setProperty('vid', 'no');
+    } else if (_backgroundAudioOnly) {
+      _backgroundAudioOnly = false;
+      if (!audioOnly) await platform.setProperty('vid', 'auto');
+    }
+  }
+
   /// Whether nothing will play once the current video ends.
   bool get stopsAfterEnd =>
       sleepAfterCurrent ||

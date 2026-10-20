@@ -13,6 +13,7 @@ add_executable(${BINARY_NAME} WIN32
   "utils.cpp"
   "win32_window.cpp"
   "window_placement.cpp"
+  "windows_shell.cpp"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
   "Runner.rc"
   "runner.exe.manifest"
@@ -36,6 +37,8 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 # dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
+# The media overlay uses C++/WinRT (headers from the Windows SDK).
+target_link_libraries(${BINARY_NAME} PRIVATE "windowsapp.lib" "shell32.lib")
 
 # Load media_kit's video plugin on first use, after LoadPreferredLibmpv() has
 # loaded the libmpv-2.dll the plugin binds to.

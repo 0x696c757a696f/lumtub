@@ -579,6 +579,20 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.pauseOnMinimize,
               onChanged: (v) => savePrefs(prefs.copyWith(pauseOnMinimize: v)),
             ), subtitle: tr('后台播放')),
+        SettingEntry(tr('最小化时只听声音'), (context) => SwitchItem(
+              title: tr('最小化时只听声音'),
+              subtitle: tr('窗口最小化或收到托盘时不解码画面，还原后恢复'),
+              leading: _icon(Icons.headphones_outlined),
+              value: prefs.audioOnlyInBackground,
+              onChanged: (v) => savePrefs(prefs.copyWith(audioOnlyInBackground: v)),
+            ), subtitle: tr('后台播放')),
+        SettingEntry(tr('关闭时最小化到托盘'), (context) => SwitchItem(
+              title: tr('关闭时最小化到托盘'),
+              subtitle: tr('点关闭按钮时隐藏到托盘图标，继续播放；从托盘菜单退出'),
+              leading: _icon(Icons.call_to_action_outlined),
+              value: prefs.closeToTray,
+              onChanged: (v) => savePrefs(prefs.copyWith(closeToTray: v)),
+            ), subtitle: tr('托盘 后台播放')),
         SettingEntry(tr('延长播放控件显示时间'), (context) => NormalItem(
               title: tr('播放控件显示时间'),
               subtitle: tr('鼠标不动 {0} 后隐藏', [labelOf(_hideTimes, prefs.controlsHideSeconds)]),

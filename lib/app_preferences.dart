@@ -56,6 +56,8 @@ class AppPreferences {
     this.miniPlayer = true,
     this.exitFullscreenOnEnd = false,
     this.pauseOnMinimize = false,
+    this.audioOnlyInBackground = false,
+    this.closeToTray = false,
     this.keyboardShortcuts = true,
     this.seekSeconds = 5,
     this.longSeekSeconds = 10,
@@ -134,6 +136,10 @@ class AppPreferences {
   final bool miniPlayer;
   final bool exitFullscreenOnEnd;
   final bool pauseOnMinimize;
+  /// Minimised or hidden to the tray, mpv decodes no picture.
+  final bool audioOnlyInBackground;
+  /// Closing the window hides it to the tray icon instead of exiting.
+  final bool closeToTray;
   final bool keyboardShortcuts;
   final int seekSeconds;
   final int longSeekSeconds;
@@ -240,6 +246,8 @@ class AppPreferences {
     bool? miniPlayer,
     bool? exitFullscreenOnEnd,
     bool? pauseOnMinimize,
+    bool? audioOnlyInBackground,
+    bool? closeToTray,
     bool? keyboardShortcuts,
     int? seekSeconds,
     int? longSeekSeconds,
@@ -289,6 +297,8 @@ class AppPreferences {
         miniPlayer: miniPlayer ?? this.miniPlayer,
         exitFullscreenOnEnd: exitFullscreenOnEnd ?? this.exitFullscreenOnEnd,
         pauseOnMinimize: pauseOnMinimize ?? this.pauseOnMinimize,
+        audioOnlyInBackground: audioOnlyInBackground ?? this.audioOnlyInBackground,
+        closeToTray: closeToTray ?? this.closeToTray,
         keyboardShortcuts: keyboardShortcuts ?? this.keyboardShortcuts,
         seekSeconds: seekSeconds ?? this.seekSeconds,
         longSeekSeconds: longSeekSeconds ?? this.longSeekSeconds,
@@ -339,6 +349,8 @@ class AppPreferences {
         'miniPlayer': miniPlayer,
         'exitFullscreenOnEnd': exitFullscreenOnEnd,
         'pauseOnMinimize': pauseOnMinimize,
+        'audioOnlyInBackground': audioOnlyInBackground,
+        'closeToTray': closeToTray,
         'keyboardShortcuts': keyboardShortcuts,
         'seekSeconds': seekSeconds,
         'longSeekSeconds': longSeekSeconds,
@@ -423,6 +435,8 @@ class AppPreferences {
       miniPlayer: flag('miniPlayer', d.miniPlayer),
       exitFullscreenOnEnd: flag('exitFullscreenOnEnd', d.exitFullscreenOnEnd),
       pauseOnMinimize: flag('pauseOnMinimize', d.pauseOnMinimize),
+      audioOnlyInBackground: flag('audioOnlyInBackground', d.audioOnlyInBackground),
+      closeToTray: flag('closeToTray', d.closeToTray),
       keyboardShortcuts: flag('keyboardShortcuts', d.keyboardShortcuts),
       seekSeconds: number('seekSeconds', 5, 1, 60),
       longSeekSeconds: number('longSeekSeconds', 10, 1, 120),

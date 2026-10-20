@@ -422,7 +422,36 @@ class AppController extends ChangeNotifier {
   /// The chosen category's videos.
   VideoListLoader? explore;
 
-  ExploreTopic get exploreTopicNow => exploreTopicsOf(exploreSection)[exploreTopic];
+  /// The categories of [section], the user's own last.
+  List<ExploreTopic> exploreTopicsFor(ExploreSection section) => exploreTopicsOf(section, preferences.exploreCustomTopics);
+
+  ExploreTopic get exploreTopicNow {
+    final topics = exploreTopicsFor(exploreSection);
+    return topics[exploreTopic.clamp(0, topics.length - 1)];
+  }
+
+  /// Adds a category of the user's own and shows it.
+  Future<void> addExploreTopic(CustomTopic topic) async {
+    final kept = preferences.exploreCustomTopics.where((t) => !(t.section == topic.section && t.label == topic.label)).toList();
+    await savePreferences(preferences.copyWith(exploreCustomTopics: [...kept, topic]));
+    final index = exploreTopicsFor(topic.section).lastIndexWhere((t) => t.custom && t.label == topic.label);
+    explore?.dispose();
+    explore = null;
+    setExplore(section: topic.section, topic: index);
+  }
+
+  /// Removes one of the user's categories, keeping the one shown if it stays.
+  Future<void> removeExploreTopic(ExploreSection section, String label) async {
+    final shown = exploreTopicNow;
+    await savePreferences(preferences.copyWith(
+      exploreCustomTopics: preferences.exploreCustomTopics.where((t) => !(t.section == section && t.label == label)).toList(),
+    ));
+    if (section != exploreSection) return;
+    final index = exploreTopicsFor(section).indexWhere((t) => t.label == shown.label && t.query == shown.query);
+    explore?.dispose();
+    explore = null;
+    setExplore(topic: index < 0 ? 0 : index);
+  }
 
   /// Opens the explore page on its topics.
   void openExplore() {
@@ -444,7 +473,7 @@ class AppController extends ChangeNotifier {
     if (nextSection == exploreSection && nextTopic == exploreTopic && nextPeriod == explorePeriod && explore != null) return;
     _update(() {
       exploreSection = nextSection;
-      exploreTopic = nextTopic.clamp(0, exploreTopicsOf(nextSection).length - 1);
+      exploreTopic = nextTopic.clamp(0, exploreTopicsFor(nextSection).length - 1);
       explorePeriod = nextPeriod;
       explore?.dispose();
       explore = null;

@@ -6,6 +6,7 @@ import '../../explore_topics.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../video_card.dart';
+import '../../widgets/pilinara_settings_tiles.dart' show confirmDialog;
 
 /// Explore: popular videos by category and period, or what is live now.
 class ExplorePage extends StatelessWidget {
@@ -42,9 +43,11 @@ class ExplorePage extends StatelessWidget {
         )),
         SliverToBoxAdapter(child: TopicStrip(
           key: ValueKey(section),
-          topics: exploreTopicsOf(section),
+          topics: controller.exploreTopicsFor(section),
           selected: controller.exploreTopic,
           onSelected: (i) => controller.setExplore(topic: i),
+          onAdd: () => _addTopic(context, section),
+          onRemove: (topic) => _removeTopic(context, section, topic),
         )),
         if (!live)
           SliverToBoxAdapter(child: Padding(
@@ -72,15 +75,92 @@ class ExplorePage extends StatelessWidget {
       ]),
     );
   }
+
+  Future<void> _addTopic(BuildContext context, ExploreSection section) async {
+    final topic = await showDialog<CustomTopic>(context: context, builder: (context) => _AddTopicDialog(section: section));
+    if (topic != null) await controller.addExploreTopic(topic);
+  }
+
+  Future<void> _removeTopic(BuildContext context, ExploreSection section, ExploreTopic topic) async {
+    final ok = await confirmDialog(context, title: '删除分类', content: '删除自定义分类“${topic.label}”？', confirm: '删除');
+    if (ok) await controller.removeExploreTopic(section, topic.label);
+  }
+}
+
+/// Asks for a category's name and the words to search for.
+class _AddTopicDialog extends StatefulWidget {
+  const _AddTopicDialog({required this.section});
+  final ExploreSection section;
+
+  @override
+  State<_AddTopicDialog> createState() => _AddTopicDialogState();
+}
+
+class _AddTopicDialogState extends State<_AddTopicDialog> {
+  final _label = TextEditingController();
+  final _query = TextEditingController();
+  late var _section = widget.section;
+
+  @override
+  void dispose() {
+    _label.dispose();
+    _query.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final label = _label.text.trim();
+    final query = _query.text.trim().isEmpty ? label : _query.text.trim();
+    if (label.isEmpty) return;
+    Navigator.pop(context, CustomTopic(label, query, _section));
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: const Text('添加分类'),
+        content: SizedBox(
+          width: 380,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            TextField(
+              controller: _label,
+              autofocus: true,
+              maxLength: 8,
+              decoration: const InputDecoration(labelText: '名称', hintText: '例如：天主教音乐'),
+              onChanged: (_) => setState(() {}),
+              onSubmitted: (_) => _submit(),
+            ),
+            TextField(
+              controller: _query,
+              decoration: const InputDecoration(labelText: '搜索词（可选）', hintText: '留空则用名称搜索，例如：Gregorian chant 额我略圣歌'),
+              onSubmitted: (_) => _submit(),
+            ),
+            const SizedBox(height: 16),
+            SegmentedButton<ExploreSection>(
+              showSelectedIcon: false,
+              segments: [for (final s in ExploreSection.values) ButtonSegment(value: s, label: Text(s.label))],
+              selected: {_section},
+              onSelectionChanged: (value) => setState(() => _section = value.first),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+          FilledButton(onPressed: _label.text.trim().isEmpty ? null : _submit, child: const Text('添加')),
+        ],
+      );
 }
 
 /// A row of category icons that scrolls sideways, with the mouse wheel or
 /// the arrows at its ends.
 class TopicStrip extends StatefulWidget {
-  const TopicStrip({super.key, required this.topics, required this.selected, required this.onSelected});
+  const TopicStrip({super.key, required this.topics, required this.selected, required this.onSelected, this.onAdd, this.onRemove});
   final List<ExploreTopic> topics;
   final int selected;
   final ValueChanged<int> onSelected;
+  /// Adds a category of the user's own, from a tile after the others.
+  final VoidCallback? onAdd;
+  /// Removes a category the user added, on right-click or long press.
+  final ValueChanged<ExploreTopic>? onRemove;
 
   @override
   State<TopicStrip> createState() => _TopicStripState();
@@ -142,9 +222,21 @@ class _TopicStripState extends State<TopicStrip> {
               child: ListView.builder(
               controller: _scroll,
               scrollDirection: Axis.horizontal,
-              itemCount: widget.topics.length,
+              itemCount: widget.topics.length + (widget.onAdd == null ? 0 : 1),
               itemExtent: _tileWidth,
-              itemBuilder: (context, i) => _TopicTile(topic: widget.topics[i], selected: i == widget.selected, onTap: () => widget.onSelected(i)),
+              itemBuilder: (context, i) {
+                if (i == widget.topics.length) {
+                  return _TopicTile(topic: const ExploreTopic('添加', Icons.add_rounded, ''), selected: false, onTap: widget.onAdd!);
+                }
+                final topic = widget.topics[i];
+                final remove = widget.onRemove;
+                return _TopicTile(
+                  topic: topic,
+                  selected: i == widget.selected,
+                  onTap: () => widget.onSelected(i),
+                  onRemove: topic.custom && remove != null ? () => remove(topic) : null,
+                );
+              },
               ),
             ),
           )),
@@ -167,20 +259,23 @@ class _Arrow extends StatelessWidget {
 }
 
 class _TopicTile extends StatelessWidget {
-  const _TopicTile({required this.topic, required this.selected, required this.onTap});
+  const _TopicTile({required this.topic, required this.selected, required this.onTap, this.onRemove});
   final ExploreTopic topic;
   final bool selected;
   final VoidCallback onTap;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Tooltip(
-      message: topic.label,
+      message: onRemove == null ? topic.label : '${topic.label}（右键或长按删除）',
       waitDuration: const Duration(milliseconds: 600),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
+        onLongPress: onRemove,
+        onSecondaryTap: onRemove,
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 160),

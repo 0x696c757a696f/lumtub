@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'app_directories.dart';
+import 'explore_topics.dart';
 import 'models.dart';
 
 /// Pages the app can open on start, in navigation order.
@@ -15,6 +16,7 @@ class AppPreferences {
     this.recordProgress = true,
     this.blockedChannels = const [],
     this.blockedKeywords = const [],
+    this.exploreCustomTopics = const [],
     this.hideShorts = false,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
@@ -46,6 +48,8 @@ class AppPreferences {
   final List<ChannelRef> blockedChannels;
   /// Case-insensitive words; a video whose title contains one is hidden.
   final List<String> blockedKeywords;
+  /// Explore categories the user added.
+  final List<CustomTopic> exploreCustomTopics;
   /// Hides videos of a minute or less, which YouTube lists as Shorts.
   final bool hideShorts;
   final int minDurationMinutes;
@@ -97,6 +101,7 @@ class AppPreferences {
     bool? recordProgress,
     List<ChannelRef>? blockedChannels,
     List<String>? blockedKeywords,
+    List<CustomTopic>? exploreCustomTopics,
     bool? hideShorts,
     int? minDurationMinutes,
     bool? hideWatched,
@@ -127,6 +132,7 @@ class AppPreferences {
         recordProgress: recordProgress ?? this.recordProgress,
         blockedChannels: blockedChannels ?? this.blockedChannels,
         blockedKeywords: blockedKeywords ?? this.blockedKeywords,
+        exploreCustomTopics: exploreCustomTopics ?? this.exploreCustomTopics,
         hideShorts: hideShorts ?? this.hideShorts,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
@@ -158,6 +164,7 @@ class AppPreferences {
         'recordProgress': recordProgress,
         'blockedChannels': [for (final c in blockedChannels) {'id': c.id, 'name': c.name}],
         'blockedKeywords': blockedKeywords,
+        'exploreCustomTopics': [for (final t in exploreCustomTopics) t.toJson()],
         'hideShorts': hideShorts,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
@@ -203,12 +210,16 @@ class AppPreferences {
     final keywords = raw['blockedKeywords'] is List
         ? (raw['blockedKeywords'] as List).map((k) => k.toString().trim()).where((k) => k.isNotEmpty).toSet().toList()
         : const <String>[];
+    final topics = raw['exploreCustomTopics'] is List
+        ? (raw['exploreCustomTopics'] as List).map(CustomTopic.fromJson).whereType<CustomTopic>().toList()
+        : const <CustomTopic>[];
     final start = raw['startPage']?.toString();
     return AppPreferences(
       recordHistory: flag('recordHistory', d.recordHistory),
       recordProgress: flag('recordProgress', d.recordProgress),
       blockedChannels: channels,
       blockedKeywords: keywords,
+      exploreCustomTopics: topics,
       hideShorts: flag('hideShorts', d.hideShorts),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),

@@ -68,6 +68,7 @@ class _WatchPageState extends State<WatchPage> {
       child: Focus(
         autofocus: true,
         child: LayoutBuilder(builder: (context, constraints) {
+          if (controller.pip) return Center(child: _Player(controller: controller, videoKey: _video));
           final wide = constraints.maxWidth >= 1080;
           final mainWidth = wide ? constraints.maxWidth - _sidePanelWidth - AppStyle.pagePadding * 3 : constraints.maxWidth - AppStyle.pagePadding * 2;
           // Keep the whole player visible: never taller than the window allows.

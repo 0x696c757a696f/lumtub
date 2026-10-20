@@ -125,6 +125,21 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('the top bar is PiliNara\'s: back and home, then the switches', (tester) async {
+    await pump(tester);
+    for (final tip in ['返回', '主页', '窗口置顶', '听视频（只放声音）', 'SponsorBlock 已关闭，点击开启', '画中画', '更多设置']) {
+      expect(find.byTooltip(tip), findsOneWidget, reason: tip);
+    }
+    // The small picture-in-picture window keeps only what fits.
+    controller.pip = true;
+    await pump(tester);
+    expect(find.byTooltip('退出画中画'), findsOneWidget);
+    expect(find.byTooltip('主页'), findsNothing);
+    expect(find.text('1X'), findsNothing);
+    expect(find.byIcon(Icons.fullscreen_rounded), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the speed menu uses the speeds from settings', (tester) async {
     await pump(tester);
     await tester.tap(find.text('1X'));

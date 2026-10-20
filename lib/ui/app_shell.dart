@@ -106,6 +106,10 @@ class _AppShellState extends State<AppShell> {
           child: ListenableBuilder(
             listenable: _controller,
             builder: (context, _) => LayoutBuilder(builder: (context, constraints) {
+              // Picture in picture shows the video alone.
+              if (_controller.pip && _controller.playing != null && _controller.videoController != null) {
+                return Scaffold(backgroundColor: Colors.black, body: WatchPage(controller: _controller));
+              }
               final wide = constraints.maxWidth >= 720;
               final rail = switch (_controller.appearance.navigation) {
                 NavigationStyle.auto => wide,

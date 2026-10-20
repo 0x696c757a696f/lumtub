@@ -11,6 +11,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app_directories.dart';
 import '../app_log.dart';
+import '../app_window.dart';
 import '../app_preferences.dart';
 import '../playback_failure.dart';
 import '../playback_recovery.dart';
@@ -118,6 +119,39 @@ class AppController extends ChangeNotifier {
   bool showStats = false;
 
   void toggleStats() => _update(() => showStats = !showStats);
+
+  /// 置顶: the window stays above the others.
+  bool pinned = false;
+  /// 画中画: the window is a small picture in a corner, above the others,
+  /// showing only the video.
+  bool pip = false;
+  /// 听视频: mpv decodes no picture, which saves power and bandwidth.
+  bool audioOnly = false;
+
+  void togglePinned() {
+    if (!AppWindow.setTopmost(!pinned || pip)) return _notice(tr('无法设置窗口置顶'));
+    _update(() => pinned = !pinned);
+  }
+
+  void setPip(bool on) {
+    if (on == pip) return;
+    final ok = on ? AppWindow.enterPip() : AppWindow.exitPip(keepOnTop: pinned);
+    if (on && !ok) return _notice(tr('无法进入画中画'));
+    _update(() => pip = on);
+  }
+
+  Future<void> toggleAudioOnly() async {
+    final platform = player?.platform;
+    if (platform is! NativePlayer) return;
+    await platform.setProperty('vid', audioOnly ? 'auto' : 'no');
+    _update(() => audioOnly = !audioOnly);
+    _notice(audioOnly ? tr('只听声音，不解码画面') : tr('已恢复画面'));
+  }
+
+  Future<void> toggleSponsorBlock() async {
+    await saveSettings(settings.copyWith(sponsorBlock: !settings.sponsorBlock));
+    _notice(settings.sponsorBlock ? tr('已开启 SponsorBlock 跳过片段') : tr('已关闭 SponsorBlock'));
+  }
 
   /// Videos like the one playing, found by searching for its title.
   VideoListLoader? related;
@@ -1308,6 +1342,7 @@ class AppController extends ChangeNotifier {
   }
 
   void stopWatching() {
+    setPip(false);
     _finishWatching();
     _saveProgress(now: true);
     _tracking = null;
@@ -1326,6 +1361,7 @@ class AppController extends ChangeNotifier {
   }
 
   void _go(PageMode target) {
+    setPip(false);
     if (playing != null) _finishWatching();
     if (target == PageMode.home) unawaited(refreshHomeFeed());
     _saveProgress(now: true);

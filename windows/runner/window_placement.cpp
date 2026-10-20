@@ -49,7 +49,9 @@ bool RestoreWindowPlacement(HWND window) {
 }
 
 void SaveWindowPlacement(HWND window) {
-  if (IsFullscreen(window)) return;
+  // Neither fullscreen nor the small picture-in-picture window (set by
+  // lib/app_window.dart) is the size to open at next time.
+  if (IsFullscreen(window) || ::GetProp(window, L"YTPlusPictureInPicture")) return;
   WINDOWPLACEMENT placement{sizeof(WINDOWPLACEMENT)};
   if (!::GetWindowPlacement(window, &placement)) return;
   if (placement.showCmd == SW_SHOWMINIMIZED) {

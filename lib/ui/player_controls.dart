@@ -106,6 +106,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       if (mounted) setState(() {});
     });
     _subscriptions.addAll([
+      // The next video may have another shape; the ratio set for the last
+      // one would stretch it.
+      _player.stream.width.listen((_) => _applyFit()),
+      _player.stream.height.listen((_) => _applyFit()),
       _player.stream.playing.listen((playing) {
         if (!playing) {
           _show();
@@ -137,11 +141,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   void _applyFit() {
     final fit = videoFit.value;
-    final width = _player.state.width ?? 0;
-    final height = _player.state.height ?? 0;
     // update() cannot clear an aspect ratio, so the automatic modes pass
     // the video's own one.
-    final ratio = fit.aspectRatio ?? (width > 0 && height > 0 ? width / height : 16 / 9);
+    final ratio = videoAspectFor(fit.aspectRatio, _player.state.width, _player.state.height);
     widget.state?.update(fit: fit.fit, aspectRatio: ratio);
   }
 

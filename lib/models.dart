@@ -159,13 +159,20 @@ class ChannelRef {
 
   static bool isValidId(String id) => RegExp(r'^UC[\w-]{22}$').hasMatch(id);
 
+  /// [raw] as an https picture address, or null; the protocol-relative and
+  /// plain http forms some responses use are upgraded.
+  static String? avatarUrl(Object? raw) {
+    if (raw is! String) return null;
+    final url = raw.startsWith('//') ? 'https:$raw' : raw.startsWith('http://') ? 'https://${raw.substring(7)}' : raw;
+    return url.startsWith('https://') ? url : null;
+  }
+
   Map<String, dynamic> toJson() => {'id': id, 'name': name, if (avatar != null) 'avatar': avatar};
 
   static ChannelRef? fromJson(Object? raw) {
     if (raw is! Map) return null;
     final id = raw['id']?.toString() ?? '';
-    final avatar = raw['avatar'];
-    return isValidId(id) ? ChannelRef(id, raw['name']?.toString() ?? '', avatar is String && avatar.startsWith('https://') ? avatar : null) : null;
+    return isValidId(id) ? ChannelRef(id, raw['name']?.toString() ?? '', avatarUrl(raw['avatar'])) : null;
   }
 
   @override
@@ -197,14 +204,14 @@ class ChannelResult {
     if (thumbnails is List) {
       for (final t in thumbnails.whereType<Map>()) {
         final url = t['url']?.toString() ?? '';
-        if (url.isNotEmpty) avatar = url.startsWith('//') ? 'https:$url' : url;
+        if (url.isNotEmpty) avatar = url;
       }
     }
     return ChannelResult(
       ChannelRef(id, (map['channel'] ?? map['title'] ?? '').toString()),
       subscribers: followers is num ? tr('{0} 位订阅者', [formatCount(followers.toInt())]) : null,
       handle: map['uploader_id']?.toString(),
-      avatar: avatar != null && avatar.startsWith('https://') ? avatar : null,
+      avatar: ChannelRef.avatarUrl(avatar),
       description: map['description']?.toString() ?? '',
     );
   }

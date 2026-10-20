@@ -65,4 +65,17 @@ void main() {
       expect(textureSizeFor(const Size(1920, 1080), Size.zero), isNull);
     });
   });
+
+  group('videoAspectFor', () {
+    test('follows the current video, so a portrait video after a landscape one is not stretched', () {
+      expect(videoAspectFor(null, 1920, 1080), closeTo(16 / 9, 0.001));
+      expect(videoAspectFor(null, 1080, 1920), closeTo(9 / 16, 0.001));
+    });
+
+    test('a forced ratio wins, and an unknown size falls back to 16:9', () {
+      expect(videoAspectFor(4 / 3, 1080, 1920), 4 / 3);
+      expect(videoAspectFor(null, null, null), 16 / 9);
+      expect(videoAspectFor(null, 0, 1920), 16 / 9);
+    });
+  });
 }

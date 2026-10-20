@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../channel_avatars.dart';
 import '../channel_feed.dart';
 import '../library_store.dart';
 import '../models.dart';
@@ -12,10 +13,16 @@ import '../video_repository.dart';
 /// Favorites, playlists, followed channels, watch progress and the feed of
 /// followed channels. Everything stays on this computer.
 class LibraryController extends ChangeNotifier {
-  LibraryController(this.store, {http.Client? client}) : _feed = ChannelFeed(client ?? http.Client());
+  LibraryController(this.store, {http.Client? client}) : _client = client ?? http.Client();
+
+  final http.Client _client;
 
   final LibraryStore store;
-  final ChannelFeed _feed;
+  late final _feed = ChannelFeed(_client);
+  late final _avatars = ChannelAvatars(_client);
+  /// Channels whose picture was looked up this session, found or not.
+  final _avatarTried = <String>{};
+  bool _fillingAvatars = false;
   VideoRepository? repository;
 
   List<VideoItem> feed = const [];
@@ -226,6 +233,38 @@ class LibraryController extends ChangeNotifier {
     loadingFeed = false;
     _feedLoadedAt = DateTime.now();
     notifyListeners();
+    unawaited(fillMissingAvatars());
+  }
+
+  /// Looks up the picture of each followed channel that has none, a few at a
+  /// time and once per session, and keeps what it finds with the channel.
+  Future<void> fillMissingAvatars({int concurrency = 3}) async {
+    if (_fillingAvatars) return;
+    _fillingAvatars = true;
+    try {
+      final queue = [for (final channel in store.channels) if (channel.avatar == null && _avatarTried.add(channel.id)) channel];
+      var found = false;
+      Future<void> worker() async {
+        while (queue.isNotEmpty) {
+          final channel = queue.removeLast();
+          try {
+            final avatar = await _avatars.fetch(channel);
+            final at = store.channels.indexOf(channel);
+            if (avatar != null && at >= 0 && store.channels[at].avatar == null) {
+              store.channels[at] = ChannelRef(channel.id, store.channels[at].name, avatar);
+              found = true;
+            }
+          } catch (_) {
+            // Offline or blocked: the letter avatar stays.
+          }
+        }
+      }
+
+      await Future.wait([for (var i = 0; i < concurrency; i++) worker()]);
+      if (found) _changed();
+    } finally {
+      _fillingAvatars = false;
+    }
   }
 
   /// [channel]'s newest videos from its feed, for recommendations.

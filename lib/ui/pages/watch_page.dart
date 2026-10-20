@@ -69,7 +69,7 @@ class _WatchPageState extends State<WatchPage> {
           // Keep the whole player visible: never taller than the window allows.
           final playerWidth = min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
           final main = <Widget>[
-            _BackRow(onBack: controller.stopWatching),
+            _BackRow(onBack: controller.goBack),
             Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
             const SizedBox(height: 12),
             _Toolbar(controller: controller),

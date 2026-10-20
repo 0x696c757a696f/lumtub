@@ -80,13 +80,9 @@ class _AppShellState extends State<AppShell> {
     }
   }
 
-  /// Leaves the watch page, or a channel or playlist page.
+  /// Goes back to the previous page or video.
   void _back() {
-    if (_controller.playing != null) {
-      _controller.stopWatching();
-    } else if (_controller.mode == PageMode.channel || _controller.mode == PageMode.playlist || _controller.mode == PageMode.youtubePlaylist) {
-      _controller.goBack();
-    }
+    if (_controller.canGoBack) _controller.goBack();
   }
 
   int? get _selectedIndex {
@@ -101,7 +97,7 @@ class _AppShellState extends State<AppShell> {
           const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): _back,
         },
         child: Listener(
-          // The mouse "back" button leaves the watch page.
+          // The mouse "back" button goes back, like Alt+←.
           onPointerDown: (event) {
             if (event.buttons == kBackMouseButton) _back();
           },
@@ -190,7 +186,18 @@ class _AppShellState extends State<AppShell> {
 void openSettings(BuildContext context, AppController controller) {
   if (controller.playing == null) return controller.navigate(PageMode.settings);
   unawaited(Navigator.of(context).push(MaterialPageRoute<void>(
-    builder: (context) => Scaffold(appBar: AppBar(title: const Text('设置')), body: SettingsPage(controller: controller)),
+    builder: (context) {
+      void back() => Navigator.of(context).maybePop();
+      return CallbackShortcuts(
+        bindings: {const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): back},
+        child: Listener(
+          onPointerDown: (event) {
+            if (event.buttons == kBackMouseButton) back();
+          },
+          child: Focus(autofocus: true, child: Scaffold(appBar: AppBar(title: const Text('设置')), body: SettingsPage(controller: controller))),
+        ),
+      );
+    },
   )));
 }
 

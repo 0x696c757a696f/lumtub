@@ -37,6 +37,7 @@ import '../video_repository.dart';
 import '../windows_env.dart';
 import '../windows_video_info.dart';
 import 'account_controller.dart';
+import 'back_stack.dart';
 import 'library_controller.dart';
 import 'video_list_loader.dart';
 
@@ -85,8 +86,10 @@ class AppController extends ChangeNotifier {
   /// [favoritesPlaylistId].
   String? openPlaylistId;
   static const favoritesPlaylistId = 'favorites';
-  /// Pages to go back to from channel and playlist pages, newest last.
-  final _backStack = <PageMode>[];
+  /// Where 返回 goes: earlier pages and videos.
+  final _back = BackStack();
+  /// Set while going back, so the step back is not itself remembered.
+  bool _restoring = false;
 
   /// The open YouTube playlist and its videos.
   PlaylistResult? youtubePlaylist;
@@ -372,6 +375,7 @@ class AppController extends ChangeNotifier {
       await play(VideoItem(id: asUrl, title: 'YouTube 视频 · $asUrl', channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$asUrl'));
       return;
     }
+    if (query != _query || mode != PageMode.explore || playing != null) _remember();
     player?.pause();
     final repository = _repository!;
     final chosen = filter ?? searchFilter;
@@ -445,12 +449,13 @@ class AppController extends ChangeNotifier {
 
   /// Opens the explore page on its topics.
   void openExplore() {
+    _remember();
     if (_query != null) {
       _query = null;
       searchResults?.dispose();
       searchResults = null;
     }
-    navigate(PageMode.explore);
+    _go(PageMode.explore);
     _loadExplore();
   }
 
@@ -487,14 +492,17 @@ class AppController extends ChangeNotifier {
   }
 
   /// Plays [item]; [from] is the list it was picked from and becomes the queue.
-  Future<void> play(VideoItem item, {List<VideoItem>? from}) async {
+  /// Opens [item] on the watch page; [at] is where to start, else where
+  /// it was left off.
+  Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at}) async {
     final player = this.player;
     if (player == null) return;
+    if (playing?.id != item.id) _remember();
     _saveProgress();
     final serial = ++_playSerial;
     _recovery.reset();
     final resume = preferences.resumePlayback ? library?.progressOf(item.id) : null;
-    final start = resume != null && resume.resumable ? resume.position : null;
+    final start = at ?? (resume != null && resume.resumable ? resume.position : null);
     _update(() {
       playing = item;
       if (from != null) queue = List.unmodifiable(from);
@@ -512,7 +520,7 @@ class AppController extends ChangeNotifier {
     if (await _open(item, serial, start: start, play: preferences.autoPlay)) {
       if (settings.defaultSpeed != player.state.rate) await player.setRate(settings.defaultSpeed);
       if (preferences.recordHistory) await _history?.record(item);
-      if (start != null) _notice('从 ${_clock(start)} 继续播放');
+      if (start != null && at == null) _notice('从 ${_clock(start)} 继续播放');
       final next = upNext.firstOrNull;
       if (next != null) prefetch(next);
     }
@@ -1015,7 +1023,13 @@ class AppController extends ChangeNotifier {
     player?.pause();
   }
 
-  void navigate(PageMode target, {bool back = false}) {
+  /// Opens [target]; 返回 comes back to where this was.
+  void navigate(PageMode target) {
+    if (target != mode || playing != null) _remember();
+    _go(target);
+  }
+
+  void _go(PageMode target) {
     _saveProgress(now: true);
     _tracking = null;
     ++_playSerial;
@@ -1023,13 +1037,6 @@ class AppController extends ChangeNotifier {
       unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
     }
     _update(() {
-      if (!back) {
-        if (!_isDetail(target)) {
-          _backStack.clear();
-        } else if (target != mode) {
-          _backStack.add(mode);
-        }
-      }
       mode = target;
       playing = null;
       playbackError = null;
@@ -1037,12 +1044,97 @@ class AppController extends ChangeNotifier {
     player?.pause();
   }
 
-  static bool _isDetail(PageMode mode) => mode == PageMode.channel || mode == PageMode.playlist || mode == PageMode.youtubePlaylist;
+  /// What is on screen now, as 返回 would come back to it.
+  BackEntry get _here {
+    final video = playing;
+    if (video != null) {
+      final state = player?.state;
+      // A video that had finished starts over rather than ending again.
+      final ended = state == null || (state.duration > Duration.zero && state.position > state.duration - const Duration(seconds: 5));
+      return BackEntry.video(video, mode: mode, position: ended ? null : state.position, queue: queue);
+    }
+    return BackEntry.page(mode, query: _query, channel: channel, channelTab: channelTab, playlistId: openPlaylistId, youtubePlaylist: youtubePlaylist);
+  }
+
+  void _remember() {
+    if (!_restoring && ready) _back.push(_here);
+  }
+
+  /// Whether 返回 has somewhere to go.
+  bool get canGoBack => !_back.isEmpty || playing != null || _query != null || mode != PageMode.home || channelQuery != null;
+
+  /// Goes back to the previous page or video: a search inside a channel is
+  /// cleared first; with nothing earlier it closes the video, then the
+  /// search, then goes home.
+  void goBack() {
+    if (playing == null && mode == PageMode.channel && channelQuery != null) return searchChannel('');
+    BackEntry? entry;
+    do {
+      entry = _back.pop();
+    } while (entry != null && playing == null && entry.same(_here));
+    _restoring = true;
+    try {
+      if (entry != null) {
+        _restore(entry);
+      } else if (playing != null) {
+        stopWatching();
+      } else if (_query != null) {
+        clearSearch();
+      } else if (mode != PageMode.home) {
+        _go(PageMode.home);
+      }
+    } finally {
+      _restoring = false;
+    }
+  }
+
+  void _restore(BackEntry entry) {
+    final video = entry.video;
+    if (video != null) {
+      unawaited(play(video, from: entry.queue.isEmpty ? null : entry.queue, at: entry.position));
+      return;
+    }
+    switch (entry.mode) {
+      case PageMode.explore:
+        final query = entry.query;
+        if (query == null) {
+          openExplore();
+        } else if (query == _query) {
+          _go(PageMode.explore);
+        } else {
+          unawaited(search(query));
+        }
+      case PageMode.channel:
+        final ref = entry.channel;
+        if (ref == null) return _go(PageMode.home);
+        if (ref.id != channel?.id) {
+          openChannel(ref);
+        } else {
+          _go(PageMode.channel);
+        }
+        if (entry.channelTab != channelTab) setChannelTab(entry.channelTab);
+      case PageMode.youtubePlaylist:
+        final playlist = entry.youtubePlaylist;
+        if (playlist == null) return _go(PageMode.home);
+        if (playlist.id != youtubePlaylist?.id) {
+          openYoutubePlaylist(playlist);
+        } else {
+          _go(PageMode.youtubePlaylist);
+        }
+      case PageMode.playlist:
+        final id = entry.playlistId;
+        if (id == null) return _go(PageMode.home);
+        openPlaylist(id);
+      case final mode:
+        _go(mode);
+    }
+  }
 
   /// Opens [ref]'s page with its uploads.
   void openChannel(ChannelRef ref) {
     final repository = _repository;
     if (repository == null) return;
+    _remember();
     channelVideos?.dispose();
     channelPosts?.dispose();
     channelPosts = null;
@@ -1052,7 +1144,7 @@ class AppController extends ChangeNotifier {
     channelVideos = VideoListLoader(() => repository.channelVideos(ref))
       ..addListener(notifyListeners)
       ..loadMore();
-    navigate(PageMode.channel);
+    _go(PageMode.channel);
   }
 
   /// Shows another tab of the open channel.
@@ -1082,12 +1174,13 @@ class AppController extends ChangeNotifier {
   void openYoutubePlaylist(PlaylistResult playlist) {
     final repository = _repository;
     if (repository == null) return;
+    _remember();
     youtubePlaylistVideos?.dispose();
     youtubePlaylist = playlist;
     youtubePlaylistVideos = VideoListLoader(() => repository.playlist(playlist.id), pageSize: 50)
       ..addListener(notifyListeners)
       ..loadMore();
-    navigate(PageMode.youtubePlaylist);
+    _go(PageMode.youtubePlaylist);
   }
 
   /// Searches the open channel's videos for [query]; an empty query lists
@@ -1142,12 +1235,10 @@ class AppController extends ChangeNotifier {
   }
 
   void openPlaylist(String id) {
+    _remember();
     openPlaylistId = id;
-    navigate(PageMode.playlist);
+    _go(PageMode.playlist);
   }
-
-  /// Leaves a channel or playlist page for the page it was opened from.
-  void goBack() => navigate(_backStack.isEmpty ? PageMode.home : _backStack.removeLast(), back: true);
 
   void retrySearch() {
     final last = _query;

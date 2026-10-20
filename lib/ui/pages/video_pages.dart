@@ -132,7 +132,7 @@ class SearchResultsPage extends StatelessWidget {
         SliverToBoxAdapter(child: PageHeader(
           '“$query”',
           subtitle: controller.searching ? '正在搜索…' : (count.isEmpty ? null : count),
-          trailing: IconButton(tooltip: '返回探索', onPressed: controller.clearSearch, icon: const Icon(Icons.close_rounded)),
+          trailing: IconButton(tooltip: '返回 (Alt+←)', onPressed: controller.goBack, icon: const Icon(Icons.arrow_back_rounded)),
         )),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),

@@ -57,7 +57,7 @@ class ChannelPage extends StatelessWidget {
                       ChoiceChip(label: Text(value.label), selected: tab == value, onSelected: (_) => controller.setChannelTab(value)),
                   ])),
             const SizedBox(width: 12),
-            SizedBox(width: 240, child: _ChannelSearchField(key: ValueKey(channel.id), controller: controller)),
+            SizedBox(width: 240, child: _ChannelSearchField(key: ValueKey((channel.id, controller.channelQuery == null)), controller: controller)),
           ]),
         )),
         if (posts != null) ..._postSlivers(context, posts) else ..._listingSlivers(context, loader!, tab, searching),

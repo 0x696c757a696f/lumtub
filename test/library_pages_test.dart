@@ -129,13 +129,13 @@ void main() {
 
   testWidgets('playlists list favorites first and open a playlist', (tester) async {
     library.toggleFavorite(videos.first);
-    final playlist = library.createPlaylist('稍后观看');
+    final playlist = library.createPlaylist('周末歌单');
     for (final video in videos.take(3)) {
       library.addToPlaylist(playlist, video);
     }
     await pump(tester, PlaylistsPage(controller: controller));
     expect(find.text('收藏'), findsOneWidget);
-    expect(find.text('稍后观看'), findsOneWidget);
+    expect(find.text('周末歌单'), findsOneWidget);
     expect(find.text('3 个视频'), findsOneWidget);
     expect(tester.takeException(), isNull);
 

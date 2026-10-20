@@ -34,10 +34,12 @@ class LibraryController extends ChangeNotifier {
   Timer? _saveTimer;
 
   List<VideoItem> get favorites => store.favorites;
+  List<VideoItem> get watchLater => store.watchLater;
   List<LocalPlaylist> get playlists => store.playlists;
   List<ChannelRef> get channels => store.channels;
 
   bool isFavorite(String id) => store.isFavorite(id);
+  bool isWatchLater(String id) => store.isWatchLater(id);
   bool isFollowing(String channelId) => store.isFollowing(channelId);
   WatchProgress? progressOf(String id) => store.progressOf(id);
 
@@ -83,6 +85,23 @@ class LibraryController extends ChangeNotifier {
     final added = store.toggleFavorite(item);
     _changed();
     return added;
+  }
+
+  /// Adds or removes [item] from 稍后观看; returns whether it is now there.
+  bool toggleWatchLater(VideoItem item) {
+    final added = store.toggleWatchLater(item);
+    _changed();
+    return added;
+  }
+
+  void removeWatchLater(String id) {
+    if (store.removeWatchLater(id)) _changed();
+  }
+
+  void clearWatchLater() {
+    if (store.watchLater.isEmpty) return;
+    store.watchLater.clear();
+    _changed();
   }
 
   LocalPlaylist createPlaylist(String name) {

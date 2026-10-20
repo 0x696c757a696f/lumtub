@@ -372,10 +372,18 @@ class HistoryStore {
     await file.writeAsString('[]', flush: true);
   }
 
+  /// Forgets the videos with these ids.
+  Future<void> remove(Set<String> ids) async {
+    items.removeWhere((item) => ids.contains(item.id));
+    await _write();
+  }
+
+  Future<void> _write() => file.writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()), flush: true);
+
   Future<void> record(VideoItem item) async {
     items.removeWhere((other) => other.id == item.id);
     items.insert(0, item);
     if (items.length > 60) items.removeRange(60, items.length);
-    await file.writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()), flush: true);
+    await _write();
   }
 }

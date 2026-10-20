@@ -388,6 +388,7 @@ class PlaylistsPage extends StatelessWidget {
     if (library == null) return const SizedBox.shrink();
     final entries = [
       (AppController.favoritesPlaylistId, tr('收藏'), library.favorites, Icons.favorite_rounded),
+      (AppController.watchLaterPlaylistId, tr('稍后观看'), library.watchLater, Icons.watch_later_rounded),
       for (final playlist in library.playlists) (playlist.id, playlist.name, playlist.items, LibraryController.isRemote(playlist) ? Icons.smart_display_outlined : Icons.playlist_play_rounded),
     ];
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
@@ -519,17 +520,22 @@ class PlaylistDetailPage extends StatelessWidget {
     final id = controller.openPlaylistId;
     if (library == null || id == null) return const SizedBox.shrink();
     final favorites = id == AppController.favoritesPlaylistId;
-    final playlist = favorites ? null : library.playlist(id);
-    if (!favorites && playlist == null) {
+    final later = id == AppController.watchLaterPlaylistId;
+    final playlist = favorites || later ? null : library.playlist(id);
+    if (!favorites && !later && playlist == null) {
       return StatusView(
         icon: Icons.playlist_remove_rounded,
         title: tr('播放列表已删除'),
         action: FilledButton.tonal(onPressed: controller.goBack, child: Text(tr('返回'))),
       );
     }
-    final items = List<VideoItem>.of(favorites ? library.favorites : playlist!.items);
-    final name = favorites ? tr('收藏') : playlist!.name;
-    void remove(VideoItem item) => favorites ? library.toggleFavorite(item) : library.removeFromPlaylist(playlist!, item);
+    final items = List<VideoItem>.of(favorites ? library.favorites : later ? library.watchLater : playlist!.items);
+    final name = favorites ? tr('收藏') : later ? tr('稍后观看') : playlist!.name;
+    void remove(VideoItem item) => favorites
+        ? library.toggleFavorite(item)
+        : later
+            ? library.removeWatchLater(item.id)
+            : library.removeFromPlaylist(playlist!, item);
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
@@ -548,6 +554,10 @@ class PlaylistDetailPage extends StatelessWidget {
             icon: const Icon(Icons.play_arrow_rounded),
             label: Text(tr('播放全部')),
           ),
+          if (later && items.isNotEmpty) ...[
+            const SizedBox(width: 4),
+            TextButton.icon(onPressed: () => _clearLater(context, library), icon: const Icon(Icons.delete_sweep_outlined), label: Text(tr('清空'))),
+          ],
           if (playlist != null) ...[
             const SizedBox(width: 4),
             IconButton(tooltip: tr('重命名'), onPressed: () => _rename(context, library, playlist), icon: const Icon(Icons.edit_outlined)),
@@ -557,14 +567,26 @@ class PlaylistDetailPage extends StatelessWidget {
       )),
       if (items.isEmpty)
         SliverFillRemaining(hasScrollBody: false, child: StatusView(
-          icon: favorites ? Icons.favorite_border_rounded : Icons.playlist_add_rounded,
-          title: favorites ? tr('还没有收藏视频') : tr('这个播放列表是空的'),
-          message: tr('右键点击任意视频，或在播放页点按钮，就能添加到这里。'),
+          icon: favorites ? Icons.favorite_border_rounded : later ? Icons.watch_later_outlined : Icons.playlist_add_rounded,
+          title: favorites ? tr('还没有收藏视频') : later ? tr('稍后观看是空的') : tr('这个播放列表是空的'),
+          message: later ? tr('右键点击任意视频选“稍后观看”，或在播放页点按钮，想看的视频会先放在这里。') : tr('右键点击任意视频，或在播放页点按钮，就能添加到这里。'),
         ))
       else
         SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items), onRemove: remove),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
+  }
+
+  Future<void> _clearLater(BuildContext context, LibraryController library) async {
+    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
+      title: Text(tr('清空稍后观看？')),
+      content: Text(tr('只清空这个列表，视频和观看记录不受影响。')),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('取消'))),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('清空'))),
+      ],
+    ));
+    if (confirmed == true) library.clearWatchLater();
   }
 
   Future<void> _rename(BuildContext context, LibraryController library, LocalPlaylist playlist) async {

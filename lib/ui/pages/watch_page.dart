@@ -18,6 +18,7 @@ import '../player_shortcuts.dart';
 import '../skeleton.dart';
 import '../theme.dart';
 import '../translatable.dart';
+import '../play_queue_panel.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
 import '../../dearrow.dart';
@@ -173,6 +174,7 @@ class _Toolbar extends StatelessWidget {
     final decoded = controller.currentCodec != tr('尚未播放视频');
     final library = controller.library;
     final favorite = library?.isFavorite(item.id) ?? false;
+    final later = library?.isWatchLater(item.id) ?? false;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Wrap(
         spacing: 8,
@@ -196,6 +198,11 @@ class _Toolbar extends StatelessWidget {
               icon: const Icon(Icons.favorite_border_rounded),
               selectedIcon: Icon(Icons.favorite_rounded, color: context.colors.primary),
               onPressed: () => library.toggleFavorite(item),
+            ),
+            IconButton(
+              tooltip: later ? tr('从稍后观看移除') : tr('稍后观看'),
+              icon: Icon(later ? Icons.watch_later_rounded : Icons.watch_later_outlined, color: later ? context.colors.primary : null),
+              onPressed: () => library.toggleWatchLater(item),
             ),
             IconButton(tooltip: tr('添加到播放列表'), icon: const Icon(Icons.playlist_add_rounded), onPressed: () => showAddToPlaylist(context, controller, item)),
             if (controller.account?.signedIn ?? false)
@@ -430,6 +437,7 @@ class _UpNext extends StatelessWidget {
     final related = controller.related;
     final relatedItems = controller.relatedItems;
     final children = <Widget>[
+      if (controller.playQueue.isNotEmpty) ...[PlayQueuePanel(controller: controller), const SizedBox(height: 16)],
       _header(context, tr('接下来播放'), items.isEmpty ? null : tr('{0} 个', [items.length])),
       if (items.isEmpty)
         Padding(

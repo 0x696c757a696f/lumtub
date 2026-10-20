@@ -463,6 +463,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
   final library = controller?.library;
   final channel = item.channelRef;
   final favorite = library?.isFavorite(item.id) ?? false;
+  final later = library?.isWatchLater(item.id) ?? false;
   final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
   PopupMenuItem<String> entry(String value, IconData icon, String label) =>
       PopupMenuItem(value: value, child: ListTile(dense: true, leading: Icon(icon), title: Text(label)));
@@ -473,7 +474,12 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
       entry('play', Icons.play_arrow_rounded, tr('播放')),
       if (library != null) ...[
         entry('favorite', favorite ? Icons.favorite_rounded : Icons.favorite_border_rounded, favorite ? tr('取消收藏') : tr('收藏')),
+        entry('later', later ? Icons.watch_later_rounded : Icons.watch_later_outlined, later ? tr('从稍后观看移除') : tr('稍后观看')),
         entry('playlist', Icons.playlist_add_rounded, tr('添加到播放列表…')),
+      ],
+      if (controller != null) ...[
+        entry('queueNext', Icons.playlist_play_rounded, tr('下一个播放')),
+        entry('queueLast', Icons.queue_music_rounded, tr('加入播放队列')),
       ],
       if (controller?.account?.signedIn ?? false) entry('youtube', Icons.video_library_outlined, tr('保存到 YouTube 播放列表…')),
       if (controller != null && channel != null) ...[
@@ -500,6 +506,13 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
     case 'favorite':
       final added = library!.toggleFavorite(item);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('已收藏') : tr('已取消收藏'))));
+    case 'later':
+      final added = library!.toggleWatchLater(item);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('已加入稍后观看') : tr('已从稍后观看移除'))));
+    case 'queueNext':
+      controller!.queueNext(item);
+    case 'queueLast':
+      controller!.queueLast(item);
     case 'playlist':
       await showAddToPlaylist(context, controller!, item);
     case 'youtube':

@@ -534,6 +534,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.miniPlayer,
               onChanged: (v) => savePrefs(prefs.copyWith(miniPlayer: v)),
             ), subtitle: tr('小窗 离开播放页 悬浮')),
+        SettingEntry(tr('看完后从稍后观看移除'), (context) => SwitchItem(
+              title: tr('看完后从稍后观看移除'),
+              subtitle: tr('稍后观看里的视频播到结尾时自动移出列表'),
+              leading: _icon(Icons.watch_later_outlined),
+              value: prefs.watchLaterAutoRemove,
+              onChanged: (v) => savePrefs(prefs.copyWith(watchLaterAutoRemove: v)),
+            ), subtitle: tr('稍后观看 自动移除')),
         SettingEntry(tr('字幕设置'), (context) => NormalItem(
               title: tr('字幕设置'),
               subtitle: '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label} · ${settings.subtitleScale.toStringAsFixed(1)}×',

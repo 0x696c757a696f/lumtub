@@ -51,6 +51,7 @@ class AppPreferences {
     this.feedRefreshMinutes = 10,
     this.autoPlay = true,
     this.resumePlayback = true,
+    this.watchLaterAutoRemove = true,
     this.autoFullscreen = false,
     this.miniPlayer = true,
     this.exitFullscreenOnEnd = false,
@@ -125,6 +126,8 @@ class AppPreferences {
   /// Start playing as soon as a video opens.
   final bool autoPlay;
   final bool resumePlayback;
+  /// Take a video off 稍后观看 once it was played to the end.
+  final bool watchLaterAutoRemove;
   final bool autoFullscreen;
   /// Leaving the watch page keeps the video in the in-app mini player
   /// (ui/mini_player.dart) instead of stopping it.
@@ -232,6 +235,7 @@ class AppPreferences {
     int? feedRefreshMinutes,
     bool? autoPlay,
     bool? resumePlayback,
+    bool? watchLaterAutoRemove,
     bool? autoFullscreen,
     bool? miniPlayer,
     bool? exitFullscreenOnEnd,
@@ -280,6 +284,7 @@ class AppPreferences {
         feedRefreshMinutes: feedRefreshMinutes ?? this.feedRefreshMinutes,
         autoPlay: autoPlay ?? this.autoPlay,
         resumePlayback: resumePlayback ?? this.resumePlayback,
+        watchLaterAutoRemove: watchLaterAutoRemove ?? this.watchLaterAutoRemove,
         autoFullscreen: autoFullscreen ?? this.autoFullscreen,
         miniPlayer: miniPlayer ?? this.miniPlayer,
         exitFullscreenOnEnd: exitFullscreenOnEnd ?? this.exitFullscreenOnEnd,
@@ -329,6 +334,7 @@ class AppPreferences {
         'feedRefreshMinutes': feedRefreshMinutes,
         'autoPlay': autoPlay,
         'resumePlayback': resumePlayback,
+        'watchLaterAutoRemove': watchLaterAutoRemove,
         'autoFullscreen': autoFullscreen,
         'miniPlayer': miniPlayer,
         'exitFullscreenOnEnd': exitFullscreenOnEnd,
@@ -412,6 +418,7 @@ class AppPreferences {
       feedRefreshMinutes: number('feedRefreshMinutes', 10, 1, 1440),
       autoPlay: flag('autoPlay', d.autoPlay),
       resumePlayback: flag('resumePlayback', d.resumePlayback),
+      watchLaterAutoRemove: flag('watchLaterAutoRemove', d.watchLaterAutoRemove),
       autoFullscreen: flag('autoFullscreen', d.autoFullscreen),
       miniPlayer: flag('miniPlayer', d.miniPlayer),
       exitFullscreenOnEnd: flag('exitFullscreenOnEnd', d.exitFullscreenOnEnd),

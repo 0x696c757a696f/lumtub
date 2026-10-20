@@ -13,6 +13,7 @@ import '../app_directories.dart';
 import '../app_log.dart';
 import '../app_window.dart';
 import '../app_preferences.dart';
+import '../play_queue.dart';
 import '../playback_failure.dart';
 import '../playback_recovery.dart';
 import '../library_store.dart';
@@ -104,6 +105,8 @@ class AppController extends ChangeNotifier {
   /// [favoritesPlaylistId].
   String? openPlaylistId;
   static const favoritesPlaylistId = 'favorites';
+  /// 稍后观看 opens on the same page as a playlist.
+  static const watchLaterPlaylistId = 'watch_later';
   /// Where 返回 goes: earlier pages and videos.
   final _back = BackStack();
   /// Set while going back, so the step back is not itself remembered.
@@ -201,6 +204,8 @@ class AppController extends ChangeNotifier {
 
   /// The list the current video was opened from, shown as the play queue.
   List<VideoItem> queue = const [];
+  /// Videos lined up by hand; they play before [upNext].
+  final playQueue = PlayQueue();
   VideoDetails? details;
   bool loadingDetails = false;
   /// Heights the playing video offers, highest first; empty until known.
@@ -320,6 +325,8 @@ class AppController extends ChangeNotifier {
   Stream<String> get notices => _notices.stream;
 
   List<VideoItem> get history => _history?.items ?? const [];
+  @visibleForTesting
+  set historyStore(HistoryStore? store) => _history = store;
 
   /// The text of the current or last search, if any.
   String? get query => _query;
@@ -1307,11 +1314,14 @@ class AppController extends ChangeNotifier {
   /// Follows [PlayerSettings.playOrder] once a video ends. Single cycle is
   /// mpv's loop-file, so a looping video never ends.
   Future<void> _playAfterEnd() async {
+    final done = playing;
+    if (done != null && preferences.watchLaterAutoRemove) library?.removeWatchLater(done.id);
     if (sleepAfterCurrent) {
       _update(() => sleepAfterCurrent = false);
       _notice(tr('定时关闭：当前视频已播完'));
       return;
     }
+    if (await playQueued()) return;
     switch (settings.playOrder) {
       case PlayOrder.pause || PlayOrder.singleCycle:
         return;
@@ -1332,6 +1342,7 @@ class AppController extends ChangeNotifier {
 
   /// Plays the next video in the queue, if there is one.
   Future<void> playNext({bool keepMini = false}) async {
+    if (await playQueued(null, keepMini)) return;
     final next = upNext;
     final suggestions = relatedItems;
     if (next.isNotEmpty) {
@@ -1341,9 +1352,46 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  @visibleForTesting
+  Future<void> playAfterEndForTest() => _playAfterEnd();
+
+  /// 下一个播放: [item] goes to the front of [playQueue].
+  void queueNext(VideoItem item) {
+    _update(() => playQueue.addNext(item));
+    _notice(tr('将在当前视频之后播放'));
+  }
+
+  /// 加入播放队列: [item] goes to the end of [playQueue].
+  void queueLast(VideoItem item) {
+    final added = playQueue.addLast(item);
+    _update(() {});
+    _notice(added ? tr('已加入播放队列') : tr('播放队列里已经有这个视频'));
+  }
+
+  void removeQueued(String id) => _update(() => playQueue.remove(id));
+
+  void clearQueue() => _update(playQueue.clear);
+
+  void moveQueued(int from, int to) => _update(() => playQueue.move(from, to));
+
+  /// Plays [item], or the first of [playQueue], and takes it off the queue.
+  /// The list the current video came from carries on after the queued ones.
+  /// False when there was nothing to play.
+  Future<bool> playQueued([VideoItem? item, bool keepMini = false]) async {
+    final next = item ?? playQueue.items.firstOrNull;
+    if (next == null) return false;
+    _update(() => playQueue.remove(next.id));
+    final at = playing == null ? -1 : queue.indexWhere((other) => other.id == playing!.id);
+    final rest = [for (final other in queue) if (other.id != next.id) other];
+    final from = at < 0 ? null : [...rest.take(at + 1), next, ...rest.skip(at + 1)];
+    await play(next, from: from, keepMini: keepMini);
+    return true;
+  }
+
   /// Whether nothing will play once the current video ends.
   bool get stopsAfterEnd =>
       sleepAfterCurrent ||
+      playQueue.isEmpty &&
       switch (settings.playOrder) {
         PlayOrder.pause => true,
         PlayOrder.singleCycle || PlayOrder.listCycle => false,
@@ -1375,7 +1423,7 @@ class AppController extends ChangeNotifier {
     });
   }
 
-  bool get hasNext => upNext.isNotEmpty || relatedItems.isNotEmpty;
+  bool get hasNext => playQueue.isNotEmpty || upNext.isNotEmpty || relatedItems.isNotEmpty;
 
   /// Related videos that pass the content filters.
   List<VideoItem> get relatedItems => visible(related?.items ?? const []);
@@ -1878,6 +1926,12 @@ class AppController extends ChangeNotifier {
   Future<void> clearSearchHistory() async {
     await searchHistory?.clear();
     _notice(tr('搜索记录已清空。'));
+  }
+
+  /// Forgets the videos with these [ids] from the watch history.
+  Future<void> removeFromHistory(Set<String> ids) async {
+    await _history?.remove(ids);
+    _update(() {});
   }
 
   Future<void> clearHistory() async {

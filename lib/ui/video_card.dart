@@ -8,6 +8,7 @@ import '../app/app_controller.dart';
 import '../appearance_settings.dart';
 import '../library_store.dart';
 import '../models.dart';
+import '../dearrow.dart';
 import '../thumbnail_cache.dart';
 import '../youtube_account.dart' show RemotePlaylist;
 import 'common.dart';
@@ -19,11 +20,24 @@ import '../l10n/l10n.dart';
 /// channel line.
 const _cardInfoHeight = 82.0;
 
-ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 480}) => ResizeImage.resizeIfNeeded(
-      width,
-      null,
-      thumbnails == null ? NetworkImage(item.thumbnail) : CachedThumbnail(item.thumbnail, CachedThumbnail.fileFor(thumbnails, item.id, VideoItem.thumbnailFile)),
-    );
+/// [item]'s thumbnail, or DeArrow's frame for it when that is on and one
+/// was chosen.
+ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 480}) {
+  final frame = deArrow.thumbnailOf(item.id);
+  return ResizeImage.resizeIfNeeded(
+    width,
+    null,
+    switch ((thumbnails, frame)) {
+      (null, null) => NetworkImage(item.thumbnail),
+      (null, final frame?) => NetworkImage(frame.toString()),
+      (final dir?, null) => CachedThumbnail(item.thumbnail, CachedThumbnail.fileFor(dir, item.id, VideoItem.thumbnailFile)),
+      (final dir?, final frame?) => CachedThumbnail(frame.toString(), CachedThumbnail.fileFor(dir, item.id, 'dearrow_${frame.queryParameters['time']}'), fallback: item.thumbnail),
+    },
+  );
+}
+
+/// [item]'s title, or DeArrow's when that is on.
+String titleFor(VideoItem item) => deArrow.titleOf(item.id, item.title);
 
 /// Column count and card height for a grid [width] wide.
 /// The 推荐原因 line under a recommended card.
@@ -254,7 +268,19 @@ class _VideoCardState extends State<VideoCard> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    deArrow.addListener(_branded);
+  }
+
+  /// DeArrow answered for some videos, maybe this one.
+  void _branded() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
+    deArrow.removeListener(_branded);
     _prefetch?.cancel();
     _preview?.cancel();
     super.dispose();
@@ -326,7 +352,7 @@ class _VideoCardState extends State<VideoCard> {
           Expanded(child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
+              Expanded(child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
               Text(meta.isEmpty ? 'YouTube' : meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
               if (widget.reason case final reason?)
                 SizedBox(
@@ -370,7 +396,9 @@ class CompactVideoTile extends StatelessWidget {
   final Directory? thumbnails;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(listenable: deArrow, builder: _tile);
+
+  Widget _tile(BuildContext context, Widget? _) {
     final colors = context.colors;
     return InkWell(
       borderRadius: AppStyle.cardRadius,
@@ -399,7 +427,7 @@ class CompactVideoTile extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
+            Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: 4),
             Text(item.channel.isEmpty ? 'YouTube' : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
           ])),

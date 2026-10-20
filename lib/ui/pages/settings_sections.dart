@@ -697,6 +697,20 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: settings.returnDislike,
               onChanged: (v) => save(settings.copyWith(returnDislike: v)),
             ), subtitle: tr('Return YouTube Dislike 倒赞 点踩')),
+        SettingEntry(tr('DeArrow 替换标题'), (context) => SwitchItem(
+              title: tr('DeArrow 替换标题'),
+              subtitle: tr('用 DeArrow 用户提交的标题替换标题党标题。和空降助手一样只发视频 ID 哈希的前几位，服务器不知道你在看什么'),
+              leading: _icon(Icons.title_rounded),
+              value: settings.deArrowTitles,
+              onChanged: (v) => save(settings.copyWith(deArrowTitles: v)),
+            ), subtitle: tr('DeArrow 标题党 标题 封面')),
+        SettingEntry(tr('DeArrow 替换封面'), (context) => SwitchItem(
+              title: tr('DeArrow 替换封面'),
+              subtitle: tr('用 DeArrow 用户选的视频画面替换夸张封面。画面由它的服务器生成，开启后会把有替换封面的视频 ID 发给它'),
+              leading: _icon(Icons.image_outlined),
+              value: settings.deArrowThumbnails,
+              onChanged: (v) => save(settings.copyWith(deArrowThumbnails: v)),
+            ), subtitle: tr('DeArrow 封面 缩略图')),
         SettingEntry(tr('视频页显示相关视频'), (context) => SwitchItem(
               title: tr('视频页显示相关视频'),
               subtitle: tr('按标题搜索得到；关闭后自动连播只播放队列'),

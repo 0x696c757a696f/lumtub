@@ -16,6 +16,7 @@ import '../playback_failure.dart';
 import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
+import '../dearrow.dart';
 import '../return_dislike.dart';
 import '../sponsor_block.dart';
 import '../appearance_settings.dart';
@@ -152,6 +153,7 @@ class AppController extends ChangeNotifier {
   AppPreferencesStore? _preferencesStore;
 
   AppController({this.appearance = const AppearanceSettings(), AppearanceSettingsStore? appearanceStore}) : _appearanceStore = appearanceStore {
+    deArrow.configure(_http, titles: () => settings.deArrowTitles, thumbnails: () => settings.deArrowThumbnails);
     _applyAppearanceGlobals(appearance);
   }
 

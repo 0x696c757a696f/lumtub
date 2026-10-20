@@ -11,10 +11,13 @@ import 'package:http/http.dart' as http;
 /// network request.
 @immutable
 class CachedThumbnail extends ImageProvider<CachedThumbnail> {
-  const CachedThumbnail(this.url, this.file);
+  const CachedThumbnail(this.url, this.file, {this.fallback});
 
   final String url;
   final File file;
+  /// Loaded instead when [url] fails, such as YouTube's own thumbnail
+  /// when DeArrow's frame is not ready; not cached under [file].
+  final String? fallback;
 
   static final http.Client _client = http.Client();
   static final Random _random = Random();
@@ -47,6 +50,11 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
         response = await _client.get(Uri.parse(url.replaceFirst(RegExp(r'(maxresdefault|sddefault)\.jpg$'), 'hqdefault.jpg'))).timeout(const Duration(seconds: 20));
       }
       if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
+        final fallback = this.fallback;
+        if (fallback != null) {
+          final other = await _client.get(Uri.parse(fallback)).timeout(const Duration(seconds: 20));
+          if (other.statusCode == 200 && other.bodyBytes.isNotEmpty) return decode(await ui.ImmutableBuffer.fromUint8List(other.bodyBytes));
+        }
         throw HttpException('Thumbnail HTTP ${response.statusCode}', uri: Uri.parse(url));
       }
       bytes = response.bodyBytes;

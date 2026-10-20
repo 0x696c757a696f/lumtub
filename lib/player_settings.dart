@@ -245,6 +245,9 @@ class PlayerSettings {
   final bool sponsorBlock;
   /// Shows Return YouTube Dislike's estimate of the dislikes.
   final bool returnDislike;
+  /// DeArrow's titles and thumbnails in place of YouTube's.
+  final bool deArrowTitles;
+  final bool deArrowThumbnails;
   final Set<String> sponsorCategories;
   final bool sponsorNotice;
   final String? cachePath;
@@ -309,6 +312,8 @@ class PlayerSettings {
     this.subtitleBold = false,
     this.sponsorBlock = false,
     this.returnDislike = false,
+    this.deArrowTitles = false,
+    this.deArrowThumbnails = false,
     this.sponsorCategories = defaultSponsorCategories,
     this.sponsorNotice = true,
     this.cachePath,
@@ -359,6 +364,8 @@ class PlayerSettings {
     bool? subtitleBold,
     bool? sponsorBlock,
     bool? returnDislike,
+    bool? deArrowTitles,
+    bool? deArrowThumbnails,
     Set<String>? sponsorCategories,
     bool? sponsorNotice,
     String? cachePath,
@@ -406,6 +413,8 @@ class PlayerSettings {
         subtitleBold: subtitleBold ?? this.subtitleBold,
         sponsorBlock: sponsorBlock ?? this.sponsorBlock,
         returnDislike: returnDislike ?? this.returnDislike,
+        deArrowTitles: deArrowTitles ?? this.deArrowTitles,
+        deArrowThumbnails: deArrowThumbnails ?? this.deArrowThumbnails,
         sponsorCategories: sponsorCategories ?? this.sponsorCategories,
         sponsorNotice: sponsorNotice ?? this.sponsorNotice,
         cachePath: clearCachePath ? null : cachePath ?? this.cachePath,
@@ -454,6 +463,8 @@ class PlayerSettings {
         'subtitleBold': subtitleBold,
         'sponsorBlock': sponsorBlock,
         'returnDislike': returnDislike,
+        'deArrowTitles': deArrowTitles,
+        'deArrowThumbnails': deArrowThumbnails,
         'sponsorCategories': sponsorCategories.toList(),
         'sponsorNotice': sponsorNotice,
         if (cachePath != null) 'cachePath': cachePath,
@@ -564,6 +575,8 @@ class PlayerSettings {
       subtitleBold: raw['subtitleBold'] == true,
       sponsorBlock: raw['sponsorBlock'] == true,
       returnDislike: raw['returnDislike'] == true,
+      deArrowTitles: raw['deArrowTitles'] == true,
+      deArrowThumbnails: raw['deArrowThumbnails'] == true,
       sponsorCategories: categories,
       sponsorNotice: raw['sponsorNotice'] != false,
       cachePath: path != null && path.trim().isNotEmpty ? path : null,

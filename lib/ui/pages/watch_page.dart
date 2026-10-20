@@ -18,6 +18,7 @@ import '../skeleton.dart';
 import '../theme.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
+import '../../dearrow.dart';
 import '../../l10n/l10n.dart';
 
 /// Player, video details, the up-next list and the comments. On wide
@@ -239,7 +240,7 @@ class _Details extends StatelessWidget {
     final channel = details?.channel.isNotEmpty == true ? details!.channel : item.channel;
     final channelRef = controller.playingChannel;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      SelectableText(details?.title.isNotEmpty == true ? details!.title : item.title, style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600, height: 1.3)),
+      SelectableText(deArrow.titleOf(item.id, details?.title.isNotEmpty == true ? details!.title : item.title), style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600, height: 1.3)),
       const SizedBox(height: 12),
       Row(children: [
         ChannelAvatar(name: channel.isEmpty ? 'YouTube' : channel),

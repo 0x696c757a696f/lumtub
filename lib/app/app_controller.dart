@@ -1068,21 +1068,52 @@ class AppController extends ChangeNotifier {
 
   /// Searches the open channel's videos for [query]; an empty query lists
   /// the uploads again.
-  void searchChannel(String query) {
+  /// What a search inside the channel covers: null for YouTube's own
+  /// channel search, else one tab whose titles are filtered.
+  ChannelTab? channelSearchTab;
+
+  /// Searches the open channel; an empty [query] lists the tab again.
+  void searchChannel(String query, {ChannelTab? within}) {
     final repository = _repository;
     final ref = channel;
     if (repository == null || ref == null) return;
     final text = query.trim();
     _update(() {
       channelVideos?.dispose();
+      channelVideos = null;
       channelPosts?.dispose();
       channelPosts = null;
-      if (channelTab == ChannelTab.posts || channelTab == ChannelTab.playlists) channelTab = ChannelTab.videos;
       channelQuery = text.isEmpty ? null : text;
-      final tab = channelTab;
-      channelVideos = VideoListLoader(() => text.isEmpty ? repository.channelTab(ref, tab) : repository.channelSearch(ref, text))
-        ..addListener(notifyListeners)
-        ..loadMore();
+      channelSearchTab = text.isEmpty ? null : within;
+      if (text.isEmpty) {
+        // Back to the tab that was open.
+        if (channelTab == ChannelTab.posts) {
+          channelPosts = PostsLoader(_posts, ref)..addListener(notifyListeners);
+          unawaited(channelPosts!.loadMore());
+        } else {
+          final tab = channelTab;
+          channelVideos = VideoListLoader(() => repository.channelTab(ref, tab))
+            ..addListener(notifyListeners)
+            ..loadMore();
+        }
+        return;
+      }
+      final words = text.toLowerCase().split(RegExp(r'\s+'));
+      bool matches(String title) {
+        final lower = title.toLowerCase();
+        return words.every(lower.contains);
+      }
+
+      if (within == ChannelTab.posts) {
+        channelPosts = PostsLoader(_posts, ref, matches: matches)..addListener(notifyListeners);
+        unawaited(channelPosts!.loadMore());
+      } else {
+        channelVideos = (within == null
+            ? VideoListLoader(() => repository.channelSearch(ref, text))
+            : VideoListLoader(() => repository.channelTab(ref, within), matches: matches))
+          ..addListener(notifyListeners)
+          ..loadMore();
+      }
     });
   }
 

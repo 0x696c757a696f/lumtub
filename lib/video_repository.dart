@@ -27,6 +27,7 @@ enum ChannelTab {
   shorts('Shorts', '/shorts'),
   live('直播', '/streams'),
   playlists('播放列表', '/playlists'),
+  podcasts('播客', '/podcasts'),
   posts('社区', null);
 
   const ChannelTab(this.label, this.path);
@@ -149,8 +150,44 @@ class VideoRepository {
   /// [channel]'s uploads, newest first.
   Listing channelVideos(ChannelRef channel) => channelTab(channel, ChannelTab.videos);
 
-  /// One tab of [channel]: uploads, Shorts, live streams or playlists.
-  Listing channelTab(ChannelRef channel, ChannelTab tab) => _listing('${channel.url}${tab.path ?? '/videos'}', channel: channel);
+  /// One tab of [channel]: uploads, Shorts, live streams, playlists or
+  /// podcasts.
+  Listing channelTab(ChannelRef channel, ChannelTab tab) {
+    final url = '${channel.url}${tab.path ?? '/videos'}';
+    if (tab != ChannelTab.playlists && tab != ChannelTab.podcasts) return _listing(url, channel: channel);
+    return Listing(() => _expandingLines(url), channel: channel);
+  }
+
+  /// A playlists tab split into shelves ("Created playlists", "Saved
+  /// playlists") lists each shelf only as a link to its own page, which
+  /// --flat-playlist does not follow; those pages are listed in their turn.
+  Stream<String> _expandingLines(String url) async* {
+    final followed = <String>{};
+    await for (final line in _lines(listingArguments(url))) {
+      final shelf = shelfUrl(line);
+      if (shelf == null) {
+        yield line;
+      } else if (followed.add(shelf)) {
+        yield* _lines(listingArguments(shelf));
+      }
+    }
+  }
+
+  /// The URL of a channel tab shelf that a flat listing line links to, or
+  /// null when the line is an entry itself.
+  static String? shelfUrl(String line) {
+    try {
+      final data = jsonDecode(line);
+      if (data is! Map) return null;
+      final url = data['url']?.toString() ?? '';
+      final uri = Uri.tryParse(url);
+      if (uri == null || uri.host != 'www.youtube.com' || uri.queryParameters.containsKey('list')) return null;
+      final path = uri.path;
+      return (path.endsWith('/playlists') || path.endsWith('/podcasts')) && uri.queryParameters.isNotEmpty ? url : null;
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// The videos of a YouTube playlist.
   Listing playlist(String id) => _listing('https://www.youtube.com/playlist?list=$id');

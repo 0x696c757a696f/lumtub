@@ -10,7 +10,7 @@ import '../video_repository.dart';
 /// them. One [Listing] serves every page, so each page continues where the
 /// last one stopped.
 class VideoListLoader extends ChangeNotifier {
-  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where});
+  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches});
 
   final Listing Function() _open;
   final int pageSize;
@@ -18,6 +18,9 @@ class VideoListLoader extends ChangeNotifier {
   final int? limit;
   /// Leaves out videos that fail this test, such as the one playing.
   final bool Function(VideoItem item)? where;
+  /// Keeps only entries whose title passes, such as a search inside one
+  /// channel tab. Pages that add nothing are skipped over, up to a limit.
+  final bool Function(String title)? matches;
 
   List<VideoItem> items = const [];
   /// Channels the listing found; only searches list them.
@@ -46,32 +49,45 @@ class VideoListLoader extends ChangeNotifier {
       _listing?.close();
       _listing = _open();
     }
-    final listing = _listing!;
-    var fresh = 0;
     loading = true;
     error = null;
     _notify();
+    _page(_listing!, count, 0);
+  }
+
+  void _page(Listing listing, int count, int skipped) {
+    var fresh = 0;
+    var shown = 0;
     _subscription = listing.next(count).listen(
       (entry) {
+        fresh++;
+        final match = matches;
         if (entry is ChannelResult) {
-          if (!_seen.add(entry.ref.id)) return;
+          if (match != null || !_seen.add(entry.ref.id)) return;
           channels = [...channels, entry];
         } else if (entry is PlaylistResult) {
-          if (!_seen.add(entry.id)) return;
+          if ((match != null && !match(entry.title)) || !_seen.add(entry.id)) return;
           playlists = [...playlists, entry];
         } else if (entry is VideoItem) {
-          if (where?.call(entry) == false || !_seen.add(entry.id)) return;
+          if (where?.call(entry) == false || (match != null && !match(entry.title)) || !_seen.add(entry.id)) return;
           if (limit != null && items.length >= limit!) return;
           items = [...items, entry];
         }
-        fresh++;
+        shown++;
         _notify();
       },
       onError: (Object e) => error = '$e',
       onDone: () {
-        loading = false;
         final full = limit != null && items.length >= limit!;
-        hasMore = !full && (error != null || (!listing.done && fresh > 0));
+        final more = !full && !listing.done && fresh > 0;
+        // A filtered page with nothing to show would leave nothing to
+        // scroll, so the next one is read straight away.
+        if (matches != null && error == null && more && shown == 0 && skipped < 25 && !_disposed) {
+          _page(listing, pageSize, skipped + 1);
+          return;
+        }
+        loading = false;
+        hasMore = !full && (error != null || more);
         _notify();
       },
     );

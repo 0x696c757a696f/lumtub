@@ -41,7 +41,17 @@ class ChannelPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
           child: Row(children: [
             Expanded(child: searching
-                ? Text('频道内搜索“${controller.channelQuery}”', style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))
+                ? Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                    Text('搜索“${controller.channelQuery}”', style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    // 全部 is YouTube's channel search; the others filter
+                    // one tab by title.
+                    for (final value in <ChannelTab?>[null, ...ChannelTab.values])
+                      ChoiceChip(
+                        label: Text(value?.label ?? '全部'),
+                        selected: controller.channelSearchTab == value,
+                        onSelected: (_) => controller.searchChannel(controller.channelQuery!, within: value),
+                      ),
+                  ])
                 : Wrap(spacing: 8, runSpacing: 8, children: [
                     for (final value in ChannelTab.values)
                       ChoiceChip(label: Text(value.label), selected: tab == value, onSelected: (_) => controller.setChannelTab(value)),
@@ -109,7 +119,12 @@ class ChannelPage extends StatelessWidget {
           child: ErrorBanner(posts.isEmpty ? '无法加载社区帖子：$error' : '加载更多失败：$error', onRetry: () => loader.loadMore(retry: true)),
         )),
       if (posts.isEmpty && !loader.loading && error == null)
-        const SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.forum_outlined, title: '这个频道还没有社区帖子')),
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: controller.channelQuery != null
+              ? const StatusView(icon: Icons.search_off_rounded, title: '没有找到相关的社区帖子', message: '只搜索了最近的帖子，换个关键词试试。')
+              : const StatusView(icon: Icons.forum_outlined, title: '这个频道还没有社区帖子'),
+        ),
     ];
   }
 }
@@ -233,7 +248,7 @@ class _ChannelSearchFieldState extends State<_ChannelSearchField> {
   Widget build(BuildContext context) => TextField(
         controller: _text,
         textInputAction: TextInputAction.search,
-        onSubmitted: widget.controller.searchChannel,
+        onSubmitted: (text) => widget.controller.searchChannel(text, within: widget.controller.channelSearchTab),
         decoration: InputDecoration(
           isDense: true,
           hintText: '搜索频道内的视频',

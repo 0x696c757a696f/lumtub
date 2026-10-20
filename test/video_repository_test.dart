@@ -60,7 +60,7 @@ void main() {
 
   test('channel tabs and playlists have their own addresses', () {
     const channel = ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick Astley');
-    expect(ChannelTab.values.map((t) => t.label), ['视频', 'Shorts', '直播', '播放列表', '社区']);
+    expect(ChannelTab.values.map((t) => t.label), ['视频', 'Shorts', '直播', '播放列表', '播客', '社区']);
     expect(ChannelTab.live.path, '/streams');
     expect(SearchFilter.playlists.sp, 'EgIQAw%253D%253D');
     expect('${channel.url}${ChannelTab.shorts.path}', 'https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/shorts');

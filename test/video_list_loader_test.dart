@@ -110,5 +110,23 @@ void main() {
     expect(loader.playlists.single.count, 42);
     expect(loader.items.single.isLive, isTrue);
   });
-}
+  test('a title filter reads past pages with no match', () async {
+    String titled(int i, String title) => jsonEncode({'id': 'video$i'.padRight(11, '0'), 'title': title, 'channel': ''});
+    final source = _Source([for (var i = 0; i < 30; i++) titled(i, i == 25 ? 'Big Dog' : 'cat $i')]);
+    final loader = VideoListLoader(() => Listing(source.open), pageSize: 2, matches: (title) => title.toLowerCase().contains('dog'));
+    addTearDown(loader.dispose);
+    loader.loadMore();
+    while (loader.loading) {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+    expect(loader.items.map((v) => v.title), ['Big Dog']);
+    expect(loader.hasMore, isTrue);
+  });
 
+  test('a playlists tab follows its shelf links', () {
+    expect(VideoRepository.shelfUrl(jsonEncode({'url': 'https://www.youtube.com/@x/playlists?view=50&shelf_id=2'})), 'https://www.youtube.com/@x/playlists?view=50&shelf_id=2');
+    expect(VideoRepository.shelfUrl(jsonEncode({'url': 'https://www.youtube.com/playlist?list=PL123', 'ie_key': 'YoutubeTab'})), isNull);
+    expect(VideoRepository.shelfUrl(jsonEncode({'url': 'https://www.youtube.com/@x/playlists'})), isNull);
+    expect(VideoRepository.shelfUrl('not json'), isNull);
+  });
+}

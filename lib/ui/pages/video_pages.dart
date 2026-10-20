@@ -202,49 +202,6 @@ class SearchResultsPage extends StatelessWidget {
   }
 }
 
-/// Explore: popular videos of the month for a few topics.
-class ExplorePage extends StatelessWidget {
-  const ExplorePage({super.key, required this.controller});
-  final AppController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final loader = controller.explore;
-    final items = controller.visible(loader?.items ?? const []);
-    final error = loader?.error;
-    final loading = loader == null || loader.loading;
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (notification.metrics.extentAfter < 800) loader?.loadMore();
-        return false;
-      },
-      child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
-        SliverToBoxAdapter(child: PageHeader('探索', subtitle: AppController.exploreTopics[controller.exploreTopic].$3 == AppController.liveFilter ? '正在直播' : '各个分类本月观看最多的视频')),
-        SliverToBoxAdapter(child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
-          child: Wrap(spacing: 8, runSpacing: 8, children: [
-            for (final (i, (label, _, _)) in AppController.exploreTopics.indexed)
-              ChoiceChip(label: Text(label), selected: controller.exploreTopic == i, onSelected: (_) => controller.setExploreTopic(i)),
-          ]),
-        )),
-        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
-        if (loading) ...[
-          if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
-          SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),
-        ],
-        if (error != null)
-          SliverToBoxAdapter(child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-            child: ErrorBanner(items.isEmpty ? '无法加载：$error' : '加载更多失败：$error', onRetry: () => loader?.loadMore(retry: true)),
-          )),
-        if (items.isEmpty && !loading && error == null)
-          const SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.explore_outlined, title: '这个分类暂时没有视频')),
-        const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
-      ]),
-    );
-  }
-}
-
 class HistoryPage extends StatelessWidget {
   const HistoryPage({super.key, required this.controller});
   final AppController controller;

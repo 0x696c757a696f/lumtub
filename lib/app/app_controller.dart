@@ -31,6 +31,7 @@ import '../player_settings.dart';
 import '../tool_manager.dart';
 import '../video_format_selector.dart';
 import '../community_posts.dart';
+import '../explore_topics.dart';
 import '../stream_resolver.dart';
 import 'posts_loader.dart';
 import '../video_repository.dart';
@@ -407,45 +408,14 @@ class AppController extends ChangeNotifier {
     _loadExplore();
   }
 
-  /// Topics on the explore page: a label and the query searched for.
-  /// The explore page's topics: a label, the search behind it, and
-  /// YouTube's filter for it (null for [exploreFilter]).
-  static const exploreTopics = <(String, String, String?)>[
-    ('音乐', '音乐', null),
-    ('直播', '直播 live', liveFilter),
-    ('游戏', '游戏', null),
-    ('游戏直播', '游戏 直播', liveFilter),
-    ('科技', '科技 数码', null),
-    ('新闻', '新闻', null),
-    ('新闻直播', 'news live', liveFilter),
-    ('体育', '体育', null),
-    ('动画', '动画', null),
-    ('电影', '电影 预告片', null),
-    ('电视剧', '电视剧', null),
-    ('综艺', '综艺', null),
-    ('美食', '美食', null),
-    ('旅行', '旅行 vlog', null),
-    ('知识', '科普', null),
-    ('教育', '教程 学习', null),
-    ('编程', '编程', null),
-    ('汽车', '汽车 评测', null),
-    ('时尚美妆', '美妆 穿搭', null),
-    ('健身', '健身', null),
-    ('宠物', '宠物 猫 狗', null),
-    ('搞笑', '搞笑', null),
-    ('播客', '播客 podcast', null),
-    ('ASMR', 'ASMR', null),
-  ];
-
-  /// YouTube's filter for videos uploaded this month, most viewed first.
-  static const exploreFilter = 'CAMSBAgEEAE%253D';
-
-  /// YouTube's filter for streams that are live now.
-  static const liveFilter = 'EgJAAQ%253D%253D';
-
+  /// The explore page's half, category and, for popular videos, period.
+  ExploreSection exploreSection = ExploreSection.popular;
   int exploreTopic = 0;
-  /// The chosen topic's videos.
+  SearchUploadDate explorePeriod = SearchUploadDate.month;
+  /// The chosen category's videos.
   VideoListLoader? explore;
+
+  ExploreTopic get exploreTopicNow => exploreTopicsOf(exploreSection)[exploreTopic];
 
   /// Opens the explore page on its topics.
   void openExplore() {
@@ -459,19 +429,28 @@ class AppController extends ChangeNotifier {
     _loadExplore();
   }
 
-  void setExploreTopic(int index) {
-    if (index == exploreTopic && explore != null) return;
-    exploreTopic = index;
-    explore?.dispose();
-    explore = null;
+  /// Shows another category, half or period of the explore page.
+  void setExplore({ExploreSection? section, int? topic, SearchUploadDate? period}) {
+    final nextSection = section ?? exploreSection;
+    final nextTopic = topic ?? (nextSection == exploreSection ? exploreTopic : 0);
+    final nextPeriod = period ?? explorePeriod;
+    if (nextSection == exploreSection && nextTopic == exploreTopic && nextPeriod == explorePeriod && explore != null) return;
+    _update(() {
+      exploreSection = nextSection;
+      exploreTopic = nextTopic.clamp(0, exploreTopicsOf(nextSection).length - 1);
+      explorePeriod = nextPeriod;
+      explore?.dispose();
+      explore = null;
+    });
     _loadExplore();
   }
 
   void _loadExplore() {
     final repository = _repository;
     if (repository == null || explore != null) return;
-    final (_, query, sp) = exploreTopics[exploreTopic];
-    _update(() => explore = VideoListLoader(() => repository.search(query, sp: sp ?? exploreFilter))
+    final query = exploreTopicNow.query;
+    final sp = exploreParams(exploreSection, explorePeriod);
+    _update(() => explore = VideoListLoader(() => repository.search(query, sp: sp))
       ..addListener(notifyListeners)
       ..loadMore());
   }

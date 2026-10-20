@@ -9,6 +9,7 @@ import '../appearance_settings.dart';
 import 'common.dart';
 import 'pages/account_settings.dart';
 import 'pages/channel_page.dart';
+import 'pages/explore_page.dart';
 import 'pages/library_pages.dart';
 import 'pages/settings_page.dart';
 import 'pages/video_pages.dart';

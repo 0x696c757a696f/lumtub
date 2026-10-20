@@ -26,6 +26,7 @@ import '../translation.dart';
 import '../player_settings.dart';
 import '../widgets/pilinara_settings_tiles.dart';
 import '../widgets/video_progress_bar.dart';
+import 'cast_ui.dart';
 import 'common.dart';
 import 'pages/settings_sections.dart' show trimSpeed, qualityLabel;
 import 'pages/settings_subpages.dart';
@@ -346,6 +347,13 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ),
         if (_controller.sleepAt != null || _controller.sleepAfterCurrent)
           Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Tooltip(message: tr('定时关闭已开启'), child: Icon(Icons.bedtime_outlined, color: Colors.white, size: 18))),
+        _IconButton(
+          tooltip: tr('投屏'),
+          icon: _controller.cast.active ? Icons.cast_connected_rounded : Icons.cast_rounded,
+          size: 19,
+          active: _controller.cast.active,
+          onTap: () => unawaited(showCastDialog(context, _controller)),
+        ),
         _IconButton(
           tooltip: _controller.pinned ? tr('取消置顶') : tr('窗口置顶'),
           icon: _controller.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,

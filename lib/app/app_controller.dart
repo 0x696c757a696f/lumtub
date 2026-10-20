@@ -25,6 +25,9 @@ import '../cache_manager.dart';
 import '../decoder_status.dart';
 import '../models.dart';
 import '../network_proxy.dart';
+import '../cast/cast_controller.dart';
+import '../cast/cast_device.dart';
+import '../cast/cast_stream.dart';
 import '../invidious_streams.dart';
 import '../piped_streams.dart';
 import '../search_options.dart';
@@ -217,6 +220,33 @@ class AppController extends ChangeNotifier {
   PlaybackFailure? _rateLimited;
   late final _piped = PipedStreams(_http);
   late final _invidious = InvidiousStreams(_http);
+
+  /// The TV or Chromecast the video is cast to, if any.
+  final cast = CastController();
+
+  /// What to cast of [playing]: one progressive mp4 with sound, from the
+  /// yt-dlp extraction or else from a Piped or Invidious server.
+  Future<CastMedia> castMedia(Duration start) async {
+    final item = playing;
+    if (item == null || item.isLive || _repository == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
+    CastSource? source;
+    try {
+      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format)).info);
+    } catch (e) {
+      logInfo('投屏：yt-dlp 解析失败：$e');
+    }
+    for (final kind in RelayKind.values) {
+      if (source != null) break;
+      try {
+        source = castSourceFromRelay(await (kind == RelayKind.piped ? _piped.fetch(item.id) : _invidious.fetch(item.id)));
+      } catch (e) {
+        logInfo('投屏：$kind 解析失败：$e');
+      }
+    }
+    if (source == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
+    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
+    return CastMedia(url: source.url, title: title, mime: source.mime, start: start);
+  }
 
   /// The Piped servers, for 设置 › Piped 服务器.
   PipedStreams get piped => _piped;
@@ -865,6 +895,7 @@ class AppController extends ChangeNotifier {
     if (player == null) return;
     if (mini && playing?.id == item.id && at == null) return expandMini();
     if (playing?.id != item.id) {
+      unawaited(cast.stop());
       _remember();
       _finishWatching();
       _watching = item;
@@ -2192,6 +2223,7 @@ class AppController extends ChangeNotifier {
     }
     _saveProgress();
     unawaited(_relay?.close());
+    cast.dispose();
     account?.dispose();
     library?.dispose();
     channelVideos?.dispose();

@@ -10,6 +10,7 @@ import '../../models.dart';
 import '../../player_settings.dart';
 import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
+import '../cast_ui.dart';
 import '../common.dart';
 import '../linked_text.dart';
 import '../player_controls.dart';
@@ -80,6 +81,7 @@ class _WatchPageState extends State<WatchPage> {
           final main = <Widget>[
             _BackRow(onBack: controller.goBack),
             Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
+            CastBar(controller: controller),
             const SizedBox(height: 12),
             _Toolbar(controller: controller),
             if (controller.playbackError != null) ...[

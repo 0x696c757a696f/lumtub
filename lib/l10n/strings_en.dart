@@ -1888,4 +1888,13 @@ const stringsEn = <String, String>{
   '小窗 离开播放页 悬浮': 'mini player leave watch page floating',
   '展开到播放页': 'Back to the watch page',
   '关闭小窗并停止播放': 'Close the mini player and stop playback',
+  '没有可以投屏的视频流（需要带声音的 MP4 地址）': 'No stream can be cast (a single MP4 address with sound is needed)',
+  '没有找到设备。请确认电视和电脑在同一个局域网，电视已开启投屏（DLNA 或 Chromecast），并允许本程序通过 Windows 防火墙。': 'No devices found. Make sure the TV and this computer are on the same network, casting (DLNA or Chromecast) is turned on, and this app is allowed through the Windows firewall.',
+  '无法投屏：{0}': 'Cannot cast: {0}',
+  '正在投屏到 {0}': 'Casting to {0}',
+  '正在投屏到 {0}…': 'Casting to {0}…',
+  '正在搜索设备…': 'Searching for devices…',
+  '停止投屏': 'Stop casting',
+  '暂停': 'Pause',
+  '投屏': 'Cast',
 };

@@ -60,9 +60,14 @@ void main() {
         {'videoPrimaryInfoRenderer': {'title': {'runs': [{'text': '你好'}, {'text': '世界'}]}}},
         {'videoSecondaryInfoRenderer': {'attributedDescription': {'content': '说明'}}},
       ],
+      'frameworkUpdates': {'entityBatchUpdate': {'mutations': [
+        {'payload': {'likeCountEntity': {'likeCountIfIndifferentNumber': '1234567', 'likeCountIfLiked': {'content': '1.2M'}}}},
+      ]}},
     });
     expect(text?.title, '你好世界');
     expect(text?.description, '说明');
+    expect(text?.likes, 1234567);
+    expect(details.localized(details.title, details.description, likes: 5).likeCount, 5);
   });
 
   test('subtitles follow the interface language unless another is chosen', () {

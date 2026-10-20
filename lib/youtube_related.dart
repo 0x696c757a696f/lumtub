@@ -54,7 +54,7 @@ class YoutubeRelated {
 
   /// [videoId]'s title and description as YouTube shows them in the
   /// interface language: the uploader's translation where there is one.
-  Future<({String title, String description})?> textFor(String videoId) async {
+  Future<({String title, String description, int? likes})?> textFor(String videoId) async {
     try {
       return localized(await _next(videoId));
     } catch (_) {
@@ -63,13 +63,22 @@ class YoutubeRelated {
     }
   }
 
-  static ({String title, String description})? localized(Object? data) {
+  static ({String title, String description, int? likes})? localized(Object? data) {
     final primary = _find(data, 'videoPrimaryInfoRenderer');
     final secondary = _find(data, 'videoSecondaryInfoRenderer');
     final title = _text(primary?['title']).trim();
     if (title.isEmpty) return null;
     final description = _text(secondary?['attributedDescription'] ?? secondary?['description']);
-    return (title: title, description: description);
+    return (title: title, description: description, likes: likesIn(data));
+  }
+
+  /// The like count of a `/next` response: the like button's own number,
+  /// which yt-dlp sometimes misses.
+  static int? likesIn(Object? data) {
+    final entity = _find(data, 'likeCountEntity');
+    final number = entity?['likeCountIfIndifferentNumber'];
+    if (number is num) return number.toInt();
+    return number is String ? int.tryParse(number) : null;
   }
 
   static Map? _find(Object? node, String key) {

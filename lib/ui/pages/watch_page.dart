@@ -113,6 +113,52 @@ class _WatchPageState extends State<WatchPage> {
   }
 }
 
+/// 赞 and 踩 with their counts, as on YouTube. The counts show signed in or
+/// not; rating needs the Google account. 踩's count is Return YouTube
+/// Dislike's estimate, when that is turned on.
+class _RatingButtons extends StatelessWidget {
+  const _RatingButtons({required this.controller});
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final item = controller.playing!;
+    final account = controller.account;
+    final signedIn = account?.signedIn ?? false;
+    final colors = context.colors;
+    final likes = controller.details?.likeCount ?? controller.dislikes?.likes;
+    final dislikes = controller.dislikes?.dislikes;
+    Widget button(VideoRating rating, IconData icon, IconData selectedIcon, String label, int? count, {String? note}) {
+      final selected = signedIn && account!.ratingOf(item.id) == rating;
+      return Tooltip(
+        message: [
+          if (!signedIn) tr('登录 Google 账号后可以{0}', [label]) else if (selected) tr('取消{0}', [label]) else label,
+          if (note != null) note,
+        ].join('\n'),
+        child: TextButton.icon(
+          style: TextButton.styleFrom(
+            foregroundColor: selected ? colors.primary : colors.onSurface,
+            backgroundColor: colors.surfaceContainerHighest,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+          ),
+          onPressed: signedIn
+              ? () => account!.rate(item, rating)
+              : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('登录 Google 账号后可以{0}', [label])))),
+          icon: Icon(selected ? selectedIcon : icon, size: 20),
+          label: Text(count == null ? label : formatCount(count)),
+        ),
+      );
+    }
+
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      button(VideoRating.like, Icons.thumb_up_outlined, Icons.thumb_up_rounded, tr('赞'), likes),
+      const SizedBox(width: 4),
+      button(VideoRating.dislike, Icons.thumb_down_outlined, Icons.thumb_down_rounded, tr('踩'), dislikes,
+          note: dislikes == null ? null : tr('踩数是 Return YouTube Dislike 的估算')),
+    ]);
+  }
+}
+
 class _Toolbar extends StatelessWidget {
   const _Toolbar({required this.controller});
   final AppController controller;
@@ -139,19 +185,7 @@ class _Toolbar extends StatelessWidget {
             ],
             child: Chip(avatar: const Icon(Icons.repeat_rounded, size: 18), label: Text(settings.playOrder.label)),
           ),
-          if (controller.account case final account? when account.signedIn) ...[
-            for (final (rating, icon, selectedIcon, label) in [
-              (VideoRating.like, Icons.thumb_up_outlined, Icons.thumb_up_rounded, tr('赞')),
-              (VideoRating.dislike, Icons.thumb_down_outlined, Icons.thumb_down_rounded, tr('踩')),
-            ])
-              IconButton(
-                tooltip: account.ratingOf(item.id) == rating ? tr('取消{0}', [label]) : label,
-                isSelected: account.ratingOf(item.id) == rating,
-                icon: Icon(icon),
-                selectedIcon: Icon(selectedIcon, color: context.colors.primary),
-                onPressed: () => account.rate(item, rating),
-              ),
-          ],
+          _RatingButtons(controller: controller),
           if (library != null) ...[
             IconButton(
               tooltip: favorite ? tr('取消收藏') : tr('收藏'),
@@ -234,8 +268,6 @@ class _Details extends StatelessWidget {
     final meta = [
       if (views != null) tr('{0}次观看', [formatCount(views)]),
       if (details?.uploadDate != null) formatDate(details!.uploadDate!),
-      if (details?.likeCount ?? controller.dislikes?.likes case final likes?) tr('{0} 赞', [formatCount(likes)]),
-      if (controller.dislikes case final votes?) tr('{0} 踩（估算）', [formatCount(votes.dislikes)]),
     ].join(' · ');
     final channel = details?.channel.isNotEmpty == true ? details!.channel : item.channel;
     final channelRef = controller.playingChannel;

@@ -1272,7 +1272,7 @@ class AppController extends ChangeNotifier {
     final text = await relatedVideos.textFor(videoId);
     final current = details;
     if (text == null || current == null || serial != _playSerial) return;
-    _update(() => details = current.localized(text.title, text.description));
+    _update(() => details = current.localized(text.title, text.description, likes: text.likes));
   }
 
   VideoListLoader _relatedTo(VideoItem item, String title) {

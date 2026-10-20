@@ -335,8 +335,8 @@ class VideoDetails {
   /// These details with YouTube's [title] and [description] in the
   /// interface language. Chapters come from the description's timestamps,
   /// so where the translated one lists the same times, theirs are renamed.
-  VideoDetails localized(String title, String description) {
-    if (title.isEmpty || (title == this.title && description == this.description)) return this;
+  VideoDetails localized(String title, String description, {int? likes}) {
+    if (title.isEmpty || (title == this.title && description == this.description && (likes == null || likeCount != null))) return this;
     final names = <int, String>{};
     for (final line in const LineSplitter().convert(description)) {
       final match = _chapterLine.firstMatch(line);
@@ -351,7 +351,7 @@ class VideoDetails {
       channelId: channelId,
       uploadDate: uploadDate,
       viewCount: viewCount,
-      likeCount: likeCount,
+      likeCount: likeCount ?? likes,
       description: description.isEmpty ? this.description : description,
       chapters: [
         for (final c in chapters) Chapter(c.start, c.end, names[c.start.inSeconds] ?? c.title),

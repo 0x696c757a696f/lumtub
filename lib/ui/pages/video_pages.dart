@@ -143,7 +143,7 @@ class SearchResultsPage extends StatelessWidget {
         action: FilledButton.tonalIcon(onPressed: onFocusSearch, icon: const Icon(Icons.search_rounded), label: Text(tr('开始搜索'))),
       );
     }
-    final results = controller.visible(controller.results);
+    final results = controller.visible(controller.results, search: true);
     final channels = controller.channelResults;
     final playlists = controller.playlistResults;
     final error = controller.searchError;

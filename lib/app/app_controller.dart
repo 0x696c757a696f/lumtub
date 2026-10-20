@@ -34,6 +34,7 @@ import '../player_settings.dart';
 import '../tool_manager.dart';
 import '../video_format_selector.dart';
 import '../community_posts.dart';
+import '../blocked_groups.dart';
 import '../explore_topics.dart';
 import '../faith_topics.dart';
 import '../stream_resolver.dart';
@@ -206,8 +207,16 @@ class AppController extends ChangeNotifier {
   SearchFilter searchFilter = SearchFilter.all;
 
   List<VideoItem> get results => searchResults?.items ?? const [];
-  List<ChannelResult> get channelResults => searchResults?.channels ?? const [];
-  List<PlaylistResult> get playlistResults => searchResults?.playlists ?? const [];
+  /// The search's channels, without blocked groups unless one is named
+  /// exactly.
+  List<ChannelResult> get channelResults => [
+        for (final c in searchResults?.channels ?? const <ChannelResult>[])
+          if (!preferences.isBlocked(c.ref.id) && !preferences.isBlockedName(c.ref.name) && (!preferences.blocksGroupIn('${c.ref.name}\n${c.handle ?? ''}') || isExactName(c.ref.name, _query) || isExactName(c.handle ?? '', _query))) c,
+      ];
+  List<PlaylistResult> get playlistResults => [
+        for (final p in searchResults?.playlists ?? const <PlaylistResult>[])
+          if (!preferences.isBlockedName(p.channel) && (!preferences.blocksGroupIn('${p.title}\n${p.channel}') || isExactName(p.channel, _query))) p,
+      ];
   bool get searching => searchResults?.loading ?? false;
   String? get searchError => searchResults?.error;
 
@@ -610,6 +619,8 @@ class AppController extends ChangeNotifier {
     final faith = exploreSection.isFaith ? faithFilter() : null;
     bool where(VideoItem item) {
       if (notInterested != null && notInterested.videos.contains(item.id)) return false;
+      // Left out here too, so that hiding them still fills the page.
+      if (preferences.blocksGroup(item) || preferences.isUnrecommended(item.channelId)) return false;
       if (taste != null && taste.channelAffinity(item) < -0.3) return false;
       if (mode == ExploreMode.liveUpcoming && !item.isUpcoming) return false;
       if (mode == ExploreMode.liveReplay && item.liveStatus != 'was_live') return false;
@@ -1173,7 +1184,7 @@ class AppController extends ChangeNotifier {
       () => repository.search(query, filter: SearchFilter.videos),
       pageSize: 13,
       limit: 12,
-      where: (other) => other.id != item.id,
+      where: (other) => other.id != item.id && !preferences.blocksGroup(other) && !preferences.isUnrecommended(other.channelId),
     )..addListener(notifyListeners);
     loader.loadMore();
     return loader;
@@ -1559,11 +1570,17 @@ class AppController extends ChangeNotifier {
 
   /// Videos of [items] that pass the privacy and content filters. The
   /// subscriptions feed is filtered only when [AppPreferences.filterSubscriptions].
-  List<VideoItem> visible(List<VideoItem> items, {bool subscriptions = false}) {
+  List<VideoItem> visible(List<VideoItem> items, {bool subscriptions = false, bool search = false}) {
     final prefs = preferences;
     if (subscriptions && !prefs.filterSubscriptions) return items.where((item) => !prefs.isBlocked(item.channelId)).toList();
     final library = this.library;
-    return items.where((item) => prefs.shows(item, watched: library?.progressOf(item.id)?.finished ?? false)).toList();
+    // Blocked groups show in a search only for their channel's exact name,
+    // channels not to recommend in any search; followed channels are the
+    // user's choice and stay.
+    bool hidden(VideoItem item) =>
+        !subscriptions &&
+        ((prefs.blocksGroup(item) && !(search && isExactName(item.channel, _query))) || (!search && prefs.isUnrecommended(item.channelId)));
+    return items.where((item) => !hidden(item) && prefs.shows(item, watched: library?.progressOf(item.id)?.finished ?? false)).toList();
   }
 
   Future<void> savePreferences(AppPreferences next) async {
@@ -1579,6 +1596,31 @@ class AppController extends ChangeNotifier {
     if (preferences.isBlocked(channel.id)) return;
     unawaited(savePreferences(preferences.copyWith(blockedChannels: [...preferences.blockedChannels, channel])));
     _notice(tr('已屏蔽“{0}”，可在 设置 › 隐私设置 中解除', [channel.name.isEmpty ? channel.id : channel.name]));
+  }
+
+  /// Blocks a channel the user typed in: a link or id with its `UC…` id,
+  /// else its exact name. Returns what was blocked, or null if nothing.
+  String? blockChannelTyped(String text) {
+    final typed = text.trim();
+    if (typed.isEmpty) return null;
+    final id = RegExp(r'UC[\w-]{22}').firstMatch(typed)?[0];
+    if (id != null) {
+      if (!preferences.isBlocked(id)) unawaited(savePreferences(preferences.copyWith(blockedChannels: [...preferences.blockedChannels, ChannelRef(id, '')])));
+      return id;
+    }
+    if (!preferences.isBlockedName(typed)) unawaited(savePreferences(preferences.copyWith(blockedChannelNames: [...preferences.blockedChannelNames, typed])));
+    return typed;
+  }
+
+  void unblockChannelName(String name) =>
+      unawaited(savePreferences(preferences.copyWith(blockedChannelNames: preferences.blockedChannelNames.where((n) => n != name).toList())));
+
+  /// Stops or resumes recommending [channel]'s videos.
+  void setRecommendChannel(ChannelRef channel, bool recommend) {
+    final rest = preferences.unrecommendedChannels.where((c) => c.id != channel.id).toList();
+    unawaited(savePreferences(preferences.copyWith(unrecommendedChannels: recommend ? rest : [...rest, channel])));
+    final name = channel.name.isEmpty ? channel.id : channel.name;
+    _notice(recommend ? tr('已恢复推荐“{0}”', [name]) : tr('不再推荐“{0}”的视频，搜索和关注不受影响', [name]));
   }
 
   void unblockChannel(String id) =>

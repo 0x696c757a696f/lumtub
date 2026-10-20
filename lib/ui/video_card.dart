@@ -447,6 +447,10 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
       if (controller?.account?.signedIn ?? false) entry('youtube', Icons.video_library_outlined, tr('保存到 YouTube 播放列表…')),
       if (controller != null && channel != null) ...[
         entry('channel', Icons.account_circle_outlined, tr('查看频道')),
+        if (controller.preferences.isUnrecommended(channel.id))
+          entry('recommend', Icons.thumb_up_off_alt_outlined, tr('恢复推荐此频道'))
+        else
+          entry('unrecommend', Icons.thumb_down_off_alt_outlined, tr('不推荐此频道')),
         entry('block', Icons.block_rounded, tr('屏蔽此频道')),
       ],
       if (onRemove != null)
@@ -471,6 +475,8 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
       await showSaveToYoutube(context, controller!, item);
     case 'channel':
       controller!.openChannel(channel!);
+    case 'recommend' || 'unrecommend':
+      controller!.setRecommendChannel(channel!, choice == 'recommend');
     case 'block':
       controller!.blockChannel(channel!);
     case 'remove':

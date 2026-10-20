@@ -243,6 +243,7 @@ class _Details extends StatelessWidget {
           TextButton(onPressed: () => controller.openChannel(channelRef), child: Text(tr('查看频道'))),
           const Spacer(),
           FollowButton(controller: controller, channel: channelRef),
+          ChannelMenuButton(controller: controller, channel: channelRef),
         ] else if (details?.channelUrl != null)
           TextButton(onPressed: () => openExternal(details!.channelUrl!), child: Text(tr('查看频道'))),
       ]),

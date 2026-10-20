@@ -5,6 +5,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
+import '../../blocked_groups.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
 import '../../appearance_settings.dart';
@@ -100,10 +101,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
     SettingsCategory.privacy => [
         SettingEntry(tr('屏蔽频道'), (context) => NormalItem(
               title: tr('屏蔽频道'),
-              subtitle: prefs.blockedChannels.isEmpty ? tr('在视频卡片的右键菜单里选“屏蔽此频道”') : tr('已屏蔽 {0} 个频道', [prefs.blockedChannels.length]),
+              subtitle: prefs.blockedChannels.isEmpty && prefs.blockedChannelNames.isEmpty && prefs.unrecommendedChannels.isEmpty
+                  ? tr('手动添加，或在视频卡片、频道页、播放页里选“屏蔽此频道”')
+                  : tr('已屏蔽 {0} 个，不推荐 {1} 个', [prefs.blockedChannels.length + prefs.blockedChannelNames.length, prefs.unrecommendedChannels.length]),
               leading: _icon(Icons.block_rounded),
               onTap: () => openBlockedChannels(context, controller),
-            ), subtitle: tr('黑名单')),
+            ), subtitle: tr('黑名单 不推荐')),
         SettingEntry(tr('记录观看历史'), (context) => SwitchItem(
               title: tr('记录观看历史'),
               subtitle: tr('关闭后新看的视频不再出现在“历史”和首页，也不再记录搜索词'),
@@ -151,6 +154,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.homeShowRecommended,
               onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecommended: v)),
             )),
+        SettingEntry(tr('屏蔽争议宗教团体'), (context) => NormalItem(
+              title: tr('屏蔽争议宗教团体'),
+              subtitle: prefs.blockGroups
+                  ? tr('已开启，屏蔽 {0} 个团体；输入完全正确的频道名仍能搜到', [blockedGroups.length - prefs.allowedGroups.length])
+                  : tr('已关闭'),
+              leading: _icon(Icons.block_rounded),
+              onTap: () => openBlockedGroups(context, controller),
+            ), subtitle: tr('法轮功 全能神 新天地 统一教 邪教 异端')),
         SettingEntry(tr('清空不感兴趣'), (context) => NormalItem(
               title: tr('清空“不感兴趣”记录'),
               subtitle: tr('{0} 个视频', [controller.homeFeed?.notInterested.videos.length ?? 0]),

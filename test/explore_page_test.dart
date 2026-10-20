@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/app_controller.dart';
 import 'package:ytplus/app_preferences.dart';
+import 'package:ytplus/blocked_groups.dart';
 import 'package:ytplus/explore_topics.dart';
 import 'package:ytplus/faith_topics.dart';
 import 'package:ytplus/models.dart';
@@ -99,6 +100,72 @@ void main() {
     VideoItem video(int i, String channel) => VideoItem(id: 'v$i'.padRight(11, '0'), title: 'Mass $i', channel: channel, url: '');
     final kept = [for (var i = 0; i < 6; i++) video(i, i < 5 ? 'a' : 'b')].where(keep).map((v) => v.channel).toList();
     expect(kept, ['a', 'a', 'a', 'b']);
+  });
+
+  test('blocked groups show in a search only for the exact channel name, and the setting turns it off', () {
+    VideoItem video(String id, String title, String channel) => VideoItem(id: id.padRight(11, '0'), title: title, channel: channel, url: '');
+    final items = [video('a', '新闻', 'NTD Television'), video('b', 'Shen Yun 2026', 'Shen Yun Performing Arts'), video('c', '弥撒', 'EWTN')];
+    final controller = AppController();
+    String ids(List<VideoItem> list) => list.map((v) => v.id[0]).join();
+    expect(ids(controller.visible(items)), 'c');
+    controller.debugQuery = 'NTD Televisio';
+    expect(ids(controller.visible(items, search: true)), 'c');
+    controller.debugQuery = ' ntd television ';
+    expect(ids(controller.visible(items, search: true)), 'ac');
+    // Outside a search the exact name does not matter.
+    expect(ids(controller.visible(items)), 'c');
+    // Channels the user follows stay in the subscription feed.
+    expect(ids(controller.visible(items, subscriptions: true)), 'abc');
+    controller.preferences = controller.preferences.copyWith(allowedGroups: ['法轮功']);
+    expect(ids(controller.visible(items)), 'abc');
+    controller.preferences = controller.preferences.copyWith(allowedGroups: [], blockGroups: false);
+    expect(ids(controller.visible(items)), 'abc');
+    expect(isExactName('大紀元時報', '大紀元'), isFalse);
+  });
+
+  test('channels not to recommend stay in searches; typed channels are blocked by id or exact name', () async {
+    const ewtn = ChannelRef('UCaaaaaaaaaaaaaaaaaaaaaa', 'EWTN');
+    VideoItem video(String id, String channel, [String? channelId]) => VideoItem(id: id.padRight(11, '0'), title: 'Mass', channel: channel, channelId: channelId, url: '');
+    final items = [video('a', 'EWTN', ewtn.id), video('b', 'Other', 'UCbbbbbbbbbbbbbbbbbbbbbb'), video('c', 'Some Channel')];
+    final controller = AppController();
+    String ids(List<VideoItem> list) => list.map((v) => v.id[0]).join();
+    controller.setRecommendChannel(ewtn, false);
+    expect(ids(controller.visible(items)), 'bc');
+    expect(ids(controller.visible(items, search: true)), 'abc');
+    expect(ids(controller.visible(items, subscriptions: true)), 'abc');
+    controller.setRecommendChannel(ewtn, true);
+    expect(controller.preferences.unrecommendedChannels, isEmpty);
+
+    expect(controller.blockChannelTyped('https://www.youtube.com/channel/UCbbbbbbbbbbbbbbbbbbbbbb'), 'UCbbbbbbbbbbbbbbbbbbbbbb');
+    expect(controller.blockChannelTyped('  some channel '), 'some channel');
+    expect(ids(controller.visible(items, search: true)), 'a');
+    controller.unblockChannelName('some channel');
+    expect(ids(controller.visible(items)), 'ac');
+
+    final back = AppPreferences.fromJson(jsonDecode(jsonEncode(controller.preferences.copyWith(
+      unrecommendedChannels: [ewtn],
+      allowedGroups: ['NXIVM'],
+      blockedChannelNames: ['X'],
+      blockGroups: false,
+    ).toJson())));
+    expect(back.unrecommendedChannels.single.name, 'EWTN');
+    expect(back.allowedGroups, ['NXIVM']);
+    expect(back.blockedChannelNames, ['X']);
+    expect(back.blockGroups, isFalse);
+    expect(const AppPreferences().blockGroups, isTrue);
+  });
+
+  test('recommendations leave out groups the user blocked, by title or channel', () {
+    VideoItem video(String title, [String channel = 'Some channel']) => VideoItem(id: 'x'.padRight(11, '0'), title: title, channel: channel, url: '');
+    expect(namesBlockedGroup(video('法輪大法好')), isTrue);
+    expect(namesBlockedGroup(video('Sermon', 'The Church of Almighty God')), isTrue);
+    expect(namesBlockedGroup(video('Inside SCIENTOLOGY')), isTrue);
+    expect(namesBlockedGroup(video('Heaven’s Gate: the cult')), isTrue);
+    expect(namesBlockedGroup(video('Shincheonji in Korea')), isTrue);
+    // Ordinary Christian words stay.
+    expect(namesBlockedGroup(video('Almighty God, we pray', 'EWTN')), isFalse);
+    expect(namesBlockedGroup(video('Jehovah Jireh worship')), isFalse);
+    expect(namesBlockedGroup(video('天主教的七件圣事', '梵蒂冈新闻')), isFalse);
   });
 
   test('arranges zones in the saved order and leaves hidden ones out', () {

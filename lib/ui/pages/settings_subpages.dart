@@ -16,6 +16,8 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../../app_log.dart';
+import '../../app_preferences.dart';
+import '../../blocked_groups.dart';
 import '../../appearance_settings.dart';
 import '../../player_settings.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
@@ -54,22 +56,120 @@ Widget _tip(BuildContext context, String text) => Padding(
 
 // 隐私设置 › 屏蔽频道
 
-Future<void> openBlockedChannels(BuildContext context, AppController controller) => _push(context, controller, tr('屏蔽频道'), (context) {
-      final channels = controller.preferences.blockedChannels;
+/// Blocked channels, by id or typed name, and channels not to recommend.
+Future<void> openBlockedChannels(BuildContext context, AppController controller) => _push(
+      context,
+      controller,
+      tr('屏蔽频道'),
+      (context) {
+        final prefs = controller.preferences;
+        final outline = TextStyle(color: context.colors.outline, fontSize: 12);
+        return [
+          _header(context, tr('屏蔽的频道')),
+          if (prefs.blockedChannels.isEmpty && prefs.blockedChannelNames.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(tr('还没有屏蔽任何频道。点右上角“添加”，或在视频卡片的右键菜单、频道页、播放页里选“屏蔽此频道”。'), style: TextStyle(color: context.colors.outline, height: 1.6)),
+            ),
+          for (final channel in prefs.blockedChannels)
+            ListTile(
+              leading: const Icon(Icons.person_off_outlined),
+              title: Text(channel.name.isEmpty ? channel.id : channel.name),
+              subtitle: Text(channel.id, style: outline),
+              trailing: TextButton(onPressed: () => controller.unblockChannel(channel.id), child: Text(tr('移除'))),
+            ),
+          for (final name in prefs.blockedChannelNames)
+            ListTile(
+              leading: const Icon(Icons.person_off_outlined),
+              title: Text(name),
+              subtitle: Text(tr('按名称屏蔽'), style: outline),
+              trailing: TextButton(onPressed: () => controller.unblockChannelName(name), child: Text(tr('移除'))),
+            ),
+          _tip(context, tr('屏蔽的频道不会出现在首页、探索、搜索、相关视频和订阅动态中。名单只保存在本机。')),
+          _header(context, tr('不推荐的频道')),
+          if (prefs.unrecommendedChannels.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(tr('还没有。在视频卡片的右键菜单、频道页或播放页里选“不推荐此频道”。'), style: TextStyle(color: context.colors.outline, height: 1.6)),
+            ),
+          for (final channel in prefs.unrecommendedChannels)
+            ListTile(
+              leading: const Icon(Icons.thumb_down_off_alt_outlined),
+              title: Text(channel.name.isEmpty ? channel.id : channel.name),
+              subtitle: Text(channel.id, style: outline),
+              trailing: TextButton(onPressed: () => controller.setRecommendChannel(channel, true), child: Text(tr('恢复推荐'))),
+            ),
+          _tip(context, tr('不推荐的频道不会出现在首页推荐、探索和相关视频里，但搜索和关注不受影响。')),
+        ];
+      },
+      actions: [
+        Builder(builder: (context) => TextButton.icon(
+              onPressed: () => _addBlockedChannel(context, controller),
+              icon: const Icon(Icons.add_rounded),
+              label: Text(tr('添加')),
+            )),
+        const SizedBox(width: 8),
+      ],
+    );
+
+Future<void> _addBlockedChannel(BuildContext context, AppController controller) async {
+  final text = TextEditingController();
+  final typed = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(tr('屏蔽频道')),
+      content: SizedBox(
+        width: 420,
+        child: TextField(
+          controller: text,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: tr('频道链接或完整名称'),
+            helperText: tr('链接里有 UC 开头的频道 ID 时按 ID 屏蔽，否则按名称完全一致屏蔽'),
+            helperMaxLines: 2,
+          ),
+          onSubmitted: (v) => Navigator.pop(context, v),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
+        FilledButton(onPressed: () => Navigator.pop(context, text.text), child: Text(tr('屏蔽'))),
+      ],
+    ),
+  );
+  text.dispose();
+  if (typed == null) return;
+  final blocked = controller.blockChannelTyped(typed);
+  if (blocked != null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('已屏蔽“{0}”', [blocked]))));
+}
+
+// 首页与搜索设置 › 屏蔽争议宗教团体
+
+/// The groups of blocked_groups.dart, all on or off and one by one.
+Future<void> openBlockedGroups(BuildContext context, AppController controller) => _push(context, controller, tr('屏蔽争议宗教团体'), (context) {
+      final prefs = controller.preferences;
+      void save(AppPreferences next) => controller.savePreferences(next);
+      final allowed = prefs.allowedGroups.toSet();
       return [
-        if (channels.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(32),
-            child: Center(child: Text(tr('还没有屏蔽任何频道。\n在视频卡片的右键菜单里选“屏蔽此频道”即可添加。'), textAlign: TextAlign.center, style: TextStyle(color: context.colors.outline, height: 1.6))),
+        SwitchListTile(
+          secondary: const Icon(Icons.block_rounded),
+          title: Text(tr('屏蔽争议宗教团体')),
+          subtitle: Text(tr('推荐、探索、相关视频、搜索和搜索建议里都不显示下列团体相关的视频和频道，包括有关它们的报道')),
+          value: prefs.blockGroups,
+          onChanged: (v) => save(prefs.copyWith(blockGroups: v)),
+        ),
+        _tip(context, tr('搜索时输入完全正确的频道名（不区分大小写，多一个字或少一个字都不行），仍能找到这个频道和它的视频。关注的频道照常出现在订阅里。')),
+        _header(context, tr('屏蔽哪些')),
+        for (final group in blockedGroups)
+          CheckboxListTile(
+            dense: true,
+            enabled: prefs.blockGroups,
+            title: Text(group.label),
+            subtitle: Text(group.words.take(6).join('、'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 12)),
+            value: !allowed.contains(group.name),
+            onChanged: (on) => save(prefs.copyWith(allowedGroups: on == true ? (allowed..remove(group.name)).toList() : [...allowed, group.name])),
           ),
-        for (final channel in channels)
-          ListTile(
-            leading: const Icon(Icons.person_off_outlined),
-            title: Text(channel.name.isEmpty ? channel.id : channel.name),
-            subtitle: Text(channel.id, style: TextStyle(color: context.colors.outline, fontSize: 12)),
-            trailing: TextButton(onPressed: () => controller.unblockChannel(channel.id), child: Text(tr('移除'))),
-          ),
-        _tip(context, tr('屏蔽的频道不会出现在首页、搜索、相关视频和订阅动态中。名单只保存在本机。')),
+        _tip(context, tr('按名称匹配标题和频道名，名单只保存在本机。还想屏蔽别的，可以用 首页与搜索设置 › 标题关键词过滤，或 隐私设置 › 屏蔽频道。')),
       ];
     });
 

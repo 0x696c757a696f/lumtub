@@ -367,6 +367,7 @@ class ChannelHeader extends StatelessWidget {
         FollowButton(controller: controller, channel: channel),
         const SizedBox(width: 8),
         IconButton(tooltip: tr('在浏览器中打开'), onPressed: () => openExternal(channel.url), icon: const Icon(Icons.open_in_new_rounded)),
+        ChannelMenuButton(controller: controller, channel: channel),
       ]),
     );
   }
@@ -431,6 +432,39 @@ class ChannelResultTile extends StatelessWidget {
         ]),
       ),
     ));
+  }
+}
+
+/// 屏蔽此频道 and 不推荐此频道, or undoing them, for a channel page or the
+/// video playing.
+class ChannelMenuButton extends StatelessWidget {
+  const ChannelMenuButton({super.key, required this.controller, required this.channel});
+  final AppController controller;
+  final ChannelRef channel;
+
+  @override
+  Widget build(BuildContext context) {
+    final prefs = controller.preferences;
+    final blocked = prefs.isBlocked(channel.id);
+    final unrecommended = prefs.isUnrecommended(channel.id);
+    PopupMenuItem<String> entry(String value, IconData icon, String label) =>
+        PopupMenuItem(value: value, child: ListTile(dense: true, leading: Icon(icon), title: Text(label)));
+    return PopupMenuButton<String>(
+      tooltip: tr('更多'),
+      icon: const Icon(Icons.more_vert_rounded),
+      itemBuilder: (context) => [
+        unrecommended
+            ? entry('recommend', Icons.thumb_up_off_alt_outlined, tr('恢复推荐此频道'))
+            : entry('unrecommend', Icons.thumb_down_off_alt_outlined, tr('不推荐此频道')),
+        blocked ? entry('unblock', Icons.person_outline_rounded, tr('取消屏蔽此频道')) : entry('block', Icons.block_rounded, tr('屏蔽此频道')),
+      ],
+      onSelected: (choice) => switch (choice) {
+        'recommend' => controller.setRecommendChannel(channel, true),
+        'unrecommend' => controller.setRecommendChannel(channel, false),
+        'unblock' => controller.unblockChannel(channel.id),
+        _ => controller.blockChannel(channel),
+      },
+    );
   }
 }
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'app_directories.dart';
+import 'blocked_groups.dart';
 import 'explore_topics.dart';
 import 'models.dart';
 import 'l10n/l10n.dart';
@@ -17,12 +18,16 @@ class AppPreferences {
     this.recordProgress = true,
     this.blockedChannels = const [],
     this.blockedKeywords = const [],
+    this.unrecommendedChannels = const [],
     this.exploreCustomTopics = const [],
     this.exploreOrder = const {},
     this.exploreHidden = const {},
     this.hideShorts = false,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
+    this.blockGroups = true,
+    this.allowedGroups = const [],
+    this.blockedChannelNames = const [],
     this.filterSubscriptions = true,
     this.homeShowContinue = true,
     this.homeShowRecent = true,
@@ -51,6 +56,9 @@ class AppPreferences {
   final List<ChannelRef> blockedChannels;
   /// Case-insensitive words; a video whose title contains one is hidden.
   final List<String> blockedKeywords;
+  /// Channels left out of recommendations, explore and related videos, but
+  /// still found by a search and shown when followed.
+  final List<ChannelRef> unrecommendedChannels;
   /// Explore categories the user added.
   final List<CustomTopic> exploreCustomTopics;
   /// Per explore half ([ExploreSection.name]), zone keys in the user's
@@ -62,6 +70,14 @@ class AppPreferences {
   final bool hideShorts;
   final int minDurationMinutes;
   final bool hideWatched;
+  /// Hides the groups in blocked_groups.dart from recommendations, explore
+  /// and search, unless a search names the channel exactly.
+  final bool blockGroups;
+  /// [BlockedGroup.name]s the user unticked, so they show.
+  final List<String> allowedGroups;
+  /// Channels the user typed in by name; a video whose channel is called
+  /// exactly this, apart from letter case, is hidden like a blocked one.
+  final List<String> blockedChannelNames;
   /// Whether the filters also apply to the subscriptions feed.
   final bool filterSubscriptions;
   final bool homeShowContinue;
@@ -90,10 +106,21 @@ class AppPreferences {
 
   bool isBlocked(String? channelId) => channelId != null && blockedChannels.any((c) => c.id == channelId);
 
+  bool isUnrecommended(String? channelId) => channelId != null && unrecommendedChannels.any((c) => c.id == channelId);
+
+  /// Whether a channel called [name] was blocked by name.
+  bool isBlockedName(String name) => blockedChannelNames.any((n) => isExactName(n, name));
+
+  /// Whether [text] names a group the user blocks.
+  bool blocksGroupIn(String text) => blockGroups && textNamesBlockedGroup(text, allowedGroups.toSet());
+
+  /// Whether [item]'s title or channel names a group the user blocks.
+  bool blocksGroup(VideoItem item) => blocksGroupIn('${item.title}\n${item.channel}');
+
   /// Whether [item] passes the privacy and content filters. [watched] says
   /// whether it was watched to the end.
   bool shows(VideoItem item, {bool watched = false}) {
-    if (isBlocked(item.channelId)) return false;
+    if (isBlocked(item.channelId) || isBlockedName(item.channel)) return false;
     if (blockedChannels.isNotEmpty && item.channelId == null && blockedChannels.any((c) => c.name.isNotEmpty && c.name == item.channel)) return false;
     final title = item.title.toLowerCase();
     if (blockedKeywords.any((word) => title.contains(word.toLowerCase()))) return false;
@@ -109,12 +136,16 @@ class AppPreferences {
     bool? recordProgress,
     List<ChannelRef>? blockedChannels,
     List<String>? blockedKeywords,
+    List<ChannelRef>? unrecommendedChannels,
     List<CustomTopic>? exploreCustomTopics,
     Map<String, List<String>>? exploreOrder,
     Map<String, List<String>>? exploreHidden,
     bool? hideShorts,
     int? minDurationMinutes,
     bool? hideWatched,
+    bool? blockGroups,
+    List<String>? allowedGroups,
+    List<String>? blockedChannelNames,
     bool? filterSubscriptions,
     bool? homeShowContinue,
     bool? homeShowRecent,
@@ -142,12 +173,16 @@ class AppPreferences {
         recordProgress: recordProgress ?? this.recordProgress,
         blockedChannels: blockedChannels ?? this.blockedChannels,
         blockedKeywords: blockedKeywords ?? this.blockedKeywords,
+        unrecommendedChannels: unrecommendedChannels ?? this.unrecommendedChannels,
         exploreCustomTopics: exploreCustomTopics ?? this.exploreCustomTopics,
         exploreOrder: exploreOrder ?? this.exploreOrder,
         exploreHidden: exploreHidden ?? this.exploreHidden,
         hideShorts: hideShorts ?? this.hideShorts,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
+        blockGroups: blockGroups ?? this.blockGroups,
+        allowedGroups: allowedGroups ?? this.allowedGroups,
+        blockedChannelNames: blockedChannelNames ?? this.blockedChannelNames,
         filterSubscriptions: filterSubscriptions ?? this.filterSubscriptions,
         homeShowContinue: homeShowContinue ?? this.homeShowContinue,
         homeShowRecent: homeShowRecent ?? this.homeShowRecent,
@@ -176,12 +211,16 @@ class AppPreferences {
         'recordProgress': recordProgress,
         'blockedChannels': [for (final c in blockedChannels) {'id': c.id, 'name': c.name}],
         'blockedKeywords': blockedKeywords,
+        'unrecommendedChannels': [for (final c in unrecommendedChannels) {'id': c.id, 'name': c.name}],
         'exploreCustomTopics': [for (final t in exploreCustomTopics) t.toJson()],
         'exploreOrder': exploreOrder,
         'exploreHidden': exploreHidden,
         'hideShorts': hideShorts,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
+        'blockGroups': blockGroups,
+        'allowedGroups': allowedGroups,
+        'blockedChannelNames': blockedChannelNames,
         'filterSubscriptions': filterSubscriptions,
         'homeShowContinue': homeShowContinue,
         'homeShowRecent': homeShowRecent,
@@ -213,16 +252,19 @@ class AppPreferences {
       final value = raw[key];
       return value is num ? value.toInt().clamp(min, max) : fallback;
     }
-    final channels = <ChannelRef>[];
-    if (raw['blockedChannels'] is List) {
-      for (final entry in raw['blockedChannels'] as List) {
-        if (entry is! Map) continue;
-        final id = entry['id']?.toString() ?? '';
-        if (ChannelRef.isValidId(id) && !channels.any((c) => c.id == id)) channels.add(ChannelRef(id, entry['name']?.toString() ?? ''));
+    List<ChannelRef> channelList(String key) {
+      final channels = <ChannelRef>[];
+      if (raw[key] is List) {
+        for (final entry in raw[key] as List) {
+          if (entry is! Map) continue;
+          final id = entry['id']?.toString() ?? '';
+          if (ChannelRef.isValidId(id) && !channels.any((c) => c.id == id)) channels.add(ChannelRef(id, entry['name']?.toString() ?? ''));
+        }
       }
+      return channels;
     }
-    final keywords = raw['blockedKeywords'] is List
-        ? (raw['blockedKeywords'] as List).map((k) => k.toString().trim()).where((k) => k.isNotEmpty).toSet().toList()
+    List<String> strings(String key) => raw[key] is List
+        ? (raw[key] as List).map((k) => k.toString().trim()).where((k) => k.isNotEmpty).toSet().toList()
         : const <String>[];
     final topics = raw['exploreCustomTopics'] is List
         ? (raw['exploreCustomTopics'] as List).map(CustomTopic.fromJson).whereType<CustomTopic>().toList()
@@ -239,14 +281,18 @@ class AppPreferences {
     return AppPreferences(
       recordHistory: flag('recordHistory', d.recordHistory),
       recordProgress: flag('recordProgress', d.recordProgress),
-      blockedChannels: channels,
-      blockedKeywords: keywords,
+      blockedChannels: channelList('blockedChannels'),
+      blockedKeywords: strings('blockedKeywords'),
+      unrecommendedChannels: channelList('unrecommendedChannels'),
+      allowedGroups: strings('allowedGroups'),
+      blockedChannelNames: strings('blockedChannelNames'),
       exploreCustomTopics: topics,
       exploreOrder: keyLists('exploreOrder'),
       exploreHidden: keyLists('exploreHidden'),
       hideShorts: flag('hideShorts', d.hideShorts),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
+      blockGroups: flag('blockGroups', d.blockGroups),
       filterSubscriptions: flag('filterSubscriptions', d.filterSubscriptions),
       homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
       homeShowRecent: flag('homeShowRecent', d.homeShowRecent),

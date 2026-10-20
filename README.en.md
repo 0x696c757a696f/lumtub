@@ -30,6 +30,10 @@ YTPlus is a lightweight YouTube client for Windows, built with Flutter, [media_k
 - Light and dark themes, accent colours, fonts, card size and more.
 - Settings can be exported, imported and reset.
 
+**Blocking**
+- Block controversial religious groups (on by default, each can be unticked): videos and channels about Falun Gong, the Church of Almighty God, Shincheonji, the Unification Church, Scientology and others stay out of recommendations, Explore, related videos, search and suggestions. Only a search for a channel's exact name finds that channel.
+- Block a channel, or stop recommending one: add it in settings by link or full name, or from the menu on a video card, channel page or the watch page. Channels not recommended still show in searches and follows.
+
 ## Privacy
 
 Recommendations, history, searches and "Not interested" stay on your computer and are never uploaded. YTPlus does not read browser cookies. When Piped is used, the Piped server knows which video you watch; to avoid that, choose a direct YouTube connection under Settings › Playback.

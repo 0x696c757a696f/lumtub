@@ -109,7 +109,7 @@ class AppPreferences {
   bool isUnrecommended(String? channelId) => channelId != null && unrecommendedChannels.any((c) => c.id == channelId);
 
   /// Whether a channel called [name] was blocked by name.
-  bool isBlockedName(String name) => blockedChannelNames.any((n) => isExactName(n, name));
+  bool isBlockedName(String name) => blockedChannelNames.any((n) => n.trim().toLowerCase() == name.trim().toLowerCase());
 
   /// Whether [text] names a group the user blocks.
   bool blocksGroupIn(String text) => blockGroups && textNamesBlockedGroup(text, allowedGroups.toSet());

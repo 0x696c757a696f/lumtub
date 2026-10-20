@@ -158,7 +158,7 @@ Future<void> openBlockedGroups(BuildContext context, AppController controller) =
           value: prefs.blockGroups,
           onChanged: (v) => save(prefs.copyWith(blockGroups: v)),
         ),
-        _tip(context, tr('搜索时输入完全正确的频道名（不区分大小写，多一个字或少一个字都不行），仍能找到这个频道和它的视频。关注的频道照常出现在订阅里。')),
+        _tip(context, tr('搜索时输入完全正确的频道名（区分大小写，多一个字或少一个字都不行），仍能找到这个频道和它的视频。关注的频道照常出现在订阅里。')),
         _header(context, tr('屏蔽哪些')),
         for (final group in blockedGroups)
           CheckboxListTile(

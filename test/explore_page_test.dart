@@ -110,7 +110,9 @@ void main() {
     expect(ids(controller.visible(items)), 'c');
     controller.debugQuery = 'NTD Televisio';
     expect(ids(controller.visible(items, search: true)), 'c');
-    controller.debugQuery = ' ntd television ';
+    controller.debugQuery = 'ntd television';
+    expect(ids(controller.visible(items, search: true)), 'c');
+    controller.debugQuery = ' NTD Television ';
     expect(ids(controller.visible(items, search: true)), 'ac');
     // Outside a search the exact name does not matter.
     expect(ids(controller.visible(items)), 'c');

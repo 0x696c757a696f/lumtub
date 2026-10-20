@@ -708,7 +708,7 @@ const stringsEn = <String, String>{
   '搜索“{0}”': 'Search "{0}"',
   '搜索失败': 'Search failed',
   '搜索或粘贴 YouTube 链接开始观看，看过的视频会出现在这里。': 'Search or paste a YouTube link to start watching. Videos you\'ve watched will appear here.',
-  '搜索时输入完全正确的频道名（不区分大小写，多一个字或少一个字都不行），仍能找到这个频道和它的视频。关注的频道照常出现在订阅里。': 'Searching for a channel\'s exact name (letter case aside; not one character more or less) still finds that channel and its videos. Followed channels still show in subscriptions.',
+  '搜索时输入完全正确的频道名（区分大小写，多一个字或少一个字都不行），仍能找到这个频道和它的视频。关注的频道照常出现在订阅里。': 'Searching for a channel\'s exact name (letter case included; not one character more or less) still finds that channel and its videos. Followed channels still show in subscriptions.',
   '搜索框下方显示的最近搜索': 'Recent searches shown below the search box',
   '搜索记录已清空。': 'Search history cleared.',
   '搜索设置': 'Search settings',

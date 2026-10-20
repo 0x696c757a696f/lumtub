@@ -8,7 +8,7 @@ import 'models.dart';
 /// one is left out of the home feed, explore, related videos, search
 /// results and suggestions, reports about the group included, while
 /// AppPreferences.blockGroups is on. Only a search for a channel's exact
-/// name finds that channel.
+/// name, letter case included, finds that channel.
 const blockedGroups = <BlockedGroup>[
   BlockedGroup('法轮功', ['法轮功', '法輪功', '法轮大法', '法輪大法', '李洪志', '明慧网', '明慧網', '神韵艺术团', '神韻藝術團', '大纪元', '大紀元', '新唐人', 'Falun Gong', 'Falun Dafa', 'Li Hongzhi', 'Minghui', 'Shen Yun', 'Epoch Times', 'NTD Television']),
   BlockedGroup('全能神', ['全能神', '东方闪电', '東方閃電', '实际神', '實際神', 'Church of Almighty God', 'Eastern Lightning']),
@@ -63,9 +63,9 @@ bool textNamesBlockedGroup(String text, [Set<String> allowed = const {}]) {
 /// than those the user [allowed].
 bool namesBlockedGroup(VideoItem item, [Set<String> allowed = const {}]) => textNamesBlockedGroup('${item.title}\n${item.channel}', allowed);
 
-/// Whether [query] is [name] exactly, apart from letter case and the spaces
-/// around it: one character more or less does not count.
+/// Whether [query] is [name] exactly, letter case included, apart from the
+/// spaces around it: one character more or less does not count.
 bool isExactName(String name, String? query) {
-  final typed = query?.trim().toLowerCase() ?? '';
-  return typed.isNotEmpty && typed == name.trim().toLowerCase();
+  final typed = query?.trim() ?? '';
+  return typed.isNotEmpty && typed == name.trim();
 }

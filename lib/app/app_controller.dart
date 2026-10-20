@@ -128,12 +128,36 @@ class AppController extends ChangeNotifier {
   /// 画中画: a small borderless window above the others, showing only the
   /// video in its own ratio (ui/pip_view.dart).
   bool pip = false;
+  /// 应用内小窗: [playing] keeps playing in a floating card over the other
+  /// pages instead of on the watch page (ui/mini_player.dart).
+  bool mini = false;
   /// 听视频: mpv decodes no picture, which saves power and bandwidth.
   bool audioOnly = false;
 
   void togglePinned() {
     if (!AppWindow.setTopmost(!pinned || pip)) return _notice(tr('无法设置窗口置顶'));
     _update(() => pinned = !pinned);
+  }
+
+  /// Whether the watch page shows [playing].
+  bool get onWatchPage => playing != null && !mini;
+
+  /// Whether leaving the watch page now keeps the video in the mini player.
+  bool get _keepsPlaying =>
+      playing != null && (mini || (preferences.miniPlayer && player != null && playbackError == null));
+
+  /// Shows [playing] on the watch page again, where it was.
+  void expandMini() {
+    if (mini) _update(() => mini = false);
+  }
+
+  /// Puts the video on the watch page into the mini player (the 应用内小窗
+  /// button), over the page it was opened from.
+  void enterMini() {
+    if (playing == null || mini || player == null) return;
+    setPip(false);
+    _saveProgress(now: true);
+    _update(() => mini = true);
   }
 
   void setPip(bool on) {
@@ -470,15 +494,20 @@ class AppController extends ChangeNotifier {
       await play(VideoItem(id: asUrl, title: tr('YouTube 视频 · {0}', [asUrl]), channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$asUrl'));
       return;
     }
-    if (query != _query || mode != PageMode.explore || playing != null) _remember();
-    player?.pause();
+    if (query != _query || mode != PageMode.explore || onWatchPage) _remember();
+    final keep = _keepsPlaying;
+    if (!keep) player?.pause();
     final repository = _repository!;
     final chosen = filter ?? searchFilter;
     if (preferences.recordHistory) unawaited(searchHistory?.add(query));
     final sp = searchParams(type: chosen, sort: searchSort, date: searchDate, duration: searchDuration);
     _update(() {
       mode = PageMode.explore;
-      playing = null;
+      if (keep) {
+        mini = true;
+      } else {
+        playing = null;
+      }
       _query = query;
       searchFilter = chosen;
       searchResults?.dispose();
@@ -829,10 +858,12 @@ class AppController extends ChangeNotifier {
 
   /// Plays [item]; [from] is the list it was picked from and becomes the queue.
   /// Opens [item] on the watch page; [at] is where to start, else where
-  /// it was left off.
-  Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at}) async {
+  /// it was left off. [keepMini] plays it in the mini player when that is
+  /// where the last video was (the queue moving on by itself).
+  Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at, bool keepMini = false}) async {
     final player = this.player;
     if (player == null) return;
+    if (mini && playing?.id == item.id && at == null) return expandMini();
     if (playing?.id != item.id) {
       _remember();
       _finishWatching();
@@ -846,6 +877,7 @@ class AppController extends ChangeNotifier {
     final start = at ?? (resume != null && resume.resumable ? resume.position : null);
     _update(() {
       playing = item;
+      mini = keepMini && mini;
       if (from != null) queue = List.unmodifiable(from);
       playbackError = null;
       details = null;
@@ -1253,28 +1285,28 @@ class AppController extends ChangeNotifier {
       case PlayOrder.pause || PlayOrder.singleCycle:
         return;
       case PlayOrder.listOrder:
-        if (upNext.isNotEmpty) await play(upNext.first);
+        if (upNext.isNotEmpty) await play(upNext.first, keepMini: true);
       case PlayOrder.listCycle:
         if (upNext.isNotEmpty) {
-          await play(upNext.first);
+          await play(upNext.first, keepMini: true);
         } else if (queue.isNotEmpty) {
-          await play(queue.first);
+          await play(queue.first, keepMini: true, at: mini && queue.first.id == playing?.id ? Duration.zero : null);
         } else if (playing != null) {
-          await play(playing!);
+          await play(playing!, keepMini: true, at: Duration.zero);
         }
       case PlayOrder.autoPlayRelated:
-        await playNext();
+        await playNext(keepMini: true);
     }
   }
 
   /// Plays the next video in the queue, if there is one.
-  Future<void> playNext() async {
+  Future<void> playNext({bool keepMini = false}) async {
     final next = upNext;
     final suggestions = relatedItems;
     if (next.isNotEmpty) {
-      await play(next.first);
+      await play(next.first, keepMini: keepMini);
     } else if (suggestions.isNotEmpty) {
-      await play(suggestions.first, from: suggestions);
+      await play(suggestions.first, from: suggestions, keepMini: keepMini);
     }
   }
 
@@ -1446,6 +1478,7 @@ class AppController extends ChangeNotifier {
     return index < 0 ? queue : queue.sublist(index + 1);
   }
 
+  /// Stops the video and closes the watch page or the mini player.
   void stopWatching() {
     setPip(false);
     _finishWatching();
@@ -1454,6 +1487,7 @@ class AppController extends ChangeNotifier {
     ++_playSerial;
     _update(() {
       playing = null;
+      mini = false;
       playbackError = null;
     });
     player?.pause();
@@ -1461,32 +1495,39 @@ class AppController extends ChangeNotifier {
 
   /// Opens [target]; 返回 comes back to where this was.
   void navigate(PageMode target) {
-    if (target != mode || playing != null) _remember();
+    if (target != mode || onWatchPage) _remember();
     _go(target);
   }
 
   void _go(PageMode target) {
     setPip(false);
-    if (playing != null) _finishWatching();
+    final keep = _keepsPlaying;
+    if (!keep) {
+      if (playing != null) _finishWatching();
+      _tracking = null;
+      ++_playSerial;
+    }
     if (target == PageMode.home) unawaited(refreshHomeFeed());
     _saveProgress(now: true);
-    _tracking = null;
-    ++_playSerial;
     if (target == PageMode.subscriptions && preferences.feedAutoRefresh) {
       unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
     }
     _update(() {
       mode = target;
-      playing = null;
-      playbackError = null;
+      if (keep) {
+        mini = true;
+      } else {
+        playing = null;
+        playbackError = null;
+      }
     });
-    player?.pause();
+    if (!keep) player?.pause();
   }
 
   /// What is on screen now, as 返回 would come back to it.
   BackEntry get _here {
     final video = playing;
-    if (video != null) {
+    if (video != null && !mini) {
       final state = player?.state;
       // A video that had finished starts over rather than ending again.
       final ended = state == null || (state.duration > Duration.zero && state.position > state.duration - const Duration(seconds: 5));
@@ -1500,23 +1541,24 @@ class AppController extends ChangeNotifier {
   }
 
   /// Whether 返回 has somewhere to go.
-  bool get canGoBack => !_back.isEmpty || playing != null || _query != null || mode != PageMode.home || channelQuery != null;
+  bool get canGoBack => !_back.isEmpty || onWatchPage || _query != null || mode != PageMode.home || channelQuery != null;
 
   /// Goes back to the previous page or video: a search inside a channel is
   /// cleared first; with nothing earlier it closes the video, then the
   /// search, then goes home.
   void goBack() {
-    if (playing == null && mode == PageMode.channel && channelQuery != null) return searchChannel('');
+    if (!onWatchPage && mode == PageMode.channel && channelQuery != null) return searchChannel('');
     BackEntry? entry;
     do {
       entry = _back.pop();
-    } while (entry != null && playing == null && entry.same(_here));
+    } while (entry != null && !onWatchPage && entry.same(_here));
     _restoring = true;
     try {
       if (entry != null) {
         _restore(entry);
-      } else if (playing != null) {
-        stopWatching();
+      } else if (onWatchPage) {
+        // Nothing earlier: leave the watch page for the page under it.
+        _go(mode);
       } else if (_query != null) {
         clearSearch();
       } else if (mode != PageMode.home) {
@@ -1530,6 +1572,7 @@ class AppController extends ChangeNotifier {
   void _restore(BackEntry entry) {
     final video = entry.video;
     if (video != null) {
+      if (mini && playing?.id == video.id) return expandMini();
       unawaited(play(video, from: entry.queue.isEmpty ? null : entry.queue, at: entry.position));
       return;
     }

@@ -1883,4 +1883,9 @@ const stringsEn = <String, String>{
   '骑行': 'Cycling',
   '鸟类': 'Birds',
   '麦地那': 'Medina',
+  '应用内小窗': 'In-app mini player',
+  '离开播放页时让视频继续在小窗里播放；关闭则停止播放': 'Keep the video playing in the mini player when leaving the watch page; off stops playback',
+  '小窗 离开播放页 悬浮': 'mini player leave watch page floating',
+  '展开到播放页': 'Back to the watch page',
+  '关闭小窗并停止播放': 'Close the mini player and stop playback',
 };

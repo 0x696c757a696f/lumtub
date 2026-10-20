@@ -368,6 +368,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           onTap: () => unawaited(_controller.toggleSponsorBlock()),
         ),
         _IconButton(
+          tooltip: tr('应用内小窗'),
+          icon: Icons.picture_in_picture_rounded,
+          size: 19,
+          onTap: () async {
+            await leaveFullscreen();
+            _controller.enterMini();
+          },
+        ),
+        _IconButton(
           tooltip: tr('画中画'),
           icon: Icons.picture_in_picture_alt_rounded,
           size: 19,

@@ -52,6 +52,7 @@ class AppPreferences {
     this.autoPlay = true,
     this.resumePlayback = true,
     this.autoFullscreen = false,
+    this.miniPlayer = true,
     this.exitFullscreenOnEnd = false,
     this.pauseOnMinimize = false,
     this.keyboardShortcuts = true,
@@ -125,6 +126,9 @@ class AppPreferences {
   final bool autoPlay;
   final bool resumePlayback;
   final bool autoFullscreen;
+  /// Leaving the watch page keeps the video in the in-app mini player
+  /// (ui/mini_player.dart) instead of stopping it.
+  final bool miniPlayer;
   final bool exitFullscreenOnEnd;
   final bool pauseOnMinimize;
   final bool keyboardShortcuts;
@@ -229,6 +233,7 @@ class AppPreferences {
     bool? autoPlay,
     bool? resumePlayback,
     bool? autoFullscreen,
+    bool? miniPlayer,
     bool? exitFullscreenOnEnd,
     bool? pauseOnMinimize,
     bool? keyboardShortcuts,
@@ -276,6 +281,7 @@ class AppPreferences {
         autoPlay: autoPlay ?? this.autoPlay,
         resumePlayback: resumePlayback ?? this.resumePlayback,
         autoFullscreen: autoFullscreen ?? this.autoFullscreen,
+        miniPlayer: miniPlayer ?? this.miniPlayer,
         exitFullscreenOnEnd: exitFullscreenOnEnd ?? this.exitFullscreenOnEnd,
         pauseOnMinimize: pauseOnMinimize ?? this.pauseOnMinimize,
         keyboardShortcuts: keyboardShortcuts ?? this.keyboardShortcuts,
@@ -324,6 +330,7 @@ class AppPreferences {
         'autoPlay': autoPlay,
         'resumePlayback': resumePlayback,
         'autoFullscreen': autoFullscreen,
+        'miniPlayer': miniPlayer,
         'exitFullscreenOnEnd': exitFullscreenOnEnd,
         'pauseOnMinimize': pauseOnMinimize,
         'keyboardShortcuts': keyboardShortcuts,
@@ -406,6 +413,7 @@ class AppPreferences {
       autoPlay: flag('autoPlay', d.autoPlay),
       resumePlayback: flag('resumePlayback', d.resumePlayback),
       autoFullscreen: flag('autoFullscreen', d.autoFullscreen),
+      miniPlayer: flag('miniPlayer', d.miniPlayer),
       exitFullscreenOnEnd: flag('exitFullscreenOnEnd', d.exitFullscreenOnEnd),
       pauseOnMinimize: flag('pauseOnMinimize', d.pauseOnMinimize),
       keyboardShortcuts: flag('keyboardShortcuts', d.keyboardShortcuts),

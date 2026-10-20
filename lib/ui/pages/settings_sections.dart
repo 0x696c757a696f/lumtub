@@ -527,6 +527,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.resumePlayback,
               onChanged: (v) => savePrefs(prefs.copyWith(resumePlayback: v)),
             ), subtitle: tr('续播 进度')),
+        SettingEntry(tr('应用内小窗'), (context) => SwitchItem(
+              title: tr('应用内小窗'),
+              subtitle: tr('离开播放页时让视频继续在小窗里播放；关闭则停止播放'),
+              leading: _icon(Icons.picture_in_picture_rounded),
+              value: prefs.miniPlayer,
+              onChanged: (v) => savePrefs(prefs.copyWith(miniPlayer: v)),
+            ), subtitle: tr('小窗 离开播放页 悬浮')),
         SettingEntry(tr('字幕设置'), (context) => NormalItem(
               title: tr('字幕设置'),
               subtitle: '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label} · ${settings.subtitleScale.toStringAsFixed(1)}×',

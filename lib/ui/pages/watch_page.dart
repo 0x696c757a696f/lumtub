@@ -21,6 +21,7 @@ import '../translatable.dart';
 import '../play_queue_panel.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
+import 'downloads_page.dart';
 import '../../dearrow.dart';
 import '../../l10n/l10n.dart';
 
@@ -208,6 +209,8 @@ class _Toolbar extends StatelessWidget {
             if (controller.account?.signedIn ?? false)
               IconButton(tooltip: tr('保存到 YouTube 播放列表'), icon: const Icon(Icons.video_library_outlined), onPressed: () => showSaveToYoutube(context, controller, item)),
           ],
+          if (controller.downloads != null && !item.isLive)
+            IconButton(tooltip: tr('下载'), icon: const Icon(Icons.download_rounded), onPressed: () => showDownloadChoice(context, controller, item)),
           IconButton(tooltip: tr('复制链接'), icon: const Icon(Icons.link_rounded), onPressed: () => copyText(context, item.url, tr('链接已复制'))),
           IconButton(tooltip: tr('在浏览器中打开'), icon: const Icon(Icons.open_in_new_rounded), onPressed: () => openExternal(item.url)),
           IconButton(tooltip: tr('快捷键'), icon: const Icon(Icons.keyboard_outlined), onPressed: () => showShortcutHelp(context, controller.preferences)),

@@ -330,6 +330,9 @@ class VideoRepository {
     return VideoDetails.fromJson(data);
   }
 
+  /// The environment yt-dlp runs in, for downloads started elsewhere.
+  Map<String, String> get processEnvironment => _environment;
+
   Map<String, String> get _environment {
     // Windows names it "Path"; keep one entry under its own spelling.
     final pathKey = Platform.environment.keys.firstWhere((key) => key.toUpperCase() == 'PATH', orElse: () => 'PATH');

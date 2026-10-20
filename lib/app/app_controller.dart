@@ -19,6 +19,8 @@ import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
 import '../dearrow.dart';
+import '../downloads/download_manager.dart';
+import '../downloads/download_models.dart';
 import '../return_dislike.dart';
 import '../sponsor_block.dart';
 import '../appearance_settings.dart';
@@ -60,7 +62,7 @@ import 'library_controller.dart';
 import 'video_list_loader.dart';
 import '../l10n/l10n.dart';
 
-enum PageMode { home, explore, subscriptions, history, playlists, settings, channel, playlist, youtubePlaylist }
+enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
 /// Application state and actions, kept separate from the widgets that show them.
 class AppController extends ChangeNotifier {
@@ -71,6 +73,9 @@ class AppController extends ChangeNotifier {
   ToolManager? _tools;
   VideoRepository? _repository;
   ToolPaths? paths;
+
+  /// 下载: videos saved on this computer; set once ready.
+  DownloadManager? downloads;
 
   Player? player;
   VideoController? videoController;
@@ -448,6 +453,7 @@ class AppController extends ChangeNotifier {
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
+        downloads = _downloadsFor(paths, directories)..addListener(notifyListeners);
         final library = this.library = LibraryController(libraryStore, client: _http)
           ..repository = _repository
           ..addListener(notifyListeners);
@@ -471,6 +477,7 @@ class AppController extends ChangeNotifier {
       // Do not block the UI while checking newer releases.
       if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
       unawaited(_readWindowsVideoInfo());
+      unawaited(downloads?.load());
       unawaited(account?.load());
       logInfo('组件就绪 · libmpv ${manager.libmpv.current?.label ?? '内置'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
@@ -498,6 +505,33 @@ class AppController extends ChangeNotifier {
         toolDirectories: paths.executableDirectories,
         proxy: () => proxy.ytDlpValue(this.settings.proxyMode),
       );
+
+  DownloadManager _downloadsFor(ToolPaths paths, AppDirectories directories) => DownloadManager(
+        file: File('${directories.data.path}${Platform.pathSeparator}downloads.json'),
+        ytDlpPath: paths.ytDlp,
+        defaultDirectory: DownloadManager.defaultDirectoryFor(Platform.environment, '${directories.data.path}${Platform.pathSeparator}downloads'),
+        environment: () => _repository!.processEnvironment,
+        ffmpegDirectory: () {
+          final env = _repository!.processEnvironment;
+          final path = env.entries.where((e) => e.key.toUpperCase() == 'PATH').firstOrNull?.value;
+          return DownloadManager.findFfmpeg([...paths.executableDirectories, '${directories.components.path}${Platform.pathSeparator}ffmpeg'], path);
+        },
+        options: () => DownloadOptions(
+          proxy: proxy.ytDlpValue(settings.proxyMode),
+          deno: paths.deno,
+          cacheDirectory: _repository?.cacheDirectory,
+          subtitleLanguages: settings.subtitleLanguage.ytDlpLangs,
+          autoSubtitles: settings.subtitleMode == SubtitleMode.always,
+        ),
+        sponsorSegments: (id) => _sponsorBlock.segments(id, settings.sponsorCategories),
+      );
+
+  /// Queues [item] for download, and says so.
+  void download(VideoItem item, DownloadQuality quality) {
+    final manager = downloads;
+    if (manager == null || item.isLive || item.isUpcoming) return _notice(tr('直播无法下载'));
+    _notice(manager.add(item, quality) == null ? tr('已在下载列表中') : tr('已加入下载'));
+  }
 
   /// The proxy everything currently goes through.
   NetworkProxy proxy = NetworkProxy.direct;
@@ -958,7 +992,9 @@ class AppController extends ChangeNotifier {
 
   Future<void> _loadSegments(VideoItem item, int serial) async {
     try {
-      final segments = await _sponsorBlock.segments(item.id, settings.sponsorCategories);
+      final local = downloads?.localVideo(item.id);
+      final saved = [for (final s in local?.segments ?? const <SkipSegment>[]) if (settings.sponsorCategories.contains(s.category)) s];
+      final segments = saved.isNotEmpty ? saved : await _sponsorBlock.segments(item.id, settings.sponsorCategories);
       if (serial == _playSerial) _update(() => _segments = segments);
     } catch (_) {
       // Playback does not depend on SponsorBlock being reachable.
@@ -998,6 +1034,8 @@ class AppController extends ChangeNotifier {
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
+      final local = resolved && piped && !item.isLive ? downloads?.localVideo(item.id) : null;
+      if (local != null) return await _openLocal(item, serial, local, start: start, play: play);
       final format = _format;
       _openedVia = null;
       if (resolved && piped) {
@@ -1062,6 +1100,48 @@ class AppController extends ChangeNotifier {
       logError('无法打开视频 ${item.id}', e);
       if (serial == _playSerial) _fail(item, PlaybackFailure.classify(['$e', ..._recentErrors]));
       return false;
+    }
+  }
+
+  /// Plays the downloaded file of [item] instead of asking YouTube.
+  Future<bool> _openLocal(VideoItem item, int serial, LocalVideo local, {Duration? start, bool play = true}) async {
+    final player = this.player!;
+    _recentErrors.clear();
+    _openedVia = null;
+    _openedResolved = null;
+    _tracking = null;
+    if (secondarySubtitle != null) {
+      secondarySubtitle = null;
+      final platform = player.platform;
+      if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
+    }
+    _lastPosition = start ?? Duration.zero;
+    await player.open(Media(local.file.path, start: start), play: play);
+    if (serial == _playSerial) _tracking = item;
+    _mpvLogLines = 0;
+    _lastDrops = 0;
+    _decoderPending = true;
+    _update(() {});
+    unawaited(_addLocalSubtitles(local, serial));
+    return true;
+  }
+
+  /// Adds the subtitle files saved next to a downloaded video, the one in
+  /// the preferred language selected, unless subtitles are set to stay off.
+  Future<void> _addLocalSubtitles(LocalVideo local, int serial) async {
+    final player = this.player;
+    final platform = player?.platform;
+    if (player == null || platform is! NativePlayer || local.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
+    try {
+      await player.stream.duration.firstWhere((d) => d > Duration.zero).timeout(const Duration(seconds: 15));
+      if (serial != _playSerial) return;
+      final first = local.preferredSubtitle(settings.subtitleLanguage.mpvLangs.split(','));
+      await platform.command(['sub-add', first.path, 'select']);
+      for (final other in local.subtitles.where((f) => f != first)) {
+        await platform.command(['sub-add', other.path, 'auto']);
+      }
+    } catch (e) {
+      logError('无法加载离线字幕', e);
     }
   }
 
@@ -1493,13 +1573,19 @@ class AppController extends ChangeNotifier {
   Future<void> _loadDetails(VideoItem item, int serial) async {
     try {
       VideoDetails loaded;
-      try {
-        // The extraction playback uses carries the details too.
-        final resolved = await _repository!.streams.resolve(item.id, _format);
-        loaded = resolved.details;
-        if (serial == _playSerial) _update(() => availableHeights = resolved.heights);
-      } catch (_) {
-        loaded = await _repository!.details(item.id);
+      final local = downloads?.localVideo(item.id);
+      if (local != null && local.info['title'] != null) {
+        // Saved with the download, so the page works offline.
+        loaded = VideoDetails.fromJson(local.info);
+      } else {
+        try {
+          // The extraction playback uses carries the details too.
+          final resolved = await _repository!.streams.resolve(item.id, _format);
+          loaded = resolved.details;
+          if (serial == _playSerial) _update(() => availableHeights = resolved.heights);
+        } catch (_) {
+          loaded = await _repository!.details(item.id);
+        }
       }
       if (serial == _playSerial) {
         _update(() {
@@ -2279,6 +2365,7 @@ class AppController extends ChangeNotifier {
     unawaited(_relay?.close());
     cast.dispose();
     account?.dispose();
+    downloads?.dispose();
     library?.dispose();
     channelVideos?.dispose();
     searchResults?.dispose();

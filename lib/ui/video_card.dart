@@ -12,6 +12,7 @@ import '../dearrow.dart';
 import '../thumbnail_cache.dart';
 import '../youtube_account.dart' show RemotePlaylist;
 import 'common.dart';
+import 'pages/downloads_page.dart';
 import 'skeleton.dart';
 import 'theme.dart';
 import '../l10n/l10n.dart';
@@ -495,6 +496,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
             ? entry('remove', Icons.remove_circle_outline_rounded, tr('从此列表移除'))
             : entry('remove', Icons.thumb_down_off_alt_outlined, removeLabel),
       const PopupMenuDivider(),
+      if (controller?.downloads != null && !item.isLive) entry('download', Icons.download_rounded, tr('下载')),
       entry('copy', Icons.link_rounded, tr('复制链接')),
       entry('browser', Icons.open_in_new_rounded, tr('在浏览器中打开')),
     ],
@@ -525,6 +527,8 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
       controller!.blockChannel(channel!);
     case 'remove':
       onRemove!();
+    case 'download':
+      await showDownloadChoice(context, controller!, item);
     case 'copy':
       await copyText(context, item.url, tr('链接已复制'));
     case 'browser':

@@ -9,6 +9,7 @@ import '../appearance_settings.dart';
 import 'common.dart';
 import 'pages/account_settings.dart';
 import 'pages/channel_page.dart';
+import 'pages/downloads_page.dart';
 import 'pages/explore_page.dart';
 import 'pages/library_pages.dart';
 import 'pages/settings_page.dart';
@@ -46,6 +47,7 @@ class _AppShellState extends State<AppShell> {
     (PageMode.subscriptions, Icons.subscriptions_outlined, Icons.subscriptions_rounded, tr('订阅')),
     (PageMode.history, Icons.history_outlined, Icons.history_rounded, tr('历史')),
     (PageMode.playlists, Icons.video_library_outlined, Icons.video_library_rounded, tr('播放列表')),
+    (PageMode.downloads, Icons.download_for_offline_outlined, Icons.download_for_offline_rounded, tr('下载')),
   ];
 
   @override
@@ -187,6 +189,7 @@ class _AppShellState extends State<AppShell> {
       PageMode.history => HistoryPage(controller: controller),
       PageMode.subscriptions => SubscriptionsPage(controller: controller),
       PageMode.playlists => PlaylistsPage(controller: controller),
+      PageMode.downloads => DownloadsPage(controller: controller),
       PageMode.channel => ChannelPage(controller: controller),
       PageMode.playlist => PlaylistDetailPage(controller: controller),
       PageMode.youtubePlaylist => YoutubePlaylistPage(controller: controller),

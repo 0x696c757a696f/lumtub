@@ -690,6 +690,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               onChanged: (v) => save(settings.copyWith(sponsorBlock: v)),
               onTap: () => openSponsorBlock(context, controller),
             ), subtitle: tr('SponsorBlock 跳过 赞助 广告')),
+        SettingEntry(tr('显示踩数'), (context) => SwitchItem(
+              title: tr('显示踩数'),
+              subtitle: tr('用 Return YouTube Dislike 估算的踩数，显示在播放页；开启后会把正在看的视频 ID 发给它的服务器'),
+              leading: _icon(Icons.thumb_down_alt_outlined),
+              value: settings.returnDislike,
+              onChanged: (v) => save(settings.copyWith(returnDislike: v)),
+            ), subtitle: tr('Return YouTube Dislike 倒赞 点踩')),
         SettingEntry(tr('视频页显示相关视频'), (context) => SwitchItem(
               title: tr('视频页显示相关视频'),
               subtitle: tr('按标题搜索得到；关闭后自动连播只播放队列'),

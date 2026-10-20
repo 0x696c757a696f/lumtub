@@ -233,7 +233,8 @@ class _Details extends StatelessWidget {
     final meta = [
       if (views != null) tr('{0}次观看', [formatCount(views)]),
       if (details?.uploadDate != null) formatDate(details!.uploadDate!),
-      if (details?.likeCount != null) tr('{0} 赞', [formatCount(details!.likeCount!)]),
+      if (details?.likeCount ?? controller.dislikes?.likes case final likes?) tr('{0} 赞', [formatCount(likes)]),
+      if (controller.dislikes case final votes?) tr('{0} 踩（估算）', [formatCount(votes.dislikes)]),
     ].join(' · ');
     final channel = details?.channel.isNotEmpty == true ? details!.channel : item.channel;
     final channelRef = controller.playingChannel;

@@ -243,6 +243,8 @@ class PlayerSettings {
   /// Skip segments marked on SponsorBlock. Off by default because it asks a
   /// third-party server, even if only by an anonymous hash prefix.
   final bool sponsorBlock;
+  /// Shows Return YouTube Dislike's estimate of the dislikes.
+  final bool returnDislike;
   final Set<String> sponsorCategories;
   final bool sponsorNotice;
   final String? cachePath;
@@ -306,6 +308,7 @@ class PlayerSettings {
     this.subtitleBackground = false,
     this.subtitleBold = false,
     this.sponsorBlock = false,
+    this.returnDislike = false,
     this.sponsorCategories = defaultSponsorCategories,
     this.sponsorNotice = true,
     this.cachePath,
@@ -355,6 +358,7 @@ class PlayerSettings {
     bool? subtitleBackground,
     bool? subtitleBold,
     bool? sponsorBlock,
+    bool? returnDislike,
     Set<String>? sponsorCategories,
     bool? sponsorNotice,
     String? cachePath,
@@ -401,6 +405,7 @@ class PlayerSettings {
         subtitleBackground: subtitleBackground ?? this.subtitleBackground,
         subtitleBold: subtitleBold ?? this.subtitleBold,
         sponsorBlock: sponsorBlock ?? this.sponsorBlock,
+        returnDislike: returnDislike ?? this.returnDislike,
         sponsorCategories: sponsorCategories ?? this.sponsorCategories,
         sponsorNotice: sponsorNotice ?? this.sponsorNotice,
         cachePath: clearCachePath ? null : cachePath ?? this.cachePath,
@@ -448,6 +453,7 @@ class PlayerSettings {
         'subtitleBackground': subtitleBackground,
         'subtitleBold': subtitleBold,
         'sponsorBlock': sponsorBlock,
+        'returnDislike': returnDislike,
         'sponsorCategories': sponsorCategories.toList(),
         'sponsorNotice': sponsorNotice,
         if (cachePath != null) 'cachePath': cachePath,
@@ -557,6 +563,7 @@ class PlayerSettings {
       subtitleBackground: raw['subtitleBackground'] == true,
       subtitleBold: raw['subtitleBold'] == true,
       sponsorBlock: raw['sponsorBlock'] == true,
+      returnDislike: raw['returnDislike'] == true,
       sponsorCategories: categories,
       sponsorNotice: raw['sponsorNotice'] != false,
       cachePath: path != null && path.trim().isNotEmpty ? path : null,

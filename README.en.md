@@ -17,7 +17,7 @@ YTPlus is a lightweight YouTube client for Windows, built with Flutter, [media_k
 **Playback**
 - libmpv playback with hardware decoding, video and audio quality, speed, subtitles (including automatic and translated captions), chapters, fullscreen and keyboard shortcuts. The watch page's title, description and chapter names, posts, comments and subtitles follow the interface language where a translation exists.
 - Streams come through Piped by default (the fastest public server is picked automatically), falling back to YouTube directly.
-- Optional SponsorBlock, off by default.
+- Optional SponsorBlock and dislike counts (Return YouTube Dislike), both off by default.
 - Comments, related videos and descriptions. On wide windows comments and Up next share tabs to the right of the player.
 
 **Google account (optional)**

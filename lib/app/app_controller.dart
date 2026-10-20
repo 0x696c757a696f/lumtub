@@ -16,6 +16,7 @@ import '../playback_failure.dart';
 import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
+import '../return_dislike.dart';
 import '../sponsor_block.dart';
 import '../appearance_settings.dart';
 import '../cache_manager.dart';
@@ -192,6 +193,9 @@ class AppController extends ChangeNotifier {
   bool _recovering = false;
   bool _shutDown = false;
   late final _sponsorBlock = SponsorBlock(_http);
+  late final _returnDislike = ReturnDislike(_http);
+  /// Return YouTube Dislike's estimate for the video playing, when on.
+  DislikeCount? dislikes;
   bool _disposed = false;
   final _notices = StreamController<String>.broadcast();
 
@@ -769,8 +773,10 @@ class AppController extends ChangeNotifier {
       related = null;
       _segments = const [];
       _skipped.clear();
+      dislikes = null;
     });
     unawaited(_loadDetails(item, serial));
+    if (settings.returnDislike) unawaited(_loadDislikes(item, serial));
     if (settings.sponsorBlock) unawaited(_loadSegments(item, serial));
     if (await _open(item, serial, start: start, play: preferences.autoPlay)) {
       if (settings.defaultSpeed != player.state.rate) await player.setRate(settings.defaultSpeed);
@@ -804,6 +810,15 @@ class AppController extends ChangeNotifier {
       if (serial == _playSerial) _update(() => _segments = segments);
     } catch (_) {
       // Playback does not depend on SponsorBlock being reachable.
+    }
+  }
+
+  Future<void> _loadDislikes(VideoItem item, int serial) async {
+    try {
+      final count = await _returnDislike.votes(item.id);
+      if (serial == _playSerial) _update(() => dislikes = count);
+    } catch (_) {
+      // The page shows the likes without it.
     }
   }
 

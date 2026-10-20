@@ -6,6 +6,7 @@ import '../../app/video_list_loader.dart';
 import '../../community_posts.dart';
 import '../../models.dart';
 import '../../video_repository.dart';
+import '../comments_view.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../video_card.dart';
@@ -95,7 +96,7 @@ class ChannelPage extends StatelessWidget {
             alignment: Alignment.topLeft,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
-              child: PostCard(post: posts[i], channel: controller.channel!, onPlay: (video) => controller.play(video)),
+              child: PostCard(post: posts[i], channel: controller.channel!, onPlay: (video) => controller.play(video), onComments: () => showPostComments(context, controller, posts[i])),
             ),
           ),
         ),
@@ -113,10 +114,34 @@ class ChannelPage extends StatelessWidget {
   }
 }
 
+/// The comments under [post], in a dialog over the channel page.
+Future<void> showPostComments(BuildContext context, AppController controller, CommunityPost post) => showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720, maxHeight: 760),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
+              child: Row(children: [
+                Expanded(child: Text(post.text.isEmpty ? '帖子评论' : post.text, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium)),
+                IconButton(tooltip: '关闭', icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.of(context).pop()),
+              ]),
+            ),
+            Flexible(child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+              child: CommentsSection(controller: controller, postId: post.id),
+            )),
+          ]),
+        ),
+      ),
+    );
+
 /// One community post: text, images, an attached video or poll, likes.
 class PostCard extends StatelessWidget {
-  const PostCard({super.key, required this.post, required this.channel, required this.onPlay});
+  const PostCard({super.key, required this.post, required this.channel, required this.onPlay, this.onComments});
   final CommunityPost post;
+  final VoidCallback? onComments;
   final ChannelRef channel;
   final void Function(VideoItem video) onPlay;
 
@@ -173,9 +198,11 @@ class PostCard extends StatelessWidget {
           const SizedBox(width: 6),
           Text(post.likes.isEmpty ? '0' : post.likes, style: TextStyle(color: colors.outline, fontSize: 12)),
           const SizedBox(width: 16),
-          Icon(Icons.comment_outlined, size: 16, color: colors.outline),
-          const SizedBox(width: 6),
-          Text(post.comments.isEmpty ? '评论' : post.comments, style: TextStyle(color: colors.outline, fontSize: 12)),
+          TextButton.icon(
+            onPressed: onComments,
+            icon: const Icon(Icons.comment_outlined, size: 16),
+            label: Text(post.comments.isEmpty ? '评论' : post.comments, style: const TextStyle(fontSize: 12)),
+          ),
           const Spacer(),
           TextButton.icon(onPressed: () => openExternal(post.url), icon: const Icon(Icons.open_in_new_rounded, size: 16), label: const Text('在浏览器中查看')),
         ]),

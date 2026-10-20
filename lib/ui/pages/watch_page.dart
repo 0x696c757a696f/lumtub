@@ -8,6 +8,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../../app/app_controller.dart';
 import '../../models.dart';
 import '../../player_settings.dart';
+import '../comments_view.dart';
 import '../common.dart';
 import '../linked_text.dart';
 import '../player_controls.dart';
@@ -78,6 +79,10 @@ class _WatchPageState extends State<WatchPage> {
             ],
             const SizedBox(height: 16),
             _Details(controller: controller),
+            if (controller.playing case final item?) ...[
+              const SizedBox(height: 24),
+              CommentsSection(key: ValueKey('comments:${item.id}'), controller: controller, videoId: item.id, onSeek: (position) => controller.player?.seek(position)),
+            ],
           ];
           if (!wide) {
             return ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: [

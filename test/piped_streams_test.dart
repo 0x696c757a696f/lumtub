@@ -146,6 +146,8 @@ piped.yt | https://api.piped.yt | 🇩🇪 | No | ![](https://api.piped.yt/regis
     // A day-old one is downloaded again.
     await file.writeAsString(jsonEncode({...saved, 'updated': DateTime.now().subtract(const Duration(days: 2)).toIso8601String()}));
     await make().servers();
+    // Known servers answered, so the list is downloaded in the background.
+    await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(listRequests, 4);
   });
 }

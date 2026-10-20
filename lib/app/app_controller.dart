@@ -22,6 +22,7 @@ import '../decoder_status.dart';
 import '../models.dart';
 import '../network_proxy.dart';
 import '../piped_streams.dart';
+import '../youtube_comments.dart';
 import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
 import '../player_settings.dart';
@@ -93,6 +94,9 @@ class AppController extends ChangeNotifier {
   ChannelTab channelTab = ChannelTab.videos;
   PostsLoader? channelPosts;
   late final _posts = CommunityPosts(_http);
+
+  /// Comments under videos and posts.
+  late final comments = YoutubeComments(_http);
 
   /// Whether the statistics overlay is shown over the video.
   bool showStats = false;

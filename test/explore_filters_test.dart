@@ -73,13 +73,14 @@ void main() {
 
   test('subtitles follow Windows\' language unless another is chosen', () {
     expect(const PlayerSettings().subtitleLanguage, SubtitleLanguage.auto);
-    final binding = TestWidgetsFlutterBinding.ensureInitialized();
-    binding.platformDispatcher.localeTestValue = const Locale('zh', 'CN');
-    addTearDown(binding.platformDispatcher.clearLocaleTestValue);
+    final saved = SubtitleLanguage.systemLocale;
+    addTearDown(() => SubtitleLanguage.systemLocale = saved);
+    var locale = const Locale('zh', 'CN');
+    SubtitleLanguage.systemLocale = () => locale;
     expect(SubtitleLanguage.auto.mpvLangs, SubtitleLanguage.zh.mpvLangs);
-    binding.platformDispatcher.localeTestValue = const Locale('zh', 'TW');
+    locale = const Locale('zh', 'TW');
     expect(SubtitleLanguage.auto.resolved, SubtitleLanguage.zhHant);
-    binding.platformDispatcher.localeTestValue = const Locale('de', 'DE');
+    locale = const Locale('de', 'DE');
     expect(SubtitleLanguage.auto.resolved, SubtitleLanguage.en);
     // 简体中文优先, the old default, now follows; a choice saved since stays.
     expect(PlayerSettings.fromJson({'subtitleLanguage': 'zh'}).subtitleLanguage, SubtitleLanguage.auto);

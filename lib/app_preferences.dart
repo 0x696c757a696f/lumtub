@@ -166,8 +166,7 @@ class AppPreferences {
   bool blocksGroup(VideoItem item) {
     final memo = _blockMemo[this] ??= <String, bool>{};
     if (memo.length > 20000) memo.clear();
-    return memo['${item.channelId}
-${item.channel}'] ??= blocksChannel(item.channel, id: item.channelId);
+    return memo['${item.channelId}\n${item.channel}'] ??= blocksChannel(item.channel, id: item.channelId);
   }
 
   static final _blockMemo = Expando<Map<String, bool>>();

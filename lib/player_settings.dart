@@ -93,10 +93,13 @@ enum SubtitleLanguage {
   final String _mpvLangs;
   String get mpvLangs => tr(resolved._mpvLangs);
 
+  /// Windows' language; tests replace it.
+  static Locale Function() systemLocale = () => PlatformDispatcher.instance.locale;
+
   /// [auto] as the language it stands for.
   SubtitleLanguage get resolved => this != auto
       ? this
-      : switch (PlatformDispatcher.instance.locale) {
+      : switch (systemLocale()) {
           Locale(languageCode: 'zh', scriptCode: 'Hant') => zhHant,
           Locale(languageCode: 'zh', countryCode: 'TW' || 'HK' || 'MO') => zhHant,
           Locale(languageCode: 'zh') => zh,

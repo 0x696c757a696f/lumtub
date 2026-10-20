@@ -133,7 +133,7 @@ class WindowsShellSync {
         _status(player?.state.playing ?? false);
       }
     }
-    final hasNext = video != null && controller.hasNext, hasPrevious = controller.previousInQueue != null;
+    final hasNext = video != null && controller.hasNext, hasPrevious = controller.hasPrevious;
     if (hasNext != _hasNext || hasPrevious != _hasPrevious) {
       _hasNext = hasNext;
       _hasPrevious = hasPrevious;

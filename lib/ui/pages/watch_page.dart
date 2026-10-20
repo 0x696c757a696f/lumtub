@@ -15,6 +15,8 @@ import '../common.dart';
 import '../linked_text.dart';
 import '../player_controls.dart';
 import '../player_shortcuts.dart';
+import '../screenshot_action.dart';
+import '../theater_mode.dart';
 import '../skeleton.dart';
 import '../theme.dart';
 import '../translatable.dart';
@@ -64,27 +66,28 @@ class _WatchPageState extends State<WatchPage> {
 
   Widget _page(BuildContext context, AppController controller) {
     _autoFullscreen(controller);
-    final shortcuts = playerShortcuts(controller, () => _video.currentState);
+    final shortcuts = playerShortcuts(controller, () => _video.currentState, onScreenshot: () => unawaited(captureScreenshot(context, controller)));
     // The same bindings work anywhere on the page and inside the fullscreen
     // route, where media_kit's controls hold focus.
     return CallbackShortcuts(
       bindings: shortcuts,
       child: Focus(
         autofocus: true,
-        child: LayoutBuilder(builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 1080;
+        child: ValueListenableBuilder(valueListenable: theaterMode, builder: (context, theater, _) => LayoutBuilder(builder: (context, constraints) {
+          // 剧场模式 gives the video the whole width and stacks the panels below.
+          final wide = !theater && constraints.maxWidth >= 1080;
           final mainWidth = wide ? constraints.maxWidth - _sidePanelWidth - AppStyle.pagePadding * 3 : constraints.maxWidth - AppStyle.pagePadding * 2;
           // Keep the whole player visible: never taller than the window allows.
-          final playerWidth = min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
+          final playerWidth = theater ? min(constraints.maxWidth, max(320.0, (constraints.maxHeight - 8) * 16 / 9)) : min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
           final item = controller.playing;
           final comments = item == null
               ? null
               : CommentsSection(key: ValueKey('comments:${item.id}'), controller: controller, videoId: item.id, onSeek: (position) => controller.player?.seek(position));
           final main = <Widget>[
-            _BackRow(onBack: controller.goBack),
+            if (!theater) _BackRow(onBack: controller.goBack),
             Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
             CastBar(controller: controller),
-            const SizedBox(height: 12),
+            if (!theater) const SizedBox(height: 12),
             _Toolbar(controller: controller),
             if (controller.playbackError != null) ...[
               const SizedBox(height: 12),
@@ -98,6 +101,20 @@ class _WatchPageState extends State<WatchPage> {
               comments,
             ],
           ];
+          if (theater) {
+            // Edge to edge, the rest keeps the page's margins.
+            return ListView(padding: EdgeInsets.zero, children: [
+              Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 12, AppStyle.pagePadding, AppStyle.pagePadding),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  ...main.skip(1),
+                  const SizedBox(height: 24),
+                  _UpNext(controller: controller, shrinkWrap: true),
+                ]),
+              ),
+            ]);
+          }
           if (!wide) {
             return ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: [
               ...main,
@@ -112,7 +129,7 @@ class _WatchPageState extends State<WatchPage> {
               child: _SidePanel(controller: controller, comments: comments),
             )),
           ]);
-        }),
+        })),
       ),
     );
   }

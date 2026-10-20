@@ -48,6 +48,7 @@ import '../blocked_groups.dart';
 import '../explore_filters.dart';
 import '../explore_topics.dart';
 import '../faith_topics.dart';
+import '../storyboard.dart';
 import '../stream_resolver.dart';
 import '../subtitle_translation.dart';
 import '../translation.dart';
@@ -298,6 +299,8 @@ class AppController extends ChangeNotifier {
   List<SkipSegment> _segments = const [];
   final _skipped = <SkipSegment>{};
   final _http = http.Client();
+  /// Sprite sheets of the progress bar's preview frames.
+  late final storyboardSheets = StoryboardSheets(_http);
   /// Behind 翻译 buttons; called only when one is tapped.
   late Translator translator = GoogleTranslator(_http);
   /// The subtitle shown above the main one (双语字幕), if any.
@@ -937,6 +940,11 @@ class AppController extends ChangeNotifier {
     if (mini && playing?.id == item.id && at == null) return expandMini();
     if (playing?.id != item.id) {
       unawaited(cast.stop());
+      if (playing case final left?) {
+        _played.removeWhere((v) => v.id == left.id);
+        _played.add(left);
+        if (_played.length > 50) _played.removeAt(0);
+      }
       _remember();
       _finishWatching();
       _watching = item;
@@ -1476,11 +1484,6 @@ class AppController extends ChangeNotifier {
     return index > 0 ? queue[index - 1] : null;
   }
 
-  Future<void> playPrevious() async {
-    final previous = previousInQueue;
-    if (previous != null) await play(previous);
-  }
-
   bool _backgroundAudioOnly = false;
 
   /// While the window is minimised or in the tray with the setting on, mpv
@@ -1535,6 +1538,38 @@ class AppController extends ChangeNotifier {
   }
 
   bool get hasNext => playQueue.isNotEmpty || upNext.isNotEmpty || relatedItems.isNotEmpty;
+
+  /// Videos played before the current one, the latest last.
+  final _played = <VideoItem>[];
+
+  bool get hasPrevious => _played.isNotEmpty || previousInQueue != null;
+
+  /// Plays the video that was playing before this one, or else the one
+  /// before it in the list it was opened from.
+  Future<void> playPrevious() async {
+    if (_played.isEmpty) {
+      if (previousInQueue case final previous?) await play(previous);
+      return;
+    }
+    final item = _played.removeLast();
+    await play(item);
+    // play() noted the video left behind; going back is not a new step.
+    if (_played.isNotEmpty && _played.last.id == item.id) _played.removeLast();
+  }
+
+  /// yt-dlp's result for the playing video, when it was extracted already
+  /// (storyboards and the replay heatmap come from it); null otherwise,
+  /// for example when Piped or Invidious played it.
+  Future<Map<String, dynamic>?> playingInfo() async {
+    final id = playing?.id;
+    final cached = id == null ? null : _repository?.streams.cached(id);
+    if (cached == null) return null;
+    try {
+      return (await cached).info;
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Related videos that pass the content filters.
   List<VideoItem> get relatedItems => visible(related?.items ?? const []);

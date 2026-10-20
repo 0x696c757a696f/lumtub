@@ -15,6 +15,7 @@ import '../../decoder_status.dart';
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
+import '../../progress_line.dart';
 import '../../translation.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../../windows_video_info.dart';
@@ -599,6 +600,19 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(Icons.touch_app_outlined),
               onTap: () => pickFromDialog<int>(context, title: tr('播放控件显示时间'), value: prefs.controlsHideSeconds, values: _hideTimes, onSelected: (v) => savePrefs(prefs.copyWith(controlsHideSeconds: v))),
             ), subtitle: tr('控制栏 隐藏')),
+        SettingEntry(tr('最多重放曲线'), (context) => SwitchItem(
+              title: tr('进度条上方显示“最多重放”曲线'),
+              subtitle: tr('热门视频才有，看哪一段被反复观看'),
+              leading: _icon(Icons.area_chart_outlined),
+              value: prefs.showHeatmap,
+              onChanged: (v) => savePrefs(prefs.copyWith(showHeatmap: v)),
+            ), subtitle: tr('热度 进度条 最多重放')),
+        SettingEntry(tr('底部细进度条'), (context) => NormalItem(
+              title: tr('底部细进度条'),
+              subtitle: tr('当前：{0}；播放控件隐藏时，画面底部的一条细线', [prefs.progressLine.label]),
+              leading: _icon(Icons.linear_scale_rounded),
+              onTap: () => pickFromDialog<ProgressLine>(context, title: tr('底部细进度条'), value: prefs.progressLine, values: [for (final v in ProgressLine.values) (v, v.label)], onSelected: (v) => savePrefs(prefs.copyWith(progressLine: v))),
+            ), subtitle: tr('进度条 迷你 隐藏')),
         SettingEntry(tr('启用键盘控制'), (context) => SwitchItem(
               title: tr('启用键盘控制'),
               subtitle: tr('空格暂停、方向键快进和音量、F 全屏等'),

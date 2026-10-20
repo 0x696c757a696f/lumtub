@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:media_kit/media_kit.dart' show NativePlayer;
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
 import '../app_preferences.dart';
 import '../l10n/l10n.dart';
+import 'theater_mode.dart';
 
 /// Keys shown in the shortcut help, in display order, with the steps from
 /// [prefs].
@@ -20,7 +22,13 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) => [
       ('M', tr('静音')),
       ('F', tr('全屏')),
       ('Esc', tr('退出全屏')),
-      ('Shift + N', tr('下一个视频')),
+      ('Shift + N / ]', tr('下一个视频')),
+      ('Shift + P / [', tr('上一个视频')),
+      (', / .', tr('暂停时逐帧后退或前进')),
+      ('0 - 9', tr('跳到视频的 0% - 90%')),
+      ('Home / End', tr('跳到开头或结尾')),
+      ('T', tr('剧场模式')),
+      ('S', tr('截图')),
       ('I', tr('显示或隐藏播放统计')),
       (tr('Alt + ← / 鼠标后退键'), tr('返回上一页')),
       ('Ctrl + K', tr('搜索')),
@@ -29,7 +37,7 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) => [
 /// Player key bindings, used both on the watch page and inside the player
 /// controls, which keep focus while the video is fullscreen. [onFeedback]
 /// is told what a key did, for the indicator over the video.
-Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, VideoState? Function() video, {void Function(IconData icon, String text)? onFeedback}) {
+Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, VideoState? Function() video, {void Function(IconData icon, String text)? onFeedback, VoidCallback? onScreenshot}) {
   final player = controller.player;
   final prefs = controller.preferences;
   if (player == null || !prefs.keyboardShortcuts) return const {};
@@ -51,7 +59,45 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     unawaited(player.setRate(next));
     onFeedback?.call(direction > 0 ? Icons.fast_forward_rounded : Icons.slow_motion_video_rounded, '${_trim(next)}x');
   }
+  // 0-9 jump to that tenth of the video, as on YouTube.
+  void jumpToTenth(int tenth) {
+    final duration = player.state.duration;
+    if (duration <= Duration.zero) return;
+    unawaited(player.seek(duration * (tenth / 10)));
+    onFeedback?.call(Icons.skip_next_rounded, '${tenth * 10}%');
+  }
+  void jumpTo(bool end) {
+    final duration = player.state.duration;
+    unawaited(player.seek(end ? duration : Duration.zero));
+    onFeedback?.call(end ? Icons.last_page_rounded : Icons.first_page_rounded, end ? tr('结尾') : tr('开头'));
+  }
+  // One frame at a time, only while paused, as on YouTube.
+  void stepFrame(bool forward) {
+    final platform = player.platform;
+    if (player.state.playing || platform is! NativePlayer) return;
+    unawaited(platform.command([forward ? 'frame-step' : 'frame-back-step']).catchError((_) {}));
+    onFeedback?.call(forward ? Icons.skip_next_rounded : Icons.skip_previous_rounded, forward ? tr('下一帧') : tr('上一帧'));
+  }
+  void previous() {
+    if (controller.hasPrevious) unawaited(controller.playPrevious());
+  }
+  void next() => unawaited(controller.playNext());
+  const digits = [LogicalKeyboardKey.digit0, LogicalKeyboardKey.digit1, LogicalKeyboardKey.digit2, LogicalKeyboardKey.digit3, LogicalKeyboardKey.digit4, LogicalKeyboardKey.digit5, LogicalKeyboardKey.digit6, LogicalKeyboardKey.digit7, LogicalKeyboardKey.digit8, LogicalKeyboardKey.digit9];
+  const numpad = [LogicalKeyboardKey.numpad0, LogicalKeyboardKey.numpad1, LogicalKeyboardKey.numpad2, LogicalKeyboardKey.numpad3, LogicalKeyboardKey.numpad4, LogicalKeyboardKey.numpad5, LogicalKeyboardKey.numpad6, LogicalKeyboardKey.numpad7, LogicalKeyboardKey.numpad8, LogicalKeyboardKey.numpad9];
   return {
+    for (var i = 0; i < 10; i++) ...{
+      SingleActivator(digits[i]): () => jumpToTenth(i),
+      SingleActivator(numpad[i]): () => jumpToTenth(i),
+    },
+    const SingleActivator(LogicalKeyboardKey.home): () => jumpTo(false),
+    const SingleActivator(LogicalKeyboardKey.end): () => jumpTo(true),
+    const SingleActivator(LogicalKeyboardKey.comma): () => stepFrame(false),
+    const SingleActivator(LogicalKeyboardKey.period): () => stepFrame(true),
+    const SingleActivator(LogicalKeyboardKey.bracketLeft): previous,
+    const SingleActivator(LogicalKeyboardKey.bracketRight): next,
+    const SingleActivator(LogicalKeyboardKey.keyP, shift: true): previous,
+    const SingleActivator(LogicalKeyboardKey.keyT): () => theaterMode.value = !theaterMode.value,
+    if (onScreenshot != null) const SingleActivator(LogicalKeyboardKey.keyS): onScreenshot,
     const SingleActivator(LogicalKeyboardKey.space): playOrPause,
     const SingleActivator(LogicalKeyboardKey.keyK): playOrPause,
     const SingleActivator(LogicalKeyboardKey.mediaPlayPause): playOrPause,

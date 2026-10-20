@@ -8,6 +8,7 @@ import 'explore_filters.dart';
 import 'feed_quality.dart';
 import 'explore_topics.dart';
 import 'models.dart';
+import 'progress_line.dart';
 import 'translation.dart';
 import 'l10n/l10n.dart';
 
@@ -63,6 +64,8 @@ class AppPreferences {
     this.longSeekSeconds = 10,
     this.volumeStep = 5,
     this.controlsHideSeconds = 3,
+    this.showHeatmap = true,
+    this.progressLine = ProgressLine.always,
     this.showRelated = true,
     this.expandDescription = false,
     this.autoCheckUpdates = true,
@@ -145,6 +148,10 @@ class AppPreferences {
   final int longSeekSeconds;
   final int volumeStep;
   final int controlsHideSeconds;
+  /// The 最多重放 curve above the progress bar.
+  final bool showHeatmap;
+  /// The thin line along the bottom of the video while the controls hide.
+  final ProgressLine progressLine;
   final bool showRelated;
   final bool expandDescription;
   final bool autoCheckUpdates;
@@ -253,6 +260,8 @@ class AppPreferences {
     int? longSeekSeconds,
     int? volumeStep,
     int? controlsHideSeconds,
+    bool? showHeatmap,
+    ProgressLine? progressLine,
     bool? showRelated,
     bool? expandDescription,
     bool? autoCheckUpdates,
@@ -304,6 +313,8 @@ class AppPreferences {
         longSeekSeconds: longSeekSeconds ?? this.longSeekSeconds,
         volumeStep: volumeStep ?? this.volumeStep,
         controlsHideSeconds: controlsHideSeconds ?? this.controlsHideSeconds,
+        showHeatmap: showHeatmap ?? this.showHeatmap,
+        progressLine: progressLine ?? this.progressLine,
         showRelated: showRelated ?? this.showRelated,
         expandDescription: expandDescription ?? this.expandDescription,
         autoCheckUpdates: autoCheckUpdates ?? this.autoCheckUpdates,
@@ -356,6 +367,8 @@ class AppPreferences {
         'longSeekSeconds': longSeekSeconds,
         'volumeStep': volumeStep,
         'controlsHideSeconds': controlsHideSeconds,
+        'showHeatmap': showHeatmap,
+        'progressLine': progressLine.name,
         'showRelated': showRelated,
         'expandDescription': expandDescription,
         'autoCheckUpdates': autoCheckUpdates,
@@ -442,6 +455,8 @@ class AppPreferences {
       longSeekSeconds: number('longSeekSeconds', 10, 1, 120),
       volumeStep: number('volumeStep', 5, 1, 25),
       controlsHideSeconds: number('controlsHideSeconds', 3, 1, 30),
+      showHeatmap: flag('showHeatmap', d.showHeatmap),
+      progressLine: ProgressLine.parse(raw['progressLine'], d.progressLine),
       showRelated: flag('showRelated', d.showRelated),
       expandDescription: flag('expandDescription', d.expandDescription),
       autoCheckUpdates: flag('autoCheckUpdates', d.autoCheckUpdates),

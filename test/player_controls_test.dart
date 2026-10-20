@@ -202,9 +202,12 @@ void main() {
     await pump(tester);
     await tester.tap(find.byIcon(Icons.more_vert_rounded));
     await tester.pumpAndSettle();
-    for (final item in ['选择画质', '选择音质', '解码格式', '播放顺序', '字幕设置', '定时关闭', '播放信息', '重载视频']) {
+    final sheet = find.descendant(of: find.byType(BottomSheet), matching: find.byType(Scrollable));
+    for (final item in ['选择画质', '选择音质', '解码格式', '播放顺序', '字幕设置', '截图 (S)', '镜像翻转', '画面缩放', '定时关闭', '播放信息', '重载视频']) {
+      await tester.scrollUntilVisible(find.text(item), 60, scrollable: sheet);
       expect(find.text(item), findsOneWidget);
     }
+    await tester.scrollUntilVisible(find.text('定时关闭'), 60, scrollable: sheet);
     await tester.tap(find.text('定时关闭'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('30 分钟'));

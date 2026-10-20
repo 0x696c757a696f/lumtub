@@ -20,11 +20,16 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
+import '../heatmap.dart';
+import '../keep_awake.dart';
+import '../picture_transform.dart';
+import '../storyboard.dart';
 import '../models.dart' show Chapter, SubtitleKind, SubtitleOption;
 import '../subtitle_translation.dart';
 import '../translation.dart';
 import '../player_settings.dart';
 import '../widgets/pilinara_settings_tiles.dart';
+import '../widgets/mini_progress_line.dart';
 import '../widgets/video_progress_bar.dart';
 import 'cast_ui.dart';
 import 'common.dart';
@@ -32,6 +37,9 @@ import 'pages/settings_sections.dart' show trimSpeed, qualityLabel;
 import 'pages/settings_subpages.dart';
 import 'player_shortcuts.dart';
 import 'player_stats.dart';
+import 'screenshot_action.dart';
+import 'storyboard_preview.dart';
+import 'theater_mode.dart';
 import 'video_texture_size.dart';
 import '../l10n/l10n.dart';
 
@@ -96,6 +104,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   (IconData, String)? _feedback;
   int _menus = 0;
   bool _hoveringBars = false;
+  late final _transform = PictureTransform(_player);
+  // What yt-dlp's extraction of the playing video offers for the bar.
+  String? _infoFor;
+  bool _infoBusy = false;
+  Heatmap? _heatmap;
+  ProgressPreview? _preview;
 
   AppController get _controller => widget.controller;
   Player get _player => widget.player;
@@ -104,6 +118,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   void initState() {
     super.initState();
     videoFit.addListener(_applyFit);
+    _controller.addListener(_syncVideo);
+    KeepAwake.hold(this, _player.state.playing && !_controller.audioOnly);
     // Hides the pointer together with the bars.
     _animation.addStatusListener((_) {
       if (mounted) setState(() {});
@@ -113,7 +129,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       // one would stretch it.
       _player.stream.width.listen((_) => _applyFit()),
       _player.stream.height.listen((_) => _applyFit()),
+      _player.stream.duration.listen((_) => _syncVideo()),
       _player.stream.playing.listen((playing) {
+        KeepAwake.hold(this, playing && !_controller.audioOnly);
         if (!playing) {
           _show();
         } else {
@@ -132,6 +150,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   @override
   void dispose() {
     videoFit.removeListener(_applyFit);
+    _controller.removeListener(_syncVideo);
+    KeepAwake.hold(this, false);
+    _transform.dispose();
     for (final subscription in _subscriptions) {
       unawaited(subscription.cancel());
     }
@@ -140,6 +161,34 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     _animation.dispose();
     _focus.dispose();
     super.dispose();
+  }
+
+  /// Loads the bar's preview frames and replay curve once per video, from
+  /// the extraction already made for playback, and resets mirroring and zoom
+  /// for a new one. Tried again until the extraction is there.
+  void _syncVideo() {
+    final id = _controller.playing?.id;
+    if (!mounted || id == null) return;
+    if (_infoFor != id) {
+      _infoFor = id;
+      _heatmap = null;
+      _preview = null;
+      _transform.reset();
+      if (mounted) setState(() {});
+    } else if (_heatmap != null || _preview != null) {
+      return;
+    }
+    if (_infoBusy) return;
+    _infoBusy = true;
+    _controller.playingInfo().then((info) {
+      _infoBusy = false;
+      if (!mounted || info == null || _controller.playing?.id != id) return;
+      final board = Storyboard.from(info);
+      setState(() {
+        _heatmap = Heatmap.from(info);
+        _preview = board == null ? null : storyboardPreview(board, _controller.storyboardSheets);
+      });
+    });
   }
 
   void _applyFit() {
@@ -213,7 +262,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final fullscreen = isFullscreen(context);
-    final shortcuts = playerShortcuts(_controller, () => widget.state, onFeedback: _showFeedback);
+    final shortcuts = playerShortcuts(_controller, () => widget.state, onFeedback: _showFeedback, onScreenshot: () => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)));
     final controls = _controls(fullscreen, shortcuts);
     final video = _controller.videoController;
     return video == null ? controls : VideoTextureSize(controller: video, fullscreen: fullscreen, child: controls);
@@ -249,6 +298,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 _buffering(),
                 if (_feedback case (final icon, final text)) Center(child: IgnorePointer(child: _FeedbackBubble(icon: icon, text: text))),
                 if (_controller.showStats) Positioned(left: 12, top: fullscreen ? 64 : 52, child: PlayerStats(player: _player)),
+                if (_controller.preferences.progressLine.shows(fullscreen: fullscreen))
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: IgnorePointer(
+                      child: FadeTransition(
+                        opacity: _animation.drive(Tween(begin: 1.0, end: 0.0)),
+                        child: MiniProgressLine(player: _player, color: Theme.of(context).colorScheme.inversePrimary),
+                      ),
+                    ),
+                  ),
                 Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _topBar(context, fullscreen))),
                 Positioned(left: 0, right: 0, bottom: 0, child: _bar(top: false, child: _bottomBar(context, fullscreen))),
               ]),
@@ -419,6 +480,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 for (final s in _controller.segments) ProgressSegment(s.start, s.end, _segmentColors[s.category] ?? const Color(0xFF00D400)),
               ],
               chapterStarts: [for (final c in _chapters) c.start],
+              preview: _preview,
+              heatmap: _controller.preferences.showHeatmap ? _heatmap?.values : null,
               labelOf: _chapters.isEmpty ? null : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(_chapters, time)?.title ?? ''}',
               onSeek: (time) => unawaited(_player.seek(time)),
             ),
@@ -486,6 +549,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               );
             },
           ),
+          if (!fullscreen)
+            ValueListenableBuilder(
+              valueListenable: theaterMode,
+              builder: (context, theater, _) => _IconButton(
+                tooltip: theater ? tr('退出剧场模式 (T)') : tr('剧场模式 (T)'),
+                icon: Icons.crop_16_9_rounded,
+                size: 22,
+                width: width,
+                active: theater,
+                onTap: () => theaterMode.value = !theater,
+              ),
+            ),
           _IconButton(
             tooltip: fullscreen ? tr('退出全屏 (F)') : tr('全屏 (F)'),
             icon: fullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
@@ -617,6 +692,17 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             }),
             item(Icons.subtitles_outlined, tr('字幕设置'), '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}', () => openSubtitleSettings(context, _controller)),
             item(Icons.tune_rounded, tr('画面与音画同步调节'), null, () => openPictureSettings(context, _controller)),
+            item(Icons.photo_camera_outlined, tr('截图 (S)'), tr('保存到“图片\\YTPlus”并复制'), () => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback))),
+            item(Icons.flip_rounded, tr('镜像翻转'), _transform.mirrored ? tr('已开启') : tr('未开启'), () => unawaited(_transform.setMirrored(!_transform.mirrored))),
+            item(Icons.zoom_in_rounded, tr('画面缩放'), _transform.zoom == 1 ? tr('原始大小') : '${trimSpeed(_transform.zoom)}x', () {
+              pickFromDialog<double>(
+                context,
+                title: tr('画面缩放'),
+                value: _transform.zoom,
+                values: [for (final z in PictureTransform.zoomLevels) (z, z == 1 ? tr('原始大小') : '${trimSpeed(z)}x')],
+                onSelected: (z) => unawaited(_transform.setZoom(z)),
+              );
+            }),
             item(Icons.bedtime_outlined, tr('定时关闭'), sleepLabel(), () => _pickSleepTimer(context)),
             item(Icons.info_outline_rounded, tr('播放信息'), _controller.showStats ? tr('显示中') : null, _controller.toggleStats),
             item(Icons.refresh_rounded, tr('重载视频'), tr('从当前位置重新加载'), () => unawaited(_controller.reloadVideo())),

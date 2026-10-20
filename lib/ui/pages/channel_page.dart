@@ -306,6 +306,11 @@ class _ChannelSearchField extends StatefulWidget {
 }
 
 class _ChannelSearchFieldState extends State<_ChannelSearchField> {
+  bool get _posts {
+    final controller = widget.controller;
+    return controller.channelQuery == null ? controller.channelTab == ChannelTab.posts : controller.channelSearchTab == ChannelTab.posts;
+  }
+
   late final _text = TextEditingController(text: widget.controller.channelQuery ?? '');
 
   @override
@@ -318,10 +323,12 @@ class _ChannelSearchFieldState extends State<_ChannelSearchField> {
   Widget build(BuildContext context) => TextField(
         controller: _text,
         textInputAction: TextInputAction.search,
-        onSubmitted: (text) => widget.controller.searchChannel(text, within: widget.controller.channelSearchTab),
+        // Typed on the 社区 tab, it searches the posts; otherwise the
+        // whole channel, until another chip is picked.
+        onSubmitted: (text) => widget.controller.searchChannel(text, within: _posts ? ChannelTab.posts : widget.controller.channelSearchTab),
         decoration: InputDecoration(
           isDense: true,
-          hintText: tr('搜索频道内的视频'),
+          hintText: _posts ? tr('搜索频道内的帖子') : tr('搜索频道内的视频'),
           prefixIcon: const Icon(Icons.search_rounded, size: 20),
           suffixIcon: ListenableBuilder(
             listenable: _text,

@@ -749,6 +749,7 @@ const stringsEn = <String, String>{
   '搜索设置': 'Search settings',
   '搜索词（可选）': 'Search terms (optional)',
   '搜索语言，如 中文、ja': 'Search language, e.g. Chinese, ja',
+  '搜索频道内的帖子': 'Search this channel\'s posts',
   '搜索频道内的视频': 'Search videos in this channel',
   '搞笑': 'Comedy',
   '摄影': 'Photography',

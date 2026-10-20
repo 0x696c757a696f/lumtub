@@ -41,21 +41,16 @@ class SubscriptionsPage extends StatelessWidget {
             ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
             : TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: const Icon(Icons.refresh_rounded), label: Text(tr('刷新'))),
       )),
-      SliverToBoxAdapter(child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
-        child: Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final channel in channels)
-            ActionChip(
-              avatar: ChannelAvatar(name: channel.name, radius: 12),
-              label: Text(channel.name.isEmpty ? channel.id : channel.name),
-              onPressed: () => controller.openChannel(channel),
-            ),
-        ]),
-      )),
+      SliverToBoxAdapter(child: _ChannelStrip(controller: controller, channels: channels, feed: library.feed)),
       if (library.feedFailures.isNotEmpty)
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
-          child: ErrorBanner(tr('这些频道暂时无法加载：{0}', [library.feedFailures.join('、')]), onRetry: () => library.refreshFeed(force: true)),
+          child: ErrorBanner(
+            library.feedFailures.length > 5
+                ? tr('{0} 等 {1} 个频道暂时无法加载', [library.feedFailures.take(5).join('、'), library.feedFailures.length])
+                : tr('这些频道暂时无法加载：{0}', [library.feedFailures.join('、')]),
+            onRetry: () => library.refreshFeed(force: true),
+          ),
         )),
       if (feed.isNotEmpty)
         SliverVideoGrid(items: feed, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: feed))
@@ -65,6 +60,110 @@ class SubscriptionsPage extends StatelessWidget {
         SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.inbox_outlined, title: tr('暂时没有新视频'))),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
+  }
+}
+
+/// One scrolling row of the followed channels, the ones that posted most
+/// recently first, and a button for the whole list. Hundreds of imported
+/// subscriptions would otherwise push the videos off the page.
+class _ChannelStrip extends StatelessWidget {
+  const _ChannelStrip({required this.controller, required this.channels, required this.feed});
+  final AppController controller;
+  final List<ChannelRef> channels;
+  final List<VideoItem> feed;
+
+  static const shown = 40;
+
+  @override
+  Widget build(BuildContext context) {
+    final recent = <String>{for (final item in feed) if (item.channelId != null) item.channelId!};
+    final rank = {for (final (i, id) in recent.indexed) id: i};
+    final ordered = [...channels]..sort((a, b) => (rank[a.id] ?? recent.length).compareTo(rank[b.id] ?? recent.length));
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppStyle.cardSpacing),
+      child: SizedBox(
+        height: 40,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
+          children: [
+            ActionChip(
+              avatar: const Icon(Icons.list_rounded, size: 18),
+              label: Text(tr('全部 {0} 个', [channels.length])),
+              onPressed: () => showDialog<void>(context: context, builder: (_) => _AllChannels(controller: controller, channels: channels)),
+            ),
+            for (final channel in ordered.take(shown))
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: ActionChip(
+                  avatar: ChannelAvatar(name: channel.name, radius: 12),
+                  label: Text(channel.name.isEmpty ? channel.id : channel.name),
+                  onPressed: () => controller.openChannel(channel),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Every followed channel, in a list that can be searched by name.
+class _AllChannels extends StatefulWidget {
+  const _AllChannels({required this.controller, required this.channels});
+  final AppController controller;
+  final List<ChannelRef> channels;
+
+  @override
+  State<_AllChannels> createState() => _AllChannelsState();
+}
+
+class _AllChannelsState extends State<_AllChannels> {
+  String _query = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _query.trim().toLowerCase();
+    final matches = [
+      for (final channel in widget.channels)
+        if (query.isEmpty || channel.name.toLowerCase().contains(query)) channel,
+    ];
+    return Dialog(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 640),
+        child: Column(children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: TextField(
+              autofocus: true,
+              onChanged: (value) => setState(() => _query = value),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search_rounded),
+                hintText: tr('在 {0} 个关注的频道里搜索', [widget.channels.length]),
+              ),
+            ),
+          ),
+          Expanded(
+            child: matches.isEmpty
+                ? Center(child: Text(tr('没有匹配的频道')))
+                : ListView.builder(
+                    itemCount: matches.length,
+                    itemBuilder: (context, i) {
+                      final channel = matches[i];
+                      return ListTile(
+                        leading: ChannelAvatar(name: channel.name, radius: 16),
+                        title: Text(channel.name.isEmpty ? channel.id : channel.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        onTap: () {
+                          Navigator.pop(context);
+                          widget.controller.openChannel(channel);
+                        },
+                      );
+                    },
+                  ),
+          ),
+        ]),
+      ),
+    );
   }
 }
 

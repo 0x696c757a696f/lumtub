@@ -61,6 +61,29 @@ void main() {
     unawaited(library.flush());
   });
 
+  testWidgets('many subscriptions fit in one row with a searchable full list', (tester) async {
+    for (var i = 0; i < 100; i++) {
+      library.toggleFollow(ChannelRef('UC${'$i'.padLeft(22, '0')}', '频道 $i'));
+    }
+    library.toggleFollow(channel);
+    library.feed = videos;
+    await pump(tester, SubscriptionsPage(controller: controller));
+    // The channel that just posted comes first; the rest wait in the list.
+    final chips = find.byType(ActionChip);
+    expect(find.descendant(of: chips.at(1), matching: find.text('Rick Astley')), findsOneWidget);
+    expect(tester.getTopLeft(chips.at(2)).dy, tester.getTopLeft(chips.at(1)).dy);
+    expect(find.text('视频 0'), findsOneWidget);
+
+    await tester.tap(find.text('全部 101 个'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '频道 42');
+    await tester.pump();
+    expect(find.widgetWithText(ListTile, '频道 42'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, '频道 7'), findsNothing);
+    expect(tester.takeException(), isNull);
+    unawaited(library.flush());
+  });
+
   testWidgets('playlists list favorites first and open a playlist', (tester) async {
     library.toggleFavorite(videos.first);
     final playlist = library.createPlaylist('稍后观看');

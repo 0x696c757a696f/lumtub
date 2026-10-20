@@ -9,9 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  media_kit: 1.1.11
-  media_kit_video: 1.2.5
-  media_kit_libs_video: 1.0.5
+  flutter_localizations:
+    sdk: flutter
+  media_kit: ^1.2.6
+  media_kit_video: ^2.0.1
+  media_kit_libs_video: ^1.0.7
   path_provider: ^2.1.5
   http: ^1.5.0
   crypto: ^3.0.6
@@ -23,5 +25,20 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
 
+# A copy of media_kit_video with one Windows fix; see vendor/media_kit_video/YTPLUS.md.
+dependency_overrides:
+  media_kit_video:
+    path: vendor/media_kit_video
+
 flutter:
   uses-material-design: true
+  fonts:
+    # Noto Sans SC is Google Fonts' build of Noto Sans CJK SC (SIL OFL 1.1,
+    # assets/fonts/OFL.txt).
+    - family: Noto Sans CJK SC
+      fonts:
+        - asset: assets/fonts/NotoSansSC-Regular.ttf
+        - asset: assets/fonts/NotoSansSC-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/NotoSansSC-Bold.ttf
+          weight: 700

@@ -36,13 +36,38 @@ class CacheManager {
     return bytes;
   }
 
-  Future<void> clear(PlayerSettings settings) async {
+  /// Deletes what is inside the managed folders, keeping the folders. A
+  /// file in use, such as one yt-dlp or Deno holds in `temp` while a search
+  /// runs, is skipped rather than stopping the rest. Returns the bytes freed
+  /// and how many files were left.
+  Future<({int freed, int skipped})> clear(PlayerSettings settings) async {
     final root = await prepare(settings);
+    var freed = 0;
+    var skipped = 0;
     for (final name in managedFolders) {
       final child = Directory('${root.path}${Platform.pathSeparator}$name');
-      if (await child.exists()) await child.delete(recursive: true);
-      await child.create(recursive: true);
+      if (!await child.exists()) continue;
+      final entries = await child.list(recursive: true, followLinks: false).toList();
+      // Files first, then folders from the deepest, so emptied ones go too.
+      for (final file in entries.whereType<File>()) {
+        try {
+          final length = await file.length();
+          await file.delete();
+          freed += length;
+        } on FileSystemException {
+          skipped++;
+        }
+      }
+      final folders = entries.whereType<Directory>().toList()..sort((a, b) => b.path.length.compareTo(a.path.length));
+      for (final folder in folders) {
+        try {
+          await folder.delete();
+        } on FileSystemException {
+          // Still holds a skipped file, or is some process's working folder.
+        }
+      }
     }
+    return (freed: freed, skipped: skipped);
   }
 
   Future<void> migrate(PlayerSettings from, PlayerSettings to) async {

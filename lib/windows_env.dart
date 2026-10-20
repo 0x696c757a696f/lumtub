@@ -22,3 +22,10 @@ void addToWindowsPath(Iterable<String> directories) {
     calloc.free(value);
   }
 }
+
+/// Starts YTPlus again and ends this process, such as after the language
+/// changed.
+Future<void> restartApp() async {
+  await Process.start(Platform.resolvedExecutable, const [], mode: ProcessStartMode.detached);
+  exit(0);
+}

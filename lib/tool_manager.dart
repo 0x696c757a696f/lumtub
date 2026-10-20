@@ -5,6 +5,8 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
+import 'libmpv_updates.dart';
+import 'l10n/l10n.dart';
 
 class ToolPaths {
   final String mpv;
@@ -25,28 +27,45 @@ class ToolManager {
   ToolManager(this.directories, this.status);
 
   late final Directory root;
+  late final LibmpvState libmpv;
   final http.Client _client = http.Client();
+
+  static final _separator = Platform.pathSeparator;
 
   Future<void> initialize() async {
     root = directories.components;
     await root.create(recursive: true);
+    libmpv = LibmpvState(Directory('${root.path}${_separator}mpv'), bundled: _readBundledLibmpv());
+    // A newer app release may ship a newer libmpv than an earlier download.
+    await libmpv.dropIfOutdated();
+  }
+
+  LibmpvBuild? _readBundledLibmpv() {
+    final file = File('${File(Platform.resolvedExecutable).parent.path}${_separator}libmpv-version.txt');
+    try {
+      return file.existsSync() ? LibmpvBuild.fromVersionFile(file.readAsStringSync()) : null;
+    } on FileSystemException {
+      return null;
+    }
   }
 
   Future<ToolPaths> ensureReady() async {
     if (!Platform.isWindows) throw UnsupportedError('This prototype currently targets Windows x64.');
-    final mpv = _bundledMpv;
+    // The runner already loaded a downloaded libmpv when one was selected;
+    // Dart has to open that same copy.
+    final mpv = libmpv.loadedPath ?? _bundledMpv;
     if (!File(mpv).existsSync()) throw StateError('Bundled libmpv-2.dll is missing. Re-download the YTPlus package.');
     if (discover()?.ytDlp.isNotEmpty != true) {
-      status('首次启动：安装 yt-dlp…');
+      status(tr('首次启动：安装 yt-dlp…'));
       await _installYtDlp();
     }
     // Deno is needed by some YouTube JavaScript challenge paths. Optional at startup.
     if (discover()?.deno == null) {
       try {
-        status('安装 YouTube 解析所需的 Deno…');
+        status(tr('安装 YouTube 解析所需的 Deno…'));
         await _installDeno();
       } catch (e) {
-        status('Deno 暂时不可用，可以稍后从工具更新中重试：$e');
+        status(tr('Deno 暂时不可用，可以稍后从工具更新中重试：{0}', [e]));
       }
     }
     final ready = discover();
@@ -60,7 +79,7 @@ class ToolManager {
 
   ToolPaths? discover() {
     if (!root.existsSync()) return null;
-    final bundledMpv = _bundledMpv;
+    final bundledMpv = libmpv.loadedPath ?? _bundledMpv;
     final mpv = File(bundledMpv).existsSync() ? bundledMpv : null;
     final yt = _findNewest('yt-dlp', 'yt-dlp.exe');
     final deno = _findNewest('deno', 'deno.exe');
@@ -71,8 +90,7 @@ class ToolManager {
   String? _findNewest(String group, String fileName) {
     final parent = Directory('${root.path}${Platform.pathSeparator}$group');
     if (!parent.existsSync()) return null;
-    final dirs = parent.listSync().whereType<Directory>().where((d) => !d.path.endsWith('.partial')).toList()
-      ..sort((a, b) => b.path.compareTo(a.path));
+    final dirs = _versions(parent);
     for (final folder in dirs) {
       try {
         for (final item in folder.listSync(recursive: true, followLinks: false)) {
@@ -83,6 +101,42 @@ class ToolManager {
     return null;
   }
 
+  /// Usable version folders in [parent], newest first.
+  List<Directory> _versions(Directory parent) {
+    if (!parent.existsSync()) return const [];
+    return parent
+        .listSync()
+        .whereType<Directory>()
+        .where((d) => !d.path.endsWith('.partial') && !File('${d.path}$_separator$_failedMarker').existsSync())
+        .toList()
+      ..sort((a, b) => b.path.compareTo(a.path));
+  }
+
+  static const _failedMarker = 'failed';
+  static const _no7zMarker = 'cannot-extract-7z';
+
+  /// The yt-dlp release tag in use, if any.
+  String? get ytDlpVersion => _versionOf(discover()?.ytDlp);
+
+  String? get denoVersion => _versionOf(discover()?.deno);
+
+  String? _versionOf(String? executable) {
+    if (executable == null || executable.isEmpty) return null;
+    final parts = executable.split(RegExp(r'[\\/]')).where((part) => part.isNotEmpty).toList();
+    return parts.length < 2 ? null : parts[parts.length - 2];
+  }
+
+  /// Whether an older working yt-dlp is installed to go back to.
+  bool get canRollBackYtDlp => _versions(Directory('${root.path}${_separator}yt-dlp')).length > 1;
+
+  /// Stops using the newest yt-dlp, for example after a nightly build broke
+  /// playback. Takes effect at the next launch, like an update.
+  Future<void> rollBackYtDlp() async {
+    final versions = _versions(Directory('${root.path}${_separator}yt-dlp'));
+    if (versions.length < 2) return;
+    await File('${versions.first.path}$_separator$_failedMarker').writeAsString(DateTime.now().toIso8601String());
+  }
+
   Future<void> checkUpdates({bool force = false}) async {
     final stamp = File('${root.path}${Platform.pathSeparator}last_update_check.txt');
     if (!force && await stamp.exists()) {
@@ -91,10 +145,10 @@ class ToolManager {
     }
     final errors = <String>[];
     for (final task in <(String, Future<void> Function())>[
-      ('yt-dlp', _installYtDlp), ('Deno', _installDeno),
+      ('yt-dlp', _installYtDlp), ('Deno', _installDeno), ('libmpv', _installLibmpv),
     ]) {
       try {
-        status('检查 ${task.$1} 更新…');
+        status(tr('检查 {0} 更新…', [task.$1]));
         await task.$2();
       } catch (e) {
         errors.add('${task.$1}: $e');
@@ -102,9 +156,9 @@ class ToolManager {
     }
     if (errors.isEmpty) {
       await stamp.writeAsString(DateTime.now().toIso8601String());
-      status('更新检查完成。如有新版，重启应用后启用。');
+      status(tr('更新检查完成。如有新版，重启应用后启用。'));
     } else {
-      status('部分组件更新失败，现有版本不受影响：${errors.join(' / ')}');
+      status(tr('部分组件更新失败，现有版本不受影响：{0}', [errors.join(' / ')]));
     }
   }
 
@@ -169,11 +223,90 @@ class ToolManager {
   Future<void> _installYtDlp() async {
     final release = await _release('yt-dlp/yt-dlp-nightly-builds');
     final tag = _safeTag(release['tag_name']);
-    final dest = Directory('${root.path}${Platform.pathSeparator}yt-dlp${Platform.pathSeparator}$tag');
-    if (await File('${dest.path}${Platform.pathSeparator}yt-dlp.exe').exists()) return;
-    status('下载 yt-dlp $tag…');
+    final group = Directory('${root.path}${_separator}yt-dlp');
+    final dest = Directory('${group.path}$_separator$tag');
+    // A version rolled back by the user is not installed again.
+    if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
+    if (await File('${dest.path}${_separator}yt-dlp.exe').exists()) return;
+    status(tr('下载 yt-dlp {0}…', [tag]));
     final asset = _asset(release, (name) => name == 'yt-dlp.exe');
-    await _downloadVerified(asset, dest);
+    final partial = Directory('${dest.path}.partial');
+    if (await partial.exists()) await partial.delete(recursive: true);
+    try {
+      final file = await _downloadVerified(asset, partial);
+      // A build that cannot even report its version is never used.
+      final check = await Process.run(file.path, ['--version']).timeout(const Duration(seconds: 30));
+      if (check.exitCode != 0) throw StateError('yt-dlp $tag failed its self-check');
+      await partial.rename(dest.path);
+    } catch (_) {
+      if (await partial.exists()) await partial.delete(recursive: true);
+      rethrow;
+    }
+    await _prune(group, keep: 3);
+  }
+
+  /// Deletes all but the newest [keep] usable versions in [group]; rolled
+  /// back versions stay as markers so they are not downloaded again.
+  Future<void> _prune(Directory group, {required int keep}) async {
+    for (final old in _versions(group).skip(keep)) {
+      try {
+        await old.delete(recursive: true);
+      } on FileSystemException {
+        // Still in use by a running process; tried again next time.
+      }
+    }
+  }
+
+  Future<void> _installLibmpv() async {
+    final release = await _release('shinchiro/mpv-winbuild-cmake');
+    final tag = _safeTag(release['tag_name']);
+    final v3 = cpuSupportsX86_64V3();
+    final build = LibmpvBuild(tag, v3 ? LibmpvBuild.v3Variant : LibmpvBuild.baseVariant);
+    final running = libmpv.selected ?? libmpv.current;
+    if (running != null && !running.isReplacedBy(build)) return;
+    final group = libmpv.directory;
+    final no7z = File('${group.path}$_separator$_no7zMarker');
+    if (await no7z.exists()) return;
+    final dest = Directory('${group.path}$_separator${build.folderName}');
+    final dll = File('${dest.path}${_separator}libmpv-2.dll');
+    if (libmpv.hasFailed(dll.path)) return;
+    if (!await dll.exists()) {
+      final names = (release['assets'] as List? ?? const []).whereType<Map>().map((asset) => asset['name']?.toString() ?? '');
+      final assetName = libmpvAssetName(names, v3: v3);
+      if (assetName == null) throw StateError('No libmpv archive for this CPU in $tag');
+      status(tr('下载 libmpv {0}…', [build.label]));
+      final archive = await _downloadVerified(_asset(release, (name) => name == assetName), Directory('${root.path}${_separator}downloads'));
+      final partial = Directory('${dest.path}.partial');
+      if (await partial.exists()) await partial.delete(recursive: true);
+      await partial.create(recursive: true);
+      try {
+        try {
+          await _extractZip(archive, partial);
+        } on ProcessException {
+          // Windows before 11 23H2 has no 7z support in tar.exe; do not
+          // download every new release only to fail again.
+          await no7z.writeAsString(DateTime.now().toIso8601String());
+          throw StateError(tr('此版本 Windows 无法解压 7z，继续使用内置 libmpv'));
+        }
+        final found = partial.listSync(recursive: true).whereType<File>().where((f) => f.path.toLowerCase().endsWith('${_separator}libmpv-2.dll'));
+        if (found.isEmpty) throw StateError('libmpv archive $tag has no libmpv-2.dll');
+        await dest.create(recursive: true);
+        await found.first.copy(dll.path);
+      } finally {
+        await partial.delete(recursive: true);
+        if (await archive.exists()) await archive.delete();
+      }
+    }
+    await libmpv.select(dll.path);
+    // Keep the running copy and the new one; the loaded DLL cannot be deleted.
+    for (final old in group.listSync().whereType<Directory>()) {
+      if (old.path == dest.path || (libmpv.loadedPath?.startsWith('${old.path}$_separator') ?? false)) continue;
+      try {
+        await old.delete(recursive: true);
+      } on FileSystemException {
+        // Locked; tried again next time.
+      }
+    }
   }
 
   Future<void> _installDeno() async {
@@ -181,7 +314,7 @@ class ToolManager {
     final tag = _safeTag(release['tag_name']);
     final dest = Directory('${root.path}${Platform.pathSeparator}deno${Platform.pathSeparator}$tag');
     if (await File('${dest.path}${Platform.pathSeparator}deno.exe').exists()) return;
-    status('下载 Deno $tag…');
+    status(tr('下载 Deno {0}…', [tag]));
     final asset = _asset(release, (name) => name == 'deno-x86_64-pc-windows-msvc.zip');
     final archive = await _downloadVerified(asset, Directory('${root.path}${Platform.pathSeparator}downloads'));
     final partial = Directory('${dest.path}.partial');

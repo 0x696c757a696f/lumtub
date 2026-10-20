@@ -2,7 +2,17 @@ name: Build YTPlus Windows
 
 on:
   workflow_dispatch:
+    inputs:
+      libmpv:
+        description: 'libmpv to ship: latest shinchiro build, or the one media_kit bundles'
+        type: choice
+        options: [latest, media_kit]
+        default: latest
   push:
+    branches: [main]
+    # A pushed tag such as v0.2.0 also publishes a GitHub release.
+    tags: ['v*']
+  pull_request:
     branches: [main]
 
 jobs:
@@ -15,7 +25,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Verify latest shinchiro x86_64-v3 libmpv update
+      # The bundled DLL is the baseline x86-64 build, which runs on every
+      # x86-64 CPU; the app downloads the faster x86-64-v3 build at runtime
+      # when the CPU supports AVX2.
+      - name: Verify latest shinchiro x86_64 libmpv
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -31,9 +44,9 @@ jobs:
             -Uri 'https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest' `
             -Headers $headers
           $asset = $release.assets |
-            Where-Object { $_.name -match '^mpv-dev-x86_64-v3-.*\.7z$' } |
+            Where-Object { $_.name -match '^mpv-dev-x86_64-(?!v3-).*\.7z$' } |
             Select-Object -First 1
-          if (-not $asset) { throw 'Latest release has no x86_64-v3 development archive.' }
+          if (-not $asset) { throw 'Latest release has no x86_64 development archive.' }
           if ($asset.digest -notmatch '^sha256:([0-9a-fA-F]{64})$') {
             throw "Latest libmpv asset has no SHA-256 digest: $($asset.name)"
           }
@@ -60,6 +73,8 @@ jobs:
               Select-Object -First 1
           }
           if (-not $library) { throw 'The latest libmpv archive does not contain libmpv-2.dll.' }
+          if ($release.tag_name -notmatch '^[0-9A-Za-z._]{1,40}$') { throw "Unexpected libmpv tag: $($release.tag_name)" }
+          $release.tag_name | Out-File -FilePath (Join-Path $env:RUNNER_TEMP 'libmpv-tag.txt') -Encoding ascii -NoNewline
           Write-Host "Verified $($release.tag_name): $($asset.name), SHA-256, and $($library.FullName)"
 
       - name: Install Flutter stable SDK
@@ -76,22 +91,6 @@ jobs:
           if (-not (Test-Path -LiteralPath $flutterBin)) { throw 'Flutter SDK did not contain flutter/bin.' }
           $flutterBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Generate Windows runner
-        shell: pwsh
-        run: |
-          flutter create --platforms=windows --project-name ytplus .
-          $cmakeFile = 'windows/CMakeLists.txt'
-          $cmake = Get-Content -LiteralPath $cmakeFile -Raw
-          $cmake = $cmake -replace '(cmake_minimum_required\([^)]+\)\r?\n)', ('$1set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE BOOL "" FORCE)' + [Environment]::NewLine)
-          Set-Content -LiteralPath $cmakeFile -Value $cmake -NoNewline
-
-      - name: Remove Flutter's generated sample test
-        shell: pwsh
-        run: |
-          if (Test-Path -LiteralPath 'test/widget_test.dart') {
-            Remove-Item -LiteralPath 'test/widget_test.dart'
-          }
-
       - name: Get packages
         run: flutter pub get
 
@@ -101,10 +100,48 @@ jobs:
       - name: Unit tests
         run: flutter test
 
+      # Tag builds use the tag (v0.2.0 -> 0.2.0); other builds add the
+      # commit so a test build is never mistaken for a release.
+      - name: Work out the version
+        shell: bash
+        run: |
+          base=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            version="$base-${GITHUB_SHA::7}"
+          fi
+          [[ "$version" =~ ^[0-9A-Za-z.+-]+$ ]] || { echo "Unexpected version: $version"; exit 1; }
+          echo "YTPLUS_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Version $version"
+
       - name: Release build
-        run: flutter build windows --release
+        # The optional Google sign-in client comes from repository secrets;
+        # without them the app asks the user for their own client.
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
+        shell: bash
+        run: flutter build windows --release --dart-define=YTPLUS_VERSION="$YTPLUS_VERSION" --dart-define=YTPLUS_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=YTPLUS_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET"
+
+      - name: Check that the video plugin is delay-loaded
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # windows/runner/libmpv_loader.cpp only works if media_kit_video_plugin.dll
+          # (which imports libmpv-2.dll) loads after main() starts.
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $dumpbin = & $vswhere -latest -products * -find 'VC\Tools\MSVC\**\bin\Hostx64\x64\dumpbin.exe' | Select-Object -First 1
+          if (-not $dumpbin) { throw 'dumpbin.exe not found.' }
+          $imports = & $dumpbin /imports 'build/windows/x64/runner/Release/ytplus.exe' | Out-String
+          $delayed = $imports.IndexOf('Section contains the following delay load imports')
+          if ($delayed -lt 0 -or $imports.IndexOf('media_kit_video_plugin.dll', $delayed) -lt 0) {
+            throw 'media_kit_video_plugin.dll is not delay-loaded.'
+          }
+          Write-Host 'media_kit_video_plugin.dll is delay-loaded.'
 
       - name: Replace bundled libmpv with the latest DLL
+        if: github.event_name != 'workflow_dispatch' || inputs.libmpv == 'latest'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -120,19 +157,63 @@ jobs:
           $sourceHash = (Get-FileHash -LiteralPath $library.FullName -Algorithm SHA256).Hash
           $targetHash = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash
           if ($sourceHash -ne $targetHash) { throw 'The bundled libmpv replacement did not verify.' }
+          # Read by lib/libmpv_updates.dart to decide whether a download is newer.
+          $tag = Get-Content -Raw (Join-Path $env:RUNNER_TEMP 'libmpv-tag.txt')
+          "$tag`nx86_64`n" | Out-File -FilePath 'build/windows/x64/runner/Release/libmpv-version.txt' -Encoding ascii -NoNewline
           Write-Host "Replaced the bundled DLL with $($library.FullName)"
 
       - name: Package Windows distribution
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           $package = 'YTPlus-Windows-x64'
           New-Item -ItemType Directory -Force -Path $package | Out-Null
           Copy-Item -Recurse -Force 'build/windows/x64/runner/Release/*' $package
           Copy-Item LICENSE, NOTICE $package
-          Compress-Archive -Path "$package/*" -DestinationPath 'YTPlus_Windows_x64.zip'
+          Compress-Archive -Path "$package/*" -DestinationPath "YTPlus_Windows_x64_$env:YTPLUS_VERSION.zip"
 
-      - name: Upload downloadable Windows ZIP
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $iscc = Get-Command iscc.exe -ErrorAction SilentlyContinue
+          if (-not $iscc) {
+            $default = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+            if (-not (Test-Path -LiteralPath $default)) { choco install innosetup -y --no-progress | Out-Null }
+            $iscc = Get-Item -LiteralPath $default
+          }
+          $source = (Resolve-Path 'YTPlus-Windows-x64').Path
+          $output = Join-Path (Get-Location) 'installer'
+          & $iscc.Source "/DAppVersion=$env:YTPLUS_VERSION" "/DSourceDir=$source" "/DOutputDir=$output" 'windows/installer/ytplus.iss'
+          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed.' }
+          Move-Item (Join-Path $output 'YTPlus_Setup_x64.exe') "YTPlus_Setup_x64_$env:YTPLUS_VERSION.exe"
+
+      - name: Upload portable ZIP
         uses: actions/upload-artifact@v7
         with:
           name: YTPlus-Windows-x64
-          path: YTPlus_Windows_x64.zip
+          path: YTPlus_Windows_x64_*.zip
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v7
+        with:
+          name: YTPlus-Setup-x64
+          path: YTPlus_Setup_x64_*.exe
+
+  # Only this job can write to the repository, and only for version tags.
+  release:
+    needs: windows
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "YTPlus $TAG" --generate-notes

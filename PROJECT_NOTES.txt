@@ -1,11 +1,4 @@
-YTPLUS WINDOWS PROTOTYPE
-=======================
-Prepared from the supplied prototype archive.
-
-The app uses Flutter, media_kit/libmpv, and yt-dlp for basic YouTube search and
-playback. GitHub Actions performs the Windows analysis, unit tests, release
-build, and live shinchiro x86_64-v3 asset integrity/extraction check.
-
-Build and Windows playback status are recorded after the GitHub workflow runs.
-The app is still a prototype: no Google sign-in, subscription sync,
-SponsorBlock, or baseline x64 libmpv fallback is included.
+YTPLUS
+======
+See README.md (简体中文) or README.en.md (English) for features, building
+and licensing.

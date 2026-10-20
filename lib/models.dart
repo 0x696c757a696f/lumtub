@@ -1,11 +1,23 @@
 import 'dart:convert';
 
+import 'l10n/l10n.dart';
+
 class VideoItem {
   final String id;
   final String title;
   final String channel;
   final int? duration;
   final String url;
+  final int? viewCount;
+  /// The channel's `UC…` id, when the source listed it.
+  final String? channelId;
+  /// Upload time, known for subscription feed entries.
+  final DateTime? published;
+  /// yt-dlp's live_status: is_live, is_upcoming or was_live; null otherwise.
+  final String? liveStatus;
+
+  bool get isLive => liveStatus == 'is_live';
+  bool get isUpcoming => liveStatus == 'is_upcoming';
 
   const VideoItem({
     required this.id,
@@ -13,9 +25,32 @@ class VideoItem {
     required this.channel,
     this.duration,
     required this.url,
+    this.viewCount,
+    this.channelId,
+    this.published,
+    this.liveStatus,
   });
 
-  String get thumbnail => 'https://i.ytimg.com/vi/$id/hqdefault.jpg';
+  /// This video credited to [ref], keeping the known name when [ref] has none.
+  VideoItem withChannel(ChannelRef ref) => VideoItem(
+        id: id,
+        title: title,
+        channel: channel.isNotEmpty ? channel : ref.name,
+        duration: duration,
+        url: url,
+        viewCount: viewCount,
+        channelId: ref.id,
+        published: published,
+        liveStatus: liveStatus,
+      );
+
+  ChannelRef? get channelRef => channelId == null ? null : ChannelRef(channelId!, channel);
+
+  /// The thumbnail size to load, a YouTube file name such as `hqdefault`;
+  /// set from the appearance settings.
+  static String thumbnailFile = 'hqdefault';
+
+  String get thumbnail => 'https://i.ytimg.com/vi/$id/$thumbnailFile.jpg';
 
   String get durationLabel {
     if (duration == null) return '';
@@ -32,6 +67,10 @@ class VideoItem {
         'channel': channel,
         'duration': duration,
         'url': url,
+        if (viewCount != null) 'view_count': viewCount,
+        if (channelId != null) 'channel_id': channelId,
+        if (published != null) 'published': published!.toUtc().toIso8601String(),
+        if (liveStatus != null) 'live_status': liveStatus,
       };
 
   factory VideoItem.fromJson(Map<String, dynamic> map) {
@@ -43,12 +82,18 @@ class VideoItem {
     if (id.isEmpty) throw const FormatException('Missing YouTube video ID');
     final name = map['channel'] ?? map['uploader'] ?? map['uploader_id'] ?? '';
     final value = map['duration'];
+    final views = map['view_count'];
+    final channelId = map['channel_id']?.toString();
     return VideoItem(
       id: id,
       title: map['title']?.toString() ?? 'Untitled video',
       channel: name.toString(),
       duration: value is num ? value.toInt() : null,
       url: 'https://www.youtube.com/watch?v=$id',
+      viewCount: views is num ? views.toInt() : null,
+      channelId: channelId != null && ChannelRef.isValidId(channelId) ? channelId : null,
+      published: DateTime.tryParse(map['published']?.toString() ?? ''),
+      liveStatus: const {'is_live', 'is_upcoming', 'was_live'}.contains(map['live_status']) ? map['live_status'] as String : null,
     );
   }
 
@@ -56,15 +101,339 @@ class VideoItem {
     final results = <VideoItem>[];
     final seen = <String>{};
     for (final line in const LineSplitter().convert(stdout)) {
-      try {
-        final data = jsonDecode(line);
-        if (data is! Map<String, dynamic>) continue;
-        final item = VideoItem.fromJson(data);
-        if (seen.add(item.id)) results.add(item);
-      } catch (_) {
-        // yt-dlp may output notices or some non-video entries.
-      }
+      final item = tryParseLine(line);
+      if (item != null && seen.add(item.id)) results.add(item);
     }
     return results;
   }
+
+  /// Parses one `--dump-json` line, or returns null for notices and
+  /// non-video entries that yt-dlp may also print.
+  static VideoItem? tryParseLine(String line) {
+    try {
+      final data = jsonDecode(line);
+      return data is Map<String, dynamic> ? VideoItem.fromJson(data) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+/// A YouTube channel, identified by its `UC…` id.
+class ChannelRef {
+  const ChannelRef(this.id, this.name, [this.avatar]);
+  final String id;
+  final String name;
+  /// The channel's picture, when a subscription import or search listed one.
+  final String? avatar;
+
+  String get url => 'https://www.youtube.com/channel/$id';
+
+  static bool isValidId(String id) => RegExp(r'^UC[\w-]{22}$').hasMatch(id);
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, if (avatar != null) 'avatar': avatar};
+
+  static ChannelRef? fromJson(Object? raw) {
+    if (raw is! Map) return null;
+    final id = raw['id']?.toString() ?? '';
+    final avatar = raw['avatar'];
+    return isValidId(id) ? ChannelRef(id, raw['name']?.toString() ?? '', avatar is String && avatar.startsWith('https://') ? avatar : null) : null;
+  }
+
+  @override
+  bool operator ==(Object other) => other is ChannelRef && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+/// A channel found by a search, with what the result listed about it.
+class ChannelResult {
+  const ChannelResult(this.ref, {this.subscribers, this.handle, this.avatar, this.description = ''});
+  final ChannelRef ref;
+  /// YouTube's own subscriber text, such as "123万位订阅者"; search results
+  /// often carry the handle in its place.
+  final String? subscribers;
+  final String? handle;
+  final String? avatar;
+  final String description;
+
+  /// Reads a flat `--dump-json` channel entry, or returns null for
+  /// anything else.
+  static ChannelResult? tryParse(Map<String, dynamic> map) {
+    final id = (map['channel_id'] ?? map['id'])?.toString() ?? '';
+    if (map['ie_key'] != 'YoutubeTab' || !ChannelRef.isValidId(id)) return null;
+    final followers = map['channel_follower_count'];
+    final thumbnails = map['thumbnails'];
+    String? avatar;
+    if (thumbnails is List) {
+      for (final t in thumbnails.whereType<Map>()) {
+        final url = t['url']?.toString() ?? '';
+        if (url.isNotEmpty) avatar = url.startsWith('//') ? 'https:$url' : url;
+      }
+    }
+    return ChannelResult(
+      ChannelRef(id, (map['channel'] ?? map['title'] ?? '').toString()),
+      subscribers: followers is num ? tr('{0} 位订阅者', [formatCount(followers.toInt())]) : null,
+      handle: map['uploader_id']?.toString(),
+      avatar: avatar != null && avatar.startsWith('https://') ? avatar : null,
+      description: map['description']?.toString() ?? '',
+    );
+  }
+}
+
+/// A YouTube playlist found by a search or on a channel's playlists tab.
+class PlaylistResult {
+  const PlaylistResult({required this.id, required this.title, this.channel = '', this.count, this.thumbnail});
+  final String id;
+  final String title;
+  final String channel;
+  final int? count;
+  final String? thumbnail;
+
+  String get url => 'https://www.youtube.com/playlist?list=$id';
+
+  static bool isValidId(String id) => RegExp(r'^[\w-]{10,64}$').hasMatch(id) && !ChannelRef.isValidId(id);
+
+  /// Reads a flat `--dump-json` playlist entry, or returns null.
+  static PlaylistResult? tryParse(Map<String, dynamic> map) {
+    if (map['ie_key'] != 'YoutubeTab') return null;
+    final url = map['url']?.toString() ?? '';
+    final id = Uri.tryParse(url)?.queryParameters['list'] ?? map['id']?.toString() ?? '';
+    if (!url.contains('list=') || !isValidId(id)) return null;
+    final count = map['playlist_count'];
+    String? thumbnail;
+    final thumbnails = map['thumbnails'];
+    if (thumbnails is List) {
+      for (final t in thumbnails.whereType<Map>()) {
+        final u = t['url']?.toString() ?? '';
+        if (u.isNotEmpty) thumbnail = u.startsWith('//') ? 'https:$u' : u;
+      }
+    }
+    return PlaylistResult(
+      id: id,
+      title: map['title']?.toString() ?? tr('播放列表'),
+      channel: (map['channel'] ?? map['uploader'] ?? '').toString(),
+      count: count is num ? count.toInt() : null,
+      thumbnail: thumbnail != null && thumbnail.startsWith('https://') ? thumbnail : null,
+    );
+  }
+}
+
+/// One entry of a listing: a [VideoItem], [ChannelResult] or [PlaylistResult].
+Object? parseListingEntry(String line) {
+  final Object? data;
+  try {
+    data = jsonDecode(line);
+  } catch (_) {
+    return null;
+  }
+  if (data is! Map<String, dynamic>) return null;
+  final channel = ChannelResult.tryParse(data);
+  if (channel != null) return channel;
+  final playlist = PlaylistResult.tryParse(data);
+  if (playlist != null) return playlist;
+  try {
+    return VideoItem.fromJson(data);
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Formats a count the way Chinese YouTube does: 9,999 / 1.2万 / 3.4亿.
+String formatCount(int value) {
+  if (currentLanguage == AppLanguage.en) {
+    if (value < 1000) return '$value';
+    if (value < 1000000) return '${_trim(value / 1000)}K';
+    if (value < 1000000000) return '${_trim(value / 1000000)}M';
+    return '${_trim(value / 1000000000)}B';
+  }
+  if (value < 10000) return '$value';
+  if (value < 100000000) return tr('{0}万', [_trim(value / 10000)]);
+  return tr('{0}亿', [_trim(value / 100000000)]);
+}
+
+String _trim(double value) => value >= 100 ? value.toStringAsFixed(0) : value.toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '');
+
+/// Metadata shown on the watch page, fetched separately from playback.
+/// A titled part of a video, from the uploader's chapter list.
+class Chapter {
+  const Chapter(this.start, this.end, this.title);
+  final Duration start;
+  /// [Duration.zero] when unknown; the next chapter's start then ends it.
+  final Duration end;
+  final String title;
+
+  /// yt-dlp's `chapters`, in order, without unusable entries.
+  static List<Chapter> listFrom(Object? raw) {
+    if (raw is! List) return const [];
+    Duration? seconds(Object? value) => value is num && value >= 0 ? Duration(milliseconds: (value * 1000).round()) : null;
+    final chapters = [
+      for (final entry in raw.whereType<Map>())
+        if (seconds(entry['start_time']) case final start?)
+          Chapter(start, seconds(entry['end_time']) ?? Duration.zero, entry['title']?.toString().trim() ?? ''),
+    ]..sort((a, b) => a.start.compareTo(b.start));
+    return chapters.length < 2 ? const [] : chapters;
+  }
+
+  /// The chapter [position] is in, or null before the first one.
+  static Chapter? at(List<Chapter> chapters, Duration position) {
+    Chapter? found;
+    for (final chapter in chapters) {
+      if (chapter.start > position) break;
+      found = chapter;
+    }
+    return found;
+  }
+}
+
+class VideoDetails {
+  final String title;
+  final String channel;
+  final String? channelUrl;
+  final String? channelId;
+  final DateTime? uploadDate;
+  final int? viewCount;
+  final int? likeCount;
+  final String description;
+  final List<Chapter> chapters;
+  /// Every subtitle YouTube offers: uploaded ones, then automatic captions
+  /// and their machine translations.
+  final List<SubtitleOption> subtitles;
+
+  const VideoDetails({
+    required this.title,
+    required this.channel,
+    this.channelUrl,
+    this.channelId,
+    this.uploadDate,
+    this.viewCount,
+    this.likeCount,
+    this.description = '',
+    this.chapters = const [],
+    this.subtitles = const [],
+  });
+
+  factory VideoDetails.fromJson(Map<String, dynamic> map) {
+    int? number(String key) => map[key] is num ? (map[key] as num).toInt() : null;
+    final date = map['upload_date']?.toString() ?? '';
+    final match = RegExp(r'^(\d{4})(\d{2})(\d{2})$').firstMatch(date);
+    return VideoDetails(
+      title: map['title']?.toString() ?? '',
+      channel: (map['channel'] ?? map['uploader'] ?? '').toString(),
+      channelUrl: map['channel_url']?.toString(),
+      channelId: ChannelRef.isValidId(map['channel_id']?.toString() ?? '') ? map['channel_id'].toString() : null,
+      uploadDate: match == null ? null : DateTime(int.parse(match[1]!), int.parse(match[2]!), int.parse(match[3]!)),
+      viewCount: number('view_count'),
+      likeCount: number('like_count'),
+      description: map['description']?.toString() ?? '',
+      chapters: Chapter.listFrom(map['chapters']),
+      subtitles: SubtitleOption.listFrom(map['subtitles'], map['automatic_captions']),
+    );
+  }
+
+  /// These details with YouTube's [title] and [description] in the
+  /// interface language. Chapters come from the description's timestamps,
+  /// so where the translated one lists the same times, theirs are renamed.
+  VideoDetails localized(String title, String description, {int? likes}) {
+    if (title.isEmpty || (title == this.title && description == this.description && (likes == null || likeCount != null))) return this;
+    final names = <int, String>{};
+    for (final line in const LineSplitter().convert(description)) {
+      final match = _chapterLine.firstMatch(line);
+      if (match == null) continue;
+      final seconds = int.parse(match[1] ?? '0') * 3600 + int.parse(match[2]!) * 60 + int.parse(match[3]!);
+      names.putIfAbsent(seconds, () => match[4]!.trim());
+    }
+    return VideoDetails(
+      title: title,
+      channel: channel,
+      channelUrl: channelUrl,
+      channelId: channelId,
+      uploadDate: uploadDate,
+      viewCount: viewCount,
+      likeCount: likeCount ?? likes,
+      description: description.isEmpty ? this.description : description,
+      chapters: [
+        for (final c in chapters) Chapter(c.start, c.end, names[c.start.inSeconds] ?? c.title),
+      ],
+      subtitles: subtitles,
+    );
+  }
+
+  static final _chapterLine = RegExp(r'^\s*[\[(]?(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\])]?\s*[-–—:|·]?\s*(\S.*)$');
+}
+
+/// A subtitle track of a video that can be added to the player by URL.
+class SubtitleOption {
+  const SubtitleOption({required this.language, required this.name, required this.url, this.kind = SubtitleKind.uploaded});
+  final String language;
+  final String name;
+  final String url;
+  final SubtitleKind kind;
+
+  /// The label shown in menus, such as "中文（简体） · zh-Hans".
+  String get label => '${languageName(language, name)}${kind == SubtitleKind.uploaded ? '' : kind == SubtitleKind.automatic ? '（自动生成）' : '（自动翻译）'}';
+
+  /// yt-dlp's `subtitles` and `automatic_captions` maps. Automatic
+  /// captions in the video's own language (yt-dlp's "-orig" entries, or
+  /// those named "(Original)") come before the machine translations.
+  static List<SubtitleOption> listFrom(Object? uploaded, Object? automatic) {
+    List<SubtitleOption> read(Object? raw, bool auto) {
+      if (raw is! Map) return const [];
+      return [
+        for (final MapEntry(:key, :value) in raw.entries)
+          if (key != 'live_chat' && value is List)
+            if (_vtt(value) case (final url, final name))
+              SubtitleOption(
+                language: '$key'.replaceFirst(RegExp(r'-orig$'), ''),
+                name: name,
+                url: url,
+                kind: !auto
+                    ? SubtitleKind.uploaded
+                    : '$key'.endsWith('-orig') || name.contains('(Original)') || name.contains('原始')
+                        ? SubtitleKind.automatic
+                        : SubtitleKind.translated,
+              ),
+      ];
+    }
+
+    final auto = read(automatic, true);
+    final original = auto.where((s) => s.kind == SubtitleKind.automatic).toList();
+    // yt-dlp lists the original language twice: as "xx-orig" and as "xx".
+    final originalLanguages = {for (final s in original) s.language};
+    return [
+      ...read(uploaded, false),
+      ...{for (final s in original) s.language: s}.values,
+      ...auto.where((s) => s.kind == SubtitleKind.translated && !originalLanguages.contains(s.language)),
+    ];
+  }
+
+  static (String, String)? _vtt(List formats) {
+    final maps = formats.whereType<Map>().where((f) => '${f['url'] ?? ''}'.startsWith('https://')).toList();
+    final pick = maps.where((f) => f['ext'] == 'vtt').firstOrNull ?? maps.where((f) => f['ext'] == 'srt' || f['ext'] == 'ass').firstOrNull;
+    return pick == null ? null : ('${pick['url']}', '${pick['name'] ?? ''}');
+  }
+
+  static final _names = {
+    'zh-Hans': tr('中文（简体）'), 'zh-CN': tr('中文（中国）'), 'zh-Hant': tr('中文（繁體）'), 'zh-TW': tr('中文（台灣）'), 'zh-HK': tr('中文（香港）'), 'zh': tr('中文'),
+    'en': tr('英语'), 'en-US': tr('英语（美国）'), 'en-GB': tr('英语（英国）'), 'ja': tr('日语'), 'ko': tr('韩语'), 'fr': tr('法语'), 'de': tr('德语'), 'es': tr('西班牙语'),
+    'pt': tr('葡萄牙语'), 'pt-BR': tr('葡萄牙语（巴西）'), 'ru': tr('俄语'), 'it': tr('意大利语'), 'vi': tr('越南语'), 'th': tr('泰语'), 'id': tr('印尼语'), 'ms': tr('马来语'),
+    'ar': tr('阿拉伯语'), 'hi': tr('印地语'), 'tr': tr('土耳其语'), 'nl': tr('荷兰语'), 'pl': tr('波兰语'), 'uk': tr('乌克兰语'), 'fil': tr('菲律宾语'),
+  };
+
+  /// A Chinese name for [code], else YouTube's own [name], else the code.
+  static String languageName(String code, [String name = '']) {
+    final known = _names[code];
+    if (known != null) return known;
+    final cleaned = name.replaceAll(RegExp(r'\s*\((Original|原始)\)'), '').trim();
+    return cleaned.isEmpty ? code : '$cleaned · $code';
+  }
+}
+
+enum SubtitleKind { uploaded, automatic, translated }
+
+String formatBytes(int bytes) {
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+  if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
 }

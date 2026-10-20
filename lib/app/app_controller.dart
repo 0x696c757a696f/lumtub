@@ -109,10 +109,11 @@ class AppController extends ChangeNotifier {
   /// Heights the playing video offers, highest first; empty until known.
   List<int> availableHeights = const [];
   /// Heights for the quality menu: automatic, then what the playing video
-  /// offers (the usual steps until that is known), and the saved limit.
+  /// offers (the usual steps until that is known). A saved limit the video
+  /// does not offer is left out: choosing it would change nothing.
   List<int> get qualityChoices {
     final heights = availableHeights.isEmpty ? qualityHeights.where((h) => h > 0) : availableHeights;
-    return {0, ...heights, if (settings.maxHeight > 0) settings.maxHeight}.toList()..sort((a, b) => a == 0 ? -1 : b == 0 ? 1 : b.compareTo(a));
+    return {0, ...heights}.toList()..sort((a, b) => a == 0 ? -1 : b == 0 ? 1 : b.compareTo(a));
   }
 
   /// The video opened from addresses resolved ahead of libmpv, if any.

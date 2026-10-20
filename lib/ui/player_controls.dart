@@ -401,11 +401,13 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             builder: (context, _) {
               final height = _player.state.height ?? 0;
               final max = _controller.settings.maxHeight;
+              final choices = _controller.qualityChoices;
               return _TextMenu<int>(
                 tooltip: '画质',
                 label: height > 0 ? '${height}P' : (max == 0 ? '自动' : '${max}P'),
-                value: max,
-                values: [for (final h in _controller.qualityChoices) (h, h == 0 ? '自动' : '${h}P')],
+                // A limit above what this video offers plays its highest.
+                value: choices.contains(max) ? max : height,
+                values: [for (final h in choices) (h, h == 0 ? '自动' : '${h}P')],
                 onSelected: (h) => unawaited(_controller.setMaxHeight(h)),
                 onOpened: _menuOpened,
                 onClosed: _menuClosed,

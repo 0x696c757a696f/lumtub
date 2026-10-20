@@ -130,6 +130,21 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             )),
       ],
     SettingsCategory.recommend => [
+        SettingEntry('首页显示为你推荐', (context) => SwitchItem(
+              title: '首页显示“为你推荐”',
+              subtitle: '根据本机的观看历史、收藏和关注在本机计算，不上传',
+              leading: _icon(Icons.auto_awesome_outlined),
+              value: prefs.homeShowRecommended,
+              onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecommended: v)),
+            )),
+        SettingEntry('清空不感兴趣', (context) => NormalItem(
+              title: '清空“不感兴趣”记录',
+              subtitle: '${controller.homeFeed?.notInterested.videos.length ?? 0} 个视频',
+              leading: _icon(Icons.thumb_down_off_alt_outlined),
+              onTap: () async {
+                if (await confirmDialog(context, title: '清空“不感兴趣”记录？', content: '被标记的视频和频道会重新出现在推荐里。')) await controller.clearNotInterested();
+              },
+            )),
         SettingEntry('首页显示继续观看', (context) => SwitchItem(
               title: '首页显示“继续观看”',
               subtitle: '没看完的视频',

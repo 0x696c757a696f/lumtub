@@ -18,7 +18,8 @@ class HomeFeedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefs = controller.preferences;
-    final recent = prefs.homeShowRecent ? controller.history.take(12).toList() : const <VideoItem>[];
+    final feed = controller.homeFeed;
+    final recent = prefs.homeShowRecent ? controller.history.take(feed != null && feed.items.isNotEmpty ? 6 : 12).toList() : const <VideoItem>[];
     final library = controller.library;
     final unfinished = library == null || !prefs.homeShowContinue
         ? const <VideoItem>[]
@@ -28,6 +29,36 @@ class HomeFeedPage extends StatelessWidget {
       if (unfinished.isNotEmpty) ...[
         const SliverToBoxAdapter(child: PageHeader('继续观看', subtitle: '从上次停下的地方接着看')),
         SliverVideoGrid(items: unfinished, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: unfinished)),
+        const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
+      ],
+      if (prefs.homeShowRecommended && feed != null && (feed.items.isNotEmpty || feed.loading || feed.error != null)) ...[
+        SliverToBoxAdapter(child: PageHeader(
+          '为你推荐',
+          subtitle: feed.loading && feed.items.isEmpty ? '正在根据观看记录挑选…' : '根据观看记录、收藏和关注，在本机挑选',
+          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+            TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(Icons.shuffle_rounded, size: 18), label: const Text('换一批')),
+            IconButton(
+              tooltip: '重新挑选',
+              onPressed: feed.loading ? null : () => controller.refreshHomeFeed(force: true),
+              icon: const Icon(Icons.refresh_rounded),
+            ),
+          ]),
+        )),
+        if (feed.items.isNotEmpty)
+          SliverVideoGrid(
+            items: feed.items,
+            thumbnails: controller.thumbnailDirectory,
+            onOpen: (item) => controller.play(item, from: feed.items),
+            onRemove: controller.dismissRecommendation,
+            removeLabel: '不感兴趣',
+          )
+        else if (feed.loading)
+          const SliverSkeletonGrid(rows: 2)
+        else if (feed.error case final error?)
+          SliverToBoxAdapter(child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
+            child: ErrorBanner('无法加载推荐：$error', onRetry: () => controller.refreshHomeFeed(force: true)),
+          )),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ],
       if (recent.isNotEmpty) ...[

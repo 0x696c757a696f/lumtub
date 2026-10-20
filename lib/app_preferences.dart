@@ -21,6 +21,7 @@ class AppPreferences {
     this.filterSubscriptions = true,
     this.homeShowContinue = true,
     this.homeShowRecent = true,
+    this.homeShowRecommended = true,
     this.startPage = 'home',
     this.feedAutoRefresh = true,
     this.feedRefreshMinutes = 10,
@@ -52,6 +53,8 @@ class AppPreferences {
   final bool filterSubscriptions;
   final bool homeShowContinue;
   final bool homeShowRecent;
+  /// 为你推荐, worked out on this computer from the history.
+  final bool homeShowRecommended;
   final String startPage;
   final bool feedAutoRefresh;
   final int feedRefreshMinutes;
@@ -97,6 +100,7 @@ class AppPreferences {
     bool? filterSubscriptions,
     bool? homeShowContinue,
     bool? homeShowRecent,
+    bool? homeShowRecommended,
     String? startPage,
     bool? feedAutoRefresh,
     int? feedRefreshMinutes,
@@ -125,6 +129,7 @@ class AppPreferences {
         filterSubscriptions: filterSubscriptions ?? this.filterSubscriptions,
         homeShowContinue: homeShowContinue ?? this.homeShowContinue,
         homeShowRecent: homeShowRecent ?? this.homeShowRecent,
+        homeShowRecommended: homeShowRecommended ?? this.homeShowRecommended,
         startPage: startPage ?? this.startPage,
         feedAutoRefresh: feedAutoRefresh ?? this.feedAutoRefresh,
         feedRefreshMinutes: feedRefreshMinutes ?? this.feedRefreshMinutes,
@@ -154,6 +159,7 @@ class AppPreferences {
         'filterSubscriptions': filterSubscriptions,
         'homeShowContinue': homeShowContinue,
         'homeShowRecent': homeShowRecent,
+        'homeShowRecommended': homeShowRecommended,
         'startPage': startPage,
         'feedAutoRefresh': feedAutoRefresh,
         'feedRefreshMinutes': feedRefreshMinutes,
@@ -203,6 +209,7 @@ class AppPreferences {
       filterSubscriptions: flag('filterSubscriptions', d.filterSubscriptions),
       homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
       homeShowRecent: flag('homeShowRecent', d.homeShowRecent),
+      homeShowRecommended: flag('homeShowRecommended', d.homeShowRecommended),
       startPage: startPages.any((p) => p.$1 == start) ? start! : 'home',
       feedAutoRefresh: flag('feedAutoRefresh', d.feedAutoRefresh),
       feedRefreshMinutes: number('feedRefreshMinutes', 10, 1, 1440),

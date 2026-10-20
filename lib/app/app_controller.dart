@@ -25,6 +25,8 @@ import '../piped_streams.dart';
 import '../search_options.dart';
 import '../search_suggestions.dart';
 import '../youtube_comments.dart';
+import '../youtube_related.dart';
+import '../recommendations.dart';
 import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
 import '../player_settings.dart';
@@ -38,6 +40,7 @@ import '../video_repository.dart';
 import '../windows_env.dart';
 import '../windows_video_info.dart';
 import 'account_controller.dart';
+import 'home_feed.dart';
 import 'back_stack.dart';
 import 'library_controller.dart';
 import 'video_list_loader.dart';
@@ -233,6 +236,9 @@ class AppController extends ChangeNotifier {
       final history = HistoryStore(directories);
       await history.initialize();
       searchHistory = SearchHistory(File('${directories.data.path}${Platform.pathSeparator}search_history.json'));
+      final notInterested = NotInterested(File('${directories.data.path}${Platform.pathSeparator}not_interested.json'));
+      await notInterested.load();
+      homeFeed = HomeFeed(notInterested)..addListener(notifyListeners);
       final libraryStore = LibraryStore(File('${directories.data.path}${Platform.pathSeparator}library.json'));
       await libraryStore.load();
       final settingsStore = PlayerSettingsStore(directories);
@@ -313,6 +319,7 @@ class AppController extends ChangeNotifier {
         error = null;
       });
       if (mode == PageMode.explore) _loadExplore();
+      if (mode == PageMode.home) unawaited(refreshHomeFeed());
       // Do not block the UI while checking newer releases.
       if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
       unawaited(_readWindowsVideoInfo());
@@ -1009,6 +1016,7 @@ class AppController extends ChangeNotifier {
   }
 
   void _go(PageMode target) {
+    if (target == PageMode.home) unawaited(refreshHomeFeed());
     _saveProgress(now: true);
     _tracking = null;
     ++_playSerial;
@@ -1234,6 +1242,57 @@ class AppController extends ChangeNotifier {
     searchDate = date ?? searchDate;
     searchDuration = duration ?? searchDuration;
     retrySearch();
+  }
+
+  /// 为你推荐 on the home page.
+  HomeFeed? homeFeed;
+  late final relatedVideos = YoutubeRelated(_http);
+
+  /// Gathers recommendations again when they are old, or when [force]d.
+  Future<void> refreshHomeFeed({bool force = false}) async {
+    final feed = homeFeed;
+    final repository = _repository;
+    final library = this.library;
+    if (feed == null || repository == null || !preferences.homeShowRecommended || feed.loading) return;
+    if (!force && !feed.stale && feed.items.isNotEmpty) return;
+    if (library != null && library.channels.isNotEmpty && library.feed.isEmpty) {
+      await library.refreshFeed().timeout(const Duration(seconds: 20), onTimeout: () {});
+    }
+    final weekly = searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: SearchUploadDate.week);
+    await feed.refresh(
+      HomeFeedSources(
+        history: history,
+        progressOf: library?.progressOf,
+        favorites: library?.favorites ?? const [],
+        followed: library?.channels ?? const [],
+        subscriptions: library?.feed ?? const [],
+        related: relatedVideos.forVideo,
+        channelUploads: library?.uploadsOf ?? (_) async => const [],
+        search: (query) async {
+          final listing = repository.search(query, sp: weekly);
+          try {
+            return (await listing.next(10).toList()).whereType<VideoItem>().toList();
+          } finally {
+            listing.close();
+          }
+        },
+      ),
+      filter: visible,
+    );
+  }
+
+  /// 换一批.
+  void shuffleHomeFeed() => homeFeed?.shuffle(filter: visible);
+
+  /// 不感兴趣: hides [item] and shows less from its channel.
+  Future<void> dismissRecommendation(VideoItem item) async {
+    await homeFeed?.dismiss(item);
+    _notice('将减少推荐类似内容');
+  }
+
+  Future<void> clearNotInterested() async {
+    await homeFeed?.notInterested.clear();
+    _notice('已清空“不感兴趣”记录');
   }
 
   /// Words typed before, newest first, and YouTube's suggestions.

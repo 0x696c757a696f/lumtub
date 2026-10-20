@@ -46,12 +46,13 @@ class VideoActions extends InheritedWidget {
 /// A lazily built grid of video cards as a sliver, so pages can put headers
 /// above it in the same scroll view.
 class SliverVideoGrid extends StatelessWidget {
-  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove});
+  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel});
   final List<VideoItem> items;
   final void Function(VideoItem item) onOpen;
   final Directory? thumbnails;
   /// Adds a "remove" entry to each card's menu, for playlists.
   final void Function(VideoItem item)? onRemove;
+  final String? removeLabel;
 
   @override
   Widget build(BuildContext context) => SliverPadding(
@@ -66,7 +67,7 @@ class SliverVideoGrid extends StatelessWidget {
               mainAxisExtent: layout.itemHeight,
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, i) => VideoCard(item: items[i], thumbnails: thumbnails, onOpen: () => onOpen(items[i]), onRemove: onRemove == null ? null : () => onRemove!(items[i])),
+              (context, i) => VideoCard(item: items[i], thumbnails: thumbnails, onOpen: () => onOpen(items[i]), onRemove: onRemove == null ? null : () => onRemove!(items[i]), removeLabel: removeLabel),
               childCount: items.length,
             ),
           );
@@ -194,11 +195,13 @@ class _CardSkeleton extends StatelessWidget {
 
 /// Thumbnail-on-top video card with hover zoom and a right-click menu.
 class VideoCard extends StatefulWidget {
-  const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails, this.onRemove});
+  const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel});
   final VideoItem item;
   final VoidCallback onOpen;
   final Directory? thumbnails;
   final VoidCallback? onRemove;
+  /// The menu entry for [onRemove]; 从此列表移除 unless given.
+  final String? removeLabel;
 
   @override
   State<VideoCard> createState() => _VideoCardState();
@@ -253,7 +256,7 @@ class _VideoCardState extends State<VideoCard> {
       child: InkWell(
         onTap: widget.onOpen,
         onHover: _hover,
-        onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: widget.onOpen, onRemove: widget.onRemove),
+        onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: widget.onOpen, onRemove: widget.onRemove, removeLabel: widget.removeLabel),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           AspectRatio(
             aspectRatio: 16 / 9,
@@ -397,7 +400,7 @@ class _ProgressBar extends StatelessWidget {
   }
 }
 
-Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position, {required VoidCallback onOpen, VoidCallback? onRemove}) async {
+Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position, {required VoidCallback onOpen, VoidCallback? onRemove, String? removeLabel}) async {
   final controller = VideoActions.of(context);
   final library = controller?.library;
   final channel = item.channelRef;
@@ -418,7 +421,10 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
         entry('channel', Icons.account_circle_outlined, '查看频道'),
         entry('block', Icons.block_rounded, '屏蔽此频道'),
       ],
-      if (onRemove != null) entry('remove', Icons.remove_circle_outline_rounded, '从此列表移除'),
+      if (onRemove != null)
+        removeLabel == null
+            ? entry('remove', Icons.remove_circle_outline_rounded, '从此列表移除')
+            : entry('remove', Icons.thumb_down_off_alt_outlined, removeLabel),
       const PopupMenuDivider(),
       entry('copy', Icons.link_rounded, '复制链接'),
       entry('browser', Icons.open_in_new_rounded, '在浏览器中打开'),

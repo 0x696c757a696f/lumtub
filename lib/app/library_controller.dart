@@ -192,6 +192,9 @@ class LibraryController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// [channel]'s newest videos from its feed, for recommendations.
+  Future<List<VideoItem>> uploadsOf(ChannelRef channel) => _feed.latest(channel);
+
   /// Newest first; videos without a date keep their channel's order after
   /// the dated ones.
   static List<VideoItem> mergeFeeds(List<List<VideoItem>> perChannel) {

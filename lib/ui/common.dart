@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'theme.dart';
 import '../l10n/l10n.dart';
 
+export '../models.dart' show formatBytes;
+
 /// Full-area message for empty, error and not-yet-available states.
 class StatusView extends StatelessWidget {
   const StatusView({super.key, required this.icon, required this.title, this.message, this.action, this.error = false});
@@ -94,12 +96,6 @@ class PageHeader extends StatelessWidget {
           if (trailing != null) trailing!,
         ]),
       );
-}
-
-String formatBytes(int bytes) {
-  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-  if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-  return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
 }
 
 String formatPlaybackTime(Duration value) {

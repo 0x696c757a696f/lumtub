@@ -1870,9 +1870,17 @@ class AppController extends ChangeNotifier {
     final manager = _cacheManager;
     if (manager == null) return;
     if (!ensureNotPlaying(tr('正在播放时不会清理缓存。请先返回列表。'))) return;
-    await manager.clear(settings);
-    _update(() => cacheBytes = 0);
-    _notice(tr('已清理 YTPlus 管理的缓存文件。'));
+    try {
+      final (:freed, :skipped) = await manager.clear(settings);
+      final left = await manager.size(settings);
+      _update(() => cacheBytes = left);
+      _notice(skipped == 0
+          ? tr('已清理 {0} 缓存。', [formatBytes(freed)])
+          : tr('已清理 {0} 缓存；{1} 个文件正被使用，留到下次。', [formatBytes(freed), skipped]));
+    } on FileSystemException catch (error) {
+      logError('清理缓存失败', error);
+      _notice(tr('清理缓存失败：{0}', [error.message]));
+    }
   }
 
   /// Saves everything and releases the player before the window closes;

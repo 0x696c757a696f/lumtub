@@ -137,9 +137,12 @@ class _ClientSettingsState extends State<_ClientSettings> {
           label: Text(tr('打开 Google Cloud 控制台')),
         ),
         const SizedBox(height: 8),
-        TextField(controller: _id, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: tr('客户端 ID'), hintText: '…apps.googleusercontent.com')),
+        // Each field gets its own storage key: a text field scrolls, and
+        // without one its scroll offset would be read back from the
+        // tile's own saved open/closed flag, a bool, and fail to build.
+        TextField(key: const PageStorageKey('client:id'), controller: _id, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: tr('客户端 ID'), hintText: '…apps.googleusercontent.com')),
         const SizedBox(height: 10),
-        TextField(controller: _secret, onChanged: (_) => setState(() {}), obscureText: true, decoration: InputDecoration(labelText: tr('客户端密钥'))),
+        TextField(key: const PageStorageKey('client:secret'), controller: _secret, onChanged: (_) => setState(() {}), obscureText: true, decoration: InputDecoration(labelText: tr('客户端密钥'))),
         const SizedBox(height: 12),
         Wrap(spacing: 8, children: [
           FilledButton.tonal(

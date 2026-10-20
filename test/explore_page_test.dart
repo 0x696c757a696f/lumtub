@@ -158,7 +158,7 @@ void main() {
     expect(restored.allowedEntries, [cgtn.key]);
   });
 
-  test('Falun Gong channels are blocked by name, @handle and id; unproven ones only when ticked', () {
+  test('Falun Gong channels are blocked by name, @handle and id; unproven ones too unless unticked', () {
     final prefs = const AppPreferences();
     expect(prefs.blocksChannel('文昭談古論今 -Wen Zhao Official'), isTrue);
     expect(prefs.blocksChannel('江峰时刻'), isTrue);
@@ -167,8 +167,8 @@ void main() {
     expect(prefs.blocksChannel('China Uncensored'), isTrue);
     // A title naming a host is not enough; only his channel is.
     expect(prefs.blocksGroupIn('采访文昭谈古论今'), isFalse);
-    expect(prefs.blocksChannel('石涛聚焦'), isFalse);
-    expect(prefs.copyWith(enabledGroups: ['法轮功相关（待核实）']).blocksChannel('石濤聚焦'), isTrue);
+    expect(prefs.blocksChannel('石濤聚焦'), isTrue);
+    expect(prefs.copyWith(allowedGroups: ['法轮功相关（待核实）']).blocksChannel('石涛聚焦'), isFalse);
     final wenzhao = blockedGroups.firstWhere((g) => g.name == '法轮功相关自媒体').entries().firstWhere((e) => e.label == '文昭谈古论今');
     expect(wenzhao.forms, contains('文昭談古論今'));
     expect(prefs.copyWith(allowedEntries: [wenzhao.key]).blocksChannel('文昭談古論今'), isFalse);

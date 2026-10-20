@@ -15,7 +15,7 @@ const blockedGroups = <BlockedGroup>[
   // Matched by channel only (blocked_channels.dart): their names are
   // ordinary words that would hide unrelated videos if titles counted.
   BlockedGroup('法轮功相关自媒体', []),
-  BlockedGroup('法轮功相关（待核实）', [], onByDefault: false),
+  BlockedGroup('法轮功相关（待核实）', []),
   BlockedGroup('全能神', ['全能神', '东方闪电', '東方閃電', '实际神', '實際神', 'Church of Almighty God', 'Eastern Lightning']),
   BlockedGroup('新天地', ['新天地', '李万熙', '李萬熙', 'Shincheonji', 'Lee Man-hee']),
   BlockedGroup('统一教', ['统一教', '統一教', '文鲜明', '文鮮明', '家庭联合', '家庭聯合', '世界和平统一家庭', '世界和平統一家庭', 'Unification Church', 'Sun Myung Moon', 'Moonies', 'Family Federation for World Peace']),

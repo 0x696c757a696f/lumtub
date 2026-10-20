@@ -15,6 +15,14 @@ class VideoItem {
   final DateTime? published;
   /// yt-dlp's live_status: is_live, is_upcoming or was_live; null otherwise.
   final String? liveStatus;
+  /// Frame size, when the source listed it; height over width is vertical.
+  final int? width;
+  final int? height;
+  /// The start of the description, when listed: auto-generated music
+  /// uploads say "Provided to YouTube by".
+  final String? description;
+  /// Listed as a Short (a /shorts/ address), whatever its length.
+  final bool isShortListing;
 
   bool get isLive => liveStatus == 'is_live';
   bool get isUpcoming => liveStatus == 'is_upcoming';
@@ -29,6 +37,10 @@ class VideoItem {
     this.channelId,
     this.published,
     this.liveStatus,
+    this.width,
+    this.height,
+    this.description,
+    this.isShortListing = false,
   });
 
   /// This video credited to [ref], keeping the known name when [ref] has none.
@@ -42,6 +54,10 @@ class VideoItem {
         channelId: ref.id,
         published: published,
         liveStatus: liveStatus,
+        width: width,
+        height: height,
+        description: description,
+        isShortListing: isShortListing,
       );
 
   ChannelRef? get channelRef => channelId == null ? null : ChannelRef(channelId!, channel);
@@ -71,6 +87,10 @@ class VideoItem {
         if (channelId != null) 'channel_id': channelId,
         if (published != null) 'published': published!.toUtc().toIso8601String(),
         if (liveStatus != null) 'live_status': liveStatus,
+        if (width != null) 'width': width,
+        if (height != null) 'height': height,
+        if (description != null) 'description': description,
+        if (isShortListing) 'is_short': true,
       };
 
   factory VideoItem.fromJson(Map<String, dynamic> map) {
@@ -84,6 +104,10 @@ class VideoItem {
     final value = map['duration'];
     final views = map['view_count'];
     final channelId = map['channel_id']?.toString();
+    final width = map['width'];
+    final height = map['height'];
+    final description = map['description'];
+    final listed = '${map['original_url'] ?? ''} ${map['webpage_url'] ?? ''}';
     return VideoItem(
       id: id,
       title: map['title']?.toString() ?? 'Untitled video',
@@ -94,6 +118,10 @@ class VideoItem {
       channelId: channelId != null && ChannelRef.isValidId(channelId) ? channelId : null,
       published: DateTime.tryParse(map['published']?.toString() ?? ''),
       liveStatus: const {'is_live', 'is_upcoming', 'was_live'}.contains(map['live_status']) ? map['live_status'] as String : null,
+      width: width is num ? width.toInt() : null,
+      height: height is num ? height.toInt() : null,
+      description: description is String && description.isNotEmpty ? description.substring(0, description.length < 120 ? description.length : 120) : null,
+      isShortListing: map['is_short'] == true || listed.contains('/shorts/'),
     );
   }
 

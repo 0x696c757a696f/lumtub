@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../../blocked_groups.dart';
+import '../../feed_quality.dart';
 import '../../state_media.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
@@ -64,6 +65,7 @@ final _scaleModes = [('spline36', tr('Spline36（默认）')), ('bilinear', tr('
 final _cacheModes = [('auto', tr('自动（推荐）')), ('yes', tr('启用')), ('no', tr('禁用'))];
 final themeModes = [(ThemeMode.system, tr('跟随系统')), (ThemeMode.light, tr('浅色')), (ThemeMode.dark, tr('深色'))];
 final _durations = [(0, tr('不限')), (1, tr('1 分钟')), (3, tr('3 分钟')), (5, tr('5 分钟')), (10, tr('10 分钟')), (20, tr('20 分钟'))];
+final _feedLevels = [(FeedLevel.off, tr('不限')), (FeedLevel.reduce, tr('减少')), (FeedLevel.drop, tr('不推荐'))];
 final _feedIntervals = [(5, tr('5 分钟')), (10, tr('10 分钟')), (30, tr('30 分钟')), (60, tr('1 小时')), (180, tr('3 小时'))];
 final _hideTimes = [(2, tr('2 秒')), (3, tr('3 秒（默认）')), (5, tr('5 秒')), (10, tr('10 秒')), (30, tr('30 秒（便于屏幕阅读器）'))];
 final _volumeMaxes = [(100, tr('100%（不增强）')), (130, '130%'), (150, '150%'), (200, '200%')];
@@ -145,6 +147,24 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.homeShowRecommended,
               onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecommended: v)),
             )),
+        SettingEntry(tr('推荐中的 YouTube Music 非 MV 音乐'), (context) => NormalItem(
+              title: tr('推荐中的 YouTube Music 非 MV 音乐'),
+              subtitle: tr('当前：{0}；自动生成的 “- Topic” 曲目，官方 MV 不受影响', [labelOf(_feedLevels, prefs.feedMusicTracks)]),
+              leading: _icon(Icons.music_note_outlined),
+              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的 YouTube Music 非 MV 音乐'), value: prefs.feedMusicTracks, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedMusicTracks: v))),
+            ), subtitle: tr('Topic 音乐 非MV 减少 不推荐')),
+        SettingEntry(tr('推荐中的 Shorts 短视频'), (context) => NormalItem(
+              title: tr('推荐中的 Shorts 短视频'),
+              subtitle: tr('当前：{0}；只影响为你推荐，搜索和关注不受影响', [labelOf(_feedLevels, prefs.feedShorts)]),
+              leading: _icon(Icons.smartphone_rounded),
+              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的 Shorts 短视频'), value: prefs.feedShorts, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedShorts: v))),
+            ), subtitle: tr('短视频 减少 不推荐')),
+        SettingEntry(tr('推荐中的竖屏视频'), (context) => NormalItem(
+              title: tr('推荐中的竖屏视频'),
+              subtitle: tr('当前：{0}；只影响为你推荐，搜索和关注不受影响', [labelOf(_feedLevels, prefs.feedVertical)]),
+              leading: _icon(Icons.stay_current_portrait_rounded),
+              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的竖屏视频'), value: prefs.feedVertical, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedVertical: v))),
+            ), subtitle: tr('竖屏 减少 不推荐')),
         SettingEntry(tr('屏蔽争议宗教团体'), (context) => NormalItem(
               title: tr('屏蔽争议宗教团体'),
               subtitle: prefs.blockGroups

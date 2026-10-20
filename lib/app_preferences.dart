@@ -5,6 +5,7 @@ import 'app_directories.dart';
 import 'blocked_groups.dart';
 import 'state_media.dart';
 import 'explore_filters.dart';
+import 'feed_quality.dart';
 import 'explore_topics.dart';
 import 'models.dart';
 import 'l10n/l10n.dart';
@@ -40,6 +41,9 @@ class AppPreferences {
     this.homeShowContinue = true,
     this.homeShowRecent = true,
     this.homeShowRecommended = true,
+    this.feedMusicTracks = FeedLevel.reduce,
+    this.feedShorts = FeedLevel.reduce,
+    this.feedVertical = FeedLevel.reduce,
     this.syncFollowToYoutube = true,
     this.startPage = 'home',
     this.feedAutoRefresh = true,
@@ -104,6 +108,12 @@ class AppPreferences {
   final bool homeShowRecent;
   /// 为你推荐, worked out on this computer from the history.
   final bool homeShowRecommended;
+  /// How much 为你推荐 shows of YouTube Music's auto-generated tracks,
+  /// Shorts and vertical videos.
+  final FeedLevel feedMusicTracks;
+  final FeedLevel feedShorts;
+  final FeedLevel feedVertical;
+  FeedMix get feedMix => FeedMix(musicTracks: feedMusicTracks, shorts: feedShorts, vertical: feedVertical);
   /// 关注 also subscribes on YouTube when signed in.
   final bool syncFollowToYoutube;
   final String startPage;
@@ -206,6 +216,9 @@ ${item.channel}'] ??= blocksChannel(item.channel, id: item.channelId);
     bool? homeShowContinue,
     bool? homeShowRecent,
     bool? homeShowRecommended,
+    FeedLevel? feedMusicTracks,
+    FeedLevel? feedShorts,
+    FeedLevel? feedVertical,
     bool? syncFollowToYoutube,
     String? startPage,
     bool? feedAutoRefresh,
@@ -249,6 +262,9 @@ ${item.channel}'] ??= blocksChannel(item.channel, id: item.channelId);
         homeShowContinue: homeShowContinue ?? this.homeShowContinue,
         homeShowRecent: homeShowRecent ?? this.homeShowRecent,
         homeShowRecommended: homeShowRecommended ?? this.homeShowRecommended,
+        feedMusicTracks: feedMusicTracks ?? this.feedMusicTracks,
+        feedShorts: feedShorts ?? this.feedShorts,
+        feedVertical: feedVertical ?? this.feedVertical,
         syncFollowToYoutube: syncFollowToYoutube ?? this.syncFollowToYoutube,
         startPage: startPage ?? this.startPage,
         feedAutoRefresh: feedAutoRefresh ?? this.feedAutoRefresh,
@@ -293,6 +309,9 @@ ${item.channel}'] ??= blocksChannel(item.channel, id: item.channelId);
         'homeShowContinue': homeShowContinue,
         'homeShowRecent': homeShowRecent,
         'homeShowRecommended': homeShowRecommended,
+        'feedMusicTracks': feedMusicTracks.name,
+        'feedShorts': feedShorts.name,
+        'feedVertical': feedVertical.name,
         'syncFollowToYoutube': syncFollowToYoutube,
         'startPage': startPage,
         'feedAutoRefresh': feedAutoRefresh,
@@ -371,6 +390,9 @@ ${item.channel}'] ??= blocksChannel(item.channel, id: item.channelId);
       homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
       homeShowRecent: flag('homeShowRecent', d.homeShowRecent),
       homeShowRecommended: flag('homeShowRecommended', d.homeShowRecommended),
+      feedMusicTracks: FeedLevel.parse(raw['feedMusicTracks'], d.feedMusicTracks),
+      feedShorts: FeedLevel.parse(raw['feedShorts'], d.feedShorts),
+      feedVertical: FeedLevel.parse(raw['feedVertical'], d.feedVertical),
       syncFollowToYoutube: flag('syncFollowToYoutube', d.syncFollowToYoutube),
       startPage: startPages.any((p) => p.$1 == start) ? start! : 'home',
       feedAutoRefresh: flag('feedAutoRefresh', d.feedAutoRefresh),

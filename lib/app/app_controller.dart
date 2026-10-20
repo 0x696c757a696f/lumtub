@@ -1605,6 +1605,7 @@ class AppController extends ChangeNotifier {
     if (library != null && library.channels.isNotEmpty && library.feed.isEmpty) {
       await library.refreshFeed().timeout(const Duration(seconds: 20), onTimeout: () {});
     }
+    feed.mix = preferences.feedMix;
     await feed.refresh(await _homeSources(repository), filter: visible);
   }
 
@@ -1669,7 +1670,10 @@ class AppController extends ChangeNotifier {
   }
 
   /// 换一批.
-  void shuffleHomeFeed() => homeFeed?.shuffle(filter: visible);
+  void shuffleHomeFeed() {
+    homeFeed?.mix = preferences.feedMix;
+    homeFeed?.shuffle(filter: visible);
+  }
 
   /// 不感兴趣: hides [item] and shows less from its channel.
   Future<void> dismissRecommendation(VideoItem item) async {

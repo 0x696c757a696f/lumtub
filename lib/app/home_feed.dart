@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../app_log.dart';
+import '../feed_quality.dart';
 import '../library_store.dart' show WatchProgress;
 import '../models.dart';
 import '../recommendations.dart';
@@ -49,6 +50,9 @@ class HomeFeed extends ChangeNotifier {
   HomeFeed(this.notInterested);
 
   final NotInterested notInterested;
+
+  /// Which kinds of video to show less of; set from the settings.
+  FeedMix mix = const FeedMix();
 
   /// The feed so far, newest page last.
   List<VideoItem> items = const [];
@@ -273,6 +277,7 @@ class HomeFeed extends ChangeNotifier {
         count: 200,
         seed: _seed * 31 + lane.index,
         weights: lane.weights,
+        mix: mix,
       );
     }
   }

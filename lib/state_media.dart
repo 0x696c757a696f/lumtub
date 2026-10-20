@@ -66,9 +66,9 @@ const stateMedia = <BlockedGroup>[
 ];
 
 
-final _all = BlockMatcher(stateMedia.where((g) => g.onByDefault).toList(), wordKind: BlockKind.channel);
+final _all = BlockMatcher(stateMedia.where((g) => g.onByDefault).toList());
 
 /// Whether a channel called [channel] is one of [stateMedia], other than
 /// the groups the user [allowed].
 bool isStateMediaChannel(String channel, [Set<String>? allowed]) =>
-    (allowed == null ? _all : BlockMatcher(stateMedia, allowedGroups: allowed, wordKind: BlockKind.channel)).channel(channel);
+    (allowed == null ? _all : BlockMatcher(stateMedia, allowedGroups: allowed)).channel(channel);

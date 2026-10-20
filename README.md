@@ -1,63 +1,63 @@
 # YTPlus
 
-简体中文 · [English](README.en.md)
+**A lightweight YouTube client for Windows. No Electron, no web player.**
 
-YTPlus 是一个轻量的 Windows YouTube 客户端，用 Flutter、[media_kit](https://github.com/media-kit/media-kit)（libmpv）和 [yt-dlp](https://github.com/yt-dlp/yt-dlp) 写成。它不用 Electron，也不用网页播放器。界面参考了 B 站第三方客户端 [PiliNara](https://github.com/Starfallan/PiliNara)。
+YTPlus is built with Flutter, [media_kit](https://github.com/media-kit/media-kit) (libmpv) and [yt-dlp](https://github.com/yt-dlp/yt-dlp). It uses neither Electron nor a web player. Its interface follows [PiliNara](https://github.com/Starfallan/PiliNara), a third-party Bilibili client.
 
-## 功能
+[Features](#features) · [Privacy](#privacy) · [Install](#install-and-use) · [Building](#building) · [License](#license-and-attribution)
 
-**浏览**
-- 首页：继续观看、最近观看，以及在本机算出的“为你推荐”。推荐结合长期兴趣、近期兴趣、兴趣探索、热门与新视频四路内容，可以无限滚动，每张卡片都写明推荐原因，可以标记“不感兴趣”。
-- 探索：按 B 站分区的方式分成视频和直播两部分，每个分区有二级分类。可按为你推荐、热门、最新、冷门宝藏、长视频浏览，也可按时长和画质（1080p、4K、HDR）筛选，直播可以看即将开播和直播回放。分区可以自己添加、隐藏、置顶和排序。视频和直播都以“推荐”（按你的兴趣混合各分区）和“全部”（不看兴趣，混合各分区）开头，可以换一批；两边都有宗教信仰分区。可以按地区（按 YouTube 的国家设置）和语言（按标题判断）筛选。
-- 宗教与信仰：探索“视频”里的宗教信仰分区，分宗教传统、宗教学术、文化艺术、宗教直播四页。基督宗教再细分到天主教、东正教、新教、东方正统教会，天主教下有教宗讲话、弥撒、圣事、圣人传记等。可按内容类型和视角筛选；这里会去掉标题党，每个频道最多显示 3 个视频。
-- 搜索：搜索建议和搜索记录，可按排序方式、上传时间、时长筛选，可以只看视频、Shorts、直播、频道或播放列表。
-- 频道页：视频、Shorts、直播、播放列表、播客和社区帖子，可以在频道内搜索。帖子的评论显示在右侧。
-- 订阅、历史、本地播放列表和收藏。Alt+← 或鼠标侧键可以返回上一页。
+## Features
 
-**播放**
-- 用 libmpv 播放，支持硬件解码、画质与音质选择、倍速、字幕（包括自动生成和自动翻译的字幕）、章节、全屏和键盘快捷键。播放页的标题、简介、章节名，以及帖子、评论和字幕，跟随设置里的界面语言（有翻译时）。
-- 默认通过 Piped 服务器取视频地址（自动选择最快的公共服务器），失败时直接连接 YouTube。
-- 可选空降助手（SponsorBlock）、踩数显示（Return YouTube Dislike）和 DeArrow 替换标题党标题与封面，都默认关闭。
-- 视频评论、相关视频、视频简介。宽窗口下评论和接下来播放在播放器右侧分标签显示。
+**Browsing**
+- Home: continue watching, recently watched, and a "For you" feed worked out on your computer. It mixes long-term interests, recent interests, exploration, and popular and new videos; it scrolls endlessly, each card says why it was suggested, and any video can be marked "Not interested".
+- Explore: video and live halves split into categories, Bilibili style, each with sub-categories. Browse by For you, Popular, Latest, Hidden gems or Long videos, filter by length and quality (1080p, 4K, HDR), and see upcoming streams and replays. Categories can be added, hidden, pinned and reordered. Videos and live both start with Recommended (your interests mixed with the categories) and All (every category, not personalised), which can be shuffled. Filter by region (YouTube's country setting) and language (guessed from the title).
+- Search: suggestions and history, sort order, upload date and length filters, and videos, Shorts, live streams, channels or playlists only.
+- Channel pages: videos, Shorts, live, playlists, podcasts and community posts, with search inside the channel. A post's comments open on the right.
+- Subscriptions, history, local playlists and favorites. Alt+← or the mouse back button returns to the previous page.
 
-**Google 账号（可选）**
-- 登录后可以同步订阅和播放列表，给视频点赞或点踩、发评论和回复、保存到 YouTube 播放列表，关注频道时同时在 YouTube 订阅。
-- 需要你自己的 Google OAuth 客户端（见下文）。凭据用 Windows DPAPI 加密保存在本机。
+**Playback**
+- libmpv playback with hardware decoding, video and audio quality, speed, subtitles (including automatic and translated captions), chapters, fullscreen and keyboard shortcuts. The watch page's title, description and chapter names, posts, comments and subtitles follow the interface language where a translation exists.
+- Streams come through Piped by default (the fastest public server is picked automatically), falling back to YouTube directly.
+- Optional SponsorBlock, dislike counts (Return YouTube Dislike) and DeArrow titles and thumbnails in place of clickbait, all off by default.
+- Comments, related videos and descriptions. On wide windows comments and Up next share tabs to the right of the player.
 
-**其它**
-- 界面语言：简体中文、繁體中文、English，可在 设置 › 外观设置 › 语言 切换。
-- 代理：跟随系统、不使用代理，或手动填写 HTTP / SOCKS5 代理。
-- 浅色和深色主题、强调色、字体、卡片大小等外观设置。
-- 设置可以导出、导入和重置。
+**Google account (optional)**
+- Sync subscriptions and playlists, like or dislike videos, post comments and replies, save to YouTube playlists, and subscribe on YouTube when following a channel.
+- Needs your own Google OAuth client (see below). Credentials are kept on your computer, encrypted with Windows DPAPI.
 
-**屏蔽**
-- 屏蔽争议宗教团体（默认开启，可逐个取消）：法轮功（含大纪元、新唐人、希望之声体系及相关自媒体频道）、全能神、新天地、统一教、山达基等团体相关的视频和频道，不出现在推荐、探索、相关视频、搜索和搜索建议里。只有搜索时输入完全正确的频道名（区分大小写），才能找到这个频道。每个团体可以点开看完整名单并逐项取消。
-- 屏蔽官方宣传媒体（默认关闭，可按国家逐类勾选）：CGTN、央视、新华社、RT、Press TV、朝鲜官方媒体等政府宣传媒体的频道。只看频道名，别的频道的相关报道照常显示；BBC、NHK、PBS 这类编辑独立的公共媒体不在其中。
-- 屏蔽频道和不推荐频道：可在设置里按链接或完整名称添加，也可以在视频卡片、频道页和播放页的菜单里操作。不推荐的频道仍能搜索和关注。
+**Other**
+- English interface. Subtitle and caption languages are unaffected and can be any language YouTube offers.
+- Proxy: follow the system, none, or a manual HTTP / SOCKS5 proxy.
+- Light and dark themes, accent colours, fonts, card size and more.
+- Settings can be exported, imported and reset.
 
-## 隐私
+**Channel blocking**
+- Optional block lists for channels, switched on or off in settings.
+- Block a channel, or stop recommending one: add it in settings by link or full name, or from the menu on a video card, channel page or the watch page. Channels not recommended still show in searches and follows.
 
-推荐、历史、搜索记录和“不感兴趣”都只保存在本机，不会上传。YTPlus 不读取浏览器 Cookie。使用 Piped 时，Piped 服务器会知道你在看哪个视频；不想这样可以在 设置 › 播放 里改为直接连接 YouTube。
+## Privacy
 
-## 安装和使用
+Recommendations, history, searches and "Not interested" stay on your computer and are never uploaded. YTPlus does not read browser cookies. When Piped is used, the Piped server knows which video you watch; to avoid that, choose a direct YouTube connection under Settings › Playback.
 
-1. 从 GitHub Actions 的 **Build YTPlus Windows** 下载 `YTPlus-Windows-x64`，或从 Releases 下载安装包。
-2. 解压后运行 `ytplus.exe`，不需要管理员权限。
-3. 第一次启动时会下载 yt-dlp 和 Deno，需要能连上 GitHub。之后每天最多检查一次更新，新版本在重启后生效。
+## Install and use
 
-数据保存在 `%LOCALAPPDATA%\YTPlus` 下的 `config`、`data`、`cache`、`components` 和 `logs` 文件夹中。日志在 `logs\ytplus.log`，可以在 设置 › 关于 里复制诊断信息。
+1. Download `YTPlus-Windows-x64` from the **Build YTPlus Windows** GitHub Actions workflow, or the installer from Releases.
+2. Unzip and run `ytplus.exe`; no administrator rights are needed.
+3. The first start downloads yt-dlp and Deno and needs access to GitHub. Updates are checked at most once a day and apply after a restart.
 
-### Google 登录
+Data lives in the `config`, `data`, `cache`, `components` and `logs` folders under `%LOCALAPPDATA%\YTPlus`. The log is `logs\ytplus.log`; Settings › About can copy diagnostics.
 
-1. 在 Google Cloud Console 创建一个“桌面应用”类型的 OAuth 客户端，并启用 YouTube Data API v3。
-2. 在 设置 › Google 账号 里填入客户端 ID 和密钥后登录。也可以在构建时通过仓库 Secrets `YTPLUS_GOOGLE_CLIENT_ID` 和 `YTPLUS_GOOGLE_CLIENT_SECRET` 内置。
-3. 自己创建的客户端未经 Google 审核，登录时可能出现“应用未经验证”的提示，选择继续即可。
+### Google sign-in
 
-## 构建
+1. In Google Cloud Console, create an OAuth client of type "Desktop app" and enable YouTube Data API v3.
+2. Enter its client ID and secret under Settings › Google account and sign in. They can also be built in through the repository secrets `YTPLUS_GOOGLE_CLIENT_ID` and `YTPLUS_GOOGLE_CLIENT_SECRET`.
+3. A client you create yourself is not reviewed by Google, so sign-in may warn that the app is unverified; continue past it.
 
-Windows 版本由 GitHub Actions（`.github/workflows/windows.yml`）构建：推送或向 `main` 提交 PR 时运行，也可以在 Actions 页面手动运行。它会校验并打包最新的 shinchiro x86_64-v3 `libmpv-2.dll`，运行 `flutter analyze` 和单元测试，构建发布版并上传 `YTPlus-Windows-x64`。推送 `v*` 标签（如 `v0.2.0`）会同时发布 GitHub Release，附带 Inno Setup 安装包。
+## Building
 
-在本机构建需要 Flutter 3.47 和 Visual Studio 的 C++ 桌面开发组件：
+The Windows build runs on GitHub Actions (`.github/workflows/windows.yml`) for pushes and pull requests to `main`, or by hand from the Actions page. It verifies and bundles the latest shinchiro x86_64-v3 `libmpv-2.dll`, runs `flutter analyze` and the unit tests, builds a release and uploads `YTPlus-Windows-x64`. Pushing a `v*` tag (such as `v0.2.0`) also publishes a GitHub release with an Inno Setup installer.
+
+Building locally needs Flutter 3.47 and Visual Studio with the C++ desktop workload:
 
 ```powershell
 flutter pub get
@@ -65,20 +65,20 @@ flutter test
 flutter build windows --release
 ```
 
-### 翻译
+### Translations
 
-界面文字在代码里用简体中文写成，并用 `tr('…')` 包起来；英文和繁体中文在 `lib/l10n/strings_en.dart` 和 `lib/l10n/strings_zh_hant.dart`。新增文字后，`test/l10n_test.dart` 会检查每一条都有英文翻译。
+The interface is English for now. Source strings are still written in simplified Chinese in the code and wrapped in `tr('…')`, and `lib/l10n/strings_en.dart` maps them to English; `test/l10n_test.dart` checks that every string has an English translation. Chinese interface languages are switched off for the moment.
 
-## 已知限制
+## Known limits
 
-- 只支持 Windows x64，libmpv 为 x86_64-v3 版本，较老的 CPU 暂无备用版本。
-- YouTube 更改接口时，搜索或播放可能失效，通常更新 yt-dlp 后恢复。
-- 官方 API 不支持给社区帖子点赞或评论。
+- Windows x64 only, with the x86_64-v3 libmpv build; there is no fallback for older CPUs yet.
+- Search or playback can break when YouTube changes; an updated yt-dlp usually fixes it.
+- The official API cannot like or comment on community posts.
 
-## 许可和致谢
+## License and attribution
 
-YTPlus 以 GNU 通用公共许可证第 3 版或更新版本（`GPL-3.0-or-later`）发布。
+YTPlus is licensed under the GNU General Public License, version 3 or later (`GPL-3.0-or-later`).
 
-`lib/widgets/pilinara_settings_tiles.dart` 中的设置组件改编自 [PiliNara](https://github.com/Starfallan/PiliNara)，版权归其贡献者，同样以 GPL-3.0-or-later 授权。`vendor/pilinara-settings/` 和 `vendor/pilinara-player/` 是未修改的 PiliNara 源码快照，便于对照，不参与构建。`vendor/media_kit_video/` 是带一处 Windows 修复的 media_kit_video 副本（见其中的 `YTPLUS.md`）。
+The settings tiles in `lib/widgets/pilinara_settings_tiles.dart` are adapted from [PiliNara](https://github.com/Starfallan/PiliNara), copyright its contributors, and remain under GPL-3.0-or-later. `vendor/pilinara-settings/` and `vendor/pilinara-player/` are unmodified PiliNara source snapshots kept for reference; they are not built. `vendor/media_kit_video/` is a copy of media_kit_video with one Windows fix (see its `YTPLUS.md`).
 
-内置字体 Noto Sans SC 以 SIL Open Font License 1.1 授权（`assets/fonts/OFL.txt`）。其它依赖和运行时组件遵循各自的许可证，再分发前请查看 `NOTICE`。
+The bundled Noto Sans SC font is under the SIL Open Font License 1.1 (`assets/fonts/OFL.txt`). Other packages and runtime components keep their own licenses; review `NOTICE` before redistributing.

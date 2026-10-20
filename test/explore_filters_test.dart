@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' show Locale;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app_preferences.dart';
@@ -70,9 +71,17 @@ void main() {
     expect(details.localized(details.title, details.description, likes: 5).likeCount, 5);
   });
 
-  test('subtitles follow the interface language unless another is chosen', () {
+  test('subtitles follow Windows\' language unless another is chosen', () {
     expect(const PlayerSettings().subtitleLanguage, SubtitleLanguage.auto);
+    final saved = SubtitleLanguage.systemLocale;
+    addTearDown(() => SubtitleLanguage.systemLocale = saved);
+    var locale = const Locale('zh', 'CN');
+    SubtitleLanguage.systemLocale = () => locale;
     expect(SubtitleLanguage.auto.mpvLangs, SubtitleLanguage.zh.mpvLangs);
+    locale = const Locale('zh', 'TW');
+    expect(SubtitleLanguage.auto.resolved, SubtitleLanguage.zhHant);
+    locale = const Locale('de', 'DE');
+    expect(SubtitleLanguage.auto.resolved, SubtitleLanguage.en);
     // 简体中文优先, the old default, now follows; a choice saved since stays.
     expect(PlayerSettings.fromJson({'subtitleLanguage': 'zh'}).subtitleLanguage, SubtitleLanguage.auto);
     expect(PlayerSettings.fromJson({'subtitleLanguage': 'ja'}).subtitleLanguage, SubtitleLanguage.ja);

@@ -21,9 +21,11 @@ enum FailureKind {
 }
 
 class PlaybackFailure {
-  const PlaybackFailure(this.kind, this.detail);
+  const PlaybackFailure(this.kind, this.detail, {this.tried = const []});
 
   final FailureKind kind;
+  /// The Piped or Invidious servers that were tried after YouTube said 429.
+  final List<String> tried;
   /// The message it was read from.
   final String detail;
 
@@ -61,10 +63,12 @@ class PlaybackFailure {
   String get message {
     final reason = switch (kind) {
       FailureKind.unavailable => tr('这个视频无法观看（私享、已删除、会员专属、地区或年龄限制）'),
-      FailureKind.rateLimited => tr('YouTube 暂时限制了请求频率（429）。已暂停预加载 10 分钟，请过几分钟再播放，或换一个代理节点'),
-      FailureKind.botCheck => tr('YouTube 要求验证“不是机器人”，说明当前 IP 被怀疑。可以换一个代理节点，或在 设置 › 播放 › 播放来源 选 Piped'),
+      FailureKind.rateLimited => tried.isEmpty
+          ? tr('YouTube 暂时限制了请求频率（429）。已暂停预加载 10 分钟，请过几分钟再播放，或换一个代理节点')
+          : tr('YouTube 暂时限制了请求频率（429），改用 {0} 也没有成功。已暂停预加载 10 分钟，请过几分钟再播放，或换一个代理节点', [tried.join('、')]),
+      FailureKind.botCheck => tr('YouTube 要求验证“不是机器人”，说明当前 IP 被怀疑。可以换一个代理节点，或在 设置 › 播放 › 播放来源 选 Piped 或 Invidious'),
       FailureKind.challenge => tr('解不开 YouTube 的 JavaScript 验证，通常是 yt-dlp 过旧。已开始检查组件更新，更新后重启 YTPlus 生效'),
-      FailureKind.forbidden => tr('YouTube 拒绝了视频地址（403）。已重新解析仍失败，可以换一个代理节点，或在 设置 › 播放 › 播放来源 选 Piped'),
+      FailureKind.forbidden => tr('YouTube 拒绝了视频地址（403）。已重新解析仍失败，可以换一个代理节点，或在 设置 › 播放 › 播放来源 选 Piped 或 Invidious'),
       FailureKind.network => tr('网络连接失败，请检查网络或代理'),
       FailureKind.unknown => '',
     };

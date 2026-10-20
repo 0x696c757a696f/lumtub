@@ -16,6 +16,7 @@ import '../player_controls.dart';
 import '../player_shortcuts.dart';
 import '../skeleton.dart';
 import '../theme.dart';
+import '../translatable.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
 import '../../dearrow.dart';
@@ -68,7 +69,6 @@ class _WatchPageState extends State<WatchPage> {
       child: Focus(
         autofocus: true,
         child: LayoutBuilder(builder: (context, constraints) {
-          if (controller.pip) return Center(child: _Player(controller: controller, videoKey: _video));
           final wide = constraints.maxWidth >= 1080;
           final mainWidth = wide ? constraints.maxWidth - _sidePanelWidth - AppStyle.pagePadding * 3 : constraints.maxWidth - AppStyle.pagePadding * 2;
           // Keep the whole player visible: never taller than the window allows.
@@ -273,7 +273,11 @@ class _Details extends StatelessWidget {
     final channel = details?.channel.isNotEmpty == true ? details!.channel : item.channel;
     final channelRef = controller.playingChannel;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      SelectableText(deArrow.titleOf(item.id, details?.title.isNotEmpty == true ? details!.title : item.title), style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600, height: 1.3)),
+      Translatable(
+        controller: controller,
+        text: deArrow.titleOf(item.id, details?.title.isNotEmpty == true ? details!.title : item.title),
+        builder: (context, title) => SelectableText(title, style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600, height: 1.3)),
+      ),
       const SizedBox(height: 12),
       Row(children: [
         ChannelAvatar(name: channel.isEmpty ? 'YouTube' : channel),
@@ -339,14 +343,18 @@ class _DescriptionState extends State<_Description> {
             if (widget.meta.isNotEmpty) Text(widget.meta, style: context.text.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
             if (widget.description.isNotEmpty) ...[
               const SizedBox(height: 6),
-              AnimatedSize(
-                duration: const Duration(milliseconds: 180),
-                alignment: Alignment.topCenter,
-                // Times seek the video and links open in the browser, as in
-                // PiliNara; the expanded text can still be selected.
-                child: _expanded
-                    ? SelectionArea(child: LinkedText(widget.description, style: const TextStyle(height: 1.5), onTime: _seek, onLink: openExternal))
-                    : LinkedText(widget.description, maxLines: 3, style: const TextStyle(height: 1.5), onTime: _seek, onLink: openExternal),
+              Translatable(
+                controller: widget.controller,
+                text: widget.description,
+                builder: (context, description) => AnimatedSize(
+                  duration: const Duration(milliseconds: 180),
+                  alignment: Alignment.topCenter,
+                  // Times seek the video and links open in the browser, as in
+                  // PiliNara; the expanded text can still be selected.
+                  child: _expanded
+                      ? SelectionArea(child: LinkedText(description, style: const TextStyle(height: 1.5), onTime: _seek, onLink: openExternal))
+                      : LinkedText(description, maxLines: 3, style: const TextStyle(height: 1.5), onTime: _seek, onLink: openExternal),
+                ),
               ),
               if (hasMore) ...[
                 const SizedBox(height: 4),

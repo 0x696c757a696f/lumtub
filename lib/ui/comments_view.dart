@@ -8,6 +8,7 @@ import 'common.dart';
 import 'linked_text.dart';
 import 'pages/channel_page.dart';
 import 'theme.dart';
+import 'translatable.dart';
 import '../l10n/l10n.dart';
 
 /// The comments under a video or a post: sort order, comments with their
@@ -117,7 +118,8 @@ class _CommentsSectionState extends State<CommentsSection> {
             ]),
             const SizedBox(height: 8),
             if (_canWrite) CommentComposer(hint: tr('添加评论…'), onSubmit: _post),
-            for (final comment in loader.comments) ..._thread(context, comment),
+            for (final comment in loader.comments)
+              if (!widget.controller.preferences.blocksCommenter(comment.author, comment.channelId)) ..._thread(context, comment),
             if (loader.loading)
               const Padding(padding: EdgeInsets.all(16), child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))))
             else if (error != null)
@@ -167,7 +169,11 @@ class _CommentTile extends StatelessWidget {
             Text(comment.published, style: small),
           ]),
           const SizedBox(height: 4),
-          LinkedText(comment.text, style: const TextStyle(height: 1.45), onTime: onSeek ?? (_) {}, onLink: openExternal),
+          Translatable(
+            controller: controller,
+            text: comment.text,
+            builder: (context, text) => LinkedText(text, style: const TextStyle(height: 1.45), onTime: onSeek ?? (_) {}, onLink: openExternal),
+          ),
           const SizedBox(height: 4),
           Row(children: [
             Tooltip(

@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
 import 'player_settings.dart';
+import 'relay_servers.dart';
 import 'video_format_selector.dart';
 import 'l10n/l10n.dart';
+
+/// The public server networks that can fetch a video in place of YouTube.
+enum RelayKind { piped, invidious }
 
 /// Where playback streams come from.
 enum PlaybackSource {
@@ -15,6 +18,10 @@ enum PlaybackSource {
   pipedAuto('Piped · 自动选择服务器（默认）'),
   /// The Piped server the user named.
   pipedCustom('Piped · 指定服务器'),
+  /// The fastest working public Invidious instance.
+  invidiousAuto('Invidious · 自动选择实例'),
+  /// The Invidious instance the user named.
+  invidiousCustom('Invidious · 指定实例'),
   /// Straight from YouTube through yt-dlp.
   youtube('直接连接 YouTube');
 
@@ -22,7 +29,15 @@ enum PlaybackSource {
   final String _label;
   String get label => tr(_label);
 
-  bool get isPiped => this != youtube;
+  /// The server network this source uses, or null for YouTube.
+  RelayKind? get relay => switch (this) {
+        pipedAuto || pipedCustom => RelayKind.piped,
+        invidiousAuto || invidiousCustom => RelayKind.invidious,
+        youtube => null,
+      };
+
+  /// Whether a named server is used instead of the fastest one.
+  bool get isCustom => this == pipedCustom || this == invidiousCustom;
 }
 
 /// A Piped API address as typed, such as `pipedapi.kavin.rocks`, as
@@ -147,9 +162,8 @@ class PipedVideo {
 /// Finds playable streams on Piped servers. Piped servers fetch the video
 /// from YouTube and pass it on, so YouTube's per-connection throttling of
 /// players that request whole files does not apply.
-class PipedStreams {
-  PipedStreams(this._client);
-  final http.Client _client;
+class PipedStreams extends RelayServers {
+  PipedStreams(http.Client client) : super(client, 'Piped');
 
   /// Public API servers checked first, without waiting for the live list;
   /// those that do not answer are simply left out.
@@ -179,152 +193,32 @@ class PipedStreams {
     'https://piped-instances.kavin.rocks/',
   ];
 
-  /// Where the downloaded list is kept between runs; null keeps it in memory.
-  File? catalogFile;
-  List<String> _catalog = const [];
-  DateTime _catalogAt = DateTime(0);
-  bool _catalogLoaded = false;
+  @override
+  List<String> get defaultServers => knownServers;
+  @override
+  String? normalize(String text) => normalizePipedServer(text);
+  @override
+  Uri healthUrl(String server) => Uri.parse('$server/healthcheck');
+  @override
+  String get pausedMessage => tr('Piped 最近连续失败，暂时不用');
 
-  List<String>? _ranked;
-  DateTime _rankedAt = DateTime(0);
-  Future<List<String>>? _ranking;
-  final _timings = <String, int>{};
-  final _tried = <String>{};
-
-  /// The built-in servers and those from the last downloaded list.
-  List<String> get catalog => {...knownServers, ..._catalog}.toList();
-
-  /// When the list was last downloaded, or null if it never was.
-  DateTime? get catalogUpdatedAt => _catalogAt.year > 2000 ? _catalogAt : null;
-
-  /// The last measured response time of [server] in ms; null when it was not
-  /// measured or did not answer (see [wasTried]).
-  int? timingOf(String server) => _timings[server];
-  bool wasTried(String server) => _tried.contains(server);
-  bool get isRanking => _ranking != null;
-
-  /// Servers to try, fastest first, re-measured every few hours.
-  Future<List<String>> servers() {
-    final ranked = _ranked;
-    if (ranked != null && ranked.isNotEmpty && DateTime.now().difference(_rankedAt) < const Duration(hours: 3)) return Future.value(ranked);
-    return _ranking ??= _rank().whenComplete(() => _ranking = null);
-  }
-
-  /// Measures every server again now.
-  Future<List<String>> remeasure() {
-    _ranked = null;
-    return servers();
-  }
-
-  /// Measures the servers already known at once. A list older than a day is
-  /// downloaded meanwhile, and servers new in it are measured when it comes
-  /// in, so a slow list does not hold up the first video. When no known
-  /// server answers, the new list is all there is, so it is waited for.
-  Future<List<String>> _rank() async {
-    await _loadCatalog();
-    final update = DateTime.now().difference(_catalogAt) > const Duration(days: 1) ? updateCatalog() : Future.value(catalog);
-    _timings.clear();
-    _tried.clear();
-    final before = catalog;
-    final others = update.then((all) => _measure(all.where((s) => !before.contains(s))));
-    await _measure(before);
-    if (_timings.isEmpty) {
-      await others;
-    } else {
-      unawaited(others.then((_) => _publish()));
-    }
-    return _publish();
-  }
-
-  /// Downloads [instanceLists] and keeps the servers they name; returns the
-  /// whole [catalog]. On failure the previous list stays.
-  Future<List<String>> updateCatalog() async {
-    await _loadCatalog();
+  @override
+  Future<Set<String>> downloadCatalog() async {
     final found = <String>{};
     await Future.wait(instanceLists.map((url) async {
       try {
-        final response = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+        final response = await client.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
         if (response.statusCode == 200) found.addAll(parsePipedInstanceList(utf8.decode(response.bodyBytes)));
       } catch (e) {
         logInfo('读取 Piped 服务器列表 $url 失败：$e');
       }
     }));
-    if (found.isNotEmpty) {
-      _catalog = found.toList();
-      _catalogAt = DateTime.now();
-      logInfo('Piped 服务器列表已更新，共 ${catalog.length} 个');
-      try {
-        await catalogFile?.parent.create(recursive: true);
-        await catalogFile?.writeAsString(jsonEncode({'updated': _catalogAt.toIso8601String(), 'servers': _catalog}));
-      } catch (e) {
-        logInfo('无法保存 Piped 服务器列表：$e');
-      }
-    }
-    return catalog;
-  }
-
-  Future<void> _loadCatalog() async {
-    if (_catalogLoaded) return;
-    _catalogLoaded = true;
-    final file = catalogFile;
-    if (file == null || !await file.exists()) return;
-    try {
-      final data = jsonDecode(await file.readAsString());
-      if (data is! Map) return;
-      _catalog = [
-        for (final s in data['servers'] is List ? data['servers'] as List : const [])
-          if (normalizePipedServer('$s') case final server?) server,
-      ];
-      _catalogAt = DateTime.tryParse('${data['updated']}') ?? DateTime(0);
-    } catch (_) {}
-  }
-
-  Future<void> _measure(Iterable<String> servers) => Future.wait(servers.map((server) async {
-        final watch = Stopwatch()..start();
-        try {
-          final response = await _client.get(Uri.parse('$server/healthcheck')).timeout(const Duration(seconds: 5));
-          if (response.statusCode == 200) _timings[server] = watch.elapsedMilliseconds;
-        } catch (_) {}
-        _tried.add(server);
-      }));
-
-  List<String> _publish() {
-    final ranked = _timings.keys.toList()..sort((a, b) => _timings[a]!.compareTo(_timings[b]!));
-    logInfo(ranked.isEmpty ? 'Piped 服务器都无法连接' : 'Piped 服务器（按速度）：${ranked.take(5).map((s) => '$s ${_timings[s]} ms').join('，')}');
-    _ranked = ranked;
-    _rankedAt = DateTime.now();
-    return ranked;
-  }
-
-  /// Moves [server] to the back after it failed, so the next video starts
-  /// with another.
-  void demote(String server) {
-    final ranked = _ranked;
-    if (ranked != null && ranked.remove(server)) ranked.add(server);
+    return found;
   }
 
   /// The streams of [videoId] from [server], or from the fastest servers
   /// in turn when [server] is null.
-  ///
-  /// After three videos in a row failed, Piped is skipped for ten minutes,
-  /// so a time when no server works does not delay every video.
-  Future<PipedVideo> fetch(String videoId, {String? server}) async {
-    if (DateTime.now().isBefore(_pausedUntil)) throw StateError(tr('Piped 最近连续失败，暂时不用'));
-    try {
-      final video = await _fetch(videoId, server);
-      _failures = 0;
-      return video;
-    } catch (_) {
-      if (++_failures >= 3) {
-        _failures = 0;
-        _pausedUntil = DateTime.now().add(const Duration(minutes: 10));
-      }
-      rethrow;
-    }
-  }
-
-  int _failures = 0;
-  DateTime _pausedUntil = DateTime(0);
+  Future<PipedVideo> fetch(String videoId, {String? server}) => guarded(() => _fetch(videoId, server));
 
   Future<PipedVideo> _fetch(String videoId, String? server) async {
     final order = server != null ? [server] : (await servers()).take(2).toList();
@@ -332,7 +226,7 @@ class PipedStreams {
     Object? lastError;
     for (final candidate in order) {
       try {
-        final response = await _client.get(Uri.parse('$candidate/streams/$videoId')).timeout(const Duration(seconds: 8));
+        final response = await client.get(Uri.parse('$candidate/streams/$videoId')).timeout(const Duration(seconds: 8));
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         if (response.statusCode != 200 || data is! Map<String, dynamic>) {
           throw StateError(data is Map && data['message'] != null ? '${data['message']}' : 'HTTP ${response.statusCode}');

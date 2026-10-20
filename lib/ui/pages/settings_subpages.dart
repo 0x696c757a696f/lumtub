@@ -154,14 +154,14 @@ Future<void> openBlockedGroups(BuildContext context, AppController controller) =
         SwitchListTile(
           secondary: const Icon(Icons.block_rounded),
           title: Text(tr('屏蔽争议宗教团体')),
-          subtitle: Text(tr('推荐、探索、相关视频、搜索和搜索建议里都不显示下列团体相关的视频和频道，包括有关它们的报道')),
+          subtitle: Text(tr('推荐、探索、相关视频和搜索里不显示下列团体自己的频道和视频；其他频道发的相关报道，以及搜索这些名字，都不受影响')),
           value: prefs.blockGroups,
           onChanged: (v) => save(prefs.copyWith(blockGroups: v)),
         ),
         _tip(context, tr('搜索时输入完全正确的频道名（区分大小写，多一个字或少一个字都不行），仍能找到这个频道和它的视频。关注的频道照常出现在订阅里。')),
         _header(context, tr('屏蔽哪些')),
         ..._groupTiles(context, controller, blockedGroups, media: false),
-        _tip(context, tr('点一个团体可以看它的完整名单，逐项取消。按名称匹配标题和频道名，名单只保存在本机。还想屏蔽别的，可以用 首页与搜索设置 › 标题关键词过滤，或 隐私设置 › 屏蔽频道。')),
+        _tip(context, tr('点一个团体可以看它的完整名单，逐项取消。只按频道名、@账号和频道 ID 匹配，不看标题和简介；名单只保存在本机。还想屏蔽别的，可以用 首页与搜索设置 › 标题关键词过滤，或 隐私设置 › 屏蔽频道。')),
       ];
     });
 
@@ -172,7 +172,7 @@ Future<void> openStateMedia(BuildContext context, AppController controller) => _
         SwitchListTile(
           secondary: const Icon(Icons.campaign_outlined),
           title: Text(tr('屏蔽官方宣传媒体')),
-          subtitle: Text(tr('推荐、探索、相关视频、搜索和搜索建议里都不显示下列政府宣传媒体的频道和视频')),
+          subtitle: Text(tr('推荐、探索、相关视频和搜索里不显示下列政府宣传媒体自己的频道和视频')),
           value: prefs.blockStateMedia,
           onChanged: (v) => save(prefs.copyWith(blockStateMedia: v)),
         ),
@@ -195,11 +195,10 @@ List<Widget> _groupTiles(BuildContext context, AppController controller, List<Bl
   final prefs = controller.preferences;
   final enabled = media ? prefs.blockStateMedia : prefs.blockGroups;
   final allowed = prefs.allowedEntries.toSet();
-  final kind = media ? BlockKind.channel : BlockKind.word;
   return [
     for (final group in groups)
       Builder(builder: (context) {
-        final entries = group.entries(kind);
+        final entries = group.entries();
         final off = entries.where((e) => allowed.contains(e.key)).length;
         return ListTile(
           dense: true,
@@ -232,7 +231,7 @@ List<Widget> _groupTiles(BuildContext context, AppController controller, List<Bl
 
 /// Everything [group] blocks, each tickable on its own.
 Future<void> _openGroupEntries(BuildContext context, AppController controller, BlockedGroup group, {required bool media}) {
-  final entries = group.entries(media ? BlockKind.channel : BlockKind.word);
+  final entries = group.entries();
   void setAll(bool on) {
     final keys = {for (final e in entries) e.key};
     final rest = controller.preferences.allowedEntries.where((k) => !keys.contains(k));

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../../blocked_groups.dart';
+import '../../feed_quality.dart';
 import '../../state_media.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
@@ -14,14 +15,14 @@ import '../../decoder_status.dart';
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
+import '../../translation.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
-import '../../windows_env.dart' show restartApp;
 import '../../windows_video_info.dart';
 import '../common.dart';
 import '../player_shortcuts.dart';
 import '../theme.dart';
 import 'account_settings.dart';
-import 'piped_servers_page.dart';
+import 'relay_servers_page.dart';
 import 'settings_subpages.dart';
 import '../../l10n/l10n.dart';
 
@@ -65,6 +66,7 @@ final _scaleModes = [('spline36', tr('Spline36（默认）')), ('bilinear', tr('
 final _cacheModes = [('auto', tr('自动（推荐）')), ('yes', tr('启用')), ('no', tr('禁用'))];
 final themeModes = [(ThemeMode.system, tr('跟随系统')), (ThemeMode.light, tr('浅色')), (ThemeMode.dark, tr('深色'))];
 final _durations = [(0, tr('不限')), (1, tr('1 分钟')), (3, tr('3 分钟')), (5, tr('5 分钟')), (10, tr('10 分钟')), (20, tr('20 分钟'))];
+final _feedLevels = [(FeedLevel.off, tr('不限')), (FeedLevel.reduce, tr('减少')), (FeedLevel.drop, tr('不推荐'))];
 final _feedIntervals = [(5, tr('5 分钟')), (10, tr('10 分钟')), (30, tr('30 分钟')), (60, tr('1 小时')), (180, tr('3 小时'))];
 final _hideTimes = [(2, tr('2 秒')), (3, tr('3 秒（默认）')), (5, tr('5 秒')), (10, tr('10 秒')), (30, tr('30 秒（便于屏幕阅读器）'))];
 final _volumeMaxes = [(100, tr('100%（不增强）')), (130, '130%'), (150, '150%'), (200, '200%')];
@@ -88,15 +90,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
   void savePrefs(AppPreferences next) => controller.savePreferences(next);
   void saveLooks(AppearanceSettings next) => controller.saveAppearance(next);
 
-  /// Saves the language and offers to restart, since text on screen keeps
-  /// the language YTPlus started in.
-  Future<void> changeLanguage(BuildContext context, AppearanceSettings next) async {
-    if (next.language == appearance.language) return;
-    await controller.saveAppearance(next);
-    if (!context.mounted || next.language.resolved == currentLanguage) return;
-    final restart = await confirmDialog(context, title: tr('重启后切换语言'), content: tr('YTPlus 重启后以新的语言显示。现在重启吗？'), confirm: tr('立即重启'));
-    if (restart) await restartApp();
-  }
   final hardware = settings.hwdec != 'no';
   return switch (category) {
     SettingsCategory.privacy => [
@@ -155,6 +148,24 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.homeShowRecommended,
               onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecommended: v)),
             )),
+        SettingEntry(tr('推荐中的 YouTube Music 非 MV 音乐'), (context) => NormalItem(
+              title: tr('推荐中的 YouTube Music 非 MV 音乐'),
+              subtitle: tr('当前：{0}；自动生成的 “- Topic” 曲目，官方 MV 不受影响', [labelOf(_feedLevels, prefs.feedMusicTracks)]),
+              leading: _icon(Icons.music_note_outlined),
+              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的 YouTube Music 非 MV 音乐'), value: prefs.feedMusicTracks, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedMusicTracks: v))),
+            ), subtitle: tr('Topic 音乐 非MV 减少 不推荐')),
+        SettingEntry(tr('推荐中的 Shorts 短视频'), (context) => NormalItem(
+              title: tr('推荐中的 Shorts 短视频'),
+              subtitle: tr('当前：{0}；只影响为你推荐，搜索和关注不受影响', [labelOf(_feedLevels, prefs.feedShorts)]),
+              leading: _icon(Icons.smartphone_rounded),
+              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的 Shorts 短视频'), value: prefs.feedShorts, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedShorts: v))),
+            ), subtitle: tr('短视频 减少 不推荐')),
+        SettingEntry(tr('推荐中的竖屏视频'), (context) => NormalItem(
+              title: tr('推荐中的竖屏视频'),
+              subtitle: tr('当前：{0}；只影响为你推荐，搜索和关注不受影响', [labelOf(_feedLevels, prefs.feedVertical)]),
+              leading: _icon(Icons.stay_current_portrait_rounded),
+              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的竖屏视频'), value: prefs.feedVertical, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedVertical: v))),
+            ), subtitle: tr('竖屏 减少 不推荐')),
         SettingEntry(tr('屏蔽争议宗教团体'), (context) => NormalItem(
               title: tr('屏蔽争议宗教团体'),
               subtitle: prefs.blockGroups
@@ -376,7 +387,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('亮度 对比度 饱和度 伽马 色调 音频延迟 audio-delay')),
         SettingEntry(tr('播放来源'), (context) => NormalItem(
               title: tr('播放来源'),
-              subtitle: tr('当前：{0}{1}。Piped 服务器替你从 YouTube 取视频，可避开限速，但它会知道你看了哪个视频；失败、直播或开着字幕时直接连接 YouTube', [settings.playbackSource.label, settings.playbackSource == PlaybackSource.pipedCustom ? ' ${settings.pipedServer}' : '']),
+              subtitle: tr('当前：{0}{1}。Piped、Invidious 服务器替你从 YouTube 取视频，可避开限速，但它们会知道你看了哪个视频；失败、直播或开着字幕时直接连接 YouTube；YouTube 返回 429 时会自动试用它们', [settings.playbackSource.label, switch (settings.playbackSource) { PlaybackSource.pipedCustom => ' ${settings.pipedServer}', PlaybackSource.invidiousCustom => ' ${settings.invidiousServer}', _ => '' }]),
               leading: _icon(Icons.dns_outlined),
               onTap: () => pickFromDialog<PlaybackSource>(
                 context,
@@ -384,17 +395,23 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 value: settings.playbackSource,
                 values: _enumValues(PlaybackSource.values, (s) => s.label),
                 onSelected: (source) async {
-                  if (source != PlaybackSource.pipedCustom) return save(settings.copyWith(playbackSource: source));
-                  if (context.mounted) await openPipedServers(context, controller);
+                  if (!source.isCustom) return save(settings.copyWith(playbackSource: source));
+                  if (context.mounted) await openRelayServers(context, controller, source.relay!);
                 },
               ),
-            ), subtitle: tr('Piped 服务器 限速 实例 instance')),
+            ), subtitle: tr('Piped Invidious 服务器 限速 实例 instance 429')),
         SettingEntry(tr('Piped 服务器'), (context) => NormalItem(
               title: tr('Piped 服务器'),
               subtitle: settings.playbackSource == PlaybackSource.pipedCustom ? tr('当前：{0}', [settings.pipedServer]) : tr('当前：自动选择最快的服务器。可测速、手动选择，列表每天自动更新'),
               leading: _icon(Icons.speed_rounded),
-              onTap: () => openPipedServers(context, controller),
+              onTap: () => openRelayServers(context, controller, RelayKind.piped),
             ), subtitle: tr('Piped 服务器 测速 列表 更新 instance')),
+        SettingEntry(tr('Invidious 实例'), (context) => NormalItem(
+              title: tr('Invidious 实例'),
+              subtitle: settings.playbackSource == PlaybackSource.invidiousCustom ? tr('当前：{0}', [settings.invidiousServer]) : tr('当前：自动选择最快的实例。可测速、手动选择，列表每天自动更新'),
+              leading: _icon(Icons.speed_rounded),
+              onTap: () => openRelayServers(context, controller, RelayKind.invidious),
+            ), subtitle: tr('Invidious 实例 测速 列表 更新 instance')),
         SettingEntry(tr('网络代理'), (context) {
           final proxy = controller.proxy;
           final now = proxy.url == null ? tr('当前直接连接') : tr('当前使用 {0}{1}', [proxy.url, proxy.isHttp ? '' : tr('（视频流不支持此类代理，视频流直接连接）')]);
@@ -589,13 +606,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             )),
       ],
     SettingsCategory.style => [
-        SettingEntry(tr('语言'), (context) => PopupItem<AppLanguage>(
-              title: tr('语言'),
-              leading: _icon(Icons.translate_rounded),
-              value: appearance.language,
-              values: [for (final l in AppLanguage.values) (l, l.label)],
-              onSelected: (language) => changeLanguage(context, appearance.copyWith(language: language)),
-            ), subtitle: 'Language 語言 English 简体中文 繁體中文'),
         SettingEntry(tr('主题模式'), (context) => PopupItem<ThemeMode>(
               title: tr('主题模式'),
               leading: _icon(Icons.brightness_6_outlined),
@@ -724,6 +734,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.expandDescription,
               onChanged: (v) => savePrefs(prefs.copyWith(expandDescription: v)),
             )),
+        SettingEntry(tr('翻译目标语言'), (context) => PopupItem<String>(
+              title: tr('翻译目标语言'),
+              leading: _icon(Icons.translate_rounded),
+              value: prefs.translateLanguage,
+              values: [for (final l in TranslationLanguage.all) (l.code, l.label)],
+              onSelected: (v) => savePrefs(prefs.copyWith(translateLanguage: v)),
+            ), subtitle: '翻译 字幕 双语 语言 translate Google'),
         SettingEntry(tr('自动检查组件更新'), (context) => SwitchItem(
               title: tr('自动检查组件更新'),
               subtitle: tr('每天检查一次 libmpv、yt-dlp 和 Deno'),
@@ -968,22 +985,27 @@ Future<void> _pickAudioFilter(BuildContext context, AppController controller) as
   if (text != null) await controller.saveSettings(controller.settings.copyWith(audioFilter: text.trim().replaceAll(RegExp(r'[\r\n]'), '')));
 }
 
-Future<void> editPipedServer(BuildContext context, AppController controller) async {
+Future<void> editRelayServer(BuildContext context, AppController controller, RelayKind kind) async {
+  final piped = kind == RelayKind.piped;
   final text = await showDialog<String>(
     context: context,
     builder: (context) => TextEditDialog(
-      title: tr('Piped 服务器'),
-      initialText: controller.settings.pipedServer,
-      hintText: tr('例如 https://pipedapi.kavin.rocks'),
+      title: piped ? tr('Piped 服务器') : tr('Invidious 实例'),
+      initialText: piped ? controller.settings.pipedServer : controller.settings.invidiousServer,
+      hintText: piped ? tr('例如 https://pipedapi.kavin.rocks') : tr('例如 https://yewtu.be'),
       helper: (text) {
         final colors = context.colors;
         final server = normalizePipedServer(text);
-        return Text(server == null ? tr('请填写 Piped 的 API 地址（https://…）') : tr('将使用 {0}', [server]), style: TextStyle(fontSize: 12, color: server == null ? colors.error : colors.outline));
+        return Text(server == null ? (piped ? tr('请填写 Piped 的 API 地址（https://…）') : tr('请填写 Invidious 实例的地址（https://…）')) : tr('将使用 {0}', [server]), style: TextStyle(fontSize: 12, color: server == null ? colors.error : colors.outline));
       },
     ),
   );
   final server = text == null ? null : normalizePipedServer(text);
-  if (server != null) await controller.saveSettings(controller.settings.copyWith(playbackSource: PlaybackSource.pipedCustom, pipedServer: server));
+  if (server == null) return;
+  final settings = controller.settings;
+  await controller.saveSettings(piped
+      ? settings.copyWith(playbackSource: PlaybackSource.pipedCustom, pipedServer: server)
+      : settings.copyWith(playbackSource: PlaybackSource.invidiousCustom, invidiousServer: server));
 }
 
 Future<void> _editProxy(BuildContext context, AppController controller) async {

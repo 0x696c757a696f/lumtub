@@ -13,6 +13,7 @@ import '../../video_repository.dart';
 import '../comments_view.dart';
 import '../common.dart';
 import '../theme.dart';
+import '../translatable.dart';
 import '../video_card.dart';
 import '../../l10n/l10n.dart';
 
@@ -155,6 +156,7 @@ class _ChannelPageState extends State<ChannelPage> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
               child: PostCard(
+                controller: controller,
                 post: posts[i],
                 channel: controller.channel!,
                 selected: shown?.id == posts[i].id,
@@ -223,7 +225,8 @@ class PostCommentsPanel extends StatelessWidget {
 
 /// One community post: text, images, an attached video or poll, likes.
 class PostCard extends StatelessWidget {
-  const PostCard({super.key, required this.post, required this.channel, required this.onPlay, this.onComments, this.selected = false});
+  const PostCard({super.key, required this.controller, required this.post, required this.channel, required this.onPlay, this.onComments, this.selected = false});
+  final AppController controller;
   final CommunityPost post;
   /// Whether its comments are open beside it.
   final bool selected;
@@ -248,7 +251,7 @@ class PostCard extends StatelessWidget {
         ]),
         if (post.text.isNotEmpty) ...[
           const SizedBox(height: 10),
-          SelectableText(post.text, style: const TextStyle(height: 1.5)),
+          Translatable(controller: controller, text: post.text, builder: (context, text) => SelectableText(text, style: const TextStyle(height: 1.5))),
         ],
         if (post.images.isNotEmpty) ...[
           const SizedBox(height: 10),

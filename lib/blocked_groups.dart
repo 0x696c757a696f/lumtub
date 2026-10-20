@@ -5,13 +5,14 @@ import 'models.dart';
 /// Names of groups the user does not want recommended: movements that
 /// governments or the mainstream churches have called heretical or
 /// destructive, with their founders, aliases and media, in simplified and
-/// traditional Chinese and English. A video whose title or channel names
-/// one is left out of the home feed, explore, related videos, search
-/// results and suggestions, reports about the group included, while
-/// AppPreferences.blockGroups is on. Only a search for a channel's exact
-/// name, letter case included, finds that channel.
+/// traditional Chinese and English. A video whose channel is one of them
+/// (by name, @handle or id) is left out of the home feed, explore, related
+/// videos and search results while AppPreferences.blockGroups is on. Titles
+/// and descriptions are never matched: other channels' reports about the
+/// group, and searches for its names, stay. Only a search for a channel's
+/// exact name, letter case included, finds that channel.
 const blockedGroups = <BlockedGroup>[
-  BlockedGroup('法轮功', ['法轮功', '法輪功', '法轮大法', '法輪大法', '李洪志', '明慧网', '明慧網', '神韵艺术团', '神韻藝術團', '大纪元', '大紀元', '新唐人', 'Falun Gong', 'Falun Dafa', 'Li Hongzhi', 'Minghui', 'Shen Yun', 'Epoch Times', 'NTD Television']),
+  BlockedGroup('法轮功', ['法轮功', '法輪功', '法轮大法', '法輪大法', '李洪志', '明慧网', '明慧網', '神韵艺术团', '神韻藝術團', '大纪元', '大紀元', 'The Epoch Times', '新唐人', 'Falun Gong', 'Falun Dafa', 'Li Hongzhi', 'Minghui', 'Shen Yun', 'Epoch Times', 'NTD Television']),
   // Matched by channel only (blocked_channels.dart): their names are
   // ordinary words that would hide unrelated videos if titles counted.
   BlockedGroup('法轮功相关自媒体', []),
@@ -62,11 +63,11 @@ class BlockedGroup {
   final bool onByDefault;
 
   /// Everything matched for this group, each of which can be unticked:
-  /// its [words] as [wordKind], then the channels of blocked_channels.dart.
-  List<BlockEntry> entries([BlockKind wordKind = BlockKind.word]) {
+  /// its [words] as channel names, then the channels of blocked_channels.dart.
+  List<BlockEntry> entries() {
     final channels = blockedChannels[name];
     return [
-      for (final word in words) BlockEntry(name, wordKind, [word]),
+      for (final word in words) BlockEntry(name, BlockKind.channel, [word]),
       for (final word in exact) BlockEntry(name, BlockKind.exact, [word]),
       if (channels != null) ...[
         for (final forms in channels.names) BlockEntry(name, BlockKind.channel, forms),
@@ -79,8 +80,6 @@ class BlockedGroup {
 
 /// How an entry of a block list is matched.
 enum BlockKind {
-  /// Anywhere in a title or channel name.
-  word('标题和频道名里的词'),
   /// A channel's name, or the start of it ("RT Documentary" for RT).
   channel('频道名'),
   /// A channel's whole name and nothing longer.
@@ -108,15 +107,13 @@ class BlockEntry {
 /// Tests videos and channels against block lists, leaving out the groups
 /// and entries the user unticked. Built once per preferences.
 class BlockMatcher {
-  BlockMatcher(List<BlockedGroup> groups, {Set<String> allowedGroups = const {}, Set<String> allowedEntries = const {}, BlockKind wordKind = BlockKind.word}) {
+  BlockMatcher(List<BlockedGroup> groups, {Set<String> allowedGroups = const {}, Set<String> allowedEntries = const {}}) {
     for (final group in groups) {
       if (allowedGroups.contains(group.name)) continue;
-      for (final entry in group.entries(wordKind)) {
+      for (final entry in group.entries()) {
         if (allowedEntries.contains(entry.key)) continue;
         final forms = [for (final form in entry.forms) entry.kind == BlockKind.id ? form : form.toLowerCase()];
         switch (entry.kind) {
-          case BlockKind.word:
-            _words.addAll(forms);
           case BlockKind.channel:
             _channels.addAll(forms);
           case BlockKind.exact:
@@ -130,20 +127,12 @@ class BlockMatcher {
     }
   }
 
-  final _words = <String>[];
   final _channels = <String>[];
   final _exact = <String>{};
   final _handles = <String>{};
   final _ids = <String>{};
 
-  bool get isEmpty => _words.isEmpty && _channels.isEmpty && _exact.isEmpty && _handles.isEmpty && _ids.isEmpty;
-
-  /// Whether [text] contains a word.
-  bool text(String text) {
-    if (_words.isEmpty) return false;
-    final lower = text.toLowerCase();
-    return _words.any(lower.contains);
-  }
+  bool get isEmpty => _channels.isEmpty && _exact.isEmpty && _handles.isEmpty && _ids.isEmpty;
 
   /// Whether a channel called [name], with [id] or [handle] if known, is
   /// listed.
@@ -169,14 +158,9 @@ bool channelNameStartsWith(String name, String word) {
 
 final _all = BlockMatcher(blockedGroups.where((g) => g.onByDefault).toList());
 
-/// Whether [text] names one of [blockedGroups], other than those the user
-/// [allowed] by name.
-bool textNamesBlockedGroup(String text, [Set<String>? allowed]) =>
-    (allowed == null ? _all : BlockMatcher(blockedGroups.where((g) => g.onByDefault).toList(), allowedGroups: allowed)).text(text);
-
-/// Whether [item]'s title or channel names one of [blockedGroups], or its
-/// channel is one of their channels.
-bool namesBlockedGroup(VideoItem item) => _all.text('${item.title}\n${item.channel}') || _all.channel(item.channel, id: item.channelId);
+/// Whether [item]'s channel is one of [blockedGroups]' channels. Its title
+/// and description do not count.
+bool namesBlockedGroup(VideoItem item) => _all.channel(item.channel, id: item.channelId);
 
 /// Whether [query] is [name] exactly, letter case included, apart from the
 /// spaces around it: one character more or less does not count.

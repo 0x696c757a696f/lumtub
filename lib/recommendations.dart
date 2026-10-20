@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'feed_quality.dart';
 import 'library_store.dart' show WatchProgress;
 import 'models.dart';
 
@@ -300,7 +301,8 @@ class NotInterested {
 /// near what was watched, from channels watched often, fresh and popular.
 /// Near the top no channel and no interest repeats much, and a little
 /// chance is mixed in so the feed does not narrow. [seed] changes the
-/// chance for 换一批.
+/// chance for 换一批. [mix] drops or ranks down the kinds of video the
+/// settings want less of.
 List<Recommendation> recommend(
   List<Candidate> candidates, {
   required TasteProfile taste,
@@ -310,6 +312,7 @@ List<Recommendation> recommend(
   int seed = 0,
   DateTime? now,
   RankWeights weights = const RankWeights(),
+  FeedMix mix = const FeedMix(),
 }) {
   final clock = now ?? DateTime.now();
   final random = Random(seed);
@@ -317,7 +320,9 @@ List<Recommendation> recommend(
   for (final candidate in candidates) {
     final item = candidate.item;
     if (exclude.contains(item.id) || (notInterested?.videos.contains(item.id) ?? false) || item.isUpcoming) continue;
-    var score = candidate.source.weight * candidate.seedWeight;
+    final penalty = mix.penaltyOf(item);
+    if (penalty == null) continue;
+    var score = candidate.source.weight * candidate.seedWeight - penalty;
     final affinity = taste.channelAffinity(item);
     score += weights.channel * affinity;
     if (!taste.channels.containsKey(TasteProfile.channelKey(item))) score += weights.novelty;

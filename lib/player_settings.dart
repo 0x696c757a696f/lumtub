@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'app_directories.dart';
 import 'decoder_status.dart';
@@ -61,8 +62,9 @@ enum SubtitleMode {
 }
 
 enum SubtitleLanguage {
-  /// The interface language's: simplified, traditional Chinese or English.
-  auto('跟随界面语言', '', ''),
+  /// Windows' language: simplified, traditional Chinese or English. Not the
+  /// interface's, which is English for now.
+  auto('跟随系统语言', '', ''),
   zh('简体中文优先', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng'),
   zhHant('繁體中文優先', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng'),
   en('英语优先', 'en.*', 'en,eng,en-US,en-GB'),
@@ -91,13 +93,17 @@ enum SubtitleLanguage {
   final String _mpvLangs;
   String get mpvLangs => tr(resolved._mpvLangs);
 
+  /// Windows' language; tests replace it.
+  static Locale Function() systemLocale = () => PlatformDispatcher.instance.locale;
+
   /// [auto] as the language it stands for.
   SubtitleLanguage get resolved => this != auto
       ? this
-      : switch (currentLanguage) {
-          AppLanguage.en => en,
-          AppLanguage.zhHant => zhHant,
-          _ => zh,
+      : switch (systemLocale()) {
+          Locale(languageCode: 'zh', scriptCode: 'Hant') => zhHant,
+          Locale(languageCode: 'zh', countryCode: 'TW' || 'HK' || 'MO') => zhHant,
+          Locale(languageCode: 'zh') => zh,
+          _ => en,
         };
 }
 
@@ -270,6 +276,8 @@ class PlayerSettings {
   final PlaybackSource playbackSource;
   /// The Piped API server for [PlaybackSource.pipedCustom].
   final String pipedServer;
+  /// The Invidious instance for [PlaybackSource.invidiousCustom].
+  final String invidiousServer;
   /// `--vd-lavc-dr`: auto, yes or no.
   final String directRendering;
   /// `--autosync`; 0 turns it off.
@@ -327,6 +335,7 @@ class PlayerSettings {
     this.proxyAddress = '',
     this.playbackSource = PlaybackSource.pipedAuto,
     this.pipedServer = '',
+    this.invidiousServer = '',
     this.directRendering = 'auto',
     this.autosync = 0,
     this.audioFilter = '',
@@ -381,6 +390,7 @@ class PlayerSettings {
     String? proxyAddress,
     PlaybackSource? playbackSource,
     String? pipedServer,
+    String? invidiousServer,
     String? directRendering,
     int? autosync,
     String? audioFilter,
@@ -428,6 +438,7 @@ class PlayerSettings {
         proxyAddress: proxyAddress ?? this.proxyAddress,
         playbackSource: playbackSource ?? this.playbackSource,
         pipedServer: pipedServer ?? this.pipedServer,
+        invidiousServer: invidiousServer ?? this.invidiousServer,
         directRendering: directRendering ?? this.directRendering,
         autosync: autosync ?? this.autosync,
         audioFilter: audioFilter ?? this.audioFilter,
@@ -477,6 +488,7 @@ class PlayerSettings {
         'proxyAddress': proxyAddress,
         'playbackSource': playbackSource.name,
         'pipedServer': pipedServer,
+        'invidiousServer': invidiousServer,
         'directRendering': directRendering,
         'autosync': autosync,
         'audioFilter': audioFilter,
@@ -590,6 +602,7 @@ class PlayerSettings {
       proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
       playbackSource: _enumByName(PlaybackSource.values, raw['playbackSource'], PlaybackSource.pipedAuto),
       pipedServer: normalizePipedServer(raw['pipedServer']?.toString() ?? '') ?? '',
+      invidiousServer: normalizePipedServer(raw['invidiousServer']?.toString() ?? '') ?? '',
       directRendering: choice('directRendering', {'auto', 'yes', 'no'}, 'auto'),
       autosync: number('autosync', 0, 0, 100),
       audioFilter: filter.length > 300 || filter.contains(RegExp(r'[\r\n]')) ? '' : filter,

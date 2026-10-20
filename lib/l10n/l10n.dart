@@ -1,4 +1,4 @@
-import 'dart:ui' show Locale, PlatformDispatcher;
+import 'dart:ui' show Locale;
 
 import 'strings_en.dart';
 import 'strings_zh_hant.dart';
@@ -17,20 +17,20 @@ enum AppLanguage {
   String get label => this == system ? tr(nativeName) : nativeName;
   final Locale? locale;
 
-  /// [system] as the language Windows uses: traditional Chinese for Taiwan,
-  /// Hong Kong and Macau, simplified for other Chinese, English otherwise.
-  AppLanguage get resolved {
-    if (this != system) return this;
-    final locale = PlatformDispatcher.instance.locale;
-    if (locale.languageCode != 'zh') return en;
-    final traditional = locale.scriptCode == 'Hant' || const {'TW', 'HK', 'MO'}.contains(locale.countryCode);
-    return traditional ? zhHant : zhHans;
-  }
+  /// [system] is English too: the interface is English for now, whatever
+  /// language Windows uses. The Chinese values are kept for the source
+  /// strings and tests, but nothing saved or chosen at run time reaches them.
+  AppLanguage get resolved => this == system ? en : this;
 
-  static AppLanguage parse(Object? raw) => values.where((l) => l.name == raw).firstOrNull ?? system;
+  /// What can be chosen in settings (nothing yet, since there is only one).
+  static const selectable = [en];
+
+  /// Any saved value, including Chinese ones from earlier versions, becomes
+  /// English.
+  static AppLanguage parse(Object? raw) => en;
 }
 
-AppLanguage _current = AppLanguage.zhHans;
+AppLanguage _current = AppLanguage.zhHans; // source language, until main() calls setLanguage
 Map<String, String> _strings = const {};
 
 /// The language the interface is shown in, chosen when YTPlus starts.

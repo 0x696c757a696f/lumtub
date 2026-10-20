@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../channel_avatars.dart';
 import '../channel_feed.dart';
 import '../library_store.dart';
 import '../models.dart';
@@ -12,10 +13,16 @@ import '../video_repository.dart';
 /// Favorites, playlists, followed channels, watch progress and the feed of
 /// followed channels. Everything stays on this computer.
 class LibraryController extends ChangeNotifier {
-  LibraryController(this.store, {http.Client? client}) : _feed = ChannelFeed(client ?? http.Client());
+  LibraryController(this.store, {http.Client? client}) : _client = client ?? http.Client();
+
+  final http.Client _client;
 
   final LibraryStore store;
-  final ChannelFeed _feed;
+  late final _feed = ChannelFeed(_client);
+  late final _avatars = ChannelAvatars(_client);
+  /// Channels whose picture was looked up this session, found or not.
+  final _avatarTried = <String>{};
+  bool _fillingAvatars = false;
   VideoRepository? repository;
 
   List<VideoItem> feed = const [];
@@ -190,30 +197,74 @@ class LibraryController extends ChangeNotifier {
     loadingFeed = true;
     notifyListeners();
     final failures = <String>[];
-    final results = await Future.wait(channels.map((channel) async {
+    // A few requests at a time: hundreds of imported subscriptions would
+    // otherwise open hundreds of connections at once and, where the feed
+    // fails, start as many yt-dlp processes.
+    final results = await mapLimited(channels, feedConcurrency, (channel) async {
       try {
         return await _feed.latest(channel);
       } catch (_) {
-        try {
-          final repository = this.repository;
-          if (repository == null) throw StateError('yt-dlp is not ready');
-          final listing = repository.channelVideos(channel);
-          try {
-            return (await listing.next(10).toList()).whereType<VideoItem>().toList();
-          } finally {
-            listing.close();
-          }
-        } catch (_) {
-          failures.add(channel.name.isEmpty ? channel.id : channel.name);
-          return const <VideoItem>[];
-        }
+        return null;
       }
-    }));
-    feed = mergeFeeds(results);
+    });
+    final missing = [for (final (i, list) in results.indexed) if (list == null) i];
+    // yt-dlp is the slow, heavy fallback: two at a time, for a few channels.
+    final fallback = await mapLimited(missing.take(maxFeedFallbacks).toList(), 2, (i) async {
+      try {
+        final repository = this.repository;
+        if (repository == null) throw StateError('yt-dlp is not ready');
+        final listing = repository.channelVideos(channels[i]);
+        try {
+          return (await listing.next(10).toList()).whereType<VideoItem>().toList();
+        } finally {
+          listing.close();
+        }
+      } catch (_) {
+        return null;
+      }
+    });
+    for (final (n, i) in missing.indexed) {
+      final list = n < fallback.length ? fallback[n] : null;
+      results[i] = list;
+      if (list == null) failures.add(channels[i].name.isEmpty ? channels[i].id : channels[i].name);
+    }
+    feed = mergeFeeds([for (final list in results) if (list != null) list]).take(maxFeedItems).toList();
     feedFailures = failures;
     loadingFeed = false;
     _feedLoadedAt = DateTime.now();
     notifyListeners();
+    unawaited(fillMissingAvatars());
+  }
+
+  /// Looks up the picture of each followed channel that has none, a few at a
+  /// time and once per session, and keeps what it finds with the channel.
+  Future<void> fillMissingAvatars({int concurrency = 3}) async {
+    if (_fillingAvatars) return;
+    _fillingAvatars = true;
+    try {
+      final queue = [for (final channel in store.channels) if (channel.avatar == null && _avatarTried.add(channel.id)) channel];
+      var found = false;
+      Future<void> worker() async {
+        while (queue.isNotEmpty) {
+          final channel = queue.removeLast();
+          try {
+            final avatar = await _avatars.fetch(channel);
+            final at = store.channels.indexOf(channel);
+            if (avatar != null && at >= 0 && store.channels[at].avatar == null) {
+              store.channels[at] = ChannelRef(channel.id, store.channels[at].name, avatar);
+              found = true;
+            }
+          } catch (_) {
+            // Offline or blocked: the letter avatar stays.
+          }
+        }
+      }
+
+      await Future.wait([for (var i = 0; i < concurrency; i++) worker()]);
+      if (found) _changed();
+    } finally {
+      _fillingAvatars = false;
+    }
   }
 
   /// [channel]'s newest videos from its feed, for recommendations.
@@ -221,6 +272,13 @@ class LibraryController extends ChangeNotifier {
 
   /// Newest first; videos without a date keep their channel's order after
   /// the dated ones.
+  /// Feed requests in flight at once.
+  static const feedConcurrency = 8;
+  /// Channels whose feed failed that yt-dlp is asked about, per refresh.
+  static const maxFeedFallbacks = 12;
+  /// The newest videos kept from all the feeds together.
+  static const maxFeedItems = 1500;
+
   static List<VideoItem> mergeFeeds(List<List<VideoItem>> perChannel) {
     final seen = <String>{};
     final all = [for (final list in perChannel) ...list].where((item) => seen.add(item.id)).toList();
@@ -233,4 +291,19 @@ class LibraryController extends ChangeNotifier {
     if (_saveTimer != null) unawaited(flush());
     super.dispose();
   }
+}
+
+/// [work] on each of [items], at most [limit] at a time, results in order.
+Future<List<R>> mapLimited<T, R>(List<T> items, int limit, Future<R> Function(T item) work) async {
+  final results = List<R?>.filled(items.length, null);
+  var next = 0;
+  Future<void> worker() async {
+    while (next < items.length) {
+      final i = next++;
+      results[i] = await work(items[i]);
+    }
+  }
+
+  await Future.wait([for (var i = 0; i < limit && i < items.length; i++) worker()]);
+  return results.cast<R>();
 }

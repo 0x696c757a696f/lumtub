@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/app_controller.dart';
+import 'package:ytplus/appearance_settings.dart';
 import 'package:ytplus/explore_topics.dart';
 import 'package:ytplus/faith_topics.dart';
 import 'package:ytplus/l10n/l10n.dart';
@@ -108,6 +109,16 @@ void main() {
     }
     await tester.tap(find.text(SettingsCategory.style.title).first);
     await tester.pump();
-    expect(find.text('Language'), findsOneWidget);
+    expect(find.text('Language'), findsNothing);
+  });
+
+  test('the interface is English whatever was saved or the system uses', () {
+    for (final saved in ['zhHans', 'zhHant', 'system', 'en', null, 'nonsense']) {
+      expect(AppLanguage.parse(saved), AppLanguage.en, reason: '$saved');
+    }
+    expect(AppLanguage.system.resolved, AppLanguage.en);
+    expect(AppLanguage.selectable, [AppLanguage.en]);
+    expect(const AppearanceSettings().language, AppLanguage.en);
+    expect(AppearanceSettings.fromJson({'language': 'zhHant'}).language, AppLanguage.en);
   });
 }

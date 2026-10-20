@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:ytplus/app/app_controller.dart';
 import 'package:ytplus/models.dart';
+import 'package:ytplus/ui/pip_view.dart';
 import 'package:ytplus/ui/player_controls.dart';
 import 'package:ytplus/ui/theme.dart';
 import 'package:ytplus/widgets/video_progress_bar.dart';
@@ -130,13 +131,27 @@ void main() {
     for (final tip in ['返回', '主页', '窗口置顶', '听视频（只放声音）', 'SponsorBlock 已关闭，点击开启', '画中画', '更多设置']) {
       expect(find.byTooltip(tip), findsOneWidget, reason: tip);
     }
-    // The small picture-in-picture window keeps only what fits.
-    controller.pip = true;
-    await pump(tester);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the picture-in-picture buttons play, seek and show the way back', (tester) async {
+    tester.view.physicalSize = const Size(498, 280);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(Colors.red, Brightness.light),
+      home: Scaffold(body: ColoredBox(color: Colors.black, child: PipControls(controller: controller, player: player))),
+    ));
+    await tester.pump();
+    expect(find.text('测试视频标题'), findsOneWidget);
     expect(find.byTooltip('退出画中画'), findsOneWidget);
     expect(find.byTooltip('主页'), findsNothing);
-    expect(find.text('1X'), findsNothing);
-    expect(find.byIcon(Icons.fullscreen_rounded), findsNothing);
+    await tester.tap(find.byTooltip('播放/暂停 (空格)'));
+    await tester.pump();
+    expect(player.state.playing, isTrue);
+    await tester.tap(find.byIcon(Icons.pause_circle_rounded));
+    await tester.pump();
+    expect(player.state.playing, isFalse);
     expect(tester.takeException(), isNull);
   });
 

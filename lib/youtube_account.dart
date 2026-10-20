@@ -141,8 +141,8 @@ class YouTubeAccountApi {
     final id = (snippet['resourceId'] as Map?)?['channelId']?.toString() ?? '';
     final thumbnails = snippet['thumbnails'];
     final picture = thumbnails is Map ? thumbnails['medium'] ?? thumbnails['default'] : null;
-    final avatar = picture is Map ? picture['url'] : null;
-    return ChannelRef.isValidId(id) ? ChannelRef(id, snippet['title']?.toString() ?? '', avatar is String && avatar.startsWith('https://') ? avatar : null) : null;
+    final avatar = ChannelRef.avatarUrl(picture is Map ? picture['url'] : null);
+    return ChannelRef.isValidId(id) ? ChannelRef(id, snippet['title']?.toString() ?? '', avatar) : null;
   }
 
   static RemotePlaylist? parsePlaylist(Map item) {

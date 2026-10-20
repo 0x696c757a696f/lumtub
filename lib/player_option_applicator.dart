@@ -25,6 +25,8 @@ class PlayerOptionApplicator {
       'video-sync': settings.videoSync.mpvValue,
       'sub-scale': settings.subtitleScale.toStringAsFixed(1),
       'sub-pos': settings.subtitlePosition.toString(),
+      // The secondary subtitle (libass) sits just above the main one.
+      'secondary-sub-pos': (settings.subtitlePosition - 8).clamp(0, 100).toString(),
       'sub-border-size': settings.subtitleBorder.toStringAsFixed(1),
       'sub-border-style': settings.subtitleBackground ? 'background-box' : 'outline-and-shadow',
       'sub-bold': settings.subtitleBold ? 'yes' : 'no',
@@ -42,6 +44,9 @@ class PlayerOptionApplicator {
       'network-timeout': '20',
       'cache-secs': settings.cacheSeconds.toString(),
       'demuxer-max-bytes': '${settings.cacheMemoryMb}MiB',
+      // What was played is kept for seeking back; mpv keeps 50 MiB, which
+      // goes on top of the forward cache above.
+      'demuxer-max-back-bytes': '${(settings.cacheMemoryMb ~/ 4).clamp(16, 50)}MiB',
       'volume-max': settings.volumeMax.toString(),
       'audio-device': settings.audioDevice,
       'loop-file': settings.playOrder == PlayOrder.singleCycle ? 'inf' : 'no',

@@ -5,8 +5,10 @@ import 'app_directories.dart';
 import 'blocked_groups.dart';
 import 'state_media.dart';
 import 'explore_filters.dart';
+import 'feed_quality.dart';
 import 'explore_topics.dart';
 import 'models.dart';
+import 'translation.dart';
 import 'l10n/l10n.dart';
 
 /// Pages the app can open on start, in navigation order.
@@ -40,6 +42,9 @@ class AppPreferences {
     this.homeShowContinue = true,
     this.homeShowRecent = true,
     this.homeShowRecommended = true,
+    this.feedMusicTracks = FeedLevel.reduce,
+    this.feedShorts = FeedLevel.reduce,
+    this.feedVertical = FeedLevel.reduce,
     this.syncFollowToYoutube = true,
     this.startPage = 'home',
     this.feedAutoRefresh = true,
@@ -57,6 +62,7 @@ class AppPreferences {
     this.showRelated = true,
     this.expandDescription = false,
     this.autoCheckUpdates = true,
+    this.translateLanguage = 'zh-CN',
   });
 
   final bool recordHistory;
@@ -104,6 +110,12 @@ class AppPreferences {
   final bool homeShowRecent;
   /// 为你推荐, worked out on this computer from the history.
   final bool homeShowRecommended;
+  /// How much 为你推荐 shows of YouTube Music's auto-generated tracks,
+  /// Shorts and vertical videos.
+  final FeedLevel feedMusicTracks;
+  final FeedLevel feedShorts;
+  final FeedLevel feedVertical;
+  FeedMix get feedMix => FeedMix(musicTracks: feedMusicTracks, shorts: feedShorts, vertical: feedVertical);
   /// 关注 also subscribes on YouTube when signed in.
   final bool syncFollowToYoutube;
   final String startPage;
@@ -123,6 +135,8 @@ class AppPreferences {
   final bool showRelated;
   final bool expandDescription;
   final bool autoCheckUpdates;
+  /// The language 翻译 and the translated subtitle turn text into (a TranslationLanguage code).
+  final String translateLanguage;
 
   bool isBlocked(String? channelId) => channelId != null && blockedChannels.any((c) => c.id == channelId);
 
@@ -130,9 +144,6 @@ class AppPreferences {
 
   /// Whether a channel called [name] was blocked by name.
   bool isBlockedName(String name) => blockedChannelNames.any((n) => n.trim().toLowerCase() == name.trim().toLowerCase());
-
-  /// Whether [text] names a group the user blocks.
-  bool blocksGroupIn(String text) => blockGroups && _matchers.groups.text(text);
 
   /// Whether a channel called [name], with [id] or [handle] if known, is
   /// one the user blocks by group or as state media.
@@ -145,15 +156,29 @@ class AppPreferences {
 
   ({BlockMatcher groups, BlockMatcher media}) get _matchers => _matcherCache[this] ??= (
         groups: BlockMatcher([for (final g in blockedGroups) if (groupOn(g)) g], allowedEntries: allowedEntries.toSet()),
-        media: BlockMatcher([for (final g in stateMedia) if (groupOn(g, media: true)) g], allowedEntries: allowedEntries.toSet(), wordKind: BlockKind.channel),
+        media: BlockMatcher([for (final g in stateMedia) if (groupOn(g, media: true)) g], allowedEntries: allowedEntries.toSet()),
       );
   static final _matcherCache = Expando<({BlockMatcher groups, BlockMatcher media})>();
 
   /// Whether a channel called [name] is state media the user blocks.
   bool blocksMediaChannel(String name) => blockStateMedia && _matchers.media.channel(name);
 
-  /// Whether [item]'s title or channel names a group the user blocks.
-  bool blocksGroup(VideoItem item) => blocksGroupIn('${item.title}\n${item.channel}') || blocksChannel(item.channel, id: item.channelId);
+  /// Whether [item] comes from a channel the user blocks as a group or state
+  /// media. Its title and description are never looked at. Remembered per
+  /// channel for these preferences: lists are filtered again on every
+  /// rebuild, and the block lists run to hundreds of names.
+  bool blocksGroup(VideoItem item) {
+    final memo = _blockMemo[this] ??= <String, bool>{};
+    if (memo.length > 20000) memo.clear();
+    return memo['${item.channelId}\n${item.channel}'] ??= blocksChannel(item.channel, id: item.channelId);
+  }
+
+  static final _blockMemo = Expando<Map<String, bool>>();
+
+  /// Whether a comment by [author] (a name or @handle) with channel [id] is
+  /// by a channel the user blocks. Its text is never looked at.
+  bool blocksCommenter(String author, String? id) =>
+      isBlocked(id) || isBlockedName(author) || blocksChannel(author, id: id, handle: author.startsWith('@') ? author : null);
 
   /// Whether [item] passes the privacy and content filters. [watched] says
   /// whether it was watched to the end.
@@ -194,6 +219,9 @@ class AppPreferences {
     bool? homeShowContinue,
     bool? homeShowRecent,
     bool? homeShowRecommended,
+    FeedLevel? feedMusicTracks,
+    FeedLevel? feedShorts,
+    FeedLevel? feedVertical,
     bool? syncFollowToYoutube,
     String? startPage,
     bool? feedAutoRefresh,
@@ -211,6 +239,7 @@ class AppPreferences {
     bool? showRelated,
     bool? expandDescription,
     bool? autoCheckUpdates,
+    String? translateLanguage,
   }) =>
       AppPreferences(
         recordHistory: recordHistory ?? this.recordHistory,
@@ -237,6 +266,9 @@ class AppPreferences {
         homeShowContinue: homeShowContinue ?? this.homeShowContinue,
         homeShowRecent: homeShowRecent ?? this.homeShowRecent,
         homeShowRecommended: homeShowRecommended ?? this.homeShowRecommended,
+        feedMusicTracks: feedMusicTracks ?? this.feedMusicTracks,
+        feedShorts: feedShorts ?? this.feedShorts,
+        feedVertical: feedVertical ?? this.feedVertical,
         syncFollowToYoutube: syncFollowToYoutube ?? this.syncFollowToYoutube,
         startPage: startPage ?? this.startPage,
         feedAutoRefresh: feedAutoRefresh ?? this.feedAutoRefresh,
@@ -254,6 +286,7 @@ class AppPreferences {
         showRelated: showRelated ?? this.showRelated,
         expandDescription: expandDescription ?? this.expandDescription,
         autoCheckUpdates: autoCheckUpdates ?? this.autoCheckUpdates,
+        translateLanguage: translateLanguage ?? this.translateLanguage,
       );
 
   Map<String, dynamic> toJson() => {
@@ -281,6 +314,9 @@ class AppPreferences {
         'homeShowContinue': homeShowContinue,
         'homeShowRecent': homeShowRecent,
         'homeShowRecommended': homeShowRecommended,
+        'feedMusicTracks': feedMusicTracks.name,
+        'feedShorts': feedShorts.name,
+        'feedVertical': feedVertical.name,
         'syncFollowToYoutube': syncFollowToYoutube,
         'startPage': startPage,
         'feedAutoRefresh': feedAutoRefresh,
@@ -298,6 +334,7 @@ class AppPreferences {
         'showRelated': showRelated,
         'expandDescription': expandDescription,
         'autoCheckUpdates': autoCheckUpdates,
+        'translateLanguage': translateLanguage,
       };
 
   factory AppPreferences.fromJson(Object? raw) {
@@ -359,6 +396,9 @@ class AppPreferences {
       homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
       homeShowRecent: flag('homeShowRecent', d.homeShowRecent),
       homeShowRecommended: flag('homeShowRecommended', d.homeShowRecommended),
+      feedMusicTracks: FeedLevel.parse(raw['feedMusicTracks'], d.feedMusicTracks),
+      feedShorts: FeedLevel.parse(raw['feedShorts'], d.feedShorts),
+      feedVertical: FeedLevel.parse(raw['feedVertical'], d.feedVertical),
       syncFollowToYoutube: flag('syncFollowToYoutube', d.syncFollowToYoutube),
       startPage: startPages.any((p) => p.$1 == start) ? start! : 'home',
       feedAutoRefresh: flag('feedAutoRefresh', d.feedAutoRefresh),
@@ -376,6 +416,7 @@ class AppPreferences {
       showRelated: flag('showRelated', d.showRelated),
       expandDescription: flag('expandDescription', d.expandDescription),
       autoCheckUpdates: flag('autoCheckUpdates', d.autoCheckUpdates),
+      translateLanguage: TranslationLanguage.byCode(raw['translateLanguage']).code,
     );
   }
 }

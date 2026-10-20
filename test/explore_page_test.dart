@@ -62,6 +62,35 @@ void main() {
     expect(uhd, [0x08, 3, 0x12, 4, 0x40, 1, 0x70, 1]);
   });
 
+  test('every zone splits into a similar number of sub-categories, without repeats', () {
+    // Video zones 8-14, live zones 6-10, 宗教与信仰 tabs 5-10 (Christianity
+    // is split by branch, one level further).
+    const ranges = {
+      ExploreSection.popular: (8, 14),
+      ExploreSection.live: (6, 10),
+      ExploreSection.faith: (5, 10),
+      ExploreSection.faithStudy: (6, 10),
+      ExploreSection.faithArts: (6, 10),
+      ExploreSection.faithLive: (5, 10),
+    };
+    for (final MapEntry(key: section, value: (min, max)) in ranges.entries) {
+      for (final topic in exploreTopicsOf(section)) {
+        if (topic.mix || topic.opens != null) {
+          expect(topic.subs, isEmpty, reason: topic.label);
+          continue;
+        }
+        expect(topic.subs.length, inInclusiveRange(min, max), reason: '${section.name} ${topic.label}');
+        expect(topic.subs.map((s) => s.label).toSet(), hasLength(topic.subs.length), reason: '${topic.label} labels');
+        expect(topic.subs.map((s) => s.query).toSet(), hasLength(topic.subs.length), reason: '${topic.label} queries');
+      }
+    }
+    // No two sub-categories of one half search for the same words.
+    for (final section in [ExploreSection.popular, ExploreSection.live]) {
+      final queries = [for (final t in exploreTopicsOf(section)) for (final s in t.subs) s.query];
+      expect(queries.toSet(), hasLength(queries.length), reason: section.name);
+    }
+  });
+
   test('宗教与信仰 has four tabs of zones, with Christianity split twice', () {
     expect(ExploreSection.faithTabs.map((s) => s.label), ['宗教传统', '宗教学术', '文化艺术', '宗教直播']);
     final christian = faithTraditionTopics.first;
@@ -153,7 +182,7 @@ void main() {
     controller.preferences = controller.preferences.copyWith(enabledGroups: ['美国政府国际广播']);
     expect(ids(controller.visible(items)), 'bd');
     // One entry can be unticked on its own.
-    final cgtn = stateMedia.first.entries(BlockKind.channel).firstWhere((e) => e.label == 'CGTN');
+    final cgtn = stateMedia.first.entries().firstWhere((e) => e.label == 'CGTN');
     controller.preferences = controller.preferences.copyWith(allowedEntries: [cgtn.key]);
     expect(ids(controller.visible(items)), 'abd');
     final restored = AppPreferences.fromJson(jsonDecode(jsonEncode(controller.preferences.toJson())));
@@ -170,7 +199,7 @@ void main() {
     expect(prefs.blocksChannel('', id: 'UCAk-SBMZp79a4k2CAqqoDLQ'), isTrue);
     expect(prefs.blocksChannel('China Uncensored'), isTrue);
     // A title naming a host is not enough; only his channel is.
-    expect(prefs.blocksGroupIn('采访文昭谈古论今'), isFalse);
+    expect(prefs.blocksGroup(VideoItem(id: 'x'.padRight(11, '0'), title: '采访文昭谈古论今', channel: 'BBC News 中文', url: '')), isFalse);
     expect(prefs.blocksChannel('石濤聚焦'), isTrue);
     expect(prefs.copyWith(allowedGroups: ['法轮功相关（待核实）']).blocksChannel('石涛聚焦'), isFalse);
     final wenzhao = blockedGroups.firstWhere((g) => g.name == '法轮功相关自媒体').entries().firstWhere((e) => e.label == '文昭谈古论今');
@@ -212,16 +241,23 @@ void main() {
     expect(const AppPreferences().blockGroups, isTrue);
   });
 
-  test('recommendations leave out groups the user blocked, by title or channel', () {
+  test('block lists hide the blocked channel only, never other channels\' videos naming it', () {
     VideoItem video(String title, [String channel = 'Some channel']) => VideoItem(id: 'x'.padRight(11, '0'), title: title, channel: channel, url: '');
-    expect(namesBlockedGroup(video('法輪大法好')), isTrue);
-    expect(namesBlockedGroup(video('Sermon', 'The Church of Almighty God')), isTrue);
-    expect(namesBlockedGroup(video('Inside SCIENTOLOGY')), isTrue);
-    expect(namesBlockedGroup(video('Heaven’s Gate: the cult')), isTrue);
-    expect(namesBlockedGroup(video('Shincheonji in Korea')), isTrue);
-    // Ordinary Christian words stay.
+    const prefs = AppPreferences();
+    // The blocked channel's own videos go; third-party reports stay.
+    expect(prefs.blocksGroup(video('今日时事', '江峰时刻')), isTrue);
+    expect(prefs.blocksGroup(video('江峰是谁？一个独立调查', 'BBC News 中文')), isFalse);
+    expect(prefs.blocksGroup(video('江峰 访谈 文昭谈古论今')), isFalse);
+    expect(prefs.blocksGroup(video('Sermon', 'Church of Almighty God')), isTrue);
+    expect(prefs.blocksGroup(video('Inside SCIENTOLOGY', 'Journalism Today')), isFalse);
+    expect(prefs.blocksGroup(video('Shincheonji in Korea', 'DW Documentary')), isFalse);
+    expect(prefs.blocksCommenter('江峰时刻', null), isTrue);
+    expect(prefs.blocksCommenter('@WenZhaoOfficial', null), isTrue);
+    expect(prefs.blocksCommenter('网友', null), isFalse);
+    expect(namesBlockedGroup(video('法輪大法好')), isFalse);
+    expect(namesBlockedGroup(video('Sermon', 'Shincheonji')), isTrue);
+    expect(namesBlockedGroup(video('Sermon', 'The Epoch Times')), isTrue);
     expect(namesBlockedGroup(video('Almighty God, we pray', 'EWTN')), isFalse);
-    expect(namesBlockedGroup(video('Jehovah Jireh worship')), isFalse);
     expect(namesBlockedGroup(video('天主教的七件圣事', '梵蒂冈新闻')), isFalse);
   });
 

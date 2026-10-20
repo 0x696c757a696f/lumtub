@@ -14,6 +14,8 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) => [
       ('← / →', '后退或前进 ${prefs.seekSeconds} 秒'),
       ('J / L', '后退或前进 ${prefs.longSeekSeconds} 秒'),
       ('↑ / ↓', '音量加减 ${prefs.volumeStep}%'),
+      ('Shift + < / >', '减速或加速播放'),
+      ('按住画面', '临时 2 倍速'),
       ('M', '静音'),
       ('F', '全屏'),
       ('Esc', '退出全屏'),
@@ -39,6 +41,15 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     unawaited(controller.changeVolume(delta).then((_) => onFeedback?.call(Icons.volume_up_rounded, '${player.state.volume.round()}%')));
   }
   void playOrPause() => unawaited(player.playOrPause());
+  // Steps through 倍速选项 like YouTube's Shift+< and Shift+>.
+  void stepSpeed(int direction) {
+    final speeds = [...controller.settings.speeds]..sort();
+    if (speeds.isEmpty) return;
+    final rate = player.state.rate;
+    final next = direction > 0 ? speeds.where((s) => s > rate + 0.001).firstOrNull ?? speeds.last : speeds.lastWhere((s) => s < rate - 0.001, orElse: () => speeds.first);
+    unawaited(player.setRate(next));
+    onFeedback?.call(direction > 0 ? Icons.fast_forward_rounded : Icons.slow_motion_video_rounded, '${_trim(next)}x');
+  }
   return {
     const SingleActivator(LogicalKeyboardKey.space): playOrPause,
     const SingleActivator(LogicalKeyboardKey.keyK): playOrPause,
@@ -65,8 +76,12 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     const SingleActivator(LogicalKeyboardKey.keyN, shift: true): () => unawaited(controller.playNext()),
     const SingleActivator(LogicalKeyboardKey.mediaTrackNext): () => unawaited(controller.playNext()),
     const SingleActivator(LogicalKeyboardKey.keyI): controller.toggleStats,
+    const SingleActivator(LogicalKeyboardKey.period, shift: true): () => stepSpeed(1),
+    const SingleActivator(LogicalKeyboardKey.comma, shift: true): () => stepSpeed(-1),
   };
 }
+
+String _trim(double speed) => speed == speed.roundToDouble() ? speed.toStringAsFixed(1) : speed.toString();
 
 Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => showDialog<void>(
       context: context,

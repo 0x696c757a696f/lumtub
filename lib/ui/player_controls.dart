@@ -12,6 +12,7 @@
 // mouse handling (hover to show, wheel for volume) is kept.
 
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -156,6 +157,24 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     });
   }
 
+  /// The rate before a long press sped playback up, while it is held.
+  double? _heldRate;
+
+  void _holdSpeed(bool hold) {
+    if (hold) {
+      if (_heldRate != null || !_player.state.playing) return;
+      final rate = _heldRate = _player.state.rate;
+      final fast = max(2.0, rate * 2).clamp(0.25, 4.0);
+      unawaited(_player.setRate(fast));
+      _showFeedback(Icons.fast_forward_rounded, '${_trimRate(fast)}x 倍速中');
+    } else if (_heldRate case final rate?) {
+      _heldRate = null;
+      unawaited(_player.setRate(rate));
+    }
+  }
+
+  static String _trimRate(double rate) => rate == rate.roundToDouble() ? rate.toStringAsFixed(0) : rate.toString();
+
   void _showFeedback(IconData icon, String text) {
     _feedbackTimer?.cancel();
     setState(() => _feedback = (icon, text));
@@ -215,6 +234,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                     _show();
                   },
                   onDoubleTap: () => unawaited(widget.state?.toggleFullscreen()),
+                  // Hold for 2x, as on YouTube and in PiliNara.
+                  onLongPressStart: (_) => _holdSpeed(true),
+                  onLongPressEnd: (_) => _holdSpeed(false),
+                  onLongPressCancel: () => _holdSpeed(false),
                 ),
                 _buffering(),
                 if (_feedback case (final icon, final text)) Center(child: IgnorePointer(child: _FeedbackBubble(icon: icon, text: text))),

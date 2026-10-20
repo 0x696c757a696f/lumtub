@@ -62,6 +62,35 @@ void main() {
     expect(uhd, [0x08, 3, 0x12, 4, 0x40, 1, 0x70, 1]);
   });
 
+  test('every zone splits into a similar number of sub-categories, without repeats', () {
+    // Video zones 8-14, live zones 6-10, 宗教与信仰 tabs 5-10 (Christianity
+    // is split by branch, one level further).
+    const ranges = {
+      ExploreSection.popular: (8, 14),
+      ExploreSection.live: (6, 10),
+      ExploreSection.faith: (5, 10),
+      ExploreSection.faithStudy: (6, 10),
+      ExploreSection.faithArts: (6, 10),
+      ExploreSection.faithLive: (5, 10),
+    };
+    for (final MapEntry(key: section, value: (min, max)) in ranges.entries) {
+      for (final topic in exploreTopicsOf(section)) {
+        if (topic.mix || topic.opens != null) {
+          expect(topic.subs, isEmpty, reason: topic.label);
+          continue;
+        }
+        expect(topic.subs.length, inInclusiveRange(min, max), reason: '${section.name} ${topic.label}');
+        expect(topic.subs.map((s) => s.label).toSet(), hasLength(topic.subs.length), reason: '${topic.label} labels');
+        expect(topic.subs.map((s) => s.query).toSet(), hasLength(topic.subs.length), reason: '${topic.label} queries');
+      }
+    }
+    // No two sub-categories of one half search for the same words.
+    for (final section in [ExploreSection.popular, ExploreSection.live]) {
+      final queries = [for (final t in exploreTopicsOf(section)) for (final s in t.subs) s.query];
+      expect(queries.toSet(), hasLength(queries.length), reason: section.name);
+    }
+  });
+
   test('宗教与信仰 has four tabs of zones, with Christianity split twice', () {
     expect(ExploreSection.faithTabs.map((s) => s.label), ['宗教传统', '宗教学术', '文化艺术', '宗教直播']);
     final christian = faithTraditionTopics.first;

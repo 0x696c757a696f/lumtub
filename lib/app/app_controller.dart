@@ -445,9 +445,15 @@ class AppController extends ChangeNotifier {
   SearchUploadDate explorePeriod = SearchUploadDate.month;
   SearchDuration exploreDuration = SearchDuration.any;
   SearchQuality exploreQuality = SearchQuality.any;
-  /// 宗教与信仰's 类型 and 视角 filters.
-  FaithFormat exploreFormat = FaithFormat.any;
-  FaithView exploreView = FaithView.any;
+  /// The 类型 and 视角 filters: 宗教与信仰's own lists there, general ones
+  /// elsewhere ([exploreFormats], [exploreViews]).
+  WordFilter exploreFormat = ContentFormat.any;
+  WordFilter exploreView = ContentView.any;
+
+  static List<WordFilter> formatsOf(ExploreSection section) => section.isFaith ? FaithFormat.values : ContentFormat.values;
+  static List<WordFilter> viewsOf(ExploreSection section) => section.isFaith ? FaithView.values : ContentView.values;
+  List<WordFilter> get exploreFormats => formatsOf(exploreSection);
+  List<WordFilter> get exploreViews => viewsOf(exploreSection);
   /// The chosen zone's videos.
   VideoListLoader? explore;
 
@@ -478,14 +484,12 @@ class AppController extends ChangeNotifier {
     return exploreLeaf > 0 && exploreLeaf <= subs.length ? subs[exploreLeaf - 1] : null;
   }
 
-  /// Whether 宗教与信仰's 类型 and 视角 filters apply.
-  bool get exploreFaithFilters => exploreSection.isFaith && !exploreSection.isLive;
-
   /// The words searched for: the narrowest sub-category's, or the whole
   /// zone's, with 宗教与信仰's filter words.
   String get exploreQuery => [
         (exploreLeafNow ?? exploreSubNow)?.query ?? exploreTopicNow.query,
-        if (exploreFaithFilters) ...[exploreFormat.words, exploreView.words],
+        exploreFormat.words,
+        exploreView.words,
       ].where((w) => w.isNotEmpty).join(' ');
 
   /// Adds a category of the user's own and shows it.
@@ -580,8 +584,8 @@ class AppController extends ChangeNotifier {
     SearchUploadDate? period,
     SearchDuration? duration,
     SearchQuality? quality,
-    FaithFormat? format,
-    FaithView? view,
+    WordFilter? format,
+    WordFilter? view,
     ExploreRegion? region,
     ExploreLanguage? language,
   }) {
@@ -614,8 +618,10 @@ class AppController extends ChangeNotifier {
     final nextPeriod = period ?? explorePeriod;
     final nextDuration = duration ?? exploreDuration;
     final nextQuality = quality ?? exploreQuality;
-    final nextFormat = format ?? exploreFormat;
-    final nextView = view ?? exploreView;
+    // A filter of the other kind's list starts over at 不限.
+    final formats = formatsOf(nextSection), views = viewsOf(nextSection);
+    final nextFormat = format ?? (formats.contains(exploreFormat) ? exploreFormat : formats.first);
+    final nextView = view ?? (views.contains(exploreView) ? exploreView : views.first);
     if (!newSection &&
         nextTopic == exploreTopic &&
         nextSub == exploreSub &&
@@ -708,7 +714,8 @@ class AppController extends ChangeNotifier {
         if (!topic.mix && topic.opens == null) topic.subs.isEmpty ? topic.query : (topic.subs.toList()..shuffle(random)).first.query,
     ]..shuffle(random);
     final picked = interests.take(2).toList();
-    return [...picked, ...zones.take(6 - picked.length)];
+    final filter = [exploreFormat.words, exploreView.words].where((w) => w.isNotEmpty).join(' ');
+    return [for (final query in [...picked, ...zones.take(6 - picked.length)]) filter.isEmpty ? query : '$query $filter'];
   }
 
   /// Shows 推荐 or the zone shown with other videos.

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../../app/app_controller.dart';
 import '../../explore_filters.dart';
 import '../../explore_topics.dart';
-import '../../faith_topics.dart';
 import '../common.dart';
 import '../../search_options.dart';
 import '../theme.dart';
@@ -162,26 +161,24 @@ class ExplorePage extends StatelessWidget {
                 changed: false,
                 onSelected: (v) => controller.setExplore(period: v),
               ),
-            if (controller.exploreFaithFilters) ...[
-              OptionChip(
-                icon: Icons.category_outlined,
-                value: controller.exploreFormat,
-                values: FaithFormat.values,
-                label: (v) => v == FaithFormat.any ? tr('类型') : v.label,
-                item: (v) => v.label,
-                changed: controller.exploreFormat != FaithFormat.any,
-                onSelected: (v) => controller.setExplore(format: v),
-              ),
-              OptionChip(
-                icon: Icons.visibility_outlined,
-                value: controller.exploreView,
-                values: FaithView.values,
-                label: (v) => v == FaithView.any ? tr('视角') : v.label,
-                item: (v) => v.label,
-                changed: controller.exploreView != FaithView.any,
-                onSelected: (v) => controller.setExplore(view: v),
-              ),
-            ],
+            OptionChip(
+              icon: Icons.category_outlined,
+              value: controller.exploreFormat,
+              values: controller.exploreFormats,
+              label: (v) => v == controller.exploreFormats.first ? tr('类型') : v.label,
+              item: (v) => v.label,
+              changed: controller.exploreFormat != controller.exploreFormats.first,
+              onSelected: (v) => controller.setExplore(format: v),
+            ),
+            OptionChip(
+              icon: Icons.visibility_outlined,
+              value: controller.exploreView,
+              values: controller.exploreViews,
+              label: (v) => v == controller.exploreViews.first ? tr('视角') : v.label,
+              item: (v) => v.label,
+              changed: controller.exploreView != controller.exploreViews.first,
+              onSelected: (v) => controller.setExplore(view: v),
+            ),
             if (!live && mode != ExploreMode.long)
               OptionChip(
                 icon: Icons.timer_outlined,

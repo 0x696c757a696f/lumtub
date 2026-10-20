@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' show Icons;
 
+import 'explore_filters.dart';
 import 'explore_topics.dart';
 import 'l10n/l10n.dart';
 import 'models.dart';
@@ -253,7 +254,7 @@ const faithLiveTopics = <ExploreTopic>[
 ];
 
 /// 宗教与信仰's 类型 filter: words added to the zone's search.
-enum FaithFormat {
+enum FaithFormat implements WordFilter {
   any('不限', ''),
   lecture('讲座', 'lecture 讲座'),
   documentary('纪录片', 'documentary 纪录片'),
@@ -265,14 +266,16 @@ enum FaithFormat {
 
   const FaithFormat(this._label, this.words);
   final String _label;
+  @override
   String get label => tr(_label);
+  @override
   final String words;
 }
 
 /// 宗教与信仰's 视角 filter: from inside a faith, from the study of it, from
 /// its critics or between faiths. Like [FaithFormat], words added to the
 /// search, so it leans the results rather than sorting them exactly.
-enum FaithView {
+enum FaithView implements WordFilter {
   any('不限', ''),
   inside('信仰内部视角', 'sermon testimony 信仰分享'),
   academic('学术中立研究', 'academic lecture university'),
@@ -281,7 +284,9 @@ enum FaithView {
 
   const FaithView(this._label, this.words);
   final String _label;
+  @override
   String get label => tr(_label);
+  @override
   final String words;
 }
 

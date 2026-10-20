@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/app_controller.dart';
 import 'package:ytplus/app_preferences.dart';
 import 'package:ytplus/blocked_groups.dart';
+import 'package:ytplus/explore_filters.dart';
 import 'package:ytplus/explore_topics.dart';
 import 'package:ytplus/faith_topics.dart';
 import 'package:ytplus/models.dart';
@@ -349,7 +350,12 @@ void main() {
     await tester.tap(find.text('宗教直播'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreMode, ExploreMode.liveViewers);
-    expect(find.text('类型'), findsNothing);
+    // The 类型 picked for videos applies to live streams too.
+    expect(controller.exploreFormat, FaithFormat.documentary);
+    await tester.tap(find.text('纪录片').first);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('不限').last);
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.text('即将开播'));
     await tester.pump();
     expect(controller.exploreMode, ExploreMode.liveUpcoming);
@@ -361,6 +367,28 @@ void main() {
     expect(controller.exploreSection, ExploreSection.popular);
     expect(controller.exploreMode, ExploreMode.popular);
     expect(controller.exploreTopicNow.label, '知识教育');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('every zone has 类型 and 视角, with lists of its own outside 宗教与信仰', (tester) async {
+    final controller = await _open(tester);
+    await tester.tap(find.text('知识教育'));
+    await tester.pump();
+    await tester.tap(find.text('类型'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('教程').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(controller.exploreQuery, endsWith('tutorial 教程'));
+    await tester.tap(find.text('视角'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('入门科普').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(controller.exploreQuery, endsWith('tutorial 教程 beginner explained 入门'));
+    // 直播 keeps them.
+    await tester.tap(find.text('直播').first);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(controller.exploreFormat, ContentFormat.tutorial);
+    expect(find.text('教程'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

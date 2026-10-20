@@ -1,5 +1,50 @@
 import 'l10n/l10n.dart';
 
+/// A 类型 or 视角 choice in explore: words added to the zone's search, so it
+/// leans the results rather than sorting them exactly.
+abstract interface class WordFilter {
+  String get label;
+  String get words;
+}
+
+/// 类型 for every zone but 宗教与信仰, whose own list fits it better.
+enum ContentFormat implements WordFilter {
+  any('不限', ''),
+  tutorial('教程', 'tutorial 教程'),
+  lecture('讲座课程', 'lecture course 课程'),
+  documentary('纪录片', 'documentary 纪录片'),
+  interview('访谈播客', 'interview podcast 访谈'),
+  review('评测', 'review 评测'),
+  analysis('解说分析', 'explained analysis 解析'),
+  news('新闻', 'news 新闻'),
+  vlog('Vlog', 'vlog'),
+  compilation('合集', 'compilation 合集');
+
+  const ContentFormat(this._label, this.words);
+  final String _label;
+  @override
+  String get label => tr(_label);
+  @override
+  final String words;
+}
+
+/// 视角 for every zone but 宗教与信仰.
+enum ContentView implements WordFilter {
+  any('不限', ''),
+  beginner('入门科普', 'beginner explained 入门'),
+  expert('专业深度', 'in-depth expert 深度'),
+  critical('批判讨论', 'critique criticism 批评'),
+  debate('对比辩论', 'debate versus 对比'),
+  experience('亲身体验', 'my experience 亲身经历');
+
+  const ContentView(this._label, this.words);
+  final String _label;
+  @override
+  String get label => tr(_label);
+  @override
+  final String words;
+}
+
 /// Where explore's videos are popular: YouTube's own country setting,
 /// `gl`, which it reads from the PREF cookie. [any] leaves it to YouTube,
 /// which goes by the connection's address.

@@ -399,21 +399,40 @@ class AppController extends ChangeNotifier {
   }
 
   /// Topics on the explore page: a label and the query searched for.
-  static const exploreTopics = [
-    ('音乐', '音乐'),
-    ('游戏', '游戏'),
-    ('科技', '科技 数码'),
-    ('新闻', '新闻'),
-    ('体育', '体育'),
-    ('动画', '动画'),
-    ('电影', '电影 预告片'),
-    ('美食', '美食'),
-    ('旅行', '旅行 vlog'),
-    ('知识', '科普'),
+  /// The explore page's topics: a label, the search behind it, and
+  /// YouTube's filter for it (null for [exploreFilter]).
+  static const exploreTopics = <(String, String, String?)>[
+    ('音乐', '音乐', null),
+    ('直播', '直播 live', liveFilter),
+    ('游戏', '游戏', null),
+    ('游戏直播', '游戏 直播', liveFilter),
+    ('科技', '科技 数码', null),
+    ('新闻', '新闻', null),
+    ('新闻直播', 'news live', liveFilter),
+    ('体育', '体育', null),
+    ('动画', '动画', null),
+    ('电影', '电影 预告片', null),
+    ('电视剧', '电视剧', null),
+    ('综艺', '综艺', null),
+    ('美食', '美食', null),
+    ('旅行', '旅行 vlog', null),
+    ('知识', '科普', null),
+    ('教育', '教程 学习', null),
+    ('编程', '编程', null),
+    ('汽车', '汽车 评测', null),
+    ('时尚美妆', '美妆 穿搭', null),
+    ('健身', '健身', null),
+    ('宠物', '宠物 猫 狗', null),
+    ('搞笑', '搞笑', null),
+    ('播客', '播客 podcast', null),
+    ('ASMR', 'ASMR', null),
   ];
 
   /// YouTube's filter for videos uploaded this month, most viewed first.
   static const exploreFilter = 'CAMSBAgEEAE%253D';
+
+  /// YouTube's filter for streams that are live now.
+  static const liveFilter = 'EgJAAQ%253D%253D';
 
   int exploreTopic = 0;
   /// The chosen topic's videos.
@@ -441,8 +460,8 @@ class AppController extends ChangeNotifier {
   void _loadExplore() {
     final repository = _repository;
     if (repository == null || explore != null) return;
-    final query = exploreTopics[exploreTopic].$2;
-    _update(() => explore = VideoListLoader(() => repository.search(query, sp: exploreFilter))
+    final (_, query, sp) = exploreTopics[exploreTopic];
+    _update(() => explore = VideoListLoader(() => repository.search(query, sp: sp ?? exploreFilter))
       ..addListener(notifyListeners)
       ..loadMore());
   }

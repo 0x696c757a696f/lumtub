@@ -190,11 +190,11 @@ class ExplorePage extends StatelessWidget {
         return false;
       },
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
-        const SliverToBoxAdapter(child: PageHeader('探索', subtitle: '各个分类本月观看最多的视频')),
+        SliverToBoxAdapter(child: PageHeader('探索', subtitle: AppController.exploreTopics[controller.exploreTopic].$3 == AppController.liveFilter ? '正在直播' : '各个分类本月观看最多的视频')),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
           child: Wrap(spacing: 8, runSpacing: 8, children: [
-            for (final (i, (label, _)) in AppController.exploreTopics.indexed)
+            for (final (i, (label, _, _)) in AppController.exploreTopics.indexed)
               ChoiceChip(label: Text(label), selected: controller.exploreTopic == i, onSelected: (_) => controller.setExploreTopic(i)),
           ]),
         )),

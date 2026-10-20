@@ -94,9 +94,24 @@ void main() {
       started = [];
       lastEnvironment = {};
     });
-    tearDown(() => dir.delete(recursive: true));
+    final managers = <DownloadManager>[];
+    tearDown(() async {
+      // Windows refuses to delete a folder while a list write is open.
+      for (final m in managers) {
+        await m.flush();
+      }
+      managers.clear();
+      for (var i = 0; ; i++) {
+        try {
+          return await dir.delete(recursive: true);
+        } on FileSystemException {
+          if (i == 20) rethrow;
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        }
+      }
+    });
 
-    DownloadManager manager({String? ffmpeg, List<SkipSegment> segments = const []}) => DownloadManager(
+    DownloadManager manager({String? ffmpeg, List<SkipSegment> segments = const []}) => _track(managers, DownloadManager(
           file: File('${dir.path}/downloads.json'),
           ytDlpPath: 'yt-dlp',
           defaultDirectory: '${dir.path}/videos',
@@ -110,7 +125,7 @@ void main() {
           ffmpegDirectory: () => ffmpeg,
           options: () => const DownloadOptions(proxy: 'http://127.0.0.1:7890', deno: 'deno.exe', subtitleLanguages: '(zh|en).*', autoSubtitles: true),
           sponsorSegments: (id) async => segments,
-        );
+        ));
 
     Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 80));
 
@@ -298,3 +313,5 @@ void main() {
     expect(DownloadManager.defaultDirectoryFor({}, 'F'), 'F');
   });
 }
+
+T _track<T>(List<T> list, T item) => (list..add(item)).last;

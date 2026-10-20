@@ -211,11 +211,11 @@ class AppController extends ChangeNotifier {
   /// exactly.
   List<ChannelResult> get channelResults => [
         for (final c in searchResults?.channels ?? const <ChannelResult>[])
-          if (!preferences.isBlocked(c.ref.id) && !preferences.isBlockedName(c.ref.name) && (!preferences.blocksGroupIn('${c.ref.name}\n${c.handle ?? ''}') || isExactName(c.ref.name, _query) || isExactName(c.handle ?? '', _query))) c,
+          if (!preferences.isBlocked(c.ref.id) && !preferences.isBlockedName(c.ref.name) && (!(preferences.blocksGroupIn('${c.ref.name}\n${c.handle ?? ''}') || preferences.blocksMediaChannel(c.ref.name)) || isExactName(c.ref.name, _query) || isExactName(c.handle ?? '', _query))) c,
       ];
   List<PlaylistResult> get playlistResults => [
         for (final p in searchResults?.playlists ?? const <PlaylistResult>[])
-          if (!preferences.isBlockedName(p.channel) && (!preferences.blocksGroupIn('${p.title}\n${p.channel}') || isExactName(p.channel, _query))) p,
+          if (!preferences.isBlockedName(p.channel) && (!(preferences.blocksGroupIn('${p.title}\n${p.channel}') || preferences.blocksMediaChannel(p.channel)) || isExactName(p.channel, _query))) p,
       ];
   bool get searching => searchResults?.loading ?? false;
   String? get searchError => searchResults?.error;

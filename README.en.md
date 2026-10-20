@@ -18,7 +18,7 @@ YTPlus is a lightweight YouTube client for Windows, built with Flutter, [media_k
 - libmpv playback with hardware decoding, video and audio quality, speed, subtitles (including automatic and translated captions), chapters, fullscreen and keyboard shortcuts.
 - Streams come through Piped by default (the fastest public server is picked automatically), falling back to YouTube directly.
 - Optional SponsorBlock, off by default.
-- Comments, related videos and descriptions.
+- Comments, related videos and descriptions. On wide windows comments and Up next share tabs to the right of the player.
 
 **Google account (optional)**
 - Sync subscriptions and playlists, like or dislike videos, post comments and replies, save to YouTube playlists, and subscribe on YouTube when following a channel.
@@ -32,6 +32,7 @@ YTPlus is a lightweight YouTube client for Windows, built with Flutter, [media_k
 
 **Blocking**
 - Block controversial religious groups (on by default, each can be unticked): videos and channels about Falun Gong, the Church of Almighty God, Shincheonji, the Unification Church, Scientology and others stay out of recommendations, Explore, related videos, search and suggestions. Only a search for a channel's exact name, letter case included, finds that channel.
+- Block state propaganda media (off by default, by country): channels such as CGTN, CCTV, Xinhua, RT, Press TV and North Korean state media. Only the channel name counts, so other channels' reports still show; editorially independent public broadcasters like the BBC, NHK and PBS are not included.
 - Block a channel, or stop recommending one: add it in settings by link or full name, or from the menu on a video card, channel page or the watch page. Channels not recommended still show in searches and follows.
 
 ## Privacy

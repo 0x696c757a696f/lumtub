@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'app_directories.dart';
 import 'blocked_groups.dart';
+import 'state_media.dart';
 import 'explore_topics.dart';
 import 'models.dart';
 import 'l10n/l10n.dart';
@@ -27,6 +28,8 @@ class AppPreferences {
     this.hideWatched = false,
     this.blockGroups = true,
     this.allowedGroups = const [],
+    this.blockStateMedia = false,
+    this.allowedMedia = stateMediaOffByDefault,
     this.blockedChannelNames = const [],
     this.filterSubscriptions = true,
     this.homeShowContinue = true,
@@ -75,6 +78,11 @@ class AppPreferences {
   final bool blockGroups;
   /// [BlockedGroup.name]s the user unticked, so they show.
   final List<String> allowedGroups;
+  /// Hides the propaganda channels in state_media.dart the same way, off by
+  /// default.
+  final bool blockStateMedia;
+  /// state_media.dart group names the user unticked.
+  final List<String> allowedMedia;
   /// Channels the user typed in by name; a video whose channel is called
   /// exactly this, apart from letter case, is hidden like a blocked one.
   final List<String> blockedChannelNames;
@@ -114,8 +122,11 @@ class AppPreferences {
   /// Whether [text] names a group the user blocks.
   bool blocksGroupIn(String text) => blockGroups && textNamesBlockedGroup(text, allowedGroups.toSet());
 
+  /// Whether a channel called [name] is state media the user blocks.
+  bool blocksMediaChannel(String name) => blockStateMedia && isStateMediaChannel(name, allowedMedia.toSet());
+
   /// Whether [item]'s title or channel names a group the user blocks.
-  bool blocksGroup(VideoItem item) => blocksGroupIn('${item.title}\n${item.channel}');
+  bool blocksGroup(VideoItem item) => blocksGroupIn('${item.title}\n${item.channel}') || blocksMediaChannel(item.channel);
 
   /// Whether [item] passes the privacy and content filters. [watched] says
   /// whether it was watched to the end.
@@ -145,6 +156,8 @@ class AppPreferences {
     bool? hideWatched,
     bool? blockGroups,
     List<String>? allowedGroups,
+    bool? blockStateMedia,
+    List<String>? allowedMedia,
     List<String>? blockedChannelNames,
     bool? filterSubscriptions,
     bool? homeShowContinue,
@@ -182,6 +195,8 @@ class AppPreferences {
         hideWatched: hideWatched ?? this.hideWatched,
         blockGroups: blockGroups ?? this.blockGroups,
         allowedGroups: allowedGroups ?? this.allowedGroups,
+        blockStateMedia: blockStateMedia ?? this.blockStateMedia,
+        allowedMedia: allowedMedia ?? this.allowedMedia,
         blockedChannelNames: blockedChannelNames ?? this.blockedChannelNames,
         filterSubscriptions: filterSubscriptions ?? this.filterSubscriptions,
         homeShowContinue: homeShowContinue ?? this.homeShowContinue,
@@ -220,6 +235,8 @@ class AppPreferences {
         'hideWatched': hideWatched,
         'blockGroups': blockGroups,
         'allowedGroups': allowedGroups,
+        'blockStateMedia': blockStateMedia,
+        'allowedMedia': allowedMedia,
         'blockedChannelNames': blockedChannelNames,
         'filterSubscriptions': filterSubscriptions,
         'homeShowContinue': homeShowContinue,
@@ -263,9 +280,9 @@ class AppPreferences {
       }
       return channels;
     }
-    List<String> strings(String key) => raw[key] is List
+    List<String> strings(String key, [List<String> fallback = const []]) => raw[key] is List
         ? (raw[key] as List).map((k) => k.toString().trim()).where((k) => k.isNotEmpty).toSet().toList()
-        : const <String>[];
+        : fallback;
     final topics = raw['exploreCustomTopics'] is List
         ? (raw['exploreCustomTopics'] as List).map(CustomTopic.fromJson).whereType<CustomTopic>().toList()
         : const <CustomTopic>[];
@@ -285,6 +302,7 @@ class AppPreferences {
       blockedKeywords: strings('blockedKeywords'),
       unrecommendedChannels: channelList('unrecommendedChannels'),
       allowedGroups: strings('allowedGroups'),
+      allowedMedia: strings('allowedMedia', d.allowedMedia),
       blockedChannelNames: strings('blockedChannelNames'),
       exploreCustomTopics: topics,
       exploreOrder: keyLists('exploreOrder'),
@@ -293,6 +311,7 @@ class AppPreferences {
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
       blockGroups: flag('blockGroups', d.blockGroups),
+      blockStateMedia: flag('blockStateMedia', d.blockStateMedia),
       filterSubscriptions: flag('filterSubscriptions', d.filterSubscriptions),
       homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
       homeShowRecent: flag('homeShowRecent', d.homeShowRecent),

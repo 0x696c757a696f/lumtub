@@ -18,6 +18,7 @@ import '../../app/app_controller.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
 import '../../blocked_groups.dart';
+import '../../state_media.dart';
 import '../../appearance_settings.dart';
 import '../../player_settings.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
@@ -170,6 +171,33 @@ Future<void> openBlockedGroups(BuildContext context, AppController controller) =
             onChanged: (on) => save(prefs.copyWith(allowedGroups: on == true ? (allowed..remove(group.name)).toList() : [...allowed, group.name])),
           ),
         _tip(context, tr('按名称匹配标题和频道名，名单只保存在本机。还想屏蔽别的，可以用 首页与搜索设置 › 标题关键词过滤，或 隐私设置 › 屏蔽频道。')),
+      ];
+    });
+
+Future<void> openStateMedia(BuildContext context, AppController controller) => _push(context, controller, tr('屏蔽官方宣传媒体'), (context) {
+      final prefs = controller.preferences;
+      void save(AppPreferences next) => controller.savePreferences(next);
+      final allowed = prefs.allowedMedia.toSet();
+      return [
+        SwitchListTile(
+          secondary: const Icon(Icons.campaign_outlined),
+          title: Text(tr('屏蔽官方宣传媒体')),
+          subtitle: Text(tr('推荐、探索、相关视频、搜索和搜索建议里都不显示下列政府宣传媒体的频道和视频')),
+          value: prefs.blockStateMedia,
+          onChanged: (v) => save(prefs.copyWith(blockStateMedia: v)),
+        ),
+        _tip(context, tr('只按频道名判断，别的频道转载或报道它们的视频照常显示。BBC、NHK、PBS 这类编辑独立的公共媒体不在其中。搜索完全正确的频道名（区分大小写）仍能找到。')),
+        _header(context, tr('屏蔽哪些')),
+        for (final group in stateMedia)
+          CheckboxListTile(
+            dense: true,
+            enabled: prefs.blockStateMedia,
+            title: Text(group.label),
+            subtitle: Text(group.words.take(6).join('、'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 12)),
+            value: !allowed.contains(group.name),
+            onChanged: (on) => save(prefs.copyWith(allowedMedia: on == true ? (allowed..remove(group.name)).toList() : [...allowed, group.name])),
+          ),
+        _tip(context, tr('名单只保存在本机。漏掉的频道可以在 隐私设置 › 屏蔽频道 里自己加。')),
       ];
     });
 

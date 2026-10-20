@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../../blocked_groups.dart';
+import '../../state_media.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
 import '../../appearance_settings.dart';
@@ -162,6 +163,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(Icons.block_rounded),
               onTap: () => openBlockedGroups(context, controller),
             ), subtitle: tr('法轮功 全能神 新天地 统一教 邪教 异端')),
+        SettingEntry(tr('屏蔽官方宣传媒体'), (context) => NormalItem(
+              title: tr('屏蔽官方宣传媒体'),
+              subtitle: prefs.blockStateMedia
+                  ? tr('已开启，屏蔽 {0} 类媒体', [stateMedia.where((g) => !prefs.allowedMedia.contains(g.name)).length])
+                  : tr('已关闭'),
+              leading: _icon(Icons.campaign_outlined),
+              onTap: () => openStateMedia(context, controller),
+            ), subtitle: tr('CGTN 央视 RT 政府 宣传 官方媒体')),
         SettingEntry(tr('清空不感兴趣'), (context) => NormalItem(
               title: tr('清空“不感兴趣”记录'),
               subtitle: tr('{0} 个视频', [controller.homeFeed?.notInterested.videos.length ?? 0]),

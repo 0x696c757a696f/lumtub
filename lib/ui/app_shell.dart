@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
-import '../blocked_groups.dart';
 import '../appearance_settings.dart';
 import 'common.dart';
 import 'pages/account_settings.dart';
@@ -347,7 +346,7 @@ class _SearchFieldState extends State<_SearchField> {
     return [
       for (final q in recent) _SearchOption(q, recent: true),
       for (final q in suggested)
-        if (!recent.contains(q) && !(widget.app.preferences.blockGroups && textNamesBlockedGroup(q))) _SearchOption(q),
+        if (!recent.contains(q) && !widget.app.preferences.blocksGroupIn(q)) _SearchOption(q),
     ].take(12);
   }
 

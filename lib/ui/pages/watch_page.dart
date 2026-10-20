@@ -20,8 +20,9 @@ import '../video_card.dart';
 import 'channel_page.dart';
 import '../../l10n/l10n.dart';
 
-/// Player, video details and the up-next list. Side by side on wide windows,
-/// stacked on narrow ones.
+/// Player, video details, the up-next list and the comments. On wide
+/// windows the list and the comments share a side panel, as PiliNara's
+/// 简介/评论 tabs; on narrow ones everything is stacked.
 class WatchPage extends StatefulWidget {
   const WatchPage({super.key, required this.controller});
   final AppController controller;
@@ -31,7 +32,7 @@ class WatchPage extends StatefulWidget {
 }
 
 class _WatchPageState extends State<WatchPage> {
-  static const _sidePanelWidth = 380.0;
+  static const _sidePanelWidth = 400.0;
   final _video = GlobalKey<VideoState>();
   String? _fullscreenFor;
 
@@ -70,6 +71,10 @@ class _WatchPageState extends State<WatchPage> {
           final mainWidth = wide ? constraints.maxWidth - _sidePanelWidth - AppStyle.pagePadding * 3 : constraints.maxWidth - AppStyle.pagePadding * 2;
           // Keep the whole player visible: never taller than the window allows.
           final playerWidth = min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
+          final item = controller.playing;
+          final comments = item == null
+              ? null
+              : CommentsSection(key: ValueKey('comments:${item.id}'), controller: controller, videoId: item.id, onSeek: (position) => controller.player?.seek(position));
           final main = <Widget>[
             _BackRow(onBack: controller.goBack),
             Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
@@ -81,9 +86,10 @@ class _WatchPageState extends State<WatchPage> {
             ],
             const SizedBox(height: 16),
             _Details(controller: controller),
-            if (controller.playing case final item?) ...[
+            // Wide windows show the comments in the side panel instead.
+            if (!wide && comments != null) ...[
               const SizedBox(height: 24),
-              CommentsSection(key: ValueKey('comments:${item.id}'), controller: controller, videoId: item.id, onSeek: (position) => controller.player?.seek(position)),
+              comments,
             ],
           ];
           if (!wide) {
@@ -96,8 +102,8 @@ class _WatchPageState extends State<WatchPage> {
           return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: main)),
             SizedBox(width: _sidePanelWidth, child: Padding(
-              padding: const EdgeInsets.only(right: AppStyle.pagePadding, top: 48),
-              child: _UpNext(controller: controller),
+              padding: const EdgeInsets.only(right: AppStyle.pagePadding, top: 8),
+              child: _SidePanel(controller: controller, comments: comments),
             )),
           ]);
         }),
@@ -316,6 +322,55 @@ class _DescriptionState extends State<_Description> {
         ),
       ),
     );
+  }
+}
+
+/// 接下来播放 and 评论 as tabs beside the player. The comments load when
+/// their tab is first opened and stay loaded while the video plays.
+class _SidePanel extends StatelessWidget {
+  const _SidePanel({required this.controller, required this.comments});
+  final AppController controller;
+  final Widget? comments;
+
+  @override
+  Widget build(BuildContext context) => DefaultTabController(
+        length: 2,
+        child: Column(children: [
+          TabBar(
+            dividerColor: Colors.transparent,
+            tabs: [Tab(height: 40, text: tr('接下来播放')), Tab(height: 40, text: tr('评论'))],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: TabBarView(children: [
+              _UpNext(controller: controller),
+              _KeepAlive(
+                child: comments == null
+                    ? const SizedBox.shrink()
+                    : ListView(padding: const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding), children: [comments!]),
+              ),
+            ]),
+          ),
+        ]),
+      );
+}
+
+class _KeepAlive extends StatefulWidget {
+  const _KeepAlive({required this.child});
+  final Widget child;
+
+  @override
+  State<_KeepAlive> createState() => _KeepAliveState();
+}
+
+class _KeepAliveState extends State<_KeepAlive> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }
 

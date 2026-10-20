@@ -10,6 +10,7 @@ import 'package:ytplus/faith_topics.dart';
 import 'package:ytplus/models.dart';
 import 'package:ytplus/recommendations.dart';
 import 'package:ytplus/search_options.dart';
+import 'package:ytplus/state_media.dart';
 import 'package:ytplus/ui/pages/explore_page.dart';
 
 Future<AppController> _open(WidgetTester tester) async {
@@ -123,6 +124,34 @@ void main() {
     controller.preferences = controller.preferences.copyWith(allowedGroups: [], blockGroups: false);
     expect(ids(controller.visible(items)), 'abc');
     expect(isExactName('大紀元時報', '大紀元'), isFalse);
+  });
+
+  test('propaganda media are matched by channel name, and blocked only when turned on', () {
+    expect(isStateMediaChannel('CGTN'), isTrue);
+    expect(isStateMediaChannel('CGTN Français'), isTrue);
+    expect(isStateMediaChannel('RT Documentary'), isTrue);
+    expect(isStateMediaChannel('RTL'), isFalse);
+    expect(isStateMediaChannel('央视新闻'), isTrue);
+    expect(isStateMediaChannel('BBC News'), isFalse);
+    expect(isStateMediaChannel('NHK WORLD-JAPAN'), isFalse);
+    expect(isStateMediaChannel('Rick Talks CGTN'), isFalse);
+    expect(isStateMediaChannel('VOA News', {'美国政府国际广播'}), isFalse);
+    VideoItem video(String id, String channel) => VideoItem(id: id.padRight(11, '0'), title: 'News', channel: channel, url: '');
+    final items = [video('a', 'CGTN'), video('b', 'BBC News'), video('c', 'VOA Chinese'), video('d', 'Some Vlog')];
+    final controller = AppController();
+    String ids(List<VideoItem> list) => list.map((v) => v.id[0]).join();
+    expect(ids(controller.visible(items)), 'abcd');
+    controller.preferences = controller.preferences.copyWith(blockStateMedia: true);
+    // 美国政府国际广播 starts unticked.
+    expect(ids(controller.visible(items)), 'bcd');
+    controller.debugQuery = 'CGTN';
+    expect(ids(controller.visible(items, search: true)), 'abcd');
+    controller.preferences = controller.preferences.copyWith(allowedMedia: []);
+    expect(ids(controller.visible(items)), 'bd');
+    final restored = AppPreferences.fromJson(jsonDecode(jsonEncode(controller.preferences.toJson())));
+    expect(restored.blockStateMedia, isTrue);
+    expect(restored.allowedMedia, isEmpty);
+    expect(AppPreferences.fromJson(<String, Object?>{}).allowedMedia, stateMediaOffByDefault);
   });
 
   test('channels not to recommend stay in searches; typed channels are blocked by id or exact name', () async {

@@ -3,11 +3,13 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app/app_controller.dart';
 import 'app_directories.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
+import 'l10n/l10n.dart';
 import 'network_proxy.dart';
 import 'ui/app_shell.dart';
 import 'ui/theme.dart';
@@ -35,6 +37,7 @@ Future<void> main() async {
   } catch (_) {
     // Directories are created again, with errors reported, during startup.
   }
+  setLanguage(appearance.language);
   runApp(YtPlusApp(controller: AppController(appearance: appearance, appearanceStore: store)));
 }
 
@@ -117,6 +120,11 @@ class _YtPlusAppState extends State<YtPlusApp> {
             debugShowCheckedModeBanner: false,
             title: appName,
             themeMode: appearance.themeMode,
+            // Material's own text (tooltips, dialogs) in the language chosen
+            // at start.
+            locale: currentLanguage.locale,
+            supportedLocales: [for (final l in AppLanguage.values) if (l.locale case final locale?) locale],
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
             theme: _light,
             darkTheme: _dark,
             // The font size setting scales on top of Windows' text size.

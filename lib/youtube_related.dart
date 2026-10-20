@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'l10n/l10n.dart';
 import 'models.dart';
 
 /// The videos YouTube suggests next to a video, from the same request the
@@ -34,7 +35,7 @@ class YoutubeRelated {
           }),
         )
         .timeout(const Duration(seconds: 15));
-    if (response.statusCode != 200) throw StateError('YouTube 返回 ${response.statusCode}');
+    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     final items = parse(jsonDecode(utf8.decode(response.bodyBytes))).where((item) => item.id != videoId).toList();
     if (_cache.length > 100) _cache.clear();
     return _cache[videoId] = items;

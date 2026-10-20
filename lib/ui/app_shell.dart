@@ -17,6 +17,7 @@ import 'pages/watch_page.dart';
 import 'pages/youtube_playlist_page.dart';
 import 'theme.dart';
 import 'video_card.dart';
+import '../l10n/l10n.dart';
 
 const appName = 'YTPlus';
 
@@ -37,12 +38,12 @@ class _AppShellState extends State<AppShell> {
 
   AppController get _controller => widget.controller;
 
-  static const _destinations = [
-    (PageMode.home, Icons.home_outlined, Icons.home_rounded, '首页'),
-    (PageMode.explore, Icons.explore_outlined, Icons.explore_rounded, '探索'),
-    (PageMode.subscriptions, Icons.subscriptions_outlined, Icons.subscriptions_rounded, '订阅'),
-    (PageMode.history, Icons.history_outlined, Icons.history_rounded, '历史'),
-    (PageMode.playlists, Icons.video_library_outlined, Icons.video_library_rounded, '播放列表'),
+  static final _destinations = [
+    (PageMode.home, Icons.home_outlined, Icons.home_rounded, tr('首页')),
+    (PageMode.explore, Icons.explore_outlined, Icons.explore_rounded, tr('探索')),
+    (PageMode.subscriptions, Icons.subscriptions_outlined, Icons.subscriptions_rounded, tr('订阅')),
+    (PageMode.history, Icons.history_outlined, Icons.history_rounded, tr('历史')),
+    (PageMode.playlists, Icons.video_library_outlined, Icons.video_library_rounded, tr('播放列表')),
   ];
 
   @override
@@ -195,7 +196,7 @@ void openSettings(BuildContext context, AppController controller) {
           onPointerDown: (event) {
             if (event.buttons == kBackMouseButton) back();
           },
-          child: Focus(autofocus: true, child: Scaffold(appBar: AppBar(title: const Text('设置')), body: SettingsPage(controller: controller))),
+          child: Focus(autofocus: true, child: Scaffold(appBar: AppBar(title: Text(tr('设置'))), body: SettingsPage(controller: controller))),
         ),
       );
     },
@@ -245,12 +246,12 @@ class _TopBar extends StatelessWidget {
           ))),
           const SizedBox(width: 16),
           IconButton(
-            tooltip: '检查组件更新',
+            tooltip: tr('检查组件更新'),
             onPressed: ready && !controller.checking ? controller.checkUpdates : null,
             icon: controller.checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.system_update_alt_rounded),
           ),
           IconButton(
-            tooltip: '设置',
+            tooltip: tr('设置'),
             isSelected: controller.mode == PageMode.settings && controller.playing == null,
             onPressed: () => openSettings(context, controller),
             icon: const Icon(Icons.settings_outlined),
@@ -379,7 +380,7 @@ class _SearchFieldState extends State<_SearchField> {
               onChanged: (_) => setState(() => _picking = false),
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
-                hintText: '搜索 YouTube，或粘贴视频链接',
+                hintText: tr('搜索 YouTube，或粘贴视频链接'),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: controller.text.isEmpty
@@ -388,7 +389,7 @@ class _SearchFieldState extends State<_SearchField> {
                         child: Center(widthFactor: 1, child: Text('Ctrl+K', style: TextStyle(fontSize: 12, color: context.colors.outline))),
                       )
                     : IconButton(
-                        tooltip: '清除',
+                        tooltip: tr('清除'),
                         icon: const Icon(Icons.close_rounded, size: 20),
                         onPressed: () {
                           controller.clear();
@@ -422,7 +423,7 @@ class _SearchFieldState extends State<_SearchField> {
                           leading: Icon(option.recent ? Icons.history_rounded : Icons.search_rounded, size: 20),
                           title: Text(option.text, maxLines: 1, overflow: TextOverflow.ellipsis),
                           trailing: option.recent
-                              ? IconButton(tooltip: '删除这条记录', icon: const Icon(Icons.close_rounded, size: 18), onPressed: () => _remove(option.text))
+                              ? IconButton(tooltip: tr('删除这条记录'), icon: const Icon(Icons.close_rounded, size: 18), onPressed: () => _remove(option.text))
                               : null,
                           onTap: () => onSelected(option),
                         );
@@ -448,15 +449,15 @@ class _SetupView extends StatelessWidget {
       return StatusView(
         icon: Icons.error_outline_rounded,
         error: true,
-        title: '组件安装遇到问题',
+        title: tr('组件安装遇到问题'),
         message: error,
-        action: FilledButton.icon(onPressed: controller.retryInitialize, icon: const Icon(Icons.refresh_rounded), label: const Text('重试')),
+        action: FilledButton.icon(onPressed: controller.retryInitialize, icon: const Icon(Icons.refresh_rounded), label: Text(tr('重试'))),
       );
     }
     return StatusView(
       icon: Icons.download_for_offline_outlined,
-      title: '正在准备播放器组件',
-      message: '${controller.status}\n首次运行需要从 GitHub 下载组件，以后可以离线启动。',
+      title: tr('正在准备播放器组件'),
+      message: tr('{0}\n首次运行需要从 GitHub 下载组件，以后可以离线启动。', [controller.status]),
       action: const SizedBox(width: 240, child: LinearProgressIndicator()),
     );
   }

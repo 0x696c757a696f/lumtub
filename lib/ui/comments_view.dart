@@ -8,6 +8,7 @@ import 'common.dart';
 import 'linked_text.dart';
 import 'pages/channel_page.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// The comments under a video or a post: sort order, comments with their
 /// replies, and a button for more. It loads when first shown.
@@ -39,9 +40,9 @@ class _CommentsSectionState extends State<CommentsSection> {
 
   YoutubeComment _own(String text) => YoutubeComment(
         id: 'own:${DateTime.now().microsecondsSinceEpoch}',
-        author: widget.controller.account?.name ?? '我',
+        author: widget.controller.account?.name ?? tr('我'),
         text: text,
-        published: '刚刚',
+        published: tr('刚刚'),
       );
 
   Future<bool> _post(String text) async {
@@ -77,7 +78,7 @@ class _CommentsSectionState extends State<CommentsSection> {
       if (_replyingTo == comment.id)
         Padding(
           padding: const EdgeInsets.only(left: 44, bottom: 8),
-          child: CommentComposer(hint: '回复 ${comment.author}…', autofocus: true, onSubmit: (text) => _reply(comment, text), onCancel: () => setState(() => _replyingTo = null)),
+          child: CommentComposer(hint: tr('回复 {0}…', [comment.author]), autofocus: true, onSubmit: (text) => _reply(comment, text), onCancel: () => setState(() => _replyingTo = null)),
         ),
       if (thread != null) ...[
         for (final reply in thread.replies) tile(reply, reply: true),
@@ -86,9 +87,9 @@ class _CommentsSectionState extends State<CommentsSection> {
           child: thread.loading
               ? const Padding(padding: EdgeInsets.all(8), child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
               : error != null
-                  ? ErrorBanner('无法加载回复：$error', onRetry: () => loader.loadReplies(comment))
+                  ? ErrorBanner(tr('无法加载回复：{0}', [error]), onRetry: () => loader.loadReplies(comment))
                   : thread.next != null
-                      ? TextButton(onPressed: () => loader.loadReplies(comment), child: const Text('更多回复'))
+                      ? TextButton(onPressed: () => loader.loadReplies(comment), child: Text(tr('更多回复')))
                       : const SizedBox.shrink(),
         ),
       ],
@@ -104,27 +105,27 @@ class _CommentsSectionState extends State<CommentsSection> {
           final error = loader.error;
           return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Text(loader.count.isEmpty ? '评论' : '评论 · ${loader.count}', style: Theme.of(context).textTheme.titleMedium),
+              Text(loader.count.isEmpty ? tr('评论') : tr('评论 · {0}', [loader.count]), style: Theme.of(context).textTheme.titleMedium),
               const Spacer(),
               SegmentedButton<bool>(
                 showSelectedIcon: false,
                 style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                segments: const [ButtonSegment(value: false, label: Text('热门')), ButtonSegment(value: true, label: Text('最新'))],
+                segments: [ButtonSegment(value: false, label: Text(tr('热门'))), ButtonSegment(value: true, label: Text(tr('最新')))],
                 selected: {loader.newest},
                 onSelectionChanged: (value) => loader.setNewest(value.first),
               ),
             ]),
             const SizedBox(height: 8),
-            if (_canWrite) CommentComposer(hint: '添加评论…', onSubmit: _post),
+            if (_canWrite) CommentComposer(hint: tr('添加评论…'), onSubmit: _post),
             for (final comment in loader.comments) ..._thread(context, comment),
             if (loader.loading)
               const Padding(padding: EdgeInsets.all(16), child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))))
             else if (error != null)
-              ErrorBanner(loader.comments.isEmpty ? '无法加载评论：$error' : '加载更多评论失败：$error', onRetry: () => loader.loadMore(retry: true))
+              ErrorBanner(loader.comments.isEmpty ? tr('无法加载评论：{0}', [error]) : tr('加载更多评论失败：{0}', [error]), onRetry: () => loader.loadMore(retry: true))
             else if (loader.started && loader.comments.isEmpty)
-              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text('还没有评论，或评论已关闭', style: TextStyle(color: colors.outline)))
+              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('还没有评论，或评论已关闭'), style: TextStyle(color: colors.outline)))
             else if (loader.hasMore)
-              Center(child: TextButton(onPressed: loader.loadMore, child: const Text('加载更多评论'))),
+              Center(child: TextButton(onPressed: loader.loadMore, child: Text(tr('加载更多评论')))),
           ]);
         },
       );
@@ -161,7 +162,7 @@ class _CommentTile extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-            if (comment.pinned) Text('置顶', style: small.copyWith(color: colors.primary)),
+            if (comment.pinned) Text(tr('置顶'), style: small.copyWith(color: colors.primary)),
             Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: comment.byUploader ? colors.primary : null)),
             Text(comment.published, style: small),
           ]),
@@ -174,14 +175,14 @@ class _CommentTile extends StatelessWidget {
             Text(comment.likes.isEmpty ? '0' : comment.likes, style: small),
             if (comment.hearted) ...[
               const SizedBox(width: 12),
-              Tooltip(message: '作者喜欢', child: Icon(Icons.favorite_rounded, size: 14, color: colors.error)),
+              Tooltip(message: tr('作者喜欢'), child: Icon(Icons.favorite_rounded, size: 14, color: colors.error)),
             ],
             if (onReply != null) ...[
               const SizedBox(width: 8),
               TextButton(
                 style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8)),
                 onPressed: onReply,
-                child: const Text('回复', style: TextStyle(fontSize: 12)),
+                child: Text(tr('回复'), style: TextStyle(fontSize: 12)),
               ),
             ],
           ]),
@@ -190,7 +191,7 @@ class _CommentTile extends StatelessWidget {
               style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
               onPressed: () => thread == null ? loader.loadReplies(comment) : loader.collapse(comment),
               icon: Icon(thread == null ? Icons.expand_more_rounded : Icons.expand_less_rounded, size: 18),
-              label: Text(thread == null ? (comment.replyCount > 0 ? '${comment.replyCount} 条回复' : '查看回复') : '收起回复'),
+              label: Text(thread == null ? (comment.replyCount > 0 ? tr('{0} 条回复', [comment.replyCount]) : tr('查看回复')) : tr('收起回复')),
             ),
         ])),
       ]),
@@ -245,12 +246,12 @@ class _CommentComposerState extends State<CommentComposer> {
             decoration: InputDecoration(hintText: widget.hint, isDense: true, counterText: '', border: const OutlineInputBorder()),
           )),
           const SizedBox(width: 8),
-          if (widget.onCancel != null) TextButton(onPressed: _sending ? null : widget.onCancel, child: const Text('取消')),
+          if (widget.onCancel != null) TextButton(onPressed: _sending ? null : widget.onCancel, child: Text(tr('取消'))),
           ListenableBuilder(
             listenable: _text,
             builder: (context, _) => FilledButton(
               onPressed: _sending || _text.text.trim().isEmpty ? null : _send,
-              child: _sending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('发布'),
+              child: _sending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(tr('发布')),
             ),
           ),
         ]),

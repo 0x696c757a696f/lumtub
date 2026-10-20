@@ -4,9 +4,10 @@ import 'dart:io';
 import 'app_directories.dart';
 import 'explore_topics.dart';
 import 'models.dart';
+import 'l10n/l10n.dart';
 
 /// Pages the app can open on start, in navigation order.
-const startPages = [('home', '首页'), ('explore', '探索'), ('subscriptions', '订阅'), ('history', '历史'), ('playlists', '播放列表')];
+final startPages = [('home', tr('首页')), ('explore', tr('探索')), ('subscriptions', tr('订阅')), ('history', tr('历史')), ('playlists', tr('播放列表'))];
 
 /// Behaviour and content preferences that are neither player options nor
 /// looks: privacy, filters, start page and how the watch page behaves.

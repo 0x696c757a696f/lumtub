@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
 import 'libmpv_updates.dart';
+import 'l10n/l10n.dart';
 
 class ToolPaths {
   final String mpv;
@@ -55,16 +56,16 @@ class ToolManager {
     final mpv = libmpv.loadedPath ?? _bundledMpv;
     if (!File(mpv).existsSync()) throw StateError('Bundled libmpv-2.dll is missing. Re-download the YTPlus package.');
     if (discover()?.ytDlp.isNotEmpty != true) {
-      status('首次启动：安装 yt-dlp…');
+      status(tr('首次启动：安装 yt-dlp…'));
       await _installYtDlp();
     }
     // Deno is needed by some YouTube JavaScript challenge paths. Optional at startup.
     if (discover()?.deno == null) {
       try {
-        status('安装 YouTube 解析所需的 Deno…');
+        status(tr('安装 YouTube 解析所需的 Deno…'));
         await _installDeno();
       } catch (e) {
-        status('Deno 暂时不可用，可以稍后从工具更新中重试：$e');
+        status(tr('Deno 暂时不可用，可以稍后从工具更新中重试：{0}', [e]));
       }
     }
     final ready = discover();
@@ -147,7 +148,7 @@ class ToolManager {
       ('yt-dlp', _installYtDlp), ('Deno', _installDeno), ('libmpv', _installLibmpv),
     ]) {
       try {
-        status('检查 ${task.$1} 更新…');
+        status(tr('检查 {0} 更新…', [task.$1]));
         await task.$2();
       } catch (e) {
         errors.add('${task.$1}: $e');
@@ -155,9 +156,9 @@ class ToolManager {
     }
     if (errors.isEmpty) {
       await stamp.writeAsString(DateTime.now().toIso8601String());
-      status('更新检查完成。如有新版，重启应用后启用。');
+      status(tr('更新检查完成。如有新版，重启应用后启用。'));
     } else {
-      status('部分组件更新失败，现有版本不受影响：${errors.join(' / ')}');
+      status(tr('部分组件更新失败，现有版本不受影响：{0}', [errors.join(' / ')]));
     }
   }
 
@@ -227,7 +228,7 @@ class ToolManager {
     // A version rolled back by the user is not installed again.
     if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
     if (await File('${dest.path}${_separator}yt-dlp.exe').exists()) return;
-    status('下载 yt-dlp $tag…');
+    status(tr('下载 yt-dlp {0}…', [tag]));
     final asset = _asset(release, (name) => name == 'yt-dlp.exe');
     final partial = Directory('${dest.path}.partial');
     if (await partial.exists()) await partial.delete(recursive: true);
@@ -273,7 +274,7 @@ class ToolManager {
       final names = (release['assets'] as List? ?? const []).whereType<Map>().map((asset) => asset['name']?.toString() ?? '');
       final assetName = libmpvAssetName(names, v3: v3);
       if (assetName == null) throw StateError('No libmpv archive for this CPU in $tag');
-      status('下载 libmpv ${build.label}…');
+      status(tr('下载 libmpv {0}…', [build.label]));
       final archive = await _downloadVerified(_asset(release, (name) => name == assetName), Directory('${root.path}${_separator}downloads'));
       final partial = Directory('${dest.path}.partial');
       if (await partial.exists()) await partial.delete(recursive: true);
@@ -285,7 +286,7 @@ class ToolManager {
           // Windows before 11 23H2 has no 7z support in tar.exe; do not
           // download every new release only to fail again.
           await no7z.writeAsString(DateTime.now().toIso8601String());
-          throw StateError('此版本 Windows 无法解压 7z，继续使用内置 libmpv');
+          throw StateError(tr('此版本 Windows 无法解压 7z，继续使用内置 libmpv'));
         }
         final found = partial.listSync(recursive: true).whereType<File>().where((f) => f.path.toLowerCase().endsWith('${_separator}libmpv-2.dll'));
         if (found.isEmpty) throw StateError('libmpv archive $tag has no libmpv-2.dll');
@@ -313,7 +314,7 @@ class ToolManager {
     final tag = _safeTag(release['tag_name']);
     final dest = Directory('${root.path}${Platform.pathSeparator}deno${Platform.pathSeparator}$tag');
     if (await File('${dest.path}${Platform.pathSeparator}deno.exe').exists()) return;
-    status('下载 Deno $tag…');
+    status(tr('下载 Deno {0}…', [tag]));
     final asset = _asset(release, (name) => name == 'deno-x86_64-pc-windows-msvc.zip');
     final archive = await _downloadVerified(asset, Directory('${root.path}${Platform.pathSeparator}downloads'));
     final partial = Directory('${dest.path}.partial');

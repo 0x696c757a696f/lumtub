@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'video_repository.dart';
+import 'l10n/l10n.dart';
 
 /// How YouTube orders search results.
 enum SearchSort {
@@ -9,8 +10,9 @@ enum SearchSort {
   views('观看次数', 3),
   rating('评分', 1);
 
-  const SearchSort(this.label, this.code);
-  final String label;
+  const SearchSort(this._label, this.code);
+  final String _label;
+  String get label => tr(_label);
   final int code;
 }
 
@@ -22,8 +24,9 @@ enum SearchUploadDate {
   month('本月', 4),
   year('今年', 5);
 
-  const SearchUploadDate(this.label, this.code);
-  final String label;
+  const SearchUploadDate(this._label, this.code);
+  final String _label;
+  String get label => tr(_label);
   final int code;
 }
 
@@ -33,8 +36,9 @@ enum SearchDuration {
   medium('4–20 分钟', 3),
   long('20 分钟以上', 2);
 
-  const SearchDuration(this.label, this.code);
-  final String label;
+  const SearchDuration(this._label, this.code);
+  final String _label;
+  String get label => tr(_label);
   final int code;
 }
 
@@ -45,8 +49,9 @@ enum SearchQuality {
   uhd('4K', [0x70, 1]),
   hdr('HDR', [0xC8, 0x01, 1]);
 
-  const SearchQuality(this.label, this.bytes);
-  final String label;
+  const SearchQuality(this._label, this.bytes);
+  final String _label;
+  String get label => tr(_label);
   /// The filter's field in YouTube's `sp` (HD 4, 4K 14, HDR 25), encoded.
   final List<int> bytes;
 }

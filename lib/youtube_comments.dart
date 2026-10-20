@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'community_posts.dart';
+import 'l10n/l10n.dart';
 
 /// One comment or reply.
 class YoutubeComment {
@@ -79,13 +80,13 @@ class YoutubeComments {
   /// The first page of comments under community post [postId].
   Future<CommentPage> post(String postId, {bool newest = false}) async {
     final response = await _client.get(Uri.parse('https://www.youtube.com/post/$postId?hl=zh-CN'), headers: _headers).timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw StateError('YouTube 返回 ${response.statusCode}');
+    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     final html = utf8.decode(response.bodyBytes, allowMalformed: true);
     _apiKey = RegExp(r'"INNERTUBE_API_KEY":"([^"]+)"').firstMatch(html)?.group(1) ?? _apiKey;
     _clientVersion = RegExp(r'"INNERTUBE_CLIENT_VERSION":"([^"]+)"').firstMatch(html)?.group(1) ?? _clientVersion;
     _visitorData = RegExp(r'"VISITOR_DATA":"([^"]+)"').firstMatch(html)?.group(1) ?? _visitorData;
     final token = sectionToken(CommunityPosts.initialData(html));
-    if (token == null) throw const FormatException('这个帖子没有评论区，或评论已关闭');
+    if (token == null) throw FormatException(tr('这个帖子没有评论区，或评论已关闭'));
     final header = await _request('browse', token);
     return _sorted(header, 'browse', newest);
   }
@@ -123,7 +124,7 @@ class YoutubeComments {
           }),
         )
         .timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw StateError('YouTube 返回 ${response.statusCode}');
+    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     return parse(jsonDecode(utf8.decode(response.bodyBytes)));
   }
 

@@ -1,3 +1,5 @@
+import 'l10n/l10n.dart';
+
 /// The decoding mode libmpv actually used for one codec.
 ///
 /// Stored as structured JSON so UI wording can change without altering how
@@ -59,8 +61,8 @@ class DecoderStatus {
   bool get isVerified => kind != DecoderKind.unverified;
 
   String get label => switch (kind) {
-        DecoderKind.unverified => '尚未验证',
-        DecoderKind.software => '软件解码已验证',
+        DecoderKind.unverified => tr('尚未验证'),
+        DecoderKind.software => tr('软件解码已验证'),
         DecoderKind.hardware => hwdec!,
       };
 

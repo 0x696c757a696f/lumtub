@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
+import 'l10n/l10n.dart';
 
 /// Encrypts bytes so only the current Windows user can read them back.
 abstract class SecretProtector {
@@ -43,7 +44,7 @@ class DpapiProtector implements SecretProtector {
         ..pbData = arena<Uint8>(_entropy.length);
       entropy.ref.pbData.asTypedList(_entropy.length).setAll(0, _entropy);
       if (call(input, nullptr, entropy, nullptr, nullptr, _uiForbidden, output) == 0) {
-        throw const FileSystemException('Windows 无法加密或解密账号凭据');
+        throw FileSystemException(tr('Windows 无法加密或解密账号凭据'));
       }
       try {
         return Uint8List.fromList(output.ref.pbData.asTypedList(output.ref.cbData));

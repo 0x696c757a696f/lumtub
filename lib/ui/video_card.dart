@@ -13,6 +13,7 @@ import '../youtube_account.dart' show RemotePlaylist;
 import 'common.dart';
 import 'skeleton.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// Height of the text below a card's thumbnail: two title lines and one
 /// channel line.
@@ -144,7 +145,7 @@ class PlaylistCard extends StatelessWidget {
                     color: Colors.black.withValues(alpha: 0.65),
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                       const Icon(Icons.playlist_play_rounded, color: Colors.white, size: 28),
-                      if (item.count != null) Text('${item.count} 个视频', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                      if (item.count != null) Text(tr('{0} 个视频', [item.count]), style: const TextStyle(color: Colors.white, fontSize: 12)),
                     ]),
                   ),
                 ),
@@ -155,7 +156,7 @@ class PlaylistCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
-              Text(item.channel.isEmpty ? '播放列表' : '${item.channel} · 播放列表', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
+              Text(item.channel.isEmpty ? tr('播放列表') : tr('{0} · 播放列表', [item.channel]), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
             ]),
           )),
         ]),
@@ -265,7 +266,7 @@ class _VideoCardState extends State<VideoCard> {
     final colors = context.colors;
     final meta = [
       if (item.channel.isNotEmpty) item.channel,
-      if (item.viewCount != null) '${formatCount(item.viewCount!)}次观看',
+      if (item.viewCount != null) tr('{0}次观看', [formatCount(item.viewCount!)]),
     ].join(' · ');
     return Card(
       child: InkWell(
@@ -315,7 +316,7 @@ class _VideoCardState extends State<VideoCard> {
                   ])),
                 ],
                 if (item.isLive || item.isUpcoming)
-                  Positioned(right: 8, bottom: 8, child: DurationBadge(item.isLive ? '直播中' : '即将直播', color: item.isLive ? const Color(0xFFCC0000) : null))
+                  Positioned(right: 8, bottom: 8, child: DurationBadge(item.isLive ? tr('直播中') : tr('即将直播'), color: item.isLive ? const Color(0xFFCC0000) : null))
                 else if (item.durationLabel.isNotEmpty)
                   Positioned(right: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
                 _ProgressBar(item: item),
@@ -438,23 +439,23 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
     context: context,
     position: RelativeRect.fromRect(position & const Size(1, 1), Offset.zero & overlay.size),
     items: [
-      entry('play', Icons.play_arrow_rounded, '播放'),
+      entry('play', Icons.play_arrow_rounded, tr('播放')),
       if (library != null) ...[
-        entry('favorite', favorite ? Icons.favorite_rounded : Icons.favorite_border_rounded, favorite ? '取消收藏' : '收藏'),
-        entry('playlist', Icons.playlist_add_rounded, '添加到播放列表…'),
+        entry('favorite', favorite ? Icons.favorite_rounded : Icons.favorite_border_rounded, favorite ? tr('取消收藏') : tr('收藏')),
+        entry('playlist', Icons.playlist_add_rounded, tr('添加到播放列表…')),
       ],
-      if (controller?.account?.signedIn ?? false) entry('youtube', Icons.video_library_outlined, '保存到 YouTube 播放列表…'),
+      if (controller?.account?.signedIn ?? false) entry('youtube', Icons.video_library_outlined, tr('保存到 YouTube 播放列表…')),
       if (controller != null && channel != null) ...[
-        entry('channel', Icons.account_circle_outlined, '查看频道'),
-        entry('block', Icons.block_rounded, '屏蔽此频道'),
+        entry('channel', Icons.account_circle_outlined, tr('查看频道')),
+        entry('block', Icons.block_rounded, tr('屏蔽此频道')),
       ],
       if (onRemove != null)
         removeLabel == null
-            ? entry('remove', Icons.remove_circle_outline_rounded, '从此列表移除')
+            ? entry('remove', Icons.remove_circle_outline_rounded, tr('从此列表移除'))
             : entry('remove', Icons.thumb_down_off_alt_outlined, removeLabel),
       const PopupMenuDivider(),
-      entry('copy', Icons.link_rounded, '复制链接'),
-      entry('browser', Icons.open_in_new_rounded, '在浏览器中打开'),
+      entry('copy', Icons.link_rounded, tr('复制链接')),
+      entry('browser', Icons.open_in_new_rounded, tr('在浏览器中打开')),
     ],
   );
   if (!context.mounted) return;
@@ -463,7 +464,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
       onOpen();
     case 'favorite':
       final added = library!.toggleFavorite(item);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '已收藏' : '已取消收藏')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('已收藏') : tr('已取消收藏'))));
     case 'playlist':
       await showAddToPlaylist(context, controller!, item);
     case 'youtube':
@@ -475,7 +476,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
     case 'remove':
       onRemove!();
     case 'copy':
-      await copyText(context, item.url, '链接已复制');
+      await copyText(context, item.url, tr('链接已复制'));
     case 'browser':
       await openExternal(item.url);
   }
@@ -491,7 +492,7 @@ Future<void> showSaveToYoutube(BuildContext context, AppController controller, V
   final choice = await showDialog<Object>(
     context: context,
     builder: (context) => SimpleDialog(
-      title: const Text('保存到 YouTube 播放列表'),
+      title: Text(tr('保存到 YouTube 播放列表')),
       children: [
         FutureBuilder<List<RemotePlaylist>>(
           future: playlists,
@@ -504,11 +505,11 @@ Future<void> showSaveToYoutube(BuildContext context, AppController controller, V
               for (final playlist in list)
                 SimpleDialogOption(
                   onPressed: () => Navigator.pop(context, playlist),
-                  child: ListTile(dense: true, leading: const Icon(Icons.playlist_play_rounded), title: Text(playlist.title), subtitle: Text('${playlist.count} 个视频')),
+                  child: ListTile(dense: true, leading: const Icon(Icons.playlist_play_rounded), title: Text(playlist.title), subtitle: Text(tr('{0} 个视频', [playlist.count]))),
                 ),
               SimpleDialogOption(
                 onPressed: () => Navigator.pop(context, create),
-                child: const ListTile(dense: true, leading: Icon(Icons.add_rounded), title: Text('新建私享播放列表…')),
+                child: ListTile(dense: true, leading: Icon(Icons.add_rounded), title: Text(tr('新建私享播放列表…'))),
               ),
             ]);
           },
@@ -518,7 +519,7 @@ Future<void> showSaveToYoutube(BuildContext context, AppController controller, V
   );
   if (!context.mounted || choice == null) return;
   if (choice is RemotePlaylist) return account.saveToPlaylist(item, playlist: choice);
-  final title = await promptText(context, title: '新建 YouTube 播放列表', hint: '播放列表名称', confirm: '创建并保存');
+  final title = await promptText(context, title: tr('新建 YouTube 播放列表'), hint: tr('播放列表名称'), confirm: tr('创建并保存'));
   if (title != null && title.trim().isNotEmpty) await account.saveToPlaylist(item, newTitle: title);
 }
 
@@ -530,16 +531,16 @@ Future<void> showAddToPlaylist(BuildContext context, AppController controller, V
   final choice = await showDialog<String>(
     context: context,
     builder: (context) => SimpleDialog(
-      title: const Text('添加到播放列表'),
+      title: Text(tr('添加到播放列表')),
       children: [
         for (final playlist in library.playlists)
           SimpleDialogOption(
             onPressed: () => Navigator.pop(context, playlist.id),
-            child: ListTile(leading: const Icon(Icons.playlist_play_rounded), title: Text(playlist.name), subtitle: Text('${playlist.items.length} 个视频')),
+            child: ListTile(leading: const Icon(Icons.playlist_play_rounded), title: Text(playlist.name), subtitle: Text(tr('{0} 个视频', [playlist.items.length]))),
           ),
         SimpleDialogOption(
           onPressed: () => Navigator.pop(context, create),
-          child: const ListTile(leading: Icon(Icons.add_rounded), title: Text('新建播放列表')),
+          child: ListTile(leading: Icon(Icons.add_rounded), title: Text(tr('新建播放列表'))),
         ),
       ],
     ),
@@ -548,11 +549,11 @@ Future<void> showAddToPlaylist(BuildContext context, AppController controller, V
   final playlist = choice == create ? await _createPlaylist(context, controller) : library.playlist(choice);
   if (playlist == null || !context.mounted) return;
   final added = library.addToPlaylist(playlist, item);
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '已添加到“${playlist.name}”' : '“${playlist.name}”里已经有这个视频')));
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('已添加到“{0}”', [playlist.name]) : tr('“{0}”里已经有这个视频', [playlist.name]))));
 }
 
 Future<LocalPlaylist?> _createPlaylist(BuildContext context, AppController controller) async {
-  final name = await promptText(context, title: '新建播放列表', hint: '播放列表名称', confirm: '创建');
+  final name = await promptText(context, title: tr('新建播放列表'), hint: tr('播放列表名称'), confirm: tr('创建'));
   return name == null ? null : controller.library?.createPlaylist(name);
 }
 
@@ -570,7 +571,7 @@ Future<String?> promptText(BuildContext context, {required String title, require
         onSubmitted: (value) => Navigator.pop(context, value),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
         FilledButton(onPressed: () => Navigator.pop(context, text.text), child: Text(confirm)),
       ],
     ),

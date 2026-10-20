@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
+import 'l10n/l10n.dart';
 
 /// Read-only access to the account's YouTube data, as older versions asked.
 const youtubeReadonlyScope = 'https://www.googleapis.com/auth/youtube.readonly';
@@ -74,7 +75,7 @@ class OAuthTokens {
 
   static OAuthTokens parse(String body, {String? previousRefreshToken}) {
     final data = jsonDecode(body);
-    if (data is! Map || data['access_token'] is! String) throw const OAuthException('Google 返回的令牌格式不正确');
+    if (data is! Map || data['access_token'] is! String) throw OAuthException(tr('Google 返回的令牌格式不正确'));
     final seconds = data['expires_in'] is num ? (data['expires_in'] as num).toInt() : 3600;
     return OAuthTokens(
       accessToken: data['access_token'] as String,
@@ -138,9 +139,9 @@ class GoogleAuth {
         await _openBrowser(authorizationUri(redirectUri: redirectUri, pkce: pkce, state: state));
       } catch (_) {
         callback.ignore();
-        throw const OAuthException('无法打开浏览器');
+        throw OAuthException(tr('无法打开浏览器'));
       }
-      final code = await callback.timeout(timeout, onTimeout: () => throw const OAuthException('登录超时，请重试'));
+      final code = await callback.timeout(timeout, onTimeout: () => throw OAuthException(tr('登录超时，请重试')));
       return await _token({
         'grant_type': 'authorization_code',
         'code': code,
@@ -171,14 +172,14 @@ class GoogleAuth {
       }
       final ok = query['state'] == state && query['code'] != null;
       request.response.headers.contentType = ContentType.html;
-      request.response.write(_page(ok ? '登录成功' : '登录没有完成', ok ? '可以关闭这个页面，回到 YTPlus。' : '请回到 YTPlus 重试。'));
+      request.response.write(_page(ok ? tr('登录成功') : tr('登录没有完成'), ok ? tr('可以关闭这个页面，回到 YTPlus。') : tr('请回到 YTPlus 重试。')));
       await request.response.close();
-      if (query['state'] != state) throw const OAuthException('登录回调校验失败，请重试');
+      if (query['state'] != state) throw OAuthException(tr('登录回调校验失败，请重试'));
       final error = query['error'];
-      if (error != null) throw OAuthException(error == 'access_denied' ? '已取消授权' : 'Google 拒绝了登录：$error');
+      if (error != null) throw OAuthException(error == 'access_denied' ? tr('已取消授权') : tr('Google 拒绝了登录：{0}', [error]));
       return query['code']!;
     }
-    throw const OAuthException('登录已取消');
+    throw OAuthException(tr('登录已取消'));
   }
 
   Future<OAuthTokens> refresh(String refreshToken) => _token({'grant_type': 'refresh_token', 'refresh_token': refreshToken}, previousRefreshToken: refreshToken);
@@ -199,7 +200,7 @@ class GoogleAuth {
     }).timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) {
       final error = _errorCode(response.body);
-      throw OAuthException('Google 登录失败（$error）', revoked: error == 'invalid_grant');
+      throw OAuthException(tr('Google 登录失败（{0}）', [error]), revoked: error == 'invalid_grant');
     }
     return OAuthTokens.parse(response.body, previousRefreshToken: previousRefreshToken);
   }
@@ -209,7 +210,7 @@ class GoogleAuth {
       final data = jsonDecode(body);
       if (data is Map && data['error'] is String) return data['error'] as String;
     } catch (_) {}
-    return 'HTTP 错误';
+    return tr('HTTP 错误');
   }
 
   static Future<void> _openInBrowser(Uri uri) async {

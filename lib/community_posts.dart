@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
+import 'l10n/l10n.dart';
 
 /// A post on a channel's 社区 (posts) tab.
 class CommunityPost {
@@ -62,13 +63,13 @@ class CommunityPosts {
   /// The first page of [channel]'s posts.
   Future<PostPage> first(ChannelRef channel) async {
     final response = await _client.get(Uri.parse('${channel.url}/posts?hl=zh-CN'), headers: _headers).timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw StateError('YouTube 返回 ${response.statusCode}');
+    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     final html = utf8.decode(response.bodyBytes, allowMalformed: true);
     _apiKey = RegExp(r'"INNERTUBE_API_KEY":"([^"]+)"').firstMatch(html)?.group(1);
     _clientVersion = RegExp(r'"INNERTUBE_CLIENT_VERSION":"([^"]+)"').firstMatch(html)?.group(1);
     _visitorData = RegExp(r'"VISITOR_DATA":"([^"]+)"').firstMatch(html)?.group(1);
     final data = initialData(html);
-    if (data == null) throw const FormatException('没有在频道页面里找到帖子数据');
+    if (data == null) throw FormatException(tr('没有在频道页面里找到帖子数据'));
     return parse(data);
   }
 
@@ -93,7 +94,7 @@ class CommunityPosts {
           }),
         )
         .timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw StateError('YouTube 返回 ${response.statusCode}');
+    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     return parse(jsonDecode(utf8.decode(response.bodyBytes)));
   }
 

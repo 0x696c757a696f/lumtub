@@ -5,6 +5,7 @@ import 'app_directories.dart';
 import 'decoder_status.dart';
 import 'network_proxy.dart';
 import 'piped_streams.dart';
+import 'l10n/l10n.dart';
 
 /// Heights offered in the quality menu; 0 means automatic.
 const qualityHeights = [0, 2160, 1440, 1080, 720, 480, 360];
@@ -20,8 +21,9 @@ enum CodecPreference {
   av01('AV1'),
   any('不限（画质优先）');
 
-  const CodecPreference(this.label);
-  final String label;
+  const CodecPreference(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 enum AudioQuality {
@@ -29,8 +31,9 @@ enum AudioQuality {
   medium('中等（≤128 kbps）'),
   low('省流（≤64 kbps）');
 
-  const AudioQuality(this.label);
-  final String label;
+  const AudioQuality(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// What happens when a video ends. Named and ordered like PiliNara's
@@ -42,8 +45,9 @@ enum PlayOrder {
   listCycle('列表循环'),
   autoPlayRelated('自动连播');
 
-  const PlayOrder(this.label);
-  final String label;
+  const PlayOrder(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 enum SubtitleMode {
@@ -51,8 +55,9 @@ enum SubtitleMode {
   manual('有人工字幕时开启'),
   always('总是开启（含自动生成字幕）');
 
-  const SubtitleMode(this.label);
-  final String label;
+  const SubtitleMode(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 enum SubtitleLanguage {
@@ -73,13 +78,16 @@ enum SubtitleLanguage {
   ar('阿拉伯语优先', '(ar|en).*', 'ar,ara,en,eng'),
   hi('印地语优先', '(hi|en).*', 'hi,hin,en,eng');
 
-  const SubtitleLanguage(this.label, this.ytDlpLangs, this.mpvLangs);
-  final String label;
+  const SubtitleLanguage(this._label, this._ytDlpLangs, this._mpvLangs);
+  final String _label;
+  String get label => tr(_label);
   /// yt-dlp's `--sub-langs` value; a regex without commas so it fits in
   /// mpv's `ytdl-raw-options` list.
-  final String ytDlpLangs;
+  final String _ytDlpLangs;
+  String get ytDlpLangs => tr(_ytDlpLangs);
   /// mpv's `slang`, in order of preference.
-  final String mpvLangs;
+  final String _mpvLangs;
+  String get mpvLangs => tr(_mpvLangs);
 }
 
 /// mpv's `--video-sync` modes, as PiliNara lists them.
@@ -94,36 +102,38 @@ enum VideoSync {
   displayDesync('display-desync', '跟随显示器，不同步音频'),
   desync('desync', '不同步（仅调试用）');
 
-  const VideoSync(this.mpvValue, this.label);
-  final String mpvValue;
-  final String label;
+  const VideoSync(this._mpvValue, this._label);
+  final String _mpvValue;
+  String get mpvValue => tr(_mpvValue);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// mpv's `--hwdec` decoders that exist on Windows, from PiliNara's
 /// `HwDecType`. The setting is an ordered list; mpv tries them in turn.
 /// Decoders without "-copy" hand frames to the renderer in GPU memory (zero
 /// copy); "-copy" ones copy them back to system memory first.
-const hwdecChoices = <(String, String)>[
-  ('no', '软件解码'),
-  ('auto', '任意可用的硬件解码器'),
-  ('auto-safe', '最佳且稳定的硬件解码器（默认）'),
-  ('auto-copy', '带拷贝的最佳硬件解码器'),
-  ('d3d12va', 'DirectX 12（Windows 10 及以上，零拷贝）'),
-  ('d3d12va-copy', 'DirectX 12（回拷）'),
-  ('d3d11va', 'DirectX 11（Windows 8 及以上，零拷贝）'),
-  ('d3d11va-copy', 'DirectX 11（回拷）'),
-  ('dxva2', 'DXVA2（Windows 7 及以上，零拷贝）'),
-  ('dxva2-copy', 'DXVA2（回拷）'),
-  ('nvdec', 'NVDEC（NVIDIA 独占，零拷贝）'),
-  ('nvdec-copy', 'NVDEC（NVIDIA 独占，回拷）'),
-  ('vulkan', 'Vulkan（实验性，零拷贝）'),
-  ('vulkan-copy', 'Vulkan（实验性，回拷）'),
-  ('cuda', 'CUDA（NVIDIA 独占，过时，零拷贝）'),
-  ('cuda-copy', 'CUDA（NVIDIA 独占，过时，回拷）'),
-  ('amf', 'AMF（AMD 独占，零拷贝）'),
-  ('amf-copy', 'AMF（AMD 独占，回拷）'),
-  ('qsv', 'Quick Sync Video（Intel 独占，零拷贝）'),
-  ('qsv-copy', 'Quick Sync Video（Intel 独占，回拷）'),
+final hwdecChoices = <(String, String)>[
+  ('no', tr('软件解码')),
+  ('auto', tr('任意可用的硬件解码器')),
+  ('auto-safe', tr('最佳且稳定的硬件解码器（默认）')),
+  ('auto-copy', tr('带拷贝的最佳硬件解码器')),
+  ('d3d12va', tr('DirectX 12（Windows 10 及以上，零拷贝）')),
+  ('d3d12va-copy', tr('DirectX 12（回拷）')),
+  ('d3d11va', tr('DirectX 11（Windows 8 及以上，零拷贝）')),
+  ('d3d11va-copy', tr('DirectX 11（回拷）')),
+  ('dxva2', tr('DXVA2（Windows 7 及以上，零拷贝）')),
+  ('dxva2-copy', tr('DXVA2（回拷）')),
+  ('nvdec', tr('NVDEC（NVIDIA 独占，零拷贝）')),
+  ('nvdec-copy', tr('NVDEC（NVIDIA 独占，回拷）')),
+  ('vulkan', tr('Vulkan（实验性，零拷贝）')),
+  ('vulkan-copy', tr('Vulkan（实验性，回拷）')),
+  ('cuda', tr('CUDA（NVIDIA 独占，过时，零拷贝）')),
+  ('cuda-copy', tr('CUDA（NVIDIA 独占，过时，回拷）')),
+  ('amf', tr('AMF（AMD 独占，零拷贝）')),
+  ('amf-copy', tr('AMF（AMD 独占，回拷）')),
+  ('qsv', tr('Quick Sync Video（Intel 独占，零拷贝）')),
+  ('qsv-copy', tr('Quick Sync Video（Intel 独占，回拷）')),
 ];
 
 /// Codecs offered for `--hwdec-codecs`.
@@ -131,14 +141,14 @@ const hwdecCodecChoices = ['h264', 'hevc', 'vp8', 'vp9', 'av1', 'vc1', 'mpeg2vid
 const defaultHwdecCodecs = 'h264,vc1,hevc,vp8,vp9,av1,prores,ffv1';
 
 /// PiliNara's 音量均衡 presets, as mpv `--af` filters.
-const audioFilterPresets = <(String, String)>[
-  ('', '关闭'),
-  ('dynaudnorm=g=5:f=250:r=0.9:p=0.5', '预设 dynaudnorm（动态均衡）'),
-  ('loudnorm=I=-16:LRA=11:TP=-1.5', '预设 loudnorm（响度标准化）'),
+final audioFilterPresets = <(String, String)>[
+  ('', tr('关闭')),
+  ('dynaudnorm=g=5:f=250:r=0.9:p=0.5', tr('预设 dynaudnorm（动态均衡）')),
+  ('loudnorm=I=-16:LRA=11:TP=-1.5', tr('预设 loudnorm（响度标准化）')),
 ];
 
 /// Picture adjustments PiliNara offers in its player, as mpv properties.
-const pictureProperties = [('brightness', '亮度'), ('contrast', '对比度'), ('saturation', '饱和度'), ('gamma', '伽马'), ('hue', '色调')];
+final pictureProperties = [('brightness', tr('亮度')), ('contrast', tr('对比度')), ('saturation', tr('饱和度')), ('gamma', tr('伽马')), ('hue', tr('色调'))];
 
 /// Options a custom line may not set: ones that load code or files, write
 /// files, or would break media_kit's rendering and playback control.
@@ -163,7 +173,7 @@ typedef RejectedOption = (String line, String reason);
     final comment = line.indexOf(RegExp(r'\s#'));
     if (comment >= 0) line = line.substring(0, comment).trim();
     if (line.startsWith('[')) {
-      rejected.add((raw.trim(), '不支持配置组（profile）'));
+      rejected.add((raw.trim(), tr('不支持配置组（profile）')));
       continue;
     }
     if (line.startsWith('--')) line = line.substring(2);
@@ -564,9 +574,9 @@ class PlayerSettings {
 
   /// Why a custom option cannot be applied, or null when it can.
   static String? customOptionProblem(String key, String value) {
-    if (!RegExp(r'^[a-z0-9][a-z0-9_\-/]*$').hasMatch(key)) return '参数名无效';
-    if (_blockedOptions.contains(key) || _blockedPrefixes.any(key.startsWith)) return 'YTPlus 不允许设置此参数';
-    if (value.length > 500 || value.contains(RegExp(r'[\r\n;]'))) return '参数值无效';
+    if (!RegExp(r'^[a-z0-9][a-z0-9_\-/]*$').hasMatch(key)) return tr('参数名无效');
+    if (_blockedOptions.contains(key) || _blockedPrefixes.any(key.startsWith)) return tr('YTPlus 不允许设置此参数');
+    if (value.length > 500 || value.contains(RegExp(r'[\r\n;]'))) return tr('参数值无效');
     return null;
   }
 
@@ -574,15 +584,15 @@ class PlayerSettings {
 }
 
 /// SponsorBlock's categories with the names PiliNara shows for them.
-const sponsorCategoryNames = {
-  'sponsor': ('赞助广告', '付费推广、付费推荐和直接广告'),
-  'selfpromo': ('自我推广', '无偿推广：周边、捐赠或合作者的信息'),
-  'interaction': ('求赞求订阅', '提醒点赞、订阅或关注'),
-  'intro': ('片头', '没有实际内容的开场动画、暂停画面'),
-  'outro': ('片尾', '结尾致谢、片尾动画和下期预告'),
-  'preview': ('回顾与预告', '本集精彩片段或上期回顾'),
-  'music_offtopic': ('音乐：非音乐部分', '音乐视频中的非音乐片段'),
-  'filler': ('离题闲聊', '与主题无关、只为娱乐的片段'),
+final sponsorCategoryNames = {
+  'sponsor': (tr('赞助广告'), tr('付费推广、付费推荐和直接广告')),
+  'selfpromo': (tr('自我推广'), tr('无偿推广：周边、捐赠或合作者的信息')),
+  'interaction': (tr('求赞求订阅'), tr('提醒点赞、订阅或关注')),
+  'intro': (tr('片头'), tr('没有实际内容的开场动画、暂停画面')),
+  'outro': (tr('片尾'), tr('结尾致谢、片尾动画和下期预告')),
+  'preview': (tr('回顾与预告'), tr('本集精彩片段或上期回顾')),
+  'music_offtopic': (tr('音乐：非音乐部分'), tr('音乐视频中的非音乐片段')),
+  'filler': (tr('离题闲聊'), tr('与主题无关、只为娱乐的片段')),
 };
 
 class PlayerSettingsStore {

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'app_directories.dart';
 import 'models.dart';
 import 'stream_resolver.dart';
+import 'l10n/l10n.dart';
 
 enum SearchFilter {
   all('全部', null),
@@ -14,8 +15,9 @@ enum SearchFilter {
   channels('频道', 'EgIQAg%253D%253D'),
   playlists('播放列表', 'EgIQAw%253D%253D');
 
-  const SearchFilter(this.label, this.sp);
-  final String label;
+  const SearchFilter(this._label, this.sp);
+  final String _label;
+  String get label => tr(_label);
   /// YouTube's own filter parameter, as its results page URL carries it.
   final String? sp;
 }
@@ -30,8 +32,9 @@ enum ChannelTab {
   podcasts('播客', '/podcasts'),
   posts('社区', null);
 
-  const ChannelTab(this.label, this.path);
-  final String label;
+  const ChannelTab(this._label, this.path);
+  final String _label;
+  String get label => tr(_label);
   final String? path;
 }
 
@@ -62,7 +65,7 @@ class Listing {
     while (taken < count) {
       final bool more;
       try {
-        more = await lines.moveNext().timeout(timeout, onTimeout: () => throw TimeoutException('yt-dlp 加载超时'));
+        more = await lines.moveNext().timeout(timeout, onTimeout: () => throw TimeoutException(tr('yt-dlp 加载超时')));
       } catch (e) {
         close();
         if (_found == 0 || e is TimeoutException) rethrow;

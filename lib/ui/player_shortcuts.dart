@@ -6,23 +6,24 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
 import '../app_preferences.dart';
+import '../l10n/l10n.dart';
 
 /// Keys shown in the shortcut help, in display order, with the steps from
 /// [prefs].
 List<(String, String)> playerShortcutHelp(AppPreferences prefs) => [
-      ('空格 / K', '播放或暂停'),
-      ('← / →', '后退或前进 ${prefs.seekSeconds} 秒'),
-      ('J / L', '后退或前进 ${prefs.longSeekSeconds} 秒'),
-      ('↑ / ↓', '音量加减 ${prefs.volumeStep}%'),
-      ('Shift + < / >', '减速或加速播放'),
-      ('按住画面', '临时 2 倍速'),
-      ('M', '静音'),
-      ('F', '全屏'),
-      ('Esc', '退出全屏'),
-      ('Shift + N', '下一个视频'),
-      ('I', '显示或隐藏播放统计'),
-      ('Alt + ← / 鼠标后退键', '返回上一页'),
-      ('Ctrl + K', '搜索'),
+      (tr('空格 / K'), tr('播放或暂停')),
+      ('← / →', tr('后退或前进 {0} 秒', [prefs.seekSeconds])),
+      ('J / L', tr('后退或前进 {0} 秒', [prefs.longSeekSeconds])),
+      ('↑ / ↓', tr('音量加减 {0}%', [prefs.volumeStep])),
+      ('Shift + < / >', tr('减速或加速播放')),
+      (tr('按住画面'), tr('临时 2 倍速')),
+      ('M', tr('静音')),
+      ('F', tr('全屏')),
+      ('Esc', tr('退出全屏')),
+      ('Shift + N', tr('下一个视频')),
+      ('I', tr('显示或隐藏播放统计')),
+      (tr('Alt + ← / 鼠标后退键'), tr('返回上一页')),
+      ('Ctrl + K', tr('搜索')),
     ];
 
 /// Player key bindings, used both on the watch page and inside the player
@@ -35,7 +36,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
   final volume = prefs.volumeStep.toDouble();
   void seek(int seconds) {
     unawaited(controller.seekBy(Duration(seconds: seconds)));
-    onFeedback?.call(seconds < 0 ? Icons.fast_rewind_rounded : Icons.fast_forward_rounded, seconds < 0 ? '快退${-seconds}秒' : '快进$seconds秒');
+    onFeedback?.call(seconds < 0 ? Icons.fast_rewind_rounded : Icons.fast_forward_rounded, seconds < 0 ? tr('快退{0}秒', [-seconds]) : tr('快进{0}秒', [seconds]));
   }
   void changeVolume(double delta) {
     unawaited(controller.changeVolume(delta).then((_) => onFeedback?.call(Icons.volume_up_rounded, '${player.state.volume.round()}%')));
@@ -65,7 +66,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     const SingleActivator(LogicalKeyboardKey.keyM): () {
       unawaited(controller.toggleMute().then((_) {
         final muted = player.state.volume == 0;
-        onFeedback?.call(muted ? Icons.volume_off_rounded : Icons.volume_up_rounded, muted ? '静音' : '${player.state.volume.round()}%');
+        onFeedback?.call(muted ? Icons.volume_off_rounded : Icons.volume_up_rounded, muted ? tr('静音') : '${player.state.volume.round()}%');
       }));
     },
     const SingleActivator(LogicalKeyboardKey.keyF): () => unawaited(video()?.toggleFullscreen()),
@@ -86,7 +87,7 @@ String _trim(double speed) => speed == speed.roundToDouble() ? speed.toStringAsF
 Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('快捷键'),
+        title: Text(tr('快捷键')),
         content: SizedBox(
           width: 360,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -104,6 +105,6 @@ Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => sho
               ),
           ]),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('知道了'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('知道了')))],
       ),
     );

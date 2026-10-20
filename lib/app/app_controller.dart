@@ -45,6 +45,7 @@ import 'home_feed.dart';
 import 'back_stack.dart';
 import 'library_controller.dart';
 import 'video_list_loader.dart';
+import '../l10n/l10n.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, settings, channel, playlist, youtubePlaylist }
 
@@ -63,15 +64,15 @@ class AppController extends ChangeNotifier {
 
   int cacheBytes = 0;
   Map<String, DecoderStatus> decodeStates = const {};
-  String currentCodec = '尚未播放视频';
-  String currentHwdec = '尚未验证';
+  String currentCodec = tr('尚未播放视频');
+  String currentHwdec = tr('尚未验证');
   WindowsVideoInfo windowsVideoInfo = const WindowsVideoInfo();
   PlayerSettings settings = const PlayerSettings();
   VideoItem? playing;
   PageMode mode = PageMode.home;
   bool ready = false;
   bool checking = false;
-  String status = '正在准备 Windows 原生播放器…';
+  String status = tr('正在准备 Windows 原生播放器…');
   /// Startup failure; the setup screen shows it with a retry button.
   String? error;
   String? playbackError;
@@ -316,7 +317,7 @@ class AppController extends ChangeNotifier {
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
         ready = true;
-        status = ignoredOptions.isEmpty ? '就绪 · 解码方式将在播放时验证' : '就绪 · 已忽略不支持的设置：${ignoredOptions.join(', ')}';
+        status = ignoredOptions.isEmpty ? tr('就绪 · 解码方式将在播放时验证') : tr('就绪 · 已忽略不支持的设置：{0}', [ignoredOptions.join(', ')]);
         error = null;
       });
       if (mode == PageMode.explore) _loadExplore();
@@ -329,7 +330,7 @@ class AppController extends ChangeNotifier {
     } catch (e) {
       _update(() {
         error = e.toString();
-        status = '初始化失败';
+        status = tr('初始化失败');
         logError('初始化失败', e);
       });
     }
@@ -338,7 +339,7 @@ class AppController extends ChangeNotifier {
   void retryInitialize() {
     _update(() {
       error = null;
-      status = '重新安装组件…';
+      status = tr('重新安装组件…');
     });
     unawaited(initialize());
   }
@@ -381,7 +382,7 @@ class AppController extends ChangeNotifier {
     if (query.isEmpty || !ready) return;
     final asUrl = parseYoutubeId(query);
     if (asUrl != null) {
-      await play(VideoItem(id: asUrl, title: 'YouTube 视频 · $asUrl', channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$asUrl'));
+      await play(VideoItem(id: asUrl, title: tr('YouTube 视频 · {0}', [asUrl]), channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$asUrl'));
       return;
     }
     if (query != _query || mode != PageMode.explore || playing != null) _remember();
@@ -659,7 +660,7 @@ class AppController extends ChangeNotifier {
     if (await _open(item, serial, start: start, play: preferences.autoPlay)) {
       if (settings.defaultSpeed != player.state.rate) await player.setRate(settings.defaultSpeed);
       if (preferences.recordHistory) await _history?.record(item);
-      if (start != null && at == null) _notice('从 ${_clock(start)} 继续播放');
+      if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
       final next = upNext.firstOrNull;
       if (next != null) prefetch(next);
     }
@@ -697,7 +698,7 @@ class AppController extends ChangeNotifier {
       // Each segment is skipped once, so seeking back into it plays it.
       _skipped.add(segment);
       unawaited(player?.seek(segment.end));
-      if (settings.sponsorNotice) _notice('已跳过${sponsorCategories[segment.category] ?? '片段'}');
+      if (settings.sponsorNotice) _notice(tr('已跳过{0}', [sponsorCategories[segment.category] ?? tr('片段')]));
       return;
     }
   }
@@ -832,7 +833,7 @@ class AppController extends ChangeNotifier {
       return;
     }
     logInfo('播放中断，从 ${_clock(position)} 重新连接 ${item.id}：$message');
-    _notice('网络中断，正在从 ${_clock(position)} 重新连接…');
+    _notice(tr('网络中断，正在从 {0} 重新连接…', [_clock(position)]));
     _recovering = true;
     try {
       // A new open also asks yt-dlp again, which replaces stream addresses
@@ -858,7 +859,7 @@ class AppController extends ChangeNotifier {
       }
     } catch (e) {
       logError('无法加载字幕 ${option.language}', e);
-      _notice('无法加载这条字幕');
+      _notice(tr('无法加载这条字幕'));
     }
   }
 
@@ -894,7 +895,7 @@ class AppController extends ChangeNotifier {
       player.stream.completed.listen((done) {
         if (!done || playing == null) return;
         if (_tracking != null && PlaybackRecovery.endedEarly(_lastPosition, player.state.duration)) {
-          unawaited(_recover('视频在 ${_clock(_lastPosition)} 意外结束'));
+          unawaited(_recover(tr('视频在 {0} 意外结束', [_clock(_lastPosition)])));
           return;
         }
         _saveProgress();
@@ -951,7 +952,7 @@ class AppController extends ChangeNotifier {
         _stallTimer?.cancel();
         if (!buffering || _tracking == null) return;
         _stallTimer = Timer(PlaybackRecovery.stallTimeout, () {
-          if (player.state.buffering && player.state.playing) unawaited(_recover('缓冲超过 ${PlaybackRecovery.stallTimeout.inSeconds} 秒没有进展'));
+          if (player.state.buffering && player.state.playing) unawaited(_recover(tr('缓冲超过 {0} 秒没有进展', [PlaybackRecovery.stallTimeout.inSeconds])));
         });
       }),
     ]);
@@ -962,7 +963,7 @@ class AppController extends ChangeNotifier {
   Future<void> _playAfterEnd() async {
     if (sleepAfterCurrent) {
       _update(() => sleepAfterCurrent = false);
-      _notice('定时关闭：当前视频已播完');
+      _notice(tr('定时关闭：当前视频已播完'));
       return;
     }
     switch (settings.playOrder) {
@@ -1020,7 +1021,7 @@ class AppController extends ChangeNotifier {
     _sleepTimer = after == null ? null : Timer(after, () {
       unawaited(player?.pause());
       _update(() => sleepAt = null);
-      _notice('定时关闭：已暂停播放');
+      _notice(tr('定时关闭：已暂停播放'));
     });
     _update(() {
       sleepAt = after == null ? null : DateTime.now().add(after);
@@ -1482,12 +1483,12 @@ class AppController extends ChangeNotifier {
   /// 不感兴趣: hides [item] and shows less from its channel.
   Future<void> dismissRecommendation(VideoItem item) async {
     await homeFeed?.dismiss(item);
-    _notice('将减少推荐类似内容');
+    _notice(tr('将减少推荐类似内容'));
   }
 
   Future<void> clearNotInterested() async {
     await homeFeed?.notInterested.clear();
-    _notice('已清空“不感兴趣”记录');
+    _notice(tr('已清空“不感兴趣”记录'));
   }
 
   /// Words typed before, newest first, and YouTube's suggestions.
@@ -1502,13 +1503,13 @@ class AppController extends ChangeNotifier {
 
   Future<void> clearSearchHistory() async {
     await searchHistory?.clear();
-    _notice('搜索记录已清空。');
+    _notice(tr('搜索记录已清空。'));
   }
 
   Future<void> clearHistory() async {
     await _history?.clear();
     _update(() {});
-    _notice('观看历史已清空。');
+    _notice(tr('观看历史已清空。'));
   }
 
   /// Videos of [items] that pass the privacy and content filters. The
@@ -1525,14 +1526,14 @@ class AppController extends ChangeNotifier {
     try {
       await _preferencesStore?.save(next);
     } on FileSystemException {
-      _notice('设置未能保存，本次运行仍然生效。');
+      _notice(tr('设置未能保存，本次运行仍然生效。'));
     }
   }
 
   void blockChannel(ChannelRef channel) {
     if (preferences.isBlocked(channel.id)) return;
     unawaited(savePreferences(preferences.copyWith(blockedChannels: [...preferences.blockedChannels, channel])));
-    _notice('已屏蔽“${channel.name.isEmpty ? channel.id : channel.name}”，可在 设置 › 隐私设置 中解除');
+    _notice(tr('已屏蔽“{0}”，可在 设置 › 隐私设置 中解除', [channel.name.isEmpty ? channel.id : channel.name]));
   }
 
   void unblockChannel(String id) =>
@@ -1540,7 +1541,7 @@ class AppController extends ChangeNotifier {
 
   void clearProgress() {
     library?.clearProgress();
-    _notice('播放进度已清空。');
+    _notice(tr('播放进度已清空。'));
   }
 
   /// Reads the Windows accent colour for [AppearanceSettings.systemAccent].
@@ -1595,7 +1596,7 @@ class AppController extends ChangeNotifier {
     await saveSettings(PlayerSettings(cachePath: settings.cachePath, cacheLimitGb: settings.cacheLimitGb, decoderResults: settings.decoderResults));
     await saveAppearance(const AppearanceSettings());
     await savePreferences(const AppPreferences());
-    _notice('已恢复默认设置。');
+    _notice(tr('已恢复默认设置。'));
   }
 
   Future<void> saveAppearance(AppearanceSettings next) async {
@@ -1605,7 +1606,7 @@ class AppController extends ChangeNotifier {
     try {
       await _appearanceStore?.save(next);
     } on FileSystemException {
-      _notice('外观设置未能保存，本次运行仍然生效。');
+      _notice(tr('外观设置未能保存，本次运行仍然生效。'));
     }
   }
 
@@ -1615,13 +1616,13 @@ class AppController extends ChangeNotifier {
   Future<void> rollBackLibmpv() async {
     await _tools?.libmpv.rollBack();
     _update(() {});
-    _notice('已改回内置 libmpv，重启 YTPlus 后生效。');
+    _notice(tr('已改回内置 libmpv，重启 YTPlus 后生效。'));
   }
 
   Future<void> rollBackYtDlp() async {
     await _tools?.rollBackYtDlp();
     _update(() {});
-    _notice('已改回上一个 yt-dlp，重启 YTPlus 后生效。');
+    _notice(tr('已改回上一个 yt-dlp，重启 YTPlus 后生效。'));
   }
 
   Future<void> checkUpdates() async {
@@ -1652,8 +1653,8 @@ class AppController extends ChangeNotifier {
         library?.repository = _repository;
       }
       status = ignoredOptions.isEmpty
-          ? '播放器设置已保存${requiresNextVideo ? '；硬件解码和帧插值在下一段视频生效。' : '。'}'
-          : '已保存；此 libmpv 不支持：${ignoredOptions.join(', ')}。';
+          ? tr('播放器设置已保存{0}', [requiresNextVideo ? tr('；硬件解码和帧插值在下一段视频生效。') : '。'])
+          : tr('已保存；此 libmpv 不支持：{0}。', [ignoredOptions.join(', ')]);
     });
   }
 
@@ -1672,7 +1673,7 @@ class AppController extends ChangeNotifier {
   Future<void> inspectCurrentDecoder({Duration delay = Duration.zero}) async {
     final platform = player?.platform;
     if (platform is! NativePlayer) {
-      _notice('当前播放器无法读取 libmpv 解码状态。');
+      _notice(tr('当前播放器无法读取 libmpv 解码状态。'));
       return;
     }
     try {
@@ -1681,7 +1682,7 @@ class AppController extends ChangeNotifier {
       final decoder = DecoderStatus.fromMpv(await platform.getProperty('hwdec-current'));
       final normalized = DecoderStatus.codecKey(codec);
       _update(() {
-        currentCodec = codec.isEmpty ? '尚未验证' : codec;
+        currentCodec = codec.isEmpty ? tr('尚未验证') : codec;
         currentHwdec = decoder.label;
         if (normalized != null) decodeStates = {...decodeStates, normalized: decoder};
       });
@@ -1690,7 +1691,7 @@ class AppController extends ChangeNotifier {
         unawaited(_settingsStore?.save(settings));
       }
     } catch (_) {
-      _update(() => currentHwdec = '尚未验证');
+      _update(() => currentHwdec = tr('尚未验证'));
     }
   }
 
@@ -1724,7 +1725,7 @@ class AppController extends ChangeNotifier {
     try {
       await Process.start('explorer.exe', [url]);
     } catch (_) {
-      _notice('无法打开 Microsoft Store 链接。');
+      _notice(tr('无法打开 Microsoft Store 链接。'));
     }
   }
 
@@ -1741,9 +1742,9 @@ class AppController extends ChangeNotifier {
       if (migrate == true) await manager.migrate(settings, next);
       await saveSettings(next);
       _update(() => cacheBytes = 0);
-      _notice('缓存位置已保存。yt-dlp 缓存在下一次搜索时使用新位置。');
+      _notice(tr('缓存位置已保存。yt-dlp 缓存在下一次搜索时使用新位置。'));
     } on FileSystemException catch (error) {
-      _notice('新缓存位置不可用，继续使用原位置：${error.message}');
+      _notice(tr('新缓存位置不可用，继续使用原位置：{0}', [error.message]));
     }
   }
 
@@ -1756,10 +1757,10 @@ class AppController extends ChangeNotifier {
   Future<void> clearCache() async {
     final manager = _cacheManager;
     if (manager == null) return;
-    if (!ensureNotPlaying('正在播放时不会清理缓存。请先返回列表。')) return;
+    if (!ensureNotPlaying(tr('正在播放时不会清理缓存。请先返回列表。'))) return;
     await manager.clear(settings);
     _update(() => cacheBytes = 0);
-    _notice('已清理 YTPlus 管理的缓存文件。');
+    _notice(tr('已清理 YTPlus 管理的缓存文件。'));
   }
 
   /// Saves everything and releases the player before the window closes;
@@ -1786,15 +1787,15 @@ class AppController extends ChangeNotifier {
     return [
       'YTPlus $appVersion',
       'Windows ${Platform.operatingSystemVersion}',
-      'CPU 核心 ${Platform.numberOfProcessors}',
+      tr('CPU 核心 {0}', [Platform.numberOfProcessors]),
       'GPU ${windowsVideoInfo.gpuNames.isEmpty ? '未知' : windowsVideoInfo.gpuNames.join(' / ')}',
       'libmpv ${tools?.libmpv.current?.label ?? '内置'}',
       'yt-dlp ${tools?.ytDlpVersion ?? '未安装'}',
       'Deno ${tools?.denoVersion ?? '未安装'}',
-      '硬件解码设置 ${settings.hwdec} · 当前 $currentCodec · $currentHwdec',
-      '画质上限 ${settings.maxHeight == 0 ? '自动' : '${settings.maxHeight}p'} · 编码 ${settings.codec.label} · 音质 ${settings.audioQuality.label}',
-      '缓存 ${settings.cacheMode} · ${settings.cacheSeconds} 秒 · ${settings.cacheMemoryMb} MB',
-      '数据目录 ${directories?.root.path ?? '未知'}',
+      tr('硬件解码设置 {0} · 当前 {1} · {2}', [settings.hwdec, currentCodec, currentHwdec]),
+      tr('画质上限 {0} · 编码 {1} · 音质 {2}', [settings.maxHeight == 0 ? tr('自动') : '${settings.maxHeight}p', settings.codec.label, settings.audioQuality.label]),
+      tr('缓存 {0} · {1} 秒 · {2} MB', [settings.cacheMode, settings.cacheSeconds, settings.cacheMemoryMb]),
+      tr('数据目录 {0}', [directories?.root.path ?? tr('未知')]),
     ].join('\n');
   }
 

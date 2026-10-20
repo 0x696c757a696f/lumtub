@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'app_log.dart';
+import 'l10n/l10n.dart';
 
 /// A loopback HTTP server libmpv reads YouTube streams through. YouTube
 /// throttles a request for more than about 10 MB of a stream to a crawl,
@@ -110,7 +111,7 @@ class ChunkedRelay {
         if (reply.statusCode != HttpStatus.ok && reply.statusCode != HttpStatus.partialContent) {
           await reply.drain<void>();
           // A 403 means the address expired; libmpv's own fallback handles it.
-          if (reply.statusCode == HttpStatus.forbidden || attempt >= 1) throw HttpException('YouTube 返回 ${reply.statusCode}', uri: uri);
+          if (reply.statusCode == HttpStatus.forbidden || attempt >= 1) throw HttpException(tr('YouTube 返回 {0}', [reply.statusCode]), uri: uri);
           continue;
         }
         answer = reply;

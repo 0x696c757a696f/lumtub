@@ -6,6 +6,7 @@ import '../../app/app_controller.dart';
 import '../../piped_streams.dart';
 import '../theme.dart';
 import 'settings_sections.dart';
+import '../../l10n/l10n.dart';
 
 /// 设置 › Piped 服务器: choose automatic selection or one server, measure
 /// them all, and download the public list again.
@@ -27,7 +28,7 @@ class _PipedServersPageState extends State<_PipedServersPage> {
   @override
   void initState() {
     super.initState();
-    if (!_piped.catalog.any(_piped.wasTried)) unawaited(_run('正在测速…', _piped.servers));
+    if (!_piped.catalog.any(_piped.wasTried)) unawaited(_run(tr('正在测速…'), _piped.servers));
   }
 
   Future<void> _run(String label, Future<void> Function() task) async {
@@ -40,7 +41,7 @@ class _PipedServersPageState extends State<_PipedServersPage> {
     }
   }
 
-  Future<void> _update() => _run('正在更新列表并测速…', () async {
+  Future<void> _update() => _run(tr('正在更新列表并测速…'), () async {
         await _piped.updateCatalog();
         await _piped.remeasure();
       });
@@ -63,9 +64,9 @@ class _PipedServersPageState extends State<_PipedServersPage> {
     final colors = context.colors;
     final updated = _piped.catalogUpdatedAt;
     return Scaffold(
-      appBar: AppBar(title: const Text('Piped 服务器'), actions: [
-        IconButton(tooltip: '测速', icon: const Icon(Icons.speed_rounded), onPressed: _busy == null ? () => _run('正在测速…', _piped.remeasure) : null),
-        IconButton(tooltip: '更新列表', icon: const Icon(Icons.refresh_rounded), onPressed: _busy == null ? _update : null),
+      appBar: AppBar(title: Text(tr('Piped 服务器')), actions: [
+        IconButton(tooltip: tr('测速'), icon: const Icon(Icons.speed_rounded), onPressed: _busy == null ? () => _run(tr('正在测速…'), _piped.remeasure) : null),
+        IconButton(tooltip: tr('更新列表'), icon: const Icon(Icons.refresh_rounded), onPressed: _busy == null ? _update : null),
       ]),
       body: ListenableBuilder(
         listenable: widget.controller,
@@ -83,12 +84,12 @@ class _PipedServersPageState extends State<_PipedServersPage> {
               );
           return ListView(padding: const EdgeInsets.only(bottom: 40), children: [
             if (_busy != null) const LinearProgressIndicator() else const SizedBox(height: 4),
-            option(selected: auto, title: '自动选择最快的服务器', subtitle: '每 3 小时重新测速，失败时换下一个', onTap: () => _choose(null)),
+            option(selected: auto, title: tr('自动选择最快的服务器'), subtitle: tr('每 3 小时重新测速，失败时换下一个'), onTap: () => _choose(null)),
             if (custom != null && !servers.contains(custom))
-              option(selected: true, title: Uri.parse(custom).host, subtitle: '手动填写的地址', onTap: () {}),
+              option(selected: true, title: Uri.parse(custom).host, subtitle: tr('手动填写的地址'), onTap: () {}),
             option(
               selected: false,
-              title: '手动填写地址…',
+              title: tr('手动填写地址…'),
               onTap: () => editPipedServer(context, widget.controller),
             ),
             Padding(
@@ -110,8 +111,7 @@ class _PipedServersPageState extends State<_PipedServersPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Text(
-                '列表每天从 Piped 官方文档（public-instances）和 piped-instances.kavin.rocks 自动更新。测速只访问各服务器的 /healthcheck；'
-                '能连接不代表能播放，YouTube 经常拦截公共服务器，这时会自动改为直接连接 YouTube。',
+                tr('列表每天从 Piped 官方文档（public-instances）和 piped-instances.kavin.rocks 自动更新。测速只访问各服务器的 /healthcheck；能连接不代表能播放，YouTube 经常拦截公共服务器，这时会自动改为直接连接 YouTube。'),
                 style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5),
               ),
             ),
@@ -132,8 +132,8 @@ class _Timing extends StatelessWidget {
     final colors = context.colors;
     final (text, color) = switch (ms) {
       final ms? => ('$ms ms', ms < 300 ? Colors.green : (ms < 1000 ? Colors.orange : colors.error)),
-      null when tried => ('无法连接', colors.error),
-      null => ('未测速', colors.outline),
+      null when tried => (tr('无法连接'), colors.error),
+      null => (tr('未测速'), colors.outline),
     };
     return Text(text, style: TextStyle(color: color, fontSize: 13, fontFeatures: const [FontFeature.tabularFigures()]));
   }

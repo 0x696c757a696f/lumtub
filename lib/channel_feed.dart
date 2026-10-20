@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
+import 'l10n/l10n.dart';
 
 /// Reads a channel's public Atom feed, which lists its latest 15 uploads with
 /// their publish times in one small request, without yt-dlp.
@@ -12,7 +13,7 @@ class ChannelFeed {
 
   Future<List<VideoItem>> latest(ChannelRef channel) async {
     final response = await _client.get(feedUri(channel), headers: {'User-Agent': 'YTPlus-Windows/0.1'}).timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw StateError('频道订阅源返回 HTTP ${response.statusCode}');
+    if (response.statusCode != 200) throw StateError(tr('频道订阅源返回 HTTP {0}', [response.statusCode]));
     return parse(response.body, channel);
   }
 

@@ -4,42 +4,43 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'app_directories.dart';
+import 'l10n/l10n.dart';
 
 /// Seed colours offered in Settings; the first is the default. The first
 /// six are YTPlus's own, the rest PiliNara's palette.
-const accentChoices = <(String, Color)>[
-  ('YouTube 红', Color(0xFFE53935)),
-  ('青绿', Color(0xFF26A69A)),
-  ('天蓝', Color(0xFF1E88E5)),
-  ('紫罗兰', Color(0xFF7E57C2)),
-  ('琥珀', Color(0xFFFFB300)),
-  ('粉红', Color(0xFFEC407A)),
-  ('默认绿', Color(0xFF5CB67B)),
-  ('橙色', Colors.orange),
-  ('黄色', Colors.yellow),
-  ('酸橙色', Colors.lime),
-  ('浅绿色', Colors.lightGreen),
-  ('青色', Colors.teal),
-  ('蓝绿色', Colors.cyan),
-  ('浅蓝色', Colors.lightBlue),
-  ('靛蓝色', Colors.indigo),
-  ('深紫色', Colors.deepPurple),
-  ('蓝灰色', Colors.blueGrey),
-  ('棕色', Colors.brown),
-  ('灰色', Colors.grey),
+final accentChoices = <(String, Color)>[
+  (tr('YouTube 红'), Color(0xFFE53935)),
+  (tr('青绿'), Color(0xFF26A69A)),
+  (tr('天蓝'), Color(0xFF1E88E5)),
+  (tr('紫罗兰'), Color(0xFF7E57C2)),
+  (tr('琥珀'), Color(0xFFFFB300)),
+  (tr('粉红'), Color(0xFFEC407A)),
+  (tr('默认绿'), Color(0xFF5CB67B)),
+  (tr('橙色'), Colors.orange),
+  (tr('黄色'), Colors.yellow),
+  (tr('酸橙色'), Colors.lime),
+  (tr('浅绿色'), Colors.lightGreen),
+  (tr('青色'), Colors.teal),
+  (tr('蓝绿色'), Colors.cyan),
+  (tr('浅蓝色'), Colors.lightBlue),
+  (tr('靛蓝色'), Colors.indigo),
+  (tr('深紫色'), Colors.deepPurple),
+  (tr('蓝灰色'), Colors.blueGrey),
+  (tr('棕色'), Colors.brown),
+  (tr('灰色'), Colors.grey),
 ];
 
 /// Material's palette styles with the names PiliNara uses.
-const schemeVariantNames = {
-  DynamicSchemeVariant.tonalSpot: '默认（Tonal Spot）',
-  DynamicSchemeVariant.fidelity: '保真（Fidelity）',
-  DynamicSchemeVariant.content: '内容（Content）',
-  DynamicSchemeVariant.vibrant: '鲜艳（Vibrant）',
-  DynamicSchemeVariant.expressive: '表现力（Expressive）',
-  DynamicSchemeVariant.neutral: '中性（Neutral）',
-  DynamicSchemeVariant.monochrome: '单色（Monochrome）',
-  DynamicSchemeVariant.rainbow: '彩虹（Rainbow）',
-  DynamicSchemeVariant.fruitSalad: '水果沙拉（Fruit Salad）',
+final schemeVariantNames = {
+  DynamicSchemeVariant.tonalSpot: tr('默认（Tonal Spot）'),
+  DynamicSchemeVariant.fidelity: tr('保真（Fidelity）'),
+  DynamicSchemeVariant.content: tr('内容（Content）'),
+  DynamicSchemeVariant.vibrant: tr('鲜艳（Vibrant）'),
+  DynamicSchemeVariant.expressive: tr('表现力（Expressive）'),
+  DynamicSchemeVariant.neutral: tr('中性（Neutral）'),
+  DynamicSchemeVariant.monochrome: tr('单色（Monochrome）'),
+  DynamicSchemeVariant.rainbow: tr('彩虹（Rainbow）'),
+  DynamicSchemeVariant.fruitSalad: tr('水果沙拉（Fruit Salad）'),
 };
 
 enum PageTransition {
@@ -49,8 +50,9 @@ enum PageTransition {
   cupertino('左右滑动'),
   none('无动画');
 
-  const PageTransition(this.label);
-  final String label;
+  const PageTransition(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 enum NavigationStyle {
@@ -58,8 +60,9 @@ enum NavigationStyle {
   rail('始终使用侧边栏'),
   bottom('始终使用底栏');
 
-  const NavigationStyle(this.label);
-  final String label;
+  const NavigationStyle(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 enum ThumbnailQuality {
@@ -68,9 +71,11 @@ enum ThumbnailQuality {
   standard('sddefault', '较高（640×480）'),
   max('maxresdefault', '最高（1280×720，部分视频没有）');
 
-  const ThumbnailQuality(this.file, this.label);
-  final String file;
-  final String label;
+  const ThumbnailQuality(this._file, this._label);
+  final String _file;
+  String get file => tr(_file);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// The font bundled with YTPlus and used by default.
@@ -78,14 +83,14 @@ const bundledFont = 'Noto Sans CJK SC';
 
 /// Fonts offered in Settings: the bundled one, then fonts that ship with
 /// Windows and cover Chinese; null is the system UI font.
-const fontChoices = <(String?, String)>[
-  (bundledFont, 'Noto Sans CJK SC（默认，内置）'),
-  (null, '系统默认'),
-  ('Microsoft YaHei UI', '微软雅黑'),
-  ('DengXian', '等线'),
-  ('SimHei', '黑体'),
-  ('SimSun', '宋体'),
-  ('KaiTi', '楷体'),
+final fontChoices = <(String?, String)>[
+  (bundledFont, tr('Noto Sans CJK SC（默认，内置）')),
+  (null, tr('系统默认')),
+  ('Microsoft YaHei UI', tr('微软雅黑')),
+  ('DengXian', tr('等线')),
+  ('SimHei', tr('黑体')),
+  ('SimSun', tr('宋体')),
+  ('KaiTi', tr('楷体')),
 ];
 
 /// The narrowest a video card may get; set from [AppearanceSettings.cardWidth].
@@ -112,6 +117,8 @@ class AppearanceSettings {
   final ThumbnailQuality thumbnailQuality;
   final bool darkWatchPage;
   final bool showStatusBar;
+  /// The interface language; it applies after a restart.
+  final AppLanguage language;
 
   const AppearanceSettings({
     this.themeMode = ThemeMode.system,
@@ -128,12 +135,13 @@ class AppearanceSettings {
     this.thumbnailQuality = ThumbnailQuality.high,
     this.darkWatchPage = false,
     this.showStatusBar = true,
+    this.language = AppLanguage.system,
   });
 
   /// The chosen colour; [systemAccent] is resolved by the app.
   Color get accent => accentIndex < 0 ? Color(customAccent) : accentChoices[accentIndex].$2;
 
-  String get accentLabel => systemAccent ? '跟随 Windows 强调色' : accentIndex < 0 ? '自定义' : accentChoices[accentIndex].$1;
+  String get accentLabel => systemAccent ? tr('跟随 Windows 强调色') : accentIndex < 0 ? tr('自定义') : accentChoices[accentIndex].$1;
 
   AppearanceSettings copyWith({
     ThemeMode? themeMode,
@@ -151,6 +159,7 @@ class AppearanceSettings {
     ThumbnailQuality? thumbnailQuality,
     bool? darkWatchPage,
     bool? showStatusBar,
+    AppLanguage? language,
   }) =>
       AppearanceSettings(
         themeMode: themeMode ?? this.themeMode,
@@ -167,6 +176,7 @@ class AppearanceSettings {
         thumbnailQuality: thumbnailQuality ?? this.thumbnailQuality,
         darkWatchPage: darkWatchPage ?? this.darkWatchPage,
         showStatusBar: showStatusBar ?? this.showStatusBar,
+        language: language ?? this.language,
       );
 
   /// What a theme is built from; themes are rebuilt only when it changes.
@@ -187,6 +197,7 @@ class AppearanceSettings {
         'thumbnailQuality': thumbnailQuality.name,
         'darkWatchPage': darkWatchPage,
         'showStatusBar': showStatusBar,
+        'language': language.name,
       };
 
   factory AppearanceSettings.fromJson(Object? raw) {
@@ -214,6 +225,7 @@ class AppearanceSettings {
       thumbnailQuality: _byName(ThumbnailQuality.values, raw['thumbnailQuality'], ThumbnailQuality.high),
       darkWatchPage: raw['darkWatchPage'] == true,
       showStatusBar: raw['showStatusBar'] != false,
+      language: AppLanguage.parse(raw['language']),
     );
   }
 }

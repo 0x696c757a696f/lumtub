@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'app_log.dart';
 import 'player_settings.dart';
 import 'video_format_selector.dart';
+import 'l10n/l10n.dart';
 
 /// Where playback streams come from.
 enum PlaybackSource {
@@ -17,8 +18,9 @@ enum PlaybackSource {
   /// Straight from YouTube through yt-dlp.
   youtube('直接连接 YouTube');
 
-  const PlaybackSource(this.label);
-  final String label;
+  const PlaybackSource(this._label);
+  final String _label;
+  String get label => tr(_label);
 
   bool get isPiped => this != youtube;
 }
@@ -307,7 +309,7 @@ class PipedStreams {
   /// After three videos in a row failed, Piped is skipped for ten minutes,
   /// so a time when no server works does not delay every video.
   Future<PipedVideo> fetch(String videoId, {String? server}) async {
-    if (DateTime.now().isBefore(_pausedUntil)) throw StateError('Piped 最近连续失败，暂时不用');
+    if (DateTime.now().isBefore(_pausedUntil)) throw StateError(tr('Piped 最近连续失败，暂时不用'));
     try {
       final video = await _fetch(videoId, server);
       _failures = 0;
@@ -326,7 +328,7 @@ class PipedStreams {
 
   Future<PipedVideo> _fetch(String videoId, String? server) async {
     final order = server != null ? [server] : (await servers()).take(2).toList();
-    if (order.isEmpty) throw StateError('没有可用的 Piped 服务器');
+    if (order.isEmpty) throw StateError(tr('没有可用的 Piped 服务器'));
     Object? lastError;
     for (final candidate in order) {
       try {
@@ -342,6 +344,6 @@ class PipedStreams {
         if (server == null) demote(candidate);
       }
     }
-    throw StateError('Piped 解析失败：$lastError');
+    throw StateError(tr('Piped 解析失败：{0}', [lastError]));
   }
 }

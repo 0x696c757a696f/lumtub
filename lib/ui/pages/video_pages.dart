@@ -8,6 +8,7 @@ import '../common.dart';
 import '../theme.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
+import '../../l10n/l10n.dart';
 
 /// Home: a search prompt and the most recently watched videos.
 class HomeFeedPage extends StatelessWidget {
@@ -35,27 +36,27 @@ class HomeFeedPage extends StatelessWidget {
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
         if (unfinished.isNotEmpty) ...[
-          const SliverToBoxAdapter(child: PageHeader('继续观看', subtitle: '从上次停下的地方接着看')),
+          SliverToBoxAdapter(child: PageHeader(tr('继续观看'), subtitle: tr('从上次停下的地方接着看'))),
           SliverVideoGrid(items: unfinished, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: unfinished)),
           const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
         ],
         if (recent.isNotEmpty) ...[
           SliverToBoxAdapter(child: PageHeader(
-            '最近观看',
-            subtitle: '来自本机观看历史',
-            trailing: TextButton(onPressed: () => controller.navigate(PageMode.history), child: const Text('查看全部')),
+            tr('最近观看'),
+            subtitle: tr('来自本机观看历史'),
+            trailing: TextButton(onPressed: () => controller.navigate(PageMode.history), child: Text(tr('查看全部'))),
           )),
           SliverVideoGrid(items: recent, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: recent)),
           const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
         ],
         if (showFeed) ...[
           SliverToBoxAdapter(child: PageHeader(
-            '为你推荐',
-            subtitle: feed.loading && feed.items.isEmpty ? '正在根据观看记录挑选…' : '长期兴趣、近期兴趣、探索和热门新视频混合，在本机挑选；右键可选“不感兴趣”',
+            tr('为你推荐'),
+            subtitle: feed.loading && feed.items.isEmpty ? tr('正在根据观看记录挑选…') : tr('长期兴趣、近期兴趣、探索和热门新视频混合，在本机挑选；右键可选“不感兴趣”'),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(Icons.shuffle_rounded, size: 18), label: const Text('换一批')),
+              TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(Icons.shuffle_rounded, size: 18), label: Text(tr('换一批'))),
               IconButton(
-                tooltip: '重新挑选',
+                tooltip: tr('重新挑选'),
                 onPressed: feed.loading ? null : () => controller.refreshHomeFeed(force: true),
                 icon: const Icon(Icons.refresh_rounded),
               ),
@@ -67,7 +68,7 @@ class HomeFeedPage extends StatelessWidget {
               thumbnails: controller.thumbnailDirectory,
               onOpen: (item) => controller.play(item, from: feed.items),
               onRemove: controller.dismissRecommendation,
-              removeLabel: '不感兴趣',
+              removeLabel: tr('不感兴趣'),
               reasons: feed.reasons,
             ),
           if (feed.loading || feed.loadingMore) ...[
@@ -76,14 +77,14 @@ class HomeFeedPage extends StatelessWidget {
           ] else if (feed.error case final error? when feed.items.isEmpty)
             SliverToBoxAdapter(child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-              child: ErrorBanner('无法加载推荐：$error', onRetry: () => controller.refreshHomeFeed(force: true)),
+              child: ErrorBanner(tr('无法加载推荐：{0}', [error]), onRetry: () => controller.refreshHomeFeed(force: true)),
             )),
         ],
         if (recent.isEmpty && !showFeed)
-          const SliverFillRemaining(hasScrollBody: false, child: StatusView(
+          SliverFillRemaining(hasScrollBody: false, child: StatusView(
             icon: Icons.play_circle_outline_rounded,
-            title: '还没有观看记录',
-            message: '搜索或粘贴 YouTube 链接开始观看，看过的视频会出现在这里。',
+            title: tr('还没有观看记录'),
+            message: tr('搜索或粘贴 YouTube 链接开始观看，看过的视频会出现在这里。'),
           )),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
@@ -110,9 +111,9 @@ class _Welcome extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
             child: Row(children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('想看点什么？', style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: colors.onPrimaryContainer)),
+                Text(tr('想看点什么？'), style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: colors.onPrimaryContainer)),
                 const SizedBox(height: 6),
-                Text('搜索 YouTube，或直接粘贴视频链接播放。按 Ctrl+K 随时搜索。', style: TextStyle(color: colors.onPrimaryContainer.withValues(alpha: 0.8))),
+                Text(tr('搜索 YouTube，或直接粘贴视频链接播放。按 Ctrl+K 随时搜索。'), style: TextStyle(color: colors.onPrimaryContainer.withValues(alpha: 0.8))),
               ])),
               const SizedBox(width: 16),
               Icon(Icons.search_rounded, size: 40, color: colors.onPrimaryContainer.withValues(alpha: 0.6)),
@@ -137,9 +138,9 @@ class SearchResultsPage extends StatelessWidget {
     if (query == null) {
       return StatusView(
         icon: Icons.explore_outlined,
-        title: '搜索 YouTube',
-        message: '输入关键词，或粘贴 youtube.com / youtu.be 链接。',
-        action: FilledButton.tonalIcon(onPressed: onFocusSearch, icon: const Icon(Icons.search_rounded), label: const Text('开始搜索')),
+        title: tr('搜索 YouTube'),
+        message: tr('输入关键词，或粘贴 youtube.com / youtu.be 链接。'),
+        action: FilledButton.tonalIcon(onPressed: onFocusSearch, icon: const Icon(Icons.search_rounded), label: Text(tr('开始搜索'))),
       );
     }
     final results = controller.visible(controller.results);
@@ -153,17 +154,17 @@ class SearchResultsPage extends StatelessWidget {
       status = StatusView(
         icon: Icons.cloud_off_rounded,
         error: true,
-        title: '搜索失败',
+        title: tr('搜索失败'),
         message: error,
-        action: FilledButton.tonalIcon(onPressed: controller.retrySearch, icon: const Icon(Icons.refresh_rounded), label: const Text('重试')),
+        action: FilledButton.tonalIcon(onPressed: controller.retrySearch, icon: const Icon(Icons.refresh_rounded), label: Text(tr('重试'))),
       );
     } else if (empty && !controller.searching) {
-      status = StatusView(icon: Icons.search_off_rounded, title: filter == SearchFilter.all ? '没有找到相关内容' : '没有找到相关${filter.label}', message: '换个关键词试试。');
+      status = StatusView(icon: Icons.search_off_rounded, title: filter == SearchFilter.all ? tr('没有找到相关内容') : tr('没有找到相关{0}', [filter.label]), message: tr('换个关键词试试。'));
     }
     final count = [
-      if (results.isNotEmpty) '${results.length} 个视频',
-      if (channels.isNotEmpty) '${channels.length} 个频道',
-      if (playlists.isNotEmpty) '${playlists.length} 个播放列表',
+      if (results.isNotEmpty) tr('{0} 个视频', [results.length]),
+      if (channels.isNotEmpty) tr('{0} 个频道', [channels.length]),
+      if (playlists.isNotEmpty) tr('{0} 个播放列表', [playlists.length]),
     ].join('，');
     return NotificationListener<ScrollNotification>(
       // Fetch the next page shortly before the end of the results is reached.
@@ -174,8 +175,8 @@ class SearchResultsPage extends StatelessWidget {
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: PageHeader(
           '“$query”',
-          subtitle: controller.searching ? '正在搜索…' : (count.isEmpty ? null : count),
-          trailing: IconButton(tooltip: '返回 (Alt+←)', onPressed: controller.goBack, icon: const Icon(Icons.arrow_back_rounded)),
+          subtitle: controller.searching ? tr('正在搜索…') : (count.isEmpty ? null : count),
+          trailing: IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: controller.goBack, icon: const Icon(Icons.arrow_back_rounded)),
         )),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
@@ -187,8 +188,8 @@ class SearchResultsPage extends StatelessWidget {
               icon: Icons.sort_rounded,
               value: controller.searchSort,
               values: SearchSort.values,
-              label: (v) => v == SearchSort.relevance ? '排序' : '按${v.label}',
-              item: (v) => '按${v.label}',
+              label: (v) => v == SearchSort.relevance ? tr('排序') : tr('按{0}', [v.label]),
+              item: (v) => tr('按{0}', [v.label]),
               changed: controller.searchSort != SearchSort.relevance,
               onSelected: (v) => controller.setSearchOptions(sort: v),
             ),
@@ -196,7 +197,7 @@ class SearchResultsPage extends StatelessWidget {
               icon: Icons.event_rounded,
               value: controller.searchDate,
               values: SearchUploadDate.values,
-              label: (v) => v == SearchUploadDate.any ? '上传时间' : v.label,
+              label: (v) => v == SearchUploadDate.any ? tr('上传时间') : v.label,
               item: (v) => v.label,
               changed: controller.searchDate != SearchUploadDate.any,
               onSelected: (v) => controller.setSearchOptions(date: v),
@@ -205,7 +206,7 @@ class SearchResultsPage extends StatelessWidget {
               icon: Icons.timer_outlined,
               value: controller.searchDuration,
               values: SearchDuration.values,
-              label: (v) => v == SearchDuration.any ? '时长' : v.label,
+              label: (v) => v == SearchDuration.any ? tr('时长') : v.label,
               item: (v) => v.label,
               changed: controller.searchDuration != SearchDuration.any,
               onSelected: (v) => controller.setSearchOptions(duration: v),
@@ -236,7 +237,7 @@ class SearchResultsPage extends StatelessWidget {
           if (error != null && !empty)
             SliverToBoxAdapter(child: Padding(
               padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-              child: ErrorBanner('加载更多失败：$error', onRetry: () => controller.loadMoreResults(retry: true)),
+              child: ErrorBanner(tr('加载更多失败：{0}', [error]), onRetry: () => controller.loadMoreResults(retry: true)),
             )),
         ],
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
@@ -253,14 +254,14 @@ class HistoryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = controller.history;
     if (items.isEmpty) {
-      return const StatusView(icon: Icons.history_rounded, title: '还没有观看记录', message: '播放过的视频会保存在本机，最多保留 60 条。');
+      return StatusView(icon: Icons.history_rounded, title: tr('还没有观看记录'), message: tr('播放过的视频会保存在本机，最多保留 60 条。'));
     }
     final snapshot = List<VideoItem>.of(items);
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
-        '观看历史',
-        subtitle: '${items.length} 个视频 · 仅保存在本机',
-        trailing: TextButton.icon(onPressed: () => _confirmClear(context), icon: const Icon(Icons.delete_sweep_outlined), label: const Text('清空')),
+        tr('观看历史'),
+        subtitle: tr('{0} 个视频 · 仅保存在本机', [items.length]),
+        trailing: TextButton.icon(onPressed: () => _confirmClear(context), icon: const Icon(Icons.delete_sweep_outlined), label: Text(tr('清空'))),
       )),
       SliverVideoGrid(items: snapshot, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: snapshot)),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
@@ -269,11 +270,11 @@ class HistoryPage extends StatelessWidget {
 
   Future<void> _confirmClear(BuildContext context) async {
     final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-      title: const Text('清空观看历史？'),
-      content: const Text('本机保存的全部观看记录都会被删除，无法恢复。'),
+      title: Text(tr('清空观看历史？')),
+      content: Text(tr('本机保存的全部观看记录都会被删除，无法恢复。')),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('清空')),
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('取消'))),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('清空'))),
       ],
     ));
     if (confirmed == true) await controller.clearHistory();

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// Full-area message for empty, error and not-yet-available states.
 class StatusView extends StatelessWidget {
@@ -57,7 +58,7 @@ class ErrorBanner extends StatelessWidget {
         Icon(Icons.error_outline_rounded, color: colors.onErrorContainer, size: 20),
         const SizedBox(width: 12),
         Expanded(child: Text(message, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onErrorContainer))),
-        if (onRetry != null) TextButton(onPressed: onRetry, child: const Text('重试')),
+        if (onRetry != null) TextButton(onPressed: onRetry, child: Text(tr('重试'))),
       ]),
     );
   }
@@ -108,7 +109,7 @@ String formatPlaybackTime(Duration value) {
   return hours > 0 ? '$hours:$minutes:$seconds' : '${value.inMinutes}:$seconds';
 }
 
-String formatDate(DateTime date) => '${date.year}年${date.month}月${date.day}日';
+String formatDate(DateTime date) => tr('{0}年{1}月{2}日', [date.year, date.month, date.day]);
 
 /// Opens a web link in the default browser.
 Future<void> openExternal(String url) async {

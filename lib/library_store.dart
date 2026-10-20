@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'models.dart';
+import 'l10n/l10n.dart';
 
 /// How far into a video playback stopped.
 class WatchProgress {
@@ -49,7 +50,7 @@ class LibraryStore {
       favorites.addAll(_items(data['favorites']));
       for (final raw in data['playlists'] is List ? data['playlists'] as List : const []) {
         if (raw is! Map || raw['id'] is! String) continue;
-        playlists.add(LocalPlaylist(id: raw['id'] as String, name: raw['name']?.toString() ?? '播放列表', items: _items(raw['items'])));
+        playlists.add(LocalPlaylist(id: raw['id'] as String, name: raw['name']?.toString() ?? tr('播放列表'), items: _items(raw['items'])));
       }
       for (final raw in data['channels'] is List ? data['channels'] as List : const []) {
         final channel = ChannelRef.fromJson(raw);
@@ -128,7 +129,7 @@ class LibraryStore {
   }
 
   LocalPlaylist createPlaylist(String name) {
-    final playlist = LocalPlaylist(id: DateTime.now().microsecondsSinceEpoch.toRadixString(36), name: name.trim().isEmpty ? '新播放列表' : name.trim());
+    final playlist = LocalPlaylist(id: DateTime.now().microsecondsSinceEpoch.toRadixString(36), name: name.trim().isEmpty ? tr('新播放列表') : name.trim());
     playlists.add(playlist);
     return playlist;
   }

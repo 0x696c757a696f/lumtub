@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
+import 'l10n/l10n.dart';
 
 /// A playlist of the signed-in account.
 class RemotePlaylist {
@@ -29,10 +30,10 @@ class YouTubeAccountApi {
   Future<({String name, String? likes})> me() async {
     final data = await _get('channels', {'part': 'snippet,contentDetails', 'mine': 'true'});
     final items = data['items'];
-    if (items is! List || items.isEmpty || items.first is! Map) return (name: 'YouTube 账号', likes: null);
+    if (items is! List || items.isEmpty || items.first is! Map) return (name: tr('YouTube 账号'), likes: null);
     final channel = items.first as Map;
     final likes = (channel['contentDetails'] as Map?)?['relatedPlaylists']?['likes'];
-    return (name: (channel['snippet'] as Map?)?['title']?.toString() ?? 'YouTube 账号', likes: likes is String && likes.isNotEmpty ? likes : null);
+    return (name: (channel['snippet'] as Map?)?['title']?.toString() ?? tr('YouTube 账号'), likes: likes is String && likes.isNotEmpty ? likes : null);
   }
 
   Future<List<ChannelRef>> subscriptions() async {
@@ -145,7 +146,7 @@ class YouTubeAccountApi {
     final id = item['id'];
     if (id is! String || id.isEmpty) return null;
     final count = (item['contentDetails'] as Map?)?['itemCount'];
-    return RemotePlaylist(id, (item['snippet'] as Map?)?['title']?.toString() ?? '播放列表', count is num ? count.toInt() : 0);
+    return RemotePlaylist(id, (item['snippet'] as Map?)?['title']?.toString() ?? tr('播放列表'), count is num ? count.toInt() : 0);
   }
 
   /// Deleted and private videos stay in playlists without an owner; they
@@ -223,15 +224,15 @@ class YouTubeApiException implements Exception {
 
   @override
   String toString() => switch (reason) {
-        'quotaExceeded' || 'dailyLimitExceeded' => 'YouTube API 今日配额已用完，请明天再同步',
-        'accessNotConfigured' => '这个 Google 客户端还没有启用 YouTube Data API v3',
-        'youtubeSignupRequired' => '这个 Google 账号还没有 YouTube 频道',
-        'insufficientPermissions' || 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' => '登录时没有授予修改权限，请重新登录 Google 账号',
-        'commentsDisabled' => '这个视频关闭了评论',
-        'forbidden' when status == 403 => 'YouTube 拒绝了这个操作',
-        'subscriptionForbidden' => '不能订阅这个频道',
-        'videoNotFound' => '找不到这个视频',
-        _ when status == 401 => '登录已失效，请重新登录',
-        _ => 'YouTube API 请求失败（HTTP $status${reason == null ? '' : ' · $reason'}）',
+        'quotaExceeded' || 'dailyLimitExceeded' => tr('YouTube API 今日配额已用完，请明天再同步'),
+        'accessNotConfigured' => tr('这个 Google 客户端还没有启用 YouTube Data API v3'),
+        'youtubeSignupRequired' => tr('这个 Google 账号还没有 YouTube 频道'),
+        'insufficientPermissions' || 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' => tr('登录时没有授予修改权限，请重新登录 Google 账号'),
+        'commentsDisabled' => tr('这个视频关闭了评论'),
+        'forbidden' when status == 403 => tr('YouTube 拒绝了这个操作'),
+        'subscriptionForbidden' => tr('不能订阅这个频道'),
+        'videoNotFound' => tr('找不到这个视频'),
+        _ when status == 401 => tr('登录已失效，请重新登录'),
+        _ => tr('YouTube API 请求失败（HTTP {0}{1}）', [status, reason == null ? '' : ' · $reason']),
       };
 }

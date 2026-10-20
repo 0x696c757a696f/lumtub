@@ -12,6 +12,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/l10n.dart';
 
 TextStyle _titleStyle(ThemeData theme) => theme.textTheme.titleMedium!;
 TextStyle _subtitleStyle(ThemeData theme) => theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.outline);
@@ -242,9 +243,9 @@ class _SliderDialogState extends State<SliderDialog> {
         actions: [
           TextButton(
             onPressed: Navigator.of(context).pop,
-            child: Text('取消', style: TextStyle(color: Theme.of(context).colorScheme.outline)),
+            child: Text(tr('取消'), style: TextStyle(color: Theme.of(context).colorScheme.outline)),
           ),
-          TextButton(onPressed: () => Navigator.pop(context, _tempValue), child: const Text('确定')),
+          TextButton(onPressed: () => Navigator.pop(context, _tempValue), child: Text(tr('确定'))),
         ],
       );
 }
@@ -314,7 +315,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
     final value = _addController.text.trim();
     if (value.isEmpty) return true;
     if (_items.contains(value)) {
-      _toast('该${widget.itemLabel}已存在');
+      _toast(tr('该{0}已存在', [tr(widget.itemLabel)]));
       return false;
     }
     setState(() {
@@ -333,7 +334,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
     }
     final duplicate = _items.indexOf(value);
     if (duplicate != -1 && duplicate != index) {
-      _toast('该${widget.itemLabel}已存在');
+      _toast(tr('该{0}已存在', [tr(widget.itemLabel)]));
       return false;
     }
     setState(() => _items[index] = value);
@@ -359,18 +360,18 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
               child: TextField(
                 controller: _addController,
                 autofocus: true,
-                decoration: InputDecoration(hintText: widget.hintText, isDense: true),
+                decoration: InputDecoration(hintText: tr(widget.hintText), isDense: true),
                 onSubmitted: (_) => _addItem(),
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(icon: const Icon(Icons.add_circle_outline), onPressed: _addItem, tooltip: '添加'),
+            IconButton(icon: const Icon(Icons.add_circle_outline), onPressed: _addItem, tooltip: tr('添加')),
           ]),
           const SizedBox(height: 12),
           if (_items.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Center(child: Text('暂无${widget.itemLabel}', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.outline))),
+              child: Center(child: Text(tr('暂无{0}', [tr(widget.itemLabel)]), style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.outline))),
             )
           else
             Flexible(
@@ -394,7 +395,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
                       trailing: IconButton(
                         icon: const Icon(Icons.delete_outline, size: 20),
                         onPressed: () => _removeItem(index),
-                        tooltip: '删除',
+                        tooltip: tr('删除'),
                       ),
                     ),
                   ),
@@ -405,7 +406,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
       ),
       actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text('取消', style: TextStyle(color: theme.colorScheme.outline))),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'), style: TextStyle(color: theme.colorScheme.outline))),
         FilledButton(
           onPressed: () {
             for (var i = 0; i < _items.length; i++) {
@@ -415,7 +416,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
             if (!_addItem()) return;
             Navigator.pop(context, List.of(_items));
           },
-          child: const Text('保存'),
+          child: Text(tr('保存')),
         ),
       ],
     );
@@ -520,8 +521,8 @@ class _SlideColorPickerState extends State<SlideColorPicker> {
           _slider('B', _rgb & 0xFF, 0),
           Row(children: [
             const Spacer(),
-            TextButton(onPressed: () => Navigator.pop(context), child: Text('取消', style: TextStyle(color: Theme.of(context).colorScheme.outline))),
-            TextButton(onPressed: () => Navigator.pop(context, Color(0xFF000000 | _rgb)), child: const Text('确定')),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'), style: TextStyle(color: Theme.of(context).colorScheme.outline))),
+            TextButton(onPressed: () => Navigator.pop(context, Color(0xFF000000 | _rgb)), child: Text(tr('确定'))),
             const SizedBox(width: 16),
           ]),
         ]),
@@ -536,8 +537,8 @@ Future<bool> confirmDialog(BuildContext context, {required String title, require
         title: Text(title),
         content: Text(content),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text('取消', style: TextStyle(color: Theme.of(context).colorScheme.outline))),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(confirm)),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('取消'), style: TextStyle(color: Theme.of(context).colorScheme.outline))),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(tr(confirm))),
         ],
       ),
     ) ??
@@ -585,8 +586,8 @@ class _OrderedMultiSelectDialogState<T> extends State<OrderedMultiSelectDialog<T
       ),
       actionsPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text('取消', style: TextStyle(color: theme.colorScheme.outline))),
-        TextButton(onPressed: _chosen.isEmpty ? null : () => Navigator.pop(context, List<T>.of(_chosen)), child: const Text('确定')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'), style: TextStyle(color: theme.colorScheme.outline))),
+        TextButton(onPressed: _chosen.isEmpty ? null : () => Navigator.pop(context, List<T>.of(_chosen)), child: Text(tr('确定'))),
       ],
     );
   }
@@ -665,8 +666,8 @@ class _TextEditDialogState extends State<TextEditDialog> {
         ]),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text('取消', style: TextStyle(color: theme.colorScheme.outline))),
-        TextButton(onPressed: () => Navigator.pop(context, _text.text), child: const Text('保存')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'), style: TextStyle(color: theme.colorScheme.outline))),
+        TextButton(onPressed: () => Navigator.pop(context, _text.text), child: Text(tr('保存'))),
       ],
     );
   }

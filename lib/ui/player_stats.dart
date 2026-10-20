@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
+import '../l10n/l10n.dart';
 
 /// mpv properties shown in the statistics overlay; the same names appear in
 /// standalone mpv's stats page (key i), so the two can be compared directly.
@@ -110,15 +111,15 @@ List<(String, String)> statsRows(Map<String, String> v) {
   final height = value('video-params/h');
   final hwdec = value('hwdec-current');
   return [
-    ('视频', or(value('video-codec'))),
-    ('分辨率', width.isEmpty || height.isEmpty ? '—' : '${width}x$height'),
-    ('解码', hwdec.isEmpty || hwdec == 'no' ? '软件解码' : '硬件 $hwdec'),
-    ('帧率', '${number('estimated-vf-fps')} / 源 ${number('container-fps', digits: 3)}'),
-    ('丢帧', '输出 ${or(value('frame-drop-count'))} · 解码 ${or(value('decoder-frame-drop-count'))} · 延迟 ${or(value('vo-delayed-frame-count'))}'),
-    ('音画偏差', value('avsync').isEmpty ? '—' : '${((double.tryParse(value('avsync')) ?? 0) * 1000).round()} ms · 显示 ${number('display-fps', digits: 0)} Hz'),
-    ('码率', '视频 ${kbps('video-bitrate')} · 音频 ${kbps('audio-bitrate')}'),
-    ('音频', or(value('audio-codec-name'))),
-    ('缓冲', value('demuxer-cache-duration').isEmpty ? '—' : '${number('demuxer-cache-duration', digits: 1)} 秒'),
-    ('下载速度', speed(value('cache-speed'))),
+    (tr('视频'), or(value('video-codec'))),
+    (tr('分辨率'), width.isEmpty || height.isEmpty ? '—' : '${width}x$height'),
+    (tr('解码'), hwdec.isEmpty || hwdec == 'no' ? tr('软件解码') : tr('硬件 {0}', [hwdec])),
+    (tr('帧率'), tr('{0} / 源 {1}', [number('estimated-vf-fps'), number('container-fps', digits: 3)])),
+    (tr('丢帧'), tr('输出 {0} · 解码 {1} · 延迟 {2}', [or(value('frame-drop-count')), or(value('decoder-frame-drop-count')), or(value('vo-delayed-frame-count'))])),
+    (tr('音画偏差'), value('avsync').isEmpty ? '—' : tr('{0} ms · 显示 {1} Hz', [((double.tryParse(value('avsync')) ?? 0) * 1000).round(), number('display-fps', digits: 0)])),
+    (tr('码率'), tr('视频 {0} · 音频 {1}', [kbps('video-bitrate'), kbps('audio-bitrate')])),
+    (tr('音频'), or(value('audio-codec-name'))),
+    (tr('缓冲'), value('demuxer-cache-duration').isEmpty ? '—' : tr('{0} 秒', [number('demuxer-cache-duration', digits: 1)])),
+    (tr('下载速度'), speed(value('cache-speed'))),
   ];
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart' show IconData;
 import 'package:flutter/material.dart' show Icons;
 
+import 'l10n/l10n.dart';
 import 'search_options.dart';
 import 'video_repository.dart';
 
@@ -9,22 +10,26 @@ enum ExploreSection {
   popular('视频'),
   live('直播');
 
-  const ExploreSection(this.label);
-  final String label;
+  const ExploreSection(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// A sub-category of a zone: its name and the words searched for.
 class ExploreSub {
-  const ExploreSub(this.label, this.query);
-  final String label;
+  const ExploreSub(this._label, this.query);
+  final String _label;
+  String get label => tr(_label);
   final String query;
 }
 
 /// One explore zone, as Bilibili's 分区: what it is called, the search
 /// behind it and its sub-categories.
 class ExploreTopic {
-  const ExploreTopic(this.label, this.icon, this.query, {this.subs = const [], this.custom = false});
-  final String label;
+  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false});
+  final String _label;
+  /// The name shown; a user's own is shown as typed.
+  String get label => custom ? _label : tr(_label);
   final IconData icon;
   final String query;
   final List<ExploreSub> subs;
@@ -33,7 +38,7 @@ class ExploreTopic {
 
   /// Names the zone in the saved order and hidden lists; custom zones as
   /// `custom:<label>`.
-  String get key => custom ? 'custom:$label' : label;
+  String get key => custom ? 'custom:$_label' : _label;
 }
 
 /// A category the user added: its name, the words searched for, and which
@@ -300,8 +305,9 @@ enum ExploreMode {
   liveViewers('观看最多', live: true),
   liveLatest('最新开播', live: true);
 
-  const ExploreMode(this.label, {required this.live});
-  final String label;
+  const ExploreMode(this._label, {required this.live});
+  final String _label;
+  String get label => tr(_label);
   final bool live;
 
   static List<ExploreMode> of(ExploreSection section) => values.where((m) => m.live == (section == ExploreSection.live)).toList();

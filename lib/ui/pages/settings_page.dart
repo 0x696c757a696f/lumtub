@@ -14,6 +14,7 @@ import '../../app/app_controller.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../theme.dart';
 import 'settings_sections.dart';
+import '../../l10n/l10n.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.controller, this.initial = SettingsCategory.account});
@@ -69,11 +70,11 @@ class _SettingsPageState extends State<SettingsPage> {
             isDense: true,
             filled: true,
             fillColor: theme.colorScheme.onInverseSurface,
-            hintText: '搜索设置',
+            hintText: tr('搜索设置'),
             prefixIcon: const Icon(Icons.search_rounded, size: 20),
             suffixIcon: searching
                 ? IconButton(
-                    tooltip: '清除',
+                    tooltip: tr('清除'),
                     icon: const Icon(Icons.close_rounded, size: 18),
                     onPressed: () => setState(() {
                       _search.clear();
@@ -98,9 +99,9 @@ class _SettingsPageState extends State<SettingsPage> {
         if (_controller.account?.signedIn ?? false)
           ListTile(
             leading: const Icon(Icons.logout_outlined),
-            title: Text('退出登录', style: theme.textTheme.titleMedium),
+            title: Text(tr('退出登录'), style: theme.textTheme.titleMedium),
             onTap: () async {
-              if (await confirmDialog(context, title: '退出登录？', content: '本机保存的 Google 登录凭据会被删除，订阅和播放列表保留在本机。', confirm: '退出登录')) {
+              if (await confirmDialog(context, title: tr('退出登录？'), content: tr('本机保存的 Google 登录凭据会被删除，订阅和播放列表保留在本机。'), confirm: tr('退出登录'))) {
                 await _controller.account?.signOut();
               }
             },
@@ -168,7 +169,7 @@ class _SearchResults extends StatelessWidget {
     return [
       Padding(
         padding: const EdgeInsets.all(32),
-        child: Text('没有找到相关设置', textAlign: TextAlign.center, style: TextStyle(color: context.colors.outline)),
+        child: Text(tr('没有找到相关设置'), textAlign: TextAlign.center, style: TextStyle(color: context.colors.outline)),
       ),
     ];
   }

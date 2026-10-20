@@ -30,6 +30,7 @@ import 'pages/settings_subpages.dart';
 import 'player_shortcuts.dart';
 import 'player_stats.dart';
 import 'video_texture_size.dart';
+import '../l10n/l10n.dart';
 
 /// Picture sizing, from PiliNara's `VideoFitType`.
 enum VideoFit {
@@ -42,8 +43,9 @@ enum VideoFit {
   ratio4x3('4:3', BoxFit.fill, 4 / 3),
   ratio16x9('16:9', BoxFit.fill, 16 / 9);
 
-  const VideoFit(this.label, this.fit, [this.aspectRatio]);
-  final String label;
+  const VideoFit(this._label, this.fit, [this.aspectRatio]);
+  final String _label;
+  String get label => tr(_label);
   final BoxFit fit;
   final double? aspectRatio;
 }
@@ -166,7 +168,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       final rate = _heldRate = _player.state.rate;
       final fast = max(2.0, rate * 2).clamp(0.25, 4.0);
       unawaited(_player.setRate(fast));
-      _showFeedback(Icons.fast_forward_rounded, '${_trimRate(fast)}x 倍速中');
+      _showFeedback(Icons.fast_forward_rounded, tr('{0}x 倍速中', [_trimRate(fast)]));
     } else if (_heldRate case final rate?) {
       _heldRate = null;
       unawaited(_player.setRate(rate));
@@ -262,7 +264,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           final chapters = _chapters;
           final current = Chapter.at(chapters, _player.state.position);
           return _PopupMenu<int>(
-            tooltip: '章节',
+            tooltip: tr('章节'),
             value: current == null ? -1 : chapters.indexOf(current),
             items: [for (final (i, c) in chapters.indexed) (i, '${formatPlaybackTime(c.start)}  ${c.title}')],
             onSelected: (i) => unawaited(_player.seek(chapters[i].start)),
@@ -314,15 +316,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       padding: EdgeInsets.fromLTRB(fullscreen ? 8 : 12, fullscreen ? 10 : 4, 8, 16),
       child: Row(children: [
         if (fullscreen)
-          _IconButton(tooltip: '返回', icon: Icons.arrow_back_ios_new_rounded, size: 18, onTap: () => unawaited(widget.state?.exitFullscreen())),
+          _IconButton(tooltip: tr('返回'), icon: Icons.arrow_back_ios_new_rounded, size: 18, onTap: () => unawaited(widget.state?.exitFullscreen())),
         if (fullscreen) const SizedBox(width: 6),
         Expanded(
           child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: fullscreen ? 16 : 14)),
         ),
         if (_controller.sleepAt != null || _controller.sleepAfterCurrent)
-          const Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Tooltip(message: '定时关闭已开启', child: Icon(Icons.bedtime_outlined, color: Colors.white, size: 18))),
-        _IconButton(tooltip: '播放信息 (I)', icon: Icons.info_outline_rounded, size: 19, onTap: _controller.toggleStats),
-        _IconButton(tooltip: '更多设置', icon: Icons.more_vert_rounded, size: 20, onTap: () => _showMore(context)),
+          Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Tooltip(message: tr('定时关闭已开启'), child: Icon(Icons.bedtime_outlined, color: Colors.white, size: 18))),
+        _IconButton(tooltip: tr('播放信息 (I)'), icon: Icons.info_outline_rounded, size: 19, onTap: _controller.toggleStats),
+        _IconButton(tooltip: tr('更多设置'), icon: Icons.more_vert_rounded, size: 20, onTap: () => _showMore(context)),
       ]),
     );
   }
@@ -356,7 +358,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         Row(children: [
           _PlayPauseButton(player: _player),
           if (_controller.hasNext)
-            _IconButton(tooltip: '下一个 (Shift+N)', icon: Icons.skip_next_rounded, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
+            _IconButton(tooltip: tr('下一个 (Shift+N)'), icon: Icons.skip_next_rounded, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
           const SizedBox(width: 4),
           StreamBuilder<Duration>(
             stream: _player.stream.position,
@@ -372,7 +374,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           ValueListenableBuilder(
             valueListenable: videoFit,
             builder: (context, fit, _) => _TextMenu<VideoFit>(
-              tooltip: '画面比例',
+              tooltip: tr('画面比例'),
               label: fit.label,
               value: fit,
               values: [for (final f in VideoFit.values) (f, f.label)],
@@ -386,7 +388,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             stream: _player.stream.rate,
             initialData: _player.state.rate,
             builder: (context, _) => _TextMenu<double>(
-              tooltip: '倍速',
+              tooltip: tr('倍速'),
               label: '${trimSpeed(_player.state.rate)}X',
               value: _player.state.rate,
               values: [for (final speed in _controller.settings.speeds) (speed, '${trimSpeed(speed)}X')],
@@ -403,11 +405,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               final max = _controller.settings.maxHeight;
               final choices = _controller.qualityChoices;
               return _TextMenu<int>(
-                tooltip: '画质',
-                label: height > 0 ? '${height}P' : (max == 0 ? '自动' : '${max}P'),
+                tooltip: tr('画质'),
+                label: height > 0 ? '${height}P' : (max == 0 ? tr('自动') : '${max}P'),
                 // A limit above what this video offers plays its highest.
                 value: choices.contains(max) ? max : height,
-                values: [for (final h in choices) (h, h == 0 ? '自动' : '${h}P')],
+                values: [for (final h in choices) (h, h == 0 ? tr('自动') : '${h}P')],
                 onSelected: (h) => unawaited(_controller.setMaxHeight(h)),
                 onOpened: _menuOpened,
                 onClosed: _menuClosed,
@@ -415,7 +417,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             },
           ),
           _IconButton(
-            tooltip: fullscreen ? '退出全屏 (F)' : '全屏 (F)',
+            tooltip: fullscreen ? tr('退出全屏 (F)') : tr('全屏 (F)'),
             icon: fullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
             size: 24,
             width: width,
@@ -437,12 +439,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           if (tracks.isEmpty && offered.isEmpty) return const SizedBox.shrink();
           const more = '\u0000more';
           return _PopupMenu<String>(
-            tooltip: '字幕',
+            tooltip: tr('字幕'),
             value: current.id,
             items: [
-              ('no', '关闭字幕'),
+              ('no', tr('关闭字幕')),
               for (final t in tracks) (t.id, _trackLabel(t.id, t.title, t.language)),
-              if (offered.isNotEmpty) (more, '全部字幕（${offered.length}）…'),
+              if (offered.isNotEmpty) (more, tr('全部字幕（{0}）…', [offered.length])),
             ],
             onSelected: (id) {
               if (id == more) {
@@ -469,11 +471,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final settings = _controller.settings;
     final audio = _player.state.tracks.audio.where((t) => t.id != 'auto' && t.id != 'no').toList();
     String sleepLabel() {
-      if (_controller.sleepAfterCurrent) return '播完当前视频后暂停';
+      if (_controller.sleepAfterCurrent) return tr('播完当前视频后暂停');
       final at = _controller.sleepAt;
-      if (at == null) return '未开启';
+      if (at == null) return tr('未开启');
       final left = at.difference(DateTime.now());
-      return '${left.inMinutes + 1} 分钟后暂停';
+      return tr('{0} 分钟后暂停', [left.inMinutes + 1]);
     }
 
     await showModalBottomSheet<void>(
@@ -494,46 +496,46 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             );
         return SafeArea(
           child: ListView(shrinkWrap: true, padding: const EdgeInsets.symmetric(vertical: 12), children: [
-            item(Icons.high_quality_outlined, '选择画质', qualityLabel(settings.maxHeight), () {
-              pickFromDialog<int>(context, title: '选择画质', value: settings.maxHeight, values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h))], onSelected: _controller.setMaxHeight);
+            item(Icons.high_quality_outlined, tr('选择画质'), qualityLabel(settings.maxHeight), () {
+              pickFromDialog<int>(context, title: tr('选择画质'), value: settings.maxHeight, values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h))], onSelected: _controller.setMaxHeight);
             }),
-            item(Icons.music_note_outlined, '选择音质', settings.audioQuality.label, () {
+            item(Icons.music_note_outlined, tr('选择音质'), settings.audioQuality.label, () {
               pickFromDialog<AudioQuality>(
                 context,
-                title: '选择音质',
+                title: tr('选择音质'),
                 value: settings.audioQuality,
                 values: [for (final q in AudioQuality.values) (q, q.label)],
                 onSelected: (q) => _controller.reloadVideo(_controller.settings.copyWith(audioQuality: q)),
               );
             }),
-            item(Icons.movie_filter_outlined, '解码格式', settings.codec.label, () {
+            item(Icons.movie_filter_outlined, tr('解码格式'), settings.codec.label, () {
               pickFromDialog<CodecPreference>(
                 context,
-                title: '解码格式',
+                title: tr('解码格式'),
                 value: settings.codec,
                 values: [for (final c in CodecPreference.values) (c, c.label)],
                 onSelected: (c) => _controller.reloadVideo(_controller.settings.copyWith(codec: c)),
               );
             }),
             if (audio.length > 1)
-              item(Icons.audiotrack_rounded, '选择音轨', _trackLabel(_player.state.track.audio.id, _player.state.track.audio.title, _player.state.track.audio.language), () {
+              item(Icons.audiotrack_rounded, tr('选择音轨'), _trackLabel(_player.state.track.audio.id, _player.state.track.audio.title, _player.state.track.audio.language), () {
                 pickFromDialog<String>(
                   context,
-                  title: '选择音轨',
+                  title: tr('选择音轨'),
                   value: _player.state.track.audio.id,
                   values: [for (final t in audio) (t.id, _trackLabel(t.id, t.title, t.language))],
                   onSelected: (id) => _player.setAudioTrack(audio.firstWhere((t) => t.id == id)),
                 );
               }),
-            item(Icons.repeat_rounded, '播放顺序', settings.playOrder.label, () {
-              pickFromDialog<PlayOrder>(context, title: '播放顺序', value: settings.playOrder, values: [for (final o in PlayOrder.values) (o, o.label)], onSelected: _controller.setPlayOrder);
+            item(Icons.repeat_rounded, tr('播放顺序'), settings.playOrder.label, () {
+              pickFromDialog<PlayOrder>(context, title: tr('播放顺序'), value: settings.playOrder, values: [for (final o in PlayOrder.values) (o, o.label)], onSelected: _controller.setPlayOrder);
             }),
-            item(Icons.subtitles_outlined, '字幕设置', '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}', () => openSubtitleSettings(context, _controller)),
-            item(Icons.tune_rounded, '画面与音画同步调节', null, () => openPictureSettings(context, _controller)),
-            item(Icons.bedtime_outlined, '定时关闭', sleepLabel(), () => _pickSleepTimer(context)),
-            item(Icons.info_outline_rounded, '播放信息', _controller.showStats ? '显示中' : null, _controller.toggleStats),
-            item(Icons.refresh_rounded, '重载视频', '从当前位置重新加载', () => unawaited(_controller.reloadVideo())),
-            item(Icons.keyboard_outlined, '快捷键', null, () => showShortcutHelp(context, _controller.preferences)),
+            item(Icons.subtitles_outlined, tr('字幕设置'), '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}', () => openSubtitleSettings(context, _controller)),
+            item(Icons.tune_rounded, tr('画面与音画同步调节'), null, () => openPictureSettings(context, _controller)),
+            item(Icons.bedtime_outlined, tr('定时关闭'), sleepLabel(), () => _pickSleepTimer(context)),
+            item(Icons.info_outline_rounded, tr('播放信息'), _controller.showStats ? tr('显示中') : null, _controller.toggleStats),
+            item(Icons.refresh_rounded, tr('重载视频'), tr('从当前位置重新加载'), () => unawaited(_controller.reloadVideo())),
+            item(Icons.keyboard_outlined, tr('快捷键'), null, () => showShortcutHelp(context, _controller.preferences)),
           ]),
         );
       },
@@ -547,9 +549,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final current = _controller.sleepAfterCurrent ? afterCurrent : (_controller.sleepAt == null ? off : null);
     await pickFromDialog<int?>(
       context,
-      title: '定时关闭',
+      title: tr('定时关闭'),
       value: current,
-      values: const [(off, '不开启'), (afterCurrent, '播完当前视频后'), (15, '15 分钟'), (30, '30 分钟'), (45, '45 分钟'), (60, '60 分钟'), (90, '90 分钟')],
+      values: [(off, tr('不开启')), (afterCurrent, tr('播完当前视频后')), (15, tr('15 分钟')), (30, tr('30 分钟')), (45, tr('45 分钟')), (60, tr('60 分钟')), (90, tr('90 分钟'))],
       onSelected: (minutes) {
         if (minutes == null || minutes == off) {
           _controller.setSleepTimer(null);
@@ -573,7 +575,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   static String _trackLabel(String id, String? title, String? language) {
     final parts = [if (title != null && title.isNotEmpty) title, if (language != null && language.isNotEmpty) language];
-    return parts.isEmpty ? '轨道 $id' : parts.join(' · ');
+    return parts.isEmpty ? tr('轨道 {0}', [id]) : parts.join(' · ');
   }
 }
 
@@ -628,7 +630,7 @@ class _PlayPauseButtonState extends State<_PlayPauseButton> with SingleTickerPro
 
   @override
   Widget build(BuildContext context) => Tooltip(
-        message: '播放/暂停 (空格)',
+        message: tr('播放/暂停 (空格)'),
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
@@ -757,7 +759,7 @@ class _VolumeButtonState extends State<_VolumeButton> {
             final max = widget.controller.settings.volumeMax.toDouble();
             return Row(mainAxisSize: MainAxisSize.min, children: [
               _IconButton(
-                tooltip: volume == 0 ? '取消静音 (M)' : '静音 (M)',
+                tooltip: volume == 0 ? tr('取消静音 (M)') : tr('静音 (M)'),
                 icon: volume == 0 ? Icons.volume_off_rounded : (volume < 50 ? Icons.volume_down_rounded : Icons.volume_up_rounded),
                 onTap: () => unawaited(widget.controller.toggleMute()),
               ),
@@ -820,9 +822,9 @@ class _SubtitlePickerState extends State<_SubtitlePicker> {
   Widget build(BuildContext context) {
     final query = _query.trim().toLowerCase();
     final shown = widget.options.where((o) => query.isEmpty || o.label.toLowerCase().contains(query) || o.language.toLowerCase().contains(query) || o.name.toLowerCase().contains(query)).toList();
-    const headings = {SubtitleKind.uploaded: '上传的字幕', SubtitleKind.automatic: '自动生成', SubtitleKind.translated: '自动翻译'};
+    final headings = {SubtitleKind.uploaded: tr('上传的字幕'), SubtitleKind.automatic: tr('自动生成'), SubtitleKind.translated: tr('自动翻译')};
     return AlertDialog(
-      title: const Text('选择字幕'),
+      title: Text(tr('选择字幕')),
       contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       content: SizedBox(
         width: 420,
@@ -830,7 +832,7 @@ class _SubtitlePickerState extends State<_SubtitlePicker> {
         child: Column(children: [
           TextField(
             autofocus: true,
-            decoration: const InputDecoration(isDense: true, prefixIcon: Icon(Icons.search_rounded, size: 20), hintText: '搜索语言，如 中文、ja'),
+            decoration: InputDecoration(isDense: true, prefixIcon: Icon(Icons.search_rounded, size: 20), hintText: tr('搜索语言，如 中文、ja')),
             onChanged: (v) => setState(() => _query = v),
           ),
           const SizedBox(height: 8),
@@ -843,11 +845,11 @@ class _SubtitlePickerState extends State<_SubtitlePicker> {
                 ),
                 for (final option in group) ListTile(dense: true, title: Text(option.label), subtitle: Text(option.language), onTap: () => Navigator.of(context).pop(option)),
               ],
-            if (shown.isEmpty) const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('没有匹配的语言'))),
+            if (shown.isEmpty) Padding(padding: EdgeInsets.all(24), child: Center(child: Text(tr('没有匹配的语言')))),
           ])),
         ]),
       ),
-      actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('取消'))],
+      actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('取消')))],
     );
   }
 }

@@ -6,6 +6,7 @@ import '../app_log.dart';
 import '../library_store.dart' show WatchProgress;
 import '../models.dart';
 import '../recommendations.dart';
+import '../l10n/l10n.dart';
 
 /// Where [HomeFeed] gathers videos from; each may fail on its own.
 class HomeFeedSources {
@@ -106,43 +107,43 @@ class HomeFeed extends ChangeNotifier {
     final now = DateTime.now();
     for (final item in sources.subscriptions.take(80)) {
       final isNew = item.published != null && now.difference(item.published!) < const Duration(hours: 48);
-      candidates[isNew ? FeedLane.fresh : FeedLane.longTerm]!.add(Candidate(item, RecommendSource.subscription, reason: isNew ? '你关注的 ${item.channel} 刚更新' : '你关注的 ${item.channel}'));
+      candidates[isNew ? FeedLane.fresh : FeedLane.longTerm]!.add(Candidate(item, RecommendSource.subscription, reason: isNew ? tr('你关注的 {0} 刚更新', [item.channel]) : tr('你关注的 {0}', [item.channel])));
     }
     // Recent: what the last few videos and the newest search were about.
     for (final (i, seed) in sources.history.take(3).indexed) {
       _expanded.add(seed.id);
-      jobs.add(gather(FeedLane.recent, () => sources.related(seed.id), RecommendSource.related, 1 - i * 0.1, 15, (_) => '看过《${_short(seed.title)}》的人也在看'));
+      jobs.add(gather(FeedLane.recent, () => sources.related(seed.id), RecommendSource.related, 1 - i * 0.1, 15, (_) => tr('看过《{0}》的人也在看', [_short(seed.title)])));
     }
     if (sources.searches.isNotEmpty) {
       final query = sources.searches.first;
-      jobs.add(gather(FeedLane.recent, () => sources.search(query), RecommendSource.topic, 0.9, 10, (_) => '你最近搜过“$query”'));
+      jobs.add(gather(FeedLane.recent, () => sources.search(query), RecommendSource.topic, 0.9, 10, (_) => tr('你最近搜过“{0}”', [query])));
     }
     // Long-term: older favourites and the channels watched most.
     final kept = <VideoItem>[...sources.favorites.take(3), ...sources.history.skip(3).take(3)];
     for (final seed in kept) {
       if (!_expanded.add(seed.id)) continue;
-      jobs.add(gather(FeedLane.longTerm, () => sources.related(seed.id), RecommendSource.related, 0.8, 10, (_) => '和你喜欢的《${_short(seed.title)}》相似'));
+      jobs.add(gather(FeedLane.longTerm, () => sources.related(seed.id), RecommendSource.related, 0.8, 10, (_) => tr('和你喜欢的《{0}》相似', [_short(seed.title)])));
     }
     var channels = 0;
     for (final key in long.topChannels(10)) {
       if (channels >= 3 || key.startsWith('name:') || followed.contains(key)) continue;
       final name = sources.history.where((item) => item.channelId == key).firstOrNull?.channel ?? '';
       channels++;
-      jobs.add(gather(FeedLane.longTerm, () => sources.channelUploads(ChannelRef(key, name)), RecommendSource.channel, 1, 8, (item) => '你常看 ${item.channel.isEmpty ? name : item.channel}'));
+      jobs.add(gather(FeedLane.longTerm, () => sources.channelUploads(ChannelRef(key, name)), RecommendSource.channel, 1, 8, (item) => tr('你常看 {0}', [item.channel.isEmpty ? name : item.channel])));
     }
     // Explore: the interests past the strongest few.
     final words = long.topWords(10);
     for (var i = 4; i + 1 < words.length && i < 8; i += 2) {
       final query = '${words[i]} ${words[i + 1]}';
-      jobs.add(gather(FeedLane.explore, () => sources.search(query), RecommendSource.topic, 1, 10, (_) => '探索：“$query”'));
+      jobs.add(gather(FeedLane.explore, () => sources.search(query), RecommendSource.topic, 1, 10, (_) => tr('探索：“{0}”', [query])));
     }
     // New and popular: this week's most watched about the main interest,
     // and in general.
     if (words.length >= 2) {
       final query = '${words[0]} ${words[1]}';
-      jobs.add(gather(FeedLane.fresh, () => sources.search(query), RecommendSource.topic, 1, 10, (_) => '“$query”本周热门'));
+      jobs.add(gather(FeedLane.fresh, () => sources.search(query), RecommendSource.topic, 1, 10, (_) => tr('“{0}”本周热门', [query])));
     }
-    jobs.add(gather(FeedLane.fresh, () => sources.search('热门'), RecommendSource.topic, 0.8, 12, (_) => '本周热门'));
+    jobs.add(gather(FeedLane.fresh, () => sources.search('热门'), RecommendSource.topic, 0.8, 12, (_) => tr('本周热门')));
     await Future.wait(jobs);
     if (generation != _generation || _disposed) return;
     _candidates
@@ -159,7 +160,7 @@ class HomeFeed extends ChangeNotifier {
     _appendPage();
     loading = false;
     loadedAt = DateTime.now();
-    if (items.isEmpty && failures > 0 && failures == jobs.length) error = '推荐来源都没有响应';
+    if (items.isEmpty && failures > 0 && failures == jobs.length) error = tr('推荐来源都没有响应');
     _notify();
     // Explore a step further from what was just shown.
     unawaited(_expand());
@@ -214,7 +215,7 @@ class HomeFeed extends ChangeNotifier {
         final found = await sources.related(watched.id);
         if (_disposed) return;
         final list = _candidates.putIfAbsent(FeedLane.recent, () => []);
-        list.insertAll(0, found.take(15).map((item) => Candidate(item, RecommendSource.related, seedWeight: 1.2, reason: '刚看完《${_short(watched.title)}》，接着看')));
+        list.insertAll(0, found.take(15).map((item) => Candidate(item, RecommendSource.related, seedWeight: 1.2, reason: tr('刚看完《{0}》，接着看', [_short(watched.title)]))));
       } catch (e) {
         logInfo('推荐来源失败：$e');
       }
@@ -299,7 +300,7 @@ class HomeFeed extends ChangeNotifier {
         if (generation != _generation) return;
         final close = (_recentTaste?.titleMatch(seed) ?? 0) > 0.3;
         _candidates.putIfAbsent(close ? FeedLane.recent : FeedLane.explore, () => []).addAll(found.take(12).map(
-              (item) => Candidate(item, RecommendSource.related, seedWeight: 0.7, reason: '由《${_short(seed.title)}》延伸'),
+              (item) => Candidate(item, RecommendSource.related, seedWeight: 0.7, reason: tr('由《{0}》延伸', [_short(seed.title)])),
             ));
       } catch (e) {
         logInfo('推荐来源失败：$e');

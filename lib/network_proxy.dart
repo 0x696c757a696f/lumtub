@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'l10n/l10n.dart';
 
 /// Where YTPlus sends its network traffic: yt-dlp, libmpv's video streams
 /// and the app's own requests all go the same way.
@@ -9,8 +10,9 @@ enum ProxyMode {
   off('不使用代理'),
   custom('手动填写');
 
-  const ProxyMode(this.label);
-  final String label;
+  const ProxyMode(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// A proxy address as `http://host:port`, or null for a direct connection.

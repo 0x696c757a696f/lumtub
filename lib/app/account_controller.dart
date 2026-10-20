@@ -11,6 +11,7 @@ import '../models.dart';
 import '../secure_store.dart';
 import '../youtube_account.dart';
 import 'library_controller.dart';
+import '../l10n/l10n.dart';
 
 enum AccountState { signedOut, signingIn, signedIn }
 
@@ -102,7 +103,7 @@ class AccountController extends ChangeNotifier {
     notifyListeners();
     try {
       final tokens = await auth.signIn();
-      if (tokens.refreshToken == null) throw const OAuthException('Google 没有返回长期凭据，请重试');
+      if (tokens.refreshToken == null) throw OAuthException(tr('Google 没有返回长期凭据，请重试'));
       _tokens = tokens;
       _refreshToken = tokens.refreshToken;
       scope = tokens.scope ?? youtubeScope;
@@ -112,7 +113,7 @@ class AccountController extends ChangeNotifier {
       state = AccountState.signedIn;
       await _save();
       notifyListeners();
-      notice('已登录 ${me.name}');
+      notice(tr('已登录 {0}', [me.name]));
       unawaited(sync(likes: me.likes));
     } catch (e) {
       logError('Google 登录失败', e);
@@ -161,7 +162,7 @@ class AccountController extends ChangeNotifier {
       likesPlaylist = likesId;
       final remote = await api.playlists();
       final mirrored = <String, ({String name, List<VideoItem> items})>{};
-      if (likesId != null) mirrored[likesId] = (name: '喜欢的视频', items: await api.playlistItems(likesId));
+      if (likesId != null) mirrored[likesId] = (name: tr('喜欢的视频'), items: await api.playlistItems(likesId));
       for (final playlist in remote) {
         mirrored[playlist.id] = (name: playlist.title, items: playlist.count == 0 ? const [] : await api.playlistItems(playlist.id));
       }
@@ -169,7 +170,7 @@ class AccountController extends ChangeNotifier {
       lastSync = DateTime.now();
       await _save();
       logInfo('YouTube 同步完成：${channels.length} 个订阅，${mirrored.length} 个播放列表');
-      notice('同步完成：${channels.length} 个订阅（新增 $added 个），${mirrored.length} 个播放列表');
+      notice(tr('同步完成：{0} 个订阅（新增 {1} 个），{2} 个播放列表', [channels.length, added, mirrored.length]));
     } catch (e) {
       logError('YouTube 同步失败', e);
       error = '$e';
@@ -214,13 +215,13 @@ class AccountController extends ChangeNotifier {
       await _api.rate(item.id, next);
       _mirrorLike(item, next == VideoRating.like);
       notice(switch (next) {
-        VideoRating.like => '已点赞',
-        VideoRating.dislike => '已点踩，YouTube 会减少类似推荐',
-        VideoRating.none => '已取消',
+        VideoRating.like => tr('已点赞'),
+        VideoRating.dislike => tr('已点踩，YouTube 会减少类似推荐'),
+        VideoRating.none => tr('已取消'),
       });
     } catch (e) {
       _ratings[item.id] = previous;
-      _failed('操作失败', e);
+      _failed(tr('操作失败'), e);
     }
   }
 
@@ -244,10 +245,10 @@ class AccountController extends ChangeNotifier {
       } else {
         await _api.reply(parentId, text.trim());
       }
-      notice(parentId == null ? '评论已发布' : '回复已发布');
+      notice(parentId == null ? tr('评论已发布') : tr('回复已发布'));
       return true;
     } catch (e) {
-      _failed('发布失败', e);
+      _failed(tr('发布失败'), e);
       return false;
     }
   }
@@ -258,7 +259,7 @@ class AccountController extends ChangeNotifier {
     try {
       return await _api.playlists();
     } catch (e) {
-      _failed('无法读取 YouTube 播放列表', e);
+      _failed(tr('无法读取 YouTube 播放列表'), e);
       return const [];
     }
   }
@@ -272,9 +273,9 @@ class AccountController extends ChangeNotifier {
       await _api.addToPlaylist(target.id, item.id);
       final local = library.playlists.where((p) => p.id == '${LibraryController.remotePrefix}${target.id}').firstOrNull;
       library.mirrorRemotePlaylist(target.id, target.title, [...?local?.items.where((v) => v.id != item.id), item]);
-      notice('已保存到 YouTube 播放列表“${target.title}”');
+      notice(tr('已保存到 YouTube 播放列表“{0}”', [target.title]));
     } catch (e) {
-      _failed('保存失败', e);
+      _failed(tr('保存失败'), e);
     }
   }
 
@@ -288,13 +289,13 @@ class AccountController extends ChangeNotifier {
         await _api.unsubscribe(channel.id);
       }
     } catch (e) {
-      _failed(subscribed ? 'YouTube 订阅失败' : '取消 YouTube 订阅失败', e);
+      _failed(subscribed ? tr('YouTube 订阅失败') : tr('取消 YouTube 订阅失败'), e);
     }
   }
 
   bool _writable() {
     if (canWrite) return true;
-    notice(signedIn ? '需要重新登录 Google 账号，授予点赞、评论等权限' : '请先在设置里登录 Google 账号');
+    notice(signedIn ? tr('需要重新登录 Google 账号，授予点赞、评论等权限') : tr('请先在设置里登录 Google 账号'));
     return false;
   }
 
@@ -312,7 +313,7 @@ class AccountController extends ChangeNotifier {
     if (tokens != null && !tokens.expired) return tokens.accessToken;
     final refreshToken = _refreshToken;
     final config = client;
-    if (refreshToken == null || config == null) throw const OAuthException('请先登录 Google 账号');
+    if (refreshToken == null || config == null) throw OAuthException(tr('请先登录 Google 账号'));
     final fresh = await GoogleAuth(config, _client).refresh(refreshToken);
     _tokens = fresh;
     return fresh.accessToken;
@@ -330,7 +331,7 @@ class AccountController extends ChangeNotifier {
         if (likesPlaylist != null) 'likes': likesPlaylist,
       });
     } on FileSystemException catch (e) {
-      error = '无法保存登录凭据：${e.message}';
+      error = tr('无法保存登录凭据：{0}', [e.message]);
     }
   }
 

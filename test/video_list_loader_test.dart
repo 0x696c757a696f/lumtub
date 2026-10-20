@@ -129,4 +129,22 @@ void main() {
     expect(VideoRepository.shelfUrl(jsonEncode({'url': 'https://www.youtube.com/@x/playlists'})), isNull);
     expect(VideoRepository.shelfUrl('not json'), isNull);
   });
+
+  test('ranks each page before showing it and fills strict filters', () async {
+    final source = _Source([for (var i = 0; i < 12; i++) _video(i)]);
+    final loader = VideoListLoader(
+      () => Listing(source.open),
+      pageSize: 4,
+      where: (item) => int.parse(item.title).isEven,
+      fill: 3,
+      rank: (item) => double.parse(item.title),
+    );
+    addTearDown(loader.dispose);
+    loader.loadMore();
+    await pumpEventQueue();
+    // Page one shows 0 and 2, too few, so page two is read straight away;
+    // each page comes out highest first.
+    expect(loader.items.map((v) => v.title), ['2', '0', '6', '4']);
+    expect(loader.loading, isFalse);
+  });
 }

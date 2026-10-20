@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Color;
@@ -415,42 +416,90 @@ class AppController extends ChangeNotifier {
     _loadExplore();
   }
 
-  /// The explore page's half, category and, for popular videos, period.
+  /// The explore page: its half, zone, sub-category (0 for all of the
+  /// zone), how videos are picked, and the filters.
   ExploreSection exploreSection = ExploreSection.popular;
   int exploreTopic = 0;
+  int exploreSub = 0;
+  ExploreMode exploreMode = ExploreMode.popular;
   SearchUploadDate explorePeriod = SearchUploadDate.month;
-  /// The chosen category's videos.
+  SearchDuration exploreDuration = SearchDuration.any;
+  SearchQuality exploreQuality = SearchQuality.any;
+  /// The chosen zone's videos.
   VideoListLoader? explore;
 
-  /// The categories of [section], the user's own last.
-  List<ExploreTopic> exploreTopicsFor(ExploreSection section) => exploreTopicsOf(section, preferences.exploreCustomTopics);
+  /// Every zone of [section], built in and the user's, in no set order.
+  List<ExploreTopic> allExploreTopics(ExploreSection section) => exploreTopicsOf(section, preferences.exploreCustomTopics);
+
+  /// The zones of [section] the strip shows, in the user's order.
+  List<ExploreTopic> exploreTopicsFor(ExploreSection section) => arrangeTopics(
+        allExploreTopics(section),
+        preferences.exploreOrder[section.name] ?? const [],
+        {...?preferences.exploreHidden[section.name]},
+      );
 
   ExploreTopic get exploreTopicNow {
     final topics = exploreTopicsFor(exploreSection);
     return topics[exploreTopic.clamp(0, topics.length - 1)];
   }
 
+  /// The words searched for: the sub-category's, or the whole zone's.
+  String get exploreQuery {
+    final topic = exploreTopicNow;
+    return exploreSub > 0 && exploreSub <= topic.subs.length ? topic.subs[exploreSub - 1].query : topic.query;
+  }
+
   /// Adds a category of the user's own and shows it.
   Future<void> addExploreTopic(CustomTopic topic) async {
     final kept = preferences.exploreCustomTopics.where((t) => !(t.section == topic.section && t.label == topic.label)).toList();
-    await savePreferences(preferences.copyWith(exploreCustomTopics: [...kept, topic]));
-    final index = exploreTopicsFor(topic.section).lastIndexWhere((t) => t.custom && t.label == topic.label);
-    explore?.dispose();
-    explore = null;
-    setExplore(section: topic.section, topic: index);
+    final key = topic.topic.key;
+    await savePreferences(preferences.copyWith(
+      exploreCustomTopics: [...kept, topic],
+      exploreHidden: {...preferences.exploreHidden, topic.section.name: [...?preferences.exploreHidden[topic.section.name]]..remove(key)},
+    ));
+    final index = exploreTopicsFor(topic.section).indexWhere((t) => t.key == key);
+    _reloadExplore(section: topic.section, topic: index);
   }
 
   /// Removes one of the user's categories, keeping the one shown if it stays.
   Future<void> removeExploreTopic(ExploreSection section, String label) async {
-    final shown = exploreTopicNow;
-    await savePreferences(preferences.copyWith(
-      exploreCustomTopics: preferences.exploreCustomTopics.where((t) => !(t.section == section && t.label == label)).toList(),
-    ));
+    final key = 'custom:$label';
+    await _arrangeExplore(section, () => savePreferences(preferences.copyWith(
+          exploreCustomTopics: preferences.exploreCustomTopics.where((t) => !(t.section == section && t.label == label)).toList(),
+          exploreOrder: {...preferences.exploreOrder, section.name: [...?preferences.exploreOrder[section.name]]..remove(key)},
+          exploreHidden: {...preferences.exploreHidden, section.name: [...?preferences.exploreHidden[section.name]]..remove(key)},
+        )));
+  }
+
+  /// Saves the order and hidden zones of [section] from the manage dialog.
+  Future<void> arrangeExploreTopics(ExploreSection section, List<String> order, Set<String> hidden) => _arrangeExplore(
+        section,
+        () => savePreferences(preferences.copyWith(
+          exploreOrder: {...preferences.exploreOrder, section.name: order},
+          exploreHidden: {...preferences.exploreHidden, section.name: hidden.toList()},
+        )),
+      );
+
+  /// Runs [change] and keeps the zone shown if it is still in the strip.
+  Future<void> _arrangeExplore(ExploreSection section, Future<void> Function() change) async {
+    final shown = exploreTopicNow.key;
+    await change();
     if (section != exploreSection) return;
-    final index = exploreTopicsFor(section).indexWhere((t) => t.label == shown.label && t.query == shown.query);
+    final index = exploreTopicsFor(section).indexWhere((t) => t.key == shown);
+    if (index == exploreTopic) {
+      notifyListeners();
+    } else if (index >= 0) {
+      // Same zone at another place: nothing to load again.
+      _update(() => exploreTopic = index);
+    } else {
+      _reloadExplore(topic: 0);
+    }
+  }
+
+  void _reloadExplore({ExploreSection? section, required int topic}) {
     explore?.dispose();
     explore = null;
-    setExplore(topic: index < 0 ? 0 : index);
+    setExplore(section: section, topic: topic < 0 ? 0 : topic);
   }
 
   /// Opens the explore page on its topics.
@@ -465,16 +514,48 @@ class AppController extends ChangeNotifier {
     _loadExplore();
   }
 
-  /// Shows another category, half or period of the explore page.
-  void setExplore({ExploreSection? section, int? topic, SearchUploadDate? period}) {
+  /// Shows another half, zone, sub-category, mode, period or filter of the
+  /// explore page. A new half starts on its first zone and usual mode; a
+  /// new zone on all of it.
+  void setExplore({
+    ExploreSection? section,
+    int? topic,
+    int? sub,
+    ExploreMode? mode,
+    SearchUploadDate? period,
+    SearchDuration? duration,
+    SearchQuality? quality,
+  }) {
     final nextSection = section ?? exploreSection;
-    final nextTopic = topic ?? (nextSection == exploreSection ? exploreTopic : 0);
+    final newSection = nextSection != exploreSection;
+    final nextTopic = (topic ?? (newSection ? 0 : exploreTopic)).clamp(0, exploreTopicsFor(nextSection).length - 1);
+    final nextSub = sub ?? (newSection || nextTopic != exploreTopic ? 0 : exploreSub);
+    final nextMode = mode != null && mode.live == (nextSection == ExploreSection.live)
+        ? mode
+        : newSection
+            ? ExploreMode.defaultOf(nextSection)
+            : exploreMode;
     final nextPeriod = period ?? explorePeriod;
-    if (nextSection == exploreSection && nextTopic == exploreTopic && nextPeriod == explorePeriod && explore != null) return;
+    final nextDuration = duration ?? exploreDuration;
+    final nextQuality = quality ?? exploreQuality;
+    if (!newSection &&
+        nextTopic == exploreTopic &&
+        nextSub == exploreSub &&
+        nextMode == exploreMode &&
+        nextPeriod == explorePeriod &&
+        nextDuration == exploreDuration &&
+        nextQuality == exploreQuality &&
+        explore != null) {
+      return;
+    }
     _update(() {
       exploreSection = nextSection;
-      exploreTopic = nextTopic.clamp(0, exploreTopicsFor(nextSection).length - 1);
+      exploreTopic = nextTopic;
+      exploreSub = nextSub;
+      exploreMode = nextMode;
       explorePeriod = nextPeriod;
+      exploreDuration = nextDuration;
+      exploreQuality = nextQuality;
       explore?.dispose();
       explore = null;
     });
@@ -484,11 +565,49 @@ class AppController extends ChangeNotifier {
   void _loadExplore() {
     final repository = _repository;
     if (repository == null || explore != null) return;
-    final query = exploreTopicNow.query;
-    final sp = exploreParams(exploreSection, explorePeriod);
-    _update(() => explore = VideoListLoader(() => repository.search(query, sp: sp))
-      ..addListener(notifyListeners)
-      ..loadMore());
+    final query = exploreQuery;
+    final mode = exploreMode;
+    final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);
+    final taste = mode == ExploreMode.forYou ? _exploreTaste() : null;
+    final notInterested = homeFeed?.notInterested;
+    bool where(VideoItem item) {
+      if (notInterested != null && notInterested.videos.contains(item.id)) return false;
+      if (taste != null && taste.channelAffinity(item) < -0.3) return false;
+      if (mode == ExploreMode.gems) {
+        final views = item.viewCount;
+        final seconds = item.duration;
+        return views != null && views <= gemMaxViews && seconds != null && seconds >= 240;
+      }
+      return true;
+    }
+
+    _update(() => explore = VideoListLoader(
+          () => repository.search(query, sp: sp),
+          where: where,
+          fill: mode == ExploreMode.gems ? 8 : 1,
+          rank: taste == null ? null : (item) => exploreScore(taste, item),
+        )
+          ..addListener(notifyListeners)
+          ..loadMore());
+  }
+
+  /// What the history says about taste, for 为你推荐 in explore.
+  TasteProfile _exploreTaste() {
+    final library = this.library;
+    return TasteProfile.from(
+      history: history,
+      progressOf: library?.progressOf,
+      favorites: [...?library?.favorites, ...?account?.likedVideos.take(50)],
+      followed: {for (final c in library?.channels ?? const <ChannelRef>[]) c.id},
+      decay: 0.97,
+    );
+  }
+
+  /// 为你推荐 in a zone: title words and channels like the history's
+  /// first, then more viewed.
+  static double exploreScore(TasteProfile taste, VideoItem item) {
+    final views = item.viewCount ?? 0;
+    return 0.55 * taste.titleMatch(item) + 0.35 * max(0.0, taste.channelAffinity(item)) + 0.1 * min(1.0, log(views + 1) / ln10 / 7);
   }
 
   static String? parseYoutubeId(String input) {

@@ -123,3 +123,34 @@ Future<void> copyText(BuildContext context, String text, String notice) async {
   await Clipboard.setData(ClipboardData(text: text));
   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(notice)));
 }
+
+/// A search option chip that opens a menu of its values.
+class OptionChip<T> extends StatelessWidget {
+  const OptionChip({super.key, required this.icon, required this.value, required this.values, required this.label, required this.item, required this.changed, required this.onSelected});
+  final IconData icon;
+  final T value;
+  final List<T> values;
+  final String Function(T value) label;
+  final String Function(T value) item;
+  final bool changed;
+  final ValueChanged<T> onSelected;
+
+  @override
+  Widget build(BuildContext context) => MenuAnchor(
+        menuChildren: [
+          for (final v in values)
+            MenuItemButton(
+              leadingIcon: Icon(v == value ? Icons.check_rounded : null, size: 18),
+              onPressed: v == value ? null : () => onSelected(v),
+              child: Text(item(v)),
+            ),
+        ],
+        builder: (context, menu, _) => FilterChip(
+          avatar: Icon(icon, size: 18),
+          label: Row(mainAxisSize: MainAxisSize.min, children: [Text(label(value)), const Icon(Icons.arrow_drop_down_rounded, size: 18)]),
+          selected: changed,
+          showCheckmark: false,
+          onSelected: (_) => menu.isOpen ? menu.close() : menu.open(),
+        ),
+      );
+}

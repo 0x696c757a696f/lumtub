@@ -38,15 +38,30 @@ enum SearchDuration {
   final int code;
 }
 
+/// Picture features a video must have.
+enum SearchQuality {
+  any('不限画质', []),
+  hd('高清 1080p', [0x20, 1]),
+  uhd('4K', [0x70, 1]),
+  hdr('HDR', [0xC8, 0x01, 1]);
+
+  const SearchQuality(this.label, this.bytes);
+  final String label;
+  /// The filter's field in YouTube's `sp` (HD 4, 4K 14, HDR 25), encoded.
+  final List<int> bytes;
+}
+
 /// YouTube's `sp` search parameter: a protobuf message, base64-encoded,
 /// with the sort order in field 1 and the filters in message field 2
-/// (upload date 1, type 2, duration 3, live 8). Null when nothing is set,
+/// (upload date 1, type 2, duration 3, live 8, and the [SearchQuality]
+/// fields). Null when nothing is set,
 /// which YouTube reads as relevance without filters.
 String? searchParams({
   SearchFilter type = SearchFilter.all,
   SearchSort sort = SearchSort.relevance,
   SearchUploadDate date = SearchUploadDate.any,
   SearchDuration duration = SearchDuration.any,
+  SearchQuality quality = SearchQuality.any,
 }) {
   final filters = <int>[
     if (date != SearchUploadDate.any) ...[0x08, date.code],
@@ -59,6 +74,7 @@ String? searchParams({
       SearchFilter.all => const <int>[],
     },
     if (duration != SearchDuration.any) ...[0x18, duration.code],
+    ...quality.bytes,
   ];
   final bytes = <int>[
     if (sort != SearchSort.relevance) ...[0x08, sort.code],

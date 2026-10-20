@@ -17,6 +17,8 @@ class AppPreferences {
     this.blockedChannels = const [],
     this.blockedKeywords = const [],
     this.exploreCustomTopics = const [],
+    this.exploreOrder = const {},
+    this.exploreHidden = const {},
     this.hideShorts = false,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
@@ -50,6 +52,11 @@ class AppPreferences {
   final List<String> blockedKeywords;
   /// Explore categories the user added.
   final List<CustomTopic> exploreCustomTopics;
+  /// Per explore half ([ExploreSection.name]), zone keys in the user's
+  /// order, the pinned ones first.
+  final Map<String, List<String>> exploreOrder;
+  /// Per explore half, the zone keys the user hid.
+  final Map<String, List<String>> exploreHidden;
   /// Hides videos of a minute or less, which YouTube lists as Shorts.
   final bool hideShorts;
   final int minDurationMinutes;
@@ -102,6 +109,8 @@ class AppPreferences {
     List<ChannelRef>? blockedChannels,
     List<String>? blockedKeywords,
     List<CustomTopic>? exploreCustomTopics,
+    Map<String, List<String>>? exploreOrder,
+    Map<String, List<String>>? exploreHidden,
     bool? hideShorts,
     int? minDurationMinutes,
     bool? hideWatched,
@@ -133,6 +142,8 @@ class AppPreferences {
         blockedChannels: blockedChannels ?? this.blockedChannels,
         blockedKeywords: blockedKeywords ?? this.blockedKeywords,
         exploreCustomTopics: exploreCustomTopics ?? this.exploreCustomTopics,
+        exploreOrder: exploreOrder ?? this.exploreOrder,
+        exploreHidden: exploreHidden ?? this.exploreHidden,
         hideShorts: hideShorts ?? this.hideShorts,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
@@ -165,6 +176,8 @@ class AppPreferences {
         'blockedChannels': [for (final c in blockedChannels) {'id': c.id, 'name': c.name}],
         'blockedKeywords': blockedKeywords,
         'exploreCustomTopics': [for (final t in exploreCustomTopics) t.toJson()],
+        'exploreOrder': exploreOrder,
+        'exploreHidden': exploreHidden,
         'hideShorts': hideShorts,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
@@ -213,6 +226,14 @@ class AppPreferences {
     final topics = raw['exploreCustomTopics'] is List
         ? (raw['exploreCustomTopics'] as List).map(CustomTopic.fromJson).whereType<CustomTopic>().toList()
         : const <CustomTopic>[];
+    Map<String, List<String>> keyLists(String key) {
+      final value = raw[key];
+      if (value is! Map) return const {};
+      return {
+        for (final entry in value.entries)
+          if (entry.value is List) '${entry.key}': [for (final k in entry.value as List) '$k'],
+      };
+    }
     final start = raw['startPage']?.toString();
     return AppPreferences(
       recordHistory: flag('recordHistory', d.recordHistory),
@@ -220,6 +241,8 @@ class AppPreferences {
       blockedChannels: channels,
       blockedKeywords: keywords,
       exploreCustomTopics: topics,
+      exploreOrder: keyLists('exploreOrder'),
+      exploreHidden: keyLists('exploreHidden'),
       hideShorts: flag('hideShorts', d.hideShorts),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),

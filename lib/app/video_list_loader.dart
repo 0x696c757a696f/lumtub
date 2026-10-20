@@ -10,7 +10,7 @@ import '../video_repository.dart';
 /// them. One [Listing] serves every page, so each page continues where the
 /// last one stopped.
 class VideoListLoader extends ChangeNotifier {
-  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches});
+  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1});
 
   final Listing Function() _open;
   final int pageSize;
@@ -21,6 +21,11 @@ class VideoListLoader extends ChangeNotifier {
   /// Keeps only entries whose title passes, such as a search inside one
   /// channel tab. Pages that add nothing are skipped over, up to a limit.
   final bool Function(String title)? matches;
+  /// Orders each page's videos, highest first, before they are shown.
+  final double Function(VideoItem item)? rank;
+  /// With [where] or [matches], pages are read until this many entries
+  /// show, so a strict filter still leaves something to scroll.
+  final int fill;
 
   List<VideoItem> items = const [];
   /// Channels the listing found; only searches list them.
@@ -52,12 +57,13 @@ class VideoListLoader extends ChangeNotifier {
     loading = true;
     error = null;
     _notify();
-    _page(_listing!, count, 0);
+    _page(_listing!, count, 0, 0);
   }
 
-  void _page(Listing listing, int count, int skipped) {
+  void _page(Listing listing, int count, int skipped, int shownBefore) {
     var fresh = 0;
-    var shown = 0;
+    var shown = shownBefore;
+    final pending = <VideoItem>[];
     _subscription = listing.next(count).listen(
       (entry) {
         fresh++;
@@ -70,7 +76,12 @@ class VideoListLoader extends ChangeNotifier {
           playlists = [...playlists, entry];
         } else if (entry is VideoItem) {
           if (where?.call(entry) == false || (match != null && !match(entry.title)) || !_seen.add(entry.id)) return;
-          if (limit != null && items.length >= limit!) return;
+          if (limit != null && items.length + pending.length >= limit!) return;
+          if (rank != null) {
+            pending.add(entry);
+            shown++;
+            return;
+          }
           items = [...items, entry];
         }
         shown++;
@@ -78,12 +89,17 @@ class VideoListLoader extends ChangeNotifier {
       },
       onError: (Object e) => error = '$e',
       onDone: () {
+        final order = rank;
+        if (order != null && pending.isNotEmpty) {
+          final scored = [for (final item in pending) (item, order(item))]..sort((a, b) => b.$2.compareTo(a.$2));
+          items = [...items, for (final (item, _) in scored) item];
+        }
         final full = limit != null && items.length >= limit!;
         final more = !full && !listing.done && fresh > 0;
         // A filtered page with nothing to show would leave nothing to
         // scroll, so the next one is read straight away.
-        if (matches != null && error == null && more && shown == 0 && skipped < 25 && !_disposed) {
-          _page(listing, pageSize, skipped + 1);
+        if ((matches != null || where != null) && error == null && more && shown < fill && skipped < 25 && !_disposed) {
+          _page(listing, pageSize, skipped + 1, shown);
           return;
         }
         loading = false;

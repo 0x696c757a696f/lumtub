@@ -183,7 +183,7 @@ class SearchResultsPage extends StatelessWidget {
             for (final value in SearchFilter.values)
               ChoiceChip(label: Text(value.label), selected: filter == value, onSelected: (_) => controller.setSearchFilter(value)),
             const SizedBox(width: 8),
-            _OptionChip(
+            OptionChip(
               icon: Icons.sort_rounded,
               value: controller.searchSort,
               values: SearchSort.values,
@@ -192,7 +192,7 @@ class SearchResultsPage extends StatelessWidget {
               changed: controller.searchSort != SearchSort.relevance,
               onSelected: (v) => controller.setSearchOptions(sort: v),
             ),
-            _OptionChip(
+            OptionChip(
               icon: Icons.event_rounded,
               value: controller.searchDate,
               values: SearchUploadDate.values,
@@ -201,7 +201,7 @@ class SearchResultsPage extends StatelessWidget {
               changed: controller.searchDate != SearchUploadDate.any,
               onSelected: (v) => controller.setSearchOptions(date: v),
             ),
-            _OptionChip(
+            OptionChip(
               icon: Icons.timer_outlined,
               value: controller.searchDuration,
               values: SearchDuration.values,
@@ -280,33 +280,3 @@ class HistoryPage extends StatelessWidget {
   }
 }
 
-/// A search option chip that opens a menu of its values.
-class _OptionChip<T> extends StatelessWidget {
-  const _OptionChip({required this.icon, required this.value, required this.values, required this.label, required this.item, required this.changed, required this.onSelected});
-  final IconData icon;
-  final T value;
-  final List<T> values;
-  final String Function(T value) label;
-  final String Function(T value) item;
-  final bool changed;
-  final ValueChanged<T> onSelected;
-
-  @override
-  Widget build(BuildContext context) => MenuAnchor(
-        menuChildren: [
-          for (final v in values)
-            MenuItemButton(
-              leadingIcon: Icon(v == value ? Icons.check_rounded : null, size: 18),
-              onPressed: v == value ? null : () => onSelected(v),
-              child: Text(item(v)),
-            ),
-        ],
-        builder: (context, menu, _) => FilterChip(
-          avatar: Icon(icon, size: 18),
-          label: Row(mainAxisSize: MainAxisSize.min, children: [Text(label(value)), const Icon(Icons.arrow_drop_down_rounded, size: 18)]),
-          selected: changed,
-          showCheckmark: false,
-          onSelected: (_) => menu.isOpen ? menu.close() : menu.open(),
-        ),
-      );
-}

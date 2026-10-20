@@ -134,10 +134,11 @@ class VideoRepository {
   /// yt-dlp arguments that print a listing's entries one per line as they
   /// arrive. `--lazy-playlist` matters: without it yt-dlp collects the whole
   /// listing before printing anything.
-  List<String> listingArguments(String url) => [
+  List<String> listingArguments(String url, {String? cookies}) => [
         '--no-warnings',
         '--skip-download',
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
+        if (cookies != null) ...['--cookies', cookies],
         ..._proxyArguments,
         '--extractor-retries', '3',
         '--flat-playlist',
@@ -146,9 +147,89 @@ class VideoRepository {
         '--', url,
       ];
 
-  /// Search results; one yt-dlp process serves every page.
-  Listing search(String query, {SearchFilter filter = SearchFilter.all, String? sp}) =>
-      _listing(searchUrl(query.trim(), filter: filter, sp: sp));
+  /// Search results; one yt-dlp process serves every page. [region] is
+  /// YouTube's country code (`gl`) to search as from, if not the one the
+  /// connection gives.
+  Listing search(String query, {SearchFilter filter = SearchFilter.all, String? sp, String? region}) {
+    final url = searchUrl(query.trim(), filter: filter, sp: sp);
+    return region == null || region.isEmpty ? _listing(url) : Listing(() => _regionLines(url, region));
+  }
+
+  /// Several searches at once, a few results of each in turn, for a mix
+  /// of zones. A search that fails drops out; the mix fails only if all do.
+  Listing searchMix(List<String> queries, {String? sp, String? region}) =>
+      Listing(() => interleave([for (final q in queries) () => search(q, sp: sp, region: region)._open()]));
+
+  /// Lines from each of [sources] in turn, [run] at a time, each started
+  /// only when first read.
+  static Stream<String> interleave(List<Stream<String> Function()> sources, {int run = 3}) async* {
+    final open = <StreamIterator<String>>[];
+    final pending = [...sources];
+    Object? lastError;
+    var yielded = false;
+    var i = 0;
+    try {
+      while (open.isNotEmpty || pending.isNotEmpty) {
+        if (pending.isNotEmpty && i >= open.length) open.add(StreamIterator(pending.removeAt(0)()));
+        final lines = open[i];
+        var taken = 0;
+        var ended = false;
+        try {
+          while (taken < run) {
+            if (!await lines.moveNext()) {
+              ended = true;
+              break;
+            }
+            taken++;
+            yielded = true;
+            yield lines.current;
+          }
+        } catch (e) {
+          lastError = e;
+          ended = true;
+        }
+        if (ended) {
+          await lines.cancel();
+          open.removeAt(i);
+        } else {
+          i++;
+        }
+        if (i >= open.length && pending.isEmpty) i = 0;
+      }
+      if (!yielded && lastError != null) throw lastError;
+    } finally {
+      for (final lines in open) {
+        await lines.cancel();
+      }
+    }
+  }
+
+  /// YouTube takes the country from the PREF cookie, as its own location
+  /// setting saves it. Each process gets a cookie file of its own with
+  /// nothing else in it, removed afterwards, so no visitor id is kept.
+  Stream<String> _regionLines(String url, String region) async* {
+    final directory = Directory(cacheDirectory == null
+        ? '${Directory.systemTemp.path}${Platform.pathSeparator}ytplus-region'
+        : '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp${Platform.pathSeparator}region');
+    await directory.create(recursive: true);
+    final file = File('${directory.path}${Platform.pathSeparator}${DateTime.now().microsecondsSinceEpoch}-${_cookieFiles++}.txt');
+    await file.writeAsString(regionCookies(region));
+    try {
+      yield* _lines(listingArguments(url, cookies: file.path));
+    } finally {
+      try {
+        await file.delete();
+      } on FileSystemException {
+        // Left for 清理缓存.
+      }
+    }
+  }
+
+  static int _cookieFiles = 0;
+
+  /// A Netscape cookie file holding only YouTube's PREF with country [gl].
+  static String regionCookies(String gl) =>
+      '# Netscape HTTP Cookie File\n.youtube.com\tTRUE\t/\tTRUE\t2147483647\tPREF\tgl=${gl.toUpperCase()}&hl=en\n';
 
   /// [channel]'s uploads, newest first.
   Listing channelVideos(ChannelRef channel) => channelTab(channel, ChannelTab.videos);

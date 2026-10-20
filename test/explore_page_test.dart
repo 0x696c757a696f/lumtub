@@ -73,7 +73,7 @@ void main() {
       final topics = exploreTopicsOf(section);
       expect(topics.map((t) => t.key).toSet(), hasLength(topics.length), reason: section.name);
       for (final topic in topics) {
-        expect(topic.query, isNotEmpty);
+        expect(topic.mix || topic.query.isNotEmpty, isTrue, reason: topic.label);
         for (final sub in topic.subs) {
           expect([sub.query, for (final leaf in sub.subs) leaf.query], everyElement(isNotEmpty));
         }
@@ -237,7 +237,13 @@ void main() {
 
   testWidgets('switches halves, zones, sub-categories and modes', (tester) async {
     final controller = await _open(tester);
+    // 推荐 comes first: a mix of zones, with 换一批.
+    expect(controller.exploreTopicNow.mix, isTrue);
+    expect(find.text('换一批'), findsOneWidget);
+    await tester.tap(find.text('知识教育'));
+    await tester.pump();
     expect(find.text('知识教育 · 本月观看最多'), findsOneWidget);
+    expect(find.text('换一批'), findsNothing);
 
     await tester.tap(find.text('历史'));
     await tester.pump();
@@ -276,6 +282,8 @@ void main() {
 
   testWidgets('宗教与信仰: tabs, three levels, filters and stream states', (tester) async {
     final controller = await _open(tester);
+    await tester.tap(find.text('知识教育'));
+    await tester.pump();
     await tester.tap(find.text('数学'));
     await tester.pump();
     await _reveal(tester, '宗教信仰');
@@ -352,7 +360,7 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, '删除'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(controller.preferences.exploreCustomTopics, isEmpty);
-    expect(controller.exploreTopicNow.label, '知识教育');
+    expect(controller.exploreTopicNow.label, '推荐');
     expect(tester.takeException(), isNull);
   });
 
@@ -376,8 +384,8 @@ void main() {
 
     final topics = controller.exploreTopicsFor(ExploreSection.popular);
     expect(topics.first.label, '播客访谈');
-    expect(topics.map((t) => t.label), isNot(contains('知识教育')));
-    expect(controller.preferences.exploreHidden['popular'], ['知识教育']);
+    expect(topics.map((t) => t.label), isNot(contains('推荐')));
+    expect(controller.preferences.exploreHidden['popular'], ['推荐']);
     // The zone shown was hidden, so the strip starts over on its first.
     expect(controller.exploreTopicNow.label, '播客访谈');
     expect(tester.takeException(), isNull);

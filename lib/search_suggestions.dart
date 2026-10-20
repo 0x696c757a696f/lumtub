@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'l10n/l10n.dart';
 
 /// Searches typed before, kept on this computer only, newest first.
 class SearchHistory {
@@ -55,7 +56,7 @@ class SearchSuggestions {
     final cached = _cache[text];
     if (cached != null) return cached;
     try {
-      final uri = Uri.https('suggestqueries-clients6.youtube.com', '/complete/search', {'client': 'firefox', 'ds': 'yt', 'hl': 'zh-CN', 'ie': 'utf-8', 'oe': 'utf-8', 'q': text});
+      final uri = Uri.https('suggestqueries-clients6.youtube.com', '/complete/search', {'client': 'firefox', 'ds': 'yt', 'hl': youtubeHl, 'ie': 'utf-8', 'oe': 'utf-8', 'q': text});
       final response = await _client.get(uri).timeout(const Duration(seconds: 4));
       if (response.statusCode != 200) return const [];
       final list = parse(utf8.decode(response.bodyBytes, allowMalformed: true));

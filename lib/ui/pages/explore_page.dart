@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
+import '../../explore_filters.dart';
 import '../../explore_topics.dart';
 import '../../faith_topics.dart';
 import '../common.dart';
@@ -34,6 +35,7 @@ class ExplorePage extends StatelessWidget {
     final name = [topic.label, if (subNow != null) subNow.label, if (controller.exploreLeafNow case final leafNow?) leafNow.label].join(' · ');
     final subtitle = switch (mode) {
       ExploreMode.curated => tr('{0} · 相关度高的完整内容，少标题党，每个频道最多 3 个', [name]),
+      ExploreMode.popular when topic.mix => tr('推荐 · 你的兴趣和各分区{0}观看最多的视频，每个频道最多 2 个', [controller.explorePeriod.label]),
       ExploreMode.popular => tr('{0} · {1}观看最多', [name, controller.explorePeriod.label]),
       ExploreMode.forYou => tr('{0} · 按你的观看记录排列', [name]),
       ExploreMode.gems => tr('{0} · 播放不到 5 万的好视频', [name]),
@@ -165,6 +167,24 @@ class ExplorePage extends StatelessWidget {
                 onSelected: (v) => controller.setExplore(duration: v),
               ),
             OptionChip(
+              icon: Icons.public_rounded,
+              value: controller.preferences.exploreRegion,
+              values: ExploreRegion.values,
+              label: (v) => v == ExploreRegion.any ? tr('地区') : v.label,
+              item: (v) => v.label,
+              changed: controller.preferences.exploreRegion != ExploreRegion.any,
+              onSelected: (v) => controller.setExplore(region: v),
+            ),
+            OptionChip(
+              icon: Icons.translate_rounded,
+              value: controller.preferences.exploreLanguage,
+              values: ExploreLanguage.values,
+              label: (v) => v == ExploreLanguage.any ? tr('语言') : v.label,
+              item: (v) => v.label,
+              changed: controller.preferences.exploreLanguage != ExploreLanguage.any,
+              onSelected: (v) => controller.setExplore(language: v),
+            ),
+            OptionChip(
               icon: Icons.hd_outlined,
               value: controller.exploreQuality,
               values: SearchQuality.values,
@@ -173,6 +193,12 @@ class ExplorePage extends StatelessWidget {
               changed: controller.exploreQuality != SearchQuality.any,
               onSelected: (v) => controller.setExplore(quality: v),
             ),
+            if (topic.mix)
+              ActionChip(
+                avatar: const Icon(Icons.refresh_rounded, size: 18),
+                label: Text(tr('换一批')),
+                onPressed: loading ? null : controller.refreshExplore,
+              ),
           ]),
         )),
         if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),

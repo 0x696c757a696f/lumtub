@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'l10n/l10n.dart';
 
 class VideoItem {
@@ -327,6 +328,36 @@ class VideoDetails {
       subtitles: SubtitleOption.listFrom(map['subtitles'], map['automatic_captions']),
     );
   }
+
+  /// These details with YouTube's [title] and [description] in the
+  /// interface language. Chapters come from the description's timestamps,
+  /// so where the translated one lists the same times, theirs are renamed.
+  VideoDetails localized(String title, String description) {
+    if (title.isEmpty || (title == this.title && description == this.description)) return this;
+    final names = <int, String>{};
+    for (final line in const LineSplitter().convert(description)) {
+      final match = _chapterLine.firstMatch(line);
+      if (match == null) continue;
+      final seconds = int.parse(match[1] ?? '0') * 3600 + int.parse(match[2]!) * 60 + int.parse(match[3]!);
+      names.putIfAbsent(seconds, () => match[4]!.trim());
+    }
+    return VideoDetails(
+      title: title,
+      channel: channel,
+      channelUrl: channelUrl,
+      channelId: channelId,
+      uploadDate: uploadDate,
+      viewCount: viewCount,
+      likeCount: likeCount,
+      description: description.isEmpty ? this.description : description,
+      chapters: [
+        for (final c in chapters) Chapter(c.start, c.end, names[c.start.inSeconds] ?? c.title),
+      ],
+      subtitles: subtitles,
+    );
+  }
+
+  static final _chapterLine = RegExp(r'^\s*[\[(]?(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\])]?\s*[-–—:|·]?\s*(\S.*)$');
 }
 
 /// A subtitle track of a video that can be added to the player by URL.

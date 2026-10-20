@@ -8,14 +8,14 @@ YTPlus is a lightweight YouTube client for Windows, built with Flutter, [media_k
 
 **Browsing**
 - Home: continue watching, recently watched, and a "For you" feed worked out on your computer. It mixes long-term interests, recent interests, exploration, and popular and new videos; it scrolls endlessly, each card says why it was suggested, and any video can be marked "Not interested".
-- Explore: video and live halves split into categories, Bilibili style, each with sub-categories. Browse by For you, Popular, Latest, Hidden gems or Long videos, filter by length and quality (1080p, 4K, HDR), and see upcoming streams and replays. Categories can be added, hidden, pinned and reordered.
-- Religion & faith: its own entry in Explore, with Traditions, Study, Culture & art and Live tabs. Christianity is split into Catholic, Eastern Orthodox, Protestant and Oriental Orthodox, and Catholic further into the Pope's words, Mass, sacraments, lives of the saints and more. Filter by type and viewpoint; clickbait is left out and each channel shows at most three videos.
+- Explore: video and live halves split into categories, Bilibili style, each with sub-categories. Browse by For you, Popular, Latest, Hidden gems or Long videos, filter by length and quality (1080p, 4K, HDR), and see upcoming streams and replays. Categories can be added, hidden, pinned and reordered. The first one, Recommended, mixes your interests with all the categories and can be shuffled. Filter by region (YouTube's country setting) and language (guessed from the title).
+- Religion & faith: the Religion category in Explore's videos, with Traditions, Study, Culture & art and Live tabs. Christianity is split into Catholic, Eastern Orthodox, Protestant and Oriental Orthodox, and Catholic further into the Pope's words, Mass, sacraments, lives of the saints and more. Filter by type and viewpoint; clickbait is left out and each channel shows at most three videos.
 - Search: suggestions and history, sort order, upload date and length filters, and videos, Shorts, live streams, channels or playlists only.
 - Channel pages: videos, Shorts, live, playlists, podcasts and community posts, with search inside the channel. A post's comments open on the right.
 - Subscriptions, history, local playlists and favorites. Alt+← or the mouse back button returns to the previous page.
 
 **Playback**
-- libmpv playback with hardware decoding, video and audio quality, speed, subtitles (including automatic and translated captions), chapters, fullscreen and keyboard shortcuts.
+- libmpv playback with hardware decoding, video and audio quality, speed, subtitles (including automatic and translated captions), chapters, fullscreen and keyboard shortcuts. The watch page's title, description and chapter names, posts, comments and subtitles follow the interface language where a translation exists.
 - Streams come through Piped by default (the fastest public server is picked automatically), falling back to YouTube directly.
 - Optional SponsorBlock, off by default.
 - Comments, related videos and descriptions. On wide windows comments and Up next share tabs to the right of the player.

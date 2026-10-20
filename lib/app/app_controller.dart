@@ -35,6 +35,7 @@ import '../tool_manager.dart';
 import '../video_format_selector.dart';
 import '../community_posts.dart';
 import '../blocked_groups.dart';
+import '../explore_filters.dart';
 import '../explore_topics.dart';
 import '../faith_topics.dart';
 import '../stream_resolver.dart';
@@ -572,7 +573,14 @@ class AppController extends ChangeNotifier {
     SearchQuality? quality,
     FaithFormat? format,
     FaithView? view,
+    ExploreRegion? region,
+    ExploreLanguage? language,
   }) {
+    if ((region != null && region != preferences.exploreRegion) || (language != null && language != preferences.exploreLanguage)) {
+      unawaited(savePreferences(preferences.copyWith(exploreRegion: region, exploreLanguage: language)));
+      explore?.dispose();
+      explore = null;
+    }
     final nextSection = section ?? exploreSection;
     final newSection = nextSection != exploreSection;
     final topics = exploreTopicsFor(nextSection);
@@ -638,6 +646,10 @@ class AppController extends ChangeNotifier {
     }
     final query = exploreQuery;
     final mode = exploreMode;
+    final mix = exploreTopicNow.mix;
+    final region = preferences.exploreRegion.gl;
+    final language = preferences.exploreLanguage;
+    final perChannel = <String, int>{};
     final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);
     final taste = mode == ExploreMode.forYou ? _exploreTaste() : null;
     final notInterested = homeFeed?.notInterested;
@@ -655,22 +667,44 @@ class AppController extends ChangeNotifier {
         if (views == null || views > gemMaxViews || seconds == null || seconds < 240) return false;
       }
       if (mode == ExploreMode.curated && seconds != null && seconds < 240) return false;
+      if (!language.matches(item.title)) return false;
+      // A mix keeps any one channel from filling it.
+      if (mix && (perChannel[TasteProfile.channelKey(item)] = (perChannel[TasteProfile.channelKey(item)] ?? 0) + 1) > 2) return false;
       // Last, as it counts the videos that show.
       return faith == null || faith(item);
     }
 
     _update(() => explore = VideoListLoader(
-          () => repository.search(query, sp: sp),
+          () => mix ? repository.searchMix(_exploreMixQueries(taste ?? _exploreTaste()), sp: sp, region: region) : repository.search(query, sp: sp, region: region),
           where: where,
           fill: switch (mode) {
             ExploreMode.gems || ExploreMode.liveReplay => 8,
             ExploreMode.liveUpcoming => 4,
-            _ => faith != null ? 8 : 1,
+            _ => faith != null || mix || language != ExploreLanguage.any ? 8 : 1,
           },
           rank: taste == null ? null : (item) => exploreScore(taste, item),
         )
           ..addListener(notifyListeners)
           ..loadMore());
+  }
+
+  /// 推荐's searches: a few of the history's interests, the rest zones of
+  /// 视频 picked at random each time, so every visit brings other videos.
+  List<String> _exploreMixQueries(TasteProfile taste, {Random? random}) {
+    final interests = taste.topWords(8)..shuffle(random);
+    final zones = [
+      for (final topic in exploreTopicsFor(ExploreSection.popular))
+        if (!topic.mix && topic.opens == null) topic.subs.isEmpty ? topic.query : (topic.subs.toList()..shuffle(random)).first.query,
+    ]..shuffle(random);
+    final picked = interests.take(2).toList();
+    return [...picked, ...zones.take(6 - picked.length)];
+  }
+
+  /// Shows 推荐 or the zone shown with other videos.
+  void refreshExplore() {
+    explore?.dispose();
+    explore = null;
+    _loadExplore();
   }
 
   /// What the history says about taste, for 为你推荐 in explore.
@@ -1193,12 +1227,23 @@ class AppController extends ChangeNotifier {
           details = loaded;
           if (preferences.showRelated) related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
         });
+        unawaited(_localizeDetails(item.id, serial));
       }
     } catch (_) {
       // The page still shows what the list already knew about the video.
     } finally {
       if (serial == _playSerial) _update(() => loadingDetails = false);
     }
+  }
+
+  /// yt-dlp asks YouTube in English, as it reads view counts and dates
+  /// only in English; the title, description and chapter names are then
+  /// fetched again in the interface language.
+  Future<void> _localizeDetails(String videoId, int serial) async {
+    final text = await relatedVideos.textFor(videoId);
+    final current = details;
+    if (text == null || current == null || serial != _playSerial) return;
+    _update(() => details = current.localized(text.title, text.description));
   }
 
   VideoListLoader _relatedTo(VideoItem item, String title) {

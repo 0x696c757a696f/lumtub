@@ -61,6 +61,8 @@ enum SubtitleMode {
 }
 
 enum SubtitleLanguage {
+  /// The interface language's: simplified, traditional Chinese or English.
+  auto('跟随界面语言', '', ''),
   zh('简体中文优先', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng'),
   zhHant('繁體中文優先', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng'),
   en('英语优先', 'en.*', 'en,eng,en-US,en-GB'),
@@ -84,10 +86,19 @@ enum SubtitleLanguage {
   /// yt-dlp's `--sub-langs` value; a regex without commas so it fits in
   /// mpv's `ytdl-raw-options` list.
   final String _ytDlpLangs;
-  String get ytDlpLangs => tr(_ytDlpLangs);
+  String get ytDlpLangs => tr(resolved._ytDlpLangs);
   /// mpv's `slang`, in order of preference.
   final String _mpvLangs;
-  String get mpvLangs => tr(_mpvLangs);
+  String get mpvLangs => tr(resolved._mpvLangs);
+
+  /// [auto] as the language it stands for.
+  SubtitleLanguage get resolved => this != auto
+      ? this
+      : switch (currentLanguage) {
+          AppLanguage.en => en,
+          AppLanguage.zhHant => zhHant,
+          _ => zh,
+        };
 }
 
 /// mpv's `--video-sync` modes, as PiliNara lists them.
@@ -290,7 +301,7 @@ class PlayerSettings {
     this.defaultVolume = 100,
     this.volumeMax = 100,
     this.subtitleMode = SubtitleMode.off,
-    this.subtitleLanguage = SubtitleLanguage.zh,
+    this.subtitleLanguage = SubtitleLanguage.auto,
     this.subtitleBorder = 3,
     this.subtitleBackground = false,
     this.subtitleBold = false,
@@ -432,7 +443,7 @@ class PlayerSettings {
         'defaultVolume': defaultVolume,
         'volumeMax': volumeMax,
         'subtitleMode': subtitleMode.name,
-        'subtitleLanguage': subtitleLanguage.name,
+        'subtitleLanguageV2': subtitleLanguage.name,
         'subtitleBorder': subtitleBorder,
         'subtitleBackground': subtitleBackground,
         'subtitleBold': subtitleBold,
@@ -537,7 +548,11 @@ class PlayerSettings {
       defaultVolume: number('defaultVolume', 100, 0, 100),
       volumeMax: number('volumeMax', 100, 100, 200),
       subtitleMode: _enumByName(SubtitleMode.values, raw['subtitleMode'], SubtitleMode.off),
-      subtitleLanguage: _enumByName(SubtitleLanguage.values, raw['subtitleLanguage'], SubtitleLanguage.zh),
+      // Saved under a new key since 跟随界面语言 came; 简体中文优先, the
+      // default before it, saved under the old one now follows too.
+      subtitleLanguage: raw.containsKey('subtitleLanguageV2') || raw['subtitleLanguage'] != 'zh'
+          ? _enumByName(SubtitleLanguage.values, raw['subtitleLanguageV2'] ?? raw['subtitleLanguage'], SubtitleLanguage.auto)
+          : SubtitleLanguage.auto,
       subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
       subtitleBackground: raw['subtitleBackground'] == true,
       subtitleBold: raw['subtitleBold'] == true,

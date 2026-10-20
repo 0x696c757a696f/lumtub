@@ -40,7 +40,7 @@ class ExploreSub {
 /// One explore zone, as Bilibili's 分区: what it is called, the search
 /// behind it and its sub-categories.
 class ExploreTopic {
-  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false, this.opens});
+  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false, this.opens, this.mix = false});
   final String _label;
   /// The name shown; a user's own is shown as typed.
   String get label => custom ? _label : tr(_label);
@@ -52,6 +52,9 @@ class ExploreTopic {
   /// A zone that leads to another part of the page, as 宗教信仰 leads to
   /// the tabs of 宗教与信仰, rather than searching itself.
   final ExploreSection? opens;
+  /// 推荐: a mix of the other zones and the history's interests rather
+  /// than a search of its own.
+  final bool mix;
 
   /// Names the zone in the saved order and hidden lists; custom zones as
   /// `custom:<label>`.
@@ -83,6 +86,7 @@ class CustomTopic {
 /// Video zones. Searches mix Chinese and English words so that YouTube's
 /// videos from other countries come up too.
 const popularTopics = <ExploreTopic>[
+  ExploreTopic('推荐', Icons.recommend_rounded, '', mix: true),
   ExploreTopic('知识教育', Icons.school_rounded, '知识 科普', subs: [
     ExploreSub('科普', '科普'),
     ExploreSub('历史', '历史 纪录片'),

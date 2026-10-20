@@ -4,6 +4,7 @@ import 'dart:io';
 import 'app_directories.dart';
 import 'blocked_groups.dart';
 import 'state_media.dart';
+import 'explore_filters.dart';
 import 'explore_topics.dart';
 import 'models.dart';
 import 'l10n/l10n.dart';
@@ -23,6 +24,8 @@ class AppPreferences {
     this.exploreCustomTopics = const [],
     this.exploreOrder = const {},
     this.exploreHidden = const {},
+    this.exploreRegion = ExploreRegion.any,
+    this.exploreLanguage = ExploreLanguage.any,
     this.hideShorts = false,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
@@ -67,6 +70,9 @@ class AppPreferences {
   /// Per explore half ([ExploreSection.name]), zone keys in the user's
   /// order, the pinned ones first.
   final Map<String, List<String>> exploreOrder;
+  /// Explore's 地区 and 语言, kept between runs.
+  final ExploreRegion exploreRegion;
+  final ExploreLanguage exploreLanguage;
   /// Per explore half, the zone keys the user hid.
   final Map<String, List<String>> exploreHidden;
   /// Hides videos of a minute or less, which YouTube lists as Shorts.
@@ -151,6 +157,8 @@ class AppPreferences {
     List<CustomTopic>? exploreCustomTopics,
     Map<String, List<String>>? exploreOrder,
     Map<String, List<String>>? exploreHidden,
+    ExploreRegion? exploreRegion,
+    ExploreLanguage? exploreLanguage,
     bool? hideShorts,
     int? minDurationMinutes,
     bool? hideWatched,
@@ -190,6 +198,8 @@ class AppPreferences {
         exploreCustomTopics: exploreCustomTopics ?? this.exploreCustomTopics,
         exploreOrder: exploreOrder ?? this.exploreOrder,
         exploreHidden: exploreHidden ?? this.exploreHidden,
+        exploreRegion: exploreRegion ?? this.exploreRegion,
+        exploreLanguage: exploreLanguage ?? this.exploreLanguage,
         hideShorts: hideShorts ?? this.hideShorts,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
@@ -230,6 +240,8 @@ class AppPreferences {
         'exploreCustomTopics': [for (final t in exploreCustomTopics) t.toJson()],
         'exploreOrder': exploreOrder,
         'exploreHidden': exploreHidden,
+        'exploreRegion': exploreRegion.name,
+        'exploreLanguage': exploreLanguage.name,
         'hideShorts': hideShorts,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
@@ -307,6 +319,8 @@ class AppPreferences {
       exploreCustomTopics: topics,
       exploreOrder: keyLists('exploreOrder'),
       exploreHidden: keyLists('exploreHidden'),
+      exploreRegion: ExploreRegion.parse(raw['exploreRegion']),
+      exploreLanguage: ExploreLanguage.parse(raw['exploreLanguage']),
       hideShorts: flag('hideShorts', d.hideShorts),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),

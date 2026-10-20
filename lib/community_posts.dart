@@ -49,9 +49,9 @@ class CommunityPosts {
   final http.Client _client;
 
   static const _userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
-  static const _headers = {
+  static Map<String, String> get _headers => {
     'User-Agent': _userAgent,
-    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+    'Accept-Language': youtubeAcceptLanguage,
     // Skips the EU consent page.
     'Cookie': 'CONSENT=YES+cb; SOCS=CAI',
   };
@@ -62,7 +62,7 @@ class CommunityPosts {
 
   /// The first page of [channel]'s posts.
   Future<PostPage> first(ChannelRef channel) async {
-    final response = await _client.get(Uri.parse('${channel.url}/posts?hl=zh-CN'), headers: _headers).timeout(const Duration(seconds: 20));
+    final response = await _client.get(Uri.parse('${channel.url}/posts?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     final html = utf8.decode(response.bodyBytes, allowMalformed: true);
     _apiKey = RegExp(r'"INNERTUBE_API_KEY":"([^"]+)"').firstMatch(html)?.group(1);
@@ -86,7 +86,7 @@ class CommunityPosts {
               'client': {
                 'clientName': 'WEB',
                 'clientVersion': _clientVersion ?? '2.20251001.00.00',
-                'hl': 'zh-CN',
+                'hl': youtubeHl,
                 if (_visitorData != null) 'visitorData': _visitorData,
               },
             },

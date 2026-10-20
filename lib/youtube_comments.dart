@@ -60,9 +60,9 @@ class YoutubeComments {
   YoutubeComments(this._client);
   final http.Client _client;
 
-  static const _headers = {
+  static Map<String, String> get _headers => {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
-    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+    'Accept-Language': youtubeAcceptLanguage,
     'Cookie': 'CONSENT=YES+cb; SOCS=CAI',
   };
 
@@ -79,7 +79,7 @@ class YoutubeComments {
 
   /// The first page of comments under community post [postId].
   Future<CommentPage> post(String postId, {bool newest = false}) async {
-    final response = await _client.get(Uri.parse('https://www.youtube.com/post/$postId?hl=zh-CN'), headers: _headers).timeout(const Duration(seconds: 20));
+    final response = await _client.get(Uri.parse('https://www.youtube.com/post/$postId?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     final html = utf8.decode(response.bodyBytes, allowMalformed: true);
     _apiKey = RegExp(r'"INNERTUBE_API_KEY":"([^"]+)"').firstMatch(html)?.group(1) ?? _apiKey;
@@ -116,7 +116,7 @@ class YoutubeComments {
               'client': {
                 'clientName': 'WEB',
                 'clientVersion': _clientVersion ?? '2.20251001.00.00',
-                'hl': 'zh-CN',
+                'hl': youtubeHl,
                 if (_visitorData != null) 'visitorData': _visitorData,
               },
             },

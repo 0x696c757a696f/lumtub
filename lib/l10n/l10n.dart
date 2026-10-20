@@ -47,6 +47,21 @@ void setLanguage(AppLanguage language) {
   };
 }
 
+/// YouTube's `hl` for the interface language, so that titles, descriptions,
+/// posts and comments come in it where YouTube has them translated.
+String get youtubeHl => switch (_current) {
+      AppLanguage.en => 'en',
+      AppLanguage.zhHant => 'zh-TW',
+      _ => 'zh-CN',
+    };
+
+/// `Accept-Language` to go with [youtubeHl].
+String get youtubeAcceptLanguage => switch (_current) {
+      AppLanguage.en => 'en-US,en;q=0.9',
+      AppLanguage.zhHant => 'zh-TW,zh;q=0.9,en;q=0.8',
+      _ => 'zh-CN,zh;q=0.9,en;q=0.8',
+    };
+
 /// [zh] in the current language, with `{0}`, `{1}`… replaced by [args].
 /// Text with no translation stays as written.
 String tr(String zh, [List<Object?> args = const []]) {

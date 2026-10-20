@@ -11,34 +11,80 @@ class YoutubeRelated {
   YoutubeRelated(this._client);
   final http.Client _client;
 
-  static const _headers = {
+  static Map<String, String> get _headers => {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
-    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+    'Accept-Language': youtubeAcceptLanguage,
     'Cookie': 'CONSENT=YES+cb; SOCS=CAI',
     'Content-Type': 'application/json',
   };
 
-  final _cache = <String, List<VideoItem>>{};
+  final _cache = <String, Future<Object?>>{};
+
+  /// YouTube's `/next` response for [videoId], in the interface language;
+  /// the related videos and the translated title both come from it.
+  Future<Object?> _next(String videoId) {
+    if (_cache.length > 100) _cache.clear();
+    return _cache[videoId] ??= () async {
+      final response = await _client
+          .post(
+            Uri.parse('https://www.youtube.com/youtubei/v1/next?prettyPrint=false'),
+            headers: _headers,
+            body: jsonEncode({
+              'context': {
+                'client': {'clientName': 'WEB', 'clientVersion': '2.20251001.00.00', 'hl': youtubeHl},
+              },
+              'videoId': videoId,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+      if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    }()
+      ..ignore();
+  }
 
   Future<List<VideoItem>> forVideo(String videoId) async {
-    final cached = _cache[videoId];
-    if (cached != null) return cached;
-    final response = await _client
-        .post(
-          Uri.parse('https://www.youtube.com/youtubei/v1/next?prettyPrint=false'),
-          headers: _headers,
-          body: jsonEncode({
-            'context': {
-              'client': {'clientName': 'WEB', 'clientVersion': '2.20251001.00.00', 'hl': 'zh-CN'},
-            },
-            'videoId': videoId,
-          }),
-        )
-        .timeout(const Duration(seconds: 15));
-    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    final items = parse(jsonDecode(utf8.decode(response.bodyBytes))).where((item) => item.id != videoId).toList();
-    if (_cache.length > 100) _cache.clear();
-    return _cache[videoId] = items;
+    try {
+      return parse(await _next(videoId)).where((item) => item.id != videoId).toList();
+    } catch (_) {
+      _cache.remove(videoId);
+      rethrow;
+    }
+  }
+
+  /// [videoId]'s title and description as YouTube shows them in the
+  /// interface language: the uploader's translation where there is one.
+  Future<({String title, String description})?> textFor(String videoId) async {
+    try {
+      return localized(await _next(videoId));
+    } catch (_) {
+      _cache.remove(videoId);
+      return null;
+    }
+  }
+
+  static ({String title, String description})? localized(Object? data) {
+    final primary = _find(data, 'videoPrimaryInfoRenderer');
+    final secondary = _find(data, 'videoSecondaryInfoRenderer');
+    final title = _text(primary?['title']).trim();
+    if (title.isEmpty) return null;
+    final description = _text(secondary?['attributedDescription'] ?? secondary?['description']);
+    return (title: title, description: description);
+  }
+
+  static Map? _find(Object? node, String key) {
+    if (node is Map) {
+      final found = node[key];
+      if (found is Map) return found;
+      for (final value in node.values) {
+        if (_find(value, key) case final hit?) return hit;
+      }
+    } else if (node is List) {
+      for (final value in node) {
+        if (_find(value, key) case final hit?) return hit;
+      }
+    }
+    return null;
   }
 
   /// The videos in a `/next` response, in YouTube's order: the older
@@ -78,7 +124,7 @@ class YoutubeRelated {
     final id = node['videoId'];
     if (id is! String || id.length != 11) return null;
     final byline = (node['longBylineText'] ?? node['shortBylineText']) as Object?;
-    final live = _text(node['badges']).contains('直播') || _text(node['badges']).toUpperCase().contains('LIVE') || node['viewCountText'] is Map && _text(node['viewCountText']).contains('正在观看');
+    final live = _text(node['badges']).contains('直播') || _text(node['badges']).toUpperCase().contains('LIVE') || node['viewCountText'] is Map && RegExp('正在观看|正在觀看|watching', caseSensitive: false).hasMatch(_text(node['viewCountText']));
     return VideoItem(
       id: id,
       title: _text(node['title']),
@@ -181,15 +227,16 @@ class YoutubeRelated {
     return int.parse(match.group(1) ?? '0') * 3600 + int.parse(match.group(2)!) * 60 + int.parse(match.group(3)!);
   }
 
-  /// View counts such as `1,234 次观看`, `12万次观看`, `3.4亿` or `1.2M views`.
+  /// View counts such as `1,234 次观看`, `12万次观看`, `3.4亿`, `12萬次觀看`
+  /// or `1.2M views`, in whichever language [youtubeHl] asked for.
   static int? _count(String text) {
-    final match = RegExp(r'([\d.,]+)\s*([万亿KMB]?)', caseSensitive: false).firstMatch(text);
-    if (match == null || !RegExp(r'观看|views|次', caseSensitive: false).hasMatch(text)) return null;
+    final match = RegExp(r'([\d.,]+)\s*([万亿萬億KMB]?)', caseSensitive: false).firstMatch(text);
+    if (match == null || !RegExp(r'观看|觀看|views|次', caseSensitive: false).hasMatch(text)) return null;
     final number = double.tryParse(match.group(1)!.replaceAll(',', ''));
     if (number == null) return null;
     final factor = switch (match.group(2)!.toUpperCase()) {
-      '万' => 1e4,
-      '亿' => 1e8,
+      '万' || '萬' => 1e4,
+      '亿' || '億' => 1e8,
       'K' => 1e3,
       'M' => 1e6,
       'B' => 1e9,

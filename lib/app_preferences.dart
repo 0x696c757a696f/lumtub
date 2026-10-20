@@ -22,6 +22,7 @@ class AppPreferences {
     this.homeShowContinue = true,
     this.homeShowRecent = true,
     this.homeShowRecommended = true,
+    this.syncFollowToYoutube = true,
     this.startPage = 'home',
     this.feedAutoRefresh = true,
     this.feedRefreshMinutes = 10,
@@ -55,6 +56,8 @@ class AppPreferences {
   final bool homeShowRecent;
   /// 为你推荐, worked out on this computer from the history.
   final bool homeShowRecommended;
+  /// 关注 also subscribes on YouTube when signed in.
+  final bool syncFollowToYoutube;
   final String startPage;
   final bool feedAutoRefresh;
   final int feedRefreshMinutes;
@@ -101,6 +104,7 @@ class AppPreferences {
     bool? homeShowContinue,
     bool? homeShowRecent,
     bool? homeShowRecommended,
+    bool? syncFollowToYoutube,
     String? startPage,
     bool? feedAutoRefresh,
     int? feedRefreshMinutes,
@@ -130,6 +134,7 @@ class AppPreferences {
         homeShowContinue: homeShowContinue ?? this.homeShowContinue,
         homeShowRecent: homeShowRecent ?? this.homeShowRecent,
         homeShowRecommended: homeShowRecommended ?? this.homeShowRecommended,
+        syncFollowToYoutube: syncFollowToYoutube ?? this.syncFollowToYoutube,
         startPage: startPage ?? this.startPage,
         feedAutoRefresh: feedAutoRefresh ?? this.feedAutoRefresh,
         feedRefreshMinutes: feedRefreshMinutes ?? this.feedRefreshMinutes,
@@ -160,6 +165,7 @@ class AppPreferences {
         'homeShowContinue': homeShowContinue,
         'homeShowRecent': homeShowRecent,
         'homeShowRecommended': homeShowRecommended,
+        'syncFollowToYoutube': syncFollowToYoutube,
         'startPage': startPage,
         'feedAutoRefresh': feedAutoRefresh,
         'feedRefreshMinutes': feedRefreshMinutes,
@@ -210,6 +216,7 @@ class AppPreferences {
       homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
       homeShowRecent: flag('homeShowRecent', d.homeShowRecent),
       homeShowRecommended: flag('homeShowRecommended', d.homeShowRecommended),
+      syncFollowToYoutube: flag('syncFollowToYoutube', d.syncFollowToYoutube),
       startPage: startPages.any((p) => p.$1 == start) ? start! : 'home',
       feedAutoRefresh: flag('feedAutoRefresh', d.feedAutoRefresh),
       feedRefreshMinutes: number('feedRefreshMinutes', 10, 1, 1440),

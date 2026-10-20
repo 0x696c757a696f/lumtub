@@ -12,8 +12,11 @@ class RemotePlaylist {
   final int count;
 }
 
-/// The parts of the YouTube Data API that YTPlus reads for a signed-in user.
-/// Every call costs one unit of the client's daily quota.
+/// How the signed-in user rated a video.
+enum VideoRating { like, dislike, none }
+
+/// The parts of the YouTube Data API that YTPlus uses for a signed-in user.
+/// A read costs one unit of the client's daily quota, a change about 50.
 class YouTubeAccountApi {
   YouTubeAccountApi(this._client, this._accessToken);
   final http.Client _client;
@@ -57,6 +60,78 @@ class YouTubeAccountApi {
       if (video != null) videos.add(video);
     }, limit: maxPlaylistItems);
     return videos;
+  }
+
+  Future<VideoRating> rating(String videoId) async {
+    final data = await _get('videos/getRating', {'id': videoId});
+    final items = data['items'];
+    final rating = items is List && items.isNotEmpty && items.first is Map ? (items.first as Map)['rating'] : null;
+    return VideoRating.values.where((r) => r.name == rating).firstOrNull ?? VideoRating.none;
+  }
+
+  Future<void> rate(String videoId, VideoRating rating) => _send('POST', 'videos/rate', {'id': videoId, 'rating': rating.name});
+
+  /// Posts a top-level comment under [videoId]; returns its id.
+  Future<String?> comment(String videoId, String text) async {
+    final data = await _send('POST', 'commentThreads', {'part': 'snippet'}, {
+      'snippet': {
+        'videoId': videoId,
+        'topLevelComment': {
+          'snippet': {'textOriginal': text},
+        },
+      },
+    });
+    return data['id']?.toString();
+  }
+
+  /// Replies to comment [parentId]; returns the reply's id.
+  Future<String?> reply(String parentId, String text) async {
+    final data = await _send('POST', 'comments', {'part': 'snippet'}, {
+      'snippet': {'parentId': parentId, 'textOriginal': text},
+    });
+    return data['id']?.toString();
+  }
+
+  Future<void> addToPlaylist(String playlistId, String videoId) => _send('POST', 'playlistItems', {'part': 'snippet'}, {
+        'snippet': {
+          'playlistId': playlistId,
+          'resourceId': {'kind': 'youtube#video', 'videoId': videoId},
+        },
+      });
+
+  /// Creates a private playlist; returns it.
+  Future<RemotePlaylist> createPlaylist(String title) async {
+    final data = await _send('POST', 'playlists', {'part': 'snippet,status'}, {
+      'snippet': {'title': title},
+      'status': {'privacyStatus': 'private'},
+    });
+    final id = data['id']?.toString();
+    if (id == null || id.isEmpty) throw const YouTubeApiException(200, 'noPlaylistId');
+    return RemotePlaylist(id, title, 0);
+  }
+
+  /// The id of the account's subscription to [channelId], if any.
+  Future<String?> subscriptionTo(String channelId) async {
+    final data = await _get('subscriptions', {'part': 'id', 'mine': 'true', 'forChannelId': channelId});
+    final items = data['items'];
+    return items is List && items.isNotEmpty && items.first is Map ? (items.first as Map)['id']?.toString() : null;
+  }
+
+  Future<void> subscribe(String channelId) async {
+    try {
+      await _send('POST', 'subscriptions', {'part': 'snippet'}, {
+        'snippet': {
+          'resourceId': {'kind': 'youtube#channel', 'channelId': channelId},
+        },
+      });
+    } on YouTubeApiException catch (e) {
+      if (e.reason != 'subscriptionDuplicate') rethrow;
+    }
+  }
+
+  Future<void> unsubscribe(String channelId) async {
+    final id = await subscriptionTo(channelId);
+    if (id != null) await _send('DELETE', 'subscriptions', {'id': id});
   }
 
   static ChannelRef? parseSubscription(Map item) {
@@ -115,6 +190,22 @@ class YouTubeAccountApi {
     return data is Map<String, dynamic> ? data : const {};
   }
 
+  /// A change: [body] as JSON, an empty answer read as an empty map.
+  Future<Map<String, dynamic>> _send(String method, String resource, Map<String, String> query, [Map<String, Object?>? body]) async {
+    final uri = Uri.https('www.googleapis.com', '/youtube/v3/$resource', query);
+    final request = http.Request(method, uri)..headers['Authorization'] = 'Bearer ${await _accessToken()}';
+    if (body != null) {
+      request.headers['Content-Type'] = 'application/json; charset=utf-8';
+      request.bodyBytes = utf8.encode(jsonEncode(body));
+    }
+    final response = await http.Response.fromStream(await _client.send(request)).timeout(const Duration(seconds: 20));
+    final text = utf8.decode(response.bodyBytes, allowMalformed: true);
+    if (response.statusCode >= 300) throw YouTubeApiException(response.statusCode, errorReason(text));
+    if (text.trim().isEmpty) return const {};
+    final data = jsonDecode(text);
+    return data is Map<String, dynamic> ? data : const {};
+  }
+
   static String? errorReason(String body) {
     try {
       final errors = (jsonDecode(body) as Map)['error']['errors'] as List;
@@ -135,6 +226,11 @@ class YouTubeApiException implements Exception {
         'quotaExceeded' || 'dailyLimitExceeded' => 'YouTube API 今日配额已用完，请明天再同步',
         'accessNotConfigured' => '这个 Google 客户端还没有启用 YouTube Data API v3',
         'youtubeSignupRequired' => '这个 Google 账号还没有 YouTube 频道',
+        'insufficientPermissions' || 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' => '登录时没有授予修改权限，请重新登录 Google 账号',
+        'commentsDisabled' => '这个视频关闭了评论',
+        'forbidden' when status == 403 => 'YouTube 拒绝了这个操作',
+        'subscriptionForbidden' => '不能订阅这个频道',
+        'videoNotFound' => '找不到这个视频',
         _ when status == 401 => '登录已失效，请重新登录',
         _ => 'YouTube API 请求失败（HTTP $status${reason == null ? '' : ' · $reason'}）',
       };

@@ -444,8 +444,9 @@ class FollowButton extends StatelessWidget {
     if (library == null) return const SizedBox.shrink();
     final following = library.isFollowing(channel.id);
     void toggle() {
-      final now = library.toggleFollow(channel);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(now ? '已关注，新视频会出现在“订阅”里' : '已取消关注')));
+      final now = controller.toggleFollow(channel);
+      final youtube = (controller.account?.canWrite ?? false) && controller.preferences.syncFollowToYoutube;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(now ? (youtube ? '已关注，并在 YouTube 上订阅' : '已关注，新视频会出现在“订阅”里') : (youtube ? '已取消关注和 YouTube 订阅' : '已取消关注'))));
     }
 
     return following

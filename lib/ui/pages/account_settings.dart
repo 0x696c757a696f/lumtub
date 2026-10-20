@@ -26,6 +26,7 @@ class AccountSettings extends StatelessWidget {
                 child: Icon(Icons.person_rounded, color: colors.onPrimaryContainer),
               ),
               title: Text(account.name ?? 'YouTube 账号'),
+              trailing: account.canWrite ? null : FilledButton.tonal(onPressed: account.signIn, child: const Text('重新登录以启用点赞和评论')),
               subtitle: Text(account.syncing
                   ? '正在同步订阅和播放列表…'
                   : account.lastSync == null
@@ -53,7 +54,7 @@ class AccountSettings extends StatelessWidget {
         AccountState.signedOut => ListTile(
             leading: Icon(Icons.account_circle_outlined, color: colors.primary),
             title: const Text('Google 账号'),
-            subtitle: Text(account.client == null ? '这个版本没有内置 Google 客户端，需要先在下方填写你自己的客户端。' : '登录后可以导入 YouTube 订阅、播放列表和喜欢的视频。'),
+            subtitle: Text(account.client == null ? '这个版本没有内置 Google 客户端，需要先在下方填写你自己的客户端。' : '登录后可以导入订阅、播放列表和喜欢的视频，也可以点赞、评论、保存到播放列表和订阅。'),
             trailing: FilledButton.icon(
               onPressed: account.client == null ? null : account.signIn,
               icon: const Icon(Icons.login_rounded),
@@ -65,9 +66,9 @@ class AccountSettings extends StatelessWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(18, 4, 18, 12),
         child: Text(
-          '登录完全可选，不登录也能正常搜索和播放。只申请 YouTube 只读权限，用来读取订阅和播放列表并复制到本机；不会修改你的账号，也不会上传本机的观看记录。'
+          '登录完全可选，不登录也能正常搜索和播放。登录后读取订阅和播放列表并复制到本机；只有你在 YTPlus 里点赞、点踩、评论、保存到播放列表或订阅时才会修改账号，不会上传本机的观看记录。'
           '登录凭据用 Windows 数据保护加密后保存在本机，只有当前 Windows 用户能解密。\n'
-          'YouTube 官方接口不提供观看历史和个性化推荐；视频播放也不使用这个账号，会员或年龄限制视频不一定能播放。',
+          'YouTube 官方接口不提供观看历史和首页推荐，也不支持给社区帖子点赞或评论；首页的“为你推荐”在本机计算，会参考同步过来的喜欢的视频和订阅。视频播放不使用这个账号，会员或年龄限制视频不一定能播放。',
           style: note,
         ),
       ),

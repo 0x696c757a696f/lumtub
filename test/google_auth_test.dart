@@ -28,7 +28,7 @@ void main() {
         .authorizationUri(redirectUri: 'http://127.0.0.1:5000', pkce: Pkce('verifier-verifier-verifier-verifier-verifier-1'), state: 'xyz');
     final query = uri.queryParameters;
     expect(uri.host, 'accounts.google.com');
-    expect(query['scope'], 'https://www.googleapis.com/auth/youtube.readonly');
+    expect(query['scope'], 'https://www.googleapis.com/auth/youtube.force-ssl');
     expect(query['code_challenge_method'], 'S256');
     expect(query['code_challenge'], Pkce.challengeFor('verifier-verifier-verifier-verifier-verifier-1'));
     expect(query['redirect_uri'], 'http://127.0.0.1:5000');

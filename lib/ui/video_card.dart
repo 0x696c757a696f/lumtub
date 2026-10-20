@@ -9,6 +9,7 @@ import '../appearance_settings.dart';
 import '../library_store.dart';
 import '../models.dart';
 import '../thumbnail_cache.dart';
+import '../youtube_account.dart' show RemotePlaylist;
 import 'common.dart';
 import 'skeleton.dart';
 import 'theme.dart';
@@ -417,6 +418,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
         entry('favorite', favorite ? Icons.favorite_rounded : Icons.favorite_border_rounded, favorite ? '取消收藏' : '收藏'),
         entry('playlist', Icons.playlist_add_rounded, '添加到播放列表…'),
       ],
+      if (controller?.account?.signedIn ?? false) entry('youtube', Icons.video_library_outlined, '保存到 YouTube 播放列表…'),
       if (controller != null && channel != null) ...[
         entry('channel', Icons.account_circle_outlined, '查看频道'),
         entry('block', Icons.block_rounded, '屏蔽此频道'),
@@ -439,6 +441,8 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '已收藏' : '已取消收藏')));
     case 'playlist':
       await showAddToPlaylist(context, controller!, item);
+    case 'youtube':
+      await showSaveToYoutube(context, controller!, item);
     case 'channel':
       controller!.openChannel(channel!);
     case 'block':
@@ -450,6 +454,47 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
     case 'browser':
       await openExternal(item.url);
   }
+}
+
+/// Lets the user pick one of the account's YouTube playlists for [item],
+/// or create a private one.
+Future<void> showSaveToYoutube(BuildContext context, AppController controller, VideoItem item) async {
+  final account = controller.account;
+  if (account == null) return;
+  final playlists = account.remotePlaylists();
+  const create = '\u0000new';
+  final choice = await showDialog<Object>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: const Text('保存到 YouTube 播放列表'),
+      children: [
+        FutureBuilder<List<RemotePlaylist>>(
+          future: playlists,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()));
+            }
+            final list = snapshot.data ?? const <RemotePlaylist>[];
+            return Column(mainAxisSize: MainAxisSize.min, children: [
+              for (final playlist in list)
+                SimpleDialogOption(
+                  onPressed: () => Navigator.pop(context, playlist),
+                  child: ListTile(dense: true, leading: const Icon(Icons.playlist_play_rounded), title: Text(playlist.title), subtitle: Text('${playlist.count} 个视频')),
+                ),
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(context, create),
+                child: const ListTile(dense: true, leading: Icon(Icons.add_rounded), title: Text('新建私享播放列表…')),
+              ),
+            ]);
+          },
+        ),
+      ],
+    ),
+  );
+  if (!context.mounted || choice == null) return;
+  if (choice is RemotePlaylist) return account.saveToPlaylist(item, playlist: choice);
+  final title = await promptText(context, title: '新建 YouTube 播放列表', hint: '播放列表名称', confirm: '创建并保存');
+  if (title != null && title.trim().isNotEmpty) await account.saveToPlaylist(item, newTitle: title);
 }
 
 /// Lets the user pick a playlist for [item], or create one.

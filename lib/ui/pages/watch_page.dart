@@ -8,6 +8,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../../app/app_controller.dart';
 import '../../models.dart';
 import '../../player_settings.dart';
+import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
 import '../common.dart';
 import '../linked_text.dart';
@@ -130,6 +131,19 @@ class _Toolbar extends StatelessWidget {
             ],
             child: Chip(avatar: const Icon(Icons.repeat_rounded, size: 18), label: Text(settings.playOrder.label)),
           ),
+          if (controller.account case final account? when account.signedIn) ...[
+            for (final (rating, icon, selectedIcon, label) in [
+              (VideoRating.like, Icons.thumb_up_outlined, Icons.thumb_up_rounded, '赞'),
+              (VideoRating.dislike, Icons.thumb_down_outlined, Icons.thumb_down_rounded, '踩'),
+            ])
+              IconButton(
+                tooltip: account.ratingOf(item.id) == rating ? '取消$label' : label,
+                isSelected: account.ratingOf(item.id) == rating,
+                icon: Icon(icon),
+                selectedIcon: Icon(selectedIcon, color: context.colors.primary),
+                onPressed: () => account.rate(item, rating),
+              ),
+          ],
           if (library != null) ...[
             IconButton(
               tooltip: favorite ? '取消收藏' : '收藏',
@@ -139,6 +153,8 @@ class _Toolbar extends StatelessWidget {
               onPressed: () => library.toggleFavorite(item),
             ),
             IconButton(tooltip: '添加到播放列表', icon: const Icon(Icons.playlist_add_rounded), onPressed: () => showAddToPlaylist(context, controller, item)),
+            if (controller.account?.signedIn ?? false)
+              IconButton(tooltip: '保存到 YouTube 播放列表', icon: const Icon(Icons.video_library_outlined), onPressed: () => showSaveToYoutube(context, controller, item)),
           ],
           IconButton(tooltip: '复制链接', icon: const Icon(Icons.link_rounded), onPressed: () => copyText(context, item.url, '链接已复制')),
           IconButton(tooltip: '在浏览器中打开', icon: const Icon(Icons.open_in_new_rounded), onPressed: () => openExternal(item.url)),

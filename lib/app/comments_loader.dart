@@ -102,6 +102,19 @@ class CommentsLoader extends ChangeNotifier {
     }
   }
 
+  /// Shows a comment the user just posted at the top.
+  void addOwn(YoutubeComment comment) {
+    comments = [comment, ...comments];
+    _notify();
+  }
+
+  /// Shows a reply the user just posted under [parent].
+  void addOwnReply(YoutubeComment parent, YoutubeComment reply) {
+    final thread = replies.putIfAbsent(parent.id, ReplyThread.new);
+    thread.replies = [...thread.replies, reply];
+    _notify();
+  }
+
   /// Hides [comment]'s replies again.
   void collapse(YoutubeComment comment) {
     if (replies.remove(comment.id) != null) _notify();

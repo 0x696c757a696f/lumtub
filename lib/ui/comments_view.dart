@@ -25,11 +25,74 @@ class CommentsSection extends StatefulWidget {
 
 class _CommentsSectionState extends State<CommentsSection> {
   late final _loader = CommentsLoader(widget.controller.comments, videoId: widget.videoId, postId: widget.postId)..loadMore();
+  /// The comment a reply is being written to.
+  String? _replyingTo;
 
   @override
   void dispose() {
     _loader.dispose();
     super.dispose();
+  }
+
+  /// Only video comments can be written: YouTube's API has none for posts.
+  bool get _canWrite => widget.videoId != null && (widget.controller.account?.signedIn ?? false);
+
+  YoutubeComment _own(String text) => YoutubeComment(
+        id: 'own:${DateTime.now().microsecondsSinceEpoch}',
+        author: widget.controller.account?.name ?? '我',
+        text: text,
+        published: '刚刚',
+      );
+
+  Future<bool> _post(String text) async {
+    final posted = await widget.controller.account?.postComment(videoId: widget.videoId!, text: text) ?? false;
+    if (posted) _loader.addOwn(_own(text.trim()));
+    return posted;
+  }
+
+  Future<bool> _reply(YoutubeComment parent, String text) async {
+    final posted = await widget.controller.account?.postComment(videoId: widget.videoId!, parentId: parent.id, text: text) ?? false;
+    if (posted) {
+      _loader.addOwnReply(parent, _own(text.trim()));
+      if (mounted) setState(() => _replyingTo = null);
+    }
+    return posted;
+  }
+
+  /// [comment] and, once loaded, its replies.
+  List<Widget> _thread(BuildContext context, YoutubeComment comment) {
+    final loader = _loader;
+    final thread = loader.replies[comment.id];
+    Widget tile(YoutubeComment c, {bool reply = false}) => _CommentTile(
+          comment: c,
+          loader: loader,
+          controller: widget.controller,
+          onSeek: widget.onSeek,
+          reply: reply,
+          onReply: _canWrite && !reply && !c.id.startsWith('own:') ? () => setState(() => _replyingTo = _replyingTo == c.id ? null : c.id) : null,
+        );
+    final error = thread?.error;
+    return [
+      tile(comment),
+      if (_replyingTo == comment.id)
+        Padding(
+          padding: const EdgeInsets.only(left: 44, bottom: 8),
+          child: CommentComposer(hint: '回复 ${comment.author}…', autofocus: true, onSubmit: (text) => _reply(comment, text), onCancel: () => setState(() => _replyingTo = null)),
+        ),
+      if (thread != null) ...[
+        for (final reply in thread.replies) tile(reply, reply: true),
+        Padding(
+          padding: const EdgeInsets.only(left: 44),
+          child: thread.loading
+              ? const Padding(padding: EdgeInsets.all(8), child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
+              : error != null
+                  ? ErrorBanner('无法加载回复：$error', onRetry: () => loader.loadReplies(comment))
+                  : thread.next != null
+                      ? TextButton(onPressed: () => loader.loadReplies(comment), child: const Text('更多回复'))
+                      : const SizedBox.shrink(),
+        ),
+      ],
+    ];
   }
 
   @override
@@ -52,6 +115,7 @@ class _CommentsSectionState extends State<CommentsSection> {
               ),
             ]),
             const SizedBox(height: 8),
+            if (_canWrite) CommentComposer(hint: '添加评论…', onSubmit: _post),
             for (final comment in loader.comments) ..._thread(context, comment),
             if (loader.loading)
               const Padding(padding: EdgeInsets.all(16), child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))))
@@ -66,39 +130,14 @@ class _CommentsSectionState extends State<CommentsSection> {
       );
 }
 
-extension on _CommentsSectionState {
-  /// [comment] and, once loaded, its replies.
-  List<Widget> _thread(BuildContext context, YoutubeComment comment) {
-    final loader = _loader;
-    final thread = loader.replies[comment.id];
-    Widget tile(YoutubeComment c, {bool reply = false}) => _CommentTile(comment: c, loader: loader, controller: widget.controller, onSeek: widget.onSeek, reply: reply);
-    final error = thread?.error;
-    return [
-      tile(comment),
-      if (thread != null) ...[
-        for (final reply in thread.replies) tile(reply, reply: true),
-        Padding(
-          padding: const EdgeInsets.only(left: 44),
-          child: thread.loading
-              ? const Padding(padding: EdgeInsets.all(8), child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
-              : error != null
-                  ? ErrorBanner('无法加载回复：$error', onRetry: () => loader.loadReplies(comment))
-                  : thread.next != null
-                      ? TextButton(onPressed: () => loader.loadReplies(comment), child: const Text('更多回复'))
-                      : const SizedBox.shrink(),
-        ),
-      ],
-    ];
-  }
-}
-
 class _CommentTile extends StatelessWidget {
-  const _CommentTile({required this.comment, required this.loader, required this.controller, this.onSeek, this.reply = false});
+  const _CommentTile({required this.comment, required this.loader, required this.controller, this.onSeek, this.reply = false, this.onReply});
   final YoutubeComment comment;
   final CommentsLoader loader;
   final AppController controller;
   final void Function(Duration position)? onSeek;
   final bool reply;
+  final VoidCallback? onReply;
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +176,14 @@ class _CommentTile extends StatelessWidget {
               const SizedBox(width: 12),
               Tooltip(message: '作者喜欢', child: Icon(Icons.favorite_rounded, size: 14, color: colors.error)),
             ],
+            if (onReply != null) ...[
+              const SizedBox(width: 8),
+              TextButton(
+                style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8)),
+                onPressed: onReply,
+                child: const Text('回复', style: TextStyle(fontSize: 12)),
+              ),
+            ],
           ]),
           if (!reply && comment.repliesToken != null)
             TextButton.icon(
@@ -149,4 +196,63 @@ class _CommentTile extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// A field for writing a comment or reply, with 发布 and, for replies, 取消.
+class CommentComposer extends StatefulWidget {
+  const CommentComposer({super.key, required this.hint, required this.onSubmit, this.onCancel, this.autofocus = false});
+  final String hint;
+  /// Posts the text; returns whether it went through.
+  final Future<bool> Function(String text) onSubmit;
+  final VoidCallback? onCancel;
+  final bool autofocus;
+
+  @override
+  State<CommentComposer> createState() => _CommentComposerState();
+}
+
+class _CommentComposerState extends State<CommentComposer> {
+  final _text = TextEditingController();
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final text = _text.text.trim();
+    if (text.isEmpty || _sending) return;
+    setState(() => _sending = true);
+    final posted = await widget.onSubmit(text);
+    if (!mounted) return;
+    setState(() => _sending = false);
+    if (posted) _text.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Expanded(child: TextField(
+            controller: _text,
+            autofocus: widget.autofocus,
+            enabled: !_sending,
+            minLines: 1,
+            maxLines: 5,
+            maxLength: 10000,
+            decoration: InputDecoration(hintText: widget.hint, isDense: true, counterText: '', border: const OutlineInputBorder()),
+          )),
+          const SizedBox(width: 8),
+          if (widget.onCancel != null) TextButton(onPressed: _sending ? null : widget.onCancel, child: const Text('取消')),
+          ListenableBuilder(
+            listenable: _text,
+            builder: (context, _) => FilledButton(
+              onPressed: _sending || _text.text.trim().isEmpty ? null : _send,
+              child: _sending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('发布'),
+            ),
+          ),
+        ]),
+      );
 }

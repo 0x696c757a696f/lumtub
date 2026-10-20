@@ -6,9 +6,17 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
-/// Read-only access to the account's YouTube data: enough to list
-/// subscriptions and playlists, and nothing that can change the account.
+/// Read-only access to the account's YouTube data, as older versions asked.
 const youtubeReadonlyScope = 'https://www.googleapis.com/auth/youtube.readonly';
+
+/// Reading the account, and the changes the user makes from YTPlus: likes,
+/// comments, playlists and subscriptions. Nothing is changed unless the user
+/// asks for it.
+const youtubeScope = 'https://www.googleapis.com/auth/youtube.force-ssl';
+
+/// Whether a grant of [scope] allows changing the account.
+bool canWriteWith(String? scope) =>
+    scope != null && (scope.split(' ').contains(youtubeScope) || scope.split(' ').contains('https://www.googleapis.com/auth/youtube'));
 
 /// A Google OAuth client of the "Desktop app" type. Google treats the secret
 /// of a desktop client as public, so it may ship inside the app.
@@ -54,10 +62,12 @@ class Pkce {
 }
 
 class OAuthTokens {
-  const OAuthTokens({required this.accessToken, required this.expiresAt, this.refreshToken});
+  const OAuthTokens({required this.accessToken, required this.expiresAt, this.refreshToken, this.scope});
   final String accessToken;
   final DateTime expiresAt;
   final String? refreshToken;
+  /// The scopes Google granted, separated by spaces.
+  final String? scope;
 
   /// Treated as expired a minute early so a request does not race the expiry.
   bool get expired => DateTime.now().isAfter(expiresAt.subtract(const Duration(minutes: 1)));
@@ -70,6 +80,7 @@ class OAuthTokens {
       accessToken: data['access_token'] as String,
       expiresAt: DateTime.now().add(Duration(seconds: seconds)),
       refreshToken: data['refresh_token'] is String ? data['refresh_token'] as String : previousRefreshToken,
+      scope: data['scope'] is String ? data['scope'] as String : null,
     );
   }
 }
@@ -104,7 +115,7 @@ class GoogleAuth {
         'client_id': config.id,
         'redirect_uri': redirectUri,
         'response_type': 'code',
-        'scope': youtubeReadonlyScope,
+        'scope': youtubeScope,
         'code_challenge': pkce.challenge,
         'code_challenge_method': 'S256',
         'state': state,

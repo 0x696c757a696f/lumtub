@@ -719,6 +719,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
       ],
     SettingsCategory.account => [
         SettingEntry('Google 账号', (context) => AccountSettings(account: controller.account, note: _note(context)), subtitle: '登录、同步订阅和播放列表、退出登录、自定义客户端'),
+        SettingEntry('关注时同步订阅', (context) => SwitchItem(
+              title: '关注频道时同步订阅到 YouTube',
+              subtitle: '登录后，关注和取消关注也会在 YouTube 账号上订阅或退订',
+              leading: _icon(Icons.subscriptions_outlined),
+              value: prefs.syncFollowToYoutube,
+              onChanged: (v) => savePrefs(prefs.copyWith(syncFollowToYoutube: v)),
+            )),
       ],
     SettingsCategory.about => aboutEntries(controller),
   };

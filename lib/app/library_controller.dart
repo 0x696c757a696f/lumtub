@@ -155,6 +155,19 @@ class LibraryController extends ChangeNotifier {
     _changed();
   }
 
+  /// Replaces one mirrored YouTube playlist, after a change made from here.
+  void mirrorRemotePlaylist(String id, String name, List<VideoItem> items) {
+    final playlists = store.playlists;
+    final copy = LocalPlaylist(id: '$remotePrefix$id', name: name, items: List.of(items));
+    final index = playlists.indexWhere((playlist) => playlist.id == copy.id);
+    if (index < 0) {
+      playlists.add(copy);
+    } else {
+      playlists[index] = copy;
+    }
+    _changed();
+  }
+
   /// Loads the newest uploads of every followed channel, at most once per
   /// [interval] unless [force]d. Each channel's feed is tried first; yt-dlp is
   /// the fallback when YouTube's feed is unavailable.

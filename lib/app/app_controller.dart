@@ -484,6 +484,7 @@ class AppController extends ChangeNotifier {
     final player = this.player;
     if (player == null) return;
     if (playing?.id != item.id) _remember();
+    unawaited(account?.loadRating(item.id));
     _saveProgress();
     final serial = ++_playSerial;
     _recovery.reset();
@@ -1263,7 +1264,7 @@ class AppController extends ChangeNotifier {
       HomeFeedSources(
         history: history,
         progressOf: library?.progressOf,
-        favorites: library?.favorites ?? const [],
+        favorites: [...?library?.favorites, ...?account?.likedVideos.take(50)],
         followed: library?.channels ?? const [],
         subscriptions: library?.feed ?? const [],
         related: relatedVideos.forVideo,
@@ -1279,6 +1280,18 @@ class AppController extends ChangeNotifier {
       ),
       filter: visible,
     );
+  }
+
+  /// Follows or unfollows [channel] here, and on YouTube when signed in
+  /// and [AppPreferences.syncFollowToYoutube]. Returns whether it is
+  /// followed now.
+  bool toggleFollow(ChannelRef channel) {
+    final library = this.library;
+    if (library == null) return false;
+    final following = library.toggleFollow(channel);
+    final account = this.account;
+    if (account != null && account.canWrite && preferences.syncFollowToYoutube) unawaited(account.setSubscribed(channel, following));
+    return following;
   }
 
   /// 换一批.

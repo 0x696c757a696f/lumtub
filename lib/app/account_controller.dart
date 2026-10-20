@@ -14,8 +14,9 @@ import 'library_controller.dart';
 
 enum AccountState { signedOut, signingIn, signedIn }
 
-/// The optional Google sign-in, used only to copy the account's YouTube
-/// subscriptions and playlists into the local library. Playback never uses
+/// The optional Google sign-in: copies the account's YouTube subscriptions
+/// and playlists into the local library, and makes the likes, comments,
+/// playlist saves and subscriptions the user asks for. Playback never uses
 /// it, and without it everything else works the same.
 class AccountController extends ChangeNotifier {
   AccountController({
@@ -43,6 +44,10 @@ class AccountController extends ChangeNotifier {
   DateTime? lastSync;
   bool syncing = false;
   String? error;
+  /// The scopes of the sign-in; older sign-ins were read-only.
+  String? scope;
+  /// The account's "liked videos" playlist.
+  String? likesPlaylist;
 
   String? _refreshToken;
   OAuthTokens? _tokens;
@@ -52,6 +57,9 @@ class AccountController extends ChangeNotifier {
   OAuthClientConfig? get client => customClient ?? (OAuthClientConfig.builtIn.isValid ? OAuthClientConfig.builtIn : null);
 
   bool get signedIn => state == AccountState.signedIn;
+
+  /// Signed in with the permission to like, comment, save and subscribe.
+  bool get canWrite => signedIn && canWriteWith(scope);
 
   Future<void> load() async {
     try {
@@ -65,6 +73,8 @@ class AccountController extends ChangeNotifier {
       _refreshToken = token;
       name = saved?['name']?.toString();
       lastSync = DateTime.tryParse(saved?['last_sync']?.toString() ?? '');
+      scope = saved?['scope']?.toString();
+      likesPlaylist = saved?['likes']?.toString();
       state = AccountState.signedIn;
     }
     notifyListeners();
@@ -95,8 +105,10 @@ class AccountController extends ChangeNotifier {
       if (tokens.refreshToken == null) throw const OAuthException('Google 没有返回长期凭据，请重试');
       _tokens = tokens;
       _refreshToken = tokens.refreshToken;
+      scope = tokens.scope ?? youtubeScope;
       final me = await _api.me();
       name = me.name;
+      likesPlaylist = me.likes;
       state = AccountState.signedIn;
       await _save();
       notifyListeners();
@@ -124,6 +136,8 @@ class AccountController extends ChangeNotifier {
     _tokens = null;
     name = null;
     lastSync = null;
+    scope = null;
+    likesPlaylist = null;
     error = null;
     state = AccountState.signedOut;
     notifyListeners();
@@ -144,6 +158,7 @@ class AccountController extends ChangeNotifier {
       final channels = await api.subscriptions();
       final added = library.followAll(channels);
       final likesId = likes ?? (await api.me()).likes;
+      likesPlaylist = likesId;
       final remote = await api.playlists();
       final mirrored = <String, ({String name, List<VideoItem> items})>{};
       if (likesId != null) mirrored[likesId] = (name: '喜欢的视频', items: await api.playlistItems(likesId));
@@ -165,6 +180,131 @@ class AccountController extends ChangeNotifier {
     }
   }
 
+  /// The liked videos copied from YouTube, for recommendations.
+  List<VideoItem> get likedVideos {
+    final id = likesPlaylist;
+    if (id == null) return const [];
+    return library.playlists.where((p) => p.id == '${LibraryController.remotePrefix}$id').firstOrNull?.items ?? const [];
+  }
+
+  final _ratings = <String, VideoRating>{};
+
+  /// How the account rated [videoId], once [loadRating] has asked.
+  VideoRating? ratingOf(String videoId) => _ratings[videoId];
+
+  Future<void> loadRating(String videoId) async {
+    if (!canWrite || _ratings.containsKey(videoId)) return;
+    try {
+      _ratings[videoId] = await _api.rating(videoId);
+      notifyListeners();
+    } catch (e) {
+      logInfo('读取点赞状态失败：$e');
+    }
+  }
+
+  /// Likes or dislikes [item], or takes the rating back when it is already
+  /// [rating].
+  Future<void> rate(VideoItem item, VideoRating rating) async {
+    if (!_writable()) return;
+    final previous = _ratings[item.id] ?? VideoRating.none;
+    final next = previous == rating ? VideoRating.none : rating;
+    _ratings[item.id] = next;
+    notifyListeners();
+    try {
+      await _api.rate(item.id, next);
+      _mirrorLike(item, next == VideoRating.like);
+      notice(switch (next) {
+        VideoRating.like => '已点赞',
+        VideoRating.dislike => '已点踩，YouTube 会减少类似推荐',
+        VideoRating.none => '已取消',
+      });
+    } catch (e) {
+      _ratings[item.id] = previous;
+      _failed('操作失败', e);
+    }
+  }
+
+  /// Keeps the local copy of 喜欢的视频 in step with a like.
+  void _mirrorLike(VideoItem item, bool liked) {
+    final id = likesPlaylist;
+    if (id == null) return;
+    final playlist = library.playlists.where((p) => p.id == '${LibraryController.remotePrefix}$id').firstOrNull;
+    if (playlist == null) return;
+    final others = playlist.items.where((v) => v.id != item.id).toList();
+    library.mirrorRemotePlaylist(id, playlist.name, liked ? [item, ...others] : others);
+  }
+
+  /// Posts [text] under [videoId], or as a reply to [parentId]. Returns
+  /// whether it was posted.
+  Future<bool> postComment({required String videoId, String? parentId, required String text}) async {
+    if (!_writable() || text.trim().isEmpty) return false;
+    try {
+      if (parentId == null) {
+        await _api.comment(videoId, text.trim());
+      } else {
+        await _api.reply(parentId, text.trim());
+      }
+      notice(parentId == null ? '评论已发布' : '回复已发布');
+      return true;
+    } catch (e) {
+      _failed('发布失败', e);
+      return false;
+    }
+  }
+
+  /// The account's own playlists, for 保存到 YouTube 播放列表.
+  Future<List<RemotePlaylist>> remotePlaylists() async {
+    if (!_writable()) return const [];
+    try {
+      return await _api.playlists();
+    } catch (e) {
+      _failed('无法读取 YouTube 播放列表', e);
+      return const [];
+    }
+  }
+
+  /// Adds [item] to the account's [playlist], creating the playlist first
+  /// when only [newTitle] is given.
+  Future<void> saveToPlaylist(VideoItem item, {RemotePlaylist? playlist, String? newTitle}) async {
+    if (!_writable()) return;
+    try {
+      final target = playlist ?? await _api.createPlaylist(newTitle!.trim());
+      await _api.addToPlaylist(target.id, item.id);
+      final local = library.playlists.where((p) => p.id == '${LibraryController.remotePrefix}${target.id}').firstOrNull;
+      library.mirrorRemotePlaylist(target.id, target.title, [...?local?.items.where((v) => v.id != item.id), item]);
+      notice('已保存到 YouTube 播放列表“${target.title}”');
+    } catch (e) {
+      _failed('保存失败', e);
+    }
+  }
+
+  /// Subscribes to or unsubscribes from [channel] on YouTube.
+  Future<void> setSubscribed(ChannelRef channel, bool subscribed) async {
+    if (!canWrite) return;
+    try {
+      if (subscribed) {
+        await _api.subscribe(channel.id);
+      } else {
+        await _api.unsubscribe(channel.id);
+      }
+    } catch (e) {
+      _failed(subscribed ? 'YouTube 订阅失败' : '取消 YouTube 订阅失败', e);
+    }
+  }
+
+  bool _writable() {
+    if (canWrite) return true;
+    notice(signedIn ? '需要重新登录 Google 账号，授予点赞、评论等权限' : '请先在设置里登录 Google 账号');
+    return false;
+  }
+
+  void _failed(String what, Object e) {
+    logError(what, e);
+    notice('$what：$e');
+    notifyListeners();
+    if (e is OAuthException && e.revoked) unawaited(signOut());
+  }
+
   YouTubeAccountApi get _api => YouTubeAccountApi(_client, _accessToken);
 
   Future<String> _accessToken() async {
@@ -182,7 +322,13 @@ class AccountController extends ChangeNotifier {
     final token = _refreshToken;
     if (token == null) return;
     try {
-      await credentials.write({'refresh_token': token, 'name': name, if (lastSync != null) 'last_sync': lastSync!.toIso8601String()});
+      await credentials.write({
+        'refresh_token': token,
+        'name': name,
+        if (lastSync != null) 'last_sync': lastSync!.toIso8601String(),
+        if (scope != null) 'scope': scope,
+        if (likesPlaylist != null) 'likes': likesPlaylist,
+      });
     } on FileSystemException catch (e) {
       error = '无法保存登录凭据：${e.message}';
     }

@@ -107,8 +107,8 @@ class _CommentTile extends StatelessWidget {
     final thread = loader.replies[comment.id];
     final channelId = comment.channelId;
     void openAuthor() {
-      // From a post's comments, leave the dialog for the channel page.
-      if (ModalRoute.of(context) is DialogRoute) Navigator.of(context).pop();
+      // From a page over the app (a post's comments), go back to it first.
+      if (ModalRoute.of(context) case final route? when !route.isFirst) Navigator.of(context).pop();
       controller.openChannel(ChannelRef(channelId!, comment.author.replaceFirst(RegExp(r'^@'), '')));
     }
     return Padding(

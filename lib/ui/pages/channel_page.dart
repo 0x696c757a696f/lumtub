@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../app/app_controller.dart';
 import '../../app/posts_loader.dart';
@@ -13,12 +14,55 @@ import '../video_card.dart';
 
 /// A channel's page: header with follow button, tabs for videos, Shorts,
 /// live streams, playlists and posts, and a search inside the channel.
-class ChannelPage extends StatelessWidget {
+class ChannelPage extends StatefulWidget {
   const ChannelPage({super.key, required this.controller});
   final AppController controller;
 
   @override
-  Widget build(BuildContext context) {
+  State<ChannelPage> createState() => _ChannelPageState();
+}
+
+class _ChannelPageState extends State<ChannelPage> {
+  /// Below this width a post's comments open as their own page instead of
+  /// beside the posts.
+  static const _sideBySide = 960.0;
+  static const _panelWidth = 440.0;
+
+  /// The post whose comments are open on the right.
+  CommunityPost? _commentsFor;
+
+  AppController get controller => widget.controller;
+
+  void _openComments(CommunityPost post, bool wide) {
+    if (wide) {
+      setState(() => _commentsFor = _commentsFor?.id == post.id ? null : post);
+    } else {
+      showPostComments(context, controller, post);
+    }
+  }
+
+  void _closeComments() => setState(() => _commentsFor = null);
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
+        final wide = constraints.maxWidth >= _sideBySide;
+        final posts = controller.channelPosts;
+        // Only while that post is still listed.
+        final open = _commentsFor;
+        final shown = wide && open != null && posts != null && posts.posts.any((p) => p.id == open.id) ? open : null;
+        final list = _list(context, wide, shown);
+        if (shown == null) return list;
+        return CallbackShortcuts(
+          bindings: {const SingleActivator(LogicalKeyboardKey.escape): _closeComments},
+          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Expanded(child: list),
+            const VerticalDivider(width: 1),
+            SizedBox(width: _panelWidth, child: PostCommentsPanel(key: ValueKey(shown.id), controller: controller, post: shown, onClose: _closeComments)),
+          ]),
+        );
+      });
+
+  Widget _list(BuildContext context, bool wide, CommunityPost? shown) {
     final channel = controller.channel;
     final loader = controller.channelVideos;
     final posts = controller.channelPosts;
@@ -60,7 +104,7 @@ class ChannelPage extends StatelessWidget {
             SizedBox(width: 240, child: _ChannelSearchField(key: ValueKey((channel.id, controller.channelQuery == null)), controller: controller)),
           ]),
         )),
-        if (posts != null) ..._postSlivers(context, posts) else ..._listingSlivers(context, loader!, tab, searching),
+        if (posts != null) ..._postSlivers(context, posts, wide, shown) else ..._listingSlivers(context, loader!, tab, searching),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );
@@ -93,7 +137,7 @@ class ChannelPage extends StatelessWidget {
     ];
   }
 
-  List<Widget> _postSlivers(BuildContext context, PostsLoader loader) {
+  List<Widget> _postSlivers(BuildContext context, PostsLoader loader, bool wide, CommunityPost? shown) {
     final posts = loader.posts;
     final error = loader.error;
     return [
@@ -106,7 +150,13 @@ class ChannelPage extends StatelessWidget {
             alignment: Alignment.topLeft,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
-              child: PostCard(post: posts[i], channel: controller.channel!, onPlay: (video) => controller.play(video), onComments: () => showPostComments(context, controller, posts[i])),
+              child: PostCard(
+                post: posts[i],
+                channel: controller.channel!,
+                selected: shown?.id == posts[i].id,
+                onPlay: (video) => controller.play(video),
+                onComments: () => _openComments(posts[i], wide),
+              ),
             ),
           ),
         ),
@@ -129,33 +179,50 @@ class ChannelPage extends StatelessWidget {
   }
 }
 
-/// The comments under [post], in a dialog over the channel page.
-Future<void> showPostComments(BuildContext context, AppController controller, CommunityPost post) => showDialog<void>(
-      context: context,
-      builder: (context) => Dialog(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720, maxHeight: 760),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
-              child: Row(children: [
-                Expanded(child: Text(post.text.isEmpty ? '帖子评论' : post.text, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium)),
-                IconButton(tooltip: '关闭', icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.of(context).pop()),
-              ]),
-            ),
-            Flexible(child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-              child: CommentsSection(controller: controller, postId: post.id),
-            )),
+/// The comments under [post] as their own page, for narrow windows.
+Future<void> showPostComments(BuildContext context, AppController controller, CommunityPost post) => Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (context) => Scaffold(
+        body: SafeArea(child: PostCommentsPanel(controller: controller, post: post, onClose: () => Navigator.of(context).pop())),
+      ),
+    ));
+
+/// A post's comments beside the posts: the post's text, then its
+/// comments, scrolling on their own.
+class PostCommentsPanel extends StatelessWidget {
+  const PostCommentsPanel({super.key, required this.controller, required this.post, required this.onClose});
+  final AppController controller;
+  final CommunityPost post;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 8, 4),
+          child: Row(children: [
+            Expanded(child: Text('帖子评论', style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
+            IconButton(tooltip: '关闭 (Esc)', icon: const Icon(Icons.close_rounded), onPressed: onClose),
           ]),
         ),
-      ),
-    );
+        if (post.text.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Text(post.text, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, height: 1.4)),
+          ),
+        const Divider(height: 1),
+        Expanded(child: SingleChildScrollView(
+          key: PageStorageKey('post-comments:${post.id}'),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: CommentsSection(controller: controller, postId: post.id),
+        )),
+      ]);
+}
 
 /// One community post: text, images, an attached video or poll, likes.
 class PostCard extends StatelessWidget {
-  const PostCard({super.key, required this.post, required this.channel, required this.onPlay, this.onComments});
+  const PostCard({super.key, required this.post, required this.channel, required this.onPlay, this.onComments, this.selected = false});
   final CommunityPost post;
+  /// Whether its comments are open beside it.
+  final bool selected;
   final VoidCallback? onComments;
   final ChannelRef channel;
   final void Function(VideoItem video) onPlay;
@@ -164,7 +231,9 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final video = post.video;
-    return Card(child: Padding(
+    return Card(
+      shape: selected ? RoundedRectangleBorder(borderRadius: AppStyle.cardRadius, side: BorderSide(color: colors.primary, width: 1.5)) : null,
+      child: Padding(
       padding: const EdgeInsets.all(16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [

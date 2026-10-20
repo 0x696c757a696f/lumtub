@@ -245,6 +245,37 @@ String formatCount(int value) {
 String _trim(double value) => value >= 100 ? value.toStringAsFixed(0) : value.toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '');
 
 /// Metadata shown on the watch page, fetched separately from playback.
+/// A titled part of a video, from the uploader's chapter list.
+class Chapter {
+  const Chapter(this.start, this.end, this.title);
+  final Duration start;
+  /// [Duration.zero] when unknown; the next chapter's start then ends it.
+  final Duration end;
+  final String title;
+
+  /// yt-dlp's `chapters`, in order, without unusable entries.
+  static List<Chapter> listFrom(Object? raw) {
+    if (raw is! List) return const [];
+    Duration? seconds(Object? value) => value is num && value >= 0 ? Duration(milliseconds: (value * 1000).round()) : null;
+    final chapters = [
+      for (final entry in raw.whereType<Map>())
+        if (seconds(entry['start_time']) case final start?)
+          Chapter(start, seconds(entry['end_time']) ?? Duration.zero, entry['title']?.toString().trim() ?? ''),
+    ]..sort((a, b) => a.start.compareTo(b.start));
+    return chapters.length < 2 ? const [] : chapters;
+  }
+
+  /// The chapter [position] is in, or null before the first one.
+  static Chapter? at(List<Chapter> chapters, Duration position) {
+    Chapter? found;
+    for (final chapter in chapters) {
+      if (chapter.start > position) break;
+      found = chapter;
+    }
+    return found;
+  }
+}
+
 class VideoDetails {
   final String title;
   final String channel;
@@ -254,6 +285,7 @@ class VideoDetails {
   final int? viewCount;
   final int? likeCount;
   final String description;
+  final List<Chapter> chapters;
 
   const VideoDetails({
     required this.title,
@@ -264,6 +296,7 @@ class VideoDetails {
     this.viewCount,
     this.likeCount,
     this.description = '',
+    this.chapters = const [],
   });
 
   factory VideoDetails.fromJson(Map<String, dynamic> map) {
@@ -279,6 +312,7 @@ class VideoDetails {
       viewCount: number('view_count'),
       likeCount: number('like_count'),
       description: map['description']?.toString() ?? '',
+      chapters: Chapter.listFrom(map['chapters']),
     );
   }
 }

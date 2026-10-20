@@ -29,6 +29,7 @@ class VideoProgressBar extends StatefulWidget {
     required this.onSeek,
     required this.color,
     this.segments = const [],
+    this.chapterStarts = const [],
     this.labelOf,
   });
 
@@ -38,6 +39,8 @@ class VideoProgressBar extends StatefulWidget {
   final ValueChanged<Duration> onSeek;
   final Color color;
   final List<ProgressSegment> segments;
+  /// Where chapters begin; the bar shows a gap at each.
+  final List<Duration> chapterStarts;
   /// The hover label for a time; the time itself by default.
   final String Function(Duration time)? labelOf;
 
@@ -91,6 +94,7 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
                       played: played,
                       buffered: _fractionOf(widget.buffered),
                       segments: [for (final s in widget.segments) (_fractionOf(s.start), _fractionOf(s.end), s.color)],
+                      chapters: [for (final start in widget.chapterStarts) if (start > Duration.zero) _fractionOf(start)],
                       pointer: pointer,
                       color: widget.color,
                       active: pointer != null,
@@ -99,23 +103,31 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
                 ),
               ),
             ),
-            if (pointer != null && widget.total > Duration.zero)
-              Positioned(
-                left: (pointer * width - 30).clamp(0.0, width - 60 < 0 ? 0.0 : width - 60),
-                bottom: VideoProgressBar.height + 4,
-                child: IgnorePointer(
-                  child: Container(
-                    width: 60,
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(4)),
-                    child: Text((widget.labelOf ?? _clock)(_timeAt(pointer)), style: const TextStyle(color: Colors.white, fontSize: 12)),
-                  ),
-                ),
-              ),
+            if (pointer != null && widget.total > Duration.zero) _label(pointer, width),
           ]),
         );
       });
+
+  Widget _label(double pointer, double width) {
+    final text = (widget.labelOf ?? _clock)(_timeAt(pointer));
+    const style = TextStyle(color: Colors.white, fontSize: 12);
+    final painter = TextPainter(text: TextSpan(text: text, style: style), textDirection: TextDirection.ltr, maxLines: 1)..layout(maxWidth: 320);
+    final labelWidth = painter.width + 16;
+    painter.dispose();
+    return Positioned(
+      left: (pointer * width - labelWidth / 2).clamp(0.0, width - labelWidth < 0 ? 0.0 : width - labelWidth),
+      bottom: VideoProgressBar.height + 4,
+      child: IgnorePointer(
+        child: Container(
+          width: labelWidth,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(4)),
+          child: Text(text, style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+      ),
+    );
+  }
 
   static String _clock(Duration d) {
     String two(int n) => n.toString().padLeft(2, '0');
@@ -125,11 +137,12 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
 }
 
 class _BarPainter extends CustomPainter {
-  const _BarPainter({required this.played, required this.buffered, required this.segments, required this.pointer, required this.color, required this.active});
+  const _BarPainter({required this.played, required this.buffered, required this.segments, this.chapters = const [], required this.pointer, required this.color, required this.active});
 
   final double played;
   final double buffered;
   final List<(double, double, Color)> segments;
+  final List<double> chapters;
   final double? pointer;
   final Color color;
   final bool active;
@@ -154,6 +167,12 @@ class _BarPainter extends CustomPainter {
       bar(start, end, segmentColor);
     }
     bar(0, played, color);
+    // Chapter gaps across the bar, as on YouTube.
+    final divider = Paint()..color = const Color(0xCC000000);
+    for (final chapter in chapters) {
+      final x = chapter * size.width;
+      canvas.drawRect(Rect.fromLTRB(x - 1, top - 0.5, x + 1, top + barHeight + 0.5), divider);
+    }
     canvas.drawCircle(Offset(played * size.width, centerY), active ? 7 : 5.5, Paint()..color = color);
 
     // PiliNara's hover marker: two small triangles pointing at the bar.
@@ -185,5 +204,5 @@ class _BarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BarPainter old) =>
-      old.played != played || old.buffered != buffered || old.pointer != pointer || old.color != color || old.active != active || !listEquals(old.segments, segments);
+      old.played != played || old.buffered != buffered || old.pointer != pointer || old.color != color || old.active != active || !listEquals(old.segments, segments) || !listEquals(old.chapters, chapters);
 }

@@ -19,6 +19,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
+import '../models.dart' show Chapter;
 import '../player_settings.dart';
 import '../widgets/pilinara_settings_tiles.dart';
 import '../widgets/video_progress_bar.dart';
@@ -27,6 +28,7 @@ import 'pages/settings_sections.dart' show trimSpeed, qualityLabel;
 import 'pages/settings_subpages.dart';
 import 'player_shortcuts.dart';
 import 'player_stats.dart';
+import 'video_texture_size.dart';
 
 /// Picture sizing, from PiliNara's `VideoFitType`.
 enum VideoFit {
@@ -186,6 +188,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   Widget build(BuildContext context) {
     final fullscreen = isFullscreen(context);
     final shortcuts = playerShortcuts(_controller, () => widget.state, onFeedback: _showFeedback);
+    final controls = _controls(fullscreen, shortcuts);
+    final video = _controller.videoController;
+    return video == null ? controls : VideoTextureSize(controller: video, fullscreen: fullscreen, child: controls);
+  }
+
+  Widget _controls(bool fullscreen, Map<ShortcutActivator, VoidCallback> shortcuts) {
     return CallbackShortcuts(
       bindings: shortcuts,
       child: Focus(
@@ -220,6 +228,30 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       ),
     );
   }
+
+  List<Chapter> get _chapters => _controller.details?.chapters ?? const [];
+
+  /// The current chapter's title; opens the chapter list, as on YouTube.
+  Widget _chapterMenu() => StreamBuilder<Duration>(
+        stream: _player.stream.position,
+        initialData: _player.state.position,
+        builder: (context, _) {
+          final chapters = _chapters;
+          final current = Chapter.at(chapters, _player.state.position);
+          return _PopupMenu<int>(
+            tooltip: '章节',
+            value: current == null ? -1 : chapters.indexOf(current),
+            items: [for (final (i, c) in chapters.indexed) (i, '${formatPlaybackTime(c.start)}  ${c.title}')],
+            onSelected: (i) => unawaited(_player.seek(chapters[i].start)),
+            onOpened: _menuOpened,
+            onClosed: _menuClosed,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: Text('·  ${current?.title ?? chapters.first.title}  ›', style: _menuText, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+          );
+        },
+      );
 
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,
@@ -291,6 +323,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               segments: [
                 for (final s in _controller.segments) ProgressSegment(s.start, s.end, _segmentColors[s.category] ?? const Color(0xFF00D400)),
               ],
+              chapterStarts: [for (final c in _chapters) c.start],
+              labelOf: _chapters.isEmpty ? null : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(_chapters, time)?.title ?? ''}',
               onSeek: (time) => unawaited(_player.seek(time)),
             ),
           ),
@@ -309,6 +343,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
             ),
           ),
+          if (_chapters.isNotEmpty) Flexible(child: _chapterMenu()),
           const Spacer(),
           _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
           ValueListenableBuilder(

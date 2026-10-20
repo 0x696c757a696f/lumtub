@@ -2,6 +2,12 @@ name: Build YTPlus Windows
 
 on:
   workflow_dispatch:
+    inputs:
+      libmpv:
+        description: 'libmpv to ship: latest shinchiro build, or the one media_kit bundles'
+        type: choice
+        options: [latest, media_kit]
+        default: latest
   push:
     branches: [main]
     # A pushed tag such as v0.2.0 also publishes a GitHub release.
@@ -135,6 +141,7 @@ jobs:
           Write-Host 'media_kit_video_plugin.dll is delay-loaded.'
 
       - name: Replace bundled libmpv with the latest DLL
+        if: github.event_name != 'workflow_dispatch' || inputs.libmpv == 'latest'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'

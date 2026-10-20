@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../../models.dart';
+import '../../search_options.dart';
 import '../../video_repository.dart';
 import '../common.dart';
 import '../theme.dart';
@@ -138,6 +139,34 @@ class SearchResultsPage extends StatelessWidget {
           child: Wrap(spacing: 8, runSpacing: 8, children: [
             for (final value in SearchFilter.values)
               ChoiceChip(label: Text(value.label), selected: filter == value, onSelected: (_) => controller.setSearchFilter(value)),
+            const SizedBox(width: 8),
+            _OptionChip(
+              icon: Icons.sort_rounded,
+              value: controller.searchSort,
+              values: SearchSort.values,
+              label: (v) => v == SearchSort.relevance ? '排序' : '按${v.label}',
+              item: (v) => '按${v.label}',
+              changed: controller.searchSort != SearchSort.relevance,
+              onSelected: (v) => controller.setSearchOptions(sort: v),
+            ),
+            _OptionChip(
+              icon: Icons.event_rounded,
+              value: controller.searchDate,
+              values: SearchUploadDate.values,
+              label: (v) => v == SearchUploadDate.any ? '上传时间' : v.label,
+              item: (v) => v.label,
+              changed: controller.searchDate != SearchUploadDate.any,
+              onSelected: (v) => controller.setSearchOptions(date: v),
+            ),
+            _OptionChip(
+              icon: Icons.timer_outlined,
+              value: controller.searchDuration,
+              values: SearchDuration.values,
+              label: (v) => v == SearchDuration.any ? '时长' : v.label,
+              item: (v) => v.label,
+              changed: controller.searchDuration != SearchDuration.any,
+              onSelected: (v) => controller.setSearchOptions(duration: v),
+            ),
           ]),
         )),
         if (status != null)
@@ -249,4 +278,35 @@ class HistoryPage extends StatelessWidget {
     ));
     if (confirmed == true) await controller.clearHistory();
   }
+}
+
+/// A search option chip that opens a menu of its values.
+class _OptionChip<T> extends StatelessWidget {
+  const _OptionChip({required this.icon, required this.value, required this.values, required this.label, required this.item, required this.changed, required this.onSelected});
+  final IconData icon;
+  final T value;
+  final List<T> values;
+  final String Function(T value) label;
+  final String Function(T value) item;
+  final bool changed;
+  final ValueChanged<T> onSelected;
+
+  @override
+  Widget build(BuildContext context) => MenuAnchor(
+        menuChildren: [
+          for (final v in values)
+            MenuItemButton(
+              leadingIcon: Icon(v == value ? Icons.check_rounded : null, size: 18),
+              onPressed: v == value ? null : () => onSelected(v),
+              child: Text(item(v)),
+            ),
+        ],
+        builder: (context, menu, _) => FilterChip(
+          avatar: Icon(icon, size: 18),
+          label: Row(mainAxisSize: MainAxisSize.min, children: [Text(label(value)), const Icon(Icons.arrow_drop_down_rounded, size: 18)]),
+          selected: changed,
+          showCheckmark: false,
+          onSelected: (_) => menu.isOpen ? menu.close() : menu.open(),
+        ),
+      );
 }

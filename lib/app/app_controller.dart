@@ -22,6 +22,8 @@ import '../decoder_status.dart';
 import '../models.dart';
 import '../network_proxy.dart';
 import '../piped_streams.dart';
+import '../search_options.dart';
+import '../search_suggestions.dart';
 import '../youtube_comments.dart';
 import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
@@ -226,6 +228,7 @@ class AppController extends ChangeNotifier {
       logInfo('YTPlus $appVersion 启动 · ${Platform.operatingSystemVersion}');
       final history = HistoryStore(directories);
       await history.initialize();
+      searchHistory = SearchHistory(File('${directories.data.path}${Platform.pathSeparator}search_history.json'));
       final libraryStore = LibraryStore(File('${directories.data.path}${Platform.pathSeparator}library.json'));
       await libraryStore.load();
       final settingsStore = PlayerSettingsStore(directories);
@@ -372,13 +375,15 @@ class AppController extends ChangeNotifier {
     player?.pause();
     final repository = _repository!;
     final chosen = filter ?? searchFilter;
+    if (preferences.recordHistory) unawaited(searchHistory?.add(query));
+    final sp = searchParams(type: chosen, sort: searchSort, date: searchDate, duration: searchDuration);
     _update(() {
       mode = PageMode.explore;
       playing = null;
       _query = query;
       searchFilter = chosen;
       searchResults?.dispose();
-      searchResults = VideoListLoader(() => repository.search(query, filter: chosen))
+      searchResults = VideoListLoader(() => sp == null ? repository.search(query) : repository.search(query, sp: sp))
         ..addListener(notifyListeners)
         ..loadMore();
     });
@@ -1149,10 +1154,31 @@ class AppController extends ChangeNotifier {
     if (last != null) unawaited(search(last));
   }
 
+  SearchSort searchSort = SearchSort.relevance;
+  SearchUploadDate searchDate = SearchUploadDate.any;
+  SearchDuration searchDuration = SearchDuration.any;
+
+  /// Searches again with another order, upload date or length.
+  void setSearchOptions({SearchSort? sort, SearchUploadDate? date, SearchDuration? duration}) {
+    searchSort = sort ?? searchSort;
+    searchDate = date ?? searchDate;
+    searchDuration = duration ?? searchDuration;
+    retrySearch();
+  }
+
+  /// Words typed before, newest first, and YouTube's suggestions.
+  SearchHistory? searchHistory;
+  late final searchSuggestions = SearchSuggestions(_http);
+
   /// Shows the current search's results of another kind.
   void setSearchFilter(SearchFilter filter) {
     final last = _query;
     if (last != null && filter != searchFilter) unawaited(search(last, filter: filter));
+  }
+
+  Future<void> clearSearchHistory() async {
+    await searchHistory?.clear();
+    _notice('搜索记录已清空。');
   }
 
   Future<void> clearHistory() async {

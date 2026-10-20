@@ -233,7 +233,7 @@ class _TopBar extends StatelessWidget {
           const SizedBox(width: 16),
           Expanded(child: Center(child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
-            child: SizedBox(height: 40, child: _SearchField(controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit)),
+            child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit)),
           ))),
           const SizedBox(width: 16),
           IconButton(
@@ -256,7 +256,8 @@ class _TopBar extends StatelessWidget {
 }
 
 class _SearchField extends StatefulWidget {
-  const _SearchField({required this.controller, required this.focusNode, required this.enabled, required this.onSubmit});
+  const _SearchField({required this.app, required this.controller, required this.focusNode, required this.enabled, required this.onSubmit});
+  final AppController app;
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool enabled;
@@ -266,38 +267,166 @@ class _SearchField extends StatefulWidget {
   State<_SearchField> createState() => _SearchFieldState();
 }
 
+/// A row under the search field: a recent search or YouTube's suggestion.
+class _SearchOption {
+  const _SearchOption(this.text, {this.recent = false});
+  final String text;
+  final bool recent;
+}
+
+/// The search field, with recent searches when empty and YouTube's
+/// suggestions while typing. Enter searches for what is typed unless a row
+/// was picked with the arrow keys.
 class _SearchFieldState extends State<_SearchField> {
+  bool _picking = false;
+  double _width = 640;
+
   @override
-  Widget build(BuildContext context) => CallbackShortcuts(
-        bindings: {const SingleActivator(LogicalKeyboardKey.escape): widget.focusNode.unfocus},
-        child: TextField(
-          controller: widget.controller,
-          focusNode: widget.focusNode,
-          enabled: widget.enabled,
-          onSubmitted: widget.onSubmit,
-          onChanged: (_) => setState(() {}),
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: '搜索 YouTube，或粘贴视频链接',
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: widget.controller.text.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: Center(widthFactor: 1, child: Text('Ctrl+K', style: TextStyle(fontSize: 12, color: context.colors.outline))),
-                  )
-                : IconButton(
-                    tooltip: '清除',
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                    onPressed: () {
-                      widget.controller.clear();
-                      setState(() {});
-                      widget.focusNode.requestFocus();
-                    },
+  void initState() {
+    super.initState();
+    widget.focusNode
+      ..onKeyEvent = _onKey
+      ..addListener(_onFocus);
+  }
+
+  @override
+  void dispose() {
+    widget.focusNode
+      ..onKeyEvent = null
+      ..removeListener(_onFocus);
+    super.dispose();
+  }
+
+  /// The first arrow key only marks the first row; later ones move.
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    final key = event.logicalKey;
+    if (event is KeyUpEvent || (key != LogicalKeyboardKey.arrowDown && key != LogicalKeyboardKey.arrowUp)) return KeyEventResult.ignored;
+    if (_picking) return KeyEventResult.ignored;
+    setState(() => _picking = true);
+    return key == LogicalKeyboardKey.arrowDown ? KeyEventResult.handled : KeyEventResult.ignored;
+  }
+
+  void _onFocus() {
+    if (widget.focusNode.hasFocus) {
+      _refresh();
+    } else if (_picking) {
+      setState(() => _picking = false);
+    }
+  }
+
+  /// Builds the rows again for the same text; they otherwise only change
+  /// when the text does.
+  void _refresh() {
+    final value = widget.controller.value;
+    widget.controller.value = value.copyWith(text: '${value.text} ');
+    widget.controller.value = value;
+  }
+
+  Future<List<String>> _recent() async =>
+      widget.app.preferences.recordHistory ? await widget.app.searchHistory?.items() ?? const [] : const [];
+
+  Future<Iterable<_SearchOption>> _options(TextEditingValue value) async {
+    final text = value.text.trim();
+    if (text.isEmpty) return [for (final q in (await _recent()).take(10)) _SearchOption(q, recent: true)];
+    final lower = text.toLowerCase();
+    final recent = [for (final q in await _recent()) if (q.toLowerCase().startsWith(lower) && q != text) q].take(3).toList();
+    // Wait for typing to pause before asking YouTube.
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    if (widget.controller.text.trim() != text) return const [];
+    final suggested = await widget.app.searchSuggestions.forQuery(text);
+    return [
+      for (final q in recent) _SearchOption(q, recent: true),
+      for (final q in suggested) if (!recent.contains(q)) _SearchOption(q),
+    ].take(12);
+  }
+
+  Future<void> _remove(String query) async {
+    await widget.app.searchHistory?.remove(query);
+    if (mounted) _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
+        _width = constraints.maxWidth;
+        return CallbackShortcuts(
+          bindings: {const SingleActivator(LogicalKeyboardKey.escape): widget.focusNode.unfocus},
+          child: RawAutocomplete<_SearchOption>(
+            textEditingController: widget.controller,
+            focusNode: widget.focusNode,
+            displayStringForOption: (option) => option.text,
+            optionsBuilder: _options,
+            onSelected: (option) => widget.onSubmit(option.text),
+            fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) => TextField(
+              controller: controller,
+              focusNode: focusNode,
+              enabled: widget.enabled,
+              onSubmitted: (text) {
+                if (_picking) {
+                  _picking = false;
+                  onFieldSubmitted();
+                } else {
+                  widget.onSubmit(text);
+                }
+              },
+              onChanged: (_) => setState(() => _picking = false),
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: '搜索 YouTube，或粘贴视频链接',
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: controller.text.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: Center(widthFactor: 1, child: Text('Ctrl+K', style: TextStyle(fontSize: 12, color: context.colors.outline))),
+                      )
+                    : IconButton(
+                        tooltip: '清除',
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        onPressed: () {
+                          controller.clear();
+                          setState(() {});
+                          focusNode.requestFocus();
+                        },
+                      ),
+              ),
+            ),
+            optionsViewBuilder: (context, onSelected, options) => Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Material(
+                  elevation: 6,
+                  borderRadius: BorderRadius.circular(12),
+                  clipBehavior: Clip.antiAlias,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: _width, minWidth: _width, maxHeight: 420),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      shrinkWrap: true,
+                      itemCount: options.length,
+                      itemBuilder: (context, i) {
+                        final option = options.elementAt(i);
+                        final highlighted = _picking && AutocompleteHighlightedOption.of(context) == i;
+                        return ListTile(
+                          dense: true,
+                          selected: highlighted,
+                          selectedTileColor: context.colors.surfaceContainerHighest,
+                          leading: Icon(option.recent ? Icons.history_rounded : Icons.search_rounded, size: 20),
+                          title: Text(option.text, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          trailing: option.recent
+                              ? IconButton(tooltip: '删除这条记录', icon: const Icon(Icons.close_rounded, size: 18), onPressed: () => _remove(option.text))
+                              : null,
+                          onTap: () => onSelected(option),
+                        );
+                      },
+                    ),
                   ),
+                ),
+              ),
+            ),
           ),
-        ),
-      );
+        );
+      });
 }
 
 class _SetupView extends StatelessWidget {

@@ -92,7 +92,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: '黑名单'),
         SettingEntry('记录观看历史', (context) => SwitchItem(
               title: '记录观看历史',
-              subtitle: '关闭后新看的视频不再出现在“历史”和首页',
+              subtitle: '关闭后新看的视频不再出现在“历史”和首页，也不再记录搜索词',
               leading: _icon(Icons.history_rounded),
               value: prefs.recordHistory,
               onChanged: (v) => savePrefs(prefs.copyWith(recordHistory: v)),
@@ -110,6 +110,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(Icons.delete_sweep_outlined),
               onTap: () async {
                 if (await confirmDialog(context, title: '清空观看历史？', content: '只删除本机的记录，不影响 YouTube 账号。')) await controller.clearHistory();
+              },
+            )),
+        SettingEntry('清空搜索记录', (context) => NormalItem(
+              title: '清空搜索记录',
+              subtitle: '搜索框下方显示的最近搜索',
+              leading: _icon(Icons.manage_search_rounded),
+              onTap: () async {
+                if (await confirmDialog(context, title: '清空搜索记录？', content: '只删除本机保存的搜索词。')) await controller.clearSearchHistory();
               },
             )),
         SettingEntry('清空播放进度', (context) => NormalItem(

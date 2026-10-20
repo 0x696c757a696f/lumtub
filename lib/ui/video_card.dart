@@ -207,18 +207,37 @@ class VideoCard extends StatefulWidget {
 class _VideoCardState extends State<VideoCard> {
   bool _hovered = false;
   Timer? _prefetch;
+  Timer? _preview;
+  /// Which of YouTube's three frames from the video (1–3) the hover preview
+  /// shows; 0 while it shows the thumbnail.
+  int _frame = 0;
 
   /// A pointer resting on a card starts resolving the video, so a click
-  /// that follows starts playback sooner.
+  /// that follows starts playback sooner, and then previews it: YouTube
+  /// keeps frames from a quarter, half and three quarters of the way in.
   void _hover(bool value) {
-    setState(() => _hovered = value);
+    setState(() {
+      _hovered = value;
+      _frame = 0;
+    });
     _prefetch?.cancel();
-    if (value) _prefetch = Timer(const Duration(milliseconds: 400), () => VideoActions.of(context)?.prefetch(widget.item));
+    _preview?.cancel();
+    if (!value) return;
+    _prefetch = Timer(const Duration(milliseconds: 400), () => VideoActions.of(context)?.prefetch(widget.item));
+    if (widget.item.isLive || widget.item.isUpcoming) return;
+    _preview = Timer(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      setState(() => _frame = 1);
+      _preview = Timer.periodic(const Duration(milliseconds: 1000), (_) {
+        if (mounted) setState(() => _frame = _frame % 3 + 1);
+      });
+    });
   }
 
   @override
   void dispose() {
     _prefetch?.cancel();
+    _preview?.cancel();
     super.dispose();
   }
 
@@ -253,6 +272,30 @@ class _VideoCardState extends State<VideoCard> {
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(Icons.ondemand_video_rounded, size: 40, color: colors.outline)),
                   ),
                 ),
+                if (_frame > 0) ...[
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: Image.network(
+                      'https://i.ytimg.com/vi/${item.id}/mq$_frame.jpg',
+                      key: ValueKey(_frame),
+                      fit: BoxFit.cover,
+                      gaplessPlayback: true,
+                      width: double.infinity,
+                      height: double.infinity,
+                      // Shown only once loaded, over the thumbnail.
+                      frameBuilder: (context, child, frame, sync) => sync || frame != null ? child : const SizedBox.shrink(),
+                      errorBuilder: (context, _, __) => const SizedBox.shrink(),
+                    ),
+                  ),
+                  Positioned(left: 8, right: 8, top: 8, child: Row(children: [
+                    for (var i = 1; i <= 3; i++)
+                      Expanded(child: Container(
+                        height: 3,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: BoxDecoration(color: i <= _frame ? Colors.white : Colors.white38, borderRadius: BorderRadius.circular(2)),
+                      )),
+                  ])),
+                ],
                 if (item.isLive || item.isUpcoming)
                   Positioned(right: 8, bottom: 8, child: DurationBadge(item.isLive ? '直播中' : '即将直播', color: item.isLive ? const Color(0xFFCC0000) : null))
                 else if (item.durationLabel.isNotEmpty)

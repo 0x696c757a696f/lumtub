@@ -483,7 +483,11 @@ class AppController extends ChangeNotifier {
   Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at}) async {
     final player = this.player;
     if (player == null) return;
-    if (playing?.id != item.id) _remember();
+    if (playing?.id != item.id) {
+      _remember();
+      _finishWatching();
+      _watching = item;
+    }
     unawaited(account?.loadRating(item.id));
     _saveProgress();
     final serial = ++_playSerial;
@@ -1000,6 +1004,7 @@ class AppController extends ChangeNotifier {
   }
 
   void stopWatching() {
+    _finishWatching();
     _saveProgress(now: true);
     _tracking = null;
     ++_playSerial;
@@ -1017,6 +1022,7 @@ class AppController extends ChangeNotifier {
   }
 
   void _go(PageMode target) {
+    if (playing != null) _finishWatching();
     if (target == PageMode.home) unawaited(refreshHomeFeed());
     _saveProgress(now: true);
     _tracking = null;
@@ -1259,9 +1265,38 @@ class AppController extends ChangeNotifier {
     if (library != null && library.channels.isNotEmpty && library.feed.isEmpty) {
       await library.refreshFeed().timeout(const Duration(seconds: 20), onTimeout: () {});
     }
+    await feed.refresh(await _homeSources(repository), filter: visible);
+  }
+
+  /// The next page of 为你推荐, as the home page scrolls to its end.
+  Future<void> loadMoreHomeFeed() async => homeFeed?.loadMore();
+
+  /// The video being watched, to learn from once it is left.
+  VideoItem? _watching;
+
+  /// Tells 为你推荐 about the video just left: watched a while, it steers
+  /// what comes next; left within seconds, it counts against its channel.
+  void _finishWatching() {
+    final item = _watching;
+    _watching = null;
+    final feed = homeFeed;
+    final repository = _repository;
+    final player = this.player;
+    if (item == null || feed == null || repository == null || player == null || !preferences.homeShowRecommended) return;
+    final position = player.state.position;
+    final duration = player.state.duration;
+    final fraction = duration > Duration.zero ? position.inMilliseconds / duration.inMilliseconds : 0.0;
+    final skipped = position < const Duration(seconds: 15) && fraction < 0.1;
+    if (!skipped && position < const Duration(seconds: 30) && fraction < 0.3) return;
+    unawaited(() async {
+      await feed.learn(item, await _homeSources(repository), skipped: skipped);
+    }());
+  }
+
+  Future<HomeFeedSources> _homeSources(VideoRepository repository) async {
+    final library = this.library;
     final weekly = searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: SearchUploadDate.week);
-    await feed.refresh(
-      HomeFeedSources(
+    return HomeFeedSources(
         history: history,
         progressOf: library?.progressOf,
         favorites: [...?library?.favorites, ...?account?.likedVideos.take(50)],
@@ -1278,9 +1313,7 @@ class AppController extends ChangeNotifier {
             listing.close();
           }
         },
-      ),
-      filter: visible,
-    );
+      );
   }
 
   /// Follows or unfollows [channel] here, and on YouTube when signed in

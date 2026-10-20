@@ -266,4 +266,44 @@ void main() {
       expect(picked.single.reason, '看过《A》的人也在看');
     });
   });
+
+  test('mixLanes follows the lanes\' shares and skips repeats', () {
+    List<Recommendation> lane(String prefix, int n) => [for (var i = 0; i < n; i++) Recommendation(video('$prefix$i'), prefix)];
+    final lanes = {
+      FeedLane.longTerm: lane('l', 50),
+      FeedLane.recent: [Recommendation(video('l0'), 'dup'), ...lane('r', 50)],
+      FeedLane.explore: lane('e', 50),
+      FeedLane.fresh: lane('f', 50),
+    };
+    final mixed = mixLanes(lanes, 20);
+    expect(mixed.map((r) => r.item.id).toSet(), hasLength(20));
+    int count(String reason) => mixed.where((r) => r.reason == reason).length;
+    expect((count('l'), count('r'), count('e'), count('f')), (7, 6, 4, 3));
+    // A lane that runs dry leaves its share to the others.
+    final short = mixLanes({FeedLane.longTerm: lane('a', 2), FeedLane.fresh: lane('b', 10)}, 8);
+    expect(short, hasLength(8));
+  });
+
+  test('HomeFeed scrolls on and follows the video just watched', () async {
+    var n = 0;
+    Future<List<VideoItem>> related(String id) async => [for (var i = 0; i < 12; i++) video('x${n++}', title: '相关 $id', channelId: 'UC${n % 9}')];
+    HomeFeedSources sources(List<VideoItem> history) => HomeFeedSources(
+          history: history,
+          related: related,
+          channelUploads: (_) async => const [],
+          search: (_) async => [for (var i = 0; i < 10; i++) video('s${n++}', channelId: 'UCs${n % 7}')],
+        );
+    final feed = HomeFeed(NotInterested(null));
+    final watched = [video('w1', title: '咖啡 拉花', channelId: 'UCcafe')];
+    await feed.refresh(sources(watched));
+    expect(feed.items, hasLength(HomeFeed.pageSize));
+    expect(feed.items.every((v) => feed.reasons[v.id]?.isNotEmpty ?? false), isTrue);
+    await feed.loadMore();
+    expect(feed.items.length, greaterThan(HomeFeed.pageSize));
+    expect(feed.items.map((v) => v.id).toSet(), hasLength(feed.items.length), reason: 'no repeats');
+
+    final next = video('w2', title: '手冲 咖啡豆', channelId: 'UCbeans');
+    await feed.learn(next, sources([next, ...watched]), skipped: false);
+    expect(feed.reasons[feed.items.first.id], startsWith('刚看完《手冲 咖啡豆》'));
+  });
 }

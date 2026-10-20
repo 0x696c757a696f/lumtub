@@ -62,12 +62,13 @@ class TasteProfile {
     List<VideoItem> favorites = const [],
     Set<String> followed = const {},
     List<String> searches = const [],
+    double decay = 0.93,
   }) {
     final channels = <String, double>{};
     final documents = <(Set<String>, double)>[];
     for (final (i, item) in history.indexed) {
       final progress = progressOf?.call(item.id);
-      final recency = pow(0.93, i).toDouble();
+      final recency = pow(decay, i).toDouble();
       final known = progress != null && progress.duration > Duration.zero;
       // Left within the first seconds: a sign against, not for.
       if (known && progress.fraction < 0.15 && progress.position < const Duration(seconds: 45)) {
@@ -182,6 +183,67 @@ class TasteProfile {
   }
 }
 
+/// The four parts of the home feed, B 站-style, and their share of it.
+/// Each ranks its videos with its own weights.
+enum FeedLane {
+  /// What the whole history keeps coming back to.
+  longTerm(0.35, RankWeights(channel: 0.8, title: 0.6, fresh: 0.3, views: 0.3)),
+  /// What the last few videos were about; follows the latest watch.
+  recent(0.30, RankWeights(channel: 0.5, title: 0.9, fresh: 0.3, views: 0.2)),
+  /// Near the interests but from channels not watched yet.
+  explore(0.20, RankWeights(channel: 0, title: 0.3, fresh: 0.2, views: 0.5, novelty: 0.5)),
+  /// New and popular now.
+  fresh(0.15, RankWeights(channel: 0.3, title: 0.2, fresh: 1.2, views: 0.6));
+
+  const FeedLane(this.share, this.weights);
+  final double share;
+  final RankWeights weights;
+}
+
+/// How much each signal counts when ranking.
+class RankWeights {
+  const RankWeights({this.channel = 0.8, this.title = 0.6, this.fresh = 0.5, this.views = 0.3, this.novelty = 0});
+  final double channel;
+  final double title;
+  final double fresh;
+  final double views;
+  /// For channels the history has never seen.
+  final double novelty;
+}
+
+/// Takes from [lanes] in proportion to their [FeedLane.share]: each slot
+/// goes to the lane furthest behind its share, skipping empty ones and
+/// videos already taken. Returns at most [count]; the lanes are consumed.
+List<Recommendation> mixLanes(Map<FeedLane, List<Recommendation>> lanes, int count, {Set<String>? taken, Map<FeedLane, int>? placed}) {
+  final seen = taken ?? <String>{};
+  final counts = placed ?? {for (final lane in FeedLane.values) lane: 0};
+  final result = <Recommendation>[];
+  while (result.length < count) {
+    final total = counts.values.fold(0, (a, b) => a + b) + 1;
+    FeedLane? next;
+    var behind = double.negativeInfinity;
+    for (final lane in FeedLane.values) {
+      final queue = lanes[lane];
+      if (queue == null) continue;
+      while (queue.isNotEmpty && seen.contains(queue.first.item.id)) {
+        queue.removeAt(0);
+      }
+      if (queue.isEmpty) continue;
+      final gap = lane.share * total - (counts[lane] ?? 0);
+      if (gap > behind) {
+        behind = gap;
+        next = lane;
+      }
+    }
+    if (next == null) break;
+    final pick = lanes[next]!.removeAt(0);
+    seen.add(pick.item.id);
+    counts.update(next, (v) => v + 1, ifAbsent: () => 1);
+    result.add(pick);
+  }
+  return result;
+}
+
 /// Videos and channels marked 不感兴趣, kept on this computer.
 class NotInterested {
   NotInterested(this.file);
@@ -247,6 +309,7 @@ List<Recommendation> recommend(
   int count = 24,
   int seed = 0,
   DateTime? now,
+  RankWeights weights = const RankWeights(),
 }) {
   final clock = now ?? DateTime.now();
   final random = Random(seed);
@@ -255,12 +318,16 @@ List<Recommendation> recommend(
     final item = candidate.item;
     if (exclude.contains(item.id) || (notInterested?.videos.contains(item.id) ?? false) || item.isUpcoming) continue;
     var score = candidate.source.weight * candidate.seedWeight;
-    score += 0.8 * taste.channelAffinity(item);
-    score += 0.6 * taste.titleMatch(item);
+    final affinity = taste.channelAffinity(item);
+    score += weights.channel * affinity;
+    if (!taste.channels.containsKey(TasteProfile.channelKey(item))) score += weights.novelty;
+    // A channel mostly skipped stays down whatever the lane.
+    if (affinity < 0 && weights.channel == 0) score += 0.8 * affinity;
+    score += weights.title * taste.titleMatch(item);
     final published = item.published;
-    if (published != null) score += 0.5 * exp(-clock.difference(published).inHours / (24 * 7));
+    if (published != null) score += weights.fresh * exp(-clock.difference(published).inHours / (24 * 7));
     final views = item.viewCount;
-    if (views != null && views > 0) score += 0.3 * min(1, log(views) / ln10 / 7);
+    if (views != null && views > 0) score += weights.views * min(1, log(views) / ln10 / 7);
     final duration = item.duration;
     // Shorts and very long videos fit a home page less.
     if (duration != null && duration < 60) score -= 0.3;

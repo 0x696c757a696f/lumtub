@@ -18,65 +18,76 @@ class HomeFeedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefs = controller.preferences;
-    final feed = controller.homeFeed;
-    final recent = prefs.homeShowRecent ? controller.history.take(feed != null && feed.items.isNotEmpty ? 6 : 12).toList() : const <VideoItem>[];
+    final feed = prefs.homeShowRecommended ? controller.homeFeed : null;
+    final showFeed = feed != null && (feed.items.isNotEmpty || feed.loading || feed.error != null);
+    // With the feed below, the history only needs a short row.
+    final recent = prefs.homeShowRecent ? controller.history.take(showFeed ? 6 : 12).toList() : const <VideoItem>[];
     final library = controller.library;
     final unfinished = library == null || !prefs.homeShowContinue
         ? const <VideoItem>[]
-        : controller.history.where((item) => library.progressOf(item.id)?.resumable ?? false).take(8).toList();
-    return CustomScrollView(key: const PageStorageKey('list'), slivers: [
-      SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
-      if (unfinished.isNotEmpty) ...[
-        const SliverToBoxAdapter(child: PageHeader('继续观看', subtitle: '从上次停下的地方接着看')),
-        SliverVideoGrid(items: unfinished, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: unfinished)),
-        const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
-      ],
-      if (prefs.homeShowRecommended && feed != null && (feed.items.isNotEmpty || feed.loading || feed.error != null)) ...[
-        SliverToBoxAdapter(child: PageHeader(
-          '为你推荐',
-          subtitle: feed.loading && feed.items.isEmpty ? '正在根据观看记录挑选…' : '根据观看记录、搜索、收藏和关注，在本机挑选；右键可选“不感兴趣”',
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(Icons.shuffle_rounded, size: 18), label: const Text('换一批')),
-            IconButton(
-              tooltip: '重新挑选',
-              onPressed: feed.loading ? null : () => controller.refreshHomeFeed(force: true),
-              icon: const Icon(Icons.refresh_rounded),
+        : controller.history.where((item) => library.progressOf(item.id)?.resumable ?? false).take(showFeed ? 4 : 8).toList();
+    return NotificationListener<ScrollNotification>(
+      // The feed goes on: the next page loads before the end is reached.
+      onNotification: (notification) {
+        if (showFeed && notification.metrics.axis == Axis.vertical && notification.metrics.extentAfter < 1200) controller.loadMoreHomeFeed();
+        return false;
+      },
+      child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
+        SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
+        if (unfinished.isNotEmpty) ...[
+          const SliverToBoxAdapter(child: PageHeader('继续观看', subtitle: '从上次停下的地方接着看')),
+          SliverVideoGrid(items: unfinished, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: unfinished)),
+          const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
+        ],
+        if (recent.isNotEmpty) ...[
+          SliverToBoxAdapter(child: PageHeader(
+            '最近观看',
+            subtitle: '来自本机观看历史',
+            trailing: TextButton(onPressed: () => controller.navigate(PageMode.history), child: const Text('查看全部')),
+          )),
+          SliverVideoGrid(items: recent, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: recent)),
+          const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
+        ],
+        if (showFeed) ...[
+          SliverToBoxAdapter(child: PageHeader(
+            '为你推荐',
+            subtitle: feed.loading && feed.items.isEmpty ? '正在根据观看记录挑选…' : '长期兴趣、近期兴趣、探索和热门新视频混合，在本机挑选；右键可选“不感兴趣”',
+            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+              TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(Icons.shuffle_rounded, size: 18), label: const Text('换一批')),
+              IconButton(
+                tooltip: '重新挑选',
+                onPressed: feed.loading ? null : () => controller.refreshHomeFeed(force: true),
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            ]),
+          )),
+          if (feed.items.isNotEmpty)
+            SliverVideoGrid(
+              items: feed.items,
+              thumbnails: controller.thumbnailDirectory,
+              onOpen: (item) => controller.play(item, from: feed.items),
+              onRemove: controller.dismissRecommendation,
+              removeLabel: '不感兴趣',
+              reasons: feed.reasons,
             ),
-          ]),
-        )),
-        if (feed.items.isNotEmpty)
-          SliverVideoGrid(
-            items: feed.items,
-            thumbnails: controller.thumbnailDirectory,
-            onOpen: (item) => controller.play(item, from: feed.items),
-            onRemove: controller.dismissRecommendation,
-            removeLabel: '不感兴趣',
-            reasons: feed.reasons,
-          )
-        else if (feed.loading)
-          const SliverSkeletonGrid(rows: 2)
-        else if (feed.error case final error?)
-          SliverToBoxAdapter(child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-            child: ErrorBanner('无法加载推荐：$error', onRetry: () => controller.refreshHomeFeed(force: true)),
+          if (feed.loading || feed.loadingMore) ...[
+            if (feed.items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
+            SliverSkeletonGrid(rows: feed.items.isEmpty ? 2 : 1),
+          ] else if (feed.error case final error? when feed.items.isEmpty)
+            SliverToBoxAdapter(child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
+              child: ErrorBanner('无法加载推荐：$error', onRetry: () => controller.refreshHomeFeed(force: true)),
+            )),
+        ],
+        if (recent.isEmpty && !showFeed)
+          const SliverFillRemaining(hasScrollBody: false, child: StatusView(
+            icon: Icons.play_circle_outline_rounded,
+            title: '还没有观看记录',
+            message: '搜索或粘贴 YouTube 链接开始观看，看过的视频会出现在这里。',
           )),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
-      ],
-      if (recent.isNotEmpty) ...[
-        SliverToBoxAdapter(child: PageHeader(
-          '最近观看',
-          subtitle: '来自本机观看历史',
-          trailing: TextButton(onPressed: () => controller.navigate(PageMode.history), child: const Text('查看全部')),
-        )),
-        SliverVideoGrid(items: recent, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: recent)),
-      ] else
-        const SliverFillRemaining(hasScrollBody: false, child: StatusView(
-          icon: Icons.play_circle_outline_rounded,
-          title: '还没有观看记录',
-          message: '搜索或粘贴 YouTube 链接开始观看，看过的视频会出现在这里。',
-        )),
-      const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
-    ]);
+      ]),
+    );
   }
 }
 

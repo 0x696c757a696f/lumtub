@@ -74,7 +74,8 @@ void main() {
 
   test('formats depend on quality and ffmpeg', () {
     expect(DownloadQuality.audio.format(merge: false), 'ba[ext=m4a]/ba');
-    expect(DownloadQuality.best.format(merge: true), contains('bv*[height<=1080]'));
+    expect(DownloadQuality.best.format(merge: true), 'bv*+ba/b');
+    expect(DownloadQuality.p1080.format(merge: true), contains('bv*[height<=1080]'));
     expect(DownloadQuality.p720.format(merge: true), contains('height<=720'));
     // Without ffmpeg nothing may ask for a merge.
     for (final q in DownloadQuality.values) {
@@ -249,7 +250,7 @@ void main() {
       expect(without.last, 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
 
       final merged = manager(ffmpeg: 'F').arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.best, directory: 'D'));
-      expect(merged, containsAllInOrder(['--merge-output-format', 'mp4']));
+      expect(merged, containsAllInOrder(['--merge-output-format', 'mp4/mkv']));
       expect(merged, containsAllInOrder(['--ffmpeg-location', 'F']));
       expect(merged[merged.indexOf('--format') + 1], contains('+'));
 

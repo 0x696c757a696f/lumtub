@@ -67,7 +67,7 @@ enum FfmpegChoice {
 
 /// Whether a download of [quality] merges, goes single-file or asks first.
 FfmpegChoice ffmpegChoiceFor(DownloadQuality quality, {required bool installed, required bool declined}) {
-  if (quality.maxHeight == null) return FfmpegChoice.singleFile;
+  if (quality.audioOnly) return FfmpegChoice.singleFile;
   if (installed) return FfmpegChoice.merge;
   return declined ? FfmpegChoice.singleFile : FfmpegChoice.ask;
 }

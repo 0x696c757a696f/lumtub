@@ -26,6 +26,21 @@ class AppWindow {
 
   static final _user32 = Platform.isWindows ? DynamicLibrary.open('user32.dll') : null;
   static final _kernel32 = Platform.isWindows ? DynamicLibrary.open('kernel32.dll') : null;
+  static final _dwmapi = Platform.isWindows ? DynamicLibrary.open('dwmapi.dll') : null;
+  static final _dwmSetWindowAttribute = _dwmapi?.lookupFunction<Int32 Function(IntPtr, Uint32, Pointer<Uint32>, Uint32), int Function(int, int, Pointer<Uint32>, int)>('DwmSetWindowAttribute');
+
+  /// Windows 11 draws a thin border around every window; picture in picture
+  /// has none. Ignored on Windows 10, which has no such border.
+  static void _setBorder(int window, {required bool visible}) {
+    final color = calloc<Uint32>()..value = visible ? _dwmColorDefault : _dwmColorNone;
+    try {
+      _dwmSetWindowAttribute?.call(window, _dwmwaBorderColor, color, sizeOf<Uint32>());
+    } finally {
+      calloc.free(color);
+    }
+  }
+
+  static const _dwmwaBorderColor = 34, _dwmColorDefault = 0xFFFFFFFF, _dwmColorNone = 0xFFFFFFFE;
 
   static final _findWindowEx = _user32?.lookupFunction<IntPtr Function(IntPtr, IntPtr, Pointer<Utf16>, Pointer<Utf16>), int Function(int, int, Pointer<Utf16>, Pointer<Utf16>)>('FindWindowExW');
   static final _getWindowThreadProcessId = _user32?.lookupFunction<Uint32 Function(IntPtr, Pointer<Uint32>), int Function(int, Pointer<Uint32>)>('GetWindowThreadProcessId');
@@ -113,6 +128,7 @@ class AppWindow {
       _setProp!(window, name, (pipAspectOf(aspect) * 1000).round());
       _setWindowLongPtr!(window, _gwlStyle, style & ~(_wsCaption | _wsMaximizeBox | _wsMinimizeBox | _wsSysMenu));
       _setWindowPos!(window, _topmost, 0, 0, 0, 0, _noMove | _noSize | _noActivate | _frameChanged);
+      _setBorder(window, visible: false);
       final (:width, :height) = pipSizeFor(aspect, shortSide: shortSide);
       final (:extraWidth, :extraHeight) = _frameOf(window, rect, client);
       final w = (width * scale).round() + extraWidth;
@@ -185,6 +201,7 @@ class AppWindow {
       }
       _removeProp!(window, name);
       _setWindowLongPtr!(window, _gwlStyle, before.style);
+      _setBorder(window, visible: true);
       final ok = _setWindowPos!(window, keepOnTop ? _topmost : _notTopmost, before.left, before.top, before.width, before.height, _frameChanged) != 0;
       if (before.maximized) _showWindow!(window, _maximize);
       return ok;

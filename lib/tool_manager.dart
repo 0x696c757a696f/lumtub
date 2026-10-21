@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
+import 'app_log.dart';
 import 'ffmpeg_component.dart';
 import 'libmpv_updates.dart';
 import 'l10n/l10n.dart';
@@ -244,11 +245,10 @@ class ToolManager {
     if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
     if (await File('${dest.path}${_separator}yt-dlp.exe').exists()) return;
     status(tr('下载 yt-dlp {0}…', [tag]));
-    final asset = _asset(release, (name) => name == 'yt-dlp.exe');
     final partial = Directory('${dest.path}.partial');
     if (await partial.exists()) await partial.delete(recursive: true);
     try {
-      final file = await _downloadVerified(asset, partial);
+      final file = await _downloadYtDlp(release, partial);
       // A build that cannot even report its version is never used.
       final check = await Process.run(file.path, ['--version']).timeout(const Duration(seconds: 30));
       if (check.exitCode != 0) throw StateError('yt-dlp $tag failed its self-check');
@@ -259,6 +259,29 @@ class ToolManager {
     }
     await _prune(group, keep: 3);
   }
+
+  /// The unpacked build (yt-dlp_win.zip) where the release has one: the
+  /// single-file yt-dlp.exe unpacks itself to a temp folder on every start,
+  /// which costs a second of CPU for each search or channel page.
+  Future<File> _downloadYtDlp(Map<String, dynamic> release, Directory into) async {
+    final names = (release['assets'] as List? ?? const []).whereType<Map>().map((asset) => asset['name']?.toString());
+    if (names.contains(ytDlpFolderAsset)) {
+      try {
+        final archive = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'));
+        await into.create(recursive: true);
+        await _extractZip(archive, into);
+        await archive.delete();
+        final exe = File('${into.path}${_separator}yt-dlp.exe');
+        if (await exe.exists()) return exe;
+      } catch (e) {
+        logInfo('yt-dlp 目录版安装失败，改用单文件版：$e');
+      }
+      if (await into.exists()) await into.delete(recursive: true);
+    }
+    return _downloadVerified(_asset(release, (name) => name == 'yt-dlp.exe'), into);
+  }
+
+  static const ytDlpFolderAsset = 'yt-dlp_win.zip';
 
   /// Deletes all but the newest [keep] usable versions in [group]; rolled
   /// back versions stay as markers so they are not downloaded again.

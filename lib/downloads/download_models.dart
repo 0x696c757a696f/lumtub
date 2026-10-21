@@ -5,21 +5,26 @@ import '../models.dart';
 /// an audio stream, so the video qualities then take the best single-file
 /// (progressive) format, which on YouTube is usually 360p.
 enum DownloadQuality {
-  best('最高画质（至多 1080p）', 1080),
+  best('最高画质', null),
+  p1080('1080p', 1080),
   p720('720p', 720),
-  audio('仅音频（m4a）', null);
+  audio('仅音频（m4a）', null, audioOnly: true);
 
-  const DownloadQuality(this._label, this.maxHeight);
+  const DownloadQuality(this._label, this.maxHeight, {this.audioOnly = false});
   final String _label;
   String get label => tr(_label);
+  /// The tallest video to take, or null for the best there is.
   final int? maxHeight;
+  final bool audioOnly;
 
   /// yt-dlp's `--format`. [merge]: ffmpeg is available to join streams.
   String format({required bool merge}) {
-    final h = maxHeight;
-    if (h == null) return 'ba[ext=m4a]/ba';
-    if (!merge) return 'b[height<=$h][ext=mp4]/b[height<=$h]/b[ext=mp4]/b';
-    return 'bv*[height<=$h][ext=mp4]+ba[ext=m4a]/bv*[height<=$h]+ba/b[height<=$h]/b';
+    if (audioOnly) return 'ba[ext=m4a]/ba';
+    final h = maxHeight == null ? '' : '[height<=$maxHeight]';
+    if (!merge) return h.isEmpty ? 'b[ext=mp4]/b' : 'b$h[ext=mp4]/b$h/b[ext=mp4]/b';
+    // The best streams whatever their codec (AV1, VP9, Opus); the container
+    // is chosen to fit them.
+    return h.isEmpty ? 'bv*+ba/b' : 'bv*$h+ba/b$h/b';
   }
 }
 

@@ -51,6 +51,9 @@ class HomeFeed extends ChangeNotifier {
 
   final NotInterested notInterested;
 
+  /// How many sources load at once.
+  static const maxConcurrentSources = 3;
+
   /// Which kinds of video to show less of; set from the settings.
   FeedMix mix = const FeedMix();
 
@@ -98,13 +101,25 @@ class HomeFeed extends ChangeNotifier {
     final candidates = <FeedLane, List<Candidate>>{for (final lane in FeedLane.values) lane: []};
     final jobs = <Future<void>>[];
     var failures = 0;
+    // Searches each start a yt-dlp process; a dozen at once pegs the CPU.
+    var running = 0;
+    final waiting = <Completer<void>>[];
     Future<void> gather(FeedLane lane, Future<List<VideoItem>> Function() load, RecommendSource source, double weight, int limit, String Function(VideoItem item) reason) async {
+      while (running >= maxConcurrentSources) {
+        final turn = Completer<void>();
+        waiting.add(turn);
+        await turn.future;
+      }
+      running++;
       try {
         final found = await load();
         candidates[lane]!.addAll(found.take(limit).map((item) => Candidate(item, source, seedWeight: weight, reason: reason(item))));
       } catch (e) {
         failures++;
         logInfo('推荐来源失败：$e');
+      } finally {
+        running--;
+        if (waiting.isNotEmpty) waiting.removeAt(0).complete();
       }
     }
 

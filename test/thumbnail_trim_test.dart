@@ -24,6 +24,13 @@ void main() {
     expect(thumbnailCapBytes(2), 2 * 1024 * 1024 * 1024);
   });
 
+  test('keeps channel avatars', () async {
+    final avatar = await make('avatar_UC1.jpg', 100, const Duration(days: 9));
+    final thumb = await make('a.jpg', 100, const Duration(days: 1));
+    await trimThumbnails(dir, 50, now: now);
+    expect((avatar.existsSync(), thumb.existsSync()), (true, false));
+  });
+
   test('deletes the least recently modified first, only until under the cap', () async {
     final oldest = await make('a.jpg', 100, const Duration(days: 3));
     final older = await make('b.jpg', 100, const Duration(days: 2));

@@ -17,7 +17,8 @@ Future<int> trimThumbnails(Directory directory, int capBytes, {DateTime? now, Du
   var total = 0;
   try {
     await for (final item in directory.list(followLinks: false)) {
-      if (item is! File) continue;
+      // Followed channels' pictures are few and wanted on every visit.
+      if (item is! File || item.uri.pathSegments.last.startsWith('avatar_')) continue;
       try {
         final stat = await item.stat();
         files.add((file: item, size: stat.size, modified: stat.modified));

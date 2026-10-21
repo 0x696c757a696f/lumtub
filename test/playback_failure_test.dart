@@ -30,7 +30,7 @@ void main() {
     expect(failure.kind, FailureKind.noFormat);
     expect(failure.retryable, isFalse);
     final named = PlaybackFailure(failure.kind, failure.detail, disabled: 'AV1、VP9');
-    expect(named.message, startsWith('没有符合格式规则的可播放视频流（已禁用：AV1、VP9）。可在设置 → 视频格式中调整。'));
+    expect(named.message, startsWith('没有符合格式规则的可播放视频流（已禁用：AV1、VP9）。可在设置的「视频设置」中调整。'));
   });
 
   test('says which servers were tried after a 429', () {

@@ -76,7 +76,7 @@ class PlaybackFailure {
       FailureKind.botCheck => tr('YouTube 要求验证“不是机器人”，说明当前 IP 被怀疑。可以换一个代理节点，或在 设置 › 播放 › 播放来源 选 Piped 或 Invidious'),
       FailureKind.challenge => tr('解不开 YouTube 的 JavaScript 验证，通常是 yt-dlp 过旧。已开始检查组件更新，更新后重启 YTPlus 生效'),
       FailureKind.forbidden => tr('YouTube 拒绝了视频地址（403）。已重新解析仍失败，可以换一个代理节点，或在 设置 › 播放 › 播放来源 选 Piped 或 Invidious'),
-      FailureKind.noFormat => disabled.isEmpty ? tr('没有可播放的视频流。') : tr('没有符合格式规则的可播放视频流（已禁用：{0}）。可在设置 → 视频格式中调整。', [disabled]),
+      FailureKind.noFormat => disabled.isEmpty ? tr('没有可播放的视频流。') : tr('没有符合格式规则的可播放视频流（已禁用：{0}）。可在设置的「视频设置」中调整。', [disabled]),
       FailureKind.network => tr('网络连接失败，请检查网络或代理'),
       FailureKind.unknown => '',
     };

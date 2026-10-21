@@ -2051,4 +2051,5 @@ const stringsEn = <String, String>{
   '没有可播放的视频流。': 'No playable video stream.',
   '没有符合格式规则的可播放视频流（已禁用：{0}）。可在设置的「视频设置」中调整。': 'No playable video stream matches the format rules (disabled: {0}). You can change this under Settings → Video settings.',
   '画质上限 {0} · 播放策略 {1} · 禁用编码 {2} · 音质 {3}': 'Quality cap {0} · Strategy {1} · Disabled codecs {2} · Audio {3}',
+  '下载的文件是 {0} 编码，已按播放规则改为在线播放': 'The downloaded file is {0}, which the playback rules disable; streaming instead',
 };

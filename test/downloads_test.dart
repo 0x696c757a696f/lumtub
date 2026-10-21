@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ytplus/video_codec.dart';
 import 'package:ytplus/downloads/download_manager.dart';
 import 'package:ytplus/downloads/download_models.dart';
 import 'package:ytplus/models.dart';
@@ -163,6 +164,7 @@ void main() {
       final file = File('${dir.path}/videos/Video [aaaaaaaaaaa].mp4')..createSync(recursive: true);
       File('${dir.path}/videos/Video [aaaaaaaaaaa].info.json').writeAsStringSync(jsonEncode({
         'title': 'Video',
+        'vcodec': 'av01.0.12M.08',
         'chapters': [{'title': 'Intro', 'start_time': 0, 'end_time': 10}, {'title': 'Main', 'start_time': 10, 'end_time': 20}],
         'formats': List.generate(50, (i) => {'url': 'https://x/$i'}),
       }));
@@ -181,6 +183,7 @@ void main() {
       final local = m.localVideo('aaaaaaaaaaa')!;
       expect(local.info.containsKey('formats'), isFalse);
       expect(local.info['title'], 'Video');
+      expect(local.videoCodec, VideoCodec.av1);
       expect(VideoDetails.fromJson(local.info).chapters, hasLength(2));
       expect(local.segments.single.category, 'sponsor');
       expect(local.segments.single.end, const Duration(seconds: 12));

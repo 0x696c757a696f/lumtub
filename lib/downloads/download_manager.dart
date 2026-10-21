@@ -8,6 +8,7 @@ import '../app_log.dart';
 import '../models.dart';
 import '../process_priority.dart';
 import '../sponsor_block.dart';
+import '../video_codec.dart';
 import 'download_models.dart';
 import 'download_selection.dart';
 
@@ -44,6 +45,9 @@ class LocalVideo {
     }
     return subtitles.first;
   }
+
+  /// The video codec of the file, from its sidecar; null when unknown.
+  VideoCodec? get videoCodec => VideoCodec.of(info['vcodec']);
 
   /// The sidecar of [media]: the same name with `.info.json`.
   static File sidecarOf(String media) => File('${_base(media)}.info.json');
@@ -436,7 +440,7 @@ class DownloadManager extends ChangeNotifier {
   }
 
   static const _sidecarKeys = [
-    'id', 'title', 'channel', 'uploader', 'channel_url', 'channel_id', 'upload_date', 'view_count', 'like_count', 'description', 'duration', 'chapters', 'webpage_url',
+    'id', 'title', 'channel', 'uploader', 'channel_url', 'channel_id', 'upload_date', 'view_count', 'like_count', 'description', 'duration', 'chapters', 'webpage_url', 'vcodec',
   ];
 
   /// Cuts yt-dlp's `.info.json` down to what the watch page shows (its

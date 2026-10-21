@@ -48,6 +48,7 @@ import '../ffmpeg_component.dart';
 import '../thumbnail_trim.dart';
 import '../tool_manager.dart';
 import '../format_policy.dart';
+import '../video_codec.dart';
 import '../community_posts.dart';
 import '../blocked_groups.dart';
 import '../explore_filters.dart';
@@ -230,6 +231,8 @@ class AppController extends ChangeNotifier {
   /// The video last opened from a Piped or Invidious server, so a failure
   /// falls back to YouTube (or the other one) once.
   String? _openedVia;
+  /// The video playing from its downloaded file, if any.
+  String? _openedLocal;
   /// The servers tried for the video being opened, and the 429 YouTube
   /// answered it with, which lets both be tried whatever 播放来源 says.
   final _relaysTried = <RelayKind>{};
@@ -1105,13 +1108,22 @@ class AppController extends ChangeNotifier {
   /// subtitles from the saved extraction without asking YouTube again.
   /// [resolved] false, or a failed resolution, leaves everything to
   /// ytdl_hook as before.
-  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true}) async {
+  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
     final player = this.player!;
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
-      final local = resolved && piped && !item.isLive ? downloads?.localVideo(item.id) : null;
-      if (local != null) return await _openLocal(item, serial, local, start: start, play: play);
+      final local = allowLocal && resolved && piped && !item.isLive ? downloads?.localVideo(item.id) : null;
+      _openedLocal = null;
+      // A download in a codec the playback rules disable (AV1 decoded in
+      // software, say) streams instead, in a codec the rules allow.
+      final localCodec = local?.videoCodec;
+      if (local != null && !FormatPolicy.allows(settings, localCodec)) {
+        logInfo('${item.id} 的下载文件是 ${localCodec!.label}，播放规则已禁用该编码，改为在线播放');
+        _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [localCodec.label]));
+      } else if (local != null) {
+        return await _openLocal(item, serial, local, start: start, play: play);
+      }
       final format = _format;
       _openedVia = null;
       if (resolved && piped) {
@@ -1192,6 +1204,7 @@ class AppController extends ChangeNotifier {
       if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
     }
     _lastPosition = start ?? Duration.zero;
+    _openedLocal = item.id;
     await player.open(Media(local.file.path, start: start), play: play);
     if (serial == _playSerial) _tracking = item;
     _mpvLogLines = 0;
@@ -2448,6 +2461,15 @@ class AppController extends ChangeNotifier {
       if (normalized != null) {
         settings = settings.copyWith(decoderResults: decodeStates);
         unawaited(_settingsStore?.save(settings));
+      }
+      // A download older than its codec in the sidecar: only libmpv can
+      // tell it is in a codec the playback rules disable.
+      final item = playing;
+      final fileCodec = VideoCodec.of(normalized);
+      if (item != null && _openedLocal == item.id && !FormatPolicy.allows(settings, fileCodec)) {
+        logInfo('${item.id} 的下载文件是 ${fileCodec!.label}，播放规则已禁用该编码，改为在线播放');
+        _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [fileCodec.label]));
+        unawaited(_open(item, _playSerial, start: player?.state.position, allowLocal: false));
       }
     } catch (_) {
       _update(() => currentHwdec = tr('尚未验证'));

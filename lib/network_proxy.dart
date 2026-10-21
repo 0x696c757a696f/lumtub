@@ -15,9 +15,10 @@ enum ProxyMode {
   String get label => tr(_label);
 }
 
-/// A proxy address as `http://host:port`, or null for a direct connection.
-/// libmpv's streams can only go through an HTTP proxy, so a SOCKS-only
-/// system proxy is passed to yt-dlp and the app but not to libmpv.
+/// A proxy address as `http://host:port` or `socks5://[user:pass@]host:port`,
+/// or null for a direct connection. yt-dlp takes either kind itself; libmpv
+/// and dart:io only speak HTTP proxies, so a SOCKS one reaches them through
+/// the local `SocksBridge`.
 class NetworkProxy {
   const NetworkProxy(this.url);
   final String? url;
@@ -25,6 +26,10 @@ class NetworkProxy {
   static const direct = NetworkProxy(null);
 
   bool get isHttp => url != null && url!.startsWith('http://');
+  bool get isSocks => url != null && !isHttp;
+
+  /// [url] without the password, for logs.
+  String? get redacted => url?.replaceFirst(RegExp(r'//[^@/]*@'), '//');
 
   /// yt-dlp's `--proxy` value for [mode]: an empty string forces a direct
   /// connection, null leaves yt-dlp to find the Windows proxy itself.
@@ -44,8 +49,9 @@ class NetworkProxy {
     if (!value.contains('://')) value = 'http://$value';
     final uri = Uri.tryParse(value);
     if (uri == null || uri.host.isEmpty || !uri.hasPort || uri.port <= 0) return null;
-    if (!{'http', 'socks5', 'socks5h', 'socks4'}.contains(uri.scheme)) return null;
-    return '${uri.scheme}://${uri.host.contains(':') ? '[${uri.host}]' : uri.host}:${uri.port}';
+    if (!{'http', 'socks5', 'socks5h', 'socks4', 'socks4a'}.contains(uri.scheme)) return null;
+    final login = uri.scheme.startsWith('socks') && uri.userInfo.isNotEmpty ? '${uri.userInfo}@' : '';
+    return '${uri.scheme}://$login${uri.host.contains(':') ? '[${uri.host}]' : uri.host}:${uri.port}';
   }
 
   /// The proxy in Windows' `ProxyServer` value: either one address for
@@ -86,24 +92,29 @@ class NetworkProxy {
       };
 }
 
-/// The overrides main installs; the controller updates their proxy.
-final appHttpOverrides = ProxyHttpOverrides(NetworkProxy.direct);
+/// The overrides main installs; the controller updates their route.
+final appHttpOverrides = ProxyHttpOverrides();
 
 /// Sends every dart:io connection the app makes (thumbnails, feeds, posts,
-/// updates) through [proxy]. dart:io supports only HTTP proxies, so other
-/// kinds leave these connections to the environment.
+/// updates) through [endpoint], an HTTP proxy that is either the user's own
+/// or the local `SocksBridge`. Without one the connection is direct, and the
+/// proxy environment variables are read only when [useEnvironment] is set.
 class ProxyHttpOverrides extends HttpOverrides {
-  ProxyHttpOverrides(this.proxy);
-  NetworkProxy proxy;
+  /// `host:port` of the HTTP proxy, or null for direct.
+  String? endpoint;
+  bool useEnvironment = false;
 
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
-    client.findProxy = (uri) {
-      final hostPort = proxy.isHttp ? proxy.hostPort : null;
-      if (hostPort == null || uri.host == 'localhost' || uri.host == '127.0.0.1') return HttpClient.findProxyFromEnvironment(uri);
-      return 'PROXY $hostPort';
-    };
+    client.findProxy = route;
     return client;
+  }
+
+  /// dart:io's proxy rule for [uri]; [environment] is for tests.
+  String route(Uri uri, {Map<String, String>? environment}) {
+    if (uri.host == 'localhost' || uri.host == '127.0.0.1' || uri.host == '::1') return 'DIRECT';
+    if (endpoint != null) return 'PROXY $endpoint';
+    return useEnvironment ? HttpClient.findProxyFromEnvironment(uri, environment: environment) : 'DIRECT';
   }
 }

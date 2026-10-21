@@ -28,6 +28,7 @@ import '../cache_manager.dart';
 import '../decoder_status.dart';
 import '../models.dart';
 import '../network_proxy.dart';
+import '../socks_bridge.dart';
 import '../cast/cast_controller.dart';
 import '../cast/cast_device.dart';
 import '../cast/cast_stream.dart';
@@ -552,17 +553,44 @@ class AppController extends ChangeNotifier {
     if (ifStale && now.difference(_proxyRead) < const Duration(seconds: 30)) return;
     _proxyRead = now;
     final next = await NetworkProxy.resolve(settings.proxyMode, settings.proxyAddress);
-    appHttpOverrides.proxy = next;
-    if (next.url != proxy.url) logInfo(next.url == null ? '网络：直接连接' : '网络：使用代理 ${next.url}');
+    await _routeThroughBridge(next);
+    appHttpOverrides.endpoint = proxyEndpoint;
+    appHttpOverrides.useEnvironment = settings.proxyMode == ProxyMode.system;
+    if (next.url != proxy.url) logInfo(next.url == null ? '网络：直接连接' : '网络：使用代理 ${next.redacted}');
     proxy = next;
     final player = this.player;
     if (player != null) await _applyProxy(player);
   }
 
+  SocksBridge? _bridge;
+  String? _bridgeFor;
+
+  /// `host:port` of the HTTP proxy libmpv and dart:io use: the proxy itself,
+  /// or the local bridge to a SOCKS one. A SOCKS proxy whose bridge could
+  /// not start gets a dead port, so requests fail instead of going direct.
+  String? proxyEndpoint;
+
+  /// Starts, replaces or stops the bridge so it matches [next].
+  Future<void> _routeThroughBridge(NetworkProxy next) async {
+    final old = _bridge;
+    if (next.isSocks && next.url == _bridgeFor && old != null) return;
+    _bridge = null;
+    _bridgeFor = next.url;
+    if (next.isSocks) {
+      try {
+        _bridge = await SocksBridge.start(next.url!);
+      } catch (e) {
+        logError('无法启动本地 SOCKS 转发，网络请求将失败而不是直连', e);
+      }
+    }
+    proxyEndpoint = next.isSocks ? (_bridge?.hostPort ?? '127.0.0.1:1') : next.isHttp ? next.hostPort : null;
+    await old?.close();
+  }
+
   /// libmpv's streams can only use an HTTP proxy.
   Future<void> _applyProxy(Player player) async {
     final platform = player.platform;
-    if (platform is NativePlayer) await platform.setProperty('http-proxy', proxy.isHttp ? proxy.url! : '');
+    if (platform is NativePlayer) await platform.setProperty('http-proxy', proxyEndpoint == null ? '' : 'http://$proxyEndpoint');
   }
 
   Future<void> search(String value, {SearchFilter? filter}) async {
@@ -2514,6 +2542,7 @@ class AppController extends ChangeNotifier {
     }
     _saveProgress();
     unawaited(_relay?.close());
+    unawaited(_bridge?.close());
     cast.dispose();
     account?.dispose();
     downloads?.dispose();

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'app_log.dart';
 import 'models.dart';
+import 'process_priority.dart';
 
 /// What yt-dlp found for one video: every format, the ones picked for
 /// [format], and the metadata the watch page shows.
@@ -121,6 +122,9 @@ class StreamResolver {
 
   /// The resolved video, from the cache while it is fresh.
   Future<ResolvedVideo> resolve(String videoId, String format) {
+    // A card prefetched in the background is now being waited on.
+    final lowered = _lowered[videoId];
+    if (lowered != null) restorePriority(lowered);
     final cached = _results[videoId];
     if (cached != null) {
       return cached.then((video) => video.fresh ? video : _start(videoId, format), onError: (_) => _start(videoId, format));
@@ -133,17 +137,36 @@ class StreamResolver {
   Future<ResolvedVideo>? cached(String videoId) => _results[videoId];
 
   /// Starts resolving [videoId] in the background, if not already done.
+  /// One at a time, at low priority: each extraction runs YouTube's
+  /// JavaScript for seconds, and a pointer passing over a grid would
+  /// otherwise start one per card. While one runs, only the card asked for
+  /// last waits its turn.
   void prefetch(String videoId, String format) {
     if (_results.containsKey(videoId)) return;
-    unawaited(_start(videoId, format).then((_) {}, onError: (_) {}));
+    if (_prefetching) {
+      _nextPrefetch = (videoId, format);
+      return;
+    }
+    _prefetching = true;
+    unawaited(_start(videoId, format, background: true).then((_) {}, onError: (_) {}).whenComplete(() {
+      _prefetching = false;
+      final next = _nextPrefetch;
+      _nextPrefetch = null;
+      if (next != null) prefetch(next.$1, next.$2);
+    }));
   }
+
+  bool _prefetching = false;
+  /// Background extractions still running, by video id: their process ids.
+  final _lowered = <String, int>{};
+  (String, String)? _nextPrefetch;
 
   /// Drops what is known about [videoId], for example after its streams
   /// failed to play.
   void forget(String videoId) => _results.remove(videoId);
 
-  Future<ResolvedVideo> _start(String videoId, String format) {
-    final future = _run(videoId, format);
+  Future<ResolvedVideo> _start(String videoId, String format, {bool background = false}) {
+    final future = _run(videoId, format, background: background);
     _results.remove(videoId);
     _results[videoId] = future;
     while (_results.length > _keep) {
@@ -159,13 +182,13 @@ class StreamResolver {
   /// Errors a second attempt can get past, unlike a private or removed video.
   static final _transient = RegExp(r'HTTP Error 5\d\d|timed out|Connection (reset|aborted|refused)|Remote end closed|getaddrinfo|IncompleteRead', caseSensitive: false);
 
-  Future<ResolvedVideo> _run(String videoId, String format) async {
+  Future<ResolvedVideo> _run(String videoId, String format, {bool background = false}) async {
     final watch = Stopwatch()..start();
-    var result = await _ytDlp(videoId, format);
+    var result = await _ytDlp(videoId, format, background: background ? videoId : null);
     if (_failed(result) && _transient.hasMatch(result.stderr.toString())) {
       logInfo('解析 $videoId 遇到网络错误，重试一次');
       await Future<void>.delayed(const Duration(seconds: 2));
-      result = await _ytDlp(videoId, format);
+      result = await _ytDlp(videoId, format, background: background ? videoId : null);
     }
     final output = result.stdout.toString().trim();
     final err = result.stderr.toString().trim();
@@ -181,13 +204,30 @@ class StreamResolver {
     await infoDirectory.create(recursive: true);
     final file = File('${infoDirectory.path}${Platform.pathSeparator}$videoId.json');
     await file.writeAsString(output);
-    logInfo('已解析 $videoId，用时 ${watch.elapsedMilliseconds} ms');
+    logInfo('已解析 $videoId${background ? '（预加载）' : ''}，用时 ${watch.elapsedMilliseconds} ms');
     return ResolvedVideo(data, file, format);
   }
 
   bool _failed(ProcessResult result) => result.exitCode != 0 || result.stdout.toString().trim().isEmpty;
 
-  Future<ProcessResult> _ytDlp(String videoId, String format) =>
-      Process.run(ytDlpPath, arguments(videoId, format), stdoutEncoding: utf8, stderrEncoding: utf8, environment: _environment)
-          .timeout(const Duration(seconds: 45));
+  /// yt-dlp for [videoId]; [background] (the video id) runs it at low
+  /// priority until [resolve] asks for that video.
+  Future<ProcessResult> _ytDlp(String videoId, String format, {String? background}) async {
+    final process = await Process.start(ytDlpPath, arguments(videoId, format), environment: _environment);
+    if (background != null) {
+      lowerPriority(process.pid);
+      _lowered[background] = process.pid;
+    }
+    final out = process.stdout.transform(utf8.decoder).join();
+    final err = process.stderr.transform(utf8.decoder).join();
+    try {
+      final code = await process.exitCode.timeout(const Duration(seconds: 45));
+      return ProcessResult(process.pid, code, await out, await err);
+    } on TimeoutException {
+      process.kill();
+      rethrow;
+    } finally {
+      if (background != null) _lowered.remove(background);
+    }
+  }
 }

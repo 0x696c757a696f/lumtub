@@ -80,6 +80,24 @@ void main() {
     expect(count.readAsLinesSync(), hasLength(2));
   });
 
+  test('prefetches one video at a time, then only the last one asked for', () async {
+    if (Platform.isWindows) return;
+    final dir = await Directory.systemTemp.createTemp('ytplus_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final log = File('${dir.path}/log');
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\nfor last; do :; done\necho "\$last" >> ${log.path}\nsleep 0.3\ncat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'));
+    for (final id in ['aaaaaaaaaaa', 'bbbbbbbbbbb', 'ccccccccccc']) {
+      resolver.prefetch(id, 'ytdl');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    expect(log.readAsLinesSync(), hasLength(1));
+    await resolver.resolve('ccccccccccc', 'ytdl');
+    expect(log.readAsLinesSync().map((line) => line.substring(line.length - 11)), ['aaaaaaaaaaa', 'ccccccccccc']);
+  });
+
   test('a failed resolution is not kept', () async {
     if (Platform.isWindows) return;
     final dir = await Directory.systemTemp.createTemp('ytplus_resolve');

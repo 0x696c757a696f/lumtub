@@ -77,3 +77,7 @@ class PlaybackFailure {
     return shown.isEmpty ? reason : '$reason\n$shown';
   }
 }
+
+/// Whether an mpv error is about a subtitle track (YouTube's timedtext),
+/// which never stops the video itself.
+bool isSubtitleError(String message) => message.contains('/api/timedtext');

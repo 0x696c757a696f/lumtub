@@ -64,7 +64,7 @@ class SettingEntry {
   bool matches(String query) => title.toLowerCase().contains(query) || (subtitle?.toLowerCase().contains(query) ?? false);
 }
 
-String qualityLabel(int height) => height == 0 ? tr('自动（不限制）') : '${height}p';
+String qualityLabel(int height) => height == 0 ? tr('自动（按屏幕分辨率）') : '${height}p';
 
 final _scaleModes = [('spline36', tr('Spline36（默认）')), ('bilinear', tr('Bilinear（最省资源）')), ('lanczos', tr('Lanczos（更锐利）')), ('ewa_lanczossharp', tr('EWA Lanczos Sharp（最清晰，GPU 负载高）'))];
 final _cacheModes = [('auto', tr('自动（推荐）')), ('yes', tr('启用')), ('no', tr('禁用'))];

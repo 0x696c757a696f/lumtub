@@ -22,6 +22,10 @@ class PlayerOptionApplicator {
       'scale': settings.scale,
       'deband': settings.deband ? 'yes' : 'no',
       'interpolation': settings.interpolation ? 'yes' : 'no',
+      // 低资源占用优先 also scales the picture the cheapest way, as mpv's
+      // fast profile does: a 4K frame shrunk to a window is most of the GPU
+      // work after decoding.
+      if (settings.strategy == PlaybackStrategy.lowResource) ...fastRendering,
       'video-sync': settings.videoSync.mpvValue,
       'sub-scale': settings.subtitleScale.toStringAsFixed(1),
       'sub-pos': settings.subtitlePosition.toString(),
@@ -72,11 +76,42 @@ class PlayerOptionApplicator {
   }
 
   /// Returns unsupported or rejected options without interrupting the player.
+  /// What 低资源占用优先 changes beyond the user's own options.
+  static const fastRendering = {
+    'scale': 'bilinear',
+    'dscale': 'bilinear',
+    'cscale': 'bilinear',
+    'correct-downscaling': 'no',
+    'linear-downscaling': 'no',
+    'sigmoid-upscaling': 'no',
+    'dither': 'no',
+    'deband': 'no',
+    'interpolation': 'no',
+  };
+
+  /// libmpv's own values of [fastRendering]'s options, read before they are
+  /// first changed, so leaving 低资源占用优先 restores them.
+  static final _mpvDefaults = Expando<Map<String, String>>();
+
   static Future<List<String>> apply(Player player, PlayerSettings settings) async {
     final platform = player.platform;
     if (platform is! NativePlayer) return const [];
     final failed = <String>[];
-    for (final entry in optionsFor(settings).entries) {
+    var defaults = _mpvDefaults[player];
+    if (defaults == null) {
+      defaults = {};
+      for (final key in fastRendering.keys) {
+        try {
+          defaults[key] = await platform.getProperty(key);
+        } catch (_) {}
+      }
+      _mpvDefaults[player] = defaults;
+    }
+    final options = optionsFor(settings);
+    for (final entry in defaults.entries) {
+      options.putIfAbsent(entry.key, () => entry.value);
+    }
+    for (final entry in options.entries) {
       try {
         await platform.setProperty(entry.key, entry.value);
       } catch (_) {

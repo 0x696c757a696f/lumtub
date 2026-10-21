@@ -122,4 +122,13 @@ void main() {
       expect(FormatPolicy.summary(const PlayerSettings()), isNot(contains('已禁用')));
     });
   });
+
+  test('automatic quality is capped at the tallest display, a chosen one is not', () {
+    expect(FormatPolicy.forDisplay(const PlayerSettings(), 1080).maxHeight, 1080);
+    expect(FormatPolicy.forDisplay(const PlayerSettings(), 1600).maxHeight, 2160);
+    expect(FormatPolicy.forDisplay(const PlayerSettings(), 1440).maxHeight, 1440);
+    expect(FormatPolicy.forDisplay(const PlayerSettings(), 0).maxHeight, 0);
+    expect(FormatPolicy.forDisplay(const PlayerSettings(maxHeight: 2160), 1080).maxHeight, 2160);
+    expect(FormatPolicy.forDisplay(const PlayerSettings(strategy: PlaybackStrategy.quality), 1080).maxHeight, 0);
+  });
 }

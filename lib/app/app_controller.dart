@@ -251,14 +251,14 @@ class AppController extends ChangeNotifier {
     if (item == null || item.isLive || _repository == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
     CastSource? source;
     try {
-      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format)).info, settings: settings);
+      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format)).info, settings: _playback);
     } catch (e) {
       logInfo('投屏：yt-dlp 解析失败：$e');
     }
     for (final kind in RelayKind.values) {
       if (source != null) break;
       try {
-        source = castSourceFromRelay(await (kind == RelayKind.piped ? _piped.fetch(item.id) : _invidious.fetch(item.id)), settings: settings);
+        source = castSourceFromRelay(await (kind == RelayKind.piped ? _piped.fetch(item.id) : _invidious.fetch(item.id)), settings: _playback);
       } catch (e) {
         logInfo('投屏：$kind 解析失败：$e');
       }
@@ -1292,7 +1292,7 @@ class AppController extends ChangeNotifier {
       final named = source.relay == kind && source.isCustom ? (kind == RelayKind.piped ? settings.pipedServer : settings.invidiousServer) : '';
       final server = named.isEmpty ? null : named;
       final video = await (kind == RelayKind.piped ? _piped.fetch(item.id, server: server) : _invidious.fetch(item.id, server: server));
-      final address = video.edl(settings);
+      final address = video.edl(_playback);
       if (address == null) return null;
       _update(() => availableHeights = video.heightsFor(settings));
       logInfo('从 $name ${video.server} 播放 ${item.id}，用时 ${watch.elapsedMilliseconds} ms');
@@ -1733,7 +1733,19 @@ class AppController extends ChangeNotifier {
   /// The audio outputs libmpv reports, "auto" first.
   List<AudioDevice> get audioDevices => player?.state.audioDevices ?? const [];
 
-  String get _format => FormatPolicy.expression(settings);
+  String get _format => FormatPolicy.expression(_playback);
+
+  /// [settings] as playback picks streams with them: automatic quality is
+  /// capped at the tallest display.
+  PlayerSettings get _playback => FormatPolicy.forDisplay(settings, _displayHeight);
+
+  int get _displayHeight {
+    var tallest = 0.0;
+    for (final display in PlatformDispatcher.instance.displays) {
+      tallest = max(tallest, display.size.height);
+    }
+    return tallest.round();
+  }
 
   /// Starts resolving [item] before it is opened, such as when the pointer
   /// rests on its card.

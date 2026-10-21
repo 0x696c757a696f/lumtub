@@ -60,6 +60,20 @@ class FormatPolicy {
     return [...{...front, ...all}];
   }
 
+  /// Heights YouTube serves, lowest first.
+  static const _ladder = [720, 1080, 1440, 2160, 4320];
+
+  /// [settings] with automatic quality capped at the tallest display: a 4K
+  /// stream on a 1080p screen costs four times the download, decoding,
+  /// memory and GPU scaling for no visible gain. A chosen quality cap and
+  /// the quality strategy are left alone. [displayHeight] is in physical
+  /// pixels; 0 when unknown.
+  static PlayerSettings forDisplay(PlayerSettings settings, int displayHeight) {
+    if (settings.maxHeight > 0 || settings.strategy == PlaybackStrategy.quality || displayHeight <= 0) return settings;
+    final cap = _ladder.where((h) => h >= displayHeight * 0.95).firstOrNull;
+    return cap == null ? settings : settings.copyWith(maxHeight: cap);
+  }
+
   /// The yt-dlp format expression for [settings].
   ///
   /// Every alternative, including the last `best`, carries the exclude

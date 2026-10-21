@@ -150,4 +150,33 @@ void main() {
     expect(count.readAsLinesSync(), hasLength(3));
     expect((await resolver.cached('dQw4w9WgXcQ'))!.format, 'ytdl');
   });
+
+  test('deletes the info file of a forgotten or evicted video, and of old runs', () async {
+    if (Platform.isWindows) return;
+    final dir = await Directory.systemTemp.createTemp('ytplus_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\ncat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final info = Directory('${dir.path}/info')..createSync();
+    final old = File('${info.path}/oldoldoldol.json')..writeAsStringSync('{}');
+    old.setLastModifiedSync(DateTime.now().subtract(const Duration(days: 2)));
+    final recent = File('${info.path}/recentrecen.json')..writeAsStringSync('{}');
+    final resolver = StreamResolver(script.path, infoDirectory: info);
+    await resolver.deleteStaleInfo();
+    expect(old.existsSync(), isFalse);
+    expect(recent.existsSync(), isTrue);
+
+    final ids = [for (var i = 0; i < 13; i++) 'video${i.toString().padLeft(6, '0')}'];
+    for (final id in ids) {
+      await resolver.resolve(id, 'ytdl');
+    }
+    // Only the 12 kept entries still have a file.
+    expect(File('${info.path}/${ids.first}.json').existsSync(), isFalse);
+    for (final id in ids.skip(1)) {
+      expect(File('${info.path}/$id.json').existsSync(), isTrue);
+    }
+    resolver.forget(ids.last);
+    expect(File('${info.path}/${ids.last}.json').existsSync(), isFalse);
+  });
 }

@@ -430,6 +430,19 @@ void main() {
       expect(await controller.stop(), isNull);
     });
 
+    test('polls less often while the window is hidden', () async {
+      final controller = CastController();
+      addTearDown(controller.dispose);
+      expect(controller.pollInterval, const Duration(seconds: 1));
+      controller.windowHidden = true;
+      expect(controller.pollInterval, const Duration(seconds: 5));
+      await controller.start(_FakeCastDevice(), const CastMedia(url: 'http://v', title: 'T'));
+      controller.windowHidden = false;
+      expect(controller.pollInterval, const Duration(seconds: 1));
+      await controller.stop();
+      expect(controller.active, isFalse);
+    });
+
     test('a failed load leaves no session and reports the message', () async {
       final controller = CastController();
       addTearDown(controller.dispose);

@@ -46,6 +46,11 @@ class DownloadsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final manager = controller.downloads;
     if (manager == null) return const SizedBox.shrink();
+    // Progress ticks reach only this page, not the whole app.
+    return ListenableBuilder(listenable: Listenable.merge([manager, manager.progress]), builder: (context, _) => _page(context, manager));
+  }
+
+  Widget _page(BuildContext context, DownloadManager manager) {
     final tasks = manager.tasks;
     return CustomScrollView(slivers: [
       SliverToBoxAdapter(

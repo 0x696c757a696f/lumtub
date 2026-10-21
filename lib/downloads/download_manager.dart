@@ -127,6 +127,12 @@ class DownloadManager extends ChangeNotifier {
   final _wipe = <String>{};
   DateTime _notified = DateTime(0);
 
+  /// Ticks with download progress, at most twice a second. The manager itself
+  /// only notifies when a task is added, removed or changes status, so the
+  /// rest of the app is not rebuilt by progress.
+  final progress = ValueNotifier<int>(0);
+  Timer? _saveTimer;
+
   /// Where new downloads are saved.
   String get directory => _directory;
 
@@ -178,11 +184,24 @@ class DownloadManager extends ChangeNotifier {
 
   Future<void> _saving = Future.value();
 
-  /// Completes when every change so far is written.
-  Future<void> flush() => _saving;
+  /// Completes when every change so far is written, including one still
+  /// waiting for its delay.
+  Future<void> flush() {
+    if (_saveTimer?.isActive ?? false) unawaited(_save());
+    return _saving;
+  }
 
   /// Writes are queued so a later state never lands before an earlier one.
-  Future<void> _save() => _saving = _saving.then((_) => _write());
+  Future<void> _save() {
+    _saveTimer?.cancel();
+    return _saving = _saving.then((_) => _write());
+  }
+
+  /// Saves after a second of quiet, so a burst of changes is one write.
+  void _saveSoon() {
+    if (_saveTimer?.isActive ?? false) return;
+    _saveTimer = Timer(const Duration(seconds: 1), () => unawaited(_save()));
+  }
 
   Future<void> _write() async {
     try {
@@ -286,7 +305,7 @@ class DownloadManager extends ChangeNotifier {
 
   void _changed() {
     notifyListeners();
-    unawaited(_save());
+    _saveSoon();
     _pump();
   }
 
@@ -411,11 +430,11 @@ class DownloadManager extends ChangeNotifier {
     task.total = p.total;
     task.speed = p.speed;
     task.eta = p.eta;
-    // A stream per second is plenty for the page.
+    // Twice a second is plenty for the page.
     final now = DateTime.now();
-    if (p.finished || now.difference(_notified) > const Duration(milliseconds: 250)) {
+    if (p.finished || now.difference(_notified) >= const Duration(milliseconds: 500)) {
       _notified = now;
-      notifyListeners();
+      progress.value++;
     }
   }
 
@@ -517,6 +536,8 @@ class DownloadManager extends ChangeNotifier {
     for (final process in _processes.values) {
       process.kill();
     }
+    _saveTimer?.cancel();
+    progress.dispose();
     super.dispose();
   }
 }

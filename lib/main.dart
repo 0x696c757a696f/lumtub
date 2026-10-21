@@ -98,6 +98,7 @@ class _YtPlusAppState extends State<YtPlusApp> {
       // Minimising hides the window; "pause on minimise" resumes only what it
       // paused itself.
       onHide: () {
+        controller.cast.windowHidden = true;
         unawaited(controller.setBackgroundAudioOnly(true));
         if (controller.playing == null) controller.releaseMemory();
         final player = controller.player;
@@ -106,6 +107,7 @@ class _YtPlusAppState extends State<YtPlusApp> {
         unawaited(player.pause());
       },
       onShow: () {
+        controller.cast.windowHidden = false;
         unawaited(controller.setBackgroundAudioOnly(false));
         if (!_pausedByMinimize) return;
         _pausedByMinimize = false;

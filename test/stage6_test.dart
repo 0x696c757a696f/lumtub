@@ -36,6 +36,25 @@ void main() {
       AppLog.current = null;
     });
 
+    test('rotates during a long session once the file passes the limit', () async {
+      final dir = await Directory.systemTemp.createTemp('ytplus_log');
+      addTearDown(() => dir.delete(recursive: true));
+      final log = (await AppLog.open(dir))!;
+      log.write('INFO ', 'x' * 1000);
+      await log.flush();
+      expect(await File('${dir.path}/ytplus.old.log').exists(), isFalse);
+      for (var i = 0; i < 1100; i++) {
+        log.write('INFO ', 'y' * 1000);
+      }
+      await log.flush();
+      expect(await File('${dir.path}/ytplus.old.log').exists(), isTrue);
+      expect(await File('${dir.path}/ytplus.log').exists(), isFalse);
+      log.write('INFO ', 'after');
+      await log.flush();
+      expect(await log.file.readAsLines(), hasLength(1));
+      AppLog.current = null;
+    });
+
     test('batches lines in order and flushes pending ones on demand', () async {
       final dir = await Directory.systemTemp.createTemp('ytplus_log');
       addTearDown(() => dir.delete(recursive: true));

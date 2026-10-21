@@ -261,6 +261,35 @@ void main() {
       expect(audio, isNot(contains('--write-subs')));
     });
 
+    test('progress ticks reach only the progress listenable, at most twice a second', () async {
+      final m = manager();
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      await until(() => processes.isNotEmpty);
+      var managerNotified = 0;
+      var ticks = 0;
+      m.addListener(() => managerNotified++);
+      m.progress.addListener(() => ticks++);
+      for (var i = 0; i < 20; i++) {
+        processes[0].out('ytplus|downloading|${i * 10}|1000|NA|250.0|2');
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      await settle();
+      expect(managerNotified, 0);
+      expect(ticks, inInclusiveRange(1, 2));
+      expect(m.tasks.single.downloaded, 190);
+    });
+
+    test('saves are coalesced and flush writes a pending one', () async {
+      final m = manager();
+      final list = File('${dir.path}/downloads.json');
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      m.add(video('bbbbbbbbbbb'), DownloadQuality.best);
+      await settle();
+      expect(list.existsSync(), isFalse);
+      await m.flush();
+      expect(jsonDecode(list.readAsStringSync())['tasks'], hasLength(2));
+    });
+
     test('keeps the list and the folder across restarts, and resumes interrupted downloads', () async {
       final m = manager();
       await m.setDirectory('${dir.path}/chosen');

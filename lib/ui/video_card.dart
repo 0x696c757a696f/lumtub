@@ -40,6 +40,14 @@ ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 4
   );
 }
 
+/// The decode width for a thumbnail shown [logical] pixels wide: the real
+/// size, in steps so resizing the window does not decode again at every
+/// pixel, and never above the 480 the YouTube file has or below 160.
+int thumbnailDecodeWidth(double logical, double pixelRatio) {
+  final steps = (logical * pixelRatio / 80).ceil();
+  return (steps * 80).clamp(160, 480);
+}
+
 /// [item]'s title, or DeArrow's when that is on.
 String titleFor(VideoItem item) => deArrow.titleOf(item.id, item.title);
 
@@ -260,7 +268,7 @@ class _VideoCardState extends State<VideoCard> {
     _prefetch?.cancel();
     _preview?.cancel();
     if (!value) return;
-    _prefetch = Timer(const Duration(milliseconds: 400), () => VideoActions.of(context)?.prefetch(widget.item));
+    _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item));
     if (widget.item.isLive || widget.item.isUpcoming) return;
     _preview = Timer(const Duration(milliseconds: 700), () {
       if (!mounted) return;
@@ -313,12 +321,14 @@ class _VideoCardState extends State<VideoCard> {
                   scale: _hovered ? 1.04 : 1,
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOut,
-                  child: Image(
-                    image: thumbnailFor(item, widget.thumbnails),
-                    fit: BoxFit.cover,
-                    gaplessPlayback: true,
-                    frameBuilder: (context, child, frame, sync) => sync || frame != null ? child : ColoredBox(color: colors.surfaceContainerHighest),
-                    errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(Icons.ondemand_video_rounded, size: 40, color: colors.outline)),
+                  child: LayoutBuilder(
+                    builder: (context, box) => Image(
+                      image: thumbnailFor(item, widget.thumbnails, width: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context))),
+                      fit: BoxFit.cover,
+                      gaplessPlayback: true,
+                      frameBuilder: (context, child, frame, sync) => sync || frame != null ? child : ColoredBox(color: colors.surfaceContainerHighest),
+                      errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(Icons.ondemand_video_rounded, size: 40, color: colors.outline)),
+                    ),
                   ),
                 ),
                 if (_frame > 0) ...[

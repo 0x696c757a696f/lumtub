@@ -2348,8 +2348,23 @@ class AppController extends ChangeNotifier {
     _applyAppearanceGlobals(next);
     if (next.systemAccent && windowsAccent == null) unawaited(refreshWindowsAccent());
     _update(() => appearance = next);
+    // The text size slider saves at every step; only the last one is written.
+    _appearanceSaveTimer?.cancel();
+    _appearanceSaveTimer = Timer(const Duration(milliseconds: 500), () => unawaited(_writeAppearance()));
+  }
+
+  Timer? _appearanceSaveTimer;
+
+  /// Writes the appearance now if a save is still waiting for its delay.
+  Future<void> _flushAppearance() async {
+    if (!(_appearanceSaveTimer?.isActive ?? false)) return;
+    _appearanceSaveTimer!.cancel();
+    await _writeAppearance();
+  }
+
+  Future<void> _writeAppearance() async {
     try {
-      await _appearanceStore?.save(next);
+      await _appearanceStore?.save(appearance);
     } on FileSystemException {
       _notice(tr('外观设置未能保存，本次运行仍然生效。'));
     }
@@ -2616,6 +2631,8 @@ class AppController extends ChangeNotifier {
     _shutDown = true;
     _saveProgress();
     await library?.flush();
+    await downloads?.flush();
+    await _flushAppearance();
     for (final subscription in _playerSubscriptions) {
       await subscription.cancel();
     }
@@ -2652,6 +2669,7 @@ class AppController extends ChangeNotifier {
     _stallTimer?.cancel();
     _sleepTimer?.cancel();
     _dropTimer?.cancel();
+    unawaited(_flushAppearance());
     _thumbnailTrimTimer?.cancel();
     for (final subscription in _playerSubscriptions) {
       unawaited(subscription.cancel());

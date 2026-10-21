@@ -69,7 +69,7 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
     final temp = File('${file.path}.${_random.nextInt(1 << 32)}.part');
     try {
       await file.parent.create(recursive: true);
-      await temp.writeAsBytes(bytes, flush: true);
+      await temp.writeAsBytes(bytes);
       await temp.rename(file.path);
     } on FileSystemException {
       try {

@@ -93,7 +93,9 @@ class ResolvedVideo {
 /// can be resolved before it is clicked.
 class StreamResolver {
   StreamResolver(this.ytDlpPath, {this.cacheDirectory, this.deno, this.proxy, required this.infoDirectory, Map<String, String>? environment})
-      : _environment = environment;
+      : _environment = environment {
+    unawaited(deleteStaleInfo());
+  }
 
   final String ytDlpPath;
   final String? cacheDirectory;
@@ -175,6 +177,32 @@ class StreamResolver {
   void forget(String videoId) {
     _results.remove(videoId);
     _formats.remove(videoId);
+    _deleteInfo(videoId);
+  }
+
+  File _infoFile(String videoId) => File('${infoDirectory.path}${Platform.pathSeparator}$videoId.json');
+
+  /// Deleted at once, so it cannot land after the next resolve rewrote it.
+  void _deleteInfo(String videoId) {
+    try {
+      _infoFile(videoId).deleteSync();
+    } on FileSystemException {
+      // Not there, or still open: left for the startup cleanup.
+    }
+  }
+
+  /// Deletes info files older than [maxAge] that earlier runs left behind.
+  Future<void> deleteStaleInfo({Duration maxAge = const Duration(days: 1)}) async {
+    try {
+      if (!await infoDirectory.exists()) return;
+      final limit = DateTime.now().subtract(maxAge);
+      await for (final entity in infoDirectory.list()) {
+        if (entity is! File || !entity.path.endsWith('.json')) continue;
+        if ((await entity.lastModified()).isBefore(limit)) await entity.delete();
+      }
+    } on FileSystemException {
+      // The cleanup is best effort.
+    }
   }
 
   Future<ResolvedVideo> _start(String videoId, String format, {bool background = false}) {
@@ -183,8 +211,10 @@ class StreamResolver {
     _results[videoId] = future;
     _formats[videoId] = format;
     while (_results.length > _keep) {
-      _formats.remove(_results.keys.first);
-      _results.remove(_results.keys.first);
+      final oldest = _results.keys.first;
+      _formats.remove(oldest);
+      _results.remove(oldest);
+      _deleteInfo(oldest);
     }
     // A failure is not kept, so the next attempt runs yt-dlp again.
     future.then((_) {}, onError: (_) {
@@ -216,7 +246,7 @@ class StreamResolver {
     final data = jsonDecode(const LineSplitter().convert(output).last);
     if (data is! Map<String, dynamic>) throw const FormatException('Unexpected yt-dlp output');
     await infoDirectory.create(recursive: true);
-    final file = File('${infoDirectory.path}${Platform.pathSeparator}$videoId.json');
+    final file = _infoFile(videoId);
     await file.writeAsString(output);
     logInfo('已解析 $videoId${background ? '（预加载）' : ''}，用时 ${watch.elapsedMilliseconds} ms');
     return ResolvedVideo(data, file, format);

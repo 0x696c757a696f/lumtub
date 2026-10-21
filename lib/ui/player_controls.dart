@@ -325,9 +325,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   List<Chapter> get _chapters => _controller.details?.chapters ?? const [];
 
   /// The current chapter's title; opens the chapter list, as on YouTube.
-  Widget _chapterMenu() => StreamBuilder<Duration>(
-        stream: _player.stream.position,
-        initialData: _player.state.position,
+  Widget _chapterMenu() {
+    if (_chapters.isEmpty) return const SizedBox.shrink();
+    // Rebuilt only when the position enters another chapter.
+    int chapterAt(Duration position) {
+      final chapters = _chapters;
+      final current = Chapter.at(chapters, position);
+      return current == null ? -1 : chapters.indexOf(current);
+    }
+
+    return StreamBuilder<int>(
+        stream: _player.stream.position.map(chapterAt).distinct(),
+        initialData: chapterAt(_player.state.position),
         builder: (context, _) {
           final chapters = _chapters;
           final current = Chapter.at(chapters, _player.state.position);
@@ -345,6 +354,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           );
         },
       );
+  }
 
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,

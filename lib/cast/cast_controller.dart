@@ -20,6 +20,23 @@ class CastController extends ChangeNotifier {
   var _seenPlaying = false;
   var _misses = 0;
   var _disposed = false;
+  var _hidden = false;
+
+  /// How often the device is asked for its status: slower while the window
+  /// is hidden, when nobody sees the progress bar.
+  Duration get pollInterval => Duration(seconds: _hidden ? 5 : 1);
+
+  /// Whether the app window is hidden or minimised.
+  set windowHidden(bool value) {
+    if (_hidden == value) return;
+    _hidden = value;
+    if (_poll != null) _startPolling();
+  }
+
+  void _startPolling() {
+    _poll?.cancel();
+    _poll = Timer.periodic(pollInterval, (_) => unawaited(_refresh()));
+  }
 
   bool get active => device != null;
 
@@ -40,7 +57,7 @@ class CastController extends ChangeNotifier {
     status = CastStatus(state: CastState.loading, position: media.start);
     _seenPlaying = false;
     _misses = 0;
-    _poll = Timer.periodic(const Duration(seconds: 1), (_) => unawaited(_refresh()));
+    _startPolling();
     _notify();
   }
 

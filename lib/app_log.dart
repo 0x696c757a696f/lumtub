@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 /// The app version, set by the release build with `--dart-define`.
@@ -8,8 +9,11 @@ const appVersion = String.fromEnvironment('YTPLUS_VERSION', defaultValue: 'å¼€å
 /// on other people's computers. It stays on this computer and never contains
 /// tokens or signed stream addresses.
 class AppLog {
-  AppLog(this.file);
+  AppLog(this.file, {int size = 0}) : _size = size;
   final File file;
+
+  /// Bytes in [file], counted as lines are appended.
+  int _size;
 
   /// The log of this run; null until [open] succeeds, and logging is then a
   /// no-op.
@@ -26,7 +30,7 @@ class AppLog {
       if (await file.exists() && await file.length() > maxBytes) {
         await file.rename('${directory.path}${Platform.pathSeparator}ytplus.old.log');
       }
-      return current = AppLog(file);
+      return current = AppLog(file, size: await file.exists() ? await file.length() : 0);
     } on FileSystemException {
       return null;
     }
@@ -61,6 +65,12 @@ class AppLog {
       _writes = _writes.then((_) async {
         try {
           await file.writeAsString(text, mode: FileMode.append, flush: true);
+          _size += utf8.encode(text).length;
+          // A long session rotates too, not only the next start.
+          if (_size > maxBytes) {
+            await file.rename('${file.parent.path}${Platform.pathSeparator}ytplus.old.log');
+            _size = 0;
+          }
         } on FileSystemException {
           // A full or locked disk must not break playback.
         }

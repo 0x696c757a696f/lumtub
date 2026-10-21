@@ -113,8 +113,25 @@ class ProxyHttpOverrides extends HttpOverrides {
 
   /// dart:io's proxy rule for [uri]; [environment] is for tests.
   String route(Uri uri, {Map<String, String>? environment}) {
-    if (uri.host == 'localhost' || uri.host == '127.0.0.1' || uri.host == '::1') return 'DIRECT';
+    // This PC and devices on the home network (DLNA, Chromecast) are never
+    // behind the proxy.
+    if (isLocalHost(uri.host)) return 'DIRECT';
     if (endpoint != null) return 'PROXY $endpoint';
     return useEnvironment ? HttpClient.findProxyFromEnvironment(uri, environment: environment) : 'DIRECT';
   }
+}
+
+/// Whether [host] is this PC or an address on the local network: loopback,
+/// private (10/8, 172.16/12, 192.168/16, fc00::/7), link-local or `.local`.
+bool isLocalHost(String host) {
+  final h = host.toLowerCase();
+  if (h == 'localhost' || h.endsWith('.local')) return true;
+  final ip = InternetAddress.tryParse(h.startsWith('[') ? h.substring(1, h.length - 1) : h);
+  if (ip == null) return false;
+  if (ip.isLoopback || ip.isLinkLocal) return true;
+  final b = ip.rawAddress;
+  if (ip.type == InternetAddressType.IPv4) {
+    return b[0] == 10 || (b[0] == 172 && b[1] >= 16 && b[1] < 32) || (b[0] == 192 && b[1] == 168);
+  }
+  return (b[0] & 0xfe) == 0xfc;
 }

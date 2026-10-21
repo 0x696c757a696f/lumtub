@@ -197,6 +197,11 @@ void main() {
     overrides.endpoint = '127.0.0.1:9';
     expect(overrides.route(Uri.parse('https://youtube.com/'), environment: env), 'PROXY 127.0.0.1:9');
     expect(overrides.route(Uri.parse('http://localhost:5/'), environment: env), 'DIRECT');
+    // Cast devices on the home network.
+    for (final host in ['192.168.1.20', '10.0.0.5', '172.20.1.1', 'tv.local', '[fe80::1]']) {
+      expect(overrides.route(Uri.parse('http://$host:8008/'), environment: env), 'DIRECT', reason: host);
+    }
+    expect(overrides.route(Uri.parse('http://172.32.0.1/'), environment: env), 'PROXY 127.0.0.1:9');
   });
 
   test('SOCKS settings keep their login and are recognised', () {

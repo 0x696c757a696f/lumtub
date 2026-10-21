@@ -1,5 +1,6 @@
 import '../l10n/l10n.dart';
 import '../models.dart';
+import 'download_selection.dart';
 
 /// What to download. Without ffmpeg yt-dlp cannot merge a video stream with
 /// an audio stream, so the video qualities then take the best single-file
@@ -79,6 +80,7 @@ class DownloadTask {
     required this.item,
     required this.quality,
     required this.directory,
+    this.selection,
     this.status = DownloadStatus.queued,
     this.filePath,
     this.error,
@@ -86,7 +88,11 @@ class DownloadTask {
   }) : added = added ?? DateTime.now();
 
   final VideoItem item;
+  /// The simple choice; for a task with a [selection] only whether it is audio.
   final DownloadQuality quality;
+  /// The formats picked in the download dialog; null for a task added with
+  /// just a [quality], such as one saved by an earlier version.
+  final DownloadSelection? selection;
   /// The folder it is saved in, as chosen when it was added.
   final String directory;
   DownloadStatus status;
@@ -104,11 +110,15 @@ class DownloadTask {
 
   double? get fraction => total == null || total == 0 ? null : (downloaded / total!).clamp(0.0, 1.0);
 
+  /// The quality or selection as the downloads list shows it.
+  String get qualityLabel => selection?.label ?? quality.label;
+
   bool get active => status == DownloadStatus.queued || status == DownloadStatus.downloading;
 
   Map<String, dynamic> toJson() => {
         'item': item.toJson(),
         'quality': quality.name,
+        if (selection != null) 'selection': selection!.toJson(),
         'directory': directory,
         'status': status.name,
         if (filePath != null) 'file': filePath,
@@ -122,9 +132,11 @@ class DownloadTask {
       final item = VideoItem.fromJson(Map<String, dynamic>.from(raw['item'] as Map));
       final directory = raw['directory']?.toString() ?? '';
       if (item.id.isEmpty || directory.isEmpty) return null;
+      final selection = DownloadSelection.fromJson(raw['selection']);
       return DownloadTask(
         item: item,
         quality: DownloadQuality.values.where((q) => q.name == raw['quality']).firstOrNull ?? DownloadQuality.best,
+        selection: selection,
         directory: directory,
         status: DownloadStatus.values.where((s) => s.name == raw['status']).firstOrNull ?? DownloadStatus.failed,
         filePath: raw['file']?.toString(),

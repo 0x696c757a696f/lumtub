@@ -9,6 +9,7 @@ import '../models.dart';
 import '../process_priority.dart';
 import '../sponsor_block.dart';
 import 'download_models.dart';
+import 'download_selection.dart';
 
 /// Per-call settings the manager reads when a download starts.
 class DownloadOptions {
@@ -112,6 +113,7 @@ class DownloadManager extends ChangeNotifier {
   final Future<List<SkipSegment>> Function(String videoId)? sponsorSegments;
 
   String _directory;
+  DownloadDefaults _defaults = const DownloadDefaults();
   final List<DownloadTask> tasks = [];
   final _active = <String>{};
   final _processes = <String, Process>{};
@@ -123,6 +125,9 @@ class DownloadManager extends ChangeNotifier {
 
   /// Where new downloads are saved.
   String get directory => _directory;
+
+  /// What the download dialog chose last, offered again next time.
+  DownloadDefaults get defaults => _defaults;
 
   /// Whether ffmpeg is there to merge video and audio streams.
   bool get canMerge => ffmpegDirectory?.call() != null;
@@ -151,6 +156,7 @@ class DownloadManager extends ChangeNotifier {
       if (data is Map) {
         final dir = data['directory']?.toString();
         if (dir != null && dir.isNotEmpty) _directory = dir;
+        _defaults = DownloadDefaults.fromJson(data['defaults']);
         for (final raw in data['tasks'] as List? ?? const []) {
           final task = DownloadTask.fromJson(raw);
           if (task == null) continue;
@@ -177,7 +183,7 @@ class DownloadManager extends ChangeNotifier {
   Future<void> _write() async {
     try {
       await file.parent.create(recursive: true);
-      await file.writeAsString(jsonEncode({'directory': _directory, 'tasks': tasks.map((t) => t.toJson()).toList()}), flush: true);
+      await file.writeAsString(jsonEncode({'directory': _directory, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()}), flush: true);
     } on FileSystemException catch (e) {
       logError('无法保存下载列表', e);
     }
@@ -189,19 +195,24 @@ class DownloadManager extends ChangeNotifier {
     await _save();
   }
 
+  Future<void> setDefaults(DownloadDefaults defaults) async {
+    _defaults = defaults;
+    await _save();
+  }
+
   // Queue.
 
   DownloadTask? taskFor(String id) => tasks.where((t) => t.id == id).firstOrNull;
 
   /// Queues [item]; null when it is already downloaded or in the queue.
-  DownloadTask? add(VideoItem item, DownloadQuality quality) {
+  DownloadTask? add(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
     final existing = taskFor(item.id);
     if (existing != null) {
       if (existing.status == DownloadStatus.done && existing.filePath != null && File(existing.filePath!).existsSync()) return null;
       if (existing.active || existing.status == DownloadStatus.paused) return null;
       tasks.remove(existing);
     }
-    final task = DownloadTask(item: item, quality: quality, directory: _directory);
+    final task = DownloadTask(item: item, quality: quality, directory: _directory, selection: selection);
     tasks.insert(0, task);
     _changed();
     return task;
@@ -290,7 +301,8 @@ class DownloadManager extends ChangeNotifier {
   List<String> arguments(DownloadTask task) {
     final o = options?.call() ?? const DownloadOptions();
     final ffmpeg = ffmpegDirectory?.call();
-    final audio = task.quality.audioOnly;
+    final selection = task.selection;
+    final audio = selection?.audioOnly ?? task.quality.audioOnly;
     return [
       '--no-warnings',
       '--newline',
@@ -309,9 +321,14 @@ class DownloadManager extends ChangeNotifier {
       '--progress-template', DownloadProgress.progressTemplate,
       '--print', DownloadProgress.filePrint,
       '--write-info-json',
-      '--format', task.quality.format(merge: ffmpeg != null),
-      // MP4 plays everywhere; MKV takes the codecs MP4 cannot hold.
-      if (ffmpeg != null && !audio) ...['--merge-output-format', 'mp4/mkv'],
+      '--format', selection?.format(merge: ffmpeg != null) ?? task.quality.format(merge: ffmpeg != null),
+      // The container was chosen with the streams; the streams are copied,
+      // never re-encoded. Otherwise MP4 plays everywhere and MKV takes the
+      // codecs MP4 cannot hold.
+      if (selection != null)
+        ...selection.containerArguments(merge: ffmpeg != null)
+      else if (ffmpeg != null && !audio)
+        ...['--merge-output-format', 'mp4/mkv'],
       if (ffmpeg != null) ...['--ffmpeg-location', ffmpeg],
       if (!audio && o.subtitleLanguages != null) ...[
         '--write-subs',

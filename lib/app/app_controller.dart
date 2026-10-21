@@ -19,8 +19,10 @@ import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
 import '../dearrow.dart';
+import '../downloads/download_formats.dart';
 import '../downloads/download_manager.dart';
 import '../downloads/download_models.dart';
+import '../downloads/download_selection.dart';
 import '../return_dislike.dart';
 import '../sponsor_block.dart';
 import '../appearance_settings.dart';
@@ -561,10 +563,18 @@ class AppController extends ChangeNotifier {
       );
 
   /// Queues [item] for download, and says so.
-  void download(VideoItem item, DownloadQuality quality) {
+  void download(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
     final manager = downloads;
     if (manager == null || item.isLive || item.isUpcoming) return _notice(tr('直播无法下载'));
-    _notice(manager.add(item, quality) == null ? tr('已在下载列表中') : tr('已加入下载'));
+    _notice(manager.add(item, quality, selection: selection) == null ? tr('已在下载列表中') : tr('已加入下载'));
+  }
+
+  /// The streams [videoId] can be downloaded as, from the extraction the
+  /// player shares (one yt-dlp run per video).
+  Future<DownloadFormats> downloadFormats(String videoId) async {
+    final repository = _repository;
+    if (repository == null) throw StateError(tr('组件尚未就绪'));
+    return DownloadFormats.parse((await repository.streams.resolve(videoId, _format)).info);
   }
 
   /// The proxy everything currently goes through.

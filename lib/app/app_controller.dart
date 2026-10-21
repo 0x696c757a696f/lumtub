@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/painting.dart' show Color;
+import 'package:flutter/painting.dart' show Color, PaintingBinding;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -2481,6 +2481,7 @@ class AppController extends ChangeNotifier {
   Future<void> _checkDrops() async {
     final platform = player?.platform;
     if (platform is! NativePlayer || _tracking == null || !(player?.state.playing ?? false)) return;
+    await _logMemory(platform);
     try {
       final drops = int.tryParse(await platform.getProperty('frame-drop-count')) ?? 0;
       final added = drops - _lastDrops;
@@ -2492,6 +2493,28 @@ class AppController extends ChangeNotifier {
         values.add('$name=${await platform.getProperty(name)}');
       }
       logInfo('10 秒内丢帧 $added（共 $drops）：${values.join(' ')}');
+    } catch (_) {
+      // Statistics are best effort.
+    }
+  }
+
+  DateTime _lastMemoryLog = DateTime(0);
+
+  /// Logs the app's memory and what libmpv's cache holds every two minutes
+  /// while a video plays, so the log shows where memory goes.
+  Future<void> _logMemory(NativePlayer platform) async {
+    if (DateTime.now().difference(_lastMemoryLog) < const Duration(minutes: 2)) return;
+    _lastMemoryLog = DateTime.now();
+    try {
+      String mb(Object? bytes) => bytes is num ? '${(bytes / (1 << 20)).round()} MB' : '?';
+      final cache = jsonDecode(await platform.getProperty('demuxer-cache-state'));
+      final ahead = cache is Map ? cache['fw-bytes'] : null;
+      final total = cache is Map ? cache['total-bytes'] : null;
+      final values = <String>[];
+      for (final name in ['video-params/w', 'video-params/h', 'video-codec', 'hwdec-current', 'video-out-params/pixelformat']) {
+        values.add('$name=${await platform.getProperty(name)}');
+      }
+      logInfo('内存：进程 ${mb(ProcessInfo.currentRss)}（峰值 ${mb(ProcessInfo.maxRss)}）· 播放缓存 ${mb(total)}（前方 ${mb(ahead)}）· 图片缓存 ${mb(PaintingBinding.instance.imageCache.currentSizeBytes)} · ${values.join(' ')}');
     } catch (_) {
       // Statistics are best effort.
     }

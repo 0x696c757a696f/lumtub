@@ -263,12 +263,15 @@ void main() {
       await m.setDirectory('${dir.path}/chosen');
       m.add(video('aaaaaaaaaaa'), DownloadQuality.audio);
       m.add(video('bbbbbbbbbbb'), DownloadQuality.best);
+      await until(() => processes.length >= 2);
       await settle();
       final file = File('${dir.path}/chosen/a [aaaaaaaaaaa].m4a')..createSync(recursive: true);
-      processes[0].out('ytplus-file|${file.path}');
-      await processes[0].exit(0);
+      // The two downloads may start in either order.
+      final a = processes[started.indexWhere((args) => args.last.endsWith('aaaaaaaaaaa'))];
+      a.out('ytplus-file|${file.path}');
+      await a.exit(0);
       await settle();
-      expect(processes[1], isNotNull);
+      expect(processes, hasLength(2));
       processes.clear();
       await m.flush();
 

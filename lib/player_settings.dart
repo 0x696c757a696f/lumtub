@@ -333,7 +333,7 @@ class PlayerSettings {
     this.libassSubtitles = false,
     this.proxyMode = ProxyMode.system,
     this.proxyAddress = '',
-    this.playbackSource = PlaybackSource.pipedAuto,
+    this.playbackSource = PlaybackSource.youtube,
     this.pipedServer = '',
     this.invidiousServer = '',
     this.directRendering = 'auto',
@@ -486,7 +486,7 @@ class PlayerSettings {
         'libassSubtitles': libassSubtitles,
         'proxyMode': proxyMode.name,
         'proxyAddress': proxyAddress,
-        'playbackSource': playbackSource.name,
+        'playbackSourceV2': playbackSource.name,
         'pipedServer': pipedServer,
         'invidiousServer': invidiousServer,
         'directRendering': directRendering,
@@ -600,7 +600,9 @@ class PlayerSettings {
       libassSubtitles: raw['libassSubtitles'] == true,
       proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),
       proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
-      playbackSource: _enumByName(PlaybackSource.values, raw['playbackSource'], PlaybackSource.pipedAuto),
+      // V2: the default became direct YouTube (2026-10-21); the old key held
+      // the old default for everyone who never chose.
+      playbackSource: _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),
       pipedServer: normalizePipedServer(raw['pipedServer']?.toString() ?? '') ?? '',
       invidiousServer: normalizePipedServer(raw['invidiousServer']?.toString() ?? '') ?? '',
       directRendering: choice('directRendering', {'auto', 'yes', 'no'}, 'auto'),

@@ -15,15 +15,16 @@ enum RelayKind { piped, invidious }
 /// Where playback streams come from.
 enum PlaybackSource {
   /// The fastest working public Piped server.
-  pipedAuto('Piped · 自动选择服务器（默认）'),
+  pipedAuto('Piped · 自动选择服务器'),
   /// The Piped server the user named.
   pipedCustom('Piped · 指定服务器'),
   /// The fastest working public Invidious instance.
   invidiousAuto('Invidious · 自动选择实例'),
   /// The Invidious instance the user named.
   invidiousCustom('Invidious · 指定实例'),
-  /// Straight from YouTube through yt-dlp.
-  youtube('直接连接 YouTube');
+  /// Straight from YouTube through yt-dlp; the default, so no third party
+  /// learns what is watched unless YouTube refuses (429) or fails.
+  youtube('直接连接 YouTube（默认）');
 
   const PlaybackSource(this._label);
   final String _label;

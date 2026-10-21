@@ -76,8 +76,9 @@ void main() {
     expect(asked.where((u) => u.contains('/streams/')), ['https://broken.example/streams/dQw4w9WgXcQ', 'https://slow.example/streams/dQw4w9WgXcQ']);
   });
 
-  test('playback source is saved, Piped by default', () {
-    expect(const PlayerSettings().playbackSource, PlaybackSource.pipedAuto);
+  test('playback source is saved, direct YouTube by default', () {
+    expect(const PlayerSettings().playbackSource, PlaybackSource.youtube);
+    expect(PlayerSettings.fromJson(const {'playbackSource': 'pipedAuto'}).playbackSource, PlaybackSource.youtube);
     final saved = PlayerSettings.fromJson(const PlayerSettings(playbackSource: PlaybackSource.pipedCustom, pipedServer: 'https://p.example').toJson());
     expect((saved.playbackSource, saved.pipedServer), (PlaybackSource.pipedCustom, 'https://p.example'));
   });

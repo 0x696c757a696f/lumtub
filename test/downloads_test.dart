@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ytplus/video_codec.dart';
 import 'package:ytplus/downloads/download_manager.dart';
 import 'package:ytplus/downloads/download_models.dart';
 import 'package:ytplus/models.dart';
@@ -146,10 +147,10 @@ void main() {
       await until(() => processes.length >= 2);
       await settle();
       expect(processes, hasLength(2));
-      // Oldest first.
-      expect(started[0].last, endsWith('aaaaaaaaaaa'));
+      // Oldest first; the two processes may start in either order.
+      expect(started.map((a) => a.last.substring(a.last.length - 11)).toSet(), {'aaaaaaaaaaa', 'bbbbbbbbbbb'});
       expect(m.taskFor('ccccccccccc')!.status, DownloadStatus.queued);
-      await processes[0].exit(1);
+      await processes[started.indexWhere((a) => a.last.endsWith('aaaaaaaaaaa'))].exit(1);
       await until(() => processes.length >= 3);
       expect(processes, hasLength(3));
       expect(m.taskFor('aaaaaaaaaaa')!.status, DownloadStatus.failed);
@@ -163,6 +164,7 @@ void main() {
       final file = File('${dir.path}/videos/Video [aaaaaaaaaaa].mp4')..createSync(recursive: true);
       File('${dir.path}/videos/Video [aaaaaaaaaaa].info.json').writeAsStringSync(jsonEncode({
         'title': 'Video',
+        'vcodec': 'av01.0.12M.08',
         'chapters': [{'title': 'Intro', 'start_time': 0, 'end_time': 10}, {'title': 'Main', 'start_time': 10, 'end_time': 20}],
         'formats': List.generate(50, (i) => {'url': 'https://x/$i'}),
       }));
@@ -181,6 +183,7 @@ void main() {
       final local = m.localVideo('aaaaaaaaaaa')!;
       expect(local.info.containsKey('formats'), isFalse);
       expect(local.info['title'], 'Video');
+      expect(local.videoCodec, VideoCodec.av1);
       expect(VideoDetails.fromJson(local.info).chapters, hasLength(2));
       expect(local.segments.single.category, 'sponsor');
       expect(local.segments.single.end, const Duration(seconds: 12));
@@ -258,17 +261,49 @@ void main() {
       expect(audio, isNot(contains('--write-subs')));
     });
 
+    test('progress ticks reach only the progress listenable, at most twice a second', () async {
+      final m = manager();
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      await until(() => processes.isNotEmpty);
+      var managerNotified = 0;
+      var ticks = 0;
+      m.addListener(() => managerNotified++);
+      m.progress.addListener(() => ticks++);
+      for (var i = 0; i < 20; i++) {
+        processes[0].out('ytplus|downloading|${i * 10}|1000|NA|250.0|2');
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      await settle();
+      expect(managerNotified, 0);
+      expect(ticks, inInclusiveRange(1, 2));
+      expect(m.tasks.single.downloaded, 190);
+    });
+
+    test('saves are coalesced and flush writes a pending one', () async {
+      final m = manager();
+      final list = File('${dir.path}/downloads.json');
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      m.add(video('bbbbbbbbbbb'), DownloadQuality.best);
+      await settle();
+      expect(list.existsSync(), isFalse);
+      await m.flush();
+      expect(jsonDecode(list.readAsStringSync())['tasks'], hasLength(2));
+    });
+
     test('keeps the list and the folder across restarts, and resumes interrupted downloads', () async {
       final m = manager();
       await m.setDirectory('${dir.path}/chosen');
       m.add(video('aaaaaaaaaaa'), DownloadQuality.audio);
       m.add(video('bbbbbbbbbbb'), DownloadQuality.best);
+      await until(() => processes.length >= 2);
       await settle();
       final file = File('${dir.path}/chosen/a [aaaaaaaaaaa].m4a')..createSync(recursive: true);
-      processes[0].out('ytplus-file|${file.path}');
-      await processes[0].exit(0);
+      // The two downloads may start in either order.
+      final a = processes[started.indexWhere((args) => args.last.endsWith('aaaaaaaaaaa'))];
+      a.out('ytplus-file|${file.path}');
+      await a.exit(0);
       await settle();
-      expect(processes[1], isNotNull);
+      expect(processes, hasLength(2));
       processes.clear();
       await m.flush();
 

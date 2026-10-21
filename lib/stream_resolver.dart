@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'app_log.dart';
+import 'format_policy.dart';
 import 'models.dart';
+import 'player_settings.dart';
 import 'process_priority.dart';
+import 'process_runner.dart';
 
 /// What yt-dlp found for one video: every format, the ones picked for
 /// [format], and the metadata the watch page shows.
@@ -31,16 +34,19 @@ class ResolvedVideo {
 
   VideoDetails get details => VideoDetails.fromJson(info);
 
-  /// Video heights this video offers, highest first.
-  List<int> get heights {
+  /// Video heights this video offers, highest first; with [settings], only
+  /// those that exist in a codec it allows.
+  List<int> heightsFor([PlayerSettings? settings]) {
     final formats = info['formats'];
     if (formats is! List) return const [];
     final heights = <int>{
       for (final f in formats.whereType<Map>())
-        if (f['vcodec'] != null && f['vcodec'] != 'none' && f['height'] is int && (f['height'] as int) > 0) f['height'] as int,
+        if (f['vcodec'] != null && f['vcodec'] != 'none' && f['height'] is int && (f['height'] as int) > 0 && (settings == null || FormatPolicy.allowsName(settings, f['vcodec']))) f['height'] as int,
     };
     return heights.toList()..sort((a, b) => b.compareTo(a));
   }
+
+  List<int> get heights => heightsFor();
 
   List<Map<String, dynamic>> get _tracks {
     final requested = info['requested_formats'];
@@ -87,7 +93,9 @@ class ResolvedVideo {
 /// can be resolved before it is clicked.
 class StreamResolver {
   StreamResolver(this.ytDlpPath, {this.cacheDirectory, this.deno, this.proxy, required this.infoDirectory, Map<String, String>? environment})
-      : _environment = environment;
+      : _environment = environment {
+    unawaited(deleteStaleInfo());
+  }
 
   final String ytDlpPath;
   final String? cacheDirectory;
@@ -102,6 +110,8 @@ class StreamResolver {
 
   static const _keep = 12;
   final _results = <String, Future<ResolvedVideo>>{};
+  /// The format each entry of [_results] is being resolved with.
+  final _formats = <String, String>{};
 
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
@@ -126,7 +136,8 @@ class StreamResolver {
     final lowered = _lowered[videoId];
     if (lowered != null) restorePriority(lowered);
     final cached = _results[videoId];
-    if (cached != null) {
+    // Another format needs another extraction.
+    if (cached != null && _formats[videoId] == format) {
       return cached.then((video) => video.fresh ? video : _start(videoId, format), onError: (_) => _start(videoId, format));
     }
     return _start(videoId, format);
@@ -142,7 +153,7 @@ class StreamResolver {
   /// otherwise start one per card. While one runs, only the card asked for
   /// last waits its turn.
   void prefetch(String videoId, String format) {
-    if (_results.containsKey(videoId)) return;
+    if (_results.containsKey(videoId) && _formats[videoId] == format) return;
     if (_prefetching) {
       _nextPrefetch = (videoId, format);
       return;
@@ -163,18 +174,51 @@ class StreamResolver {
 
   /// Drops what is known about [videoId], for example after its streams
   /// failed to play.
-  void forget(String videoId) => _results.remove(videoId);
+  void forget(String videoId) {
+    _results.remove(videoId);
+    _formats.remove(videoId);
+    _deleteInfo(videoId);
+  }
+
+  File _infoFile(String videoId) => File('${infoDirectory.path}${Platform.pathSeparator}$videoId.json');
+
+  /// Deleted at once, so it cannot land after the next resolve rewrote it.
+  void _deleteInfo(String videoId) {
+    try {
+      _infoFile(videoId).deleteSync();
+    } on FileSystemException {
+      // Not there, or still open: left for the startup cleanup.
+    }
+  }
+
+  /// Deletes info files older than [maxAge] that earlier runs left behind.
+  Future<void> deleteStaleInfo({Duration maxAge = const Duration(days: 1)}) async {
+    try {
+      if (!await infoDirectory.exists()) return;
+      final limit = DateTime.now().subtract(maxAge);
+      await for (final entity in infoDirectory.list()) {
+        if (entity is! File || !entity.path.endsWith('.json')) continue;
+        if ((await entity.lastModified()).isBefore(limit)) await entity.delete();
+      }
+    } on FileSystemException {
+      // The cleanup is best effort.
+    }
+  }
 
   Future<ResolvedVideo> _start(String videoId, String format, {bool background = false}) {
     final future = _run(videoId, format, background: background);
     _results.remove(videoId);
     _results[videoId] = future;
+    _formats[videoId] = format;
     while (_results.length > _keep) {
-      _results.remove(_results.keys.first);
+      final oldest = _results.keys.first;
+      _formats.remove(oldest);
+      _results.remove(oldest);
+      _deleteInfo(oldest);
     }
     // A failure is not kept, so the next attempt runs yt-dlp again.
     future.then((_) {}, onError: (_) {
-      if (identical(_results[videoId], future)) _results.remove(videoId);
+      if (identical(_results[videoId], future)) forget(videoId);
     });
     return future;
   }
@@ -202,7 +246,7 @@ class StreamResolver {
     final data = jsonDecode(const LineSplitter().convert(output).last);
     if (data is! Map<String, dynamic>) throw const FormatException('Unexpected yt-dlp output');
     await infoDirectory.create(recursive: true);
-    final file = File('${infoDirectory.path}${Platform.pathSeparator}$videoId.json');
+    final file = _infoFile(videoId);
     await file.writeAsString(output);
     logInfo('已解析 $videoId${background ? '（预加载）' : ''}，用时 ${watch.elapsedMilliseconds} ms');
     return ResolvedVideo(data, file, format);
@@ -213,19 +257,18 @@ class StreamResolver {
   /// yt-dlp for [videoId]; [background] (the video id) runs it at low
   /// priority until [resolve] asks for that video.
   Future<ProcessResult> _ytDlp(String videoId, String format, {String? background}) async {
-    final process = await Process.start(ytDlpPath, arguments(videoId, format), environment: _environment);
-    if (background != null) {
-      lowerPriority(process.pid);
-      _lowered[background] = process.pid;
-    }
-    final out = process.stdout.transform(utf8.decoder).join();
-    final err = process.stderr.transform(utf8.decoder).join();
     try {
-      final code = await process.exitCode.timeout(const Duration(seconds: 45));
-      return ProcessResult(process.pid, code, await out, await err);
-    } on TimeoutException {
-      process.kill();
-      rethrow;
+      return await runWithTimeout(
+        ytDlpPath,
+        arguments(videoId, format),
+        timeout: const Duration(seconds: 45),
+        environment: _environment,
+        onStart: (process) {
+          if (background == null) return;
+          lowerPriority(process.pid);
+          _lowered[background] = process.pid;
+        },
+      );
     } finally {
       if (background != null) _lowered.remove(background);
     }

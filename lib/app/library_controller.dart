@@ -7,8 +7,11 @@ import 'package:http/http.dart' as http;
 import '../channel_avatars.dart';
 import '../channel_feed.dart';
 import '../library_store.dart';
+import '../map_limited.dart';
 import '../models.dart';
 import '../video_repository.dart';
+
+export '../map_limited.dart';
 
 /// Favorites, playlists, followed channels, watch progress and the feed of
 /// followed channels. Everything stays on this computer.
@@ -310,19 +313,4 @@ class LibraryController extends ChangeNotifier {
     if (_saveTimer != null) unawaited(flush());
     super.dispose();
   }
-}
-
-/// [work] on each of [items], at most [limit] at a time, results in order.
-Future<List<R>> mapLimited<T, R>(List<T> items, int limit, Future<R> Function(T item) work) async {
-  final results = List<R?>.filled(items.length, null);
-  var next = 0;
-  Future<void> worker() async {
-    while (next < items.length) {
-      final i = next++;
-      results[i] = await work(items[i]);
-    }
-  }
-
-  await Future.wait([for (var i = 0; i < limit && i < items.length; i++) worker()]);
-  return results.cast<R>();
 }

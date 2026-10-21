@@ -60,4 +60,13 @@ void main() {
     expect(options['vd-lavc-dr'], 'yes');
     expect(options['hwdec-codecs'], 'h264,av1');
   });
+
+  test('low resource use scales the cheapest way, other strategies keep the user scaler', () {
+    final fast = PlayerOptionApplicator.optionsFor(const PlayerSettings(strategy: PlaybackStrategy.lowResource));
+    expect(fast['dscale'], 'bilinear');
+    expect(fast['scale'], 'bilinear');
+    final normal = PlayerOptionApplicator.optionsFor(const PlayerSettings());
+    expect(normal['scale'], 'spline36');
+    expect(normal.containsKey('dscale'), isFalse);
+  });
 }

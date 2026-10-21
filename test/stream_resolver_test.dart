@@ -127,4 +127,56 @@ void main() {
     expect(video.info['title'], 'Never Gonna Give You Up');
     expect(count.readAsLinesSync(), hasLength(2));
   });
+
+  test('resolves again when the format differs from the cached one', () async {
+    if (Platform.isWindows) return;
+    final dir = await Directory.systemTemp.createTemp('ytplus_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final count = File('${dir.path}/count');
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\necho x >> ${count.path}\ncat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'));
+    final first = await resolver.resolve('dQw4w9WgXcQ', 'best[height<=720]');
+    expect(first.format, 'best[height<=720]');
+    expect(identical(await resolver.resolve('dQw4w9WgXcQ', 'best[height<=720]'), first), isTrue);
+    final second = await resolver.resolve('dQw4w9WgXcQ', 'bestvideo+bestaudio');
+    expect(second.format, 'bestvideo+bestaudio');
+    expect(count.readAsLinesSync(), hasLength(2));
+    // A prefetch for the cached format is skipped, one for another is not.
+    resolver.prefetch('dQw4w9WgXcQ', 'bestvideo+bestaudio');
+    resolver.prefetch('dQw4w9WgXcQ', 'ytdl');
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    expect(count.readAsLinesSync(), hasLength(3));
+    expect((await resolver.cached('dQw4w9WgXcQ'))!.format, 'ytdl');
+  });
+
+  test('deletes the info file of a forgotten or evicted video, and of old runs', () async {
+    if (Platform.isWindows) return;
+    final dir = await Directory.systemTemp.createTemp('ytplus_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\ncat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final info = Directory('${dir.path}/info')..createSync();
+    final old = File('${info.path}/oldoldoldol.json')..writeAsStringSync('{}');
+    old.setLastModifiedSync(DateTime.now().subtract(const Duration(days: 2)));
+    final recent = File('${info.path}/recentrecen.json')..writeAsStringSync('{}');
+    final resolver = StreamResolver(script.path, infoDirectory: info);
+    await resolver.deleteStaleInfo();
+    expect(old.existsSync(), isFalse);
+    expect(recent.existsSync(), isTrue);
+
+    final ids = [for (var i = 0; i < 13; i++) 'video${i.toString().padLeft(6, '0')}'];
+    for (final id in ids) {
+      await resolver.resolve(id, 'ytdl');
+    }
+    // Only the 12 kept entries still have a file.
+    expect(File('${info.path}/${ids.first}.json').existsSync(), isFalse);
+    for (final id in ids.skip(1)) {
+      expect(File('${info.path}/$id.json').existsSync(), isTrue);
+    }
+    resolver.forget(ids.last);
+    expect(File('${info.path}/${ids.last}.json').existsSync(), isFalse);
+  });
 }

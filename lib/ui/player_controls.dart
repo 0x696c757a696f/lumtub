@@ -27,12 +27,14 @@ import '../storyboard.dart';
 import '../models.dart' show Chapter, SubtitleKind, SubtitleOption;
 import '../subtitle_translation.dart';
 import '../translation.dart';
+import '../format_policy.dart';
 import '../player_settings.dart';
 import '../widgets/pilinara_settings_tiles.dart';
 import '../widgets/mini_progress_line.dart';
 import '../widgets/video_progress_bar.dart';
 import 'cast_ui.dart';
 import 'common.dart';
+import 'format_policy_dialogs.dart';
 import 'pages/settings_sections.dart' show trimSpeed, qualityLabel;
 import 'pages/settings_subpages.dart';
 import 'player_shortcuts.dart';
@@ -323,9 +325,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   List<Chapter> get _chapters => _controller.details?.chapters ?? const [];
 
   /// The current chapter's title; opens the chapter list, as on YouTube.
-  Widget _chapterMenu() => StreamBuilder<Duration>(
-        stream: _player.stream.position,
-        initialData: _player.state.position,
+  Widget _chapterMenu() {
+    if (_chapters.isEmpty) return const SizedBox.shrink();
+    // Rebuilt only when the position enters another chapter.
+    int chapterAt(Duration position) {
+      final chapters = _chapters;
+      final current = Chapter.at(chapters, position);
+      return current == null ? -1 : chapters.indexOf(current);
+    }
+
+    return StreamBuilder<int>(
+        stream: _player.stream.position.map(chapterAt).distinct(),
+        initialData: chapterAt(_player.state.position),
         builder: (context, _) {
           final chapters = _chapters;
           final current = Chapter.at(chapters, _player.state.position);
@@ -343,6 +354,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           );
         },
       );
+  }
 
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,
@@ -668,14 +680,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 onSelected: (q) => _controller.reloadVideo(_controller.settings.copyWith(audioQuality: q)),
               );
             }),
-            item(Icons.movie_filter_outlined, tr('解码格式'), settings.codec.label, () {
-              pickFromDialog<CodecPreference>(
-                context,
-                title: tr('解码格式'),
-                value: settings.codec,
-                values: [for (final c in CodecPreference.values) (c, c.label)],
-                onSelected: (c) => _controller.reloadVideo(_controller.settings.copyWith(codec: c)),
-              );
+            item(Icons.movie_filter_outlined, tr('播放策略'), settings.strategy.label, () {
+              pickPlaybackStrategy(context, settings.strategy, (v) => _controller.reloadVideo(_controller.settings.copyWith(strategy: v)));
+            }),
+            item(Icons.block_outlined, tr('禁用视频编码'), FormatPolicy.disabledNames(settings).isEmpty ? tr('无') : FormatPolicy.disabledNames(settings), () {
+              pickDisabledCodecs(context, settings.disabledCodecs, (v) => _controller.reloadVideo(_controller.settings.copyWith(disabledCodecs: v)));
             }),
             if (audio.length > 1)
               item(Icons.audiotrack_rounded, tr('选择音轨'), _trackLabel(_player.state.track.audio.id, _player.state.track.audio.title, _player.state.track.audio.language), () {

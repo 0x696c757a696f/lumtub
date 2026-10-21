@@ -15,9 +15,10 @@ enum ProxyMode {
   String get label => tr(_label);
 }
 
-/// A proxy address as `http://host:port`, or null for a direct connection.
-/// libmpv's streams can only go through an HTTP proxy, so a SOCKS-only
-/// system proxy is passed to yt-dlp and the app but not to libmpv.
+/// A proxy address as `http://host:port` or `socks5://[user:pass@]host:port`,
+/// or null for a direct connection. yt-dlp takes either kind itself; libmpv
+/// and dart:io only speak HTTP proxies, so a SOCKS one reaches them through
+/// the local `SocksBridge`.
 class NetworkProxy {
   const NetworkProxy(this.url);
   final String? url;
@@ -25,6 +26,10 @@ class NetworkProxy {
   static const direct = NetworkProxy(null);
 
   bool get isHttp => url != null && url!.startsWith('http://');
+  bool get isSocks => url != null && !isHttp;
+
+  /// [url] without the password, for logs.
+  String? get redacted => url?.replaceFirst(RegExp(r'//[^@/]*@'), '//');
 
   /// yt-dlp's `--proxy` value for [mode]: an empty string forces a direct
   /// connection, null leaves yt-dlp to find the Windows proxy itself.
@@ -44,8 +49,9 @@ class NetworkProxy {
     if (!value.contains('://')) value = 'http://$value';
     final uri = Uri.tryParse(value);
     if (uri == null || uri.host.isEmpty || !uri.hasPort || uri.port <= 0) return null;
-    if (!{'http', 'socks5', 'socks5h', 'socks4'}.contains(uri.scheme)) return null;
-    return '${uri.scheme}://${uri.host.contains(':') ? '[${uri.host}]' : uri.host}:${uri.port}';
+    if (!{'http', 'socks5', 'socks5h', 'socks4', 'socks4a'}.contains(uri.scheme)) return null;
+    final login = uri.scheme.startsWith('socks') && uri.userInfo.isNotEmpty ? '${uri.userInfo}@' : '';
+    return '${uri.scheme}://$login${uri.host.contains(':') ? '[${uri.host}]' : uri.host}:${uri.port}';
   }
 
   /// The proxy in Windows' `ProxyServer` value: either one address for
@@ -86,24 +92,46 @@ class NetworkProxy {
       };
 }
 
-/// The overrides main installs; the controller updates their proxy.
-final appHttpOverrides = ProxyHttpOverrides(NetworkProxy.direct);
+/// The overrides main installs; the controller updates their route.
+final appHttpOverrides = ProxyHttpOverrides();
 
 /// Sends every dart:io connection the app makes (thumbnails, feeds, posts,
-/// updates) through [proxy]. dart:io supports only HTTP proxies, so other
-/// kinds leave these connections to the environment.
+/// updates) through [endpoint], an HTTP proxy that is either the user's own
+/// or the local `SocksBridge`. Without one the connection is direct, and the
+/// proxy environment variables are read only when [useEnvironment] is set.
 class ProxyHttpOverrides extends HttpOverrides {
-  ProxyHttpOverrides(this.proxy);
-  NetworkProxy proxy;
+  /// `host:port` of the HTTP proxy, or null for direct.
+  String? endpoint;
+  bool useEnvironment = false;
 
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
-    client.findProxy = (uri) {
-      final hostPort = proxy.isHttp ? proxy.hostPort : null;
-      if (hostPort == null || uri.host == 'localhost' || uri.host == '127.0.0.1') return HttpClient.findProxyFromEnvironment(uri);
-      return 'PROXY $hostPort';
-    };
+    client.findProxy = route;
     return client;
   }
+
+  /// dart:io's proxy rule for [uri]; [environment] is for tests.
+  String route(Uri uri, {Map<String, String>? environment}) {
+    // This PC and devices on the home network (DLNA, Chromecast) are never
+    // behind the proxy.
+    if (isLocalHost(uri.host)) return 'DIRECT';
+    if (endpoint != null) return 'PROXY $endpoint';
+    return useEnvironment ? HttpClient.findProxyFromEnvironment(uri, environment: environment) : 'DIRECT';
+  }
+}
+
+/// Whether [host] is this PC or an address on the local network: loopback,
+/// private (10/8, 172.16/12, 192.168/16, fc00::/7), link-local or `.local`.
+bool isLocalHost(String host) {
+  final h = host.toLowerCase();
+  if (h == 'localhost' || h.endsWith('.local')) return true;
+  final ip = InternetAddress.tryParse(h.startsWith('[') ? h.substring(1, h.length - 1) : h);
+  if (ip == null) return false;
+  if (ip.isLoopback || ip.isLinkLocal) return true;
+  final b = ip.rawAddress;
+  if (ip.type == InternetAddressType.IPv4) {
+    return b[0] == 10 || (b[0] == 172 && b[1] >= 16 && b[1] < 32) || (b[0] == 192 && b[1] == 168);
+  }
+  return (b[0] & 0xfe) == 0xfc;
 }

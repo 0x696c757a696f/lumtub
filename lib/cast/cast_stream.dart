@@ -1,4 +1,6 @@
+import '../format_policy.dart';
 import '../piped_streams.dart';
+import '../player_settings.dart';
 
 /// A single progressive address a TV can play without extra headers.
 class CastSource {
@@ -15,8 +17,9 @@ bool _isH264(String codec) => codec.startsWith('avc1') || codec.startsWith('h264
 
 /// The best file of a yt-dlp extraction with picture and sound together and
 /// no fragments (format 22 or 18 style): mp4, H.264 first, then the highest
-/// picture up to 1080p. Null when YouTube lists none.
-CastSource? castSourceFromYtDlp(Map<String, dynamic> info) {
+/// picture up to 1080p, skipping codecs [settings] disables. Null when
+/// YouTube lists none.
+CastSource? castSourceFromYtDlp(Map<String, dynamic> info, {PlayerSettings? settings}) {
   final formats = info['formats'];
   if (formats is! List) return null;
   final candidates = <(int, int, int, String)>[];
@@ -27,6 +30,7 @@ CastSource? castSourceFromYtDlp(Map<String, dynamic> info) {
     final video = f['vcodec']?.toString() ?? 'none';
     final audio = f['acodec']?.toString() ?? 'none';
     if (video == 'none' || audio == 'none' || f['ext'] != 'mp4') continue;
+    if (settings != null && !FormatPolicy.allowsName(settings, video)) continue;
     final height = f['height'] is num ? (f['height'] as num).toInt() : 0;
     final bitrate = f['tbr'] is num ? (f['tbr'] as num).round() : 0;
     // Higher tuples are better: allowed height, then H.264, then size.
@@ -44,9 +48,10 @@ CastSource? castSourceFromYtDlp(Map<String, dynamic> info) {
 }
 
 /// The best muxed mp4 stream of a Piped or Invidious answer, by the same rules.
-CastSource? castSourceFromRelay(PipedVideo video) {
-  if (video.live || video.muxed.isEmpty) return null;
-  final sorted = [...video.muxed]..sort((a, b) {
+CastSource? castSourceFromRelay(PipedVideo video, {PlayerSettings? settings}) {
+  final muxed = [for (final s in video.muxed) if (settings == null || FormatPolicy.allowsName(settings, s.codec)) s];
+  if (video.live || muxed.isEmpty) return null;
+  final sorted = [...muxed]..sort((a, b) {
       int rank(PipedStream s) => (s.height <= _castMaxHeight ? 4000000 : 0) + (_isH264(s.codec) ? 2000000 : 0) + s.height * 1000 + s.bitrate ~/ 1000;
       return rank(b).compareTo(rank(a));
     });

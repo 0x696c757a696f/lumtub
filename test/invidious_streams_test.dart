@@ -7,6 +7,7 @@ import 'package:http/testing.dart';
 import 'package:ytplus/invidious_streams.dart';
 import 'package:ytplus/piped_streams.dart';
 import 'package:ytplus/player_settings.dart';
+import 'package:ytplus/video_codec.dart';
 
 /// The shape of https://api.invidious.io/instances.json?sort_by=type,users
 /// (docs.invidious.io/instances), written from its documented schema.
@@ -60,7 +61,7 @@ void main() {
     expect((h264.codec, h264.height, h264.bitrate, h264.videoOnly), ('avc1.640028', 1080, 4000000, true));
     expect(h264.url, startsWith('https://inv.example/videoplayback?'));
     // A path alone belongs to the instance.
-    final vp9 = video.pickVideo(const PlayerSettings(codec: CodecPreference.vp9))!;
+    final vp9 = video.pickVideo(const PlayerSettings(disabledCodecs: {VideoCodec.h264}))!;
     expect((vp9.codec, vp9.url), ('vp9', 'https://inv.example/videoplayback?expire=1&itag=248&local=true'));
     // The instance's own http address becomes https; the 720p60 label has no size problem.
     final p720 = video.pickVideo(const PlayerSettings(maxHeight: 720))!;
@@ -70,6 +71,16 @@ void main() {
     final edl = video.edl(const PlayerSettings())!;
     expect(edl, startsWith('edl://!new_stream;!no_clip;!no_chapters;%'));
     expect(edl, allOf(contains('itag=137'), contains('itag=251')));
+  });
+
+  test('streams off the instance and YouTube are skipped', () {
+    final video = parseInvidiousVideo('https://inv.example', {
+      'adaptiveFormats': [
+        for (final (i, url) in ['https://inv.example/a', 'https://r1.googlevideo.com/a', 'https://evil.example/a', 'https://127.0.0.1/a', 'https://192.168.1.2/a', 'https://[::1]/a', 'https://nas.local/a'].indexed)
+          {'bitrate': '${i + 1}', 'url': url, 'type': 'audio/mp4; codecs="mp4a.40.2"'},
+      ],
+    });
+    expect(video.audio.map((s) => s.bitrate), [1, 2]);
   });
 
   test('height comes from the label when there is no size, and live has no EDL', () {
@@ -118,13 +129,16 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(first.wasTried('https://yewtu.be'), isTrue);
     expect(first.timingOf('https://yewtu.be'), isNull);
+    await first.saved;
     expect((jsonDecode(await file.readAsString()) as Map)['servers'], ['https://yewtu.be', 'https://inv.nadeko.net']);
     final fetched = await first.fetch('dQw4w9WgXcQ');
     expect(fetched.server, 'https://inv.nadeko.net');
     expect(fetched.edl(const PlayerSettings()), isNotNull);
 
     // A list from today is not downloaded again.
-    await make().servers();
+    final second = make();
+    await second.servers();
+    await second.saved;
     expect(listRequests, 1);
     // A day-old one is.
     final saved = jsonDecode(await file.readAsString()) as Map;

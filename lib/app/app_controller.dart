@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/painting.dart' show Color;
+import 'package:flutter/painting.dart' show Color, PaintingBinding;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -19,8 +19,10 @@ import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
 import '../dearrow.dart';
+import '../downloads/download_formats.dart';
 import '../downloads/download_manager.dart';
 import '../downloads/download_models.dart';
+import '../downloads/download_selection.dart';
 import '../return_dislike.dart';
 import '../sponsor_block.dart';
 import '../appearance_settings.dart';
@@ -28,6 +30,7 @@ import '../cache_manager.dart';
 import '../decoder_status.dart';
 import '../models.dart';
 import '../network_proxy.dart';
+import '../socks_bridge.dart';
 import '../cast/cast_controller.dart';
 import '../cast/cast_device.dart';
 import '../cast/cast_stream.dart';
@@ -42,8 +45,11 @@ import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
 import '../player_settings.dart';
 import '../ffmpeg_component.dart';
+import '../thumbnail_trim.dart';
 import '../tool_manager.dart';
-import '../video_format_selector.dart';
+import '../format_policy.dart';
+import '../memory_trim.dart';
+import '../video_codec.dart';
 import '../community_posts.dart';
 import '../blocked_groups.dart';
 import '../explore_filters.dart';
@@ -226,6 +232,8 @@ class AppController extends ChangeNotifier {
   /// The video last opened from a Piped or Invidious server, so a failure
   /// falls back to YouTube (or the other one) once.
   String? _openedVia;
+  /// The video playing from its downloaded file, if any.
+  String? _openedLocal;
   /// The servers tried for the video being opened, and the 429 YouTube
   /// answered it with, which lets both be tried whatever 播放来源 says.
   final _relaysTried = <RelayKind>{};
@@ -243,14 +251,14 @@ class AppController extends ChangeNotifier {
     if (item == null || item.isLive || _repository == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
     CastSource? source;
     try {
-      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format)).info);
+      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format)).info, settings: _playback);
     } catch (e) {
       logInfo('投屏：yt-dlp 解析失败：$e');
     }
     for (final kind in RelayKind.values) {
       if (source != null) break;
       try {
-        source = castSourceFromRelay(await (kind == RelayKind.piped ? _piped.fetch(item.id) : _invidious.fetch(item.id)));
+        source = castSourceFromRelay(await (kind == RelayKind.piped ? _piped.fetch(item.id) : _invidious.fetch(item.id)), settings: _playback);
       } catch (e) {
         logInfo('投屏：$kind 解析失败：$e');
       }
@@ -321,6 +329,7 @@ class AppController extends ChangeNotifier {
   int _lastDrops = 0;
   DateTime _lastDropLog = DateTime(0);
   Timer? _dropTimer;
+  Timer? _thumbnailTrimTimer;
   final _recovery = PlaybackRecovery();
   /// The last position actually played, which survives a failed stream.
   Duration _lastPosition = Duration.zero;
@@ -476,6 +485,8 @@ class AppController extends ChangeNotifier {
         videoController = controller;
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
+        _thumbnailTrimTimer?.cancel();
+        _thumbnailTrimTimer = Timer.periodic(const Duration(hours: 1), (_) => _trimThumbnails());
         ready = true;
         status = ignoredOptions.isEmpty ? tr('就绪 · 解码方式将在播放时验证') : tr('就绪 · 已忽略不支持的设置：{0}', [ignoredOptions.join(', ')]);
         error = null;
@@ -485,6 +496,7 @@ class AppController extends ChangeNotifier {
       // Do not block the UI while checking newer releases.
       if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
       unawaited(_readWindowsVideoInfo());
+      unawaited(_trimThumbnails());
       unawaited(downloads?.load());
       unawaited(account?.load());
       logInfo('组件就绪 · libmpv ${manager.libmpv.current?.label ?? '内置'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
@@ -494,6 +506,26 @@ class AppController extends ChangeNotifier {
         status = tr('初始化失败');
         logError('初始化失败', e);
       });
+    }
+  }
+
+  /// Keeps the thumbnail cache under its cap, at startup and then hourly;
+  /// skipped while a video plays.
+  Future<void> _trimThumbnails() async {
+    final directory = thumbnailDirectory;
+    if (_disposed || directory == null || playing != null) return;
+    try {
+      final freed = await trimThumbnails(directory, thumbnailCapBytes(settings.cacheLimitGb));
+      if (freed > 0) {
+        logInfo('缩略图缓存超出上限，已清理 ${formatBytes(freed)}');
+        final manager = _cacheManager;
+        if (manager != null) {
+          final left = await manager.size(settings);
+          _update(() => cacheBytes = left);
+        }
+      }
+    } catch (e) {
+      logInfo('清理缩略图缓存失败：$e');
     }
   }
 
@@ -535,10 +567,18 @@ class AppController extends ChangeNotifier {
       );
 
   /// Queues [item] for download, and says so.
-  void download(VideoItem item, DownloadQuality quality) {
+  void download(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
     final manager = downloads;
     if (manager == null || item.isLive || item.isUpcoming) return _notice(tr('直播无法下载'));
-    _notice(manager.add(item, quality) == null ? tr('已在下载列表中') : tr('已加入下载'));
+    _notice(manager.add(item, quality, selection: selection) == null ? tr('已在下载列表中') : tr('已加入下载'));
+  }
+
+  /// The streams [videoId] can be downloaded as, from the extraction the
+  /// player shares (one yt-dlp run per video).
+  Future<DownloadFormats> downloadFormats(String videoId) async {
+    final repository = _repository;
+    if (repository == null) throw StateError(tr('组件尚未就绪'));
+    return DownloadFormats.parse((await repository.streams.resolve(videoId, _format)).info);
   }
 
   /// The proxy everything currently goes through.
@@ -552,17 +592,44 @@ class AppController extends ChangeNotifier {
     if (ifStale && now.difference(_proxyRead) < const Duration(seconds: 30)) return;
     _proxyRead = now;
     final next = await NetworkProxy.resolve(settings.proxyMode, settings.proxyAddress);
-    appHttpOverrides.proxy = next;
-    if (next.url != proxy.url) logInfo(next.url == null ? '网络：直接连接' : '网络：使用代理 ${next.url}');
+    await _routeThroughBridge(next);
+    appHttpOverrides.endpoint = proxyEndpoint;
+    appHttpOverrides.useEnvironment = settings.proxyMode == ProxyMode.system;
+    if (next.url != proxy.url) logInfo(next.url == null ? '网络：直接连接' : '网络：使用代理 ${next.redacted}');
     proxy = next;
     final player = this.player;
     if (player != null) await _applyProxy(player);
   }
 
+  SocksBridge? _bridge;
+  String? _bridgeFor;
+
+  /// `host:port` of the HTTP proxy libmpv and dart:io use: the proxy itself,
+  /// or the local bridge to a SOCKS one. A SOCKS proxy whose bridge could
+  /// not start gets a dead port, so requests fail instead of going direct.
+  String? proxyEndpoint;
+
+  /// Starts, replaces or stops the bridge so it matches [next].
+  Future<void> _routeThroughBridge(NetworkProxy next) async {
+    final old = _bridge;
+    if (next.isSocks && next.url == _bridgeFor && old != null) return;
+    _bridge = null;
+    _bridgeFor = next.url;
+    if (next.isSocks) {
+      try {
+        _bridge = await SocksBridge.start(next.url!);
+      } catch (e) {
+        logError('无法启动本地 SOCKS 转发，网络请求将失败而不是直连', e);
+      }
+    }
+    proxyEndpoint = next.isSocks ? (_bridge?.hostPort ?? '127.0.0.1:1') : next.isHttp ? next.hostPort : null;
+    await old?.close();
+  }
+
   /// libmpv's streams can only use an HTTP proxy.
   Future<void> _applyProxy(Player player) async {
     final platform = player.platform;
-    if (platform is NativePlayer) await platform.setProperty('http-proxy', proxy.isHttp ? proxy.url! : '');
+    if (platform is NativePlayer) await platform.setProperty('http-proxy', proxyEndpoint == null ? '' : 'http://$proxyEndpoint');
   }
 
   Future<void> search(String value, {SearchFilter? filter}) async {
@@ -575,7 +642,7 @@ class AppController extends ChangeNotifier {
     }
     if (query != _query || mode != PageMode.explore || onWatchPage) _remember();
     final keep = _keepsPlaying;
-    if (!keep) player?.pause();
+    if (!keep) _unload();
     final repository = _repository!;
     final chosen = filter ?? searchFilter;
     if (preferences.recordHistory) unawaited(searchHistory?.add(query));
@@ -1042,13 +1109,22 @@ class AppController extends ChangeNotifier {
   /// subtitles from the saved extraction without asking YouTube again.
   /// [resolved] false, or a failed resolution, leaves everything to
   /// ytdl_hook as before.
-  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true}) async {
+  Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
     final player = this.player!;
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
-      final local = resolved && piped && !item.isLive ? downloads?.localVideo(item.id) : null;
-      if (local != null) return await _openLocal(item, serial, local, start: start, play: play);
+      final local = allowLocal && resolved && piped && !item.isLive ? downloads?.localVideo(item.id) : null;
+      _openedLocal = null;
+      // A download in a codec the playback rules disable (AV1 decoded in
+      // software, say) streams instead, in a codec the rules allow.
+      final localCodec = local?.videoCodec;
+      if (local != null && !FormatPolicy.allows(settings, localCodec)) {
+        logInfo('${item.id} 的下载文件是 ${localCodec!.label}，播放规则已禁用该编码，改为在线播放');
+        _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [localCodec.label]));
+      } else if (local != null) {
+        return await _openLocal(item, serial, local, start: start, play: play);
+      }
       final format = _format;
       _openedVia = null;
       if (resolved && piped) {
@@ -1099,7 +1175,7 @@ class AppController extends ChangeNotifier {
       }
       _lastPosition = start ?? Duration.zero;
       _openedResolved = video == null ? null : item.id;
-      if (video != null) _update(() => availableHeights = video!.heights);
+      if (video != null) _update(() => availableHeights = video!.heightsFor(settings));
       await player.open(Media(direct ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
@@ -1129,6 +1205,7 @@ class AppController extends ChangeNotifier {
       if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
     }
     _lastPosition = start ?? Duration.zero;
+    _openedLocal = item.id;
     await player.open(Media(local.file.path, start: start), play: play);
     if (serial == _playSerial) _tracking = item;
     _mpvLogLines = 0;
@@ -1215,9 +1292,9 @@ class AppController extends ChangeNotifier {
       final named = source.relay == kind && source.isCustom ? (kind == RelayKind.piped ? settings.pipedServer : settings.invidiousServer) : '';
       final server = named.isEmpty ? null : named;
       final video = await (kind == RelayKind.piped ? _piped.fetch(item.id, server: server) : _invidious.fetch(item.id, server: server));
-      final address = video.edl(settings);
+      final address = video.edl(_playback);
       if (address == null) return null;
-      _update(() => availableHeights = video.heights);
+      _update(() => availableHeights = video.heightsFor(settings));
       logInfo('从 $name ${video.server} 播放 ${item.id}，用时 ${watch.elapsedMilliseconds} ms');
       return address;
     } catch (e) {
@@ -1229,6 +1306,7 @@ class AppController extends ChangeNotifier {
   /// Shows why [item] cannot play and acts on the cause.
   void _fail(VideoItem item, PlaybackFailure failure) {
     logError('播放失败 ${item.id}（${failure.kind.name}）：${failure.detail}');
+    if (failure.kind == FailureKind.noFormat) failure = PlaybackFailure(failure.kind, failure.detail, disabled: FormatPolicy.disabledNames(settings));
     switch (failure.kind) {
       case FailureKind.rateLimited:
         _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
@@ -1655,7 +1733,19 @@ class AppController extends ChangeNotifier {
   /// The audio outputs libmpv reports, "auto" first.
   List<AudioDevice> get audioDevices => player?.state.audioDevices ?? const [];
 
-  String get _format => VideoFormatSelector.expressionFor(settings);
+  String get _format => FormatPolicy.expression(_playback);
+
+  /// [settings] as playback picks streams with them: automatic quality is
+  /// capped at the tallest display.
+  PlayerSettings get _playback => FormatPolicy.forDisplay(settings, _displayHeight);
+
+  int get _displayHeight {
+    var tallest = 0.0;
+    for (final display in PlatformDispatcher.instance.displays) {
+      tallest = max(tallest, display.size.height);
+    }
+    return tallest.round();
+  }
 
   /// Starts resolving [item] before it is opened, such as when the pointer
   /// rests on its card.
@@ -1675,7 +1765,7 @@ class AppController extends ChangeNotifier {
           // The extraction playback uses carries the details too.
           final resolved = await _repository!.streams.resolve(item.id, _format);
           loaded = resolved.details;
-          if (serial == _playSerial) _update(() => availableHeights = resolved.heights);
+          if (serial == _playSerial) _update(() => availableHeights = resolved.heightsFor(settings));
         } catch (_) {
           loaded = await _repository!.details(item.id);
         }
@@ -1748,7 +1838,24 @@ class AppController extends ChangeNotifier {
       mini = false;
       playbackError = null;
     });
-    player?.pause();
+    _unload();
+  }
+
+  /// Closes the video in libmpv rather than pausing it, so its cache,
+  /// decoded frames and textures are freed, then hands the freed memory back
+  /// to Windows. Coming back to the video opens it again where it was left.
+  void _unload() {
+    final player = this.player;
+    if (player == null) return;
+    unawaited(player.stop().then((_) => releaseMemory()));
+  }
+
+  /// Hands memory freed by closed videos back to Windows.
+  void releaseMemory() {
+    if (!Platform.isWindows) return;
+    final before = ProcessInfo.currentRss;
+    releaseFreedMemory();
+    logInfo('已释放空闲内存：${before >> 20} MB → ${ProcessInfo.currentRss >> 20} MB');
   }
 
   /// Opens [target]; 返回 comes back to where this was.
@@ -1779,7 +1886,7 @@ class AppController extends ChangeNotifier {
         playbackError = null;
       }
     });
-    if (!keep) player?.pause();
+    if (!keep) _unload();
   }
 
   /// What is on screen now, as 返回 would come back to it.
@@ -2241,8 +2348,23 @@ class AppController extends ChangeNotifier {
     _applyAppearanceGlobals(next);
     if (next.systemAccent && windowsAccent == null) unawaited(refreshWindowsAccent());
     _update(() => appearance = next);
+    // The text size slider saves at every step; only the last one is written.
+    _appearanceSaveTimer?.cancel();
+    _appearanceSaveTimer = Timer(const Duration(milliseconds: 500), () => unawaited(_writeAppearance()));
+  }
+
+  Timer? _appearanceSaveTimer;
+
+  /// Writes the appearance now if a save is still waiting for its delay.
+  Future<void> _flushAppearance() async {
+    if (!(_appearanceSaveTimer?.isActive ?? false)) return;
+    _appearanceSaveTimer!.cancel();
+    await _writeAppearance();
+  }
+
+  Future<void> _writeAppearance() async {
     try {
-      await _appearanceStore?.save(next);
+      await _appearanceStore?.save(appearance);
     } on FileSystemException {
       _notice(tr('外观设置未能保存，本次运行仍然生效。'));
     }
@@ -2385,6 +2507,15 @@ class AppController extends ChangeNotifier {
         settings = settings.copyWith(decoderResults: decodeStates);
         unawaited(_settingsStore?.save(settings));
       }
+      // A download older than its codec in the sidecar: only libmpv can
+      // tell it is in a codec the playback rules disable.
+      final item = playing;
+      final fileCodec = VideoCodec.of(normalized);
+      if (item != null && _openedLocal == item.id && !FormatPolicy.allows(settings, fileCodec)) {
+        logInfo('${item.id} 的下载文件是 ${fileCodec!.label}，播放规则已禁用该编码，改为在线播放');
+        _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [fileCodec.label]));
+        unawaited(_open(item, _playSerial, start: player?.state.position, allowLocal: false));
+      }
     } catch (_) {
       _update(() => currentHwdec = tr('尚未验证'));
     }
@@ -2395,6 +2526,7 @@ class AppController extends ChangeNotifier {
   Future<void> _checkDrops() async {
     final platform = player?.platform;
     if (platform is! NativePlayer || _tracking == null || !(player?.state.playing ?? false)) return;
+    await _logMemory(platform);
     try {
       final drops = int.tryParse(await platform.getProperty('frame-drop-count')) ?? 0;
       final added = drops - _lastDrops;
@@ -2406,6 +2538,28 @@ class AppController extends ChangeNotifier {
         values.add('$name=${await platform.getProperty(name)}');
       }
       logInfo('10 秒内丢帧 $added（共 $drops）：${values.join(' ')}');
+    } catch (_) {
+      // Statistics are best effort.
+    }
+  }
+
+  DateTime _lastMemoryLog = DateTime(0);
+
+  /// Logs the app's memory and what libmpv's cache holds every two minutes
+  /// while a video plays, so the log shows where memory goes.
+  Future<void> _logMemory(NativePlayer platform) async {
+    if (DateTime.now().difference(_lastMemoryLog) < const Duration(minutes: 2)) return;
+    _lastMemoryLog = DateTime.now();
+    try {
+      String mb(Object? bytes) => bytes is num ? '${(bytes / (1 << 20)).round()} MB' : '?';
+      final cache = jsonDecode(await platform.getProperty('demuxer-cache-state'));
+      final ahead = cache is Map ? cache['fw-bytes'] : null;
+      final total = cache is Map ? cache['total-bytes'] : null;
+      final values = <String>[];
+      for (final name in ['video-params/w', 'video-params/h', 'video-codec', 'hwdec-current', 'video-out-params/pixelformat']) {
+        values.add('$name=${await platform.getProperty(name)}');
+      }
+      logInfo('内存：进程 ${mb(ProcessInfo.currentRss)}（峰值 ${mb(ProcessInfo.maxRss)}）· 播放缓存 ${mb(total)}（前方 ${mb(ahead)}）· 图片缓存 ${mb(PaintingBinding.instance.imageCache.currentSizeBytes)} · ${values.join(' ')}');
     } catch (_) {
       // Statistics are best effort.
     }
@@ -2434,8 +2588,12 @@ class AppController extends ChangeNotifier {
     try {
       await manager.prepare(next);
       final migrate = await confirmMigrate(target.path);
-      if (migrate == true) await manager.migrate(settings, next);
-      await saveSettings(next);
+      // The old folders are deleted only after the new location is saved.
+      if (migrate == true) {
+        await manager.migrate(settings, next, commit: () => saveSettings(next));
+      } else {
+        await saveSettings(next);
+      }
       _update(() => cacheBytes = 0);
       _notice(tr('缓存位置已保存。yt-dlp 缓存在下一次搜索时使用新位置。'));
     } on FileSystemException catch (error) {
@@ -2473,6 +2631,8 @@ class AppController extends ChangeNotifier {
     _shutDown = true;
     _saveProgress();
     await library?.flush();
+    await downloads?.flush();
+    await _flushAppearance();
     for (final subscription in _playerSubscriptions) {
       await subscription.cancel();
     }
@@ -2481,6 +2641,7 @@ class AppController extends ChangeNotifier {
     await player?.pause();
     await player?.dispose();
     logInfo('YTPlus 正常退出');
+    await AppLog.current?.flush();
   }
 
   /// A summary for bug reports; it names no account, video or file
@@ -2496,7 +2657,7 @@ class AppController extends ChangeNotifier {
       'yt-dlp ${tools?.ytDlpVersion ?? '未安装'}',
       'Deno ${tools?.denoVersion ?? '未安装'}',
       tr('硬件解码设置 {0} · 当前 {1} · {2}', [settings.hwdec, currentCodec, currentHwdec]),
-      tr('画质上限 {0} · 编码 {1} · 音质 {2}', [settings.maxHeight == 0 ? tr('自动') : '${settings.maxHeight}p', settings.codec.label, settings.audioQuality.label]),
+      tr('画质上限 {0} · 播放策略 {1} · 禁用编码 {2} · 音质 {3}', [settings.maxHeight == 0 ? tr('自动') : '${settings.maxHeight}p', settings.strategy.label, FormatPolicy.disabledNames(settings).isEmpty ? tr('无') : FormatPolicy.disabledNames(settings), settings.audioQuality.label]),
       tr('缓存 {0} · {1} 秒 · {2} MB', [settings.cacheMode, settings.cacheSeconds, settings.cacheMemoryMb]),
       tr('数据目录 {0}', [directories?.root.path ?? tr('未知')]),
     ].join('\n');
@@ -2508,11 +2669,14 @@ class AppController extends ChangeNotifier {
     _stallTimer?.cancel();
     _sleepTimer?.cancel();
     _dropTimer?.cancel();
+    unawaited(_flushAppearance());
+    _thumbnailTrimTimer?.cancel();
     for (final subscription in _playerSubscriptions) {
       unawaited(subscription.cancel());
     }
     _saveProgress();
     unawaited(_relay?.close());
+    unawaited(_bridge?.close());
     cast.dispose();
     account?.dispose();
     downloads?.dispose();

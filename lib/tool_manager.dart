@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'app_directories.dart';
 import 'ffmpeg_component.dart';
 import 'libmpv_updates.dart';
+import 'process_runner.dart';
+import 'version_order.dart';
 import 'l10n/l10n.dart';
 
 class ToolPaths {
@@ -110,7 +112,7 @@ class ToolManager {
         .whereType<Directory>()
         .where((d) => !d.path.endsWith('.partial') && !File('${d.path}$_separator$_failedMarker').existsSync())
         .toList()
-      ..sort((a, b) => b.path.compareTo(a.path));
+      ..sort((a, b) => compareVersionFolders(a.path, b.path));
   }
 
   static const _failedMarker = 'failed';
@@ -266,7 +268,7 @@ class ToolManager {
     try {
       final file = await _downloadYtDlp(release, partial);
       // A build that cannot even report its version is never used.
-      final check = await Process.run(file.path, ['--version']).timeout(const Duration(seconds: 30));
+      final check = await runWithTimeout(file.path, ['--version'], timeout: const Duration(seconds: 30));
       if (check.exitCode != 0) throw StateError('yt-dlp $tag failed its self-check');
       await partial.rename(dest.path);
     } catch (_) {
@@ -448,7 +450,7 @@ class ToolManager {
     try {
       final written = await _extractFfmpeg(archive, partial);
       if (!written.contains('ffmpeg.exe') || !written.contains('ffprobe.exe')) throw StateError('ffmpeg archive lacks ffmpeg.exe or ffprobe.exe');
-      final check = await Process.run('${partial.path}${_separator}ffmpeg.exe', ['-version']).timeout(const Duration(seconds: 30));
+      final check = await runWithTimeout('${partial.path}${_separator}ffmpeg.exe', ['-version'], timeout: const Duration(seconds: 30));
       if (check.exitCode != 0) throw StateError('ffmpeg $folder failed its self-check');
       await partial.rename(dest.path);
     } catch (_) {

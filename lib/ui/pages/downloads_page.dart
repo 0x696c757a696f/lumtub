@@ -7,31 +7,28 @@ import 'package:flutter/material.dart';
 import '../../app/app_controller.dart';
 import '../../downloads/download_manager.dart';
 import '../../downloads/download_models.dart';
+import '../../downloads/download_selection.dart';
 import '../../l10n/l10n.dart';
 import '../../models.dart';
+import '../download_dialog.dart';
 import '../ffmpeg_dialog.dart';
 import '../common.dart';
 import '../theme.dart';
 
-/// Asks which quality to download [item] in, then queues it.
+/// Asks what to download [item] as, then queues it.
 Future<void> showDownloadChoice(BuildContext context, AppController controller, VideoItem item) async {
-  final quality = await showDialog<DownloadQuality>(
+  final choice = await showDialog<DownloadChoice>(
     context: context,
-    builder: (context) => SimpleDialog(
-      title: Text(tr('下载画质')),
-      children: [
-        for (final q in DownloadQuality.values)
-          SimpleDialogOption(onPressed: () => Navigator.pop(context, q), child: Text(q.label)),
-        if (controller.downloads?.canMerge == false)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-            child: Text(tr('没有 ffmpeg 时无法合并画面和声音，视频会下载为 YouTube 提供的单文件格式（通常为 360p）。首次选择高画质时可以按需安装 ffmpeg。'), style: context.text.bodySmall),
-          ),
-      ],
+    builder: (context) => DownloadDialog(
+      title: item.title,
+      loadFormats: () => controller.downloadFormats(item.id),
+      defaults: controller.downloads?.defaults ?? const DownloadDefaults(),
+      canMerge: controller.downloads?.canMerge ?? false,
     ),
   );
-  if (quality == null || !context.mounted) return;
-  if (await ensureFfmpegForDownload(context, controller, quality)) controller.download(item, quality);
+  if (choice == null || !context.mounted) return;
+  if (choice.defaults != null) unawaited(controller.downloads?.setDefaults(choice.defaults!));
+  if (await ensureFfmpegForDownload(context, controller, choice.quality)) controller.download(item, choice.quality, selection: choice.selection);
 }
 
 /// Shows [path] in Windows Explorer; a file is selected in its folder.
@@ -49,6 +46,11 @@ class DownloadsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final manager = controller.downloads;
     if (manager == null) return const SizedBox.shrink();
+    // Progress ticks reach only this page, not the whole app.
+    return ListenableBuilder(listenable: Listenable.merge([manager, manager.progress]), builder: (context, _) => _page(context, manager));
+  }
+
+  Widget _page(BuildContext context, DownloadManager manager) {
     final tasks = manager.tasks;
     return CustomScrollView(slivers: [
       SliverToBoxAdapter(
@@ -128,7 +130,7 @@ class _DownloadTile extends StatelessWidget {
       case DownloadStatus.done:
         final file = task.filePath == null ? null : File(task.filePath!);
         final size = file != null && file.existsSync() ? ' · ${formatBytes(file.lengthSync())}' : '';
-        return '${tr('已完成')} · ${task.quality.label}$size';
+        return '${tr('已完成')} · ${task.qualityLabel}$size';
       case DownloadStatus.failed:
         return tr('下载失败：{0}', [task.error ?? '']);
       case DownloadStatus.cancelled:

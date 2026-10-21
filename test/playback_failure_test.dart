@@ -25,6 +25,14 @@ void main() {
     expect(PlaybackFailure.classify(['odd']).message, 'odd');
   });
 
+  test('names the disabled codecs when no stream matches the format rules', () {
+    final failure = PlaybackFailure.classify(['ERROR: [youtube] x: Requested format is not available. Use --list-formats for a list of available formats']);
+    expect(failure.kind, FailureKind.noFormat);
+    expect(failure.retryable, isFalse);
+    final named = PlaybackFailure(failure.kind, failure.detail, disabled: 'AV1、VP9');
+    expect(named.message, startsWith('没有符合格式规则的可播放视频流（已禁用：AV1、VP9）。可在设置的「视频设置」中调整。'));
+  });
+
   test('says which servers were tried after a 429', () {
     final limited = PlaybackFailure.classify(['HTTP Error 429']);
     final tried = PlaybackFailure(limited.kind, limited.detail, tried: const ['Piped', 'Invidious']);

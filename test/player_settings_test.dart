@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/decoder_status.dart';
 import 'package:ytplus/player_settings.dart';
+import 'package:ytplus/video_codec.dart';
 
 void main() {
   test('invalid persisted values return safe defaults', () {
@@ -68,7 +69,27 @@ void main() {
   test('reads the switches of earlier builds', () {
     final settings = PlayerSettings.fromJson({'autoplayNext': false, 'autoSelectCodec': false});
     expect(settings.playOrder, PlayOrder.pause);
-    expect(settings.codec, CodecPreference.any);
+    expect(settings.strategy, PlaybackStrategy.quality);
+  });
+
+  test('migrates the old preferred codec to a strategy', () {
+    expect(PlayerSettings.fromJson({'codec': 'any'}).strategy, PlaybackStrategy.quality);
+    for (final old in ['auto', 'avc1', 'vp9', 'av01']) {
+      expect(PlayerSettings.fromJson({'codec': old}).strategy, PlaybackStrategy.auto);
+    }
+    expect(PlayerSettings.fromJson(const {}).strategy, PlaybackStrategy.auto);
+    expect(PlayerSettings.fromJson(const {}).disabledCodecs, isEmpty);
+    expect(PlayerSettings.fromJson({'strategy': 'bogus'}).strategy, PlaybackStrategy.auto);
+  });
+
+  test('strategy and disabled codecs survive a round trip by name', () {
+    const original = PlayerSettings(strategy: PlaybackStrategy.lowResource, disabledCodecs: {VideoCodec.av1, VideoCodec.vp8});
+    final json = jsonDecode(jsonEncode(original.toJson())) as Map<String, dynamic>;
+    expect(json['disabledCodecs'], ['av1', 'vp8']);
+    final restored = PlayerSettings.fromJson(json);
+    expect(restored.strategy, PlaybackStrategy.lowResource);
+    expect(restored.disabledCodecs, {VideoCodec.av1, VideoCodec.vp8});
+    expect(PlayerSettings.fromJson({'disabledCodecs': ['av1', 'nope', 3]}).disabledCodecs, {VideoCodec.av1});
   });
 
   test('new player preferences survive a round trip', () {

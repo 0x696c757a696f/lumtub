@@ -55,7 +55,7 @@ PipedVideo parseInvidiousVideo(String server, Map<String, dynamic> json) {
     final codec = RegExp(r'codecs="?([^",;]+)').firstMatch(type)?[1] ?? '';
     final size = RegExp(r'^(\d+)x(\d+)$').firstMatch('${format['size']}');
     final height = size != null ? int.parse(size[2]!) : int.tryParse(RegExp(r'^\d+').firstMatch('${format['qualityLabel'] ?? format['resolution']}')?[0] ?? '') ?? 0;
-    final stream = PipedStream.tryParse({
+    final stream = PipedStream.tryParse(trustedHosts: [host], {
       'url': address(format['url']),
       'codec': codec,
       'mimeType': mime,
@@ -76,7 +76,7 @@ PipedVideo parseInvidiousVideo(String server, Map<String, dynamic> json) {
     if (format is! Map) continue;
     final type = '${format['type']}';
     final size = RegExp(r'^(\d+)x(\d+)$').firstMatch('${format['size']}');
-    final stream = PipedStream.tryParse({
+    final stream = PipedStream.tryParse(trustedHosts: [host], {
       'url': address(format['url']),
       'codec': RegExp(r'codecs="?([^",;]+)').firstMatch(type)?[1] ?? '',
       'mimeType': type,

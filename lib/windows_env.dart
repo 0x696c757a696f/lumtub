@@ -2,6 +2,8 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
 
+import 'app_log.dart';
+
 typedef _SetEnvNative = Int32 Function(Pointer<Utf16>, Pointer<Utf16>);
 typedef _SetEnvDart = int Function(Pointer<Utf16>, Pointer<Utf16>);
 
@@ -27,5 +29,6 @@ void addToWindowsPath(Iterable<String> directories) {
 /// changed.
 Future<void> restartApp() async {
   await Process.start(Platform.resolvedExecutable, const [], mode: ProcessStartMode.detached);
+  await AppLog.current?.flush();
   exit(0);
 }

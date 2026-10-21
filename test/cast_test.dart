@@ -11,6 +11,8 @@ import 'package:ytplus/cast/dlna.dart';
 import 'package:ytplus/cast/mdns.dart';
 import 'package:ytplus/invidious_streams.dart';
 import 'package:ytplus/piped_streams.dart';
+import 'package:ytplus/player_settings.dart';
+import 'package:ytplus/video_codec.dart';
 
 const _description = '''<?xml version="1.0"?>
 <root xmlns="urn:schemas-upnp-org:device-1-0"><specVersion><major>1</major><minor>0</minor></specVersion>
@@ -377,6 +379,13 @@ void main() {
       expect(castSourceFromYtDlp({}), isNull);
     });
 
+    test('skips muxed streams in a disabled codec', () {
+      final info = {'formats': [format('22', height: 720), format('av1mux', height: 1080, v: 'av01.0.08M.08')]};
+      expect(castSourceFromYtDlp(info)?.url, 'https://v/22');
+      expect(castSourceFromYtDlp(info, settings: const PlayerSettings(disabledCodecs: {VideoCodec.h264}))?.url, 'https://v/av1mux');
+      expect(castSourceFromYtDlp({'formats': [format('22', height: 720)]}, settings: const PlayerSettings(disabledCodecs: {VideoCodec.h264})), isNull);
+    });
+
     test('picks a muxed stream from Piped and Invidious answers', () {
       final piped = PipedVideo.fromJson('https://p', {
         'videoStreams': [
@@ -419,6 +428,19 @@ void main() {
       expect(device.calls.last, 'stop');
       expect(controller.active, isFalse);
       expect(await controller.stop(), isNull);
+    });
+
+    test('polls less often while the window is hidden', () async {
+      final controller = CastController();
+      addTearDown(controller.dispose);
+      expect(controller.pollInterval, const Duration(seconds: 1));
+      controller.windowHidden = true;
+      expect(controller.pollInterval, const Duration(seconds: 5));
+      await controller.start(_FakeCastDevice(), const CastMedia(url: 'http://v', title: 'T'));
+      controller.windowHidden = false;
+      expect(controller.pollInterval, const Duration(seconds: 1));
+      await controller.stop();
+      expect(controller.active, isFalse);
     });
 
     test('a failed load leaves no session and reports the message', () async {

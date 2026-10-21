@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'map_limited.dart';
 
 /// A list of public servers (Piped, Invidious) that fetch videos from
 /// YouTube for the app: a built-in list plus one downloaded at most once a
@@ -45,6 +47,11 @@ abstract class RelayServers {
   Future<List<String>>? _ranking;
   final _timings = <String, int>{};
   final _tried = <String>{};
+  /// The fastest server of the last measurement, probed first next time.
+  String? _lastGood;
+
+  /// How many servers are probed at once.
+  static const probeConcurrency = 4;
 
   /// The built-in servers and those from the last downloaded list.
   List<String> get catalog => {...defaultServers, ..._catalog}.toList();
@@ -81,8 +88,10 @@ abstract class RelayServers {
     _timings.clear();
     _tried.clear();
     final before = catalog;
-    final others = update.then((all) => _measure(all.where((s) => !before.contains(s))));
-    await _measure(before);
+    final measuring = _measure(before);
+    // After the known servers, so no more than [probeConcurrency] probes run at once.
+    final others = Future.wait([update, measuring]).then((r) => _measure((r[0] as List<String>).where((s) => !before.contains(s))));
+    await measuring;
     if (_timings.isEmpty) {
       await others;
     } else {
@@ -105,14 +114,26 @@ abstract class RelayServers {
       _catalog = found.toList();
       _catalogAt = DateTime.now();
       logInfo('$name 服务器列表已更新，共 ${catalog.length} 个');
-      try {
-        await catalogFile?.parent.create(recursive: true);
-        await catalogFile?.writeAsString(jsonEncode({'updated': _catalogAt.toIso8601String(), 'servers': _catalog}));
-      } catch (e) {
-        logInfo('无法保存 $name 服务器列表：$e');
-      }
+      await _saveCatalog();
     }
     return catalog;
+  }
+
+  /// The catalog write in progress; writes run one after another so two
+  /// never interleave in the file.
+  Future<void> _saving = Future.value();
+  @visibleForTesting
+  Future<void> get saved => _saving;
+
+  Future<void> _saveCatalog() => _saving = _saving.then((_) => _writeCatalog());
+
+  Future<void> _writeCatalog() async {
+    try {
+      await catalogFile?.parent.create(recursive: true);
+      await catalogFile?.writeAsString(jsonEncode({'updated': _catalogAt.toIso8601String(), 'servers': _catalog, if (_lastGood != null) 'last': _lastGood}));
+    } catch (e) {
+      logInfo('无法保存 $name 服务器列表：$e');
+    }
   }
 
   Future<void> _loadCatalog() async {
@@ -128,23 +149,35 @@ abstract class RelayServers {
           if (normalize('$s') case final server?) server,
       ];
       _catalogAt = DateTime.tryParse('${data['updated']}') ?? DateTime(0);
+      _lastGood = normalize('${data['last']}');
     } catch (_) {}
   }
 
-  Future<void> _measure(Iterable<String> servers) => Future.wait(servers.map((server) async {
-        final watch = Stopwatch()..start();
-        try {
-          final response = await client.get(healthUrl(server)).timeout(const Duration(seconds: 5));
-          if (isHealthy(response)) _timings[server] = watch.elapsedMilliseconds;
-        } catch (_) {}
-        _tried.add(server);
-      }));
+  /// Probes [servers], the last one that worked first, at most
+  /// [probeConcurrency] at a time.
+  Future<void> _measure(Iterable<String> servers) {
+    final list = servers.toList();
+    final last = _lastGood;
+    if (last != null && list.remove(last)) list.insert(0, last);
+    return mapLimited(list, probeConcurrency, (server) async {
+      final watch = Stopwatch()..start();
+      try {
+        final response = await client.get(healthUrl(server)).timeout(const Duration(seconds: 5));
+        if (isHealthy(response)) _timings[server] = watch.elapsedMilliseconds;
+      } catch (_) {}
+      _tried.add(server);
+    });
+  }
 
   List<String> _publish() {
     final ranked = _timings.keys.toList()..sort((a, b) => _timings[a]!.compareTo(_timings[b]!));
     logInfo(ranked.isEmpty ? '$name 服务器都无法连接' : '$name 服务器（按速度）：${ranked.take(5).map((s) => '$s ${_timings[s]} ms').join('，')}');
     _ranked = ranked;
     _rankedAt = DateTime.now();
+    if (ranked.isNotEmpty && ranked.first != _lastGood) {
+      _lastGood = ranked.first;
+      unawaited(_saveCatalog());
+    }
     return ranked;
   }
 

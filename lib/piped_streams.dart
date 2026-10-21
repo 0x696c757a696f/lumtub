@@ -4,9 +4,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'media_url_policy.dart';
+import 'format_policy.dart';
 import 'player_settings.dart';
 import 'relay_servers.dart';
-import 'video_format_selector.dart';
+import 'video_codec.dart';
 import 'l10n/l10n.dart';
 
 /// The public server networks that can fetch a video in place of YouTube.
@@ -15,15 +17,16 @@ enum RelayKind { piped, invidious }
 /// Where playback streams come from.
 enum PlaybackSource {
   /// The fastest working public Piped server.
-  pipedAuto('Piped · 自动选择服务器（默认）'),
+  pipedAuto('Piped · 自动选择服务器'),
   /// The Piped server the user named.
   pipedCustom('Piped · 指定服务器'),
   /// The fastest working public Invidious instance.
   invidiousAuto('Invidious · 自动选择实例'),
   /// The Invidious instance the user named.
   invidiousCustom('Invidious · 指定实例'),
-  /// Straight from YouTube through yt-dlp.
-  youtube('直接连接 YouTube');
+  /// Straight from YouTube through yt-dlp; the default, so no third party
+  /// learns what is watched unless YouTube refuses (429) or fails.
+  youtube('直接连接 YouTube（默认）');
 
   const PlaybackSource(this._label);
   final String _label;
@@ -87,10 +90,12 @@ class PipedStream {
   /// The container's MIME type, such as video/mp4, when the server gave one.
   final String mime;
 
-  static PipedStream? tryParse(Object? raw) {
+  /// The stream in [raw], or null when its address is not an allowed media
+  /// address (see [isAllowedMediaUrl]; [trustedHosts] are the server's own).
+  static PipedStream? tryParse(Object? raw, {Iterable<String> trustedHosts = const []}) {
     if (raw is! Map) return null;
     final url = raw['url']?.toString() ?? '';
-    if (!url.startsWith('https://')) return null;
+    if (!isAllowedMediaUrl(url, trustedHosts: trustedHosts)) return null;
     var codec = (raw['codec']?.toString() ?? '').toLowerCase();
     if (codec.startsWith('vp09')) codec = 'vp9';
     final mime = raw['mimeType']?.toString() ?? '';
@@ -111,35 +116,46 @@ class PipedVideo {
   final List<PipedStream> muxed;
   final bool live;
 
-  factory PipedVideo.fromJson(String server, Map<String, dynamic> json) => PipedVideo(
-        server: server,
-        video: [for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const []) PipedStream.tryParse(s)]
-            .whereType<PipedStream>()
-            .where((s) => s.videoOnly && s.height > 0)
-            .toList(),
-        audio: [for (final s in json['audioStreams'] is List ? json['audioStreams'] as List : const []) PipedStream.tryParse(s)].whereType<PipedStream>().toList(),
-        live: json['livestream'] == true,
-        muxed: [for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const []) PipedStream.tryParse(s)]
-            .whereType<PipedStream>()
-            .where((s) => !s.videoOnly && s.height > 0 && (s.mime.isEmpty || s.mime.contains('mp4')))
-            .toList(),
-      );
+  /// Streams are kept only on the server's host, its `proxyUrl` host or YouTube's.
+  factory PipedVideo.fromJson(String server, Map<String, dynamic> json) {
+    final trusted = {Uri.tryParse(server)?.host ?? '', Uri.tryParse('${json['proxyUrl']}')?.host ?? ''}..remove('');
+    PipedStream? parse(Object? s) => PipedStream.tryParse(s, trustedHosts: trusted);
+    return PipedVideo(
+      server: server,
+      video: [for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const []) parse(s)]
+          .whereType<PipedStream>()
+          .where((s) => s.videoOnly && s.height > 0)
+          .toList(),
+      audio: [for (final s in json['audioStreams'] is List ? json['audioStreams'] as List : const []) parse(s)].whereType<PipedStream>().toList(),
+      live: json['livestream'] == true,
+      muxed: [for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const []) parse(s)]
+          .whereType<PipedStream>()
+          .where((s) => !s.videoOnly && s.height > 0 && (s.mime.isEmpty || s.mime.contains('mp4')))
+          .toList(),
+    );
+  }
 
   List<int> get heights => ({for (final s in video) s.height}.toList()..sort((a, b) => b.compareTo(a)));
 
+  /// [heights] of the streams [settings] allows.
+  List<int> heightsFor(PlayerSettings settings) => ({for (final s in video) if (FormatPolicy.allowsName(settings, s.codec)) s.height}.toList()..sort((a, b) => b.compareTo(a)));
+
   /// The video stream for [settings]: the highest allowed height in the
-  /// first preferred codec that has one, as the yt-dlp expression would pick.
+  /// first preferred allowed codec that has one, as the yt-dlp expression would pick.
   PipedStream? pickVideo(PlayerSettings settings) {
-    if (video.isEmpty) return null;
+    final streams = video.where((s) => FormatPolicy.allowsName(settings, s.codec)).toList();
+    if (streams.isEmpty) return null;
     final limit = settings.maxHeight;
-    var allowed = video.where((s) => limit == 0 || s.height <= limit).toList();
+    var allowed = streams.where((s) => limit == 0 || s.height <= limit).toList();
     if (allowed.isEmpty) {
-      final lowest = video.map((s) => s.height).reduce((a, b) => a < b ? a : b);
-      allowed = video.where((s) => s.height == lowest).toList();
+      final lowest = streams.map((s) => s.height).reduce((a, b) => a < b ? a : b);
+      allowed = streams.where((s) => s.height == lowest).toList();
     }
     int better(PipedStream a, PipedStream b) => a.height != b.height ? b.height.compareTo(a.height) : b.bitrate.compareTo(a.bitrate);
-    for (final codec in VideoFormatSelector.codecOrder(settings)) {
-      final matching = allowed.where((s) => s.codec.startsWith(codec)).toList()..sort(better);
+    // Quality strategy has no codec preference: the best picture wins.
+    if (settings.strategy == PlaybackStrategy.quality) return (allowed..sort(better)).first;
+    for (final codec in FormatPolicy.codecOrder(settings)) {
+      final matching = allowed.where((s) => VideoCodec.of(s.codec) == codec).toList()..sort(better);
       if (matching.isNotEmpty) return matching.first;
     }
     return (allowed..sort(better)).first;

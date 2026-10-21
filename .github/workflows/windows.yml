@@ -23,7 +23,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       # The bundled DLL is the baseline x86-64 build, which runs on every
       # x86-64 CPU; the app downloads the faster x86-64-v3 build at runtime
@@ -189,13 +189,13 @@ jobs:
           Move-Item (Join-Path $output 'YTPlus_Setup_x64.exe') "YTPlus_Setup_x64_$env:YTPLUS_VERSION.exe"
 
       - name: Upload portable ZIP
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: YTPlus-Windows-x64
           path: YTPlus_Windows_x64_*.zip
 
       - name: Upload installer
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: YTPlus-Setup-x64
           path: YTPlus_Setup_x64_*.exe
@@ -208,7 +208,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: dist
           merge-multiple: true

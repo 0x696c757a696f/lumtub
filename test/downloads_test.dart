@@ -146,10 +146,10 @@ void main() {
       await until(() => processes.length >= 2);
       await settle();
       expect(processes, hasLength(2));
-      // Oldest first.
-      expect(started[0].last, endsWith('aaaaaaaaaaa'));
+      // Oldest first; the two processes may start in either order.
+      expect(started.map((a) => a.last.substring(a.last.length - 11)).toSet(), {'aaaaaaaaaaa', 'bbbbbbbbbbb'});
       expect(m.taskFor('ccccccccccc')!.status, DownloadStatus.queued);
-      await processes[0].exit(1);
+      await processes[started.indexWhere((a) => a.last.endsWith('aaaaaaaaaaa'))].exit(1);
       await until(() => processes.length >= 3);
       expect(processes, hasLength(3));
       expect(m.taskFor('aaaaaaaaaaa')!.status, DownloadStatus.failed);

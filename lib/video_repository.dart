@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'app_directories.dart';
 import 'models.dart';
+import 'process_priority.dart';
 import 'stream_resolver.dart';
 import 'l10n/l10n.dart';
 
@@ -285,6 +286,7 @@ class VideoRepository {
 
   Stream<String> _lines(List<String> arguments) async* {
     final process = await Process.start(ytDlpPath, arguments, environment: _environment);
+    lowerPriority(process.pid);
     final stderr = StringBuffer();
     final errors = process.stderr.transform(utf8.decoder).listen(stderr.write);
     try {

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import '../app_log.dart';
 import '../models.dart';
+import '../process_priority.dart';
 import '../sponsor_block.dart';
 import 'download_models.dart';
 
@@ -289,7 +290,7 @@ class DownloadManager extends ChangeNotifier {
   List<String> arguments(DownloadTask task) {
     final o = options?.call() ?? const DownloadOptions();
     final ffmpeg = ffmpegDirectory?.call();
-    final audio = task.quality == DownloadQuality.audio;
+    final audio = task.quality.audioOnly;
     return [
       '--no-warnings',
       '--newline',
@@ -309,7 +310,8 @@ class DownloadManager extends ChangeNotifier {
       '--print', DownloadProgress.filePrint,
       '--write-info-json',
       '--format', task.quality.format(merge: ffmpeg != null),
-      if (ffmpeg != null && !audio) ...['--merge-output-format', 'mp4'],
+      // MP4 plays everywhere; MKV takes the codecs MP4 cannot hold.
+      if (ffmpeg != null && !audio) ...['--merge-output-format', 'mp4/mkv'],
       if (ffmpeg != null) ...['--ffmpeg-location', ffmpeg],
       if (!audio && o.subtitleLanguages != null) ...[
         '--write-subs',
@@ -317,6 +319,8 @@ class DownloadManager extends ChangeNotifier {
         '--sub-langs', o.subtitleLanguages!,
         '--sub-format', 'vtt/best',
         '--sleep-subtitles', '1',
+        // A subtitle YouTube refuses (429) is skipped, not the whole video.
+        '--ignore-errors',
       ],
       '--', task.item.url,
     ];
@@ -337,6 +341,7 @@ class DownloadManager extends ChangeNotifier {
       };
       final process = await _start(ytDlpPath, arguments(task), environment: env);
       _processes[id] = process;
+      lowerPriority(process.pid);
       // A pause that came while the process was starting.
       if (task.status != DownloadStatus.downloading) _stop(id);
       void line(String text) {

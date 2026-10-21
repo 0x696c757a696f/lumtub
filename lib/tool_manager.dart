@@ -5,7 +5,6 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
-import 'app_log.dart';
 import 'ffmpeg_component.dart';
 import 'libmpv_updates.dart';
 import 'l10n/l10n.dart';
@@ -249,12 +248,12 @@ class ToolManager {
     final release = await _release('yt-dlp/yt-dlp-nightly-builds');
     final tag = _safeTag(release['tag_name']);
     final group = Directory('${root.path}${_separator}yt-dlp');
+    await _removeSingleFileYtDlp(group);
     var dest = Directory('${group.path}$_separator$tag');
     // A version rolled back by the user is not installed again.
     if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
     if (await File('${dest.path}${_separator}yt-dlp.exe').exists()) {
-      final names = (release['assets'] as List? ?? const []).whereType<Map>().map((asset) => asset['name']?.toString());
-      if (await Directory('${dest.path}${_separator}_internal').exists() || !names.contains(ytDlpFolderAsset)) return;
+      if (await Directory('${dest.path}${_separator}_internal').exists()) return;
       // The same release as the single-file build in use, unpacked, beside
       // it: the running one cannot be replaced, and the newer name wins.
       dest = Directory('${dest.path}-dir');
@@ -277,25 +276,32 @@ class ToolManager {
     await _prune(group, keep: 3);
   }
 
-  /// The unpacked build (yt-dlp_win.zip) where the release has one: the
-  /// single-file yt-dlp.exe unpacks itself to a temp folder on every start,
-  /// which costs a second of CPU for each search or channel page.
+  /// The unpacked build (yt-dlp_win.zip). The single-file yt-dlp.exe
+  /// unpacks itself to a temp folder on every start, which costs a second
+  /// of CPU and a second process for each search or channel page.
   Future<File> _downloadYtDlp(Map<String, dynamic> release, Directory into) async {
-    final names = (release['assets'] as List? ?? const []).whereType<Map>().map((asset) => asset['name']?.toString());
-    if (names.contains(ytDlpFolderAsset)) {
+    final archive = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'));
+    await into.create(recursive: true);
+    await _extractZip(archive, into);
+    await archive.delete();
+    final exe = File('${into.path}${_separator}yt-dlp.exe');
+    if (!await exe.exists()) throw StateError('$ytDlpFolderAsset has no yt-dlp.exe');
+    return exe;
+  }
+
+  /// Deletes single-file yt-dlp builds once an unpacked one is installed.
+  /// One still running stays until the next launch.
+  Future<void> _removeSingleFileYtDlp(Directory group) async {
+    final versions = _versions(group);
+    bool unpacked(Directory d) => Directory('${d.path}${_separator}_internal').existsSync();
+    if (!versions.any(unpacked)) return;
+    for (final old in versions.where((d) => !unpacked(d))) {
       try {
-        final archive = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'));
-        await into.create(recursive: true);
-        await _extractZip(archive, into);
-        await archive.delete();
-        final exe = File('${into.path}${_separator}yt-dlp.exe');
-        if (await exe.exists()) return exe;
-      } catch (e) {
-        logInfo('yt-dlp 目录版安装失败，改用单文件版：$e');
+        await old.delete(recursive: true);
+      } on FileSystemException {
+        // In use; tried again next time.
       }
-      if (await into.exists()) await into.delete(recursive: true);
     }
-    return _downloadVerified(_asset(release, (name) => name == 'yt-dlp.exe'), into);
   }
 
   static const ytDlpFolderAsset = 'yt-dlp_win.zip';

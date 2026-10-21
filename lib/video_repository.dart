@@ -43,14 +43,22 @@ enum ChannelTab {
 /// process. Each page continues where the last stopped, so scrolling through
 /// n results costs O(n) instead of re-fetching earlier pages.
 class Listing {
-  Listing(this._open, {this.channel, this.timeout = const Duration(seconds: 60)});
+  Listing(this._open, {this.channel, this.timeout = const Duration(seconds: 60), this.idleTimeout = const Duration(seconds: 20)});
 
   final Stream<String> Function() _open;
   /// Filled in on videos, for listings that leave the channel out.
   final ChannelRef? channel;
   final Duration timeout;
+  /// How long the source may sit unread before it is closed. A yt-dlp
+  /// process waiting for the next page holds ~40 MB, and every list the
+  /// user has looked at would keep one; the next page then starts a new
+  /// one and skips what was already read.
+  final Duration idleTimeout;
 
   StreamIterator<String>? _lines;
+  Timer? _idle;
+  /// Lines read from the source so far, kept or not.
+  int _read = 0;
   int _found = 0;
   bool _done = false;
 
@@ -61,33 +69,56 @@ class Listing {
   /// stalls; other errors after the first entries end the listing.
   Stream<Object> next(int count) async* {
     if (_done) return;
-    final lines = _lines ??= StreamIterator(_open());
-    var taken = 0;
-    while (taken < count) {
-      final bool more;
-      try {
-        more = await lines.moveNext().timeout(timeout, onTimeout: () => throw TimeoutException(tr('yt-dlp 加载超时')));
-      } catch (e) {
-        close();
-        if (_found == 0 || e is TimeoutException) rethrow;
-        return;
+    _idle?.cancel();
+    try {
+      var lines = _lines;
+      if (lines == null) {
+        lines = _lines = StreamIterator(_open());
+        // Reopened after going idle: past what was already shown.
+        for (var skip = _read; skip > 0; skip--) {
+          if (!await _move(lines)) return;
+        }
       }
-      if (!more) {
-        _done = true;
-        return;
+      var taken = 0;
+      while (taken < count) {
+        if (!await _move(lines)) return;
+        _read++;
+        var entry = parseListingEntry(lines.current);
+        if (entry == null) continue;
+        final ref = channel;
+        if (entry is VideoItem && ref != null) entry = entry.withChannel(ref);
+        _found++;
+        taken++;
+        yield entry;
       }
-      var entry = parseListingEntry(lines.current);
-      if (entry == null) continue;
-      final ref = channel;
-      if (entry is VideoItem && ref != null) entry = entry.withChannel(ref);
-      _found++;
-      taken++;
-      yield entry;
+    } finally {
+      if (!_done) _idle = Timer(idleTimeout, _suspend);
     }
+  }
+
+  /// The next line, false at the end; see [next] for which errors fail.
+  Future<bool> _move(StreamIterator<String> lines) async {
+    final bool more;
+    try {
+      more = await lines.moveNext().timeout(timeout, onTimeout: () => throw TimeoutException(tr('yt-dlp 加载超时')));
+    } catch (e) {
+      close();
+      if (_found == 0 || e is TimeoutException) rethrow;
+      return false;
+    }
+    if (!more) _done = true;
+    return more;
+  }
+
+  void _suspend() {
+    final lines = _lines;
+    _lines = null;
+    unawaited(lines?.cancel());
   }
 
   void close() {
     _done = true;
+    _idle?.cancel();
     unawaited(_lines?.cancel());
   }
 }

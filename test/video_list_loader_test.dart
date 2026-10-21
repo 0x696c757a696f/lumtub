@@ -13,12 +13,19 @@ class _Source {
   final List<String> lines;
   int read = 0;
   int opened = 0;
+  int cancelled = 0;
 
   Stream<String> open() async* {
     opened++;
-    for (final line in lines) {
-      read++;
-      yield line;
+    var finished = false;
+    try {
+      for (final line in lines) {
+        read++;
+        yield line;
+      }
+      finished = true;
+    } finally {
+      if (!finished) cancelled++;
     }
   }
 }
@@ -62,6 +69,17 @@ void main() {
     expect(calls, 2);
     expect(loader.error, isNull);
     expect(loader.items, hasLength(1));
+  });
+
+  test('an idle listing closes its source and later resumes where it was', () async {
+    final source = _Source([for (var i = 0; i < 5; i++) _video(i)]);
+    final listing = Listing(source.open, idleTimeout: const Duration(milliseconds: 50));
+    expect((await listing.next(2).toList()).map((v) => (v as dynamic).title), ['0', '1']);
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    expect(source.cancelled, 1);
+    expect((await listing.next(2).toList()).map((v) => (v as dynamic).title), ['2', '3']);
+    expect(source.opened, 2);
+    listing.close();
   });
 
   test('stops at the limit and skips filtered videos', () async {

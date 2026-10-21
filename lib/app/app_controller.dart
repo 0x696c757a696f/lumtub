@@ -2481,6 +2481,7 @@ class AppController extends ChangeNotifier {
     await player?.pause();
     await player?.dispose();
     logInfo('YTPlus 正常退出');
+    await AppLog.current?.flush();
   }
 
   /// A summary for bug reports; it names no account, video or file

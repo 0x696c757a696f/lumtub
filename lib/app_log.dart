@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 /// The app version, set by the release build with `--dart-define`.
@@ -31,13 +32,41 @@ class AppLog {
     }
   }
 
+  static const flushDelay = Duration(milliseconds: 200);
+
+  final _pending = StringBuffer();
+  Timer? _timer;
+  /// Appends run one after another, so lines stay in order.
+  Future<void> _writes = Future.value();
+
+  /// Queues a line; lines are written together shortly after, or at once
+  /// for errors, without blocking the caller.
   void write(String level, String message) {
-    final line = '${DateTime.now().toIso8601String()} $level ${redact(message)}\n';
-    try {
-      file.writeAsStringSync(line, mode: FileMode.append, flush: true);
-    } on FileSystemException {
-      // A full or locked disk must not break playback.
+    _pending.write('${DateTime.now().toIso8601String()} $level ${redact(message)}\n');
+    if (level.trim() == 'ERROR') {
+      unawaited(flush());
+    } else {
+      _timer ??= Timer(flushDelay, () => unawaited(flush()));
     }
+  }
+
+  /// Completes once every line written so far is on disk; call it before
+  /// the app exits.
+  Future<void> flush() {
+    _timer?.cancel();
+    _timer = null;
+    if (_pending.isNotEmpty) {
+      final text = _pending.toString();
+      _pending.clear();
+      _writes = _writes.then((_) async {
+        try {
+          await file.writeAsString(text, mode: FileMode.append, flush: true);
+        } on FileSystemException {
+          // A full or locked disk must not break playback.
+        }
+      });
+    }
+    return _writes;
   }
 
   static final _secrets = [

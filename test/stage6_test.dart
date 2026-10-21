@@ -25,6 +25,7 @@ void main() {
       final log = (await AppLog.open(dir))!;
       log.write('INFO ', '第一行');
       log.write('ERROR', 'refresh_token=secret');
+      await log.flush();
       final text = await log.file.readAsString();
       expect(text, contains('INFO  第一行'));
       expect(text, contains('refresh_token=***'));
@@ -32,6 +33,27 @@ void main() {
       await AppLog.open(dir);
       expect(await File('${dir.path}/ytplus.old.log').exists(), isTrue);
       expect(await File('${dir.path}/ytplus.log').exists(), isFalse);
+      AppLog.current = null;
+    });
+
+    test('batches lines in order and flushes pending ones on demand', () async {
+      final dir = await Directory.systemTemp.createTemp('ytplus_log');
+      addTearDown(() => dir.delete(recursive: true));
+      final log = (await AppLog.open(dir))!;
+      for (var i = 0; i < 50; i++) {
+        log.write(i == 25 ? 'ERROR' : 'INFO ', 'line $i');
+      }
+      await log.flush();
+      final lines = await log.file.readAsLines();
+      expect(lines, hasLength(50));
+      for (var i = 0; i < 50; i++) {
+        expect(lines[i], endsWith(' line $i'));
+      }
+      expect(lines[3], contains('INFO  line 3'));
+      // Without an explicit flush the timer writes them.
+      log.write('INFO ', 'later');
+      await Future<void>.delayed(AppLog.flushDelay + const Duration(milliseconds: 300));
+      expect(await log.file.readAsLines(), hasLength(51));
       AppLog.current = null;
     });
   });

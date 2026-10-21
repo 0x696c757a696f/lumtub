@@ -5,6 +5,7 @@ import 'dart:io';
 import 'app_directories.dart';
 import 'models.dart';
 import 'process_priority.dart';
+import 'process_runner.dart';
 import 'stream_resolver.dart';
 import 'l10n/l10n.dart';
 
@@ -351,8 +352,7 @@ class VideoRepository {
       ];
 
   Future<VideoDetails> details(String videoId) async {
-    final result = await Process.run(ytDlpPath, detailsArguments(videoId), stdoutEncoding: utf8, stderrEncoding: utf8, environment: _environment)
-        .timeout(const Duration(seconds: 45));
+    final result = await runWithTimeout(ytDlpPath, detailsArguments(videoId), timeout: const Duration(seconds: 45), environment: _environment);
     final output = result.stdout.toString().trim();
     if (result.exitCode != 0 || output.isEmpty) {
       final err = result.stderr.toString().trim();

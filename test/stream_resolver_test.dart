@@ -127,4 +127,27 @@ void main() {
     expect(video.info['title'], 'Never Gonna Give You Up');
     expect(count.readAsLinesSync(), hasLength(2));
   });
+
+  test('resolves again when the format differs from the cached one', () async {
+    if (Platform.isWindows) return;
+    final dir = await Directory.systemTemp.createTemp('ytplus_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final count = File('${dir.path}/count');
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\necho x >> ${count.path}\ncat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'));
+    final first = await resolver.resolve('dQw4w9WgXcQ', 'best[height<=720]');
+    expect(first.format, 'best[height<=720]');
+    expect(identical(await resolver.resolve('dQw4w9WgXcQ', 'best[height<=720]'), first), isTrue);
+    final second = await resolver.resolve('dQw4w9WgXcQ', 'bestvideo+bestaudio');
+    expect(second.format, 'bestvideo+bestaudio');
+    expect(count.readAsLinesSync(), hasLength(2));
+    // A prefetch for the cached format is skipped, one for another is not.
+    resolver.prefetch('dQw4w9WgXcQ', 'bestvideo+bestaudio');
+    resolver.prefetch('dQw4w9WgXcQ', 'ytdl');
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    expect(count.readAsLinesSync(), hasLength(3));
+    expect((await resolver.cached('dQw4w9WgXcQ'))!.format, 'ytdl');
+  });
 }

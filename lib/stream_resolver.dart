@@ -5,6 +5,7 @@ import 'dart:io';
 import 'app_log.dart';
 import 'models.dart';
 import 'process_priority.dart';
+import 'process_runner.dart';
 
 /// What yt-dlp found for one video: every format, the ones picked for
 /// [format], and the metadata the watch page shows.
@@ -102,6 +103,8 @@ class StreamResolver {
 
   static const _keep = 12;
   final _results = <String, Future<ResolvedVideo>>{};
+  /// The format each entry of [_results] is being resolved with.
+  final _formats = <String, String>{};
 
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
@@ -126,7 +129,8 @@ class StreamResolver {
     final lowered = _lowered[videoId];
     if (lowered != null) restorePriority(lowered);
     final cached = _results[videoId];
-    if (cached != null) {
+    // Another format needs another extraction.
+    if (cached != null && _formats[videoId] == format) {
       return cached.then((video) => video.fresh ? video : _start(videoId, format), onError: (_) => _start(videoId, format));
     }
     return _start(videoId, format);
@@ -142,7 +146,7 @@ class StreamResolver {
   /// otherwise start one per card. While one runs, only the card asked for
   /// last waits its turn.
   void prefetch(String videoId, String format) {
-    if (_results.containsKey(videoId)) return;
+    if (_results.containsKey(videoId) && _formats[videoId] == format) return;
     if (_prefetching) {
       _nextPrefetch = (videoId, format);
       return;
@@ -163,18 +167,23 @@ class StreamResolver {
 
   /// Drops what is known about [videoId], for example after its streams
   /// failed to play.
-  void forget(String videoId) => _results.remove(videoId);
+  void forget(String videoId) {
+    _results.remove(videoId);
+    _formats.remove(videoId);
+  }
 
   Future<ResolvedVideo> _start(String videoId, String format, {bool background = false}) {
     final future = _run(videoId, format, background: background);
     _results.remove(videoId);
     _results[videoId] = future;
+    _formats[videoId] = format;
     while (_results.length > _keep) {
+      _formats.remove(_results.keys.first);
       _results.remove(_results.keys.first);
     }
     // A failure is not kept, so the next attempt runs yt-dlp again.
     future.then((_) {}, onError: (_) {
-      if (identical(_results[videoId], future)) _results.remove(videoId);
+      if (identical(_results[videoId], future)) forget(videoId);
     });
     return future;
   }
@@ -213,19 +222,18 @@ class StreamResolver {
   /// yt-dlp for [videoId]; [background] (the video id) runs it at low
   /// priority until [resolve] asks for that video.
   Future<ProcessResult> _ytDlp(String videoId, String format, {String? background}) async {
-    final process = await Process.start(ytDlpPath, arguments(videoId, format), environment: _environment);
-    if (background != null) {
-      lowerPriority(process.pid);
-      _lowered[background] = process.pid;
-    }
-    final out = process.stdout.transform(utf8.decoder).join();
-    final err = process.stderr.transform(utf8.decoder).join();
     try {
-      final code = await process.exitCode.timeout(const Duration(seconds: 45));
-      return ProcessResult(process.pid, code, await out, await err);
-    } on TimeoutException {
-      process.kill();
-      rethrow;
+      return await runWithTimeout(
+        ytDlpPath,
+        arguments(videoId, format),
+        timeout: const Duration(seconds: 45),
+        environment: _environment,
+        onStart: (process) {
+          if (background == null) return;
+          lowerPriority(process.pid);
+          _lowered[background] = process.pid;
+        },
+      );
     } finally {
       if (background != null) _lowered.remove(background);
     }

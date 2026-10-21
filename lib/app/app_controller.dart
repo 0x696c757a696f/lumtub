@@ -48,6 +48,7 @@ import '../ffmpeg_component.dart';
 import '../thumbnail_trim.dart';
 import '../tool_manager.dart';
 import '../format_policy.dart';
+import '../memory_trim.dart';
 import '../video_codec.dart';
 import '../community_posts.dart';
 import '../blocked_groups.dart';
@@ -641,7 +642,7 @@ class AppController extends ChangeNotifier {
     }
     if (query != _query || mode != PageMode.explore || onWatchPage) _remember();
     final keep = _keepsPlaying;
-    if (!keep) player?.pause();
+    if (!keep) _unload();
     final repository = _repository!;
     final chosen = filter ?? searchFilter;
     if (preferences.recordHistory) unawaited(searchHistory?.add(query));
@@ -1825,7 +1826,24 @@ class AppController extends ChangeNotifier {
       mini = false;
       playbackError = null;
     });
-    player?.pause();
+    _unload();
+  }
+
+  /// Closes the video in libmpv rather than pausing it, so its cache,
+  /// decoded frames and textures are freed, then hands the freed memory back
+  /// to Windows. Coming back to the video opens it again where it was left.
+  void _unload() {
+    final player = this.player;
+    if (player == null) return;
+    unawaited(player.stop().then((_) => releaseMemory()));
+  }
+
+  /// Hands memory freed by closed videos back to Windows.
+  void releaseMemory() {
+    if (!Platform.isWindows) return;
+    final before = ProcessInfo.currentRss;
+    releaseFreedMemory();
+    logInfo('已释放空闲内存：${before >> 20} MB → ${ProcessInfo.currentRss >> 20} MB');
   }
 
   /// Opens [target]; 返回 comes back to where this was.
@@ -1856,7 +1874,7 @@ class AppController extends ChangeNotifier {
         playbackError = null;
       }
     });
-    if (!keep) player?.pause();
+    if (!keep) _unload();
   }
 
   /// What is on screen now, as 返回 would come back to it.

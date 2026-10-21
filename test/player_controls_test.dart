@@ -70,6 +70,13 @@ class FakePlayer implements Player {
     _playing.add(false);
   }
 
+  /// Unloads the video, as libmpv's stop does.
+  @override
+  Future<void> stop({bool open = false}) async {
+    state = state.copyWith(playing: false);
+    _playing.add(false);
+  }
+
   @override
   Future<void> seek(Duration duration) async {
     seeks.add(duration);

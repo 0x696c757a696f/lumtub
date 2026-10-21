@@ -99,6 +99,7 @@ class _YtPlusAppState extends State<YtPlusApp> {
       // paused itself.
       onHide: () {
         unawaited(controller.setBackgroundAudioOnly(true));
+        if (controller.playing == null) controller.releaseMemory();
         final player = controller.player;
         if (!controller.preferences.pauseOnMinimize || player == null || !player.state.playing) return;
         _pausedByMinimize = true;

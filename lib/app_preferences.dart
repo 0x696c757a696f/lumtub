@@ -69,6 +69,7 @@ class AppPreferences {
     this.showRelated = true,
     this.expandDescription = false,
     this.autoCheckUpdates = true,
+    this.skipFfmpegPrompt = false,
     this.translateLanguage = 'zh-CN',
   });
 
@@ -155,6 +156,8 @@ class AppPreferences {
   final bool showRelated;
   final bool expandDescription;
   final bool autoCheckUpdates;
+  /// The user chose single-file downloads and not to be asked to install ffmpeg.
+  final bool skipFfmpegPrompt;
   /// The language 翻译 and the translated subtitle turn text into (a TranslationLanguage code).
   final String translateLanguage;
 
@@ -265,6 +268,7 @@ class AppPreferences {
     bool? showRelated,
     bool? expandDescription,
     bool? autoCheckUpdates,
+    bool? skipFfmpegPrompt,
     String? translateLanguage,
   }) =>
       AppPreferences(
@@ -318,6 +322,7 @@ class AppPreferences {
         showRelated: showRelated ?? this.showRelated,
         expandDescription: expandDescription ?? this.expandDescription,
         autoCheckUpdates: autoCheckUpdates ?? this.autoCheckUpdates,
+        skipFfmpegPrompt: skipFfmpegPrompt ?? this.skipFfmpegPrompt,
         translateLanguage: translateLanguage ?? this.translateLanguage,
       );
 
@@ -372,6 +377,7 @@ class AppPreferences {
         'showRelated': showRelated,
         'expandDescription': expandDescription,
         'autoCheckUpdates': autoCheckUpdates,
+        'skipFfmpegPrompt': skipFfmpegPrompt,
         'translateLanguage': translateLanguage,
       };
 
@@ -460,6 +466,7 @@ class AppPreferences {
       showRelated: flag('showRelated', d.showRelated),
       expandDescription: flag('expandDescription', d.expandDescription),
       autoCheckUpdates: flag('autoCheckUpdates', d.autoCheckUpdates),
+      skipFfmpegPrompt: flag('skipFfmpegPrompt', d.skipFfmpegPrompt),
       translateLanguage: TranslationLanguage.byCode(raw['translateLanguage']).code,
     );
   }

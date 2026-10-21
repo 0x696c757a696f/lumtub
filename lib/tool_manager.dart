@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
+import 'ffmpeg_component.dart';
 import 'libmpv_updates.dart';
 import 'l10n/l10n.dart';
 
@@ -146,6 +147,8 @@ class ToolManager {
     final errors = <String>[];
     for (final task in <(String, Future<void> Function())>[
       ('yt-dlp', _installYtDlp), ('Deno', _installDeno), ('libmpv', _installLibmpv),
+      // Never installed by an update check: only kept current once the user has it.
+      ('ffmpeg', () => installFfmpeg(onlyIfInstalled: true)),
     ]) {
       try {
         status(tr('检查 {0} 更新…', [task.$1]));
@@ -162,9 +165,9 @@ class ToolManager {
     }
   }
 
-  Future<Map<String, dynamic>> _release(String repository) async {
+  Future<Map<String, dynamic>> _release(String repository, {String? tag}) async {
     final response = await _client.get(
-      Uri.parse('https://api.github.com/repos/$repository/releases/latest'),
+      Uri.parse('https://api.github.com/repos/$repository/releases/${tag == null ? 'latest' : 'tags/$tag'}'),
       headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'YTPlus-Windows/0.1'},
     ).timeout(const Duration(seconds: 25));
     if (response.statusCode != 200) throw HttpException('GitHub API HTTP ${response.statusCode} for $repository');
@@ -180,13 +183,20 @@ class ToolManager {
     throw StateError('Matching release asset not found: ${release['tag_name']}');
   }
 
-  Future<File> _downloadVerified(Map<String, dynamic> asset, Directory into) async {
-    final assetName = asset['name']?.toString() ?? '';
+  Uri _assetUri(Map<String, dynamic> asset) {
     final uri = Uri.parse(asset['browser_download_url']?.toString() ?? '');
-    if (uri.scheme != 'https' || uri.host != 'github.com' || assetName.isEmpty) {
+    if (uri.scheme != 'https' || uri.host != 'github.com' || (asset['name']?.toString() ?? '').isEmpty) {
       throw const FormatException('Untrusted GitHub asset URL');
     }
-    final digest = asset['digest']?.toString() ?? '';
+    return uri;
+  }
+
+  /// Downloads [asset] into [into] and checks its SHA-256: [sha256Hex] when
+  /// given (from the release's checksum file), else the digest GitHub lists.
+  Future<File> _downloadVerified(Map<String, dynamic> asset, Directory into, {String? sha256Hex, void Function(int received, int? total)? onProgress}) async {
+    final assetName = asset['name']?.toString() ?? '';
+    final uri = _assetUri(asset);
+    final digest = sha256Hex == null ? asset['digest']?.toString() ?? '' : 'sha256:$sha256Hex';
     if (!RegExp(r'^sha256:[a-fA-F0-9]{64}$').hasMatch(digest)) {
       throw StateError('No trusted SHA-256 digest for $assetName');
     }
@@ -202,7 +212,12 @@ class ToolManager {
       if (result.statusCode != 200) throw HttpException('Download failed: HTTP ${result.statusCode}');
       final sink = temp.openWrite();
       try {
-        await sink.addStream(result.stream.timeout(const Duration(seconds: 90)));
+        var received = 0;
+        await sink.addStream(result.stream.timeout(const Duration(seconds: 90)).map((chunk) {
+          received += chunk.length;
+          onProgress?.call(received, result.contentLength);
+          return chunk;
+        }));
       } finally {
         await sink.close();
       }
@@ -331,6 +346,78 @@ class ToolManager {
       if (await partial.exists()) await partial.delete(recursive: true);
       rethrow;
     }
+  }
+
+  // ffmpeg: optional, installed on demand (see ffmpeg_component.dart).
+
+  /// The folder holding the newest installed ffmpeg and ffprobe, if any.
+  String? get ffmpegDirectory {
+    final exe = _findNewest('ffmpeg', 'ffmpeg.exe');
+    return exe == null ? null : File(exe).parent.path;
+  }
+
+  String? get ffmpegVersion => _versionOf(_findNewest('ffmpeg', 'ffmpeg.exe'));
+
+  /// Bytes on disk of the installed ffmpeg, or null without it.
+  int? get ffmpegBytes {
+    final dir = ffmpegDirectory;
+    if (dir == null) return null;
+    var total = 0;
+    for (final file in Directory(dir).listSync().whereType<File>()) {
+      total += file.lengthSync();
+    }
+    return total;
+  }
+
+  /// The download size in bytes the release lists for the ffmpeg archive.
+  Future<int?> ffmpegDownloadSize() async {
+    final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
+    final name = ffmpegAssetName((release['assets'] as List? ?? const []).whereType<Map>().map((a) => a['name']?.toString() ?? ''));
+    final size = (release['assets'] as List).whereType<Map>().where((a) => a['name'] == name).firstOrNull?['size'];
+    return size is int ? size : null;
+  }
+
+  /// Installs the newest ffmpeg build unless it is there already. With
+  /// [onlyIfInstalled] nothing happens for a user who never installed it.
+  Future<void> installFfmpeg({bool onlyIfInstalled = false, void Function(int received, int? total)? onProgress}) async {
+    if (onlyIfInstalled && ffmpegDirectory == null) return;
+    final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
+    final assets = (release['assets'] as List? ?? const []).whereType<Map<String, dynamic>>().toList();
+    final assetName = ffmpegAssetName(assets.map((a) => a['name']?.toString() ?? ''));
+    if (assetName == null) throw StateError('No LGPL shared ffmpeg build in the $ffmpegRepository release');
+    final asset = _asset(release, (name) => name == assetName);
+    final folder = ffmpegFolderName(assetName, asset['updated_at']?.toString());
+    final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
+    if (await File('${dest.path}${_separator}ffmpeg.exe').exists()) return;
+    status(tr('下载 ffmpeg {0}…', [folder]));
+    // The hash comes from the checksum file of the same release, over HTTPS.
+    final sums = await _client.get(_assetUri(_asset(release, (name) => name == ffmpegChecksumsAsset)), headers: {'User-Agent': 'YTPlus-Windows/0.1'}).timeout(const Duration(seconds: 30));
+    if (sums.statusCode != 200) throw HttpException('Checksum file HTTP ${sums.statusCode}');
+    final expected = parseChecksums(sums.body)[assetName];
+    if (expected == null) throw StateError('No checksum listed for $assetName');
+    final archive = await _downloadVerified(asset, Directory('${root.path}${_separator}downloads'), sha256Hex: expected, onProgress: onProgress);
+    final partial = Directory('${dest.path}.partial');
+    if (await partial.exists()) await partial.delete(recursive: true);
+    await partial.create(recursive: true);
+    try {
+      final written = await extractFfmpegBinaries(archive, partial);
+      if (!written.contains('ffmpeg.exe') || !written.contains('ffprobe.exe')) throw StateError('ffmpeg archive lacks ffmpeg.exe or ffprobe.exe');
+      final check = await Process.run('${partial.path}${_separator}ffmpeg.exe', ['-version']).timeout(const Duration(seconds: 30));
+      if (check.exitCode != 0) throw StateError('ffmpeg $folder failed its self-check');
+      await partial.rename(dest.path);
+    } catch (_) {
+      if (await partial.exists()) await partial.delete(recursive: true);
+      rethrow;
+    } finally {
+      if (await archive.exists()) await archive.delete();
+    }
+    await _prune(Directory('${root.path}${_separator}ffmpeg'), keep: 2);
+  }
+
+  /// Deletes every installed ffmpeg.
+  Future<void> removeFfmpeg() async {
+    final dir = Directory('${root.path}${_separator}ffmpeg');
+    if (await dir.exists()) await dir.delete(recursive: true);
   }
 
   String _safeTag(Object? value) {

@@ -9,6 +9,7 @@ import '../../downloads/download_manager.dart';
 import '../../downloads/download_models.dart';
 import '../../l10n/l10n.dart';
 import '../../models.dart';
+import '../ffmpeg_dialog.dart';
 import '../common.dart';
 import '../theme.dart';
 
@@ -24,12 +25,13 @@ Future<void> showDownloadChoice(BuildContext context, AppController controller, 
         if (controller.downloads?.canMerge == false)
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-            child: Text(tr('没有 ffmpeg 时无法合并画面和声音，视频会下载为 YouTube 提供的单文件格式（通常为 360p）。'), style: context.text.bodySmall),
+            child: Text(tr('没有 ffmpeg 时无法合并画面和声音，视频会下载为 YouTube 提供的单文件格式（通常为 360p）。首次选择高画质时可以按需安装 ffmpeg。'), style: context.text.bodySmall),
           ),
       ],
     ),
   );
-  if (quality != null) controller.download(item, quality);
+  if (quality == null || !context.mounted) return;
+  if (await ensureFfmpegForDownload(context, controller, quality)) controller.download(item, quality);
 }
 
 /// Shows [path] in Windows Explorer; a file is selected in its folder.

@@ -41,6 +41,7 @@ import '../recommendations.dart';
 import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
 import '../player_settings.dart';
+import '../ffmpeg_component.dart';
 import '../tool_manager.dart';
 import '../video_format_selector.dart';
 import '../community_posts.dart';
@@ -517,7 +518,7 @@ class AppController extends ChangeNotifier {
         ffmpegDirectory: () {
           final env = _repository!.processEnvironment;
           final path = env.entries.where((e) => e.key.toUpperCase() == 'PATH').firstOrNull?.value;
-          return DownloadManager.findFfmpeg([...paths.executableDirectories, '${directories.components.path}${Platform.pathSeparator}ffmpeg'], path);
+          return DownloadManager.findFfmpeg([if (_tools?.ffmpegDirectory != null) _tools!.ffmpegDirectory!, ...paths.executableDirectories, '${directories.components.path}${Platform.pathSeparator}ffmpeg'], path);
         },
         options: () => DownloadOptions(
           proxy: proxy.ytDlpValue(settings.proxyMode),
@@ -2234,6 +2235,63 @@ class AppController extends ChangeNotifier {
     await _tools?.rollBackYtDlp();
     _update(() {});
     _notice(tr('已改回上一个 yt-dlp，重启 YTPlus 后生效。'));
+  }
+
+  /// Download progress (0..1, null when unknown) while ffmpeg installs.
+  double? ffmpegProgress;
+  bool installingFfmpeg = false;
+
+  /// Whether ffmpeg is there, so downloads can merge video and audio.
+  bool get ffmpegInstalled => downloads?.canMerge ?? false;
+
+  /// Whether starting a download in [quality] merges, goes single-file or
+  /// needs to ask about installing ffmpeg first.
+  FfmpegChoice ffmpegChoice(DownloadQuality quality) =>
+      ffmpegChoiceFor(quality, installed: ffmpegInstalled, declined: preferences.skipFfmpegPrompt);
+
+  /// Remembers that the user wants single-file downloads without being asked.
+  Future<void> declineFfmpegPrompt() => savePreferences(preferences.copyWith(skipFfmpegPrompt: true));
+
+  /// The size of the ffmpeg download in bytes, or null when unknown.
+  Future<int?> ffmpegDownloadSize() async {
+    try {
+      return await _tools?.ffmpegDownloadSize();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Installs or updates ffmpeg; true when it is usable afterwards.
+  Future<bool> installFfmpeg() async {
+    final tools = _tools;
+    if (tools == null || installingFfmpeg) return false;
+    _update(() {
+      installingFfmpeg = true;
+      ffmpegProgress = null;
+    });
+    try {
+      await tools.installFfmpeg(onProgress: (received, total) {
+        final fraction = total == null || total == 0 ? null : received / total;
+        if (fraction == null || fraction - (ffmpegProgress ?? 0) >= 0.01) _update(() => ffmpegProgress = fraction);
+      });
+      if (preferences.skipFfmpegPrompt) await savePreferences(preferences.copyWith(skipFfmpegPrompt: false));
+      return true;
+    } catch (e) {
+      logError('ffmpeg 安装失败', e);
+      _notice(tr('ffmpeg 安装失败：{0}', [e]));
+      return false;
+    } finally {
+      _update(() => installingFfmpeg = false);
+    }
+  }
+
+  Future<void> removeFfmpeg() async {
+    try {
+      await _tools?.removeFfmpeg();
+    } on FileSystemException catch (e) {
+      _notice(tr('无法删除 ffmpeg（可能正在使用）：{0}', [e.message]));
+    }
+    _update(() {});
   }
 
   Future<void> checkUpdates() async {

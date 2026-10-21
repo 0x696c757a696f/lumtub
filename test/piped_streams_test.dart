@@ -133,8 +133,10 @@ piped.yt | https://api.piped.yt | 🇩🇪 | No | ![](https://api.piped.yt/regis
         }))
       ..catalogFile = file;
 
-    expect(await make().servers(), ['https://new.example']);
+    final first = make();
+    expect(await first.servers(), ['https://new.example']);
     expect(listRequests, 2);
+    await first.saved;
     final saved = jsonDecode(await file.readAsString()) as Map;
     expect(saved['servers'], ['https://new.example']);
 
@@ -145,6 +147,7 @@ piped.yt | https://api.piped.yt | 🇩🇪 | No | ![](https://api.piped.yt/regis
     expect(next.catalog, containsAll([...PipedStreams.knownServers, 'https://new.example']));
     expect(next.timingOf('https://new.example'), isNotNull);
     expect((next.wasTried('https://pipedapi.kavin.rocks'), next.timingOf('https://pipedapi.kavin.rocks')), (true, null));
+    await next.saved;
 
     // A day-old one is downloaded again.
     await file.writeAsString(jsonEncode({...saved, 'updated': DateTime.now().subtract(const Duration(days: 2)).toIso8601String()}));
@@ -231,6 +234,7 @@ piped.yt | https://api.piped.yt | 🇩🇪 | No | ![](https://api.piped.yt/regis
     expect(order.first, servers[9]);
     expect(order.toSet().containsAll(servers), isTrue);
     expect(ranked.toSet(), {servers[9], servers[3]});
+    await streams.saved;
     expect(((jsonDecode(await file.readAsString()) as Map)['last']), ranked.first);
   });
 }

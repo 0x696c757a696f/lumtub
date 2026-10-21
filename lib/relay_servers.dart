@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
@@ -118,7 +119,15 @@ abstract class RelayServers {
     return catalog;
   }
 
-  Future<void> _saveCatalog() async {
+  /// The catalog write in progress; writes run one after another so two
+  /// never interleave in the file.
+  Future<void> _saving = Future.value();
+  @visibleForTesting
+  Future<void> get saved => _saving;
+
+  Future<void> _saveCatalog() => _saving = _saving.then((_) => _writeCatalog());
+
+  Future<void> _writeCatalog() async {
     try {
       await catalogFile?.parent.create(recursive: true);
       await catalogFile?.writeAsString(jsonEncode({'updated': _catalogAt.toIso8601String(), 'servers': _catalog, if (_lastGood != null) 'last': _lastGood}));

@@ -128,13 +128,16 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(first.wasTried('https://yewtu.be'), isTrue);
     expect(first.timingOf('https://yewtu.be'), isNull);
+    await first.saved;
     expect((jsonDecode(await file.readAsString()) as Map)['servers'], ['https://yewtu.be', 'https://inv.nadeko.net']);
     final fetched = await first.fetch('dQw4w9WgXcQ');
     expect(fetched.server, 'https://inv.nadeko.net');
     expect(fetched.edl(const PlayerSettings()), isNotNull);
 
     // A list from today is not downloaded again.
-    await make().servers();
+    final second = make();
+    await second.servers();
+    await second.saved;
     expect(listRequests, 1);
     // A day-old one is.
     final saved = jsonDecode(await file.readAsString()) as Map;

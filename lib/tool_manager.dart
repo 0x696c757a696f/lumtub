@@ -400,7 +400,7 @@ class ToolManager {
     if (await partial.exists()) await partial.delete(recursive: true);
     await partial.create(recursive: true);
     try {
-      final written = await extractFfmpegBinaries(archive, partial);
+      final written = await _extractFfmpeg(archive, partial);
       if (!written.contains('ffmpeg.exe') || !written.contains('ffprobe.exe')) throw StateError('ffmpeg archive lacks ffmpeg.exe or ffprobe.exe');
       final check = await Process.run('${partial.path}${_separator}ffmpeg.exe', ['-version']).timeout(const Duration(seconds: 30));
       if (check.exitCode != 0) throw StateError('ffmpeg $folder failed its self-check');
@@ -424,6 +424,32 @@ class ToolManager {
     final tag = value?.toString() ?? '';
     if (!RegExp(r'^[a-zA-Z0-9._-]{1,100}$').hasMatch(tag)) throw const FormatException('Invalid release tag');
     return tag;
+  }
+
+  /// ffmpeg.exe, ffprobe.exe and their DLLs from [archive]; Windows' own
+  /// tar.exe takes over for an archive the small reader cannot read (Zip64).
+  Future<List<String>> _extractFfmpeg(File archive, Directory into) async {
+    try {
+      return await extractFfmpegBinaries(archive, into);
+    } on FormatException {
+      final whole = Directory('${into.path}.all');
+      if (await whole.exists()) await whole.delete(recursive: true);
+      await whole.create();
+      try {
+        await _extractZip(archive, whole);
+        final written = <String>[];
+        await for (final entry in whole.list(recursive: true)) {
+          final name = entry.uri.pathSegments.last.toLowerCase();
+          if (entry is File && entry.parent.uri.pathSegments.where((s) => s.isNotEmpty).last == 'bin' && (name == 'ffmpeg.exe' || name == 'ffprobe.exe' || name.endsWith('.dll'))) {
+            await entry.copy('${into.path}$_separator$name');
+            written.add(name);
+          }
+        }
+        return written;
+      } finally {
+        await whole.delete(recursive: true);
+      }
+    }
   }
 
   Future<void> _extractZip(File archive, Directory into) async {

@@ -6,6 +6,7 @@ import 'app_directories.dart';
 import 'decoder_status.dart';
 import 'network_proxy.dart';
 import 'piped_streams.dart';
+import 'video_codec.dart';
 import 'l10n/l10n.dart';
 
 /// Heights offered in the quality menu; 0 means automatic.
@@ -14,17 +15,18 @@ const qualityHeights = [0, 2160, 1440, 1080, 720, 480, 360];
 /// Speeds offered before the user edits the list, as in PiliNara.
 const defaultSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 3.0];
 
-/// The video codec to ask YouTube for first.
-enum CodecPreference {
-  auto('自动（省资源优先）'),
-  avc1('H.264 (AVC)'),
-  vp9('VP9'),
-  av01('AV1'),
-  any('不限（画质优先）');
+/// How playback picks among the codecs that are not disabled; see
+/// `FormatPolicy`.
+enum PlaybackStrategy {
+  auto('智能自动（推荐）', '根据硬件解码能力和视频画质自动选择'),
+  quality('画质优先', '优先分辨率、帧率和画质，允许软件解码'),
+  lowResource('低资源占用优先', '尽可能使用硬件解码，降低 CPU 占用');
 
-  const CodecPreference(this._label);
+  const PlaybackStrategy(this._label, this._description);
   final String _label;
+  final String _description;
   String get label => tr(_label);
+  String get description => tr(_description);
 }
 
 enum AudioQuality {
@@ -227,7 +229,9 @@ class PlayerSettings {
   final String cacheMode;
   final int cacheSeconds;
   final int cacheMemoryMb;
-  final CodecPreference codec;
+  final PlaybackStrategy strategy;
+  /// Codecs no strategy may pick, whatever the video offers.
+  final Set<VideoCodec> disabledCodecs;
   final AudioQuality audioQuality;
   /// mpv's `audio-device` name, or `auto` for the Windows default.
   final String audioDevice;
@@ -303,7 +307,8 @@ class PlayerSettings {
     this.cacheMode = 'auto',
     this.cacheSeconds = 60,
     this.cacheMemoryMb = 150,
-    this.codec = CodecPreference.auto,
+    this.strategy = PlaybackStrategy.auto,
+    this.disabledCodecs = const {},
     this.audioQuality = AudioQuality.best,
     this.audioDevice = 'auto',
     this.videoSync = VideoSync.audio,
@@ -356,7 +361,8 @@ class PlayerSettings {
     String? cacheMode,
     int? cacheSeconds,
     int? cacheMemoryMb,
-    CodecPreference? codec,
+    PlaybackStrategy? strategy,
+    Set<VideoCodec>? disabledCodecs,
     AudioQuality? audioQuality,
     String? audioDevice,
     VideoSync? videoSync,
@@ -406,7 +412,8 @@ class PlayerSettings {
         cacheMode: cacheMode ?? this.cacheMode,
         cacheSeconds: cacheSeconds ?? this.cacheSeconds,
         cacheMemoryMb: cacheMemoryMb ?? this.cacheMemoryMb,
-        codec: codec ?? this.codec,
+        strategy: strategy ?? this.strategy,
+        disabledCodecs: disabledCodecs ?? this.disabledCodecs,
         audioQuality: audioQuality ?? this.audioQuality,
         audioDevice: audioDevice ?? this.audioDevice,
         videoSync: videoSync ?? this.videoSync,
@@ -457,7 +464,8 @@ class PlayerSettings {
         'cacheSeconds': cacheSeconds,
         'cacheMemoryMb': cacheMemoryMb,
         'bufferDefaults': 2,
-        'codec': codec.name,
+        'strategy': strategy.name,
+        'disabledCodecs': [for (final c in VideoCodec.values) if (disabledCodecs.contains(c)) c.name],
         'audioQuality': audioQuality.name,
         'audioDevice': audioDevice,
         'videoSync': videoSync.name,
@@ -543,11 +551,15 @@ class PlayerSettings {
     final categories = raw['sponsorCategories'] is List
         ? (raw['sponsorCategories'] as List).map((c) => c.toString()).where(sponsorCategoryNames.containsKey).toSet()
         : defaultSponsorCategories;
-    // Builds before the codec menu had an on/off switch, and before the play
-    // order menu an autoplay switch.
-    final codec = raw.containsKey('codec')
-        ? _enumByName(CodecPreference.values, raw['codec'], CodecPreference.auto)
-        : raw['autoSelectCodec'] == false ? CodecPreference.any : CodecPreference.auto;
+    // Builds before the format policy saved a preferred `codec`: "any" and a
+    // switched-off codec selection meant best quality, the rest automatic.
+    final strategy = raw.containsKey('strategy')
+        ? _enumByName(PlaybackStrategy.values, raw['strategy'], PlaybackStrategy.auto)
+        : raw['codec'] == 'any' || raw['autoSelectCodec'] == false ? PlaybackStrategy.quality : PlaybackStrategy.auto;
+    final disabled = raw['disabledCodecs'] is List
+        ? {for (final name in raw['disabledCodecs'] as List) VideoCodec.byName(name)}.whereType<VideoCodec>().toSet()
+        : <VideoCodec>{};
+    // Builds before the play order menu had an autoplay switch.
     final playOrder = raw.containsKey('playOrder')
         ? _enumByName(PlayOrder.values, raw['playOrder'], PlayOrder.autoPlayRelated)
         : raw['autoplayNext'] == false ? PlayOrder.pause : PlayOrder.autoPlayRelated;
@@ -566,7 +578,8 @@ class PlayerSettings {
       // those move to the larger defaults that ride out network hiccups.
       cacheSeconds: oldBuffer && raw['cacheSeconds'] == 30 ? 60 : number('cacheSeconds', 60, 1, 600),
       cacheMemoryMb: oldBuffer && raw['cacheMemoryMb'] == 64 ? 150 : number('cacheMemoryMb', 150, 16, 1024),
-      codec: codec,
+      strategy: strategy,
+      disabledCodecs: disabled,
       audioQuality: _enumByName(AudioQuality.values, raw['audioQuality'], AudioQuality.best),
       audioDevice: device.isEmpty || device.length > 200 || device.contains(RegExp(r'[\r\n]')) ? 'auto' : device,
       videoSync: _enumByName(VideoSync.values, raw['videoSync'], VideoSync.audio),

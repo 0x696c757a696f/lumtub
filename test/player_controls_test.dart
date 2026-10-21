@@ -203,7 +203,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_vert_rounded));
     await tester.pumpAndSettle();
     final sheet = find.descendant(of: find.byType(BottomSheet), matching: find.byType(Scrollable));
-    for (final item in ['选择画质', '选择音质', '解码格式', '播放顺序', '字幕设置', '截图 (S)', '镜像翻转', '画面缩放', '定时关闭', '播放信息', '重载视频']) {
+    for (final item in ['选择画质', '选择音质', '播放策略', '禁用视频编码', '播放顺序', '字幕设置', '截图 (S)', '镜像翻转', '画面缩放', '定时关闭', '播放信息', '重载视频']) {
       await tester.scrollUntilVisible(find.text(item), 60, scrollable: sheet);
       expect(find.text(item), findsOneWidget);
     }

@@ -5,9 +5,10 @@ import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
 import 'media_url_policy.dart';
+import 'format_policy.dart';
 import 'player_settings.dart';
 import 'relay_servers.dart';
-import 'video_format_selector.dart';
+import 'video_codec.dart';
 import 'l10n/l10n.dart';
 
 /// The public server networks that can fetch a video in place of YouTube.
@@ -136,19 +137,25 @@ class PipedVideo {
 
   List<int> get heights => ({for (final s in video) s.height}.toList()..sort((a, b) => b.compareTo(a)));
 
+  /// [heights] of the streams [settings] allows.
+  List<int> heightsFor(PlayerSettings settings) => ({for (final s in video) if (FormatPolicy.allowsName(settings, s.codec)) s.height}.toList()..sort((a, b) => b.compareTo(a)));
+
   /// The video stream for [settings]: the highest allowed height in the
-  /// first preferred codec that has one, as the yt-dlp expression would pick.
+  /// first preferred allowed codec that has one, as the yt-dlp expression would pick.
   PipedStream? pickVideo(PlayerSettings settings) {
-    if (video.isEmpty) return null;
+    final streams = video.where((s) => FormatPolicy.allowsName(settings, s.codec)).toList();
+    if (streams.isEmpty) return null;
     final limit = settings.maxHeight;
-    var allowed = video.where((s) => limit == 0 || s.height <= limit).toList();
+    var allowed = streams.where((s) => limit == 0 || s.height <= limit).toList();
     if (allowed.isEmpty) {
-      final lowest = video.map((s) => s.height).reduce((a, b) => a < b ? a : b);
-      allowed = video.where((s) => s.height == lowest).toList();
+      final lowest = streams.map((s) => s.height).reduce((a, b) => a < b ? a : b);
+      allowed = streams.where((s) => s.height == lowest).toList();
     }
     int better(PipedStream a, PipedStream b) => a.height != b.height ? b.height.compareTo(a.height) : b.bitrate.compareTo(a.bitrate);
-    for (final codec in VideoFormatSelector.codecOrder(settings)) {
-      final matching = allowed.where((s) => s.codec.startsWith(codec)).toList()..sort(better);
+    // Quality strategy has no codec preference: the best picture wins.
+    if (settings.strategy == PlaybackStrategy.quality) return (allowed..sort(better)).first;
+    for (final codec in FormatPolicy.codecOrder(settings)) {
+      final matching = allowed.where((s) => VideoCodec.of(s.codec) == codec).toList()..sort(better);
       if (matching.isNotEmpty) return matching.first;
     }
     return (allowed..sort(better)).first;

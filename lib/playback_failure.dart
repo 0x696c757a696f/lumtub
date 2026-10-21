@@ -15,17 +15,23 @@ enum FailureKind {
   challenge,
   /// HTTP 403 on a stream: the address expired or lacks a PO Token.
   forbidden,
+  /// yt-dlp found no stream the format rules allow (every codec of the
+  /// video is disabled, or none is left at the chosen height): retrying with
+  /// the same rules cannot help and the rules are never lifted.
+  noFormat,
   /// Timeouts, resets, DNS: worth reconnecting.
   network,
   unknown,
 }
 
 class PlaybackFailure {
-  const PlaybackFailure(this.kind, this.detail, {this.tried = const []});
+  const PlaybackFailure(this.kind, this.detail, {this.tried = const [], this.disabled = ''});
 
   final FailureKind kind;
   /// The Piped or Invidious servers that were tried after YouTube said 429.
   final List<String> tried;
+  /// Names of the codecs the user disabled, for [FailureKind.noFormat].
+  final String disabled;
   /// The message it was read from.
   final String detail;
 
@@ -36,6 +42,7 @@ class PlaybackFailure {
       r"inappropriate|Premieres in|live event will begin|This live stream recording is not available",
       caseSensitive: false,
     )),
+    (FailureKind.noFormat, RegExp(r'Requested format is not available', caseSensitive: false)),
     (FailureKind.rateLimited, RegExp(r'\b429\b|Too Many Requests|rate.?limit', caseSensitive: false)),
     (FailureKind.botCheck, RegExp(r"not a bot|confirm you.?re not|Sign in to confirm", caseSensitive: false)),
     (FailureKind.challenge, RegExp(r'n challenge|nsig|signature (solving|extraction|function)|JavaScript runtime|js.?runtime', caseSensitive: false)),
@@ -69,6 +76,7 @@ class PlaybackFailure {
       FailureKind.botCheck => tr('YouTube 要求验证“不是机器人”，说明当前 IP 被怀疑。可以换一个代理节点，或在 设置 › 播放 › 播放来源 选 Piped 或 Invidious'),
       FailureKind.challenge => tr('解不开 YouTube 的 JavaScript 验证，通常是 yt-dlp 过旧。已开始检查组件更新，更新后重启 YTPlus 生效'),
       FailureKind.forbidden => tr('YouTube 拒绝了视频地址（403）。已重新解析仍失败，可以换一个代理节点，或在 设置 › 播放 › 播放来源 选 Piped 或 Invidious'),
+      FailureKind.noFormat => disabled.isEmpty ? tr('没有可播放的视频流。') : tr('没有符合格式规则的可播放视频流（已禁用：{0}）。可在设置 → 视频格式中调整。', [disabled]),
       FailureKind.network => tr('网络连接失败，请检查网络或代理'),
       FailureKind.unknown => '',
     };

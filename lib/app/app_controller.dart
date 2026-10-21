@@ -47,7 +47,7 @@ import '../player_settings.dart';
 import '../ffmpeg_component.dart';
 import '../thumbnail_trim.dart';
 import '../tool_manager.dart';
-import '../video_format_selector.dart';
+import '../format_policy.dart';
 import '../community_posts.dart';
 import '../blocked_groups.dart';
 import '../explore_filters.dart';
@@ -247,14 +247,14 @@ class AppController extends ChangeNotifier {
     if (item == null || item.isLive || _repository == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
     CastSource? source;
     try {
-      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format)).info);
+      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format)).info, settings: settings);
     } catch (e) {
       logInfo('投屏：yt-dlp 解析失败：$e');
     }
     for (final kind in RelayKind.values) {
       if (source != null) break;
       try {
-        source = castSourceFromRelay(await (kind == RelayKind.piped ? _piped.fetch(item.id) : _invidious.fetch(item.id)));
+        source = castSourceFromRelay(await (kind == RelayKind.piped ? _piped.fetch(item.id) : _invidious.fetch(item.id)), settings: settings);
       } catch (e) {
         logInfo('投屏：$kind 解析失败：$e');
       }
@@ -1162,7 +1162,7 @@ class AppController extends ChangeNotifier {
       }
       _lastPosition = start ?? Duration.zero;
       _openedResolved = video == null ? null : item.id;
-      if (video != null) _update(() => availableHeights = video!.heights);
+      if (video != null) _update(() => availableHeights = video!.heightsFor(settings));
       await player.open(Media(direct ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
@@ -1280,7 +1280,7 @@ class AppController extends ChangeNotifier {
       final video = await (kind == RelayKind.piped ? _piped.fetch(item.id, server: server) : _invidious.fetch(item.id, server: server));
       final address = video.edl(settings);
       if (address == null) return null;
-      _update(() => availableHeights = video.heights);
+      _update(() => availableHeights = video.heightsFor(settings));
       logInfo('从 $name ${video.server} 播放 ${item.id}，用时 ${watch.elapsedMilliseconds} ms');
       return address;
     } catch (e) {
@@ -1292,6 +1292,7 @@ class AppController extends ChangeNotifier {
   /// Shows why [item] cannot play and acts on the cause.
   void _fail(VideoItem item, PlaybackFailure failure) {
     logError('播放失败 ${item.id}（${failure.kind.name}）：${failure.detail}');
+    if (failure.kind == FailureKind.noFormat) failure = PlaybackFailure(failure.kind, failure.detail, disabled: FormatPolicy.disabledNames(settings));
     switch (failure.kind) {
       case FailureKind.rateLimited:
         _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
@@ -1718,7 +1719,7 @@ class AppController extends ChangeNotifier {
   /// The audio outputs libmpv reports, "auto" first.
   List<AudioDevice> get audioDevices => player?.state.audioDevices ?? const [];
 
-  String get _format => VideoFormatSelector.expressionFor(settings);
+  String get _format => FormatPolicy.expression(settings);
 
   /// Starts resolving [item] before it is opened, such as when the pointer
   /// rests on its card.
@@ -1738,7 +1739,7 @@ class AppController extends ChangeNotifier {
           // The extraction playback uses carries the details too.
           final resolved = await _repository!.streams.resolve(item.id, _format);
           loaded = resolved.details;
-          if (serial == _playSerial) _update(() => availableHeights = resolved.heights);
+          if (serial == _playSerial) _update(() => availableHeights = resolved.heightsFor(settings));
         } catch (_) {
           loaded = await _repository!.details(item.id);
         }
@@ -2564,7 +2565,7 @@ class AppController extends ChangeNotifier {
       'yt-dlp ${tools?.ytDlpVersion ?? '未安装'}',
       'Deno ${tools?.denoVersion ?? '未安装'}',
       tr('硬件解码设置 {0} · 当前 {1} · {2}', [settings.hwdec, currentCodec, currentHwdec]),
-      tr('画质上限 {0} · 编码 {1} · 音质 {2}', [settings.maxHeight == 0 ? tr('自动') : '${settings.maxHeight}p', settings.codec.label, settings.audioQuality.label]),
+      tr('画质上限 {0} · 播放策略 {1} · 禁用编码 {2} · 音质 {3}', [settings.maxHeight == 0 ? tr('自动') : '${settings.maxHeight}p', settings.strategy.label, FormatPolicy.disabledNames(settings).isEmpty ? tr('无') : FormatPolicy.disabledNames(settings), settings.audioQuality.label]),
       tr('缓存 {0} · {1} 秒 · {2} MB', [settings.cacheMode, settings.cacheSeconds, settings.cacheMemoryMb]),
       tr('数据目录 {0}', [directories?.root.path ?? tr('未知')]),
     ].join('\n');

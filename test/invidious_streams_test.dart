@@ -7,6 +7,7 @@ import 'package:http/testing.dart';
 import 'package:ytplus/invidious_streams.dart';
 import 'package:ytplus/piped_streams.dart';
 import 'package:ytplus/player_settings.dart';
+import 'package:ytplus/video_codec.dart';
 
 /// The shape of https://api.invidious.io/instances.json?sort_by=type,users
 /// (docs.invidious.io/instances), written from its documented schema.
@@ -60,7 +61,7 @@ void main() {
     expect((h264.codec, h264.height, h264.bitrate, h264.videoOnly), ('avc1.640028', 1080, 4000000, true));
     expect(h264.url, startsWith('https://inv.example/videoplayback?'));
     // A path alone belongs to the instance.
-    final vp9 = video.pickVideo(const PlayerSettings(codec: CodecPreference.vp9))!;
+    final vp9 = video.pickVideo(const PlayerSettings(disabledCodecs: {VideoCodec.h264}))!;
     expect((vp9.codec, vp9.url), ('vp9', 'https://inv.example/videoplayback?expire=1&itag=248&local=true'));
     // The instance's own http address becomes https; the 720p60 label has no size problem.
     final p720 = video.pickVideo(const PlayerSettings(maxHeight: 720))!;

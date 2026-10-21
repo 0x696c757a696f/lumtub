@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:ytplus/piped_streams.dart';
 import 'package:ytplus/player_settings.dart';
+import 'package:ytplus/video_codec.dart';
 
 Map<String, dynamic> _streams() => {
       'title': 'x',
@@ -31,7 +32,10 @@ void main() {
   test('picks streams the way the yt-dlp expression would', () {
     expect(video.heights, [1080, 720]);
     expect(video.pickVideo(const PlayerSettings())!.url, endsWith('itag=137'));
-    expect(video.pickVideo(const PlayerSettings(codec: CodecPreference.vp9))!.url, endsWith('itag=248'));
+    expect(video.pickVideo(const PlayerSettings(disabledCodecs: {VideoCodec.h264}))!.url, endsWith('itag=248'));
+    expect(video.pickVideo(const PlayerSettings(disabledCodecs: {VideoCodec.h264, VideoCodec.vp9})), isNull);
+    expect(video.heightsFor(const PlayerSettings(disabledCodecs: {VideoCodec.h264})), [1080]);
+    expect(video.edl(const PlayerSettings(disabledCodecs: {VideoCodec.h264, VideoCodec.vp9})), isNull);
     expect(video.pickVideo(const PlayerSettings(maxHeight: 720))!.url, endsWith('itag=136'));
     expect(video.pickVideo(const PlayerSettings(maxHeight: 144))!.height, 720);
     expect(video.pickAudio(const PlayerSettings())!.url, endsWith('itag=251'));

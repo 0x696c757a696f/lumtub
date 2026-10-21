@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../app/app_controller.dart';
 import '../../blocked_groups.dart';
 import '../../feed_quality.dart';
+import '../../format_policy.dart';
 import '../../state_media.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
@@ -17,9 +18,11 @@ import '../../piped_streams.dart';
 import '../../player_settings.dart';
 import '../../progress_line.dart';
 import '../../translation.dart';
+import '../../video_codec.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../../windows_video_info.dart';
 import '../common.dart';
+import '../format_policy_dialogs.dart';
 import '../player_shortcuts.dart';
 import '../theme.dart';
 import 'account_settings.dart';
@@ -332,18 +335,25 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(Icons.high_quality_outlined),
               onTap: () => pickFromDialog<int>(context, title: tr('默认画质'), value: settings.maxHeight, values: [for (final h in qualityHeights) (h, qualityLabel(h))], onSelected: controller.setMaxHeight),
             ), subtitle: tr('清晰度 分辨率')),
-        SettingEntry(tr('首选解码格式'), (context) => NormalItem(
-              title: tr('首选解码格式'),
-              subtitle: tr('当前：{0}', [settings.codec.label]),
+        SettingEntry(tr('播放策略'), (context) => NormalItem(
+              title: tr('播放策略'),
+              subtitle: '${settings.strategy.label}：${settings.strategy.description}',
               leading: _icon(Icons.movie_filter_outlined),
-              onTap: () => pickFromDialog<CodecPreference>(
-                context,
-                title: tr('首选解码格式'),
-                value: settings.codec,
-                values: _enumValues(CodecPreference.values, (c) => c.label),
-                onSelected: (v) => save(settings.copyWith(codec: v)),
-              ),
-            ), subtitle: tr('编码 H.264 VP9 AV1')),
+              onTap: () => pickPlaybackStrategy(context, settings.strategy, (v) => save(settings.copyWith(strategy: v))),
+            ), subtitle: tr('视频格式 编码 H.264 VP9 AV1 智能自动 画质优先 低资源占用')),
+        for (final codec in VideoCodec.values)
+          SettingEntry(tr('禁用 {0}', [codec.label]), (context) => SwitchItem(
+                title: tr('禁用 {0}', [codec.label]),
+                subtitle: codec == VideoCodec.values.first ? disabledCodecsNote : null,
+                leading: _icon(Icons.block_outlined),
+                value: settings.disabledCodecs.contains(codec),
+                onChanged: (v) => save(settings.copyWith(disabledCodecs: withCodecDisabled(settings.disabledCodecs, codec, v))),
+              ), subtitle: tr('视频格式 禁用视频编码')),
+        SettingEntry(tr('当前规则'), (context) => ListTile(
+              dense: true,
+              leading: _icon(Icons.rule_rounded),
+              title: Text(FormatPolicy.summary(settings), style: _note(context)),
+            ), subtitle: tr('视频格式')),
         SettingEntry(tr('默认音质'), (context) => NormalItem(
               title: tr('默认音质'),
               subtitle: tr('当前：{0}', [settings.audioQuality.label]),

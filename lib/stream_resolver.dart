@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'app_log.dart';
+import 'format_policy.dart';
 import 'models.dart';
+import 'player_settings.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
 
@@ -32,16 +34,19 @@ class ResolvedVideo {
 
   VideoDetails get details => VideoDetails.fromJson(info);
 
-  /// Video heights this video offers, highest first.
-  List<int> get heights {
+  /// Video heights this video offers, highest first; with [settings], only
+  /// those that exist in a codec it allows.
+  List<int> heightsFor([PlayerSettings? settings]) {
     final formats = info['formats'];
     if (formats is! List) return const [];
     final heights = <int>{
       for (final f in formats.whereType<Map>())
-        if (f['vcodec'] != null && f['vcodec'] != 'none' && f['height'] is int && (f['height'] as int) > 0) f['height'] as int,
+        if (f['vcodec'] != null && f['vcodec'] != 'none' && f['height'] is int && (f['height'] as int) > 0 && (settings == null || FormatPolicy.allowsName(settings, f['vcodec']))) f['height'] as int,
     };
     return heights.toList()..sort((a, b) => b.compareTo(a));
   }
+
+  List<int> get heights => heightsFor();
 
   List<Map<String, dynamic>> get _tracks {
     final requested = info['requested_formats'];

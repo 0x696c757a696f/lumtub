@@ -311,6 +311,10 @@ class AppController extends ChangeNotifier {
   /// yt-dlp and libmpv error lines for the video being opened, which name
   /// the cause libmpv's own error message usually leaves out.
   final _recentErrors = <String>[];
+  /// When mpv last named a subtitle address, or any other address, it could
+  /// not open.
+  DateTime? _subtitleFailedAt, _mediaFailedAt;
+
   /// No prefetching until then, after YouTube answered 429.
   DateTime _rateLimitedUntil = DateTime(0);
   bool _updateCheckedForChallenge = false;
@@ -1336,58 +1340,33 @@ class AppController extends ChangeNotifier {
       // once the video has loaded (a broken subtitle track) are not fatal.
       player.stream.error.listen((message) {
         if (playing == null || message.isEmpty) return;
-        if (player.state.duration == Duration.zero) {
-          final item = playing!;
-          final viaRelay = _openedVia == item.id;
-          _openedVia = null;
-          // What a server's address says is not what YouTube said earlier.
-          final failure = PlaybackFailure.classify(viaRelay ? [message] : [message, ..._recentErrors]);
-          final position = _lastPosition > Duration.zero ? _lastPosition : null;
-          if (viaRelay) {
-            if (!failure.retryable && failure.kind != FailureKind.rateLimited) {
-              _fail(item, failure);
-              return;
-            }
-            final limited = _rateLimited;
-            logInfo('Piped 或 Invidious 的地址无法播放（$message），改${limited != null ? '用下一个服务器' : '为直接连接 YouTube'}');
-            unawaited(limited != null ? _fallBackFromRateLimit(item, _playSerial, limited, start: position) : _open(item, _playSerial, start: position, piped: false));
+        // curl reports a refused subtitle (often 429 on auto captions) a
+        // moment before mpv names the subtitle address, so each error waits
+        // briefly to see whether it was about a subtitle, which never stops
+        // the video.
+        final serial = _playSerial;
+        final loaded = player.state.duration > Duration.zero;
+        Timer(const Duration(milliseconds: 400), () {
+          if (serial != _playSerial || playing == null) return;
+          bool recent(DateTime? at) => at != null && DateTime.now().difference(at) < const Duration(seconds: 2);
+          if (isSubtitleError(message) || (recent(_subtitleFailedAt) && !recent(_mediaFailedAt))) {
+            logInfo('字幕加载失败，视频继续播放：$message');
             return;
           }
-          if (failure.kind == FailureKind.rateLimited) {
-            unawaited(_fallBackFromRateLimit(item, _playSerial, failure, start: position));
-            return;
-          }
-          if (!failure.retryable) {
-            _fail(item, failure);
-            return;
-          }
-          if (_openedResolved == item.id) {
-            // Addresses resolved ahead may have gone stale; let libmpv's
-            // ytdl_hook resolve the video itself once.
-            _openedResolved = null;
-            _repository?.streams.forget(item.id);
-            logInfo('预先解析的地址无法播放（$message），改由 libmpv 重新解析 ${item.id}');
-            unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
-            return;
-          }
-          _fail(item, failure);
-        } else if (PlaybackRecovery.isNetworkError(message)) {
-          final failure = PlaybackFailure.classify([message, ..._recentErrors]);
-          if (failure.retryable) {
-            unawaited(_recover(message));
-          } else {
-            _fail(playing!, failure);
-          }
-        }
+          _onPlayerError(player, message, loaded: loaded);
+        });
       }),
       // libmpv's warnings go to the log, a limited number per video, so
       // problems such as dropped frames can be read after the fact.
       player.stream.log.listen((log) {
+        final text = log.text.trim();
+        if (text.startsWith('Failed to open')) {
+          isSubtitleError(text) ? _subtitleFailedAt = DateTime.now() : _mediaFailedAt = DateTime.now();
+        }
         if (_mpvLogLines >= 200) return;
         _mpvLogLines++;
-        final text = log.text.trim();
         logInfo('mpv [${log.prefix}] ${log.level}: $text');
-        if ((log.level == 'error' || log.prefix == 'ytdl_hook') && _recentErrors.length < 20) _recentErrors.add(text);
+        if ((log.level == 'error' || log.prefix == 'ytdl_hook') && _recentErrors.length < 20 && !isSubtitleError(text)) _recentErrors.add(text);
       }),
       // A stream that stops delivering data leaves mpv buffering forever.
       player.stream.buffering.listen((buffering) {
@@ -1398,6 +1377,53 @@ class AppController extends ChangeNotifier {
         });
       }),
     ]);
+  }
+
+  /// An mpv error that was not about a subtitle.
+  void _onPlayerError(Player player, String message, {required bool loaded}) {
+    if (!loaded) {
+      final item = playing!;
+      final viaRelay = _openedVia == item.id;
+      _openedVia = null;
+      // What a server's address says is not what YouTube said earlier.
+      final failure = PlaybackFailure.classify(viaRelay ? [message] : [message, ..._recentErrors]);
+      final position = _lastPosition > Duration.zero ? _lastPosition : null;
+      if (viaRelay) {
+        if (!failure.retryable && failure.kind != FailureKind.rateLimited) {
+          _fail(item, failure);
+          return;
+        }
+        final limited = _rateLimited;
+        logInfo('Piped 或 Invidious 的地址无法播放（$message），改${limited != null ? '用下一个服务器' : '为直接连接 YouTube'}');
+        unawaited(limited != null ? _fallBackFromRateLimit(item, _playSerial, limited, start: position) : _open(item, _playSerial, start: position, piped: false));
+        return;
+      }
+      if (failure.kind == FailureKind.rateLimited) {
+        unawaited(_fallBackFromRateLimit(item, _playSerial, failure, start: position));
+        return;
+      }
+      if (!failure.retryable) {
+        _fail(item, failure);
+        return;
+      }
+      if (_openedResolved == item.id) {
+        // Addresses resolved ahead may have gone stale; let libmpv's
+        // ytdl_hook resolve the video itself once.
+        _openedResolved = null;
+        _repository?.streams.forget(item.id);
+        logInfo('预先解析的地址无法播放（$message），改由 libmpv 重新解析 ${item.id}');
+        unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
+        return;
+      }
+      _fail(item, failure);
+    } else if (PlaybackRecovery.isNetworkError(message)) {
+      final failure = PlaybackFailure.classify([message, ..._recentErrors]);
+      if (failure.retryable) {
+        unawaited(_recover(message));
+      } else {
+        _fail(playing!, failure);
+      }
+    }
   }
 
   /// Follows [PlayerSettings.playOrder] once a video ends. Single cycle is

@@ -93,6 +93,30 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
       info->ptMinTrackSize.y = static_cast<LONG>(90 * scale);
       return 0;
     }
+    // Picture in picture has no frame at all: the client area covers the
+    // whole window, and its edges still resize it.
+    case WM_NCCALCSIZE:
+      if (wparam && PictureInPictureAspect(hwnd) > 0) return 0;
+      break;
+    case WM_NCHITTEST: {
+      if (PictureInPictureAspect(hwnd) <= 0) break;
+      RECT rect{};
+      ::GetWindowRect(hwnd, &rect);
+      const LONG x = static_cast<short>(LOWORD(lparam));
+      const LONG y = static_cast<short>(HIWORD(lparam));
+      const LONG edge = std::lround(6 * ::GetDpiForWindow(hwnd) / 96.0);
+      const bool left = x < rect.left + edge, right = x >= rect.right - edge;
+      const bool top = y < rect.top + edge, bottom = y >= rect.bottom - edge;
+      if (top && left) return HTTOPLEFT;
+      if (top && right) return HTTOPRIGHT;
+      if (bottom && left) return HTBOTTOMLEFT;
+      if (bottom && right) return HTBOTTOMRIGHT;
+      if (left) return HTLEFT;
+      if (right) return HTRIGHT;
+      if (top) return HTTOP;
+      if (bottom) return HTBOTTOM;
+      return HTCLIENT;
+    }
     case WM_SIZING: {
       const double aspect = PictureInPictureAspect(hwnd);
       if (aspect <= 0) break;

@@ -2007,4 +2007,5 @@ const stringsEn = <String, String>{
   '安装': 'Install',
   '更新': 'Update',
   'ffmpeg 是可选组件，只用于合并高画质视频和音频，不会自动下载。它是 BtbN/FFmpeg-Builds 的 LGPL 构建（https://github.com/BtbN/FFmpeg-Builds），源代码见 https://ffmpeg.org/download.html。': 'ffmpeg is an optional component used only to merge high-quality video and audio, and is never downloaded automatically. It is the LGPL build from BtbN/FFmpeg-Builds (https://github.com/BtbN/FFmpeg-Builds); source code at https://ffmpeg.org/download.html.',
+  '最高画质': 'Best quality',
 };

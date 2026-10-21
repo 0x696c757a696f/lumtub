@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -10,6 +11,7 @@ import 'package:ytplus/player_settings.dart';
 Map<String, dynamic> _streams() => {
       'title': 'x',
       'livestream': false,
+      'proxyUrl': 'https://proxy.example',
       'videoStreams': [
         {'url': 'https://proxy.example/v?itag=137', 'codec': 'avc1.640028', 'height': 1080, 'bitrate': 4000000, 'videoOnly': true, 'mimeType': 'video/mp4'},
         {'url': 'https://proxy.example/v?itag=248', 'codec': 'vp9', 'height': 1080, 'bitrate': 3000000, 'videoOnly': true, 'mimeType': 'video/webm'},
@@ -150,5 +152,85 @@ piped.yt | https://api.piped.yt | 🇩🇪 | No | ![](https://api.piped.yt/regis
     // Known servers answered, so the list is downloaded in the background.
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(listRequests, 4);
+  });
+
+  test('streams off the allowed hosts are skipped', () {
+    PipedStream? parse(String url, [List<String> trusted = const ['pipedapi.example', 'proxy.example']]) =>
+        PipedStream.tryParse({'url': url, 'codec': 'opus', 'bitrate': 1}, trustedHosts: trusted);
+    for (final good in [
+      'https://pipedapi.example/v',
+      'https://proxy.example:8443/v',
+      'https://rr3---sn-abc.googlevideo.com/videoplayback?x=1',
+      'https://www.youtube.com/a',
+      'https://i.ytimg.com/a',
+    ]) {
+      expect(parse(good), isNotNull, reason: good);
+    }
+    for (final bad in [
+      'http://pipedapi.example/v',
+      'https://evil.example/v',
+      'https://notgooglevideo.com/v',
+      'https://googlevideo.com.evil.example/v',
+      'https://googlevideo.com@evil.example/v',
+      'https://127.0.0.1/v',
+      'https://localhost/v',
+      'https://a.localhost/v',
+      'https://printer.local/v',
+      'https://10.0.0.5/v',
+      'https://172.16.0.1/v',
+      'https://192.168.1.1/v',
+      'https://169.254.169.254/v',
+      'https://[::1]/v',
+      'https://[fe80::1]/v',
+      'https://[fd00::1]/v',
+      'https://[::ffff:192.168.0.1]/v',
+      'https://2130706433/v',
+      'https://0x7f.1/v',
+      '/relative',
+      '',
+    ]) {
+      expect(parse(bad), isNull, reason: bad);
+      // Not even a server that names itself so is believed.
+      if (RegExp(r'^https://(\[|\d|0x|a?\.?localhost|printer\.local)').hasMatch(bad)) {
+        expect(parse(bad, [Uri.parse(bad).host]), isNull, reason: 'trusted $bad');
+      }
+    }
+    // Without trusted hosts only YouTube's own pass.
+    expect(parse('https://proxy.example/v', const []), isNull);
+    final video = PipedVideo.fromJson('https://pipedapi.example', {
+      'proxyUrl': 'https://proxy.example',
+      'audioStreams': [
+        {'url': 'https://proxy.example/a', 'codec': 'opus', 'bitrate': 1},
+        {'url': 'https://evil.example/a', 'codec': 'opus', 'bitrate': 2},
+        {'url': 'https://192.168.0.9/a', 'codec': 'opus', 'bitrate': 3},
+        {'url': 'https://r1.googlevideo.com/a', 'codec': 'opus', 'bitrate': 4},
+      ],
+    });
+    expect(video.audio.map((s) => s.bitrate), [1, 4]);
+  });
+
+  test('servers are probed four at a time, the last one that worked first', () async {
+    final servers = [for (var i = 0; i < 12; i++) 'https://s$i.example'];
+    var running = 0, most = 0;
+    final order = <String>[];
+    final dir = await Directory.systemTemp.createTemp('piped');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = File('${dir.path}/piped_servers.json');
+    await file.writeAsString(jsonEncode({'updated': DateTime.now().toIso8601String(), 'servers': servers, 'last': servers[9]}));
+    final streams = PipedStreams(MockClient((request) async {
+      final host = request.url.origin;
+      order.add(host);
+      most = max(most, ++running);
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      running--;
+      return http.Response('OK', host == servers[9] || host == servers[3] ? 200 : 503);
+    }))
+      ..catalogFile = file;
+    final ranked = await streams.servers();
+    expect(most, 4);
+    expect(order.first, servers[9]);
+    expect(order.toSet().containsAll(servers), isTrue);
+    expect(ranked.toSet(), {servers[9], servers[3]});
+    expect(((jsonDecode(await file.readAsString()) as Map)['last']), ranked.first);
   });
 }

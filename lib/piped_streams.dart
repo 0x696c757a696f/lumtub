@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'media_url_policy.dart';
 import 'player_settings.dart';
 import 'relay_servers.dart';
 import 'video_format_selector.dart';
@@ -88,10 +89,12 @@ class PipedStream {
   /// The container's MIME type, such as video/mp4, when the server gave one.
   final String mime;
 
-  static PipedStream? tryParse(Object? raw) {
+  /// The stream in [raw], or null when its address is not an allowed media
+  /// address (see [isAllowedMediaUrl]; [trustedHosts] are the server's own).
+  static PipedStream? tryParse(Object? raw, {Iterable<String> trustedHosts = const []}) {
     if (raw is! Map) return null;
     final url = raw['url']?.toString() ?? '';
-    if (!url.startsWith('https://')) return null;
+    if (!isAllowedMediaUrl(url, trustedHosts: trustedHosts)) return null;
     var codec = (raw['codec']?.toString() ?? '').toLowerCase();
     if (codec.startsWith('vp09')) codec = 'vp9';
     final mime = raw['mimeType']?.toString() ?? '';
@@ -112,19 +115,24 @@ class PipedVideo {
   final List<PipedStream> muxed;
   final bool live;
 
-  factory PipedVideo.fromJson(String server, Map<String, dynamic> json) => PipedVideo(
-        server: server,
-        video: [for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const []) PipedStream.tryParse(s)]
-            .whereType<PipedStream>()
-            .where((s) => s.videoOnly && s.height > 0)
-            .toList(),
-        audio: [for (final s in json['audioStreams'] is List ? json['audioStreams'] as List : const []) PipedStream.tryParse(s)].whereType<PipedStream>().toList(),
-        live: json['livestream'] == true,
-        muxed: [for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const []) PipedStream.tryParse(s)]
-            .whereType<PipedStream>()
-            .where((s) => !s.videoOnly && s.height > 0 && (s.mime.isEmpty || s.mime.contains('mp4')))
-            .toList(),
-      );
+  /// Streams are kept only on the server's host, its `proxyUrl` host or YouTube's.
+  factory PipedVideo.fromJson(String server, Map<String, dynamic> json) {
+    final trusted = {Uri.tryParse(server)?.host ?? '', Uri.tryParse('${json['proxyUrl']}')?.host ?? ''}..remove('');
+    PipedStream? parse(Object? s) => PipedStream.tryParse(s, trustedHosts: trusted);
+    return PipedVideo(
+      server: server,
+      video: [for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const []) parse(s)]
+          .whereType<PipedStream>()
+          .where((s) => s.videoOnly && s.height > 0)
+          .toList(),
+      audio: [for (final s in json['audioStreams'] is List ? json['audioStreams'] as List : const []) parse(s)].whereType<PipedStream>().toList(),
+      live: json['livestream'] == true,
+      muxed: [for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const []) parse(s)]
+          .whereType<PipedStream>()
+          .where((s) => !s.videoOnly && s.height > 0 && (s.mime.isEmpty || s.mime.contains('mp4')))
+          .toList(),
+    );
+  }
 
   List<int> get heights => ({for (final s in video) s.height}.toList()..sort((a, b) => b.compareTo(a)));
 

@@ -72,6 +72,16 @@ void main() {
     expect(edl, allOf(contains('itag=137'), contains('itag=251')));
   });
 
+  test('streams off the instance and YouTube are skipped', () {
+    final video = parseInvidiousVideo('https://inv.example', {
+      'adaptiveFormats': [
+        for (final (i, url) in ['https://inv.example/a', 'https://r1.googlevideo.com/a', 'https://evil.example/a', 'https://127.0.0.1/a', 'https://192.168.1.2/a', 'https://[::1]/a', 'https://nas.local/a'].indexed)
+          {'bitrate': '${i + 1}', 'url': url, 'type': 'audio/mp4; codecs="mp4a.40.2"'},
+      ],
+    });
+    expect(video.audio.map((s) => s.bitrate), [1, 2]);
+  });
+
   test('height comes from the label when there is no size, and live has no EDL', () {
     final video = parseInvidiousVideo('https://inv.example', {
       'liveNow': true,

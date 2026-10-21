@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 import 'app_directories.dart';
 import 'player_settings.dart';
 
@@ -70,23 +72,84 @@ class CacheManager {
     return (freed: freed, skipped: skipped);
   }
 
-  Future<void> migrate(PlayerSettings from, PlayerSettings to) async {
+  /// Moves the managed folders from [from]'s location to [to]'s without
+  /// ever losing the old copy: each is copied into a temporary folder next to
+  /// its destination and checked (file count and sizes), then put in place;
+  /// [commit] (saving the new location) runs; only then is the old folder
+  /// emptied. If anything fails, or [commit] throws, the old folders stay as
+  /// they were, whatever was already in [to] is restored, and the error is
+  /// rethrown.
+  Future<void> migrate(PlayerSettings from, PlayerSettings to, {Future<void> Function()? commit, @visibleForTesting String? tag}) async {
     final oldRoot = await prepare(from);
     final newRoot = await prepare(to);
-    for (final name in managedFolders) {
-      final source = Directory('${oldRoot.path}${Platform.pathSeparator}$name');
-      final destination = Directory('${newRoot.path}${Platform.pathSeparator}$name');
-      if (source.path == destination.path || !await source.exists()) continue;
-      if (await destination.exists()) await destination.delete(recursive: true);
+    tag ??= '${DateTime.now().microsecondsSinceEpoch}';
+    String at(Directory root, String name, [String suffix = '']) => '${root.path}${Platform.pathSeparator}$name$suffix';
+    final names = [
+      for (final name in managedFolders)
+        if (at(oldRoot, name) != at(newRoot, name) && await Directory(at(oldRoot, name)).exists()) name,
+    ];
+    final staged = <String, Directory>{};
+    final backups = <String, Directory>{};
+    final placed = <String>[];
+    Future<void> discard(Directory directory) async {
       try {
-        await source.rename(destination.path);
+        if (await directory.exists()) await directory.delete(recursive: true);
       } on FileSystemException {
-        await _copyDirectory(source, destination);
-        await source.delete(recursive: true);
+        // A leftover `.migrating`/`.replaced` folder is harmless.
       }
-      await source.create(recursive: true);
+    }
+
+    try {
+      for (final name in names) {
+        final source = Directory(at(oldRoot, name));
+        final temp = staged[name] = Directory(at(newRoot, name, '.migrating-$tag'));
+        await _copyDirectory(source, temp);
+        final (expected, actual) = (await _inventory(source), await _inventory(temp));
+        if (!_sameInventory(expected, actual)) throw FileSystemException('Copied cache does not match the original', source.path);
+      }
+      for (final name in names) {
+        final destination = Directory(at(newRoot, name));
+        if (await destination.exists()) {
+          final backup = backups[name] = Directory(at(newRoot, name, '.replaced-$tag'));
+          await destination.rename(backup.path);
+        }
+        await staged[name]!.rename(destination.path);
+        placed.add(name);
+      }
+      await commit?.call();
+    } catch (_) {
+      for (final name in placed.reversed) {
+        await discard(Directory(at(newRoot, name)));
+        final backup = backups[name];
+        if (backup != null) await backup.rename(at(newRoot, name));
+      }
+      for (final name in names) {
+        if (!placed.contains(name)) {
+          final backup = backups[name];
+          if (backup != null && await backup.exists() && !await Directory(at(newRoot, name)).exists()) await backup.rename(at(newRoot, name));
+        }
+        await discard(staged[name] ?? Directory(at(newRoot, name, '.migrating-$tag')));
+      }
+      rethrow;
+    }
+    for (final name in names) {
+      final backup = backups[name];
+      if (backup != null) await discard(backup);
+      // The old location is no longer used; a file still held open is left behind.
+      await discard(Directory(at(oldRoot, name)));
     }
   }
+
+  /// Relative path -> size of every file under [directory].
+  Future<Map<String, int>> _inventory(Directory directory) async {
+    final found = <String, int>{};
+    await for (final item in directory.list(recursive: true, followLinks: false)) {
+      if (item is File) found[item.path.substring(directory.path.length)] = await item.length();
+    }
+    return found;
+  }
+
+  bool _sameInventory(Map<String, int> a, Map<String, int> b) => a.length == b.length && a.entries.every((e) => b[e.key] == e.value);
 
   Future<void> _copyDirectory(Directory from, Directory to) async {
     await to.create(recursive: true);

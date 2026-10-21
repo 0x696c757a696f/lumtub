@@ -43,6 +43,7 @@ import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
 import '../player_settings.dart';
 import '../ffmpeg_component.dart';
+import '../thumbnail_trim.dart';
 import '../tool_manager.dart';
 import '../video_format_selector.dart';
 import '../community_posts.dart';
@@ -322,6 +323,7 @@ class AppController extends ChangeNotifier {
   int _lastDrops = 0;
   DateTime _lastDropLog = DateTime(0);
   Timer? _dropTimer;
+  Timer? _thumbnailTrimTimer;
   final _recovery = PlaybackRecovery();
   /// The last position actually played, which survives a failed stream.
   Duration _lastPosition = Duration.zero;
@@ -477,6 +479,8 @@ class AppController extends ChangeNotifier {
         videoController = controller;
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
+        _thumbnailTrimTimer?.cancel();
+        _thumbnailTrimTimer = Timer.periodic(const Duration(hours: 1), (_) => _trimThumbnails());
         ready = true;
         status = ignoredOptions.isEmpty ? tr('就绪 · 解码方式将在播放时验证') : tr('就绪 · 已忽略不支持的设置：{0}', [ignoredOptions.join(', ')]);
         error = null;
@@ -486,6 +490,7 @@ class AppController extends ChangeNotifier {
       // Do not block the UI while checking newer releases.
       if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
       unawaited(_readWindowsVideoInfo());
+      unawaited(_trimThumbnails());
       unawaited(downloads?.load());
       unawaited(account?.load());
       logInfo('组件就绪 · libmpv ${manager.libmpv.current?.label ?? '内置'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
@@ -495,6 +500,26 @@ class AppController extends ChangeNotifier {
         status = tr('初始化失败');
         logError('初始化失败', e);
       });
+    }
+  }
+
+  /// Keeps the thumbnail cache under its cap, at startup and then hourly;
+  /// skipped while a video plays.
+  Future<void> _trimThumbnails() async {
+    final directory = thumbnailDirectory;
+    if (_disposed || directory == null || playing != null) return;
+    try {
+      final freed = await trimThumbnails(directory, thumbnailCapBytes(settings.cacheLimitGb));
+      if (freed > 0) {
+        logInfo('缩略图缓存超出上限，已清理 ${formatBytes(freed)}');
+        final manager = _cacheManager;
+        if (manager != null) {
+          final left = await manager.size(settings);
+          _update(() => cacheBytes = left);
+        }
+      }
+    } catch (e) {
+      logInfo('清理缩略图缓存失败：$e');
     }
   }
 
@@ -2462,8 +2487,12 @@ class AppController extends ChangeNotifier {
     try {
       await manager.prepare(next);
       final migrate = await confirmMigrate(target.path);
-      if (migrate == true) await manager.migrate(settings, next);
-      await saveSettings(next);
+      // The old folders are deleted only after the new location is saved.
+      if (migrate == true) {
+        await manager.migrate(settings, next, commit: () => saveSettings(next));
+      } else {
+        await saveSettings(next);
+      }
       _update(() => cacheBytes = 0);
       _notice(tr('缓存位置已保存。yt-dlp 缓存在下一次搜索时使用新位置。'));
     } on FileSystemException catch (error) {
@@ -2537,6 +2566,7 @@ class AppController extends ChangeNotifier {
     _stallTimer?.cancel();
     _sleepTimer?.cancel();
     _dropTimer?.cancel();
+    _thumbnailTrimTimer?.cancel();
     for (final subscription in _playerSubscriptions) {
       unawaited(subscription.cancel());
     }

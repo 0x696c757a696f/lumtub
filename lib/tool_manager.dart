@@ -125,7 +125,16 @@ class ToolManager {
   String? _versionOf(String? executable) {
     if (executable == null || executable.isEmpty) return null;
     final parts = executable.split(RegExp(r'[\\/]')).where((part) => part.isNotEmpty).toList();
-    return parts.length < 2 ? null : parts[parts.length - 2];
+    return parts.length < 2 ? null : parts[parts.length - 2].replaceFirst(RegExp(r'-dir$'), '');
+  }
+
+  /// Whether the yt-dlp in use is the single-file build, which the
+  /// unpacked one replaces as soon as possible rather than at the next
+  /// release.
+  bool get _ytDlpIsSingleFile {
+    final yt = discover()?.ytDlp;
+    if (yt == null || yt.isEmpty) return false;
+    return !Directory('${File(yt).parent.path}${_separator}_internal').existsSync();
   }
 
   /// Whether an older working yt-dlp is installed to go back to.
@@ -141,7 +150,7 @@ class ToolManager {
 
   Future<void> checkUpdates({bool force = false}) async {
     final stamp = File('${root.path}${Platform.pathSeparator}last_update_check.txt');
-    if (!force && await stamp.exists()) {
+    if (!force && !_ytDlpIsSingleFile && await stamp.exists()) {
       final last = DateTime.tryParse((await stamp.readAsString()).trim());
       if (last != null && DateTime.now().difference(last) < const Duration(hours: 24)) return;
     }
@@ -240,10 +249,18 @@ class ToolManager {
     final release = await _release('yt-dlp/yt-dlp-nightly-builds');
     final tag = _safeTag(release['tag_name']);
     final group = Directory('${root.path}${_separator}yt-dlp');
-    final dest = Directory('${group.path}$_separator$tag');
+    var dest = Directory('${group.path}$_separator$tag');
     // A version rolled back by the user is not installed again.
     if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
-    if (await File('${dest.path}${_separator}yt-dlp.exe').exists()) return;
+    if (await File('${dest.path}${_separator}yt-dlp.exe').exists()) {
+      final names = (release['assets'] as List? ?? const []).whereType<Map>().map((asset) => asset['name']?.toString());
+      if (await Directory('${dest.path}${_separator}_internal').exists() || !names.contains(ytDlpFolderAsset)) return;
+      // The same release as the single-file build in use, unpacked, beside
+      // it: the running one cannot be replaced, and the newer name wins.
+      dest = Directory('${dest.path}-dir');
+      if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
+      if (await File('${dest.path}${_separator}yt-dlp.exe').exists()) return;
+    }
     status(tr('下载 yt-dlp {0}…', [tag]));
     final partial = Directory('${dest.path}.partial');
     if (await partial.exists()) await partial.delete(recursive: true);

@@ -128,6 +128,10 @@ class StreamResolver {
     return _start(videoId, format);
   }
 
+  /// The extraction of [videoId] if one is running or done; never starts
+  /// yt-dlp.
+  Future<ResolvedVideo>? cached(String videoId) => _results[videoId];
+
   /// Starts resolving [videoId] in the background, if not already done.
   void prefetch(String videoId, String format) {
     if (_results.containsKey(videoId)) return;

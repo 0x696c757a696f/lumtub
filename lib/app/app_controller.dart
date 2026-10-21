@@ -13,11 +13,14 @@ import '../app_directories.dart';
 import '../app_log.dart';
 import '../app_window.dart';
 import '../app_preferences.dart';
+import '../play_queue.dart';
 import '../playback_failure.dart';
 import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
 import '../dearrow.dart';
+import '../downloads/download_manager.dart';
+import '../downloads/download_models.dart';
 import '../return_dislike.dart';
 import '../sponsor_block.dart';
 import '../appearance_settings.dart';
@@ -25,6 +28,9 @@ import '../cache_manager.dart';
 import '../decoder_status.dart';
 import '../models.dart';
 import '../network_proxy.dart';
+import '../cast/cast_controller.dart';
+import '../cast/cast_device.dart';
+import '../cast/cast_stream.dart';
 import '../invidious_streams.dart';
 import '../piped_streams.dart';
 import '../search_options.dart';
@@ -35,6 +41,7 @@ import '../recommendations.dart';
 import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
 import '../player_settings.dart';
+import '../ffmpeg_component.dart';
 import '../tool_manager.dart';
 import '../video_format_selector.dart';
 import '../community_posts.dart';
@@ -42,6 +49,7 @@ import '../blocked_groups.dart';
 import '../explore_filters.dart';
 import '../explore_topics.dart';
 import '../faith_topics.dart';
+import '../storyboard.dart';
 import '../stream_resolver.dart';
 import '../subtitle_translation.dart';
 import '../translation.dart';
@@ -56,7 +64,7 @@ import 'library_controller.dart';
 import 'video_list_loader.dart';
 import '../l10n/l10n.dart';
 
-enum PageMode { home, explore, subscriptions, history, playlists, settings, channel, playlist, youtubePlaylist }
+enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
 /// Application state and actions, kept separate from the widgets that show them.
 class AppController extends ChangeNotifier {
@@ -67,6 +75,9 @@ class AppController extends ChangeNotifier {
   ToolManager? _tools;
   VideoRepository? _repository;
   ToolPaths? paths;
+
+  /// 下载: videos saved on this computer; set once ready.
+  DownloadManager? downloads;
 
   Player? player;
   VideoController? videoController;
@@ -101,6 +112,8 @@ class AppController extends ChangeNotifier {
   /// [favoritesPlaylistId].
   String? openPlaylistId;
   static const favoritesPlaylistId = 'favorites';
+  /// 稍后观看 opens on the same page as a playlist.
+  static const watchLaterPlaylistId = 'watch_later';
   /// Where 返回 goes: earlier pages and videos.
   final _back = BackStack();
   /// Set while going back, so the step back is not itself remembered.
@@ -128,12 +141,36 @@ class AppController extends ChangeNotifier {
   /// 画中画: a small borderless window above the others, showing only the
   /// video in its own ratio (ui/pip_view.dart).
   bool pip = false;
+  /// 应用内小窗: [playing] keeps playing in a floating card over the other
+  /// pages instead of on the watch page (ui/mini_player.dart).
+  bool mini = false;
   /// 听视频: mpv decodes no picture, which saves power and bandwidth.
   bool audioOnly = false;
 
   void togglePinned() {
     if (!AppWindow.setTopmost(!pinned || pip)) return _notice(tr('无法设置窗口置顶'));
     _update(() => pinned = !pinned);
+  }
+
+  /// Whether the watch page shows [playing].
+  bool get onWatchPage => playing != null && !mini;
+
+  /// Whether leaving the watch page now keeps the video in the mini player.
+  bool get _keepsPlaying =>
+      playing != null && (mini || (preferences.miniPlayer && player != null && playbackError == null));
+
+  /// Shows [playing] on the watch page again, where it was.
+  void expandMini() {
+    if (mini) _update(() => mini = false);
+  }
+
+  /// Puts the video on the watch page into the mini player (the 应用内小窗
+  /// button), over the page it was opened from.
+  void enterMini() {
+    if (playing == null || mini || player == null) return;
+    setPip(false);
+    _saveProgress(now: true);
+    _update(() => mini = true);
   }
 
   void setPip(bool on) {
@@ -174,6 +211,8 @@ class AppController extends ChangeNotifier {
 
   /// The list the current video was opened from, shown as the play queue.
   List<VideoItem> queue = const [];
+  /// Videos lined up by hand; they play before [upNext].
+  final playQueue = PlayQueue();
   VideoDetails? details;
   bool loadingDetails = false;
   /// Heights the playing video offers, highest first; empty until known.
@@ -193,6 +232,33 @@ class AppController extends ChangeNotifier {
   PlaybackFailure? _rateLimited;
   late final _piped = PipedStreams(_http);
   late final _invidious = InvidiousStreams(_http);
+
+  /// The TV or Chromecast the video is cast to, if any.
+  final cast = CastController();
+
+  /// What to cast of [playing]: one progressive mp4 with sound, from the
+  /// yt-dlp extraction or else from a Piped or Invidious server.
+  Future<CastMedia> castMedia(Duration start) async {
+    final item = playing;
+    if (item == null || item.isLive || _repository == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
+    CastSource? source;
+    try {
+      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format)).info);
+    } catch (e) {
+      logInfo('投屏：yt-dlp 解析失败：$e');
+    }
+    for (final kind in RelayKind.values) {
+      if (source != null) break;
+      try {
+        source = castSourceFromRelay(await (kind == RelayKind.piped ? _piped.fetch(item.id) : _invidious.fetch(item.id)));
+      } catch (e) {
+        logInfo('投屏：$kind 解析失败：$e');
+      }
+    }
+    if (source == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
+    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
+    return CastMedia(url: source.url, title: title, mime: source.mime, start: start);
+  }
 
   /// The Piped servers, for 设置 › Piped 服务器.
   PipedStreams get piped => _piped;
@@ -234,6 +300,8 @@ class AppController extends ChangeNotifier {
   List<SkipSegment> _segments = const [];
   final _skipped = <SkipSegment>{};
   final _http = http.Client();
+  /// Sprite sheets of the progress bar's preview frames.
+  late final storyboardSheets = StoryboardSheets(_http);
   /// Behind 翻译 buttons; called only when one is tapped.
   late Translator translator = GoogleTranslator(_http);
   /// The subtitle shown above the main one (双语字幕), if any.
@@ -266,6 +334,8 @@ class AppController extends ChangeNotifier {
   Stream<String> get notices => _notices.stream;
 
   List<VideoItem> get history => _history?.items ?? const [];
+  @visibleForTesting
+  set historyStore(HistoryStore? store) => _history = store;
 
   /// The text of the current or last search, if any.
   String? get query => _query;
@@ -387,6 +457,7 @@ class AppController extends ChangeNotifier {
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
+        downloads = _downloadsFor(paths, directories)..addListener(notifyListeners);
         final library = this.library = LibraryController(libraryStore, client: _http)
           ..repository = _repository
           ..addListener(notifyListeners);
@@ -410,6 +481,7 @@ class AppController extends ChangeNotifier {
       // Do not block the UI while checking newer releases.
       if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
       unawaited(_readWindowsVideoInfo());
+      unawaited(downloads?.load());
       unawaited(account?.load());
       logInfo('组件就绪 · libmpv ${manager.libmpv.current?.label ?? '内置'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
@@ -437,6 +509,33 @@ class AppController extends ChangeNotifier {
         toolDirectories: paths.executableDirectories,
         proxy: () => proxy.ytDlpValue(this.settings.proxyMode),
       );
+
+  DownloadManager _downloadsFor(ToolPaths paths, AppDirectories directories) => DownloadManager(
+        file: File('${directories.data.path}${Platform.pathSeparator}downloads.json'),
+        ytDlpPath: paths.ytDlp,
+        defaultDirectory: DownloadManager.defaultDirectoryFor(Platform.environment, '${directories.data.path}${Platform.pathSeparator}downloads'),
+        environment: () => _repository!.processEnvironment,
+        ffmpegDirectory: () {
+          final env = _repository!.processEnvironment;
+          final path = env.entries.where((e) => e.key.toUpperCase() == 'PATH').firstOrNull?.value;
+          return DownloadManager.findFfmpeg([if (_tools?.ffmpegDirectory != null) _tools!.ffmpegDirectory!, ...paths.executableDirectories, '${directories.components.path}${Platform.pathSeparator}ffmpeg'], path);
+        },
+        options: () => DownloadOptions(
+          proxy: proxy.ytDlpValue(settings.proxyMode),
+          deno: paths.deno,
+          cacheDirectory: _repository?.cacheDirectory,
+          subtitleLanguages: settings.subtitleLanguage.ytDlpLangs,
+          autoSubtitles: settings.subtitleMode == SubtitleMode.always,
+        ),
+        sponsorSegments: (id) => _sponsorBlock.segments(id, settings.sponsorCategories),
+      );
+
+  /// Queues [item] for download, and says so.
+  void download(VideoItem item, DownloadQuality quality) {
+    final manager = downloads;
+    if (manager == null || item.isLive || item.isUpcoming) return _notice(tr('直播无法下载'));
+    _notice(manager.add(item, quality) == null ? tr('已在下载列表中') : tr('已加入下载'));
+  }
 
   /// The proxy everything currently goes through.
   NetworkProxy proxy = NetworkProxy.direct;
@@ -470,15 +569,20 @@ class AppController extends ChangeNotifier {
       await play(VideoItem(id: asUrl, title: tr('YouTube 视频 · {0}', [asUrl]), channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$asUrl'));
       return;
     }
-    if (query != _query || mode != PageMode.explore || playing != null) _remember();
-    player?.pause();
+    if (query != _query || mode != PageMode.explore || onWatchPage) _remember();
+    final keep = _keepsPlaying;
+    if (!keep) player?.pause();
     final repository = _repository!;
     final chosen = filter ?? searchFilter;
     if (preferences.recordHistory) unawaited(searchHistory?.add(query));
     final sp = searchParams(type: chosen, sort: searchSort, date: searchDate, duration: searchDuration);
     _update(() {
       mode = PageMode.explore;
-      playing = null;
+      if (keep) {
+        mini = true;
+      } else {
+        playing = null;
+      }
       _query = query;
       searchFilter = chosen;
       searchResults?.dispose();
@@ -829,11 +933,19 @@ class AppController extends ChangeNotifier {
 
   /// Plays [item]; [from] is the list it was picked from and becomes the queue.
   /// Opens [item] on the watch page; [at] is where to start, else where
-  /// it was left off.
-  Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at}) async {
+  /// it was left off. [keepMini] plays it in the mini player when that is
+  /// where the last video was (the queue moving on by itself).
+  Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at, bool keepMini = false}) async {
     final player = this.player;
     if (player == null) return;
+    if (mini && playing?.id == item.id && at == null) return expandMini();
     if (playing?.id != item.id) {
+      unawaited(cast.stop());
+      if (playing case final left?) {
+        _played.removeWhere((v) => v.id == left.id);
+        _played.add(left);
+        if (_played.length > 50) _played.removeAt(0);
+      }
       _remember();
       _finishWatching();
       _watching = item;
@@ -846,6 +958,7 @@ class AppController extends ChangeNotifier {
     final start = at ?? (resume != null && resume.resumable ? resume.position : null);
     _update(() {
       playing = item;
+      mini = keepMini && mini;
       if (from != null) queue = List.unmodifiable(from);
       playbackError = null;
       details = null;
@@ -888,7 +1001,9 @@ class AppController extends ChangeNotifier {
 
   Future<void> _loadSegments(VideoItem item, int serial) async {
     try {
-      final segments = await _sponsorBlock.segments(item.id, settings.sponsorCategories);
+      final local = downloads?.localVideo(item.id);
+      final saved = [for (final s in local?.segments ?? const <SkipSegment>[]) if (settings.sponsorCategories.contains(s.category)) s];
+      final segments = saved.isNotEmpty ? saved : await _sponsorBlock.segments(item.id, settings.sponsorCategories);
       if (serial == _playSerial) _update(() => _segments = segments);
     } catch (_) {
       // Playback does not depend on SponsorBlock being reachable.
@@ -928,6 +1043,8 @@ class AppController extends ChangeNotifier {
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
+      final local = resolved && piped && !item.isLive ? downloads?.localVideo(item.id) : null;
+      if (local != null) return await _openLocal(item, serial, local, start: start, play: play);
       final format = _format;
       _openedVia = null;
       if (resolved && piped) {
@@ -992,6 +1109,48 @@ class AppController extends ChangeNotifier {
       logError('无法打开视频 ${item.id}', e);
       if (serial == _playSerial) _fail(item, PlaybackFailure.classify(['$e', ..._recentErrors]));
       return false;
+    }
+  }
+
+  /// Plays the downloaded file of [item] instead of asking YouTube.
+  Future<bool> _openLocal(VideoItem item, int serial, LocalVideo local, {Duration? start, bool play = true}) async {
+    final player = this.player!;
+    _recentErrors.clear();
+    _openedVia = null;
+    _openedResolved = null;
+    _tracking = null;
+    if (secondarySubtitle != null) {
+      secondarySubtitle = null;
+      final platform = player.platform;
+      if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
+    }
+    _lastPosition = start ?? Duration.zero;
+    await player.open(Media(local.file.path, start: start), play: play);
+    if (serial == _playSerial) _tracking = item;
+    _mpvLogLines = 0;
+    _lastDrops = 0;
+    _decoderPending = true;
+    _update(() {});
+    unawaited(_addLocalSubtitles(local, serial));
+    return true;
+  }
+
+  /// Adds the subtitle files saved next to a downloaded video, the one in
+  /// the preferred language selected, unless subtitles are set to stay off.
+  Future<void> _addLocalSubtitles(LocalVideo local, int serial) async {
+    final player = this.player;
+    final platform = player?.platform;
+    if (player == null || platform is! NativePlayer || local.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
+    try {
+      await player.stream.duration.firstWhere((d) => d > Duration.zero).timeout(const Duration(seconds: 15));
+      if (serial != _playSerial) return;
+      final first = local.preferredSubtitle(settings.subtitleLanguage.mpvLangs.split(','));
+      await platform.command(['sub-add', first.path, 'select']);
+      for (final other in local.subtitles.where((f) => f != first)) {
+        await platform.command(['sub-add', other.path, 'auto']);
+      }
+    } catch (e) {
+      logError('无法加载离线字幕', e);
     }
   }
 
@@ -1244,43 +1403,110 @@ class AppController extends ChangeNotifier {
   /// Follows [PlayerSettings.playOrder] once a video ends. Single cycle is
   /// mpv's loop-file, so a looping video never ends.
   Future<void> _playAfterEnd() async {
+    final done = playing;
+    if (done != null && preferences.watchLaterAutoRemove) library?.removeWatchLater(done.id);
     if (sleepAfterCurrent) {
       _update(() => sleepAfterCurrent = false);
       _notice(tr('定时关闭：当前视频已播完'));
       return;
     }
+    if (await playQueued()) return;
     switch (settings.playOrder) {
       case PlayOrder.pause || PlayOrder.singleCycle:
         return;
       case PlayOrder.listOrder:
-        if (upNext.isNotEmpty) await play(upNext.first);
+        if (upNext.isNotEmpty) await play(upNext.first, keepMini: true);
       case PlayOrder.listCycle:
         if (upNext.isNotEmpty) {
-          await play(upNext.first);
+          await play(upNext.first, keepMini: true);
         } else if (queue.isNotEmpty) {
-          await play(queue.first);
+          await play(queue.first, keepMini: true, at: mini && queue.first.id == playing?.id ? Duration.zero : null);
         } else if (playing != null) {
-          await play(playing!);
+          await play(playing!, keepMini: true, at: Duration.zero);
         }
       case PlayOrder.autoPlayRelated:
-        await playNext();
+        await playNext(keepMini: true);
     }
   }
 
   /// Plays the next video in the queue, if there is one.
-  Future<void> playNext() async {
+  Future<void> playNext({bool keepMini = false}) async {
+    if (await playQueued(null, keepMini)) return;
     final next = upNext;
     final suggestions = relatedItems;
     if (next.isNotEmpty) {
-      await play(next.first);
+      await play(next.first, keepMini: keepMini);
     } else if (suggestions.isNotEmpty) {
-      await play(suggestions.first, from: suggestions);
+      await play(suggestions.first, from: suggestions, keepMini: keepMini);
+    }
+  }
+
+  @visibleForTesting
+  Future<void> playAfterEndForTest() => _playAfterEnd();
+
+  /// 下一个播放: [item] goes to the front of [playQueue].
+  void queueNext(VideoItem item) {
+    _update(() => playQueue.addNext(item));
+    _notice(tr('将在当前视频之后播放'));
+  }
+
+  /// 加入播放队列: [item] goes to the end of [playQueue].
+  void queueLast(VideoItem item) {
+    final added = playQueue.addLast(item);
+    _update(() {});
+    _notice(added ? tr('已加入播放队列') : tr('播放队列里已经有这个视频'));
+  }
+
+  void removeQueued(String id) => _update(() => playQueue.remove(id));
+
+  void clearQueue() => _update(playQueue.clear);
+
+  void moveQueued(int from, int to) => _update(() => playQueue.move(from, to));
+
+  /// Plays [item], or the first of [playQueue], and takes it off the queue.
+  /// The list the current video came from carries on after the queued ones.
+  /// False when there was nothing to play.
+  Future<bool> playQueued([VideoItem? item, bool keepMini = false]) async {
+    final next = item ?? playQueue.items.firstOrNull;
+    if (next == null) return false;
+    _update(() => playQueue.remove(next.id));
+    final at = playing == null ? -1 : queue.indexWhere((other) => other.id == playing!.id);
+    final rest = [for (final other in queue) if (other.id != next.id) other];
+    final from = at < 0 ? null : [...rest.take(at + 1), next, ...rest.skip(at + 1)];
+    await play(next, from: from, keepMini: keepMini);
+    return true;
+  }
+
+  /// The video before the current one in the queue, if it was opened from one.
+  VideoItem? get previousInQueue {
+    final current = playing;
+    if (current == null) return null;
+    final index = queue.indexWhere((item) => item.id == current.id);
+    return index > 0 ? queue[index - 1] : null;
+  }
+
+  bool _backgroundAudioOnly = false;
+
+  /// While the window is minimised or in the tray with the setting on, mpv
+  /// decodes no picture; [hidden] false brings it back. A user's own 听视频
+  /// choice is left alone.
+  Future<void> setBackgroundAudioOnly(bool hidden) async {
+    final platform = player?.platform;
+    if (platform is! NativePlayer) return;
+    if (hidden) {
+      if (!preferences.audioOnlyInBackground || audioOnly || _backgroundAudioOnly || !player!.state.playing) return;
+      _backgroundAudioOnly = true;
+      await platform.setProperty('vid', 'no');
+    } else if (_backgroundAudioOnly) {
+      _backgroundAudioOnly = false;
+      if (!audioOnly) await platform.setProperty('vid', 'auto');
     }
   }
 
   /// Whether nothing will play once the current video ends.
   bool get stopsAfterEnd =>
       sleepAfterCurrent ||
+      playQueue.isEmpty &&
       switch (settings.playOrder) {
         PlayOrder.pause => true,
         PlayOrder.singleCycle || PlayOrder.listCycle => false,
@@ -1312,7 +1538,39 @@ class AppController extends ChangeNotifier {
     });
   }
 
-  bool get hasNext => upNext.isNotEmpty || relatedItems.isNotEmpty;
+  bool get hasNext => playQueue.isNotEmpty || upNext.isNotEmpty || relatedItems.isNotEmpty;
+
+  /// Videos played before the current one, the latest last.
+  final _played = <VideoItem>[];
+
+  bool get hasPrevious => _played.isNotEmpty || previousInQueue != null;
+
+  /// Plays the video that was playing before this one, or else the one
+  /// before it in the list it was opened from.
+  Future<void> playPrevious() async {
+    if (_played.isEmpty) {
+      if (previousInQueue case final previous?) await play(previous);
+      return;
+    }
+    final item = _played.removeLast();
+    await play(item);
+    // play() noted the video left behind; going back is not a new step.
+    if (_played.isNotEmpty && _played.last.id == item.id) _played.removeLast();
+  }
+
+  /// yt-dlp's result for the playing video, when it was extracted already
+  /// (storyboards and the replay heatmap come from it); null otherwise,
+  /// for example when Piped or Invidious played it.
+  Future<Map<String, dynamic>?> playingInfo() async {
+    final id = playing?.id;
+    final cached = id == null ? null : _repository?.streams.cached(id);
+    if (cached == null) return null;
+    try {
+      return (await cached).info;
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Related videos that pass the content filters.
   List<VideoItem> get relatedItems => visible(related?.items ?? const []);
@@ -1382,13 +1640,19 @@ class AppController extends ChangeNotifier {
   Future<void> _loadDetails(VideoItem item, int serial) async {
     try {
       VideoDetails loaded;
-      try {
-        // The extraction playback uses carries the details too.
-        final resolved = await _repository!.streams.resolve(item.id, _format);
-        loaded = resolved.details;
-        if (serial == _playSerial) _update(() => availableHeights = resolved.heights);
-      } catch (_) {
-        loaded = await _repository!.details(item.id);
+      final local = downloads?.localVideo(item.id);
+      if (local != null && local.info['title'] != null) {
+        // Saved with the download, so the page works offline.
+        loaded = VideoDetails.fromJson(local.info);
+      } else {
+        try {
+          // The extraction playback uses carries the details too.
+          final resolved = await _repository!.streams.resolve(item.id, _format);
+          loaded = resolved.details;
+          if (serial == _playSerial) _update(() => availableHeights = resolved.heights);
+        } catch (_) {
+          loaded = await _repository!.details(item.id);
+        }
       }
       if (serial == _playSerial) {
         _update(() {
@@ -1446,6 +1710,7 @@ class AppController extends ChangeNotifier {
     return index < 0 ? queue : queue.sublist(index + 1);
   }
 
+  /// Stops the video and closes the watch page or the mini player.
   void stopWatching() {
     setPip(false);
     _finishWatching();
@@ -1454,6 +1719,7 @@ class AppController extends ChangeNotifier {
     ++_playSerial;
     _update(() {
       playing = null;
+      mini = false;
       playbackError = null;
     });
     player?.pause();
@@ -1461,32 +1727,39 @@ class AppController extends ChangeNotifier {
 
   /// Opens [target]; 返回 comes back to where this was.
   void navigate(PageMode target) {
-    if (target != mode || playing != null) _remember();
+    if (target != mode || onWatchPage) _remember();
     _go(target);
   }
 
   void _go(PageMode target) {
     setPip(false);
-    if (playing != null) _finishWatching();
+    final keep = _keepsPlaying;
+    if (!keep) {
+      if (playing != null) _finishWatching();
+      _tracking = null;
+      ++_playSerial;
+    }
     if (target == PageMode.home) unawaited(refreshHomeFeed());
     _saveProgress(now: true);
-    _tracking = null;
-    ++_playSerial;
     if (target == PageMode.subscriptions && preferences.feedAutoRefresh) {
       unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
     }
     _update(() {
       mode = target;
-      playing = null;
-      playbackError = null;
+      if (keep) {
+        mini = true;
+      } else {
+        playing = null;
+        playbackError = null;
+      }
     });
-    player?.pause();
+    if (!keep) player?.pause();
   }
 
   /// What is on screen now, as 返回 would come back to it.
   BackEntry get _here {
     final video = playing;
-    if (video != null) {
+    if (video != null && !mini) {
       final state = player?.state;
       // A video that had finished starts over rather than ending again.
       final ended = state == null || (state.duration > Duration.zero && state.position > state.duration - const Duration(seconds: 5));
@@ -1500,23 +1773,24 @@ class AppController extends ChangeNotifier {
   }
 
   /// Whether 返回 has somewhere to go.
-  bool get canGoBack => !_back.isEmpty || playing != null || _query != null || mode != PageMode.home || channelQuery != null;
+  bool get canGoBack => !_back.isEmpty || onWatchPage || _query != null || mode != PageMode.home || channelQuery != null;
 
   /// Goes back to the previous page or video: a search inside a channel is
   /// cleared first; with nothing earlier it closes the video, then the
   /// search, then goes home.
   void goBack() {
-    if (playing == null && mode == PageMode.channel && channelQuery != null) return searchChannel('');
+    if (!onWatchPage && mode == PageMode.channel && channelQuery != null) return searchChannel('');
     BackEntry? entry;
     do {
       entry = _back.pop();
-    } while (entry != null && playing == null && entry.same(_here));
+    } while (entry != null && !onWatchPage && entry.same(_here));
     _restoring = true;
     try {
       if (entry != null) {
         _restore(entry);
-      } else if (playing != null) {
-        stopWatching();
+      } else if (onWatchPage) {
+        // Nothing earlier: leave the watch page for the page under it.
+        _go(mode);
       } else if (_query != null) {
         clearSearch();
       } else if (mode != PageMode.home) {
@@ -1530,6 +1804,7 @@ class AppController extends ChangeNotifier {
   void _restore(BackEntry entry) {
     final video = entry.video;
     if (video != null) {
+      if (mini && playing?.id == video.id) return expandMini();
       unawaited(play(video, from: entry.queue.isEmpty ? null : entry.queue, at: entry.position));
       return;
     }
@@ -1806,6 +2081,12 @@ class AppController extends ChangeNotifier {
     _notice(tr('搜索记录已清空。'));
   }
 
+  /// Forgets the videos with these [ids] from the watch history.
+  Future<void> removeFromHistory(Set<String> ids) async {
+    await _history?.remove(ids);
+    _update(() {});
+  }
+
   Future<void> clearHistory() async {
     await _history?.clear();
     _update(() {});
@@ -1954,6 +2235,63 @@ class AppController extends ChangeNotifier {
     await _tools?.rollBackYtDlp();
     _update(() {});
     _notice(tr('已改回上一个 yt-dlp，重启 YTPlus 后生效。'));
+  }
+
+  /// Download progress (0..1, null when unknown) while ffmpeg installs.
+  double? ffmpegProgress;
+  bool installingFfmpeg = false;
+
+  /// Whether ffmpeg is there, so downloads can merge video and audio.
+  bool get ffmpegInstalled => downloads?.canMerge ?? false;
+
+  /// Whether starting a download in [quality] merges, goes single-file or
+  /// needs to ask about installing ffmpeg first.
+  FfmpegChoice ffmpegChoice(DownloadQuality quality) =>
+      ffmpegChoiceFor(quality, installed: ffmpegInstalled, declined: preferences.skipFfmpegPrompt);
+
+  /// Remembers that the user wants single-file downloads without being asked.
+  Future<void> declineFfmpegPrompt() => savePreferences(preferences.copyWith(skipFfmpegPrompt: true));
+
+  /// The size of the ffmpeg download in bytes, or null when unknown.
+  Future<int?> ffmpegDownloadSize() async {
+    try {
+      return await _tools?.ffmpegDownloadSize();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Installs or updates ffmpeg; true when it is usable afterwards.
+  Future<bool> installFfmpeg() async {
+    final tools = _tools;
+    if (tools == null || installingFfmpeg) return false;
+    _update(() {
+      installingFfmpeg = true;
+      ffmpegProgress = null;
+    });
+    try {
+      await tools.installFfmpeg(onProgress: (received, total) {
+        final fraction = total == null || total == 0 ? null : received / total;
+        if (fraction == null || fraction - (ffmpegProgress ?? 0) >= 0.01) _update(() => ffmpegProgress = fraction);
+      });
+      if (preferences.skipFfmpegPrompt) await savePreferences(preferences.copyWith(skipFfmpegPrompt: false));
+      return true;
+    } catch (e) {
+      logError('ffmpeg 安装失败', e);
+      _notice(tr('ffmpeg 安装失败：{0}', [e]));
+      return false;
+    } finally {
+      _update(() => installingFfmpeg = false);
+    }
+  }
+
+  Future<void> removeFfmpeg() async {
+    try {
+      await _tools?.removeFfmpeg();
+    } on FileSystemException catch (e) {
+      _notice(tr('无法删除 ffmpeg（可能正在使用）：{0}', [e.message]));
+    }
+    _update(() {});
   }
 
   Future<void> checkUpdates() async {
@@ -2149,7 +2487,9 @@ class AppController extends ChangeNotifier {
     }
     _saveProgress();
     unawaited(_relay?.close());
+    cast.dispose();
     account?.dispose();
+    downloads?.dispose();
     library?.dispose();
     channelVideos?.dispose();
     searchResults?.dispose();

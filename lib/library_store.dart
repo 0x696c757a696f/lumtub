@@ -37,6 +37,8 @@ class LibraryStore {
   static const _maxProgress = 500;
 
   final favorites = <VideoItem>[];
+  /// 稍后观看, newest first.
+  final watchLater = <VideoItem>[];
   final playlists = <LocalPlaylist>[];
   final channels = <ChannelRef>[];
   // Insertion order is age order, so the oldest entry is dropped first.
@@ -48,6 +50,7 @@ class LibraryStore {
       final data = jsonDecode(await file.readAsString());
       if (data is! Map) return;
       favorites.addAll(_items(data['favorites']));
+      watchLater.addAll(_items(data['watchLater']));
       for (final raw in data['playlists'] is List ? data['playlists'] as List : const []) {
         if (raw is! Map || raw['id'] is! String) continue;
         playlists.add(LocalPlaylist(id: raw['id'] as String, name: raw['name']?.toString() ?? tr('播放列表'), items: _items(raw['items'])));
@@ -83,6 +86,7 @@ class LibraryStore {
   Map<String, dynamic> toJson() => {
         'version': 1,
         'favorites': favorites.map((item) => item.toJson()).toList(),
+        'watchLater': watchLater.map((item) => item.toJson()).toList(),
         'playlists': playlists.map((playlist) => playlist.toJson()).toList(),
         'channels': channels.map((channel) => channel.toJson()).toList(),
         'progress': {for (final entry in _progress.entries) entry.key: [entry.value.$1, entry.value.$2]},
@@ -126,6 +130,22 @@ class LibraryStore {
     }
     favorites.insert(0, item);
     return true;
+  }
+
+  bool isWatchLater(String id) => watchLater.any((item) => item.id == id);
+
+  /// Adds or removes [item] from 稍后观看; returns whether it is now there.
+  bool toggleWatchLater(VideoItem item) {
+    if (removeWatchLater(item.id)) return false;
+    watchLater.insert(0, item);
+    return true;
+  }
+
+  /// Takes [id] off 稍后观看; false when it was not there.
+  bool removeWatchLater(String id) {
+    final before = watchLater.length;
+    watchLater.removeWhere((item) => item.id == id);
+    return watchLater.length != before;
   }
 
   LocalPlaylist createPlaylist(String name) {

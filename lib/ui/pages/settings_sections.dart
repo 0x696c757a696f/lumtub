@@ -15,6 +15,7 @@ import '../../decoder_status.dart';
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
+import '../../progress_line.dart';
 import '../../translation.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../../windows_video_info.dart';
@@ -527,6 +528,20 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.resumePlayback,
               onChanged: (v) => savePrefs(prefs.copyWith(resumePlayback: v)),
             ), subtitle: tr('续播 进度')),
+        SettingEntry(tr('应用内小窗'), (context) => SwitchItem(
+              title: tr('应用内小窗'),
+              subtitle: tr('离开播放页时让视频继续在小窗里播放；关闭则停止播放'),
+              leading: _icon(Icons.picture_in_picture_rounded),
+              value: prefs.miniPlayer,
+              onChanged: (v) => savePrefs(prefs.copyWith(miniPlayer: v)),
+            ), subtitle: tr('小窗 离开播放页 悬浮')),
+        SettingEntry(tr('看完后从稍后观看移除'), (context) => SwitchItem(
+              title: tr('看完后从稍后观看移除'),
+              subtitle: tr('稍后观看里的视频播到结尾时自动移出列表'),
+              leading: _icon(Icons.watch_later_outlined),
+              value: prefs.watchLaterAutoRemove,
+              onChanged: (v) => savePrefs(prefs.copyWith(watchLaterAutoRemove: v)),
+            ), subtitle: tr('稍后观看 自动移除')),
         SettingEntry(tr('字幕设置'), (context) => NormalItem(
               title: tr('字幕设置'),
               subtitle: '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label} · ${settings.subtitleScale.toStringAsFixed(1)}×',
@@ -565,12 +580,39 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.pauseOnMinimize,
               onChanged: (v) => savePrefs(prefs.copyWith(pauseOnMinimize: v)),
             ), subtitle: tr('后台播放')),
+        SettingEntry(tr('最小化时只听声音'), (context) => SwitchItem(
+              title: tr('最小化时只听声音'),
+              subtitle: tr('窗口最小化或收到托盘时不解码画面，还原后恢复'),
+              leading: _icon(Icons.headphones_outlined),
+              value: prefs.audioOnlyInBackground,
+              onChanged: (v) => savePrefs(prefs.copyWith(audioOnlyInBackground: v)),
+            ), subtitle: tr('后台播放')),
+        SettingEntry(tr('关闭时最小化到托盘'), (context) => SwitchItem(
+              title: tr('关闭时最小化到托盘'),
+              subtitle: tr('点关闭按钮时隐藏到托盘图标，继续播放；从托盘菜单退出'),
+              leading: _icon(Icons.call_to_action_outlined),
+              value: prefs.closeToTray,
+              onChanged: (v) => savePrefs(prefs.copyWith(closeToTray: v)),
+            ), subtitle: tr('托盘 后台播放')),
         SettingEntry(tr('延长播放控件显示时间'), (context) => NormalItem(
               title: tr('播放控件显示时间'),
               subtitle: tr('鼠标不动 {0} 后隐藏', [labelOf(_hideTimes, prefs.controlsHideSeconds)]),
               leading: _icon(Icons.touch_app_outlined),
               onTap: () => pickFromDialog<int>(context, title: tr('播放控件显示时间'), value: prefs.controlsHideSeconds, values: _hideTimes, onSelected: (v) => savePrefs(prefs.copyWith(controlsHideSeconds: v))),
             ), subtitle: tr('控制栏 隐藏')),
+        SettingEntry(tr('最多重放曲线'), (context) => SwitchItem(
+              title: tr('进度条上方显示“最多重放”曲线'),
+              subtitle: tr('热门视频才有，看哪一段被反复观看'),
+              leading: _icon(Icons.area_chart_outlined),
+              value: prefs.showHeatmap,
+              onChanged: (v) => savePrefs(prefs.copyWith(showHeatmap: v)),
+            ), subtitle: tr('热度 进度条 最多重放')),
+        SettingEntry(tr('底部细进度条'), (context) => NormalItem(
+              title: tr('底部细进度条'),
+              subtitle: tr('当前：{0}；播放控件隐藏时，画面底部的一条细线', [prefs.progressLine.label]),
+              leading: _icon(Icons.linear_scale_rounded),
+              onTap: () => pickFromDialog<ProgressLine>(context, title: tr('底部细进度条'), value: prefs.progressLine, values: [for (final v in ProgressLine.values) (v, v.label)], onSelected: (v) => savePrefs(prefs.copyWith(progressLine: v))),
+            ), subtitle: tr('进度条 迷你 隐藏')),
         SettingEntry(tr('启用键盘控制'), (context) => SwitchItem(
               title: tr('启用键盘控制'),
               subtitle: tr('空格暂停、方向键快进和音量、F 全屏等'),

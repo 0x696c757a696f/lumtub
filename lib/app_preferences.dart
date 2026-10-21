@@ -8,6 +8,7 @@ import 'explore_filters.dart';
 import 'feed_quality.dart';
 import 'explore_topics.dart';
 import 'models.dart';
+import 'progress_line.dart';
 import 'translation.dart';
 import 'l10n/l10n.dart';
 
@@ -51,17 +52,24 @@ class AppPreferences {
     this.feedRefreshMinutes = 10,
     this.autoPlay = true,
     this.resumePlayback = true,
+    this.watchLaterAutoRemove = true,
     this.autoFullscreen = false,
+    this.miniPlayer = true,
     this.exitFullscreenOnEnd = false,
     this.pauseOnMinimize = false,
+    this.audioOnlyInBackground = false,
+    this.closeToTray = false,
     this.keyboardShortcuts = true,
     this.seekSeconds = 5,
     this.longSeekSeconds = 10,
     this.volumeStep = 5,
     this.controlsHideSeconds = 3,
+    this.showHeatmap = true,
+    this.progressLine = ProgressLine.always,
     this.showRelated = true,
     this.expandDescription = false,
     this.autoCheckUpdates = true,
+    this.skipFfmpegPrompt = false,
     this.translateLanguage = 'zh-CN',
   });
 
@@ -124,17 +132,32 @@ class AppPreferences {
   /// Start playing as soon as a video opens.
   final bool autoPlay;
   final bool resumePlayback;
+  /// Take a video off 稍后观看 once it was played to the end.
+  final bool watchLaterAutoRemove;
   final bool autoFullscreen;
+  /// Leaving the watch page keeps the video in the in-app mini player
+  /// (ui/mini_player.dart) instead of stopping it.
+  final bool miniPlayer;
   final bool exitFullscreenOnEnd;
   final bool pauseOnMinimize;
+  /// Minimised or hidden to the tray, mpv decodes no picture.
+  final bool audioOnlyInBackground;
+  /// Closing the window hides it to the tray icon instead of exiting.
+  final bool closeToTray;
   final bool keyboardShortcuts;
   final int seekSeconds;
   final int longSeekSeconds;
   final int volumeStep;
   final int controlsHideSeconds;
+  /// The 最多重放 curve above the progress bar.
+  final bool showHeatmap;
+  /// The thin line along the bottom of the video while the controls hide.
+  final ProgressLine progressLine;
   final bool showRelated;
   final bool expandDescription;
   final bool autoCheckUpdates;
+  /// The user chose single-file downloads and not to be asked to install ffmpeg.
+  final bool skipFfmpegPrompt;
   /// The language 翻译 and the translated subtitle turn text into (a TranslationLanguage code).
   final String translateLanguage;
 
@@ -228,17 +251,24 @@ class AppPreferences {
     int? feedRefreshMinutes,
     bool? autoPlay,
     bool? resumePlayback,
+    bool? watchLaterAutoRemove,
     bool? autoFullscreen,
+    bool? miniPlayer,
     bool? exitFullscreenOnEnd,
     bool? pauseOnMinimize,
+    bool? audioOnlyInBackground,
+    bool? closeToTray,
     bool? keyboardShortcuts,
     int? seekSeconds,
     int? longSeekSeconds,
     int? volumeStep,
     int? controlsHideSeconds,
+    bool? showHeatmap,
+    ProgressLine? progressLine,
     bool? showRelated,
     bool? expandDescription,
     bool? autoCheckUpdates,
+    bool? skipFfmpegPrompt,
     String? translateLanguage,
   }) =>
       AppPreferences(
@@ -275,17 +305,24 @@ class AppPreferences {
         feedRefreshMinutes: feedRefreshMinutes ?? this.feedRefreshMinutes,
         autoPlay: autoPlay ?? this.autoPlay,
         resumePlayback: resumePlayback ?? this.resumePlayback,
+        watchLaterAutoRemove: watchLaterAutoRemove ?? this.watchLaterAutoRemove,
         autoFullscreen: autoFullscreen ?? this.autoFullscreen,
+        miniPlayer: miniPlayer ?? this.miniPlayer,
         exitFullscreenOnEnd: exitFullscreenOnEnd ?? this.exitFullscreenOnEnd,
         pauseOnMinimize: pauseOnMinimize ?? this.pauseOnMinimize,
+        audioOnlyInBackground: audioOnlyInBackground ?? this.audioOnlyInBackground,
+        closeToTray: closeToTray ?? this.closeToTray,
         keyboardShortcuts: keyboardShortcuts ?? this.keyboardShortcuts,
         seekSeconds: seekSeconds ?? this.seekSeconds,
         longSeekSeconds: longSeekSeconds ?? this.longSeekSeconds,
         volumeStep: volumeStep ?? this.volumeStep,
         controlsHideSeconds: controlsHideSeconds ?? this.controlsHideSeconds,
+        showHeatmap: showHeatmap ?? this.showHeatmap,
+        progressLine: progressLine ?? this.progressLine,
         showRelated: showRelated ?? this.showRelated,
         expandDescription: expandDescription ?? this.expandDescription,
         autoCheckUpdates: autoCheckUpdates ?? this.autoCheckUpdates,
+        skipFfmpegPrompt: skipFfmpegPrompt ?? this.skipFfmpegPrompt,
         translateLanguage: translateLanguage ?? this.translateLanguage,
       );
 
@@ -323,17 +360,24 @@ class AppPreferences {
         'feedRefreshMinutes': feedRefreshMinutes,
         'autoPlay': autoPlay,
         'resumePlayback': resumePlayback,
+        'watchLaterAutoRemove': watchLaterAutoRemove,
         'autoFullscreen': autoFullscreen,
+        'miniPlayer': miniPlayer,
         'exitFullscreenOnEnd': exitFullscreenOnEnd,
         'pauseOnMinimize': pauseOnMinimize,
+        'audioOnlyInBackground': audioOnlyInBackground,
+        'closeToTray': closeToTray,
         'keyboardShortcuts': keyboardShortcuts,
         'seekSeconds': seekSeconds,
         'longSeekSeconds': longSeekSeconds,
         'volumeStep': volumeStep,
         'controlsHideSeconds': controlsHideSeconds,
+        'showHeatmap': showHeatmap,
+        'progressLine': progressLine.name,
         'showRelated': showRelated,
         'expandDescription': expandDescription,
         'autoCheckUpdates': autoCheckUpdates,
+        'skipFfmpegPrompt': skipFfmpegPrompt,
         'translateLanguage': translateLanguage,
       };
 
@@ -405,17 +449,24 @@ class AppPreferences {
       feedRefreshMinutes: number('feedRefreshMinutes', 10, 1, 1440),
       autoPlay: flag('autoPlay', d.autoPlay),
       resumePlayback: flag('resumePlayback', d.resumePlayback),
+      watchLaterAutoRemove: flag('watchLaterAutoRemove', d.watchLaterAutoRemove),
       autoFullscreen: flag('autoFullscreen', d.autoFullscreen),
+      miniPlayer: flag('miniPlayer', d.miniPlayer),
       exitFullscreenOnEnd: flag('exitFullscreenOnEnd', d.exitFullscreenOnEnd),
       pauseOnMinimize: flag('pauseOnMinimize', d.pauseOnMinimize),
+      audioOnlyInBackground: flag('audioOnlyInBackground', d.audioOnlyInBackground),
+      closeToTray: flag('closeToTray', d.closeToTray),
       keyboardShortcuts: flag('keyboardShortcuts', d.keyboardShortcuts),
       seekSeconds: number('seekSeconds', 5, 1, 60),
       longSeekSeconds: number('longSeekSeconds', 10, 1, 120),
       volumeStep: number('volumeStep', 5, 1, 25),
       controlsHideSeconds: number('controlsHideSeconds', 3, 1, 30),
+      showHeatmap: flag('showHeatmap', d.showHeatmap),
+      progressLine: ProgressLine.parse(raw['progressLine'], d.progressLine),
       showRelated: flag('showRelated', d.showRelated),
       expandDescription: flag('expandDescription', d.expandDescription),
       autoCheckUpdates: flag('autoCheckUpdates', d.autoCheckUpdates),
+      skipFfmpegPrompt: flag('skipFfmpegPrompt', d.skipFfmpegPrompt),
       translateLanguage: TranslationLanguage.byCode(raw['translateLanguage']).code,
     );
   }

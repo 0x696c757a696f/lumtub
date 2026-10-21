@@ -9,6 +9,8 @@
 // later. Changes: rewritten as one self-contained widget without GetX or
 // the audio_video_progress_bar package.
 
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -18,6 +20,13 @@ class ProgressSegment {
   final Duration start;
   final Duration end;
   final Color color;
+}
+
+/// A picture shown above the pointer, such as the frame at that time.
+class ProgressPreview {
+  const ProgressPreview(this.size, this.builder);
+  final Size size;
+  final Widget Function(Duration time) builder;
 }
 
 class VideoProgressBar extends StatefulWidget {
@@ -31,6 +40,8 @@ class VideoProgressBar extends StatefulWidget {
     this.segments = const [],
     this.chapterStarts = const [],
     this.labelOf,
+    this.preview,
+    this.heatmap,
   });
 
   final Duration position;
@@ -43,9 +54,14 @@ class VideoProgressBar extends StatefulWidget {
   final List<Duration> chapterStarts;
   /// The hover label for a time; the time itself by default.
   final String Function(Duration time)? labelOf;
+  /// A frame shown above the time label while the pointer is on the bar.
+  final ProgressPreview? preview;
+  /// Samples 0..1 over the whole bar, drawn as a faint curve above it.
+  final List<double>? heatmap;
 
   static const barHeight = 3.5;
   static const height = 20.0;
+  static const heatmapHeight = 16.0;
 
   @override
   State<VideoProgressBar> createState() => _VideoProgressBarState();
@@ -73,6 +89,14 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
         return SizedBox(
           height: VideoProgressBar.height,
           child: Stack(clipBehavior: Clip.none, children: [
+            if (widget.heatmap case final heat? when heat.length > 1)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: VideoProgressBar.height / 2 + VideoProgressBar.barHeight / 2 + 1,
+                height: VideoProgressBar.heatmapHeight,
+                child: IgnorePointer(child: CustomPaint(painter: _HeatmapPainter(heat, widget.color))),
+              ),
             Positioned.fill(
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
@@ -114,16 +138,30 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
     final painter = TextPainter(text: TextSpan(text: text, style: style), textDirection: TextDirection.ltr, maxLines: 1)..layout(maxWidth: 320);
     final labelWidth = painter.width + 16;
     painter.dispose();
+    final preview = widget.preview;
+    final boxWidth = max(labelWidth, preview?.size.width ?? 0);
+    final heat = widget.heatmap != null ? VideoProgressBar.heatmapHeight : 0.0;
     return Positioned(
-      left: (pointer * width - labelWidth / 2).clamp(0.0, width - labelWidth < 0 ? 0.0 : width - labelWidth),
-      bottom: VideoProgressBar.height + 4,
+      left: (pointer * width - boxWidth / 2).clamp(0.0, width - boxWidth < 0 ? 0.0 : width - boxWidth),
+      bottom: VideoProgressBar.height + 4 + heat,
       child: IgnorePointer(
-        child: Container(
-          width: labelWidth,
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(vertical: 3),
-          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(4)),
-          child: Text(text, style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
+        child: SizedBox(
+          width: boxWidth,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            if (preview != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 4),
+                decoration: BoxDecoration(border: Border.all(color: Colors.white70), borderRadius: BorderRadius.circular(4)),
+                child: ClipRRect(borderRadius: BorderRadius.circular(3), child: SizedBox.fromSize(size: preview.size, child: preview.builder(_timeAt(pointer)))),
+              ),
+            Container(
+              width: labelWidth,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(4)),
+              child: Text(text, style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+          ]),
         ),
       ),
     );
@@ -205,4 +243,37 @@ class _BarPainter extends CustomPainter {
   @override
   bool shouldRepaint(_BarPainter old) =>
       old.played != played || old.buffered != buffered || old.pointer != pointer || old.color != color || old.active != active || !listEquals(old.segments, segments) || !listEquals(old.chapters, chapters);
+}
+
+/// The "most replayed" curve: a smooth filled area, faint enough to leave
+/// the bar readable.
+class _HeatmapPainter extends CustomPainter {
+  const _HeatmapPainter(this.values, this.color);
+  final List<double> values;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final n = values.length;
+    final peak = values.reduce(max);
+    if (n < 2 || peak <= 0) return;
+    Offset point(int i) => Offset(i / (n - 1) * size.width, size.height - (values[i] / peak).clamp(0.0, 1.0) * (size.height - 1) - 1);
+    final line = Path()..moveTo(0, point(0).dy);
+    for (var i = 1; i < n; i++) {
+      final a = point(i - 1), b = point(i);
+      final mid = Offset((a.dx + b.dx) / 2, (a.dy + b.dy) / 2);
+      line.quadraticBezierTo(a.dx, a.dy, mid.dx, mid.dy);
+    }
+    line.lineTo(size.width, point(n - 1).dy);
+    final area = Path.from(line)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas
+      ..drawPath(area, Paint()..color = Colors.white.withValues(alpha: 0.14))
+      ..drawPath(line, Paint()..color = Colors.white.withValues(alpha: 0.3)..style = PaintingStyle.stroke..strokeWidth = 1);
+  }
+
+  @override
+  bool shouldRepaint(_HeatmapPainter old) => !identical(old.values, values) || old.color != color;
 }

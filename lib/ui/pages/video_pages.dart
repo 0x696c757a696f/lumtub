@@ -8,6 +8,7 @@ import '../common.dart';
 import '../theme.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
+export 'history_page.dart';
 import '../../l10n/l10n.dart';
 
 /// Home: a search prompt and the most recently watched videos.
@@ -245,39 +246,3 @@ class SearchResultsPage extends StatelessWidget {
     );
   }
 }
-
-class HistoryPage extends StatelessWidget {
-  const HistoryPage({super.key, required this.controller});
-  final AppController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final items = controller.history;
-    if (items.isEmpty) {
-      return StatusView(icon: Icons.history_rounded, title: tr('还没有观看记录'), message: tr('播放过的视频会保存在本机，最多保留 60 条。'));
-    }
-    final snapshot = List<VideoItem>.of(items);
-    return CustomScrollView(key: const PageStorageKey('list'), slivers: [
-      SliverToBoxAdapter(child: PageHeader(
-        tr('观看历史'),
-        subtitle: tr('{0} 个视频 · 仅保存在本机', [items.length]),
-        trailing: TextButton.icon(onPressed: () => _confirmClear(context), icon: const Icon(Icons.delete_sweep_outlined), label: Text(tr('清空'))),
-      )),
-      SliverVideoGrid(items: snapshot, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: snapshot)),
-      const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
-    ]);
-  }
-
-  Future<void> _confirmClear(BuildContext context) async {
-    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-      title: Text(tr('清空观看历史？')),
-      content: Text(tr('本机保存的全部观看记录都会被删除，无法恢复。')),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('取消'))),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('清空'))),
-      ],
-    ));
-    if (confirmed == true) await controller.clearHistory();
-  }
-}
-

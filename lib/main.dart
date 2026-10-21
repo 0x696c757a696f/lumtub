@@ -13,6 +13,7 @@ import 'l10n/l10n.dart';
 import 'network_proxy.dart';
 import 'ui/app_shell.dart';
 import 'ui/theme.dart';
+import 'windows_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,6 +63,7 @@ class _YtPlusAppState extends State<YtPlusApp> {
   late ThemeData _dark;
   late final AppLifecycleListener _lifecycle;
   bool _pausedByMinimize = false;
+  WindowsShellSync? _shell;
 
   void _updateThemes(AppearanceSettings appearance, Color accent) {
     final key = appearance.themeKey(accent);
@@ -84,6 +86,7 @@ class _YtPlusAppState extends State<YtPlusApp> {
     super.initState();
     final controller = widget.controller;
     unawaited(controller.initialize());
+    if (Platform.isWindows) _shell = WindowsShellSync(controller, WindowsShell());
     if (controller.appearance.systemAccent) unawaited(controller.refreshWindowsAccent());
     // Closing the window ends the process without disposing widgets, so the
     // player and unsaved progress are released here first.
@@ -95,12 +98,14 @@ class _YtPlusAppState extends State<YtPlusApp> {
       // Minimising hides the window; "pause on minimise" resumes only what it
       // paused itself.
       onHide: () {
+        unawaited(controller.setBackgroundAudioOnly(true));
         final player = controller.player;
         if (!controller.preferences.pauseOnMinimize || player == null || !player.state.playing) return;
         _pausedByMinimize = true;
         unawaited(player.pause());
       },
       onShow: () {
+        unawaited(controller.setBackgroundAudioOnly(false));
         if (!_pausedByMinimize) return;
         _pausedByMinimize = false;
         unawaited(controller.player?.play());
@@ -111,6 +116,7 @@ class _YtPlusAppState extends State<YtPlusApp> {
   @override
   void dispose() {
     _lifecycle.dispose();
+    _shell?.dispose();
     widget.controller.dispose();
     super.dispose();
   }

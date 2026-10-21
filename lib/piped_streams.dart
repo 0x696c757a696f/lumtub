@@ -76,7 +76,7 @@ List<String> parsePipedInstanceList(String text) {
 
 /// One stream a Piped server lists for a video.
 class PipedStream {
-  const PipedStream({required this.url, required this.codec, this.height = 0, this.bitrate = 0, this.videoOnly = false});
+  const PipedStream({required this.url, required this.codec, this.height = 0, this.bitrate = 0, this.videoOnly = false, this.mime = ''});
   final String url;
   /// Normalised to yt-dlp's prefixes: avc1, vp9, av01, mp4a, opus.
   final String codec;
@@ -84,6 +84,8 @@ class PipedStream {
   /// Bits per second.
   final int bitrate;
   final bool videoOnly;
+  /// The container's MIME type, such as video/mp4, when the server gave one.
+  final String mime;
 
   static PipedStream? tryParse(Object? raw) {
     if (raw is! Map) return null;
@@ -94,16 +96,19 @@ class PipedStream {
     final mime = raw['mimeType']?.toString() ?? '';
     if (codec.isEmpty && mime.contains('mp4')) codec = mime.startsWith('audio') ? 'mp4a' : 'avc1';
     int number(String key) => raw[key] is num ? (raw[key] as num).toInt() : int.tryParse('${raw[key]}') ?? 0;
-    return PipedStream(url: url, codec: codec, height: number('height'), bitrate: number('bitrate'), videoOnly: raw['videoOnly'] == true);
+    return PipedStream(url: url, codec: codec, height: number('height'), bitrate: number('bitrate'), videoOnly: raw['videoOnly'] == true, mime: mime.split(';').first.trim());
   }
 }
 
 /// What a Piped server returned for one video.
 class PipedVideo {
-  const PipedVideo({required this.server, required this.video, required this.audio, this.live = false});
+  const PipedVideo({required this.server, required this.video, required this.audio, this.live = false, this.muxed = const []});
   final String server;
   final List<PipedStream> video;
   final List<PipedStream> audio;
+  /// Streams with video and audio in one file (mp4), which a TV can play
+  /// from a single address; see `castStreamOf`.
+  final List<PipedStream> muxed;
   final bool live;
 
   factory PipedVideo.fromJson(String server, Map<String, dynamic> json) => PipedVideo(
@@ -114,6 +119,10 @@ class PipedVideo {
             .toList(),
         audio: [for (final s in json['audioStreams'] is List ? json['audioStreams'] as List : const []) PipedStream.tryParse(s)].whereType<PipedStream>().toList(),
         live: json['livestream'] == true,
+        muxed: [for (final s in json['videoStreams'] is List ? json['videoStreams'] as List : const []) PipedStream.tryParse(s)]
+            .whereType<PipedStream>()
+            .where((s) => !s.videoOnly && s.height > 0 && (s.mime.isEmpty || s.mime.contains('mp4')))
+            .toList(),
       );
 
   List<int> get heights => ({for (final s in video) s.height}.toList()..sort((a, b) => b.compareTo(a)));

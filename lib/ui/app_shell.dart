@@ -9,12 +9,14 @@ import '../appearance_settings.dart';
 import 'common.dart';
 import 'pages/account_settings.dart';
 import 'pages/channel_page.dart';
+import 'pages/downloads_page.dart';
 import 'pages/explore_page.dart';
 import 'pages/library_pages.dart';
 import 'pages/settings_page.dart';
 import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
 import 'pages/youtube_playlist_page.dart';
+import 'mini_player.dart';
 import 'pip_view.dart';
 import 'theme.dart';
 import 'video_card.dart';
@@ -45,6 +47,7 @@ class _AppShellState extends State<AppShell> {
     (PageMode.subscriptions, Icons.subscriptions_outlined, Icons.subscriptions_rounded, tr('订阅')),
     (PageMode.history, Icons.history_outlined, Icons.history_rounded, tr('历史')),
     (PageMode.playlists, Icons.video_library_outlined, Icons.video_library_rounded, tr('播放列表')),
+    (PageMode.downloads, Icons.download_for_offline_outlined, Icons.download_for_offline_rounded, tr('下载')),
   ];
 
   @override
@@ -126,25 +129,31 @@ class _AppShellState extends State<AppShell> {
                     searchFocus: _searchFocus,
                     onSubmit: _submitSearch,
                   ),
-                  Expanded(child: Row(children: [
-                    if (rail)
-                      NavigationRail(
-                        selectedIndex: _selectedIndex,
-                        labelType: NavigationRailLabelType.all,
-                        minWidth: 76,
-                        groupAlignment: -1,
-                        onDestinationSelected: _select,
-                        destinations: [
-                          for (final d in _destinations)
-                            NavigationRailDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: Text(d.$4)),
-                        ],
-                      ),
-                    Expanded(child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 160),
-                      // Keyed per page so each page's list keeps its scroll position
-                      // (PageStorage) when the user comes back to it.
-                      child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _content())),
-                    )),
+                  Expanded(child: Stack(children: [
+                    Row(children: [
+                      if (rail)
+                        NavigationRail(
+                          selectedIndex: _selectedIndex,
+                          labelType: NavigationRailLabelType.all,
+                          minWidth: 76,
+                          groupAlignment: -1,
+                          onDestinationSelected: _select,
+                          destinations: [
+                            for (final d in _destinations)
+                              NavigationRailDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: Text(d.$4)),
+                          ],
+                        ),
+                      Expanded(child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 160),
+                        // Keyed per page so each page's list keeps its scroll position
+                        // (PageStorage) when the user comes back to it.
+                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _content())),
+                      )),
+                    ]),
+                    // The video keeps playing over the pages; the watch page
+                    // is not mounted meanwhile, so the card has the only Video.
+                    if (_controller.mini && _controller.playing != null)
+                      Positioned.fill(child: MiniPlayer(controller: _controller)),
                   ])),
                   if (_controller.appearance.showStatusBar) _StatusBar(controller: _controller),
                 ]),
@@ -162,7 +171,7 @@ class _AppShellState extends State<AppShell> {
         ),
       );
 
-  String get _pageKey => !_controller.ready ? 'setup' : _controller.playing != null ? 'watch' : switch (_controller.mode) {
+  String get _pageKey => !_controller.ready ? 'setup' : _controller.onWatchPage ? 'watch' : switch (_controller.mode) {
         PageMode.channel => 'channel:${_controller.channel?.id}',
         PageMode.playlist => 'playlist:${_controller.openPlaylistId}',
         PageMode.youtubePlaylist => 'yt-playlist:${_controller.youtubePlaylist?.id}',
@@ -173,13 +182,14 @@ class _AppShellState extends State<AppShell> {
   Widget _content() {
     final controller = _controller;
     if (!controller.ready) return _SetupView(controller: controller);
-    if (controller.playing != null && controller.videoController != null) return WatchPage(controller: controller);
+    if (controller.onWatchPage && controller.videoController != null) return WatchPage(controller: controller);
     return switch (controller.mode) {
       PageMode.home => HomeFeedPage(controller: controller, onFocusSearch: _focusSearch),
       PageMode.explore => controller.query == null ? ExplorePage(controller: controller) : SearchResultsPage(controller: controller, onFocusSearch: _focusSearch),
       PageMode.history => HistoryPage(controller: controller),
       PageMode.subscriptions => SubscriptionsPage(controller: controller),
       PageMode.playlists => PlaylistsPage(controller: controller),
+      PageMode.downloads => DownloadsPage(controller: controller),
       PageMode.channel => ChannelPage(controller: controller),
       PageMode.playlist => PlaylistDetailPage(controller: controller),
       PageMode.youtubePlaylist => YoutubePlaylistPage(controller: controller),
@@ -191,7 +201,7 @@ class _AppShellState extends State<AppShell> {
 /// Opens 设置. While a video is open it goes over the watch page, so the
 /// video keeps playing and 返回 comes back to it.
 void openSettings(BuildContext context, AppController controller) {
-  if (controller.playing == null) return controller.navigate(PageMode.settings);
+  if (!controller.onWatchPage) return controller.navigate(PageMode.settings);
   unawaited(Navigator.of(context).push(MaterialPageRoute<void>(
     builder: (context) {
       void back() => Navigator.of(context).maybePop();
@@ -257,7 +267,7 @@ class _TopBar extends StatelessWidget {
           ),
           IconButton(
             tooltip: tr('设置'),
-            isSelected: controller.mode == PageMode.settings && controller.playing == null,
+            isSelected: controller.mode == PageMode.settings && !controller.onWatchPage,
             onPressed: () => openSettings(context, controller),
             icon: const Icon(Icons.settings_outlined),
             selectedIcon: const Icon(Icons.settings_rounded),

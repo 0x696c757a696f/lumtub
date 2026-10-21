@@ -70,7 +70,22 @@ PipedVideo parseInvidiousVideo(String server, Map<String, dynamic> json) {
       audio.add(stream);
     }
   }
-  return PipedVideo(server: server, video: video, audio: audio, live: json['liveNow'] == true);
+  // formatStreams are the files with picture and sound together.
+  final muxed = <PipedStream>[];
+  for (final format in json['formatStreams'] is List ? json['formatStreams'] as List : const []) {
+    if (format is! Map) continue;
+    final type = '${format['type']}';
+    final size = RegExp(r'^(\d+)x(\d+)$').firstMatch('${format['size']}');
+    final stream = PipedStream.tryParse({
+      'url': address(format['url']),
+      'codec': RegExp(r'codecs="?([^",;]+)').firstMatch(type)?[1] ?? '',
+      'mimeType': type,
+      'height': size != null ? int.parse(size[2]!) : int.tryParse(RegExp(r'^\d+').firstMatch('${format['qualityLabel']}')?[0] ?? '') ?? 0,
+      'bitrate': format['bitrate'],
+    });
+    if (stream != null && stream.height > 0 && stream.mime == 'video/mp4') muxed.add(stream);
+  }
+  return PipedVideo(server: server, video: video, audio: audio, live: json['liveNow'] == true, muxed: muxed);
 }
 
 /// Finds playable streams on Invidious instances, the second source beside

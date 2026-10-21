@@ -10,15 +10,20 @@ import '../../models.dart';
 import '../../player_settings.dart';
 import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
+import '../cast_ui.dart';
 import '../common.dart';
 import '../linked_text.dart';
 import '../player_controls.dart';
 import '../player_shortcuts.dart';
+import '../screenshot_action.dart';
+import '../theater_mode.dart';
 import '../skeleton.dart';
 import '../theme.dart';
 import '../translatable.dart';
+import '../play_queue_panel.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
+import 'downloads_page.dart';
 import '../../dearrow.dart';
 import '../../l10n/l10n.dart';
 
@@ -61,26 +66,28 @@ class _WatchPageState extends State<WatchPage> {
 
   Widget _page(BuildContext context, AppController controller) {
     _autoFullscreen(controller);
-    final shortcuts = playerShortcuts(controller, () => _video.currentState);
+    final shortcuts = playerShortcuts(controller, () => _video.currentState, onScreenshot: () => unawaited(captureScreenshot(context, controller)));
     // The same bindings work anywhere on the page and inside the fullscreen
     // route, where media_kit's controls hold focus.
     return CallbackShortcuts(
       bindings: shortcuts,
       child: Focus(
         autofocus: true,
-        child: LayoutBuilder(builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 1080;
+        child: ValueListenableBuilder(valueListenable: theaterMode, builder: (context, theater, _) => LayoutBuilder(builder: (context, constraints) {
+          // 剧场模式 gives the video the whole width and stacks the panels below.
+          final wide = !theater && constraints.maxWidth >= 1080;
           final mainWidth = wide ? constraints.maxWidth - _sidePanelWidth - AppStyle.pagePadding * 3 : constraints.maxWidth - AppStyle.pagePadding * 2;
           // Keep the whole player visible: never taller than the window allows.
-          final playerWidth = min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
+          final playerWidth = theater ? min(constraints.maxWidth, max(320.0, (constraints.maxHeight - 8) * 16 / 9)) : min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
           final item = controller.playing;
           final comments = item == null
               ? null
               : CommentsSection(key: ValueKey('comments:${item.id}'), controller: controller, videoId: item.id, onSeek: (position) => controller.player?.seek(position));
           final main = <Widget>[
-            _BackRow(onBack: controller.goBack),
+            if (!theater) _BackRow(onBack: controller.goBack),
             Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
-            const SizedBox(height: 12),
+            CastBar(controller: controller),
+            if (!theater) const SizedBox(height: 12),
             _Toolbar(controller: controller),
             if (controller.playbackError != null) ...[
               const SizedBox(height: 12),
@@ -94,6 +101,20 @@ class _WatchPageState extends State<WatchPage> {
               comments,
             ],
           ];
+          if (theater) {
+            // Edge to edge, the rest keeps the page's margins.
+            return ListView(padding: EdgeInsets.zero, children: [
+              Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 12, AppStyle.pagePadding, AppStyle.pagePadding),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  ...main.skip(1),
+                  const SizedBox(height: 24),
+                  _UpNext(controller: controller, shrinkWrap: true),
+                ]),
+              ),
+            ]);
+          }
           if (!wide) {
             return ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: [
               ...main,
@@ -108,7 +129,7 @@ class _WatchPageState extends State<WatchPage> {
               child: _SidePanel(controller: controller, comments: comments),
             )),
           ]);
-        }),
+        })),
       ),
     );
   }
@@ -171,6 +192,7 @@ class _Toolbar extends StatelessWidget {
     final decoded = controller.currentCodec != tr('尚未播放视频');
     final library = controller.library;
     final favorite = library?.isFavorite(item.id) ?? false;
+    final later = library?.isWatchLater(item.id) ?? false;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Wrap(
         spacing: 8,
@@ -195,10 +217,17 @@ class _Toolbar extends StatelessWidget {
               selectedIcon: Icon(Icons.favorite_rounded, color: context.colors.primary),
               onPressed: () => library.toggleFavorite(item),
             ),
+            IconButton(
+              tooltip: later ? tr('从稍后观看移除') : tr('稍后观看'),
+              icon: Icon(later ? Icons.watch_later_rounded : Icons.watch_later_outlined, color: later ? context.colors.primary : null),
+              onPressed: () => library.toggleWatchLater(item),
+            ),
             IconButton(tooltip: tr('添加到播放列表'), icon: const Icon(Icons.playlist_add_rounded), onPressed: () => showAddToPlaylist(context, controller, item)),
             if (controller.account?.signedIn ?? false)
               IconButton(tooltip: tr('保存到 YouTube 播放列表'), icon: const Icon(Icons.video_library_outlined), onPressed: () => showSaveToYoutube(context, controller, item)),
           ],
+          if (controller.downloads != null && !item.isLive)
+            IconButton(tooltip: tr('下载'), icon: const Icon(Icons.download_rounded), onPressed: () => showDownloadChoice(context, controller, item)),
           IconButton(tooltip: tr('复制链接'), icon: const Icon(Icons.link_rounded), onPressed: () => copyText(context, item.url, tr('链接已复制'))),
           IconButton(tooltip: tr('在浏览器中打开'), icon: const Icon(Icons.open_in_new_rounded), onPressed: () => openExternal(item.url)),
           IconButton(tooltip: tr('快捷键'), icon: const Icon(Icons.keyboard_outlined), onPressed: () => showShortcutHelp(context, controller.preferences)),
@@ -428,6 +457,7 @@ class _UpNext extends StatelessWidget {
     final related = controller.related;
     final relatedItems = controller.relatedItems;
     final children = <Widget>[
+      if (controller.playQueue.isNotEmpty) ...[PlayQueuePanel(controller: controller), const SizedBox(height: 16)],
       _header(context, tr('接下来播放'), items.isEmpty ? null : tr('{0} 个', [items.length])),
       if (items.isEmpty)
         Padding(

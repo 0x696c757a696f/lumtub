@@ -330,6 +330,9 @@ class VideoRepository {
     return VideoDetails.fromJson(data);
   }
 
+  /// The environment yt-dlp runs in, for downloads started elsewhere.
+  Map<String, String> get processEnvironment => _environment;
+
   Map<String, String> get _environment {
     // Windows names it "Path"; keep one entry under its own spelling.
     final pathKey = Platform.environment.keys.firstWhere((key) => key.toUpperCase() == 'PATH', orElse: () => 'PATH');
@@ -372,10 +375,18 @@ class HistoryStore {
     await file.writeAsString('[]', flush: true);
   }
 
+  /// Forgets the videos with these ids.
+  Future<void> remove(Set<String> ids) async {
+    items.removeWhere((item) => ids.contains(item.id));
+    await _write();
+  }
+
+  Future<void> _write() => file.writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()), flush: true);
+
   Future<void> record(VideoItem item) async {
     items.removeWhere((other) => other.id == item.id);
     items.insert(0, item);
     if (items.length > 60) items.removeRange(60, items.length);
-    await file.writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()), flush: true);
+    await _write();
   }
 }

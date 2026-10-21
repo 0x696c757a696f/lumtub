@@ -749,6 +749,21 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
         ),
         NormalItem(title: 'Deno', subtitle: tools.denoVersion ?? tr('未安装'), leading: const Icon(Icons.code_rounded)),
         NormalItem(
+          title: 'ffmpeg',
+          subtitle: controller.installingFfmpeg
+              ? tr('正在安装… {0}', [controller.ffmpegProgress == null ? '' : '${(controller.ffmpegProgress! * 100).round()}%'])
+              : tools.ffmpegVersion == null
+                  ? tr('未安装（合并高画质下载时按需安装）')
+                  : tr('{0} · 占用 {1}', [tools.ffmpegVersion!, formatBytes(tools.ffmpegBytes ?? 0)]),
+          leading: const Icon(Icons.merge_type_rounded),
+          trailing: controller.installingFfmpeg
+              ? null
+              : Row(mainAxisSize: MainAxisSize.min, children: [
+                  TextButton(onPressed: controller.installFfmpeg, child: Text(tools.ffmpegVersion == null ? tr('安装') : tr('更新'))),
+                  if (tools.ffmpegVersion != null) TextButton(onPressed: controller.removeFfmpeg, child: Text(tr('移除'))),
+                ]),
+        ),
+        NormalItem(
           title: controller.checking ? tr('正在检查更新…') : tr('立即检查更新'),
           subtitle: tr('只从官方 GitHub Release 下载并校验 SHA-256，重启后启用'),
           leading: const Icon(Icons.system_update_alt_rounded),
@@ -756,6 +771,7 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
           onTap: controller.checkUpdates,
         ),
         _tip(context, tr('新 libmpv 出错时会自动改回内置版本。yt-dlp 更新后若无法播放，可以回退到上一版。')),
+        _tip(context, tr('ffmpeg 是可选组件，只用于合并高画质视频和音频，不会自动下载。它是 BtbN/FFmpeg-Builds 的 LGPL 构建（https://github.com/BtbN/FFmpeg-Builds），源代码见 https://ffmpeg.org/download.html。')),
       ];
     });
 

@@ -34,12 +34,10 @@ class FormatPolicy {
 
   /// The allowed codecs, most preferred first.
   ///
-  /// - auto: codecs with verified hardware decoding first (VP9, AV1), then
-  ///   H.264, which every Windows GPU decodes, then the rest. A cap above
-  ///   1080p puts VP9 and AV1 before H.264, because YouTube offers H.264 only
-  ///   up to 1080p. AV1, the most expensive codec to decode, therefore comes
-  ///   before H.264 only when verified in hardware or when that cap needs it;
-  ///   otherwise it is the last resort.
+  /// - auto: removes user-disabled codecs, then uses the verified decoder
+  ///   ladder: AV1 hardware decoding, then VP9 hardware decoding, then H.264.
+  ///   When none has verified hardware decoding, software H.264 comes first,
+  ///   then VP9 and AV1.
   /// - lowResource: H.264, then codecs with verified hardware decoding, then
   ///   the rest. Above 1080p the verified ones go first, as H.264 cannot
   ///   reach that height.
@@ -47,17 +45,23 @@ class FormatPolicy {
   ///   bitrate, so the expression ignores this list; Piped and Invidious
   ///   streams use it as a tie-break after height (VP9, AV1, H.264, VP8).
   static List<VideoCodec> codecOrder(PlayerSettings settings) {
-    final all = [for (final c in [VideoCodec.vp9, VideoCodec.av1, VideoCodec.h264, VideoCodec.vp8]) if (allows(settings, c)) c];
+    final all = [for (final c in [VideoCodec.av1, VideoCodec.vp9, VideoCodec.h264, VideoCodec.vp8]) if (allows(settings, c)) c];
     final modern = all.where((c) => c == VideoCodec.vp9 || c == VideoCodec.av1).toList();
+    final av1Hardware = _hardware(settings, VideoCodec.av1);
+    final vp9Hardware = _hardware(settings, VideoCodec.vp9);
     final verified = modern.where((c) => _hardware(settings, c)).toList();
     final tall = settings.maxHeight > 1080;
     final h264 = all.where((c) => c == VideoCodec.h264);
     final front = switch (settings.strategy) {
       PlaybackStrategy.quality => const <VideoCodec>[],
-      PlaybackStrategy.auto => [...verified, if (tall) ...modern, ...h264],
+      PlaybackStrategy.auto => av1Hardware
+          ? [VideoCodec.av1, VideoCodec.vp9, ...h264]
+          : vp9Hardware
+          ? [VideoCodec.vp9, ...h264, VideoCodec.av1]
+          : [...h264, VideoCodec.vp9, VideoCodec.av1],
       PlaybackStrategy.lowResource => [if (tall) ...verified, ...h264, ...verified],
     };
-    return [...{...front, ...all}];
+    return [...{...front, ...all}.where(all.contains)];
   }
 
   /// Heights YouTube serves, lowest first.
@@ -99,25 +103,29 @@ class FormatPolicy {
       if (height.isEmpty && exclude.isEmpty && settings.audioQuality == AudioQuality.best) return 'ytdl';
       return 'bestvideo$exclude$height+$audio/best$exclude$height/best$exclude';
     }
-    // A disabled codec is a hard filter, not a reason to trade 1080p AVC for
-    // 360p VP9. Let yt-dlp rank the remaining formats by its normal order
-    // (quality, resolution, frame rate, then codec) so VP9 wins only when the
-    // available quality is otherwise equal.
-    if (exclude.isNotEmpty) {
-      return [
-        'bestvideo$exclude$height+$audio',
-        if (audio != 'bestaudio') 'bestvideo$exclude$height+bestaudio',
-        'best$exclude$height',
-        'best$exclude',
-      ].join('/');
-    }
     return [
-      for (final codec in codecOrder(settings)) 'bestvideo${codec.onlyFilter}$height+$audio',
       'bestvideo$exclude$height+$audio',
       if (audio != 'bestaudio') 'bestvideo$exclude$height+bestaudio',
       'best$exclude$height',
       'best$exclude',
     ].join('/');
+  }
+
+  /// yt-dlp first ranks by picture quality, then breaks ties by the verified
+  /// decoder ladder. This keeps a 1080p AVC stream ahead of a 360p VP9
+  /// stream, while still choosing hardware-decoded AV1 or VP9 when the
+  /// quality tier is equal.
+  static String? formatSort(PlayerSettings settings) {
+    if (settings.strategy == PlaybackStrategy.quality) return null;
+    final first = codecOrder(settings).firstOrNull;
+    if (first == null) return null;
+    final preferred = switch (first) {
+      VideoCodec.av1 => 'av01',
+      VideoCodec.vp9 => 'vp9',
+      VideoCodec.h264 => 'avc',
+      VideoCodec.vp8 => 'vp8',
+    };
+    return 'res,fps,vcodec:$preferred';
   }
 
   /// Names of the disabled codecs, e.g. `AV1、VP9`, or empty.

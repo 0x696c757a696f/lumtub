@@ -259,7 +259,7 @@ class AppController extends ChangeNotifier {
     if (item == null || item.isLive || _repository == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
     CastSource? source;
     try {
-      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format)).info, settings: _playback);
+      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort)).info, settings: _playback);
     } catch (e) {
       logInfo('投屏：yt-dlp 解析失败：$e');
     }
@@ -595,7 +595,7 @@ class AppController extends ChangeNotifier {
   Future<DownloadFormats> downloadFormats(String videoId) async {
     final repository = _repository;
     if (repository == null) throw StateError(tr('组件尚未就绪'));
-    return DownloadFormats.parse((await repository.streams.resolve(videoId, _format)).info);
+    return DownloadFormats.parse((await repository.streams.resolve(videoId, _format, formatSort: _formatSort)).info);
   }
 
   /// The proxy everything currently goes through.
@@ -1222,6 +1222,7 @@ class AppController extends ChangeNotifier {
         return await _openLocal(item, serial, local, start: start, play: play);
       }
       final format = _format;
+      final formatSort = _formatSort;
       _openedVia = null;
       if (resolved && piped) {
         _recentErrors.clear();
@@ -1236,7 +1237,7 @@ class AppController extends ChangeNotifier {
       ResolvedVideo? video;
       if (resolved) {
         try {
-          video = await _repository!.streams.resolve(item.id, format);
+          video = await _repository!.streams.resolve(item.id, format, formatSort: formatSort);
         } catch (e) {
           _recentErrors.add('$e');
           final failure = PlaybackFailure.classify(['$e']);
@@ -1841,6 +1842,8 @@ class AppController extends ChangeNotifier {
 
   String get _format => FormatPolicy.expression(_playback);
 
+  String? get _formatSort => FormatPolicy.formatSort(_playback);
+
   /// [settings] as playback picks streams with them: automatic quality is
   /// capped at the tallest display.
   PlayerSettings get _playback => FormatPolicy.forDisplay(settings, _displayHeight);
@@ -1856,7 +1859,7 @@ class AppController extends ChangeNotifier {
   /// Starts resolving [item] before it is opened, such as when the pointer
   /// rests on its card.
   void prefetch(VideoItem item) {
-    if (ready && playing?.id != item.id && DateTime.now().isAfter(_rateLimitedUntil)) _repository?.streams.prefetch(item.id, _format);
+    if (ready && playing?.id != item.id && DateTime.now().isAfter(_rateLimitedUntil)) _repository?.streams.prefetch(item.id, _format, formatSort: _formatSort);
   }
 
   Future<void> _loadDetails(VideoItem item, int serial) async {
@@ -1869,7 +1872,7 @@ class AppController extends ChangeNotifier {
       } else {
         try {
           // The extraction playback uses carries the details too.
-          final resolved = await _repository!.streams.resolve(item.id, _format);
+          final resolved = await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort);
           loaded = resolved.details;
           if (serial == _playSerial) _update(() => availableHeights = resolved.heightsFor(settings));
         } catch (_) {

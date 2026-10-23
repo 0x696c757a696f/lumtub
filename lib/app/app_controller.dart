@@ -411,7 +411,6 @@ class AppController extends ChangeNotifier {
       final preferences = await preferencesStore.load();
       final cacheManager = CacheManager(directories);
       await cacheManager.prepare(settings);
-      final cacheBytes = await cacheManager.size(settings);
       final manager = ToolManager(directories, (message) {
         logInfo(message);
         _update(() => status = message);
@@ -459,7 +458,7 @@ class AppController extends ChangeNotifier {
         this.paths = paths;
         this.directories = directories;
         _cacheManager = cacheManager;
-        this.cacheBytes = cacheBytes;
+        this.cacheBytes = 0;
         _settingsStore = settingsStore;
         this.settings = settings;
         _preferencesStore = preferencesStore;
@@ -493,6 +492,7 @@ class AppController extends ChangeNotifier {
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
       // Do not block the UI while checking newer releases.
       if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
+      unawaited(_refreshCacheSize());
       unawaited(_readWindowsVideoInfo());
       unawaited(_trimThumbnails());
       unawaited(downloads?.load());
@@ -509,6 +509,17 @@ class AppController extends ChangeNotifier {
 
   /// Keeps the thumbnail cache under its cap, at startup and then hourly;
   /// skipped while a video plays.
+  Future<void> _refreshCacheSize() async {
+    final manager = _cacheManager;
+    if (manager == null) return;
+    try {
+      final bytes = await manager.size(settings);
+      if (!_disposed) _update(() => cacheBytes = bytes);
+    } on FileSystemException catch (error) {
+      logInfo('Could not measure cache size: $error');
+    }
+  }
+
   Future<void> _trimThumbnails() async {
     final directory = thumbnailDirectory;
     if (_disposed || directory == null || playing != null) return;

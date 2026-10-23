@@ -20,24 +20,16 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Compute and create the next release tag
+      - name: Create a release tag from the application version and commit
         run: |
           set -euo pipefail
-          git fetch --tags --force origin
           pubspec_version=$(sed -n 's/^version: *\([^+[:space:]]*\).*/\1/p' pubspec.yaml)
           [[ "$pubspec_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
             echo "pubspec.yaml must declare a stable semantic version, found: $pubspec_version" >&2
             exit 1
           }
-          IFS=. read -r major minor patch <<< "$pubspec_version"
-          latest=$(git tag -l 'v[0-9]*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
-          if [[ -n "$latest" ]]; then
-            IFS=. read -r latest_major latest_minor latest_patch <<< "${latest#v}"
-            if [[ "$latest_major" == "$major" && "$latest_minor" == "$minor" && "$latest_patch" -ge "$patch" ]]; then
-              patch=$((latest_patch + 1))
-            fi
-          fi
-          tag="v$major.$minor.$patch"
+          commit=$(git rev-parse --short=7 HEAD)
+          tag="v$pubspec_version-$commit"
           git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1 && {
             echo "Tag $tag already exists" >&2
             exit 1
@@ -46,7 +38,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git tag -a "$tag" -m "YTPlus $tag"
           git push origin "$tag"
-          echo "Created $tag from pubspec.yaml version $pubspec_version"
+          echo "Created $tag from application version $pubspec_version and commit $commit"
 
       - name: Explain the release pipeline
         env:

@@ -71,6 +71,19 @@ void main() {
   });
 
   group('disabled codecs', () {
+    test('keeps the best allowed resolution before preferring a codec', () {
+      const settings = PlayerSettings(disabledCodecs: {VideoCodec.av1});
+      const exclude = '[vcodec!^=av01][vcodec!^=av1]';
+
+      // yt-dlp's normal bestvideo sort is quality, resolution, frame rate,
+      // then codec. Keeping the codecs in one selector therefore chooses a
+      // 1080p AVC stream over a 360p VP9 stream, and VP9 over AVC at the same
+      // quality.
+      expect(_expression(settings), 'bestvideo$exclude+bestaudio/best$exclude/best$exclude');
+      expect(_expression(settings), isNot(contains(VideoCodec.vp9.onlyFilter)));
+      expect(_expression(settings), isNot(contains(VideoCodec.h264.onlyFilter)));
+    });
+
     test('never appear in the order or in any alternative of any strategy', () {
       for (final strategy in PlaybackStrategy.values) {
         for (final disabled in [

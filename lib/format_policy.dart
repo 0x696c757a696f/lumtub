@@ -99,6 +99,18 @@ class FormatPolicy {
       if (height.isEmpty && exclude.isEmpty && settings.audioQuality == AudioQuality.best) return 'ytdl';
       return 'bestvideo$exclude$height+$audio/best$exclude$height/best$exclude';
     }
+    // A disabled codec is a hard filter, not a reason to trade 1080p AVC for
+    // 360p VP9. Let yt-dlp rank the remaining formats by its normal order
+    // (quality, resolution, frame rate, then codec) so VP9 wins only when the
+    // available quality is otherwise equal.
+    if (exclude.isNotEmpty) {
+      return [
+        'bestvideo$exclude$height+$audio',
+        if (audio != 'bestaudio') 'bestvideo$exclude$height+bestaudio',
+        'best$exclude$height',
+        'best$exclude',
+      ].join('/');
+    }
     return [
       for (final codec in codecOrder(settings)) 'bestvideo${codec.onlyFilter}$height+$audio',
       'bestvideo$exclude$height+$audio',

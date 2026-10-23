@@ -1097,10 +1097,12 @@ class AppController extends ChangeNotifier {
         });
       },
       onError: (Object error) {
-        if (serial == _playSerial) _update(() {
-          replayChatError = '$error';
-          loadingReplayChat = false;
-        });
+        if (serial == _playSerial) {
+          _update(() {
+            replayChatError = '$error';
+            loadingReplayChat = false;
+          });
+        }
       },
       onDone: () {
         _flushCurrentChat(serial);

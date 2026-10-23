@@ -1,23 +1,13 @@
-# Weekly pull requests that update Dart packages and the GitHub Actions the
-# build uses. Each runs the Windows build, so a broken update shows up as a
-# red check before anything is merged.
 version: 2
 updates:
   - package-ecosystem: pub
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: daily
     open-pull-requests-limit: 5
-    groups:
-      dart-packages:
-        patterns: ["*"]
-        update-types: [minor, patch]
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
-    groups:
-      actions:
-        patterns: ["*"]
+      interval: daily
+    open-pull-requests-limit: 5

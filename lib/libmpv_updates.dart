@@ -1,7 +1,7 @@
 import 'dart:ffi';
 import 'dart:io';
 
-/// A libmpv build from shinchiro/mpv-winbuild-cmake: its release tag
+/// A libmpv build from zhongfly/mpv-winbuild: its release tag
 /// (a date such as 20261018) and CPU variant.
 class LibmpvBuild {
   const LibmpvBuild(this.tag, this.variant);

@@ -1,0 +1,50 @@
+name: Create YTPlus release
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: create-release
+  cancel-in-progress: false
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Create a release tag from the application version and commit
+        run: |
+          set -euo pipefail
+          pubspec_version=$(sed -n 's/^version: *\([^+[:space:]]*\).*/\1/p' pubspec.yaml)
+          [[ "$pubspec_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "pubspec.yaml must declare a stable semantic version, found: $pubspec_version" >&2
+            exit 1
+          }
+          commit=$(git rev-parse --short=7 HEAD)
+          tag="v$pubspec_version-$commit"
+          git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1 && {
+            echo "Tag $tag already exists" >&2
+            exit 1
+          }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "$tag" -m "YTPlus $tag"
+          git push origin "$tag"
+          echo "Created $tag from application version $pubspec_version and commit $commit"
+
+      - name: Explain the release pipeline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(git describe --tags --exact-match)
+          gh workflow run windows.yml --ref "$tag"
+          echo 'The tagged Windows build was dispatched.'
+          echo 'That workflow builds the ZIP and installer, then creates the GitHub Release with generated release notes.'

@@ -915,9 +915,22 @@ Future<void> _changeCacheLocation(BuildContext context, AppController controller
 
 /// GPU, the decoder in use, which codecs were verified to decode in
 /// hardware, and the optional Windows video extensions.
-class _DecoderStatus extends StatelessWidget {
+class _DecoderStatus extends StatefulWidget {
   const _DecoderStatus({required this.controller});
   final AppController controller;
+
+  @override
+  State<_DecoderStatus> createState() => _DecoderStatusState();
+}
+
+class _DecoderStatusState extends State<_DecoderStatus> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.refreshWindowsVideoInfo();
+  }
+
+  AppController get controller => widget.controller;
 
   @override
   Widget build(BuildContext context) {

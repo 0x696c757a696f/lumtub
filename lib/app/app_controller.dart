@@ -501,7 +501,6 @@ class AppController extends ChangeNotifier {
       // Do not block the UI while checking newer releases.
       if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
       unawaited(_refreshCacheSize());
-      unawaited(_readWindowsVideoInfo());
       unawaited(_trimThumbnails());
       unawaited(downloads?.load());
       unawaited(account?.load());
@@ -2683,6 +2682,11 @@ class AppController extends ChangeNotifier {
     final info = await WindowsVideoInfo.read();
     _update(() => windowsVideoInfo = info);
   }
+
+  /// Reads optional Windows Media Foundation codec extensions only when the
+  /// decoder-status settings section is opened. libmpv itself does not use
+  /// these extensions.
+  void refreshWindowsVideoInfo() => unawaited(_readWindowsVideoInfo());
 
   Future<void> openStore(String url) async {
     try {

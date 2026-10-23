@@ -7,6 +7,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../app/app_controller.dart';
 import '../../models.dart';
+import '../../live_chat.dart';
 import '../../player_settings.dart';
 import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
@@ -83,6 +84,7 @@ class _WatchPageState extends State<WatchPage> {
           final comments = item == null
               ? null
               : CommentsSection(key: ValueKey('comments:${item.id}'), controller: controller, videoId: item.id, onSeek: (position) => controller.player?.seek(position));
+          final replayChat = item?.liveStatus == 'was_live' ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide) : null;
           final main = <Widget>[
             if (!theater) _BackRow(onBack: controller.goBack),
             Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
@@ -99,6 +101,10 @@ class _WatchPageState extends State<WatchPage> {
             if (!wide && comments != null) ...[
               const SizedBox(height: 24),
               comments,
+            ],
+            if (!wide && replayChat != null) ...[
+              const SizedBox(height: 24),
+              replayChat,
             ],
           ];
           if (theater) {
@@ -126,7 +132,7 @@ class _WatchPageState extends State<WatchPage> {
             Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: main)),
             SizedBox(width: _sidePanelWidth, child: Padding(
               padding: const EdgeInsets.only(right: AppStyle.pagePadding, top: 8),
-              child: _SidePanel(controller: controller, comments: comments),
+              child: _SidePanel(controller: controller, comments: comments, replayChat: replayChat),
             )),
           ]);
         })),
@@ -400,17 +406,18 @@ class _DescriptionState extends State<_Description> {
 /// 接下来播放 and 评论 as tabs beside the player. The comments load when
 /// their tab is first opened and stay loaded while the video plays.
 class _SidePanel extends StatelessWidget {
-  const _SidePanel({required this.controller, required this.comments});
+  const _SidePanel({required this.controller, required this.comments, this.replayChat});
   final AppController controller;
   final Widget? comments;
+  final Widget? replayChat;
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
-        length: 2,
+        length: replayChat == null ? 2 : 3,
         child: Column(children: [
           TabBar(
             dividerColor: Colors.transparent,
-            tabs: [Tab(height: 40, text: tr('接下来播放')), Tab(height: 40, text: tr('评论'))],
+            tabs: [Tab(height: 40, text: tr('接下来播放')), Tab(height: 40, text: tr('评论')), if (replayChat != null) Tab(height: 40, text: tr('聊天回放'))],
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -421,6 +428,7 @@ class _SidePanel extends StatelessWidget {
                     ? const SizedBox.shrink()
                     : ListView(padding: const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding), children: [comments!]),
               ),
+              if (replayChat != null) _KeepAlive(child: replayChat!),
             ]),
           ),
         ]),
@@ -444,6 +452,72 @@ class _KeepAliveState extends State<_KeepAlive> with AutomaticKeepAliveClientMix
     super.build(context);
     return widget.child;
   }
+}
+
+class _ReplayChatPanel extends StatelessWidget {
+  const _ReplayChatPanel({required this.controller, this.shrinkWrap = false});
+  final AppController controller;
+  final bool shrinkWrap;
+
+  @override
+  Widget build(BuildContext context) {
+    final messages = controller.replayChat;
+    final content = <Widget>[
+      Text(tr('聊天回放'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+      const SizedBox(height: 8),
+      if (controller.loadingReplayChat) const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator())),
+      if (controller.replayChatError != null) ErrorBanner(tr('无法加载聊天回放：{0}', [controller.replayChatError])),
+      if (!controller.loadingReplayChat && controller.replayChatError == null && messages.isEmpty)
+        Padding(padding: const EdgeInsets.all(12), child: Text(tr('这个直播录像没有公开的聊天回放'), style: TextStyle(color: context.colors.onSurfaceVariant))),
+      for (final message in messages) _ReplayChatMessage(message: message, onSeek: message.offset == null ? null : () => controller.player?.seek(message.offset!)),
+    ];
+    return shrinkWrap
+        ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: content)
+        : ListView(padding: const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding), children: content);
+  }
+}
+
+class _ReplayChatMessage extends StatelessWidget {
+  const _ReplayChatMessage({required this.message, this.onSeek});
+  final LiveChatMessage message;
+  final VoidCallback? onSeek;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = switch (message.kind) {
+      LiveChatKind.paidMessage => Icons.volunteer_activism_rounded,
+      LiveChatKind.paidSticker => Icons.emoji_emotions_outlined,
+      LiveChatKind.membership => Icons.workspace_premium_outlined,
+      LiveChatKind.system => Icons.info_outline_rounded,
+      LiveChatKind.message => Icons.chat_bubble_outline_rounded,
+    };
+    final time = message.offset == null ? '' : _chatClock(message.offset!);
+    return InkWell(
+      onTap: onSeek,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(icon, size: 18, color: context.colors.outline),
+          const SizedBox(width: 8),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(child: Text(message.author.isEmpty ? tr('系统消息') : message.author, style: const TextStyle(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              if (message.amount != null) Text(message.amount!, style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w700)),
+              if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: context.colors.outline, fontSize: 12))),
+            ]),
+            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 3), child: Text(message.text)),
+            if (message.stickerUrl != null) Padding(padding: const EdgeInsets.only(top: 4), child: Image.network(message.stickerUrl!, height: 56, errorBuilder: (context, error, stack) => const SizedBox.shrink())),
+          ])),
+        ]),
+      ),
+    );
+  }
+}
+
+String _chatClock(Duration value) {
+  final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
+  return value.inHours > 0 ? '${value.inHours}:${value.inMinutes.remainder(60).toString().padLeft(2, '0')}:$seconds' : '${value.inMinutes}:$seconds';
 }
 
 class _UpNext extends StatelessWidget {

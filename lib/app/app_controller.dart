@@ -28,6 +28,7 @@ import '../sponsor_block.dart';
 import '../appearance_settings.dart';
 import '../cache_manager.dart';
 import '../decoder_status.dart';
+import '../live_chat.dart';
 import '../models.dart';
 import '../network_proxy.dart';
 import '../socks_bridge.dart';
@@ -221,6 +222,9 @@ class AppController extends ChangeNotifier {
   final playQueue = PlayQueue();
   VideoDetails? details;
   bool loadingDetails = false;
+  List<LiveChatMessage> replayChat = const [];
+  bool loadingReplayChat = false;
+  String? replayChatError;
   /// Heights the playing video offers, highest first; empty until known.
   List<int> availableHeights = const [];
   /// Heights for the quality menu: automatic, then only what the playing
@@ -1044,6 +1048,9 @@ class AppController extends ChangeNotifier {
       playbackError = null;
       details = null;
       loadingDetails = true;
+      replayChat = const [];
+      loadingReplayChat = false;
+      replayChatError = null;
       availableHeights = const [];
       related?.dispose();
       related = null;
@@ -1060,6 +1067,24 @@ class AppController extends ChangeNotifier {
       if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
       final next = upNext.firstOrNull;
       if (next != null) prefetch(next);
+      if (item.liveStatus == 'was_live') unawaited(_loadReplayChat(item, serial));
+    }
+  }
+
+  Future<void> _loadReplayChat(VideoItem item, int serial) async {
+    final repository = _repository;
+    if (repository == null || serial != _playSerial) return;
+    _update(() {
+      loadingReplayChat = true;
+      replayChatError = null;
+    });
+    try {
+      final messages = await repository.liveChat.replay(item.id);
+      if (serial == _playSerial) _update(() => replayChat = messages);
+    } catch (error) {
+      if (serial == _playSerial) _update(() => replayChatError = '$error');
+    } finally {
+      if (serial == _playSerial) _update(() => loadingReplayChat = false);
     }
   }
 

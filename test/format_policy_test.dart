@@ -35,6 +35,12 @@ void main() {
       expect(expression, startsWith('bestvideo[height<=?2160]+bestaudio/'));
     });
 
+    test('never exceeds the user-selected default quality', () {
+      const settings = PlayerSettings(maxHeight: 720, decoderResults: {'av1': _hw});
+      expect(_expression(settings), startsWith('bestvideo[height<=?720]+bestaudio/'));
+      expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:av01');
+    });
+
     test('puts AV1 before H.264 only with verified hardware decoding', () {
       final plain = _order(const PlayerSettings(maxHeight: 1080));
       expect(plain.indexOf(VideoCodec.av1), greaterThan(plain.indexOf(VideoCodec.h264)));

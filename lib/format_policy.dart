@@ -112,10 +112,10 @@ class FormatPolicy {
     ].join('/');
   }
 
-  /// yt-dlp first ranks by picture quality, then breaks ties by the verified
-  /// decoder ladder. This keeps a 1080p AVC stream ahead of a 360p VP9
-  /// stream, while still choosing hardware-decoded AV1 or VP9 when the
-  /// quality tier is equal.
+  /// Within the user's selected quality cap, yt-dlp first ranks by picture
+  /// quality, then breaks ties by the verified decoder ladder. This keeps a
+  /// 1080p AVC stream ahead of a 360p VP9 stream, while still choosing
+  /// hardware-decoded AV1 or VP9 when the quality tier is equal.
   static String? formatSort(PlayerSettings settings) {
     if (settings.strategy == PlaybackStrategy.quality) return null;
     final first = codecOrder(settings).firstOrNull;

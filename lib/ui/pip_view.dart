@@ -183,7 +183,8 @@ class PipControls extends StatelessWidget {
           ]),
         ),
       ),
-      Padding(
+      Container(
+        color: Colors.black.withValues(alpha: .70),
         padding: const EdgeInsets.fromLTRB(6, 0, 20, 2),
         child: StreamBuilder<Duration>(
           stream: player.stream.position,
@@ -192,7 +193,7 @@ class PipControls extends StatelessWidget {
             position: player.state.position,
             buffered: player.state.buffer,
             total: player.state.duration,
-            color: Theme.of(context).colorScheme.inversePrimary,
+            color: Colors.white,
             onSeek: (time) => unawaited(player.seek(time)),
           ),
         ),
@@ -206,6 +207,11 @@ class PipControls extends StatelessWidget {
         onPressed: onTap,
         padding: const EdgeInsets.all(4),
         constraints: const BoxConstraints(),
-        style: IconButton.styleFrom(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+        style: IconButton.styleFrom(
+          backgroundColor: Colors.black.withValues(alpha: .70),
+          foregroundColor: Colors.white,
+          shape: const CircleBorder(),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
       );
 }

@@ -7,6 +7,13 @@ class PlaybackRecovery {
   final Duration window;
   final DateTime Function() _clock;
   final _attempts = <DateTime>[];
+  Duration? _position;
+  DateTime? _observedAt;
+  DateTime? _advancedAt;
+  Duration _progress = Duration.zero;
+
+  bool get awaitingProgress => _position != null;
+  bool get stalled => awaitingProgress && _clock().difference(_advancedAt!) >= stallTimeout;
 
   /// How long buffering may stall during playback before reconnecting.
   static const stallTimeout = Duration(seconds: 20);
@@ -14,15 +21,52 @@ class PlaybackRecovery {
   /// Whether another attempt is allowed now; records it if so. Attempts
   /// older than [window] no longer count, so a long video can recover from
   /// several separate outages.
-  bool tryAttempt() {
+  bool tryAttempt({Duration position = Duration.zero}) {
     final now = _clock();
     _attempts.removeWhere((time) => now.difference(time) > window);
     if (_attempts.length >= maxAttempts) return false;
     _attempts.add(now);
+    _position = position;
+    _observedAt = now;
+    _advancedAt = now;
+    _progress = Duration.zero;
     return true;
   }
 
-  void reset() => _attempts.clear();
+  /// Opening or seeking to the resume point is not playback. Count only
+  /// decoded, advancing playback; a seek starts the observation again.
+  bool observeProgress(Duration position, {required bool playing, required bool buffering, required bool decoded, double rate = 1}) {
+    final previous = _position;
+    if (previous == null) return false;
+    final now = _clock();
+    final elapsed = now.difference(_observedAt!);
+    final advance = position - previous;
+    _position = position;
+    _observedAt = now;
+    final maximumAdvance = Duration(microseconds: (elapsed.inMicroseconds * rate).round()) + const Duration(milliseconds: 500);
+    if (!playing || buffering || !decoded || advance < Duration.zero || advance > maximumAdvance) {
+      _progress = Duration.zero;
+      return false;
+    }
+    if (advance == Duration.zero) return false;
+    _advancedAt = now;
+    _progress += advance;
+    if (_progress < const Duration(seconds: 10)) return false;
+    reset();
+    return true;
+  }
+
+  void cancelPending() {
+    _position = null;
+    _observedAt = null;
+    _advancedAt = null;
+    _progress = Duration.zero;
+  }
+
+  void reset() {
+    _attempts.clear();
+    cancelPending();
+  }
 
   /// mpv reaches the end of a stream it can no longer read as if the video
   /// had finished; a real ending is within a few seconds of the duration.

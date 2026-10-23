@@ -28,7 +28,9 @@ class AppLog {
       await directory.create(recursive: true);
       final file = File('${directory.path}${Platform.pathSeparator}ytplus.log');
       if (await file.exists() && await file.length() > maxBytes) {
-        await file.rename('${directory.path}${Platform.pathSeparator}ytplus.old.log');
+        final previous = File('${directory.path}${Platform.pathSeparator}ytplus.old.log');
+        if (await previous.exists()) await previous.delete();
+        await file.rename(previous.path);
       }
       return current = AppLog(file, size: await file.exists() ? await file.length() : 0);
     } on FileSystemException {
@@ -68,7 +70,9 @@ class AppLog {
           _size += utf8.encode(text).length;
           // A long session rotates too, not only the next start.
           if (_size > maxBytes) {
-            await file.rename('${file.parent.path}${Platform.pathSeparator}ytplus.old.log');
+            final previous = File('${file.parent.path}${Platform.pathSeparator}ytplus.old.log');
+            if (await previous.exists()) await previous.delete();
+            await file.rename(previous.path);
             _size = 0;
           }
         } on FileSystemException {

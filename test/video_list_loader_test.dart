@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/video_list_loader.dart';
 import 'package:ytplus/video_repository.dart';
 
-String _video(int i) => jsonEncode({'id': 'video$i'.padRight(11, '0'), 'title': '$i', 'channel': ''});
+String _video(int i) => jsonEncode({'id': 'v${i.toString().padLeft(10, '0')}', 'title': '$i', 'channel': ''});
 
 /// A source that records how many lines were read from it.
 class _Source {
@@ -48,6 +48,21 @@ void main() {
     expect(source.opened, 1);
     expect(source.read, 5);
     expect(loader.hasMore, isFalse);
+  });
+
+  test('publishes a page once instead of rebuilding for every result', () async {
+    final source = _Source([for (var i = 0; i < 20; i++) _video(i)]);
+    final loader = VideoListLoader(() => Listing(source.open), pageSize: 20);
+    addTearDown(loader.dispose);
+    var notifications = 0;
+    loader.addListener(() => notifications++);
+
+    loader.loadMore();
+    await pumpEventQueue();
+
+    expect(loader.items, hasLength(20));
+    // One notification starts loading and one publishes the finished page.
+    expect(notifications, 2);
   });
 
   test('after an error only an explicit retry loads again', () async {

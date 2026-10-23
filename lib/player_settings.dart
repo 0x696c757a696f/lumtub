@@ -160,14 +160,20 @@ const hwdecCodecChoices = ['h264', 'hevc', 'vp8', 'vp9', 'av1', 'vc1', 'mpeg2vid
 const defaultHwdecCodecs = 'h264,vc1,hevc,vp8,vp9,av1,prores,ffv1';
 
 /// PiliNara's 音量均衡 presets, as mpv `--af` filters.
-final audioFilterPresets = <(String, String)>[
+List<(String, String)> get audioFilterPresets => [
   ('', tr('关闭')),
   ('dynaudnorm=g=5:f=250:r=0.9:p=0.5', tr('预设 dynaudnorm（动态均衡）')),
   ('loudnorm=I=-16:LRA=11:TP=-1.5', tr('预设 loudnorm（响度标准化）')),
 ];
 
 /// Picture adjustments PiliNara offers in its player, as mpv properties.
-final pictureProperties = [('brightness', tr('亮度')), ('contrast', tr('对比度')), ('saturation', tr('饱和度')), ('gamma', tr('伽马')), ('hue', tr('色调'))];
+List<(String, String)> get pictureProperties => [
+      ('brightness', tr('亮度')),
+      ('contrast', tr('对比度')),
+      ('saturation', tr('饱和度')),
+      ('gamma', tr('伽马')),
+      ('hue', tr('色调')),
+    ];
 
 /// Options a custom line may not set: ones that load code or files, write
 /// files, or would break media_kit's rendering and playback control.

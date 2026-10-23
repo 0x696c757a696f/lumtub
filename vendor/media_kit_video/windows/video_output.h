@@ -17,6 +17,8 @@
 
 #include <future>
 #include <memory>
+#include <atomic>
+#include <condition_variable>
 
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
@@ -85,6 +87,8 @@ class VideoOutput {
 
   void Resize(int64_t required_width, int64_t required_height);
 
+  void UnregisterTexture(int64_t texture_id);
+
   int64_t GetVideoWidth();
 
   int64_t GetVideoHeight();
@@ -101,9 +105,12 @@ class VideoOutput {
   // For preventing any asynchronous operations (primarily texture objects
   // deletion after unregister in |Resize|) access this object after
   // destruction.
-  bool destroyed_ = false;
+  std::atomic<bool> destroyed_{false};
+  std::atomic<bool> render_pending_{false};
 
   std::mutex textures_mutex_ = std::mutex();
+  std::condition_variable textures_unregistered_;
+  size_t pending_texture_unregistrations_ = 0;
 
   std::unordered_map<int64_t, std::unique_ptr<flutter::TextureVariant>>
       texture_variants_ = {};

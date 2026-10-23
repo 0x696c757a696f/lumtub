@@ -103,37 +103,42 @@ class VideoListLoader extends ChangeNotifier {
   void _page(Listing listing, int count, int skipped, int shownBefore) {
     var fresh = 0;
     var shown = shownBefore;
-    final pending = <VideoItem>[];
+    // A search page can contain dozens of entries.  Publishing each one used
+    // to copy the whole accumulated list and rebuild the result sliver once
+    // per entry.  Keep one page local and publish it together instead.
+    final pendingVideos = <VideoItem>[];
+    final pendingChannels = <ChannelResult>[];
+    final pendingPlaylists = <PlaylistResult>[];
     _subscription = listing.next(count).listen(
       (entry) {
         fresh++;
         final match = matches;
         if (entry is ChannelResult) {
           if (match != null || !_seen.add(entry.ref.id)) return;
-          channels = [...channels, entry];
+          pendingChannels.add(entry);
         } else if (entry is PlaylistResult) {
           if ((match != null && !match(entry.title)) || !_seen.add(entry.id)) return;
-          playlists = [...playlists, entry];
+          pendingPlaylists.add(entry);
         } else if (entry is VideoItem) {
           if (where?.call(entry) == false || (match != null && !match(entry.title)) || !_seen.add(entry.id)) return;
-          if (limit != null && items.length + pending.length >= limit!) return;
-          if (rank != null) {
-            pending.add(entry);
-            shown++;
-            return;
-          }
-          items = [...items, entry];
+          if (limit != null && items.length + pendingVideos.length >= limit!) return;
+          pendingVideos.add(entry);
         }
         shown++;
-        _notify();
       },
       onError: (Object e) => error = '$e',
       onDone: () {
         final order = rank;
-        if (order != null && pending.isNotEmpty) {
-          final scored = [for (final item in pending) (item, order(item))]..sort((a, b) => b.$2.compareTo(a.$2));
-          items = [...items, for (final (item, _) in scored) item];
+        if (pendingVideos.isNotEmpty) {
+          if (order == null) {
+            items = [...items, ...pendingVideos];
+          } else {
+            final scored = [for (final item in pendingVideos) (item, order(item))]..sort((a, b) => b.$2.compareTo(a.$2));
+            items = [...items, for (final (item, _) in scored) item];
+          }
         }
+        if (pendingChannels.isNotEmpty) channels = [...channels, ...pendingChannels];
+        if (pendingPlaylists.isNotEmpty) playlists = [...playlists, ...pendingPlaylists];
         final full = limit != null && items.length >= limit!;
         final more = !full && !listing.done && fresh > 0;
         // A filtered page with nothing to show would leave nothing to

@@ -159,7 +159,12 @@ class PlaylistCard extends StatelessWidget {
               borderRadius: AppStyle.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
                 if (cover != null)
-                  Image.network(cover, fit: BoxFit.cover, errorBuilder: (context, error, stack) => ColoredBox(color: colors.surfaceContainerHighest))
+                  LayoutBuilder(builder: (context, box) => Image.network(
+                    cover,
+                    cacheWidth: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context)),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stack) => ColoredBox(color: colors.surfaceContainerHighest),
+                  ))
                 else
                   ColoredBox(color: colors.surfaceContainerHighest),
                 Positioned(

@@ -41,12 +41,11 @@ class VideoOutputManager {
                std::optional<int64_t> height);
 
   // Destroys the |VideoOutput| with given handle.
-  void Dispose(int64_t handle);
+  void Dispose(int64_t handle, std::function<void()> callback);
 
   ~VideoOutputManager();
 
  private:
-  std::mutex mutex_ = std::mutex();
   // All the operations involving ANGLE or EGL or libmpv must be performed on
   // same single thread to prevent any race conditions or invalid ANGLE usage.
   // Not doing so results in access violations & crashes.
@@ -78,6 +77,9 @@ class VideoOutputManager {
   // that all the posted tasks are performed on a single thread orderly. This
   // also makes usage of any |std::mutex| unnecessary (for the good).
   std::unique_ptr<ThreadPool> thread_pool_ = std::make_unique<ThreadPool>(1);
+  // Serializes platform requests while the render worker owns ANGLE/libmpv.
+  std::unique_ptr<ThreadPool> lifecycle_thread_pool_ =
+      std::make_unique<ThreadPool>(1);
   flutter::PluginRegistrarWindows* registrar_ = nullptr;
   std::unordered_map<int64_t, std::unique_ptr<VideoOutput>> video_outputs_ = {};
 };

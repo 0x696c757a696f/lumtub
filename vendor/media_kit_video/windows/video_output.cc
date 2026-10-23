@@ -45,7 +45,6 @@ VideoOutput::VideoOutput(int64_t handle,
             static_cast<int32_t>(width_.value_or(1)),
             static_cast<int32_t>(height_.value_or(1)));
         surface_manager_->MakeCurrent(true);
-        Resize(width_.value_or(1), height_.value_or(1));
         mpv_opengl_init_params gl_init_params{
             [](auto, auto name) {
               return reinterpret_cast<void*>(eglGetProcAddress(name));
@@ -59,6 +58,7 @@ VideoOutput::VideoOutput(int64_t handle,
         };
         // Create render context.
         if (mpv_render_context_create(&render_context_, handle_, params) == 0) {
+          Resize(width_.value_or(1), height_.value_or(1));
           mpv_render_context_set_update_callback(
               render_context_,
               [](void* context) {
@@ -81,6 +81,7 @@ VideoOutput::VideoOutput(int64_t handle,
       }
     }
     if (!is_hardware_acceleration_enabled) {
+      surface_manager_.reset();
       std::cout << "media_kit: VideoOutput: Using S/W rendering." << std::endl;
       // Allocate a "large enough" buffer ahead of time.
       pixel_buffer_ =
@@ -104,55 +105,57 @@ VideoOutput::VideoOutput(int64_t handle,
       }
     }
   });
-  future.wait();
+  future.get();
 }
 
 VideoOutput::~VideoOutput() {
   destroyed_ = true;
-  auto promise = std::promise<void>();
-  if (texture_id_) {
-    registrar_->texture_registrar()->UnregisterTexture(
-        texture_id_, [&, texture_id = texture_id_]() {
-          // Add one more task into the thread pool queue & exit the destructor
-          // only when it gets executed. This will ensure that all the tasks
-          // posted to the thread pool i.e. render or resize before this are
-          // executed (and won't reference the dead object anymore), most
-          // notably |CheckAndResize| & |Render|.
-          auto future = thread_pool_ref_->Post([&, id = texture_id]() {
-            std::cout << "media_kit: VideoOutput: Free Texture: " << id
-                      << std::endl;
-            std::cout << "VideoOutput::~VideoOutput: "
-                      << reinterpret_cast<int64_t>(handle_) << std::endl;
-            std::lock_guard<std::mutex> lock(textures_mutex_);
-            texture_variants_.clear();
-            // H/W
-            textures_.clear();
-            // S/W
-            pixel_buffer_textures_.clear();
-            // Free (call destructor) |ANGLESurfaceManager| through the thread
-            // pool. This will ensure synchronized EGL or ANGLE usage & won't
-            // conflict with |Render| or |CheckAndResize| of other
-            // |VideoOutput|s.
-            surface_manager_.reset(nullptr);
-            promise.set_value();
-          });
-        });
+  // Stop libmpv callbacks and drain rendering before releasing any surfaces.
+  thread_pool_ref_->Post([this]() {
+    if (render_context_) {
+      if (surface_manager_) {
+        surface_manager_->MakeCurrent(true);
+      }
+      mpv_render_context_set_update_callback(render_context_, nullptr, nullptr);
+      mpv_render_context_free(render_context_);
+      render_context_ = nullptr;
+      if (surface_manager_) {
+        surface_manager_->MakeCurrent(false);
+      }
+    }
+  }).get();
+
+  int64_t texture_id;
+  {
+    std::lock_guard<std::mutex> lock(textures_mutex_);
+    texture_id = texture_id_;
+    texture_id_ = 0;
+  }
+  if (texture_id) {
+    UnregisterTexture(texture_id);
+  }
+  {
+    std::unique_lock<std::mutex> lock(textures_mutex_);
+    textures_unregistered_.wait(
+        lock, [this]() { return pending_texture_unregistrations_ == 0; });
+    assert(texture_variants_.empty());
   }
 
-  promise.get_future().wait();
-  texture_id_ = 0;
-
-  thread_pool_ref_->Post([render_context = render_context_]() {
-    mpv_render_context_free(render_context);
-  });
+  thread_pool_ref_->Post([this]() { surface_manager_.reset(); }).get();
 }
 
 void VideoOutput::NotifyRender() {
-  if (destroyed_) {
+  if (destroyed_ || render_pending_.exchange(true)) {
     return;
   }
-  thread_pool_ref_->Post(std::bind(&VideoOutput::CheckAndResize, this));
-  thread_pool_ref_->Post(std::bind(&VideoOutput::Render, this));
+  // Keep at most one pending render while the current frame is being drawn.
+  thread_pool_ref_->Post([this]() {
+    render_pending_ = false;
+    if (!destroyed_) {
+      CheckAndResize();
+      Render();
+    }
+  });
 }
 
 void VideoOutput::Render() {
@@ -200,8 +203,10 @@ void VideoOutput::Render() {
 
 void VideoOutput::SetTextureUpdateCallback(
     std::function<void(int64_t, int64_t, int64_t)> callback) {
-  texture_update_callback_ = callback;
-  texture_update_callback_(texture_id_, GetVideoWidth(), GetVideoHeight());
+  thread_pool_ref_->Post([this, callback]() {
+    texture_update_callback_ = callback;
+    texture_update_callback_(texture_id_, GetVideoWidth(), GetVideoHeight());
+  }).get();
 }
 
 void VideoOutput::SetSize(std::optional<int64_t> width,
@@ -269,29 +274,7 @@ void VideoOutput::Resize(int64_t required_width, int64_t required_height) {
   std::cout << required_width << " " << required_height << std::endl;
   // Unregister previously registered texture & delete underlying objects.
   if (texture_id_) {
-    registrar_->texture_registrar()->UnregisterTexture(
-        texture_id_, [&, id = texture_id_]() {
-          if (id) {
-            std::cout << "media_kit: VideoOutput: Free Texture: " << id
-                      << std::endl;
-            std::lock_guard<std::mutex> lock(textures_mutex_);
-            if (destroyed_) {
-              return;
-            }
-            if (texture_variants_.find(id) != texture_variants_.end()) {
-              texture_variants_.erase(id);
-            }
-            // H/W
-            if (textures_.find(id) != textures_.end()) {
-              textures_.erase(id);
-            }
-            // S/W
-            if (pixel_buffer_textures_.find(id) !=
-                pixel_buffer_textures_.end()) {
-              pixel_buffer_textures_.erase(id);
-            }
-          }
-        });
+    UnregisterTexture(texture_id_);
     // YTPlus: under the lock, so Flutter's texture callback sees 0 and
     // returns no frame instead of reading the textures freed below.
     std::lock_guard<std::mutex> lock(textures_mutex_);
@@ -373,6 +356,22 @@ void VideoOutput::Resize(int64_t required_width, int64_t required_height) {
     // Notify public texture update callback.
     texture_update_callback_(texture_id_, required_width, required_height);
   }
+}
+
+void VideoOutput::UnregisterTexture(int64_t texture_id) {
+  {
+    std::lock_guard<std::mutex> lock(textures_mutex_);
+    ++pending_texture_unregistrations_;
+  }
+  registrar_->texture_registrar()->UnregisterTexture(
+      texture_id, [this, texture_id]() {
+        std::lock_guard<std::mutex> lock(textures_mutex_);
+        texture_variants_.erase(texture_id);
+        textures_.erase(texture_id);
+        pixel_buffer_textures_.erase(texture_id);
+        --pending_texture_unregistrations_;
+        textures_unregistered_.notify_all();
+      });
 }
 
 int64_t VideoOutput::GetVideoWidth() {

@@ -3,6 +3,10 @@
 
 /// English text for each simplified-Chinese source string.
 const stringsEn = <String, String>{
+  '聊天回放': 'Chat replay',
+  '无法加载聊天回放：{0}': 'Couldn\'t load chat replay: {0}',
+  '这个直播录像没有公开的聊天回放': 'This live replay has no public chat replay',
+  '系统消息': 'System message',
   ' 像素': ' px',
   ' 秒': ' s',
   '# 每行一个，和 mpv.conf 相同\nd3d11va-zero-copy=yes\nhwdec-codecs = h264,vc1,hevc,vp8,vp9,av1,prores,ffv1\nvd-lavc-dr = auto': '# One per line, same as mpv.conf\nd3d11va-zero-copy=yes\nhwdec-codecs = h264,vc1,hevc,vp8,vp9,av1,prores,ffv1\nvd-lavc-dr = auto',

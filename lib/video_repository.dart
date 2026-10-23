@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'app_directories.dart';
+import 'live_chat_repository.dart';
 import 'models.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
@@ -152,6 +153,15 @@ class VideoRepository {
     infoDirectory: Directory(cacheDirectory == null
         ? '${Directory.systemTemp.path}${Platform.pathSeparator}ytplus-info'
         : '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp${Platform.pathSeparator}info'),
+    environment: _environment,
+  );
+
+  /// Read-only chat replay, written under this repository's configured cache.
+  late final LiveChatRepository liveChat = LiveChatRepository(
+    ytDlpPath,
+    cacheDirectory: cacheDirectory,
+    deno: deno,
+    proxy: proxy,
     environment: _environment,
   );
 

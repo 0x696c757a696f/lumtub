@@ -2,6 +2,8 @@ name: Create YTPlus release
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '17 9 * * *'
 
 concurrency:
   group: create-release
@@ -21,8 +23,30 @@ jobs:
           fetch-depth: 0
 
       - name: Create a release tag from the application version and commit
+        id: prepare
+        env:
+          SCHEDULED: ${{ github.event_name == 'schedule' }}
         run: |
           set -euo pipefail
+          git fetch --tags --force origin
+          latest_tag=$(git tag --merged HEAD --list 'v*' --sort=-creatordate | head -n 1 || true)
+          if [[ -n "$latest_tag" ]]; then
+            changes=$(git rev-list --count "$latest_tag..HEAD")
+            if [[ "$changes" == 0 ]]; then
+              echo "No commits since $latest_tag; no release is created."
+              echo 'release=false' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [[ "$SCHEDULED" == true ]]; then
+              last_release=$(git for-each-ref --format='%(creatordate:unix)' "refs/tags/$latest_tag")
+              now=$(date +%s)
+              if (( now - last_release < 30 * 24 * 60 * 60 )); then
+                echo "Last release $latest_tag is less than 30 days old; no release is created."
+                echo 'release=false' >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            fi
+          fi
           pubspec_version=$(sed -n 's/^version: *\([^+[:space:]]*\).*/\1/p' pubspec.yaml)
           [[ "$pubspec_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
             echo "pubspec.yaml must declare a stable semantic version, found: $pubspec_version" >&2
@@ -38,13 +62,15 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git tag -a "$tag" -m "YTPlus $tag"
           git push origin "$tag"
+          echo 'release=true' >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "Created $tag from application version $pubspec_version and commit $commit"
 
-      - name: Explain the release pipeline
+      - name: Dispatch the tagged Windows release build
+        if: steps.prepare.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=$(git describe --tags --exact-match)
-          gh workflow run windows.yml --ref "$tag"
+          gh workflow run windows.yml --ref "${{ steps.prepare.outputs.tag }}"
           echo 'The tagged Windows build was dispatched.'
           echo 'That workflow builds the ZIP and installer, then creates the GitHub Release with generated release notes.'

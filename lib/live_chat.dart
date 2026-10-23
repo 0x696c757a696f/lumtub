@@ -121,7 +121,10 @@ class LiveChatMessage {
         final shortcuts = emoji['shortcuts'];
         if (shortcuts is List && shortcuts.isNotEmpty) return '${shortcuts.first}';
         final accessibility = emoji['accessibility'];
-        if (accessibility is Map && accessibility['accessibilityData'] case final Map data) return '${data['label'] ?? ''}';
+        if (accessibility is Map) {
+          final data = accessibility['accessibilityData'];
+          if (data is Map) return '${data['label'] ?? ''}';
+        }
       }
       return '';
     }).join();

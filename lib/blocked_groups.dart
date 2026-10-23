@@ -42,6 +42,11 @@ const blockedGroups = <BlockedGroup>[
   BlockedGroup('曼森家族', ['曼森家族', 'Manson Family', 'Charles Manson']),
   BlockedGroup('天父的儿女', ['天父的儿女', '天父的兒女', 'Family International', 'David Berg']),
   BlockedGroup('雷尔运动', ['雷尔运动', '雷爾運動', 'Raelian', 'Raëlian', 'Rael movement']),
+  // User-supplied channels and networks. These use exact channel names,
+  // handles and IDs in blocked_channels.dart; titles and descriptions stay searchable.
+  BlockedGroup('凯拉萨与尼希亚南达', [], exact: ['KAILASA', "KAILASA's SPH Nithyananda", 'KAILASA News', 'United States of KAILASA', "KAILASA's Nithyananda Yoga", 'Nithyananda', '尼希亚南达', '尼希亞南達', '凯拉萨', '凱拉薩']),
+  BlockedGroup('清海与赛巴巴媒体', [], exact: ['SupremeMasterTV Web', 'SMSpirit', 'SriSathyaSaiOfficial', 'SriSathyaSaiMandarin', 'SriSathyaSaiSpeaksOfficial', 'SriSathyaSaiBhajans', 'PrasanthiMandirLiveRadioSai', 'SriSathyaSaiKidsWorld']),
+  BlockedGroup('领袖神化与神迹宣传频道', [], exact: ['Saint MSG', 'Dera Sacha Sauda', 'KALKI', 'Sri Amma Bhagavan', 'Dr and Master Sha', 'Shri Mataji Teachings', 'Shri Mataji Excerpts', 'Sahaja Workshop', 'Bhakti Marga', 'Awakening with Brahma Kumaris', 'Benny Hinn Ministries', 'This Is Your Day', 'Prophet Shepherd Bushiri', 'Shepherd Bushiri Sermon', 'The Jesus Nation RSA', 'Uebert Angel', 'Uebert Angel Highlight', 'GoodNews City', 'Copeland Ministries', 'Kenneth Copeland Africa', 'Prophet Jeremiah DreamFarm', 'LoveWorld Philippines', 'Kingdom of Jesus Christ']),
   BlockedGroup('FLDS', ['FLDS', '基本教义派耶稣基督', '基本教義派耶穌基督', 'Warren Jeffs']),
   BlockedGroup('NXIVM', ['NXIVM', 'Keith Raniere']),
   BlockedGroup('奥姆真理教', ['奥姆真理教', '奧姆真理教', 'Aum Shinrikyo', '麻原彰晃']),

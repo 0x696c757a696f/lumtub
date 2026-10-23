@@ -225,6 +225,10 @@ class AppController extends ChangeNotifier {
   List<LiveChatMessage> replayChat = const [];
   bool loadingReplayChat = false;
   String? replayChatError;
+  StreamSubscription<LiveChatMessage>? _currentChat;
+  Timer? _currentChatFlushTimer;
+  final _currentChatPending = <LiveChatMessage>[];
+  final _currentChatIds = <String>{};
   /// Heights the playing video offers, highest first; empty until known.
   List<int> availableHeights = const [];
   /// Heights for the quality menu: automatic, then only what the playing
@@ -1036,6 +1040,7 @@ class AppController extends ChangeNotifier {
     }
     unawaited(account?.loadRating(item.id));
     _saveProgress();
+    _stopCurrentChat();
     final serial = ++_playSerial;
     _recoveryTimer?.cancel();
     _recovery.reset();
@@ -1067,8 +1072,60 @@ class AppController extends ChangeNotifier {
       if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
       final next = upNext.firstOrNull;
       if (next != null) prefetch(next);
-      if (item.liveStatus == 'was_live') unawaited(_loadReplayChat(item, serial));
+      if (item.isLive) {
+        _startCurrentChat(item, serial);
+      } else if (item.liveStatus == 'was_live') {
+        unawaited(_loadReplayChat(item, serial));
+      }
     }
+  }
+
+  void _startCurrentChat(VideoItem item, int serial) {
+    final repository = _repository;
+    if (repository == null || serial != _playSerial) return;
+    _update(() {
+      loadingReplayChat = true;
+      replayChatError = null;
+    });
+    _currentChat = repository.liveChat.current(item.id).listen(
+      (message) {
+        if (serial != _playSerial || !_currentChatIds.add(message.id)) return;
+        _currentChatPending.add(message);
+        _currentChatFlushTimer ??= Timer(const Duration(milliseconds: 300), () {
+          _currentChatFlushTimer = null;
+          _flushCurrentChat(serial);
+        });
+      },
+      onError: (Object error) {
+        if (serial == _playSerial) _update(() {
+          replayChatError = '$error';
+          loadingReplayChat = false;
+        });
+      },
+      onDone: () {
+        _flushCurrentChat(serial);
+        if (serial == _playSerial) _update(() => loadingReplayChat = false);
+      },
+    );
+  }
+
+  void _flushCurrentChat(int serial) {
+    if (serial != _playSerial || _currentChatPending.isEmpty) return;
+    final next = [...replayChat, ..._currentChatPending];
+    _currentChatPending.clear();
+    _update(() {
+      replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
+      loadingReplayChat = false;
+    });
+  }
+
+  void _stopCurrentChat() {
+    _currentChatFlushTimer?.cancel();
+    _currentChatFlushTimer = null;
+    _currentChatPending.clear();
+    _currentChatIds.clear();
+    unawaited(_currentChat?.cancel());
+    _currentChat = null;
   }
 
   Future<void> _loadReplayChat(VideoItem item, int serial) async {
@@ -1873,6 +1930,7 @@ class AppController extends ChangeNotifier {
 
   /// Stops the video and closes the watch page or the mini player.
   void stopWatching() {
+    _stopCurrentChat();
     setPip(false);
     _finishWatching();
     _saveProgress(now: true);
@@ -2716,6 +2774,7 @@ class AppController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _stopCurrentChat();
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _sleepTimer?.cancel();

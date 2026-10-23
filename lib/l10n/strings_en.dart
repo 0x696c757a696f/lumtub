@@ -3,6 +3,7 @@
 
 /// English text for each simplified-Chinese source string.
 const stringsEn = <String, String>{
+  '当前直播没有公开聊天': 'This live stream has no public chat',
   '聊天回放': 'Chat replay',
   '无法加载聊天回放：{0}': 'Couldn\'t load chat replay: {0}',
   '这个直播录像没有公开的聊天回放': 'This live replay has no public chat replay',

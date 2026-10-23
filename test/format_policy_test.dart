@@ -50,13 +50,13 @@ void main() {
     test('caps every alternative at the chosen height and ends with plain fallbacks', () {
       final expression = _expression(const PlayerSettings(maxHeight: 720));
       expect(expression.split('/').where((a) => a.startsWith('bestvideo')), everyElement(contains('[height<=?720]')));
-      expect(expression, endsWith('/bestvideo[height<=?720]+bestaudio/best[height<=?720]/best'));
+      expect(expression, endsWith('/best[height<=?720]/best'));
     });
 
     test('keeps the audio cap on the alternatives', () {
       final expression = _expression(const PlayerSettings(audioQuality: AudioQuality.low));
       expect(expression, startsWith('bestvideo+bestaudio[abr<=?64]/'));
-      expect(expression, endsWith('/bestvideo+bestaudio[abr<=?64]/bestvideo+bestaudio/best/best'));
+      expect(expression, endsWith('/bestvideo+bestaudio/best/best'));
     });
   });
 

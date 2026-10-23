@@ -1104,7 +1104,9 @@ class AppController extends ChangeNotifier {
       },
       onDone: () {
         _flushCurrentChat(serial);
-        if (serial == _playSerial) _update(() => loadingReplayChat = false);
+        if (serial == _playSerial) {
+          _update(() => loadingReplayChat = false);
+        }
       },
     );
   }

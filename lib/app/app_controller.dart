@@ -458,7 +458,7 @@ class AppController extends ChangeNotifier {
         this.paths = paths;
         this.directories = directories;
         _cacheManager = cacheManager;
-        this.cacheBytes = 0;
+        cacheBytes = 0;
         _settingsStore = settingsStore;
         this.settings = settings;
         _preferencesStore = preferencesStore;

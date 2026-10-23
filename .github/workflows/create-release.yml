@@ -2,11 +2,6 @@ name: Create YTPlus release
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version without v (must match pubspec.yaml, for example 0.1.0)'
-        required: true
-        type: string
 
 concurrency:
   group: create-release
@@ -25,21 +20,24 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Validate and create the release tag
-        env:
-          VERSION: ${{ inputs.version }}
+      - name: Compute and create the next release tag
         run: |
           set -euo pipefail
-          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]] || {
-            echo "Version must be semantic, for example 0.1.0 or 0.1.0-rc.1" >&2
-            exit 1
-          }
+          git fetch --tags --force origin
           pubspec_version=$(sed -n 's/^version: *\([^+[:space:]]*\).*/\1/p' pubspec.yaml)
-          [[ "$pubspec_version" == "$VERSION" ]] || {
-            echo "pubspec.yaml declares release version $pubspec_version, not $VERSION" >&2
+          [[ "$pubspec_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "pubspec.yaml must declare a stable semantic version, found: $pubspec_version" >&2
             exit 1
           }
-          tag="v$VERSION"
+          IFS=. read -r major minor patch <<< "$pubspec_version"
+          latest=$(git tag -l 'v[0-9]*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
+          if [[ -n "$latest" ]]; then
+            IFS=. read -r latest_major latest_minor latest_patch <<< "${latest#v}"
+            if [[ "$latest_major" == "$major" && "$latest_minor" == "$minor" && "$latest_patch" -ge "$patch" ]]; then
+              patch=$((latest_patch + 1))
+            fi
+          fi
+          tag="v$major.$minor.$patch"
           git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1 && {
             echo "Tag $tag already exists" >&2
             exit 1
@@ -48,11 +46,13 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git tag -a "$tag" -m "YTPlus $tag"
           git push origin "$tag"
+          echo "Created $tag from pubspec.yaml version $pubspec_version"
 
       - name: Explain the release pipeline
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh workflow run windows.yml --ref "v${{ inputs.version }}"
+          tag=$(git describe --tags --exact-match)
+          gh workflow run windows.yml --ref "$tag"
           echo 'The tagged Windows build was dispatched.'
           echo 'That workflow builds the ZIP and installer, then creates the GitHub Release with generated release notes.'

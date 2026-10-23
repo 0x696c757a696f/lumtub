@@ -405,6 +405,7 @@ const stringsEn = <String, String>{
   '印度教哲学': 'Hindu philosophy',
   '即将开播': 'Upcoming',
   '即将直播': 'Upcoming live',
+  '开始于 {0}': 'Starts {0}',
   '历史': 'History',
   '原住民宗教': 'Indigenous religions',
   '原始': 'Original',

@@ -15,6 +15,8 @@ class VideoItem {
   final DateTime? published;
   /// yt-dlp's live_status: is_live, is_upcoming or was_live; null otherwise.
   final String? liveStatus;
+  /// Scheduled local start time for an upcoming stream, reported by yt-dlp.
+  final DateTime? scheduledStart;
   /// Frame size, when the source listed it; height over width is vertical.
   final int? width;
   final int? height;
@@ -37,6 +39,7 @@ class VideoItem {
     this.channelId,
     this.published,
     this.liveStatus,
+    this.scheduledStart,
     this.width,
     this.height,
     this.description,
@@ -54,6 +57,7 @@ class VideoItem {
         channelId: ref.id,
         published: published,
         liveStatus: liveStatus,
+        scheduledStart: scheduledStart,
         width: width,
         height: height,
         description: description,
@@ -87,6 +91,7 @@ class VideoItem {
         if (channelId != null) 'channel_id': channelId,
         if (published != null) 'published': published!.toUtc().toIso8601String(),
         if (liveStatus != null) 'live_status': liveStatus,
+        if (scheduledStart != null) 'scheduled_start': scheduledStart!.toUtc().toIso8601String(),
         if (width != null) 'width': width,
         if (height != null) 'height': height,
         if (description != null) 'description': description,
@@ -108,6 +113,12 @@ class VideoItem {
     final height = map['height'];
     final description = map['description'];
     final listed = '${map['original_url'] ?? ''} ${map['webpage_url'] ?? ''}';
+    final liveStatus = const {'is_live', 'is_upcoming', 'was_live'}.contains(map['live_status']) ? map['live_status'] as String : null;
+    DateTime? unixTime(Object? value) {
+      final seconds = value is num ? value.toInt() : int.tryParse('${value ?? ''}');
+      return seconds == null || seconds <= 0 ? null : DateTime.fromMillisecondsSinceEpoch(seconds * 1000, isUtc: true).toLocal();
+    }
+    final savedScheduledStart = DateTime.tryParse(map['scheduled_start']?.toString() ?? '')?.toLocal();
     return VideoItem(
       id: id,
       title: map['title']?.toString() ?? 'Untitled video',
@@ -117,7 +128,8 @@ class VideoItem {
       viewCount: views is num ? views.toInt() : null,
       channelId: channelId != null && ChannelRef.isValidId(channelId) ? channelId : null,
       published: DateTime.tryParse(map['published']?.toString() ?? ''),
-      liveStatus: const {'is_live', 'is_upcoming', 'was_live'}.contains(map['live_status']) ? map['live_status'] as String : null,
+      liveStatus: liveStatus,
+      scheduledStart: savedScheduledStart ?? (liveStatus == 'is_upcoming' ? unixTime(map['release_timestamp']) ?? unixTime(map['timestamp']) : null),
       width: width is num ? width.toInt() : null,
       height: height is num ? height.toInt() : null,
       description: description is String && description.isNotEmpty ? description.substring(0, description.length < 120 ? description.length : 120) : null,

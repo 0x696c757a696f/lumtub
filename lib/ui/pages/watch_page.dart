@@ -302,6 +302,7 @@ class _Details extends StatelessWidget {
     final details = controller.details;
     final views = details?.viewCount ?? item.viewCount;
     final meta = [
+      if (item.isUpcoming && item.scheduledStart != null) tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]),
       if (views != null) tr('{0}次观看', [formatCount(views)]),
       if (details?.uploadDate != null) formatDate(details!.uploadDate!),
     ].join(' · ');

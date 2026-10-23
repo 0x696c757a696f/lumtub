@@ -319,9 +319,6 @@ class AppController extends ChangeNotifier {
   /// yt-dlp and libmpv error lines for the video being opened, which name
   /// the cause libmpv's own error message usually leaves out.
   final _recentErrors = <String>[];
-  /// When mpv last named a subtitle address, or any other address, it could
-  /// not open.
-  DateTime? _subtitleFailedAt, _mediaFailedAt;
 
   /// No prefetching until then, after YouTube answered 429.
   DateTime _rateLimitedUntil = DateTime(0);
@@ -334,6 +331,7 @@ class AppController extends ChangeNotifier {
   /// The last position actually played, which survives a failed stream.
   Duration _lastPosition = Duration.zero;
   Timer? _stallTimer;
+  Timer? _recoveryTimer;
   bool _recovering = false;
   bool _shutDown = false;
   late final _sponsorBlock = SponsorBlock(_http);
@@ -1024,6 +1022,7 @@ class AppController extends ChangeNotifier {
     unawaited(account?.loadRating(item.id));
     _saveProgress();
     final serial = ++_playSerial;
+    _recoveryTimer?.cancel();
     _recovery.reset();
     final resume = preferences.resumePlayback ? library?.progressOf(item.id) : null;
     final start = at ?? (resume != null && resume.resumable ? resume.position : null);
@@ -1305,6 +1304,8 @@ class AppController extends ChangeNotifier {
 
   /// Shows why [item] cannot play and acts on the cause.
   void _fail(VideoItem item, PlaybackFailure failure) {
+    _recoveryTimer?.cancel();
+    _recovery.cancelPending();
     logError('播放失败 ${item.id}（${failure.kind.name}）：${failure.detail}');
     if (failure.kind == FailureKind.noFormat) failure = PlaybackFailure(failure.kind, failure.detail, disabled: FormatPolicy.disabledNames(settings));
     switch (failure.kind) {
@@ -1326,7 +1327,7 @@ class AppController extends ChangeNotifier {
     final item = _tracking;
     if (item == null || _recovering) return;
     final position = _lastPosition;
-    if (!_recovery.tryAttempt()) {
+    if (!_recovery.tryAttempt(position: position)) {
       logError('播放中断，已放弃自动重连 ${item.id}：$message');
       _fail(item, PlaybackFailure.classify([message, ..._recentErrors]));
       return;
@@ -1334,11 +1335,21 @@ class AppController extends ChangeNotifier {
     logInfo('播放中断，从 ${_clock(position)} 重新连接 ${item.id}：$message');
     _notice(tr('网络中断，正在从 {0} 重新连接…', [_clock(position)]));
     _recovering = true;
+    _recoveryTimer?.cancel();
+    final serial = _playSerial;
     try {
       // A new open also asks yt-dlp again, which replaces stream addresses
       // that expired while the video sat paused.
       _repository?.streams.forget(item.id);
-      await _open(item, _playSerial, start: position);
+      final opened = await _open(item, serial, start: position);
+      if (!opened || serial != _playSerial) return;
+      _recoveryTimer = Timer.periodic(PlaybackRecovery.stallTimeout, (_) {
+        if (serial != _playSerial || !_recovery.awaitingProgress) {
+          _recoveryTimer?.cancel();
+        } else if (_recovery.stalled && player!.state.playing) {
+          unawaited(_recover('Playback did not advance after reopening'));
+        }
+      });
     } finally {
       _recovering = false;
     }
@@ -1386,9 +1397,16 @@ class AppController extends ChangeNotifier {
       player.stream.position.listen((position) {
         if (_tracking == null) return;
         if (position > Duration.zero) {
-          // Ten seconds of playback after a reconnect means it worked.
-          if (position - _lastPosition > const Duration(seconds: 10)) _recovery.reset();
-          if (!_recovering) _lastPosition = position;
+          if (_recovery.observeProgress(position,
+            playing: player.state.playing,
+            buffering: player.state.buffering,
+            decoded: audioOnly || _backgroundAudioOnly || (player.state.width ?? 0) > 0,
+            rate: player.state.rate,
+          )) {
+            _recoveryTimer?.cancel();
+            logInfo('Playback recovered after ten seconds of decoded progress');
+          }
+          _lastPosition = position;
         }
         if (_decoderPending && position > const Duration(milliseconds: 500) && (player.state.width ?? 0) > 0) {
           _decoderPending = false;
@@ -1418,33 +1436,24 @@ class AppController extends ChangeNotifier {
       // once the video has loaded (a broken subtitle track) are not fatal.
       player.stream.error.listen((message) {
         if (playing == null || message.isEmpty) return;
-        // curl reports a refused subtitle (often 429 on auto captions) a
-        // moment before mpv names the subtitle address, so each error waits
-        // briefly to see whether it was about a subtitle, which never stops
-        // the video.
-        final serial = _playSerial;
-        final loaded = player.state.duration > Duration.zero;
-        Timer(const Duration(milliseconds: 400), () {
-          if (serial != _playSerial || playing == null) return;
-          bool recent(DateTime? at) => at != null && DateTime.now().difference(at) < const Duration(seconds: 2);
-          if (isSubtitleError(message) || (recent(_subtitleFailedAt) && !recent(_mediaFailedAt))) {
-            logInfo('字幕加载失败，视频继续播放：$message');
-            return;
-          }
-          _onPlayerError(player, message, loaded: loaded);
-        });
+        if (isSubtitleError(message)) {
+          logInfo('字幕加载失败，视频继续播放：$message');
+          return;
+        }
+        // FFmpeg may log the HTTP status before naming the request. Keep
+        // it diagnostic-only; media URL failures, EOF and stalls drive recovery.
+        if (isUnattributedHttpError(message)) return;
+        _onPlayerError(player, message, loaded: player.state.duration > Duration.zero);
       }),
       // libmpv's warnings go to the log, a limited number per video, so
       // problems such as dropped frames can be read after the fact.
       player.stream.log.listen((log) {
         final text = log.text.trim();
-        if (text.startsWith('Failed to open')) {
-          isSubtitleError(text) ? _subtitleFailedAt = DateTime.now() : _mediaFailedAt = DateTime.now();
-        }
+        final subtitle = isSubtitleError(text) || log.prefix == 'sub' || log.prefix.startsWith('sub/');
+        if ((log.level == 'error' || log.prefix == 'ytdl_hook') && _recentErrors.length < 20 && !subtitle && !isUnattributedHttpError(text)) _recentErrors.add(text);
         if (_mpvLogLines >= 200) return;
         _mpvLogLines++;
         logInfo('mpv [${log.prefix}] ${log.level}: $text');
-        if ((log.level == 'error' || log.prefix == 'ytdl_hook') && _recentErrors.length < 20 && !isSubtitleError(text)) _recentErrors.add(text);
       }),
       // A stream that stops delivering data leaves mpv buffering forever.
       player.stream.buffering.listen((buffering) {
@@ -1832,6 +1841,8 @@ class AppController extends ChangeNotifier {
     _finishWatching();
     _saveProgress(now: true);
     _tracking = null;
+    _recoveryTimer?.cancel();
+    _recovery.reset();
     ++_playSerial;
     _update(() {
       playing = null;
@@ -1870,6 +1881,8 @@ class AppController extends ChangeNotifier {
     if (!keep) {
       if (playing != null) _finishWatching();
       _tracking = null;
+      _recoveryTimer?.cancel();
+      _recovery.reset();
       ++_playSerial;
     }
     if (target == PageMode.home) unawaited(refreshHomeFeed());
@@ -2638,6 +2651,7 @@ class AppController extends ChangeNotifier {
     }
     _playerSubscriptions.clear();
     _stallTimer?.cancel();
+    _recoveryTimer?.cancel();
     await player?.pause();
     await player?.dispose();
     logInfo('YTPlus 正常退出');
@@ -2667,6 +2681,7 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _stallTimer?.cancel();
+    _recoveryTimer?.cancel();
     _sleepTimer?.cancel();
     _dropTimer?.cancel();
     unawaited(_flushAppearance());

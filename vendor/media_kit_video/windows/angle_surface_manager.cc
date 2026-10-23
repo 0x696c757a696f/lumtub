@@ -29,13 +29,19 @@ int ANGLESurfaceManager::instance_count_ = 0;
 ANGLESurfaceManager::ANGLESurfaceManager(int32_t width, int32_t height)
     : width_(width), height_(height) {
   mutex_ = ::CreateMutex(NULL, FALSE, NULL);
-  Create();
   instance_count_++;
+  try {
+    Create();
+  } catch (...) {
+    CleanUp(true);
+    ::CloseHandle(mutex_);
+    instance_count_--;
+    throw;
+  }
 }
 
 ANGLESurfaceManager::~ANGLESurfaceManager() {
   CleanUp(true);
-  ::ReleaseMutex(mutex_);
   ::CloseHandle(mutex_);
   instance_count_--;
 }
@@ -121,19 +127,19 @@ void ANGLESurfaceManager::Create() {
 }
 
 void ANGLESurfaceManager::CleanUp(bool release_context) {
+  if (display_ != EGL_NO_DISPLAY) {
+    MakeCurrent(false);
+  }
+  if (surface_ != EGL_NO_SURFACE) {
+    eglDestroySurface(display_, surface_);
+    surface_ = EGL_NO_SURFACE;
+  }
   if (release_context) {
-    if (display_ != EGL_NO_DISPLAY && surface_ != EGL_NO_SURFACE) {
-      eglReleaseTexImage(display_, surface_, EGL_BACK_BUFFER);
-    }
     if (display_ != EGL_NO_DISPLAY && context_ != EGL_NO_CONTEXT) {
       eglDestroyContext(display_, context_);
       context_ = EGL_NO_CONTEXT;
     }
-    if (surface_ != EGL_NO_SURFACE) {
-      eglDestroySurface(display_, surface_);
-      surface_ = EGL_NO_SURFACE;
-    }
-    if (instance_count_ == 1) {
+    if (instance_count_ == 1 && display_ != EGL_NO_DISPLAY) {
       eglTerminate(display_);
     }
     display_ = EGL_NO_DISPLAY;
@@ -147,23 +153,12 @@ void ANGLESurfaceManager::CleanUp(bool release_context) {
       d3d_11_device_->Release();
       d3d_11_device_ = nullptr;
     }
-  } else {
-    // Clear context & destroy existing |surface_|.
-    eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, context_);
-    if (display_ != EGL_NO_DISPLAY && surface_ != EGL_NO_SURFACE) {
-      eglDestroySurface(display_, surface_);
-    }
-    surface_ = EGL_NO_SURFACE;
   }
   // Release D3D 11 texture(s).
-  if (internal_d3d_11_texture_2D_) {
-    internal_d3d_11_texture_2D_->Release();
-    internal_d3d_11_texture_2D_ = nullptr;
-  }
-  if (d3d_11_texture_2D_) {
-    d3d_11_texture_2D_->Release();
-    d3d_11_texture_2D_ = nullptr;
-  }
+  internal_d3d_11_texture_2D_.Reset();
+  d3d_11_texture_2D_.Reset();
+  internal_handle_ = nullptr;
+  handle_ = nullptr;
 }
 
 bool ANGLESurfaceManager::CreateD3DTexture() {
@@ -198,6 +193,9 @@ bool ANGLESurfaceManager::CreateD3DTexture() {
         adapter, driver_type, 0, 0, feature_levels.begin(),
         static_cast<UINT>(feature_levels.size()), D3D11_SDK_VERSION,
         &d3d_11_device_, 0, &d3d_11_device_context_);
+    if (adapter) {
+      adapter->Release();
+    }
     CHECK_HRESULT("D3D11CreateDevice");
   }
 
@@ -243,7 +241,6 @@ bool ANGLESurfaceManager::CreateD3DTexture() {
   // Retrieve the shared |HANDLE| for interop.
   hr = resource->GetSharedHandle(&internal_handle_);
   CHECK_HRESULT("IDXGIResource::GetSharedHandle");
-  internal_d3d_11_texture_2D_->AddRef();
 
   // External.
   hr = d3d_11_device_->CreateTexture2D(&d3d11_texture2D_desc, nullptr,
@@ -254,7 +251,6 @@ bool ANGLESurfaceManager::CreateD3DTexture() {
   // Retrieve the shared |HANDLE| for interop.
   hr = resource->GetSharedHandle(&handle_);
   CHECK_HRESULT("IDXGIResource::GetSharedHandle");
-  d3d_11_texture_2D_->AddRef();
 
   return true;
 }
@@ -320,11 +316,6 @@ bool ANGLESurfaceManager::CreateAndBindEGLSurface() {
   if (surface_ == EGL_NO_SURFACE) {
     FAIL("eglCreatePbufferFromClientBuffer");
   }
-  GLuint t;
-  glGenTextures(1, &t);
-  glBindTexture(GL_TEXTURE_2D, t);
-  eglBindTexImage(display_, surface_, EGL_BACK_BUFFER);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  // libmpv renders to the pbuffer directly; no GL sampling texture is needed.
   return true;
 }

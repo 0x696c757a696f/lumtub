@@ -55,7 +55,7 @@ class PlaybackFailure {
 
   /// The first cause any of [messages] names, most specific first.
   static PlaybackFailure classify(Iterable<String> messages) {
-    final all = messages.where((m) => m.trim().isNotEmpty).toList();
+    final all = messages.where((m) => m.trim().isNotEmpty && !isSubtitleError(m)).toList();
     for (final (kind, pattern) in _patterns) {
       final hit = all.where(pattern.hasMatch).firstOrNull;
       if (hit != null) return PlaybackFailure(kind, hit.trim());
@@ -88,4 +88,12 @@ class PlaybackFailure {
 
 /// Whether an mpv error is about a subtitle track (YouTube's timedtext),
 /// which never stops the video itself.
-bool isSubtitleError(String message) => message.contains('/api/timedtext');
+bool isSubtitleError(String message) => _subtitleError.hasMatch(message);
+
+final _subtitleError = RegExp(r'/api/timedtext\b|\bsubtitles?\b|\bsub-add\b', caseSensitive: false);
+
+/// FFmpeg's bare HTTP diagnostics do not identify the failed request.
+/// Only the later URL-bearing error can attribute it to media or subtitles.
+bool isUnattributedHttpError(String message) =>
+    !RegExp(r'https?://|edl://', caseSensitive: false).hasMatch(message) &&
+    RegExp(r'\b[45]\d\d\b|too many requests|forbidden', caseSensitive: false).hasMatch(message);

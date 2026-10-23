@@ -66,14 +66,19 @@ class SettingEntry {
 
 String qualityLabel(int height) => height == 0 ? tr('自动（按屏幕分辨率）') : '${height}p';
 
-final _scaleModes = [('spline36', tr('Spline36（默认）')), ('bilinear', tr('Bilinear（最省资源）')), ('lanczos', tr('Lanczos（更锐利）')), ('ewa_lanczossharp', tr('EWA Lanczos Sharp（最清晰，GPU 负载高）'))];
-final _cacheModes = [('auto', tr('自动（推荐）')), ('yes', tr('启用')), ('no', tr('禁用'))];
-final themeModes = [(ThemeMode.system, tr('跟随系统')), (ThemeMode.light, tr('浅色')), (ThemeMode.dark, tr('深色'))];
-final _durations = [(0, tr('不限')), (1, tr('1 分钟')), (3, tr('3 分钟')), (5, tr('5 分钟')), (10, tr('10 分钟')), (20, tr('20 分钟'))];
-final _feedLevels = [(FeedLevel.off, tr('不限')), (FeedLevel.reduce, tr('减少')), (FeedLevel.drop, tr('不推荐'))];
-final _feedIntervals = [(5, tr('5 分钟')), (10, tr('10 分钟')), (30, tr('30 分钟')), (60, tr('1 小时')), (180, tr('3 小时'))];
-final _hideTimes = [(2, tr('2 秒')), (3, tr('3 秒（默认）')), (5, tr('5 秒')), (10, tr('10 秒')), (30, tr('30 秒（便于屏幕阅读器）'))];
-final _volumeMaxes = [(100, tr('100%（不增强）')), (130, '130%'), (150, '150%'), (200, '200%')];
+List<(String, String)> get _scaleModes => [
+      ('spline36', tr('Spline36（默认）')),
+      ('bilinear', tr('Bilinear（最省资源）')),
+      ('lanczos', tr('Lanczos（更锐利）')),
+      ('ewa_lanczossharp', tr('EWA Lanczos Sharp（最清晰，GPU 负载高）')),
+    ];
+List<(String, String)> get _cacheModes => [('auto', tr('自动（推荐）')), ('yes', tr('启用')), ('no', tr('禁用'))];
+List<(ThemeMode, String)> get themeModes => [(ThemeMode.system, tr('跟随系统')), (ThemeMode.light, tr('浅色')), (ThemeMode.dark, tr('深色'))];
+List<(int, String)> get _durations => [(0, tr('不限')), (1, tr('1 分钟')), (3, tr('3 分钟')), (5, tr('5 分钟')), (10, tr('10 分钟')), (20, tr('20 分钟'))];
+List<(FeedLevel, String)> get _feedLevels => [(FeedLevel.off, tr('不限')), (FeedLevel.reduce, tr('减少')), (FeedLevel.drop, tr('不推荐'))];
+List<(int, String)> get _feedIntervals => [(5, tr('5 分钟')), (10, tr('10 分钟')), (30, tr('30 分钟')), (60, tr('1 小时')), (180, tr('3 小时'))];
+List<(int, String)> get _hideTimes => [(2, tr('2 秒')), (3, tr('3 秒（默认）')), (5, tr('5 秒')), (10, tr('10 秒')), (30, tr('30 秒（便于屏幕阅读器）'))];
+List<(int, String)> get _volumeMaxes => [(100, tr('100%（不增强）')), (130, '130%'), (150, '150%'), (200, '200%')];
 
 String labelOf<T>(List<(T, String)> values, T value) {
   for (final (key, label) in values) {

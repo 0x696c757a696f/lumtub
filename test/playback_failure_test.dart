@@ -39,4 +39,24 @@ void main() {
     expect(tried.message, contains('改用 Piped、Invidious 也没有成功'));
     expect(limited.message, isNot(contains('改用')));
   });
+
+  test('subtitle rate limits cannot replace the media failure', () {
+    final failure = PlaybackFailure.classify([
+      'Unable to download video subtitles: HTTP Error 429: Too Many Requests',
+      'Failed to open https://www.youtube.com/api/timedtext?v=x: HTTP 429',
+      'Failed to open https://rr1.googlevideo.com/videoplayback: HTTP 403 Forbidden',
+    ]);
+    expect(failure.kind, FailureKind.forbidden);
+    expect(failure.detail, contains('googlevideo.com'));
+    expect(PlaybackFailure.classify(['Failed to open subtitle: HTTP 429']).kind, FailureKind.unknown);
+  });
+
+  test('HTTP diagnostics without request addresses have no media attribution', () {
+    expect(isUnattributedHttpError('https: HTTP error 429 Too Many Requests'), isTrue);
+    expect(isUnattributedHttpError('HTTP error 403 Forbidden'), isTrue);
+    expect(isUnattributedHttpError('Failed to open https://rr1.googlevideo.com/x: HTTP 403'), isFalse);
+    expect(isSubtitleError('Failed to open https://www.youtube.com/API/TIMEDTEXT?v=x'), isTrue);
+    expect(isSubtitleError('sub-add failed'), isTrue);
+    expect(isSubtitleError('Failed to open https://rr1.googlevideo.com/x'), isFalse);
+  });
 }

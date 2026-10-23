@@ -321,7 +321,7 @@ class ToolManager {
   }
 
   Future<void> _installLibmpv() async {
-    final release = await _release('shinchiro/mpv-winbuild-cmake');
+    final release = await _release('zhongfly/mpv-winbuild');
     final tag = _safeTag(release['tag_name']);
     final v3 = cpuSupportsX86_64V3();
     final build = LibmpvBuild(tag, v3 ? LibmpvBuild.v3Variant : LibmpvBuild.baseVariant);

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       libmpv:
-        description: 'libmpv to ship: latest shinchiro build, or the one media_kit bundles'
+        description: 'libmpv to ship: latest zhongfly x86_64-v3 build, or the one media_kit bundles'
         type: choice
         options: [latest, media_kit]
         default: latest
@@ -25,10 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      # The bundled DLL is the baseline x86-64 build, which runs on every
-      # x86-64 CPU; the app downloads the faster x86-64-v3 build at runtime
-      # when the CPU supports AVX2.
-      - name: Verify latest shinchiro x86_64 libmpv
+      # Ship zhongfly's x86-64-v3 DLL. The runtime updater keeps its CPU
+      # capability check before installing later component updates.
+      - name: Verify latest zhongfly x86_64-v3 libmpv
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -41,12 +40,12 @@ jobs:
             Authorization = "Bearer $env:GITHUB_TOKEN"
           }
           $release = Invoke-RestMethod `
-            -Uri 'https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest' `
+            -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases/latest' `
             -Headers $headers
           $asset = $release.assets |
-            Where-Object { $_.name -match '^mpv-dev-x86_64-(?!v3-).*\.7z$' } |
+            Where-Object { $_.name -match '^mpv-dev-x86_64-v3-.+\.7z$' } |
             Select-Object -First 1
-          if (-not $asset) { throw 'Latest release has no x86_64 development archive.' }
+          if (-not $asset) { throw 'Latest release has no x86_64-v3 development archive.' }
           if ($asset.digest -notmatch '^sha256:([0-9a-fA-F]{64})$') {
             throw "Latest libmpv asset has no SHA-256 digest: $($asset.name)"
           }
@@ -73,7 +72,7 @@ jobs:
               Select-Object -First 1
           }
           if (-not $library) { throw 'The latest libmpv archive does not contain libmpv-2.dll.' }
-          if ($release.tag_name -notmatch '^[0-9A-Za-z._]{1,40}$') { throw "Unexpected libmpv tag: $($release.tag_name)" }
+          if ($release.tag_name -notmatch '^[0-9A-Za-z._-]{1,100}$') { throw "Unexpected libmpv tag: $($release.tag_name)" }
           $release.tag_name | Out-File -FilePath (Join-Path $env:RUNNER_TEMP 'libmpv-tag.txt') -Encoding ascii -NoNewline
           Write-Host "Verified $($release.tag_name): $($asset.name), SHA-256, and $($library.FullName)"
 
@@ -159,7 +158,7 @@ jobs:
           if ($sourceHash -ne $targetHash) { throw 'The bundled libmpv replacement did not verify.' }
           # Read by lib/libmpv_updates.dart to decide whether a download is newer.
           $tag = Get-Content -Raw (Join-Path $env:RUNNER_TEMP 'libmpv-tag.txt')
-          "$tag`nx86_64`n" | Out-File -FilePath 'build/windows/x64/runner/Release/libmpv-version.txt' -Encoding ascii -NoNewline
+          "$tag`nx86_64-v3`n" | Out-File -FilePath 'build/windows/x64/runner/Release/libmpv-version.txt' -Encoding ascii -NoNewline
           Write-Host "Replaced the bundled DLL with $($library.FullName)"
 
       - name: Package Windows distribution

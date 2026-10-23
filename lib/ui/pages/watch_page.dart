@@ -462,18 +462,33 @@ class _ReplayChatPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final messages = controller.replayChat;
-    final content = <Widget>[
+    final header = <Widget>[
       Text(tr('聊天回放'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
       const SizedBox(height: 8),
       if (controller.loadingReplayChat) const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator())),
       if (controller.replayChatError != null) ErrorBanner(tr('无法加载聊天回放：{0}', [controller.replayChatError])),
       if (!controller.loadingReplayChat && controller.replayChatError == null && messages.isEmpty)
         Padding(padding: const EdgeInsets.all(12), child: Text(tr('这个直播录像没有公开的聊天回放'), style: TextStyle(color: context.colors.onSurfaceVariant))),
-      for (final message in messages) _ReplayChatMessage(message: message, onSeek: message.offset == null ? null : () => controller.player?.seek(message.offset!)),
     ];
-    return shrinkWrap
-        ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: content)
-        : ListView(padding: const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding), children: content);
+    if (messages.isEmpty) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: header);
+    Widget messageAt(int index) {
+      final message = messages[index];
+      return _ReplayChatMessage(message: message, onSeek: message.offset == null ? null : () => controller.player?.seek(message.offset!));
+    }
+    if (shrinkWrap) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        ...header,
+        SizedBox(height: 320, child: ListView.builder(itemCount: messages.length, itemBuilder: (context, index) => messageAt(index))),
+      ]);
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding),
+      itemCount: messages.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: header);
+        return messageAt(index - 1);
+      },
+    );
   }
 }
 
@@ -507,7 +522,16 @@ class _ReplayChatMessage extends StatelessWidget {
               if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: context.colors.outline, fontSize: 12))),
             ]),
             if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 3), child: Text(message.text)),
-            if (message.stickerUrl != null) Padding(padding: const EdgeInsets.only(top: 4), child: Image.network(message.stickerUrl!, height: 56, errorBuilder: (context, error, stack) => const SizedBox.shrink())),
+            if (message.stickerUrl != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Image.network(
+                  message.stickerUrl!,
+                  height: 56,
+                  cacheHeight: (56 * MediaQuery.of(context).devicePixelRatio).round(),
+                  errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+                ),
+              ),
           ])),
         ]),
       ),

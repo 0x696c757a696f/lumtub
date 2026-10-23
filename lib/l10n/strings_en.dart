@@ -98,7 +98,6 @@ const stringsEn = <String, String>{
   'Vulkan（实验性，回拷）': 'Vulkan (experimental, copy-back)',
   'Vulkan（实验性，零拷贝）': 'Vulkan (experimental, zero-copy)',
   'Windows 无法加密或解密账号凭据': 'Windows couldn\'t encrypt or decrypt the account credentials',
-  'Windows 缺少视频解码扩展：{0}。可在设置 → 播放与性能中安装。': 'Windows video decoder extensions are missing: {0}. Install them in Settings > Playback & performance.',
   'YTPlus 不允许设置此参数': 'YTPlus doesn\'t allow setting this option',
   'YTPlus 让 YouTube 在 Windows 上更好用': 'YTPlus makes YouTube better on Windows',
   'YTPlus 重启后以新的语言显示。现在重启吗？': 'YTPlus shows the new language after a restart. Restart now?',

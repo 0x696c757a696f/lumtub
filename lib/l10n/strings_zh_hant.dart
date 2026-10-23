@@ -82,7 +82,6 @@ const stringsZhHant = <String, String>{
   'Vulkan（实验性，回拷）': 'Vulkan（實驗性，回拷）',
   'Vulkan（实验性，零拷贝）': 'Vulkan（實驗性，零複製）',
   'Windows 无法加密或解密账号凭据': 'Windows 無法加密或解密賬號憑據',
-  'Windows 缺少视频解码扩展：{0}。可在设置 → 播放与性能中安装。': 'Windows 缺少視訊解碼擴充套件：{0}。可在設定 → 播放與效能中安裝。',
   'YTPlus 不允许设置此参数': 'YTPlus 不允許設定此引數',
   'YTPlus 让 YouTube 在 Windows 上更好用': 'YTPlus 讓 YouTube 在 Windows 上更好用',
   'YTPlus 重启后以新的语言显示。现在重启吗？': 'YTPlus 重啟後以新的語言顯示。現在重啟嗎？',

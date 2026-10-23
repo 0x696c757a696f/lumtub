@@ -2682,6 +2682,11 @@ class AppController extends ChangeNotifier {
   Future<void> _readWindowsVideoInfo() async {
     final info = await WindowsVideoInfo.read();
     _update(() => windowsVideoInfo = info);
+    final missing = <String>[
+      if (info.vp9Extension == ExtensionStatus.missing) 'VP9 Video Extensions',
+      if (info.av1Extension == ExtensionStatus.missing) 'AV1 Video Extension',
+    ];
+    if (missing.isNotEmpty) _notice(tr('Windows 缺少视频解码扩展：{0}。可在设置 → 播放与性能中安装。', [missing.join('、')]));
   }
 
   Future<void> openStore(String url) async {

@@ -262,7 +262,7 @@ class _Controls extends StatelessWidget {
         ),
       ),
       Container(
-        color: Colors.black70,
+        color: Colors.black.withValues(alpha: .70),
         padding: const EdgeInsets.fromLTRB(6, 0, 6, 2),
         child: StreamBuilder<Duration>(
           stream: player.stream.position,
@@ -286,7 +286,7 @@ class _Controls extends StatelessWidget {
         padding: const EdgeInsets.all(4),
         constraints: const BoxConstraints(),
         style: IconButton.styleFrom(
-          backgroundColor: Colors.black70,
+          backgroundColor: Colors.black.withValues(alpha: .70),
           foregroundColor: Colors.white,
           shape: const CircleBorder(),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,

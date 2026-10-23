@@ -23,7 +23,7 @@ class FormatPolicy {
 
   static bool _hardware(PlayerSettings settings, VideoCodec codec) {
     final key = decoderKey(codec);
-    return key != null && (settings.decoderResults[key]?.isHardware ?? false);
+    return settings.hwdec != 'no' && key != null && (settings.decoderResults[key]?.isHardware ?? false);
   }
 
   /// Whether [codec] may play. Null (audio, unknown names) is not filtered.
@@ -36,7 +36,8 @@ class FormatPolicy {
   ///
   /// - auto: removes user-disabled codecs, then uses the verified decoder
   ///   ladder: AV1 hardware decoding, then VP9 hardware decoding, then H.264.
-  ///   When none has verified hardware decoding, software H.264 comes first,
+  ///   When hardware decoding is off or none has verified hardware decoding,
+  ///   software H.264 comes first,
   ///   then VP9 and AV1.
   /// - lowResource: H.264, then codecs with verified hardware decoding, then
   ///   the rest. Above 1080p the verified ones go first, as H.264 cannot

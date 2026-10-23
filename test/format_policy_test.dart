@@ -17,6 +17,12 @@ void main() {
       expect(_expression(const PlayerSettings()), startsWith('bestvideo+bestaudio/'));
     });
 
+    test('uses software AVC, VP9, then AV1 when hardware decoding is off', () {
+      const settings = PlayerSettings(hwdec: 'no', decoderResults: {'av1': _hw, 'vp9': _hw});
+      expect(_order(settings).take(3), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1]);
+      expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:avc');
+    });
+
     test('uses AV1, then VP9, then H.264 when AV1 hardware decoding is verified', () {
       const all = PlayerSettings(decoderResults: {'vp9': _hw, 'av1': _hw, 'h264': _hw});
       expect(_order(all).take(3), [VideoCodec.av1, VideoCodec.vp9, VideoCodec.h264]);

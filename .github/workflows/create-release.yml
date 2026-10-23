@@ -13,6 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
+  actions: write
   contents: write
 
 jobs:
@@ -49,6 +50,9 @@ jobs:
           git push origin "$tag"
 
       - name: Explain the release pipeline
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo 'The pushed tag triggers Build YTPlus Windows.'
+          gh workflow run windows.yml --ref "v${{ inputs.version }}"
+          echo 'The tagged Windows build was dispatched.'
           echo 'That workflow builds the ZIP and installer, then creates the GitHub Release with generated release notes.'

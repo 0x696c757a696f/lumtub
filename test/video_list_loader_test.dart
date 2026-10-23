@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/video_list_loader.dart';
 import 'package:ytplus/video_repository.dart';
 
-String _video(int i) => jsonEncode({'id': 'video$i'.padRight(11, '0'), 'title': '$i', 'channel': ''});
+String _video(int i) => jsonEncode({'id': 'v${i.toString().padLeft(10, '0')}', 'title': '$i', 'channel': ''});
 
 /// A source that records how many lines were read from it.
 class _Source {

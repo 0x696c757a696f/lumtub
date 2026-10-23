@@ -152,7 +152,12 @@ class _DownloadTile extends StatelessWidget {
         child: SizedBox(
           width: 96,
           height: 54,
-          child: Image.network(item.thumbnail, fit: BoxFit.cover, errorBuilder: (_, __, ___) => ColoredBox(color: colors.surfaceContainerHighest)),
+          child: Image.network(
+            item.thumbnail,
+            cacheWidth: (96 * MediaQuery.devicePixelRatioOf(context)).ceil(),
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => ColoredBox(color: colors.surfaceContainerHighest),
+          ),
         ),
       ),
       title: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis),

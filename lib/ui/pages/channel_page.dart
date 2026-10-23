@@ -263,7 +263,12 @@ class PostCard extends StatelessWidget {
               separatorBuilder: (context, i) => const SizedBox(width: 8),
               itemBuilder: (context, i) => ClipRRect(
                 borderRadius: AppStyle.thumbnailRadius,
-                child: Image.network(post.images[i], fit: BoxFit.cover, errorBuilder: (context, error, stack) => const SizedBox(width: 240)),
+                child: Image.network(
+                  post.images[i],
+                  cacheHeight: (240 * MediaQuery.devicePixelRatioOf(context)).ceil(),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) => const SizedBox(width: 240),
+                ),
               ),
             ),
           ),

@@ -65,13 +65,20 @@ class FormatPolicy {
 
   /// [settings] with automatic quality capped at the tallest display: a 4K
   /// stream on a 1080p screen costs four times the download, decoding,
-  /// memory and GPU scaling for no visible gain. A chosen quality cap and
-  /// the quality strategy are left alone. [displayHeight] is in physical
+  /// memory and GPU scaling for no visible gain. Automatic selection also
+  /// stays at 1080p until VP9 or AV1 has actually been verified in hardware:
+  /// YouTube has H.264 at that height, so this avoids selecting an unverified
+  /// modern codec for 1440p or 4K. A chosen quality cap, codec restriction,
+  /// or quality strategy is left alone. [displayHeight] is in physical
   /// pixels; 0 when unknown.
   static PlayerSettings forDisplay(PlayerSettings settings, int displayHeight) {
-    if (settings.maxHeight > 0 || settings.strategy == PlaybackStrategy.quality || displayHeight <= 0) return settings;
-    final cap = _ladder.where((h) => h >= displayHeight * 0.95).firstOrNull;
-    return cap == null ? settings : settings.copyWith(maxHeight: cap);
+    if (settings.maxHeight > 0 || settings.strategy == PlaybackStrategy.quality || settings.disabledCodecs.isNotEmpty) return settings;
+    final modernHardware = [VideoCodec.vp9, VideoCodec.av1].any((codec) => _hardware(settings, codec));
+    final decoderCap = settings.strategy == PlaybackStrategy.auto && !modernHardware ? 1080 : 0;
+    final displayCap = displayHeight <= 0 ? 0 : _ladder.where((h) => h >= displayHeight * 0.95).firstOrNull ?? 0;
+    final caps = [if (decoderCap > 0) decoderCap, if (displayCap > 0) displayCap];
+    if (caps.isEmpty) return settings;
+    return settings.copyWith(maxHeight: caps.reduce((a, b) => a < b ? a : b));
   }
 
   /// The yt-dlp format expression for [settings].

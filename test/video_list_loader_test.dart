@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ytplus/app/video_list_loader.dart';
 import 'package:ytplus/video_repository.dart';
+import 'package:ytplus/models.dart';
 
 String _video(int i) => jsonEncode({'id': 'v${i.toString().padLeft(10, '0')}', 'title': '$i', 'channel': ''});
 
@@ -142,6 +143,13 @@ void main() {
     expect(loader.playlists.single.title, 'Hits');
     expect(loader.playlists.single.count, 42);
     expect(loader.items.single.isLive, isTrue);
+  });
+  test('reads playlists that report extractor_key instead of ie_key', () {
+    final entry = parseListingEntry(jsonEncode({
+      '_type': 'url', 'extractor_key': 'YoutubeTab', 'id': 'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI',
+      'url': 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI', 'title': 'Hits',
+    }));
+    expect(entry, isA<PlaylistResult>());
   });
   test('a title filter reads past pages with no match', () async {
     String titled(int i, String title) => jsonEncode({'id': 'video$i'.padRight(11, '0'), 'title': title, 'channel': ''});

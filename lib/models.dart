@@ -209,7 +209,7 @@ class ChannelResult {
   /// anything else.
   static ChannelResult? tryParse(Map<String, dynamic> map) {
     final id = (map['channel_id'] ?? map['id'])?.toString() ?? '';
-    if (map['ie_key'] != 'YoutubeTab' || !ChannelRef.isValidId(id)) return null;
+    if (!_isTab(map) || !ChannelRef.isValidId(id)) return null;
     final followers = map['channel_follower_count'];
     final thumbnails = map['thumbnails'];
     String? avatar;
@@ -244,7 +244,7 @@ class PlaylistResult {
 
   /// Reads a flat `--dump-json` playlist entry, or returns null.
   static PlaylistResult? tryParse(Map<String, dynamic> map) {
-    if (map['ie_key'] != 'YoutubeTab') return null;
+    if (!_isTab(map)) return null;
     final url = map['url']?.toString() ?? '';
     final id = Uri.tryParse(url)?.queryParameters['list'] ?? map['id']?.toString() ?? '';
     if (!url.contains('list=') || !isValidId(id)) return null;
@@ -266,6 +266,10 @@ class PlaylistResult {
     );
   }
 }
+
+/// Whether a flat entry is a channel or playlist page. yt-dlp now reports
+/// `extractor_key`; older versions reported `ie_key`.
+bool _isTab(Map<String, dynamic> map) => (map['extractor_key'] ?? map['ie_key']) == 'YoutubeTab';
 
 /// One entry of a listing: a [VideoItem], [ChannelResult] or [PlaylistResult].
 Object? parseListingEntry(String line) {

@@ -12,6 +12,12 @@
 #ifndef OutputDir
   #define OutputDir "..\..\build\installer"
 #endif
+#ifndef PackageArch
+  #define PackageArch "x64"
+#endif
+#ifndef InstallArch
+  #define InstallArch "x64"
+#endif
 
 [Setup]
 AppId={{6F1C2E9A-3B7D-4C55-9E2A-8D4F1A7B9C31}
@@ -25,14 +31,14 @@ DefaultDirName={autopf}\YTPlus
 DefaultGroupName=YTPlus
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
-ArchitecturesAllowed=x64compatible
-ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed={#InstallArch}
+ArchitecturesInstallIn64BitMode={#InstallArch}
 MinVersion=10.0
 LicenseFile={#SourceDir}\LICENSE
 SetupIconFile=..\runner\resources\app_icon.ico
 UninstallDisplayIcon={app}\ytplus.exe
 OutputDir={#OutputDir}
-OutputBaseFilename=YTPlus_Setup_x64
+OutputBaseFilename=YTPlus_{#AppVersion}_win-{#PackageArch}-setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern

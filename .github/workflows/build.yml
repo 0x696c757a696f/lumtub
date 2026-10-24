@@ -52,7 +52,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Windows: verify latest zhongfly libmpv
+      - name: Windows - verify latest zhongfly libmpv
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -91,7 +91,7 @@ jobs:
           $release.tag_name | Out-File -FilePath (Join-Path $env:RUNNER_TEMP 'libmpv-tag.txt') -Encoding ascii -NoNewline
           Write-Host "Verified $($release.tag_name): $($asset.name), SHA-256, and $($library.FullName)"
 
-      - name: Windows: install Flutter stable SDK
+      - name: Windows - install Flutter stable SDK
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -103,7 +103,7 @@ jobs:
           if (-not (Test-Path -LiteralPath $flutterBin)) { throw 'Flutter SDK did not contain flutter/bin.' }
           $flutterBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Windows ARM64: select the native Flutter runtime
+      - name: Windows ARM64 - select the native Flutter runtime
         if: matrix.package_arch == 'arm64'
         shell: pwsh
         run: |
@@ -113,16 +113,16 @@ jobs:
           $dartVersion = (& dart --version 2>&1 | Out-String)
           if ($dartVersion -notmatch 'windows_arm64') { throw "Expected the ARM64 Dart runtime, got: $dartVersion" }
 
-      - name: Windows: get packages
+      - name: Windows - get packages
         run: flutter pub get
 
-      - name: Windows: analyze sources
+      - name: Windows - analyze sources
         run: flutter analyze
 
-      - name: Windows: run unit tests
+      - name: Windows - run unit tests
         run: flutter test
 
-      - name: Windows: determine package version
+      - name: Windows - determine package version
         shell: bash
         run: |
           base=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)
@@ -135,14 +135,14 @@ jobs:
           echo "YTPLUS_VERSION=$version" >> "$GITHUB_ENV"
           echo "Version $version"
 
-      - name: Windows: build release
+      - name: Windows - build release
         env:
           GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
         shell: bash
         run: flutter build windows --release --dart-define=YTPLUS_VERSION="$YTPLUS_VERSION" --dart-define=YTPLUS_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=YTPLUS_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET"
 
-      - name: Windows: check delayed video plugin loading
+      - name: Windows - check delayed video plugin loading
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -156,7 +156,7 @@ jobs:
           if ($delayed -lt 0 -or $imports.IndexOf('media_kit_video_plugin.dll', $delayed) -lt 0) { throw 'media_kit_video_plugin.dll is not delay-loaded.' }
           Write-Host 'media_kit_video_plugin.dll is delay-loaded.'
 
-      - name: Windows: replace bundled libmpv DLL
+      - name: Windows - replace bundled libmpv DLL
         if: github.event_name != 'workflow_dispatch' || inputs.libmpv == 'latest'
         shell: pwsh
         run: |
@@ -175,7 +175,7 @@ jobs:
           "$tag`n$env:RUNTIME_ARCH`n" | Out-File -FilePath (Join-Path $releaseDir 'libmpv-version.txt') -Encoding ascii -NoNewline
           Write-Host "Replaced the bundled DLL with $($library.FullName)"
 
-      - name: Windows: package portable distribution
+      - name: Windows - package portable distribution
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -188,7 +188,7 @@ jobs:
           Copy-Item LICENSE, NOTICE $package
           Compress-Archive -Path "$package/*" -DestinationPath "$package.zip"
 
-      - name: Windows: build installer
+      - name: Windows - build installer
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -203,13 +203,13 @@ jobs:
           & $iscc.Source "/DAppVersion=$env:YTPLUS_VERSION" "/DSourceDir=$source" "/DOutputDir=$output" "/DPackageArch=$env:PACKAGE_ARCH" "/DInstallArch=$env:INSTALL_ARCH" 'windows/installer/ytplus.iss'
           if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed.' }
 
-      - name: Windows: upload portable ZIP
+      - name: Windows - upload portable ZIP
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: YTPlus-windows-${{ matrix.package_arch }}-portable
           path: YTPlus_*_windows-${{ matrix.package_arch }}.zip
 
-      - name: Windows: upload installer
+      - name: Windows - upload installer
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: YTPlus-windows-${{ matrix.package_arch }}-installer
@@ -227,7 +227,7 @@ jobs:
         with:
           path: dist
           merge-multiple: true
-      - name: Windows: publish GitHub Release
+      - name: Windows - publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}

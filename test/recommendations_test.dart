@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -143,6 +144,49 @@ void main() {
       ));
       expect(query, '热门');
       expect(feed.items, hasLength(1));
+    });
+
+    test('shows a first page before a slow search answers', () async {
+      final slow = Completer<List<VideoItem>>();
+      final feed = HomeFeed(NotInterested(null));
+      final done = feed.refresh(HomeFeedSources(
+        history: const [],
+        subscriptions: [video('sub', channelId: 'UCsub')],
+        related: (_) async => const [],
+        channelUploads: (_) async => const [],
+        search: (_) => slow.future,
+      ));
+      await Future<void>.delayed(HomeFeed.firstPageWait + const Duration(milliseconds: 100));
+      expect(feed.loading, isFalse);
+      expect(feed.gathering, isTrue);
+      final shown = feed.items.map((v) => v.id).toList();
+      expect(shown, hasLength(1));
+      slow.complete([video('pop', channelId: 'UCpop')]);
+      await done;
+      expect(feed.gathering, isFalse);
+      expect(feed.items.map((v) => v.id).take(shown.length), shown, reason: '先显示的不会被重新排序');
+      expect(feed.items, hasLength(2));
+    });
+
+    test('shows the saved feed on the next launch without dismissed videos', () async {
+      final dir = await Directory.systemTemp.createTemp('home_feed');
+      addTearDown(() => dir.delete(recursive: true));
+      final file = File('${dir.path}/home_feed.json');
+      final feed = HomeFeed(NotInterested(null), cacheFile: file);
+      await feed.refresh(HomeFeedSources(
+        history: const [],
+        related: (_) async => const [],
+        channelUploads: (_) async => const [],
+        search: (_) async => [video('a', channelId: 'UCa'), video('b', channelId: 'UCb')],
+      ));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(file.existsSync(), isTrue);
+
+      final dismissed = NotInterested(null)..videos.add(video('a').id);
+      final next = HomeFeed(dismissed, cacheFile: file);
+      await next.restore(filter: (items) => items.where((v) => v.channelId != 'UCblocked').toList());
+      expect(next.items.map((v) => v.id), [video('b').id]);
+      expect(next.reasons[video('b').id], isNotNull);
     });
   });
 

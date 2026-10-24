@@ -220,7 +220,11 @@ class HomeFeed extends ChangeNotifier {
     final all = Future.wait(jobs);
     // Show a first page as soon as there is enough for one; the rest of the
     // sources are ranked in as they answer and fill the pages after it.
-    await Future.any([all, enough.future, Future<void>.delayed(firstPageWait)]);
+    final wait = Timer(firstPageWait, () {
+      if (!enough.isCompleted) enough.complete();
+    });
+    await Future.any([all, enough.future]);
+    wait.cancel();
     if (generation != _generation || _disposed) return;
     if (candidates.values.every((list) => list.isEmpty)) await all;
     if (generation != _generation || _disposed) return;

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <string>
 
+#include "data_root.h"
 #include "flutter_window.h"
 #include "libmpv_loader.h"
 #include "utils.h"
@@ -15,16 +16,8 @@
 namespace {
 
 std::wstring CrashLogDirectory() {
-  const DWORD required = ::GetEnvironmentVariableW(L"LOCALAPPDATA", nullptr, 0);
-  if (required == 0) return L"";
-  std::wstring local_app_data(required, L'\0');
-  if (::GetEnvironmentVariableW(L"LOCALAPPDATA", local_app_data.data(), required) == 0) {
-    return L"";
-  }
-  local_app_data.resize(required - 1);
-  const std::wstring root = local_app_data + L"\\YTPlus";
-  const std::wstring logs = root + L"\\logs";
-  ::CreateDirectoryW(root.c_str(), nullptr);
+  if (DataRoot().empty()) return L"";
+  const std::wstring logs = DataRoot() + L"\\logs";
   ::CreateDirectoryW(logs.c_str(), nullptr);
   return logs;
 }
@@ -70,6 +63,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // from the Windows runner, libmpv, ANGLE, or a graphics driver and keeps a
   // small stack dump beside the normal app logs for the next diagnosis.
   ::SetUnhandledExceptionFilter(WriteCrashDump);
+
+  // Before anything reads or writes its files: the portable package keeps
+  // them next to the executable.
+  DataRoot();
 
   // Initialize COM, so that it is available for use in the library and/or
   // plugins.

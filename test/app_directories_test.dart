@@ -21,4 +21,15 @@ void main() {
     expect(await directories.logs.exists(), isTrue);
     expect(await keep.readAsString(), '{"keep":true}');
   });
+
+  test('uses the folder the runner chose, else LocalAppData', () async {
+    final temp = await Directory.systemTemp.createTemp('ytplus_dirs');
+    addTearDown(() => temp.delete(recursive: true));
+    final sep = Platform.pathSeparator;
+    final portable = await AppDirectories.create(environment: {'YTPLUS_HOME': '${temp.path}${sep}userdata', 'LOCALAPPDATA': '${temp.path}${sep}local'});
+    expect(portable.logs.path, '${temp.path}${sep}userdata${sep}logs');
+    expect(portable.logs.existsSync(), isTrue);
+    final installed = await AppDirectories.create(environment: {'LOCALAPPDATA': '${temp.path}${sep}local'});
+    expect(installed.root.path, '${temp.path}${sep}local${sep}YTPlus');
+  });
 }

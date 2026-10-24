@@ -277,6 +277,11 @@ jobs:
           Copy-Item -Recurse -Force "$releaseDir/*" $package
           Copy-Item LICENSE, NOTICE $package
           Compress-Archive -Path "$package/*" -DestinationPath "$package.zip"
+          # Only the ZIP carries the marker: the installer is built from the
+          # same folder and keeps its data in LocalAppData.
+          $marker = Join-Path $env:RUNNER_TEMP 'portable.txt'
+          "YTPlus keeps its settings, cache and logs in the userdata folder next to this file.`r`nDelete this file to keep them in %LOCALAPPDATA%\YTPlus instead.`r`n" | Out-File -FilePath $marker -Encoding ascii -NoNewline
+          Compress-Archive -Update -Path $marker -DestinationPath "$package.zip"
 
       - name: Windows - build installer
         shell: pwsh

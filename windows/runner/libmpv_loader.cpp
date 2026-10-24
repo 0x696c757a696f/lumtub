@@ -1,5 +1,7 @@
 #include "libmpv_loader.h"
 
+#include "data_root.h"
+
 #include <windows.h>
 
 #include <string>
@@ -9,7 +11,7 @@
 // the same name, so loading an updated copy here makes the plugin and Dart
 // share it; otherwise the copy next to the executable is used.
 //
-// State lives in %LOCALAPPDATA%\YTPlus\components\mpv and is written by
+// State lives in <DataRoot()>\components\mpv and is written by
 // lib/libmpv_updates.dart. All files are UTF-8 text:
 //   use.txt        full path of the downloaded libmpv-2.dll to use
 //   confirmed.txt  that path, once a video has played with it
@@ -22,10 +24,8 @@ namespace {
 constexpr int kMaxUnconfirmedLaunches = 3;
 
 std::wstring StateDirectory() {
-  wchar_t buffer[MAX_PATH * 2];
-  const DWORD length = ::GetEnvironmentVariableW(L"LOCALAPPDATA", buffer, MAX_PATH * 2);
-  if (length == 0 || length >= MAX_PATH * 2) return L"";
-  return std::wstring(buffer, length) + L"\\YTPlus\\components\\mpv\\";
+  if (DataRoot().empty()) return L"";
+  return DataRoot() + L"\\components\\mpv\\";
 }
 
 std::wstring Widen(const std::string& text) {

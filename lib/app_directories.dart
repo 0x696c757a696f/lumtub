@@ -4,8 +4,10 @@ import 'package:path_provider/path_provider.dart';
 
 /// The small set of directories owned by YTPlus.
 ///
-/// They live under LocalAppData so both the installed and portable package can
-/// initialise without elevation. Only files created by YTPlus are kept here.
+/// They live under LocalAppData, so the installed package initialises without
+/// elevation, or for the portable package in the userdata folder next to the
+/// executable: the Windows runner (windows/runner/data_root.cpp) picks one
+/// and passes it on as YTPLUS_HOME. Only files created by YTPlus are kept here.
 class AppDirectories {
   final Directory root;
   final Directory config;
@@ -32,9 +34,13 @@ class AppDirectories {
         logs: Directory('${root.path}${Platform.pathSeparator}logs'),
       );
 
-  static Future<AppDirectories> create() async {
-    final localAppData = Platform.environment['LOCALAPPDATA'];
-    final root = localAppData == null || localAppData.trim().isEmpty
+  static Future<AppDirectories> create({Map<String, String>? environment}) async {
+    final env = environment ?? Platform.environment;
+    final home = env['YTPLUS_HOME'];
+    final localAppData = env['LOCALAPPDATA'];
+    final root = home != null && home.trim().isNotEmpty
+        ? Directory(home)
+        : localAppData == null || localAppData.trim().isEmpty
         ? Directory('${(await getApplicationSupportDirectory()).path}${Platform.pathSeparator}YTPlus')
         : Directory('$localAppData${Platform.pathSeparator}YTPlus');
     final directories = AppDirectories.at(root);

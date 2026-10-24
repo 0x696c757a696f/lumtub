@@ -45,7 +45,7 @@ Recommendations, history, searches and "Not interested" stay on your computer an
 2. Unzip and run `ytplus.exe`; no administrator rights are needed.
 3. The first start downloads yt-dlp and Deno and needs access to GitHub. Updates are checked at most once a day and apply after a restart.
 
-Data lives in the `config`, `data`, `cache`, `components` and `logs` folders under `%LOCALAPPDATA%\YTPlus`. The log is `logs\ytplus.log`; Settings › About can copy diagnostics.
+Data lives in the `config`, `data`, `cache`, `components` and `logs` folders under `%LOCALAPPDATA%\YTPlus` for the installed app, and in the `userdata` folder next to `ytplus.exe` for the portable ZIP (delete its `portable.txt` to use `%LOCALAPPDATA%` instead; a portable copy in a folder it cannot write to falls back to it as well). The log is `logs\ytplus.log`; Settings › About can copy diagnostics.
 
 ### Google sign-in
 

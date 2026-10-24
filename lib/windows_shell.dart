@@ -18,6 +18,24 @@ class WindowsShell {
   }
 
   static const channelName = 'ytplus/windows_shell';
+
+  /// DirectWrite family names installed for the current Windows user.
+  /// A missing or older native runner simply leaves the Settings list empty.
+  static Future<List<String>> systemFontFamilies() async {
+    try {
+      final names = await const MethodChannel(channelName)
+          .invokeListMethod<String>('listSystemFonts')
+          // Test bindings and an older runner can leave an unimplemented
+          // platform call pending. The Settings page must still open.
+          .timeout(const Duration(milliseconds: 500), onTimeout: () => const <String>[]);
+      return (names ?? const <String>[]).where((name) => name.trim().isNotEmpty).toSet().toList()..sort();
+    } on MissingPluginException {
+      return const [];
+    } on PlatformException {
+      return const [];
+    }
+  }
+
   final MethodChannel _channel;
 
   /// The least time between two timeline updates.

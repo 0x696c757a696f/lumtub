@@ -137,4 +137,63 @@ const blockedChannels = <String, BlockedChannels>{
       ['清透世界'],
     ],
   ),
+  '凯拉萨与尼希亚南达': BlockedChannels(
+    names: [
+      ['Kailaasa - Chinese'],
+      ["KAILASA's SPH Nithyananda - Chinese"],
+      ['凯拉萨的尼希亚南达瑜伽', '凱拉薩的尼希亞南達瑜伽'],
+      ['Chinese Nithyananda Gurukul'],
+      ['凯拉萨洛杉矶中文频道', '凱拉薩洛杉磯中文頻道'],
+      ['台灣凱拉薩 SHRIKAILASA IN TAIWAN'],
+      ['Paramashivasena Chinese'],
+      ['凱拉薩超意識喜悅生活館'],
+      ['Enriching Spirituality'],
+      ['Words of Abundance'],
+      ['Hinduism Now'],
+      ['The Avatar Clicks'],
+      ["KAILASA's Nithyananda Keerthanalaya"],
+      ["KAILASA's Nithyananda Real Reels"],
+      ["KAILASA's Nithyananda Top Secrets"],
+      ['Autobiography of the Avatar from KAILASA'],
+      ['KAILASA NEPAL'],
+    ],
+    handles: ['@NithyanandaChinese', '@taiwankailasa1314', '@nithyanandayogachinese', '@eGurukulChineseTW', '@KailasaLAChinese', '@shrikailasaintaiwan9676', '@enrichingspirituality4444', '@SriNithyananda', '@KAILASANews', '@kailasacountry', '@nithyanandayoga', '@HinduismNow', '@TheAvatarClick', '@kailasamusic', '@KailasaNepal', '@KailasaSPHTamil'],
+    ids: ['UCewpZIBPFGB8S53fZn-W4mg', 'UCVBKDnjkM0fRH39HXWq076A', 'UCjvd52oHdaEpqL5GV2oV0SA', 'UCaVSEA4F8Ef-mF-sZV9reQA', 'UCrjORLNlPHXLkl7fLvvJugA', 'UCeHXmbXVVd9hXX77Pk2Ibxw', 'UC9OM-qeiYIPtAkBe9veG5uw', 'UCY83L4ntOaUWxoE0Zhyh3bQ', 'UCx3e_K5VKnUAhmPdx_EpsRA', 'UC4Y4ALe-fJA7epugfiwZsXg', 'UCUCjPGxUDlNwdCudDD93UHg', 'UCfwruXdi5dyHxg9YNaG5IXQ', 'UCszwulh2dYz1d45bGo7h9qA', 'UCxQgt_kpxsHW9feECsw3T-Q', 'UCt2sCanam3FRn0Ld-qBRt9w', 'UCgDMywiR2XbZOkYmFknD-mg', 'UC2S7ZBdRKPUzT03dVUCvjnQ', 'UCu7lP32xedomuSmh0qn3oYQ', 'UCh75MkfPsI88ZazMrkuCseQ', 'UCYAmGv38u8e_RapIQXn8S5g', 'UCDj5sl5bgnaTPkJ5YO0c1xQ', 'UCFuAKnQiOKXduFUiEmB2R2A', 'UCYZDlDtKsGe_ahm5as0SgzA', 'UCz70wBGZsfkZD8UHnQDQQtw', 'UCnbv5cbRLMUJ0zndmVTRnSg', 'UCNH0vqGEh8qTwlN5KXD_Sbg', 'UCv_BUFcUynkVhNvbn3MkLyw', 'UCdJfCvTnjcw1FdFy5DBNKAg', 'UCMxB0b8AFYQip6_5d5PvjQw'],
+  ),
+  '清海与赛巴巴媒体': BlockedChannels(
+    handles: ['@SriSathyaSaiOfficial', '@SriSathyaSaiMandarin', '@SriSathyaSaiSpeaksOfficial', '@SriSathyaSaiBhajans', '@PrasanthiMandirLiveRadioSai', '@SriSathyaSaiKidsWorld', '@SriSathyaSaiHindi', '@SriSathyaSaiTelugu', '@SriSathyaSaiTamil', '@SriSathyaSaiMalayalam', '@SriSathyaSaiKannada'],
+  ),
+  // Exact IDs and public handles supplied by the user. These are separate from
+  // general subject words so documentaries and criticism remain visible.
+  '补充的灵性导师与宗教频道': BlockedChannels(
+    handles: [
+      '@BodhiMeditation', '@EnergyBagua', '@EnergyBaguaEn', '@EnergyBaguaID', '@jinbodhi-en', '@jinbodhi-kr', '@BodhiMeditationKR', '@PutiMalaysia',
+      '@IglesiaLaLuzdelMundo', '@Radiolldmhoy', '@PastorAlphLukauofficial', '@Official_AMITV', '@EmmanuelTV-Live', '@TheLastReformation', '@thelastreformationfrance', '@thelastreformationuk',
+      '@RSEWebTeam', '@KRSERADIO', '@kryonleecarroll3491', '@BasharHigherMind99', '@OSHOInternational', '@Moojiji', '@Moojiitaliano', '@SadhguruChinese', '@sadhgurutraditionalchinese', '@ishafoundation', '@eckankar', '@jinbodhi-vn',
+      '@accessconsciousness', '@ThetaHealingVianna',
+    ],
+    ids: [
+      'UC8AqZc9Ij7GGptu3U5Mcj7A', 'UCJAt3XGA5S2qiZSygvd2cIA', 'UCPDI_GKjDpKV1mzFnLwyC5w', 'UCuk4yvTFVwkdZCEM9p6KWaA', 'UCxxZCeOQLvEWbdDRvt10f4Q',
+      'UCVERMeALCDV6OFdK5wbC-YQ', 'UCTQqhVgp94Vf7KTrANN8Xpw', 'UCLl20r-KQlapX_5fT-N3cOw', 'UCsWyzBTDj2uDPe-YtKLDUFQ',
+      'UCNkWFeAkrMq6LEfwxHGl3nA', 'UCDr4vL3pCQRup0cV3qWZFmg', 'UCi4gMat8ST0GV6H6P4dfkMw', 'UCQnRKVEgfHO3q8cLT6Rwp5A', 'UC9Rp6IXUugNEgDs0DJLvf_g', 'UCESo2LGqdEynYAWRbr11XGA',
+      'UCBuBSRtY41VzSkP_RR3IVoQ', 'UC8aKMQEmMkWiSpYSR6EI1iA', 'UCdbvc-yJ4JQjNGTgFiJIZNA', 'UCjl5wTW8jGBR1Vfpp2yLoNQ', 'UCk89pEd76qutMB08hVSY49Q', 'UCBRcyI55pANUU4Ofia75yEg',
+      'UC2Pfkwhv43s6oC-NDAl2vXw', 'UCX7ei8-AD5lgRO_XWku6RXw', 'UCd0tVUZ53-T5UU2MnD05apQ', 'UCLMJY6l7o6YMfK01o69fo9Q', 'UCyK-3e-PGUmrnH6KBKIacww',
+      'UCpcJIF6X8RtHvl2vZRKJ33Q', 'UCOkZrhW3cASIhZN60K2mTkQ', 'UCeBAfedUQFMbDDLGjuXIwvg', 'UC_z8ERuOLTrlAaopY0gxzsA', 'UCXdMzx6s5IU9xQA5aXPJ3LA',
+      'UCYeeF44slL_5o07hoCfIRsw', 'UC0Zr8DXBfnRGT1kSMR18pRg', 'UCTgB6FVaVMCjaV1mSkqUzEg', 'UCMeYcOA9lMRDS1eM9k7Kanw', 'UCP-zsdDBSvlh3FlXwP7ajog',
+      'UCaylUlPa1RqjyyYz4oV6cCw', 'UC2YtPSdMF_hG8-ecx9Fkcw', 'UCf0fNlKk7D5JwsXi8ne5cxw', 'UCxONu8QnFlim00YxUYv17RQ', 'UCHRyrQWgP7JNuEZ6yd2sUXg', 'UCKv-uJdqW5gQx5HkR76yRJg',
+      'UC-zY8Y8BC3bcOjAtb8tnCqQ', 'UCA9ff3XVWgKBjklq-4_NWbQ', 'UCnAvqWHXFtadVQCyUcBwOGg', 'UCCJPNud3Tri2CL-2MuDrhBg', 'UCWcfoRKfi3uYx_YNwLm3hwQ',
+      'UCm_xFjZ9VxOiIfaQjOiQvMg', 'UCkXYA19-jmzhKZndkZRm6UA', 'UCScyTd8t6wRK71Hd6U2ITAg', 'UC7sjyIF-9MvtqN3Rv6rMNGQ', 'UCFvQ_m5tg0ob1Rn7mciCmnQ', 'UCfqkmt_PKfqB7dXyRtS28KA', 'UCwYNO48BBaZOmfGxtHRDYPw',
+    ],
+  ),
+  '领袖神化与神迹宣传频道': BlockedChannels(
+    names: [
+      ['Happy Science Official'], ['Happy Science India'], ['Happy Science Europe'],
+      ['The Church of Almighty God'], ['Shincheonji Church of Jesus'],
+      ['God the Mother'], ['Newsong, Church of God'], ['Newsong Guide'], ['ASEZ WAO'],
+      ['FamilyFed Media'], ['Family Federation EUME'], ['Divine Principle'],
+      ['Rael: The Last Prophet'], ['Raelian Movement - North America'], ['Australian Raelian Movement'],
+    ],
+    handles: ['@TheChurchofAlmightyGod', '@ChurchofAlmightyGodMalaysia', '@ShincheonjiChurch_zh', '@wmscog_zh', '@wmscog_hk', '@wmscog_mo', '@JerusalemMother', '@JerusalemMother_en', '@WMSCOG', '@wmscog_us', '@wmscog_uk', '@wmscog_sa', '@wmscog_newsong', '@wmscog_guide', '@ASEZWAO', '@uctaiwan', '@ffwputaiwan', '@ffwp_taichung', '@FamilyFedMedia', '@FamilyFederationEUME', '@divineprinciple7796', '@twRaelianMovement', '@online3765', '@Rael_Official', '@raelianmovement-northamerica', '@australianraelianmovement8033', '@RaelTV-Korea', '@BhaktiMarga1008'],
+    ids: ['UCjfyq7YJH8VoH9cqZKndcIQ', 'UCE2wpyJPQAiKZLxNim13gUA', 'UCS_f7kBa8szKH_eHEngPUSQ', 'UChcrEH2VWEukIiG6HO3eJJg', 'UCioiBk9rS5Dv5j66hUipsuQ', 'UCqc-JKqWTHMSdfiy_Xst55g', 'UCQ36leR6qdmBMdqbURisGcw', 'UCIvtEYMedJDaBQYH9oipNyA', 'UCx7GlGIgN1aHKqjBBwctJEQ', 'UCB_-yL8GoqssAkENRllT-0Q', 'UC6qpjAkeOQqtdZzyjGt2MEg', 'UCxA8J3oAkhdKp6MKP5rTRQA', 'UCG1wAHkfxi_zBxo3cL6dohg', 'UCGTMbm285tAmJqG-TKY6XDw', 'UCW0zF2PSbG_AYzoF4OEVsbA', 'UCWyRY-jRhq5WEBlk2VszLRw', 'UCJxHxs-4-O7qmlWgBn8pvsQ'],
+  ),
 };

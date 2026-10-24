@@ -75,6 +75,7 @@ void main() {
     expect(count.readAsLinesSync(), hasLength(1));
     expect(jsonDecode(videos[0].file.readAsStringSync())['title'], 'Never Gonna Give You Up');
     expect(resolver.arguments('dQw4w9WgXcQ', 'ytdl'), containsAllInOrder(['--format', 'bestvideo+bestaudio/best', '--', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ']));
+    expect(resolver.arguments('dQw4w9WgXcQ', 'bestvideo+bestaudio', formatSort: 'res,fps,vcodec:vp9'), containsAllInOrder(['--format', 'bestvideo+bestaudio', '--format-sort', 'res,fps,vcodec:vp9']));
     resolver.forget('dQw4w9WgXcQ');
     await resolver.resolve('dQw4w9WgXcQ', 'ytdl');
     expect(count.readAsLinesSync(), hasLength(2));

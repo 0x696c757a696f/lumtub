@@ -88,9 +88,6 @@ final fontChoices = <(String?, String)>[
   (null, tr('系统默认')),
   ('Microsoft YaHei UI', tr('微软雅黑')),
   ('DengXian', tr('等线')),
-  ('SimHei', tr('黑体')),
-  ('SimSun', tr('宋体')),
-  ('KaiTi', tr('楷体')),
 ];
 
 /// The narrowest a video card may get; set from [AppearanceSettings.cardWidth].
@@ -217,7 +214,7 @@ class AppearanceSettings {
       pureBlack: raw['pureBlack'] == true,
       // Earlier builds wrote nothing for the system font; it now defaults to
       // the bundled one.
-      fontFamily: font == 'system' ? null : fontChoices.any((f) => f.$1 != null && f.$1 == font) ? font : bundledFont,
+      fontFamily: font == 'system' ? null : font?.trim().isNotEmpty == true ? font : bundledFont,
       textScale: scale is num ? scale.toDouble().clamp(0.8, 1.4) : 1.0,
       transition: _byName(PageTransition.values, raw['transition'], PageTransition.fade),
       navigation: _byName(NavigationStyle.values, raw['navigation'], NavigationStyle.auto),

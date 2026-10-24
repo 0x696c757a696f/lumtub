@@ -99,6 +99,10 @@ class AppController extends ChangeNotifier {
   PageMode mode = PageMode.home;
   bool ready = false;
   bool checking = false;
+  bool checkingAppUpdate = false;
+  String? availableAppVersion;
+  String? availableAppUrl;
+  String? appUpdateError;
   String status = tr('正在准备 Windows 原生播放器…');
   /// Startup failure; the setup screen shows it with a retry button.
   String? error;
@@ -225,6 +229,10 @@ class AppController extends ChangeNotifier {
   List<LiveChatMessage> replayChat = const [];
   bool loadingReplayChat = false;
   String? replayChatError;
+  StreamSubscription<LiveChatMessage>? _currentChat;
+  Timer? _currentChatFlushTimer;
+  final _currentChatPending = <LiveChatMessage>[];
+  final _currentChatIds = <String>{};
   /// Heights the playing video offers, highest first; empty until known.
   List<int> availableHeights = const [];
   /// Heights for the quality menu: automatic, then only what the playing
@@ -255,7 +263,7 @@ class AppController extends ChangeNotifier {
     if (item == null || item.isLive || _repository == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
     CastSource? source;
     try {
-      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format)).info, settings: _playback);
+      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort)).info, settings: _playback);
     } catch (e) {
       logInfo('投屏：yt-dlp 解析失败：$e');
     }
@@ -495,9 +503,11 @@ class AppController extends ChangeNotifier {
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
       // Do not block the UI while checking newer releases.
-      if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
+      if (preferences.autoCheckUpdates) {
+        unawaited(manager.checkUpdates());
+        unawaited(checkAppUpdate());
+      }
       unawaited(_refreshCacheSize());
-      unawaited(_readWindowsVideoInfo());
       unawaited(_trimThumbnails());
       unawaited(downloads?.load());
       unawaited(account?.load());
@@ -508,6 +518,40 @@ class AppController extends ChangeNotifier {
         status = tr('初始化失败');
         logError('初始化失败', e);
       });
+    }
+  }
+
+  /// Checks the application's own release separately from libmpv and yt-dlp.
+  /// Replacing an installed executable is left to the installer after the
+  /// user opens the matching GitHub Release.
+  Future<void> checkAppUpdate() async {
+    if (checkingAppUpdate) return;
+    _update(() {
+      checkingAppUpdate = true;
+      appUpdateError = null;
+    });
+    try {
+      final response = await _http.get(
+        Uri.https('api.github.com', '/repos/0x696c757a696f/ytplus/releases/latest'),
+        headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'YTPlus-Windows/$appVersion'},
+      ).timeout(const Duration(seconds: 15));
+      if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
+      final json = jsonDecode(response.body);
+      if (json is! Map) throw const FormatException('Invalid GitHub release response');
+      final tag = json['tag_name']?.toString().replaceFirst(RegExp(r'^v', caseSensitive: false), '') ?? '';
+      final url = json['html_url']?.toString() ?? '';
+      _update(() {
+        availableAppVersion = tag.isNotEmpty && tag != appVersion ? tag : null;
+        availableAppUrl = availableAppVersion == null || url.isEmpty ? null : url;
+        checkingAppUpdate = false;
+      });
+      logInfo(availableAppVersion == null ? 'YTPlus is up to date ($appVersion)' : 'YTPlus update available: $availableAppVersion');
+    } catch (error) {
+      _update(() {
+        checkingAppUpdate = false;
+        appUpdateError = '$error';
+      });
+      logInfo('Could not check YTPlus updates: $error');
     }
   }
 
@@ -591,7 +635,7 @@ class AppController extends ChangeNotifier {
   Future<DownloadFormats> downloadFormats(String videoId) async {
     final repository = _repository;
     if (repository == null) throw StateError(tr('组件尚未就绪'));
-    return DownloadFormats.parse((await repository.streams.resolve(videoId, _format)).info);
+    return DownloadFormats.parse((await repository.streams.resolve(videoId, _format, formatSort: _formatSort)).info);
   }
 
   /// The proxy everything currently goes through.
@@ -924,12 +968,19 @@ class AppController extends ChangeNotifier {
     final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);
     // 推荐 always goes by the history, whatever order it is shown in.
     final taste = mode == ExploreMode.forYou || exploreTopicNow.personal ? _exploreTaste() : null;
+    // The Home and Explore "For You" lists share these choices.  Explore has
+    // its own loader, so it must apply the mix here instead of relying on
+    // HomeFeed's ranking pass.
+    final feedMix = mode == ExploreMode.forYou ? preferences.feedMix : null;
     final notInterested = homeFeed?.notInterested;
     final faith = exploreSection.isFaith ? faithFilter() : null;
     bool where(VideoItem item) {
       if (notInterested != null && notInterested.videos.contains(item.id)) return false;
       // Left out here too, so that hiding them still fills the page.
       if (preferences.blocksGroup(item) || preferences.isUnrecommended(item.channelId)) return false;
+      // "Don't recommend" is a hard exclusion.  "Fewer" remains in the
+      // list, but its score is reduced below in the ranking callback.
+      if (feedMix?.penaltyOf(item) == null) return false;
       if (taste != null && taste.channelAffinity(item) < -0.3) return false;
       if (mode == ExploreMode.liveUpcoming && !item.isUpcoming) return false;
       if (mode == ExploreMode.liveReplay && item.liveStatus != 'was_live') return false;
@@ -954,7 +1005,9 @@ class AppController extends ChangeNotifier {
             ExploreMode.liveUpcoming => 4,
             _ => faith != null || mix || language != ExploreLanguage.any ? 8 : 1,
           },
-          rank: taste == null ? null : (item) => exploreScore(taste, item),
+          rank: taste == null
+              ? null
+              : (item) => exploreScore(taste, item) - (feedMix?.penaltyOf(item) ?? 0),
         )
           ..addListener(notifyListeners)
           ..loadMore());
@@ -1036,6 +1089,7 @@ class AppController extends ChangeNotifier {
     }
     unawaited(account?.loadRating(item.id));
     _saveProgress();
+    _stopCurrentChat();
     final serial = ++_playSerial;
     _recoveryTimer?.cancel();
     _recovery.reset();
@@ -1067,8 +1121,64 @@ class AppController extends ChangeNotifier {
       if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
       final next = upNext.firstOrNull;
       if (next != null) prefetch(next);
-      if (item.liveStatus == 'was_live') unawaited(_loadReplayChat(item, serial));
+      if (item.isLive) {
+        _startCurrentChat(item, serial);
+      } else if (item.liveStatus == 'was_live') {
+        unawaited(_loadReplayChat(item, serial));
+      }
     }
+  }
+
+  void _startCurrentChat(VideoItem item, int serial) {
+    final repository = _repository;
+    if (repository == null || serial != _playSerial) return;
+    _update(() {
+      loadingReplayChat = true;
+      replayChatError = null;
+    });
+    _currentChat = repository.liveChat.current(item.id).listen(
+      (message) {
+        if (serial != _playSerial || !_currentChatIds.add(message.id)) return;
+        _currentChatPending.add(message);
+        _currentChatFlushTimer ??= Timer(const Duration(milliseconds: 300), () {
+          _currentChatFlushTimer = null;
+          _flushCurrentChat(serial);
+        });
+      },
+      onError: (Object error) {
+        if (serial == _playSerial) {
+          _update(() {
+            replayChatError = '$error';
+            loadingReplayChat = false;
+          });
+        }
+      },
+      onDone: () {
+        _flushCurrentChat(serial);
+        if (serial == _playSerial) {
+          _update(() => loadingReplayChat = false);
+        }
+      },
+    );
+  }
+
+  void _flushCurrentChat(int serial) {
+    if (serial != _playSerial || _currentChatPending.isEmpty) return;
+    final next = [...replayChat, ..._currentChatPending];
+    _currentChatPending.clear();
+    _update(() {
+      replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
+      loadingReplayChat = false;
+    });
+  }
+
+  void _stopCurrentChat() {
+    _currentChatFlushTimer?.cancel();
+    _currentChatFlushTimer = null;
+    _currentChatPending.clear();
+    _currentChatIds.clear();
+    unawaited(_currentChat?.cancel());
+    _currentChat = null;
   }
 
   Future<void> _loadReplayChat(VideoItem item, int serial) async {
@@ -1161,6 +1271,7 @@ class AppController extends ChangeNotifier {
         return await _openLocal(item, serial, local, start: start, play: play);
       }
       final format = _format;
+      final formatSort = _formatSort;
       _openedVia = null;
       if (resolved && piped) {
         _recentErrors.clear();
@@ -1175,7 +1286,7 @@ class AppController extends ChangeNotifier {
       ResolvedVideo? video;
       if (resolved) {
         try {
-          video = await _repository!.streams.resolve(item.id, format);
+          video = await _repository!.streams.resolve(item.id, format, formatSort: formatSort);
         } catch (e) {
           _recentErrors.add('$e');
           final failure = PlaybackFailure.classify(['$e']);
@@ -1780,6 +1891,8 @@ class AppController extends ChangeNotifier {
 
   String get _format => FormatPolicy.expression(_playback);
 
+  String? get _formatSort => FormatPolicy.formatSort(_playback);
+
   /// [settings] as playback picks streams with them: automatic quality is
   /// capped at the tallest display.
   PlayerSettings get _playback => FormatPolicy.forDisplay(settings, _displayHeight);
@@ -1795,7 +1908,7 @@ class AppController extends ChangeNotifier {
   /// Starts resolving [item] before it is opened, such as when the pointer
   /// rests on its card.
   void prefetch(VideoItem item) {
-    if (ready && playing?.id != item.id && DateTime.now().isAfter(_rateLimitedUntil)) _repository?.streams.prefetch(item.id, _format);
+    if (ready && playing?.id != item.id && DateTime.now().isAfter(_rateLimitedUntil)) _repository?.streams.prefetch(item.id, _format, formatSort: _formatSort);
   }
 
   Future<void> _loadDetails(VideoItem item, int serial) async {
@@ -1808,7 +1921,7 @@ class AppController extends ChangeNotifier {
       } else {
         try {
           // The extraction playback uses carries the details too.
-          final resolved = await _repository!.streams.resolve(item.id, _format);
+          final resolved = await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort);
           loaded = resolved.details;
           if (serial == _playSerial) _update(() => availableHeights = resolved.heightsFor(settings));
         } catch (_) {
@@ -1873,6 +1986,7 @@ class AppController extends ChangeNotifier {
 
   /// Stops the video and closes the watch page or the mini player.
   void stopWatching() {
+    _stopCurrentChat();
     setPip(false);
     _finishWatching();
     _saveProgress(now: true);
@@ -2619,6 +2733,11 @@ class AppController extends ChangeNotifier {
     _update(() => windowsVideoInfo = info);
   }
 
+  /// Reads optional Windows Media Foundation codec extensions only when the
+  /// decoder-status settings section is opened. libmpv itself does not use
+  /// these extensions.
+  void refreshWindowsVideoInfo() => unawaited(_readWindowsVideoInfo());
+
   Future<void> openStore(String url) async {
     try {
       await Process.start('explorer.exe', [url]);
@@ -2716,6 +2835,7 @@ class AppController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _stopCurrentChat();
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _sleepTimer?.cancel();

@@ -157,21 +157,15 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.homeShowRecommended,
               onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecommended: v)),
             )),
-        SettingEntry(tr('推荐中的 YouTube Music 非 MV 音乐'), (context) => NormalItem(
-              title: tr('推荐中的 YouTube Music 非 MV 音乐'),
-              subtitle: tr('当前：{0}；自动生成的 “- Topic” 曲目，官方 MV 不受影响', [labelOf(_feedLevels, prefs.feedMusicTracks)]),
-              leading: _icon(Icons.music_note_outlined),
-              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的 YouTube Music 非 MV 音乐'), value: prefs.feedMusicTracks, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedMusicTracks: v))),
-            ), subtitle: tr('Topic 音乐 非MV 减少 不推荐')),
         SettingEntry(tr('推荐中的 Shorts 短视频'), (context) => NormalItem(
               title: tr('推荐中的 Shorts 短视频'),
-              subtitle: tr('当前：{0}；只影响为你推荐，搜索和关注不受影响', [labelOf(_feedLevels, prefs.feedShorts)]),
+              subtitle: tr('当前：{0}；Shorts 按 YouTube Shorts 标记或短时长识别，和普通竖屏视频独立；只影响首页和探索的为你推荐', [labelOf(_feedLevels, prefs.feedShorts)]),
               leading: _icon(Icons.smartphone_rounded),
               onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的 Shorts 短视频'), value: prefs.feedShorts, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedShorts: v))),
             ), subtitle: tr('短视频 减少 不推荐')),
         SettingEntry(tr('推荐中的竖屏视频'), (context) => NormalItem(
               title: tr('推荐中的竖屏视频'),
-              subtitle: tr('当前：{0}；只影响为你推荐，搜索和关注不受影响', [labelOf(_feedLevels, prefs.feedVertical)]),
+              subtitle: tr('当前：{0}；按已知画面尺寸的高大于宽识别，和 Shorts 独立；只影响首页和探索的为你推荐', [labelOf(_feedLevels, prefs.feedVertical)]),
               leading: _icon(Icons.stay_current_portrait_rounded),
               onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的竖屏视频'), value: prefs.feedVertical, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedVertical: v))),
             ), subtitle: tr('竖屏 减少 不推荐')),
@@ -915,9 +909,22 @@ Future<void> _changeCacheLocation(BuildContext context, AppController controller
 
 /// GPU, the decoder in use, which codecs were verified to decode in
 /// hardware, and the optional Windows video extensions.
-class _DecoderStatus extends StatelessWidget {
+class _DecoderStatus extends StatefulWidget {
   const _DecoderStatus({required this.controller});
   final AppController controller;
+
+  @override
+  State<_DecoderStatus> createState() => _DecoderStatusState();
+}
+
+class _DecoderStatusState extends State<_DecoderStatus> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.refreshWindowsVideoInfo();
+  }
+
+  AppController get controller => widget.controller;
 
   @override
   Widget build(BuildContext context) {

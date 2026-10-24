@@ -3,6 +3,7 @@
 
 /// English text for each simplified-Chinese source string.
 const stringsEn = <String, String>{
+  '当前直播没有公开聊天': 'This live stream has no public chat',
   '聊天回放': 'Chat replay',
   '无法加载聊天回放：{0}': 'Couldn\'t load chat replay: {0}',
   '这个直播录像没有公开的聊天回放': 'This live replay has no public chat replay',
@@ -404,6 +405,7 @@ const stringsEn = <String, String>{
   '印度教哲学': 'Hindu philosophy',
   '即将开播': 'Upcoming',
   '即将直播': 'Upcoming live',
+  '开始于 {0}': 'Starts {0}',
   '历史': 'History',
   '原住民宗教': 'Indigenous religions',
   '原始': 'Original',
@@ -1519,6 +1521,7 @@ const stringsEn = <String, String>{
   '隐藏 1 分钟以内的视频': 'Hide videos under 1 minute',
   '隐藏 Shorts 短视频': 'Hide Shorts',
   '隐藏已看完的视频': 'Hide watched videos',
+  '补充的灵性导师与宗教频道': 'Additional spiritual and religious channels',
   '雷尔运动': 'Raëlian Movement',
   '需要先打开“屏蔽争议宗教团体”': 'Needs "Block controversial religious groups" on',
   '需要先打开“屏蔽官方宣传媒体”': 'Needs "Block state propaganda media" on',
@@ -1614,8 +1617,10 @@ const stringsEn = <String, String>{
   'Topic 音乐 非MV 减少 不推荐': 'topic music non-MV fewer don\'t recommend',
   '推荐中的 Shorts 短视频': 'Shorts in For You',
   '当前：{0}；只影响为你推荐，搜索和关注不受影响': 'Now: {0}. Only affects For You; search and subscriptions are not affected',
+  '当前：{0}；Shorts 按 YouTube Shorts 标记或短时长识别，和普通竖屏视频独立；只影响首页和探索的为你推荐': 'Now: {0}. Shorts use YouTube Shorts metadata or short duration. They are separate from ordinary vertical videos and affect For You on Home and Explore only',
   '短视频 减少 不推荐': 'shorts fewer don\'t recommend',
   '推荐中的竖屏视频': 'Vertical videos in For You',
+  '当前：{0}；按已知画面尺寸的高大于宽识别，和 Shorts 独立；只影响首页和探索的为你推荐': 'Now: {0}. A vertical video has known dimensions with height greater than width. It is separate from Shorts and affects For You on Home and Explore only',
   '竖屏 减少 不推荐': 'vertical fewer don\'t recommend',
   '3D 建模': '3D modeling',
   'AI 大会': 'AI conference',
@@ -2057,4 +2062,13 @@ const stringsEn = <String, String>{
   '画质上限 {0} · 播放策略 {1} · 禁用编码 {2} · 音质 {3}': 'Quality cap {0} · Strategy {1} · Disabled codecs {2} · Audio {3}',
   '下载的文件是 {0} 编码，已按播放规则改为在线播放': 'The downloaded file is {0}, which the playback rules disable; streaming instead',
   '自动（按屏幕分辨率）': 'Auto (up to screen resolution)',
+  '已安装的系统字体': 'Installed system fonts',
+  '搜索已安装字体': 'Search installed fonts',
+  '没有匹配的已安装字体': 'No installed fonts match',
+  'Noto Sans CJK SC 随 YTPlus 安装；系统字体从当前 Windows 用户的字体集合读取。': 'Noto Sans CJK SC is bundled with YTPlus. System fonts are read from the current Windows user\'s font collection.',
+  '正在检查软件更新…': 'Checking for app updates…',
+  '有新版本：{0}': 'Update available: {0}',
+  '启动时自动检查，也可立即检查': 'Checked automatically at startup; you can also check now.',
+  '点击打开 GitHub Release 下载': 'Click to open the GitHub Release download.',
+  '检查软件更新失败：{0}': 'Could not check for app updates: {0}',
 };

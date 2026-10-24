@@ -257,7 +257,14 @@ void main() {
     expect(namesBlockedGroup(video('法輪大法好')), isFalse);
     expect(namesBlockedGroup(video('Sermon', 'Shincheonji')), isTrue);
     expect(namesBlockedGroup(video('Sermon', 'The Epoch Times')), isTrue);
+    expect(namesBlockedGroup(video('Sermon', "KAILASA's SPH Nithyananda")), isTrue);
+    expect(namesBlockedGroup(video('Sermon', 'Unrelated channel').withChannel(const ChannelRef('UCewpZIBPFGB8S53fZn-W4mg', 'Unrelated channel'))), isTrue);
+    expect(namesBlockedGroup(video('KAILASA documentary', 'DW Documentary')), isFalse);
     expect(namesBlockedGroup(video('Almighty God, we pray', 'EWTN')), isFalse);
+    expect(namesBlockedGroup(video('Sermon', 'Twin Flames Universe')), isTrue);
+    expect(namesBlockedGroup(video('Sermon', 'Unrelated channel').withChannel(const ChannelRef('UC8AqZc9Ij7GGptu3U5Mcj7A', 'Unrelated channel'))), isTrue);
+    expect(prefs.copyWith(allowedGroups: ['补充的灵性导师与宗教频道']).blocksChannel('Twin Flames Universe'), isFalse);
+    expect(namesBlockedGroup(video('Twin Flames Universe investigation', 'DW Documentary')), isFalse);
     expect(namesBlockedGroup(video('天主教的七件圣事', '梵蒂冈新闻')), isFalse);
   });
 

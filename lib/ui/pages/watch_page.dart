@@ -84,7 +84,7 @@ class _WatchPageState extends State<WatchPage> {
           final comments = item == null
               ? null
               : CommentsSection(key: ValueKey('comments:${item.id}'), controller: controller, videoId: item.id, onSeek: (position) => controller.player?.seek(position));
-          final replayChat = item?.liveStatus == 'was_live' ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide) : null;
+          final replayChat = item?.isLive == true || item?.liveStatus == 'was_live' ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide) : null;
           final main = <Widget>[
             if (!theater) _BackRow(onBack: controller.goBack),
             Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
@@ -302,6 +302,7 @@ class _Details extends StatelessWidget {
     final details = controller.details;
     final views = details?.viewCount ?? item.viewCount;
     final meta = [
+      if (item.isUpcoming && item.scheduledStart != null) tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]),
       if (views != null) tr('{0}次观看', [formatCount(views)]),
       if (details?.uploadDate != null) formatDate(details!.uploadDate!),
     ].join(' · ');
@@ -417,7 +418,7 @@ class _SidePanel extends StatelessWidget {
         child: Column(children: [
           TabBar(
             dividerColor: Colors.transparent,
-            tabs: [Tab(height: 40, text: tr('接下来播放')), Tab(height: 40, text: tr('评论')), if (replayChat != null) Tab(height: 40, text: tr('聊天回放'))],
+            tabs: [Tab(height: 40, text: tr('接下来播放')), Tab(height: 40, text: tr('评论')), if (replayChat != null) Tab(height: 40, text: tr('聊天'))],
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -462,13 +463,14 @@ class _ReplayChatPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final messages = controller.replayChat;
+    final live = controller.playing?.isLive ?? false;
     final header = <Widget>[
-      Text(tr('聊天回放'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+      Text(tr(live ? '聊天' : '聊天回放'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
       const SizedBox(height: 8),
       if (controller.loadingReplayChat) const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator())),
       if (controller.replayChatError != null) ErrorBanner(tr('无法加载聊天回放：{0}', [controller.replayChatError])),
       if (!controller.loadingReplayChat && controller.replayChatError == null && messages.isEmpty)
-        Padding(padding: const EdgeInsets.all(12), child: Text(tr('这个直播录像没有公开的聊天回放'), style: TextStyle(color: context.colors.onSurfaceVariant))),
+        Padding(padding: const EdgeInsets.all(12), child: Text(tr(live ? '当前直播没有公开聊天' : '这个直播录像没有公开的聊天回放'), style: TextStyle(color: context.colors.onSurfaceVariant))),
     ];
     if (messages.isEmpty) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: header);
     Widget messageAt(int index) {

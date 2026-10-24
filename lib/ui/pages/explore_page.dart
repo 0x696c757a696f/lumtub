@@ -15,9 +15,21 @@ import '../../models.dart';
 /// Explore, in zones as Bilibili's 分区: videos, live streams or the tabs of
 /// 宗教与信仰, a zone and one of its sub-categories, how they are picked, and
 /// filters.
-class ExplorePage extends StatelessWidget {
+class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key, required this.controller});
   final AppController controller;
+
+  /// The width from which zones and followed channels move to a left column.
+  static const wideLayout = 960.0;
+
+  @override
+  State<ExplorePage> createState() => _ExplorePageState();
+}
+
+class _ExplorePageState extends State<ExplorePage> {
+  double _railWidth = 220;
+
+  AppController get controller => widget.controller;
 
   @override
   Widget build(BuildContext context) {
@@ -57,18 +69,23 @@ class ExplorePage extends StatelessWidget {
     // A wide window lists the zones down the left, as Bilibili's 分区 does,
     // leaving the full width below the filters to the videos.
     return LayoutBuilder(builder: (context, constraints) {
-      final wide = constraints.maxWidth >= wideLayout;
+      final wide = constraints.maxWidth >= ExplorePage.wideLayout;
       final page = _page(context, items: items, error: error, loading: loading, subtitle: subtitle, strip: wide ? null : strip());
       if (!wide) return page;
       return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        SizedBox(width: TopicStrip.railWidth, child: strip(vertical: true)),
+        SizedBox(width: _railWidth, child: strip(vertical: true)),
+        MouseRegion(
+          cursor: SystemMouseCursors.resizeLeftRight,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onHorizontalDragUpdate: (details) => setState(() => _railWidth = (_railWidth + details.delta.dx).clamp(TopicStrip.railWidth, 360).toDouble()),
+            child: const SizedBox(width: 8),
+          ),
+        ),
         Expanded(child: page),
       ]);
     });
   }
-
-  /// The width from which zones and followed channels move to a left column.
-  static const wideLayout = 960.0;
 
   Widget _page(BuildContext context, {required List<VideoItem> items, required String? error, required bool loading, required String subtitle, required Widget? strip}) {
     final loader = controller.explore;

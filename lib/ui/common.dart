@@ -109,6 +109,13 @@ String formatPlaybackTime(Duration value) {
 
 String formatDate(DateTime date) => tr('{0}年{1}月{2}日', [date.year, date.month, date.day]);
 
+/// An exact local start time for an upcoming stream.
+String formatScheduledStart(DateTime date) {
+  final local = date.toLocal();
+  final time = '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  return '${formatDate(local)} $time';
+}
+
 /// Opens a web link in the default browser.
 Future<void> openExternal(String url) async {
   final uri = Uri.tryParse(url);

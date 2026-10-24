@@ -21,6 +21,7 @@ import '../../blocked_groups.dart';
 import '../../state_media.dart';
 import '../../appearance_settings.dart';
 import '../../player_settings.dart';
+import '../../windows_shell.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../common.dart';
 import '../theme.dart';
@@ -578,56 +579,97 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
 
 // 外观设置 › App 字体设置 (PiliNara's font_setting.dart)
 
-Future<void> openFontSettings(BuildContext context, AppController controller) => _push(context, controller, tr('App 字体设置'), (context) {
-      final appearance = controller.appearance;
-      void save(AppearanceSettings next) => controller.saveAppearance(next);
-      final theme = Theme.of(context);
-      return [
-        _header(context, tr('字体')),
-        RadioGroup<String?>(
-          groupValue: appearance.fontFamily,
-          onChanged: (v) => save(v == null ? appearance.copyWith(clearFontFamily: true) : appearance.copyWith(fontFamily: v)),
-          child: Column(children: [
-            for (final (family, label) in fontChoices)
-              RadioListTile<String?>(
-                value: family,
-                title: Text(label, style: TextStyle(fontFamily: family)),
-                subtitle: family == null ? null : Text(family, style: TextStyle(color: context.colors.outline, fontSize: 12)),
-              ),
-          ]),
+Future<void> openFontSettings(BuildContext context, AppController controller) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => _FontSettingsPage(controller: controller)));
+
+class _FontSettingsPage extends StatefulWidget {
+  const _FontSettingsPage({required this.controller});
+  final AppController controller;
+
+  @override
+  State<_FontSettingsPage> createState() => _FontSettingsPageState();
+}
+
+class _FontSettingsPageState extends State<_FontSettingsPage> {
+  List<String>? _systemFonts;
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isWindows) {
+      WindowsShell.systemFontFamilies().then((fonts) {
+        if (mounted) setState(() => _systemFonts = fonts);
+      });
+    } else {
+      _systemFonts = const [];
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: Text(tr('App 字体设置'))),
+        body: ListenableBuilder(
+          listenable: widget.controller,
+          builder: (context, _) {
+            final controller = widget.controller;
+            final appearance = controller.appearance;
+            final fixed = {for (final (family, _) in fontChoices) if (family != null) family};
+            final needle = _query.trim().toLowerCase();
+            final system = (_systemFonts ?? const <String>[]).where((family) => !fixed.contains(family) && (needle.isEmpty || family.toLowerCase().contains(needle))).toList();
+            void save(String? family) => controller.saveAppearance(family == null ? appearance.copyWith(clearFontFamily: true) : appearance.copyWith(fontFamily: family));
+            Widget option(String? family, String label) => RadioListTile<String?>(
+                  value: family,
+                  title: Text(label, style: TextStyle(fontFamily: family)),
+                  subtitle: family == null ? null : Text(family, style: TextStyle(color: context.colors.outline, fontSize: 12)),
+                );
+            final theme = Theme.of(context);
+            return RadioGroup<String?>(
+              groupValue: appearance.fontFamily,
+              onChanged: save,
+              child: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
+                _header(context, tr('字体')),
+                for (final (family, label) in fontChoices) option(family, label),
+                _header(context, tr('已安装的系统字体')),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    onChanged: (value) => setState(() => _query = value),
+                    decoration: InputDecoration(prefixIcon: const Icon(Icons.search_rounded), hintText: tr('搜索已安装字体')),
+                  ),
+                ),
+                if (_systemFonts == null)
+                  const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()))
+                else if (system.isEmpty)
+                  Padding(padding: const EdgeInsets.all(16), child: Text(tr('没有匹配的已安装字体'), style: TextStyle(color: context.colors.outline)))
+                else
+                  for (final family in system) option(family, family),
+                _header(context, tr('字号')),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(children: [
+                    Expanded(child: Slider(min: 0.8, max: 1.4, divisions: 12, value: appearance.textScale, label: '${(appearance.textScale * 100).round()}%', onChanged: (v) => controller.saveAppearance(appearance.copyWith(textScale: (v * 100).round() / 100)))),
+                    SizedBox(width: 48, child: Text('${(appearance.textScale * 100).round()}%')),
+                    TextButton(onPressed: () => controller.saveAppearance(appearance.copyWith(textScale: 1, fontFamily: bundledFont)), child: Text(tr('重置'))),
+                  ]),
+                ),
+                _header(context, tr('预览')),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(tr('YTPlus 让 YouTube 在 Windows 上更好用'), style: theme.textTheme.titleLarge),
+                    const SizedBox(height: 6),
+                    Text('The quick brown fox jumps over the lazy dog. 0123456789', style: theme.textTheme.bodyMedium),
+                    const SizedBox(height: 6),
+                    Text(tr('频道名称 · 12 万次观看 · 3 天前'), style: theme.textTheme.labelMedium!.copyWith(color: context.colors.outline)),
+                  ]),
+                ),
+                _tip(context, tr('Noto Sans CJK SC 随 YTPlus 安装；系统字体从当前 Windows 用户的字体集合读取。')),
+              ]),
+            );
+          },
         ),
-        _header(context, tr('字号')),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(children: [
-            Expanded(
-              child: Slider(
-                min: 0.8,
-                max: 1.4,
-                divisions: 12,
-                value: appearance.textScale,
-                label: '${(appearance.textScale * 100).round()}%',
-                onChanged: (v) => save(controller.appearance.copyWith(textScale: (v * 100).round() / 100)),
-              ),
-            ),
-            SizedBox(width: 48, child: Text('${(appearance.textScale * 100).round()}%')),
-            TextButton(onPressed: () => save(controller.appearance.copyWith(textScale: 1, fontFamily: bundledFont)), child: Text(tr('重置'))),
-          ]),
-        ),
-        _header(context, tr('预览')),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(tr('YTPlus 让 YouTube 在 Windows 上更好用'), style: theme.textTheme.titleLarge),
-            const SizedBox(height: 6),
-            Text('The quick brown fox jumps over the lazy dog. 0123456789', style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 6),
-            Text(tr('频道名称 · 12 万次观看 · 3 天前'), style: theme.textTheme.labelMedium!.copyWith(color: context.colors.outline)),
-          ]),
-        ),
-        _tip(context, tr('注：Noto Sans CJK SC 随 YTPlus 安装（SIL OFL 1.1 许可），其余是 Windows 自带的中文字体，部分字体可能缺少某些字重。')),
-      ];
-    });
+      );
+}
 
 // 视频设置 › 画面与音画同步调节 (PiliNara's video picture panel)
 
@@ -795,10 +837,21 @@ List<SettingEntry> aboutEntries(AppController controller) => [
             ]),
           ), subtitle: tr('当前版本 更新')),
       SettingEntry(tr('检查更新'), (context) => NormalItem(
-            title: tr('检查更新'),
-            subtitle: tr('打开 GitHub 发布页下载新版本'),
+            title: controller.checkingAppUpdate
+                ? tr('正在检查软件更新…')
+                : controller.availableAppVersion == null
+                    ? tr('检查更新')
+                    : tr('有新版本：{0}', [controller.availableAppVersion!]),
+            subtitle: controller.appUpdateError == null
+                ? controller.availableAppVersion == null
+                    ? tr('启动时自动检查，也可立即检查')
+                    : tr('点击打开 GitHub Release 下载')
+                : tr('检查软件更新失败：{0}', [controller.appUpdateError!]),
             leading: const Icon(Icons.update_rounded),
-            onTap: () => openExternal('$_repository/releases'),
+            onTap: () async {
+              await controller.checkAppUpdate();
+              openExternal(controller.availableAppUrl ?? '$_repository/releases');
+            },
           ), subtitle: tr('发布页 新版本')),
       SettingEntry(tr('源代码'), (context) => NormalItem(
             title: tr('Github 仓库'),

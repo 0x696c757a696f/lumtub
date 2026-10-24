@@ -52,7 +52,6 @@ class AppPreferences {
     this.homeShowContinue = true,
     this.homeShowRecent = true,
     this.homeShowRecommended = true,
-    this.feedMusicTracks = FeedLevel.reduce,
     this.feedShorts = FeedLevel.reduce,
     this.feedVertical = FeedLevel.reduce,
     this.syncFollowToYoutube = true,
@@ -127,12 +126,10 @@ class AppPreferences {
   final bool homeShowRecent;
   /// 为你推荐, worked out on this computer from the history.
   final bool homeShowRecommended;
-  /// How much 为你推荐 shows of YouTube Music's auto-generated tracks,
-  /// Shorts and vertical videos.
-  final FeedLevel feedMusicTracks;
+  /// How much For You shows Shorts and vertical videos.
   final FeedLevel feedShorts;
   final FeedLevel feedVertical;
-  FeedMix get feedMix => FeedMix(musicTracks: feedMusicTracks, shorts: feedShorts, vertical: feedVertical);
+  FeedMix get feedMix => FeedMix(shorts: feedShorts, vertical: feedVertical);
   /// 关注 also subscribes on YouTube when signed in.
   final bool syncFollowToYoutube;
   final String startPage;
@@ -251,7 +248,6 @@ class AppPreferences {
     bool? homeShowContinue,
     bool? homeShowRecent,
     bool? homeShowRecommended,
-    FeedLevel? feedMusicTracks,
     FeedLevel? feedShorts,
     FeedLevel? feedVertical,
     bool? syncFollowToYoutube,
@@ -305,7 +301,6 @@ class AppPreferences {
         homeShowContinue: homeShowContinue ?? this.homeShowContinue,
         homeShowRecent: homeShowRecent ?? this.homeShowRecent,
         homeShowRecommended: homeShowRecommended ?? this.homeShowRecommended,
-        feedMusicTracks: feedMusicTracks ?? this.feedMusicTracks,
         feedShorts: feedShorts ?? this.feedShorts,
         feedVertical: feedVertical ?? this.feedVertical,
         syncFollowToYoutube: syncFollowToYoutube ?? this.syncFollowToYoutube,
@@ -360,7 +355,6 @@ class AppPreferences {
         'homeShowContinue': homeShowContinue,
         'homeShowRecent': homeShowRecent,
         'homeShowRecommended': homeShowRecommended,
-        'feedMusicTracks': feedMusicTracks.name,
         'feedShorts': feedShorts.name,
         'feedVertical': feedVertical.name,
         'syncFollowToYoutube': syncFollowToYoutube,
@@ -449,7 +443,6 @@ class AppPreferences {
       homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
       homeShowRecent: flag('homeShowRecent', d.homeShowRecent),
       homeShowRecommended: flag('homeShowRecommended', d.homeShowRecommended),
-      feedMusicTracks: FeedLevel.parse(raw['feedMusicTracks'], d.feedMusicTracks),
       feedShorts: FeedLevel.parse(raw['feedShorts'], d.feedShorts),
       feedVertical: FeedLevel.parse(raw['feedVertical'], d.feedVertical),
       syncFollowToYoutube: flag('syncFollowToYoutube', d.syncFollowToYoutube),

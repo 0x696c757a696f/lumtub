@@ -1,0 +1,326 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      libmpv:
+        description: 'libmpv to ship: latest zhongfly build, or the one media_kit bundles'
+        type: choice
+        options: [latest, media_kit]
+        default: latest
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  windows:
+    name: Windows ${{ matrix.package_arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package_arch: x64
+            runner: windows-latest
+            mpv_arch: x86_64
+            runtime_arch: x86_64
+            build_dir: x64
+            install_arch: x64
+          - package_arch: x64-v3
+            runner: windows-latest
+            mpv_arch: x86_64-v3
+            runtime_arch: x86_64-v3
+            build_dir: x64
+            install_arch: x64
+          - package_arch: arm64
+            runner: windows-11-arm
+            mpv_arch: aarch64
+            runtime_arch: aarch64
+            build_dir: arm64
+            install_arch: arm64
+    runs-on: ${{ matrix.runner }}
+    env:
+      FLUTTER_VERSION: 3.47.7
+      PACKAGE_ARCH: ${{ matrix.package_arch }}
+      MPV_ARCH: ${{ matrix.mpv_arch }}
+      RUNTIME_ARCH: ${{ matrix.runtime_arch }}
+      BUILD_DIR: ${{ matrix.build_dir }}
+      INSTALL_ARCH: ${{ matrix.install_arch }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Windows - verify latest zhongfly libmpv
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ProgressPreference = 'SilentlyContinue'
+          $headers = @{
+            Accept = 'application/vnd.github+json'
+            'User-Agent' = 'YTPlus-GitHub-Actions'
+            Authorization = "Bearer $env:GITHUB_TOKEN"
+          }
+          $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases/latest' -Headers $headers
+          $asset = $release.assets | Where-Object { $_.name -match "^mpv-dev-$([regex]::Escape($env:MPV_ARCH))-.+\.7z$" } | Select-Object -First 1
+          if (-not $asset) { throw "Latest release has no $env:MPV_ARCH development archive." }
+          if ($asset.digest -notmatch '^sha256:([0-9a-fA-F]{64})$') { throw "Latest libmpv asset has no SHA-256 digest: $($asset.name)" }
+          $expectedHash = $Matches[1].ToLowerInvariant()
+          $downloadUri = [uri]$asset.browser_download_url
+          if ($downloadUri.Scheme -ne 'https' -or $downloadUri.Host -ne 'github.com') { throw "Unexpected libmpv download host: $downloadUri" }
+          $archive = Join-Path $env:RUNNER_TEMP $asset.name
+          $extractDir = Join-Path $env:RUNNER_TEMP 'ytplus-mpv-check'
+          New-Item -ItemType Directory -Force -Path $extractDir | Out-Null
+          Invoke-WebRequest -Uri $downloadUri -OutFile $archive -Headers $headers
+          $actualHash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualHash -ne $expectedHash) { throw "SHA-256 mismatch for $($asset.name)" }
+          & tar.exe -xf $archive -C $extractDir 2>$null
+          $library = Get-ChildItem -LiteralPath $extractDir -Filter 'libmpv-2.dll' -File -Recurse | Select-Object -First 1
+          if (-not $library) {
+            $sevenZip = Join-Path $env:RUNNER_TEMP '7zr.exe'
+            Invoke-WebRequest -Uri 'https://www.7-zip.org/a/7zr.exe' -OutFile $sevenZip
+            & $sevenZip x -y "-o$extractDir" $archive | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw 'Could not extract the latest libmpv archive.' }
+            $library = Get-ChildItem -LiteralPath $extractDir -Filter 'libmpv-2.dll' -File -Recurse | Select-Object -First 1
+          }
+          if (-not $library) { throw 'The latest libmpv archive does not contain libmpv-2.dll.' }
+          if ($release.tag_name -notmatch '^[0-9A-Za-z._-]{1,100}$') { throw "Unexpected libmpv tag: $($release.tag_name)" }
+          $release.tag_name | Out-File -FilePath (Join-Path $env:RUNNER_TEMP 'libmpv-tag.txt') -Encoding ascii -NoNewline
+          Write-Host "Verified $($release.tag_name): $($asset.name), SHA-256, and $($library.FullName)"
+
+      - name: Windows - install Flutter stable SDK
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $archive = Join-Path $env:RUNNER_TEMP "flutter_windows_$env:FLUTTER_VERSION-stable.zip"
+          $destination = Join-Path $env:RUNNER_TEMP 'flutter-sdk'
+          Invoke-WebRequest -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_$env:FLUTTER_VERSION-stable.zip" -OutFile $archive
+          Expand-Archive -LiteralPath $archive -DestinationPath $destination -Force
+          $flutterBin = Join-Path $destination 'flutter/bin'
+          if (-not (Test-Path -LiteralPath $flutterBin)) { throw 'Flutter SDK did not contain flutter/bin.' }
+          $flutterBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Windows ARM64 - select the native Flutter runtime
+        if: matrix.package_arch == 'arm64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Remove-Item (Join-Path $env:RUNNER_TEMP 'flutter-sdk/flutter/bin/cache/engine-dart-sdk.stamp') -Force -ErrorAction SilentlyContinue
+          & flutter --version
+          $dartVersion = (& dart --version 2>&1 | Out-String)
+          if ($dartVersion -notmatch 'windows_arm64') { throw "Expected the ARM64 Dart runtime, got: $dartVersion" }
+
+      # media_kit publishes ANGLE only for x64. vcpkg builds it from source
+      # for arm64 once; the result is cached by vcpkg commit.
+      - name: Windows ARM64 - prepare vcpkg
+        id: vcpkg
+        if: matrix.package_arch == 'arm64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = $env:VCPKG_INSTALLATION_ROOT
+          if (-not $root -or -not (Test-Path -LiteralPath (Join-Path $root 'vcpkg.exe'))) {
+            $root = Join-Path $env:RUNNER_TEMP 'vcpkg'
+            git clone --depth 1 https://github.com/microsoft/vcpkg $root
+            & (Join-Path $root 'bootstrap-vcpkg.bat') -disableMetrics
+            if ($LASTEXITCODE -ne 0) { throw 'vcpkg bootstrap failed.' }
+          }
+          $commit = (git -C $root rev-parse HEAD).Trim()
+          "root=$root" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "commit=$commit" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "vcpkg $commit at $root"
+
+      - name: Windows ARM64 - restore ANGLE
+        id: angle-cache
+        if: matrix.package_arch == 'arm64'
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/angle-arm64
+          key: angle-arm64-windows-${{ steps.vcpkg.outputs.commit }}
+
+      - name: Windows ARM64 - build ANGLE
+        if: matrix.package_arch == 'arm64' && steps.angle-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $vcpkg = Join-Path '${{ steps.vcpkg.outputs.root }}' 'vcpkg.exe'
+          & $vcpkg install angle:arm64-windows --clean-after-build
+          if ($LASTEXITCODE -ne 0) { throw 'vcpkg could not build ANGLE for arm64.' }
+          $installed = Join-Path '${{ steps.vcpkg.outputs.root }}' 'installed/arm64-windows'
+          $out = Join-Path $env:RUNNER_TEMP 'angle-arm64'
+          New-Item -ItemType Directory -Force -Path (Join-Path $out 'lib') | Out-Null
+          Copy-Item (Join-Path $installed 'bin/*.dll') $out
+          foreach ($name in 'libEGL', 'libGLESv2') {
+            $lib = Get-ChildItem -LiteralPath (Join-Path $installed 'lib') -Filter "$name*.lib" -File | Select-Object -First 1
+            if (-not $lib) { throw "vcpkg produced no $name import library." }
+            Copy-Item -LiteralPath $lib.FullName (Join-Path $out "lib/$name.dll.lib")
+          }
+          Get-ChildItem -Recurse $out | ForEach-Object { Write-Host $_.FullName }
+
+      # The x64 media_kit archives cannot link on arm64; put the aarch64
+      # libmpv and arm64 ANGLE where media_kit_libs_windows_video expects
+      # them (see vendor/media_kit_libs_windows_video/windows/CMakeLists.txt).
+      - name: Windows ARM64 - stage libmpv and ANGLE
+        if: matrix.package_arch == 'arm64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ProgressPreference = 'SilentlyContinue'
+          $build = "build/windows/$env:BUILD_DIR"
+          $mpv = Join-Path $build 'libmpv'
+          $angle = Join-Path $build 'ANGLE'
+          New-Item -ItemType Directory -Force -Path (Join-Path $mpv 'include'), (Join-Path $angle 'lib') | Out-Null
+
+          $extractDir = Join-Path $env:RUNNER_TEMP 'ytplus-mpv-check'
+          foreach ($name in 'libmpv-2.dll', 'libmpv.dll.a') {
+            $file = Get-ChildItem -LiteralPath $extractDir -Filter $name -File -Recurse | Select-Object -First 1
+            if (-not $file) { throw "The aarch64 libmpv archive has no $name." }
+            Copy-Item -LiteralPath $file.FullName $mpv
+          }
+          $client = Get-ChildItem -LiteralPath $extractDir -Filter 'client.h' -File -Recurse | Select-Object -First 1
+          if (-not $client) { throw 'The aarch64 libmpv archive has no headers.' }
+          Copy-Item (Join-Path $client.DirectoryName '*.h') (Join-Path $mpv 'include')
+
+          # Headers from the archive media_kit uses on x64 (same MD5 check).
+          $archive = Join-Path $env:RUNNER_TEMP 'ANGLE.7z'
+          Invoke-WebRequest -Uri 'https://github.com/alexmercerind/flutter-windows-ANGLE-OpenGL-ES/releases/download/v1.0.1/ANGLE.7z' -OutFile $archive
+          $md5 = (Get-FileHash -LiteralPath $archive -Algorithm MD5).Hash.ToLowerInvariant()
+          if ($md5 -ne 'e866f13e8d552348058afaafe869b1ed') { throw 'ANGLE header archive failed its MD5 check.' }
+          $headers = Join-Path $env:RUNNER_TEMP 'angle-headers'
+          New-Item -ItemType Directory -Force -Path $headers | Out-Null
+          & cmake -E chdir $headers cmake -E tar xf $archive
+          if ($LASTEXITCODE -ne 0) { throw 'Could not extract the ANGLE headers.' }
+          Copy-Item -Recurse (Join-Path $headers 'include') $angle
+
+          $built = Join-Path $env:RUNNER_TEMP 'angle-arm64'
+          Copy-Item (Join-Path $built '*.dll') $angle
+          Copy-Item (Join-Path $built 'lib/*.lib') (Join-Path $angle 'lib')
+          $sdk = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\Redist\D3D\arm64\d3dcompiler_47.dll" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $sdk) { throw 'The Windows SDK has no arm64 d3dcompiler_47.dll.' }
+          Copy-Item -LiteralPath $sdk.FullName $angle
+          Get-ChildItem -Recurse $build -Include *.dll, *.lib, *.a, client.h, egl.h | ForEach-Object { Write-Host $_.FullName }
+
+      - name: Windows - get packages
+        run: flutter pub get
+
+      - name: Windows - analyze sources
+        run: flutter analyze
+
+      - name: Windows - run unit tests
+        run: flutter test
+
+      - name: Windows - determine package version
+        shell: bash
+        run: |
+          base=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            version="$base-${GITHUB_SHA::7}"
+          fi
+          [[ "$version" =~ ^[0-9A-Za-z.+-]+$ ]] || { echo "Unexpected version: $version"; exit 1; }
+          echo "YTPLUS_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Version $version"
+
+      - name: Windows - build release
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
+        shell: bash
+        run: flutter build windows --release --dart-define=YTPLUS_VERSION="$YTPLUS_VERSION" --dart-define=YTPLUS_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=YTPLUS_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET"
+
+      - name: Windows - check delayed video plugin loading
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $install = & $vswhere -latest -products * -property installationPath
+          $dumpbin = Get-ChildItem -LiteralPath $install -Filter dumpbin.exe -File -Recurse | Select-Object -First 1
+          if (-not $dumpbin) { throw 'dumpbin.exe not found.' }
+          $releaseDir = Join-Path "build/windows/$env:BUILD_DIR/runner" 'Release'
+          $imports = & $dumpbin.FullName /imports (Join-Path $releaseDir 'ytplus.exe') | Out-String
+          $delayed = $imports.IndexOf('Section contains the following delay load imports')
+          if ($delayed -lt 0 -or $imports.IndexOf('media_kit_video_plugin.dll', $delayed) -lt 0) { throw 'media_kit_video_plugin.dll is not delay-loaded.' }
+          Write-Host 'media_kit_video_plugin.dll is delay-loaded.'
+
+      - name: Windows - replace bundled libmpv DLL
+        if: github.event_name != 'workflow_dispatch' || inputs.libmpv == 'latest'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $extractDir = Join-Path $env:RUNNER_TEMP 'ytplus-mpv-check'
+          $library = Get-ChildItem -LiteralPath $extractDir -Filter 'libmpv-2.dll' -File -Recurse | Select-Object -First 1
+          if (-not $library) { throw 'Verified libmpv-2.dll is missing.' }
+          $releaseDir = Join-Path "build/windows/$env:BUILD_DIR/runner" 'Release'
+          $destination = Join-Path $releaseDir 'libmpv-2.dll'
+          if (-not (Test-Path -LiteralPath $destination)) { throw 'The release build does not contain media_kit libmpv-2.dll to replace.' }
+          Copy-Item -LiteralPath $library.FullName -Destination $destination -Force
+          $sourceHash = (Get-FileHash -LiteralPath $library.FullName -Algorithm SHA256).Hash
+          $targetHash = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash
+          if ($sourceHash -ne $targetHash) { throw 'The bundled libmpv replacement did not verify.' }
+          $tag = Get-Content -Raw (Join-Path $env:RUNNER_TEMP 'libmpv-tag.txt')
+          "$tag`n$env:RUNTIME_ARCH`n" | Out-File -FilePath (Join-Path $releaseDir 'libmpv-version.txt') -Encoding ascii -NoNewline
+          Write-Host "Replaced the bundled DLL with $($library.FullName)"
+
+      - name: Windows - package portable distribution
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Keep the platform in every distributable name. Future platform
+          # jobs use the same YTPlus_<version>_<platform>-<architecture> form.
+          $package = "YTPlus_$env:YTPLUS_VERSION`_windows-$env:PACKAGE_ARCH"
+          $releaseDir = Join-Path "build/windows/$env:BUILD_DIR/runner" 'Release'
+          New-Item -ItemType Directory -Force -Path $package | Out-Null
+          Copy-Item -Recurse -Force "$releaseDir/*" $package
+          Copy-Item LICENSE, NOTICE $package
+          Compress-Archive -Path "$package/*" -DestinationPath "$package.zip"
+
+      - name: Windows - build installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $iscc = Get-Command iscc.exe -ErrorAction SilentlyContinue
+          if (-not $iscc) {
+            $default = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+            if (-not (Test-Path -LiteralPath $default)) { choco install innosetup -y --no-progress | Out-Null }
+            $iscc = Get-Item -LiteralPath $default
+          }
+          $source = (Resolve-Path "YTPlus_$env:YTPLUS_VERSION`_windows-$env:PACKAGE_ARCH").Path
+          $output = Join-Path (Get-Location) 'installer'
+          & $iscc.Source "/DAppVersion=$env:YTPLUS_VERSION" "/DSourceDir=$source" "/DOutputDir=$output" "/DPackageArch=$env:PACKAGE_ARCH" "/DInstallArch=$env:INSTALL_ARCH" 'windows/installer/ytplus.iss'
+          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed.' }
+
+      - name: Windows - upload portable ZIP
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: YTPlus-windows-${{ matrix.package_arch }}-portable
+          path: YTPlus_*_windows-${{ matrix.package_arch }}.zip
+          if-no-files-found: error
+
+      - name: Windows - upload installer
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: YTPlus-windows-${{ matrix.package_arch }}-installer
+          path: installer/YTPlus_*_windows-${{ matrix.package_arch }}-setup.exe
+          if-no-files-found: error
+
+  release:
+    name: Windows Release
+    needs: windows
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Windows - publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "YTPlus $TAG" --generate-notes

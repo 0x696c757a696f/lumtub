@@ -112,11 +112,12 @@ class StreamResolver {
   final _results = <String, Future<ResolvedVideo>>{};
   /// The format each entry of [_results] is being resolved with.
   final _formats = <String, String>{};
+  final _formatSorts = <String, String?>{};
 
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
 
-  List<String> arguments(String videoId, String format) {
+  List<String> arguments(String videoId, String format, {String? formatSort}) {
     final proxy = this.proxy?.call();
     return [
       if (proxy != null) ...['--proxy', proxy],
@@ -126,21 +127,22 @@ class StreamResolver {
         '--no-playlist',
         '--dump-single-json',
         '--format', expressionOf(format),
+        if (formatSort != null) ...['--format-sort', formatSort],
         '--', 'https://www.youtube.com/watch?v=$videoId',
       ];
   }
 
   /// The resolved video, from the cache while it is fresh.
-  Future<ResolvedVideo> resolve(String videoId, String format) {
+  Future<ResolvedVideo> resolve(String videoId, String format, {String? formatSort}) {
     // A card prefetched in the background is now being waited on.
     final lowered = _lowered[videoId];
     if (lowered != null) restorePriority(lowered);
     final cached = _results[videoId];
     // Another format needs another extraction.
-    if (cached != null && _formats[videoId] == format) {
-      return cached.then((video) => video.fresh ? video : _start(videoId, format), onError: (_) => _start(videoId, format));
+    if (cached != null && _formats[videoId] == format && _formatSorts[videoId] == formatSort) {
+      return cached.then((video) => video.fresh ? video : _start(videoId, format, formatSort: formatSort), onError: (_) => _start(videoId, format, formatSort: formatSort));
     }
-    return _start(videoId, format);
+    return _start(videoId, format, formatSort: formatSort);
   }
 
   /// The extraction of [videoId] if one is running or done; never starts
@@ -152,31 +154,32 @@ class StreamResolver {
   /// JavaScript for seconds, and a pointer passing over a grid would
   /// otherwise start one per card. While one runs, only the card asked for
   /// last waits its turn.
-  void prefetch(String videoId, String format) {
-    if (_results.containsKey(videoId) && _formats[videoId] == format) return;
+  void prefetch(String videoId, String format, {String? formatSort}) {
+    if (_results.containsKey(videoId) && _formats[videoId] == format && _formatSorts[videoId] == formatSort) return;
     if (_prefetching) {
-      _nextPrefetch = (videoId, format);
+      _nextPrefetch = (videoId, format, formatSort);
       return;
     }
     _prefetching = true;
-    unawaited(_start(videoId, format, background: true).then((_) {}, onError: (_) {}).whenComplete(() {
+    unawaited(_start(videoId, format, formatSort: formatSort, background: true).then((_) {}, onError: (_) {}).whenComplete(() {
       _prefetching = false;
       final next = _nextPrefetch;
       _nextPrefetch = null;
-      if (next != null) prefetch(next.$1, next.$2);
+      if (next != null) prefetch(next.$1, next.$2, formatSort: next.$3);
     }));
   }
 
   bool _prefetching = false;
   /// Background extractions still running, by video id: their process ids.
   final _lowered = <String, int>{};
-  (String, String)? _nextPrefetch;
+  (String, String, String?)? _nextPrefetch;
 
   /// Drops what is known about [videoId], for example after its streams
   /// failed to play.
   void forget(String videoId) {
     _results.remove(videoId);
     _formats.remove(videoId);
+    _formatSorts.remove(videoId);
     _deleteInfo(videoId);
   }
 
@@ -205,14 +208,16 @@ class StreamResolver {
     }
   }
 
-  Future<ResolvedVideo> _start(String videoId, String format, {bool background = false}) {
-    final future = _run(videoId, format, background: background);
+  Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false}) {
+    final future = _run(videoId, format, formatSort: formatSort, background: background);
     _results.remove(videoId);
     _results[videoId] = future;
     _formats[videoId] = format;
+    _formatSorts[videoId] = formatSort;
     while (_results.length > _keep) {
       final oldest = _results.keys.first;
       _formats.remove(oldest);
+      _formatSorts.remove(oldest);
       _results.remove(oldest);
       _deleteInfo(oldest);
     }
@@ -226,13 +231,13 @@ class StreamResolver {
   /// Errors a second attempt can get past, unlike a private or removed video.
   static final _transient = RegExp(r'HTTP Error 5\d\d|timed out|Connection (reset|aborted|refused)|Remote end closed|getaddrinfo|IncompleteRead', caseSensitive: false);
 
-  Future<ResolvedVideo> _run(String videoId, String format, {bool background = false}) async {
+  Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false}) async {
     final watch = Stopwatch()..start();
-    var result = await _ytDlp(videoId, format, background: background ? videoId : null);
+    var result = await _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
     if (_failed(result) && _transient.hasMatch(result.stderr.toString())) {
       logInfo('解析 $videoId 遇到网络错误，重试一次');
       await Future<void>.delayed(const Duration(seconds: 2));
-      result = await _ytDlp(videoId, format, background: background ? videoId : null);
+      result = await _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
     }
     final output = result.stdout.toString().trim();
     final err = result.stderr.toString().trim();
@@ -256,11 +261,11 @@ class StreamResolver {
 
   /// yt-dlp for [videoId]; [background] (the video id) runs it at low
   /// priority until [resolve] asks for that video.
-  Future<ProcessResult> _ytDlp(String videoId, String format, {String? background}) async {
+  Future<ProcessResult> _ytDlp(String videoId, String format, {String? formatSort, String? background}) async {
     try {
       return await runWithTimeout(
         ytDlpPath,
-        arguments(videoId, format),
+        arguments(videoId, format, formatSort: formatSort),
         timeout: const Duration(seconds: 45),
         environment: _environment,
         onStart: (process) {

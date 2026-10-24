@@ -2,6 +2,7 @@
 
 // C++/WinRT first: it wants to see <windows.h> and <unknwn.h> before the rest.
 #include <unknwn.h>
+#include <dwrite.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Media.h>
 #include <winrt/Windows.Storage.Streams.h>
@@ -11,6 +12,7 @@
 #include <shellapi.h>
 
 #include <chrono>
+#include <set>
 #include <string>
 
 #include <flutter/standard_method_codec.h>
@@ -37,6 +39,55 @@ std::wstring Widen(const std::string& text) {
   std::wstring wide(size, L'\0');
   ::MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), wide.data(), size);
   return wide;
+}
+
+std::string Narrow(const std::wstring& text) {
+  if (text.empty()) return "";
+  const int size = ::WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
+  std::string narrow(size, '\0');
+  ::WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), narrow.data(), size, nullptr, nullptr);
+  return narrow;
+}
+
+// DirectWrite is the same collection Flutter asks Windows to resolve. It gives
+// family names rather than registry file names, so a returned value can be
+// supplied directly to ThemeData.fontFamily.
+flutter::EncodableList SystemFontFamilies() {
+  IDWriteFactory* factory = nullptr;
+  if (FAILED(::DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&factory)))) return {};
+  IDWriteFontCollection* collection = nullptr;
+  if (FAILED(factory->GetSystemFontCollection(&collection))) {
+    factory->Release();
+    return {};
+  }
+  std::set<std::string> families;
+  for (UINT32 i = 0; i < collection->GetFontFamilyCount(); ++i) {
+    IDWriteFontFamily* family = nullptr;
+    if (FAILED(collection->GetFontFamily(i, &family))) continue;
+    IDWriteLocalizedStrings* names = nullptr;
+    if (SUCCEEDED(family->GetFamilyNames(&names))) {
+      UINT32 index = 0;
+      BOOL found = FALSE;
+      names->FindLocaleName(L"zh-cn", &index, &found);
+      if (!found) names->FindLocaleName(L"en-us", &index, &found);
+      if (!found) index = 0;
+      UINT32 length = 0;
+      if (SUCCEEDED(names->GetStringLength(index, &length)) && length > 0) {
+        std::wstring name(length + 1, L'\0');
+        if (SUCCEEDED(names->GetString(index, name.data(), length + 1))) {
+          name.resize(length);
+          families.insert(Narrow(name));
+        }
+      }
+      names->Release();
+    }
+    family->Release();
+  }
+  collection->Release();
+  factory->Release();
+  flutter::EncodableList result;
+  for (const auto& family : families) result.emplace_back(family);
+  return result;
 }
 
 const EncodableValue* Find(const EncodableValue* arguments, const char* key) {
@@ -185,7 +236,10 @@ void WindowsShell::HandleCall(const flutter::MethodCall<EncodableValue>& call,
   const std::string& method = call.method_name();
   const EncodableValue* args = call.arguments();
   try {
-    if (method == "setTray") {
+    if (method == "listSystemFonts") {
+      result->Success(EncodableValue(SystemFontFamilies()));
+      return;
+    } else if (method == "setTray") {
       close_to_tray_ = BoolArg(args, "enabled");
       show_label_ = Widen(StringArg(args, "show"));
       play_pause_label_ = Widen(StringArg(args, "playPause"));

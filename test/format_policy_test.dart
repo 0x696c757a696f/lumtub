@@ -14,25 +14,34 @@ void main() {
   group('auto', () {
     test('uses H.264 until a hardware codec was actually verified', () {
       expect(_order(const PlayerSettings()), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1, VideoCodec.vp8]);
-      expect(_expression(const PlayerSettings()), startsWith("bestvideo[vcodec~='^(avc1|avc3|h264)']+bestaudio/"));
+      expect(_expression(const PlayerSettings()), startsWith('bestvideo+bestaudio/'));
     });
 
-    test('prefers verified hardware codecs, VP9 then AV1, then H.264', () {
+    test('uses software AVC, VP9, then AV1 when hardware decoding is off', () {
+      const settings = PlayerSettings(hwdec: 'no', decoderResults: {'av1': _hw, 'vp9': _hw});
+      expect(_order(settings).take(3), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1]);
+      expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:avc');
+    });
+
+    test('uses AV1, then VP9, then H.264 when AV1 hardware decoding is verified', () {
       const all = PlayerSettings(decoderResults: {'vp9': _hw, 'av1': _hw, 'h264': _hw});
-      expect(_order(all).take(3), [VideoCodec.vp9, VideoCodec.av1, VideoCodec.h264]);
+      expect(_order(all).take(3), [VideoCodec.av1, VideoCodec.vp9, VideoCodec.h264]);
       const vp9Only = PlayerSettings(decoderResults: {'vp9': _hw, 'av1': DecoderStatus.unverified()});
       expect(_order(vp9Only).take(2), [VideoCodec.vp9, VideoCodec.h264]);
     });
 
-    test('asks for VP9 or AV1 above 1080p, where YouTube has no H.264', () {
+    test('does not promote software VP9 or AV1 just because the quality cap is tall', () {
       final expression = _expression(const PlayerSettings(maxHeight: 2160));
-      expect(
-        expression,
-        startsWith("bestvideo[vcodec~='^(vp09|vp9)'][height<=?2160]+bestaudio/bestvideo[vcodec~='^(av01|av1)'][height<=?2160]+bestaudio/bestvideo[vcodec~='^(avc1"),
-      );
+      expect(expression, startsWith('bestvideo[height<=?2160]+bestaudio/'));
     });
 
-    test('puts AV1 before H.264 only with verified hardware decoding or a tall cap', () {
+    test('never exceeds the user-selected default quality', () {
+      const settings = PlayerSettings(maxHeight: 720, decoderResults: {'av1': _hw});
+      expect(_expression(settings), startsWith('bestvideo[height<=?720]+bestaudio/'));
+      expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:av01');
+    });
+
+    test('puts AV1 before H.264 only with verified hardware decoding', () {
       final plain = _order(const PlayerSettings(maxHeight: 1080));
       expect(plain.indexOf(VideoCodec.av1), greaterThan(plain.indexOf(VideoCodec.h264)));
       expect(_order(const PlayerSettings(decoderResults: {'av1': _hw})).first, VideoCodec.av1);
@@ -41,13 +50,13 @@ void main() {
     test('caps every alternative at the chosen height and ends with plain fallbacks', () {
       final expression = _expression(const PlayerSettings(maxHeight: 720));
       expect(expression.split('/').where((a) => a.startsWith('bestvideo')), everyElement(contains('[height<=?720]')));
-      expect(expression, endsWith('/bestvideo[height<=?720]+bestaudio/best[height<=?720]/best'));
+      expect(expression, endsWith('/best[height<=?720]/best'));
     });
 
     test('keeps the audio cap on the alternatives', () {
       final expression = _expression(const PlayerSettings(audioQuality: AudioQuality.low));
-      expect(expression, startsWith("bestvideo[vcodec~='^(avc1|avc3|h264)']+bestaudio[abr<=?64]/"));
-      expect(expression, endsWith('/bestvideo+bestaudio[abr<=?64]/bestvideo+bestaudio/best/best'));
+      expect(expression, startsWith('bestvideo+bestaudio[abr<=?64]/'));
+      expect(expression, endsWith('/bestvideo+bestaudio/best/best'));
     });
   });
 
@@ -71,6 +80,12 @@ void main() {
   });
 
   group('disabled codecs', () {
+    test('filters disabled codecs before sorting by the verified decoder ladder', () {
+      const settings = PlayerSettings(disabledCodecs: {VideoCodec.av1}, decoderResults: {'vp9': _hw});
+      expect(_expression(settings), startsWith('bestvideo[vcodec!^=av01][vcodec!^=av1]+bestaudio/'));
+      expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:vp9');
+    });
+
     test('never appear in the order or in any alternative of any strategy', () {
       for (final strategy in PlaybackStrategy.values) {
         for (final disabled in [
@@ -109,10 +124,11 @@ void main() {
       expect(_expression(settings), 'bestvideo$exclude+bestaudio/best$exclude/best$exclude');
     });
 
-    test('the VP9 filter matches vp09 names, which the old vp9 prefix missed', () {
-      const settings = PlayerSettings(maxHeight: 2160);
-      expect(_expression(settings), contains("[vcodec~='^(vp09|vp9)']"));
-      expect(_expression(settings), isNot(contains('[vcodec^=vp9]')));
+    test('sorts highest resolution and frame rate before the hardware decoder preference', () {
+      expect(FormatPolicy.formatSort(const PlayerSettings()), 'res,fps,vcodec:avc');
+      expect(FormatPolicy.formatSort(const PlayerSettings(decoderResults: {'vp9': _hw})), 'res,fps,vcodec:vp9');
+      expect(FormatPolicy.formatSort(const PlayerSettings(decoderResults: {'av1': _hw})), 'res,fps,vcodec:av01');
+      expect(FormatPolicy.formatSort(const PlayerSettings(strategy: PlaybackStrategy.quality)), isNull);
     });
 
     test('summary and names list them', () {

@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'live_chat.dart';
+import 'process_priority.dart';
 import 'process_runner.dart';
 
 /// Fetches the read-only chat replay that yt-dlp exposes as the `live_chat`
@@ -64,5 +67,78 @@ class LiveChatRepository {
     }
     final contents = await file.readAsString();
     return contents.trim().isEmpty ? const [] : LiveChatMessage.parseLines(contents);
+  }
+
+  /// Streams new messages from an active live chat. yt-dlp owns YouTube's
+  /// continuation requests and appends each action to the same JSON format
+  /// used for recorded replays. Cancelling the subscription stops that run.
+  Stream<LiveChatMessage> current(String videoId) async* {
+    final file = fileFor(videoId);
+    await directory.create(recursive: true);
+    try {
+      await file.delete();
+    } on FileSystemException {
+      // The previous managed chat capture did not exist.
+    }
+    final process = await Process.start(
+      ytDlpPath,
+      arguments(videoId),
+      environment: _environment,
+    );
+    lowerPriority(process.pid);
+    final errors = StringBuffer();
+    final errorSubscription = process.stderr.transform(utf8.decoder).listen(errors.write);
+    var running = true;
+    var exitCode = 0;
+    unawaited(process.exitCode.then((code) {
+      exitCode = code;
+      running = false;
+    }));
+    var offset = 0;
+    var pending = <int>[];
+    var yielded = false;
+    try {
+      while (running || pending.isNotEmpty) {
+        if (await file.exists()) {
+          final length = await file.length();
+          if (length > offset) {
+            final reader = await file.open();
+            await reader.setPosition(offset);
+            pending.addAll(await reader.read(length - offset));
+            await reader.close();
+            offset = length;
+            final lastLine = pending.lastIndexOf(10);
+            if (lastLine >= 0) {
+              final lines = utf8.decode(pending.sublist(0, lastLine + 1), allowMalformed: true);
+              pending = pending.sublist(lastLine + 1);
+              for (final line in const LineSplitter().convert(lines)) {
+                for (final message in LiveChatMessage.parseLine(line)) {
+                  yielded = true;
+                  yield message;
+                }
+              }
+            }
+          }
+        }
+        if (!running) {
+          if (pending.isNotEmpty) {
+            for (final message in LiveChatMessage.parseLine(utf8.decode(pending, allowMalformed: true))) {
+              yielded = true;
+              yield message;
+            }
+            pending = const [];
+          }
+          break;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+      }
+      if (!yielded && exitCode != 0) {
+        final error = errors.toString().trim();
+        throw StateError(error.isEmpty ? 'yt-dlp exited with code $exitCode' : error);
+      }
+    } finally {
+      process.kill();
+      await errorSubscription.cancel();
+    }
   }
 }

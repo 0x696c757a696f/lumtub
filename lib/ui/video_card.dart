@@ -307,7 +307,9 @@ class _VideoCardState extends State<VideoCard> {
   Widget build(BuildContext context) {
     final item = widget.item;
     final colors = context.colors;
+    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
     final meta = [
+      if (upcomingStart != null) upcomingStart,
       if (item.channel.isNotEmpty) item.channel,
       if (item.viewCount != null) tr('{0}次观看', [formatCount(item.viewCount!)]),
     ].join(' · ');
@@ -419,6 +421,7 @@ class CompactVideoTile extends StatelessWidget {
 
   Widget _tile(BuildContext context, Widget? _) {
     final colors = context.colors;
+    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
     return InkWell(
       borderRadius: AppStyle.cardRadius,
       onTap: onOpen,
@@ -438,7 +441,10 @@ class CompactVideoTile extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                   ),
-                  if (item.durationLabel.isNotEmpty) Positioned(right: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
+                  if (item.isLive || item.isUpcoming)
+                    Positioned(right: 4, bottom: 4, child: DurationBadge(item.isLive ? tr('直播中') : tr('即将直播'), color: item.isLive ? const Color(0xFFCC0000) : null))
+                  else if (item.durationLabel.isNotEmpty)
+                    Positioned(right: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
                   _ProgressBar(item: item),
                 ]),
               ),
@@ -448,6 +454,8 @@ class CompactVideoTile extends StatelessWidget {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: 4),
+            if (upcomingStart != null)
+              Text(upcomingStart, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary, fontWeight: FontWeight.w500)),
             Text(item.channel.isEmpty ? 'YouTube' : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
           ])),
         ]),

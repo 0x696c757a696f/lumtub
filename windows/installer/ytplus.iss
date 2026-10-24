@@ -1,4 +1,4 @@
-; Inno Setup script for the YTPlus installer, built by .github/workflows/windows.yml:
+; Inno Setup script for the YTPlus installer, built by .github/workflows/build.yml:
 ;   iscc /DAppVersion=0.1.0 /DSourceDir=<release folder> /DOutputDir=<folder> ytplus.iss
 ; Installs for the current user only, so no administrator rights are needed,
 ; the same as the portable ZIP.
@@ -11,6 +11,12 @@
 #endif
 #ifndef OutputDir
   #define OutputDir "..\..\build\installer"
+#endif
+#ifndef PackageArch
+  #define PackageArch "x64"
+#endif
+#ifndef InstallArch
+  #define InstallArch "x64"
 #endif
 
 [Setup]
@@ -25,14 +31,14 @@ DefaultDirName={autopf}\YTPlus
 DefaultGroupName=YTPlus
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
-ArchitecturesAllowed=x64compatible
-ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed={#InstallArch}
+ArchitecturesInstallIn64BitMode={#InstallArch}
 MinVersion=10.0
 LicenseFile={#SourceDir}\LICENSE
 SetupIconFile=..\runner\resources\app_icon.ico
 UninstallDisplayIcon={app}\ytplus.exe
 OutputDir={#OutputDir}
-OutputBaseFilename=YTPlus_Setup_x64
+OutputBaseFilename=YTPlus_{#AppVersion}_windows-{#PackageArch}-setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern

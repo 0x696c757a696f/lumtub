@@ -813,7 +813,7 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
           onTap: controller.checkUpdates,
         ),
         _tip(context, tr('新 libmpv 出错时会自动改回内置版本。yt-dlp 更新后若无法播放，可以回退到上一版。')),
-        _tip(context, tr('ffmpeg 是可选组件，只用于合并高画质视频和音频，不会自动下载。使用 BtbN/FFmpeg-Builds 的 LGPL 版本，源代码见 https://ffmpeg.org/download.html。')),
+        _tip(context, tr('ffmpeg 是可选组件，只用于合并高画质视频和音频，不会自动下载。使用 zhongfly/mpv-winbuild 的 LGPL 版本（无法安装时改用 BtbN/FFmpeg-Builds 的），源代码见 https://ffmpeg.org/download.html。')),
       ];
     });
 

@@ -80,6 +80,21 @@ void main() {
     expect(ffmpegAssetName(const ['ffmpeg-master-latest-win64-gpl.zip', 'checksums.sha256'], 'x86_64'), isNull);
   });
 
+  test('picks zhongfly\'s LGPL ffmpeg for this CPU', () {
+    const names = [
+      'mpv-dev-x86_64-v3-20261024-git-a39482e7a5.7z',
+      'ffmpeg-x86_64-v3-git-1d83e7145.7z',
+      'ffmpeg-lgpl-x86_64-git-1d83e7145.7z',
+      'ffmpeg-lgpl-x86_64-v3-git-1d83e7145.7z',
+      'ffmpeg-lgpl-aarch64-git-1d83e7145.7z',
+    ];
+    expect(zhongflyFfmpegAssetName(names, 'x86_64'), 'ffmpeg-lgpl-x86_64-git-1d83e7145.7z');
+    expect(zhongflyFfmpegAssetName(names, 'x86_64-v3'), 'ffmpeg-lgpl-x86_64-v3-git-1d83e7145.7z');
+    expect(zhongflyFfmpegAssetName(names, 'aarch64'), 'ffmpeg-lgpl-aarch64-git-1d83e7145.7z');
+    expect(zhongflyFfmpegAssetName(names.where((n) => !n.contains('lgpl')), 'x86_64'), isNull);
+    expect(zhongflyFfmpegFolderName('ffmpeg-lgpl-x86_64-v3-git-1d83e7145.7z', '2026-10-24-a39482e7a5'), '20261024-git-1d83e7145');
+  });
+
   test('folder names carry the version and the asset date', () {
     expect(ffmpegFolderName('ffmpeg-n7.1-latest-win64-lgpl-shared-7.1.zip', '2026-10-21T03:04:05Z'), 'n7.1-20261021');
     expect(ffmpegFolderName('ffmpeg-master-latest-win64-lgpl-shared.zip', null), 'master');

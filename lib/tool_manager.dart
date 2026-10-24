@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
+import 'app_log.dart';
 import 'ffmpeg_component.dart';
 import 'libmpv_updates.dart';
 import 'process_runner.dart';
@@ -418,16 +419,85 @@ class ToolManager {
 
   /// The download size in bytes the release lists for the ffmpeg archive.
   Future<int?> ffmpegDownloadSize() async {
+    try {
+      if (!await _no7z.exists()) {
+        final size = (await _zhongflyFfmpeg()).$2['size'];
+        if (size is int) return size;
+      }
+    } catch (_) {
+      // The BtbN build is installed instead.
+    }
     final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
     final name = ffmpegAssetName((release['assets'] as List? ?? const []).whereType<Map>().map((a) => a['name']?.toString() ?? ''), libmpvVariantForThisProcess());
     final size = (release['assets'] as List).whereType<Map>().where((a) => a['name'] == name).firstOrNull?['size'];
     return size is int ? size : null;
   }
 
+  /// Marks a Windows whose tar.exe cannot unpack 7z, for libmpv and ffmpeg.
+  File get _no7z => File('${libmpv.directory.path}$_separator$_no7zMarker');
+
   /// Installs the newest ffmpeg build unless it is there already. With
   /// [onlyIfInstalled] nothing happens for a user who never installed it.
   Future<void> installFfmpeg({bool onlyIfInstalled = false, void Function(int received, int? total)? onProgress}) async {
     if (onlyIfInstalled && ffmpegDirectory == null) return;
+    if (!await _no7z.exists()) {
+      try {
+        await _installZhongflyFfmpeg(onProgress);
+        return;
+      } on ProcessException {
+        await _no7z.parent.create(recursive: true);
+        await _no7z.writeAsString(DateTime.now().toIso8601String());
+        logInfo('此版本 Windows 无法解压 7z，改用 BtbN 的 ffmpeg');
+      } catch (e) {
+        logInfo('zhongfly 的 ffmpeg 无法安装，改用 BtbN 的：$e');
+      }
+    }
+    await _installBtbnFfmpeg(onProgress);
+  }
+
+  Future<(Map<String, dynamic>, Map<String, dynamic>)> _zhongflyFfmpeg() async {
+    final release = await _release(ffmpegPrimaryRepository);
+    final names = (release['assets'] as List? ?? const []).whereType<Map>().map((a) => a['name']?.toString() ?? '');
+    final variant = libmpvVariantForThisProcess();
+    final name = zhongflyFfmpegAssetName(names, variant);
+    if (name == null) throw StateError('No $variant ffmpeg in ${release['tag_name']} of $ffmpegPrimaryRepository');
+    return (release, _asset(release, (n) => n == name));
+  }
+
+  Future<void> _installZhongflyFfmpeg(void Function(int received, int? total)? onProgress) async {
+    final (release, asset) = await _zhongflyFfmpeg();
+    final tag = _safeTag(release['tag_name']);
+    final folder = zhongflyFfmpegFolderName(asset['name'].toString(), tag);
+    final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
+    if (await File('${dest.path}${_separator}ffmpeg.exe').exists()) return;
+    status(tr('下载 ffmpeg {0}…', [folder]));
+    // Checked against the SHA-256 digest GitHub lists for the asset.
+    final archive = await _downloadVerified(asset, Directory('${root.path}${_separator}downloads'), onProgress: onProgress);
+    final partial = Directory('${dest.path}.partial');
+    final whole = Directory('${dest.path}.all');
+    for (final dir in [partial, whole]) {
+      if (await dir.exists()) await dir.delete(recursive: true);
+      await dir.create(recursive: true);
+    }
+    try {
+      await _extractZip(archive, whole);
+      final exe = whole.listSync(recursive: true).whereType<File>().where((f) => f.path.toLowerCase().endsWith('${_separator}ffmpeg.exe')).firstOrNull;
+      if (exe == null) throw StateError('ffmpeg archive $tag has no ffmpeg.exe');
+      await exe.copy('${partial.path}${_separator}ffmpeg.exe');
+      final check = await runWithTimeout('${partial.path}${_separator}ffmpeg.exe', ['-version'], timeout: const Duration(seconds: 30));
+      if (check.exitCode != 0) throw StateError('ffmpeg $folder failed its self-check');
+      await partial.rename(dest.path);
+    } catch (_) {
+      if (await partial.exists()) await partial.delete(recursive: true);
+      rethrow;
+    } finally {
+      if (await whole.exists()) await whole.delete(recursive: true);
+      if (await archive.exists()) await archive.delete();
+    }
+    await _prune(Directory('${root.path}${_separator}ffmpeg'), keep: 2);
+  }
+
+  Future<void> _installBtbnFfmpeg(void Function(int received, int? total)? onProgress) async {
     final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
     final assets = (release['assets'] as List? ?? const []).whereType<Map<String, dynamic>>().toList();
     final variant = libmpvVariantForThisProcess();

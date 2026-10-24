@@ -4,12 +4,37 @@ import 'dart:typed_data';
 
 import 'downloads/download_models.dart';
 
-/// The on-demand ffmpeg component: yt-dlp needs ffmpeg and ffprobe to merge a
-/// video stream with an audio stream. The LGPL build from
-/// https://github.com/BtbN/FFmpeg-Builds is used, and only
-/// the two tools and the DLLs they load are kept (the shared build, since a
-/// static one repeats every library in both executables).
+/// The on-demand ffmpeg component: yt-dlp needs ffmpeg to merge a video
+/// stream with an audio stream. The LGPL ffmpeg.exe that
+/// https://github.com/zhongfly/mpv-winbuild publishes with the libmpv
+/// builds is used, for x86-64, x86-64-v3 and ARM64. Where that cannot be
+/// installed (no build for this CPU, or a Windows whose tar.exe cannot
+/// unpack 7z), the LGPL shared build from
+/// https://github.com/BtbN/FFmpeg-Builds, with ffprobe, is used; only the
+/// tools and the DLLs they load are kept.
 /// Source code: https://ffmpeg.org/download.html
+
+const ffmpegPrimaryRepository = 'zhongfly/mpv-winbuild';
+
+/// zhongfly's LGPL ffmpeg for [variant] among the release's asset [names],
+/// such as `ffmpeg-lgpl-x86_64-v3-git-1d83e7145.7z`.
+String? zhongflyFfmpegAssetName(Iterable<String> names, String variant) {
+  final pattern = RegExp('^ffmpeg-lgpl-${RegExp.escape(variant)}-git-[0-9a-f]+\\.7z\$');
+  for (final name in names) {
+    if (pattern.hasMatch(name)) return name;
+  }
+  return null;
+}
+
+/// The folder for a zhongfly build: the release date from [tag]
+/// (`2026-10-24-a39482e7a5`) and the FFmpeg commit, such as
+/// `20261024-git-1d83e7145`. Starting with the date, it sorts newer than
+/// any BtbN folder.
+String zhongflyFfmpegFolderName(String assetName, String tag) {
+  final date = RegExp(r'^(\d{4})-(\d{2})-(\d{2})').firstMatch(tag);
+  final commit = RegExp(r'-git-([0-9a-f]+)\.7z$').firstMatch(assetName)?[1] ?? 'unknown';
+  return '${date == null ? '0' : '${date[1]}${date[2]}${date[3]}'}-git-$commit';
+}
 
 const ffmpegRepository = 'BtbN/FFmpeg-Builds';
 const ffmpegReleaseTag = 'latest';

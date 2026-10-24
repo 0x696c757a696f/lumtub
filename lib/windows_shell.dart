@@ -23,7 +23,11 @@ class WindowsShell {
   /// A missing or older native runner simply leaves the Settings list empty.
   static Future<List<String>> systemFontFamilies() async {
     try {
-      final names = await const MethodChannel(channelName).invokeListMethod<String>('listSystemFonts');
+      final names = await const MethodChannel(channelName)
+          .invokeListMethod<String>('listSystemFonts')
+          // Test bindings and an older runner can leave an unimplemented
+          // platform call pending. The Settings page must still open.
+          .timeout(const Duration(milliseconds: 500), onTimeout: () => const <String>[]);
       return (names ?? const <String>[]).where((name) => name.trim().isNotEmpty).toSet().toList()..sort();
     } on MissingPluginException {
       return const [];

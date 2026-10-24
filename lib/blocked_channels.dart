@@ -163,6 +163,28 @@ const blockedChannels = <String, BlockedChannels>{
   '清海与赛巴巴媒体': BlockedChannels(
     handles: ['@SriSathyaSaiOfficial', '@SriSathyaSaiMandarin', '@SriSathyaSaiSpeaksOfficial', '@SriSathyaSaiBhajans', '@PrasanthiMandirLiveRadioSai', '@SriSathyaSaiKidsWorld', '@SriSathyaSaiHindi', '@SriSathyaSaiTelugu', '@SriSathyaSaiTamil', '@SriSathyaSaiMalayalam', '@SriSathyaSaiKannada'],
   ),
+  // Exact IDs and public handles supplied by the user. These are separate from
+  // general subject words so documentaries and criticism remain visible.
+  '补充的灵性导师与宗教频道': BlockedChannels(
+    handles: [
+      '@BodhiMeditation', '@EnergyBagua', '@EnergyBaguaEn', '@EnergyBaguaID', '@jinbodhi-en', '@jinbodhi-kr', '@BodhiMeditationKR', '@PutiMalaysia',
+      '@IglesiaLaLuzdelMundo', '@Radiolldmhoy', '@PastorAlphLukauofficial', '@Official_AMITV', '@EmmanuelTV-Live', '@TheLastReformation', '@thelastreformationfrance', '@thelastreformationuk',
+      '@RSEWebTeam', '@KRSERADIO', '@kryonleecarroll3491', '@BasharHigherMind99', '@OSHOInternational', '@Moojiji', '@Moojiitaliano', '@SadhguruChinese', '@sadhgurutraditionalchinese', '@ishafoundation', '@eckankar', '@jinbodhi-vn',
+      '@accessconsciousness', '@ThetaHealingVianna',
+    ],
+    ids: [
+      'UC8AqZc9Ij7GGptu3U5Mcj7A', 'UCJAt3XGA5S2qiZSygvd2cIA', 'UCPDI_GKjDpKV1mzFnLwyC5w', 'UCuk4yvTFVwkdZCEM9p6KWaA', 'UCxxZCeOQLvEWbdDRvt10f4Q',
+      'UCVERMeALCDV6OFdK5wbC-YQ', 'UCTQqhVgp94Vf7KTrANN8Xpw', 'UCLl20r-KQlapX_5fT-N3cOw', 'UCsWyzBTDj2uDPe-YtKLDUFQ',
+      'UCNkWFeAkrMq6LEfwxHGl3nA', 'UCDr4vL3pCQRup0cV3qWZFmg', 'UCi4gMat8ST0GV6H6P4dfkMw', 'UCQnRKVEgfHO3q8cLT6Rwp5A', 'UC9Rp6IXUugNEgDs0DJLvf_g', 'UCESo2LGqdEynYAWRbr11XGA',
+      'UCBuBSRtY41VzSkP_RR3IVoQ', 'UC8aKMQEmMkWiSpYSR6EI1iA', 'UCdbvc-yJ4JQjNGTgFiJIZNA', 'UCjl5wTW8jGBR1Vfpp2yLoNQ', 'UCk89pEd76qutMB08hVSY49Q', 'UCBRcyI55pANUU4Ofia75yEg',
+      'UC2Pfkwhv43s6oC-NDAl2vXw', 'UCX7ei8-AD5lgRO_XWku6RXw', 'UCd0tVUZ53-T5UU2MnD05apQ', 'UCLMJY6l7o6YMfK01o69fo9Q', 'UCyK-3e-PGUmrnH6KBKIacww',
+      'UCpcJIF6X8RtHvl2vZRKJ33Q', 'UCOkZrhW3cASIhZN60K2mTkQ', 'UCeBAfedUQFMbDDLGjuXIwvg', 'UC_z8ERuOLTrlAaopY0gxzsA', 'UCXdMzx6s5IU9xQA5aXPJ3LA',
+      'UCYeeF44slL_5o07hoCfIRsw', 'UC0Zr8DXBfnRGT1kSMR18pRg', 'UCTgB6FVaVMCjaV1mSkqUzEg', 'UCMeYcOA9lMRDS1eM9k7Kanw', 'UCP-zsdDBSvlh3FlXwP7ajog',
+      'UCaylUlPa1RqjyyYz4oV6cCw', 'UC2YtPSdMF_hG8-ecx9Fkcw', 'UCf0fNlKk7D5JwsXi8ne5cxw', 'UCxONu8QnFlim00YxUYv17RQ', 'UCHRyrQWgP7JNuEZ6yd2sUXg', 'UCKv-uJdqW5gQx5HkR76yRJg',
+      'UC-zY8Y8BC3bcOjAtb8tnCqQ', 'UCA9ff3XVWgKBjklq-4_NWbQ', 'UCnAvqWHXFtadVQCyUcBwOGg', 'UCCJPNud3Tri2CL-2MuDrhBg', 'UCWcfoRKfi3uYx_YNwLm3hwQ',
+      'UCm_xFjZ9VxOiIfaQjOiQvMg', 'UCkXYA19-jmzhKZndkZRm6UA', 'UCScyTd8t6wRK71Hd6U2ITAg', 'UC7sjyIF-9MvtqN3Rv6rMNGQ', 'UCFvQ_m5tg0ob1Rn7mciCmnQ', 'UCfqkmt_PKfqB7dXyRtS28KA', 'UCwYNO48BBaZOmfGxtHRDYPw',
+    ],
+  ),
   '领袖神化与神迹宣传频道': BlockedChannels(
     names: [
       ['Happy Science Official'], ['Happy Science India'], ['Happy Science Europe'],

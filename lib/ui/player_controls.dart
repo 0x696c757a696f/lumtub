@@ -475,9 +475,13 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   Widget _bottomBar(BuildContext context, bool fullscreen) {
     final primary = Theme.of(context).colorScheme.inversePrimary;
     final width = fullscreen ? 42.0 : 35.0;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 16, 10, 8),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
+    // Keep the action cluster anchored to the physical bottom-right edge in
+    // fullscreen. The progress and playback information remain on the left.
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(fullscreen ? 18 : 10, 16, fullscreen ? 18 : 10, fullscreen ? 14 : 8),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: StreamBuilder<Duration>(
@@ -581,7 +585,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             onTap: () => unawaited(widget.state?.toggleFullscreen()),
           ),
         ]),
-      ]),
+        ]),
+      ),
     );
   }
 

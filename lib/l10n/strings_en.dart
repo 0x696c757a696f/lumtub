@@ -1521,6 +1521,7 @@ const stringsEn = <String, String>{
   '隐藏 1 分钟以内的视频': 'Hide videos under 1 minute',
   '隐藏 Shorts 短视频': 'Hide Shorts',
   '隐藏已看完的视频': 'Hide watched videos',
+  '补充的灵性导师与宗教频道': 'Additional spiritual and religious channels',
   '雷尔运动': 'Raëlian Movement',
   '需要先打开“屏蔽争议宗教团体”': 'Needs "Block controversial religious groups" on',
   '需要先打开“屏蔽官方宣传媒体”': 'Needs "Block state propaganda media" on',

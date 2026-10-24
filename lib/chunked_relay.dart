@@ -92,36 +92,55 @@ class ChunkedRelay {
       await response.close();
     } catch (e) {
       // libmpv closing the connection to seek is the common case.
-      if (e is! SocketException && e is! HttpException) logInfo('分块转发中断：$e');
+      if (e is _Upstream || e is! IOException) logInfo('分块转发中断：$e');
       try {
         await response.close();
       } catch (_) {}
     }
   }
 
+  /// Sends bytes [from] to [to] of [target]. A reply YouTube cuts short is
+  /// continued from the next missing byte; libmpv sees one unbroken reply.
   Future<void> _copy(_Target target, int from, int to, HttpResponse into) async {
+    var next = from;
+    for (var attempt = 0; next <= to; attempt++) {
+      final answer = await _request(target, next, to);
+      var received = 0;
+      Object? failure;
+      // Kept out of the reply to libmpv, which an error would end.
+      await into.addStream(answer.map((chunk) {
+        received += chunk.length;
+        return chunk;
+      }).handleError((Object e) => failure = e));
+      next += received;
+      if (next <= to) {
+        if (attempt >= 2 || received == 0) throw _Upstream('YouTube 在 $next 字节处中断（${failure ?? '提前结束'}）');
+        logInfo('YouTube 回复在 $next 字节处中断（${failure ?? '提前结束'}），从此处继续');
+      } else if (next > to + 1) {
+        // More than asked for would shift every later byte.
+        throw _Upstream('YouTube 多发了 ${next - to - 1} 字节');
+      }
+    }
+  }
+
+  Future<HttpClientResponse> _request(_Target target, int from, int to) async {
     // Appended as text: rebuilding the query could re-encode signed values.
     final uri = Uri.parse('${target.url}&range=$from-$to');
-    HttpClientResponse? answer;
-    for (var attempt = 0; answer == null; attempt++) {
+    for (var attempt = 0;; attempt++) {
       try {
         final upstream = await _client.getUrl(uri);
         if (target.userAgent != null) upstream.headers.set(HttpHeaders.userAgentHeader, target.userAgent!);
         final reply = await upstream.close();
-        if (reply.statusCode != HttpStatus.ok && reply.statusCode != HttpStatus.partialContent) {
-          await reply.drain<void>();
-          // A 403 means the address expired; libmpv's own fallback handles it.
-          if (reply.statusCode == HttpStatus.forbidden || attempt >= 1) throw HttpException(tr('YouTube 返回 {0}', [reply.statusCode]), uri: uri);
-          continue;
-        }
-        answer = reply;
-      } on SocketException {
-        if (attempt >= 1) rethrow;
+        if (reply.statusCode == HttpStatus.ok || reply.statusCode == HttpStatus.partialContent) return reply;
+        await reply.drain<void>();
+        // A 403 means the address expired; the app reopens the video.
+        if (reply.statusCode == HttpStatus.forbidden || attempt >= 1) throw _Upstream(tr('YouTube 返回 {0}', [reply.statusCode]));
+      } on IOException catch (e) {
+        // A connection YouTube dropped, before any byte of this reply.
+        if (attempt >= 1) throw _Upstream('$e');
         await Future<void>.delayed(const Duration(milliseconds: 500));
       }
     }
-    // Retried only before any byte was sent, so nothing is sent twice.
-    await into.addStream(answer);
   }
 
   Future<void> close() async {
@@ -129,6 +148,14 @@ class ChunkedRelay {
     _server = null;
     _client.close(force: true);
   }
+}
+
+/// YouTube's side failed, as opposed to libmpv hanging up.
+class _Upstream implements Exception {
+  const _Upstream(this.message);
+  final String message;
+  @override
+  String toString() => message;
 }
 
 class _Target {

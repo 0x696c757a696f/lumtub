@@ -342,6 +342,9 @@ class AppController extends ChangeNotifier {
   final _recovery = PlaybackRecovery();
   /// The last position actually played, which survives a failed stream.
   Duration _lastPosition = Duration.zero;
+  final _resumePoint = ResumePoint();
+  String? _relayed;
+  String? _unrelayed;
   Timer? _stallTimer;
   Timer? _recoveryTimer;
   bool _recovering = false;
@@ -1309,11 +1312,13 @@ class AppController extends ChangeNotifier {
       final subtitles = settings.subtitleMode != SubtitleMode.off;
       // Through the relay when the app's own connections reach YouTube the
       // way libmpv's would: directly or through an HTTP proxy.
-      final relay = proxy.url == null || proxy.isHttp ? _relay : null;
+      // A video whose stream broke through it is reopened without it.
+      final relay = (proxy.url == null || proxy.isHttp) && _unrelayed != item.id ? _relay : null;
       final agent = video?.userAgent;
       final direct = video != null && video.format == format && !subtitles
           ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent))
           : null;
+      _relayed = direct != null && relay != null ? item.id : null;
       final platform = player.platform;
       if (platform is NativePlayer) {
         await platform.setProperty('ytdl-format', format);
@@ -1326,6 +1331,7 @@ class AppController extends ChangeNotifier {
         if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
       }
       _lastPosition = start ?? Duration.zero;
+      _resumePoint.start(_lastPosition);
       _openedResolved = video == null ? null : item.id;
       if (video != null) _update(() => availableHeights = video!.heightsFor(settings));
       await player.open(Media(direct ?? item.url, start: start), play: play);
@@ -1357,6 +1363,7 @@ class AppController extends ChangeNotifier {
       if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
     }
     _lastPosition = start ?? Duration.zero;
+    _resumePoint.start(_lastPosition);
     _openedLocal = item.id;
     await player.open(Media(local.file.path, start: start), play: play);
     if (serial == _playSerial) _tracking = item;
@@ -1413,6 +1420,7 @@ class AppController extends ChangeNotifier {
       if (address == null) continue;
       _tracking = null;
       _lastPosition = start ?? Duration.zero;
+      _resumePoint.start(_lastPosition);
       _openedResolved = null;
       _openedVia = item.id;
       await player.open(Media(address, start: start), play: play);
@@ -1479,13 +1487,17 @@ class AppController extends ChangeNotifier {
   Future<void> _recover(String message) async {
     final item = _tracking;
     if (item == null || _recovering) return;
-    final position = _lastPosition;
+    final position = _resumePoint.beforeFailure;
     if (!_recovery.tryAttempt(position: position)) {
       logError('播放中断，已放弃自动重连 ${item.id}：$message');
       _fail(item, PlaybackFailure.classify([message, ..._recentErrors]));
       return;
     }
     logInfo('播放中断，从 ${_clock(position)} 重新连接 ${item.id}：$message');
+    if (_relayed == item.id) {
+      _unrelayed = item.id;
+      logInfo('改为不经本地分块转发播放 ${item.id}');
+    }
     _notice(tr('网络中断，正在从 {0} 重新连接…', [_clock(position)]));
     _recovering = true;
     _recoveryTimer?.cancel();
@@ -1560,6 +1572,7 @@ class AppController extends ChangeNotifier {
             logInfo('Playback recovered after ten seconds of decoded progress');
           }
           _lastPosition = position;
+          _resumePoint.observe(position, rate: player.state.rate);
         }
         if (_decoderPending && position > const Duration(milliseconds: 500) && (player.state.width ?? 0) > 0) {
           _decoderPending = false;

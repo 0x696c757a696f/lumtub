@@ -157,12 +157,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.homeShowRecommended,
               onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecommended: v)),
             )),
-        SettingEntry(tr('推荐中的 YouTube Music 非 MV 音乐'), (context) => NormalItem(
-              title: tr('推荐中的 YouTube Music 非 MV 音乐'),
-              subtitle: tr('当前：{0}；自动生成的 “- Topic” 曲目，官方 MV 不受影响', [labelOf(_feedLevels, prefs.feedMusicTracks)]),
-              leading: _icon(Icons.music_note_outlined),
-              onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的 YouTube Music 非 MV 音乐'), value: prefs.feedMusicTracks, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedMusicTracks: v))),
-            ), subtitle: tr('Topic 音乐 非MV 减少 不推荐')),
         SettingEntry(tr('推荐中的 Shorts 短视频'), (context) => NormalItem(
               title: tr('推荐中的 Shorts 短视频'),
               subtitle: tr('当前：{0}；Shorts 按 YouTube Shorts 标记或短时长识别，和普通竖屏视频独立；只影响首页和探索的为你推荐', [labelOf(_feedLevels, prefs.feedShorts)]),

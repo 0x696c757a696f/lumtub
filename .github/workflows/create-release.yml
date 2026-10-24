@@ -71,6 +71,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh workflow run windows.yml --ref "${{ steps.prepare.outputs.tag }}"
+          gh workflow run build.yml --ref "${{ steps.prepare.outputs.tag }}"
           echo 'The tagged Windows build was dispatched.'
           echo 'That workflow builds the ZIP and installer, then creates the GitHub Release with generated release notes.'

@@ -1,4 +1,4 @@
-; Inno Setup script for the YTPlus installer, built by .github/workflows/windows.yml:
+; Inno Setup script for the YTPlus installer, built by .github/workflows/build.yml:
 ;   iscc /DAppVersion=0.1.0 /DSourceDir=<release folder> /DOutputDir=<folder> ytplus.iss
 ; Installs for the current user only, so no administrator rights are needed,
 ; the same as the portable ZIP.

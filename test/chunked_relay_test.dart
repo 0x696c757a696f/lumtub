@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ytplus/chunked_relay.dart';
+import 'package:lumtub/chunked_relay.dart';
 
 void main() {
   late HttpServer upstream;
@@ -10,10 +10,12 @@ void main() {
   final data = Uint8List.fromList(List.generate(1000, (i) => i % 251));
   final ranges = <String>[];
   var fail403 = false;
+  var cutOnce = 0;
 
   setUp(() async {
     ranges.clear();
     fail403 = false;
+    cutOnce = 0;
     upstream = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     upstream.listen((request) async {
       final range = request.uri.queryParameters['range']!;
@@ -24,6 +26,17 @@ void main() {
         return;
       }
       final [from, to] = range.split('-').map(int.parse).toList();
+      if (cutOnce > 0) {
+        // Promises the whole piece, then drops the connection partway.
+        final cut = cutOnce;
+        cutOnce = 0;
+        request.response.contentLength = to - from + 1;
+        final socket = await request.response.detachSocket();
+        socket.add(data.sublist(from, from + cut));
+        await socket.flush();
+        socket.destroy();
+        return;
+      }
       request.response.add(data.sublist(from, to + 1));
       await request.response.close();
     });
@@ -89,5 +102,14 @@ void main() {
     }
     expect(received, lessThan(data.length));
     expect(ranges, ['0-299']);
+  });
+
+  test('continues a reply YouTube cuts short from the next missing byte', () async {
+    cutOnce = 120;
+    final address = relay.register(source())!;
+    final (status, bytes, _) = await get(address);
+    expect(status, 200);
+    expect(bytes, data);
+    expect(ranges, ['0-299', '120-299', '300-599', '600-899', '900-999']);
   });
 }

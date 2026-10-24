@@ -82,3 +82,55 @@ class PlaybackRecovery {
   /// filter, which leave the video playing.
   static bool isNetworkError(String message) => !message.toLowerCase().contains('sub') && _network.hasMatch(message);
 }
+
+/// Where to reopen a video after its stream failed. mpv that can no longer
+/// read a stream may jump to its end before it reports the video finished;
+/// the place before that jump is where the viewer was.
+class ResumePoint {
+  ResumePoint({DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
+
+  final DateTime Function() _clock;
+  Duration _position = Duration.zero;
+  DateTime? _observedAt;
+  Duration? _beforeJump;
+  DateTime? _jumpedAt;
+
+  /// How long after a jump a failure is still taken to have caused it.
+  static const window = Duration(seconds: 15);
+
+  /// The last position seen, jump or not.
+  Duration get current => _position;
+
+  /// Where playback was before a recent jump forward, else [current].
+  Duration get beforeFailure {
+    final jumpedAt = _jumpedAt;
+    if (jumpedAt == null || _clock().difference(jumpedAt) > window) return _position;
+    return _beforeJump!;
+  }
+
+  void start(Duration position) {
+    _position = position;
+    _observedAt = null;
+    _beforeJump = null;
+    _jumpedAt = null;
+  }
+
+  void observe(Duration position, {double rate = 1}) {
+    final now = _clock();
+    final observedAt = _observedAt;
+    if (observedAt != null) {
+      final elapsed = now.difference(observedAt);
+      final allowed = Duration(microseconds: (elapsed.inMicroseconds * rate).round()) + const Duration(seconds: 2);
+      final jumpedAt = _jumpedAt;
+      final recentJump = jumpedAt != null && now.difference(jumpedAt) <= window;
+      // A seek by the viewer looks the same; within [window] the earliest
+      // place counts, so a failure soon after a seek resumes before it.
+      if (position - _position > allowed && !recentJump) {
+        _beforeJump = _position;
+        _jumpedAt = now;
+      }
+    }
+    _position = position;
+    _observedAt = now;
+  }
+}

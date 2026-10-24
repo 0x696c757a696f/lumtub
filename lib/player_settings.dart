@@ -247,7 +247,7 @@ class PlayerSettings {
   final PlayOrder playOrder;
   final double defaultSpeed;
   final List<double> speeds;
-  /// Volume when YTPlus starts, 0–100.
+  /// Volume when Lumtub starts, 0–100.
   final int defaultVolume;
   /// Highest volume allowed; above 100 boosts quiet videos.
   final int volumeMax;
@@ -282,7 +282,7 @@ class PlayerSettings {
   final ProxyMode proxyMode;
   /// The proxy for [ProxyMode.custom], such as `127.0.0.1:7890`.
   final String proxyAddress;
-  /// Where playback streams come from; Piped by default, the user's choice.
+  /// Where playback streams come from: YouTube directly by default.
   final PlaybackSource playbackSource;
   /// The Piped API server for [PlaybackSource.pipedCustom].
   final String pipedServer;
@@ -644,7 +644,7 @@ class PlayerSettings {
   /// Why a custom option cannot be applied, or null when it can.
   static String? customOptionProblem(String key, String value) {
     if (!RegExp(r'^[a-z0-9][a-z0-9_\-/]*$').hasMatch(key)) return tr('参数名无效');
-    if (_blockedOptions.contains(key) || _blockedPrefixes.any(key.startsWith)) return tr('YTPlus 不允许设置此参数');
+    if (_blockedOptions.contains(key) || _blockedPrefixes.any(key.startsWith)) return tr('Lumtub 不允许设置此参数');
     if (value.length > 500 || value.contains(RegExp(r'[\r\n;]'))) return tr('参数值无效');
     return null;
   }

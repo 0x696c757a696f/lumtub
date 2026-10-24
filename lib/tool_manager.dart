@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
+import 'app_log.dart';
 import 'ffmpeg_component.dart';
 import 'libmpv_updates.dart';
 import 'process_runner.dart';
@@ -57,7 +58,7 @@ class ToolManager {
     // The runner already loaded a downloaded libmpv when one was selected;
     // Dart has to open that same copy.
     final mpv = libmpv.loadedPath ?? _bundledMpv;
-    if (!File(mpv).existsSync()) throw StateError('Bundled libmpv-2.dll is missing. Re-download the YTPlus package.');
+    if (!File(mpv).existsSync()) throw StateError('Bundled libmpv-2.dll is missing. Re-download the Lumtub package.');
     if (discover()?.ytDlp.isNotEmpty != true) {
       status(tr('首次启动：安装 yt-dlp…'));
       await _installYtDlp();
@@ -179,24 +180,10 @@ class ToolManager {
   Future<Map<String, dynamic>> _release(String repository, {String? tag}) async {
     final response = await _client.get(
       Uri.parse('https://api.github.com/repos/$repository/releases/${tag == null ? 'latest' : 'tags/$tag'}'),
-      headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'YTPlus-Windows/0.1'},
+      headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'Lumtub-Windows/0.1'},
     ).timeout(const Duration(seconds: 25));
     if (response.statusCode != 200) throw HttpException('GitHub API HTTP ${response.statusCode} for $repository');
     return jsonDecode(response.body) as Map<String, dynamic>;
-  }
-
-  /// The newest download-ffmpeg release of [ffmpegRepository], which also
-  /// publishes libmpv releases.
-  Future<Map<String, dynamic>> _ffmpegRelease() async {
-    final response = await _client.get(
-      Uri.parse('https://api.github.com/repos/$ffmpegRepository/releases?per_page=30'),
-      headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'YTPlus-Windows/0.1'},
-    ).timeout(const Duration(seconds: 25));
-    if (response.statusCode != 200) throw HttpException('GitHub API HTTP ${response.statusCode} for $ffmpegRepository');
-    final releases = jsonDecode(response.body);
-    final release = releases is List ? ffmpegRelease(releases) : null;
-    if (release == null) throw StateError('No ffmpeg release in $ffmpegRepository');
-    return release;
   }
 
   Map<String, dynamic> _asset(Map<String, dynamic> release, bool Function(String) accept) {
@@ -232,7 +219,7 @@ class ToolManager {
     if (await temp.exists()) await temp.delete();
     try {
       final request = http.Request('GET', uri);
-      request.headers['User-Agent'] = 'YTPlus-Windows/0.1';
+      request.headers['User-Agent'] = 'Lumtub-Windows/0.1';
       final result = await _client.send(request).timeout(const Duration(seconds: 30));
       if (result.statusCode != 200) throw HttpException('Download failed: HTTP ${result.statusCode}');
       final sink = temp.openWrite();
@@ -432,28 +419,97 @@ class ToolManager {
 
   /// The download size in bytes the release lists for the ffmpeg archive.
   Future<int?> ffmpegDownloadSize() async {
-    final release = await _ffmpegRelease();
+    try {
+      if (!await _no7z.exists()) {
+        final size = (await _zhongflyFfmpeg()).$2['size'];
+        if (size is int) return size;
+      }
+    } catch (_) {
+      // The BtbN build is installed instead.
+    }
+    final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
     final name = ffmpegAssetName((release['assets'] as List? ?? const []).whereType<Map>().map((a) => a['name']?.toString() ?? ''), libmpvVariantForThisProcess());
     final size = (release['assets'] as List).whereType<Map>().where((a) => a['name'] == name).firstOrNull?['size'];
     return size is int ? size : null;
   }
 
+  /// Marks a Windows whose tar.exe cannot unpack 7z, for libmpv and ffmpeg.
+  File get _no7z => File('${libmpv.directory.path}$_separator$_no7zMarker');
+
   /// Installs the newest ffmpeg build unless it is there already. With
   /// [onlyIfInstalled] nothing happens for a user who never installed it.
   Future<void> installFfmpeg({bool onlyIfInstalled = false, void Function(int received, int? total)? onProgress}) async {
     if (onlyIfInstalled && ffmpegDirectory == null) return;
-    final release = await _ffmpegRelease();
+    if (!await _no7z.exists()) {
+      try {
+        await _installZhongflyFfmpeg(onProgress);
+        return;
+      } on ProcessException {
+        await _no7z.parent.create(recursive: true);
+        await _no7z.writeAsString(DateTime.now().toIso8601String());
+        logInfo('此版本 Windows 无法解压 7z，改用 BtbN 的 ffmpeg');
+      } catch (e) {
+        logInfo('zhongfly 的 ffmpeg 无法安装，改用 BtbN 的：$e');
+      }
+    }
+    await _installBtbnFfmpeg(onProgress);
+  }
+
+  Future<(Map<String, dynamic>, Map<String, dynamic>)> _zhongflyFfmpeg() async {
+    final release = await _release(ffmpegPrimaryRepository);
+    final names = (release['assets'] as List? ?? const []).whereType<Map>().map((a) => a['name']?.toString() ?? '');
+    final variant = libmpvVariantForThisProcess();
+    final name = zhongflyFfmpegAssetName(names, variant);
+    if (name == null) throw StateError('No $variant ffmpeg in ${release['tag_name']} of $ffmpegPrimaryRepository');
+    return (release, _asset(release, (n) => n == name));
+  }
+
+  Future<void> _installZhongflyFfmpeg(void Function(int received, int? total)? onProgress) async {
+    final (release, asset) = await _zhongflyFfmpeg();
+    final tag = _safeTag(release['tag_name']);
+    final folder = zhongflyFfmpegFolderName(asset['name'].toString(), tag);
+    final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
+    if (await File('${dest.path}${_separator}ffmpeg.exe').exists()) return;
+    status(tr('下载 ffmpeg {0}…', [folder]));
+    // Checked against the SHA-256 digest GitHub lists for the asset.
+    final archive = await _downloadVerified(asset, Directory('${root.path}${_separator}downloads'), onProgress: onProgress);
+    final partial = Directory('${dest.path}.partial');
+    final whole = Directory('${dest.path}.all');
+    for (final dir in [partial, whole]) {
+      if (await dir.exists()) await dir.delete(recursive: true);
+      await dir.create(recursive: true);
+    }
+    try {
+      await _extractZip(archive, whole);
+      final exe = whole.listSync(recursive: true).whereType<File>().where((f) => f.path.toLowerCase().endsWith('${_separator}ffmpeg.exe')).firstOrNull;
+      if (exe == null) throw StateError('ffmpeg archive $tag has no ffmpeg.exe');
+      await exe.copy('${partial.path}${_separator}ffmpeg.exe');
+      final check = await runWithTimeout('${partial.path}${_separator}ffmpeg.exe', ['-version'], timeout: const Duration(seconds: 30));
+      if (check.exitCode != 0) throw StateError('ffmpeg $folder failed its self-check');
+      await partial.rename(dest.path);
+    } catch (_) {
+      if (await partial.exists()) await partial.delete(recursive: true);
+      rethrow;
+    } finally {
+      if (await whole.exists()) await whole.delete(recursive: true);
+      if (await archive.exists()) await archive.delete();
+    }
+    await _prune(Directory('${root.path}${_separator}ffmpeg'), keep: 2);
+  }
+
+  Future<void> _installBtbnFfmpeg(void Function(int received, int? total)? onProgress) async {
+    final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
     final assets = (release['assets'] as List? ?? const []).whereType<Map<String, dynamic>>().toList();
     final variant = libmpvVariantForThisProcess();
     final assetName = ffmpegAssetName(assets.map((a) => a['name']?.toString() ?? ''), variant);
-    if (assetName == null) throw StateError('No $variant ffmpeg build in the ${release['tag_name']} release');
+    if (assetName == null) throw StateError('No LGPL shared ffmpeg build for $variant in the $ffmpegRepository release');
     final asset = _asset(release, (name) => name == assetName);
     final folder = ffmpegFolderName(assetName, asset['updated_at']?.toString());
     final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
     if (await File('${dest.path}${_separator}ffmpeg.exe').exists()) return;
     status(tr('下载 ffmpeg {0}…', [folder]));
     // The hash comes from the checksum file of the same release, over HTTPS.
-    final sums = await _client.get(_assetUri(_asset(release, (name) => name == ffmpegChecksumsAsset)), headers: {'User-Agent': 'YTPlus-Windows/0.1'}).timeout(const Duration(seconds: 30));
+    final sums = await _client.get(_assetUri(_asset(release, (name) => name == ffmpegChecksumsAsset)), headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 30));
     if (sums.statusCode != 200) throw HttpException('Checksum file HTTP ${sums.statusCode}');
     final expected = parseChecksums(sums.body)[assetName];
     if (expected == null) throw StateError('No checksum listed for $assetName');

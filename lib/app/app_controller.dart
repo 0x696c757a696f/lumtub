@@ -342,6 +342,9 @@ class AppController extends ChangeNotifier {
   final _recovery = PlaybackRecovery();
   /// The last position actually played, which survives a failed stream.
   Duration _lastPosition = Duration.zero;
+  final _resumePoint = ResumePoint();
+  String? _relayed;
+  String? _unrelayed;
   Timer? _stallTimer;
   Timer? _recoveryTimer;
   bool _recovering = false;
@@ -411,7 +414,7 @@ class AppController extends ChangeNotifier {
         Directory.current = directories.cache;
       } catch (_) {}
       await AppLog.open(directories.logs);
-      logInfo('YTPlus $appVersion 启动 · ${Platform.operatingSystemVersion}');
+      logInfo('Lumtub $appVersion 启动 · ${Platform.operatingSystemVersion}');
       final history = HistoryStore(directories);
       await history.initialize();
       searchHistory = SearchHistory(File('${directories.data.path}${Platform.pathSeparator}search_history.json'));
@@ -538,8 +541,8 @@ class AppController extends ChangeNotifier {
     });
     try {
       final response = await _http.get(
-        Uri.https('api.github.com', '/repos/0x696c757a696f/ytplus/releases/latest'),
-        headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'YTPlus-Windows/$appVersion'},
+        Uri.https('api.github.com', '/repos/0x696c757a696f/lumtub/releases/latest'),
+        headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'Lumtub-Windows/$appVersion'},
       ).timeout(const Duration(seconds: 15));
       if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
       final json = jsonDecode(response.body);
@@ -551,13 +554,13 @@ class AppController extends ChangeNotifier {
         availableAppUrl = availableAppVersion == null || url.isEmpty ? null : url;
         checkingAppUpdate = false;
       });
-      logInfo(availableAppVersion == null ? 'YTPlus is up to date ($appVersion)' : 'YTPlus update available: $availableAppVersion');
+      logInfo(availableAppVersion == null ? 'Lumtub is up to date ($appVersion)' : 'Lumtub update available: $availableAppVersion');
     } catch (error) {
       _update(() {
         checkingAppUpdate = false;
         appUpdateError = '$error';
       });
-      logInfo('Could not check YTPlus updates: $error');
+      logInfo('Could not check Lumtub updates: $error');
     }
   }
 
@@ -1309,11 +1312,13 @@ class AppController extends ChangeNotifier {
       final subtitles = settings.subtitleMode != SubtitleMode.off;
       // Through the relay when the app's own connections reach YouTube the
       // way libmpv's would: directly or through an HTTP proxy.
-      final relay = proxy.url == null || proxy.isHttp ? _relay : null;
+      // A video whose stream broke through it is reopened without it.
+      final relay = (proxy.url == null || proxy.isHttp) && _unrelayed != item.id ? _relay : null;
       final agent = video?.userAgent;
       final direct = video != null && video.format == format && !subtitles
           ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent))
           : null;
+      _relayed = direct != null && relay != null ? item.id : null;
       final platform = player.platform;
       if (platform is NativePlayer) {
         await platform.setProperty('ytdl-format', format);
@@ -1326,6 +1331,7 @@ class AppController extends ChangeNotifier {
         if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
       }
       _lastPosition = start ?? Duration.zero;
+      _resumePoint.start(_lastPosition);
       _openedResolved = video == null ? null : item.id;
       if (video != null) _update(() => availableHeights = video!.heightsFor(settings));
       await player.open(Media(direct ?? item.url, start: start), play: play);
@@ -1357,6 +1363,7 @@ class AppController extends ChangeNotifier {
       if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
     }
     _lastPosition = start ?? Duration.zero;
+    _resumePoint.start(_lastPosition);
     _openedLocal = item.id;
     await player.open(Media(local.file.path, start: start), play: play);
     if (serial == _playSerial) _tracking = item;
@@ -1413,6 +1420,7 @@ class AppController extends ChangeNotifier {
       if (address == null) continue;
       _tracking = null;
       _lastPosition = start ?? Duration.zero;
+      _resumePoint.start(_lastPosition);
       _openedResolved = null;
       _openedVia = item.id;
       await player.open(Media(address, start: start), play: play);
@@ -1479,13 +1487,17 @@ class AppController extends ChangeNotifier {
   Future<void> _recover(String message) async {
     final item = _tracking;
     if (item == null || _recovering) return;
-    final position = _lastPosition;
+    final position = _resumePoint.beforeFailure;
     if (!_recovery.tryAttempt(position: position)) {
       logError('播放中断，已放弃自动重连 ${item.id}：$message');
       _fail(item, PlaybackFailure.classify([message, ..._recentErrors]));
       return;
     }
     logInfo('播放中断，从 ${_clock(position)} 重新连接 ${item.id}：$message');
+    if (_relayed == item.id) {
+      _unrelayed = item.id;
+      logInfo('改为不经本地分块转发播放 ${item.id}');
+    }
     _notice(tr('网络中断，正在从 {0} 重新连接…', [_clock(position)]));
     _recovering = true;
     _recoveryTimer?.cancel();
@@ -1560,6 +1572,7 @@ class AppController extends ChangeNotifier {
             logInfo('Playback recovered after ten seconds of decoded progress');
           }
           _lastPosition = position;
+          _resumePoint.observe(position, rate: player.state.rate);
         }
         if (_decoderPending && position > const Duration(milliseconds: 500) && (player.state.width ?? 0) > 0) {
           _decoderPending = false;
@@ -2469,7 +2482,7 @@ class AppController extends ChangeNotifier {
   /// Settings as one JSON document, for backup. Values that belong to this
   /// computer (cache folder, audio output, decoder results) are left out.
   String exportSettings() => const JsonEncoder.withIndent('  ').convert({
-        'app': 'YTPlus',
+        'app': 'Lumtub',
         'version': 1,
         'exported': DateTime.now().toIso8601String(),
         'player': settings.toJson()
@@ -2490,7 +2503,7 @@ class AppController extends ChangeNotifier {
     } on FormatException {
       return false;
     }
-    if (data is! Map || data['app'] != 'YTPlus') return false;
+    if (data is! Map || (data['app'] != 'Lumtub' && data['app'] != 'YTPlus')) return false;
     final player = PlayerSettings.fromJson(data['player']).copyWith(
       cachePath: settings.cachePath,
       clearCachePath: settings.cachePath == null,
@@ -2543,17 +2556,17 @@ class AppController extends ChangeNotifier {
 
   ToolManager? get tools => _tools;
 
-  /// Goes back to the libmpv shipped with YTPlus from the next launch on.
+  /// Goes back to the libmpv shipped with Lumtub from the next launch on.
   Future<void> rollBackLibmpv() async {
     await _tools?.libmpv.rollBack();
     _update(() {});
-    _notice(tr('已改回内置 libmpv，重启 YTPlus 后生效。'));
+    _notice(tr('已改回内置 libmpv，重启 Lumtub 后生效。'));
   }
 
   Future<void> rollBackYtDlp() async {
     await _tools?.rollBackYtDlp();
     _update(() {});
-    _notice(tr('已改回上一个 yt-dlp，重启 YTPlus 后生效。'));
+    _notice(tr('已改回上一个 yt-dlp，重启 Lumtub 后生效。'));
   }
 
   /// Download progress (0..1, null when unknown) while ffmpeg installs.
@@ -2759,7 +2772,7 @@ class AppController extends ChangeNotifier {
   Future<void> changeCacheLocation(String selectedFolder, Future<bool?> Function(String targetPath) confirmMigrate) async {
     final manager = _cacheManager;
     if (directories == null || manager == null) return;
-    final target = Directory('$selectedFolder${Platform.pathSeparator}YTPlusCache');
+    final target = Directory('$selectedFolder${Platform.pathSeparator}LumtubCache');
     final next = settings.copyWith(cachePath: target.path);
     try {
       await manager.prepare(next);
@@ -2817,7 +2830,7 @@ class AppController extends ChangeNotifier {
     _recoveryTimer?.cancel();
     await player?.pause();
     await player?.dispose();
-    logInfo('YTPlus 正常退出');
+    logInfo('Lumtub 正常退出');
     await AppLog.current?.flush();
   }
 
@@ -2826,7 +2839,7 @@ class AppController extends ChangeNotifier {
   String diagnostics() {
     final tools = _tools;
     return [
-      'YTPlus $appVersion',
+      'Lumtub $appVersion',
       'Windows ${Platform.operatingSystemVersion}',
       tr('CPU 核心 {0}', [Platform.numberOfProcessors]),
       'GPU ${windowsVideoInfo.gpuNames.isEmpty ? '未知' : windowsVideoInfo.gpuNames.join(' / ')}',

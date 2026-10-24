@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ytplus/playback_recovery.dart';
+import 'package:lumtub/playback_recovery.dart';
 
 void main() {
   late DateTime now;
@@ -70,5 +70,40 @@ void main() {
     recovery.reset();
     expect(recovery.awaitingProgress, isFalse);
     expect(recovery.stalled, isFalse);
+  });
+
+  group('ResumePoint', () {
+    late ResumePoint point;
+    setUp(() {
+      point = ResumePoint(clock: () => now);
+      point.start(Duration.zero);
+    });
+
+    void play(int seconds) {
+      for (var i = 0; i < seconds; i++) {
+        now = now.add(const Duration(seconds: 1));
+        point.observe(point.current + const Duration(seconds: 1));
+      }
+    }
+
+    test('a failed stream jumping to the end resumes where playback was', () {
+      play(2);
+      now = now.add(const Duration(milliseconds: 200));
+      point.observe(const Duration(hours: 1, minutes: 38, seconds: 29));
+      now = now.add(const Duration(seconds: 10));
+      expect(point.beforeFailure, const Duration(seconds: 2));
+    });
+
+    test('long after a jump, the place it went to counts', () {
+      play(2);
+      point.observe(const Duration(minutes: 30));
+      play(20);
+      expect(point.beforeFailure, const Duration(minutes: 30, seconds: 20));
+    });
+
+    test('normal playback is not a jump', () {
+      play(12);
+      expect(point.beforeFailure, const Duration(seconds: 12));
+    });
   });
 }

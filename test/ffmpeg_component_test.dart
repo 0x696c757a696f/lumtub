@@ -4,9 +4,9 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ytplus/app_preferences.dart';
-import 'package:ytplus/downloads/download_models.dart';
-import 'package:ytplus/ffmpeg_component.dart';
+import 'package:lumtub/app_preferences.dart';
+import 'package:lumtub/downloads/download_models.dart';
+import 'package:lumtub/ffmpeg_component.dart';
 
 /// A zip with [entries] (name -> bytes), deflated, written the way zip tools do.
 Uint8List _zip(Map<String, List<int>> entries, {bool corruptCrc = false}) {
@@ -59,33 +59,45 @@ Uint8List _zip(Map<String, List<int>> entries, {bool corruptCrc = false}) {
 }
 
 void main() {
-  test('picks the archive for this CPU from the newest download release', () {
+  test('picks the newest shared LGPL build for this CPU', () {
     const names = [
-      'sha256.txt',
-      'ffmpeg-download-x86_64-n8.1.3.zip',
-      'ffmpeg-download-x86_64-v3-n8.1.3.zip',
-      'ffmpeg-download-aarch64-n8.1.3.zip',
-      'mpv-dev-x86_64-20261024-git-abc.7z',
+      'checksums.sha256',
+      'ffmpeg-master-latest-win64-gpl.zip',
+      'ffmpeg-master-latest-win64-lgpl-shared.zip',
+      'ffmpeg-n6.1-latest-win64-lgpl-shared-6.1.zip',
+      'ffmpeg-n7.1-latest-win64-lgpl-7.1.zip',
+      'ffmpeg-n7.1-latest-win64-lgpl-shared-7.1.zip',
+      'ffmpeg-n7.1-latest-win64-gpl-shared-7.1.zip',
+      'ffmpeg-n7.1-latest-winarm64-lgpl-shared-7.1.zip',
+      'ffmpeg-n7.1-latest-linux64-lgpl-shared-7.1.tar.xz',
+      'ffmpeg-n10.0-latest-win64-lgpl-shared-10.0.zip',
     ];
-    expect(ffmpegAssetName(names, 'x86_64'), 'ffmpeg-download-x86_64-n8.1.3.zip');
-    expect(ffmpegAssetName(names, 'x86_64-v3'), 'ffmpeg-download-x86_64-v3-n8.1.3.zip');
-    expect(ffmpegAssetName(names, 'aarch64'), 'ffmpeg-download-aarch64-n8.1.3.zip');
-    expect(ffmpegAssetName(names.where((n) => !n.contains('aarch64')), 'aarch64'), isNull);
+    expect(ffmpegAssetName(names, 'x86_64'), 'ffmpeg-n10.0-latest-win64-lgpl-shared-10.0.zip');
+    expect(ffmpegAssetName(names, 'x86_64-v3'), 'ffmpeg-n10.0-latest-win64-lgpl-shared-10.0.zip');
+    expect(ffmpegAssetName(names, 'aarch64'), 'ffmpeg-n7.1-latest-winarm64-lgpl-shared-7.1.zip');
+    expect(ffmpegAssetName(names.where((n) => !n.contains('arm64')), 'aarch64'), 'ffmpeg-n10.0-latest-win64-lgpl-shared-10.0.zip');
+    expect(ffmpegAssetName(names.where((n) => n.contains('master')), 'x86_64'), 'ffmpeg-master-latest-win64-lgpl-shared.zip');
+    expect(ffmpegAssetName(const ['ffmpeg-master-latest-win64-gpl.zip', 'checksums.sha256'], 'x86_64'), isNull);
+  });
 
-    final release = ffmpegRelease([
-      {'tag_name': 'ffmpeg-n8.2-20261101-9', 'draft': true},
-      {'tag_name': '2026-10-24-abc', 'draft': false},
-      {'tag_name': 'ffmpeg-n8.1.3-20261024-3', 'draft': false, 'prerelease': false},
-      {'tag_name': 'ffmpeg-n8.1.2-20261001-1', 'draft': false},
-    ]);
-    expect(release?['tag_name'], 'ffmpeg-n8.1.3-20261024-3');
-    expect(ffmpegRelease(const [{'tag_name': '2026-10-24-abc'}]), isNull);
+  test('picks zhongfly\'s LGPL ffmpeg for this CPU', () {
+    const names = [
+      'mpv-dev-x86_64-v3-20261024-git-a39482e7a5.7z',
+      'ffmpeg-x86_64-v3-git-1d83e7145.7z',
+      'ffmpeg-lgpl-x86_64-git-1d83e7145.7z',
+      'ffmpeg-lgpl-x86_64-v3-git-1d83e7145.7z',
+      'ffmpeg-lgpl-aarch64-git-1d83e7145.7z',
+    ];
+    expect(zhongflyFfmpegAssetName(names, 'x86_64'), 'ffmpeg-lgpl-x86_64-git-1d83e7145.7z');
+    expect(zhongflyFfmpegAssetName(names, 'x86_64-v3'), 'ffmpeg-lgpl-x86_64-v3-git-1d83e7145.7z');
+    expect(zhongflyFfmpegAssetName(names, 'aarch64'), 'ffmpeg-lgpl-aarch64-git-1d83e7145.7z');
+    expect(zhongflyFfmpegAssetName(names.where((n) => !n.contains('lgpl')), 'x86_64'), isNull);
+    expect(zhongflyFfmpegFolderName('ffmpeg-lgpl-x86_64-v3-git-1d83e7145.7z', '2026-10-24-a39482e7a5'), '20261024-git-1d83e7145');
   });
 
   test('folder names carry the version and the asset date', () {
     expect(ffmpegFolderName('ffmpeg-n7.1-latest-win64-lgpl-shared-7.1.zip', '2026-10-21T03:04:05Z'), 'n7.1-20261021');
     expect(ffmpegFolderName('ffmpeg-master-latest-win64-lgpl-shared.zip', null), 'master');
-    expect(ffmpegFolderName('ffmpeg-download-x86_64-v3-n8.1.3.zip', '2026-10-24T11:00:00Z'), 'n8.1.3-20261024');
   });
 
   test('parses checksum files', () {
@@ -102,7 +114,7 @@ void main() {
 
   group('extraction', () {
     late Directory temp;
-    setUp(() => temp = Directory.systemTemp.createTempSync('ytplus_ffmpeg'));
+    setUp(() => temp = Directory.systemTemp.createTempSync('lumtub_ffmpeg'));
     tearDown(() => temp.deleteSync(recursive: true));
 
     final exe = List<int>.generate(5000, (i) => i % 251);

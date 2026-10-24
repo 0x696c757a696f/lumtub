@@ -282,7 +282,7 @@ class PlayerSettings {
   final ProxyMode proxyMode;
   /// The proxy for [ProxyMode.custom], such as `127.0.0.1:7890`.
   final String proxyAddress;
-  /// Where playback streams come from; Piped by default, the user's choice.
+  /// Where playback streams come from: YouTube directly by default.
   final PlaybackSource playbackSource;
   /// The Piped API server for [PlaybackSource.pipedCustom].
   final String pipedServer;

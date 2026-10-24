@@ -194,7 +194,7 @@ void main() {
     test('a file that went missing is not played locally', () async {
       final m = manager();
       m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
-      await settle();
+      await until(() => processes.isNotEmpty);
       final file = File('${dir.path}/videos/x [aaaaaaaaaaa].mp4')..createSync(recursive: true);
       processes[0].out('lumtub-file|${file.path}');
       await processes[0].exit(0);

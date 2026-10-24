@@ -165,13 +165,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('Topic 音乐 非MV 减少 不推荐')),
         SettingEntry(tr('推荐中的 Shorts 短视频'), (context) => NormalItem(
               title: tr('推荐中的 Shorts 短视频'),
-              subtitle: tr('当前：{0}；只影响为你推荐，搜索和关注不受影响', [labelOf(_feedLevels, prefs.feedShorts)]),
+              subtitle: tr('当前：{0}；Shorts 按 YouTube Shorts 标记或短时长识别，和普通竖屏视频独立；只影响首页和探索的为你推荐', [labelOf(_feedLevels, prefs.feedShorts)]),
               leading: _icon(Icons.smartphone_rounded),
               onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的 Shorts 短视频'), value: prefs.feedShorts, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedShorts: v))),
             ), subtitle: tr('短视频 减少 不推荐')),
         SettingEntry(tr('推荐中的竖屏视频'), (context) => NormalItem(
               title: tr('推荐中的竖屏视频'),
-              subtitle: tr('当前：{0}；只影响为你推荐，搜索和关注不受影响', [labelOf(_feedLevels, prefs.feedVertical)]),
+              subtitle: tr('当前：{0}；按已知画面尺寸的高大于宽识别，和 Shorts 独立；只影响首页和探索的为你推荐', [labelOf(_feedLevels, prefs.feedVertical)]),
               leading: _icon(Icons.stay_current_portrait_rounded),
               onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的竖屏视频'), value: prefs.feedVertical, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedVertical: v))),
             ), subtitle: tr('竖屏 减少 不推荐')),

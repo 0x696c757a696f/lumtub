@@ -968,12 +968,19 @@ class AppController extends ChangeNotifier {
     final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);
     // 推荐 always goes by the history, whatever order it is shown in.
     final taste = mode == ExploreMode.forYou || exploreTopicNow.personal ? _exploreTaste() : null;
+    // The Home and Explore "For You" lists share these choices.  Explore has
+    // its own loader, so it must apply the mix here instead of relying on
+    // HomeFeed's ranking pass.
+    final feedMix = mode == ExploreMode.forYou ? preferences.feedMix : null;
     final notInterested = homeFeed?.notInterested;
     final faith = exploreSection.isFaith ? faithFilter() : null;
     bool where(VideoItem item) {
       if (notInterested != null && notInterested.videos.contains(item.id)) return false;
       // Left out here too, so that hiding them still fills the page.
       if (preferences.blocksGroup(item) || preferences.isUnrecommended(item.channelId)) return false;
+      // "Don't recommend" is a hard exclusion.  "Fewer" remains in the
+      // list, but its score is reduced below in the ranking callback.
+      if (feedMix?.penaltyOf(item) == null) return false;
       if (taste != null && taste.channelAffinity(item) < -0.3) return false;
       if (mode == ExploreMode.liveUpcoming && !item.isUpcoming) return false;
       if (mode == ExploreMode.liveReplay && item.liveStatus != 'was_live') return false;
@@ -998,7 +1005,9 @@ class AppController extends ChangeNotifier {
             ExploreMode.liveUpcoming => 4,
             _ => faith != null || mix || language != ExploreLanguage.any ? 8 : 1,
           },
-          rank: taste == null ? null : (item) => exploreScore(taste, item),
+          rank: taste == null
+              ? null
+              : (item) => exploreScore(taste, item) - (feedMix?.penaltyOf(item) ?? 0),
         )
           ..addListener(notifyListeners)
           ..loadMore());

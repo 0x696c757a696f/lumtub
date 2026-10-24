@@ -29,6 +29,9 @@ dev_dependencies:
 dependency_overrides:
   media_kit_video:
     path: vendor/media_kit_video
+  # A copy of media_kit_libs_windows_video that can build for Windows ARM64.
+  media_kit_libs_windows_video:
+    path: vendor/media_kit_libs_windows_video
 
 flutter:
   uses-material-design: true

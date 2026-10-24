@@ -15,9 +15,20 @@ void main() {
       'mpv-dev-x86_64-20261018-git-abc1234.7z',
       'mpv-dev-i686-20261018-git-abc1234.7z',
     ];
-    expect(libmpvAssetName(names, v3: true), 'mpv-dev-x86_64-v3-20261018-git-abc1234.7z');
-    expect(libmpvAssetName(names, v3: false), 'mpv-dev-x86_64-20261018-git-abc1234.7z');
-    expect(libmpvAssetName(const ['mpv-dev-x86_64-v3-20261018-git-abc1234.7z'], v3: false), isNull);
+    expect(libmpvAssetName(names, LibmpvBuild.v3Variant), 'mpv-dev-x86_64-v3-20261018-git-abc1234.7z');
+    expect(libmpvAssetName(names, LibmpvBuild.baseVariant), 'mpv-dev-x86_64-20261018-git-abc1234.7z');
+    expect(libmpvAssetName(names, LibmpvBuild.arm64Variant), 'mpv-dev-aarch64-20261018-git-abc1234.7z');
+    expect(libmpvAssetName(const ['mpv-dev-x86_64-v3-20261018-git-abc1234.7z'], LibmpvBuild.baseVariant), isNull);
+  });
+
+  test('an ARM64 build only replaces or is replaced by an ARM64 build', () {
+    const arm = LibmpvBuild('20261018', LibmpvBuild.arm64Variant);
+    expect(arm.isReplacedBy(const LibmpvBuild('20261019', LibmpvBuild.arm64Variant)), isTrue);
+    expect(arm.isReplacedBy(const LibmpvBuild('20261019', LibmpvBuild.v3Variant)), isFalse);
+    expect(base.isReplacedBy(const LibmpvBuild('20261019', LibmpvBuild.arm64Variant)), isFalse);
+    expect(LibmpvBuild.fromFolderName('20261018-aarch64'), arm);
+    expect(LibmpvBuild.fromVersionFile('20261018\naarch64\n'), arm);
+    expect(arm.label, '20261018（ARM64）');
   });
 
   test('a newer release or the AVX2 build of the same release replaces a build', () {

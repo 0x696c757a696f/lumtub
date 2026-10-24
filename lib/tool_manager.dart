@@ -323,8 +323,7 @@ class ToolManager {
   Future<void> _installLibmpv() async {
     final release = await _release('zhongfly/mpv-winbuild');
     final tag = _safeTag(release['tag_name']);
-    final v3 = cpuSupportsX86_64V3();
-    final build = LibmpvBuild(tag, v3 ? LibmpvBuild.v3Variant : LibmpvBuild.baseVariant);
+    final build = LibmpvBuild(tag, libmpvVariantForThisProcess());
     final running = libmpv.selected ?? libmpv.current;
     if (running != null && !running.isReplacedBy(build)) return;
     final group = libmpv.directory;
@@ -335,7 +334,7 @@ class ToolManager {
     if (libmpv.hasFailed(dll.path)) return;
     if (!await dll.exists()) {
       final names = (release['assets'] as List? ?? const []).whereType<Map>().map((asset) => asset['name']?.toString() ?? '');
-      final assetName = libmpvAssetName(names, v3: v3);
+      final assetName = libmpvAssetName(names, build.variant);
       if (assetName == null) throw StateError('No libmpv archive for this CPU in $tag');
       status(tr('下载 libmpv {0}…', [build.label]));
       final archive = await _downloadVerified(_asset(release, (name) => name == assetName), Directory('${root.path}${_separator}downloads'));

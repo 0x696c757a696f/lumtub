@@ -6,19 +6,23 @@ import 'dart:io';
 class LibmpvBuild {
   const LibmpvBuild(this.tag, this.variant);
   final String tag;
-  /// `x86_64-v3` (AVX2) or `x86_64` (any x86-64 CPU).
+  /// `x86_64-v3` (AVX2), `x86_64` (any x86-64 CPU) or `aarch64` (Windows
+  /// on ARM).
   final String variant;
 
   bool get isV3 => variant == v3Variant;
+  bool get isArm64 => variant == arm64Variant;
   String get folderName => '$tag-$variant';
-  String get label => '$tag（${isV3 ? 'x86-64-v3' : 'x86-64'}）';
+  String get label => '$tag（${isArm64 ? 'ARM64' : isV3 ? 'x86-64-v3' : 'x86-64'}）';
 
   static const v3Variant = 'x86_64-v3';
   static const baseVariant = 'x86_64';
+  static const arm64Variant = 'aarch64';
+  static const variants = {v3Variant, baseVariant, arm64Variant};
 
   /// Parses a folder name written by [folderName].
   static LibmpvBuild? fromFolderName(String name) {
-    final match = RegExp(r'^([0-9A-Za-z._]{1,40})-(x86_64(?:-v3)?)$').firstMatch(name);
+    final match = RegExp(r'^([0-9A-Za-z._]{1,40})-(x86_64(?:-v3)?|aarch64)$').firstMatch(name);
     return match == null ? null : LibmpvBuild(match.group(1)!, match.group(2)!);
   }
 
@@ -26,13 +30,14 @@ class LibmpvBuild {
   /// bundled DLL: the tag on the first line and the variant on the second.
   static LibmpvBuild? fromVersionFile(String content) {
     final lines = content.split(RegExp(r'\r?\n')).map((line) => line.trim()).toList();
-    if (lines.length < 2 || lines[0].isEmpty || !{v3Variant, baseVariant}.contains(lines[1])) return null;
+    if (lines.length < 2 || lines[0].isEmpty || !variants.contains(lines[1])) return null;
     return LibmpvBuild(lines[0], lines[1]);
   }
 
-  /// Whether [other] should replace this build: a newer release, or the same
-  /// release built for AVX2 CPUs.
+  /// Whether [other] should replace this build: a newer release for the same
+  /// CPU architecture, or the same release built for AVX2 CPUs.
   bool isReplacedBy(LibmpvBuild other) {
+    if (other.isArm64 != isArm64) return false;
     final order = other.tag.compareTo(tag);
     return order > 0 || (order == 0 && other.isV3 && !isV3);
   }
@@ -44,13 +49,24 @@ class LibmpvBuild {
   int get hashCode => Object.hash(tag, variant);
 }
 
-/// The development archive for [v3] or the baseline build among [names].
-String? libmpvAssetName(Iterable<String> names, {required bool v3}) {
-  final pattern = v3 ? RegExp(r'^mpv-dev-x86_64-v3-.+\.7z$') : RegExp(r'^mpv-dev-x86_64-(?!v3-).+\.7z$');
+/// The development archive for [variant] among [names].
+String? libmpvAssetName(Iterable<String> names, String variant) {
+  final pattern = switch (variant) {
+    LibmpvBuild.v3Variant => RegExp(r'^mpv-dev-x86_64-v3-.+\.7z$'),
+    LibmpvBuild.arm64Variant => RegExp(r'^mpv-dev-aarch64-.+\.7z$'),
+    _ => RegExp(r'^mpv-dev-x86_64-(?!v3-).+\.7z$'),
+  };
   for (final name in names) {
     if (pattern.hasMatch(name)) return name;
   }
   return null;
+}
+
+/// The libmpv variant this process can load: aarch64 in the ARM64 build,
+/// otherwise x86-64-v3 when the CPU supports it.
+String libmpvVariantForThisProcess() {
+  if (Abi.current() == Abi.windowsArm64) return LibmpvBuild.arm64Variant;
+  return cpuSupportsX86_64V3() ? LibmpvBuild.v3Variant : LibmpvBuild.baseVariant;
 }
 
 typedef _FeatureNative = Int32 Function(Uint32);
@@ -160,6 +176,8 @@ class LibmpvState {
   Future<void> dropIfOutdated() async {
     final chosen = selected;
     final shipped = bundled;
+    // A download for the other CPU architecture never replaces the bundled
+    // one, so it is dropped too: it cannot load at all.
     if (chosen == null || shipped == null || shipped.isReplacedBy(chosen)) return;
     final file = _file('use.txt');
     if (await file.exists()) await file.delete();

@@ -8,6 +8,10 @@ import '../l10n/l10n.dart';
 
 export '../models.dart' show formatBytes;
 
+/// Whether a scrolled list is close enough to its end to fetch the next
+/// page: two screens ahead, so it usually arrives before the user gets there.
+bool nearListEnd(ScrollMetrics metrics) => metrics.extentAfter < (metrics.viewportDimension * 2).clamp(1200, double.infinity);
+
 /// Full-area message for empty, error and not-yet-available states.
 class StatusView extends StatelessWidget {
   const StatusView({super.key, required this.icon, required this.title, this.message, this.action, this.error = false});

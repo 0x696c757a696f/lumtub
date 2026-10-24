@@ -31,7 +31,7 @@ class HomeFeedPage extends StatelessWidget {
     return NotificationListener<ScrollNotification>(
       // The feed goes on: the next page loads before the end is reached.
       onNotification: (notification) {
-        if (showFeed && notification.metrics.axis == Axis.vertical && notification.metrics.extentAfter < 1200) controller.loadMoreHomeFeed();
+        if (showFeed && notification.metrics.axis == Axis.vertical && nearListEnd(notification.metrics)) controller.loadMoreHomeFeed();
         return false;
       },
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
@@ -170,7 +170,7 @@ class SearchResultsPage extends StatelessWidget {
     return NotificationListener<ScrollNotification>(
       // Fetch the next page shortly before the end of the results is reached.
       onNotification: (notification) {
-        if (notification.metrics.extentAfter < 800) controller.loadMoreResults();
+        if (nearListEnd(notification.metrics)) controller.loadMoreResults();
         return false;
       },
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [

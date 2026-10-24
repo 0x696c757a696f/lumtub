@@ -23,7 +23,7 @@ class YoutubePlaylistPage extends StatelessWidget {
     final colors = context.colors;
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification.metrics.extentAfter < 800) loader.loadMore();
+        if (nearListEnd(notification.metrics)) loader.loadMore();
         return false;
       },
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [

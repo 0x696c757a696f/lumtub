@@ -78,7 +78,7 @@ class _ChannelPageState extends State<ChannelPage> {
     final searching = controller.channelQuery != null;
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification.metrics.extentAfter < 800) {
+        if (nearListEnd(notification.metrics)) {
           loader?.loadMore();
           posts?.loadMore();
         }

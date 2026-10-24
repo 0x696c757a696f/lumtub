@@ -331,6 +331,8 @@ void main() {
       await processes[0].exit(0);
       await settle();
       await m.remove('aaaaaaaaaaa', deleteFiles: true);
+      // A download still finishing deletes its files once it has finished.
+      await until(() => !file.existsSync());
       expect(file.existsSync(), isFalse);
       expect(other.existsSync(), isTrue);
       expect(m.tasks, isEmpty);

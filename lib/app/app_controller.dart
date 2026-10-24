@@ -404,6 +404,12 @@ class AppController extends ChangeNotifier {
   Future<void> initialize() async {
     try {
       final directories = await AppDirectories.create();
+      // yt-dlp, including the one libmpv starts, writes some temporary
+      // files (format tests) to the working folder, which is the install
+      // folder and read-only under Program Files.
+      try {
+        Directory.current = directories.cache;
+      } catch (_) {}
       await AppLog.open(directories.logs);
       logInfo('YTPlus $appVersion 启动 · ${Platform.operatingSystemVersion}');
       final history = HistoryStore(directories);

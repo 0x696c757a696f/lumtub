@@ -99,6 +99,10 @@ class AppController extends ChangeNotifier {
   PageMode mode = PageMode.home;
   bool ready = false;
   bool checking = false;
+  bool checkingAppUpdate = false;
+  String? availableAppVersion;
+  String? availableAppUrl;
+  String? appUpdateError;
   String status = tr('正在准备 Windows 原生播放器…');
   /// Startup failure; the setup screen shows it with a retry button.
   String? error;
@@ -499,7 +503,10 @@ class AppController extends ChangeNotifier {
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
       // Do not block the UI while checking newer releases.
-      if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
+      if (preferences.autoCheckUpdates) {
+        unawaited(manager.checkUpdates());
+        unawaited(checkAppUpdate());
+      }
       unawaited(_refreshCacheSize());
       unawaited(_trimThumbnails());
       unawaited(downloads?.load());
@@ -511,6 +518,40 @@ class AppController extends ChangeNotifier {
         status = tr('初始化失败');
         logError('初始化失败', e);
       });
+    }
+  }
+
+  /// Checks the application's own release separately from libmpv and yt-dlp.
+  /// Replacing an installed executable is left to the installer after the
+  /// user opens the matching GitHub Release.
+  Future<void> checkAppUpdate() async {
+    if (checkingAppUpdate) return;
+    _update(() {
+      checkingAppUpdate = true;
+      appUpdateError = null;
+    });
+    try {
+      final response = await _http.get(
+        Uri.https('api.github.com', '/repos/0x696c757a696f/ytplus/releases/latest'),
+        headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'YTPlus-Windows/$appVersion'},
+      ).timeout(const Duration(seconds: 15));
+      if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
+      final json = jsonDecode(response.body);
+      if (json is! Map) throw const FormatException('Invalid GitHub release response');
+      final tag = json['tag_name']?.toString().replaceFirst(RegExp(r'^v', caseSensitive: false), '') ?? '';
+      final url = json['html_url']?.toString() ?? '';
+      _update(() {
+        availableAppVersion = tag.isNotEmpty && tag != appVersion ? tag : null;
+        availableAppUrl = availableAppVersion == null || url.isEmpty ? null : url;
+        checkingAppUpdate = false;
+      });
+      logInfo(availableAppVersion == null ? 'YTPlus is up to date ($appVersion)' : 'YTPlus update available: $availableAppVersion');
+    } catch (error) {
+      _update(() {
+        checkingAppUpdate = false;
+        appUpdateError = '$error';
+      });
+      logInfo('Could not check YTPlus updates: $error');
     }
   }
 

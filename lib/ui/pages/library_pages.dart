@@ -27,6 +27,7 @@ class SubscriptionsPage extends StatefulWidget {
 
 class _SubscriptionsPageState extends State<SubscriptionsPage> {
   ChannelRef? _selected;
+  double _railWidth = _ChannelStrip.railWidth;
 
   AppController get controller => widget.controller;
 
@@ -52,6 +53,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
     final feed = selected == null ? all : [for (final item in all) if (item.channelId == selected.id) item];
     Widget strip({bool vertical = false}) => _ChannelStrip(
           vertical: vertical,
+          itemWidth: vertical ? _railWidth - 12 : 72,
           channels: channels,
           feed: library.feed,
           selected: selected,
@@ -68,7 +70,8 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       final page = _page(context, library, channels, selected, feed, wide ? null : strip());
       if (!wide) return page;
       return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        SizedBox(width: _ChannelStrip.railWidth, child: strip(vertical: true)),
+        SizedBox(width: _railWidth, child: strip(vertical: true)),
+        _RailResizeHandle(onDrag: (delta) => setState(() => _railWidth = (_railWidth + delta).clamp(_ChannelStrip.railWidth, 360).toDouble())),
         Expanded(child: page),
       ]);
     });
@@ -136,7 +139,7 @@ File? _avatarFile(Directory? thumbnails, ChannelRef channel) =>
 /// mouse wheel too. Those that posted most recently come first, and a dot
 /// marks an upload in the last two days.
 class _ChannelStrip extends StatefulWidget {
-  const _ChannelStrip({this.vertical = false, required this.channels, required this.feed, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll});
+  const _ChannelStrip({this.vertical = false, this.itemWidth = 72, required this.channels, required this.feed, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll});
   final List<ChannelRef> channels;
   final List<VideoItem> feed;
   final ChannelRef? selected;
@@ -146,6 +149,7 @@ class _ChannelStrip extends StatefulWidget {
 
   /// A column down the left of a wide page instead of a row.
   final bool vertical;
+  final double itemWidth;
   static const railWidth = 92.0;
 
   /// How many avatars the row holds; the rest are in the full list.
@@ -184,6 +188,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
     final fresh = DateTime.now().subtract(const Duration(days: 2));
     final showAll = _StripItem(
       label: tr('全部 {0} 个', [widget.channels.length]),
+      width: widget.itemWidth,
       selected: false,
       onTap: widget.onShowAll,
       avatar: (radius) => CircleAvatar(radius: radius, child: Icon(Icons.manage_search_rounded, size: radius)),
@@ -213,6 +218,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
   List<Widget> _items(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest, DateTime fresh) => [
         _StripItem(
           label: tr('全部'),
+          width: widget.itemWidth,
           selected: selected == null,
           onTap: () => widget.onSelect(null),
           avatar: (radius) => CircleAvatar(radius: radius, child: Icon(Icons.dynamic_feed_rounded, size: radius)),
@@ -220,6 +226,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
         for (final channel in ordered.take(_ChannelStrip.shown))
           _StripItem(
             label: channel.name.isEmpty ? channel.id : channel.name,
+            width: widget.itemWidth,
             selected: channel == selected,
             fresh: latest[channel.id]?.isAfter(fresh) ?? false,
             onTap: () => widget.onSelect(channel),
@@ -255,8 +262,9 @@ class _ChannelStripState extends State<_ChannelStrip> {
 }
 
 class _StripItem extends StatelessWidget {
-  const _StripItem({required this.label, required this.selected, required this.onTap, required this.avatar, this.fresh = false});
+  const _StripItem({required this.label, required this.width, required this.selected, required this.onTap, required this.avatar, this.fresh = false});
   final String label;
+  final double width;
   final bool selected;
   final bool fresh;
   final VoidCallback onTap;
@@ -272,7 +280,7 @@ class _StripItem extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: SizedBox(
-          width: 72,
+          width: width,
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             const SizedBox(height: 6),
             Stack(clipBehavior: Clip.none, children: [
@@ -293,7 +301,7 @@ class _StripItem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
                 label,
-                maxLines: 1,
+                maxLines: width > 100 ? 2 : 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: selected ? colors.primary : colors.onSurfaceVariant, fontWeight: selected ? FontWeight.w600 : null),
@@ -305,6 +313,21 @@ class _StripItem extends StatelessWidget {
       ),
     );
   }
+}
+
+class _RailResizeHandle extends StatelessWidget {
+  const _RailResizeHandle({required this.onDrag});
+  final ValueChanged<double> onDrag;
+
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+        cursor: SystemMouseCursors.resizeLeftRight,
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onHorizontalDragUpdate: (details) => onDrag(details.delta.dx),
+          child: const SizedBox(width: 8),
+        ),
+      );
 }
 
 /// Every followed channel, in a list that can be searched by name. Picking

@@ -105,17 +105,19 @@ class _CommentsSectionState extends State<CommentsSection> {
           final loader = _loader;
           final error = loader.error;
           return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Text(loader.count.isEmpty ? tr('评论') : tr('评论 · {0}', [loader.count]), style: Theme.of(context).textTheme.titleMedium),
-              const Spacer(),
-              SegmentedButton<bool>(
+            LayoutBuilder(builder: (context, constraints) {
+              final order = SegmentedButton<bool>(
                 showSelectedIcon: false,
                 style: const ButtonStyle(visualDensity: VisualDensity.compact),
                 segments: [ButtonSegment(value: false, label: Text(tr('热门'))), ButtonSegment(value: true, label: Text(tr('最新')))],
                 selected: {loader.newest},
                 onSelectionChanged: (value) => loader.setNewest(value.first),
-              ),
-            ]),
+              );
+              final title = Text(loader.count.isEmpty ? tr('评论') : tr('评论 · {0}', [loader.count]), style: Theme.of(context).textTheme.titleMedium);
+              return constraints.maxWidth >= 520
+                  ? Row(children: [title, const Spacer(), order])
+                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Align(alignment: Alignment.centerRight, child: order)]);
+            }),
             const SizedBox(height: 8),
             if (_canWrite) CommentComposer(hint: tr('添加评论…'), onSubmit: _post),
             for (final comment in loader.comments)

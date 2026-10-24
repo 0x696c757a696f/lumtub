@@ -2060,4 +2060,13 @@ const stringsEn = <String, String>{
   '画质上限 {0} · 播放策略 {1} · 禁用编码 {2} · 音质 {3}': 'Quality cap {0} · Strategy {1} · Disabled codecs {2} · Audio {3}',
   '下载的文件是 {0} 编码，已按播放规则改为在线播放': 'The downloaded file is {0}, which the playback rules disable; streaming instead',
   '自动（按屏幕分辨率）': 'Auto (up to screen resolution)',
+  '已安装的系统字体': 'Installed system fonts',
+  '搜索已安装字体': 'Search installed fonts',
+  '没有匹配的已安装字体': 'No installed fonts match',
+  'Noto Sans CJK SC 随 YTPlus 安装；系统字体从当前 Windows 用户的字体集合读取。': 'Noto Sans CJK SC is bundled with YTPlus. System fonts are read from the current Windows user\'s font collection.',
+  '正在检查软件更新…': 'Checking for app updates…',
+  '有新版本：{0}': 'Update available: {0}',
+  '启动时自动检查，也可立即检查': 'Checked automatically at startup; you can also check now.',
+  '点击打开 GitHub Release 下载': 'Click to open the GitHub Release download.',
+  '检查软件更新失败：{0}': 'Could not check for app updates: {0}',
 };

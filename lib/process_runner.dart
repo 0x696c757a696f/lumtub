@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'native_core.dart';
 
 /// Runs [executable] and collects its output like [Process.run], but kills it
 /// when [timeout] passes (and throws a [TimeoutException]); `Process.run`
@@ -13,7 +14,7 @@ Future<ProcessResult> runWithTimeout(
   Map<String, String>? environment,
   void Function(Process process)? onStart,
 }) async {
-  final process = await Process.start(executable, arguments, environment: environment);
+  final process = await ProcessTree.start(executable, arguments, environment: environment);
   onStart?.call(process);
   const decoder = Utf8Decoder(allowMalformed: true);
   final out = process.stdout.transform(decoder).join();

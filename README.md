@@ -41,7 +41,7 @@ Recommendations, history, searches and "Not interested" stay on your computer an
 
 ## Install and use
 
-1. Download `YTPlus-Windows-x64` from the **Build YTPlus Windows** GitHub Actions workflow, or the installer from Releases.
+1. Download the portable ZIP or the installer for your PC from the **Build** GitHub Actions workflow or from Releases: `x64-v3` for CPUs with AVX2 (most from 2015 on), `x64` for older ones, `arm64` for Windows on ARM.
 2. Unzip and run `ytplus.exe`; no administrator rights are needed.
 3. The first start downloads yt-dlp and Deno and needs access to GitHub. Updates are checked at most once a day and apply after a restart.
 
@@ -55,14 +55,17 @@ Data lives in the `config`, `data`, `cache`, `components` and `logs` folders und
 
 ## Building
 
-The Windows build runs on GitHub Actions (`.github/workflows/windows.yml`) for pushes and pull requests to `main`, or by hand from the Actions page. It verifies and bundles the latest shinchiro x86_64-v3 `libmpv-2.dll`, runs `flutter analyze` and the unit tests, builds a release and uploads `YTPlus-Windows-x64`. Pushing a `v*` tag (such as `v0.2.0`) also publishes a GitHub release with an Inno Setup installer.
+The Windows build runs on GitHub Actions (`.github/workflows/build.yml`) for pushes and pull requests to `main`, or by hand from the Actions page. For each of x64, x64-v3 and arm64 it bundles a verified libmpv for that CPU, builds and tests the Rust library in `native/ytplus_core` (release profile with fat LTO, one codegen unit, and `target-cpu=x86-64-v3` for x64-v3), runs `flutter analyze` and the unit tests, and uploads a portable ZIP and an Inno Setup installer. Pushing a `v*` tag (such as `v0.2.0`) also publishes them as a GitHub release.
 
-Building locally needs Flutter 3.47 and Visual Studio with the C++ desktop workload:
+`ytplus_core.dll` is optional at run time: without it YTPlus works as before, minus what it adds (for now, stopping yt-dlp also stops the ffmpeg and Deno it started, and none of them outlive YTPlus).
+
+Building locally needs Flutter 3.47 and Visual Studio with the C++ desktop workload, plus Rust for the native library:
 
 ```powershell
 flutter pub get
 flutter test
 flutter build windows --release
+cargo build --release --manifest-path native/ytplus_core/Cargo.toml
 ```
 
 ### Translations
@@ -71,7 +74,7 @@ The interface is English for now. Source strings are still written in simplified
 
 ## Known limits
 
-- Windows x64 only, with the x86_64-v3 libmpv build; there is no fallback for older CPUs yet.
+- Windows only for now.
 - Search or playback can break when YouTube changes; an updated yt-dlp usually fixes it.
 - The official API cannot like or comment on community posts.
 

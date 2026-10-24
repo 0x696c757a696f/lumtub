@@ -5,6 +5,7 @@ import 'dart:io';
 import 'live_chat.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
+import 'native_core.dart';
 
 /// Fetches the read-only chat replay that yt-dlp exposes as the `live_chat`
 /// subtitle track. It shares yt-dlp's component, proxy and disk cache with
@@ -80,7 +81,7 @@ class LiveChatRepository {
     } on FileSystemException {
       // The previous managed chat capture did not exist.
     }
-    final process = await Process.start(
+    final process = await ProcessTree.start(
       ytDlpPath,
       arguments(videoId),
       environment: _environment,

@@ -9,6 +9,7 @@ import 'process_priority.dart';
 import 'process_runner.dart';
 import 'stream_resolver.dart';
 import 'l10n/l10n.dart';
+import 'native_core.dart';
 
 enum SearchFilter {
   all('全部', null),
@@ -327,7 +328,7 @@ class VideoRepository {
       Listing(() => _lines(listingArguments(url)), channel: channel);
 
   Stream<String> _lines(List<String> arguments) async* {
-    final process = await Process.start(ytDlpPath, arguments, environment: _environment);
+    final process = await ProcessTree.start(ytDlpPath, arguments, environment: _environment);
     lowerPriority(process.pid);
     final stderr = StringBuffer();
     final errors = process.stderr.transform(utf8.decoder).listen(stderr.write);

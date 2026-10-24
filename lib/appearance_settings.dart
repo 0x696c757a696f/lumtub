@@ -88,9 +88,6 @@ final fontChoices = <(String?, String)>[
   (null, tr('系统默认')),
   ('Microsoft YaHei UI', tr('微软雅黑')),
   ('DengXian', tr('等线')),
-  ('SimHei', tr('黑体')),
-  ('SimSun', tr('宋体')),
-  ('KaiTi', tr('楷体')),
 ];
 
 /// The narrowest a video card may get; set from [AppearanceSettings.cardWidth].

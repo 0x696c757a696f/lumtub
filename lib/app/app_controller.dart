@@ -404,6 +404,12 @@ class AppController extends ChangeNotifier {
   Future<void> initialize() async {
     try {
       final directories = await AppDirectories.create();
+      // yt-dlp, including the one libmpv starts, writes some temporary
+      // files (format tests) to the working folder, which is the install
+      // folder and read-only under Program Files.
+      try {
+        Directory.current = directories.cache;
+      } catch (_) {}
       await AppLog.open(directories.logs);
       logInfo('YTPlus $appVersion 启动 · ${Platform.operatingSystemVersion}');
       final history = HistoryStore(directories);
@@ -411,7 +417,7 @@ class AppController extends ChangeNotifier {
       searchHistory = SearchHistory(File('${directories.data.path}${Platform.pathSeparator}search_history.json'));
       final notInterested = NotInterested(File('${directories.data.path}${Platform.pathSeparator}not_interested.json'));
       await notInterested.load();
-      homeFeed = HomeFeed(notInterested)..addListener(notifyListeners);
+      homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(notifyListeners);
       final libraryStore = LibraryStore(File('${directories.data.path}${Platform.pathSeparator}library.json'));
       await libraryStore.load();
       final settingsStore = PlayerSettingsStore(directories);
@@ -2278,6 +2284,8 @@ class AppController extends ChangeNotifier {
     final library = this.library;
     if (feed == null || repository == null || !preferences.homeShowRecommended || feed.loading) return;
     if (!force && !feed.stale && feed.items.isNotEmpty) return;
+    // The last launch's feed shows while a new one is gathered.
+    await feed.restore(filter: visible);
     if (library != null && library.channels.isNotEmpty && library.feed.isEmpty) {
       await library.refreshFeed().timeout(const Duration(seconds: 20), onTimeout: () {});
     }

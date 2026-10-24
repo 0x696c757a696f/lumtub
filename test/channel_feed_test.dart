@@ -1,5 +1,7 @@
 import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:ytplus/app/library_controller.dart';
 import 'package:ytplus/channel_feed.dart';
 import 'package:ytplus/models.dart';
@@ -75,5 +77,20 @@ void main() {
     });
     expect(out, List.generate(40, (i) => i * 2));
     expect(most, 8);
+  });
+
+  test('a channel whose feed is missing is not asked again for a day', () async {
+    var requests = 0;
+    var now = DateTime(2026, 10, 24);
+    final feed = ChannelFeed(MockClient((_) async {
+      requests++;
+      return http.Response('', 404);
+    }), clock: () => now);
+    await expectLater(feed.latest(channel), throwsStateError);
+    await expectLater(feed.latest(channel), throwsStateError);
+    expect(requests, 1);
+    now = now.add(ChannelFeed.missingFor);
+    await expectLater(feed.latest(channel), throwsStateError);
+    expect(requests, 2);
   });
 }

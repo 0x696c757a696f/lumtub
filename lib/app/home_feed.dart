@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
@@ -47,12 +49,20 @@ class HomeFeedSources {
 /// All of it is worked out on this computer; nothing about the history
 /// leaves it beyond the requests a watch page would make anyway.
 class HomeFeed extends ChangeNotifier {
-  HomeFeed(this.notInterested);
+  HomeFeed(this.notInterested, {this.cacheFile});
 
   final NotInterested notInterested;
+  /// Where the last first pages are kept, to show at once on the next launch.
+  final File? cacheFile;
 
   /// How many sources load at once.
   static const maxConcurrentSources = 3;
+  /// The first page is shown once this many sources answered, or after
+  /// [firstPageWait], instead of after the slowest search.
+  static const firstPageSources = 4;
+  static const firstPageWait = Duration(seconds: 3);
+  /// Videos kept in [cacheFile].
+  static const cachedItems = pageSize * 2;
 
   /// Which kinds of video to show less of; set from the settings.
   FeedMix mix = const FeedMix();
@@ -62,6 +72,8 @@ class HomeFeed extends ChangeNotifier {
   /// Why each of [items] is suggested, by video id.
   Map<String, String> reasons = const {};
   bool loading = false;
+  /// The first page is shown but slower sources are still answering.
+  bool gathering = false;
   /// Gathering more for the end of the feed.
   bool loadingMore = false;
   String? error;
@@ -87,6 +99,43 @@ class HomeFeed extends ChangeNotifier {
 
   bool get stale => loadedAt == null || DateTime.now().difference(loadedAt!) > const Duration(minutes: 30);
 
+  /// Shows the feed saved by the last launch while a new one is gathered;
+  /// [filter] drops what was hidden since.
+  Future<void> restore({List<VideoItem> Function(List<VideoItem>)? filter}) async {
+    final file = cacheFile;
+    if (file == null || items.isNotEmpty) return;
+    try {
+      final data = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      final saved = [
+        for (final entry in data['items'] as List? ?? const [])
+          if (entry is Map<String, dynamic>) VideoItem.fromJson(entry),
+      ].where((item) => !notInterested.videos.contains(item.id)).toList();
+      if (_disposed || items.isNotEmpty || saved.isEmpty) return;
+      items = filter?.call(saved) ?? saved;
+      reasons = {for (final MapEntry(:key, :value) in (data['reasons'] as Map? ?? const {}).entries) '$key': '$value'};
+      _notify();
+    } catch (_) {
+      // No feed saved yet, or an unreadable one: gather as usual.
+    }
+  }
+
+  Future<void> _save() async {
+    final file = cacheFile;
+    if (file == null || items.isEmpty) return;
+    final kept = items.take(cachedItems).toList();
+    try {
+      await file.parent.create(recursive: true);
+      final partial = File('${file.path}.partial');
+      await partial.writeAsString(jsonEncode({
+        'items': [for (final item in kept) item.toJson()],
+        'reasons': {for (final item in kept) if (reasons[item.id] != null) item.id: reasons[item.id]},
+      }));
+      await partial.rename(file.path);
+    } catch (e) {
+      logInfo('保存推荐缓存失败：$e');
+    }
+  }
+
   /// Gathers everything again; [filter] drops blocked or hidden videos.
   Future<void> refresh(HomeFeedSources sources, {List<VideoItem> Function(List<VideoItem>)? filter}) async {
     final generation = ++_generation;
@@ -101,6 +150,8 @@ class HomeFeed extends ChangeNotifier {
     final candidates = <FeedLane, List<Candidate>>{for (final lane in FeedLane.values) lane: []};
     final jobs = <Future<void>>[];
     var failures = 0;
+    var answered = 0;
+    final enough = Completer<void>();
     // Searches each start a yt-dlp process; a dozen at once pegs the CPU.
     var running = 0;
     final waiting = <Completer<void>>[];
@@ -119,6 +170,8 @@ class HomeFeed extends ChangeNotifier {
         logInfo('推荐来源失败：$e');
       } finally {
         running--;
+        answered++;
+        if (answered >= firstPageSources && !enough.isCompleted) enough.complete();
         if (waiting.isNotEmpty) waiting.removeAt(0).complete();
       }
     }
@@ -133,10 +186,6 @@ class HomeFeed extends ChangeNotifier {
       _expanded.add(seed.id);
       jobs.add(gather(FeedLane.recent, () => sources.related(seed.id), RecommendSource.related, 1 - i * 0.1, 15, (_) => tr('看过《{0}》的人也在看', [_short(seed.title)])));
     }
-    if (sources.searches.isNotEmpty) {
-      final query = sources.searches.first;
-      jobs.add(gather(FeedLane.recent, () => sources.search(query), RecommendSource.topic, 0.9, 10, (_) => tr('你最近搜过“{0}”', [query])));
-    }
     // Long-term: older favourites and the channels watched most.
     final kept = <VideoItem>[...sources.favorites.take(3), ...sources.history.skip(3).take(3)];
     for (final seed in kept) {
@@ -149,6 +198,11 @@ class HomeFeed extends ChangeNotifier {
       final name = sources.history.where((item) => item.channelId == key).firstOrNull?.channel ?? '';
       channels++;
       jobs.add(gather(FeedLane.longTerm, () => sources.channelUploads(ChannelRef(key, name)), RecommendSource.channel, 1, 8, (item) => tr('你常看 {0}', [item.channel.isEmpty ? name : item.channel])));
+    }
+    // Searches each start yt-dlp and take seconds: after the HTTP sources.
+    if (sources.searches.isNotEmpty) {
+      final query = sources.searches.first;
+      jobs.add(gather(FeedLane.recent, () => sources.search(query), RecommendSource.topic, 0.9, 10, (_) => tr('你最近搜过“{0}”', [query])));
     }
     // Explore: the interests past the strongest few.
     final words = long.topWords(10);
@@ -163,8 +217,18 @@ class HomeFeed extends ChangeNotifier {
       jobs.add(gather(FeedLane.fresh, () => sources.search(query), RecommendSource.topic, 1, 10, (_) => tr('“{0}”本周热门', [query])));
     }
     jobs.add(gather(FeedLane.fresh, () => sources.search('热门'), RecommendSource.topic, 0.8, 12, (_) => tr('本周热门')));
-    await Future.wait(jobs);
+    final all = Future.wait(jobs);
+    // Show a first page as soon as there is enough for one; the rest of the
+    // sources are ranked in as they answer and fill the pages after it.
+    final wait = Timer(firstPageWait, () {
+      if (!enough.isCompleted) enough.complete();
+    });
+    await Future.any([all, enough.future]);
+    wait.cancel();
     if (generation != _generation || _disposed) return;
+    if (candidates.values.every((list) => list.isEmpty)) await all;
+    if (generation != _generation || _disposed) return;
+    // The same lists keep filling from the sources still running.
     _candidates
       ..clear()
       ..addAll(candidates);
@@ -179,8 +243,16 @@ class HomeFeed extends ChangeNotifier {
     _appendPage();
     loading = false;
     loadedAt = DateTime.now();
+    gathering = true;
+    _notify();
+    await all;
+    if (generation != _generation || _disposed) return;
+    gathering = false;
+    _rankAll();
+    if (items.length < pageSize) _appendPage();
     if (items.isEmpty && failures > 0 && failures == jobs.length) error = tr('推荐来源都没有响应');
     _notify();
+    unawaited(_save());
     // Explore a step further from what was just shown.
     unawaited(_expand());
   }

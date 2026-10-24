@@ -209,6 +209,34 @@ jobs:
       - name: Windows - analyze sources
         run: flutter analyze
 
+      - name: Windows - build the Rust core
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (-not (Get-Command rustup -ErrorAction SilentlyContinue)) {
+            $hostTriple = if ($env:PACKAGE_ARCH -eq 'arm64') { 'aarch64-pc-windows-msvc' } else { 'x86_64-pc-windows-msvc' }
+            $init = Join-Path $env:RUNNER_TEMP 'rustup-init.exe'
+            Invoke-WebRequest -Uri "https://static.rust-lang.org/rustup/dist/$hostTriple/rustup-init.exe" -OutFile $init
+            & $init -y --profile minimal --no-modify-path
+            if ($LASTEXITCODE -ne 0) { throw 'rustup-init failed.' }
+            $cargoBin = Join-Path $env:USERPROFILE '.cargo\bin'
+            $env:PATH = "$cargoBin;$env:PATH"
+            $cargoBin | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          }
+          $target = if ($env:PACKAGE_ARCH -eq 'arm64') { 'aarch64-pc-windows-msvc' } else { 'x86_64-pc-windows-msvc' }
+          rustup target add $target
+          # Each package is built for its own CPU level, as libmpv is.
+          if ($env:PACKAGE_ARCH -eq 'x64-v3') { $env:RUSTFLAGS = '-C target-cpu=x86-64-v3' }
+          $manifest = 'native/ytplus_core/Cargo.toml'
+          cargo test --manifest-path $manifest --release --target $target
+          if ($LASTEXITCODE -ne 0) { throw 'Rust core tests failed.' }
+          cargo build --manifest-path $manifest --release --target $target
+          if ($LASTEXITCODE -ne 0) { throw 'Rust core build failed.' }
+          $dll = (Resolve-Path "native/ytplus_core/target/$target/release/ytplus_core.dll").Path
+          Write-Host "ytplus_core.dll: $((Get-Item $dll).Length) bytes"
+          # The Dart tests load it from here; packaging copies it next to ytplus.exe.
+          "YTPLUS_CORE_DLL=$dll" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: Windows - run unit tests
         run: flutter test
 
@@ -274,9 +302,15 @@ jobs:
           $package = "YTPlus_$env:YTPLUS_VERSION`_windows-$env:PACKAGE_ARCH"
           $releaseDir = Join-Path "build/windows/$env:BUILD_DIR/runner" 'Release'
           New-Item -ItemType Directory -Force -Path $package | Out-Null
+          Copy-Item -LiteralPath $env:YTPLUS_CORE_DLL -Destination $releaseDir -Force
           Copy-Item -Recurse -Force "$releaseDir/*" $package
           Copy-Item LICENSE, NOTICE $package
           Compress-Archive -Path "$package/*" -DestinationPath "$package.zip"
+          # Only the ZIP carries the marker: the installer is built from the
+          # same folder and keeps its data in LocalAppData.
+          $marker = Join-Path $env:RUNNER_TEMP 'portable.txt'
+          "YTPlus keeps its settings, cache and logs in the userdata folder next to this file.`r`nDelete this file to keep them in %LOCALAPPDATA%\YTPlus instead.`r`n" | Out-File -FilePath $marker -Encoding ascii -NoNewline
+          Compress-Archive -Update -Path $marker -DestinationPath "$package.zip"
 
       - name: Windows - build installer
         shell: pwsh

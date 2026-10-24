@@ -98,7 +98,7 @@ class _ExplorePageState extends State<ExplorePage> {
     final leaf = controller.exploreLeaf;
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification.depth == 0 && notification.metrics.axis == Axis.vertical && notification.metrics.extentAfter < 800) loader?.loadMore();
+        if (notification.depth == 0 && notification.metrics.axis == Axis.vertical && nearListEnd(notification.metrics)) loader?.loadMore();
         return false;
       },
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [

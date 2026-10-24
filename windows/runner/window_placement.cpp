@@ -1,17 +1,17 @@
 #include "window_placement.h"
 
+#include "data_root.h"
+
 #include <cstdio>
 #include <string>
 
-// Kept as the raw WINDOWPLACEMENT in %LOCALAPPDATA%\YTPlus\config\window.bin.
+// Kept as the raw WINDOWPLACEMENT in <DataRoot()>\config\window.bin.
 
 namespace {
 
 std::wstring PlacementFile() {
-  wchar_t buffer[MAX_PATH * 2];
-  const DWORD length = ::GetEnvironmentVariableW(L"LOCALAPPDATA", buffer, MAX_PATH * 2);
-  if (length == 0 || length >= MAX_PATH * 2) return L"";
-  return std::wstring(buffer, length) + L"\\YTPlus\\config\\window.bin";
+  if (DataRoot().empty()) return L"";
+  return DataRoot() + L"\\config\\window.bin";
 }
 
 // media_kit's fullscreen drops the caption and covers the whole monitor.

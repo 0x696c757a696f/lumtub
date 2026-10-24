@@ -185,6 +185,20 @@ class ToolManager {
     return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
+  /// The newest download-ffmpeg release of [ffmpegRepository], which also
+  /// publishes libmpv releases.
+  Future<Map<String, dynamic>> _ffmpegRelease() async {
+    final response = await _client.get(
+      Uri.parse('https://api.github.com/repos/$ffmpegRepository/releases?per_page=30'),
+      headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'YTPlus-Windows/0.1'},
+    ).timeout(const Duration(seconds: 25));
+    if (response.statusCode != 200) throw HttpException('GitHub API HTTP ${response.statusCode} for $ffmpegRepository');
+    final releases = jsonDecode(response.body);
+    final release = releases is List ? ffmpegRelease(releases) : null;
+    if (release == null) throw StateError('No ffmpeg release in $ffmpegRepository');
+    return release;
+  }
+
   Map<String, dynamic> _asset(Map<String, dynamic> release, bool Function(String) accept) {
     final raw = release['assets'];
     if (raw is! List) throw const FormatException('GitHub release contains no assets');
@@ -418,8 +432,8 @@ class ToolManager {
 
   /// The download size in bytes the release lists for the ffmpeg archive.
   Future<int?> ffmpegDownloadSize() async {
-    final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
-    final name = ffmpegAssetName((release['assets'] as List? ?? const []).whereType<Map>().map((a) => a['name']?.toString() ?? ''));
+    final release = await _ffmpegRelease();
+    final name = ffmpegAssetName((release['assets'] as List? ?? const []).whereType<Map>().map((a) => a['name']?.toString() ?? ''), libmpvVariantForThisProcess());
     final size = (release['assets'] as List).whereType<Map>().where((a) => a['name'] == name).firstOrNull?['size'];
     return size is int ? size : null;
   }
@@ -428,10 +442,11 @@ class ToolManager {
   /// [onlyIfInstalled] nothing happens for a user who never installed it.
   Future<void> installFfmpeg({bool onlyIfInstalled = false, void Function(int received, int? total)? onProgress}) async {
     if (onlyIfInstalled && ffmpegDirectory == null) return;
-    final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
+    final release = await _ffmpegRelease();
     final assets = (release['assets'] as List? ?? const []).whereType<Map<String, dynamic>>().toList();
-    final assetName = ffmpegAssetName(assets.map((a) => a['name']?.toString() ?? ''));
-    if (assetName == null) throw StateError('No LGPL shared ffmpeg build in the $ffmpegRepository release');
+    final variant = libmpvVariantForThisProcess();
+    final assetName = ffmpegAssetName(assets.map((a) => a['name']?.toString() ?? ''), variant);
+    if (assetName == null) throw StateError('No $variant ffmpeg build in the ${release['tag_name']} release');
     final asset = _asset(release, (name) => name == assetName);
     final folder = ffmpegFolderName(assetName, asset['updated_at']?.toString());
     final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');

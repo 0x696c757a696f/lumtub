@@ -11,6 +11,7 @@ import '../sponsor_block.dart';
 import '../video_codec.dart';
 import 'download_models.dart';
 import 'download_selection.dart';
+import '../native_core.dart';
 
 /// Per-call settings the manager reads when a download starts.
 class DownloadOptions {
@@ -102,7 +103,7 @@ class DownloadManager extends ChangeNotifier {
     this.ffmpegDirectory,
     this.sponsorSegments,
   })  : _directory = defaultDirectory,
-        _start = start ?? Process.start;
+        _start = start ?? ProcessTree.start;
 
   /// Where the list and the folder setting are saved.
   final File file;

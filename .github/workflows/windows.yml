@@ -179,7 +179,9 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $package = "YTPlus_$env:YTPLUS_VERSION`_win-$env:PACKAGE_ARCH"
+          # Keep the platform in every distributable name. Future platform
+          # jobs use the same YTPlus_<version>_<platform>-<architecture> form.
+          $package = "YTPlus_$env:YTPLUS_VERSION`_windows-$env:PACKAGE_ARCH"
           $releaseDir = Join-Path "build/windows/$env:BUILD_DIR/runner" 'Release'
           New-Item -ItemType Directory -Force -Path $package | Out-Null
           Copy-Item -Recurse -Force "$releaseDir/*" $package
@@ -196,7 +198,7 @@ jobs:
             if (-not (Test-Path -LiteralPath $default)) { choco install innosetup -y --no-progress | Out-Null }
             $iscc = Get-Item -LiteralPath $default
           }
-          $source = (Resolve-Path "YTPlus_$env:YTPLUS_VERSION`_win-$env:PACKAGE_ARCH").Path
+          $source = (Resolve-Path "YTPlus_$env:YTPLUS_VERSION`_windows-$env:PACKAGE_ARCH").Path
           $output = Join-Path (Get-Location) 'installer'
           & $iscc.Source "/DAppVersion=$env:YTPLUS_VERSION" "/DSourceDir=$source" "/DOutputDir=$output" "/DPackageArch=$env:PACKAGE_ARCH" "/DInstallArch=$env:INSTALL_ARCH" 'windows/installer/ytplus.iss'
           if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed.' }
@@ -204,14 +206,14 @@ jobs:
       - name: Upload portable ZIP
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: YTPlus-win-${{ matrix.package_arch }}-zip
-          path: YTPlus_*_win-${{ matrix.package_arch }}.zip
+          name: YTPlus-windows-${{ matrix.package_arch }}-portable
+          path: YTPlus_*_windows-${{ matrix.package_arch }}.zip
 
       - name: Upload installer
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: YTPlus-win-${{ matrix.package_arch }}-setup
-          path: YTPlus_*_win-${{ matrix.package_arch }}-setup.exe
+          name: YTPlus-windows-${{ matrix.package_arch }}-installer
+          path: YTPlus_*_windows-${{ matrix.package_arch }}-setup.exe
 
   release:
     needs: windows

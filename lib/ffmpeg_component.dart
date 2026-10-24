@@ -5,42 +5,44 @@ import 'dart:typed_data';
 import 'downloads/download_models.dart';
 
 /// The on-demand ffmpeg component: yt-dlp needs ffmpeg and ffprobe to merge a
-/// video stream with an audio stream. The LGPL build from
-/// https://github.com/BtbN/FFmpeg-Builds is used, and only
-/// the two tools and the DLLs they load are kept (the shared build, since a
-/// static one repeats every library in both executables).
-/// Source code: https://ffmpeg.org/download.html
+/// video stream with an audio stream. YTPlus builds its own in
+/// https://github.com/0x696c757a696f/ytplus-media-builds (download-ffmpeg):
+/// LGPL, static, with no codec libraries or hardware decoding, only what
+/// merging and repackaging need, for x86-64, x86-64-v3 and ARM64. Each
+/// archive's BUILD.txt names the FFmpeg source it was built from.
 
-const ffmpegRepository = 'BtbN/FFmpeg-Builds';
-const ffmpegReleaseTag = 'latest';
-const ffmpegChecksumsAsset = 'checksums.sha256';
+const ffmpegRepository = '0x696c757a696f/ytplus-media-builds';
+/// Releases of [ffmpegRepository] holding download builds; the others hold
+/// libmpv.
+const ffmpegReleasePrefix = 'ffmpeg-';
+const ffmpegChecksumsAsset = 'sha256.txt';
 
-/// The shared-library LGPL x64 build among the release's asset [names]: the newest
-/// numbered release (`ffmpeg-n7.1-latest-win64-lgpl-shared-7.1.zip`), else the
-/// `master` one. Static and GPL builds never match.
-String? ffmpegAssetName(Iterable<String> names) {
-  final numbered = RegExp(r'^ffmpeg-n(\d+)\.(\d+)(?:\.\d+)?-latest-win64-lgpl-shared-\d+\.\d+(?:\.\d+)?\.zip$');
-  String? best;
-  var bestKey = -1;
-  for (final name in names) {
-    final match = numbered.firstMatch(name);
-    if (match == null) continue;
-    final key = int.parse(match[1]!) * 1000 + int.parse(match[2]!);
-    if (key > bestKey) {
-      best = name;
-      bestKey = key;
-    }
+/// The newest published download-ffmpeg release among [releases], as the
+/// GitHub API lists them (newest first).
+Map<String, dynamic>? ffmpegRelease(Iterable<Object?> releases) {
+  for (final release in releases) {
+    if (release is! Map<String, dynamic> || release['draft'] == true || release['prerelease'] == true) continue;
+    if ((release['tag_name']?.toString() ?? '').startsWith(ffmpegReleasePrefix)) return release;
   }
-  if (best != null) return best;
-  const master = 'ffmpeg-master-latest-win64-lgpl-shared.zip';
-  return names.contains(master) ? master : null;
+  return null;
+}
+
+/// The archive for [variant] (`x86_64`, `x86_64-v3` or `aarch64`, as
+/// libmpvVariantForThisProcess names it) among the release's asset [names],
+/// such as `ffmpeg-download-x86_64-v3-n8.1.3.zip`.
+String? ffmpegAssetName(Iterable<String> names, String variant) {
+  final pattern = RegExp('^ffmpeg-download-${RegExp.escape(variant)}-n\\d+\\.\\d+(?:\\.\\d+)?\\.zip\$');
+  for (final name in names) {
+    if (pattern.hasMatch(name)) return name;
+  }
+  return null;
 }
 
 /// The folder name for a build: its version from [assetName] and the date
 /// the asset was [updatedAt] (ISO 8601), such as `n7.1-20261021`. A date in
 /// the name makes newer builds sort last.
 String ffmpegFolderName(String assetName, String? updatedAt) {
-  final version = RegExp(r'^ffmpeg-(n\d+\.\d+(?:\.\d+)?|master)-').firstMatch(assetName)?[1] ?? 'unknown';
+  final version = RegExp(r'-(n\d+\.\d+(?:\.\d+)?|master)(?:-|\.zip$)').firstMatch(assetName)?[1] ?? 'unknown';
   final date = RegExp(r'^(\d{4})-(\d{2})-(\d{2})').firstMatch(updatedAt ?? '');
   return date == null ? version : '$version-${date[1]}${date[2]}${date[3]}';
 }
@@ -89,11 +91,11 @@ final _crcTable = List<int>.generate(256, (n) {
   return c;
 });
 
-/// Writes `bin/ffmpeg.exe`, `bin/ffprobe.exe` and the `bin/*.dll` of the zip
-/// [archive] into [into], flat, and nothing else (no ffplay, headers, docs). Returns the names written. Throws a
+/// Writes `ffmpeg.exe`, `ffprobe.exe` and any DLLs of the zip [archive],
+/// at its top or in `bin/`, into [into], flat, and nothing else (no ffplay, headers, docs). Returns the names written. Throws a
 /// [FormatException] for a damaged archive or a failed CRC check.
 Future<List<String>> extractFfmpegBinaries(File archive, Directory into) async {
-  final wanted = RegExp(r'(?:^|/)bin/((?:ffmpeg|ffprobe)\.exe|[A-Za-z0-9_+-][A-Za-z0-9._+-]*\.dll)$', caseSensitive: false);
+  final wanted = RegExp(r'^(?:[^/]+/)?(?:bin/)?((?:ffmpeg|ffprobe)\.exe|[A-Za-z0-9_+-][A-Za-z0-9._+-]*\.dll)$', caseSensitive: false);
   final raf = await archive.open();
   try {
     final length = await raf.length();

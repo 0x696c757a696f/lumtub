@@ -59,28 +59,33 @@ Uint8List _zip(Map<String, List<int>> entries, {bool corruptCrc = false}) {
 }
 
 void main() {
-  test('picks the newest shared LGPL win64 build', () {
+  test('picks the archive for this CPU from the newest download release', () {
     const names = [
-      'checksums.sha256',
-      'ffmpeg-master-latest-win64-gpl.zip',
-      'ffmpeg-master-latest-win64-lgpl.zip',
-      'ffmpeg-master-latest-win64-lgpl-shared.zip',
-      'ffmpeg-n6.1-latest-win64-lgpl-shared-6.1.zip',
-      'ffmpeg-n7.1-latest-win64-lgpl-7.1.zip',
-      'ffmpeg-n7.1-latest-win64-lgpl-shared-7.1.zip',
-      'ffmpeg-n7.1-latest-win64-gpl-shared-7.1.zip',
-      'ffmpeg-n7.1-latest-linux64-lgpl-shared-7.1.tar.xz',
-      'ffmpeg-n10.0-latest-win64-lgpl-shared-10.0.zip',
+      'sha256.txt',
+      'ffmpeg-download-x86_64-n8.1.3.zip',
+      'ffmpeg-download-x86_64-v3-n8.1.3.zip',
+      'ffmpeg-download-aarch64-n8.1.3.zip',
+      'mpv-dev-x86_64-20261024-git-abc.7z',
     ];
-    expect(ffmpegAssetName(names), 'ffmpeg-n10.0-latest-win64-lgpl-shared-10.0.zip');
-    expect(ffmpegAssetName(names.where((n) => !n.contains('n10'))), 'ffmpeg-n7.1-latest-win64-lgpl-shared-7.1.zip');
-    expect(ffmpegAssetName(names.where((n) => n.contains('master'))), 'ffmpeg-master-latest-win64-lgpl-shared.zip');
-    expect(ffmpegAssetName(const ['ffmpeg-master-latest-win64-gpl.zip', 'checksums.sha256']), isNull);
+    expect(ffmpegAssetName(names, 'x86_64'), 'ffmpeg-download-x86_64-n8.1.3.zip');
+    expect(ffmpegAssetName(names, 'x86_64-v3'), 'ffmpeg-download-x86_64-v3-n8.1.3.zip');
+    expect(ffmpegAssetName(names, 'aarch64'), 'ffmpeg-download-aarch64-n8.1.3.zip');
+    expect(ffmpegAssetName(names.where((n) => !n.contains('aarch64')), 'aarch64'), isNull);
+
+    final release = ffmpegRelease([
+      {'tag_name': 'ffmpeg-n8.2-20261101-9', 'draft': true},
+      {'tag_name': '2026-10-24-abc', 'draft': false},
+      {'tag_name': 'ffmpeg-n8.1.3-20261024-3', 'draft': false, 'prerelease': false},
+      {'tag_name': 'ffmpeg-n8.1.2-20261001-1', 'draft': false},
+    ]);
+    expect(release?['tag_name'], 'ffmpeg-n8.1.3-20261024-3');
+    expect(ffmpegRelease(const [{'tag_name': '2026-10-24-abc'}]), isNull);
   });
 
   test('folder names carry the version and the asset date', () {
     expect(ffmpegFolderName('ffmpeg-n7.1-latest-win64-lgpl-shared-7.1.zip', '2026-10-21T03:04:05Z'), 'n7.1-20261021');
     expect(ffmpegFolderName('ffmpeg-master-latest-win64-lgpl-shared.zip', null), 'master');
+    expect(ffmpegFolderName('ffmpeg-download-x86_64-v3-n8.1.3.zip', '2026-10-24T11:00:00Z'), 'n8.1.3-20261024');
   });
 
   test('parses checksum files', () {
@@ -121,6 +126,13 @@ void main() {
       expect(out.listSync().map((e) => e.uri.pathSegments.last).toSet(), {'ffmpeg.exe', 'ffprobe.exe', 'avcodec-61.dll'});
       expect(File('${out.path}/ffmpeg.exe').readAsBytesSync(), exe);
       expect(File('${out.path}/ffprobe.exe').readAsBytesSync(), [1, 2, 3]);
+    });
+
+    test('reads the flat download-ffmpeg archive', () async {
+      final archive = File('${temp.path}/flat.zip')
+        ..writeAsBytesSync(_zip({'ffmpeg.exe': exe, 'ffprobe.exe': [1], 'BUILD.txt': [2], 'COPYING.LGPLv2.1': [3]}));
+      final out = Directory('${temp.path}/out')..createSync();
+      expect((await extractFfmpegBinaries(archive, out)).toSet(), {'ffmpeg.exe', 'ffprobe.exe'});
     });
 
     test('refuses a damaged entry and a file that is not a zip', () async {

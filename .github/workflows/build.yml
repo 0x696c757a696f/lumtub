@@ -136,7 +136,7 @@ jobs:
       - name: Windows ARM64 - restore ANGLE
         id: angle-cache
         if: matrix.package_arch == 'arm64'
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/angle-arm64
           key: angle-arm64-windows-${{ steps.vcpkg.outputs.commit }}

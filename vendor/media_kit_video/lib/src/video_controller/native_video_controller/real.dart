@@ -98,6 +98,11 @@ class NativeVideoController extends PlatformVideoController {
         videoParamsWidth = width;
         videoParamsHeight = height;
 
+        // Lumtub: a size set through [setSize] stays when the video changes.
+        if (this.width != null && this.height != null) {
+          return;
+        }
+
         await _channel.invokeMethod(
           'VideoOutputManager.SetSize',
           {

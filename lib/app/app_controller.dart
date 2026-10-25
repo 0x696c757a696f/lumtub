@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/painting.dart' show Color, PaintingBinding;
+import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -62,6 +62,7 @@ import '../stream_resolver.dart';
 import '../subtitle_translation.dart';
 import '../translation.dart';
 import 'posts_loader.dart';
+import '../video_output_size.dart';
 import '../video_repository.dart';
 import '../windows_env.dart';
 import '../windows_video_info.dart';
@@ -190,6 +191,15 @@ class AppController extends ChangeNotifier {
     _update(() => pip = on);
   }
 
+  VideoOutputSize? _outputSize;
+
+  /// [owner] shows the video in [box], in physical pixels; libmpv draws it
+  /// at the size of the largest place it is shown.
+  void showVideoIn(Object owner, Size box) => _outputSize?.show(owner, box);
+
+  /// [owner] no longer shows the video.
+  void hideVideoIn(Object owner) => _outputSize?.hide(owner);
+
   /// The playing video's width over height, 16:9 until it is known.
   double get videoAspect {
     final state = player?.state;
@@ -309,7 +319,7 @@ class AppController extends ChangeNotifier {
 
   int _playSerial = 0;
   String? _query;
-  final _playerSubscriptions = <StreamSubscription<Object>>[];
+  final _playerSubscriptions = <StreamSubscription<Object?>>[];
   double _volumeBeforeMute = 100;
   bool _libmpvConfirmed = false;
   /// The video whose position is being recorded; null while switching, so
@@ -503,6 +513,7 @@ class AppController extends ChangeNotifier {
         )..addListener(notifyListeners);
         this.player = player;
         videoController = controller;
+        _outputSize = VideoOutputSize((width, height) => controller.setSize(width: width, height: height));
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
         _thumbnailTrimTimer?.cancel();
@@ -1563,7 +1574,10 @@ class AppController extends ChangeNotifier {
   }
 
   void _listenTo(Player player) {
+    void videoSize(_) => _outputSize?.video = Size((player.state.width ?? 0).toDouble(), (player.state.height ?? 0).toDouble());
     _playerSubscriptions.addAll([
+      player.stream.width.listen(videoSize),
+      player.stream.height.listen(videoSize),
       // A second of playback proves a downloaded libmpv works on this PC.
       player.stream.position.listen((position) {
         if (_tracking == null) return;
@@ -2868,6 +2882,7 @@ class AppController extends ChangeNotifier {
     _recoveryTimer?.cancel();
     _sleepTimer?.cancel();
     _dropTimer?.cancel();
+    _outputSize?.dispose();
     unawaited(_flushAppearance());
     _thumbnailTrimTimer?.cancel();
     for (final subscription in _playerSubscriptions) {

@@ -26,6 +26,7 @@ import '../video_card.dart';
 import 'channel_page.dart';
 import 'downloads_page.dart';
 import '../../dearrow.dart';
+import '../video_box.dart';
 import '../../l10n/l10n.dart';
 
 /// Player, video details, the up-next list and the comments. On wide
@@ -281,8 +282,13 @@ class _Player extends StatelessWidget {
               child: Video(
                 key: videoKey,
                 controller: controller.videoController!,
-                controls: (state) => RepaintBoundary(
-                  child: PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
+                // The controls cover the video here and in full screen, so
+                // they measure the size it is drawn at.
+                controls: (state) => VideoBox(
+                  controller: controller,
+                  child: RepaintBoundary(
+                    child: PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
+                  ),
                 ),
                 subtitleViewConfiguration: subtitleViewFor(controller.settings),
               ),

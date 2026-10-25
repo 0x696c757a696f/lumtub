@@ -22,6 +22,7 @@ import '../l10n/l10n.dart';
 import '../widgets/video_progress_bar.dart';
 import 'pages/watch_page.dart' show subtitleViewFor;
 import 'player_shortcuts.dart';
+import 'video_box.dart';
 
 class PipView extends StatefulWidget {
   const PipView({super.key, required this.controller});
@@ -92,13 +93,16 @@ class _PipViewState extends State<PipView> {
               _setHovering(false);
             },
             child: Stack(fit: StackFit.expand, children: [
-              Video(
-                controller: _controller.videoController!,
-                controls: NoVideoControls,
-                subtitleViewConfiguration: SubtitleViewConfiguration(
-                  visible: subtitles.visible,
-                  style: subtitles.style.copyWith(fontSize: 14 * scale),
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+              VideoBox(
+                controller: _controller,
+                child: Video(
+                  controller: _controller.videoController!,
+                  controls: NoVideoControls,
+                  subtitleViewConfiguration: SubtitleViewConfiguration(
+                    visible: subtitles.visible,
+                    style: subtitles.style.copyWith(fontSize: 14 * scale),
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                  ),
                 ),
               ),
               // Press and move to drag the window; double-click to go back.

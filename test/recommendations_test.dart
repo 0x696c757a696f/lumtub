@@ -275,15 +275,6 @@ void main() {
   });
 
   group('taste details', () {
-    test('words in every title count less than distinctive ones', () {
-      final taste = TasteProfile.from(history: [
-        video('a', title: '教程 机械键盘'),
-        video('b', title: '教程 剪辑'),
-        video('c', title: '教程 摄影'),
-      ]);
-      expect(taste.words['教程']! / 3, lessThan(taste.words['键盘']!));
-    });
-
     test('a video left within seconds counts against its channel', () {
       final taste = TasteProfile.from(
         history: [video('a', channelId: 'UCskip', title: '不喜欢'), video('b', channelId: 'UCgood', title: '喜欢')],
@@ -293,7 +284,7 @@ void main() {
       );
       expect(taste.channelAffinity(video('x', channelId: 'UCskip')), lessThan(0));
       expect(taste.channelAffinity(video('x', channelId: 'UCgood')), 1);
-      expect(taste.words.containsKey('不喜'), isFalse);
+      expect(taste.interestOf(video('x', title: '不喜')), isNull);
     });
 
     test('searches count as interests', () {

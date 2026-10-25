@@ -49,6 +49,13 @@ The build reports how complete each translation is (look for
 
 ## Sending a translation
 
+The easiest way is on Weblate: open
+https://hosted.weblate.org/engage/lumtub/, sign in, pick your language (or
+start a new one) and translate in the browser. Weblate sends the work back as
+a pull request.
+
+To work with the files directly instead:
+
 1. Fork the repository and add or edit your file in `assets/l10n`.
 2. Open a pull request. The Build workflow checks that every key exists and
    every placeholder is kept.

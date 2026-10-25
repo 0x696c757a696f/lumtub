@@ -78,7 +78,10 @@ Future<void> loadTranslations([AssetBundle? bundle]) async {
   final manifest = await AssetManifest.loadFromAssetBundle(bundle);
   _translations.clear();
   for (final path in manifest.listAssets().where((p) => p.startsWith('assets/l10n/') && p.endsWith('.json'))) {
-    final tag = path.substring('assets/l10n/'.length, path.length - '.json'.length);
+    // Weblate may name a file zh_Hant as well as zh-Hant.
+    final tag = path.substring('assets/l10n/'.length, path.length - '.json'.length).replaceAll('_', '-');
+    // Simplified Chinese is the source text in the code; a file for it is not a translation.
+    if (tag == AppLanguage.zhHans.tag) continue;
     final map = (jsonDecode(await bundle.loadString(path)) as Map<String, dynamic>).map((k, v) => MapEntry(k, v as String));
     _translations[tag] = {
       for (final e in map.entries)

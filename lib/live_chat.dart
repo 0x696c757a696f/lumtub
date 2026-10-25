@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'native_core.dart';
+
 /// A read-only item from yt-dlp's `live_chat` JSON subtitle stream.
 ///
 /// yt-dlp writes one JSON action per line. Replay actions include an offset
@@ -36,97 +38,30 @@ class LiveChatMessage {
 
   /// Parses one yt-dlp `live_chat` line. Status actions without a chat item
   /// and unknown renderer types are left out.
-  static List<LiveChatMessage> parseLine(String line) {
-    final raw = jsonDecode(line);
-    if (raw is! Map) return const [];
-    final replay = raw['replayChatItemAction'];
-    final action = replay is Map ? replay : raw;
-    final offsetMs = int.tryParse('${action['videoOffsetTimeMsec'] ?? ''}');
-    final offset = offsetMs == null ? null : Duration(milliseconds: offsetMs);
-    final actions = action['actions'];
-    if (actions is! List) return const [];
-    return [
-      for (final entry in actions.whereType<Map>())
-        if (entry['addChatItemAction'] case final Map add)
-          if (add['item'] case final Map item)
-            if (_fromItem(item, offset: offset) case final message?) message,
-    ];
-  }
+  static List<LiveChatMessage> parseLine(String line) => _read(line);
 
   /// Parses a complete `.live_chat.json` file written by yt-dlp.
-  static List<LiveChatMessage> parseLines(String contents) => [
-        for (final line in const LineSplitter().convert(contents))
-          if (line.trim().isNotEmpty) ...parseLine(line),
-      ];
+  static List<LiveChatMessage> parseLines(String contents) => _read(contents);
 
-  static LiveChatMessage? _fromItem(Map item, {required Duration? offset}) {
-    final found = <(LiveChatKind, Map)>[
-      if (item['liveChatTextMessageRenderer'] case final Map renderer) (LiveChatKind.message, renderer),
-      if (item['liveChatPaidMessageRenderer'] case final Map renderer) (LiveChatKind.paidMessage, renderer),
-      if (item['liveChatPaidStickerRenderer'] case final Map renderer) (LiveChatKind.paidSticker, renderer),
-      if (item['liveChatMembershipItemRenderer'] case final Map renderer) (LiveChatKind.membership, renderer),
-      if (item['liveChatViewerEngagementMessageRenderer'] case final Map renderer) (LiveChatKind.system, renderer),
+  /// The chat items of [lines], read by the native core; none without it.
+  static List<LiveChatMessage> _read(String lines) {
+    final core = NativeCore.instance;
+    final list = core == null ? null : jsonDecode(core.take(core.withText(lines, core.liveChat)) ?? 'null');
+    if (list is! List) return const [];
+    return [
+      for (final m in list.cast<Map<String, dynamic>>())
+        LiveChatMessage(
+          id: m['id'] as String,
+          kind: LiveChatKind.values.byName(m['kind'] as String),
+          text: m['text'] as String,
+          offset: m['offsetMs'] == null ? null : Duration(milliseconds: (m['offsetMs'] as num).toInt()),
+          timestampUsec: (m['timestampUsec'] as num?)?.toInt(),
+          author: m['author'] as String,
+          authorChannelId: m['authorChannelId'] as String?,
+          authorAvatar: m['authorAvatar'] as String?,
+          amount: m['amount'] as String?,
+          stickerUrl: m['stickerUrl'] as String?,
+        ),
     ];
-    if (found.isEmpty) return null;
-    final (kind, renderer) = found.first;
-    final text = _text(renderer['message']).isNotEmpty
-        ? _text(renderer['message'])
-        : _text(renderer['headerSubtext']).isNotEmpty
-            ? _text(renderer['headerSubtext'])
-            : _text(renderer['headerPrimaryText']);
-    final id = '${renderer['id'] ?? ''}';
-    if (id.isEmpty) return null;
-    final authorPhoto = renderer['authorPhoto'];
-    String? avatar;
-    if (authorPhoto is Map && authorPhoto['thumbnails'] is List) {
-      for (final thumbnail in authorPhoto['thumbnails'] as List) {
-        if (thumbnail is Map && thumbnail['url'] is String) avatar = thumbnail['url'] as String;
-      }
-    }
-    final amount = _text(renderer['purchaseAmountText']);
-    String? stickerUrl;
-    if (renderer['sticker'] case final Map sticker) {
-      final thumbnails = sticker['thumbnails'];
-      if (thumbnails is List) {
-        for (final thumbnail in thumbnails) {
-          if (thumbnail is Map && thumbnail['url'] is String) stickerUrl = thumbnail['url'] as String;
-        }
-      }
-    }
-    return LiveChatMessage(
-      id: id,
-      kind: kind,
-      text: text,
-      offset: offset,
-      timestampUsec: int.tryParse('${renderer['timestampUsec'] ?? ''}'),
-      author: _text(renderer['authorName']),
-      authorChannelId: renderer['authorExternalChannelId']?.toString(),
-      authorAvatar: avatar,
-      amount: amount.isEmpty ? null : amount,
-      stickerUrl: stickerUrl,
-    );
-  }
-
-  static String _text(Object? raw) {
-    if (raw is! Map) return '';
-    final simple = raw['simpleText'];
-    if (simple is String) return simple;
-    final runs = raw['runs'];
-    if (runs is! List) return '';
-    return runs.whereType<Map>().map((run) {
-      final text = run['text'];
-      if (text is String) return text;
-      final emoji = run['emoji'];
-      if (emoji is Map) {
-        final shortcuts = emoji['shortcuts'];
-        if (shortcuts is List && shortcuts.isNotEmpty) return '${shortcuts.first}';
-        final accessibility = emoji['accessibility'];
-        if (accessibility is Map) {
-          final data = accessibility['accessibilityData'];
-          if (data is Map) return '${data['label'] ?? ''}';
-        }
-      }
-      return '';
-    }).join();
   }
 }

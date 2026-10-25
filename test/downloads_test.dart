@@ -201,7 +201,7 @@ void main() {
       final file = File('${dir.path}/videos/x [aaaaaaaaaaa].mp4')..createSync(recursive: true);
       processes[0].out('lumtub-file|${file.path}');
       await processes[0].exit(0);
-      await settle();
+      await until(() => finished.isNotEmpty);
       expect(m.localVideo('aaaaaaaaaaa'), isNotNull);
       expect(finished.single.filePath, file.path);
       file.deleteSync();

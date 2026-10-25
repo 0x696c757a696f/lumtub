@@ -27,6 +27,13 @@ enum VideoCodec {
 
   static VideoCodec? byName(Object? name) => values.where((c) => c.name == name).firstOrNull;
 
+  /// The codecs YouTube offers at every quality; one of them must stay
+  /// enabled, or no video plays.
+  static const main = {av1, vp9, h264};
+
+  /// Whether some video can still play with [disabled] disabled.
+  static bool playableWithout(Set<VideoCodec> disabled) => !disabled.containsAll(main);
+
   /// yt-dlp filters keeping only formats of this codec, e.g. `[vcodec~='^(vp09|vp9)']`.
   String get onlyFilter => "[vcodec~='^(${prefixes.join('|')})']";
 

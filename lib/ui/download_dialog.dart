@@ -165,7 +165,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
         const SizedBox(height: 14),
         _section(context, tr('视频画质'), [
           for (final h in heights)
-            _chip('${h}p', selected: h == DownloadFormats.pickHeight(heights, _wantedHeight), onTap: () => setState(() {
+            _chip('${h}p', selected: h == video?.height, onTap: () => setState(() {
                   _wantedHeight = h;
                   _containerNote = null;
                   _checkContainer();

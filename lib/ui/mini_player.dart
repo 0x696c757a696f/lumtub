@@ -19,6 +19,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../app/app_controller.dart';
 import '../app_window.dart' show pipAspectOf;
 import '../l10n/l10n.dart';
+import 'video_box.dart';
 import '../widgets/video_progress_bar.dart';
 
 /// The corners the card snaps to.
@@ -123,10 +124,13 @@ class _MiniPlayerState extends State<MiniPlayer> {
     if (builder != null) return builder(context);
     final controller = _controller.videoController;
     if (controller == null) return const SizedBox.expand();
-    return Video(
-      controller: controller,
-      controls: NoVideoControls,
-      subtitleViewConfiguration: const SubtitleViewConfiguration(visible: false),
+    return VideoBox(
+      controller: _controller,
+      child: Video(
+        controller: controller,
+        controls: NoVideoControls,
+        subtitleViewConfiguration: const SubtitleViewConfiguration(visible: false),
+      ),
     );
   }
 

@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import 'community_posts.dart';
 import 'l10n/l10n.dart';
+import 'native_core.dart';
+import 'youtube_web.dart';
 
 /// One comment or reply.
 class YoutubeComment {
@@ -61,7 +63,7 @@ class YoutubeComments {
   final http.Client _client;
 
   static Map<String, String> get _headers => {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+    'User-Agent': YoutubeWeb.userAgent,
     'Accept-Language': youtubeAcceptLanguage,
     'Cookie': 'CONSENT=YES+cb; SOCS=CAI',
   };
@@ -85,7 +87,8 @@ class YoutubeComments {
     _apiKey = RegExp(r'"INNERTUBE_API_KEY":"([^"]+)"').firstMatch(html)?.group(1) ?? _apiKey;
     _clientVersion = RegExp(r'"INNERTUBE_CLIENT_VERSION":"([^"]+)"').firstMatch(html)?.group(1) ?? _clientVersion;
     _visitorData = RegExp(r'"VISITOR_DATA":"([^"]+)"').firstMatch(html)?.group(1) ?? _visitorData;
-    final token = sectionToken(CommunityPosts.initialData(html));
+    final core = NativeCore.instance;
+    final token = core == null ? null : jsonDecode(core.take(core.withText(html, core.youtubePostComments)) ?? 'null') as String?;
     if (token == null) throw FormatException(tr('这个帖子没有评论区，或评论已关闭'));
     final header = await _request('browse', token);
     return _sorted(header, 'browse', newest);
@@ -110,12 +113,12 @@ class YoutubeComments {
     final response = await _client
         .post(
           Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?${key == null ? '' : 'key=$key&'}prettyPrint=false'),
-          headers: {..._headers, 'Content-Type': 'application/json'},
+          headers: YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage),
           body: jsonEncode({
             'context': {
               'client': {
                 'clientName': 'WEB',
-                'clientVersion': _clientVersion ?? '2.20251001.00.00',
+                'clientVersion': _clientVersion ?? YoutubeWeb.clientVersion,
                 'hl': youtubeHl,
                 if (_visitorData != null) 'visitorData': _visitorData,
               },
@@ -125,7 +128,7 @@ class YoutubeComments {
         )
         .timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    return parse(jsonDecode(utf8.decode(response.bodyBytes)));
+    return read(utf8.decode(response.bodyBytes));
   }
 
   /// The token of a video's comment section, built as yt-dlp's
@@ -134,154 +137,37 @@ class YoutubeComments {
   static String videoSectionToken(String videoId) =>
       base64.encode(utf8.encode('\x12\r\x12\x0b$videoId\x18\x062\'"\x11"\x0b${videoId}0\x00x\x020\x00B\x10comments-section'));
 
-  /// The comment section's continuation token in a page's `ytInitialData`.
-  static String? sectionToken(Object? data) {
-    String? found;
-    void walk(Object? node) {
-      if (found != null) return;
-      if (node is List) {
-        for (final child in node) {
-          walk(child);
-        }
-      } else if (node is Map) {
-        final section = node['itemSectionRenderer'];
-        if (section is Map && section['sectionIdentifier'] == 'comment-item-section') {
-          found = _token(section['contents']);
-          return;
-        }
-        for (final value in node.values) {
-          if (value is Map || value is List) walk(value);
-        }
-      }
-    }
-
-    walk(data);
-    return found;
-  }
-
-  /// The first `continuationCommand` token anywhere under [node].
-  static String? _token(Object? node) {
-    if (node is List) {
-      for (final child in node) {
-        final token = _token(child);
-        if (token != null) return token;
-      }
-    } else if (node is Map) {
-      final token = _path(node, ['continuationCommand', 'token']);
-      if (token is String) return token;
-      for (final value in node.values) {
-        if (value is Map || value is List) {
-          final token = _token(value);
-          if (token != null) return token;
-        }
-      }
-    }
-    return null;
-  }
-
-  /// A `/next` or `/browse` response with comment section items.
-  static CommentPage parse(Object? response) {
-    final entities = <String, Map>{};
-    final mutations = _path(response, ['frameworkUpdates', 'entityBatchUpdate', 'mutations']);
-    if (mutations is List) {
-      for (final mutation in mutations.whereType<Map>()) {
-        final key = mutation['entityKey'];
-        final payload = mutation['payload'];
-        if (key is String && payload is Map) entities[key] = payload;
-      }
-    }
-    final items = <Object?>[];
-    final endpoints = _path(response, ['onResponseReceivedEndpoints']);
-    if (endpoints is List) {
-      for (final endpoint in endpoints.whereType<Map>()) {
-        final command = endpoint['reloadContinuationItemsCommand'] ?? endpoint['appendContinuationItemsAction'];
-        final list = _path(command, ['continuationItems']);
-        if (list is List) items.addAll(list);
-      }
-    }
-    final comments = <YoutubeComment>[];
-    final seen = <String>{};
-    String? continuation;
-    var count = '';
-    String? top;
-    String? newest;
-    for (final item in items.whereType<Map>()) {
-      final header = item['commentsHeaderRenderer'];
-      if (header is Map) {
-        count = CommunityPosts.text(header['countText']).isNotEmpty ? CommunityPosts.text(header['countText']) : CommunityPosts.text(header['commentsCount']);
-        final sorts = _path(header, ['sortMenu', 'sortFilterSubMenuRenderer', 'subMenuItems']);
-        if (sorts is List) {
-          top = sorts.isNotEmpty ? _token(sorts[0]) : null;
-          newest = sorts.length > 1 ? _token(sorts[1]) : null;
-        }
-        continue;
-      }
-      final thread = item['commentThreadRenderer'];
-      final comment = _comment(thread is Map ? thread : item, entities, thread is Map ? _path(thread, ['replies', 'commentRepliesRenderer']) : null);
-      if (comment != null) {
-        if (seen.add(comment.id)) comments.add(comment);
-        continue;
-      }
-      if (item['continuationItemRenderer'] != null) continuation = _token(item['continuationItemRenderer']) ?? continuation;
-    }
-    return CommentPage(comments, continuation, count: count, topToken: top, newestToken: newest);
-  }
-
-  static YoutubeComment? _comment(Map node, Map<String, Map> entities, Object? replies) {
-    final repliesToken = replies == null ? null : _token(replies);
-    final model = _path(node, ['commentViewModel', 'commentViewModel']) ?? node['commentViewModel'];
-    if (model is Map) {
-      final payload = _path(entities[model['commentKey']], ['commentEntityPayload']);
-      final id = _path(payload, ['properties', 'commentId']);
-      if (id is! String) return null;
-      final toolbar = _path(entities[model['toolbarStateKey']], ['engagementToolbarStateEntityPayload']);
-      final author = _path(payload, ['author']);
-      return YoutubeComment(
-        id: id,
-        author: '${_path(author, ['displayName']) ?? ''}',
-        text: '${_path(payload, ['properties', 'content', 'content']) ?? ''}',
-        avatar: _https(_path(author, ['avatarThumbnailUrl'])),
-        channelId: _path(author, ['channelId']) as String?,
-        published: '${_path(payload, ['properties', 'publishedTime']) ?? ''}',
-        likes: '${_path(payload, ['toolbar', 'likeCountNotliked']) ?? ''}'.trim(),
-        replyCount: int.tryParse('${_path(payload, ['toolbar', 'replyCount']) ?? ''}'.replaceAll(RegExp(r'\D'), '')) ?? 0,
-        repliesToken: repliesToken,
-        pinned: model['pinnedText'] != null,
-        hearted: _path(toolbar, ['heartState']) == 'TOOLBAR_HEART_STATE_HEARTED',
-        byUploader: _path(author, ['isCreator']) == true,
-      );
-    }
-    final renderer = _path(node, ['comment', 'commentRenderer']) ?? node['commentRenderer'];
-    if (renderer is! Map || renderer['commentId'] is! String) return null;
-    final thumbnails = _path(renderer, ['authorThumbnail', 'thumbnails']);
-    return YoutubeComment(
-      id: renderer['commentId'] as String,
-      author: CommunityPosts.text(renderer['authorText']),
-      text: CommunityPosts.text(renderer['contentText']),
-      avatar: thumbnails is List && thumbnails.isNotEmpty ? _https(_path(thumbnails.last, ['url'])) : null,
-      channelId: _path(renderer, ['authorEndpoint', 'browseEndpoint', 'browseId']) as String?,
-      published: CommunityPosts.text(renderer['publishedTimeText']),
-      likes: CommunityPosts.text(renderer['voteCount']),
-      replyCount: renderer['replyCount'] is int ? renderer['replyCount'] as int : 0,
-      repliesToken: repliesToken,
-      pinned: renderer['pinnedCommentBadge'] != null,
-      hearted: _path(renderer, ['actionButtons', 'commentActionButtonsRenderer', 'creatorHeart']) != null,
-      byUploader: renderer['authorIsChannelOwner'] == true,
+  /// A `/next` or `/browse` response [body] with comment section items,
+  /// read by the native core; empty without it.
+  static CommentPage read(String body) {
+    final core = NativeCore.instance;
+    final page = core == null ? null : jsonDecode(core.take(core.withText(body, core.youtubeComments)) ?? 'null');
+    if (page is! Map<String, dynamic>) return const CommentPage([], null);
+    return CommentPage(
+      [
+        for (final c in (page['comments'] as List).cast<Map<String, dynamic>>())
+          YoutubeComment(
+            id: c['id'] as String,
+            author: c['author'] as String,
+            text: c['text'] as String,
+            avatar: c['avatar'] as String?,
+            channelId: c['channelId'] as String?,
+            published: c['published'] as String,
+            likes: c['likes'] as String,
+            replyCount: (c['replyCount'] as num).toInt(),
+            repliesToken: c['repliesToken'] as String?,
+            pinned: c['pinned'] as bool,
+            hearted: c['hearted'] as bool,
+            byUploader: c['byUploader'] as bool,
+          ),
+      ],
+      page['continuation'] as String?,
+      count: page['count'] as String,
+      topToken: page['topToken'] as String?,
+      newestToken: page['newestToken'] as String?,
     );
   }
 
-  static String? _https(Object? url) {
-    final text = '${url ?? ''}';
-    final full = text.startsWith('//') ? 'https:$text' : text;
-    return full.startsWith('https://') ? full : null;
-  }
-
-  static Object? _path(Object? node, List<String> keys) {
-    var current = node;
-    for (final key in keys) {
-      if (current is! Map) return null;
-      current = current[key];
-    }
-    return current;
-  }
+  @visibleForTesting
+  static CommentPage parse(Object? response) => read(jsonEncode(response));
 }

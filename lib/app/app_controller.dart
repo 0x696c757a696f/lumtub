@@ -1,15 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/painting.dart' show Color, PaintingBinding;
+import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app_directories.dart';
+import '../app_updater.dart';
 import '../app_log.dart';
 import '../app_window.dart';
 import '../app_preferences.dart';
@@ -28,6 +30,7 @@ import '../sponsor_block.dart';
 import '../appearance_settings.dart';
 import '../cache_manager.dart';
 import '../decoder_status.dart';
+import '../native_core.dart';
 import '../live_chat.dart';
 import '../models.dart';
 import '../network_proxy.dart';
@@ -61,6 +64,7 @@ import '../stream_resolver.dart';
 import '../subtitle_translation.dart';
 import '../translation.dart';
 import 'posts_loader.dart';
+import '../video_output_size.dart';
 import '../video_repository.dart';
 import '../windows_env.dart';
 import '../windows_video_info.dart';
@@ -99,10 +103,8 @@ class AppController extends ChangeNotifier {
   PageMode mode = PageMode.home;
   bool ready = false;
   bool checking = false;
-  bool checkingAppUpdate = false;
-  String? availableAppVersion;
-  String? availableAppUrl;
-  String? appUpdateError;
+  /// Lumtub's own updates; null until the components are ready.
+  AppUpdater? appUpdater;
   String status = tr('正在准备 Windows 原生播放器…');
   /// Startup failure; the setup screen shows it with a retry button.
   String? error;
@@ -190,6 +192,15 @@ class AppController extends ChangeNotifier {
     if (on && !ok) return _notice(tr('无法进入画中画'));
     _update(() => pip = on);
   }
+
+  VideoOutputSize? _outputSize;
+
+  /// [owner] shows the video in [box], in physical pixels; libmpv draws it
+  /// at the size of the largest place it is shown.
+  void showVideoIn(Object owner, Size box) => _outputSize?.show(owner, box);
+
+  /// [owner] no longer shows the video.
+  void hideVideoIn(Object owner) => _outputSize?.hide(owner);
 
   /// The playing video's width over height, 16:9 until it is known.
   double get videoAspect {
@@ -310,7 +321,7 @@ class AppController extends ChangeNotifier {
 
   int _playSerial = 0;
   String? _query;
-  final _playerSubscriptions = <StreamSubscription<Object>>[];
+  final _playerSubscriptions = <StreamSubscription<Object?>>[];
   double _volumeBeforeMute = 100;
   bool _libmpvConfirmed = false;
   /// The video whose position is being recorded; null while switching, so
@@ -504,8 +515,10 @@ class AppController extends ChangeNotifier {
         )..addListener(notifyListeners);
         this.player = player;
         videoController = controller;
+        _outputSize = VideoOutputSize((width, height) => controller.setSize(width: width, height: height));
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
+        unawaited(_measureDecoders());
         _thumbnailTrimTimer?.cancel();
         _thumbnailTrimTimer = Timer.periodic(const Duration(hours: 1), (_) => _trimThumbnails());
         ready = true;
@@ -515,10 +528,10 @@ class AppController extends ChangeNotifier {
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
       // Do not block the UI while checking newer releases.
-      if (preferences.autoCheckUpdates) {
-        unawaited(manager.checkUpdates());
-        unawaited(checkAppUpdate());
-      }
+      if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
+      final updater = AppUpdater(client: _http, directory: Directory('${directories.cache.path}${Platform.pathSeparator}updates'), download: manager.downloadVerified)..addListener(notifyListeners);
+      appUpdater = updater;
+      if (preferences.autoCheckUpdates || preferences.autoUpdateApp) updater.start(download: () => preferences.autoUpdateApp);
       unawaited(_refreshCacheSize());
       unawaited(_trimThumbnails());
       unawaited(downloads?.load());
@@ -533,38 +546,15 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  /// Checks the application's own release separately from libmpv and yt-dlp.
-  /// Replacing an installed executable is left to the installer after the
-  /// user opens the matching GitHub Release.
-  Future<void> checkAppUpdate() async {
-    if (checkingAppUpdate) return;
-    _update(() {
-      checkingAppUpdate = true;
-      appUpdateError = null;
-    });
-    try {
-      final response = await _http.get(
-        Uri.https('api.github.com', '/repos/0x696c757a696f/lumtub/releases/latest'),
-        headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'Lumtub-Windows/$appVersion'},
-      ).timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
-      final json = jsonDecode(response.body);
-      if (json is! Map) throw const FormatException('Invalid GitHub release response');
-      final tag = json['tag_name']?.toString().replaceFirst(RegExp(r'^v', caseSensitive: false), '') ?? '';
-      final url = json['html_url']?.toString() ?? '';
-      _update(() {
-        availableAppVersion = tag.isNotEmpty && tag != appVersion ? tag : null;
-        availableAppUrl = availableAppVersion == null || url.isEmpty ? null : url;
-        checkingAppUpdate = false;
-      });
-      logInfo(availableAppVersion == null ? 'Lumtub is up to date ($appVersion)' : 'Lumtub update available: $availableAppVersion');
-    } catch (error) {
-      _update(() {
-        checkingAppUpdate = false;
-        appUpdateError = '$error';
-      });
-      logInfo('Could not check Lumtub updates: $error');
-    }
+  /// Checks for a new Lumtub now and downloads it, for the settings page.
+  Future<void> checkAppUpdate() async => appUpdater?.check(download: AppUpdater.canInstall);
+
+  /// Closes Lumtub, installs the downloaded update and starts it again.
+  Future<void> restartToUpdate() async {
+    final updater = appUpdater;
+    if (updater == null || updater.ready == null) return;
+    await shutdown(install: false);
+    if (await updater.install(relaunch: true)) exit(0);
   }
 
   /// Keeps the thumbnail cache under its cap, at startup and then hourly;
@@ -613,6 +603,7 @@ class AppController extends ChangeNotifier {
         deno: paths.deno,
         toolDirectories: paths.executableDirectories,
         proxy: () => proxy.ytDlpValue(this.settings.proxyMode),
+        client: _http,
       );
 
   DownloadManager _downloadsFor(ToolPaths paths, AppDirectories directories) => DownloadManager(
@@ -981,8 +972,10 @@ class AppController extends ChangeNotifier {
     final query = exploreQuery;
     final mode = exploreMode;
     final mix = exploreTopicNow.mix;
-    final region = preferences.exploreRegion.gl;
-    final language = preferences.exploreLanguage;
+    // 全球热门 is the same everywhere, whatever region and language are set.
+    final global = exploreTopicNow.global;
+    final region = global ? null : preferences.exploreRegion.gl;
+    final language = global ? ExploreLanguage.any : preferences.exploreLanguage;
     final perChannel = <String, int>{};
     final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);
     final taste = mode == ExploreMode.forYou ? _exploreTaste() : null;
@@ -993,6 +986,9 @@ class AppController extends ChangeNotifier {
     final notInterested = homeFeed?.notInterested;
     final faith = exploreSection.isFaith ? faithFilter() : null;
     final seen = mix ? {for (final item in history) item.id, ...?homeFeed?.items.map((item) => item.id)} : const <String>{};
+    final known = mode == ExploreMode.fresh
+        ? {for (final item in history) TasteProfile.channelKey(item), for (final channel in library?.channels ?? const <ChannelRef>[]) channel.id}
+        : const <String>{};
     final dropped = <String, int>{};
     bool drop(String why) {
       dropped.update(why, (n) => n + 1, ifAbsent: () => 1);
@@ -1014,6 +1010,11 @@ class AppController extends ChangeNotifier {
         final views = item.viewCount;
         if (views == null || views > gemMaxViews || seconds == null || seconds < 240) return drop('not a hidden gem');
       }
+      if (mode == ExploreMode.fresh) {
+        final views = item.viewCount;
+        if (views == null || views > freshMaxViews || seconds == null || seconds < 60) return drop('not new');
+        if (known.contains(TasteProfile.channelKey(item))) return drop('known channel');
+      }
       if (mode == ExploreMode.curated && seconds != null && seconds < 240) return drop('too short');
       if (!language.matches(item.title)) return drop('language');
       // 全部 is for finding more: not what was watched or what 为你推荐
@@ -1028,7 +1029,7 @@ class AppController extends ChangeNotifier {
           () => mix ? repository.searchMix(exploreMixQueries(exploreSection), sp: sp, region: region) : repository.search(query, sp: sp, region: region),
           where: where,
           fill: switch (mode) {
-            ExploreMode.gems || ExploreMode.liveReplay => 8,
+            ExploreMode.gems || ExploreMode.fresh || ExploreMode.liveReplay => 8,
             ExploreMode.liveUpcoming => 4,
             _ => faith != null || mix || language != ExploreLanguage.any ? 8 : 1,
           },
@@ -1576,7 +1577,10 @@ class AppController extends ChangeNotifier {
   }
 
   void _listenTo(Player player) {
+    void videoSize(_) => _outputSize?.video = Size((player.state.width ?? 0).toDouble(), (player.state.height ?? 0).toDouble());
     _playerSubscriptions.addAll([
+      player.stream.width.listen(videoSize),
+      player.stream.height.listen(videoSize),
       // A second of playback proves a downloaded libmpv works on this PC.
       player.stream.position.listen((position) {
         if (_tracking == null) return;
@@ -1902,9 +1906,21 @@ class AppController extends ChangeNotifier {
   }
 
   /// Saves the quality limit and reloads the current video where it was.
-  Future<void> setMaxHeight(int height) async {
+  /// Sets the quality cap; [asDefault] when it was chosen in the settings
+  /// rather than for the video playing.
+  Future<void> setMaxHeight(int height, {bool asDefault = false}) async {
     if (height == settings.maxHeight) return;
-    await reloadVideo(settings.copyWith(maxHeight: height));
+    // Automatic codecs follow the quality: above 1080p VP9 stays enabled.
+    final next = settings.copyWith(maxHeight: height);
+    if (height > 1080) {
+      final usable = [VideoCodec.vp9, VideoCodec.av1].where((codec) => !next.disabledCodecs.contains(codec));
+      if (usable.isEmpty) {
+        if (asDefault) _notice(tr('VP9 和 AV1 都已禁用，H.264 最高只能到 1080p'));
+      } else if (!usable.any((codec) => FormatPolicy.hardware(next, codec))) {
+        _notice(tr('这台电脑不能硬解 VP9 和 AV1，1440p 和 4K 只能用 CPU 软解，占用会很高'));
+      }
+    }
+    await reloadVideo(next);
   }
 
   /// Saves [next], if given, and reopens the current video where it was,
@@ -1961,7 +1977,13 @@ class AppController extends ChangeNotifier {
           // The extraction playback uses carries the details too.
           final resolved = await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort);
           loaded = resolved.details;
-          if (serial == _playSerial) _update(() => availableHeights = resolved.heightsFor(settings));
+          if (serial == _playSerial) {
+            _update(() => availableHeights = resolved.heightsFor(settings));
+            final lost = resolved.lostToDisabled(settings, _playback.maxHeight);
+            if (lost != null) {
+              _notice(tr('这个视频的 {0}p 只有 {1}，已被禁用，正在播放 {2}p', [lost.height, lost.codecs.map((c) => c.label).join(' / '), lost.playing]));
+            }
+          }
         } catch (_) {
           loaded = await _repository!.details(item.id);
         }
@@ -2690,6 +2712,28 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  /// Asks the GPU what it decodes in hardware, once per graphics adapter
+  /// and driver: the automatic codecs follow the answer.
+  Future<void> _measureDecoders() async {
+    try {
+      final json = await Isolate.run(NativeCore.hwDecodersNow);
+      if (json == null || _disposed) return;
+      final probe = jsonDecode(json) as Map<String, dynamic>;
+      final adapter = probe['adapter']?.toString() ?? '';
+      if (adapter.isEmpty || adapter == settings.decoderAdapter) return;
+      int height(String key) => (probe[key] as num?)?.toInt() ?? 0;
+      logInfo('Hardware decoding on $adapter: H.264 ${height('h264')}p, VP9 ${height('vp9')}p, AV1 ${height('av1')}p');
+      final results = {
+        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? const DecoderStatus.hardware('d3d11va') : const DecoderStatus.software(),
+      };
+      _update(() => decodeStates = results);
+      settings = settings.copyWith(decoderResults: results, decoderAdapter: adapter);
+      await _settingsStore?.save(settings);
+    } catch (e) {
+      logError('Could not ask the GPU what it decodes', e);
+    }
+  }
+
   Future<void> inspectCurrentDecoder({Duration delay = Duration.zero}) async {
     final platform = player?.platform;
     if (platform is! NativePlayer) {
@@ -2834,9 +2878,10 @@ class AppController extends ChangeNotifier {
 
   /// Saves everything and releases the player before the window closes;
   /// dispose() alone does not run when Windows ends the process.
-  Future<void> shutdown() async {
+  Future<void> shutdown({bool install = true}) async {
     if (_shutDown) return;
     _shutDown = true;
+    if (install) await appUpdater?.install();
     _saveProgress();
     await library?.flush();
     await downloads?.flush();
@@ -2880,6 +2925,7 @@ class AppController extends ChangeNotifier {
     _recoveryTimer?.cancel();
     _sleepTimer?.cancel();
     _dropTimer?.cancel();
+    _outputSize?.dispose();
     unawaited(_flushAppearance());
     _thumbnailTrimTimer?.cancel();
     for (final subscription in _playerSubscriptions) {

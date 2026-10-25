@@ -14,6 +14,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../app_updater.dart';
 import '../../app/app_controller.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
@@ -658,7 +659,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(tr('Lumtub 让 YouTube 在 Windows 上更好用'), style: theme.textTheme.titleLarge),
                     const SizedBox(height: 6),
-                    Text('The quick brown fox jumps over the lazy dog. 0123456789', style: theme.textTheme.bodyMedium),
+                    Text(tr('敏捷的棕色狐狸跳过了懒狗。0123456789'), style: theme.textTheme.bodyMedium),
                     const SizedBox(height: 6),
                     Text(tr('频道名称 · 12 万次观看 · 3 天前'), style: theme.textTheme.labelMedium!.copyWith(color: context.colors.outline)),
                   ]),
@@ -836,23 +837,43 @@ List<SettingEntry> aboutEntries(AppController controller) => [
               ),
             ]),
           ), subtitle: tr('当前版本 更新')),
-      SettingEntry(tr('检查更新'), (context) => NormalItem(
-            title: controller.checkingAppUpdate
-                ? tr('正在检查软件更新…')
-                : controller.availableAppVersion == null
-                    ? tr('检查更新')
-                    : tr('有新版本：{0}', [controller.availableAppVersion!]),
-            subtitle: controller.appUpdateError == null
-                ? controller.availableAppVersion == null
-                    ? tr('启动时自动检查，也可立即检查')
-                    : tr('点击打开 GitHub Release 下载')
-                : tr('检查软件更新失败：{0}', [controller.appUpdateError!]),
-            leading: const Icon(Icons.update_rounded),
-            onTap: () async {
-              await controller.checkAppUpdate();
-              openExternal(controller.availableAppUrl ?? '$_repository/releases');
-            },
-          ), subtitle: tr('发布页 新版本')),
+      SettingEntry(tr('检查更新'), (context) {
+        final updater = controller.appUpdater;
+        final release = updater?.available;
+        final progress = updater?.progress;
+        final String title, subtitle;
+        if (updater?.ready != null) {
+          title = tr('新版本 {0} 已下载', [release?.version ?? '']);
+          subtitle = tr('关闭 Lumtub 时自动安装，点击立即重启并更新');
+        } else if (progress != null) {
+          title = tr('正在下载新版本 {0}…', [release?.version ?? '']);
+          subtitle = '${(progress * 100).round()}%';
+        } else if (updater?.checking ?? false) {
+          title = tr('正在检查软件更新…');
+          subtitle = tr('启动时和每 6 小时自动检查，也可立即检查');
+        } else if (release != null) {
+          title = tr('有新版本：{0}', [release.version]);
+          subtitle = AppUpdater.canInstall && release.asset != null ? tr('点击下载，关闭 Lumtub 时自动安装') : tr('点击打开 GitHub Release 下载');
+        } else {
+          title = tr('检查更新');
+          subtitle = updater?.error == null ? tr('启动时和每 6 小时自动检查，也可立即检查') : tr('检查软件更新失败：{0}', [updater!.error!]);
+        }
+        return NormalItem(
+          title: title,
+          subtitle: subtitle,
+          leading: const Icon(Icons.update_rounded),
+          onTap: () async {
+            if (updater?.ready != null) return controller.restartToUpdate();
+            if (progress != null || (updater?.checking ?? false)) return;
+            await controller.checkAppUpdate();
+            final found = controller.appUpdater?.available;
+            if (found != null && (!AppUpdater.canInstall || found.asset == null)) openExternal(found.page.isEmpty ? '$_repository/releases' : found.page);
+            if (found == null && context.mounted && controller.appUpdater?.error == null) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('已是最新版本'))));
+            }
+          },
+        );
+      }, subtitle: tr('发布页 新版本 自动更新')),
       SettingEntry(tr('源代码'), (context) => NormalItem(
             title: tr('Github 仓库'),
             subtitle: 'github.com/0x696c757a696f/lumtub',

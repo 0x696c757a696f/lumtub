@@ -43,6 +43,11 @@ Future<void> main() async {
   } catch (_) {
     // Directories are created again, with errors reported, during startup.
   }
+  try {
+    await loadTranslations();
+  } catch (e) {
+    logError('Could not read the translations', e);
+  }
   setLanguage(appearance.language);
   runApp(LumtubApp(controller: AppController(appearance: appearance, appearanceStore: store)));
 }

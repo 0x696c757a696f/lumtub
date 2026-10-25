@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'dart:ffi';
+
 import 'blocked_channels.dart';
 import 'l10n/l10n.dart';
 import 'models.dart';
+import 'native_core.dart';
 
 /// Names of groups the user does not want recommended: movements that
 /// governments or the mainstream churches have called heretical or
@@ -118,9 +122,11 @@ class BlockEntry {
 }
 
 /// Tests videos and channels against block lists, leaving out the groups
-/// and entries the user unticked. Built once per preferences.
-class BlockMatcher {
-  BlockMatcher(List<BlockedGroup> groups, {Set<String> allowedGroups = const {}, Set<String> allowedEntries = const {}}) {
+/// and entries the user unticked. Built once per preferences; the matching
+/// is done by lumtub_core (native/lumtub_core/src/filter.rs).
+class BlockMatcher implements Finalizable {
+  factory BlockMatcher(List<BlockedGroup> groups, {Set<String> allowedGroups = const {}, Set<String> allowedEntries = const {}}) {
+    final channels = <String>[], exact = <String>{}, handles = <String>{}, ids = <String>{};
     for (final group in groups) {
       if (allowedGroups.contains(group.name)) continue;
       for (final entry in group.entries()) {
@@ -128,45 +134,38 @@ class BlockMatcher {
         final forms = [for (final form in entry.forms) entry.kind == BlockKind.id ? form : form.toLowerCase()];
         switch (entry.kind) {
           case BlockKind.channel:
-            _channels.addAll(forms);
+            channels.addAll(forms);
           case BlockKind.exact:
-            _exact.addAll(forms);
+            exact.addAll(forms);
           case BlockKind.handle:
-            _handles.addAll(forms);
+            handles.addAll(forms);
           case BlockKind.id:
-            _ids.addAll(forms);
+            ids.addAll(forms);
         }
       }
     }
+    final core = NativeCore.instance;
+    if (core == null) return BlockMatcher._(null, nullptr);
+    final json = jsonEncode({'channels': channels, 'exact': exact.toList(), 'handles': handles.toList(), 'ids': ids.toList()});
+    final handle = core.withText(json, core.blocksNew);
+    final matcher = BlockMatcher._(core, handle);
+    if (handle != nullptr) core.blocksFinalizer.attach(matcher, handle.cast());
+    return matcher;
   }
 
-  final _channels = <String>[];
-  final _exact = <String>{};
-  final _handles = <String>{};
-  final _ids = <String>{};
+  BlockMatcher._(this._core, this._handle);
 
-  bool get isEmpty => _channels.isEmpty && _exact.isEmpty && _handles.isEmpty && _ids.isEmpty;
+  final NativeCore? _core;
+  final Pointer<Void> _handle;
 
   /// Whether a channel called [name], with [id] or [handle] if known, is
   /// listed.
   bool channel(String name, {String? id, String? handle}) {
-    if (id != null && _ids.contains(id)) return true;
-    if (handle != null && handle.isNotEmpty && _handles.contains((handle.startsWith('@') ? handle : '@$handle').toLowerCase())) return true;
-    final lower = name.trim().toLowerCase();
-    return lower.isNotEmpty && (_exact.contains(lower) || _channels.any((word) => channelNameStartsWith(lower, word)));
+    final core = _core;
+    if (core == null || _handle == nullptr) return false;
+    final json = jsonEncode({'n': name, if (id != null) 'i': id, if (handle != null) 'h': handle});
+    return core.withText(json, (bytes, length) => core.blocksMatch(_handle, bytes, length));
   }
-}
-
-final _letter = RegExp(r'[\p{L}\p{N}]', unicode: true);
-
-/// Whether channel [name] is [word] or starts with it as a whole word:
-/// "RT Documentary" for RT but not "RTL"; a Chinese name may run on
-/// ("央视新闻"). Both lower case.
-bool channelNameStartsWith(String name, String word) {
-  if (!name.startsWith(word)) return false;
-  if (name.length == word.length) return true;
-  final last = word.codeUnitAt(word.length - 1);
-  return last > 0x2E7F || !_letter.hasMatch(name[word.length]);
 }
 
 final _all = BlockMatcher(blockedGroups.where((g) => g.onByDefault).toList());

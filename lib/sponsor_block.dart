@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
+import 'native_core.dart';
 import 'player_settings.dart';
 
 /// A part of a video that SponsorBlock users marked, in seconds.
@@ -27,7 +27,10 @@ class SponsorBlock {
   SponsorBlock(this._client);
   final http.Client _client;
 
-  static String hashPrefix(String videoId) => sha256.convert(utf8.encode(videoId)).toString().substring(0, 4);
+  static String hashPrefix(String videoId) {
+    final core = NativeCore.instance!;
+    return core.take(core.withText(videoId, core.hashPrefix))!;
+  }
 
   static Uri requestUri(String videoId, [Set<String> categories = PlayerSettings.defaultSponsorCategories]) =>
       Uri.https('sponsor.ajay.app', '/api/skipSegments/${hashPrefix(videoId)}', {
@@ -35,7 +38,7 @@ class SponsorBlock {
       });
 
   Future<List<SkipSegment>> segments(String videoId, [Set<String> categories = PlayerSettings.defaultSponsorCategories]) async {
-    if (categories.isEmpty) return const [];
+    if (categories.isEmpty || NativeCore.instance == null) return const [];
     final response = await _client.get(requestUri(videoId, categories), headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 10));
     // 404 means no video with this prefix has segments.
     if (response.statusCode == 404) return const [];
@@ -44,23 +47,12 @@ class SponsorBlock {
   }
 
   static List<SkipSegment> parse(String body, String videoId, [Set<String> categories = PlayerSettings.defaultSponsorCategories]) {
-    final data = jsonDecode(body);
-    if (data is! List) return const [];
-    final segments = <SkipSegment>[];
-    for (final video in data) {
-      if (video is! Map || video['videoID'] != videoId || video['segments'] is! List) continue;
-      for (final raw in video['segments'] as List) {
-        if (raw is! Map || raw['segment'] is! List || (raw['actionType'] ?? 'skip') != 'skip') continue;
-        final bounds = raw['segment'] as List;
-        if (bounds.length != 2 || bounds[0] is! num || bounds[1] is! num) continue;
-        final category = raw['category']?.toString() ?? '';
-        if (!categories.contains(category)) continue;
-        final start = Duration(milliseconds: ((bounds[0] as num) * 1000).round());
-        final end = Duration(milliseconds: ((bounds[1] as num) * 1000).round());
-        if (end > start) segments.add(SkipSegment(start, end, category));
-      }
-    }
-    segments.sort((a, b) => a.start.compareTo(b.start));
-    return segments;
+    final core = NativeCore.instance;
+    if (core == null) return const [];
+    final ask = jsonEncode({'answer': body, 'videoId': videoId, 'categories': categories.toList()});
+    final answer = jsonDecode(core.take(core.withText(ask, core.sponsorSegments)) ?? '[]') as List;
+    return [
+      for (final s in answer.cast<Map<String, dynamic>>()) SkipSegment(Duration(milliseconds: s['start'] as int), Duration(milliseconds: s['end'] as int), s['category'] as String),
+    ];
   }
 }

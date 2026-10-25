@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/youtube_comments.dart';
 
 Map<String, Object?> _continuation(String token) => {
@@ -149,7 +150,9 @@ void main() {
         {'itemSectionRenderer': {'sectionIdentifier': 'comment-item-section', 'contents': [_continuation('POST-COMMENTS')]}},
       ],
     };
-    expect(YoutubeComments.sectionToken(data), 'POST-COMMENTS');
+    final core = NativeCore.instance!;
+    final html = '<script>var ytInitialData = ${jsonEncode(data)};</script>';
+    expect(jsonDecode(core.take(core.withText(html, core.youtubePostComments))!), 'POST-COMMENTS');
   });
 
   test('loads the header, then the chosen sort order', () async {

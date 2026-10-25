@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/decoder_status.dart';
 import 'package:lumtub/format_policy.dart';
 import 'package:lumtub/player_settings.dart';
+import 'package:lumtub/stream_resolver.dart';
 import 'package:lumtub/video_codec.dart';
 
 const _hw = DecoderStatus.hardware('d3d11va');
@@ -11,50 +14,107 @@ String _expression(PlayerSettings settings) => FormatPolicy.expression(settings)
 List<VideoCodec> _order(PlayerSettings settings) => FormatPolicy.codecOrder(settings);
 
 void main() {
+  test('a new install plays H.264 only', () {
+    const settings = PlayerSettings();
+    expect(settings.disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+    expect(_order(settings), [VideoCodec.h264, VideoCodec.vp8]);
+    for (final alternative in _expression(settings).split('/')) {
+      expect(alternative, allOf(contains('vp09'), contains('av01')));
+    }
+  });
+
+  test('automatic codecs follow the hardware and the quality', () {
+    const soft = DecoderStatus.software();
+    expect(const PlayerSettings(decoderResults: {'vp9': _hw, 'av1': soft}).disabledCodecs, {VideoCodec.av1});
+    expect(const PlayerSettings(decoderResults: {'vp9': _hw, 'av1': _hw}).disabledCodecs, isEmpty);
+    expect(const PlayerSettings(decoderResults: {'vp9': soft, 'av1': soft}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+    // H.264 stops at 1080p: above it VP9 stays enabled, even in software.
+    expect(const PlayerSettings(maxHeight: 2160, decoderResults: {'vp9': soft}).disabledCodecs, {VideoCodec.av1});
+    expect(const PlayerSettings(maxHeight: 1080, decoderResults: {'vp9': soft}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+  });
+
+  test('a choice equal to the automatic one stays automatic', () {
+    const settings = PlayerSettings(decoderResults: {'vp9': _hw});
+    expect(settings.withDisabledCodecs({VideoCodec.av1}).codecsChosen, isFalse);
+    final chosen = settings.withDisabledCodecs({VideoCodec.av1, VideoCodec.vp9});
+    expect(chosen.codecsChosen, isTrue);
+    expect(chosen.copyWith(maxHeight: 2160).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+  });
+
+  test('says when the tallest picture is only in a disabled codec', () {
+    final video = ResolvedVideo({
+      'formats': [
+        {'height': 1080, 'vcodec': 'avc1.640028'},
+        {'height': 360, 'vcodec': 'vp09.00.21.08'},
+        {'height': 2160, 'vcodec': 'vp09.00.51.08'},
+      ],
+    }, File('x'), 'best');
+    const noH264 = PlayerSettings(disabledCodecs: {VideoCodec.h264, VideoCodec.av1});
+    final lost = video.lostToDisabled(noH264, 1080)!;
+    expect((lost.height, lost.playing), (1080, 360));
+    expect(lost.codecs, [VideoCodec.h264]);
+    expect(video.lostToDisabled(noH264, 0), isNull);
+    expect(video.lostToDisabled(const PlayerSettings(disabledCodecs: {}), 1080), isNull);
+  });
+
+  test('H.264 can be disabled only with VP9 or AV1 in hardware', () {
+    expect(FormatPolicy.canDisableH264(const PlayerSettings()), isFalse);
+    expect(FormatPolicy.canDisableH264(const PlayerSettings(decoderResults: {'av1': _hw})), isTrue);
+    expect(FormatPolicy.canDisableH264(const PlayerSettings(hwdec: 'no', decoderResults: {'av1': _hw})), isFalse);
+  });
+
+  test('knows when VP9 or AV1 can only be decoded in software', () {
+    const soft = DecoderStatus.software();
+    expect(FormatPolicy.softwareOnly(const PlayerSettings(decoderResults: {'vp9': soft}), VideoCodec.vp9), isTrue);
+    expect(FormatPolicy.softwareOnly(const PlayerSettings(decoderResults: {'vp9': _hw}), VideoCodec.vp9), isFalse);
+    expect(FormatPolicy.softwareOnly(const PlayerSettings(), VideoCodec.av1), isFalse);
+    expect(FormatPolicy.softwareOnly(const PlayerSettings(hwdec: 'no'), VideoCodec.av1), isTrue);
+  });
+
   group('auto', () {
     test('uses H.264 until a hardware codec was actually verified', () {
-      expect(_order(const PlayerSettings()), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1, VideoCodec.vp8]);
-      expect(_expression(const PlayerSettings()), startsWith('bestvideo+bestaudio/'));
+      expect(_order(const PlayerSettings(disabledCodecs: {})), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1, VideoCodec.vp8]);
+      expect(_expression(const PlayerSettings(disabledCodecs: {})), startsWith('bestvideo+bestaudio/'));
     });
 
     test('uses software AVC, VP9, then AV1 when hardware decoding is off', () {
-      const settings = PlayerSettings(hwdec: 'no', decoderResults: {'av1': _hw, 'vp9': _hw});
+      const settings = PlayerSettings(disabledCodecs: {}, hwdec: 'no', decoderResults: {'av1': _hw, 'vp9': _hw});
       expect(_order(settings).take(3), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1]);
       expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:avc');
     });
 
     test('uses AV1, then VP9, then H.264 when AV1 hardware decoding is verified', () {
-      const all = PlayerSettings(decoderResults: {'vp9': _hw, 'av1': _hw, 'h264': _hw});
+      const all = PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw, 'av1': _hw, 'h264': _hw});
       expect(_order(all).take(3), [VideoCodec.av1, VideoCodec.vp9, VideoCodec.h264]);
-      const vp9Only = PlayerSettings(decoderResults: {'vp9': _hw, 'av1': DecoderStatus.unverified()});
+      const vp9Only = PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw, 'av1': DecoderStatus.unverified()});
       expect(_order(vp9Only).take(2), [VideoCodec.vp9, VideoCodec.h264]);
     });
 
     test('does not promote software VP9 or AV1 just because the quality cap is tall', () {
-      final expression = _expression(const PlayerSettings(maxHeight: 2160));
+      final expression = _expression(const PlayerSettings(disabledCodecs: {}, maxHeight: 2160));
       expect(expression, startsWith('bestvideo[height<=?2160]+bestaudio/'));
     });
 
     test('never exceeds the user-selected default quality', () {
-      const settings = PlayerSettings(maxHeight: 720, decoderResults: {'av1': _hw});
+      const settings = PlayerSettings(disabledCodecs: {}, maxHeight: 720, decoderResults: {'av1': _hw});
       expect(_expression(settings), startsWith('bestvideo[height<=?720]+bestaudio/'));
       expect(FormatPolicy.formatSort(settings), 'res,fps,vcodec:av01');
     });
 
     test('puts AV1 before H.264 only with verified hardware decoding', () {
-      final plain = _order(const PlayerSettings(maxHeight: 1080));
+      final plain = _order(const PlayerSettings(disabledCodecs: {}, maxHeight: 1080));
       expect(plain.indexOf(VideoCodec.av1), greaterThan(plain.indexOf(VideoCodec.h264)));
-      expect(_order(const PlayerSettings(decoderResults: {'av1': _hw})).first, VideoCodec.av1);
+      expect(_order(const PlayerSettings(disabledCodecs: {}, decoderResults: {'av1': _hw})).first, VideoCodec.av1);
     });
 
     test('caps every alternative at the chosen height and ends with plain fallbacks', () {
-      final expression = _expression(const PlayerSettings(maxHeight: 720));
+      final expression = _expression(const PlayerSettings(disabledCodecs: {}, maxHeight: 720));
       expect(expression.split('/').where((a) => a.startsWith('bestvideo')), everyElement(contains('[height<=?720]')));
       expect(expression, endsWith('/best[height<=?720]/best'));
     });
 
     test('keeps the audio cap on the alternatives', () {
-      final expression = _expression(const PlayerSettings(audioQuality: AudioQuality.low));
+      final expression = _expression(const PlayerSettings(disabledCodecs: {}, audioQuality: AudioQuality.low));
       expect(expression, startsWith('bestvideo+bestaudio[abr<=?64]/'));
       expect(expression, endsWith('/bestvideo+bestaudio/best/best'));
     });
@@ -62,20 +122,20 @@ void main() {
 
   group('lowResource', () {
     test('H.264 first, then verified hardware codecs, then the rest', () {
-      const settings = PlayerSettings(strategy: PlaybackStrategy.lowResource, decoderResults: {'av1': _hw});
+      const settings = PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.lowResource, decoderResults: {'av1': _hw});
       expect(_order(settings), [VideoCodec.h264, VideoCodec.av1, VideoCodec.vp9, VideoCodec.vp8]);
     });
 
     test('goes to verified codecs first above 1080p', () {
-      const settings = PlayerSettings(strategy: PlaybackStrategy.lowResource, maxHeight: 2160, decoderResults: {'vp9': _hw});
+      const settings = PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.lowResource, maxHeight: 2160, decoderResults: {'vp9': _hw});
       expect(_order(settings).take(2), [VideoCodec.vp9, VideoCodec.h264]);
     });
   });
 
   group('quality', () {
     test("is yt-dlp's own ranking", () {
-      expect(_expression(const PlayerSettings(strategy: PlaybackStrategy.quality)), 'ytdl');
-      expect(_expression(const PlayerSettings(strategy: PlaybackStrategy.quality, maxHeight: 480)), 'bestvideo[height<=?480]+bestaudio/best[height<=?480]/best');
+      expect(_expression(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality)), 'ytdl');
+      expect(_expression(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality, maxHeight: 480)), 'bestvideo[height<=?480]+bestaudio/best[height<=?480]/best');
     });
   });
 
@@ -125,30 +185,30 @@ void main() {
     });
 
     test('sorts highest resolution and frame rate before the hardware decoder preference', () {
-      expect(FormatPolicy.formatSort(const PlayerSettings()), 'res,fps,vcodec:avc');
-      expect(FormatPolicy.formatSort(const PlayerSettings(decoderResults: {'vp9': _hw})), 'res,fps,vcodec:vp9');
-      expect(FormatPolicy.formatSort(const PlayerSettings(decoderResults: {'av1': _hw})), 'res,fps,vcodec:av01');
-      expect(FormatPolicy.formatSort(const PlayerSettings(strategy: PlaybackStrategy.quality)), isNull);
+      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {})), 'res,fps,vcodec:avc');
+      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw})), 'res,fps,vcodec:vp9');
+      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, decoderResults: {'av1': _hw})), 'res,fps,vcodec:av01');
+      expect(FormatPolicy.formatSort(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality)), isNull);
     });
 
     test('summary and names list them', () {
       const settings = PlayerSettings(disabledCodecs: {VideoCodec.vp9, VideoCodec.av1});
       expect(FormatPolicy.disabledNames(settings), 'AV1、VP9');
       expect(FormatPolicy.summary(settings), contains('已禁用 AV1、VP9'));
-      expect(FormatPolicy.summary(const PlayerSettings()), isNot(contains('已禁用')));
+      expect(FormatPolicy.summary(const PlayerSettings(disabledCodecs: {})), isNot(contains('已禁用')));
     });
   });
 
   test('automatic quality caps unverified modern codecs at 1080p', () {
-    expect(FormatPolicy.forDisplay(const PlayerSettings(), 1080).maxHeight, 1080);
-    expect(FormatPolicy.forDisplay(const PlayerSettings(), 1600).maxHeight, 1080);
-    expect(FormatPolicy.forDisplay(const PlayerSettings(), 1440).maxHeight, 1080);
-    expect(FormatPolicy.forDisplay(const PlayerSettings(), 0).maxHeight, 1080);
-    const hardwareVp9 = PlayerSettings(decoderResults: {'vp9': _hw});
+    expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {}), 1080).maxHeight, 1080);
+    expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {}), 1600).maxHeight, 1080);
+    expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {}), 1440).maxHeight, 1080);
+    expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {}), 0).maxHeight, 1080);
+    const hardwareVp9 = PlayerSettings(disabledCodecs: {}, decoderResults: {'vp9': _hw});
     expect(FormatPolicy.forDisplay(hardwareVp9, 1600).maxHeight, 2160);
     expect(FormatPolicy.forDisplay(hardwareVp9, 0).maxHeight, 0);
-    expect(FormatPolicy.forDisplay(const PlayerSettings(maxHeight: 2160), 1080).maxHeight, 2160);
-    expect(FormatPolicy.forDisplay(const PlayerSettings(strategy: PlaybackStrategy.quality), 1080).maxHeight, 0);
+    expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {}, maxHeight: 2160), 1080).maxHeight, 2160);
+    expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality), 1080).maxHeight, 0);
     expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {VideoCodec.h264}), 1600).maxHeight, 0);
   });
 }

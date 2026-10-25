@@ -44,10 +44,12 @@ class _ExplorePageState extends State<ExplorePage> {
     final name = [topic.label, if (subNow != null) subNow.label, if (controller.exploreLeafNow case final leafNow?) leafNow.label].join(' · ');
     final subtitle = switch (mode) {
       ExploreMode.curated => tr('{0} · 相关度高的完整内容，少标题党，每个频道最多 3 个', [name]),
+      ExploreMode.popular when topic.global => tr('全球热门 · 不限地区和语言，{0}观看最多，每个频道最多 2 个', [controller.explorePeriod.label]),
       ExploreMode.popular when topic.mix => tr('全部 · 各分区{0}观看最多的视频，每个频道最多 2 个', [controller.explorePeriod.label]),
       ExploreMode.popular => tr('{0} · {1}观看最多', [name, controller.explorePeriod.label]),
       ExploreMode.forYou => tr('{0} · 按你的观看记录排列', [name]),
       ExploreMode.gems => tr('{0} · 播放不到 5 万的好视频', [name]),
+      ExploreMode.fresh => tr('{0} · 本周新发、播放不到 5000，来自你没看过的频道', [name]),
       ExploreMode.long => tr('{0} · 今年观看最多的 20 分钟以上视频', [name]),
       ExploreMode.latest => tr('{0} · 最新上传', [name]),
       ExploreMode.liveViewers => tr('{0}直播 · 按观看人数排列', [name]),
@@ -205,24 +207,27 @@ class _ExplorePageState extends State<ExplorePage> {
                 changed: controller.exploreDuration != SearchDuration.any,
                 onSelected: (v) => controller.setExplore(duration: v),
               ),
-            OptionChip(
-              icon: Icons.public_rounded,
-              value: controller.preferences.exploreRegion,
-              values: ExploreRegion.values,
-              label: (v) => v == ExploreRegion.any ? tr('地区') : v.label,
-              item: (v) => v.label,
-              changed: controller.preferences.exploreRegion != ExploreRegion.any,
-              onSelected: (v) => controller.setExplore(region: v),
-            ),
-            OptionChip(
-              icon: Icons.translate_rounded,
-              value: controller.preferences.exploreLanguage,
-              values: ExploreLanguage.values,
-              label: (v) => v == ExploreLanguage.any ? tr('语言') : v.label,
-              item: (v) => v.label,
-              changed: controller.preferences.exploreLanguage != ExploreLanguage.any,
-              onSelected: (v) => controller.setExplore(language: v),
-            ),
+            // 全球热门 leaves region and language out.
+            if (!topic.global) ...[
+              OptionChip(
+                icon: Icons.public_rounded,
+                value: controller.preferences.exploreRegion,
+                values: ExploreRegion.values,
+                label: (v) => v == ExploreRegion.any ? tr('地区') : v.label,
+                item: (v) => v.label,
+                changed: controller.preferences.exploreRegion != ExploreRegion.any,
+                onSelected: (v) => controller.setExplore(region: v),
+              ),
+              OptionChip(
+                icon: Icons.translate_rounded,
+                value: controller.preferences.exploreLanguage,
+                values: ExploreLanguage.values,
+                label: (v) => v == ExploreLanguage.any ? tr('语言') : v.label,
+                item: (v) => v.label,
+                changed: controller.preferences.exploreLanguage != ExploreLanguage.any,
+                onSelected: (v) => controller.setExplore(language: v),
+              ),
+            ],
             OptionChip(
               icon: Icons.hd_outlined,
               value: controller.exploreQuality,

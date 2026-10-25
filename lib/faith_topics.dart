@@ -4,6 +4,7 @@ import 'explore_filters.dart';
 import 'explore_topics.dart';
 import 'l10n/l10n.dart';
 import 'models.dart';
+import 'native_core.dart';
 
 // The zones of 宗教与信仰, one list per tab. Each is a YouTube search, so a
 // channel can turn up under every tradition or theme it speaks to; nothing
@@ -393,19 +394,12 @@ enum FaithView implements WordFilter {
   final String words;
 }
 
-final _baitWords = RegExp(
-  r'震惊|炸裂|吊打|打脸|怒怼|惊呆|毁三观|跪了|destroy|owned|exposed|humiliat|wreck|shocking|obliterat|demolish|you won.t believe|triggered',
-  caseSensitive: false,
-);
-
 /// Whether [title] reads like bait: three or more exclamation marks, a
 /// title mostly in capitals, or words such as "destroys" and 吊打. Such
 /// videos are left out of 宗教与信仰, where they tend to crowd out the rest.
 bool looksLikeBait(String title) {
-  if ('!'.allMatches(title).length + '！'.allMatches(title).length >= 3) return true;
-  if (_baitWords.hasMatch(title)) return true;
-  final letters = title.replaceAll(RegExp(r'[^A-Za-z]'), '');
-  return letters.length >= 12 && letters.replaceAll(RegExp('[^A-Z]'), '').length > letters.length * 0.7;
+  final core = NativeCore.instance;
+  return core != null && core.withText(title, core.looksLikeBait);
 }
 
 /// At most this many videos of one channel in a 宗教与信仰 listing, so that

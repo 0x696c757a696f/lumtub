@@ -77,6 +77,7 @@ class AppPreferences {
     this.showRelated = true,
     this.expandDescription = false,
     this.autoCheckUpdates = true,
+    this.autoUpdateApp = true,
     this.skipFfmpegPrompt = false,
     this.translateLanguage = 'zh-CN',
   });
@@ -162,6 +163,9 @@ class AppPreferences {
   final bool showRelated;
   final bool expandDescription;
   final bool autoCheckUpdates;
+  /// Download new Lumtub versions in the background and install them when
+  /// Lumtub closes.
+  final bool autoUpdateApp;
   /// The user chose single-file downloads and not to be asked to install ffmpeg.
   final bool skipFfmpegPrompt;
   /// The language 翻译 and the translated subtitle turn text into (a TranslationLanguage code).
@@ -273,6 +277,7 @@ class AppPreferences {
     bool? showRelated,
     bool? expandDescription,
     bool? autoCheckUpdates,
+    bool? autoUpdateApp,
     bool? skipFfmpegPrompt,
     String? translateLanguage,
   }) =>
@@ -326,6 +331,7 @@ class AppPreferences {
         showRelated: showRelated ?? this.showRelated,
         expandDescription: expandDescription ?? this.expandDescription,
         autoCheckUpdates: autoCheckUpdates ?? this.autoCheckUpdates,
+        autoUpdateApp: autoUpdateApp ?? this.autoUpdateApp,
         skipFfmpegPrompt: skipFfmpegPrompt ?? this.skipFfmpegPrompt,
         translateLanguage: translateLanguage ?? this.translateLanguage,
       );
@@ -380,6 +386,7 @@ class AppPreferences {
         'showRelated': showRelated,
         'expandDescription': expandDescription,
         'autoCheckUpdates': autoCheckUpdates,
+        'autoUpdateApp': autoUpdateApp,
         'skipFfmpegPrompt': skipFfmpegPrompt,
         'translateLanguage': translateLanguage,
       };
@@ -468,6 +475,7 @@ class AppPreferences {
       showRelated: flag('showRelated', d.showRelated),
       expandDescription: flag('expandDescription', d.expandDescription),
       autoCheckUpdates: flag('autoCheckUpdates', d.autoCheckUpdates),
+      autoUpdateApp: flag('autoUpdateApp', d.autoUpdateApp),
       skipFfmpegPrompt: flag('skipFfmpegPrompt', d.skipFfmpegPrompt),
       translateLanguage: TranslationLanguage.byCode(raw['translateLanguage']).code,
     );

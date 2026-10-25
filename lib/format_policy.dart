@@ -25,7 +25,19 @@ class FormatPolicy {
         VideoCodec.vp8 => null,
       };
 
-  static bool _hardware(PlayerSettings settings, VideoCodec codec) {
+  /// Whether H.264 may be disabled: only when VP9 or AV1 is decoded in
+  /// hardware, or every video would be decoded on the CPU.
+  static bool canDisableH264(PlayerSettings settings) => hardware(settings, VideoCodec.vp9) || hardware(settings, VideoCodec.av1);
+
+  /// Whether this PC is known to decode [codec] only in software.
+  static bool softwareOnly(PlayerSettings settings, VideoCodec codec) {
+    final key = decoderKey(codec);
+    if (key == null) return false;
+    return settings.hwdec == 'no' || ((settings.decoderResults[key]?.isVerified ?? false) && !hardware(settings, codec));
+  }
+
+  /// Whether this PC decodes [codec] in hardware, as measured.
+  static bool hardware(PlayerSettings settings, VideoCodec codec) {
     final key = decoderKey(codec);
     return settings.hwdec != 'no' && key != null && (settings.decoderResults[key]?.isHardware ?? false);
   }
@@ -44,7 +56,7 @@ class FormatPolicy {
     final json = jsonEncode({
       'strategy': settings.strategy.name,
       'disabled': [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.name],
-      'hardware': [for (final c in VideoCodec.values) if (_hardware(settings, c)) c.name],
+      'hardware': [for (final c in VideoCodec.values) if (hardware(settings, c)) c.name],
       'maxHeight': settings.maxHeight,
       'audio': settings.audioQuality.name,
       'display': max(0, displayHeight),

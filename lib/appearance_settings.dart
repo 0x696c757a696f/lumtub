@@ -132,7 +132,7 @@ class AppearanceSettings {
     this.thumbnailQuality = ThumbnailQuality.high,
     this.darkWatchPage = false,
     this.showStatusBar = true,
-    this.language = AppLanguage.en,
+    this.language = AppLanguage.system,
   });
 
   /// The chosen colour; [systemAccent] is resolved by the app.
@@ -194,7 +194,7 @@ class AppearanceSettings {
         'thumbnailQuality': thumbnailQuality.name,
         'darkWatchPage': darkWatchPage,
         'showStatusBar': showStatusBar,
-        'language': language.name,
+        'language': language.tag,
       };
 
   factory AppearanceSettings.fromJson(Object? raw) {

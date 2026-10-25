@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app_log.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/playback_recovery.dart';
 import 'package:lumtub/ui/player_stats.dart';
 
@@ -18,6 +19,13 @@ void main() {
       expect(redacted, contains('rr3---sn-abc.googlevideo.com'));
       expect(AppLog.redact('播放失败 dQw4w9WgXcQ'), '播放失败 dQw4w9WgXcQ');
     });
+
+    test('hides the same with the native core', () {
+      expect(NativeCore.instance, isNotNull);
+      expect(AppLog.nativeRedact, isNotNull);
+      const line = 'refresh_token=1//abc Bearer ya29.qqq https://rr3---sn-abc.googlevideo.com/videoplayback?sig=ABC 播放失败';
+      expect(AppLog.redact(line), 'refresh_token=*** Bearer *** https://rr3---sn-abc.googlevideo.com/… 播放失败');
+    }, skip: Platform.environment['LUMTUB_CORE_DLL'] == null ? 'needs lumtub_core (LUMTUB_CORE_DLL)' : null);
 
     test('appends lines and rotates a large log', () async {
       final dir = await Directory.systemTemp.createTemp('lumtub_log');

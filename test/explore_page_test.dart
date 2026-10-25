@@ -56,6 +56,10 @@ void main() {
     expect(exploreParams(ExploreMode.latest), 'CAISAhAB');
     // Long: views, this year, videos, over 20 minutes.
     expect(exploreParams(ExploreMode.long), 'CAMSBggFEAEYAg%253D%253D');
+    // 新人新作: this week, videos only.
+    expect(base64.decode(exploreParams(ExploreMode.fresh).replaceAll('%253D', '=')), [0x12, 4, 0x08, 3, 0x10, 1]);
+    // 全球热门 is a mix of the video zones, after 全部.
+    expect(popularTopics.take(2).map((t) => (t.label, t.mix, t.global)), [('全部', true, false), ('全球热门', true, true)]);
     final hdr = base64.decode(searchParams(quality: SearchQuality.hdr)!.replaceAll('%253D', '='));
     expect(hdr, [0x12, 3, 0xC8, 0x01, 1]);
     final uhd = base64.decode(exploreParams(ExploreMode.liveViewers, quality: SearchQuality.uhd).replaceAll('%253D', '='));

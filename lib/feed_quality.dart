@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'models.dart';
+import 'native_core.dart';
 
 /// How much of a kind of video 为你推荐 shows.
 enum FeedLevel {
@@ -43,12 +46,18 @@ class FeedMix {
 }
 
 /// A Short: a /shorts/ address, a minute or less, or up to three minutes
-/// tagged #shorts.
+/// tagged #shorts (native/lumtub_core/src/filter.rs). Without the library
+/// nothing counts as one.
 bool isShort(VideoItem item) {
-  if (item.isShortListing || item.url.contains('/shorts/')) return true;
-  final seconds = item.duration;
-  if (seconds == null || seconds <= 0) return false;
-  return seconds <= 60 || (seconds <= 180 && RegExp(r'#shorts?\b', caseSensitive: false).hasMatch('${item.title} ${item.description ?? ''}'));
+  final core = NativeCore.instance;
+  if (core == null) return false;
+  final json = jsonEncode({
+    'u': item.url,
+    't': '${item.title} ${item.description ?? ''}',
+    if (item.duration case final seconds?) 'd': seconds,
+    'l': item.isShortListing,
+  });
+  return core.withText(json, core.isShort);
 }
 
 /// Taller than wide, when the frame size is known.

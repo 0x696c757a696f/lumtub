@@ -1,4 +1,5 @@
 import 'l10n/l10n.dart';
+import 'native_core.dart';
 
 /// A 类型 or 视角 choice in explore: words added to the zone's search, so it
 /// leans the results rather than sorting them exactly.
@@ -108,56 +109,17 @@ enum ExploreLanguage {
   static ExploreLanguage parse(Object? raw) => values.where((l) => l.name == raw).firstOrNull ?? any;
 
   /// Whether [title] reads as this language.
-  bool matches(String title) => this == any || titleLanguage(title) == this;
+  /// Without the library every title passes.
+  bool matches(String title) => this == any || NativeCore.instance == null || titleLanguage(title) == this;
 }
 
-final _kana = RegExp(r'[぀-ヿ]');
-final _hangul = RegExp(r'[가-힯ᄀ-ᇿ]');
-final _han = RegExp(r'[一-鿿㐀-䶿]');
-final _cyrillic = RegExp(r'[Ѐ-ӿ]');
-final _arabic = RegExp(r'[؀-ۿ]');
-final _devanagari = RegExp(r'[ऀ-ॿ]');
-final _thai = RegExp(r'[฀-๿]');
-final _vietnamese = RegExp(r'[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]', caseSensitive: false);
-final _latin = RegExp(r'[a-zA-Z]');
-final _word = RegExp(r"[\p{L}']+", unicode: true);
-
-/// Small words that mark a Latin-script language, and letters only it uses.
-const _latinWords = <ExploreLanguage, Set<String>>{
-  ExploreLanguage.en: {'the', 'and', 'of', 'to', 'in', 'is', 'for', 'with', 'how', 'what', 'why', 'you', 'my', 'this', 'your', 'from', 'on', 'are', 'i', 'we', 'best', 'vs'},
-  ExploreLanguage.es: {'el', 'los', 'las', 'del', 'y', 'que', 'con', 'una', 'por', 'para', 'es', 'como', 'mi', 'más', 'qué', 'cómo', 'muy', 'pero', 'su'},
-  ExploreLanguage.fr: {'le', 'les', 'des', 'et', 'du', 'est', 'une', 'pour', 'dans', 'avec', 'sur', 'pas', 'qui', 'mon', 'ce', 'je', 'au', 'aux', "c'est", 'vous'},
-  ExploreLanguage.de: {'der', 'die', 'das', 'und', 'ist', 'mit', 'ein', 'eine', 'nicht', 'für', 'auf', 'den', 'ich', 'wie', 'was', 'zu', 'im', 'von', 'auch', 'wir'},
-  ExploreLanguage.pt: {'o', 'os', 'do', 'da', 'dos', 'das', 'e', 'que', 'com', 'um', 'uma', 'para', 'não', 'é', 'em', 'no', 'na', 'mais', 'você', 'como'},
-};
-final _latinLetters = <ExploreLanguage, RegExp>{
-  ExploreLanguage.es: RegExp('[ñ¿¡]', caseSensitive: false),
-  ExploreLanguage.fr: RegExp('[œçèùû]', caseSensitive: false),
-  ExploreLanguage.de: RegExp('[äöüß]', caseSensitive: false),
-  ExploreLanguage.pt: RegExp('[ãõ]|ção', caseSensitive: false),
-};
-
 /// The language [title] is most likely in, or [ExploreLanguage.any] when
-/// it gives nothing to go by.
+/// it gives nothing to go by: by its script, and for Latin letters by its
+/// small words (native/lumtub_core/src/filter.rs). Without the library
+/// every title passes.
 ExploreLanguage titleLanguage(String title) {
-  if (_kana.hasMatch(title)) return ExploreLanguage.ja;
-  if (_hangul.hasMatch(title)) return ExploreLanguage.ko;
-  if (_han.hasMatch(title)) return ExploreLanguage.zh;
-  if (_thai.hasMatch(title)) return ExploreLanguage.th;
-  if (_devanagari.hasMatch(title)) return ExploreLanguage.hi;
-  if (_arabic.hasMatch(title)) return ExploreLanguage.ar;
-  if (_cyrillic.hasMatch(title)) return ExploreLanguage.ru;
-  if (_vietnamese.hasMatch(title)) return ExploreLanguage.vi;
-  if (!_latin.hasMatch(title)) return ExploreLanguage.any;
-  final words = _word.allMatches(title.toLowerCase()).map((m) => m.group(0)!).toList();
-  var best = ExploreLanguage.en;
-  var bestScore = 0.0;
-  for (final MapEntry(key: language, value: small) in _latinWords.entries) {
-    var score = words.where(small.contains).length.toDouble();
-    if (_latinLetters[language]?.hasMatch(title) ?? false) score += 1.5;
-    if (score > bestScore) (best, bestScore) = (language, score);
-  }
-  // A title with no small words at all, such as "Minecraft Speedrun", is
-  // taken as English, the usual language of such titles.
-  return best;
+  final core = NativeCore.instance;
+  if (core == null) return ExploreLanguage.any;
+  final index = core.withText(title, core.titleLanguage);
+  return index < ExploreLanguage.values.length ? ExploreLanguage.values[index] : ExploreLanguage.any;
 }

@@ -77,8 +77,8 @@ void main() {
 
   test('finds ytInitialData in the page despite braces inside strings', () {
     final html = '<script>var ytInitialData = ${jsonEncode({'a': '};{', 'b': {'c': 1}})};</script>';
-    expect(CommunityPosts.initialData(html), {'a': '};{', 'b': {'c': 1}});
-    expect(CommunityPosts.initialData('<html></html>'), isNull);
+    expect(CommunityPosts.read(html)?.posts, isEmpty);
+    expect(CommunityPosts.read('<html></html>'), isNull);
   });
 
   test('loads the first page from HTML and the next from the browse endpoint', () async {

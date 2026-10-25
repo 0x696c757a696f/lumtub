@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+
+import 'native_core.dart';
+import 'sponsor_block.dart';
 
 /// What DeArrow's users put in place of a video's title and thumbnail:
 /// a plain title, and the time of a frame to show. Null keeps YouTube's.
@@ -46,7 +48,7 @@ class DeArrow extends ChangeNotifier {
   var _running = 0;
   Timer? _notify;
 
-  static String hashPrefix(String videoId) => sha256.convert(utf8.encode(videoId)).toString().substring(0, 4);
+  static String hashPrefix(String videoId) => SponsorBlock.hashPrefix(videoId);
 
   static Uri requestUri(String videoId) => Uri.https('sponsor.ajay.app', '/api/branding/${hashPrefix(videoId)}');
 
@@ -58,7 +60,7 @@ class DeArrow extends ChangeNotifier {
     if (!titlesOn && !thumbnailsOn) return Branding.none;
     final known = _branding[videoId];
     if (known != null) return known;
-    if (_client != null && _pending.add(videoId)) {
+    if (_client != null && NativeCore.instance != null && _pending.add(videoId)) {
       _queue.add(videoId);
       _pump();
     }
@@ -113,17 +115,10 @@ class DeArrow extends ChangeNotifier {
   /// best title and thumbnail that are not YouTube's own, as DeArrow's
   /// extension takes them (locked by a moderator, or not voted down).
   static Branding parse(String body, String videoId) {
-    final data = jsonDecode(body);
-    if (data is! Map || data[videoId] is! Map) return Branding.none;
-    final video = data[videoId] as Map;
-    bool trusted(Map entry) => entry['locked'] == true || (entry['votes'] is num && (entry['votes'] as num) >= 0);
-    Map? best(Object? list) => list is List ? list.whereType<Map>().where(trusted).firstOrNull : null;
-    final title = best(video['titles']);
-    final thumbnail = best(video['thumbnails']);
-    // A title starting with ">" asks not to be re-cased; the mark is not shown.
-    final text = title == null || title['original'] == true ? null : '${title['title'] ?? ''}'.replaceFirst(RegExp(r'^>\s*'), '').trim();
-    final time = thumbnail == null || thumbnail['original'] == true ? null : thumbnail['timestamp'];
-    return Branding(title: text == null || text.isEmpty ? null : text, thumbnailTime: time is num ? time.toDouble() : null);
+    final core = NativeCore.instance;
+    if (core == null) return Branding.none;
+    final answer = jsonDecode(core.take(core.withText(jsonEncode({'answer': body, 'videoId': videoId}), core.dearrowBranding)) ?? '{}') as Map<String, dynamic>;
+    return Branding(title: answer['title'] as String?, thumbnailTime: (answer['thumbnailTime'] as num?)?.toDouble());
   }
 
   @visibleForTesting

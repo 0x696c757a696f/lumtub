@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'app_log.dart';
 import 'format_policy.dart';
@@ -8,6 +9,7 @@ import 'models.dart';
 import 'player_settings.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
+import 'video_codec.dart';
 
 /// What yt-dlp found for one video: every format, the ones picked for
 /// [format], and the metadata the watch page shows.
@@ -47,6 +49,24 @@ class ResolvedVideo {
   }
 
   List<int> get heights => heightsFor();
+
+  /// When the tallest picture up to [cap] (0 for none) exists only in codecs
+  /// [settings] disable: that height, those codecs, and the tallest height
+  /// that does play.
+  ({int height, List<VideoCodec> codecs, int playing})? lostToDisabled(PlayerSettings settings, int cap) {
+    final formats = info['formats'];
+    if (formats is! List) return null;
+    final byHeight = <int, Set<VideoCodec>>{};
+    for (final f in formats.whereType<Map>()) {
+      final height = f['height'], codec = VideoCodec.of(f['vcodec']);
+      if (height is int && height > 0 && codec != null && (cap <= 0 || height <= cap)) (byHeight[height] ??= {}).add(codec);
+    }
+    if (byHeight.isEmpty) return null;
+    final tallest = byHeight.keys.reduce(max);
+    final allowed = [for (final e in byHeight.entries) if (e.value.any((c) => FormatPolicy.allows(settings, c))) e.key];
+    if (allowed.isEmpty || allowed.contains(tallest)) return null;
+    return (height: tallest, codecs: byHeight[tallest]!.toList()..sort((a, b) => a.index.compareTo(b.index)), playing: allowed.reduce(max));
+  }
 
   List<Map<String, dynamic>> get _tracks {
     final requested = info['requested_formats'];

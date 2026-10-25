@@ -689,7 +689,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               pickPlaybackStrategy(context, settings.strategy, (v) => _controller.reloadVideo(_controller.settings.copyWith(strategy: v)));
             }),
             item(Icons.block_outlined, tr('禁用视频编码'), FormatPolicy.disabledNames(settings).isEmpty ? tr('无') : FormatPolicy.disabledNames(settings), () {
-              pickDisabledCodecs(context, settings.disabledCodecs, (v) => _controller.reloadVideo(_controller.settings.copyWith(disabledCodecs: v)));
+              pickDisabledCodecs(context, settings, (v) => _controller.reloadVideo(v));
             }),
             if (audio.length > 1)
               item(Icons.audiotrack_rounded, tr('选择音轨'), _trackLabel(_player.state.track.audio.id, _player.state.track.audio.title, _player.state.track.audio.language), () {

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
+import 'background_json.dart';
 import 'feed_quality.dart';
 import 'library_store.dart' show WatchProgress;
 import 'models.dart';
@@ -210,7 +211,7 @@ class NotInterested {
     final file = this.file;
     if (file == null) return;
     try {
-      final data = jsonDecode(await file.readAsString());
+      final data = await decodeJsonInBackground(await file.readAsString());
       if (data is! Map) return;
       for (final id in data['videos'] is List ? data['videos'] as List : const []) {
         if (id is String) videos.add(id);

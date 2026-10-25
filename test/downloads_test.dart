@@ -183,7 +183,7 @@ void main() {
       expect(task.status, DownloadStatus.done);
       expect(task.filePath, file.path);
 
-      final local = m.localVideo('aaaaaaaaaaa')!;
+      final local = (await m.localVideo('aaaaaaaaaaa'))!;
       expect(local.info.containsKey('formats'), isFalse);
       expect(local.info['title'], 'Video');
       expect(local.videoCodec, VideoCodec.av1);
@@ -202,10 +202,10 @@ void main() {
       processes[0].out('lumtub-file|${file.path}');
       await processes[0].exit(0);
       await until(() => finished.isNotEmpty);
-      expect(m.localVideo('aaaaaaaaaaa'), isNotNull);
+      expect(await m.localVideo('aaaaaaaaaaa'), isNotNull);
       expect(finished.single.filePath, file.path);
       file.deleteSync();
-      expect(m.localVideo('aaaaaaaaaaa'), isNull);
+      expect(await m.localVideo('aaaaaaaaaaa'), isNull);
     });
 
     test('pause keeps a slot until the process ends, resume continues, cancel deletes partial files', () async {
@@ -322,7 +322,7 @@ void main() {
       // The one that was running when the app closed starts again.
       expect(restarted.taskFor('bbbbbbbbbbb')!.status, DownloadStatus.downloading);
       expect(processes, hasLength(1));
-      expect(restarted.localVideo('aaaaaaaaaaa'), isNotNull);
+      expect(await restarted.localVideo('aaaaaaaaaaa'), isNotNull);
     });
 
     test('remove can delete the files', () async {

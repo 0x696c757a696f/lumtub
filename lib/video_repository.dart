@@ -418,7 +418,7 @@ class HistoryStore {
     file = File('${directories.data.path}${Platform.pathSeparator}watch_history.json');
     if (!await file.exists()) return;
     try {
-      final data = jsonDecode(await file.readAsString());
+      final data = await decodeJsonInBackground(await file.readAsString());
       if (data is List) {
         for (final value in data) {
           try {

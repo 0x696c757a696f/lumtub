@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 
@@ -530,12 +531,14 @@ class DownloadManager extends ChangeNotifier {
   // Playback.
 
   /// The downloaded [id] when its file is still there.
-  LocalVideo? localVideo(String id) {
+  Future<LocalVideo?> localVideo(String id) async {
     final task = taskFor(id);
     final path = task?.filePath;
     if (task == null || task.status != DownloadStatus.done || path == null) return null;
     final media = File(path);
-    return media.existsSync() ? LocalVideo.read(media) : null;
+    if (!await media.exists()) return null;
+    // The sidecar and the folder listing are read away from the UI isolate.
+    return Isolate.run(() => LocalVideo.read(media));
   }
 
   @override

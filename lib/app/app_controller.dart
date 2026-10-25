@@ -1256,7 +1256,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> _loadSegments(VideoItem item, int serial) async {
     try {
-      final local = downloads?.localVideo(item.id);
+      final local = await downloads?.localVideo(item.id);
       final saved = [for (final s in local?.segments ?? const <SkipSegment>[]) if (settings.sponsorCategories.contains(s.category)) s];
       final segments = saved.isNotEmpty ? saved : await _sponsorBlock.segments(item.id, settings.sponsorCategories);
       if (serial == _playSerial) _update(() => _segments = segments);
@@ -1298,7 +1298,7 @@ class AppController extends ChangeNotifier {
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
-      final local = allowLocal && resolved && piped && !item.isLive ? downloads?.localVideo(item.id) : null;
+      final local = allowLocal && resolved && piped && !item.isLive ? await downloads?.localVideo(item.id) : null;
       _openedLocal = null;
       // A download in a codec the playback rules disable (AV1 decoded in
       // software, say) streams instead, in a codec the rules allow.
@@ -1978,7 +1978,7 @@ class AppController extends ChangeNotifier {
   Future<void> _loadDetails(VideoItem item, int serial) async {
     try {
       VideoDetails loaded;
-      final local = downloads?.localVideo(item.id);
+      final local = await downloads?.localVideo(item.id);
       if (local != null && local.info['title'] != null) {
         // Saved with the download, so the page works offline.
         loaded = VideoDetails.fromJson(local.info);

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'background_json.dart';
 import 'models.dart';
 import 'l10n/l10n.dart';
 
@@ -47,7 +48,7 @@ class LibraryStore {
   Future<void> load() async {
     if (!await file.exists()) return;
     try {
-      final data = jsonDecode(await file.readAsString());
+      final data = await decodeJsonInBackground(await file.readAsString());
       if (data is! Map) return;
       favorites.addAll(_items(data['favorites']));
       watchLater.addAll(_items(data['watchLater']));

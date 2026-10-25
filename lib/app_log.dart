@@ -92,7 +92,12 @@ class AppLog {
   // enough to tell what failed.
   static final _streamUrl = RegExp(r'https?://([\w.-]*googlevideo\.com)/\S*');
 
+  /// The native core's [redact], once the core has loaded; the patterns
+  /// above cover the log until then, or without the core.
+  static String Function(String message)? nativeRedact;
+
   static String redact(String message) {
+    if (nativeRedact case final native?) return native(message);
     var text = message.replaceAllMapped(_streamUrl, (m) => 'https://${m[1]}/…');
     for (final pattern in _secrets) {
       text = text.replaceAllMapped(pattern, (m) => '${m[1]}***');

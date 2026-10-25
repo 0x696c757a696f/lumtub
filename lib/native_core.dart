@@ -30,6 +30,10 @@ class NativeCore {
         downloadContainer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_container'),
         updateOffer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_offer'),
         updateScript = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_script'),
+        redact = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_redact'),
+        hashPrefix = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_hash_prefix'),
+        sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
+        dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
         titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
         looksLikeBait = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_looks_like_bait'),
         isShort = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_is_short'),
@@ -56,6 +60,11 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) downloadContainer;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateOffer;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateScript;
+  final Pointer<Utf8> Function(Pointer<Uint8> message, int length) redact;
+  /// The first four hex digits of a video id's SHA-256.
+  final Pointer<Utf8> Function(Pointer<Uint8> videoId, int length) hashPrefix;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) sponsorSegments;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) dearrowBranding;
   /// The place in ExploreLanguage of the language a title reads as.
   final int Function(Pointer<Uint8> title, int length) titleLanguage;
   final bool Function(Pointer<Uint8> title, int length) looksLikeBait;
@@ -86,7 +95,9 @@ class NativeCore {
     for (final path in paths) {
       if (!File(path).existsSync()) continue;
       try {
-        return NativeCore._(DynamicLibrary.open(path));
+        final core = NativeCore._(DynamicLibrary.open(path));
+        AppLog.nativeRedact = (message) => core.take(core.withText(message, core.redact)) ?? message;
+        return core;
       } catch (e) {
         logInfo('Could not load $path: $e');
       }

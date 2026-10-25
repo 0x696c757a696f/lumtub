@@ -64,8 +64,12 @@ String get youtubeAcceptLanguage => switch (_current) {
 
 /// [zh] in the current language, with `{0}`, `{1}`… replaced by [args].
 /// Text with no translation stays as written.
-String tr(String zh, [List<Object?> args = const []]) {
-  final text = _strings[zh] ?? zh;
+String tr(String zh, [List<Object?> args = const []]) => _fill(_strings[zh] ?? zh, args);
+
+/// [zh] in English whatever the interface language, for the log.
+String trLog(String zh, [List<Object?> args = const []]) => _fill(stringsEn[zh] ?? zh, args);
+
+String _fill(String text, List<Object?> args) {
   if (args.isEmpty) return text;
   return text.replaceAllMapped(_placeholder, (m) {
     final i = int.parse(m.group(1)!);

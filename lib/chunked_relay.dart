@@ -92,7 +92,7 @@ class ChunkedRelay {
       await response.close();
     } catch (e) {
       // libmpv closing the connection to seek is the common case.
-      if (e is _Upstream || e is! IOException) logInfo('分块转发中断：$e');
+      if (e is _Upstream || e is! IOException) logInfo('Chunked relay stopped: $e');
       try {
         await response.close();
       } catch (_) {}
@@ -115,7 +115,7 @@ class ChunkedRelay {
       next += received;
       if (next <= to) {
         if (attempt >= 2 || received == 0) throw _Upstream('YouTube 在 $next 字节处中断（${failure ?? '提前结束'}）');
-        logInfo('YouTube 回复在 $next 字节处中断（${failure ?? '提前结束'}），从此处继续');
+        logInfo('YouTube reply broke off at byte $next (${failure ?? 'ended early'}), continuing from there');
       } else if (next > to + 1) {
         // More than asked for would shift every later byte.
         throw _Upstream('YouTube 多发了 ${next - to - 1} 字节');

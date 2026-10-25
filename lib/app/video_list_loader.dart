@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../app_log.dart';
 import '../models.dart';
 import '../video_repository.dart';
 
@@ -10,7 +11,7 @@ import '../video_repository.dart';
 /// them. One [Listing] serves every page, so each page continues where the
 /// last one stopped.
 class VideoListLoader extends ChangeNotifier {
-  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1});
+  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1, this.name, this.dropped});
 
   final Listing Function() _open;
   final int pageSize;
@@ -26,6 +27,11 @@ class VideoListLoader extends ChangeNotifier {
   /// With [where] or [matches], pages are read until this many entries
   /// show, so a strict filter still leaves something to scroll.
   final int fill;
+  /// What the list is, for the log; a list that comes back empty is logged
+  /// with how many entries were read and, from [dropped], why they were
+  /// left out.
+  final String? name;
+  final Map<String, int>? dropped;
 
   List<VideoItem> items = const [];
   /// Channels the listing found; only searches list them.
@@ -40,6 +46,12 @@ class VideoListLoader extends ChangeNotifier {
   StreamSubscription<Object>? _subscription;
   final _seen = <String>{};
   bool _disposed = false;
+  /// Entries read from the listing so far, shown or not.
+  int _read = 0;
+  int _emptyRetries = 0;
+
+  /// Waits before reading an empty list again.
+  static List<Duration> emptyRetryDelays = const [Duration(seconds: 3), Duration(seconds: 10)];
 
   /// Waits before each automatic retry after a failure, longer each time;
   /// once they are used up only the 重试 button tries again.
@@ -112,6 +124,7 @@ class VideoListLoader extends ChangeNotifier {
     _subscription = listing.next(count).listen(
       (entry) {
         fresh++;
+        _read++;
         final match = matches;
         if (entry is ChannelResult) {
           if (match != null || !_seen.add(entry.ref.id)) return;
@@ -146,6 +159,23 @@ class VideoListLoader extends ChangeNotifier {
         if ((matches != null || where != null) && error == null && more && shown < fill && skipped < 25 && !_disposed) {
           _page(listing, pageSize, skipped + 1, shown);
           return;
+        }
+        if (items.isEmpty && error == null && !more && !_disposed) {
+          final why = dropped == null || dropped!.isEmpty ? '' : ', dropped ${[for (final e in dropped!.entries) '${e.value} (${e.key})'].join(', ')}';
+          if (name != null) logInfo('$name has no videos to show: read $_read entries$why');
+          // Nothing came back at all, as happens for a while after the
+          // first launch: tried again a little later before the list is
+          // called empty.
+          if (_read == 0 && _emptyRetries < emptyRetryDelays.length) {
+            _retryTimer = Timer(emptyRetryDelays[_emptyRetries++], () {
+              _retryTimer = null;
+              if (_disposed) return;
+              _listing?.close();
+              _listing = _open();
+              _page(_listing!, pageSize, 0, 0);
+            });
+            return;
+          }
         }
         loading = false;
         hasMore = !full && (error != null || more);

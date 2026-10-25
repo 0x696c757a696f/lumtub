@@ -306,7 +306,7 @@ void main() {
 
   testWidgets('switches halves, zones, sub-categories and modes', (tester) async {
     final controller = await _open(tester);
-    // 推荐 comes first: a mix of zones, with 换一批.
+    // 全部 comes first: a mix of zones, with 换一批.
     expect(controller.exploreTopicNow.mix, isTrue);
     expect(find.text('换一批'), findsOneWidget);
     await tester.tap(find.text('知识教育'));
@@ -337,7 +337,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreSection, ExploreSection.live);
     expect(controller.exploreMode, ExploreMode.liveViewers);
-    expect(find.text('推荐直播 · 按观看人数排列'), findsOneWidget);
+    expect(find.text('全部直播 · 按观看人数排列'), findsOneWidget);
     expect(find.text('换一批'), findsOneWidget);
     expect(find.text('本月'), findsNothing);
 
@@ -437,15 +437,15 @@ void main() {
 
   testWidgets('a wide window lists the zones down the left', (tester) async {
     final controller = await _open(tester, width: 1280);
-    final first = tester.getTopLeft(find.text('推荐').first);
-    final second = tester.getTopLeft(find.text('全部').first);
+    final first = tester.getTopLeft(find.text('全部').first);
+    final second = tester.getTopLeft(find.text('知识教育').first);
     expect(first.dx, lessThan(TopicStrip.railWidth));
     expect(second.dx, first.dx);
     expect(second.dy, greaterThan(first.dy));
     expect(find.text('管理'), findsOneWidget);
-    await tester.tap(find.text('全部').first);
+    await tester.tap(find.text('知识教育').first);
     await tester.pump();
-    expect(controller.exploreTopicNow.label, '全部');
+    expect(controller.exploreTopicNow.label, '知识教育');
     expect(tester.takeException(), isNull);
   });
 
@@ -471,7 +471,7 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, '删除'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(controller.preferences.exploreCustomTopics, isEmpty);
-    expect(controller.exploreTopicNow.label, '推荐');
+    expect(controller.exploreTopicNow.label, '全部');
     expect(tester.takeException(), isNull);
   });
 
@@ -495,8 +495,8 @@ void main() {
 
     final topics = controller.exploreTopicsFor(ExploreSection.popular);
     expect(topics.first.label, '游戏');
-    expect(topics.map((t) => t.label), isNot(contains('推荐')));
-    expect(controller.preferences.exploreHidden['popular'], ['推荐']);
+    expect(topics.map((t) => t.label), isNot(contains('全部')));
+    expect(controller.preferences.exploreHidden['popular'], ['全部']);
     // The zone shown was hidden, so the strip starts over on its first.
     expect(controller.exploreTopicNow.label, '游戏');
     expect(tester.takeException(), isNull);

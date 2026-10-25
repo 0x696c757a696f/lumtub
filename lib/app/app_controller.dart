@@ -265,14 +265,14 @@ class AppController extends ChangeNotifier {
     try {
       source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort)).info, settings: _playback);
     } catch (e) {
-      logInfo('投屏：yt-dlp 解析失败：$e');
+      logInfo('Cast: yt-dlp could not resolve: $e');
     }
     for (final kind in RelayKind.values) {
       if (source != null) break;
       try {
         source = castSourceFromRelay(await (kind == RelayKind.piped ? _piped.fetch(item.id) : _invidious.fetch(item.id)), settings: _playback);
       } catch (e) {
-        logInfo('投屏：$kind 解析失败：$e');
+        logInfo('Cast: $kind could not resolve: $e');
       }
     }
     if (source == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
@@ -417,7 +417,7 @@ class AppController extends ChangeNotifier {
         Directory.current = directories.cache;
       } catch (_) {}
       await AppLog.open(directories.logs);
-      logInfo('Lumtub $appVersion 启动 · ${Platform.operatingSystemVersion}');
+      logInfo('Lumtub $appVersion started · ${Platform.operatingSystemVersion}');
       final history = HistoryStore(directories);
       await history.initialize();
       searchHistory = SearchHistory(File('${directories.data.path}${Platform.pathSeparator}search_history.json'));
@@ -435,8 +435,8 @@ class AppController extends ChangeNotifier {
       final preferences = await preferencesStore.load();
       final cacheManager = CacheManager(directories);
       await cacheManager.prepare(settings);
-      final manager = ToolManager(directories, (message) {
-        logInfo(message);
+      final manager = ToolManager(directories, (message, logged) {
+        logInfo(logged);
         _update(() => status = message);
       });
       _tools = manager;
@@ -460,7 +460,7 @@ class AppController extends ChangeNotifier {
         await _relay!.start();
       } catch (e) {
         _relay = null;
-        logError('无法启动本地分块转发，视频流将直接连接', e);
+        logError('Could not start the local chunked relay; streams connect directly', e);
       }
       _piped.catalogFile = File('${directories.config.path}${Platform.pathSeparator}piped_servers.json');
       // Measures the Piped servers while the app starts, not on the first click.
@@ -523,12 +523,12 @@ class AppController extends ChangeNotifier {
       unawaited(_trimThumbnails());
       unawaited(downloads?.load());
       unawaited(account?.load());
-      logInfo('组件就绪 · libmpv ${manager.libmpv.current?.label ?? '内置'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
+      logInfo('Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
       _update(() {
         error = e.toString();
         status = tr('初始化失败');
-        logError('初始化失败', e);
+        logError('Initialization failed', e);
       });
     }
   }
@@ -586,7 +586,7 @@ class AppController extends ChangeNotifier {
     try {
       final freed = await trimThumbnails(directory, thumbnailCapBytes(settings.cacheLimitGb));
       if (freed > 0) {
-        logInfo('缩略图缓存超出上限，已清理 ${formatBytes(freed)}');
+        logInfo('Thumbnail cache over its limit, freed ${formatBytes(freed)}');
         final manager = _cacheManager;
         if (manager != null) {
           final left = await manager.size(settings);
@@ -594,7 +594,7 @@ class AppController extends ChangeNotifier {
         }
       }
     } catch (e) {
-      logInfo('清理缩略图缓存失败：$e');
+      logInfo('Could not trim the thumbnail cache: $e');
     }
   }
 
@@ -671,7 +671,7 @@ class AppController extends ChangeNotifier {
     await _routeThroughBridge(next);
     appHttpOverrides.endpoint = proxyEndpoint;
     appHttpOverrides.useEnvironment = settings.proxyMode == ProxyMode.system;
-    if (next.url != proxy.url) logInfo(next.url == null ? '网络：直接连接' : '网络：使用代理 ${next.redacted}');
+    if (next.url != proxy.url) logInfo(next.url == null ? 'Network: direct connection' : 'Network: using proxy ${next.redacted}');
     proxy = next;
     final player = this.player;
     if (player != null) await _applyProxy(player);
@@ -695,7 +695,7 @@ class AppController extends ChangeNotifier {
       try {
         _bridge = await SocksBridge.start(next.url!);
       } catch (e) {
-        logError('无法启动本地 SOCKS 转发，网络请求将失败而不是直连', e);
+        logError('Could not start the local SOCKS bridge; requests will fail rather than go direct', e);
       }
     }
     proxyEndpoint = next.isSocks ? (_bridge?.hostPort ?? '127.0.0.1:1') : next.isHttp ? next.hostPort : null;
@@ -985,39 +985,47 @@ class AppController extends ChangeNotifier {
     final language = preferences.exploreLanguage;
     final perChannel = <String, int>{};
     final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);
-    // 推荐 always goes by the history, whatever order it is shown in.
-    final taste = mode == ExploreMode.forYou || exploreTopicNow.personal ? _exploreTaste() : null;
+    final taste = mode == ExploreMode.forYou ? _exploreTaste() : null;
     // The Home and Explore "For You" lists share these choices.  Explore has
     // its own loader, so it must apply the mix here instead of relying on
     // HomeFeed's ranking pass.
     final feedMix = mode == ExploreMode.forYou ? preferences.feedMix : null;
     final notInterested = homeFeed?.notInterested;
     final faith = exploreSection.isFaith ? faithFilter() : null;
+    final seen = mix ? {for (final item in history) item.id, ...?homeFeed?.items.map((item) => item.id)} : const <String>{};
+    final dropped = <String, int>{};
+    bool drop(String why) {
+      dropped.update(why, (n) => n + 1, ifAbsent: () => 1);
+      return false;
+    }
+
     bool where(VideoItem item) {
-      if (notInterested != null && notInterested.videos.contains(item.id)) return false;
+      if (notInterested != null && notInterested.videos.contains(item.id)) return drop('not interested');
       // Left out here too, so that hiding them still fills the page.
-      if (preferences.blocksGroup(item) || preferences.isUnrecommended(item.channelId)) return false;
+      if (preferences.blocksGroup(item) || preferences.isUnrecommended(item.channelId)) return drop('blocked');
       // "Don't recommend" is a hard exclusion.  "Fewer" remains in the
       // list, but its score is reduced below in the ranking callback.
-      if (feedMix?.penaltyOf(item) == null) return false;
-      if (taste != null && taste.channelAffinity(item) < -0.3) return false;
-      if (mode == ExploreMode.liveUpcoming && !item.isUpcoming) return false;
-      if (mode == ExploreMode.liveReplay && item.liveStatus != 'was_live') return false;
+      if (feedMix != null && feedMix.penaltyOf(item) == null) return drop('Shorts or vertical');
+      if (taste != null && taste.channelAffinity(item) < -0.3) return drop('often skipped channel');
+      if (mode == ExploreMode.liveUpcoming && !item.isUpcoming) return drop('not upcoming');
+      if (mode == ExploreMode.liveReplay && item.liveStatus != 'was_live') return drop('not a replay');
       final seconds = item.duration;
       if (mode == ExploreMode.gems) {
         final views = item.viewCount;
-        if (views == null || views > gemMaxViews || seconds == null || seconds < 240) return false;
+        if (views == null || views > gemMaxViews || seconds == null || seconds < 240) return drop('not a hidden gem');
       }
-      if (mode == ExploreMode.curated && seconds != null && seconds < 240) return false;
-      if (!language.matches(item.title)) return false;
-      // A mix keeps any one channel from filling it.
-      if (mix && (perChannel[TasteProfile.channelKey(item)] = (perChannel[TasteProfile.channelKey(item)] ?? 0) + 1) > 2) return false;
+      if (mode == ExploreMode.curated && seconds != null && seconds < 240) return drop('too short');
+      if (!language.matches(item.title)) return drop('language');
+      // 全部 is for finding more: not what was watched or what 为你推荐
+      // already shows. It keeps any one channel from filling it.
+      if (mix && seen.contains(item.id)) return drop('already seen');
+      if (mix && (perChannel[TasteProfile.channelKey(item)] = (perChannel[TasteProfile.channelKey(item)] ?? 0) + 1) > 2) return drop('more than 2 per channel');
       // Last, as it counts the videos that show.
-      return faith == null || faith(item);
+      return faith == null || faith(item) || drop('faith filter');
     }
 
     _update(() => explore = VideoListLoader(
-          () => mix ? repository.searchMix(_exploreMixQueries(exploreSection, exploreTopicNow.personal ? taste ?? _exploreTaste() : null), sp: sp, region: region) : repository.search(query, sp: sp, region: region),
+          () => mix ? repository.searchMix(exploreMixQueries(exploreSection), sp: sp, region: region) : repository.search(query, sp: sp, region: region),
           where: where,
           fill: switch (mode) {
             ExploreMode.gems || ExploreMode.liveReplay => 8,
@@ -1027,33 +1035,34 @@ class AppController extends ChangeNotifier {
           rank: taste == null
               ? null
               : (item) => exploreScore(taste, item) - (feedMix?.penaltyOf(item) ?? 0),
+          name: 'Explore ${exploreSection.name} · ${exploreTopicNow.label} · ${mode.name}',
+          dropped: dropped,
         )
           ..addListener(notifyListeners)
           ..loadMore());
   }
 
-  /// 推荐 and 全部's searches: zones of [section] picked at random each
-  /// time, so every visit brings others, and for 推荐 a few of the
-  /// history's interests ([taste]) in place of two of them.
-  List<String> _exploreMixQueries(ExploreSection section, TasteProfile? taste, {Random? random}) {
-    final interests = (taste?.topWords(8) ?? <String>[])..shuffle(random);
+  /// 全部's searches: zones of [section] picked at random each time, so
+  /// every visit brings others. Personal picks are left to 为你推荐 on the
+  /// home page.
+  @visibleForTesting
+  List<String> exploreMixQueries(ExploreSection section, {Random? random}) {
     final zones = [
       for (final topic in exploreTopicsFor(section))
         if (!topic.mix && topic.opens == null) topic.subs.isEmpty ? topic.query : (topic.subs.toList()..shuffle(random)).first.query,
     ]..shuffle(random);
-    final picked = interests.take(2).toList();
     final filter = [exploreFormat.words, exploreView.words].where((w) => w.isNotEmpty).join(' ');
-    return [for (final query in [...picked, ...zones.take(6 - picked.length)]) filter.isEmpty ? query : '$query $filter'];
+    return [for (final query in zones.take(6)) filter.isEmpty ? query : '$query $filter'];
   }
 
-  /// Shows 推荐 or the zone shown with other videos.
+  /// Shows 全部 or the zone shown with other videos.
   void refreshExplore() {
     explore?.dispose();
     explore = null;
     _loadExplore();
   }
 
-  /// What the history says about taste, for 为你推荐 in explore.
+  /// What the history says about taste, for 为你推荐 in a zone.
   TasteProfile _exploreTaste() {
     final library = this.library;
     return TasteProfile.from(
@@ -1284,7 +1293,7 @@ class AppController extends ChangeNotifier {
       // software, say) streams instead, in a codec the rules allow.
       final localCodec = local?.videoCodec;
       if (local != null && !FormatPolicy.allows(settings, localCodec)) {
-        logInfo('${item.id} 的下载文件是 ${localCodec!.label}，播放规则已禁用该编码，改为在线播放');
+        logInfo('The download of ${item.id} is ${localCodec!.label}, a codec the playback rules disable; playing online instead');
         _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [localCodec.label]));
       } else if (local != null) {
         return await _openLocal(item, serial, local, start: start, play: play);
@@ -1315,7 +1324,7 @@ class AppController extends ChangeNotifier {
             if (serial == _playSerial) _fail(item, failure);
             return false;
           }
-          logError('预先解析 ${item.id} 失败，改由 libmpv 解析', e);
+          logError('Prefetching ${item.id} failed, letting libmpv resolve it', e);
         }
         if (serial != _playSerial) return false;
       }
@@ -1354,7 +1363,7 @@ class AppController extends ChangeNotifier {
       _update(() {});
       return true;
     } catch (e) {
-      logError('无法打开视频 ${item.id}', e);
+      logError('Could not open video ${item.id}', e);
       if (serial == _playSerial) _fail(item, PlaybackFailure.classify(['$e', ..._recentErrors]));
       return false;
     }
@@ -1400,7 +1409,7 @@ class AppController extends ChangeNotifier {
         await platform.command(['sub-add', other.path, 'auto']);
       }
     } catch (e) {
-      logError('无法加载离线字幕', e);
+      logError('Could not load offline subtitles', e);
     }
   }
 
@@ -1465,10 +1474,10 @@ class AppController extends ChangeNotifier {
       final address = video.edl(_playback);
       if (address == null) return null;
       _update(() => availableHeights = video.heightsFor(settings));
-      logInfo('从 $name ${video.server} 播放 ${item.id}，用时 ${watch.elapsedMilliseconds} ms');
+      logInfo('Playing ${item.id} from $name ${video.server}, took ${watch.elapsedMilliseconds} ms');
       return address;
     } catch (e) {
-      logInfo('$e，不使用 $name');
+      logInfo('$e; not using $name');
       return null;
     }
   }
@@ -1477,7 +1486,7 @@ class AppController extends ChangeNotifier {
   void _fail(VideoItem item, PlaybackFailure failure) {
     _recoveryTimer?.cancel();
     _recovery.cancelPending();
-    logError('播放失败 ${item.id}（${failure.kind.name}）：${failure.detail}');
+    logError('Playback failed ${item.id} (${failure.kind.name}): ${failure.detail}');
     if (failure.kind == FailureKind.noFormat) failure = PlaybackFailure(failure.kind, failure.detail, disabled: FormatPolicy.disabledNames(settings));
     switch (failure.kind) {
       case FailureKind.rateLimited:
@@ -1499,14 +1508,14 @@ class AppController extends ChangeNotifier {
     if (item == null || _recovering) return;
     final position = _resumePoint.beforeFailure;
     if (!_recovery.tryAttempt(position: position)) {
-      logError('播放中断，已放弃自动重连 ${item.id}：$message');
+      logError('Playback interrupted, gave up reconnecting ${item.id}: $message');
       _fail(item, PlaybackFailure.classify([message, ..._recentErrors]));
       return;
     }
-    logInfo('播放中断，从 ${_clock(position)} 重新连接 ${item.id}：$message');
+    logInfo('Playback interrupted, reconnecting ${item.id} at ${_clock(position)}: $message');
     if (_relayed == item.id) {
       _unrelayed = item.id;
-      logInfo('改为不经本地分块转发播放 ${item.id}');
+      logInfo('Playing ${item.id} without the local chunked relay');
     }
     _notice(tr('网络中断，正在从 {0} 重新连接…', [_clock(position)]));
     _recovering = true;
@@ -1543,7 +1552,7 @@ class AppController extends ChangeNotifier {
         await platform.command(['sub-add', option.url, 'select', option.label, option.language]);
       }
     } catch (e) {
-      logError('无法加载字幕 ${option.language}', e);
+      logError('Could not load subtitles ${option.language}', e);
       _notice(tr('无法加载这条字幕'));
     }
   }
@@ -1556,7 +1565,7 @@ class AppController extends ChangeNotifier {
       if (!await SecondarySubtitle.set(player, option)) throw StateError('字幕未加载');
       _update(() => secondarySubtitle = option);
     } catch (e) {
-      logError('无法设置副字幕 ${option?.language}', e);
+      logError('Could not set secondary subtitles ${option?.language}', e);
       _notice(tr('无法加载这条字幕'));
     }
   }
@@ -1613,7 +1622,7 @@ class AppController extends ChangeNotifier {
       player.stream.error.listen((message) {
         if (playing == null || message.isEmpty) return;
         if (isSubtitleError(message)) {
-          logInfo('字幕加载失败，视频继续播放：$message');
+          logInfo('Subtitles failed to load, video keeps playing: $message');
           return;
         }
         // FFmpeg may log the HTTP status before naming the request. Keep
@@ -1657,7 +1666,7 @@ class AppController extends ChangeNotifier {
           return;
         }
         final limited = _rateLimited;
-        logInfo('Piped 或 Invidious 的地址无法播放（$message），改${limited != null ? '用下一个服务器' : '为直接连接 YouTube'}');
+        logInfo('Piped or Invidious address did not play ($message); ${limited != null ? 'trying the next server' : 'connecting to YouTube directly'}');
         unawaited(limited != null ? _fallBackFromRateLimit(item, _playSerial, limited, start: position) : _open(item, _playSerial, start: position, piped: false));
         return;
       }
@@ -1674,7 +1683,7 @@ class AppController extends ChangeNotifier {
         // ytdl_hook resolve the video itself once.
         _openedResolved = null;
         _repository?.streams.forget(item.id);
-        logInfo('预先解析的地址无法播放（$message），改由 libmpv 重新解析 ${item.id}');
+        logInfo('Prefetched address did not play ($message); libmpv resolves ${item.id} again');
         unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
         return;
       }
@@ -2045,7 +2054,7 @@ class AppController extends ChangeNotifier {
     if (!Platform.isWindows) return;
     final before = ProcessInfo.currentRss;
     releaseFreedMemory();
-    logInfo('已释放空闲内存：${before >> 20} MB → ${ProcessInfo.currentRss >> 20} MB');
+    logInfo('Released idle memory: ${before >> 20} MB → ${ProcessInfo.currentRss >> 20} MB');
   }
 
   /// Opens [target]; 返回 comes back to where this was.
@@ -2525,7 +2534,7 @@ class AppController extends ChangeNotifier {
     await saveSettings(player);
     await saveAppearance(AppearanceSettings.fromJson(data['appearance']));
     await savePreferences(AppPreferences.fromJson(data['preferences']));
-    logInfo('已导入设置');
+    logInfo('Settings imported');
     return true;
   }
 
@@ -2619,7 +2628,7 @@ class AppController extends ChangeNotifier {
       if (preferences.skipFfmpegPrompt) await savePreferences(preferences.copyWith(skipFfmpegPrompt: false));
       return true;
     } catch (e) {
-      logError('ffmpeg 安装失败', e);
+      logError('ffmpeg installation failed', e);
       _notice(tr('ffmpeg 安装失败：{0}', [e]));
       return false;
     } finally {
@@ -2706,7 +2715,7 @@ class AppController extends ChangeNotifier {
       final item = playing;
       final fileCodec = VideoCodec.of(normalized);
       if (item != null && _openedLocal == item.id && !FormatPolicy.allows(settings, fileCodec)) {
-        logInfo('${item.id} 的下载文件是 ${fileCodec!.label}，播放规则已禁用该编码，改为在线播放');
+        logInfo('The download of ${item.id} is ${fileCodec!.label}, a codec the playback rules disable; playing online instead');
         _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [fileCodec.label]));
         unawaited(_open(item, _playSerial, start: player?.state.position, allowLocal: false));
       }
@@ -2731,7 +2740,7 @@ class AppController extends ChangeNotifier {
       for (final name in ['avsync', 'estimated-vf-fps', 'container-fps', 'display-fps', 'vo-delayed-frame-count', 'mistimed-frame-count', 'decoder-frame-drop-count', 'hwdec-current', 'video-sync', 'speed', 'video-params/w', 'video-params/h', 'time-pos', 'audio-pts', 'audio-params/samplerate', 'audio-out-params/samplerate', 'current-ao', 'd3d11va-zero-copy', 'vd-lavc-dr', 'video-codec', 'video-out-params/pixelformat']) {
         values.add('$name=${await platform.getProperty(name)}');
       }
-      logInfo('10 秒内丢帧 $added（共 $drops）：${values.join(' ')}');
+      logInfo('Dropped $added frames in 10 s ($drops total): ${values.join(' ')}');
     } catch (_) {
       // Statistics are best effort.
     }
@@ -2753,7 +2762,7 @@ class AppController extends ChangeNotifier {
       for (final name in ['video-params/w', 'video-params/h', 'video-codec', 'hwdec-current', 'video-out-params/pixelformat']) {
         values.add('$name=${await platform.getProperty(name)}');
       }
-      logInfo('内存：进程 ${mb(ProcessInfo.currentRss)}（峰值 ${mb(ProcessInfo.maxRss)}）· 播放缓存 ${mb(total)}（前方 ${mb(ahead)}）· 图片缓存 ${mb(PaintingBinding.instance.imageCache.currentSizeBytes)} · ${values.join(' ')}');
+      logInfo('Memory: process ${mb(ProcessInfo.currentRss)} (peak ${mb(ProcessInfo.maxRss)}) · playback cache ${mb(total)} (ahead ${mb(ahead)}) · image cache ${mb(PaintingBinding.instance.imageCache.currentSizeBytes)} · ${values.join(' ')}');
     } catch (_) {
       // Statistics are best effort.
     }
@@ -2818,7 +2827,7 @@ class AppController extends ChangeNotifier {
           ? tr('已清理 {0} 缓存。', [formatBytes(freed)])
           : tr('已清理 {0} 缓存；{1} 个文件正被使用，留到下次。', [formatBytes(freed), skipped]));
     } on FileSystemException catch (error) {
-      logError('清理缓存失败', error);
+      logError('Could not clear the cache', error);
       _notice(tr('清理缓存失败：{0}', [error.message]));
     }
   }
@@ -2840,7 +2849,7 @@ class AppController extends ChangeNotifier {
     _recoveryTimer?.cancel();
     await player?.pause();
     await player?.dispose();
-    logInfo('Lumtub 正常退出');
+    logInfo('Lumtub exited normally');
     await AppLog.current?.flush();
   }
 

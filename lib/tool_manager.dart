@@ -27,8 +27,11 @@ class ToolPaths {
 /// Downloads GitHub release assets to versioned directories and checks SHA-256.
 class ToolManager {
   final AppDirectories directories;
-  final void Function(String) status;
-  ToolManager(this.directories, this.status);
+  /// Shows a message, and writes it to the log in English.
+  final void Function(String shown, String logged) report;
+  ToolManager(this.directories, this.report);
+
+  void status(String zh, [List<Object?> args = const []]) => report(tr(zh, args), trLog(zh, args));
 
   late final Directory root;
   late final LibmpvState libmpv;
@@ -60,16 +63,16 @@ class ToolManager {
     final mpv = libmpv.loadedPath ?? _bundledMpv;
     if (!File(mpv).existsSync()) throw StateError('Bundled libmpv-2.dll is missing. Re-download the Lumtub package.');
     if (discover()?.ytDlp.isNotEmpty != true) {
-      status(tr('首次启动：安装 yt-dlp…'));
+      status('首次启动：安装 yt-dlp…');
       await _installYtDlp();
     }
     // Deno is needed by some YouTube JavaScript challenge paths. Optional at startup.
     if (discover()?.deno == null) {
       try {
-        status(tr('安装 YouTube 解析所需的 Deno…'));
+        status('安装 YouTube 解析所需的 Deno…');
         await _installDeno();
       } catch (e) {
-        status(tr('Deno 暂时不可用，可以稍后从工具更新中重试：{0}', [e]));
+        status('Deno 暂时不可用，可以稍后从工具更新中重试：{0}', [e]);
       }
     }
     final ready = discover();
@@ -163,7 +166,7 @@ class ToolManager {
       ('ffmpeg', () => installFfmpeg(onlyIfInstalled: true)),
     ]) {
       try {
-        status(tr('检查 {0} 更新…', [task.$1]));
+        status('检查 {0} 更新…', [task.$1]);
         await task.$2();
       } catch (e) {
         errors.add('${task.$1}: $e');
@@ -171,9 +174,9 @@ class ToolManager {
     }
     if (errors.isEmpty) {
       await stamp.writeAsString(DateTime.now().toIso8601String());
-      status(tr('更新检查完成。如有新版，重启应用后启用。'));
+      status('更新检查完成。如有新版，重启应用后启用。');
     } else {
-      status(tr('部分组件更新失败，现有版本不受影响：{0}', [errors.join(' / ')]));
+      status('部分组件更新失败，现有版本不受影响：{0}', [errors.join(' / ')]);
     }
   }
 
@@ -263,7 +266,7 @@ class ToolManager {
       if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
       if (await File('${dest.path}${_separator}yt-dlp.exe').exists()) return;
     }
-    status(tr('下载 yt-dlp {0}…', [tag]));
+    status('下载 yt-dlp {0}…', [tag]);
     final partial = Directory('${dest.path}.partial');
     if (await partial.exists()) await partial.delete(recursive: true);
     try {
@@ -337,7 +340,7 @@ class ToolManager {
       final names = (release['assets'] as List? ?? const []).whereType<Map>().map((asset) => asset['name']?.toString() ?? '');
       final assetName = libmpvAssetName(names, build.variant);
       if (assetName == null) throw StateError('No libmpv archive for this CPU in $tag');
-      status(tr('下载 libmpv {0}…', [build.label]));
+      status('下载 libmpv {0}…', [build.label]);
       final archive = await _downloadVerified(_asset(release, (name) => name == assetName), Directory('${root.path}${_separator}downloads'));
       final partial = Directory('${dest.path}.partial');
       if (await partial.exists()) await partial.delete(recursive: true);
@@ -377,7 +380,7 @@ class ToolManager {
     final tag = _safeTag(release['tag_name']);
     final dest = Directory('${root.path}${Platform.pathSeparator}deno${Platform.pathSeparator}$tag');
     if (await File('${dest.path}${Platform.pathSeparator}deno.exe').exists()) return;
-    status(tr('下载 Deno {0}…', [tag]));
+    status('下载 Deno {0}…', [tag]);
     final asset = _asset(release, (name) => name == 'deno-x86_64-pc-windows-msvc.zip');
     final archive = await _downloadVerified(asset, Directory('${root.path}${Platform.pathSeparator}downloads'));
     final partial = Directory('${dest.path}.partial');
@@ -447,9 +450,9 @@ class ToolManager {
       } on ProcessException {
         await _no7z.parent.create(recursive: true);
         await _no7z.writeAsString(DateTime.now().toIso8601String());
-        logInfo('此版本 Windows 无法解压 7z，改用 BtbN 的 ffmpeg');
+        logInfo('This Windows version cannot extract 7z; using the BtbN ffmpeg');
       } catch (e) {
-        logInfo('zhongfly 的 ffmpeg 无法安装，改用 BtbN 的：$e');
+        logInfo('Could not install the zhongfly ffmpeg, using the BtbN one: $e');
       }
     }
     await _installBtbnFfmpeg(onProgress);
@@ -470,7 +473,7 @@ class ToolManager {
     final folder = zhongflyFfmpegFolderName(asset['name'].toString(), tag);
     final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
     if (await File('${dest.path}${_separator}ffmpeg.exe').exists()) return;
-    status(tr('下载 ffmpeg {0}…', [folder]));
+    status('下载 ffmpeg {0}…', [folder]);
     // Checked against the SHA-256 digest GitHub lists for the asset.
     final archive = await _downloadVerified(asset, Directory('${root.path}${_separator}downloads'), onProgress: onProgress);
     final partial = Directory('${dest.path}.partial');
@@ -507,7 +510,7 @@ class ToolManager {
     final folder = ffmpegFolderName(assetName, asset['updated_at']?.toString());
     final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
     if (await File('${dest.path}${_separator}ffmpeg.exe').exists()) return;
-    status(tr('下载 ffmpeg {0}…', [folder]));
+    status('下载 ffmpeg {0}…', [folder]);
     // The hash comes from the checksum file of the same release, over HTTPS.
     final sums = await _client.get(_assetUri(_asset(release, (name) => name == ffmpegChecksumsAsset)), headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 30));
     if (sums.statusCode != 200) throw HttpException('Checksum file HTTP ${sums.statusCode}');

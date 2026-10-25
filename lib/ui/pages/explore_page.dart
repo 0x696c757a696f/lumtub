@@ -44,7 +44,6 @@ class _ExplorePageState extends State<ExplorePage> {
     final name = [topic.label, if (subNow != null) subNow.label, if (controller.exploreLeafNow case final leafNow?) leafNow.label].join(' · ');
     final subtitle = switch (mode) {
       ExploreMode.curated => tr('{0} · 相关度高的完整内容，少标题党，每个频道最多 3 个', [name]),
-      ExploreMode.popular when topic.personal => tr('推荐 · 你的兴趣和各分区{0}观看最多的视频，每个频道最多 2 个', [controller.explorePeriod.label]),
       ExploreMode.popular when topic.mix => tr('全部 · 各分区{0}观看最多的视频，每个频道最多 2 个', [controller.explorePeriod.label]),
       ExploreMode.popular => tr('{0} · {1}观看最多', [name, controller.explorePeriod.label]),
       ExploreMode.forYou => tr('{0} · 按你的观看记录排列', [name]),

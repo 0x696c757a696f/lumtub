@@ -224,6 +224,10 @@ jobs:
             $cargoBin | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
           }
           $target = if ($env:PACKAGE_ARCH -eq 'arm64') { 'aarch64-pc-windows-msvc' } else { 'x86_64-pc-windows-msvc' }
+          # The runner image may carry an older Rust; build with the newest stable.
+          rustup update stable --no-self-update
+          rustup default stable
+          rustc --version
           rustup target add $target
           # Each package is built for its own CPU level, as libmpv is.
           if ($env:PACKAGE_ARCH -eq 'x64-v3') { $env:RUSTFLAGS = '-C target-cpu=x86-64-v3' }

@@ -413,7 +413,7 @@ fn rank(taste: &Taste, ranking: &Ranking) -> Vec<(usize, usize)> {
     picked
 }
 
-unsafe fn text<'a>(ptr: *const u8, len: usize) -> &'a str {
+pub(crate) unsafe fn text<'a>(ptr: *const u8, len: usize) -> &'a str {
     if ptr.is_null() || len == 0 {
         return "";
     }
@@ -424,7 +424,7 @@ fn give(value: String) -> *mut c_char {
     CString::new(value).map_or(std::ptr::null_mut(), CString::into_raw)
 }
 
-fn give_json<T: serde::Serialize>(value: &T) -> *mut c_char {
+pub(crate) fn give_json<T: serde::Serialize>(value: &T) -> *mut c_char {
     serde_json::to_string(value).map_or(std::ptr::null_mut(), give)
 }
 

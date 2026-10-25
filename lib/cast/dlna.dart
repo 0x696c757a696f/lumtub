@@ -211,7 +211,7 @@ class DlnaDevice implements CastDevice {
           return;
         }
       } on CastException catch (e) {
-        logInfo('DLNA 投屏跳转失败：$e');
+        logInfo('DLNA seek failed: $e');
       }
     }
   }
@@ -271,7 +271,7 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
       if (service == null || !seen.add(description.udn) || controller.isClosed) return;
       controller.add(DlnaDevice(name: description.name, id: description.udn, serviceType: service.type, controlUrl: service.controlUrl));
     } catch (e) {
-      logInfo('读取 DLNA 设备描述 ${found.location} 失败：$e');
+      logInfo('Could not read the DLNA device description ${found.location}: $e');
     }
   }
 
@@ -300,7 +300,7 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
           if (found != null && locations.add(found.location.toString())) unawaited(describe(found));
         });
       } on SocketException catch (e) {
-        logInfo('DLNA 搜索无法使用 $address：${e.message}');
+        logInfo('DLNA discovery cannot use $address: ${e.message}');
       }
     }
     void search() {

@@ -108,12 +108,12 @@ abstract class RelayServers {
     try {
       found = await downloadCatalog();
     } catch (e) {
-      logInfo('读取 $name 服务器列表失败：$e');
+      logInfo('Could not read the $name server list: $e');
     }
     if (found.isNotEmpty) {
       _catalog = found.toList();
       _catalogAt = DateTime.now();
-      logInfo('$name 服务器列表已更新，共 ${catalog.length} 个');
+      logInfo('$name server list updated: ${catalog.length} servers');
       await _saveCatalog();
     }
     return catalog;
@@ -132,7 +132,7 @@ abstract class RelayServers {
       await catalogFile?.parent.create(recursive: true);
       await catalogFile?.writeAsString(jsonEncode({'updated': _catalogAt.toIso8601String(), 'servers': _catalog, if (_lastGood != null) 'last': _lastGood}));
     } catch (e) {
-      logInfo('无法保存 $name 服务器列表：$e');
+      logInfo('Could not save the $name server list: $e');
     }
   }
 
@@ -171,7 +171,7 @@ abstract class RelayServers {
 
   List<String> _publish() {
     final ranked = _timings.keys.toList()..sort((a, b) => _timings[a]!.compareTo(_timings[b]!));
-    logInfo(ranked.isEmpty ? '$name 服务器都无法连接' : '$name 服务器（按速度）：${ranked.take(5).map((s) => '$s ${_timings[s]} ms').join('，')}');
+    logInfo(ranked.isEmpty ? 'No $name server could be reached' : '$name servers by speed: ${ranked.take(5).map((s) => '$s ${_timings[s]} ms').join(', ')}');
     _ranked = ranked;
     _rankedAt = DateTime.now();
     if (ranked.isNotEmpty && ranked.first != _lastGood) {

@@ -90,7 +90,9 @@ void main() {
     late List<List<String>> started;
     late Map<String, String> lastEnvironment;
 
+    final finished = <DownloadTask>[];
     setUp(() async {
+      finished.clear();
       dir = await Directory.systemTemp.createTemp('lumtub_downloads');
       processes = [];
       started = [];
@@ -127,6 +129,7 @@ void main() {
           ffmpegDirectory: () => ffmpeg,
           options: () => const DownloadOptions(proxy: 'http://127.0.0.1:7890', deno: 'deno.exe', subtitleLanguages: '(zh|en).*', autoSubtitles: true),
           sponsorSegments: (id) async => segments,
+          onFinished: finished.add,
         ));
 
     Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 80));
@@ -200,6 +203,7 @@ void main() {
       await processes[0].exit(0);
       await settle();
       expect(m.localVideo('aaaaaaaaaaa'), isNotNull);
+      expect(finished.single.filePath, file.path);
       file.deleteSync();
       expect(m.localVideo('aaaaaaaaaaa'), isNull);
     });

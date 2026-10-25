@@ -314,7 +314,7 @@ class PlayerSettings {
     this.cacheSeconds = 60,
     this.cacheMemoryMb = 150,
     this.strategy = PlaybackStrategy.auto,
-    this.disabledCodecs = const {VideoCodec.av1, VideoCodec.vp9},
+    this.disabledCodecs = const {VideoCodec.av1},
     this.audioQuality = AudioQuality.best,
     this.audioDevice = 'auto',
     this.videoSync = VideoSync.audio,
@@ -564,7 +564,9 @@ class PlayerSettings {
         : raw['codec'] == 'any' || raw['autoSelectCodec'] == false ? PlaybackStrategy.quality : PlaybackStrategy.auto;
     final disabled = raw['disabledCodecs'] is List
         ? {for (final name in raw['disabledCodecs'] as List) VideoCodec.byName(name)}.whereType<VideoCodec>().toSet()
-        : const {VideoCodec.av1, VideoCodec.vp9};
+        : const {VideoCodec.av1};
+    // A file that disables every codec YouTube plays would play nothing.
+    if (!VideoCodec.playableWithout(disabled)) disabled.remove(VideoCodec.h264);
     // Builds before the play order menu had an autoplay switch.
     final playOrder = raw.containsKey('playOrder')
         ? _enumByName(PlayOrder.values, raw['playOrder'], PlayOrder.autoPlayRelated)

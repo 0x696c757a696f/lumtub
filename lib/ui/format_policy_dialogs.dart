@@ -8,8 +8,25 @@ import '../widgets/pilinara_settings_tiles.dart';
 /// The text under the disabled codecs, in the settings and the player menu.
 String get disabledCodecsNote => tr('禁用后，所有播放策略都不会主动选择对应编码。');
 
-/// [current] with [codec] disabled or enabled again.
-Set<VideoCodec> withCodecDisabled(Set<VideoCodec> current, VideoCodec codec, bool disabled) => disabled ? {...current, codec} : ({...current}..remove(codec));
+/// Said when a choice would disable every codec YouTube plays.
+String get lastCodecNote => tr('H.264、VP9、AV1 至少保留一个，否则视频无法播放');
+
+/// [current] with [codec] disabled or enabled again; null when that would
+/// leave nothing to play.
+Set<VideoCodec>? withCodecDisabled(Set<VideoCodec> current, VideoCodec codec, bool disabled) {
+  final next = disabled ? {...current, codec} : ({...current}..remove(codec));
+  return VideoCodec.playableWithout(next) ? next : null;
+}
+
+void _sayLastCodec(BuildContext context) {
+  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(lastCodecNote)));
+}
+
+/// Disables or enables [codec] through [save], or says why it cannot.
+void toggleCodec(BuildContext context, Set<VideoCodec> current, VideoCodec codec, bool disabled, ValueChanged<Set<VideoCodec>> save) {
+  final next = withCodecDisabled(current, codec, disabled);
+  next == null ? _sayLastCodec(context) : save(next);
+}
 
 /// Asks for a [PlaybackStrategy], each with its one-line description, and
 /// reports a changed choice.
@@ -46,5 +63,9 @@ Future<void> pickDisabledCodecs(BuildContext context, Set<VideoCodec> current, V
   );
   if (result == null) return;
   final next = result.toSet();
+  if (!VideoCodec.playableWithout(next)) {
+    if (context.mounted) _sayLastCodec(context);
+    return;
+  }
   if (next.length != current.length || !current.containsAll(next)) onSelected(next);
 }

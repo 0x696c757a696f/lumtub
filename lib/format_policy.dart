@@ -25,6 +25,13 @@ class FormatPolicy {
         VideoCodec.vp8 => null,
       };
 
+  /// Whether this PC is known to decode [codec] only in software.
+  static bool softwareOnly(PlayerSettings settings, VideoCodec codec) {
+    final key = decoderKey(codec);
+    if (key == null) return false;
+    return settings.hwdec == 'no' || ((settings.decoderResults[key]?.isVerified ?? false) && !_hardware(settings, codec));
+  }
+
   static bool _hardware(PlayerSettings settings, VideoCodec codec) {
     final key = decoderKey(codec);
     return settings.hwdec != 'no' && key != null && (settings.decoderResults[key]?.isHardware ?? false);

@@ -11,13 +11,21 @@ String _expression(PlayerSettings settings) => FormatPolicy.expression(settings)
 List<VideoCodec> _order(PlayerSettings settings) => FormatPolicy.codecOrder(settings);
 
 void main() {
-  test('a new install plays H.264 only', () {
+  test('a new install never picks AV1', () {
     const settings = PlayerSettings();
-    expect(settings.disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
-    expect(_order(settings), [VideoCodec.h264, VideoCodec.vp8]);
+    expect(settings.disabledCodecs, {VideoCodec.av1});
+    expect(_order(settings), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.vp8]);
     for (final alternative in _expression(settings).split('/')) {
-      expect(alternative, allOf(contains('vp09'), contains('av01')));
+      expect(alternative, contains('av01'));
     }
+  });
+
+  test('knows when VP9 or AV1 can only be decoded in software', () {
+    const soft = DecoderStatus.software();
+    expect(FormatPolicy.softwareOnly(const PlayerSettings(decoderResults: {'vp9': soft}), VideoCodec.vp9), isTrue);
+    expect(FormatPolicy.softwareOnly(const PlayerSettings(decoderResults: {'vp9': _hw}), VideoCodec.vp9), isFalse);
+    expect(FormatPolicy.softwareOnly(const PlayerSettings(), VideoCodec.av1), isFalse);
+    expect(FormatPolicy.softwareOnly(const PlayerSettings(hwdec: 'no'), VideoCodec.av1), isTrue);
   });
 
   group('auto', () {

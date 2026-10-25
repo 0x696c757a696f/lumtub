@@ -1905,7 +1905,22 @@ class AppController extends ChangeNotifier {
   /// Saves the quality limit and reloads the current video where it was.
   Future<void> setMaxHeight(int height) async {
     if (height == settings.maxHeight) return;
-    await reloadVideo(settings.copyWith(maxHeight: height));
+    var next = settings.copyWith(maxHeight: height);
+    // H.264 stops at 1080p: a taller default needs VP9 or AV1, chosen
+    // between them as the strategy prefers.
+    final modern = {VideoCodec.vp9, VideoCodec.av1};
+    if (height > 1080) {
+      final enabled = next.disabledCodecs.containsAll(modern);
+      if (enabled) next = next.copyWith(disabledCodecs: next.disabledCodecs.difference(modern));
+      final usable = modern.where((codec) => !next.disabledCodecs.contains(codec));
+      final software = usable.isNotEmpty && usable.every((codec) => FormatPolicy.softwareOnly(next, codec));
+      if (software) {
+        _notice(tr('这台电脑不能硬解 VP9 和 AV1，1440p 和 4K 只能用 CPU 软解，占用会很高'));
+      } else if (enabled) {
+        _notice(tr('H.264 最高 1080p，已重新启用 VP9 和 AV1'));
+      }
+    }
+    await reloadVideo(next);
   }
 
   /// Saves [next], if given, and reopens the current video where it was,

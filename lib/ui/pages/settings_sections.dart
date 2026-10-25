@@ -346,7 +346,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 subtitle: codec == VideoCodec.values.first ? disabledCodecsNote : null,
                 leading: _icon(Icons.block_outlined),
                 value: settings.disabledCodecs.contains(codec),
-                onChanged: (v) => save(settings.copyWith(disabledCodecs: withCodecDisabled(settings.disabledCodecs, codec, v))),
+                onChanged: (v) => toggleCodec(context, settings.disabledCodecs, codec, v, (next) => save(settings.copyWith(disabledCodecs: next))),
               ), subtitle: tr('视频格式 禁用视频编码')),
         SettingEntry(tr('当前规则'), (context) => ListTile(
               dense: true,

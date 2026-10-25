@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
@@ -8,6 +9,7 @@ import 'app_directories.dart';
 import 'app_log.dart';
 import 'ffmpeg_component.dart';
 import 'libmpv_updates.dart';
+import 'native_core.dart';
 import 'process_runner.dart';
 import 'version_order.dart';
 import 'l10n/l10n.dart';
@@ -252,7 +254,13 @@ class ToolManager {
     }
   }
 
-  Future<String> _sha256(File file) async => (await sha256.bind(file.openRead()).first).toString();
+  /// The file's SHA-256, hashed by the native core on another isolate so the
+  /// window keeps drawing; Dart hashes it when the core is missing.
+  Future<String> _sha256(File file) async {
+    final path = file.path;
+    final native = NativeCore.instance == null ? null : await Isolate.run(() => NativeCore.fileSha256Of(path));
+    return native ?? (await sha256.bind(file.openRead()).first).toString();
+  }
 
   Future<void> _installYtDlp() async {
     final release = await _release('yt-dlp/yt-dlp-nightly-builds');

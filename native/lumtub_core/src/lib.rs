@@ -8,7 +8,7 @@ pub mod downloads;
 pub mod format_policy;
 pub mod process_tree;
 pub mod redact;
-pub mod sponsor;
+pub mod hashes;
 pub mod taste;
 pub mod update;
 

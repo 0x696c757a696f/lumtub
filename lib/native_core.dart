@@ -34,6 +34,7 @@ class NativeCore {
         hashPrefix = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_hash_prefix'),
         sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
         dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
+        fileSha256 = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_file_sha256'),
         titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
         looksLikeBait = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_looks_like_bait'),
         isShort = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_is_short'),
@@ -65,6 +66,7 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> videoId, int length) hashPrefix;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) sponsorSegments;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) dearrowBranding;
+  final Pointer<Utf8> Function(Pointer<Uint8> path, int length) fileSha256;
   /// The place in ExploreLanguage of the language a title reads as.
   final int Function(Pointer<Uint8> title, int length) titleLanguage;
   final bool Function(Pointer<Uint8> title, int length) looksLikeBait;
@@ -103,6 +105,13 @@ class NativeCore {
       }
     }
     return null;
+  }
+
+  /// The SHA-256 of the file at [path] in hex; null without the core or when
+  /// it cannot be read. It blocks, so run it on another isolate.
+  static String? fileSha256Of(String path) {
+    final core = instance;
+    return core?.take(core.withText(path, core.fileSha256));
   }
 
   /// Calls [call] with [text] as UTF-8 in native memory.

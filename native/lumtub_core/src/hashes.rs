@@ -1,5 +1,5 @@
-//! SponsorBlock and DeArrow: the hash prefix sent instead of the video id,
-//! and reading their answers for that prefix.
+//! SHA-256: of downloaded files, and the hash prefix SponsorBlock and
+//! DeArrow get instead of the video id; and reading their answers.
 //!
 //! Only the first four hex digits of the id's SHA-256 leave the computer, so
 //! the servers cannot tell which video is watched; they answer for every
@@ -91,6 +91,32 @@ pub fn branding(answer: &Value, video_id: &str) -> Branding {
     Branding { title, thumbnail_time }
 }
 
+/// The SHA-256 of the file at [path] in lowercase hex.
+pub fn file_sha256(path: &str) -> std::io::Result<String> {
+    use std::io::Read;
+    let mut file = std::fs::File::open(path)?;
+    let mut hasher = Sha256::new();
+    let mut buffer = vec![0; 1 << 20];
+    loop {
+        let read = file.read(&mut buffer)?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    Ok(hasher.finalize().iter().map(|b| format!("{b:02x}")).collect())
+}
+
+/// [file_sha256] for Dart; null when the file cannot be read. Free the text
+/// with `lumtub_string_free`.
+///
+/// # Safety
+/// [path] must point to [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_file_sha256(path: *const u8, length: usize) -> *mut c_char {
+    file_sha256(unsafe { text(path, length) }).map_or(std::ptr::null_mut(), give)
+}
+
 /// [hash_prefix] for Dart. Free the text with `lumtub_string_free`.
 ///
 /// # Safety
@@ -145,6 +171,15 @@ pub unsafe extern "C" fn lumtub_dearrow_branding(json: *const u8, length: usize)
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn hashes_files() {
+        let path = std::env::temp_dir().join(format!("lumtub-sha-{}", std::process::id()));
+        std::fs::write(&path, b"abc").unwrap();
+        assert_eq!(file_sha256(path.to_str().unwrap()).unwrap(), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+        std::fs::remove_file(&path).unwrap();
+        assert!(file_sha256("/no/such/file").is_err());
+    }
 
     #[test]
     fn hashes_the_video_id() {

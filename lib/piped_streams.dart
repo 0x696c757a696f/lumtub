@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'background_json.dart';
 import 'media_url_policy.dart';
 import 'format_policy.dart';
 import 'player_settings.dart';
@@ -252,7 +253,7 @@ class PipedStreams extends RelayServers {
     for (final candidate in order) {
       try {
         final response = await client.get(Uri.parse('$candidate/streams/$videoId')).timeout(const Duration(seconds: 8));
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final data = await decodeUtf8JsonInBackground(response.bodyBytes);
         if (response.statusCode != 200 || data is! Map<String, dynamic>) {
           throw StateError(data is Map && data['message'] != null ? '${data['message']}' : 'HTTP ${response.statusCode}');
         }

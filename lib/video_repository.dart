@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
+import 'background_json.dart';
 import 'live_chat_repository.dart';
 import 'models.dart';
 import 'process_priority.dart';
@@ -383,7 +384,7 @@ class VideoRepository {
       final err = result.stderr.toString().trim();
       throw StateError(err.isEmpty ? 'yt-dlp exited with code ${result.exitCode}' : err);
     }
-    final data = jsonDecode(const LineSplitter().convert(output).last);
+    final data = await decodeJsonInBackground(const LineSplitter().convert(output).last);
     if (data is! Map<String, dynamic>) throw const FormatException('Unexpected yt-dlp output');
     return VideoDetails.fromJson(data);
   }

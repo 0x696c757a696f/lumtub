@@ -293,7 +293,7 @@ Object? parseListingEntry(String line) {
 
 /// Formats a count the way Chinese YouTube does: 9,999 / 1.2万 / 3.4亿.
 String formatCount(int value) {
-  if (currentLanguage == AppLanguage.en) {
+  if (!currentLanguage.isChinese) {
     if (value < 1000) return '$value';
     if (value < 1000000) return '${_trim(value / 1000)}K';
     if (value < 1000000000) return '${_trim(value / 1000000)}M';

@@ -194,7 +194,7 @@ class AppearanceSettings {
         'thumbnailQuality': thumbnailQuality.name,
         'darkWatchPage': darkWatchPage,
         'showStatusBar': showStatusBar,
-        'language': language.name,
+        'language': language.tag,
       };
 
   factory AppearanceSettings.fromJson(Object? raw) {

@@ -7,7 +7,6 @@ import 'package:lumtub/appearance_settings.dart';
 import 'package:lumtub/explore_topics.dart';
 import 'package:lumtub/faith_topics.dart';
 import 'package:lumtub/l10n/l10n.dart';
-import 'package:lumtub/l10n/strings_en.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/ui/pages/explore_page.dart';
 import 'package:lumtub/ui/pages/settings_page.dart';
@@ -26,16 +25,36 @@ Set<String> _sourceKeys() {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(loadTranslations);
   tearDown(() => setLanguage(AppLanguage.zhHans));
 
-  test('every translatable string has English text with the same placeholders', () {
+  test('every translatable string has English text', () {
     final keys = _sourceKeys();
     expect(keys.length, greaterThan(900));
-    final missing = keys.where((k) => !stringsEn.containsKey(k)).toList();
-    expect(missing, isEmpty, reason: 'add these to lib/l10n/strings_en.dart');
+    final english = translations['en']!;
+    expect(keys.where((k) => !english.containsKey(k)).toList(), isEmpty, reason: 'add these to assets/l10n/en.json');
+  });
+
+  test('every translation keeps the placeholders and translates only strings English has', () {
+    final keys = translations['en']!.keys.toSet();
     final placeholder = RegExp(r'\{\d+\}');
-    for (final MapEntry(:key, :value) in stringsEn.entries) {
-      expect(placeholder.allMatches(value).map((m) => m[0]).toSet(), placeholder.allMatches(key).map((m) => m[0]).toSet(), reason: key);
+    Set<String?> placeholders(String s) => placeholder.allMatches(s).map((m) => m[0]).toSet();
+    for (final MapEntry(key: tag, value: strings) in translations.entries) {
+      for (final MapEntry(:key, :value) in strings.entries) {
+        expect(keys, contains(key), reason: '$tag: not in en.json');
+        expect(placeholders(value), placeholders(key), reason: '$tag: $key');
+      }
+    }
+  });
+
+  test('only translations covering nine strings in ten are offered', () {
+    final english = translations['en']!.length;
+    for (final MapEntry(key: tag, value: strings) in translations.entries) {
+      if (tag == 'en') continue;
+      final offered = AppLanguage.selectable.any((l) => l.tag == tag);
+      expect(offered, strings.length >= english * completeEnough, reason: '$tag: ${strings.length} of $english');
+      stdout.writeln('Translation $tag: ${(strings.length * 100 / english).toStringAsFixed(0)}%');
     }
   });
 
@@ -45,9 +64,11 @@ void main() {
     expect(tr('还没有翻译的文字'), '还没有翻译的文字');
     expect(ExploreMode.gems.label, 'Hidden gems');
     expect(formatCount(1234567), '1.2M');
-    setLanguage(AppLanguage.zhHant);
+    setLanguage(const AppLanguage('zh-Hant'));
     expect(tr('冷门宝藏'), '冷門寶藏');
     expect(formatCount(1234567), '123萬');
+    setLanguage(const AppLanguage('de'));
+    expect(tr('冷门宝藏'), 'Hidden gems', reason: 'a language without the string falls back to English');
     setLanguage(AppLanguage.zhHans);
     expect(tr('冷门宝藏'), '冷门宝藏');
     expect(formatCount(1234567), '123万');
@@ -93,7 +114,7 @@ void main() {
   });
 
   for (final language in [AppLanguage.en, AppLanguage.zhHans]) {
-    testWidgets('every settings group lays out in ${language.name}', (tester) async {
+    testWidgets('every settings group lays out in ${language.tag}', (tester) async {
       setLanguage(language);
       tester.view.physicalSize = const Size(1280, 900);
       tester.view.devicePixelRatio = 1;
@@ -121,8 +142,9 @@ void main() {
     for (final saved in ['zhHant', 'system', null, 'nonsense']) {
       expect(AppLanguage.parse(saved), AppLanguage.system, reason: '$saved');
     }
-    expect(AppLanguage.selectable, [AppLanguage.system, AppLanguage.en, AppLanguage.zhHans]);
-    expect([AppLanguage.en, AppLanguage.zhHans], contains(AppLanguage.system.resolved));
+    expect(AppLanguage.selectable.take(3), [AppLanguage.system, AppLanguage.zhHans, AppLanguage.en]);
+    expect(AppLanguage.parse(AppLanguage.zhHans.tag), AppLanguage.zhHans);
+    expect(AppLanguage.selectable, contains(AppLanguage.system.resolved));
     expect(const AppearanceSettings().language, AppLanguage.system);
     expect(AppearanceSettings.fromJson({'language': 'zhHant'}).language, AppLanguage.system);
   });

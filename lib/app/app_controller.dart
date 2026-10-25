@@ -358,6 +358,9 @@ class AppController extends ChangeNotifier {
 
   /// One-off messages the UI shows as snack bars.
   Stream<String> get notices => _notices.stream;
+  final _finishedDownloads = StreamController<DownloadTask>.broadcast();
+  /// Downloads as they finish, for a notice that can open the file.
+  Stream<DownloadTask> get finishedDownloads => _finishedDownloads.stream;
 
   List<VideoItem> get history => _history?.items ?? const [];
   @visibleForTesting
@@ -615,6 +618,9 @@ class AppController extends ChangeNotifier {
   DownloadManager _downloadsFor(ToolPaths paths, AppDirectories directories) => DownloadManager(
         file: File('${directories.data.path}${Platform.pathSeparator}downloads.json'),
         ytDlpPath: paths.ytDlp,
+        onFinished: (task) {
+          if (!_disposed) _finishedDownloads.add(task);
+        },
         defaultDirectory: DownloadManager.defaultDirectoryFor(Platform.environment, '${directories.data.path}${Platform.pathSeparator}downloads'),
         environment: () => _repository!.processEnvironment,
         ffmpegDirectory: () {
@@ -644,7 +650,11 @@ class AppController extends ChangeNotifier {
   Future<DownloadFormats> downloadFormats(String videoId) async {
     final repository = _repository;
     if (repository == null) throw StateError(tr('组件尚未就绪'));
-    return DownloadFormats.parse((await repository.streams.resolve(videoId, _format, formatSort: _formatSort)).info);
+    final info = (await repository.streams.resolve(videoId, _format, formatSort: _formatSort)).info;
+    // Automatic picks follow the playback order, so a download is in a codec
+    // this PC decodes well; the quality strategy takes the best picture.
+    final preference = settings.strategy == PlaybackStrategy.quality ? const <VideoCodec>[] : FormatPolicy.codecOrder(settings);
+    return DownloadFormats.parse(info, preference: preference);
   }
 
   /// The proxy everything currently goes through.
@@ -2883,6 +2893,7 @@ class AppController extends ChangeNotifier {
     if (!_shutDown) unawaited(player?.dispose());
     _tools?.dispose();
     unawaited(_notices.close());
+    unawaited(_finishedDownloads.close());
     super.dispose();
   }
 }

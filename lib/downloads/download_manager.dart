@@ -103,6 +103,7 @@ class DownloadManager extends ChangeNotifier {
     this.options,
     this.ffmpegDirectory,
     this.sponsorSegments,
+    this.onFinished,
   })  : _directory = defaultDirectory,
         _start = start ?? ProcessTree.start;
 
@@ -117,6 +118,8 @@ class DownloadManager extends ChangeNotifier {
   final String? Function()? ffmpegDirectory;
   /// SponsorBlock segments to keep with a finished download.
   final Future<List<SkipSegment>> Function(String videoId)? sponsorSegments;
+  /// Called once a download's file is complete.
+  final void Function(DownloadTask task)? onFinished;
 
   String _directory;
   DownloadDefaults _defaults = const DownloadDefaults();
@@ -458,6 +461,7 @@ class DownloadManager extends ChangeNotifier {
     } catch (e) {
       logError('无法保存 ${task.id} 的离线信息', e);
     }
+    onFinished?.call(task);
   }
 
   static const _sidecarKeys = [

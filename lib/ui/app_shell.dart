@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
 import '../appearance_settings.dart';
+import '../downloads/download_models.dart';
 import 'common.dart';
 import 'pages/account_settings.dart';
 import 'pages/channel_page.dart';
@@ -38,6 +39,7 @@ class _AppShellState extends State<AppShell> {
   final _searchText = TextEditingController();
   final _searchFocus = FocusNode(debugLabel: 'search');
   StreamSubscription<String>? _notices;
+  StreamSubscription<DownloadTask>? _finished;
 
   AppController get _controller => widget.controller;
 
@@ -56,11 +58,21 @@ class _AppShellState extends State<AppShell> {
     _notices = _controller.notices.listen((message) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     });
+    _finished = _controller.finishedDownloads.listen((task) {
+      final path = task.filePath;
+      if (!mounted || path == null) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(tr('已下载：{0}', [task.item.title]), maxLines: 2, overflow: TextOverflow.ellipsis),
+        duration: const Duration(seconds: 8),
+        action: SnackBarAction(label: tr('打开所在文件夹'), onPressed: () => unawaited(openInExplorer(path, select: true))),
+      ));
+    });
   }
 
   @override
   void dispose() {
     unawaited(_notices?.cancel());
+    unawaited(_finished?.cancel());
     _searchText.dispose();
     _searchFocus.dispose();
     super.dispose();

@@ -101,6 +101,18 @@ void main() {
       expect(hdr.pickVideo(null)!.id, 'b');
     });
 
+    test('automatic picks follow the playback codec order', () {
+      // No hardware AV1 or VP9: H.264, which YouTube has up to 1080p.
+      final software = DownloadFormats.parse(info(), preference: const [VideoCodec.h264, VideoCodec.vp9, VideoCodec.av1]);
+      expect(software.heightsFor(null).first, 1080);
+      expect(software.pickVideo(null)!.id, '137');
+      // Hardware VP9: VP9 at 4K rather than AV1.
+      final vp9 = DownloadFormats.parse(info(), preference: const [VideoCodec.vp9, VideoCodec.h264, VideoCodec.av1]);
+      expect(vp9.pickVideo(null)!.id, '313');
+      // A codec chosen by hand is not affected.
+      expect(software.pickVideo(VideoCodec.av1)!.id, '401');
+    });
+
     test('prefers the original language, then the bitrate, and skips DRC copies', () {
       final f = DownloadFormats.parse({
         'formats': [

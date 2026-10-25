@@ -37,16 +37,20 @@ class DownloadAudioFormat {
 /// The streams a video offers for download, read from yt-dlp's
 /// `--dump-single-json` result (see `StreamResolver`).
 class DownloadFormats {
-  const DownloadFormats(this.video, this.audio);
+  const DownloadFormats(this.video, this.audio, {this.preference = const []});
   final List<DownloadVideoFormat> video;
   final List<DownloadAudioFormat> audio;
+  /// The codecs automatic picks may take, most preferred first: the
+  /// playback order (`FormatPolicy.codecOrder`), so a download plays as
+  /// smoothly as the stream would. Empty: any codec, the best picture.
+  final List<VideoCodec> preference;
 
   bool get isEmpty => video.isEmpty && audio.isEmpty;
 
   /// Video-only and audio-only formats of [info]; storyboards, formats
   /// without an address, playlist streams and loudness-boosted copies are
   /// left out.
-  factory DownloadFormats.parse(Map<String, dynamic> info) {
+  factory DownloadFormats.parse(Map<String, dynamic> info, {List<VideoCodec> preference = const []}) {
     final raw = info['formats'];
     final video = <DownloadVideoFormat>[];
     final audio = <DownloadAudioFormat>[];
@@ -72,7 +76,7 @@ class DownloadFormats {
         }
       }
     }
-    return DownloadFormats(video, audio);
+    return DownloadFormats(video, audio, preference: preference);
   }
 
   static const _dialogOrder = [VideoCodec.vp9, VideoCodec.av1, VideoCodec.h264, VideoCodec.vp8];
@@ -83,9 +87,16 @@ class DownloadFormats {
           if (video.any((f) => f.codec == c)) c,
       ];
 
-  /// Heights offered for [codec] (any codec when null), highest first.
-  List<int> heightsFor(VideoCodec? codec) =>
-      {for (final f in video) if (codec == null || f.codec == codec) f.height}.toList()..sort((a, b) => b.compareTo(a));
+  /// The codec an automatic pick takes: the first of [preference] the video
+  /// has, or null (any) when it has none of them or [preference] is empty.
+  VideoCodec? get automaticCodec => preference.where((c) => video.any((f) => f.codec == c)).firstOrNull;
+
+  /// Heights offered for [codec] (the [automaticCodec] when null), highest
+  /// first.
+  List<int> heightsFor(VideoCodec? codec) {
+    final wanted = codec ?? automaticCodec;
+    return {for (final f in video) if (wanted == null || f.codec == wanted) f.height}.toList()..sort((a, b) => b.compareTo(a));
+  }
 
   /// The stream to download at [height] (see [pickHeight]) in [codec] (any
   /// when null): more frames, then SDR, then the better codec, then the
@@ -94,7 +105,8 @@ class DownloadFormats {
     final heights = heightsFor(codec);
     if (heights.isEmpty) return null;
     final chosen = pickHeight(heights, height);
-    final candidates = video.where((f) => f.height == chosen && (codec == null || f.codec == codec)).toList();
+    final wanted = codec ?? automaticCodec;
+    final candidates = video.where((f) => f.height == chosen && (wanted == null || f.codec == wanted)).toList();
     candidates.sort((a, b) {
       final byFps = (b.fps ?? 0).compareTo(a.fps ?? 0);
       if (byFps != 0) return byFps;

@@ -40,7 +40,7 @@ enum SettingsCategory {
   video('视频设置', '画质、音质、解码、缓冲、音频输出等', Icons.video_settings_outlined),
   play('播放设置', '倍速、自动播放、播放顺序、字幕、音量、全屏、快捷键等', Icons.touch_app_outlined),
   style('外观设置', '主题、字体、页面过渡动画、导航栏、卡片宽度、封面质量等', Icons.style_outlined),
-  extra('其它设置', '空降助手、相关视频、视频简介、组件更新、缓存等', Icons.extension_outlined),
+  extra('其它设置', '空降助手、相关视频、视频简介、组件更新、下载和缓存位置等', Icons.extension_outlined),
   backup('备份与恢复', '导入、导出和重置设置', Icons.settings_backup_restore_rounded),
   account('Google 账号', '登录、同步订阅和播放列表', Icons.account_circle_outlined),
   about('关于', '版本、日志、诊断信息、开源许可', Icons.info_outline);
@@ -817,6 +817,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(Icons.cleaning_services_outlined),
               onTap: controller.clearCache,
             ), subtitle: tr('缓存占用')),
+        SettingEntry(tr('下载位置'), (context) => NormalItem(
+              title: tr('下载位置'),
+              subtitle: controller.downloads == null ? tr('正在准备…') : tr('{0}\n新的下载保存到这里，点击更改', [controller.downloads!.directory]),
+              leading: _icon(Icons.download_for_offline_outlined),
+              onTap: controller.downloads == null ? null : () => _changeDownloadLocation(context, controller),
+            ), subtitle: tr('下载 保存位置 文件夹')),
         SettingEntry(tr('数据位置'), (context) => NormalItem(
               title: tr('数据位置'),
               subtitle: tr('{0}\n设置、观看记录、收藏和下载的组件都保存在这里，卸载时会保留', [controller.directories?.root.path ?? tr('正在准备…')]),
@@ -890,6 +896,12 @@ Future<void> _importSettings(BuildContext context, AppController controller) asy
   }
   final ok = await controller.importSettings(text);
   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? tr('设置已导入') : tr('这不是 Lumtub 导出的设置文件'))));
+}
+
+Future<void> _changeDownloadLocation(BuildContext context, AppController controller) async {
+  final manager = controller.downloads!;
+  final selected = await getDirectoryPath(initialDirectory: manager.directory);
+  if (selected != null) await manager.setDirectory(selected);
 }
 
 Future<void> _changeCacheLocation(BuildContext context, AppController controller) async {

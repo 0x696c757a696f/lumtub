@@ -992,6 +992,7 @@ class AppController extends ChangeNotifier {
     final feedMix = mode == ExploreMode.forYou ? preferences.feedMix : null;
     final notInterested = homeFeed?.notInterested;
     final faith = exploreSection.isFaith ? faithFilter() : null;
+    final seen = mix ? {for (final item in history) item.id, ...?homeFeed?.items.map((item) => item.id)} : const <String>{};
     final dropped = <String, int>{};
     bool drop(String why) {
       dropped.update(why, (n) => n + 1, ifAbsent: () => 1);
@@ -1015,14 +1016,16 @@ class AppController extends ChangeNotifier {
       }
       if (mode == ExploreMode.curated && seconds != null && seconds < 240) return drop('too short');
       if (!language.matches(item.title)) return drop('language');
-      // A mix keeps any one channel from filling it.
+      // 全部 is for finding more: not what was watched or what 为你推荐
+      // already shows. It keeps any one channel from filling it.
+      if (mix && seen.contains(item.id)) return drop('already seen');
       if (mix && (perChannel[TasteProfile.channelKey(item)] = (perChannel[TasteProfile.channelKey(item)] ?? 0) + 1) > 2) return drop('more than 2 per channel');
       // Last, as it counts the videos that show.
       return faith == null || faith(item) || drop('faith filter');
     }
 
     _update(() => explore = VideoListLoader(
-          () => mix ? repository.searchMix(_exploreMixQueries(exploreSection, taste ?? _exploreTaste()), sp: sp, region: region) : repository.search(query, sp: sp, region: region),
+          () => mix ? repository.searchMix(exploreMixQueries(exploreSection), sp: sp, region: region) : repository.search(query, sp: sp, region: region),
           where: where,
           fill: switch (mode) {
             ExploreMode.gems || ExploreMode.liveReplay => 8,
@@ -1040,27 +1043,26 @@ class AppController extends ChangeNotifier {
   }
 
   /// 全部's searches: zones of [section] picked at random each time, so
-  /// every visit brings others, and one of the history's interests
-  /// ([taste]) in place of one of them.
-  List<String> _exploreMixQueries(ExploreSection section, TasteProfile? taste, {Random? random}) {
-    final interests = (taste?.topWords(8) ?? <String>[])..shuffle(random);
+  /// every visit brings others. Personal picks are left to 为你推荐 on the
+  /// home page.
+  @visibleForTesting
+  List<String> exploreMixQueries(ExploreSection section, {Random? random}) {
     final zones = [
       for (final topic in exploreTopicsFor(section))
         if (!topic.mix && topic.opens == null) topic.subs.isEmpty ? topic.query : (topic.subs.toList()..shuffle(random)).first.query,
     ]..shuffle(random);
-    final picked = interests.take(1).toList();
     final filter = [exploreFormat.words, exploreView.words].where((w) => w.isNotEmpty).join(' ');
-    return [for (final query in [...picked, ...zones.take(6 - picked.length)]) filter.isEmpty ? query : '$query $filter'];
+    return [for (final query in zones.take(6)) filter.isEmpty ? query : '$query $filter'];
   }
 
-  /// Shows 推荐 or the zone shown with other videos.
+  /// Shows 全部 or the zone shown with other videos.
   void refreshExplore() {
     explore?.dispose();
     explore = null;
     _loadExplore();
   }
 
-  /// What the history says about taste, for 为你推荐 in explore.
+  /// What the history says about taste, for 为你推荐 in a zone.
   TasteProfile _exploreTaste() {
     final library = this.library;
     return TasteProfile.from(

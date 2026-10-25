@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'app_log.dart';
 import 'native_core.dart';
 import 'video_repository.dart';
+import 'youtube_web.dart';
 
 /// Search results and channel tabs read from YouTube's web API, a page per
 /// request, without starting yt-dlp. The native core turns each response
@@ -13,8 +14,6 @@ import 'video_repository.dart';
 class YoutubeListing {
   YoutubeListing(this._client);
   final http.Client _client;
-
-  static const _clientVersion = '2.20260708.00.00';
 
   /// Whether listings can be read this way: the native core reads them.
   static bool get available => NativeCore.instance != null;
@@ -48,19 +47,12 @@ class YoutubeListing {
       final response = await _client
           .post(
             Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?prettyPrint=false'),
-            headers: const {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
-              'Content-Type': 'application/json',
-              'Origin': 'https://www.youtube.com',
-              'X-YouTube-Client-Name': '1',
-              'X-YouTube-Client-Version': _clientVersion,
-              'Cookie': 'CONSENT=YES+cb; SOCS=CAI',
-            },
+            headers: YoutubeWeb.apiHeaders(),
             body: jsonEncode({
               'context': {
                 'client': {
                   'clientName': 'WEB',
-                  'clientVersion': _clientVersion,
+                  'clientVersion': YoutubeWeb.clientVersion,
                   'hl': 'en',
                   'timeZone': 'UTC',
                   'utcOffsetMinutes': 0,

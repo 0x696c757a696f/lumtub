@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'l10n/l10n.dart';
 import 'models.dart';
 import 'native_core.dart';
+import 'youtube_web.dart';
 
 /// The videos YouTube suggests next to a video, from the same request the
 /// watch page makes. No account is involved.
@@ -14,10 +15,7 @@ class YoutubeRelated {
   final http.Client _client;
 
   static Map<String, String> get _headers => {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
-    'Accept-Language': youtubeAcceptLanguage,
-    'Cookie': 'CONSENT=YES+cb; SOCS=CAI',
-    'Content-Type': 'application/json',
+    ...YoutubeWeb.apiHeaders(acceptLanguage: youtubeAcceptLanguage),
   };
 
   /// What was read from each response, not the response itself: a `/next`
@@ -35,7 +33,7 @@ class YoutubeRelated {
             headers: _headers,
             body: jsonEncode({
               'context': {
-                'client': {'clientName': 'WEB', 'clientVersion': '2.20251001.00.00', 'hl': youtubeHl},
+                'client': {'clientName': 'WEB', 'clientVersion': YoutubeWeb.clientVersion, 'hl': youtubeHl},
               },
               'videoId': videoId,
             }),

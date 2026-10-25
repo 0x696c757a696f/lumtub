@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
+import 'youtube_web.dart';
 
 /// Finds the picture of a channel whose subscription was saved without one
 /// (followed from a video or channel page), from the `og:image` of its public
@@ -13,7 +14,7 @@ class ChannelAvatars {
 
   Future<String?> fetch(ChannelRef channel) async {
     final response = await _client.get(pageUri(channel), headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Lumtub-Windows/0.1',
+      'User-Agent': YoutubeWeb.userAgent,
       'Accept-Language': 'en',
       // Skips the cookie consent page shown in some regions.
       'Cookie': 'SOCS=CAI',

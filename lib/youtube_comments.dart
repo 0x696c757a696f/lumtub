@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import 'l10n/l10n.dart';
 import 'native_core.dart';
+import 'youtube_web.dart';
 
 /// One comment or reply.
 class YoutubeComment {
@@ -62,7 +63,7 @@ class YoutubeComments {
   final http.Client _client;
 
   static Map<String, String> get _headers => {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+    'User-Agent': YoutubeWeb.userAgent,
     'Accept-Language': youtubeAcceptLanguage,
     'Cookie': 'CONSENT=YES+cb; SOCS=CAI',
   };
@@ -112,12 +113,12 @@ class YoutubeComments {
     final response = await _client
         .post(
           Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?${key == null ? '' : 'key=$key&'}prettyPrint=false'),
-          headers: {..._headers, 'Content-Type': 'application/json'},
+          headers: YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage),
           body: jsonEncode({
             'context': {
               'client': {
                 'clientName': 'WEB',
-                'clientVersion': _clientVersion ?? '2.20251001.00.00',
+                'clientVersion': _clientVersion ?? YoutubeWeb.clientVersion,
                 'hl': youtubeHl,
                 if (_visitorData != null) 'visitorData': _visitorData,
               },

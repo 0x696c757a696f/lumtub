@@ -3,6 +3,7 @@
 //! Every export is a plain C function. Lumtub needs the library for its
 //! recommendations; the process tree is used when the platform has one.
 
+pub mod comments;
 pub mod filter;
 pub mod downloads;
 pub mod format_policy;

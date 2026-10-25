@@ -261,6 +261,12 @@ class PlayerSettings {
   final bool sponsorBlock;
   /// Shows Return YouTube Dislike's estimate of the dislikes.
   final bool returnDislike;
+  /// VP9 was enabled for a quality above 1080p, and is disabled again
+  /// when the quality goes back to 1080p or lower.
+  final bool vp9ForQuality;
+  /// The user chose [disabledCodecs]; Lumtub no longer enables or
+  /// disables codecs for the quality.
+  final bool codecsChosen;
   /// DeArrow's titles and thumbnails in place of YouTube's.
   final bool deArrowTitles;
   final bool deArrowThumbnails;
@@ -314,7 +320,7 @@ class PlayerSettings {
     this.cacheSeconds = 60,
     this.cacheMemoryMb = 150,
     this.strategy = PlaybackStrategy.auto,
-    this.disabledCodecs = const {VideoCodec.av1},
+    this.disabledCodecs = const {VideoCodec.av1, VideoCodec.vp9},
     this.audioQuality = AudioQuality.best,
     this.audioDevice = 'auto',
     this.videoSync = VideoSync.audio,
@@ -331,6 +337,8 @@ class PlayerSettings {
     this.subtitleBold = false,
     this.sponsorBlock = false,
     this.returnDislike = false,
+    this.vp9ForQuality = false,
+    this.codecsChosen = false,
     this.deArrowTitles = false,
     this.deArrowThumbnails = false,
     this.sponsorCategories = defaultSponsorCategories,
@@ -385,6 +393,8 @@ class PlayerSettings {
     bool? subtitleBold,
     bool? sponsorBlock,
     bool? returnDislike,
+    bool? vp9ForQuality,
+    bool? codecsChosen,
     bool? deArrowTitles,
     bool? deArrowThumbnails,
     Set<String>? sponsorCategories,
@@ -436,6 +446,8 @@ class PlayerSettings {
         subtitleBold: subtitleBold ?? this.subtitleBold,
         sponsorBlock: sponsorBlock ?? this.sponsorBlock,
         returnDislike: returnDislike ?? this.returnDislike,
+        vp9ForQuality: vp9ForQuality ?? this.vp9ForQuality,
+        codecsChosen: codecsChosen ?? this.codecsChosen,
         deArrowTitles: deArrowTitles ?? this.deArrowTitles,
         deArrowThumbnails: deArrowThumbnails ?? this.deArrowThumbnails,
         sponsorCategories: sponsorCategories ?? this.sponsorCategories,
@@ -488,6 +500,8 @@ class PlayerSettings {
         'subtitleBold': subtitleBold,
         'sponsorBlock': sponsorBlock,
         'returnDislike': returnDislike,
+        'vp9ForQuality': vp9ForQuality,
+        'codecsChosen': codecsChosen,
         'deArrowTitles': deArrowTitles,
         'deArrowThumbnails': deArrowThumbnails,
         'sponsorCategories': sponsorCategories.toList(),
@@ -564,7 +578,7 @@ class PlayerSettings {
         : raw['codec'] == 'any' || raw['autoSelectCodec'] == false ? PlaybackStrategy.quality : PlaybackStrategy.auto;
     final disabled = raw['disabledCodecs'] is List
         ? {for (final name in raw['disabledCodecs'] as List) VideoCodec.byName(name)}.whereType<VideoCodec>().toSet()
-        : const {VideoCodec.av1};
+        : const {VideoCodec.av1, VideoCodec.vp9};
     // A file that disables every codec YouTube plays would play nothing.
     if (!VideoCodec.playableWithout(disabled)) disabled.remove(VideoCodec.h264);
     // Builds before the play order menu had an autoplay switch.
@@ -608,6 +622,9 @@ class PlayerSettings {
       subtitleBold: raw['subtitleBold'] == true,
       sponsorBlock: raw['sponsorBlock'] == true,
       returnDislike: raw['returnDislike'] == true,
+      vp9ForQuality: raw['vp9ForQuality'] == true,
+      // Builds before automatic codec choice saved only what the user chose.
+      codecsChosen: raw.containsKey('codecsChosen') ? raw['codecsChosen'] == true : raw['disabledCodecs'] is List,
       deArrowTitles: raw['deArrowTitles'] == true,
       deArrowThumbnails: raw['deArrowThumbnails'] == true,
       sponsorCategories: categories,

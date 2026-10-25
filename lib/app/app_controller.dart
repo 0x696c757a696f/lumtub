@@ -1903,21 +1903,20 @@ class AppController extends ChangeNotifier {
   }
 
   /// Saves the quality limit and reloads the current video where it was.
-  Future<void> setMaxHeight(int height) async {
+  /// Sets the quality cap; [asDefault] when it was chosen in the settings
+  /// rather than for the video playing.
+  Future<void> setMaxHeight(int height, {bool asDefault = false}) async {
     if (height == settings.maxHeight) return;
-    var next = settings.copyWith(maxHeight: height);
-    // H.264 stops at 1080p: a taller default needs VP9 or AV1, chosen
-    // between them as the strategy prefers.
-    final modern = {VideoCodec.vp9, VideoCodec.av1};
+    final change = FormatPolicy.withQuality(settings, height);
+    final next = change.settings;
     if (height > 1080) {
-      final enabled = next.disabledCodecs.containsAll(modern);
-      if (enabled) next = next.copyWith(disabledCodecs: next.disabledCodecs.difference(modern));
-      final usable = modern.where((codec) => !next.disabledCodecs.contains(codec));
-      final software = usable.isNotEmpty && usable.every((codec) => FormatPolicy.softwareOnly(next, codec));
-      if (software) {
+      final usable = [VideoCodec.vp9, VideoCodec.av1].where((codec) => !next.disabledCodecs.contains(codec));
+      if (usable.isNotEmpty && usable.every((codec) => FormatPolicy.softwareOnly(next, codec))) {
         _notice(tr('这台电脑不能硬解 VP9 和 AV1，1440p 和 4K 只能用 CPU 软解，占用会很高'));
-      } else if (enabled) {
-        _notice(tr('H.264 最高 1080p，已重新启用 VP9 和 AV1'));
+      } else if (change.unlocked && asDefault) {
+        _notice(tr('H.264 最高 1080p，1440p 和 4K 需要 VP9，已自动启用；画质改回 1080p 及以下时会再禁用'));
+      } else if (usable.isEmpty && asDefault) {
+        _notice(tr('VP9 和 AV1 都已禁用，H.264 最高只能到 1080p'));
       }
     }
     await reloadVideo(next);

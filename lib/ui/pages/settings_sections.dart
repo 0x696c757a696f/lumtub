@@ -332,7 +332,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               title: tr('默认画质'),
               subtitle: tr('当前：{0}', [qualityLabel(settings.maxHeight)]),
               leading: _icon(Icons.high_quality_outlined),
-              onTap: () => pickFromDialog<int>(context, title: tr('默认画质'), value: settings.maxHeight, values: [for (final h in qualityHeights) (h, qualityLabel(h))], onSelected: controller.setMaxHeight),
+              onTap: () => pickFromDialog<int>(context, title: tr('默认画质'), value: settings.maxHeight, values: [for (final h in qualityHeights) (h, qualityLabel(h))], onSelected: (h) => controller.setMaxHeight(h, asDefault: true)),
             ), subtitle: tr('清晰度 分辨率')),
         SettingEntry(tr('播放策略'), (context) => NormalItem(
               title: tr('播放策略'),
@@ -346,7 +346,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 subtitle: codec == VideoCodec.values.first ? disabledCodecsNote : null,
                 leading: _icon(Icons.block_outlined),
                 value: settings.disabledCodecs.contains(codec),
-                onChanged: (v) => toggleCodec(context, settings.disabledCodecs, codec, v, (next) => save(settings.copyWith(disabledCodecs: next))),
+                onChanged: (v) => toggleCodec(context, settings.disabledCodecs, codec, v, (next) => save(settings.copyWith(disabledCodecs: next, vp9ForQuality: false, codecsChosen: true))),
               ), subtitle: tr('视频格式 禁用视频编码')),
         SettingEntry(tr('当前规则'), (context) => ListTile(
               dense: true,

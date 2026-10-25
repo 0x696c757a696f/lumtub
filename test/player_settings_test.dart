@@ -72,6 +72,12 @@ void main() {
     expect(settings.strategy, PlaybackStrategy.quality);
   });
 
+  test('codecs saved by an earlier build count as chosen', () {
+    expect(PlayerSettings.fromJson({'disabledCodecs': ['av1']}).codecsChosen, isTrue);
+    expect(PlayerSettings.fromJson(const {}).codecsChosen, isFalse);
+    expect(PlayerSettings.fromJson(const PlayerSettings().toJson()).codecsChosen, isFalse);
+  });
+
   test('never loads with every playable codec disabled', () {
     expect(PlayerSettings.fromJson({'disabledCodecs': ['av1', 'vp9', 'h264', 'vp8']}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9, VideoCodec.vp8});
     expect(VideoCodec.playableWithout({VideoCodec.av1, VideoCodec.vp9}), isTrue);
@@ -84,7 +90,7 @@ void main() {
       expect(PlayerSettings.fromJson({'codec': old}).strategy, PlaybackStrategy.auto);
     }
     expect(PlayerSettings.fromJson(const {}).strategy, PlaybackStrategy.auto);
-    expect(PlayerSettings.fromJson(const {}).disabledCodecs, {VideoCodec.av1});
+    expect(PlayerSettings.fromJson(const {}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
     expect(PlayerSettings.fromJson({'strategy': 'bogus'}).strategy, PlaybackStrategy.auto);
   });
 

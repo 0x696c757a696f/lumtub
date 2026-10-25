@@ -25,6 +25,25 @@ class FormatPolicy {
         VideoCodec.vp8 => null,
       };
 
+  /// [settings] with the quality cap [height]. H.264 stops at 1080p, so a
+  /// taller cap enables a disabled VP9 until the cap is 1080p or lower
+  /// again, unless the user chose the codecs; [unlocked] says VP9 was
+  /// enabled just now.
+  static ({PlayerSettings settings, bool unlocked}) withQuality(PlayerSettings settings, int height) {
+    var next = settings.copyWith(maxHeight: height);
+    if (next.codecsChosen) return (settings: next, unlocked: false);
+    final disabled = next.disabledCodecs;
+    if (height > 1080 && disabled.contains(VideoCodec.vp9)) {
+      final without = {...disabled}..remove(VideoCodec.vp9);
+      return (settings: next.copyWith(disabledCodecs: without, vp9ForQuality: true), unlocked: true);
+    }
+    if (height <= 1080 && next.vp9ForQuality) {
+      next = next.copyWith(disabledCodecs: {...disabled, VideoCodec.vp9}, vp9ForQuality: false);
+      if (!VideoCodec.playableWithout(next.disabledCodecs)) next = next.copyWith(disabledCodecs: {...disabled});
+    }
+    return (settings: next, unlocked: false);
+  }
+
   /// Whether this PC is known to decode [codec] only in software.
   static bool softwareOnly(PlayerSettings settings, VideoCodec codec) {
     final key = decoderKey(codec);

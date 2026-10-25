@@ -11,13 +11,29 @@ String _expression(PlayerSettings settings) => FormatPolicy.expression(settings)
 List<VideoCodec> _order(PlayerSettings settings) => FormatPolicy.codecOrder(settings);
 
 void main() {
-  test('a new install never picks AV1', () {
+  test('a new install plays H.264 only', () {
     const settings = PlayerSettings();
-    expect(settings.disabledCodecs, {VideoCodec.av1});
-    expect(_order(settings), [VideoCodec.h264, VideoCodec.vp9, VideoCodec.vp8]);
+    expect(settings.disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+    expect(_order(settings), [VideoCodec.h264, VideoCodec.vp8]);
     for (final alternative in _expression(settings).split('/')) {
-      expect(alternative, contains('av01'));
+      expect(alternative, allOf(contains('vp09'), contains('av01')));
     }
+  });
+
+  test('a quality above 1080p enables VP9 until the quality is 1080p or lower again', () {
+    final high = FormatPolicy.withQuality(const PlayerSettings(), 2160);
+    expect(high.unlocked, isTrue);
+    expect(high.settings.disabledCodecs, {VideoCodec.av1});
+    final higher = FormatPolicy.withQuality(high.settings, 1440);
+    expect(higher.unlocked, isFalse);
+    expect(higher.settings.disabledCodecs, {VideoCodec.av1});
+    final low = FormatPolicy.withQuality(higher.settings, 1080);
+    expect(low.settings.disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+    expect(low.settings.vp9ForQuality, isFalse);
+    // Codecs the user chose stay as chosen.
+    final chosen = FormatPolicy.withQuality(const PlayerSettings(codecsChosen: true), 2160);
+    expect(chosen.unlocked, isFalse);
+    expect(chosen.settings.disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
   });
 
   test('knows when VP9 or AV1 can only be decoded in software', () {

@@ -25,6 +25,10 @@ void main() {
     await process.exitCode;
   });
 
+  test('the recommendations library is there', () {
+    expect(NativeCore.instance, isNotNull, reason: 'build native/lumtub_core and point LUMTUB_CORE_DLL at it');
+  });
+
   // CI builds lumtub_core.dll first and points LUMTUB_CORE_DLL at it.
   test('killing a tree ends the processes it started', () async {
     final process = await ProcessTree.start('powershell.exe', [
@@ -38,5 +42,5 @@ void main() {
     expect(process.kill(), isTrue);
     await process.exitCode;
     expect(await _goneSoon(grandchild), isTrue);
-  }, skip: NativeCore.instance == null ? 'lumtub_core.dll is not built' : null, timeout: const Timeout(Duration(seconds: 60)));
+  }, skip: !Platform.isWindows ? 'job objects are Windows only' : NativeCore.instance == null ? 'lumtub_core.dll is not built' : null, timeout: const Timeout(Duration(seconds: 60)));
 }

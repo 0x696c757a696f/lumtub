@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../app/app_controller.dart';
 import '../appearance_settings.dart';
 import '../downloads/download_models.dart';
+import '../native_core.dart';
 import 'common.dart';
 import 'pages/account_settings.dart';
 import 'pages/channel_page.dart';
@@ -58,6 +59,13 @@ class _AppShellState extends State<AppShell> {
     _notices = _controller.notices.listen((message) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     });
+    if (NativeCore.instance == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(NativeCore.missingMessage), duration: const Duration(minutes: 1), showCloseIcon: true));
+        }
+      });
+    }
     _finished = _controller.finishedDownloads.listen((task) {
       final path = task.filePath;
       if (!mounted || path == null) return;

@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import '../native_core.dart';
 import '../video_codec.dart';
 
 /// A video-only stream of a video, as yt-dlp lists it.
@@ -35,7 +38,10 @@ class DownloadAudioFormat {
 }
 
 /// The streams a video offers for download, read from yt-dlp's
-/// `--dump-single-json` result (see `StreamResolver`).
+/// `--dump-single-json` result (see `StreamResolver`). Reading the list and
+/// picking from it is done by lumtub_core (native/lumtub_core/src/downloads.rs);
+/// without it there is nothing to pick and the dialog offers its simple
+/// choices.
 class DownloadFormats {
   const DownloadFormats(this.video, this.audio, {this.preference = const []});
   final List<DownloadVideoFormat> video;
@@ -51,91 +57,87 @@ class DownloadFormats {
   /// without an address, playlist streams and loudness-boosted copies are
   /// left out.
   factory DownloadFormats.parse(Map<String, dynamic> info, {List<VideoCodec> preference = const []}) {
-    final raw = info['formats'];
-    final video = <DownloadVideoFormat>[];
-    final audio = <DownloadAudioFormat>[];
-    if (raw is List) {
-      for (final f in raw.whereType<Map>()) {
-        final id = f['format_id']?.toString() ?? '';
-        final ext = f['ext']?.toString() ?? '';
-        final url = f['url']?.toString() ?? '';
-        final protocol = f['protocol']?.toString() ?? '';
-        if (id.isEmpty || url.isEmpty || ext == 'mhtml' || protocol.contains('m3u8')) continue;
-        final vcodec = VideoCodec.of(f['vcodec']);
-        final acodec = f['acodec']?.toString() ?? '';
-        final hasAudio = acodec.isNotEmpty && acodec != 'none';
-        final size = _int(f['filesize']) ?? _int(f['filesize_approx']);
-        final tbr = _num(f['tbr']);
-        final height = _int(f['height']);
-        if (vcodec != null && !hasAudio && height != null && height > 0) {
-          video.add(DownloadVideoFormat(id: id, codec: vcodec, height: height, fps: _num(f['fps']), ext: ext, size: size, tbr: tbr, dynamicRange: f['dynamic_range']?.toString()));
-        } else if (hasAudio && (f['vcodec'] == null || f['vcodec'] == 'none')) {
-          // Loudness-boosted copies (`251-drc`) duplicate the normal track.
-          if (id.endsWith('-drc') || '${f['format_note']}'.toUpperCase().contains('DRC')) continue;
-          audio.add(DownloadAudioFormat(id: id, codec: acodec, abr: _num(f['abr']) ?? tbr, ext: ext, size: size, languagePreference: _int(f['language_preference'])));
-        }
-      }
-    }
-    return DownloadFormats(video, audio, preference: preference);
+    final core = NativeCore.instance;
+    if (core == null) return DownloadFormats(const [], const [], preference: preference);
+    final parsed = jsonDecode(core.take(core.withText(jsonEncode(info), core.downloadFormats)) ?? '{}') as Map<String, dynamic>;
+    return DownloadFormats(
+      [
+        for (final f in (parsed['video'] as List? ?? const []).cast<Map<String, dynamic>>())
+          DownloadVideoFormat(
+            id: f['id'] as String,
+            codec: VideoCodec.byName(f['codec'])!,
+            height: f['height'] as int,
+            fps: (f['fps'] as num?)?.toDouble(),
+            ext: f['ext'] as String? ?? '',
+            size: f['size'] as int?,
+            tbr: (f['tbr'] as num?)?.toDouble(),
+            dynamicRange: f['range'] as String?,
+          ),
+      ],
+      [for (final f in (parsed['audio'] as List? ?? const []).cast<Map<String, dynamic>>()) _audio(f)],
+      preference: preference,
+    );
   }
 
-  static const _dialogOrder = [VideoCodec.vp9, VideoCodec.av1, VideoCodec.h264, VideoCodec.vp8];
+  static DownloadAudioFormat _audio(Map<String, dynamic> f) => DownloadAudioFormat(
+        id: f['id'] as String,
+        codec: f['codec'] as String,
+        abr: (f['abr'] as num?)?.toDouble(),
+        ext: f['ext'] as String? ?? '',
+        size: f['size'] as int?,
+        languagePreference: f['language'] as int?,
+      );
+
+  /// The streams in the form lumtub_core reads.
+  Map<String, dynamic> toJson() => {
+        'video': [
+          for (final f in video)
+            {'id': f.id, 'codec': f.codec.name, 'height': f.height, if (f.fps != null) 'fps': f.fps, 'ext': f.ext, if (f.size != null) 'size': f.size, if (f.tbr != null) 'tbr': f.tbr, if (f.dynamicRange != null) 'range': f.dynamicRange},
+        ],
+        'audio': [for (final a in audio) _audioJson(a)],
+      };
+
+  static Map<String, dynamic> _audioJson(DownloadAudioFormat a) =>
+      {'id': a.id, 'codec': a.codec, if (a.abr != null) 'abr': a.abr, 'ext': a.ext, if (a.size != null) 'size': a.size, if (a.languagePreference != null) 'language': a.languagePreference};
+
+  /// lumtub_core's answer for these options: the codecs, the automatic
+  /// codec, the heights, the picked stream, the audio best first and the
+  /// plan.
+  Map<String, dynamic> choose({VideoCodec? codec, int? height, String container = 'auto', bool audioOnly = false}) {
+    final core = NativeCore.instance;
+    if (core == null) return const {};
+    final json = jsonEncode({
+      ...toJson(),
+      'preference': [for (final c in preference) c.name],
+      if (codec?.name != null) 'codec': codec?.name,
+      if (height != null) 'height': height,
+      'container': container,
+      'audioOnly': audioOnly,
+    });
+    return jsonDecode(core.take(core.withText(json, core.downloadChoose)) ?? '{}') as Map<String, dynamic>;
+  }
 
   /// Codecs this video has, in the order the dialog lists them.
-  List<VideoCodec> get codecs => [
-        for (final c in _dialogOrder)
-          if (video.any((f) => f.codec == c)) c,
-      ];
+  List<VideoCodec> get codecs => [for (final name in choose()['codecs'] as List? ?? const []) VideoCodec.byName(name)!];
 
   /// The codec an automatic pick takes: the first of [preference] the video
   /// has, or null (any) when it has none of them or [preference] is empty.
-  VideoCodec? get automaticCodec => preference.where((c) => video.any((f) => f.codec == c)).firstOrNull;
+  VideoCodec? get automaticCodec => VideoCodec.byName(choose()['automatic']);
 
   /// Heights offered for [codec] (the [automaticCodec] when null), highest
   /// first.
-  List<int> heightsFor(VideoCodec? codec) {
-    final wanted = codec ?? automaticCodec;
-    return {for (final f in video) if (wanted == null || f.codec == wanted) f.height}.toList()..sort((a, b) => b.compareTo(a));
-  }
+  List<int> heightsFor(VideoCodec? codec) => (choose(codec: codec)['heights'] as List? ?? const []).cast<int>();
 
-  /// The stream to download at [height] (see [pickHeight]) in [codec] (any
-  /// when null): more frames, then SDR, then the better codec, then the
-  /// higher bitrate.
+  /// The stream to download at [height] in [codec] (any when null): it,
+  /// else the nearest below, else the lowest above, the highest without a
+  /// wish; then more frames, SDR, the better codec and the higher bitrate.
   DownloadVideoFormat? pickVideo(VideoCodec? codec, {int? height}) {
-    final heights = heightsFor(codec);
-    if (heights.isEmpty) return null;
-    final chosen = pickHeight(heights, height);
-    final wanted = codec ?? automaticCodec;
-    final candidates = video.where((f) => f.height == chosen && (wanted == null || f.codec == wanted)).toList();
-    candidates.sort((a, b) {
-      final byFps = (b.fps ?? 0).compareTo(a.fps ?? 0);
-      if (byFps != 0) return byFps;
-      if (a.hdr != b.hdr) return a.hdr ? 1 : -1;
-      final byCodec = _rank.indexOf(a.codec).compareTo(_rank.indexOf(b.codec));
-      if (byCodec != 0) return byCodec;
-      return (b.tbr ?? 0).compareTo(a.tbr ?? 0);
-    });
-    return candidates.first;
-  }
-
-  static const _rank = [VideoCodec.av1, VideoCodec.vp9, VideoCodec.h264, VideoCodec.vp8];
-
-  /// The entry of [available] (highest first) for a wish of [wanted]: it, else
-  /// the nearest below, else the lowest above; the highest without a wish.
-  static int pickHeight(List<int> available, int? wanted) {
-    if (wanted == null) return available.first;
-    for (final h in available) {
-      if (h <= wanted) return h;
-    }
-    return available.last;
+    final id = choose(codec: codec, height: height)['video'];
+    return video.where((f) => f.id == id).firstOrNull;
   }
 
   /// Audio tracks, best first: the video's own language, then bitrate.
-  List<DownloadAudioFormat> get audioBest => [...audio]..sort((a, b) {
-      final byLanguage = (b.languagePreference ?? -1).compareTo(a.languagePreference ?? -1);
-      return byLanguage != 0 ? byLanguage : (b.abr ?? 0).compareTo(a.abr ?? 0);
-    });
-
-  static int? _int(Object? v) => v is num ? v.toInt() : int.tryParse('$v');
-  static double? _num(Object? v) => v is num ? v.toDouble() : double.tryParse('$v');
+  List<DownloadAudioFormat> get audioBest => [
+        for (final id in choose()['audioBest'] as List? ?? const []) audio.firstWhere((a) => a.id == id),
+      ];
 }

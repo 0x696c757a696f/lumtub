@@ -10,8 +10,9 @@ import 'app_log.dart';
 import 'l10n/l10n.dart';
 
 /// lumtub_core, the Rust library built from native/lumtub_core and
-/// shipped next to lumtub.exe. The recommendations, the format policy and
-/// the filters (block lists, Shorts, language, bait) need it; without it
+/// shipped next to lumtub.exe. The recommendations, the format policy,
+/// the filters (block lists, Shorts, language, bait) and the download
+/// dialog's choices need it; without it
 /// Lumtub says its install is incomplete (see [missingMessage]).
 class NativeCore {
   NativeCore._(DynamicLibrary library)
@@ -24,6 +25,9 @@ class NativeCore {
         titleWords = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_title_words'),
         recommend = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_recommend'),
         formatPolicy = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_format_policy'),
+        downloadFormats = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_formats'),
+        downloadChoose = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_choose'),
+        downloadContainer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_container'),
         titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
         looksLikeBait = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_looks_like_bait'),
         isShort = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_is_short'),
@@ -45,6 +49,9 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> title, int length) titleWords;
   final Pointer<Utf8> Function(Pointer<Void> taste, Pointer<Uint8> json, int length) recommend;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) formatPolicy;
+  final Pointer<Utf8> Function(Pointer<Uint8> info, int length) downloadFormats;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) downloadChoose;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) downloadContainer;
   /// The place in ExploreLanguage of the language a title reads as.
   final int Function(Pointer<Uint8> title, int length) titleLanguage;
   final bool Function(Pointer<Uint8> title, int length) looksLikeBait;

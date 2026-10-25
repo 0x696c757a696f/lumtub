@@ -8,7 +8,7 @@
 use serde::{Deserialize, Serialize};
 use std::ffi::c_char;
 
-#[derive(Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Codec {
     Av1,
@@ -19,7 +19,14 @@ pub enum Codec {
 
 impl Codec {
     /// The order codecs are listed in when nothing else decides.
-    const ALL: [Codec; 4] = [Codec::Av1, Codec::Vp9, Codec::H264, Codec::Vp8];
+    pub(crate) const ALL: [Codec; 4] = [Codec::Av1, Codec::Vp9, Codec::H264, Codec::Vp8];
+
+    /// The family of a codec name such as `av01.0.08M.08` or `avc1.640028`;
+    /// none for audio-only (`none`), missing or unknown codecs.
+    pub(crate) fn of(name: &str) -> Option<Codec> {
+        let name = name.trim().to_lowercase();
+        Codec::ALL.into_iter().find(|c| c.prefixes().iter().any(|p| name.starts_with(p)))
+    }
 
     /// Lower-case name prefixes that mean this codec.
     fn prefixes(self) -> &'static [&'static str] {

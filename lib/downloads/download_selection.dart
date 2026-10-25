@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import '../l10n/l10n.dart';
 import '../models.dart';
+import '../native_core.dart';
 import '../video_codec.dart';
 import 'download_formats.dart';
 
@@ -28,39 +31,32 @@ class ContainerPlan {
   final String? problem;
 }
 
-/// Picks the audio track and container for [video]. MKV holds anything, MP4
-/// AV1/VP9/H.264 with AAC or Opus, WebM VP8/VP9/AV1 with Opus or Vorbis.
-/// [wanted] auto takes MP4 for H.264 with AAC, WebM when everything fits it,
-/// else MKV. Streams are only ever copied, never re-encoded.
+/// Why [problem], a lumtub_core problem code, keeps a container from
+/// holding the streams.
+String? _problem(Object? problem) => switch (problem) {
+      'mp4Vp8' => tr('MP4 不能容纳 VP8'),
+      'mp4Audio' => tr('MP4 没有可用的音轨'),
+      'webmH264' => tr('WebM 不能容纳 H.264'),
+      'webmAudio' => tr('WebM 没有可用的音轨'),
+      _ => null,
+    };
+
+/// Picks the audio track and container for [video] (lumtub_core). MKV
+/// holds anything, MP4 AV1/VP9/H.264 with AAC or Opus, WebM VP8/VP9/AV1
+/// with Opus or Vorbis. [wanted] auto takes MP4 for H.264 with AAC, WebM
+/// when everything fits it, else MKV. Streams are only ever copied, never
+/// re-encoded.
 ContainerPlan planContainer(DownloadContainer wanted, VideoCodec video, List<DownloadAudioFormat> audioBest) {
-  DownloadAudioFormat? first(bool Function(DownloadAudioFormat) test) => audioBest.where(test).firstOrNull;
-  final aac = first((a) => a.isAac);
-  final mp4Audio = aac ?? first((a) => a.isOpus);
-  final webmAudio = first((a) => a.isOpus || a.isVorbis);
-  final webmVideo = video != VideoCodec.h264;
-  final hasAudio = audioBest.isNotEmpty;
-  switch (wanted) {
-    case DownloadContainer.mkv:
-      return ContainerPlan(DownloadContainer.mkv, audioBest.firstOrNull);
-    case DownloadContainer.mp4:
-      final problem = video == VideoCodec.vp8
-          ? tr('MP4 不能容纳 VP8')
-          : hasAudio && mp4Audio == null
-              ? tr('MP4 没有可用的音轨')
-              : null;
-      return ContainerPlan(DownloadContainer.mp4, mp4Audio, problem: problem);
-    case DownloadContainer.webm:
-      final problem = !webmVideo
-          ? tr('WebM 不能容纳 H.264')
-          : hasAudio && webmAudio == null
-              ? tr('WebM 没有可用的音轨')
-              : null;
-      return ContainerPlan(DownloadContainer.webm, webmAudio, problem: problem);
-    case DownloadContainer.auto:
-      if (video == VideoCodec.h264 && aac != null) return ContainerPlan(DownloadContainer.mp4, aac);
-      if (webmVideo && webmAudio != null) return ContainerPlan(DownloadContainer.webm, webmAudio);
-      return ContainerPlan(DownloadContainer.mkv, audioBest.firstOrNull);
-  }
+  final core = NativeCore.instance;
+  final json = jsonEncode({'container': wanted.name, 'codec': video.name, 'audio': DownloadFormats(const [], audioBest).toJson()['audio']});
+  final answer = core == null ? null : jsonDecode(core.take(core.withText(json, core.downloadContainer)) ?? 'null') as Map<String, dynamic>?;
+  if (answer == null) return ContainerPlan(DownloadContainer.mkv, audioBest.firstOrNull);
+  final audio = (answer['audio'] as Map?)?['id'];
+  return ContainerPlan(
+    DownloadContainer.byName(answer['container']),
+    audioBest.where((a) => a.id == audio).firstOrNull,
+    problem: _problem(answer['problem']),
+  );
 }
 
 /// What the download dialog chose: locked format ids, and the container the
@@ -146,22 +142,13 @@ class DownloadPlan {
   final String? problem;
 }
 
-/// Builds the selection for [codec] (null: any), [height] (see
-/// [DownloadFormats.pickHeight]) and [container] from [formats]; for
-/// [audioOnly] the best m4a track, else the best track.
+/// Builds the selection for [codec] (null: any), [height] (the nearest
+/// offered) and [container] from [formats]; for [audioOnly] the best m4a
+/// track, else the best track. Worked out by lumtub_core.
 DownloadPlan planDownload(DownloadFormats formats, {VideoCodec? codec, int? height, DownloadContainer container = DownloadContainer.auto, bool audioOnly = false}) {
-  final audio = formats.audioBest;
-  if (audioOnly) {
-    final track = audio.where((a) => a.ext == 'm4a').firstOrNull ?? audio.firstOrNull;
-    if (track == null) return const DownloadPlan(null);
-    return DownloadPlan(DownloadSelection(audioOnly: true, audioId: track.id, size: track.size, container: DownloadContainer.mkv));
-  }
-  final video = formats.pickVideo(codec, height: height);
-  if (video == null) return const DownloadPlan(null);
-  final plan = planContainer(container, video.codec, audio);
-  if (plan.problem != null) return DownloadPlan(null, problem: plan.problem);
-  final size = video.size == null ? null : video.size! + (plan.audio?.size ?? 0);
-  return DownloadPlan(DownloadSelection(codec: video.codec, height: video.height, videoId: video.id, audioId: plan.audio?.id, container: plan.container, size: size));
+  final plan = formats.choose(codec: codec, height: height, container: container.name, audioOnly: audioOnly)['plan'] as Map<String, dynamic>? ?? const {};
+  final selection = plan['selection'] == null ? null : DownloadSelection.fromJson(plan['selection']);
+  return DownloadPlan(selection, problem: _problem(plan['problem']));
 }
 
 /// The dialog's last choices, offered again next time.

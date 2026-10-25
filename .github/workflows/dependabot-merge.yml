@@ -1,0 +1,40 @@
+name: Merge dependency updates
+
+# Merges a Dependabot pull request once its build has passed. Major version
+# bumps of Dart packages are left for review, since they often need code
+# changes the build alone cannot judge.
+on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.actor.login == 'dependabot[bot]' &&
+      startsWith(github.event.workflow_run.head_branch, 'dependabot/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          pr=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number,title,author --jq '.[] | select(.author.login == "app/dependabot") | "\(.number)\t\(.title)"' | head -n1)
+          if [ -z "$pr" ]; then echo "No open Dependabot pull request for $BRANCH."; exit 0; fi
+          number=${pr%%$'\t'*}
+          title=${pr#*$'\t'}
+          if [[ "$BRANCH" == dependabot/pub/* ]] && [[ "$title" =~ from\ v?([0-9]+)[^\ ]*\ to\ v?([0-9]+) ]] && [ "${BASH_REMATCH[1]}" != "${BASH_REMATCH[2]}" ]; then
+            echo "#$number is a major Dart package update; left for review."
+            exit 0
+          fi
+          gh pr merge "$number" --repo "$REPO" --squash --delete-branch --match-head-commit "$SHA"

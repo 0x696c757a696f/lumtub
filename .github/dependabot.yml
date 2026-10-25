@@ -11,3 +11,12 @@ updates:
     schedule:
       interval: daily
     open-pull-requests-limit: 5
+
+  - package-ecosystem: cargo
+    directory: /native/lumtub_core
+    schedule:
+      interval: weekly
+    groups:
+      rust:
+        patterns: ['*']
+    open-pull-requests-limit: 5

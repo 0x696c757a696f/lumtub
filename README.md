@@ -13,7 +13,7 @@
 ![Rust](https://img.shields.io/badge/Rust-core-B7410E?logo=rust)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-[Why Lumtub](#why-lumtub) · [Features](#features) · [Install](#install) · [Privacy](#privacy) · [Building](#building) · [License](#license-and-attribution)
+[Why Lumtub](#why-lumtub) · [Features](#features) · [Install](#install) · [Privacy](#privacy) · [Support](#support) · [Building](#building) · [License](#license-and-attribution)
 
 </div>
 
@@ -87,6 +87,16 @@
 ## Privacy
 
 🔒 Recommendations, history, searches and "Not interested" never leave your PC. Lumtub does not read browser cookies. Videos play straight from YouTube by default. If you choose a Piped or Invidious server under Settings › Playback, or Lumtub falls back to one because YouTube refused, that server knows which video you watch.
+
+## Support
+
+Lumtub is free and has no ads. If it is useful to you, you can support its development:
+
+| Channel | Address |
+|---|---|
+| USDC on **Arbitrum One** | `0x619FeeF5986b9ed8E75D7CFD67AdB575355b9F80` |
+
+Send USDC on the Arbitrum One network only; tokens sent on another network may be lost. The address can also be copied from Settings › About › Support development.
 
 ## Building
 

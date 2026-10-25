@@ -29,6 +29,7 @@ import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
 
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
+const _usdcArbitrum = '0x619FeeF5986b9ed8E75D7CFD67AdB575355b9F80';
 
 /// Pushes a sub-page that rebuilds whenever [controller] changes.
 Future<void> _push(BuildContext context, AppController controller, String title, List<Widget> Function(BuildContext context) children, {List<Widget>? actions}) =>
@@ -865,6 +866,12 @@ List<SettingEntry> aboutEntries(AppController controller) => [
             leading: const Icon(Icons.feedback_outlined),
             onTap: () => openExternal('$_repository/issues'),
           ), subtitle: 'issue bug'),
+      SettingEntry(tr('支持开发'), (context) => NormalItem(
+            title: tr('支持开发'),
+            subtitle: tr('USDC（Arbitrum One）：{0}\n点击复制地址，请只在 Arbitrum One 网络上转账', [_usdcArbitrum]),
+            leading: const Icon(Icons.favorite_outline_rounded),
+            onTap: () => copyText(context, _usdcArbitrum, tr('USDC 地址已复制')),
+          ), subtitle: '捐助 赞助 donate sponsor USDC Arbitrum'),
       SettingEntry(tr('错误日志'), (context) => NormalItem(
             title: tr('错误日志'),
             subtitle: tr('只保存在本机，不记录登录凭据和视频流地址'),

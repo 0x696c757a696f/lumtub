@@ -9,6 +9,7 @@ pub mod format_policy;
 pub mod process_tree;
 pub mod redact;
 pub mod hashes;
+pub mod innertube;
 pub mod taste;
 pub mod update;
 

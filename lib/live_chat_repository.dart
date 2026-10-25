@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'live_chat.dart';
 import 'process_priority.dart';
@@ -66,9 +67,14 @@ class LiveChatRepository {
       if (result.exitCode == 0 || RegExp(r'no subtitles|live chat replay is not available', caseSensitive: false).hasMatch(error)) return const [];
       throw StateError(error.isEmpty ? 'yt-dlp exited with code ${result.exitCode}' : error);
     }
-    final contents = await file.readAsString();
-    return contents.trim().isEmpty ? const [] : LiveChatMessage.parseLines(contents);
+    return _readReplay(file);
   }
+
+  // A replay of a long stream runs to a hundred megabytes.
+  static Future<List<LiveChatMessage>> _readReplay(File file) => Isolate.run(() async {
+        final contents = await file.readAsString();
+        return contents.trim().isEmpty ? const <LiveChatMessage>[] : LiveChatMessage.parseLines(contents);
+      });
 
   /// Streams new messages from an active live chat. yt-dlp owns YouTube's
   /// continuation requests and appends each action to the same JSON format
@@ -112,11 +118,9 @@ class LiveChatRepository {
             if (lastLine >= 0) {
               final lines = utf8.decode(pending.sublist(0, lastLine + 1), allowMalformed: true);
               pending = pending.sublist(lastLine + 1);
-              for (final line in const LineSplitter().convert(lines)) {
-                for (final message in LiveChatMessage.parseLine(line)) {
-                  yielded = true;
-                  yield message;
-                }
+              for (final message in LiveChatMessage.parseLines(lines)) {
+                yielded = true;
+                yield message;
               }
             }
           }

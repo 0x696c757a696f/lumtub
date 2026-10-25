@@ -238,6 +238,10 @@ class AppController extends ChangeNotifier {
   VideoDetails? details;
   bool loadingDetails = false;
   List<LiveChatMessage> replayChat = const [];
+
+  /// Fires when a live chat gains messages, which happens several times a
+  /// second: only the chat panel listens, not the whole app.
+  final chatMessages = ValueNotifier(0);
   bool loadingReplayChat = false;
   String? replayChatError;
   StreamSubscription<LiveChatMessage>? _currentChat;
@@ -655,7 +659,7 @@ class AppController extends ChangeNotifier {
     // Automatic picks follow the playback order, so a download is in a codec
     // this PC decodes well; the quality strategy takes the best picture.
     final preference = settings.strategy == PlaybackStrategy.quality ? const <VideoCodec>[] : FormatPolicy.codecOrder(settings);
-    return DownloadFormats.parse(info, preference: preference);
+    return DownloadFormats.parseInBackground(info, preference: preference);
   }
 
   /// The proxy everything currently goes through.
@@ -1205,10 +1209,12 @@ class AppController extends ChangeNotifier {
     if (serial != _playSerial || _currentChatPending.isEmpty) return;
     final next = [...replayChat, ..._currentChatPending];
     _currentChatPending.clear();
-    _update(() {
-      replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
-      loadingReplayChat = false;
-    });
+    replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
+    if (loadingReplayChat) {
+      _update(() => loadingReplayChat = false);
+    } else if (!_disposed) {
+      chatMessages.value++;
+    }
   }
 
   void _stopCurrentChat() {
@@ -2931,6 +2937,7 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _stopCurrentChat();
+    chatMessages.dispose();
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _sleepTimer?.cancel();

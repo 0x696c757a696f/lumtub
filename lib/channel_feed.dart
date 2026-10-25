@@ -30,11 +30,13 @@ class ChannelFeed {
 
   /// Parses the feed. The format is fixed and small, so a few patterns are
   /// enough and no XML package is needed.
+  static final _patterns = <String, RegExp>{};
+
   static List<VideoItem> parse(String xml, ChannelRef channel) {
     final items = <VideoItem>[];
     for (final entry in RegExp(r'<entry>([\s\S]*?)</entry>').allMatches(xml)) {
       final body = entry.group(1)!;
-      String? field(String pattern) => RegExp(pattern).firstMatch(body)?.group(1);
+      String? field(String pattern) => (_patterns[pattern] ??= RegExp(pattern)).firstMatch(body)?.group(1);
       final id = field(r'<yt:videoId>([\w-]{11})</yt:videoId>');
       if (id == null) continue;
       final views = field(r'<media:statistics views="(\d+)"');

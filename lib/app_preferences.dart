@@ -210,8 +210,11 @@ class AppPreferences {
 
   /// Whether a comment by [author] (a name or @handle) with channel [id] is
   /// by a channel the user blocks. Its text is never looked at.
-  bool blocksCommenter(String author, String? id) =>
-      isBlocked(id) || isBlockedName(author) || blocksChannel(author, id: id, handle: author.startsWith('@') ? author : null);
+  bool blocksCommenter(String author, String? id) {
+    final memo = _blockMemo[this] ??= <String, bool>{};
+    if (memo.length > 20000) memo.clear();
+    return memo['comment\n$id\n$author'] ??= isBlocked(id) || isBlockedName(author) || blocksChannel(author, id: id, handle: author.startsWith('@') ? author : null);
+  }
 
   /// Whether [item] passes the privacy and content filters. [watched] says
   /// whether it was watched to the end.

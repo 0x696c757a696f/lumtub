@@ -6,6 +6,7 @@ import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 
 import '../app_log.dart';
+import '../background_json.dart';
 import '../l10n/l10n.dart';
 import '../models.dart';
 import '../process_priority.dart';
@@ -477,7 +478,7 @@ class DownloadManager extends ChangeNotifier {
     final sidecar = LocalVideo.sidecarOf(media);
     var full = <String, dynamic>{};
     if (sidecar.existsSync()) {
-      final data = jsonDecode(await sidecar.readAsString());
+      final data = await decodeJsonInBackground(await sidecar.readAsString());
       if (data is Map<String, dynamic>) full = data;
     }
     List<SkipSegment> segments = const [];

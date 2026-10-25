@@ -105,7 +105,10 @@ class AppUpdater extends ChangeNotifier {
     try {
       final file = await _download(asset, _directory, (received, total) {
         if (total == null || total <= 0) return;
-        progress = received / total;
+        // Whole percents only: each notice rebuilds the app.
+        final next = (received * 100 ~/ total) / 100;
+        if (next == progress) return;
+        progress = next;
         notifyListeners();
       });
       ready = file;

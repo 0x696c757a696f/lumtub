@@ -476,7 +476,9 @@ class _ReplayChatPanel extends StatelessWidget {
   final bool shrinkWrap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(listenable: controller.chatMessages, builder: (context, _) => _build(context));
+
+  Widget _build(BuildContext context) {
     final messages = controller.replayChat;
     final live = controller.playing?.isLive ?? false;
     final header = <Widget>[

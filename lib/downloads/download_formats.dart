@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import '../native_core.dart';
 import '../video_codec.dart';
@@ -52,6 +53,10 @@ class DownloadFormats {
   final List<VideoCodec> preference;
 
   bool get isEmpty => video.isEmpty && audio.isEmpty;
+
+  /// [parse] away from the UI isolate: [info] runs to a few megabytes.
+  static Future<DownloadFormats> parseInBackground(Map<String, dynamic> info, {List<VideoCodec> preference = const []}) =>
+      Isolate.run(() => DownloadFormats.parse(info, preference: preference));
 
   /// Video-only and audio-only formats of [info]; storyboards, formats
   /// without an address, playlist streams and loudness-boosted copies are

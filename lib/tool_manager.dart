@@ -100,15 +100,28 @@ class ToolManager {
     final parent = Directory('${root.path}${Platform.pathSeparator}$group');
     if (!parent.existsSync()) return null;
     final dirs = _versions(parent);
+    // Settings pages ask on every rebuild, and a yt-dlp folder holds a
+    // thousand files: the answer is kept while the version folders stay.
+    final key = '$group/$fileName';
+    final folders = dirs.map((d) => d.path).join('|');
+    if (_found[key] case (final known, final path) when known == folders && (path == null || File(path).existsSync())) return path;
+    String? found;
+    search:
     for (final folder in dirs) {
       try {
         for (final item in folder.listSync(recursive: true, followLinks: false)) {
-          if (item is File && item.uri.pathSegments.last.toLowerCase() == fileName.toLowerCase()) return item.path;
+          if (item is File && item.uri.pathSegments.last.toLowerCase() == fileName.toLowerCase()) {
+            found = item.path;
+            break search;
+          }
         }
       } catch (_) {}
     }
-    return null;
+    _found[key] = (folders, found);
+    return found;
   }
+
+  final _found = <String, (String, String?)>{};
 
   /// Usable version folders in [parent], newest first.
   List<Directory> _versions(Directory parent) {

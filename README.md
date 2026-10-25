@@ -36,7 +36,7 @@
 ### 🏠 Browse
 - **Home:** continue watching, recently watched, and an endless "For you" feed mixing long-term interests, recent interests, exploration, and popular and new videos. Every card says why it was suggested; any video can be marked "Not interested".
 - **Explore:** video and live split into Bilibili-style categories with sub-categories. Sort by For you, Popular, Latest, Hidden gems or Long videos; filter by length, quality (1080p, 4K, HDR), region and language. Categories can be added, hidden, pinned and reordered.
-- **Languages:** English and simplified Chinese, following the Windows language. Translations are plain JSON files; see [TRANSLATING.md](TRANSLATING.md) to add yours.
+- **Languages:** English and simplified Chinese, following the Windows language. Help translate Lumtub on [Weblate](https://hosted.weblate.org/engage/lumtub/).
 - **Search:** suggestions and history, sort order, upload date and length filters, and videos, Shorts, live, channels or playlists only.
 - **Channels:** videos, Shorts, live, playlists, podcasts and community posts, with search inside the channel.
 - **Library:** subscriptions, history, local playlists, favorites, watch later and a play queue.
@@ -113,7 +113,9 @@ cargo build --release --manifest-path native/lumtub_core/Cargo.toml
 
 ### Translations
 
-Source strings are written in simplified Chinese and wrapped in `tr('…')`. Translations live in `assets/l10n`; see [TRANSLATING.md](TRANSLATING.md).
+[![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
+
+Lumtub is translated on [Weblate](https://hosted.weblate.org/engage/lumtub/), which offers free hosting to open-source projects. Source strings are written in simplified Chinese and wrapped in `tr('…')`; translations live in `assets/l10n`. See [TRANSLATING.md](TRANSLATING.md).
 
 ## Known limits
 

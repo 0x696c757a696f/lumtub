@@ -37,6 +37,8 @@ class NativeCore {
         fileSha256 = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_file_sha256'),
         youtubeNext = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_next'),
         youtubeComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_comments'),
+        youtubePosts = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_posts'),
+        youtubePostComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_post_comments'),
         titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
         looksLikeBait = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_looks_like_bait'),
         isShort = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_is_short'),
@@ -73,6 +75,10 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeNext;
   /// A page of a YouTube comments response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeComments;
+  /// Posts of a browse response or a posts tab's HTML.
+  final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubePosts;
+  /// The comment section token of a community post's HTML.
+  final Pointer<Utf8> Function(Pointer<Uint8> html, int length) youtubePostComments;
   /// The place in ExploreLanguage of the language a title reads as.
   final int Function(Pointer<Uint8> title, int length) titleLanguage;
   final bool Function(Pointer<Uint8> title, int length) looksLikeBait;

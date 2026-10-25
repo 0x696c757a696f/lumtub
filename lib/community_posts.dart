@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
+import 'native_core.dart';
 import 'l10n/l10n.dart';
 
 /// A post on a channel's 社区 (posts) tab.
@@ -68,9 +70,9 @@ class CommunityPosts {
     _apiKey = RegExp(r'"INNERTUBE_API_KEY":"([^"]+)"').firstMatch(html)?.group(1);
     _clientVersion = RegExp(r'"INNERTUBE_CLIENT_VERSION":"([^"]+)"').firstMatch(html)?.group(1);
     _visitorData = RegExp(r'"VISITOR_DATA":"([^"]+)"').firstMatch(html)?.group(1);
-    final data = initialData(html);
-    if (data == null) throw FormatException(tr('没有在频道页面里找到帖子数据'));
-    return parse(data);
+    final page = read(html);
+    if (page == null) throw FormatException(tr('没有在频道页面里找到帖子数据'));
+    return page;
   }
 
   /// The page after the one that gave [continuation].
@@ -95,147 +97,34 @@ class CommunityPosts {
         )
         .timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    return parse(jsonDecode(utf8.decode(response.bodyBytes)));
+    return read(utf8.decode(response.bodyBytes)) ?? const PostPage([], null);
   }
 
-  /// The `ytInitialData` object embedded in a YouTube page.
-  static Object? initialData(String html) {
-    final marker = RegExp(r'(?:var ytInitialData|window\["ytInitialData"\])\s*=\s*').firstMatch(html);
-    if (marker == null) return null;
-    final start = html.indexOf('{', marker.end);
-    if (start < 0) return null;
-    // Find the matching brace, skipping braces inside strings.
-    var depth = 0;
-    var inString = false;
-    for (var i = start; i < html.length; i++) {
-      final c = html.codeUnitAt(i);
-      if (inString) {
-        if (c == 0x5C) {
-          i++;
-        } else if (c == 0x22) {
-          inString = false;
-        }
-      } else if (c == 0x22) {
-        inString = true;
-      } else if (c == 0x7B) {
-        depth++;
-      } else if (c == 0x7D && --depth == 0) {
-        try {
-          return jsonDecode(html.substring(start, i + 1));
-        } catch (_) {
-          return null;
-        }
-      }
-    }
-    return null;
-  }
-
-  /// Posts and the continuation token anywhere in a browse response. The
-  /// tree is walked instead of followed by path, so layout changes around
-  /// the posts do not break reading them.
-  static PostPage parse(Object? data) {
-    final posts = <CommunityPost>[];
-    final seen = <String>{};
-    String? continuation;
-    void walk(Object? node) {
-      if (node is List) {
-        for (final child in node) {
-          walk(child);
-        }
-        return;
-      }
-      if (node is! Map) return;
-      final post = node['backstagePostRenderer'] ?? node['postRenderer'];
-      if (post is Map) {
-        final parsed = _post(post);
-        if (parsed != null && seen.add(parsed.id)) posts.add(parsed);
-        return;
-      }
-      final token = _path(node, ['continuationItemRenderer', 'continuationEndpoint', 'continuationCommand', 'token']);
-      if (token is String) continuation = token;
-      for (final value in node.values) {
-        if (value is Map || value is List) walk(value);
-      }
+  /// Posts and the continuation token of a browse response, or of the
+  /// `ytInitialData` in the HTML page [body]; read by the native core. Null
+  /// when there is neither, or without the core.
+  static PostPage? read(String body) {
+    final core = NativeCore.instance;
+    final page = core == null ? null : jsonDecode(core.take(core.withText(body, core.youtubePosts)) ?? 'null');
+    if (page is! Map<String, dynamic>) return null;
+    CommunityPost post(Map<String, dynamic> p) {
+      final video = p['video'] as Map<String, dynamic>?;
+      final id = video?['id'] as String?;
+      return CommunityPost(
+        id: p['id'] as String,
+        text: p['text'] as String,
+        published: p['published'] as String,
+        likes: p['likes'] as String,
+        comments: p['comments'] as String,
+        images: (p['images'] as List).cast<String>(),
+        video: id == null ? null : VideoItem(id: id, title: video!['title'] as String, channel: video['channel'] as String, duration: (video['duration'] as num?)?.toInt(), url: 'https://www.youtube.com/watch?v=$id'),
+        poll: (p['poll'] as List).cast<String>(),
+      );
     }
 
-    walk(data);
-    return PostPage(posts, continuation);
+    return PostPage([for (final p in (page['posts'] as List).cast<Map<String, dynamic>>()) post(p)], page['continuation'] as String?);
   }
 
-  static Object? _path(Object? node, List<Object> keys) {
-    var current = node;
-    for (final key in keys) {
-      if (key is String && current is Map) {
-        current = current[key];
-      } else if (key is int && current is List && key < current.length) {
-        current = current[key];
-      } else {
-        return null;
-      }
-    }
-    return current;
-  }
-
-  /// The text of a YouTube "runs" or "simpleText" object.
-  static String text(Object? node) {
-    if (node is! Map) return '';
-    final simple = node['simpleText'];
-    if (simple is String) return simple;
-    final runs = node['runs'];
-    if (runs is List) return runs.whereType<Map>().map((r) => r['text']?.toString() ?? '').join();
-    final content = node['content'];
-    return content is String ? content : '';
-  }
-
-  static String? _image(Object? renderer) {
-    final thumbnails = _path(renderer, ['image', 'thumbnails']);
-    if (thumbnails is! List || thumbnails.isEmpty) return null;
-    final url = (thumbnails.last as Map)['url']?.toString() ?? '';
-    final full = url.startsWith('//') ? 'https:$url' : url;
-    return full.startsWith('https://') ? full : null;
-  }
-
-  static CommunityPost? _post(Map post) {
-    final id = post['postId']?.toString() ?? '';
-    if (id.isEmpty) return null;
-    final attachment = post['backstageAttachment'];
-    final images = <String>[];
-    final single = _image(_path(attachment, ['backstageImageRenderer']));
-    if (single != null) images.add(single);
-    final multi = _path(attachment, ['postMultiImageRenderer', 'images']);
-    if (multi is List) {
-      for (final item in multi) {
-        final url = _image(_path(item, ['backstageImageRenderer']));
-        if (url != null) images.add(url);
-      }
-    }
-    VideoItem? video;
-    final videoRenderer = _path(attachment, ['videoRenderer']);
-    if (videoRenderer is Map && videoRenderer['videoId'] is String) {
-      final videoId = videoRenderer['videoId'] as String;
-      if (RegExp(r'^[\w-]{11}$').hasMatch(videoId)) {
-        final length = text(videoRenderer['lengthText']).split(':').map(int.tryParse).toList();
-        int? seconds;
-        if (length.isNotEmpty && length.every((n) => n != null)) seconds = length.fold<int>(0, (total, n) => total * 60 + n!);
-        video = VideoItem(
-          id: videoId,
-          title: text(videoRenderer['title']),
-          channel: text(videoRenderer['ownerText']),
-          duration: seconds,
-          url: 'https://www.youtube.com/watch?v=$videoId',
-        );
-      }
-    }
-    final choices = _path(attachment, ['pollRenderer', 'choices']);
-    return CommunityPost(
-      id: id,
-      text: text(post['contentText']),
-      published: text(post['publishedTimeText']),
-      likes: text(post['voteCount']),
-      comments: text(_path(post, ['actionButtons', 'commentActionButtonsRenderer', 'replyButton', 'buttonRenderer', 'text'])),
-      images: images,
-      video: video,
-      poll: choices is List ? [for (final c in choices) text(_path(c, ['text']))].where((t) => t.isNotEmpty).toList() : const [],
-    );
-  }
+  @visibleForTesting
+  static PostPage parse(Object? data) => read(jsonEncode(data)) ?? const PostPage([], null);
 }

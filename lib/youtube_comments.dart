@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import 'community_posts.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
 
@@ -87,7 +86,8 @@ class YoutubeComments {
     _apiKey = RegExp(r'"INNERTUBE_API_KEY":"([^"]+)"').firstMatch(html)?.group(1) ?? _apiKey;
     _clientVersion = RegExp(r'"INNERTUBE_CLIENT_VERSION":"([^"]+)"').firstMatch(html)?.group(1) ?? _clientVersion;
     _visitorData = RegExp(r'"VISITOR_DATA":"([^"]+)"').firstMatch(html)?.group(1) ?? _visitorData;
-    final token = sectionToken(CommunityPosts.initialData(html));
+    final core = NativeCore.instance;
+    final token = core == null ? null : jsonDecode(core.take(core.withText(html, core.youtubePostComments)) ?? 'null') as String?;
     if (token == null) throw FormatException(tr('这个帖子没有评论区，或评论已关闭'));
     final header = await _request('browse', token);
     return _sorted(header, 'browse', newest);
@@ -136,51 +136,6 @@ class YoutubeComments {
   static String videoSectionToken(String videoId) =>
       base64.encode(utf8.encode('\x12\r\x12\x0b$videoId\x18\x062\'"\x11"\x0b${videoId}0\x00x\x020\x00B\x10comments-section'));
 
-  /// The comment section's continuation token in a page's `ytInitialData`.
-  static String? sectionToken(Object? data) {
-    String? found;
-    void walk(Object? node) {
-      if (found != null) return;
-      if (node is List) {
-        for (final child in node) {
-          walk(child);
-        }
-      } else if (node is Map) {
-        final section = node['itemSectionRenderer'];
-        if (section is Map && section['sectionIdentifier'] == 'comment-item-section') {
-          found = _token(section['contents']);
-          return;
-        }
-        for (final value in node.values) {
-          if (value is Map || value is List) walk(value);
-        }
-      }
-    }
-
-    walk(data);
-    return found;
-  }
-
-  /// The first `continuationCommand` token anywhere under [node].
-  static String? _token(Object? node) {
-    if (node is List) {
-      for (final child in node) {
-        final token = _token(child);
-        if (token != null) return token;
-      }
-    } else if (node is Map) {
-      final token = _path(node, ['continuationCommand', 'token']);
-      if (token is String) return token;
-      for (final value in node.values) {
-        if (value is Map || value is List) {
-          final token = _token(value);
-          if (token != null) return token;
-        }
-      }
-    }
-    return null;
-  }
-
   /// A `/next` or `/browse` response [body] with comment section items,
   /// read by the native core; empty without it.
   static CommentPage read(String body) {
@@ -214,13 +169,4 @@ class YoutubeComments {
 
   @visibleForTesting
   static CommentPage parse(Object? response) => read(jsonEncode(response));
-
-  static Object? _path(Object? node, List<String> keys) {
-    var current = node;
-    for (final key in keys) {
-      if (current is! Map) return null;
-      current = current[key];
-    }
-    return current;
-  }
 }

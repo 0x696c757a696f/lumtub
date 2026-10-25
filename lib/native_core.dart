@@ -39,6 +39,7 @@ class NativeCore {
         youtubeComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_comments'),
         youtubePosts = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_posts'),
         liveChat = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_live_chat'),
+        youtubeListing = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_listing'),
         youtubePostComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_post_comments'),
         titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
         looksLikeBait = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_looks_like_bait'),
@@ -80,6 +81,8 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubePosts;
   /// Chat items of yt-dlp `live_chat` lines.
   final Pointer<Utf8> Function(Pointer<Uint8> lines, int length) liveChat;
+  /// Entries and next token of a YouTube search or browse response.
+  final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeListing;
   /// The comment section token of a community post's HTML.
   final Pointer<Utf8> Function(Pointer<Uint8> html, int length) youtubePostComments;
   /// The place in ExploreLanguage of the language a title reads as.

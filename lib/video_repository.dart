@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:http/http.dart' as http;
+
 import 'app_directories.dart';
 import 'live_chat_repository.dart';
 import 'models.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
 import 'stream_resolver.dart';
+import 'youtube_listing.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
 
@@ -138,7 +141,11 @@ class VideoRepository {
   /// yt-dlp's `--proxy` value at the time of each call, see
   /// `NetworkProxy.ytDlpValue`.
   final String? Function()? proxy;
-  VideoRepository(this.ytDlpPath, {this.cacheDirectory, this.deno, this.toolDirectories = const [], this.proxy});
+  /// Reads search results and channel tabs from YouTube's web API, with
+  /// yt-dlp as the fallback; null lists everything with yt-dlp.
+  final YoutubeListing? web;
+  VideoRepository(this.ytDlpPath, {this.cacheDirectory, this.deno, this.toolDirectories = const [], this.proxy, http.Client? client})
+      : web = client == null ? null : YoutubeListing(client);
 
   List<String> get _proxyArguments {
     final value = proxy?.call();
@@ -196,7 +203,10 @@ class VideoRepository {
   /// connection gives.
   Listing search(String query, {SearchFilter filter = SearchFilter.all, String? sp, String? region}) {
     final url = searchUrl(query.trim(), filter: filter, sp: sp);
-    return region == null || region.isEmpty ? _listing(url) : Listing(() => _regionLines(url, region));
+    Stream<String> ytDlp() => region == null || region.isEmpty ? _lines(listingArguments(url)) : _regionLines(url, region);
+    final web = this.web;
+    if (web == null || !YoutubeListing.available) return Listing(ytDlp);
+    return Listing(() => YoutubeListing.orElse(() => web.search(query.trim(), sp: sp ?? filter.sp, region: region), ytDlp));
   }
 
   /// Several searches at once, a few results of each in turn, for a mix
@@ -282,6 +292,10 @@ class VideoRepository {
   /// podcasts.
   Listing channelTab(ChannelRef channel, ChannelTab tab) {
     final url = '${channel.url}${tab.path ?? '/videos'}';
+    final web = this.web;
+    if (web != null && YoutubeListing.available && YoutubeListing.hasTab(tab)) {
+      return Listing(() => YoutubeListing.orElse(() => web.channelTab(channel.id, tab), () => _lines(listingArguments(url))), channel: channel);
+    }
     if (tab != ChannelTab.playlists && tab != ChannelTab.podcasts) return _listing(url, channel: channel);
     return Listing(() => _expandingLines(url), channel: channel);
   }

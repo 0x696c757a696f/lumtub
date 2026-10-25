@@ -12,6 +12,7 @@ pub mod redact;
 pub mod hashes;
 pub mod posts;
 pub mod innertube;
+pub mod listing;
 pub mod live_chat;
 pub mod taste;
 pub mod update;

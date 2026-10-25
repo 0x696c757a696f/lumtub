@@ -589,6 +589,7 @@ class AppController extends ChangeNotifier {
         deno: paths.deno,
         toolDirectories: paths.executableDirectories,
         proxy: () => proxy.ytDlpValue(this.settings.proxyMode),
+        client: _http,
       );
 
   DownloadManager _downloadsFor(ToolPaths paths, AppDirectories directories) => DownloadManager(

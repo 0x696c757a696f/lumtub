@@ -981,8 +981,10 @@ class AppController extends ChangeNotifier {
     final query = exploreQuery;
     final mode = exploreMode;
     final mix = exploreTopicNow.mix;
-    final region = preferences.exploreRegion.gl;
-    final language = preferences.exploreLanguage;
+    // 全球热门 is the same everywhere, whatever region and language are set.
+    final global = exploreTopicNow.global;
+    final region = global ? null : preferences.exploreRegion.gl;
+    final language = global ? ExploreLanguage.any : preferences.exploreLanguage;
     final perChannel = <String, int>{};
     final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);
     final taste = mode == ExploreMode.forYou ? _exploreTaste() : null;
@@ -993,6 +995,9 @@ class AppController extends ChangeNotifier {
     final notInterested = homeFeed?.notInterested;
     final faith = exploreSection.isFaith ? faithFilter() : null;
     final seen = mix ? {for (final item in history) item.id, ...?homeFeed?.items.map((item) => item.id)} : const <String>{};
+    final known = mode == ExploreMode.fresh
+        ? {for (final item in history) TasteProfile.channelKey(item), for (final channel in library?.channels ?? const <ChannelRef>[]) channel.id}
+        : const <String>{};
     final dropped = <String, int>{};
     bool drop(String why) {
       dropped.update(why, (n) => n + 1, ifAbsent: () => 1);
@@ -1014,6 +1019,11 @@ class AppController extends ChangeNotifier {
         final views = item.viewCount;
         if (views == null || views > gemMaxViews || seconds == null || seconds < 240) return drop('not a hidden gem');
       }
+      if (mode == ExploreMode.fresh) {
+        final views = item.viewCount;
+        if (views == null || views > freshMaxViews || seconds == null || seconds < 60) return drop('not new');
+        if (known.contains(TasteProfile.channelKey(item))) return drop('known channel');
+      }
       if (mode == ExploreMode.curated && seconds != null && seconds < 240) return drop('too short');
       if (!language.matches(item.title)) return drop('language');
       // 全部 is for finding more: not what was watched or what 为你推荐
@@ -1028,7 +1038,7 @@ class AppController extends ChangeNotifier {
           () => mix ? repository.searchMix(exploreMixQueries(exploreSection), sp: sp, region: region) : repository.search(query, sp: sp, region: region),
           where: where,
           fill: switch (mode) {
-            ExploreMode.gems || ExploreMode.liveReplay => 8,
+            ExploreMode.gems || ExploreMode.fresh || ExploreMode.liveReplay => 8,
             ExploreMode.liveUpcoming => 4,
             _ => faith != null || mix || language != ExploreLanguage.any ? 8 : 1,
           },

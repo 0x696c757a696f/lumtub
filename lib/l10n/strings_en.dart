@@ -2076,4 +2076,8 @@ const stringsEn = <String, String>{
   '启动时自动检查，也可立即检查': 'Checked automatically at startup; you can also check now.',
   '点击打开 GitHub Release 下载': 'Click to open the GitHub Release download.',
   '检查软件更新失败：{0}': 'Could not check for app updates: {0}',
+  '全球热门': 'Global trending',
+  '新人新作': 'New creators',
+  '全球热门 · 不限地区和语言，{0}观看最多，每个频道最多 2 个': 'Global trending · Most watched in any region or language ({0}), up to 2 per channel',
+  '{0} · 本周新发、播放不到 5000，来自你没看过的频道': '{0} · New this week, under 5,000 views, from channels you have not watched',
 };

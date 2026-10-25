@@ -40,7 +40,7 @@ class ExploreSub {
 /// One explore zone, as Bilibili's 分区: what it is called, the search
 /// behind it and its sub-categories.
 class ExploreTopic {
-  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false, this.opens, this.mix = false});
+  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false, this.opens, this.mix = false, this.global = false});
   final String _label;
   /// The name shown; a user's own is shown as typed.
   String get label => custom ? _label : tr(_label);
@@ -55,6 +55,8 @@ class ExploreTopic {
   /// 全部: a mix of the other zones, with one of the history's interests
   /// when there is a history, rather than a search of its own.
   final bool mix;
+  /// 全球热门: a [mix] that leaves out the region and language filters.
+  final bool global;
 
   /// Names the zone in the saved order and hidden lists; custom zones as
   /// `custom:<label>`.
@@ -88,6 +90,7 @@ class CustomTopic {
 /// videos from other countries come up too.
 const popularTopics = <ExploreTopic>[
   ExploreTopic('全部', Icons.apps_rounded, '', mix: true),
+  ExploreTopic('全球热门', Icons.public_rounded, '', mix: true, global: true),
   ExploreTopic('知识教育', Icons.school_rounded, '知识 科普', subs: [
     ExploreSub('科普', '科普'),
     ExploreSub('历史', '历史 纪录片'),
@@ -480,6 +483,7 @@ enum ExploreMode {
   popular('热门', live: false),
   latest('最新', live: false),
   gems('冷门宝藏', live: false),
+  fresh('新人新作', live: false),
   long('长视频', live: false),
   liveViewers('观看最多', live: true),
   liveLatest('最新开播', live: true),
@@ -507,6 +511,10 @@ enum ExploreMode {
 /// 冷门宝藏: videos of at least four minutes with at most this many views.
 const gemMaxViews = 50000;
 
+/// 新人新作: this week's videos of at least a minute with at most this many
+/// views, from channels not followed or watched.
+const freshMaxViews = 5000;
+
 /// The periods popular videos can be counted over.
 const explorePeriods = [SearchUploadDate.today, SearchUploadDate.week, SearchUploadDate.month, SearchUploadDate.year];
 
@@ -527,6 +535,7 @@ String exploreParams(
       ExploreMode.latest => searchParams(type: SearchFilter.videos, sort: SearchSort.date, duration: duration, quality: quality)!,
       ExploreMode.forYou => searchParams(type: SearchFilter.videos, date: SearchUploadDate.month, duration: duration, quality: quality)!,
       ExploreMode.gems => searchParams(type: SearchFilter.videos, date: SearchUploadDate.year, duration: duration, quality: quality)!,
+      ExploreMode.fresh => searchParams(type: SearchFilter.videos, date: SearchUploadDate.week, duration: duration, quality: quality)!,
       ExploreMode.long => searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: SearchUploadDate.year, duration: SearchDuration.long, quality: quality)!,
       ExploreMode.liveViewers => searchParams(type: SearchFilter.live, sort: SearchSort.views, quality: quality)!,
       ExploreMode.liveLatest => searchParams(type: SearchFilter.live, sort: SearchSort.date, quality: quality)!,

@@ -206,6 +206,10 @@ class ToolManager {
     return uri;
   }
 
+  /// Downloads a GitHub release [asset] into [into], checked against the
+  /// SHA-256 digest GitHub lists for it.
+  Future<File> downloadVerified(Map<String, dynamic> asset, Directory into, void Function(int received, int? total) onProgress) => _downloadVerified(asset, into, onProgress: onProgress);
+
   /// Downloads [asset] into [into] and checks its SHA-256: [sha256Hex] when
   /// given (from the release's checksum file), else the digest GitHub lists.
   Future<File> _downloadVerified(Map<String, dynamic> asset, Directory into, {String? sha256Hex, void Function(int received, int? total)? onProgress}) async {

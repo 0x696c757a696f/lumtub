@@ -10,6 +10,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app_directories.dart';
+import '../app_updater.dart';
 import '../app_log.dart';
 import '../app_window.dart';
 import '../app_preferences.dart';
@@ -99,10 +100,8 @@ class AppController extends ChangeNotifier {
   PageMode mode = PageMode.home;
   bool ready = false;
   bool checking = false;
-  bool checkingAppUpdate = false;
-  String? availableAppVersion;
-  String? availableAppUrl;
-  String? appUpdateError;
+  /// Lumtub's own updates; null until the components are ready.
+  AppUpdater? appUpdater;
   String status = tr('正在准备 Windows 原生播放器…');
   /// Startup failure; the setup screen shows it with a retry button.
   String? error;
@@ -515,10 +514,10 @@ class AppController extends ChangeNotifier {
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
       // Do not block the UI while checking newer releases.
-      if (preferences.autoCheckUpdates) {
-        unawaited(manager.checkUpdates());
-        unawaited(checkAppUpdate());
-      }
+      if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
+      final updater = AppUpdater(client: _http, directory: Directory('${directories.cache.path}${Platform.pathSeparator}updates'), download: manager.downloadVerified)..addListener(notifyListeners);
+      appUpdater = updater;
+      if (preferences.autoCheckUpdates || preferences.autoUpdateApp) updater.start(download: () => preferences.autoUpdateApp);
       unawaited(_refreshCacheSize());
       unawaited(_trimThumbnails());
       unawaited(downloads?.load());
@@ -533,38 +532,15 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  /// Checks the application's own release separately from libmpv and yt-dlp.
-  /// Replacing an installed executable is left to the installer after the
-  /// user opens the matching GitHub Release.
-  Future<void> checkAppUpdate() async {
-    if (checkingAppUpdate) return;
-    _update(() {
-      checkingAppUpdate = true;
-      appUpdateError = null;
-    });
-    try {
-      final response = await _http.get(
-        Uri.https('api.github.com', '/repos/0x696c757a696f/lumtub/releases/latest'),
-        headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'Lumtub-Windows/$appVersion'},
-      ).timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
-      final json = jsonDecode(response.body);
-      if (json is! Map) throw const FormatException('Invalid GitHub release response');
-      final tag = json['tag_name']?.toString().replaceFirst(RegExp(r'^v', caseSensitive: false), '') ?? '';
-      final url = json['html_url']?.toString() ?? '';
-      _update(() {
-        availableAppVersion = tag.isNotEmpty && tag != appVersion ? tag : null;
-        availableAppUrl = availableAppVersion == null || url.isEmpty ? null : url;
-        checkingAppUpdate = false;
-      });
-      logInfo(availableAppVersion == null ? 'Lumtub is up to date ($appVersion)' : 'Lumtub update available: $availableAppVersion');
-    } catch (error) {
-      _update(() {
-        checkingAppUpdate = false;
-        appUpdateError = '$error';
-      });
-      logInfo('Could not check Lumtub updates: $error');
-    }
+  /// Checks for a new Lumtub now and downloads it, for the settings page.
+  Future<void> checkAppUpdate() async => appUpdater?.check(download: AppUpdater.canInstall);
+
+  /// Closes Lumtub, installs the downloaded update and starts it again.
+  Future<void> restartToUpdate() async {
+    final updater = appUpdater;
+    if (updater == null || updater.ready == null) return;
+    await shutdown(install: false);
+    if (await updater.install(relaunch: true)) exit(0);
   }
 
   /// Keeps the thumbnail cache under its cap, at startup and then hourly;
@@ -2844,9 +2820,10 @@ class AppController extends ChangeNotifier {
 
   /// Saves everything and releases the player before the window closes;
   /// dispose() alone does not run when Windows ends the process.
-  Future<void> shutdown() async {
+  Future<void> shutdown({bool install = true}) async {
     if (_shutDown) return;
     _shutDown = true;
+    if (install) await appUpdater?.install();
     _saveProgress();
     await library?.flush();
     await downloads?.flush();

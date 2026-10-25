@@ -799,6 +799,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.autoCheckUpdates,
               onChanged: (v) => savePrefs(prefs.copyWith(autoCheckUpdates: v)),
             )),
+        SettingEntry(tr('自动更新 Lumtub'), (context) => SwitchItem(
+              title: tr('自动更新 Lumtub'),
+              subtitle: tr('在后台下载新版本，关闭 Lumtub 时安装，不打断使用'),
+              leading: _icon(Icons.browser_updated_rounded),
+              value: prefs.autoUpdateApp,
+              onChanged: (v) => savePrefs(prefs.copyWith(autoUpdateApp: v)),
+            )),
         SettingEntry(tr('组件管理'), (context) => NormalItem(
               title: tr('组件管理'),
               subtitle: 'libmpv ${controller.tools?.libmpv.current?.label ?? '内置'} · yt-dlp ${controller.tools?.ytDlpVersion ?? '未安装'}',

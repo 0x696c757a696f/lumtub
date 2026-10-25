@@ -213,7 +213,7 @@ class DownloadManager extends ChangeNotifier {
       await file.parent.create(recursive: true);
       await file.writeAsString(jsonEncode({'directory': _directory, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()}), flush: true);
     } on FileSystemException catch (e) {
-      logError('无法保存下载列表', e);
+      logError('Could not save the download list', e);
     }
   }
 
@@ -459,7 +459,7 @@ class DownloadManager extends ChangeNotifier {
     try {
       await _writeSidecar(task, path);
     } catch (e) {
-      logError('无法保存 ${task.id} 的离线信息', e);
+      logError('Could not save the offline info of ${task.id}', e);
     }
     onFinished?.call(task);
   }

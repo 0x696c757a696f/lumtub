@@ -236,4 +236,21 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 60));
     expect(limited.error, contains('429'));
   });
+
+  test('tries again when the first answer is empty', () async {
+    VideoListLoader.emptyRetryDelays = const [Duration(milliseconds: 10), Duration(milliseconds: 10)];
+    addTearDown(() => VideoListLoader.emptyRetryDelays = const [Duration(seconds: 3), Duration(seconds: 10)]);
+    var opened = 0;
+    final loader = VideoListLoader(() {
+      opened++;
+      final lines = opened < 3 ? const <String>[] : [jsonEncode(const VideoItem(id: 'abcdefghijk', title: 't', channel: 'c', url: 'u').toJson())];
+      return Listing(() => Stream.fromIterable(lines));
+    }, name: 'test');
+    loader.loadMore();
+    while (loader.loading) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    expect(opened, 3);
+    expect(loader.items.map((v) => v.id), ['abcdefghijk']);
+  });
 }

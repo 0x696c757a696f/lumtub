@@ -92,7 +92,7 @@ class CastController extends ChangeNotifier {
     try {
       await action(current);
     } on CastException catch (e) {
-      logInfo('投屏操作失败：$e');
+      logInfo('Cast action failed: $e');
       error = e.message;
     }
     _notify();
@@ -119,7 +119,7 @@ class CastController extends ChangeNotifier {
     if (current == null) return null;
     final at = status?.position;
     await end(stopDevice: true);
-    logInfo('已停止投屏到 ${current.name}');
+    logInfo('Stopped casting to ${current.name}');
     return at;
   }
 
@@ -133,7 +133,7 @@ class CastController extends ChangeNotifier {
       try {
         await (stopDevice ? current.stop() : current.close());
       } on CastException catch (e) {
-        logInfo('结束投屏时出错：$e');
+        logInfo('Error while ending the cast: $e');
       }
     }
     status = null;

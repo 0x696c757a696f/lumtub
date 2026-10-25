@@ -879,7 +879,7 @@ Future<void> _exportSettings(BuildContext context, AppController controller) asy
     await XFile.fromData(Uint8List.fromList(utf8.encode(controller.exportSettings())), mimeType: 'application/json', name: name).saveTo(location.path);
     if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('设置已导出'))));
   } catch (e) {
-    logError('导出设置失败', e);
+    logError('Could not export settings', e);
     if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('导出失败：{0}', [e]))));
   }
 }

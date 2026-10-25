@@ -63,7 +63,7 @@ class NativeCore {
       try {
         return NativeCore._(DynamicLibrary.open(path));
       } catch (e) {
-        logInfo('无法加载 $path：$e');
+        logInfo('Could not load $path: $e');
       }
     }
     return null;

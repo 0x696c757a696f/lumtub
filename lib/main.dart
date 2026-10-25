@@ -26,11 +26,11 @@ Future<void> main() async {
   HttpOverrides.global = appHttpOverrides;
   final reportFlutterError = FlutterError.onError;
   FlutterError.onError = (details) {
-    logError('界面错误', details.exception, details.stack);
+    logError('UI error', details.exception, details.stack);
     reportFlutterError?.call(details);
   };
   PlatformDispatcher.instance.onError = (error, stack) {
-    logError('未处理的错误', error, stack);
+    logError('Unhandled error', error, stack);
     return false;
   };
   // Load the theme before the first frame so the window never flashes the

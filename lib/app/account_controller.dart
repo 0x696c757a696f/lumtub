@@ -116,7 +116,7 @@ class AccountController extends ChangeNotifier {
       notice(tr('已登录 {0}', [me.name]));
       unawaited(sync(likes: me.likes));
     } catch (e) {
-      logError('Google 登录失败', e);
+      logError('Google sign-in failed', e);
       _tokens = null;
       _refreshToken = null;
       state = AccountState.signedOut;
@@ -169,10 +169,10 @@ class AccountController extends ChangeNotifier {
       library.mirrorRemotePlaylists(mirrored);
       lastSync = DateTime.now();
       await _save();
-      logInfo('YouTube 同步完成：${channels.length} 个订阅，${mirrored.length} 个播放列表');
+      logInfo('YouTube sync done: ${channels.length} subscriptions, ${mirrored.length} playlists');
       notice(tr('同步完成：{0} 个订阅（新增 {1} 个），{2} 个播放列表', [channels.length, added, mirrored.length]));
     } catch (e) {
-      logError('YouTube 同步失败', e);
+      logError('YouTube sync failed', e);
       error = '$e';
       if (e is OAuthException && e.revoked) await signOut();
     } finally {
@@ -199,7 +199,7 @@ class AccountController extends ChangeNotifier {
       _ratings[videoId] = await _api.rating(videoId);
       notifyListeners();
     } catch (e) {
-      logInfo('读取点赞状态失败：$e');
+      logInfo('Could not read the like status: $e');
     }
   }
 

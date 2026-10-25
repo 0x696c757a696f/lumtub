@@ -26,7 +26,7 @@ Future<void> captureScreenshot(BuildContext context, AppController controller, {
       action: SnackBarAction(label: tr('打开文件夹'), onPressed: () => unawaited(revealInFolder(file))),
     ));
   } catch (e) {
-    logError('截图失败', e);
+    logError('Screenshot failed', e);
     onFeedback?.call(Icons.error_outline_rounded, tr('截图失败'));
     messenger?.showSnackBar(SnackBar(content: Text(tr('截图失败'))));
   }

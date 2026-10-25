@@ -12,7 +12,7 @@ use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, VecDeque};
 use std::io::{BufRead, BufReader, ErrorKind, Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::{Shutdown, TcpListener, TcpStream};
 use std::os::raw::c_char;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -230,14 +230,24 @@ pub fn byte_range(header: Option<&str>, size: u64) -> Range {
     if start >= size || start > end { Range::Unsatisfiable } else { Range::Part(start, end) }
 }
 
-/// Answers the requests on one connection from libmpv.
+/// Answers the requests on one connection from libmpv, then closes it
+/// gracefully: Windows resets a connection closed with bytes still unread,
+/// and a reset can discard the end of the reply on its way to libmpv.
 fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &dyn Fetch) {
     let _ = client.set_nodelay(true);
-    let Ok(writer) = client.try_clone() else { return };
+    let Ok(mut writer) = client.try_clone() else { return };
     let mut reader = BufReader::new(client);
-    let mut writer = writer;
+    answer(&mut reader, &mut writer, shared, fetch);
+    let _ = writer.flush();
+    let _ = writer.shutdown(Shutdown::Write);
+    let _ = reader.get_ref().set_read_timeout(Some(Duration::from_secs(2)));
+    let mut rest = [0u8; 4096];
+    while matches!(reader.read(&mut rest), Ok(n) if n > 0) {}
+}
+
+fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mutex<Shared>, fetch: &dyn Fetch) {
     loop {
-        let Some((method, path, headers)) = read_request(&mut reader) else { return };
+        let Some((method, path, headers)) = read_request(reader) else { return };
         let keep_open = !headers.get("connection").is_some_and(|v| v.eq_ignore_ascii_case("close"));
         let target = shared.lock().unwrap().targets.get(path.trim_start_matches('/')).cloned();
         let Some(target) = target.filter(|_| method == "GET" || method == "HEAD") else {
@@ -279,7 +289,7 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &dyn Fetch) {
         let mut position = start;
         while position <= end {
             let last = (position + target.chunk - 1).min(end);
-            match copy(fetch, &target, position, last, &mut writer, shared) {
+            match copy(fetch, &target, position, last, writer, shared) {
                 Ok(()) => position = last + 1,
                 Err(Stop::Client) => return,
                 Err(Stop::Upstream(message)) => {

@@ -1197,7 +1197,7 @@ const stringsEn = <String, String>{
   '{0}\n新的下载保存到这里，点击更改': '{0}\nNew downloads are saved here; click to change',
   '下载 保存位置 文件夹': 'downloads save location folder',
   '已下载：{0}': 'Downloaded: {0}',
-  '安装包不完整：缺少 {0}，推荐不可用。请重新安装 Lumtub。': 'This install is incomplete: {0} is missing, so recommendations are off. Please reinstall Lumtub.',
+  '安装包不完整：缺少 {0}，推荐不可用，画质只能按默认选择。请重新安装 Lumtub。': 'This install is incomplete: {0} is missing, so recommendations are off and quality uses the defaults. Please reinstall Lumtub.',
   '窗口底部的 libmpv 版本和状态信息': 'libmpv version and status at the bottom of the window',
   '窗口置顶': 'Keep window on top',
   '立即': 'Immediately',

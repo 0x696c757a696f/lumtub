@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'l10n/l10n.dart';
+import 'native_core.dart';
 import 'player_settings.dart';
 import 'video_codec.dart';
 
@@ -32,41 +36,45 @@ class FormatPolicy {
   /// Whether a stream whose codec is called [name] may play.
   static bool allowsName(PlayerSettings settings, Object? name) => allows(settings, VideoCodec.of(name));
 
+  /// The policy for [settings], worked out by lumtub_core
+  /// (native/lumtub_core/src/format_policy.rs). Without the library
+  /// yt-dlp's and mpv's defaults apply, minus the disabled codecs.
+  static _Policy _policy(PlayerSettings settings, {int displayHeight = 0}) {
+    final core = NativeCore.instance;
+    final json = jsonEncode({
+      'strategy': settings.strategy.name,
+      'disabled': [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.name],
+      'hardware': [for (final c in VideoCodec.values) if (_hardware(settings, c)) c.name],
+      'maxHeight': settings.maxHeight,
+      'audio': settings.audioQuality.name,
+      'display': max(0, displayHeight),
+    });
+    final answer = core?.take(core.withText(json, core.formatPolicy));
+    if (answer == null) {
+      return _Policy([for (final c in VideoCodec.values) if (allows(settings, c)) c], 'ytdl', null, 0);
+    }
+    final data = jsonDecode(answer) as Map<String, dynamic>;
+    return _Policy(
+      [for (final name in data['order'] as List) if (VideoCodec.byName(name) case final codec?) codec],
+      data['expression'] as String,
+      data['formatSort'] as String?,
+      data['displayHeight'] as int,
+    );
+  }
+
   /// The allowed codecs, most preferred first.
   ///
   /// - auto: removes user-disabled codecs, then uses the verified decoder
   ///   ladder: AV1 hardware decoding, then VP9 hardware decoding, then H.264.
   ///   When hardware decoding is off or none has verified hardware decoding,
-  ///   software H.264 comes first,
-  ///   then VP9 and AV1.
+  ///   software H.264 comes first, then VP9 and AV1.
   /// - lowResource: H.264, then codecs with verified hardware decoding, then
   ///   the rest. Above 1080p the verified ones go first, as H.264 cannot
   ///   reach that height.
   /// - quality: no preference. yt-dlp ranks by resolution, frame rate and
   ///   bitrate, so the expression ignores this list; Piped and Invidious
   ///   streams use it as a tie-break after height (VP9, AV1, H.264, VP8).
-  static List<VideoCodec> codecOrder(PlayerSettings settings) {
-    final all = [for (final c in [VideoCodec.av1, VideoCodec.vp9, VideoCodec.h264, VideoCodec.vp8]) if (allows(settings, c)) c];
-    final modern = all.where((c) => c == VideoCodec.vp9 || c == VideoCodec.av1).toList();
-    final av1Hardware = _hardware(settings, VideoCodec.av1);
-    final vp9Hardware = _hardware(settings, VideoCodec.vp9);
-    final verified = modern.where((c) => _hardware(settings, c)).toList();
-    final tall = settings.maxHeight > 1080;
-    final h264 = all.where((c) => c == VideoCodec.h264);
-    final front = switch (settings.strategy) {
-      PlaybackStrategy.quality => const <VideoCodec>[],
-      PlaybackStrategy.auto => av1Hardware
-          ? [VideoCodec.av1, VideoCodec.vp9, ...h264]
-          : vp9Hardware
-          ? [VideoCodec.vp9, ...h264, VideoCodec.av1]
-          : [...h264, VideoCodec.vp9, VideoCodec.av1],
-      PlaybackStrategy.lowResource => [if (tall) ...verified, ...h264, ...verified],
-    };
-    return [...{...front, ...all}.where(all.contains)];
-  }
-
-  /// Heights YouTube serves, lowest first.
-  static const _ladder = [720, 1080, 1440, 2160, 4320];
+  static List<VideoCodec> codecOrder(PlayerSettings settings) => _policy(settings).order;
 
   /// [settings] with automatic quality capped at the tallest display: a 4K
   /// stream on a 1080p screen costs four times the download, decoding,
@@ -77,13 +85,8 @@ class FormatPolicy {
   /// or quality strategy is left alone. [displayHeight] is in physical
   /// pixels; 0 when unknown.
   static PlayerSettings forDisplay(PlayerSettings settings, int displayHeight) {
-    if (settings.maxHeight > 0 || settings.strategy == PlaybackStrategy.quality || settings.disabledCodecs.isNotEmpty) return settings;
-    final modernHardware = [VideoCodec.vp9, VideoCodec.av1].any((codec) => _hardware(settings, codec));
-    final decoderCap = settings.strategy == PlaybackStrategy.auto && !modernHardware ? 1080 : 0;
-    final displayCap = displayHeight <= 0 ? 0 : _ladder.where((h) => h >= displayHeight * 0.95).firstOrNull ?? 0;
-    final caps = [if (decoderCap > 0) decoderCap, if (displayCap > 0) displayCap];
-    if (caps.isEmpty) return settings;
-    return settings.copyWith(maxHeight: caps.reduce((a, b) => a < b ? a : b));
+    final cap = _policy(settings, displayHeight: displayHeight).displayHeight;
+    return cap > 0 ? settings.copyWith(maxHeight: cap) : settings;
   }
 
   /// The yt-dlp format expression for [settings].
@@ -92,42 +95,13 @@ class FormatPolicy {
   /// filters of the disabled codecs, so no fallback can pick one. The quality
   /// strategy is yt-dlp's own `bestvideo`, written `ytdl` when nothing
   /// restricts it.
-  static String expression(PlayerSettings settings) {
-    final height = settings.maxHeight > 0 ? '[height<=?${settings.maxHeight}]' : '';
-    final exclude = [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.excludeFilter].join();
-    final audio = switch (settings.audioQuality) {
-      AudioQuality.best => 'bestaudio',
-      AudioQuality.medium => 'bestaudio[abr<=?128]',
-      AudioQuality.low => 'bestaudio[abr<=?64]',
-    };
-    if (settings.strategy == PlaybackStrategy.quality) {
-      if (height.isEmpty && exclude.isEmpty && settings.audioQuality == AudioQuality.best) return 'ytdl';
-      return 'bestvideo$exclude$height+$audio/best$exclude$height/best$exclude';
-    }
-    return [
-      'bestvideo$exclude$height+$audio',
-      if (audio != 'bestaudio') 'bestvideo$exclude$height+bestaudio',
-      'best$exclude$height',
-      'best$exclude',
-    ].join('/');
-  }
+  static String expression(PlayerSettings settings) => _policy(settings).expression;
 
   /// Within the user's selected quality cap, yt-dlp first ranks by picture
   /// quality, then breaks ties by the verified decoder ladder. This keeps a
   /// 1080p AVC stream ahead of a 360p VP9 stream, while still choosing
   /// hardware-decoded AV1 or VP9 when the quality tier is equal.
-  static String? formatSort(PlayerSettings settings) {
-    if (settings.strategy == PlaybackStrategy.quality) return null;
-    final first = codecOrder(settings).firstOrNull;
-    if (first == null) return null;
-    final preferred = switch (first) {
-      VideoCodec.av1 => 'av01',
-      VideoCodec.vp9 => 'vp9',
-      VideoCodec.h264 => 'avc',
-      VideoCodec.vp8 => 'vp8',
-    };
-    return 'res,fps,vcodec:$preferred';
-  }
+  static String? formatSort(PlayerSettings settings) => _policy(settings).formatSort;
 
   /// Names of the disabled codecs, e.g. `AV1、VP9`, or empty.
   static String disabledNames(PlayerSettings settings) => [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.label].join('、');
@@ -139,4 +113,12 @@ class FormatPolicy {
     final rule = tr('当前规则：{0}，编码顺序 {1}', [settings.strategy.label, order.isEmpty ? tr('无') : order]);
     return disabled.isEmpty ? rule : '$rule${tr('，已禁用 {0}', [disabled])}';
   }
+}
+
+class _Policy {
+  const _Policy(this.order, this.expression, this.formatSort, this.displayHeight);
+  final List<VideoCodec> order;
+  final String expression;
+  final String? formatSort;
+  final int displayHeight;
 }

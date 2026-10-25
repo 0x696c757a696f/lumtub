@@ -10,7 +10,8 @@ import 'app_log.dart';
 import 'l10n/l10n.dart';
 
 /// lumtub_core, the Rust library built from native/lumtub_core and
-/// shipped next to lumtub.exe. The recommendations need it; without it
+/// shipped next to lumtub.exe. The recommendations and the format policy
+/// need it; without it
 /// Lumtub says its install is incomplete (see [missingMessage]).
 class NativeCore {
   NativeCore._(DynamicLibrary library)
@@ -22,6 +23,7 @@ class NativeCore {
         tasteTop = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Bool, Uint32), Pointer<Utf8> Function(Pointer<Void>, bool, int)>('lumtub_taste_top'),
         titleWords = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_title_words'),
         recommend = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_recommend'),
+        formatPolicy = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_format_policy'),
         _stringFree = library.lookupFunction<Void Function(Pointer<Utf8>), void Function(Pointer<Utf8>)>('lumtub_string_free'),
         _adopt = library.lookupFunction<IntPtr Function(Uint32), int Function(int)>('lumtub_tree_adopt'),
         _kill = library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>('lumtub_tree_kill'),
@@ -36,6 +38,7 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Void> taste, bool words, int count) tasteTop;
   final Pointer<Utf8> Function(Pointer<Uint8> title, int length) titleWords;
   final Pointer<Utf8> Function(Pointer<Void> taste, Pointer<Uint8> json, int length) recommend;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) formatPolicy;
   final void Function(Pointer<Utf8>) _stringFree;
   final int Function(int pid) _adopt;
   final bool Function(int job, int code) _kill;
@@ -48,7 +51,7 @@ class NativeCore {
   static String get fileName => Platform.isWindows ? 'lumtub_core.dll' : Platform.isMacOS ? 'liblumtub_core.dylib' : 'liblumtub_core.so';
 
   /// What Lumtub says when the library is missing.
-  static String get missingMessage => tr('安装包不完整：缺少 {0}，推荐不可用。请重新安装 Lumtub。', [fileName]);
+  static String get missingMessage => tr('安装包不完整：缺少 {0}，推荐不可用，画质只能按默认选择。请重新安装 Lumtub。', [fileName]);
 
   static NativeCore? _load() {
     final paths = [

@@ -1,4 +1,4 @@
-import 'dart:ui' show Locale;
+import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'strings_en.dart';
 import 'strings_zh_hant.dart';
@@ -17,17 +17,16 @@ enum AppLanguage {
   String get label => this == system ? tr(nativeName) : nativeName;
   final Locale? locale;
 
-  /// [system] is English too: the interface is English for now, whatever
-  /// language Windows uses. The Chinese values are kept for the source
-  /// strings and tests, but nothing saved or chosen at run time reaches them.
-  AppLanguage get resolved => this == system ? en : this;
+  /// [system] as the language Windows uses: simplified Chinese for any
+  /// Chinese, English otherwise. Traditional Chinese is not complete yet,
+  /// so it is never chosen for the system and cannot be saved.
+  AppLanguage get resolved =>
+      this == system ? (PlatformDispatcher.instance.locale.languageCode == 'zh' ? zhHans : en) : this;
 
-  /// What can be chosen in settings (nothing yet, since there is only one).
-  static const selectable = [en];
+  /// What can be chosen in settings.
+  static const selectable = [system, en, zhHans];
 
-  /// Any saved value, including Chinese ones from earlier versions, becomes
-  /// English.
-  static AppLanguage parse(Object? raw) => en;
+  static AppLanguage parse(Object? raw) => values.where((l) => l.name == raw && selectable.contains(l)).firstOrNull ?? system;
 }
 
 AppLanguage _current = AppLanguage.zhHans; // source language, until main() calls setLanguage

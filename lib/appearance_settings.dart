@@ -132,7 +132,7 @@ class AppearanceSettings {
     this.thumbnailQuality = ThumbnailQuality.high,
     this.darkWatchPage = false,
     this.showStatusBar = true,
-    this.language = AppLanguage.en,
+    this.language = AppLanguage.system,
   });
 
   /// The chosen colour; [systemAccent] is resolved by the app.

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../app_log.dart';
+import '../l10n/l10n.dart';
 import '../models.dart';
 import '../process_priority.dart';
 import '../sponsor_block.dart';
@@ -423,7 +424,7 @@ class DownloadManager extends ChangeNotifier {
     } else {
       task.status = DownloadStatus.failed;
       task.speed = null;
-      task.error = errors.lastWhere((e) => e.startsWith('ERROR'), orElse: () => errors.isEmpty ? 'yt-dlp exited with code $exitCode' : errors.last);
+      task.error = errors.lastWhere((e) => e.startsWith('ERROR'), orElse: () => errors.isEmpty ? tr('yt-dlp 意外退出（代码 {0}）', [exitCode]) : errors.last);
     }
     if (_wipe.remove(id)) await _deleteFiles(task);
     _active.remove(id);
@@ -448,7 +449,7 @@ class DownloadManager extends ChangeNotifier {
     if (path == null || !File(path).existsSync()) path = _findMedia(task);
     if (path == null) {
       task.status = DownloadStatus.failed;
-      task.error = 'The downloaded file was not found';
+      task.error = tr('找不到下载好的文件');
       return;
     }
     task.filePath = path;

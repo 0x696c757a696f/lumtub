@@ -68,7 +68,9 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final controller = AppController()..ready = true;
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: ListenableBuilder(
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: ListenableBuilder(
       listenable: controller,
       builder: (context, _) => ExplorePage(controller: controller),
     ))));
@@ -90,35 +92,38 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('every settings group lays out in English', (tester) async {
-    setLanguage(AppLanguage.en);
-    tester.view.physicalSize = const Size(1280, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    final controller = AppController();
-    await tester.pumpWidget(MaterialApp(
-      theme: buildAppTheme(Colors.red, Brightness.light),
-      home: Scaffold(body: SettingsPage(controller: controller)),
-    ));
-    await tester.pump();
-    expect(find.text('Language'), findsNothing);
-    for (final category in SettingsCategory.values) {
-      await tester.tap(find.text(category.title).first);
+  for (final language in [AppLanguage.en, AppLanguage.zhHans]) {
+    testWidgets('every settings group lays out in ${language.name}', (tester) async {
+      setLanguage(language);
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final controller = AppController();
+      await tester.pumpWidget(MaterialApp(
+        theme: buildAppTheme(Colors.red, Brightness.light),
+        home: Scaffold(body: SettingsPage(controller: controller)),
+      ));
       await tester.pump();
-      expect(tester.takeException(), isNull, reason: category.title);
-    }
-    await tester.tap(find.text(SettingsCategory.style.title).first);
-    await tester.pump();
-    expect(find.text('Language'), findsNothing);
-  });
+      for (final category in SettingsCategory.values) {
+        await tester.tap(find.text(category.title).first);
+        await tester.pump();
+        expect(tester.takeException(), isNull, reason: category.title);
+      }
+      await tester.tap(find.text(SettingsCategory.style.title).first);
+      await tester.pump();
+      expect(find.text(tr('语言')), findsOneWidget);
+    });
+  }
 
-  test('the interface is English whatever was saved or the system uses', () {
-    for (final saved in ['zhHans', 'zhHant', 'system', 'en', null, 'nonsense']) {
-      expect(AppLanguage.parse(saved), AppLanguage.en, reason: '$saved');
+  test('the language follows Windows unless English or simplified Chinese was saved', () {
+    expect(AppLanguage.parse('en'), AppLanguage.en);
+    expect(AppLanguage.parse('zhHans'), AppLanguage.zhHans);
+    for (final saved in ['zhHant', 'system', null, 'nonsense']) {
+      expect(AppLanguage.parse(saved), AppLanguage.system, reason: '$saved');
     }
-    expect(AppLanguage.system.resolved, AppLanguage.en);
-    expect(AppLanguage.selectable, [AppLanguage.en]);
-    expect(const AppearanceSettings().language, AppLanguage.en);
-    expect(AppearanceSettings.fromJson({'language': 'zhHant'}).language, AppLanguage.en);
+    expect(AppLanguage.selectable, [AppLanguage.system, AppLanguage.en, AppLanguage.zhHans]);
+    expect([AppLanguage.en, AppLanguage.zhHans], contains(AppLanguage.system.resolved));
+    expect(const AppearanceSettings().language, AppLanguage.system);
+    expect(AppearanceSettings.fromJson({'language': 'zhHant'}).language, AppLanguage.system);
   });
 }

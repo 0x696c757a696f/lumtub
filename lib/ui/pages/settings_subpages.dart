@@ -659,7 +659,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(tr('Lumtub 让 YouTube 在 Windows 上更好用'), style: theme.textTheme.titleLarge),
                     const SizedBox(height: 6),
-                    Text('The quick brown fox jumps over the lazy dog. 0123456789', style: theme.textTheme.bodyMedium),
+                    Text(tr('敏捷的棕色狐狸跳过了懒狗。0123456789'), style: theme.textTheme.bodyMedium),
                     const SizedBox(height: 6),
                     Text(tr('频道名称 · 12 万次观看 · 3 天前'), style: theme.textTheme.labelMedium!.copyWith(color: context.colors.outline)),
                   ]),

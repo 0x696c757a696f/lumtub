@@ -401,7 +401,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('开箱评测', 'unboxing review live'),
   ]),
   ExploreTopic('学习工作', Icons.menu_book_rounded, 'study with me live', subs: [
-    ExploreSub('Study with Me', 'study with me live'),
+    ExploreSub('陪你学习', 'study with me live'),
     ExploreSub('工作陪伴', 'work with me pomodoro live'),
     ExploreSub('编程直播', 'live coding'),
     ExploreSub('线上课堂', '线上课堂 直播'),

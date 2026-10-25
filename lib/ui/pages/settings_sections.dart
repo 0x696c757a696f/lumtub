@@ -20,6 +20,7 @@ import '../../progress_line.dart';
 import '../../translation.dart';
 import '../../video_codec.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
+import '../../windows_env.dart' show restartApp;
 import '../../windows_video_info.dart';
 import '../common.dart';
 import '../format_policy_dialogs.dart';
@@ -98,6 +99,16 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
   void save(PlayerSettings next) => controller.saveSettings(next);
   void savePrefs(AppPreferences next) => controller.savePreferences(next);
   void saveLooks(AppearanceSettings next) => controller.saveAppearance(next);
+
+  /// Saves the language and offers to restart, since text on screen keeps
+  /// the language Lumtub started in.
+  Future<void> changeLanguage(BuildContext context, AppearanceSettings next) async {
+    if (next.language == appearance.language) return;
+    await controller.saveAppearance(next);
+    if (!context.mounted || next.language.resolved == currentLanguage) return;
+    final restart = await confirmDialog(context, title: tr('重启后切换语言'), content: tr('Lumtub 重启后以新的语言显示。现在重启吗？'), confirm: tr('立即重启'));
+    if (restart) await restartApp();
+  }
 
   final hardware = settings.hwdec != 'no';
   return switch (category) {
@@ -660,6 +671,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             )),
       ],
     SettingsCategory.style => [
+        SettingEntry(tr('语言'), (context) => PopupItem<AppLanguage>(
+              title: tr('语言'),
+              leading: _icon(Icons.translate_rounded),
+              value: appearance.language,
+              values: [for (final l in AppLanguage.selectable) (l, l.label)],
+              onSelected: (language) => changeLanguage(context, appearance.copyWith(language: language)),
+            ), subtitle: 'Language 语言 English 简体中文'),
         SettingEntry(tr('主题模式'), (context) => PopupItem<ThemeMode>(
               title: tr('主题模式'),
               leading: _icon(Icons.brightness_6_outlined),

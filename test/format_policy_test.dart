@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/decoder_status.dart';
 import 'package:lumtub/format_policy.dart';
 import 'package:lumtub/player_settings.dart';
+import 'package:lumtub/stream_resolver.dart';
 import 'package:lumtub/video_codec.dart';
 
 const _hw = DecoderStatus.hardware('d3d11va');
@@ -20,22 +23,44 @@ void main() {
     }
   });
 
-  test('a quality above 1080p enables VP9 until the quality is 1080p or lower again', () {
-    final high = FormatPolicy.withQuality(const PlayerSettings(), 2160);
-    expect(high.unlocked, isTrue);
-    expect(high.settings.disabledCodecs, {VideoCodec.av1});
-    final higher = FormatPolicy.withQuality(high.settings, 1440);
-    expect(higher.unlocked, isFalse);
-    expect(higher.settings.disabledCodecs, {VideoCodec.av1});
-    final low = FormatPolicy.withQuality(higher.settings, 1080);
-    expect(low.settings.disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
-    expect(low.settings.vp9ForQuality, isFalse);
-    // Codecs the user chose stay as chosen.
-    final chosen = FormatPolicy.withQuality(const PlayerSettings(disabledCodecs: {VideoCodec.av1, VideoCodec.vp9, VideoCodec.vp8}), 2160);
-    expect(chosen.unlocked, isFalse);
-    expect(chosen.settings.disabledCodecs, {VideoCodec.av1, VideoCodec.vp9, VideoCodec.vp8});
-    final enabled = FormatPolicy.withQuality(const PlayerSettings(disabledCodecs: {VideoCodec.av1}), 720);
-    expect(enabled.settings.disabledCodecs, {VideoCodec.av1});
+  test('automatic codecs follow the hardware and the quality', () {
+    const soft = DecoderStatus.software();
+    expect(const PlayerSettings(decoderResults: {'vp9': _hw, 'av1': soft}).disabledCodecs, {VideoCodec.av1});
+    expect(const PlayerSettings(decoderResults: {'vp9': _hw, 'av1': _hw}).disabledCodecs, isEmpty);
+    expect(const PlayerSettings(decoderResults: {'vp9': soft, 'av1': soft}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+    // H.264 stops at 1080p: above it VP9 stays enabled, even in software.
+    expect(const PlayerSettings(maxHeight: 2160, decoderResults: {'vp9': soft}).disabledCodecs, {VideoCodec.av1});
+    expect(const PlayerSettings(maxHeight: 1080, decoderResults: {'vp9': soft}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+  });
+
+  test('a choice equal to the automatic one stays automatic', () {
+    const settings = PlayerSettings(decoderResults: {'vp9': _hw});
+    expect(settings.withDisabledCodecs({VideoCodec.av1}).codecsChosen, isFalse);
+    final chosen = settings.withDisabledCodecs({VideoCodec.av1, VideoCodec.vp9});
+    expect(chosen.codecsChosen, isTrue);
+    expect(chosen.copyWith(maxHeight: 2160).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+  });
+
+  test('says when the tallest picture is only in a disabled codec', () {
+    final video = ResolvedVideo({
+      'formats': [
+        {'height': 1080, 'vcodec': 'avc1.640028'},
+        {'height': 360, 'vcodec': 'vp09.00.21.08'},
+        {'height': 2160, 'vcodec': 'vp09.00.51.08'},
+      ],
+    }, File('x'), 'best');
+    const noH264 = PlayerSettings(disabledCodecs: {VideoCodec.h264, VideoCodec.av1});
+    final lost = video.lostToDisabled(noH264, 1080)!;
+    expect((lost.height, lost.playing), (1080, 360));
+    expect(lost.codecs, [VideoCodec.h264]);
+    expect(video.lostToDisabled(noH264, 0), isNull);
+    expect(video.lostToDisabled(const PlayerSettings(disabledCodecs: {}), 1080), isNull);
+  });
+
+  test('H.264 can be disabled only with VP9 or AV1 in hardware', () {
+    expect(FormatPolicy.canDisableH264(const PlayerSettings()), isFalse);
+    expect(FormatPolicy.canDisableH264(const PlayerSettings(decoderResults: {'av1': _hw})), isTrue);
+    expect(FormatPolicy.canDisableH264(const PlayerSettings(hwdec: 'no', decoderResults: {'av1': _hw})), isFalse);
   });
 
   test('knows when VP9 or AV1 can only be decoded in software', () {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
+import '../format_policy.dart';
 import '../player_settings.dart';
 import '../video_codec.dart';
 import '../widgets/pilinara_settings_tiles.dart';
@@ -11,21 +12,34 @@ String get disabledCodecsNote => tr('禁用后，所有播放策略都不会主�
 /// Said when a choice would disable every codec YouTube plays.
 String get lastCodecNote => tr('H.264、VP9、AV1 至少保留一个，否则视频无法播放');
 
-/// [current] with [codec] disabled or enabled again; null when that would
+/// Said where H.264 cannot be disabled.
+String get h264NeededNote => tr('VP9 和 AV1 都不能硬解，不能禁用 H.264，否则所有视频都要用 CPU 软解');
+
+/// [settings] with [codec] disabled or enabled again; null when that would
 /// leave nothing to play.
-Set<VideoCodec>? withCodecDisabled(Set<VideoCodec> current, VideoCodec codec, bool disabled) {
-  final next = disabled ? {...current, codec} : ({...current}..remove(codec));
-  return VideoCodec.playableWithout(next) ? next : null;
+PlayerSettings? withCodecDisabled(PlayerSettings settings, VideoCodec codec, bool disabled) {
+  final current = settings.disabledCodecs;
+  return _withCodecs(settings, disabled ? {...current, codec} : ({...current}..remove(codec)));
 }
 
-void _sayLastCodec(BuildContext context) {
-  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(lastCodecNote)));
+PlayerSettings? _withCodecs(PlayerSettings settings, Set<VideoCodec> next) {
+  if (!VideoCodec.playableWithout(next)) return null;
+  if (next.contains(VideoCodec.h264) && !settings.disabledCodecs.contains(VideoCodec.h264) && !FormatPolicy.canDisableH264(settings)) return null;
+  return settings.withDisabledCodecs(next);
 }
+
+void _say(BuildContext context, String text) {
+  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+}
+
+String _why(PlayerSettings settings, Set<VideoCodec> next) => VideoCodec.playableWithout(next) ? h264NeededNote : lastCodecNote;
 
 /// Disables or enables [codec] through [save], or says why it cannot.
-void toggleCodec(BuildContext context, Set<VideoCodec> current, VideoCodec codec, bool disabled, ValueChanged<Set<VideoCodec>> save) {
-  final next = withCodecDisabled(current, codec, disabled);
-  next == null ? _sayLastCodec(context) : save(next);
+void toggleCodec(BuildContext context, PlayerSettings settings, VideoCodec codec, bool disabled, ValueChanged<PlayerSettings> save) {
+  final next = withCodecDisabled(settings, codec, disabled);
+  if (next != null) return save(next);
+  final current = settings.disabledCodecs;
+  _say(context, _why(settings, disabled ? {...current, codec} : current));
 }
 
 /// Asks for a [PlaybackStrategy], each with its one-line description, and
@@ -50,8 +64,9 @@ Future<void> pickPlaybackStrategy(BuildContext context, PlaybackStrategy current
   if (result != null && result != current) onSelected(result);
 }
 
-/// Asks which codecs to disable and reports the new set when it changed.
-Future<void> pickDisabledCodecs(BuildContext context, Set<VideoCodec> current, ValueChanged<Set<VideoCodec>> onSelected) async {
+/// Asks which codecs to disable and reports the settings when they changed.
+Future<void> pickDisabledCodecs(BuildContext context, PlayerSettings settings, ValueChanged<PlayerSettings> onSelected) async {
+  final current = settings.disabledCodecs;
   final result = await showDialog<List<VideoCodec>>(
     context: context,
     builder: (context) => OrderedMultiSelectDialog<VideoCodec>(
@@ -62,10 +77,12 @@ Future<void> pickDisabledCodecs(BuildContext context, Set<VideoCodec> current, V
     ),
   );
   if (result == null) return;
-  final next = result.toSet();
-  if (!VideoCodec.playableWithout(next)) {
-    if (context.mounted) _sayLastCodec(context);
+  final chosen = result.toSet();
+  if (chosen.length == current.length && current.containsAll(chosen)) return;
+  final next = _withCodecs(settings, chosen);
+  if (next == null) {
+    if (context.mounted) _say(context, _why(settings, chosen));
     return;
   }
-  if (next.length != current.length || !current.containsAll(next)) onSelected(next);
+  onSelected(next);
 }

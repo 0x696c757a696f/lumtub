@@ -236,8 +236,32 @@ class PlayerSettings {
   final int cacheSeconds;
   final int cacheMemoryMb;
   final PlaybackStrategy strategy;
-  /// Codecs no strategy may pick, whatever the video offers.
-  final Set<VideoCodec> disabledCodecs;
+  /// The codecs the user chose to disable; null leaves them to Lumtub.
+  final Set<VideoCodec>? chosenCodecs;
+
+  /// Codecs no strategy may pick, whatever the video offers: the user's
+  /// choice, or else [automaticCodecs].
+  Set<VideoCodec> get disabledCodecs => chosenCodecs ?? automaticCodecs;
+
+  /// The codecs disabled for the user: VP9 and AV1 unless this PC decodes
+  /// them in hardware, so playback stays light. Above 1080p, which H.264
+  /// cannot reach, VP9 stays enabled even in software.
+  Set<VideoCodec> get automaticCodecs {
+    bool hardware(String key) => hwdec != 'no' && (decoderResults[key]?.isHardware ?? false);
+    final off = {if (!hardware('av1')) VideoCodec.av1, if (!hardware('vp9')) VideoCodec.vp9};
+    if (maxHeight > 1080 && off.length == 2) off.remove(VideoCodec.vp9);
+    return off;
+  }
+
+  /// Whether the user chose the codecs rather than Lumtub.
+  bool get codecsChosen => chosenCodecs != null;
+
+  /// These settings with [disabled] disabled: the user's choice, or back to
+  /// the automatic one when it is the same.
+  PlayerSettings withDisabledCodecs(Set<VideoCodec> disabled) =>
+      _sameCodecs(disabled, copyWith(automaticCodecs: true).automaticCodecs) ? copyWith(automaticCodecs: true) : copyWith(disabledCodecs: disabled);
+
+  static bool _sameCodecs(Set<VideoCodec> a, Set<VideoCodec> b) => a.length == b.length && a.containsAll(b);
   final AudioQuality audioQuality;
   /// mpv's `audio-device` name, or `auto` for the Windows default.
   final String audioDevice;
@@ -261,16 +285,8 @@ class PlayerSettings {
   final bool sponsorBlock;
   /// Shows Return YouTube Dislike's estimate of the dislikes.
   final bool returnDislike;
-  /// VP9 was enabled for a quality above 1080p, and is disabled again
-  /// when the quality goes back to 1080p or lower.
-  final bool vp9ForQuality;
-  /// The codecs a new install disables: H.264 alone is decoded in hardware
-  /// almost everywhere.
-  static const defaultDisabledCodecs = {VideoCodec.av1, VideoCodec.vp9};
-
-  /// The user's own codec choice, which Lumtub leaves alone: anything but
-  /// the default, or the default with VP9 enabled for the quality.
-  bool get codecsChosen => !vp9ForQuality && (disabledCodecs.length != defaultDisabledCodecs.length || !disabledCodecs.containsAll(defaultDisabledCodecs));
+  /// The graphics adapter and driver [decoderResults] were measured on.
+  final String decoderAdapter;
   /// DeArrow's titles and thumbnails in place of YouTube's.
   final bool deArrowTitles;
   final bool deArrowThumbnails;
@@ -324,7 +340,7 @@ class PlayerSettings {
     this.cacheSeconds = 60,
     this.cacheMemoryMb = 150,
     this.strategy = PlaybackStrategy.auto,
-    this.disabledCodecs = defaultDisabledCodecs,
+    Set<VideoCodec>? disabledCodecs,
     this.audioQuality = AudioQuality.best,
     this.audioDevice = 'auto',
     this.videoSync = VideoSync.audio,
@@ -341,7 +357,7 @@ class PlayerSettings {
     this.subtitleBold = false,
     this.sponsorBlock = false,
     this.returnDislike = false,
-    this.vp9ForQuality = false,
+    this.decoderAdapter = '',
     this.deArrowTitles = false,
     this.deArrowThumbnails = false,
     this.sponsorCategories = defaultSponsorCategories,
@@ -363,7 +379,7 @@ class PlayerSettings {
     this.audioFilter = '',
     this.picture = const {},
     this.audioDelayMs = 0,
-  });
+  }) : chosenCodecs = disabledCodecs;
 
   /// Whether a finished video is followed by another one.
   bool get autoplayNext => playOrder != PlayOrder.pause && playOrder != PlayOrder.singleCycle;
@@ -396,7 +412,8 @@ class PlayerSettings {
     bool? subtitleBold,
     bool? sponsorBlock,
     bool? returnDislike,
-    bool? vp9ForQuality,
+    bool automaticCodecs = false,
+    String? decoderAdapter,
     bool? deArrowTitles,
     bool? deArrowThumbnails,
     Set<String>? sponsorCategories,
@@ -431,7 +448,7 @@ class PlayerSettings {
         cacheSeconds: cacheSeconds ?? this.cacheSeconds,
         cacheMemoryMb: cacheMemoryMb ?? this.cacheMemoryMb,
         strategy: strategy ?? this.strategy,
-        disabledCodecs: disabledCodecs ?? this.disabledCodecs,
+        disabledCodecs: automaticCodecs ? null : disabledCodecs ?? chosenCodecs,
         audioQuality: audioQuality ?? this.audioQuality,
         audioDevice: audioDevice ?? this.audioDevice,
         videoSync: videoSync ?? this.videoSync,
@@ -448,7 +465,7 @@ class PlayerSettings {
         subtitleBold: subtitleBold ?? this.subtitleBold,
         sponsorBlock: sponsorBlock ?? this.sponsorBlock,
         returnDislike: returnDislike ?? this.returnDislike,
-        vp9ForQuality: vp9ForQuality ?? this.vp9ForQuality,
+        decoderAdapter: decoderAdapter ?? this.decoderAdapter,
         deArrowTitles: deArrowTitles ?? this.deArrowTitles,
         deArrowThumbnails: deArrowThumbnails ?? this.deArrowThumbnails,
         sponsorCategories: sponsorCategories ?? this.sponsorCategories,
@@ -484,7 +501,7 @@ class PlayerSettings {
         'cacheMemoryMb': cacheMemoryMb,
         'bufferDefaults': 2,
         'strategy': strategy.name,
-        'disabledCodecs': [for (final c in VideoCodec.values) if (disabledCodecs.contains(c)) c.name],
+        'disabledCodecs': chosenCodecs == null ? null : [for (final c in VideoCodec.values) if (chosenCodecs!.contains(c)) c.name],
         'audioQuality': audioQuality.name,
         'audioDevice': audioDevice,
         'videoSync': videoSync.name,
@@ -501,7 +518,7 @@ class PlayerSettings {
         'subtitleBold': subtitleBold,
         'sponsorBlock': sponsorBlock,
         'returnDislike': returnDislike,
-        'vp9ForQuality': vp9ForQuality,
+        'decoderAdapter': decoderAdapter,
         'deArrowTitles': deArrowTitles,
         'deArrowThumbnails': deArrowThumbnails,
         'sponsorCategories': sponsorCategories.toList(),
@@ -578,9 +595,9 @@ class PlayerSettings {
         : raw['codec'] == 'any' || raw['autoSelectCodec'] == false ? PlaybackStrategy.quality : PlaybackStrategy.auto;
     final disabled = raw['disabledCodecs'] is List
         ? {for (final name in raw['disabledCodecs'] as List) VideoCodec.byName(name)}.whereType<VideoCodec>().toSet()
-        : defaultDisabledCodecs;
+        : null;
     // A file that disables every codec YouTube plays would play nothing.
-    if (!VideoCodec.playableWithout(disabled)) disabled.remove(VideoCodec.h264);
+    if (disabled != null && !VideoCodec.playableWithout(disabled)) disabled.remove(VideoCodec.h264);
     // Builds before the play order menu had an autoplay switch.
     final playOrder = raw.containsKey('playOrder')
         ? _enumByName(PlayOrder.values, raw['playOrder'], PlayOrder.autoPlayRelated)
@@ -588,7 +605,7 @@ class PlayerSettings {
     final path = raw['cachePath']?.toString();
     final device = raw['audioDevice']?.toString() ?? 'auto';
     final oldBuffer = raw['bufferDefaults'] != 2;
-    return PlayerSettings(
+    final loaded = PlayerSettings(
       hwdec: validHwdec(raw['hwdec']?.toString()) ?? 'auto-safe',
       scale: choice('scale', {'spline36', 'bilinear', 'lanczos', 'ewa_lanczossharp'}, 'spline36'),
       deband: raw['deband'] == true,
@@ -622,7 +639,7 @@ class PlayerSettings {
       subtitleBold: raw['subtitleBold'] == true,
       sponsorBlock: raw['sponsorBlock'] == true,
       returnDislike: raw['returnDislike'] == true,
-      vp9ForQuality: raw['vp9ForQuality'] == true,
+      decoderAdapter: raw['decoderAdapter']?.toString() ?? '',
       deArrowTitles: raw['deArrowTitles'] == true,
       deArrowThumbnails: raw['deArrowThumbnails'] == true,
       sponsorCategories: categories,
@@ -647,6 +664,9 @@ class PlayerSettings {
       picture: picture,
       audioDelayMs: number('audioDelayMs', 0, -5000, 5000),
     );
+    // The same codecs as the automatic choice stay automatic.
+    final chosen = loaded.chosenCodecs;
+    return chosen != null ? loaded.withDisabledCodecs(chosen) : loaded;
   }
 
   /// [value] if it is a comma list of known decoders, else null.

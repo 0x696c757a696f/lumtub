@@ -40,6 +40,7 @@ class NativeCore {
         youtubePosts = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_posts'),
         liveChat = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_live_chat'),
         youtubeListing = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_listing'),
+        hwDecoders = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_hw_decoders'),
         youtubePostComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_post_comments'),
         titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
         looksLikeBait = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_looks_like_bait'),
@@ -83,6 +84,8 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> lines, int length) liveChat;
   /// Entries and next token of a YouTube search or browse response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeListing;
+  /// The graphics adapter and the tallest picture it decodes per codec.
+  final Pointer<Utf8> Function() hwDecoders;
   /// The comment section token of a community post's HTML.
   final Pointer<Utf8> Function(Pointer<Uint8> html, int length) youtubePostComments;
   /// The place in ExploreLanguage of the language a title reads as.
@@ -130,6 +133,13 @@ class NativeCore {
   static String? fileSha256Of(String path) {
     final core = instance;
     return core?.take(core.withText(path, core.fileSha256));
+  }
+
+  /// What the GPU decodes in hardware as JSON; null without the core or
+  /// off Windows. It creates a Direct3D device, so run it on another isolate.
+  static String? hwDecodersNow() {
+    final core = instance;
+    return core?.take(core.hwDecoders());
   }
 
   /// Calls [call] with [text] as UTF-8 in native memory.

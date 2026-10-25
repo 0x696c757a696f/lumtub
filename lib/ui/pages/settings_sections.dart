@@ -343,10 +343,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         for (final codec in VideoCodec.values)
           SettingEntry(tr('禁用 {0}', [codec.label]), (context) => SwitchItem(
                 title: tr('禁用 {0}', [codec.label]),
-                subtitle: codec == VideoCodec.values.first ? disabledCodecsNote : null,
+                subtitle: codec == VideoCodec.h264 && !FormatPolicy.canDisableH264(settings)
+                    ? h264NeededNote
+                    : codec == VideoCodec.values.first ? disabledCodecsNote : null,
                 leading: _icon(Icons.block_outlined),
                 value: settings.disabledCodecs.contains(codec),
-                onChanged: (v) => toggleCodec(context, settings.disabledCodecs, codec, v, (next) => save(settings.copyWith(disabledCodecs: next, vp9ForQuality: false))),
+                enabled: codec != VideoCodec.h264 || FormatPolicy.canDisableH264(settings) || settings.disabledCodecs.contains(codec),
+                onChanged: (v) => toggleCodec(context, settings, codec, v, save),
               ), subtitle: tr('视频格式 禁用视频编码')),
         SettingEntry(tr('当前规则'), (context) => ListTile(
               dense: true,

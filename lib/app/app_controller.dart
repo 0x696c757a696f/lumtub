@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -29,6 +30,7 @@ import '../sponsor_block.dart';
 import '../appearance_settings.dart';
 import '../cache_manager.dart';
 import '../decoder_status.dart';
+import '../native_core.dart';
 import '../live_chat.dart';
 import '../models.dart';
 import '../network_proxy.dart';
@@ -516,6 +518,7 @@ class AppController extends ChangeNotifier {
         _outputSize = VideoOutputSize((width, height) => controller.setSize(width: width, height: height));
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
+        unawaited(_measureDecoders());
         _thumbnailTrimTimer?.cancel();
         _thumbnailTrimTimer = Timer.periodic(const Duration(hours: 1), (_) => _trimThumbnails());
         ready = true;
@@ -1907,16 +1910,14 @@ class AppController extends ChangeNotifier {
   /// rather than for the video playing.
   Future<void> setMaxHeight(int height, {bool asDefault = false}) async {
     if (height == settings.maxHeight) return;
-    final change = FormatPolicy.withQuality(settings, height);
-    final next = change.settings;
+    // Automatic codecs follow the quality: above 1080p VP9 stays enabled.
+    final next = settings.copyWith(maxHeight: height);
     if (height > 1080) {
       final usable = [VideoCodec.vp9, VideoCodec.av1].where((codec) => !next.disabledCodecs.contains(codec));
-      if (usable.isNotEmpty && usable.every((codec) => FormatPolicy.softwareOnly(next, codec))) {
+      if (usable.isEmpty) {
+        if (asDefault) _notice(tr('VP9 和 AV1 都已禁用，H.264 最高只能到 1080p'));
+      } else if (!usable.any((codec) => FormatPolicy.hardware(next, codec))) {
         _notice(tr('这台电脑不能硬解 VP9 和 AV1，1440p 和 4K 只能用 CPU 软解，占用会很高'));
-      } else if (change.unlocked && asDefault) {
-        _notice(tr('H.264 最高 1080p，1440p 和 4K 需要 VP9，已自动启用；画质改回 1080p 及以下时会再禁用'));
-      } else if (usable.isEmpty && asDefault) {
-        _notice(tr('VP9 和 AV1 都已禁用，H.264 最高只能到 1080p'));
       }
     }
     await reloadVideo(next);
@@ -1976,7 +1977,13 @@ class AppController extends ChangeNotifier {
           // The extraction playback uses carries the details too.
           final resolved = await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort);
           loaded = resolved.details;
-          if (serial == _playSerial) _update(() => availableHeights = resolved.heightsFor(settings));
+          if (serial == _playSerial) {
+            _update(() => availableHeights = resolved.heightsFor(settings));
+            final lost = resolved.lostToDisabled(settings, _playback.maxHeight);
+            if (lost != null) {
+              _notice(tr('这个视频的 {0}p 只有 {1}，已被禁用，正在播放 {2}p', [lost.height, lost.codecs.map((c) => c.label).join(' / '), lost.playing]));
+            }
+          }
         } catch (_) {
           loaded = await _repository!.details(item.id);
         }
@@ -2702,6 +2709,28 @@ class AppController extends ChangeNotifier {
       await platform.setProperty(name, value);
     } catch (_) {
       // A preview that libmpv rejects changes nothing.
+    }
+  }
+
+  /// Asks the GPU what it decodes in hardware, once per graphics adapter
+  /// and driver: the automatic codecs follow the answer.
+  Future<void> _measureDecoders() async {
+    try {
+      final json = await Isolate.run(NativeCore.hwDecodersNow);
+      if (json == null || _disposed) return;
+      final probe = jsonDecode(json) as Map<String, dynamic>;
+      final adapter = probe['adapter']?.toString() ?? '';
+      if (adapter.isEmpty || adapter == settings.decoderAdapter) return;
+      int height(String key) => (probe[key] as num?)?.toInt() ?? 0;
+      logInfo('Hardware decoding on $adapter: H.264 ${height('h264')}p, VP9 ${height('vp9')}p, AV1 ${height('av1')}p');
+      final results = {
+        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? const DecoderStatus.hardware('d3d11va') : const DecoderStatus.software(),
+      };
+      _update(() => decodeStates = results);
+      settings = settings.copyWith(decoderResults: results, decoderAdapter: adapter);
+      await _settingsStore?.save(settings);
+    } catch (e) {
+      logError('Could not ask the GPU what it decodes', e);
     }
   }
 

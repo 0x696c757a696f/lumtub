@@ -1005,7 +1005,7 @@ class AppController extends ChangeNotifier {
       if (preferences.blocksGroup(item) || preferences.isUnrecommended(item.channelId)) return drop('blocked');
       // "Don't recommend" is a hard exclusion.  "Fewer" remains in the
       // list, but its score is reduced below in the ranking callback.
-      if (feedMix?.penaltyOf(item) == null) return drop('Shorts or vertical');
+      if (feedMix != null && feedMix.penaltyOf(item) == null) return drop('Shorts or vertical');
       if (taste != null && taste.channelAffinity(item) < -0.3) return drop('often skipped channel');
       if (mode == ExploreMode.liveUpcoming && !item.isUpcoming) return drop('not upcoming');
       if (mode == ExploreMode.liveReplay && item.liveStatus != 'was_live') return drop('not a replay');

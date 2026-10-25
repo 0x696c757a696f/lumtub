@@ -318,15 +318,20 @@ class _Details extends StatelessWidget {
       Row(children: [
         ChannelAvatar(name: channel.isEmpty ? 'YouTube' : channel),
         const SizedBox(width: 12),
-        Flexible(child: Text(channel.isEmpty ? 'YouTube' : channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall)),
-        const SizedBox(width: 8),
+        // The name and its link take the free space, so the follow button
+        // and menu sit at the right edge.
+        Expanded(child: Row(children: [
+          Flexible(child: Text(channel.isEmpty ? 'YouTube' : channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall)),
+          const SizedBox(width: 8),
+          if (channelRef != null)
+            TextButton(onPressed: () => controller.openChannel(channelRef), child: Text(tr('查看频道')))
+          else if (details?.channelUrl != null)
+            TextButton(onPressed: () => openExternal(details!.channelUrl!), child: Text(tr('查看频道'))),
+        ])),
         if (channelRef != null) ...[
-          TextButton(onPressed: () => controller.openChannel(channelRef), child: Text(tr('查看频道'))),
-          const Spacer(),
           FollowButton(controller: controller, channel: channelRef),
           ChannelMenuButton(controller: controller, channel: channelRef),
-        ] else if (details?.channelUrl != null)
-          TextButton(onPressed: () => openExternal(details!.channelUrl!), child: Text(tr('查看频道'))),
+        ],
       ]),
       const SizedBox(height: 12),
       if (controller.loadingDetails && details == null)

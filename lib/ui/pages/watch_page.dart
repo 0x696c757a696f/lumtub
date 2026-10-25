@@ -351,7 +351,11 @@ class _Details extends StatelessWidget {
           SkeletonBox(width: 260, height: 12),
         ]))
       else if (meta.isNotEmpty || (details?.description.isNotEmpty ?? false))
-        _Description(meta: meta, description: details?.description ?? '', expanded: controller.preferences.expandDescription, controller: controller),
+        // As wide as the title and channel row, not as wide as its text.
+        SizedBox(
+          width: double.infinity,
+          child: _Description(meta: meta, description: details?.description ?? '', expanded: controller.preferences.expandDescription, controller: controller),
+        ),
     ]);
   }
 }

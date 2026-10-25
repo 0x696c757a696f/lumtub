@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -70,7 +71,7 @@ class CommunityPosts {
     _apiKey = RegExp(r'"INNERTUBE_API_KEY":"([^"]+)"').firstMatch(html)?.group(1);
     _clientVersion = RegExp(r'"INNERTUBE_CLIENT_VERSION":"([^"]+)"').firstMatch(html)?.group(1);
     _visitorData = RegExp(r'"VISITOR_DATA":"([^"]+)"').firstMatch(html)?.group(1);
-    final page = read(html);
+    final page = await _readInBackground(html);
     if (page == null) throw FormatException(tr('没有在频道页面里找到帖子数据'));
     return page;
   }
@@ -97,8 +98,11 @@ class CommunityPosts {
         )
         .timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    return read(utf8.decode(response.bodyBytes)) ?? const PostPage([], null);
+    return await _readInBackground(utf8.decode(response.bodyBytes)) ?? const PostPage([], null);
   }
+
+  // A channel page runs to a megabyte or two.
+  static Future<PostPage?> _readInBackground(String body) => Isolate.run(() => read(body));
 
   /// Posts and the continuation token of a browse response, or of the
   /// `ytInitialData` in the HTML page [body]; read by the native core. Null

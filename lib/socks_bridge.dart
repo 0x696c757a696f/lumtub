@@ -1,31 +1,71 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
+
+import 'native_core.dart';
 
 /// A local HTTP proxy that forwards through a SOCKS proxy. libmpv and
 /// dart:io can only use HTTP proxies, so a SOCKS setting reaches them as
 /// `http://127.0.0.1:port`. It accepts `CONNECT host:port` (https) and
 /// plain absolute-URI requests (http), listens on loopback only, and when
 /// the SOCKS proxy fails the request fails: nothing connects directly.
-class SocksBridge {
-  SocksBridge._(this._server, this._proxy);
-
+abstract interface class SocksBridge {
   /// Listens on a random loopback port and forwards through [proxyUrl]
-  /// (`socks5://[user:pass@]host:port`, also `socks5h`, `socks4`, `socks4a`).
-  static Future<SocksBridge> start(String proxyUrl) async {
-    final bridge = SocksBridge._(await ServerSocket.bind(InternetAddress.loopbackIPv4, 0), Uri.parse(proxyUrl));
+  /// (`socks5://[user:pass@]host:port`, also `socks5h`, `socks4`, `socks4a`):
+  /// lumtub_core's bridge, whose connections never pass through Dart, or
+  /// the Dart one when the core cannot start it. [native] false is the
+  /// Dart one alone.
+  static Future<SocksBridge> start(String proxyUrl, {bool native = true}) async {
+    if (NativeCore.instance case final core? when native) {
+      final handle = core.withText(proxyUrl, core.socksStart);
+      if (handle != nullptr) return _NativeBridge(core, handle);
+    }
+    final bridge = DartSocksBridge._(await ServerSocket.bind(InternetAddress.loopbackIPv4, 0), Uri.parse(proxyUrl));
     bridge._server.listen(bridge._handle);
     return bridge;
   }
+
+  int get port;
+  String get hostPort;
+
+  /// Stops listening and drops the connections still open.
+  Future<void> close();
+}
+
+class _NativeBridge implements SocksBridge {
+  _NativeBridge(this._core, this._handle) : port = _core.socksPort(_handle);
+
+  final NativeCore _core;
+  Pointer<Void> _handle;
+
+  @override
+  final int port;
+  @override
+  String get hostPort => '127.0.0.1:$port';
+
+  @override
+  Future<void> close() async {
+    if (_handle == nullptr) return;
+    _core.socksClose(_handle);
+    _handle = nullptr;
+  }
+}
+
+/// The bridge in Dart, used when lumtub_core cannot start one.
+class DartSocksBridge implements SocksBridge {
+  DartSocksBridge._(this._server, this._proxy);
 
   final ServerSocket _server;
   final Uri _proxy;
   final _open = <Socket>{};
 
+  @override
   int get port => _server.port;
+  @override
   String get hostPort => '127.0.0.1:$port';
 
-  /// Stops listening and drops the connections still open.
+  @override
   Future<void> close() async {
     await _server.close();
     for (final socket in _open.toList()) {

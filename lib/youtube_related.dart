@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -40,7 +41,7 @@ class YoutubeRelated {
           )
           .timeout(const Duration(seconds: 15));
       if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-      return readNext(utf8.decode(response.bodyBytes));
+      return _readInBackground(response.bodyBytes);
     }()
       ..ignore();
   }
@@ -64,6 +65,10 @@ class YoutubeRelated {
       return null;
     }
   }
+
+  // A `/next` response runs to a megabyte or two.
+  static Future<({List<VideoItem> related, ({String title, String description, int? likes})? text})> _readInBackground(List<int> bytes) =>
+      Isolate.run(() => readNext(utf8.decode(bytes)));
 
   /// The related videos and the localized text of a `/next` response
   /// [body], read by the native core; nothing without it.

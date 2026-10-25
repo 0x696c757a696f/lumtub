@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/network_proxy.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/socks_bridge.dart';
 
 /// A SOCKS5 server on loopback that sends every request to [target] and
@@ -101,12 +102,24 @@ Future<String> ask(SocksBridge bridge, String request, {String? thenSend}) async
 }
 
 void main() {
+  test('the native bridge is the one used when lumtub_core is there', () async {
+    final bridge = await SocksBridge.start('socks5://127.0.0.1:1');
+    expect(bridge, isNot(isA<DartSocksBridge>()));
+    await bridge.close();
+  }, skip: NativeCore.instance == null);
+  for (final native in [false, true]) {
+    group(native ? 'lumtub_core bridge' : 'Dart bridge', () => _tests(native));
+  }
+}
+
+void _tests(bool native) {
+  Future<SocksBridge> start(String url) => SocksBridge.start(url, native: native);
   const get = 'GET / HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n';
 
   test('CONNECT tunnels through SOCKS5, sending the name for socks5h', () async {
     final (target, seen) = await startTarget();
     final socks = await FakeSocks.start(target.port);
-    final bridge = await SocksBridge.start('socks5h://127.0.0.1:${socks.server.port}');
+    final bridge = await start('socks5h://127.0.0.1:${socks.server.port}');
     final answer = await ask(bridge, 'CONNECT example.test:443 HTTP/1.1\r\nHost: example.test:443\r\n\r\n', thenSend: get);
     expect(answer, startsWith('HTTP/1.1 200'));
     expect(answer, contains('hello'));
@@ -120,7 +133,7 @@ void main() {
   test('socks5 resolves names itself and sends the address', () async {
     final (target, _) = await startTarget();
     final socks = await FakeSocks.start(target.port);
-    final bridge = await SocksBridge.start('socks5://127.0.0.1:${socks.server.port}');
+    final bridge = await start('socks5://127.0.0.1:${socks.server.port}');
     final answer = await ask(bridge, 'CONNECT 127.0.0.1:80 HTTP/1.1\r\n\r\n', thenSend: get);
     expect(answer, startsWith('HTTP/1.1 200'));
     expect(socks.asked, ['1:127.0.0.1']);
@@ -132,7 +145,7 @@ void main() {
   test('a plain HTTP request is forwarded as an origin-form request', () async {
     final (target, seen) = await startTarget();
     final socks = await FakeSocks.start(target.port);
-    final bridge = await SocksBridge.start('socks5h://127.0.0.1:${socks.server.port}');
+    final bridge = await start('socks5h://127.0.0.1:${socks.server.port}');
     final client = HttpClient()..findProxy = (_) => 'PROXY ${bridge.hostPort}';
     final response = await client.getUrl(Uri.parse('http://example.test:8080/a/b?q=1')).then((r) => r.close());
     expect(await response.transform(utf8.decoder).join(), 'hello');
@@ -147,11 +160,11 @@ void main() {
   test('username and password go to the SOCKS server, and a wrong one fails', () async {
     final (target, seen) = await startTarget();
     final socks = await FakeSocks.start(target.port, user: 'me', pass: 'p@ss');
-    final good = await SocksBridge.start('socks5h://me:p%40ss@127.0.0.1:${socks.server.port}');
+    final good = await start('socks5h://me:p%40ss@127.0.0.1:${socks.server.port}');
     expect(await ask(good, 'CONNECT a.test:80 HTTP/1.1\r\n\r\n', thenSend: get), contains('hello'));
-    final bad = await SocksBridge.start('socks5h://me:nope@127.0.0.1:${socks.server.port}');
+    final bad = await start('socks5h://me:nope@127.0.0.1:${socks.server.port}');
     expect(await ask(bad, 'CONNECT a.test:80 HTTP/1.1\r\n\r\n'), startsWith('HTTP/1.1 502'));
-    final anonymous = await SocksBridge.start('socks5h://127.0.0.1:${socks.server.port}');
+    final anonymous = await start('socks5h://127.0.0.1:${socks.server.port}');
     expect(await ask(anonymous, 'CONNECT a.test:80 HTTP/1.1\r\n\r\n'), startsWith('HTTP/1.1 502'));
     expect(seen, ['/']);
     for (final bridge in [good, bad, anonymous]) {
@@ -165,14 +178,14 @@ void main() {
     final (target, seen) = await startTarget();
     final connect = 'CONNECT 127.0.0.1:${target.port} HTTP/1.1\r\n\r\n';
     final refusing = await FakeSocks.start(target.port, replyCode: 5);
-    var bridge = await SocksBridge.start('socks5://127.0.0.1:${refusing.server.port}');
+    var bridge = await start('socks5://127.0.0.1:${refusing.server.port}');
     expect(await ask(bridge, connect), startsWith('HTTP/1.1 502'));
     await bridge.close();
     await refusing.close();
     final dead = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
     final deadPort = dead.port;
     await dead.close();
-    bridge = await SocksBridge.start('socks5://127.0.0.1:$deadPort');
+    bridge = await start('socks5://127.0.0.1:$deadPort');
     expect(await ask(bridge, connect), startsWith('HTTP/1.1 502'));
     expect(await ask(bridge, 'GET http://127.0.0.1:${target.port}/ HTTP/1.1\r\n\r\n'), startsWith('HTTP/1.1 502'));
     expect(await ask(bridge, 'nonsense\r\n\r\n'), startsWith('HTTP/1.1 400'));
@@ -182,7 +195,7 @@ void main() {
   });
 
   test('the bridge listens on loopback only and stops on close', () async {
-    final bridge = await SocksBridge.start('socks5://127.0.0.1:1');
+    final bridge = await start('socks5://127.0.0.1:1');
     expect(bridge.hostPort, startsWith('127.0.0.1:'));
     await bridge.close();
     await expectLater(Socket.connect('127.0.0.1', bridge.port), throwsA(isA<SocketException>()));

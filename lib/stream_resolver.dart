@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'app_log.dart';
+import 'background_json.dart';
 import 'format_policy.dart';
 import 'models.dart';
 import 'player_settings.dart';
@@ -268,7 +269,7 @@ class StreamResolver {
     // missing streams, so they go to the log.
     final warnings = const LineSplitter().convert(err).where((line) => line.startsWith('WARNING')).take(5).toList();
     if (warnings.isNotEmpty) logInfo('yt-dlp warnings for $videoId:\n${warnings.join('\n')}');
-    final data = jsonDecode(const LineSplitter().convert(output).last);
+    final data = await decodeJsonInBackground(const LineSplitter().convert(output).last);
     if (data is! Map<String, dynamic>) throw const FormatException('Unexpected yt-dlp output');
     await infoDirectory.create(recursive: true);
     final file = _infoFile(videoId);

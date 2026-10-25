@@ -238,6 +238,10 @@ class AppController extends ChangeNotifier {
   VideoDetails? details;
   bool loadingDetails = false;
   List<LiveChatMessage> replayChat = const [];
+
+  /// Fires when a live chat gains messages, which happens several times a
+  /// second: only the chat panel listens, not the whole app.
+  final chatMessages = ValueNotifier(0);
   bool loadingReplayChat = false;
   String? replayChatError;
   StreamSubscription<LiveChatMessage>? _currentChat;
@@ -296,7 +300,23 @@ class AppController extends ChangeNotifier {
   /// The Invidious instances, for 设置 › Invidious 实例.
   InvidiousStreams get invidious => _invidious;
   /// Serves YouTube streams to libmpv in pieces YouTube does not throttle.
-  ChunkedRelay? _relay;
+  StreamRelay? _relay;
+
+  /// lumtub_core's relay, or the Dart one when it cannot start; null when
+  /// neither can, and streams connect directly.
+  Future<StreamRelay?> _startRelay() async {
+    for (final relay in [if (NativeCore.instance case final core?) NativeRelay(core), ChunkedRelay()]) {
+      try {
+        await relay.start();
+        if (relay is ChunkedRelay) logInfo('Using the Dart chunked relay');
+        return relay;
+      } catch (e) {
+        logError('Could not start the local chunked relay', e);
+      }
+    }
+    logInfo('Streams connect directly');
+    return null;
+  }
 
   AppearanceSettings appearance;
   final AppearanceSettingsStore? _appearanceStore;
@@ -466,13 +486,7 @@ class AppController extends ChangeNotifier {
       final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
       await _applyProxy(player);
-      try {
-        _relay = ChunkedRelay();
-        await _relay!.start();
-      } catch (e) {
-        _relay = null;
-        logError('Could not start the local chunked relay; streams connect directly', e);
-      }
+      _relay = await _startRelay();
       _piped.catalogFile = File('${directories.config.path}${Platform.pathSeparator}piped_servers.json');
       // Measures the Piped servers while the app starts, not on the first click.
       _invidious.catalogFile = File('${directories.config.path}${Platform.pathSeparator}invidious_servers.json');
@@ -645,7 +659,7 @@ class AppController extends ChangeNotifier {
     // Automatic picks follow the playback order, so a download is in a codec
     // this PC decodes well; the quality strategy takes the best picture.
     final preference = settings.strategy == PlaybackStrategy.quality ? const <VideoCodec>[] : FormatPolicy.codecOrder(settings);
-    return DownloadFormats.parse(info, preference: preference);
+    return DownloadFormats.parseInBackground(info, preference: preference);
   }
 
   /// The proxy everything currently goes through.
@@ -1195,10 +1209,12 @@ class AppController extends ChangeNotifier {
     if (serial != _playSerial || _currentChatPending.isEmpty) return;
     final next = [...replayChat, ..._currentChatPending];
     _currentChatPending.clear();
-    _update(() {
-      replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
-      loadingReplayChat = false;
-    });
+    replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
+    if (loadingReplayChat) {
+      _update(() => loadingReplayChat = false);
+    } else if (!_disposed) {
+      chatMessages.value++;
+    }
   }
 
   void _stopCurrentChat() {
@@ -1246,7 +1262,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> _loadSegments(VideoItem item, int serial) async {
     try {
-      final local = downloads?.localVideo(item.id);
+      final local = await downloads?.localVideo(item.id);
       final saved = [for (final s in local?.segments ?? const <SkipSegment>[]) if (settings.sponsorCategories.contains(s.category)) s];
       final segments = saved.isNotEmpty ? saved : await _sponsorBlock.segments(item.id, settings.sponsorCategories);
       if (serial == _playSerial) _update(() => _segments = segments);
@@ -1288,7 +1304,7 @@ class AppController extends ChangeNotifier {
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
-      final local = allowLocal && resolved && piped && !item.isLive ? downloads?.localVideo(item.id) : null;
+      final local = allowLocal && resolved && piped && !item.isLive ? await downloads?.localVideo(item.id) : null;
       _openedLocal = null;
       // A download in a codec the playback rules disable (AV1 decoded in
       // software, say) streams instead, in a codec the rules allow.
@@ -1336,7 +1352,7 @@ class AppController extends ChangeNotifier {
       final relay = (proxy.url == null || proxy.isHttp) && _unrelayed != item.id ? _relay : null;
       final agent = video?.userAgent;
       final direct = video != null && video.format == format && !subtitles
-          ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent))
+          ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent, proxy: proxy.url))
           : null;
       _relayed = direct != null && relay != null ? item.id : null;
       final platform = player.platform;
@@ -1968,7 +1984,7 @@ class AppController extends ChangeNotifier {
   Future<void> _loadDetails(VideoItem item, int serial) async {
     try {
       VideoDetails loaded;
-      final local = downloads?.localVideo(item.id);
+      final local = await downloads?.localVideo(item.id);
       if (local != null && local.info['title'] != null) {
         // Saved with the download, so the page works offline.
         loaded = VideoDetails.fromJson(local.info);
@@ -2921,6 +2937,7 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _stopCurrentChat();
+    chatMessages.dispose();
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _sleepTimer?.cancel();

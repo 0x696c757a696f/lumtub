@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:http/http.dart' as http;
 
@@ -39,8 +40,13 @@ class YoutubeListing {
   /// Whether [tab] can be read through [channelTab].
   static bool hasTab(ChannelTab tab) => tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live;
 
+  // A results page runs to a megabyte.
+  static Future<Object?> _readInBackground(List<int> bytes) => Isolate.run(() {
+        final core = NativeCore.instance!;
+        return jsonDecode(core.take(core.withText(utf8.decode(bytes), core.youtubeListing)) ?? 'null');
+      });
+
   Stream<String> _pages(String endpoint, Map<String, Object> first, {String? region}) async* {
-    final core = NativeCore.instance!;
     final seen = <String>{};
     Map<String, Object> body = first;
     for (var page = 0; page < 50; page++) {
@@ -64,7 +70,7 @@ class YoutubeListing {
           )
           .timeout(const Duration(seconds: 20));
       if (response.statusCode != 200) throw StateError('YouTube $endpoint returned HTTP ${response.statusCode}');
-      final read = jsonDecode(core.take(core.withText(utf8.decode(response.bodyBytes), core.youtubeListing)) ?? 'null');
+      final read = await _readInBackground(response.bodyBytes);
       if (read is! Map<String, dynamic>) throw const FormatException('Unexpected YouTube response');
       var added = 0;
       for (final entry in (read['entries'] as List).cast<Map<String, dynamic>>()) {

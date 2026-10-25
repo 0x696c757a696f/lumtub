@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -128,8 +129,10 @@ class YoutubeComments {
         )
         .timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    return read(utf8.decode(response.bodyBytes));
+    return _readInBackground(response.bodyBytes);
   }
+
+  static Future<CommentPage> _readInBackground(List<int> bytes) => Isolate.run(() => read(utf8.decode(bytes)));
 
   /// The token of a video's comment section, built as yt-dlp's
   /// `_generate_comment_continuation` does, so the watch page need not be

@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 
 import '../app_log.dart';
+import '../background_json.dart';
 import '../l10n/l10n.dart';
 import '../models.dart';
 import '../process_priority.dart';
@@ -476,7 +478,7 @@ class DownloadManager extends ChangeNotifier {
     final sidecar = LocalVideo.sidecarOf(media);
     var full = <String, dynamic>{};
     if (sidecar.existsSync()) {
-      final data = jsonDecode(await sidecar.readAsString());
+      final data = await decodeJsonInBackground(await sidecar.readAsString());
       if (data is Map<String, dynamic>) full = data;
     }
     List<SkipSegment> segments = const [];
@@ -530,12 +532,14 @@ class DownloadManager extends ChangeNotifier {
   // Playback.
 
   /// The downloaded [id] when its file is still there.
-  LocalVideo? localVideo(String id) {
+  Future<LocalVideo?> localVideo(String id) async {
     final task = taskFor(id);
     final path = task?.filePath;
     if (task == null || task.status != DownloadStatus.done || path == null) return null;
     final media = File(path);
-    return media.existsSync() ? LocalVideo.read(media) : null;
+    if (!await media.exists()) return null;
+    // The sidecar and the folder listing are read away from the UI isolate.
+    return Isolate.run(() => LocalVideo.read(media));
   }
 
   @override

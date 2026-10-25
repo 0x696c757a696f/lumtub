@@ -98,12 +98,16 @@ class VideoItem {
         if (isShortListing) 'is_short': true,
       };
 
+  // Compiled once: every listing entry and saved item comes through here.
+  static final _videoId = RegExp(r'^[\w-]{11}$');
+  static final _watchUrlId = RegExp(r'[?&]v=([\w-]{11})');
+
   factory VideoItem.fromJson(Map<String, dynamic> map) {
     final raw = map['id']?.toString() ?? '';
     // yt-dlp flat playlist results normally expose an 11-character YouTube ID.
-    final id = RegExp(r'^[\w-]{11}$').hasMatch(raw)
+    final id = _videoId.hasMatch(raw)
         ? raw
-        : (RegExp(r'[?&]v=([\w-]{11})').firstMatch(map['url']?.toString() ?? '')?.group(1) ?? '');
+        : (_watchUrlId.firstMatch(map['url']?.toString() ?? '')?.group(1) ?? '');
     if (id.isEmpty) throw const FormatException('Missing YouTube video ID');
     final name = map['channel'] ?? map['uploader'] ?? map['uploader_id'] ?? '';
     final value = map['duration'];
@@ -169,7 +173,8 @@ class ChannelRef {
 
   String get url => 'https://www.youtube.com/channel/$id';
 
-  static bool isValidId(String id) => RegExp(r'^UC[\w-]{22}$').hasMatch(id);
+  static bool isValidId(String id) => _id.hasMatch(id);
+  static final _id = RegExp(r'^UC[\w-]{22}$');
 
   /// [raw] as an https picture address, or null; the protocol-relative and
   /// plain http forms some responses use are upgraded.
@@ -240,7 +245,8 @@ class PlaylistResult {
 
   String get url => 'https://www.youtube.com/playlist?list=$id';
 
-  static bool isValidId(String id) => RegExp(r'^[\w-]{10,64}$').hasMatch(id) && !ChannelRef.isValidId(id);
+  static bool isValidId(String id) => _id.hasMatch(id) && !ChannelRef.isValidId(id);
+  static final _id = RegExp(r'^[\w-]{10,64}$');
 
   /// Reads a flat `--dump-json` playlist entry, or returns null.
   static PlaylistResult? tryParse(Map<String, dynamic> map) {

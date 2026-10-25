@@ -210,8 +210,11 @@ class AppPreferences {
 
   /// Whether a comment by [author] (a name or @handle) with channel [id] is
   /// by a channel the user blocks. Its text is never looked at.
-  bool blocksCommenter(String author, String? id) =>
-      isBlocked(id) || isBlockedName(author) || blocksChannel(author, id: id, handle: author.startsWith('@') ? author : null);
+  bool blocksCommenter(String author, String? id) {
+    final memo = _blockMemo[this] ??= <String, bool>{};
+    if (memo.length > 20000) memo.clear();
+    return memo['comment\n$id\n$author'] ??= isBlocked(id) || isBlockedName(author) || blocksChannel(author, id: id, handle: author.startsWith('@') ? author : null);
+  }
 
   /// Whether [item] passes the privacy and content filters. [watched] says
   /// whether it was watched to the end.
@@ -221,11 +224,20 @@ class AppPreferences {
     final title = item.title.toLowerCase();
     if (blockedKeywords.any((word) => title.contains(word.toLowerCase()))) return false;
     final duration = item.duration;
-    if (hideShorts && (item.url.contains('/shorts/') || (duration != null && duration > 0 && duration <= 60))) return false;
+    if (hideShorts && _isShort(item)) return false;
     if (minDurationMinutes > 0 && duration != null && duration > 0 && duration < minDurationMinutes * 60) return false;
     if (hideWatched && watched) return false;
     return true;
   }
+
+  /// The same test as 为你推荐's Shorts setting, remembered per video: lists
+  /// are filtered again on every rebuild.
+  static bool _isShort(VideoItem item) {
+    if (_shorts.length > 20000) _shorts.clear();
+    return _shorts[item.id] ??= item.isShortListing || item.url.contains('/shorts/') || ((item.duration ?? 0) > 0 && item.duration! <= 60) || isShort(item);
+  }
+
+  static final _shorts = <String, bool>{};
 
   AppPreferences copyWith({
     bool? recordHistory,

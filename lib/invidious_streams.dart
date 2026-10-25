@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'background_json.dart';
 import 'l10n/l10n.dart';
 import 'piped_streams.dart';
 import 'relay_servers.dart';
@@ -138,7 +139,7 @@ class InvidiousStreams extends RelayServers {
     for (final candidate in order) {
       try {
         final response = await client.get(Uri.parse('$candidate/api/v1/videos/$videoId?local=true')).timeout(const Duration(seconds: 10));
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final data = await decodeUtf8JsonInBackground(response.bodyBytes);
         if (response.statusCode != 200 || data is! Map<String, dynamic>) {
           throw StateError(data is Map && data['error'] != null ? '${data['error']}' : 'HTTP ${response.statusCode}');
         }

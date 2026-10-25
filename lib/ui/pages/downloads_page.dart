@@ -128,14 +128,23 @@ class _DownloadTile extends StatelessWidget {
       case DownloadStatus.paused:
         return tr('已暂停');
       case DownloadStatus.done:
-        final file = task.filePath == null ? null : File(task.filePath!);
-        final size = file != null && file.existsSync() ? ' · ${formatBytes(file.lengthSync())}' : '';
+        final bytes = task.filePath == null ? null : _sizes[task.filePath!] ??= _sizeOf(task.filePath!);
+        final size = bytes == null ? '' : ' · ${formatBytes(bytes)}';
         return '${tr('已完成')} · ${task.qualityLabel}$size';
       case DownloadStatus.failed:
         return tr('下载失败：{0}', [task.error ?? '']);
       case DownloadStatus.cancelled:
         return tr('已取消');
     }
+  }
+
+  // The list rebuilds twice a second while a download runs; a finished
+  // file keeps its size.
+  static final _sizes = <String, int?>{};
+
+  static int? _sizeOf(String path) {
+    final file = File(path);
+    return file.existsSync() ? file.lengthSync() : null;
   }
 
   @override

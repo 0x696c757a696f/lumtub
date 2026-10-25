@@ -1,9 +1,64 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
 import 'app_log.dart';
 import 'l10n/l10n.dart';
+import 'native_core.dart';
+
+/// Serves YouTube streams to libmpv from 127.0.0.1 in pieces YouTube does
+/// not throttle.
+abstract interface class StreamRelay {
+  Future<void> start();
+
+  /// A loopback address that serves [url], or null when the relay is not
+  /// running or the stream's size is unknown (it is needed for seeking).
+  /// [proxy] is the HTTP proxy to fetch through, null for none.
+  String? register(String url, {int? size, String? userAgent, String? proxy});
+
+  Future<void> close();
+}
+
+/// The relay in lumtub_core: the stream's bytes are copied on native
+/// threads and never pass through Dart.
+class NativeRelay implements StreamRelay {
+  NativeRelay(this._core, {this.chunkSize = 9 << 20});
+
+  final NativeCore _core;
+  final int chunkSize;
+  Timer? _logTimer;
+
+  @override
+  Future<void> start() async {
+    if (_core.relayStart() == 0) throw const SocketException('lumtub_core could not listen on 127.0.0.1');
+    _logTimer ??= Timer.periodic(const Duration(seconds: 3), (_) => _drainLog());
+  }
+
+  void _drainLog() {
+    final lines = _core.take(_core.relayLog());
+    if (lines == null) return;
+    for (final line in (jsonDecode(lines) as List).cast<String>()) {
+      logInfo(line);
+    }
+  }
+
+  @override
+  String? register(String url, {int? size, String? userAgent, String? proxy}) {
+    final length = size ?? int.tryParse(Uri.tryParse(url)?.queryParameters['clen'] ?? '');
+    if (length == null || length <= 0) return null;
+    final json = jsonEncode({'url': url, 'size': length, 'userAgent': userAgent, 'proxy': proxy, 'chunk': chunkSize});
+    return _core.take(_core.withText(json, _core.relayRegister));
+  }
+
+  /// The native relay runs until Lumtub exits.
+  @override
+  Future<void> close() async {
+    _logTimer?.cancel();
+    _logTimer = null;
+    _drainLog();
+  }
+}
 
 /// A loopback HTTP server libmpv reads YouTube streams through. YouTube
 /// throttles a request for more than about 10 MB of a stream to a crawl,
@@ -11,7 +66,8 @@ import 'l10n/l10n.dart';
 /// answers each libmpv request by fetching the stream in smaller pieces
 /// with YouTube's own `range` parameter, as yt-dlp and the YouTube website
 /// do. Only addresses the app registered are served, only on 127.0.0.1.
-class ChunkedRelay {
+/// Used when lumtub_core's [NativeRelay] cannot start.
+class ChunkedRelay implements StreamRelay {
   ChunkedRelay({this.chunkSize = 9 << 20, HttpClient? client}) : _client = client ?? HttpClient();
 
   final int chunkSize;
@@ -22,15 +78,16 @@ class ChunkedRelay {
 
   static const _keep = 16;
 
+  @override
   Future<void> start() async {
     if (_server != null) return;
     final server = _server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     server.listen((request) => unawaited(_serve(request)));
   }
 
-  /// A loopback address that serves [url], or null when the relay is not
-  /// running or the stream's size is unknown (it is needed for seeking).
-  String? register(String url, {int? size, String? userAgent}) {
+  /// Fetches through the proxy dart:io uses, so [proxy] is not needed.
+  @override
+  String? register(String url, {int? size, String? userAgent, String? proxy}) {
     final server = _server;
     final uri = Uri.tryParse(url);
     if (server == null || uri == null) return null;
@@ -143,6 +200,7 @@ class ChunkedRelay {
     }
   }
 
+  @override
   Future<void> close() async {
     await _server?.close(force: true);
     _server = null;

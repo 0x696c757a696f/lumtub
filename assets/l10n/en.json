@@ -2091,5 +2091,9 @@
   "点击下载，关闭 Lumtub 时自动安装": "Click to download; it installs when Lumtub closes",
   "已是最新版本": "Lumtub is up to date",
   "自动更新 Lumtub": "Update Lumtub automatically",
-  "在后台下载新版本，关闭 Lumtub 时安装，不打断使用": "Downloads new versions in the background and installs them when Lumtub closes"
+  "在后台下载新版本，关闭 Lumtub 时安装，不打断使用": "Downloads new versions in the background and installs them when Lumtub closes",
+  "隐藏所有 Shorts 短视频": "Hide all Shorts",
+  "搜索、频道、首页和探索都不显示 Shorts": "No Shorts in search, channels, Home or Explore",
+  "短视频 隐藏": "shorts hide",
+  "已隐藏所有 Shorts": "All Shorts are hidden"
 }

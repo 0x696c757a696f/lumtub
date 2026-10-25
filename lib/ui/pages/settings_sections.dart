@@ -168,10 +168,20 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.homeShowRecommended,
               onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecommended: v)),
             )),
+        SettingEntry(tr('隐藏 Shorts 短视频'), (context) => SwitchItem(
+              title: tr('隐藏所有 Shorts 短视频'),
+              subtitle: tr('搜索、频道、首页和探索都不显示 Shorts'),
+              leading: _icon(Icons.smartphone_rounded),
+              value: prefs.hideShorts,
+              onChanged: (v) => savePrefs(prefs.copyWith(hideShorts: v)),
+            ), subtitle: tr('短视频 隐藏')),
         SettingEntry(tr('推荐中的 Shorts 短视频'), (context) => NormalItem(
               title: tr('推荐中的 Shorts 短视频'),
-              subtitle: tr('当前：{0}；Shorts 按 YouTube Shorts 标记或短时长识别，和普通竖屏视频独立；只影响首页和探索的为你推荐', [labelOf(_feedLevels, prefs.feedShorts)]),
+              subtitle: prefs.hideShorts
+                  ? tr('已隐藏所有 Shorts')
+                  : tr('当前：{0}；Shorts 按 YouTube Shorts 标记或短时长识别，和普通竖屏视频独立；只影响首页和探索的为你推荐', [labelOf(_feedLevels, prefs.feedShorts)]),
               leading: _icon(Icons.smartphone_rounded),
+              enabled: !prefs.hideShorts,
               onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的 Shorts 短视频'), value: prefs.feedShorts, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedShorts: v))),
             ), subtitle: tr('短视频 减少 不推荐')),
         SettingEntry(tr('推荐中的竖屏视频'), (context) => NormalItem(
@@ -229,13 +239,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 if (result != null) savePrefs(controller.preferences.copyWith(blockedKeywords: result));
               },
             ), subtitle: tr('屏蔽 关键字')),
-        SettingEntry(tr('隐藏 Shorts 短视频'), (context) => SwitchItem(
-              title: tr('隐藏 Shorts 短视频'),
-              subtitle: tr('隐藏 1 分钟以内的视频'),
-              leading: _icon(Icons.smartphone_rounded),
-              value: prefs.hideShorts,
-              onChanged: (v) => savePrefs(prefs.copyWith(hideShorts: v)),
-            )),
         SettingEntry(tr('最短视频时长'), (context) => NormalItem(
               title: tr('最短视频时长'),
               subtitle: tr('当前：{0}，更短的视频不显示', [labelOf(_durations, prefs.minDurationMinutes)]),

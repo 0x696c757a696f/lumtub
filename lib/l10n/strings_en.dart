@@ -65,7 +65,7 @@ const stringsEn = <String, String>{
   'GPU 当前解码方式 VP9 AV1 视频扩展': 'GPU current decoding mode VP9 AV1 video extensions',
   'GitHub 源代码': 'GitHub source code',
   '支持开发': 'Support development',
-  '加密货币捐助：BTC、ETH、USDC、USDT': 'Donate in crypto: BTC, ETH, USDC, USDT',
+  'GitHub Sponsors，或用 BTC、ETH、USDC、USDT 捐助': 'GitHub Sponsors, or donate BTC, ETH, USDC or USDT',
   '点右侧按钮复制地址。请确认币种和网络一致，转错网络可能无法找回。': 'Use the button on the right to copy an address. Make sure the coin and network match; funds sent on the wrong network may be lost.',
   '地址已复制': 'Address copied',
   '复制': 'Copy',

@@ -3,6 +3,11 @@
 
 /// Traditional Chinese text for each simplified-Chinese source string.
 const stringsZhHant = <String, String>{
+  '支持开发': '支援開發',
+  'GitHub Sponsors，或用 BTC、ETH、USDC、USDT 捐助': 'GitHub Sponsors，或用 BTC、ETH、USDC、USDT 捐助',
+  '点右侧按钮复制地址。请确认币种和网络一致，转错网络可能无法找回。': '點右側按鈕複製地址。請確認幣種和網路一致，轉錯網路可能無法找回。',
+  '地址已复制': '地址已複製',
+  '复制': '複製',
   ' 像素': ' 畫素',
   '# 每行一个，和 mpv.conf 相同\nd3d11va-zero-copy=yes\nhwdec-codecs = h264,vc1,hevc,vp8,vp9,av1,prores,ffv1\nvd-lavc-dr = auto': '# 每行一個，和 mpv.conf 相同\nd3d11va-zero-copy=yes\nhwdec-codecs = h264,vc1,hevc,vp8,vp9,av1,prores,ffv1\nvd-lavc-dr = auto',
   '0.1 到 5 之间': '0.1 到 5 之間',

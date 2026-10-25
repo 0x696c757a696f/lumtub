@@ -878,7 +878,7 @@ List<SettingEntry> aboutEntries(AppController controller) => [
           ), subtitle: 'issue bug'),
       SettingEntry(tr('支持开发'), (context) => NormalItem(
             title: tr('支持开发'),
-            subtitle: tr('加密货币捐助：BTC、ETH、USDC、USDT'),
+            subtitle: tr('GitHub Sponsors，或用 BTC、ETH、USDC、USDT 捐助'),
             leading: const Icon(Icons.favorite_outline_rounded),
             onTap: () => _showDonations(context),
           ), subtitle: '捐助 赞助 donate sponsor BTC ETH USDC USDT'),
@@ -911,6 +911,14 @@ Future<void> _showDonations(BuildContext context) => showDialog<void>(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(tr('点右侧按钮复制地址。请确认币种和网络一致，转错网络可能无法找回。'), style: TextStyle(color: context.colors.outline)),
             const SizedBox(height: 8),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.favorite_rounded),
+              title: const Text('GitHub Sponsors'),
+              subtitle: const Text('github.com/sponsors/0x696c757a696f'),
+              trailing: const Icon(Icons.open_in_new_rounded),
+              onTap: () => openExternal('https://github.com/sponsors/0x696c757a696f'),
+            ),
             for (final (network, assets, address) in _donationAddresses)
               ListTile(
                 contentPadding: EdgeInsets.zero,

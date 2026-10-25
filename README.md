@@ -92,6 +92,9 @@
 
 Lumtub is free and has no ads. If it is useful to you, you can support its development:
 
+- [GitHub Sponsors](https://github.com/sponsors/0x696c757a696f)
+- Crypto:
+
 | Network | Coins | Address |
 |---|---|---|
 | Ethereum, Arbitrum One and other EVM networks | ETH, USDC, USDT | `0x619FeeF5986b9ed8E75D7CFD67AdB575355b9F80` |

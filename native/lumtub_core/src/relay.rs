@@ -82,7 +82,15 @@ impl Web {
         let agent: ureq::Agent = ureq::Agent::config_builder()
             .http_status_as_error(false)
             .proxy(proxy_config)
-            .tls_config(ureq::tls::TlsConfig::builder().provider(ureq::tls::TlsProvider::NativeTls).build())
+            // The system's certificate store, as libmpv and the rest of the app
+            // use: a proxy or security tool that inspects HTTPS installs its own
+            // root there, and a fixed list of roots would reject every stream.
+            .tls_config(
+                ureq::tls::TlsConfig::builder()
+                    .provider(ureq::tls::TlsProvider::NativeTls)
+                    .root_certs(ureq::tls::RootCerts::PlatformVerifier)
+                    .build(),
+            )
             .timeout_connect(Some(Duration::from_secs(15)))
             .timeout_recv_response(Some(Duration::from_secs(20)))
             .build()
@@ -445,6 +453,20 @@ pub extern "C" fn lumtub_relay_log() -> *mut c_char {
 mod tests {
     use super::*;
     use std::io::Cursor;
+
+    /// Fetches over real HTTPS through LUMTUB_TEST_PROXY, which may inspect
+    /// TLS with a root from the system store. Run with --ignored.
+    #[test]
+    #[ignore]
+    fn fetches_https_with_the_system_roots() {
+        let proxy = std::env::var("LUMTUB_TEST_PROXY").ok();
+        let target = Target { url: String::new(), size: 0, user_agent: None, mime: None, proxy, chunk: chunk() };
+        let (status, mut body) = Web::default().get(&target, "https://static.crates.io/crates/ureq/3.5.0/download").expect("fetch");
+        assert_eq!(status, 200);
+        let mut bytes = Vec::new();
+        body.read_to_end(&mut bytes).unwrap();
+        assert!(bytes.len() > 1000);
+    }
 
     /// Serves [data] like googlevideo, cutting each reply after [cut] bytes.
     struct Fake {

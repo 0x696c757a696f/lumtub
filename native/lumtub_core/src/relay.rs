@@ -180,7 +180,7 @@ fn query(url: &str, name: &str) -> Option<String> {
     })
 }
 
-fn decode(text: &str) -> String {
+pub(crate) fn decode(text: &str) -> String {
     let bytes = text.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
     let mut i = 0;

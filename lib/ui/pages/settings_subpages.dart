@@ -29,7 +29,17 @@ import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
 
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
-const _usdcArbitrum = '0x619FeeF5986b9ed8E75D7CFD67AdB575355b9F80';
+
+/// (network, assets, address) for 关于 › 支持开发; the README lists the same.
+const _donationAddresses = [
+  ('Ethereum · Arbitrum One · EVM', 'ETH USDC USDT', '0x619FeeF5986b9ed8E75D7CFD67AdB575355b9F80'),
+  ('Bitcoin Taproot', 'BTC', 'bc1p7jf7pzep76cld4pd6xmtfjckpn6qamdqc2rhjus64re2cvuc72sqdwszqc'),
+  ('Bitcoin Native SegWit', 'BTC', 'bc1q4rp3ag5lmnyy8eqwjm9s4xx62uulfr6n43ycvc'),
+  ('Bitcoin Nested SegWit', 'BTC', '3Lu1yzQYfNZLpvh2dt6T6NuRbtwQkJHmT6'),
+  ('Bitcoin Legacy', 'BTC', '123mpbi91xQitVkh9oosY4VczFqJB9kjDQ'),
+  ('Tron (TRC-20)', 'USDT', 'TBHXcP2ReM5sqpRDTyrL1UWtcSmYeyrmnB'),
+  ('Solana', 'USDT', '4s6uaauKCgwSNVzb5Lq1kxUe9dpm8V64D6FPw7hTwrQ6'),
+];
 
 /// Pushes a sub-page that rebuilds whenever [controller] changes.
 Future<void> _push(BuildContext context, AppController controller, String title, List<Widget> Function(BuildContext context) children, {List<Widget>? actions}) =>
@@ -868,10 +878,10 @@ List<SettingEntry> aboutEntries(AppController controller) => [
           ), subtitle: 'issue bug'),
       SettingEntry(tr('支持开发'), (context) => NormalItem(
             title: tr('支持开发'),
-            subtitle: tr('USDC（Arbitrum One）：{0}\n点击复制地址，请只在 Arbitrum One 网络上转账', [_usdcArbitrum]),
+            subtitle: tr('加密货币捐助：BTC、ETH、USDC、USDT'),
             leading: const Icon(Icons.favorite_outline_rounded),
-            onTap: () => copyText(context, _usdcArbitrum, tr('USDC 地址已复制')),
-          ), subtitle: '捐助 赞助 donate sponsor USDC Arbitrum'),
+            onTap: () => _showDonations(context),
+          ), subtitle: '捐助 赞助 donate sponsor BTC ETH USDC USDT'),
       SettingEntry(tr('错误日志'), (context) => NormalItem(
             title: tr('错误日志'),
             subtitle: tr('只保存在本机，不记录登录凭据和视频流地址'),
@@ -891,6 +901,32 @@ List<SettingEntry> aboutEntries(AppController controller) => [
             onTap: () => showLicensePage(context: context, applicationName: 'Lumtub', applicationVersion: appVersion),
           ), subtitle: 'PiliNara mpv media_kit yt-dlp license'),
     ];
+
+Future<void> _showDonations(BuildContext context) => showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('支持开发')),
+        content: SizedBox(
+          width: 560,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(tr('点右侧按钮复制地址。请确认币种和网络一致，转错网络可能无法找回。'), style: TextStyle(color: context.colors.outline)),
+            const SizedBox(height: 8),
+            for (final (network, assets, address) in _donationAddresses)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text('$network  ·  $assets'),
+                subtitle: SelectableText(address, style: const TextStyle(fontFamily: 'Consolas', fontSize: 13)),
+                trailing: IconButton(
+                  icon: const Icon(Icons.content_copy_rounded),
+                  tooltip: tr('复制'),
+                  onPressed: () => copyText(context, address, tr('地址已复制')),
+                ),
+              ),
+          ]),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('关闭')))],
+      ),
+    );
 
 // 关于 › 错误日志 (PiliNara's logs.dart)
 

@@ -92,11 +92,17 @@
 
 Lumtub is free and has no ads. If it is useful to you, you can support its development:
 
-| Channel | Address |
-|---|---|
-| USDC on **Arbitrum One** | `0x619FeeF5986b9ed8E75D7CFD67AdB575355b9F80` |
+| Network | Coins | Address |
+|---|---|---|
+| Ethereum, Arbitrum One and other EVM networks | ETH, USDC, USDT | `0x619FeeF5986b9ed8E75D7CFD67AdB575355b9F80` |
+| Bitcoin (Taproot) | BTC | `bc1p7jf7pzep76cld4pd6xmtfjckpn6qamdqc2rhjus64re2cvuc72sqdwszqc` |
+| Bitcoin (Native SegWit) | BTC | `bc1q4rp3ag5lmnyy8eqwjm9s4xx62uulfr6n43ycvc` |
+| Bitcoin (Nested SegWit) | BTC | `3Lu1yzQYfNZLpvh2dt6T6NuRbtwQkJHmT6` |
+| Bitcoin (Legacy) | BTC | `123mpbi91xQitVkh9oosY4VczFqJB9kjDQ` |
+| Tron (TRC-20) | USDT | `TBHXcP2ReM5sqpRDTyrL1UWtcSmYeyrmnB` |
+| Solana | USDT | `4s6uaauKCgwSNVzb5Lq1kxUe9dpm8V64D6FPw7hTwrQ6` |
 
-Send USDC on the Arbitrum One network only; tokens sent on another network may be lost. The address can also be copied from Settings › About › Support development.
+Check that the coin and network match the row before sending; funds sent on the wrong network may be lost. The addresses can also be copied from Settings › About › Support development.
 
 ## Building
 

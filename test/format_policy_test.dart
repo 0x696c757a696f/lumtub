@@ -31,9 +31,11 @@ void main() {
     expect(low.settings.disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
     expect(low.settings.vp9ForQuality, isFalse);
     // Codecs the user chose stay as chosen.
-    final chosen = FormatPolicy.withQuality(const PlayerSettings(codecsChosen: true), 2160);
+    final chosen = FormatPolicy.withQuality(const PlayerSettings(disabledCodecs: {VideoCodec.av1, VideoCodec.vp9, VideoCodec.vp8}), 2160);
     expect(chosen.unlocked, isFalse);
-    expect(chosen.settings.disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
+    expect(chosen.settings.disabledCodecs, {VideoCodec.av1, VideoCodec.vp9, VideoCodec.vp8});
+    final enabled = FormatPolicy.withQuality(const PlayerSettings(disabledCodecs: {VideoCodec.av1}), 720);
+    expect(enabled.settings.disabledCodecs, {VideoCodec.av1});
   });
 
   test('knows when VP9 or AV1 can only be decoded in software', () {

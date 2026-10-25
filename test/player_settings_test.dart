@@ -72,10 +72,11 @@ void main() {
     expect(settings.strategy, PlaybackStrategy.quality);
   });
 
-  test('codecs saved by an earlier build count as chosen', () {
+  test('only codecs other than the default count as chosen', () {
     expect(PlayerSettings.fromJson({'disabledCodecs': ['av1']}).codecsChosen, isTrue);
+    expect(PlayerSettings.fromJson({'disabledCodecs': ['vp9', 'av1']}).codecsChosen, isFalse);
     expect(PlayerSettings.fromJson(const {}).codecsChosen, isFalse);
-    expect(PlayerSettings.fromJson(const PlayerSettings().toJson()).codecsChosen, isFalse);
+    expect(const PlayerSettings(disabledCodecs: {VideoCodec.av1}, vp9ForQuality: true).codecsChosen, isFalse);
   });
 
   test('never loads with every playable codec disabled', () {

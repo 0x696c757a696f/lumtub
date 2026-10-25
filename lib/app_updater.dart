@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'native_core.dart';
 
 /// The package this build is, such as `windows-x64-v3`; empty for builds
 /// made outside CI, which never update themselves.
@@ -23,25 +24,6 @@ class AppRelease {
   final String page;
   /// The installer or portable ZIP for this package, as GitHub lists it.
   final Map<String, dynamic>? asset;
-}
-
-/// Whether the release [tag], published at [published], is newer than
-/// [current] built at [built]: a higher version number, or the same number
-/// from another commit published after this build.
-@visibleForTesting
-bool isNewerRelease(String current, String tag, {DateTime? published, DateTime? built}) {
-  List<int>? numbers(String version) {
-    final match = RegExp(r'^v?(\d+)\.(\d+)\.(\d+)').firstMatch(version);
-    return match == null ? null : [for (var i = 1; i <= 3; i++) int.parse(match.group(i)!)];
-  }
-
-  final have = numbers(current), offered = numbers(tag);
-  if (have == null || offered == null) return false;
-  for (var i = 0; i < 3; i++) {
-    if (offered[i] != have[i]) return offered[i] > have[i];
-  }
-  final sameCommit = tag.replaceFirst(RegExp('^v'), '') == current;
-  return !sameCommit && published != null && built != null && published.isAfter(built);
 }
 
 /// Keeps Lumtub up to date without getting in the way: it checks GitHub,
@@ -99,12 +81,10 @@ class AppUpdater extends ChangeNotifier {
       if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
       final json = jsonDecode(response.body);
       if (json is! Map<String, dynamic>) throw const FormatException('Invalid GitHub release response');
-      final tag = json['tag_name']?.toString() ?? '';
-      final published = DateTime.tryParse(json['published_at']?.toString() ?? '');
-      final newer = isNewerRelease(appVersion, tag, published: published, built: appBuilt);
-      available = newer ? AppRelease(version: tag.replaceFirst(RegExp('^v'), ''), page: json['html_url']?.toString() ?? '', asset: _assetOf(json)) : null;
-      if (!newer) ready = null;
-      logInfo(newer ? 'Lumtub update available: ${available!.version}' : 'Lumtub is up to date ($appVersion)');
+      final offer = offerOf(json, current: appVersion, built: appBuilt, package: appPackage, portable: portable);
+      available = offer;
+      if (offer == null) ready = null;
+      logInfo(offer != null ? 'Lumtub update available: ${offer.version}' : 'Lumtub is up to date ($appVersion)');
     } catch (e) {
       error = '$e';
       logInfo('Could not check Lumtub updates: $e');
@@ -113,17 +93,6 @@ class AppUpdater extends ChangeNotifier {
       notifyListeners();
     }
     if (download) await this.download();
-  }
-
-  /// This package's file of [release]: the installer, or the ZIP for the
-  /// portable package.
-  static Map<String, dynamic>? _assetOf(Map<String, dynamic> release) {
-    if (appPackage.isEmpty) return null;
-    final suffix = portable ? '_$appPackage.zip' : '_$appPackage-setup.exe';
-    for (final asset in (release['assets'] as List? ?? const []).whereType<Map<String, dynamic>>()) {
-      if (asset['name']?.toString().endsWith(suffix) ?? false) return asset;
-    }
-    return null;
   }
 
   /// Downloads and verifies the available package, in the background.
@@ -158,7 +127,9 @@ class AppUpdater extends ChangeNotifier {
     if (file == null || !await file.exists()) return false;
     try {
       final script = File('${_directory.path}${Platform.pathSeparator}install-update.ps1');
-      await script.writeAsString(updateScript(package: file.path, processId: pid, executable: Platform.resolvedExecutable, portable: file.path.endsWith('.zip'), relaunch: relaunch));
+      final text = updateScript(package: file.path, processId: pid, executable: Platform.resolvedExecutable, portable: file.path.endsWith('.zip'), relaunch: relaunch);
+      if (text == null) return false;
+      await script.writeAsString(text);
       await Process.start('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', script.path], mode: ProcessStartMode.detached);
       logInfo('Installing Lumtub ${available?.version ?? ''} after exit');
       ready = null;
@@ -188,33 +159,25 @@ class AppUpdater extends ChangeNotifier {
   }
 }
 
-/// A PowerShell script that waits for Lumtub ([processId]) to end, then
-/// runs the installer silently or copies the portable ZIP over the folder
-/// of [executable], removes [package], and starts Lumtub again if
-/// [relaunch]. What happens is written to update.log next to the package.
+/// The update [release] (GitHub's JSON) offers a build of [current] made at
+/// [built]: newer, with the file for [package]. Null when it is not newer or
+/// the native core is missing.
+AppRelease? offerOf(Map<String, dynamic> release, {required String current, DateTime? built, String package = '', bool portable = false}) {
+  final core = NativeCore.instance;
+  if (core == null) return null;
+  final ask = jsonEncode({'release': release, 'current': current, 'built': built == null ? null : built.millisecondsSinceEpoch ~/ 1000, 'package': package, 'portable': portable});
+  final answer = jsonDecode(core.take(core.withText(ask, core.updateOffer)) ?? 'null');
+  if (answer is! Map<String, dynamic>) return null;
+  return AppRelease(version: answer['version'] as String, page: answer['page'] as String, asset: answer['asset'] as Map<String, dynamic>?);
+}
+
+/// A PowerShell script that waits for Lumtub ([processId]) to end, then runs
+/// the installer silently or unpacks the portable ZIP over the folder of
+/// [executable], removes [package] and starts Lumtub again if [relaunch].
 @visibleForTesting
-String updateScript({required String package, required int processId, required String executable, required bool portable, required bool relaunch}) {
-  String quote(String value) => "'${value.replaceAll("'", "''")}'";
-  String parent(String path) => path.substring(0, path.lastIndexOf(RegExp(r'[\\/]')).clamp(0, path.length));
-  final folder = parent(executable);
-  final log = '${parent(package)}\\update.log';
-  return [
-    r"$ErrorActionPreference = 'Stop'",
-    'try {',
-    '  Wait-Process -Id $processId -Timeout 120 -ErrorAction SilentlyContinue',
-    if (portable) ...[
-      r"  $unpacked = Join-Path $env:TEMP ('lumtub-update-' + [guid]::NewGuid())",
-      '  Expand-Archive -LiteralPath ${quote(package)} -DestinationPath \$unpacked -Force',
-      '  Copy-Item -Path (Join-Path \$unpacked \'*\') -Destination ${quote(folder)} -Recurse -Force',
-      r'  Remove-Item -LiteralPath $unpacked -Recurse -Force',
-    ] else
-      "  \$setup = Start-Process -FilePath ${quote(package)} -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS' -Wait -PassThru\n"
-          "  if (\$setup.ExitCode -ne 0) { throw \"Setup exited with \$(\$setup.ExitCode)\" }",
-    '  Remove-Item -LiteralPath ${quote(package)} -Force',
-    "  \"\$(Get-Date -Format o) updated\" | Out-File -FilePath ${quote(log)} -Append",
-    '} catch {',
-    "  \"\$(Get-Date -Format o) \$_\" | Out-File -FilePath ${quote(log)} -Append",
-    '}',
-    if (relaunch) 'Start-Process -FilePath ${quote(executable)}',
-  ].join('\r\n');
+String? updateScript({required String package, required int processId, required String executable, required bool portable, required bool relaunch}) {
+  final core = NativeCore.instance;
+  if (core == null) return null;
+  final ask = jsonEncode({'package': package, 'processId': processId, 'executable': executable, 'portable': portable, 'relaunch': relaunch});
+  return jsonDecode(core.take(core.withText(ask, core.updateScript)) ?? 'null') as String?;
 }

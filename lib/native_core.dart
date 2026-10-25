@@ -28,6 +28,8 @@ class NativeCore {
         downloadFormats = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_formats'),
         downloadChoose = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_choose'),
         downloadContainer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_container'),
+        updateOffer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_offer'),
+        updateScript = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_script'),
         titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
         looksLikeBait = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_looks_like_bait'),
         isShort = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_is_short'),
@@ -52,6 +54,8 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> info, int length) downloadFormats;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) downloadChoose;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) downloadContainer;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateOffer;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateScript;
   /// The place in ExploreLanguage of the language a title reads as.
   final int Function(Pointer<Uint8> title, int length) titleLanguage;
   final bool Function(Pointer<Uint8> title, int length) looksLikeBait;

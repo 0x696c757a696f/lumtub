@@ -10,8 +10,8 @@ import 'app_log.dart';
 import 'l10n/l10n.dart';
 
 /// lumtub_core, the Rust library built from native/lumtub_core and
-/// shipped next to lumtub.exe. The recommendations and the format policy
-/// need it; without it
+/// shipped next to lumtub.exe. The recommendations, the format policy and
+/// the filters (block lists, Shorts, language, bait) need it; without it
 /// Lumtub says its install is incomplete (see [missingMessage]).
 class NativeCore {
   NativeCore._(DynamicLibrary library)
@@ -24,6 +24,12 @@ class NativeCore {
         titleWords = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_title_words'),
         recommend = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_recommend'),
         formatPolicy = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_format_policy'),
+        titleLanguage = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_title_language'),
+        looksLikeBait = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_looks_like_bait'),
+        isShort = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_is_short'),
+        blocksNew = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size), Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_blocks_new'),
+        blocksFinalizer = NativeFinalizer(library.lookup<NativeFinalizerFunction>('lumtub_blocks_free')),
+        blocksMatch = library.lookupFunction<Bool Function(Pointer<Void>, Pointer<Uint8>, Size), bool Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_blocks_match'),
         _stringFree = library.lookupFunction<Void Function(Pointer<Utf8>), void Function(Pointer<Utf8>)>('lumtub_string_free'),
         _adopt = library.lookupFunction<IntPtr Function(Uint32), int Function(int)>('lumtub_tree_adopt'),
         _kill = library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>('lumtub_tree_kill'),
@@ -39,6 +45,14 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> title, int length) titleWords;
   final Pointer<Utf8> Function(Pointer<Void> taste, Pointer<Uint8> json, int length) recommend;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) formatPolicy;
+  /// The place in ExploreLanguage of the language a title reads as.
+  final int Function(Pointer<Uint8> title, int length) titleLanguage;
+  final bool Function(Pointer<Uint8> title, int length) looksLikeBait;
+  final bool Function(Pointer<Uint8> json, int length) isShort;
+  final Pointer<Void> Function(Pointer<Uint8> json, int length) blocksNew;
+  /// Frees block lists once Dart no longer holds them.
+  final NativeFinalizer blocksFinalizer;
+  final bool Function(Pointer<Void> blocks, Pointer<Uint8> json, int length) blocksMatch;
   final void Function(Pointer<Utf8>) _stringFree;
   final int Function(int pid) _adopt;
   final bool Function(int job, int code) _kill;
@@ -51,7 +65,7 @@ class NativeCore {
   static String get fileName => Platform.isWindows ? 'lumtub_core.dll' : Platform.isMacOS ? 'liblumtub_core.dylib' : 'liblumtub_core.so';
 
   /// What Lumtub says when the library is missing.
-  static String get missingMessage => tr('安装包不完整：缺少 {0}，推荐不可用，画质只能按默认选择。请重新安装 Lumtub。', [fileName]);
+  static String get missingMessage => tr('安装包不完整：缺少 {0}，推荐和屏蔽不可用，画质只能按默认选择。请重新安装 Lumtub。', [fileName]);
 
   static NativeCore? _load() {
     final paths = [

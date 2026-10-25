@@ -78,7 +78,7 @@ void main() {
       expect(PlayerSettings.fromJson({'codec': old}).strategy, PlaybackStrategy.auto);
     }
     expect(PlayerSettings.fromJson(const {}).strategy, PlaybackStrategy.auto);
-    expect(PlayerSettings.fromJson(const {}).disabledCodecs, isEmpty);
+    expect(PlayerSettings.fromJson(const {}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
     expect(PlayerSettings.fromJson({'strategy': 'bogus'}).strategy, PlaybackStrategy.auto);
   });
 

@@ -133,7 +133,7 @@ void main() {
     expect((jsonDecode(await file.readAsString()) as Map)['servers'], ['https://yewtu.be', 'https://inv.nadeko.net']);
     final fetched = await first.fetch('dQw4w9WgXcQ');
     expect(fetched.server, 'https://inv.nadeko.net');
-    expect(fetched.edl(const PlayerSettings()), isNotNull);
+    expect(fetched.edl(const PlayerSettings(disabledCodecs: {})), isNotNull);
 
     // A list from today is not downloaded again.
     final second = make();

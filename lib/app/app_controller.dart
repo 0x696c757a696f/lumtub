@@ -296,7 +296,23 @@ class AppController extends ChangeNotifier {
   /// The Invidious instances, for 设置 › Invidious 实例.
   InvidiousStreams get invidious => _invidious;
   /// Serves YouTube streams to libmpv in pieces YouTube does not throttle.
-  ChunkedRelay? _relay;
+  StreamRelay? _relay;
+
+  /// lumtub_core's relay, or the Dart one when it cannot start; null when
+  /// neither can, and streams connect directly.
+  Future<StreamRelay?> _startRelay() async {
+    for (final relay in [if (NativeCore.instance case final core?) NativeRelay(core), ChunkedRelay()]) {
+      try {
+        await relay.start();
+        if (relay is ChunkedRelay) logInfo('Using the Dart chunked relay');
+        return relay;
+      } catch (e) {
+        logError('Could not start the local chunked relay', e);
+      }
+    }
+    logInfo('Streams connect directly');
+    return null;
+  }
 
   AppearanceSettings appearance;
   final AppearanceSettingsStore? _appearanceStore;
@@ -466,13 +482,7 @@ class AppController extends ChangeNotifier {
       final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
       await _applyProxy(player);
-      try {
-        _relay = ChunkedRelay();
-        await _relay!.start();
-      } catch (e) {
-        _relay = null;
-        logError('Could not start the local chunked relay; streams connect directly', e);
-      }
+      _relay = await _startRelay();
       _piped.catalogFile = File('${directories.config.path}${Platform.pathSeparator}piped_servers.json');
       // Measures the Piped servers while the app starts, not on the first click.
       _invidious.catalogFile = File('${directories.config.path}${Platform.pathSeparator}invidious_servers.json');
@@ -1336,7 +1346,7 @@ class AppController extends ChangeNotifier {
       final relay = (proxy.url == null || proxy.isHttp) && _unrelayed != item.id ? _relay : null;
       final agent = video?.userAgent;
       final direct = video != null && video.format == format && !subtitles
-          ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent))
+          ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent, proxy: proxy.url))
           : null;
       _relayed = direct != null && relay != null ? item.id : null;
       final platform = player.platform;

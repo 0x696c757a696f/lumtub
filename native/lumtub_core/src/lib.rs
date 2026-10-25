@@ -9,6 +9,7 @@ pub mod downloads;
 pub mod format_policy;
 pub mod process_tree;
 pub mod redact;
+pub mod relay;
 pub mod hashes;
 pub mod hw_decode;
 pub mod posts;
@@ -21,5 +22,5 @@ pub mod update;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    8
+    9
 }

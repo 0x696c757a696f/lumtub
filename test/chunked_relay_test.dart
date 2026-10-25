@@ -3,10 +3,17 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/chunked_relay.dart';
+import 'package:lumtub/native_core.dart';
 
 void main() {
+  for (final native in [false, true]) {
+    group(native ? 'lumtub_core relay' : 'Dart relay', () => _tests(native));
+  }
+}
+
+void _tests(bool native) {
   late HttpServer upstream;
-  late ChunkedRelay relay;
+  late StreamRelay relay;
   final data = Uint8List.fromList(List.generate(1000, (i) => i % 251));
   final ranges = <String>[];
   var fail403 = false;
@@ -40,7 +47,7 @@ void main() {
       request.response.add(data.sublist(from, to + 1));
       await request.response.close();
     });
-    relay = ChunkedRelay(chunkSize: 300);
+    relay = native ? NativeRelay(NativeCore.instance!, chunkSize: 300) : ChunkedRelay(chunkSize: 300);
     await relay.start();
   });
 

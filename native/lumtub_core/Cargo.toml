@@ -34,3 +34,4 @@ strip = true
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.154", features = ["preserve_order"] }
 sha2 = "0.11.1"
+ureq = { version = "3", default-features = false, features = ["native-tls"] }

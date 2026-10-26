@@ -19,13 +19,16 @@
 
 #include <d3d.h>
 #include <d3d11.h>
+#include <d3d11_4.h>
 #include <wrl.h>
 
 #include "frame_stats.h"
 #include "utils.h"
 
+#include <atomic>
 #include <cstdint>
 #include <functional>
+#include <string>
 
 // |ANGLESurfaceManager| provides an abstraction around ANGLE to easily draw
 // OpenGL ES 2.0 content & read as D3D 11 texture using shared |HANDLE|.
@@ -57,6 +60,9 @@ class ANGLESurfaceManager {
   // Lumtub: how long drawing and Flutter's reads take, lock waits included.
   FrameTiming draw_timing;
   FrameTiming read_timing;
+  // Lumtub: how |Read| waits for its copy, how long, and how often the wait
+  // gave up; "sync=fence wait=count/avg/max late=n", then starts again.
+  std::string TakeSyncStats();
 
  private:
   void SwapBuffers();
@@ -71,6 +77,10 @@ class ANGLESurfaceManager {
 
   bool CreateAndBindEGLSurface();
 
+  void PrepareCopySync();
+
+  void WaitForCopy();
+
   int32_t width_ = 1;
   int32_t height_ = 1;
   HANDLE internal_handle_ = nullptr;
@@ -83,8 +93,18 @@ class ANGLESurfaceManager {
   ID3D11DeviceContext* d3d_11_device_context_ = nullptr;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> internal_d3d_11_texture_2D_;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> d3d_11_texture_2D_;
-  // Signals when |Read|'s copy has finished on the GPU.
+  // Signals when |Read|'s copy has finished on the GPU: a fence and an event
+  // to sleep on where the driver has them (Windows 10 1703, WDDM 2), else a
+  // query that is polled.
   Microsoft::WRL::ComPtr<ID3D11Query> copy_query_;
+  Microsoft::WRL::ComPtr<ID3D11Fence> copy_fence_;
+  Microsoft::WRL::ComPtr<ID3D11DeviceContext4> copy_context_;
+  HANDLE copy_event_ = nullptr;
+  UINT64 copy_value_ = 0;
+  bool copy_sync_ready_ = false;
+  const char* copy_sync_ = "none";
+  FrameTiming wait_timing_;
+  std::atomic<uint64_t> late_{0};
   // ANGLE
   EGLSurface surface_ = EGL_NO_SURFACE;
   EGLDisplay display_ = EGL_NO_DISPLAY;
@@ -93,7 +113,7 @@ class ANGLESurfaceManager {
 
   static constexpr EGLint kEGLConfigurationAttributes[] = {
       EGL_RED_SIZE,   8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE,    8,
-      EGL_ALPHA_SIZE, 8, EGL_DEPTH_SIZE, 8, EGL_STENCIL_SIZE, 8,
+      EGL_ALPHA_SIZE, 8, EGL_DEPTH_SIZE, 0, EGL_STENCIL_SIZE, 0,
       EGL_NONE,
   };
   static constexpr EGLint kEGLContextAttributes[] = {

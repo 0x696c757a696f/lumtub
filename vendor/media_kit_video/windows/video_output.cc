@@ -213,7 +213,8 @@ std::string VideoOutput::TakeStats() {
               std::to_string(width()) + "x" + std::to_string(height());
   if (surface_manager_ != nullptr) {
     text += " " + surface_manager_->draw_timing.Take("draw") + " " +
-            surface_manager_->read_timing.Take("read");
+            surface_manager_->read_timing.Take("read") + " " +
+            surface_manager_->TakeSyncStats();
   }
   return text;
 }

@@ -76,26 +76,80 @@ void ANGLESurfaceManager::Read() {
     // returns, with nothing ordering it after the copy. A copy still in flight
     // shows up as a black frame, most often at 60 fps or while the UI animates.
     // Wait for it (bounded, so a lost device cannot hang the UI).
-    if (copy_query_ == nullptr) {
-      auto desc = D3D11_QUERY_DESC{D3D11_QUERY_EVENT, 0};
-      d3d_11_device_->CreateQuery(&desc, &copy_query_);
-    }
-    if (copy_query_ != nullptr) {
-      d3d_11_device_context_->End(copy_query_.Get());
-    }
-    d3d_11_device_context_->Flush();
-    if (copy_query_ != nullptr) {
-      const auto deadline = ::GetTickCount64() + 50;
-      BOOL done = FALSE;
-      while (d3d_11_device_context_->GetData(copy_query_.Get(), &done,
-                                             sizeof(done), 0) == S_FALSE &&
-             ::GetTickCount64() < deadline) {
-        std::this_thread::yield();
-      }
-    }
+    WaitForCopy();
   }
   ::ReleaseMutex(mutex_);
   read_timing.Add(std::chrono::steady_clock::now() - start);
+}
+
+void ANGLESurfaceManager::PrepareCopySync() {
+  copy_sync_ready_ = true;
+  Microsoft::WRL::ComPtr<ID3D11Device5> device;
+  if (SUCCEEDED(d3d_11_device_->QueryInterface(IID_PPV_ARGS(&device))) &&
+      SUCCEEDED(
+          d3d_11_device_context_->QueryInterface(IID_PPV_ARGS(&copy_context_))) &&
+      SUCCEEDED(device->CreateFence(0, D3D11_FENCE_FLAG_NONE,
+                                    IID_PPV_ARGS(&copy_fence_)))) {
+    copy_event_ = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (copy_event_ != nullptr) {
+      copy_sync_ = "fence";
+      return;
+    }
+  }
+  copy_fence_.Reset();
+  copy_context_.Reset();
+  auto desc = D3D11_QUERY_DESC{D3D11_QUERY_EVENT, 0};
+  d3d_11_device_->CreateQuery(&desc, &copy_query_);
+  copy_sync_ = copy_query_ != nullptr ? "query" : "none";
+}
+
+void ANGLESurfaceManager::WaitForCopy() {
+  if (!copy_sync_ready_) {
+    PrepareCopySync();
+  }
+  const auto start = std::chrono::steady_clock::now();
+  const auto deadline = ::GetTickCount64() + 50;
+  bool late = false;
+  if (copy_fence_ != nullptr) {
+    const auto value = ++copy_value_;
+    copy_context_->Signal(copy_fence_.Get(), value);
+    d3d_11_device_context_->Flush();
+    // The event can still be set by a wait that gave up earlier, so the
+    // fence itself says when this copy is done.
+    while (copy_fence_->GetCompletedValue() < value) {
+      const auto now = ::GetTickCount64();
+      if (now >= deadline ||
+          FAILED(copy_fence_->SetEventOnCompletion(value, copy_event_)) ||
+          ::WaitForSingleObject(copy_event_,
+                                static_cast<DWORD>(deadline - now)) ==
+              WAIT_FAILED) {
+        late = copy_fence_->GetCompletedValue() < value;
+        break;
+      }
+    }
+  } else if (copy_query_ != nullptr) {
+    d3d_11_device_context_->End(copy_query_.Get());
+    d3d_11_device_context_->Flush();
+    BOOL done = FALSE;
+    HRESULT state;
+    while ((state = d3d_11_device_context_->GetData(
+                copy_query_.Get(), &done, sizeof(done), 0)) == S_FALSE &&
+           ::GetTickCount64() < deadline) {
+      std::this_thread::yield();
+    }
+    late = state == S_FALSE;
+  } else {
+    d3d_11_device_context_->Flush();
+  }
+  if (late) {
+    late_++;
+  }
+  wait_timing_.Add(std::chrono::steady_clock::now() - start);
+}
+
+std::string ANGLESurfaceManager::TakeSyncStats() {
+  return std::string("sync=") + copy_sync_ + " " + wait_timing_.Take("wait") +
+         " late=" + std::to_string(late_.exchange(0));
 }
 
 void ANGLESurfaceManager::MakeCurrent(bool value) {
@@ -149,6 +203,14 @@ void ANGLESurfaceManager::CleanUp(bool release_context) {
     display_ = EGL_NO_DISPLAY;
     // Release D3D device & context if the instance is being destroyed.
     copy_query_ = nullptr;
+    copy_fence_.Reset();
+    copy_context_.Reset();
+    if (copy_event_ != nullptr) {
+      ::CloseHandle(copy_event_);
+      copy_event_ = nullptr;
+    }
+    copy_value_ = 0;
+    copy_sync_ready_ = false;
     if (d3d_11_device_context_) {
       d3d_11_device_context_->Release();
       d3d_11_device_context_ = nullptr;

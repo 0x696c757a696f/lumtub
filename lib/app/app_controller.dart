@@ -373,6 +373,7 @@ class AppController extends ChangeNotifier {
   bool _updateCheckedForChallenge = false;
   int _lastDrops = 0;
   DateTime _lastDropLog = DateTime(0);
+  DateTime _lastFrameLog = DateTime(0);
   Timer? _dropTimer;
   Timer? _thumbnailTrimTimer;
   final _recovery = PlaybackRecovery();
@@ -2841,7 +2842,15 @@ class AppController extends ChangeNotifier {
       _lastDrops = drops;
       // Read every time, so the timings cover these 10 seconds.
       final frames = await _frameStats(platform);
-      if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) return;
+      if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) {
+        // Smooth playback is logged too, every few minutes, so a stutter can
+        // be compared with how the same machine plays normally.
+        if (frames != null && DateTime.now().difference(_lastFrameLog) >= const Duration(minutes: 3)) {
+          _lastFrameLog = DateTime.now();
+          logInfo('Frames in 10 s, $added dropped: $frames');
+        }
+        return;
+      }
       _lastDropLog = DateTime.now();
       final values = <String>[];
       for (final name in ['avsync', 'estimated-vf-fps', 'container-fps', 'display-fps', 'vo-delayed-frame-count', 'mistimed-frame-count', 'decoder-frame-drop-count', 'hwdec-current', 'video-sync', 'speed', 'video-params/w', 'video-params/h', 'time-pos', 'audio-pts', 'audio-params/samplerate', 'audio-out-params/samplerate', 'current-ao', 'd3d11va-zero-copy', 'vd-lavc-dr', 'video-codec', 'video-out-params/pixelformat']) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../app/app_controller.dart';
@@ -14,11 +16,14 @@ import '../l10n/l10n.dart';
 /// The comments under a video or a post: sort order, comments with their
 /// replies, and a button for more. It loads when first shown.
 class CommentsSection extends StatefulWidget {
-  const CommentsSection({super.key, required this.controller, this.videoId, this.postId, this.onSeek, this.scrollable = false, this.padding = EdgeInsets.zero});
+  const CommentsSection({super.key, required this.controller, this.videoId, this.postId, this.onSeek, this.scrollable = false, this.sliver = false, this.padding = EdgeInsets.zero});
   final AppController controller;
   /// Scrolls by itself and builds only the comments on screen; otherwise it
   /// sits in the page's own scrolling column.
   final bool scrollable;
+  /// A sliver in the page's own scroll view, built only as far as it is
+  /// scrolled into view; it loads once it first comes near the screen.
+  final bool sliver;
   final EdgeInsets padding;
   final String? videoId;
   final String? postId;
@@ -30,7 +35,20 @@ class CommentsSection extends StatefulWidget {
 }
 
 class _CommentsSectionState extends State<CommentsSection> {
-  late final _loader = CommentsLoader(widget.controller.comments, videoId: widget.videoId, postId: widget.postId)..loadMore();
+  late final _loader = CommentsLoader(widget.controller.comments, videoId: widget.videoId, postId: widget.postId);
+  bool _asked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.sliver) _load();
+  }
+
+  void _load() {
+    if (_asked || !mounted) return;
+    _asked = true;
+    unawaited(_loader.loadMore());
+  }
   /// The comment a reply is being written to.
   String? _replyingTo;
 
@@ -137,22 +155,23 @@ class _CommentsSectionState extends State<CommentsSection> {
             else if (loader.hasMore)
               Center(child: TextButton(onPressed: loader.loadMore, child: Text(tr('加载更多评论')))),
           ];
+          Widget item(BuildContext context, int index) {
+            // Not during the build that asked for it.
+            if (!_asked) scheduleMicrotask(_load);
+            if (index < header.length) return header[index];
+            index -= header.length;
+            if (index < shown.length) return Column(crossAxisAlignment: CrossAxisAlignment.start, children: _thread(context, shown[index]));
+            return footer[index - shown.length];
+          }
+          final count = header.length + shown.length + footer.length;
+          if (widget.sliver) return SliverPadding(padding: widget.padding, sliver: SliverList.builder(itemCount: count, itemBuilder: item));
           if (!widget.scrollable) {
             return Padding(
               padding: widget.padding,
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [...header, for (final comment in shown) ..._thread(context, comment), ...footer]),
             );
           }
-          return ListView.builder(
-            padding: widget.padding,
-            itemCount: header.length + shown.length + footer.length,
-            itemBuilder: (context, index) {
-              if (index < header.length) return header[index];
-              index -= header.length;
-              if (index < shown.length) return Column(crossAxisAlignment: CrossAxisAlignment.start, children: _thread(context, shown[index]));
-              return footer[index - shown.length];
-            },
-          );
+          return ListView.builder(padding: widget.padding, itemCount: count, itemBuilder: item);
         },
       );
 }

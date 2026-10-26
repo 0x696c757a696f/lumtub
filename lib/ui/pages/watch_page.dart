@@ -101,6 +101,7 @@ class _WatchPageState extends State<WatchPage> {
                   videoId: item.id,
                   onSeek: (position) => controller.player?.seek(position),
                   scrollable: wide,
+                  sliver: !wide,
                   padding: wide ? const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding) : EdgeInsets.zero,
                 );
           final replayChat = item?.isLive == true || item?.liveStatus == 'was_live' ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide) : null;
@@ -116,35 +117,28 @@ class _WatchPageState extends State<WatchPage> {
             ],
             const SizedBox(height: 16),
             _Details(controller: controller),
-            // Wide windows show the comments in the side panel instead.
-            if (!wide && comments != null) ...[
-              const SizedBox(height: 24),
-              comments,
-            ],
-            if (!wide && replayChat != null) ...[
-              const SizedBox(height: 24),
-              replayChat,
-            ],
           ];
-          if (theater) {
-            // Edge to edge, the rest keeps the page's margins.
-            return ListView(padding: EdgeInsets.zero, children: [
-              Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 12, AppStyle.pagePadding, AppStyle.pagePadding),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  ...main.skip(1),
-                  const SizedBox(height: 24),
-                  _UpNext(controller: controller, shrinkWrap: true),
-                ]),
-              ),
-            ]);
-          }
           if (!wide) {
-            return ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: [
-              ...main,
+            // One scroll view of slivers, so the comments below the details
+            // are built as they scroll into view, not all at once.
+            const margin = AppStyle.pagePadding;
+            final rest = [
+              if (replayChat != null) ...[const SizedBox(height: 24), replayChat],
               const SizedBox(height: 24),
               _UpNext(controller: controller, shrinkWrap: true),
+            ];
+            return CustomScrollView(slivers: [
+              // In 剧场模式 the player goes edge to edge.
+              if (theater) SliverToBoxAdapter(child: Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video)))),
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(margin, theater ? 12 : 0, margin, 0),
+                sliver: SliverList.list(children: theater ? main.skip(1).toList() : main),
+              ),
+              if (comments != null) ...[
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                SliverPadding(padding: const EdgeInsets.symmetric(horizontal: margin), sliver: comments),
+              ],
+              SliverPadding(padding: const EdgeInsets.fromLTRB(margin, 0, margin, margin), sliver: SliverList.list(children: rest)),
             ]);
           }
           return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [

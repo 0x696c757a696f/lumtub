@@ -39,6 +39,21 @@ class VideoOutputSize {
   }
 
   bool _cover = false;
+  bool _hidden = false;
+
+  /// While the window is minimised or in the tray, the picture is drawn
+  /// small: it keeps playing, so it is there at once on return, at a
+  /// fraction of the GPU work.
+  set hidden(bool value) {
+    if (value == _hidden) return;
+    _hidden = value;
+    _timer?.cancel();
+    // Back to full size without the usual pause, so the first frames are sharp.
+    value ? _schedule() : _update();
+  }
+
+  /// The box drawn into while hidden.
+  static const hiddenBox = Size(320, 180);
 
   /// Whether the picture is zoomed or stretched to fill its box, so it is
   /// drawn large enough to cover the box rather than fit inside it.
@@ -70,7 +85,7 @@ class VideoOutputSize {
   }
 
   void _update() {
-    final next = target(_video, _boxes.values, cover: _cover);
+    final next = target(_video, _hidden ? const [hiddenBox] : _boxes.values, cover: _cover);
     if (next == null) {
       if (_native) return;
       _native = true;

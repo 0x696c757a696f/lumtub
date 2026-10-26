@@ -123,3 +123,14 @@ class PlayerOptionApplicator {
     return failed;
   }
 }
+
+/// The average time to draw a frame, from frame timings such as
+/// `draw=240/13.1ms/29.9ms`, when it takes more than 60% of a frame's time
+/// at [fps]; null while drawing keeps up or too few frames were drawn.
+double? drawBusy(String frames, double fps) {
+  final match = RegExp(r'draw=(\d+)/([\d.]+)ms').firstMatch(frames);
+  if (match == null || fps <= 0) return null;
+  final count = int.parse(match[1]!);
+  final average = double.parse(match[2]!);
+  return count >= 50 && average > 600 / fps ? average : null;
+}

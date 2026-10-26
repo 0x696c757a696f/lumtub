@@ -37,4 +37,19 @@ void main() {
     await settle();
     expect(applied, [(1280, 720), (null, null)]);
   });
+
+  test('draws small while the window is hidden and full size at once on return', () async {
+    final applied = <(int?, int?)>[];
+    final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 10));
+    Future<void> settle() => Future.delayed(const Duration(milliseconds: 50));
+    final page = Object();
+    size.video = const Size(1920, 1080);
+    size.show(page, const Size(1280, 720));
+    await settle();
+    size.hidden = true;
+    await settle();
+    expect(applied.last, (320, 180));
+    size.hidden = false;
+    expect(applied.last, (1280, 720));
+  });
 }

@@ -50,6 +50,7 @@ import '../youtube_related.dart';
 import '../recommendations.dart';
 import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
+import '../power.dart';
 import '../player_settings.dart';
 import '../ffmpeg_component.dart';
 import '../thumbnail_trim.dart';
@@ -520,6 +521,7 @@ class AppController extends ChangeNotifier {
       ));
       final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      _lightRendering = null;
       await _applyProxy(player);
       _relay = await _startRelay();
       _piped.catalogFile = File('${directories.config.path}${Platform.pathSeparator}piped_servers.json');
@@ -2097,6 +2099,7 @@ class AppController extends ChangeNotifier {
   /// decodes no picture; [hidden] false brings it back. A user's own 听视频
   /// choice is left alone.
   Future<void> setBackgroundAudioOnly(bool hidden) async {
+    _outputSize?.hidden = hidden;
     final platform = player?.platform;
     if (platform is! NativePlayer) return;
     if (hidden) {
@@ -2105,7 +2108,16 @@ class AppController extends ChangeNotifier {
       await platform.setProperty('vid', 'no');
     } else if (_backgroundAudioOnly) {
       _backgroundAudioOnly = false;
-      if (!audioOnly) await platform.setProperty('vid', 'auto');
+      if (audioOnly) return;
+      await platform.setProperty('vid', 'auto');
+      // The decoder starts again at the next keyframe, which in a stream can
+      // be far off: until then the last picture stays. An exact seek to
+      // here decodes up to now at once.
+      try {
+        await platform.command(['seek', '0', 'relative+exact']);
+      } catch (e) {
+        logInfo('Could not refresh the picture after restoring: $e');
+      }
     }
   }
 
@@ -2267,6 +2279,8 @@ class AppController extends ChangeNotifier {
   /// rests on its card ([hover]). Not on hover while a video plays: the
   /// yt-dlp run would take CPU from the playback for a guess.
   void prefetch(VideoItem item, {bool hover = false}) {
+    // Each one starts yt-dlp; on battery only the next video in line is.
+    if (hover && Power.saving) return;
     if (hover && player?.state.playing == true) return;
     if (ready && playing?.id != item.id && DateTime.now().isAfter(_rateLimitedUntil)) _repository?.streams.prefetch(item.id, _format, formatSort: _formatSort);
   }
@@ -3057,6 +3071,7 @@ class AppController extends ChangeNotifier {
     final oldSettings = settings;
     final requiresNextVideo = next.hwdec != oldSettings.hwdec || next.interpolation != oldSettings.interpolation;
     final ignoredOptions = await PlayerOptionApplicator.apply(player, next);
+    _lightRendering = null;
     await store.save(next);
     _update(() => settings = next);
     if (next.proxyMode != oldSettings.proxyMode ||
@@ -3158,6 +3173,7 @@ class AppController extends ChangeNotifier {
       _lastDrops = drops;
       // Read every time, so the timings cover these 10 seconds.
       final frames = await _frameStats(platform);
+      await _lightenIfBusy(platform, frames);
       if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) {
         // Smooth playback is logged too, every few minutes, so a stutter can
         // be compared with how the same machine plays normally.
@@ -3180,6 +3196,45 @@ class AppController extends ChangeNotifier {
 
   /// The video output's timings for each frame since the last call: libmpv's
   /// render, the ANGLE draw and Flutter's read, as count/average/max.
+  /// Why scaling was switched to the cheap kind: the GPU could not keep
+  /// up (until the settings change), or the PC runs on battery (until it
+  /// is plugged in); null while it is not.
+  String? _lightRendering;
+
+  /// In 智能自动, switches mpv to the cheapest scaling (as 低资源占用优先
+  /// does) on battery or with battery saver, and once drawing a frame takes
+  /// most of its time: on a weak or busy GPU the filters cost dropped
+  /// frames, and at window size the difference is hard to see.
+  Future<void> _lightenIfBusy(NativePlayer platform, String? frames) async {
+    final player = this.player;
+    if (player == null) return;
+    if (_lightRendering == 'battery' && !Power.saving) {
+      _lightRendering = null;
+      await PlayerOptionApplicator.apply(player, settings);
+      logInfo('Plugged in again; scaling back to normal');
+      return;
+    }
+    // Filters the person turned on are kept.
+    if (_lightRendering != null || settings.strategy != PlaybackStrategy.auto || settings.scale != const PlayerSettings().scale || settings.deband || settings.interpolation) return;
+    String reason;
+    if (Power.saving) {
+      reason = 'battery';
+    } else {
+      final busy = frames == null ? null : drawBusy(frames, double.tryParse(await platform.getProperty('container-fps')) ?? 0);
+      if (busy == null) return;
+      reason = 'busy';
+      logInfo('Frames take ${busy.toStringAsFixed(1)} ms to draw, most of their time');
+    }
+    _lightRendering = reason;
+    for (final MapEntry(:key, :value) in PlayerOptionApplicator.fastRendering.entries) {
+      if (settings.customOptions.containsKey(key)) continue;
+      try {
+        await platform.setProperty(key, value);
+      } catch (_) {}
+    }
+    logInfo(reason == 'battery' ? 'On battery; scaling switched to the fast kind' : 'Scaling switched to the fast kind');
+  }
+
   Future<String?> _frameStats(NativePlayer platform) async {
     try {
       final stats = await _videoChannel.invokeMethod<String>('VideoOutputManager.Stats', {'handle': '${await platform.handle}'});

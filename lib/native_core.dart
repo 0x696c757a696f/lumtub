@@ -165,8 +165,11 @@ class NativeCore {
   }
 
   /// Calls [call] with [text] as UTF-8 in native memory.
-  T withText<T>(String text, T Function(Pointer<Uint8> bytes, int length) call) {
-    final bytes = utf8.encode(text);
+  T withText<T>(String text, T Function(Pointer<Uint8> bytes, int length) call) => withBytes(utf8.encode(text), call);
+
+  /// Calls [call] with UTF-8 [bytes] in native memory, such as a response
+  /// body as it came, so a megabyte page is not decoded and encoded again.
+  T withBytes<T>(List<int> bytes, T Function(Pointer<Uint8> bytes, int length) call) {
     final buffer = malloc<Uint8>(max(1, bytes.length));
     try {
       buffer.asTypedList(bytes.length).setAll(0, bytes);

@@ -32,7 +32,8 @@ class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin
     final colors = [Colors.transparent, highlight, highlight, Colors.transparent];
     return AnimatedBuilder(
       animation: _controller,
-      child: widget.child,
+      // The placeholders stay the same; only the shine moves over them.
+      child: RepaintBoundary(child: widget.child),
       builder: (context, child) => ShaderMask(
         blendMode: BlendMode.srcATop,
         shaderCallback: (bounds) {

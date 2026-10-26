@@ -7,7 +7,7 @@
 #![allow(clippy::missing_safety_doc)]
 
 use serde::Deserialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::ffi::{CString, c_char};
 
 /// Keys in the order they were first added, so ties come out the same way
@@ -157,14 +157,18 @@ impl Taste {
 
     /// 0 to 1: the cosine between [title] and the history's words.
     pub fn title_match(&self, title: &str) -> f64 {
+        self.words_match(&title_words(title))
+    }
+
+    fn words_match(&self, words: &[String]) -> f64 {
         if self.words_norm == 0.0 {
             return 0.0;
         }
         let mut dot = 0.0;
         let mut norm = 0.0;
-        for word in title_words(title) {
-            let idf = self.idf.get(&word).copied().unwrap_or(self.default_idf);
-            dot += self.words.get(&word).unwrap_or(0.0) * idf;
+        for word in words {
+            let idf = self.idf.get(word).copied().unwrap_or(self.default_idf);
+            dot += self.words.get(word).unwrap_or(0.0) * idf;
             norm += idf * idf;
         }
         if norm == 0.0 {
@@ -178,13 +182,17 @@ impl Taste {
     /// The history's interest [title] belongs to most: its word that weighs
     /// most in the history, if any weighs enough.
     pub fn interest(&self, title: &str) -> Option<String> {
+        self.interest_in(&title_words(title)).map(str::to_owned)
+    }
+
+    fn interest_in<'w>(&self, words: &'w [String]) -> Option<&'w str> {
         let mut best = None;
         let mut best_weight = 0.0;
-        for word in title_words(title) {
-            let weight = self.words.get(&word).unwrap_or(0.0);
+        for word in words {
+            let weight = self.words.get(word).unwrap_or(0.0);
             if weight > best_weight {
                 best_weight = weight;
-                best = Some(word);
+                best = Some(word.as_str());
             }
         }
         if self.max_word > 0.0 && best_weight >= 0.2 * self.max_word { best } else { None }
@@ -220,9 +228,8 @@ fn cjk(c: char) -> bool {
 /// the order they appear, Latin words first.
 pub fn title_words(title: &str) -> Vec<String> {
     let mut result: Vec<String> = Vec::new();
-    let mut seen: HashSet<String> = HashSet::new();
     let mut push = |word: String| {
-        if seen.insert(word.clone()) {
+        if !result.contains(&word) {
             result.push(word);
         }
     };
@@ -326,6 +333,7 @@ fn rank(taste: &Taste, ranking: &Ranking) -> Vec<(usize, usize)> {
     }
     let mut entries: Vec<Entry> = Vec::new();
     let mut by_id: HashMap<&str, usize> = HashMap::new();
+    let words: Vec<Vec<String>> = ranking.candidates.iter().map(|c| title_words(&c.t)).collect();
     for (i, c) in ranking.candidates.iter().enumerate() {
         let mut score = c.s - c.p;
         let affinity = taste.affinity(&c.k);
@@ -337,7 +345,7 @@ fn rank(taste: &Taste, ranking: &Ranking) -> Vec<(usize, usize)> {
         if affinity < 0.0 && weights.channel == 0.0 {
             score += 0.8 * affinity;
         }
-        score += weights.title * taste.title_match(&c.t);
+        score += weights.title * taste.words_match(&words[i]);
         if let Some(hours) = c.a {
             score += weights.fresh * (-hours / (24.0 * 7.0)).exp();
         }
@@ -374,14 +382,14 @@ fn rank(taste: &Taste, ranking: &Ranking) -> Vec<(usize, usize)> {
         interest: Option<usize>,
     }
     let mut channel_ids: HashMap<&str, usize> = HashMap::new();
-    let mut interest_ids: HashMap<String, usize> = HashMap::new();
+    let mut interest_ids: HashMap<&str, usize> = HashMap::new();
     let mut pool: Vec<Pooled> = entries
         .iter()
         .map(|e| {
             let c = &ranking.candidates[e.item];
             let next = channel_ids.len();
             let channel = *channel_ids.entry(&c.k).or_insert(next);
-            let interest = taste.interest(&c.t).map(|word| {
+            let interest = taste.interest_in(&words[e.item]).map(|word| {
                 let next = interest_ids.len();
                 *interest_ids.entry(word).or_insert(next)
             });

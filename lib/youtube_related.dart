@@ -68,13 +68,15 @@ class YoutubeRelated {
 
   // A `/next` response runs to a megabyte or two.
   static Future<({List<VideoItem> related, ({String title, String description, int? likes})? text})> _readInBackground(List<int> bytes) =>
-      Isolate.run(() => readNext(utf8.decode(bytes)));
+      Isolate.run(() => readNextBytes(bytes));
 
   /// The related videos and the localized text of a `/next` response
   /// [body], read by the native core; nothing without it.
-  static ({List<VideoItem> related, ({String title, String description, int? likes})? text}) readNext(String body) {
+  static ({List<VideoItem> related, ({String title, String description, int? likes})? text}) readNext(String body) => readNextBytes(utf8.encode(body));
+
+  static ({List<VideoItem> related, ({String title, String description, int? likes})? text}) readNextBytes(List<int> body) {
     final core = NativeCore.instance;
-    final answer = core == null ? null : jsonDecode(core.take(core.withText(body, core.youtubeNext)) ?? 'null');
+    final answer = core == null ? null : jsonDecode(core.take(core.withBytes(body, core.youtubeNext)) ?? 'null');
     if (answer is! Map<String, dynamic>) return (related: const <VideoItem>[], text: null);
     final text = answer['text'] as Map<String, dynamic>?;
     return (

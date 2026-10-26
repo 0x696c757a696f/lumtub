@@ -97,10 +97,10 @@ class CommunityPosts {
         )
         .timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    return await _readInBackground(utf8.decode(response.bodyBytes)) ?? const PostPage([], null);
+    return await _readInBackground(response.bodyBytes) ?? const PostPage([], null);
   }
 
-  static Future<PostPage?> _readInBackground(String body) => Isolate.run(() => read(body));
+  static Future<PostPage?> _readInBackground(List<int> body) => Isolate.run(() => readBytes(body));
 
   // A channel page runs to a megabyte or two; its client settings are read
   // there too.
@@ -113,9 +113,11 @@ class CommunityPosts {
   /// Posts and the continuation token of a browse response, or of the
   /// `ytInitialData` in the HTML page [body]; read by the native core. Null
   /// when there is neither, or without the core.
-  static PostPage? read(String body) {
+  static PostPage? read(String body) => readBytes(utf8.encode(body));
+
+  static PostPage? readBytes(List<int> body) {
     final core = NativeCore.instance;
-    final page = core == null ? null : jsonDecode(core.take(core.withText(body, core.youtubePosts)) ?? 'null');
+    final page = core == null ? null : jsonDecode(core.take(core.withBytes(body, core.youtubePosts)) ?? 'null');
     if (page is! Map<String, dynamic>) return null;
     CommunityPost post(Map<String, dynamic> p) {
       final video = p['video'] as Map<String, dynamic>?;

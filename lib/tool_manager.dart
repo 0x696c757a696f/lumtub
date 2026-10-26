@@ -178,9 +178,14 @@ class ToolManager {
 
   Future<void> checkUpdates({bool force = false}) async {
     final stamp = File('${root.path}${Platform.pathSeparator}last_update_check.txt');
-    if (!force && !_ytDlpIsSingleFile && await stamp.exists()) {
-      final last = DateTime.tryParse((await stamp.readAsString()).trim());
-      if (last != null && DateTime.now().difference(last) < const Duration(hours: 24)) return;
+    // The single-file yt-dlp is replaced as soon as possible, but a failed
+    // try waits an hour, as does any check that failed, rather than costing
+    // every launch GitHub requests against its hourly limit.
+    if (!force && await stamp.exists()) {
+      final [time, ...rest] = (await stamp.readAsString()).trim().split(' ');
+      final last = DateTime.tryParse(time);
+      final wait = _ytDlpIsSingleFile || rest.contains('failed') ? const Duration(hours: 1) : const Duration(hours: 24);
+      if (last != null && DateTime.now().difference(last) < wait) return;
     }
     final errors = <String>[];
     for (final task in <(String, Future<void> Function())>[
@@ -199,6 +204,7 @@ class ToolManager {
       await stamp.writeAsString(DateTime.now().toIso8601String());
       status('更新检查完成。如有新版，重启应用后启用。');
     } else {
+      await stamp.writeAsString('${DateTime.now().toIso8601String()} failed');
       status('部分组件更新失败，现有版本不受影响：{0}', [errors.join(' / ')]);
     }
   }

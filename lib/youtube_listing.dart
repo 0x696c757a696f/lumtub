@@ -43,7 +43,7 @@ class YoutubeListing {
   // A results page runs to a megabyte.
   static Future<Object?> _readInBackground(List<int> bytes) => Isolate.run(() {
         final core = NativeCore.instance!;
-        return jsonDecode(core.take(core.withText(utf8.decode(bytes), core.youtubeListing)) ?? 'null');
+        return jsonDecode(core.take(core.withBytes(bytes, core.youtubeListing)) ?? 'null');
       });
 
   Stream<String> _pages(String endpoint, Map<String, Object> first, {String? region}) async* {

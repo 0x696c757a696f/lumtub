@@ -961,6 +961,7 @@ class AppController extends ChangeNotifier {
       return;
     }
     _update(() {
+      _putAwayExplore();
       exploreSection = nextSection;
       exploreTopic = nextTopic;
       exploreSub = nextSub;
@@ -971,10 +972,34 @@ class AppController extends ChangeNotifier {
       explorePeriod = nextPeriod;
       exploreDuration = nextDuration;
       exploreQuality = nextQuality;
-      explore?.dispose();
-      explore = null;
     });
     _loadExplore();
+  }
+
+  /// Lists of zones shown lately, so going back to one shows it again
+  /// instead of searching anew. 全部 is left out, as each visit brings
+  /// others, and so is a list that failed.
+  final _recentExplore = <Object, (DateTime, VideoListLoader)>{};
+  static const _keepExplore = Duration(minutes: 15);
+
+  Object get _exploreKey => (exploreSection, exploreTopic, exploreSub, exploreLeaf, exploreMode, explorePeriod, exploreDuration, exploreQuality, exploreFormat, exploreView, preferences.exploreRegion, preferences.exploreLanguage);
+
+  void _putAwayExplore() {
+    final loader = explore;
+    explore = null;
+    if (loader == null) return;
+    if (exploreTopicNow.mix || loader.error != null) {
+      loader.dispose();
+      return;
+    }
+    loader.removeListener(notifyListeners);
+    final key = _exploreKey;
+    final older = _recentExplore.remove(key)?.$2;
+    if (older != null && !identical(older, loader)) older.dispose();
+    _recentExplore[key] = (DateTime.now(), loader);
+    while (_recentExplore.length > 4) {
+      _recentExplore.remove(_recentExplore.keys.first)!.$2.dispose();
+    }
   }
 
   void _loadExplore() {
@@ -983,6 +1008,14 @@ class AppController extends ChangeNotifier {
     if (exploreTopicNow.opens case final opens?) {
       setExplore(section: opens);
       return;
+    }
+    if (_recentExplore.remove(_exploreKey) case (final at, final loader)) {
+      if (DateTime.now().difference(at) < _keepExplore) {
+        logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
+        _update(() => explore = loader..addListener(notifyListeners));
+        return;
+      }
+      loader.dispose();
     }
     final query = exploreQuery;
     final mode = exploreMode;
@@ -3028,6 +3061,9 @@ class AppController extends ChangeNotifier {
     channelVideos?.dispose();
     searchResults?.dispose();
     explore?.dispose();
+    for (final (_, loader) in _recentExplore.values) {
+      loader.dispose();
+    }
     channelPosts?.dispose();
     youtubePlaylistVideos?.dispose();
     related?.dispose();

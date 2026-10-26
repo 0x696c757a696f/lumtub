@@ -30,7 +30,7 @@ fn text_of(node: &Value, keys: &[&str]) -> Option<String> {
 /// Counts such as `1,234 views`, `1.2M subscribers` or `No views`.
 pub fn count(text: &str) -> Option<u64> {
     let text = text.trim();
-    if text.to_ascii_lowercase().starts_with("no ") {
+    if text.as_bytes().get(..3).is_some_and(|p| p.eq_ignore_ascii_case(b"no ")) {
         return Some(0);
     }
     let start = text.find(|c: char| c.is_ascii_digit())?;

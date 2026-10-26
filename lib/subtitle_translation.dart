@@ -36,8 +36,8 @@ SubtitleOption? translationOf(List<SubtitleOption> options, TranslationLanguage 
 class SecondarySubtitle {
   /// Shows [option] as the secondary subtitle, adding the track to [player]
   /// first if it is not loaded; null turns the secondary subtitle off.
-  /// Returns whether it worked.
-  static Future<bool> set(Player player, SubtitleOption? option) async {
+  /// Returns whether it worked. [file] holds the track, fetched already.
+  static Future<bool> set(Player player, SubtitleOption? option, {String? file}) async {
     final platform = player.platform;
     if (platform is! NativePlayer) return false;
     if (option == null) {
@@ -48,7 +48,7 @@ class SecondarySubtitle {
     var track = _loaded(player, option);
     if (track == null) {
       // "auto" adds the track without choosing it as the main subtitle.
-      await platform.command(['sub-add', option.url, 'auto', option.label, option.language]);
+      await platform.command(['sub-add', file ?? option.url, 'auto', option.label, option.language]);
       track = await _waitFor(player, option);
       if (track == null) return false;
     }

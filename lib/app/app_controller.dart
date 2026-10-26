@@ -62,6 +62,7 @@ import '../explore_topics.dart';
 import '../faith_topics.dart';
 import '../storyboard.dart';
 import '../stream_resolver.dart';
+import '../subtitle_files.dart';
 import '../subtitle_translation.dart';
 import '../translation.dart';
 import 'posts_loader.dart';
@@ -1557,6 +1558,18 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  late final _subtitleFiles = SubtitleFiles(_http, Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles'), translator);
+
+  /// [option] as a local file, fetched with retries; see [SubtitleFiles].
+  Future<String> _subtitleFile(SubtitleOption option) async {
+    try {
+      return await _subtitleFiles.pathFor(option);
+    } catch (e) {
+      logInfo('Could not fetch subtitles ${option.language}: $e');
+      rethrow;
+    }
+  }
+
   /// Shows [option], adding it to the player first if it is not loaded.
   Future<void> showSubtitle(SubtitleOption option) async {
     final player = this.player;
@@ -1567,7 +1580,9 @@ class AppController extends ChangeNotifier {
       if (loaded != null) {
         await player.setSubtitleTrack(loaded);
       } else {
-        await platform.command(['sub-add', option.url, 'select', option.label, option.language]);
+        final file = await _subtitleFile(option);
+        if (this.player != player) return;
+        await platform.command(['sub-add', file, 'select', option.label, option.language]);
       }
     } catch (e) {
       logError('Could not load subtitles ${option.language}', e);
@@ -1580,7 +1595,10 @@ class AppController extends ChangeNotifier {
     final player = this.player;
     if (player == null) return;
     try {
-      if (!await SecondarySubtitle.set(player, option)) throw StateError('字幕未加载');
+      final loaded = option == null || player.state.tracks.subtitle.any((t) => t.title == option.label);
+      final file = loaded ? null : await _subtitleFile(option);
+      if (this.player != player) return;
+      if (!await SecondarySubtitle.set(player, option, file: file)) throw StateError('字幕未加载');
       _update(() => secondarySubtitle = option);
     } catch (e) {
       logError('Could not set secondary subtitles ${option?.language}', e);

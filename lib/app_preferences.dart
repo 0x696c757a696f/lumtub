@@ -175,17 +175,33 @@ class AppPreferences {
   /// The language 翻译 and the translated subtitle turn text into (a TranslationLanguage code).
   final String translateLanguage;
 
-  bool isBlocked(String? channelId) => channelId != null && blockedChannels.any((c) => c.id == channelId);
+  bool isBlocked(String? channelId) => channelId != null && _lists.blockedIds.contains(channelId);
 
-  bool isUnrecommended(String? channelId) => channelId != null && unrecommendedChannels.any((c) => c.id == channelId);
+  bool isUnrecommended(String? channelId) => channelId != null && _lists.unrecommendedIds.contains(channelId);
 
   /// Whether a channel called [name] was blocked by name.
-  bool isBlockedName(String name) => blockedChannelNames.any((n) => n.trim().toLowerCase() == name.trim().toLowerCase());
+  bool isBlockedName(String name) => _lists.names.isNotEmpty && _lists.names.contains(name.trim().toLowerCase());
+
+  /// The block lists as sets and lowercased once per preferences: [shows]
+  /// runs for every item of every list on every rebuild.
+  ({Set<String> blockedIds, Set<String> unrecommendedIds, Set<String> names, List<String> keywords}) get _lists => _listCache[this] ??= (
+        blockedIds: {for (final c in blockedChannels) c.id},
+        unrecommendedIds: {for (final c in unrecommendedChannels) c.id},
+        names: {for (final n in blockedChannelNames) n.trim().toLowerCase()},
+        keywords: [for (final w in blockedKeywords) w.toLowerCase()],
+      );
+  static final _listCache = Expando<({Set<String> blockedIds, Set<String> unrecommendedIds, Set<String> names, List<String> keywords})>();
 
   /// Whether a channel called [name], with [id] or [handle] if known, is
   /// one the user blocks by group or as state media.
-  bool blocksChannel(String name, {String? id, String? handle}) =>
-      (blockGroups && _matchers.groups.channel(name, id: id, handle: handle)) || blocksMediaChannel(name);
+  /// Remembered per channel for these preferences, as each test goes
+  /// through the native core.
+  bool blocksChannel(String name, {String? id, String? handle}) {
+    if (!blockGroups && !blockStateMedia) return false;
+    final memo = _blockMemo[this] ??= <String, bool>{};
+    if (memo.length > 20000) memo.clear();
+    return memo['channel\n$id\n$handle\n$name'] ??= (blockGroups && _matchers.groups.channel(name, id: id, handle: handle)) || blocksMediaChannel(name);
+  }
 
   /// Whether [group] of either list is ticked.
   bool groupOn(BlockedGroup group, {bool media = false}) =>
@@ -225,8 +241,11 @@ class AppPreferences {
   bool shows(VideoItem item, {bool watched = false}) {
     if (isBlocked(item.channelId) || isBlockedName(item.channel)) return false;
     if (blockedChannels.isNotEmpty && item.channelId == null && blockedChannels.any((c) => c.name.isNotEmpty && c.name == item.channel)) return false;
-    final title = item.title.toLowerCase();
-    if (blockedKeywords.any((word) => title.contains(word.toLowerCase()))) return false;
+    final keywords = _lists.keywords;
+    if (keywords.isNotEmpty) {
+      final title = item.title.toLowerCase();
+      if (keywords.any(title.contains)) return false;
+    }
     final duration = item.duration;
     if (hideShorts && _isShort(item)) return false;
     if (minDurationMinutes > 0 && duration != null && duration > 0 && duration < minDurationMinutes * 60) return false;

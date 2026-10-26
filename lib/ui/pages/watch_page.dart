@@ -56,13 +56,22 @@ class _WatchPageState extends State<WatchPage> {
     });
   }
 
+  Object? _darkKey;
+  ThemeData? _dark;
+
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
     final appearance = controller.appearance;
     final page = _page(context, controller);
     if (!appearance.darkWatchPage || Theme.of(context).brightness == Brightness.dark) return page;
-    final dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.fontFamily);
+    // ColorScheme.fromSeed is costly and the page rebuilds on every notify.
+    final key = appearance.themeKey(controller.accentColor);
+    if (key != _darkKey) {
+      _darkKey = key;
+      _dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.fontFamily);
+    }
+    final dark = _dark!;
     return Theme(data: dark, child: Material(color: dark.colorScheme.surface, child: page));
   }
 

@@ -481,6 +481,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   Widget _bottomBar(BuildContext context, bool fullscreen) {
     final primary = Theme.of(context).colorScheme.inversePrimary;
+    // Built here, once per rebuild of the bar, not on every position event.
+    final segments = [
+      for (final s in _controller.segments) ProgressSegment(s.start, s.end, _segmentColors[s.category] ?? const Color(0xFF00D400)),
+    ];
+    final chapterStarts = [for (final c in _chapters) c.start];
     final width = fullscreen ? 42.0 : 35.0;
     // Keep the action cluster anchored to the physical bottom-right edge in
     // fullscreen. The progress and playback information remain on the left.
@@ -491,18 +496,16 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: StreamBuilder<Duration>(
-            stream: _player.stream.position,
-            initialData: _player.state.position,
-            builder: (context, _) => VideoProgressBar(
+          child: _PositionBuilder(
+            player: _player,
+            active: !_animation.isDismissed,
+            builder: (context) => VideoProgressBar(
               position: _player.state.position,
               buffered: _player.state.buffer,
               total: _player.state.duration,
               color: primary,
-              segments: [
-                for (final s in _controller.segments) ProgressSegment(s.start, s.end, _segmentColors[s.category] ?? const Color(0xFF00D400)),
-              ],
-              chapterStarts: [for (final c in _chapters) c.start],
+              segments: segments,
+              chapterStarts: chapterStarts,
               preview: _preview,
               heatmap: _controller.preferences.showHeatmap ? _heatmap?.values : null,
               labelOf: _chapters.isEmpty ? null : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(_chapters, time)?.title ?? ''}',
@@ -516,10 +519,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           if (_controller.hasNext)
             _IconButton(tooltip: tr('下一个 (Shift+N)'), icon: Icons.skip_next_rounded, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
           const SizedBox(width: 4),
-          StreamBuilder<Duration>(
-            stream: _player.stream.position,
-            initialData: _player.state.position,
-            builder: (context, _) => Text(
+          _PositionBuilder(
+            player: _player,
+            active: !_animation.isDismissed,
+            seconds: true,
+            builder: (context) => Text(
               '${formatPlaybackTime(_player.state.position)} / ${formatPlaybackTime(_player.state.duration)}',
               style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
             ),
@@ -797,6 +801,58 @@ class _IconButton extends StatelessWidget {
 }
 
 /// PiliNara's `PlayOrPauseButton`, animating between the two icons.
+/// Rebuilds [builder] as the playback position moves, only while [active]
+/// (the bars are on screen), and with [seconds] only when the whole second
+/// changes. mpv reports the position on every frame.
+class _PositionBuilder extends StatefulWidget {
+  const _PositionBuilder({required this.player, required this.active, required this.builder, this.seconds = false});
+  final Player player;
+  final bool active;
+  final bool seconds;
+  final WidgetBuilder builder;
+
+  @override
+  State<_PositionBuilder> createState() => _PositionBuilderState();
+}
+
+class _PositionBuilderState extends State<_PositionBuilder> {
+  StreamSubscription<Duration>? _subscription;
+  int _shown = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _listen();
+  }
+
+  @override
+  void didUpdateWidget(_PositionBuilder old) {
+    super.didUpdateWidget(old);
+    if (old.active != widget.active || old.player != widget.player) _listen();
+  }
+
+  void _listen() {
+    unawaited(_subscription?.cancel());
+    _subscription = !widget.active
+        ? null
+        : widget.player.stream.position.listen((position) {
+            final mark = widget.seconds ? position.inSeconds : position.inMilliseconds;
+            if (mark == _shown || !mounted) return;
+            _shown = mark;
+            setState(() {});
+          });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_subscription?.cancel());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context);
+}
+
 class _PlayPauseButton extends StatefulWidget {
   const _PlayPauseButton({required this.player});
   final Player player;

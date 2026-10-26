@@ -126,7 +126,6 @@ void main() {
     await pump(tester);
     expect(find.text('测试视频标题'), findsOneWidget);
     expect(find.text('1:00 / 10:00'), findsOneWidget);
-    expect(find.text('自动'), findsOneWidget, reason: '画面比例');
     expect(find.text('1X'), findsOneWidget, reason: '倍速');
     expect(find.text('1080P'), findsOneWidget, reason: '画质');
     expect(find.byIcon(Icons.fullscreen_rounded), findsOneWidget);
@@ -135,7 +134,7 @@ void main() {
 
   testWidgets('the top bar is PiliNara\'s: back and home, then the switches', (tester) async {
     await pump(tester);
-    for (final tip in ['返回', '主页', '窗口置顶', '听视频（只放声音）', 'SponsorBlock 已关闭，点击开启', '画中画', '更多设置']) {
+    for (final tip in ['返回', '主页', '投屏', '画中画', '更多设置']) {
       expect(find.byTooltip(tip), findsOneWidget, reason: tip);
     }
     expect(tester.takeException(), isNull);
@@ -208,9 +207,11 @@ void main() {
     expect(find.text('1.5X'), findsOneWidget);
   });
 
-  testWidgets('the fit menu changes the picture fit', (tester) async {
+  testWidgets('the fit choice in 更多设置 changes the picture fit', (tester) async {
     await pump(tester);
-    await tester.tap(find.text('自动'));
+    await tester.tap(find.byTooltip('更多设置'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('16:9'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('16:9'));
     await tester.pumpAndSettle();
@@ -240,10 +241,10 @@ void main() {
 
   testWidgets('the more panel applies choices and stays open', (tester) async {
     await pump(tester);
-    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.tap(find.byTooltip('更多设置'));
     await tester.pumpAndSettle();
     final panel = find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first;
-    for (final item in ['画质', '画面缩放', '镜像翻转']) {
+    for (final item in ['窗口置顶', '听视频', '空降助手', '播放信息', '镜像翻转', '画质', '画面比例']) {
       expect(find.text(item), findsWidgets, reason: item);
     }
     await tester.scrollUntilVisible(find.text('30 分钟'), 60, scrollable: panel);
@@ -258,7 +259,7 @@ void main() {
     await tester.tap(find.text('不开启'));
     await tester.pumpAndSettle();
     expect(controller.sleepAt, isNull);
-    for (final item in ['播放策略', '禁用视频编码', '字幕', '播放信息', '截图 (S)', '重载视频', '快捷键']) {
+    for (final item in ['播放策略', '禁用视频编码', '字幕', '截图 (S)', '重载视频', '快捷键']) {
       await tester.scrollUntilVisible(find.text(item), 60, scrollable: panel);
       expect(find.text(item), findsWidgets, reason: item);
     }

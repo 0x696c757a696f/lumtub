@@ -107,6 +107,40 @@ class PanelChoices<T> extends StatelessWidget {
   }
 }
 
+/// A tile that turns something on and off, for the switches at the top
+/// of 更多设置.
+class PanelToggle extends StatelessWidget {
+  const PanelToggle({super.key, required this.label, required this.icon, required this.value, required this.onChanged});
+  final String label;
+  final IconData icon;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 116,
+      child: Material(
+        color: value ? colors.primaryContainer : colors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => onChanged(!value),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            child: Column(children: [
+              Icon(icon, size: 22, color: value ? colors.onPrimaryContainer : colors.onSurfaceVariant),
+              const SizedBox(height: 6),
+              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: value ? colors.onPrimaryContainer : colors.onSurface)),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// A row with a switch.
 class PanelSwitch extends StatelessWidget {
   const PanelSwitch({super.key, required this.label, required this.icon, required this.value, required this.onChanged, this.detail});

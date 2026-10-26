@@ -422,8 +422,19 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ),
         const SizedBox(width: 6),
         Expanded(
-          child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: fullscreen ? 16 : 14)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: fullscreen ? 16 : 14, fontWeight: FontWeight.w500)),
+            if (fullscreen && (details?.channel ?? item?.channel ?? '').isNotEmpty)
+              Text(details?.channel ?? item!.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          ]),
         ),
+        // Switches that are on show here, so the state stays visible after
+        // they moved into 更多设置.
+        for (final (on, icon, tip) in [
+          (_controller.pinned, Icons.push_pin_rounded, tr('窗口置顶中')),
+          (_controller.audioOnly, Icons.headphones_rounded, tr('听视频中')),
+        ])
+          if (on) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tip, child: Icon(icon, color: Theme.of(context).colorScheme.inversePrimary, size: 17))),
         if (_controller.sleepAt != null || _controller.sleepAfterCurrent)
           Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Tooltip(message: tr('定时关闭已开启'), child: Icon(Icons.bedtime_outlined, color: Colors.white, size: 18))),
         _IconButton(
@@ -434,36 +445,6 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           onTap: () => unawaited(showCastDialog(context, _controller)),
         ),
         _IconButton(
-          tooltip: _controller.pinned ? tr('取消置顶') : tr('窗口置顶'),
-          icon: _controller.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
-          size: 19,
-          active: _controller.pinned,
-          onTap: _controller.togglePinned,
-        ),
-        _IconButton(
-          tooltip: _controller.audioOnly ? tr('恢复画面') : tr('听视频（只放声音）'),
-          icon: Icons.headphones_rounded,
-          size: 19,
-          active: _controller.audioOnly,
-          onTap: () => unawaited(_controller.toggleAudioOnly()),
-        ),
-        _IconButton(
-          tooltip: _controller.settings.sponsorBlock ? tr('SponsorBlock 已开启，点击关闭') : tr('SponsorBlock 已关闭，点击开启'),
-          icon: _controller.settings.sponsorBlock ? Icons.shield_rounded : Icons.shield_outlined,
-          size: 19,
-          active: _controller.settings.sponsorBlock,
-          onTap: () => unawaited(_controller.toggleSponsorBlock()),
-        ),
-        _IconButton(
-          tooltip: tr('应用内小窗'),
-          icon: Icons.picture_in_picture_rounded,
-          size: 19,
-          onTap: () async {
-            await leaveFullscreen();
-            _controller.enterMini();
-          },
-        ),
-        _IconButton(
           tooltip: tr('画中画'),
           icon: Icons.picture_in_picture_alt_rounded,
           size: 19,
@@ -472,8 +453,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             _controller.setPip(true);
           },
         ),
-        _IconButton(tooltip: tr('播放信息 (I)'), icon: Icons.info_outline_rounded, size: 19, active: _controller.showStats, onTap: _controller.toggleStats),
-        _IconButton(tooltip: tr('更多设置'), icon: Icons.more_vert_rounded, size: 20, onTap: () => _showMore(context)),
+        _IconButton(tooltip: tr('更多设置'), icon: Icons.tune_rounded, size: 20, onTap: () => _showMore(context)),
       ]),
     );
   }
@@ -517,7 +497,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           _PlayPauseButton(player: _player),
           if (_controller.hasNext)
             _IconButton(tooltip: tr('下一个 (Shift+N)'), icon: Icons.skip_next_rounded, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
-          const SizedBox(width: 4),
+          _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
+          const SizedBox(width: 6),
           _PositionBuilder(
             player: _player,
             active: !_animation.isDismissed,
@@ -527,21 +508,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
             ),
           ),
-          if (_chapters.isNotEmpty) Flexible(child: _chapterMenu()),
-          const Spacer(),
-          _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
-          ValueListenableBuilder(
-            valueListenable: videoFit,
-            builder: (context, fit, _) => _TextMenu<VideoFit>(
-              tooltip: tr('画面比例'),
-              label: fit.label,
-              value: fit,
-              values: [for (final f in VideoFit.values) (f, f.label)],
-              onSelected: (f) => videoFit.value = f,
-              onOpened: _menuOpened,
-              onClosed: _menuClosed,
-            ),
-          ),
+          Expanded(child: Align(alignment: Alignment.centerLeft, child: _chapterMenu())),
           _subtitleMenu(width),
           StreamBuilder<double>(
             stream: _player.stream.rate,
@@ -651,6 +618,20 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final sleeping = _controller.sleepAfterCurrent ? sleepAfterCurrent : (sleepAt == null ? sleepOff : null);
     final codecs = FormatPolicy.disabledNames(settings);
     return ListView(padding: const EdgeInsets.only(bottom: 16), children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+        child: Wrap(spacing: 8, runSpacing: 8, children: [
+          PanelToggle(label: tr('窗口置顶'), icon: Icons.push_pin_outlined, value: _controller.pinned, onChanged: (_) => _controller.togglePinned()),
+          PanelToggle(label: tr('听视频'), icon: Icons.headphones_rounded, value: _controller.audioOnly, onChanged: (_) => unawaited(_controller.toggleAudioOnly())),
+          PanelToggle(label: tr('空降助手'), icon: Icons.shield_outlined, value: settings.sponsorBlock, onChanged: (_) => unawaited(_controller.toggleSponsorBlock())),
+          PanelToggle(label: tr('播放信息'), icon: Icons.info_outline_rounded, value: _controller.showStats, onChanged: (_) => _controller.toggleStats()),
+          PanelToggle(label: tr('镜像翻转'), icon: Icons.flip_rounded, value: _transform.mirrored, onChanged: (v) => unawaited(_transform.setMirrored(v))),
+          PanelToggle(label: tr('应用内小窗'), icon: Icons.picture_in_picture_rounded, value: false, onChanged: (_) => closeThen(() async {
+            if (isFullscreen(context)) await widget.state?.exitFullscreen();
+            _controller.enterMini();
+          })),
+        ]),
+      ),
       PanelHeading(tr('画面')),
       PanelChoices<int>(
         label: tr('画质'),
@@ -659,6 +640,16 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h))],
         onSelected: _controller.setMaxHeight,
       ),
+      ValueListenableBuilder(
+        valueListenable: videoFit,
+        builder: (context, fit, _) => PanelChoices<VideoFit>(
+          label: tr('画面比例'),
+          icon: Icons.aspect_ratio_rounded,
+          value: fit,
+          values: [for (final f in VideoFit.values) (f, f.label)],
+          onSelected: (f) => videoFit.value = f,
+        ),
+      ),
       PanelChoices<double>(
         label: tr('画面缩放'),
         icon: Icons.zoom_in_rounded,
@@ -666,7 +657,6 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         values: [for (final z in PictureTransform.zoomLevels) (z, z == 1 ? tr('原始大小') : '${trimSpeed(z)}x')],
         onSelected: (z) => unawaited(_transform.setZoom(z)),
       ),
-      PanelSwitch(label: tr('镜像翻转'), icon: Icons.flip_rounded, value: _transform.mirrored, onChanged: (v) => unawaited(_transform.setMirrored(v))),
       PanelLink(label: tr('画面与音画同步调节'), icon: Icons.tune_rounded, onTap: () => closeThen(() => openPictureSettings(context, _controller))),
       PanelHeading(tr('声音')),
       PanelChoices<AudioQuality>(
@@ -730,7 +720,6 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         onTap: () => closeThen(() => unawaited(_openSubtitles(context))),
       ),
       PanelHeading(tr('工具')),
-      PanelSwitch(label: tr('播放信息'), icon: Icons.info_outline_rounded, value: _controller.showStats, onChanged: (_) => _controller.toggleStats()),
       PanelLink(label: tr('截图 (S)'), detail: tr('保存到“图片\\Lumtub”并复制'), icon: Icons.photo_camera_outlined, opens: false, onTap: () => closeThen(() => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)))),
       PanelLink(label: tr('重载视频'), detail: tr('从当前位置重新加载'), icon: Icons.refresh_rounded, opens: false, onTap: () => closeThen(() => unawaited(_controller.reloadVideo()))),
       PanelLink(label: tr('快捷键'), icon: Icons.keyboard_outlined, onTap: () => showShortcutHelp(context, _controller.preferences)),
@@ -743,7 +732,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 }
 
-/// PiliNara's `ComBtn`: a bare white icon with a tooltip.
+/// PiliNara's `ComBtn`: a bare white icon with a tooltip, with a soft
+/// round highlight under the mouse.
 class _IconButton extends StatelessWidget {
   const _IconButton({required this.tooltip, required this.icon, required this.onTap, this.size = 22, this.width = 34, this.active = false});
   final String tooltip;
@@ -757,12 +747,39 @@ class _IconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Tooltip(
         message: tooltip,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onTap,
-            child: SizedBox(width: width, height: 34, child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white)),
+        child: _Hover(
+          onTap: onTap,
+          child: SizedBox(width: width, height: 34, child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white)),
+        ),
+      );
+}
+
+/// A pressable area of the bars: the click cursor and a translucent
+/// rounded highlight while the mouse is over it.
+class _Hover extends StatefulWidget {
+  const _Hover({required this.onTap, required this.child});
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  State<_Hover> createState() => _HoverState();
+}
+
+class _HoverState extends State<_Hover> {
+  bool _over = false;
+
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _over = true),
+        onExit: (_) => setState(() => _over = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            decoration: BoxDecoration(color: _over ? Colors.white.withValues(alpha: 0.14) : Colors.transparent, borderRadius: BorderRadius.circular(17)),
+            child: widget.child,
           ),
         ),
       );
@@ -884,30 +901,51 @@ class _PopupMenu<T> extends StatelessWidget {
   final VoidCallback onClosed;
   final Widget child;
 
+  static const _itemHeight = 36.0;
+  static const _padding = 6.0;
+
+  /// Opens the list just above the button, as the bars sit at the bottom,
+  /// instead of over it.
+  Future<void> _open(BuildContext context) async {
+    final box = context.findRenderObject()! as RenderBox;
+    final overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
+    final rect = Rect.fromPoints(box.localToGlobal(Offset.zero, ancestor: overlay), box.localToGlobal(box.size.bottomRight(Offset.zero), ancestor: overlay));
+    final height = items.length * _itemHeight + _padding * 2;
+    final top = rect.top - height - 6;
+    final position = top >= 8
+        ? RelativeRect.fromLTRB(rect.left, top, overlay.size.width - rect.right, overlay.size.height - rect.top)
+        : RelativeRect.fromRect(rect, Offset.zero & overlay.size);
+    onOpened();
+    final theme = Theme.of(context);
+    final picked = await showMenu<T>(
+      context: context,
+      position: position,
+      color: const Color(0xEB1F1F1F),
+      elevation: 6,
+      menuPadding: const EdgeInsets.symmetric(vertical: _padding),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      constraints: const BoxConstraints(minWidth: 112),
+      items: [
+        for (final (item, label) in items)
+          PopupMenuItem<T>(
+            height: _itemHeight,
+            padding: const EdgeInsets.only(left: 12, right: 20),
+            value: item,
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              SizedBox(width: 22, child: item == value ? Icon(Icons.check_rounded, size: 16, color: theme.colorScheme.inversePrimary) : null),
+              Flexible(child: Text(label, style: item == value ? _menuText.copyWith(color: theme.colorScheme.inversePrimary, fontWeight: FontWeight.w600) : _menuText)),
+            ]),
+          ),
+      ],
+    );
+    onClosed();
+    if (picked != null && picked != value) onSelected(picked);
+  }
+
   @override
-  Widget build(BuildContext context) => PopupMenuButton<T>(
-        tooltip: tooltip,
-        requestFocus: false,
-        initialValue: value,
-        color: Colors.black.withValues(alpha: 0.8),
-        menuPadding: EdgeInsets.zero,
-        position: PopupMenuPosition.over,
-        onOpened: onOpened,
-        onCanceled: onClosed,
-        onSelected: (v) {
-          onClosed();
-          onSelected(v);
-        },
-        itemBuilder: (context) => [
-          for (final (item, label) in items)
-            PopupMenuItem<T>(
-              height: 35,
-              padding: const EdgeInsets.only(left: 30, right: 30),
-              value: item,
-              child: Text(label, style: item == value ? _menuText.copyWith(color: Theme.of(context).colorScheme.inversePrimary) : _menuText),
-            ),
-        ],
-        child: child,
+  Widget build(BuildContext context) => Tooltip(
+        message: tooltip,
+        child: Builder(builder: (context) => _Hover(onTap: () => unawaited(_open(context)), child: child)),
       );
 }
 

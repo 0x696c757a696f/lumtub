@@ -2200,5 +2200,8 @@
   "定时关闭（{0} 分钟后暂停）": "Sleep timer (pauses in {0} min)",
   "工具": "Tools",
   "音质": "Audio quality",
-  "音轨": "Audio track"
+  "音轨": "Audio track",
+  "听视频": "Audio only",
+  "听视频中": "Playing audio only",
+  "窗口置顶中": "Window pinned on top"
 }

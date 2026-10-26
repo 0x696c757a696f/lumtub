@@ -224,7 +224,7 @@ class LibraryController extends ChangeNotifier {
     // fails, start as many yt-dlp processes.
     final results = await mapLimited(channels, feedConcurrency, (channel) async {
       try {
-        return await _feed.latest(channel);
+        return await _feed.latest(channel, fresh: force);
       } catch (_) {
         return null;
       }

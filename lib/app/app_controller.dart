@@ -2020,8 +2020,9 @@ class AppController extends ChangeNotifier {
             }
           }
         } catch (e) {
-          // A second yt-dlp would meet the same 429.
-          if (DateTime.now().isBefore(_rateLimitedUntil) || RegExp(r'\b429\b|Too Many Requests').hasMatch('$e')) rethrow;
+          // A second yt-dlp would meet the same 429, or the same network
+          // the first one already tried twice.
+          if (DateTime.now().isBefore(_rateLimitedUntil) || RegExp(r'\b429\b|Too Many Requests').hasMatch('$e') || StreamResolver.isTransient(e)) rethrow;
           loaded = await _repository!.details(item.id);
         }
       }

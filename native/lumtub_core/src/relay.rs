@@ -93,6 +93,7 @@ impl Web {
             )
             .timeout_connect(Some(Duration::from_secs(15)))
             .timeout_recv_response(Some(Duration::from_secs(20)))
+            .timeout_recv_body(Some(Duration::from_secs(120)))
             .build()
             .into();
         agents.insert(proxy.clone(), agent.clone());
@@ -254,6 +255,7 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &dyn Fetch) {
 }
 
 fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mutex<Shared>, fetch: &dyn Fetch) {
+    let mut buffer = vec![0u8; 256 << 10];
     loop {
         let Some((method, path, headers)) = read_request(reader) else { return };
         let keep_open = !headers.get("connection").is_some_and(|v| v.eq_ignore_ascii_case("close"));
@@ -297,7 +299,7 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
         let mut position = start;
         while position <= end {
             let last = (position + target.chunk - 1).min(end);
-            match copy(fetch, &target, position, last, writer, shared) {
+            match copy(fetch, &target, position, last, writer, shared, &mut buffer) {
                 Ok(()) => position = last + 1,
                 Err(Stop::Client) => return,
                 Err(Stop::Upstream(message)) => {
@@ -350,16 +352,15 @@ enum Stop {
 
 /// Sends bytes [from] to [to] of [target]. A reply YouTube cuts short is
 /// continued from the next missing byte; libmpv sees one unbroken reply.
-fn copy(fetch: &dyn Fetch, target: &Target, from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>) -> Result<(), Stop> {
+fn copy(fetch: &dyn Fetch, target: &Target, from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>, buffer: &mut [u8]) -> Result<(), Stop> {
     let mut next = from;
-    let mut buffer = vec![0u8; 256 << 10];
     let mut attempt = 0;
     while next <= to {
         let mut body = request(fetch, target, next, to)?;
         let mut received = 0u64;
         let mut failure = None;
         loop {
-            match body.read(&mut buffer) {
+            match body.read(buffer) {
                 Ok(0) => break,
                 Ok(n) => {
                     let wanted = (to + 1 - next - received).min(n as u64) as usize;

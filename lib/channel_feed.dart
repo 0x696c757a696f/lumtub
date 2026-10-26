@@ -18,7 +18,22 @@ class ChannelFeed {
 
   static Uri feedUri(ChannelRef channel) => Uri.https('www.youtube.com', '/feeds/videos.xml', {'channel_id': channel.id});
 
-  Future<List<VideoItem>> latest(ChannelRef channel) async {
+  /// Feeds read in the last minutes: the library's refresh and the home
+  /// feed right after it ask for the same channels. [fresh] reads again,
+  /// for a refresh the user asked for.
+  final _recent = <String, (DateTime, List<VideoItem>)>{};
+  static const recentFor = Duration(minutes: 5);
+
+  Future<List<VideoItem>> latest(ChannelRef channel, {bool fresh = false}) async {
+    if (_recent[channel.id] case (final at, final items) when !fresh && _clock().difference(at) < recentFor) return items;
+    final items = await _read(channel);
+    _recent.remove(channel.id);
+    if (_recent.length >= 300) _recent.remove(_recent.keys.first);
+    _recent[channel.id] = (_clock(), items);
+    return items;
+  }
+
+  Future<List<VideoItem>> _read(ChannelRef channel) async {
     final missingSince = _missing[channel.id];
     if (missingSince != null && _clock().difference(missingSince) < missingFor) throw StateError(tr('频道订阅源返回 HTTP {0}', [404]));
     final response = await _client.get(feedUri(channel), headers: {'User-Agent': YoutubeWeb.userAgent}).timeout(const Duration(seconds: 20));

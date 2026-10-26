@@ -252,6 +252,9 @@ class StreamResolver {
   /// Errors a second attempt can get past, unlike a private or removed video.
   static final _transient = RegExp(r'HTTP Error 5\d\d|timed out|Connection (reset|aborted|refused)|Remote end closed|getaddrinfo|IncompleteRead', caseSensitive: false);
 
+  /// Whether [error] is a network failure that resolving already retried.
+  static bool isTransient(Object error) => _transient.hasMatch('$error');
+
   Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false}) async {
     final watch = Stopwatch()..start();
     var result = await _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);

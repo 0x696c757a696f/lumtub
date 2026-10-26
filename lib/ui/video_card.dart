@@ -35,7 +35,7 @@ ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 4
       (null, null) => NetworkImage(url),
       (null, final frame?) => NetworkImage(frame.toString()),
       (final dir?, null) => CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file)),
-      (final dir?, final frame?) => CachedThumbnail(frame.toString(), CachedThumbnail.fileFor(dir, item.id, 'dearrow_${frame.queryParameters['time']}'), fallback: url),
+      (final dir?, final frame?) => CachedThumbnail(frame.toString(), CachedThumbnail.fileFor(dir, item.id, 'dearrow_${frame.queryParameters['time']}'), fallback: CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file))),
     },
   );
 }
@@ -290,10 +290,15 @@ class _VideoCardState extends State<VideoCard> {
     deArrow.addListener(_branded);
   }
 
-  /// DeArrow answered for some videos, maybe this one.
+  /// DeArrow answered for some videos, maybe this one: answers come in
+  /// bursts while a feed loads, so only a card whose branding changed
+  /// builds again.
   void _branded() {
-    if (mounted) setState(() {});
+    if (mounted && _branding != _brandingNow()) setState(() {});
   }
+
+  (String, Uri?) _brandingNow() => (deArrow.titleOf(widget.item.id, widget.item.title), deArrow.thumbnailOf(widget.item.id));
+  (String, Uri?)? _branding;
 
   @override
   void dispose() {
@@ -306,6 +311,7 @@ class _VideoCardState extends State<VideoCard> {
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
+    _branding = _brandingNow();
     final colors = context.colors;
     final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
     final meta = [

@@ -16,8 +16,8 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   final String url;
   final File file;
   /// Loaded instead when [url] fails, such as YouTube's own thumbnail
-  /// when DeArrow's frame is not ready; not cached under [file].
-  final String? fallback;
+  /// when DeArrow's frame is not ready.
+  final CachedThumbnail? fallback;
 
   static final http.Client _client = http.Client();
   static final Random _random = Random();
@@ -37,30 +37,59 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
       MultiFrameImageStreamCompleter(codec: _load(decode), scale: 1.0, debugLabel: url);
 
   Future<ui.Codec> _load(ImageDecoderCallback decode) async {
-    Uint8List? bytes;
+    final Uint8List bytes;
     try {
-      if (await file.exists()) bytes = await file.readAsBytes();
-    } on FileSystemException {
-      bytes = null;
-    }
-    if (bytes == null || bytes.isEmpty) {
-      var response = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 20));
-      // The larger sizes exist only for some videos; hqdefault always does.
-      if (response.statusCode == 404 && RegExp(r'/(maxresdefault|sddefault)\.jpg$').hasMatch(url)) {
-        response = await _client.get(Uri.parse(url.replaceFirst(RegExp(r'(maxresdefault|sddefault)\.jpg$'), 'hqdefault.jpg'))).timeout(const Duration(seconds: 20));
-      }
-      if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
-        final fallback = this.fallback;
-        if (fallback != null) {
-          final other = await _client.get(Uri.parse(fallback)).timeout(const Duration(seconds: 20));
-          if (other.statusCode == 200 && other.bodyBytes.isNotEmpty) return decode(await ui.ImmutableBuffer.fromUint8List(other.bodyBytes));
-        }
-        throw HttpException('Thumbnail HTTP ${response.statusCode}', uri: Uri.parse(url));
-      }
-      bytes = response.bodyBytes;
-      await _store(bytes);
+      bytes = await _bytes();
+    } catch (_) {
+      final fallback = this.fallback;
+      if (fallback == null) rethrow;
+      return fallback._load(decode);
     }
     return decode(await ui.ImmutableBuffer.fromUint8List(bytes));
+  }
+
+  /// Addresses that failed lately, and when. Flutter forgets an image that
+  /// failed, so a card scrolled back into view would ask again; a refused
+  /// address waits ten minutes, one the network failed half a minute.
+  static final _failed = <String, (DateTime, Duration)>{};
+
+  Future<Uint8List> _bytes() async {
+    try {
+      if (await file.exists()) {
+        final bytes = await file.readAsBytes();
+        if (bytes.isNotEmpty) return bytes;
+      }
+    } on FileSystemException {
+      // Downloaded again below.
+    }
+    if (_failed[url] case (final at, final wait) when DateTime.now().difference(at) < wait) {
+      throw HttpException('Thumbnail failed lately', uri: Uri.parse(url));
+    }
+    try {
+      var response = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+      // The larger sizes exist only for some videos; hqdefault always does.
+      if (response.statusCode == 404 && RegExp(r'/(maxresdefault|sddefault)\.jpg$').hasMatch(url)) {
+        response = await _client.get(Uri.parse(url.replaceFirst(RegExp(r'(maxresdefault|sddefault)\.jpg$'), 'hqdefault.jpg'))).timeout(const Duration(seconds: 10));
+      }
+      if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
+        _remember(const Duration(minutes: 10));
+        throw HttpException('Thumbnail HTTP ${response.statusCode}', uri: Uri.parse(url));
+      }
+      _failed.remove(url);
+      await _store(response.bodyBytes);
+      return response.bodyBytes;
+    } on HttpException {
+      rethrow;
+    } catch (_) {
+      _remember(const Duration(seconds: 30));
+      rethrow;
+    }
+  }
+
+  void _remember(Duration wait) {
+    _failed.remove(url);
+    if (_failed.length >= 500) _failed.remove(_failed.keys.first);
+    _failed[url] = (DateTime.now(), wait);
   }
 
   /// Writes through a unique temporary file so two cards loading the same

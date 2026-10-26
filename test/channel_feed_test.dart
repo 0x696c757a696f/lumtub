@@ -106,4 +106,21 @@ void main() {
     await expectLater(feed.latest(channel), throwsStateError);
     expect(requests, 2);
   });
+
+  test('a feed read minutes ago is answered again without asking', () async {
+    var requests = 0;
+    var now = DateTime(2026, 10, 24);
+    final feed = ChannelFeed(MockClient((_) async {
+      requests++;
+      return http.Response('<feed></feed>', 200);
+    }), clock: () => now);
+    await feed.latest(channel);
+    await feed.latest(channel);
+    expect(requests, 1);
+    await feed.latest(channel, fresh: true);
+    expect(requests, 2);
+    now = now.add(ChannelFeed.recentFor);
+    await feed.latest(channel);
+    expect(requests, 3);
+  });
 }

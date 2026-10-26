@@ -454,8 +454,8 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
         PopupItem<String>(
           title: tr('第二字幕语言'),
           leading: const Icon(Icons.closed_caption_outlined),
-          value: secondary?.code ?? '',
-          values: [('', tr('不显示')), for (final l in TranslationLanguage.all) (l.code, l.label)],
+          value: settings.secondarySubtitleLanguage == PlayerSettings.originalSubtitle ? PlayerSettings.originalSubtitle : secondary?.code ?? '',
+          values: [('', tr('不显示')), (PlayerSettings.originalSubtitle, tr('视频原字幕（自带或自动生成）')), for (final l in TranslationLanguage.all) (l.code, l.label)],
           enabled: settings.subtitleMode != SubtitleMode.off,
           onSelected: (v) => save(settings.copyWith(secondarySubtitleLanguage: v)),
         ),
@@ -463,7 +463,7 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           context,
           settings.subtitleMode == SubtitleMode.off
               ? tr('先开启“自动启用字幕”，第二字幕才会自动显示。')
-              : tr('第二字幕显示在第一字幕上方。视频没有这种语言的字幕时使用 YouTube 自动翻译；和第一字幕语言相同时不显示。'),
+              : tr('第一字幕按“第一字幕语言”显示，视频没有这种语言时用 YouTube 翻译。第二字幕显示在上方，“视频原字幕”是视频说话语言的字幕；和第一字幕相同时不显示。'),
         ),
         SubtitlePreview(settings: settings),
         _header(context, tr('第一字幕样式')),

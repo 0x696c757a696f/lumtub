@@ -7,7 +7,6 @@ import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleKind, SubtitleOption;
 import '../subtitle_translation.dart';
-import '../translation.dart';
 import 'player_panel.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
@@ -87,8 +86,9 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final controller = widget.controller;
     final player = widget.player;
     final offered = controller.details?.subtitles ?? const <SubtitleOption>[];
-    final target = TranslationLanguage.byCode(controller.preferences.translateLanguage);
-    final translation = translationOf(offered, target);
+    final target = controller.settings.subtitleLanguage.translation;
+    // Only offered when the video has no subtitle of its own in 第一字幕语言.
+    final translation = hasOwnSubtitle(offered, target) ? null : translationOf(offered, target);
     final labels = {for (final o in offered) o.label};
     // Tracks mpv has that the list above does not name, such as those
     // libmpv's ytdl_hook added or a downloaded video's files.
@@ -161,7 +161,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
         Expanded(
           child: ListView(padding: const EdgeInsets.only(bottom: 12), children: [
             row((key: 'off', label: tr('关闭'), detail: null, option: null, track: null), icon: Icons.block_rounded),
-            if (translation != null) row((key: 'o:${translation.label}', label: tr('翻译为{0}', [target.label]), detail: null, option: translation, track: null), icon: Icons.translate_rounded),
+            if (translation != null) row((key: 'o:${translation.label}', label: tr('{0}（YouTube 翻译）', [target.label]), detail: null, option: translation, track: null), icon: Icons.translate_rounded),
             for (final (title, rows) in visible) ...[heading(title), for (final c in rows) row(c)],
             if (shownTranslated.isNotEmpty) ...[
               if (searching || _allLanguages) ...[heading(tr('YouTube 自动翻译')), for (final c in shownTranslated) row(c)]

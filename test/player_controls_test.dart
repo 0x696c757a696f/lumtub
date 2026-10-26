@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/ui/pip_view.dart';
 import 'package:lumtub/ui/player_controls.dart';
 import 'package:lumtub/ui/theme.dart';
@@ -167,6 +168,7 @@ void main() {
       SubtitleOption(language: 'ja', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=ja', kind: SubtitleKind.automatic),
       SubtitleOption(language: 'fr', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=en&tlang=fr', kind: SubtitleKind.translated),
     ]);
+    controller.settings = controller.settings.copyWith(subtitleLanguage: SubtitleLanguage.zh);
     tester.view.physicalSize = const Size(1280, 720);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -181,7 +183,7 @@ void main() {
     expect(find.text('第二字幕（上方）'), findsOneWidget);
     expect(find.text('视频自带'), findsNWidgets(2));
     expect(find.text('自动生成'), findsNWidgets(2));
-    expect(find.text('翻译为简体中文'), findsNWidgets(2));
+    expect(find.text('简体中文（YouTube 翻译）'), findsNWidgets(2));
     // YouTube's translations wait behind a button on each side.
     expect(find.textContaining('法语'), findsNothing);
     await tester.tap(find.textContaining('更多语言').first);

@@ -53,6 +53,33 @@ SubtitleOption? subtitleIn(List<SubtitleOption> options, TranslationLanguage tar
   return translationOf(options, target);
 }
 
+/// Whether the video has a subtitle of its own (not translated) in [target].
+bool hasOwnSubtitle(List<SubtitleOption> options, TranslationLanguage target) =>
+    options.any((o) => o.kind != SubtitleKind.translated && speaks(o.language, target));
+
+/// The video's subtitle in the language it is spoken in: YouTube generates
+/// automatic subtitles in that language, so an uploaded one in the same
+/// language comes first, then the automatic one, then any uploaded one.
+SubtitleOption? originalSubtitle(List<SubtitleOption> options) {
+  final automatic = options.where((o) => o.kind == SubtitleKind.automatic).firstOrNull;
+  final uploaded = options.where((o) => o.kind == SubtitleKind.uploaded);
+  if (automatic == null) return uploaded.firstOrNull;
+  return uploaded.where((o) => sameLanguage(o.language, automatic.language)).firstOrNull ?? automatic;
+}
+
+/// Whether two tags name one language; Chinese scripts count as different.
+bool sameLanguage(String? a, String? b) {
+  String base(String? tag) {
+    final t = (tag ?? '').toLowerCase().replaceAll('_', '-');
+    if (const {'zh', 'zh-hans', 'zh-cn', 'zh-sg', 'chi', 'zho'}.contains(t)) return 'zh-hans';
+    if (const {'zh-hant', 'zh-tw', 'zh-hk', 'zh-mo'}.contains(t)) return 'zh-hant';
+    return t.split('-').first;
+  }
+
+  final x = base(a);
+  return x.isNotEmpty && x == base(b);
+}
+
 /// Sets and clears mpv's secondary subtitle.
 class SecondarySubtitle {
   /// Shows [option] as the secondary subtitle, adding the track to [player]

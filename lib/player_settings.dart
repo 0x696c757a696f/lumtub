@@ -65,8 +65,8 @@ enum SubtitleMode {
 }
 
 enum SubtitleLanguage {
-  /// Windows' language: simplified, traditional Chinese or English. Not the
-  /// interface's, which is English for now.
+  /// Windows' language when one below is, else English. Not the
+  /// interface's.
   auto('跟随系统语言', '', ''),
   zh('简体中文优先', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng'),
   zhHant('繁體中文優先', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng'),
@@ -99,6 +99,14 @@ enum SubtitleLanguage {
   /// Windows' language; tests replace it.
   static Locale Function() systemLocale = () => PlatformDispatcher.instance.locale;
 
+  /// The language subtitles are translated into when a video has none in
+  /// this one.
+  TranslationLanguage get translation => switch (resolved) {
+        zh => TranslationLanguage.byCode('zh-CN'),
+        zhHant => TranslationLanguage.byCode('zh-TW'),
+        final l => TranslationLanguage.maybeByCode(l.name) ?? TranslationLanguage.byCode('en'),
+      };
+
   /// [auto] as the language it stands for.
   SubtitleLanguage get resolved => this != auto
       ? this
@@ -106,7 +114,7 @@ enum SubtitleLanguage {
           Locale(languageCode: 'zh', scriptCode: 'Hant') => zhHant,
           Locale(languageCode: 'zh', countryCode: 'TW' || 'HK' || 'MO') => zhHant,
           Locale(languageCode: 'zh') => zh,
-          _ => en,
+          Locale(:final languageCode) => values.where((l) => l.index > zhHant.index && l.name == languageCode).firstOrNull ?? en,
         };
 }
 
@@ -292,6 +300,9 @@ class PlayerSettings {
   final SubtitleLanguage subtitleLanguage;
   /// The TranslationLanguage code of the subtitle shown above the main
   /// one when a video opens; empty for none.
+  /// [secondarySubtitleLanguage] for the video's own subtitle in its own
+  /// language, uploaded or automatic.
+  static const originalSubtitle = 'original';
   final String secondarySubtitleLanguage;
   final double subtitleBorder;
   final bool subtitleBackground;
@@ -723,7 +734,7 @@ class PlayerSettings {
       subtitleLanguage: raw.containsKey('subtitleLanguageV2') || raw['subtitleLanguage'] != 'zh'
           ? _enumByName(SubtitleLanguage.values, raw['subtitleLanguageV2'] ?? raw['subtitleLanguage'], SubtitleLanguage.auto)
           : SubtitleLanguage.auto,
-      secondarySubtitleLanguage: TranslationLanguage.maybeByCode(raw['secondarySubtitleLanguage'])?.code ?? '',
+      secondarySubtitleLanguage: raw['secondarySubtitleLanguage'] == originalSubtitle ? originalSubtitle : TranslationLanguage.maybeByCode(raw['secondarySubtitleLanguage'])?.code ?? '',
       subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
       subtitleBackground: raw['subtitleBackground'] == true,
       subtitleBold: raw['subtitleBold'] == true,

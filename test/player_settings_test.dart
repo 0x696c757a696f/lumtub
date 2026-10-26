@@ -206,6 +206,7 @@ vo=gpu-next
     expect(read.subtitleFont, '');
     expect(read.secondaryFont, '');
     expect(read.secondarySubtitleLanguage, '');
+    expect(PlayerSettings.fromJson({'secondarySubtitleLanguage': 'original'}).secondarySubtitleLanguage, PlayerSettings.originalSubtitle);
     expect(read.subtitleOpacity, 0.1);
     expect(PlayerSettings.fromJson({}).subtitleFont, PlayerSettings.defaultSubtitleFont);
   });

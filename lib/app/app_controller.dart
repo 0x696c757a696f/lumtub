@@ -1641,12 +1641,12 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  /// Shows the subtitle 第二字幕语言 names above the main one once the
-  /// main one is on, unless the main one is in that language already.
-  Future<void> _autoSecondary(VideoItem item, VideoDetails details, int serial) async {
-    final target = TranslationLanguage.maybeByCode(settings.secondarySubtitleLanguage);
+  /// Once the main subtitle is on, shows it in 第一字幕语言 (YouTube's
+  /// translation when the video has none in it) and the subtitle 第二字幕语言
+  /// names above it, unless that is the main one already.
+  Future<void> _autoSubtitles(VideoItem item, VideoDetails details, int serial) async {
     final player = this.player;
-    if (target == null || player == null || details.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
+    if (player == null || details.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
     if (_secondaryAutoFor == item.id || _openedLocal == item.id) return;
     bool shown(SubtitleTrack t) => t.id != 'no' && t.id != 'auto';
     if (!shown(player.state.track.subtitle)) {
@@ -1658,9 +1658,30 @@ class AppController extends ChangeNotifier {
     }
     if (serial != _playSerial || this.player != player || secondarySubtitle != null || _secondaryAutoFor == item.id) return;
     _secondaryAutoFor = item.id;
-    final main = player.state.track.subtitle;
-    final option = subtitleIn(details.subtitles, target);
-    if (option == null || speaks(main.language, target) || option.label == main.title) return;
+    var mainTitle = player.state.track.subtitle.title;
+    var mainLanguage = player.state.track.subtitle.language;
+    final first = settings.subtitleLanguage.translation;
+    if (!speaks(mainLanguage, first)) {
+      final option = subtitleIn(details.subtitles, first);
+      if (option != null && option.label != mainTitle) {
+        logInfo('Showing ${option.language} (${option.kind.name}) as the main subtitle');
+        await showSubtitle(option);
+        if (serial != _playSerial || this.player != player) return;
+        mainTitle = option.label;
+        mainLanguage = option.language;
+      }
+    }
+    final wanted = settings.secondarySubtitleLanguage;
+    final target = TranslationLanguage.maybeByCode(wanted);
+    final SubtitleOption? option;
+    if (wanted == PlayerSettings.originalSubtitle) {
+      option = originalSubtitle(details.subtitles);
+      if (option == null || sameLanguage(option.language, mainLanguage)) return;
+    } else {
+      option = target == null ? null : subtitleIn(details.subtitles, target);
+      if (option == null || speaks(mainLanguage, target!)) return;
+    }
+    if (option.label == mainTitle || secondarySubtitle != null) return;
     logInfo('Showing ${option.language} (${option.kind.name}) as the second subtitle');
     await setSecondarySubtitle(option);
   }
@@ -2109,7 +2130,7 @@ class AppController extends ChangeNotifier {
           if (preferences.showRelated) related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
         });
         unawaited(_localizeDetails(item.id, serial));
-        unawaited(_autoSecondary(item, loaded, serial));
+        unawaited(_autoSubtitles(item, loaded, serial));
       }
     } catch (_) {
       // The page still shows what the list already knew about the video.

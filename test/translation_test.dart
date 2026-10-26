@@ -104,6 +104,23 @@ void main() {
     expect((translated.kind, Uri.parse(translated.url).queryParameters['tlang']), (SubtitleKind.translated, 'en'));
   });
 
+  test('finds the subtitle in the language the video is spoken in', () {
+    const jaAuto = SubtitleOption(language: 'ja', name: '', url: 'https://yt.example/ja-auto.vtt', kind: SubtitleKind.automatic);
+    const jaOwn = SubtitleOption(language: 'ja-JP', name: '', url: 'https://yt.example/ja.vtt');
+    const enOwn = SubtitleOption(language: 'en', name: '', url: 'https://yt.example/en.vtt');
+    expect(originalSubtitle([enOwn, jaAuto, jaOwn]), jaOwn);
+    expect(originalSubtitle([enOwn, jaAuto]), jaAuto);
+    expect(originalSubtitle([enOwn]), enOwn);
+    expect(originalSubtitle(const []), isNull);
+    expect(sameLanguage('zh', 'zh-Hans'), isTrue);
+    expect(sameLanguage('zh-Hans', 'zh-Hant'), isFalse);
+    expect(sameLanguage('en-US', 'en'), isTrue);
+    expect(sameLanguage(null, null), isFalse);
+    final simplified = TranslationLanguage.byCode('zh-CN');
+    expect(hasOwnSubtitle([enOwn, jaAuto], simplified), isFalse);
+    expect(hasOwnSubtitle([const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/zh.vtt', kind: SubtitleKind.automatic)], simplified), isTrue);
+  });
+
   test('the translation service settings are saved', () {
     final prefs = const AppPreferences().copyWith(
       translation: const TranslationConfig(service: TranslationService.ai, aiPreset: 'deepseek', promptPreset: 'natural'),

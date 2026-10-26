@@ -24,6 +24,7 @@ import 'pages/watch_page.dart' show subtitleViewFor;
 import 'player_shortcuts.dart';
 import 'video_box.dart';
 import 'motion.dart';
+import '../widgets/position_ticks.dart';
 
 class PipView extends StatefulWidget {
   const PipView({super.key, required this.controller});
@@ -192,7 +193,7 @@ class PipControls extends StatelessWidget {
         color: Colors.black.withValues(alpha: .70),
         padding: const EdgeInsets.fromLTRB(6, 0, 20, 2),
         child: StreamBuilder<Duration>(
-          stream: player.stream.position,
+          stream: coarsePosition(player),
           initialData: player.state.position,
           builder: (context, _) => VideoProgressBar(
             position: player.state.position,

@@ -16,7 +16,12 @@ mod imp {
         SetInformationJobObject, TerminateJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
         JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
     };
-    use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_SET_QUOTA, PROCESS_TERMINATE};
+    use windows_sys::Win32::System::Threading::{
+        GetCurrentProcess, OpenProcess, ProcessPowerThrottling, SetProcessInformation, BELOW_NORMAL_PRIORITY_CLASS,
+        PROCESS_POWER_THROTTLING_CURRENT_VERSION, PROCESS_POWER_THROTTLING_EXECUTION_SPEED, PROCESS_POWER_THROTTLING_STATE,
+        PROCESS_SET_INFORMATION, PROCESS_SET_QUOTA, PROCESS_TERMINATE,
+    };
+    use windows_sys::Win32::System::JobObjects::JOB_OBJECT_LIMIT_PRIORITY_CLASS;
 
     pub fn adopt(pid: u32) -> isize {
         unsafe {
@@ -55,6 +60,43 @@ mod imp {
             CloseHandle(job as HANDLE);
         }
     }
+
+    /// Windows' efficiency mode (EcoQoS) for [process]: it runs on
+    /// efficient cores at lower clocks, for work nobody waits on.
+    fn efficiency(process: HANDLE, on: bool) -> bool {
+        let state = PROCESS_POWER_THROTTLING_STATE {
+            Version: PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+            ControlMask: PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
+            StateMask: if on { PROCESS_POWER_THROTTLING_EXECUTION_SPEED } else { 0 },
+        };
+        unsafe { SetProcessInformation(process, ProcessPowerThrottling, &state as *const _ as *const _, size_of::<PROCESS_POWER_THROTTLING_STATE>() as u32) != 0 }
+    }
+
+    pub fn background(job: isize, pid: u32) -> bool {
+        unsafe {
+            // Everything in the job, ffmpeg included, below normal priority.
+            let mut limits: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = zeroed();
+            limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_PRIORITY_CLASS;
+            limits.BasicLimitInformation.PriorityClass = BELOW_NORMAL_PRIORITY_CLASS;
+            let prioritised = SetInformationJobObject(
+                job as HANDLE,
+                JobObjectExtendedLimitInformation,
+                &limits as *const _ as *const _,
+                size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+            ) != 0;
+            let process = OpenProcess(PROCESS_SET_INFORMATION, 0, pid);
+            if process.is_null() {
+                return prioritised;
+            }
+            let efficient = efficiency(process, true);
+            CloseHandle(process);
+            prioritised && efficient
+        }
+    }
+
+    pub fn efficient_self(on: bool) -> bool {
+        unsafe { efficiency(GetCurrentProcess(), on) }
+    }
 }
 
 #[cfg(not(windows))]
@@ -66,6 +108,14 @@ mod imp {
         false
     }
     pub fn close(_job: isize) {}
+
+    pub fn background(_job: isize, _pid: u32) -> bool {
+        false
+    }
+
+    pub fn efficient_self(_on: bool) -> bool {
+        false
+    }
 }
 
 /// Puts process [pid] in a new job of its own. Returns the job handle, or 0
@@ -73,6 +123,19 @@ mod imp {
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_tree_adopt(pid: u32) -> isize {
     imp::adopt(pid)
+}
+
+/// Runs the processes of [job] as background work: below normal priority,
+/// and [pid] (the one started) in Windows' efficiency mode. For downloads.
+#[unsafe(no_mangle)]
+pub extern "C" fn lumtub_tree_background(job: isize, pid: u32) -> bool {
+    imp::background(job, pid)
+}
+
+/// Turns Windows' efficiency mode for Lumtub itself on or off.
+#[unsafe(no_mangle)]
+pub extern "C" fn lumtub_efficiency_mode(on: bool) -> bool {
+    imp::efficient_self(on)
 }
 
 /// Ends every process in [job] with exit [code].

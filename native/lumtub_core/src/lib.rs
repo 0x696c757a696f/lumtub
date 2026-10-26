@@ -28,5 +28,5 @@ pub mod update;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    15
+    16
 }

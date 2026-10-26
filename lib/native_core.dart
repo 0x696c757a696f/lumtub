@@ -61,7 +61,9 @@ class NativeCore {
         _stringFree = library.lookupFunction<Void Function(Pointer<Utf8>), void Function(Pointer<Utf8>)>('lumtub_string_free'),
         _adopt = library.lookupFunction<IntPtr Function(Uint32), int Function(int)>('lumtub_tree_adopt'),
         _kill = library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>('lumtub_tree_kill'),
-        _close = library.lookupFunction<Void Function(IntPtr), void Function(int)>('lumtub_tree_close');
+        _close = library.lookupFunction<Void Function(IntPtr), void Function(int)>('lumtub_tree_close'),
+        _background = library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>('lumtub_tree_background'),
+        _efficiencyMode = library.lookupFunction<Bool Function(Bool), bool Function(bool)>('lumtub_efficiency_mode');
 
   /// The loaded core, for bindings kept beside their own feature.
   final DynamicLibrary library;
@@ -132,6 +134,12 @@ class NativeCore {
   final bool Function(Pointer<Void> blocks, Pointer<Uint8> json, int length) blocksMatch;
   final void Function(Pointer<Utf8>) _stringFree;
   final int Function(int pid) _adopt;
+  final bool Function(int job, int pid) _background;
+  final bool Function(bool on) _efficiencyMode;
+
+  /// Windows' efficiency mode for Lumtub itself: lower clocks, efficient
+  /// cores. For while it is hidden and not playing.
+  static void efficiencyMode(bool on) => instance?._efficiencyMode(on);
   final bool Function(int job, int code) _kill;
   final void Function(int job) _close;
 
@@ -212,9 +220,13 @@ class ProcessTree implements Process {
   }
 
   /// Starts [executable] like [Process.start] and puts it in its own tree.
-  static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory}) async {
+  /// A [background] tree runs below normal priority, its first process in
+  /// Windows' efficiency mode: for downloads, which nobody waits on.
+  static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory, bool background = false}) async {
     final process = await Process.start(executable, arguments, environment: environment, workingDirectory: workingDirectory);
-    return adopt(process);
+    final tree = adopt(process);
+    if (background && tree is ProcessTree) NativeCore.instance?._background(tree._job, process.pid);
+    return tree;
   }
 
   /// [process] in a tree of its own, or [process] itself where there is

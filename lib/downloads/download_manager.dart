@@ -108,7 +108,10 @@ class DownloadManager extends ChangeNotifier {
     this.sponsorSegments,
     this.onFinished,
   })  : _directory = defaultDirectory,
-        _start = start ?? ProcessTree.start;
+        _start = start ?? _backgroundStart;
+
+  static Future<Process> _backgroundStart(String executable, List<String> arguments, {Map<String, String>? environment}) =>
+      ProcessTree.start(executable, arguments, environment: environment, background: true);
 
   /// Where the list and the folder setting are saved.
   final File file;

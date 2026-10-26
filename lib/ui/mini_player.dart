@@ -22,6 +22,7 @@ import '../l10n/l10n.dart';
 import 'video_box.dart';
 import '../widgets/video_progress_bar.dart';
 import 'motion.dart';
+import '../widgets/position_ticks.dart';
 
 /// The corners the card snaps to.
 enum MiniCorner { topLeft, topRight, bottomLeft, bottomRight }
@@ -225,7 +226,7 @@ class _ProgressLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StreamBuilder<Duration>(
-        stream: player.stream.position,
+        stream: coarsePosition(player),
         initialData: player.state.position,
         builder: (context, _) {
           final total = player.state.duration.inMilliseconds;
@@ -281,7 +282,7 @@ class _Controls extends StatelessWidget {
         color: Colors.black.withValues(alpha: .70),
         padding: const EdgeInsets.fromLTRB(6, 0, 6, 2),
         child: StreamBuilder<Duration>(
-          stream: player.stream.position,
+          stream: coarsePosition(player),
           initialData: player.state.position,
           builder: (context, _) => VideoProgressBar(
             position: player.state.position,

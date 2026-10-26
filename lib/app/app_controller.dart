@@ -1887,6 +1887,7 @@ class AppController extends ChangeNotifier {
     _playerSubscriptions.addAll([
       player.stream.width.listen(videoSize),
       player.stream.height.listen(videoSize),
+      player.stream.playing.listen((_) => _updateEfficiency()),
       // A second of playback proves a downloaded libmpv works on this PC.
       player.stream.position.listen((position) {
         if (_tracking == null) return;
@@ -2094,12 +2095,25 @@ class AppController extends ChangeNotifier {
   }
 
   bool _backgroundAudioOnly = false;
+  bool _windowHidden = false;
+  bool? _efficient;
+
+  /// Hidden and not playing, Lumtub runs in Windows' efficiency mode; any
+  /// playback (a media key while hidden, too) turns it off.
+  void _updateEfficiency() {
+    final on = _windowHidden && !(player?.state.playing ?? false);
+    if (on == _efficient) return;
+    _efficient = on;
+    NativeCore.efficiencyMode(on);
+  }
 
   /// While the window is minimised or in the tray with the setting on, mpv
   /// decodes no picture; [hidden] false brings it back. A user's own 听视频
   /// choice is left alone.
   Future<void> setBackgroundAudioOnly(bool hidden) async {
     _outputSize?.hidden = hidden;
+    _windowHidden = hidden;
+    _updateEfficiency();
     final platform = player?.platform;
     if (platform is! NativePlayer) return;
     if (hidden) {

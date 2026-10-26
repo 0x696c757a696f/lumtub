@@ -26,6 +26,7 @@ import '../../windows_video_info.dart';
 import '../common.dart';
 import '../format_policy_dialogs.dart';
 import '../player_shortcuts.dart';
+import '../motion.dart';
 import '../theme.dart';
 import 'account_settings.dart';
 import 'relay_servers_page.dart';
@@ -756,6 +757,21 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 onSelected: (v) => saveLooks(appearance.copyWith(transition: v)),
               ),
             )),
+        SettingEntry(tr('减少动画'), (context) => NormalItem(
+              title: tr('减少动画'),
+              subtitle: tr('当前：{0}{1}。减少后，页面切换、展开收起和悬停效果都直接完成', [
+                appearance.motion.label,
+                appearance.motion == MotionPreference.system ? (Motion.reduced ? tr('（系统已关闭动画）') : tr('（系统开着动画）')) : '',
+              ]),
+              leading: _icon(Icons.motion_photos_off_outlined),
+              onTap: () => pickFromDialog<MotionPreference>(
+                context,
+                title: tr('减少动画'),
+                value: appearance.motion,
+                values: _enumValues(MotionPreference.values, (m) => m.label),
+                onSelected: (v) => saveLooks(appearance.copyWith(motion: v)),
+              ),
+            ), subtitle: tr('动画 动效 reduce motion 无障碍')),
         SettingEntry(tr('导航栏样式'), (context) => PopupItem<NavigationStyle>(
               title: tr('导航栏样式'),
               leading: _icon(Icons.view_sidebar_outlined),

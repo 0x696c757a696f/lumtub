@@ -7,6 +7,7 @@ import 'package:media_kit/media_kit.dart';
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../subtitle_cues.dart';
+import 'motion.dart';
 import 'player_panel.dart';
 
 /// 字幕列表: every line of the main subtitle beside the video, the one
@@ -64,7 +65,7 @@ class _SubtitleListState extends State<SubtitleList> {
       setState(() => _current = index);
       if (_follow && _query.isEmpty && index >= 0 && _scroll.hasClients) {
         final target = (index * _rowHeight - _scroll.position.viewportDimension / 3).clamp(0.0, _scroll.position.maxScrollExtent);
-        unawaited(_scroll.animateTo(target, duration: const Duration(milliseconds: 250), curve: Curves.easeOut));
+        unawaited(Motion.scrollTo(_scroll, target, duration: const Duration(milliseconds: 250), curve: Curves.easeOut));
       }
     }
 

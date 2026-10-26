@@ -82,6 +82,18 @@ enum PageTransition {
   String get label => tr(_label);
 }
 
+/// 减少动画: whether page changes, expanding sections and hover effects
+/// animate.
+enum MotionPreference {
+  system('跟随系统'),
+  reduced('减少动画'),
+  full('保留动画');
+
+  const MotionPreference(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
 enum NavigationStyle {
   auto('自动（窗口较宽时用侧边栏）'),
   rail('始终使用侧边栏'),
@@ -135,6 +147,7 @@ class AppearanceSettings {
   final String? fontFamily;
   final double textScale;
   final PageTransition transition;
+  final MotionPreference motion;
   final NavigationStyle navigation;
   /// The narrowest a video card may get before a column is dropped.
   final double cardWidth;
@@ -154,6 +167,7 @@ class AppearanceSettings {
     this.fontFamily = bundledFont,
     this.textScale = 1.0,
     this.transition = PageTransition.fade,
+    this.motion = MotionPreference.system,
     this.navigation = NavigationStyle.auto,
     this.cardWidth = 250,
     this.thumbnailQuality = ThumbnailQuality.high,
@@ -178,6 +192,7 @@ class AppearanceSettings {
     bool clearFontFamily = false,
     double? textScale,
     PageTransition? transition,
+    MotionPreference? motion,
     NavigationStyle? navigation,
     double? cardWidth,
     ThumbnailQuality? thumbnailQuality,
@@ -195,6 +210,7 @@ class AppearanceSettings {
         fontFamily: clearFontFamily ? null : fontFamily ?? this.fontFamily,
         textScale: textScale ?? this.textScale,
         transition: transition ?? this.transition,
+        motion: motion ?? this.motion,
         navigation: navigation ?? this.navigation,
         cardWidth: cardWidth ?? this.cardWidth,
         thumbnailQuality: thumbnailQuality ?? this.thumbnailQuality,
@@ -216,6 +232,7 @@ class AppearanceSettings {
         'fontFamily': fontFamily ?? 'system',
         'textScale': textScale,
         'transition': transition.name,
+        'motion': motion.name,
         'navigation': navigation.name,
         'cardWidth': cardWidth,
         'thumbnailQuality': thumbnailQuality.name,
@@ -244,6 +261,7 @@ class AppearanceSettings {
       fontFamily: font == 'system' ? null : font?.trim().isNotEmpty == true ? font : bundledFont,
       textScale: scale is num ? scale.toDouble().clamp(0.8, 1.4) : 1.0,
       transition: _byName(PageTransition.values, raw['transition'], PageTransition.fade),
+      motion: _byName(MotionPreference.values, raw['motion'], MotionPreference.system),
       navigation: _byName(NavigationStyle.values, raw['navigation'], NavigationStyle.auto),
       cardWidth: width is num ? width.toDouble().clamp(180, 420) : 250,
       thumbnailQuality: _byName(ThumbnailQuality.values, raw['thumbnailQuality'], ThumbnailQuality.high),

@@ -29,6 +29,7 @@ import 'downloads_page.dart';
 import '../../dearrow.dart';
 import '../video_box.dart';
 import '../../l10n/l10n.dart';
+import '../motion.dart';
 
 /// Player, video details, the up-next list and the comments. On wide
 /// windows the list and the comments share a side panel, as PiliNara's
@@ -411,7 +412,7 @@ class _DescriptionState extends State<_Description> {
                 controller: widget.controller,
                 text: widget.description,
                 builder: (context, description) => AnimatedSize(
-                  duration: const Duration(milliseconds: 180),
+                  duration: Motion.of(const Duration(milliseconds: 180)),
                   alignment: Alignment.topCenter,
                   // Times seek the video and links open in the browser, as in
                   // PiliNara; the expanded text can still be selected.
@@ -496,7 +497,7 @@ class _ReplayChatPanel extends StatelessWidget {
       Text(tr(live ? '聊天' : '聊天回放'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
       const SizedBox(height: 8),
       if (controller.loadingReplayChat) const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator())),
-      if (controller.replayChatError != null) ErrorBanner(tr('无法加载聊天回放：{0}', [controller.replayChatError])),
+      if (controller.replayChatError != null) ErrorBanner(tr(live ? '无法加载聊天：{0}' : '无法加载聊天回放：{0}', [controller.replayChatError]), onRetry: controller.retryChat),
       if (!controller.loadingReplayChat && controller.replayChatError == null && messages.isEmpty)
         Padding(padding: const EdgeInsets.all(12), child: Text(tr(live ? '当前直播没有公开聊天' : '这个直播录像没有公开的聊天回放'), style: TextStyle(color: context.colors.onSurfaceVariant))),
     ];

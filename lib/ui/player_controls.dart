@@ -46,6 +46,7 @@ import 'theater_mode.dart';
 import 'video_box.dart';
 import 'video_aspect.dart';
 import '../l10n/l10n.dart';
+import 'motion.dart';
 
 /// Picture sizing, from PiliNara's `VideoFitType`.
 enum VideoFit {
@@ -100,7 +101,7 @@ class PlayerControls extends StatefulWidget {
 }
 
 class _PlayerControlsState extends State<PlayerControls> with SingleTickerProviderStateMixin {
-  late final _animation = AnimationController(vsync: this, duration: const Duration(milliseconds: 200), value: 1);
+  late final _animation = AnimationController(vsync: this, duration: Motion.of(const Duration(milliseconds: 200)), value: 1);
   final _subscriptions = <StreamSubscription<Object?>>[];
   final _focus = FocusNode(debugLabel: 'player controls');
   Timer? _hideTimer;
@@ -797,7 +798,7 @@ class _HoverState extends State<_Hover> {
           behavior: HitTestBehavior.opaque,
           onTap: widget.onTap,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
+            duration: Motion.of(const Duration(milliseconds: 120)),
             decoration: BoxDecoration(color: _over ? Colors.white.withValues(alpha: 0.14) : Colors.transparent, borderRadius: BorderRadius.circular(17)),
             child: widget.child,
           ),
@@ -867,7 +868,7 @@ class _PlayPauseButton extends StatefulWidget {
 }
 
 class _PlayPauseButtonState extends State<_PlayPauseButton> with SingleTickerProviderStateMixin {
-  late final _animation = AnimationController(vsync: this, value: widget.player.state.playing ? 1 : 0, duration: const Duration(milliseconds: 200));
+  late final _animation = AnimationController(vsync: this, value: widget.player.state.playing ? 1 : 0, duration: Motion.of(const Duration(milliseconds: 200)));
   late final StreamSubscription<bool> _subscription = widget.player.stream.playing.listen((playing) => playing ? _animation.forward() : _animation.reverse());
 
   @override
@@ -1040,7 +1041,7 @@ class _VolumeButtonState extends State<_VolumeButton> {
                 onTap: () => unawaited(widget.controller.toggleMute()),
               ),
               AnimatedSize(
-                duration: const Duration(milliseconds: 150),
+                duration: Motion.of(const Duration(milliseconds: 150)),
                 child: _open
                     ? SizedBox(
                         width: 96,

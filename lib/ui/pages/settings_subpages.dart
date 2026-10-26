@@ -31,6 +31,7 @@ import '../theme.dart';
 import '../theme_preset_card.dart';
 import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
+import '../motion.dart';
 
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
 
@@ -625,7 +626,7 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
           onTap: windows == null ? null : () => save(appearance.copyWith(systemAccent: !appearance.systemAccent)),
         ),
         AnimatedSize(
-          duration: const Duration(milliseconds: 200),
+          duration: Motion.of(const Duration(milliseconds: 200)),
           child: appearance.systemAccent && windows != null
               ? const SizedBox(width: double.infinity)
               : Padding(

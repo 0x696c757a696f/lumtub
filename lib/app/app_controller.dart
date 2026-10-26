@@ -81,6 +81,7 @@ import 'back_stack.dart';
 import 'library_controller.dart';
 import 'video_list_loader.dart';
 import '../l10n/l10n.dart';
+import '../friendly_error.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
@@ -1306,7 +1307,7 @@ class AppController extends ChangeNotifier {
       onError: (Object error) {
         if (serial == _playSerial) {
           _update(() {
-            replayChatError = '$error';
+            replayChatError = friendlyError(error);
             loadingReplayChat = false;
           });
         }
@@ -1341,6 +1342,18 @@ class AppController extends ChangeNotifier {
     _currentChat = null;
   }
 
+  /// Asks again for the chat of the video playing after it failed.
+  void retryChat() {
+    final item = playing;
+    if (item == null) return;
+    if (item.isLive) {
+      unawaited(_currentChat?.cancel());
+      _startCurrentChat(item, _playSerial);
+    } else {
+      unawaited(_loadReplayChat(item, _playSerial));
+    }
+  }
+
   Future<void> _loadReplayChat(VideoItem item, int serial) async {
     final repository = _repository;
     if (repository == null || serial != _playSerial) return;
@@ -1352,7 +1365,7 @@ class AppController extends ChangeNotifier {
       final messages = await repository.liveChat.replay(item.id);
       if (serial == _playSerial) _update(() => replayChat = messages);
     } catch (error) {
-      if (serial == _playSerial) _update(() => replayChatError = '$error');
+      if (serial == _playSerial) _update(() => replayChatError = friendlyError(error));
     } finally {
       if (serial == _playSerial) _update(() => loadingReplayChat = false);
     }

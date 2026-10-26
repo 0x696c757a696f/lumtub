@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'motion.dart';
 
 /// Shimmer for loading placeholders, adapted from PiliNara's Skeleton.
 ///
@@ -16,8 +17,10 @@ class Skeleton extends StatefulWidget {
 }
 
 class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController.unbounded(vsync: this)
-    ..repeat(min: -0.5, max: 1.5, period: const Duration(milliseconds: 1200));
+  // With animations reduced, the placeholder stays still.
+  late final AnimationController _controller = Motion.reduced
+      ? AnimationController.unbounded(vsync: this, value: 0.5)
+      : (AnimationController.unbounded(vsync: this)..repeat(min: -0.5, max: 1.5, period: const Duration(milliseconds: 1200)));
   final _matrix = Matrix4.identity();
 
   @override

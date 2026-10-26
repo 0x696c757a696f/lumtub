@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../youtube_comments.dart';
+import '../friendly_error.dart';
 
 /// The replies under one comment, loaded on demand.
 class ReplyThread {
@@ -68,7 +69,7 @@ class CommentsLoader extends ChangeNotifier {
       // A page with nothing new would only repeat.
       _next = page.comments.isEmpty ? null : page.continuation;
     } catch (e) {
-      if (generation == _generation) error = '$e';
+      if (generation == _generation) error = friendlyError(e);
     } finally {
       if (generation == _generation) {
         loading = false;
@@ -95,7 +96,7 @@ class CommentsLoader extends ChangeNotifier {
         ..replies = [...thread.replies, ...page.comments.where((c) => seen.add(c.id))]
         ..next = page.comments.isEmpty ? null : page.continuation;
     } catch (e) {
-      thread.error = '$e';
+      thread.error = friendlyError(e);
     } finally {
       thread.loading = false;
       _notify();

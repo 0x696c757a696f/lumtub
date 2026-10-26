@@ -21,6 +21,7 @@ import '../app_window.dart' show pipAspectOf;
 import '../l10n/l10n.dart';
 import 'video_box.dart';
 import '../widgets/video_progress_bar.dart';
+import 'motion.dart';
 
 /// The corners the card snaps to.
 enum MiniCorner { topLeft, topRight, bottomLeft, bottomRight }
@@ -153,7 +154,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
       final offset = dragging ?? miniPosition(_corner, area, size);
       return Stack(children: [
         AnimatedPositioned(
-          duration: dragging == null ? const Duration(milliseconds: 180) : Duration.zero,
+          duration: dragging == null ? Motion.of(const Duration(milliseconds: 180)) : Duration.zero,
           curve: Curves.easeOut,
           left: offset.dx,
           top: offset.dy,
@@ -204,7 +205,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
             ignoring: !_hovering,
             child: AnimatedOpacity(
               opacity: _hovering ? 1 : 0,
-              duration: const Duration(milliseconds: 150),
+              duration: Motion.of(const Duration(milliseconds: 150)),
               onEnd: () {
                 if (!_hovering && mounted) setState(() => _controlsBuilt = false);
               },

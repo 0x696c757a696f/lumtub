@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
 import '../appearance_settings.dart';
@@ -16,6 +17,7 @@ import 'pages/downloads_page.dart';
 import 'skeleton.dart';
 import 'theme.dart';
 import '../l10n/l10n.dart';
+import 'motion.dart';
 
 /// Height of the text below a card's thumbnail: two title lines and one
 /// channel line.
@@ -265,6 +267,10 @@ class VideoCard extends StatefulWidget {
 
 class _VideoCardState extends State<VideoCard> {
   bool _hovered = false;
+  /// Reached with the keyboard: it previews and shows its actions as a
+  /// pointer resting on it would, with an outline to show where focus is.
+  bool _focused = false;
+  bool _pointer = false;
   Timer? _prefetch;
   Timer? _preview;
   /// Which of YouTube's three frames from the video (1–3) the hover preview
@@ -275,6 +281,7 @@ class _VideoCardState extends State<VideoCard> {
   /// that follows starts playback sooner, and then previews it: YouTube
   /// keeps frames from a quarter, half and three quarters of the way in.
   void _hover(bool value) {
+    if (value == _hovered) return;
     setState(() {
       _hovered = value;
       _frame = 0;
@@ -291,6 +298,23 @@ class _VideoCardState extends State<VideoCard> {
         if (mounted) setState(() => _frame = _frame % 3 + 1);
       });
     });
+  }
+
+  void _pointerOver(bool value) {
+    _pointer = value;
+    _hover(_pointer || _focused);
+  }
+
+  void _focus(bool value) {
+    setState(() => _focused = value);
+    _hover(_pointer || _focused);
+  }
+
+  /// The menu, at the card's middle when opened from the keyboard.
+  void _menu([Offset? at]) {
+    final box = context.findRenderObject() as RenderBox?;
+    final position = at ?? (box == null ? Offset.zero : box.localToGlobal(box.size.center(Offset.zero)));
+    unawaited(showVideoMenu(context, widget.item, position, onOpen: widget.onOpen, onRemove: widget.onRemove, removeLabel: widget.removeLabel));
   }
 
   @override
@@ -328,11 +352,12 @@ class _VideoCardState extends State<VideoCard> {
       if (item.channel.isNotEmpty) item.channel,
       if (item.viewCount != null) tr('{0}次观看', [formatCount(item.viewCount!)]),
     ].join(' · ');
-    return Card(
+    final card = Card(
       child: InkWell(
         onTap: widget.onOpen,
-        onHover: _hover,
-        onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: widget.onOpen, onRemove: widget.onRemove, removeLabel: widget.removeLabel),
+        onHover: _pointerOver,
+        onFocusChange: _focus,
+        onSecondaryTapUp: (details) => _menu(details.globalPosition),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           AspectRatio(
             aspectRatio: 16 / 9,
@@ -341,7 +366,7 @@ class _VideoCardState extends State<VideoCard> {
               child: Stack(fit: StackFit.expand, children: [
                 AnimatedScale(
                   scale: _hovered ? 1.04 : 1,
-                  duration: const Duration(milliseconds: 180),
+                  duration: Motion.of(const Duration(milliseconds: 180)),
                   curve: Curves.easeOut,
                   child: LayoutBuilder(
                     builder: (context, box) => Image(
@@ -355,7 +380,7 @@ class _VideoCardState extends State<VideoCard> {
                 ),
                 if (_frame > 0) ...[
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
+                    duration: Motion.of(const Duration(milliseconds: 250)),
                     child: Image.network(
                       'https://i.ytimg.com/vi/${item.id}/mq$_frame.jpg',
                       key: ValueKey(_frame),
@@ -382,6 +407,7 @@ class _VideoCardState extends State<VideoCard> {
                 else if (item.durationLabel.isNotEmpty)
                   Positioned(right: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
                 _ProgressBar(item: item),
+                if (_hovered) Positioned(top: 8, right: 8, child: _QuickActions(item: item, onMore: _menu)),
               ]),
             ),
           ),
@@ -406,6 +432,69 @@ class _VideoCardState extends State<VideoCard> {
         ]),
       ),
     );
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.contextMenu): _menu,
+        const SingleActivator(LogicalKeyboardKey.f10, shift: true): _menu,
+      },
+      child: Stack(children: [
+        card,
+        if (_focused)
+          Positioned.fill(child: IgnorePointer(child: DecoratedBox(decoration: BoxDecoration(
+            borderRadius: AppStyle.cardRadius,
+            border: Border.all(color: colors.primary, width: 2),
+          )))),
+      ]),
+    );
+  }
+}
+
+/// 稍后观看, 加入播放队列 and the menu over a card's thumbnail while it is
+/// pointed at or focused, so they need no right click.
+class _QuickActions extends StatefulWidget {
+  const _QuickActions({required this.item, required this.onMore});
+  final VideoItem item;
+  final VoidCallback onMore;
+
+  @override
+  State<_QuickActions> createState() => _QuickActionsState();
+}
+
+class _QuickActionsState extends State<_QuickActions> {
+  @override
+  Widget build(BuildContext context) {
+    final controller = VideoActions.of(context);
+    final library = controller?.library;
+    final item = widget.item;
+    final later = library?.isWatchLater(item.id) ?? false;
+    Widget button(IconData icon, String tip, VoidCallback onPressed) => Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Tooltip(
+            message: tip,
+            child: Material(
+              color: Colors.black.withValues(alpha: 0.72),
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                canRequestFocus: false,
+                onTap: onPressed,
+                child: Padding(padding: const EdgeInsets.all(6), child: Icon(icon, size: 18, color: Colors.white)),
+              ),
+            ),
+          ),
+        );
+    void notice(String text) => ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(text), duration: const Duration(seconds: 2)));
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      if (library != null)
+        button(later ? Icons.watch_later_rounded : Icons.watch_later_outlined, later ? tr('从稍后观看移除') : tr('稍后观看'), () {
+          final added = library.toggleWatchLater(item);
+          setState(() {});
+          notice(added ? tr('已加入稍后观看') : tr('已从稍后观看移除'));
+        }),
+      if (controller != null && !item.isUpcoming)
+        button(Icons.queue_music_rounded, tr('加入播放队列'), () => controller.queueLast(item)),
+      button(Icons.more_vert_rounded, tr('更多（菜单键）'), widget.onMore),
+    ]);
   }
 }
 

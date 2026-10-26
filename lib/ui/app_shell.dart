@@ -23,6 +23,7 @@ import 'pip_view.dart';
 import 'theme.dart';
 import 'video_card.dart';
 import '../l10n/l10n.dart';
+import 'motion.dart';
 
 const appName = 'Lumtub';
 
@@ -121,6 +122,12 @@ class _AppShellState extends State<AppShell> {
         bindings: {
           const SingleActivator(LogicalKeyboardKey.keyK, control: true): _focusSearch,
           const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): _back,
+          // Esc goes back too, except on the watch page, where it leaves
+          // full screen and closes panels.
+          const SingleActivator(LogicalKeyboardKey.escape): () {
+            final typing = FocusManager.instance.primaryFocus?.context?.widget is EditableText;
+            if (!typing && !_controller.onWatchPage) _back();
+          },
         },
         child: Listener(
           // The mouse "back" button goes back, like Alt+←.
@@ -164,7 +171,7 @@ class _AppShellState extends State<AppShell> {
                           ],
                         ),
                       Expanded(child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 160),
+                        duration: Motion.of(const Duration(milliseconds: 160)),
                         // Keyed per page so each page's list keeps its scroll position
                         // (PageStorage) when the user comes back to it.
                         child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _content())),

@@ -2306,5 +2306,19 @@
   "关闭（使用系统 DNS）": "Off (system DNS)",
   "自定义…": "Custom…",
   "加密 DNS": "Encrypted DNS",
-  "正在测试 {0}…": "Testing {0}…"
+  "正在测试 {0}…": "Testing {0}…",
+  "当前：{0}{1}。减少后，页面切换、展开收起和悬停效果都直接完成": "Current: {0}{1}. With fewer animations, page changes, expanding sections and hover effects finish at once",
+  "减少动画": "Reduce animations",
+  "保留动画": "Keep animations",
+  "连不上 YouTube，请检查网络或代理": "Can't reach YouTube; check the network or proxy",
+  "出了点问题，请重试": "Something went wrong; please try again",
+  "（系统已关闭动画）": " (animations are off in the system)",
+  "（系统开着动画）": " (animations are on in the system)",
+  "YouTube 拒绝了这次请求（403），请稍后再试或换个代理": "YouTube refused the request (403); try again later or use another proxy",
+  "无法加载聊天：{0}": "Couldn't load the chat: {0}",
+  "更多（菜单键）": "More (Menu key)",
+  "请求太频繁，YouTube 暂时限制了访问，请稍后再试": "Too many requests; YouTube is limiting access for now, try again later",
+  "网络超时，请检查网络或代理": "The network timed out; check the network or proxy",
+  "安全连接失败，可能是代理或证书的问题": "The secure connection failed; the proxy or a certificate may be the cause",
+  "动画 动效 reduce motion 无障碍": "animation motion reduce motion accessibility"
 }

@@ -23,6 +23,7 @@ import '../widgets/video_progress_bar.dart';
 import 'pages/watch_page.dart' show subtitleViewFor;
 import 'player_shortcuts.dart';
 import 'video_box.dart';
+import 'motion.dart';
 
 class PipView extends StatefulWidget {
   const PipView({super.key, required this.controller});
@@ -116,7 +117,7 @@ class _PipViewState extends State<PipView> {
                 ignoring: !_hovering,
                 child: AnimatedOpacity(
                   opacity: _hovering ? 1 : 0,
-                  duration: const Duration(milliseconds: 150),
+                  duration: Motion.of(const Duration(milliseconds: 150)),
                   child: PipControls(controller: _controller, player: player, scale: scale),
                 ),
               ),

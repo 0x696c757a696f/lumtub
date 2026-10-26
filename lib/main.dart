@@ -13,6 +13,7 @@ import 'keep_awake.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
 import 'ui/app_shell.dart';
+import 'ui/motion.dart';
 import 'ui/theme.dart';
 import 'windows_shell.dart';
 
@@ -72,7 +73,8 @@ class _LumtubAppState extends State<LumtubApp> {
   WindowsShellSync? _shell;
 
   void _updateThemes(AppearanceSettings appearance, Color accent) {
-    final key = appearance.themeKey(accent);
+    Motion.update(appearance.motion);
+    final key = (appearance.themeKey(accent), Motion.reduced);
     if (key == _themeKey) return;
     _themeKey = key;
     ThemeData build(Brightness brightness) => buildAppTheme(
@@ -81,7 +83,7 @@ class _LumtubAppState extends State<LumtubApp> {
           variant: appearance.schemeVariant,
           pureBlack: appearance.pureBlack,
           fontFamily: appearance.fontFamily,
-          transition: appearance.transition,
+          transition: Motion.reduced ? PageTransition.none : appearance.transition,
         );
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
@@ -119,6 +121,8 @@ class _LumtubAppState extends State<LumtubApp> {
         unawaited(player.pause());
       },
       onShow: () {
+        // “Show animations in Windows” may have changed meanwhile.
+        if (widget.controller.appearance.motion == MotionPreference.system && Motion.systemPrefersReduced() != Motion.reduced) setState(() => _themeKey = null);
         controller.cast.windowHidden = false;
         KeepAwake.hidden = false;
         unawaited(controller.setBackgroundAudioOnly(false));
@@ -158,7 +162,7 @@ class _LumtubAppState extends State<LumtubApp> {
             builder: (context, child) {
               final media = MediaQuery.of(context);
               return MediaQuery(
-                data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale)),
+                data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale), disableAnimations: media.disableAnimations || Motion.reduced),
                 child: child!,
               );
             },

@@ -234,7 +234,7 @@ void main() {
     limited.loadMore();
     await pumpEventQueue();
     await Future<void>.delayed(const Duration(milliseconds: 60));
-    expect(limited.error, contains('429'));
+    expect(limited.error, contains('太频繁'));
   });
 
   test('tries again when the first answer is empty', () async {

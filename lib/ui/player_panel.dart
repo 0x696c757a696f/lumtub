@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
+import 'motion.dart';
 
 /// A panel that slides in from the player's right edge, for choices that
 /// apply at once while the video keeps playing (更多设置, 字幕).
@@ -10,7 +11,7 @@ Future<void> showPlayerPanel(BuildContext context, {required String title, List<
       barrierDismissible: true,
       barrierLabel: tr('关闭'),
       barrierColor: Colors.black26,
-      transitionDuration: const Duration(milliseconds: 180),
+      transitionDuration: Motion.of(const Duration(milliseconds: 180)),
       pageBuilder: (context, animation, secondary) => _Panel(title: title, actions: actions, width: width, builder: builder),
       transitionBuilder: (context, animation, secondary, child) => SlideTransition(
         position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),

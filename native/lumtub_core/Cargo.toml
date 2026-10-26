@@ -39,3 +39,5 @@ serde_json = { version = "1.0.154", features = ["preserve_order"] }
 sha2 = "0.11.1"
 tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "time", "macros"] }
 ureq = { version = "3", default-features = false, features = ["native-tls-no-default"] }
+ml-dsa = { version = "0.1.1", default-features = false }
+ed25519-dalek = { version = "3.0.0", default-features = false }

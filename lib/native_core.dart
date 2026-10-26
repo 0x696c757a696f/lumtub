@@ -30,6 +30,7 @@ class NativeCore {
         downloadContainer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_container'),
         updateOffer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_offer'),
         updateScript = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_script'),
+        updateVerify = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_verify'),
         redact = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_redact'),
         subtitleCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_subtitle_cues'),
         _looksLike = library.lookupFunction<Bool Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_looks_like'),
@@ -79,6 +80,7 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) downloadContainer;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateOffer;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateScript;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateVerify;
   final Pointer<Utf8> Function(Pointer<Uint8> message, int length) redact;
   /// A WebVTT or SRT file's lines as JSON `[[start_ms, end_ms, "text"], …]`.
   final Pointer<Utf8> Function(Pointer<Uint8> source, int length) subtitleCues;

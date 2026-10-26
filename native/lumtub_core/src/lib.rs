@@ -22,10 +22,11 @@ pub mod innertube;
 pub mod listing;
 pub mod live_chat;
 pub mod taste;
+pub mod signing;
 pub mod update;
 
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    14
+    15
 }

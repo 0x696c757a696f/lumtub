@@ -47,6 +47,7 @@ import 'video_box.dart';
 import 'video_aspect.dart';
 import '../l10n/l10n.dart';
 import 'motion.dart';
+import 'smooth_wheel.dart';
 
 /// Picture sizing, from PiliNara's `VideoFitType`.
 enum VideoFit {
@@ -252,7 +253,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   void _onScroll(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent) return;
+    // One volume step per notch, however the wheel's glide is split up.
+    if (event is! PointerScrollEvent || SmoothWheel.isFollowUp(event)) return;
     final step = _controller.preferences.volumeStep.toDouble();
     unawaited(_controller.changeVolume(event.scrollDelta.dy < 0 ? step : -step).then((_) {
       final volume = _player.state.volume.round();

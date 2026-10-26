@@ -15,11 +15,13 @@ import 'l10n/l10n.dart';
 import 'network_proxy.dart';
 import 'ui/app_shell.dart';
 import 'ui/motion.dart';
+import 'ui/smooth_wheel.dart';
 import 'ui/theme.dart';
 import 'windows_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) SmoothWheel.install();
   // Decoded thumbnails and avatars: Flutter keeps up to 1000 and 100 MiB.
   // Pages rebuild them from the disk cache quickly, so fewer are kept.
   PaintingBinding.instance.imageCache

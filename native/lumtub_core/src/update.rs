@@ -83,12 +83,20 @@ pub fn asset_of<'a>(release: &'a Value, package: &str, portable: bool) -> Option
     release.get("assets")?.as_array()?.iter().find(|asset| asset.get("name").and_then(Value::as_str).is_some_and(|name| name.ends_with(&suffix)))
 }
 
+/// The signature file published next to [asset].
+pub fn signature_of<'a>(release: &'a Value, asset: &Value) -> Option<&'a Value> {
+    let name = format!("{}.sig", asset.get("name")?.as_str()?);
+    release.get("assets")?.as_array()?.iter().find(|other| other.get("name").and_then(Value::as_str) == Some(&name))
+}
+
 #[derive(Serialize, Debug, PartialEq)]
 pub struct Offer<'a> {
     /// Such as `0.2.2-1234567`.
     pub version: &'a str,
     pub page: &'a str,
     pub asset: Option<&'a Value>,
+    /// The asset's signature file, `<asset name>.sig`.
+    pub signature: Option<&'a Value>,
 }
 
 /// The update [release] offers the running build, if it is newer.
@@ -98,10 +106,12 @@ pub fn offer<'a>(release: &'a Value, current: &str, built: Option<i64>, package:
     if !is_newer(current, tag, published, built) {
         return None;
     }
+    let asset = asset_of(release, package, portable);
     Some(Offer {
         version: tag.strip_prefix('v').unwrap_or(tag),
         page: release.get("html_url").and_then(Value::as_str).unwrap_or_default(),
-        asset: asset_of(release, package, portable),
+        asset,
+        signature: asset.and_then(|asset| signature_of(release, asset)),
     })
 }
 
@@ -174,8 +184,8 @@ pub fn script(install: &Install) -> String {
     lines.join("\r\n")
 }
 
-/// The update a GitHub release offers, as JSON `{version, page, asset}`, or
-/// JSON `null` when it is not newer. [json] is `{release, current, built,
+/// The update a GitHub release offers, as JSON `{version, page, asset,
+/// signature}`, or JSON `null` when it is not newer. [json] is `{release, current, built,
 /// package, portable}` with `built` in seconds since 1970.
 ///
 /// # Safety
@@ -258,6 +268,7 @@ mod tests {
             "assets": [
                 {"name": "Lumtub_0.2.2-1234567_windows-x64-v3-setup.exe"},
                 {"name": "Lumtub_0.2.2-1234567_windows-x64-v3.zip"},
+                {"name": "Lumtub_0.2.2-1234567_windows-x64-setup.exe.sig"},
                 {"name": "Lumtub_0.2.2-1234567_windows-x64-setup.exe"},
                 {"name": "Lumtub_0.2.2-1234567_windows-x64.zip"},
             ],
@@ -282,6 +293,8 @@ mod tests {
         assert_eq!(offered.version, "0.2.2-1234567");
         assert!(offered.page.ends_with("v0.2.2-1234567"));
         assert_eq!(offered.asset.unwrap()["name"], "Lumtub_0.2.2-1234567_windows-x64-setup.exe");
+        assert_eq!(offered.signature.unwrap()["name"], "Lumtub_0.2.2-1234567_windows-x64-setup.exe.sig");
+        assert_eq!(offer(&release, "0.2.1-72ec49d", Some(BUILT), "windows-x64", true).unwrap().signature, None);
         assert_eq!(offer(&release, "0.2.2-1234567", Some(BUILT), "windows-x64", false), None);
         assert_eq!(offer(&release, "0.2.2-aaaaaaa", Some(BUILT), "windows-x64", false).unwrap().version, "0.2.2-1234567");
     }

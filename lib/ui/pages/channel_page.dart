@@ -76,13 +76,10 @@ class _ChannelPageState extends State<ChannelPage> {
     }
     final tab = controller.channelTab;
     final searching = controller.channelQuery != null;
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (nearListEnd(notification.metrics)) {
-          loader?.loadMore();
-          posts?.loadMore();
-        }
-        return false;
+    return NearEndListener(
+      onNearEnd: () {
+        loader?.loadMore();
+        posts?.loadMore();
       },
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: ChannelHeader(controller: controller, channel: channel, onBack: controller.goBack)),

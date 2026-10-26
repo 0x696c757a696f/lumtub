@@ -12,6 +12,27 @@ export '../models.dart' show formatBytes;
 /// page: two screens ahead, so it usually arrives before the user gets there.
 bool nearListEnd(ScrollMetrics metrics) => metrics.extentAfter < (metrics.viewportDimension * 2).clamp(1200, double.infinity);
 
+/// Calls [onNearEnd] when the vertical list in [child] is [nearListEnd],
+/// while scrolling and also when its content changes size, so a first page
+/// too short to scroll on a tall window still brings the next one.
+class NearEndListener extends StatelessWidget {
+  const NearEndListener({super.key, required this.onNearEnd, this.enabled = true, required this.child});
+  final VoidCallback onNearEnd;
+  final bool enabled;
+  final Widget child;
+
+  bool _check(ScrollMetrics metrics, int depth) {
+    if (enabled && depth == 0 && metrics.axis == Axis.vertical && metrics.hasContentDimensions && nearListEnd(metrics)) onNearEnd();
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) => NotificationListener<ScrollMetricsNotification>(
+        onNotification: (n) => _check(n.metrics, n.depth),
+        child: NotificationListener<ScrollNotification>(onNotification: (n) => _check(n.metrics, n.depth), child: child),
+      );
+}
+
 /// Full-area message for empty, error and not-yet-available states.
 class StatusView extends StatelessWidget {
   const StatusView({super.key, required this.icon, required this.title, this.message, this.action, this.error = false});

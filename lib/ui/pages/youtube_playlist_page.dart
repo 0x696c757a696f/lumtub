@@ -21,11 +21,8 @@ class YoutubePlaylistPage extends StatelessWidget {
     final items = controller.visible(loader.items);
     final error = loader.error;
     final colors = context.colors;
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (nearListEnd(notification.metrics)) loader.loadMore();
-        return false;
-      },
+    return NearEndListener(
+      onNearEnd: loader.loadMore,
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 20),

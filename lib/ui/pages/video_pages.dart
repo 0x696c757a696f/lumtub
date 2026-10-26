@@ -28,12 +28,10 @@ class HomeFeedPage extends StatelessWidget {
     final unfinished = library == null || !prefs.homeShowContinue
         ? const <VideoItem>[]
         : controller.history.where((item) => library.progressOf(item.id)?.resumable ?? false).take(showFeed ? 4 : 8).toList();
-    return NotificationListener<ScrollNotification>(
+    return NearEndListener(
       // The feed goes on: the next page loads before the end is reached.
-      onNotification: (notification) {
-        if (showFeed && notification.metrics.axis == Axis.vertical && nearListEnd(notification.metrics)) controller.loadMoreHomeFeed();
-        return false;
-      },
+      enabled: showFeed,
+      onNearEnd: controller.loadMoreHomeFeed,
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         // The search box is at the top already; the prompt greets a first start.
         if (recent.isEmpty && unfinished.isEmpty && !showFeed) SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
@@ -168,12 +166,9 @@ class SearchResultsPage extends StatelessWidget {
       if (channels.isNotEmpty) tr('{0} 个频道', [channels.length]),
       if (playlists.isNotEmpty) tr('{0} 个播放列表', [playlists.length]),
     ].join('，');
-    return NotificationListener<ScrollNotification>(
+    return NearEndListener(
       // Fetch the next page shortly before the end of the results is reached.
-      onNotification: (notification) {
-        if (nearListEnd(notification.metrics)) controller.loadMoreResults();
-        return false;
-      },
+      onNearEnd: controller.loadMoreResults,
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: PageHeader(
           '“$query”',

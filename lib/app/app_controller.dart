@@ -461,6 +461,8 @@ class AppController extends ChangeNotifier {
     if (!_disposed) _notices.add(message);
   }
 
+  Timer? _afterStart;
+
   Future<void> initialize() async {
     try {
       final directories = await AppDirectories.create();
@@ -559,13 +561,17 @@ class AppController extends ChangeNotifier {
       });
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
-      // Do not block the UI while checking newer releases.
-      if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
       final updater = AppUpdater(client: _http, directory: Directory('${directories.cache.path}${Platform.pathSeparator}updates'), download: manager.downloadVerified)..addListener(notifyListeners);
       appUpdater = updater;
-      if (preferences.autoCheckUpdates || preferences.autoUpdateApp) updater.start(download: () => preferences.autoUpdateApp);
-      unawaited(_refreshCacheSize());
-      unawaited(_trimThumbnails());
+      // Housekeeping waits until the first page has loaded and drawn, so
+      // update checks and folder scans do not compete with it.
+      _afterStart = Timer(const Duration(seconds: 8), () {
+        if (_disposed) return;
+        if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
+        if (preferences.autoCheckUpdates || preferences.autoUpdateApp) updater.start(download: () => preferences.autoUpdateApp);
+        unawaited(_refreshCacheSize());
+        unawaited(_trimThumbnails());
+      });
       unawaited(downloads?.load());
       unawaited(account?.load());
       _translationCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}translations.json'));
@@ -3265,6 +3271,7 @@ class AppController extends ChangeNotifier {
     _outputSize?.dispose();
     unawaited(_flushAppearance());
     _thumbnailTrimTimer?.cancel();
+    _afterStart?.cancel();
     for (final subscription in _playerSubscriptions) {
       unawaited(subscription.cancel());
     }

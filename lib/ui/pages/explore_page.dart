@@ -97,11 +97,8 @@ class _ExplorePageState extends State<ExplorePage> {
     final sub = controller.exploreSub;
     final subNow = controller.exploreSubNow;
     final leaf = controller.exploreLeaf;
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (notification.depth == 0 && notification.metrics.axis == Axis.vertical && nearListEnd(notification.metrics)) loader?.loadMore();
-        return false;
-      },
+    return NearEndListener(
+      onNearEnd: () => loader?.loadMore(),
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: PageHeader(
           tr('探索'),

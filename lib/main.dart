@@ -107,6 +107,11 @@ class _LumtubAppState extends State<LumtubApp> {
         controller.cast.windowHidden = true;
         KeepAwake.hidden = true;
         unawaited(controller.setBackgroundAudioOnly(true));
+        // Nothing is drawn while hidden: decoded thumbnails go, and come
+        // back from the disk cache when the window does.
+        PaintingBinding.instance.imageCache
+          ..clear()
+          ..clearLiveImages();
         if (controller.playing == null) controller.releaseMemory();
         final player = controller.player;
         if (!controller.preferences.pauseOnMinimize || player == null || !player.state.playing) return;

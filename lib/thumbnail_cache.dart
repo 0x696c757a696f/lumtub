@@ -55,6 +55,22 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
   /// address waits ten minutes, one the network failed half a minute.
   static final _failed = <String, (DateTime, Duration)>{};
 
+  static final _youtubeJpeg = RegExp(r'^https://i\.ytimg\.com/vi/([\w-]+)/(\w+)\.jpg$');
+
+  /// What to ask for, in order, until one is not a 404. YouTube's WebP
+  /// copy of a thumbnail is about a third smaller than the JPEG and every
+  /// platform's decoder reads it; a few old videos lack it. The larger
+  /// sizes exist only for some videos; hqdefault always does.
+  static List<String> candidates(String url) {
+    final match = _youtubeJpeg.firstMatch(url);
+    if (match == null) return [url];
+    final id = match[1]!;
+    final names = [match[2]!, if (const {'maxresdefault', 'sddefault'}.contains(match[2])) 'hqdefault'];
+    return [
+      for (final name in names) ...['https://i.ytimg.com/vi_webp/$id/$name.webp', 'https://i.ytimg.com/vi/$id/$name.jpg'],
+    ];
+  }
+
   Future<Uint8List> _bytes() async {
     try {
       if (await file.exists()) {
@@ -68,10 +84,10 @@ class CachedThumbnail extends ImageProvider<CachedThumbnail> {
       throw HttpException('Thumbnail failed lately', uri: Uri.parse(url));
     }
     try {
-      var response = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
-      // The larger sizes exist only for some videos; hqdefault always does.
-      if (response.statusCode == 404 && RegExp(r'/(maxresdefault|sddefault)\.jpg$').hasMatch(url)) {
-        response = await _client.get(Uri.parse(url.replaceFirst(RegExp(r'(maxresdefault|sddefault)\.jpg$'), 'hqdefault.jpg'))).timeout(const Duration(seconds: 10));
+      late http.Response response;
+      for (final address in candidates(url)) {
+        response = await _client.get(Uri.parse(address)).timeout(const Duration(seconds: 10));
+        if (response.statusCode != 404) break;
       }
       if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
         _remember(const Duration(minutes: 10));

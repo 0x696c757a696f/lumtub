@@ -10,6 +10,7 @@ import 'explore_topics.dart';
 import 'models.dart';
 import 'progress_line.dart';
 import 'translation.dart';
+import 'translation_services.dart';
 import 'l10n/l10n.dart';
 
 /// Pages the app can open on start, in navigation order.
@@ -81,6 +82,8 @@ class AppPreferences {
     this.autoUpdateApp = true,
     this.skipFfmpegPrompt = false,
     this.translateLanguage = 'zh-CN',
+    this.translation = const TranslationConfig(),
+    this.subtitlesByService = false,
   });
 
   final bool recordHistory;
@@ -174,6 +177,12 @@ class AppPreferences {
   final bool skipFfmpegPrompt;
   /// The language 翻译 and the translated subtitle turn text into (a TranslationLanguage code).
   final String translateLanguage;
+
+  /// Which service 翻译 uses, and its settings; the keys are kept apart.
+  final TranslationConfig translation;
+
+  /// Translated subtitles come from [translation] instead of YouTube.
+  final bool subtitlesByService;
 
   bool isBlocked(String? channelId) => channelId != null && _lists.blockedIds.contains(channelId);
 
@@ -312,6 +321,8 @@ class AppPreferences {
     bool? autoUpdateApp,
     bool? skipFfmpegPrompt,
     String? translateLanguage,
+    TranslationConfig? translation,
+    bool? subtitlesByService,
   }) =>
       AppPreferences(
         recordHistory: recordHistory ?? this.recordHistory,
@@ -367,6 +378,8 @@ class AppPreferences {
         autoUpdateApp: autoUpdateApp ?? this.autoUpdateApp,
         skipFfmpegPrompt: skipFfmpegPrompt ?? this.skipFfmpegPrompt,
         translateLanguage: translateLanguage ?? this.translateLanguage,
+        translation: translation ?? this.translation,
+        subtitlesByService: subtitlesByService ?? this.subtitlesByService,
       );
 
   Map<String, dynamic> toJson() => {
@@ -423,6 +436,8 @@ class AppPreferences {
         'autoUpdateApp': autoUpdateApp,
         'skipFfmpegPrompt': skipFfmpegPrompt,
         'translateLanguage': translateLanguage,
+        'translation': translation.toJson(),
+        'subtitlesByService': subtitlesByService,
       };
 
   factory AppPreferences.fromJson(Object? raw) {
@@ -513,6 +528,8 @@ class AppPreferences {
       autoUpdateApp: flag('autoUpdateApp', d.autoUpdateApp),
       skipFfmpegPrompt: flag('skipFfmpegPrompt', d.skipFfmpegPrompt),
       translateLanguage: TranslationLanguage.byCode(raw['translateLanguage']).code,
+      translation: TranslationConfig.fromJson(raw['translation']),
+      subtitlesByService: flag('subtitlesByService', d.subtitlesByService),
     );
   }
 }

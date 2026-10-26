@@ -628,19 +628,25 @@ class _UpNext extends StatelessWidget {
 SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings) {
   if (settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
+  TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
+        height: 1.4,
+        fontSize: 32 * scale,
+        fontFamily: font.isEmpty ? null : font,
+        letterSpacing: 0.0,
+        wordSpacing: 0.0,
+        color: Color(0xFF000000 | color).withValues(alpha: opacity),
+        fontWeight: settings.subtitleBold ? FontWeight.w700 : FontWeight.normal,
+        backgroundColor: settings.subtitleBackground ? Color.fromRGBO(0, 0, 0, 0.67 * opacity) : null,
+        shadows: settings.subtitleBackground || border == 0
+            ? null
+            : [
+                for (final (dx, dy) in const [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)])
+                  Shadow(color: Colors.black.withValues(alpha: opacity), offset: Offset(dx * border / 2, dy * border / 2), blurRadius: border / 2),
+              ],
+      );
   return SubtitleViewConfiguration(
-    style: TextStyle(
-      height: 1.4,
-      fontSize: 32 * settings.subtitleScale,
-      letterSpacing: 0.0,
-      wordSpacing: 0.0,
-      color: Colors.white,
-      fontWeight: settings.subtitleBold ? FontWeight.w700 : FontWeight.normal,
-      backgroundColor: settings.subtitleBackground ? const Color(0xAA000000) : null,
-      shadows: settings.subtitleBackground || border == 0
-          ? null
-          : [for (final (dx, dy) in const [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)]) Shadow(color: Colors.black, offset: Offset(dx * border / 2, dy * border / 2), blurRadius: border / 2)],
-    ),
+    style: style(settings.subtitleFont, settings.subtitleScale, settings.subtitleColor, settings.subtitleOpacity),
+    secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
     // sub-pos counts from the top; 100 is the bottom edge.
     padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + (100 - settings.subtitlePosition) * 4.0),
   );

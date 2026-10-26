@@ -36,6 +36,9 @@ class TranslationLanguage {
 
   /// The language for a saved [code], else simplified Chinese.
   static TranslationLanguage byCode(Object? code) => all.firstWhere((l) => l.code == code, orElse: () => all.first);
+
+  /// The language for a saved [code]; null for none or an unknown one.
+  static TranslationLanguage? maybeByCode(Object? code) => all.where((l) => l.code == code).firstOrNull;
 }
 
 /// Something that turns text into another language.

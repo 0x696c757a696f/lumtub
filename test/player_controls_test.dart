@@ -162,6 +162,39 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('the subtitle panel puts the first and second subtitle side by side', (tester) async {
+    controller.details = const VideoDetails(title: '测试视频标题', channel: '频道', subtitles: [
+      SubtitleOption(language: 'en', name: 'English', url: 'https://yt.example/api/timedtext?v=1&lang=en'),
+      SubtitleOption(language: 'ja', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=ja', kind: SubtitleKind.automatic),
+      SubtitleOption(language: 'fr', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=en&tlang=fr', kind: SubtitleKind.translated),
+    ]);
+    tester.view.physicalSize = const Size(1280, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(Colors.red, Brightness.light),
+      home: Scaffold(body: ColoredBox(color: Colors.black, child: PlayerControls(player: player, state: null, controller: controller))),
+    ));
+    await tester.pump();
+    await tester.tap(find.byTooltip('字幕'));
+    await tester.pumpAndSettle();
+    expect(find.text('第一字幕'), findsOneWidget);
+    expect(find.text('第二字幕（上方）'), findsOneWidget);
+    expect(find.text('视频自带'), findsNWidgets(2));
+    expect(find.text('自动生成'), findsNWidgets(2));
+    expect(find.text('翻译为简体中文'), findsNWidgets(2));
+    // YouTube's translations wait behind a button on each side.
+    expect(find.textContaining('法语'), findsNothing);
+    await tester.tap(find.textContaining('更多语言').first);
+    await tester.pump();
+    expect(find.text('YouTube 自动翻译'), findsNWidgets(2));
+    expect(find.byIcon(Icons.check_rounded), findsNWidgets(2), reason: 'both sides start off');
+    await tester.tap(find.byTooltip('关闭'));
+    await tester.pumpAndSettle();
+    expect(find.text('第一字幕'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the speed menu uses the speeds from settings', (tester) async {
     await pump(tester);
     await tester.tap(find.text('1X'));
@@ -210,7 +243,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_vert_rounded));
     await tester.pumpAndSettle();
     final sheet = find.descendant(of: find.byType(BottomSheet), matching: find.byType(Scrollable));
-    for (final item in ['选择画质', '选择音质', '播放策略', '禁用视频编码', '播放顺序', '字幕设置', '截图 (S)', '镜像翻转', '画面缩放', '定时关闭', '播放信息', '重载视频']) {
+    for (final item in ['选择画质', '选择音质', '播放策略', '禁用视频编码', '播放顺序', '字幕', '截图 (S)', '镜像翻转', '画面缩放', '定时关闭', '播放信息', '重载视频']) {
       await tester.scrollUntilVisible(find.text(item), 60, scrollable: sheet);
       expect(find.text(item), findsOneWidget);
     }

@@ -7,6 +7,7 @@ import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/subtitle_translation.dart';
 import 'package:lumtub/translation.dart';
+import 'package:lumtub/translation_services.dart';
 import 'package:lumtub/ui/translatable.dart';
 
 class _Fake implements Translator {
@@ -81,6 +82,37 @@ void main() {
     // Nothing to translate when the only subtitle is already in the target language.
     expect(translationOf([const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/a.vtt')], target), isNull);
     expect(translationOf(const [], target), isNull);
+  });
+
+  test('tells languages apart by script and finds the second subtitle', () {
+    final simplified = TranslationLanguage.byCode('zh-CN');
+    final traditional = TranslationLanguage.byCode('zh-TW');
+    final english = TranslationLanguage.byCode('en');
+    expect(['zh', 'zh-Hans', 'zh_CN', 'chi'].every((t) => speaks(t, simplified)), isTrue);
+    expect(speaks('zh-Hant', simplified), isFalse);
+    expect(speaks('zh-HK', traditional), isTrue);
+    expect(speaks('en-GB', english), isTrue);
+    expect(speaks('eng', english), isFalse);
+    expect(speaks(null, english), isFalse);
+
+    const ja = SubtitleOption(language: 'ja', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=ja', kind: SubtitleKind.automatic);
+    const enAuto = SubtitleOption(language: 'en', name: '', url: 'https://yt.example/en-auto.vtt', kind: SubtitleKind.automatic);
+    const enOwn = SubtitleOption(language: 'en-US', name: '', url: 'https://yt.example/en.vtt');
+    expect(subtitleIn([ja, enAuto, enOwn], english), enOwn);
+    expect(subtitleIn([ja, enAuto], english), enAuto);
+    final translated = subtitleIn([ja], english)!;
+    expect((translated.kind, Uri.parse(translated.url).queryParameters['tlang']), (SubtitleKind.translated, 'en'));
+  });
+
+  test('the translation service settings are saved', () {
+    final prefs = const AppPreferences().copyWith(
+      translation: const TranslationConfig(service: TranslationService.ai, aiPreset: 'deepseek', promptPreset: 'natural'),
+      subtitlesByService: true,
+    );
+    final read = AppPreferences.fromJson(prefs.toJson());
+    expect(read.translation, prefs.translation);
+    expect(read.subtitlesByService, isTrue);
+    expect(AppPreferences.fromJson({}).translation.service, TranslationService.google);
   });
 
   testWidgets('translates on tap, shows the original again and reports errors', (tester) async {

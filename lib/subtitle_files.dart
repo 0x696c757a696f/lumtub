@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'models.dart';
 import 'translation.dart';
+import 'translation_services.dart';
 import 'youtube_web.dart';
 
 /// Subtitles fetched by the app and handed to mpv as files.
@@ -14,35 +15,48 @@ import 'youtube_web.dart';
 /// caption request, above all a translated one (`tlang=`), with 429. Here
 /// a 429 is retried after a pause, and a translation YouTube still refuses
 /// is made from the original track with [_translator], one request per
-/// stretch of lines, as the 翻译 button does for comments.
+/// stretch of lines, as the 翻译 button does for comments. When
+/// [byTranslator] says so, every translation is made that way and YouTube's
+/// is not asked for.
 class SubtitleFiles {
-  SubtitleFiles(this._client, this._folder, this._translator, {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)]});
+  SubtitleFiles(this._client, this._folder, this._translator, {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never});
   final http.Client _client;
   final Directory _folder;
-  final Translator _translator;
+  /// The translator chosen now; a new one translates again.
+  final Translator Function() _translator;
   final List<Duration> pauses;
+  final bool Function() byTranslator;
+
+  static bool _never() => false;
 
   final _paths = <String, Future<String>>{};
   bool _cleared = false;
 
   /// A file holding [option], fetched once per address.
   Future<String> pathFor(SubtitleOption option) {
-    final pending = _paths[option.url] ??= _fetch(option);
+    final source = _sourceOf(option);
+    final translator = source != null && byTranslator() ? _translator() : null;
+    final key = translator == null ? option.url : '${option.url}\u0000${identityHashCode(translator)}';
+    final pending = _paths[key] ??= _fetch(option, key, translator);
     pending.ignore();
     return pending.catchError((Object e) {
-      _paths.remove(option.url);
+      _paths.remove(key);
       throw e;
     });
   }
 
-  Future<String> _fetch(SubtitleOption option) async {
+  Future<String> _fetch(SubtitleOption option, String key, Translator? translator) async {
     String text;
-    try {
-      text = await _get(option.url);
-    } on _Refused {
-      final source = _sourceOf(option);
-      if (source == null) rethrow;
-      text = await _translate(await _get(source.url), source.target);
+    final source = _sourceOf(option);
+    if (translator != null && source != null) {
+      text = await _translate(await _get(source.url), source.target, translator);
+    } else {
+      try {
+        text = await _get(option.url);
+      } on _Refused {
+        if (source == null) rethrow;
+        text = await _translate(await _get(source.url), source.target, _translator());
+      }
     }
     if (!_cleared) {
       _cleared = true;
@@ -52,7 +66,7 @@ class SubtitleFiles {
       } catch (_) {}
     }
     await _folder.create(recursive: true);
-    final file = File('${_folder.path}${Platform.pathSeparator}${_name(option.url)}.vtt');
+    final file = File('${_folder.path}${Platform.pathSeparator}${_name(key)}.vtt');
     await file.writeAsString(text);
     return file.path;
   }
@@ -74,20 +88,22 @@ class SubtitleFiles {
     return (url: uri.replace(queryParameters: {...uri.queryParameters}..remove('tlang')).toString(), target: target);
   }
 
-  Future<String> _translate(String vtt, String target) async {
+  Future<String> _translate(String vtt, String tlang, Translator translator) async {
     final cues = WebVtt.cues(vtt);
     if (cues.isEmpty) return vtt;
+    final target = TranslationLanguage.all.where((l) => l.youtube == tlang).firstOrNull?.code ?? tlang;
+    final chunkLength = chunkLengthOf(translator);
     // Line groups of one request each, so a reply that drops the line break
     // at a request's end cannot shift every line after it.
     final lines = <String>[];
     for (var start = 0; start < cues.length;) {
       var end = start;
       var length = 0;
-      while (end < cues.length && (end == start || length + cues[end].text.length < GoogleTranslator.chunkLength)) {
+      while (end < cues.length && (end == start || length + cues[end].text.length < chunkLength)) {
         length += cues[end++].text.length + 1;
       }
       final group = cues.sublist(start, end);
-      final translated = (await _translator.translate(group.map((c) => c.text).join('\n'), target)).trim().split('\n');
+      final translated = (await translator.translate(group.map((c) => c.text).join('\n'), target)).trim().split('\n');
       if (translated.length != group.length) throw const TranslationException('Translated subtitles lost their line breaks');
       lines.addAll(translated);
       start = end;

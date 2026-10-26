@@ -25,11 +25,32 @@ SubtitleOption translatedOption(SubtitleOption source, TranslationLanguage targe
 /// original-language track translated. Null when the video has no subtitle
 /// in another language to translate.
 SubtitleOption? translationOf(List<SubtitleOption> options, TranslationLanguage target) {
-  bool isTarget(SubtitleOption o) => o.language == target.youtube || o.language == target.code;
-  final listed = options.where((o) => o.kind == SubtitleKind.translated && isTarget(o)).firstOrNull;
+  final listed = options.where((o) => o.kind == SubtitleKind.translated && speaks(o.language, target)).firstOrNull;
   if (listed != null) return listed;
-  final source = options.where((o) => o.kind != SubtitleKind.translated && !isTarget(o)).firstOrNull;
+  final source = options.where((o) => o.kind != SubtitleKind.translated && !speaks(o.language, target)).firstOrNull;
   return source == null ? null : translatedOption(source, target);
+}
+
+/// Whether a subtitle tagged [language] (YouTube's or mpv's tag) is in
+/// [target]. Chinese is told apart by script: zh-Hans, zh-CN and bare zh
+/// are simplified, zh-Hant, zh-TW and zh-HK traditional.
+bool speaks(String? language, TranslationLanguage target) {
+  final tag = (language ?? '').toLowerCase().replaceAll('_', '-');
+  if (tag.isEmpty) return false;
+  if (target.code == 'zh-CN') return const {'zh', 'zh-hans', 'zh-cn', 'zh-sg', 'chi', 'zho'}.contains(tag);
+  if (target.code == 'zh-TW') return const {'zh-hant', 'zh-tw', 'zh-hk', 'zh-mo'}.contains(tag);
+  final code = target.code.toLowerCase();
+  return tag == code || tag.startsWith('$code-');
+}
+
+/// The subtitle of [options] to show in [target]: one the video has in
+/// that language, uploaded before automatic, else YouTube's translation.
+SubtitleOption? subtitleIn(List<SubtitleOption> options, TranslationLanguage target) {
+  for (final kind in [SubtitleKind.uploaded, SubtitleKind.automatic]) {
+    final own = options.where((o) => o.kind == kind && speaks(o.language, target)).firstOrNull;
+    if (own != null) return own;
+  }
+  return translationOf(options, target);
 }
 
 /// Sets and clears mpv's secondary subtitle.

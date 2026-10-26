@@ -101,19 +101,37 @@ class SubtitleViewState extends State<SubtitleView> {
             padding: padding,
             duration: duration,
             alignment: Alignment.bottomCenter,
-            child: Text(
-              [
-                // Lumtub: the secondary subtitle goes above the main one.
-                for (final line in subtitle.reversed)
-                  if (line.trim().isNotEmpty) line.trim(),
-              ].join('\n'),
-              style: widget.configuration.style,
-              textAlign: widget.configuration.textAlign,
-              textScaler: textScaler,
-            ),
+            child: _lines(textScaler),
           ),
         );
       },
+    );
+  }
+
+  // Lumtub: the secondary subtitle goes above the main one, in its own
+  // style when the configuration has one.
+  Widget _lines(TextScaler textScaler) {
+    final configuration = widget.configuration;
+    final main = subtitle.isEmpty ? '' : subtitle.first.trim();
+    final secondary = subtitle.length < 2 ? '' : subtitle[1].trim();
+    final secondaryStyle = configuration.secondaryStyle;
+    if (secondaryStyle == null) {
+      return Text(
+        [if (secondary.isNotEmpty) secondary, if (main.isNotEmpty) main].join('\n'),
+        style: configuration.style,
+        textAlign: configuration.textAlign,
+        textScaler: textScaler,
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (secondary.isNotEmpty)
+          Text(secondary, style: secondaryStyle, textAlign: configuration.textAlign, textScaler: textScaler),
+        if (secondary.isNotEmpty && main.isNotEmpty) SizedBox(height: configuration.spacing),
+        if (main.isNotEmpty)
+          Text(main, style: configuration.style, textAlign: configuration.textAlign, textScaler: textScaler),
+      ],
     );
   }
 }
@@ -140,6 +158,13 @@ class SubtitleViewConfiguration {
   /// The padding to be used for the subtitles.
   final EdgeInsets padding;
 
+  /// Lumtub: the style of the secondary subtitle; null draws it like the
+  /// main one.
+  final TextStyle? secondaryStyle;
+
+  /// Lumtub: the gap between the secondary and the main subtitle.
+  final double spacing;
+
   /// {@macro subtitle_view_configuration}
   const SubtitleViewConfiguration({
     this.visible = true,
@@ -154,6 +179,8 @@ class SubtitleViewConfiguration {
     ),
     this.textAlign = TextAlign.center,
     this.textScaler,
+    this.secondaryStyle,
+    this.spacing = 4.0,
     this.padding = const EdgeInsets.fromLTRB(
       16.0,
       0.0,

@@ -29,6 +29,7 @@ import '../theme.dart';
 import 'account_settings.dart';
 import 'relay_servers_page.dart';
 import 'settings_subpages.dart';
+import 'translation_settings_page.dart';
 import '../../l10n/l10n.dart';
 
 /// The groups in the settings list, in display order, named and ordered
@@ -817,6 +818,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.expandDescription,
               onChanged: (v) => savePrefs(prefs.copyWith(expandDescription: v)),
             )),
+        SettingEntry(tr('翻译服务'), (context) => NormalItem(
+              title: tr('翻译服务'),
+              subtitle: prefs.translation.service.label,
+              leading: _icon(Icons.g_translate_rounded),
+              onTap: () => openTranslationSettings(context, controller),
+            ), subtitle: '翻译 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
         SettingEntry(tr('翻译目标语言'), (context) => PopupItem<String>(
               title: tr('翻译目标语言'),
               leading: _icon(Icons.translate_rounded),

@@ -24,9 +24,7 @@ import '../heatmap.dart';
 import '../keep_awake.dart';
 import '../picture_transform.dart';
 import '../storyboard.dart';
-import '../models.dart' show Chapter, SubtitleKind, SubtitleOption;
-import '../subtitle_translation.dart';
-import '../translation.dart';
+import '../models.dart' show Chapter;
 import '../format_policy.dart';
 import '../player_settings.dart';
 import '../widgets/pilinara_settings_tiles.dart';
@@ -38,6 +36,7 @@ import 'format_policy_dialogs.dart';
 import 'pages/settings_sections.dart' show trimSpeed, qualityLabel;
 import 'pages/settings_subpages.dart';
 import 'player_shortcuts.dart';
+import 'subtitle_panel.dart';
 import 'player_stats.dart';
 import 'screenshot_action.dart';
 import 'storyboard_preview.dart';
@@ -605,52 +604,25 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         stream: _player.stream.track,
         initialData: _player.state.track,
         builder: (context, _) {
-          final tracks = _player.state.tracks.subtitle.where((t) => t.id != 'auto' && t.id != 'no').toList();
           final current = _player.state.track.subtitle;
           final on = current.id != 'no' && current.id != 'auto';
-          final offered = _controller.details?.subtitles ?? const <SubtitleOption>[];
-          if (tracks.isEmpty && offered.isEmpty) return const SizedBox.shrink();
-          const more = '\u0000more';
-          const translate = '\u0000translate';
-          const bilingual = '\u0000bilingual';
-          const secondary = '\u0000secondary';
-          final target = TranslationLanguage.byCode(_controller.preferences.translateLanguage);
-          final translation = translationOf(offered, target);
-          final secondaryOn = _controller.secondarySubtitle != null;
-          return _PopupMenu<String>(
+          final hasTracks = _player.state.tracks.subtitle.any((t) => t.id != 'auto' && t.id != 'no');
+          if (!hasTracks && (_controller.details?.subtitles ?? const []).isEmpty) return const SizedBox.shrink();
+          return _IconButton(
             tooltip: tr('字幕'),
-            value: current.id,
-            items: [
-              ('no', tr('关闭字幕')),
-              for (final t in tracks) (t.id, _trackLabel(t.id, t.title, t.language)),
-              if (offered.isNotEmpty) (more, tr('全部字幕（{0}）…', [offered.length])),
-              if (translation != null) (translate, tr('翻译字幕为{0}', [target.label])),
-              if (translation != null || secondaryOn) (bilingual, secondaryOn ? tr('关闭双语字幕') : tr('双语字幕（加{0}副字幕）', [target.label])),
-              if (offered.isNotEmpty) (secondary, tr('副字幕…')),
-            ],
-            onSelected: (id) {
-              if (id == more) {
-                unawaited(_pickSubtitle(context, offered));
-              } else if (id == secondary) {
-                unawaited(_pickSubtitle(context, offered, secondary: true));
-              } else if (id == translate) {
-                unawaited(_controller.showSubtitle(translation!));
-              } else if (id == bilingual) {
-                unawaited(_controller.setSecondarySubtitle(secondaryOn ? null : translation));
-              } else {
-                unawaited(_player.setSubtitleTrack(id == 'no' ? SubtitleTrack.no() : tracks.firstWhere((t) => t.id == id)));
-              }
-            },
-            onOpened: _menuOpened,
-            onClosed: _menuClosed,
-            child: SizedBox(
-              width: width,
-              height: 30,
-              child: Icon(on ? Icons.closed_caption_rounded : Icons.closed_caption_off_outlined, size: 22, color: Colors.white),
-            ),
+            width: width,
+            icon: on ? Icons.closed_caption_rounded : Icons.closed_caption_off_outlined,
+            active: _controller.secondarySubtitle != null,
+            onTap: () => unawaited(_openSubtitles(context)),
           );
         },
       );
+
+  Future<void> _openSubtitles(BuildContext context) async {
+    _menuOpened();
+    await showSubtitlePanel(context, _controller, _player, onSettings: () => openSubtitleSettings(context, _controller));
+    _menuClosed();
+  }
 
   /// PiliNara's header "更多" sheet: format, order, subtitles, sleep timer,
   /// playback info and reload.
@@ -715,7 +687,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             item(Icons.repeat_rounded, tr('播放顺序'), settings.playOrder.label, () {
               pickFromDialog<PlayOrder>(context, title: tr('播放顺序'), value: settings.playOrder, values: [for (final o in PlayOrder.values) (o, o.label)], onSelected: _controller.setPlayOrder);
             }),
-            item(Icons.subtitles_outlined, tr('字幕设置'), '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}', () => openSubtitleSettings(context, _controller)),
+            item(Icons.subtitles_outlined, tr('字幕'), '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}', () => unawaited(_openSubtitles(context))),
             item(Icons.tune_rounded, tr('画面与音画同步调节'), null, () => openPictureSettings(context, _controller)),
             item(Icons.photo_camera_outlined, tr('截图 (S)'), tr('保存到“图片\\Lumtub”并复制'), () => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback))),
             item(Icons.flip_rounded, tr('镜像翻转'), _transform.mirrored ? tr('已开启') : tr('未开启'), () => unawaited(_transform.setMirrored(!_transform.mirrored))),
@@ -758,15 +730,6 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         }
       },
     );
-  }
-
-  /// Every subtitle the video offers, with a filter; the pick is added to
-  /// the player.
-  Future<void> _pickSubtitle(BuildContext context, List<SubtitleOption> offered, {bool secondary = false}) async {
-    _menuOpened();
-    final picked = await showDialog<SubtitleOption>(context: context, builder: (context) => _SubtitlePicker(options: offered, title: secondary ? tr('副字幕（显示在主字幕上方）') : null));
-    _menuClosed();
-    if (picked != null) await (secondary ? _controller.setSecondarySubtitle(picked) : _controller.showSubtitle(picked));
   }
 
   static String _trackLabel(String id, String? title, String? language) {
@@ -1054,53 +1017,4 @@ class _FeedbackBubble extends StatelessWidget {
           Text(text, style: const TextStyle(color: Colors.white, fontSize: 13)),
         ]),
       );
-}
-
-/// Lists [options] by kind, with a filter by language name or code.
-class _SubtitlePicker extends StatefulWidget {
-  const _SubtitlePicker({required this.options, this.title});
-  final List<SubtitleOption> options;
-  final String? title;
-
-  @override
-  State<_SubtitlePicker> createState() => _SubtitlePickerState();
-}
-
-class _SubtitlePickerState extends State<_SubtitlePicker> {
-  String _query = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final query = _query.trim().toLowerCase();
-    final shown = widget.options.where((o) => query.isEmpty || o.label.toLowerCase().contains(query) || o.language.toLowerCase().contains(query) || o.name.toLowerCase().contains(query)).toList();
-    final headings = {SubtitleKind.uploaded: tr('上传的字幕'), SubtitleKind.automatic: tr('自动生成'), SubtitleKind.translated: tr('自动翻译')};
-    return AlertDialog(
-      title: Text(widget.title ?? tr('选择字幕')),
-      contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      content: SizedBox(
-        width: 420,
-        height: 520,
-        child: Column(children: [
-          TextField(
-            autofocus: true,
-            decoration: InputDecoration(isDense: true, prefixIcon: Icon(Icons.search_rounded, size: 20), hintText: tr('搜索语言，如 中文、ja')),
-            onChanged: (v) => setState(() => _query = v),
-          ),
-          const SizedBox(height: 8),
-          Expanded(child: ListView(children: [
-            for (final kind in SubtitleKind.values)
-              if (shown.where((o) => o.kind == kind).toList() case final group when group.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-                  child: Text(headings[kind]!, style: Theme.of(context).textTheme.labelLarge!.copyWith(color: Theme.of(context).colorScheme.primary)),
-                ),
-                for (final option in group) ListTile(dense: true, title: Text(option.label), subtitle: Text(option.language), onTap: () => Navigator.of(context).pop(option)),
-              ],
-            if (shown.isEmpty) Padding(padding: EdgeInsets.all(24), child: Center(child: Text(tr('没有匹配的语言')))),
-          ])),
-        ]),
-      ),
-      actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('取消')))],
-    );
-  }
 }

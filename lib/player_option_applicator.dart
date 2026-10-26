@@ -28,6 +28,8 @@ class PlayerOptionApplicator {
       if (settings.strategy == PlaybackStrategy.lowResource) ...fastRendering,
       'video-sync': settings.videoSync.mpvValue,
       'sub-scale': settings.subtitleScale.toStringAsFixed(1),
+      'sub-font': settings.subtitleFont.isEmpty ? 'sans-serif' : settings.subtitleFont,
+      'sub-color': PlayerSettings.mpvColor(settings.subtitleColor, settings.subtitleOpacity),
       'sub-pos': settings.subtitlePosition.toString(),
       // The secondary subtitle (libass) sits just above the main one.
       'secondary-sub-pos': (settings.subtitlePosition - 8).clamp(0, 100).toString(),

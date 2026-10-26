@@ -65,6 +65,7 @@ import '../stream_resolver.dart';
 import '../subtitle_files.dart';
 import '../subtitle_translation.dart';
 import '../translation.dart';
+import '../translation_services.dart';
 import 'posts_loader.dart';
 import '../video_output_size.dart';
 import '../video_repository.dart';
@@ -359,10 +360,19 @@ class AppController extends ChangeNotifier {
   final _http = http.Client();
   /// Sprite sheets of the progress bar's preview frames.
   late final storyboardSheets = StoryboardSheets(_http);
-  /// Behind 翻译 buttons; called only when one is tapped.
-  late Translator translator = GoogleTranslator(_http);
+  late final _google = GoogleTranslator(_http);
+  /// Behind 翻译 buttons and translated subtitles: the service 翻译服务
+  /// names; called only when something is to be translated.
+  late Translator translator = _google;
+  /// The translation services' API keys, by [TranslationService.name],
+  /// kept encrypted with DPAPI apart from the settings.
+  Map<String, String> translationKeys = const {};
+  SecureJsonFile? _translationKeyFile;
   /// The subtitle shown above the main one (双语字幕), if any.
   SubtitleOption? secondarySubtitle;
+  /// The video 第二字幕语言 was applied to, so a secondary subtitle turned
+  /// off stays off.
+  String? _secondaryAutoFor;
   bool _decoderPending = false;
   int _mpvLogLines = 0;
   /// yt-dlp and libmpv error lines for the video being opened, which name
@@ -552,6 +562,8 @@ class AppController extends ChangeNotifier {
       unawaited(_trimThumbnails());
       unawaited(downloads?.load());
       unawaited(account?.load());
+      _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), DpapiProtector());
+      unawaited(_loadTranslationKeys());
       logInfo('Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
       _update(() {
@@ -1592,7 +1604,12 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  late final _subtitleFiles = SubtitleFiles(_http, Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles'), translator);
+  late final _subtitleFiles = SubtitleFiles(
+    _http,
+    Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles'),
+    () => translator,
+    byTranslator: () => preferences.subtitlesByService && preferences.translation.service != TranslationService.google,
+  );
 
   /// [option] as a local file, fetched with retries; see [SubtitleFiles].
   Future<String> _subtitleFile(SubtitleOption option) async {
@@ -1622,6 +1639,30 @@ class AppController extends ChangeNotifier {
       logError('Could not load subtitles ${option.language}', e);
       _notice(tr('无法加载这条字幕'));
     }
+  }
+
+  /// Shows the subtitle 第二字幕语言 names above the main one once the
+  /// main one is on, unless the main one is in that language already.
+  Future<void> _autoSecondary(VideoItem item, VideoDetails details, int serial) async {
+    final target = TranslationLanguage.maybeByCode(settings.secondarySubtitleLanguage);
+    final player = this.player;
+    if (target == null || player == null || details.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
+    if (_secondaryAutoFor == item.id || _openedLocal == item.id) return;
+    bool shown(SubtitleTrack t) => t.id != 'no' && t.id != 'auto';
+    if (!shown(player.state.track.subtitle)) {
+      try {
+        await player.stream.track.firstWhere((t) => shown(t.subtitle)).timeout(const Duration(seconds: 30));
+      } on TimeoutException {
+        return;
+      }
+    }
+    if (serial != _playSerial || this.player != player || secondarySubtitle != null || _secondaryAutoFor == item.id) return;
+    _secondaryAutoFor = item.id;
+    final main = player.state.track.subtitle;
+    final option = subtitleIn(details.subtitles, target);
+    if (option == null || speaks(main.language, target) || option.label == main.title) return;
+    logInfo('Showing ${option.language} (${option.kind.name}) as the second subtitle');
+    await setSecondarySubtitle(option);
   }
 
   /// Shows [option] (null: none) above the main subtitle.
@@ -2068,6 +2109,7 @@ class AppController extends ChangeNotifier {
           if (preferences.showRelated) related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
         });
         unawaited(_localizeDetails(item.id, serial));
+        unawaited(_autoSecondary(item, loaded, serial));
       }
     } catch (_) {
       // The page still shows what the list already knew about the video.
@@ -2564,13 +2606,47 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> savePreferences(AppPreferences next) async {
+    final service = next.translation != preferences.translation;
     _update(() => preferences = next);
+    if (service) _useTranslator();
     try {
       await _preferencesStore?.save(next);
     } on FileSystemException {
       _notice(tr('设置未能保存，本次运行仍然生效。'));
     }
   }
+
+  Future<void> _loadTranslationKeys() async {
+    final saved = await _translationKeyFile?.read();
+    if (saved == null) return;
+    translationKeys = {for (final MapEntry(:key, :value) in saved.entries) if (value is String && value.isNotEmpty) key: value};
+    _useTranslator();
+    _update(() {});
+  }
+
+  void _useTranslator() {
+    translator = translatorFor(preferences.translation, translationKeys, _http, fallback: _google);
+    logInfo('Translating with ${preferences.translation.service.name}');
+  }
+
+  /// Saves the API key of [service]; an empty one removes it.
+  Future<void> saveTranslationKey(TranslationService service, String key) async {
+    final keys = {...translationKeys}..remove(service.name);
+    if (key.trim().isNotEmpty) keys[service.name] = key.trim();
+    _update(() => translationKeys = keys);
+    _useTranslator();
+    try {
+      final file = _translationKeyFile;
+      if (file == null) return;
+      keys.isEmpty ? await file.delete() : await file.write(keys);
+    } catch (e) {
+      logError('Could not save the translation key', e);
+      _notice(tr('密钥未能保存，本次运行仍然生效。'));
+    }
+  }
+
+  /// A short sentence put through the chosen service, to check it works.
+  Future<String> testTranslation() => translator.translate('Subtitles and comments can be translated here.', preferences.translateLanguage);
 
   void blockChannel(ChannelRef channel) {
     if (preferences.isBlocked(channel.id)) return;

@@ -67,11 +67,10 @@ class CommunityPosts {
   Future<PostPage> first(ChannelRef channel) async {
     final response = await _client.get(Uri.parse('${channel.url}/posts?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    final html = utf8.decode(response.bodyBytes, allowMalformed: true);
-    _apiKey = RegExp(r'"INNERTUBE_API_KEY":"([^"]+)"').firstMatch(html)?.group(1);
-    _clientVersion = RegExp(r'"INNERTUBE_CLIENT_VERSION":"([^"]+)"').firstMatch(html)?.group(1);
-    _visitorData = RegExp(r'"VISITOR_DATA":"([^"]+)"').firstMatch(html)?.group(1);
-    final page = await _readInBackground(html);
+    final (page, apiKey, clientVersion, visitorData) = await _readPageInBackground(response.bodyBytes);
+    _apiKey = apiKey;
+    _clientVersion = clientVersion;
+    _visitorData = visitorData;
     if (page == null) throw FormatException(tr('没有在频道页面里找到帖子数据'));
     return page;
   }
@@ -101,8 +100,15 @@ class CommunityPosts {
     return await _readInBackground(utf8.decode(response.bodyBytes)) ?? const PostPage([], null);
   }
 
-  // A channel page runs to a megabyte or two.
   static Future<PostPage?> _readInBackground(String body) => Isolate.run(() => read(body));
+
+  // A channel page runs to a megabyte or two; its client settings are read
+  // there too.
+  static Future<(PostPage?, String?, String?, String?)> _readPageInBackground(List<int> bytes) => Isolate.run(() {
+        final html = utf8.decode(bytes, allowMalformed: true);
+        String? find(String name) => RegExp('"$name":"([^"]+)"').firstMatch(html)?.group(1);
+        return (read(html), find('INNERTUBE_API_KEY'), find('INNERTUBE_CLIENT_VERSION'), find('VISITOR_DATA'));
+      });
 
   /// Posts and the continuation token of a browse response, or of the
   /// `ytInitialData` in the HTML page [body]; read by the native core. Null

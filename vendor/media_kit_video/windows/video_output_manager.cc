@@ -36,6 +36,14 @@ void VideoOutputManager::SetSize(int64_t handle,
   });
 }
 
+void VideoOutputManager::TakeStats(int64_t handle,
+                                   std::function<void(std::string)> callback) {
+  lifecycle_thread_pool_->Post([=]() {
+    auto it = video_outputs_.find(handle);
+    callback(it == video_outputs_.end() ? std::string() : it->second->TakeStats());
+  });
+}
+
 void VideoOutputManager::Dispose(int64_t handle,
                                  std::function<void()> callback) {
   lifecycle_thread_pool_->Post([=]() {

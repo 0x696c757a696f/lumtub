@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 import 'l10n/l10n.dart';
+import 'native_core.dart';
 
 /// Where Lumtub sends its network traffic: yt-dlp, libmpv's video streams
 /// and the app's own requests all go the same way.
@@ -73,6 +75,18 @@ class NetworkProxy {
   /// The Windows proxy, read from the registry as the browsers read it.
   static Future<NetworkProxy> windows() async {
     if (!Platform.isWindows) return direct;
+    final core = NativeCore.instance;
+    if (core != null) {
+      try {
+        final setting = jsonDecode(core.take(core.systemProxy()) ?? 'null');
+        if (setting is Map && setting['enabled'] is bool) {
+          final server = '${setting['server'] ?? ''}';
+          return setting['enabled'] == true && server.isNotEmpty ? NetworkProxy(parseWindows(server)) : direct;
+        }
+      } catch (_) {
+        // Read it with reg.exe below.
+      }
+    }
     try {
       const key = r'HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings';
       final enabled = await Process.run('reg', ['query', key, '/v', 'ProxyEnable']).timeout(const Duration(seconds: 5));

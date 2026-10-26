@@ -6,6 +6,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -61,6 +62,7 @@ import '../explore_topics.dart';
 import '../faith_topics.dart';
 import '../storyboard.dart';
 import '../stream_resolver.dart';
+import '../subtitle_files.dart';
 import '../subtitle_translation.dart';
 import '../translation.dart';
 import 'posts_loader.dart';
@@ -1556,6 +1558,18 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  late final _subtitleFiles = SubtitleFiles(_http, Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles'), translator);
+
+  /// [option] as a local file, fetched with retries; see [SubtitleFiles].
+  Future<String> _subtitleFile(SubtitleOption option) async {
+    try {
+      return await _subtitleFiles.pathFor(option);
+    } catch (e) {
+      logInfo('Could not fetch subtitles ${option.language}: $e');
+      rethrow;
+    }
+  }
+
   /// Shows [option], adding it to the player first if it is not loaded.
   Future<void> showSubtitle(SubtitleOption option) async {
     final player = this.player;
@@ -1566,7 +1580,9 @@ class AppController extends ChangeNotifier {
       if (loaded != null) {
         await player.setSubtitleTrack(loaded);
       } else {
-        await platform.command(['sub-add', option.url, 'select', option.label, option.language]);
+        final file = await _subtitleFile(option);
+        if (this.player != player) return;
+        await platform.command(['sub-add', file, 'select', option.label, option.language]);
       }
     } catch (e) {
       logError('Could not load subtitles ${option.language}', e);
@@ -1579,7 +1595,10 @@ class AppController extends ChangeNotifier {
     final player = this.player;
     if (player == null) return;
     try {
-      if (!await SecondarySubtitle.set(player, option)) throw StateError('字幕未加载');
+      final loaded = option == null || player.state.tracks.subtitle.any((t) => t.title == option.label);
+      final file = loaded ? null : await _subtitleFile(option);
+      if (this.player != player) return;
+      if (!await SecondarySubtitle.set(player, option, file: file)) throw StateError('字幕未加载');
       _update(() => secondarySubtitle = option);
     } catch (e) {
       logError('Could not set secondary subtitles ${option?.language}', e);
@@ -2032,8 +2051,10 @@ class AppController extends ChangeNotifier {
     final repository = _repository!;
     // Long titles make poor queries; the first words carry the topic.
     final query = title.length > 60 ? title.substring(0, 60) : title;
+    // YouTube's own suggestions come with the /next request the localized
+    // title already makes; a search on the title stands in without them.
     final loader = VideoListLoader(
-      () => repository.search(query, filter: SearchFilter.videos),
+      () => repository.videosOr(() => relatedVideos.forVideo(item.id), query),
       pageSize: 13,
       limit: 12,
       where: (other) => other.id != item.id && !preferences.blocksGroup(other) && !preferences.isUnrecommended(other.channelId),
@@ -2347,8 +2368,9 @@ class AppController extends ChangeNotifier {
   HomeFeed? homeFeed;
   late final relatedVideos = YoutubeRelated(_http);
 
-  /// Gathers recommendations again when they are old, or when [force]d.
-  Future<void> refreshHomeFeed({bool force = false}) async {
+  /// Gathers recommendations again when they are old, or when [force]d;
+  /// with [keep], the videos shown stay and new ones follow them.
+  Future<void> refreshHomeFeed({bool force = false, bool keep = false}) async {
     final feed = homeFeed;
     final repository = _repository;
     final library = this.library;
@@ -2356,15 +2378,22 @@ class AppController extends ChangeNotifier {
     if (!force && !feed.stale && feed.items.isNotEmpty) return;
     // The last launch's feed shows while a new one is gathered.
     await feed.restore(filter: visible);
+    if (!force && !preferences.homeAutoRefresh && feed.items.isNotEmpty) return;
     if (library != null && library.channels.isNotEmpty && library.feed.isEmpty) {
       await library.refreshFeed().timeout(const Duration(seconds: 20), onTimeout: () {});
     }
     feed.mix = preferences.feedMix;
-    await feed.refresh(await _homeSources(repository), filter: visible);
+    await feed.refresh(await _homeSources(repository), filter: visible, keep: keep);
   }
 
   /// The next page of 为你推荐, as the home page scrolls to its end.
-  Future<void> loadMoreHomeFeed() async => homeFeed?.loadMore();
+  Future<void> loadMoreHomeFeed() async {
+    final feed = homeFeed;
+    if (feed == null) return;
+    // Kept from the last launch without refreshing: gather now, after it.
+    if (!feed.gathered) return refreshHomeFeed(force: true, keep: true);
+    await feed.loadMore();
+  }
 
   /// The video being watched, to learn from once it is left.
   VideoItem? _watching;
@@ -2471,6 +2500,21 @@ class AppController extends ChangeNotifier {
   /// subscriptions feed is filtered only when [AppPreferences.filterSubscriptions].
   List<VideoItem> visible(List<VideoItem> items, {bool subscriptions = false, bool search = false}) {
     final prefs = preferences;
+    // Pages filter their lists on every rebuild, and a feed runs to a
+    // thousand items: the answer is kept while the list and the preferences
+    // stay. Hiding watched videos depends on progress, which changes.
+    final key = (prefs, subscriptions, search, search ? _query : null);
+    if (!prefs.hideWatched) {
+      if (_visible[items] case (final known, final kept) when known == key) return kept;
+    }
+    final kept = _filter(items, prefs, subscriptions: subscriptions, search: search);
+    if (!prefs.hideWatched) _visible[items] = (key, kept);
+    return kept;
+  }
+
+  final _visible = Expando<(Object, List<VideoItem>)>();
+
+  List<VideoItem> _filter(List<VideoItem> items, AppPreferences prefs, {required bool subscriptions, required bool search}) {
     if (subscriptions && !prefs.filterSubscriptions) return items.where((item) => !prefs.isBlocked(item.channelId)).toList();
     final library = this.library;
     // Blocked groups show in a search only for their channel's exact name,
@@ -2794,17 +2838,33 @@ class AppController extends ChangeNotifier {
       final drops = int.tryParse(await platform.getProperty('frame-drop-count')) ?? 0;
       final added = drops - _lastDrops;
       _lastDrops = drops;
+      // Read every time, so the timings cover these 10 seconds.
+      final frames = await _frameStats(platform);
       if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) return;
       _lastDropLog = DateTime.now();
       final values = <String>[];
       for (final name in ['avsync', 'estimated-vf-fps', 'container-fps', 'display-fps', 'vo-delayed-frame-count', 'mistimed-frame-count', 'decoder-frame-drop-count', 'hwdec-current', 'video-sync', 'speed', 'video-params/w', 'video-params/h', 'time-pos', 'audio-pts', 'audio-params/samplerate', 'audio-out-params/samplerate', 'current-ao', 'd3d11va-zero-copy', 'vd-lavc-dr', 'video-codec', 'video-out-params/pixelformat']) {
         values.add('$name=${await platform.getProperty(name)}');
       }
-      logInfo('Dropped $added frames in 10 s ($drops total): ${values.join(' ')}');
+      logInfo('Dropped $added frames in 10 s ($drops total): ${values.join(' ')}${frames == null ? '' : ' · frames $frames'}');
     } catch (_) {
       // Statistics are best effort.
     }
   }
+
+  /// The video output's timings for each frame since the last call: libmpv's
+  /// render, the ANGLE draw and Flutter's read, as count/average/max.
+  Future<String?> _frameStats(NativePlayer platform) async {
+    try {
+      final stats = await _videoChannel.invokeMethod<String>('VideoOutputManager.Stats', {'handle': '${await platform.handle}'});
+      return stats == null || stats.isEmpty ? null : stats;
+    } catch (_) {
+      // An older plugin without timings.
+      return null;
+    }
+  }
+
+  static const _videoChannel = MethodChannel('com.alexmercerind/media_kit_video');
 
   DateTime _lastMemoryLog = DateTime(0);
 

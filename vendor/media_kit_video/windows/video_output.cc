@@ -145,7 +145,11 @@ VideoOutput::~VideoOutput() {
 }
 
 void VideoOutput::NotifyRender() {
-  if (destroyed_ || render_pending_.exchange(true)) {
+  if (destroyed_) {
+    return;
+  }
+  if (render_pending_.exchange(true)) {
+    coalesced_++;
     return;
   }
   // Keep at most one pending render while the current frame is being drawn.
@@ -159,6 +163,7 @@ void VideoOutput::NotifyRender() {
 }
 
 void VideoOutput::Render() {
+  const auto start = std::chrono::steady_clock::now();
   if (texture_id_) {
     // H/W
     if (surface_manager_ != nullptr) {
@@ -199,6 +204,18 @@ void VideoOutput::Render() {
       // Prevent any redundant exceptions if the texture is unregistered etc.
     }
   }
+  render_timing_.Add(std::chrono::steady_clock::now() - start);
+}
+
+std::string VideoOutput::TakeStats() {
+  auto text = render_timing_.Take("render") +
+              " coalesced=" + std::to_string(coalesced_.exchange(0)) + " " +
+              std::to_string(width()) + "x" + std::to_string(height());
+  if (surface_manager_ != nullptr) {
+    text += " " + surface_manager_->draw_timing.Take("draw") + " " +
+            surface_manager_->read_timing.Take("read");
+  }
+  return text;
 }
 
 void VideoOutput::SetTextureUpdateCallback(

@@ -82,9 +82,18 @@ class _WatchPageState extends State<WatchPage> {
           // Keep the whole player visible: never taller than the window allows.
           final playerWidth = theater ? min(constraints.maxWidth, max(320.0, (constraints.maxHeight - 8) * 16 / 9)) : min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
           final item = controller.playing;
+          // In the side panel the comments scroll by themselves and build
+          // only what is on screen.
           final comments = item == null
               ? null
-              : CommentsSection(key: ValueKey('comments:${item.id}'), controller: controller, videoId: item.id, onSeek: (position) => controller.player?.seek(position));
+              : CommentsSection(
+                  key: ValueKey('comments:${item.id}'),
+                  controller: controller,
+                  videoId: item.id,
+                  onSeek: (position) => controller.player?.seek(position),
+                  scrollable: wide,
+                  padding: wide ? const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding) : EdgeInsets.zero,
+                );
           final replayChat = item?.isLive == true || item?.liveStatus == 'was_live' ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide) : null;
           final main = <Widget>[
             if (!theater) _BackRow(onBack: controller.goBack),
@@ -440,9 +449,7 @@ class _SidePanel extends StatelessWidget {
             child: TabBarView(children: [
               _UpNext(controller: controller),
               _KeepAlive(
-                child: comments == null
-                    ? const SizedBox.shrink()
-                    : ListView(padding: const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding), children: [comments!]),
+                child: comments ?? const SizedBox.shrink(),
               ),
               if (replayChat != null) _KeepAlive(child: replayChat!),
             ]),

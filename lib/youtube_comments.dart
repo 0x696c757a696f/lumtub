@@ -84,12 +84,10 @@ class YoutubeComments {
   Future<CommentPage> post(String postId, {bool newest = false}) async {
     final response = await _client.get(Uri.parse('https://www.youtube.com/post/$postId?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    final html = utf8.decode(response.bodyBytes, allowMalformed: true);
-    _apiKey = RegExp(r'"INNERTUBE_API_KEY":"([^"]+)"').firstMatch(html)?.group(1) ?? _apiKey;
-    _clientVersion = RegExp(r'"INNERTUBE_CLIENT_VERSION":"([^"]+)"').firstMatch(html)?.group(1) ?? _clientVersion;
-    _visitorData = RegExp(r'"VISITOR_DATA":"([^"]+)"').firstMatch(html)?.group(1) ?? _visitorData;
-    final core = NativeCore.instance;
-    final token = core == null ? null : jsonDecode(core.take(core.withText(html, core.youtubePostComments)) ?? 'null') as String?;
+    final (token, apiKey, clientVersion, visitorData) = await _readPostInBackground(response.bodyBytes);
+    _apiKey = apiKey ?? _apiKey;
+    _clientVersion = clientVersion ?? _clientVersion;
+    _visitorData = visitorData ?? _visitorData;
     if (token == null) throw FormatException(tr('这个帖子没有评论区，或评论已关闭'));
     final header = await _request('browse', token);
     return _sorted(header, 'browse', newest);
@@ -133,6 +131,16 @@ class YoutubeComments {
   }
 
   static Future<CommentPage> _readInBackground(List<int> bytes) => Isolate.run(() => read(utf8.decode(bytes)));
+
+  // A post page runs to a megabyte: its comments token and client settings
+  // are read away from the UI isolate.
+  static Future<(String?, String?, String?, String?)> _readPostInBackground(List<int> bytes) => Isolate.run(() {
+        final html = utf8.decode(bytes, allowMalformed: true);
+        String? find(String name) => RegExp('"$name":"([^"]+)"').firstMatch(html)?.group(1);
+        final core = NativeCore.instance;
+        final token = core == null ? null : jsonDecode(core.take(core.withText(html, core.youtubePostComments)) ?? 'null') as String?;
+        return (token, find('INNERTUBE_API_KEY'), find('INNERTUBE_CLIENT_VERSION'), find('VISITOR_DATA'));
+      });
 
   /// The token of a video's comment section, built as yt-dlp's
   /// `_generate_comment_continuation` does, so the watch page need not be

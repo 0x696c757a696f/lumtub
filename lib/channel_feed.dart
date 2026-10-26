@@ -40,6 +40,8 @@ class ChannelFeed {
       final id = field(r'<yt:videoId>([\w-]{11})</yt:videoId>');
       if (id == null) continue;
       final views = field(r'<media:statistics views="(\d+)"');
+      // Shorts link to /shorts/ here; nothing else in the feed tells them apart.
+      final short = field(r'<link rel="alternate" href="https://www\.youtube\.com/(shorts)/') != null;
       items.add(VideoItem(
         id: id,
         title: _unescape(field(r'<title>([\s\S]*?)</title>') ?? ''),
@@ -48,6 +50,7 @@ class ChannelFeed {
         viewCount: views == null ? null : int.tryParse(views),
         channelId: channel.id,
         published: DateTime.tryParse(field(r'<published>([^<]+)</published>') ?? ''),
+        isShortListing: short,
       ));
     }
     return items;

@@ -15,3 +15,8 @@ The changes, marked "Lumtub" in the code:
 - `lib/src/video_controller/native_video_controller/real.dart`: a size set
   with `setSize` is kept when the next video's size arrives, instead of
   being replaced by the video's own size.
+- `windows/frame_stats.h`, `video_output.cc`, `angle_surface_manager.cc`,
+  `video_output_manager.cc`, `media_kit_video_plugin.cc`: time each frame's
+  render, ANGLE draw and Flutter read, count frames announced while one was
+  still waiting, and return them through `VideoOutputManager.Stats`, so the
+  log shows where frames are lost.

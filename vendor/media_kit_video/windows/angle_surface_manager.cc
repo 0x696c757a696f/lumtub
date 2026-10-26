@@ -56,15 +56,18 @@ void ANGLESurfaceManager::SetSize(int32_t width, int32_t height) {
 }
 
 void ANGLESurfaceManager::Draw(std::function<void()> callback) {
+  const auto start = std::chrono::steady_clock::now();
   ::WaitForSingleObject(mutex_, INFINITE);
   MakeCurrent(true);
   callback();
   SwapBuffers();
   MakeCurrent(false);
   ::ReleaseMutex(mutex_);
+  draw_timing.Add(std::chrono::steady_clock::now() - start);
 }
 
 void ANGLESurfaceManager::Read() {
+  const auto start = std::chrono::steady_clock::now();
   ::WaitForSingleObject(mutex_, INFINITE);
   if (d3d_11_device_context_ != nullptr) {
     d3d_11_device_context_->CopyResource(d3d_11_texture_2D_.Get(),
@@ -92,6 +95,7 @@ void ANGLESurfaceManager::Read() {
     }
   }
   ::ReleaseMutex(mutex_);
+  read_timing.Add(std::chrono::steady_clock::now() - start);
 }
 
 void ANGLESurfaceManager::MakeCurrent(bool value) {

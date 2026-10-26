@@ -29,13 +29,20 @@ void main() {
   <media:group><media:community><media:statistics views="1700000000"/></media:community></media:group>
  </entry>
  <entry>
+  <yt:videoId>abcdefghijk</yt:videoId>
+  <title>A short</title>
+  <link rel="alternate" href="https://www.youtube.com/shorts/abcdefghijk"/>
+ </entry>
+ <entry>
   <yt:videoId>broken</yt:videoId>
   <title>No valid id</title>
  </entry>
 </feed>''';
     final items = ChannelFeed.parse(xml, channel);
-    expect(items, hasLength(1));
-    final item = items.single;
+    expect(items, hasLength(2));
+    expect(items.last.isShortListing, isTrue);
+    final item = items.first;
+    expect(item.isShortListing, isFalse);
     expect(item.id, 'dQw4w9WgXcQ');
     expect(item.title, 'Never Gonna Give You Up & more');
     expect(item.channel, 'Rick Astley');
@@ -51,6 +58,12 @@ void main() {
       [video('c', DateTime(2026, 3, 1)), video('a', DateTime(2026, 1, 1))],
     ]);
     expect(merged.map((item) => item.id), ['c', 'a', 'b']);
+  });
+
+  test('lists given videos before falling back to a search', () async {
+    final listing = VideoRepository('yt-dlp.exe').videosOr(() async => [VideoItem(id: 'abcdefghijk', title: 'Related', channel: 'C', url: 'https://www.youtube.com/watch?v=abcdefghijk', duration: 90)], 'query');
+    final items = (await listing.next(5).toList()).whereType<VideoItem>().toList();
+    expect(items.map((i) => (i.id, i.title, i.duration)), [('abcdefghijk', 'Related', 90)]);
   });
 
   test('lists a channel\'s uploads lazily from one process', () {

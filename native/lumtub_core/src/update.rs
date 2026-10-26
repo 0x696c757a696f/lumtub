@@ -135,6 +135,7 @@ pub struct Install {
 pub fn script(install: &Install) -> String {
     let package = quote(&install.package);
     let log = quote(&format!("{}\\update.log", parent(&install.package)));
+    let folder = parent(&install.executable);
     let mut lines = vec![
         "$ErrorActionPreference = 'Stop'".to_owned(),
         "try {".to_owned(),
@@ -144,12 +145,19 @@ pub fn script(install: &Install) -> String {
         lines.extend([
             "  $unpacked = Join-Path $env:TEMP ('lumtub-update-' + [guid]::NewGuid())".to_owned(),
             format!("  Expand-Archive -LiteralPath {package} -DestinationPath $unpacked -Force"),
-            format!("  Copy-Item -Path (Join-Path $unpacked '*') -Destination {} -Recurse -Force", quote(parent(&install.executable))),
+            format!("  Copy-Item -Path (Join-Path $unpacked '*') -Destination {} -Recurse -Force", quote(folder)),
             "  Remove-Item -LiteralPath $unpacked -Recurse -Force".to_owned(),
         ]);
     } else {
+        // Into the folder this Lumtub runs from, wherever that is, asking
+        // for administrator rights only when the folder needs them.
+        let setup_log = quote(&format!("{}\\setup.log", parent(&install.package)));
         lines.extend([
-            format!("  $setup = Start-Process -FilePath {package} -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS' -Wait -PassThru"),
+            format!("  $folder = {}", quote(folder)),
+            "  $elevate = $false".to_owned(),
+            "  try { $probe = Join-Path $folder ('.update-' + [guid]::NewGuid()); [IO.File]::WriteAllText($probe, ''); Remove-Item -LiteralPath $probe -Force } catch { $elevate = $true }".to_owned(),
+            format!("  $arguments = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS',('/DIR=\"' + $folder + '\"'),('/LOG=\"' + {setup_log} + '\"'))"),
+            format!("  if ($elevate) {{ $setup = Start-Process -FilePath {package} -ArgumentList $arguments -Verb RunAs -Wait -PassThru }} else {{ $setup = Start-Process -FilePath {package} -ArgumentList $arguments -Wait -PassThru }}"),
             "  if ($setup.ExitCode -ne 0) { throw \"Setup exited with $($setup.ExitCode)\" }".to_owned(),
         ]);
     }
@@ -288,7 +296,10 @@ mod tests {
             relaunch: false,
         });
         assert!(script.contains("Wait-Process -Id 42"));
-        assert!(script.contains(r"Start-Process -FilePath 'C:\cache\updates\Lumtub_0.2.2_windows-x64-setup.exe' -ArgumentList '/VERYSILENT'"));
+        assert!(script.contains(r"$folder = 'C:\Lumtub'"));
+        assert!(script.contains(r#"('/DIR="' + $folder + '"')"#));
+        assert!(script.contains(r#"('/LOG="' + 'C:\cache\updates\setup.log' + '"')"#));
+        assert!(script.contains(r"Start-Process -FilePath 'C:\cache\updates\Lumtub_0.2.2_windows-x64-setup.exe' -ArgumentList $arguments -Verb RunAs -Wait -PassThru"));
         assert!(script.contains(r"-FilePath 'C:\cache\updates\update.log'"));
         assert!(!script.contains("Expand-Archive"));
         assert!(!script.contains(r"Start-Process -FilePath 'C:\Lumtub\lumtub.exe'"));

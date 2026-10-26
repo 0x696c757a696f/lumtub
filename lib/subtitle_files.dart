@@ -131,7 +131,7 @@ class WebVtt {
         for (final line in lines.skip(at + 1))
           if (_unescape(line.replaceAll(_tag, '')).trim() case final clean when clean.isNotEmpty) clean,
       ];
-      if (text.first == previous) text = text.sublist(1);
+      if (text.isNotEmpty && text.first == previous) text = text.sublist(1);
       if (text.isEmpty) continue;
       previous = text.last;
       cues.add((timing: lines[at].trim(), text: text.join(' ')));

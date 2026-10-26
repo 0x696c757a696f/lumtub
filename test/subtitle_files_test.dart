@@ -43,6 +43,11 @@ void main() {
     expect(WebVtt.cues(_auto).last.timing, '00:00:02.010 --> 00:00:04.000 align:start position:0%');
   });
 
+  test('skips cues with no text, as automatic captions have between lines', () {
+    const vtt = 'WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n \n\n00:00:01.000 --> 00:00:02.000\nhello\n\n00:00:02.000 --> 00:00:02.010\n&nbsp;\n';
+    expect(WebVtt.cues(vtt).map((c) => c.text), ['hello']);
+  });
+
   test('retries a 429 and saves the track to a file', () async {
     var calls = 0;
     final client = MockClient((request) async => ++calls < 3 ? http.Response('', 429) : http.Response('WEBVTT\n', 200));

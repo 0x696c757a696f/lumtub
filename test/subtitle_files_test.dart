@@ -30,6 +30,20 @@ class _Joining implements Translator {
   }
 }
 
+/// Uppercases after a short wait, recording how many requests overlap.
+class _Slow implements Translator {
+  _Slow(this.running, this.set);
+  final int Function() running;
+  final void Function(int) set;
+  @override
+  Future<String> translate(String text, String target) async {
+    set(running() + 1);
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+    set(running() - 1);
+    return text.toUpperCase();
+  }
+}
+
 const _auto = '''WEBVTT
 Kind: captions
 Language: en
@@ -97,6 +111,25 @@ void main() {
     final path = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated));
     expect(WebVtt.cues(await File(path).readAsString()).map((c) => c.text), ['LINE 0', 'LINE 1', 'LINE 2', 'LINE 3', 'LINE 4']);
     expect(translator.asked.first, 'line 0\nline 1\nline 2\nline 3\nline 4');
+  });
+
+  test('translates a long track a few requests at a time, in order', () async {
+    final vtt = StringBuffer('WEBVTT\n\n');
+    for (var i = 0; i < 40; i++) {
+      vtt.write('00:00:${i.toString().padLeft(2, '0')}.000 --> 00:00:${i.toString().padLeft(2, '0')}.900\n${'word$i ' * 300}\n\n');
+    }
+    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response('$vtt', 200));
+    var running = 0, most = 0;
+    final translator = _Slow(() => running, (n) {
+      running = n;
+      if (n > most) most = n;
+    });
+    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], concurrency: 3);
+    final path = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated));
+    final cues = WebVtt.cues(await File(path).readAsString());
+    expect(cues, hasLength(40));
+    expect([for (final c in cues) c.text.split(' ').first], [for (var i = 0; i < 40; i++) 'WORD$i']);
+    expect(most, 3);
   });
 
   test('a track that cannot be fetched fails and is asked again next time', () async {

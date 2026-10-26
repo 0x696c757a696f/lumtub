@@ -19,13 +19,15 @@ import 'youtube_web.dart';
 /// [byTranslator] says so, every translation is made that way and YouTube's
 /// is not asked for.
 class SubtitleFiles {
-  SubtitleFiles(this._client, this._folder, this._translator, {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never});
+  SubtitleFiles(this._client, this._folder, this._translator, {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3});
   final http.Client _client;
   final Directory _folder;
   /// The translator chosen now; a new one translates again.
   final Translator Function() _translator;
   final List<Duration> pauses;
   final bool Function() byTranslator;
+  /// Translation requests in flight at once for one track.
+  final int concurrency;
 
   static bool _never() => false;
 
@@ -95,16 +97,29 @@ class SubtitleFiles {
     final chunkLength = chunkLengthOf(translator);
     // Line groups of one request each, so a reply that drops the line break
     // at a request's end cannot shift every line after it.
-    final lines = <String>[];
+    final groups = <List<String>>[];
     for (var start = 0; start < cues.length;) {
       var end = start;
       var length = 0;
       while (end < cues.length && (end == start || length + cues[end].text.length < chunkLength)) {
         length += cues[end++].text.length + 1;
       }
-      lines.addAll(await _translateLines([for (final cue in cues.sublist(start, end)) cue.text], target, translator));
+      groups.add([for (final cue in cues.sublist(start, end)) cue.text]);
       start = end;
     }
+    // A few requests at a time: a long video's track is ready several times
+    // sooner, without the burst that gets a free service to answer 429.
+    final translated = List<List<String>>.filled(groups.length, const []);
+    var next = 0;
+    Future<void> worker() async {
+      while (next < groups.length) {
+        final i = next++;
+        translated[i] = await _translateLines(groups[i], target, translator);
+      }
+    }
+
+    await Future.wait([for (var i = 0; i < concurrency && i < groups.length; i++) worker()]);
+    final lines = translated.expand((group) => group).toList();
     return WebVtt.write([for (final (i, cue) in cues.indexed) (timing: cue.timing, text: lines[i].trim())]);
   }
 

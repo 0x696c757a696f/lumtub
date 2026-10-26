@@ -97,6 +97,10 @@ class HomeFeed extends ChangeNotifier {
   int _generation = 0;
   bool _disposed = false;
 
+  /// Whether this launch gathered the feed, rather than only restoring
+  /// the last one, which has nothing more to show.
+  bool get gathered => _longTaste != null;
+
   bool get stale => loadedAt == null || DateTime.now().difference(loadedAt!) > const Duration(minutes: 30);
 
   /// Shows the feed saved by the last launch while a new one is gathered;
@@ -137,7 +141,8 @@ class HomeFeed extends ChangeNotifier {
   }
 
   /// Gathers everything again; [filter] drops blocked or hidden videos.
-  Future<void> refresh(HomeFeedSources sources, {List<VideoItem> Function(List<VideoItem>)? filter}) async {
+  /// With [keep], the videos shown stay and new ones follow them.
+  Future<void> refresh(HomeFeedSources sources, {List<VideoItem> Function(List<VideoItem>)? filter, bool keep = false}) async {
     final generation = ++_generation;
     _sources = sources;
     _filter = filter;
@@ -237,8 +242,12 @@ class HomeFeed extends ChangeNotifier {
       ..addAll(sources.history.map((item) => item.id));
     _placed.clear();
     _seed = 0;
-    items = const [];
-    reasons = const {};
+    if (keep) {
+      _taken.addAll(items.map((item) => item.id));
+    } else {
+      items = const [];
+      reasons = const {};
+    }
     _rankAll();
     _appendPage();
     loading = false;

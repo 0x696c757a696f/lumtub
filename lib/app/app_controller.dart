@@ -2348,8 +2348,9 @@ class AppController extends ChangeNotifier {
   HomeFeed? homeFeed;
   late final relatedVideos = YoutubeRelated(_http);
 
-  /// Gathers recommendations again when they are old, or when [force]d.
-  Future<void> refreshHomeFeed({bool force = false}) async {
+  /// Gathers recommendations again when they are old, or when [force]d;
+  /// with [keep], the videos shown stay and new ones follow them.
+  Future<void> refreshHomeFeed({bool force = false, bool keep = false}) async {
     final feed = homeFeed;
     final repository = _repository;
     final library = this.library;
@@ -2362,11 +2363,17 @@ class AppController extends ChangeNotifier {
       await library.refreshFeed().timeout(const Duration(seconds: 20), onTimeout: () {});
     }
     feed.mix = preferences.feedMix;
-    await feed.refresh(await _homeSources(repository), filter: visible);
+    await feed.refresh(await _homeSources(repository), filter: visible, keep: keep);
   }
 
   /// The next page of 为你推荐, as the home page scrolls to its end.
-  Future<void> loadMoreHomeFeed() async => homeFeed?.loadMore();
+  Future<void> loadMoreHomeFeed() async {
+    final feed = homeFeed;
+    if (feed == null) return;
+    // Kept from the last launch without refreshing: gather now, after it.
+    if (!feed.gathered) return refreshHomeFeed(force: true, keep: true);
+    await feed.loadMore();
+  }
 
   /// The video being watched, to learn from once it is left.
   VideoItem? _watching;

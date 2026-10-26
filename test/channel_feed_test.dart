@@ -29,13 +29,20 @@ void main() {
   <media:group><media:community><media:statistics views="1700000000"/></media:community></media:group>
  </entry>
  <entry>
+  <yt:videoId>abcdefghijk</yt:videoId>
+  <title>A short</title>
+  <link rel="alternate" href="https://www.youtube.com/shorts/abcdefghijk"/>
+ </entry>
+ <entry>
   <yt:videoId>broken</yt:videoId>
   <title>No valid id</title>
  </entry>
 </feed>''';
     final items = ChannelFeed.parse(xml, channel);
-    expect(items, hasLength(1));
-    final item = items.single;
+    expect(items, hasLength(2));
+    expect(items.last.isShortListing, isTrue);
+    final item = items.first;
+    expect(item.isShortListing, isFalse);
     expect(item.id, 'dQw4w9WgXcQ');
     expect(item.title, 'Never Gonna Give You Up & more');
     expect(item.channel, 'Rick Astley');

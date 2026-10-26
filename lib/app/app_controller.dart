@@ -2357,6 +2357,7 @@ class AppController extends ChangeNotifier {
     if (!force && !feed.stale && feed.items.isNotEmpty) return;
     // The last launch's feed shows while a new one is gathered.
     await feed.restore(filter: visible);
+    if (!force && !preferences.homeAutoRefresh && feed.items.isNotEmpty) return;
     if (library != null && library.channels.isNotEmpty && library.feed.isEmpty) {
       await library.refreshFeed().timeout(const Duration(seconds: 20), onTimeout: () {});
     }

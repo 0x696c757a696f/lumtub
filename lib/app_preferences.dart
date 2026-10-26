@@ -52,6 +52,7 @@ class AppPreferences {
     this.homeShowContinue = true,
     this.homeShowRecent = true,
     this.homeShowRecommended = true,
+    this.homeAutoRefresh = true,
     this.feedShorts = FeedLevel.reduce,
     this.feedVertical = FeedLevel.reduce,
     this.syncFollowToYoutube = true,
@@ -127,6 +128,9 @@ class AppPreferences {
   final bool homeShowRecent;
   /// 为你推荐, worked out on this computer from the history.
   final bool homeShowRecommended;
+  /// Whether 为你推荐 is gathered again at launch and once it is half an
+  /// hour old; off, the last list stays until refreshed by hand.
+  final bool homeAutoRefresh;
   /// How much For You shows Shorts and vertical videos.
   final FeedLevel feedShorts;
   final FeedLevel feedVertical;
@@ -260,6 +264,7 @@ class AppPreferences {
     bool? homeShowContinue,
     bool? homeShowRecent,
     bool? homeShowRecommended,
+    bool? homeAutoRefresh,
     FeedLevel? feedShorts,
     FeedLevel? feedVertical,
     bool? syncFollowToYoutube,
@@ -314,6 +319,7 @@ class AppPreferences {
         homeShowContinue: homeShowContinue ?? this.homeShowContinue,
         homeShowRecent: homeShowRecent ?? this.homeShowRecent,
         homeShowRecommended: homeShowRecommended ?? this.homeShowRecommended,
+        homeAutoRefresh: homeAutoRefresh ?? this.homeAutoRefresh,
         feedShorts: feedShorts ?? this.feedShorts,
         feedVertical: feedVertical ?? this.feedVertical,
         syncFollowToYoutube: syncFollowToYoutube ?? this.syncFollowToYoutube,
@@ -369,6 +375,7 @@ class AppPreferences {
         'homeShowContinue': homeShowContinue,
         'homeShowRecent': homeShowRecent,
         'homeShowRecommended': homeShowRecommended,
+        'homeAutoRefresh': homeAutoRefresh,
         'feedShorts': feedShorts.name,
         'feedVertical': feedVertical.name,
         'syncFollowToYoutube': syncFollowToYoutube,
@@ -458,6 +465,7 @@ class AppPreferences {
       homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
       homeShowRecent: flag('homeShowRecent', d.homeShowRecent),
       homeShowRecommended: flag('homeShowRecommended', d.homeShowRecommended),
+      homeAutoRefresh: flag('homeAutoRefresh', d.homeAutoRefresh),
       feedShorts: FeedLevel.parse(raw['feedShorts'], d.feedShorts),
       feedVertical: FeedLevel.parse(raw['feedVertical'], d.feedVertical),
       syncFollowToYoutube: flag('syncFollowToYoutube', d.syncFollowToYoutube),

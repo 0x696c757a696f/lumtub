@@ -75,4 +75,9 @@ void main() {
     expect((back.feedShorts, back.feedVertical), (FeedLevel.off, FeedLevel.reduce));
     expect(AppPreferences.fromJson({'feedShorts': 'bogus'}).feedShorts, FeedLevel.reduce);
   });
+
+  test('For You refreshes on its own unless turned off', () {
+    expect(const AppPreferences().homeAutoRefresh, isTrue);
+    expect(AppPreferences.fromJson(const AppPreferences().copyWith(homeAutoRefresh: false).toJson()).homeAutoRefresh, isFalse);
+  });
 }

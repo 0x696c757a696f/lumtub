@@ -168,6 +168,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.homeShowRecommended,
               onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecommended: v)),
             )),
+        SettingEntry(tr('自动刷新为你推荐'), (context) => SwitchItem(
+              title: tr('自动刷新“为你推荐”'),
+              subtitle: tr('启动时和列表超过 30 分钟后重新获取；关闭后保留上次的列表，点刷新按钮才更新'),
+              leading: _icon(Icons.autorenew_rounded),
+              value: prefs.homeAutoRefresh,
+              enabled: prefs.homeShowRecommended,
+              onChanged: (v) => savePrefs(prefs.copyWith(homeAutoRefresh: v)),
+            ), subtitle: tr('启动 刷新')),
         SettingEntry(tr('隐藏 Shorts 短视频'), (context) => SwitchItem(
               title: tr('隐藏所有 Shorts 短视频'),
               subtitle: tr('搜索、频道、首页和探索都不显示 Shorts'),

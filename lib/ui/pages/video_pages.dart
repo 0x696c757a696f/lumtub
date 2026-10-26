@@ -35,7 +35,8 @@ class HomeFeedPage extends StatelessWidget {
         return false;
       },
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
-        SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
+        // The search box is at the top already; the prompt greets a first start.
+        if (recent.isEmpty && unfinished.isEmpty && !showFeed) SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
         if (unfinished.isNotEmpty) ...[
           SliverToBoxAdapter(child: PageHeader(tr('继续观看'), subtitle: tr('从上次停下的地方接着看'))),
           SliverVideoGrid(items: unfinished, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: unfinished)),
@@ -53,7 +54,7 @@ class HomeFeedPage extends StatelessWidget {
         if (showFeed) ...[
           SliverToBoxAdapter(child: PageHeader(
             tr('为你推荐'),
-            subtitle: feed.loading && feed.items.isEmpty ? tr('正在根据观看记录挑选…') : tr('长期兴趣、近期兴趣、探索和热门新视频混合，在本机挑选；右键可选“不感兴趣”'),
+            subtitle: feed.loading && feed.items.isEmpty ? tr('正在根据观看记录挑选…') : tr('按你的观看兴趣在本机挑选，右键可选“不感兴趣”'),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
               TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(Icons.shuffle_rounded, size: 18), label: Text(tr('换一批'))),
               IconButton(

@@ -35,11 +35,15 @@ ThemeData buildAppTheme(
     PageTransition.cupertino => const CupertinoPageTransitionsBuilder(),
     PageTransition.none => const _NoTransitionsBuilder(),
   };
+  // Component styles below are used as they are, not merged with the
+  // theme's text theme, so they carry the font themselves.
+  final fallback = fontFamily == bundledFont ? null : const [bundledFont];
+  TextStyle font(TextStyle style) => style.copyWith(fontFamily: fontFamily, fontFamilyFallback: fallback);
   return ThemeData(
     useMaterial3: true,
     fontFamily: fontFamily,
     // Characters a chosen Windows font lacks come from the bundled one.
-    fontFamilyFallback: fontFamily == bundledFont ? null : const [bundledFont],
+    fontFamilyFallback: fallback,
     colorScheme: scheme,
     scaffoldBackgroundColor: scheme.surface,
     visualDensity: VisualDensity.standard,
@@ -63,8 +67,8 @@ ThemeData buildAppTheme(
     navigationRailTheme: NavigationRailThemeData(
       backgroundColor: Colors.transparent,
       indicatorColor: scheme.secondaryContainer,
-      selectedLabelTextStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: scheme.onSurface),
-      unselectedLabelTextStyle: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+      selectedLabelTextStyle: font(TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: scheme.onSurface)),
+      unselectedLabelTextStyle: font(TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
@@ -84,19 +88,49 @@ ThemeData buildAppTheme(
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: scheme.secondaryContainer,
-      contentTextStyle: TextStyle(color: scheme.onSecondaryContainer),
+      contentTextStyle: font(TextStyle(color: scheme.onSecondaryContainer)),
       width: 480,
     ),
-    tooltipTheme: const TooltipThemeData(
-      waitDuration: Duration(milliseconds: 500),
-      textStyle: TextStyle(fontSize: 13, color: Colors.white),
-      decoration: BoxDecoration(color: Color(0xE6616161), borderRadius: BorderRadius.all(Radius.circular(4))),
+    tooltipTheme: TooltipThemeData(
+      waitDuration: const Duration(milliseconds: 500),
+      textStyle: font(const TextStyle(fontSize: 13, color: Colors.white)),
+      decoration: const BoxDecoration(color: Color(0xE6424242), borderRadius: BorderRadius.all(Radius.circular(6))),
+    ),
+    // Pills, like the segmented buttons beside them: a hairline when off,
+    // filled with no outline when on.
+    chipTheme: ChipThemeData(
+      shape: const StadiumBorder(),
+      side: WidgetStateBorderSide.resolveWith((states) => states.contains(WidgetState.selected) ? BorderSide.none : BorderSide(color: scheme.outlineVariant)),
+      selectedColor: scheme.secondaryContainer,
+      labelStyle: font(TextStyle(fontSize: 13, color: scheme.onSurfaceVariant)),
+      secondaryLabelStyle: font(TextStyle(fontSize: 13, color: scheme.onSecondaryContainer, fontWeight: FontWeight.w600)),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+    ),
+    // Drop-down menus (filters, MenuAnchor) match the popup menus.
+    menuTheme: MenuThemeData(
+      style: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(scheme.surfaceContainerLow),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        elevation: const WidgetStatePropertyAll(3),
+        shape: const WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12)))),
+        padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 6)),
+      ),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: ButtonStyle(
+        visualDensity: VisualDensity.compact,
+        side: WidgetStatePropertyAll(BorderSide(color: scheme.outlineVariant)),
+        backgroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? scheme.secondaryContainer : null),
+      ),
     ),
     dividerTheme: DividerThemeData(color: scheme.outlineVariant.withValues(alpha: 0.5), space: 1),
     expansionTileTheme: const ExpansionTileThemeData(shape: Border(), collapsedShape: Border()),
     pageTransitionsTheme: PageTransitionsTheme(builders: {
       TargetPlatform.windows: builder,
       TargetPlatform.linux: builder,
+      TargetPlatform.macOS: builder,
+      TargetPlatform.android: builder,
     }),
   );
 }

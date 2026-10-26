@@ -215,11 +215,15 @@ class PostCommentsPanel extends StatelessWidget {
             child: Text(post.text, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, height: 1.4)),
           ),
         const Divider(height: 1),
-        Expanded(child: SingleChildScrollView(
-          key: PageStorageKey('post-comments:${post.id}'),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-          child: CommentsSection(controller: controller, postId: post.id),
-        )),
+        Expanded(
+          child: CommentsSection(
+            key: PageStorageKey('post-comments:${post.id}'),
+            controller: controller,
+            postId: post.id,
+            scrollable: true,
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          ),
+        ),
       ]);
 }
 

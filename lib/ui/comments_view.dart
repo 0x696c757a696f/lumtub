@@ -14,8 +14,12 @@ import '../l10n/l10n.dart';
 /// The comments under a video or a post: sort order, comments with their
 /// replies, and a button for more. It loads when first shown.
 class CommentsSection extends StatefulWidget {
-  const CommentsSection({super.key, required this.controller, this.videoId, this.postId, this.onSeek});
+  const CommentsSection({super.key, required this.controller, this.videoId, this.postId, this.onSeek, this.scrollable = false, this.padding = EdgeInsets.zero});
   final AppController controller;
+  /// Scrolls by itself and builds only the comments on screen; otherwise it
+  /// sits in the page's own scrolling column.
+  final bool scrollable;
+  final EdgeInsets padding;
   final String? videoId;
   final String? postId;
   /// Seeks the video when a timestamp in a comment is clicked.
@@ -104,7 +108,7 @@ class _CommentsSectionState extends State<CommentsSection> {
           final colors = context.colors;
           final loader = _loader;
           final error = loader.error;
-          return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          final header = <Widget>[
             LayoutBuilder(builder: (context, constraints) {
               final order = SegmentedButton<bool>(
                 showSelectedIcon: false,
@@ -120,8 +124,10 @@ class _CommentsSectionState extends State<CommentsSection> {
             }),
             const SizedBox(height: 8),
             if (_canWrite) CommentComposer(hint: tr('添加评论…'), onSubmit: _post),
-            for (final comment in loader.comments)
-              if (!widget.controller.preferences.blocksCommenter(comment.author, comment.channelId)) ..._thread(context, comment),
+          ];
+          final prefs = widget.controller.preferences;
+          final shown = [for (final comment in loader.comments) if (!prefs.blocksCommenter(comment.author, comment.channelId)) comment];
+          final footer = <Widget>[
             if (loader.loading)
               const Padding(padding: EdgeInsets.all(16), child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))))
             else if (error != null)
@@ -130,7 +136,23 @@ class _CommentsSectionState extends State<CommentsSection> {
               Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('还没有评论，或评论已关闭'), style: TextStyle(color: colors.outline)))
             else if (loader.hasMore)
               Center(child: TextButton(onPressed: loader.loadMore, child: Text(tr('加载更多评论')))),
-          ]);
+          ];
+          if (!widget.scrollable) {
+            return Padding(
+              padding: widget.padding,
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [...header, for (final comment in shown) ..._thread(context, comment), ...footer]),
+            );
+          }
+          return ListView.builder(
+            padding: widget.padding,
+            itemCount: header.length + shown.length + footer.length,
+            itemBuilder: (context, index) {
+              if (index < header.length) return header[index];
+              index -= header.length;
+              if (index < shown.length) return Column(crossAxisAlignment: CrossAxisAlignment.start, children: _thread(context, shown[index]));
+              return footer[index - shown.length];
+            },
+          );
         },
       );
 }

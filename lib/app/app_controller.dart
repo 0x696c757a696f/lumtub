@@ -2471,6 +2471,21 @@ class AppController extends ChangeNotifier {
   /// subscriptions feed is filtered only when [AppPreferences.filterSubscriptions].
   List<VideoItem> visible(List<VideoItem> items, {bool subscriptions = false, bool search = false}) {
     final prefs = preferences;
+    // Pages filter their lists on every rebuild, and a feed runs to a
+    // thousand items: the answer is kept while the list and the preferences
+    // stay. Hiding watched videos depends on progress, which changes.
+    final key = (prefs, subscriptions, search, search ? _query : null);
+    if (!prefs.hideWatched) {
+      if (_visible[items] case (final known, final kept) when known == key) return kept;
+    }
+    final kept = _filter(items, prefs, subscriptions: subscriptions, search: search);
+    if (!prefs.hideWatched) _visible[items] = (key, kept);
+    return kept;
+  }
+
+  final _visible = Expando<(Object, List<VideoItem>)>();
+
+  List<VideoItem> _filter(List<VideoItem> items, AppPreferences prefs, {required bool subscriptions, required bool search}) {
     if (subscriptions && !prefs.filterSubscriptions) return items.where((item) => !prefs.isBlocked(item.channelId)).toList();
     final library = this.library;
     // Blocked groups show in a search only for their channel's exact name,

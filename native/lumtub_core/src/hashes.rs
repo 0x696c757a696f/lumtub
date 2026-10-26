@@ -147,8 +147,8 @@ pub unsafe extern "C" fn lumtub_sponsor_segments(json: *const u8, length: usize)
     give_json(&segments(&answer, &ask.video_id, &ask.categories))
 }
 
-/// [branding] as JSON `{title?, thumbnailTime?}`. [json] is `{answer,
-/// videoId}` with the answer as DeArrow's text.
+/// [branding] as JSON `{title?, thumbnailTime?}`. [json] is the video id,
+/// a newline and DeArrow's answer, or `{answer, videoId}`.
 ///
 /// # Safety
 /// [json] must point to [length] bytes of UTF-8.
@@ -160,7 +160,16 @@ pub unsafe extern "C" fn lumtub_dearrow_branding(json: *const u8, length: usize)
         answer: String,
         video_id: String,
     }
-    let Ok(ask) = serde_json::from_str::<Ask>(unsafe { text(json, length) }) else {
+    let input = unsafe { text(json, length) };
+    // The video id, a newline and the answer as it came, which spares the
+    // app escaping the answer into JSON; or the older JSON object.
+    if let Some((video_id, body)) = input.split_once('\n')
+        && !video_id.starts_with('{')
+    {
+        let answer = serde_json::from_str(body).unwrap_or(Value::Null);
+        return give_json(&branding(&answer, video_id));
+    }
+    let Ok(ask) = serde_json::from_str::<Ask>(input) else {
         return std::ptr::null_mut();
     };
     let answer = serde_json::from_str(&ask.answer).unwrap_or(Value::Null);
@@ -223,5 +232,19 @@ mod tests {
         let original = json!({"abc": {"titles": [{"title": "Same", "original": true, "votes": 5}], "thumbnails": [{"original": true, "locked": true}]}});
         assert_eq!(branding(&original, "abc"), Branding::default());
         assert_eq!(branding(&answer, "other"), Branding::default());
+    }
+
+    #[test]
+    fn branding_takes_the_id_line_and_the_json_object_alike() {
+        let read = |input: &str| {
+            let out = unsafe { lumtub_dearrow_branding(input.as_ptr(), input.len()) };
+            let text = unsafe { std::ffi::CStr::from_ptr(out) }.to_str().unwrap().to_owned();
+            unsafe { crate::taste::lumtub_string_free(out) };
+            text
+        };
+        let answer = r#"{"abc": {"titles": [{"title": "New\nline", "votes": 1}], "thumbnails": []}}"#;
+        let line = read(&format!("abc\n{answer}"));
+        assert!(line.contains("New"));
+        assert_eq!(read(&json!({"answer": answer, "videoId": "abc"}).to_string()), line);
     }
 }

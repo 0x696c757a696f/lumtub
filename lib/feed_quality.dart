@@ -51,6 +51,14 @@ class FeedMix {
 bool isShort(VideoItem item) {
   final core = NativeCore.instance;
   if (core == null) return false;
+  // Feeds rank and filter the same videos again on every refresh and rebuild.
+  if (_shorts.length > 20000) _shorts.clear();
+  return _shorts[Object.hash(item.id, item.url, item.title, item.description, item.duration, item.isShortListing)] ??= _askCore(core, item);
+}
+
+final _shorts = <int, bool>{};
+
+bool _askCore(NativeCore core, VideoItem item) {
   final json = jsonEncode({
     'u': item.url,
     't': '${item.title} ${item.description ?? ''}',

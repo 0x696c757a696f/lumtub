@@ -230,14 +230,10 @@ class AppPreferences {
     return true;
   }
 
-  /// The same test as 为你推荐's Shorts setting, remembered per video: lists
-  /// are filtered again on every rebuild.
-  static bool _isShort(VideoItem item) {
-    if (_shorts.length > 20000) _shorts.clear();
-    return _shorts[item.id] ??= item.isShortListing || item.url.contains('/shorts/') || ((item.duration ?? 0) > 0 && item.duration! <= 60) || isShort(item);
-  }
-
-  static final _shorts = <String, bool>{};
+  /// The same test as 为你推荐's Shorts setting, which also works without the
+  /// native core.
+  static bool _isShort(VideoItem item) =>
+      item.isShortListing || item.url.contains('/shorts/') || ((item.duration ?? 0) > 0 && item.duration! <= 60) || isShort(item);
 
   AppPreferences copyWith({
     bool? recordHistory,

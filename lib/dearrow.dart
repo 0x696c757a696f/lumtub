@@ -117,7 +117,7 @@ class DeArrow extends ChangeNotifier {
   static Branding parse(String body, String videoId) {
     final core = NativeCore.instance;
     if (core == null) return Branding.none;
-    final answer = jsonDecode(core.take(core.withText(jsonEncode({'answer': body, 'videoId': videoId}), core.dearrowBranding)) ?? '{}') as Map<String, dynamic>;
+    final answer = jsonDecode(core.take(core.withText('$videoId\n$body', core.dearrowBranding)) ?? '{}') as Map<String, dynamic>;
     return Branding(title: answer['title'] as String?, thumbnailTime: (answer['thumbnailTime'] as num?)?.toDouble());
   }
 

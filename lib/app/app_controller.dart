@@ -2051,8 +2051,10 @@ class AppController extends ChangeNotifier {
     final repository = _repository!;
     // Long titles make poor queries; the first words carry the topic.
     final query = title.length > 60 ? title.substring(0, 60) : title;
+    // YouTube's own suggestions come with the /next request the localized
+    // title already makes; a search on the title stands in without them.
     final loader = VideoListLoader(
-      () => repository.search(query, filter: SearchFilter.videos),
+      () => repository.videosOr(() => relatedVideos.forVideo(item.id), query),
       pageSize: 13,
       limit: 12,
       where: (other) => other.id != item.id && !preferences.blocksGroup(other) && !preferences.isUnrecommended(other.channelId),

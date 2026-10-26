@@ -143,10 +143,26 @@ class AppUpdater extends ChangeNotifier {
     }
   }
 
-  /// Removes the packages of updates already installed.
+  /// Removes the packages of updates already installed, after logging how
+  /// the last install went (update.log, and the installer's own log when
+  /// it failed).
   Future<void> _cleanUp() async {
     try {
       if (!await _directory.exists()) return;
+      final sep = Platform.pathSeparator;
+      final outcome = File('${_directory.path}${sep}update.log');
+      if (await outcome.exists()) {
+        final lines = (await outcome.readAsLines()).where((line) => line.trim().isNotEmpty).toList();
+        final last = lines.isEmpty ? '' : lines.last.trim();
+        logInfo('Last Lumtub update: $last');
+        if (!last.endsWith(' updated')) {
+          final setup = File('${_directory.path}${sep}setup.log');
+          if (await setup.exists()) {
+            final tail = (await setup.readAsLines(encoding: const Utf8Codec(allowMalformed: true))).reversed.take(8).toList().reversed;
+            logInfo('Installer log ends with:\n${tail.join('\n')}');
+          }
+        }
+      }
       await for (final entity in _directory.list()) {
         if (entity is File) await entity.delete();
       }

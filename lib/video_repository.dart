@@ -210,6 +210,14 @@ class VideoRepository {
     return Listing(() => YoutubeListing.orElse(() => web.search(query.trim(), sp: sp ?? filter.sp, region: region), ytDlp));
   }
 
+  /// The videos [first] finds, or a search for [query] when it finds none
+  /// or fails.
+  Listing videosOr(Future<List<VideoItem>> Function() first, String query) => Listing(() => YoutubeListing.orElse(() async* {
+        for (final item in await first()) {
+          yield jsonEncode(item.toJson());
+        }
+      }, () => search(query, filter: SearchFilter.videos)._open()));
+
   /// Several searches at once, a few results of each in turn, for a mix
   /// of zones. A search that fails drops out; the mix fails only if all do.
   Listing searchMix(List<String> queries, {String? sp, String? region}) =>

@@ -60,6 +60,12 @@ void main() {
     expect(merged.map((item) => item.id), ['c', 'a', 'b']);
   });
 
+  test('lists given videos before falling back to a search', () async {
+    final listing = VideoRepository('yt-dlp.exe').videosOr(() async => [VideoItem(id: 'abcdefghijk', title: 'Related', channel: 'C', url: 'https://www.youtube.com/watch?v=abcdefghijk', duration: 90)], 'query');
+    final items = (await listing.next(5).toList()).whereType<VideoItem>().toList();
+    expect(items.map((i) => (i.id, i.title, i.duration)), [('abcdefghijk', 'Related', 90)]);
+  });
+
   test('lists a channel\'s uploads lazily from one process', () {
     final arguments = VideoRepository('yt-dlp.exe').listingArguments('${channel.url}/videos');
     expect(arguments, containsAllInOrder(['--flat-playlist', '--lazy-playlist', '--dump-json']));

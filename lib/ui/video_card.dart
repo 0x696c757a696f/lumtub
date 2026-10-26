@@ -273,7 +273,7 @@ class _VideoCardState extends State<VideoCard> {
     _prefetch?.cancel();
     _preview?.cancel();
     if (!value) return;
-    _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item));
+    _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item, hover: true));
     if (widget.item.isLive || widget.item.isUpcoming) return;
     _preview = Timer(const Duration(milliseconds: 700), () {
       if (!mounted) return;

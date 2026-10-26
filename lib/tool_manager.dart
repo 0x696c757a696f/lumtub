@@ -69,11 +69,19 @@ class ToolManager {
       await _installYtDlp();
     }
     // Deno is needed by some YouTube JavaScript challenge paths. Optional at startup.
-    if (discover()?.deno == null) {
+    // After a failed try, launches within six hours start without waiting
+    // on it again (offline, it is a 25-second wait every time).
+    final denoFailed = File('${root.path}${_separator}deno-failed');
+    final failedAt = denoFailed.existsSync() ? denoFailed.lastModifiedSync() : null;
+    if (discover()?.deno == null && (failedAt == null || DateTime.now().difference(failedAt) > const Duration(hours: 6))) {
       try {
         status('安装 YouTube 解析所需的 Deno…');
         await _installDeno();
+        if (denoFailed.existsSync()) denoFailed.deleteSync();
       } catch (e) {
+        try {
+          denoFailed.writeAsStringSync('$e');
+        } catch (_) {}
         status('Deno 暂时不可用，可以稍后从工具更新中重试：{0}', [e]);
       }
     }

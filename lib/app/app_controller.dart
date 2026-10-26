@@ -1993,8 +1993,10 @@ class AppController extends ChangeNotifier {
   }
 
   /// Starts resolving [item] before it is opened, such as when the pointer
-  /// rests on its card.
-  void prefetch(VideoItem item) {
+  /// rests on its card ([hover]). Not on hover while a video plays: the
+  /// yt-dlp run would take CPU from the playback for a guess.
+  void prefetch(VideoItem item, {bool hover = false}) {
+    if (hover && player?.state.playing == true) return;
     if (ready && playing?.id != item.id && DateTime.now().isAfter(_rateLimitedUntil)) _repository?.streams.prefetch(item.id, _format, formatSort: _formatSort);
   }
 

@@ -9,6 +9,7 @@ import 'app/app_controller.dart';
 import 'app_directories.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
+import 'keep_awake.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
 import 'ui/app_shell.dart';
@@ -104,6 +105,7 @@ class _LumtubAppState extends State<LumtubApp> {
       // paused itself.
       onHide: () {
         controller.cast.windowHidden = true;
+        KeepAwake.hidden = true;
         unawaited(controller.setBackgroundAudioOnly(true));
         if (controller.playing == null) controller.releaseMemory();
         final player = controller.player;
@@ -113,6 +115,7 @@ class _LumtubAppState extends State<LumtubApp> {
       },
       onShow: () {
         controller.cast.windowHidden = false;
+        KeepAwake.hidden = false;
         unawaited(controller.setBackgroundAudioOnly(false));
         if (!_pausedByMinimize) return;
         _pausedByMinimize = false;

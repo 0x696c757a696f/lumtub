@@ -20,13 +20,13 @@ Future<void> showSubtitlePanel(BuildContext context, AppController controller, P
       width: 560,
       actions: [
         Builder(
-          builder: (inner) => IconButton(
-            tooltip: tr('字幕列表'),
+          builder: (inner) => TextButton.icon(
             onPressed: () {
               Navigator.of(inner).pop();
               onList != null ? onList() : unawaited(showSubtitleList(context, controller, player));
             },
-            icon: const Icon(Icons.notes_rounded),
+            icon: const Icon(Icons.subject_rounded, size: 18),
+            label: Text(tr('字幕列表')),
           ),
         ),
         Builder(

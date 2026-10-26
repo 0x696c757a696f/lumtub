@@ -18,6 +18,18 @@ class _Upper implements Translator {
   }
 }
 
+/// Joins every two lines into one, as machine translation does with short
+/// caption fragments.
+class _Joining implements Translator {
+  final asked = <String>[];
+  @override
+  Future<String> translate(String text, String target) async {
+    asked.add(text);
+    final lines = text.split('\n');
+    return [for (var i = 0; i < lines.length; i += 2) lines.skip(i).take(2).join(' ').toUpperCase()].join('\n');
+  }
+}
+
 const _auto = '''WEBVTT
 Kind: captions
 Language: en
@@ -72,6 +84,19 @@ void main() {
     expect(translator.asked, ['hello world\nhow & why']);
     expect(translator.targets, ['zh-CN']);
     expect(await File(path).readAsString(), contains('00:00:02.010 --> 00:00:04.000 align:start position:0%\nHOW &amp; WHY\n'));
+  });
+
+  test('asks again in halves when a translation joins lines', () async {
+    final vtt = StringBuffer('WEBVTT\n\n');
+    for (var i = 0; i < 5; i++) {
+      vtt.write('00:00:0$i.000 --> 00:00:0$i.900\nline $i\n\n');
+    }
+    final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response('$vtt', 200));
+    final translator = _Joining();
+    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero]);
+    final path = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated));
+    expect(WebVtt.cues(await File(path).readAsString()).map((c) => c.text), ['LINE 0', 'LINE 1', 'LINE 2', 'LINE 3', 'LINE 4']);
+    expect(translator.asked.first, 'line 0\nline 1\nline 2\nline 3\nline 4');
   });
 
   test('a track that cannot be fetched fails and is asked again next time', () async {

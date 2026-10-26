@@ -6,6 +6,7 @@ import 'package:media_kit/media_kit.dart';
 
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
+import '../models.dart' show SubtitleOption;
 import '../subtitle_cues.dart';
 import 'motion.dart';
 import 'player_panel.dart';
@@ -31,7 +32,7 @@ class SubtitleList extends StatefulWidget {
 
 class _SubtitleListState extends State<SubtitleList> {
   static const _rowHeight = 64.0;
-  late Future<List<SubtitleCue>> _cues = widget.controller.mainSubtitleCues();
+  late Future<List<SubtitleCue>> _cues = widget.controller.listedSubtitleCues();
   final _scroll = ScrollController();
   StreamSubscription<Object?>? _trackChanges;
   StreamSubscription<Duration>? _positions;
@@ -40,17 +41,29 @@ class _SubtitleListState extends State<SubtitleList> {
   bool _follow = true;
   String _query = '';
 
+  late SubtitleOption? _second = widget.controller.secondarySubtitle;
+
   @override
   void initState() {
     super.initState();
-    _trackChanges = widget.player.stream.track.listen((_) => setState(() {
-          _cues = widget.controller.mainSubtitleCues();
-          _current = -1;
-        }));
+    _trackChanges = widget.player.stream.track.listen((_) => _reload());
+    widget.controller.addListener(_secondChanged);
+  }
+
+  void _reload() => setState(() {
+        _cues = widget.controller.listedSubtitleCues();
+        _current = -1;
+      });
+
+  void _secondChanged() {
+    if (identical(widget.controller.secondarySubtitle, _second)) return;
+    _second = widget.controller.secondarySubtitle;
+    _reload();
   }
 
   @override
   void dispose() {
+    widget.controller.removeListener(_secondChanged);
     _trackChanges?.cancel();
     _positions?.cancel();
     _scroll.dispose();
@@ -97,7 +110,7 @@ class _SubtitleListState extends State<SubtitleList> {
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
-                const {'no', 'auto'}.contains(widget.player.state.track.subtitle.id) ? tr('先打开一条字幕') : tr('这条字幕无法列出'),
+                const {'no', 'auto'}.contains(widget.player.state.track.subtitle.id) && widget.controller.secondarySubtitle == null ? tr('先打开一条字幕') : tr('这条字幕无法列出'),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: colors.outline),
               ),

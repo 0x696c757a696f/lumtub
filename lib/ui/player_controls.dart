@@ -572,7 +572,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
-  Widget _subtitleMenu(double width) => StreamBuilder<Track>(
+  Widget _subtitleMenu(double width) => ListenableBuilder(
+        listenable: _controller,
+        builder: (context, _) => StreamBuilder<Track>(
         stream: _player.stream.track,
         initialData: _player.state.track,
         builder: (context, _) {
@@ -580,14 +582,21 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           final on = current.id != 'no' && current.id != 'auto';
           final hasTracks = _player.state.tracks.subtitle.any((t) => t.id != 'auto' && t.id != 'no');
           if (!hasTracks && (_controller.details?.subtitles ?? const []).isEmpty) return const SizedBox.shrink();
-          return _IconButton(
+          final button = _IconButton(
             tooltip: tr('字幕'),
             width: width,
             icon: on ? Icons.closed_caption_rounded : Icons.closed_caption_off_outlined,
             active: _controller.secondarySubtitle != null,
             onTap: () => unawaited(_openSubtitles(context)),
           );
+          if (!on && _controller.secondarySubtitle == null) return button;
+          // While a subtitle is shown, its list is one click away.
+          return Row(mainAxisSize: MainAxisSize.min, children: [
+            button,
+            _IconButton(tooltip: tr('字幕列表'), width: width, icon: Icons.subject_rounded, onTap: () => unawaited(_openSubtitleList(context))),
+          ]);
         },
+      ),
       );
 
   Future<void> _openSubtitles(BuildContext context) async {
@@ -684,7 +693,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             label: tr('音轨'),
             icon: Icons.audiotrack_rounded,
             value: _player.state.track.audio.id,
-            values: [for (final t in audio) (t.id, _trackLabel(t.id, t.title, t.language))],
+            values: [for (final t in audio) (t.id, trackLabel(t.id, t.title, t.language))],
+            collapsed: true,
             onSelected: (id) => unawaited(_player.setAudioTrack(audio.firstWhere((t) => t.id == id))),
           ),
         ),
@@ -732,7 +742,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       ),
       PanelHeading(tr('工具')),
       PanelLink(label: tr('截图 (S)'), detail: tr('保存到“图片\\Lumtub”并复制'), icon: Icons.photo_camera_outlined, opens: false, onTap: () => closeThen(() => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)))),
-      PanelLink(label: tr('字幕列表'), detail: tr('点一句跳过去；A / D 上一句、下一句，R 重听'), icon: Icons.notes_rounded, onTap: () => closeThen(() => unawaited(_openSubtitleList(context)))),
+      PanelLink(label: tr('字幕列表'), detail: tr('点一句跳过去；A / D 上一句、下一句，R 重听'), icon: Icons.subject_rounded, onTap: () => closeThen(() => unawaited(_openSubtitleList(context)))),
       PanelLink(
         label: tr('复制当前字幕 (Ctrl+C)'),
         icon: Icons.content_copy_rounded,
@@ -749,10 +759,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     ]);
   }
 
-  static String _trackLabel(String id, String? title, String? language) {
-    final parts = [if (title != null && title.isNotEmpty) title, if (language != null && language.isNotEmpty) language];
-    return parts.isEmpty ? tr('轨道 {0}', [id]) : parts.join(' · ');
-  }
+
 }
 
 /// PiliNara's `ComBtn`: a bare white icon with a tooltip, with a soft
@@ -1083,4 +1090,24 @@ class _FeedbackBubble extends StatelessWidget {
           Text(text, style: const TextStyle(color: Colors.white, fontSize: 13)),
         ]),
       );
+}
+
+/// yt-dlp names audio formats like `251-4 - audio only (English (US)
+/// original (default), medium)`; shown as the part in brackets and the
+/// codec its number stands for.
+final _ytDlpAudio = RegExp(r'^(\d+)(-[\w-]+)? - audio only \((.*)\)$');
+
+/// A track's name in menus.
+String trackLabel(String id, String? title, String? language) {
+  final match = title == null ? null : _ytDlpAudio.firstMatch(title);
+  if (match != null) {
+    final codec = switch (int.parse(match[1]!)) {
+      249 || 250 || 251 => 'Opus',
+      139 || 140 || 141 => 'AAC',
+      _ => null,
+    };
+    return [match[3]!, if (codec != null) codec, if (match[2]?.contains('drc') ?? false) tr('音量均衡')].join(' · ');
+  }
+  final parts = [if (title != null && title.isNotEmpty) title, if (language != null && language.isNotEmpty) language];
+  return parts.isEmpty ? tr('轨道 {0}', [id]) : parts.join(' · ');
 }

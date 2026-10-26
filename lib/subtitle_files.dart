@@ -102,13 +102,25 @@ class SubtitleFiles {
       while (end < cues.length && (end == start || length + cues[end].text.length < chunkLength)) {
         length += cues[end++].text.length + 1;
       }
-      final group = cues.sublist(start, end);
-      final translated = (await translator.translate(group.map((c) => c.text).join('\n'), target)).trim().split('\n');
-      if (translated.length != group.length) throw const TranslationException('Translated subtitles lost their line breaks');
-      lines.addAll(translated);
+      lines.addAll(await _translateLines([for (final cue in cues.sublist(start, end)) cue.text], target, translator));
       start = end;
     }
     return WebVtt.write([for (final (i, cue) in cues.indexed) (timing: cue.timing, text: lines[i].trim())]);
+  }
+
+  /// [texts] translated line for line. A reply with more or fewer lines
+  /// (machine translation joins short caption fragments) is asked again in
+  /// halves, down to single lines.
+  static Future<List<String>> _translateLines(List<String> texts, String target, Translator translator) async {
+    final reply = (await translator.translate(texts.join('\n'), target)).trim();
+    if (texts.length == 1) return [reply.replaceAll('\n', ' ')];
+    final lines = reply.split('\n');
+    if (lines.length == texts.length) return lines;
+    final half = texts.length ~/ 2;
+    return [
+      ...await _translateLines(texts.sublist(0, half), target, translator),
+      ...await _translateLines(texts.sublist(half), target, translator),
+    ];
   }
 
   static String _name(String url) {

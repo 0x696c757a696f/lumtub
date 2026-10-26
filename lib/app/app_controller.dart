@@ -1718,20 +1718,24 @@ class AppController extends ChangeNotifier {
 
   (String, List<SubtitleCue>)? _cues;
 
-  /// The lines of the main subtitle, for 字幕列表: read from the file the
-  /// track came from, ours or the one mpv was given. Empty when there is
-  /// no subtitle or it is not WebVTT or SRT.
-  Future<List<SubtitleCue>> mainSubtitleCues() async {
+  /// The lines for 字幕列表: of the main subtitle, or of the second one
+  /// while it is the only one on. Read from the file the track came from,
+  /// ours or the one mpv was given. Empty when there is no subtitle or it
+  /// is not WebVTT or SRT.
+  Future<List<SubtitleCue>> listedSubtitleCues() async {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return const [];
     final track = player.state.track.subtitle;
-    if (track.id == 'no' || track.id == 'auto') return const [];
-    final key = '${playing?.id}\u0000${track.id}\u0000${track.title}';
+    final off = track.id == 'no' || track.id == 'auto';
+    // With only the second subtitle on, its lines are listed.
+    final second = off ? secondarySubtitle : null;
+    if (off && second == null) return const [];
+    final key = second != null ? '${playing?.id}\u0000second\u0000${second.url}' : '${playing?.id}\u0000${track.id}\u0000${track.title}';
     if (_cues case (final k, final cues) when k == key) return cues;
     String? text;
     try {
-      final option = details?.subtitles.where((o) => o.label == track.title).firstOrNull;
+      final option = second ?? details?.subtitles.where((o) => o.label == track.title).firstOrNull;
       if (option != null) {
         text = await File(await _subtitleFile(option)).readAsString();
       } else {

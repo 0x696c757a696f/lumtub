@@ -72,35 +72,53 @@ class PanelHeading extends StatelessWidget {
 }
 
 /// A label over chips, one of which is chosen; a tap applies at once.
-class PanelChoices<T> extends StatelessWidget {
-  const PanelChoices({super.key, required this.label, this.icon, required this.value, required this.values, required this.onSelected});
+/// [collapsed] shows only the chosen value until 全部 is clicked, for
+/// long lists such as a video's audio tracks.
+class PanelChoices<T> extends StatefulWidget {
+  const PanelChoices({super.key, required this.label, this.icon, required this.value, required this.values, required this.onSelected, this.collapsed = false});
   final String label;
   final IconData? icon;
   final T value;
   final List<(T, String)> values;
   final ValueChanged<T> onSelected;
+  final bool collapsed;
+
+  @override
+  State<PanelChoices<T>> createState() => _PanelChoicesState<T>();
+}
+
+class _PanelChoicesState<T> extends State<PanelChoices<T>> {
+  late bool _open = !widget.collapsed;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shown = _open ? widget.values : [for (final entry in widget.values) if (entry.$1 == widget.value) entry];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          if (icon != null) ...[Icon(icon, size: 18, color: theme.colorScheme.onSurfaceVariant), const SizedBox(width: 8)],
-          Text(label, style: theme.textTheme.bodyMedium),
+          if (widget.icon != null) ...[Icon(widget.icon, size: 18, color: theme.colorScheme.onSurfaceVariant), const SizedBox(width: 8)],
+          Text(widget.label, style: theme.textTheme.bodyMedium),
         ]),
         const SizedBox(height: 6),
         Wrap(spacing: 6, runSpacing: 6, children: [
-          for (final (v, text) in values)
+          for (final (v, text) in shown)
             ChoiceChip(
               label: Text(text),
-              selected: v == value,
+              selected: v == widget.value,
               showCheckmark: false,
               visualDensity: VisualDensity.compact,
               onSelected: (_) {
-                if (v != value) onSelected(v);
+                if (v != widget.value) widget.onSelected(v);
               },
+            ),
+          if (widget.collapsed && widget.values.length > 1)
+            ActionChip(
+              avatar: Icon(_open ? Icons.expand_less_rounded : Icons.expand_more_rounded, size: 18),
+              label: Text(_open ? tr('收起') : tr('全部 {0} 个', [widget.values.length])),
+              visualDensity: VisualDensity.compact,
+              onPressed: () => setState(() => _open = !_open),
             ),
         ]),
       ]),

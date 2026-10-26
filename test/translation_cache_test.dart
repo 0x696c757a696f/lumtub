@@ -68,4 +68,19 @@ void main() {
     expect(looksLike('Cette vidéo est vraiment super', 'fr'), isFalse);
     expect(looksLike('😂😂', 'zh-CN'), isFalse);
   });
+
+  test('translations made in incognito mode are used but never written', () async {
+    final dir = await Directory.systemTemp.createTemp('lumtub_cache');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = File('${dir.path}/translations.json');
+    final cache = TranslationCache(file: file)..put('g', 'zh-CN', 'kept', '保留');
+    cache.persist = false;
+    cache.put('g', 'zh-CN', 'secret', '秘密');
+    expect(cache.get('g', 'zh-CN', 'secret'), '秘密');
+    await cache.save();
+    final again = TranslationCache(file: file);
+    await again.load();
+    expect(again.get('g', 'zh-CN', 'kept'), '保留');
+    expect(again.get('g', 'zh-CN', 'secret'), isNull);
+  });
 }

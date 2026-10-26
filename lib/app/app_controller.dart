@@ -464,6 +464,20 @@ class AppController extends ChangeNotifier {
 
   Timer? _afterStart;
 
+  /// 无痕模式: nothing watched or searched is remembered (history, search
+  /// history, progress, what 为你推荐 learns, translations kept on disk)
+  /// until it is turned off or Lumtub closes. Not saved, so every start is
+  /// normal.
+  bool incognito = false;
+
+  void setIncognito(bool value) {
+    if (value == incognito) return;
+    _update(() => incognito = value);
+    _translationCache.persist = !value;
+    _notice(value ? tr('已开启无痕模式：这次看过、搜过的内容都不会被记下') : tr('已关闭无痕模式'));
+    logInfo(value ? 'Incognito on' : 'Incognito off');
+  }
+
   Future<void> initialize() async {
     try {
       final directories = await AppDirectories.create();
@@ -809,7 +823,7 @@ class AppController extends ChangeNotifier {
     if (!keep) _unload();
     final repository = _repository!;
     final chosen = filter ?? searchFilter;
-    if (preferences.recordHistory) unawaited(searchHistory?.add(query));
+    if (preferences.recordHistory && !incognito) unawaited(searchHistory?.add(query));
     final sp = searchParams(type: chosen, sort: searchSort, date: searchDate, duration: searchDuration);
     _update(() {
       mode = PageMode.explore;
@@ -1276,7 +1290,7 @@ class AppController extends ChangeNotifier {
     if (settings.sponsorBlock) unawaited(_loadSegments(item, serial));
     if (await _open(item, serial, start: start, play: preferences.autoPlay)) {
       if (settings.defaultSpeed != player.state.rate) await player.setRate(settings.defaultSpeed);
-      if (preferences.recordHistory) await _history?.record(item);
+      if (preferences.recordHistory && !incognito) await _history?.record(item);
       if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
       final next = upNext.firstOrNull;
       if (next != null) prefetch(next);
@@ -1381,7 +1395,7 @@ class AppController extends ChangeNotifier {
   void _saveProgress({bool now = false}) {
     final item = _tracking;
     final player = this.player;
-    if (item == null || player == null || !preferences.recordProgress) return;
+    if (item == null || player == null || !preferences.recordProgress || incognito) return;
     final duration = player.state.duration;
     if (duration <= Duration.zero) return;
     library?.recordProgress(item.id, player.state.position, duration);
@@ -2632,7 +2646,7 @@ class AppController extends ChangeNotifier {
     final feed = homeFeed;
     final repository = _repository;
     final player = this.player;
-    if (item == null || feed == null || repository == null || player == null || !preferences.homeShowRecommended) return;
+    if (item == null || feed == null || repository == null || player == null || !preferences.homeShowRecommended || incognito) return;
     final position = player.state.position;
     final duration = player.state.duration;
     final fraction = duration > Duration.zero ? position.inMilliseconds / duration.inMilliseconds : 0.0;
@@ -3230,6 +3244,47 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  /// 清除本地数据: removes the chosen [kinds] from this computer. Favourites,
+  /// playlists and followed channels are never touched here.
+  Future<void> clearLocalData(Set<LocalData> kinds) async {
+    if (kinds.contains(LocalData.cache) && !ensureNotPlaying(tr('正在播放时不会清理缓存。请先返回列表。'))) return;
+    logInfo('Clearing local data: ${kinds.map((k) => k.name).join(', ')}');
+    for (final kind in LocalData.values.where(kinds.contains)) {
+      try {
+        switch (kind) {
+          case LocalData.history:
+            await _history?.clear();
+            await searchHistory?.clear();
+          case LocalData.progress:
+            library?.clearProgress();
+          case LocalData.recommendations:
+            await homeFeed?.notInterested.clear();
+          case LocalData.cache:
+            _translationCache.clear();
+            final manager = _cacheManager;
+            if (manager != null) {
+              await manager.clear(settings);
+              cacheBytes = await manager.size(settings);
+            }
+          case LocalData.account:
+            await account?.signOut();
+          case LocalData.keys:
+            translationKeys = const {};
+            _useTranslator();
+            await _translationKeyFile?.delete();
+          case LocalData.settings:
+            await saveSettings(PlayerSettings(cachePath: settings.cachePath, cacheLimitGb: settings.cacheLimitGb, decoderResults: settings.decoderResults));
+            await saveAppearance(const AppearanceSettings());
+            await savePreferences(const AppPreferences());
+        }
+      } catch (e) {
+        logError('Could not clear ${kind.name}', e);
+      }
+    }
+    _update(() {});
+    _notice(tr('已清除所选的本地数据'));
+  }
+
   /// Saves everything and releases the player before the window closes;
   /// dispose() alone does not run when Windows ends the process.
   Future<void> shutdown({bool install = true}) async {
@@ -3311,4 +3366,19 @@ class AppController extends ChangeNotifier {
     unawaited(_finishedDownloads.close());
     super.dispose();
   }
+}
+
+/// What 清除本地数据 can remove.
+enum LocalData {
+  history('观看历史和搜索记录'),
+  progress('播放进度'),
+  recommendations('“不感兴趣”记录'),
+  cache('缓存（视频、缩略图、翻译）'),
+  account('Google 账号登录'),
+  keys('翻译服务的 API 密钥'),
+  settings('所有设置（恢复默认）');
+
+  const LocalData(this._label);
+  final String _label;
+  String get label => tr(_label);
 }

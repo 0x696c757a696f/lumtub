@@ -112,6 +112,9 @@ class SliverVideoGrid extends StatelessWidget {
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) => VideoCard(
+                // A card's hover and preview state never passes to another
+                // video when the list changes under it.
+                key: ValueKey(items[i].id),
                 item: items[i],
                 thumbnails: thumbnails,
                 onOpen: () => onOpen(items[i]),
@@ -317,6 +320,13 @@ class _VideoCardState extends State<VideoCard> {
     unawaited(showVideoMenu(context, widget.item, position, onOpen: widget.onOpen, onRemove: widget.onRemove, removeLabel: widget.removeLabel));
   }
 
+  ImageProvider _frameImage(VideoItem item, int frame) {
+    final url = 'https://i.ytimg.com/vi/${item.id}/mq$frame.jpg';
+    final dir = widget.thumbnails;
+    // mq frames are 320 wide; decoding them larger gains nothing.
+    return ResizeImage.resizeIfNeeded(320, null, dir == null ? NetworkImage(url) : CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, 'mq$frame')));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -381,8 +391,10 @@ class _VideoCardState extends State<VideoCard> {
                 if (_frame > 0) ...[
                   AnimatedSwitcher(
                     duration: Motion.of(const Duration(milliseconds: 250)),
-                    child: Image.network(
-                      'https://i.ytimg.com/vi/${item.id}/mq$_frame.jpg',
+                    child: Image(
+                      // The frames are cached on disk like thumbnails, so
+                      // hovering the same card again reads no network.
+                      image: _frameImage(item, _frame),
                       key: ValueKey(_frame),
                       fit: BoxFit.cover,
                       gaplessPlayback: true,

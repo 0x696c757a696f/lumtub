@@ -1,0 +1,28 @@
+name: Audit
+
+# Known vulnerabilities and unexpected sources in the Rust core's
+# dependencies. Separate from Build so a new advisory is reported without
+# holding back builds; it also runs weekly, as advisories appear without
+# any change here.
+on:
+  push:
+    branches: [main]
+    paths: ['native/lumtub_core/Cargo.toml', 'native/lumtub_core/Cargo.lock', 'native/lumtub_core/deny.toml', '.github/workflows/audit.yml']
+  pull_request:
+    paths: ['native/lumtub_core/Cargo.toml', 'native/lumtub_core/Cargo.lock', 'native/lumtub_core/deny.toml', '.github/workflows/audit.yml']
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cargo-deny:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --version 0.20.2 --locked
+      - name: Check advisories, bans and sources
+        run: cargo deny --manifest-path native/lumtub_core/Cargo.toml check advisories bans sources

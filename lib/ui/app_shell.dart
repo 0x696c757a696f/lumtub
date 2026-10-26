@@ -121,6 +121,7 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) => CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.keyK, control: true): _focusSearch,
+          const SingleActivator(LogicalKeyboardKey.keyN, control: true, shift: true): () => _controller.setIncognito(!_controller.incognito),
           const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): _back,
           // Esc goes back too, except on the watch page, where it leaves
           // full screen and closes panels.
@@ -287,6 +288,14 @@ class _TopBar extends StatelessWidget {
             child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit)),
           ))),
           const SizedBox(width: 16),
+          IconButton(
+            tooltip: controller.incognito ? tr('无痕模式已开启，点击关闭 (Ctrl+Shift+N)') : tr('无痕模式：不记录观看和搜索 (Ctrl+Shift+N)'),
+            isSelected: controller.incognito,
+            style: controller.incognito ? IconButton.styleFrom(backgroundColor: colors.tertiaryContainer, foregroundColor: colors.onTertiaryContainer) : null,
+            onPressed: () => controller.setIncognito(!controller.incognito),
+            icon: const Icon(Icons.visibility_off_outlined),
+            selectedIcon: const Icon(Icons.visibility_off_rounded),
+          ),
           IconButton(
             tooltip: tr('检查组件更新'),
             onPressed: ready && !controller.checking ? controller.checkUpdates : null,

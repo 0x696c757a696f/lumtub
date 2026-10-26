@@ -162,6 +162,25 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 if (await confirmDialog(context, title: tr('清空播放进度？'), content: tr('“继续观看”和卡片上的进度条会一并清空。'))) controller.clearProgress();
               },
             )),
+        SettingEntry(tr('连接的服务器'), (context) => NormalItem(
+              title: tr('连接的服务器'),
+              subtitle: tr('Lumtub 会连接哪些服务器、各自知道什么，能关的都可以在这里关'),
+              leading: _icon(Icons.lan_outlined),
+              onTap: () => openPrivacyConnections(context, controller),
+            ), subtitle: tr('隐私 服务器 网络 连接 遥测 第三方')),
+        SettingEntry(tr('无痕模式'), (context) => SwitchItem(
+              title: tr('无痕模式'),
+              subtitle: tr('不记录观看历史、搜索记录和播放进度，“为你推荐”也不学习；关掉 Lumtub 后自动恢复。快捷键 Ctrl+Shift+N'),
+              leading: _icon(Icons.visibility_off_outlined),
+              value: controller.incognito,
+              onChanged: controller.setIncognito,
+            ), subtitle: tr('隐身 不记录 incognito private')),
+        SettingEntry(tr('清除本地数据'), (context) => NormalItem(
+              title: tr('清除本地数据'),
+              subtitle: tr('选择要从这台电脑上删除的内容，收藏、播放列表和关注不会被删除'),
+              leading: _icon(Icons.cleaning_services_outlined),
+              onTap: () => _clearLocalData(context, controller),
+            ), subtitle: tr('清除 删除 数据 隐私 重置 卸载')),
       ],
     SettingsCategory.recommend => [
         SettingEntry(tr('首页显示为你推荐'), (context) => SwitchItem(
@@ -1171,6 +1190,52 @@ Future<void> editRelayServer(BuildContext context, AppController controller, Rel
   await controller.saveSettings(piped
       ? settings.copyWith(playbackSource: PlaybackSource.pipedCustom, pipedServer: server)
       : settings.copyWith(playbackSource: PlaybackSource.invidiousCustom, invidiousServer: server));
+}
+
+Future<void> _clearLocalData(BuildContext context, AppController controller) async {
+  final chosen = await showDialog<Set<LocalData>>(context: context, builder: (context) => const _ClearDataDialog());
+  if (chosen == null || chosen.isEmpty) return;
+  await controller.clearLocalData(chosen);
+}
+
+class _ClearDataDialog extends StatefulWidget {
+  const _ClearDataDialog();
+
+  @override
+  State<_ClearDataDialog> createState() => _ClearDataDialogState();
+}
+
+class _ClearDataDialogState extends State<_ClearDataDialog> {
+  // What leaves no settings to redo is chosen to start with.
+  final _chosen = {LocalData.history, LocalData.progress, LocalData.recommendations, LocalData.cache};
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(tr('清除本地数据')),
+        content: SizedBox(
+          width: 420,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            for (final kind in LocalData.values)
+              CheckboxListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                value: _chosen.contains(kind),
+                title: Text(kind.label),
+                onChanged: (v) => setState(() => v == true ? _chosen.add(kind) : _chosen.remove(kind)),
+              ),
+            const SizedBox(height: 8),
+            Text(tr('只删除这台电脑上的数据，不影响 YouTube 账号。收藏、播放列表和关注不会被删除。'), style: TextStyle(fontSize: 12, color: context.colors.outline)),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: context.colors.error, foregroundColor: context.colors.onError),
+            onPressed: _chosen.isEmpty ? null : () => Navigator.pop(context, {..._chosen}),
+            child: Text(tr('清除')),
+          ),
+        ],
+      );
 }
 
 Future<String?> _editDnsUrl(BuildContext context, String current) async {

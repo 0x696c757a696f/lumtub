@@ -19,6 +19,10 @@ class TranslationCache {
   Timer? _saveTimer;
   Future<void>? _loading;
 
+  /// Off in 无痕模式: translations made meanwhile are used but never written.
+  bool persist = true;
+  final _private = <String>{};
+
   Future<void> load() => _loading ??= _load();
 
   Future<void> _load() async {
@@ -58,14 +62,20 @@ class TranslationCache {
     final key = keyOf(scope, target, text);
     _entries.remove(key);
     _entries[key] = (translation, _now().millisecondsSinceEpoch);
+    if (persist) {
+      _private.remove(key);
+    } else {
+      _private.add(key);
+    }
     _trim();
-    _scheduleSave();
+    if (persist) _scheduleSave();
   }
 
   int get length => _entries.length;
 
   void clear() {
     _entries.clear();
+    _private.clear();
     _saveTimer?.cancel();
     final file = this.file;
     if (file != null) unawaited(file.delete().then((_) {}, onError: (_) {}));
@@ -73,6 +83,7 @@ class TranslationCache {
 
   void _trim() {
     while (_entries.length > maxEntries) {
+      _private.remove(_entries.keys.first);
       _entries.remove(_entries.keys.first);
     }
   }
@@ -90,7 +101,7 @@ class TranslationCache {
     try {
       await file.parent.create(recursive: true);
       final temp = File('${file.path}.tmp');
-      await temp.writeAsString(jsonEncode({for (final MapEntry(:key, :value) in _entries.entries) key: [value.$1, value.$2]}));
+      await temp.writeAsString(jsonEncode({for (final MapEntry(:key, :value) in _entries.entries) if (!_private.contains(key)) key: [value.$1, value.$2]}));
       await temp.rename(file.path);
     } catch (_) {
       // The cache is only a saving; translating again still works.

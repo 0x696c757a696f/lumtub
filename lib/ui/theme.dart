@@ -22,9 +22,14 @@ ThemeData buildAppTheme(
   bool pureBlack = false,
   String? fontFamily,
   PageTransition transition = PageTransition.fade,
+  bool highContrast = false,
 }) {
   final dark = brightness == Brightness.dark;
-  var scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness, dynamicSchemeVariant: variant);
+  var scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness, dynamicSchemeVariant: variant, contrastLevel: highContrast ? 1.0 : 0.0);
+  if (highContrast) {
+    // Windows' high contrast themes: borders and secondary text as strong as text.
+    scheme = scheme.copyWith(outline: scheme.onSurface, outlineVariant: scheme.onSurfaceVariant, surface: dark ? Colors.black : Colors.white);
+  }
   if (dark && pureBlack) {
     scheme = scheme.copyWith(surface: Colors.black, surfaceContainerLowest: Colors.black, surfaceContainerLow: const Color(0xFF0E0E0E));
   }

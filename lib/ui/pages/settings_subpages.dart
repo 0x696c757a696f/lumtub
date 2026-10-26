@@ -19,6 +19,8 @@ import '../../app/app_controller.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
 import '../../blocked_groups.dart';
+import '../../encrypted_dns.dart';
+import '../../piped_streams.dart';
 import '../../state_media.dart';
 import '../../appearance_settings.dart';
 import '../../player_settings.dart';
@@ -30,6 +32,7 @@ import '../subtitle_style.dart';
 import '../theme.dart';
 import '../theme_preset_card.dart';
 import 'settings_sections.dart';
+import 'translation_settings_page.dart';
 import '../../l10n/l10n.dart';
 import '../motion.dart';
 
@@ -1110,3 +1113,48 @@ class _LogsPageState extends State<_LogsPage> {
     );
   }
 }
+
+/// 连接的服务器: every service Lumtub talks to, when, and what it learns,
+/// with a switch where it can be turned off.
+Future<void> openPrivacyConnections(BuildContext context, AppController controller) => _push(context, controller, tr('连接的服务器'), (context) {
+      final settings = controller.settings;
+      final prefs = controller.preferences;
+      void saveSettings(PlayerSettings next) => controller.saveSettings(next);
+      void savePrefs(AppPreferences next) => controller.savePreferences(next);
+      Widget row(IconData icon, String title, String hosts, String detail, {bool? value, ValueChanged<bool>? onChanged, String? state, VoidCallback? onTap}) => ListTile(
+            leading: Icon(icon),
+            title: Text(title),
+            subtitle: Text('$hosts\n$detail'),
+            isThreeLine: true,
+            onTap: onTap ?? (onChanged == null || value == null ? null : () => onChanged(!value)),
+            trailing: value != null && onChanged != null
+                ? Switch(value: value, onChanged: onChanged)
+                : state == null
+                    ? null
+                    : Text(state, style: TextStyle(color: context.colors.outline)),
+          );
+      final dns = DnsServer.of(settings.dnsServer, settings.dnsCustomUrl);
+      final relay = settings.playbackSource != PlaybackSource.youtube;
+      return [
+        _tip(context, tr('Lumtub 没有统计、遥测或崩溃上报，不上传观看历史、Cookie 或账号数据。下面是它会连接的全部服务器；开着代理时都经过代理。')),
+        _header(context, tr('必需')),
+        row(Icons.smart_display_outlined, 'YouTube', 'www.youtube.com · *.googlevideo.com · i.ytimg.com', tr('搜索、列表、播放和缩略图。YouTube 会看到你的 IP 和看了哪些视频，和用浏览器看一样'), state: tr('必需')),
+        row(Icons.manage_search_rounded, tr('YouTube 搜索建议'), 'suggestqueries-clients6.youtube.com', tr('在搜索框打字时，把已输入的文字发给 YouTube 取建议'), state: tr('打字时')),
+        _header(context, tr('可以关闭')),
+        row(Icons.system_update_alt_rounded, tr('更新检查'), 'api.github.com · github.com', tr('检查和下载 Lumtub、libmpv、yt-dlp 等组件的新版本；GitHub 只看到你的 IP'),
+            value: prefs.autoCheckUpdates, onChanged: (v) => savePrefs(prefs.copyWith(autoCheckUpdates: v, autoUpdateApp: v && prefs.autoUpdateApp))),
+        row(Icons.fast_forward_outlined, tr('空降助手（SponsorBlock）'), 'sponsor.ajay.app', tr('播放时用视频 ID 的哈希前缀查询赞助片段，服务器不知道具体是哪个视频'),
+            value: settings.sponsorBlock, onChanged: (v) => saveSettings(settings.copyWith(sponsorBlock: v))),
+        row(Icons.title_rounded, 'DeArrow', 'sponsor.ajay.app · dearrow-thumb.ajay.app', tr('用社区提交的标题和封面替换标题党；标题用视频 ID 的哈希前缀查询，替换的封面图按视频 ID 下载'),
+            value: settings.deArrowTitles || settings.deArrowThumbnails, onChanged: (v) => saveSettings(settings.copyWith(deArrowTitles: v, deArrowThumbnails: v))),
+        row(Icons.thumb_down_off_alt_outlined, 'Return YouTube Dislike', 'returnyoutubedislikeapi.com', tr('播放页显示估算的踩数；会把正在看的视频 ID 发给它'),
+            value: settings.returnDislike, onChanged: (v) => saveSettings(settings.copyWith(returnDislike: v))),
+        row(Icons.translate_rounded, tr('翻译'), controller.preferences.translation.service.label, tr('只在你点“翻译”或开启字幕翻译时，把要翻译的文字发给所选服务'),
+            state: tr('点击时'), onTap: () => openTranslationSettings(context, controller)),
+        row(Icons.hub_outlined, tr('Piped / Invidious'), relay ? settings.playbackSource.label : tr('当前未使用'), tr('替你从 YouTube 取视频；它们会知道你看了哪个视频。YouTube 返回 429 时也会临时试用'),
+            state: relay ? tr('使用中') : tr('仅备用')),
+        row(Icons.dns_outlined, tr('加密 DNS'), dns?.url ?? tr('当前未使用'), tr('直连时查找网址；DNS 服务器会知道你访问了哪些网站，但看不到具体内容'), state: dns == null ? tr('关闭') : tr('使用中')),
+        row(Icons.account_circle_outlined, tr('Google 账号'), 'accounts.google.com · oauth2.googleapis.com · www.googleapis.com', tr('只在登录后同步订阅、播放列表、点赞和评论'),
+            state: controller.account?.signedIn ?? false ? tr('已登录') : tr('未登录')),
+      ];
+    });

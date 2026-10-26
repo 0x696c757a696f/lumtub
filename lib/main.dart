@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app/app_controller.dart';
 import 'app_directories.dart';
+import 'app_window.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
 import 'keep_awake.dart';
@@ -68,6 +69,9 @@ class _LumtubAppState extends State<LumtubApp> {
   Object? _themeKey;
   late ThemeData _light;
   late ThemeData _dark;
+  // Used while Windows' high contrast mode is on.
+  late ThemeData _lightContrast;
+  late ThemeData _darkContrast;
   late final AppLifecycleListener _lifecycle;
   bool _pausedByMinimize = false;
   WindowsShellSync? _shell;
@@ -77,16 +81,19 @@ class _LumtubAppState extends State<LumtubApp> {
     final key = (appearance.themeKey(accent), Motion.reduced);
     if (key == _themeKey) return;
     _themeKey = key;
-    ThemeData build(Brightness brightness) => buildAppTheme(
+    ThemeData build(Brightness brightness, {bool highContrast = false}) => buildAppTheme(
           accent,
           brightness,
           variant: appearance.schemeVariant,
           pureBlack: appearance.pureBlack,
           fontFamily: appearance.fontFamily,
           transition: Motion.reduced ? PageTransition.none : appearance.transition,
+          highContrast: highContrast,
         );
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
+    _lightContrast = build(Brightness.light, highContrast: true);
+    _darkContrast = build(Brightness.dark, highContrast: true);
   }
 
   @override
@@ -158,9 +165,12 @@ class _LumtubAppState extends State<LumtubApp> {
             localizationsDelegates: GlobalMaterialLocalizations.delegates,
             theme: _light,
             darkTheme: _dark,
+            highContrastTheme: _lightContrast,
+            highContrastDarkTheme: _darkContrast,
             // The font size setting scales on top of Windows' text size.
             builder: (context, child) {
               final media = MediaQuery.of(context);
+              _matchTitleBar(Theme.of(context).colorScheme);
               return MediaQuery(
                 data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale), disableAnimations: media.disableAnimations || Motion.reduced),
                 child: child!,
@@ -171,6 +181,22 @@ class _LumtubAppState extends State<LumtubApp> {
         },
         child: AppShell(controller: widget.controller),
       );
+}
+
+Object? _titleBar;
+
+/// The Windows title bar in the page's own colours, so the window reads as
+/// one surface in light and dark themes.
+void _matchTitleBar(ColorScheme scheme) {
+  if (!Platform.isWindows) return;
+  final key = (scheme.surface, scheme.onSurface, scheme.brightness);
+  if (key == _titleBar) return;
+  _titleBar = key;
+  WidgetsBinding.instance.addPostFrameCallback((_) => AppWindow.setTitleBar(
+        caption: scheme.surface.toARGB32(),
+        text: scheme.onSurface.toARGB32(),
+        dark: scheme.brightness == Brightness.dark,
+      ));
 }
 
 class _ScaledTextScaler extends TextScaler {

@@ -247,7 +247,7 @@ jobs:
           $manifest = 'native/lumtub_core/Cargo.toml'
           cargo test --manifest-path $manifest --release --target $target
           if ($LASTEXITCODE -ne 0) { throw 'Rust core tests failed.' }
-          cargo build --manifest-path $manifest --release --target $target
+          cargo build --manifest-path $manifest --release --target $target --lib
           if ($LASTEXITCODE -ne 0) { throw 'Rust core build failed.' }
           $dll = (Resolve-Path "native/lumtub_core/target/$target/release/lumtub_core.dll").Path
           Write-Host "lumtub_core.dll: $((Get-Item $dll).Length) bytes"
@@ -368,11 +368,25 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          sparse-checkout: release-notes
+          sparse-checkout: |
+            release-notes
+            native/lumtub_core
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: dist
           merge-multiple: true
+      - name: Windows - sign update packages
+        env:
+          LUMTUB_UPDATE_KEY: ${{ secrets.LUMTUB_UPDATE_KEY }}
+        run: |
+          # Each installer and ZIP gets a .sig (Ed25519 + ML-DSA-65); Lumtub
+          # installs an update only when both signatures hold.
+          if [[ -z "$LUMTUB_UPDATE_KEY" ]]; then
+            echo "::error::The LUMTUB_UPDATE_KEY secret is not set; the release would not update itself."
+            exit 1
+          fi
+          rustup update stable
+          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip
       - name: Windows - publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

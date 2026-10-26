@@ -6,6 +6,7 @@ import 'app_directories.dart';
 import 'decoder_status.dart';
 import 'network_proxy.dart';
 import 'piped_streams.dart';
+import 'translation.dart';
 import 'video_codec.dart';
 import 'l10n/l10n.dart';
 
@@ -64,8 +65,8 @@ enum SubtitleMode {
 }
 
 enum SubtitleLanguage {
-  /// Windows' language: simplified, traditional Chinese or English. Not the
-  /// interface's, which is English for now.
+  /// Windows' language when one below is, else English. Not the
+  /// interface's.
   auto('跟随系统语言', '', ''),
   zh('简体中文优先', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng'),
   zhHant('繁體中文優先', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng'),
@@ -98,6 +99,14 @@ enum SubtitleLanguage {
   /// Windows' language; tests replace it.
   static Locale Function() systemLocale = () => PlatformDispatcher.instance.locale;
 
+  /// The language subtitles are translated into when a video has none in
+  /// this one.
+  TranslationLanguage get translation => switch (resolved) {
+        zh => TranslationLanguage.byCode('zh-CN'),
+        zhHant => TranslationLanguage.byCode('zh-TW'),
+        final l => TranslationLanguage.maybeByCode(l.name) ?? TranslationLanguage.byCode('en'),
+      };
+
   /// [auto] as the language it stands for.
   SubtitleLanguage get resolved => this != auto
       ? this
@@ -105,7 +114,7 @@ enum SubtitleLanguage {
           Locale(languageCode: 'zh', scriptCode: 'Hant') => zhHant,
           Locale(languageCode: 'zh', countryCode: 'TW' || 'HK' || 'MO') => zhHant,
           Locale(languageCode: 'zh') => zh,
-          _ => en,
+          Locale(:final languageCode) => values.where((l) => l.index > zhHant.index && l.name == languageCode).firstOrNull ?? en,
         };
 }
 
@@ -232,6 +241,18 @@ class PlayerSettings {
   final bool interpolation;
   final double subtitleScale;
   final int subtitlePosition;
+  /// The main subtitle's font family (empty: the default), color
+  /// (0xRRGGBB) and opacity (0.1 to 1); [subtitleScale] is its size.
+  final String subtitleFont;
+  final int subtitleColor;
+  final double subtitleOpacity;
+  /// The same for the secondary subtitle (双语字幕), drawn above the main.
+  /// libmpv has no separate style for it, so these apply only while the
+  /// interface draws subtitles.
+  final String secondaryFont;
+  final double secondaryScale;
+  final int secondaryColor;
+  final double secondaryOpacity;
   final String cacheMode;
   final int cacheSeconds;
   final int cacheMemoryMb;
@@ -277,6 +298,12 @@ class PlayerSettings {
   final int volumeMax;
   final SubtitleMode subtitleMode;
   final SubtitleLanguage subtitleLanguage;
+  /// The TranslationLanguage code of the subtitle shown above the main
+  /// one when a video opens; empty for none.
+  /// [secondarySubtitleLanguage] for the video's own subtitle in its own
+  /// language, uploaded or automatic.
+  static const originalSubtitle = 'original';
+  final String secondarySubtitleLanguage;
   final double subtitleBorder;
   final bool subtitleBackground;
   final bool subtitleBold;
@@ -308,6 +335,10 @@ class PlayerSettings {
   final ProxyMode proxyMode;
   /// The proxy for [ProxyMode.custom], such as `127.0.0.1:7890`.
   final String proxyAddress;
+  /// 加密 DNS: a [DnsServer] id, `custom` for [dnsCustomUrl], or `''` for
+  /// the system resolver.
+  final String dnsServer;
+  final String dnsCustomUrl;
   /// Where playback streams come from: YouTube directly by default.
   final PlaybackSource playbackSource;
   /// The Piped API server for [PlaybackSource.pipedCustom].
@@ -336,6 +367,13 @@ class PlayerSettings {
     this.interpolation = false,
     this.subtitleScale = 1.0,
     this.subtitlePosition = 100,
+    this.subtitleFont = defaultSubtitleFont,
+    this.subtitleColor = 0xFFFFFF,
+    this.subtitleOpacity = 1.0,
+    this.secondaryFont = defaultSubtitleFont,
+    this.secondaryScale = 0.8,
+    this.secondaryColor = 0xFFE7A8,
+    this.secondaryOpacity = 0.95,
     this.cacheMode = 'auto',
     this.cacheSeconds = 60,
     this.cacheMemoryMb = 150,
@@ -352,6 +390,7 @@ class PlayerSettings {
     this.volumeMax = 100,
     this.subtitleMode = SubtitleMode.off,
     this.subtitleLanguage = SubtitleLanguage.auto,
+    this.secondarySubtitleLanguage = '',
     this.subtitleBorder = 3,
     this.subtitleBackground = false,
     this.subtitleBold = false,
@@ -371,6 +410,8 @@ class PlayerSettings {
     this.libassSubtitles = false,
     this.proxyMode = ProxyMode.system,
     this.proxyAddress = '',
+    this.dnsServer = '',
+    this.dnsCustomUrl = '',
     this.playbackSource = PlaybackSource.youtube,
     this.pipedServer = '',
     this.invidiousServer = '',
@@ -391,6 +432,13 @@ class PlayerSettings {
     bool? interpolation,
     double? subtitleScale,
     int? subtitlePosition,
+    String? subtitleFont,
+    int? subtitleColor,
+    double? subtitleOpacity,
+    String? secondaryFont,
+    double? secondaryScale,
+    int? secondaryColor,
+    double? secondaryOpacity,
     String? cacheMode,
     int? cacheSeconds,
     int? cacheMemoryMb,
@@ -407,6 +455,7 @@ class PlayerSettings {
     int? volumeMax,
     SubtitleMode? subtitleMode,
     SubtitleLanguage? subtitleLanguage,
+    String? secondarySubtitleLanguage,
     double? subtitleBorder,
     bool? subtitleBackground,
     bool? subtitleBold,
@@ -429,6 +478,8 @@ class PlayerSettings {
     bool? libassSubtitles,
     ProxyMode? proxyMode,
     String? proxyAddress,
+    String? dnsServer,
+    String? dnsCustomUrl,
     PlaybackSource? playbackSource,
     String? pipedServer,
     String? invidiousServer,
@@ -444,6 +495,13 @@ class PlayerSettings {
         interpolation: interpolation ?? this.interpolation,
         subtitleScale: subtitleScale ?? this.subtitleScale,
         subtitlePosition: subtitlePosition ?? this.subtitlePosition,
+        subtitleFont: subtitleFont ?? this.subtitleFont,
+        subtitleColor: subtitleColor ?? this.subtitleColor,
+        subtitleOpacity: subtitleOpacity ?? this.subtitleOpacity,
+        secondaryFont: secondaryFont ?? this.secondaryFont,
+        secondaryScale: secondaryScale ?? this.secondaryScale,
+        secondaryColor: secondaryColor ?? this.secondaryColor,
+        secondaryOpacity: secondaryOpacity ?? this.secondaryOpacity,
         cacheMode: cacheMode ?? this.cacheMode,
         cacheSeconds: cacheSeconds ?? this.cacheSeconds,
         cacheMemoryMb: cacheMemoryMb ?? this.cacheMemoryMb,
@@ -460,6 +518,7 @@ class PlayerSettings {
         volumeMax: volumeMax ?? this.volumeMax,
         subtitleMode: subtitleMode ?? this.subtitleMode,
         subtitleLanguage: subtitleLanguage ?? this.subtitleLanguage,
+        secondarySubtitleLanguage: secondarySubtitleLanguage ?? this.secondarySubtitleLanguage,
         subtitleBorder: subtitleBorder ?? this.subtitleBorder,
         subtitleBackground: subtitleBackground ?? this.subtitleBackground,
         subtitleBold: subtitleBold ?? this.subtitleBold,
@@ -479,6 +538,8 @@ class PlayerSettings {
         libassSubtitles: libassSubtitles ?? this.libassSubtitles,
         proxyMode: proxyMode ?? this.proxyMode,
         proxyAddress: proxyAddress ?? this.proxyAddress,
+        dnsServer: dnsServer ?? this.dnsServer,
+        dnsCustomUrl: dnsCustomUrl ?? this.dnsCustomUrl,
         playbackSource: playbackSource ?? this.playbackSource,
         pipedServer: pipedServer ?? this.pipedServer,
         invidiousServer: invidiousServer ?? this.invidiousServer,
@@ -496,6 +557,13 @@ class PlayerSettings {
         'interpolation': interpolation,
         'subtitleScale': subtitleScale,
         'subtitlePosition': subtitlePosition,
+        'subtitleFont': subtitleFont,
+        'subtitleColor': subtitleColor,
+        'subtitleOpacity': subtitleOpacity,
+        'secondaryFont': secondaryFont,
+        'secondaryScale': secondaryScale,
+        'secondaryColor': secondaryColor,
+        'secondaryOpacity': secondaryOpacity,
         'cacheMode': cacheMode,
         'cacheSeconds': cacheSeconds,
         'cacheMemoryMb': cacheMemoryMb,
@@ -513,6 +581,7 @@ class PlayerSettings {
         'volumeMax': volumeMax,
         'subtitleMode': subtitleMode.name,
         'subtitleLanguageV2': subtitleLanguage.name,
+        'secondarySubtitleLanguage': secondarySubtitleLanguage,
         'subtitleBorder': subtitleBorder,
         'subtitleBackground': subtitleBackground,
         'subtitleBold': subtitleBold,
@@ -531,6 +600,8 @@ class PlayerSettings {
         'libassSubtitles': libassSubtitles,
         'proxyMode': proxyMode.name,
         'proxyAddress': proxyAddress,
+        'dnsServer': dnsServer,
+        'dnsCustomUrl': dnsCustomUrl,
         'playbackSourceV2': playbackSource.name,
         'pipedServer': pipedServer,
         'invidiousServer': invidiousServer,
@@ -541,6 +612,40 @@ class PlayerSettings {
         'audioDelayMs': audioDelayMs,
         'decoderResults': decoderResults.map((codec, status) => MapEntry(codec, status.toJson())),
       };
+
+  /// Microsoft YaHei: on every Windows, with Chinese and Latin letters
+  /// that read well over video.
+  static const defaultSubtitleFont = 'Microsoft YaHei';
+
+  /// These settings with the subtitle style of a fresh install.
+  PlayerSettings withDefaultSubtitleStyle() {
+    const d = PlayerSettings();
+    return copyWith(
+      subtitleScale: d.subtitleScale,
+      subtitlePosition: d.subtitlePosition,
+      subtitleFont: d.subtitleFont,
+      subtitleColor: d.subtitleColor,
+      subtitleOpacity: d.subtitleOpacity,
+      secondaryFont: d.secondaryFont,
+      secondaryScale: d.secondaryScale,
+      secondaryColor: d.secondaryColor,
+      secondaryOpacity: d.secondaryOpacity,
+      subtitleBorder: d.subtitleBorder,
+      subtitleBackground: d.subtitleBackground,
+      subtitleBold: d.subtitleBold,
+    );
+  }
+
+  /// [value] as a font family name, or empty when it is none: the name
+  /// goes into mpv's options as it is.
+  static String cleanFont(Object? value) {
+    final name = value is String ? value.trim() : '';
+    return name.length > 64 || name.contains(RegExp(r'[\x00-\x1f,;"]')) ? '' : name;
+  }
+
+  /// [rgb] (0xRRGGBB) at [opacity] as mpv's #AARRGGBB.
+  static String mpvColor(int rgb, double opacity) =>
+      '#${(opacity.clamp(0, 1) * 255).round().toRadixString(16).padLeft(2, '0')}${(rgb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}'.toUpperCase();
 
   factory PlayerSettings.fromJson(Object? raw) {
     if (raw is! Map) return const PlayerSettings();
@@ -612,6 +717,13 @@ class PlayerSettings {
       interpolation: raw['interpolation'] == true,
       subtitleScale: decimal('subtitleScale', 1.0, 0.5, 3.0),
       subtitlePosition: number('subtitlePosition', 100, 0, 100),
+      subtitleFont: raw.containsKey('subtitleFont') ? cleanFont(raw['subtitleFont']) : defaultSubtitleFont,
+      subtitleColor: number('subtitleColor', 0xFFFFFF, 0, 0xFFFFFF),
+      subtitleOpacity: decimal('subtitleOpacity', 1.0, 0.1, 1.0),
+      secondaryFont: raw.containsKey('secondaryFont') ? cleanFont(raw['secondaryFont']) : defaultSubtitleFont,
+      secondaryScale: decimal('secondaryScale', 0.8, 0.5, 3.0),
+      secondaryColor: number('secondaryColor', 0xFFE7A8, 0, 0xFFFFFF),
+      secondaryOpacity: decimal('secondaryOpacity', 0.95, 0.1, 1.0),
       cacheMode: choice('cacheMode', {'auto', 'yes', 'no'}, 'auto'),
       // Builds before bufferDefaults 2 saved 30 s / 64 MB even when untouched;
       // those move to the larger defaults that ride out network hiccups.
@@ -634,6 +746,7 @@ class PlayerSettings {
       subtitleLanguage: raw.containsKey('subtitleLanguageV2') || raw['subtitleLanguage'] != 'zh'
           ? _enumByName(SubtitleLanguage.values, raw['subtitleLanguageV2'] ?? raw['subtitleLanguage'], SubtitleLanguage.auto)
           : SubtitleLanguage.auto,
+      secondarySubtitleLanguage: raw['secondarySubtitleLanguage'] == originalSubtitle ? originalSubtitle : TranslationLanguage.maybeByCode(raw['secondarySubtitleLanguage'])?.code ?? '',
       subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
       subtitleBackground: raw['subtitleBackground'] == true,
       subtitleBold: raw['subtitleBold'] == true,
@@ -653,6 +766,8 @@ class PlayerSettings {
       libassSubtitles: raw['libassSubtitles'] == true,
       proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),
       proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
+      dnsServer: raw['dnsServer']?.toString() ?? '',
+      dnsCustomUrl: raw['dnsCustomUrl']?.toString() ?? '',
       // V2: the default became direct YouTube (2026-10-21); the old key held
       // the old default for everyone who never chose.
       playbackSource: _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),

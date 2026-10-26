@@ -67,6 +67,7 @@ pub struct Bridge {
 impl Bridge {
     /// Listens on a random loopback port and forwards through [proxy].
     pub fn start(proxy: Proxy) -> std::io::Result<Bridge> {
+        let address = (proxy.host.as_str(), proxy.port).to_socket_addrs().ok().and_then(|mut a| a.next());
         let listener = TcpListener::bind("127.0.0.1:0")?;
         let port = listener.local_addr()?.port();
         let stop = Arc::new(AtomicBool::new(false));
@@ -79,13 +80,14 @@ impl Bridge {
                     break;
                 }
                 let Ok(client) = client else { continue };
+                let _ = client.set_nodelay(true);
                 let id = ids.fetch_add(1, Ordering::Relaxed);
                 if let Ok(copy) = client.try_clone() {
                     tracked.lock().unwrap().insert(id, copy);
                 }
                 let (proxy, tracked) = (proxy.clone(), tracked.clone());
                 let _ = std::thread::Builder::new().name("socks-client".into()).spawn(move || {
-                    handle(client, &proxy, &tracked, id);
+                    handle(client, &proxy, address, &tracked, id);
                     tracked.lock().unwrap().remove(&id);
                 });
             }
@@ -122,11 +124,11 @@ enum Bad {
     Gateway,
 }
 
-fn handle(client: TcpStream, proxy: &Proxy, open: &Mutex<HashMap<u64, TcpStream>>, id: u64) {
+fn handle(client: TcpStream, proxy: &Proxy, address: Option<SocketAddr>, open: &Mutex<HashMap<u64, TcpStream>>, id: u64) {
     let Ok(mut writer) = client.try_clone() else { return };
     let mut reader = BufReader::new(client);
     let _ = reader.get_ref().set_read_timeout(Some(TIMEOUT));
-    let upstream = match open_tunnel(&mut reader, proxy) {
+    let upstream = match open_tunnel(&mut reader, proxy, address) {
         Ok(tunnel) => tunnel,
         Err(bad) => {
             let status = match bad {
@@ -164,19 +166,36 @@ fn handle(client: TcpStream, proxy: &Proxy, open: &Mutex<HashMap<u64, TcpStream>
     let (Ok(mut up_read), Ok(mut up_write)) = (upstream.try_clone(), upstream.try_clone()) else { return };
     let mut client_read = reader.into_inner();
     let to_upstream = std::thread::spawn(move || {
-        let _ = std::io::copy(&mut client_read, &mut up_write);
+        pipe(&mut client_read, &mut up_write);
         let _ = up_write.shutdown(Shutdown::Write);
     });
-    let _ = std::io::copy(&mut up_read, &mut writer);
+    pipe(&mut up_read, &mut writer);
     let _ = writer.shutdown(Shutdown::Write);
     let _ = to_upstream.join();
     let _ = upstream.shutdown(Shutdown::Both);
     open.lock().unwrap().remove(&(id | 1 << 63));
 }
 
+/// Copies [from] to [to] until either side ends.
+fn pipe(from: &mut TcpStream, to: &mut TcpStream) {
+    let mut buffer = vec![0u8; 64 << 10];
+    loop {
+        match from.read(&mut buffer) {
+            Ok(0) => return,
+            Ok(n) => {
+                if to.write_all(&buffer[..n]).is_err() {
+                    return;
+                }
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+            Err(_) => return,
+        }
+    }
+}
+
 /// Reads the client's request head and opens the SOCKS tunnel it asks for;
 /// the request to forward for plain HTTP, none for CONNECT.
-fn open_tunnel(reader: &mut BufReader<TcpStream>, proxy: &Proxy) -> Result<(TcpStream, Option<Vec<u8>>), Bad> {
+fn open_tunnel(reader: &mut BufReader<TcpStream>, proxy: &Proxy, address: Option<SocketAddr>) -> Result<(TcpStream, Option<Vec<u8>>), Bad> {
     let head = read_head(reader).ok_or(Bad::Request)?;
     let end = head.windows(2).position(|w| w == b"\r\n").ok_or(Bad::Request)?;
     let line = String::from_utf8_lossy(&head[..end]).into_owned();
@@ -194,7 +213,7 @@ fn open_tunnel(reader: &mut BufReader<TcpStream>, proxy: &Proxy) -> Result<(TcpS
         forward.extend_from_slice(&head[end..]);
         (host, port, Some(forward))
     };
-    let upstream = connect(proxy, &host, port).map_err(|_| Bad::Gateway)?;
+    let upstream = connect_to(proxy, address, &host, port).map_err(|_| Bad::Gateway)?;
     Ok((upstream, forward))
 }
 
@@ -214,8 +233,17 @@ fn read_head(reader: &mut BufReader<TcpStream>) -> Option<Vec<u8>> {
 
 /// Opens a tunnel to [host]:[port] through [proxy].
 pub fn connect(proxy: &Proxy, host: &str, port: u16) -> std::io::Result<TcpStream> {
-    let address = (proxy.host.as_str(), proxy.port).to_socket_addrs()?.next().ok_or_else(|| err("no address for the SOCKS proxy"))?;
+    connect_to(proxy, None, host, port)
+}
+
+/// As [connect], with the proxy's address already resolved when known.
+fn connect_to(proxy: &Proxy, address: Option<SocketAddr>, host: &str, port: u16) -> std::io::Result<TcpStream> {
+    let address = match address {
+        Some(address) => address,
+        None => (proxy.host.as_str(), proxy.port).to_socket_addrs()?.next().ok_or_else(|| err("no address for the SOCKS proxy"))?,
+    };
     let mut socket = TcpStream::connect_timeout(&address, TIMEOUT)?;
+    socket.set_nodelay(true)?;
     socket.set_read_timeout(Some(TIMEOUT))?;
     socket.set_write_timeout(Some(TIMEOUT))?;
     if proxy.v4 {

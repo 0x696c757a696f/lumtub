@@ -38,16 +38,44 @@ class VideoOutputSize {
     _schedule();
   }
 
+  bool _cover = false;
+  bool _hidden = false;
+
+  /// While the window is minimised or in the tray, the picture is drawn
+  /// small: it keeps playing, so it is there at once on return, at a
+  /// fraction of the GPU work.
+  set hidden(bool value) {
+    if (value == _hidden) return;
+    _hidden = value;
+    _timer?.cancel();
+    // Back to full size without the usual pause, so the first frames are sharp.
+    value ? _schedule() : _update();
+  }
+
+  /// The box drawn into while hidden.
+  static const hiddenBox = Size(320, 180);
+
+  /// Whether the picture is zoomed or stretched to fill its box, so it is
+  /// drawn large enough to cover the box rather than fit inside it.
+  set cover(bool value) {
+    if (value == _cover) return;
+    _cover = value;
+    _schedule();
+  }
+
   /// The size to draw at for the video [video] shown in the largest of
-  /// [boxes]: the video fitted into that box, or null for the video's own
-  /// size when the box is as large or there is nothing to fit.
-  static (int, int)? target(Size video, Iterable<Size> boxes) {
+  /// [boxes]: the video fitted into that box (covering it with [cover]),
+  /// or null for the video's own size when the box is as large or there is
+  /// nothing to fit.
+  static (int, int)? target(Size video, Iterable<Size> boxes, {bool cover = false}) {
     if (video.isEmpty || boxes.isEmpty) return null;
     final box = boxes.reduce((a, b) => a.width * a.height >= b.width * b.height ? a : b);
     if (box.isEmpty) return null;
-    final scale = min(box.width / video.width, box.height / video.height);
+    final across = box.width / video.width, down = box.height / video.height;
+    final scale = cover ? max(across, down) : min(across, down);
     if (scale >= 1) return null;
-    int even(double v) => max(2, (v / 2).round() * 2);
+    // Even sizes; rounded up when covering, so no edge is left short.
+    int even(double v) => max(2, (cover ? (v / 2).ceil() : (v / 2).round()) * 2);
     return (even(video.width * scale), even(video.height * scale));
   }
 
@@ -57,7 +85,7 @@ class VideoOutputSize {
   }
 
   void _update() {
-    final next = target(_video, _boxes.values);
+    final next = target(_video, _hidden ? const [hiddenBox] : _boxes.values, cover: _cover);
     if (next == null) {
       if (_native) return;
       _native = true;

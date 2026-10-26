@@ -32,6 +32,8 @@ import '../appearance_settings.dart';
 import '../cache_manager.dart';
 import '../decoder_status.dart';
 import '../native_core.dart';
+import '../encrypted_dns.dart';
+import '../native_http.dart';
 import '../live_chat.dart';
 import '../models.dart';
 import '../network_proxy.dart';
@@ -48,6 +50,7 @@ import '../youtube_related.dart';
 import '../recommendations.dart';
 import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
+import '../power.dart';
 import '../player_settings.dart';
 import '../ffmpeg_component.dart';
 import '../thumbnail_trim.dart';
@@ -63,8 +66,11 @@ import '../faith_topics.dart';
 import '../storyboard.dart';
 import '../stream_resolver.dart';
 import '../subtitle_files.dart';
+import '../subtitle_cues.dart';
 import '../subtitle_translation.dart';
 import '../translation.dart';
+import '../translation_cache.dart';
+import '../translation_services.dart';
 import 'posts_loader.dart';
 import '../video_output_size.dart';
 import '../video_repository.dart';
@@ -76,6 +82,7 @@ import 'back_stack.dart';
 import 'library_controller.dart';
 import 'video_list_loader.dart';
 import '../l10n/l10n.dart';
+import '../friendly_error.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
@@ -204,6 +211,9 @@ class AppController extends ChangeNotifier {
   /// [owner] no longer shows the video.
   void hideVideoIn(Object owner) => _outputSize?.hide(owner);
 
+  /// Whether the picture is zoomed or stretched to fill the player.
+  set coverVideo(bool value) => _outputSize?.cover = value;
+
   /// The playing video's width over height, 16:9 until it is known.
   double get videoAspect {
     final state = player?.state;
@@ -261,6 +271,7 @@ class AppController extends ChangeNotifier {
   /// The video last opened from a Piped or Invidious server, so a failure
   /// falls back to YouTube (or the other one) once.
   String? _openedVia;
+  String? _openedOrigin;
   /// The video playing from its downloaded file, if any.
   String? _openedLocal;
   /// The servers tried for the video being opened, and the 429 YouTube
@@ -352,13 +363,24 @@ class AppController extends ChangeNotifier {
   DateTime _lastProgressSave = DateTime(0);
   List<SkipSegment> _segments = const [];
   final _skipped = <SkipSegment>{};
-  final _http = http.Client();
+  final _http = appHttpClient();
   /// Sprite sheets of the progress bar's preview frames.
   late final storyboardSheets = StoryboardSheets(_http);
-  /// Behind 翻译 buttons; called only when one is tapped.
-  late Translator translator = GoogleTranslator(_http);
+  late final _google = GoogleTranslator(_http);
+  /// Translations already made, kept for a week in the cache folder.
+  TranslationCache _translationCache = TranslationCache();
+  /// Behind 翻译 buttons and translated subtitles: the service 翻译服务
+  /// names; called only when something is to be translated.
+  late Translator translator = CachingTranslator(_google, _translationCache, preferences.translation.cacheScope);
+  /// The translation services' API keys, by [TranslationService.name],
+  /// kept encrypted with DPAPI apart from the settings.
+  Map<String, String> translationKeys = const {};
+  SecureJsonFile? _translationKeyFile;
   /// The subtitle shown above the main one (双语字幕), if any.
   SubtitleOption? secondarySubtitle;
+  /// The video 第二字幕语言 was applied to, so a secondary subtitle turned
+  /// off stays off.
+  String? _secondaryAutoFor;
   bool _decoderPending = false;
   int _mpvLogLines = 0;
   /// yt-dlp and libmpv error lines for the video being opened, which name
@@ -369,7 +391,13 @@ class AppController extends ChangeNotifier {
   DateTime _rateLimitedUntil = DateTime(0);
   bool _updateCheckedForChallenge = false;
   int _lastDrops = 0;
+  /// Ten-second windows in a row that dropped a tenth of the frames or more.
+  int _dropStreak = 0;
+  /// The quality automatic playback is lowered to for this run after
+  /// frames kept dropping; 0 while it is not.
+  int _droppedCap = 0;
   DateTime _lastDropLog = DateTime(0);
+  DateTime _lastFrameLog = DateTime(0);
   Timer? _dropTimer;
   Timer? _thumbnailTrimTimer;
   final _recovery = PlaybackRecovery();
@@ -440,6 +468,22 @@ class AppController extends ChangeNotifier {
     if (!_disposed) _notices.add(message);
   }
 
+  Timer? _afterStart;
+
+  /// 无痕模式: nothing watched or searched is remembered (history, search
+  /// history, progress, what 为你推荐 learns, translations kept on disk)
+  /// until it is turned off or Lumtub closes. Not saved, so every start is
+  /// normal.
+  bool incognito = false;
+
+  void setIncognito(bool value) {
+    if (value == incognito) return;
+    _update(() => incognito = value);
+    _translationCache.persist = !value;
+    _notice(value ? tr('已开启无痕模式：这次看过、搜过的内容都不会被记下') : tr('已关闭无痕模式'));
+    logInfo(value ? 'Incognito on' : 'Incognito off');
+  }
+
   Future<void> initialize() async {
     try {
       final directories = await AppDirectories.create();
@@ -452,28 +496,23 @@ class AppController extends ChangeNotifier {
       await AppLog.open(directories.logs);
       logInfo('Lumtub $appVersion started · ${Platform.operatingSystemVersion}');
       final history = HistoryStore(directories);
-      await history.initialize();
       searchHistory = SearchHistory(File('${directories.data.path}${Platform.pathSeparator}search_history.json'));
       final notInterested = NotInterested(File('${directories.data.path}${Platform.pathSeparator}not_interested.json'));
-      await notInterested.load();
-      homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(notifyListeners);
       final libraryStore = LibraryStore(File('${directories.data.path}${Platform.pathSeparator}library.json'));
-      await libraryStore.load();
       final settingsStore = PlayerSettingsStore(directories);
-      final settings = await settingsStore.load();
-      this.settings = settings;
-      // Before the component downloads, which go through the proxy too.
-      await _refreshProxy();
       final preferencesStore = AppPreferencesStore(directories);
-      final preferences = await preferencesStore.load();
+      // Separate files: read together rather than one after another.
+      final (_, _, _, settings, preferences) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load()).wait;
+      homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(notifyListeners);
+      this.settings = settings;
       final cacheManager = CacheManager(directories);
-      await cacheManager.prepare(settings);
       final manager = ToolManager(directories, (message, logged) {
         logInfo(logged);
         _update(() => status = message);
       });
       _tools = manager;
-      await manager.initialize();
+      // The proxy comes before the component downloads, which use it too.
+      await (_refreshProxy(), cacheManager.prepare(settings), manager.initialize()).wait;
       final paths = await manager.ensureReady();
       addToWindowsPath(paths.executableDirectories);
       MediaKit.ensureInitialized(libmpv: paths.mpv);
@@ -487,6 +526,7 @@ class AppController extends ChangeNotifier {
       ));
       final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      _lightRendering = null;
       await _applyProxy(player);
       _relay = await _startRelay();
       _piped.catalogFile = File('${directories.config.path}${Platform.pathSeparator}piped_servers.json');
@@ -543,15 +583,23 @@ class AppController extends ChangeNotifier {
       });
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
-      // Do not block the UI while checking newer releases.
-      if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
       final updater = AppUpdater(client: _http, directory: Directory('${directories.cache.path}${Platform.pathSeparator}updates'), download: manager.downloadVerified)..addListener(notifyListeners);
       appUpdater = updater;
-      if (preferences.autoCheckUpdates || preferences.autoUpdateApp) updater.start(download: () => preferences.autoUpdateApp);
-      unawaited(_refreshCacheSize());
-      unawaited(_trimThumbnails());
+      // Housekeeping waits until the first page has loaded and drawn, so
+      // update checks and folder scans do not compete with it.
+      _afterStart = Timer(const Duration(seconds: 8), () {
+        if (_disposed) return;
+        if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
+        if (preferences.autoCheckUpdates || preferences.autoUpdateApp) updater.start(download: () => preferences.autoUpdateApp);
+        unawaited(_refreshCacheSize());
+        unawaited(_trimThumbnails());
+      });
       unawaited(downloads?.load());
       unawaited(account?.load());
+      _translationCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}translations.json'));
+      _useTranslator();
+      _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), DpapiProtector());
+      unawaited(_loadTranslationKeys());
       logInfo('Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
       _update(() {
@@ -646,6 +694,55 @@ class AppController extends ChangeNotifier {
       );
 
   /// Queues [item] for download, and says so.
+  /// A file name for [item]'s [suffix] (such as `.jpg`) in the download folder.
+  String _downloadPath(VideoItem item, String suffix) {
+    final title = item.title.replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '_').replaceAll(RegExp(r'\s+'), ' ').trim();
+    final short = title.length > 120 ? title.substring(0, 120).trim() : title;
+    final folder = downloads?.directory ?? Directory.systemTemp.path;
+    return '$folder${Platform.pathSeparator}${short.isEmpty ? item.id : short} [${item.id}]$suffix';
+  }
+
+  /// Saves [item]'s largest cover image next to the downloads and returns
+  /// its path.
+  Future<String> saveCover(VideoItem item) async {
+    for (final name in const ['maxresdefault', 'sddefault', 'hqdefault']) {
+      final http.Response response;
+      try {
+        response = await _http.get(Uri.https('i.ytimg.com', '/vi/${item.id}/$name.jpg')).timeout(const Duration(seconds: 20));
+      } catch (_) {
+        throw StateError(tr('无法下载封面，请检查网络或代理'));
+      }
+      // YouTube answers a missing size with a small placeholder or 404.
+      if (response.statusCode != 200 || response.bodyBytes.length < 2000) continue;
+      final file = File(_downloadPath(item, '.jpg'));
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(response.bodyBytes);
+      return file.path;
+    }
+    throw StateError(tr('这个视频没有封面'));
+  }
+
+  /// The subtitles [item] offers, with the one translated into 第一字幕语言
+  /// when the video has none in it.
+  Future<List<SubtitleOption>> subtitleOptionsFor(VideoItem item) async {
+    final known = playing?.id == item.id ? details : null;
+    final repository = _repository;
+    final offered = known?.subtitles ?? (repository == null ? const <SubtitleOption>[] : (await repository.details(item.id)).subtitles);
+    final target = settings.subtitleLanguage.translation;
+    final translation = hasOwnSubtitle(offered, target) ? null : translationOf(offered, target);
+    return [if (translation != null) translation, ...offered.where((o) => o.kind != SubtitleKind.translated)];
+  }
+
+  /// Saves [option] of [item] next to the downloads, as SRT or as WebVTT,
+  /// and returns its path.
+  Future<String> saveSubtitle(VideoItem item, SubtitleOption option, {bool srt = true}) async {
+    final vtt = await File(await _subtitleFiles.wholePathFor(option)).readAsString();
+    final file = File(_downloadPath(item, '.${option.language}.${srt ? 'srt' : 'vtt'}'));
+    await file.parent.create(recursive: true);
+    await file.writeAsString(srt ? toSrt(parseSubtitleCues(vtt)) : vtt);
+    return file.path;
+  }
+
   void download(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
     final manager = downloads;
     if (manager == null || item.isLive || item.isUpcoming) return _notice(tr('直播无法下载'));
@@ -678,6 +775,11 @@ class AppController extends ChangeNotifier {
     await _routeThroughBridge(next);
     appHttpOverrides.endpoint = proxyEndpoint;
     appHttpOverrides.useEnvironment = settings.proxyMode == ProxyMode.system;
+    NativeHttp.configure(
+      proxy: nativeProxy(next.url),
+      system: settings.proxyMode == ProxyMode.system,
+      dns: DnsServer.of(settings.dnsServer, settings.dnsCustomUrl),
+    );
     if (next.url != proxy.url) logInfo(next.url == null ? 'Network: direct connection' : 'Network: using proxy ${next.redacted}');
     proxy = next;
     final player = this.player;
@@ -728,7 +830,7 @@ class AppController extends ChangeNotifier {
     if (!keep) _unload();
     final repository = _repository!;
     final chosen = filter ?? searchFilter;
-    if (preferences.recordHistory) unawaited(searchHistory?.add(query));
+    if (preferences.recordHistory && !incognito) unawaited(searchHistory?.add(query));
     final sp = searchParams(type: chosen, sort: searchSort, date: searchDate, duration: searchDuration);
     _update(() {
       mode = PageMode.explore;
@@ -962,6 +1064,7 @@ class AppController extends ChangeNotifier {
       return;
     }
     _update(() {
+      _putAwayExplore();
       exploreSection = nextSection;
       exploreTopic = nextTopic;
       exploreSub = nextSub;
@@ -972,10 +1075,34 @@ class AppController extends ChangeNotifier {
       explorePeriod = nextPeriod;
       exploreDuration = nextDuration;
       exploreQuality = nextQuality;
-      explore?.dispose();
-      explore = null;
     });
     _loadExplore();
+  }
+
+  /// Lists of zones shown lately, so going back to one shows it again
+  /// instead of searching anew. 全部 is left out, as each visit brings
+  /// others, and so is a list that failed.
+  final _recentExplore = <Object, (DateTime, VideoListLoader)>{};
+  static const _keepExplore = Duration(minutes: 15);
+
+  Object get _exploreKey => (exploreSection, exploreTopic, exploreSub, exploreLeaf, exploreMode, explorePeriod, exploreDuration, exploreQuality, exploreFormat, exploreView, preferences.exploreRegion, preferences.exploreLanguage);
+
+  void _putAwayExplore() {
+    final loader = explore;
+    explore = null;
+    if (loader == null) return;
+    if (exploreTopicNow.mix || loader.error != null) {
+      loader.dispose();
+      return;
+    }
+    loader.removeListener(notifyListeners);
+    final key = _exploreKey;
+    final older = _recentExplore.remove(key)?.$2;
+    if (older != null && !identical(older, loader)) older.dispose();
+    _recentExplore[key] = (DateTime.now(), loader);
+    while (_recentExplore.length > 4) {
+      _recentExplore.remove(_recentExplore.keys.first)!.$2.dispose();
+    }
   }
 
   void _loadExplore() {
@@ -984,6 +1111,14 @@ class AppController extends ChangeNotifier {
     if (exploreTopicNow.opens case final opens?) {
       setExplore(section: opens);
       return;
+    }
+    if (_recentExplore.remove(_exploreKey) case (final at, final loader)) {
+      if (DateTime.now().difference(at) < _keepExplore) {
+        logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
+        _update(() => explore = loader..addListener(notifyListeners));
+        return;
+      }
+      loader.dispose();
     }
     final query = exploreQuery;
     final mode = exploreMode;
@@ -1162,7 +1297,7 @@ class AppController extends ChangeNotifier {
     if (settings.sponsorBlock) unawaited(_loadSegments(item, serial));
     if (await _open(item, serial, start: start, play: preferences.autoPlay)) {
       if (settings.defaultSpeed != player.state.rate) await player.setRate(settings.defaultSpeed);
-      if (preferences.recordHistory) await _history?.record(item);
+      if (preferences.recordHistory && !incognito) await _history?.record(item);
       if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
       final next = upNext.firstOrNull;
       if (next != null) prefetch(next);
@@ -1193,7 +1328,7 @@ class AppController extends ChangeNotifier {
       onError: (Object error) {
         if (serial == _playSerial) {
           _update(() {
-            replayChatError = '$error';
+            replayChatError = friendlyError(error);
             loadingReplayChat = false;
           });
         }
@@ -1228,6 +1363,18 @@ class AppController extends ChangeNotifier {
     _currentChat = null;
   }
 
+  /// Asks again for the chat of the video playing after it failed.
+  void retryChat() {
+    final item = playing;
+    if (item == null) return;
+    if (item.isLive) {
+      unawaited(_currentChat?.cancel());
+      _startCurrentChat(item, _playSerial);
+    } else {
+      unawaited(_loadReplayChat(item, _playSerial));
+    }
+  }
+
   Future<void> _loadReplayChat(VideoItem item, int serial) async {
     final repository = _repository;
     if (repository == null || serial != _playSerial) return;
@@ -1239,7 +1386,7 @@ class AppController extends ChangeNotifier {
       final messages = await repository.liveChat.replay(item.id);
       if (serial == _playSerial) _update(() => replayChat = messages);
     } catch (error) {
-      if (serial == _playSerial) _update(() => replayChatError = '$error');
+      if (serial == _playSerial) _update(() => replayChatError = friendlyError(error));
     } finally {
       if (serial == _playSerial) _update(() => loadingReplayChat = false);
     }
@@ -1255,7 +1402,7 @@ class AppController extends ChangeNotifier {
   void _saveProgress({bool now = false}) {
     final item = _tracking;
     final player = this.player;
-    if (item == null || player == null || !preferences.recordProgress) return;
+    if (item == null || player == null || !preferences.recordProgress || incognito) return;
     final duration = player.state.duration;
     if (duration <= Duration.zero) return;
     library?.recordProgress(item.id, player.state.position, duration);
@@ -1371,11 +1518,13 @@ class AppController extends ChangeNotifier {
       _lastPosition = start ?? Duration.zero;
       _resumePoint.start(_lastPosition);
       _openedResolved = video == null ? null : item.id;
+      _openedOrigin = video?.origin;
       if (video != null) _update(() => availableHeights = video!.heightsFor(settings));
       await player.open(Media(direct ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;
+      _dropStreak = 0;
       // The decoder is known once frames are shown; resolving the video
       // can take longer than any fixed delay.
       _decoderPending = true;
@@ -1407,6 +1556,7 @@ class AppController extends ChangeNotifier {
     if (serial == _playSerial) _tracking = item;
     _mpvLogLines = 0;
     _lastDrops = 0;
+    _dropStreak = 0;
     _decoderPending = true;
     _update(() {});
     unawaited(_addLocalSubtitles(local, serial));
@@ -1465,6 +1615,7 @@ class AppController extends ChangeNotifier {
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;
+      _dropStreak = 0;
       _decoderPending = true;
       _update(() {});
       return true;
@@ -1558,7 +1709,43 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  late final _subtitleFiles = SubtitleFiles(_http, Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles'), translator);
+  late final _subtitleFiles = SubtitleFiles(
+    _http,
+    Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles'),
+    () => translator,
+    byTranslator: () => preferences.subtitlesByService && preferences.translation.service != TranslationService.google,
+    position: () => player?.state.position ?? Duration.zero,
+    onUpdated: (path) => unawaited(_subtitleFileUpdated(path)),
+  );
+
+  /// Swaps the loaded track of [path] for the file's new contents (the
+  /// rest of a translation), keeping it where it was shown: main, second or
+  /// not at all. mpv's sub-reload would select it as the main one.
+  Future<void> _subtitleFileUpdated(String path) async {
+    final platform = player?.platform;
+    if (platform is! NativePlayer) return;
+    try {
+      Future<List<Map<dynamic, dynamic>>> tracks() async {
+        final list = jsonDecode(await platform.getProperty('track-list'));
+        return [if (list is List) for (final t in list.whereType<Map>()) if (t['type'] == 'sub' && t['external-filename'] == path) t];
+      }
+
+      final old = (await tracks()).firstOrNull;
+      if (old == null) return;
+      final id = '${old['id']}';
+      final main = await platform.getProperty('sid');
+      final second = await platform.getProperty('secondary-sid');
+      await platform.command(['sub-add', path, 'auto', '${old['title'] ?? ''}', '${old['lang'] ?? ''}']);
+      final added = (await tracks()).where((t) => '${t['id']}' != id).lastOrNull;
+      if (added == null) return;
+      if (main == id) await platform.setProperty('sid', '${added['id']}');
+      if (second == id) await platform.setProperty('secondary-sid', '${added['id']}');
+      await platform.command(['sub-remove', id]);
+      logInfo('Subtitle translation finished; track $id replaced by ${added['id']}');
+    } catch (e) {
+      logInfo('Could not reload the finished subtitle translation: $e');
+    }
+  }
 
   /// [option] as a local file, fetched with retries; see [SubtitleFiles].
   Future<String> _subtitleFile(SubtitleOption option) async {
@@ -1569,6 +1756,53 @@ class AppController extends ChangeNotifier {
       rethrow;
     }
   }
+
+  (String, List<SubtitleCue>)? _cues;
+
+  /// The lines for 字幕列表: of the main subtitle, or of the second one
+  /// while it is the only one on. Read from the file the track came from,
+  /// ours or the one mpv was given. Empty when there is no subtitle or it
+  /// is not WebVTT or SRT.
+  Future<List<SubtitleCue>> listedSubtitleCues() async {
+    final player = this.player;
+    final platform = player?.platform;
+    if (player == null || platform is! NativePlayer) return const [];
+    final track = player.state.track.subtitle;
+    final off = track.id == 'no' || track.id == 'auto';
+    // With only the second subtitle on, its lines are listed.
+    final second = off ? secondarySubtitle : null;
+    if (off && second == null) return const [];
+    final key = second != null ? '${playing?.id}\u0000second\u0000${second.url}' : '${playing?.id}\u0000${track.id}\u0000${track.title}';
+    if (_cues case (final k, final cues) when k == key) return cues;
+    String? text;
+    try {
+      final option = second ?? details?.subtitles.where((o) => o.label == track.title).firstOrNull;
+      if (option != null) {
+        text = await File(await _subtitleFile(option)).readAsString();
+      } else {
+        final list = jsonDecode(await platform.getProperty('track-list'));
+        final entry = list is List ? list.whereType<Map>().where((t) => t['type'] == 'sub' && '${t['id']}' == track.id).firstOrNull : null;
+        final source = entry?['external-filename'];
+        if (source is String && source.startsWith(RegExp('https?://'))) {
+          final response = await _http.get(Uri.parse(source)).timeout(const Duration(seconds: 20));
+          if (response.statusCode == 200) text = utf8.decode(response.bodyBytes, allowMalformed: true);
+        } else if (source is String && await File(source).exists()) {
+          text = await File(source).readAsString();
+        }
+      }
+    } catch (e) {
+      logInfo('Could not read the subtitle lines: $e');
+    }
+    final cues = text == null ? const <SubtitleCue>[] : parseSubtitleCues(text);
+    if (cues.isNotEmpty) _cues = (key, cues);
+    return cues;
+  }
+
+  /// The text of the subtitles on screen now, main and second.
+  String get currentSubtitleText => [
+        for (final line in player?.state.subtitle ?? const <String>[])
+          if (line.trim().isNotEmpty) line.trim(),
+      ].join('\n');
 
   /// Shows [option], adding it to the player first if it is not loaded.
   Future<void> showSubtitle(SubtitleOption option) async {
@@ -1588,6 +1822,51 @@ class AppController extends ChangeNotifier {
       logError('Could not load subtitles ${option.language}', e);
       _notice(tr('无法加载这条字幕'));
     }
+  }
+
+  /// Once the main subtitle is on, shows it in 第一字幕语言 (YouTube's
+  /// translation when the video has none in it) and the subtitle 第二字幕语言
+  /// names above it, unless that is the main one already.
+  Future<void> _autoSubtitles(VideoItem item, VideoDetails details, int serial) async {
+    final player = this.player;
+    if (player == null || details.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
+    if (_secondaryAutoFor == item.id || _openedLocal == item.id) return;
+    bool shown(SubtitleTrack t) => t.id != 'no' && t.id != 'auto';
+    if (!shown(player.state.track.subtitle)) {
+      try {
+        await player.stream.track.firstWhere((t) => shown(t.subtitle)).timeout(const Duration(seconds: 30));
+      } on TimeoutException {
+        return;
+      }
+    }
+    if (serial != _playSerial || this.player != player || secondarySubtitle != null || _secondaryAutoFor == item.id) return;
+    _secondaryAutoFor = item.id;
+    var mainTitle = player.state.track.subtitle.title;
+    var mainLanguage = player.state.track.subtitle.language;
+    final first = settings.subtitleLanguage.translation;
+    if (!speaks(mainLanguage, first)) {
+      final option = subtitleIn(details.subtitles, first);
+      if (option != null && option.label != mainTitle) {
+        logInfo('Showing ${option.language} (${option.kind.name}) as the main subtitle');
+        await showSubtitle(option);
+        if (serial != _playSerial || this.player != player) return;
+        mainTitle = option.label;
+        mainLanguage = option.language;
+      }
+    }
+    final wanted = settings.secondarySubtitleLanguage;
+    final target = TranslationLanguage.maybeByCode(wanted);
+    final SubtitleOption? option;
+    if (wanted == PlayerSettings.originalSubtitle) {
+      option = originalSubtitle(details.subtitles);
+      if (option == null || sameLanguage(option.language, mainLanguage)) return;
+    } else {
+      option = target == null ? null : subtitleIn(details.subtitles, target);
+      if (option == null || speaks(mainLanguage, target!)) return;
+    }
+    if (option.label == mainTitle || secondarySubtitle != null) return;
+    logInfo('Showing ${option.language} (${option.kind.name}) as the second subtitle');
+    await setSecondarySubtitle(option);
   }
 
   /// Shows [option] (null: none) above the main subtitle.
@@ -1616,6 +1895,7 @@ class AppController extends ChangeNotifier {
     _playerSubscriptions.addAll([
       player.stream.width.listen(videoSize),
       player.stream.height.listen(videoSize),
+      player.stream.playing.listen((_) => _updateEfficiency()),
       // A second of playback proves a downloaded libmpv works on this PC.
       player.stream.position.listen((position) {
         if (_tracking == null) return;
@@ -1722,7 +2002,7 @@ class AppController extends ChangeNotifier {
         // ytdl_hook resolve the video itself once.
         _openedResolved = null;
         _repository?.streams.forget(item.id);
-        logInfo('Prefetched address did not play ($message); libmpv resolves ${item.id} again');
+        logInfo('Prefetched address did not play ($message; $_openedOrigin); libmpv resolves ${item.id} again');
         unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
         return;
       }
@@ -1823,11 +2103,25 @@ class AppController extends ChangeNotifier {
   }
 
   bool _backgroundAudioOnly = false;
+  bool _windowHidden = false;
+  bool? _efficient;
+
+  /// Hidden and not playing, Lumtub runs in Windows' efficiency mode; any
+  /// playback (a media key while hidden, too) turns it off.
+  void _updateEfficiency() {
+    final on = _windowHidden && !(player?.state.playing ?? false);
+    if (on == _efficient) return;
+    _efficient = on;
+    NativeCore.efficiencyMode(on);
+  }
 
   /// While the window is minimised or in the tray with the setting on, mpv
   /// decodes no picture; [hidden] false brings it back. A user's own 听视频
   /// choice is left alone.
   Future<void> setBackgroundAudioOnly(bool hidden) async {
+    _outputSize?.hidden = hidden;
+    _windowHidden = hidden;
+    _updateEfficiency();
     final platform = player?.platform;
     if (platform is! NativePlayer) return;
     if (hidden) {
@@ -1836,7 +2130,16 @@ class AppController extends ChangeNotifier {
       await platform.setProperty('vid', 'no');
     } else if (_backgroundAudioOnly) {
       _backgroundAudioOnly = false;
-      if (!audioOnly) await platform.setProperty('vid', 'auto');
+      if (audioOnly) return;
+      await platform.setProperty('vid', 'auto');
+      // The decoder starts again at the next keyframe, which in a stream can
+      // be far off: until then the last picture stays. An exact seek to
+      // here decodes up to now at once.
+      try {
+        await platform.command(['seek', '0', 'relative+exact']);
+      } catch (e) {
+        logInfo('Could not refresh the picture after restoring: $e');
+      }
     }
   }
 
@@ -1944,6 +2247,11 @@ class AppController extends ChangeNotifier {
   /// Sets the quality cap; [asDefault] when it was chosen in the settings
   /// rather than for the video playing.
   Future<void> setMaxHeight(int height, {bool asDefault = false}) async {
+    // 自动 again lifts the quality lowered for dropped frames.
+    if (height == 0 && _droppedCap > 0) {
+      _droppedCap = 0;
+      if (settings.maxHeight == 0) return reloadVideo();
+    }
     if (height == settings.maxHeight) return;
     // Automatic codecs follow the quality: above 1080p VP9 stays enabled.
     final next = settings.copyWith(maxHeight: height);
@@ -1984,7 +2292,11 @@ class AppController extends ChangeNotifier {
 
   /// [settings] as playback picks streams with them: automatic quality is
   /// capped at the tallest display.
-  PlayerSettings get _playback => FormatPolicy.forDisplay(settings, _displayHeight);
+  PlayerSettings get _playback {
+    final playback = FormatPolicy.forDisplay(settings, _displayHeight);
+    if (_droppedCap == 0 || settings.maxHeight != 0 || (playback.maxHeight > 0 && playback.maxHeight <= _droppedCap)) return playback;
+    return playback.copyWith(maxHeight: _droppedCap);
+  }
 
   int get _displayHeight {
     var tallest = 0.0;
@@ -1995,8 +2307,12 @@ class AppController extends ChangeNotifier {
   }
 
   /// Starts resolving [item] before it is opened, such as when the pointer
-  /// rests on its card.
-  void prefetch(VideoItem item) {
+  /// rests on its card ([hover]). Not on hover while a video plays: the
+  /// yt-dlp run would take CPU from the playback for a guess.
+  void prefetch(VideoItem item, {bool hover = false}) {
+    // Each one starts yt-dlp; on battery only the next video in line is.
+    if (hover && Power.saving) return;
+    if (hover && player?.state.playing == true) return;
     if (ready && playing?.id != item.id && DateTime.now().isAfter(_rateLimitedUntil)) _repository?.streams.prefetch(item.id, _format, formatSort: _formatSort);
   }
 
@@ -2019,7 +2335,10 @@ class AppController extends ChangeNotifier {
               _notice(tr('这个视频的 {0}p 只有 {1}，已被禁用，正在播放 {2}p', [lost.height, lost.codecs.map((c) => c.label).join(' / '), lost.playing]));
             }
           }
-        } catch (_) {
+        } catch (e) {
+          // A second yt-dlp would meet the same 429, or the same network
+          // the first one already tried twice.
+          if (DateTime.now().isBefore(_rateLimitedUntil) || RegExp(r'\b429\b|Too Many Requests').hasMatch('$e') || StreamResolver.isTransient(e)) rethrow;
           loaded = await _repository!.details(item.id);
         }
       }
@@ -2029,6 +2348,7 @@ class AppController extends ChangeNotifier {
           if (preferences.showRelated) related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
         });
         unawaited(_localizeDetails(item.id, serial));
+        unawaited(_autoSubtitles(item, loaded, serial));
       }
     } catch (_) {
       // The page still shows what the list already knew about the video.
@@ -2406,7 +2726,7 @@ class AppController extends ChangeNotifier {
     final feed = homeFeed;
     final repository = _repository;
     final player = this.player;
-    if (item == null || feed == null || repository == null || player == null || !preferences.homeShowRecommended) return;
+    if (item == null || feed == null || repository == null || player == null || !preferences.homeShowRecommended || incognito) return;
     final position = player.state.position;
     final duration = player.state.duration;
     final fraction = duration > Duration.zero ? position.inMilliseconds / duration.inMilliseconds : 0.0;
@@ -2502,13 +2822,11 @@ class AppController extends ChangeNotifier {
     final prefs = preferences;
     // Pages filter their lists on every rebuild, and a feed runs to a
     // thousand items: the answer is kept while the list and the preferences
-    // stay. Hiding watched videos depends on progress, which changes.
-    final key = (prefs, subscriptions, search, search ? _query : null);
-    if (!prefs.hideWatched) {
-      if (_visible[items] case (final known, final kept) when known == key) return kept;
-    }
+    // stay. Hiding watched videos also follows which videos are finished.
+    final key = (prefs, subscriptions, search, search ? _query : null, prefs.hideWatched ? (library?.store, library?.store.finishedVersion) : null);
+    if (_visible[items] case (final known, final kept) when known == key) return kept;
     final kept = _filter(items, prefs, subscriptions: subscriptions, search: search);
-    if (!prefs.hideWatched) _visible[items] = (key, kept);
+    _visible[items] = (key, kept);
     return kept;
   }
 
@@ -2527,13 +2845,53 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> savePreferences(AppPreferences next) async {
+    final service = next.translation != preferences.translation;
     _update(() => preferences = next);
+    if (service) _useTranslator();
     try {
       await _preferencesStore?.save(next);
     } on FileSystemException {
       _notice(tr('设置未能保存，本次运行仍然生效。'));
     }
   }
+
+  Future<void> _loadTranslationKeys() async {
+    final saved = await _translationKeyFile?.read();
+    if (saved == null) return;
+    translationKeys = {for (final MapEntry(:key, :value) in saved.entries) if (value is String && value.isNotEmpty) key: value};
+    _useTranslator();
+    _update(() {});
+  }
+
+  void _useTranslator() {
+    translator = CachingTranslator(translatorFor(preferences.translation, translationKeys, _http, fallback: _google), _translationCache, preferences.translation.cacheScope);
+    logInfo('Translating with ${preferences.translation.service.name}');
+  }
+
+  /// Saves the API key of [service]; an empty one removes it.
+  Future<void> saveTranslationKey(TranslationService service, String key) async {
+    final keys = {...translationKeys}..remove(service.name);
+    if (key.trim().isNotEmpty) keys[service.name] = key.trim();
+    _update(() => translationKeys = keys);
+    _useTranslator();
+    try {
+      final file = _translationKeyFile;
+      if (file == null) return;
+      keys.isEmpty ? await file.delete() : await file.write(keys);
+    } catch (e) {
+      logError('Could not save the translation key', e);
+      _notice(tr('密钥未能保存，本次运行仍然生效。'));
+    }
+  }
+
+  /// The models the chosen AI endpoint lists.
+  Future<List<String>> listAiModels() {
+    final config = preferences.translation;
+    return AiTranslator.listModels(_http, config.effectiveAiBaseUrl, translationKeys[TranslationService.ai.name] ?? '');
+  }
+
+  /// A short sentence put through the chosen service, to check it works.
+  Future<String> testTranslation() => (translator is CachingTranslator ? (translator as CachingTranslator).inner : translator).translate('Subtitles and comments can be translated here.', preferences.translateTarget);
 
   void blockChannel(ChannelRef channel) {
     if (preferences.isBlocked(channel.id)) return;
@@ -2744,9 +3102,15 @@ class AppController extends ChangeNotifier {
     final oldSettings = settings;
     final requiresNextVideo = next.hwdec != oldSettings.hwdec || next.interpolation != oldSettings.interpolation;
     final ignoredOptions = await PlayerOptionApplicator.apply(player, next);
+    _lightRendering = null;
     await store.save(next);
     _update(() => settings = next);
-    if (next.proxyMode != oldSettings.proxyMode || next.proxyAddress != oldSettings.proxyAddress) await _refreshProxy();
+    if (next.proxyMode != oldSettings.proxyMode ||
+        next.proxyAddress != oldSettings.proxyAddress ||
+        next.dnsServer != oldSettings.dnsServer ||
+        next.dnsCustomUrl != oldSettings.dnsCustomUrl) {
+      await _refreshProxy();
+    }
     _update(() {
       final paths = this.paths;
       final cacheManager = _cacheManager;
@@ -2840,7 +3204,17 @@ class AppController extends ChangeNotifier {
       _lastDrops = drops;
       // Read every time, so the timings cover these 10 seconds.
       final frames = await _frameStats(platform);
-      if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) return;
+      await _lightenIfBusy(platform, frames);
+      await _stepDownIfDropping(platform, added);
+      if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) {
+        // Smooth playback is logged too, every few minutes, so a stutter can
+        // be compared with how the same machine plays normally.
+        if (frames != null && DateTime.now().difference(_lastFrameLog) >= const Duration(minutes: 3)) {
+          _lastFrameLog = DateTime.now();
+          logInfo('Frames in 10 s, $added dropped: $frames');
+        }
+        return;
+      }
       _lastDropLog = DateTime.now();
       final values = <String>[];
       for (final name in ['avsync', 'estimated-vf-fps', 'container-fps', 'display-fps', 'vo-delayed-frame-count', 'mistimed-frame-count', 'decoder-frame-drop-count', 'hwdec-current', 'video-sync', 'speed', 'video-params/w', 'video-params/h', 'time-pos', 'audio-pts', 'audio-params/samplerate', 'audio-out-params/samplerate', 'current-ao', 'd3d11va-zero-copy', 'vd-lavc-dr', 'video-codec', 'video-out-params/pixelformat']) {
@@ -2854,6 +3228,64 @@ class AppController extends ChangeNotifier {
 
   /// The video output's timings for each frame since the last call: libmpv's
   /// render, the ANGLE draw and Flutter's read, as count/average/max.
+  /// Why scaling was switched to the cheap kind: the GPU could not keep
+  /// up (until the settings change), or the PC runs on battery (until it
+  /// is plugged in); null while it is not.
+  String? _lightRendering;
+
+  /// In 智能自动, switches mpv to the cheapest scaling (as 低资源占用优先
+  /// does) on battery or with battery saver, and once drawing a frame takes
+  /// most of its time: on a weak or busy GPU the filters cost dropped
+  /// frames, and at window size the difference is hard to see.
+  Future<void> _lightenIfBusy(NativePlayer platform, String? frames) async {
+    final player = this.player;
+    if (player == null) return;
+    if (_lightRendering == 'battery' && !Power.saving) {
+      _lightRendering = null;
+      await PlayerOptionApplicator.apply(player, settings);
+      logInfo('Plugged in again; scaling back to normal');
+      return;
+    }
+    // Filters the person turned on are kept.
+    if (_lightRendering != null || settings.strategy != PlaybackStrategy.auto || settings.scale != const PlayerSettings().scale || settings.deband || settings.interpolation) return;
+    String reason;
+    if (Power.saving) {
+      reason = 'battery';
+    } else {
+      final busy = frames == null ? null : drawBusy(frames, double.tryParse(await platform.getProperty('container-fps')) ?? 0);
+      if (busy == null) return;
+      reason = 'busy';
+      logInfo('Frames take ${busy.toStringAsFixed(1)} ms to draw, most of their time');
+    }
+    _lightRendering = reason;
+    for (final MapEntry(:key, :value) in PlayerOptionApplicator.fastRendering.entries) {
+      if (settings.customOptions.containsKey(key)) continue;
+      try {
+        await platform.setProperty(key, value);
+      } catch (_) {}
+    }
+    logInfo(reason == 'battery' ? 'On battery; scaling switched to the fast kind' : 'Scaling switched to the fast kind');
+  }
+
+  /// With automatic quality, a video that keeps dropping frames (a tenth
+  /// of them for 30 seconds, after the cheap scaling above) is reopened one
+  /// quality lower, such as 1080p60 at 720p60, and later videos of this run
+  /// stay at most there. Choosing 自动 again lifts it.
+  Future<void> _stepDownIfDropping(NativePlayer platform, int added) async {
+    if (settings.maxHeight != 0 || settings.strategy == PlaybackStrategy.quality) return;
+    final fps = double.tryParse(await platform.getProperty('container-fps')) ?? 0;
+    _dropStreak = fps > 0 && added >= fps ? _dropStreak + 1 : 0;
+    if (_dropStreak < 3) return;
+    _dropStreak = 0;
+    final height = int.tryParse(await platform.getProperty('video-params/h')) ?? 0;
+    final lower = stepDownHeight(height, availableHeights);
+    if (lower == null) return;
+    _droppedCap = lower;
+    logInfo('Frames kept dropping at ${height}p${fps.round()}; automatic quality lowered to ${lower}p for this run');
+    _notice(tr('播放一直掉帧，自动画质已降到 {0}p（本次运行有效，重新选“自动”可恢复）', ['$lower']));
+    await reloadVideo();
+  }
+
   Future<String?> _frameStats(NativePlayer platform) async {
     try {
       final stats = await _videoChannel.invokeMethod<String>('VideoOutputManager.Stats', {'handle': '${await platform.handle}'});
@@ -2940,6 +3372,7 @@ class AppController extends ChangeNotifier {
     if (manager == null) return;
     if (!ensureNotPlaying(tr('正在播放时不会清理缓存。请先返回列表。'))) return;
     try {
+      _translationCache.clear();
       final (:freed, :skipped) = await manager.clear(settings);
       final left = await manager.size(settings);
       _update(() => cacheBytes = left);
@@ -2952,6 +3385,47 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  /// 清除本地数据: removes the chosen [kinds] from this computer. Favourites,
+  /// playlists and followed channels are never touched here.
+  Future<void> clearLocalData(Set<LocalData> kinds) async {
+    if (kinds.contains(LocalData.cache) && !ensureNotPlaying(tr('正在播放时不会清理缓存。请先返回列表。'))) return;
+    logInfo('Clearing local data: ${kinds.map((k) => k.name).join(', ')}');
+    for (final kind in LocalData.values.where(kinds.contains)) {
+      try {
+        switch (kind) {
+          case LocalData.history:
+            await _history?.clear();
+            await searchHistory?.clear();
+          case LocalData.progress:
+            library?.clearProgress();
+          case LocalData.recommendations:
+            await homeFeed?.notInterested.clear();
+          case LocalData.cache:
+            _translationCache.clear();
+            final manager = _cacheManager;
+            if (manager != null) {
+              await manager.clear(settings);
+              cacheBytes = await manager.size(settings);
+            }
+          case LocalData.account:
+            await account?.signOut();
+          case LocalData.keys:
+            translationKeys = const {};
+            _useTranslator();
+            await _translationKeyFile?.delete();
+          case LocalData.settings:
+            await saveSettings(PlayerSettings(cachePath: settings.cachePath, cacheLimitGb: settings.cacheLimitGb, decoderResults: settings.decoderResults));
+            await saveAppearance(const AppearanceSettings());
+            await savePreferences(const AppPreferences());
+        }
+      } catch (e) {
+        logError('Could not clear ${kind.name}', e);
+      }
+    }
+    _update(() {});
+    _notice(tr('已清除所选的本地数据'));
+  }
+
   /// Saves everything and releases the player before the window closes;
   /// dispose() alone does not run when Windows ends the process.
   Future<void> shutdown({bool install = true}) async {
@@ -2961,6 +3435,7 @@ class AppController extends ChangeNotifier {
     _saveProgress();
     await library?.flush();
     await downloads?.flush();
+    await _translationCache.save();
     await _flushAppearance();
     for (final subscription in _playerSubscriptions) {
       await subscription.cancel();
@@ -3005,6 +3480,7 @@ class AppController extends ChangeNotifier {
     _outputSize?.dispose();
     unawaited(_flushAppearance());
     _thumbnailTrimTimer?.cancel();
+    _afterStart?.cancel();
     for (final subscription in _playerSubscriptions) {
       unawaited(subscription.cancel());
     }
@@ -3018,6 +3494,9 @@ class AppController extends ChangeNotifier {
     channelVideos?.dispose();
     searchResults?.dispose();
     explore?.dispose();
+    for (final (_, loader) in _recentExplore.values) {
+      loader.dispose();
+    }
     channelPosts?.dispose();
     youtubePlaylistVideos?.dispose();
     related?.dispose();
@@ -3028,4 +3507,19 @@ class AppController extends ChangeNotifier {
     unawaited(_finishedDownloads.close());
     super.dispose();
   }
+}
+
+/// What 清除本地数据 can remove.
+enum LocalData {
+  history('观看历史和搜索记录'),
+  progress('播放进度'),
+  recommendations('“不感兴趣”记录'),
+  cache('缓存（视频、缩略图、翻译）'),
+  account('Google 账号登录'),
+  keys('翻译服务的 API 密钥'),
+  settings('所有设置（恢复默认）');
+
+  const LocalData(this._label);
+  final String _label;
+  String get label => tr(_label);
 }

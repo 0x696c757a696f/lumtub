@@ -213,7 +213,8 @@ std::string VideoOutput::TakeStats() {
               std::to_string(width()) + "x" + std::to_string(height());
   if (surface_manager_ != nullptr) {
     text += " " + surface_manager_->draw_timing.Take("draw") + " " +
-            surface_manager_->read_timing.Take("read");
+            surface_manager_->read_timing.Take("read") + " " +
+            surface_manager_->TakeFrameStats();
   }
   return text;
 }
@@ -324,7 +325,9 @@ void VideoOutput::Resize(int64_t required_width, int64_t required_height) {
               // storing its descriptor, at() threw and ended the app.
               auto it = textures_.find(texture_id_);
               if (texture_id_ && it != textures_.end()) {
-                surface_manager_->Read();
+                // Lumtub: the texture holding the last frame drawn; Flutter
+                // reads the descriptor before this lock is let go.
+                it->second->handle = surface_manager_->Read();
                 return it->second.get();
               } else {
                 return (FlutterDesktopGpuSurfaceDescriptor*)nullptr;

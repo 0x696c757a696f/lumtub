@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../app_log.dart';
 import '../models.dart';
 import '../video_repository.dart';
+import '../friendly_error.dart';
 
 /// Pages through a listing such as search results or a channel's uploads,
 /// keeping the items, loading state and last error for the page that shows
@@ -66,8 +67,11 @@ class VideoListLoader extends ChangeNotifier {
   /// Errors a retry would only make worse, or cannot fix.
   static final _noRetry = RegExp(r'429|Too Many Requests|Sign in to confirm|not a bot|Private video|unavailable', caseSensitive: false);
 
+  /// The error as it came, which [error] shows in plainer words.
+  String? _cause;
+
   void _scheduleRetry() {
-    final message = error;
+    final message = error == null ? null : _cause ?? error;
     if (_disposed || message == null || _noRetry.hasMatch(message) || _retries >= retryDelays.length) return;
     _failing.add(this);
     _retryTimer?.cancel();
@@ -108,6 +112,7 @@ class VideoListLoader extends ChangeNotifier {
     }
     loading = true;
     error = null;
+    _cause = null;
     _notify();
     _page(_listing!, count, 0, 0);
   }
@@ -139,7 +144,10 @@ class VideoListLoader extends ChangeNotifier {
         }
         shown++;
       },
-      onError: (Object e) => error = '$e',
+      onError: (Object e) {
+        _cause = '$e';
+        error = friendlyError(e);
+      },
       onDone: () {
         final order = rank;
         if (pendingVideos.isNotEmpty) {

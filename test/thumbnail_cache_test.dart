@@ -15,4 +15,18 @@ void main() {
     expect(a, b);
     expect(a.hashCode, b.hashCode);
   });
+
+  test('asks for the WebP copy first, then the JPEG, then hqdefault', () {
+    expect(CachedThumbnail.candidates('https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg'), [
+      'https://i.ytimg.com/vi_webp/dQw4w9WgXcQ/mqdefault.webp',
+      'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
+    ]);
+    expect(CachedThumbnail.candidates('https://i.ytimg.com/vi/a-b_c/maxresdefault.jpg'), [
+      'https://i.ytimg.com/vi_webp/a-b_c/maxresdefault.webp',
+      'https://i.ytimg.com/vi/a-b_c/maxresdefault.jpg',
+      'https://i.ytimg.com/vi_webp/a-b_c/hqdefault.webp',
+      'https://i.ytimg.com/vi/a-b_c/hqdefault.jpg',
+    ]);
+    expect(CachedThumbnail.candidates('https://dearrow-thumb.ajay.app/api/v1/getThumbnail?videoID=x&time=1'), ['https://dearrow-thumb.ajay.app/api/v1/getThumbnail?videoID=x&time=1']);
+  });
 }

@@ -69,4 +69,21 @@ void main() {
     expect(normal['scale'], 'spline36');
     expect(normal.containsKey('dscale'), isFalse);
   });
+
+  test('frame drawing is busy when it takes most of a frame', () {
+    const stats = 'render=240/13.2ms/30.0ms coalesced=0 1420x800 draw=240/13.1ms/29.9ms read=240/1.3ms/9.4ms';
+    expect(drawBusy(stats, 60), closeTo(13.1, 0.01));
+    expect(drawBusy(stats, 24), isNull);
+    expect(drawBusy('draw=20/30.0ms/40.0ms', 60), isNull);
+    expect(drawBusy('render=1/4.1ms/4.1ms', 60), isNull);
+    expect(drawBusy(stats, 0), isNull);
+  });
+
+  test('dropped frames step down to the next quality, not below 360p', () {
+    expect(stepDownHeight(1080, [2160, 1080, 720, 480, 360]), 720);
+    expect(stepDownHeight(1080, [1080, 480]), 480);
+    expect(stepDownHeight(1088, [1080, 720]), 1080);
+    expect(stepDownHeight(360, [360, 240, 144]), isNull);
+    expect(stepDownHeight(720, const []), isNull);
+  });
 }

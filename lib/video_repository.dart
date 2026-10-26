@@ -341,7 +341,12 @@ class VideoRepository {
   }
 
   /// The videos of a YouTube playlist.
-  Listing playlist(String id) => _listing('https://www.youtube.com/playlist?list=$id');
+  Listing playlist(String id) {
+    final url = 'https://www.youtube.com/playlist?list=$id';
+    final web = this.web;
+    if (web == null || !YoutubeListing.available) return _listing(url);
+    return Listing(() => YoutubeListing.orElse(() => web.playlist(id), () => _lines(listingArguments(url))));
+  }
 
   /// Videos of [channel] matching [query].
   Listing channelSearch(ChannelRef channel, String query) =>

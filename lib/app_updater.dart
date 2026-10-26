@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -17,18 +18,20 @@ final appBuilt = DateTime.tryParse(const String.fromEnvironment('LUMTUB_BUILT'))
 
 /// A release newer than the running build.
 class AppRelease {
-  const AppRelease({required this.version, required this.page, this.asset});
+  const AppRelease({required this.version, required this.page, this.asset, this.signature});
   /// Such as `0.2.1-72ec49d`.
   final String version;
   /// The release's GitHub page.
   final String page;
   /// The installer or portable ZIP for this package, as GitHub lists it.
   final Map<String, dynamic>? asset;
+  /// The asset's `.sig`: Ed25519 and ML-DSA-65 signatures, both required.
+  final Map<String, dynamic>? signature;
 }
 
 /// Keeps Lumtub up to date without getting in the way: it checks GitHub,
 /// downloads the new installer (or the portable ZIP) in the background and
-/// verifies it, then installs it once Lumtub closes, so the next start is
+/// verifies its SHA-256 and both of its signatures, then installs it once Lumtub closes, so the next start is
 /// the new version. [restartNow] does the same at once.
 class AppUpdater extends ChangeNotifier {
   AppUpdater({required http.Client client, required Directory directory, required Future<File> Function(Map<String, dynamic> asset, Directory into, void Function(int received, int? total) onProgress) download})
@@ -111,6 +114,7 @@ class AppUpdater extends ChangeNotifier {
         progress = next;
         notifyListeners();
       });
+      await _verifySignature(file, asset, available!.signature);
       ready = file;
       logInfo('Lumtub ${available!.version} downloaded; it installs when Lumtub closes');
     } catch (e) {
@@ -119,6 +123,27 @@ class AppUpdater extends ChangeNotifier {
     } finally {
       progress = null;
       notifyListeners();
+    }
+  }
+
+  /// Fetches the package's `.sig` and checks it in the native core; deletes
+  /// [file] and throws when the signatures do not hold.
+  Future<void> _verifySignature(File file, Map<String, dynamic> asset, Map<String, dynamic>? signature) async {
+    final name = asset['name'].toString();
+    try {
+      final uri = Uri.parse(signature?['browser_download_url']?.toString() ?? '');
+      if (signature == null || uri.scheme != 'https' || uri.host != 'github.com') throw const FormatException('The update has no signature');
+      final response = await _client.get(uri, headers: {'User-Agent': 'Lumtub/$appVersion'}).timeout(const Duration(seconds: 30));
+      if (response.statusCode != 200) throw HttpException('Signature download failed: HTTP ${response.statusCode}');
+      final sig = File('${file.path}.sig');
+      await sig.writeAsBytes(response.bodyBytes);
+      final path = file.path, sigPath = sig.path;
+      final error = await Isolate.run(() => verifyUpdate(file: path, name: name, signature: sigPath));
+      await sig.delete();
+      if (error != null) throw FormatException(error);
+    } catch (_) {
+      if (await file.exists()) await file.delete();
+      rethrow;
     }
   }
 
@@ -187,7 +212,18 @@ AppRelease? offerOf(Map<String, dynamic> release, {required String current, Date
   final ask = jsonEncode({'release': release, 'current': current, 'built': built == null ? null : built.millisecondsSinceEpoch ~/ 1000, 'package': package, 'portable': portable});
   final answer = jsonDecode(core.take(core.withText(ask, core.updateOffer)) ?? 'null');
   if (answer is! Map<String, dynamic>) return null;
-  return AppRelease(version: answer['version'] as String, page: answer['page'] as String, asset: answer['asset'] as Map<String, dynamic>?);
+  return AppRelease(version: answer['version'] as String, page: answer['page'] as String, asset: answer['asset'] as Map<String, dynamic>?, signature: answer['signature'] as Map<String, dynamic>?);
+}
+
+/// Why the package [file] (listed as [name]) fails its `.sig` file
+/// [signature], or null when both signatures hold. It reads the whole
+/// package, so run it on another isolate.
+String? verifyUpdate({required String file, required String name, required String signature}) {
+  final core = NativeCore.instance;
+  if (core == null) return 'The native core is missing';
+  final answer = jsonDecode(core.take(core.withText(jsonEncode({'file': file, 'name': name, 'signature': signature}), core.updateVerify)) ?? 'null');
+  if (answer is Map && answer['ok'] == true) return null;
+  return answer is Map ? '${answer['error']}' : 'Could not check the signature';
 }
 
 /// A PowerShell script that waits for Lumtub ([processId]) to end, then runs

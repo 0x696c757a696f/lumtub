@@ -90,6 +90,32 @@ class AppWindow {
     }
   }
 
+  /// Colours the title bar like the page below it: [caption] behind, [text]
+  /// on it, and Windows' dark or light buttons. Windows 10 ignores the
+  /// colours and keeps only the dark or light frame.
+  static void setTitleBar({required int caption, required int text, required bool dark}) {
+    final window = handle;
+    if (window == null) return;
+    final value = calloc<Uint32>();
+    try {
+      void set(int attribute, int v) {
+        value.value = v;
+        _dwmSetWindowAttribute?.call(window, attribute, value, sizeOf<Uint32>());
+      }
+
+      set(_dwmwaUseImmersiveDarkMode, dark ? 1 : 0);
+      set(_dwmwaCaptionColor, _colorRef(caption));
+      set(_dwmwaTextColor, _colorRef(text));
+    } finally {
+      calloc.free(value);
+    }
+  }
+
+  /// 0xAARRGGBB as a Win32 COLORREF, 0x00BBGGRR.
+  static int _colorRef(int argb) => ((argb & 0xFF) << 16) | (argb & 0xFF00) | ((argb >> 16) & 0xFF);
+
+  static const _dwmwaUseImmersiveDarkMode = 20, _dwmwaCaptionColor = 35, _dwmwaTextColor = 36;
+
   /// Keeps the window above the others, or lets it go back among them.
   static bool setTopmost(bool on) {
     final window = handle;

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../community_posts.dart';
 import '../models.dart';
+import '../friendly_error.dart';
 
 /// Pages through a channel's posts for the 社区 tab.
 class PostsLoader extends ChangeNotifier {
@@ -40,7 +41,7 @@ class PostsLoader extends ChangeNotifier {
         if (fresh.isNotEmpty || !hasMore || matches == null) break;
       }
     } catch (e) {
-      error = '$e';
+      error = friendlyError(e);
     } finally {
       loading = false;
       _notify();

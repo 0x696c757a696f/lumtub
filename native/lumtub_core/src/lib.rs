@@ -11,18 +11,22 @@ pub mod process_tree;
 pub mod redact;
 pub mod relay;
 pub mod socks;
+pub mod subtitles;
 pub mod system_proxy;
 pub mod hashes;
+pub mod dns;
+pub mod http;
 pub mod hw_decode;
 pub mod posts;
 pub mod innertube;
 pub mod listing;
 pub mod live_chat;
 pub mod taste;
+pub mod signing;
 pub mod update;
 
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    11
+    16
 }

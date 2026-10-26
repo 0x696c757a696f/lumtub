@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/ui/pip_view.dart';
 import 'package:lumtub/ui/player_controls.dart';
 import 'package:lumtub/ui/theme.dart';
@@ -126,7 +127,6 @@ void main() {
     await pump(tester);
     expect(find.text('测试视频标题'), findsOneWidget);
     expect(find.text('1:00 / 10:00'), findsOneWidget);
-    expect(find.text('自动'), findsOneWidget, reason: '画面比例');
     expect(find.text('1X'), findsOneWidget, reason: '倍速');
     expect(find.text('1080P'), findsOneWidget, reason: '画质');
     expect(find.byIcon(Icons.fullscreen_rounded), findsOneWidget);
@@ -135,7 +135,7 @@ void main() {
 
   testWidgets('the top bar is PiliNara\'s: back and home, then the switches', (tester) async {
     await pump(tester);
-    for (final tip in ['返回', '主页', '窗口置顶', '听视频（只放声音）', 'SponsorBlock 已关闭，点击开启', '画中画', '更多设置']) {
+    for (final tip in ['返回', '主页', '投屏', '画中画', '更多设置']) {
       expect(find.byTooltip(tip), findsOneWidget, reason: tip);
     }
     expect(tester.takeException(), isNull);
@@ -162,6 +162,51 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('the subtitle panel puts the first and second subtitle side by side', (tester) async {
+    controller.details = const VideoDetails(title: '测试视频标题', channel: '频道', subtitles: [
+      SubtitleOption(language: 'en', name: 'English', url: 'https://yt.example/api/timedtext?v=1&lang=en'),
+      SubtitleOption(language: 'ja', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=ja', kind: SubtitleKind.automatic),
+      SubtitleOption(language: 'fr', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=en&tlang=fr', kind: SubtitleKind.translated),
+    ]);
+    controller.settings = controller.settings.copyWith(subtitleLanguage: SubtitleLanguage.zh);
+    tester.view.physicalSize = const Size(1280, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(Colors.red, Brightness.light),
+      home: Scaffold(body: ColoredBox(color: Colors.black, child: PlayerControls(player: player, state: null, controller: controller))),
+    ));
+    await tester.pump();
+    await tester.tap(find.byTooltip('字幕'));
+    await tester.pumpAndSettle();
+    expect(find.text('第一字幕'), findsOneWidget);
+    expect(find.text('第二字幕（上方）'), findsOneWidget);
+    expect(find.text('视频自带'), findsNWidgets(2));
+    expect(find.text('自动生成'), findsNWidgets(2));
+    expect(find.text('简体中文（YouTube 翻译）'), findsNWidgets(2));
+    // YouTube's translations wait behind a button on each side.
+    expect(find.textContaining('法语'), findsNothing);
+    await tester.tap(find.textContaining('更多语言').first);
+    await tester.pump();
+    expect(find.text('YouTube 自动翻译'), findsNWidgets(2));
+    expect(find.byIcon(Icons.check_rounded), findsNWidgets(2), reason: 'both sides start off');
+    await tester.tap(find.byTooltip('关闭'));
+    await tester.pumpAndSettle();
+    expect(find.text('第一字幕'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('字幕列表 opens from 更多设置 and asks for a subtitle first', (tester) async {
+    await pump(tester);
+    await tester.tap(find.byTooltip('更多设置'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('字幕列表'), 200, scrollable: find.byType(Scrollable).last);
+    await tester.tap(find.text('字幕列表'));
+    await tester.pumpAndSettle();
+    expect(find.text('先打开一条字幕'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the speed menu uses the speeds from settings', (tester) async {
     await pump(tester);
     await tester.tap(find.text('1X'));
@@ -175,9 +220,11 @@ void main() {
     expect(find.text('1.5X'), findsOneWidget);
   });
 
-  testWidgets('the fit menu changes the picture fit', (tester) async {
+  testWidgets('the fit choice in 更多设置 changes the picture fit', (tester) async {
     await pump(tester);
-    await tester.tap(find.text('自动'));
+    await tester.tap(find.byTooltip('更多设置'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('16:9'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('16:9'));
     await tester.pumpAndSettle();
@@ -205,22 +252,33 @@ void main() {
     expect(find.text('快进7秒'), findsNothing);
   });
 
-  testWidgets('the more sheet lists PiliNara\'s player settings', (tester) async {
+  testWidgets('the more panel applies choices and stays open', (tester) async {
     await pump(tester);
-    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.tap(find.byTooltip('更多设置'));
     await tester.pumpAndSettle();
-    final sheet = find.descendant(of: find.byType(BottomSheet), matching: find.byType(Scrollable));
-    for (final item in ['选择画质', '选择音质', '播放策略', '禁用视频编码', '播放顺序', '字幕设置', '截图 (S)', '镜像翻转', '画面缩放', '定时关闭', '播放信息', '重载视频']) {
-      await tester.scrollUntilVisible(find.text(item), 60, scrollable: sheet);
-      expect(find.text(item), findsOneWidget);
+    final panel = find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first;
+    for (final item in ['窗口置顶', '听视频', '空降助手', '播放信息', '镜像翻转', '画质', '画面比例']) {
+      expect(find.text(item), findsWidgets, reason: item);
     }
-    await tester.scrollUntilVisible(find.text('定时关闭'), 60, scrollable: sheet);
-    await tester.tap(find.text('定时关闭'));
+    await tester.scrollUntilVisible(find.text('30 分钟'), 60, scrollable: panel);
     await tester.pumpAndSettle();
     await tester.tap(find.text('30 分钟'));
     await tester.pumpAndSettle();
     expect(controller.sleepAt, isNotNull);
-    expect(find.byIcon(Icons.bedtime_outlined), findsOneWidget);
-    controller.setSleepTimer(null);
+    // Still open, with the time left in the label.
+    expect(find.textContaining('分钟后暂停'), findsOneWidget);
+    await tester.ensureVisible(find.text('不开启'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('不开启'));
+    await tester.pumpAndSettle();
+    expect(controller.sleepAt, isNull);
+    for (final item in ['播放策略', '禁用视频编码', '字幕', '截图 (S)', '重载视频', '快捷键']) {
+      await tester.scrollUntilVisible(find.text(item), 60, scrollable: panel);
+      expect(find.text(item), findsWidgets, reason: item);
+    }
+    await tester.tap(find.byTooltip('关闭'));
+    await tester.pumpAndSettle();
+    expect(find.text('播放策略'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 }

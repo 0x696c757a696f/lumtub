@@ -35,6 +35,14 @@ class ResolvedVideo {
 
   bool get fresh => DateTime.now().isBefore(expires);
 
+  /// For the log when an address is refused: how old it is, and which
+  /// YouTube client and formats yt-dlp took it from.
+  String get origin {
+    final tracks = _tracks;
+    final clients = {for (final t in tracks) Uri.tryParse(t['url']?.toString() ?? '')?.queryParameters['c'] ?? '?'};
+    return 'resolved ${DateTime.now().difference(fetched).inSeconds} s ago, client ${clients.join('/')}, formats ${tracks.map((t) => t['format_id']).join('+')}';
+  }
+
   VideoDetails get details => VideoDetails.fromJson(info);
 
   /// Video heights this video offers, highest first; with [settings], only
@@ -251,6 +259,9 @@ class StreamResolver {
 
   /// Errors a second attempt can get past, unlike a private or removed video.
   static final _transient = RegExp(r'HTTP Error 5\d\d|timed out|Connection (reset|aborted|refused)|Remote end closed|getaddrinfo|IncompleteRead', caseSensitive: false);
+
+  /// Whether [error] is a network failure that resolving already retried.
+  static bool isTransient(Object error) => _transient.hasMatch('$error');
 
   Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false}) async {
     final watch = Stopwatch()..start();

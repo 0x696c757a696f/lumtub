@@ -20,10 +20,21 @@ class KeepAwake {
 
   static void _systemApply(int flags) => _setThreadExecutionState?.call(flags);
 
+  static bool _hidden = false;
+
+  /// Whether the window is minimised: nobody watches the display then, so
+  /// it may turn off even while a video plays on as sound.
+  static set hidden(bool value) {
+    if (value == _hidden) return;
+    _hidden = value;
+    _apply();
+  }
+
   /// Whether [holder] wants the display kept on from now on.
   static void hold(Object holder, bool awake) {
     final changed = awake ? _holders.add(holder) : _holders.remove(holder);
-    if (!changed) return;
-    apply?.call(_holders.isEmpty ? _continuous : _continuous | _displayRequired);
+    if (changed) _apply();
   }
+
+  static void _apply() => apply?.call(_holders.isEmpty || _hidden ? _continuous : _continuous | _displayRequired);
 }

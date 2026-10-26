@@ -10,6 +10,7 @@ import 'app_log.dart';
 import 'ffmpeg_component.dart';
 import 'libmpv_updates.dart';
 import 'native_core.dart';
+import 'native_http.dart';
 import 'process_runner.dart';
 import 'version_order.dart';
 import 'l10n/l10n.dart';
@@ -37,7 +38,7 @@ class ToolManager {
 
   late final Directory root;
   late final LibmpvState libmpv;
-  final http.Client _client = http.Client();
+  final http.Client _client = appHttpClient();
 
   static final _separator = Platform.pathSeparator;
 
@@ -69,11 +70,19 @@ class ToolManager {
       await _installYtDlp();
     }
     // Deno is needed by some YouTube JavaScript challenge paths. Optional at startup.
-    if (discover()?.deno == null) {
+    // After a failed try, launches within six hours start without waiting
+    // on it again (offline, it is a 25-second wait every time).
+    final denoFailed = File('${root.path}${_separator}deno-failed');
+    final failedAt = denoFailed.existsSync() ? denoFailed.lastModifiedSync() : null;
+    if (discover()?.deno == null && (failedAt == null || DateTime.now().difference(failedAt) > const Duration(hours: 6))) {
       try {
         status('安装 YouTube 解析所需的 Deno…');
         await _installDeno();
+        if (denoFailed.existsSync()) denoFailed.deleteSync();
       } catch (e) {
+        try {
+          denoFailed.writeAsStringSync('$e');
+        } catch (_) {}
         status('Deno 暂时不可用，可以稍后从工具更新中重试：{0}', [e]);
       }
     }
@@ -170,9 +179,14 @@ class ToolManager {
 
   Future<void> checkUpdates({bool force = false}) async {
     final stamp = File('${root.path}${Platform.pathSeparator}last_update_check.txt');
-    if (!force && !_ytDlpIsSingleFile && await stamp.exists()) {
-      final last = DateTime.tryParse((await stamp.readAsString()).trim());
-      if (last != null && DateTime.now().difference(last) < const Duration(hours: 24)) return;
+    // The single-file yt-dlp is replaced as soon as possible, but a failed
+    // try waits an hour, as does any check that failed, rather than costing
+    // every launch GitHub requests against its hourly limit.
+    if (!force && await stamp.exists()) {
+      final [time, ...rest] = (await stamp.readAsString()).trim().split(' ');
+      final last = DateTime.tryParse(time);
+      final wait = _ytDlpIsSingleFile || rest.contains('failed') ? const Duration(hours: 1) : const Duration(hours: 24);
+      if (last != null && DateTime.now().difference(last) < wait) return;
     }
     final errors = <String>[];
     for (final task in <(String, Future<void> Function())>[
@@ -191,6 +205,7 @@ class ToolManager {
       await stamp.writeAsString(DateTime.now().toIso8601String());
       status('更新检查完成。如有新版，重启应用后启用。');
     } else {
+      await stamp.writeAsString('${DateTime.now().toIso8601String()} failed');
       status('部分组件更新失败，现有版本不受影响：{0}', [errors.join(' / ')]);
     }
   }

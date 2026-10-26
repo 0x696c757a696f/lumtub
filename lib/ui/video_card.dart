@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
 import '../appearance_settings.dart';
@@ -16,6 +17,7 @@ import 'pages/downloads_page.dart';
 import 'skeleton.dart';
 import 'theme.dart';
 import '../l10n/l10n.dart';
+import 'motion.dart';
 
 /// Height of the text below a card's thumbnail: two title lines and one
 /// channel line.
@@ -35,18 +37,27 @@ ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 4
       (null, null) => NetworkImage(url),
       (null, final frame?) => NetworkImage(frame.toString()),
       (final dir?, null) => CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file)),
-      (final dir?, final frame?) => CachedThumbnail(frame.toString(), CachedThumbnail.fileFor(dir, item.id, 'dearrow_${frame.queryParameters['time']}'), fallback: url),
+      (final dir?, final frame?) => CachedThumbnail(frame.toString(), CachedThumbnail.fileFor(dir, item.id, 'dearrow_${frame.queryParameters['time']}'), fallback: CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, file))),
     },
   );
 }
 
 /// The decode width for a thumbnail shown [logical] pixels wide: the real
 /// size, in steps so resizing the window does not decode again at every
-/// pixel, and never above the 480 the YouTube file has or below 160.
-int thumbnailDecodeWidth(double logical, double pixelRatio) {
+/// pixel, and never above the width of the file shown ([largest], by
+/// default the thumbnail size chosen in Settings) or below 160.
+int thumbnailDecodeWidth(double logical, double pixelRatio, {int? largest}) {
   final steps = (logical * pixelRatio / 80).ceil();
-  return (steps * 80).clamp(160, 480);
+  return (steps * 80).clamp(160, largest ?? thumbnailFileWidth(VideoItem.thumbnailFile));
 }
+
+/// How wide YouTube's thumbnail file [name] is.
+int thumbnailFileWidth(String name) => switch (name) {
+      'mqdefault' => 320,
+      'sddefault' => 640,
+      'maxresdefault' => 1280,
+      _ => 480,
+    };
 
 /// [item]'s title, or DeArrow's when that is on.
 String titleFor(VideoItem item) => deArrow.titleOf(item.id, item.title);
@@ -101,6 +112,9 @@ class SliverVideoGrid extends StatelessWidget {
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) => VideoCard(
+                // A card's hover and preview state never passes to another
+                // video when the list changes under it.
+                key: ValueKey(items[i].id),
                 item: items[i],
                 thumbnails: thumbnails,
                 onOpen: () => onOpen(items[i]),
@@ -161,7 +175,7 @@ class PlaylistCard extends StatelessWidget {
                 if (cover != null)
                   LayoutBuilder(builder: (context, box) => Image.network(
                     cover,
-                    cacheWidth: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context)),
+                    cacheWidth: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context), largest: 480),
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stack) => ColoredBox(color: colors.surfaceContainerHighest),
                   ))
@@ -256,6 +270,10 @@ class VideoCard extends StatefulWidget {
 
 class _VideoCardState extends State<VideoCard> {
   bool _hovered = false;
+  /// Reached with the keyboard: it previews and shows its actions as a
+  /// pointer resting on it would, with an outline to show where focus is.
+  bool _focused = false;
+  bool _pointer = false;
   Timer? _prefetch;
   Timer? _preview;
   /// Which of YouTube's three frames from the video (1–3) the hover preview
@@ -266,6 +284,7 @@ class _VideoCardState extends State<VideoCard> {
   /// that follows starts playback sooner, and then previews it: YouTube
   /// keeps frames from a quarter, half and three quarters of the way in.
   void _hover(bool value) {
+    if (value == _hovered) return;
     setState(() {
       _hovered = value;
       _frame = 0;
@@ -273,7 +292,7 @@ class _VideoCardState extends State<VideoCard> {
     _prefetch?.cancel();
     _preview?.cancel();
     if (!value) return;
-    _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item));
+    _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item, hover: true));
     if (widget.item.isLive || widget.item.isUpcoming) return;
     _preview = Timer(const Duration(milliseconds: 700), () {
       if (!mounted) return;
@@ -284,16 +303,45 @@ class _VideoCardState extends State<VideoCard> {
     });
   }
 
+  void _pointerOver(bool value) {
+    _pointer = value;
+    _hover(_pointer || _focused);
+  }
+
+  void _focus(bool value) {
+    setState(() => _focused = value);
+    _hover(_pointer || _focused);
+  }
+
+  /// The menu, at the card's middle when opened from the keyboard.
+  void _menu([Offset? at]) {
+    final box = context.findRenderObject() as RenderBox?;
+    final position = at ?? (box == null ? Offset.zero : box.localToGlobal(box.size.center(Offset.zero)));
+    unawaited(showVideoMenu(context, widget.item, position, onOpen: widget.onOpen, onRemove: widget.onRemove, removeLabel: widget.removeLabel));
+  }
+
+  ImageProvider _frameImage(VideoItem item, int frame) {
+    final url = 'https://i.ytimg.com/vi/${item.id}/mq$frame.jpg';
+    final dir = widget.thumbnails;
+    // mq frames are 320 wide; decoding them larger gains nothing.
+    return ResizeImage.resizeIfNeeded(320, null, dir == null ? NetworkImage(url) : CachedThumbnail(url, CachedThumbnail.fileFor(dir, item.id, 'mq$frame')));
+  }
+
   @override
   void initState() {
     super.initState();
     deArrow.addListener(_branded);
   }
 
-  /// DeArrow answered for some videos, maybe this one.
+  /// DeArrow answered for some videos, maybe this one: answers come in
+  /// bursts while a feed loads, so only a card whose branding changed
+  /// builds again.
   void _branded() {
-    if (mounted) setState(() {});
+    if (mounted && _branding != _brandingNow()) setState(() {});
   }
+
+  (String, Uri?) _brandingNow() => (deArrow.titleOf(widget.item.id, widget.item.title), deArrow.thumbnailOf(widget.item.id));
+  (String, Uri?)? _branding;
 
   @override
   void dispose() {
@@ -306,6 +354,7 @@ class _VideoCardState extends State<VideoCard> {
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
+    _branding = _brandingNow();
     final colors = context.colors;
     final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
     final meta = [
@@ -313,11 +362,12 @@ class _VideoCardState extends State<VideoCard> {
       if (item.channel.isNotEmpty) item.channel,
       if (item.viewCount != null) tr('{0}次观看', [formatCount(item.viewCount!)]),
     ].join(' · ');
-    return Card(
+    final card = Card(
       child: InkWell(
         onTap: widget.onOpen,
-        onHover: _hover,
-        onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: widget.onOpen, onRemove: widget.onRemove, removeLabel: widget.removeLabel),
+        onHover: _pointerOver,
+        onFocusChange: _focus,
+        onSecondaryTapUp: (details) => _menu(details.globalPosition),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           AspectRatio(
             aspectRatio: 16 / 9,
@@ -326,7 +376,7 @@ class _VideoCardState extends State<VideoCard> {
               child: Stack(fit: StackFit.expand, children: [
                 AnimatedScale(
                   scale: _hovered ? 1.04 : 1,
-                  duration: const Duration(milliseconds: 180),
+                  duration: Motion.of(const Duration(milliseconds: 180)),
                   curve: Curves.easeOut,
                   child: LayoutBuilder(
                     builder: (context, box) => Image(
@@ -340,9 +390,11 @@ class _VideoCardState extends State<VideoCard> {
                 ),
                 if (_frame > 0) ...[
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    child: Image.network(
-                      'https://i.ytimg.com/vi/${item.id}/mq$_frame.jpg',
+                    duration: Motion.of(const Duration(milliseconds: 250)),
+                    child: Image(
+                      // The frames are cached on disk like thumbnails, so
+                      // hovering the same card again reads no network.
+                      image: _frameImage(item, _frame),
                       key: ValueKey(_frame),
                       fit: BoxFit.cover,
                       gaplessPlayback: true,
@@ -367,6 +419,7 @@ class _VideoCardState extends State<VideoCard> {
                 else if (item.durationLabel.isNotEmpty)
                   Positioned(right: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
                 _ProgressBar(item: item),
+                if (_hovered) Positioned(top: 8, right: 8, child: _QuickActions(item: item, onMore: _menu)),
               ]),
             ),
           ),
@@ -391,6 +444,69 @@ class _VideoCardState extends State<VideoCard> {
         ]),
       ),
     );
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.contextMenu): _menu,
+        const SingleActivator(LogicalKeyboardKey.f10, shift: true): _menu,
+      },
+      child: Stack(children: [
+        card,
+        if (_focused)
+          Positioned.fill(child: IgnorePointer(child: DecoratedBox(decoration: BoxDecoration(
+            borderRadius: AppStyle.cardRadius,
+            border: Border.all(color: colors.primary, width: 2),
+          )))),
+      ]),
+    );
+  }
+}
+
+/// 稍后观看, 加入播放队列 and the menu over a card's thumbnail while it is
+/// pointed at or focused, so they need no right click.
+class _QuickActions extends StatefulWidget {
+  const _QuickActions({required this.item, required this.onMore});
+  final VideoItem item;
+  final VoidCallback onMore;
+
+  @override
+  State<_QuickActions> createState() => _QuickActionsState();
+}
+
+class _QuickActionsState extends State<_QuickActions> {
+  @override
+  Widget build(BuildContext context) {
+    final controller = VideoActions.of(context);
+    final library = controller?.library;
+    final item = widget.item;
+    final later = library?.isWatchLater(item.id) ?? false;
+    Widget button(IconData icon, String tip, VoidCallback onPressed) => Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Tooltip(
+            message: tip,
+            child: Material(
+              color: Colors.black.withValues(alpha: 0.72),
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                canRequestFocus: false,
+                onTap: onPressed,
+                child: Padding(padding: const EdgeInsets.all(6), child: Icon(icon, size: 18, color: Colors.white)),
+              ),
+            ),
+          ),
+        );
+    void notice(String text) => ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(text), duration: const Duration(seconds: 2)));
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      if (library != null)
+        button(later ? Icons.watch_later_rounded : Icons.watch_later_outlined, later ? tr('从稍后观看移除') : tr('稍后观看'), () {
+          final added = library.toggleWatchLater(item);
+          setState(() {});
+          notice(added ? tr('已加入稍后观看') : tr('已从稍后观看移除'));
+        }),
+      if (controller != null && !item.isUpcoming)
+        button(Icons.queue_music_rounded, tr('加入播放队列'), () => controller.queueLast(item)),
+      button(Icons.more_vert_rounded, tr('更多（菜单键）'), widget.onMore),
+    ]);
   }
 }
 

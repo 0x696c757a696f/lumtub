@@ -81,7 +81,12 @@ void main() {
     locale = const Locale('zh', 'TW');
     expect(SubtitleLanguage.auto.resolved, SubtitleLanguage.zhHant);
     locale = const Locale('de', 'DE');
+    expect(SubtitleLanguage.auto.resolved, SubtitleLanguage.de);
+    expect(SubtitleLanguage.auto.translation.code, 'de');
+    locale = const Locale('nl', 'NL');
     expect(SubtitleLanguage.auto.resolved, SubtitleLanguage.en);
+    locale = const Locale('zh', 'HK');
+    expect(SubtitleLanguage.auto.translation.code, 'zh-TW');
     // 简体中文优先, the old default, now follows; a choice saved since stays.
     expect(PlayerSettings.fromJson({'subtitleLanguage': 'zh'}).subtitleLanguage, SubtitleLanguage.auto);
     expect(PlayerSettings.fromJson({'subtitleLanguage': 'ja'}).subtitleLanguage, SubtitleLanguage.ja);

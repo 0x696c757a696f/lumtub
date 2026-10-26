@@ -1,0 +1,50 @@
+name: Refresh lockfiles
+
+# Dependabot raises direct dependencies only; this moves every package in
+# pubspec.lock and Cargo.lock to the newest version the constraints allow.
+# The result goes to the deps/lockfiles branch and Build checks it; Merge
+# dependency updates then brings it into main.
+on:
+  schedule:
+    - cron: '41 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      FLUTTER_VERSION: 3.47.7
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+      - name: Flutter
+        run: |
+          curl -sSfL "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz" | tar -xJ -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - name: Dart packages
+        run: flutter pub upgrade
+      - name: Rust crates
+        run: |
+          rustup update stable
+          cargo update --manifest-path native/lumtub_core/Cargo.toml
+      - name: Push and build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "Lockfiles are current."
+            exit 0
+          fi
+          git diff --stat
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c deps/lockfiles
+          git commit -qam "Refresh lockfiles"
+          git push --force origin deps/lockfiles
+          gh workflow run build.yml --ref deps/lockfiles

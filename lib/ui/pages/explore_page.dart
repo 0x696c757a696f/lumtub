@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -11,6 +13,7 @@ import '../video_card.dart';
 import '../../widgets/pilinara_settings_tiles.dart' show confirmDialog;
 import '../../l10n/l10n.dart';
 import '../../models.dart';
+import '../motion.dart';
 
 /// Explore, in zones as Bilibili's 分区: videos, live streams or the tabs of
 /// 宗教与信仰, a zone and one of its sub-categories, how they are picked, and
@@ -97,11 +100,8 @@ class _ExplorePageState extends State<ExplorePage> {
     final sub = controller.exploreSub;
     final subNow = controller.exploreSubNow;
     final leaf = controller.exploreLeaf;
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (notification.depth == 0 && notification.metrics.axis == Axis.vertical && nearListEnd(notification.metrics)) loader?.loadMore();
-        return false;
-      },
+    return NearEndListener(
+      onNearEnd: () => loader?.loadMore(),
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: PageHeader(
           tr('探索'),
@@ -486,7 +486,7 @@ class _TopicStripState extends State<TopicStrip> {
     if (!_scroll.hasClients) return;
     final position = _scroll.position;
     final target = (position.pixels + delta).clamp(position.minScrollExtent, position.maxScrollExtent);
-    _scroll.animateTo(target, duration: const Duration(milliseconds: 220), curve: Curves.easeOutCubic);
+    unawaited(Motion.scrollTo(_scroll, target));
   }
 
   Widget _rail(BuildContext context) {
@@ -598,7 +598,7 @@ class _RailTile extends StatelessWidget {
           ),
           child: Row(children: [
             AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
+              duration: Motion.of(const Duration(milliseconds: 160)),
               width: 3,
               height: selected ? 20 : 0,
               decoration: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(2)),
@@ -651,7 +651,7 @@ class _TopicTile extends StatelessWidget {
         onSecondaryTap: onRemove,
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
+            duration: Motion.of(const Duration(milliseconds: 160)),
             width: 44,
             height: 44,
             decoration: BoxDecoration(

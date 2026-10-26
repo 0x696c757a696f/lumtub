@@ -13,6 +13,13 @@ void main() {
     expect(VideoOutputSize.target(Size.zero, const [Size(100, 100)]), isNull);
   });
 
+  test('covers the box when the picture is zoomed or stretched', () {
+    final (w, h) = VideoOutputSize.target(const Size(1920, 800), const [Size(1280, 720)], cover: true)!;
+    expect(h, greaterThanOrEqualTo(720));
+    expect(w / h, closeTo(1920 / 800, 0.01));
+    expect(VideoOutputSize.target(const Size(1280, 720), const [Size(1920, 1080)], cover: true), isNull);
+  });
+
   test('applies the size once things settle, and the video size when hidden', () async {
     final applied = <(int?, int?)>[];
     final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 10));
@@ -29,5 +36,20 @@ void main() {
     size.hide(page);
     await settle();
     expect(applied, [(1280, 720), (null, null)]);
+  });
+
+  test('draws small while the window is hidden and full size at once on return', () async {
+    final applied = <(int?, int?)>[];
+    final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 10));
+    Future<void> settle() => Future.delayed(const Duration(milliseconds: 50));
+    final page = Object();
+    size.video = const Size(1920, 1080);
+    size.show(page, const Size(1280, 720));
+    await settle();
+    size.hidden = true;
+    await settle();
+    expect(applied.last, (320, 180));
+    size.hidden = false;
+    expect(applied.last, (1280, 720));
   });
 }

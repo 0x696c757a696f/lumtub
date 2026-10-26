@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../app/app_controller.dart';
+import '../../appearance_settings.dart' show bundledFont;
 import '../../models.dart';
 import '../../live_chat.dart';
 import '../../player_settings.dart';
@@ -28,6 +29,7 @@ import 'downloads_page.dart';
 import '../../dearrow.dart';
 import '../video_box.dart';
 import '../../l10n/l10n.dart';
+import '../motion.dart';
 
 /// Player, video details, the up-next list and the comments. On wide
 /// windows the list and the comments share a side panel, as PiliNara's
@@ -56,13 +58,22 @@ class _WatchPageState extends State<WatchPage> {
     });
   }
 
+  Object? _darkKey;
+  ThemeData? _dark;
+
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
     final appearance = controller.appearance;
     final page = _page(context, controller);
     if (!appearance.darkWatchPage || Theme.of(context).brightness == Brightness.dark) return page;
-    final dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.fontFamily);
+    // ColorScheme.fromSeed is costly and the page rebuilds on every notify.
+    final key = appearance.themeKey(controller.accentColor);
+    if (key != _darkKey) {
+      _darkKey = key;
+      _dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.fontFamily);
+    }
+    final dark = _dark!;
     return Theme(data: dark, child: Material(color: dark.colorScheme.surface, child: page));
   }
 
@@ -92,6 +103,7 @@ class _WatchPageState extends State<WatchPage> {
                   videoId: item.id,
                   onSeek: (position) => controller.player?.seek(position),
                   scrollable: wide,
+                  sliver: !wide,
                   padding: wide ? const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding) : EdgeInsets.zero,
                 );
           final replayChat = item?.isLive == true || item?.liveStatus == 'was_live' ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide) : null;
@@ -107,35 +119,28 @@ class _WatchPageState extends State<WatchPage> {
             ],
             const SizedBox(height: 16),
             _Details(controller: controller),
-            // Wide windows show the comments in the side panel instead.
-            if (!wide && comments != null) ...[
-              const SizedBox(height: 24),
-              comments,
-            ],
-            if (!wide && replayChat != null) ...[
-              const SizedBox(height: 24),
-              replayChat,
-            ],
           ];
-          if (theater) {
-            // Edge to edge, the rest keeps the page's margins.
-            return ListView(padding: EdgeInsets.zero, children: [
-              Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 12, AppStyle.pagePadding, AppStyle.pagePadding),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  ...main.skip(1),
-                  const SizedBox(height: 24),
-                  _UpNext(controller: controller, shrinkWrap: true),
-                ]),
-              ),
-            ]);
-          }
           if (!wide) {
-            return ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: [
-              ...main,
+            // One scroll view of slivers, so the comments below the details
+            // are built as they scroll into view, not all at once.
+            const margin = AppStyle.pagePadding;
+            final rest = [
+              if (replayChat != null) ...[const SizedBox(height: 24), replayChat],
               const SizedBox(height: 24),
               _UpNext(controller: controller, shrinkWrap: true),
+            ];
+            return CustomScrollView(slivers: [
+              // In 剧场模式 the player goes edge to edge.
+              if (theater) SliverToBoxAdapter(child: Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video)))),
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(margin, theater ? 12 : 0, margin, 0),
+                sliver: SliverList.list(children: theater ? main.skip(1).toList() : main),
+              ),
+              if (comments != null) ...[
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                SliverPadding(padding: const EdgeInsets.symmetric(horizontal: margin), sliver: comments),
+              ],
+              SliverPadding(padding: const EdgeInsets.fromLTRB(margin, 0, margin, margin), sliver: SliverList.list(children: rest)),
             ]);
           }
           return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -407,7 +412,7 @@ class _DescriptionState extends State<_Description> {
                 controller: widget.controller,
                 text: widget.description,
                 builder: (context, description) => AnimatedSize(
-                  duration: const Duration(milliseconds: 180),
+                  duration: Motion.of(const Duration(milliseconds: 180)),
                   alignment: Alignment.topCenter,
                   // Times seek the video and links open in the browser, as in
                   // PiliNara; the expanded text can still be selected.
@@ -492,7 +497,7 @@ class _ReplayChatPanel extends StatelessWidget {
       Text(tr(live ? '聊天' : '聊天回放'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
       const SizedBox(height: 8),
       if (controller.loadingReplayChat) const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator())),
-      if (controller.replayChatError != null) ErrorBanner(tr('无法加载聊天回放：{0}', [controller.replayChatError])),
+      if (controller.replayChatError != null) ErrorBanner(tr(live ? '无法加载聊天：{0}' : '无法加载聊天回放：{0}', [controller.replayChatError]), onRetry: controller.retryChat),
       if (!controller.loadingReplayChat && controller.replayChatError == null && messages.isEmpty)
         Padding(padding: const EdgeInsets.all(12), child: Text(tr(live ? '当前直播没有公开聊天' : '这个直播录像没有公开的聊天回放'), style: TextStyle(color: context.colors.onSurfaceVariant))),
     ];
@@ -625,19 +630,27 @@ class _UpNext extends StatelessWidget {
 SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings) {
   if (settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
+  TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
+        height: 1.4,
+        fontSize: 32 * scale,
+        fontFamily: font.isEmpty ? null : font,
+        // Where the font is missing (another system), the bundled one.
+        fontFamilyFallback: const [bundledFont],
+        letterSpacing: 0.0,
+        wordSpacing: 0.0,
+        color: Color(0xFF000000 | color).withValues(alpha: opacity),
+        fontWeight: settings.subtitleBold ? FontWeight.w700 : FontWeight.normal,
+        backgroundColor: settings.subtitleBackground ? Color.fromRGBO(0, 0, 0, 0.67 * opacity) : null,
+        shadows: settings.subtitleBackground || border == 0
+            ? null
+            : [
+                for (final (dx, dy) in const [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)])
+                  Shadow(color: Colors.black.withValues(alpha: opacity), offset: Offset(dx * border / 2, dy * border / 2), blurRadius: border / 2),
+              ],
+      );
   return SubtitleViewConfiguration(
-    style: TextStyle(
-      height: 1.4,
-      fontSize: 32 * settings.subtitleScale,
-      letterSpacing: 0.0,
-      wordSpacing: 0.0,
-      color: Colors.white,
-      fontWeight: settings.subtitleBold ? FontWeight.w700 : FontWeight.normal,
-      backgroundColor: settings.subtitleBackground ? const Color(0xAA000000) : null,
-      shadows: settings.subtitleBackground || border == 0
-          ? null
-          : [for (final (dx, dy) in const [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)]) Shadow(color: Colors.black, offset: Offset(dx * border / 2, dy * border / 2), blurRadius: border / 2)],
-    ),
+    style: style(settings.subtitleFont, settings.subtitleScale, settings.subtitleColor, settings.subtitleOpacity),
+    secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
     // sub-pos counts from the top; 100 is the bottom edge.
     padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + (100 - settings.subtitlePosition) * 4.0),
   );

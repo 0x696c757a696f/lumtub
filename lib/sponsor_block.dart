@@ -37,8 +37,20 @@ class SponsorBlock {
         'categories': jsonEncode(categories.toList()),
       });
 
+  /// Answers of this session, so replaying or going back to a video, or
+  /// downloading it, asks once.
+  final _known = <String, List<SkipSegment>>{};
+
   Future<List<SkipSegment>> segments(String videoId, [Set<String> categories = PlayerSettings.defaultSponsorCategories]) async {
     if (categories.isEmpty || NativeCore.instance == null) return const [];
+    final key = '$videoId ${(categories.toList()..sort()).join(',')}';
+    if (_known[key] case final known?) return known;
+    final found = await _fetch(videoId, categories);
+    if (_known.length >= 200) _known.remove(_known.keys.first);
+    return _known[key] = found;
+  }
+
+  Future<List<SkipSegment>> _fetch(String videoId, Set<String> categories) async {
     final response = await _client.get(requestUri(videoId, categories), headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 10));
     // 404 means no video with this prefix has segments.
     if (response.statusCode == 404) return const [];

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
+import 'position_ticks.dart';
 
 /// The thin played/buffered line along the bottom edge of the video, shown
 /// while the controls are hidden.
@@ -12,7 +13,7 @@ class MiniProgressLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StreamBuilder<Duration>(
-        stream: player.stream.position,
+        stream: coarsePosition(player),
         initialData: player.state.position,
         builder: (context, _) {
           final total = player.state.duration.inMilliseconds;

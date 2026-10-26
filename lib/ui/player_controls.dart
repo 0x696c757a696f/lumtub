@@ -16,6 +16,7 @@ import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
@@ -24,12 +25,9 @@ import '../heatmap.dart';
 import '../keep_awake.dart';
 import '../picture_transform.dart';
 import '../storyboard.dart';
-import '../models.dart' show Chapter, SubtitleKind, SubtitleOption;
-import '../subtitle_translation.dart';
-import '../translation.dart';
+import '../models.dart' show Chapter;
 import '../format_policy.dart';
 import '../player_settings.dart';
-import '../widgets/pilinara_settings_tiles.dart';
 import '../widgets/mini_progress_line.dart';
 import '../widgets/video_progress_bar.dart';
 import 'cast_ui.dart';
@@ -38,12 +36,18 @@ import 'format_policy_dialogs.dart';
 import 'pages/settings_sections.dart' show trimSpeed, qualityLabel;
 import 'pages/settings_subpages.dart';
 import 'player_shortcuts.dart';
+import 'player_panel.dart';
+import 'subtitle_list_panel.dart';
+import 'subtitle_panel.dart';
 import 'player_stats.dart';
 import 'screenshot_action.dart';
 import 'storyboard_preview.dart';
 import 'theater_mode.dart';
-import 'video_texture_size.dart';
+import 'video_box.dart';
+import 'video_aspect.dart';
 import '../l10n/l10n.dart';
+import 'motion.dart';
+import 'smooth_wheel.dart';
 
 /// Picture sizing, from PiliNara's `VideoFitType`.
 enum VideoFit {
@@ -98,7 +102,7 @@ class PlayerControls extends StatefulWidget {
 }
 
 class _PlayerControlsState extends State<PlayerControls> with SingleTickerProviderStateMixin {
-  late final _animation = AnimationController(vsync: this, duration: const Duration(milliseconds: 200), value: 1);
+  late final _animation = AnimationController(vsync: this, duration: Motion.of(const Duration(milliseconds: 200)), value: 1);
   final _subscriptions = <StreamSubscription<Object?>>[];
   final _focus = FocusNode(debugLabel: 'player controls');
   Timer? _hideTimer;
@@ -110,6 +114,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   // What yt-dlp's extraction of the playing video offers for the bar.
   String? _infoFor;
   bool _infoBusy = false;
+  String? _infoRead;
   Heatmap? _heatmap;
   ProgressPreview? _preview;
 
@@ -120,6 +125,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   void initState() {
     super.initState();
     videoFit.addListener(_applyFit);
+    _controller.coverVideo = videoFit.value != VideoFit.contain;
     _controller.addListener(_syncVideo);
     KeepAwake.hold(this, _player.state.playing && !_controller.audioOnly);
     // Hides the pointer together with the bars.
@@ -173,11 +179,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     if (!mounted || id == null) return;
     if (_infoFor != id) {
       _infoFor = id;
+      _infoRead = null;
       _heatmap = null;
       _preview = null;
       _transform.reset();
       if (mounted) setState(() {});
-    } else if (_heatmap != null || _preview != null) {
+    } else if (_infoRead == id) {
       return;
     }
     if (_infoBusy) return;
@@ -185,6 +192,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     _controller.playingInfo().then((info) {
       _infoBusy = false;
       if (!mounted || info == null || _controller.playing?.id != id) return;
+      // Read once per video, also when it has neither: a live has no heatmap
+      // or storyboard, and the controller notifies many times a second.
+      _infoRead = id;
       final board = Storyboard.from(info);
       setState(() {
         _heatmap = Heatmap.from(info);
@@ -195,6 +205,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   void _applyFit() {
     final fit = videoFit.value;
+    _controller.coverVideo = fit != VideoFit.contain;
     // update() cannot clear an aspect ratio, so the automatic modes pass
     // the video's own one.
     final ratio = videoAspectFor(fit.aspectRatio, _player.state.width, _player.state.height);
@@ -242,7 +253,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   void _onScroll(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent) return;
+    // One volume step per notch, however the wheel's glide is split up.
+    if (event is! PointerScrollEvent || SmoothWheel.isFollowUp(event)) return;
     final step = _controller.preferences.volumeStep.toDouble();
     unawaited(_controller.changeVolume(event.scrollDelta.dy < 0 ? step : -step).then((_) {
       final volume = _player.state.volume.round();
@@ -266,8 +278,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final fullscreen = isFullscreen(context);
     final shortcuts = playerShortcuts(_controller, () => widget.state, onFeedback: _showFeedback, onScreenshot: () => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)));
     final controls = _controls(fullscreen, shortcuts);
-    final video = _controller.videoController;
-    return video == null ? controls : VideoTextureSize(controller: video, fullscreen: fullscreen, child: controls);
+    return VideoBox(controller: _controller, child: controls);
   }
 
   Widget _controls(bool fullscreen, Map<ShortcutActivator, VoidCallback> shortcuts) {
@@ -416,8 +427,19 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ),
         const SizedBox(width: 6),
         Expanded(
-          child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: fullscreen ? 16 : 14)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: fullscreen ? 16 : 14, fontWeight: FontWeight.w500)),
+            if (fullscreen && (details?.channel ?? item?.channel ?? '').isNotEmpty)
+              Text(details?.channel ?? item!.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          ]),
         ),
+        // Switches that are on show here, so the state stays visible after
+        // they moved into 更多设置.
+        for (final (on, icon, tip) in [
+          (_controller.pinned, Icons.push_pin_rounded, tr('窗口置顶中')),
+          (_controller.audioOnly, Icons.headphones_rounded, tr('听视频中')),
+        ])
+          if (on) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tip, child: Icon(icon, color: Theme.of(context).colorScheme.inversePrimary, size: 17))),
         if (_controller.sleepAt != null || _controller.sleepAfterCurrent)
           Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Tooltip(message: tr('定时关闭已开启'), child: Icon(Icons.bedtime_outlined, color: Colors.white, size: 18))),
         _IconButton(
@@ -428,36 +450,6 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           onTap: () => unawaited(showCastDialog(context, _controller)),
         ),
         _IconButton(
-          tooltip: _controller.pinned ? tr('取消置顶') : tr('窗口置顶'),
-          icon: _controller.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
-          size: 19,
-          active: _controller.pinned,
-          onTap: _controller.togglePinned,
-        ),
-        _IconButton(
-          tooltip: _controller.audioOnly ? tr('恢复画面') : tr('听视频（只放声音）'),
-          icon: Icons.headphones_rounded,
-          size: 19,
-          active: _controller.audioOnly,
-          onTap: () => unawaited(_controller.toggleAudioOnly()),
-        ),
-        _IconButton(
-          tooltip: _controller.settings.sponsorBlock ? tr('SponsorBlock 已开启，点击关闭') : tr('SponsorBlock 已关闭，点击开启'),
-          icon: _controller.settings.sponsorBlock ? Icons.shield_rounded : Icons.shield_outlined,
-          size: 19,
-          active: _controller.settings.sponsorBlock,
-          onTap: () => unawaited(_controller.toggleSponsorBlock()),
-        ),
-        _IconButton(
-          tooltip: tr('应用内小窗'),
-          icon: Icons.picture_in_picture_rounded,
-          size: 19,
-          onTap: () async {
-            await leaveFullscreen();
-            _controller.enterMini();
-          },
-        ),
-        _IconButton(
           tooltip: tr('画中画'),
           icon: Icons.picture_in_picture_alt_rounded,
           size: 19,
@@ -466,14 +458,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             _controller.setPip(true);
           },
         ),
-        _IconButton(tooltip: tr('播放信息 (I)'), icon: Icons.info_outline_rounded, size: 19, active: _controller.showStats, onTap: _controller.toggleStats),
-        _IconButton(tooltip: tr('更多设置'), icon: Icons.more_vert_rounded, size: 20, onTap: () => _showMore(context)),
+        _IconButton(tooltip: tr('更多设置'), icon: Icons.tune_rounded, size: 20, onTap: () => _showMore(context)),
       ]),
     );
   }
 
   Widget _bottomBar(BuildContext context, bool fullscreen) {
     final primary = Theme.of(context).colorScheme.inversePrimary;
+    // Built here, once per rebuild of the bar, not on every position event.
+    final segments = [
+      for (final s in _controller.segments) ProgressSegment(s.start, s.end, _segmentColors[s.category] ?? const Color(0xFF00D400)),
+    ];
+    final chapterStarts = [for (final c in _chapters) c.start];
     final width = fullscreen ? 42.0 : 35.0;
     // Keep the action cluster anchored to the physical bottom-right edge in
     // fullscreen. The progress and playback information remain on the left.
@@ -484,18 +480,16 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: StreamBuilder<Duration>(
-            stream: _player.stream.position,
-            initialData: _player.state.position,
-            builder: (context, _) => VideoProgressBar(
+          child: _PositionBuilder(
+            player: _player,
+            active: !_animation.isDismissed,
+            builder: (context) => VideoProgressBar(
               position: _player.state.position,
               buffered: _player.state.buffer,
               total: _player.state.duration,
               color: primary,
-              segments: [
-                for (final s in _controller.segments) ProgressSegment(s.start, s.end, _segmentColors[s.category] ?? const Color(0xFF00D400)),
-              ],
-              chapterStarts: [for (final c in _chapters) c.start],
+              segments: segments,
+              chapterStarts: chapterStarts,
               preview: _preview,
               heatmap: _controller.preferences.showHeatmap ? _heatmap?.values : null,
               labelOf: _chapters.isEmpty ? null : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(_chapters, time)?.title ?? ''}',
@@ -508,30 +502,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           _PlayPauseButton(player: _player),
           if (_controller.hasNext)
             _IconButton(tooltip: tr('下一个 (Shift+N)'), icon: Icons.skip_next_rounded, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
-          const SizedBox(width: 4),
-          StreamBuilder<Duration>(
-            stream: _player.stream.position,
-            initialData: _player.state.position,
-            builder: (context, _) => Text(
+          _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
+          const SizedBox(width: 6),
+          _PositionBuilder(
+            player: _player,
+            active: !_animation.isDismissed,
+            seconds: true,
+            builder: (context) => Text(
               '${formatPlaybackTime(_player.state.position)} / ${formatPlaybackTime(_player.state.duration)}',
               style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
             ),
           ),
-          if (_chapters.isNotEmpty) Flexible(child: _chapterMenu()),
-          const Spacer(),
-          _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
-          ValueListenableBuilder(
-            valueListenable: videoFit,
-            builder: (context, fit, _) => _TextMenu<VideoFit>(
-              tooltip: tr('画面比例'),
-              label: fit.label,
-              value: fit,
-              values: [for (final f in VideoFit.values) (f, f.label)],
-              onSelected: (f) => videoFit.value = f,
-              onOpened: _menuOpened,
-              onClosed: _menuClosed,
-            ),
-          ),
+          Expanded(child: Align(alignment: Alignment.centerLeft, child: _chapterMenu())),
           _subtitleMenu(width),
           StreamBuilder<double>(
             stream: _player.stream.rate,
@@ -590,181 +572,198 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
-  Widget _subtitleMenu(double width) => StreamBuilder<Track>(
+  Widget _subtitleMenu(double width) => ListenableBuilder(
+        listenable: _controller,
+        builder: (context, _) => StreamBuilder<Track>(
         stream: _player.stream.track,
         initialData: _player.state.track,
         builder: (context, _) {
-          final tracks = _player.state.tracks.subtitle.where((t) => t.id != 'auto' && t.id != 'no').toList();
           final current = _player.state.track.subtitle;
           final on = current.id != 'no' && current.id != 'auto';
-          final offered = _controller.details?.subtitles ?? const <SubtitleOption>[];
-          if (tracks.isEmpty && offered.isEmpty) return const SizedBox.shrink();
-          const more = '\u0000more';
-          const translate = '\u0000translate';
-          const bilingual = '\u0000bilingual';
-          const secondary = '\u0000secondary';
-          final target = TranslationLanguage.byCode(_controller.preferences.translateLanguage);
-          final translation = translationOf(offered, target);
-          final secondaryOn = _controller.secondarySubtitle != null;
-          return _PopupMenu<String>(
+          final hasTracks = _player.state.tracks.subtitle.any((t) => t.id != 'auto' && t.id != 'no');
+          if (!hasTracks && (_controller.details?.subtitles ?? const []).isEmpty) return const SizedBox.shrink();
+          final button = _IconButton(
             tooltip: tr('字幕'),
-            value: current.id,
-            items: [
-              ('no', tr('关闭字幕')),
-              for (final t in tracks) (t.id, _trackLabel(t.id, t.title, t.language)),
-              if (offered.isNotEmpty) (more, tr('全部字幕（{0}）…', [offered.length])),
-              if (translation != null) (translate, tr('翻译字幕为{0}', [target.label])),
-              if (translation != null || secondaryOn) (bilingual, secondaryOn ? tr('关闭双语字幕') : tr('双语字幕（加{0}副字幕）', [target.label])),
-              if (offered.isNotEmpty) (secondary, tr('副字幕…')),
-            ],
-            onSelected: (id) {
-              if (id == more) {
-                unawaited(_pickSubtitle(context, offered));
-              } else if (id == secondary) {
-                unawaited(_pickSubtitle(context, offered, secondary: true));
-              } else if (id == translate) {
-                unawaited(_controller.showSubtitle(translation!));
-              } else if (id == bilingual) {
-                unawaited(_controller.setSecondarySubtitle(secondaryOn ? null : translation));
-              } else {
-                unawaited(_player.setSubtitleTrack(id == 'no' ? SubtitleTrack.no() : tracks.firstWhere((t) => t.id == id)));
-              }
-            },
-            onOpened: _menuOpened,
-            onClosed: _menuClosed,
-            child: SizedBox(
-              width: width,
-              height: 30,
-              child: Icon(on ? Icons.closed_caption_rounded : Icons.closed_caption_off_outlined, size: 22, color: Colors.white),
-            ),
+            width: width,
+            icon: on ? Icons.closed_caption_rounded : Icons.closed_caption_off_outlined,
+            active: _controller.secondarySubtitle != null,
+            onTap: () => unawaited(_openSubtitles(context)),
           );
+          if (!on && _controller.secondarySubtitle == null) return button;
+          // While a subtitle is shown, its list is one click away.
+          return Row(mainAxisSize: MainAxisSize.min, children: [
+            button,
+            _IconButton(tooltip: tr('字幕列表'), width: width, icon: Icons.subject_rounded, onTap: () => unawaited(_openSubtitleList(context))),
+          ]);
         },
+      ),
       );
 
-  /// PiliNara's header "更多" sheet: format, order, subtitles, sleep timer,
-  /// playback info and reload.
+  Future<void> _openSubtitles(BuildContext context) async {
+    _menuOpened();
+    await showSubtitlePanel(context, _controller, _player, onSettings: () => openSubtitleSettings(context, _controller), onList: () => unawaited(_openSubtitleList(context)));
+    _menuClosed();
+  }
+
+  Future<void> _openSubtitleList(BuildContext context) async {
+    _menuOpened();
+    await showSubtitleList(context, _controller, _player);
+    _menuClosed();
+  }
+
+  /// The 更多 panel: PiliNara's header sheet, as a side panel whose
+  /// choices apply at once while it stays open.
   Future<void> _showMore(BuildContext context) async {
     _menuOpened();
+    await showPlayerPanel(
+      context,
+      title: tr('更多设置'),
+      builder: (panel) => ListenableBuilder(listenable: Listenable.merge([_controller, _transform]), builder: (panel, _) => _moreItems(context, panel)),
+    );
+    _menuClosed();
+  }
+
+  Widget _moreItems(BuildContext context, BuildContext panel) {
     final settings = _controller.settings;
     final audio = _player.state.tracks.audio.where((t) => t.id != 'auto' && t.id != 'no').toList();
-    String sleepLabel() {
-      if (_controller.sleepAfterCurrent) return tr('播完当前视频后暂停');
-      final at = _controller.sleepAt;
-      if (at == null) return tr('未开启');
-      final left = at.difference(DateTime.now());
-      return tr('{0} 分钟后暂停', [left.inMinutes + 1]);
+    // Steps that open a page or act on the picture close the panel first.
+    void closeThen(VoidCallback then) {
+      Navigator.of(panel).pop();
+      then();
     }
 
-    await showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      constraints: const BoxConstraints(maxWidth: 520),
-      builder: (sheet) {
-        Widget item(IconData icon, String title, String? subtitle, VoidCallback onTap) => ListTile(
-              dense: true,
-              leading: Icon(icon, size: 20),
-              title: Text(title),
-              subtitle: subtitle == null ? null : Text(subtitle, style: TextStyle(color: Theme.of(sheet).colorScheme.outline, fontSize: 12)),
-              onTap: () {
-                Navigator.pop(sheet);
-                onTap();
-              },
-            );
-        return SafeArea(
-          child: ListView(shrinkWrap: true, padding: const EdgeInsets.symmetric(vertical: 12), children: [
-            item(Icons.high_quality_outlined, tr('选择画质'), qualityLabel(settings.maxHeight), () {
-              pickFromDialog<int>(context, title: tr('选择画质'), value: settings.maxHeight, values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h))], onSelected: _controller.setMaxHeight);
-            }),
-            item(Icons.music_note_outlined, tr('选择音质'), settings.audioQuality.label, () {
-              pickFromDialog<AudioQuality>(
-                context,
-                title: tr('选择音质'),
-                value: settings.audioQuality,
-                values: [for (final q in AudioQuality.values) (q, q.label)],
-                onSelected: (q) => _controller.reloadVideo(_controller.settings.copyWith(audioQuality: q)),
-              );
-            }),
-            item(Icons.movie_filter_outlined, tr('播放策略'), settings.strategy.label, () {
-              pickPlaybackStrategy(context, settings.strategy, (v) => _controller.reloadVideo(_controller.settings.copyWith(strategy: v)));
-            }),
-            item(Icons.block_outlined, tr('禁用视频编码'), FormatPolicy.disabledNames(settings).isEmpty ? tr('无') : FormatPolicy.disabledNames(settings), () {
-              pickDisabledCodecs(context, settings, (v) => _controller.reloadVideo(v));
-            }),
-            if (audio.length > 1)
-              item(Icons.audiotrack_rounded, tr('选择音轨'), _trackLabel(_player.state.track.audio.id, _player.state.track.audio.title, _player.state.track.audio.language), () {
-                pickFromDialog<String>(
-                  context,
-                  title: tr('选择音轨'),
-                  value: _player.state.track.audio.id,
-                  values: [for (final t in audio) (t.id, _trackLabel(t.id, t.title, t.language))],
-                  onSelected: (id) => _player.setAudioTrack(audio.firstWhere((t) => t.id == id)),
-                );
-              }),
-            item(Icons.repeat_rounded, tr('播放顺序'), settings.playOrder.label, () {
-              pickFromDialog<PlayOrder>(context, title: tr('播放顺序'), value: settings.playOrder, values: [for (final o in PlayOrder.values) (o, o.label)], onSelected: _controller.setPlayOrder);
-            }),
-            item(Icons.subtitles_outlined, tr('字幕设置'), '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}', () => openSubtitleSettings(context, _controller)),
-            item(Icons.tune_rounded, tr('画面与音画同步调节'), null, () => openPictureSettings(context, _controller)),
-            item(Icons.photo_camera_outlined, tr('截图 (S)'), tr('保存到“图片\\Lumtub”并复制'), () => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback))),
-            item(Icons.flip_rounded, tr('镜像翻转'), _transform.mirrored ? tr('已开启') : tr('未开启'), () => unawaited(_transform.setMirrored(!_transform.mirrored))),
-            item(Icons.zoom_in_rounded, tr('画面缩放'), _transform.zoom == 1 ? tr('原始大小') : '${trimSpeed(_transform.zoom)}x', () {
-              pickFromDialog<double>(
-                context,
-                title: tr('画面缩放'),
-                value: _transform.zoom,
-                values: [for (final z in PictureTransform.zoomLevels) (z, z == 1 ? tr('原始大小') : '${trimSpeed(z)}x')],
-                onSelected: (z) => unawaited(_transform.setZoom(z)),
-              );
-            }),
-            item(Icons.bedtime_outlined, tr('定时关闭'), sleepLabel(), () => _pickSleepTimer(context)),
-            item(Icons.info_outline_rounded, tr('播放信息'), _controller.showStats ? tr('显示中') : null, _controller.toggleStats),
-            item(Icons.refresh_rounded, tr('重载视频'), tr('从当前位置重新加载'), () => unawaited(_controller.reloadVideo())),
-            item(Icons.keyboard_outlined, tr('快捷键'), null, () => showShortcutHelp(context, _controller.preferences)),
-          ]),
-        );
-      },
-    );
-    _menuClosed();
+    const sleepOff = -1;
+    const sleepAfterCurrent = 0;
+    final sleepAt = _controller.sleepAt;
+    final sleeping = _controller.sleepAfterCurrent ? sleepAfterCurrent : (sleepAt == null ? sleepOff : null);
+    final codecs = FormatPolicy.disabledNames(settings);
+    return ListView(padding: const EdgeInsets.only(bottom: 16), children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+        child: Wrap(spacing: 8, runSpacing: 8, children: [
+          PanelToggle(label: tr('窗口置顶'), icon: Icons.push_pin_outlined, value: _controller.pinned, onChanged: (_) => _controller.togglePinned()),
+          PanelToggle(label: tr('听视频'), icon: Icons.headphones_rounded, value: _controller.audioOnly, onChanged: (_) => unawaited(_controller.toggleAudioOnly())),
+          PanelToggle(label: tr('空降助手'), icon: Icons.shield_outlined, value: settings.sponsorBlock, onChanged: (_) => unawaited(_controller.toggleSponsorBlock())),
+          PanelToggle(label: tr('播放信息'), icon: Icons.info_outline_rounded, value: _controller.showStats, onChanged: (_) => _controller.toggleStats()),
+          PanelToggle(label: tr('镜像翻转'), icon: Icons.flip_rounded, value: _transform.mirrored, onChanged: (v) => unawaited(_transform.setMirrored(v))),
+          PanelToggle(label: tr('应用内小窗'), icon: Icons.picture_in_picture_rounded, value: false, onChanged: (_) => closeThen(() async {
+            if (isFullscreen(context)) await widget.state?.exitFullscreen();
+            _controller.enterMini();
+          })),
+        ]),
+      ),
+      PanelHeading(tr('画面')),
+      PanelChoices<int>(
+        label: tr('画质'),
+        icon: Icons.high_quality_outlined,
+        value: settings.maxHeight,
+        values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h))],
+        onSelected: _controller.setMaxHeight,
+      ),
+      ValueListenableBuilder(
+        valueListenable: videoFit,
+        builder: (context, fit, _) => PanelChoices<VideoFit>(
+          label: tr('画面比例'),
+          icon: Icons.aspect_ratio_rounded,
+          value: fit,
+          values: [for (final f in VideoFit.values) (f, f.label)],
+          onSelected: (f) => videoFit.value = f,
+        ),
+      ),
+      PanelChoices<double>(
+        label: tr('画面缩放'),
+        icon: Icons.zoom_in_rounded,
+        value: _transform.zoom,
+        values: [for (final z in PictureTransform.zoomLevels) (z, z == 1 ? tr('原始大小') : '${trimSpeed(z)}x')],
+        onSelected: (z) => unawaited(_transform.setZoom(z)),
+      ),
+      PanelLink(label: tr('画面与音画同步调节'), icon: Icons.tune_rounded, onTap: () => closeThen(() => openPictureSettings(context, _controller))),
+      PanelHeading(tr('声音')),
+      PanelChoices<AudioQuality>(
+        label: tr('音质'),
+        icon: Icons.music_note_outlined,
+        value: settings.audioQuality,
+        values: [for (final q in AudioQuality.values) (q, q.label)],
+        onSelected: (q) => unawaited(_controller.reloadVideo(_controller.settings.copyWith(audioQuality: q))),
+      ),
+      if (audio.length > 1)
+        StreamBuilder<Track>(
+          stream: _player.stream.track,
+          builder: (context, _) => PanelChoices<String>(
+            label: tr('音轨'),
+            icon: Icons.audiotrack_rounded,
+            value: _player.state.track.audio.id,
+            values: [for (final t in audio) (t.id, trackLabel(t.id, t.title, t.language))],
+            collapsed: true,
+            onSelected: (id) => unawaited(_player.setAudioTrack(audio.firstWhere((t) => t.id == id))),
+          ),
+        ),
+      PanelHeading(tr('播放')),
+      PanelChoices<PlayOrder>(
+        label: tr('播放顺序'),
+        icon: Icons.repeat_rounded,
+        value: settings.playOrder,
+        values: [for (final o in PlayOrder.values) (o, o.label)],
+        onSelected: _controller.setPlayOrder,
+      ),
+      PanelChoices<int?>(
+        label: sleepAt == null ? tr('定时关闭') : tr('定时关闭（{0} 分钟后暂停）', [sleepAt.difference(DateTime.now()).inMinutes + 1]),
+        icon: Icons.bedtime_outlined,
+        value: sleeping,
+        values: [(sleepOff, tr('不开启')), (sleepAfterCurrent, tr('播完当前视频后')), for (final m in const [15, 30, 45, 60, 90]) (m, tr('{0} 分钟', [m]))],
+        onSelected: (minutes) {
+          if (minutes == null || minutes == sleepOff) {
+            _controller.setSleepTimer(null);
+          } else if (minutes == sleepAfterCurrent) {
+            _controller.setSleepTimer(null, afterCurrent: true);
+          } else {
+            _controller.setSleepTimer(Duration(minutes: minutes));
+          }
+        },
+      ),
+      PanelChoices<PlaybackStrategy>(
+        label: tr('播放策略'),
+        icon: Icons.movie_filter_outlined,
+        value: settings.strategy,
+        values: [for (final v in PlaybackStrategy.values) (v, v.label)],
+        onSelected: (v) => unawaited(_controller.reloadVideo(_controller.settings.copyWith(strategy: v))),
+      ),
+      PanelLink(
+        label: tr('禁用视频编码'),
+        detail: codecs.isEmpty ? tr('无') : codecs,
+        icon: Icons.block_outlined,
+        onTap: () => pickDisabledCodecs(context, settings, (v) => _controller.reloadVideo(v)),
+      ),
+      PanelLink(
+        label: tr('字幕'),
+        detail: '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}',
+        icon: Icons.subtitles_outlined,
+        onTap: () => closeThen(() => unawaited(_openSubtitles(context))),
+      ),
+      PanelHeading(tr('工具')),
+      PanelLink(label: tr('截图 (S)'), detail: tr('保存到“图片\\Lumtub”并复制'), icon: Icons.photo_camera_outlined, opens: false, onTap: () => closeThen(() => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)))),
+      PanelLink(label: tr('字幕列表'), detail: tr('点一句跳过去；A / D 上一句、下一句，R 重听'), icon: Icons.subject_rounded, onTap: () => closeThen(() => unawaited(_openSubtitleList(context)))),
+      PanelLink(
+        label: tr('复制当前字幕 (Ctrl+C)'),
+        icon: Icons.content_copy_rounded,
+        opens: false,
+        onTap: () {
+          final text = _controller.currentSubtitleText;
+          if (text.isEmpty) return;
+          unawaited(Clipboard.setData(ClipboardData(text: text)));
+          closeThen(() => _showFeedback(Icons.content_copy_rounded, tr('已复制字幕')));
+        },
+      ),
+      PanelLink(label: tr('重载视频'), detail: tr('从当前位置重新加载'), icon: Icons.refresh_rounded, opens: false, onTap: () => closeThen(() => unawaited(_controller.reloadVideo()))),
+      PanelLink(label: tr('快捷键'), icon: Icons.keyboard_outlined, onTap: () => showShortcutHelp(context, _controller.preferences)),
+    ]);
   }
 
-  Future<void> _pickSleepTimer(BuildContext context) async {
-    const off = -1;
-    const afterCurrent = 0;
-    final current = _controller.sleepAfterCurrent ? afterCurrent : (_controller.sleepAt == null ? off : null);
-    await pickFromDialog<int?>(
-      context,
-      title: tr('定时关闭'),
-      value: current,
-      values: [(off, tr('不开启')), (afterCurrent, tr('播完当前视频后')), (15, tr('15 分钟')), (30, tr('30 分钟')), (45, tr('45 分钟')), (60, tr('60 分钟')), (90, tr('90 分钟'))],
-      onSelected: (minutes) {
-        if (minutes == null || minutes == off) {
-          _controller.setSleepTimer(null);
-        } else if (minutes == afterCurrent) {
-          _controller.setSleepTimer(null, afterCurrent: true);
-        } else {
-          _controller.setSleepTimer(Duration(minutes: minutes));
-        }
-      },
-    );
-  }
 
-  /// Every subtitle the video offers, with a filter; the pick is added to
-  /// the player.
-  Future<void> _pickSubtitle(BuildContext context, List<SubtitleOption> offered, {bool secondary = false}) async {
-    _menuOpened();
-    final picked = await showDialog<SubtitleOption>(context: context, builder: (context) => _SubtitlePicker(options: offered, title: secondary ? tr('副字幕（显示在主字幕上方）') : null));
-    _menuClosed();
-    if (picked != null) await (secondary ? _controller.setSecondarySubtitle(picked) : _controller.showSubtitle(picked));
-  }
-
-  static String _trackLabel(String id, String? title, String? language) {
-    final parts = [if (title != null && title.isNotEmpty) title, if (language != null && language.isNotEmpty) language];
-    return parts.isEmpty ? tr('轨道 {0}', [id]) : parts.join(' · ');
-  }
 }
 
-/// PiliNara's `ComBtn`: a bare white icon with a tooltip.
+/// PiliNara's `ComBtn`: a bare white icon with a tooltip, with a soft
+/// round highlight under the mouse.
 class _IconButton extends StatelessWidget {
   const _IconButton({required this.tooltip, required this.icon, required this.onTap, this.size = 22, this.width = 34, this.active = false});
   final String tooltip;
@@ -778,18 +777,97 @@ class _IconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Tooltip(
         message: tooltip,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onTap,
-            child: SizedBox(width: width, height: 34, child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white)),
+        child: _Hover(
+          onTap: onTap,
+          child: SizedBox(width: width, height: 34, child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white)),
+        ),
+      );
+}
+
+/// A pressable area of the bars: the click cursor and a translucent
+/// rounded highlight while the mouse is over it.
+class _Hover extends StatefulWidget {
+  const _Hover({required this.onTap, required this.child});
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  State<_Hover> createState() => _HoverState();
+}
+
+class _HoverState extends State<_Hover> {
+  bool _over = false;
+
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _over = true),
+        onExit: (_) => setState(() => _over = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: Motion.of(const Duration(milliseconds: 120)),
+            decoration: BoxDecoration(color: _over ? Colors.white.withValues(alpha: 0.14) : Colors.transparent, borderRadius: BorderRadius.circular(17)),
+            child: widget.child,
           ),
         ),
       );
 }
 
 /// PiliNara's `PlayOrPauseButton`, animating between the two icons.
+/// Rebuilds [builder] as the playback position moves, only while [active]
+/// (the bars are on screen), and with [seconds] only when the whole second
+/// changes. mpv reports the position on every frame.
+class _PositionBuilder extends StatefulWidget {
+  const _PositionBuilder({required this.player, required this.active, required this.builder, this.seconds = false});
+  final Player player;
+  final bool active;
+  final bool seconds;
+  final WidgetBuilder builder;
+
+  @override
+  State<_PositionBuilder> createState() => _PositionBuilderState();
+}
+
+class _PositionBuilderState extends State<_PositionBuilder> {
+  StreamSubscription<Duration>? _subscription;
+  int _shown = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _listen();
+  }
+
+  @override
+  void didUpdateWidget(_PositionBuilder old) {
+    super.didUpdateWidget(old);
+    if (old.active != widget.active || old.player != widget.player) _listen();
+  }
+
+  void _listen() {
+    unawaited(_subscription?.cancel());
+    _subscription = !widget.active
+        ? null
+        : widget.player.stream.position.listen((position) {
+            final mark = widget.seconds ? position.inSeconds : position.inMilliseconds;
+            if (mark == _shown || !mounted) return;
+            _shown = mark;
+            setState(() {});
+          });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_subscription?.cancel());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context);
+}
+
 class _PlayPauseButton extends StatefulWidget {
   const _PlayPauseButton({required this.player});
   final Player player;
@@ -799,7 +877,7 @@ class _PlayPauseButton extends StatefulWidget {
 }
 
 class _PlayPauseButtonState extends State<_PlayPauseButton> with SingleTickerProviderStateMixin {
-  late final _animation = AnimationController(vsync: this, value: widget.player.state.playing ? 1 : 0, duration: const Duration(milliseconds: 200));
+  late final _animation = AnimationController(vsync: this, value: widget.player.state.playing ? 1 : 0, duration: Motion.of(const Duration(milliseconds: 200)));
   late final StreamSubscription<bool> _subscription = widget.player.stream.playing.listen((playing) => playing ? _animation.forward() : _animation.reverse());
 
   @override
@@ -853,30 +931,51 @@ class _PopupMenu<T> extends StatelessWidget {
   final VoidCallback onClosed;
   final Widget child;
 
+  static const _itemHeight = 36.0;
+  static const _padding = 6.0;
+
+  /// Opens the list just above the button, as the bars sit at the bottom,
+  /// instead of over it.
+  Future<void> _open(BuildContext context) async {
+    final box = context.findRenderObject()! as RenderBox;
+    final overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
+    final rect = Rect.fromPoints(box.localToGlobal(Offset.zero, ancestor: overlay), box.localToGlobal(box.size.bottomRight(Offset.zero), ancestor: overlay));
+    final height = items.length * _itemHeight + _padding * 2;
+    final top = rect.top - height - 6;
+    final position = top >= 8
+        ? RelativeRect.fromLTRB(rect.left, top, overlay.size.width - rect.right, overlay.size.height - rect.top)
+        : RelativeRect.fromRect(rect, Offset.zero & overlay.size);
+    onOpened();
+    final theme = Theme.of(context);
+    final picked = await showMenu<T>(
+      context: context,
+      position: position,
+      color: const Color(0xEB1F1F1F),
+      elevation: 6,
+      menuPadding: const EdgeInsets.symmetric(vertical: _padding),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      constraints: const BoxConstraints(minWidth: 112),
+      items: [
+        for (final (item, label) in items)
+          PopupMenuItem<T>(
+            height: _itemHeight,
+            padding: const EdgeInsets.only(left: 12, right: 20),
+            value: item,
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              SizedBox(width: 22, child: item == value ? Icon(Icons.check_rounded, size: 16, color: theme.colorScheme.inversePrimary) : null),
+              Flexible(child: Text(label, style: item == value ? _menuText.copyWith(color: theme.colorScheme.inversePrimary, fontWeight: FontWeight.w600) : _menuText)),
+            ]),
+          ),
+      ],
+    );
+    onClosed();
+    if (picked != null && picked != value) onSelected(picked);
+  }
+
   @override
-  Widget build(BuildContext context) => PopupMenuButton<T>(
-        tooltip: tooltip,
-        requestFocus: false,
-        initialValue: value,
-        color: Colors.black.withValues(alpha: 0.8),
-        menuPadding: EdgeInsets.zero,
-        position: PopupMenuPosition.over,
-        onOpened: onOpened,
-        onCanceled: onClosed,
-        onSelected: (v) {
-          onClosed();
-          onSelected(v);
-        },
-        itemBuilder: (context) => [
-          for (final (item, label) in items)
-            PopupMenuItem<T>(
-              height: 35,
-              padding: const EdgeInsets.only(left: 30, right: 30),
-              value: item,
-              child: Text(label, style: item == value ? _menuText.copyWith(color: Theme.of(context).colorScheme.inversePrimary) : _menuText),
-            ),
-        ],
-        child: child,
+  Widget build(BuildContext context) => Tooltip(
+        message: tooltip,
+        child: Builder(builder: (context) => _Hover(onTap: () => unawaited(_open(context)), child: child)),
       );
 }
 
@@ -951,7 +1050,7 @@ class _VolumeButtonState extends State<_VolumeButton> {
                 onTap: () => unawaited(widget.controller.toggleMute()),
               ),
               AnimatedSize(
-                duration: const Duration(milliseconds: 150),
+                duration: Motion.of(const Duration(milliseconds: 150)),
                 child: _open
                     ? SizedBox(
                         width: 96,
@@ -993,51 +1092,22 @@ class _FeedbackBubble extends StatelessWidget {
       );
 }
 
-/// Lists [options] by kind, with a filter by language name or code.
-class _SubtitlePicker extends StatefulWidget {
-  const _SubtitlePicker({required this.options, this.title});
-  final List<SubtitleOption> options;
-  final String? title;
+/// yt-dlp names audio formats like `251-4 - audio only (English (US)
+/// original (default), medium)`; shown as the part in brackets and the
+/// codec its number stands for.
+final _ytDlpAudio = RegExp(r'^(\d+)(-[\w-]+)? - audio only \((.*)\)$');
 
-  @override
-  State<_SubtitlePicker> createState() => _SubtitlePickerState();
-}
-
-class _SubtitlePickerState extends State<_SubtitlePicker> {
-  String _query = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final query = _query.trim().toLowerCase();
-    final shown = widget.options.where((o) => query.isEmpty || o.label.toLowerCase().contains(query) || o.language.toLowerCase().contains(query) || o.name.toLowerCase().contains(query)).toList();
-    final headings = {SubtitleKind.uploaded: tr('上传的字幕'), SubtitleKind.automatic: tr('自动生成'), SubtitleKind.translated: tr('自动翻译')};
-    return AlertDialog(
-      title: Text(widget.title ?? tr('选择字幕')),
-      contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      content: SizedBox(
-        width: 420,
-        height: 520,
-        child: Column(children: [
-          TextField(
-            autofocus: true,
-            decoration: InputDecoration(isDense: true, prefixIcon: Icon(Icons.search_rounded, size: 20), hintText: tr('搜索语言，如 中文、ja')),
-            onChanged: (v) => setState(() => _query = v),
-          ),
-          const SizedBox(height: 8),
-          Expanded(child: ListView(children: [
-            for (final kind in SubtitleKind.values)
-              if (shown.where((o) => o.kind == kind).toList() case final group when group.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-                  child: Text(headings[kind]!, style: Theme.of(context).textTheme.labelLarge!.copyWith(color: Theme.of(context).colorScheme.primary)),
-                ),
-                for (final option in group) ListTile(dense: true, title: Text(option.label), subtitle: Text(option.language), onTap: () => Navigator.of(context).pop(option)),
-              ],
-            if (shown.isEmpty) Padding(padding: EdgeInsets.all(24), child: Center(child: Text(tr('没有匹配的语言')))),
-          ])),
-        ]),
-      ),
-      actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('取消')))],
-    );
+/// A track's name in menus.
+String trackLabel(String id, String? title, String? language) {
+  final match = title == null ? null : _ytDlpAudio.firstMatch(title);
+  if (match != null) {
+    final codec = switch (int.parse(match[1]!)) {
+      249 || 250 || 251 => 'Opus',
+      139 || 140 || 141 => 'AAC',
+      _ => null,
+    };
+    return [match[3]!, if (codec != null) codec, if (match[2]?.contains('drc') ?? false) tr('音量均衡')].join(' · ');
   }
+  final parts = [if (title != null && title.isNotEmpty) title, if (language != null && language.isNotEmpty) language];
+  return parts.isEmpty ? tr('轨道 {0}', [id]) : parts.join(' · ');
 }

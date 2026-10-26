@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app_updater.dart';
 import 'package:lumtub/native_core.dart';
@@ -11,6 +13,7 @@ void main() {
         'published_at': published.toIso8601String(),
         'assets': [
           {'name': 'Lumtub_${tag.substring(1)}_windows-x64-setup.exe', 'digest': 'sha256:00'},
+          {'name': 'Lumtub_${tag.substring(1)}_windows-x64-setup.exe.sig'},
           {'name': 'Lumtub_${tag.substring(1)}_windows-x64.zip'},
           {'name': 'Lumtub_${tag.substring(1)}_windows-x64-v3-setup.exe'},
         ],
@@ -22,6 +25,7 @@ void main() {
     expect(offer.page, endsWith('/v0.2.2-1234567'));
     expect(offer.asset!['name'], 'Lumtub_0.2.2-1234567_windows-x64-setup.exe');
     expect(offer.asset!['digest'], 'sha256:00');
+    expect(offer.signature!['name'], 'Lumtub_0.2.2-1234567_windows-x64-setup.exe.sig');
     expect(offerOf(release('v0.2.2-1234567', built), current: '0.2.1-72ec49d', built: built, package: 'windows-x64', portable: true)!.asset!['name'], 'Lumtub_0.2.2-1234567_windows-x64.zip');
   }, skip: skip);
 
@@ -38,5 +42,14 @@ void main() {
     expect(script, contains('Wait-Process -Id 42'));
     expect(script, contains('/VERYSILENT'));
     expect(script, endsWith(r"Start-Process -FilePath 'C:\Lumtub\lumtub.exe'"));
+  }, skip: skip);
+
+  test('rejects a package whose signature does not hold', () {
+    final folder = Directory.systemTemp.createTempSync('lumtub-update');
+    addTearDown(() => folder.deleteSync(recursive: true));
+    final file = File('${folder.path}/Lumtub_0.2.4-abcdef0_windows-x64-setup.exe')..writeAsStringSync('package');
+    final sig = File('${file.path}.sig')..writeAsBytesSync(List.filled(3373, 1));
+    expect(verifyUpdate(file: file.path, name: 'Lumtub_0.2.4-abcdef0_windows-x64-setup.exe', signature: sig.path), "The update's signature does not match");
+    expect(verifyUpdate(file: file.path, name: 'x', signature: '${folder.path}/missing.sig'), startsWith('Could not read the signature'));
   }, skip: skip);
 }

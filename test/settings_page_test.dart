@@ -81,7 +81,8 @@ void main() {
     await pump(tester);
     for (final (category, row, title, content) in [
       (SettingsCategory.play, '倍速设置', '倍速设置', '倍速列表'),
-      (SettingsCategory.play, '字幕设置', '字幕设置', '首选字幕语言'),
+      (SettingsCategory.play, '字幕设置', '字幕设置', '第一字幕语言'),
+      (SettingsCategory.extra, '翻译服务', '翻译服务', 'Google 翻译（免费）'),
       (SettingsCategory.style, '应用主题', '选择应用主题', '调色板风格'),
       (SettingsCategory.style, 'App 字体设置', 'App 字体设置', '微软雅黑'),
       (SettingsCategory.extra, '组件管理', '组件管理', '正在准备组件…'),
@@ -94,6 +95,21 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
     }
+  });
+
+  testWidgets('a theme preset sets the colour and palette style in one tap', (tester) async {
+    await pump(tester);
+    await openRow(tester, SettingsCategory.style, '应用主题');
+    expect(find.text('经典红'), findsOneWidget);
+    await tester.tap(find.text('森林绿'));
+    await tester.pumpAndSettle();
+    final appearance = controller.appearance;
+    expect((appearance.accentIndex, appearance.customAccent, appearance.pureBlack), (-1, 0xFF2E7D32, false));
+    await tester.scrollUntilVisible(find.text('OLED 纯黑'), 60, scrollable: find.byType(Scrollable).last);
+    await tester.tap(find.text('OLED 纯黑'));
+    await tester.pumpAndSettle();
+    expect(controller.appearance.pureBlack, isTrue);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the SponsorBlock row opens its categories and keeps its switch', (tester) async {

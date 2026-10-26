@@ -68,6 +68,7 @@ class LibraryStore {
             _progress[entry.key.toString()] = ((value[0] as num).toInt(), (value[1] as num).toInt());
           }
         }
+        finishedVersion++;
       }
     } catch (_) {
       // A damaged file starts an empty library rather than blocking startup.
@@ -102,7 +103,14 @@ class LibraryStore {
   }
 
   /// Forgets every position, for the privacy settings.
-  void clearProgress() => _progress.clear();
+  void clearProgress() {
+    _progress.clear();
+    finishedVersion++;
+  }
+
+  /// Changes whenever a video becomes watched to the end or stops being
+  /// so, for lists that hide watched videos to know when to filter again.
+  int finishedVersion = 0;
 
   WatchProgress? progressOf(String id) {
     final value = _progress[id];
@@ -112,12 +120,18 @@ class LibraryStore {
   /// Remembers where [id] stopped. A finished video is kept as watched to
   /// the end, which is not resumable, so it starts from the beginning.
   void setProgress(String id, Duration position, Duration duration) {
+    final wasFinished = progressOf(id)?.finished ?? false;
     _progress.remove(id);
-    if (duration <= Duration.zero) return;
+    if (duration <= Duration.zero) {
+      if (wasFinished) finishedVersion++;
+      return;
+    }
     final finished = WatchProgress(position, duration).fraction >= 0.95;
+    if (finished != wasFinished) finishedVersion++;
     _progress[id] = (finished ? duration.inSeconds : position.inSeconds, duration.inSeconds);
     while (_progress.length > _maxProgress) {
-      _progress.remove(_progress.keys.first);
+      final (seconds, total) = _progress.remove(_progress.keys.first)!;
+      if (total > 0 && seconds / total >= 0.95) finishedVersion++;
     }
   }
 

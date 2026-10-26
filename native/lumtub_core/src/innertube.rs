@@ -8,20 +8,6 @@ use std::os::raw::c_char;
 
 use crate::taste::{give_json, text};
 
-/// The first object under [key] anywhere in [node], depth first.
-pub(crate) fn find<'a>(node: &'a Value, key: &str) -> Option<&'a Map<String, Value>> {
-    match node {
-        Value::Object(map) => {
-            if let Some(Value::Object(found)) = map.get(key) {
-                return Some(found);
-            }
-            map.values().find_map(|value| find(value, key))
-        }
-        Value::Array(list) => list.iter().find_map(|value| find(value, key)),
-        _ => None,
-    }
-}
-
 /// The value at [path] of nested objects.
 pub(crate) fn at<'a>(node: &'a Value, path: &[&str]) -> Option<&'a Value> {
     path.iter().try_fold(node, |current, key| current.as_object()?.get(*key))
@@ -198,36 +184,92 @@ fn lockup(value: &Value) -> Option<Video> {
     })
 }
 
-/// The videos in a `/next` response, in YouTube's order: the older
-/// `compactVideoRenderer` and the newer `lockupViewModel` shapes.
-pub fn related(data: &Value) -> Vec<Video> {
-    fn walk(node: &Value, out: &mut Vec<Video>) {
+/// What one pass over a `/next` response finds: the related videos and the
+/// first (depth first, as [find]) object under each of the renderers read.
+#[derive(Default)]
+struct Parts<'a> {
+    related: Vec<Video>,
+    primary: Option<&'a Map<String, Value>>,
+    secondary: Option<&'a Map<String, Value>>,
+    like: Option<&'a Map<String, Value>>,
+}
+
+impl<'a> Parts<'a> {
+    fn of(data: &'a Value) -> Parts<'a> {
+        let mut parts = Parts::default();
+        parts.walk(data, true);
+        parts
+    }
+
+    fn walk(&mut self, node: &'a Value, collect: bool) {
         match node {
             Value::Object(map) => {
-                let found = if let Some(Value::Object(c)) = map.get("compactVideoRenderer") {
-                    Some(compact(c))
-                } else if let Some(l @ Value::Object(_)) = map.get("lockupViewModel") {
-                    Some(lockup(l))
-                } else {
-                    None
-                };
-                match found {
-                    Some(Some(video)) => {
-                        if !out.iter().any(|v| v.id == video.id) {
-                            out.push(video);
+                for (slot, key) in [(&mut self.primary, "videoPrimaryInfoRenderer"), (&mut self.secondary, "videoSecondaryInfoRenderer"), (&mut self.like, "likeCountEntity")] {
+                    if slot.is_none()
+                        && let Some(Value::Object(found)) = map.get(key)
+                    {
+                        *slot = Some(found);
+                    }
+                }
+                let mut collect = collect;
+                if collect {
+                    let found = if let Some(Value::Object(c)) = map.get("compactVideoRenderer") {
+                        Some(compact(c))
+                    } else if let Some(l @ Value::Object(_)) = map.get("lockupViewModel") {
+                        Some(lockup(l))
+                    } else {
+                        None
+                    };
+                    if let Some(found) = found {
+                        collect = false;
+                        if let Some(video) = found
+                            && !self.related.iter().any(|v| v.id == video.id)
+                        {
+                            self.related.push(video);
                         }
                     }
-                    Some(None) => {}
-                    None => map.values().for_each(|v| walk(v, out)),
+                }
+                if collect || self.wants_more() {
+                    for value in map.values() {
+                        self.walk(value, collect);
+                    }
                 }
             }
-            Value::Array(list) => list.iter().for_each(|v| walk(v, out)),
+            Value::Array(list) if collect || self.wants_more() => {
+                for value in list {
+                    self.walk(value, collect);
+                }
+            }
             _ => {}
         }
     }
-    let mut out = Vec::new();
-    walk(data, &mut out);
-    out
+
+    fn wants_more(&self) -> bool {
+        self.primary.is_none() || self.secondary.is_none() || self.like.is_none()
+    }
+
+    fn likes(&self) -> Option<i64> {
+        match self.like?.get("likeCountIfIndifferentNumber")? {
+            Value::Number(n) => n.as_f64().map(|n| n as i64),
+            Value::String(s) => s.parse().ok(),
+            _ => None,
+        }
+    }
+
+    fn localized(&self) -> Option<Localized> {
+        let title = text_of(self.primary.and_then(|p| p.get("title"))).trim().to_owned();
+        if title.is_empty() {
+            return None;
+        }
+        let description = text_of(self.secondary.and_then(|s| s.get("attributedDescription").filter(|v| !v.is_null()).or_else(|| s.get("description"))));
+        Some(Localized { title, description, likes: self.likes() })
+    }
+}
+
+/// The videos in a `/next` response, in YouTube's order: the older
+/// `compactVideoRenderer` and the newer `lockupViewModel` shapes.
+pub fn related(data: &Value) -> Vec<Video> {
+    Parts::of(data).related
 }
 
 /// A video's title and description in the interface language, and its likes.
@@ -241,23 +283,12 @@ pub struct Localized {
 
 /// The like count of a `/next` response: the like button's own number.
 pub fn likes(data: &Value) -> Option<i64> {
-    match find(data, "likeCountEntity")?.get("likeCountIfIndifferentNumber")? {
-        Value::Number(n) => n.as_f64().map(|n| n as i64),
-        Value::String(s) => s.parse().ok(),
-        _ => None,
-    }
+    Parts::of(data).likes()
 }
 
 /// The title and description of a `/next` response as YouTube shows them.
 pub fn localized(data: &Value) -> Option<Localized> {
-    let primary = find(data, "videoPrimaryInfoRenderer");
-    let secondary = find(data, "videoSecondaryInfoRenderer");
-    let title = text_of(primary.and_then(|p| p.get("title"))).trim().to_owned();
-    if title.is_empty() {
-        return None;
-    }
-    let description = text_of(secondary.and_then(|s| s.get("attributedDescription").filter(|v| !v.is_null()).or_else(|| s.get("description"))));
-    Some(Localized { title, description, likes: likes(data) })
+    Parts::of(data).localized()
 }
 
 /// What Lumtub reads from a `/next` response, as JSON `{related, text}`;
@@ -275,7 +306,9 @@ pub unsafe extern "C" fn lumtub_youtube_next(body: *const u8, length: usize) -> 
     let Ok(data) = serde_json::from_str::<Value>(unsafe { text(body, length) }) else {
         return std::ptr::null_mut();
     };
-    give_json(&Next { related: related(&data), text: localized(&data) })
+    let parts = Parts::of(&data);
+    let text = parts.localized();
+    give_json(&Next { related: parts.related, text })
 }
 
 #[cfg(test)]
@@ -338,6 +371,18 @@ mod tests {
         assert_eq!(videos[0], Video { id: "aaaaaaaaaaa".into(), title: "Old".into(), channel: "Chan".into(), channel_id: Some("UCabc".into()), duration: Some(600), view_count: Some(1000), live: false });
         assert_eq!(videos[1], Video { id: "bbbbbbbbbbb".into(), title: "New".into(), channel: "Other".into(), channel_id: Some("UCdef".into()), duration: Some(3723), view_count: Some(120_000), live: false });
         assert!(videos[2].live);
+    }
+
+    #[test]
+    fn takes_the_first_renderers_depth_first() {
+        let data = json!({
+            "a": [{"x": {"videoPrimaryInfoRenderer": {"title": {"simpleText": "first"}}}}, {"videoPrimaryInfoRenderer": {"title": {"simpleText": "second"}}}],
+            "compactVideoRenderer": {"videoId": "v", "likeCountEntity": {"likeCountIfIndifferentNumber": 7}},
+            "b": {"likeCountEntity": {"likeCountIfIndifferentNumber": 9}}
+        });
+        let parts = Parts::of(&data);
+        assert_eq!(parts.localized().map(|l| l.title), Some("first".to_owned()));
+        assert_eq!(parts.likes(), Some(7));
     }
 
     #[test]

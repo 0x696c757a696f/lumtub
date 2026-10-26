@@ -30,7 +30,7 @@ fn text_of(node: &Value, keys: &[&str]) -> Option<String> {
 /// Counts such as `1,234 views`, `1.2M subscribers` or `No views`.
 pub fn count(text: &str) -> Option<u64> {
     let text = text.trim();
-    if text.to_ascii_lowercase().starts_with("no ") {
+    if text.as_bytes().get(..3).is_some_and(|p| p.eq_ignore_ascii_case(b"no ")) {
         return Some(0);
     }
     let start = text.find(|c: char| c.is_ascii_digit())?;
@@ -320,6 +320,8 @@ fn contents(list: &[Value], page: &mut Page) {
             page.continuation = Some(token);
         } else if let Some(item) = content.get("richItemRenderer") {
             page.entries.extend(rich(item));
+        } else if let Some(renderer) = content.get("playlistVideoRenderer") {
+            page.entries.extend(video(renderer));
         } else if let Some(section) = content.get("itemSectionRenderer").or_else(|| content.get("richSectionRenderer").and_then(|s| s.get("content"))) {
             for item in section.get("contents").and_then(Value::as_array).into_iter().flatten().filter(|v| v.is_object()) {
                 if let Some(grid) = item.get("gridRenderer").or_else(|| item.get("reelShelfRenderer")) {
@@ -327,7 +329,7 @@ fn contents(list: &[Value], page: &mut Page) {
                 } else if let Some(shelf) = item.get("shelfRenderer") {
                     let inner = at(shelf, &["content", "verticalListRenderer", "items"]).or_else(|| at(shelf, &["content", "expandedShelfContentsRenderer", "items"])).or_else(|| at(shelf, &["content", "gridRenderer", "items"]));
                     page.entries.extend(inner.and_then(Value::as_array).into_iter().flatten().filter_map(basic));
-                } else if let Some(grid) = item.get("richGridRenderer") {
+                } else if let Some(grid) = item.get("richGridRenderer").or_else(|| item.get("playlistVideoListRenderer")) {
                     contents(grid.get("contents").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default(), page);
                 } else if let Some(entry) = basic(item) {
                     page.entries.push(entry);
@@ -509,4 +511,35 @@ mod tests {
     fn reads_nothing_from_other_responses() {
         assert_eq!(page(&json!({"error": {"code": 400}})), Page::default());
     }
+
+    #[test]
+    fn reads_playlist_pages() {
+        let first = json!({"contents": {"twoColumnBrowseResultsRenderer": {"tabs": [{"tabRenderer": {"selected": true, "content": {"sectionListRenderer": {"contents": [
+            {"itemSectionRenderer": {"contents": [{"playlistVideoListRenderer": {"contents": [
+                {"playlistVideoRenderer": {
+                    "videoId": "dQw4w9WgXcQ",
+                    "title": {"runs": [{"text": "Never Gonna Give You Up"}]},
+                    "shortBylineText": {"runs": [{"text": "Rick Astley", "navigationEndpoint": {"browseEndpoint": {"browseId": "UCuAXFkgsw1L7xaCfnd5JJOw", "canonicalBaseUrl": "/@RickAstleyYT"}}}]},
+                    "lengthSeconds": "213",
+                    "videoInfo": {"runs": [{"text": "1.7B views"}, {"text": " • "}, {"text": "15 years ago"}]}
+                }},
+                {"continuationItemRenderer": {"continuationEndpoint": {"continuationCommand": {"token": "NEXT"}}}}
+            ]}}]}}
+        ]}}}}]}}});
+        let page = page(&first);
+        assert_eq!(page.continuation.as_deref(), Some("NEXT"));
+        assert_eq!(page.entries.len(), 1);
+        let video = &page.entries[0];
+        assert_eq!(video["id"], "dQw4w9WgXcQ");
+        assert_eq!(video["title"], "Never Gonna Give You Up");
+        assert_eq!(video["duration"], 213);
+        assert_eq!(video["channel"], "Rick Astley");
+        assert_eq!(video["channel_id"], "UCuAXFkgsw1L7xaCfnd5JJOw");
+        assert_eq!(video["view_count"], 1_700_000_000u64);
+        let more = json!({"onResponseReceivedActions": [{"appendContinuationItemsAction": {"continuationItems": [
+            {"playlistVideoRenderer": {"videoId": "aaaaaaaaaaa", "title": {"runs": [{"text": "Next"}]}}}
+        ]}}]});
+        assert_eq!(super::page(&more).entries[0]["id"], "aaaaaaaaaaa");
+    }
+
 }

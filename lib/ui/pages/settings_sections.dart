@@ -13,6 +13,7 @@ import '../../app_log.dart';
 import '../../app_preferences.dart';
 import '../../appearance_settings.dart';
 import '../../decoder_status.dart';
+import '../../encrypted_dns.dart';
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
@@ -25,10 +26,12 @@ import '../../windows_video_info.dart';
 import '../common.dart';
 import '../format_policy_dialogs.dart';
 import '../player_shortcuts.dart';
+import '../motion.dart';
 import '../theme.dart';
 import 'account_settings.dart';
 import 'relay_servers_page.dart';
 import 'settings_subpages.dart';
+import 'translation_settings_page.dart';
 import '../../l10n/l10n.dart';
 
 /// The groups in the settings list, in display order, named and ordered
@@ -159,6 +162,25 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 if (await confirmDialog(context, title: tr('清空播放进度？'), content: tr('“继续观看”和卡片上的进度条会一并清空。'))) controller.clearProgress();
               },
             )),
+        SettingEntry(tr('连接的服务器'), (context) => NormalItem(
+              title: tr('连接的服务器'),
+              subtitle: tr('Lumtub 会连接哪些服务器、各自知道什么，能关的都可以在这里关'),
+              leading: _icon(Icons.lan_outlined),
+              onTap: () => openPrivacyConnections(context, controller),
+            ), subtitle: tr('隐私 服务器 网络 连接 遥测 第三方')),
+        SettingEntry(tr('无痕模式'), (context) => SwitchItem(
+              title: tr('无痕模式'),
+              subtitle: tr('不记录观看历史、搜索记录和播放进度，“为你推荐”也不学习；关掉 Lumtub 后自动恢复。快捷键 Ctrl+Shift+N'),
+              leading: _icon(Icons.visibility_off_outlined),
+              value: controller.incognito,
+              onChanged: controller.setIncognito,
+            ), subtitle: tr('隐身 不记录 incognito private')),
+        SettingEntry(tr('清除本地数据'), (context) => NormalItem(
+              title: tr('清除本地数据'),
+              subtitle: tr('选择要从这台电脑上删除的内容，收藏、播放列表和关注不会被删除'),
+              leading: _icon(Icons.cleaning_services_outlined),
+              onTap: () => _clearLocalData(context, controller),
+            ), subtitle: tr('清除 删除 数据 隐私 重置 卸载')),
       ],
     SettingsCategory.recommend => [
         SettingEntry(tr('首页显示为你推荐'), (context) => SwitchItem(
@@ -466,6 +488,32 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ),
           );
         }, subtitle: tr('proxy 代理 Clash v2rayN 系统代理 http-proxy')),
+        SettingEntry(tr('加密 DNS'), (context) => NormalItem(
+              title: tr('加密 DNS'),
+              subtitle: tr('当前：{0}。直连时用 DNS-over-HTTPS 查找网址，防止 DNS 被篡改；连不上时自动改用系统 DNS。开着代理时由代理解析，此项不起作用；和 Clash 的 TUN/fake-ip 模式一起用时请保持关闭', [DnsServer.label(settings.dnsServer, settings.dnsCustomUrl)]),
+              leading: _icon(Icons.dns_outlined),
+              onTap: () => pickFromDialog<String>(
+                context,
+                title: tr('加密 DNS'),
+                value: settings.dnsServer,
+                values: [
+                  ('', DnsServer.label('', '')),
+                  for (final server in DnsServer.presets) (server.id, server.name),
+                  (DnsServer.custom, tr('自定义…')),
+                ],
+                onSelected: (id) async {
+                  var custom = settings.dnsCustomUrl;
+                  if (id == DnsServer.custom) {
+                    final url = await _editDnsUrl(context, custom);
+                    if (url == null) return;
+                    custom = url;
+                  }
+                  await controller.saveSettings(settings.copyWith(dnsServer: id, dnsCustomUrl: custom));
+                  final server = DnsServer.of(id, custom);
+                  if (server != null && context.mounted) await _testDns(context, server);
+                },
+              ),
+            ), subtitle: tr('DNS DoH DNS-over-HTTPS Cloudflare Google Quad9 加密 污染')),
         SettingEntry(tr('缓冲模式'), (context) => NormalItem(
               title: tr('缓冲模式'),
               subtitle: tr('当前：{0}。只使用内存，不写入磁盘', [labelOf(_cacheModes, settings.cacheMode)]),
@@ -728,6 +776,21 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 onSelected: (v) => saveLooks(appearance.copyWith(transition: v)),
               ),
             )),
+        SettingEntry(tr('减少动画'), (context) => NormalItem(
+              title: tr('减少动画'),
+              subtitle: tr('当前：{0}{1}。减少后，页面切换、展开收起和悬停效果都直接完成', [
+                appearance.motion.label,
+                appearance.motion == MotionPreference.system ? (Motion.reduced ? tr('（系统已关闭动画）') : tr('（系统开着动画）')) : '',
+              ]),
+              leading: _icon(Icons.motion_photos_off_outlined),
+              onTap: () => pickFromDialog<MotionPreference>(
+                context,
+                title: tr('减少动画'),
+                value: appearance.motion,
+                values: _enumValues(MotionPreference.values, (m) => m.label),
+                onSelected: (v) => saveLooks(appearance.copyWith(motion: v)),
+              ),
+            ), subtitle: tr('动画 动效 reduce motion 无障碍')),
         SettingEntry(tr('导航栏样式'), (context) => PopupItem<NavigationStyle>(
               title: tr('导航栏样式'),
               leading: _icon(Icons.view_sidebar_outlined),
@@ -817,11 +880,17 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.expandDescription,
               onChanged: (v) => savePrefs(prefs.copyWith(expandDescription: v)),
             )),
+        SettingEntry(tr('翻译服务'), (context) => NormalItem(
+              title: tr('翻译服务'),
+              subtitle: prefs.translation.service.label,
+              leading: _icon(Icons.g_translate_rounded),
+              onTap: () => openTranslationSettings(context, controller),
+            ), subtitle: '翻译 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
         SettingEntry(tr('翻译目标语言'), (context) => PopupItem<String>(
               title: tr('翻译目标语言'),
               leading: _icon(Icons.translate_rounded),
               value: prefs.translateLanguage,
-              values: [for (final l in TranslationLanguage.all) (l.code, l.label)],
+              values: [('', tr('跟随系统语言（{0}）', [SubtitleLanguage.auto.translation.label])), for (final l in TranslationLanguage.all) (l.code, l.label)],
               onSelected: (v) => savePrefs(prefs.copyWith(translateLanguage: v)),
             ), subtitle: '翻译 字幕 双语 语言 translate Google'),
         SettingEntry(tr('自动检查组件更新'), (context) => SwitchItem(
@@ -1121,6 +1190,83 @@ Future<void> editRelayServer(BuildContext context, AppController controller, Rel
   await controller.saveSettings(piped
       ? settings.copyWith(playbackSource: PlaybackSource.pipedCustom, pipedServer: server)
       : settings.copyWith(playbackSource: PlaybackSource.invidiousCustom, invidiousServer: server));
+}
+
+Future<void> _clearLocalData(BuildContext context, AppController controller) async {
+  final chosen = await showDialog<Set<LocalData>>(context: context, builder: (context) => const _ClearDataDialog());
+  if (chosen == null || chosen.isEmpty) return;
+  await controller.clearLocalData(chosen);
+}
+
+class _ClearDataDialog extends StatefulWidget {
+  const _ClearDataDialog();
+
+  @override
+  State<_ClearDataDialog> createState() => _ClearDataDialogState();
+}
+
+class _ClearDataDialogState extends State<_ClearDataDialog> {
+  // What leaves no settings to redo is chosen to start with.
+  final _chosen = {LocalData.history, LocalData.progress, LocalData.recommendations, LocalData.cache};
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(tr('清除本地数据')),
+        content: SizedBox(
+          width: 420,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            for (final kind in LocalData.values)
+              CheckboxListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                value: _chosen.contains(kind),
+                title: Text(kind.label),
+                onChanged: (v) => setState(() => v == true ? _chosen.add(kind) : _chosen.remove(kind)),
+              ),
+            const SizedBox(height: 8),
+            Text(tr('只删除这台电脑上的数据，不影响 YouTube 账号。收藏、播放列表和关注不会被删除。'), style: TextStyle(fontSize: 12, color: context.colors.outline)),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: context.colors.error, foregroundColor: context.colors.onError),
+            onPressed: _chosen.isEmpty ? null : () => Navigator.pop(context, {..._chosen}),
+            child: Text(tr('清除')),
+          ),
+        ],
+      );
+}
+
+Future<String?> _editDnsUrl(BuildContext context, String current) async {
+  final text = await showDialog<String>(
+    context: context,
+    builder: (context) => TextEditDialog(
+      title: tr('自定义 DoH 地址'),
+      initialText: current,
+      hintText: tr('例如 https://dns.example.com/dns-query'),
+      helper: (text) {
+        final colors = context.colors;
+        final url = DnsServer.normalize(text);
+        return Text(url == null ? tr('请填写 https:// 开头的 DoH 地址') : tr('将使用 {0}', [url]), style: TextStyle(fontSize: 12, color: url == null ? colors.error : colors.outline));
+      },
+    ),
+  );
+  return text == null ? null : DnsServer.normalize(text);
+}
+
+/// Looks www.youtube.com up over [server] and says how it went.
+Future<void> _testDns(BuildContext context, DnsServer server) async {
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.showSnackBar(SnackBar(content: Text(tr('正在测试 {0}…', [server.name])), duration: const Duration(seconds: 10)));
+  final result = await testDnsServer(server);
+  messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(SnackBar(
+    content: Text(result.ok
+        ? tr('{0} 可用：www.youtube.com → {1}，用时 {2} 毫秒', [server.name, result.addresses.take(2).join('、'), result.milliseconds])
+        : tr('{0} 现在连不上（{1}），会先改用系统 DNS', [server.name, result.error])),
+    duration: const Duration(seconds: 6),
+  ));
 }
 
 Future<void> _editProxy(BuildContext context, AppController controller) async {

@@ -37,13 +37,16 @@ class YoutubeListing {
         },
       });
 
+  /// The videos of playlist [id].
+  Stream<String> playlist(String id) => _pages('browse', {'browseId': 'VL$id'});
+
   /// Whether [tab] can be read through [channelTab].
   static bool hasTab(ChannelTab tab) => tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live;
 
   // A results page runs to a megabyte.
   static Future<Object?> _readInBackground(List<int> bytes) => Isolate.run(() {
         final core = NativeCore.instance!;
-        return jsonDecode(core.take(core.withText(utf8.decode(bytes), core.youtubeListing)) ?? 'null');
+        return jsonDecode(core.take(core.withBytes(bytes, core.youtubeListing)) ?? 'null');
       });
 
   Stream<String> _pages(String endpoint, Map<String, Object> first, {String? region}) async* {

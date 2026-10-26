@@ -2,7 +2,8 @@ name: Merge dependency updates
 
 # Merges a Dependabot pull request once its build has passed. Major version
 # bumps of Dart packages are left for review, since they often need code
-# changes the build alone cannot judge.
+# changes the build alone cannot judge. Refreshed lockfiles (see
+# lockfiles.yml) go into main the same way, when main has not moved since.
 on:
   workflow_run:
     workflows: [Build]
@@ -38,3 +39,26 @@ jobs:
             exit 0
           fi
           gh pr merge "$number" --repo "$REPO" --squash --delete-branch --match-head-commit "$SHA"
+
+  lockfiles:
+    if: >-
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'deps/lockfiles' &&
+      github.event.workflow_run.triggering_actor.login == 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Bring into main
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          git fetch -q origin deps/lockfiles
+          if [ "$(git rev-parse origin/deps/lockfiles)" != "$SHA" ]; then echo "deps/lockfiles moved on; the next build merges it."; exit 0; fi
+          if ! git merge-base --is-ancestor HEAD "$SHA"; then echo "main moved on; tomorrow's refresh starts from it."; exit 0; fi
+          git push origin "$SHA:refs/heads/main"
+          git push origin --delete deps/lockfiles

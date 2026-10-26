@@ -30,6 +30,33 @@ final accentChoices = <(String, Color)>[
   (tr('灰色'), Colors.grey),
 ];
 
+/// A ready-made look: a seed colour and palette style, each shown light
+/// or dark as 主题模式 says. [pureBlack] also turns dark backgrounds black.
+class ThemePreset {
+  const ThemePreset(this._name, this.seed, this.variant, {this.pureBlack = false});
+  final String _name;
+  String get name => tr(_name);
+  final int seed;
+  final DynamicSchemeVariant variant;
+  final bool pureBlack;
+
+  bool isApplied(AppearanceSettings a) => !a.systemAccent && a.accentIndex < 0 && a.customAccent == seed && a.schemeVariant == variant && a.pureBlack == pureBlack;
+
+  AppearanceSettings applyTo(AppearanceSettings a) => a.copyWith(systemAccent: false, accentIndex: -1, customAccent: seed, schemeVariant: variant, pureBlack: pureBlack);
+}
+
+const themePresets = [
+  ThemePreset('经典红', 0xFFE53935, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('海湾蓝', 0xFF1E88E5, DynamicSchemeVariant.fidelity),
+  ThemePreset('森林绿', 0xFF2E7D32, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('青瓷', 0xFF26A69A, DynamicSchemeVariant.content),
+  ThemePreset('薰衣草', 0xFF7E57C2, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('樱花', 0xFFEC407A, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('日落', 0xFFF4511E, DynamicSchemeVariant.vibrant),
+  ThemePreset('石墨', 0xFF607D8B, DynamicSchemeVariant.neutral),
+  ThemePreset('OLED 纯黑', 0xFF9E9E9E, DynamicSchemeVariant.monochrome, pureBlack: true),
+];
+
 /// Material's palette styles with the names PiliNara uses.
 final schemeVariantNames = {
   DynamicSchemeVariant.tonalSpot: tr('默认（Tonal Spot）'),
@@ -51,6 +78,18 @@ enum PageTransition {
   none('无动画');
 
   const PageTransition(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
+/// 减少动画: whether page changes, expanding sections and hover effects
+/// animate.
+enum MotionPreference {
+  system('跟随系统'),
+  reduced('减少动画'),
+  full('保留动画');
+
+  const MotionPreference(this._label);
   final String _label;
   String get label => tr(_label);
 }
@@ -108,6 +147,7 @@ class AppearanceSettings {
   final String? fontFamily;
   final double textScale;
   final PageTransition transition;
+  final MotionPreference motion;
   final NavigationStyle navigation;
   /// The narrowest a video card may get before a column is dropped.
   final double cardWidth;
@@ -127,6 +167,7 @@ class AppearanceSettings {
     this.fontFamily = bundledFont,
     this.textScale = 1.0,
     this.transition = PageTransition.fade,
+    this.motion = MotionPreference.system,
     this.navigation = NavigationStyle.auto,
     this.cardWidth = 250,
     this.thumbnailQuality = ThumbnailQuality.high,
@@ -151,6 +192,7 @@ class AppearanceSettings {
     bool clearFontFamily = false,
     double? textScale,
     PageTransition? transition,
+    MotionPreference? motion,
     NavigationStyle? navigation,
     double? cardWidth,
     ThumbnailQuality? thumbnailQuality,
@@ -168,6 +210,7 @@ class AppearanceSettings {
         fontFamily: clearFontFamily ? null : fontFamily ?? this.fontFamily,
         textScale: textScale ?? this.textScale,
         transition: transition ?? this.transition,
+        motion: motion ?? this.motion,
         navigation: navigation ?? this.navigation,
         cardWidth: cardWidth ?? this.cardWidth,
         thumbnailQuality: thumbnailQuality ?? this.thumbnailQuality,
@@ -189,6 +232,7 @@ class AppearanceSettings {
         'fontFamily': fontFamily ?? 'system',
         'textScale': textScale,
         'transition': transition.name,
+        'motion': motion.name,
         'navigation': navigation.name,
         'cardWidth': cardWidth,
         'thumbnailQuality': thumbnailQuality.name,
@@ -217,6 +261,7 @@ class AppearanceSettings {
       fontFamily: font == 'system' ? null : font?.trim().isNotEmpty == true ? font : bundledFont,
       textScale: scale is num ? scale.toDouble().clamp(0.8, 1.4) : 1.0,
       transition: _byName(PageTransition.values, raw['transition'], PageTransition.fade),
+      motion: _byName(MotionPreference.values, raw['motion'], MotionPreference.system),
       navigation: _byName(NavigationStyle.values, raw['navigation'], NavigationStyle.auto),
       cardWidth: width is num ? width.toDouble().clamp(180, 420) : 250,
       thumbnailQuality: _byName(ThumbnailQuality.values, raw['thumbnailQuality'], ThumbnailQuality.high),

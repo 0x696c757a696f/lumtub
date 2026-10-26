@@ -15,7 +15,7 @@ import 'l10n/l10n.dart';
 /// dialog's choices need it; without it
 /// Lumtub says its install is incomplete (see [missingMessage]).
 class NativeCore {
-  NativeCore._(DynamicLibrary library)
+  NativeCore._(this.library)
       : tasteNew = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size), Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_taste_new'),
         tasteFinalizer = NativeFinalizer(library.lookup<NativeFinalizerFunction>('lumtub_taste_free')),
         tasteAffinity = library.lookupFunction<Double Function(Pointer<Void>, Pointer<Uint8>, Size), double Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_taste_affinity'),
@@ -30,7 +30,10 @@ class NativeCore {
         downloadContainer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_download_container'),
         updateOffer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_offer'),
         updateScript = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_script'),
+        updateVerify = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_verify'),
         redact = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_redact'),
+        subtitleCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_subtitle_cues'),
+        _looksLike = library.lookupFunction<Bool Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_looks_like'),
         hashPrefix = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_hash_prefix'),
         sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
         dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
@@ -58,8 +61,12 @@ class NativeCore {
         _stringFree = library.lookupFunction<Void Function(Pointer<Utf8>), void Function(Pointer<Utf8>)>('lumtub_string_free'),
         _adopt = library.lookupFunction<IntPtr Function(Uint32), int Function(int)>('lumtub_tree_adopt'),
         _kill = library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>('lumtub_tree_kill'),
-        _close = library.lookupFunction<Void Function(IntPtr), void Function(int)>('lumtub_tree_close');
+        _close = library.lookupFunction<Void Function(IntPtr), void Function(int)>('lumtub_tree_close'),
+        _background = library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>('lumtub_tree_background'),
+        _efficiencyMode = library.lookupFunction<Bool Function(Bool), bool Function(bool)>('lumtub_efficiency_mode');
 
+  /// The loaded core, for bindings kept beside their own feature.
+  final DynamicLibrary library;
   final Pointer<Void> Function(Pointer<Uint8> json, int length) tasteNew;
   /// Frees a taste once Dart no longer holds it.
   final NativeFinalizer tasteFinalizer;
@@ -75,7 +82,14 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) downloadContainer;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateOffer;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateScript;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateVerify;
   final Pointer<Utf8> Function(Pointer<Uint8> message, int length) redact;
+  /// A WebVTT or SRT file's lines as JSON `[[start_ms, end_ms, "text"], …]`.
+  final Pointer<Utf8> Function(Pointer<Uint8> source, int length) subtitleCues;
+  final bool Function(Pointer<Uint8> source, int length, Pointer<Uint8> target, int targetLength) _looksLike;
+
+  /// Whether [source] looks to be in [target] already, from its script.
+  bool looksLike(String source, String target) => withText(source, (s, sl) => withText(target, (t, tl) => _looksLike(s, sl, t, tl)));
   /// The first four hex digits of a video id's SHA-256.
   final Pointer<Utf8> Function(Pointer<Uint8> videoId, int length) hashPrefix;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) sponsorSegments;
@@ -120,6 +134,12 @@ class NativeCore {
   final bool Function(Pointer<Void> blocks, Pointer<Uint8> json, int length) blocksMatch;
   final void Function(Pointer<Utf8>) _stringFree;
   final int Function(int pid) _adopt;
+  final bool Function(int job, int pid) _background;
+  final bool Function(bool on) _efficiencyMode;
+
+  /// Windows' efficiency mode for Lumtub itself: lower clocks, efficient
+  /// cores. For while it is hidden and not playing.
+  static void efficiencyMode(bool on) => instance?._efficiencyMode(on);
   final bool Function(int job, int code) _kill;
   final void Function(int job) _close;
 
@@ -165,8 +185,11 @@ class NativeCore {
   }
 
   /// Calls [call] with [text] as UTF-8 in native memory.
-  T withText<T>(String text, T Function(Pointer<Uint8> bytes, int length) call) {
-    final bytes = utf8.encode(text);
+  T withText<T>(String text, T Function(Pointer<Uint8> bytes, int length) call) => withBytes(utf8.encode(text), call);
+
+  /// Calls [call] with UTF-8 [bytes] in native memory, such as a response
+  /// body as it came, so a megabyte page is not decoded and encoded again.
+  T withBytes<T>(List<int> bytes, T Function(Pointer<Uint8> bytes, int length) call) {
     final buffer = malloc<Uint8>(max(1, bytes.length));
     try {
       buffer.asTypedList(bytes.length).setAll(0, bytes);
@@ -197,9 +220,13 @@ class ProcessTree implements Process {
   }
 
   /// Starts [executable] like [Process.start] and puts it in its own tree.
-  static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory}) async {
+  /// A [background] tree runs below normal priority, its first process in
+  /// Windows' efficiency mode: for downloads, which nobody waits on.
+  static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory, bool background = false}) async {
     final process = await Process.start(executable, arguments, environment: environment, workingDirectory: workingDirectory);
-    return adopt(process);
+    final tree = adopt(process);
+    if (background && tree is ProcessTree) NativeCore.instance?._background(tree._job, process.pid);
+    return tree;
   }
 
   /// [process] in a tree of its own, or [process] itself where there is

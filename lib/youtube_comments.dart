@@ -130,7 +130,7 @@ class YoutubeComments {
     return _readInBackground(response.bodyBytes);
   }
 
-  static Future<CommentPage> _readInBackground(List<int> bytes) => Isolate.run(() => read(utf8.decode(bytes)));
+  static Future<CommentPage> _readInBackground(List<int> bytes) => Isolate.run(() => readBytes(bytes));
 
   // A post page runs to a megabyte: its comments token and client settings
   // are read away from the UI isolate.
@@ -150,9 +150,11 @@ class YoutubeComments {
 
   /// A `/next` or `/browse` response [body] with comment section items,
   /// read by the native core; empty without it.
-  static CommentPage read(String body) {
+  static CommentPage read(String body) => readBytes(utf8.encode(body));
+
+  static CommentPage readBytes(List<int> body) {
     final core = NativeCore.instance;
-    final page = core == null ? null : jsonDecode(core.take(core.withText(body, core.youtubeComments)) ?? 'null');
+    final page = core == null ? null : jsonDecode(core.take(core.withBytes(body, core.youtubeComments)) ?? 'null');
     if (page is! Map<String, dynamic>) return const CommentPage([], null);
     return CommentPage(
       [

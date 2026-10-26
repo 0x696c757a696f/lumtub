@@ -108,7 +108,10 @@ class DownloadManager extends ChangeNotifier {
     this.sponsorSegments,
     this.onFinished,
   })  : _directory = defaultDirectory,
-        _start = start ?? ProcessTree.start;
+        _start = start ?? _backgroundStart;
+
+  static Future<Process> _backgroundStart(String executable, List<String> arguments, {Map<String, String>? environment}) =>
+      ProcessTree.start(executable, arguments, environment: environment, background: true);
 
   /// Where the list and the folder setting are saved.
   final File file;
@@ -538,9 +541,16 @@ class DownloadManager extends ChangeNotifier {
     if (task == null || task.status != DownloadStatus.done || path == null) return null;
     final media = File(path);
     if (!await media.exists()) return null;
+    // One play asks several times; the files do not change in between.
+    final recent = _recentLocal;
+    if (recent != null && recent.path == path && DateTime.now().difference(recent.at) < const Duration(seconds: 10)) return recent.video;
     // The sidecar and the folder listing are read away from the UI isolate.
-    return Isolate.run(() => LocalVideo.read(media));
+    final video = Isolate.run(() => LocalVideo.read(media));
+    _recentLocal = (path: path, at: DateTime.now(), video: video);
+    return video;
   }
+
+  ({String path, DateTime at, Future<LocalVideo> video})? _recentLocal;
 
   @override
   void dispose() {

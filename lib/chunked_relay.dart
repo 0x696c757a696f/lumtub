@@ -28,19 +28,35 @@ class NativeRelay implements StreamRelay {
   final NativeCore _core;
   final int chunkSize;
   Timer? _logTimer;
+  int _quiet = 0;
 
   @override
   Future<void> start() async {
     if (_core.relayStart() == 0) throw const SocketException('lumtub_core could not listen on 127.0.0.1');
-    _logTimer ??= Timer.periodic(const Duration(seconds: 3), (_) => _drainLog());
   }
 
-  void _drainLog() {
+  /// Reads the relay's log while it serves streams; a minute without lines
+  /// stops the timer until the next stream is registered.
+  void _watchLog() {
+    _quiet = 0;
+    _logTimer ??= Timer.periodic(const Duration(seconds: 3), (_) {
+      if (_drainLog()) {
+        _quiet = 0;
+      } else if (++_quiet >= 20) {
+        _logTimer?.cancel();
+        _logTimer = null;
+      }
+    });
+  }
+
+  bool _drainLog() {
     final lines = _core.take(_core.relayLog());
-    if (lines == null) return;
-    for (final line in (jsonDecode(lines) as List).cast<String>()) {
+    if (lines == null) return false;
+    final list = (jsonDecode(lines) as List).cast<String>();
+    for (final line in list) {
       logInfo(line);
     }
+    return list.isNotEmpty;
   }
 
   @override
@@ -48,6 +64,7 @@ class NativeRelay implements StreamRelay {
     final length = size ?? int.tryParse(Uri.tryParse(url)?.queryParameters['clen'] ?? '');
     if (length == null || length <= 0) return null;
     final json = jsonEncode({'url': url, 'size': length, 'userAgent': userAgent, 'proxy': proxy, 'chunk': chunkSize});
+    _watchLog();
     return _core.take(_core.withText(json, _core.relayRegister));
   }
 

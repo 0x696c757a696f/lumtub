@@ -19,15 +19,22 @@ import '../../app/app_controller.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
 import '../../blocked_groups.dart';
+import '../../encrypted_dns.dart';
+import '../../piped_streams.dart';
 import '../../state_media.dart';
 import '../../appearance_settings.dart';
 import '../../player_settings.dart';
+import '../../translation.dart';
 import '../../windows_shell.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../common.dart';
+import '../subtitle_style.dart';
 import '../theme.dart';
+import '../theme_preset_card.dart';
 import 'settings_sections.dart';
+import 'translation_settings_page.dart';
 import '../../l10n/l10n.dart';
+import '../motion.dart';
 
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
 
@@ -387,6 +394,52 @@ Future<void> openPlaySpeed(BuildContext context, AppController controller) {
 Future<void> openSubtitleSettings(BuildContext context, AppController controller) => _push(context, controller, tr('字幕设置'), (context) {
       final settings = controller.settings;
       void save(PlayerSettings next) => controller.saveSettings(next);
+      // Read when a picker closes, so two quick changes do not undo each other.
+      PlayerSettings now() => controller.settings;
+      String percent(double v) => '${(v * 100).round()}%';
+      List<Widget> look({
+        required String font,
+        required double scale,
+        required int color,
+        required double opacity,
+        required void Function(String) setFont,
+        required void Function(double) setScale,
+        required void Function(int) setColor,
+        required void Function(double) setOpacity,
+        bool enabled = true,
+      }) =>
+          [
+            NormalItem(
+              title: tr('字体'),
+              subtitle: subtitleFontLabel(font),
+              leading: const Icon(Icons.font_download_outlined),
+              enabled: enabled,
+              onTap: () => pickSubtitleFont(context, font, setFont),
+            ),
+            NormalItem(
+              title: tr('大小'),
+              subtitle: '${scale.toStringAsFixed(1)}×',
+              leading: const Icon(Icons.format_size_rounded),
+              enabled: enabled,
+              onTap: () => pickWithSlider(context, title: tr('大小'), value: scale, min: 0.5, max: 3, divisions: 25, suffix: '×', precise: 1, onSelected: (v) => setScale((v * 10).round() / 10)),
+            ),
+            NormalItem(
+              title: tr('颜色'),
+              subtitle: subtitleColorLabel(color),
+              leading: const Icon(Icons.palette_outlined),
+              trailing: Container(width: 20, height: 20, decoration: BoxDecoration(color: Color(0xFF000000 | color), shape: BoxShape.circle, border: Border.all(color: context.colors.outlineVariant))),
+              enabled: enabled,
+              onTap: () => pickSubtitleColor(context, color, setColor),
+            ),
+            NormalItem(
+              title: tr('不透明度'),
+              subtitle: percent(opacity),
+              leading: const Icon(Icons.opacity_rounded),
+              enabled: enabled,
+              onTap: () => pickSubtitleOpacity(context, opacity, setOpacity),
+            ),
+          ];
+      final secondary = TranslationLanguage.maybeByCode(settings.secondarySubtitleLanguage);
       return [
         PopupItem<SubtitleMode>(
           title: tr('自动启用字幕'),
@@ -396,13 +449,52 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           onSelected: (v) => save(settings.copyWith(subtitleMode: v)),
         ),
         PopupItem<SubtitleLanguage>(
-          title: tr('首选字幕语言'),
+          title: tr('第一字幕语言'),
           leading: const Icon(Icons.translate_rounded),
           value: settings.subtitleLanguage,
           values: [for (final l in SubtitleLanguage.values) (l, l.label)],
           onSelected: (v) => save(settings.copyWith(subtitleLanguage: v)),
         ),
-        _header(context, tr('样式')),
+        PopupItem<String>(
+          title: tr('第二字幕语言'),
+          leading: const Icon(Icons.closed_caption_outlined),
+          value: settings.secondarySubtitleLanguage == PlayerSettings.originalSubtitle ? PlayerSettings.originalSubtitle : secondary?.code ?? '',
+          values: [('', tr('不显示')), (PlayerSettings.originalSubtitle, tr('视频原字幕（自带或自动生成）')), for (final l in TranslationLanguage.all) (l.code, l.label)],
+          enabled: settings.subtitleMode != SubtitleMode.off,
+          onSelected: (v) => save(settings.copyWith(secondarySubtitleLanguage: v)),
+        ),
+        _tip(
+          context,
+          settings.subtitleMode == SubtitleMode.off
+              ? tr('先开启“自动启用字幕”，第二字幕才会自动显示。')
+              : tr('第一字幕按“第一字幕语言”显示，视频没有这种语言时用 YouTube 翻译。第二字幕显示在上方，“视频原字幕”是视频说话语言的字幕；和第一字幕相同时不显示。'),
+        ),
+        SubtitlePreview(settings: settings),
+        _header(context, tr('第一字幕样式')),
+        ...look(
+          font: settings.subtitleFont,
+          scale: settings.subtitleScale,
+          color: settings.subtitleColor,
+          opacity: settings.subtitleOpacity,
+          setFont: (v) => save(now().copyWith(subtitleFont: v)),
+          setScale: (v) => save(now().copyWith(subtitleScale: v)),
+          setColor: (v) => save(now().copyWith(subtitleColor: v)),
+          setOpacity: (v) => save(now().copyWith(subtitleOpacity: v)),
+        ),
+        _header(context, tr('第二字幕样式')),
+        if (settings.libassSubtitles) _tip(context, tr('由 mpv 绘制字幕时，第二字幕使用第一字幕的样式。')),
+        ...look(
+          font: settings.secondaryFont,
+          scale: settings.secondaryScale,
+          color: settings.secondaryColor,
+          opacity: settings.secondaryOpacity,
+          enabled: !settings.libassSubtitles,
+          setFont: (v) => save(now().copyWith(secondaryFont: v)),
+          setScale: (v) => save(now().copyWith(secondaryScale: v)),
+          setColor: (v) => save(now().copyWith(secondaryColor: v)),
+          setOpacity: (v) => save(now().copyWith(secondaryOpacity: v)),
+        ),
+        _header(context, tr('通用')),
         SwitchItem(
           title: tr('由 mpv 绘制字幕（libass）'),
           subtitle: tr('支持特效字幕；关闭时由界面绘制，更省资源。重启后生效'),
@@ -411,22 +503,16 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           onChanged: (v) => save(settings.copyWith(libassSubtitles: v)),
         ),
         NormalItem(
-          title: tr('字幕大小'),
-          subtitle: tr('当前：{0}×', [settings.subtitleScale.toStringAsFixed(1)]),
-          leading: const Icon(Icons.format_size_rounded),
-          onTap: () => pickWithSlider(context, title: tr('字幕大小'), value: settings.subtitleScale, min: 0.5, max: 3, divisions: 25, suffix: '×', onSelected: (v) => save(controller.settings.copyWith(subtitleScale: (v * 10).round() / 10))),
-        ),
-        NormalItem(
           title: tr('字幕位置'),
           subtitle: tr('当前：{0}%（100 为画面底部）', [settings.subtitlePosition]),
           leading: const Icon(Icons.vertical_align_bottom_rounded),
-          onTap: () => pickWithSlider(context, title: tr('字幕位置'), value: settings.subtitlePosition.toDouble(), min: 0, max: 100, divisions: 100, suffix: '%', onSelected: (v) => save(controller.settings.copyWith(subtitlePosition: v.round()))),
+          onTap: () => pickWithSlider(context, title: tr('字幕位置'), value: settings.subtitlePosition.toDouble(), min: 0, max: 100, divisions: 100, suffix: '%', onSelected: (v) => save(now().copyWith(subtitlePosition: v.round()))),
         ),
         NormalItem(
           title: tr('描边粗细'),
           subtitle: tr('当前：{0}', [settings.subtitleBorder.toStringAsFixed(1)]),
           leading: const Icon(Icons.border_style_rounded),
-          onTap: () => pickWithSlider(context, title: tr('描边粗细'), value: settings.subtitleBorder, min: 0, max: 8, divisions: 16, suffix: '', onSelected: (v) => save(controller.settings.copyWith(subtitleBorder: v))),
+          onTap: () => pickWithSlider(context, title: tr('描边粗细'), value: settings.subtitleBorder, min: 0, max: 8, divisions: 16, suffix: '', precise: 1, onSelected: (v) => save(now().copyWith(subtitleBorder: v))),
         ),
         SwitchItem(
           title: tr('背景色块'),
@@ -440,6 +526,12 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           leading: const Icon(Icons.format_bold_rounded),
           value: settings.subtitleBold,
           onChanged: (v) => save(settings.copyWith(subtitleBold: v)),
+        ),
+        NormalItem(
+          title: tr('恢复默认样式'),
+          subtitle: tr('微软雅黑，第一字幕白色，第二字幕小一号的浅金色'),
+          leading: const Icon(Icons.restart_alt_rounded),
+          onTap: () => save(now().withDefaultSubtitleStyle()),
         ),
         _tip(context, tr('字幕由 yt-dlp 获取，没有人工字幕时使用自动生成的字幕。语言和启用方式从下一个视频开始生效，样式立即生效。')),
       ];
@@ -500,6 +592,16 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
           );
       final windows = controller.windowsAccent;
       return [
+        _header(context, tr('主题预设')),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Wrap(spacing: 12, runSpacing: 12, children: [
+            for (final preset in themePresets)
+              ThemePresetCard(preset: preset, selected: preset.isApplied(appearance), onTap: () => save(preset.applyTo(controller.appearance))),
+          ]),
+        ),
+        _tip(context, tr('每套主题都有浅色和深色，跟随下面的“主题模式”。')),
+        _header(context, tr('自定义')),
         PopupItem<ThemeMode>(
           title: tr('主题模式'),
           leading: const Icon(Icons.flashlight_on_outlined),
@@ -527,7 +629,7 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
           onTap: windows == null ? null : () => save(appearance.copyWith(systemAccent: !appearance.systemAccent)),
         ),
         AnimatedSize(
-          duration: const Duration(milliseconds: 200),
+          duration: Motion.of(const Duration(milliseconds: 200)),
           child: appearance.systemAccent && windows != null
               ? const SizedBox(width: double.infinity)
               : Padding(
@@ -1011,3 +1113,48 @@ class _LogsPageState extends State<_LogsPage> {
     );
   }
 }
+
+/// 连接的服务器: every service Lumtub talks to, when, and what it learns,
+/// with a switch where it can be turned off.
+Future<void> openPrivacyConnections(BuildContext context, AppController controller) => _push(context, controller, tr('连接的服务器'), (context) {
+      final settings = controller.settings;
+      final prefs = controller.preferences;
+      void saveSettings(PlayerSettings next) => controller.saveSettings(next);
+      void savePrefs(AppPreferences next) => controller.savePreferences(next);
+      Widget row(IconData icon, String title, String hosts, String detail, {bool? value, ValueChanged<bool>? onChanged, String? state, VoidCallback? onTap}) => ListTile(
+            leading: Icon(icon),
+            title: Text(title),
+            subtitle: Text('$hosts\n$detail'),
+            isThreeLine: true,
+            onTap: onTap ?? (onChanged == null || value == null ? null : () => onChanged(!value)),
+            trailing: value != null && onChanged != null
+                ? Switch(value: value, onChanged: onChanged)
+                : state == null
+                    ? null
+                    : Text(state, style: TextStyle(color: context.colors.outline)),
+          );
+      final dns = DnsServer.of(settings.dnsServer, settings.dnsCustomUrl);
+      final relay = settings.playbackSource != PlaybackSource.youtube;
+      return [
+        _tip(context, tr('Lumtub 没有统计、遥测或崩溃上报，不上传观看历史、Cookie 或账号数据。下面是它会连接的全部服务器；开着代理时都经过代理。')),
+        _header(context, tr('必需')),
+        row(Icons.smart_display_outlined, 'YouTube', 'www.youtube.com · *.googlevideo.com · i.ytimg.com', tr('搜索、列表、播放和缩略图。YouTube 会看到你的 IP 和看了哪些视频，和用浏览器看一样'), state: tr('必需')),
+        row(Icons.manage_search_rounded, tr('YouTube 搜索建议'), 'suggestqueries-clients6.youtube.com', tr('在搜索框打字时，把已输入的文字发给 YouTube 取建议'), state: tr('打字时')),
+        _header(context, tr('可以关闭')),
+        row(Icons.system_update_alt_rounded, tr('更新检查'), 'api.github.com · github.com', tr('检查和下载 Lumtub、libmpv、yt-dlp 等组件的新版本；GitHub 只看到你的 IP'),
+            value: prefs.autoCheckUpdates, onChanged: (v) => savePrefs(prefs.copyWith(autoCheckUpdates: v, autoUpdateApp: v && prefs.autoUpdateApp))),
+        row(Icons.fast_forward_outlined, tr('空降助手（SponsorBlock）'), 'sponsor.ajay.app', tr('播放时用视频 ID 的哈希前缀查询赞助片段，服务器不知道具体是哪个视频'),
+            value: settings.sponsorBlock, onChanged: (v) => saveSettings(settings.copyWith(sponsorBlock: v))),
+        row(Icons.title_rounded, 'DeArrow', 'sponsor.ajay.app · dearrow-thumb.ajay.app', tr('用社区提交的标题和封面替换标题党；标题用视频 ID 的哈希前缀查询，替换的封面图按视频 ID 下载'),
+            value: settings.deArrowTitles || settings.deArrowThumbnails, onChanged: (v) => saveSettings(settings.copyWith(deArrowTitles: v, deArrowThumbnails: v))),
+        row(Icons.thumb_down_off_alt_outlined, 'Return YouTube Dislike', 'returnyoutubedislikeapi.com', tr('播放页显示估算的踩数；会把正在看的视频 ID 发给它'),
+            value: settings.returnDislike, onChanged: (v) => saveSettings(settings.copyWith(returnDislike: v))),
+        row(Icons.translate_rounded, tr('翻译'), controller.preferences.translation.service.label, tr('只在你点“翻译”或开启字幕翻译时，把要翻译的文字发给所选服务'),
+            state: tr('点击时'), onTap: () => openTranslationSettings(context, controller)),
+        row(Icons.hub_outlined, tr('Piped / Invidious'), relay ? settings.playbackSource.label : tr('当前未使用'), tr('替你从 YouTube 取视频；它们会知道你看了哪个视频。YouTube 返回 429 时也会临时试用'),
+            state: relay ? tr('使用中') : tr('仅备用')),
+        row(Icons.dns_outlined, tr('加密 DNS'), dns?.url ?? tr('当前未使用'), tr('直连时查找网址；DNS 服务器会知道你访问了哪些网站，但看不到具体内容'), state: dns == null ? tr('关闭') : tr('使用中')),
+        row(Icons.account_circle_outlined, tr('Google 账号'), 'accounts.google.com · oauth2.googleapis.com · www.googleapis.com', tr('只在登录后同步订阅、播放列表、点赞和评论'),
+            state: controller.account?.signedIn ?? false ? tr('已登录') : tr('未登录')),
+      ];
+    });

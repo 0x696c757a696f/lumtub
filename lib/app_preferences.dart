@@ -8,8 +8,10 @@ import 'explore_filters.dart';
 import 'feed_quality.dart';
 import 'explore_topics.dart';
 import 'models.dart';
+import 'player_settings.dart' show SubtitleLanguage;
 import 'progress_line.dart';
 import 'translation.dart';
+import 'translation_services.dart';
 import 'l10n/l10n.dart';
 
 /// Pages the app can open on start, in navigation order.
@@ -80,7 +82,13 @@ class AppPreferences {
     this.autoCheckUpdates = true,
     this.autoUpdateApp = true,
     this.skipFfmpegPrompt = false,
-    this.translateLanguage = 'zh-CN',
+    this.translateLanguage = '',
+    this.translation = const TranslationConfig(),
+    this.subtitlesByService = false,
+    this.bilingualTranslation = true,
+    this.translationStyle = TranslationStyle.quote,
+    this.translationFirst = false,
+    this.skipSameLanguage = true,
   });
 
   final bool recordHistory;
@@ -172,20 +180,54 @@ class AppPreferences {
   final bool autoUpdateApp;
   /// The user chose single-file downloads and not to be asked to install ffmpeg.
   final bool skipFfmpegPrompt;
-  /// The language 翻译 and the translated subtitle turn text into (a TranslationLanguage code).
+  /// The language 翻译 turns text into (a TranslationLanguage code); empty
+  /// follows Windows' language.
   final String translateLanguage;
 
-  bool isBlocked(String? channelId) => channelId != null && blockedChannels.any((c) => c.id == channelId);
+  /// [translateLanguage], with Windows' language for empty.
+  String get translateTarget => translateLanguage.isEmpty ? SubtitleLanguage.auto.translation.code : translateLanguage;
 
-  bool isUnrecommended(String? channelId) => channelId != null && unrecommendedChannels.any((c) => c.id == channelId);
+  /// Which service 翻译 uses, and its settings; the keys are kept apart.
+  final TranslationConfig translation;
+
+  /// Translated subtitles come from [translation] instead of YouTube.
+  final bool subtitlesByService;
+  /// 翻译 shows the translation under the original, not in its place.
+  final bool bilingualTranslation;
+  /// How the translation under the original looks.
+  final TranslationStyle translationStyle;
+  /// The translation goes above the original instead of under it.
+  final bool translationFirst;
+  /// 翻译 does nothing for text already in the target language.
+  final bool skipSameLanguage;
+
+  bool isBlocked(String? channelId) => channelId != null && _lists.blockedIds.contains(channelId);
+
+  bool isUnrecommended(String? channelId) => channelId != null && _lists.unrecommendedIds.contains(channelId);
 
   /// Whether a channel called [name] was blocked by name.
-  bool isBlockedName(String name) => blockedChannelNames.any((n) => n.trim().toLowerCase() == name.trim().toLowerCase());
+  bool isBlockedName(String name) => _lists.names.isNotEmpty && _lists.names.contains(name.trim().toLowerCase());
+
+  /// The block lists as sets and lowercased once per preferences: [shows]
+  /// runs for every item of every list on every rebuild.
+  ({Set<String> blockedIds, Set<String> unrecommendedIds, Set<String> names, List<String> keywords}) get _lists => _listCache[this] ??= (
+        blockedIds: {for (final c in blockedChannels) c.id},
+        unrecommendedIds: {for (final c in unrecommendedChannels) c.id},
+        names: {for (final n in blockedChannelNames) n.trim().toLowerCase()},
+        keywords: [for (final w in blockedKeywords) w.toLowerCase()],
+      );
+  static final _listCache = Expando<({Set<String> blockedIds, Set<String> unrecommendedIds, Set<String> names, List<String> keywords})>();
 
   /// Whether a channel called [name], with [id] or [handle] if known, is
   /// one the user blocks by group or as state media.
-  bool blocksChannel(String name, {String? id, String? handle}) =>
-      (blockGroups && _matchers.groups.channel(name, id: id, handle: handle)) || blocksMediaChannel(name);
+  /// Remembered per channel for these preferences, as each test goes
+  /// through the native core.
+  bool blocksChannel(String name, {String? id, String? handle}) {
+    if (!blockGroups && !blockStateMedia) return false;
+    final memo = _blockMemo[this] ??= <String, bool>{};
+    if (memo.length > 20000) memo.clear();
+    return memo['channel\n$id\n$handle\n$name'] ??= (blockGroups && _matchers.groups.channel(name, id: id, handle: handle)) || blocksMediaChannel(name);
+  }
 
   /// Whether [group] of either list is ticked.
   bool groupOn(BlockedGroup group, {bool media = false}) =>
@@ -225,8 +267,11 @@ class AppPreferences {
   bool shows(VideoItem item, {bool watched = false}) {
     if (isBlocked(item.channelId) || isBlockedName(item.channel)) return false;
     if (blockedChannels.isNotEmpty && item.channelId == null && blockedChannels.any((c) => c.name.isNotEmpty && c.name == item.channel)) return false;
-    final title = item.title.toLowerCase();
-    if (blockedKeywords.any((word) => title.contains(word.toLowerCase()))) return false;
+    final keywords = _lists.keywords;
+    if (keywords.isNotEmpty) {
+      final title = item.title.toLowerCase();
+      if (keywords.any(title.contains)) return false;
+    }
     final duration = item.duration;
     if (hideShorts && _isShort(item)) return false;
     if (minDurationMinutes > 0 && duration != null && duration > 0 && duration < minDurationMinutes * 60) return false;
@@ -293,6 +338,12 @@ class AppPreferences {
     bool? autoUpdateApp,
     bool? skipFfmpegPrompt,
     String? translateLanguage,
+    TranslationConfig? translation,
+    bool? subtitlesByService,
+    bool? bilingualTranslation,
+    TranslationStyle? translationStyle,
+    bool? translationFirst,
+    bool? skipSameLanguage,
   }) =>
       AppPreferences(
         recordHistory: recordHistory ?? this.recordHistory,
@@ -348,6 +399,12 @@ class AppPreferences {
         autoUpdateApp: autoUpdateApp ?? this.autoUpdateApp,
         skipFfmpegPrompt: skipFfmpegPrompt ?? this.skipFfmpegPrompt,
         translateLanguage: translateLanguage ?? this.translateLanguage,
+        translation: translation ?? this.translation,
+        subtitlesByService: subtitlesByService ?? this.subtitlesByService,
+        bilingualTranslation: bilingualTranslation ?? this.bilingualTranslation,
+        translationStyle: translationStyle ?? this.translationStyle,
+        translationFirst: translationFirst ?? this.translationFirst,
+        skipSameLanguage: skipSameLanguage ?? this.skipSameLanguage,
       );
 
   Map<String, dynamic> toJson() => {
@@ -403,7 +460,13 @@ class AppPreferences {
         'autoCheckUpdates': autoCheckUpdates,
         'autoUpdateApp': autoUpdateApp,
         'skipFfmpegPrompt': skipFfmpegPrompt,
-        'translateLanguage': translateLanguage,
+        'translateLanguageV2': translateLanguage,
+        'translation': translation.toJson(),
+        'subtitlesByService': subtitlesByService,
+        'bilingualTranslation': bilingualTranslation,
+        'translationStyle': translationStyle.name,
+        'translationFirst': translationFirst,
+        'skipSameLanguage': skipSameLanguage,
       };
 
   factory AppPreferences.fromJson(Object? raw) {
@@ -493,7 +556,19 @@ class AppPreferences {
       autoCheckUpdates: flag('autoCheckUpdates', d.autoCheckUpdates),
       autoUpdateApp: flag('autoUpdateApp', d.autoUpdateApp),
       skipFfmpegPrompt: flag('skipFfmpegPrompt', d.skipFfmpegPrompt),
-      translateLanguage: TranslationLanguage.byCode(raw['translateLanguage']).code,
+      // Simplified Chinese was the default before Windows' language was
+      // followed, so a value saved then follows Windows too.
+      translateLanguage: raw.containsKey('translateLanguageV2')
+          ? TranslationLanguage.maybeByCode(raw['translateLanguageV2'])?.code ?? ''
+          : raw['translateLanguage'] == TranslationLanguage.defaultCode
+              ? ''
+              : TranslationLanguage.maybeByCode(raw['translateLanguage'])?.code ?? '',
+      translation: TranslationConfig.fromJson(raw['translation']),
+      subtitlesByService: flag('subtitlesByService', d.subtitlesByService),
+      bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
+      translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,
+      translationFirst: flag('translationFirst', d.translationFirst),
+      skipSameLanguage: flag('skipSameLanguage', d.skipSameLanguage),
     );
   }
 }

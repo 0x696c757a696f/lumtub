@@ -28,6 +28,8 @@ class PlayerOptionApplicator {
       if (settings.strategy == PlaybackStrategy.lowResource) ...fastRendering,
       'video-sync': settings.videoSync.mpvValue,
       'sub-scale': settings.subtitleScale.toStringAsFixed(1),
+      'sub-font': settings.subtitleFont.isEmpty ? 'sans-serif' : settings.subtitleFont,
+      'sub-color': PlayerSettings.mpvColor(settings.subtitleColor, settings.subtitleOpacity),
       'sub-pos': settings.subtitlePosition.toString(),
       // The secondary subtitle (libass) sits just above the main one.
       'secondary-sub-pos': (settings.subtitlePosition - 8).clamp(0, 100).toString(),
@@ -120,4 +122,25 @@ class PlayerOptionApplicator {
     }
     return failed;
   }
+}
+
+/// The average time to draw a frame, from frame timings such as
+/// `draw=240/13.1ms/29.9ms`, when it takes more than 60% of a frame's time
+/// at [fps]; null while drawing keeps up or too few frames were drawn.
+double? drawBusy(String frames, double fps) {
+  final match = RegExp(r'draw=(\d+)/([\d.]+)ms').firstMatch(frames);
+  if (match == null || fps <= 0) return null;
+  final count = int.parse(match[1]!);
+  final average = double.parse(match[2]!);
+  return count >= 50 && average > 600 / fps ? average : null;
+}
+
+/// The next quality below [height] among [available], for playback that
+/// keeps dropping frames; null at 360p or when there is none.
+int? stepDownHeight(int height, Iterable<int> available) {
+  int? lower;
+  for (final h in available) {
+    if (h >= 360 && h < height && (lower == null || h > lower)) lower = h;
+  }
+  return lower;
 }

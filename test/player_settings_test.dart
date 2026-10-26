@@ -180,4 +180,39 @@ vo=gpu-next
     final restored = PlayerSettings.fromJson(jsonDecode(jsonEncode(original.toJson())));
     expect(restored.toJson(), original.toJson());
   });
+
+  test('keeps both subtitles\' styles and the second language', () {
+    const changed = PlayerSettings(
+      subtitleFont: 'KaiTi',
+      subtitleColor: 0xFFEB3B,
+      subtitleOpacity: 0.8,
+      secondaryFont: 'Arial',
+      secondaryScale: 1.2,
+      secondaryColor: 0x80DEEA,
+      secondaryOpacity: 0.5,
+      secondarySubtitleLanguage: 'ja',
+    );
+    final read = PlayerSettings.fromJson(jsonDecode(jsonEncode(changed.toJson())));
+    expect((read.subtitleFont, read.subtitleColor, read.subtitleOpacity), ('KaiTi', 0xFFEB3B, 0.8));
+    expect((read.secondaryFont, read.secondaryScale, read.secondaryColor, read.secondaryOpacity), ('Arial', 1.2, 0x80DEEA, 0.5));
+    expect(read.secondarySubtitleLanguage, 'ja');
+    final reset = read.withDefaultSubtitleStyle();
+    expect((reset.subtitleFont, reset.secondaryColor, reset.secondaryScale), (PlayerSettings.defaultSubtitleFont, 0xFFE7A8, 0.8));
+    expect(reset.secondarySubtitleLanguage, 'ja');
+  });
+
+  test('refuses font names and languages mpv or the app cannot take', () {
+    final read = PlayerSettings.fromJson({'subtitleFont': 'Arial, "x"', 'secondaryFont': '', 'secondarySubtitleLanguage': 'xx', 'subtitleOpacity': 0});
+    expect(read.subtitleFont, '');
+    expect(read.secondaryFont, '');
+    expect(read.secondarySubtitleLanguage, '');
+    expect(PlayerSettings.fromJson({'secondarySubtitleLanguage': 'original'}).secondarySubtitleLanguage, PlayerSettings.originalSubtitle);
+    expect(read.subtitleOpacity, 0.1);
+    expect(PlayerSettings.fromJson({}).subtitleFont, PlayerSettings.defaultSubtitleFont);
+  });
+
+  test('writes colors the way mpv reads them', () {
+    expect(PlayerSettings.mpvColor(0xFFFFFF, 1), '#FFFFFFFF');
+    expect(PlayerSettings.mpvColor(0x00FF00, 0.5), '#8000FF00');
+  });
 }

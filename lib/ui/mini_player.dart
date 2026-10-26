@@ -21,6 +21,8 @@ import '../app_window.dart' show pipAspectOf;
 import '../l10n/l10n.dart';
 import 'video_box.dart';
 import '../widgets/video_progress_bar.dart';
+import 'motion.dart';
+import '../widgets/position_ticks.dart';
 
 /// The corners the card snaps to.
 enum MiniCorner { topLeft, topRight, bottomLeft, bottomRight }
@@ -71,6 +73,9 @@ class _MiniPlayerState extends State<MiniPlayer> {
   Timer? _hideTimer;
   Timer? _mountTimer;
   bool _hovering = false;
+  /// Whether the controls are built: from hovering until they have faded
+  /// out, so the hidden progress bar does not follow playback.
+  bool _controlsBuilt = false;
   // The watch page's Video is still fading out for a moment after the card
   // appears; two Videos of one controller must not overlap.
   bool _videoMounted = false;
@@ -115,7 +120,12 @@ class _MiniPlayerState extends State<MiniPlayer> {
   }
 
   void _setHovering(bool on) {
-    if (mounted && on != _hovering) setState(() => _hovering = on);
+    if (mounted && on != _hovering) {
+      setState(() {
+        _hovering = on;
+        if (on) _controlsBuilt = true;
+      });
+    }
   }
 
   Widget _video(BuildContext context) {
@@ -145,7 +155,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
       final offset = dragging ?? miniPosition(_corner, area, size);
       return Stack(children: [
         AnimatedPositioned(
-          duration: dragging == null ? const Duration(milliseconds: 180) : Duration.zero,
+          duration: dragging == null ? Motion.of(const Duration(milliseconds: 180)) : Duration.zero,
           curve: Curves.easeOut,
           left: offset.dx,
           top: offset.dy,
@@ -196,8 +206,11 @@ class _MiniPlayerState extends State<MiniPlayer> {
             ignoring: !_hovering,
             child: AnimatedOpacity(
               opacity: _hovering ? 1 : 0,
-              duration: const Duration(milliseconds: 150),
-              child: _Controls(controller: _controller, player: player, title: title),
+              duration: Motion.of(const Duration(milliseconds: 150)),
+              onEnd: () {
+                if (!_hovering && mounted) setState(() => _controlsBuilt = false);
+              },
+              child: _controlsBuilt ? _Controls(controller: _controller, player: player, title: title) : const SizedBox.expand(),
             ),
           ),
         ]),
@@ -213,7 +226,7 @@ class _ProgressLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StreamBuilder<Duration>(
-        stream: player.stream.position,
+        stream: coarsePosition(player),
         initialData: player.state.position,
         builder: (context, _) {
           final total = player.state.duration.inMilliseconds;
@@ -269,7 +282,7 @@ class _Controls extends StatelessWidget {
         color: Colors.black.withValues(alpha: .70),
         padding: const EdgeInsets.fromLTRB(6, 0, 6, 2),
         child: StreamBuilder<Duration>(
-          stream: player.stream.position,
+          stream: coarsePosition(player),
           initialData: player.state.position,
           builder: (context, _) => VideoProgressBar(
             position: player.state.position,

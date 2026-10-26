@@ -13,6 +13,7 @@ class TranslationLanguage {
   final String _label;
   String get label => tr(_label);
 
+  /// The default before Windows' language was followed.
   static const defaultCode = 'zh-CN';
 
   static const all = [
@@ -36,6 +37,24 @@ class TranslationLanguage {
 
   /// The language for a saved [code], else simplified Chinese.
   static TranslationLanguage byCode(Object? code) => all.firstWhere((l) => l.code == code, orElse: () => all.first);
+
+  /// The language for a saved [code]; null for none or an unknown one.
+  static TranslationLanguage? maybeByCode(Object? code) => all.where((l) => l.code == code).firstOrNull;
+}
+
+/// How a translation shown under its original looks, as KISS Translator
+/// offers them.
+enum TranslationStyle {
+  quote('引用竖线'),
+  plain('无样式'),
+  highlight('背景高亮'),
+  underline('虚线下划线'),
+  box('虚线框'),
+  blur('模糊（悬停显示）');
+
+  const TranslationStyle(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// Something that turns text into another language.

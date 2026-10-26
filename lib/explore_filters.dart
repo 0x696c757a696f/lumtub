@@ -117,9 +117,15 @@ enum ExploreLanguage {
 /// it gives nothing to go by: by its script, and for Latin letters by its
 /// small words (native/lumtub_core/src/filter.rs). Without the library
 /// every title passes.
+/// Explore filters every list again on each pass, so answers are kept.
 ExploreLanguage titleLanguage(String title) {
   final core = NativeCore.instance;
   if (core == null) return ExploreLanguage.any;
+  if (_languages[title] case final known?) return known;
   final index = core.withText(title, core.titleLanguage);
-  return index < ExploreLanguage.values.length ? ExploreLanguage.values[index] : ExploreLanguage.any;
+  final language = index < ExploreLanguage.values.length ? ExploreLanguage.values[index] : ExploreLanguage.any;
+  if (_languages.length >= 4000) _languages.remove(_languages.keys.first);
+  return _languages[title] = language;
 }
+
+final _languages = <String, ExploreLanguage>{};

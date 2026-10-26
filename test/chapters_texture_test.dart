@@ -1,8 +1,7 @@
-import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/models.dart';
-import 'package:lumtub/ui/video_texture_size.dart';
+import 'package:lumtub/ui/video_aspect.dart';
 
 void main() {
   group('Chapter', () {
@@ -41,28 +40,6 @@ void main() {
         ],
       });
       expect(details.chapters, hasLength(2));
-    });
-  });
-
-  group('textureSizeFor', () {
-    test('shrinks a large video to cover the player, keeping its aspect', () {
-      final size = textureSizeFor(const Size(2560, 1440), const Size(1300, 731));
-      expect(size, isNotNull);
-      expect(size!.width, greaterThanOrEqualTo(1300));
-      expect(size.height, greaterThanOrEqualTo(731));
-      expect(size.width / size.height, closeTo(16 / 9, 0.01));
-      expect(size.width % 2, 0);
-    });
-
-    test('covers the box when the aspect differs (zoomed fit modes stay sharp)', () {
-      final size = textureSizeFor(const Size(1920, 800), const Size(1280, 720))!;
-      expect(size.height, greaterThanOrEqualTo(720));
-    });
-
-    test('uses the video size when it is not larger than the player', () {
-      expect(textureSizeFor(const Size(1280, 720), const Size(1920, 1080)), isNull);
-      expect(textureSizeFor(Size.zero, const Size(1920, 1080)), isNull);
-      expect(textureSizeFor(const Size(1920, 1080), Size.zero), isNull);
     });
   });
 

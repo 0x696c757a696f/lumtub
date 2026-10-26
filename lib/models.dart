@@ -429,7 +429,11 @@ class SubtitleOption {
   final SubtitleKind kind;
 
   /// The label shown in menus, such as "中文（简体） · zh-Hans".
-  String get label => '${languageName(language, name)}${kind == SubtitleKind.uploaded ? '' : kind == SubtitleKind.automatic ? '（自动生成）' : '（自动翻译）'}';
+  String get label => switch (kind) {
+        SubtitleKind.uploaded => languageName(language, name),
+        SubtitleKind.automatic => tr('{0}（自动生成）', [languageName(language, name)]),
+        SubtitleKind.translated => tr('{0}（自动翻译）', [languageName(language, name)]),
+      };
 
   /// yt-dlp's `subtitles` and `automatic_captions` maps. Automatic
   /// captions in the video's own language (yt-dlp's "-orig" entries, or

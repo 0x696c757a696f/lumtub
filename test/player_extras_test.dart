@@ -137,6 +137,22 @@ void main() {
       expect(calls.length, count);
     });
 
+    test('keep awake lets the display sleep while the window is minimised', () {
+      final calls = <int>[];
+      KeepAwake.apply = calls.add;
+      final a = Object();
+      addTearDown(() {
+        KeepAwake.hidden = false;
+        KeepAwake.hold(a, false);
+        KeepAwake.apply = null;
+      });
+      KeepAwake.hold(a, true);
+      KeepAwake.hidden = true;
+      expect(calls.last, 0x80000000);
+      KeepAwake.hidden = false;
+      expect(calls.last, 0x80000002);
+    });
+
     test('mpv zoom is a power of two', () {
       expect(PictureTransform.zoomProperty(1), 0);
       expect(PictureTransform.zoomProperty(2), closeTo(1, 1e-9));

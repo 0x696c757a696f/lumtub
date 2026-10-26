@@ -7,16 +7,21 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app/app_controller.dart';
 import 'app_directories.dart';
+import 'app_window.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
+import 'keep_awake.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
 import 'ui/app_shell.dart';
+import 'ui/motion.dart';
+import 'ui/smooth_wheel.dart';
 import 'ui/theme.dart';
 import 'windows_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) SmoothWheel.install();
   // Decoded thumbnails and avatars: Flutter keeps up to 1000 and 100 MiB.
   // Pages rebuild them from the disk cache quickly, so fewer are kept.
   PaintingBinding.instance.imageCache
@@ -66,24 +71,31 @@ class _LumtubAppState extends State<LumtubApp> {
   Object? _themeKey;
   late ThemeData _light;
   late ThemeData _dark;
+  // Used while Windows' high contrast mode is on.
+  late ThemeData _lightContrast;
+  late ThemeData _darkContrast;
   late final AppLifecycleListener _lifecycle;
   bool _pausedByMinimize = false;
   WindowsShellSync? _shell;
 
   void _updateThemes(AppearanceSettings appearance, Color accent) {
-    final key = appearance.themeKey(accent);
+    Motion.update(appearance.motion);
+    final key = (appearance.themeKey(accent), Motion.reduced);
     if (key == _themeKey) return;
     _themeKey = key;
-    ThemeData build(Brightness brightness) => buildAppTheme(
+    ThemeData build(Brightness brightness, {bool highContrast = false}) => buildAppTheme(
           accent,
           brightness,
           variant: appearance.schemeVariant,
           pureBlack: appearance.pureBlack,
           fontFamily: appearance.fontFamily,
-          transition: appearance.transition,
+          transition: Motion.reduced ? PageTransition.none : appearance.transition,
+          highContrast: highContrast,
         );
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
+    _lightContrast = build(Brightness.light, highContrast: true);
+    _darkContrast = build(Brightness.dark, highContrast: true);
   }
 
   @override
@@ -104,7 +116,13 @@ class _LumtubAppState extends State<LumtubApp> {
       // paused itself.
       onHide: () {
         controller.cast.windowHidden = true;
+        KeepAwake.hidden = true;
         unawaited(controller.setBackgroundAudioOnly(true));
+        // Nothing is drawn while hidden: decoded thumbnails go, and come
+        // back from the disk cache when the window does.
+        PaintingBinding.instance.imageCache
+          ..clear()
+          ..clearLiveImages();
         if (controller.playing == null) controller.releaseMemory();
         final player = controller.player;
         if (!controller.preferences.pauseOnMinimize || player == null || !player.state.playing) return;
@@ -112,7 +130,10 @@ class _LumtubAppState extends State<LumtubApp> {
         unawaited(player.pause());
       },
       onShow: () {
+        // “Show animations in Windows” may have changed meanwhile.
+        if (widget.controller.appearance.motion == MotionPreference.system && Motion.systemPrefersReduced() != Motion.reduced) setState(() => _themeKey = null);
         controller.cast.windowHidden = false;
+        KeepAwake.hidden = false;
         unawaited(controller.setBackgroundAudioOnly(false));
         if (!_pausedByMinimize) return;
         _pausedByMinimize = false;
@@ -146,11 +167,14 @@ class _LumtubAppState extends State<LumtubApp> {
             localizationsDelegates: GlobalMaterialLocalizations.delegates,
             theme: _light,
             darkTheme: _dark,
+            highContrastTheme: _lightContrast,
+            highContrastDarkTheme: _darkContrast,
             // The font size setting scales on top of Windows' text size.
             builder: (context, child) {
               final media = MediaQuery.of(context);
+              _matchTitleBar(Theme.of(context).colorScheme);
               return MediaQuery(
-                data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale)),
+                data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale), disableAnimations: media.disableAnimations || Motion.reduced),
                 child: child!,
               );
             },
@@ -159,6 +183,22 @@ class _LumtubAppState extends State<LumtubApp> {
         },
         child: AppShell(controller: widget.controller),
       );
+}
+
+Object? _titleBar;
+
+/// The Windows title bar in the page's own colours, so the window reads as
+/// one surface in light and dark themes.
+void _matchTitleBar(ColorScheme scheme) {
+  if (!Platform.isWindows) return;
+  final key = (scheme.surface, scheme.onSurface, scheme.brightness);
+  if (key == _titleBar) return;
+  _titleBar = key;
+  WidgetsBinding.instance.addPostFrameCallback((_) => AppWindow.setTitleBar(
+        caption: scheme.surface.toARGB32(),
+        text: scheme.onSurface.toARGB32(),
+        dark: scheme.brightness == Brightness.dark,
+      ));
 }
 
 class _ScaledTextScaler extends TextScaler {

@@ -24,11 +24,97 @@ Future<void> showDownloadChoice(BuildContext context, AppController controller, 
       loadFormats: () => controller.downloadFormats(item.id),
       defaults: controller.downloads?.defaults ?? const DownloadDefaults(),
       canMerge: controller.downloads?.canMerge ?? false,
+      onCover: () => unawaited(_saveExtra(context, controller, () => controller.saveCover(item))),
+      onSubtitles: () => unawaited(_chooseSubtitle(context, controller, item)),
     ),
   );
   if (choice == null || !context.mounted) return;
   if (choice.defaults != null) unawaited(controller.downloads?.setDefaults(choice.defaults!));
   if (await ensureFfmpegForDownload(context, controller, choice.quality)) controller.download(item, choice.quality, selection: choice.selection);
+}
+
+/// Runs [save] and says where the file went, with a button to show it.
+Future<void> _saveExtra(BuildContext context, AppController controller, Future<String> Function() save) async {
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  try {
+    final path = await save();
+    messenger?.showSnackBar(SnackBar(
+      content: Text(tr('已保存：{0}', [path.split(Platform.pathSeparator).last])),
+      action: Platform.isWindows ? SnackBarAction(label: tr('打开文件夹'), onPressed: () => unawaited(openInExplorer(path, select: true))) : null,
+    ));
+  } catch (e) {
+    messenger?.showSnackBar(SnackBar(content: Text(tr('保存失败：{0}', ['$e'.replaceFirst('Bad state: ', '')]))));
+  }
+}
+
+/// Picks one of [item]'s subtitles and the file type, then saves it.
+Future<void> _chooseSubtitle(BuildContext context, AppController controller, VideoItem item) async {
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  List<SubtitleOption> options;
+  try {
+    options = await controller.subtitleOptionsFor(item);
+  } catch (e) {
+    messenger?.showSnackBar(SnackBar(content: Text(tr('无法读取字幕列表'))));
+    return;
+  }
+  if (!context.mounted) return;
+  if (options.isEmpty) {
+    messenger?.showSnackBar(SnackBar(content: Text(tr('这个视频没有字幕'))));
+    return;
+  }
+  final picked = await showDialog<(SubtitleOption, bool)>(context: context, builder: (context) => _SubtitleSaveDialog(options: options));
+  if (picked == null || !context.mounted) return;
+  await _saveExtra(context, controller, () => controller.saveSubtitle(item, picked.$1, srt: picked.$2));
+}
+
+class _SubtitleSaveDialog extends StatefulWidget {
+  const _SubtitleSaveDialog({required this.options});
+  final List<SubtitleOption> options;
+
+  @override
+  State<_SubtitleSaveDialog> createState() => _SubtitleSaveDialogState();
+}
+
+class _SubtitleSaveDialogState extends State<_SubtitleSaveDialog> {
+  late SubtitleOption _option = widget.options.first;
+  bool _srt = true;
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(tr('下载字幕')),
+        content: SizedBox(
+          width: 420,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Flexible(
+              child: SingleChildScrollView(
+                child: RadioGroup<SubtitleOption>(
+                  groupValue: _option,
+                  onChanged: (v) => setState(() => _option = v ?? _option),
+                  child: Column(children: [
+                    for (final o in widget.options)
+                      RadioListTile<SubtitleOption>(
+                        dense: true,
+                        value: o,
+                        title: Text(o.kind == SubtitleKind.translated ? tr('{0}（YouTube 翻译）', [SubtitleOption.languageName(o.language, o.name)]) : o.label),
+                      ),
+                  ]),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<bool>(
+              showSelectedIcon: false,
+              segments: const [ButtonSegment(value: true, label: Text('SRT')), ButtonSegment(value: false, label: Text('WebVTT'))],
+              selected: {_srt},
+              onSelectionChanged: (v) => setState(() => _srt = v.first),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
+          FilledButton(onPressed: () => Navigator.pop(context, (_option, _srt)), child: Text(tr('保存'))),
+        ],
+      );
 }
 
 /// Shows [path] in Windows Explorer; a file is selected in its folder.

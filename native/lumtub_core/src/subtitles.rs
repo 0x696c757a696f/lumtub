@@ -80,7 +80,7 @@ pub fn cues(source: &str) -> Vec<Cue> {
             continue;
         };
         let mut body: Vec<String> = lines[at + 1..].iter().map(|l| clean(l)).filter(|l| !l.is_empty()).collect();
-        if body.first().is_some() && body.first() == previous.as_ref() {
+        if previous.is_some() && body.first() == previous.as_ref() {
             body.remove(0);
         }
         let Some(last) = body.last() else { continue };

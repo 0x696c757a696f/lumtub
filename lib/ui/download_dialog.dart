@@ -21,12 +21,15 @@ class DownloadChoice {
 /// Lets the user pick the codec, height and container of a download from the
 /// formats the video really has.
 class DownloadDialog extends StatefulWidget {
-  const DownloadDialog({super.key, required this.title, required this.loadFormats, this.defaults = const DownloadDefaults(), this.canMerge = true});
+  const DownloadDialog({super.key, required this.title, required this.loadFormats, this.defaults = const DownloadDefaults(), this.canMerge = true, this.onCover, this.onSubtitles});
   final String title;
   final Future<DownloadFormats> Function() loadFormats;
   final DownloadDefaults defaults;
   /// Whether ffmpeg is there; without it the video comes as a single file.
   final bool canMerge;
+  /// Saves just the cover or a subtitle instead; the dialog closes first.
+  final VoidCallback? onCover;
+  final VoidCallback? onSubtitles;
 
   @override
   State<DownloadDialog> createState() => _DownloadDialogState();
@@ -124,7 +127,26 @@ class _DownloadDialogState extends State<DownloadDialog> {
     return AlertDialog(
       title: Text(tr('下载视频')),
       content: SizedBox(width: 460, child: SingleChildScrollView(child: _body(context))),
+      actionsOverflowButtonSpacing: 4,
       actions: [
+        if (widget.onCover != null)
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onCover!();
+            },
+            icon: const Icon(Icons.image_outlined, size: 18),
+            label: Text(tr('下载封面')),
+          ),
+        if (widget.onSubtitles != null)
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onSubtitles!();
+            },
+            icon: const Icon(Icons.subtitles_outlined, size: 18),
+            label: Text(tr('下载字幕')),
+          ),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
         if (_formats != null) FilledButton(onPressed: selection == null ? null : () => _submit(selection), child: Text(tr('开始下载'))),
       ],

@@ -2286,5 +2286,12 @@
   "上一句或下一句字幕": "Previous or next subtitle line",
   "重听这一句": "Replay this line",
   "先打开一条字幕": "Turn on a subtitle first",
-  "上一句": "Previous line"
+  "上一句": "Previous line",
+  "无法读取字幕列表": "Couldn't read the subtitle list",
+  "这个视频没有封面": "This video has no cover image",
+  "已保存：{0}": "Saved: {0}",
+  "无法下载封面，请检查网络或代理": "Couldn't download the cover; check the network or proxy",
+  "下载字幕": "Download subtitles",
+  "保存失败：{0}": "Could not save: {0}",
+  "下载封面": "Download cover"
 }

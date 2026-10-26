@@ -22,4 +22,10 @@ void main() {
     expect(cueIndexAt(cues, const Duration(seconds: 3)), 1);
     expect(cueIndexAt(cues, const Duration(seconds: 30)), 1);
   });
+
+  test('writes SRT', () {
+    final srt = toSrt(dartSubtitleCues(vtt));
+    expect(srt, '1\n00:00:01,000 --> 00:00:02,500\nHello & hi\n\n2\n00:00:02,500 --> 00:00:04,000\nworld\n\n');
+    expect(dartSubtitleCues(srt).map((c) => c.text), ['Hello & hi', 'world']);
+  });
 }

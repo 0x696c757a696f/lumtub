@@ -664,6 +664,55 @@ class AppController extends ChangeNotifier {
       );
 
   /// Queues [item] for download, and says so.
+  /// A file name for [item]'s [suffix] (such as `.jpg`) in the download folder.
+  String _downloadPath(VideoItem item, String suffix) {
+    final title = item.title.replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '_').replaceAll(RegExp(r'\s+'), ' ').trim();
+    final short = title.length > 120 ? title.substring(0, 120).trim() : title;
+    final folder = downloads?.directory ?? Directory.systemTemp.path;
+    return '$folder${Platform.pathSeparator}${short.isEmpty ? item.id : short} [${item.id}]$suffix';
+  }
+
+  /// Saves [item]'s largest cover image next to the downloads and returns
+  /// its path.
+  Future<String> saveCover(VideoItem item) async {
+    for (final name in const ['maxresdefault', 'sddefault', 'hqdefault']) {
+      final http.Response response;
+      try {
+        response = await _http.get(Uri.https('i.ytimg.com', '/vi/${item.id}/$name.jpg')).timeout(const Duration(seconds: 20));
+      } catch (_) {
+        throw StateError(tr('无法下载封面，请检查网络或代理'));
+      }
+      // YouTube answers a missing size with a small placeholder or 404.
+      if (response.statusCode != 200 || response.bodyBytes.length < 2000) continue;
+      final file = File(_downloadPath(item, '.jpg'));
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(response.bodyBytes);
+      return file.path;
+    }
+    throw StateError(tr('这个视频没有封面'));
+  }
+
+  /// The subtitles [item] offers, with the one translated into 第一字幕语言
+  /// when the video has none in it.
+  Future<List<SubtitleOption>> subtitleOptionsFor(VideoItem item) async {
+    final known = playing?.id == item.id ? details : null;
+    final repository = _repository;
+    final offered = known?.subtitles ?? (repository == null ? const <SubtitleOption>[] : (await repository.details(item.id)).subtitles);
+    final target = settings.subtitleLanguage.translation;
+    final translation = hasOwnSubtitle(offered, target) ? null : translationOf(offered, target);
+    return [if (translation != null) translation, ...offered.where((o) => o.kind != SubtitleKind.translated)];
+  }
+
+  /// Saves [option] of [item] next to the downloads, as SRT or as WebVTT,
+  /// and returns its path.
+  Future<String> saveSubtitle(VideoItem item, SubtitleOption option, {bool srt = true}) async {
+    final vtt = await File(await _subtitleFile(option)).readAsString();
+    final file = File(_downloadPath(item, '.${option.language}.${srt ? 'srt' : 'vtt'}'));
+    await file.parent.create(recursive: true);
+    await file.writeAsString(srt ? toSrt(parseSubtitleCues(vtt)) : vtt);
+    return file.path;
+  }
+
   void download(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
     final manager = downloads;
     if (manager == null || item.isLive || item.isUpcoming) return _notice(tr('直播无法下载'));

@@ -46,6 +46,24 @@ List<SubtitleCue> dartSubtitleCues(String text) {
   return cues;
 }
 
+/// [cues] as an SRT file.
+String toSrt(List<SubtitleCue> cues) {
+  String stamp(Duration d) {
+    String two(int n, [int width = 2]) => n.toString().padLeft(width, '0');
+    return '${two(d.inHours)}:${two(d.inMinutes % 60)}:${two(d.inSeconds % 60)},${two(d.inMilliseconds % 1000, 3)}';
+  }
+
+  final out = StringBuffer();
+  for (final (i, cue) in cues.indexed) {
+    out
+      ..writeln(i + 1)
+      ..writeln('${stamp(cue.start)} --> ${stamp(cue.end)}')
+      ..writeln(cue.text)
+      ..writeln();
+  }
+  return out.toString();
+}
+
 /// The cue shown at [position], else the last one before it; -1 before the first.
 int cueIndexAt(List<SubtitleCue> cues, Duration position) {
   var low = 0, high = cues.length - 1, found = -1;

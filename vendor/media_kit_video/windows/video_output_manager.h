@@ -40,6 +40,9 @@ class VideoOutputManager {
                std::optional<int64_t> width,
                std::optional<int64_t> height);
 
+  // Lumtub: frame timings of the |VideoOutput| with given handle, empty without one.
+  void TakeStats(int64_t handle, std::function<void(std::string)> callback);
+
   // Destroys the |VideoOutput| with given handle.
   void Dispose(int64_t handle, std::function<void()> callback);
 

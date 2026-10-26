@@ -6,6 +6,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -2809,17 +2810,33 @@ class AppController extends ChangeNotifier {
       final drops = int.tryParse(await platform.getProperty('frame-drop-count')) ?? 0;
       final added = drops - _lastDrops;
       _lastDrops = drops;
+      // Read every time, so the timings cover these 10 seconds.
+      final frames = await _frameStats(platform);
       if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) return;
       _lastDropLog = DateTime.now();
       final values = <String>[];
       for (final name in ['avsync', 'estimated-vf-fps', 'container-fps', 'display-fps', 'vo-delayed-frame-count', 'mistimed-frame-count', 'decoder-frame-drop-count', 'hwdec-current', 'video-sync', 'speed', 'video-params/w', 'video-params/h', 'time-pos', 'audio-pts', 'audio-params/samplerate', 'audio-out-params/samplerate', 'current-ao', 'd3d11va-zero-copy', 'vd-lavc-dr', 'video-codec', 'video-out-params/pixelformat']) {
         values.add('$name=${await platform.getProperty(name)}');
       }
-      logInfo('Dropped $added frames in 10 s ($drops total): ${values.join(' ')}');
+      logInfo('Dropped $added frames in 10 s ($drops total): ${values.join(' ')}${frames == null ? '' : ' · frames $frames'}');
     } catch (_) {
       // Statistics are best effort.
     }
   }
+
+  /// The video output's timings for each frame since the last call: libmpv's
+  /// render, the ANGLE draw and Flutter's read, as count/average/max.
+  Future<String?> _frameStats(NativePlayer platform) async {
+    try {
+      final stats = await _videoChannel.invokeMethod<String>('VideoOutputManager.Stats', {'handle': '${await platform.handle}'});
+      return stats == null || stats.isEmpty ? null : stats;
+    } catch (_) {
+      // An older plugin without timings.
+      return null;
+    }
+  }
+
+  static const _videoChannel = MethodChannel('com.alexmercerind/media_kit_video');
 
   DateTime _lastMemoryLog = DateTime(0);
 

@@ -21,6 +21,7 @@
 #include <d3d11.h>
 #include <wrl.h>
 
+#include "frame_stats.h"
 #include "utils.h"
 
 #include <cstdint>
@@ -52,6 +53,10 @@ class ANGLESurfaceManager {
   void Read();
 
   void MakeCurrent(bool value);
+
+  // Lumtub: how long drawing and Flutter's reads take, lock waits included.
+  FrameTiming draw_timing;
+  FrameTiming read_timing;
 
  private:
   void SwapBuffers();

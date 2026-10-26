@@ -78,6 +78,9 @@ class VideoOutput {
 
   void SetSize(std::optional<int64_t> width, std::optional<int64_t> height);
 
+  // Lumtub: frame timings since the last call, for the log.
+  std::string TakeStats();
+
  private:
   void NotifyRender();
 
@@ -107,6 +110,9 @@ class VideoOutput {
   // destruction.
   std::atomic<bool> destroyed_{false};
   std::atomic<bool> render_pending_{false};
+  // Lumtub: frames libmpv announced while one was still waiting to be drawn.
+  std::atomic<uint64_t> coalesced_{0};
+  FrameTiming render_timing_;
 
   std::mutex textures_mutex_ = std::mutex();
   std::condition_variable textures_unregistered_;

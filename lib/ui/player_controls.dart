@@ -111,6 +111,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   // What yt-dlp's extraction of the playing video offers for the bar.
   String? _infoFor;
   bool _infoBusy = false;
+  String? _infoRead;
   Heatmap? _heatmap;
   ProgressPreview? _preview;
 
@@ -175,11 +176,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     if (!mounted || id == null) return;
     if (_infoFor != id) {
       _infoFor = id;
+      _infoRead = null;
       _heatmap = null;
       _preview = null;
       _transform.reset();
       if (mounted) setState(() {});
-    } else if (_heatmap != null || _preview != null) {
+    } else if (_infoRead == id) {
       return;
     }
     if (_infoBusy) return;
@@ -187,6 +189,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     _controller.playingInfo().then((info) {
       _infoBusy = false;
       if (!mounted || info == null || _controller.playing?.id != id) return;
+      // Read once per video, also when it has neither: a live has no heatmap
+      // or storyboard, and the controller notifies many times a second.
+      _infoRead = id;
       final board = Storyboard.from(info);
       setState(() {
         _heatmap = Heatmap.from(info);

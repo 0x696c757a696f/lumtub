@@ -455,28 +455,23 @@ class AppController extends ChangeNotifier {
       await AppLog.open(directories.logs);
       logInfo('Lumtub $appVersion started · ${Platform.operatingSystemVersion}');
       final history = HistoryStore(directories);
-      await history.initialize();
       searchHistory = SearchHistory(File('${directories.data.path}${Platform.pathSeparator}search_history.json'));
       final notInterested = NotInterested(File('${directories.data.path}${Platform.pathSeparator}not_interested.json'));
-      await notInterested.load();
-      homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(notifyListeners);
       final libraryStore = LibraryStore(File('${directories.data.path}${Platform.pathSeparator}library.json'));
-      await libraryStore.load();
       final settingsStore = PlayerSettingsStore(directories);
-      final settings = await settingsStore.load();
-      this.settings = settings;
-      // Before the component downloads, which go through the proxy too.
-      await _refreshProxy();
       final preferencesStore = AppPreferencesStore(directories);
-      final preferences = await preferencesStore.load();
+      // Separate files: read together rather than one after another.
+      final (_, _, _, settings, preferences) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load()).wait;
+      homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(notifyListeners);
+      this.settings = settings;
       final cacheManager = CacheManager(directories);
-      await cacheManager.prepare(settings);
       final manager = ToolManager(directories, (message, logged) {
         logInfo(logged);
         _update(() => status = message);
       });
       _tools = manager;
-      await manager.initialize();
+      // The proxy comes before the component downloads, which use it too.
+      await (_refreshProxy(), cacheManager.prepare(settings), manager.initialize()).wait;
       final paths = await manager.ensureReady();
       addToWindowsPath(paths.executableDirectories);
       MediaKit.ensureInitialized(libmpv: paths.mpv);
@@ -2022,7 +2017,9 @@ class AppController extends ChangeNotifier {
               _notice(tr('这个视频的 {0}p 只有 {1}，已被禁用，正在播放 {2}p', [lost.height, lost.codecs.map((c) => c.label).join(' / '), lost.playing]));
             }
           }
-        } catch (_) {
+        } catch (e) {
+          // A second yt-dlp would meet the same 429.
+          if (DateTime.now().isBefore(_rateLimitedUntil) || RegExp(r'\b429\b|Too Many Requests').hasMatch('$e')) rethrow;
           loaded = await _repository!.details(item.id);
         }
       }

@@ -32,6 +32,7 @@ import '../appearance_settings.dart';
 import '../cache_manager.dart';
 import '../decoder_status.dart';
 import '../native_core.dart';
+import '../native_http.dart';
 import '../live_chat.dart';
 import '../models.dart';
 import '../network_proxy.dart';
@@ -359,7 +360,7 @@ class AppController extends ChangeNotifier {
   DateTime _lastProgressSave = DateTime(0);
   List<SkipSegment> _segments = const [];
   final _skipped = <SkipSegment>{};
-  final _http = http.Client();
+  final _http = appHttpClient();
   /// Sprite sheets of the progress bar's preview frames.
   late final storyboardSheets = StoryboardSheets(_http);
   late final _google = GoogleTranslator(_http);
@@ -745,6 +746,7 @@ class AppController extends ChangeNotifier {
     await _routeThroughBridge(next);
     appHttpOverrides.endpoint = proxyEndpoint;
     appHttpOverrides.useEnvironment = settings.proxyMode == ProxyMode.system;
+    NativeHttp.configure(proxy: nativeProxy(next.url), system: settings.proxyMode == ProxyMode.system);
     if (next.url != proxy.url) logInfo(next.url == null ? 'Network: direct connection' : 'Network: using proxy ${next.redacted}');
     proxy = next;
     final player = this.player;

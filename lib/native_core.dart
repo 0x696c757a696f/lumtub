@@ -15,7 +15,7 @@ import 'l10n/l10n.dart';
 /// dialog's choices need it; without it
 /// Lumtub says its install is incomplete (see [missingMessage]).
 class NativeCore {
-  NativeCore._(DynamicLibrary library)
+  NativeCore._(this.library)
       : tasteNew = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size), Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_taste_new'),
         tasteFinalizer = NativeFinalizer(library.lookup<NativeFinalizerFunction>('lumtub_taste_free')),
         tasteAffinity = library.lookupFunction<Double Function(Pointer<Void>, Pointer<Uint8>, Size), double Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_taste_affinity'),
@@ -62,6 +62,8 @@ class NativeCore {
         _kill = library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>('lumtub_tree_kill'),
         _close = library.lookupFunction<Void Function(IntPtr), void Function(int)>('lumtub_tree_close');
 
+  /// The loaded core, for bindings kept beside their own feature.
+  final DynamicLibrary library;
   final Pointer<Void> Function(Pointer<Uint8> json, int length) tasteNew;
   /// Frees a taste once Dart no longer holds it.
   final NativeFinalizer tasteFinalizer;

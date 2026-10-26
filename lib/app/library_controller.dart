@@ -9,6 +9,7 @@ import '../channel_feed.dart';
 import '../library_store.dart';
 import '../map_limited.dart';
 import '../models.dart';
+import '../native_http.dart';
 import '../video_repository.dart';
 
 export '../map_limited.dart';
@@ -16,7 +17,7 @@ export '../map_limited.dart';
 /// Favorites, playlists, followed channels, watch progress and the feed of
 /// followed channels. Everything stays on this computer.
 class LibraryController extends ChangeNotifier {
-  LibraryController(this.store, {http.Client? client}) : _client = client ?? http.Client();
+  LibraryController(this.store, {http.Client? client}) : _client = client ?? appHttpClient();
 
   final http.Client _client;
 

@@ -10,6 +10,7 @@ import 'app_log.dart';
 import 'ffmpeg_component.dart';
 import 'libmpv_updates.dart';
 import 'native_core.dart';
+import 'native_http.dart';
 import 'process_runner.dart';
 import 'version_order.dart';
 import 'l10n/l10n.dart';
@@ -37,7 +38,7 @@ class ToolManager {
 
   late final Directory root;
   late final LibmpvState libmpv;
-  final http.Client _client = http.Client();
+  final http.Client _client = appHttpClient();
 
   static final _separator = Platform.pathSeparator;
 

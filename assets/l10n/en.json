@@ -2161,7 +2161,6 @@
   "接口地址": "Endpoint",
   "提示词": "Prompt",
   "显示": "Show",
-  "更多语言（YouTube 自动翻译，{0} 种）": "More languages (YouTube auto-translate, {0})",
   "服务商": "Provider",
   "服务器地址": "Server address",
   "未填写": "Not set",
@@ -2203,5 +2202,17 @@
   "音轨": "Audio track",
   "听视频": "Audio only",
   "听视频中": "Playing audio only",
-  "窗口置顶中": "Window pinned on top"
+  "窗口置顶中": "Window pinned on top",
+  "更多语言（{0} 种）": "More languages ({0})",
+  "主题预设": "Theme presets",
+  "每套主题都有浅色和深色，跟随下面的“主题模式”。": "Each theme has a light and a dark version; Theme mode below picks which.",
+  "经典红": "Classic red",
+  "海湾蓝": "Bay blue",
+  "森林绿": "Forest green",
+  "青瓷": "Celadon",
+  "薰衣草": "Lavender",
+  "樱花": "Sakura",
+  "日落": "Sunset",
+  "石墨": "Graphite",
+  "OLED 纯黑": "OLED black"
 }

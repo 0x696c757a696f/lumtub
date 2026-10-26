@@ -169,7 +169,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
                 TextButton.icon(
                   onPressed: () => setState(() => _allLanguages = true),
                   icon: const Icon(Icons.expand_more_rounded, size: 18),
-                  label: Text(tr('更多语言（YouTube 自动翻译，{0} 种）', [shownTranslated.length])),
+                  label: Text(tr('更多语言（{0} 种）', [shownTranslated.length])),
                 ),
             ],
             if (searching && visible.isEmpty && shownTranslated.isEmpty)

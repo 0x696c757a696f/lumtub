@@ -30,6 +30,33 @@ final accentChoices = <(String, Color)>[
   (tr('灰色'), Colors.grey),
 ];
 
+/// A ready-made look: a seed colour and palette style, each shown light
+/// or dark as 主题模式 says. [pureBlack] also turns dark backgrounds black.
+class ThemePreset {
+  const ThemePreset(this._name, this.seed, this.variant, {this.pureBlack = false});
+  final String _name;
+  String get name => tr(_name);
+  final int seed;
+  final DynamicSchemeVariant variant;
+  final bool pureBlack;
+
+  bool isApplied(AppearanceSettings a) => !a.systemAccent && a.accentIndex < 0 && a.customAccent == seed && a.schemeVariant == variant && a.pureBlack == pureBlack;
+
+  AppearanceSettings applyTo(AppearanceSettings a) => a.copyWith(systemAccent: false, accentIndex: -1, customAccent: seed, schemeVariant: variant, pureBlack: pureBlack);
+}
+
+const themePresets = [
+  ThemePreset('经典红', 0xFFE53935, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('海湾蓝', 0xFF1E88E5, DynamicSchemeVariant.fidelity),
+  ThemePreset('森林绿', 0xFF2E7D32, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('青瓷', 0xFF26A69A, DynamicSchemeVariant.content),
+  ThemePreset('薰衣草', 0xFF7E57C2, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('樱花', 0xFFEC407A, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('日落', 0xFFF4511E, DynamicSchemeVariant.vibrant),
+  ThemePreset('石墨', 0xFF607D8B, DynamicSchemeVariant.neutral),
+  ThemePreset('OLED 纯黑', 0xFF9E9E9E, DynamicSchemeVariant.monochrome, pureBlack: true),
+];
+
 /// Material's palette styles with the names PiliNara uses.
 final schemeVariantNames = {
   DynamicSchemeVariant.tonalSpot: tr('默认（Tonal Spot）'),

@@ -28,6 +28,7 @@ import '../../widgets/pilinara_settings_tiles.dart';
 import '../common.dart';
 import '../subtitle_style.dart';
 import '../theme.dart';
+import '../theme_preset_card.dart';
 import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
 
@@ -587,6 +588,16 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
           );
       final windows = controller.windowsAccent;
       return [
+        _header(context, tr('主题预设')),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Wrap(spacing: 12, runSpacing: 12, children: [
+            for (final preset in themePresets)
+              ThemePresetCard(preset: preset, selected: preset.isApplied(appearance), onTap: () => save(preset.applyTo(controller.appearance))),
+          ]),
+        ),
+        _tip(context, tr('每套主题都有浅色和深色，跟随下面的“主题模式”。')),
+        _header(context, tr('自定义')),
         PopupItem<ThemeMode>(
           title: tr('主题模式'),
           leading: const Icon(Icons.flashlight_on_outlined),

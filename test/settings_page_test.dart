@@ -97,6 +97,21 @@ void main() {
     }
   });
 
+  testWidgets('a theme preset sets the colour and palette style in one tap', (tester) async {
+    await pump(tester);
+    await openRow(tester, SettingsCategory.style, '应用主题');
+    expect(find.text('经典红'), findsOneWidget);
+    await tester.tap(find.text('森林绿'));
+    await tester.pumpAndSettle();
+    final appearance = controller.appearance;
+    expect((appearance.accentIndex, appearance.customAccent, appearance.pureBlack), (-1, 0xFF2E7D32, false));
+    await tester.scrollUntilVisible(find.text('OLED 纯黑'), 60, scrollable: find.byType(Scrollable).last);
+    await tester.tap(find.text('OLED 纯黑'));
+    await tester.pumpAndSettle();
+    expect(controller.appearance.pureBlack, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the SponsorBlock row opens its categories and keeps its switch', (tester) async {
     await pump(tester);
     await openRow(tester, SettingsCategory.extra, '空降助手');

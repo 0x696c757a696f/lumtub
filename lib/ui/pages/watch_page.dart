@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../app/app_controller.dart';
+import '../../appearance_settings.dart' show bundledFont;
 import '../../models.dart';
 import '../../live_chat.dart';
 import '../../player_settings.dart';
@@ -632,6 +633,8 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings) {
         height: 1.4,
         fontSize: 32 * scale,
         fontFamily: font.isEmpty ? null : font,
+        // Where the font is missing (another system), the bundled one.
+        fontFamilyFallback: const [bundledFont],
         letterSpacing: 0.0,
         wordSpacing: 0.0,
         color: Color(0xFF000000 | color).withValues(alpha: opacity),

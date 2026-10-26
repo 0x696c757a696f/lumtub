@@ -19,7 +19,7 @@ import 'youtube_web.dart';
 /// [byTranslator] says so, every translation is made that way and YouTube's
 /// is not asked for.
 class SubtitleFiles {
-  SubtitleFiles(this._client, this._folder, this._translator, {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3});
+  SubtitleFiles(this._client, this._folder, this._translator, {this.pauses = const [Duration(seconds: 2), Duration(seconds: 5)], this.byTranslator = _never, this.concurrency = 3, Duration Function()? position, this.onUpdated}) : _position = position ?? _start;
   final http.Client _client;
   final Directory _folder;
   /// The translator chosen now; a new one translates again.
@@ -28,17 +28,24 @@ class SubtitleFiles {
   final bool Function() byTranslator;
   /// Translation requests in flight at once for one track.
   final int concurrency;
+  /// Where playback is, so a track Lumtub translates starts there.
+  final Duration Function() _position;
+  /// Called with a file's path once the rest of a translation, begun at
+  /// [_position], has been written to it.
+  final void Function(String path)? onUpdated;
+
+  static Duration _start() => Duration.zero;
 
   static bool _never() => false;
 
   final _paths = <String, Future<String>>{};
+  /// Translations still being finished in the background, by key.
+  final _finishing = <String, Future<void>>{};
   bool _cleared = false;
 
   /// A file holding [option], fetched once per address.
   Future<String> pathFor(SubtitleOption option) {
-    final source = _sourceOf(option);
-    final translator = source != null && byTranslator() ? _translator() : null;
-    final key = translator == null ? option.url : '${option.url}\u0000${identityHashCode(translator)}';
+    final (key, translator) = _keyOf(option);
     final pending = _paths[key] ??= _fetch(option, key, translator);
     pending.ignore();
     return pending.catchError((Object e) {
@@ -47,19 +54,33 @@ class SubtitleFiles {
     });
   }
 
+  (String, Translator?) _keyOf(SubtitleOption option) {
+    final translator = _sourceOf(option) != null && byTranslator() ? _translator() : null;
+    return (translator == null ? option.url : '${option.url}\u0000${identityHashCode(translator)}', translator);
+  }
+
+  /// The file of [option] with every line in it, waiting for a translation
+  /// still being finished; for saving or listing the whole track.
+  Future<String> wholePathFor(SubtitleOption option) async {
+    final path = await pathFor(option);
+    await _finishing[_keyOf(option).$1];
+    return path;
+  }
+
   Future<String> _fetch(SubtitleOption option, String key, Translator? translator) async {
-    String text;
+    ({String text, Future<String>? rest}) result;
     final source = _sourceOf(option);
     if (translator != null && source != null) {
-      text = await _translate(await _get(source.url), source.target, translator);
+      result = await _translate(await _get(source.url), source.target, translator);
     } else {
       try {
-        text = await _get(option.url);
+        result = (text: await _get(option.url), rest: null);
       } on _Refused {
         if (source == null) rethrow;
-        text = await _translate(await _get(source.url), source.target, _translator());
+        result = await _translate(await _get(source.url), source.target, _translator());
       }
     }
+    final text = result.text;
     if (!_cleared) {
       _cleared = true;
       // Files of earlier launches: their addresses have expired anyway.
@@ -70,6 +91,17 @@ class SubtitleFiles {
     await _folder.create(recursive: true);
     final file = File('${_folder.path}${Platform.pathSeparator}${_name(key)}.vtt');
     await file.writeAsString(text);
+    if (result.rest case final rest?) {
+      _finishing[key] = rest.then((whole) async {
+        await file.writeAsString(whole);
+        onUpdated?.call(file.path);
+      }).catchError((Object e) {
+        // The lines translated so far stay; the track is asked again next time.
+        _paths.remove(key);
+      }).whenComplete(() {
+        _finishing.remove(key);
+      });
+    }
     return file.path;
   }
 
@@ -90,37 +122,55 @@ class SubtitleFiles {
     return (url: uri.replace(queryParameters: {...uri.queryParameters}..remove('tlang')).toString(), target: target);
   }
 
-  Future<String> _translate(String vtt, String tlang, Translator translator) async {
+  /// [vtt] translated into [tlang]. The pieces around [_position] come
+  /// first: the text has those lines, enough to start with, and [rest]
+  /// completes with the whole track, or is null when it is all there.
+  Future<({String text, Future<String>? rest})> _translate(String vtt, String tlang, Translator translator) async {
     final cues = WebVtt.cues(vtt);
-    if (cues.isEmpty) return vtt;
+    if (cues.isEmpty) return (text: vtt, rest: null);
     final target = TranslationLanguage.all.where((l) => l.youtube == tlang).firstOrNull?.code ?? tlang;
     final chunkLength = chunkLengthOf(translator);
     // Line groups of one request each, so a reply that drops the line break
     // at a request's end cannot shift every line after it.
-    final groups = <List<String>>[];
+    final groups = <(int, int)>[];
     for (var start = 0; start < cues.length;) {
       var end = start;
       var length = 0;
       while (end < cues.length && (end == start || length + cues[end].text.length < chunkLength)) {
         length += cues[end++].text.length + 1;
       }
-      groups.add([for (final cue in cues.sublist(start, end)) cue.text]);
+      groups.add((start, end));
       start = end;
     }
-    // A few requests at a time: a long video's track is ready several times
-    // sooner, without the burst that gets a free service to answer 429.
-    final translated = List<List<String>>.filled(groups.length, const []);
+    // From the piece playing now onwards, then the ones before it.
+    final now = _position();
+    final at = groups.lastIndexWhere((g) => WebVtt.startOf(cues[g.$1].timing) <= now).clamp(0, groups.length - 1);
+    final order = [for (var i = at; i < groups.length; i++) i, for (var i = 0; i < at; i++) i];
+    final translated = List<List<String>?>.filled(groups.length, null);
     var next = 0;
-    Future<void> worker() async {
-      while (next < groups.length) {
-        final i = next++;
-        translated[i] = await _translateLines(groups[i], target, translator);
+    // A few requests at a time: a long track is ready several times sooner,
+    // without the burst that gets a free service to answer 429.
+    Future<void> worker(int stop) async {
+      while (next < stop) {
+        final i = order[next++];
+        final (start, end) = groups[i];
+        translated[i] = await _translateLines([for (final cue in cues.sublist(start, end)) cue.text], target, translator);
       }
     }
 
-    await Future.wait([for (var i = 0; i < concurrency && i < groups.length; i++) worker()]);
-    final lines = translated.expand((group) => group).toList();
-    return WebVtt.write([for (final (i, cue) in cues.indexed) (timing: cue.timing, text: lines[i].trim())]);
+    Future<void> run(int stop) => Future.wait([for (var i = 0; i < concurrency && i < stop; i++) worker(stop)]);
+
+    String write() => WebVtt.write([
+          for (final (i, (start, end)) in groups.indexed)
+            if (translated[i] case final lines?)
+              for (var c = start; c < end; c++) (timing: cues[c].timing, text: lines[c - start].trim()),
+        ]);
+
+    final first = order.length <= concurrency ? order.length : concurrency;
+    await run(first);
+    if (first == order.length) return (text: write(), rest: null);
+    final partial = write();
+    return (text: partial, rest: run(order.length).then((_) => write()));
   }
 
   /// [texts] translated line for line. A reply with more or fewer lines
@@ -180,6 +230,15 @@ class WebVtt {
       cues.add((timing: lines[at].trim(), text: text.join(' ')));
     }
     return cues;
+  }
+
+  /// When a cue with [timing] (`00:01:02.500 --> …`) starts.
+  static Duration startOf(String timing) {
+    final parts = timing.trim().split(RegExp(r'\s'))[0].split(':');
+    final seconds = double.tryParse(parts.last) ?? 0;
+    final minutes = parts.length > 1 ? int.tryParse(parts[parts.length - 2]) ?? 0 : 0;
+    final hours = parts.length > 2 ? int.tryParse(parts[parts.length - 3]) ?? 0 : 0;
+    return Duration(hours: hours, minutes: minutes, milliseconds: (seconds * 1000).round());
   }
 
   static String write(List<({String timing, String text})> cues) {

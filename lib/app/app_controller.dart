@@ -729,7 +729,7 @@ class AppController extends ChangeNotifier {
   /// Saves [option] of [item] next to the downloads, as SRT or as WebVTT,
   /// and returns its path.
   Future<String> saveSubtitle(VideoItem item, SubtitleOption option, {bool srt = true}) async {
-    final vtt = await File(await _subtitleFile(option)).readAsString();
+    final vtt = await File(await _subtitleFiles.wholePathFor(option)).readAsString();
     final file = File(_downloadPath(item, '.${option.language}.${srt ? 'srt' : 'vtt'}'));
     await file.parent.create(recursive: true);
     await file.writeAsString(srt ? toSrt(parseSubtitleCues(vtt)) : vtt);
@@ -1704,7 +1704,38 @@ class AppController extends ChangeNotifier {
     Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles'),
     () => translator,
     byTranslator: () => preferences.subtitlesByService && preferences.translation.service != TranslationService.google,
+    position: () => player?.state.position ?? Duration.zero,
+    onUpdated: (path) => unawaited(_subtitleFileUpdated(path)),
   );
+
+  /// Swaps the loaded track of [path] for the file's new contents (the
+  /// rest of a translation), keeping it where it was shown: main, second or
+  /// not at all. mpv's sub-reload would select it as the main one.
+  Future<void> _subtitleFileUpdated(String path) async {
+    final platform = player?.platform;
+    if (platform is! NativePlayer) return;
+    try {
+      Future<List<Map<dynamic, dynamic>>> tracks() async {
+        final list = jsonDecode(await platform.getProperty('track-list'));
+        return [if (list is List) for (final t in list.whereType<Map>()) if (t['type'] == 'sub' && t['external-filename'] == path) t];
+      }
+
+      final old = (await tracks()).firstOrNull;
+      if (old == null) return;
+      final id = '${old['id']}';
+      final main = await platform.getProperty('sid');
+      final second = await platform.getProperty('secondary-sid');
+      await platform.command(['sub-add', path, 'auto', '${old['title'] ?? ''}', '${old['lang'] ?? ''}']);
+      final added = (await tracks()).where((t) => '${t['id']}' != id).lastOrNull;
+      if (added == null) return;
+      if (main == id) await platform.setProperty('sid', '${added['id']}');
+      if (second == id) await platform.setProperty('secondary-sid', '${added['id']}');
+      await platform.command(['sub-remove', id]);
+      logInfo('Subtitle translation finished; track $id replaced by ${added['id']}');
+    } catch (e) {
+      logInfo('Could not reload the finished subtitle translation: $e');
+    }
+  }
 
   /// [option] as a local file, fetched with retries; see [SubtitleFiles].
   Future<String> _subtitleFile(SubtitleOption option) async {

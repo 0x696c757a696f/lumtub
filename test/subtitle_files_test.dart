@@ -124,12 +124,27 @@ void main() {
       running = n;
       if (n > most) most = n;
     });
-    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], concurrency: 3);
-    final path = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated));
+    final updated = <String>[];
+    final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero], concurrency: 3, position: () => const Duration(seconds: 20), onUpdated: updated.add);
+    const option = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated);
+    final path = await files.pathFor(option);
+    // First the pieces from where playback is.
+    final first = WebVtt.cues(await File(path).readAsString());
+    expect(first, isNotEmpty);
+    expect(first.length, lessThan(40));
+    expect(first.first.text, startsWith('WORD20'));
+    expect(await files.wholePathFor(option), path);
     final cues = WebVtt.cues(await File(path).readAsString());
     expect(cues, hasLength(40));
     expect([for (final c in cues) c.text.split(' ').first], [for (var i = 0; i < 40; i++) 'WORD$i']);
     expect(most, 3);
+    expect(updated, [path]);
+  });
+
+  test('reads when a cue starts', () {
+    expect(WebVtt.startOf('00:01:02.500 --> 00:01:04.000 align:start'), const Duration(minutes: 1, seconds: 2, milliseconds: 500));
+    expect(WebVtt.startOf('1:00:00.000 --> 1:00:01.000'), const Duration(hours: 1));
+    expect(WebVtt.startOf('02.250 --> 03.000'), const Duration(seconds: 2, milliseconds: 250));
   });
 
   test('a track that cannot be fetched fails and is asked again next time', () async {

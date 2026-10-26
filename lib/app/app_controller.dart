@@ -204,6 +204,9 @@ class AppController extends ChangeNotifier {
   /// [owner] no longer shows the video.
   void hideVideoIn(Object owner) => _outputSize?.hide(owner);
 
+  /// Whether the picture is zoomed or stretched to fill the player.
+  set coverVideo(bool value) => _outputSize?.cover = value;
+
   /// The playing video's width over height, 16:9 until it is known.
   double get videoAspect {
     final state = player?.state;

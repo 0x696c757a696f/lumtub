@@ -42,7 +42,8 @@ import 'player_stats.dart';
 import 'screenshot_action.dart';
 import 'storyboard_preview.dart';
 import 'theater_mode.dart';
-import 'video_texture_size.dart';
+import 'video_box.dart';
+import 'video_aspect.dart';
 import '../l10n/l10n.dart';
 
 /// Picture sizing, from PiliNara's `VideoFitType`.
@@ -120,6 +121,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   void initState() {
     super.initState();
     videoFit.addListener(_applyFit);
+    _controller.coverVideo = videoFit.value != VideoFit.contain;
     _controller.addListener(_syncVideo);
     KeepAwake.hold(this, _player.state.playing && !_controller.audioOnly);
     // Hides the pointer together with the bars.
@@ -195,6 +197,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   void _applyFit() {
     final fit = videoFit.value;
+    _controller.coverVideo = fit != VideoFit.contain;
     // update() cannot clear an aspect ratio, so the automatic modes pass
     // the video's own one.
     final ratio = videoAspectFor(fit.aspectRatio, _player.state.width, _player.state.height);
@@ -266,8 +269,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     final fullscreen = isFullscreen(context);
     final shortcuts = playerShortcuts(_controller, () => widget.state, onFeedback: _showFeedback, onScreenshot: () => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)));
     final controls = _controls(fullscreen, shortcuts);
-    final video = _controller.videoController;
-    return video == null ? controls : VideoTextureSize(controller: video, fullscreen: fullscreen, child: controls);
+    return VideoBox(controller: _controller, child: controls);
   }
 
   Widget _controls(bool fullscreen, Map<ShortcutActivator, VoidCallback> shortcuts) {

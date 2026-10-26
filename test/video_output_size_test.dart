@@ -13,6 +13,13 @@ void main() {
     expect(VideoOutputSize.target(Size.zero, const [Size(100, 100)]), isNull);
   });
 
+  test('covers the box when the picture is zoomed or stretched', () {
+    final (w, h) = VideoOutputSize.target(const Size(1920, 800), const [Size(1280, 720)], cover: true)!;
+    expect(h, greaterThanOrEqualTo(720));
+    expect(w / h, closeTo(1920 / 800, 0.01));
+    expect(VideoOutputSize.target(const Size(1280, 720), const [Size(1920, 1080)], cover: true), isNull);
+  });
+
   test('applies the size once things settle, and the video size when hidden', () async {
     final applied = <(int?, int?)>[];
     final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 10));

@@ -30,6 +30,21 @@ void main() {
     expect(library.progressOf(video.id), isNull);
   });
 
+  test('counts changes to which videos are finished', () async {
+    final library = store();
+    var version = library.finishedVersion;
+    library.setProgress(video.id, const Duration(seconds: 90), const Duration(minutes: 3));
+    expect(library.finishedVersion, version);
+    library.setProgress(video.id, const Duration(seconds: 175), const Duration(minutes: 3));
+    expect(library.finishedVersion, ++version);
+    library.setProgress(video.id, const Duration(seconds: 178), const Duration(minutes: 3));
+    expect(library.finishedVersion, version);
+    library.setProgress(video.id, const Duration(seconds: 10), const Duration(minutes: 3));
+    expect(library.finishedVersion, ++version);
+    library.clearProgress();
+    expect(library.finishedVersion, ++version);
+  });
+
   test('keeps favorites, playlists and followed channels without duplicates', () {
     final library = store();
     expect(library.toggleFavorite(video), isTrue);

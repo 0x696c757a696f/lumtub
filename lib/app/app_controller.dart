@@ -2504,13 +2504,11 @@ class AppController extends ChangeNotifier {
     final prefs = preferences;
     // Pages filter their lists on every rebuild, and a feed runs to a
     // thousand items: the answer is kept while the list and the preferences
-    // stay. Hiding watched videos depends on progress, which changes.
-    final key = (prefs, subscriptions, search, search ? _query : null);
-    if (!prefs.hideWatched) {
-      if (_visible[items] case (final known, final kept) when known == key) return kept;
-    }
+    // stay. Hiding watched videos also follows which videos are finished.
+    final key = (prefs, subscriptions, search, search ? _query : null, prefs.hideWatched ? (library?.store, library?.store.finishedVersion) : null);
+    if (_visible[items] case (final known, final kept) when known == key) return kept;
     final kept = _filter(items, prefs, subscriptions: subscriptions, search: search);
-    if (!prefs.hideWatched) _visible[items] = (key, kept);
+    _visible[items] = (key, kept);
     return kept;
   }
 

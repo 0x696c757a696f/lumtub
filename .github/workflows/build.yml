@@ -209,7 +209,7 @@ jobs:
       - name: Windows - analyze sources
         run: flutter analyze
 
-      - name: Windows - build the Rust core
+      - name: Windows - install the Rust toolchain
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -229,6 +229,19 @@ jobs:
           rustup default stable
           rustc --version
           rustup target add $target
+
+      # Keyed by the toolchain installed above, so a new stable starts a fresh cache.
+      - name: Windows - cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: ${{ matrix.package_arch }}
+
+      - name: Windows - build the Rust core
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $target = if ($env:PACKAGE_ARCH -eq 'arm64') { 'aarch64-pc-windows-msvc' } else { 'x86_64-pc-windows-msvc' }
           # Each package is built for its own CPU level, as libmpv is.
           if ($env:PACKAGE_ARCH -eq 'x64-v3') { $env:RUSTFLAGS = '-C target-cpu=x86-64-v3' }
           $manifest = 'native/lumtub_core/Cargo.toml'

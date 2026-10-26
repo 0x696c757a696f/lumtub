@@ -8,30 +8,35 @@ import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleKind, SubtitleOption;
 import '../subtitle_translation.dart';
 import '../translation.dart';
+import 'player_panel.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
 /// above it (双语字幕) on the right, as PiliNara's `_SubtitleSelectPanel`
 /// has them. A choice applies at once and the panel stays open; a track
 /// chosen on one side is greyed out on the other.
-Future<void> showSubtitlePanel(BuildContext context, AppController controller, Player player, {required VoidCallback onSettings}) => showGeneralDialog<void>(
-      context: context,
-      useRootNavigator: true,
-      barrierDismissible: true,
-      barrierLabel: tr('关闭'),
-      barrierColor: Colors.black26,
-      transitionDuration: const Duration(milliseconds: 180),
-      pageBuilder: (context, animation, secondary) => _SubtitlePanel(controller: controller, player: player, onSettings: onSettings),
-      transitionBuilder: (context, animation, secondary, child) => SlideTransition(
-        position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
-        child: child,
-      ),
+Future<void> showSubtitlePanel(BuildContext context, AppController controller, Player player, {required VoidCallback onSettings}) => showPlayerPanel(
+      context,
+      title: tr('字幕'),
+      width: 560,
+      actions: [
+        Builder(
+          builder: (context) => TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              onSettings();
+            },
+            icon: const Icon(Icons.tune_rounded, size: 18),
+            label: Text(tr('字幕设置')),
+          ),
+        ),
+      ],
+      builder: (context) => _SubtitlePanel(controller: controller, player: player),
     );
 
 class _SubtitlePanel extends StatefulWidget {
-  const _SubtitlePanel({required this.controller, required this.player, required this.onSettings});
+  const _SubtitlePanel({required this.controller, required this.player});
   final AppController controller;
   final Player player;
-  final VoidCallback onSettings;
 
   @override
   State<_SubtitlePanel> createState() => _SubtitlePanelState();
@@ -174,57 +179,26 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
       ]);
     }
 
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Material(
-        elevation: 8,
-        color: colors.surfaceContainerHigh,
-        borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
-        clipBehavior: Clip.antiAlias,
-        child: SizedBox(
-          width: 560,
-          height: double.infinity,
-          child: SafeArea(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
-                child: Row(children: [
-                  Text(tr('字幕'), style: theme.textTheme.titleMedium),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      widget.onSettings();
-                    },
-                    icon: const Icon(Icons.tune_rounded, size: 18),
-                    label: Text(tr('字幕设置')),
-                  ),
-                  IconButton(tooltip: tr('关闭'), onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.close_rounded)),
-                ]),
-              ),
-              if (offered.length > 6)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: TextField(
-                    decoration: InputDecoration(isDense: true, prefixIcon: const Icon(Icons.search_rounded, size: 20), hintText: tr('搜索语言，如 中文、ja')),
-                    onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-                  ),
-                ),
-              if (offered.isEmpty && others.isEmpty)
-                Expanded(child: Center(child: Text(controller.loadingDetails ? tr('正在读取字幕列表…') : tr('这个视频没有字幕'), style: TextStyle(color: colors.outline))))
-              else
-                Expanded(
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    Expanded(child: column(primary: true)),
-                    VerticalDivider(width: 1, color: colors.outlineVariant),
-                    Expanded(child: column(primary: false)),
-                  ]),
-                ),
-            ]),
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      if (offered.length > 6)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: TextField(
+            decoration: InputDecoration(isDense: true, prefixIcon: const Icon(Icons.search_rounded, size: 20), hintText: tr('搜索语言，如 中文、ja')),
+            onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
           ),
         ),
-      ),
-    );
+      if (offered.isEmpty && others.isEmpty)
+        Expanded(child: Center(child: Text(controller.loadingDetails ? tr('正在读取字幕列表…') : tr('这个视频没有字幕'), style: TextStyle(color: colors.outline))))
+      else
+        Expanded(
+          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Expanded(child: column(primary: true)),
+            VerticalDivider(width: 1, color: colors.outlineVariant),
+            Expanded(child: column(primary: false)),
+          ]),
+        ),
+    ]);
   }
 
   Future<void> _choose(_Choice choice, {required bool primary}) async {

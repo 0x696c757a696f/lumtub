@@ -2194,5 +2194,11 @@
   "通用": "General",
   "隐藏": "Hide",
   "颜色": "Color",
-  "默认": "Default"
+  "默认": "Default",
+  "{0} 分钟": "{0} min",
+  "声音": "Sound",
+  "定时关闭（{0} 分钟后暂停）": "Sleep timer (pauses in {0} min)",
+  "工具": "Tools",
+  "音质": "Audio quality",
+  "音轨": "Audio track"
 }

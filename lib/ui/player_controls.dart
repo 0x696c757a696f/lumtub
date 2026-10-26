@@ -27,7 +27,6 @@ import '../storyboard.dart';
 import '../models.dart' show Chapter;
 import '../format_policy.dart';
 import '../player_settings.dart';
-import '../widgets/pilinara_settings_tiles.dart';
 import '../widgets/mini_progress_line.dart';
 import '../widgets/video_progress_bar.dart';
 import 'cast_ui.dart';
@@ -36,6 +35,7 @@ import 'format_policy_dialogs.dart';
 import 'pages/settings_sections.dart' show trimSpeed, qualityLabel;
 import 'pages/settings_subpages.dart';
 import 'player_shortcuts.dart';
+import 'player_panel.dart';
 import 'subtitle_panel.dart';
 import 'player_stats.dart';
 import 'screenshot_action.dart';
@@ -624,112 +624,117 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     _menuClosed();
   }
 
-  /// PiliNara's header "更多" sheet: format, order, subtitles, sleep timer,
-  /// playback info and reload.
+  /// The 更多 panel: PiliNara's header sheet, as a side panel whose
+  /// choices apply at once while it stays open.
   Future<void> _showMore(BuildContext context) async {
     _menuOpened();
-    final settings = _controller.settings;
-    final audio = _player.state.tracks.audio.where((t) => t.id != 'auto' && t.id != 'no').toList();
-    String sleepLabel() {
-      if (_controller.sleepAfterCurrent) return tr('播完当前视频后暂停');
-      final at = _controller.sleepAt;
-      if (at == null) return tr('未开启');
-      final left = at.difference(DateTime.now());
-      return tr('{0} 分钟后暂停', [left.inMinutes + 1]);
-    }
-
-    await showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      constraints: const BoxConstraints(maxWidth: 520),
-      builder: (sheet) {
-        Widget item(IconData icon, String title, String? subtitle, VoidCallback onTap) => ListTile(
-              dense: true,
-              leading: Icon(icon, size: 20),
-              title: Text(title),
-              subtitle: subtitle == null ? null : Text(subtitle, style: TextStyle(color: Theme.of(sheet).colorScheme.outline, fontSize: 12)),
-              onTap: () {
-                Navigator.pop(sheet);
-                onTap();
-              },
-            );
-        return SafeArea(
-          child: ListView(shrinkWrap: true, padding: const EdgeInsets.symmetric(vertical: 12), children: [
-            item(Icons.high_quality_outlined, tr('选择画质'), qualityLabel(settings.maxHeight), () {
-              pickFromDialog<int>(context, title: tr('选择画质'), value: settings.maxHeight, values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h))], onSelected: _controller.setMaxHeight);
-            }),
-            item(Icons.music_note_outlined, tr('选择音质'), settings.audioQuality.label, () {
-              pickFromDialog<AudioQuality>(
-                context,
-                title: tr('选择音质'),
-                value: settings.audioQuality,
-                values: [for (final q in AudioQuality.values) (q, q.label)],
-                onSelected: (q) => _controller.reloadVideo(_controller.settings.copyWith(audioQuality: q)),
-              );
-            }),
-            item(Icons.movie_filter_outlined, tr('播放策略'), settings.strategy.label, () {
-              pickPlaybackStrategy(context, settings.strategy, (v) => _controller.reloadVideo(_controller.settings.copyWith(strategy: v)));
-            }),
-            item(Icons.block_outlined, tr('禁用视频编码'), FormatPolicy.disabledNames(settings).isEmpty ? tr('无') : FormatPolicy.disabledNames(settings), () {
-              pickDisabledCodecs(context, settings, (v) => _controller.reloadVideo(v));
-            }),
-            if (audio.length > 1)
-              item(Icons.audiotrack_rounded, tr('选择音轨'), _trackLabel(_player.state.track.audio.id, _player.state.track.audio.title, _player.state.track.audio.language), () {
-                pickFromDialog<String>(
-                  context,
-                  title: tr('选择音轨'),
-                  value: _player.state.track.audio.id,
-                  values: [for (final t in audio) (t.id, _trackLabel(t.id, t.title, t.language))],
-                  onSelected: (id) => _player.setAudioTrack(audio.firstWhere((t) => t.id == id)),
-                );
-              }),
-            item(Icons.repeat_rounded, tr('播放顺序'), settings.playOrder.label, () {
-              pickFromDialog<PlayOrder>(context, title: tr('播放顺序'), value: settings.playOrder, values: [for (final o in PlayOrder.values) (o, o.label)], onSelected: _controller.setPlayOrder);
-            }),
-            item(Icons.subtitles_outlined, tr('字幕'), '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}', () => unawaited(_openSubtitles(context))),
-            item(Icons.tune_rounded, tr('画面与音画同步调节'), null, () => openPictureSettings(context, _controller)),
-            item(Icons.photo_camera_outlined, tr('截图 (S)'), tr('保存到“图片\\Lumtub”并复制'), () => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback))),
-            item(Icons.flip_rounded, tr('镜像翻转'), _transform.mirrored ? tr('已开启') : tr('未开启'), () => unawaited(_transform.setMirrored(!_transform.mirrored))),
-            item(Icons.zoom_in_rounded, tr('画面缩放'), _transform.zoom == 1 ? tr('原始大小') : '${trimSpeed(_transform.zoom)}x', () {
-              pickFromDialog<double>(
-                context,
-                title: tr('画面缩放'),
-                value: _transform.zoom,
-                values: [for (final z in PictureTransform.zoomLevels) (z, z == 1 ? tr('原始大小') : '${trimSpeed(z)}x')],
-                onSelected: (z) => unawaited(_transform.setZoom(z)),
-              );
-            }),
-            item(Icons.bedtime_outlined, tr('定时关闭'), sleepLabel(), () => _pickSleepTimer(context)),
-            item(Icons.info_outline_rounded, tr('播放信息'), _controller.showStats ? tr('显示中') : null, _controller.toggleStats),
-            item(Icons.refresh_rounded, tr('重载视频'), tr('从当前位置重新加载'), () => unawaited(_controller.reloadVideo())),
-            item(Icons.keyboard_outlined, tr('快捷键'), null, () => showShortcutHelp(context, _controller.preferences)),
-          ]),
-        );
-      },
+    await showPlayerPanel(
+      context,
+      title: tr('更多设置'),
+      builder: (panel) => ListenableBuilder(listenable: Listenable.merge([_controller, _transform]), builder: (panel, _) => _moreItems(context, panel)),
     );
     _menuClosed();
   }
 
-  Future<void> _pickSleepTimer(BuildContext context) async {
-    const off = -1;
-    const afterCurrent = 0;
-    final current = _controller.sleepAfterCurrent ? afterCurrent : (_controller.sleepAt == null ? off : null);
-    await pickFromDialog<int?>(
-      context,
-      title: tr('定时关闭'),
-      value: current,
-      values: [(off, tr('不开启')), (afterCurrent, tr('播完当前视频后')), (15, tr('15 分钟')), (30, tr('30 分钟')), (45, tr('45 分钟')), (60, tr('60 分钟')), (90, tr('90 分钟'))],
-      onSelected: (minutes) {
-        if (minutes == null || minutes == off) {
-          _controller.setSleepTimer(null);
-        } else if (minutes == afterCurrent) {
-          _controller.setSleepTimer(null, afterCurrent: true);
-        } else {
-          _controller.setSleepTimer(Duration(minutes: minutes));
-        }
-      },
-    );
+  Widget _moreItems(BuildContext context, BuildContext panel) {
+    final settings = _controller.settings;
+    final audio = _player.state.tracks.audio.where((t) => t.id != 'auto' && t.id != 'no').toList();
+    // Steps that open a page or act on the picture close the panel first.
+    void closeThen(VoidCallback then) {
+      Navigator.of(panel).pop();
+      then();
+    }
+
+    const sleepOff = -1;
+    const sleepAfterCurrent = 0;
+    final sleepAt = _controller.sleepAt;
+    final sleeping = _controller.sleepAfterCurrent ? sleepAfterCurrent : (sleepAt == null ? sleepOff : null);
+    final codecs = FormatPolicy.disabledNames(settings);
+    return ListView(padding: const EdgeInsets.only(bottom: 16), children: [
+      PanelHeading(tr('画面')),
+      PanelChoices<int>(
+        label: tr('画质'),
+        icon: Icons.high_quality_outlined,
+        value: settings.maxHeight,
+        values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h))],
+        onSelected: _controller.setMaxHeight,
+      ),
+      PanelChoices<double>(
+        label: tr('画面缩放'),
+        icon: Icons.zoom_in_rounded,
+        value: _transform.zoom,
+        values: [for (final z in PictureTransform.zoomLevels) (z, z == 1 ? tr('原始大小') : '${trimSpeed(z)}x')],
+        onSelected: (z) => unawaited(_transform.setZoom(z)),
+      ),
+      PanelSwitch(label: tr('镜像翻转'), icon: Icons.flip_rounded, value: _transform.mirrored, onChanged: (v) => unawaited(_transform.setMirrored(v))),
+      PanelLink(label: tr('画面与音画同步调节'), icon: Icons.tune_rounded, onTap: () => closeThen(() => openPictureSettings(context, _controller))),
+      PanelHeading(tr('声音')),
+      PanelChoices<AudioQuality>(
+        label: tr('音质'),
+        icon: Icons.music_note_outlined,
+        value: settings.audioQuality,
+        values: [for (final q in AudioQuality.values) (q, q.label)],
+        onSelected: (q) => unawaited(_controller.reloadVideo(_controller.settings.copyWith(audioQuality: q))),
+      ),
+      if (audio.length > 1)
+        StreamBuilder<Track>(
+          stream: _player.stream.track,
+          builder: (context, _) => PanelChoices<String>(
+            label: tr('音轨'),
+            icon: Icons.audiotrack_rounded,
+            value: _player.state.track.audio.id,
+            values: [for (final t in audio) (t.id, _trackLabel(t.id, t.title, t.language))],
+            onSelected: (id) => unawaited(_player.setAudioTrack(audio.firstWhere((t) => t.id == id))),
+          ),
+        ),
+      PanelHeading(tr('播放')),
+      PanelChoices<PlayOrder>(
+        label: tr('播放顺序'),
+        icon: Icons.repeat_rounded,
+        value: settings.playOrder,
+        values: [for (final o in PlayOrder.values) (o, o.label)],
+        onSelected: _controller.setPlayOrder,
+      ),
+      PanelChoices<int?>(
+        label: sleepAt == null ? tr('定时关闭') : tr('定时关闭（{0} 分钟后暂停）', [sleepAt.difference(DateTime.now()).inMinutes + 1]),
+        icon: Icons.bedtime_outlined,
+        value: sleeping,
+        values: [(sleepOff, tr('不开启')), (sleepAfterCurrent, tr('播完当前视频后')), for (final m in const [15, 30, 45, 60, 90]) (m, tr('{0} 分钟', [m]))],
+        onSelected: (minutes) {
+          if (minutes == null || minutes == sleepOff) {
+            _controller.setSleepTimer(null);
+          } else if (minutes == sleepAfterCurrent) {
+            _controller.setSleepTimer(null, afterCurrent: true);
+          } else {
+            _controller.setSleepTimer(Duration(minutes: minutes));
+          }
+        },
+      ),
+      PanelChoices<PlaybackStrategy>(
+        label: tr('播放策略'),
+        icon: Icons.movie_filter_outlined,
+        value: settings.strategy,
+        values: [for (final v in PlaybackStrategy.values) (v, v.label)],
+        onSelected: (v) => unawaited(_controller.reloadVideo(_controller.settings.copyWith(strategy: v))),
+      ),
+      PanelLink(
+        label: tr('禁用视频编码'),
+        detail: codecs.isEmpty ? tr('无') : codecs,
+        icon: Icons.block_outlined,
+        onTap: () => pickDisabledCodecs(context, settings, (v) => _controller.reloadVideo(v)),
+      ),
+      PanelLink(
+        label: tr('字幕'),
+        detail: '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}',
+        icon: Icons.subtitles_outlined,
+        onTap: () => closeThen(() => unawaited(_openSubtitles(context))),
+      ),
+      PanelHeading(tr('工具')),
+      PanelSwitch(label: tr('播放信息'), icon: Icons.info_outline_rounded, value: _controller.showStats, onChanged: (_) => _controller.toggleStats()),
+      PanelLink(label: tr('截图 (S)'), detail: tr('保存到“图片\\Lumtub”并复制'), icon: Icons.photo_camera_outlined, opens: false, onTap: () => closeThen(() => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)))),
+      PanelLink(label: tr('重载视频'), detail: tr('从当前位置重新加载'), icon: Icons.refresh_rounded, opens: false, onTap: () => closeThen(() => unawaited(_controller.reloadVideo()))),
+      PanelLink(label: tr('快捷键'), icon: Icons.keyboard_outlined, onTap: () => showShortcutHelp(context, _controller.preferences)),
+    ]);
   }
 
   static String _trackLabel(String id, String? title, String? language) {

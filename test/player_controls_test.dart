@@ -238,22 +238,33 @@ void main() {
     expect(find.text('快进7秒'), findsNothing);
   });
 
-  testWidgets('the more sheet lists PiliNara\'s player settings', (tester) async {
+  testWidgets('the more panel applies choices and stays open', (tester) async {
     await pump(tester);
     await tester.tap(find.byIcon(Icons.more_vert_rounded));
     await tester.pumpAndSettle();
-    final sheet = find.descendant(of: find.byType(BottomSheet), matching: find.byType(Scrollable));
-    for (final item in ['选择画质', '选择音质', '播放策略', '禁用视频编码', '播放顺序', '字幕', '截图 (S)', '镜像翻转', '画面缩放', '定时关闭', '播放信息', '重载视频']) {
-      await tester.scrollUntilVisible(find.text(item), 60, scrollable: sheet);
-      expect(find.text(item), findsOneWidget);
+    final panel = find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first;
+    for (final item in ['画质', '画面缩放', '镜像翻转']) {
+      expect(find.text(item), findsWidgets, reason: item);
     }
-    await tester.scrollUntilVisible(find.text('定时关闭'), 60, scrollable: sheet);
-    await tester.tap(find.text('定时关闭'));
+    await tester.scrollUntilVisible(find.text('30 分钟'), 60, scrollable: panel);
     await tester.pumpAndSettle();
     await tester.tap(find.text('30 分钟'));
     await tester.pumpAndSettle();
     expect(controller.sleepAt, isNotNull);
-    expect(find.byIcon(Icons.bedtime_outlined), findsOneWidget);
-    controller.setSleepTimer(null);
+    // Still open, with the time left in the label.
+    expect(find.textContaining('分钟后暂停'), findsOneWidget);
+    await tester.ensureVisible(find.text('不开启'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('不开启'));
+    await tester.pumpAndSettle();
+    expect(controller.sleepAt, isNull);
+    for (final item in ['播放策略', '禁用视频编码', '字幕', '播放信息', '截图 (S)', '重载视频', '快捷键']) {
+      await tester.scrollUntilVisible(find.text(item), 60, scrollable: panel);
+      expect(find.text(item), findsWidgets, reason: item);
+    }
+    await tester.tap(find.byTooltip('关闭'));
+    await tester.pumpAndSettle();
+    expect(find.text('播放策略'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 }

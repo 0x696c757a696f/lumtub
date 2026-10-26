@@ -30,7 +30,17 @@ void main() {
 
   setUp(() {
     dir = Directory.systemTemp.createTempSync('lumtub_later');
-    addTearDown(() => dir.deleteSync(recursive: true));
+    addTearDown(() async {
+      // A save started by the last action may still hold a file on Windows.
+      for (var attempt = 0;; attempt++) {
+        try {
+          return await dir.delete(recursive: true);
+        } on FileSystemException {
+          if (attempt >= 20) rethrow;
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        }
+      }
+    });
     store = LibraryStore(File('${dir.path}/library.json'));
     library = LibraryController(store);
     controller = AppController()..library = library;

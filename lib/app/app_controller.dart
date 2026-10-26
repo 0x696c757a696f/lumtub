@@ -264,6 +264,7 @@ class AppController extends ChangeNotifier {
   /// The video last opened from a Piped or Invidious server, so a failure
   /// falls back to YouTube (or the other one) once.
   String? _openedVia;
+  String? _openedOrigin;
   /// The video playing from its downloaded file, if any.
   String? _openedLocal;
   /// The servers tried for the video being opened, and the 429 YouTube
@@ -1403,6 +1404,7 @@ class AppController extends ChangeNotifier {
       _lastPosition = start ?? Duration.zero;
       _resumePoint.start(_lastPosition);
       _openedResolved = video == null ? null : item.id;
+      _openedOrigin = video?.origin;
       if (video != null) _update(() => availableHeights = video!.heightsFor(settings));
       await player.open(Media(direct ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
@@ -1754,7 +1756,7 @@ class AppController extends ChangeNotifier {
         // ytdl_hook resolve the video itself once.
         _openedResolved = null;
         _repository?.streams.forget(item.id);
-        logInfo('Prefetched address did not play ($message); libmpv resolves ${item.id} again');
+        logInfo('Prefetched address did not play ($message; $_openedOrigin); libmpv resolves ${item.id} again');
         unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
         return;
       }

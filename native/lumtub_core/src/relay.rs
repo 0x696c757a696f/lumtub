@@ -279,6 +279,25 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
                 continue;
             }
         };
+        // The first chunk is asked for before answering, so a refusal such as
+        // an expired address (403) reaches libmpv as that status at once
+        // rather than as a reply that breaks off, which it retries.
+        let first = if method == "GET" {
+            match request(fetch, &target, start, (start + target.chunk - 1).min(end)) {
+                Ok(body) => Some(body),
+                Err(stop) => {
+                    let code = match stop {
+                        Stop::Refused(code) => code,
+                        _ => 502,
+                    };
+                    log(shared, format!("Chunked relay stopped before answering: {}", stop.why()));
+                    let _ = write!(writer, "HTTP/1.1 {code} Upstream Error\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+                    return;
+                }
+            }
+        } else {
+            None
+        };
         let mut head = format!("HTTP/1.1 {status}\r\nAccept-Ranges: bytes\r\nContent-Length: {}\r\n", end - start + 1);
         if status.starts_with("206") {
             head.push_str(&format!("Content-Range: bytes {start}-{end}/{size}\r\n"));
@@ -297,7 +316,7 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
             continue;
         }
         let done = std::thread::scope(|scope| {
-            let mut ahead = Ahead { scope, fetch, target: &target, next: None, handle: None };
+            let mut ahead = Ahead { scope, fetch, target: &target, next: None, handle: None, first };
             let mut position = start;
             while position <= end {
                 let last = (position + target.chunk - 1).min(end);
@@ -305,8 +324,8 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
                 match copy(position, last, writer, shared, &mut buffer, &mut ahead) {
                     Ok(()) => position = last + 1,
                     Err(Stop::Client) => return false,
-                    Err(Stop::Upstream(message)) => {
-                        log(shared, format!("Chunked relay stopped: {message}"));
+                    Err(stop) => {
+                        log(shared, format!("Chunked relay stopped: {}", stop.why()));
                         return false;
                     }
                 }
@@ -356,6 +375,18 @@ enum Stop {
     Client,
     /// YouTube's side failed.
     Upstream(String),
+    /// YouTube answered with this status instead of the bytes.
+    Refused(u16),
+}
+
+impl Stop {
+    fn why(&self) -> String {
+        match self {
+            Stop::Client => "libmpv hung up".into(),
+            Stop::Upstream(message) => message.clone(),
+            Stop::Refused(status) => format!("YouTube answered {status}"),
+        }
+    }
 }
 
 type Body = Box<dyn Read + Send>;
@@ -369,6 +400,8 @@ struct Ahead<'s, 'e> {
     /// Range of the chunk after the current one, none for the last chunk.
     next: Option<(u64, u64)>,
     handle: Option<std::thread::ScopedJoinHandle<'s, Result<Body, Stop>>>,
+    /// The first chunk's reply, opened before the response head was sent.
+    first: Option<Body>,
 }
 
 impl<'s, 'e> Ahead<'s, 'e> {
@@ -390,17 +423,18 @@ fn copy(from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>, buffe
         // Only this chunk's first request was opened ahead; continuing a
         // broken reply asks anew and leaves the next chunk's request waiting.
         let pending = if attempt == 0 { ahead.handle.take() } else { None };
-        let prefetched = match pending {
+        let opened = if attempt == 0 { ahead.first.take() } else { None };
+        let prefetched = opened.or_else(|| match pending {
             Some(handle) => match handle.join() {
                 Ok(Ok(body)) => Some(body),
-                Ok(Err(Stop::Upstream(e))) => {
-                    log(shared, format!("Prefetch of the next chunk failed ({e}), requesting again"));
+                Ok(Err(stop @ (Stop::Upstream(_) | Stop::Refused(_)))) => {
+                    log(shared, format!("Prefetch of the next chunk failed ({}), requesting again", stop.why()));
                     None
                 }
                 _ => None,
             },
             None => None,
-        };
+        });
         let mut body = match prefetched {
             Some(body) => body,
             None => request(fetch, target, next, to)?,
@@ -452,7 +486,7 @@ fn request(fetch: &dyn Fetch, target: &Target, from: u64, to: u64) -> Result<Box
             Ok((status, _)) => {
                 // A 403 means the address expired; the app reopens the video.
                 if status == 403 || attempt >= 1 {
-                    return Err(Stop::Upstream(format!("YouTube answered {status}")));
+                    return Err(Stop::Refused(status));
                 }
             }
             Err(e) => {
@@ -636,7 +670,9 @@ mod tests {
         let source = fake(1000, None, 403);
         let relay = Relay::start(source.clone()).unwrap();
         let address = relay.register(target(1000)).unwrap();
-        let (_, body) = get(&address, None);
+        let (head, body) = get(&address, None);
+        // Passed on as YouTube's status, so libmpv fails at once.
+        assert!(head.starts_with("HTTP/1.1 403"), "{head}");
         assert!(body.is_empty());
         assert_eq!(source.calls.lock().unwrap().len(), 1);
         assert!(relay.take_log().iter().any(|l| l.contains("403")));

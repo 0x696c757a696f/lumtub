@@ -284,7 +284,7 @@ void main() {
         expect(preset.text, contains('{lines}'));
         expect(preset.text, contains('exactly {lines} lines'));
       }
-      expect(AiTranslator.aiPresets.map((p) => p.id), ['openai', 'deepseek', 'anthropic', 'gemini', 'qwen', 'openrouter', 'ollama', 'custom']);
+      expect(AiTranslator.aiPresets.map((p) => p.id), ['openai', 'deepseek', 'anthropic', 'gemini', 'qwen', 'zhipu', 'siliconflow', 'openrouter', 'ollama', 'custom']);
     });
   });
 
@@ -347,7 +347,7 @@ void main() {
     });
 
     test('a missing key gives a translator that throws', () async {
-      for (final service in [TranslationService.deepl, TranslationService.microsoft, TranslationService.ai]) {
+      for (final service in [TranslationService.deepl, TranslationService.baidu, TranslationService.ai]) {
         final translator = translatorFor(TranslationConfig(service: service), {}, client, fallback: fallback);
         expect(await _fails(translator.translate('a', 'en')), tr('请先在设置里填写 {0} 的密钥', [service.label]));
         expect(await translator.translate(' ', 'en'), ' ');
@@ -362,6 +362,9 @@ void main() {
       expect(build(TranslationService.libre), isA<LibreTranslator>());
       expect(build(TranslationService.ai, {'ai': 'k'}), isA<AiTranslator>());
       expect(build(TranslationService.ai, {}, 'ollama'), isA<AiTranslator>());
+      expect(build(TranslationService.microsoft), isA<MicrosoftTranslator>());
+      expect(build(TranslationService.deeplx), isA<DeepLXTranslator>());
+      expect(build(TranslationService.baidu, {'baidu': 'k'}), isA<BaiduTranslator>());
     });
 
     test('chunkLengthOf', () {
@@ -377,5 +380,90 @@ void main() {
     expect(TranslationService.google.needsKey, isFalse);
     expect(TranslationService.deepl.needsKey, isTrue);
     expect(TranslationService.libre.needsKey, isFalse);
+  });
+
+  group('new services', () {
+    test('Microsoft without a key signs in with an Edge token, once', () async {
+      final requests = <http.Request>[];
+      final client = MockClient((request) async {
+        requests.add(request);
+        if (request.url.host == 'edge.microsoft.com') return http.Response('token-1', 200);
+        final texts = (jsonDecode(request.body) as List).map((e) => (e as Map)['Text']).toList();
+        return _json([for (final t in texts) {'translations': [{'text': '译$t'}]}]);
+      });
+      final translator = MicrosoftTranslator(client);
+      expect(await translator.translate('a\nb', 'zh-CN'), '译a\n译b');
+      expect(await translator.translate('c', 'zh-CN'), '译c');
+      expect(requests.where((r) => r.url.host == 'edge.microsoft.com').length, 1);
+      final api = requests.lastWhere((r) => r.url.host != 'edge.microsoft.com');
+      expect(api.url.host, 'api-edge.cognitive.microsofttranslator.com');
+      expect(api.headers['Authorization'], 'Bearer token-1');
+    });
+
+    test('DeepLX joins lines and falls back to one request per line', () async {
+      final bodies = <Map>[];
+      final client = MockClient((request) async {
+        final body = jsonDecode(request.body) as Map;
+        bodies.add(body);
+        final text = body['text'] as String;
+        // Loses the line break the first time.
+        return _json({'code': 200, 'data': text.contains('\n') ? 'joined' : '译$text'});
+      });
+      final translator = DeepLXTranslator(client, server: 'http://localhost:1188');
+      expect(await translator.translate('a\nb', 'zh-CN'), '译a\n译b');
+      expect(bodies.first['target_lang'], 'ZH');
+      expect(translator.endpoint.toString(), 'http://localhost:1188/translate');
+      expect(await _fails(DeepLXTranslator(client, server: '').translate('x', 'en')), tr('请填写 DeepLX 服务器地址'));
+    });
+
+    test('Baidu signs requests and reads trans_result', () async {
+      late Map<String, String> form;
+      final client = MockClient((request) async {
+        form = Uri(query: request.body).queryParameters;
+        return _json({'trans_result': [{'src': 'a', 'dst': '甲'}, {'src': 'b', 'dst': '乙'}]});
+      });
+      expect(await BaiduTranslator(client, appId: 'id', key: 'secret').translate('a\nb', 'ja'), '甲\n乙');
+      expect(form['to'], 'jp');
+      expect(form['sign'], hasLength(32));
+      final failing = MockClient((_) async => _json({'error_code': '54004'}));
+      expect(await _fails(BaiduTranslator(failing, appId: 'id', key: 'k').translate('a', 'en')), tr('百度翻译账户余额不足'));
+    });
+
+    test('AI style, glossary, temperature and context reach the request', () async {
+      final sent = <Map>[];
+      final client = MockClient((request) async {
+        final body = jsonDecode(request.body) as Map;
+        sent.add(body);
+        final user = ((body['messages'] as List)[1] as Map)['content'] as String;
+        return _json({'choices': [{'message': {'content': user.split('\n').map((l) => '译$l').join('\n')}}]});
+      });
+      final translator = AiTranslator(client,
+          baseUrl: 'http://x/v1', model: 'm', prompt: 'To {target}.', tone: AiTone.byId('casual').instruction, glossary: 'Lumtub=路姆\nbad line', temperature: 0.7, contextLines: 2);
+      await translator.translate('one\ntwo\nthree', 'zh-CN');
+      await translator.translate('four', 'zh-CN');
+      final system = ((sent.last['messages'] as List)[0] as Map)['content'] as String;
+      expect(sent.last['temperature'], 0.7);
+      expect(system, contains('casual'));
+      expect(system, contains('Lumtub=路姆'));
+      expect(system, isNot(contains('bad line')));
+      expect(system, endsWith('do not translate or repeat them:\ntwo\nthree'));
+    });
+
+    test('lists models from /models', () async {
+      final client = MockClient((request) async {
+        expect(request.url.path, '/v1/models');
+        return _json({'data': [{'id': 'b'}, {'id': 'a'}, {'id': 'a'}]});
+      });
+      expect(await AiTranslator.listModels(client, 'https://x/v1/', ''), ['a', 'b']);
+    });
+
+    test('the new settings round-trip and stay in range', () {
+      const config = TranslationConfig(service: TranslationService.baidu, baiduAppId: 'id', deeplxServer: 'http://d', aiTone: 'formal', aiGlossary: 'a=b', aiTemperature: 0.9, aiContext: 5);
+      final read = TranslationConfig.fromJson(jsonDecode(jsonEncode(config.toJson())));
+      expect(read, config);
+      expect(read.cacheScope, isNot(const TranslationConfig(service: TranslationService.baidu).cacheScope));
+      final wild = TranslationConfig.fromJson({'aiTone': 'x', 'aiTemperature': 9, 'aiContext': 99});
+      expect((wild.aiTone, wild.aiTemperature, wild.aiContext), ('default', 1.5, 10));
+    });
   });
 }

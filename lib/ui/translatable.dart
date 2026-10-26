@@ -1,7 +1,10 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
+import '../language_guess.dart';
 import '../translation.dart';
 import 'theme.dart';
 
@@ -39,10 +42,14 @@ class _TranslatableState extends State<Translatable> {
   }
 
   Future<void> _toggle() async {
-    final language = widget.controller.preferences.translateTarget;
+    final prefs = widget.controller.preferences;
+    final language = prefs.translateTarget;
     if (_showing) return setState(() => _showing = false);
     if (_translation != null && _language == language) return setState(() => _showing = true);
     final text = widget.text;
+    if (prefs.skipSameLanguage && looksLike(text, language)) {
+      return setState(() => _error = tr('已经是{0}，不用翻译', [TranslationLanguage.byCode(language).label]));
+    }
     setState(() {
       _loading = true;
       _error = null;
@@ -74,16 +81,13 @@ class _TranslatableState extends State<Translatable> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final both = widget.controller.preferences.bilingualTranslation;
+    final prefs = widget.controller.preferences;
+    final both = prefs.bilingualTranslation;
+    final translation = _showing && both ? TranslationView(style: prefs.translationStyle, child: widget.builder(context, _translation!)) : null;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      if (translation != null && prefs.translationFirst) ...[translation, const SizedBox(height: 6)],
       widget.builder(context, _showing && !both ? _translation! : widget.text),
-      if (_showing && both)
-        Container(
-          margin: const EdgeInsets.only(top: 6),
-          padding: const EdgeInsets.only(left: 10),
-          decoration: BoxDecoration(border: Border(left: BorderSide(color: colors.primary.withValues(alpha: 0.6), width: 2))),
-          child: DefaultTextStyle.merge(style: TextStyle(color: colors.onSurfaceVariant), child: widget.builder(context, _translation!)),
-        ),
+      if (translation != null && !prefs.translationFirst) ...[const SizedBox(height: 6), translation],
       Padding(
         padding: widget.padding,
         child: Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
@@ -98,4 +102,87 @@ class _TranslatableState extends State<Translatable> {
       ),
     ]);
   }
+}
+
+/// A translation shown beside its original, in one of [TranslationStyle].
+class TranslationView extends StatefulWidget {
+  const TranslationView({super.key, required this.style, required this.child});
+  final TranslationStyle style;
+  final Widget child;
+
+  @override
+  State<TranslationView> createState() => _TranslationViewState();
+}
+
+class _TranslationViewState extends State<TranslationView> {
+  bool _revealed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final child = DefaultTextStyle.merge(style: TextStyle(color: colors.onSurfaceVariant), child: widget.child);
+    switch (widget.style) {
+      case TranslationStyle.quote:
+        return Container(
+          padding: const EdgeInsets.only(left: 10),
+          decoration: BoxDecoration(border: Border(left: BorderSide(color: colors.primary.withValues(alpha: 0.6), width: 2))),
+          child: child,
+        );
+      case TranslationStyle.plain:
+        return child;
+      case TranslationStyle.highlight:
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(color: colors.primaryContainer.withValues(alpha: 0.45), borderRadius: BorderRadius.circular(6)),
+          child: child,
+        );
+      case TranslationStyle.underline:
+        return DefaultTextStyle.merge(
+          style: TextStyle(decoration: TextDecoration.underline, decorationStyle: TextDecorationStyle.dashed, decorationColor: colors.primary.withValues(alpha: 0.7)),
+          child: child,
+        );
+      case TranslationStyle.box:
+        return CustomPaint(
+          painter: _DashedBox(colors.primary.withValues(alpha: 0.6)),
+          child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), child: child),
+        );
+      case TranslationStyle.blur:
+        // Hidden until the pointer is over it or it is tapped, for
+        // listening practice.
+        return MouseRegion(
+          onEnter: (_) => setState(() => _revealed = true),
+          onExit: (_) => setState(() => _revealed = false),
+          child: GestureDetector(
+            onTap: () => setState(() => _revealed = !_revealed),
+            child: ImageFiltered(
+              enabled: !_revealed,
+              imageFilter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+              child: child,
+            ),
+          ),
+        );
+    }
+  }
+}
+
+class _DashedBox extends CustomPainter {
+  _DashedBox(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    final path = Path()..addRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(6)));
+    for (final metric in path.computeMetrics()) {
+      for (var d = 0.0; d < metric.length; d += 7) {
+        canvas.drawPath(metric.extractPath(d, d + 4), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBox old) => old.color != color;
 }

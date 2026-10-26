@@ -65,6 +65,7 @@ import '../stream_resolver.dart';
 import '../subtitle_files.dart';
 import '../subtitle_translation.dart';
 import '../translation.dart';
+import '../translation_cache.dart';
 import '../translation_services.dart';
 import 'posts_loader.dart';
 import '../video_output_size.dart';
@@ -361,9 +362,11 @@ class AppController extends ChangeNotifier {
   /// Sprite sheets of the progress bar's preview frames.
   late final storyboardSheets = StoryboardSheets(_http);
   late final _google = GoogleTranslator(_http);
+  /// Translations already made, kept for a week in the cache folder.
+  TranslationCache _translationCache = TranslationCache();
   /// Behind 翻译 buttons and translated subtitles: the service 翻译服务
   /// names; called only when something is to be translated.
-  late Translator translator = _google;
+  late Translator translator = CachingTranslator(_google, _translationCache, preferences.translation.cacheScope);
   /// The translation services' API keys, by [TranslationService.name],
   /// kept encrypted with DPAPI apart from the settings.
   Map<String, String> translationKeys = const {};
@@ -562,6 +565,8 @@ class AppController extends ChangeNotifier {
       unawaited(_trimThumbnails());
       unawaited(downloads?.load());
       unawaited(account?.load());
+      _translationCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}translations.json'));
+      _useTranslator();
       _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), DpapiProtector());
       unawaited(_loadTranslationKeys());
       logInfo('Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
@@ -2646,7 +2651,7 @@ class AppController extends ChangeNotifier {
   }
 
   void _useTranslator() {
-    translator = translatorFor(preferences.translation, translationKeys, _http, fallback: _google);
+    translator = CachingTranslator(translatorFor(preferences.translation, translationKeys, _http, fallback: _google), _translationCache, preferences.translation.cacheScope);
     logInfo('Translating with ${preferences.translation.service.name}');
   }
 
@@ -2666,8 +2671,14 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  /// The models the chosen AI endpoint lists.
+  Future<List<String>> listAiModels() {
+    final config = preferences.translation;
+    return AiTranslator.listModels(_http, config.effectiveAiBaseUrl, translationKeys[TranslationService.ai.name] ?? '');
+  }
+
   /// A short sentence put through the chosen service, to check it works.
-  Future<String> testTranslation() => translator.translate('Subtitles and comments can be translated here.', preferences.translateTarget);
+  Future<String> testTranslation() => (translator is CachingTranslator ? (translator as CachingTranslator).inner : translator).translate('Subtitles and comments can be translated here.', preferences.translateTarget);
 
   void blockChannel(ChannelRef channel) {
     if (preferences.isBlocked(channel.id)) return;
@@ -3082,6 +3093,7 @@ class AppController extends ChangeNotifier {
     if (manager == null) return;
     if (!ensureNotPlaying(tr('正在播放时不会清理缓存。请先返回列表。'))) return;
     try {
+      _translationCache.clear();
       final (:freed, :skipped) = await manager.clear(settings);
       final left = await manager.size(settings);
       _update(() => cacheBytes = left);
@@ -3103,6 +3115,7 @@ class AppController extends ChangeNotifier {
     _saveProgress();
     await library?.flush();
     await downloads?.flush();
+    await _translationCache.save();
     await _flushAppearance();
     for (final subscription in _playerSubscriptions) {
       await subscription.cancel();

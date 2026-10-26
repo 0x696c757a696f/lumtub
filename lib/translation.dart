@@ -42,6 +42,21 @@ class TranslationLanguage {
   static TranslationLanguage? maybeByCode(Object? code) => all.where((l) => l.code == code).firstOrNull;
 }
 
+/// How a translation shown under its original looks, as KISS Translator
+/// offers them.
+enum TranslationStyle {
+  quote('引用竖线'),
+  plain('无样式'),
+  highlight('背景高亮'),
+  underline('虚线下划线'),
+  box('虚线框'),
+  blur('模糊（悬停显示）');
+
+  const TranslationStyle(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
 /// Something that turns text into another language.
 abstract class Translator {
   /// [text] in [target] (a [TranslationLanguage.code]); throws

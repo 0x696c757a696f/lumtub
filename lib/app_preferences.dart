@@ -86,6 +86,9 @@ class AppPreferences {
     this.translation = const TranslationConfig(),
     this.subtitlesByService = false,
     this.bilingualTranslation = true,
+    this.translationStyle = TranslationStyle.quote,
+    this.translationFirst = false,
+    this.skipSameLanguage = true,
   });
 
   final bool recordHistory;
@@ -191,6 +194,12 @@ class AppPreferences {
   final bool subtitlesByService;
   /// 翻译 shows the translation under the original, not in its place.
   final bool bilingualTranslation;
+  /// How the translation under the original looks.
+  final TranslationStyle translationStyle;
+  /// The translation goes above the original instead of under it.
+  final bool translationFirst;
+  /// 翻译 does nothing for text already in the target language.
+  final bool skipSameLanguage;
 
   bool isBlocked(String? channelId) => channelId != null && _lists.blockedIds.contains(channelId);
 
@@ -332,6 +341,9 @@ class AppPreferences {
     TranslationConfig? translation,
     bool? subtitlesByService,
     bool? bilingualTranslation,
+    TranslationStyle? translationStyle,
+    bool? translationFirst,
+    bool? skipSameLanguage,
   }) =>
       AppPreferences(
         recordHistory: recordHistory ?? this.recordHistory,
@@ -390,6 +402,9 @@ class AppPreferences {
         translation: translation ?? this.translation,
         subtitlesByService: subtitlesByService ?? this.subtitlesByService,
         bilingualTranslation: bilingualTranslation ?? this.bilingualTranslation,
+        translationStyle: translationStyle ?? this.translationStyle,
+        translationFirst: translationFirst ?? this.translationFirst,
+        skipSameLanguage: skipSameLanguage ?? this.skipSameLanguage,
       );
 
   Map<String, dynamic> toJson() => {
@@ -449,6 +464,9 @@ class AppPreferences {
         'translation': translation.toJson(),
         'subtitlesByService': subtitlesByService,
         'bilingualTranslation': bilingualTranslation,
+        'translationStyle': translationStyle.name,
+        'translationFirst': translationFirst,
+        'skipSameLanguage': skipSameLanguage,
       };
 
   factory AppPreferences.fromJson(Object? raw) {
@@ -548,6 +566,9 @@ class AppPreferences {
       translation: TranslationConfig.fromJson(raw['translation']),
       subtitlesByService: flag('subtitlesByService', d.subtitlesByService),
       bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
+      translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,
+      translationFirst: flag('translationFirst', d.translationFirst),
+      skipSameLanguage: flag('skipSameLanguage', d.skipSameLanguage),
     );
   }
 }

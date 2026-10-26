@@ -2667,7 +2667,7 @@ class AppController extends ChangeNotifier {
   }
 
   /// A short sentence put through the chosen service, to check it works.
-  Future<String> testTranslation() => translator.translate('Subtitles and comments can be translated here.', preferences.translateLanguage);
+  Future<String> testTranslation() => translator.translate('Subtitles and comments can be translated here.', preferences.translateTarget);
 
   void blockChannel(ChannelRef channel) {
     if (preferences.isBlocked(channel.id)) return;

@@ -66,8 +66,13 @@ void main() {
   test('the target language is saved and unknown codes fall back', () {
     final prefs = const AppPreferences().copyWith(translateLanguage: 'ja');
     expect(AppPreferences.fromJson(prefs.toJson()).translateLanguage, 'ja');
-    expect(AppPreferences.fromJson({'translateLanguage': 'xx'}).translateLanguage, 'zh-CN');
-    expect(const AppPreferences().translateLanguage, TranslationLanguage.defaultCode);
+    expect(AppPreferences.fromJson({'translateLanguage': 'xx'}).translateLanguage, '');
+    // Empty follows Windows; the old default, saved before, follows it too.
+    expect(const AppPreferences().translateLanguage, '');
+    expect(AppPreferences.fromJson({'translateLanguage': TranslationLanguage.defaultCode}).translateLanguage, '');
+    final chosen = const AppPreferences().copyWith(translateLanguage: 'zh-CN');
+    expect(AppPreferences.fromJson(chosen.toJson()).translateLanguage, 'zh-CN');
+    expect(AppPreferences.fromJson(const AppPreferences().toJson()).bilingualTranslation, isTrue);
   });
 
   test('translated subtitles use a listed track or translate the original', () {
@@ -135,9 +140,23 @@ void main() {
   testWidgets('translates on tap, shows the original again and reports errors', (tester) async {
     final fake = _Fake();
     final controller = AppController()..translator = fake;
+    controller.preferences = controller.preferences.copyWith(translateLanguage: 'zh-CN');
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(controller: controller, text: 'Hello', builder: (context, text) => Text(text)))));
     expect(find.text('Hello'), findsOneWidget);
     expect(fake.calls, 0);
+    // 双语对照 (the default) keeps the original above the translation.
+    await tester.tap(find.text('翻译'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Hello'), findsOneWidget);
+    expect(find.text('[zh-CN] Hello'), findsOneWidget);
+    await tester.tap(find.text('隐藏译文'));
+    await tester.pump();
+    expect(find.text('[zh-CN] Hello'), findsNothing);
+    expect(fake.calls, 1);
+    fake.calls = 0;
+    controller.preferences = controller.preferences.copyWith(bilingualTranslation: false);
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(key: const ValueKey('replace'), controller: controller, text: 'Hello', builder: (context, text) => Text(text)))));
     await tester.tap(find.text('翻译'));
     await tester.pump();
     await tester.pump();

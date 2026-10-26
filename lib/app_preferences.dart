@@ -8,6 +8,7 @@ import 'explore_filters.dart';
 import 'feed_quality.dart';
 import 'explore_topics.dart';
 import 'models.dart';
+import 'player_settings.dart' show SubtitleLanguage;
 import 'progress_line.dart';
 import 'translation.dart';
 import 'translation_services.dart';
@@ -81,9 +82,10 @@ class AppPreferences {
     this.autoCheckUpdates = true,
     this.autoUpdateApp = true,
     this.skipFfmpegPrompt = false,
-    this.translateLanguage = 'zh-CN',
+    this.translateLanguage = '',
     this.translation = const TranslationConfig(),
     this.subtitlesByService = false,
+    this.bilingualTranslation = true,
   });
 
   final bool recordHistory;
@@ -175,14 +177,20 @@ class AppPreferences {
   final bool autoUpdateApp;
   /// The user chose single-file downloads and not to be asked to install ffmpeg.
   final bool skipFfmpegPrompt;
-  /// The language 翻译 and the translated subtitle turn text into (a TranslationLanguage code).
+  /// The language 翻译 turns text into (a TranslationLanguage code); empty
+  /// follows Windows' language.
   final String translateLanguage;
+
+  /// [translateLanguage], with Windows' language for empty.
+  String get translateTarget => translateLanguage.isEmpty ? SubtitleLanguage.auto.translation.code : translateLanguage;
 
   /// Which service 翻译 uses, and its settings; the keys are kept apart.
   final TranslationConfig translation;
 
   /// Translated subtitles come from [translation] instead of YouTube.
   final bool subtitlesByService;
+  /// 翻译 shows the translation under the original, not in its place.
+  final bool bilingualTranslation;
 
   bool isBlocked(String? channelId) => channelId != null && _lists.blockedIds.contains(channelId);
 
@@ -323,6 +331,7 @@ class AppPreferences {
     String? translateLanguage,
     TranslationConfig? translation,
     bool? subtitlesByService,
+    bool? bilingualTranslation,
   }) =>
       AppPreferences(
         recordHistory: recordHistory ?? this.recordHistory,
@@ -380,6 +389,7 @@ class AppPreferences {
         translateLanguage: translateLanguage ?? this.translateLanguage,
         translation: translation ?? this.translation,
         subtitlesByService: subtitlesByService ?? this.subtitlesByService,
+        bilingualTranslation: bilingualTranslation ?? this.bilingualTranslation,
       );
 
   Map<String, dynamic> toJson() => {
@@ -435,9 +445,10 @@ class AppPreferences {
         'autoCheckUpdates': autoCheckUpdates,
         'autoUpdateApp': autoUpdateApp,
         'skipFfmpegPrompt': skipFfmpegPrompt,
-        'translateLanguage': translateLanguage,
+        'translateLanguageV2': translateLanguage,
         'translation': translation.toJson(),
         'subtitlesByService': subtitlesByService,
+        'bilingualTranslation': bilingualTranslation,
       };
 
   factory AppPreferences.fromJson(Object? raw) {
@@ -527,9 +538,16 @@ class AppPreferences {
       autoCheckUpdates: flag('autoCheckUpdates', d.autoCheckUpdates),
       autoUpdateApp: flag('autoUpdateApp', d.autoUpdateApp),
       skipFfmpegPrompt: flag('skipFfmpegPrompt', d.skipFfmpegPrompt),
-      translateLanguage: TranslationLanguage.byCode(raw['translateLanguage']).code,
+      // Simplified Chinese was the default before Windows' language was
+      // followed, so a value saved then follows Windows too.
+      translateLanguage: raw.containsKey('translateLanguageV2')
+          ? TranslationLanguage.maybeByCode(raw['translateLanguageV2'])?.code ?? ''
+          : raw['translateLanguage'] == TranslationLanguage.defaultCode
+              ? ''
+              : TranslationLanguage.maybeByCode(raw['translateLanguage'])?.code ?? '',
       translation: TranslationConfig.fromJson(raw['translation']),
       subtitlesByService: flag('subtitlesByService', d.subtitlesByService),
+      bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
     );
   }
 }

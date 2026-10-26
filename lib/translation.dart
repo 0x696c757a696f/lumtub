@@ -13,6 +13,7 @@ class TranslationLanguage {
   final String _label;
   String get label => tr(_label);
 
+  /// The default before Windows' language was followed.
   static const defaultCode = 'zh-CN';
 
   static const all = [

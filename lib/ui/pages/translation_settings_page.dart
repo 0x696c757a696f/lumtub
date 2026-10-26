@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../../l10n/l10n.dart';
+import '../../player_settings.dart' show SubtitleLanguage;
 import '../../translation.dart';
 import '../../translation_services.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
@@ -79,8 +80,15 @@ List<Widget> _items(BuildContext context, AppController controller) {
       title: tr('翻译目标语言'),
       leading: const Icon(Icons.translate_rounded),
       value: prefs.translateLanguage,
-      values: [for (final l in TranslationLanguage.all) (l.code, l.label)],
+      values: [('', tr('跟随系统语言（{0}）', [SubtitleLanguage.auto.translation.label])), for (final l in TranslationLanguage.all) (l.code, l.label)],
       onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(translateLanguage: v)),
+    ),
+    SwitchItem(
+      title: tr('双语对照'),
+      subtitle: tr('评论、简介和动态的译文显示在原文下方；关闭时译文替换原文'),
+      leading: const Icon(Icons.vertical_split_outlined),
+      value: prefs.bilingualTranslation,
+      onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(bilingualTranslation: v)),
     ),
     SwitchItem(
       title: tr('字幕也用这个服务翻译'),

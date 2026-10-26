@@ -828,7 +828,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               title: tr('翻译目标语言'),
               leading: _icon(Icons.translate_rounded),
               value: prefs.translateLanguage,
-              values: [for (final l in TranslationLanguage.all) (l.code, l.label)],
+              values: [('', tr('跟随系统语言（{0}）', [SubtitleLanguage.auto.translation.label])), for (final l in TranslationLanguage.all) (l.code, l.label)],
               onSelected: (v) => savePrefs(prefs.copyWith(translateLanguage: v)),
             ), subtitle: '翻译 字幕 双语 语言 translate Google'),
         SettingEntry(tr('自动检查组件更新'), (context) => SwitchItem(

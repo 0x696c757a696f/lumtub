@@ -2218,5 +2218,9 @@
   "按你的观看兴趣在本机挑选，右键可选“不感兴趣”": "Picked on this device from what you watch; right-click a video for \"Not interested\"",
   "{0}（YouTube 翻译）": "{0} (YouTube translation)",
   "视频原字幕（自带或自动生成）": "Video's own language (uploaded or auto-generated)",
-  "第一字幕按“第一字幕语言”显示，视频没有这种语言时用 YouTube 翻译。第二字幕显示在上方，“视频原字幕”是视频说话语言的字幕；和第一字幕相同时不显示。": "The first subtitle is shown in the first subtitle language, translated by YouTube when the video has none in it. The second subtitle appears above it; \"Video's own language\" is the subtitle in the language spoken in the video. It is hidden when it matches the first."
+  "第一字幕按“第一字幕语言”显示，视频没有这种语言时用 YouTube 翻译。第二字幕显示在上方，“视频原字幕”是视频说话语言的字幕；和第一字幕相同时不显示。": "The first subtitle is shown in the first subtitle language, translated by YouTube when the video has none in it. The second subtitle appears above it; \"Video's own language\" is the subtitle in the language spoken in the video. It is hidden when it matches the first.",
+  "跟随系统语言（{0}）": "Follow system language ({0})",
+  "双语对照": "Bilingual",
+  "评论、简介和动态的译文显示在原文下方；关闭时译文替换原文": "Translations of comments, descriptions and posts appear under the original; when off, the translation replaces it",
+  "隐藏译文": "Hide translation"
 }

@@ -42,11 +42,20 @@ ImageProvider thumbnailFor(VideoItem item, Directory? thumbnails, {int width = 4
 
 /// The decode width for a thumbnail shown [logical] pixels wide: the real
 /// size, in steps so resizing the window does not decode again at every
-/// pixel, and never above the 480 the YouTube file has or below 160.
-int thumbnailDecodeWidth(double logical, double pixelRatio) {
+/// pixel, and never above the width of the file shown ([largest], by
+/// default the thumbnail size chosen in Settings) or below 160.
+int thumbnailDecodeWidth(double logical, double pixelRatio, {int? largest}) {
   final steps = (logical * pixelRatio / 80).ceil();
-  return (steps * 80).clamp(160, 480);
+  return (steps * 80).clamp(160, largest ?? thumbnailFileWidth(VideoItem.thumbnailFile));
 }
+
+/// How wide YouTube's thumbnail file [name] is.
+int thumbnailFileWidth(String name) => switch (name) {
+      'mqdefault' => 320,
+      'sddefault' => 640,
+      'maxresdefault' => 1280,
+      _ => 480,
+    };
 
 /// [item]'s title, or DeArrow's when that is on.
 String titleFor(VideoItem item) => deArrow.titleOf(item.id, item.title);
@@ -161,7 +170,7 @@ class PlaylistCard extends StatelessWidget {
                 if (cover != null)
                   LayoutBuilder(builder: (context, box) => Image.network(
                     cover,
-                    cacheWidth: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context)),
+                    cacheWidth: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context), largest: 480),
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stack) => ColoredBox(color: colors.surfaceContainerHighest),
                   ))

@@ -296,17 +296,25 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
             }
             continue;
         }
-        let mut position = start;
-        while position <= end {
-            let last = (position + target.chunk - 1).min(end);
-            match copy(fetch, &target, position, last, writer, shared, &mut buffer) {
-                Ok(()) => position = last + 1,
-                Err(Stop::Client) => return,
-                Err(Stop::Upstream(message)) => {
-                    log(shared, format!("Chunked relay stopped: {message}"));
-                    return;
+        let done = std::thread::scope(|scope| {
+            let mut ahead = Ahead { scope, fetch, target: &target, next: None, handle: None };
+            let mut position = start;
+            while position <= end {
+                let last = (position + target.chunk - 1).min(end);
+                ahead.next = (last < end).then(|| (last + 1, (last + target.chunk).min(end)));
+                match copy(position, last, writer, shared, &mut buffer, &mut ahead) {
+                    Ok(()) => position = last + 1,
+                    Err(Stop::Client) => return false,
+                    Err(Stop::Upstream(message)) => {
+                        log(shared, format!("Chunked relay stopped: {message}"));
+                        return false;
+                    }
                 }
             }
+            true
+        });
+        if !done {
+            return;
         }
         let _ = writer.flush();
         if !keep_open {
@@ -350,13 +358,53 @@ enum Stop {
     Upstream(String),
 }
 
-/// Sends bytes [from] to [to] of [target]. A reply YouTube cuts short is
+type Body = Box<dyn Read + Send>;
+
+/// The following chunk's request, opened on a helper thread while the current
+/// chunk is still being read.
+struct Ahead<'s, 'e> {
+    scope: &'s std::thread::Scope<'s, 'e>,
+    fetch: &'e dyn Fetch,
+    target: &'e Target,
+    /// Range of the chunk after the current one, none for the last chunk.
+    next: Option<(u64, u64)>,
+    handle: Option<std::thread::ScopedJoinHandle<'s, Result<Body, Stop>>>,
+}
+
+impl<'s, 'e> Ahead<'s, 'e> {
+    fn start(&mut self) {
+        if let Some((from, to)) = self.next.take() {
+            let (fetch, target) = (self.fetch, self.target);
+            self.handle = Some(self.scope.spawn(move || request(fetch, target, from, to)));
+        }
+    }
+}
+
+/// Sends bytes [from] to [to] of the target. A reply YouTube cuts short is
 /// continued from the next missing byte; libmpv sees one unbroken reply.
-fn copy(fetch: &dyn Fetch, target: &Target, from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>, buffer: &mut [u8]) -> Result<(), Stop> {
+fn copy(from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>, buffer: &mut [u8], ahead: &mut Ahead) -> Result<(), Stop> {
+    let (fetch, target) = (ahead.fetch, ahead.target);
     let mut next = from;
     let mut attempt = 0;
     while next <= to {
-        let mut body = request(fetch, target, next, to)?;
+        // Only this chunk's first request was opened ahead; continuing a
+        // broken reply asks anew and leaves the next chunk's request waiting.
+        let pending = if attempt == 0 { ahead.handle.take() } else { None };
+        let prefetched = match pending {
+            Some(handle) => match handle.join() {
+                Ok(Ok(body)) => Some(body),
+                Ok(Err(Stop::Upstream(e))) => {
+                    log(shared, format!("Prefetch of the next chunk failed ({e}), requesting again"));
+                    None
+                }
+                _ => None,
+            },
+            None => None,
+        };
+        let mut body = match prefetched {
+            Some(body) => body,
+            None => request(fetch, target, next, to)?,
+        };
         let mut received = 0u64;
         let mut failure = None;
         loop {
@@ -366,6 +414,9 @@ fn copy(fetch: &dyn Fetch, target: &Target, from: u64, to: u64, into: &mut impl 
                     let wanted = (to + 1 - next - received).min(n as u64) as usize;
                     into.write_all(&buffer[..wanted]).map_err(|_| Stop::Client)?;
                     received += wanted as u64;
+                    if ahead.handle.is_none() && received * 4 >= (to + 1 - from) * 3 {
+                        ahead.start();
+                    }
                     if wanted < n {
                         // More than asked for would shift every later byte.
                         return Err(Stop::Upstream(format!("YouTube sent more than bytes {next}-{to}")));
@@ -536,6 +587,37 @@ mod tests {
         let calls = source.calls.lock().unwrap();
         assert_eq!(calls.len(), 3);
         assert!(calls[0].ends_with(&format!("&range=100-{}", 100 + CHUNK - 1)));
+    }
+
+    #[test]
+    fn prefetches_each_range_once() {
+        let size = (CHUNK * 3 + 77) as usize;
+        let source = fake(size, None, 200);
+        let relay = Relay::start(source.clone()).unwrap();
+        let address = relay.register(target(size as u64)).unwrap();
+        let (_, body) = get(&address, None);
+        assert!(body == source.data);
+        let mut calls = source.calls.lock().unwrap().clone();
+        calls.sort();
+        let mut want: Vec<String> = (0..4u64).map(|i| format!("&range={}-{}", i * CHUNK, ((i + 1) * CHUNK - 1).min(size as u64 - 1))).collect();
+        want.sort();
+        assert_eq!(calls.len(), 4);
+        for (c, w) in calls.iter().zip(&want) {
+            assert!(c.ends_with(w), "{c} {w}");
+        }
+        assert!(relay.take_log().is_empty());
+    }
+
+    #[test]
+    fn continues_a_cut_chunk_before_the_prefetched_one() {
+        // Each reply breaks off past the point where the next chunk is
+        // asked for, so the rest of a chunk must not come from that request.
+        let size = (CHUNK * 2 + 10) as usize;
+        let source = fake(size, Some((CHUNK * 4 / 5) as usize), 206);
+        let relay = Relay::start(source.clone()).unwrap();
+        let address = relay.register(target(size as u64)).unwrap();
+        let (_, body) = get(&address, None);
+        assert!(body == source.data);
     }
 
     #[test]

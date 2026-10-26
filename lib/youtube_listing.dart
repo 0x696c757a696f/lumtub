@@ -37,6 +37,9 @@ class YoutubeListing {
         },
       });
 
+  /// The videos of playlist [id].
+  Stream<String> playlist(String id) => _pages('browse', {'browseId': 'VL$id'});
+
   /// Whether [tab] can be read through [channelTab].
   static bool hasTab(ChannelTab tab) => tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live;
 

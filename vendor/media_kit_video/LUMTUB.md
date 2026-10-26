@@ -3,9 +3,13 @@
 Copied from pub.dev (MIT, see LICENSE) with only the Windows plugin kept.
 The changes, marked "Lumtub" in the code:
 
-- `windows/angle_surface_manager.cc` (`Read`): wait for the copy into the
-  shared texture to finish before Flutter samples it, which otherwise shows
-  black frames on some GPUs.
+- `windows/angle_surface_manager.cc`, `video_output.cc`: libmpv draws
+  straight into a ring of four shared textures that Flutter samples, instead
+  of into one texture copied into a second one for every frame shown (and
+  Flutter's raster thread waiting for that copy). A frame is handed out only
+  after `glFinish`, and a texture is drawn into again only once Flutter has
+  taken two newer ones, so Flutter never samples a texture being drawn,
+  which showed as black frames on some GPUs.
 - `windows/video_output.cc` (`Resize`): resizing the texture freed it while
   Flutter's raster thread could still read it, and the texture callback
   used `at()` on a map entry that was not stored yet; both crashed the app
@@ -19,5 +23,5 @@ The changes, marked "Lumtub" in the code:
 - `windows/frame_stats.h`, `video_output.cc`, `angle_surface_manager.cc`,
   `video_output_manager.cc`, `media_kit_video_plugin.cc`: time each frame's
   render, ANGLE draw and Flutter read, count frames announced while one was
-  still waiting, and return them through `VideoOutputManager.Stats`, so the
+  still waiting and frames drawn against frames Flutter took, and return them through `VideoOutputManager.Stats`, so the
   log shows where frames are lost.

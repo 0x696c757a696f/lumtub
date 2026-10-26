@@ -134,3 +134,13 @@ double? drawBusy(String frames, double fps) {
   final average = double.parse(match[2]!);
   return count >= 50 && average > 600 / fps ? average : null;
 }
+
+/// The next quality below [height] among [available], for playback that
+/// keeps dropping frames; null at 360p or when there is none.
+int? stepDownHeight(int height, Iterable<int> available) {
+  int? lower;
+  for (final h in available) {
+    if (h >= 360 && h < height && (lower == null || h > lower)) lower = h;
+  }
+  return lower;
+}

@@ -391,6 +391,11 @@ class AppController extends ChangeNotifier {
   DateTime _rateLimitedUntil = DateTime(0);
   bool _updateCheckedForChallenge = false;
   int _lastDrops = 0;
+  /// Ten-second windows in a row that dropped a tenth of the frames or more.
+  int _dropStreak = 0;
+  /// The quality automatic playback is lowered to for this run after
+  /// frames kept dropping; 0 while it is not.
+  int _droppedCap = 0;
   DateTime _lastDropLog = DateTime(0);
   DateTime _lastFrameLog = DateTime(0);
   Timer? _dropTimer;
@@ -1519,6 +1524,7 @@ class AppController extends ChangeNotifier {
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;
+      _dropStreak = 0;
       // The decoder is known once frames are shown; resolving the video
       // can take longer than any fixed delay.
       _decoderPending = true;
@@ -1550,6 +1556,7 @@ class AppController extends ChangeNotifier {
     if (serial == _playSerial) _tracking = item;
     _mpvLogLines = 0;
     _lastDrops = 0;
+    _dropStreak = 0;
     _decoderPending = true;
     _update(() {});
     unawaited(_addLocalSubtitles(local, serial));
@@ -1608,6 +1615,7 @@ class AppController extends ChangeNotifier {
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;
+      _dropStreak = 0;
       _decoderPending = true;
       _update(() {});
       return true;
@@ -2239,6 +2247,11 @@ class AppController extends ChangeNotifier {
   /// Sets the quality cap; [asDefault] when it was chosen in the settings
   /// rather than for the video playing.
   Future<void> setMaxHeight(int height, {bool asDefault = false}) async {
+    // 自动 again lifts the quality lowered for dropped frames.
+    if (height == 0 && _droppedCap > 0) {
+      _droppedCap = 0;
+      if (settings.maxHeight == 0) return reloadVideo();
+    }
     if (height == settings.maxHeight) return;
     // Automatic codecs follow the quality: above 1080p VP9 stays enabled.
     final next = settings.copyWith(maxHeight: height);
@@ -2279,7 +2292,11 @@ class AppController extends ChangeNotifier {
 
   /// [settings] as playback picks streams with them: automatic quality is
   /// capped at the tallest display.
-  PlayerSettings get _playback => FormatPolicy.forDisplay(settings, _displayHeight);
+  PlayerSettings get _playback {
+    final playback = FormatPolicy.forDisplay(settings, _displayHeight);
+    if (_droppedCap == 0 || settings.maxHeight != 0 || (playback.maxHeight > 0 && playback.maxHeight <= _droppedCap)) return playback;
+    return playback.copyWith(maxHeight: _droppedCap);
+  }
 
   int get _displayHeight {
     var tallest = 0.0;
@@ -3188,6 +3205,7 @@ class AppController extends ChangeNotifier {
       // Read every time, so the timings cover these 10 seconds.
       final frames = await _frameStats(platform);
       await _lightenIfBusy(platform, frames);
+      await _stepDownIfDropping(platform, added);
       if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) {
         // Smooth playback is logged too, every few minutes, so a stutter can
         // be compared with how the same machine plays normally.
@@ -3247,6 +3265,25 @@ class AppController extends ChangeNotifier {
       } catch (_) {}
     }
     logInfo(reason == 'battery' ? 'On battery; scaling switched to the fast kind' : 'Scaling switched to the fast kind');
+  }
+
+  /// With automatic quality, a video that keeps dropping frames (a tenth
+  /// of them for 30 seconds, after the cheap scaling above) is reopened one
+  /// quality lower, such as 1080p60 at 720p60, and later videos of this run
+  /// stay at most there. Choosing 自动 again lifts it.
+  Future<void> _stepDownIfDropping(NativePlayer platform, int added) async {
+    if (settings.maxHeight != 0 || settings.strategy == PlaybackStrategy.quality) return;
+    final fps = double.tryParse(await platform.getProperty('container-fps')) ?? 0;
+    _dropStreak = fps > 0 && added >= fps ? _dropStreak + 1 : 0;
+    if (_dropStreak < 3) return;
+    _dropStreak = 0;
+    final height = int.tryParse(await platform.getProperty('video-params/h')) ?? 0;
+    final lower = stepDownHeight(height, availableHeights);
+    if (lower == null) return;
+    _droppedCap = lower;
+    logInfo('Frames kept dropping at ${height}p${fps.round()}; automatic quality lowered to ${lower}p for this run');
+    _notice(tr('播放一直掉帧，自动画质已降到 {0}p（本次运行有效，重新选“自动”可恢复）', ['$lower']));
+    await reloadVideo();
   }
 
   Future<String?> _frameStats(NativePlayer platform) async {

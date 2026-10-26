@@ -28,13 +28,19 @@
 #include <atomic>
 #include <cstdint>
 #include <functional>
+#include <mutex>
 #include <string>
 
 // |ANGLESurfaceManager| provides an abstraction around ANGLE to easily draw
 // OpenGL ES 2.0 content & read as D3D 11 texture using shared |HANDLE|.
 // * |Draw|: Takes callback where OpenGL ES 2.0 calls can be made for rendering.
-// * |Read|: Copies the drawn content to D3D 11 texture & makes it available to
-//           the shared |handle| for access.
+// * |Read|: Returns the shared |HANDLE| of the last frame drawn.
+//
+// Lumtub: frames are drawn straight into a ring of shared textures that
+// Flutter samples, instead of into one texture copied into another for each
+// frame Flutter shows. A frame is handed out only once the GPU has finished
+// drawing it, and a texture is drawn into again only after Flutter has
+// taken two newer ones, so Flutter never samples one being drawn.
 
 // A large part of implementation is inspired from Flutter.
 // https://github.com/flutter/engine/blob/master/shell/platform/windows/angle_surface_manager.h
@@ -43,7 +49,7 @@ class ANGLESurfaceManager {
  public:
   const int32_t width() const { return width_; }
   const int32_t height() const { return height_; }
-  const HANDLE handle() const { return handle_; }
+  const HANDLE handle() const { return handles_[front_]; }
 
   ANGLESurfaceManager(int32_t width, int32_t height);
 
@@ -53,16 +59,16 @@ class ANGLESurfaceManager {
 
   void Draw(std::function<void()> callback);
 
-  void Read();
+  HANDLE Read();
 
   void MakeCurrent(bool value);
 
   // Lumtub: how long drawing and Flutter's reads take, lock waits included.
   FrameTiming draw_timing;
   FrameTiming read_timing;
-  // Lumtub: how |Read| waits for its copy, how long, and how often the wait
-  // gave up; "sync=fence wait=count/avg/max late=n", then starts again.
-  std::string TakeSyncStats();
+  // Lumtub: "frames=drawn/shown", frames drawn and frames Flutter took,
+  // then starts again. More drawn than shown is work nobody saw.
+  std::string TakeFrameStats();
 
  private:
   void SwapBuffers();
@@ -77,36 +83,32 @@ class ANGLESurfaceManager {
 
   bool CreateAndBindEGLSurface();
 
-  void PrepareCopySync();
-
-  void WaitForCopy();
+  int PickTarget();
 
   int32_t width_ = 1;
   int32_t height_ = 1;
-  HANDLE internal_handle_ = nullptr;
-  HANDLE handle_ = nullptr;
+  // Lumtub: the ring. |front_| is the last frame drawn, |taken_| the frames
+  // Flutter took last and the one before, |drawing_| the one being drawn.
+  static constexpr int kBuffers = 4;
+  HANDLE handles_[kBuffers] = {};
+  Microsoft::WRL::ComPtr<ID3D11Texture2D> textures_[kBuffers];
+  EGLSurface surfaces_[kBuffers] = {EGL_NO_SURFACE, EGL_NO_SURFACE,
+                                    EGL_NO_SURFACE, EGL_NO_SURFACE};
+  uint64_t used_[kBuffers] = {};
+  uint64_t clock_ = 0;
+  int front_ = 0;
+  int taken_[2] = {-1, -1};
+  int drawing_ = -1;
+  std::mutex ring_mutex_;
+  std::atomic<uint64_t> drawn_{0};
+  std::atomic<uint64_t> shown_{0};
 
-  // Sync |Draw| & |Read| calls.
+  // Sync |Draw| with |SetSize| and the context's other users.
   HANDLE mutex_ = nullptr;
   // D3D 11
   ID3D11Device* d3d_11_device_ = nullptr;
   ID3D11DeviceContext* d3d_11_device_context_ = nullptr;
-  Microsoft::WRL::ComPtr<ID3D11Texture2D> internal_d3d_11_texture_2D_;
-  Microsoft::WRL::ComPtr<ID3D11Texture2D> d3d_11_texture_2D_;
-  // Signals when |Read|'s copy has finished on the GPU: a fence and an event
-  // to sleep on where the driver has them (Windows 10 1703, WDDM 2), else a
-  // query that is polled.
-  Microsoft::WRL::ComPtr<ID3D11Query> copy_query_;
-  Microsoft::WRL::ComPtr<ID3D11Fence> copy_fence_;
-  Microsoft::WRL::ComPtr<ID3D11DeviceContext4> copy_context_;
-  HANDLE copy_event_ = nullptr;
-  UINT64 copy_value_ = 0;
-  bool copy_sync_ready_ = false;
-  const char* copy_sync_ = "none";
-  FrameTiming wait_timing_;
-  std::atomic<uint64_t> late_{0};
   // ANGLE
-  EGLSurface surface_ = EGL_NO_SURFACE;
   EGLDisplay display_ = EGL_NO_DISPLAY;
   EGLContext context_ = nullptr;
   EGLConfig config_ = nullptr;

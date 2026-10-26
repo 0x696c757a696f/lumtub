@@ -78,4 +78,12 @@ void main() {
     expect(drawBusy('render=1/4.1ms/4.1ms', 60), isNull);
     expect(drawBusy(stats, 0), isNull);
   });
+
+  test('dropped frames step down to the next quality, not below 360p', () {
+    expect(stepDownHeight(1080, [2160, 1080, 720, 480, 360]), 720);
+    expect(stepDownHeight(1080, [1080, 480]), 480);
+    expect(stepDownHeight(1088, [1080, 720]), 1080);
+    expect(stepDownHeight(360, [360, 240, 144]), isNull);
+    expect(stepDownHeight(720, const []), isNull);
+  });
 }

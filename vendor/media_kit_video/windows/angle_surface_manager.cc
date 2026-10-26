@@ -7,8 +7,6 @@
 // LICENSE file.
 #include "angle_surface_manager.h"
 
-#include <thread>
-
 #include <iostream>
 
 #pragma comment(lib, "dxgi.lib")
@@ -58,103 +56,62 @@ void ANGLESurfaceManager::SetSize(int32_t width, int32_t height) {
 void ANGLESurfaceManager::Draw(std::function<void()> callback) {
   const auto start = std::chrono::steady_clock::now();
   ::WaitForSingleObject(mutex_, INFINITE);
-  MakeCurrent(true);
+  const auto target = PickTarget();
+  eglMakeCurrent(display_, surfaces_[target], surfaces_[target], context_);
   callback();
+  // Lumtub: the frame is handed to Flutter only once the GPU has drawn it.
   SwapBuffers();
   MakeCurrent(false);
+  {
+    std::lock_guard<std::mutex> lock(ring_mutex_);
+    front_ = target;
+  }
+  drawn_++;
   ::ReleaseMutex(mutex_);
   draw_timing.Add(std::chrono::steady_clock::now() - start);
 }
 
-void ANGLESurfaceManager::Read() {
-  const auto start = std::chrono::steady_clock::now();
-  ::WaitForSingleObject(mutex_, INFINITE);
-  if (d3d_11_device_context_ != nullptr) {
-    d3d_11_device_context_->CopyResource(d3d_11_texture_2D_.Get(),
-                                         internal_d3d_11_texture_2D_.Get());
-    // Lumtub: Flutter samples |handle_| on its own D3D device as soon as this
-    // returns, with nothing ordering it after the copy. A copy still in flight
-    // shows up as a black frame, most often at 60 fps or while the UI animates.
-    // Wait for it (bounded, so a lost device cannot hang the UI).
-    WaitForCopy();
+int ANGLESurfaceManager::PickTarget() {
+  std::lock_guard<std::mutex> lock(ring_mutex_);
+  // Neither the frame Flutter may take next nor the two it took last, which
+  // its GPU may still be sampling; of the others, the longest unused.
+  auto target = -1;
+  for (auto i = 0; i < kBuffers; i++) {
+    if (i == front_ || i == taken_[0] || i == taken_[1]) {
+      continue;
+    }
+    if (target < 0 || used_[i] < used_[target]) {
+      target = i;
+    }
   }
-  ::ReleaseMutex(mutex_);
+  used_[target] = ++clock_;
+  return target;
+}
+
+HANDLE ANGLESurfaceManager::Read() {
+  const auto start = std::chrono::steady_clock::now();
+  HANDLE handle;
+  {
+    std::lock_guard<std::mutex> lock(ring_mutex_);
+    if (taken_[0] != front_) {
+      taken_[1] = taken_[0];
+      taken_[0] = front_;
+      shown_++;
+    }
+    handle = handles_[front_];
+  }
   read_timing.Add(std::chrono::steady_clock::now() - start);
+  return handle;
 }
 
-void ANGLESurfaceManager::PrepareCopySync() {
-  copy_sync_ready_ = true;
-  Microsoft::WRL::ComPtr<ID3D11Device5> device;
-  if (SUCCEEDED(d3d_11_device_->QueryInterface(IID_PPV_ARGS(&device))) &&
-      SUCCEEDED(
-          d3d_11_device_context_->QueryInterface(IID_PPV_ARGS(&copy_context_))) &&
-      SUCCEEDED(device->CreateFence(0, D3D11_FENCE_FLAG_NONE,
-                                    IID_PPV_ARGS(&copy_fence_)))) {
-    copy_event_ = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (copy_event_ != nullptr) {
-      copy_sync_ = "fence";
-      return;
-    }
-  }
-  copy_fence_.Reset();
-  copy_context_.Reset();
-  auto desc = D3D11_QUERY_DESC{D3D11_QUERY_EVENT, 0};
-  d3d_11_device_->CreateQuery(&desc, &copy_query_);
-  copy_sync_ = copy_query_ != nullptr ? "query" : "none";
-}
-
-void ANGLESurfaceManager::WaitForCopy() {
-  if (!copy_sync_ready_) {
-    PrepareCopySync();
-  }
-  const auto start = std::chrono::steady_clock::now();
-  const auto deadline = ::GetTickCount64() + 50;
-  bool late = false;
-  if (copy_fence_ != nullptr) {
-    const auto value = ++copy_value_;
-    copy_context_->Signal(copy_fence_.Get(), value);
-    d3d_11_device_context_->Flush();
-    // The event can still be set by a wait that gave up earlier, so the
-    // fence itself says when this copy is done.
-    while (copy_fence_->GetCompletedValue() < value) {
-      const auto now = ::GetTickCount64();
-      if (now >= deadline ||
-          FAILED(copy_fence_->SetEventOnCompletion(value, copy_event_)) ||
-          ::WaitForSingleObject(copy_event_,
-                                static_cast<DWORD>(deadline - now)) ==
-              WAIT_FAILED) {
-        late = copy_fence_->GetCompletedValue() < value;
-        break;
-      }
-    }
-  } else if (copy_query_ != nullptr) {
-    d3d_11_device_context_->End(copy_query_.Get());
-    d3d_11_device_context_->Flush();
-    BOOL done = FALSE;
-    HRESULT state;
-    while ((state = d3d_11_device_context_->GetData(
-                copy_query_.Get(), &done, sizeof(done), 0)) == S_FALSE &&
-           ::GetTickCount64() < deadline) {
-      std::this_thread::yield();
-    }
-    late = state == S_FALSE;
-  } else {
-    d3d_11_device_context_->Flush();
-  }
-  if (late) {
-    late_++;
-  }
-  wait_timing_.Add(std::chrono::steady_clock::now() - start);
-}
-
-std::string ANGLESurfaceManager::TakeSyncStats() {
-  return std::string("sync=") + copy_sync_ + " " + wait_timing_.Take("wait") +
-         " late=" + std::to_string(late_.exchange(0));
+std::string ANGLESurfaceManager::TakeFrameStats() {
+  return "frames=" + std::to_string(drawn_.exchange(0)) + "/" +
+         std::to_string(shown_.exchange(0));
 }
 
 void ANGLESurfaceManager::MakeCurrent(bool value) {
   if (value) {
-    eglMakeCurrent(display_, surface_, surface_, context_);
+    eglMakeCurrent(display_, surfaces_[0], surfaces_[0], context_);
   } else {
     eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
   }
@@ -178,9 +135,16 @@ void ANGLESurfaceManager::Create() {
     throw std::runtime_error("Unable to create ANGLE EGL surface.");
     return;
   }
-  if (internal_handle_ == nullptr || handle_ == nullptr) {
-    throw std::runtime_error("Unable to retrieve Direct3D shared HANDLE.");
-    return;
+  for (auto handle : handles_) {
+    if (handle == nullptr) {
+      throw std::runtime_error("Unable to retrieve Direct3D shared HANDLE.");
+    }
+  }
+  std::lock_guard<std::mutex> lock(ring_mutex_);
+  front_ = 0;
+  taken_[0] = taken_[1] = -1;
+  for (auto& used : used_) {
+    used = 0;
   }
 }
 
@@ -188,9 +152,11 @@ void ANGLESurfaceManager::CleanUp(bool release_context) {
   if (display_ != EGL_NO_DISPLAY) {
     MakeCurrent(false);
   }
-  if (surface_ != EGL_NO_SURFACE) {
-    eglDestroySurface(display_, surface_);
-    surface_ = EGL_NO_SURFACE;
+  for (auto& surface : surfaces_) {
+    if (surface != EGL_NO_SURFACE) {
+      eglDestroySurface(display_, surface);
+      surface = EGL_NO_SURFACE;
+    }
   }
   if (release_context) {
     if (display_ != EGL_NO_DISPLAY && context_ != EGL_NO_CONTEXT) {
@@ -202,15 +168,6 @@ void ANGLESurfaceManager::CleanUp(bool release_context) {
     }
     display_ = EGL_NO_DISPLAY;
     // Release D3D device & context if the instance is being destroyed.
-    copy_query_ = nullptr;
-    copy_fence_.Reset();
-    copy_context_.Reset();
-    if (copy_event_ != nullptr) {
-      ::CloseHandle(copy_event_);
-      copy_event_ = nullptr;
-    }
-    copy_value_ = 0;
-    copy_sync_ready_ = false;
     if (d3d_11_device_context_) {
       d3d_11_device_context_->Release();
       d3d_11_device_context_ = nullptr;
@@ -221,10 +178,10 @@ void ANGLESurfaceManager::CleanUp(bool release_context) {
     }
   }
   // Release D3D 11 texture(s).
-  internal_d3d_11_texture_2D_.Reset();
-  d3d_11_texture_2D_.Reset();
-  internal_handle_ = nullptr;
-  handle_ = nullptr;
+  for (auto i = 0; i < kBuffers; i++) {
+    textures_[i].Reset();
+    handles_[i] = nullptr;
+  }
 }
 
 bool ANGLESurfaceManager::CreateD3DTexture() {
@@ -290,33 +247,19 @@ bool ANGLESurfaceManager::CreateD3DTexture() {
   d3d11_texture2D_desc.CPUAccessFlags = 0;
   d3d11_texture2D_desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 
-  // The general idea is to create two textures, one that is used to |Draw|
-  // using ANGLE & another one that is used for |Read| the rendered content
-  // using |handle|.
-  // The internal texture is copied to the public texture once a frame is
-  // requested using |ID3D11DeviceContext::CopyResource|. This prevents any kind
-  // of synchronization issues.
-
-  // Internal.
-  auto hr = d3d_11_device_->CreateTexture2D(&d3d11_texture2D_desc, nullptr,
-                                            &internal_d3d_11_texture_2D_);
-  CHECK_HRESULT("ID3D11Device::CreateTexture2D");
-  auto resource = Microsoft::WRL::ComPtr<IDXGIResource>{};
-  hr = internal_d3d_11_texture_2D_.As(&resource);
-  CHECK_HRESULT("ID3D11Texture2D::As");
-  // Retrieve the shared |HANDLE| for interop.
-  hr = resource->GetSharedHandle(&internal_handle_);
-  CHECK_HRESULT("IDXGIResource::GetSharedHandle");
-
-  // External.
-  hr = d3d_11_device_->CreateTexture2D(&d3d11_texture2D_desc, nullptr,
-                                       &d3d_11_texture_2D_);
-  CHECK_HRESULT("ID3D11Device::CreateTexture2D");
-  hr = d3d_11_texture_2D_.As(&resource);
-  CHECK_HRESULT("ID3D11Texture2D::As");
-  // Retrieve the shared |HANDLE| for interop.
-  hr = resource->GetSharedHandle(&handle_);
-  CHECK_HRESULT("IDXGIResource::GetSharedHandle");
+  // Lumtub: the ring of textures ANGLE draws into and Flutter samples
+  // through their shared |HANDLE|s.
+  for (auto i = 0; i < kBuffers; i++) {
+    auto hr = d3d_11_device_->CreateTexture2D(&d3d11_texture2D_desc, nullptr,
+                                              &textures_[i]);
+    CHECK_HRESULT("ID3D11Device::CreateTexture2D");
+    auto resource = Microsoft::WRL::ComPtr<IDXGIResource>{};
+    hr = textures_[i].As(&resource);
+    CHECK_HRESULT("ID3D11Texture2D::As");
+    // Retrieve the shared |HANDLE| for interop.
+    hr = resource->GetSharedHandle(&handles_[i]);
+    CHECK_HRESULT("IDXGIResource::GetSharedHandle");
+  }
 
   return true;
 }
@@ -376,11 +319,13 @@ bool ANGLESurfaceManager::CreateAndBindEGLSurface() {
       EGL_TEXTURE_TARGET, EGL_TEXTURE_2D, EGL_TEXTURE_FORMAT, EGL_TEXTURE_RGBA,
       EGL_NONE,
   };
-  surface_ = eglCreatePbufferFromClientBuffer(
-      display_, EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE, internal_handle_,
-      config_, buffer_attributes);
-  if (surface_ == EGL_NO_SURFACE) {
-    FAIL("eglCreatePbufferFromClientBuffer");
+  for (auto i = 0; i < kBuffers; i++) {
+    surfaces_[i] = eglCreatePbufferFromClientBuffer(
+        display_, EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE, handles_[i], config_,
+        buffer_attributes);
+    if (surfaces_[i] == EGL_NO_SURFACE) {
+      FAIL("eglCreatePbufferFromClientBuffer");
+    }
   }
   // libmpv renders to the pbuffer directly; no GL sampling texture is needed.
   return true;

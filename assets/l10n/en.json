@@ -2272,5 +2272,19 @@
   "跟随提示词": "As the prompt says",
   "这个视频讲解了新引擎的工作原理。": "This video explains how the new engine works.",
   " 句": " lines",
-  "例如 http://localhost:1188/translate": "e.g. http://localhost:1188/translate"
+  "例如 http://localhost:1188/translate": "e.g. http://localhost:1188/translate",
+  "下一句": "Next line",
+  "搜索字幕": "Search subtitles",
+  "字幕列表": "Subtitle list",
+  "回到当前这句": "Back to the current line",
+  "复制当前字幕 (Ctrl+C)": "Copy current subtitle (Ctrl+C)",
+  "点一句跳过去；A / D 上一句、下一句，R 重听": "Click a line to jump there; A / D previous or next line, R replays",
+  "复制": "Copy",
+  "已复制字幕": "Subtitle copied",
+  "复制当前字幕": "Copy the current subtitle",
+  "这条字幕无法列出": "This subtitle can't be listed",
+  "上一句或下一句字幕": "Previous or next subtitle line",
+  "重听这一句": "Replay this line",
+  "先打开一条字幕": "Turn on a subtitle first",
+  "上一句": "Previous line"
 }

@@ -8,16 +8,27 @@ import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleKind, SubtitleOption;
 import '../subtitle_translation.dart';
 import 'player_panel.dart';
+import 'subtitle_list_panel.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
 /// above it (双语字幕) on the right, as PiliNara's `_SubtitleSelectPanel`
 /// has them. A choice applies at once and the panel stays open; a track
 /// chosen on one side is greyed out on the other.
-Future<void> showSubtitlePanel(BuildContext context, AppController controller, Player player, {required VoidCallback onSettings}) => showPlayerPanel(
+Future<void> showSubtitlePanel(BuildContext context, AppController controller, Player player, {required VoidCallback onSettings, VoidCallback? onList}) => showPlayerPanel(
       context,
       title: tr('字幕'),
       width: 560,
       actions: [
+        Builder(
+          builder: (inner) => IconButton(
+            tooltip: tr('字幕列表'),
+            onPressed: () {
+              Navigator.of(inner).pop();
+              onList != null ? onList() : unawaited(showSubtitleList(context, controller, player));
+            },
+            icon: const Icon(Icons.notes_rounded),
+          ),
+        ),
         Builder(
           builder: (context) => TextButton.icon(
             onPressed: () {

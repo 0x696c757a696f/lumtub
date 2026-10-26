@@ -196,6 +196,17 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('字幕列表 opens from 更多设置 and asks for a subtitle first', (tester) async {
+    await pump(tester);
+    await tester.tap(find.byTooltip('更多设置'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('字幕列表'), 200, scrollable: find.byType(Scrollable).last);
+    await tester.tap(find.text('字幕列表'));
+    await tester.pumpAndSettle();
+    expect(find.text('先打开一条字幕'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the speed menu uses the speeds from settings', (tester) async {
     await pump(tester);
     await tester.tap(find.text('1X'));

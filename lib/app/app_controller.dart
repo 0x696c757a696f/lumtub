@@ -63,6 +63,7 @@ import '../faith_topics.dart';
 import '../storyboard.dart';
 import '../stream_resolver.dart';
 import '../subtitle_files.dart';
+import '../subtitle_cues.dart';
 import '../subtitle_translation.dart';
 import '../translation.dart';
 import '../translation_cache.dart';
@@ -1625,6 +1626,49 @@ class AppController extends ChangeNotifier {
       rethrow;
     }
   }
+
+  (String, List<SubtitleCue>)? _cues;
+
+  /// The lines of the main subtitle, for 字幕列表: read from the file the
+  /// track came from, ours or the one mpv was given. Empty when there is
+  /// no subtitle or it is not WebVTT or SRT.
+  Future<List<SubtitleCue>> mainSubtitleCues() async {
+    final player = this.player;
+    final platform = player?.platform;
+    if (player == null || platform is! NativePlayer) return const [];
+    final track = player.state.track.subtitle;
+    if (track.id == 'no' || track.id == 'auto') return const [];
+    final key = '${playing?.id}\u0000${track.id}\u0000${track.title}';
+    if (_cues case (final k, final cues) when k == key) return cues;
+    String? text;
+    try {
+      final option = details?.subtitles.where((o) => o.label == track.title).firstOrNull;
+      if (option != null) {
+        text = await File(await _subtitleFile(option)).readAsString();
+      } else {
+        final list = jsonDecode(await platform.getProperty('track-list'));
+        final entry = list is List ? list.whereType<Map>().where((t) => t['type'] == 'sub' && '${t['id']}' == track.id).firstOrNull : null;
+        final source = entry?['external-filename'];
+        if (source is String && source.startsWith(RegExp('https?://'))) {
+          final response = await _http.get(Uri.parse(source)).timeout(const Duration(seconds: 20));
+          if (response.statusCode == 200) text = utf8.decode(response.bodyBytes, allowMalformed: true);
+        } else if (source is String && await File(source).exists()) {
+          text = await File(source).readAsString();
+        }
+      }
+    } catch (e) {
+      logInfo('Could not read the subtitle lines: $e');
+    }
+    final cues = text == null ? const <SubtitleCue>[] : parseSubtitleCues(text);
+    if (cues.isNotEmpty) _cues = (key, cues);
+    return cues;
+  }
+
+  /// The text of the subtitles on screen now, main and second.
+  String get currentSubtitleText => [
+        for (final line in player?.state.subtitle ?? const <String>[])
+          if (line.trim().isNotEmpty) line.trim(),
+      ].join('\n');
 
   /// Shows [option], adding it to the player first if it is not loaded.
   Future<void> showSubtitle(SubtitleOption option) async {

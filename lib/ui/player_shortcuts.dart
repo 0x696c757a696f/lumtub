@@ -27,6 +27,9 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) => [
       (', / .', tr('暂停时逐帧后退或前进')),
       ('0 - 9', tr('跳到视频的 0% - 90%')),
       ('Home / End', tr('跳到开头或结尾')),
+      ('A / D', tr('上一句或下一句字幕')),
+      ('R', tr('重听这一句')),
+      ('Ctrl + C', tr('复制当前字幕')),
       ('T', tr('剧场模式')),
       ('S', tr('截图')),
       ('I', tr('显示或隐藏播放统计')),
@@ -78,6 +81,22 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     unawaited(platform.command([forward ? 'frame-step' : 'frame-back-step']).catchError((_) {}));
     onFeedback?.call(forward ? Icons.skip_next_rounded : Icons.skip_previous_rounded, forward ? tr('下一帧') : tr('上一帧'));
   }
+  // Line by line through the main subtitle, as Language Reactor's A and D.
+  void subtitleStep(int skip) {
+    final platform = player.platform;
+    if (platform is! NativePlayer || player.state.track.subtitle.id == 'no') return;
+    unawaited(platform.command(['sub-seek', '$skip']).catchError((_) {}));
+    onFeedback?.call(
+      skip < 0 ? Icons.skip_previous_rounded : skip > 0 ? Icons.skip_next_rounded : Icons.replay_rounded,
+      skip < 0 ? tr('上一句') : skip > 0 ? tr('下一句') : tr('重听这一句'),
+    );
+  }
+  void copySubtitle() {
+    final text = controller.currentSubtitleText;
+    if (text.isEmpty) return;
+    unawaited(Clipboard.setData(ClipboardData(text: text)));
+    onFeedback?.call(Icons.content_copy_rounded, tr('已复制字幕'));
+  }
   void previous() {
     if (controller.hasPrevious) unawaited(controller.playPrevious());
   }
@@ -97,6 +116,10 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     const SingleActivator(LogicalKeyboardKey.bracketRight): next,
     const SingleActivator(LogicalKeyboardKey.keyP, shift: true): previous,
     const SingleActivator(LogicalKeyboardKey.keyT): () => theaterMode.value = !theaterMode.value,
+    const SingleActivator(LogicalKeyboardKey.keyA): () => subtitleStep(-1),
+    const SingleActivator(LogicalKeyboardKey.keyD): () => subtitleStep(1),
+    const SingleActivator(LogicalKeyboardKey.keyR): () => subtitleStep(0),
+    const SingleActivator(LogicalKeyboardKey.keyC, control: true): copySubtitle,
     if (onScreenshot != null) const SingleActivator(LogicalKeyboardKey.keyS): onScreenshot,
     const SingleActivator(LogicalKeyboardKey.space): playOrPause,
     const SingleActivator(LogicalKeyboardKey.keyK): playOrPause,

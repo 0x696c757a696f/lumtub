@@ -1,8 +1,13 @@
+import 'native_core.dart';
+
 /// A guess from the script alone at whether text is in a language already,
 /// so 翻译 can skip it without asking a service. Latin-script languages
 /// cannot be told apart this way and are never skipped, except English
-/// text for English.
-bool looksLike(String text, String target) {
+/// text for English. The native core decides when it is there.
+bool looksLike(String text, String target) => NativeCore.instance?.looksLike(text, target) ?? dartLooksLike(text, target);
+
+/// [looksLike] without the native core.
+bool dartLooksLike(String text, String target) {
   final letters = text.runes.where(_isLetter).toList();
   if (letters.length < 2) return false;
   int count(bool Function(int) test) => letters.where(test).length;

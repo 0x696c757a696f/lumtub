@@ -16,6 +16,7 @@ import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
@@ -36,6 +37,7 @@ import 'pages/settings_sections.dart' show trimSpeed, qualityLabel;
 import 'pages/settings_subpages.dart';
 import 'player_shortcuts.dart';
 import 'player_panel.dart';
+import 'subtitle_list_panel.dart';
 import 'subtitle_panel.dart';
 import 'player_stats.dart';
 import 'screenshot_action.dart';
@@ -587,7 +589,13 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   Future<void> _openSubtitles(BuildContext context) async {
     _menuOpened();
-    await showSubtitlePanel(context, _controller, _player, onSettings: () => openSubtitleSettings(context, _controller));
+    await showSubtitlePanel(context, _controller, _player, onSettings: () => openSubtitleSettings(context, _controller), onList: () => unawaited(_openSubtitleList(context)));
+    _menuClosed();
+  }
+
+  Future<void> _openSubtitleList(BuildContext context) async {
+    _menuOpened();
+    await showSubtitleList(context, _controller, _player);
     _menuClosed();
   }
 
@@ -721,6 +729,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       ),
       PanelHeading(tr('工具')),
       PanelLink(label: tr('截图 (S)'), detail: tr('保存到“图片\\Lumtub”并复制'), icon: Icons.photo_camera_outlined, opens: false, onTap: () => closeThen(() => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)))),
+      PanelLink(label: tr('字幕列表'), detail: tr('点一句跳过去；A / D 上一句、下一句，R 重听'), icon: Icons.notes_rounded, onTap: () => closeThen(() => unawaited(_openSubtitleList(context)))),
+      PanelLink(
+        label: tr('复制当前字幕 (Ctrl+C)'),
+        icon: Icons.content_copy_rounded,
+        opens: false,
+        onTap: () {
+          final text = _controller.currentSubtitleText;
+          if (text.isEmpty) return;
+          unawaited(Clipboard.setData(ClipboardData(text: text)));
+          closeThen(() => _showFeedback(Icons.content_copy_rounded, tr('已复制字幕')));
+        },
+      ),
       PanelLink(label: tr('重载视频'), detail: tr('从当前位置重新加载'), icon: Icons.refresh_rounded, opens: false, onTap: () => closeThen(() => unawaited(_controller.reloadVideo()))),
       PanelLink(label: tr('快捷键'), icon: Icons.keyboard_outlined, onTap: () => showShortcutHelp(context, _controller.preferences)),
     ]);

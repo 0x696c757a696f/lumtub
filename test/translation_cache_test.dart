@@ -50,6 +50,12 @@ void main() {
   });
 
   test('guesses text already in the target language from its script', () {
+    for (final guess in [looksLike, dartLooksLike]) {
+      expect(guess('这个视频真不错，学到了', 'zh-CN'), isTrue);
+      expect(guess('這個視頻真不錯，學到了', 'zh-TW'), isTrue);
+      expect(guess('このビデオは本当に良かった', 'zh-CN'), isFalse);
+      expect(guess('This is a really great video, thanks!', 'en'), isTrue);
+    }
     expect(looksLike('这个视频真不错，学到了', 'zh-CN'), isTrue);
     expect(looksLike('這個視頻真不錯，學到了', 'zh-CN'), isFalse);
     expect(looksLike('這個視頻真不錯，學到了', 'zh-TW'), isTrue);

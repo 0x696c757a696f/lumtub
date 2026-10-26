@@ -31,6 +31,8 @@ class NativeCore {
         updateOffer = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_offer'),
         updateScript = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_update_script'),
         redact = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_redact'),
+        subtitleCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_subtitle_cues'),
+        _looksLike = library.lookupFunction<Bool Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_looks_like'),
         hashPrefix = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_hash_prefix'),
         sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
         dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
@@ -76,6 +78,12 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateOffer;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) updateScript;
   final Pointer<Utf8> Function(Pointer<Uint8> message, int length) redact;
+  /// A WebVTT or SRT file's lines as JSON `[[start_ms, end_ms, "text"], …]`.
+  final Pointer<Utf8> Function(Pointer<Uint8> source, int length) subtitleCues;
+  final bool Function(Pointer<Uint8> source, int length, Pointer<Uint8> target, int targetLength) _looksLike;
+
+  /// Whether [source] looks to be in [target] already, from its script.
+  bool looksLike(String source, String target) => withText(source, (s, sl) => withText(target, (t, tl) => _looksLike(s, sl, t, tl)));
   /// The first four hex digits of a video id's SHA-256.
   final Pointer<Utf8> Function(Pointer<Uint8> videoId, int length) hashPrefix;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) sponsorSegments;

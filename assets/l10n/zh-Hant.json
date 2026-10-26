@@ -1609,5 +1609,18 @@
   "无法下载封面，请检查网络或代理": "無法下載封面，請檢查網路或代理",
   "下载字幕": "下載字幕",
   "保存失败：{0}": "儲存失敗：{0}",
-  "下载封面": "下載封面"
+  "下载封面": "下載封面",
+  "例如 https://dns.example.com/dns-query": "例如 https://dns.example.com/dns-query",
+  "{0} 现在连不上（{1}），会先改用系统 DNS": "{0} 現在連不上（{1}），會先改用系統 DNS",
+  "请填写 https:// 开头的 DoH 地址": "請填寫 https:// 開頭的 DoH 位址",
+  "自定义 DoH 地址": "自訂 DoH 位址",
+  "当前：{0}。直连时用 DNS-over-HTTPS 查找网址，防止 DNS 被篡改；连不上时自动改用系统 DNS。开着代理时由代理解析，此项不起作用；和 Clash 的 TUN/fake-ip 模式一起用时请保持关闭": "目前：{0}。直連時用 DNS-over-HTTPS 查找網址，防止 DNS 被竄改；連不上時自動改用系統 DNS。開著代理時由代理解析，此項不起作用；和 Clash 的 TUN/fake-ip 模式一起用時請保持關閉",
+  "没有回应": "沒有回應",
+  "缺少原生核心": "缺少原生核心",
+  "{0} 可用：www.youtube.com → {1}，用时 {2} 毫秒": "{0} 可用：www.youtube.com → {1}，用時 {2} 毫秒",
+  "DNS DoH DNS-over-HTTPS Cloudflare Google Quad9 加密 污染": "DNS DoH DNS-over-HTTPS Cloudflare Google Quad9 加密 污染",
+  "关闭（使用系统 DNS）": "關閉（使用系統 DNS）",
+  "自定义…": "自訂…",
+  "加密 DNS": "加密 DNS",
+  "正在测试 {0}…": "正在測試 {0}…"
 }

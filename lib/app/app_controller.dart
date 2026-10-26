@@ -32,6 +32,7 @@ import '../appearance_settings.dart';
 import '../cache_manager.dart';
 import '../decoder_status.dart';
 import '../native_core.dart';
+import '../encrypted_dns.dart';
 import '../native_http.dart';
 import '../live_chat.dart';
 import '../models.dart';
@@ -746,7 +747,11 @@ class AppController extends ChangeNotifier {
     await _routeThroughBridge(next);
     appHttpOverrides.endpoint = proxyEndpoint;
     appHttpOverrides.useEnvironment = settings.proxyMode == ProxyMode.system;
-    NativeHttp.configure(proxy: nativeProxy(next.url), system: settings.proxyMode == ProxyMode.system);
+    NativeHttp.configure(
+      proxy: nativeProxy(next.url),
+      system: settings.proxyMode == ProxyMode.system,
+      dns: DnsServer.of(settings.dnsServer, settings.dnsCustomUrl),
+    );
     if (next.url != proxy.url) logInfo(next.url == null ? 'Network: direct connection' : 'Network: using proxy ${next.redacted}');
     proxy = next;
     final player = this.player;
@@ -2986,7 +2991,12 @@ class AppController extends ChangeNotifier {
     final ignoredOptions = await PlayerOptionApplicator.apply(player, next);
     await store.save(next);
     _update(() => settings = next);
-    if (next.proxyMode != oldSettings.proxyMode || next.proxyAddress != oldSettings.proxyAddress) await _refreshProxy();
+    if (next.proxyMode != oldSettings.proxyMode ||
+        next.proxyAddress != oldSettings.proxyAddress ||
+        next.dnsServer != oldSettings.dnsServer ||
+        next.dnsCustomUrl != oldSettings.dnsCustomUrl) {
+      await _refreshProxy();
+    }
     _update(() {
       final paths = this.paths;
       final cacheManager = _cacheManager;

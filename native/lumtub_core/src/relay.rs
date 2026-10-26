@@ -79,7 +79,7 @@ impl Web {
             Some(p) => Some(ureq::Proxy::new(p).map_err(|e| e.to_string())?),
             None => None,
         };
-        let agent: ureq::Agent = ureq::Agent::config_builder()
+        let config = ureq::Agent::config_builder()
             .http_status_as_error(false)
             .proxy(proxy_config)
             // The system's certificate store, as libmpv and the rest of the app
@@ -94,8 +94,9 @@ impl Web {
             .timeout_connect(Some(Duration::from_secs(15)))
             .timeout_recv_response(Some(Duration::from_secs(20)))
             .timeout_recv_body(Some(Duration::from_secs(120)))
-            .build()
-            .into();
+            .build();
+        // 加密 DNS, when it is on, finds YouTube's stream servers too.
+        let agent = ureq::Agent::with_parts(config, ureq::unversioned::transport::DefaultConnector::default(), crate::dns::BlockingResolver);
         agents.insert(proxy.clone(), agent.clone());
         Ok(agent)
     }

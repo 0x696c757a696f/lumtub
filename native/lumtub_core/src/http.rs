@@ -101,6 +101,9 @@ struct Settings {
     /// or the `*_PROXY` variables) instead of connecting directly.
     #[serde(default)]
     system: bool,
+    /// 加密 DNS for direct connections.
+    #[serde(default)]
+    dns: crate::dns::Settings,
 }
 
 fn build(settings: &Settings) -> reqwest::Client {
@@ -118,6 +121,9 @@ fn build(settings: &Settings) -> reqwest::Client {
         None if !settings.system => builder = builder.no_proxy(),
         None => {}
     }
+    if let Some(doh) = crate::dns::current() {
+        builder = builder.dns_resolver(std::sync::Arc::new(crate::dns::Resolver(doh)));
+    }
     builder.build().unwrap_or_else(|_| reqwest::Client::new())
 }
 
@@ -129,7 +135,11 @@ static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
         .build()
         .expect("HTTP runtime")
 });
-static CLIENT: LazyLock<RwLock<reqwest::Client>> = LazyLock::new(|| RwLock::new(build(&Settings { proxy: None, system: true })));
+pub(crate) fn runtime() -> &'static Runtime {
+    &RUNTIME
+}
+
+static CLIENT: LazyLock<RwLock<reqwest::Client>> = LazyLock::new(|| RwLock::new(build(&Settings { proxy: None, system: true, dns: Default::default() })));
 static RUNNING: LazyLock<Mutex<HashMap<i64, AbortHandle>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[derive(Deserialize)]
@@ -236,7 +246,8 @@ pub unsafe extern "C" fn lumtub_http_init(post: PostCObject) {
     *POST.write().unwrap_or_else(|e| e.into_inner()) = Some(post);
 }
 
-/// Sets the proxy from JSON `{"proxy": "socks5://…" | null, "system": bool}`;
+/// Sets the proxy and 加密 DNS from JSON `{"proxy": "socks5://…" | null,
+/// "system": bool, "dns": {"url", "bootstrap"}}`;
 /// connections already open finish on the old route.
 ///
 /// # Safety
@@ -244,6 +255,7 @@ pub unsafe extern "C" fn lumtub_http_init(post: PostCObject) {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_http_configure(json: *const u8, length: usize) {
     let settings: Settings = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
+    crate::dns::set(settings.dns.clone());
     *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = build(&settings);
 }
 

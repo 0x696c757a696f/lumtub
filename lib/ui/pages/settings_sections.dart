@@ -13,6 +13,7 @@ import '../../app_log.dart';
 import '../../app_preferences.dart';
 import '../../appearance_settings.dart';
 import '../../decoder_status.dart';
+import '../../encrypted_dns.dart';
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
@@ -467,6 +468,32 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ),
           );
         }, subtitle: tr('proxy 代理 Clash v2rayN 系统代理 http-proxy')),
+        SettingEntry(tr('加密 DNS'), (context) => NormalItem(
+              title: tr('加密 DNS'),
+              subtitle: tr('当前：{0}。直连时用 DNS-over-HTTPS 查找网址，防止 DNS 被篡改；连不上时自动改用系统 DNS。开着代理时由代理解析，此项不起作用；和 Clash 的 TUN/fake-ip 模式一起用时请保持关闭', [DnsServer.label(settings.dnsServer, settings.dnsCustomUrl)]),
+              leading: _icon(Icons.dns_outlined),
+              onTap: () => pickFromDialog<String>(
+                context,
+                title: tr('加密 DNS'),
+                value: settings.dnsServer,
+                values: [
+                  ('', DnsServer.label('', '')),
+                  for (final server in DnsServer.presets) (server.id, server.name),
+                  (DnsServer.custom, tr('自定义…')),
+                ],
+                onSelected: (id) async {
+                  var custom = settings.dnsCustomUrl;
+                  if (id == DnsServer.custom) {
+                    final url = await _editDnsUrl(context, custom);
+                    if (url == null) return;
+                    custom = url;
+                  }
+                  await controller.saveSettings(settings.copyWith(dnsServer: id, dnsCustomUrl: custom));
+                  final server = DnsServer.of(id, custom);
+                  if (server != null && context.mounted) await _testDns(context, server);
+                },
+              ),
+            ), subtitle: tr('DNS DoH DNS-over-HTTPS Cloudflare Google Quad9 加密 污染')),
         SettingEntry(tr('缓冲模式'), (context) => NormalItem(
               title: tr('缓冲模式'),
               subtitle: tr('当前：{0}。只使用内存，不写入磁盘', [labelOf(_cacheModes, settings.cacheMode)]),
@@ -1128,6 +1155,37 @@ Future<void> editRelayServer(BuildContext context, AppController controller, Rel
   await controller.saveSettings(piped
       ? settings.copyWith(playbackSource: PlaybackSource.pipedCustom, pipedServer: server)
       : settings.copyWith(playbackSource: PlaybackSource.invidiousCustom, invidiousServer: server));
+}
+
+Future<String?> _editDnsUrl(BuildContext context, String current) async {
+  final text = await showDialog<String>(
+    context: context,
+    builder: (context) => TextEditDialog(
+      title: tr('自定义 DoH 地址'),
+      initialText: current,
+      hintText: tr('例如 https://dns.example.com/dns-query'),
+      helper: (text) {
+        final colors = context.colors;
+        final url = DnsServer.normalize(text);
+        return Text(url == null ? tr('请填写 https:// 开头的 DoH 地址') : tr('将使用 {0}', [url]), style: TextStyle(fontSize: 12, color: url == null ? colors.error : colors.outline));
+      },
+    ),
+  );
+  return text == null ? null : DnsServer.normalize(text);
+}
+
+/// Looks www.youtube.com up over [server] and says how it went.
+Future<void> _testDns(BuildContext context, DnsServer server) async {
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.showSnackBar(SnackBar(content: Text(tr('正在测试 {0}…', [server.name])), duration: const Duration(seconds: 10)));
+  final result = await testDnsServer(server);
+  messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(SnackBar(
+    content: Text(result.ok
+        ? tr('{0} 可用：www.youtube.com → {1}，用时 {2} 毫秒', [server.name, result.addresses.take(2).join('、'), result.milliseconds])
+        : tr('{0} 现在连不上（{1}），会先改用系统 DNS', [server.name, result.error])),
+    duration: const Duration(seconds: 6),
+  ));
 }
 
 Future<void> _editProxy(BuildContext context, AppController controller) async {

@@ -14,6 +14,7 @@ pub mod socks;
 pub mod subtitles;
 pub mod system_proxy;
 pub mod hashes;
+pub mod dns;
 pub mod http;
 pub mod hw_decode;
 pub mod posts;
@@ -26,5 +27,5 @@ pub mod update;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    13
+    14
 }

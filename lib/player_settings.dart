@@ -335,6 +335,10 @@ class PlayerSettings {
   final ProxyMode proxyMode;
   /// The proxy for [ProxyMode.custom], such as `127.0.0.1:7890`.
   final String proxyAddress;
+  /// 加密 DNS: a [DnsServer] id, `custom` for [dnsCustomUrl], or `''` for
+  /// the system resolver.
+  final String dnsServer;
+  final String dnsCustomUrl;
   /// Where playback streams come from: YouTube directly by default.
   final PlaybackSource playbackSource;
   /// The Piped API server for [PlaybackSource.pipedCustom].
@@ -406,6 +410,8 @@ class PlayerSettings {
     this.libassSubtitles = false,
     this.proxyMode = ProxyMode.system,
     this.proxyAddress = '',
+    this.dnsServer = '',
+    this.dnsCustomUrl = '',
     this.playbackSource = PlaybackSource.youtube,
     this.pipedServer = '',
     this.invidiousServer = '',
@@ -472,6 +478,8 @@ class PlayerSettings {
     bool? libassSubtitles,
     ProxyMode? proxyMode,
     String? proxyAddress,
+    String? dnsServer,
+    String? dnsCustomUrl,
     PlaybackSource? playbackSource,
     String? pipedServer,
     String? invidiousServer,
@@ -530,6 +538,8 @@ class PlayerSettings {
         libassSubtitles: libassSubtitles ?? this.libassSubtitles,
         proxyMode: proxyMode ?? this.proxyMode,
         proxyAddress: proxyAddress ?? this.proxyAddress,
+        dnsServer: dnsServer ?? this.dnsServer,
+        dnsCustomUrl: dnsCustomUrl ?? this.dnsCustomUrl,
         playbackSource: playbackSource ?? this.playbackSource,
         pipedServer: pipedServer ?? this.pipedServer,
         invidiousServer: invidiousServer ?? this.invidiousServer,
@@ -590,6 +600,8 @@ class PlayerSettings {
         'libassSubtitles': libassSubtitles,
         'proxyMode': proxyMode.name,
         'proxyAddress': proxyAddress,
+        'dnsServer': dnsServer,
+        'dnsCustomUrl': dnsCustomUrl,
         'playbackSourceV2': playbackSource.name,
         'pipedServer': pipedServer,
         'invidiousServer': invidiousServer,
@@ -754,6 +766,8 @@ class PlayerSettings {
       libassSubtitles: raw['libassSubtitles'] == true,
       proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),
       proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
+      dnsServer: raw['dnsServer']?.toString() ?? '',
+      dnsCustomUrl: raw['dnsCustomUrl']?.toString() ?? '',
       // V2: the default became direct YouTube (2026-10-21); the old key held
       // the old default for everyone who never chose.
       playbackSource: _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),

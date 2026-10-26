@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:http/http.dart' as http;
 
+import 'encrypted_dns.dart';
 import 'native_core.dart';
 import 'network_proxy.dart';
 
@@ -54,10 +55,11 @@ abstract final class NativeHttp {
 
   /// Routes new connections through [proxy] (`http://…` or `socks5://…`);
   /// with none, through the system's proxy when [system], else directly.
-  static void configure({String? proxy, bool system = false}) {
+  /// [dns] looks names up for direct connections instead of the system.
+  static void configure({String? proxy, bool system = false, DnsServer? dns}) {
     final native = _native;
     if (native == null) return;
-    final bytes = utf8.encode(jsonEncode({'proxy': proxy, 'system': system}));
+    final bytes = utf8.encode(jsonEncode({'proxy': proxy, 'system': system, 'dns': dns?.toJson() ?? const {}}));
     _withBytes(bytes, (p, n) => native.configure(p, n));
   }
 

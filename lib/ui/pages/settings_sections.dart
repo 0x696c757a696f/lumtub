@@ -649,6 +649,19 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.autoFullscreen,
               onChanged: (v) => savePrefs(prefs.copyWith(autoFullscreen: v)),
             )),
+        SettingEntry(tr('播放时自动关灯'), (context) => SwitchItem(
+              title: tr('播放时自动关灯'),
+              subtitle: tr('视频播放时调暗视频以外的界面，暂停时恢复'),
+              leading: _icon(Icons.lightbulb_outline_rounded),
+              value: prefs.autoLightsOff,
+              onChanged: (v) => savePrefs(prefs.copyWith(autoLightsOff: v)),
+            ), subtitle: tr('影院模式')),
+        SettingEntry(tr('关灯暗度'), (context) => NormalItem(
+              title: tr('关灯暗度'),
+              subtitle: tr('关灯后视频以外变暗 {0}%', [prefs.lightsOffDim]),
+              leading: _icon(Icons.dark_mode_outlined),
+              onTap: () => pickWithSlider(context, title: tr('关灯暗度'), value: prefs.lightsOffDim.toDouble(), min: 50, max: 98, divisions: 48, suffix: '%', onSelected: (v) => savePrefs(prefs.copyWith(lightsOffDim: v.round()))),
+            ), subtitle: tr('影院模式')),
         SettingEntry(tr('自动退出全屏'), (context) => SwitchItem(
               title: tr('自动退出全屏'),
               subtitle: tr('视频播放结束、没有下一个时退出全屏'),

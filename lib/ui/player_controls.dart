@@ -44,6 +44,7 @@ import 'subtitle_style_panel.dart';
 import 'player_stats.dart';
 import 'screenshot_action.dart';
 import 'storyboard_preview.dart';
+import 'lights_off.dart';
 import 'theater_mode.dart';
 import 'video_box.dart';
 import 'video_aspect.dart';
@@ -266,6 +267,14 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     // One step per notch, however the wheel's glide is split up.
     if (event is! PointerScrollEvent || SmoothWheel.isFollowUp(event)) return;
     final up = event.scrollDelta.dy < 0;
+    // Ctrl + wheel steps through 倍速选项, as Enhancer for YouTube does.
+    if (HardwareKeyboard.instance.isControlPressed) {
+      final speed = nextSpeed(_controller.settings.speeds, _player.state.rate, up ? 1 : -1);
+      if (speed == null) return;
+      unawaited(_player.setRate(speed));
+      _showFeedback(up ? Icons.fast_forward_rounded : Icons.slow_motion_video_rounded, '${trimSpeed(speed)}X');
+      return;
+    }
     // The left half of the player sets the brightness, the right the volume.
     if (_onLeft(event.localPosition)) {
       _brighten(up ? _brightnessStep : -_brightnessStep);
@@ -597,6 +606,17 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           if (on) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tip, child: Icon(icon, color: Theme.of(context).colorScheme.inversePrimary, size: 17))),
         if (_controller.sleepAt != null || _controller.sleepAfterCurrent)
           Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Tooltip(message: tr('定时关闭已开启'), child: Icon(Icons.bedtime_outlined, color: Colors.white, size: 18))),
+        if (!fullscreen)
+          ValueListenableBuilder(
+            valueListenable: lightsOff,
+            builder: (context, off, _) => _IconButton(
+              tooltip: off ? tr('开灯 (B)') : tr('关灯 (B)'),
+              icon: off ? Icons.lightbulb_rounded : Icons.lightbulb_outline_rounded,
+              size: 19,
+              active: off,
+              onTap: () => lightsOff.value = !off,
+            ),
+          ),
         _IconButton(
           tooltip: tr('投屏'),
           icon: _controller.cast.active ? Icons.cast_connected_rounded : Icons.cast_rounded,

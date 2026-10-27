@@ -8,6 +8,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/player_settings.dart';
+import 'package:lumtub/ui/lights_off.dart';
 import 'package:lumtub/ui/pip_view.dart';
 import 'package:lumtub/ui/player_controls.dart';
 import 'package:lumtub/ui/theme.dart';
@@ -300,6 +301,33 @@ void main() {
     expect(controller.brightness, 5);
     await tester.pump(const Duration(seconds: 2));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Ctrl + wheel steps the speed instead of the volume', (tester) async {
+    await pump(tester);
+    player.state = player.state.copyWith(volume: 50, rate: 1);
+    final controls = tester.getRect(find.byType(PlayerControls));
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    tester.binding.handlePointerEvent(PointerScrollEvent(position: controls.centerRight - const Offset(100, 0), scrollDelta: const Offset(0, -100)));
+    await tester.pump();
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    expect(player.state.rate, greaterThan(1));
+    expect(player.state.volume, 50);
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the lights button toggles 关灯', (tester) async {
+    await pump(tester);
+    lightsOff.value = false;
+    await tester.tap(find.byType(PlayerControls), warnIfMissed: false);
+    await tester.pump();
+    await tester.tap(find.byTooltip('关灯 (B)'));
+    await tester.pump();
+    expect(lightsOff.value, isTrue);
+    expect(find.byTooltip('开灯 (B)'), findsOneWidget);
+    lightsOff.value = false;
+    await tester.pump(const Duration(seconds: 4));
   });
 
   testWidgets('a touch shows the lock, and locked taps do nothing', (tester) async {

@@ -77,6 +77,8 @@ class AppPreferences {
     this.resumePlayback = true,
     this.watchLaterAutoRemove = true,
     this.autoFullscreen = false,
+    this.autoLightsOff = false,
+    this.lightsOffDim = 85,
     this.miniPlayer = true,
     this.exitFullscreenOnEnd = false,
     this.pauseOnMinimize = false,
@@ -167,6 +169,10 @@ class AppPreferences {
   /// Take a video off 稍后观看 once it was played to the end.
   final bool watchLaterAutoRemove;
   final bool autoFullscreen;
+  /// 关灯 while the video plays, lights on when it pauses.
+  final bool autoLightsOff;
+  /// How dark 关灯 makes the rest of the window, in percent.
+  final int lightsOffDim;
   /// Leaving the watch page keeps the video in the in-app mini player
   /// (ui/mini_player.dart) instead of stopping it.
   final bool miniPlayer;
@@ -335,6 +341,8 @@ class AppPreferences {
     bool? resumePlayback,
     bool? watchLaterAutoRemove,
     bool? autoFullscreen,
+    bool? autoLightsOff,
+    int? lightsOffDim,
     bool? miniPlayer,
     bool? exitFullscreenOnEnd,
     bool? pauseOnMinimize,
@@ -397,6 +405,8 @@ class AppPreferences {
         resumePlayback: resumePlayback ?? this.resumePlayback,
         watchLaterAutoRemove: watchLaterAutoRemove ?? this.watchLaterAutoRemove,
         autoFullscreen: autoFullscreen ?? this.autoFullscreen,
+        autoLightsOff: autoLightsOff ?? this.autoLightsOff,
+        lightsOffDim: lightsOffDim ?? this.lightsOffDim,
         miniPlayer: miniPlayer ?? this.miniPlayer,
         exitFullscreenOnEnd: exitFullscreenOnEnd ?? this.exitFullscreenOnEnd,
         pauseOnMinimize: pauseOnMinimize ?? this.pauseOnMinimize,
@@ -460,6 +470,8 @@ class AppPreferences {
         'resumePlayback': resumePlayback,
         'watchLaterAutoRemove': watchLaterAutoRemove,
         'autoFullscreen': autoFullscreen,
+        'autoLightsOff': autoLightsOff,
+        'lightsOffDim': lightsOffDim,
         'miniPlayer': miniPlayer,
         'exitFullscreenOnEnd': exitFullscreenOnEnd,
         'pauseOnMinimize': pauseOnMinimize,
@@ -557,6 +569,8 @@ class AppPreferences {
       resumePlayback: flag('resumePlayback', d.resumePlayback),
       watchLaterAutoRemove: flag('watchLaterAutoRemove', d.watchLaterAutoRemove),
       autoFullscreen: flag('autoFullscreen', d.autoFullscreen),
+      autoLightsOff: flag('autoLightsOff', d.autoLightsOff),
+      lightsOffDim: number('lightsOffDim', 85, 50, 98),
       miniPlayer: flag('miniPlayer', d.miniPlayer),
       exitFullscreenOnEnd: flag('exitFullscreenOnEnd', d.exitFullscreenOnEnd),
       pauseOnMinimize: flag('pauseOnMinimize', d.pauseOnMinimize),

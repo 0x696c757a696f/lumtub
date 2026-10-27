@@ -5,6 +5,7 @@ import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/main.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/ui/lights_off.dart';
 import 'package:lumtub/ui/mini_player.dart';
 import 'package:lumtub/ui/theme.dart';
 
@@ -277,6 +278,11 @@ void main() {
     controller.enterMini();
     await tester.pump();
     expect(find.byType(MiniPlayer), findsOneWidget);
+    // 关灯 is for the watch page only, not the pages under the mini player.
+    lightsOff.value = true;
+    await tester.pump();
+    expect(find.byType(LightsOffLayer), findsNothing);
+    lightsOff.value = false;
 
     controller.stopWatching();
     await tester.pump();

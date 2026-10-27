@@ -2410,5 +2410,14 @@
   "A 点 {0}，再按一次设置 B 点": "Point A {0}; press again to set point B",
   "已取消 A-B 循环": "A-B loop off",
   "（也试过 {0}）": " (also tried {0})",
-  "视频原语言": "Video's own language"
+  "视频原语言": "Video's own language",
+  "关灯": "Lights off",
+  "开灯 (B)": "Lights on (B)",
+  "关灯 (B)": "Lights off (B)",
+  "Ctrl + 滚轮": "Ctrl + wheel",
+  "播放时自动关灯": "Lights off while playing",
+  "视频播放时调暗视频以外的界面，暂停时恢复": "Dims everything but the video while it plays, back when paused",
+  "影院模式": "Cinema mode",
+  "关灯暗度": "Lights-off darkness",
+  "关灯后视频以外变暗 {0}%": "Everything but the video goes {0}% dark"
 }

@@ -14,6 +14,7 @@ import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
 import '../cast_ui.dart';
 import '../common.dart';
+import '../lights_off.dart';
 import '../linked_text.dart';
 import '../player_controls.dart';
 import '../player_shortcuts.dart';
@@ -47,6 +48,27 @@ class _WatchPageState extends State<WatchPage> {
   static const _sidePanelWidth = 400.0;
   final _video = GlobalKey<VideoState>();
   String? _fullscreenFor;
+  StreamSubscription<bool>? _playing;
+
+  @override
+  void initState() {
+    super.initState();
+    final player = widget.controller.player;
+    _playing = player?.stream.playing.listen(_autoLights);
+    // The shell above is building now, so its 关灯 layer changes after.
+    if (player != null) WidgetsBinding.instance.addPostFrameCallback((_) => _autoLights(player.state.playing));
+  }
+
+  @override
+  void dispose() {
+    unawaited(_playing?.cancel());
+    super.dispose();
+  }
+
+  /// 播放时自动关灯: dark while the video plays, lit while it is paused.
+  void _autoLights(bool playing) {
+    if (mounted && widget.controller.preferences.autoLightsOff) lightsOff.value = playing;
+  }
 
   /// Enters fullscreen once per video when 自动全屏 is on.
   void _autoFullscreen(AppController controller) {
@@ -285,6 +307,7 @@ class _Player extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AspectRatio(
+        key: lightsOffHole,
         aspectRatio: 16 / 9,
         child: ClipRRect(
           borderRadius: AppStyle.cardRadius,

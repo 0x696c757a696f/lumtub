@@ -668,8 +668,16 @@ class _UpNext extends StatelessWidget {
 }
 
 /// Flutter's subtitle view styled from 字幕设置, or hidden when libmpv draws
-/// the subtitles (see AppController's player setup).
-SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings) {
+/// the subtitles (see AppController's player setup). The text follows the
+/// size of the video; a small window, such as picture in picture, passes
+/// [smallWindow] with its size, which keeps the text readable and shrinks
+/// the gap below it.
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow}) {
+  // The view scales by area against 1080p, which makes the text tiny in a
+  // small window; there it goes by the short side, and no smaller than
+  // three fifths.
+  final textScaler = smallWindow == null ? null : TextScaler.linear((smallWindow.shortestSide / 720).clamp(0.6, 1.0));
+  final paddingScale = smallWindow == null ? 1.0 : (smallWindow.shortestSide / 720).clamp(0.3, 1.0);
   if (settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
   TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
@@ -694,6 +702,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings) {
     style: style(settings.subtitleFont, settings.subtitleScale, settings.subtitleColor, settings.subtitleOpacity),
     secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
     // sub-pos counts from the top; 100 is the bottom edge.
-    padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + (100 - settings.subtitlePosition) * 4.0),
+    textScaler: textScaler,
+    padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );
 }

@@ -77,7 +77,8 @@ class _PipViewState extends State<PipView> {
   Widget build(BuildContext context) {
     final player = _controller.player!;
     final scale = (MediaQuery.sizeOf(context).shortestSide / 280).clamp(0.6, 2.0);
-    final subtitles = subtitleViewFor(_controller.settings);
+    // The same subtitles as the player's, sized for the small window.
+    final subtitles = subtitleViewFor(_controller.settings, smallWindow: MediaQuery.sizeOf(context));
     return CallbackShortcuts(
       bindings: {
         ...playerShortcuts(_controller, () => null),
@@ -100,11 +101,7 @@ class _PipViewState extends State<PipView> {
                 child: Video(
                   controller: _controller.videoController!,
                   controls: NoVideoControls,
-                  subtitleViewConfiguration: SubtitleViewConfiguration(
-                    visible: subtitles.visible,
-                    style: subtitles.style.copyWith(fontSize: 14 * scale),
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                  ),
+                  subtitleViewConfiguration: subtitles,
                 ),
               ),
               // Press and move to drag the window; double-click to go back.

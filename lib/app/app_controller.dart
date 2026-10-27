@@ -2495,16 +2495,26 @@ class AppController extends ChangeNotifier {
     if (item == null) throw TranslationException(tr('没有正在播放的视频'));
     if (_summaries[item.id] case final done?) return done;
     final ai = aiServiceFor(preferences.translation, translationKeys, _http);
-    if (ai == null) throw TranslationException(tr('请先在“翻译服务”里设置 AI 接口和密钥'));
+    if (ai == null) throw TranslationException(tr('请先在“翻译与 AI”里设置 AI 接口和密钥'));
     final subtitles = details?.subtitles ?? const <SubtitleOption>[];
     final option = originalSubtitle(subtitles, language: details?.language) ?? subtitles.firstOrNull;
-    if (option == null) throw TranslationException(tr('这个视频没有字幕，无法总结'));
-    final source = await File(await _subtitleFile(option)).readAsString();
-    final transcript = await summaryTranscript(source);
     final title = details?.title.isNotEmpty == true ? details!.title : item.title;
-    final summary = await summarizeTranscript(ai, title, transcript, onProgress: onProgress);
+    final String summary;
+    if (option == null) {
+      // No subtitles, not even YouTube's automatic ones: the description
+      // and chapters are all there is to go on.
+      final description = details?.description ?? '';
+      final chapters = [for (final c in details?.chapters ?? const <Chapter>[]) (start: c.start, title: c.title)];
+      if (!canSummarizeDescription(description, chapters)) throw TranslationException(tr('这个视频没有字幕，简介也太短，无法总结'));
+      summary = await summarizeDescription(ai, title, description, chapters);
+      logInfo('Summarized ${item.id} from its description');
+    } else {
+      final source = await File(await _subtitleFile(option)).readAsString();
+      final transcript = await summaryTranscript(source);
+      summary = await summarizeTranscript(ai, title, transcript, onProgress: onProgress);
+      logInfo('Summarized ${item.id} from ${transcript.chunks.length} part(s)');
+    }
     if (_summaries.length >= 30) _summaries.remove(_summaries.keys.first);
-    logInfo('Summarized ${item.id} from ${transcript.chunks.length} part(s)');
     return _summaries[item.id] = summary;
   }
 

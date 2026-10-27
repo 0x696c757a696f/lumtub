@@ -62,3 +62,27 @@ Future<String> summarizeTranscript(AiTranslator ai, String title, SummaryTranscr
   final note = transcript.cut ? '\n\n(The transcript was too long; only its first part is covered.)' : '';
   return _clean(await ai.complete(system, 'Title: $title\n\nNotes on each part of the transcript, in order:\n${notes.join('\n')}$note'));
 }
+
+String _clock(Duration time) {
+  final s = time.inSeconds;
+  final (h, m, r) = (s ~/ 3600, s ~/ 60 % 60, s % 60);
+  return h > 0 ? '$h:${'$m'.padLeft(2, '0')}:${'$r'.padLeft(2, '0')}' : '$m:${'$r'.padLeft(2, '0')}';
+}
+
+/// Whether a video without subtitles still says enough about itself, in
+/// its description and chapters, to be summarized.
+bool canSummarizeDescription(String description, List<({Duration start, String title})> chapters) =>
+    chapters.length >= 2 || description.trim().length >= 200;
+
+/// The summary of a video without subtitles, from its [description] and
+/// [chapters] only, opening with a line that says so.
+Future<String> summarizeDescription(AiTranslator ai, String title, String description, List<({Duration start, String title})> chapters) async {
+  final system = 'You summarize a YouTube video that has no transcript, from its title, description and chapter list only. Write in $summaryLanguage. '
+      'Start with one or two sentences on what the video is likely about. Then, if there are chapters, list them as short bullets starting with "- ", '
+      'each beginning with its time in square brackets, like [12:34]; otherwise list the main points the description makes. '
+      'Use only what is given, say nothing about what is not there, and do not add a heading or a closing remark.';
+  final text = description.length > 6000 ? description.substring(0, 6000) : description;
+  final list = chapters.isEmpty ? '' : '\n\nChapters:\n${[for (final c in chapters) '[${_clock(c.start)}] ${c.title}'].join('\n')}';
+  final summary = _clean(await ai.complete(system, 'Title: $title\n\nDescription:\n$text$list'));
+  return '${tr('这个视频没有字幕，以下只根据标题、简介和章节整理，可能不完整。')}\n\n$summary';
+}

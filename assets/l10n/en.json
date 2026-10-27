@@ -2496,5 +2496,8 @@
   "请先填写 AI 接口的地址、模型和密钥": "Fill in the AI interface address, model and key first",
   "AI 翻译": "AI translation",
   "只在你点“翻译”、开启字幕翻译或使用 AI 总结时，把文字发给所选服务": "Text is sent to the chosen service only when you click Translate, turn on subtitle translation or use AI summary",
-  "AI 翻译和 AI 总结共用这一个接口，支持 OpenAI 兼容的 /chat/completions。只在你使用 AI 翻译或点“AI 总结”时才发送文字。": "AI translation and AI summary share this one interface (OpenAI-compatible /chat/completions). Text is sent only when you use AI translation or click AI summary."
+  "AI 翻译和 AI 总结共用这一个接口，支持 OpenAI 兼容的 /chat/completions。只在你使用 AI 翻译或点“AI 总结”时才发送文字。": "AI translation and AI summary share this one interface (OpenAI-compatible /chat/completions). Text is sent only when you use AI translation or click AI summary.",
+  "这个视频没有字幕，以下只根据标题、简介和章节整理，可能不完整。": "This video has no subtitles. This summary uses only the title, description and chapters, so it may be incomplete.",
+  "这个视频没有字幕，简介也太短，无法总结": "This video has no subtitles and its description is too short to summarize",
+  "请先在“翻译与 AI”里设置 AI 接口和密钥": "Set up the AI interface and key under Translation & AI first"
 }

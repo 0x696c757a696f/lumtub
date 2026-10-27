@@ -115,6 +115,23 @@ void main() {
       expect(progress.last.$1, progress.last.$2 - 1);
     });
 
+    test('a video without subtitles is summarized from its description and chapters', () async {
+      String? asked;
+      final client = MockClient((request) async {
+        final messages = (jsonDecode(request.body) as Map)['messages'] as List;
+        asked = (messages.last as Map)['content'] as String;
+        return _reply('- [1:05] Setup');
+      });
+      final ai = AiTranslator(client, baseUrl: 'https://ai.example/v1', key: 'k', model: 'm', prompt: '');
+      final chapters = [(start: Duration.zero, title: 'Intro'), (start: const Duration(seconds: 65), title: 'Setup')];
+      expect(canSummarizeDescription('short', const []), isFalse);
+      expect(canSummarizeDescription('short', chapters), isTrue);
+      final summary = await summarizeDescription(ai, 'Title', 'About the video', chapters);
+      expect(asked, contains('[1:05] Setup'));
+      expect(summary, startsWith('这个视频没有字幕'));
+      expect(summary, endsWith('- [1:05] Setup'));
+    });
+
     test('needs an AI service with its key, except a local one', () {
       final client = MockClient((_) async => _reply(''));
       expect(aiServiceFor(const TranslationConfig(aiPreset: 'openai'), const {}, client), isNull);

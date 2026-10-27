@@ -1,7 +1,7 @@
 name: lumtub
 description: A lightweight native Windows YouTube player built with Flutter and libmpv.
 publish_to: none
-version: 0.2.6+8
+version: 0.2.7+9
 
 environment:
   sdk: '>=3.6.0 <4.0.0'

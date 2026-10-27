@@ -48,6 +48,20 @@ class DecoderStatus {
 
   static bool _validHwdec(String? value) => value != null && RegExp(r'^[a-z0-9_-]{1,40}$').hasMatch(value);
 
+  /// The `video-crop` that keeps a hardware decoder's padding off the
+  /// picture. Decoders hand over frames padded to whole blocks (1080 rows
+  /// arrive as 1088), and the scaler, sampling a few rows past the edge,
+  /// draws the padding as a green line along the bottom or right. A few
+  /// rows off each padded edge keeps it out on every platform; empty is no
+  /// crop.
+  static String paddingCrop(int width, int height, {required bool hardware}) {
+    const margin = 4;
+    if (!hardware || width <= 64 || height <= 64) return '';
+    final w = width % 64 == 0 ? width : width - margin;
+    final h = height % 64 == 0 ? height : height - margin;
+    return w == width && h == height ? '' : '${w}x$h+0+0';
+  }
+
   /// Normalises libmpv's `video-codec` description to a tracked codec key.
   static String? codecKey(String videoCodec) {
     final codec = videoCodec.toLowerCase();

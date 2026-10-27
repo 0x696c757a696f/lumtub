@@ -2535,6 +2535,5 @@
   "音频太大，语音识别接口不接受": "The audio is too large for the speech recognition service",
   "视频较长，需要 ffmpeg 才能分段识别（和下载用的是同一个）。": "This video is long and needs ffmpeg (the same one downloads use) to be recognized in parts.",
   "ffmpeg 没装好，无法分段识别": "ffmpeg was not installed, so the audio cannot be split",
-  "安装 ffmpeg 并继续": "Install ffmpeg and continue",
-  "此项即 mpv 的 --d3d11va-zero-copy，只对 d3d11va 有效；其他解码器选不带 -copy 的模式即为零拷贝。开启后 1080p 等视频的底边可能出现一条绿线，看到就关掉": "mpv's --d3d11va-zero-copy, for d3d11va only; with other decoders, a mode without -copy is zero-copy. It can draw a green line along the bottom of 1080p and similar videos; turn it off if you see one"
+  "安装 ffmpeg 并继续": "Install ffmpeg and continue"
 }

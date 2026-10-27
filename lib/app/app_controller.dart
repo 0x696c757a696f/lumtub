@@ -3684,6 +3684,14 @@ class AppController extends ChangeNotifier {
         currentHwdec = decoder.label;
         if (normalized != null) decodeStates = {...decodeStates, normalized: decoder};
       });
+      final width = int.tryParse(await platform.getProperty('video-params/w')) ?? 0;
+      final height = int.tryParse(await platform.getProperty('video-params/h')) ?? 0;
+      final crop = DecoderStatus.paddingCrop(width, height, hardware: decoder.kind == DecoderKind.hardware);
+      if (crop != _paddingCrop) {
+        _paddingCrop = crop;
+        await platform.setProperty('video-crop', crop);
+        if (crop.isNotEmpty) logInfo('Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
+      }
       if (normalized != null) {
         settings = settings.copyWith(decoderResults: decodeStates);
         unawaited(_settingsStore?.save(settings));
@@ -3701,6 +3709,9 @@ class AppController extends ChangeNotifier {
       _update(() => currentHwdec = tr('尚未验证'));
     }
   }
+
+  /// The `video-crop` last set, so an unchanged one is not set again.
+  String _paddingCrop = '';
 
   /// Logs playback timing when frames are being dropped, at most once a
   /// minute, so the log shows why a video stutters.

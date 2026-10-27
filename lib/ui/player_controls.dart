@@ -39,6 +39,7 @@ import 'player_shortcuts.dart';
 import 'player_panel.dart';
 import 'subtitle_list_panel.dart';
 import 'subtitle_panel.dart';
+import 'subtitle_style_panel.dart';
 import 'player_stats.dart';
 import 'screenshot_action.dart';
 import 'storyboard_preview.dart';
@@ -601,7 +602,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   Future<void> _openSubtitles(BuildContext context) async {
     _menuOpened();
-    await showSubtitlePanel(context, _controller, _player, onSettings: () => openSubtitleSettings(context, _controller), onList: () => unawaited(_openSubtitleList(context)));
+    await showSubtitlePanel(context, _controller, _player, onSettings: () => unawaited(showSubtitleStylePanel(context, _controller)), onList: () => unawaited(_openSubtitleList(context)));
     _menuClosed();
   }
 

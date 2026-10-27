@@ -88,3 +88,34 @@ Duration _time(String text) {
 }
 
 String _unescape(String text) => text.replaceAll('&nbsp;', ' ').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&');
+
+/// A line of the main subtitle with what the second subtitle says while it
+/// is spoken.
+typedef PairedCue = ({SubtitleCue cue, String? second});
+
+/// Each of [main]'s cues with the [second] cues that overlap it most of
+/// their own length, so a second line lands beside one main line only.
+List<PairedCue> pairSubtitleCues(List<SubtitleCue> main, List<SubtitleCue> second) {
+  final out = <PairedCue>[];
+  var from = 0;
+  final taken = List.filled(second.length, false);
+  for (final cue in main) {
+    while (from < second.length && second[from].end <= cue.start) {
+      from++;
+    }
+    final lines = <String>[];
+    for (var j = from; j < second.length && second[j].start < cue.end; j++) {
+      if (taken[j]) continue;
+      final other = second[j];
+      final overlap = (other.end < cue.end ? other.end : cue.end) - (other.start > cue.start ? other.start : cue.start);
+      final length = other.end - other.start;
+      // A second line belongs where most of it is spoken.
+      if (overlap * 2 >= length || overlap >= const Duration(seconds: 1)) {
+        lines.add(other.text);
+        taken[j] = true;
+      }
+    }
+    out.add((cue: cue, second: lines.isEmpty ? null : lines.join(' ')));
+  }
+  return out;
+}

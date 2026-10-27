@@ -1778,44 +1778,57 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  (String, List<SubtitleCue>)? _cues;
+  final _cues = <String, List<SubtitleCue>>{};
 
-  /// The lines for 字幕列表: of the main subtitle, or of the second one
-  /// while it is the only one on. Read from the file the track came from,
-  /// ours or the one mpv was given. Empty when there is no subtitle or it
-  /// is not WebVTT or SRT.
-  Future<List<SubtitleCue>> listedSubtitleCues() async {
+  /// The lines for 字幕列表: of the main subtitle, each with the second
+  /// subtitle's words spoken at the same time, or of the second one while
+  /// it is the only one on. Read from the file the track came from, ours or
+  /// the one mpv was given. Empty when there is no subtitle or it is not
+  /// WebVTT or SRT.
+  Future<List<PairedCue>> listedSubtitleCues() async {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return const [];
     final track = player.state.track.subtitle;
     final off = track.id == 'no' || track.id == 'auto';
-    // With only the second subtitle on, its lines are listed.
-    final second = off ? secondarySubtitle : null;
-    if (off && second == null) return const [];
-    final key = second != null ? '${playing?.id}\u0000second\u0000${second.url}' : '${playing?.id}\u0000${track.id}\u0000${track.title}';
-    if (_cues case (final k, final cues) when k == key) return cues;
+    final second = secondarySubtitle;
+    final secondCues = second == null ? const <SubtitleCue>[] : await _optionCues(second);
+    if (off) return pairSubtitleCues(secondCues, const []);
+    return pairSubtitleCues(await _trackCues(platform, track), secondCues);
+  }
+
+  Future<List<SubtitleCue>> _optionCues(SubtitleOption option) => _cached('${playing?.id}\u0000${option.url}', () async => File(await _subtitleFile(option)).readAsString());
+
+  Future<List<SubtitleCue>> _trackCues(NativePlayer platform, SubtitleTrack track) {
+    final option = details?.subtitles.where((o) => o.label == track.title).firstOrNull;
+    if (option != null) return _optionCues(option);
+    return _cached('${playing?.id}\u0000${track.id}\u0000${track.title}', () async {
+      final list = jsonDecode(await platform.getProperty('track-list'));
+      final entry = list is List ? list.whereType<Map>().where((t) => t['type'] == 'sub' && '${t['id']}' == track.id).firstOrNull : null;
+      final source = entry?['external-filename'];
+      if (source is String && source.startsWith(RegExp('https?://'))) {
+        final response = await _http.get(Uri.parse(source)).timeout(const Duration(seconds: 20));
+        if (response.statusCode == 200) return utf8.decode(response.bodyBytes, allowMalformed: true);
+      } else if (source is String && await File(source).exists()) {
+        return File(source).readAsString();
+      }
+      return null;
+    });
+  }
+
+  Future<List<SubtitleCue>> _cached(String key, Future<String?> Function() read) async {
+    if (_cues[key] case final cues?) return cues;
     String? text;
     try {
-      final option = second ?? details?.subtitles.where((o) => o.label == track.title).firstOrNull;
-      if (option != null) {
-        text = await File(await _subtitleFile(option)).readAsString();
-      } else {
-        final list = jsonDecode(await platform.getProperty('track-list'));
-        final entry = list is List ? list.whereType<Map>().where((t) => t['type'] == 'sub' && '${t['id']}' == track.id).firstOrNull : null;
-        final source = entry?['external-filename'];
-        if (source is String && source.startsWith(RegExp('https?://'))) {
-          final response = await _http.get(Uri.parse(source)).timeout(const Duration(seconds: 20));
-          if (response.statusCode == 200) text = utf8.decode(response.bodyBytes, allowMalformed: true);
-        } else if (source is String && await File(source).exists()) {
-          text = await File(source).readAsString();
-        }
-      }
+      text = await read();
     } catch (e) {
       logInfo('Could not read the subtitle lines: $e');
     }
     final cues = text == null ? const <SubtitleCue>[] : parseSubtitleCues(text);
-    if (cues.isNotEmpty) _cues = (key, cues);
+    if (cues.isNotEmpty) {
+      if (_cues.length >= 4) _cues.remove(_cues.keys.first);
+      _cues[key] = cues;
+    }
     return cues;
   }
 
@@ -3145,6 +3158,11 @@ class AppController extends ChangeNotifier {
           : tr('已保存；此 libmpv 不支持：{0}。', [ignoredOptions.join(', ')]);
     });
   }
+
+  /// Shows [next] at once without saving or touching libmpv, while a
+  /// slider of the subtitle style panel moves; [saveSettings] follows when
+  /// it is let go.
+  void previewSettings(PlayerSettings next) => _update(() => settings = next);
 
   /// Sets one libmpv property without saving, for live previews such as
   /// the picture sliders.

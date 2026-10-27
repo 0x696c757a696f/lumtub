@@ -142,3 +142,31 @@ class GoogleTranslator implements Translator {
     return chunks;
   }
 }
+
+/// [text] in [target], translating only the lines not already in it, so a
+/// comment written in two languages gets its foreign half translated
+/// instead of coming back unchanged. [isTarget] tells which lines are.
+/// Lines are sent together in one request.
+Future<String> translateForeignLines(Translator translator, String text, String target, bool Function(String line) isTarget) async {
+  final lines = text.split('\n');
+  final foreign = [
+    for (final (i, line) in lines.indexed)
+      if (line.trim().isNotEmpty && !isTarget(line)) i,
+  ];
+  if (foreign.isEmpty || foreign.length == lines.where((l) => l.trim().isNotEmpty).length) return translator.translate(text, target);
+  final translated = (await translator.translate([for (final i in foreign) lines[i]].join('\n'), target)).split('\n');
+  final out = [...lines];
+  if (translated.length == foreign.length) {
+    for (final (k, i) in foreign.indexed) {
+      out[i] = translated[k];
+    }
+  } else {
+    // The service joined or split lines: its text stands where the first
+    // foreign line was.
+    out[foreign.first] = translated.join('\n');
+    for (final i in foreign.skip(1).toList().reversed) {
+      out.removeAt(i);
+    }
+  }
+  return out.join('\n');
+}

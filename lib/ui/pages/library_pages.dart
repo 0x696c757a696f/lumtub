@@ -630,6 +630,7 @@ class PlaylistsPage extends StatelessWidget {
 
   /// The account's playlists on YouTube, read with the TV-code sign-in.
   List<Widget> _youtubePlaylists(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => controller.ensureTvPlaylists());
     final lists = [
       PlaylistResult(id: YoutubeTvFeed.watchLaterId, title: tr('稍后观看')),
       ...controller.tvPlaylists,
@@ -714,7 +715,7 @@ class _PlaylistCard extends StatelessWidget {
               borderRadius: AppStyle.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
                 if (thumbnailUrl case final url? when items.isEmpty)
-                  Image.network(url, fit: BoxFit.cover, errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline)))
+                  Image(image: ResizeImage.resizeIfNeeded(480, null, NetworkImage(url)), fit: BoxFit.cover, errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline)))
                 else if (items.isEmpty)
                   ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline))
                 else

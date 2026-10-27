@@ -24,6 +24,7 @@ import 'pip_view.dart';
 import 'theme.dart';
 import 'video_card.dart';
 import '../l10n/l10n.dart';
+import 'frame_stats.dart';
 import 'motion.dart';
 
 const appName = 'Lumtub';
@@ -45,6 +46,7 @@ class _AppShellState extends State<AppShell> {
   StreamSubscription<DownloadTask>? _finished;
 
   AppController get _controller => widget.controller;
+  late final _frames = FrameStats.start(() => _controller.onWatchPage ? (_controller.mini ? 'mini player' : 'watch') : _controller.mode.name);
 
   static final _destinations = [
     (PageMode.home, Icons.home_outlined, Icons.home_rounded, tr('首页')),
@@ -58,6 +60,7 @@ class _AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
+    _frames;
     _notices = _controller.notices.listen((message) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     });
@@ -139,6 +142,7 @@ class _AppShellState extends State<AppShell> {
           child: ListenableBuilder(
             listenable: _controller,
             builder: (context, _) => LayoutBuilder(builder: (context, constraints) {
+              _frames.rebuilt();
               // Picture in picture shows the video alone.
               if (_controller.pip && _controller.playing != null && _controller.videoController != null) {
                 return PipView(controller: _controller);

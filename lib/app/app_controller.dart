@@ -535,9 +535,20 @@ class AppController extends ChangeNotifier {
       youtubeHistory?.dispose();
       youtubeHistory = null;
       tvPlaylists = const [];
-      if (signedIn) unawaited(loadTvPlaylists());
+      _tvPlaylistsRead = false;
+      // Signed in just now: YouTube's own suggestions join the feed.
+      if (signedIn && homeFeed != null) unawaited(refreshHomeFeed(force: true, keep: true));
     }
     notifyListeners();
+  }
+
+  bool _tvPlaylistsRead = false;
+
+  /// Reads the account's YouTube playlists the first time 播放列表 shows.
+  void ensureTvPlaylists() {
+    if (_tvPlaylistsRead || !(tvFeed?.available ?? false)) return;
+    _tvPlaylistsRead = true;
+    unawaited(loadTvPlaylists());
   }
 
   /// Reads the account's YouTube playlists again.
@@ -688,6 +699,9 @@ class AppController extends ChangeNotifier {
         final tv = tvSignIn = YoutubeTvSignIn(folder: directories.data.path)..addListener(_tvSignInChanged);
         comments.signIn = tv;
         tvFeed = YoutubeTvFeed(tv);
+        // Before the first home feed, which mixes in YouTube's own.
+        tv.load();
+        _tvWasSignedIn = tv.signedIn;
         this.player = player;
         videoController = controller;
         _outputSize = VideoOutputSize((width, height) => controller.setSize(width: width, height: height));
@@ -715,7 +729,6 @@ class AppController extends ChangeNotifier {
       });
       unawaited(downloads?.load());
       unawaited(account?.load());
-      tvSignIn?.load();
       _translationCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}translations.json'));
       _useTranslator();
       _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), DpapiProtector());

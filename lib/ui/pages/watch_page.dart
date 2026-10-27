@@ -535,9 +535,11 @@ class _ReplayChatPanel extends StatelessWidget {
         Padding(padding: const EdgeInsets.all(12), child: Text(tr(live ? '当前直播没有公开聊天' : '这个直播录像没有公开的聊天回放'), style: TextStyle(color: context.colors.onSurfaceVariant))),
     ];
     if (messages.isEmpty) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: header);
+    // The same widget for the same message, so a flush of new messages
+    // does not build the ones already shown again.
     Widget messageAt(int index) {
       final message = messages[index];
-      return _ReplayChatMessage(message: message, onSeek: message.offset == null ? null : () => controller.player?.seek(message.offset!));
+      return _chatRows[message] ??= _ReplayChatMessage(message: message, onSeek: message.offset == null ? null : () => controller.player?.seek(message.offset!));
     }
     if (shrinkWrap) {
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -555,6 +557,8 @@ class _ReplayChatPanel extends StatelessWidget {
     );
   }
 }
+
+final _chatRows = Expando<Widget>();
 
 class _ReplayChatMessage extends StatelessWidget {
   const _ReplayChatMessage({required this.message, this.onSeek});
@@ -592,7 +596,7 @@ class _ReplayChatMessage extends StatelessWidget {
                 child: Image.network(
                   message.stickerUrl!,
                   height: 56,
-                  cacheHeight: (56 * MediaQuery.of(context).devicePixelRatio).round(),
+                  cacheHeight: (56 * MediaQuery.devicePixelRatioOf(context)).round(),
                   errorBuilder: (context, error, stack) => const SizedBox.shrink(),
                 ),
               ),

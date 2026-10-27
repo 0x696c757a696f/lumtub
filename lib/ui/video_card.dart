@@ -526,16 +526,44 @@ class DurationBadge extends StatelessWidget {
 }
 
 /// Compact horizontal card for the up-next list on the watch page.
-class CompactVideoTile extends StatelessWidget {
+class CompactVideoTile extends StatefulWidget {
   const CompactVideoTile({super.key, required this.item, required this.onOpen, this.thumbnails});
   final VideoItem item;
   final VoidCallback onOpen;
   final Directory? thumbnails;
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(listenable: deArrow, builder: _tile);
+  State<CompactVideoTile> createState() => _CompactVideoTileState();
+}
 
-  Widget _tile(BuildContext context, Widget? _) {
+class _CompactVideoTileState extends State<CompactVideoTile> {
+  VideoItem get item => widget.item;
+  VoidCallback get onOpen => widget.onOpen;
+  Directory? get thumbnails => widget.thumbnails;
+
+  @override
+  void initState() {
+    super.initState();
+    deArrow.addListener(_branded);
+  }
+
+  @override
+  void dispose() {
+    deArrow.removeListener(_branded);
+    super.dispose();
+  }
+
+  /// As [VideoCard]: only a tile whose DeArrow branding changed builds again.
+  void _branded() {
+    if (mounted && _branding != _brandingNow()) setState(() {});
+  }
+
+  (String, Uri?) _brandingNow() => (deArrow.titleOf(item.id, item.title), deArrow.thumbnailOf(item.id));
+  (String, Uri?)? _branding;
+
+  @override
+  Widget build(BuildContext context) {
+    _branding = _brandingNow();
     final colors = context.colors;
     final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
     return InkWell(

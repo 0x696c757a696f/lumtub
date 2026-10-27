@@ -173,8 +173,7 @@ class AccountController extends ChangeNotifier {
       notice(tr('同步完成：{0} 个订阅（新增 {1} 个），{2} 个播放列表', [channels.length, added, mirrored.length]));
     } catch (e) {
       logError('YouTube sync failed', e);
-      error = '$e';
-      if (e is OAuthException && e.revoked) await signOut();
+      if (!(e is OAuthException && e.revoked)) error = '$e';
     } finally {
       syncing = false;
       notifyListeners();
@@ -303,7 +302,6 @@ class AccountController extends ChangeNotifier {
     logError(what, e);
     notice('$what：$e');
     notifyListeners();
-    if (e is OAuthException && e.revoked) unawaited(signOut());
   }
 
   YouTubeAccountApi get _api => YouTubeAccountApi(_client, _accessToken);
@@ -317,9 +315,23 @@ class AccountController extends ChangeNotifier {
     final refreshToken = _refreshToken;
     final config = client;
     if (refreshToken == null || config == null) throw OAuthException(tr('请先登录 Google 账号'));
-    final fresh = await GoogleAuth(config, _client).refresh(refreshToken);
-    _tokens = fresh;
-    return fresh.accessToken;
+    try {
+      final fresh = await GoogleAuth(config, _client).refresh(refreshToken);
+      _tokens = fresh;
+      return fresh.accessToken;
+    } on OAuthException catch (e) {
+      if (e.revoked && _refreshToken == refreshToken) unawaited(_expired());
+      rethrow;
+    }
+  }
+
+  /// Google no longer takes the saved sign-in: shown as signed out, with
+  /// why, rather than as signed in with nothing working.
+  Future<void> _expired() async {
+    logInfo('Google sign-in expired or was revoked');
+    await signOut();
+    error = tr('Google 登录已失效，请重新登录');
+    notifyListeners();
   }
 
   Future<void> _save() async {

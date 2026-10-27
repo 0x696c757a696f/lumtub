@@ -2542,5 +2542,6 @@
   "点踩": "Dislike",
   "取消点赞": "Remove like",
   "取消点踩": "Remove dislike",
-  "YouTube 不接受当前 Google 授权的这项操作": "YouTube doesn't accept this action with the current Google sign-in"
+  "YouTube 不接受当前 Google 授权的这项操作": "YouTube doesn't accept this action with the current Google sign-in",
+  "Google 登录已失效，请重新登录": "Google sign-in has expired. Please sign in again"
 }

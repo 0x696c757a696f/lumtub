@@ -193,4 +193,23 @@ void main() {
     expect(writes, isEmpty);
     expect(notices.single, contains('重新登录'));
   });
+
+  test('a sign-in Google no longer takes shows as signed out, saying so', () async {
+    await File('${dir.path}/google-client.json').writeAsString(jsonEncode(const OAuthClientConfig('1-a.apps.googleusercontent.com', 's').toJson()));
+    await SecureJsonFile(File('${dir.path}/google-account.bin'), _XorProtector()).write({'refresh_token': 'stale', 'name': 'n', 'scope': youtubeScope});
+    final account = AccountController(
+      clientFile: File('${dir.path}/google-client.json'),
+      credentials: SecureJsonFile(File('${dir.path}/google-account.bin'), _XorProtector()),
+      client: MockClient((request) async => request.url.path == '/token' ? http.Response('{"error":"invalid_grant"}', 400) : http.Response('', 200)),
+      library: library,
+      notice: (_) {},
+    );
+    await account.load();
+    expect(account.canWrite, isTrue);
+    await expectLater(account.accessToken(), throwsA(isA<OAuthException>()));
+    await pumpEventQueue();
+    expect(account.signedIn, isFalse);
+    expect(account.error, contains('重新登录'));
+    expect(await File('${dir.path}/google-account.bin').exists(), isFalse);
+  });
 }

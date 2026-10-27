@@ -166,15 +166,16 @@ class YoutubeComments {
   Future<CommentPage> _request(String endpoint, String token) async {
     final signedIn = await signedInHeaders();
     final response = await _post(endpoint, {'continuation': token}, signedIn);
-    if (signedIn.isNotEmpty && (response.statusCode == 401 || response.statusCode == 403)) {
-      _refuse(response.statusCode);
+    if (signedIn.isNotEmpty && response.statusCode >= 400 && response.statusCode < 500) {
+      refuse(response.statusCode);
       return _request(endpoint, token);
     }
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     return _readInBackground(response.bodyBytes);
   }
 
-  void _refuse(int status) {
+  /// Stops sending the sign-in after YouTube answered [status] to it.
+  void refuse(int status) {
     refused = true;
     logInfo('YouTube answered $status to the Google sign-in on InnerTube; comments load signed out');
   }
@@ -185,8 +186,8 @@ class YoutubeComments {
     final signedIn = await signedInHeaders();
     if (signedIn.isEmpty) throw StateError(tr('需要先登录 Google 账号'));
     final response = await _post('comment/perform_comment_action', {'actions': [action]}, signedIn);
-    if (response.statusCode == 401 || response.statusCode == 403) {
-      _refuse(response.statusCode);
+    if (response.statusCode >= 400 && response.statusCode < 500) {
+      refuse(response.statusCode);
       throw StateError(tr('YouTube 不接受当前 Google 授权的这项操作'));
     }
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));

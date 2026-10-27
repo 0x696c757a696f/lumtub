@@ -195,7 +195,7 @@ void main() {
     var refuse = false;
     final comments = YoutubeComments(MockClient((request) async {
       seen.add(request.headers['Authorization']);
-      if (refuse && request.headers['Authorization'] != null) return http.Response('', 401);
+      if (refuse && request.headers['Authorization'] != null) return http.Response('', 400);
       if (request.url.path.endsWith('perform_comment_action')) {
         expect(jsonDecode(request.body)['actions'], ['UNLIKE']);
         return http.Response('{}', 200);

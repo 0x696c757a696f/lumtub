@@ -104,8 +104,8 @@ class CommunityPosts {
           }),
         )
         .timeout(const Duration(seconds: 20));
-    if (signedIn.isNotEmpty && (response.statusCode == 401 || response.statusCode == 403)) {
-      signIn?.refused = true;
+    if (signedIn.isNotEmpty && response.statusCode >= 400 && response.statusCode < 500) {
+      signIn?.refuse(response.statusCode);
       return next(continuation);
     }
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));

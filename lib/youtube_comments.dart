@@ -147,7 +147,11 @@ class YoutubeComments {
   /// The first page of comments under [videoId], top comments first unless
   /// [newest].
   Future<CommentPage> video(String videoId, {bool newest = false}) async {
-    final header = await _request('next', videoSectionToken(videoId));
+    // Signed in, the TV app's own watch page names its comment section, as
+    // SmartTube reads it; the website's section token is built here.
+    final header = (await signedInHeaders()).isEmpty
+        ? await _request('next', {'continuation': videoSectionToken(videoId)})
+        : await _request('next', {'videoId': videoId}, fallback: {'continuation': videoSectionToken(videoId)});
     return _sorted(header, 'next', newest);
   }
 
@@ -160,36 +164,39 @@ class YoutubeComments {
     _clientVersion = clientVersion ?? _clientVersion;
     _visitorData = visitorData ?? _visitorData;
     if (token == null) throw FormatException(tr('这个帖子没有评论区，或评论已关闭'));
-    final header = await _request('browse', token);
+    final header = await _request('browse', {'continuation': token});
     return _sorted(header, 'browse', newest);
   }
 
   /// The next page after [token], or the replies a comment's
   /// [YoutubeComment.repliesToken] names. [post] says whether the token came
   /// from a community post.
-  Future<CommentPage> more(String token, {bool post = false}) => _request(post ? 'browse' : 'next', token);
+  Future<CommentPage> more(String token, {bool post = false}) => _request(post ? 'browse' : 'next', {'continuation': token});
 
   /// The first page is only the header; the sort order's token loads the
   /// comments themselves.
   Future<CommentPage> _sorted(CommentPage header, String endpoint, bool newest) async {
     final token = newest ? header.newestToken ?? header.topToken : header.topToken;
     if (token == null) return header;
-    final page = await _request(endpoint, token);
+    final page = await _request(endpoint, {'continuation': token});
     return CommentPage(page.comments, page.continuation, count: header.count, topToken: header.topToken, newestToken: header.newestToken);
   }
 
-  Future<CommentPage> _request(String endpoint, String token) async {
-    final signedIn = await signedInHeaders();
-    final response = await _post(endpoint, {'continuation': token}, signedIn);
+  /// Posts [body] to [endpoint], signed in when there is a sign-in YouTube
+  /// takes; when it does not, posts [fallback] (or [body]) signed out.
+  Future<CommentPage> _request(String endpoint, Map<String, Object?> body, {Map<String, Object?>? fallback, bool signedOut = false}) async {
+    final signedIn = signedOut ? const <String, String>{} : await signedInHeaders();
+    final response = await _post(endpoint, signedIn.isEmpty ? fallback ?? body : body, signedIn);
     if (signedIn.isNotEmpty && response.statusCode >= 400 && response.statusCode < 500) {
       refuse(response.statusCode, response.body);
-      return _request(endpoint, token);
+      return _request(endpoint, fallback ?? body);
     }
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     final page = await _readInBackground(response.bodyBytes);
     if (signedIn.isNotEmpty && page.comments.isEmpty && page.continuation == null && page.topToken == null && page.count.isEmpty) {
-      refuse(200, response.body);
-      return _request(endpoint, token);
+      final start = response.body.replaceAll(RegExp(r'\s+'), ' ');
+      logInfo('The TV app was answered no comments; trying signed out · ${start.length > 300 ? start.substring(0, 300) : start}');
+      return _request(endpoint, fallback ?? body, signedOut: true);
     }
     return page;
   }
@@ -198,7 +205,7 @@ class YoutubeComments {
   void refuse(int status, [String body = '']) {
     refused = true;
     final start = body.replaceAll(RegExp(r'\s+'), ' ');
-    logInfo('YouTube answered $status${status == 200 ? ' with nothing readable' : ''} to the TV-code sign-in on InnerTube; comments load signed out · ${start.length > 300 ? start.substring(0, 300) : start}');
+    logInfo('YouTube answered $status to the TV-code sign-in on InnerTube; comments load signed out · ${start.length > 300 ? start.substring(0, 300) : start}');
   }
 
   /// Likes, dislikes or takes back either, by the [action] of a

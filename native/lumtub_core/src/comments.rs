@@ -162,12 +162,19 @@ pub(crate) fn display(value: &Value) -> String {
     }
 }
 
-/// The first `continuationCommand` token anywhere under [node].
+/// The first `continuationCommand` token anywhere under [node], or the
+/// `nextContinuationData` one of the TV app's pages.
 pub(crate) fn token(node: Option<&Value>) -> Option<String> {
     match node? {
         Value::Object(map) => {
             if let Some(Value::String(token)) = map.get("continuationCommand").and_then(|c| c.get("token")) {
                 return Some(token.clone());
+            }
+            // The TV app's pages give their continuations this older way.
+            for older in ["nextContinuationData", "reloadContinuationData"] {
+                if let Some(Value::String(token)) = map.get(older).and_then(|c| c.get("continuation")) {
+                    return Some(token.clone());
+                }
             }
             map.values().filter(|v| v.is_object() || v.is_array()).find_map(|v| token(Some(v)))
         }
@@ -248,6 +255,17 @@ fn comment(node: &Value, entities: &HashMap<&str, &Value>, replies: Option<&Valu
     let present = |path: &[&str]| at(renderer, path).is_some_and(|v| !v.is_null());
     let mut emojis = Emojis::new();
     let text = rich_text(renderer.get("contentText"), &mut emojis);
+    // The TV app opens replies through `detailViewEndpoint` and writes their
+    // count as text.
+    let replies_token = replies_token.or_else(|| token(renderer.get("detailViewEndpoint")));
+    let reply_count = renderer.get("replyCount").and_then(Value::as_i64).unwrap_or_else(|| plain_text(renderer.get("repliesCount")).chars().filter(char::is_ascii_digit).collect::<String>().parse().unwrap_or(0));
+    let mut rating = button_rating(at(renderer, &["actionButtons", "commentActionButtonsRenderer"]));
+    if let Some(rating) = rating.as_mut()
+        && rating.state.is_empty()
+        && renderer.get("isLiked") == Some(&Value::Bool(true))
+    {
+        rating.state = "like".to_owned();
+    }
     Some(Comment {
         id,
         author: plain_text(renderer.get("authorText")),
@@ -256,13 +274,13 @@ fn comment(node: &Value, entities: &HashMap<&str, &Value>, replies: Option<&Valu
         channel_id: at(renderer, &["authorEndpoint", "browseEndpoint", "browseId"]).and_then(Value::as_str).map(str::to_owned),
         published: plain_text(renderer.get("publishedTimeText")),
         likes: plain_text(renderer.get("voteCount")),
-        reply_count: renderer.get("replyCount").and_then(Value::as_i64).unwrap_or(0),
+        reply_count,
         replies_token,
         pinned: present(&["pinnedCommentBadge"]),
         hearted: present(&["actionButtons", "commentActionButtonsRenderer", "creatorHeart"]),
         by_uploader: renderer.get("authorIsChannelOwner") == Some(&Value::Bool(true)),
         emojis,
-        rating: button_rating(at(renderer, &["actionButtons", "commentActionButtonsRenderer"])),
+        rating,
     })
 }
 
@@ -285,7 +303,27 @@ pub fn page(response: &Value) -> Page {
             }
         }
     }
+    // The TV app's comment pages: `itemSectionContinuation` with its
+    // continuation beside the items.
+    let section = at(response, &["continuationContents", "itemSectionContinuation"]);
+    if let Some(Value::Array(list)) = section.and_then(|s| s.get("contents")) {
+        items.extend(list.iter().filter(|v| v.is_object()));
+    }
     let mut page = Page::default();
+    page.continuation = token(section.and_then(|s| s.get("continuations")));
+    // The TV app's watch page: the comment panel's sort orders.
+    if let Some(Value::Array(panels)) = response.get("engagementPanels") {
+        let panel = panels.iter().filter_map(|p| p.get("engagementPanelSectionListRenderer")).find(|p| p.get("panelIdentifier").and_then(Value::as_str) == Some("comment-item-section"));
+        if let Some(panel) = panel {
+            let header = at(panel, &["header", "engagementPanelTitleHeaderRenderer"]);
+            if let Some(Value::Array(sorts)) = header.and_then(|h| at(h, &["menu", "sortFilterSubMenuRenderer", "subMenuItems"])) {
+                page.top_token = token(sorts.first());
+                page.newest_token = token(sorts.get(1));
+            }
+            page.top_token = page.top_token.take().or_else(|| token(panel.get("content")));
+            page.count = header.map(|h| plain_text(h.get("contextualInfo"))).unwrap_or_default();
+        }
+    }
     for item in items {
         if let Some(header @ Value::Object(_)) = item.get("commentsHeaderRenderer") {
             let count = plain_text(header.get("countText"));
@@ -437,6 +475,50 @@ mod tests {
         assert_eq!(rating(0), Some(&Rating { state: "like".into(), like: Some("L".into()), unlike: Some("UL".into()), dislike: Some("D".into()), undislike: Some("UD".into()) }));
         assert_eq!(rating(1), Some(&Rating { state: "dislike".into(), like: Some("L2".into()), unlike: Some("UL2".into()), dislike: Some("D2".into()), undislike: None }));
         assert_eq!(rating(2), None);
+    }
+
+    #[test]
+    fn reads_the_tv_apps_watch_panel_and_comment_pages() {
+        let watch = json!({"engagementPanels": [
+            {"engagementPanelSectionListRenderer": {"panelIdentifier": "video-description-ep-identifier"}},
+            {"engagementPanelSectionListRenderer": {
+                "panelIdentifier": "comment-item-section",
+                "header": {"engagementPanelTitleHeaderRenderer": {
+                    "contextualInfo": {"runs": [{"text": "1.2K"}]},
+                    "menu": {"sortFilterSubMenuRenderer": {"subMenuItems": [
+                        {"continuation": {"reloadContinuationData": {"continuation": "TOP"}}},
+                        {"continuation": {"reloadContinuationData": {"continuation": "NEW"}}}
+                    ]}}
+                }}
+            }}
+        ]});
+        let header = page(&watch);
+        assert_eq!((header.top_token.as_deref(), header.newest_token.as_deref(), header.count.as_str()), (Some("TOP"), Some("NEW"), "1.2K"));
+
+        let comments = page(&json!({"continuationContents": {"itemSectionContinuation": {
+            "contents": [{"commentThreadRenderer": {"comment": {"commentRenderer": {
+                "commentId": "tv1",
+                "authorText": {"runs": [{"text": "@a"}]},
+                "contentText": {"runs": [{"text": "hi"}]},
+                "repliesCount": {"runs": [{"text": "3 replies"}]},
+                "isLiked": true,
+                "detailViewEndpoint": {"engagementPanelEndpoint": {"content": {"sectionListRenderer": {"contents": [
+                    {"itemSectionRenderer": {"continuations": [{"nextContinuationData": {"continuation": "REPLIES"}}]}}
+                ]}}}},
+                "actionButtons": {"commentActionButtonsRenderer": {
+                    "likeButton": {"toggleButtonRenderer": {
+                        "defaultServiceEndpoint": {"authDeterminedCommand": {"authenticatedCommand": {"performCommentActionEndpoint": {"action": "LIKE"}}}},
+                        "toggledServiceEndpoint": {"performCommentActionEndpoint": {"action": "UNLIKE"}}
+                    }}
+                }}
+            }}}}],
+            "continuations": [{"nextContinuationData": {"continuation": "MORE"}}]
+        }}}));
+        assert_eq!(comments.continuation.as_deref(), Some("MORE"));
+        let c = &comments.comments[0];
+        assert_eq!((c.id.as_str(), c.text.as_str(), c.reply_count, c.replies_token.as_deref()), ("tv1", "hi", 3, Some("REPLIES")));
+        let rating = c.rating.as_ref().unwrap();
+        assert_eq!((rating.state.as_str(), rating.like.as_deref(), rating.unlike.as_deref()), ("like", Some("LIKE"), Some("UNLIKE")));
     }
 
     #[test]

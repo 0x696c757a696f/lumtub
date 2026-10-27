@@ -222,4 +222,26 @@ void main() {
     expect(seen, ['Bearer T', null]);
     expect(comments.refused, isTrue);
   }, skip: NativeCore.instance == null);
+
+  test('signed in, comments come from the TV app\'s watch page and its comment pages', () async {
+    final asked = <String>[];
+    final comments = YoutubeComments(MockClient((request) async {
+      final body = jsonDecode(request.body) as Map;
+      expect(((body['context'] as Map)['client'] as Map)['clientName'], 'TVHTML5');
+      asked.add(body['videoId'] as String? ?? body['continuation'] as String);
+      final data = body.containsKey('videoId')
+          ? {'engagementPanels': [
+              {'engagementPanelSectionListRenderer': {'panelIdentifier': 'comment-item-section', 'header': {'engagementPanelTitleHeaderRenderer': {'menu': {'sortFilterSubMenuRenderer': {'subMenuItems': [
+                {'continuation': {'reloadContinuationData': {'continuation': 'TOP'}}},
+              ]}}}}}},
+            ]}
+          : {'continuationContents': {'itemSectionContinuation': {'contents': [
+              {'commentThreadRenderer': {'comment': {'commentRenderer': {'commentId': 'tv', 'contentText': {'simpleText': '电视'}}}}},
+            ]}}};
+      return http.Response.bytes(utf8.encode(jsonEncode(data)), 200);
+    }))..token = (() async => 'T');
+    final page = await comments.video('dQw4w9WgXcQ');
+    expect(asked, ['dQw4w9WgXcQ', 'TOP']);
+    expect(page.comments.single.text, '电视');
+  }, skip: NativeCore.instance == null);
 }

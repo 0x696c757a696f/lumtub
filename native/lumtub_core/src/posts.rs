@@ -6,7 +6,7 @@ use serde::Serialize;
 use serde_json::Value;
 use std::os::raw::c_char;
 
-use crate::comments::{display, https, plain_text, token};
+use crate::comments::{Rating, button_rating, display, https, plain_text, token};
 use crate::innertube::at;
 use crate::taste::{give_json, text};
 
@@ -56,6 +56,8 @@ pub struct Post {
     pub images: Vec<String>,
     pub video: Option<AttachedVideo>,
     pub poll: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rating: Option<Rating>,
 }
 
 #[derive(Serialize, Debug, PartialEq, Default)]
@@ -107,6 +109,7 @@ fn post(post: &Value) -> Option<Post> {
         images,
         video,
         poll,
+        rating: button_rating(at(post, &["actionButtons", "commentActionButtonsRenderer"])),
     })
 }
 

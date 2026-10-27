@@ -91,6 +91,68 @@ fn attached_emojis(content: Option<&Value>) -> Emojis {
     emojis
 }
 
+/// What liking a comment or a post takes: the signed-in state and the
+/// `performCommentActionEndpoint` actions of its buttons. Present only in
+/// pages loaded signed in; signed out the buttons lead to a sign-in.
+#[derive(Serialize, Debug, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct Rating {
+    /// `like`, `dislike` or empty.
+    pub state: String,
+    pub like: Option<String>,
+    pub unlike: Option<String>,
+    pub dislike: Option<String>,
+    pub undislike: Option<String>,
+}
+
+/// The first `performCommentActionEndpoint` action under [node].
+fn comment_action(node: Option<&Value>) -> Option<String> {
+    match node? {
+        Value::Object(map) => {
+            if let Some(Value::String(action)) = map.get("performCommentActionEndpoint").and_then(|e| e.get("action")) {
+                return Some(action.clone());
+            }
+            map.values().filter(|v| v.is_object() || v.is_array()).find_map(|v| comment_action(Some(v)))
+        }
+        Value::Array(list) => list.iter().find_map(|v| comment_action(Some(v))),
+        _ => None,
+    }
+}
+
+/// The rating of the like and dislike toggle buttons under [buttons]
+/// (`commentActionButtonsRenderer`), as old comments and posts have them.
+pub(crate) fn button_rating(buttons: Option<&Value>) -> Option<Rating> {
+    let button = |name: &str| buttons.and_then(|b| at(b, &[name, "toggleButtonRenderer"]));
+    let (like, dislike) = (button("likeButton"), button("dislikeButton"));
+    let toggled = |b: Option<&Value>| b.and_then(|b| b.get("isToggled")) == Some(&Value::Bool(true));
+    let rating = Rating {
+        state: if toggled(like) { "like" } else if toggled(dislike) { "dislike" } else { "" }.to_owned(),
+        like: comment_action(like.and_then(|b| b.get("defaultServiceEndpoint"))),
+        unlike: comment_action(like.and_then(|b| b.get("toggledServiceEndpoint"))),
+        dislike: comment_action(dislike.and_then(|b| b.get("defaultServiceEndpoint"))),
+        undislike: comment_action(dislike.and_then(|b| b.get("toggledServiceEndpoint"))),
+    };
+    (rating.like.is_some() || rating.dislike.is_some()).then_some(rating)
+}
+
+/// The rating of a `commentViewModel`, from its toolbar entities.
+fn view_model_rating(surface: Option<&Value>, state: Option<&Value>) -> Option<Rating> {
+    let surface = surface?.get("engagementToolbarSurfaceEntityPayload")?;
+    let rating = Rating {
+        state: match state.and_then(|s| at(s, &["engagementToolbarStateEntityPayload", "likeState"])).and_then(Value::as_str) {
+            Some("TOOLBAR_LIKE_STATE_LIKED") => "like",
+            Some("TOOLBAR_LIKE_STATE_DISLIKED") => "dislike",
+            _ => "",
+        }
+        .to_owned(),
+        like: comment_action(surface.get("likeCommand")),
+        unlike: comment_action(surface.get("unlikeCommand")),
+        dislike: comment_action(surface.get("dislikeCommand")),
+        undislike: comment_action(surface.get("undislikeCommand")),
+    };
+    (rating.like.is_some() || rating.dislike.is_some()).then_some(rating)
+}
+
 /// A value as Dart's `'$value'` writes it, with null as empty.
 pub(crate) fn display(value: &Value) -> String {
     match value {
@@ -138,6 +200,8 @@ pub struct Comment {
     pub by_uploader: bool,
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub emojis: Emojis,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rating: Option<Rating>,
 }
 
 #[derive(Serialize, Debug, PartialEq, Default)]
@@ -175,6 +239,7 @@ fn comment(node: &Value, entities: &HashMap<&str, &Value>, replies: Option<&Valu
             hearted: toolbar.and_then(|t| t.get("heartState")).and_then(Value::as_str) == Some("TOOLBAR_HEART_STATE_HEARTED"),
             by_uploader: of_author("isCreator") == Some(&Value::Bool(true)),
             emojis: attached_emojis(field(&["properties", "content"])),
+            rating: view_model_rating(entity(model, "toolbarSurfaceKey"), entity(model, "toolbarStateKey")),
         });
     }
     let renderer = at(node, &["comment", "commentRenderer"]).filter(|v| !v.is_null()).or_else(|| node.get("commentRenderer"))?;
@@ -197,6 +262,7 @@ fn comment(node: &Value, entities: &HashMap<&str, &Value>, replies: Option<&Valu
         hearted: present(&["actionButtons", "commentActionButtonsRenderer", "creatorHeart"]),
         by_uploader: renderer.get("authorIsChannelOwner") == Some(&Value::Bool(true)),
         emojis,
+        rating: button_rating(at(renderer, &["actionButtons", "commentActionButtonsRenderer"])),
     })
 }
 
@@ -320,6 +386,7 @@ mod tests {
                 hearted: true,
                 by_uploader: false,
                 emojis: Emojis::new(),
+                rating: None,
             }
         );
         let old = &page.comments[1];
@@ -341,6 +408,35 @@ mod tests {
         let runs = json!({"runs": [{"text": "a "}, {"emoji": {"emojiId": "x", "isCustomEmoji": true, "shortcuts": [":x:"], "image": {"thumbnails": [{"url": "https://yt3/x"}]}}}]});
         assert_eq!(rich_text(Some(&runs), &mut emojis), "a :x:");
         assert_eq!(emojis.get(":x:").map(String::as_str), Some("https://yt3/x"));
+    }
+
+    #[test]
+    fn reads_the_signed_in_rating() {
+        let action = |a: &str| json!({"innertubeCommand": {"performCommentActionEndpoint": {"action": a}}});
+        let response = json!({
+            "frameworkUpdates": {"entityBatchUpdate": {"mutations": [
+                {"entityKey": "c", "payload": {"commentEntityPayload": {"properties": {"commentId": "C1", "content": {"content": "x"}}}}},
+                {"entityKey": "s", "payload": {"engagementToolbarStateEntityPayload": {"likeState": "TOOLBAR_LIKE_STATE_LIKED"}}},
+                {"entityKey": "t", "payload": {"engagementToolbarSurfaceEntityPayload": {
+                    "likeCommand": action("L"), "unlikeCommand": action("UL"), "dislikeCommand": action("D"), "undislikeCommand": action("UD"),
+                }}},
+            ]}},
+            "onResponseReceivedEndpoints": [{"appendContinuationItemsAction": {"continuationItems": [
+                {"commentThreadRenderer": {"commentViewModel": {"commentViewModel": {"commentKey": "c", "toolbarStateKey": "s", "toolbarSurfaceKey": "t"}}}},
+                {"commentRenderer": {"commentId": "C2", "actionButtons": {"commentActionButtonsRenderer": {
+                    "likeButton": {"toggleButtonRenderer": {"isToggled": false, "defaultServiceEndpoint": {"performCommentActionEndpoint": {"action": "L2"}}, "toggledServiceEndpoint": {"performCommentActionEndpoint": {"action": "UL2"}}}},
+                    "dislikeButton": {"toggleButtonRenderer": {"isToggled": true, "defaultServiceEndpoint": {"commandExecutorCommand": {"commands": [{"performCommentActionEndpoint": {"action": "D2"}}]}}}},
+                }}}},
+                {"commentRenderer": {"commentId": "C3", "actionButtons": {"commentActionButtonsRenderer": {
+                    "likeButton": {"toggleButtonRenderer": {"defaultServiceEndpoint": {"signInEndpoint": {}}}},
+                }}}},
+            ]}}],
+        });
+        let page = page(&response);
+        let rating = |i: usize| page.comments[i].rating.as_ref();
+        assert_eq!(rating(0), Some(&Rating { state: "like".into(), like: Some("L".into()), unlike: Some("UL".into()), dislike: Some("D".into()), undislike: Some("UD".into()) }));
+        assert_eq!(rating(1), Some(&Rating { state: "dislike".into(), like: Some("L2".into()), unlike: Some("UL2".into()), dislike: Some("D2".into()), undislike: None }));
+        assert_eq!(rating(2), None);
     }
 
     #[test]

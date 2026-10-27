@@ -52,6 +52,9 @@ class AppUpdater extends ChangeNotifier {
   /// The verified package, installed when Lumtub closes.
   File? ready;
   String? error;
+  /// A version whose package failed its signature check; it is not
+  /// downloaded again, and the settings page sends to GitHub instead.
+  String? rejected;
   Timer? _timer;
 
   /// The portable package keeps a portable.txt next to lumtub.exe.
@@ -63,8 +66,9 @@ class AppUpdater extends ChangeNotifier {
   /// Checks now and then every six hours, downloading what it finds when
   /// [download] says so.
   void start({required bool Function() download}) {
-    unawaited(_cleanUp());
-    unawaited(check(download: download()));
+    // Cleaning first: it deletes what is in the folder, and the first
+    // download writes there.
+    unawaited(_cleanUp().then((_) => check(download: download())));
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(hours: 6), (_) => check(download: download()));
   }
@@ -101,7 +105,7 @@ class AppUpdater extends ChangeNotifier {
   /// Downloads and verifies the available package, in the background.
   Future<void> download() async {
     final asset = available?.asset;
-    if (!canInstall || asset == null || progress != null || ready?.path.endsWith(asset['name'].toString()) == true) return;
+    if (!canInstall || asset == null || progress != null || rejected == available!.version || ready?.path.endsWith(asset['name'].toString()) == true) return;
     progress = 0;
     error = null;
     notifyListeners();
@@ -114,7 +118,12 @@ class AppUpdater extends ChangeNotifier {
         progress = next;
         notifyListeners();
       });
-      await _verifySignature(file, asset, available!.signature);
+      try {
+        await _verifySignature(file, asset, available!.signature);
+      } on FormatException {
+        rejected = available!.version;
+        rethrow;
+      }
       ready = file;
       logInfo('Lumtub ${available!.version} downloaded; it installs when Lumtub closes');
     } catch (e) {

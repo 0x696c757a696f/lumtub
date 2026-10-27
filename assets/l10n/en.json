@@ -2367,5 +2367,7 @@
   "Google 账号登录": "Google account sign-in",
   "翻译服务的 API 密钥": "Translation service API keys",
   "所有设置（恢复默认）": "All settings (back to defaults)",
-  "播放一直掉帧，自动画质已降到 {0}p（本次运行有效，重新选“自动”可恢复）": "Frames kept dropping, so automatic quality is lowered to {0}p for this run (choose Auto again to undo)"
+  "播放一直掉帧，自动画质已降到 {0}p（本次运行有效，重新选“自动”可恢复）": "Frames kept dropping, so automatic quality is lowered to {0}p for this run (choose Auto again to undo)",
+  "安装包的签名验证没通过，没有安装。点击打开 GitHub Release 手动下载": "The installer failed its signature check and was not installed. Click to download it from GitHub Releases",
+  "下载失败：{0}。点击重试": "Download failed: {0}. Click to retry"
 }

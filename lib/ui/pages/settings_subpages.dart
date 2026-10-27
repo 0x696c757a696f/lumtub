@@ -953,9 +953,16 @@ List<SettingEntry> aboutEntries(AppController controller) => [
         } else if (updater?.checking ?? false) {
           title = tr('正在检查软件更新…');
           subtitle = tr('启动时和每 6 小时自动检查，也可立即检查');
+        } else if (release != null && updater?.rejected == release.version) {
+          title = tr('有新版本：{0}', [release.version]);
+          subtitle = tr('安装包的签名验证没通过，没有安装。点击打开 GitHub Release 手动下载');
         } else if (release != null) {
           title = tr('有新版本：{0}', [release.version]);
-          subtitle = AppUpdater.canInstall && release.asset != null ? tr('点击下载，关闭 Lumtub 时自动安装') : tr('点击打开 GitHub Release 下载');
+          subtitle = !AppUpdater.canInstall || release.asset == null
+              ? tr('点击打开 GitHub Release 下载')
+              : updater?.error != null
+                  ? tr('下载失败：{0}。点击重试', [updater!.error!])
+                  : tr('点击下载，关闭 Lumtub 时自动安装');
         } else {
           title = tr('检查更新');
           subtitle = updater?.error == null ? tr('启动时和每 6 小时自动检查，也可立即检查') : tr('检查软件更新失败：{0}', [updater!.error!]);
@@ -969,7 +976,7 @@ List<SettingEntry> aboutEntries(AppController controller) => [
             if (progress != null || (updater?.checking ?? false)) return;
             await controller.checkAppUpdate();
             final found = controller.appUpdater?.available;
-            if (found != null && (!AppUpdater.canInstall || found.asset == null)) openExternal(found.page.isEmpty ? '$_repository/releases' : found.page);
+            if (found != null && (!AppUpdater.canInstall || found.asset == null || controller.appUpdater?.rejected == found.version)) openExternal(found.page.isEmpty ? '$_repository/releases' : found.page);
             if (found == null && context.mounted && controller.appUpdater?.error == null) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('已是最新版本'))));
             }

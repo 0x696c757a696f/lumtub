@@ -41,6 +41,7 @@ class _SubtitleListState extends State<SubtitleList> {
   /// Following the playing line stops while the person scrolls.
   bool _follow = true;
   String _query = '';
+  final _currentKey = GlobalKey();
 
   late SubtitleOption? _second = widget.controller.secondarySubtitle;
   late SubtitleListMode _mode = widget.controller.preferences.subtitleListMode;
@@ -89,21 +90,37 @@ class _SubtitleListState extends State<SubtitleList> {
     super.dispose();
   }
 
-  void _listen(List<PairedCue> cues, double rowHeight) {
+  void _listen(List<PairedCue> cues) {
     final starts = [for (final c in cues) c.cue];
     _positions?.cancel();
     void at(Duration position) {
       final index = cueIndexAt(starts, position);
       if (index == _current || !mounted) return;
       setState(() => _current = index);
-      if (_follow && _query.isEmpty && index >= 0 && _scroll.hasClients) {
-        final target = (index * rowHeight - _scroll.position.viewportDimension / 3).clamp(0.0, _scroll.position.maxScrollExtent);
-        unawaited(Motion.scrollTo(_scroll, target, duration: const Duration(milliseconds: 250), curve: Curves.easeOut));
-      }
+      if (_follow && _query.isEmpty && index >= 0) WidgetsBinding.instance.addPostFrameCallback((_) => _reveal(index, cues.length));
     }
 
     _positions = widget.player.stream.position.listen(at);
     WidgetsBinding.instance.addPostFrameCallback((_) => at(widget.player.state.position));
+  }
+
+  /// Scrolls the playing row to a third of the way down. Rows differ in
+  /// height, so one not built yet is first jumped near by the average.
+  void _reveal(int index, int count) {
+    if (!mounted) return;
+    final built = _currentKey.currentContext;
+    if (built != null) {
+      unawaited(Scrollable.ensureVisible(built, alignment: 0.3, duration: Motion.of(const Duration(milliseconds: 250)), curve: Curves.easeOut));
+      return;
+    }
+    if (!_scroll.hasClients || count == 0) return;
+    final position = _scroll.position;
+    final average = (position.maxScrollExtent + position.viewportDimension) / count;
+    _scroll.jumpTo((index * average - position.viewportDimension / 3).clamp(0.0, position.maxScrollExtent));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final row = _currentKey.currentContext;
+      if (row != null && mounted) unawaited(Scrollable.ensureVisible(row, alignment: 0.3));
+    });
   }
 
   void _copy(PairedCue line) {
@@ -137,9 +154,7 @@ class _SubtitleListState extends State<SubtitleList> {
             ),
           );
         }
-        final bilingual = cues.any((c) => c.second != null);
-        final rowHeight = bilingual ? 92.0 : 64.0;
-        if (_positions == null) _listen(cues, rowHeight);
+        if (_positions == null) _listen(cues);
         final shown = [
           for (final (i, cue) in cues.indexed)
             if (_query.isEmpty || cue.cue.text.toLowerCase().contains(_query) || (cue.second?.toLowerCase().contains(_query) ?? false)) i,
@@ -165,7 +180,6 @@ class _SubtitleListState extends State<SubtitleList> {
               },
               child: ListView.builder(
                 controller: _scroll,
-                itemExtent: _query.isEmpty ? rowHeight : null,
                 itemCount: shown.length,
                 itemBuilder: (context, k) {
                   final i = shown[k];
@@ -176,6 +190,7 @@ class _SubtitleListState extends State<SubtitleList> {
                   final under = swap ? cue.text : line.second;
                   final playing = i == _current;
                   return GestureDetector(
+                    key: playing ? _currentKey : null,
                     onSecondaryTap: () => _copy(line),
                     child: Material(
                       color: playing ? colors.secondaryContainer : Colors.transparent,
@@ -185,7 +200,7 @@ class _SubtitleListState extends State<SubtitleList> {
                           unawaited(widget.player.seek(cue.start));
                         },
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 6, 4, 6),
+                          padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
                           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             SizedBox(
                               width: 52,
@@ -195,17 +210,15 @@ class _SubtitleListState extends State<SubtitleList> {
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                                 Text(
                                   top,
-                                  maxLines: _query.isEmpty ? 2 : null,
-                                  overflow: _query.isEmpty ? TextOverflow.ellipsis : null,
                                   style: TextStyle(fontSize: 13, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
                                 ),
-                                if (under != null)
+                                if (under != null) ...[
+                                  const SizedBox(height: 2),
                                   Text(
                                     under,
-                                    maxLines: _query.isEmpty ? 2 : null,
-                                    overflow: _query.isEmpty ? TextOverflow.ellipsis : null,
                                     style: TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
                                   ),
+                                ],
                               ]),
                             ),
                             IconButton(

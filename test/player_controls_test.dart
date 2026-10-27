@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -58,6 +59,9 @@ class FakePlayer implements Player {
   late final PlayerStream stream;
 
   final seeks = <Duration>[];
+
+  @override
+  PlatformPlayer? get platform => null;
 
   @override
   Future<void> playOrPause() async {
@@ -182,7 +186,9 @@ void main() {
     expect(find.text('第一字幕'), findsOneWidget);
     expect(find.text('第二字幕（上方）'), findsOneWidget);
     expect(find.text('视频自带'), findsNWidgets(2));
-    expect(find.text('自动生成'), findsNWidgets(2));
+    // The automatic Japanese is the video's own language, first on each side.
+    expect(find.text('原语言：日语（自动生成）'), findsNWidgets(2));
+    expect(find.text('自动生成'), findsNothing);
     expect(find.text('简体中文（YouTube 翻译）'), findsNWidgets(2));
     // YouTube's translations wait behind a button on each side.
     expect(find.textContaining('法语'), findsNothing);
@@ -279,6 +285,39 @@ void main() {
     await tester.tap(find.byTooltip('关闭'));
     await tester.pumpAndSettle();
     expect(find.text('播放策略'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the wheel sets brightness on the left and volume on the right', (tester) async {
+    await pump(tester);
+    player.state = player.state.copyWith(volume: 50);
+    final controls = tester.getRect(find.byType(PlayerControls));
+    tester.binding.handlePointerEvent(PointerScrollEvent(position: controls.centerRight - const Offset(100, 0), scrollDelta: const Offset(0, -100)));
+    await tester.pump();
+    expect(player.state.volume, greaterThan(50));
+    tester.binding.handlePointerEvent(PointerScrollEvent(timeStamp: const Duration(seconds: 1), position: controls.centerLeft + const Offset(100, 0), scrollDelta: const Offset(0, -100)));
+    await tester.pump();
+    expect(controller.brightness, 5);
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a touch shows the lock, and locked taps do nothing', (tester) async {
+    await pump(tester);
+    await tester.tap(find.byType(PlayerControls), warnIfMissed: false);
+    await tester.pump();
+    final playing = player.state.playing;
+    await tester.tap(find.byTooltip('锁定'));
+    await tester.pump();
+    expect(find.byTooltip('解锁'), findsOneWidget);
+    expect(find.byTooltip('更多设置'), findsNothing);
+    await tester.tapAt(tester.getRect(find.byType(PlayerControls)).center + const Offset(150, 0));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(player.state.playing, playing);
+    await tester.tap(find.byTooltip('解锁'));
+    await tester.pump();
+    expect(find.byTooltip('更多设置'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 10));
     expect(tester.takeException(), isNull);
   });
 }

@@ -60,7 +60,14 @@ bool hasOwnSubtitle(List<SubtitleOption> options, TranslationLanguage target) =>
 /// The video's subtitle in the language it is spoken in: YouTube generates
 /// automatic subtitles in that language, so an uploaded one in the same
 /// language comes first, then the automatic one, then any uploaded one.
-SubtitleOption? originalSubtitle(List<SubtitleOption> options) {
+/// [language], yt-dlp's tag for the video, wins when a subtitle has it.
+SubtitleOption? originalSubtitle(List<SubtitleOption> options, {String? language}) {
+  if (language != null && language.isNotEmpty) {
+    for (final kind in [SubtitleKind.uploaded, SubtitleKind.automatic]) {
+      final own = options.where((o) => o.kind == kind && sameLanguage(o.language, language)).firstOrNull;
+      if (own != null) return own;
+    }
+  }
   final automatic = options.where((o) => o.kind == SubtitleKind.automatic).firstOrNull;
   final uploaded = options.where((o) => o.kind == SubtitleKind.uploaded);
   if (automatic == null) return uploaded.firstOrNull;

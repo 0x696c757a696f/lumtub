@@ -93,13 +93,47 @@ String _unescape(String text) => text.replaceAll('&nbsp;', ' ').replaceAll('&lt;
 /// is spoken.
 typedef PairedCue = ({SubtitleCue cue, String? second});
 
-/// Each of [main]'s cues with the [second] cues that overlap it most of
-/// their own length, so a second line lands beside one main line only.
+/// [main]'s cues with the [second] cues spoken with them. Where one second
+/// line spans several main lines, as a translation joined into whole
+/// sentences does, those main lines become one row, so each row reads as a
+/// sentence beside its translation.
 List<PairedCue> pairSubtitleCues(List<SubtitleCue> main, List<SubtitleCue> second) {
-  final out = <PairedCue>[];
+  if (second.isEmpty) return [for (final cue in main) (cue: cue, second: null)];
+  final joinNext = List.filled(main.length, false);
   var from = 0;
+  for (final other in second) {
+    while (from < main.length && main[from].end <= other.start) {
+      from++;
+    }
+    int? first, last;
+    for (var i = from; i < main.length && main[i].start < other.end; i++) {
+      final overlap = _overlap(main[i], other);
+      // A brush at either end does not tie a main line to this one.
+      if (overlap >= const Duration(milliseconds: 300) && overlap * 10 >= (main[i].end - main[i].start) * 3) {
+        first ??= i;
+        last = i;
+      }
+    }
+    if (first != null) {
+      for (var i = first; i < last!; i++) {
+        joinNext[i] = true;
+      }
+    }
+  }
+  final rows = <SubtitleCue>[];
+  for (var i = 0; i < main.length; i++) {
+    var row = main[i];
+    // Overlapping lines could chain on; a row stays a sentence long.
+    while (joinNext[i] && i + 1 < main.length && main[i + 1].end - row.start <= _longestRow) {
+      i++;
+      row = (start: row.start, end: main[i].end, text: joinCueText(row.text, main[i].text));
+    }
+    rows.add(row);
+  }
+  final out = <PairedCue>[];
+  from = 0;
   final taken = List.filled(second.length, false);
-  for (final cue in main) {
+  for (final cue in rows) {
     while (from < second.length && second[from].end <= cue.start) {
       from++;
     }
@@ -107,15 +141,31 @@ List<PairedCue> pairSubtitleCues(List<SubtitleCue> main, List<SubtitleCue> secon
     for (var j = from; j < second.length && second[j].start < cue.end; j++) {
       if (taken[j]) continue;
       final other = second[j];
-      final overlap = (other.end < cue.end ? other.end : cue.end) - (other.start > cue.start ? other.start : cue.start);
-      final length = other.end - other.start;
+      final overlap = _overlap(cue, other);
       // A second line belongs where most of it is spoken.
-      if (overlap * 2 >= length || overlap >= const Duration(seconds: 1)) {
+      if (overlap * 2 >= other.end - other.start || overlap >= const Duration(seconds: 1)) {
         lines.add(other.text);
         taken[j] = true;
       }
     }
-    out.add((cue: cue, second: lines.isEmpty ? null : lines.join(' ')));
+    out.add((cue: cue, second: lines.isEmpty ? null : lines.reduce(joinCueText)));
   }
   return out;
 }
+
+const _longestRow = Duration(seconds: 15);
+
+Duration _overlap(SubtitleCue a, SubtitleCue b) {
+  final end = a.end < b.end ? a.end : b.end;
+  final start = a.start > b.start ? a.start : b.start;
+  return end > start ? end - start : Duration.zero;
+}
+
+/// [a] and [b] as one line: with a space between words, none between
+/// Chinese or Japanese characters.
+String joinCueText(String a, String b) {
+  if (a.isEmpty || b.isEmpty) return a + b;
+  return _wide.hasMatch(a[a.length - 1]) || _wide.hasMatch(b[0]) ? '$a$b' : '$a $b';
+}
+
+final _wide = RegExp(r'[　-ヿ㐀-鿿豈-﫿＀-￯]');

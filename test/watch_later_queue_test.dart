@@ -9,6 +9,7 @@ import 'package:lumtub/app_directories.dart';
 import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/library_store.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/play_queue.dart';
 import 'package:lumtub/ui/pages/history_page.dart';
 import 'package:lumtub/ui/pages/library_pages.dart';
@@ -110,6 +111,7 @@ void main() {
     test('the controller queues, counts as next, and playing one takes it off', () async {
       controller.playing = videos[0];
       controller.queue = videos.take(3).toList();
+      controller.settings = const PlayerSettings(playOrder: PlayOrder.listOrder);
       expect(controller.hasNext, isTrue);
       expect(controller.stopsAfterEnd, isFalse);
       controller.queueLast(videos[4]);

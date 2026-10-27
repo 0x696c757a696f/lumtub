@@ -71,10 +71,8 @@ class StatusView extends StatelessWidget {
 
 /// Inline error with an optional retry, for errors below existing content.
 class ErrorBanner extends StatelessWidget {
-  const ErrorBanner(this.message, {super.key, this.onRetry, this.retryLabel, this.waiting = false});
+  const ErrorBanner(this.message, {super.key, this.onRetry, this.retryLabel});
   final String message;
-  /// Something that resolves by itself, shown calmly rather than as an error.
-  final bool waiting;
   final VoidCallback? onRetry;
   /// What the button says, when it does something other than retry.
   final String? retryLabel;
@@ -84,11 +82,11 @@ class ErrorBanner extends StatelessWidget {
     final colors = context.colors;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
-      decoration: BoxDecoration(color: waiting ? colors.secondaryContainer : colors.errorContainer, borderRadius: AppStyle.cardRadius),
+      decoration: BoxDecoration(color: colors.errorContainer, borderRadius: AppStyle.cardRadius),
       child: Row(children: [
-        Icon(waiting ? Icons.schedule_rounded : Icons.error_outline_rounded, color: waiting ? colors.onSecondaryContainer : colors.onErrorContainer, size: 20),
+        Icon(Icons.error_outline_rounded, color: colors.onErrorContainer, size: 20),
         const SizedBox(width: 12),
-        Expanded(child: Text(message, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: waiting ? colors.onSecondaryContainer : colors.onErrorContainer))),
+        Expanded(child: Text(message, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onErrorContainer))),
         if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('重试'))),
       ]),
     );

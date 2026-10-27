@@ -117,6 +117,9 @@ void main() {
     expect(originalSubtitle([enOwn, jaAuto]), jaAuto);
     expect(originalSubtitle([enOwn]), enOwn);
     expect(originalSubtitle(const []), isNull);
+    // yt-dlp's tag for the video wins over the automatic captions' language.
+    expect(originalSubtitle([enOwn, jaAuto, jaOwn], language: 'en'), enOwn);
+    expect(originalSubtitle([enOwn, jaAuto], language: 'fr'), jaAuto);
     expect(sameLanguage('zh', 'zh-Hans'), isTrue);
     expect(sameLanguage('zh-Hans', 'zh-Hant'), isFalse);
     expect(sameLanguage('en-US', 'en'), isTrue);

@@ -383,7 +383,7 @@ class PlayerSettings {
     this.audioDevice = 'auto',
     this.videoSync = VideoSync.audio,
     this.maxHeight = 0,
-    this.playOrder = PlayOrder.autoPlayRelated,
+    this.playOrder = PlayOrder.pause,
     this.defaultSpeed = 1.0,
     this.speeds = defaultSpeeds,
     this.defaultVolume = 100,
@@ -575,6 +575,7 @@ class PlayerSettings {
         'videoSync': videoSync.name,
         'maxHeight': maxHeight,
         'playOrder': playOrder.name,
+        'playOrderDefault': 2,
         'defaultSpeed': defaultSpeed,
         'speeds': speeds,
         'defaultVolume': defaultVolume,
@@ -704,9 +705,12 @@ class PlayerSettings {
     // A file that disables every codec YouTube plays would play nothing.
     if (disabled != null && !VideoCodec.playableWithout(disabled)) disabled.remove(VideoCodec.h264);
     // Builds before the play order menu had an autoplay switch.
-    final playOrder = raw.containsKey('playOrder')
-        ? _enumByName(PlayOrder.values, raw['playOrder'], PlayOrder.autoPlayRelated)
+    // Builds before playOrderDefault 2 saved 自动连播 as the default even
+    // when untouched; the default is now to stop at the end.
+    final savedOrder = raw.containsKey('playOrder')
+        ? _enumByName(PlayOrder.values, raw['playOrder'], PlayOrder.pause)
         : raw['autoplayNext'] == false ? PlayOrder.pause : PlayOrder.autoPlayRelated;
+    final playOrder = raw['playOrderDefault'] != 2 && savedOrder == PlayOrder.autoPlayRelated ? PlayOrder.pause : savedOrder;
     final path = raw['cachePath']?.toString();
     final device = raw['audioDevice']?.toString() ?? 'auto';
     final oldBuffer = raw['bufferDefaults'] != 2;

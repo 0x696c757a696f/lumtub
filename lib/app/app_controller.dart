@@ -123,6 +123,9 @@ class AppController extends ChangeNotifier {
   bool get waitingForStart => playbackError != null && _waitingForStart;
   bool _waitingForStart = false;
 
+  /// When the stream being played is scheduled to start, if it has not.
+  DateTime? get scheduledStart => playing?.scheduledStart ?? details?.scheduledStart;
+
   /// Favorites, playlists, followed channels and progress; set once ready.
   LibraryController? library;
 
@@ -1697,7 +1700,7 @@ class AppController extends ChangeNotifier {
   void _waitForStart(VideoItem item) {
     _startTimer?.cancel();
     final serial = _playSerial;
-    final scheduled = item.scheduledStart?.difference(DateTime.now());
+    final scheduled = (playing?.id == item.id ? scheduledStart : item.scheduledStart)?.difference(DateTime.now());
     final delay = scheduled != null && scheduled > const Duration(minutes: 1)
         ? scheduled + const Duration(seconds: 15)
         : Duration(seconds: min(30 * (1 << min(_startAttempts, 2)), 120));
@@ -1934,7 +1937,7 @@ class AppController extends ChangeNotifier {
     final target = TranslationLanguage.maybeByCode(wanted);
     final SubtitleOption? option;
     if (wanted == PlayerSettings.originalSubtitle) {
-      option = originalSubtitle(details.subtitles);
+      option = originalSubtitle(details.subtitles, language: details.language);
       if (option == null || sameLanguage(option.language, mainLanguage)) return;
     } else {
       option = target == null ? null : subtitleIn(details.subtitles, target);
@@ -2313,6 +2316,22 @@ class AppController extends ChangeNotifier {
     if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, settings.volumeMax.toDouble()).toDouble());
   }
 
+  /// The video's brightness, -100 to 100, as 画面与音画同步调节 keeps it.
+  int get brightness => settings.picture['brightness'] ?? 0;
+  Timer? _brightnessSave;
+
+  /// Brightens or darkens the video by [delta] and returns the new value;
+  /// saved once the changes pause, not at every wheel notch.
+  Future<int> changeBrightness(int delta) async {
+    final value = (brightness + delta).clamp(-100, 100);
+    _update(() => settings = settings.copyWith(picture: {...settings.picture, 'brightness': value}));
+    _brightnessSave?.cancel();
+    _brightnessSave = Timer(const Duration(seconds: 1), () => unawaited(_settingsStore?.save(settings)));
+    final platform = player?.platform;
+    if (platform is NativePlayer) await platform.setProperty('brightness', '$value');
+    return value;
+  }
+
   Future<void> toggleMute() async {
     final player = this.player;
     if (player == null) return;
@@ -2429,6 +2448,8 @@ class AppController extends ChangeNotifier {
           details = loaded;
           if (preferences.showRelated) related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
         });
+        // Once yt-dlp names the start time, wait for it rather than poll.
+        if (waitingForStart && item.scheduledStart == null && loaded.scheduledStart != null) _waitForStart(item);
         unawaited(_localizeDetails(item.id, serial));
         unawaited(_autoSubtitles(item, loaded, serial));
       }

@@ -254,13 +254,89 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   void _onScroll(PointerSignalEvent event) {
-    // One volume step per notch, however the wheel's glide is split up.
+    if (event is! PointerScrollEvent) return;
+    // The wheel over the video sets the volume only: claiming the event
+    // keeps the page around the player from scrolling too.
+    GestureBinding.instance.pointerSignalResolver.register(event, _changeVolume);
+  }
+
+  void _changeVolume(PointerSignalEvent event) {
+    // One step per notch, however the wheel's glide is split up.
     if (event is! PointerScrollEvent || SmoothWheel.isFollowUp(event)) return;
-    final step = _controller.preferences.volumeStep.toDouble();
-    unawaited(_controller.changeVolume(event.scrollDelta.dy < 0 ? step : -step).then((_) {
-      final volume = _player.state.volume.round();
-      _showFeedback(volume == 0 ? Icons.volume_off_rounded : Icons.volume_up_rounded, '$volume%');
-    }));
+    final up = event.scrollDelta.dy < 0;
+    // The left half of the player sets the brightness, the right the volume.
+    if (_onLeft(event.localPosition)) {
+      _brighten(up ? _brightnessStep : -_brightnessStep);
+    } else {
+      final step = _controller.preferences.volumeStep.toDouble();
+      _louder(up ? step : -step);
+    }
+  }
+
+  static const _brightnessStep = 5;
+
+  bool _onLeft(Offset position) => position.dx < (context.size?.width ?? double.infinity) / 2;
+
+  void _louder(double delta) => unawaited(_controller.changeVolume(delta).then((_) {
+        final volume = _player.state.volume.round();
+        _showFeedback(volume == 0 ? Icons.volume_off_rounded : Icons.volume_up_rounded, '$volume%');
+      }));
+
+  void _brighten(int delta) => unawaited(_controller.changeBrightness(delta).then((value) {
+        _showFeedback(value < 0 ? Icons.brightness_5_rounded : Icons.brightness_7_rounded, tr('亮度 {0}', [value > 0 ? '+$value' : '$value']));
+      }));
+
+  /// Sliding a finger up or down: the side it started on, and how far it
+  /// has gone in steps not applied yet.
+  bool _dragLeft = false;
+  double _dragSteps = 0;
+
+  /// 锁定: taps, slides and the wheel do nothing but show the unlock
+  /// button, so a phone in a pocket or a hand on the screen changes nothing.
+  bool _locked = false;
+  /// Whether a finger last touched the player; the lock button is for
+  /// touch screens and full screen.
+  bool _touched = false;
+
+  void _toggleLock() {
+    setState(() => _locked = !_locked);
+    _showFeedback(_locked ? Icons.lock_rounded : Icons.lock_open_rounded, _locked ? tr('已锁定') : tr('已解锁'));
+    _show();
+  }
+
+  Widget _lockButton() => Positioned(
+        left: 12,
+        top: 0,
+        bottom: 0,
+        child: Center(
+          child: FadeTransition(
+            opacity: _animation,
+            child: IgnorePointer(
+              ignoring: _animation.isDismissed,
+              child: DecoratedBox(
+                decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
+                child: _IconButton(tooltip: _locked ? tr('解锁') : tr('锁定'), icon: _locked ? Icons.lock_rounded : Icons.lock_open_rounded, width: 40, onTap: _toggleLock),
+              ),
+            ),
+          ),
+        ),
+      );
+
+  void _dragStart(DragStartDetails details) {
+    _dragLeft = _onLeft(details.localPosition);
+    _dragSteps = 0;
+  }
+
+  void _dragUpdate(DragUpdateDetails details) {
+    final height = context.size?.height ?? 0;
+    if (height <= 0) return;
+    // The player's full height is the whole range: 100 % volume, or 200
+    // brightness steps from -100 to 100.
+    _dragSteps -= (details.primaryDelta ?? 0) / height * (_dragLeft ? 200 : 100);
+    final whole = _dragSteps.truncate();
+    if (whole == 0) return;
+    _dragSteps -= whole;
+    _dragLeft ? _brighten(whole) : _louder(whole.toDouble());
   }
 
   /// Keeps the bars up while one of their menus is open.
@@ -294,21 +370,34 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             onHover: (_) => _show(),
             cursor: _animation.value == 0 ? SystemMouseCursors.none : MouseCursor.defer,
             child: Listener(
-              onPointerSignal: _onScroll,
+              onPointerSignal: (event) {
+                if (!_locked) _onScroll(event);
+              },
+              onPointerDown: (event) {
+                final touch = event.kind == PointerDeviceKind.touch || event.kind == PointerDeviceKind.stylus;
+                if (touch != _touched) setState(() => _touched = touch);
+              },
               child: Stack(fit: StackFit.expand, children: [
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    _focus.requestFocus();
-                    unawaited(_player.playOrPause());
-                    _show();
-                  },
-                  onDoubleTap: () => unawaited(widget.state?.toggleFullscreen()),
-                  // Hold for 2x, as on YouTube and in PiliNara.
-                  onLongPressStart: (_) => _holdSpeed(true),
-                  onLongPressEnd: (_) => _holdSpeed(false),
-                  onLongPressCancel: () => _holdSpeed(false),
-                ),
+                if (_locked)
+                  GestureDetector(behavior: HitTestBehavior.opaque, onTap: _show)
+                else
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      _focus.requestFocus();
+                      unawaited(_player.playOrPause());
+                      _show();
+                    },
+                    onDoubleTap: () => unawaited(widget.state?.toggleFullscreen()),
+                    // A finger sliding up or down, as in phone players.
+                    supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus},
+                    onVerticalDragStart: _dragStart,
+                    onVerticalDragUpdate: _dragUpdate,
+                    // Hold for 2x, as on YouTube and in PiliNara.
+                    onLongPressStart: (_) => _holdSpeed(true),
+                    onLongPressEnd: (_) => _holdSpeed(false),
+                    onLongPressCancel: () => _holdSpeed(false),
+                  ),
                 _buffering(),
                 if (_feedback case (final icon, final text)) Center(child: IgnorePointer(child: _FeedbackBubble(icon: icon, text: text))),
                 if (_controller.showStats) Positioned(left: 12, top: fullscreen ? 64 : 52, child: PlayerStats(player: _player)),
@@ -324,8 +413,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       ),
                     ),
                   ),
-                Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _topBar(context, fullscreen))),
-                Positioned(left: 0, right: 0, bottom: 0, child: _bar(top: false, child: _bottomBar(context, fullscreen))),
+                if (!_locked) ...[
+                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _topBar(context, fullscreen))),
+                  Positioned(left: 0, right: 0, bottom: 0, child: _bar(top: false, child: _bottomBar(context, fullscreen))),
+                ],
+                if (_locked || _touched || fullscreen) _lockButton(),
               ]),
             ),
           ),

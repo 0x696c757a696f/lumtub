@@ -1792,9 +1792,13 @@ class AppController extends ChangeNotifier {
     final track = player.state.track.subtitle;
     final off = track.id == 'no' || track.id == 'auto';
     final second = secondarySubtitle;
-    final secondCues = second == null ? const <SubtitleCue>[] : await _optionCues(second);
-    if (off) return pairSubtitleCues(secondCues, const []);
-    return pairSubtitleCues(await _trackCues(platform, track), secondCues);
+    final mode = preferences.subtitleListMode;
+    if (off || (second != null && mode == SubtitleListMode.second)) {
+      return second == null ? const [] : pairSubtitleCues(await _optionCues(second), const []);
+    }
+    final main = await _trackCues(platform, track);
+    if (second == null || mode == SubtitleListMode.first) return pairSubtitleCues(main, const []);
+    return pairSubtitleCues(main, await _optionCues(second));
   }
 
   Future<List<SubtitleCue>> _optionCues(SubtitleOption option) => _cached('${playing?.id}\u0000${option.url}', () async => File(await _subtitleFile(option)).readAsString());

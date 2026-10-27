@@ -2372,5 +2372,10 @@
   "下载失败：{0}。点击重试": "Download failed: {0}. Click to retry",
   "字幕样式": "Subtitle style",
   "全部字幕设置": "All subtitle settings",
-  "第二字幕": "Second subtitle"
+  "第二字幕": "Second subtitle",
+  "列表显示": "List shows",
+  "双语，第一字幕在上": "Both, first subtitle on top",
+  "双语，第二字幕在上": "Both, second subtitle on top",
+  "只看第一字幕": "First subtitle only",
+  "只看第二字幕": "Second subtitle only"
 }

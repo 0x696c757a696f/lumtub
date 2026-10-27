@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 
 import '../app/app_controller.dart';
+import '../app_preferences.dart' show SubtitleListMode;
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleOption;
 import '../subtitle_cues.dart';
@@ -42,6 +43,7 @@ class _SubtitleListState extends State<SubtitleList> {
   String _query = '';
 
   late SubtitleOption? _second = widget.controller.secondarySubtitle;
+  late SubtitleListMode _mode = widget.controller.preferences.subtitleListMode;
 
   @override
   void initState() {
@@ -58,10 +60,25 @@ class _SubtitleListState extends State<SubtitleList> {
       });
 
   void _secondChanged() {
-    if (identical(widget.controller.secondarySubtitle, _second)) return;
+    final mode = widget.controller.preferences.subtitleListMode;
+    if (identical(widget.controller.secondarySubtitle, _second) && mode == _mode) return;
     _second = widget.controller.secondarySubtitle;
+    _mode = mode;
     _reload();
   }
+
+  /// Both subtitles are on, so there is a choice of what to list.
+  bool get _bothOn => _second != null && !const {'no', 'auto'}.contains(widget.player.state.track.subtitle.id);
+
+  Widget _modeMenu(ColorScheme colors) => PopupMenuButton<SubtitleListMode>(
+        tooltip: tr('列表显示'),
+        initialValue: _mode,
+        onSelected: (mode) => unawaited(widget.controller.savePreferences(widget.controller.preferences.copyWith(subtitleListMode: mode))),
+        itemBuilder: (context) => [
+          for (final mode in SubtitleListMode.values) CheckedPopupMenuItem(value: mode, checked: mode == _mode, child: Text(mode.label)),
+        ],
+        icon: Icon(Icons.view_agenda_outlined, color: colors.onSurfaceVariant),
+      );
 
   @override
   void dispose() {
@@ -129,11 +146,16 @@ class _SubtitleListState extends State<SubtitleList> {
         ];
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: TextField(
-              decoration: InputDecoration(isDense: true, prefixIcon: const Icon(Icons.search_rounded, size: 20), hintText: tr('搜索字幕')),
-              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-            ),
+            padding: EdgeInsets.fromLTRB(16, 0, _bothOn ? 4 : 16, 8),
+            child: Row(children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(isDense: true, prefixIcon: const Icon(Icons.search_rounded, size: 20), hintText: tr('搜索字幕')),
+                  onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+                ),
+              ),
+              if (_bothOn) _modeMenu(colors),
+            ]),
           ),
           Expanded(
             child: NotificationListener<UserScrollNotification>(
@@ -149,6 +171,9 @@ class _SubtitleListState extends State<SubtitleList> {
                   final i = shown[k];
                   final line = cues[i];
                   final cue = line.cue;
+                  final swap = _mode == SubtitleListMode.secondOver && line.second != null;
+                  final top = swap ? line.second! : cue.text;
+                  final under = swap ? cue.text : line.second;
                   final playing = i == _current;
                   return GestureDetector(
                     onSecondaryTap: () => _copy(line),
@@ -169,14 +194,14 @@ class _SubtitleListState extends State<SubtitleList> {
                             Expanded(
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                                 Text(
-                                  cue.text,
+                                  top,
                                   maxLines: _query.isEmpty ? 2 : null,
                                   overflow: _query.isEmpty ? TextOverflow.ellipsis : null,
                                   style: TextStyle(fontSize: 13, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
                                 ),
-                                if (line.second case final second?)
+                                if (under != null)
                                   Text(
-                                    second,
+                                    under,
                                     maxLines: _query.isEmpty ? 2 : null,
                                     overflow: _query.isEmpty ? TextOverflow.ellipsis : null,
                                     style: TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),

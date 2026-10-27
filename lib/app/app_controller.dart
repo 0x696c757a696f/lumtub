@@ -3223,6 +3223,15 @@ class AppController extends ChangeNotifier {
     return AiTranslator.listModels(_http, config.effectiveAiBaseUrl, translationKeys[TranslationService.ai.name] ?? '');
   }
 
+  /// A one-line answer from the AI interface, to check it works whichever
+  /// service translates.
+  Future<String> testAi() async {
+    final ai = aiServiceFor(preferences.translation, translationKeys, _http);
+    if (ai == null) throw TranslationException(tr('请先填写 AI 接口的地址、模型和密钥'));
+    final answer = await ai.complete('Answer in one short sentence.', 'Say hello and name the model you are.');
+    return answer.replaceAll(RegExp(r'<think>[\s\S]*?</think>'), '').trim();
+  }
+
   /// A short sentence put through the chosen service, to check it works.
   Future<String> testTranslation() => (translator is CachingTranslator ? (translator as CachingTranslator).inner : translator).translate('Subtitles and comments can be translated here.', preferences.translateTarget);
 

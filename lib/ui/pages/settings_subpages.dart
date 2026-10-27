@@ -1156,7 +1156,7 @@ Future<void> openPrivacyConnections(BuildContext context, AppController controll
             value: settings.deArrowTitles || settings.deArrowThumbnails, onChanged: (v) => saveSettings(settings.copyWith(deArrowTitles: v, deArrowThumbnails: v))),
         row(Icons.thumb_down_off_alt_outlined, 'Return YouTube Dislike', 'returnyoutubedislikeapi.com', tr('播放页显示估算的踩数；会把正在看的视频 ID 发给它'),
             value: settings.returnDislike, onChanged: (v) => saveSettings(settings.copyWith(returnDislike: v))),
-        row(Icons.translate_rounded, tr('翻译'), controller.preferences.translation.service.label, tr('只在你点“翻译”或开启字幕翻译时，把要翻译的文字发给所选服务'),
+        row(Icons.translate_rounded, tr('翻译'), controller.preferences.translation.service.label, tr('只在你点“翻译”、开启字幕翻译或使用 AI 总结时，把文字发给所选服务'),
             state: tr('点击时'), onTap: () => openTranslationSettings(context, controller)),
         row(Icons.hub_outlined, tr('Piped / Invidious'), relay ? settings.playbackSource.label : tr('当前未使用'), tr('替你从 YouTube 取视频；它们会知道你看了哪个视频。YouTube 返回 429 时也会临时试用'),
             state: relay ? tr('使用中') : tr('仅备用')),

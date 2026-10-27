@@ -2486,5 +2486,15 @@
   "频道 倍速 音量": "channel speed volume",
   "首页不显示任何视频，只留搜索": "The home page shows no videos, only search",
   "首页不显示视频。想看什么就搜索，或打开订阅和稍后观看。": "No videos on the home page. Search for what you want to watch, or open Subscriptions and Watch later.",
-  "这个频道按上次的 {0}x 倍速播放": "This channel plays at its last speed, {0}x"
+  "这个频道按上次的 {0}x 倍速播放": "This channel plays at its last speed, {0}x",
+  "想用 AI 翻译，把上面的“翻译服务”选成“AI 大模型”。": "To translate with AI, set “Translation service” above to “AI model”.",
+  "AI 接口": "AI interface",
+  "AI 总结使用“设置 › 翻译与 AI”里的 AI 接口（OpenAI、DeepSeek、Ollama 等）。设置好接口和密钥后再试。只会发送视频标题和字幕文字。": "AI summary uses the AI interface under Settings › Translation & AI (OpenAI, DeepSeek, Ollama and others). Set up the interface and key, then try again. Only the video title and subtitle text are sent.",
+  "测试 AI 接口": "Test AI interface",
+  "翻译与 AI": "Translation & AI",
+  "翻译：{0} · AI：{1}": "Translation: {0} · AI: {1}",
+  "请先填写 AI 接口的地址、模型和密钥": "Fill in the AI interface address, model and key first",
+  "AI 翻译": "AI translation",
+  "只在你点“翻译”、开启字幕翻译或使用 AI 总结时，把文字发给所选服务": "Text is sent to the chosen service only when you click Translate, turn on subtitle translation or use AI summary",
+  "AI 翻译和 AI 总结共用这一个接口，支持 OpenAI 兼容的 /chat/completions。只在你使用 AI 翻译或点“AI 总结”时才发送文字。": "AI translation and AI summary share this one interface (OpenAI-compatible /chat/completions). Text is sent only when you use AI translation or click AI summary."
 }

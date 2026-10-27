@@ -26,10 +26,20 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('the AI interface shows whichever service translates', (tester) async {
+    await open(tester, const TranslationConfig(service: TranslationService.deepl, aiPreset: 'deepseek'));
+    for (final text in ['AI 接口', 'https://api.deepseek.com/v1', 'deepseek-chat', '测试 AI 接口', '测试翻译']) {
+      expect(find.text(text), findsWidgets, reason: text);
+    }
+    expect(find.text('AI 翻译'), findsNothing);
+    expect(find.text('提示词'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a key is asked for with the text hidden', (tester) async {
     await open(tester, const TranslationConfig(service: TranslationService.deepl));
-    expect(find.text('未填写'), findsOneWidget);
-    await tester.tap(find.text('API 密钥'));
+    expect(find.text('未填写'), findsWidgets);
+    await tester.tap(find.text('API 密钥').first);
     await tester.pumpAndSettle();
     expect(tester.widget<TextField>(find.byType(TextField)).obscureText, isTrue);
     await tester.tap(find.byTooltip('显示'));

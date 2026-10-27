@@ -56,7 +56,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
     final summary = _summary;
     final Widget body;
     if (!controller.canSummarize) {
-      body = Text(tr('AI 总结使用“翻译服务”里设置的 AI 接口（OpenAI、DeepSeek、Ollama 等）。设置好接口和密钥后再试。只会发送视频标题和字幕文字。'), style: TextStyle(color: colors.onSurfaceVariant, height: 1.5));
+      body = Text(tr('AI 总结使用“设置 › 翻译与 AI”里的 AI 接口（OpenAI、DeepSeek、Ollama 等）。设置好接口和密钥后再试。只会发送视频标题和字幕文字。'), style: TextStyle(color: colors.onSurfaceVariant, height: 1.5));
     } else if (summary != null) {
       body = SingleChildScrollView(
         child: SelectionArea(

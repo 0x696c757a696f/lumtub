@@ -8,11 +8,11 @@ import '../../translation_services.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../translatable.dart' show TranslationView;
 
-/// 设置 › 翻译服务: the service behind 翻译 and translated subtitles, its
-/// API key and, for AI models, the endpoint and prompt.
+/// 设置 › 翻译与 AI: the service behind 翻译 and translated subtitles, and
+/// the one AI interface that AI 翻译 and AI 总结 share.
 Future<void> openTranslationSettings(BuildContext context, AppController controller) => Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => Scaffold(
-        appBar: AppBar(title: Text(tr('翻译服务'))),
+        appBar: AppBar(title: Text(tr('翻译与 AI'))),
         body: ListenableBuilder(
           listenable: controller,
           builder: (context, _) => ListView(padding: const EdgeInsets.only(bottom: 40), children: _items(context, controller)),
@@ -122,8 +122,13 @@ List<Widget> _items(BuildContext context, AppController controller) {
       textItem(tr('服务器地址'), config.libreServer, config.libreServer.isEmpty ? tr('未填写') : config.libreServer, Icons.dns_outlined, tr('例如 https://libretranslate.com'), (v) => saveConfig((c) => c.copyWith(libreServer: v))),
       keyItem(service, optional: true),
     ],
-    if (service == TranslationService.ai) ...[
-      header(tr('AI 大模型')),
+    const SizedBox(height: 8),
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Align(alignment: Alignment.centerLeft, child: _TestButton(controller: controller)),
+    ),
+    header(tr('AI 接口')),
+    tip(tr('AI 翻译和 AI 总结共用这一个接口，支持 OpenAI 兼容的 /chat/completions。只在你使用 AI 翻译或点“AI 总结”时才发送文字。')),
       PopupItem<String>(
         title: tr('服务商'),
         leading: const Icon(Icons.hub_outlined),
@@ -150,7 +155,14 @@ List<Widget> _items(BuildContext context, AppController controller) {
           if (typed != null) saveConfig((c) => c.copyWith(aiModel: typed.trim()));
         },
       ),
-      keyItem(service, optional: ai.id == 'ollama' || ai.id == 'custom'),
+      keyItem(TranslationService.ai, optional: ai.id == 'ollama' || ai.id == 'custom'),
+    const SizedBox(height: 8),
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Align(alignment: Alignment.centerLeft, child: _TestButton(controller: controller, ai: true)),
+    ),
+    if (service == TranslationService.ai) ...[
+      header(tr('AI 翻译')),
       PopupItem<String>(
         title: tr('提示词'),
         leading: const Icon(Icons.edit_note_rounded),
@@ -197,12 +209,8 @@ List<Widget> _items(BuildContext context, AppController controller) {
         onTap: () => pickWithSlider(context, title: tr('字幕上下文'), value: config.aiContext.toDouble(), min: 0, max: 10, divisions: 10, suffix: tr(' 句'), onSelected: (v) => saveConfig((c) => c.copyWith(aiContext: v.round()))),
       ),
       tip(tr('使用 OpenAI 兼容的 /chat/completions 接口。提示词里 {target} 换成目标语言，{lines} 换成行数；字幕按行翻译，返回的行数不对时会重试一次。')),
-    ],
-    const SizedBox(height: 8),
-    Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Align(alignment: Alignment.centerLeft, child: _TestButton(controller: controller)),
-    ),
+    ] else
+      tip(tr('想用 AI 翻译，把上面的“翻译服务”选成“AI 大模型”。')),
     header(tr('显示')),
     SwitchItem(
       title: tr('双语对照'),
@@ -246,8 +254,11 @@ List<Widget> _items(BuildContext context, AppController controller) {
 String _masked(String key) => key.length <= 8 ? '••••' : '${key.substring(0, 3)}••••${key.substring(key.length - 4)}';
 
 class _TestButton extends StatefulWidget {
-  const _TestButton({required this.controller});
+  const _TestButton({required this.controller, this.ai = false});
   final AppController controller;
+
+  /// Checks the AI interface instead of the translation service.
+  final bool ai;
 
   @override
   State<_TestButton> createState() => _TestButtonState();
@@ -264,7 +275,7 @@ class _TestButtonState extends State<_TestButton> {
       _result = null;
     });
     try {
-      final text = await widget.controller.testTranslation();
+      final text = await (widget.ai ? widget.controller.testAi() : widget.controller.testTranslation());
       if (mounted) {
         setState(() {
           _result = text;
@@ -290,7 +301,7 @@ class _TestButtonState extends State<_TestButton> {
       FilledButton.tonalIcon(
         onPressed: _testing ? null : _test,
         icon: _testing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.play_arrow_rounded),
-        label: Text(tr('测试翻译')),
+        label: Text(widget.ai ? tr('测试 AI 接口') : tr('测试翻译')),
       ),
       if (_result != null)
         Padding(

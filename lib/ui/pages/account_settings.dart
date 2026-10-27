@@ -10,9 +10,10 @@ import '../../l10n/l10n.dart';
 
 /// Google sign-in, sync and the OAuth client used for it.
 class AccountSettings extends StatelessWidget {
-  const AccountSettings({super.key, required this.account, this.tvSignIn, required this.note});
+  const AccountSettings({super.key, required this.account, this.tvSignIn, this.saveTvSamples, required this.note});
   final AccountController? account;
   final YoutubeTvSignIn? tvSignIn;
+  final Future<String> Function()? saveTvSamples;
   final TextStyle note;
 
   @override
@@ -80,7 +81,7 @@ class AccountSettings extends StatelessWidget {
           style: note,
         ),
       ),
-      if (tvSignIn != null) ListenableBuilder(listenable: tvSignIn!, builder: (context, _) => _TvSignInTile(tvSignIn!, note: note)),
+      if (tvSignIn != null) ListenableBuilder(listenable: tvSignIn!, builder: (context, _) => _TvSignInTile(tvSignIn!, saveSamples: saveTvSamples, note: note)),
       _ClientSettings(account: account, note: note),
     ]);
   }
@@ -102,8 +103,9 @@ class AccountSettings extends StatelessWidget {
 
 /// The TV-code sign-in, for liking and disliking comments and posts.
 class _TvSignInTile extends StatelessWidget {
-  const _TvSignInTile(this.sign, {required this.note});
+  const _TvSignInTile(this.sign, {this.saveSamples, required this.note});
   final YoutubeTvSignIn sign;
+  final Future<String> Function()? saveSamples;
   final TextStyle note;
 
   @override
@@ -118,7 +120,18 @@ class _TvSignInTile extends StatelessWidget {
             leading: Icon(Icons.thumb_up_alt_outlined, color: colors.primary),
             title: Text(tr('评论和帖子点赞：已用电视码登录')),
             subtitle: Text(tr('可以给评论和社区帖子点赞、点踩')),
-            trailing: OutlinedButton(onPressed: sign.signOut, child: Text(tr('退出'))),
+            trailing: Wrap(spacing: 8, children: [
+              if (saveSamples != null)
+                TextButton(
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final result = await saveSamples!();
+                    messenger.showSnackBar(SnackBar(content: Text(result)));
+                  },
+                  child: Text(tr('保存电视版样本')),
+                ),
+              OutlinedButton(onPressed: sign.signOut, child: Text(tr('退出'))),
+            ]),
           ),
         TvSignInState.waiting => ListTile(
             leading: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),

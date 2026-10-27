@@ -1013,7 +1013,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('恢复默认')),
       ],
     SettingsCategory.account => [
-        SettingEntry(tr('Google 账号'), (context) => AccountSettings(account: controller.account, tvSignIn: controller.tvSignIn, note: _note(context)), subtitle: tr('登录、同步订阅和播放列表、退出登录、自定义客户端')),
+        SettingEntry(tr('Google 账号'), (context) => AccountSettings(account: controller.account, tvSignIn: controller.tvSignIn, saveTvSamples: controller.saveTvSamples, note: _note(context)), subtitle: tr('登录、同步订阅和播放列表、退出登录、自定义客户端')),
         SettingEntry(tr('关注时同步订阅'), (context) => SwitchItem(
               title: tr('关注频道时同步订阅到 YouTube'),
               subtitle: tr('登录后，关注和取消关注也会在 YouTube 账号上订阅或退订'),

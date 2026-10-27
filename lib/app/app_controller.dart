@@ -51,6 +51,7 @@ import '../search_options.dart';
 import '../search_suggestions.dart';
 import '../youtube_comments.dart';
 import '../youtube_tv_sign_in.dart';
+import '../tv_samples.dart' as tv_samples;
 import '../youtube_related.dart';
 import '../recommendations.dart';
 import '../chunked_relay.dart';
@@ -503,6 +504,14 @@ class AppController extends ChangeNotifier {
     if (_disposed) return;
     change();
     notifyListeners();
+  }
+
+  /// Settings › Google 账号 › 保存电视版样本.
+  Future<String> saveTvSamples() async {
+    final token = await tvSignIn?.accessToken();
+    final logs = directories?.logs;
+    if (token == null || logs == null) return tr('需要先在设置 › Google 账号里用电视码登录');
+    return tv_samples.saveTvSamples(_http, token, logs);
   }
 
   void _tvSignInChanged() {

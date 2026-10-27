@@ -2559,5 +2559,7 @@
   "打开网页": "Open page",
   "评论和帖子点赞": "Comment and post likes",
   "YouTube 只接受电视码登录来给评论和帖子点赞。不用密码和 Cookie，随时可以在 Google 账号的第三方应用里撤销。": "YouTube takes only a TV-code sign-in for liking comments and posts. No password or cookies; you can revoke it any time under third-party apps in your Google account.",
-  "用电视码登录": "Sign in with a TV code"
+  "用电视码登录": "Sign in with a TV code",
+  "已保存到 {0}": "Saved to {0}",
+  "保存电视版样本": "Save TV samples"
 }

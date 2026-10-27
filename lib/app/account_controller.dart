@@ -131,7 +131,8 @@ class AccountController extends ChangeNotifier {
 
   /// Revokes the grant at Google when reachable and deletes the local
   /// credentials. Imported channels and playlists stay in the library.
-  Future<void> signOut() async {
+  /// [reason] is shown as why it is signed out.
+  Future<void> signOut({String? reason}) async {
     final token = _refreshToken;
     _refreshToken = null;
     _tokens = null;
@@ -139,7 +140,7 @@ class AccountController extends ChangeNotifier {
     lastSync = null;
     scope = null;
     likesPlaylist = null;
-    error = null;
+    error = reason;
     state = AccountState.signedOut;
     notifyListeners();
     await credentials.delete();
@@ -329,9 +330,7 @@ class AccountController extends ChangeNotifier {
   /// why, rather than as signed in with nothing working.
   Future<void> _expired() async {
     logInfo('Google sign-in expired or was revoked');
-    await signOut();
-    error = tr('Google 登录已失效，请重新登录');
-    notifyListeners();
+    await signOut(reason: tr('Google 登录已失效，请重新登录'));
   }
 
   Future<void> _save() async {

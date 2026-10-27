@@ -1574,6 +1574,7 @@ class AppController extends ChangeNotifier {
       if (serial != _playSerial) return;
       final first = local.preferredSubtitle(settings.subtitleLanguage.mpvLangs.split(','));
       await platform.command(['sub-add', first.path, 'select']);
+      await _syncMainSubtitle();
       for (final other in local.subtitles.where((f) => f != first)) {
         await platform.command(['sub-add', other.path, 'auto']);
       }
@@ -1741,9 +1742,29 @@ class AppController extends ChangeNotifier {
       if (main == id) await platform.setProperty('sid', '${added['id']}');
       if (second == id) await platform.setProperty('secondary-sid', '${added['id']}');
       await platform.command(['sub-remove', id]);
+      if (main == id) await _syncMainSubtitle();
       logInfo('Subtitle translation finished; track $id replaced by ${added['id']}');
     } catch (e) {
       logInfo('Could not reload the finished subtitle translation: $e');
+    }
+  }
+
+  /// Tells media_kit which main subtitle mpv shows. It only learns of one
+  /// chosen through its own setSubtitleTrack, not of one selected by
+  /// sub-add or a sid change, and the subtitle panel reads it.
+  Future<void> _syncMainSubtitle() async {
+    final player = this.player;
+    final platform = player?.platform;
+    if (player == null || platform is! NativePlayer) return;
+    try {
+      final sid = await platform.getProperty('sid');
+      if (sid.isEmpty || sid == player.state.track.subtitle.id) return;
+      if (sid == 'no') return await player.setSubtitleTrack(SubtitleTrack.no());
+      SubtitleTrack? find(Tracks tracks) => tracks.subtitle.where((t) => t.id == sid).firstOrNull;
+      final track = find(player.state.tracks) ?? await player.stream.tracks.map(find).firstWhere((t) => t != null).timeout(const Duration(seconds: 3));
+      if (track != null) await player.setSubtitleTrack(track);
+    } catch (e) {
+      logInfo('Could not read the selected subtitle: $e');
     }
   }
 
@@ -1817,6 +1838,7 @@ class AppController extends ChangeNotifier {
         final file = await _subtitleFile(option);
         if (this.player != player) return;
         await platform.command(['sub-add', file, 'select', option.label, option.language]);
+        await _syncMainSubtitle();
       }
     } catch (e) {
       logError('Could not load subtitles ${option.language}', e);

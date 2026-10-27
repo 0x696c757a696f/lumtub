@@ -189,4 +189,37 @@ void main() {
     expect(asked, ['/youtubei/v1/next SECTION', '/youtubei/v1/next NEW']);
     expect((page.count, page.comments.single.text), ('2', '新'));
   });
+
+  test('signed in, pages come with ratings; a refused token loads signed out', () async {
+    final seen = <String?>[];
+    var refuse = false;
+    final comments = YoutubeComments(MockClient((request) async {
+      seen.add(request.headers['Authorization']);
+      if (refuse && request.headers['Authorization'] != null) return http.Response('', 401);
+      if (request.url.path.endsWith('perform_comment_action')) {
+        expect(jsonDecode(request.body)['actions'], ['UNLIKE']);
+        return http.Response('{}', 200);
+      }
+      return http.Response.bytes(utf8.encode(jsonEncode({
+        'onResponseReceivedEndpoints': [
+          {'appendContinuationItemsAction': {'continuationItems': [
+            {'commentRenderer': {'commentId': 'C', 'actionButtons': {'commentActionButtonsRenderer': {
+              'likeButton': {'toggleButtonRenderer': {'isToggled': true,
+                'defaultServiceEndpoint': {'performCommentActionEndpoint': {'action': 'LIKE'}},
+                'toggledServiceEndpoint': {'performCommentActionEndpoint': {'action': 'UNLIKE'}}}},
+            }}}},
+          ]}},
+        ],
+      })), 200);
+    }))..token = (() async => 'T');
+    final rating = (await comments.more('X')).comments.single.rating!;
+    expect((rating.state, rating.actionFor('like', 'like'), rating.actionFor('', 'like'), rating.actionFor('like', 'dislike')), ('like', 'UNLIKE', 'LIKE', null));
+    await comments.rate('UNLIKE');
+    expect(seen, ['Bearer T', 'Bearer T']);
+    refuse = true;
+    seen.clear();
+    expect((await comments.more('X')).comments.single.rating, isNotNull);
+    expect(seen, ['Bearer T', null]);
+    expect(comments.refused, isTrue);
+  }, skip: NativeCore.instance == null);
 }

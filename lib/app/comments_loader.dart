@@ -30,6 +30,30 @@ class CommentsLoader extends ChangeNotifier {
   int _generation = 0;
   bool _disposed = false;
 
+  /// Ratings changed here, by comment id, ahead of the next load.
+  final _rated = <String, String>{};
+
+  /// `like`, `dislike` or empty for [comment], as last pressed here.
+  String ratingOf(YoutubeComment comment) => _rated[comment.id] ?? comment.rating?.state ?? '';
+
+  /// Presses like or dislike ([want]) on [comment]: shown at once, taken
+  /// back if YouTube refuses. Returns why it failed, or null.
+  Future<String?> rate(YoutubeComment comment, String want) async {
+    final before = ratingOf(comment);
+    final action = comment.rating?.actionFor(before, want);
+    if (action == null) return null;
+    _rated[comment.id] = before == want ? '' : want;
+    _notify();
+    try {
+      await _source.rate(action);
+      return null;
+    } catch (e) {
+      _rated[comment.id] = before;
+      _notify();
+      return friendlyError(e);
+    }
+  }
+
   bool get hasMore => !started || _next != null;
   bool get _post => postId != null;
 

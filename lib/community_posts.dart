@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'models.dart';
 import 'native_core.dart';
 import 'l10n/l10n.dart';
+import 'youtube_comments.dart';
 import 'youtube_web.dart';
 
 /// A post on a channel's 社区 (posts) tab.
@@ -20,6 +21,7 @@ class CommunityPost {
     this.images = const [],
     this.video,
     this.poll = const [],
+    this.rating,
   });
 
   final String id;
@@ -33,6 +35,8 @@ class CommunityPost {
   final VideoItem? video;
   /// The choices of an attached poll.
   final List<String> poll;
+  /// Liking it, in pages loaded signed in.
+  final CommentRating? rating;
 
   String get url => 'https://www.youtube.com/post/$id';
 }
@@ -49,7 +53,7 @@ class PostPage {
 /// website loads it: the first page from the tab's HTML, later pages from
 /// its browse endpoint with the continuation token.
 class CommunityPosts {
-  CommunityPosts(this._client);
+  CommunityPosts(this._client, {this.signIn});
   final http.Client _client;
 
   static Map<String, String> get _headers => {
@@ -62,6 +66,9 @@ class CommunityPosts {
   String? _apiKey;
   String? _clientVersion;
   String? _visitorData;
+
+  /// The comments client, whose Google sign-in later pages are loaded with.
+  final YoutubeComments? signIn;
 
   /// The first page of [channel]'s posts.
   Future<PostPage> first(ChannelRef channel) async {
@@ -77,12 +84,13 @@ class CommunityPosts {
 
   /// The page after the one that gave [continuation].
   Future<PostPage> next(String continuation) async {
-    final key = _apiKey;
+    final signedIn = await signIn?.signedInHeaders() ?? const <String, String>{};
+    final key = signedIn.isEmpty ? _apiKey : null;
     final query = key == null ? '?prettyPrint=false' : '?key=$key&prettyPrint=false';
     final response = await _client
         .post(
           Uri.parse('https://www.youtube.com/youtubei/v1/browse$query'),
-          headers: YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage),
+          headers: {...YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage), ...signedIn},
           body: jsonEncode({
             'context': {
               'client': {
@@ -96,6 +104,10 @@ class CommunityPosts {
           }),
         )
         .timeout(const Duration(seconds: 20));
+    if (signedIn.isNotEmpty && (response.statusCode == 401 || response.statusCode == 403)) {
+      signIn?.refused = true;
+      return next(continuation);
+    }
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     return await _readInBackground(response.bodyBytes) ?? const PostPage([], null);
   }
@@ -131,6 +143,7 @@ class CommunityPosts {
         images: (p['images'] as List).cast<String>(),
         video: id == null ? null : VideoItem(id: id, title: video!['title'] as String, channel: video['channel'] as String, duration: (video['duration'] as num?)?.toInt(), url: 'https://www.youtube.com/watch?v=$id'),
         poll: (p['poll'] as List).cast<String>(),
+        rating: CommentRating.fromJson(p['rating']),
       );
     }
 

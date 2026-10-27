@@ -9,6 +9,7 @@ import '../models.dart';
 import '../youtube_comments.dart';
 import 'common.dart';
 import 'linked_text.dart';
+import 'rating_buttons.dart';
 import 'pages/channel_page.dart';
 import 'theme.dart';
 import 'translatable.dart';
@@ -285,13 +286,10 @@ class _CommentTile extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Row(children: [
-            Tooltip(
-              message: tr('点赞数。YouTube 官方接口不支持给评论点赞'),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.thumb_up_outlined, size: 14, color: colors.outline),
-                const SizedBox(width: 4),
-                Text(comment.likes.isEmpty ? '0' : comment.likes, style: small),
-              ]),
+            RatingButtons(
+              likes: comment.likes,
+              state: loader.ratingOf(comment),
+              onRate: comment.rating == null ? null : (want) => loader.rate(comment, want),
             ),
             if (comment.hearted) ...[
               const SizedBox(width: 12),

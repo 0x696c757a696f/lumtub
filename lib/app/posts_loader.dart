@@ -21,6 +21,31 @@ class PostsLoader extends ChangeNotifier {
   bool _started = false;
   bool _disposed = false;
 
+  /// Ratings changed here, by post id, ahead of the next load.
+  final _rated = <String, String>{};
+
+  /// `like`, `dislike` or empty for [post], as last pressed here.
+  String ratingOf(CommunityPost post) => _rated[post.id] ?? post.rating?.state ?? '';
+
+  /// Presses like or dislike ([want]) on [post]: shown at once, taken back
+  /// if YouTube refuses. Returns why it failed, or null.
+  Future<String?> rate(CommunityPost post, String want) async {
+    final before = ratingOf(post);
+    final action = post.rating?.actionFor(before, want);
+    final signIn = _source.signIn;
+    if (action == null || signIn == null) return null;
+    _rated[post.id] = before == want ? '' : want;
+    _notify();
+    try {
+      await signIn.rate(action);
+      return null;
+    } catch (e) {
+      _rated[post.id] = before;
+      _notify();
+      return friendlyError(e);
+    }
+  }
+
   /// Fetches the next page; after a failure only [retry] fetches again.
   Future<void> loadMore({bool retry = false}) async {
     if (loading || !hasMore || (error != null && !retry)) return;

@@ -308,6 +308,9 @@ class AccountController extends ChangeNotifier {
 
   YouTubeAccountApi get _api => YouTubeAccountApi(_client, _accessToken);
 
+  /// A current access token, refreshed when it has expired.
+  Future<String> accessToken() => _accessToken();
+
   Future<String> _accessToken() async {
     final tokens = _tokens;
     if (tokens != null && !tokens.expired) return tokens.accessToken;

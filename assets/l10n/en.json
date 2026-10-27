@@ -2535,5 +2535,12 @@
   "音频太大，语音识别接口不接受": "The audio is too large for the speech recognition service",
   "视频较长，需要 ffmpeg 才能分段识别（和下载用的是同一个）。": "This video is long and needs ffmpeg (the same one downloads use) to be recognized in parts.",
   "ffmpeg 没装好，无法分段识别": "ffmpeg was not installed, so the audio cannot be split",
-  "安装 ffmpeg 并继续": "Install ffmpeg and continue"
+  "安装 ffmpeg 并继续": "Install ffmpeg and continue",
+  "点赞数。登录 Google 账号后可以点赞和点踩": "Likes. Sign in with Google to like and dislike",
+  "需要先登录 Google 账号": "Sign in with Google first",
+  "点赞": "Like",
+  "点踩": "Dislike",
+  "取消点赞": "Remove like",
+  "取消点踩": "Remove dislike",
+  "YouTube 不接受当前 Google 授权的这项操作": "YouTube doesn't accept this action with the current Google sign-in"
 }

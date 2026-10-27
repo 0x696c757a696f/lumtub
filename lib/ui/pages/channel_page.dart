@@ -12,6 +12,7 @@ import '../../thumbnail_cache.dart';
 import '../../video_repository.dart';
 import '../comments_view.dart';
 import '../common.dart';
+import '../rating_buttons.dart';
 import '../theme.dart';
 import '../translatable.dart';
 import '../video_card.dart';
@@ -291,13 +292,10 @@ class PostCard extends StatelessWidget {
         ],
         const SizedBox(height: 8),
         Row(children: [
-          Tooltip(
-            message: tr('点赞数。YouTube 官方接口不支持给帖子点赞或评论'),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.thumb_up_outlined, size: 16, color: colors.outline),
-              const SizedBox(width: 6),
-              Text(post.likes.isEmpty ? '0' : post.likes, style: TextStyle(color: colors.outline, fontSize: 12)),
-            ]),
+          RatingButtons(
+            likes: post.likes,
+            state: controller.channelPosts?.ratingOf(post) ?? '',
+            onRate: post.rating == null || controller.channelPosts == null ? null : (want) => controller.channelPosts!.rate(post, want),
           ),
           const SizedBox(width: 16),
           TextButton.icon(

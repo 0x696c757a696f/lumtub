@@ -4,9 +4,42 @@ import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
 import 'youtube_web.dart';
+
+/// Liking a comment or a post: its state and the actions of its buttons,
+/// present only in pages loaded signed in.
+class CommentRating {
+  const CommentRating({this.state = '', this.like, this.unlike, this.dislike, this.undislike});
+
+  static CommentRating? fromJson(Object? json) => json is! Map<String, dynamic>
+      ? null
+      : CommentRating(
+          state: json['state'] as String? ?? '',
+          like: json['like'] as String?,
+          unlike: json['unlike'] as String?,
+          dislike: json['dislike'] as String?,
+          undislike: json['undislike'] as String?,
+        );
+
+  /// `like`, `dislike` or empty.
+  final String state;
+  final String? like;
+  final String? unlike;
+  final String? dislike;
+  final String? undislike;
+
+  /// The action that turns [current] into [want] pressed (`like` or
+  /// `dislike`); pressing the one already on takes it back.
+  String? actionFor(String current, String want) => switch ((want, current == want)) {
+        ('like', true) => unlike,
+        ('like', false) => like,
+        (_, true) => undislike,
+        _ => dislike,
+      };
+}
 
 /// One comment or reply.
 class YoutubeComment {
@@ -24,6 +57,7 @@ class YoutubeComment {
     this.hearted = false,
     this.byUploader = false,
     this.emojis = const {},
+    this.rating,
   });
 
   final String id;
@@ -43,6 +77,7 @@ class YoutubeComment {
   final bool byUploader;
   /// Custom emoji in [text]: shortcut to picture address.
   final Map<String, String> emojis;
+  final CommentRating? rating;
 }
 
 /// One page of comments, the token for the next, and from the first page
@@ -75,6 +110,24 @@ class YoutubeComments {
   String? _apiKey;
   String? _clientVersion;
   String? _visitorData;
+
+  /// The Google sign-in's access token, so pages come with the like and
+  /// dislike buttons of the signed-in user; null when signed out.
+  Future<String?> Function()? token;
+
+  /// YouTube did not take the sign-in's token; comments load signed out
+  /// for the rest of the run.
+  bool refused = false;
+
+  Future<Map<String, String>> signedInHeaders() async {
+    if (refused) return const {};
+    try {
+      final value = await token?.call();
+      return value == null ? const {} : {'Authorization': 'Bearer $value'};
+    } catch (_) {
+      return const {};
+    }
+  }
 
   /// The first page of comments under [videoId], top comments first unless
   /// [newest].
@@ -111,11 +164,40 @@ class YoutubeComments {
   }
 
   Future<CommentPage> _request(String endpoint, String token) async {
+    final signedIn = await signedInHeaders();
+    final response = await _post(endpoint, {'continuation': token}, signedIn);
+    if (signedIn.isNotEmpty && (response.statusCode == 401 || response.statusCode == 403)) {
+      _refuse(response.statusCode);
+      return _request(endpoint, token);
+    }
+    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
+    return _readInBackground(response.bodyBytes);
+  }
+
+  void _refuse(int status) {
+    refused = true;
+    logInfo('YouTube answered $status to the Google sign-in on InnerTube; comments load signed out');
+  }
+
+  /// Likes, dislikes or takes back either, by the [action] of a
+  /// [CommentRating], for a comment or a post alike.
+  Future<void> rate(String action) async {
+    final signedIn = await signedInHeaders();
+    if (signedIn.isEmpty) throw StateError(tr('需要先登录 Google 账号'));
+    final response = await _post('comment/perform_comment_action', {'actions': [action]}, signedIn);
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      _refuse(response.statusCode);
+      throw StateError(tr('YouTube 不接受当前 Google 授权的这项操作'));
+    }
+    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
+  }
+
+  Future<http.Response> _post(String endpoint, Map<String, Object?> body, Map<String, String> signedIn) {
     final key = _apiKey;
-    final response = await _client
+    return _client
         .post(
-          Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?${key == null ? '' : 'key=$key&'}prettyPrint=false'),
-          headers: YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage),
+          Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?${key == null || signedIn.isNotEmpty ? '' : 'key=$key&'}prettyPrint=false'),
+          headers: {...YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage), ...signedIn},
           body: jsonEncode({
             'context': {
               'client': {
@@ -125,12 +207,10 @@ class YoutubeComments {
                 if (_visitorData != null) 'visitorData': _visitorData,
               },
             },
-            'continuation': token,
+            ...body,
           }),
         )
         .timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    return _readInBackground(response.bodyBytes);
   }
 
   static Future<CommentPage> _readInBackground(List<int> bytes) => Isolate.run(() => readBytes(bytes));
@@ -176,6 +256,7 @@ class YoutubeComments {
             hearted: c['hearted'] as bool,
             byUploader: c['byUploader'] as bool,
             emojis: (c['emojis'] as Map<String, dynamic>?)?.cast<String, String>() ?? const {},
+            rating: CommentRating.fromJson(c['rating']),
           ),
       ],
       page['continuation'] as String?,

@@ -159,10 +159,11 @@ class AppController extends ChangeNotifier {
   /// The channel page's tab, and its posts when that tab is open.
   ChannelTab channelTab = ChannelTab.videos;
   PostsLoader? channelPosts;
-  late final _posts = CommunityPosts(_http);
+  late final _posts = CommunityPosts(_http, signIn: comments);
 
-  /// Comments under videos and posts.
-  late final comments = YoutubeComments(_http);
+  /// Comments under videos and posts, and liking them and posts, signed in
+  /// with the Google account when there is one.
+  late final comments = YoutubeComments(_http)..token = (() async => account?.canWrite ?? false ? await account!.accessToken() : null);
 
   /// Whether the statistics overlay is shown over the video.
   bool showStats = false;

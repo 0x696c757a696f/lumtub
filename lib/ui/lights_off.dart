@@ -54,9 +54,11 @@ class _LightsOffLayerState extends State<LightsOffLayer> with SingleTickerProvid
   Widget build(BuildContext context) {
     final hole = _hole;
     if (hole == null) return const SizedBox.shrink();
+    // Its own layer: the fade and a moving hole repaint the dark layer
+    // only, not the page under it.
     return _HoleHitTest(
       hole: hole,
-      child: GestureDetector(
+      child: RepaintBoundary(child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => lightsOff.value = false,
         child: AnimatedBuilder(
@@ -66,7 +68,7 @@ class _LightsOffLayerState extends State<LightsOffLayer> with SingleTickerProvid
             painter: _DarkPainter(hole: widget.radius.toRRect(hole), color: Colors.black.withValues(alpha: widget.dim * _fade.value)),
           ),
         ),
-      ),
+      )),
     );
   }
 }

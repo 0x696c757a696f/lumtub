@@ -2430,12 +2430,16 @@ class AppController extends ChangeNotifier {
   Timer? _brightnessSave;
 
   /// Brightens or darkens the video by [delta] and returns the new value;
-  /// saved once the changes pause, not at every wheel notch.
+  /// saved, and shown to the rest of the app, once the changes pause, not
+  /// at every wheel notch or slide step.
   Future<int> changeBrightness(int delta) async {
     final value = (brightness + delta).clamp(-100, 100);
-    _update(() => settings = settings.copyWith(picture: {...settings.picture, 'brightness': value}));
+    settings = settings.copyWith(picture: {...settings.picture, 'brightness': value});
     _brightnessSave?.cancel();
-    _brightnessSave = Timer(const Duration(seconds: 1), () => unawaited(_settingsStore?.save(settings)));
+    _brightnessSave = Timer(const Duration(seconds: 1), () {
+      _update(() {});
+      unawaited(_settingsStore?.save(settings));
+    });
     final platform = player?.platform;
     if (platform is NativePlayer) await platform.setProperty('brightness', '$value');
     return value;

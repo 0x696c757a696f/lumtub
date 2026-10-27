@@ -54,18 +54,24 @@ class _UpcomingCardState extends State<UpcomingCard> {
     final late = left != null && left < -const Duration(minutes: 1);
     const white = Colors.white;
     return Stack(fit: StackFit.expand, children: [
-      ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16, tileMode: TileMode.decal),
-        child: Image(
-          image: widget.thumbnail,
-          fit: BoxFit.cover,
-          errorBuilder: (context, _, __) => const SizedBox.shrink(),
-        ),
-      ),
-      const DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x99000000), Color(0xCC000000)]),
-        ),
+      // The blur stays in its own layer, so the spinner and the countdown
+      // ticking above it do not blur the picture again every frame.
+      RepaintBoundary(
+        child: Stack(fit: StackFit.expand, children: [
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16, tileMode: TileMode.decal),
+            child: Image(
+              image: widget.thumbnail,
+              fit: BoxFit.cover,
+              errorBuilder: (context, _, __) => const SizedBox.shrink(),
+            ),
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x99000000), Color(0xCC000000)]),
+            ),
+          ),
+        ]),
       ),
       Padding(
         padding: const EdgeInsets.all(24),
@@ -96,7 +102,7 @@ class _UpcomingCardState extends State<UpcomingCard> {
               ],
               const SizedBox(height: 22),
               Row(mainAxisSize: MainAxisSize.min, children: [
-                const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xAAFFFFFF))),
+                const RepaintBoundary(child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xAAFFFFFF)))),
                 const SizedBox(width: 10),
                 Text(tr('开始后会自动播放'), style: const TextStyle(color: Color(0xAAFFFFFF), fontSize: 13)),
                 const SizedBox(width: 12),

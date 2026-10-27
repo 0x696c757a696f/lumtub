@@ -2377,5 +2377,7 @@
   "双语，第一字幕在上": "Both, first subtitle on top",
   "双语，第二字幕在上": "Both, second subtitle on top",
   "只看第一字幕": "First subtitle only",
-  "只看第二字幕": "Second subtitle only"
+  "只看第二字幕": "Second subtitle only",
+  "需要管理员权限才能安装到这个文件夹": "Administrator rights are needed to install into this folder",
+  "安装没有开始：{0}。点击重试": "The installer didn't start: {0}. Click to try again"
 }

@@ -946,7 +946,7 @@ List<SettingEntry> aboutEntries(AppController controller) => [
         final String title, subtitle;
         if (updater?.ready != null) {
           title = tr('新版本 {0} 已下载', [release?.version ?? '']);
-          subtitle = tr('关闭 Lumtub 时自动安装，点击立即重启并更新');
+          subtitle = updater?.installError != null ? tr('安装没有开始：{0}。点击重试', [updater!.installError!]) : tr('关闭 Lumtub 时自动安装，点击立即重启并更新');
         } else if (progress != null) {
           title = tr('正在下载新版本 {0}…', [release?.version ?? '']);
           subtitle = '${(progress * 100).round()}%';

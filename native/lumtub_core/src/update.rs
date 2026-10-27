@@ -208,6 +208,90 @@ pub unsafe extern "C" fn lumtub_update_offer(json: *const u8, length: usize) -> 
     give_json(&offer(&ask.release, &ask.current, ask.built, &ask.package, ask.portable))
 }
 
+/// The installer's arguments: silent, into [folder], waiting for Lumtub's
+/// process [process_id] to end, logging to setup.log and noting success in
+/// update.log next to the package, and starting Lumtub again when
+/// [relaunch]. Read by the installer's own code (lumtub.iss).
+pub fn setup_arguments(package: &str, folder: &str, process_id: u32, relaunch: bool) -> String {
+    let logs = parent(package);
+    let mut arguments = format!(
+        "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /DIR=\"{folder}\" /LOG=\"{logs}\\setup.log\" /WAITPID={process_id} /UPDATELOG=\"{logs}\\update.log\""
+    );
+    if relaunch {
+        arguments.push_str(" /RELAUNCH=1");
+    }
+    arguments
+}
+
+/// Whether Lumtub's account can write to [folder], so the installer needs
+/// no administrator rights there.
+fn writable(folder: &str) -> bool {
+    let probe = std::path::Path::new(folder).join(format!(".update-{}", std::process::id()));
+    let ok = std::fs::write(&probe, b"").is_ok();
+    let _ = std::fs::remove_file(&probe);
+    ok
+}
+
+#[cfg(windows)]
+fn shell_execute(file: &str, arguments: &str, elevate: bool) -> Result<(), String> {
+    use windows_sys::Win32::UI::Shell::{ShellExecuteExW, SEE_MASK_NOASYNC, SHELLEXECUTEINFOW};
+    use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+    fn wide(value: &str) -> Vec<u16> {
+        value.encode_utf16().chain(std::iter::once(0)).collect()
+    }
+    let verb = wide(if elevate { "runas" } else { "open" });
+    let file = wide(file);
+    let arguments = wide(arguments);
+    unsafe {
+        let mut info: SHELLEXECUTEINFOW = std::mem::zeroed();
+        info.cbSize = std::mem::size_of::<SHELLEXECUTEINFOW>() as u32;
+        info.fMask = SEE_MASK_NOASYNC;
+        info.lpVerb = verb.as_ptr();
+        info.lpFile = file.as_ptr();
+        info.lpParameters = arguments.as_ptr();
+        info.nShow = SW_SHOWNORMAL;
+        if ShellExecuteExW(&mut info) != 0 {
+            Ok(())
+        } else {
+            Err(std::io::Error::last_os_error().to_string())
+        }
+    }
+}
+
+#[cfg(not(windows))]
+fn shell_execute(_file: &str, _arguments: &str, _elevate: bool) -> Result<(), String> {
+    Err("Installers run only on Windows".to_owned())
+}
+
+/// Starts the installer of [json] (`{package, folder, processId,
+/// relaunch}`) directly, asking for administrator rights only when the
+/// folder needs them; the installer waits for Lumtub to end. JSON
+/// `{"ok":true}`, or `{"error":…}` when it did not start, as when the
+/// person declined the administrator prompt.
+///
+/// # Safety
+/// [json] must point to [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_update_launch(json: *const u8, length: usize) -> *mut c_char {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Launch {
+        package: String,
+        folder: String,
+        process_id: u32,
+        relaunch: bool,
+    }
+    let Ok(launch) = serde_json::from_str::<Launch>(unsafe { text(json, length) }) else {
+        return std::ptr::null_mut();
+    };
+    let elevate = !writable(&launch.folder);
+    let arguments = setup_arguments(&launch.package, &launch.folder, launch.process_id, launch.relaunch);
+    give_json(&match shell_execute(&launch.package, &arguments, elevate) {
+        Ok(()) => serde_json::json!({"ok": true, "elevated": elevate}),
+        Err(error) => serde_json::json!({"error": error, "elevated": elevate}),
+    })
+}
+
 /// The install script for [json], an [Install] as JSON.
 ///
 /// # Safety
@@ -226,6 +310,23 @@ mod tests {
     use serde_json::json;
 
     const BUILT: i64 = 1_761_393_600; // 2025-10-25T12:00:00Z
+
+    #[test]
+    fn installer_arguments_wait_log_and_relaunch() {
+        let args = setup_arguments(r"C:\cache\updates\Lumtub_0.2.6_windows-x64-setup.exe", r"D:\Program Files\lumtub", 42, true);
+        assert_eq!(
+            args,
+            r#"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /DIR="D:\Program Files\lumtub" /LOG="C:\cache\updates\setup.log" /WAITPID=42 /UPDATELOG="C:\cache\updates\update.log" /RELAUNCH=1"#
+        );
+        assert!(!setup_arguments("C:\\a\\b.exe", "D:\\x", 1, false).contains("RELAUNCH"));
+    }
+
+    #[test]
+    fn a_folder_is_writable_when_a_file_can_be_made_there() {
+        let folder = std::env::temp_dir();
+        assert!(writable(folder.to_str().unwrap()));
+        assert!(!writable("/nonexistent/lumtub"));
+    }
 
     #[test]
     fn reads_rfc3339_times() {

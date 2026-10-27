@@ -72,7 +72,57 @@ Name: "{autodesktop}\Lumtub"; Filename: "{app}\lumtub.exe"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\lumtub.exe"; Description: "{cm:LaunchProgram,Lumtub}"; Flags: nowait postinstall skipifsilent
+; An update Lumtub started asks for Lumtub again. Through Explorer, so it
+; runs as the signed-in user even when this installer runs as administrator.
+Filename: "{win}\explorer.exe"; Parameters: """{app}\lumtub.exe"""; Flags: nowait; Check: Relaunch
 
 ; Settings, history, the library and downloaded components live in
 ; %LOCALAPPDATA%\Lumtub and are kept on uninstall, so reinstalling or
 ; switching to the portable ZIP keeps them.
+
+[Code]
+// Lumtub starts its update installer itself, with /WAITPID= its own process
+// so files are replaced only after it has ended, /UPDATELOG= the file noting
+// success that Lumtub reads at its next start, and /RELAUNCH=1 to be started
+// again afterwards.
+function OpenProcess(Access: Cardinal; Inherit: Boolean; ProcessId: Cardinal): THandle;
+  external 'OpenProcess@kernel32.dll stdcall';
+function WaitForSingleObject(Waited: THandle; Milliseconds: Cardinal): Cardinal;
+  external 'WaitForSingleObject@kernel32.dll stdcall';
+function CloseHandle(Closed: THandle): Boolean;
+  external 'CloseHandle@kernel32.dll stdcall';
+
+const
+  SYNCHRONIZE = $00100000;
+
+function InitializeSetup(): Boolean;
+var
+  ProcessId: Cardinal;
+  Process: THandle;
+begin
+  ProcessId := StrToIntDef(ExpandConstant('{param:WAITPID|0}'), 0);
+  if ProcessId <> 0 then
+  begin
+    Process := OpenProcess(SYNCHRONIZE, False, ProcessId);
+    if Process <> 0 then
+    begin
+      WaitForSingleObject(Process, 120000);
+      CloseHandle(Process);
+    end;
+  end;
+  Result := True;
+end;
+
+function Relaunch(): Boolean;
+begin
+  Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  UpdateLog: String;
+begin
+  UpdateLog := ExpandConstant('{param:UPDATELOG|}');
+  if (CurStep = ssPostInstall) and (UpdateLog <> '') then
+    SaveStringToFile(UpdateLog, GetDateTimeString('yyyy-mm-dd hh:nn:ss', '-', ':') + ' updated' + #13#10, True);
+end;

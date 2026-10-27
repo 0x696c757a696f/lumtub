@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'l10n/l10n.dart';
 import 'native_core.dart';
 
 /// The package this build is, such as `windows-x64-v3`; empty for builds
@@ -52,6 +53,9 @@ class AppUpdater extends ChangeNotifier {
   /// The verified package, installed when Lumtub closes.
   File? ready;
   String? error;
+  /// Why the installer did not start, as when its administrator prompt
+  /// was declined; the package stays ready for another try.
+  String? installError;
   /// A version whose package failed its signature check; it is not
   /// downloaded again, and the settings page sends to GitHub instead.
   String? rejected;
@@ -158,17 +162,40 @@ class AppUpdater extends ChangeNotifier {
 
   /// Installs the downloaded package once this process has ended, and
   /// starts Lumtub again when [relaunch]. Returns whether it was handed
-  /// over.
+  /// over; false when it could not start, as when the administrator prompt
+  /// was declined, and Lumtub should keep running.
+  ///
+  /// The installer is started directly and waits for Lumtub itself: a
+  /// hidden PowerShell script, as before, is what security software stops.
+  /// The portable ZIP still needs the script to unpack it.
   Future<bool> install({bool relaunch = false}) async {
     final file = ready;
     if (file == null || !await file.exists()) return false;
+    final executable = Platform.resolvedExecutable;
+    final portable = file.path.endsWith('.zip');
     try {
-      final script = File('${_directory.path}${Platform.pathSeparator}install-update.ps1');
-      final text = updateScript(package: file.path, processId: pid, executable: Platform.resolvedExecutable, portable: file.path.endsWith('.zip'), relaunch: relaunch);
-      if (text == null) return false;
-      await script.writeAsString(text);
-      await Process.start('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', script.path], mode: ProcessStartMode.detached);
-      logInfo('Installing Lumtub ${available?.version ?? ''} after exit');
+      if (!portable) {
+        final folder = File(executable).parent.path;
+        final result = launchInstaller(package: file.path, folder: folder, processId: pid, relaunch: relaunch);
+        if (result == null) throw StateError('No native core');
+        if (result['ok'] != true) {
+          logInfo('Could not start the Lumtub installer${result['elevated'] == true ? ' as administrator' : ''}: ${result['error']}');
+          installError = result['elevated'] == true ? tr('需要管理员权限才能安装到这个文件夹') : '${result['error']}';
+          notifyListeners();
+          return false;
+        }
+        installError = null;
+        logInfo('Installing Lumtub ${available?.version ?? ''} after exit${result['elevated'] == true ? ' as administrator' : ''}');
+        await AppLog.current?.flush();
+      } else {
+        final script = File('${_directory.path}${Platform.pathSeparator}install-update.ps1');
+        final text = updateScript(package: file.path, processId: pid, executable: executable, portable: true, relaunch: relaunch);
+        if (text == null) return false;
+        await script.writeAsString(text);
+        await Process.start('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', script.path], mode: ProcessStartMode.detached);
+        logInfo('Installing Lumtub ${available?.version ?? ''} after exit');
+        await AppLog.current?.flush();
+      }
       ready = null;
       return true;
     } catch (e) {
@@ -185,6 +212,11 @@ class AppUpdater extends ChangeNotifier {
       if (!await _directory.exists()) return;
       final sep = Platform.pathSeparator;
       final outcome = File('${_directory.path}${sep}update.log');
+      final setupLog = File('${_directory.path}${sep}setup.log');
+      if (!await outcome.exists() && await setupLog.exists()) {
+        final tail = (await setupLog.readAsLines(encoding: const Utf8Codec(allowMalformed: true))).reversed.take(8).toList().reversed;
+        logInfo('Lumtub update did not finish; installer log ends with:\n${tail.join('\n')}');
+      }
       if (await outcome.exists()) {
         final lines = (await outcome.readAsLines()).where((line) => line.trim().isNotEmpty).toList();
         final last = lines.isEmpty ? '' : lines.last.trim();
@@ -233,6 +265,15 @@ String? verifyUpdate({required String file, required String name, required Strin
   final answer = jsonDecode(core.take(core.withText(jsonEncode({'file': file, 'name': name, 'signature': signature}), core.updateVerify)) ?? 'null');
   if (answer is Map && answer['ok'] == true) return null;
   return answer is Map ? '${answer['error']}' : 'Could not check the signature';
+}
+
+/// Starts the installer [package] into [folder]; see `lumtub_update_launch`.
+/// Null without the native core.
+Map<String, dynamic>? launchInstaller({required String package, required String folder, required int processId, required bool relaunch}) {
+  final core = NativeCore.instance;
+  if (core == null) return null;
+  final ask = jsonEncode({'package': package, 'folder': folder, 'processId': processId, 'relaunch': relaunch});
+  return jsonDecode(core.take(core.withText(ask, core.updateLaunch)) ?? 'null') as Map<String, dynamic>?;
 }
 
 /// A PowerShell script that waits for Lumtub ([processId]) to end, then runs

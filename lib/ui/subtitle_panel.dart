@@ -78,6 +78,8 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
       widget.player.stream.tracks.listen((_) => _changed()),
     ]);
     widget.controller.addListener(_changed);
+    // The subtitle mpv chose by itself shows as chosen here too.
+    unawaited(widget.controller.syncMainSubtitle());
   }
 
   @override
@@ -237,6 +239,8 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
       } else {
         await controller.setSecondarySubtitle(choice.option);
       }
+      // A track mpv loaded itself has no option to remember by.
+      if (choice.key == 'off' || choice.option != null) await controller.rememberSubtitleChoice(primary: primary, option: choice.option);
     } finally {
       if (mounted) setState(() => primary ? _busyMain = null : _busySecondary = null);
     }

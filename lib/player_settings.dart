@@ -298,6 +298,9 @@ class PlayerSettings {
   final int volumeMax;
   final SubtitleMode subtitleMode;
   final SubtitleLanguage subtitleLanguage;
+  /// The first subtitle in the language the video is spoken in rather than
+  /// [subtitleLanguage].
+  final bool subtitleOriginal;
   /// The TranslationLanguage code of the subtitle shown above the main
   /// one when a video opens; empty for none.
   /// [secondarySubtitleLanguage] for the video's own subtitle in its own
@@ -390,6 +393,7 @@ class PlayerSettings {
     this.volumeMax = 100,
     this.subtitleMode = SubtitleMode.off,
     this.subtitleLanguage = SubtitleLanguage.auto,
+    this.subtitleOriginal = false,
     this.secondarySubtitleLanguage = '',
     this.subtitleBorder = 3,
     this.subtitleBackground = false,
@@ -455,6 +459,7 @@ class PlayerSettings {
     int? volumeMax,
     SubtitleMode? subtitleMode,
     SubtitleLanguage? subtitleLanguage,
+    bool? subtitleOriginal,
     String? secondarySubtitleLanguage,
     double? subtitleBorder,
     bool? subtitleBackground,
@@ -518,6 +523,7 @@ class PlayerSettings {
         volumeMax: volumeMax ?? this.volumeMax,
         subtitleMode: subtitleMode ?? this.subtitleMode,
         subtitleLanguage: subtitleLanguage ?? this.subtitleLanguage,
+        subtitleOriginal: subtitleOriginal ?? this.subtitleOriginal,
         secondarySubtitleLanguage: secondarySubtitleLanguage ?? this.secondarySubtitleLanguage,
         subtitleBorder: subtitleBorder ?? this.subtitleBorder,
         subtitleBackground: subtitleBackground ?? this.subtitleBackground,
@@ -582,6 +588,7 @@ class PlayerSettings {
         'volumeMax': volumeMax,
         'subtitleMode': subtitleMode.name,
         'subtitleLanguageV2': subtitleLanguage.name,
+        'subtitleOriginal': subtitleOriginal,
         'secondarySubtitleLanguage': secondarySubtitleLanguage,
         'subtitleBorder': subtitleBorder,
         'subtitleBackground': subtitleBackground,
@@ -751,6 +758,7 @@ class PlayerSettings {
       subtitleLanguage: raw.containsKey('subtitleLanguageV2') || raw['subtitleLanguage'] != 'zh'
           ? _enumByName(SubtitleLanguage.values, raw['subtitleLanguageV2'] ?? raw['subtitleLanguage'], SubtitleLanguage.auto)
           : SubtitleLanguage.auto,
+      subtitleOriginal: raw['subtitleOriginal'] == true,
       secondarySubtitleLanguage: raw['secondarySubtitleLanguage'] == originalSubtitle ? originalSubtitle : TranslationLanguage.maybeByCode(raw['secondarySubtitleLanguage'])?.code ?? '',
       subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
       subtitleBackground: raw['subtitleBackground'] == true,

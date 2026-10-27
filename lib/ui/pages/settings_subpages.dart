@@ -448,12 +448,12 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           values: [for (final m in SubtitleMode.values) (m, m.label)],
           onSelected: (v) => save(settings.copyWith(subtitleMode: v)),
         ),
-        PopupItem<SubtitleLanguage>(
+        PopupItem<Object>(
           title: tr('第一字幕语言'),
           leading: const Icon(Icons.translate_rounded),
-          value: settings.subtitleLanguage,
-          values: [for (final l in SubtitleLanguage.values) (l, l.label)],
-          onSelected: (v) => save(settings.copyWith(subtitleLanguage: v)),
+          value: settings.subtitleOriginal ? PlayerSettings.originalSubtitle : settings.subtitleLanguage,
+          values: [(PlayerSettings.originalSubtitle, tr('视频原语言')), for (final l in SubtitleLanguage.values) (l, l.label)],
+          onSelected: (v) => save(v is SubtitleLanguage ? settings.copyWith(subtitleLanguage: v, subtitleOriginal: false) : settings.copyWith(subtitleOriginal: true)),
         ),
         PopupItem<String>(
           title: tr('第二字幕语言'),

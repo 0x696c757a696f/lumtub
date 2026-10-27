@@ -1596,7 +1596,7 @@ class AppController extends ChangeNotifier {
       if (serial != _playSerial) return;
       final first = local.preferredSubtitle(settings.subtitleLanguage.mpvLangs.split(','));
       await platform.command(['sub-add', first.path, 'select']);
-      await _syncMainSubtitle();
+      await syncMainSubtitle();
       for (final other in local.subtitles.where((f) => f != first)) {
         await platform.command(['sub-add', other.path, 'auto']);
       }
@@ -1795,20 +1795,29 @@ class AppController extends ChangeNotifier {
       if (main == id) await platform.setProperty('sid', '${added['id']}');
       if (second == id) await platform.setProperty('secondary-sid', '${added['id']}');
       await platform.command(['sub-remove', id]);
-      if (main == id) await _syncMainSubtitle();
+      if (main == id) await syncMainSubtitle();
       logInfo('Subtitle translation finished; track $id replaced by ${added['id']}');
     } catch (e) {
       logInfo('Could not reload the finished subtitle translation: $e');
     }
   }
 
-  /// Tells media_kit which main subtitle mpv shows. It only learns of one
-  /// chosen through its own setSubtitleTrack, not of one selected by
-  /// sub-add or a sid change, and the subtitle panel reads it.
-  Future<void> _syncMainSubtitle() async {
+  /// Tells media_kit which main subtitle mpv shows, and this controller
+  /// which second one. media_kit only learns of one chosen through its own
+  /// setSubtitleTrack, not of one mpv picked as the file loaded, selected
+  /// by sub-add or a sid change, and the subtitle panel reads both.
+  Future<void> syncMainSubtitle() async {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return;
+    try {
+      final second = await platform.getProperty('secondary-sid');
+      if (secondarySubtitle == null && second.isNotEmpty && second != 'no') {
+        final title = player.state.tracks.subtitle.where((t) => t.id == second).firstOrNull?.title;
+        final option = details?.subtitles.where((o) => o.label == title).firstOrNull;
+        if (option != null) _update(() => secondarySubtitle = option);
+      }
+    } catch (_) {}
     try {
       final sid = await platform.getProperty('sid');
       if (sid.isEmpty || sid == player.state.track.subtitle.id) return;
@@ -1908,7 +1917,7 @@ class AppController extends ChangeNotifier {
         final file = await _subtitleFile(option);
         if (this.player != player) return;
         await platform.command(['sub-add', file, 'select', option.label, option.language]);
-        await _syncMainSubtitle();
+        await syncMainSubtitle();
       }
     } catch (e) {
       logError('Could not load subtitles ${option.language}', e);
@@ -1924,20 +1933,23 @@ class AppController extends ChangeNotifier {
     if (player == null || details.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
     if (_secondaryAutoFor == item.id || _openedLocal == item.id) return;
     bool shown(SubtitleTrack t) => t.id != 'no' && t.id != 'auto';
-    if (!shown(player.state.track.subtitle)) {
-      try {
-        await player.stream.track.firstWhere((t) => shown(t.subtitle)).timeout(const Duration(seconds: 30));
-      } on TimeoutException {
-        return;
-      }
+    // mpv picks the track itself as the file loads and does not say so;
+    // ask it until a subtitle is on or half a minute has passed.
+    for (var i = 0; i < 30 && !shown(player.state.track.subtitle); i++) {
+      await syncMainSubtitle();
+      if (serial != _playSerial || this.player != player) return;
+      if (shown(player.state.track.subtitle)) break;
+      await player.stream.track.firstWhere((t) => shown(t.subtitle)).timeout(const Duration(seconds: 1), onTimeout: () => player.state.track);
     }
+    if (!shown(player.state.track.subtitle)) return;
     if (serial != _playSerial || this.player != player || secondarySubtitle != null || _secondaryAutoFor == item.id) return;
     _secondaryAutoFor = item.id;
     var mainTitle = player.state.track.subtitle.title;
     var mainLanguage = player.state.track.subtitle.language;
     final first = settings.subtitleLanguage.translation;
-    if (!speaks(mainLanguage, first)) {
-      final option = subtitleIn(details.subtitles, first);
+    final spoken = settings.subtitleOriginal ? originalSubtitle(details.subtitles, language: details.language) : null;
+    if (spoken != null ? spoken.label != mainTitle : !speaks(mainLanguage, first)) {
+      final option = spoken ?? subtitleIn(details.subtitles, first);
       if (option != null && option.label != mainTitle) {
         logInfo('Showing ${option.language} (${option.kind.name}) as the main subtitle');
         await showSubtitle(option);
@@ -1959,6 +1971,42 @@ class AppController extends ChangeNotifier {
     if (option.label == mainTitle || secondarySubtitle != null) return;
     logInfo('Showing ${option.language} (${option.kind.name}) as the second subtitle');
     await setSecondarySubtitle(option);
+  }
+
+  /// Keeps what was just chosen in the 字幕 panel for the videos after this
+  /// one: the first subtitle ([primary]) on or off and in which language,
+  /// or the second. [option] null is 关闭. Saved without a notice.
+  Future<void> rememberSubtitleChoice({required bool primary, SubtitleOption? option}) async {
+    final details = this.details;
+    final spoken = details == null ? null : originalSubtitle(details.subtitles, language: details.language);
+    final original = option != null && spoken != null && option.label == spoken.label;
+    PlayerSettings next;
+    if (primary) {
+      if (option == null) {
+        next = settings.copyWith(subtitleMode: SubtitleMode.off);
+      } else {
+        final language = SubtitleLanguage.values.where((l) => l != SubtitleLanguage.auto && speaks(option.language, l.translation)).firstOrNull;
+        // Uploaded subtitles alone would miss the automatic one chosen.
+        final mode = settings.subtitleMode == SubtitleMode.manual && option.kind == SubtitleKind.uploaded ? SubtitleMode.manual : SubtitleMode.always;
+        next = settings.copyWith(
+          subtitleMode: mode,
+          subtitleOriginal: original,
+          subtitleLanguage: original ? null : language == null || language == settings.subtitleLanguage.resolved ? null : language,
+        );
+      }
+    } else {
+      final target = option == null ? null : TranslationLanguage.all.where((l) => speaks(option.language, l)).firstOrNull;
+      next = settings.copyWith(
+        secondarySubtitleLanguage: option == null ? '' : original ? PlayerSettings.originalSubtitle : target?.code,
+        // A second subtitle needs the first one on to come back by itself.
+        subtitleMode: option != null && settings.subtitleMode == SubtitleMode.off ? SubtitleMode.always : null,
+      );
+    }
+    if (jsonEncode(next.toJson()) == jsonEncode(settings.toJson())) return;
+    final player = this.player;
+    if (player != null) await PlayerOptionApplicator.apply(player, next, previous: settings);
+    _update(() => settings = next);
+    await _settingsStore?.save(next);
   }
 
   /// Shows [option] (null: none) above the main subtitle.

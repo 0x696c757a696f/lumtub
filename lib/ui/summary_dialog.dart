@@ -60,7 +60,12 @@ class _SummaryDialogState extends State<_SummaryDialog> {
     } else if (summary != null) {
       body = SingleChildScrollView(
         child: SelectionArea(
-          child: LinkedText(summary, style: const TextStyle(height: 1.6), onTime: (time) => controller.player?.seek(time), onLink: openExternal),
+          child: LinkedText(summary, style: const TextStyle(height: 1.6), onTime: (time) {
+            // Out of the way so the moment shows; the summary is kept and
+            // opens again at once.
+            controller.player?.seek(time);
+            Navigator.pop(context);
+          }, onLink: openExternal),
         ),
       );
     } else if (_error case final error?) {

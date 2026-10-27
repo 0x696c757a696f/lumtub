@@ -165,11 +165,15 @@ class CommentsLoader extends ChangeNotifier {
   }
 }
 
+/// Lower-cased once per comment, not once per keystroke.
+final _searchText = Expando<String>();
+
 /// Whether [comment] holds every word of [query], in its text or author's
 /// name, ignoring case.
+
 bool commentMatches(YoutubeComment comment, List<String> words) {
   if (words.isEmpty) return true;
-  final text = '${comment.text}\n${comment.author}'.toLowerCase();
+  final text = _searchText[comment] ??= '${comment.text}\n${comment.author}'.toLowerCase();
   return words.every(text.contains);
 }
 

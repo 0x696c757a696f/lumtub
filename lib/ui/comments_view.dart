@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
 import '../app/comments_loader.dart';
@@ -84,7 +85,9 @@ class _CommentsSectionState extends State<CommentsSection> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        TextField(
+        CallbackShortcuts(
+          bindings: {const SingleActivator(LogicalKeyboardKey.escape): _toggleSearch},
+          child: TextField(
           controller: _search,
           autofocus: true,
           decoration: InputDecoration(
@@ -95,6 +98,7 @@ class _CommentsSectionState extends State<CommentsSection> {
             suffixIcon: IconButton(tooltip: tr('关闭搜索'), icon: const Icon(Icons.close_rounded, size: 18), onPressed: _toggleSearch),
           ),
           onChanged: (text) => setState(() => _words = commentQueryWords(text)),
+        ),
         ),
         const SizedBox(height: 4),
         Row(children: [

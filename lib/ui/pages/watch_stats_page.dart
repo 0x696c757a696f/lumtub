@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../../l10n/l10n.dart';
+import '../../models.dart' show ChannelRef;
 import '../../watch_time.dart';
 import '../../widgets/pilinara_settings_tiles.dart' show confirmDialog;
 import '../theme.dart';
@@ -77,7 +78,18 @@ class _WatchStatsPageState extends State<_WatchStatsPage> {
             if (stats.top.isEmpty)
               Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('还没有记录'), style: TextStyle(color: context.colors.outline)))
             else
-              for (final (_, name, seconds) in stats.top) _ChannelRow(name: name, seconds: seconds, most: stats.top.first.$3),
+              for (final (key, name, seconds) in stats.top)
+                _ChannelRow(
+                  name: name,
+                  seconds: seconds,
+                  most: stats.top.first.$3,
+                  onTap: key.startsWith('name:')
+                      ? null
+                      : () {
+                          Navigator.of(context).popUntil((route) => route.isFirst);
+                          widget.controller.openChannel(ChannelRef(key, name));
+                        },
+                ),
           ]);
         },
       ),
@@ -140,14 +152,18 @@ class _DailyBars extends StatelessWidget {
 }
 
 class _ChannelRow extends StatelessWidget {
-  const _ChannelRow({required this.name, required this.seconds, required this.most});
+  const _ChannelRow({required this.name, required this.seconds, required this.most, this.onTap});
   final String name;
   final int seconds;
   final int most;
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        borderRadius: AppStyle.cardRadius,
+        child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Expanded(child: Text(name.isEmpty ? tr('未知频道') : name, maxLines: 1, overflow: TextOverflow.ellipsis)),
@@ -159,5 +175,6 @@ class _ChannelRow extends StatelessWidget {
             child: LinearProgressIndicator(value: most == 0 ? 0 : seconds / most, minHeight: 4, backgroundColor: context.colors.surfaceContainerHighest),
           ),
         ]),
+      ),
       );
 }

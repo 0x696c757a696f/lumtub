@@ -7,6 +7,7 @@ import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleKind, SubtitleOption;
 import '../subtitle_translation.dart';
+import '../speech_subtitles.dart' show SpeechNeedsFfmpeg;
 import '../translation.dart' show TranslationException;
 import 'pages/translation_settings_page.dart' show openTranslationSettings;
 import 'player_panel.dart';
@@ -303,14 +304,23 @@ class SpeechOffer extends StatefulWidget {
 
 class _SpeechOfferState extends State<SpeechOffer> {
   String? _error;
+  bool _needsFfmpeg = false;
 
-  Future<void> _run() async {
-    setState(() => _error = null);
+  Future<void> _run({bool withFfmpeg = false}) async {
+    setState(() {
+      _error = null;
+      _needsFfmpeg = false;
+    });
     try {
-      await widget.controller.recognizeSpeech();
+      await widget.controller.recognizeSpeech(withFfmpeg: withFfmpeg);
       widget.onDone?.call();
     } catch (e) {
-      if (mounted) setState(() => _error = e is TranslationException ? e.message : '$e');
+      if (mounted) {
+        setState(() {
+          _error = e is TranslationException ? e.message : '$e';
+          _needsFfmpeg = e is SpeechNeedsFfmpeg;
+        });
+      }
     }
   }
 
@@ -355,7 +365,9 @@ class _SpeechOfferState extends State<SpeechOffer> {
             ],
             if (_error case final error? when !mine) ...[
               const SizedBox(height: 12),
-              ErrorBanner(error, onRetry: controller.canRecognizeSpeech ? _run : null),
+              _needsFfmpeg
+                  ? ErrorBanner(error, onRetry: () => _run(withFfmpeg: true), retryLabel: tr('安装 ffmpeg 并继续'))
+                  : ErrorBanner(error, onRetry: controller.canRecognizeSpeech ? _run : null),
             ],
           ]);
         },

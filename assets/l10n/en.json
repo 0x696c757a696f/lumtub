@@ -2532,5 +2532,8 @@
   "请先在“翻译与 AI”里设置语音识别接口和密钥": "Set up the speech recognition service and key under Translation & AI first",
   "这个语音识别服务不返回时间轴，无法生成字幕": "This speech recognition service returns no timing, so it cannot make subtitles",
   "连不上语音识别接口：{0}": "Could not reach the speech recognition service: {0}",
-  "音频太大，语音识别接口不接受": "The audio is too large for the speech recognition service"
+  "音频太大，语音识别接口不接受": "The audio is too large for the speech recognition service",
+  "视频较长，需要 ffmpeg 才能分段识别（和下载用的是同一个）。": "This video is long and needs ffmpeg (the same one downloads use) to be recognized in parts.",
+  "ffmpeg 没装好，无法分段识别": "ffmpeg was not installed, so the audio cannot be split",
+  "安装 ffmpeg 并继续": "Install ffmpeg and continue"
 }

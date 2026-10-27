@@ -65,6 +65,12 @@ class SpeechRecognizer {
   }
 }
 
+/// A video too long for one request, while ffmpeg, which cuts it, is not
+/// installed. The audio fetched stays for the next try.
+class SpeechNeedsFfmpeg extends TranslationException {
+  SpeechNeedsFfmpeg() : super(tr('视频较长，需要 ffmpeg 才能分段识别（和下载用的是同一个）。'));
+}
+
 /// One stretch of audio to recognize and where in the video it starts.
 typedef SpeechPart = ({File file, Duration offset});
 
@@ -109,15 +115,21 @@ class SpeechAudio {
     String? ffmpeg,
   }) async {
     await folder.create(recursive: true);
-    final result = await runWithTimeout(
-      ytDlp,
-      arguments(videoId, folder, proxy: proxy, cacheDirectory: cacheDirectory, deno: deno),
-      timeout: const Duration(minutes: 15),
-      environment: environment,
-      onStart: (process) => lowerPriority(process.pid),
-    );
-    final printed = const LineSplitter().convert(result.stdout.toString()).where((l) => l.contains('|')).lastOrNull;
-    if (result.exitCode != 0 || printed == null) throw TranslationException(tr('没能下载这个视频的音频'));
+    // What an earlier try fetched, when it stopped for ffmpeg.
+    final fetched = File('${folder.path}${Platform.pathSeparator}audio.txt');
+    var printed = await fetched.exists() ? (await fetched.readAsString()).trim() : null;
+    if (printed == null || !await File(printed.substring(printed.indexOf('|') + 1)).exists()) {
+      final result = await runWithTimeout(
+        ytDlp,
+        arguments(videoId, folder, proxy: proxy, cacheDirectory: cacheDirectory, deno: deno),
+        timeout: const Duration(minutes: 15),
+        environment: environment,
+        onStart: (process) => lowerPriority(process.pid),
+      );
+      printed = const LineSplitter().convert(result.stdout.toString()).where((l) => l.contains('|')).lastOrNull;
+      if (result.exitCode != 0 || printed == null) throw TranslationException(tr('没能下载这个视频的音频'));
+      await fetched.writeAsString(printed);
+    }
     final split = printed.indexOf('|');
     final seconds = double.tryParse(printed.substring(0, split)) ?? 0;
     final audio = File(printed.substring(split + 1).trim());
@@ -128,7 +140,7 @@ class SpeechAudio {
     if (count <= 1) return [(file: audio, offset: Duration.zero)];
     if (ffmpeg == null) {
       if (size <= partBytes) return [(file: audio, offset: Duration.zero)];
-      throw TranslationException(tr('视频较长，需要 ffmpeg 才能分段识别。可以在“设置 › 组件管理”里安装 ffmpeg。'));
+      throw SpeechNeedsFfmpeg();
     }
     return _cut(audio, folder, ffmpeg, Duration(seconds: (length.inSeconds / count).ceil() + 1));
   }

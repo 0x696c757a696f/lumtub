@@ -2511,8 +2511,10 @@ class AppController extends ChangeNotifier {
 
   /// Makes subtitles for the video playing from its audio (语音识别), shows
   /// them and keeps them for next time. The audio goes to the service set
-  /// up under 翻译与 AI only now, when asked.
-  Future<SubtitleOption> recognizeSpeech() async {
+  /// up under 翻译与 AI only now, when asked. With [withFfmpeg] a long video
+  /// installs ffmpeg, the one downloads use, to be cut; without it that
+  /// throws [SpeechNeedsFfmpeg] and the audio is kept for the next try.
+  Future<SubtitleOption> recognizeSpeech({bool withFfmpeg = false}) async {
     final item = playing;
     final details = this.details;
     final repository = _repository;
@@ -2526,10 +2528,10 @@ class AppController extends ChangeNotifier {
     final serial = _playSerial;
     final folder = Directory('${(directories?.cache ?? Directory.systemTemp).path}${Platform.pathSeparator}speech-${item.id}');
     void stage(String text, [int done = 0, int total = 0]) => speechJob.value = (videoId: item.id, stage: text, done: done, total: total);
-    try {
-      stage(tr('正在下载音频…'));
+    var keepAudio = false;
+    Future<List<SpeechPart>> fetch() {
       final ffmpegDir = downloads?.ffmpegDirectory?.call();
-      final parts = await SpeechAudio.fetch(
+      return SpeechAudio.fetch(
         item.id,
         folder,
         ytDlp: repository.ytDlpPath,
@@ -2539,6 +2541,23 @@ class AppController extends ChangeNotifier {
         deno: paths.deno,
         ffmpeg: ffmpegDir == null ? null : '$ffmpegDir${Platform.pathSeparator}${Platform.isWindows ? 'ffmpeg.exe' : 'ffmpeg'}',
       );
+    }
+
+    try {
+      stage(tr('正在下载音频…'));
+      List<SpeechPart> parts;
+      try {
+        parts = await fetch();
+      } on SpeechNeedsFfmpeg {
+        if (!withFfmpeg) {
+          keepAudio = true;
+          rethrow;
+        }
+        stage(tr('正在安装 ffmpeg…'));
+        if (!await installFfmpeg()) throw TranslationException(tr('ffmpeg 没装好，无法分段识别'));
+        stage(tr('正在下载音频…'));
+        parts = await fetch();
+      }
       final hint = details.language?.split('-').first.toLowerCase();
       final answers = List<({Duration offset, Map<String, dynamic> answer})?>.filled(parts.length, null);
       var done = 0;
@@ -2576,7 +2595,7 @@ class AppController extends ChangeNotifier {
     } finally {
       speechJob.value = null;
       try {
-        if (await folder.exists()) await folder.delete(recursive: true);
+        if (!keepAudio && await folder.exists()) await folder.delete(recursive: true);
       } catch (_) {}
     }
   }

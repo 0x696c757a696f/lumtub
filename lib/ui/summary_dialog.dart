@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleKind;
+import '../speech_subtitles.dart' show SpeechNeedsFfmpeg;
 import 'common.dart';
 import 'linked_text.dart';
 import 'pages/translation_settings_page.dart';
@@ -24,6 +25,7 @@ class _SummaryDialog extends StatefulWidget {
 
 class _SummaryDialogState extends State<_SummaryDialog> {
   String? _summary;
+  bool _needsFfmpeg = false;
 
   /// Whether 语音识别 has subtitles for this video already.
   bool get _speechDone => widget.controller.details?.subtitles.any((s) => s.kind == SubtitleKind.speech) ?? false;
@@ -39,17 +41,23 @@ class _SummaryDialogState extends State<_SummaryDialog> {
   }
 
   /// Subtitles from 语音识别 first, then the summary made again from them.
-  Future<void> _fromSpeech() async {
+  Future<void> _fromSpeech({bool withFfmpeg = false}) async {
     final controller = widget.controller;
     setState(() {
       _error = null;
       _summary = null;
+      _needsFfmpeg = false;
     });
     try {
-      await controller.recognizeSpeech();
+      await controller.recognizeSpeech(withFfmpeg: withFfmpeg);
       controller.forgetSummary(controller.playing?.id ?? '');
     } catch (e) {
-      if (mounted) setState(() => _error = '$e');
+      if (mounted) {
+        setState(() {
+          _error = '$e';
+          _needsFfmpeg = e is SpeechNeedsFfmpeg;
+        });
+      }
       return;
     }
     if (mounted) await _run();
@@ -91,7 +99,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
         ),
       );
     } else if (_error case final error?) {
-      body = ErrorBanner(error, onRetry: _run);
+      body = _needsFfmpeg ? ErrorBanner(error, onRetry: () => _fromSpeech(withFfmpeg: true), retryLabel: tr('安装 ffmpeg 并继续')) : ErrorBanner(error, onRetry: _run);
     } else if (controller.speechJob.value != null) {
       body = ValueListenableBuilder(
         valueListenable: controller.speechJob,

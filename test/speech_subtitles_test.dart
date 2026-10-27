@@ -71,6 +71,17 @@ void main() {
     expect(args.last, 'https://www.youtube.com/watch?v=abc');
   });
 
+  test('a long video without ffmpeg asks for it and keeps the audio for the next try', () async {
+    final runs = File('${dir.path}/runs');
+    final fake = File('${dir.path}/yt-dlp.sh')
+      ..writeAsStringSync('#!/bin/sh\necho run >> ${runs.path}\nhead -c 21000000 /dev/zero > ${dir.path}/work/audio.webm\necho "3600.0|${dir.path}/work/audio.webm"\n');
+    await Process.run('chmod', ['+x', fake.path]);
+    Future<List<SpeechPart>> fetch() => SpeechAudio.fetch('abc', Directory('${dir.path}/work'), ytDlp: fake.path, environment: const {});
+    await expectLater(fetch(), throwsA(isA<SpeechNeedsFfmpeg>()));
+    await expectLater(fetch(), throwsA(isA<SpeechNeedsFfmpeg>()));
+    expect(runs.readAsLinesSync(), hasLength(1));
+  }, skip: Platform.isWindows ? 'uses a shell script for yt-dlp' : null);
+
   test('lumtub_core turns the answers into subtitles at their offsets', () async {
     final vtt = await speechVtt([
       (offset: Duration.zero, answer: {'segments': [{'start': 0.0, 'end': 2.0, 'text': 'first'}]}),

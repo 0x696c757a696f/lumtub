@@ -95,7 +95,11 @@ class PlayerOptionApplicator {
   /// first changed, so leaving 低资源占用优先 restores them.
   static final _mpvDefaults = Expando<Map<String, String>>();
 
-  static Future<List<String>> apply(Player player, PlayerSettings settings) async {
+  /// Sets [settings]' options on [player]. With [previous], the settings
+  /// libmpv already has, only the options that differ are set: setting
+  /// hwdec or the decoder options again restarts the video decoder, which
+  /// a change of subtitle colour must not.
+  static Future<List<String>> apply(Player player, PlayerSettings settings, {PlayerSettings? previous}) async {
     final platform = player.platform;
     if (platform is! NativePlayer) return const [];
     final failed = <String>[];
@@ -113,7 +117,9 @@ class PlayerOptionApplicator {
     for (final entry in defaults.entries) {
       options.putIfAbsent(entry.key, () => entry.value);
     }
+    final before = previous == null ? null : optionsFor(previous);
     for (final entry in options.entries) {
+      if (before != null && (before[entry.key] ?? defaults[entry.key]) == entry.value) continue;
       try {
         await platform.setProperty(entry.key, entry.value);
       } catch (_) {

@@ -3136,7 +3136,9 @@ class AppController extends ChangeNotifier {
     if (store == null || player == null) return;
     final oldSettings = settings;
     final requiresNextVideo = next.hwdec != oldSettings.hwdec || next.interpolation != oldSettings.interpolation;
-    final ignoredOptions = await PlayerOptionApplicator.apply(player, next);
+    // Lighter scaling set for a busy GPU is not in the settings, so then
+    // every option is set again.
+    final ignoredOptions = await PlayerOptionApplicator.apply(player, next, previous: _lightRendering == null ? oldSettings : null);
     _lightRendering = null;
     await store.save(next);
     _update(() => settings = next);

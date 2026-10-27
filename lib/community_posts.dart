@@ -90,22 +90,24 @@ class CommunityPosts {
     final response = await _client
         .post(
           Uri.parse('https://www.youtube.com/youtubei/v1/browse$query'),
-          headers: {...YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage), ...signedIn},
+          headers: signedIn.isEmpty ? YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage) : {...YoutubeComments.tvHeaders(youtubeAcceptLanguage), ...signedIn},
           body: jsonEncode({
             'context': {
-              'client': {
-                'clientName': 'WEB',
-                'clientVersion': _clientVersion ?? YoutubeWeb.clientVersion,
-                'hl': youtubeHl,
-                if (_visitorData != null) 'visitorData': _visitorData,
-              },
+              'client': signedIn.isEmpty
+                  ? {
+                      'clientName': 'WEB',
+                      'clientVersion': _clientVersion ?? YoutubeWeb.clientVersion,
+                      'hl': youtubeHl,
+                      if (_visitorData != null) 'visitorData': _visitorData,
+                    }
+                  : YoutubeComments.tvClient(youtubeHl),
             },
             'continuation': continuation,
           }),
         )
         .timeout(const Duration(seconds: 20));
     if (signedIn.isNotEmpty && response.statusCode >= 400 && response.statusCode < 500) {
-      signIn?.refuse(response.statusCode);
+      signIn?.refuse(response.statusCode, response.body);
       return next(continuation);
     }
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));

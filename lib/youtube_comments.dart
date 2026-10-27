@@ -119,6 +119,21 @@ class YoutubeComments {
   /// for the rest of the run.
   bool refused = false;
 
+  /// YouTube takes a TV-code sign-in only from its TV app, so signed-in
+  /// requests speak as that app.
+  static const tvClientVersion = '7.20250923.13.00';
+
+  static Map<String, Object?> tvClient(String hl) => {'clientName': 'TVHTML5', 'clientVersion': tvClientVersion, 'hl': hl};
+
+  static Map<String, String> tvHeaders(String acceptLanguage) => {
+        'User-Agent': 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/Version',
+        'Accept-Language': acceptLanguage,
+        'Content-Type': 'application/json',
+        'Origin': 'https://www.youtube.com',
+        'X-YouTube-Client-Name': '7',
+        'X-YouTube-Client-Version': tvClientVersion,
+      };
+
   Future<Map<String, String>> signedInHeaders() async {
     if (refused) return const {};
     try {
@@ -167,17 +182,23 @@ class YoutubeComments {
     final signedIn = await signedInHeaders();
     final response = await _post(endpoint, {'continuation': token}, signedIn);
     if (signedIn.isNotEmpty && response.statusCode >= 400 && response.statusCode < 500) {
-      refuse(response.statusCode);
+      refuse(response.statusCode, response.body);
       return _request(endpoint, token);
     }
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    return _readInBackground(response.bodyBytes);
+    final page = await _readInBackground(response.bodyBytes);
+    if (signedIn.isNotEmpty && page.comments.isEmpty && page.continuation == null && page.topToken == null && page.count.isEmpty) {
+      refuse(200, response.body);
+      return _request(endpoint, token);
+    }
+    return page;
   }
 
   /// Stops sending the sign-in after YouTube answered [status] to it.
-  void refuse(int status) {
+  void refuse(int status, [String body = '']) {
     refused = true;
-    logInfo('YouTube answered $status to the Google sign-in on InnerTube; comments load signed out');
+    final start = body.replaceAll(RegExp(r'\s+'), ' ');
+    logInfo('YouTube answered $status${status == 200 ? ' with nothing readable' : ''} to the TV-code sign-in on InnerTube; comments load signed out · ${start.length > 300 ? start.substring(0, 300) : start}');
   }
 
   /// Likes, dislikes or takes back either, by the [action] of a
@@ -187,7 +208,7 @@ class YoutubeComments {
     if (signedIn.isEmpty) throw StateError(tr('需要先在设置 › Google 账号里用电视码登录'));
     final response = await _post('comment/perform_comment_action', {'actions': [action]}, signedIn);
     if (response.statusCode >= 400 && response.statusCode < 500) {
-      refuse(response.statusCode);
+      refuse(response.statusCode, response.body);
       throw StateError(tr('YouTube 不接受当前电视码登录的这项操作'));
     }
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
@@ -198,15 +219,17 @@ class YoutubeComments {
     return _client
         .post(
           Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?${key == null || signedIn.isNotEmpty ? '' : 'key=$key&'}prettyPrint=false'),
-          headers: {...YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage), ...signedIn},
+          headers: signedIn.isEmpty ? YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage) : {...tvHeaders(youtubeAcceptLanguage), ...signedIn},
           body: jsonEncode({
             'context': {
-              'client': {
-                'clientName': 'WEB',
-                'clientVersion': _clientVersion ?? YoutubeWeb.clientVersion,
-                'hl': youtubeHl,
-                if (_visitorData != null) 'visitorData': _visitorData,
-              },
+              'client': signedIn.isEmpty
+                  ? {
+                      'clientName': 'WEB',
+                      'clientVersion': _clientVersion ?? YoutubeWeb.clientVersion,
+                      'hl': youtubeHl,
+                      if (_visitorData != null) 'visitorData': _visitorData,
+                    }
+                  : tvClient(youtubeHl),
             },
             ...body,
           }),

@@ -14,6 +14,7 @@ import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
 import '../cast_ui.dart';
 import '../common.dart';
+import '../emoji_text.dart';
 import '../lights_off.dart';
 import '../linked_text.dart';
 import '../player_controls.dart';
@@ -589,7 +590,7 @@ class _ReplayChatMessage extends StatelessWidget {
               if (message.amount != null) Text(message.amount!, style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w700)),
               if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: context.colors.outline, fontSize: 12))),
             ]),
-            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 3), child: Text(message.text)),
+            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 3), child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis)))),
             if (message.stickerUrl != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),

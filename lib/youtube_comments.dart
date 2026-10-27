@@ -23,6 +23,7 @@ class YoutubeComment {
     this.pinned = false,
     this.hearted = false,
     this.byUploader = false,
+    this.emojis = const {},
   });
 
   final String id;
@@ -40,6 +41,8 @@ class YoutubeComment {
   /// The uploader liked it.
   final bool hearted;
   final bool byUploader;
+  /// Custom emoji in [text]: shortcut to picture address.
+  final Map<String, String> emojis;
 }
 
 /// One page of comments, the token for the next, and from the first page
@@ -172,6 +175,7 @@ class YoutubeComments {
             pinned: c['pinned'] as bool,
             hearted: c['hearted'] as bool,
             byUploader: c['byUploader'] as bool,
+            emojis: (c['emojis'] as Map<String, dynamic>?)?.cast<String, String>() ?? const {},
           ),
       ],
       page['continuation'] as String?,

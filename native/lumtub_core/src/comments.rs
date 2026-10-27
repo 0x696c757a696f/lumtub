@@ -5,7 +5,7 @@
 
 use serde::Serialize;
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::os::raw::c_char;
 
 use crate::innertube::at;
@@ -24,6 +24,71 @@ pub(crate) fn plain_text(node: Option<&Value>) -> String {
         Some(Value::String(content)) => content.clone(),
         _ => String::new(),
     }
+}
+
+/// Custom emoji in a text: the shortcut written in it, such as
+/// `:face-blue-smiling:`, and the address of its picture.
+pub type Emojis = BTreeMap<String, String>;
+
+/// What an `emoji` run reads as: a Unicode emoji as itself, a custom one
+/// (YouTube's own or a channel's) as its shortcut, with its picture added
+/// to [emojis].
+pub(crate) fn emoji_run(emoji: &Value, emojis: &mut Emojis) -> String {
+    let id = emoji.get("emojiId").map(display).unwrap_or_default();
+    let custom = emoji.get("isCustomEmoji") == Some(&Value::Bool(true));
+    if !custom && !id.is_empty() && !id.is_ascii() {
+        return id;
+    }
+    let label = at(emoji, &["accessibility", "accessibilityData", "label"]).map(display).unwrap_or_default();
+    let name = match emoji.get("shortcuts").and_then(Value::as_array).and_then(|s| s.first()) {
+        Some(first) => display(first),
+        None if !label.is_empty() => label,
+        None => id,
+    };
+    let picture = at(emoji, &["image", "thumbnails"]).and_then(Value::as_array).and_then(|t| t.iter().filter_map(|t| https(t.get("url"))).next_back());
+    if let Some(url) = picture
+        && !name.is_empty()
+    {
+        emojis.insert(name.clone(), url);
+    }
+    name
+}
+
+/// [plain_text], with emoji runs read by [emoji_run].
+pub(crate) fn rich_text(node: Option<&Value>, emojis: &mut Emojis) -> String {
+    let Some(Value::Array(runs)) = node.and_then(|n| n.get("runs")) else { return plain_text(node) };
+    runs.iter()
+        .filter_map(Value::as_object)
+        .map(|run| match (run.get("text"), run.get("emoji")) {
+            (Some(text), _) => display(text),
+            (None, Some(emoji @ Value::Object(_))) => emoji_run(emoji, emojis),
+            _ => String::new(),
+        })
+        .collect()
+}
+
+/// The custom emoji of a `commentViewModel` text: each attachment covers
+/// its shortcut in the text, counted in UTF-16 units as JavaScript does.
+fn attached_emojis(content: Option<&Value>) -> Emojis {
+    let mut emojis = Emojis::new();
+    let (Some(text), Some(Value::Array(runs))) = (content.and_then(|c| c.get("content")).and_then(Value::as_str), content.and_then(|c| c.get("attachmentRuns"))) else {
+        return emojis;
+    };
+    let units: Vec<u16> = text.encode_utf16().collect();
+    for run in runs {
+        let start = run.get("startIndex").and_then(Value::as_u64).unwrap_or(0) as usize;
+        let Some(length) = run.get("length").and_then(Value::as_u64).map(|l| l as usize) else { continue };
+        let Some(slice) = units.get(start..start + length) else { continue };
+        let name = String::from_utf16_lossy(slice);
+        let url = at(run, &["element", "type", "imageType", "image", "sources"]).and_then(Value::as_array).and_then(|s| s.iter().filter_map(|s| https(s.get("url"))).next_back());
+        if let Some(url) = url
+            && name.starts_with(':')
+            && name.ends_with(':')
+        {
+            emojis.insert(name, url);
+        }
+    }
+    emojis
 }
 
 /// A value as Dart's `'$value'` writes it, with null as empty.
@@ -71,6 +136,8 @@ pub struct Comment {
     pub pinned: bool,
     pub hearted: bool,
     pub by_uploader: bool,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub emojis: Emojis,
 }
 
 #[derive(Serialize, Debug, PartialEq, Default)]
@@ -107,16 +174,19 @@ fn comment(node: &Value, entities: &HashMap<&str, &Value>, replies: Option<&Valu
             pinned: model.get("pinnedText").is_some_and(|v| !v.is_null()),
             hearted: toolbar.and_then(|t| t.get("heartState")).and_then(Value::as_str) == Some("TOOLBAR_HEART_STATE_HEARTED"),
             by_uploader: of_author("isCreator") == Some(&Value::Bool(true)),
+            emojis: attached_emojis(field(&["properties", "content"])),
         });
     }
     let renderer = at(node, &["comment", "commentRenderer"]).filter(|v| !v.is_null()).or_else(|| node.get("commentRenderer"))?;
     let id = renderer.get("commentId")?.as_str()?.to_owned();
     let avatar = at(renderer, &["authorThumbnail", "thumbnails"]).and_then(Value::as_array).and_then(|t| t.last()).and_then(|t| https(t.get("url")));
     let present = |path: &[&str]| at(renderer, path).is_some_and(|v| !v.is_null());
+    let mut emojis = Emojis::new();
+    let text = rich_text(renderer.get("contentText"), &mut emojis);
     Some(Comment {
         id,
         author: plain_text(renderer.get("authorText")),
-        text: plain_text(renderer.get("contentText")),
+        text,
         avatar,
         channel_id: at(renderer, &["authorEndpoint", "browseEndpoint", "browseId"]).and_then(Value::as_str).map(str::to_owned),
         published: plain_text(renderer.get("publishedTimeText")),
@@ -126,6 +196,7 @@ fn comment(node: &Value, entities: &HashMap<&str, &Value>, replies: Option<&Valu
         pinned: present(&["pinnedCommentBadge"]),
         hearted: present(&["actionButtons", "commentActionButtonsRenderer", "creatorHeart"]),
         by_uploader: renderer.get("authorIsChannelOwner") == Some(&Value::Bool(true)),
+        emojis,
     })
 }
 
@@ -248,11 +319,28 @@ mod tests {
                 pinned: true,
                 hearted: true,
                 by_uploader: false,
+                emojis: Emojis::new(),
             }
         );
         let old = &page.comments[1];
         assert_eq!((old.author.as_str(), old.text.as_str(), old.avatar.as_deref(), old.channel_id.as_deref()), ("老用户", "你好", Some("https://yt3.ggpht.com/big"), Some("UCold")));
         assert!(old.hearted && old.by_uploader && !old.pinned && old.reply_count == 2);
+    }
+
+    #[test]
+    fn finds_custom_emoji_by_utf16_position() {
+        let content = json!({
+            "content": "好😀 :_hi: ok",
+            "attachmentRuns": [
+                {"startIndex": 4, "length": 5, "element": {"type": {"imageType": {"image": {"sources": [{"url": "https://yt3/hi"}]}}}}},
+                {"startIndex": 0, "length": 1, "element": {"type": {"imageType": {"image": {"sources": [{"url": "https://yt3/x"}]}}}}},
+            ],
+        });
+        assert_eq!(attached_emojis(Some(&content)), Emojis::from([(":_hi:".into(), "https://yt3/hi".into())]));
+        let mut emojis = Emojis::new();
+        let runs = json!({"runs": [{"text": "a "}, {"emoji": {"emojiId": "x", "isCustomEmoji": true, "shortcuts": [":x:"], "image": {"thumbnails": [{"url": "https://yt3/x"}]}}}]});
+        assert_eq!(rich_text(Some(&runs), &mut emojis), "a :x:");
+        assert_eq!(emojis.get(":x:").map(String::as_str), Some("https://yt3/x"));
     }
 
     #[test]

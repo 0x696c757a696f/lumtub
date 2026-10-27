@@ -5,7 +5,7 @@ use serde::Serialize;
 use serde_json::Value;
 use std::os::raw::c_char;
 
-use crate::comments::display;
+use crate::comments::{Emojis, display, emoji_run};
 use crate::taste::{give_json, text};
 
 #[derive(Serialize, Debug, PartialEq, Clone, Copy)]
@@ -37,10 +37,13 @@ pub struct Message {
     pub amount: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sticker_url: Option<String>,
+    #[serde(skip_serializing_if = "Emojis::is_empty")]
+    pub emojis: Emojis,
 }
 
-/// Chat text: `simpleText`, or runs of text and emoji shortcuts.
-fn chat_text(node: Option<&Value>) -> String {
+/// Chat text: `simpleText`, or runs of text and emoji, custom emoji's
+/// pictures going to [emojis].
+fn chat_text(node: Option<&Value>, emojis: &mut Emojis) -> String {
     let Some(Value::Object(map)) = node else { return String::new() };
     if let Some(Value::String(simple)) = map.get("simpleText") {
         return simple.clone();
@@ -52,15 +55,9 @@ fn chat_text(node: Option<&Value>) -> String {
             if let Some(Value::String(text)) = run.get("text") {
                 return text.clone();
             }
-            let Some(emoji @ Value::Object(_)) = run.get("emoji") else { return String::new() };
-            if let Some(Value::Array(shortcuts)) = emoji.get("shortcuts")
-                && let Some(first) = shortcuts.first()
-            {
-                return display(first);
-            }
-            match emoji.get("accessibility").and_then(|a| a.get("accessibilityData")).filter(|d| d.is_object()) {
-                Some(data) => data.get("label").map(display).unwrap_or_default(),
-                None => String::new(),
+            match run.get("emoji") {
+                Some(emoji @ Value::Object(_)) => emoji_run(emoji, emojis),
+                _ => String::new(),
             }
         })
         .collect()
@@ -88,19 +85,22 @@ fn message(item: &Value, offset_ms: Option<i64>) -> Option<Message> {
     if id.is_empty() {
         return None;
     }
-    let text = ["message", "headerSubtext", "headerPrimaryText"].iter().map(|key| chat_text(renderer.get(*key))).find(|t| !t.is_empty()).unwrap_or_default();
-    let amount = chat_text(renderer.get("purchaseAmountText"));
+    let mut emojis = Emojis::new();
+    let text = ["message", "headerSubtext", "headerPrimaryText"].iter().map(|key| chat_text(renderer.get(*key), &mut emojis)).find(|t| !t.is_empty()).unwrap_or_default();
+    let mut ignored = Emojis::new();
+    let amount = chat_text(renderer.get("purchaseAmountText"), &mut ignored);
     Some(Message {
         id,
         kind,
         text,
         offset_ms,
         timestamp_usec: integer(renderer.get("timestampUsec")),
-        author: chat_text(renderer.get("authorName")),
+        author: chat_text(renderer.get("authorName"), &mut ignored),
         author_channel_id: renderer.get("authorExternalChannelId").filter(|v| !v.is_null()).map(display),
         author_avatar: last_thumbnail(renderer.get("authorPhoto").filter(|p| p.is_object())),
         amount: (!amount.is_empty()).then_some(amount),
         sticker_url: last_thumbnail(renderer.get("sticker").filter(|s| s.is_object())),
+        emojis,
     })
 }
 
@@ -163,9 +163,21 @@ mod tests {
                 author_avatar: Some("https://a/l".into()),
                 amount: None,
                 sticker_url: None,
+                emojis: Emojis::new(),
             }
         );
         let sticker = &messages[1];
+        let custom = json!({"addChatItemAction": {"item": {"liveChatTextMessageRenderer": {
+            "id": "m3", "authorName": {"simpleText": "Bo"},
+            "message": {"runs": [
+                {"emoji": {"emojiId": "\u{1F600}", "shortcuts": [":grinning:"], "image": {"thumbnails": [{"url": "https://e/g"}]}}},
+                {"text": " "},
+                {"emoji": {"emojiId": "UC/abc", "isCustomEmoji": true, "shortcuts": [":_wave:"], "image": {"thumbnails": [{"url": "//yt3/s"}, {"url": "https://yt3/l"}]}}},
+            ]},
+        }}}});
+        let custom = &lines(&json!({"actions": [custom]}).to_string())[0];
+        assert_eq!(custom.text, "\u{1F600} :_wave:");
+        assert_eq!(custom.emojis, Emojis::from([(":_wave:".into(), "https://yt3/l".into())]));
         assert_eq!((sticker.kind, sticker.offset_ms, sticker.amount.as_deref(), sticker.sticker_url.as_deref()), (Kind::PaidSticker, None, Some("$5.00"), Some("https://s/1")));
     }
 }

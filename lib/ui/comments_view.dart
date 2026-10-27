@@ -281,7 +281,7 @@ class _CommentTile extends StatelessWidget {
           Translatable(
             controller: controller,
             text: comment.text,
-            builder: (context, text) => LinkedText(text, style: const TextStyle(height: 1.45), onTime: onSeek ?? (_) {}, onLink: openExternal),
+            builder: (context, text) => LinkedText(text, style: const TextStyle(height: 1.45), emojis: comment.emojis, onTime: onSeek ?? (_) {}, onLink: openExternal),
           ),
           const SizedBox(height: 4),
           Row(children: [

@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import 'emoji_text.dart';
+
 /// A piece of text: plain, a time such as 1:23:45, or a web link.
 sealed class TextPart {
   const TextPart(this.text);
@@ -50,13 +52,15 @@ List<TextPart> splitLinks(String text) {
 
 /// [text] with its times and links tappable.
 class LinkedText extends StatefulWidget {
-  const LinkedText(this.text, {super.key, this.style, this.maxLines, required this.onTime, required this.onLink});
+  const LinkedText(this.text, {super.key, this.style, this.maxLines, required this.onTime, required this.onLink, this.emojis = const {}});
 
   final String text;
   final TextStyle? style;
   final int? maxLines;
   final ValueChanged<Duration> onTime;
   final ValueChanged<String> onLink;
+  /// Custom emoji shortcuts in [text] and their pictures.
+  final Map<String, String> emojis;
 
   @override
   State<LinkedText> createState() => _LinkedTextState();
@@ -94,7 +98,7 @@ class _LinkedTextState extends State<LinkedText> {
           switch (part) {
             TimePart(:final time) => TextSpan(text: part.text, style: link, recognizer: _tap(() => widget.onTime(time)), mouseCursor: SystemMouseCursors.click),
             LinkPart() => TextSpan(text: part.text, style: link, recognizer: _tap(() => widget.onLink(part.text)), mouseCursor: SystemMouseCursors.click),
-            PlainPart() => TextSpan(text: part.text),
+            PlainPart() => TextSpan(children: emojiSpans(context, part.text, widget.emojis, style: widget.style)),
           },
       ]),
       style: widget.style,

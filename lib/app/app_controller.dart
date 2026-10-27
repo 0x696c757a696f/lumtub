@@ -617,8 +617,11 @@ class AppController extends ChangeNotifier {
   Future<void> restartToUpdate() async {
     final updater = appUpdater;
     if (updater == null || updater.ready == null) return;
+    // The installer starts first and waits for Lumtub to end, so a declined
+    // administrator prompt leaves Lumtub running as it was.
+    if (!await updater.install(relaunch: true)) return;
     await shutdown(install: false);
-    if (await updater.install(relaunch: true)) exit(0);
+    exit(0);
   }
 
   /// Keeps the thumbnail cache under its cap, at startup and then hourly;

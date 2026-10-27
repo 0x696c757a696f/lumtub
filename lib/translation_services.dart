@@ -501,10 +501,25 @@ class AiTranslator extends _CachedTranslator {
     return out.join('\n');
   }
 
-  Future<List<String>> _translatePiece(List<String> lines, String target) async {
+  /// [text] in [target], with [before] (the lines that came just before
+  /// it, as subtitle sentences do) sent along to read but not translate.
+  /// Not cached: the same line can read differently after other lines.
+  Future<String> translateInContext(String text, String target, List<String> before) async {
+    if (text.trim().isEmpty) return text;
+    final lines = text.split('\n');
+    final out = List<String>.of(lines);
+    final indexes = [for (var i = 0; i < lines.length; i++) if (lines[i].trim().isNotEmpty) i];
+    final result = await _translatePiece([for (final i in indexes) lines[i]], target, before.sublist(before.length > contextLines ? before.length - contextLines : 0));
+    for (var k = 0; k < indexes.length; k++) {
+      out[indexes[k]] = result[k];
+    }
+    return out.join('\n');
+  }
+
+  Future<List<String>> _translatePiece(List<String> lines, String target, [List<String>? given]) async {
     final input = lines.join('\n');
-    final context = contextLines <= 0 ? const <String>[] : _recent.sublist(_recent.length > contextLines ? _recent.length - contextLines : 0);
-    if (contextLines > 0) {
+    final context = given ?? (contextLines <= 0 ? const <String>[] : _recent.sublist(_recent.length > contextLines ? _recent.length - contextLines : 0));
+    if (given == null && contextLines > 0) {
       final recent = [..._recent, ...lines];
       _recent = recent.sublist(recent.length > contextLines ? recent.length - contextLines : 0);
     }

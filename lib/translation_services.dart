@@ -548,22 +548,25 @@ class AiTranslator extends _CachedTranslator {
 
   static List<String> _split(String reply) => reply.split('\n');
 
-  Future<String> _ask(String input, int count, String target, String? note, List<String> context) async {
+  Future<String> _ask(String input, int count, String target, String? note, List<String> context) => _chat([
+        {'role': 'system', 'content': systemPrompt(target, count, context)},
+        {'role': 'user', 'content': input},
+        if (note != null) {'role': 'user', 'content': note},
+      ], temperature, const Duration(seconds: 60));
+
+  /// One answer to [user] under [system], such as AI 总结's; not cached.
+  Future<String> complete(String system, String user, {double temperature = 0.3}) => _chat([
+        {'role': 'system', 'content': system},
+        {'role': 'user', 'content': user},
+      ], temperature, const Duration(seconds: 120));
+
+  Future<String> _chat(List<Map<String, String>> messages, double temperature, Duration timeout) async {
     final base = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
     final uri = Uri.tryParse('$base/chat/completions');
     if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) {
       throw TranslationException(tr('AI 接口地址或模型名不对'));
     }
-    final system = systemPrompt(target, count, context);
-    final body = {
-      'model': model,
-      'temperature': temperature,
-      'messages': [
-        {'role': 'system', 'content': system},
-        {'role': 'user', 'content': input},
-        if (note != null) {'role': 'user', 'content': note},
-      ],
-    };
+    final body = {'model': model, 'temperature': temperature, 'messages': messages};
     final reply = await _post(
       client,
       uri,
@@ -573,7 +576,7 @@ class AiTranslator extends _CachedTranslator {
       },
       jsonEncode(body),
       {401: tr('AI 接口密钥无效'), 404: tr('AI 接口地址或模型名不对')},
-      const Duration(seconds: 60),
+      timeout,
     );
     final data = _decode(reply);
     if (data is Map && data['choices'] is List && (data['choices'] as List).isNotEmpty) {
@@ -825,6 +828,16 @@ Translator translatorFor(TranslationConfig config, Map<String, String> keys, htt
         contextLines: config.aiContext,
       );
   }
+}
+
+/// The AI service set up under 翻译服务, whichever service translates;
+/// null when it still needs its key.
+AiTranslator? aiServiceFor(TranslationConfig config, Map<String, String> keys, http.Client client) {
+  final key = (keys[TranslationService.ai.name] ?? '').trim();
+  final baseUrl = config.effectiveAiBaseUrl;
+  final keyOptional = config.aiPreset == 'ollama' || config.aiPreset == 'custom' || _isLocalUrl(baseUrl);
+  if (key.isEmpty && !keyOptional || baseUrl.isEmpty || config.effectiveAiModel.isEmpty) return null;
+  return AiTranslator(client, baseUrl: baseUrl, key: key, model: config.effectiveAiModel, prompt: config.effectivePrompt);
 }
 
 /// How many characters of text to hand [translator] at a time.

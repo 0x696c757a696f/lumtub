@@ -20,6 +20,7 @@ class HomeFeedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefs = controller.preferences;
+    if (prefs.focusHideHome) return _FocusHome(controller: controller, onFocusSearch: onFocusSearch);
     final feed = prefs.homeShowRecommended ? controller.homeFeed : null;
     final showFeed = feed != null && (feed.items.isNotEmpty || feed.loading || feed.error != null);
     // With the feed below, the history only needs a short row.
@@ -88,6 +89,42 @@ class HomeFeedPage extends StatelessWidget {
           )),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
+    );
+  }
+}
+
+/// 专注模式's home page: no videos to be drawn into, only the search and
+/// the user's own lists.
+class _FocusHome extends StatelessWidget {
+  const _FocusHome({required this.controller, required this.onFocusSearch});
+  final AppController controller;
+  final VoidCallback onFocusSearch;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: Padding(
+          padding: const EdgeInsets.all(AppStyle.pagePadding),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.self_improvement_rounded, size: 48, color: colors.primary),
+            const SizedBox(height: 16),
+            Text(tr('专注模式'), style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text(tr('首页不显示视频。想看什么就搜索，或打开订阅和稍后观看。'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline, height: 1.5)),
+            const SizedBox(height: 20),
+            FilledButton.icon(onPressed: onFocusSearch, icon: const Icon(Icons.search_rounded), label: Text(tr('搜索 (Ctrl+K)'))),
+            const SizedBox(height: 8),
+            Wrap(spacing: 8, alignment: WrapAlignment.center, children: [
+              TextButton(onPressed: () => controller.navigate(PageMode.subscriptions), child: Text(tr('订阅'))),
+              TextButton(onPressed: () => controller.navigate(PageMode.playlists), child: Text(tr('稍后观看与播放列表'))),
+              TextButton(onPressed: () => controller.savePreferences(controller.preferences.copyWith(focusHideHome: false)), child: Text(tr('显示首页内容'))),
+            ]),
+          ]),
+        ),
+      ),
     );
   }
 }

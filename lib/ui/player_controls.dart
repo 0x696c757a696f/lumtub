@@ -22,6 +22,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
+import '../app_preferences.dart' show rateText;
 import '../heatmap.dart';
 import '../keep_awake.dart';
 import '../picture_transform.dart';
@@ -239,14 +240,13 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       final rate = _heldRate = _player.state.rate;
       final fast = max(2.0, rate * 2).clamp(0.25, 4.0);
       unawaited(_player.setRate(fast));
-      _showFeedback(Icons.fast_forward_rounded, tr('{0}x 倍速中', [_trimRate(fast)]));
+      _showFeedback(Icons.fast_forward_rounded, tr('{0}x 倍速中', [rateText(fast)]));
     } else if (_heldRate case final rate?) {
       _heldRate = null;
       unawaited(_player.setRate(rate));
     }
   }
 
-  static String _trimRate(double rate) => rate == rate.roundToDouble() ? rate.toStringAsFixed(0) : rate.toString();
 
   void _showFeedback(IconData icon, String text) {
     _feedbackTimer?.cancel();

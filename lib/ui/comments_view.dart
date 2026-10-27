@@ -51,11 +51,64 @@ class _CommentsSectionState extends State<CommentsSection> {
   }
   /// The comment a reply is being written to.
   String? _replyingTo;
+  /// 搜索评论: open, and the words looked for.
+  bool _searching = false;
+  List<String> _words = const [];
+  final _search = TextEditingController();
 
   @override
   void dispose() {
     _loader.dispose();
+    _search.dispose();
     super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _searching = !_searching;
+      if (!_searching) {
+        _search.clear();
+        _words = const [];
+        _loader.stopLoadingAll();
+      }
+    });
+  }
+
+  /// [comment], or one of its loaded replies, holds the words searched.
+  bool _matches(YoutubeComment comment) =>
+      commentMatches(comment, _words) || (_loader.replies[comment.id]?.replies.any((reply) => commentMatches(reply, _words)) ?? false);
+
+  Widget _searchBar(BuildContext context) {
+    final loader = _loader;
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        TextField(
+          controller: _search,
+          autofocus: true,
+          decoration: InputDecoration(
+            isDense: true,
+            prefixIcon: const Icon(Icons.search_rounded, size: 20),
+            hintText: tr('搜索评论内容或作者'),
+            border: const OutlineInputBorder(),
+            suffixIcon: IconButton(tooltip: tr('关闭搜索'), icon: const Icon(Icons.close_rounded, size: 18), onPressed: _toggleSearch),
+          ),
+          onChanged: (text) => setState(() => _words = commentQueryWords(text)),
+        ),
+        const SizedBox(height: 4),
+        Row(children: [
+          Expanded(child: Text(
+            loader.loadingAll ? tr('正在加载全部评论… 已加载 {0} 条', [loader.comments.length]) : tr('在已加载的 {0} 条评论里搜索', [loader.comments.length]),
+            style: TextStyle(color: colors.outline, fontSize: 12),
+          )),
+          if (loader.loadingAll)
+            TextButton(onPressed: loader.stopLoadingAll, child: Text(tr('停止')))
+          else if (loader.hasMore)
+            TextButton(onPressed: loader.loadAll, child: Text(tr('加载全部评论再搜'))),
+        ]),
+      ]),
+    );
   }
 
   /// Only video comments can be written: YouTube's API has none for posts.
@@ -136,15 +189,22 @@ class _CommentsSectionState extends State<CommentsSection> {
                 onSelectionChanged: (value) => loader.setNewest(value.first),
               );
               final title = Text(loader.count.isEmpty ? tr('评论') : tr('评论 · {0}', [loader.count]), style: Theme.of(context).textTheme.titleMedium);
+              final search = IconButton(
+                tooltip: tr('搜索评论'),
+                isSelected: _searching,
+                icon: const Icon(Icons.search_rounded),
+                onPressed: _toggleSearch,
+              );
               return constraints.maxWidth >= 520
-                  ? Row(children: [title, const Spacer(), order])
-                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Align(alignment: Alignment.centerRight, child: order)]);
+                  ? Row(children: [title, const Spacer(), search, const SizedBox(width: 4), order])
+                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Row(mainAxisAlignment: MainAxisAlignment.end, children: [search, order])]);
             }),
             const SizedBox(height: 8),
+            if (_searching) _searchBar(context),
             if (_canWrite) CommentComposer(hint: tr('添加评论…'), onSubmit: _post),
           ];
           final prefs = widget.controller.preferences;
-          final shown = [for (final comment in loader.comments) if (!prefs.blocksCommenter(comment.author, comment.channelId)) comment];
+          final shown = [for (final comment in loader.comments) if (!prefs.blocksCommenter(comment.author, comment.channelId) && (_words.isEmpty || _matches(comment))) comment];
           final footer = <Widget>[
             if (loader.loading)
               const Padding(padding: EdgeInsets.all(16), child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))))
@@ -152,6 +212,8 @@ class _CommentsSectionState extends State<CommentsSection> {
               ErrorBanner(loader.comments.isEmpty ? tr('无法加载评论：{0}', [error]) : tr('加载更多评论失败：{0}', [error]), onRetry: () => loader.loadMore(retry: true))
             else if (loader.started && loader.comments.isEmpty)
               Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('还没有评论，或评论已关闭'), style: TextStyle(color: colors.outline)))
+            else if (_words.isNotEmpty && shown.isEmpty && !loader.loadingAll)
+              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('已加载的评论里没有找到'), style: TextStyle(color: colors.outline)))
             else if (loader.hasMore)
               Center(child: TextButton(onPressed: loader.loadMore, child: Text(tr('加载更多评论')))),
           ];

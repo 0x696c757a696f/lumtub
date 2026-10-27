@@ -39,6 +39,9 @@ import '../models.dart';
 import '../network_proxy.dart';
 import '../socks_bridge.dart';
 import '../cast/cast_controller.dart';
+import '../channel_playback.dart';
+import '../video_summary.dart';
+import '../watch_time.dart';
 import '../cast/cast_device.dart';
 import '../cast/cast_stream.dart';
 import '../invidious_streams.dart';
@@ -423,6 +426,18 @@ class AppController extends ChangeNotifier {
   bool _shutDown = false;
   late final _sponsorBlock = SponsorBlock(_http);
   late final _returnDislike = ReturnDislike(_http);
+  /// Each channel's last speed and volume; see [ChannelPlayback].
+  ChannelPlayback? channelPlayback;
+  /// 观看统计's watch time.
+  WatchTime? watchTime;
+  /// The channel whose speed and volume changes are remembered now; null
+  /// while a video opens and its own settings are applied.
+  String? _playbackChannel;
+  /// The volume a channel with none of its own plays at: the last chosen.
+  double? _sessionVolume;
+  /// Playing time not yet added to [watchTime], and when it was counted.
+  int _watchMs = 0;
+  DateTime? _watchTick;
   /// Return YouTube Dislike's estimate for the video playing, when on.
   DislikeCount? dislikes;
   bool _disposed = false;
@@ -510,10 +525,14 @@ class AppController extends ChangeNotifier {
       searchHistory = SearchHistory(File('${directories.data.path}${Platform.pathSeparator}search_history.json'));
       final notInterested = NotInterested(File('${directories.data.path}${Platform.pathSeparator}not_interested.json'));
       final libraryStore = LibraryStore(File('${directories.data.path}${Platform.pathSeparator}library.json'));
+      final channelPlayback = ChannelPlayback(File('${directories.data.path}${Platform.pathSeparator}channel_playback.json'));
+      final watchTime = WatchTime(File('${directories.data.path}${Platform.pathSeparator}watch_time.json'));
       final settingsStore = PlayerSettingsStore(directories);
       final preferencesStore = AppPreferencesStore(directories);
       // Separate files: read together rather than one after another.
-      final (_, _, _, settings, preferences) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load()).wait;
+      final (_, _, _, settings, preferences, _, _) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load(), channelPlayback.load(), watchTime.load()).wait;
+      this.channelPlayback = channelPlayback;
+      this.watchTime = watchTime;
       homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(notifyListeners);
       this.settings = settings;
       final cacheManager = CacheManager(directories);
@@ -1287,6 +1306,8 @@ class AppController extends ChangeNotifier {
     }
     unawaited(account?.loadRating(item.id));
     _saveProgress();
+    _countWatchTime(flush: true);
+    _playbackChannel = null;
     _stopCurrentChat();
     final serial = ++_playSerial;
     _recoveryTimer?.cancel();
@@ -1318,7 +1339,7 @@ class AppController extends ChangeNotifier {
     if (settings.returnDislike) unawaited(_loadDislikes(item, serial));
     if (settings.sponsorBlock) unawaited(_loadSegments(item, serial));
     if (await _open(item, serial, start: start, play: preferences.autoPlay)) {
-      if (settings.defaultSpeed != player.state.rate) await player.setRate(settings.defaultSpeed);
+      await _applyChannelPlayback(item, player);
       if (preferences.recordHistory && !incognito) await _history?.record(item);
       if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
       final next = upNext.firstOrNull;
@@ -2035,7 +2056,12 @@ class AppController extends ChangeNotifier {
     _playerSubscriptions.addAll([
       player.stream.width.listen(videoSize),
       player.stream.height.listen(videoSize),
-      player.stream.playing.listen((_) => _updateEfficiency()),
+      player.stream.playing.listen((_) {
+        _updateEfficiency();
+        _countWatchTime();
+      }),
+      player.stream.rate.listen((rate) => _rememberPlayback(rate: rate)),
+      player.stream.volume.listen((volume) => _rememberPlayback(volume: volume)),
       // A second of playback proves a downloaded libmpv works on this PC.
       player.stream.position.listen((position) {
         if (_tracking == null) return;
@@ -2063,6 +2089,7 @@ class AppController extends ChangeNotifier {
           unawaited(inspectCurrentDecoder(delay: const Duration(milliseconds: 500)));
         }
         if (_segments.isNotEmpty) _skipSegments(position);
+        _countWatchTime();
         final now = DateTime.now();
         if (now.difference(_lastProgressSave) > const Duration(seconds: 5)) {
           _lastProgressSave = now;
@@ -2420,6 +2447,92 @@ class AppController extends ChangeNotifier {
     await platform.setProperty('ab-loop-b', at(loopB));
   }
 
+  /// Plays [item] at its channel's remembered speed and volume, else at
+  /// 默认倍速 and the volume chosen last.
+  Future<void> _applyChannelPlayback(VideoItem item, Player player) async {
+    _playbackChannel = null;
+    final key = ChannelPlayback.keyOf(item);
+    final saved = preferences.rememberChannelPlayback && key != null ? channelPlayback?.of(key) : null;
+    final rate = saved?.rate ?? settings.defaultSpeed;
+    if (rate != player.state.rate) await player.setRate(rate);
+    // Said once, so a speed that came back on its own is not a surprise.
+    if (saved?.rate case final kept? when kept != settings.defaultSpeed) _notice(tr('这个频道按上次的 {0}x 倍速播放', [rateText(kept)]));
+    final volume = saved?.volume?.toDouble() ?? _sessionVolume;
+    if (volume != null && volume != player.state.volume) await player.setVolume(volume.clamp(0.0, settings.volumeMax.toDouble()).toDouble());
+    if (this.player == player && playing == item) _playbackChannel = key;
+  }
+
+  /// Keeps a speed or volume chosen while a channel plays for its next
+  /// videos. Mute is not a volume to come back to.
+  void _rememberPlayback({double? rate, double? volume}) {
+    final key = _playbackChannel;
+    if (volume != null && volume > 0 && key != null) _sessionVolume = volume;
+    if (key == null || !preferences.rememberChannelPlayback) return;
+    final store = channelPlayback;
+    if (store == null) return;
+    if (rate != null) {
+      if (rate == store.of(key)?.rate) return;
+      store.remember(key, rate: rate, forgetRate: rate == settings.defaultSpeed);
+    } else if (volume != null && volume > 0 && volume.round() != store.of(key)?.volume) {
+      store.remember(key, volume: volume.round());
+    }
+  }
+
+  /// AI 总结 already made this session, by video id.
+  final _summaries = <String, String>{};
+
+  String? summaryOf(String id) => _summaries[id];
+
+  /// Whether AI 总结 has an AI service to ask.
+  bool get canSummarize => aiServiceFor(preferences.translation, translationKeys, _http) != null;
+
+  /// AI 总结 of the video playing, from its subtitles in its own language,
+  /// by the AI service set up under 翻译服务. Only the transcript and the
+  /// title are sent, and only when asked.
+  Future<String> summarize({void Function(int done, int total)? onProgress}) async {
+    final item = playing;
+    final details = this.details;
+    if (item == null) throw TranslationException(tr('没有正在播放的视频'));
+    if (_summaries[item.id] case final done?) return done;
+    final ai = aiServiceFor(preferences.translation, translationKeys, _http);
+    if (ai == null) throw TranslationException(tr('请先在“翻译服务”里设置 AI 接口和密钥'));
+    final subtitles = details?.subtitles ?? const <SubtitleOption>[];
+    final option = originalSubtitle(subtitles, language: details?.language) ?? subtitles.firstOrNull;
+    if (option == null) throw TranslationException(tr('这个视频没有字幕，无法总结'));
+    final source = await File(await _subtitleFile(option)).readAsString();
+    final transcript = await summaryTranscript(source);
+    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
+    final summary = await summarizeTranscript(ai, title, transcript, onProgress: onProgress);
+    if (_summaries.length >= 30) _summaries.remove(_summaries.keys.first);
+    logInfo('Summarized ${item.id} from ${transcript.chunks.length} part(s)');
+    return _summaries[item.id] = summary;
+  }
+
+  /// Counts the time played up to now into 观看统计, before it is shown.
+  void flushWatchTime() => _countWatchTime(flush: true);
+
+  /// Adds the time played since the last call to 观看统计, a minute or
+  /// a pause at a time; nothing in 无痕模式 or with history off.
+  void _countWatchTime({bool flush = false}) {
+    final player = this.player;
+    final item = _tracking;
+    final now = DateTime.now();
+    final last = _watchTick;
+    final playing = player != null && player.state.playing && !player.state.buffering && item != null;
+    _watchTick = playing ? now : null;
+    if (last != null) {
+      final gap = now.difference(last).inMilliseconds;
+      // A long gap is a sleep or a stall, not watching.
+      if (gap > 0 && gap < 5000) _watchMs += gap;
+    }
+    if (_watchMs < 60000 && !(flush || !playing) || _watchMs < 1000) return;
+    final seconds = _watchMs ~/ 1000;
+    _watchMs -= seconds * 1000;
+    final key = item == null ? null : ChannelPlayback.keyOf(item);
+    if (key == null || !preferences.recordHistory || incognito) return;
+    watchTime?.add(key, item!.channel, seconds);
+  }
+
   Future<void> changeVolume(double delta) async {
     final player = this.player;
     if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, settings.volumeMax.toDouble()).toDouble());
@@ -2623,6 +2736,8 @@ class AppController extends ChangeNotifier {
     setPip(false);
     _finishWatching();
     _saveProgress(now: true);
+    _countWatchTime(flush: true);
+    _playbackChannel = null;
     _tracking = null;
     _recoveryTimer?.cancel();
     _startTimer?.cancel();
@@ -2912,7 +3027,7 @@ class AppController extends ChangeNotifier {
     final feed = homeFeed;
     final repository = _repository;
     final library = this.library;
-    if (feed == null || repository == null || !preferences.homeShowRecommended || feed.loading) return;
+    if (feed == null || repository == null || !preferences.homeShowRecommended || preferences.focusHideHome || feed.loading) return;
     if (!force && !feed.stale && feed.items.isNotEmpty) return;
     // The last launch's feed shows while a new one is gathered.
     await feed.restore(filter: visible);
@@ -3686,6 +3801,8 @@ class AppController extends ChangeNotifier {
     _shutDown = true;
     if (install) await appUpdater?.install();
     _saveProgress();
+    _countWatchTime(flush: true);
+    await (watchTime?.save() ?? Future.value(), channelPlayback?.save() ?? Future.value()).wait;
     await library?.flush();
     await downloads?.flush();
     await _translationCache.save();
@@ -3739,6 +3856,9 @@ class AppController extends ChangeNotifier {
       unawaited(subscription.cancel());
     }
     _saveProgress();
+    _countWatchTime(flush: true);
+    unawaited(watchTime?.save());
+    unawaited(channelPlayback?.save());
     unawaited(_relay?.close());
     unawaited(_bridge?.close());
     cast.dispose();

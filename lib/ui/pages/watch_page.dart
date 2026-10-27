@@ -19,6 +19,7 @@ import '../linked_text.dart';
 import '../player_controls.dart';
 import '../player_shortcuts.dart';
 import '../screenshot_action.dart';
+import '../summary_dialog.dart';
 import '../theater_mode.dart';
 import '../skeleton.dart';
 import '../theme.dart';
@@ -118,7 +119,8 @@ class _WatchPageState extends State<WatchPage> {
           final item = controller.playing;
           // In the side panel the comments scroll by themselves and build
           // only what is on screen.
-          final comments = item == null
+          // 专注模式 can leave the comments out; then they are not loaded.
+          final comments = item == null || controller.preferences.focusHideComments
               ? null
               : CommentsSection(
                   key: ValueKey('comments:${item.id}'),
@@ -272,6 +274,8 @@ class _Toolbar extends StatelessWidget {
           ],
           if (controller.downloads != null && !item.isLive)
             IconButton(tooltip: tr('下载'), icon: const Icon(Icons.download_rounded), onPressed: () => showDownloadChoice(context, controller, item)),
+          if (!item.isLive)
+            IconButton(tooltip: tr('AI 总结'), icon: const Icon(Icons.auto_awesome_outlined), onPressed: () => showVideoSummary(context, controller)),
           IconButton(tooltip: tr('复制链接'), icon: const Icon(Icons.link_rounded), onPressed: () => copyText(context, item.url, tr('链接已复制'))),
           IconButton(tooltip: tr('在浏览器中打开'), icon: const Icon(Icons.open_in_new_rounded), onPressed: () => openExternal(item.url)),
           IconButton(tooltip: tr('快捷键'), icon: const Icon(Icons.keyboard_outlined), onPressed: () => showShortcutHelp(context, controller.preferences)),
@@ -474,25 +478,22 @@ class _SidePanel extends StatelessWidget {
   final Widget? replayChat;
 
   @override
-  Widget build(BuildContext context) => DefaultTabController(
-        length: replayChat == null ? 2 : 3,
-        child: Column(children: [
-          TabBar(
-            dividerColor: Colors.transparent,
-            tabs: [Tab(height: 40, text: tr('接下来播放')), Tab(height: 40, text: tr('评论')), if (replayChat != null) Tab(height: 40, text: tr('聊天'))],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: TabBarView(children: [
-              _UpNext(controller: controller),
-              _KeepAlive(
-                child: comments ?? const SizedBox.shrink(),
-              ),
-              if (replayChat != null) _KeepAlive(child: replayChat!),
-            ]),
-          ),
-        ]),
-      );
+  Widget build(BuildContext context) {
+    final tabs = [
+      (tr('接下来播放'), _UpNext(controller: controller)),
+      if (comments case final comments?) (tr('评论'), _KeepAlive(child: comments)),
+      if (replayChat case final chat?) (tr('聊天'), _KeepAlive(child: chat)),
+    ];
+    return DefaultTabController(
+      key: ValueKey(tabs.length),
+      length: tabs.length,
+      child: Column(children: [
+        TabBar(dividerColor: Colors.transparent, tabs: [for (final (label, _) in tabs) Tab(height: 40, text: label)]),
+        const SizedBox(height: 8),
+        Expanded(child: TabBarView(children: [for (final (_, view) in tabs) view])),
+      ]),
+    );
+  }
 }
 
 class _KeepAlive extends StatefulWidget {

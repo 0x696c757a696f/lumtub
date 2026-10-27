@@ -78,6 +78,9 @@ class AppPreferences {
     this.watchLaterAutoRemove = true,
     this.autoFullscreen = false,
     this.autoLightsOff = false,
+    this.rememberChannelPlayback = true,
+    this.focusHideHome = false,
+    this.focusHideComments = false,
     this.lightsOffDim = 85,
     this.miniPlayer = true,
     this.exitFullscreenOnEnd = false,
@@ -171,6 +174,12 @@ class AppPreferences {
   final bool autoFullscreen;
   /// 关灯 while the video plays, lights on when it pauses.
   final bool autoLightsOff;
+  /// Each channel plays at the speed and volume last chosen on it.
+  final bool rememberChannelPlayback;
+  /// 专注模式: the home page shows no videos at all, only a way to search.
+  final bool focusHideHome;
+  /// 专注模式: no comments on the watch page.
+  final bool focusHideComments;
   /// How dark 关灯 makes the rest of the window, in percent.
   final int lightsOffDim;
   /// Leaving the watch page keeps the video in the in-app mini player
@@ -342,6 +351,9 @@ class AppPreferences {
     bool? watchLaterAutoRemove,
     bool? autoFullscreen,
     bool? autoLightsOff,
+    bool? rememberChannelPlayback,
+    bool? focusHideHome,
+    bool? focusHideComments,
     int? lightsOffDim,
     bool? miniPlayer,
     bool? exitFullscreenOnEnd,
@@ -406,6 +418,9 @@ class AppPreferences {
         watchLaterAutoRemove: watchLaterAutoRemove ?? this.watchLaterAutoRemove,
         autoFullscreen: autoFullscreen ?? this.autoFullscreen,
         autoLightsOff: autoLightsOff ?? this.autoLightsOff,
+        rememberChannelPlayback: rememberChannelPlayback ?? this.rememberChannelPlayback,
+        focusHideHome: focusHideHome ?? this.focusHideHome,
+        focusHideComments: focusHideComments ?? this.focusHideComments,
         lightsOffDim: lightsOffDim ?? this.lightsOffDim,
         miniPlayer: miniPlayer ?? this.miniPlayer,
         exitFullscreenOnEnd: exitFullscreenOnEnd ?? this.exitFullscreenOnEnd,
@@ -471,6 +486,9 @@ class AppPreferences {
         'watchLaterAutoRemove': watchLaterAutoRemove,
         'autoFullscreen': autoFullscreen,
         'autoLightsOff': autoLightsOff,
+        'rememberChannelPlayback': rememberChannelPlayback,
+        'focusHideHome': focusHideHome,
+        'focusHideComments': focusHideComments,
         'lightsOffDim': lightsOffDim,
         'miniPlayer': miniPlayer,
         'exitFullscreenOnEnd': exitFullscreenOnEnd,
@@ -570,6 +588,9 @@ class AppPreferences {
       watchLaterAutoRemove: flag('watchLaterAutoRemove', d.watchLaterAutoRemove),
       autoFullscreen: flag('autoFullscreen', d.autoFullscreen),
       autoLightsOff: flag('autoLightsOff', d.autoLightsOff),
+      rememberChannelPlayback: flag('rememberChannelPlayback', d.rememberChannelPlayback),
+      focusHideHome: flag('focusHideHome', d.focusHideHome),
+      focusHideComments: flag('focusHideComments', d.focusHideComments),
       lightsOffDim: number('lightsOffDim', 85, 50, 98),
       miniPlayer: flag('miniPlayer', d.miniPlayer),
       exitFullscreenOnEnd: flag('exitFullscreenOnEnd', d.exitFullscreenOnEnd),
@@ -623,3 +644,6 @@ class AppPreferencesStore {
     await file.writeAsString(jsonEncode(preferences.toJson()), flush: true);
   }
 }
+
+/// A playback speed as shown to people: `2`, `1.25`.
+String rateText(double rate) => rate == rate.roundToDouble() ? rate.toStringAsFixed(0) : rate.toString();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../common.dart';
+import '../playlist_length.dart';
 import '../theme.dart';
 import '../video_card.dart';
 import '../../l10n/l10n.dart';
@@ -36,6 +37,8 @@ class YoutubePlaylistPage extends StatelessWidget {
                 [if (playlist.channel.isNotEmpty) playlist.channel, if (playlist.count != null) tr('{0} 个视频', [playlist.count]), tr('YouTube 播放列表')].join(' · '),
                 style: TextStyle(color: colors.onSurfaceVariant),
               ),
+              if (playlistLength(items, progressOf: controller.library?.progressOf, partial: loader.hasMore) case final length?)
+                Text(length, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
             ])),
             FilledButton.icon(
               onPressed: items.isEmpty ? null : () => controller.play(items.first, from: items),

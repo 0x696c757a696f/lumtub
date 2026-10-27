@@ -8,6 +8,7 @@ import '../../app/library_controller.dart';
 import '../../library_store.dart';
 import '../../models.dart';
 import '../common.dart';
+import '../playlist_length.dart';
 import '../theme.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
@@ -27,6 +28,8 @@ class SubscriptionsPage extends StatefulWidget {
 
 class _SubscriptionsPageState extends State<SubscriptionsPage> {
   ChannelRef? _selected;
+  /// The 订阅分组 shown, or null for every channel.
+  ChannelGroup? _group;
   double _railWidth = _ChannelStrip.railWidth;
 
   AppController get controller => widget.controller;
@@ -48,26 +51,32 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
             : FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: const Icon(Icons.login_rounded), label: Text(tr('登录并导入订阅'))),
       );
     }
-    final selected = channels.contains(_selected) ? _selected : null;
+    final group = library.channelGroups.contains(_group) ? _group : null;
+    final inGroup = group == null ? channels : [for (final c in channels) if (group.channels.contains(c.id)) c];
+    final selected = inGroup.contains(_selected) ? _selected : null;
     final all = controller.visible(library.feed, subscriptions: true);
-    final feed = selected == null ? all : [for (final item in all) if (item.channelId == selected.id) item];
+    final feed = selected != null
+        ? [for (final item in all) if (item.channelId == selected.id) item]
+        : group != null
+            ? [for (final item in all) if (group.channels.contains(item.channelId)) item]
+            : all;
     Widget strip({bool vertical = false}) => _ChannelStrip(
           vertical: vertical,
           itemWidth: vertical ? _railWidth - 12 : 72,
-          channels: channels,
+          channels: inGroup,
           feed: library.feed,
           selected: selected,
           thumbnails: controller.thumbnailDirectory,
           onSelect: _select,
           onShowAll: () => showDialog<void>(
             context: context,
-            builder: (_) => _AllChannels(channels: channels, thumbnails: controller.thumbnailDirectory, onSelect: _select, onOpen: controller.openChannel),
+            builder: (_) => _AllChannels(channels: inGroup, thumbnails: controller.thumbnailDirectory, onSelect: _select, onOpen: controller.openChannel),
           ),
         );
     // A wide window lists the channels down the left, as Bilibili's 动态 does.
     return LayoutBuilder(builder: (context, constraints) {
       final wide = constraints.maxWidth >= ExplorePage.wideLayout;
-      final page = _page(context, library, channels, selected, feed, wide ? null : strip());
+      final page = _page(context, library, channels, selected, feed, wide ? null : strip(), group);
       if (!wide) return page;
       return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         SizedBox(width: _railWidth, child: strip(vertical: true)),
@@ -77,7 +86,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
     });
   }
 
-  Widget _page(BuildContext context, LibraryController library, List<ChannelRef> channels, ChannelRef? selected, List<VideoItem> feed, Widget? strip) {
+  Widget _page(BuildContext context, LibraryController library, List<ChannelRef> channels, ChannelRef? selected, List<VideoItem> feed, Widget? strip, ChannelGroup? group) {
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
         tr('订阅'),
@@ -85,6 +94,15 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
         trailing: library.loadingFeed
             ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
             : TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: const Icon(Icons.refresh_rounded), label: Text(tr('刷新'))),
+      )),
+      SliverToBoxAdapter(child: _GroupChips(
+        groups: library.channelGroups,
+        selected: group,
+        onSelect: (g) => setState(() {
+          _group = g;
+          _selected = null;
+        }),
+        onManage: () => showDialog<void>(context: context, builder: (_) => _ManageGroups(library: library, channels: channels)),
       )),
       if (strip != null) SliverToBoxAdapter(child: strip),
       if (selected != null)
@@ -119,6 +137,12 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
         SliverVideoGrid(items: feed, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: feed))
       else if (library.loadingFeed)
         const SliverSkeletonGrid()
+      else if (group != null && group.channels.isEmpty)
+        SliverFillRemaining(hasScrollBody: false, child: StatusView(
+          icon: Icons.folder_open_rounded,
+          title: tr('这个分组还没有频道'),
+          action: FilledButton.tonal(onPressed: () => showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels)), child: Text(tr('选择频道'))),
+        ))
       else if (selected != null)
         SliverFillRemaining(hasScrollBody: false, child: StatusView(
           icon: Icons.inbox_outlined,
@@ -129,6 +153,159 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
         SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.inbox_outlined, title: tr('暂时没有新视频'))),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
+  }
+}
+
+/// 全部 and each 订阅分组 as chips, with the button that edits them.
+class _GroupChips extends StatelessWidget {
+  const _GroupChips({required this.groups, required this.selected, required this.onSelect, required this.onManage});
+  final List<ChannelGroup> groups;
+  final ChannelGroup? selected;
+  final ValueChanged<ChannelGroup?> onSelect;
+  final VoidCallback onManage;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 8),
+        child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          if (groups.isNotEmpty) ...[
+            ChoiceChip(label: Text(tr('全部')), selected: selected == null, onSelected: (_) => onSelect(null)),
+            for (final group in groups)
+              ChoiceChip(label: Text('${group.name} · ${group.channels.length}'), selected: selected == group, onSelected: (_) => onSelect(selected == group ? null : group)),
+          ],
+          TextButton.icon(
+            onPressed: onManage,
+            icon: Icon(groups.isEmpty ? Icons.create_new_folder_outlined : Icons.edit_outlined, size: 18),
+            label: Text(groups.isEmpty ? tr('新建分组') : tr('管理分组')),
+          ),
+        ]),
+      );
+}
+
+/// Adds, renames and removes 订阅分组 and picks each one's channels.
+class _ManageGroups extends StatelessWidget {
+  const _ManageGroups({required this.library, required this.channels});
+  final LibraryController library;
+  final List<ChannelRef> channels;
+
+  Future<String?> _askName(BuildContext context, {String initial = ''}) {
+    final text = TextEditingController(text: initial);
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(initial.isEmpty ? tr('新建分组') : tr('重命名分组')),
+        content: TextField(
+          controller: text,
+          autofocus: true,
+          decoration: InputDecoration(labelText: tr('分组名称')),
+          onSubmitted: (v) => Navigator.pop(context, v),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
+          TextButton(onPressed: () => Navigator.pop(context, text.text), child: Text(tr('确认'))),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: library,
+        builder: (context, _) => AlertDialog(
+          title: Text(tr('订阅分组')),
+          content: SizedBox(
+            width: 420,
+            child: library.channelGroups.isEmpty
+                ? Text(tr('把关注的频道分成几组，比如“学习”“音乐”，订阅页可以只看一组的新视频。'), style: TextStyle(color: context.colors.outline, height: 1.5))
+                : ListView(shrinkWrap: true, children: [
+                    for (final group in library.channelGroups)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.folder_outlined),
+                        title: Text(group.name),
+                        subtitle: Text(tr('{0} 个频道', [group.channels.length])),
+                        onTap: () => showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels)),
+                        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                          IconButton(
+                            tooltip: tr('重命名'),
+                            icon: const Icon(Icons.drive_file_rename_outline_rounded),
+                            onPressed: () async {
+                              final name = await _askName(context, initial: group.name);
+                              if (name != null && name.trim().isNotEmpty) library.renameGroup(group, name);
+                            },
+                          ),
+                          IconButton(tooltip: tr('删除分组'), icon: const Icon(Icons.delete_outline_rounded), onPressed: () => library.removeGroup(group)),
+                        ]),
+                      ),
+                  ]),
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: () async {
+                final name = await _askName(context);
+                if (name == null || name.trim().isEmpty || !context.mounted) return;
+                final group = library.addGroup(name);
+                await showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels));
+              },
+              icon: const Icon(Icons.add_rounded),
+              label: Text(tr('新建分组')),
+            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('完成'))),
+          ],
+        ),
+      );
+}
+
+/// The followed channels with a tick for those in [group].
+class _GroupChannels extends StatefulWidget {
+  const _GroupChannels({required this.library, required this.group, required this.channels});
+  final LibraryController library;
+  final ChannelGroup group;
+  final List<ChannelRef> channels;
+
+  @override
+  State<_GroupChannels> createState() => _GroupChannelsState();
+}
+
+class _GroupChannelsState extends State<_GroupChannels> {
+  String _filter = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final group = widget.group;
+    final filter = _filter.toLowerCase();
+    final shown = [for (final c in widget.channels) if (filter.isEmpty || c.name.toLowerCase().contains(filter)) c];
+    return ListenableBuilder(
+      listenable: widget.library,
+      builder: (context, _) => AlertDialog(
+        title: Text(tr('“{0}”里的频道', [group.name])),
+        content: SizedBox(
+          width: 420,
+          height: 480,
+          child: Column(children: [
+            TextField(
+              decoration: InputDecoration(isDense: true, prefixIcon: const Icon(Icons.search_rounded, size: 20), hintText: tr('筛选频道'), border: const OutlineInputBorder()),
+              onChanged: (v) => setState(() => _filter = v.trim()),
+            ),
+            const SizedBox(height: 8),
+            Expanded(child: ListView.builder(
+              itemCount: shown.length,
+              itemBuilder: (context, index) {
+                final channel = shown[index];
+                return CheckboxListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  value: group.channels.contains(channel.id),
+                  title: Text(channel.name.isEmpty ? channel.id : channel.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  onChanged: (v) => widget.library.setInGroup(group, channel.id, v ?? false),
+                );
+              },
+            )),
+          ]),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('完成')))],
+      ),
+    );
   }
 }
 
@@ -571,6 +748,8 @@ class PlaylistDetailPage extends StatelessWidget {
               playlist != null && LibraryController.isRemote(playlist) ? tr('{0} 个视频 · 来自 YouTube 账号，同步时会更新', [items.length]) : tr('{0} 个视频 · 仅保存在本机', [items.length]),
               style: TextStyle(color: context.colors.onSurfaceVariant),
             ),
+            if (playlistLength(items, progressOf: library.progressOf) case final length?)
+              Text(length, style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
           ])),
           FilledButton.icon(
             onPressed: items.isEmpty ? null : () => controller.play(items.first, from: items),

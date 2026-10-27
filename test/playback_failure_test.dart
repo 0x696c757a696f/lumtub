@@ -59,4 +59,14 @@ void main() {
     expect(isSubtitleError('sub-add failed'), isTrue);
     expect(isSubtitleError('Failed to open https://rr1.googlevideo.com/x'), isFalse);
   });
+
+  test('a stream that has not started is waited for, not reported as unavailable', () {
+    final soon = PlaybackFailure.classify(['Bad state: ERROR: [youtube] qVho8nf4JQM: This live event will begin in a few moments.']);
+    expect(soon.kind, FailureKind.upcoming);
+    expect(soon.retryable, isFalse);
+    expect(soon.message, '直播还没开始，开始后会自动播放');
+    expect(kind(['ERROR: [youtube] x: Premieres in 2 hours']), FailureKind.upcoming);
+    expect(kind(['ERROR: [youtube] x: This live event will begin in 3 days.']), FailureKind.upcoming);
+    expect(kind(['ERROR: [youtube] x: This live stream recording is not available.']), FailureKind.unavailable);
+  });
 }

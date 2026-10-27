@@ -118,6 +118,10 @@ class AppController extends ChangeNotifier {
   /// Startup failure; the setup screen shows it with a retry button.
   String? error;
   String? playbackError;
+  /// Whether [playbackError] is a live stream that has not started yet and
+  /// is retried by itself.
+  bool get waitingForStart => playbackError != null && _waitingForStart;
+  bool _waitingForStart = false;
 
   /// Favorites, playlists, followed channels and progress; set once ready.
   LibraryController? library;
@@ -408,6 +412,8 @@ class AppController extends ChangeNotifier {
   String? _unrelayed;
   Timer? _stallTimer;
   Timer? _recoveryTimer;
+  Timer? _startTimer;
+  int _startAttempts = 0;
   bool _recovering = false;
   bool _shutDown = false;
   late final _sponsorBlock = SponsorBlock(_http);
@@ -1255,10 +1261,12 @@ class AppController extends ChangeNotifier {
   /// Opens [item] on the watch page; [at] is where to start, else where
   /// it was left off. [keepMini] plays it in the mini player when that is
   /// where the last video was (the queue moving on by itself).
-  Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at, bool keepMini = false}) async {
+  Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at, bool keepMini = false, bool retryingStart = false}) async {
     final player = this.player;
     if (player == null) return;
-    if (mini && playing?.id == item.id && at == null) return expandMini();
+    if (mini && playing?.id == item.id && at == null && !retryingStart) return expandMini();
+    _startTimer?.cancel();
+    if (!retryingStart) _startAttempts = 0;
     if (playing?.id != item.id) {
       unawaited(cast.stop());
       if (playing case final left?) {
@@ -1282,7 +1290,11 @@ class AppController extends ChangeNotifier {
       playing = item;
       mini = keepMini && mini;
       if (from != null) queue = List.unmodifiable(from);
-      playbackError = null;
+      // A stream being waited for keeps saying so until it plays.
+      if (!retryingStart) {
+        playbackError = null;
+        _waitingForStart = false;
+      }
       details = null;
       loadingDetails = true;
       replayChat = const [];
@@ -1670,9 +1682,31 @@ class AppController extends ChangeNotifier {
           _updateCheckedForChallenge = true;
           unawaited(checkUpdates());
         }
+      case FailureKind.upcoming:
+        _waitForStart(item);
       default:
     }
-    _update(() => playbackError = failure.message);
+    _update(() {
+      playbackError = failure.message;
+      _waitingForStart = failure.kind == FailureKind.upcoming;
+    });
+  }
+
+  /// Opens [item] again once it may have started: at its scheduled time
+  /// when that is still ahead, otherwise every half minute, then less often.
+  void _waitForStart(VideoItem item) {
+    _startTimer?.cancel();
+    final serial = _playSerial;
+    final scheduled = item.scheduledStart?.difference(DateTime.now());
+    final delay = scheduled != null && scheduled > const Duration(minutes: 1)
+        ? scheduled + const Duration(seconds: 15)
+        : Duration(seconds: min(30 * (1 << min(_startAttempts, 2)), 120));
+    _startAttempts++;
+    logInfo('${item.id} has not started, opening it again in ${delay.inSeconds} s');
+    _startTimer = Timer(delay, () {
+      if (_disposed || serial != _playSerial || playing?.id != item.id || !waitingForStart) return;
+      unawaited(play(item, keepMini: true, retryingStart: true));
+    });
   }
 
   /// Reopens the current video where it stopped after the network failed,
@@ -1942,6 +1976,12 @@ class AppController extends ChangeNotifier {
       player.stream.position.listen((position) {
         if (_tracking == null) return;
         if (position > Duration.zero) {
+          if (waitingForStart) {
+            _update(() {
+              _waitingForStart = false;
+              playbackError = null;
+            });
+          }
           if (_recovery.observeProgress(position,
             playing: player.state.playing,
             buffering: player.state.buffering,
@@ -2451,12 +2491,14 @@ class AppController extends ChangeNotifier {
     _saveProgress(now: true);
     _tracking = null;
     _recoveryTimer?.cancel();
+    _startTimer?.cancel();
     _recovery.reset();
     ++_playSerial;
     _update(() {
       playing = null;
       mini = false;
       playbackError = null;
+      _waitingForStart = false;
     });
     _unload();
   }
@@ -3552,6 +3594,7 @@ class AppController extends ChangeNotifier {
     chatMessages.dispose();
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
+    _startTimer?.cancel();
     _sleepTimer?.cancel();
     _dropTimer?.cancel();
     _outputSize?.dispose();

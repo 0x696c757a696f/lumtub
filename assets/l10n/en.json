@@ -2379,5 +2379,7 @@
   "只看第一字幕": "First subtitle only",
   "只看第二字幕": "Second subtitle only",
   "需要管理员权限才能安装到这个文件夹": "Administrator rights are needed to install into this folder",
-  "安装没有开始：{0}。点击重试": "The installer didn't start: {0}. Click to try again"
+  "安装没有开始：{0}。点击重试": "The installer didn't start: {0}. Click to try again",
+  "直播还没开始，开始后会自动播放": "This stream hasn't started yet. It will play as soon as it begins",
+  "现在重试": "Try now"
 }

@@ -6,6 +6,9 @@ enum FailureKind {
   /// Private, removed, members-only, region- or age-restricted: retrying
   /// cannot help.
   unavailable,
+  /// A live stream or premiere that has not started yet: it plays once it
+  /// begins, so Lumtub tries again by itself.
+  upcoming,
   /// HTTP 429: more requests only extend the limit.
   rateLimited,
   /// "Sign in to confirm you're not a bot": YouTube distrusts this IP.
@@ -36,10 +39,11 @@ class PlaybackFailure {
   final String detail;
 
   static final _patterns = <(FailureKind, RegExp)>[
+    (FailureKind.upcoming, RegExp(r'Premieres in|live event will begin|will begin in|waiting for scheduled stream', caseSensitive: false)),
     (FailureKind.unavailable, RegExp(
       r"Video unavailable|Private video|video is private|members.only|join this channel|has been removed|"
       r"account[^.]{0,40}terminated|copyright|not available in your country|geo.?restrict|age.?restrict|confirm your age|"
-      r"inappropriate|Premieres in|live event will begin|This live stream recording is not available",
+      r"inappropriate|This live stream recording is not available",
       caseSensitive: false,
     )),
     (FailureKind.noFormat, RegExp(r'Requested format is not available', caseSensitive: false)),
@@ -70,6 +74,7 @@ class PlaybackFailure {
   String get message {
     final reason = switch (kind) {
       FailureKind.unavailable => tr('这个视频无法观看（私享、已删除、会员专属、地区或年龄限制）'),
+      FailureKind.upcoming => tr('直播还没开始，开始后会自动播放'),
       FailureKind.rateLimited => tried.isEmpty
           ? tr('YouTube 暂时限制了请求频率（429）。已暂停预加载 10 分钟，请过几分钟再播放，或换一个代理节点')
           : tr('YouTube 暂时限制了请求频率（429），改用 {0} 也没有成功。已暂停预加载 10 分钟，请过几分钟再播放，或换一个代理节点', [tried.join('、')]),
@@ -80,6 +85,7 @@ class PlaybackFailure {
       FailureKind.network => tr('网络连接失败，请检查网络或代理'),
       FailureKind.unknown => '',
     };
+    if (kind == FailureKind.upcoming) return reason;
     final shown = detail.length > 300 ? '${detail.substring(0, 300)}…' : detail;
     if (reason.isEmpty) return shown;
     return shown.isEmpty ? reason : '$reason\n$shown';

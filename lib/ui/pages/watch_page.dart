@@ -115,7 +115,9 @@ class _WatchPageState extends State<WatchPage> {
             _Toolbar(controller: controller),
             if (controller.playbackError != null) ...[
               const SizedBox(height: 12),
-              ErrorBanner(tr('播放失败：{0}', [controller.playbackError]), onRetry: controller.retryPlayback),
+              controller.waitingForStart
+                  ? ErrorBanner(controller.playbackError!, waiting: true, onRetry: controller.retryPlayback, retryLabel: tr('现在重试'))
+                  : ErrorBanner(tr('播放失败：{0}', [controller.playbackError]), onRetry: controller.retryPlayback),
             ],
             const SizedBox(height: 16),
             _Details(controller: controller),

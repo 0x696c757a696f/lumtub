@@ -645,6 +645,9 @@ class TranslationConfig {
     this.aiGlossary = '',
     this.aiTemperature = 0.2,
     this.aiContext = 3,
+    this.speechPreset = 'groq',
+    this.speechBaseUrl = '',
+    this.speechModel = '',
   });
 
   final TranslationService service;
@@ -664,6 +667,16 @@ class TranslationConfig {
   final double aiTemperature;
   /// Earlier subtitle lines sent along as context, 0 for none.
   final int aiContext;
+  /// 语音识别: a [SpeechPreset.id], and the address and model typed over it.
+  final String speechPreset;
+  final String speechBaseUrl;
+  final String speechModel;
+
+  SpeechPreset get speech => SpeechPreset.byId(speechPreset);
+
+  String get effectiveSpeechBaseUrl => speechBaseUrl.trim().isNotEmpty ? speechBaseUrl.trim() : speech.baseUrl;
+
+  String get effectiveSpeechModel => speechModel.trim().isNotEmpty ? speechModel.trim() : speech.model;
 
   AiPreset get _aiPreset => AiTranslator.aiPresets.firstWhere((p) => p.id == aiPreset, orElse: () => AiTranslator.aiPresets.first);
 
@@ -691,6 +704,9 @@ class TranslationConfig {
     String? aiGlossary,
     double? aiTemperature,
     int? aiContext,
+    String? speechPreset,
+    String? speechBaseUrl,
+    String? speechModel,
   }) =>
       TranslationConfig(
         service: service ?? this.service,
@@ -707,6 +723,9 @@ class TranslationConfig {
         aiGlossary: aiGlossary ?? this.aiGlossary,
         aiTemperature: aiTemperature ?? this.aiTemperature,
         aiContext: aiContext ?? this.aiContext,
+        speechPreset: speechPreset ?? this.speechPreset,
+        speechBaseUrl: speechBaseUrl ?? this.speechBaseUrl,
+        speechModel: speechModel ?? this.speechModel,
       );
 
   Map<String, Object?> toJson() => {
@@ -724,6 +743,9 @@ class TranslationConfig {
         'aiGlossary': aiGlossary,
         'aiTemperature': aiTemperature,
         'aiContext': aiContext,
+        'speechPreset': speechPreset,
+        'speechBaseUrl': speechBaseUrl,
+        'speechModel': speechModel,
       };
 
   factory TranslationConfig.fromJson(Object? json) {
@@ -749,6 +771,9 @@ class TranslationConfig {
       aiGlossary: text('aiGlossary', ''),
       aiTemperature: temperature is num ? temperature.toDouble().clamp(0.0, 1.5) : 0.2,
       aiContext: context is int ? context.clamp(0, 10) : 3,
+      speechPreset: SpeechPreset.byId(text('speechPreset', 'groq')).id,
+      speechBaseUrl: text('speechBaseUrl', ''),
+      speechModel: text('speechModel', ''),
     );
   }
 
@@ -761,11 +786,14 @@ class TranslationConfig {
   /// cached translations are kept apart.
   String get cacheScope => jsonEncode(service == TranslationService.google ? ['google'] : _fields.map((f) => f is TranslationService ? f.name : f).toList());
 
-  @override
-  bool operator ==(Object other) => other is TranslationConfig && _listEquals(other._fields, _fields);
+  /// Translation settings and the 语音识别 ones, which change no translation.
+  List<Object?> get _all => [..._fields, speechPreset, speechBaseUrl, speechModel];
 
   @override
-  int get hashCode => Object.hashAll(_fields);
+  bool operator ==(Object other) => other is TranslationConfig && _listEquals(other._all, _all);
+
+  @override
+  int get hashCode => Object.hashAll(_all);
 }
 
 bool _listEquals(List<Object?> a, List<Object?> b) {
@@ -838,6 +866,41 @@ AiTranslator? aiServiceFor(TranslationConfig config, Map<String, String> keys, h
   final keyOptional = config.aiPreset == 'ollama' || config.aiPreset == 'custom' || _isLocalUrl(baseUrl);
   if (key.isEmpty && !keyOptional || baseUrl.isEmpty || config.effectiveAiModel.isEmpty) return null;
   return AiTranslator(client, baseUrl: baseUrl, key: key, model: config.effectiveAiModel, prompt: config.effectivePrompt);
+}
+
+/// A 语音识别 service with an OpenAI-compatible `/audio/transcriptions`
+/// that answers `verbose_json` with timed segments, which subtitles need.
+class SpeechPreset {
+  const SpeechPreset(this.id, this.label, this.baseUrl, this.model, {this.sameKeyAs});
+  final String id;
+  final String label;
+  final String baseUrl;
+  final String model;
+  /// The AI 接口 preset whose key works here too.
+  final String? sameKeyAs;
+
+  static const all = [
+    SpeechPreset('groq', 'Groq（Whisper，免费额度）', 'https://api.groq.com/openai/v1', 'whisper-large-v3-turbo'),
+    SpeechPreset('openai', 'OpenAI（Whisper）', 'https://api.openai.com/v1', 'whisper-1', sameKeyAs: 'openai'),
+    SpeechPreset('custom', '自定义（OpenAI 兼容）', '', 'whisper-1'),
+  ];
+
+  static SpeechPreset byId(String id) => all.firstWhere((p) => p.id == id, orElse: () => all.first);
+}
+
+/// The key 语音识别 uses: its own, else the AI 接口's when that is the same
+/// service.
+String speechKeyFor(TranslationConfig config, Map<String, String> keys) {
+  final own = (keys['speech'] ?? '').trim();
+  if (own.isNotEmpty) return own;
+  final same = config.speech.sameKeyAs;
+  return same != null && same == config.aiPreset ? (keys[TranslationService.ai.name] ?? '').trim() : '';
+}
+
+/// Whether 语音识别 has what it needs to be asked.
+bool speechReady(TranslationConfig config, Map<String, String> keys) {
+  final url = config.effectiveSpeechBaseUrl;
+  return url.isNotEmpty && config.effectiveSpeechModel.isNotEmpty && (speechKeyFor(config, keys).isNotEmpty || _isLocalUrl(url));
 }
 
 /// How many characters of text to hand [translator] at a time.

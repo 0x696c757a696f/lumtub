@@ -40,6 +40,7 @@ import '../network_proxy.dart';
 import '../socks_bridge.dart';
 import '../cast/cast_controller.dart';
 import '../channel_playback.dart';
+import '../speech_subtitles.dart';
 import '../video_summary.dart';
 import '../watch_time.dart';
 import '../cast/cast_device.dart';
@@ -428,6 +429,11 @@ class AppController extends ChangeNotifier {
   late final _returnDislike = ReturnDislike(_http);
   /// Each channel's last speed and volume; see [ChannelPlayback].
   ChannelPlayback? channelPlayback;
+  /// 语音识别 subtitles made for videos that had none, kept on this computer.
+  SpeechSubtitleStore? speechStore;
+  /// The 语音识别 running now: the video, what it is doing, parts done of
+  /// how many. Its own notifier, so progress repaints only what shows it.
+  final speechJob = ValueNotifier<({String videoId, String stage, int done, int total})?>(null);
   /// 观看统计's watch time.
   WatchTime? watchTime;
   /// The channel whose speed and volume changes are remembered now; null
@@ -533,6 +539,7 @@ class AppController extends ChangeNotifier {
       final (_, _, _, settings, preferences, _, _) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load(), channelPlayback.load(), watchTime.load()).wait;
       this.channelPlayback = channelPlayback;
       this.watchTime = watchTime;
+      speechStore = SpeechSubtitleStore(Directory('${directories.data.path}${Platform.pathSeparator}speech'));
       homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(notifyListeners);
       this.settings = settings;
       final cacheManager = CacheManager(directories);
@@ -2481,6 +2488,102 @@ class AppController extends ChangeNotifier {
   /// AI 总结 already made this session, by video id.
   final _summaries = <String, String>{};
 
+  /// Whether [details] has subtitles other than 语音识别's.
+  static bool hasOwnSubtitles(VideoDetails? details) => details?.subtitles.any((s) => s.kind != SubtitleKind.speech) ?? false;
+
+  /// Whether 语音识别 has its address, model and key.
+  bool get canRecognizeSpeech => speechReady(preferences.translation, translationKeys);
+
+  Future<SubtitleOption?> _speechOptionFor(String videoId, VideoDetails details) async {
+    if (hasOwnSubtitles(details)) return null;
+    final saved = await speechStore?.of(videoId);
+    return saved == null ? null : SubtitleOption(language: saved.language, name: '', url: saved.file.uri.toString(), kind: SubtitleKind.speech);
+  }
+
+  /// Shows [speech], or its translation into 第一字幕语言, unless subtitles
+  /// are off.
+  Future<void> _showSpeech(SubtitleOption speech, int serial) async {
+    if (settings.subtitleMode == SubtitleMode.off || serial != _playSerial) return;
+    final first = settings.subtitleLanguage.translation;
+    final option = settings.subtitleOriginal || speaks(speech.language, first) ? speech : translationOf([speech], first) ?? speech;
+    await showSubtitle(option);
+  }
+
+  /// Makes subtitles for the video playing from its audio (语音识别), shows
+  /// them and keeps them for next time. The audio goes to the service set
+  /// up under 翻译与 AI only now, when asked.
+  Future<SubtitleOption> recognizeSpeech() async {
+    final item = playing;
+    final details = this.details;
+    final repository = _repository;
+    final paths = this.paths;
+    final store = speechStore;
+    if (item == null || details == null || repository == null || paths == null || store == null) throw TranslationException(tr('没有正在播放的视频'));
+    if (speechJob.value != null) throw TranslationException(tr('正在识别另一个视频，请稍候'));
+    final config = preferences.translation;
+    if (!canRecognizeSpeech) throw TranslationException(tr('请先在“翻译与 AI”里设置语音识别接口和密钥'));
+    final recognizer = SpeechRecognizer(_http, baseUrl: config.effectiveSpeechBaseUrl, key: speechKeyFor(config, translationKeys), model: config.effectiveSpeechModel);
+    final serial = _playSerial;
+    final folder = Directory('${(directories?.cache ?? Directory.systemTemp).path}${Platform.pathSeparator}speech-${item.id}');
+    void stage(String text, [int done = 0, int total = 0]) => speechJob.value = (videoId: item.id, stage: text, done: done, total: total);
+    try {
+      stage(tr('正在下载音频…'));
+      final ffmpegDir = downloads?.ffmpegDirectory?.call();
+      final parts = await SpeechAudio.fetch(
+        item.id,
+        folder,
+        ytDlp: repository.ytDlpPath,
+        environment: repository.processEnvironment,
+        proxy: proxy.ytDlpValue(settings.proxyMode),
+        cacheDirectory: repository.cacheDirectory,
+        deno: paths.deno,
+        ffmpeg: ffmpegDir == null ? null : '$ffmpegDir${Platform.pathSeparator}${Platform.isWindows ? 'ffmpeg.exe' : 'ffmpeg'}',
+      );
+      final hint = details.language?.split('-').first.toLowerCase();
+      final answers = List<({Duration offset, Map<String, dynamic> answer})?>.filled(parts.length, null);
+      var done = 0;
+      var next = 0;
+      stage(tr('正在识别语音…'), 0, parts.length);
+      // Two parts at a time: twice as fast without the burst a free tier
+      // answers with 429.
+      Future<void> worker() async {
+        while (next < parts.length) {
+          final i = next++;
+          answers[i] = (offset: parts[i].offset, answer: await recognizer.transcribe(parts[i].file, language: hint));
+          stage(tr('正在识别语音…'), ++done, parts.length);
+        }
+      }
+
+      await Future.wait([for (var i = 0; i < min(2, parts.length); i++) worker()]);
+      final heard = [for (final a in answers) a!];
+      final vtt = await speechVtt(heard);
+      if (!vtt.contains('-->')) throw TranslationException(tr('没有识别出说话的内容'));
+      final language = (hint == null || hint.isEmpty ? null : details.language) ?? speechLanguageTag(heard.first.answer['language']) ?? 'und';
+      final file = await store.save(item.id, language, vtt);
+      logInfo('Recognized speech of ${item.id} in ${parts.length} part(s)');
+      final option = SubtitleOption(language: language, name: '', url: file.uri.toString(), kind: SubtitleKind.speech);
+      if (serial == _playSerial && playing?.id == item.id) {
+        _summaries.remove(item.id);
+        _update(() => this.details = this.details?.withSpeechSubtitle(option));
+        await _showSpeech(option, serial);
+      }
+      return option;
+    } on TranslationException {
+      rethrow;
+    } catch (e) {
+      logError('Speech recognition failed for ${item.id}', e);
+      throw TranslationException(tr('语音识别失败：{0}', [e]));
+    } finally {
+      speechJob.value = null;
+      try {
+        if (await folder.exists()) await folder.delete(recursive: true);
+      } catch (_) {}
+    }
+  }
+
+  /// Forgets [videoId]'s AI 总结, so the next one is made again.
+  void forgetSummary(String videoId) => _summaries.remove(videoId);
+
   String? summaryOf(String id) => _summaries[id];
 
   /// Whether AI 总结 has an AI service to ask.
@@ -2679,6 +2782,9 @@ class AppController extends ChangeNotifier {
           loaded = await _repository!.details(item.id);
         }
       }
+      // A video with no subtitles keeps the ones 语音识别 made for it.
+      final speech = await _speechOptionFor(item.id, loaded);
+      if (speech != null) loaded = loaded.withSpeechSubtitle(speech);
       if (serial == _playSerial) {
         _update(() {
           details = loaded;
@@ -2687,7 +2793,11 @@ class AppController extends ChangeNotifier {
         // Once yt-dlp names the start time, wait for it rather than poll.
         if (waitingForStart && item.scheduledStart == null && loaded.scheduledStart != null) _waitForStart(item);
         unawaited(_localizeDetails(item.id, serial));
-        unawaited(_autoSubtitles(item, loaded, serial));
+        if (speech != null && loaded.subtitles.length == 1) {
+          unawaited(_showSpeech(speech, serial));
+        } else {
+          unawaited(_autoSubtitles(item, loaded, serial));
+        }
       }
     } catch (_) {
       // The page still shows what the list already knew about the video.
@@ -3212,9 +3322,13 @@ class AppController extends ChangeNotifier {
   }
 
   /// Saves the API key of [service]; an empty one removes it.
-  Future<void> saveTranslationKey(TranslationService service, String key) async {
-    final keys = {...translationKeys}..remove(service.name);
-    if (key.trim().isNotEmpty) keys[service.name] = key.trim();
+  Future<void> saveTranslationKey(TranslationService service, String key) => saveApiKey(service.name, key);
+
+  /// Saves the API key kept under [name] (a [TranslationService.name], or
+  /// `speech` for 语音识别); an empty one removes it.
+  Future<void> saveApiKey(String name, String key) async {
+    final keys = {...translationKeys}..remove(name);
+    if (key.trim().isNotEmpty) keys[name] = key.trim();
     _update(() => translationKeys = keys);
     _useTranslator();
     try {
@@ -3862,6 +3976,7 @@ class AppController extends ChangeNotifier {
     _disposed = true;
     _stopCurrentChat();
     chatMessages.dispose();
+    speechJob.dispose();
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _startTimer?.cancel();

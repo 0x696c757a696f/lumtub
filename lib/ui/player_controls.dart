@@ -758,7 +758,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           final current = _player.state.track.subtitle;
           final on = current.id != 'no' && current.id != 'auto';
           final hasTracks = _player.state.tracks.subtitle.any((t) => t.id != 'auto' && t.id != 'no');
-          if (!hasTracks && (_controller.details?.subtitles ?? const []).isEmpty) return const SizedBox.shrink();
+          // A video with none still gets the button, for 语音识别.
+          final details = _controller.details;
+          if (!hasTracks && (details == null || (details.subtitles.isEmpty && (_controller.playing?.isLive ?? true)))) return const SizedBox.shrink();
           final button = _IconButton(
             tooltip: tr('字幕'),
             width: width,

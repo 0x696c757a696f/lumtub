@@ -429,6 +429,22 @@ class VideoDetails {
     );
   }
 
+  /// These details with [speech] (语音识别) listed after the rest.
+  VideoDetails withSpeechSubtitle(SubtitleOption speech) => VideoDetails(
+        title: title,
+        channel: channel,
+        channelUrl: channelUrl,
+        channelId: channelId,
+        uploadDate: uploadDate,
+        viewCount: viewCount,
+        likeCount: likeCount,
+        description: description,
+        chapters: chapters,
+        subtitles: [...subtitles.where((s) => s.kind != SubtitleKind.speech), speech],
+        scheduledStart: scheduledStart,
+        language: language,
+      );
+
   static final _chapterLine = RegExp(r'^\s*[\[(]?(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\])]?\s*[-–—:|·]?\s*(\S.*)$');
 }
 
@@ -445,6 +461,7 @@ class SubtitleOption {
         SubtitleKind.uploaded => languageName(language, name),
         SubtitleKind.automatic => tr('{0}（自动生成）', [languageName(language, name)]),
         SubtitleKind.translated => tr('{0}（自动翻译）', [languageName(language, name)]),
+        SubtitleKind.speech => tr('{0}（语音识别）', [languageName(language, name)]),
       };
 
   /// yt-dlp's `subtitles` and `automatic_captions` maps. Automatic
@@ -503,7 +520,8 @@ class SubtitleOption {
   }
 }
 
-enum SubtitleKind { uploaded, automatic, translated }
+/// [speech] is 语音识别's, made on this computer for a video with none.
+enum SubtitleKind { uploaded, automatic, translated, speech }
 
 String formatBytes(int bytes) {
   if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';

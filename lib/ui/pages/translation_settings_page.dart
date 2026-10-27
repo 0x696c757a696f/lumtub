@@ -211,6 +211,34 @@ List<Widget> _items(BuildContext context, AppController controller) {
       tip(tr('使用 OpenAI 兼容的 /chat/completions 接口。提示词里 {target} 换成目标语言，{lines} 换成行数；字幕按行翻译，返回的行数不对时会重试一次。')),
     ] else
       tip(tr('想用 AI 翻译，把上面的“翻译服务”选成“AI 大模型”。')),
+    header(tr('语音识别')),
+    tip(tr('视频没有字幕时，可以把音频发给语音识别服务生成带时间轴的字幕，播放和 AI 总结都能用。只在你点“用语音识别生成字幕”时才上传这个视频的音频，结果保存在本机，下次不再上传。')),
+    PopupItem<String>(
+      title: tr('语音识别服务'),
+      leading: const Icon(Icons.graphic_eq_rounded),
+      value: config.speech.id,
+      values: [for (final p in SpeechPreset.all) (p.id, tr(p.label))],
+      onSelected: (v) => saveConfig((c) => c.copyWith(speechPreset: v, speechBaseUrl: '', speechModel: '')),
+    ),
+    textItem(tr('接口地址'), config.speechBaseUrl, config.effectiveSpeechBaseUrl.isEmpty ? tr('未填写') : config.effectiveSpeechBaseUrl, Icons.link_rounded,
+        config.speech.baseUrl.isEmpty ? tr('OpenAI 兼容接口，如 http://localhost:8000/v1') : config.speech.baseUrl, (v) => saveConfig((c) => c.copyWith(speechBaseUrl: v))),
+    textItem(tr('模型'), config.speechModel, config.effectiveSpeechModel.isEmpty ? tr('未填写') : config.effectiveSpeechModel, Icons.memory_rounded,
+        config.speech.model, (v) => saveConfig((c) => c.copyWith(speechModel: v))),
+    Builder(builder: (context) {
+      final own = controller.translationKeys['speech'] ?? '';
+      final shared = own.isEmpty && speechKeyFor(config, controller.translationKeys).isNotEmpty;
+      return NormalItem(
+        title: config.speech.id == 'custom' ? tr('API 密钥（可选）') : tr('API 密钥'),
+        subtitle: own.isNotEmpty ? tr('已填写（{0}）', [_masked(own)]) : shared ? tr('使用 AI 接口的密钥') : tr('未填写'),
+        leading: const Icon(Icons.key_rounded),
+        onTap: () async {
+          final typed = await showDialog<String>(context: context, builder: (context) => _KeyDialog(title: tr('语音识别的 API 密钥'), initial: own));
+          if (typed != null) await controller.saveApiKey('speech', typed);
+        },
+      );
+    }),
+    if (config.speech.id == 'groq')
+      tip(tr('Groq 的密钥可以在 console.groq.com 免费申请；免费额度每天能识别几个小时的音频。')),
     header(tr('显示')),
     SwitchItem(
       title: tr('双语对照'),

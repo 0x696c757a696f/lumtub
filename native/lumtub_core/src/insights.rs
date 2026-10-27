@@ -1,6 +1,6 @@
 //! Text and numbers Lumtub works out from what it already has: a video's
-//! subtitles as a transcript for AI 总结, and 观看统计 from the watch time
-//! kept on this computer.
+//! subtitles as a transcript for AI 总结, 语音识别 results as subtitles, and
+//! 观看统计 from the watch time kept on this computer.
 
 use serde_json::{Value, json};
 use std::collections::HashMap;
@@ -163,6 +163,94 @@ pub fn watch_stats(input: &Value) -> Value {
     })
 }
 
+/// `HH:MM:SS.mmm`, as WebVTT writes times.
+fn vtt_time(ms: u64) -> String {
+    format!("{:02}:{:02}:{:02}.{:03}", ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, ms % 1000)
+}
+
+/// [text] in pieces of about [size] characters, broken after punctuation
+/// or a space where one is near, so long recognized sentences fit on screen.
+fn pieces(text: &str, size: usize) -> Vec<String> {
+    let chars: Vec<char> = text.chars().collect();
+    if chars.len() <= size + size / 3 {
+        return vec![text.to_string()];
+    }
+    let count = chars.len().div_ceil(size);
+    let target = chars.len().div_ceil(count);
+    let mut out = Vec::new();
+    let mut start = 0;
+    while start < chars.len() {
+        let mut end = (start + target).min(chars.len());
+        if end < chars.len() {
+            let low = start + target * 2 / 3;
+            let high = (start + target * 4 / 3).min(chars.len() - 1);
+            let good = |c: char| matches!(c, '，' | '。' | '！' | '？' | '、' | '；' | ',' | '.' | '!' | '?' | ';');
+            if let Some(at) = (low..=high).find(|&i| good(chars[i])) {
+                end = at + 1;
+            } else if let Some(at) = (low..=high).rev().find(|&i| chars[i] == ' ') {
+                end = at;
+            }
+        }
+        let piece: String = chars[start..end].iter().collect::<String>().trim().to_string();
+        if !piece.is_empty() {
+            out.push(piece);
+        }
+        start = end;
+    }
+    out
+}
+
+/// WebVTT of what an OpenAI-compatible `/audio/transcriptions` answered
+/// (`verbose_json`) for each part of a video's audio:
+/// `{parts: [{offset: ms, segments: [{start, end, text, no_speech_prob}]}]}`,
+/// [start] and [end] in seconds from the part's start. Silence Whisper
+/// filled with made-up words is left out and long sentences are split.
+pub fn speech_vtt(input: &Value) -> String {
+    let mut cues: Vec<(u64, u64, String)> = Vec::new();
+    for part in input.get("parts").and_then(Value::as_array).into_iter().flatten() {
+        let offset = part.get("offset").and_then(Value::as_u64).unwrap_or(0);
+        for segment in part.get("segments").and_then(Value::as_array).into_iter().flatten() {
+            let text = segment.get("text").and_then(Value::as_str).unwrap_or("").split_whitespace().collect::<Vec<_>>().join(" ");
+            let quiet = segment.get("no_speech_prob").and_then(Value::as_f64).unwrap_or(0.0) > 0.8;
+            if text.is_empty() || quiet {
+                continue;
+            }
+            let second = |name: &str| (segment.get(name).and_then(Value::as_f64).unwrap_or(0.0).max(0.0) * 1000.0) as u64;
+            let start = offset + second("start");
+            let end = (offset + second("end")).max(start + 500);
+            let size = if text.chars().any(wide) { 22 } else { 48 };
+            let parts = pieces(&text, size);
+            let total: usize = parts.iter().map(|p| p.chars().count()).sum::<usize>().max(1);
+            let mut at = start;
+            for (i, piece) in parts.iter().enumerate() {
+                let next = if i + 1 == parts.len() { end } else { at + (end - start) * piece.chars().count() as u64 / total as u64 };
+                cues.push((at, next.max(at + 300), piece.clone()));
+                at = next;
+            }
+        }
+    }
+    cues.sort_by_key(|c| c.0);
+    let mut out = String::from("WEBVTT\n\n");
+    for i in 0..cues.len() {
+        let (start, mut end, ref text) = cues[i];
+        if let Some(next) = cues.get(i + 1) {
+            end = end.min(next.0.max(start + 300));
+        }
+        out.push_str(&format!("{} --> {}\n{}\n\n", vtt_time(start), vtt_time(end), text));
+    }
+    out
+}
+
+/// [speech_vtt] for Dart.
+///
+/// # Safety
+/// [json] must point to [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_speech_vtt(json: *const u8, length: usize) -> *mut c_char {
+    let input: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or(Value::Null);
+    give(speech_vtt(&input))
+}
+
 /// [transcript] for Dart, from `{source, budget, most}`.
 ///
 /// # Safety
@@ -219,6 +307,27 @@ mod tests {
         let whole = transcript(&source, 100_000, 3);
         assert_eq!(whole["chunks"].as_array().unwrap().len(), 1);
         assert_eq!(whole["cut"], false);
+    }
+
+    #[test]
+    fn turns_recognized_speech_into_subtitles() {
+        let vtt = speech_vtt(&json!({"parts": [
+            {"offset": 0, "segments": [
+                {"start": 0.0, "end": 2.5, "text": " Hello there. "},
+                {"start": 3.0, "end": 4.0, "text": "Thanks for watching!", "no_speech_prob": 0.95},
+            ]},
+            {"offset": 600_000, "segments": [
+                {"start": 1.0, "end": 9.0, "text": "这是一段很长的识别结果，里面有好几个分句，应该被拆成两条字幕显示，不然一行放不下。"},
+            ]},
+        ]}));
+        assert!(vtt.starts_with("WEBVTT\n\n00:00:00.000 --> 00:00:02.500\nHello there.\n\n"));
+        assert!(!vtt.contains("Thanks for watching"));
+        assert!(vtt.contains("00:10:01.000 --> "));
+        let cues = cues(&vtt);
+        assert_eq!(cues.len(), 3);
+        assert!(cues[1].text.ends_with('，'));
+        assert_eq!(cues[2].end, 609_000);
+        assert_eq!(cues[1].end, cues[2].start);
     }
 
     #[test]

@@ -7,7 +7,10 @@ import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleKind, SubtitleOption;
 import '../subtitle_translation.dart';
+import '../translation.dart' show TranslationException;
+import 'pages/translation_settings_page.dart' show openTranslationSettings;
 import 'player_panel.dart';
+import 'common.dart' show ErrorBanner;
 import 'subtitle_list_panel.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
@@ -126,6 +129,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
       if (others.isNotEmpty) (tr('已加载'), others),
       (tr('视频自带'), [for (final o in offered) if (o.kind == SubtitleKind.uploaded && (searching || !identical(o, spoken))) _ofOption(o)]),
       (tr('自动生成'), [for (final o in offered) if (o.kind == SubtitleKind.automatic && (searching || !identical(o, spoken))) _ofOption(o)]),
+      (tr('语音识别'), [for (final o in offered) if (o.kind == SubtitleKind.speech && (searching || !identical(o, spoken))) _ofOption(o)]),
     ];
     final translated = [for (final o in offered) if (o.kind == SubtitleKind.translated) _ofOption(o)];
     final theme = Theme.of(context);
@@ -212,7 +216,13 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
           ),
         ),
       if (offered.isEmpty && others.isEmpty)
-        Expanded(child: Center(child: Text(controller.loadingDetails ? tr('正在读取字幕列表…') : tr('这个视频没有字幕'), style: TextStyle(color: colors.outline))))
+        Expanded(
+          child: Center(
+            child: controller.loadingDetails
+                ? Text(tr('正在读取字幕列表…'), style: TextStyle(color: colors.outline))
+                : SpeechOffer(controller: controller, onDone: () => setState(() {})),
+          ),
+        )
       else
         Expanded(
           child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -275,5 +285,81 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
   static String _trackLabel(SubtitleTrack t) {
     final parts = [if (t.title != null && t.title!.isNotEmpty) t.title!, if (t.language != null && t.language!.isNotEmpty) t.language!];
     return parts.isEmpty ? tr('轨道 {0}', [t.id]) : parts.join(' · ');
+  }
+}
+
+/// 这个视频没有字幕, with 语音识别 to make some: progress while it runs, and
+/// the way to its settings when it is not set up.
+class SpeechOffer extends StatefulWidget {
+  const SpeechOffer({super.key, required this.controller, this.onDone, this.message});
+  final AppController controller;
+  final VoidCallback? onDone;
+  /// What is said above the button; 这个视频没有字幕 when null.
+  final String? message;
+
+  @override
+  State<SpeechOffer> createState() => _SpeechOfferState();
+}
+
+class _SpeechOfferState extends State<SpeechOffer> {
+  String? _error;
+
+  Future<void> _run() async {
+    setState(() => _error = null);
+    try {
+      await widget.controller.recognizeSpeech();
+      widget.onDone?.call();
+    } catch (e) {
+      if (mounted) setState(() => _error = e is TranslationException ? e.message : '$e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: ValueListenableBuilder(
+        valueListenable: controller.speechJob,
+        builder: (context, job, _) {
+          final mine = job != null && job.videoId == controller.playing?.id;
+          return Column(mainAxisSize: MainAxisSize.min, children: [
+            Text(widget.message ?? tr('这个视频没有字幕'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline)),
+            const SizedBox(height: 12),
+            if (mine) ...[
+              SizedBox(
+                width: 220,
+                child: LinearProgressIndicator(value: job.total == 0 ? null : job.done / job.total),
+              ),
+              const SizedBox(height: 8),
+              Text(job.total > 1 ? '${job.stage} ${job.done} / ${job.total}' : job.stage, style: TextStyle(color: colors.outline, fontSize: 12)),
+            ] else if (controller.canRecognizeSpeech)
+              FilledButton.tonalIcon(
+                onPressed: job == null ? _run : null,
+                icon: const Icon(Icons.graphic_eq_rounded, size: 18),
+                label: Text(tr('用语音识别生成字幕')),
+              )
+            else ...[
+              Text(tr('语音识别会把这个视频的音频发给你在“翻译与 AI”里设置的服务（如 Groq、OpenAI），生成带时间轴的字幕。'),
+                  textAlign: TextAlign.center, style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5)),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: () async {
+                  await openTranslationSettings(context, controller);
+                  if (mounted) setState(() {});
+                },
+                icon: const Icon(Icons.settings_outlined, size: 18),
+                label: Text(tr('设置语音识别')),
+              ),
+            ],
+            if (_error case final error? when !mine) ...[
+              const SizedBox(height: 12),
+              ErrorBanner(error, onRetry: controller.canRecognizeSpeech ? _run : null),
+            ],
+          ]);
+        },
+      ),
+    );
   }
 }

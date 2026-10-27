@@ -28,7 +28,7 @@ void main() {
 
   testWidgets('the AI interface shows whichever service translates', (tester) async {
     await open(tester, const TranslationConfig(service: TranslationService.deepl, aiPreset: 'deepseek'));
-    for (final text in ['AI 接口', 'https://api.deepseek.com/v1', 'deepseek-chat', '测试 AI 接口', '测试翻译']) {
+    for (final text in ['AI 接口', 'https://api.deepseek.com/v1', 'deepseek-chat', '测试 AI 接口', '测试翻译', '语音识别服务', 'Groq（Whisper，免费额度）', 'whisper-large-v3-turbo']) {
       expect(find.text(text), findsWidgets, reason: text);
     }
     expect(find.text('AI 翻译'), findsNothing);

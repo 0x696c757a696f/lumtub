@@ -107,6 +107,13 @@ class SubtitleFiles {
   }
 
   Future<String> _get(String url) async {
+    final uri = Uri.parse(url);
+    if (uri.scheme == 'file') {
+      // 语音识别's own file. Asked in another language it is refused like
+      // a YouTube translation, so the chosen service translates it.
+      if (uri.queryParameters.containsKey('tlang')) throw const _Refused(0);
+      return File(Uri.parse(url.split('?').first).toFilePath()).readAsString();
+    }
     for (var attempt = 0;; attempt++) {
       final response = await _client.get(Uri.parse(url), headers: {'User-Agent': YoutubeWeb.userAgent}).timeout(const Duration(seconds: 20));
       if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) return utf8.decode(response.bodyBytes, allowMalformed: true);

@@ -937,7 +937,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               subtitle: tr('翻译：{0} · AI：{1}', [prefs.translation.service.label, controller.canSummarize ? prefs.translation.effectiveAiModel : tr('未设置')]),
               leading: _icon(Icons.g_translate_rounded),
               onTap: () => openTranslationSettings(context, controller),
-            ), subtitle: '翻译服务 AI 总结 接口 模型 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
+            ), subtitle: '翻译服务 AI 总结 接口 模型 语音识别 Whisper Groq 没有字幕 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
         SettingEntry(tr('翻译目标语言'), (context) => PopupItem<String>(
               title: tr('翻译目标语言'),
               leading: _icon(Icons.translate_rounded),

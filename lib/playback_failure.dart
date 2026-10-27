@@ -86,9 +86,11 @@ class PlaybackFailure {
       FailureKind.unknown => '',
     };
     if (kind == FailureKind.upcoming) return reason;
+    // The servers named in the 429 message are said here for the others.
+    final servers = tried.isEmpty || kind == FailureKind.rateLimited ? '' : tr('（也试过 {0}）', [tried.join('、')]);
     final shown = detail.length > 300 ? '${detail.substring(0, 300)}…' : detail;
-    if (reason.isEmpty) return shown;
-    return shown.isEmpty ? reason : '$reason\n$shown';
+    if (reason.isEmpty) return '$shown$servers';
+    return shown.isEmpty ? '$reason$servers' : '$reason$servers\n$shown';
   }
 }
 

@@ -69,4 +69,10 @@ void main() {
     expect(kind(['ERROR: [youtube] x: This live event will begin in 3 days.']), FailureKind.upcoming);
     expect(kind(['ERROR: [youtube] x: This live stream recording is not available.']), FailureKind.unavailable);
   });
+
+  test('says which servers were tried after YouTube refused', () {
+    const failure = PlaybackFailure(FailureKind.botCheck, 'Sign in to confirm you’re not a bot', tried: ['Piped', 'Invidious']);
+    expect(failure.message.split('\n').first, endsWith('（也试过 Piped、Invidious）'));
+    expect(const PlaybackFailure(FailureKind.unknown, 'odd', tried: ['Piped']).message, 'odd（也试过 Piped）');
+  });
 }

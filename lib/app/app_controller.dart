@@ -284,7 +284,9 @@ class AppController extends ChangeNotifier {
   /// The servers tried for the video being opened, and the 429 YouTube
   /// answered it with, which lets both be tried whatever 播放来源 says.
   final _relaysTried = <RelayKind>{};
-  PlaybackFailure? _rateLimited;
+  /// What YouTube said when it would not play the video, so Piped and
+  /// Invidious stand in for it.
+  PlaybackFailure? _youtubeRefused;
   late final _piped = PipedStreams(_http);
   late final _invidious = InvidiousStreams(_http);
 
@@ -1490,7 +1492,7 @@ class AppController extends ChangeNotifier {
       if (resolved && piped) {
         _recentErrors.clear();
         _relaysTried.clear();
-        _rateLimited = null;
+        _youtubeRefused = null;
       }
       // Piped or Invidious first, as chosen in 播放来源.
       if (piped) {
@@ -1506,7 +1508,7 @@ class AppController extends ChangeNotifier {
           final failure = PlaybackFailure.classify(['$e']);
           if (!failure.retryable) {
             // libmpv's ytdl_hook would ask YouTube again and fail the same way.
-            if (failure.kind == FailureKind.rateLimited) return await _fallBackFromRateLimit(item, serial, failure, start: start, play: play);
+            if (_serversMayHelp(failure.kind)) return await _fallBack(item, serial, failure, start: start, play: play);
             if (serial == _playSerial) _fail(item, failure);
             return false;
           }
@@ -1605,12 +1607,14 @@ class AppController extends ChangeNotifier {
 
   /// The server network to try next for [item], or null for YouTube.
   /// Normally the one 播放来源 names, and only without subtitles, which
-  /// these servers do not give libmpv. After YouTube answered 429 both are
-  /// tried (that one first), subtitles or not, since playing beats failing.
+  /// these servers do not give libmpv. After YouTube refused the video
+  /// (429, a bot check, a challenge yt-dlp could not solve, or an error
+  /// that remained after resolving again) both are tried (that one first),
+  /// subtitles or not, since playing beats failing.
   RelayKind? _nextRelay(VideoItem item) {
     if (item.isLive) return null;
     final preferred = settings.playbackSource.relay;
-    final candidates = _rateLimited != null
+    final candidates = _youtubeRefused != null
         ? [if (preferred != null) preferred, ...RelayKind.values.where((k) => k != preferred)]
         : [if (preferred != null && settings.subtitleMode == SubtitleMode.off) preferred];
     return candidates.where((k) => !_relaysTried.contains(k)).firstOrNull;
@@ -1643,11 +1647,18 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  /// YouTube answered 429 for [item]: plays it from the Piped or Invidious
+  /// Whether Piped or Invidious may play what YouTube would not. Not for
+  /// what the video itself is (private, upcoming, no allowed format) or for
+  /// a network that is down.
+  static bool _serversMayHelp(FailureKind kind) =>
+      const {FailureKind.rateLimited, FailureKind.botCheck, FailureKind.challenge, FailureKind.forbidden, FailureKind.unknown}.contains(kind);
+
+  /// YouTube would not play [item]: plays it from the Piped or Invidious
   /// server not yet tried, and only when there is none shows the error.
-  Future<bool> _fallBackFromRateLimit(VideoItem item, int serial, PlaybackFailure failure, {Duration? start, bool play = true}) async {
-    _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
-    _rateLimited = failure;
+  Future<bool> _fallBack(VideoItem item, int serial, PlaybackFailure failure, {Duration? start, bool play = true}) async {
+    if (failure.kind == FailureKind.rateLimited) _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
+    if (_youtubeRefused == null) logInfo('YouTube would not play ${item.id} (${failure.kind.name}); trying Piped and Invidious');
+    _youtubeRefused = failure;
     if (await _openViaRelays(item, serial, start: start, play: play)) return true;
     if (serial == _playSerial) _fail(item, PlaybackFailure(failure.kind, failure.detail, tried: [for (final k in _relaysTried) k == RelayKind.piped ? 'Piped' : 'Invidious']));
     return false;
@@ -2067,21 +2078,17 @@ class AppController extends ChangeNotifier {
       final failure = PlaybackFailure.classify(viaRelay ? [message] : [message, ..._recentErrors]);
       final position = _lastPosition > Duration.zero ? _lastPosition : null;
       if (viaRelay) {
-        if (!failure.retryable && failure.kind != FailureKind.rateLimited) {
+        if (!failure.retryable && !_serversMayHelp(failure.kind)) {
           _fail(item, failure);
           return;
         }
-        final limited = _rateLimited;
+        final limited = _youtubeRefused;
         logInfo('Piped or Invidious address did not play ($message); ${limited != null ? 'trying the next server' : 'connecting to YouTube directly'}');
-        unawaited(limited != null ? _fallBackFromRateLimit(item, _playSerial, limited, start: position) : _open(item, _playSerial, start: position, piped: false));
-        return;
-      }
-      if (failure.kind == FailureKind.rateLimited) {
-        unawaited(_fallBackFromRateLimit(item, _playSerial, failure, start: position));
+        unawaited(limited != null ? _fallBack(item, _playSerial, limited, start: position) : _open(item, _playSerial, start: position, piped: false));
         return;
       }
       if (!failure.retryable) {
-        _fail(item, failure);
+        _serversMayHelp(failure.kind) ? unawaited(_fallBack(item, _playSerial, failure, start: position)) : _fail(item, failure);
         return;
       }
       if (_openedResolved == item.id) {
@@ -2093,7 +2100,8 @@ class AppController extends ChangeNotifier {
         unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
         return;
       }
-      _fail(item, failure);
+      // Resolved again and still refused: the servers are the last way.
+      _serversMayHelp(failure.kind) ? unawaited(_fallBack(item, _playSerial, failure, start: position)) : _fail(item, failure);
     } else if (PlaybackRecovery.isNetworkError(message)) {
       final failure = PlaybackFailure.classify([message, ..._recentErrors]);
       if (failure.retryable) {

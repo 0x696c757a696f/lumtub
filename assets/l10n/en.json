@@ -2408,5 +2408,6 @@
   "A-B 循环": "A-B loop",
   "循环 {0} – {1}": "Looping {0} – {1}",
   "A 点 {0}，再按一次设置 B 点": "Point A {0}; press again to set point B",
-  "已取消 A-B 循环": "A-B loop off"
+  "已取消 A-B 循环": "A-B loop off",
+  "（也试过 {0}）": " (also tried {0})"
 }

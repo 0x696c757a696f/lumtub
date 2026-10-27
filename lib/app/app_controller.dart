@@ -391,6 +391,9 @@ class AppController extends ChangeNotifier {
   SecureJsonFile? _translationKeyFile;
   /// The subtitle shown above the main one (双语字幕), if any.
   SubtitleOption? secondarySubtitle;
+  /// The second subtitle being fetched or translated, shown as loading in
+  /// the 字幕 panel rather than as 关闭.
+  SubtitleOption? secondaryLoading;
   /// The video 第二字幕语言 was applied to, so a secondary subtitle turned
   /// off stays off.
   String? _secondaryAutoFor;
@@ -1893,10 +1896,10 @@ class AppController extends ChangeNotifier {
 
   Future<List<SubtitleCue>> _optionCues(SubtitleOption option) => _cached('${playing?.id}\u0000${option.url}', () async => File(await _subtitleFile(option)).readAsString());
 
-  Future<List<SubtitleCue>> _trackCues(NativePlayer platform, SubtitleTrack track) {
+  Future<List<SubtitleCue>> _trackCues(NativePlayer platform, SubtitleTrack track) async {
     final option = details?.subtitles.where((o) => o.label == track.title).firstOrNull;
     if (option != null) return _optionCues(option);
-    return _cached('${playing?.id}\u0000${track.id}\u0000${track.title}', () async {
+    final cues = await _cached('${playing?.id}\u0000${track.id}\u0000${track.title}', () async {
       final list = jsonDecode(await platform.getProperty('track-list'));
       final entry = list is List ? list.whereType<Map>().where((t) => t['type'] == 'sub' && '${t['id']}' == track.id).firstOrNull : null;
       final source = entry?['external-filename'];
@@ -1908,6 +1911,12 @@ class AppController extends ChangeNotifier {
       }
       return null;
     });
+    if (cues.isNotEmpty) return cues;
+    // A track libmpv's ytdl_hook added has its own title, and its address
+    // may be refused; the same language from the list reads the same lines.
+    final language = track.language;
+    final same = language == null ? null : details?.subtitles.where((o) => o.kind != SubtitleKind.translated && sameLanguage(o.language, language)).firstOrNull;
+    return same == null ? cues : _optionCues(same);
   }
 
   Future<List<SubtitleCue>> _cached(String key, Future<String?> Function() read) async {
@@ -1962,21 +1971,21 @@ class AppController extends ChangeNotifier {
     if (_secondaryAutoFor == item.id || _openedLocal == item.id) return;
     bool shown(SubtitleTrack t) => t.id != 'no' && t.id != 'auto';
     // mpv picks the track itself as the file loads and does not say so;
-    // ask it until a subtitle is on or half a minute has passed.
-    for (var i = 0; i < 30 && !shown(player.state.track.subtitle); i++) {
+    // ask it for a few seconds, then pick one here.
+    for (var i = 0; i < 6 && !shown(player.state.track.subtitle); i++) {
       await syncMainSubtitle();
       if (serial != _playSerial || this.player != player) return;
       if (shown(player.state.track.subtitle)) break;
       await player.stream.track.firstWhere((t) => shown(t.subtitle)).timeout(const Duration(seconds: 1), onTimeout: () => player.state.track);
     }
-    if (!shown(player.state.track.subtitle)) return;
-    if (serial != _playSerial || this.player != player || secondarySubtitle != null || _secondaryAutoFor == item.id) return;
+    if (serial != _playSerial || this.player != player || _secondaryAutoFor == item.id) return;
     _secondaryAutoFor = item.id;
-    var mainTitle = player.state.track.subtitle.title;
-    var mainLanguage = player.state.track.subtitle.language;
+    var mainTitle = shown(player.state.track.subtitle) ? player.state.track.subtitle.title : null;
+    var mainLanguage = shown(player.state.track.subtitle) ? player.state.track.subtitle.language : null;
     final first = settings.subtitleLanguage.translation;
     final spoken = settings.subtitleOriginal ? originalSubtitle(details.subtitles, language: details.language) : null;
-    if (spoken != null ? spoken.label != mainTitle : !speaks(mainLanguage, first)) {
+    final mainWanted = settings.subtitleMode == SubtitleMode.always || mainTitle != null;
+    if (mainWanted && (mainTitle == null || (spoken != null ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage) : !speaks(mainLanguage, first)))) {
       final option = spoken ?? subtitleIn(details.subtitles, first);
       if (option != null && option.label != mainTitle) {
         logInfo('Showing ${option.language} (${option.kind.name}) as the main subtitle');
@@ -1994,7 +2003,10 @@ class AppController extends ChangeNotifier {
       if (option == null || sameLanguage(option.language, mainLanguage)) return;
     } else {
       option = target == null ? null : subtitleIn(details.subtitles, target);
-      if (option == null || speaks(mainLanguage, target!)) return;
+      if (option == null || speaks(mainLanguage, target!)) {
+        if (wanted.isNotEmpty) logInfo('No second subtitle in $wanted beside $mainLanguage');
+        return;
+      }
     }
     if (option.label == mainTitle || secondarySubtitle != null) return;
     logInfo('Showing ${option.language} (${option.kind.name}) as the second subtitle');
@@ -2041,6 +2053,7 @@ class AppController extends ChangeNotifier {
   Future<void> setSecondarySubtitle(SubtitleOption? option) async {
     final player = this.player;
     if (player == null) return;
+    if (option != null) _update(() => secondaryLoading = option);
     try {
       final loaded = option == null || player.state.tracks.subtitle.any((t) => t.title == option.label);
       final file = loaded ? null : await _subtitleFile(option);
@@ -2050,6 +2063,8 @@ class AppController extends ChangeNotifier {
     } catch (e) {
       logError('Could not set secondary subtitles ${option?.language}', e);
       _notice(tr('无法加载这条字幕'));
+    } finally {
+      if (identical(secondaryLoading, option)) _update(() => secondaryLoading = null);
     }
   }
 

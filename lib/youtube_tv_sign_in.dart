@@ -219,6 +219,23 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
     return (status: status, body: message[1] as Uint8List);
   }
 
+  /// Adds [videoId], watched from [from] to [to] seconds of [length], to
+  /// the account's YouTube history; the reason it could not, or null.
+  Future<String?> reportWatched(String videoId, {required double from, required double to, double length = 0}) async {
+    final native = _native;
+    final watched = native?.watched;
+    if (native == null || watched == null || !signedIn) return 'signed out';
+    final port = ReceivePort('lumtub tv history');
+    final request = jsonEncode({'video_id': videoId, 'from': from, 'to': to, 'length': length, 'hl': youtubeHl});
+    if (!_withText(request, (p, n) => watched(port.sendPort.nativePort, p, n))) {
+      port.close();
+      return 'bad request';
+    }
+    final message = await port.first as List;
+    port.close();
+    return message[0] == 1 ? null : '${message.length > 1 ? message[1] : 'failed'}';
+  }
+
   void _notify() {
     if (!_disposed) notifyListeners();
   }
@@ -248,11 +265,21 @@ class _Bindings {
         signIn = library.lookupFunction<Void Function(Int64), void Function(int)>('lumtub_tv_sign_in'),
         cancel = library.lookupFunction<Void Function(), void Function()>('lumtub_tv_cancel'),
         signOut = library.lookupFunction<Void Function(), void Function()>('lumtub_tv_sign_out'),
-        innertube = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_tv_innertube');
+        innertube = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_tv_innertube'),
+        watched = _optional(library, 'lumtub_tv_watched');
+
+  static bool Function(int, Pointer<Uint8>, int)? _optional(DynamicLibrary library, String name) {
+    try {
+      return library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>(name);
+    } catch (_) {
+      return null;
+    }
+  }
 
   final bool Function(Pointer<Uint8>, int) open;
   final void Function(int port) signIn;
   final void Function() cancel;
   final void Function() signOut;
   final bool Function(int port, Pointer<Uint8>, int) innertube;
+  final bool Function(int port, Pointer<Uint8>, int)? watched;
 }

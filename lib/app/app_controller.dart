@@ -50,6 +50,7 @@ import '../piped_streams.dart';
 import '../search_options.dart';
 import '../search_suggestions.dart';
 import '../youtube_comments.dart';
+import '../youtube_tv_feed.dart';
 import '../youtube_tv_sign_in.dart';
 import '../tv_samples.dart' as tv_samples;
 import '../youtube_related.dart';
@@ -141,6 +142,16 @@ class AppController extends ChangeNotifier {
   /// The TV-code sign-in that YouTube's own pages take, for liking comments
   /// and posts.
   YoutubeTvSignIn? tvSignIn;
+
+  /// The account's own YouTube pages, read with [tvSignIn].
+  YoutubeTvFeed? tvFeed;
+
+  /// The account's YouTube playlists, once read; empty when signed out.
+  List<PlaylistResult> tvPlaylists = const [];
+  bool tvPlaylistsLoading = false;
+
+  /// The account's YouTube watch history, while 观看历史 shows it.
+  VideoListLoader? youtubeHistory;
 
   /// The open channel page and its uploads.
   ChannelRef? channel;
@@ -514,10 +525,55 @@ class AppController extends ChangeNotifier {
     return tv_samples.saveTvSamples(sign, logs);
   }
 
+  bool _tvWasSignedIn = false;
+
   void _tvSignInChanged() {
-    if (tvSignIn?.signedIn ?? false) comments.refused = false;
+    final signedIn = tvSignIn?.signedIn ?? false;
+    if (signedIn) comments.refused = false;
+    if (signedIn != _tvWasSignedIn) {
+      _tvWasSignedIn = signedIn;
+      youtubeHistory?.dispose();
+      youtubeHistory = null;
+      tvPlaylists = const [];
+      if (signedIn) unawaited(loadTvPlaylists());
+    }
     notifyListeners();
   }
+
+  /// Reads the account's YouTube playlists again.
+  Future<void> loadTvPlaylists() async {
+    final feed = tvFeed;
+    if (feed == null || !feed.available || tvPlaylistsLoading) return;
+    tvPlaylistsLoading = true;
+    notifyListeners();
+    try {
+      final found = await feed.accountPlaylists();
+      if (feed.available) tvPlaylists = found;
+    } catch (e) {
+      logInfo('Could not read the YouTube playlists: $e');
+    } finally {
+      tvPlaylistsLoading = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  /// 观看历史 › YouTube: the account's history on YouTube, loaded the first
+  /// time it is shown.
+  VideoListLoader? openYoutubeHistory({bool reload = false}) {
+    final feed = tvFeed;
+    if (feed == null || !feed.available) return null;
+    if (reload) {
+      youtubeHistory?.dispose();
+      youtubeHistory = null;
+    }
+    return youtubeHistory ??= VideoListLoader(() => Listing(() => feed.lines(YoutubeTvFeed.history)), pageSize: 40, name: 'YouTube history')
+      ..addListener(notifyListeners)
+      ..loadMore();
+  }
+
+  /// Whether [playlist] is the account's own, read signed in.
+  bool _isAccountPlaylist(PlaylistResult playlist) =>
+      playlist.id == YoutubeTvFeed.watchLaterId || tvPlaylists.any((list) => list.id == playlist.id);
 
   void _notice(String message) {
     if (!_disposed) _notices.add(message);
@@ -629,8 +685,9 @@ class AppController extends ChangeNotifier {
           library: library,
           notice: _notice,
         )..addListener(notifyListeners);
-        tvSignIn = YoutubeTvSignIn(folder: directories.data.path)..addListener(_tvSignInChanged);
-        comments.signIn = tvSignIn;
+        final tv = tvSignIn = YoutubeTvSignIn(folder: directories.data.path)..addListener(_tvSignInChanged);
+        comments.signIn = tv;
+        tvFeed = YoutubeTvFeed(tv);
         this.player = player;
         videoController = controller;
         _outputSize = VideoOutputSize((width, height) => controller.setSize(width: width, height: height));
@@ -3117,7 +3174,9 @@ class AppController extends ChangeNotifier {
     _remember();
     youtubePlaylistVideos?.dispose();
     youtubePlaylist = playlist;
-    youtubePlaylistVideos = VideoListLoader(() => repository.playlist(playlist.id), pageSize: 50)
+    final feed = tvFeed;
+    final signedIn = feed != null && feed.available && _isAccountPlaylist(playlist);
+    youtubePlaylistVideos = VideoListLoader(() => signedIn ? Listing(() => feed.lines('VL${playlist.id}', pages: 50)) : repository.playlist(playlist.id), pageSize: 50)
       ..addListener(notifyListeners)
       ..loadMore();
     _go(PageMode.youtubePlaylist);
@@ -3236,6 +3295,7 @@ class AppController extends ChangeNotifier {
   void _finishWatching() {
     final item = _watching;
     _watching = null;
+    if (item != null) _reportWatchedToYoutube(item);
     final feed = homeFeed;
     final repository = _repository;
     final player = this.player;
@@ -3250,6 +3310,22 @@ class AppController extends ChangeNotifier {
     }());
   }
 
+  /// 观看记录同步到 YouTube: adds the video just left to the account's
+  /// history, as SmartTube does: from the start for the first three minutes,
+  /// else where it was left; nearly finished marks it watched.
+  void _reportWatchedToYoutube(VideoItem item) {
+    final sign = tvSignIn;
+    final player = this.player;
+    if (sign == null || !sign.signedIn || player == null || !preferences.syncHistoryToYoutube || !preferences.recordHistory || incognito) return;
+    final to = player.state.position.inMilliseconds / 1000;
+    if (to < 5) return;
+    final length = player.state.duration.inMilliseconds / 1000;
+    unawaited(() async {
+      final why = await sign.reportWatched(item.id, from: to < 180 ? 0 : to, to: to, length: length);
+      if (why != null) logInfo('Could not add ${item.id} to the YouTube history: $why');
+    }());
+  }
+
   Future<HomeFeedSources> _homeSources(VideoRepository repository) async {
     final library = this.library;
     final weekly = searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: SearchUploadDate.week);
@@ -3260,6 +3336,7 @@ class AppController extends ChangeNotifier {
         followed: library?.channels ?? const [],
         subscriptions: library?.feed ?? const [],
         searches: preferences.recordHistory ? await searchHistory?.items() ?? const [] : const [],
+        youtubeHome: tvFeed?.available ?? false ? () => tvFeed!.videos(YoutubeTvFeed.home, limit: 40) : null,
         related: relatedVideos.forVideo,
         channelUploads: library?.uploadsOf ?? (_) async => const [],
         search: (query) async {
@@ -4095,6 +4172,7 @@ class AppController extends ChangeNotifier {
     }
     channelPosts?.dispose();
     youtubePlaylistVideos?.dispose();
+    youtubeHistory?.dispose();
     related?.dispose();
     _http.close();
     if (!_shutDown) unawaited(player?.dispose());

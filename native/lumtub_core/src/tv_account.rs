@@ -57,6 +57,16 @@ fn account() -> std::sync::MutexGuard<'static, Account> {
     ACCOUNT.lock().unwrap_or_else(|e| e.into_inner())
 }
 
+/// Where requests go: YouTube, or a test server.
+pub(crate) fn base() -> String {
+    account().base.clone()
+}
+
+/// After a 401: the access token stopped working early.
+pub(crate) fn forget_access() {
+    account().access = None;
+}
+
 /// The body of an InnerTube request as the TV app sends it: its client
 /// context (as SmartTube's `AppClient.TV` builds it) and [body]'s fields.
 pub fn tv_body(body: &Value, hl: &str, gl: &str) -> Value {
@@ -290,14 +300,14 @@ async fn sign_in(port: i64, attempt: u64) {
 }
 
 /// Why a request could not be made signed in.
-enum NoToken {
+pub(crate) enum NoToken {
     SignedOut,
     /// Google no longer takes the saved sign-in; it is now signed out.
     Revoked,
     Failed(String),
 }
 
-async fn access_token() -> Result<String, NoToken> {
+pub(crate) async fn access_token() -> Result<String, NoToken> {
     let (refresh, base) = {
         let account = account();
         if let Some((token, until)) = &account.access

@@ -7,6 +7,7 @@ import '../../app/app_controller.dart';
 import '../../app/library_controller.dart';
 import '../../library_store.dart';
 import '../../models.dart';
+import '../../youtube_tv_feed.dart';
 import '../common.dart';
 import '../playlist_length.dart';
 import '../theme.dart';
@@ -622,8 +623,42 @@ class PlaylistsPage extends StatelessWidget {
           padding: const EdgeInsets.all(AppStyle.pagePadding),
           child: Text(tr('右键点击任意视频，可以收藏或添加到播放列表。'), style: TextStyle(color: context.colors.onSurfaceVariant)),
         )),
+      if (controller.tvFeed?.available ?? false) ..._youtubePlaylists(context),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
+  }
+
+  /// The account's playlists on YouTube, read with the TV-code sign-in.
+  List<Widget> _youtubePlaylists(BuildContext context) {
+    final lists = [
+      PlaylistResult(id: YoutubeTvFeed.watchLaterId, title: tr('稍后观看')),
+      ...controller.tvPlaylists,
+    ];
+    return [
+      SliverToBoxAdapter(child: PageHeader(
+        tr('YouTube 账号'),
+        subtitle: tr('保存在 YouTube 上的播放列表'),
+        trailing: controller.tvPlaylistsLoading
+            ? const Padding(padding: EdgeInsets.all(8), child: SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)))
+            : TextButton.icon(onPressed: controller.loadTvPlaylists, icon: const Icon(Icons.refresh_rounded), label: Text(tr('刷新'))),
+      )),
+      SliverVideoLayout(
+        count: lists.length,
+        builder: (context, i) {
+          final list = lists[i];
+          return _PlaylistCard(
+            name: list.title,
+            items: const [],
+            remote: true,
+            count: list.count,
+            thumbnailUrl: list.thumbnail,
+            icon: list.id == YoutubeTvFeed.watchLaterId ? Icons.watch_later_rounded : Icons.smart_display_outlined,
+            thumbnails: controller.thumbnailDirectory,
+            onOpen: () => controller.openYoutubePlaylist(list),
+          );
+        },
+      ),
+    ];
   }
 }
 
@@ -652,12 +687,19 @@ class SliverVideoLayout extends StatelessWidget {
 }
 
 class _PlaylistCard extends StatelessWidget {
-  const _PlaylistCard({required this.name, required this.items, required this.icon, required this.thumbnails, required this.onOpen});
+  const _PlaylistCard({required this.name, required this.items, required this.icon, required this.thumbnails, required this.onOpen, this.remote = false, this.count, this.thumbnailUrl});
   final String name;
   final List<VideoItem> items;
+  /// A playlist kept on YouTube, whose videos are not loaded: [count] is
+  /// how many it holds, if known, and [thumbnailUrl] its cover.
+  final bool remote;
+  final int? count;
+  final String? thumbnailUrl;
   final IconData icon;
   final Directory? thumbnails;
   final VoidCallback onOpen;
+
+  int? get _shownCount => remote ? count : items.length;
 
   @override
   Widget build(BuildContext context) {
@@ -671,7 +713,9 @@ class _PlaylistCard extends StatelessWidget {
             child: ClipRRect(
               borderRadius: AppStyle.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
-                if (items.isEmpty)
+                if (thumbnailUrl case final url? when items.isEmpty)
+                  Image.network(url, fit: BoxFit.cover, errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline)))
+                else if (items.isEmpty)
                   ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline))
                 else
                   Image(
@@ -689,7 +733,7 @@ class _PlaylistCard extends StatelessWidget {
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Icon(icon, color: Colors.white),
                       const SizedBox(height: 4),
-                      Text('${items.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                      if (_shownCount case final shown?) Text('$shown', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
                     ]),
                   ),
                 ),
@@ -700,7 +744,7 @@ class _PlaylistCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Text(name, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.onSurface))),
-              Text(tr('{0} 个视频', [items.length]), style: TextStyle(fontSize: 12, color: colors.outline)),
+              if (_shownCount case final shown?) Text(tr('{0} 个视频', [shown]), style: TextStyle(fontSize: 12, color: colors.outline)),
             ]),
           )),
         ]),

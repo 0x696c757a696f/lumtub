@@ -23,6 +23,7 @@ class HomeFeedSources {
     this.followed = const [],
     this.subscriptions = const [],
     this.searches = const [],
+    this.youtubeHome,
   });
 
   final List<VideoItem> history;
@@ -33,6 +34,8 @@ class HomeFeedSources {
   final List<VideoItem> subscriptions;
   /// Words searched for, newest first; they count as interests.
   final List<String> searches;
+  /// The signed-in account's own YouTube home feed; null when signed out.
+  final Future<List<VideoItem>> Function()? youtubeHome;
   /// YouTube's suggestions next to a video.
   final Future<List<VideoItem>> Function(String videoId) related;
   /// A channel's newest videos.
@@ -185,6 +188,10 @@ class HomeFeed extends ChangeNotifier {
     for (final item in sources.subscriptions.take(80)) {
       final isNew = item.published != null && now.difference(item.published!) < const Duration(hours: 48);
       candidates[isNew ? FeedLane.fresh : FeedLane.longTerm]!.add(Candidate(item, RecommendSource.subscription, reason: isNew ? tr('你关注的 {0} 刚更新', [item.channel]) : tr('你关注的 {0}', [item.channel])));
+    }
+    // What YouTube itself suggests to the signed-in account.
+    if (sources.youtubeHome case final home?) {
+      jobs.add(gather(FeedLane.longTerm, home, RecommendSource.related, 1, 40, (_) => tr('YouTube 为你推荐')));
     }
     // Recent: what the last few videos and the newest search were about.
     for (final (i, seed) in sources.history.take(3).indexed) {

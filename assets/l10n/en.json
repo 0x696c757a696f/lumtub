@@ -2568,5 +2568,14 @@
   "用 YouTube 官方接口：同步订阅、播放列表和喜欢的视频，给视频点赞，发评论，保存到播放列表，订阅频道。": "Uses the official YouTube API: syncs subscriptions, playlists and liked videos; likes videos, posts comments, saves to playlists and subscribes.",
   "用 YouTube 电视版的接口，做官方接口做不到的事：给评论和社区帖子点赞、点踩。": "Uses YouTube's TV app interface for what the official API cannot do: liking and disliking comments and community posts.",
   "电视码登录": "TV-code sign-in",
-  "需要先在设置 › YouTube 账号里用电视码登录": "Sign in with a TV code in Settings › YouTube account first"
+  "需要先在设置 › YouTube 账号里用电视码登录": "Sign in with a TV code in Settings › YouTube account first",
+  "保存在 YouTube 上的播放列表": "Playlists saved on YouTube",
+  "观看记录同步到 YouTube": "Sync watch history to YouTube",
+  "用电视码登录后，在 Lumtub 看过的视频也会记进 YouTube 账号的观看记录，YouTube 的推荐会参考它。默认关闭；无痕模式和关闭本机历史时不同步": "With the TV-code sign-in, videos watched in Lumtub are also added to your YouTube watch history, which YouTube uses for recommendations. Off by default; nothing is synced in incognito mode or when local history is off",
+  "本机": "This computer",
+  "YouTube 账号里的观看记录": "Watch history in your YouTube account",
+  "在 YouTube 管理": "Manage on YouTube",
+  "YouTube 上还没有观看记录": "No watch history on YouTube yet",
+  "无法加载 YouTube 观看记录：{0}": "Could not load the YouTube watch history: {0}",
+  "YouTube 为你推荐": "Recommended by YouTube"
 }

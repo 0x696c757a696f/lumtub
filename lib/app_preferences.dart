@@ -70,6 +70,7 @@ class AppPreferences {
     this.feedShorts = FeedLevel.reduce,
     this.feedVertical = FeedLevel.reduce,
     this.syncFollowToYoutube = true,
+    this.syncHistoryToYoutube = false,
     this.startPage = 'home',
     this.feedAutoRefresh = true,
     this.feedRefreshMinutes = 10,
@@ -163,6 +164,9 @@ class AppPreferences {
   FeedMix get feedMix => FeedMix(shorts: feedShorts, vertical: feedVertical);
   /// 关注 also subscribes on YouTube when signed in.
   final bool syncFollowToYoutube;
+  /// Videos watched here are added to the YouTube account's history, with
+  /// the TV-code sign-in. Off unless turned on.
+  final bool syncHistoryToYoutube;
   final String startPage;
   final bool feedAutoRefresh;
   final int feedRefreshMinutes;
@@ -343,6 +347,7 @@ class AppPreferences {
     FeedLevel? feedShorts,
     FeedLevel? feedVertical,
     bool? syncFollowToYoutube,
+    bool? syncHistoryToYoutube,
     String? startPage,
     bool? feedAutoRefresh,
     int? feedRefreshMinutes,
@@ -410,6 +415,7 @@ class AppPreferences {
         feedShorts: feedShorts ?? this.feedShorts,
         feedVertical: feedVertical ?? this.feedVertical,
         syncFollowToYoutube: syncFollowToYoutube ?? this.syncFollowToYoutube,
+        syncHistoryToYoutube: syncHistoryToYoutube ?? this.syncHistoryToYoutube,
         startPage: startPage ?? this.startPage,
         feedAutoRefresh: feedAutoRefresh ?? this.feedAutoRefresh,
         feedRefreshMinutes: feedRefreshMinutes ?? this.feedRefreshMinutes,
@@ -478,6 +484,7 @@ class AppPreferences {
         'feedShorts': feedShorts.name,
         'feedVertical': feedVertical.name,
         'syncFollowToYoutube': syncFollowToYoutube,
+        'syncHistoryToYoutube': syncHistoryToYoutube,
         'startPage': startPage,
         'feedAutoRefresh': feedAutoRefresh,
         'feedRefreshMinutes': feedRefreshMinutes,
@@ -580,6 +587,7 @@ class AppPreferences {
       feedShorts: FeedLevel.parse(raw['feedShorts'], d.feedShorts),
       feedVertical: FeedLevel.parse(raw['feedVertical'], d.feedVertical),
       syncFollowToYoutube: flag('syncFollowToYoutube', d.syncFollowToYoutube),
+      syncHistoryToYoutube: flag('syncHistoryToYoutube', d.syncHistoryToYoutube),
       startPage: startPages.any((p) => p.$1 == start) ? start! : 'home',
       feedAutoRefresh: flag('feedAutoRefresh', d.feedAutoRefresh),
       feedRefreshMinutes: number('feedRefreshMinutes', 10, 1, 1440),

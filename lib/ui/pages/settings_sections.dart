@@ -1021,6 +1021,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.syncFollowToYoutube,
               onChanged: (v) => savePrefs(prefs.copyWith(syncFollowToYoutube: v)),
             )),
+        SettingEntry(tr('观看记录同步到 YouTube'), (context) => SwitchItem(
+              title: tr('观看记录同步到 YouTube'),
+              subtitle: tr('用电视码登录后，在 Lumtub 看过的视频也会记进 YouTube 账号的观看记录，YouTube 的推荐会参考它。默认关闭；无痕模式和关闭本机历史时不同步'),
+              leading: _icon(Icons.history_rounded),
+              value: prefs.syncHistoryToYoutube,
+              onChanged: (v) => savePrefs(prefs.copyWith(syncHistoryToYoutube: v)),
+            )),
       ],
     SettingsCategory.about => aboutEntries(controller),
   };

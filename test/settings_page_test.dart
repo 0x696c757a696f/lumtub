@@ -82,7 +82,7 @@ void main() {
     for (final (category, row, title, content) in [
       (SettingsCategory.play, '倍速设置', '倍速设置', '倍速列表'),
       (SettingsCategory.play, '字幕设置', '字幕设置', '第一字幕语言'),
-      (SettingsCategory.extra, '翻译服务', '翻译服务', 'Google 翻译（免费）'),
+      (SettingsCategory.extra, '翻译与 AI', '翻译与 AI', 'Google 翻译（免费）'),
       (SettingsCategory.style, '应用主题', '选择应用主题', '调色板风格'),
       (SettingsCategory.style, 'App 字体设置', 'App 字体设置', '微软雅黑'),
       (SettingsCategory.extra, '组件管理', '组件管理', '正在准备组件…'),

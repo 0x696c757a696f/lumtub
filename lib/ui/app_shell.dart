@@ -18,6 +18,7 @@ import 'pages/settings_page.dart';
 import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
 import 'pages/youtube_playlist_page.dart';
+import 'lights_off.dart';
 import 'mini_player.dart';
 import 'pip_view.dart';
 import 'theme.dart';
@@ -148,7 +149,7 @@ class _AppShellState extends State<AppShell> {
                 NavigationStyle.rail => true,
                 NavigationStyle.bottom => false,
               };
-              return Scaffold(
+              final scaffold = Scaffold(
                 body: Column(children: [
                   _TopBar(
                     wide: wide,
@@ -193,6 +194,17 @@ class _AppShellState extends State<AppShell> {
                     for (final d in _destinations) NavigationDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: d.$4),
                   ],
                 ),
+              );
+              // 关灯 darkens the whole window but the player, under dialogs
+              // and menus, which are routes above the shell.
+              final watching = _controller.onWatchPage && !_controller.mini && _controller.videoController != null;
+              return ValueListenableBuilder(
+                valueListenable: lightsOff,
+                builder: (context, off, child) => Stack(fit: StackFit.expand, children: [
+                  child!,
+                  if (off && watching) Positioned.fill(child: LightsOffLayer(dim: _controller.preferences.lightsOffDim / 100)),
+                ]),
+                child: scaffold,
               );
             }),
           ),

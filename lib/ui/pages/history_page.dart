@@ -8,6 +8,7 @@ import '../../models.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../video_card.dart';
+import 'watch_stats_page.dart';
 
 /// The watch history, with a search box, single delete from a card's menu,
 /// and a 选择 mode to delete several at once (after PiliNara's history and
@@ -66,6 +67,7 @@ class _HistoryPageState extends State<HistoryPage> {
                 TextButton(onPressed: _stopSelecting, child: Text(tr('完成'))),
               ])
             : Row(mainAxisSize: MainAxisSize.min, children: [
+                TextButton.icon(onPressed: () => openWatchStats(context, widget.controller), icon: const Icon(Icons.insights_rounded), label: Text(tr('观看统计'))),
                 TextButton.icon(onPressed: () => setState(() => _selecting = true), icon: const Icon(Icons.checklist_rounded), label: Text(tr('选择'))),
                 TextButton.icon(onPressed: () => _confirmClear(context), icon: const Icon(Icons.delete_sweep_outlined), label: Text(tr('清空'))),
               ]),

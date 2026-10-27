@@ -142,9 +142,39 @@ class LibraryController extends ChangeNotifier {
       _feedLoadedAt = null;
     } else {
       feed = feed.where((item) => item.channelId != channel.id).toList();
+      for (final group in store.channelGroups) {
+        group.channels.remove(channel.id);
+      }
     }
     _changed();
     return following;
+  }
+
+  List<ChannelGroup> get channelGroups => store.channelGroups;
+
+  /// A new 订阅分组 named [name], with [channels] in it.
+  ChannelGroup addGroup(String name, [Set<String>? channels]) {
+    final group = ChannelGroup(name.trim(), channels);
+    store.channelGroups.add(group);
+    _changed();
+    return group;
+  }
+
+  void renameGroup(ChannelGroup group, String name) {
+    if (name.trim().isEmpty) return;
+    group.name = name.trim();
+    _changed();
+  }
+
+  void removeGroup(ChannelGroup group) {
+    store.channelGroups.remove(group);
+    _changed();
+  }
+
+  /// Puts [channelId] in [group] or takes it out.
+  void setInGroup(ChannelGroup group, String channelId, bool inGroup) {
+    if (inGroup ? !group.channels.add(channelId) : !group.channels.remove(channelId)) return;
+    _changed();
   }
 
   /// Follows each of [channels] not yet followed; returns how many were new.

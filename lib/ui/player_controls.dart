@@ -22,6 +22,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../app/app_controller.dart';
+import '../app_preferences.dart' show rateText;
 import '../heatmap.dart';
 import '../keep_awake.dart';
 import '../picture_transform.dart';
@@ -44,6 +45,7 @@ import 'subtitle_style_panel.dart';
 import 'player_stats.dart';
 import 'screenshot_action.dart';
 import 'storyboard_preview.dart';
+import 'lights_off.dart';
 import 'theater_mode.dart';
 import 'video_box.dart';
 import 'video_aspect.dart';
@@ -238,14 +240,13 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       final rate = _heldRate = _player.state.rate;
       final fast = max(2.0, rate * 2).clamp(0.25, 4.0);
       unawaited(_player.setRate(fast));
-      _showFeedback(Icons.fast_forward_rounded, tr('{0}x 倍速中', [_trimRate(fast)]));
+      _showFeedback(Icons.fast_forward_rounded, tr('{0}x 倍速中', [rateText(fast)]));
     } else if (_heldRate case final rate?) {
       _heldRate = null;
       unawaited(_player.setRate(rate));
     }
   }
 
-  static String _trimRate(double rate) => rate == rate.roundToDouble() ? rate.toStringAsFixed(0) : rate.toString();
 
   void _showFeedback(IconData icon, String text) {
     _feedbackTimer?.cancel();
@@ -266,6 +267,14 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     // One step per notch, however the wheel's glide is split up.
     if (event is! PointerScrollEvent || SmoothWheel.isFollowUp(event)) return;
     final up = event.scrollDelta.dy < 0;
+    // Ctrl + wheel steps through 倍速选项, as Enhancer for YouTube does.
+    if (HardwareKeyboard.instance.isControlPressed) {
+      final speed = nextSpeed(_controller.settings.speeds, _player.state.rate, up ? 1 : -1);
+      if (speed == null) return;
+      unawaited(_player.setRate(speed));
+      _showFeedback(up ? Icons.fast_forward_rounded : Icons.slow_motion_video_rounded, '${trimSpeed(speed)}X');
+      return;
+    }
     // The left half of the player sets the brightness, the right the volume.
     if (_onLeft(event.localPosition)) {
       _brighten(up ? _brightnessStep : -_brightnessStep);
@@ -597,6 +606,17 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           if (on) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tip, child: Icon(icon, color: Theme.of(context).colorScheme.inversePrimary, size: 17))),
         if (_controller.sleepAt != null || _controller.sleepAfterCurrent)
           Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Tooltip(message: tr('定时关闭已开启'), child: Icon(Icons.bedtime_outlined, color: Colors.white, size: 18))),
+        if (!fullscreen)
+          ValueListenableBuilder(
+            valueListenable: lightsOff,
+            builder: (context, off, _) => _IconButton(
+              tooltip: off ? tr('开灯 (B)') : tr('关灯 (B)'),
+              icon: off ? Icons.lightbulb_rounded : Icons.lightbulb_outline_rounded,
+              size: 19,
+              active: off,
+              onTap: () => lightsOff.value = !off,
+            ),
+          ),
         _IconButton(
           tooltip: tr('投屏'),
           icon: _controller.cast.active ? Icons.cast_connected_rounded : Icons.cast_rounded,
@@ -738,7 +758,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           final current = _player.state.track.subtitle;
           final on = current.id != 'no' && current.id != 'auto';
           final hasTracks = _player.state.tracks.subtitle.any((t) => t.id != 'auto' && t.id != 'no');
-          if (!hasTracks && (_controller.details?.subtitles ?? const []).isEmpty) return const SizedBox.shrink();
+          // A video with none still gets the button, for 语音识别.
+          final details = _controller.details;
+          if (!hasTracks && (details == null || (details.subtitles.isEmpty && (_controller.playing?.isLive ?? true)))) return const SizedBox.shrink();
           final button = _IconButton(
             tooltip: tr('字幕'),
             width: width,

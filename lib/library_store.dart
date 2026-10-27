@@ -29,6 +29,15 @@ class LocalPlaylist {
   Map<String, dynamic> toJson() => {'id': id, 'name': name, 'items': items.map((item) => item.toJson()).toList()};
 }
 
+/// 订阅分组: a name and the followed channels in it, by id.
+class ChannelGroup {
+  ChannelGroup(this.name, [Set<String>? channels]) : channels = channels ?? {};
+  String name;
+  final Set<String> channels;
+
+  Map<String, dynamic> toJson() => {'name': name, 'channels': channels.toList()};
+}
+
 /// Favorites, playlists, followed channels and watch progress, stored only on
 /// this computer in `data/library.json`.
 class LibraryStore {
@@ -42,6 +51,7 @@ class LibraryStore {
   final watchLater = <VideoItem>[];
   final playlists = <LocalPlaylist>[];
   final channels = <ChannelRef>[];
+  final channelGroups = <ChannelGroup>[];
   // Insertion order is age order, so the oldest entry is dropped first.
   final _progress = <String, (int, int)>{};
 
@@ -59,6 +69,11 @@ class LibraryStore {
       for (final raw in data['channels'] is List ? data['channels'] as List : const []) {
         final channel = ChannelRef.fromJson(raw);
         if (channel != null && !channels.contains(channel)) channels.add(channel);
+      }
+      for (final raw in data['groups'] is List ? data['groups'] as List : const []) {
+        if (raw is! Map || raw['name'] is! String || (raw['name'] as String).trim().isEmpty) continue;
+        final ids = raw['channels'] is List ? {for (final id in raw['channels'] as List) if (id is String) id} : <String>{};
+        channelGroups.add(ChannelGroup((raw['name'] as String).trim(), ids));
       }
       final progress = data['progress'];
       if (progress is Map) {
@@ -91,6 +106,7 @@ class LibraryStore {
         'watchLater': watchLater.map((item) => item.toJson()).toList(),
         'playlists': playlists.map((playlist) => playlist.toJson()).toList(),
         'channels': channels.map((channel) => channel.toJson()).toList(),
+        'groups': channelGroups.map((group) => group.toJson()).toList(),
         'progress': {for (final entry in _progress.entries) entry.key: [entry.value.$1, entry.value.$2]},
       };
 

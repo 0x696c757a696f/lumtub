@@ -39,6 +39,10 @@ import '../models.dart';
 import '../network_proxy.dart';
 import '../socks_bridge.dart';
 import '../cast/cast_controller.dart';
+import '../channel_playback.dart';
+import '../speech_subtitles.dart';
+import '../video_summary.dart';
+import '../watch_time.dart';
 import '../cast/cast_device.dart';
 import '../cast/cast_stream.dart';
 import '../invidious_streams.dart';
@@ -423,6 +427,23 @@ class AppController extends ChangeNotifier {
   bool _shutDown = false;
   late final _sponsorBlock = SponsorBlock(_http);
   late final _returnDislike = ReturnDislike(_http);
+  /// Each channel's last speed and volume; see [ChannelPlayback].
+  ChannelPlayback? channelPlayback;
+  /// 语音识别 subtitles made for videos that had none, kept on this computer.
+  SpeechSubtitleStore? speechStore;
+  /// The 语音识别 running now: the video, what it is doing, parts done of
+  /// how many. Its own notifier, so progress repaints only what shows it.
+  final speechJob = ValueNotifier<({String videoId, String stage, int done, int total})?>(null);
+  /// 观看统计's watch time.
+  WatchTime? watchTime;
+  /// The channel whose speed and volume changes are remembered now; null
+  /// while a video opens and its own settings are applied.
+  String? _playbackChannel;
+  /// The volume a channel with none of its own plays at: the last chosen.
+  double? _sessionVolume;
+  /// Playing time not yet added to [watchTime], and when it was counted.
+  int _watchMs = 0;
+  DateTime? _watchTick;
   /// Return YouTube Dislike's estimate for the video playing, when on.
   DislikeCount? dislikes;
   bool _disposed = false;
@@ -510,10 +531,15 @@ class AppController extends ChangeNotifier {
       searchHistory = SearchHistory(File('${directories.data.path}${Platform.pathSeparator}search_history.json'));
       final notInterested = NotInterested(File('${directories.data.path}${Platform.pathSeparator}not_interested.json'));
       final libraryStore = LibraryStore(File('${directories.data.path}${Platform.pathSeparator}library.json'));
+      final channelPlayback = ChannelPlayback(File('${directories.data.path}${Platform.pathSeparator}channel_playback.json'));
+      final watchTime = WatchTime(File('${directories.data.path}${Platform.pathSeparator}watch_time.json'));
       final settingsStore = PlayerSettingsStore(directories);
       final preferencesStore = AppPreferencesStore(directories);
       // Separate files: read together rather than one after another.
-      final (_, _, _, settings, preferences) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load()).wait;
+      final (_, _, _, settings, preferences, _, _) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load(), channelPlayback.load(), watchTime.load()).wait;
+      this.channelPlayback = channelPlayback;
+      this.watchTime = watchTime;
+      speechStore = SpeechSubtitleStore(Directory('${directories.data.path}${Platform.pathSeparator}speech'));
       homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(notifyListeners);
       this.settings = settings;
       final cacheManager = CacheManager(directories);
@@ -1287,6 +1313,8 @@ class AppController extends ChangeNotifier {
     }
     unawaited(account?.loadRating(item.id));
     _saveProgress();
+    _countWatchTime(flush: true);
+    _playbackChannel = null;
     _stopCurrentChat();
     final serial = ++_playSerial;
     _recoveryTimer?.cancel();
@@ -1318,7 +1346,7 @@ class AppController extends ChangeNotifier {
     if (settings.returnDislike) unawaited(_loadDislikes(item, serial));
     if (settings.sponsorBlock) unawaited(_loadSegments(item, serial));
     if (await _open(item, serial, start: start, play: preferences.autoPlay)) {
-      if (settings.defaultSpeed != player.state.rate) await player.setRate(settings.defaultSpeed);
+      await _applyChannelPlayback(item, player);
       if (preferences.recordHistory && !incognito) await _history?.record(item);
       if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
       final next = upNext.firstOrNull;
@@ -2035,7 +2063,12 @@ class AppController extends ChangeNotifier {
     _playerSubscriptions.addAll([
       player.stream.width.listen(videoSize),
       player.stream.height.listen(videoSize),
-      player.stream.playing.listen((_) => _updateEfficiency()),
+      player.stream.playing.listen((_) {
+        _updateEfficiency();
+        _countWatchTime();
+      }),
+      player.stream.rate.listen((rate) => _rememberPlayback(rate: rate)),
+      player.stream.volume.listen((volume) => _rememberPlayback(volume: volume)),
       // A second of playback proves a downloaded libmpv works on this PC.
       player.stream.position.listen((position) {
         if (_tracking == null) return;
@@ -2063,6 +2096,7 @@ class AppController extends ChangeNotifier {
           unawaited(inspectCurrentDecoder(delay: const Duration(milliseconds: 500)));
         }
         if (_segments.isNotEmpty) _skipSegments(position);
+        _countWatchTime();
         final now = DateTime.now();
         if (now.difference(_lastProgressSave) > const Duration(seconds: 5)) {
           _lastProgressSave = now;
@@ -2420,6 +2454,217 @@ class AppController extends ChangeNotifier {
     await platform.setProperty('ab-loop-b', at(loopB));
   }
 
+  /// Plays [item] at its channel's remembered speed and volume, else at
+  /// 默认倍速 and the volume chosen last.
+  Future<void> _applyChannelPlayback(VideoItem item, Player player) async {
+    _playbackChannel = null;
+    final key = ChannelPlayback.keyOf(item);
+    final saved = preferences.rememberChannelPlayback && key != null ? channelPlayback?.of(key) : null;
+    final rate = saved?.rate ?? settings.defaultSpeed;
+    if (rate != player.state.rate) await player.setRate(rate);
+    // Said once, so a speed that came back on its own is not a surprise.
+    if (saved?.rate case final kept? when kept != settings.defaultSpeed) _notice(tr('这个频道按上次的 {0}x 倍速播放', [rateText(kept)]));
+    final volume = saved?.volume?.toDouble() ?? _sessionVolume;
+    if (volume != null && volume != player.state.volume) await player.setVolume(volume.clamp(0.0, settings.volumeMax.toDouble()).toDouble());
+    if (this.player == player && playing == item) _playbackChannel = key;
+  }
+
+  /// Keeps a speed or volume chosen while a channel plays for its next
+  /// videos. Mute is not a volume to come back to.
+  void _rememberPlayback({double? rate, double? volume}) {
+    final key = _playbackChannel;
+    if (volume != null && volume > 0 && key != null) _sessionVolume = volume;
+    if (key == null || !preferences.rememberChannelPlayback) return;
+    final store = channelPlayback;
+    if (store == null) return;
+    if (rate != null) {
+      if (rate == store.of(key)?.rate) return;
+      store.remember(key, rate: rate, forgetRate: rate == settings.defaultSpeed);
+    } else if (volume != null && volume > 0 && volume.round() != store.of(key)?.volume) {
+      store.remember(key, volume: volume.round());
+    }
+  }
+
+  /// AI 总结 already made this session, by video id.
+  final _summaries = <String, String>{};
+
+  /// Whether [details] has subtitles other than 语音识别's.
+  static bool hasOwnSubtitles(VideoDetails? details) => details?.subtitles.any((s) => s.kind != SubtitleKind.speech) ?? false;
+
+  /// Whether 语音识别 has its address, model and key.
+  bool get canRecognizeSpeech => speechReady(preferences.translation, translationKeys);
+
+  Future<SubtitleOption?> _speechOptionFor(String videoId, VideoDetails details) async {
+    if (hasOwnSubtitles(details)) return null;
+    final saved = await speechStore?.of(videoId);
+    return saved == null ? null : SubtitleOption(language: saved.language, name: '', url: saved.file.uri.toString(), kind: SubtitleKind.speech);
+  }
+
+  /// Shows [speech], or its translation into 第一字幕语言, unless subtitles
+  /// are off.
+  Future<void> _showSpeech(SubtitleOption speech, int serial) async {
+    if (settings.subtitleMode == SubtitleMode.off || serial != _playSerial) return;
+    final first = settings.subtitleLanguage.translation;
+    final option = settings.subtitleOriginal || speaks(speech.language, first) ? speech : translationOf([speech], first) ?? speech;
+    await showSubtitle(option);
+  }
+
+  /// Makes subtitles for the video playing from its audio (语音识别), shows
+  /// them and keeps them for next time. The audio goes to the service set
+  /// up under 翻译与 AI only now, when asked. With [withFfmpeg] a long video
+  /// installs ffmpeg, the one downloads use, to be cut; without it that
+  /// throws [SpeechNeedsFfmpeg] and the audio is kept for the next try.
+  Future<SubtitleOption> recognizeSpeech({bool withFfmpeg = false}) async {
+    final item = playing;
+    final details = this.details;
+    final repository = _repository;
+    final paths = this.paths;
+    final store = speechStore;
+    if (item == null || details == null || repository == null || paths == null || store == null) throw TranslationException(tr('没有正在播放的视频'));
+    if (speechJob.value != null) throw TranslationException(tr('正在识别另一个视频，请稍候'));
+    final config = preferences.translation;
+    if (!canRecognizeSpeech) throw TranslationException(tr('请先在“翻译与 AI”里设置语音识别接口和密钥'));
+    final recognizer = SpeechRecognizer(_http, baseUrl: config.effectiveSpeechBaseUrl, key: speechKeyFor(config, translationKeys), model: config.effectiveSpeechModel);
+    final serial = _playSerial;
+    final folder = Directory('${(directories?.cache ?? Directory.systemTemp).path}${Platform.pathSeparator}speech-${item.id}');
+    void stage(String text, [int done = 0, int total = 0]) => speechJob.value = (videoId: item.id, stage: text, done: done, total: total);
+    var keepAudio = false;
+    Future<List<SpeechPart>> fetch() {
+      final ffmpegDir = downloads?.ffmpegDirectory?.call();
+      return SpeechAudio.fetch(
+        item.id,
+        folder,
+        ytDlp: repository.ytDlpPath,
+        environment: repository.processEnvironment,
+        proxy: proxy.ytDlpValue(settings.proxyMode),
+        cacheDirectory: repository.cacheDirectory,
+        deno: paths.deno,
+        ffmpeg: ffmpegDir == null ? null : '$ffmpegDir${Platform.pathSeparator}${Platform.isWindows ? 'ffmpeg.exe' : 'ffmpeg'}',
+      );
+    }
+
+    try {
+      stage(tr('正在下载音频…'));
+      List<SpeechPart> parts;
+      try {
+        parts = await fetch();
+      } on SpeechNeedsFfmpeg {
+        if (!withFfmpeg) {
+          keepAudio = true;
+          rethrow;
+        }
+        stage(tr('正在安装 ffmpeg…'));
+        if (!await installFfmpeg()) throw TranslationException(tr('ffmpeg 没装好，无法分段识别'));
+        stage(tr('正在下载音频…'));
+        parts = await fetch();
+      }
+      final hint = details.language?.split('-').first.toLowerCase();
+      final answers = List<({Duration offset, Map<String, dynamic> answer})?>.filled(parts.length, null);
+      var done = 0;
+      var next = 0;
+      stage(tr('正在识别语音…'), 0, parts.length);
+      // Two parts at a time: twice as fast without the burst a free tier
+      // answers with 429.
+      Future<void> worker() async {
+        while (next < parts.length) {
+          final i = next++;
+          answers[i] = (offset: parts[i].offset, answer: await recognizer.transcribe(parts[i].file, language: hint));
+          stage(tr('正在识别语音…'), ++done, parts.length);
+        }
+      }
+
+      await Future.wait([for (var i = 0; i < min(2, parts.length); i++) worker()]);
+      final heard = [for (final a in answers) a!];
+      final vtt = await speechVtt(heard);
+      if (!vtt.contains('-->')) throw TranslationException(tr('没有识别出说话的内容'));
+      final language = (hint == null || hint.isEmpty ? null : details.language) ?? speechLanguageTag(heard.first.answer['language']) ?? 'und';
+      final file = await store.save(item.id, language, vtt);
+      logInfo('Recognized speech of ${item.id} in ${parts.length} part(s)');
+      final option = SubtitleOption(language: language, name: '', url: file.uri.toString(), kind: SubtitleKind.speech);
+      if (serial == _playSerial && playing?.id == item.id) {
+        _summaries.remove(item.id);
+        _update(() => this.details = this.details?.withSpeechSubtitle(option));
+        await _showSpeech(option, serial);
+      }
+      return option;
+    } on TranslationException {
+      rethrow;
+    } catch (e) {
+      logError('Speech recognition failed for ${item.id}', e);
+      throw TranslationException(tr('语音识别失败：{0}', [e]));
+    } finally {
+      speechJob.value = null;
+      try {
+        if (!keepAudio && await folder.exists()) await folder.delete(recursive: true);
+      } catch (_) {}
+    }
+  }
+
+  /// Forgets [videoId]'s AI 总结, so the next one is made again.
+  void forgetSummary(String videoId) => _summaries.remove(videoId);
+
+  String? summaryOf(String id) => _summaries[id];
+
+  /// Whether AI 总结 has an AI service to ask.
+  bool get canSummarize => aiServiceFor(preferences.translation, translationKeys, _http) != null;
+
+  /// AI 总结 of the video playing, from its subtitles in its own language,
+  /// by the AI service set up under 翻译服务. Only the transcript and the
+  /// title are sent, and only when asked.
+  Future<String> summarize({void Function(int done, int total)? onProgress}) async {
+    final item = playing;
+    final details = this.details;
+    if (item == null) throw TranslationException(tr('没有正在播放的视频'));
+    if (_summaries[item.id] case final done?) return done;
+    final ai = aiServiceFor(preferences.translation, translationKeys, _http);
+    if (ai == null) throw TranslationException(tr('请先在“翻译与 AI”里设置 AI 接口和密钥'));
+    final subtitles = details?.subtitles ?? const <SubtitleOption>[];
+    final option = originalSubtitle(subtitles, language: details?.language) ?? subtitles.firstOrNull;
+    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
+    final String summary;
+    if (option == null) {
+      // No subtitles, not even YouTube's automatic ones: the description
+      // and chapters are all there is to go on.
+      final description = details?.description ?? '';
+      final chapters = [for (final c in details?.chapters ?? const <Chapter>[]) (start: c.start, title: c.title)];
+      if (!canSummarizeDescription(description, chapters)) throw TranslationException(tr('这个视频没有字幕，简介也太短，无法总结'));
+      summary = await summarizeDescription(ai, title, description, chapters);
+      logInfo('Summarized ${item.id} from its description');
+    } else {
+      final source = await File(await _subtitleFile(option)).readAsString();
+      final transcript = await summaryTranscript(source);
+      summary = await summarizeTranscript(ai, title, transcript, onProgress: onProgress);
+      logInfo('Summarized ${item.id} from ${transcript.chunks.length} part(s)');
+    }
+    if (_summaries.length >= 30) _summaries.remove(_summaries.keys.first);
+    return _summaries[item.id] = summary;
+  }
+
+  /// Counts the time played up to now into 观看统计, before it is shown.
+  void flushWatchTime() => _countWatchTime(flush: true);
+
+  /// Adds the time played since the last call to 观看统计, a minute or
+  /// a pause at a time; nothing in 无痕模式 or with history off.
+  void _countWatchTime({bool flush = false}) {
+    final player = this.player;
+    final item = _tracking;
+    final now = DateTime.now();
+    final last = _watchTick;
+    final playing = player != null && player.state.playing && !player.state.buffering && item != null;
+    _watchTick = playing ? now : null;
+    if (last != null) {
+      final gap = now.difference(last).inMilliseconds;
+      // A long gap is a sleep or a stall, not watching.
+      if (gap > 0 && gap < 5000) _watchMs += gap;
+    }
+    if (_watchMs < 60000 && !(flush || !playing) || _watchMs < 1000) return;
+    final seconds = _watchMs ~/ 1000;
+    _watchMs -= seconds * 1000;
+    final key = item == null ? null : ChannelPlayback.keyOf(item);
+    if (key == null || !preferences.recordHistory || incognito) return;
+    watchTime?.add(key, item!.channel, seconds);
+  }
+
   Future<void> changeVolume(double delta) async {
     final player = this.player;
     if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, settings.volumeMax.toDouble()).toDouble());
@@ -2430,12 +2675,16 @@ class AppController extends ChangeNotifier {
   Timer? _brightnessSave;
 
   /// Brightens or darkens the video by [delta] and returns the new value;
-  /// saved once the changes pause, not at every wheel notch.
+  /// saved, and shown to the rest of the app, once the changes pause, not
+  /// at every wheel notch or slide step.
   Future<int> changeBrightness(int delta) async {
     final value = (brightness + delta).clamp(-100, 100);
-    _update(() => settings = settings.copyWith(picture: {...settings.picture, 'brightness': value}));
+    settings = settings.copyWith(picture: {...settings.picture, 'brightness': value});
     _brightnessSave?.cancel();
-    _brightnessSave = Timer(const Duration(seconds: 1), () => unawaited(_settingsStore?.save(settings)));
+    _brightnessSave = Timer(const Duration(seconds: 1), () {
+      _update(() {});
+      unawaited(_settingsStore?.save(settings));
+    });
     final platform = player?.platform;
     if (platform is NativePlayer) await platform.setProperty('brightness', '$value');
     return value;
@@ -2552,6 +2801,9 @@ class AppController extends ChangeNotifier {
           loaded = await _repository!.details(item.id);
         }
       }
+      // A video with no subtitles keeps the ones 语音识别 made for it.
+      final speech = await _speechOptionFor(item.id, loaded);
+      if (speech != null) loaded = loaded.withSpeechSubtitle(speech);
       if (serial == _playSerial) {
         _update(() {
           details = loaded;
@@ -2560,7 +2812,11 @@ class AppController extends ChangeNotifier {
         // Once yt-dlp names the start time, wait for it rather than poll.
         if (waitingForStart && item.scheduledStart == null && loaded.scheduledStart != null) _waitForStart(item);
         unawaited(_localizeDetails(item.id, serial));
-        unawaited(_autoSubtitles(item, loaded, serial));
+        if (speech != null && loaded.subtitles.length == 1) {
+          unawaited(_showSpeech(speech, serial));
+        } else {
+          unawaited(_autoSubtitles(item, loaded, serial));
+        }
       }
     } catch (_) {
       // The page still shows what the list already knew about the video.
@@ -2619,6 +2875,8 @@ class AppController extends ChangeNotifier {
     setPip(false);
     _finishWatching();
     _saveProgress(now: true);
+    _countWatchTime(flush: true);
+    _playbackChannel = null;
     _tracking = null;
     _recoveryTimer?.cancel();
     _startTimer?.cancel();
@@ -2908,7 +3166,7 @@ class AppController extends ChangeNotifier {
     final feed = homeFeed;
     final repository = _repository;
     final library = this.library;
-    if (feed == null || repository == null || !preferences.homeShowRecommended || feed.loading) return;
+    if (feed == null || repository == null || !preferences.homeShowRecommended || preferences.focusHideHome || feed.loading) return;
     if (!force && !feed.stale && feed.items.isNotEmpty) return;
     // The last launch's feed shows while a new one is gathered.
     await feed.restore(filter: visible);
@@ -3083,9 +3341,13 @@ class AppController extends ChangeNotifier {
   }
 
   /// Saves the API key of [service]; an empty one removes it.
-  Future<void> saveTranslationKey(TranslationService service, String key) async {
-    final keys = {...translationKeys}..remove(service.name);
-    if (key.trim().isNotEmpty) keys[service.name] = key.trim();
+  Future<void> saveTranslationKey(TranslationService service, String key) => saveApiKey(service.name, key);
+
+  /// Saves the API key kept under [name] (a [TranslationService.name], or
+  /// `speech` for 语音识别); an empty one removes it.
+  Future<void> saveApiKey(String name, String key) async {
+    final keys = {...translationKeys}..remove(name);
+    if (key.trim().isNotEmpty) keys[name] = key.trim();
     _update(() => translationKeys = keys);
     _useTranslator();
     try {
@@ -3102,6 +3364,15 @@ class AppController extends ChangeNotifier {
   Future<List<String>> listAiModels() {
     final config = preferences.translation;
     return AiTranslator.listModels(_http, config.effectiveAiBaseUrl, translationKeys[TranslationService.ai.name] ?? '');
+  }
+
+  /// A one-line answer from the AI interface, to check it works whichever
+  /// service translates.
+  Future<String> testAi() async {
+    final ai = aiServiceFor(preferences.translation, translationKeys, _http);
+    if (ai == null) throw TranslationException(tr('请先填写 AI 接口的地址、模型和密钥'));
+    final answer = await ai.complete('Answer in one short sentence.', 'Say hello and name the model you are.');
+    return answer.replaceAll(RegExp(r'<think>[\s\S]*?</think>'), '').trim();
   }
 
   /// A short sentence put through the chosen service, to check it works.
@@ -3682,6 +3953,8 @@ class AppController extends ChangeNotifier {
     _shutDown = true;
     if (install) await appUpdater?.install();
     _saveProgress();
+    _countWatchTime(flush: true);
+    await (watchTime?.save() ?? Future.value(), channelPlayback?.save() ?? Future.value()).wait;
     await library?.flush();
     await downloads?.flush();
     await _translationCache.save();
@@ -3722,6 +3995,7 @@ class AppController extends ChangeNotifier {
     _disposed = true;
     _stopCurrentChat();
     chatMessages.dispose();
+    speechJob.dispose();
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     _startTimer?.cancel();
@@ -3735,6 +4009,9 @@ class AppController extends ChangeNotifier {
       unawaited(subscription.cancel());
     }
     _saveProgress();
+    _countWatchTime(flush: true);
+    unawaited(watchTime?.save());
+    unawaited(channelPlayback?.save());
     unawaited(_relay?.close());
     unawaited(_bridge?.close());
     cast.dispose();

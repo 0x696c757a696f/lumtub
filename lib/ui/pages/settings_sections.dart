@@ -32,6 +32,7 @@ import 'account_settings.dart';
 import 'relay_servers_page.dart';
 import 'settings_subpages.dart';
 import 'translation_settings_page.dart';
+import 'watch_stats_page.dart';
 import '../../l10n/l10n.dart';
 
 /// The groups in the settings list, in display order, named and ordered
@@ -131,6 +132,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.recordHistory,
               onChanged: (v) => savePrefs(prefs.copyWith(recordHistory: v)),
             )),
+        SettingEntry(tr('观看统计'), (context) => NormalItem(
+              title: tr('观看统计'),
+              subtitle: tr('每天看了多久、最常看的频道，只存在本机'),
+              leading: _icon(Icons.insights_rounded),
+              onTap: () => openWatchStats(context, controller),
+            ), subtitle: tr('观看时长')),
         SettingEntry(tr('记录播放进度'), (context) => SwitchItem(
               title: tr('记录播放进度'),
               subtitle: tr('用于继续播放和卡片上的进度条'),
@@ -183,6 +190,27 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('清除 删除 数据 隐私 重置 卸载')),
       ],
     SettingsCategory.recommend => [
+        SettingEntry(tr('专注模式：隐藏首页内容'), (context) => SwitchItem(
+              title: tr('专注模式：隐藏首页内容'),
+              subtitle: tr('首页不显示任何视频，只留搜索'),
+              leading: _icon(Icons.self_improvement_rounded),
+              value: prefs.focusHideHome,
+              onChanged: (v) => savePrefs(prefs.copyWith(focusHideHome: v)),
+            ), subtitle: tr('专注模式')),
+        SettingEntry(tr('专注模式：隐藏相关视频'), (context) => SwitchItem(
+              title: tr('专注模式：隐藏相关视频'),
+              subtitle: tr('播放页不显示、也不加载相关视频，播放队列照常；与“其它设置”里的“视频页显示相关视频”是同一个开关'),
+              leading: _icon(Icons.video_library_outlined),
+              value: !prefs.showRelated,
+              onChanged: (v) => savePrefs(prefs.copyWith(showRelated: !v)),
+            ), subtitle: tr('专注模式')),
+        SettingEntry(tr('专注模式：隐藏评论'), (context) => SwitchItem(
+              title: tr('专注模式：隐藏评论'),
+              subtitle: tr('播放页不显示、也不加载评论'),
+              leading: _icon(Icons.comments_disabled_outlined),
+              value: prefs.focusHideComments,
+              onChanged: (v) => savePrefs(prefs.copyWith(focusHideComments: v)),
+            ), subtitle: tr('专注模式')),
         SettingEntry(tr('首页显示为你推荐'), (context) => SwitchItem(
               title: tr('首页显示“为你推荐”'),
               subtitle: tr('根据本机的观看历史、收藏和关注在本机计算，不上传'),
@@ -589,6 +617,17 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(Icons.speed_rounded),
               onTap: () => openPlaySpeed(context, controller),
             ), subtitle: tr('播放速度')),
+        SettingEntry(tr('按频道记住倍速和音量'), (context) => SwitchItem(
+              title: tr('按频道记住倍速和音量'),
+              subtitle: tr('在某个频道的视频里调过的倍速和音量，下次播放这个频道时自动用上'),
+              leading: _icon(Icons.tune_rounded),
+              value: prefs.rememberChannelPlayback,
+              onChanged: (v) {
+                // Off forgets what was kept, so it does not come back later.
+                if (!v) controller.channelPlayback?.clear();
+                savePrefs(prefs.copyWith(rememberChannelPlayback: v));
+              },
+            ), subtitle: tr('频道 倍速 音量')),
         SettingEntry(tr('自动播放'), (context) => SwitchItem(
               title: tr('自动播放'),
               subtitle: tr('打开视频后立即开始播放'),
@@ -649,6 +688,19 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.autoFullscreen,
               onChanged: (v) => savePrefs(prefs.copyWith(autoFullscreen: v)),
             )),
+        SettingEntry(tr('播放时自动关灯'), (context) => SwitchItem(
+              title: tr('播放时自动关灯'),
+              subtitle: tr('视频播放时调暗视频以外的界面，暂停时恢复'),
+              leading: _icon(Icons.lightbulb_outline_rounded),
+              value: prefs.autoLightsOff,
+              onChanged: (v) => savePrefs(prefs.copyWith(autoLightsOff: v)),
+            ), subtitle: tr('影院模式')),
+        SettingEntry(tr('关灯暗度'), (context) => NormalItem(
+              title: tr('关灯暗度'),
+              subtitle: tr('关灯后视频以外变暗 {0}%', [prefs.lightsOffDim]),
+              leading: _icon(Icons.dark_mode_outlined),
+              onTap: () => pickWithSlider(context, title: tr('关灯暗度'), value: prefs.lightsOffDim.toDouble(), min: 50, max: 98, divisions: 48, suffix: '%', onSelected: (v) => savePrefs(prefs.copyWith(lightsOffDim: v.round()))),
+            ), subtitle: tr('影院模式')),
         SettingEntry(tr('自动退出全屏'), (context) => SwitchItem(
               title: tr('自动退出全屏'),
               subtitle: tr('视频播放结束、没有下一个时退出全屏'),
@@ -880,12 +932,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.expandDescription,
               onChanged: (v) => savePrefs(prefs.copyWith(expandDescription: v)),
             )),
-        SettingEntry(tr('翻译服务'), (context) => NormalItem(
-              title: tr('翻译服务'),
-              subtitle: prefs.translation.service.label,
+        SettingEntry(tr('翻译与 AI'), (context) => NormalItem(
+              title: tr('翻译与 AI'),
+              subtitle: tr('翻译：{0} · AI：{1}', [prefs.translation.service.label, controller.canSummarize ? prefs.translation.effectiveAiModel : tr('未设置')]),
               leading: _icon(Icons.g_translate_rounded),
               onTap: () => openTranslationSettings(context, controller),
-            ), subtitle: '翻译 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
+            ), subtitle: '翻译服务 AI 总结 接口 模型 语音识别 Whisper Groq 没有字幕 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
         SettingEntry(tr('翻译目标语言'), (context) => PopupItem<String>(
               title: tr('翻译目标语言'),
               leading: _icon(Icons.translate_rounded),

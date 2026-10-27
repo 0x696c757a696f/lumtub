@@ -46,7 +46,7 @@ bool speaks(String? language, TranslationLanguage target) {
 /// The subtitle of [options] to show in [target]: one the video has in
 /// that language, uploaded before automatic, else YouTube's translation.
 SubtitleOption? subtitleIn(List<SubtitleOption> options, TranslationLanguage target) {
-  for (final kind in [SubtitleKind.uploaded, SubtitleKind.automatic]) {
+  for (final kind in [SubtitleKind.uploaded, SubtitleKind.automatic, SubtitleKind.speech]) {
     final own = options.where((o) => o.kind == kind && speaks(o.language, target)).firstOrNull;
     if (own != null) return own;
   }
@@ -63,14 +63,14 @@ bool hasOwnSubtitle(List<SubtitleOption> options, TranslationLanguage target) =>
 /// [language], yt-dlp's tag for the video, wins when a subtitle has it.
 SubtitleOption? originalSubtitle(List<SubtitleOption> options, {String? language}) {
   if (language != null && language.isNotEmpty) {
-    for (final kind in [SubtitleKind.uploaded, SubtitleKind.automatic]) {
+    for (final kind in [SubtitleKind.uploaded, SubtitleKind.automatic, SubtitleKind.speech]) {
       final own = options.where((o) => o.kind == kind && sameLanguage(o.language, language)).firstOrNull;
       if (own != null) return own;
     }
   }
   final automatic = options.where((o) => o.kind == SubtitleKind.automatic).firstOrNull;
   final uploaded = options.where((o) => o.kind == SubtitleKind.uploaded);
-  if (automatic == null) return uploaded.firstOrNull;
+  if (automatic == null) return uploaded.firstOrNull ?? options.where((o) => o.kind == SubtitleKind.speech).firstOrNull;
   return uploaded.where((o) => sameLanguage(o.language, automatic.language)).firstOrNull ?? automatic;
 }
 

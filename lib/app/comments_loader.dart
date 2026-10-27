@@ -38,6 +38,7 @@ class CommentsLoader extends ChangeNotifier {
     if (value == newest) return Future.value();
     newest = value;
     _generation++;
+    loadingAll = false;
     comments = const [];
     replies.clear();
     started = false;
@@ -76,6 +77,38 @@ class CommentsLoader extends ChangeNotifier {
         _notify();
       }
     }
+  }
+
+  /// Whether [loadAll] is running.
+  bool loadingAll = false;
+
+  /// Loads page after page, for 搜索评论 to look through all of them, up to
+  /// [most] comments or until [stopLoadingAll].
+  Future<void> loadAll({int most = 3000}) async {
+    if (loadingAll) return;
+    final generation = _generation;
+    loadingAll = true;
+    _notify();
+    try {
+      while (loadingAll && !_disposed && generation == _generation && hasMore && error == null && comments.length < most) {
+        if (loading) {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          continue;
+        }
+        await loadMore();
+      }
+    } finally {
+      if (generation == _generation && loadingAll) {
+        loadingAll = false;
+        _notify();
+      }
+    }
+  }
+
+  void stopLoadingAll() {
+    if (!loadingAll) return;
+    loadingAll = false;
+    _notify();
   }
 
   /// Loads [comment]'s replies, or the next page of them.
@@ -131,3 +164,18 @@ class CommentsLoader extends ChangeNotifier {
     super.dispose();
   }
 }
+
+/// Lower-cased once per comment, not once per keystroke.
+final _searchText = Expando<String>();
+
+/// Whether [comment] holds every word of [query], in its text or author's
+/// name, ignoring case.
+
+bool commentMatches(YoutubeComment comment, List<String> words) {
+  if (words.isEmpty) return true;
+  final text = _searchText[comment] ??= '${comment.text}\n${comment.author}'.toLowerCase();
+  return words.every(text.contains);
+}
+
+/// [query] as the lower-case words [commentMatches] looks for.
+List<String> commentQueryWords(String query) => [for (final word in query.toLowerCase().split(RegExp(r'\s+'))) if (word.isNotEmpty) word];

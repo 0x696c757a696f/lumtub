@@ -8,6 +8,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../app/app_controller.dart';
 import '../app_preferences.dart';
 import '../l10n/l10n.dart';
+import 'lights_off.dart';
 import 'theater_mode.dart';
 
 /// Keys shown in the shortcut help, in display order, with the steps from
@@ -19,6 +20,7 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) => [
       ('↑ / ↓', tr('音量加减 {0}%', [prefs.volumeStep])),
       ('Shift + < / >', tr('减速或加速播放')),
       (tr('按住画面'), tr('临时 2 倍速')),
+      (tr('Ctrl + 滚轮'), tr('减速或加速播放')),
       ('M', tr('静音')),
       ('F', tr('全屏')),
       ('Esc', tr('退出全屏')),
@@ -31,6 +33,7 @@ List<(String, String)> playerShortcutHelp(AppPreferences prefs) => [
       ('R', tr('重听这一句')),
       ('Ctrl + C', tr('复制当前字幕')),
       ('T', tr('剧场模式')),
+      ('B', tr('关灯')),
       ('S', tr('截图')),
       ('I', tr('显示或隐藏播放统计')),
       (tr('Alt + ← / 鼠标后退键'), tr('返回上一页')),
@@ -55,10 +58,8 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
   void playOrPause() => unawaited(player.playOrPause());
   // Steps through 倍速选项 like YouTube's Shift+< and Shift+>.
   void stepSpeed(int direction) {
-    final speeds = [...controller.settings.speeds]..sort();
-    if (speeds.isEmpty) return;
-    final rate = player.state.rate;
-    final next = direction > 0 ? speeds.where((s) => s > rate + 0.001).firstOrNull ?? speeds.last : speeds.lastWhere((s) => s < rate - 0.001, orElse: () => speeds.first);
+    final next = nextSpeed(controller.settings.speeds, player.state.rate, direction);
+    if (next == null) return;
     unawaited(player.setRate(next));
     onFeedback?.call(direction > 0 ? Icons.fast_forward_rounded : Icons.slow_motion_video_rounded, '${_trim(next)}x');
   }
@@ -116,6 +117,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     const SingleActivator(LogicalKeyboardKey.bracketRight): next,
     const SingleActivator(LogicalKeyboardKey.keyP, shift: true): previous,
     const SingleActivator(LogicalKeyboardKey.keyT): () => theaterMode.value = !theaterMode.value,
+    const SingleActivator(LogicalKeyboardKey.keyB): () => lightsOff.value = !lightsOff.value,
     const SingleActivator(LogicalKeyboardKey.keyA): () => subtitleStep(-1),
     const SingleActivator(LogicalKeyboardKey.keyD): () => subtitleStep(1),
     const SingleActivator(LogicalKeyboardKey.keyR): () => subtitleStep(0),
@@ -149,6 +151,14 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     const SingleActivator(LogicalKeyboardKey.period, shift: true): () => stepSpeed(1),
     const SingleActivator(LogicalKeyboardKey.comma, shift: true): () => stepSpeed(-1),
   };
+}
+
+/// The speed in [speeds] after [rate], up for a positive [direction], down
+/// otherwise; the end of the list when there is none further.
+double? nextSpeed(List<double> speeds, double rate, int direction) {
+  final sorted = [...speeds]..sort();
+  if (sorted.isEmpty) return null;
+  return direction > 0 ? sorted.where((s) => s > rate + 0.001).firstOrNull ?? sorted.last : sorted.lastWhere((s) => s < rate - 0.001, orElse: () => sorted.first);
 }
 
 String _trim(double speed) => speed == speed.roundToDouble() ? speed.toStringAsFixed(1) : speed.toString();

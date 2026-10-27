@@ -184,11 +184,11 @@ class YoutubeComments {
   /// [CommentRating], for a comment or a post alike.
   Future<void> rate(String action) async {
     final signedIn = await signedInHeaders();
-    if (signedIn.isEmpty) throw StateError(tr('需要先登录 Google 账号'));
+    if (signedIn.isEmpty) throw StateError(tr('需要先在设置 › Google 账号里用电视码登录'));
     final response = await _post('comment/perform_comment_action', {'actions': [action]}, signedIn);
     if (response.statusCode >= 400 && response.statusCode < 500) {
       refuse(response.statusCode);
-      throw StateError(tr('YouTube 不接受当前 Google 授权的这项操作'));
+      throw StateError(tr('YouTube 不接受当前电视码登录的这项操作'));
     }
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
   }

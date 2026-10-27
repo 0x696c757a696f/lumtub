@@ -50,6 +50,7 @@ import '../piped_streams.dart';
 import '../search_options.dart';
 import '../search_suggestions.dart';
 import '../youtube_comments.dart';
+import '../youtube_tv_sign_in.dart';
 import '../youtube_related.dart';
 import '../recommendations.dart';
 import '../chunked_relay.dart';
@@ -136,6 +137,10 @@ class AppController extends ChangeNotifier {
   /// The optional Google sign-in for importing subscriptions and playlists.
   AccountController? account;
 
+  /// The TV-code sign-in that YouTube's own pages take, for liking comments
+  /// and posts.
+  YoutubeTvSignIn? tvSignIn;
+
   /// The open channel page and its uploads.
   ChannelRef? channel;
   VideoListLoader? channelVideos;
@@ -163,7 +168,7 @@ class AppController extends ChangeNotifier {
 
   /// Comments under videos and posts, and liking them and posts, signed in
   /// with the Google account when there is one.
-  late final comments = YoutubeComments(_http)..token = (() async => account?.canWrite ?? false ? await account!.accessToken() : null);
+  late final comments = YoutubeComments(_http)..token = (() async => tvSignIn?.accessToken());
 
   /// Whether the statistics overlay is shown over the video.
   bool showStats = false;
@@ -500,6 +505,11 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _tvSignInChanged() {
+    if (tvSignIn?.signedIn ?? false) comments.refused = false;
+    notifyListeners();
+  }
+
   void _notice(String message) {
     if (!_disposed) _notices.add(message);
   }
@@ -610,6 +620,10 @@ class AppController extends ChangeNotifier {
           library: library,
           notice: _notice,
         )..addListener(notifyListeners);
+        tvSignIn = YoutubeTvSignIn(
+          credentials: SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}youtube-tv.bin'), DpapiProtector()),
+          client: _http,
+        )..addListener(_tvSignInChanged);
         this.player = player;
         videoController = controller;
         _outputSize = VideoOutputSize((width, height) => controller.setSize(width: width, height: height));
@@ -637,6 +651,7 @@ class AppController extends ChangeNotifier {
       });
       unawaited(downloads?.load());
       unawaited(account?.load());
+      unawaited(tvSignIn?.load());
       _translationCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}translations.json'));
       _useTranslator();
       _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), DpapiProtector());
@@ -4062,6 +4077,7 @@ class AppController extends ChangeNotifier {
     unawaited(_bridge?.close());
     cast.dispose();
     account?.dispose();
+    tvSignIn?.cancel();
     downloads?.dispose();
     library?.dispose();
     channelVideos?.dispose();

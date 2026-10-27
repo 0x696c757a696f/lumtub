@@ -20,7 +20,7 @@ void main() {
     expect(VideoOutputSize.target(const Size(1280, 720), const [Size(1920, 1080)], cover: true), isNull);
   });
 
-  test('applies the size once things settle, and the video size when hidden', () async {
+  test('applies the size once things settle, and keeps it while a page covers the video', () async {
     final applied = <(int?, int?)>[];
     final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 10));
     Future<void> settle() => Future.delayed(const Duration(milliseconds: 50));
@@ -35,7 +35,18 @@ void main() {
     expect(applied, [(1280, 720)]);
     size.hide(page);
     await settle();
-    expect(applied, [(1280, 720), (null, null)]);
+    expect(applied, [(1280, 720)]);
+    expect(size.onScreen, isFalse);
+  });
+
+  test('registers the texture again at the same size', () async {
+    final applied = <(int?, int?)>[];
+    final size = VideoOutputSize((w, h) async => applied.add((w, h)), delay: const Duration(milliseconds: 10));
+    size.video = const Size(1920, 1080);
+    size.show(Object(), const Size(1280, 720));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await size.refresh();
+    expect(applied, [(1280, 720), (1280, 722), (1280, 720)]);
   });
 
   test('draws small while the window is hidden and full size at once on return', () async {

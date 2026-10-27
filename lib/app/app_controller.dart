@@ -1574,6 +1574,7 @@ class AppController extends ChangeNotifier {
       if (serial != _playSerial) return;
       final first = local.preferredSubtitle(settings.subtitleLanguage.mpvLangs.split(','));
       await platform.command(['sub-add', first.path, 'select']);
+      await _syncMainSubtitle();
       for (final other in local.subtitles.where((f) => f != first)) {
         await platform.command(['sub-add', other.path, 'auto']);
       }
@@ -1741,9 +1742,29 @@ class AppController extends ChangeNotifier {
       if (main == id) await platform.setProperty('sid', '${added['id']}');
       if (second == id) await platform.setProperty('secondary-sid', '${added['id']}');
       await platform.command(['sub-remove', id]);
+      if (main == id) await _syncMainSubtitle();
       logInfo('Subtitle translation finished; track $id replaced by ${added['id']}');
     } catch (e) {
       logInfo('Could not reload the finished subtitle translation: $e');
+    }
+  }
+
+  /// Tells media_kit which main subtitle mpv shows. It only learns of one
+  /// chosen through its own setSubtitleTrack, not of one selected by
+  /// sub-add or a sid change, and the subtitle panel reads it.
+  Future<void> _syncMainSubtitle() async {
+    final player = this.player;
+    final platform = player?.platform;
+    if (player == null || platform is! NativePlayer) return;
+    try {
+      final sid = await platform.getProperty('sid');
+      if (sid.isEmpty || sid == player.state.track.subtitle.id) return;
+      if (sid == 'no') return await player.setSubtitleTrack(SubtitleTrack.no());
+      SubtitleTrack? find(Tracks tracks) => tracks.subtitle.where((t) => t.id == sid).firstOrNull;
+      final track = find(player.state.tracks) ?? await player.stream.tracks.map(find).firstWhere((t) => t != null).timeout(const Duration(seconds: 3));
+      if (track != null) await player.setSubtitleTrack(track);
+    } catch (e) {
+      logInfo('Could not read the selected subtitle: $e');
     }
   }
 
@@ -1757,44 +1778,61 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  (String, List<SubtitleCue>)? _cues;
+  final _cues = <String, List<SubtitleCue>>{};
 
-  /// The lines for 字幕列表: of the main subtitle, or of the second one
-  /// while it is the only one on. Read from the file the track came from,
-  /// ours or the one mpv was given. Empty when there is no subtitle or it
-  /// is not WebVTT or SRT.
-  Future<List<SubtitleCue>> listedSubtitleCues() async {
+  /// The lines for 字幕列表: of the main subtitle, each with the second
+  /// subtitle's words spoken at the same time, or of the second one while
+  /// it is the only one on. Read from the file the track came from, ours or
+  /// the one mpv was given. Empty when there is no subtitle or it is not
+  /// WebVTT or SRT.
+  Future<List<PairedCue>> listedSubtitleCues() async {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return const [];
     final track = player.state.track.subtitle;
     final off = track.id == 'no' || track.id == 'auto';
-    // With only the second subtitle on, its lines are listed.
-    final second = off ? secondarySubtitle : null;
-    if (off && second == null) return const [];
-    final key = second != null ? '${playing?.id}\u0000second\u0000${second.url}' : '${playing?.id}\u0000${track.id}\u0000${track.title}';
-    if (_cues case (final k, final cues) when k == key) return cues;
+    final second = secondarySubtitle;
+    final mode = preferences.subtitleListMode;
+    if (off || (second != null && mode == SubtitleListMode.second)) {
+      return second == null ? const [] : pairSubtitleCues(await _optionCues(second), const []);
+    }
+    final main = await _trackCues(platform, track);
+    if (second == null || mode == SubtitleListMode.first) return pairSubtitleCues(main, const []);
+    return pairSubtitleCues(main, await _optionCues(second));
+  }
+
+  Future<List<SubtitleCue>> _optionCues(SubtitleOption option) => _cached('${playing?.id}\u0000${option.url}', () async => File(await _subtitleFile(option)).readAsString());
+
+  Future<List<SubtitleCue>> _trackCues(NativePlayer platform, SubtitleTrack track) {
+    final option = details?.subtitles.where((o) => o.label == track.title).firstOrNull;
+    if (option != null) return _optionCues(option);
+    return _cached('${playing?.id}\u0000${track.id}\u0000${track.title}', () async {
+      final list = jsonDecode(await platform.getProperty('track-list'));
+      final entry = list is List ? list.whereType<Map>().where((t) => t['type'] == 'sub' && '${t['id']}' == track.id).firstOrNull : null;
+      final source = entry?['external-filename'];
+      if (source is String && source.startsWith(RegExp('https?://'))) {
+        final response = await _http.get(Uri.parse(source)).timeout(const Duration(seconds: 20));
+        if (response.statusCode == 200) return utf8.decode(response.bodyBytes, allowMalformed: true);
+      } else if (source is String && await File(source).exists()) {
+        return File(source).readAsString();
+      }
+      return null;
+    });
+  }
+
+  Future<List<SubtitleCue>> _cached(String key, Future<String?> Function() read) async {
+    if (_cues[key] case final cues?) return cues;
     String? text;
     try {
-      final option = second ?? details?.subtitles.where((o) => o.label == track.title).firstOrNull;
-      if (option != null) {
-        text = await File(await _subtitleFile(option)).readAsString();
-      } else {
-        final list = jsonDecode(await platform.getProperty('track-list'));
-        final entry = list is List ? list.whereType<Map>().where((t) => t['type'] == 'sub' && '${t['id']}' == track.id).firstOrNull : null;
-        final source = entry?['external-filename'];
-        if (source is String && source.startsWith(RegExp('https?://'))) {
-          final response = await _http.get(Uri.parse(source)).timeout(const Duration(seconds: 20));
-          if (response.statusCode == 200) text = utf8.decode(response.bodyBytes, allowMalformed: true);
-        } else if (source is String && await File(source).exists()) {
-          text = await File(source).readAsString();
-        }
-      }
+      text = await read();
     } catch (e) {
       logInfo('Could not read the subtitle lines: $e');
     }
     final cues = text == null ? const <SubtitleCue>[] : parseSubtitleCues(text);
-    if (cues.isNotEmpty) _cues = (key, cues);
+    if (cues.isNotEmpty) {
+      if (_cues.length >= 4) _cues.remove(_cues.keys.first);
+      _cues[key] = cues;
+    }
     return cues;
   }
 
@@ -1817,6 +1855,7 @@ class AppController extends ChangeNotifier {
         final file = await _subtitleFile(option);
         if (this.player != player) return;
         await platform.command(['sub-add', file, 'select', option.label, option.language]);
+        await _syncMainSubtitle();
       }
     } catch (e) {
       logError('Could not load subtitles ${option.language}', e);
@@ -3101,7 +3140,9 @@ class AppController extends ChangeNotifier {
     if (store == null || player == null) return;
     final oldSettings = settings;
     final requiresNextVideo = next.hwdec != oldSettings.hwdec || next.interpolation != oldSettings.interpolation;
-    final ignoredOptions = await PlayerOptionApplicator.apply(player, next);
+    // Lighter scaling set for a busy GPU is not in the settings, so then
+    // every option is set again.
+    final ignoredOptions = await PlayerOptionApplicator.apply(player, next, previous: _lightRendering == null ? oldSettings : null);
     _lightRendering = null;
     await store.save(next);
     _update(() => settings = next);
@@ -3123,6 +3164,11 @@ class AppController extends ChangeNotifier {
           : tr('已保存；此 libmpv 不支持：{0}。', [ignoredOptions.join(', ')]);
     });
   }
+
+  /// Shows [next] at once without saving or touching libmpv, while a
+  /// slider of the subtitle style panel moves; [saveSettings] follows when
+  /// it is let go.
+  void previewSettings(PlayerSettings next) => _update(() => settings = next);
 
   /// Sets one libmpv property without saving, for live previews such as
   /// the picture sliders.
@@ -3204,6 +3250,7 @@ class AppController extends ChangeNotifier {
       _lastDrops = drops;
       // Read every time, so the timings cover these 10 seconds.
       final frames = await _frameStats(platform);
+      await _watchPicture(platform, frames);
       await _lightenIfBusy(platform, frames);
       await _stepDownIfDropping(platform, added);
       if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) {
@@ -3223,6 +3270,33 @@ class AppController extends ChangeNotifier {
       logInfo('Dropped $added frames in 10 s ($drops total): ${values.join(' ')}${frames == null ? '' : ' · frames $frames'}');
     } catch (_) {
       // Statistics are best effort.
+    }
+  }
+
+  DateTime _lastPictureFix = DateTime(2000);
+
+  /// Brings back a picture that stopped while the sound plays on: when no
+  /// frame was drawn in 10 s, the decoder is restarted from here; when
+  /// frames were drawn but none reached the screen, the texture is
+  /// registered again. Only while the video is on screen, at most once a
+  /// minute.
+  Future<void> _watchPicture(NativePlayer platform, String? frames) async {
+    final match = frames == null ? null : RegExp(r'frames=(\d+)/(\d+)').firstMatch(frames);
+    final outputSize = _outputSize;
+    if (match == null || outputSize == null || !outputSize.onScreen || audioOnly || _backgroundAudioOnly || _windowHidden) return;
+    if ((player?.state.width ?? 0) == 0 || DateTime.now().difference(_lastPictureFix) < const Duration(minutes: 1)) return;
+    final drawn = int.parse(match[1]!), shown = int.parse(match[2]!);
+    if (drawn > 0 && shown > 0) return;
+    _lastPictureFix = DateTime.now();
+    logInfo('Picture stalled while playing ($frames); ${drawn == 0 ? 'restarting the decoder' : 'registering the texture again'}');
+    try {
+      if (drawn == 0) {
+        await platform.command(['seek', '0', 'relative+exact']);
+      } else {
+        await outputSize.refresh();
+      }
+    } catch (e) {
+      logInfo('Could not bring the picture back: $e');
     }
   }
 

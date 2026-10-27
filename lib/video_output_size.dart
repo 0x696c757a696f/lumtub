@@ -84,7 +84,23 @@ class VideoOutputSize {
     _timer = Timer(delay, _update);
   }
 
+  /// Whether the picture is in a box on screen now.
+  bool get onScreen => _boxes.isNotEmpty && !_hidden;
+
+  /// Registers the picture's texture again at the same size, for a picture
+  /// that stopped reaching the screen.
+  Future<void> refresh() async {
+    final size = _applied ?? (_video.isEmpty ? null : (_video.width.round(), _video.height.round()));
+    if (size == null) return;
+    await _apply(size.$1, size.$2 + 2);
+    final applied = _applied;
+    await (applied == null ? _apply(null, null) : _apply(applied.$1, applied.$2));
+  }
+
   void _update() {
+    // While a page covers the video, the size stays: drawing it again at
+    // another size for nobody to see costs a texture swap twice.
+    if (_boxes.isEmpty && !_hidden) return;
     final next = target(_video, _hidden ? const [hiddenBox] : _boxes.values, cover: _cover);
     if (next == null) {
       if (_native) return;

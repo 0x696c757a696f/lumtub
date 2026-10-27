@@ -95,22 +95,22 @@ void main() {
     final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero]);
     final path = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated));
     expect(asked.last.queryParameters.containsKey('tlang'), isFalse);
-    expect(translator.asked, ['hello world\nhow & why']);
+    expect(translator.asked, ['hello world how & why']);
     expect(translator.targets, ['zh-CN']);
-    expect(await File(path).readAsString(), contains('00:00:02.010 --> 00:00:04.000 align:start position:0%\nHOW &amp; WHY\n'));
+    expect(await File(path).readAsString(), contains('00:00:00.000 --> 00:00:04.000\nHELLO WORLD HOW &amp; WHY\n'));
   });
 
   test('asks again in halves when a translation joins lines', () async {
     final vtt = StringBuffer('WEBVTT\n\n');
     for (var i = 0; i < 5; i++) {
-      vtt.write('00:00:0$i.000 --> 00:00:0$i.900\nline $i\n\n');
+      vtt.write('00:00:0$i.000 --> 00:00:0$i.900\nline $i.\n\n');
     }
     final client = MockClient((request) async => request.url.queryParameters.containsKey('tlang') ? http.Response('', 429) : http.Response('$vtt', 200));
     final translator = _Joining();
     final files = SubtitleFiles(client, folder, () => translator, pauses: const [Duration.zero]);
     final path = await files.pathFor(const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://www.youtube.com/api/timedtext?v=a&lang=en&tlang=zh-Hans', kind: SubtitleKind.translated));
-    expect(WebVtt.cues(await File(path).readAsString()).map((c) => c.text), ['LINE 0', 'LINE 1', 'LINE 2', 'LINE 3', 'LINE 4']);
-    expect(translator.asked.first, 'line 0\nline 1\nline 2\nline 3\nline 4');
+    expect(WebVtt.cues(await File(path).readAsString()).map((c) => c.text), ['LINE 0.', 'LINE 1.', 'LINE 2.', 'LINE 3.', 'LINE 4.']);
+    expect(translator.asked.first, 'line 0.\nline 1.\nline 2.\nline 3.\nline 4.');
   });
 
   test('translates a long track a few requests at a time, in order', () async {
@@ -139,6 +139,30 @@ void main() {
     expect([for (final c in cues) c.text.split(' ').first], [for (var i = 0; i < 40; i++) 'WORD$i']);
     expect(most, 3);
     expect(updated, [path]);
+  });
+
+  test('joins caption fragments into sentences for translation', () {
+    ({String timing, String text}) cue(String from, String to, String text) => (timing: '00:00:$from --> 00:00:$to align:start', text: text);
+    final joined = WebVtt.sentences([
+      cue('00.000', '01.500', 'so today we are'),
+      cue('01.500', '03.000', 'going to talk about'),
+      cue('03.000', '04.000', 'subtitles.'),
+      cue('04.100', '05.000', 'Next one'),
+      cue('09.000', '10.000', 'after a pause'),
+      cue('10.000', '11.000', '我们今天'),
+      cue('11.000', '12.000', '来聊字幕。'),
+    ]);
+    expect([for (final c in joined) c.text], ['so today we are going to talk about subtitles.', 'Next one', 'after a pause 我们今天来聊字幕。']);
+    expect(joined.first.timing, '00:00:00.000 --> 00:00:04.000');
+    expect(joined[1].timing, '00:00:04.100 --> 00:00:05.000 align:start');
+  });
+
+  test('a sentence stops growing past what can be read at once', () {
+    final cues = [for (var i = 0; i < 10; i++) (timing: '00:00:0$i.000 --> 00:00:0$i.900', text: 'and then some more words')];
+    final joined = WebVtt.sentences(cues);
+    expect(joined.length, greaterThan(1));
+    expect(joined.every((c) => WebVtt.endOf(c.timing) - WebVtt.startOf(c.timing) <= const Duration(seconds: 7)), isTrue);
+    expect(joined.every((c) => c.text.length <= 90), isTrue);
   });
 
   test('reads when a cue starts', () {

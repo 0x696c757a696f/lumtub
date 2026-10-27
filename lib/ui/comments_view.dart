@@ -287,27 +287,51 @@ class _CommentComposerState extends State<CommentComposer> {
   }
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Expanded(child: TextField(
-            controller: _text,
-            autofocus: widget.autofocus,
-            enabled: !_sending,
-            minLines: 1,
-            maxLines: 5,
-            maxLength: 10000,
-            decoration: InputDecoration(hintText: widget.hint, isDense: true, counterText: '', border: const OutlineInputBorder()),
-          )),
-          const SizedBox(width: 8),
-          if (widget.onCancel != null) TextButton(onPressed: _sending ? null : widget.onCancel, child: Text(tr('取消'))),
+  Widget build(BuildContext context) {
+    final small = Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 13);
+    // The field takes the whole width, as on YouTube, with its buttons
+    // under it, so a narrow comments panel still leaves room to write.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        TextField(
+          controller: _text,
+          autofocus: widget.autofocus,
+          enabled: !_sending,
+          minLines: 1,
+          maxLines: 6,
+          maxLength: 10000,
+          style: small,
+          decoration: InputDecoration(
+            hintText: widget.hint,
+            hintMaxLines: 1,
+            hintStyle: small?.copyWith(overflow: TextOverflow.ellipsis),
+            isDense: true,
+            counterText: '',
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          if (widget.onCancel != null) TextButton(style: _compact, onPressed: _sending ? null : widget.onCancel, child: Text(tr('取消'))),
+          const SizedBox(width: 4),
           ListenableBuilder(
             listenable: _text,
             builder: (context, _) => FilledButton(
+              style: _compact,
               onPressed: _sending || _text.text.trim().isEmpty ? null : _send,
               child: _sending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(tr('发布')),
             ),
           ),
         ]),
-      );
+      ]),
+    );
+  }
+
+  static const _compact = ButtonStyle(
+    visualDensity: VisualDensity.compact,
+    textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 13)),
+    padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 14)),
+  );
 }

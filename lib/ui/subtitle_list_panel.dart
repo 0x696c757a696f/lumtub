@@ -5,14 +5,16 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 
 import '../app/app_controller.dart';
+import '../app_preferences.dart' show SubtitleListMode;
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleOption;
 import '../subtitle_cues.dart';
 import 'motion.dart';
 import 'player_panel.dart';
 
-/// 字幕列表: every line of the main subtitle beside the video, the one
-/// being spoken marked and kept in view. A tap jumps there; the copy button
+/// 字幕列表: every line of the main subtitle beside the video, with the
+/// second subtitle's words under it, the one being spoken marked and kept
+/// in view. A tap jumps there; the copy button
 /// or a right click copies the line.
 Future<void> showSubtitleList(BuildContext context, AppController controller, Player player) => showPlayerPanel(
       context,
@@ -31,8 +33,7 @@ class SubtitleList extends StatefulWidget {
 }
 
 class _SubtitleListState extends State<SubtitleList> {
-  static const _rowHeight = 64.0;
-  late Future<List<SubtitleCue>> _cues = widget.controller.listedSubtitleCues();
+  late Future<List<PairedCue>> _cues = widget.controller.listedSubtitleCues();
   final _scroll = ScrollController();
   StreamSubscription<Object?>? _trackChanges;
   StreamSubscription<Duration>? _positions;
@@ -42,6 +43,7 @@ class _SubtitleListState extends State<SubtitleList> {
   String _query = '';
 
   late SubtitleOption? _second = widget.controller.secondarySubtitle;
+  late SubtitleListMode _mode = widget.controller.preferences.subtitleListMode;
 
   @override
   void initState() {
@@ -53,13 +55,30 @@ class _SubtitleListState extends State<SubtitleList> {
   void _reload() => setState(() {
         _cues = widget.controller.listedSubtitleCues();
         _current = -1;
+        unawaited(_positions?.cancel());
+        _positions = null;
       });
 
   void _secondChanged() {
-    if (identical(widget.controller.secondarySubtitle, _second)) return;
+    final mode = widget.controller.preferences.subtitleListMode;
+    if (identical(widget.controller.secondarySubtitle, _second) && mode == _mode) return;
     _second = widget.controller.secondarySubtitle;
+    _mode = mode;
     _reload();
   }
+
+  /// Both subtitles are on, so there is a choice of what to list.
+  bool get _bothOn => _second != null && !const {'no', 'auto'}.contains(widget.player.state.track.subtitle.id);
+
+  Widget _modeMenu(ColorScheme colors) => PopupMenuButton<SubtitleListMode>(
+        tooltip: tr('列表显示'),
+        initialValue: _mode,
+        onSelected: (mode) => unawaited(widget.controller.savePreferences(widget.controller.preferences.copyWith(subtitleListMode: mode))),
+        itemBuilder: (context) => [
+          for (final mode in SubtitleListMode.values) CheckedPopupMenuItem(value: mode, checked: mode == _mode, child: Text(mode.label)),
+        ],
+        icon: Icon(Icons.view_agenda_outlined, color: colors.onSurfaceVariant),
+      );
 
   @override
   void dispose() {
@@ -70,14 +89,15 @@ class _SubtitleListState extends State<SubtitleList> {
     super.dispose();
   }
 
-  void _listen(List<SubtitleCue> cues) {
+  void _listen(List<PairedCue> cues, double rowHeight) {
+    final starts = [for (final c in cues) c.cue];
     _positions?.cancel();
     void at(Duration position) {
-      final index = cueIndexAt(cues, position);
+      final index = cueIndexAt(starts, position);
       if (index == _current || !mounted) return;
       setState(() => _current = index);
       if (_follow && _query.isEmpty && index >= 0 && _scroll.hasClients) {
-        final target = (index * _rowHeight - _scroll.position.viewportDimension / 3).clamp(0.0, _scroll.position.maxScrollExtent);
+        final target = (index * rowHeight - _scroll.position.viewportDimension / 3).clamp(0.0, _scroll.position.maxScrollExtent);
         unawaited(Motion.scrollTo(_scroll, target, duration: const Duration(milliseconds: 250), curve: Curves.easeOut));
       }
     }
@@ -86,8 +106,8 @@ class _SubtitleListState extends State<SubtitleList> {
     WidgetsBinding.instance.addPostFrameCallback((_) => at(widget.player.state.position));
   }
 
-  void _copy(SubtitleCue cue) {
-    unawaited(Clipboard.setData(ClipboardData(text: cue.text)));
+  void _copy(PairedCue line) {
+    unawaited(Clipboard.setData(ClipboardData(text: [line.cue.text, if (line.second != null) line.second!].join('\n'))));
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(tr('已复制字幕')), duration: const Duration(seconds: 1)));
   }
 
@@ -100,11 +120,11 @@ class _SubtitleListState extends State<SubtitleList> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return FutureBuilder<List<SubtitleCue>>(
+    return FutureBuilder<List<PairedCue>>(
       future: _cues,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
-        final cues = snapshot.data ?? const <SubtitleCue>[];
+        final cues = snapshot.data ?? const <PairedCue>[];
         if (cues.isEmpty) {
           return Center(
             child: Padding(
@@ -117,18 +137,25 @@ class _SubtitleListState extends State<SubtitleList> {
             ),
           );
         }
-        if (_positions == null) _listen(cues);
+        final bilingual = cues.any((c) => c.second != null);
+        final rowHeight = bilingual ? 92.0 : 64.0;
+        if (_positions == null) _listen(cues, rowHeight);
         final shown = [
           for (final (i, cue) in cues.indexed)
-            if (_query.isEmpty || cue.text.toLowerCase().contains(_query)) i,
+            if (_query.isEmpty || cue.cue.text.toLowerCase().contains(_query) || (cue.second?.toLowerCase().contains(_query) ?? false)) i,
         ];
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: TextField(
-              decoration: InputDecoration(isDense: true, prefixIcon: const Icon(Icons.search_rounded, size: 20), hintText: tr('搜索字幕')),
-              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-            ),
+            padding: EdgeInsets.fromLTRB(16, 0, _bothOn ? 4 : 16, 8),
+            child: Row(children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(isDense: true, prefixIcon: const Icon(Icons.search_rounded, size: 20), hintText: tr('搜索字幕')),
+                  onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+                ),
+              ),
+              if (_bothOn) _modeMenu(colors),
+            ]),
           ),
           Expanded(
             child: NotificationListener<UserScrollNotification>(
@@ -138,14 +165,18 @@ class _SubtitleListState extends State<SubtitleList> {
               },
               child: ListView.builder(
                 controller: _scroll,
-                itemExtent: _query.isEmpty ? _rowHeight : null,
+                itemExtent: _query.isEmpty ? rowHeight : null,
                 itemCount: shown.length,
                 itemBuilder: (context, k) {
                   final i = shown[k];
-                  final cue = cues[i];
+                  final line = cues[i];
+                  final cue = line.cue;
+                  final swap = _mode == SubtitleListMode.secondOver && line.second != null;
+                  final top = swap ? line.second! : cue.text;
+                  final under = swap ? cue.text : line.second;
                   final playing = i == _current;
                   return GestureDetector(
-                    onSecondaryTap: () => _copy(cue),
+                    onSecondaryTap: () => _copy(line),
                     child: Material(
                       color: playing ? colors.secondaryContainer : Colors.transparent,
                       child: InkWell(
@@ -161,19 +192,28 @@ class _SubtitleListState extends State<SubtitleList> {
                               child: Text(_clock(cue.start), style: TextStyle(fontSize: 12, color: playing ? colors.primary : colors.outline, fontFeatures: const [FontFeature.tabularFigures()])),
                             ),
                             Expanded(
-                              child: Text(
-                                cue.text,
-                                maxLines: _query.isEmpty ? 2 : null,
-                                overflow: _query.isEmpty ? TextOverflow.ellipsis : null,
-                                style: TextStyle(fontSize: 13, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
-                              ),
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                                Text(
+                                  top,
+                                  maxLines: _query.isEmpty ? 2 : null,
+                                  overflow: _query.isEmpty ? TextOverflow.ellipsis : null,
+                                  style: TextStyle(fontSize: 13, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
+                                ),
+                                if (under != null)
+                                  Text(
+                                    under,
+                                    maxLines: _query.isEmpty ? 2 : null,
+                                    overflow: _query.isEmpty ? TextOverflow.ellipsis : null,
+                                    style: TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer.withValues(alpha: 0.8) : colors.onSurfaceVariant),
+                                  ),
+                              ]),
                             ),
                             IconButton(
                               tooltip: tr('复制'),
                               visualDensity: VisualDensity.compact,
                               iconSize: 16,
                               icon: Icon(Icons.content_copy_rounded, color: colors.outline),
-                              onPressed: () => _copy(cue),
+                              onPressed: () => _copy(line),
                             ),
                           ]),
                         ),

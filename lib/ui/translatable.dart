@@ -47,7 +47,8 @@ class _TranslatableState extends State<Translatable> {
     if (_showing) return setState(() => _showing = false);
     if (_translation != null && _language == language) return setState(() => _showing = true);
     final text = widget.text;
-    if (prefs.skipSameLanguage && looksLike(text, language)) {
+    final lines = text.split('\n').where((l) => l.trim().isNotEmpty);
+    if (prefs.skipSameLanguage && looksLike(text, language) && lines.every((l) => looksLike(l, language) || !_hasLetters(l))) {
       return setState(() => _error = tr('已经是{0}，不用翻译', [TranslationLanguage.byCode(language).label]));
     }
     setState(() {
@@ -55,7 +56,7 @@ class _TranslatableState extends State<Translatable> {
       _error = null;
     });
     try {
-      final result = await widget.controller.translator.translate(text, language);
+      final result = await translateForeignLines(widget.controller.translator, text, language, (line) => looksLike(line, language) || !_hasLetters(line));
       if (!mounted || text != widget.text) return;
       setState(() {
         _translation = result;
@@ -103,6 +104,9 @@ class _TranslatableState extends State<Translatable> {
     ]);
   }
 }
+
+/// Whether [line] has a word in it, not just emoji, digits or a link.
+bool _hasLetters(String line) => RegExp(r'\p{L}{2,}', unicode: true).hasMatch(line.replaceAll(RegExp(r'https?://\S+'), ''));
 
 /// A translation shown beside its original, in one of [TranslationStyle].
 class TranslationView extends StatefulWidget {

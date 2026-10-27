@@ -375,9 +375,18 @@ class VideoRepository {
     }
   }
 
+  /// The `lang` values yt-dlp accepts; any other stops the extraction.
+  static const _metadataLanguages = {
+    'af', 'az', 'id', 'ms', 'bs', 'ca', 'cs', 'da', 'de', 'et', 'en-IN', 'en-GB', 'en', 'es', 'es-419', 'es-US', 'eu', 'fil', 'fr', 'fr-CA',
+    'gl', 'hr', 'zu', 'is', 'it', 'sw', 'lv', 'lt', 'hu', 'nl', 'no', 'uz', 'pl', 'pt-PT', 'pt', 'ro', 'sq', 'sk', 'sl', 'sr-Latn', 'fi',
+    'sv', 'vi', 'tr', 'be', 'bg', 'ky', 'kk', 'mk', 'mn', 'ru', 'sr', 'uk', 'el', 'hy', 'iw', 'ur', 'ar', 'fa', 'ne', 'mr', 'hi', 'as',
+    'bn', 'pa', 'gu', 'or', 'ta', 'te', 'kn', 'ml', 'si', 'th', 'lo', 'my', 'ka', 'am', 'km', 'zh-CN', 'zh-TW', 'zh-HK', 'ja', 'ko',
+  };
+
   /// yt-dlp arguments for watch-page metadata. Skipping the player JS keeps
   /// this cheaper than the extraction libmpv runs for playback; formats are
-  /// not needed here.
+  /// not needed here. The title and description come in the app's language
+  /// when the uploader translated them, else as written.
   List<String> detailsArguments(String videoId) => [
         '--no-warnings',
         '--skip-download',
@@ -385,7 +394,7 @@ class VideoRepository {
         '--no-playlist',
         ..._proxyArguments,
         '--ignore-no-formats-error',
-        '--extractor-args', 'youtube:player_skip=js',
+        '--extractor-args', ['youtube:player_skip=js', if (_metadataLanguages.contains(youtubeHl)) 'lang=$youtubeHl'].join(';'),
         '--dump-json',
         '--', 'https://www.youtube.com/watch?v=$videoId',
       ];

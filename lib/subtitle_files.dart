@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'models.dart';
 import 'translation.dart';
+import 'translation_cache.dart';
 import 'translation_services.dart';
 import 'youtube_web.dart';
 
@@ -126,7 +127,9 @@ class SubtitleFiles {
   /// first: the text has those lines, enough to start with, and [rest]
   /// completes with the whole track, or is null when it is all there.
   Future<({String text, Future<String>? rest})> _translate(String vtt, String tlang, Translator translator) async {
-    final cues = WebVtt.cues(vtt);
+    // Whole sentences, not the fragments captions show, so each is
+    // translated with all its words and never split between two requests.
+    final cues = WebVtt.sentences(WebVtt.cues(vtt));
     if (cues.isEmpty) return (text: vtt, rest: null);
     final target = TranslationLanguage.all.where((l) => l.youtube == tlang).firstOrNull?.code ?? tlang;
     final chunkLength = chunkLengthOf(translator);
@@ -154,7 +157,9 @@ class SubtitleFiles {
       while (next < stop) {
         final i = order[next++];
         final (start, end) = groups[i];
-        translated[i] = await _translateLines([for (final cue in cues.sublist(start, end)) cue.text], target, translator);
+        // The sentences just before the piece go along for AI to read.
+        final before = [for (final cue in cues.sublist(start > contextSentences ? start - contextSentences : 0, start)) cue.text];
+        translated[i] = await _translateLines([for (final cue in cues.sublist(start, end)) cue.text], target, translator, before);
       }
     }
 
@@ -176,17 +181,28 @@ class SubtitleFiles {
   /// [texts] translated line for line. A reply with more or fewer lines
   /// (machine translation joins short caption fragments) is asked again in
   /// halves, down to single lines.
-  static Future<List<String>> _translateLines(List<String> texts, String target, Translator translator) async {
-    final reply = (await translator.translate(texts.join('\n'), target)).trim();
+  static Future<List<String>> _translateLines(List<String> texts, String target, Translator translator, List<String> before) async {
+    final ai = _aiOf(translator);
+    final text = texts.join('\n');
+    final reply = (await (ai != null && before.isNotEmpty ? ai.translateInContext(text, target, before) : translator.translate(text, target))).trim();
     if (texts.length == 1) return [reply.replaceAll('\n', ' ')];
     final lines = reply.split('\n');
     if (lines.length == texts.length) return lines;
     final half = texts.length ~/ 2;
     return [
-      ...await _translateLines(texts.sublist(0, half), target, translator),
-      ...await _translateLines(texts.sublist(half), target, translator),
+      ...await _translateLines(texts.sublist(0, half), target, translator, before),
+      ...await _translateLines(texts.sublist(half), target, translator, [...before, ...texts.sublist(0, half)]),
     ];
   }
+
+  /// How many sentences before a request AI is shown.
+  static const contextSentences = 3;
+
+  static AiTranslator? _aiOf(Translator translator) => switch (translator) {
+        AiTranslator() => translator.contextLines > 0 ? translator : null,
+        CachingTranslator(:final inner) => _aiOf(inner),
+        _ => null,
+      };
 
   static String _name(String url) {
     var hash = 0xcbf29ce484222325;
@@ -230,6 +246,60 @@ class WebVtt {
       cues.add((timing: lines[at].trim(), text: text.join(' ')));
     }
     return cues;
+  }
+
+  static final _sentenceEnd = RegExp(r'[.!?。！？…]["”’」』)）]*$');
+  static final _cjk = RegExp(r'[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af\uf900-\ufaff]');
+
+  /// [cues] joined into sentences: a cue runs on into the next while it has
+  /// no sentence end, the next follows within [gap], and the sentence stays
+  /// short enough to read ([maxWidth], CJK characters counting double) and
+  /// within [maxLength] on screen. Each spans from its first cue's start to
+  /// its last cue's end.
+  static List<({String timing, String text})> sentences(
+    List<({String timing, String text})> cues, {
+    Duration gap = const Duration(milliseconds: 1200),
+    Duration maxLength = const Duration(seconds: 7),
+    int maxWidth = 90,
+  }) {
+    int width(String text) => text.length + _cjk.allMatches(text).length;
+    final out = <({String timing, String text})>[];
+    for (var i = 0; i < cues.length;) {
+      final start = startOf(cues[i].timing);
+      var end = endOf(cues[i].timing);
+      var text = cues[i].text;
+      var j = i + 1;
+      while (j < cues.length && !_sentenceEnd.hasMatch(text)) {
+        final next = cues[j];
+        final joined = _join(text, next.text);
+        final nextEnd = endOf(next.timing);
+        if (startOf(next.timing) - end > gap || nextEnd - start > maxLength || width(joined) > maxWidth) break;
+        text = joined;
+        end = nextEnd;
+        j++;
+      }
+      out.add(j == i + 1 ? cues[i] : (timing: '${_stamp(start)} --> ${_stamp(end)}', text: text));
+      i = j;
+    }
+    return out;
+  }
+
+  /// [a] and [b] as one line: with a space, except between CJK characters.
+  static String _join(String a, String b) {
+    if (a.isEmpty || b.isEmpty) return a + b;
+    final cjk = _cjk.hasMatch(a[a.length - 1]) && _cjk.hasMatch(b[0]);
+    return cjk ? '$a$b' : '$a $b';
+  }
+
+  static String _stamp(Duration d) {
+    String two(int n, [int width = 2]) => n.toString().padLeft(width, '0');
+    return '${two(d.inHours)}:${two(d.inMinutes % 60)}:${two(d.inSeconds % 60)}.${two(d.inMilliseconds % 1000, 3)}';
+  }
+
+  /// When a cue with [timing] ends.
+  static Duration endOf(String timing) {
+    final parts = timing.split('-->');
+    return parts.length < 2 ? startOf(timing) : startOf(parts[1]);
   }
 
   /// When a cue with [timing] (`00:01:02.500 --> …`) starts.

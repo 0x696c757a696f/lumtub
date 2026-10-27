@@ -197,7 +197,7 @@ vo=gpu-next
     expect((read.secondaryFont, read.secondaryScale, read.secondaryColor, read.secondaryOpacity), ('Arial', 1.2, 0x80DEEA, 0.5));
     expect(read.secondarySubtitleLanguage, 'ja');
     final reset = read.withDefaultSubtitleStyle();
-    expect((reset.subtitleFont, reset.secondaryColor, reset.secondaryScale), (PlayerSettings.defaultSubtitleFont, 0xFFE7A8, 0.8));
+    expect((reset.subtitleFont, reset.secondaryColor, reset.secondaryScale), (PlayerSettings.defaultSubtitleFont, 0xFFE7A8, 0.9));
     expect(reset.secondarySubtitleLanguage, 'ja');
   });
 

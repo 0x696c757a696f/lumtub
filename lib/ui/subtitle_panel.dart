@@ -13,7 +13,8 @@ import 'subtitle_list_panel.dart';
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
 /// above it (双语字幕) on the right, as PiliNara's `_SubtitleSelectPanel`
 /// has them. A choice applies at once and the panel stays open; a track
-/// chosen on one side is greyed out on the other.
+/// chosen on one side is greyed out on the other, and tapping it there
+/// swaps the two sides.
 Future<void> showSubtitlePanel(BuildContext context, AppController controller, Player player, {required VoidCallback onSettings, VoidCallback? onList}) => showPlayerPanel(
       context,
       title: tr('字幕'),
@@ -61,6 +62,8 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
   /// The row being applied, per side.
   String? _busyMain;
   String? _busySecondary;
+  /// The options shown, by row key, for swapping the two sides.
+  var _options = <String, SubtitleOption>{};
   final _subscriptions = <StreamSubscription<Object?>>[];
 
   void _changed() {
@@ -112,6 +115,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final mainKey = !_real(main) ? 'off' : labels.contains(main.title) || main.title == translation?.label ? 'o:${main.title}' : 't:${main.id}';
     final secondary = controller.secondarySubtitle;
     final secondaryKey = secondary == null ? 'off' : 'o:${secondary.label}';
+    _options = {for (final o in [if (translation != null) translation, ...offered]) 'o:${o.label}': o};
 
     final groups = <(String, List<_Choice>)>[
       if (others.isNotEmpty) (tr('已加载'), others),
@@ -124,24 +128,27 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final colors = theme.colorScheme;
 
     Widget column({required bool primary}) {
-      final selected = primary ? mainKey : secondaryKey;
-      final other = primary ? secondaryKey : mainKey;
       final busy = primary ? _busyMain : _busySecondary;
+      // A row shows as chosen the moment it is tapped; loading follows.
+      final selected = busy ?? (primary ? mainKey : secondaryKey);
+      final mine = primary ? mainKey : secondaryKey;
+      final other = (primary ? _busySecondary : _busyMain) ?? (primary ? secondaryKey : mainKey);
       Widget row(_Choice choice, {IconData? icon}) {
         final isSelected = choice.key == selected;
-        final disabled = choice.key != 'off' && choice.key == other;
+        // The other side's subtitle: tapping it swaps the two.
+        final swap = choice.key != 'off' && choice.key == other;
         return InkWell(
-          onTap: disabled || isSelected ? null : () => _choose(choice, primary: primary),
+          onTap: isSelected || _busyMain != null || _busySecondary != null ? null : () => swap ? _swap(choice, primary: primary, mine: mine) : _choose(choice, primary: primary),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(children: [
-              if (icon != null) ...[Icon(icon, size: 16, color: disabled ? colors.outline : colors.primary), const SizedBox(width: 8)],
+              if (icon != null) ...[Icon(icon, size: 16, color: swap ? colors.outline : colors.primary), const SizedBox(width: 8)],
               Expanded(
                 child: Text(
                   choice.label,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, color: disabled ? colors.outline : isSelected ? colors.primary : colors.onSurface, fontWeight: isSelected ? FontWeight.w600 : null),
+                  style: TextStyle(fontSize: 13, color: swap ? colors.outline : isSelected ? colors.primary : colors.onSurface, fontWeight: isSelected ? FontWeight.w600 : null),
                 ),
               ),
               if (busy == choice.key)
@@ -229,6 +236,32 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
       }
     } finally {
       if (mounted) setState(() => primary ? _busyMain = null : _busySecondary = null);
+    }
+  }
+
+  /// Puts [choice], the other side's subtitle, on this side and this
+  /// side's subtitle ([mine]) on the other. mpv shows a track on one side
+  /// only, so the second subtitle is cleared first.
+  Future<void> _swap(_Choice choice, {required bool primary, required String mine}) async {
+    final controller = widget.controller;
+    final player = widget.player;
+    final current = _options[mine];
+    setState(() {
+      _busyMain = primary ? choice.key : mine;
+      _busySecondary = primary ? mine : choice.key;
+    });
+    try {
+      await controller.setSecondarySubtitle(null);
+      final main = primary ? choice.option : current;
+      if (main == null) {
+        await player.setSubtitleTrack(SubtitleTrack.no());
+      } else {
+        await controller.showSubtitle(main);
+      }
+      final second = primary ? current : choice.option;
+      if (second != null) await controller.setSecondarySubtitle(second);
+    } finally {
+      if (mounted) setState(() => _busyMain = _busySecondary = null);
     }
   }
 

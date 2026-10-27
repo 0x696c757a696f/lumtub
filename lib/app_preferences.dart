@@ -28,6 +28,18 @@ List<(String, String)> get startPages => [
 
 /// Behaviour and content preferences that are neither player options nor
 /// looks: privacy, filters, start page and how the watch page behaves.
+/// What 字幕列表 lists while a first and a second subtitle are on.
+enum SubtitleListMode {
+  firstOver('双语，第一字幕在上'),
+  secondOver('双语，第二字幕在上'),
+  first('只看第一字幕'),
+  second('只看第二字幕');
+
+  const SubtitleListMode(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
 class AppPreferences {
   const AppPreferences({
     this.recordHistory = true,
@@ -88,6 +100,7 @@ class AppPreferences {
     this.bilingualTranslation = true,
     this.translationStyle = TranslationStyle.quote,
     this.translationFirst = false,
+    this.subtitleListMode = SubtitleListMode.firstOver,
     this.skipSameLanguage = true,
   });
 
@@ -198,6 +211,8 @@ class AppPreferences {
   final TranslationStyle translationStyle;
   /// The translation goes above the original instead of under it.
   final bool translationFirst;
+  /// Which subtitles 字幕列表 shows while two are on.
+  final SubtitleListMode subtitleListMode;
   /// 翻译 does nothing for text already in the target language.
   final bool skipSameLanguage;
 
@@ -343,6 +358,7 @@ class AppPreferences {
     bool? bilingualTranslation,
     TranslationStyle? translationStyle,
     bool? translationFirst,
+    SubtitleListMode? subtitleListMode,
     bool? skipSameLanguage,
   }) =>
       AppPreferences(
@@ -404,6 +420,7 @@ class AppPreferences {
         bilingualTranslation: bilingualTranslation ?? this.bilingualTranslation,
         translationStyle: translationStyle ?? this.translationStyle,
         translationFirst: translationFirst ?? this.translationFirst,
+        subtitleListMode: subtitleListMode ?? this.subtitleListMode,
         skipSameLanguage: skipSameLanguage ?? this.skipSameLanguage,
       );
 
@@ -466,6 +483,7 @@ class AppPreferences {
         'bilingualTranslation': bilingualTranslation,
         'translationStyle': translationStyle.name,
         'translationFirst': translationFirst,
+        'subtitleListMode': subtitleListMode.name,
         'skipSameLanguage': skipSameLanguage,
       };
 
@@ -568,6 +586,7 @@ class AppPreferences {
       bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
       translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,
       translationFirst: flag('translationFirst', d.translationFirst),
+      subtitleListMode: SubtitleListMode.values.where((v) => v.name == raw['subtitleListMode']).firstOrNull ?? d.subtitleListMode,
       skipSameLanguage: flag('skipSameLanguage', d.skipSameLanguage),
     );
   }

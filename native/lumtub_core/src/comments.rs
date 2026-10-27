@@ -309,8 +309,7 @@ pub fn page(response: &Value) -> Page {
     if let Some(Value::Array(list)) = section.and_then(|s| s.get("contents")) {
         items.extend(list.iter().filter(|v| v.is_object()));
     }
-    let mut page = Page::default();
-    page.continuation = token(section.and_then(|s| s.get("continuations")));
+    let mut page = Page { continuation: token(section.and_then(|s| s.get("continuations"))), ..Default::default() };
     // The TV app's watch page: the comment panel's sort orders.
     if let Some(Value::Array(panels)) = response.get("engagementPanels") {
         let panel = panels.iter().filter_map(|p| p.get("engagementPanelSectionListRenderer")).find(|p| p.get("panelIdentifier").and_then(Value::as_str) == Some("comment-item-section"));

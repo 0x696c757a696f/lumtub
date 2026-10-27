@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
+import 'youtube_tv_sign_in.dart';
 import 'youtube_web.dart';
 
 /// Liking a comment or a post: its state and the actions of its buttons,
@@ -111,45 +112,22 @@ class YoutubeComments {
   String? _clientVersion;
   String? _visitorData;
 
-  /// The Google sign-in's access token, so pages come with the like and
-  /// dislike buttons of the signed-in user; null when signed out.
-  Future<String?> Function()? token;
+  /// The TV-code sign-in, so pages come with the like and dislike buttons
+  /// of the signed-in user.
+  SignedInnerTube? signIn;
 
-  /// YouTube did not take the sign-in's token; comments load signed out
-  /// for the rest of the run.
+  /// YouTube did not take the sign-in; comments load signed out for the
+  /// rest of the run.
   bool refused = false;
 
-  /// YouTube takes a TV-code sign-in only from its TV app, so signed-in
-  /// requests speak as that app.
-  static const tvClientVersion = '7.20250923.13.00';
-
-  static Map<String, Object?> tvClient(String hl) => {'clientName': 'TVHTML5', 'clientVersion': tvClientVersion, 'hl': hl};
-
-  static Map<String, String> tvHeaders(String acceptLanguage) => {
-        'User-Agent': 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/Version',
-        'Accept-Language': acceptLanguage,
-        'Content-Type': 'application/json',
-        'Origin': 'https://www.youtube.com',
-        'X-YouTube-Client-Name': '7',
-        'X-YouTube-Client-Version': tvClientVersion,
-      };
-
-  Future<Map<String, String>> signedInHeaders() async {
-    if (refused) return const {};
-    try {
-      final value = await token?.call();
-      return value == null ? const {} : {'Authorization': 'Bearer $value'};
-    } catch (_) {
-      return const {};
-    }
-  }
+  bool get signedIn => !refused && (signIn?.signedIn ?? false);
 
   /// The first page of comments under [videoId], top comments first unless
   /// [newest].
   Future<CommentPage> video(String videoId, {bool newest = false}) async {
     // Signed in, the TV app's own watch page names its comment section, as
     // SmartTube reads it; the website's section token is built here.
-    final header = (await signedInHeaders()).isEmpty
+    final header = !signedIn
         ? await _request('next', {'continuation': videoSectionToken(videoId)})
         : await _request('next', {'videoId': videoId}, fallback: {'continuation': videoSectionToken(videoId)});
     return _sorted(header, 'next', newest);
@@ -185,58 +163,61 @@ class YoutubeComments {
   /// Posts [body] to [endpoint], signed in when there is a sign-in YouTube
   /// takes; when it does not, posts [fallback] (or [body]) signed out.
   Future<CommentPage> _request(String endpoint, Map<String, Object?> body, {Map<String, Object?>? fallback, bool signedOut = false}) async {
-    final signedIn = signedOut ? const <String, String>{} : await signedInHeaders();
-    final response = await _post(endpoint, signedIn.isEmpty ? fallback ?? body : body, signedIn);
-    if (signedIn.isNotEmpty && response.statusCode >= 400 && response.statusCode < 500) {
-      refuse(response.statusCode, response.body);
-      return _request(endpoint, fallback ?? body);
+    if (!signedOut && signedIn) {
+      final answer = await signIn!.post(endpoint, body);
+      if (answer != null) {
+        if (answer.status >= 400 && answer.status < 500) {
+          refuse(answer.status, answer.body);
+          return _request(endpoint, fallback ?? body, signedOut: true);
+        }
+        if (answer.status != 200) throw StateError(tr('YouTube 返回 {0}', [answer.status]));
+        final page = await _readInBackground(answer.body);
+        if (page.comments.isNotEmpty || page.continuation != null || page.topToken != null || page.count.isNotEmpty) return page;
+        logInfo('The TV app was answered no comments; trying signed out · ${_start(answer.body)}');
+      }
     }
+    final response = await _post(endpoint, signedOut || !signedIn ? fallback ?? body : body);
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    final page = await _readInBackground(response.bodyBytes);
-    if (signedIn.isNotEmpty && page.comments.isEmpty && page.continuation == null && page.topToken == null && page.count.isEmpty) {
-      final start = response.body.replaceAll(RegExp(r'\s+'), ' ');
-      logInfo('The TV app was answered no comments; trying signed out · ${start.length > 300 ? start.substring(0, 300) : start}');
-      return _request(endpoint, fallback ?? body, signedOut: true);
-    }
-    return page;
+    return _readInBackground(response.bodyBytes);
+  }
+
+  static String _start(List<int> body) {
+    final start = utf8.decode(body.take(600).toList(), allowMalformed: true).replaceAll(RegExp(r'\s+'), ' ');
+    return start.length > 300 ? start.substring(0, 300) : start;
   }
 
   /// Stops sending the sign-in after YouTube answered [status] to it.
-  void refuse(int status, [String body = '']) {
+  void refuse(int status, [List<int> body = const []]) {
     refused = true;
-    final start = body.replaceAll(RegExp(r'\s+'), ' ');
-    logInfo('YouTube answered $status to the TV-code sign-in on InnerTube; comments load signed out · ${start.length > 300 ? start.substring(0, 300) : start}');
+    logInfo('YouTube answered $status to the TV-code sign-in on InnerTube; comments load signed out · ${_start(body)}');
   }
 
   /// Likes, dislikes or takes back either, by the [action] of a
   /// [CommentRating], for a comment or a post alike.
   Future<void> rate(String action) async {
-    final signedIn = await signedInHeaders();
-    if (signedIn.isEmpty) throw StateError(tr('需要先在设置 › Google 账号里用电视码登录'));
-    final response = await _post('comment/perform_comment_action', {'actions': [action]}, signedIn);
-    if (response.statusCode >= 400 && response.statusCode < 500) {
-      refuse(response.statusCode, response.body);
+    final answer = signedIn ? await signIn!.post('comment/perform_comment_action', {'actions': [action]}) : null;
+    if (answer == null) throw StateError(tr('需要先在设置 › Google 账号里用电视码登录'));
+    if (answer.status >= 400 && answer.status < 500) {
+      logInfo('YouTube answered ${answer.status} to a comment action · ${_start(answer.body)}');
       throw StateError(tr('YouTube 不接受当前电视码登录的这项操作'));
     }
-    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
+    if (answer.status != 200) throw StateError(tr('YouTube 返回 {0}', [answer.status]));
   }
 
-  Future<http.Response> _post(String endpoint, Map<String, Object?> body, Map<String, String> signedIn) {
+  Future<http.Response> _post(String endpoint, Map<String, Object?> body) {
     final key = _apiKey;
     return _client
         .post(
-          Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?${key == null || signedIn.isNotEmpty ? '' : 'key=$key&'}prettyPrint=false'),
-          headers: signedIn.isEmpty ? YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage) : {...tvHeaders(youtubeAcceptLanguage), ...signedIn},
+          Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?${key == null ? '' : 'key=$key&'}prettyPrint=false'),
+          headers: YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage),
           body: jsonEncode({
             'context': {
-              'client': signedIn.isEmpty
-                  ? {
-                      'clientName': 'WEB',
-                      'clientVersion': _clientVersion ?? YoutubeWeb.clientVersion,
-                      'hl': youtubeHl,
-                      if (_visitorData != null) 'visitorData': _visitorData,
-                    }
-                  : tvClient(youtubeHl),
+              'client': {
+                'clientName': 'WEB',
+                'clientVersion': _clientVersion ?? YoutubeWeb.clientVersion,
+                'hl': youtubeHl,
+                if (_visitorData != null) 'visitorData': _visitorData,
+              },
             },
             ...body,
           }),

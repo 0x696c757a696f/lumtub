@@ -168,8 +168,8 @@ class AppController extends ChangeNotifier {
   late final _posts = CommunityPosts(_http, signIn: comments);
 
   /// Comments under videos and posts, and liking them and posts, signed in
-  /// with the Google account when there is one.
-  late final comments = YoutubeComments(_http)..token = (() async => tvSignIn?.accessToken());
+  /// with the TV code when there is one.
+  late final comments = YoutubeComments(_http);
 
   /// Whether the statistics overlay is shown over the video.
   bool showStats = false;
@@ -508,10 +508,10 @@ class AppController extends ChangeNotifier {
 
   /// Settings › Google 账号 › 保存电视版样本.
   Future<String> saveTvSamples() async {
-    final token = await tvSignIn?.accessToken();
+    final sign = tvSignIn;
     final logs = directories?.logs;
-    if (token == null || logs == null) return tr('需要先在设置 › Google 账号里用电视码登录');
-    return tv_samples.saveTvSamples(_http, token, logs);
+    if (sign == null || !sign.signedIn || logs == null) return tr('需要先在设置 › Google 账号里用电视码登录');
+    return tv_samples.saveTvSamples(sign, logs);
   }
 
   void _tvSignInChanged() {
@@ -629,10 +629,8 @@ class AppController extends ChangeNotifier {
           library: library,
           notice: _notice,
         )..addListener(notifyListeners);
-        tvSignIn = YoutubeTvSignIn(
-          credentials: SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}youtube-tv.bin'), DpapiProtector()),
-          client: _http,
-        )..addListener(_tvSignInChanged);
+        tvSignIn = YoutubeTvSignIn(folder: directories.data.path)..addListener(_tvSignInChanged);
+        comments.signIn = tvSignIn;
         this.player = player;
         videoController = controller;
         _outputSize = VideoOutputSize((width, height) => controller.setSize(width: width, height: height));
@@ -660,7 +658,7 @@ class AppController extends ChangeNotifier {
       });
       unawaited(downloads?.load());
       unawaited(account?.load());
-      unawaited(tvSignIn?.load());
+      tvSignIn?.load();
       _translationCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}translations.json'));
       _useTranslator();
       _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), DpapiProtector());

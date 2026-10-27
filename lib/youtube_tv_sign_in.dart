@@ -1,36 +1,43 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
+import 'dart:ffi';
+import 'dart:isolate';
 
+import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 
-import 'l10n/l10n.dart';
 import 'app_log.dart';
-import 'secure_store.dart';
+import 'l10n/l10n.dart';
+import 'native_core.dart';
+import 'native_http.dart';
+
+/// An InnerTube answer made with the TV-code sign-in.
+typedef SignedAnswer = ({int status, Uint8List body});
+
+/// InnerTube requests made signed in, as YouTube's TV app.
+abstract interface class SignedInnerTube {
+  bool get signedIn;
+
+  /// [body] posted to `youtubei/v1/[endpoint]`; null when signed out.
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body);
+}
 
 /// Where [YoutubeTvSignIn] stands.
 enum TvSignInState { signedOut, waiting, signedIn }
 
 /// Signs in the way YouTube's TV app does: the user types a short code at
-/// youtube.com/activate. YouTube's own pages take only this kind of sign-in,
-/// so comments and posts can be liked and disliked with it. Kept apart from
-/// the Google sign-in, which works with the YouTube Data API instead.
-class YoutubeTvSignIn extends ChangeNotifier {
-  YoutubeTvSignIn({required this.credentials, required http.Client client, Duration? pollFloor})
-      : _client = client,
-        _pollFloor = pollFloor ?? const Duration(seconds: 5);
+/// youtube.com/activate. The sign-in, its credential and every request made
+/// with it live in the Rust core (native/lumtub_core/src/tv_account.rs);
+/// this side only shows where it stands. Kept apart from the Google sign-in,
+/// which works with the YouTube Data API instead.
+class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
+  YoutubeTvSignIn({required this.folder, this.base});
 
-  final SecureJsonFile credentials;
-  final http.Client _client;
-  final Duration _pollFloor;
+  /// Where the encrypted credential is kept.
+  final String folder;
 
-  /// The YouTube TV app's own client, as every TV-code sign-in uses it.
-  static const clientId = '861556708454-d6dlm3lh05idd8npek18k6be8ba3oc68.apps.googleusercontent.com';
-  static const clientSecret = 'SboVhoG9s0rNafixCSGGKXAT';
-  static const scope = 'http://gdata.youtube.com https://www.googleapis.com/auth/youtube-paid-content';
-  static final codeEndpoint = Uri.parse('https://www.youtube.com/o/oauth2/device/code');
-  static final tokenEndpoint = Uri.parse('https://www.youtube.com/o/oauth2/token');
+  /// Another server than YouTube, for tests.
+  final String? base;
 
   TvSignInState state = TvSignInState.signedOut;
   String? error;
@@ -39,156 +46,170 @@ class YoutubeTvSignIn extends ChangeNotifier {
   String? code;
   String address = 'https://www.youtube.com/activate';
 
-  String? _refreshToken;
-  String? _accessToken;
-  DateTime _expires = DateTime.fromMillisecondsSinceEpoch(0);
-  int _attempt = 0;
+  ReceivePort? _waiting;
+  bool _disposed = false;
 
+  static _Bindings? _bindings;
+  static bool _tried = false;
+
+  static _Bindings? get _native {
+    if (_tried) return _bindings;
+    _tried = true;
+    final core = NativeCore.instance;
+    if (core == null || !NativeHttp.available) return null;
+    try {
+      return _bindings = _Bindings(core.library);
+    } catch (e) {
+      logInfo('The TV-code sign-in is not in this core: $e');
+      return null;
+    }
+  }
+
+  /// Whether this build can sign in with a TV code.
+  static bool get available => _native != null;
+
+  @override
   bool get signedIn => state == TvSignInState.signedIn;
 
-  Future<void> load() async {
-    final token = (await credentials.read())?['refresh_token'];
-    if (token is String && token.isNotEmpty) {
-      _refreshToken = token;
+  bool _opened = false;
+
+  void load() {
+    final native = _native;
+    if (native == null) return;
+    _opened = true;
+    final open = _withText(jsonEncode({'folder': folder, if (base != null) 'base': base}), native.open);
+    if (open) {
       state = TvSignInState.signedIn;
-      notifyListeners();
+      _notify();
     }
   }
 
   /// Asks YouTube for a code, shows it, and waits until the user has typed it
   /// in, the code runs out, or [cancel].
-  Future<void> signIn() async {
-    if (state == TvSignInState.waiting) return;
-    final attempt = ++_attempt;
+  void signIn() {
+    final native = _native;
+    if (native == null || state == TvSignInState.waiting) return;
+    if (!_opened) load();
+    _waiting?.close();
+    final port = _waiting = ReceivePort('lumtub tv sign-in');
     error = null;
-    state = TvSignInState.waiting;
     code = null;
-    notifyListeners();
-    try {
-      final device = _json(await _client.post(codeEndpoint, body: {
-        'client_id': clientId,
-        'scope': scope,
-        'device_id': _deviceId(),
-        'device_model': 'ytlr::',
-      }).timeout(const Duration(seconds: 20)));
-      final deviceCode = device['device_code'] as String?;
-      if (deviceCode == null) throw StateError(tr('YouTube 没有给出电视码'));
-      code = device['user_code'] as String?;
-      address = device['verification_url'] as String? ?? address;
-      notifyListeners();
-      var wait = Duration(seconds: (device['interval'] as num?)?.toInt() ?? 5);
-      if (wait < _pollFloor) wait = _pollFloor;
-      final until = DateTime.now().add(Duration(seconds: (device['expires_in'] as num?)?.toInt() ?? 1800));
-      while (attempt == _attempt) {
-        await Future<void>.delayed(wait);
-        if (attempt != _attempt) return;
-        if (DateTime.now().isAfter(until)) throw StateError(tr('电视码已过期，请重新获取'));
-        final answer = _json(await _client.post(tokenEndpoint, body: {
-          'client_id': clientId,
-          'client_secret': clientSecret,
-          'code': deviceCode,
-          'grant_type': 'http://oauth.net/grant_type/device/1.0',
-        }).timeout(const Duration(seconds: 20)), allowError: true);
-        switch (answer['error']) {
-          case 'authorization_pending':
-            continue;
-          case 'slow_down':
-            wait += const Duration(seconds: 5);
-            continue;
-          case 'access_denied':
-            throw StateError(tr('已在 YouTube 拒绝授权'));
-          case 'expired_token':
-            throw StateError(tr('电视码已过期，请重新获取'));
-          case final String other:
-            throw StateError(tr('YouTube 授权失败（{0}）', [other]));
-        }
-        final refresh = answer['refresh_token'] as String?;
-        if (refresh == null) throw StateError(tr('YouTube 没有返回长期凭据，请重试'));
-        _take(answer);
-        _refreshToken = refresh;
-        await credentials.write({'refresh_token': refresh});
-        code = null;
-        state = TvSignInState.signedIn;
-        logInfo('Signed in with a TV code');
-        notifyListeners();
-        return;
+    state = TvSignInState.waiting;
+    _notify();
+    port.listen((message) {
+      if (message is! List || message.isEmpty || !identical(port, _waiting)) return;
+      switch (message[0]) {
+        case 0:
+          code = message[1] as String;
+          address = message[2] as String;
+        case 1:
+          logInfo('Signed in with a TV code');
+          _finish(port, TvSignInState.signedIn);
+        case 2:
+          logInfo('TV code sign-in failed: ${message[1]}');
+          error = _why(message[1] as String);
+          _finish(port, TvSignInState.signedOut);
+        case 3:
+          _finish(port, TvSignInState.signedOut);
       }
-    } catch (e) {
-      if (attempt != _attempt) return;
-      logInfo('TV code sign-in failed: $e');
-      code = null;
-      state = TvSignInState.signedOut;
-      error = '$e';
-      notifyListeners();
-    }
+      _notify();
+    });
+    native.signIn(port.sendPort.nativePort);
   }
+
+  void _finish(ReceivePort port, TvSignInState next) {
+    port.close();
+    if (identical(_waiting, port)) _waiting = null;
+    code = null;
+    state = next;
+  }
+
+  static String _why(String code) => switch (code) {
+        'access_denied' => tr('已在 YouTube 拒绝授权'),
+        'expired_token' => tr('电视码已过期，请重新获取'),
+        'invalid_grant' => tr('电视码登录已失效，请重新登录'),
+        _ => tr('YouTube 授权失败（{0}）', [code]),
+      };
 
   void cancel() {
     if (state != TvSignInState.waiting) return;
-    _attempt++;
+    _native?.cancel();
+    _waiting?.close();
+    _waiting = null;
     code = null;
     state = TvSignInState.signedOut;
-    notifyListeners();
+    _notify();
   }
 
-  Future<void> signOut() async {
-    _attempt++;
-    _refreshToken = null;
-    _accessToken = null;
+  void signOut() {
+    _native?.signOut();
+    _waiting?.close();
+    _waiting = null;
     code = null;
     error = null;
     state = TvSignInState.signedOut;
-    notifyListeners();
-    await credentials.delete();
+    _notify();
   }
 
-  /// A current access token, or null when not signed in. A sign-in YouTube no
-  /// longer takes signs out, saying so.
-  Future<String?> accessToken() async {
-    final refresh = _refreshToken;
-    if (refresh == null) return null;
-    final current = _accessToken;
-    if (current != null && DateTime.now().isBefore(_expires)) return current;
-    final answer = _json(await _client.post(tokenEndpoint, body: {
-      'client_id': clientId,
-      'client_secret': clientSecret,
-      'refresh_token': refresh,
-      'grant_type': 'refresh_token',
-    }).timeout(const Duration(seconds: 20)), allowError: true);
-    if (answer['error'] == 'invalid_grant') {
-      if (_refreshToken == refresh) {
-        await signOut();
-        error = tr('电视码登录已失效，请重新登录');
-        notifyListeners();
-      }
+  @override
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body) async {
+    final native = _native;
+    if (native == null || !signedIn) return null;
+    final port = ReceivePort('lumtub tv innertube');
+    final request = jsonEncode({'endpoint': endpoint, 'body': body, 'hl': youtubeHl, 'language': youtubeAcceptLanguage});
+    if (!_withText(request, (p, n) => native.innertube(port.sendPort.nativePort, p, n))) {
+      port.close();
       return null;
     }
-    if (answer['error'] != null) throw StateError(tr('YouTube 授权失败（{0}）', [answer['error']]));
-    _take(answer);
-    return _accessToken;
+    final message = await port.first as List;
+    port.close();
+    final status = message[0] as int;
+    if (status == -1) return null;
+    if (status == -2) {
+      logInfo('The TV-code sign-in expired or was revoked');
+      state = TvSignInState.signedOut;
+      error = tr('电视码登录已失效，请重新登录');
+      _notify();
+      return null;
+    }
+    if (status == -3) throw StateError(message[1] as String);
+    return (status: status, body: message[1] as Uint8List);
   }
 
-  void _take(Map<String, dynamic> answer) {
-    _accessToken = answer['access_token'] as String?;
-    final seconds = (answer['expires_in'] as num?)?.toInt() ?? 3600;
-    _expires = DateTime.now().add(Duration(seconds: seconds - 60));
+  void _notify() {
+    if (!_disposed) notifyListeners();
   }
 
-  static Map<String, dynamic> _json(http.Response response, {bool allowError = false}) {
-    Object? data;
+  @override
+  void dispose() {
+    _disposed = true;
+    cancel();
+    super.dispose();
+  }
+
+  static T _withText<T>(String text, T Function(Pointer<Uint8>, int) call) {
+    final bytes = utf8.encode(text);
+    final buffer = malloc<Uint8>(bytes.isEmpty ? 1 : bytes.length);
     try {
-      data = jsonDecode(utf8.decode(response.bodyBytes));
-    } catch (_) {}
-    if (data is Map<String, dynamic> && (response.statusCode == 200 || (allowError && data['error'] != null))) return data;
-    throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
+      buffer.asTypedList(bytes.length).setAll(0, bytes);
+      return call(buffer, bytes.length);
+    } finally {
+      malloc.free(buffer);
+    }
   }
+}
 
-  static String _deviceId() {
-    final random = Random.secure();
-    final bytes = [for (var i = 0; i < 16; i++) random.nextInt(256)];
-    bytes[6] = (bytes[6] & 0x0f) | 0x40;
-    bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
-  }
+class _Bindings {
+  _Bindings(DynamicLibrary library)
+      : open = library.lookupFunction<Bool Function(Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int)>('lumtub_tv_open'),
+        signIn = library.lookupFunction<Void Function(Int64), void Function(int)>('lumtub_tv_sign_in'),
+        cancel = library.lookupFunction<Void Function(), void Function()>('lumtub_tv_cancel'),
+        signOut = library.lookupFunction<Void Function(), void Function()>('lumtub_tv_sign_out'),
+        innertube = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_tv_innertube');
+
+  final bool Function(Pointer<Uint8>, int) open;
+  final void Function(int port) signIn;
+  final void Function() cancel;
+  final void Function() signOut;
+  final bool Function(int port, Pointer<Uint8>, int) innertube;
 }

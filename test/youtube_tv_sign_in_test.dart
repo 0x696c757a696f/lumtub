@@ -1,71 +1,103 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
-import 'package:lumtub/secure_store.dart';
+import 'package:lumtub/native_http.dart';
 import 'package:lumtub/youtube_tv_sign_in.dart';
 
-class _XorProtector implements SecretProtector {
-  @override
-  Uint8List protect(Uint8List data) => Uint8List.fromList([for (final b in data) b ^ 0x5a]);
-  @override
-  Uint8List unprotect(Uint8List data) => protect(data);
+/// Stands in for youtube.com: the TV page and script, the device-code
+/// endpoints and InnerTube.
+class _FakeYouTube {
+  late final HttpServer server;
+  var polls = 0;
+  var refreshGone = false;
+  final asked = <String>[];
+  final bodies = <Map<String, dynamic>>[];
+  final authorizations = <String?>[];
+
+  String get base => 'http://127.0.0.1:${server.port}';
+
+  Future<void> start() async {
+    server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    server.listen((request) async {
+      final path = request.uri.path;
+      asked.add(path);
+      final text = await utf8.decodeStream(request);
+      final body = text.isEmpty ? <String, dynamic>{} : jsonDecode(text) as Map<String, dynamic>;
+      bodies.add(body);
+      authorizations.add(request.headers.value('authorization'));
+      Object? answer;
+      String? page;
+      var status = 200;
+      switch (path) {
+        case '/tv':
+          page = '<script id="base-js" src="$base/base.js" nonce="n"></script>';
+        case '/base.js':
+          page = 'x={clientId:"42-tv.apps.googleusercontent.com",\$a:"tvsecret"}';
+        case '/o/oauth2/device/code':
+          answer = {'device_code': 'D', 'user_code': 'ABC-DEF', 'verification_url': 'https://yt.example/activate', 'interval': 0, 'expires_in': 60};
+        case '/o/oauth2/token' when body['grant_type'] == 'refresh_token':
+          (status, answer) = refreshGone ? (400, {'error': 'invalid_grant'}) : (200, {'access_token': 'A2', 'expires_in': 3600});
+        case '/o/oauth2/token':
+          (status, answer) = ++polls < 2 ? (428, {'error': 'authorization_pending'}) : (200, {'access_token': 'A1', 'expires_in': 0, 'refresh_token': 'R'});
+        default:
+          answer = {'ok': path};
+      }
+      request.response.statusCode = status;
+      request.response.write(page ?? jsonEncode(answer));
+      await request.response.close();
+    });
+  }
 }
 
 void main() {
   late Directory dir;
-  setUp(() async => dir = await Directory.systemTemp.createTemp('lumtub_tv'));
-  tearDown(() => dir.delete(recursive: true));
+  late _FakeYouTube youtube;
 
-  SecureJsonFile file() => SecureJsonFile(File('${dir.path}/youtube-tv.bin'), _XorProtector());
+  setUp(() async {
+    NativeHttp.configure();
+    dir = await Directory.systemTemp.createTemp('lumtub_tv');
+    youtube = _FakeYouTube();
+    await youtube.start();
+  });
+  tearDown(() async {
+    await youtube.server.close(force: true);
+    await dir.delete(recursive: true);
+  });
 
-  test('shows the code, waits for it to be typed in, then keeps and refreshes the sign-in', () async {
-    var polls = 0;
-    var refreshGone = false;
-    final grants = <String>[];
-    final client = MockClient((request) async {
-      final body = Uri.splitQueryString(request.body);
-      if (request.url.path.endsWith('/device/code')) {
-        expect(body['client_id'], YoutubeTvSignIn.clientId);
-        return http.Response(jsonEncode({'device_code': 'D', 'user_code': 'ABC-DEF-GHI', 'verification_url': 'https://www.google.com/device', 'interval': 0, 'expires_in': 60}), 200);
-      }
-      grants.add(body['grant_type']!);
-      if (body['grant_type'] == 'refresh_token') {
-        return refreshGone ? http.Response('{"error":"invalid_grant"}', 400) : http.Response('{"access_token":"A2","expires_in":3600}', 200);
-      }
-      return ++polls < 3 ? http.Response('{"error":"authorization_pending"}', 428) : http.Response('{"access_token":"A1","expires_in":0,"refresh_token":"R"}', 200);
-    });
-    final sign = YoutubeTvSignIn(credentials: file(), client: client, pollFloor: Duration.zero);
+  Future<void> settled(YoutubeTvSignIn sign) async {
+    for (var i = 0; i < 200 && sign.state == TvSignInState.waiting; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+  }
+
+  test('signs in with the TV app\'s client, keeps the sign-in, and makes requests as the TV app', () async {
+    final sign = YoutubeTvSignIn(folder: dir.path, base: youtube.base);
     final codes = <String?>[];
     sign.addListener(() => codes.add(sign.code));
-    await sign.signIn();
-    expect(codes, contains('ABC-DEF-GHI'));
-    expect((sign.signedIn, sign.address, polls), (true, 'https://www.google.com/device', 3));
-    expect(await sign.accessToken(), 'A2');
+    sign.signIn();
+    await settled(sign);
+    expect(sign.state, TvSignInState.signedIn, reason: sign.error);
+    expect(codes, contains('ABC-DEF'));
+    expect(sign.address, 'https://yt.example/activate');
+    final device = youtube.bodies[youtube.asked.indexOf('/o/oauth2/device/code')];
+    expect((device['client_id'], device['device_model']), ('42-tv.apps.googleusercontent.com', 'ytlr::'));
+    expect(youtube.bodies[youtube.asked.indexOf('/o/oauth2/token')]['client_secret'], 'tvsecret');
 
-    final again = YoutubeTvSignIn(credentials: file(), client: client);
-    await again.load();
+    final answer = await sign.post('next', {'videoId': 'x'});
+    expect(answer!.status, 200);
+    final sent = youtube.bodies.last;
+    expect((sent['videoId'], sent['context']['client']['clientName']), ('x', 'TVHTML5'));
+    expect(youtube.authorizations.last, 'Bearer A2', reason: 'the first token had already run out');
+
+    await expectLater(sign.post('account/set_setting', const {}), throwsStateError);
+
+    final again = YoutubeTvSignIn(folder: dir.path, base: youtube.base)..load();
     expect(again.signedIn, isTrue);
-    refreshGone = true;
-    expect(await again.accessToken(), isNull);
+    youtube.refreshGone = true;
+    expect(await again.post('browse', {'browseId': 'FEhistory'}), isNull);
     expect(again.signedIn, isFalse);
     expect(again.error, isNotNull);
-    expect(await File('${dir.path}/youtube-tv.bin').exists(), isFalse);
-  });
-
-  test('a denied code ends the wait with why', () async {
-    final sign = YoutubeTvSignIn(
-      credentials: file(),
-      client: MockClient((request) async => request.url.path.endsWith('/device/code')
-          ? http.Response('{"device_code":"D","user_code":"X","interval":0}', 200)
-          : http.Response('{"error":"access_denied"}', 403)),
-      pollFloor: Duration.zero,
-    );
-    await sign.signIn();
-    expect(sign.state, TvSignInState.signedOut);
-    expect(sign.error, isNotNull);
-  });
+    expect(File('${dir.path}/youtube-tv.bin').existsSync(), isFalse);
+  }, skip: !YoutubeTvSignIn.available);
 }

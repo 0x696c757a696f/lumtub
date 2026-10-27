@@ -84,32 +84,34 @@ class CommunityPosts {
 
   /// The page after the one that gave [continuation].
   Future<PostPage> next(String continuation) async {
-    final signedIn = await signIn?.signedInHeaders() ?? const <String, String>{};
-    final key = signedIn.isEmpty ? _apiKey : null;
+    final signIn = this.signIn;
+    if (signIn != null && signIn.signedIn) {
+      final answer = await signIn.signIn!.post('browse', {'continuation': continuation});
+      if (answer != null && answer.status >= 400 && answer.status < 500) signIn.refuse(answer.status, answer.body);
+      if (answer != null && answer.status == 200) {
+        final page = await _readInBackground(answer.body);
+        if (page != null && page.posts.isNotEmpty) return page;
+      }
+    }
+    final key = _apiKey;
     final query = key == null ? '?prettyPrint=false' : '?key=$key&prettyPrint=false';
     final response = await _client
         .post(
           Uri.parse('https://www.youtube.com/youtubei/v1/browse$query'),
-          headers: signedIn.isEmpty ? YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage) : {...YoutubeComments.tvHeaders(youtubeAcceptLanguage), ...signedIn},
+          headers: YoutubeWeb.apiHeaders(clientVersion: _clientVersion, acceptLanguage: youtubeAcceptLanguage),
           body: jsonEncode({
             'context': {
-              'client': signedIn.isEmpty
-                  ? {
-                      'clientName': 'WEB',
-                      'clientVersion': _clientVersion ?? YoutubeWeb.clientVersion,
-                      'hl': youtubeHl,
-                      if (_visitorData != null) 'visitorData': _visitorData,
-                    }
-                  : YoutubeComments.tvClient(youtubeHl),
+              'client': {
+                'clientName': 'WEB',
+                'clientVersion': _clientVersion ?? YoutubeWeb.clientVersion,
+                'hl': youtubeHl,
+                if (_visitorData != null) 'visitorData': _visitorData,
+              },
             },
             'continuation': continuation,
           }),
         )
         .timeout(const Duration(seconds: 20));
-    if (signedIn.isNotEmpty && response.statusCode >= 400 && response.statusCode < 500) {
-      signIn?.refuse(response.statusCode, response.body);
-      return next(continuation);
-    }
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     return await _readInBackground(response.bodyBytes) ?? const PostPage([], null);
   }

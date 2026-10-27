@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/youtube_comments.dart';
+import 'package:lumtub/youtube_tv_sign_in.dart';
 
 Map<String, Object?> _continuation(String token) => {
       'continuationItemRenderer': {
@@ -190,45 +192,43 @@ void main() {
     expect((page.count, page.comments.single.text), ('2', '新'));
   });
 
-  test('signed in, pages come with ratings; a refused token loads signed out', () async {
-    final seen = <String?>[];
-    var refuse = false;
-    final comments = YoutubeComments(MockClient((request) async {
-      seen.add(request.headers['Authorization']);
-      if (refuse && request.headers['Authorization'] != null) return http.Response('', 400);
-      if (request.url.path.endsWith('perform_comment_action')) {
-        expect(jsonDecode(request.body)['actions'], ['UNLIKE']);
-        return http.Response('{}', 200);
+  test('signed in, pages come with ratings; a refused sign-in loads signed out', () async {
+    final signedOut = <String>[];
+    final ratingPage = utf8.encode(jsonEncode({
+      'onResponseReceivedEndpoints': [
+        {'appendContinuationItemsAction': {'continuationItems': [
+          {'commentRenderer': {'commentId': 'C', 'actionButtons': {'commentActionButtonsRenderer': {
+            'likeButton': {'toggleButtonRenderer': {'isToggled': true,
+              'defaultServiceEndpoint': {'performCommentActionEndpoint': {'action': 'LIKE'}},
+              'toggledServiceEndpoint': {'performCommentActionEndpoint': {'action': 'UNLIKE'}}}},
+          }}}},
+        ]}},
+      ],
+    }));
+    final sign = _FakeSignIn((endpoint, body) {
+      if (endpoint.endsWith('perform_comment_action')) {
+        expect(body['actions'], ['UNLIKE']);
+        return (status: 200, body: Uint8List(0));
       }
-      return http.Response.bytes(utf8.encode(jsonEncode({
-        'onResponseReceivedEndpoints': [
-          {'appendContinuationItemsAction': {'continuationItems': [
-            {'commentRenderer': {'commentId': 'C', 'actionButtons': {'commentActionButtonsRenderer': {
-              'likeButton': {'toggleButtonRenderer': {'isToggled': true,
-                'defaultServiceEndpoint': {'performCommentActionEndpoint': {'action': 'LIKE'}},
-                'toggledServiceEndpoint': {'performCommentActionEndpoint': {'action': 'UNLIKE'}}}},
-            }}}},
-          ]}},
-        ],
-      })), 200);
-    }))..token = (() async => 'T');
+      return (status: 200, body: Uint8List.fromList(ratingPage));
+    });
+    final comments = YoutubeComments(MockClient((request) async {
+      signedOut.add(request.url.path);
+      return http.Response.bytes(ratingPage, 200);
+    }))..signIn = sign;
     final rating = (await comments.more('X')).comments.single.rating!;
     expect((rating.state, rating.actionFor('like', 'like'), rating.actionFor('', 'like'), rating.actionFor('like', 'dislike')), ('like', 'UNLIKE', 'LIKE', null));
     await comments.rate('UNLIKE');
-    expect(seen, ['Bearer T', 'Bearer T']);
-    refuse = true;
-    seen.clear();
-    expect((await comments.more('X')).comments.single.rating, isNotNull);
-    expect(seen, ['Bearer T', null]);
+    expect(sign.asked, ['next', 'comment/perform_comment_action']);
+    expect(signedOut, isEmpty);
+    sign.answer = (endpoint, body) => (status: 400, body: Uint8List(0));
+    expect((await comments.more('X')).comments, hasLength(1));
+    expect(signedOut, ['/youtubei/v1/next']);
     expect(comments.refused, isTrue);
   }, skip: NativeCore.instance == null);
 
   test('signed in, comments come from the TV app\'s watch page and its comment pages', () async {
-    final asked = <String>[];
-    final comments = YoutubeComments(MockClient((request) async {
-      final body = jsonDecode(request.body) as Map;
-      expect(((body['context'] as Map)['client'] as Map)['clientName'], 'TVHTML5');
-      asked.add(body['videoId'] as String? ?? body['continuation'] as String);
+    final sign = _FakeSignIn((endpoint, body) {
       final data = body.containsKey('videoId')
           ? {'engagementPanels': [
               {'engagementPanelSectionListRenderer': {'panelIdentifier': 'comment-item-section', 'header': {'engagementPanelTitleHeaderRenderer': {'menu': {'sortFilterSubMenuRenderer': {'subMenuItems': [
@@ -238,10 +238,28 @@ void main() {
           : {'continuationContents': {'itemSectionContinuation': {'contents': [
               {'commentThreadRenderer': {'comment': {'commentRenderer': {'commentId': 'tv', 'contentText': {'simpleText': '电视'}}}}},
             ]}}};
-      return http.Response.bytes(utf8.encode(jsonEncode(data)), 200);
-    }))..token = (() async => 'T');
+      return (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(data))));
+    });
+    final comments = YoutubeComments(MockClient((request) async => fail('signed out request')))..signIn = sign;
     final page = await comments.video('dQw4w9WgXcQ');
-    expect(asked, ['dQw4w9WgXcQ', 'TOP']);
+    expect(sign.bodies.map((b) => b['videoId'] ?? b['continuation']), ['dQw4w9WgXcQ', 'TOP']);
     expect(page.comments.single.text, '电视');
   }, skip: NativeCore.instance == null);
+}
+
+class _FakeSignIn implements SignedInnerTube {
+  _FakeSignIn(this.answer);
+  SignedAnswer Function(String endpoint, Map<String, Object?> body) answer;
+  final asked = <String>[];
+  final bodies = <Map<String, Object?>>[];
+
+  @override
+  bool get signedIn => true;
+
+  @override
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body) async {
+    asked.add(endpoint);
+    bodies.add(body);
+    return answer(endpoint, body);
+  }
 }

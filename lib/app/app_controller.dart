@@ -3246,6 +3246,7 @@ class AppController extends ChangeNotifier {
       _lastDrops = drops;
       // Read every time, so the timings cover these 10 seconds.
       final frames = await _frameStats(platform);
+      await _watchPicture(platform, frames);
       await _lightenIfBusy(platform, frames);
       await _stepDownIfDropping(platform, added);
       if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) {
@@ -3265,6 +3266,33 @@ class AppController extends ChangeNotifier {
       logInfo('Dropped $added frames in 10 s ($drops total): ${values.join(' ')}${frames == null ? '' : ' · frames $frames'}');
     } catch (_) {
       // Statistics are best effort.
+    }
+  }
+
+  DateTime _lastPictureFix = DateTime(2000);
+
+  /// Brings back a picture that stopped while the sound plays on: when no
+  /// frame was drawn in 10 s, the decoder is restarted from here; when
+  /// frames were drawn but none reached the screen, the texture is
+  /// registered again. Only while the video is on screen, at most once a
+  /// minute.
+  Future<void> _watchPicture(NativePlayer platform, String? frames) async {
+    final match = frames == null ? null : RegExp(r'frames=(\d+)/(\d+)').firstMatch(frames);
+    final outputSize = _outputSize;
+    if (match == null || outputSize == null || !outputSize.onScreen || audioOnly || _backgroundAudioOnly || _windowHidden) return;
+    if ((player?.state.width ?? 0) == 0 || DateTime.now().difference(_lastPictureFix) < const Duration(minutes: 1)) return;
+    final drawn = int.parse(match[1]!), shown = int.parse(match[2]!);
+    if (drawn > 0 && shown > 0) return;
+    _lastPictureFix = DateTime.now();
+    logInfo('Picture stalled while playing ($frames); ${drawn == 0 ? 'restarting the decoder' : 'registering the texture again'}');
+    try {
+      if (drawn == 0) {
+        await platform.command(['seek', '0', 'relative+exact']);
+      } else {
+        await outputSize.refresh();
+      }
+    } catch (e) {
+      logInfo('Could not bring the picture back: $e');
     }
   }
 

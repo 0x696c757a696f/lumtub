@@ -196,7 +196,7 @@ class YoutubeComments {
   /// [CommentRating], for a comment or a post alike.
   Future<void> rate(String action) async {
     final answer = signedIn ? await signIn!.post('comment/perform_comment_action', {'actions': [action]}) : null;
-    if (answer == null) throw StateError(tr('需要先在设置 › Google 账号里用电视码登录'));
+    if (answer == null) throw StateError(tr('需要先在设置 › YouTube 账号里用电视码登录'));
     if (answer.status >= 400 && answer.status < 500) {
       logInfo('YouTube answered ${answer.status} to a comment action · ${_start(answer.body)}');
       throw StateError(tr('YouTube 不接受当前电视码登录的这项操作'));

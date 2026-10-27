@@ -510,7 +510,7 @@ class AppController extends ChangeNotifier {
   Future<String> saveTvSamples() async {
     final sign = tvSignIn;
     final logs = directories?.logs;
-    if (sign == null || !sign.signedIn || logs == null) return tr('需要先在设置 › Google 账号里用电视码登录');
+    if (sign == null || !sign.signedIn || logs == null) return tr('需要先在设置 › YouTube 账号里用电视码登录');
     return tv_samples.saveTvSamples(sign, logs);
   }
 

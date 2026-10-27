@@ -22,7 +22,9 @@ class AccountSettings extends StatelessWidget {
     if (account == null) return ListTile(title: Text(tr('正在准备…')));
     final colors = context.colors;
     final error = account.error;
+    final tv = tvSignIn;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      _Heading(tr('Google 登录'), tr('用 YouTube 官方接口：同步订阅、播放列表和喜欢的视频，给视频点赞，发评论，保存到播放列表，订阅频道。')),
       switch (account.state) {
         AccountState.signedIn => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             ListTile(
@@ -58,7 +60,7 @@ class AccountSettings extends StatelessWidget {
           ),
         AccountState.signedOut => ListTile(
             leading: Icon(Icons.account_circle_outlined, color: colors.primary),
-            title: Text(tr('Google 账号')),
+            title: Text(tr('未登录')),
             subtitle: Text(account.client == null ? tr('这个版本没有内置 Google 客户端，需要先在下方填写你自己的客户端。') : tr('登录后可以导入订阅、播放列表和喜欢的视频，也可以点赞、评论、保存到播放列表和订阅。')),
             trailing: FilledButton.icon(
               onPressed: account.client == null ? null : account.signIn,
@@ -74,16 +76,37 @@ class AccountSettings extends StatelessWidget {
               ? ErrorBanner(error, onRetry: () => openExternal(YouTubeApiException.enableApiUrl), retryLabel: tr('去启用'))
               : ErrorBanner(error),
         ),
+      if (tv != null)
+        ListenableBuilder(
+          listenable: tv,
+          builder: (context, _) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const Divider(height: 24),
+            _Heading(tr('电视码登录'), tr('用 YouTube 电视版的接口，做官方接口做不到的事：给评论和社区帖子点赞、点踩。')),
+            _TvSignInTile(tv, saveSamples: saveTvSamples, note: note),
+            if (_differentAccounts(account, tv) case final names?)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: ErrorBanner(tr('两种登录显示的账号不同（Google：{0}，电视码：{1}）。如果不是同一个账号，订阅、点赞会分在两个账号上，建议退出一个重新登录。', [names.$1, names.$2])),
+              ),
+          ]),
+        ),
       Padding(
-        padding: const EdgeInsets.fromLTRB(18, 4, 18, 12),
+        padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
         child: Text(
-          tr('登录完全可选，不登录也能正常搜索和播放。登录后读取订阅和播放列表并复制到本机；只有你在 Lumtub 里点赞、点踩、评论、保存到播放列表或订阅时才会修改账号，不会上传本机的观看记录。登录凭据用 Windows 数据保护加密后保存在本机，只有当前 Windows 用户能解密。\nYouTube 官方接口不提供观看历史和首页推荐，也不支持给社区帖子点赞或评论；首页的“为你推荐”在本机计算，会参考同步过来的喜欢的视频和订阅。视频播放不使用这个账号，会员或年龄限制视频不一定能播放。'),
+          tr('两种登录都可选，不登录也能正常搜索和播放；都登录时请用同一个 Google 账号。登录凭据用 Windows 数据保护加密后保存在本机，只有当前 Windows 用户能解密。只有你在 Lumtub 里点赞、点踩、评论、保存到播放列表或订阅时才会修改账号，不会上传本机的观看记录。\n首页的“为你推荐”在本机计算，会参考同步过来的喜欢的视频和订阅。视频播放不使用账号，会员或年龄限制视频不一定能播放。'),
           style: note,
         ),
       ),
-      if (tvSignIn != null) ListenableBuilder(listenable: tvSignIn!, builder: (context, _) => _TvSignInTile(tvSignIn!, saveSamples: saveTvSamples, note: note)),
       _ClientSettings(account: account, note: note),
     ]);
+  }
+
+  /// The two names when both sign-ins show one and they differ.
+  static (String, String)? _differentAccounts(AccountController account, YoutubeTvSignIn tv) {
+    final google = account.signedIn ? account.name?.trim() : null;
+    final television = tv.signedIn ? tv.name?.trim() : null;
+    if (google == null || television == null || google.isEmpty || television.isEmpty) return null;
+    return google.toLowerCase() == television.toLowerCase() ? null : (google, television);
   }
 
   static String _time(DateTime time) => '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
@@ -101,6 +124,23 @@ class AccountSettings extends StatelessWidget {
   }
 }
 
+/// A sign-in's name and what it is for, above its controls.
+class _Heading extends StatelessWidget {
+  const _Heading(this.title, this.detail);
+  final String title;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 2),
+          Text(detail, style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant)),
+        ]),
+      );
+}
+
 /// The TV-code sign-in, for liking and disliking comments and posts.
 class _TvSignInTile extends StatelessWidget {
   const _TvSignInTile(this.sign, {this.saveSamples, required this.note});
@@ -114,11 +154,10 @@ class _TvSignInTile extends StatelessWidget {
     final error = sign.error;
     final code = sign.code;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const Divider(height: 1),
       switch (sign.state) {
         TvSignInState.signedIn => ListTile(
             leading: Icon(Icons.thumb_up_alt_outlined, color: colors.primary),
-            title: Text(tr('评论和帖子点赞：已用电视码登录')),
+            title: Text(sign.name ?? tr('已用电视码登录')),
             subtitle: Text(tr('可以给评论和社区帖子点赞、点踩')),
             trailing: Wrap(spacing: 8, children: [
               if (saveSamples != null)
@@ -150,8 +189,8 @@ class _TvSignInTile extends StatelessWidget {
           ),
         TvSignInState.signedOut => ListTile(
             leading: Icon(Icons.tv_rounded, color: colors.primary),
-            title: Text(tr('评论和帖子点赞')),
-            subtitle: Text(tr('YouTube 只接受电视码登录来给评论和帖子点赞。不用密码和 Cookie，随时可以在 Google 账号的第三方应用里撤销。')),
+            title: Text(tr('未登录')),
+            subtitle: Text(tr('在浏览器里输入一串电视码完成登录，不用密码和 Cookie，随时可以在 Google 账号的第三方应用里撤销。')),
             trailing: FilledButton.tonal(onPressed: sign.signIn, child: Text(tr('用电视码登录'))),
           ),
       },

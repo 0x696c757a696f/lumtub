@@ -47,7 +47,7 @@ enum SettingsCategory {
   style('外观设置', '主题、字体、页面过渡动画、导航栏、卡片宽度、封面质量等', Icons.style_outlined),
   extra('其它设置', '空降助手、相关视频、视频简介、组件更新、下载和缓存位置等', Icons.extension_outlined),
   backup('备份与恢复', '导入、导出和重置设置', Icons.settings_backup_restore_rounded),
-  account('Google 账号', '登录、同步订阅和播放列表', Icons.account_circle_outlined),
+  account('YouTube 账号', 'Google 登录、电视码登录、同步订阅和播放列表', Icons.account_circle_outlined),
   about('关于', '版本、日志、诊断信息、开源许可', Icons.info_outline);
 
   const SettingsCategory(this._title, this._subtitle, this.icon);
@@ -1013,7 +1013,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('恢复默认')),
       ],
     SettingsCategory.account => [
-        SettingEntry(tr('Google 账号'), (context) => AccountSettings(account: controller.account, tvSignIn: controller.tvSignIn, saveTvSamples: controller.saveTvSamples, note: _note(context)), subtitle: tr('登录、同步订阅和播放列表、退出登录、自定义客户端')),
+        SettingEntry(tr('YouTube 账号'), (context) => AccountSettings(account: controller.account, tvSignIn: controller.tvSignIn, saveTvSamples: controller.saveTvSamples, note: _note(context)), subtitle: tr('Google 登录、电视码登录、同步、退出登录、自定义客户端')),
         SettingEntry(tr('关注时同步订阅'), (context) => SwitchItem(
               title: tr('关注频道时同步订阅到 YouTube'),
               subtitle: tr('登录后，关注和取消关注也会在 YouTube 账号上订阅或退订'),

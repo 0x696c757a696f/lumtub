@@ -1163,5 +1163,7 @@ Future<void> openPrivacyConnections(BuildContext context, AppController controll
         row(Icons.dns_outlined, tr('加密 DNS'), dns?.url ?? tr('当前未使用'), tr('直连时查找网址；DNS 服务器会知道你访问了哪些网站，但看不到具体内容'), state: dns == null ? tr('关闭') : tr('使用中')),
         row(Icons.account_circle_outlined, tr('Google 账号'), 'accounts.google.com · oauth2.googleapis.com · www.googleapis.com', tr('只在登录后同步订阅、播放列表、点赞和评论'),
             state: controller.account?.signedIn ?? false ? tr('已登录') : tr('未登录')),
+        row(Icons.tv_rounded, tr('电视码登录'), 'www.youtube.com/o/oauth2 · www.youtube.com/youtubei', tr('只在登录后给评论和帖子点赞、点踩，以 YouTube 电视版的身份请求'),
+            state: controller.tvSignIn?.signedIn ?? false ? tr('已登录') : tr('未登录')),
       ];
     });

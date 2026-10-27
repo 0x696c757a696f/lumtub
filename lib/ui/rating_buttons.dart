@@ -23,7 +23,7 @@ class RatingButtons extends StatelessWidget {
     final onRate = this.onRate;
     if (onRate == null) {
       return Tooltip(
-        message: tr('点赞数。在设置 › Google 账号里用电视码登录后可以点赞和点踩'),
+        message: tr('点赞数。在设置 › YouTube 账号里用电视码登录后可以点赞和点踩'),
         child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.thumb_up_outlined, size: 14, color: colors.outline), const SizedBox(width: 4), count]),
       );
     }

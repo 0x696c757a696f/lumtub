@@ -352,7 +352,17 @@ fn english() -> String {
 }
 
 /// Endpoints Dart may call through the sign-in; anything else is refused.
-const ENDPOINTS: [&str; 6] = ["next", "browse", "comment/perform_comment_action", "like/like", "like/dislike", "like/removelike"];
+const ENDPOINTS: [&str; 9] = [
+    "next",
+    "browse",
+    "account/accounts_list",
+    "comment/perform_comment_action",
+    "like/like",
+    "like/dislike",
+    "like/removelike",
+    "browse/edit_playlist",
+    "feedback",
+];
 
 /// Answers on [port]: `[status, body_bytes]`, or `[-1]` signed out, `[-2]`
 /// when the sign-in was revoked (now signed out), `[-3, why]` on failure.

@@ -42,6 +42,9 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
   TvSignInState state = TvSignInState.signedOut;
   String? error;
 
+  /// The signed-in account's name, once read.
+  String? name;
+
   /// While [TvSignInState.waiting]: the code to type, and where.
   String? code;
   String address = 'https://www.youtube.com/activate';
@@ -81,6 +84,7 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
     if (open) {
       state = TvSignInState.signedIn;
       _notify();
+      unawaited(_readName());
     }
   }
 
@@ -105,6 +109,7 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
         case 1:
           logInfo('Signed in with a TV code');
           _finish(port, TvSignInState.signedIn);
+          unawaited(_readName());
         case 2:
           logInfo('TV code sign-in failed: ${message[1]}');
           error = _why(message[1] as String);
@@ -141,7 +146,45 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
     _notify();
   }
 
+  /// Reads [name] from the account list, as SmartTube does.
+  Future<void> _readName() async {
+    try {
+      final answer = await post('account/accounts_list', {
+        'accountReadMask': {'returnOwner': true, 'returnBrandAccounts': true, 'returnPersonaAccounts': false},
+      });
+      if (answer == null || answer.status != 200) return;
+      name = accountName(jsonDecode(utf8.decode(answer.body)));
+      _notify();
+    } catch (e) {
+      logInfo('Could not read the TV-code account: $e');
+    }
+  }
+
+  /// The selected account's name in an `account/accounts_list` answer, or
+  /// the first one's.
+  static String? accountName(Object? data) {
+    final items = <Map>[];
+    void walk(Object? node) {
+      if (node is Map) {
+        if (node['accountName'] != null) items.add(node);
+        node.values.forEach(walk);
+      } else if (node is List) {
+        node.forEach(walk);
+      }
+    }
+
+    walk(data);
+    final item = items.where((i) => i['isSelected'] == true).firstOrNull ?? items.firstOrNull;
+    final text = item?['accountName'];
+    if (text is! Map) return null;
+    final simple = text['simpleText'];
+    if (simple is String) return simple;
+    final runs = text['runs'];
+    return runs is List ? runs.map((r) => r is Map ? '${r['text'] ?? ''}' : '').join() : null;
+  }
+
   void signOut() {
+    name = null;
     _native?.signOut();
     _waiting?.close();
     _waiting = null;

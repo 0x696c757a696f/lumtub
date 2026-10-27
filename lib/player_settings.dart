@@ -371,7 +371,7 @@ class PlayerSettings {
     this.subtitleColor = 0xFFFFFF,
     this.subtitleOpacity = 1.0,
     this.secondaryFont = defaultSubtitleFont,
-    this.secondaryScale = 0.8,
+    this.secondaryScale = 0.9,
     this.secondaryColor = 0xFFE7A8,
     this.secondaryOpacity = 0.95,
     this.cacheMode = 'auto',
@@ -721,7 +721,8 @@ class PlayerSettings {
       subtitleColor: number('subtitleColor', 0xFFFFFF, 0, 0xFFFFFF),
       subtitleOpacity: decimal('subtitleOpacity', 1.0, 0.1, 1.0),
       secondaryFont: raw.containsKey('secondaryFont') ? cleanFont(raw['secondaryFont']) : defaultSubtitleFont,
-      secondaryScale: decimal('secondaryScale', 0.8, 0.5, 3.0),
+      // 0.8 was the default before it grew to 0.9, too small to read.
+      secondaryScale: raw['secondaryScale'] == 0.8 ? 0.9 : decimal('secondaryScale', 0.9, 0.5, 3.0),
       secondaryColor: number('secondaryColor', 0xFFE7A8, 0, 0xFFFFFF),
       secondaryOpacity: decimal('secondaryOpacity', 0.95, 0.1, 1.0),
       cacheMode: choice('cacheMode', {'auto', 'yes', 'no'}, 'auto'),

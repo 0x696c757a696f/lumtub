@@ -357,6 +357,10 @@ class VideoDetails {
   /// Every subtitle YouTube offers: uploaded ones, then automatic captions
   /// and their machine translations.
   final List<SubtitleOption> subtitles;
+  /// When a live stream or premiere that has not started is scheduled to.
+  final DateTime? scheduledStart;
+  /// The language the video is in, as yt-dlp tags it, when known.
+  final String? language;
 
   const VideoDetails({
     required this.title,
@@ -369,6 +373,8 @@ class VideoDetails {
     this.description = '',
     this.chapters = const [],
     this.subtitles = const [],
+    this.scheduledStart,
+    this.language,
   });
 
   factory VideoDetails.fromJson(Map<String, dynamic> map) {
@@ -386,6 +392,10 @@ class VideoDetails {
       description: map['description']?.toString() ?? '',
       chapters: Chapter.listFrom(map['chapters']),
       subtitles: SubtitleOption.listFrom(map['subtitles'], map['automatic_captions']),
+      scheduledStart: map['live_status'] == 'is_upcoming' && map['release_timestamp'] is num
+          ? DateTime.fromMillisecondsSinceEpoch((map['release_timestamp'] as num).toInt() * 1000)
+          : null,
+      language: map['language'] is String && (map['language'] as String).isNotEmpty ? map['language'] as String : null,
     );
   }
 
@@ -414,6 +424,8 @@ class VideoDetails {
         for (final c in chapters) Chapter(c.start, c.end, names[c.start.inSeconds] ?? c.title),
       ],
       subtitles: subtitles,
+      scheduledStart: scheduledStart,
+      language: language,
     );
   }
 

@@ -298,6 +298,9 @@ class PlayerSettings {
   final int volumeMax;
   final SubtitleMode subtitleMode;
   final SubtitleLanguage subtitleLanguage;
+  /// The first subtitle in the language the video is spoken in rather than
+  /// [subtitleLanguage].
+  final bool subtitleOriginal;
   /// The TranslationLanguage code of the subtitle shown above the main
   /// one when a video opens; empty for none.
   /// [secondarySubtitleLanguage] for the video's own subtitle in its own
@@ -383,13 +386,14 @@ class PlayerSettings {
     this.audioDevice = 'auto',
     this.videoSync = VideoSync.audio,
     this.maxHeight = 0,
-    this.playOrder = PlayOrder.autoPlayRelated,
+    this.playOrder = PlayOrder.pause,
     this.defaultSpeed = 1.0,
     this.speeds = defaultSpeeds,
     this.defaultVolume = 100,
     this.volumeMax = 100,
     this.subtitleMode = SubtitleMode.off,
     this.subtitleLanguage = SubtitleLanguage.auto,
+    this.subtitleOriginal = false,
     this.secondarySubtitleLanguage = '',
     this.subtitleBorder = 3,
     this.subtitleBackground = false,
@@ -455,6 +459,7 @@ class PlayerSettings {
     int? volumeMax,
     SubtitleMode? subtitleMode,
     SubtitleLanguage? subtitleLanguage,
+    bool? subtitleOriginal,
     String? secondarySubtitleLanguage,
     double? subtitleBorder,
     bool? subtitleBackground,
@@ -518,6 +523,7 @@ class PlayerSettings {
         volumeMax: volumeMax ?? this.volumeMax,
         subtitleMode: subtitleMode ?? this.subtitleMode,
         subtitleLanguage: subtitleLanguage ?? this.subtitleLanguage,
+        subtitleOriginal: subtitleOriginal ?? this.subtitleOriginal,
         secondarySubtitleLanguage: secondarySubtitleLanguage ?? this.secondarySubtitleLanguage,
         subtitleBorder: subtitleBorder ?? this.subtitleBorder,
         subtitleBackground: subtitleBackground ?? this.subtitleBackground,
@@ -575,12 +581,14 @@ class PlayerSettings {
         'videoSync': videoSync.name,
         'maxHeight': maxHeight,
         'playOrder': playOrder.name,
+        'playOrderDefault': 2,
         'defaultSpeed': defaultSpeed,
         'speeds': speeds,
         'defaultVolume': defaultVolume,
         'volumeMax': volumeMax,
         'subtitleMode': subtitleMode.name,
         'subtitleLanguageV2': subtitleLanguage.name,
+        'subtitleOriginal': subtitleOriginal,
         'secondarySubtitleLanguage': secondarySubtitleLanguage,
         'subtitleBorder': subtitleBorder,
         'subtitleBackground': subtitleBackground,
@@ -704,9 +712,12 @@ class PlayerSettings {
     // A file that disables every codec YouTube plays would play nothing.
     if (disabled != null && !VideoCodec.playableWithout(disabled)) disabled.remove(VideoCodec.h264);
     // Builds before the play order menu had an autoplay switch.
-    final playOrder = raw.containsKey('playOrder')
-        ? _enumByName(PlayOrder.values, raw['playOrder'], PlayOrder.autoPlayRelated)
+    // Builds before playOrderDefault 2 saved 自动连播 as the default even
+    // when untouched; the default is now to stop at the end.
+    final savedOrder = raw.containsKey('playOrder')
+        ? _enumByName(PlayOrder.values, raw['playOrder'], PlayOrder.pause)
         : raw['autoplayNext'] == false ? PlayOrder.pause : PlayOrder.autoPlayRelated;
+    final playOrder = raw['playOrderDefault'] != 2 && savedOrder == PlayOrder.autoPlayRelated ? PlayOrder.pause : savedOrder;
     final path = raw['cachePath']?.toString();
     final device = raw['audioDevice']?.toString() ?? 'auto';
     final oldBuffer = raw['bufferDefaults'] != 2;
@@ -747,6 +758,7 @@ class PlayerSettings {
       subtitleLanguage: raw.containsKey('subtitleLanguageV2') || raw['subtitleLanguage'] != 'zh'
           ? _enumByName(SubtitleLanguage.values, raw['subtitleLanguageV2'] ?? raw['subtitleLanguage'], SubtitleLanguage.auto)
           : SubtitleLanguage.auto,
+      subtitleOriginal: raw['subtitleOriginal'] == true,
       secondarySubtitleLanguage: raw['secondarySubtitleLanguage'] == originalSubtitle ? originalSubtitle : TranslationLanguage.maybeByCode(raw['secondarySubtitleLanguage'])?.code ?? '',
       subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
       subtitleBackground: raw['subtitleBackground'] == true,

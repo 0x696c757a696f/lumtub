@@ -69,8 +69,10 @@ class PlayerOptionApplicator {
     // have, from splitting the option.
     String quote(String value) => value.contains(RegExp('[,=%]')) || value.startsWith(RegExp(r'["\[]')) ? '%${utf8.encode(value).length}%$value' : value;
     return [
-      if (subtitles) 'sub-langs=${quote(settings.subtitleLanguage.ytDlpLangs)}',
-      if (subtitles && settings.subtitleMode == SubtitleMode.always) 'write-auto-subs=',
+      // The video's own language: yt-dlp names its automatic captions
+      // "<language>-orig"; an uploaded one in it is added once known.
+      if (subtitles) 'sub-langs=${quote(settings.subtitleOriginal ? '.*-orig' : settings.subtitleLanguage.ytDlpLangs)}',
+      if (subtitles && (settings.subtitleMode == SubtitleMode.always || settings.subtitleOriginal)) 'write-auto-subs=',
       if (infoJson != null) 'load-info-json=${quote(infoJson)}',
       // Also for SOCKS proxies, which ytdl_hook does not take from http-proxy.
       if (proxy != null) 'proxy=${quote(proxy)}',

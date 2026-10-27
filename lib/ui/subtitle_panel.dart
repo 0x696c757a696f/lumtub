@@ -78,6 +78,8 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
       widget.player.stream.tracks.listen((_) => _changed()),
     ]);
     widget.controller.addListener(_changed);
+    // The subtitle mpv chose by itself shows as chosen here too.
+    unawaited(widget.controller.syncMainSubtitle());
   }
 
   @override
@@ -103,6 +105,8 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final target = controller.settings.subtitleLanguage.translation;
     // Only offered when the video has no subtitle of its own in 第一字幕语言.
     final translation = hasOwnSubtitle(offered, target) ? null : translationOf(offered, target);
+    // The video's own language, at the top so it need not be looked for.
+    final spoken = originalSubtitle(offered, language: controller.details?.language);
     final labels = {for (final o in offered) o.label};
     // Tracks mpv has that the list above does not name, such as those
     // libmpv's ytdl_hook added or a downloaded video's files.
@@ -117,13 +121,13 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final secondaryKey = secondary == null ? 'off' : 'o:${secondary.label}';
     _options = {for (final o in [if (translation != null) translation, ...offered]) 'o:${o.label}': o};
 
+    final searching = _query.isNotEmpty;
     final groups = <(String, List<_Choice>)>[
       if (others.isNotEmpty) (tr('已加载'), others),
-      (tr('视频自带'), [for (final o in offered) if (o.kind == SubtitleKind.uploaded) _ofOption(o)]),
-      (tr('自动生成'), [for (final o in offered) if (o.kind == SubtitleKind.automatic) _ofOption(o)]),
+      (tr('视频自带'), [for (final o in offered) if (o.kind == SubtitleKind.uploaded && (searching || !identical(o, spoken))) _ofOption(o)]),
+      (tr('自动生成'), [for (final o in offered) if (o.kind == SubtitleKind.automatic && (searching || !identical(o, spoken))) _ofOption(o)]),
     ];
     final translated = [for (final o in offered) if (o.kind == SubtitleKind.translated) _ofOption(o)];
-    final searching = _query.isNotEmpty;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -179,6 +183,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
         Expanded(
           child: ListView(padding: const EdgeInsets.only(bottom: 12), children: [
             row((key: 'off', label: tr('关闭'), detail: null, option: null, track: null), icon: Icons.block_rounded),
+            if (spoken != null && !searching) row((key: 'o:${spoken.label}', label: tr('原语言：{0}', [spoken.label]), detail: null, option: spoken, track: null), icon: Icons.record_voice_over_outlined),
             if (translation != null) row((key: 'o:${translation.label}', label: tr('{0}（YouTube 翻译）', [target.label]), detail: null, option: translation, track: null), icon: Icons.translate_rounded),
             for (final (title, rows) in visible) ...[heading(title), for (final c in rows) row(c)],
             if (shownTranslated.isNotEmpty) ...[
@@ -234,6 +239,8 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
       } else {
         await controller.setSecondarySubtitle(choice.option);
       }
+      // A track mpv loaded itself has no option to remember by.
+      if (choice.key == 'off' || choice.option != null) await controller.rememberSubtitleChoice(primary: primary, option: choice.option);
     } finally {
       if (mounted) setState(() => primary ? _busyMain = null : _busySecondary = null);
     }

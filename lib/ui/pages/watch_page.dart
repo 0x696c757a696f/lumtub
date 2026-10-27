@@ -24,6 +24,7 @@ import '../theme.dart';
 import '../translatable.dart';
 import '../play_queue_panel.dart';
 import '../video_card.dart';
+import '../upcoming_card.dart';
 import 'channel_page.dart';
 import 'downloads_page.dart';
 import '../../dearrow.dart';
@@ -113,7 +114,7 @@ class _WatchPageState extends State<WatchPage> {
             CastBar(controller: controller),
             if (!theater) const SizedBox(height: 12),
             _Toolbar(controller: controller),
-            if (controller.playbackError != null) ...[
+            if (controller.playbackError != null && !controller.waitingForStart) ...[
               const SizedBox(height: 12),
               ErrorBanner(tr('播放失败：{0}', [controller.playbackError]), onRetry: controller.retryPlayback),
             ],
@@ -292,21 +293,29 @@ class _Player extends StatelessWidget {
             // As in PiliNara: the video and its controls repaint apart, so
             // pointer movement over the controls does not redraw the video
             // texture, which flashes black on some Windows GPUs.
-            child: RepaintBoundary(
-              child: Video(
-                key: videoKey,
-                controller: controller.videoController!,
-                // The controls cover the video here and in full screen, so
-                // they measure the size it is drawn at.
-                controls: (state) => VideoBox(
-                  controller: controller,
-                  child: RepaintBoundary(
-                    child: PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
+            child: Stack(fit: StackFit.expand, children: [
+              RepaintBoundary(
+                child: Video(
+                  key: videoKey,
+                  controller: controller.videoController!,
+                  // The controls cover the video here and in full screen, so
+                  // they measure the size it is drawn at.
+                  controls: (state) => VideoBox(
+                    controller: controller,
+                    child: RepaintBoundary(
+                      child: PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
+                    ),
                   ),
+                  subtitleViewConfiguration: subtitleViewFor(controller.settings),
                 ),
-                subtitleViewConfiguration: subtitleViewFor(controller.settings),
               ),
-            ),
+              if (controller.waitingForStart && controller.playing != null)
+                UpcomingCard(
+                  thumbnail: thumbnailFor(controller.playing!, controller.thumbnailDirectory, width: 320, size: 'mqdefault'),
+                  start: controller.scheduledStart,
+                  onRetry: controller.retryPlayback,
+                ),
+            ]),
           ),
         ),
       );
@@ -584,15 +593,23 @@ class _UpNext extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = controller.upNext;
     final related = controller.related;
-    final relatedItems = controller.relatedItems;
+    // What 接下来播放 already lists is not repeated under 相关视频.
+    final queued = {for (final item in items) item.id};
+    final relatedItems = [for (final item in controller.relatedItems) if (!queued.contains(item.id)) item];
     final children = <Widget>[
       if (controller.playQueue.isNotEmpty) ...[PlayQueuePanel(controller: controller), const SizedBox(height: 16)],
-      _header(context, tr('接下来播放'), items.isEmpty ? null : tr('{0} 个', [items.length])),
+      _header(context, tr('接下来播放'), items.isEmpty ? null : tr('{0} 个', [items.length]), trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+        Text(tr('自动连播'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
+        Transform.scale(
+          scale: 0.75,
+          child: Switch(value: controller.settings.playOrder == PlayOrder.autoPlayRelated, onChanged: (on) => unawaited(controller.setAutoplayNext(on))),
+        ),
+      ])),
       if (items.isEmpty)
         Padding(
           padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
           child: Text(
-            relatedItems.isEmpty ? tr('播放队列已经到底了。播放搜索结果、播放列表或观看历史中的视频时，后面的视频会显示在这里。') : tr('播放队列已经到底了，自动连播会接着播放下面的相关视频。'),
+            relatedItems.isEmpty ? tr('播放队列已经到底了。播放搜索结果、播放列表或观看历史中的视频时，后面的视频会显示在这里。') : controller.settings.autoplayNext ? tr('播放队列已经到底了，自动连播会接着播放下面的相关视频。') : tr('播放队列已经到底了。打开自动连播后，会接着播放下面的相关视频。'),
             style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5),
           ),
         )
@@ -612,12 +629,13 @@ class _UpNext extends StatelessWidget {
     return ListView(padding: const EdgeInsets.only(bottom: AppStyle.pagePadding), children: children);
   }
 
-  Widget _header(BuildContext context, String title, String? note) => Padding(
-        padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
+  Widget _header(BuildContext context, String title, String? note, {Widget? trailing}) => Padding(
+        padding: EdgeInsets.fromLTRB(6, 0, trailing == null ? 6 : 0, 8),
         child: Row(children: [
           Text(title, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+          if (note != null) ...[const SizedBox(width: 8), Text(note, style: TextStyle(color: context.colors.outline, fontSize: 12))],
           const Spacer(),
-          if (note != null) Text(note, style: TextStyle(color: context.colors.outline, fontSize: 12)),
+          if (trailing != null) trailing,
         ]),
       );
 

@@ -64,7 +64,7 @@ void main() {
     expect(PlayerSettings.fromJson({'maxHeight': 9999}).maxHeight, 0);
     expect(PlayerSettings.fromJson({'maxHeight': 240}).maxHeight, 240);
     expect(PlayerSettings.fromJson({'maxHeight': '720'}).maxHeight, 0);
-    expect(PlayerSettings.fromJson(const {}).autoplayNext, isTrue);
+    expect(PlayerSettings.fromJson(const {}).autoplayNext, isFalse);
   });
   test('reads the switches of earlier builds', () {
     final settings = PlayerSettings.fromJson({'autoplayNext': false, 'autoSelectCodec': false});
@@ -214,5 +214,13 @@ vo=gpu-next
   test('writes colors the way mpv reads them', () {
     expect(PlayerSettings.mpvColor(0xFFFFFF, 1), '#FFFFFFFF');
     expect(PlayerSettings.mpvColor(0x00FF00, 0.5), '#8000FF00');
+  });
+
+  test('autoplay of related videos is off by default, also for files saved before', () {
+    expect(const PlayerSettings().playOrder, PlayOrder.pause);
+    expect(PlayerSettings.fromJson({'playOrder': 'autoPlayRelated'}).playOrder, PlayOrder.pause);
+    expect(PlayerSettings.fromJson({'playOrder': 'listCycle'}).playOrder, PlayOrder.listCycle);
+    final chosen = const PlayerSettings(playOrder: PlayOrder.autoPlayRelated).toJson();
+    expect(PlayerSettings.fromJson(chosen).playOrder, PlayOrder.autoPlayRelated);
   });
 }

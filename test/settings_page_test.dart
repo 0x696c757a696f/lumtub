@@ -41,7 +41,7 @@ void main() {
     await tester.tap(find.text(SettingsCategory.play.title));
     await tester.pumpAndSettle();
     expect(find.widgetWithText(AppBar, SettingsCategory.play.title), findsOneWidget);
-    expect(find.text('自动连播'), findsOneWidget);
+    expect(find.text('播放顺序'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

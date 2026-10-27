@@ -12,6 +12,7 @@
 // mouse handling (hover to show, wheel for volume) is kept.
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/gestures.dart';
@@ -165,6 +166,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     for (final subscription in _subscriptions) {
       unawaited(subscription.cancel());
     }
+    if (_orientationLocked) unawaited(SystemChrome.setPreferredOrientations(const []));
     _hideTimer?.cancel();
     _feedbackTimer?.cancel();
     _animation.dispose();
@@ -254,13 +256,148 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   void _onScroll(PointerSignalEvent event) {
-    // One volume step per notch, however the wheel's glide is split up.
+    if (event is! PointerScrollEvent) return;
+    // The wheel over the video sets the volume only: claiming the event
+    // keeps the page around the player from scrolling too.
+    GestureBinding.instance.pointerSignalResolver.register(event, _changeVolume);
+  }
+
+  void _changeVolume(PointerSignalEvent event) {
+    // One step per notch, however the wheel's glide is split up.
     if (event is! PointerScrollEvent || SmoothWheel.isFollowUp(event)) return;
-    final step = _controller.preferences.volumeStep.toDouble();
-    unawaited(_controller.changeVolume(event.scrollDelta.dy < 0 ? step : -step).then((_) {
-      final volume = _player.state.volume.round();
-      _showFeedback(volume == 0 ? Icons.volume_off_rounded : Icons.volume_up_rounded, '$volume%');
-    }));
+    final up = event.scrollDelta.dy < 0;
+    // The left half of the player sets the brightness, the right the volume.
+    if (_onLeft(event.localPosition)) {
+      _brighten(up ? _brightnessStep : -_brightnessStep);
+    } else {
+      final step = _controller.preferences.volumeStep.toDouble();
+      _louder(up ? step : -step);
+    }
+  }
+
+  static const _brightnessStep = 5;
+
+  bool _onLeft(Offset position) => position.dx < (context.size?.width ?? double.infinity) / 2;
+
+  void _louder(double delta) => unawaited(_controller.changeVolume(delta).then((_) {
+        final volume = _player.state.volume.round();
+        _showFeedback(volume == 0 ? Icons.volume_off_rounded : Icons.volume_up_rounded, '$volume%');
+      }));
+
+  void _brighten(int delta) => unawaited(_controller.changeBrightness(delta).then((value) {
+        _showFeedback(value < 0 ? Icons.brightness_5_rounded : Icons.brightness_7_rounded, tr('亮度 {0}', [value > 0 ? '+$value' : '$value']));
+      }));
+
+  /// Sliding a finger up or down: the side it started on, and how far it
+  /// has gone in steps not applied yet.
+  bool _dragLeft = false;
+  double _dragSteps = 0;
+
+  /// 锁定: taps, slides and the wheel do nothing but show the unlock
+  /// button, so a phone in a pocket or a hand on the screen changes nothing.
+  bool _locked = false;
+  /// Whether a finger last touched the player; the lock button is for
+  /// touch screens and full screen.
+  bool _touched = false;
+
+  void _toggleLock() {
+    setState(() => _locked = !_locked);
+    _showFeedback(_locked ? Icons.lock_rounded : Icons.lock_open_rounded, _locked ? tr('已锁定') : tr('已解锁'));
+    _show();
+  }
+
+  TapDownDetails? _doubleTapAt;
+
+  /// A finger's double tap on the left or right third skips back or ahead
+  /// 10 s, as in YouTube's phone app; the middle, and the mouse anywhere,
+  /// toggles full screen.
+  void _doubleTap() {
+    final at = _doubleTapAt;
+    final width = context.size?.width ?? 0;
+    final touch = at != null && (at.kind == PointerDeviceKind.touch || at.kind == PointerDeviceKind.stylus);
+    if (touch && width > 0 && (at.localPosition.dx < width / 3 || at.localPosition.dx > width * 2 / 3)) {
+      final ahead = at.localPosition.dx > width / 2;
+      unawaited(_controller.seekBy(Duration(seconds: ahead ? 10 : -10)));
+      _showFeedback(ahead ? Icons.fast_forward_rounded : Icons.fast_rewind_rounded, ahead ? tr('+10 秒') : tr('-10 秒'));
+      return;
+    }
+    unawaited(widget.state?.toggleFullscreen());
+  }
+
+  /// Phones only: keeps the screen in the way it is held now, landscape or
+  /// portrait, until unlocked.
+  static final _phone = Platform.isAndroid || Platform.isIOS;
+  bool _orientationLocked = false;
+
+  void _toggleOrientation() {
+    final landscape = MediaQuery.orientationOf(context) == Orientation.landscape;
+    setState(() => _orientationLocked = !_orientationLocked);
+    unawaited(SystemChrome.setPreferredOrientations(!_orientationLocked
+        ? const []
+        : landscape
+            ? const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
+            : const [DeviceOrientation.portraitUp]));
+    _showFeedback(Icons.screen_rotation_rounded, !_orientationLocked ? tr('屏幕方向跟随手机') : landscape ? tr('已锁定横屏') : tr('已锁定竖屏'));
+  }
+
+  /// A-B 循环 at the current position, saying what the press did.
+  Future<void> _markLoop() async {
+    await _controller.markLoop();
+    final a = _controller.loopA, b = _controller.loopB;
+    _showFeedback(
+      Icons.repeat_one_rounded,
+      b != null ? tr('循环 {0} – {1}', [formatPlaybackTime(a!), formatPlaybackTime(b)]) : a != null ? tr('A 点 {0}，再按一次设置 B 点', [formatPlaybackTime(a)]) : tr('已取消 A-B 循环'),
+    );
+  }
+
+  Widget _lockButton() => Positioned(
+        left: 12,
+        top: 0,
+        bottom: 0,
+        child: Center(
+          child: FadeTransition(
+            opacity: _animation,
+            child: IgnorePointer(
+              ignoring: _animation.isDismissed,
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                DecoratedBox(
+                  decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
+                  child: _IconButton(tooltip: _locked ? tr('解锁') : tr('锁定'), icon: _locked ? Icons.lock_rounded : Icons.lock_open_rounded, width: 40, onTap: _toggleLock),
+                ),
+                if (_phone && !_locked) ...[
+                  const SizedBox(height: 12),
+                  DecoratedBox(
+                    decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
+                    child: _IconButton(
+                      tooltip: _orientationLocked ? tr('屏幕方向跟随手机') : tr('锁定屏幕方向'),
+                      icon: _orientationLocked ? Icons.screen_lock_rotation_rounded : Icons.screen_rotation_rounded,
+                      active: _orientationLocked,
+                      width: 40,
+                      onTap: _toggleOrientation,
+                    ),
+                  ),
+                ],
+              ]),
+            ),
+          ),
+        ),
+      );
+
+  void _dragStart(DragStartDetails details) {
+    _dragLeft = _onLeft(details.localPosition);
+    _dragSteps = 0;
+  }
+
+  void _dragUpdate(DragUpdateDetails details) {
+    final height = context.size?.height ?? 0;
+    if (height <= 0) return;
+    // The player's full height is the whole range: 100 % volume, or 200
+    // brightness steps from -100 to 100.
+    _dragSteps -= (details.primaryDelta ?? 0) / height * (_dragLeft ? 200 : 100);
+    final whole = _dragSteps.truncate();
+    if (whole == 0) return;
+    _dragSteps -= whole;
+    _dragLeft ? _brighten(whole) : _louder(whole.toDouble());
   }
 
   /// Keeps the bars up while one of their menus is open.
@@ -294,21 +431,35 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             onHover: (_) => _show(),
             cursor: _animation.value == 0 ? SystemMouseCursors.none : MouseCursor.defer,
             child: Listener(
-              onPointerSignal: _onScroll,
+              onPointerSignal: (event) {
+                if (!_locked) _onScroll(event);
+              },
+              onPointerDown: (event) {
+                final touch = event.kind == PointerDeviceKind.touch || event.kind == PointerDeviceKind.stylus;
+                if (touch != _touched) setState(() => _touched = touch);
+              },
               child: Stack(fit: StackFit.expand, children: [
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    _focus.requestFocus();
-                    unawaited(_player.playOrPause());
-                    _show();
-                  },
-                  onDoubleTap: () => unawaited(widget.state?.toggleFullscreen()),
-                  // Hold for 2x, as on YouTube and in PiliNara.
-                  onLongPressStart: (_) => _holdSpeed(true),
-                  onLongPressEnd: (_) => _holdSpeed(false),
-                  onLongPressCancel: () => _holdSpeed(false),
-                ),
+                if (_locked)
+                  GestureDetector(behavior: HitTestBehavior.opaque, onTap: _show)
+                else
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      _focus.requestFocus();
+                      unawaited(_player.playOrPause());
+                      _show();
+                    },
+                    onDoubleTapDown: (details) => _doubleTapAt = details,
+                    onDoubleTap: _doubleTap,
+                    // A finger sliding up or down, as in phone players.
+                    supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus},
+                    onVerticalDragStart: _dragStart,
+                    onVerticalDragUpdate: _dragUpdate,
+                    // Hold for 2x, as on YouTube and in PiliNara.
+                    onLongPressStart: (_) => _holdSpeed(true),
+                    onLongPressEnd: (_) => _holdSpeed(false),
+                    onLongPressCancel: () => _holdSpeed(false),
+                  ),
                 _buffering(),
                 if (_feedback case (final icon, final text)) Center(child: IgnorePointer(child: _FeedbackBubble(icon: icon, text: text))),
                 if (_controller.showStats) Positioned(left: 12, top: fullscreen ? 64 : 52, child: PlayerStats(player: _player)),
@@ -324,8 +475,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       ),
                     ),
                   ),
-                Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _topBar(context, fullscreen))),
-                Positioned(left: 0, right: 0, bottom: 0, child: _bar(top: false, child: _bottomBar(context, fullscreen))),
+                if (!_locked) ...[
+                  Positioned(left: 0, right: 0, top: 0, child: _bar(top: true, child: _topBar(context, fullscreen))),
+                  Positioned(left: 0, right: 0, bottom: 0, child: _bar(top: false, child: _bottomBar(context, fullscreen))),
+                ],
+                if (_locked || _touched || fullscreen) _lockButton(),
               ]),
             ),
           ),
@@ -469,6 +623,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     // Built here, once per rebuild of the bar, not on every position event.
     final segments = [
       for (final s in _controller.segments) ProgressSegment(s.start, s.end, _segmentColors[s.category] ?? const Color(0xFF00D400)),
+      // The A-B loop, or a sliver at A while B is still to be set.
+      if (_controller.loopA case final a?) ProgressSegment(a, _controller.loopB ?? a + const Duration(seconds: 1), const Color(0xCCFFFFFF)),
     ];
     final chapterStarts = [for (final c in _chapters) c.start];
     final width = fullscreen ? 42.0 : 35.0;
@@ -647,6 +803,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           PanelToggle(label: tr('空降助手'), icon: Icons.shield_outlined, value: settings.sponsorBlock, onChanged: (_) => unawaited(_controller.toggleSponsorBlock())),
           PanelToggle(label: tr('播放信息'), icon: Icons.info_outline_rounded, value: _controller.showStats, onChanged: (_) => _controller.toggleStats()),
           PanelToggle(label: tr('镜像翻转'), icon: Icons.flip_rounded, value: _transform.mirrored, onChanged: (v) => unawaited(_transform.setMirrored(v))),
+          PanelToggle(
+            label: _controller.loopB != null ? tr('A-B 循环中') : _controller.loopA != null ? tr('设置 B 点') : tr('A-B 循环'),
+            icon: Icons.repeat_one_rounded,
+            value: _controller.loopA != null,
+            onChanged: (_) => unawaited(_markLoop()),
+          ),
           PanelToggle(label: tr('应用内小窗'), icon: Icons.picture_in_picture_rounded, value: false, onChanged: (_) => closeThen(() async {
             if (isFullscreen(context)) await widget.state?.exitFullscreen();
             _controller.enterMini();

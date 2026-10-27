@@ -626,7 +626,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('稍后观看 自动移除')),
         SettingEntry(tr('字幕设置'), (context) => NormalItem(
               title: tr('字幕设置'),
-              subtitle: '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label} · ${settings.subtitleScale.toStringAsFixed(1)}×',
+              subtitle: '${settings.subtitleMode.label} · ${settings.subtitleOriginal ? tr('视频原语言') : settings.subtitleLanguage.label} · ${settings.subtitleScale.toStringAsFixed(1)}×',
               leading: _icon(Icons.subtitles_outlined),
               onTap: () => openSubtitleSettings(context, controller),
             ), subtitle: tr('自动启用字幕 字幕语言 字幕大小')),

@@ -118,6 +118,13 @@ class AppController extends ChangeNotifier {
   /// Startup failure; the setup screen shows it with a retry button.
   String? error;
   String? playbackError;
+  /// Whether [playbackError] is a live stream that has not started yet and
+  /// is retried by itself.
+  bool get waitingForStart => playbackError != null && _waitingForStart;
+  bool _waitingForStart = false;
+
+  /// When the stream being played is scheduled to start, if it has not.
+  DateTime? get scheduledStart => playing?.scheduledStart ?? details?.scheduledStart;
 
   /// Favorites, playlists, followed channels and progress; set once ready.
   LibraryController? library;
@@ -277,7 +284,9 @@ class AppController extends ChangeNotifier {
   /// The servers tried for the video being opened, and the 429 YouTube
   /// answered it with, which lets both be tried whatever 播放来源 says.
   final _relaysTried = <RelayKind>{};
-  PlaybackFailure? _rateLimited;
+  /// What YouTube said when it would not play the video, so Piped and
+  /// Invidious stand in for it.
+  PlaybackFailure? _youtubeRefused;
   late final _piped = PipedStreams(_http);
   late final _invidious = InvidiousStreams(_http);
 
@@ -408,6 +417,8 @@ class AppController extends ChangeNotifier {
   String? _unrelayed;
   Timer? _stallTimer;
   Timer? _recoveryTimer;
+  Timer? _startTimer;
+  int _startAttempts = 0;
   bool _recovering = false;
   bool _shutDown = false;
   late final _sponsorBlock = SponsorBlock(_http);
@@ -1255,10 +1266,14 @@ class AppController extends ChangeNotifier {
   /// Opens [item] on the watch page; [at] is where to start, else where
   /// it was left off. [keepMini] plays it in the mini player when that is
   /// where the last video was (the queue moving on by itself).
-  Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at, bool keepMini = false}) async {
+  Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at, bool keepMini = false, bool retryingStart = false}) async {
     final player = this.player;
     if (player == null) return;
-    if (mini && playing?.id == item.id && at == null) return expandMini();
+    if (mini && playing?.id == item.id && at == null && !retryingStart) return expandMini();
+    _startTimer?.cancel();
+    if (!retryingStart) _startAttempts = 0;
+    // A loop belongs to the video it was set in.
+    if (playing?.id != item.id) unawaited(clearLoop());
     if (playing?.id != item.id) {
       unawaited(cast.stop());
       if (playing case final left?) {
@@ -1282,7 +1297,11 @@ class AppController extends ChangeNotifier {
       playing = item;
       mini = keepMini && mini;
       if (from != null) queue = List.unmodifiable(from);
-      playbackError = null;
+      // A stream being waited for keeps saying so until it plays.
+      if (!retryingStart) {
+        playbackError = null;
+        _waitingForStart = false;
+      }
       details = null;
       loadingDetails = true;
       replayChat = const [];
@@ -1473,7 +1492,7 @@ class AppController extends ChangeNotifier {
       if (resolved && piped) {
         _recentErrors.clear();
         _relaysTried.clear();
-        _rateLimited = null;
+        _youtubeRefused = null;
       }
       // Piped or Invidious first, as chosen in 播放来源.
       if (piped) {
@@ -1489,7 +1508,7 @@ class AppController extends ChangeNotifier {
           final failure = PlaybackFailure.classify(['$e']);
           if (!failure.retryable) {
             // libmpv's ytdl_hook would ask YouTube again and fail the same way.
-            if (failure.kind == FailureKind.rateLimited) return await _fallBackFromRateLimit(item, serial, failure, start: start, play: play);
+            if (_serversMayHelp(failure.kind)) return await _fallBack(item, serial, failure, start: start, play: play);
             if (serial == _playSerial) _fail(item, failure);
             return false;
           }
@@ -1577,7 +1596,7 @@ class AppController extends ChangeNotifier {
       if (serial != _playSerial) return;
       final first = local.preferredSubtitle(settings.subtitleLanguage.mpvLangs.split(','));
       await platform.command(['sub-add', first.path, 'select']);
-      await _syncMainSubtitle();
+      await syncMainSubtitle();
       for (final other in local.subtitles.where((f) => f != first)) {
         await platform.command(['sub-add', other.path, 'auto']);
       }
@@ -1588,12 +1607,14 @@ class AppController extends ChangeNotifier {
 
   /// The server network to try next for [item], or null for YouTube.
   /// Normally the one 播放来源 names, and only without subtitles, which
-  /// these servers do not give libmpv. After YouTube answered 429 both are
-  /// tried (that one first), subtitles or not, since playing beats failing.
+  /// these servers do not give libmpv. After YouTube refused the video
+  /// (429, a bot check, a challenge yt-dlp could not solve, or an error
+  /// that remained after resolving again) both are tried (that one first),
+  /// subtitles or not, since playing beats failing.
   RelayKind? _nextRelay(VideoItem item) {
     if (item.isLive) return null;
     final preferred = settings.playbackSource.relay;
-    final candidates = _rateLimited != null
+    final candidates = _youtubeRefused != null
         ? [if (preferred != null) preferred, ...RelayKind.values.where((k) => k != preferred)]
         : [if (preferred != null && settings.subtitleMode == SubtitleMode.off) preferred];
     return candidates.where((k) => !_relaysTried.contains(k)).firstOrNull;
@@ -1626,11 +1647,18 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  /// YouTube answered 429 for [item]: plays it from the Piped or Invidious
+  /// Whether Piped or Invidious may play what YouTube would not. Not for
+  /// what the video itself is (private, upcoming, no allowed format) or for
+  /// a network that is down.
+  static bool _serversMayHelp(FailureKind kind) =>
+      const {FailureKind.rateLimited, FailureKind.botCheck, FailureKind.challenge, FailureKind.forbidden, FailureKind.unknown}.contains(kind);
+
+  /// YouTube would not play [item]: plays it from the Piped or Invidious
   /// server not yet tried, and only when there is none shows the error.
-  Future<bool> _fallBackFromRateLimit(VideoItem item, int serial, PlaybackFailure failure, {Duration? start, bool play = true}) async {
-    _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
-    _rateLimited = failure;
+  Future<bool> _fallBack(VideoItem item, int serial, PlaybackFailure failure, {Duration? start, bool play = true}) async {
+    if (failure.kind == FailureKind.rateLimited) _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
+    if (_youtubeRefused == null) logInfo('YouTube would not play ${item.id} (${failure.kind.name}); trying Piped and Invidious');
+    _youtubeRefused = failure;
     if (await _openViaRelays(item, serial, start: start, play: play)) return true;
     if (serial == _playSerial) _fail(item, PlaybackFailure(failure.kind, failure.detail, tried: [for (final k in _relaysTried) k == RelayKind.piped ? 'Piped' : 'Invidious']));
     return false;
@@ -1670,9 +1698,31 @@ class AppController extends ChangeNotifier {
           _updateCheckedForChallenge = true;
           unawaited(checkUpdates());
         }
+      case FailureKind.upcoming:
+        _waitForStart(item);
       default:
     }
-    _update(() => playbackError = failure.message);
+    _update(() {
+      playbackError = failure.message;
+      _waitingForStart = failure.kind == FailureKind.upcoming;
+    });
+  }
+
+  /// Opens [item] again once it may have started: at its scheduled time
+  /// when that is still ahead, otherwise every half minute, then less often.
+  void _waitForStart(VideoItem item) {
+    _startTimer?.cancel();
+    final serial = _playSerial;
+    final scheduled = (playing?.id == item.id ? scheduledStart : item.scheduledStart)?.difference(DateTime.now());
+    final delay = scheduled != null && scheduled > const Duration(minutes: 1)
+        ? scheduled + const Duration(seconds: 15)
+        : Duration(seconds: min(30 * (1 << min(_startAttempts, 2)), 120));
+    _startAttempts++;
+    logInfo('${item.id} has not started, opening it again in ${delay.inSeconds} s');
+    _startTimer = Timer(delay, () {
+      if (_disposed || serial != _playSerial || playing?.id != item.id || !waitingForStart) return;
+      unawaited(play(item, keepMini: true, retryingStart: true));
+    });
   }
 
   /// Reopens the current video where it stopped after the network failed,
@@ -1745,20 +1795,29 @@ class AppController extends ChangeNotifier {
       if (main == id) await platform.setProperty('sid', '${added['id']}');
       if (second == id) await platform.setProperty('secondary-sid', '${added['id']}');
       await platform.command(['sub-remove', id]);
-      if (main == id) await _syncMainSubtitle();
+      if (main == id) await syncMainSubtitle();
       logInfo('Subtitle translation finished; track $id replaced by ${added['id']}');
     } catch (e) {
       logInfo('Could not reload the finished subtitle translation: $e');
     }
   }
 
-  /// Tells media_kit which main subtitle mpv shows. It only learns of one
-  /// chosen through its own setSubtitleTrack, not of one selected by
-  /// sub-add or a sid change, and the subtitle panel reads it.
-  Future<void> _syncMainSubtitle() async {
+  /// Tells media_kit which main subtitle mpv shows, and this controller
+  /// which second one. media_kit only learns of one chosen through its own
+  /// setSubtitleTrack, not of one mpv picked as the file loaded, selected
+  /// by sub-add or a sid change, and the subtitle panel reads both.
+  Future<void> syncMainSubtitle() async {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return;
+    try {
+      final second = await platform.getProperty('secondary-sid');
+      if (secondarySubtitle == null && second.isNotEmpty && second != 'no') {
+        final title = player.state.tracks.subtitle.where((t) => t.id == second).firstOrNull?.title;
+        final option = details?.subtitles.where((o) => o.label == title).firstOrNull;
+        if (option != null) _update(() => secondarySubtitle = option);
+      }
+    } catch (_) {}
     try {
       final sid = await platform.getProperty('sid');
       if (sid.isEmpty || sid == player.state.track.subtitle.id) return;
@@ -1858,7 +1917,7 @@ class AppController extends ChangeNotifier {
         final file = await _subtitleFile(option);
         if (this.player != player) return;
         await platform.command(['sub-add', file, 'select', option.label, option.language]);
-        await _syncMainSubtitle();
+        await syncMainSubtitle();
       }
     } catch (e) {
       logError('Could not load subtitles ${option.language}', e);
@@ -1874,20 +1933,23 @@ class AppController extends ChangeNotifier {
     if (player == null || details.subtitles.isEmpty || settings.subtitleMode == SubtitleMode.off) return;
     if (_secondaryAutoFor == item.id || _openedLocal == item.id) return;
     bool shown(SubtitleTrack t) => t.id != 'no' && t.id != 'auto';
-    if (!shown(player.state.track.subtitle)) {
-      try {
-        await player.stream.track.firstWhere((t) => shown(t.subtitle)).timeout(const Duration(seconds: 30));
-      } on TimeoutException {
-        return;
-      }
+    // mpv picks the track itself as the file loads and does not say so;
+    // ask it until a subtitle is on or half a minute has passed.
+    for (var i = 0; i < 30 && !shown(player.state.track.subtitle); i++) {
+      await syncMainSubtitle();
+      if (serial != _playSerial || this.player != player) return;
+      if (shown(player.state.track.subtitle)) break;
+      await player.stream.track.firstWhere((t) => shown(t.subtitle)).timeout(const Duration(seconds: 1), onTimeout: () => player.state.track);
     }
+    if (!shown(player.state.track.subtitle)) return;
     if (serial != _playSerial || this.player != player || secondarySubtitle != null || _secondaryAutoFor == item.id) return;
     _secondaryAutoFor = item.id;
     var mainTitle = player.state.track.subtitle.title;
     var mainLanguage = player.state.track.subtitle.language;
     final first = settings.subtitleLanguage.translation;
-    if (!speaks(mainLanguage, first)) {
-      final option = subtitleIn(details.subtitles, first);
+    final spoken = settings.subtitleOriginal ? originalSubtitle(details.subtitles, language: details.language) : null;
+    if (spoken != null ? spoken.label != mainTitle : !speaks(mainLanguage, first)) {
+      final option = spoken ?? subtitleIn(details.subtitles, first);
       if (option != null && option.label != mainTitle) {
         logInfo('Showing ${option.language} (${option.kind.name}) as the main subtitle');
         await showSubtitle(option);
@@ -1900,7 +1962,7 @@ class AppController extends ChangeNotifier {
     final target = TranslationLanguage.maybeByCode(wanted);
     final SubtitleOption? option;
     if (wanted == PlayerSettings.originalSubtitle) {
-      option = originalSubtitle(details.subtitles);
+      option = originalSubtitle(details.subtitles, language: details.language);
       if (option == null || sameLanguage(option.language, mainLanguage)) return;
     } else {
       option = target == null ? null : subtitleIn(details.subtitles, target);
@@ -1909,6 +1971,42 @@ class AppController extends ChangeNotifier {
     if (option.label == mainTitle || secondarySubtitle != null) return;
     logInfo('Showing ${option.language} (${option.kind.name}) as the second subtitle');
     await setSecondarySubtitle(option);
+  }
+
+  /// Keeps what was just chosen in the 字幕 panel for the videos after this
+  /// one: the first subtitle ([primary]) on or off and in which language,
+  /// or the second. [option] null is 关闭. Saved without a notice.
+  Future<void> rememberSubtitleChoice({required bool primary, SubtitleOption? option}) async {
+    final details = this.details;
+    final spoken = details == null ? null : originalSubtitle(details.subtitles, language: details.language);
+    final original = option != null && spoken != null && option.label == spoken.label;
+    PlayerSettings next;
+    if (primary) {
+      if (option == null) {
+        next = settings.copyWith(subtitleMode: SubtitleMode.off);
+      } else {
+        final language = SubtitleLanguage.values.where((l) => l != SubtitleLanguage.auto && speaks(option.language, l.translation)).firstOrNull;
+        // Uploaded subtitles alone would miss the automatic one chosen.
+        final mode = settings.subtitleMode == SubtitleMode.manual && option.kind == SubtitleKind.uploaded ? SubtitleMode.manual : SubtitleMode.always;
+        next = settings.copyWith(
+          subtitleMode: mode,
+          subtitleOriginal: original,
+          subtitleLanguage: original ? null : language == null || language == settings.subtitleLanguage.resolved ? null : language,
+        );
+      }
+    } else {
+      final target = option == null ? null : TranslationLanguage.all.where((l) => speaks(option.language, l)).firstOrNull;
+      next = settings.copyWith(
+        secondarySubtitleLanguage: option == null ? '' : original ? PlayerSettings.originalSubtitle : target?.code,
+        // A second subtitle needs the first one on to come back by itself.
+        subtitleMode: option != null && settings.subtitleMode == SubtitleMode.off ? SubtitleMode.always : null,
+      );
+    }
+    if (jsonEncode(next.toJson()) == jsonEncode(settings.toJson())) return;
+    final player = this.player;
+    if (player != null) await PlayerOptionApplicator.apply(player, next, previous: settings);
+    _update(() => settings = next);
+    await _settingsStore?.save(next);
   }
 
   /// Shows [option] (null: none) above the main subtitle.
@@ -1942,6 +2040,12 @@ class AppController extends ChangeNotifier {
       player.stream.position.listen((position) {
         if (_tracking == null) return;
         if (position > Duration.zero) {
+          if (waitingForStart) {
+            _update(() {
+              _waitingForStart = false;
+              playbackError = null;
+            });
+          }
           if (_recovery.observeProgress(position,
             playing: player.state.playing,
             buffering: player.state.buffering,
@@ -2022,21 +2126,17 @@ class AppController extends ChangeNotifier {
       final failure = PlaybackFailure.classify(viaRelay ? [message] : [message, ..._recentErrors]);
       final position = _lastPosition > Duration.zero ? _lastPosition : null;
       if (viaRelay) {
-        if (!failure.retryable && failure.kind != FailureKind.rateLimited) {
+        if (!failure.retryable && !_serversMayHelp(failure.kind)) {
           _fail(item, failure);
           return;
         }
-        final limited = _rateLimited;
+        final limited = _youtubeRefused;
         logInfo('Piped or Invidious address did not play ($message); ${limited != null ? 'trying the next server' : 'connecting to YouTube directly'}');
-        unawaited(limited != null ? _fallBackFromRateLimit(item, _playSerial, limited, start: position) : _open(item, _playSerial, start: position, piped: false));
-        return;
-      }
-      if (failure.kind == FailureKind.rateLimited) {
-        unawaited(_fallBackFromRateLimit(item, _playSerial, failure, start: position));
+        unawaited(limited != null ? _fallBack(item, _playSerial, limited, start: position) : _open(item, _playSerial, start: position, piped: false));
         return;
       }
       if (!failure.retryable) {
-        _fail(item, failure);
+        _serversMayHelp(failure.kind) ? unawaited(_fallBack(item, _playSerial, failure, start: position)) : _fail(item, failure);
         return;
       }
       if (_openedResolved == item.id) {
@@ -2048,7 +2148,8 @@ class AppController extends ChangeNotifier {
         unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
         return;
       }
-      _fail(item, failure);
+      // Resolved again and still refused: the servers are the last way.
+      _serversMayHelp(failure.kind) ? unawaited(_fallBack(item, _playSerial, failure, start: position)) : _fail(item, failure);
     } else if (PlaybackRecovery.isNetworkError(message)) {
       final failure = PlaybackFailure.classify([message, ..._recentErrors]);
       if (failure.retryable) {
@@ -2268,9 +2369,76 @@ class AppController extends ChangeNotifier {
     await player.seek(target);
   }
 
+  /// A-B 循环: where the loop starts, then where it ends; mpv plays the
+  /// part between them again and again.
+  Duration? loopA;
+  Duration? loopB;
+
+  /// Steps the A-B loop on at the current position: the first press marks
+  /// A, the second B and starts the loop, the third clears it.
+  Future<void> markLoop() async {
+    final player = this.player;
+    if (player == null) return;
+    final now = player.state.position;
+    if (loopA == null || loopB != null) {
+      final clearing = loopB != null;
+      _update(() {
+        loopA = clearing ? null : now;
+        loopB = null;
+      });
+      await _applyLoop();
+      return;
+    }
+    // B before A swaps them, so the loop still runs forwards.
+    final a = loopA!;
+    _update(() {
+      loopA = now < a ? now : a;
+      loopB = now < a ? a : now;
+    });
+    if (loopB! - loopA! < const Duration(milliseconds: 500)) {
+      _update(() => loopB = null);
+      return;
+    }
+    await _applyLoop();
+    await player.seek(loopA!);
+  }
+
+  Future<void> clearLoop() async {
+    if (loopA == null && loopB == null) return;
+    _update(() {
+      loopA = null;
+      loopB = null;
+    });
+    await _applyLoop();
+  }
+
+  Future<void> _applyLoop() async {
+    final platform = player?.platform;
+    if (platform is! NativePlayer) return;
+    String at(Duration? d) => d == null || loopB == null ? 'no' : (d.inMilliseconds / 1000).toStringAsFixed(3);
+    await platform.setProperty('ab-loop-a', at(loopA));
+    await platform.setProperty('ab-loop-b', at(loopB));
+  }
+
   Future<void> changeVolume(double delta) async {
     final player = this.player;
     if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, settings.volumeMax.toDouble()).toDouble());
+  }
+
+  /// The video's brightness, -100 to 100, as 画面与音画同步调节 keeps it.
+  int get brightness => settings.picture['brightness'] ?? 0;
+  Timer? _brightnessSave;
+
+  /// Brightens or darkens the video by [delta] and returns the new value;
+  /// saved once the changes pause, not at every wheel notch.
+  Future<int> changeBrightness(int delta) async {
+    final value = (brightness + delta).clamp(-100, 100);
+    _update(() => settings = settings.copyWith(picture: {...settings.picture, 'brightness': value}));
+    _brightnessSave?.cancel();
+    _brightnessSave = Timer(const Duration(seconds: 1), () => unawaited(_settingsStore?.save(settings)));
+    final platform = player?.platform;
+    if (platform is NativePlayer) await platform.setProperty('brightness', '$value');
+    return value;
   }
 
   Future<void> toggleMute() async {
@@ -2389,6 +2557,8 @@ class AppController extends ChangeNotifier {
           details = loaded;
           if (preferences.showRelated) related = _relatedTo(item, loaded.title.isNotEmpty ? loaded.title : item.title);
         });
+        // Once yt-dlp names the start time, wait for it rather than poll.
+        if (waitingForStart && item.scheduledStart == null && loaded.scheduledStart != null) _waitForStart(item);
         unawaited(_localizeDetails(item.id, serial));
         unawaited(_autoSubtitles(item, loaded, serial));
       }
@@ -2451,12 +2621,14 @@ class AppController extends ChangeNotifier {
     _saveProgress(now: true);
     _tracking = null;
     _recoveryTimer?.cancel();
+    _startTimer?.cancel();
     _recovery.reset();
     ++_playSerial;
     _update(() {
       playing = null;
       mini = false;
       playbackError = null;
+      _waitingForStart = false;
     });
     _unload();
   }
@@ -3552,6 +3724,7 @@ class AppController extends ChangeNotifier {
     chatMessages.dispose();
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
+    _startTimer?.cancel();
     _sleepTimer?.cancel();
     _dropTimer?.cancel();
     _outputSize?.dispose();

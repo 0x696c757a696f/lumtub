@@ -2150,6 +2150,9 @@ class AppController extends ChangeNotifier {
         final text = log.text.trim();
         final subtitle = isSubtitleError(text) || log.prefix == 'sub' || log.prefix.startsWith('sub/');
         if ((log.level == 'error' || log.prefix == 'ytdl_hook') && _recentErrors.length < 20 && !subtitle && !isUnattributedHttpError(text)) _recentErrors.add(text);
+        // curl gave up on a stream; when it was the video's, the sound
+        // plays on over the last picture.
+        if (log.prefix == 'curl' && text.startsWith('transfer failed')) _streamLostIn = _playSerial;
         if (_mpvLogLines >= 200) return;
         _mpvLogLines++;
         logInfo('mpv [${log.prefix}] ${log.level}: $text');
@@ -3736,6 +3739,12 @@ class AppController extends ChangeNotifier {
 
   DateTime _lastPictureFix = DateTime(2000);
 
+  /// The open in which libmpv's curl gave up on a stream.
+  int? _streamLostIn;
+
+  /// The open in which the decoder was restarted for a stalled picture.
+  int? _pictureRestartedIn;
+
   /// Brings back a picture that stopped while the sound plays on: when no
   /// frame was drawn in 10 s, the decoder is restarted from here; when
   /// frames were drawn but none reached the screen, the texture is
@@ -3749,9 +3758,19 @@ class AppController extends ChangeNotifier {
     final drawn = int.parse(match[1]!), shown = int.parse(match[2]!);
     if (drawn > 0 && shown > 0) return;
     _lastPictureFix = DateTime.now();
+    // A video stream that broke off, or a restart that brought nothing
+    // back, needs the video opened again at the same place.
+    if (drawn == 0 && (_streamLostIn == _playSerial || _pictureRestartedIn == _playSerial)) {
+      logInfo('Picture stalled while playing ($frames); the video stream is gone, reopening');
+      _pictureRestartedIn = null;
+      _streamLostIn = null;
+      unawaited(_recover('The video stream stopped while the sound played on'));
+      return;
+    }
     logInfo('Picture stalled while playing ($frames); ${drawn == 0 ? 'restarting the decoder' : 'registering the texture again'}');
     try {
       if (drawn == 0) {
+        _pictureRestartedIn = _playSerial;
         await platform.command(['seek', '0', 'relative+exact']);
       } else {
         await outputSize.refresh();

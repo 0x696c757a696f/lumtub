@@ -88,7 +88,7 @@ class PlayerOptionApplicator {
     'correct-downscaling': 'no',
     'linear-downscaling': 'no',
     'sigmoid-upscaling': 'no',
-    'dither': 'no',
+    // Dithering stays: it costs little and without it dark gradients band.
     'deband': 'no',
     'interpolation': 'no',
   };

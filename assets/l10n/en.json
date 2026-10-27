@@ -2396,5 +2396,17 @@
   "已锁定": "Locked",
   "已解锁": "Unlocked",
   "锁定": "Lock",
-  "解锁": "Unlock"
+  "解锁": "Unlock",
+  "+10 秒": "+10 s",
+  "-10 秒": "-10 s",
+  "屏幕方向跟随手机": "Rotate with the phone",
+  "已锁定横屏": "Locked to landscape",
+  "已锁定竖屏": "Locked to portrait",
+  "锁定屏幕方向": "Lock screen rotation",
+  "A-B 循环中": "A-B looping",
+  "设置 B 点": "Set point B",
+  "A-B 循环": "A-B loop",
+  "循环 {0} – {1}": "Looping {0} – {1}",
+  "A 点 {0}，再按一次设置 B 点": "Point A {0}; press again to set point B",
+  "已取消 A-B 循环": "A-B loop off"
 }

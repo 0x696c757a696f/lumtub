@@ -320,4 +320,35 @@ void main() {
     await tester.pump(const Duration(seconds: 10));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('a finger\'s double tap on the sides skips 10 s', (tester) async {
+    await pump(tester);
+    final rect = tester.getRect(find.byType(PlayerControls));
+    Future<void> doubleTap(Offset at) async {
+      await tester.tapAt(at, kind: PointerDeviceKind.touch);
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tapAt(at, kind: PointerDeviceKind.touch);
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    await doubleTap(rect.centerRight - const Offset(60, 0));
+    expect(player.seeks.last, const Duration(minutes: 1, seconds: 10));
+    await doubleTap(rect.centerLeft + const Offset(60, 0));
+    expect(player.seeks.last, const Duration(minutes: 1));
+    await tester.pump(const Duration(seconds: 10));
+    expect(tester.takeException(), isNull);
+  });
+
+  test('A-B loop: A, then B, then off; B before A swaps them', () async {
+    player.state = player.state.copyWith(position: const Duration(seconds: 30));
+    await controller.markLoop();
+    expect(controller.loopA, const Duration(seconds: 30));
+    expect(controller.loopB, isNull);
+    player.state = player.state.copyWith(position: const Duration(seconds: 10));
+    await controller.markLoop();
+    expect((controller.loopA, controller.loopB), (const Duration(seconds: 10), const Duration(seconds: 30)));
+    expect(player.seeks.last, const Duration(seconds: 10));
+    await controller.markLoop();
+    expect((controller.loopA, controller.loopB), (null, null));
+  });
 }

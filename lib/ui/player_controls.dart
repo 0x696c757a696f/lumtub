@@ -12,6 +12,7 @@
 // mouse handling (hover to show, wheel for volume) is kept.
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/gestures.dart';
@@ -165,6 +166,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     for (final subscription in _subscriptions) {
       unawaited(subscription.cancel());
     }
+    if (_orientationLocked) unawaited(SystemChrome.setPreferredOrientations(const []));
     _hideTimer?.cancel();
     _feedbackTimer?.cancel();
     _animation.dispose();
@@ -304,6 +306,50 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     _show();
   }
 
+  TapDownDetails? _doubleTapAt;
+
+  /// A finger's double tap on the left or right third skips back or ahead
+  /// 10 s, as in YouTube's phone app; the middle, and the mouse anywhere,
+  /// toggles full screen.
+  void _doubleTap() {
+    final at = _doubleTapAt;
+    final width = context.size?.width ?? 0;
+    final touch = at != null && (at.kind == PointerDeviceKind.touch || at.kind == PointerDeviceKind.stylus);
+    if (touch && width > 0 && (at.localPosition.dx < width / 3 || at.localPosition.dx > width * 2 / 3)) {
+      final ahead = at.localPosition.dx > width / 2;
+      unawaited(_controller.seekBy(Duration(seconds: ahead ? 10 : -10)));
+      _showFeedback(ahead ? Icons.fast_forward_rounded : Icons.fast_rewind_rounded, ahead ? tr('+10 秒') : tr('-10 秒'));
+      return;
+    }
+    unawaited(widget.state?.toggleFullscreen());
+  }
+
+  /// Phones only: keeps the screen in the way it is held now, landscape or
+  /// portrait, until unlocked.
+  static final _phone = Platform.isAndroid || Platform.isIOS;
+  bool _orientationLocked = false;
+
+  void _toggleOrientation() {
+    final landscape = MediaQuery.orientationOf(context) == Orientation.landscape;
+    setState(() => _orientationLocked = !_orientationLocked);
+    unawaited(SystemChrome.setPreferredOrientations(!_orientationLocked
+        ? const []
+        : landscape
+            ? const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
+            : const [DeviceOrientation.portraitUp]));
+    _showFeedback(Icons.screen_rotation_rounded, !_orientationLocked ? tr('屏幕方向跟随手机') : landscape ? tr('已锁定横屏') : tr('已锁定竖屏'));
+  }
+
+  /// A-B 循环 at the current position, saying what the press did.
+  Future<void> _markLoop() async {
+    await _controller.markLoop();
+    final a = _controller.loopA, b = _controller.loopB;
+    _showFeedback(
+      Icons.repeat_one_rounded,
+      b != null ? tr('循环 {0} – {1}', [formatPlaybackTime(a!), formatPlaybackTime(b)]) : a != null ? tr('A 点 {0}，再按一次设置 B 点', [formatPlaybackTime(a)]) : tr('已取消 A-B 循环'),
+    );
+  }
+
   Widget _lockButton() => Positioned(
         left: 12,
         top: 0,
@@ -313,10 +359,25 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             opacity: _animation,
             child: IgnorePointer(
               ignoring: _animation.isDismissed,
-              child: DecoratedBox(
-                decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
-                child: _IconButton(tooltip: _locked ? tr('解锁') : tr('锁定'), icon: _locked ? Icons.lock_rounded : Icons.lock_open_rounded, width: 40, onTap: _toggleLock),
-              ),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                DecoratedBox(
+                  decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
+                  child: _IconButton(tooltip: _locked ? tr('解锁') : tr('锁定'), icon: _locked ? Icons.lock_rounded : Icons.lock_open_rounded, width: 40, onTap: _toggleLock),
+                ),
+                if (_phone && !_locked) ...[
+                  const SizedBox(height: 12),
+                  DecoratedBox(
+                    decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
+                    child: _IconButton(
+                      tooltip: _orientationLocked ? tr('屏幕方向跟随手机') : tr('锁定屏幕方向'),
+                      icon: _orientationLocked ? Icons.screen_lock_rotation_rounded : Icons.screen_rotation_rounded,
+                      active: _orientationLocked,
+                      width: 40,
+                      onTap: _toggleOrientation,
+                    ),
+                  ),
+                ],
+              ]),
             ),
           ),
         ),
@@ -388,7 +449,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       unawaited(_player.playOrPause());
                       _show();
                     },
-                    onDoubleTap: () => unawaited(widget.state?.toggleFullscreen()),
+                    onDoubleTapDown: (details) => _doubleTapAt = details,
+                    onDoubleTap: _doubleTap,
                     // A finger sliding up or down, as in phone players.
                     supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus},
                     onVerticalDragStart: _dragStart,
@@ -561,6 +623,8 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     // Built here, once per rebuild of the bar, not on every position event.
     final segments = [
       for (final s in _controller.segments) ProgressSegment(s.start, s.end, _segmentColors[s.category] ?? const Color(0xFF00D400)),
+      // The A-B loop, or a sliver at A while B is still to be set.
+      if (_controller.loopA case final a?) ProgressSegment(a, _controller.loopB ?? a + const Duration(seconds: 1), const Color(0xCCFFFFFF)),
     ];
     final chapterStarts = [for (final c in _chapters) c.start];
     final width = fullscreen ? 42.0 : 35.0;
@@ -739,6 +803,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           PanelToggle(label: tr('空降助手'), icon: Icons.shield_outlined, value: settings.sponsorBlock, onChanged: (_) => unawaited(_controller.toggleSponsorBlock())),
           PanelToggle(label: tr('播放信息'), icon: Icons.info_outline_rounded, value: _controller.showStats, onChanged: (_) => _controller.toggleStats()),
           PanelToggle(label: tr('镜像翻转'), icon: Icons.flip_rounded, value: _transform.mirrored, onChanged: (v) => unawaited(_transform.setMirrored(v))),
+          PanelToggle(
+            label: _controller.loopB != null ? tr('A-B 循环中') : _controller.loopA != null ? tr('设置 B 点') : tr('A-B 循环'),
+            icon: Icons.repeat_one_rounded,
+            value: _controller.loopA != null,
+            onChanged: (_) => unawaited(_markLoop()),
+          ),
           PanelToggle(label: tr('应用内小窗'), icon: Icons.picture_in_picture_rounded, value: false, onChanged: (_) => closeThen(() async {
             if (isFullscreen(context)) await widget.state?.exitFullscreen();
             _controller.enterMini();

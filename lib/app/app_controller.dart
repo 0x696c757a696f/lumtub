@@ -1270,6 +1270,8 @@ class AppController extends ChangeNotifier {
     if (mini && playing?.id == item.id && at == null && !retryingStart) return expandMini();
     _startTimer?.cancel();
     if (!retryingStart) _startAttempts = 0;
+    // A loop belongs to the video it was set in.
+    if (playing?.id != item.id) unawaited(clearLoop());
     if (playing?.id != item.id) {
       unawaited(cast.stop());
       if (playing case final left?) {
@@ -2309,6 +2311,57 @@ class AppController extends ChangeNotifier {
     if (target < Duration.zero) target = Duration.zero;
     if (duration > Duration.zero && target > duration) target = duration;
     await player.seek(target);
+  }
+
+  /// A-B 循环: where the loop starts, then where it ends; mpv plays the
+  /// part between them again and again.
+  Duration? loopA;
+  Duration? loopB;
+
+  /// Steps the A-B loop on at the current position: the first press marks
+  /// A, the second B and starts the loop, the third clears it.
+  Future<void> markLoop() async {
+    final player = this.player;
+    if (player == null) return;
+    final now = player.state.position;
+    if (loopA == null || loopB != null) {
+      final clearing = loopB != null;
+      _update(() {
+        loopA = clearing ? null : now;
+        loopB = null;
+      });
+      await _applyLoop();
+      return;
+    }
+    // B before A swaps them, so the loop still runs forwards.
+    final a = loopA!;
+    _update(() {
+      loopA = now < a ? now : a;
+      loopB = now < a ? a : now;
+    });
+    if (loopB! - loopA! < const Duration(milliseconds: 500)) {
+      _update(() => loopB = null);
+      return;
+    }
+    await _applyLoop();
+    await player.seek(loopA!);
+  }
+
+  Future<void> clearLoop() async {
+    if (loopA == null && loopB == null) return;
+    _update(() {
+      loopA = null;
+      loopB = null;
+    });
+    await _applyLoop();
+  }
+
+  Future<void> _applyLoop() async {
+    final platform = player?.platform;
+    if (platform is! NativePlayer) return;
+    String at(Duration? d) => d == null || loopB == null ? 'no' : (d.inMilliseconds / 1000).toStringAsFixed(3);
+    await platform.setProperty('ab-loop-a', at(loopA));
+    await platform.setProperty('ab-loop-b', at(loopB));
   }
 
   Future<void> changeVolume(double delta) async {

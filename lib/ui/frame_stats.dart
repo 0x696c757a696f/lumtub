@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' show FramePhase;
 
 import 'package:flutter/scheduler.dart';
 
@@ -13,6 +14,12 @@ class FrameStats {
 
   /// A frame over this misses 30 fps.
   static const slow = Duration(milliseconds: 33);
+
+  /// A frame over this is logged by itself, with when it came.
+  static const long = Duration(milliseconds: 250);
+
+  /// Runs from the start of main().
+  static final sinceStart = Stopwatch();
 
   final String Function() _page;
   final Map<String, int> Function()? _causes;
@@ -46,6 +53,10 @@ class FrameStats {
         _slow++;
         final page = _page();
         _pages[page] = (_pages[page] ?? 0) + 1;
+        if (build > long || raster > long) {
+          logInfo('Long frame #${timing.frameNumber} ${(sinceStart.elapsedMilliseconds / 1000).toStringAsFixed(1)} s after start on $page: '
+              'build ${_ms(build)}, raster ${_ms(raster)}, waited ${_ms(timing.timestampInMicroseconds(FramePhase.rasterStart) - timing.timestampInMicroseconds(FramePhase.buildFinish))} for raster');
+        }
       }
       if (build > _worstBuild) _worstBuild = build;
       if (raster > _worstRaster) _worstRaster = raster;
@@ -65,5 +76,5 @@ class FrameStats {
     _since = now;
   }
 
-  static String _ms(Duration d) => '${(d.inMicroseconds / 1000).toStringAsFixed(1)} ms';
+  static String _ms(Object d) => '${((d is Duration ? d.inMicroseconds : d as int) / 1000).toStringAsFixed(1)} ms';
 }

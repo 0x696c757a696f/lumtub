@@ -14,12 +14,14 @@ import 'keep_awake.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
 import 'ui/app_shell.dart';
+import 'ui/frame_stats.dart';
 import 'ui/motion.dart';
 import 'ui/smooth_wheel.dart';
 import 'ui/theme.dart';
 import 'windows_shell.dart';
 
 Future<void> main() async {
+  FrameStats.sinceStart.start();
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) SmoothWheel.install();
   // Decoded thumbnails and avatars: Flutter keeps up to 1000 and 100 MiB.
@@ -55,6 +57,7 @@ Future<void> main() async {
   }
   setLanguage(appearance.language);
   runApp(LumtubApp(controller: AppController(appearance: appearance, appearanceStore: store)));
+  unawaited(WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) => logInfo('First frame shown ${FrameStats.sinceStart.elapsedMilliseconds} ms after start')));
 }
 
 class LumtubApp extends StatefulWidget {

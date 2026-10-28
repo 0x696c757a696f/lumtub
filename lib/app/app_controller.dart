@@ -1698,7 +1698,9 @@ class AppController extends ChangeNotifier {
   /// update; a video being opened waits for its stream anyway.
   void _ensureVideo(Player player) {
     if (videoController != null) return;
-    videoController = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
+    final made = Stopwatch()..start();
+    final controller = videoController = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
+    unawaited(controller.platform.future.then((_) => logInfo('Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
   }
 
   Future<bool> _openOnce(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {

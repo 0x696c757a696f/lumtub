@@ -1743,14 +1743,15 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  /// Makes the video's picture output, the first time a video plays. Made
-  /// at start it held up drawing the window for most of a second when the
-  /// graphics files were not in the disk cache yet, such as after an
-  /// update; a video being opened waits for its stream anyway.
+  /// Makes the video's picture output, from [_warmUp] or when the first
+  /// video plays. Made right at start it held up drawing the window for
+  /// most of a second.
   void _ensureVideo(Player player) {
     if (videoController != null) return;
     final made = Stopwatch()..start();
     final controller = videoController = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
+    // It is made after the next frame, and an idle window draws none.
+    WidgetsBinding.instance.scheduleFrame();
     unawaited(controller.platform.future.then((_) => logInfo('Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
   }
 
@@ -3899,7 +3900,13 @@ class AppController extends ChangeNotifier {
         library?.repository = _repository;
       }
       status = ignoredOptions.isEmpty
-          ? tr('播放器设置已保存{0}', [requiresNextVideo ? tr('；硬件解码和帧插值在下一段视频生效。') : '。'])
+          ? tr('播放器设置已保存{0}', [
+              _zeroCopyDxva2(next.hwdec) != _zeroCopyDxva2(oldSettings.hwdec) && videoController != null
+                  ? tr('；DXVA2 零拷贝要重启 Lumtub 后生效。')
+                  : requiresNextVideo
+                      ? tr('；硬件解码和帧插值在下一段视频生效。')
+                      : '。'
+            ])
           : tr('已保存；此 libmpv 不支持：{0}。', [ignoredOptions.join(', ')]);
     });
   }
@@ -4403,3 +4410,7 @@ int _readPlayerFiles(String folder, String? mpv) {
   }
   return total;
 }
+
+/// Whether [hwdec] asks for zero-copy DXVA2, whose interop the video output
+/// only loads when it is made.
+bool _zeroCopyDxva2(String hwdec) => hwdec.split(',').map((e) => e.trim()).contains('dxva2');

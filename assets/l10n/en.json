@@ -2648,5 +2648,6 @@
   "浏览器登录": "Browser sign-in",
   "同步订阅和播放列表，给视频点赞、评论、订阅。推荐，大多数人只需要这一个": "Sync subscriptions and playlists; like, comment and subscribe. Recommended; most people need only this one",
   "只用于给社区帖子点赞、投票和评论": "Only for liking, voting and commenting on community posts",
-  "不登录也能搜索和播放。想用哪项功能，就只登录对应的那一个；打勾的是已经登录的。": "Search and playback work without it. Sign in only to the one with the feature you want; ticked ones are signed in."
+  "不登录也能搜索和播放。想用哪项功能，就只登录对应的那一个；打勾的是已经登录的。": "Search and playback work without it. Sign in only to the one with the feature you want; ticked ones are signed in.",
+  "；DXVA2 零拷贝要重启 Lumtub 后生效。": "; zero-copy DXVA2 takes effect after restarting Lumtub."
 }

@@ -1718,6 +1718,13 @@ class AppController extends ChangeNotifier {
     final mpv = paths?.mpv;
     final bytes = await Isolate.run(_readingPlayerFiles(folder, mpv));
     logInfo('Read ${bytes >> 20} MB of player files in ${read.elapsedMilliseconds} ms');
+    final directories = this.directories;
+    if (directories != null) {
+      try {
+        final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders').listSync().whereType<File>().length;
+        logInfo('Shader cache holds $shaders shaders');
+      } catch (_) {}
+    }
     await _measureDecoders();
     var lastInput = DateTime.now();
     void touched(PointerEvent _) => lastInput = DateTime.now();

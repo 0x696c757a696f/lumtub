@@ -6,7 +6,9 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
-import 'package:flutter/services.dart' show MethodChannel;
+import 'package:flutter/gestures.dart' show GestureBinding, PointerEvent;
+import 'package:flutter/services.dart' show HardwareKeyboard, KeyEvent, MethodChannel;
+import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -50,6 +52,10 @@ import '../piped_streams.dart';
 import '../search_options.dart';
 import '../search_suggestions.dart';
 import '../youtube_comments.dart';
+import '../youtube_tv_feed.dart';
+import '../youtube_tv_sign_in.dart';
+import '../youtube_web_sign_in.dart';
+import '../tv_samples.dart' as tv_samples;
 import '../youtube_related.dart';
 import '../recommendations.dart';
 import '../chunked_relay.dart';
@@ -136,6 +142,24 @@ class AppController extends ChangeNotifier {
   /// The optional Google sign-in for importing subscriptions and playlists.
   AccountController? account;
 
+  /// The TV-code sign-in that YouTube's own pages take, for liking comments
+  /// and posts.
+  YoutubeTvSignIn? tvSignIn;
+
+  /// The cookie sign-in, for liking posts, voting in polls and writing
+  /// under posts, which the TV-code sign-in cannot reach.
+  YoutubeWebSignIn? webSignIn;
+
+  /// The account's own YouTube pages, read with [tvSignIn].
+  YoutubeTvFeed? tvFeed;
+
+  /// The account's YouTube playlists, once read; empty when signed out.
+  List<PlaylistResult> tvPlaylists = const [];
+  bool tvPlaylistsLoading = false;
+
+  /// The account's YouTube watch history, while 观看历史 shows it.
+  VideoListLoader? youtubeHistory;
+
   /// The open channel page and its uploads.
   ChannelRef? channel;
   VideoListLoader? channelVideos;
@@ -159,9 +183,10 @@ class AppController extends ChangeNotifier {
   /// The channel page's tab, and its posts when that tab is open.
   ChannelTab channelTab = ChannelTab.videos;
   PostsLoader? channelPosts;
-  late final _posts = CommunityPosts(_http);
+  late final _posts = CommunityPosts(_http, signIn: comments);
 
-  /// Comments under videos and posts.
+  /// Comments under videos and posts, and liking them and posts, signed in
+  /// with the TV code when there is one.
   late final comments = YoutubeComments(_http);
 
   /// Whether the statistics overlay is shown over the video.
@@ -391,6 +416,9 @@ class AppController extends ChangeNotifier {
   SecureJsonFile? _translationKeyFile;
   /// The subtitle shown above the main one (双语字幕), if any.
   SubtitleOption? secondarySubtitle;
+  /// The second subtitle being fetched or translated, shown as loading in
+  /// the 字幕 panel rather than as 关闭.
+  SubtitleOption? secondaryLoading;
   /// The video 第二字幕语言 was applied to, so a secondary subtitle turned
   /// off stays off.
   String? _secondaryAutoFor;
@@ -404,6 +432,11 @@ class AppController extends ChangeNotifier {
   DateTime _rateLimitedUntil = DateTime(0);
   bool _updateCheckedForChallenge = false;
   int _lastDrops = 0;
+
+  /// When the current video was opened. Its first seconds are left out of
+  /// the dropped-frame checks: the first picture of a run compiles the
+  /// shaders and drops frames that later ones do not.
+  DateTime _openedAt = DateTime(2000);
   /// Ten-second windows in a row that dropped a tenth of the frames or more.
   int _dropStreak = 0;
   /// The quality automatic playback is lowered to for this run after
@@ -496,6 +529,120 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// What asked for the window to be rebuilt since the frame log last
+  /// took the counts: a part of the app by name, or `app` for the rest.
+  final rebuildCauses = <String, int>{};
+  final _passers = <String, VoidCallback>{};
+
+  @override
+  void notifyListeners() {
+    rebuildCauses.update('app', (n) => n + 1, ifAbsent: () => 1);
+    super.notifyListeners();
+  }
+
+  /// Passes on a change of the part named [cause], counted under its name.
+  /// The same callback comes back for a name, so it can be removed again.
+  /// A part only one page shows does not rebuild the window while another
+  /// is open; going to that page rebuilds it with what the part has then.
+  VoidCallback _passOn(String cause) => _passers[cause] ??= () {
+        if (_disposed || !_shows(cause)) return;
+        rebuildCauses.update(cause, (n) => n + 1, ifAbsent: () => 1);
+        super.notifyListeners();
+      };
+
+  bool _shows(String cause) {
+    bool page(PageMode shown) => !onWatchPage && mode == shown;
+    return switch (cause) {
+      'home feed' => page(PageMode.home),
+      'channel' => page(PageMode.channel),
+      'related' => onWatchPage,
+      'search' || 'explore' => page(PageMode.explore),
+      'youtube history' => page(PageMode.history),
+      _ => true,
+    };
+  }
+
+  /// Settings › Google 账号 › 保存电视版样本.
+  Future<String> saveTvSamples() async {
+    final sign = tvSignIn;
+    final logs = directories?.logs;
+    if (sign == null || !sign.signedIn || logs == null) return tr('需要先在设置 › YouTube 账号里用电视码登录');
+    return tv_samples.saveTvSamples(sign, logs);
+  }
+
+  bool _tvWasSignedIn = false;
+
+  int _webSignIns = 0;
+
+  void _webSignInChanged() {
+    final web = webSignIn;
+    // A new sign-in is tried again even after YouTube refused the old one.
+    if (web != null && web.signIns != _webSignIns) {
+      _webSignIns = web.signIns;
+      comments.webRefused = false;
+    }
+    notifyListeners();
+  }
+
+  void _tvSignInChanged() {
+    final signedIn = tvSignIn?.signedIn ?? false;
+    if (signedIn) comments.refused = false;
+    if (signedIn != _tvWasSignedIn) {
+      _tvWasSignedIn = signedIn;
+      youtubeHistory?.dispose();
+      youtubeHistory = null;
+      tvPlaylists = const [];
+      _tvPlaylistsRead = false;
+      // Signed in just now: YouTube's own suggestions join the feed.
+      if (signedIn && homeFeed != null) unawaited(refreshHomeFeed(force: true, keep: true));
+    }
+    notifyListeners();
+  }
+
+  bool _tvPlaylistsRead = false;
+
+  /// Reads the account's YouTube playlists the first time 播放列表 shows.
+  void ensureTvPlaylists() {
+    if (_tvPlaylistsRead || !(tvFeed?.available ?? false)) return;
+    _tvPlaylistsRead = true;
+    unawaited(loadTvPlaylists());
+  }
+
+  /// Reads the account's YouTube playlists again.
+  Future<void> loadTvPlaylists() async {
+    final feed = tvFeed;
+    if (feed == null || !feed.available || tvPlaylistsLoading) return;
+    tvPlaylistsLoading = true;
+    notifyListeners();
+    try {
+      final found = await feed.accountPlaylists();
+      if (feed.available) tvPlaylists = found;
+    } catch (e) {
+      logInfo('Could not read the YouTube playlists: $e');
+    } finally {
+      tvPlaylistsLoading = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  /// 观看历史 › YouTube: the account's history on YouTube, loaded the first
+  /// time it is shown.
+  VideoListLoader? openYoutubeHistory({bool reload = false}) {
+    final feed = tvFeed;
+    if (feed == null || !feed.available) return null;
+    if (reload) {
+      youtubeHistory?.dispose();
+      youtubeHistory = null;
+    }
+    return youtubeHistory ??= VideoListLoader(() => Listing(() => feed.lines(YoutubeTvFeed.history)), pageSize: 40, name: 'YouTube history')
+      ..addListener(_passOn('youtube history'))
+      ..loadMore();
+  }
+
+  /// Whether [playlist] is the account's own, read signed in.
+  bool _isAccountPlaylist(PlaylistResult playlist) =>
+      playlist.id == YoutubeTvFeed.watchLaterId || tvPlaylists.any((list) => list.id == playlist.id);
+
   void _notice(String message) {
     if (!_disposed) _notices.add(message);
   }
@@ -540,7 +687,7 @@ class AppController extends ChangeNotifier {
       this.channelPlayback = channelPlayback;
       this.watchTime = watchTime;
       speechStore = SpeechSubtitleStore(Directory('${directories.data.path}${Platform.pathSeparator}speech'));
-      homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(notifyListeners);
+      homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(_passOn('home feed'));
       this.settings = settings;
       final cacheManager = CacheManager(directories);
       final manager = ToolManager(directories, (message, logged) {
@@ -561,8 +708,17 @@ class AppController extends ChangeNotifier {
         libass: settings.libassSubtitles,
         logLevel: MPVLogLevel.warn,
       ));
-      final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      // Compiled shaders are kept between runs, so a video's first frame
+      // does not wait for them again.
+      final platform = player.platform;
+      if (platform is NativePlayer) {
+        final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders');
+        try {
+          shaders.createSync(recursive: true);
+          await platform.setProperty('gpu-shader-cache-dir', shaders.path);
+        } catch (_) {}
+      }
       _lightRendering = null;
       await _applyProxy(player);
       _relay = await _startRelay();
@@ -595,23 +751,30 @@ class AppController extends ChangeNotifier {
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
-        downloads = _downloadsFor(paths, directories)..addListener(notifyListeners);
+        downloads = _downloadsFor(paths, directories)..addListener(_passOn('downloads'));
         final library = this.library = LibraryController(libraryStore, client: _http)
           ..repository = _repository
-          ..addListener(notifyListeners);
+          ..addListener(_passOn('library'));
         account = AccountController(
           clientFile: File('${directories.data.path}${Platform.pathSeparator}google-client.json'),
           credentials: SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}google-account.bin'), DpapiProtector()),
           client: _http,
           library: library,
           notice: _notice,
-        )..addListener(notifyListeners);
+        )..addListener(_passOn('account'));
+        final tv = tvSignIn = YoutubeTvSignIn(folder: directories.data.path)..addListener(_tvSignInChanged);
+        comments.signIn = tv;
+        final web = webSignIn = YoutubeWebSignIn(folder: directories.data.path)..addListener(_webSignInChanged);
+        comments.web = web;
+        web.load();
+        tvFeed = YoutubeTvFeed(tv);
+        // Before the first home feed, which mixes in YouTube's own.
+        tv.load();
+        _tvWasSignedIn = tv.signedIn;
         this.player = player;
-        videoController = controller;
-        _outputSize = VideoOutputSize((width, height) => controller.setSize(width: width, height: height));
+        _outputSize = VideoOutputSize((width, height) async => videoController?.setSize(width: width, height: height));
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
-        unawaited(_measureDecoders());
         _thumbnailTrimTimer?.cancel();
         _thumbnailTrimTimer = Timer.periodic(const Duration(hours: 1), (_) => _trimThumbnails());
         ready = true;
@@ -620,10 +783,11 @@ class AppController extends ChangeNotifier {
       });
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
-      final updater = AppUpdater(client: _http, directory: Directory('${directories.cache.path}${Platform.pathSeparator}updates'), download: manager.downloadVerified)..addListener(notifyListeners);
+      final updater = AppUpdater(client: _http, directory: Directory('${directories.cache.path}${Platform.pathSeparator}updates'), download: manager.downloadVerified)..addListener(_passOn('updater'));
       appUpdater = updater;
       // Housekeeping waits until the first page has loaded and drawn, so
       // update checks and folder scans do not compete with it.
+      unawaited(_warmUp(player));
       _afterStart = Timer(const Duration(seconds: 8), () {
         if (_disposed) return;
         if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
@@ -883,7 +1047,7 @@ class AppController extends ChangeNotifier {
       searchFilter = chosen;
       searchResults?.dispose();
       searchResults = VideoListLoader(() => sp == null ? repository.search(query) : repository.search(query, sp: sp))
-        ..addListener(notifyListeners)
+        ..addListener(_passOn('search'))
         ..loadMore();
     });
   }
@@ -1135,7 +1299,7 @@ class AppController extends ChangeNotifier {
       loader.dispose();
       return;
     }
-    loader.removeListener(notifyListeners);
+    loader.removeListener(_passOn('explore'));
     final key = _exploreKey;
     final older = _recentExplore.remove(key)?.$2;
     if (older != null && !identical(older, loader)) older.dispose();
@@ -1155,7 +1319,7 @@ class AppController extends ChangeNotifier {
     if (_recentExplore.remove(_exploreKey) case (final at, final loader)) {
       if (DateTime.now().difference(at) < _keepExplore) {
         logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
-        _update(() => explore = loader..addListener(notifyListeners));
+        _update(() => explore = loader..addListener(_passOn('explore')));
         return;
       }
       loader.dispose();
@@ -1230,7 +1394,7 @@ class AppController extends ChangeNotifier {
           name: 'Explore ${exploreSection.name} · ${exploreTopicNow.label} · ${mode.name}',
           dropped: dropped,
         )
-          ..addListener(notifyListeners)
+          ..addListener(_passOn('explore'))
           ..loadMore());
   }
 
@@ -1296,11 +1460,13 @@ class AppController extends ChangeNotifier {
     final player = this.player;
     if (player == null) return;
     if (mini && playing?.id == item.id && at == null && !retryingStart) return expandMini();
+    _ensureVideo(player);
     _startTimer?.cancel();
     if (!retryingStart) _startAttempts = 0;
     // A loop belongs to the video it was set in.
     if (playing?.id != item.id) unawaited(clearLoop());
     if (playing?.id != item.id) {
+      _shownOptions.clear();
       unawaited(cast.stop());
       if (playing case final left?) {
         _played.removeWhere((v) => v.id == left.id);
@@ -1499,7 +1665,111 @@ class AppController extends ChangeNotifier {
   /// [resolved] false, or a failed resolution, leaves everything to
   /// ytdl_hook as before.
   Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
+    // Opened again (reconnecting, another quality): the subtitles shown
+    // come back, as the new file starts with none of the ones added.
+    final kept = _tracking?.id == item.id ? _shownSubtitles() : null;
+    final opened = await _openOnce(item, serial, start: start, play: play, resolved: resolved, piped: piped, allowLocal: allowLocal);
+    if (opened && kept != null) unawaited(_restoreSubtitles(kept, serial));
+    return opened;
+  }
+
+  /// The subtitles shown now: the main one by its label (empty: turned
+  /// off) and the second one.
+  ({String? main, SubtitleOption? second}) _shownSubtitles() {
+    final track = player?.state.track.subtitle;
+    final main = track == null || track.id == 'auto' ? null : track.id == 'no' ? '' : track.title;
+    return (main: main, second: secondarySubtitle);
+  }
+
+  Future<void> _restoreSubtitles(({String? main, SubtitleOption? second}) kept, int serial) async {
+    final player = this.player;
+    if (player == null) return;
+    try {
+      await player.stream.duration.firstWhere((d) => d > Duration.zero).timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      return;
+    }
+    if (serial != _playSerial || this.player != player) return;
+    final main = kept.main;
+    if (main == '') {
+      await player.setSubtitleTrack(SubtitleTrack.no());
+    } else if (main != null) {
+      final option = _shownOptions[main] ?? details?.subtitles.where((o) => o.label == main).firstOrNull;
+      if (option != null && player.state.track.subtitle.title != main) await showSubtitle(option);
+    }
+    if (serial != _playSerial || this.player != player) return;
+    final second = kept.second;
+    if (second != null && secondarySubtitle?.label != second.label) {
+      logInfo('Showing ${second.language} (${second.kind.name}) as the second subtitle again');
+      await setSecondarySubtitle(second);
+    }
+  }
+
+  /// The subtitles shown in this video, by label, so a reopened video can
+  /// show them again.
+  final _shownOptions = <String, SubtitleOption>{};
+
+  /// Gets the first video ready while nothing else happens: reads the
+  /// player's files from disk once they may be cold after an update,
+  /// probes the hardware decoders, and makes the picture output when the
+  /// mouse and keyboard have been still for a moment. Opening a video
+  /// first does whatever is still left there and then.
+  Future<void> _warmUp(Player player) async {
+    await WidgetsBinding.instance.waitUntilFirstFrameRasterized;
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (_disposed) return;
+    final read = Stopwatch()..start();
+    final folder = File(Platform.resolvedExecutable).parent.path;
+    final mpv = paths?.mpv;
+    final bytes = await Isolate.run(_readingPlayerFiles(folder, mpv));
+    logInfo('Read ${bytes >> 20} MB of player files in ${read.elapsedMilliseconds} ms');
+    final directories = this.directories;
+    if (directories != null) {
+      try {
+        final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders').listSync().whereType<File>().length;
+        logInfo('Shader cache holds $shaders shaders');
+      } catch (_) {}
+    }
+    await _measureDecoders();
+    var lastInput = DateTime.now();
+    void touched(PointerEvent _) => lastInput = DateTime.now();
+    bool pressed(KeyEvent _) {
+      lastInput = DateTime.now();
+      return false;
+    }
+
+    GestureBinding.instance.pointerRouter.addGlobalRoute(touched);
+    HardwareKeyboard.instance.addHandler(pressed);
+    try {
+      while (!_disposed && videoController == null && this.player == player) {
+        final still = DateTime.now().difference(lastInput);
+        if (still >= const Duration(milliseconds: 1500)) {
+          _ensureVideo(player);
+          break;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 1500) - still);
+      }
+    } finally {
+      GestureBinding.instance.pointerRouter.removeGlobalRoute(touched);
+      HardwareKeyboard.instance.removeHandler(pressed);
+    }
+  }
+
+  /// Makes the video's picture output, from [_warmUp] or when the first
+  /// video plays. Made right at start it held up drawing the window for
+  /// most of a second.
+  void _ensureVideo(Player player) {
+    if (videoController != null) return;
+    final made = Stopwatch()..start();
+    final controller = videoController = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
+    // It is made after the next frame, and an idle window draws none.
+    WidgetsBinding.instance.scheduleFrame();
+    unawaited(controller.platform.future.then((_) => logInfo('Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
+  }
+
+  Future<bool> _openOnce(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
     final player = this.player!;
+    _ensureVideo(player);
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);
@@ -1575,6 +1845,7 @@ class AppController extends ChangeNotifier {
       _mpvLogLines = 0;
       _lastDrops = 0;
       _dropStreak = 0;
+      _openedAt = DateTime.now();
       // The decoder is known once frames are shown; resolving the video
       // can take longer than any fixed delay.
       _decoderPending = true;
@@ -1607,6 +1878,7 @@ class AppController extends ChangeNotifier {
     _mpvLogLines = 0;
     _lastDrops = 0;
     _dropStreak = 0;
+    _openedAt = DateTime.now();
     _decoderPending = true;
     _update(() {});
     unawaited(_addLocalSubtitles(local, serial));
@@ -1669,6 +1941,7 @@ class AppController extends ChangeNotifier {
       _mpvLogLines = 0;
       _lastDrops = 0;
       _dropStreak = 0;
+      _openedAt = DateTime.now();
       _decoderPending = true;
       _update(() {});
       return true;
@@ -1893,10 +2166,10 @@ class AppController extends ChangeNotifier {
 
   Future<List<SubtitleCue>> _optionCues(SubtitleOption option) => _cached('${playing?.id}\u0000${option.url}', () async => File(await _subtitleFile(option)).readAsString());
 
-  Future<List<SubtitleCue>> _trackCues(NativePlayer platform, SubtitleTrack track) {
+  Future<List<SubtitleCue>> _trackCues(NativePlayer platform, SubtitleTrack track) async {
     final option = details?.subtitles.where((o) => o.label == track.title).firstOrNull;
     if (option != null) return _optionCues(option);
-    return _cached('${playing?.id}\u0000${track.id}\u0000${track.title}', () async {
+    final cues = await _cached('${playing?.id}\u0000${track.id}\u0000${track.title}', () async {
       final list = jsonDecode(await platform.getProperty('track-list'));
       final entry = list is List ? list.whereType<Map>().where((t) => t['type'] == 'sub' && '${t['id']}' == track.id).firstOrNull : null;
       final source = entry?['external-filename'];
@@ -1908,6 +2181,12 @@ class AppController extends ChangeNotifier {
       }
       return null;
     });
+    if (cues.isNotEmpty) return cues;
+    // A track libmpv's ytdl_hook added has its own title, and its address
+    // may be refused; the same language from the list reads the same lines.
+    final language = track.language;
+    final same = language == null ? null : details?.subtitles.where((o) => o.kind != SubtitleKind.translated && sameLanguage(o.language, language)).firstOrNull;
+    return same == null ? cues : _optionCues(same);
   }
 
   Future<List<SubtitleCue>> _cached(String key, Future<String?> Function() read) async {
@@ -1937,6 +2216,7 @@ class AppController extends ChangeNotifier {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return;
+    _shownOptions[option.label] = option;
     final loaded = player.state.tracks.subtitle.where((t) => t.title == option.label).firstOrNull;
     try {
       if (loaded != null) {
@@ -1962,21 +2242,21 @@ class AppController extends ChangeNotifier {
     if (_secondaryAutoFor == item.id || _openedLocal == item.id) return;
     bool shown(SubtitleTrack t) => t.id != 'no' && t.id != 'auto';
     // mpv picks the track itself as the file loads and does not say so;
-    // ask it until a subtitle is on or half a minute has passed.
-    for (var i = 0; i < 30 && !shown(player.state.track.subtitle); i++) {
+    // ask it for a few seconds, then pick one here.
+    for (var i = 0; i < 6 && !shown(player.state.track.subtitle); i++) {
       await syncMainSubtitle();
       if (serial != _playSerial || this.player != player) return;
       if (shown(player.state.track.subtitle)) break;
       await player.stream.track.firstWhere((t) => shown(t.subtitle)).timeout(const Duration(seconds: 1), onTimeout: () => player.state.track);
     }
-    if (!shown(player.state.track.subtitle)) return;
-    if (serial != _playSerial || this.player != player || secondarySubtitle != null || _secondaryAutoFor == item.id) return;
+    if (serial != _playSerial || this.player != player || _secondaryAutoFor == item.id) return;
     _secondaryAutoFor = item.id;
-    var mainTitle = player.state.track.subtitle.title;
-    var mainLanguage = player.state.track.subtitle.language;
+    var mainTitle = shown(player.state.track.subtitle) ? player.state.track.subtitle.title : null;
+    var mainLanguage = shown(player.state.track.subtitle) ? player.state.track.subtitle.language : null;
     final first = settings.subtitleLanguage.translation;
     final spoken = settings.subtitleOriginal ? originalSubtitle(details.subtitles, language: details.language) : null;
-    if (spoken != null ? spoken.label != mainTitle : !speaks(mainLanguage, first)) {
+    final mainWanted = settings.subtitleMode == SubtitleMode.always || mainTitle != null;
+    if (mainWanted && (mainTitle == null || (spoken != null ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage) : !speaks(mainLanguage, first)))) {
       final option = spoken ?? subtitleIn(details.subtitles, first);
       if (option != null && option.label != mainTitle) {
         logInfo('Showing ${option.language} (${option.kind.name}) as the main subtitle');
@@ -1994,7 +2274,10 @@ class AppController extends ChangeNotifier {
       if (option == null || sameLanguage(option.language, mainLanguage)) return;
     } else {
       option = target == null ? null : subtitleIn(details.subtitles, target);
-      if (option == null || speaks(mainLanguage, target!)) return;
+      if (option == null || speaks(mainLanguage, target!)) {
+        if (wanted.isNotEmpty) logInfo('No second subtitle in $wanted beside $mainLanguage');
+        return;
+      }
     }
     if (option.label == mainTitle || secondarySubtitle != null) return;
     logInfo('Showing ${option.language} (${option.kind.name}) as the second subtitle');
@@ -2041,6 +2324,7 @@ class AppController extends ChangeNotifier {
   Future<void> setSecondarySubtitle(SubtitleOption? option) async {
     final player = this.player;
     if (player == null) return;
+    if (option != null) _update(() => secondaryLoading = option);
     try {
       final loaded = option == null || player.state.tracks.subtitle.any((t) => t.title == option.label);
       final file = loaded ? null : await _subtitleFile(option);
@@ -2050,6 +2334,8 @@ class AppController extends ChangeNotifier {
     } catch (e) {
       logError('Could not set secondary subtitles ${option?.language}', e);
       _notice(tr('无法加载这条字幕'));
+    } finally {
+      if (identical(secondaryLoading, option)) _update(() => secondaryLoading = null);
     }
   }
 
@@ -2135,6 +2421,9 @@ class AppController extends ChangeNotifier {
         final text = log.text.trim();
         final subtitle = isSubtitleError(text) || log.prefix == 'sub' || log.prefix.startsWith('sub/');
         if ((log.level == 'error' || log.prefix == 'ytdl_hook') && _recentErrors.length < 20 && !subtitle && !isUnattributedHttpError(text)) _recentErrors.add(text);
+        // curl gave up on a stream; when it was the video's, the sound
+        // plays on over the last picture.
+        if (log.prefix == 'curl' && text.startsWith('transfer failed')) _streamLostIn = _playSerial;
         if (_mpvLogLines >= 200) return;
         _mpvLogLines++;
         logInfo('mpv [${log.prefix}] ${log.level}: $text');
@@ -2846,7 +3135,7 @@ class AppController extends ChangeNotifier {
       pageSize: 13,
       limit: 12,
       where: (other) => other.id != item.id && !preferences.blocksGroup(other) && !preferences.isUnrecommended(other.channelId),
-    )..addListener(notifyListeners);
+    )..addListener(_passOn('related'));
     loader.loadMore();
     return loader;
   }
@@ -3041,7 +3330,7 @@ class AppController extends ChangeNotifier {
     channelQuery = null;
     channelTab = ChannelTab.videos;
     channelVideos = VideoListLoader(() => repository.channelVideos(ref))
-      ..addListener(notifyListeners)
+      ..addListener(_passOn('channel'))
       ..loadMore();
     _go(PageMode.channel);
   }
@@ -3059,11 +3348,11 @@ class AppController extends ChangeNotifier {
       channelPosts?.dispose();
       channelPosts = null;
       if (tab == ChannelTab.posts) {
-        channelPosts = PostsLoader(_posts, ref)..addListener(notifyListeners);
+        channelPosts = PostsLoader(_posts, ref)..addListener(_passOn('channel'));
         unawaited(channelPosts!.loadMore());
       } else {
         channelVideos = VideoListLoader(() => repository.channelTab(ref, tab))
-          ..addListener(notifyListeners)
+          ..addListener(_passOn('channel'))
           ..loadMore();
       }
     });
@@ -3076,8 +3365,10 @@ class AppController extends ChangeNotifier {
     _remember();
     youtubePlaylistVideos?.dispose();
     youtubePlaylist = playlist;
-    youtubePlaylistVideos = VideoListLoader(() => repository.playlist(playlist.id), pageSize: 50)
-      ..addListener(notifyListeners)
+    final feed = tvFeed;
+    final signedIn = feed != null && feed.available && _isAccountPlaylist(playlist);
+    youtubePlaylistVideos = VideoListLoader(() => signedIn ? Listing(() => feed.lines('VL${playlist.id}', pages: 50)) : repository.playlist(playlist.id), pageSize: 50)
+      ..addListener(_passOn('channel'))
       ..loadMore();
     _go(PageMode.youtubePlaylist);
   }
@@ -3104,12 +3395,12 @@ class AppController extends ChangeNotifier {
       if (text.isEmpty) {
         // Back to the tab that was open.
         if (channelTab == ChannelTab.posts) {
-          channelPosts = PostsLoader(_posts, ref)..addListener(notifyListeners);
+          channelPosts = PostsLoader(_posts, ref)..addListener(_passOn('channel'));
           unawaited(channelPosts!.loadMore());
         } else {
           final tab = channelTab;
           channelVideos = VideoListLoader(() => repository.channelTab(ref, tab))
-            ..addListener(notifyListeners)
+            ..addListener(_passOn('channel'))
             ..loadMore();
         }
         return;
@@ -3121,13 +3412,13 @@ class AppController extends ChangeNotifier {
       }
 
       if (within == ChannelTab.posts) {
-        channelPosts = PostsLoader(_posts, ref, matches: matches)..addListener(notifyListeners);
+        channelPosts = PostsLoader(_posts, ref, matches: matches)..addListener(_passOn('channel'));
         unawaited(channelPosts!.loadMore());
       } else {
         channelVideos = (within == null
             ? VideoListLoader(() => repository.channelSearch(ref, text))
             : VideoListLoader(() => repository.channelTab(ref, within), matches: matches))
-          ..addListener(notifyListeners)
+          ..addListener(_passOn('channel'))
           ..loadMore();
       }
     });
@@ -3195,6 +3486,7 @@ class AppController extends ChangeNotifier {
   void _finishWatching() {
     final item = _watching;
     _watching = null;
+    if (item != null) _reportWatchedToYoutube(item);
     final feed = homeFeed;
     final repository = _repository;
     final player = this.player;
@@ -3209,6 +3501,22 @@ class AppController extends ChangeNotifier {
     }());
   }
 
+  /// 观看记录同步到 YouTube: adds the video just left to the account's
+  /// history, as SmartTube does: from the start for the first three minutes,
+  /// else where it was left; nearly finished marks it watched.
+  void _reportWatchedToYoutube(VideoItem item) {
+    final sign = tvSignIn;
+    final player = this.player;
+    if (sign == null || !sign.signedIn || player == null || !preferences.syncHistoryToYoutube || !preferences.recordHistory || incognito) return;
+    final to = player.state.position.inMilliseconds / 1000;
+    if (to < 5) return;
+    final length = player.state.duration.inMilliseconds / 1000;
+    unawaited(() async {
+      final why = await sign.reportWatched(item.id, from: to < 180 ? 0 : to, to: to, length: length);
+      if (why != null) logInfo('Could not add ${item.id} to the YouTube history: $why');
+    }());
+  }
+
   Future<HomeFeedSources> _homeSources(VideoRepository repository) async {
     final library = this.library;
     final weekly = searchParams(type: SearchFilter.videos, sort: SearchSort.views, date: SearchUploadDate.week);
@@ -3219,6 +3527,7 @@ class AppController extends ChangeNotifier {
         followed: library?.channels ?? const [],
         subscriptions: library?.feed ?? const [],
         searches: preferences.recordHistory ? await searchHistory?.items() ?? const [] : const [],
+        youtubeHome: tvFeed?.available ?? false ? () => tvFeed!.videos(YoutubeTvFeed.home, limit: 40) : null,
         related: relatedVideos.forVideo,
         channelUploads: library?.uploadsOf ?? (_) async => const [],
         search: (query) async {
@@ -3606,7 +3915,13 @@ class AppController extends ChangeNotifier {
         library?.repository = _repository;
       }
       status = ignoredOptions.isEmpty
-          ? tr('播放器设置已保存{0}', [requiresNextVideo ? tr('；硬件解码和帧插值在下一段视频生效。') : '。'])
+          ? tr('播放器设置已保存{0}', [
+              _zeroCopyDxva2(next.hwdec) != _zeroCopyDxva2(oldSettings.hwdec) && videoController != null
+                  ? tr('；DXVA2 零拷贝要重启 Lumtub 后生效。')
+                  : requiresNextVideo
+                      ? tr('；硬件解码和帧插值在下一段视频生效。')
+                      : '。'
+            ])
           : tr('已保存；此 libmpv 不支持：{0}。', [ignoredOptions.join(', ')]);
     });
   }
@@ -3666,6 +3981,14 @@ class AppController extends ChangeNotifier {
         currentHwdec = decoder.label;
         if (normalized != null) decodeStates = {...decodeStates, normalized: decoder};
       });
+      final width = int.tryParse(await platform.getProperty('video-params/w')) ?? 0;
+      final height = int.tryParse(await platform.getProperty('video-params/h')) ?? 0;
+      final crop = DecoderStatus.paddingCrop(width, height, hardware: decoder.kind == DecoderKind.hardware);
+      if (crop != _paddingCrop) {
+        _paddingCrop = crop;
+        await platform.setProperty('video-crop', crop);
+        if (crop.isNotEmpty) logInfo('Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
+      }
       if (normalized != null) {
         settings = settings.copyWith(decoderResults: decodeStates);
         unawaited(_settingsStore?.save(settings));
@@ -3684,6 +4007,9 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  /// The `video-crop` last set, so an unchanged one is not set again.
+  String _paddingCrop = '';
+
   /// Logs playback timing when frames are being dropped, at most once a
   /// minute, so the log shows why a video stutters.
   Future<void> _checkDrops() async {
@@ -3697,8 +4023,10 @@ class AppController extends ChangeNotifier {
       // Read every time, so the timings cover these 10 seconds.
       final frames = await _frameStats(platform);
       await _watchPicture(platform, frames);
-      await _lightenIfBusy(platform, frames);
-      await _stepDownIfDropping(platform, added);
+      if (DateTime.now().difference(_openedAt) >= const Duration(seconds: 20)) {
+        await _lightenIfBusy(platform, frames);
+        await _stepDownIfDropping(platform, added);
+      }
       if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) {
         // Smooth playback is logged too, every few minutes, so a stutter can
         // be compared with how the same machine plays normally.
@@ -3721,6 +4049,12 @@ class AppController extends ChangeNotifier {
 
   DateTime _lastPictureFix = DateTime(2000);
 
+  /// The open in which libmpv's curl gave up on a stream.
+  int? _streamLostIn;
+
+  /// The open in which the decoder was restarted for a stalled picture.
+  int? _pictureRestartedIn;
+
   /// Brings back a picture that stopped while the sound plays on: when no
   /// frame was drawn in 10 s, the decoder is restarted from here; when
   /// frames were drawn but none reached the screen, the texture is
@@ -3734,9 +4068,19 @@ class AppController extends ChangeNotifier {
     final drawn = int.parse(match[1]!), shown = int.parse(match[2]!);
     if (drawn > 0 && shown > 0) return;
     _lastPictureFix = DateTime.now();
+    // A video stream that broke off, or a restart that brought nothing
+    // back, needs the video opened again at the same place.
+    if (drawn == 0 && (_streamLostIn == _playSerial || _pictureRestartedIn == _playSerial)) {
+      logInfo('Picture stalled while playing ($frames); the video stream is gone, reopening');
+      _pictureRestartedIn = null;
+      _streamLostIn = null;
+      unawaited(_recover('The video stream stopped while the sound played on'));
+      return;
+    }
     logInfo('Picture stalled while playing ($frames); ${drawn == 0 ? 'restarting the decoder' : 'registering the texture again'}');
     try {
       if (drawn == 0) {
+        _pictureRestartedIn = _playSerial;
         await platform.command(['seek', '0', 'relative+exact']);
       } else {
         await outputSize.refresh();
@@ -4016,6 +4360,8 @@ class AppController extends ChangeNotifier {
     unawaited(_bridge?.close());
     cast.dispose();
     account?.dispose();
+    tvSignIn?.cancel();
+    webSignIn?.cancel();
     downloads?.dispose();
     library?.dispose();
     channelVideos?.dispose();
@@ -4026,6 +4372,7 @@ class AppController extends ChangeNotifier {
     }
     channelPosts?.dispose();
     youtubePlaylistVideos?.dispose();
+    youtubeHistory?.dispose();
     related?.dispose();
     _http.close();
     if (!_shutDown) unawaited(player?.dispose());
@@ -4050,3 +4397,37 @@ enum LocalData {
   final String _label;
   String get label => tr(_label);
 }
+
+/// Reads the libraries in [folder], libmpv at [mpv] and the system shader
+/// compiler, so making the video output does not wait for the disk.
+/// Returns the bytes read.
+int Function() _readingPlayerFiles(String folder, String? mpv) => () => _readPlayerFiles(folder, mpv);
+
+int _readPlayerFiles(String folder, String? mpv) {
+  final files = <File>[
+    for (final entry in Directory(folder).listSync())
+      if (entry is File && entry.path.toLowerCase().endsWith('.dll')) entry,
+    if (mpv != null && !mpv.toLowerCase().startsWith(folder.toLowerCase())) File(mpv),
+    if (Platform.isWindows) File('${Platform.environment['SystemRoot'] ?? r'C:\Windows'}\\System32\\d3dcompiler_47.dll'),
+  ];
+  var total = 0;
+  for (final file in files) {
+    try {
+      final handle = file.openSync();
+      try {
+        while (true) {
+          final chunk = handle.readSync(1 << 20);
+          if (chunk.isEmpty) break;
+          total += chunk.length;
+        }
+      } finally {
+        handle.closeSync();
+      }
+    } catch (_) {}
+  }
+  return total;
+}
+
+/// Whether [hwdec] asks for zero-copy DXVA2, whose interop the video output
+/// only loads when it is made.
+bool _zeroCopyDxva2(String hwdec) => hwdec.split(',').map((e) => e.trim()).contains('dxva2');

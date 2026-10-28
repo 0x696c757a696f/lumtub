@@ -1,0 +1,80 @@
+import 'dart:math';
+import 'dart:ui' show FramePhase;
+
+import 'package:flutter/scheduler.dart';
+
+import '../app_log.dart';
+
+/// Counts the frames that took too long to build or draw and writes a line
+/// to the log once a minute when there were any, with the page that was
+/// open and how often the whole window was rebuilt, so a stutter the user
+/// mentions can be found afterwards. It only reads the engine's timings.
+class FrameStats {
+  FrameStats._(this._page, this._causes);
+
+  /// A frame over this misses 30 fps.
+  static const slow = Duration(milliseconds: 33);
+
+  /// A frame over this is logged by itself, with when it came.
+  static const long = Duration(milliseconds: 250);
+
+  /// Runs from the start of main().
+  static final sinceStart = Stopwatch();
+
+  final String Function() _page;
+  final Map<String, int> Function()? _causes;
+  int _frames = 0;
+  int _slow = 0;
+  int _rebuilds = 0;
+  Duration _worstBuild = Duration.zero;
+  Duration _worstRaster = Duration.zero;
+  final _pages = <String, int>{};
+  DateTime _since = DateTime.now();
+
+  static FrameStats? _instance;
+
+  /// Starts counting; [page] names what is shown, [causes] counts what
+  /// asked for the window to be rebuilt, and is cleared once logged.
+  static FrameStats start(String Function() page, {Map<String, int> Function()? causes}) {
+    final stats = _instance ??= FrameStats._(page, causes);
+    SchedulerBinding.instance.addTimingsCallback(stats._timings);
+    return stats;
+  }
+
+  /// One rebuild of the whole window.
+  void rebuilt() => _rebuilds++;
+
+  void _timings(List<FrameTiming> timings) {
+    for (final timing in timings) {
+      _frames++;
+      final build = timing.buildDuration;
+      final raster = timing.rasterDuration;
+      if (build > slow || raster > slow) {
+        _slow++;
+        final page = _page();
+        _pages[page] = (_pages[page] ?? 0) + 1;
+        if (build > long || raster > long) {
+          logInfo('Long frame #${timing.frameNumber} ${(sinceStart.elapsedMilliseconds / 1000).toStringAsFixed(1)} s after start on $page: '
+              'build ${_ms(build)}, raster ${_ms(raster)}, waited ${_ms(timing.timestampInMicroseconds(FramePhase.rasterStart) - timing.timestampInMicroseconds(FramePhase.buildFinish))} for raster');
+        }
+      }
+      if (build > _worstBuild) _worstBuild = build;
+      if (raster > _worstRaster) _worstRaster = raster;
+    }
+    final now = DateTime.now();
+    if (now.difference(_since) < const Duration(minutes: 1)) return;
+    if (_slow > 0) {
+      final where = (_pages.entries.toList()..sort((a, b) => b.value - a.value)).take(3).map((e) => '${e.key} ${e.value}').join(', ');
+      final causes = _causes?.call() ?? const {};
+      final by = (causes.entries.toList()..sort((a, b) => b.value - a.value)).take(5).map((e) => '${e.key} ${e.value}').join(', ');
+      logInfo('Frames: $_slow of $_frames slow (worst build ${_ms(_worstBuild)}, raster ${_ms(_worstRaster)}) on $where; window rebuilt $_rebuilds times in ${max(1, now.difference(_since).inSeconds)} s${by.isEmpty ? '' : ' ($by)'}');
+    }
+    _causes?.call().clear();
+    _frames = _slow = _rebuilds = 0;
+    _worstBuild = _worstRaster = Duration.zero;
+    _pages.clear();
+    _since = now;
+  }
+
+  static String _ms(Object d) => '${((d is Duration ? d.inMicroseconds : d as int) / 1000).toStringAsFixed(1)} ms';
+}

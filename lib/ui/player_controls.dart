@@ -31,6 +31,7 @@ import '../models.dart' show Chapter;
 import '../format_policy.dart';
 import '../player_settings.dart';
 import '../widgets/mini_progress_line.dart';
+import '../widgets/position_ticks.dart' show coarse;
 import '../widgets/video_progress_bar.dart';
 import 'cast_ui.dart';
 import 'common.dart';
@@ -1035,12 +1036,21 @@ class _PositionBuilderState extends State<_PositionBuilder> {
     unawaited(_subscription?.cancel());
     _subscription = !widget.active
         ? null
-        : widget.player.stream.position.listen((position) {
+        : _positions().listen((position) {
             final mark = widget.seconds ? position.inSeconds : position.inMilliseconds;
             if (mark == _shown || !mounted) return;
             _shown = mark;
             setState(() {});
           });
+  }
+
+  /// mpv reports the position every frame; the bar moves about a pixel in
+  /// 1/1500 of the video, so changes smaller than that are skipped.
+  Stream<Duration> _positions() {
+    final positions = widget.player.stream.position;
+    if (widget.seconds) return positions;
+    final step = Duration(microseconds: (widget.player.state.duration.inMicroseconds / 1500).round());
+    return coarse(positions, step: step < const Duration(milliseconds: 40) ? const Duration(milliseconds: 40) : step > const Duration(milliseconds: 500) ? const Duration(milliseconds: 500) : step);
   }
 
   @override

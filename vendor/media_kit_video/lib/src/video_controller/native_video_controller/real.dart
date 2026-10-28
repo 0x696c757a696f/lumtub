@@ -158,8 +158,13 @@ class NativeVideoController extends PlatformVideoController {
     // Store the [NativeVideoController] in the [_controllers].
     _controllers[handle] = controller;
 
+    // Lumtub: on Windows only the Direct3D 11 interop is loaded unless
+    // zero-copy DXVA2 is asked for. Loading every interop made a Direct3D 9
+    // device too, which held up drawing the window.
+    final zeroCopyDxva2 = configuration.hwdec!.split(',').map((e) => e.trim()).contains('dxva2');
     await controller.setProperties(
       {
+        if (Platform.isWindows) 'gpu-hwdec-interop': zeroCopyDxva2 ? 'auto' : 'd3d11-egl',
         'vo': configuration.vo!,
         'hwdec': configuration.hwdec!,
         'vid': 'auto',

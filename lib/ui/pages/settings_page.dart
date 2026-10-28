@@ -147,9 +147,16 @@ class _Entries extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
         listenable: controller,
-        builder: (context, _) => ListView(padding: const EdgeInsets.only(top: 4, bottom: 24), children: [
-          for (final entry in settingEntries(category, controller)) entry.builder(context),
-        ]),
+        builder: (context, _) {
+          // Built as they scroll in: a long group no longer builds every row
+          // whenever any setting changes.
+          final entries = settingEntries(category, controller);
+          return ListView.builder(
+            padding: const EdgeInsets.only(top: 4, bottom: 24),
+            itemCount: entries.length,
+            itemBuilder: (context, index) => entries[index].builder(context),
+          );
+        },
       );
 }
 

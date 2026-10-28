@@ -4,6 +4,7 @@
 //! recommendations; the process tree is used when the platform has one.
 
 pub mod comments;
+pub mod comment_action;
 pub mod filter;
 pub mod downloads;
 pub mod format_policy;
@@ -23,11 +24,17 @@ pub mod innertube;
 pub mod listing;
 pub mod live_chat;
 pub mod taste;
+pub mod tv_account;
+pub mod tv_browse;
+pub mod tv_history;
 pub mod signing;
 pub mod update;
+pub mod browser_sign_in;
+pub mod vault;
+pub mod web_account;
 
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    19
+    23
 }

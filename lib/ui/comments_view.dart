@@ -9,6 +9,7 @@ import '../models.dart';
 import '../youtube_comments.dart';
 import 'common.dart';
 import 'linked_text.dart';
+import 'rating_buttons.dart';
 import 'pages/channel_page.dart';
 import 'theme.dart';
 import 'translatable.dart';
@@ -115,7 +116,8 @@ class _CommentsSectionState extends State<CommentsSection> {
     );
   }
 
-  /// Only video comments can be written: YouTube's API has none for posts.
+  /// Video comments are written with the Google sign-in; posts, which
+  /// YouTube's API has nothing for, with the cookie sign-in.
   bool get _canWrite => widget.videoId != null && (widget.controller.account?.signedIn ?? false);
 
   YoutubeComment _own(String text) => YoutubeComment(
@@ -129,6 +131,17 @@ class _CommentsSectionState extends State<CommentsSection> {
     final posted = await widget.controller.account?.postComment(videoId: widget.videoId!, text: text) ?? false;
     if (posted) _loader.addOwn(_own(text.trim()));
     return posted;
+  }
+
+  /// Writes under a post, with the cookie sign-in.
+  Future<bool> _create(String text) async {
+    final failed = await _loader.create(text.trim());
+    if (failed == null) {
+      _loader.addOwn(_own(text.trim()));
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failed)));
+    }
+    return failed == null;
   }
 
   Future<bool> _reply(YoutubeComment parent, String text) async {
@@ -205,7 +218,8 @@ class _CommentsSectionState extends State<CommentsSection> {
             }),
             const SizedBox(height: 8),
             if (_searching) _searchBar(context),
-            if (_canWrite) CommentComposer(hint: tr('添加评论…'), onSubmit: _post),
+            if (_canWrite) CommentComposer(hint: tr('添加评论…'), onSubmit: _post)
+            else if (loader.canCreate) CommentComposer(hint: tr('添加评论…'), onSubmit: _create),
           ];
           final prefs = widget.controller.preferences;
           final shown = [for (final comment in loader.comments) if (!prefs.blocksCommenter(comment.author, comment.channelId) && (_words.isEmpty || _matches(comment))) comment];
@@ -281,17 +295,15 @@ class _CommentTile extends StatelessWidget {
           Translatable(
             controller: controller,
             text: comment.text,
-            builder: (context, text) => LinkedText(text, style: const TextStyle(height: 1.45), onTime: onSeek ?? (_) {}, onLink: openExternal),
+            builder: (context, text) => LinkedText(text, style: const TextStyle(height: 1.45), emojis: comment.emojis, onTime: onSeek ?? (_) {}, onLink: openExternal),
           ),
           const SizedBox(height: 4),
           Row(children: [
-            Tooltip(
-              message: tr('点赞数。YouTube 官方接口不支持给评论点赞'),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.thumb_up_outlined, size: 14, color: colors.outline),
-                const SizedBox(width: 4),
-                Text(comment.likes.isEmpty ? '0' : comment.likes, style: small),
-              ]),
+            RatingButtons(
+              likes: comment.likes,
+              state: loader.ratingOf(comment),
+              loaded: loader.loadedRatingOf(comment),
+              onRate: loader.canRate(comment) ? (want) => loader.rate(comment, want) : null,
             ),
             if (comment.hearted) ...[
               const SizedBox(width: 12),

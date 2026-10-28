@@ -20,6 +20,7 @@ class LiveChatMessage {
     this.authorAvatar,
     this.amount,
     this.stickerUrl,
+    this.emojis = const {},
   });
 
   final String id;
@@ -35,6 +36,8 @@ class LiveChatMessage {
   final String? amount;
   /// The Super Sticker image, when this is a paid sticker.
   final String? stickerUrl;
+  /// Custom emoji in [text]: shortcut to picture address.
+  final Map<String, String> emojis;
 
   /// Parses one yt-dlp `live_chat` line. Status actions without a chat item
   /// and unknown renderer types are left out.
@@ -61,6 +64,7 @@ class LiveChatMessage {
           authorAvatar: m['authorAvatar'] as String?,
           amount: m['amount'] as String?,
           stickerUrl: m['stickerUrl'] as String?,
+          emojis: (m['emojis'] as Map<String, dynamic>?)?.cast<String, String>() ?? const {},
         ),
     ];
   }

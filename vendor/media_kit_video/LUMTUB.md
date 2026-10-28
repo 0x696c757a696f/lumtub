@@ -25,3 +25,7 @@ The changes, marked "Lumtub" in the code:
   render, ANGLE draw and Flutter read, count frames announced while one was
   still waiting and frames drawn against frames Flutter took, and return them through `VideoOutputManager.Stats`, so the
   log shows where frames are lost.
+- `lib/src/video_controller/native_video_controller/real.dart`: on Windows
+  `gpu-hwdec-interop` is `d3d11-egl` unless zero-copy `dxva2` is in `hwdec`,
+  so making the output does not also make a Direct3D 9 device for the
+  DXVA2 interop.

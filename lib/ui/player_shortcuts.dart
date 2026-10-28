@@ -104,7 +104,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
   void next() => unawaited(controller.playNext());
   const digits = [LogicalKeyboardKey.digit0, LogicalKeyboardKey.digit1, LogicalKeyboardKey.digit2, LogicalKeyboardKey.digit3, LogicalKeyboardKey.digit4, LogicalKeyboardKey.digit5, LogicalKeyboardKey.digit6, LogicalKeyboardKey.digit7, LogicalKeyboardKey.digit8, LogicalKeyboardKey.digit9];
   const numpad = [LogicalKeyboardKey.numpad0, LogicalKeyboardKey.numpad1, LogicalKeyboardKey.numpad2, LogicalKeyboardKey.numpad3, LogicalKeyboardKey.numpad4, LogicalKeyboardKey.numpad5, LogicalKeyboardKey.numpad6, LogicalKeyboardKey.numpad7, LogicalKeyboardKey.numpad8, LogicalKeyboardKey.numpad9];
-  return {
+  final bindings = <ShortcutActivator, VoidCallback>{
     for (var i = 0; i < 10; i++) ...{
       SingleActivator(digits[i]): () => jumpToTenth(i),
       SingleActivator(numpad[i]): () => jumpToTenth(i),
@@ -151,6 +151,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     const SingleActivator(LogicalKeyboardKey.period, shift: true): () => stepSpeed(1),
     const SingleActivator(LogicalKeyboardKey.comma, shift: true): () => stepSpeed(-1),
   };
+  return {for (final MapEntry(:key, :value) in bindings.entries) NotWhileTyping(key): value};
 }
 
 /// The speed in [speeds] after [rate], up for a positive [direction], down
@@ -187,3 +188,24 @@ Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => sho
         actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('知道了')))],
       ),
     );
+
+/// [activator], except while a text field has the focus, so typing a
+/// comment or a search inside the watch page types instead of seeking.
+class NotWhileTyping extends ShortcutActivator {
+  const NotWhileTyping(this.activator);
+  final ShortcutActivator activator;
+
+  static bool get typing {
+    final context = FocusManager.instance.primaryFocus?.context;
+    return context != null && (context.widget is EditableText || context.findAncestorStateOfType<EditableTextState>() != null);
+  }
+
+  @override
+  bool accepts(KeyEvent event, HardwareKeyboard state) => !typing && activator.accepts(event, state);
+
+  @override
+  Iterable<LogicalKeyboardKey>? get triggers => activator.triggers;
+
+  @override
+  String debugDescribeKeys() => activator.debugDescribeKeys();
+}

@@ -33,6 +33,8 @@ class _HistoryPageState extends State<HistoryPage> {
   String _query = '';
   bool _selecting = false;
   final _selected = <String>{};
+  /// Showing the account's history on YouTube instead of this computer's.
+  bool _youtube = false;
 
   AppController get controller => widget.controller;
 
@@ -45,7 +47,9 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     final all = controller.history;
-    if (all.isEmpty) {
+    final signedIn = controller.tvFeed?.available ?? false;
+    if (signedIn && _youtube) return _youtubeHistory(context);
+    if (all.isEmpty && !signedIn) {
       return StatusView(icon: Icons.history_rounded, title: tr('还没有观看记录'), message: tr('播放过的视频会保存在本机，最多保留 60 条。'));
     }
     final items = filterHistory(all, _query);
@@ -72,6 +76,7 @@ class _HistoryPageState extends State<HistoryPage> {
                 TextButton.icon(onPressed: () => _confirmClear(context), icon: const Icon(Icons.delete_sweep_outlined), label: Text(tr('清空'))),
               ]),
       )),
+      if (signedIn) SliverToBoxAdapter(child: _sourceChips()),
       SliverToBoxAdapter(child: Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
         child: Align(alignment: Alignment.centerLeft, child: ConstrainedBox(
@@ -91,7 +96,9 @@ class _HistoryPageState extends State<HistoryPage> {
           ),
         )),
       )),
-      if (items.isEmpty)
+      if (all.isEmpty)
+        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.history_rounded, title: tr('还没有观看记录'), message: tr('播放过的视频会保存在本机，最多保留 60 条。')))
+      else if (items.isEmpty)
         SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.search_off_rounded, title: tr('没有匹配的历史记录'), message: tr('换个关键词试试。')))
       else if (_selecting)
         SliverPadding(
@@ -116,6 +123,57 @@ class _HistoryPageState extends State<HistoryPage> {
         ),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
+  }
+
+  Widget _sourceChips() => Padding(
+        padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 12),
+        child: Wrap(spacing: 8, children: [
+          ChoiceChip(label: Text(tr('本机')), selected: !_youtube, onSelected: (_) => setState(() => _youtube = false)),
+          ChoiceChip(label: Text(tr('YouTube 账号')), selected: _youtube, onSelected: (_) => setState(() {
+                _youtube = true;
+                _stopSelecting();
+              })),
+        ]),
+      );
+
+  /// The account's history as YouTube keeps it, read with the TV-code
+  /// sign-in. Read only: deleting goes through YouTube itself.
+  Widget _youtubeHistory(BuildContext context) {
+    final loader = controller.youtubeHistory;
+    if (loader == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) controller.openYoutubeHistory();
+      });
+      return CustomScrollView(slivers: [SliverToBoxAdapter(child: PageHeader(tr('观看历史'))), SliverToBoxAdapter(child: _sourceChips()), const SliverSkeletonGrid(rows: 3)]);
+    }
+    final items = controller.visible(loader.items);
+    final error = loader.error;
+    return NearEndListener(
+      onNearEnd: loader.loadMore,
+      child: CustomScrollView(key: const PageStorageKey('youtube-history'), slivers: [
+        SliverToBoxAdapter(child: PageHeader(
+          tr('观看历史'),
+          subtitle: tr('YouTube 账号里的观看记录'),
+          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+            TextButton.icon(onPressed: () => openExternal('https://www.youtube.com/feed/history'), icon: const Icon(Icons.open_in_new_rounded), label: Text(tr('在 YouTube 管理'))),
+            TextButton.icon(onPressed: () => controller.openYoutubeHistory(reload: true), icon: const Icon(Icons.refresh_rounded), label: Text(tr('刷新'))),
+          ]),
+        )),
+        SliverToBoxAdapter(child: _sourceChips()),
+        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
+        if (loader.loading) ...[
+          if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
+          SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),
+        ] else if (items.isEmpty && error == null)
+          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.history_rounded, title: tr('YouTube 上还没有观看记录'))),
+        if (error != null)
+          SliverToBoxAdapter(child: Padding(
+            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
+            child: ErrorBanner(tr('无法加载 YouTube 观看记录：{0}', [error]), onRetry: () => loader.loadMore(retry: true)),
+          )),
+        const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
+      ]),
+    );
   }
 
   void _stopSelecting() => setState(() {

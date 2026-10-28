@@ -63,14 +63,14 @@ pub type PostCObject = unsafe extern "C" fn(port: i64, message: *mut CObject) ->
 static POST: RwLock<Option<PostCObject>> = RwLock::new(None);
 
 /// A message element; the Dart VM copies it while posting.
-enum Item {
+pub(crate) enum Item {
     Int(i64),
     Text(String),
     Bytes(Vec<u8>),
     Null,
 }
 
-fn post(port: i64, items: Vec<Item>) -> bool {
+pub(crate) fn post(port: i64, items: Vec<Item>) -> bool {
     let Some(send) = *POST.read().unwrap_or_else(|e| e.into_inner()) else {
         return false;
     };
@@ -137,6 +137,11 @@ static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
 });
 pub(crate) fn runtime() -> &'static Runtime {
     &RUNTIME
+}
+
+/// The client every request goes through, on the app's proxy and DNS.
+pub(crate) fn client() -> reqwest::Client {
+    CLIENT.read().unwrap_or_else(|e| e.into_inner()).clone()
 }
 
 static CLIENT: LazyLock<RwLock<reqwest::Client>> = LazyLock::new(|| RwLock::new(build(&Settings { proxy: None, system: true, dns: Default::default() })));

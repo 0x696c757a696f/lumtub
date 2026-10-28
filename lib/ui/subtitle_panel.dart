@@ -122,7 +122,9 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final main = player.state.track.subtitle;
     final mainKey = !_real(main) ? 'off' : labels.contains(main.title) || main.title == translation?.label ? 'o:${main.title}' : 't:${main.id}';
     final secondary = controller.secondarySubtitle;
-    final secondaryKey = secondary == null ? 'off' : 'o:${secondary.label}';
+    // Being fetched or translated still: shown as on its way, not 关闭.
+    final loading = controller.secondaryLoading;
+    final secondaryKey = secondary == null ? (loading == null ? 'off' : 'o:${loading.label}') : 'o:${secondary.label}';
     _options = {for (final o in [if (translation != null) translation, ...offered]) 'o:${o.label}': o};
 
     final searching = _query.isNotEmpty;
@@ -137,7 +139,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final colors = theme.colorScheme;
 
     Widget column({required bool primary}) {
-      final busy = primary ? _busyMain : _busySecondary;
+      final busy = primary ? _busyMain : _busySecondary ?? (loading == null ? null : 'o:${loading.label}');
       // A row shows as chosen the moment it is tapped; loading follows.
       final selected = busy ?? (primary ? mainKey : secondaryKey);
       final mine = primary ? mainKey : secondaryKey;

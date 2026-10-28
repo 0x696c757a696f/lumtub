@@ -6,7 +6,7 @@ use serde::Serialize;
 use serde_json::Value;
 use std::os::raw::c_char;
 
-use crate::comments::{display, https, plain_text, token};
+use crate::comments::{Rating, button_rating, display, find_string, https, plain_text, token};
 use crate::innertube::at;
 use crate::taste::{give_json, text};
 
@@ -56,6 +56,31 @@ pub struct Post {
     pub images: Vec<String>,
     pub video: Option<AttachedVideo>,
     pub poll: Vec<String>,
+    /// The poll's choices with their votes, in pages loaded signed in.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub choices: Vec<PollChoice>,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub votes: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rating: Option<Rating>,
+}
+
+/// A poll choice; [select] and [deselect] are the comment actions that
+/// vote for it and take the vote back.
+#[derive(Serialize, Debug, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct PollChoice {
+    pub text: String,
+    pub selected: bool,
+    /// The share of votes, 0 to 1, once the user voted.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ratio: Option<f64>,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub percent: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub select: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deselect: Option<String>,
 }
 
 #[derive(Serialize, Debug, PartialEq, Default)]
@@ -98,6 +123,23 @@ fn post(post: &Value) -> Option<Post> {
         Some(Value::Array(choices)) => choices.iter().map(|c| plain_text(c.get("text"))).filter(|t| !t.is_empty()).collect(),
         _ => Vec::new(),
     };
+    let action = |choice: &Value, key: &str| choice.get(key).and_then(|e| find_string(e, "action"));
+    let choices: Vec<PollChoice> = match of(&["pollRenderer", "choices"]) {
+        Some(Value::Array(choices)) => choices
+            .iter()
+            .map(|c| PollChoice {
+                text: plain_text(c.get("text")),
+                selected: c.get("selected") == Some(&Value::Bool(true)),
+                ratio: c.get("voteRatio").and_then(Value::as_f64),
+                percent: plain_text(c.get("votePercentage")),
+                select: action(c, "selectServiceEndpoint"),
+                deselect: action(c, "deselectServiceEndpoint"),
+            })
+            .filter(|c| !c.text.is_empty())
+            .collect(),
+        _ => Vec::new(),
+    };
+    let votable = choices.iter().any(|c| c.select.is_some());
     Some(Post {
         id,
         text: plain_text(post.get("contentText")),
@@ -107,6 +149,9 @@ fn post(post: &Value) -> Option<Post> {
         images,
         video,
         poll,
+        choices: if votable { choices } else { Vec::new() },
+        votes: plain_text(of(&["pollRenderer", "totalVotes"])),
+        rating: button_rating(at(post, &["actionButtons", "commentActionButtonsRenderer"])),
     })
 }
 
@@ -219,6 +264,26 @@ mod tests {
         assert_eq!(first.images, ["https://yt3.ggpht.com/big"]);
         assert_eq!(page.posts[1].video, Some(AttachedVideo { id: "dQw4w9WgXcQ".into(), title: "视频".into(), channel: "频道".into(), duration: Some(3723) }));
         assert_eq!(page.posts[2].poll, ["是"]);
+        assert!(page.posts[2].choices.is_empty());
+    }
+
+    #[test]
+    fn reads_a_poll_that_can_be_voted_in() {
+        let vote = |action: &str| json!({"commandExecutorCommand": {"commands": [{"performCommentActionEndpoint": {"action": action}}]}});
+        let data = json!({"contents": [{"postRenderer": {"postId": "P", "backstageAttachment": {"pollRenderer": {
+            "totalVotes": {"simpleText": "1.2K 票"},
+            "choices": [
+                {"text": {"runs": [{"text": "是"}]}, "selected": true, "voteRatio": 0.75, "votePercentage": {"simpleText": "75%"}, "selectServiceEndpoint": vote("S1"), "deselectServiceEndpoint": vote("D1")},
+                {"text": {"runs": [{"text": "否"}]}, "selected": false, "selectServiceEndpoint": vote("S2"), "deselectServiceEndpoint": vote("D2")}
+            ]
+        }}}}]});
+        let post = &page(&data).posts[0];
+        assert_eq!(post.votes, "1.2K 票");
+        assert_eq!(
+            post.choices[0],
+            PollChoice { text: "是".into(), selected: true, ratio: Some(0.75), percent: "75%".into(), select: Some("S1".into()), deselect: Some("D1".into()) }
+        );
+        assert_eq!((post.choices[1].selected, post.choices[1].select.as_deref()), (false, Some("S2")));
     }
 
     #[test]

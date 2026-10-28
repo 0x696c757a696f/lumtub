@@ -21,6 +21,60 @@ class PostsLoader extends ChangeNotifier {
   bool _started = false;
   bool _disposed = false;
 
+  /// Ratings changed here, by post id, ahead of the next load.
+  final _rated = <String, String>{};
+
+  /// `like`, `dislike` or empty for [post], as last pressed here.
+  String ratingOf(CommunityPost post) => _rated[post.id] ?? post.rating?.state ?? '';
+
+  /// Presses like or dislike ([want]) on [post]: shown at once, taken back
+  /// if YouTube refuses. Returns why it failed, or null.
+  Future<String?> rate(CommunityPost post, String want) async {
+    final before = ratingOf(post);
+    final action = post.rating?.actionFor(before, want);
+    final signIn = _source.signIn;
+    if (action == null || signIn == null) return null;
+    _rated[post.id] = before == want ? '' : want;
+    _notify();
+    try {
+      await signIn.rate(action, post: true);
+      return null;
+    } catch (e) {
+      _rated[post.id] = before;
+      _notify();
+      return friendlyError(e);
+    }
+  }
+
+  /// Poll choices voted for here, by post id: the choice's index, or -1
+  /// when the vote was taken back.
+  final _voted = <String, int>{};
+
+  /// The index of the choice [post]'s poll has the user's vote on, or -1.
+  int voteOf(CommunityPost post) => _voted[post.id] ?? post.choices.indexWhere((c) => c.selected);
+
+  /// Votes for choice [index] of [post]'s poll, or takes the vote back when
+  /// it is already there: shown at once, taken back if YouTube refuses.
+  /// Returns why it failed, or null.
+  Future<String?> vote(CommunityPost post, int index) async {
+    final signIn = _source.signIn;
+    if (signIn == null || index < 0 || index >= post.choices.length) return null;
+    final before = voteOf(post);
+    final choice = post.choices[index];
+    final action = before == index ? choice.deselect : choice.select;
+    if (action == null) return null;
+    _voted[post.id] = before == index ? -1 : index;
+    _notify();
+    try {
+      await signIn.rate(action, post: true);
+      return null;
+    } catch (e) {
+      _voted[post.id] = before;
+      _notify();
+      return friendlyError(e);
+    }
+  }
+
   /// Fetches the next page; after a failure only [retry] fetches again.
   Future<void> loadMore({bool retry = false}) async {
     if (loading || !hasMore || (error != null && !retry)) return;

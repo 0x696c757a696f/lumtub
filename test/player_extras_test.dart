@@ -189,7 +189,7 @@ void main() {
     });
 
     test('maps the YouTube keys without clashing with the old ones', () {
-      final keys = playerShortcuts(controller, () => null, onScreenshot: () {}).keys.whereType<SingleActivator>().toList();
+      final keys = playerShortcuts(controller, () => null, onScreenshot: () {}).keys.whereType<NotWhileTyping>().map((k) => k.activator).whereType<SingleActivator>().toList();
       final seen = <String>{};
       for (final k in keys) {
         expect(seen.add('${k.trigger.keyId}/${k.shift}/${k.control}/${k.alt}'), isTrue, reason: 'duplicate ${k.trigger.keyLabel}');
@@ -202,7 +202,25 @@ void main() {
       }
       // Shift + , and . still change the speed.
       expect(keys.any((k) => k.trigger == LogicalKeyboardKey.period && k.shift), isTrue);
-      expect(playerShortcuts(controller, () => null).keys.whereType<SingleActivator>().any((k) => k.trigger == LogicalKeyboardKey.keyS), isFalse, reason: 'no screenshot without a handler');
+      expect(playerShortcuts(controller, () => null).keys.whereType<NotWhileTyping>().map((k) => k.activator).whereType<SingleActivator>().any((k) => k.trigger == LogicalKeyboardKey.keyS), isFalse, reason: 'no screenshot without a handler');
+    });
+
+    testWidgets('keys type into a text field instead of seeking', (tester) async {
+      var fired = 0;
+      final field = FocusNode();
+      final other = FocusNode();
+      await tester.pumpWidget(MaterialApp(home: Scaffold(body: CallbackShortcuts(
+        bindings: {const NotWhileTyping(SingleActivator(LogicalKeyboardKey.digit5)): () => fired++},
+        child: Column(children: [TextField(focusNode: field), Focus(focusNode: other, child: const SizedBox(width: 10, height: 10))]),
+      ))));
+      field.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit5);
+      expect(fired, 0);
+      other.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit5);
+      expect(fired, 1);
     });
 
     test('the help lists the new keys', () {

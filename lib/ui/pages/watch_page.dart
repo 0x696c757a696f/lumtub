@@ -14,6 +14,7 @@ import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
 import '../cast_ui.dart';
 import '../common.dart';
+import '../emoji_text.dart';
 import '../lights_off.dart';
 import '../linked_text.dart';
 import '../player_controls.dart';
@@ -198,6 +199,7 @@ class _RatingButtons extends StatelessWidget {
     final dislikes = controller.dislikes?.dislikes;
     Widget button(VideoRating rating, IconData icon, IconData selectedIcon, String label, int? count, {String? note}) {
       final selected = signedIn && account!.ratingOf(item.id) == rating;
+      final shown = count == null || !signedIn ? count : (count + account!.ratingChange(item.id, rating)).clamp(0, 1 << 62);
       return Tooltip(
         message: [
           if (!signedIn) tr('登录 Google 账号后可以{0}', [label]) else if (selected) tr('取消{0}', [label]) else label,
@@ -213,7 +215,7 @@ class _RatingButtons extends StatelessWidget {
               ? () => account!.rate(item, rating)
               : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('登录 Google 账号后可以{0}', [label])))),
           icon: Icon(selected ? selectedIcon : icon, size: 20),
-          label: Text(count == null ? label : formatCount(count)),
+          label: Text(shown == null ? label : formatCount(shown)),
         ),
       );
     }
@@ -535,9 +537,11 @@ class _ReplayChatPanel extends StatelessWidget {
         Padding(padding: const EdgeInsets.all(12), child: Text(tr(live ? '当前直播没有公开聊天' : '这个直播录像没有公开的聊天回放'), style: TextStyle(color: context.colors.onSurfaceVariant))),
     ];
     if (messages.isEmpty) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: header);
+    // The same widget for the same message, so a flush of new messages
+    // does not build the ones already shown again.
     Widget messageAt(int index) {
       final message = messages[index];
-      return _ReplayChatMessage(message: message, onSeek: message.offset == null ? null : () => controller.player?.seek(message.offset!));
+      return _chatRows[message] ??= _ReplayChatMessage(message: message, onSeek: message.offset == null ? null : () => controller.player?.seek(message.offset!));
     }
     if (shrinkWrap) {
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -555,6 +559,8 @@ class _ReplayChatPanel extends StatelessWidget {
     );
   }
 }
+
+final _chatRows = Expando<Widget>();
 
 class _ReplayChatMessage extends StatelessWidget {
   const _ReplayChatMessage({required this.message, this.onSeek});
@@ -585,14 +591,14 @@ class _ReplayChatMessage extends StatelessWidget {
               if (message.amount != null) Text(message.amount!, style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w700)),
               if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: context.colors.outline, fontSize: 12))),
             ]),
-            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 3), child: Text(message.text)),
+            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 3), child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis)))),
             if (message.stickerUrl != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Image.network(
                   message.stickerUrl!,
                   height: 56,
-                  cacheHeight: (56 * MediaQuery.of(context).devicePixelRatio).round(),
+                  cacheHeight: (56 * MediaQuery.devicePixelRatioOf(context)).round(),
                   errorBuilder: (context, error, stack) => const SizedBox.shrink(),
                 ),
               ),
@@ -668,8 +674,16 @@ class _UpNext extends StatelessWidget {
 }
 
 /// Flutter's subtitle view styled from 字幕设置, or hidden when libmpv draws
-/// the subtitles (see AppController's player setup).
-SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings) {
+/// the subtitles (see AppController's player setup). The text follows the
+/// size of the video; a small window, such as picture in picture, passes
+/// [smallWindow] with its size, which keeps the text readable and shrinks
+/// the gap below it.
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow}) {
+  // The view scales by area against 1080p, which makes the text tiny in a
+  // small window; there it goes by the short side, and no smaller than
+  // three fifths.
+  final textScaler = smallWindow == null ? null : TextScaler.linear((smallWindow.shortestSide / 720).clamp(0.6, 1.0));
+  final paddingScale = smallWindow == null ? 1.0 : (smallWindow.shortestSide / 720).clamp(0.3, 1.0);
   if (settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
   TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
@@ -694,6 +708,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings) {
     style: style(settings.subtitleFont, settings.subtitleScale, settings.subtitleColor, settings.subtitleOpacity),
     secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
     // sub-pos counts from the top; 100 is the bottom edge.
-    padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + (100 - settings.subtitlePosition) * 4.0),
+    textScaler: textScaler,
+    padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );
 }

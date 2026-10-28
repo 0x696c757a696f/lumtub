@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 
 import '../youtube_comments.dart';
+import '../app_log.dart';
 import '../friendly_error.dart';
+import '../l10n/l10n.dart';
 
 /// The replies under one comment, loaded on demand.
 class ReplyThread {
@@ -29,6 +31,75 @@ class CommentsLoader extends ChangeNotifier {
   final replies = <String, ReplyThread>{};
   int _generation = 0;
   bool _disposed = false;
+
+  /// Ratings changed here, by comment id, ahead of the next load.
+  final _rated = <String, String>{};
+
+  /// Like buttons found for comments their list came without, by id: the
+  /// TV app gives them only on the page of one comment.
+  final _found = <String, CommentRating>{};
+  /// A comment with buttons, whose actions others' are made from.
+  (String, CommentRating)? _template;
+
+  /// `like`, `dislike` or empty for [comment], as last pressed here.
+  String ratingOf(YoutubeComment comment) => _rated[comment.id] ?? comment.rating?.state ?? _found[comment.id]?.state ?? '';
+
+  /// `like`, `dislike` or empty for [comment] when it was loaded.
+  String loadedRatingOf(YoutubeComment comment) => comment.rating?.state ?? _found[comment.id]?.state ?? '';
+
+  /// Whether [comment] can be liked: its buttons came with it, or can be
+  /// found or made signed in.
+  bool canRate(YoutubeComment comment) =>
+      comment.rating != null || _found.containsKey(comment.id) || ((_post ? _source.webSignedIn : _source.signedIn) && (comment.detailToken != null || _template != null));
+
+  void _learn(Iterable<YoutubeComment> comments) {
+    for (final c in comments) {
+      final rating = c.rating;
+      if (rating == null) continue;
+      _found[c.id] = rating;
+      _template ??= (c.id, rating);
+    }
+  }
+
+  /// [comment]'s buttons: as they came, from its own page, or made from
+  /// another comment's.
+  Future<CommentRating?> _ratingFor(YoutubeComment comment) async {
+    final known = comment.rating ?? _found[comment.id];
+    if (known != null) return known;
+    final detail = comment.detailToken;
+    if (detail != null) {
+      try {
+        _learn((await _source.more(detail, post: _post)).comments);
+      } catch (e) {
+        logInfo('Could not read the page of comment ${comment.id}: $e');
+      }
+      if (_found[comment.id] case final found?) return found;
+    }
+    final template = _template;
+    final made = template?.$2.forComment(template.$1, comment.id);
+    if (made != null) _found[comment.id] = made;
+    return made;
+  }
+
+  /// Presses like or dislike ([want]) on [comment]: shown at once, taken
+  /// back if YouTube refuses. Returns why it failed, or null.
+  Future<String?> rate(YoutubeComment comment, String want) async {
+    final before = ratingOf(comment);
+    final rating = await _ratingFor(comment);
+    if (rating == null) return tr('YouTube 没有给这条评论点赞按钮');
+    final action = rating.actionFor(before, want);
+    if (action == null) return null;
+    _rated[comment.id] = before == want ? '' : want;
+    _notify();
+    try {
+      await _source.rate(action, post: _post);
+      return null;
+    } catch (e) {
+      _rated[comment.id] = before;
+      _notify();
+      return friendlyError(e);
+    }
+  }
 
   bool get hasMore => !started || _next != null;
   bool get _post => postId != null;
@@ -63,8 +134,12 @@ class CommentsLoader extends ChangeNotifier {
               ? await _source.post(postId!, newest: newest)
               : await _source.video(videoId!, newest: newest);
       if (generation != _generation) return;
-      if (!started) count = page.count;
+      if (!started) {
+        count = page.count;
+        createParams = page.createParams;
+      }
       started = true;
+      _learn(page.comments);
       final seen = {for (final c in comments) c.id};
       comments = [...comments, ...page.comments.where((c) => seen.add(c.id))];
       // A page with nothing new would only repeat.
@@ -124,7 +199,9 @@ class CommentsLoader extends ChangeNotifier {
     try {
       final page = await _source.more(token, post: _post);
       if (generation != _generation) return;
-      final seen = {for (final c in thread.replies) c.id};
+      _learn(page.comments);
+      // The TV app's replies page starts with the comment itself.
+      final seen = {comment.id, for (final c in thread.replies) c.id};
       thread
         ..replies = [...thread.replies, ...page.comments.where((c) => seen.add(c.id))]
         ..next = page.comments.isEmpty ? null : page.continuation;
@@ -133,6 +210,23 @@ class CommentsLoader extends ChangeNotifier {
     } finally {
       thread.loading = false;
       _notify();
+    }
+  }
+
+  /// The post's comment box, when it was loaded with the cookie sign-in.
+  String? createParams;
+
+  bool get canCreate => _post && createParams != null && _source.webSignedIn;
+
+  /// Writes [text] under the post. Returns why it failed, or null.
+  Future<String?> create(String text) async {
+    final params = createParams;
+    if (params == null) return tr('这个帖子没有评论框');
+    try {
+      await _source.create(params, text);
+      return null;
+    } catch (e) {
+      return friendlyError(e);
     }
   }
 

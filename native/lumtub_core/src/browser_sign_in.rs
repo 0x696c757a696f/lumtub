@@ -276,12 +276,29 @@ fn close(browser: &mut Child, socket: Option<&mut Socket>) {
     let _ = browser.wait();
 }
 
-/// Waits for [browser] to exit; false when this sign-in was cancelled or
-/// took too long, and the browser was killed.
-fn wait_closed(browser: &mut Child, current: impl Fn() -> bool, patience: Duration) -> bool {
+/// Whether a browser still has [profile] open. Chromium holds `lockfile`
+/// open without delete sharing on Windows and deletes it on exit; elsewhere
+/// it keeps the `SingletonLock` link.
+fn profile_in_use(profile: &Path) -> bool {
+    if cfg!(windows) {
+        let lock = profile.join("lockfile");
+        lock.exists() && std::fs::remove_file(&lock).is_err()
+    } else {
+        profile.join("SingletonLock").symlink_metadata().is_ok()
+    }
+}
+
+/// Waits for the browser to let go of [profile]; false when this sign-in
+/// was cancelled or took too long. The process started may hand the window
+/// to another one and exit at once, so its exit alone says nothing.
+fn wait_closed(browser: &mut Child, profile: &Path, current: impl Fn() -> bool, patience: Duration) -> bool {
     let begun = Instant::now();
+    let mut seen = false;
     loop {
-        if !matches!(browser.try_wait(), Ok(None)) {
+        let exited = !matches!(browser.try_wait(), Ok(None));
+        if profile_in_use(profile) {
+            seen = true;
+        } else if exited && (seen || begun.elapsed() > Duration::from_secs(20)) {
             return true;
         }
         if !current() || begun.elapsed() > patience {
@@ -355,7 +372,7 @@ pub fn sign_in(exe: &Path, folder: &Path, url: &str, opened: impl FnOnce(), read
         }
     };
     opened();
-    let outcome = if !wait_closed(&mut browser, current, PATIENCE) {
+    let outcome = if !wait_closed(&mut browser, &profile, current, PATIENCE) {
         Outcome::Closed
     } else {
         reading();

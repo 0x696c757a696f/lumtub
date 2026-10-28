@@ -23,90 +23,109 @@ class AccountSettings extends StatelessWidget {
   Widget build(BuildContext context) {
     final account = this.account;
     if (account == null) return ListTile(title: Text(tr('正在准备…')));
-    final colors = context.colors;
-    final error = account.error;
     final tv = tvSignIn;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      _Heading(tr('Google 登录'), tr('用 YouTube 官方接口：同步订阅、播放列表和喜欢的视频，给视频点赞，发评论，保存到播放列表，订阅频道。')),
-      switch (account.state) {
-        AccountState.signedIn => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor: colors.primaryContainer,
-                child: Icon(Icons.person_rounded, color: colors.onPrimaryContainer),
-              ),
-              title: Text(account.name ?? tr('YouTube 账号')),
-              trailing: account.canWrite ? null : FilledButton.tonal(onPressed: account.signIn, child: Text(tr('重新登录以启用点赞和评论'))),
-              subtitle: Text(account.syncing
-                  ? tr('正在同步订阅和播放列表…')
-                  : account.lastSync == null
-                      ? tr('已登录，尚未同步')
-                      : tr('上次同步：{0} {1}', [formatDate(account.lastSync!), _time(account.lastSync!)])),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Wrap(spacing: 8, runSpacing: 8, children: [
-                FilledButton.tonalIcon(
-                  onPressed: account.syncing ? null : account.sync,
-                  icon: account.syncing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.sync_rounded),
-                  label: Text(tr('立即同步')),
+    final web = webSignIn;
+    return ListenableBuilder(
+      listenable: Listenable.merge([account, if (tv != null) tv, if (web != null) web]),
+      builder: (context, _) {
+        final colors = context.colors;
+        final error = account.error;
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const _Intro(),
+          _Section(
+            number: 1,
+            title: tr('Google 登录'),
+            purpose: tr('同步订阅和播放列表，给视频点赞、评论、订阅。推荐，大多数人只需要这一个'),
+            signedIn: account.signedIn,
+            expanded: true,
+            children: [
+              switch (account.state) {
+                AccountState.signedIn => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: colors.primaryContainer,
+                        child: Icon(Icons.person_rounded, color: colors.onPrimaryContainer),
+                      ),
+                      title: Text(account.name ?? tr('YouTube 账号')),
+                      trailing: account.canWrite ? null : FilledButton.tonal(onPressed: account.signIn, child: Text(tr('重新登录以启用点赞和评论'))),
+                      subtitle: Text(account.syncing
+                          ? tr('正在同步订阅和播放列表…')
+                          : account.lastSync == null
+                              ? tr('已登录，尚未同步')
+                              : tr('上次同步：{0} {1}', [formatDate(account.lastSync!), _time(account.lastSync!)])),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Wrap(spacing: 8, runSpacing: 8, children: [
+                        FilledButton.tonalIcon(
+                          onPressed: account.syncing ? null : account.sync,
+                          icon: account.syncing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.sync_rounded),
+                          label: Text(tr('立即同步')),
+                        ),
+                        OutlinedButton(onPressed: () => _confirmSignOut(context, account), child: Text(tr('退出登录'))),
+                      ]),
+                    ),
+                  ]),
+                AccountState.signingIn => ListTile(
+                    leading: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
+                    title: Text(tr('请在浏览器中完成登录')),
+                    subtitle: Text(tr('已在默认浏览器打开 Google 登录页，完成后会自动回到这里。')),
+                    trailing: TextButton(onPressed: account.cancelSignIn, child: Text(tr('取消'))),
+                  ),
+                AccountState.signedOut => ListTile(
+                    leading: Icon(Icons.account_circle_outlined, color: colors.primary),
+                    title: Text(tr('未登录')),
+                    subtitle: Text(account.client == null ? tr('这个版本没有内置 Google 客户端，需要先在下方填写你自己的客户端。') : tr('登录后可以导入订阅、播放列表和喜欢的视频，也可以点赞、评论、保存到播放列表和订阅。')),
+                    trailing: FilledButton.icon(
+                      onPressed: account.client == null ? null : account.signIn,
+                      icon: const Icon(Icons.login_rounded),
+                      label: Text(tr('登录')),
+                    ),
+                  ),
+              },
+              if (error != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: error == YouTubeApiException.apiNotEnabled ? ErrorBanner(error, onRetry: () => openExternal(YouTubeApiException.enableApiUrl), retryLabel: tr('去启用')) : ErrorBanner(error),
                 ),
-                OutlinedButton(onPressed: () => _confirmSignOut(context, account), child: Text(tr('退出登录'))),
-              ]),
-            ),
-          ]),
-        AccountState.signingIn => ListTile(
-            leading: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
-            title: Text(tr('请在浏览器中完成登录')),
-            subtitle: Text(tr('已在默认浏览器打开 Google 登录页，完成后会自动回到这里。')),
-            trailing: TextButton(onPressed: account.cancelSignIn, child: Text(tr('取消'))),
+              _ClientSettings(account: account, note: note),
+            ],
           ),
-        AccountState.signedOut => ListTile(
-            leading: Icon(Icons.account_circle_outlined, color: colors.primary),
-            title: Text(tr('未登录')),
-            subtitle: Text(account.client == null ? tr('这个版本没有内置 Google 客户端，需要先在下方填写你自己的客户端。') : tr('登录后可以导入订阅、播放列表和喜欢的视频，也可以点赞、评论、保存到播放列表和订阅。')),
-            trailing: FilledButton.icon(
-              onPressed: account.client == null ? null : account.signIn,
-              icon: const Icon(Icons.login_rounded),
-              label: Text(tr('登录')),
+          if (tv != null)
+            _Section(
+              number: 2,
+              title: tr('电视码登录'),
+              purpose: tr('YouTube 首页推荐、观看历史，给评论点赞'),
+              signedIn: tv.signedIn,
+              expanded: tv.signedIn || tv.state == TvSignInState.waiting || tv.error != null,
+              children: [
+                _TvSignInTile(tv, saveSamples: saveTvSamples, note: note),
+                if (_differentAccounts(account, tv) case final names?)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: ErrorBanner(tr('两种登录显示的账号不同（Google：{0}，电视码：{1}）。如果不是同一个账号，订阅、点赞会分在两个账号上，建议退出一个重新登录。', [names.$1, names.$2])),
+                  ),
+              ],
+            ),
+          if (web != null)
+            _Section(
+              number: tv == null ? 2 : 3,
+              title: tr('浏览器登录'),
+              purpose: tr('只用于给社区帖子点赞、投票和评论'),
+              signedIn: web.signedIn,
+              expanded: web.signedIn || web.waiting || web.error != null,
+              children: [CookieSignInTile(web, note: note)],
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+            child: Text(
+              tr('登录时请用同一个 Google 账号。登录凭据加密保存在本机，只有你在 Lumtub 里点赞、评论、保存或订阅时才会修改账号，不会上传本机的观看记录。视频播放不使用账号，会员或年龄限制视频不一定能播放。'),
+              style: note,
             ),
           ),
+        ]);
       },
-      if (error != null)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: error == YouTubeApiException.apiNotEnabled
-              ? ErrorBanner(error, onRetry: () => openExternal(YouTubeApiException.enableApiUrl), retryLabel: tr('去启用'))
-              : ErrorBanner(error),
-        ),
-      if (tv != null)
-        ListenableBuilder(
-          listenable: tv,
-          builder: (context, _) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Divider(height: 24),
-            _Heading(tr('电视码登录'), tr('用 YouTube 电视版的接口，做官方接口做不到的事：给评论和社区帖子点赞、点踩。')),
-            _TvSignInTile(tv, saveSamples: saveTvSamples, note: note),
-            if (_differentAccounts(account, tv) case final names?)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: ErrorBanner(tr('两种登录显示的账号不同（Google：{0}，电视码：{1}）。如果不是同一个账号，订阅、点赞会分在两个账号上，建议退出一个重新登录。', [names.$1, names.$2])),
-              ),
-          ]),
-        ),
-      if (webSignIn case final web?) ...[
-        const Divider(height: 24),
-        _Heading(tr('浏览器登录（Cookie）'), tr('用 YouTube 网页版的接口，做电视码做不到的事：给社区帖子点赞、点踩、投票和评论。')),
-        CookieSignInTile(web, note: note),
-      ],
-      Padding(
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
-        child: Text(
-          tr('这些登录都可选，不登录也能正常搜索和播放；登录多种时请用同一个 Google 账号。登录凭据用 Windows 数据保护加密后保存在本机，只有当前 Windows 用户能解密。只有你在 Lumtub 里点赞、点踩、评论、保存到播放列表或订阅时才会修改账号，不会上传本机的观看记录。\n首页的“为你推荐”在本机计算，会参考同步过来的喜欢的视频和订阅。视频播放不使用账号，会员或年龄限制视频不一定能播放。'),
-          style: note,
-        ),
-      ),
-      _ClientSettings(account: account, note: note),
-    ]);
+    );
   }
 
   /// The two names when both sign-ins show one and they differ.
@@ -120,33 +139,86 @@ class AccountSettings extends StatelessWidget {
   static String _time(DateTime time) => '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
 
   Future<void> _confirmSignOut(BuildContext context, AccountController account) async {
-    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-      title: Text(tr('退出 Google 账号？')),
-      content: Text(tr('会删除本机保存的登录凭据，并通知 Google 撤销 Lumtub 的授权。已经导入的关注频道和播放列表会保留。')),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('取消'))),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('退出登录'))),
-      ],
-    ));
+    final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: Text(tr('退出 Google 账号？')),
+              content: Text(tr('会删除本机保存的登录凭据，并通知 Google 撤销 Lumtub 的授权。已经导入的关注频道和播放列表会保留。')),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('取消'))),
+                FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('退出登录'))),
+              ],
+            ));
     if (confirmed == true) await account.signOut();
   }
 }
 
-/// A sign-in's name and what it is for, above its controls.
-class _Heading extends StatelessWidget {
-  const _Heading(this.title, this.detail);
-  final String title;
-  final String detail;
+/// What the sign-ins are for, above them.
+class _Intro extends StatelessWidget {
+  const _Intro();
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
+        padding: const EdgeInsets.fromLTRB(18, 4, 18, 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(tr('登录都是可选的'), style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
-          Text(detail, style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant)),
+          Text(tr('不登录也能搜索和播放。想用哪项功能，就只登录对应的那一个；打勾的是已经登录的。'), style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant)),
         ]),
       );
+}
+
+/// A sign-in step's number, ticked once it is done.
+class _Badge extends StatelessWidget {
+  const _Badge(this.number, {required this.done});
+  final int number;
+  final bool done;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      width: 24,
+      height: 24,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: done ? colors.primary : colors.surfaceContainerHighest),
+      child: done ? Icon(Icons.check_rounded, size: 16, color: colors.onPrimary) : Text('$number', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: colors.onSurfaceVariant)),
+    );
+  }
+}
+
+/// One sign-in: a header with what it is for, folding its controls away
+/// until they are wanted.
+class _Section extends StatelessWidget {
+  const _Section({required this.number, required this.title, required this.purpose, required this.signedIn, required this.expanded, required this.children});
+  final int number;
+  final String title;
+  final String purpose;
+  final bool signedIn;
+  final bool expanded;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), border: Border.all(color: colors.outlineVariant)),
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        key: PageStorageKey('account:$number'),
+        initiallyExpanded: expanded,
+        shape: const Border(),
+        collapsedShape: const Border(),
+        leading: _Badge(number, done: signedIn),
+        title: Text(title, style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+        subtitle: Text(purpose, style: context.text.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
+        childrenPadding: const EdgeInsets.only(bottom: 8),
+        expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
 }
 
 /// The TV-code sign-in, for liking and disliking comments and posts.
@@ -238,7 +310,11 @@ class _ClientSettingsState extends State<_ClientSettings> {
       key: const PageStorageKey('expand:client'),
       leading: const Icon(Icons.key_outlined),
       title: Text(tr('自定义 Google 客户端')),
-      subtitle: Text(custom ? tr('正在使用你自己的客户端') : account.client == null ? tr('未设置') : tr('正在使用内置客户端')),
+      subtitle: Text(custom
+          ? tr('正在使用你自己的客户端')
+          : account.client == null
+              ? tr('未设置')
+              : tr('正在使用内置客户端')),
       initiallyExpanded: account.client == null,
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
@@ -264,7 +340,8 @@ class _ClientSettingsState extends State<_ClientSettings> {
         // Each field gets its own storage key: a text field scrolls, and
         // without one its scroll offset would be read back from the
         // tile's own saved open/closed flag, a bool, and fail to build.
-        TextField(key: const PageStorageKey('client:id'), controller: _id, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: tr('客户端 ID'), hintText: '…apps.googleusercontent.com')),
+        TextField(
+            key: const PageStorageKey('client:id'), controller: _id, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: tr('客户端 ID'), hintText: '…apps.googleusercontent.com')),
         const SizedBox(height: 10),
         TextField(key: const PageStorageKey('client:secret'), controller: _secret, onChanged: (_) => setState(() {}), obscureText: true, decoration: InputDecoration(labelText: tr('客户端密钥'))),
         const SizedBox(height: 12),

@@ -2640,5 +2640,13 @@
   "复制地址": "Copy address",
   "正在读取登录…": "Reading the sign-in…",
   "浏览器窗口关闭时还没有登录 YouTube，请登录完成后再关闭": "The browser window was closed before you signed in to YouTube. Sign in first, then close it.",
-  "看到 YouTube 首页后关闭这个浏览器窗口，Lumtub 会自动读取登录。这是一个临时的独立窗口，不会碰你平时浏览器里的数据。": "Once YouTube's home page shows, close this browser window and Lumtub reads the sign-in. It is a separate temporary window and never touches your usual browser's data."
+  "看到 YouTube 首页后关闭这个浏览器窗口，Lumtub 会自动读取登录。这是一个临时的独立窗口，不会碰你平时浏览器里的数据。": "Once YouTube's home page shows, close this browser window and Lumtub reads the sign-in. It is a separate temporary window and never touches your usual browser's data.",
+  "YouTube 首页推荐、观看历史，给评论点赞": "YouTube's home feed and watch history; like comments",
+  "给社区帖子点赞、投票和评论": "Like, vote and comment on community posts",
+  "登录时请用同一个 Google 账号。登录凭据加密保存在本机，只有你在 Lumtub 里点赞、评论、保存或订阅时才会修改账号，不会上传本机的观看记录。视频播放不使用账号，会员或年龄限制视频不一定能播放。": "Use the same Google account for each sign-in. Sign-ins are kept encrypted on this PC. Lumtub changes your account only when you like, comment, save or subscribe in it, and never uploads your local watch history. Playback does not use an account, so members-only or age-restricted videos may not play.",
+  "登录都是可选的": "Signing in is optional",
+  "浏览器登录": "Browser sign-in",
+  "同步订阅和播放列表，给视频点赞、评论、订阅。推荐，大多数人只需要这一个": "Sync subscriptions and playlists; like, comment and subscribe. Recommended; most people need only this one",
+  "只用于给社区帖子点赞、投票和评论": "Only for liking, voting and commenting on community posts",
+  "不登录也能搜索和播放。想用哪项功能，就只登录对应的那一个；打勾的是已经登录的。": "Search and playback work without it. Sign in only to the one with the feature you want; ticked ones are signed in."
 }

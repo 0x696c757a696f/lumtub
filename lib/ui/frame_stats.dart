@@ -9,12 +9,13 @@ import '../app_log.dart';
 /// open and how often the whole window was rebuilt, so a stutter the user
 /// mentions can be found afterwards. It only reads the engine's timings.
 class FrameStats {
-  FrameStats._(this._page);
+  FrameStats._(this._page, this._causes);
 
   /// A frame over this misses 30 fps.
   static const slow = Duration(milliseconds: 33);
 
   final String Function() _page;
+  final Map<String, int> Function()? _causes;
   int _frames = 0;
   int _slow = 0;
   int _rebuilds = 0;
@@ -25,9 +26,10 @@ class FrameStats {
 
   static FrameStats? _instance;
 
-  /// Starts counting; [page] names what is shown.
-  static FrameStats start(String Function() page) {
-    final stats = _instance ??= FrameStats._(page);
+  /// Starts counting; [page] names what is shown, [causes] counts what
+  /// asked for the window to be rebuilt, and is cleared once logged.
+  static FrameStats start(String Function() page, {Map<String, int> Function()? causes}) {
+    final stats = _instance ??= FrameStats._(page, causes);
     SchedulerBinding.instance.addTimingsCallback(stats._timings);
     return stats;
   }
@@ -52,8 +54,11 @@ class FrameStats {
     if (now.difference(_since) < const Duration(minutes: 1)) return;
     if (_slow > 0) {
       final where = (_pages.entries.toList()..sort((a, b) => b.value - a.value)).take(3).map((e) => '${e.key} ${e.value}').join(', ');
-      logInfo('Frames: $_slow of $_frames slow (worst build ${_ms(_worstBuild)}, raster ${_ms(_worstRaster)}) on $where; window rebuilt $_rebuilds times in ${max(1, now.difference(_since).inSeconds)} s');
+      final causes = _causes?.call() ?? const {};
+      final by = (causes.entries.toList()..sort((a, b) => b.value - a.value)).take(5).map((e) => '${e.key} ${e.value}').join(', ');
+      logInfo('Frames: $_slow of $_frames slow (worst build ${_ms(_worstBuild)}, raster ${_ms(_worstRaster)}) on $where; window rebuilt $_rebuilds times in ${max(1, now.difference(_since).inSeconds)} s${by.isEmpty ? '' : ' ($by)'}');
     }
+    _causes?.call().clear();
     _frames = _slow = _rebuilds = 0;
     _worstBuild = _worstRaster = Duration.zero;
     _pages.clear();

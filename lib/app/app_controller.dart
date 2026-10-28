@@ -522,6 +522,25 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// What asked for the window to be rebuilt since the frame log last
+  /// took the counts: a part of the app by name, or `app` for the rest.
+  final rebuildCauses = <String, int>{};
+  final _passers = <String, VoidCallback>{};
+
+  @override
+  void notifyListeners() {
+    rebuildCauses.update('app', (n) => n + 1, ifAbsent: () => 1);
+    super.notifyListeners();
+  }
+
+  /// Passes on a change of the part named [cause], counted under its name.
+  /// The same callback comes back for a name, so it can be removed again.
+  VoidCallback _passOn(String cause) => _passers[cause] ??= () {
+        if (_disposed) return;
+        rebuildCauses.update(cause, (n) => n + 1, ifAbsent: () => 1);
+        super.notifyListeners();
+      };
+
   /// Settings › Google 账号 › 保存电视版样本.
   Future<String> saveTvSamples() async {
     final sign = tvSignIn;
@@ -595,7 +614,7 @@ class AppController extends ChangeNotifier {
       youtubeHistory = null;
     }
     return youtubeHistory ??= VideoListLoader(() => Listing(() => feed.lines(YoutubeTvFeed.history)), pageSize: 40, name: 'YouTube history')
-      ..addListener(notifyListeners)
+      ..addListener(_passOn('youtube history'))
       ..loadMore();
   }
 
@@ -647,7 +666,7 @@ class AppController extends ChangeNotifier {
       this.channelPlayback = channelPlayback;
       this.watchTime = watchTime;
       speechStore = SpeechSubtitleStore(Directory('${directories.data.path}${Platform.pathSeparator}speech'));
-      homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(notifyListeners);
+      homeFeed = HomeFeed(notInterested, cacheFile: File('${directories.cache.path}${Platform.pathSeparator}home_feed.json'))..addListener(_passOn('home feed'));
       this.settings = settings;
       final cacheManager = CacheManager(directories);
       final manager = ToolManager(directories, (message, logged) {
@@ -702,17 +721,17 @@ class AppController extends ChangeNotifier {
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
-        downloads = _downloadsFor(paths, directories)..addListener(notifyListeners);
+        downloads = _downloadsFor(paths, directories)..addListener(_passOn('downloads'));
         final library = this.library = LibraryController(libraryStore, client: _http)
           ..repository = _repository
-          ..addListener(notifyListeners);
+          ..addListener(_passOn('library'));
         account = AccountController(
           clientFile: File('${directories.data.path}${Platform.pathSeparator}google-client.json'),
           credentials: SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}google-account.bin'), DpapiProtector()),
           client: _http,
           library: library,
           notice: _notice,
-        )..addListener(notifyListeners);
+        )..addListener(_passOn('account'));
         final tv = tvSignIn = YoutubeTvSignIn(folder: directories.data.path)..addListener(_tvSignInChanged);
         comments.signIn = tv;
         final web = webSignIn = YoutubeWebSignIn(folder: directories.data.path)..addListener(_webSignInChanged);
@@ -736,7 +755,7 @@ class AppController extends ChangeNotifier {
       });
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
-      final updater = AppUpdater(client: _http, directory: Directory('${directories.cache.path}${Platform.pathSeparator}updates'), download: manager.downloadVerified)..addListener(notifyListeners);
+      final updater = AppUpdater(client: _http, directory: Directory('${directories.cache.path}${Platform.pathSeparator}updates'), download: manager.downloadVerified)..addListener(_passOn('updater'));
       appUpdater = updater;
       // Housekeeping waits until the first page has loaded and drawn, so
       // update checks and folder scans do not compete with it.
@@ -999,7 +1018,7 @@ class AppController extends ChangeNotifier {
       searchFilter = chosen;
       searchResults?.dispose();
       searchResults = VideoListLoader(() => sp == null ? repository.search(query) : repository.search(query, sp: sp))
-        ..addListener(notifyListeners)
+        ..addListener(_passOn('search'))
         ..loadMore();
     });
   }
@@ -1251,7 +1270,7 @@ class AppController extends ChangeNotifier {
       loader.dispose();
       return;
     }
-    loader.removeListener(notifyListeners);
+    loader.removeListener(_passOn('explore'));
     final key = _exploreKey;
     final older = _recentExplore.remove(key)?.$2;
     if (older != null && !identical(older, loader)) older.dispose();
@@ -1271,7 +1290,7 @@ class AppController extends ChangeNotifier {
     if (_recentExplore.remove(_exploreKey) case (final at, final loader)) {
       if (DateTime.now().difference(at) < _keepExplore) {
         logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
-        _update(() => explore = loader..addListener(notifyListeners));
+        _update(() => explore = loader..addListener(_passOn('explore')));
         return;
       }
       loader.dispose();
@@ -1346,7 +1365,7 @@ class AppController extends ChangeNotifier {
           name: 'Explore ${exploreSection.name} · ${exploreTopicNow.label} · ${mode.name}',
           dropped: dropped,
         )
-          ..addListener(notifyListeners)
+          ..addListener(_passOn('explore'))
           ..loadMore());
   }
 
@@ -1417,6 +1436,7 @@ class AppController extends ChangeNotifier {
     // A loop belongs to the video it was set in.
     if (playing?.id != item.id) unawaited(clearLoop());
     if (playing?.id != item.id) {
+      _shownOptions.clear();
       unawaited(cast.stop());
       if (playing case final left?) {
         _played.removeWhere((v) => v.id == left.id);
@@ -1615,6 +1635,51 @@ class AppController extends ChangeNotifier {
   /// [resolved] false, or a failed resolution, leaves everything to
   /// ytdl_hook as before.
   Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
+    // Opened again (reconnecting, another quality): the subtitles shown
+    // come back, as the new file starts with none of the ones added.
+    final kept = _tracking?.id == item.id ? _shownSubtitles() : null;
+    final opened = await _openOnce(item, serial, start: start, play: play, resolved: resolved, piped: piped, allowLocal: allowLocal);
+    if (opened && kept != null) unawaited(_restoreSubtitles(kept, serial));
+    return opened;
+  }
+
+  /// The subtitles shown now: the main one by its label (empty: turned
+  /// off) and the second one.
+  ({String? main, SubtitleOption? second}) _shownSubtitles() {
+    final track = player?.state.track.subtitle;
+    final main = track == null || track.id == 'auto' ? null : track.id == 'no' ? '' : track.title;
+    return (main: main, second: secondarySubtitle);
+  }
+
+  Future<void> _restoreSubtitles(({String? main, SubtitleOption? second}) kept, int serial) async {
+    final player = this.player;
+    if (player == null) return;
+    try {
+      await player.stream.duration.firstWhere((d) => d > Duration.zero).timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      return;
+    }
+    if (serial != _playSerial || this.player != player) return;
+    final main = kept.main;
+    if (main == '') {
+      await player.setSubtitleTrack(SubtitleTrack.no());
+    } else if (main != null) {
+      final option = _shownOptions[main] ?? details?.subtitles.where((o) => o.label == main).firstOrNull;
+      if (option != null && player.state.track.subtitle.title != main) await showSubtitle(option);
+    }
+    if (serial != _playSerial || this.player != player) return;
+    final second = kept.second;
+    if (second != null && secondarySubtitle?.label != second.label) {
+      logInfo('Showing ${second.language} (${second.kind.name}) as the second subtitle again');
+      await setSecondarySubtitle(second);
+    }
+  }
+
+  /// The subtitles shown in this video, by label, so a reopened video can
+  /// show them again.
+  final _shownOptions = <String, SubtitleOption>{};
+
+  Future<bool> _openOnce(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
     final player = this.player!;
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
@@ -2059,6 +2124,7 @@ class AppController extends ChangeNotifier {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return;
+    _shownOptions[option.label] = option;
     final loaded = player.state.tracks.subtitle.where((t) => t.title == option.label).firstOrNull;
     try {
       if (loaded != null) {
@@ -2977,7 +3043,7 @@ class AppController extends ChangeNotifier {
       pageSize: 13,
       limit: 12,
       where: (other) => other.id != item.id && !preferences.blocksGroup(other) && !preferences.isUnrecommended(other.channelId),
-    )..addListener(notifyListeners);
+    )..addListener(_passOn('related'));
     loader.loadMore();
     return loader;
   }
@@ -3172,7 +3238,7 @@ class AppController extends ChangeNotifier {
     channelQuery = null;
     channelTab = ChannelTab.videos;
     channelVideos = VideoListLoader(() => repository.channelVideos(ref))
-      ..addListener(notifyListeners)
+      ..addListener(_passOn('channel'))
       ..loadMore();
     _go(PageMode.channel);
   }
@@ -3190,11 +3256,11 @@ class AppController extends ChangeNotifier {
       channelPosts?.dispose();
       channelPosts = null;
       if (tab == ChannelTab.posts) {
-        channelPosts = PostsLoader(_posts, ref)..addListener(notifyListeners);
+        channelPosts = PostsLoader(_posts, ref)..addListener(_passOn('channel'));
         unawaited(channelPosts!.loadMore());
       } else {
         channelVideos = VideoListLoader(() => repository.channelTab(ref, tab))
-          ..addListener(notifyListeners)
+          ..addListener(_passOn('channel'))
           ..loadMore();
       }
     });
@@ -3210,7 +3276,7 @@ class AppController extends ChangeNotifier {
     final feed = tvFeed;
     final signedIn = feed != null && feed.available && _isAccountPlaylist(playlist);
     youtubePlaylistVideos = VideoListLoader(() => signedIn ? Listing(() => feed.lines('VL${playlist.id}', pages: 50)) : repository.playlist(playlist.id), pageSize: 50)
-      ..addListener(notifyListeners)
+      ..addListener(_passOn('channel'))
       ..loadMore();
     _go(PageMode.youtubePlaylist);
   }
@@ -3237,12 +3303,12 @@ class AppController extends ChangeNotifier {
       if (text.isEmpty) {
         // Back to the tab that was open.
         if (channelTab == ChannelTab.posts) {
-          channelPosts = PostsLoader(_posts, ref)..addListener(notifyListeners);
+          channelPosts = PostsLoader(_posts, ref)..addListener(_passOn('channel'));
           unawaited(channelPosts!.loadMore());
         } else {
           final tab = channelTab;
           channelVideos = VideoListLoader(() => repository.channelTab(ref, tab))
-            ..addListener(notifyListeners)
+            ..addListener(_passOn('channel'))
             ..loadMore();
         }
         return;
@@ -3254,13 +3320,13 @@ class AppController extends ChangeNotifier {
       }
 
       if (within == ChannelTab.posts) {
-        channelPosts = PostsLoader(_posts, ref, matches: matches)..addListener(notifyListeners);
+        channelPosts = PostsLoader(_posts, ref, matches: matches)..addListener(_passOn('channel'));
         unawaited(channelPosts!.loadMore());
       } else {
         channelVideos = (within == null
             ? VideoListLoader(() => repository.channelSearch(ref, text))
             : VideoListLoader(() => repository.channelTab(ref, within), matches: matches))
-          ..addListener(notifyListeners)
+          ..addListener(_passOn('channel'))
           ..loadMore();
       }
     });

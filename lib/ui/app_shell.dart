@@ -47,7 +47,7 @@ class _AppShellState extends State<AppShell> {
   StreamSubscription<DownloadTask>? _finished;
 
   AppController get _controller => widget.controller;
-  late final _frames = FrameStats.start(() => _controller.onWatchPage ? (_controller.mini ? 'mini player' : 'watch') : _controller.mode.name);
+  late final _frames = FrameStats.start(() => _controller.onWatchPage ? (_controller.mini ? 'mini player' : 'watch') : _controller.mode.name, causes: () => _controller.rebuildCauses);
 
   static final _destinations = [
     (PageMode.home, Icons.home_outlined, Icons.home_rounded, tr('首页')),

@@ -26,6 +26,28 @@ pub enum Language {
     Hi,
     Th,
     Vi,
+    It,
+    Nl,
+    Tr,
+    Id,
+    Ms,
+    Tl,
+    Pl,
+    Uk,
+    Cs,
+    Ro,
+    Hu,
+    El,
+    Sv,
+    No,
+    Da,
+    Fi,
+    He,
+    Fa,
+    Ur,
+    Bn,
+    Ta,
+    Te,
 }
 
 const VIETNAMESE: &str = "ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ";
@@ -107,10 +129,35 @@ pub fn title_language(title: &str) -> Language {
     if any_in(title, &[(0x0900, 0x097F)]) {
         return Language::Hi;
     }
+    if any_in(title, &[(0x0980, 0x09FF)]) {
+        return Language::Bn;
+    }
+    if any_in(title, &[(0x0B80, 0x0BFF)]) {
+        return Language::Ta;
+    }
+    if any_in(title, &[(0x0C00, 0x0C7F)]) {
+        return Language::Te;
+    }
+    if any_in(title, &[(0x0590, 0x05FF)]) {
+        return Language::He;
+    }
+    if any_in(title, &[(0x0370, 0x03FF)]) {
+        return Language::El;
+    }
     if any_in(title, &[(0x0600, 0x06FF)]) {
+        // Letters Arabic itself does not use.
+        if title.contains(['ٹ', 'ڈ', 'ڑ', 'ں', 'ے']) {
+            return Language::Ur;
+        }
+        if title.contains(['پ', 'چ', 'ژ', 'گ', 'ی']) {
+            return Language::Fa;
+        }
         return Language::Ar;
     }
     if any_in(title, &[(0x0400, 0x04FF)]) {
+        if title.to_lowercase().contains(['і', 'ї', 'є', 'ґ']) {
+            return Language::Uk;
+        }
         return Language::Ru;
     }
     let lower = title.to_lowercase();
@@ -374,6 +421,11 @@ mod tests {
         assert_eq!(title_language("【4K】東京の夜景を歩く"), Language::Ja);
         assert_eq!(title_language("서울 맛집 투어"), Language::Ko);
         assert_eq!(title_language("中国历史纪录片 第一集"), Language::Zh);
+        assert_eq!(title_language("Історія України"), Language::Uk);
+        assert_eq!(title_language("История России"), Language::Ru);
+        assert_eq!(title_language("Ταξίδι στην Αθήνα"), Language::El);
+        assert_eq!(title_language("سفر به ایران"), Language::Fa);
+        assert_eq!(title_language("رحلة إلى مصر"), Language::Ar);
         assert_eq!(title_language("How to build a PC in 2026"), Language::En);
         assert_eq!(title_language("Minecraft Speedrun"), Language::En);
         assert_eq!(title_language("Cómo hacer pan en casa"), Language::Es);

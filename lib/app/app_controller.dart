@@ -19,6 +19,7 @@ import '../app_log.dart';
 import '../app_window.dart';
 import '../app_preferences.dart';
 import '../play_queue.dart';
+import '../video_languages.dart';
 import '../playback_failure.dart';
 import '../playback_recovery.dart';
 import '../library_store.dart';
@@ -431,6 +432,9 @@ class AppController extends ChangeNotifier {
   /// No prefetching until then, after YouTube answered 429.
   DateTime _rateLimitedUntil = DateTime(0);
   bool _updateCheckedForChallenge = false;
+  /// The spoken language of explore's videos, for its language filter.
+  VideoLanguages? _videoLanguages;
+
   int _lastDrops = 0;
 
   /// When the current video was opened. Its first seconds are left out of
@@ -751,6 +755,7 @@ class AppController extends ChangeNotifier {
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
+        _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}video_languages.json'));
         downloads = _downloadsFor(paths, directories)..addListener(_passOn('downloads'));
         final library = this.library = LibraryController(libraryStore, client: _http)
           ..repository = _repository
@@ -1331,6 +1336,9 @@ class AppController extends ChangeNotifier {
     final global = exploreTopicNow.global;
     final region = global ? null : preferences.exploreRegion.gl;
     final language = global ? ExploreLanguage.any : preferences.exploreLanguage;
+    // Listed titles are machine-translated, so the language is asked of
+    // each video instead (VideoLanguages).
+    final spoken = language != ExploreLanguage.any && VideoLanguages.available && _videoLanguages != null;
     final perChannel = <String, int>{};
     final sp = exploreParams(mode, period: explorePeriod, duration: exploreDuration, quality: exploreQuality);
     final taste = mode == ExploreMode.forYou ? _exploreTaste() : null;
@@ -1371,7 +1379,7 @@ class AppController extends ChangeNotifier {
         if (known.contains(TasteProfile.channelKey(item))) return drop('known channel');
       }
       if (mode == ExploreMode.curated && seconds != null && seconds < 240) return drop('too short');
-      if (!language.matches(item.title)) return drop('language');
+      if (!spoken && !language.matches(item.title)) return drop('language');
       // 全部 is for finding more: not what was watched or what 为你推荐
       // already shows. It keeps any one channel from filling it.
       if (mix && seen.contains(item.id)) return drop('already seen');
@@ -1381,7 +1389,11 @@ class AppController extends ChangeNotifier {
     }
 
     _update(() => explore = VideoListLoader(
-          () => mix ? repository.searchMix(exploreMixQueries(exploreSection), sp: sp, region: region) : repository.search(query, sp: sp, region: region),
+          () {
+            final listing = mix ? repository.searchMix(exploreMixQueries(exploreSection), sp: sp, region: region) : repository.search(query, sp: sp, region: region);
+            final languages = _videoLanguages;
+            return spoken && languages != null ? listing.refined((lines) => languages.only(lines, language)) : listing;
+          },
           where: where,
           fill: switch (mode) {
             ExploreMode.gems || ExploreMode.fresh || ExploreMode.liveReplay => 8,

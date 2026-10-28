@@ -6,7 +6,9 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
-import 'package:flutter/services.dart' show MethodChannel;
+import 'package:flutter/gestures.dart' show GestureBinding, PointerEvent;
+import 'package:flutter/services.dart' show HardwareKeyboard, KeyEvent, MethodChannel;
+import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -702,6 +704,16 @@ class AppController extends ChangeNotifier {
         logLevel: MPVLogLevel.warn,
       ));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      // Compiled shaders are kept between runs, so a video's first frame
+      // does not wait for them again.
+      final platform = player.platform;
+      if (platform is NativePlayer) {
+        final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders');
+        try {
+          shaders.createSync(recursive: true);
+          await platform.setProperty('gpu-shader-cache-dir', shaders.path);
+        } catch (_) {}
+      }
       _lightRendering = null;
       await _applyProxy(player);
       _relay = await _startRelay();
@@ -758,7 +770,6 @@ class AppController extends ChangeNotifier {
         _outputSize = VideoOutputSize((width, height) async => videoController?.setSize(width: width, height: height));
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
-        unawaited(_measureDecoders());
         _thumbnailTrimTimer?.cancel();
         _thumbnailTrimTimer = Timer.periodic(const Duration(hours: 1), (_) => _trimThumbnails());
         ready = true;
@@ -771,6 +782,7 @@ class AppController extends ChangeNotifier {
       appUpdater = updater;
       // Housekeeping waits until the first page has loaded and drawn, so
       // update checks and folder scans do not compete with it.
+      unawaited(_warmUp(player));
       _afterStart = Timer(const Duration(seconds: 8), () {
         if (_disposed) return;
         if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
@@ -1691,6 +1703,45 @@ class AppController extends ChangeNotifier {
   /// The subtitles shown in this video, by label, so a reopened video can
   /// show them again.
   final _shownOptions = <String, SubtitleOption>{};
+
+  /// Gets the first video ready while nothing else happens: reads the
+  /// player's files from disk once they may be cold after an update,
+  /// probes the hardware decoders, and makes the picture output when the
+  /// mouse and keyboard have been still for a moment. Opening a video
+  /// first does whatever is still left there and then.
+  Future<void> _warmUp(Player player) async {
+    await WidgetsBinding.instance.waitUntilFirstFrameRasterized;
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (_disposed) return;
+    final read = Stopwatch()..start();
+    final folder = File(Platform.resolvedExecutable).parent.path;
+    final mpv = paths?.mpv;
+    final bytes = await Isolate.run(_readingPlayerFiles(folder, mpv));
+    logInfo('Read ${bytes >> 20} MB of player files in ${read.elapsedMilliseconds} ms');
+    await _measureDecoders();
+    var lastInput = DateTime.now();
+    void touched(PointerEvent _) => lastInput = DateTime.now();
+    bool pressed(KeyEvent _) {
+      lastInput = DateTime.now();
+      return false;
+    }
+
+    GestureBinding.instance.pointerRouter.addGlobalRoute(touched);
+    HardwareKeyboard.instance.addHandler(pressed);
+    try {
+      while (!_disposed && videoController == null && this.player == player) {
+        final still = DateTime.now().difference(lastInput);
+        if (still >= const Duration(milliseconds: 1500)) {
+          _ensureVideo(player);
+          break;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 1500) - still);
+      }
+    } finally {
+      GestureBinding.instance.pointerRouter.removeGlobalRoute(touched);
+      HardwareKeyboard.instance.removeHandler(pressed);
+    }
+  }
 
   /// Makes the video's picture output, the first time a video plays. Made
   /// at start it held up drawing the window for most of a second when the
@@ -4321,4 +4372,34 @@ enum LocalData {
   const LocalData(this._label);
   final String _label;
   String get label => tr(_label);
+}
+
+/// Reads the libraries in [folder], libmpv at [mpv] and the system shader
+/// compiler, so making the video output does not wait for the disk.
+/// Returns the bytes read.
+int Function() _readingPlayerFiles(String folder, String? mpv) => () => _readPlayerFiles(folder, mpv);
+
+int _readPlayerFiles(String folder, String? mpv) {
+  final files = <File>[
+    for (final entry in Directory(folder).listSync())
+      if (entry is File && entry.path.toLowerCase().endsWith('.dll')) entry,
+    if (mpv != null && !mpv.toLowerCase().startsWith(folder.toLowerCase())) File(mpv),
+    if (Platform.isWindows) File('${Platform.environment['SystemRoot'] ?? r'C:\Windows'}\\System32\\d3dcompiler_47.dll'),
+  ];
+  var total = 0;
+  for (final file in files) {
+    try {
+      final handle = file.openSync();
+      try {
+        while (true) {
+          final chunk = handle.readSync(1 << 20);
+          if (chunk.isEmpty) break;
+          total += chunk.length;
+        }
+      } finally {
+        handle.closeSync();
+      }
+    } catch (_) {}
+  }
+  return total;
 }

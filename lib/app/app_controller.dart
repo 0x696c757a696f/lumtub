@@ -535,11 +535,25 @@ class AppController extends ChangeNotifier {
 
   /// Passes on a change of the part named [cause], counted under its name.
   /// The same callback comes back for a name, so it can be removed again.
+  /// A part only one page shows does not rebuild the window while another
+  /// is open; going to that page rebuilds it with what the part has then.
   VoidCallback _passOn(String cause) => _passers[cause] ??= () {
-        if (_disposed) return;
+        if (_disposed || !_shows(cause)) return;
         rebuildCauses.update(cause, (n) => n + 1, ifAbsent: () => 1);
         super.notifyListeners();
       };
+
+  bool _shows(String cause) {
+    bool page(PageMode shown) => !onWatchPage && mode == shown;
+    return switch (cause) {
+      'home feed' => page(PageMode.home),
+      'channel' => page(PageMode.channel),
+      'related' => onWatchPage,
+      'search' || 'explore' => page(PageMode.explore),
+      'youtube history' => page(PageMode.history),
+      _ => true,
+    };
+  }
 
   /// Settings › Google 账号 › 保存电视版样本.
   Future<String> saveTvSamples() async {

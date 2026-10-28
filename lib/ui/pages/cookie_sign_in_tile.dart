@@ -41,7 +41,9 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
       };
 
   Future<void> _import() async {
-    final file = await openFile(acceptedTypeGroups: [XTypeGroup(label: tr('Cookie 文件'), extensions: const ['txt'])]);
+    final file = await openFile(acceptedTypeGroups: [
+      XTypeGroup(label: tr('Cookie 文件'), extensions: const ['txt'])
+    ]);
     if (file == null || !mounted) return;
     var delete = true;
     final confirmed = await showDialog<bool>(
@@ -82,9 +84,14 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
         if (sign.waiting)
           ListTile(
             leading: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
-            title: Text(sign.browser == null ? tr('正在打开浏览器…') : tr('请在 {0} 窗口里登录 YouTube', [sign.browser!])),
-            subtitle: Text(tr('登录完成后窗口会自动关闭。这是一个临时的独立窗口，不会碰你平时浏览器里的数据。')),
-            trailing: sign.browser == null ? null : TextButton(onPressed: sign.cancel, child: Text(tr('取消'))),
+            title: Text(sign.reading
+                ? tr('正在读取登录…')
+                : sign.browser == null
+                    ? tr('正在打开浏览器…')
+                    : tr('请在 {0} 窗口里登录 YouTube', [sign.browser!])),
+            subtitle: Text(tr('看到 YouTube 首页后关闭这个浏览器窗口，Lumtub 会自动读取登录。这是一个临时的独立窗口，不会碰你平时浏览器里的数据。')),
+            isThreeLine: true,
+            trailing: sign.browser == null || sign.reading ? null : TextButton(onPressed: sign.cancel, child: Text(tr('取消'))),
           )
         else if (sign.signedIn)
           ListTile(

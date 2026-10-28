@@ -48,6 +48,9 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube {
   /// While the browser window is open: its name.
   String? browser;
   bool waiting = false;
+
+  /// The window was closed and the cookies are being read.
+  bool reading = false;
   String? error;
 
   /// Counts the sign-ins made in this run.
@@ -102,7 +105,7 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube {
   }
 
   /// Opens a browser window of its own at Google's sign-in and keeps the
-  /// cookies once the user has signed in. [presence] asks for Windows
+  /// cookies once the user has signed in and closed it. [presence] asks for Windows
   /// Hello, Touch ID or the password to open them later.
   void signInWithBrowser({bool presence = true}) {
     final native = _native;
@@ -123,6 +126,7 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube {
     final port = _waiting = ReceivePort('lumtub cookie sign-in');
     error = null;
     browser = null;
+    reading = false;
     waiting = true;
     _notify();
     port.listen((message) {
@@ -130,6 +134,8 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube {
       switch (message[0]) {
         case 1:
           browser = message[1] as String;
+        case 2:
+          reading = true;
         case 0:
           logInfo('Signed in with cookies (${message[1]}, kept by ${message[2]})');
           signIns++;
@@ -155,12 +161,14 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube {
     port.close();
     if (identical(_waiting, port)) _waiting = null;
     waiting = false;
+    reading = false;
     browser = null;
   }
 
   static String _why(String code) => switch (code) {
         'no browser' => tr('没有找到 Edge、Chrome 或其他 Chromium 内核的浏览器，请改用导入 cookies.txt'),
         'not signed in' => tr('这些 Cookie 没有登录 YouTube'),
+        'closed before signing in' => tr('浏览器窗口关闭时还没有登录 YouTube，请登录完成后再关闭'),
         'no youtube.com cookies' => tr('文件里没有 youtube.com 的 Cookie'),
         _ => tr('Cookie 登录失败（{0}）', [code]),
       };

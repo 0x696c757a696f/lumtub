@@ -32,6 +32,7 @@ import '../subtitle_style.dart';
 import '../theme.dart';
 import '../theme_preset_card.dart';
 import 'settings_sections.dart';
+import 'support_page.dart';
 import 'translation_settings_page.dart';
 import '../../l10n/l10n.dart';
 import '../motion.dart';
@@ -983,6 +984,12 @@ List<SettingEntry> aboutEntries(AppController controller) => [
           },
         );
       }, subtitle: tr('发布页 新版本 自动更新')),
+      SettingEntry(tr('支持开发'), (context) => NormalItem(
+            title: tr('支持开发'),
+            subtitle: tr('通过 GitHub Sponsors 或加密货币赞助 Lumtub'),
+            leading: const Icon(Icons.favorite_rounded, color: Color(0xFFEA4AAA)),
+            onTap: () => openSupport(context),
+          ), subtitle: tr('赞助 捐赠 sponsor donate')),
       SettingEntry(tr('源代码'), (context) => NormalItem(
             title: tr('Github 仓库'),
             subtitle: 'github.com/0x696c757a696f/lumtub',

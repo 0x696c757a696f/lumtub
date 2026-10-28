@@ -12,8 +12,9 @@
 ![Flutter](https://img.shields.io/badge/Flutter-UI-02569B?logo=flutter)
 ![Rust](https://img.shields.io/badge/Rust-core-B7410E?logo=rust)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-EA4AAA?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/0x696c757a696f)
 
-[Why Lumtub](#why-lumtub) · [Features](#features) · [Install](#install) · [Privacy](#privacy) · [Building](#building) · [License](#license-and-attribution)
+[Why Lumtub](#why-lumtub) · [Features](#features) · [Install](#install) · [Privacy](#privacy) · [Building](#building) · [Support](#support) · [License](#license-and-attribution)
 
 </div>
 
@@ -87,7 +88,7 @@
 
 ## Privacy
 
-🔒 Recommendations, history, searches and "Not interested" never leave your PC. Lumtub does not read browser cookies. Videos play straight from YouTube by default. If you choose a Piped or Invidious server under Settings › Playback, or Lumtub falls back to one because YouTube refused, that server knows which video you watch.
+🔒 Recommendations, history, searches and "Not interested" never leave your PC. Lumtub never reads your browser's cookies or profiles. The optional cookie sign-in (for liking, voting and commenting on community posts) opens a separate temporary browser window, keeps only the youtube.com cookies, encrypts them on your PC and deletes that window's data. Videos play straight from YouTube by default. If you choose a Piped or Invidious server under Settings › Playback, or Lumtub falls back to one because YouTube refused, that server knows which video you watch.
 
 ## Building
 
@@ -121,7 +122,37 @@ Lumtub is translated on [Weblate](https://hosted.weblate.org/engage/lumtub/), wh
 
 - Windows only for now; macOS and Linux are planned.
 - YouTube changes can break search or playback until yt-dlp catches up, usually within days.
-- The official API cannot like or comment on community posts.
+- Liking, voting and commenting on community posts need the optional cookie sign-in; the official API cannot do them.
+
+## Support
+
+<div align="center">
+
+**Lumtub is free, open source, ad-free and collects nothing.**<br>
+If it saves you time, sponsoring keeps it updated: development time, test devices and a code-signing certificate.
+
+<a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/Sponsor_on_GitHub-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" height="40"></a>
+
+Monthly or one-time, any amount. The same page is under Settings › About › Support development in the app.
+
+</div>
+
+<details>
+<summary><b>Crypto</b> (check that the coin and network match the address; funds sent on the wrong chain cannot be recovered)</summary>
+
+| Coin | Network | Address |
+|---|---|---|
+| ETH · USDC · USDT | Any EVM chain (Ethereum, Arbitrum, Base, Optimism, Polygon, BNB Chain…) | `0x619FeeF5986b9ed8E75D7CFD67AdB575355b9F80` |
+| BTC | Taproot | `bc1p7jf7pzep76cld4pd6xmtfjckpn6qamdqc2rhjus64re2cvuc72sqdwszqc` |
+| BTC | Native SegWit | `bc1q4rp3ag5lmnyy8eqwjm9s4xx62uulfr6n43ycvc` |
+| BTC | Nested SegWit | `3Lu1yzQYfNZLpvh2dt6T6NuRbtwQkJHmT6` |
+| BTC | Legacy | `123mpbi91xQitVkh9oosY4VczFqJB9kjDQ` |
+| USDT | Tron (TRC-20) | `TBHXcP2ReM5sqpRDTyrL1UWtcSmYeyrmnB` |
+| USDT | Solana (SPL) | `4s6uaauKCgwSNVzb5Lq1kxUe9dpm8V64D6FPw7hTwrQ6` |
+
+</details>
+
+Not spending money helps too: ⭐ star the repository, [report a bug or suggest an idea](https://github.com/0x696c757a696f/lumtub/issues), or [translate Lumtub on Weblate](https://hosted.weblate.org/engage/lumtub/).
 
 ## License and attribution
 

@@ -1,9 +1,9 @@
 //! Signing in to YouTube in a browser window of its own: Edge, or the
 //! default browser when it is Chromium-based, or Chrome, opened with a
-//! fresh profile of its own. The user signs in there as on any browser;
-//! once YouTube has set its sign-in cookies they are read from the browser
-//! through its DevTools port on 127.0.0.1, the browser is closed and its
-//! profile deleted. The user's own browser profiles are never opened.
+//! fresh profile of its own. The user signs in there as on any browser and
+//! closes the window; the profile is then opened again without a window,
+//! its YouTube cookies are read through the DevTools port on 127.0.0.1 and
+//! the profile is deleted. The user's own browser profiles are never opened.
 
 use std::io::{Read, Write};
 use std::net::TcpStream;
@@ -51,8 +51,34 @@ pub fn find_browser() -> Option<PathBuf> {
             .find(|p| p.is_file())
     };
     installed(&["Microsoft", "Edge", "Application", "msedge.exe"])
+        .or_else(|| app_path("msedge.exe"))
         .or_else(|| default_browser().filter(|p| is_chromium(p)))
         .or_else(|| installed(&["Google", "Chrome", "Application", "chrome.exe"]))
+        .or_else(|| app_path("chrome.exe"))
+}
+
+/// Where [name] is installed, as its installer registered under App Paths.
+#[cfg(windows)]
+fn app_path(name: &str) -> Option<PathBuf> {
+    use windows_sys::Win32::System::Registry::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, RRF_RT_REG_SZ, RegGetValueW};
+    let key: Vec<u16> = format!("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\{name}\0").encode_utf16().collect();
+    [HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER].into_iter().find_map(|root| {
+        let mut buffer = [0u16; 1024];
+        let mut size = std::mem::size_of_val(&buffer) as u32;
+        // SAFETY: [key] is NUL-terminated and [buffer] holds [size] bytes.
+        let status = unsafe { RegGetValueW(root, key.as_ptr(), std::ptr::null(), RRF_RT_REG_SZ, std::ptr::null_mut(), buffer.as_mut_ptr().cast(), &mut size) };
+        if status != 0 {
+            return None;
+        }
+        let end = buffer.iter().position(|&c| c == 0).unwrap_or(0);
+        let path = String::from_utf16_lossy(&buffer[..end]);
+        Some(PathBuf::from(path.trim_matches('"'))).filter(|p| p.is_file())
+    })
+}
+
+#[cfg(not(windows))]
+fn app_path(_name: &str) -> Option<PathBuf> {
+    None
 }
 
 #[cfg(windows)]
@@ -250,10 +276,65 @@ fn close(browser: &mut Child, socket: Option<&mut Socket>) {
     let _ = browser.wait();
 }
 
+/// Waits for [browser] to exit; false when this sign-in was cancelled or
+/// took too long, and the browser was killed.
+fn wait_closed(browser: &mut Child, current: impl Fn() -> bool, patience: Duration) -> bool {
+    let begun = Instant::now();
+    loop {
+        if !matches!(browser.try_wait(), Ok(None)) {
+            return true;
+        }
+        if !current() || begun.elapsed() > patience {
+            let _ = browser.kill();
+            let _ = browser.wait();
+            return false;
+        }
+        std::thread::sleep(Duration::from_millis(500));
+    }
+}
+
+/// Opens [profile] again in [exe] without a window and reads its YouTube
+/// cookies through the DevTools port. An empty error: cancelled.
+fn read_profile(exe: &Path, profile: &Path, current: impl Fn() -> bool) -> Result<Jar, String> {
+    let _ = std::fs::remove_file(profile.join("DevToolsActivePort"));
+    let mut browser = Command::new(exe)
+        .arg(format!("--user-data-dir={}", profile.display()))
+        .args(["--headless=new", "--remote-debugging-port=0", "--no-first-run", "--no-default-browser-check", "--disable-sync", "about:blank"])
+        .spawn()
+        .map_err(|e| format!("could not open {}: {e}", browser_name(exe)))?;
+    let begun = Instant::now();
+    let failed = loop {
+        if !current() {
+            break String::new();
+        }
+        if let Some(Ok(mut socket)) = devtools(profile).map(|(port, path)| Socket::connect(port, &path)) {
+            let read = match socket.call("Storage.getCookies", json!({})) {
+                Ok(mut answer) => {
+                    let jar = youtube_cookies(&answer);
+                    answer.zeroize();
+                    Ok(jar)
+                }
+                Err(e) => Err(format!("could not read the cookies: {e}")),
+            };
+            close(&mut browser, Some(&mut socket));
+            return read;
+        }
+        if begun.elapsed() > Duration::from_secs(30) || !matches!(browser.try_wait(), Ok(None)) {
+            break format!("{} did not start without a window", browser_name(exe));
+        }
+        std::thread::sleep(Duration::from_millis(300));
+    };
+    close(&mut browser, None);
+    Err(failed)
+}
+
 /// Opens [exe] with a fresh profile under [folder] at the sign-in page and
-/// waits, on this thread, for the user to sign in. [opened] runs once the
-/// browser is up.
-pub fn sign_in(exe: &Path, folder: &Path, url: &str, opened: impl FnOnce()) -> Outcome {
+/// waits, on this thread, for the user to sign in and close the window.
+/// The window is an ordinary one: Google refuses to sign in a browser that
+/// has its DevTools port open, so the cookies are read after it closed, by
+/// opening the profile again without a window. [opened] runs once the
+/// browser is up, [reading] once its window was closed.
+pub fn sign_in(exe: &Path, folder: &Path, url: &str, opened: impl FnOnce(), reading: impl FnOnce()) -> Outcome {
     let attempt = ATTEMPT.fetch_add(1, Ordering::SeqCst) + 1;
     let current = || ATTEMPT.load(Ordering::SeqCst) == attempt;
     let profile = folder.join("browser-sign-in");
@@ -263,7 +344,7 @@ pub fn sign_in(exe: &Path, folder: &Path, url: &str, opened: impl FnOnce()) -> O
     }
     let started = Command::new(exe)
         .arg(format!("--user-data-dir={}", profile.display()))
-        .args(["--remote-debugging-port=0", "--no-first-run", "--no-default-browser-check", "--disable-sync", "--new-window"])
+        .args(["--no-first-run", "--no-default-browser-check", "--disable-sync", "--new-window"])
         .arg(url)
         .spawn();
     let mut browser = match started {
@@ -273,56 +354,18 @@ pub fn sign_in(exe: &Path, folder: &Path, url: &str, opened: impl FnOnce()) -> O
             return Outcome::Failed(format!("could not open {}: {e}", browser_name(exe)));
         }
     };
-    let begun = Instant::now();
-    let mut socket: Option<Socket> = None;
-    let mut opened = Some(opened);
-    let outcome = loop {
-        if !current() {
-            break Outcome::Closed;
+    opened();
+    let outcome = if !wait_closed(&mut browser, current, PATIENCE) {
+        Outcome::Closed
+    } else {
+        reading();
+        match read_profile(exe, &profile, current) {
+            Ok(jar) if finished(&jar) => Outcome::SignedIn(jar),
+            Ok(_) => Outcome::Failed("closed before signing in".into()),
+            Err(why) if why.is_empty() => Outcome::Closed,
+            Err(why) => Outcome::Failed(why),
         }
-        if begun.elapsed() > PATIENCE {
-            break Outcome::Closed;
-        }
-        if socket.is_none() {
-            match devtools(&profile).map(|(port, path)| Socket::connect(port, &path)) {
-                Some(Ok(connected)) => {
-                    socket = Some(connected);
-                    if let Some(opened) = opened.take() {
-                        opened();
-                    }
-                }
-                // The browser went before its DevTools port came up.
-                _ if begun.elapsed() > Duration::from_secs(30) => break Outcome::Failed(format!("{} did not start", browser_name(exe))),
-                _ => {}
-            }
-        }
-        if let Some(open) = socket.as_mut() {
-            match open.call("Storage.getCookies", json!({})) {
-                Ok(mut answer) => {
-                    let jar = youtube_cookies(&answer);
-                    answer.zeroize();
-                    if finished(&jar) {
-                        // The last cookies of the sign-in redirect land a moment later.
-                        std::thread::sleep(Duration::from_secs(2));
-                        let jar = match open.call("Storage.getCookies", json!({})) {
-                            Ok(mut answer) => {
-                                let fresh = youtube_cookies(&answer);
-                                answer.zeroize();
-                                if fresh.signed_in() { fresh } else { jar }
-                            }
-                            Err(_) => jar,
-                        };
-                        break Outcome::SignedIn(jar);
-                    }
-                }
-                // The user closed the browser.
-                Err(_) => break Outcome::Closed,
-            }
-        }
-        std::thread::sleep(Duration::from_millis(1500));
     };
-    close(&mut browser, socket.as_mut());
-    drop(socket);
     remove_profile(&profile);
     outcome
 }

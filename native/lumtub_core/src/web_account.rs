@@ -463,7 +463,8 @@ pub unsafe extern "C" fn lumtub_web_import(port: i64, json: *const u8, length: u
 /// Opens a browser window of its own at Google's sign-in, as
 /// browser_sign_in.rs does, and keeps the cookies once the user signed in.
 /// [json] is `{"hello", "url"?}`. Answers on [port] `[1, browser]` once the
-/// window is up, then `[0, cookies, guard]`, `[-4]` when it was closed
+/// window is up, `[2]` once it was closed and the cookies are read, then
+/// `[0, cookies, guard]`, `[-4]` when it was closed
 /// first, or `[-2, why]`.
 ///
 /// # Safety
@@ -480,9 +481,17 @@ pub unsafe extern "C" fn lumtub_web_browser_sign_in(port: i64, json: *const u8, 
     };
     std::thread::spawn(move || {
         let name = browser_sign_in::browser_name(&browser);
-        let outcome = browser_sign_in::sign_in(&browser, &folder, &url, || {
-            post(port, vec![Item::Int(1), Item::Text(name)]);
-        });
+        let outcome = browser_sign_in::sign_in(
+            &browser,
+            &folder,
+            &url,
+            || {
+                post(port, vec![Item::Int(1), Item::Text(name)]);
+            },
+            || {
+                post(port, vec![Item::Int(2)]);
+            },
+        );
         match outcome {
             browser_sign_in::Outcome::SignedIn(jar) => answer(port, keep(&jar, hello).map(|guard| (jar.len(), guard))),
             browser_sign_in::Outcome::Closed => {

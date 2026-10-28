@@ -1,9 +1,15 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:lumtub/app/posts_loader.dart';
 import 'package:lumtub/community_posts.dart';
+import 'package:lumtub/native_core.dart';
+import 'package:lumtub/youtube_comments.dart';
+import 'package:lumtub/youtube_tv_sign_in.dart';
+import 'package:lumtub/youtube_web_sign_in.dart';
 import 'package:lumtub/models.dart';
 
 Map<String, dynamic> _post(String id, {Map<String, dynamic>? attachment}) => {
@@ -101,4 +107,59 @@ void main() {
     expect(body['continuation'], 'NEXT');
     expect(body['context']['client']['clientVersion'], '2.2026');
   });
+
+  test('with the cookie sign-in, posts load as the website signed in and polls can be voted in', () async {
+    final web = _FakeWeb()..answer = (endpoint, body) => (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(_signedInPoll))));
+    final comments = YoutubeComments(MockClient((request) async => fail('signed out request')))..web = web;
+    final posts = CommunityPosts(MockClient((request) async => fail('signed out request')), signIn: comments);
+    final page = await posts.first(const ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick'));
+    expect(web.bodies.first.$2['browseId'], 'UCuAXFkgsw1L7xaCfnd5JJOw');
+    final post = page.posts.single;
+    expect(post.votes, '1.2K 票');
+    expect(post.choices.map((c) => (c.text, c.selected, c.percent)), [('是', false, ''), ('否', true, '40%')]);
+
+    final loader = PostsLoader(posts, const ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick'));
+    expect(loader.voteOf(post), 1);
+    expect(await loader.vote(post, 0), isNull);
+    expect(loader.voteOf(post), 0);
+    expect((web.bodies.last.$1, web.bodies.last.$3), ('comment/perform_comment_action', true));
+    expect(web.bodies.last.$2, {'actions': ['S1']});
+    expect(await loader.vote(post, 0), isNull);
+    expect(web.bodies.last.$2, {'actions': ['D1']});
+    expect(loader.voteOf(post), -1);
+
+    web.answer = (endpoint, body) => (status: 403, body: Uint8List(0));
+    expect(await loader.vote(post, 1), isNotNull);
+    expect(loader.voteOf(post), -1);
+  }, skip: NativeCore.instance == null);
 }
+
+class _FakeWeb implements WebInnerTube {
+  final bodies = <(String, Map<String, Object?>, bool)>[];
+  SignedAnswer Function(String endpoint, Map<String, Object?> body) answer = (endpoint, body) => (status: 200, body: Uint8List.fromList(utf8.encode('{}')));
+
+  @override
+  bool get signedIn => true;
+
+  @override
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false}) async {
+    bodies.add((endpoint, body, ask));
+    return answer(endpoint, body);
+  }
+}
+
+Map<String, dynamic> _vote(String action) => {'commandExecutorCommand': {'commands': [{'performCommentActionEndpoint': {'action': action}}]}};
+
+final _signedInPoll = {
+  'contents': [
+    _post('Ugkx5', attachment: {
+      'pollRenderer': {
+        'totalVotes': {'simpleText': '1.2K 票'},
+        'choices': [
+          {'text': {'runs': [{'text': '是'}]}, 'selected': false, 'selectServiceEndpoint': _vote('S1'), 'deselectServiceEndpoint': _vote('D1')},
+          {'text': {'runs': [{'text': '否'}]}, 'selected': true, 'voteRatio': 0.4, 'votePercentage': {'simpleText': '40%'}, 'selectServiceEndpoint': _vote('S2'), 'deselectServiceEndpoint': _vote('D2')},
+        ],
+      },
+    }),
+  ],
+};

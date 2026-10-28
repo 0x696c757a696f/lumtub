@@ -275,7 +275,10 @@ class PostCard extends StatelessWidget {
             ),
           ),
         ],
-        if (post.poll.isNotEmpty) ...[
+        if (post.choices.isNotEmpty && controller.channelPosts != null) ...[
+          const SizedBox(height: 10),
+          _Poll(post: post, loader: controller.channelPosts!),
+        ] else if (post.poll.isNotEmpty) ...[
           const SizedBox(height: 10),
           for (final choice in post.poll)
             Container(
@@ -308,6 +311,63 @@ class PostCard extends StatelessWidget {
         ]),
       ]),
     ));
+  }
+}
+
+/// A poll that can be voted in: a choice is voted for by tapping it, and
+/// tapped again to take the vote back. The shares show once YouTube gave
+/// them, which it does after a vote.
+class _Poll extends StatelessWidget {
+  const _Poll({required this.post, required this.loader});
+  final CommunityPost post;
+  final PostsLoader loader;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final voted = loader.voteOf(post);
+    Future<void> vote(int index) async {
+      final failed = await loader.vote(post, index);
+      if (failed != null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failed)));
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      for (final (index, choice) in post.choices.indexed)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Material(
+            color: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: voted == index ? colors.primary : colors.outlineVariant, width: voted == index ? 1.5 : 1),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => vote(index),
+              child: Stack(children: [
+                if (voted >= 0 && choice.ratio != null)
+                  Positioned.fill(
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: choice.ratio!.clamp(0.0, 1.0),
+                      child: ColoredBox(color: colors.primary.withValues(alpha: 0.12)),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(children: [
+                    Icon(voted == index ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, size: 18, color: voted == index ? colors.primary : colors.outline),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(choice.text)),
+                    if (voted >= 0 && choice.percent.isNotEmpty) Text(choice.percent, style: TextStyle(color: colors.outline, fontSize: 12)),
+                  ]),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      if (post.votes.isNotEmpty) Text(post.votes, style: TextStyle(color: colors.outline, fontSize: 12)),
+    ]);
   }
 }
 

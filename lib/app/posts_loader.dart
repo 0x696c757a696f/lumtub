@@ -37,10 +37,39 @@ class PostsLoader extends ChangeNotifier {
     _rated[post.id] = before == want ? '' : want;
     _notify();
     try {
-      await signIn.rate(action);
+      await signIn.rate(action, post: true);
       return null;
     } catch (e) {
       _rated[post.id] = before;
+      _notify();
+      return friendlyError(e);
+    }
+  }
+
+  /// Poll choices voted for here, by post id: the choice's index, or -1
+  /// when the vote was taken back.
+  final _voted = <String, int>{};
+
+  /// The index of the choice [post]'s poll has the user's vote on, or -1.
+  int voteOf(CommunityPost post) => _voted[post.id] ?? post.choices.indexWhere((c) => c.selected);
+
+  /// Votes for choice [index] of [post]'s poll, or takes the vote back when
+  /// it is already there: shown at once, taken back if YouTube refuses.
+  /// Returns why it failed, or null.
+  Future<String?> vote(CommunityPost post, int index) async {
+    final signIn = _source.signIn;
+    if (signIn == null || index < 0 || index >= post.choices.length) return null;
+    final before = voteOf(post);
+    final choice = post.choices[index];
+    final action = before == index ? choice.deselect : choice.select;
+    if (action == null) return null;
+    _voted[post.id] = before == index ? -1 : index;
+    _notify();
+    try {
+      await signIn.rate(action, post: true);
+      return null;
+    } catch (e) {
+      _voted[post.id] = before;
       _notify();
       return friendlyError(e);
     }

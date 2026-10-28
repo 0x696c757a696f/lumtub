@@ -223,6 +223,21 @@ pub struct Page {
     pub count: String,
     pub top_token: Option<String>,
     pub newest_token: Option<String>,
+    /// The website's comment box, in pages loaded signed in with cookies.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub create_params: Option<String>,
+}
+
+/// The first string under key [name] anywhere in [node].
+pub(crate) fn find_string(node: &Value, name: &str) -> Option<String> {
+    match node {
+        Value::Object(map) => match map.get(name) {
+            Some(Value::String(found)) if !found.is_empty() => Some(found.clone()),
+            _ => map.values().filter(|v| v.is_object() || v.is_array()).find_map(|v| find_string(v, name)),
+        },
+        Value::Array(list) => list.iter().find_map(|v| find_string(v, name)),
+        _ => None,
+    }
 }
 
 fn comment(node: &Value, entities: &HashMap<&str, &Value>, replies: Option<&Value>) -> Option<Comment> {
@@ -352,6 +367,7 @@ pub fn page(response: &Value) -> Page {
             page.continuation = token(Some(more)).or(page.continuation);
         }
     }
+    page.create_params = find_string(response, "createCommentParams");
     page
 }
 
@@ -482,6 +498,17 @@ mod tests {
         assert_eq!(rating(0), Some(&Rating { state: "like".into(), like: Some("L".into()), unlike: Some("UL".into()), dislike: Some("D".into()), undislike: Some("UD".into()) }));
         assert_eq!(rating(1), Some(&Rating { state: "dislike".into(), like: Some("L2".into()), unlike: Some("UL2".into()), dislike: Some("D2".into()), undislike: None }));
         assert_eq!(rating(2), None);
+    }
+
+    #[test]
+    fn finds_the_websites_comment_box() {
+        let response = json!({"onResponseReceivedEndpoints": [{"reloadContinuationItemsCommand": {"continuationItems": [
+            {"commentsHeaderRenderer": {"createRenderer": {"commentSimpleboxRenderer": {"submitButton": {"buttonRenderer": {
+                "serviceEndpoint": {"createCommentEndpoint": {"createCommentParams": "CREATE"}}
+            }}}}}}
+        ]}}]});
+        assert_eq!(page(&response).create_params.as_deref(), Some("CREATE"));
+        assert_eq!(page(&json!({})).create_params, None);
     }
 
     #[test]

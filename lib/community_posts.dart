@@ -22,6 +22,8 @@ class CommunityPost {
     this.images = const [],
     this.video,
     this.poll = const [],
+    this.choices = const [],
+    this.votes = '',
     this.rating,
   });
 
@@ -36,10 +38,38 @@ class CommunityPost {
   final VideoItem? video;
   /// The choices of an attached poll.
   final List<String> poll;
+  /// The poll's choices with their votes, in pages loaded with the cookie
+  /// sign-in; empty where the poll cannot be voted in.
+  final List<PollChoice> choices;
+  /// The poll's vote count, such as "1.2K 票".
+  final String votes;
   /// Liking it, in pages loaded signed in.
   final CommentRating? rating;
 
   String get url => 'https://www.youtube.com/post/$id';
+}
+
+/// A poll choice that can be voted for: [select] votes for it, [deselect]
+/// takes the vote back.
+class PollChoice {
+  const PollChoice({required this.text, this.selected = false, this.ratio, this.percent = '', this.select, this.deselect});
+
+  final String text;
+  final bool selected;
+  /// The share of votes, 0 to 1, once the user voted.
+  final double? ratio;
+  final String percent;
+  final String? select;
+  final String? deselect;
+
+  static PollChoice fromJson(Map<String, dynamic> json) => PollChoice(
+        text: json['text'] as String,
+        selected: json['selected'] == true,
+        ratio: (json['ratio'] as num?)?.toDouble(),
+        percent: json['percent'] as String? ?? '',
+        select: json['select'] as String?,
+        deselect: json['deselect'] as String?,
+      );
 }
 
 /// One page of posts and the token for the next.
@@ -68,25 +98,32 @@ class CommunityPosts {
   String? _clientVersion;
   String? _visitorData;
 
-  /// The comments client, whose Google sign-in later pages are loaded with.
+  /// The comments client, whose cookie sign-in posts are loaded with.
   final YoutubeComments? signIn;
+
+  /// The posts tab's browse params, newer first.
+  static const _tabParams = ['EgVwb3N0c_IGBAoCSgA%3D', 'Egljb21tdW5pdHnyBgQKAkoA'];
 
   /// The first page of [channel]'s posts.
   Future<PostPage> first(ChannelRef channel) async {
-    // Signed in, the posts tab read as the TV app may come with the like
-    // buttons; YouTube's TV app has no posts of its own, so it may not.
+    // With the cookie sign-in the posts tab, as the website loads it, comes
+    // with the like buttons and polls that can be voted in.
     final signIn = this.signIn;
-    if (signIn != null && signIn.signedIn) {
+    if (signIn != null && signIn.webSignedIn) {
       try {
-        final answer = await signIn.signIn!.post('browse', {'browseId': channel.id, 'params': 'Egljb21tdW5pdHnyBgQKAkoA'});
-        if (answer != null) {
+        for (final params in _tabParams) {
+          final answer = await signIn.web!.post('browse', {'browseId': channel.id, 'params': Uri.decodeComponent(params)});
+          if (answer == null) break;
+          if (answer.status >= 400 && answer.status < 500) {
+            signIn.refuseWeb(answer.status, answer.body);
+            break;
+          }
           final page = answer.status == 200 ? await _readInBackground(answer.body) : null;
-          final rated = page?.posts.where((p) => p.rating != null).length ?? 0;
-          logInfo('Posts of ${channel.id} as the TV app: ${answer.status}, ${page?.posts.length ?? 0} posts, $rated with buttons');
-          if (page != null && rated > 0) return page;
+          logInfo('Posts of ${channel.id} signed in: ${answer.status}, ${page?.posts.length ?? 0} posts, ${page?.posts.where((p) => p.rating != null).length ?? 0} with buttons');
+          if (page != null && page.posts.isNotEmpty) return page;
         }
       } catch (e) {
-        logInfo('Posts of ${channel.id} as the TV app failed: $e');
+        logInfo('Posts of ${channel.id} signed in failed: $e');
       }
     }
     final response = await _client.get(Uri.parse('${channel.url}/posts?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));
@@ -102,9 +139,9 @@ class CommunityPosts {
   /// The page after the one that gave [continuation].
   Future<PostPage> next(String continuation) async {
     final signIn = this.signIn;
-    if (signIn != null && signIn.signedIn) {
-      final answer = await signIn.signIn!.post('browse', {'continuation': continuation});
-      if (answer != null && answer.status >= 400 && answer.status < 500) signIn.refuse(answer.status, answer.body);
+    if (signIn != null && signIn.webSignedIn) {
+      final answer = await signIn.web!.post('browse', {'continuation': continuation});
+      if (answer != null && answer.status >= 400 && answer.status < 500) signIn.refuseWeb(answer.status, answer.body);
       if (answer != null && answer.status == 200) {
         final page = await _readInBackground(answer.body);
         if (page != null && page.posts.isNotEmpty) return page;
@@ -164,6 +201,8 @@ class CommunityPosts {
         images: (p['images'] as List).cast<String>(),
         video: id == null ? null : VideoItem(id: id, title: video!['title'] as String, channel: video['channel'] as String, duration: (video['duration'] as num?)?.toInt(), url: 'https://www.youtube.com/watch?v=$id'),
         poll: (p['poll'] as List).cast<String>(),
+        choices: [for (final c in (p['choices'] as List? ?? const []).cast<Map<String, dynamic>>()) PollChoice.fromJson(c)],
+        votes: p['votes'] as String? ?? '',
         rating: CommentRating.fromJson(p['rating']),
       );
     }

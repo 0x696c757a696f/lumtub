@@ -6,7 +6,9 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/youtube_comments.dart';
+import 'package:lumtub/app/comments_loader.dart';
 import 'package:lumtub/youtube_tv_sign_in.dart';
+import 'package:lumtub/youtube_web_sign_in.dart';
 
 Map<String, Object?> _continuation(String token) => {
       'continuationItemRenderer': {
@@ -245,6 +247,39 @@ void main() {
     expect(sign.bodies.map((b) => b['videoId'] ?? b['continuation']), ['dQw4w9WgXcQ', 'TOP']);
     expect(page.comments.single.text, '电视');
   }, skip: NativeCore.instance == null);
+
+  test('with the cookie sign-in, a post\'s comments load as the website and can be written to', () async {
+    final web = _FakeWeb((endpoint, body) {
+      final data = body['browseId'] == 'FEpost_detail'
+          ? {'onResponseReceivedEndpoints': [{'reloadContinuationItemsCommand': {'continuationItems': [
+              {'commentsHeaderRenderer': {
+                'countText': {'runs': [{'text': '7'}]},
+                'sortMenu': {'sortFilterSubMenuRenderer': {'subMenuItems': [
+                  {'serviceEndpoint': {'continuationCommand': {'token': 'TOP'}}},
+                  {'serviceEndpoint': {'continuationCommand': {'token': 'NEW'}}},
+                ]}},
+                'createRenderer': {'commentSimpleboxRenderer': {'submitButton': {'buttonRenderer': {'serviceEndpoint': {'createCommentEndpoint': {'createCommentParams': 'CREATE'}}}}}},
+              }},
+            ]}}]}
+          : endpoint == 'browse'
+              ? {'onResponseReceivedEndpoints': [{'appendContinuationItemsAction': {'continuationItems': [
+                  {'commentThreadRenderer': {'comment': {'commentRenderer': {'commentId': 'c1', 'contentText': {'simpleText': '好'}}}}},
+                ]}}]}
+              : <String, Object?>{};
+      return (status: 200, body: Uint8List.fromList(utf8.encode(jsonEncode(data))));
+    });
+    final html = '<script>var ytInitialData = {"x":{"browseEndpoint":{"browseId":"FEpost_detail","params":"DETAIL"}}};</script>';
+    final comments = YoutubeComments(MockClient((request) async => http.Response(html, 200)))..web = web;
+    final loader = CommentsLoader(comments, postId: 'Ugkx1');
+    await loader.loadMore();
+    expect(web.bodies.first.$2, {'browseId': 'FEpost_detail', 'params': 'DETAIL'});
+    expect(loader.comments.single.text, '好');
+    expect(loader.count, '7');
+    expect(loader.canCreate, isTrue);
+    expect(await loader.create('你好'), isNull);
+    expect((web.bodies.last.$1, web.bodies.last.$3), ('comment/create_comment', true));
+    expect(web.bodies.last.$2, {'commentText': '你好', 'createCommentParams': 'CREATE'});
+  }, skip: NativeCore.instance == null);
 }
 
 class _FakeSignIn implements SignedInnerTube {
@@ -260,6 +295,21 @@ class _FakeSignIn implements SignedInnerTube {
   Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body) async {
     asked.add(endpoint);
     bodies.add(body);
+    return answer(endpoint, body);
+  }
+}
+
+class _FakeWeb implements WebInnerTube {
+  _FakeWeb(this.answer);
+  SignedAnswer Function(String endpoint, Map<String, Object?> body) answer;
+  final bodies = <(String, Map<String, Object?>, bool)>[];
+
+  @override
+  bool get signedIn => true;
+
+  @override
+  Future<SignedAnswer?> post(String endpoint, Map<String, Object?> body, {bool ask = false}) async {
+    bodies.add((endpoint, body, ask));
     return answer(endpoint, body);
   }
 }

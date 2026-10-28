@@ -52,6 +52,7 @@ import '../search_suggestions.dart';
 import '../youtube_comments.dart';
 import '../youtube_tv_feed.dart';
 import '../youtube_tv_sign_in.dart';
+import '../youtube_web_sign_in.dart';
 import '../tv_samples.dart' as tv_samples;
 import '../youtube_related.dart';
 import '../recommendations.dart';
@@ -142,6 +143,10 @@ class AppController extends ChangeNotifier {
   /// The TV-code sign-in that YouTube's own pages take, for liking comments
   /// and posts.
   YoutubeTvSignIn? tvSignIn;
+
+  /// The cookie sign-in, for liking posts, voting in polls and writing
+  /// under posts, which the TV-code sign-in cannot reach.
+  YoutubeWebSignIn? webSignIn;
 
   /// The account's own YouTube pages, read with [tvSignIn].
   YoutubeTvFeed? tvFeed;
@@ -527,6 +532,18 @@ class AppController extends ChangeNotifier {
 
   bool _tvWasSignedIn = false;
 
+  int _webSignIns = 0;
+
+  void _webSignInChanged() {
+    final web = webSignIn;
+    // A new sign-in is tried again even after YouTube refused the old one.
+    if (web != null && web.signIns != _webSignIns) {
+      _webSignIns = web.signIns;
+      comments.webRefused = false;
+    }
+    notifyListeners();
+  }
+
   void _tvSignInChanged() {
     final signedIn = tvSignIn?.signedIn ?? false;
     if (signedIn) comments.refused = false;
@@ -698,6 +715,9 @@ class AppController extends ChangeNotifier {
         )..addListener(notifyListeners);
         final tv = tvSignIn = YoutubeTvSignIn(folder: directories.data.path)..addListener(_tvSignInChanged);
         comments.signIn = tv;
+        final web = webSignIn = YoutubeWebSignIn(folder: directories.data.path)..addListener(_webSignInChanged);
+        comments.web = web;
+        web.load();
         tvFeed = YoutubeTvFeed(tv);
         // Before the first home feed, which mixes in YouTube's own.
         tv.load();
@@ -4175,6 +4195,7 @@ class AppController extends ChangeNotifier {
     cast.dispose();
     account?.dispose();
     tvSignIn?.cancel();
+    webSignIn?.cancel();
     downloads?.dispose();
     library?.dispose();
     channelVideos?.dispose();

@@ -4,15 +4,18 @@ import '../../app/account_controller.dart';
 import '../../google_auth.dart';
 import '../../youtube_account.dart';
 import '../../youtube_tv_sign_in.dart';
+import '../../youtube_web_sign_in.dart';
 import '../common.dart';
 import '../theme.dart';
+import 'cookie_sign_in_tile.dart';
 import '../../l10n/l10n.dart';
 
 /// Google sign-in, sync and the OAuth client used for it.
 class AccountSettings extends StatelessWidget {
-  const AccountSettings({super.key, required this.account, this.tvSignIn, this.saveTvSamples, required this.note});
+  const AccountSettings({super.key, required this.account, this.tvSignIn, this.webSignIn, this.saveTvSamples, required this.note});
   final AccountController? account;
   final YoutubeTvSignIn? tvSignIn;
+  final YoutubeWebSignIn? webSignIn;
   final Future<String> Function()? saveTvSamples;
   final TextStyle note;
 
@@ -90,10 +93,15 @@ class AccountSettings extends StatelessWidget {
               ),
           ]),
         ),
+      if (webSignIn case final web?) ...[
+        const Divider(height: 24),
+        _Heading(tr('浏览器登录（Cookie）'), tr('用 YouTube 网页版的接口，做电视码做不到的事：给社区帖子点赞、点踩、投票和评论。')),
+        CookieSignInTile(web, note: note),
+      ],
       Padding(
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
         child: Text(
-          tr('两种登录都可选，不登录也能正常搜索和播放；都登录时请用同一个 Google 账号。登录凭据用 Windows 数据保护加密后保存在本机，只有当前 Windows 用户能解密。只有你在 Lumtub 里点赞、点踩、评论、保存到播放列表或订阅时才会修改账号，不会上传本机的观看记录。\n首页的“为你推荐”在本机计算，会参考同步过来的喜欢的视频和订阅。视频播放不使用账号，会员或年龄限制视频不一定能播放。'),
+          tr('这些登录都可选，不登录也能正常搜索和播放；登录多种时请用同一个 Google 账号。登录凭据用 Windows 数据保护加密后保存在本机，只有当前 Windows 用户能解密。只有你在 Lumtub 里点赞、点踩、评论、保存到播放列表或订阅时才会修改账号，不会上传本机的观看记录。\n首页的“为你推荐”在本机计算，会参考同步过来的喜欢的视频和订阅。视频播放不使用账号，会员或年龄限制视频不一定能播放。'),
           style: note,
         ),
       ),

@@ -47,7 +47,7 @@ class CommentsLoader extends ChangeNotifier {
   /// Whether [comment] can be liked: its buttons came with it, or can be
   /// found or made signed in.
   bool canRate(YoutubeComment comment) =>
-      comment.rating != null || _found.containsKey(comment.id) || (_source.signedIn && (comment.detailToken != null || _template != null));
+      comment.rating != null || _found.containsKey(comment.id) || ((_post ? _source.webSignedIn : _source.signedIn) && (comment.detailToken != null || _template != null));
 
   void _learn(Iterable<YoutubeComment> comments) {
     for (final c in comments) {
@@ -89,7 +89,7 @@ class CommentsLoader extends ChangeNotifier {
     _rated[comment.id] = before == want ? '' : want;
     _notify();
     try {
-      await _source.rate(action);
+      await _source.rate(action, post: _post);
       return null;
     } catch (e) {
       _rated[comment.id] = before;
@@ -131,7 +131,10 @@ class CommentsLoader extends ChangeNotifier {
               ? await _source.post(postId!, newest: newest)
               : await _source.video(videoId!, newest: newest);
       if (generation != _generation) return;
-      if (!started) count = page.count;
+      if (!started) {
+        count = page.count;
+        createParams = page.createParams;
+      }
       started = true;
       _learn(page.comments);
       final seen = {for (final c in comments) c.id};
@@ -204,6 +207,23 @@ class CommentsLoader extends ChangeNotifier {
     } finally {
       thread.loading = false;
       _notify();
+    }
+  }
+
+  /// The post's comment box, when it was loaded with the cookie sign-in.
+  String? createParams;
+
+  bool get canCreate => _post && createParams != null && _source.webSignedIn;
+
+  /// Writes [text] under the post. Returns why it failed, or null.
+  Future<String?> create(String text) async {
+    final params = createParams;
+    if (params == null) return tr('这个帖子没有评论框');
+    try {
+      await _source.create(params, text);
+      return null;
+    } catch (e) {
+      return friendlyError(e);
     }
   }
 

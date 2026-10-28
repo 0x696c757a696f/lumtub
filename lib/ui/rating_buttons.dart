@@ -7,19 +7,23 @@ import 'theme.dart';
 /// press (signed in, from a page that carried their actions); without it
 /// only the like count shows.
 class RatingButtons extends StatelessWidget {
-  const RatingButtons({super.key, required this.likes, this.state = '', this.onRate});
+  const RatingButtons({super.key, required this.likes, this.state = '', this.loaded = '', this.onRate});
 
   /// YouTube's own count, such as "1.2万".
   final String likes;
+
   /// `like`, `dislike` or empty.
   final String state;
+
+  /// [state] when [likes] was counted.
+  final String loaded;
   final Future<String?> Function(String want)? onRate;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final small = TextStyle(color: colors.outline, fontSize: 12);
-    final count = Text(likes.isEmpty ? '0' : likes, style: small);
+    final count = Text(countLikes(likes, from: loaded, to: state), style: small);
     final onRate = this.onRate;
     if (onRate == null) {
       return Tooltip(
@@ -48,4 +52,16 @@ class RatingButtons extends StatelessWidget {
       button('dislike', Icons.thumb_down_outlined, Icons.thumb_down_rounded, state == 'dislike' ? tr('取消点踩') : tr('点踩')),
     ]);
   }
+}
+
+/// YouTube's like count [likes], counted while the rating was [from], as it
+/// is now that it is [to]. A rounded count such as "1.2万" stays as it is:
+/// one like does not change it.
+String countLikes(String likes, {String from = '', String to = ''}) {
+  final change = (to == 'like' ? 1 : 0) - (from == 'like' ? 1 : 0);
+  final plain = likes.trim().replaceAll(',', '');
+  if (plain.isEmpty) return '${change < 0 ? 0 : change}';
+  final number = int.tryParse(plain);
+  if (number == null || change == 0) return likes;
+  return '${number + change < 0 ? 0 : number + change}';
 }

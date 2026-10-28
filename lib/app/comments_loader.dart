@@ -44,6 +44,9 @@ class CommentsLoader extends ChangeNotifier {
   /// `like`, `dislike` or empty for [comment], as last pressed here.
   String ratingOf(YoutubeComment comment) => _rated[comment.id] ?? comment.rating?.state ?? _found[comment.id]?.state ?? '';
 
+  /// `like`, `dislike` or empty for [comment] when it was loaded.
+  String loadedRatingOf(YoutubeComment comment) => comment.rating?.state ?? _found[comment.id]?.state ?? '';
+
   /// Whether [comment] can be liked: its buttons came with it, or can be
   /// found or made signed in.
   bool canRate(YoutubeComment comment) =>

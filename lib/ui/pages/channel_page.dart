@@ -298,6 +298,7 @@ class PostCard extends StatelessWidget {
           RatingButtons(
             likes: post.likes,
             state: controller.channelPosts?.ratingOf(post) ?? '',
+            loaded: post.rating?.state ?? '',
             onRate: post.rating == null || controller.channelPosts == null ? null : (want) => controller.channelPosts!.rate(post, want),
           ),
           const SizedBox(width: 16),

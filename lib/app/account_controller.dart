@@ -189,14 +189,23 @@ class AccountController extends ChangeNotifier {
   }
 
   final _ratings = <String, VideoRating>{};
+  final _loadedRatings = <String, VideoRating>{};
 
   /// How the account rated [videoId], once [loadRating] has asked.
   VideoRating? ratingOf(String videoId) => _ratings[videoId];
 
+  /// What [videoId]'s [rating] count gains or loses from the rating
+  /// pressed here since the count was read.
+  int ratingChange(String videoId, VideoRating rating) {
+    final now = _ratings[videoId] ?? VideoRating.none;
+    final loaded = _loadedRatings[videoId] ?? VideoRating.none;
+    return (now == rating ? 1 : 0) - (loaded == rating ? 1 : 0);
+  }
+
   Future<void> loadRating(String videoId) async {
     if (!canWrite || _ratings.containsKey(videoId)) return;
     try {
-      _ratings[videoId] = await _api.rating(videoId);
+      _ratings[videoId] = _loadedRatings[videoId] = await _api.rating(videoId);
       notifyListeners();
     } catch (e) {
       logInfo('Could not read the like status: $e');

@@ -302,6 +302,7 @@ class _CommentTile extends StatelessWidget {
             RatingButtons(
               likes: comment.likes,
               state: loader.ratingOf(comment),
+              loaded: loader.loadedRatingOf(comment),
               onRate: loader.canRate(comment) ? (want) => loader.rate(comment, want) : null,
             ),
             if (comment.hearted) ...[

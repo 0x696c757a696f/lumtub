@@ -5,11 +5,12 @@
 //! its YouTube cookies are read through the DevTools port on 127.0.0.1 and
 //! the profile is deleted. The user's own browser profiles are never opened.
 
-use std::io::{Read, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command};
+use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
@@ -236,6 +237,15 @@ pub fn finished(jar: &Jar) -> bool {
     jar.signed_in() && jar.get("LOGIN_INFO").is_some()
 }
 
+/// The DevTools port and path in the browser's "DevTools listening on
+/// ws://127.0.0.1:<port>/<path>" line.
+fn listening(said: &str) -> Option<(u16, String)> {
+    let address = said.lines().find_map(|l| l.trim().strip_prefix("DevTools listening on ws://"))?;
+    let (host, path) = address.split_once('/')?;
+    let port = host.rsplit_once(':')?.1.parse().ok()?;
+    Some((port, format!("/{path}")))
+}
+
 /// The DevTools port and path the browser wrote into its profile.
 fn devtools(profile: &Path) -> Option<(u16, String)> {
     let text = std::fs::read_to_string(profile.join("DevToolsActivePort")).ok()?;
@@ -261,13 +271,13 @@ fn remove_profile(profile: &Path) {
     }
 }
 
-fn close(browser: &mut Child, socket: Option<&mut Socket>) {
+fn close(browser: &mut Child, profile: &Path, socket: Option<&mut Socket>) {
     if let Some(socket) = socket {
         let _ = socket.call("Browser.close", json!({}));
     }
     let deadline = Instant::now() + Duration::from_secs(10);
     while Instant::now() < deadline {
-        if !matches!(browser.try_wait(), Ok(None)) {
+        if !matches!(browser.try_wait(), Ok(None)) && !profile_in_use(profile) {
             return;
         }
         std::thread::sleep(Duration::from_millis(200));
@@ -317,14 +327,32 @@ fn read_profile(exe: &Path, profile: &Path, current: impl Fn() -> bool) -> Resul
     let mut browser = Command::new(exe)
         .arg(format!("--user-data-dir={}", profile.display()))
         .args(["--headless=new", "--remote-debugging-port=0", "--no-first-run", "--no-default-browser-check", "--disable-sync", "about:blank"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
         .spawn()
         .map_err(|e| format!("could not open {}: {e}", browser_name(exe)))?;
+    // The browser names its DevTools address on stderr as well as in the
+    // profile; what it says there also tells why it did not start.
+    let said = Arc::new(Mutex::new(String::new()));
+    if let Some(stderr) = browser.stderr.take() {
+        let said = said.clone();
+        std::thread::spawn(move || {
+            for line in BufReader::new(stderr).lines().map_while(Result::ok) {
+                let mut said = said.lock().unwrap_or_else(|e| e.into_inner());
+                if said.len() < 16 * 1024 {
+                    said.push_str(&line);
+                    said.push('\n');
+                }
+            }
+        });
+    }
+    let heard = || said.lock().map(|s| s.clone()).unwrap_or_default();
     let begun = Instant::now();
     let failed = loop {
         if !current() {
             break String::new();
         }
-        if let Some(Ok(mut socket)) = devtools(profile).map(|(port, path)| Socket::connect(port, &path)) {
+        if let Some(Ok(mut socket)) = devtools(profile).or_else(|| listening(&heard())).map(|(port, path)| Socket::connect(port, &path)) {
             let read = match socket.call("Storage.getCookies", json!({})) {
                 Ok(mut answer) => {
                     let jar = youtube_cookies(&answer);
@@ -333,15 +361,22 @@ fn read_profile(exe: &Path, profile: &Path, current: impl Fn() -> bool) -> Resul
                 }
                 Err(e) => Err(format!("could not read the cookies: {e}")),
             };
-            close(&mut browser, Some(&mut socket));
+            close(&mut browser, profile, Some(&mut socket));
             return read;
         }
-        if begun.elapsed() > Duration::from_secs(30) || !matches!(browser.try_wait(), Ok(None)) {
-            break format!("{} did not start without a window", browser_name(exe));
+        // Like the window, the process started may hand over to another
+        // and exit; only a profile nothing holds says it has gone.
+        let gone = !matches!(browser.try_wait(), Ok(None)) && !profile_in_use(profile) && begun.elapsed() > Duration::from_secs(10);
+        if gone || begun.elapsed() > Duration::from_secs(30) {
+            let last = heard().lines().rev().find(|l| !l.trim().is_empty()).map(|l| l.chars().take(200).collect::<String>());
+            break match last {
+                Some(last) => format!("{} did not start without a window: {last}", browser_name(exe)),
+                None => format!("{} did not start without a window", browser_name(exe)),
+            };
         }
         std::thread::sleep(Duration::from_millis(300));
     };
-    close(&mut browser, None);
+    close(&mut browser, profile, None);
     Err(failed)
 }
 
@@ -420,6 +455,13 @@ mod tests {
         let mut half = Jar::default();
         half.set("SAPISID", "a");
         assert!(!finished(&half));
+    }
+
+    #[test]
+    fn reads_the_devtools_address_from_stderr() {
+        let said = "[1:2:ERROR] something\n\nDevTools listening on ws://127.0.0.1:41235/devtools/browser/0b1c\n";
+        assert_eq!(listening(said), Some((41235, "/devtools/browser/0b1c".to_owned())));
+        assert_eq!(listening("nothing here"), None);
     }
 
     #[test]

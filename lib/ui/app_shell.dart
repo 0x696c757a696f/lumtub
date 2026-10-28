@@ -26,6 +26,7 @@ import 'video_card.dart';
 import '../l10n/l10n.dart';
 import 'frame_stats.dart';
 import 'motion.dart';
+import 'player_shortcuts.dart';
 
 const appName = 'Lumtub';
 
@@ -130,7 +131,7 @@ class _AppShellState extends State<AppShell> {
           // Esc goes back too, except on the watch page, where it leaves
           // full screen and closes panels.
           const SingleActivator(LogicalKeyboardKey.escape): () {
-            final typing = FocusManager.instance.primaryFocus?.context?.widget is EditableText;
+            final typing = NotWhileTyping.typing;
             if (!typing && !_controller.onWatchPage) _back();
           },
         },

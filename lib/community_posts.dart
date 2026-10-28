@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'app_log.dart';
 import 'models.dart';
 import 'native_core.dart';
 import 'l10n/l10n.dart';
@@ -72,6 +73,22 @@ class CommunityPosts {
 
   /// The first page of [channel]'s posts.
   Future<PostPage> first(ChannelRef channel) async {
+    // Signed in, the posts tab read as the TV app may come with the like
+    // buttons; YouTube's TV app has no posts of its own, so it may not.
+    final signIn = this.signIn;
+    if (signIn != null && signIn.signedIn) {
+      try {
+        final answer = await signIn.signIn!.post('browse', {'browseId': channel.id, 'params': 'Egljb21tdW5pdHnyBgQKAkoA'});
+        if (answer != null) {
+          final page = answer.status == 200 ? await _readInBackground(answer.body) : null;
+          final rated = page?.posts.where((p) => p.rating != null).length ?? 0;
+          logInfo('Posts of ${channel.id} as the TV app: ${answer.status}, ${page?.posts.length ?? 0} posts, $rated with buttons');
+          if (page != null && rated > 0) return page;
+        }
+      } catch (e) {
+        logInfo('Posts of ${channel.id} as the TV app failed: $e');
+      }
+    }
     final response = await _client.get(Uri.parse('${channel.url}/posts?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
     final (page, apiKey, clientVersion, visitorData) = await _readPageInBackground(response.bodyBytes);

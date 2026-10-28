@@ -4,6 +4,7 @@
 //! recommendations; the process tree is used when the platform has one.
 
 pub mod comments;
+pub mod comment_action;
 pub mod filter;
 pub mod downloads;
 pub mod format_policy;
@@ -32,5 +33,5 @@ pub mod update;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    21
+    22
 }

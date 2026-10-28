@@ -2577,5 +2577,6 @@
   "在 YouTube 管理": "Manage on YouTube",
   "YouTube 上还没有观看记录": "No watch history on YouTube yet",
   "无法加载 YouTube 观看记录：{0}": "Could not load the YouTube watch history: {0}",
-  "YouTube 为你推荐": "Recommended by YouTube"
+  "YouTube 为你推荐": "Recommended by YouTube",
+  "YouTube 没有给这条评论点赞按钮": "YouTube didn't give this comment a like button"
 }

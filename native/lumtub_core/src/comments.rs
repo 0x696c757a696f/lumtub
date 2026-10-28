@@ -209,6 +209,10 @@ pub struct Comment {
     pub emojis: Emojis,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rating: Option<Rating>,
+    /// The TV app's page for this one comment (`detailViewEndpoint`), where
+    /// it comes with its like buttons when the list leaves them out.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail_token: Option<String>,
 }
 
 #[derive(Serialize, Debug, PartialEq, Default)]
@@ -247,6 +251,7 @@ fn comment(node: &Value, entities: &HashMap<&str, &Value>, replies: Option<&Valu
             by_uploader: of_author("isCreator") == Some(&Value::Bool(true)),
             emojis: attached_emojis(field(&["properties", "content"])),
             rating: view_model_rating(entity(model, "toolbarSurfaceKey"), entity(model, "toolbarStateKey")),
+            detail_token: None,
         });
     }
     let renderer = at(node, &["comment", "commentRenderer"]).filter(|v| !v.is_null()).or_else(|| node.get("commentRenderer"))?;
@@ -257,7 +262,8 @@ fn comment(node: &Value, entities: &HashMap<&str, &Value>, replies: Option<&Valu
     let text = rich_text(renderer.get("contentText"), &mut emojis);
     // The TV app opens replies through `detailViewEndpoint` and writes their
     // count as text.
-    let replies_token = replies_token.or_else(|| token(renderer.get("detailViewEndpoint")));
+    let detail_token = token(renderer.get("detailViewEndpoint"));
+    let replies_token = replies_token.or_else(|| detail_token.clone());
     let reply_count = renderer.get("replyCount").and_then(Value::as_i64).unwrap_or_else(|| plain_text(renderer.get("repliesCount")).chars().filter(char::is_ascii_digit).collect::<String>().parse().unwrap_or(0));
     let mut rating = button_rating(at(renderer, &["actionButtons", "commentActionButtonsRenderer"]));
     if let Some(rating) = rating.as_mut()
@@ -281,6 +287,7 @@ fn comment(node: &Value, entities: &HashMap<&str, &Value>, replies: Option<&Valu
         by_uploader: renderer.get("authorIsChannelOwner") == Some(&Value::Bool(true)),
         emojis,
         rating,
+        detail_token,
     })
 }
 
@@ -424,6 +431,7 @@ mod tests {
                 by_uploader: false,
                 emojis: Emojis::new(),
                 rating: None,
+                detail_token: None,
             }
         );
         let old = &page.comments[1];
@@ -516,6 +524,7 @@ mod tests {
         assert_eq!(comments.continuation.as_deref(), Some("MORE"));
         let c = &comments.comments[0];
         assert_eq!((c.id.as_str(), c.text.as_str(), c.reply_count, c.replies_token.as_deref()), ("tv1", "hi", 3, Some("REPLIES")));
+        assert_eq!(c.detail_token.as_deref(), Some("REPLIES"));
         let rating = c.rating.as_ref().unwrap();
         assert_eq!((rating.state.as_str(), rating.like.as_deref(), rating.unlike.as_deref()), ("like", Some("LIKE"), Some("UNLIKE")));
     }

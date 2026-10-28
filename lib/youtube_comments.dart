@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:isolate';
 
+import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
@@ -24,6 +26,33 @@ class CommentRating {
           dislike: json['dislike'] as String?,
           undislike: json['undislike'] as String?,
         );
+
+  /// The same buttons for comment [to], made from these of comment [from]
+  /// on the same video by the native core; null when they cannot be.
+  CommentRating? forComment(String from, String to) {
+    String? swap(String? action) {
+      if (action == null) return null;
+      final core = NativeCore.instance;
+      final made = _actionFor;
+      if (core == null || made == null) return null;
+      return jsonDecode(core.take(core.withText(jsonEncode({'action': action, 'from': from, 'to': to}), made)) ?? 'null') as String?;
+    }
+
+    final rating = CommentRating(like: swap(like), unlike: swap(unlike), dislike: swap(dislike), undislike: swap(undislike));
+    return rating.like == null && rating.dislike == null ? null : rating;
+  }
+
+  static Pointer<Utf8> Function(Pointer<Uint8>, int)? _actionForBinding;
+  static bool _triedActionFor = false;
+  static Pointer<Utf8> Function(Pointer<Uint8>, int)? get _actionFor {
+    if (_triedActionFor) return _actionForBinding;
+    _triedActionFor = true;
+    try {
+      return _actionForBinding = NativeCore.instance?.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_comment_action_for');
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// `like`, `dislike` or empty.
   final String state;
@@ -59,6 +88,7 @@ class YoutubeComment {
     this.byUploader = false,
     this.emojis = const {},
     this.rating,
+    this.detailToken,
   });
 
   final String id;
@@ -79,6 +109,9 @@ class YoutubeComment {
   /// Custom emoji in [text]: shortcut to picture address.
   final Map<String, String> emojis;
   final CommentRating? rating;
+  /// The TV app's page for this one comment, which has its like buttons
+  /// when the list it came in does not; read through [YoutubeComments.more].
+  final String? detailToken;
 }
 
 /// One page of comments, the token for the next, and from the first page
@@ -137,10 +170,25 @@ class YoutubeComments {
   Future<CommentPage> post(String postId, {bool newest = false}) async {
     final response = await _client.get(Uri.parse('https://www.youtube.com/post/$postId?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
-    final (token, apiKey, clientVersion, visitorData) = await _readPostInBackground(response.bodyBytes);
+    final (token, apiKey, clientVersion, visitorData, detail) = await _readPostInBackground(response.bodyBytes);
     _apiKey = apiKey ?? _apiKey;
     _clientVersion = clientVersion ?? _clientVersion;
     _visitorData = visitorData ?? _visitorData;
+    // Signed in, the post's own page read as the TV app may come with the
+    // like buttons and the comment box; YouTube's TV app has no posts of
+    // its own, so it may not.
+    if (signedIn && detail != null) {
+      try {
+        final answer = await signIn!.post('browse', {'browseId': 'FEpost_detail', 'params': detail});
+        if (answer != null) {
+          final page = answer.status == 200 ? await _readInBackground(answer.body) : const CommentPage([], null);
+          logInfo('Post $postId as the TV app: ${answer.status}, ${page.comments.length} comments, sort ${page.topToken != null}, ${page.comments.where((c) => c.rating != null).length} with buttons · ${_start(answer.body)}');
+          if (page.topToken != null || page.comments.any((c) => c.rating != null)) return await _sorted(page, 'browse', newest);
+        }
+      } catch (e) {
+        logInfo('Post $postId as the TV app failed: $e');
+      }
+    }
     if (token == null) throw FormatException(tr('这个帖子没有评论区，或评论已关闭'));
     final header = await _request('browse', {'continuation': token});
     return _sorted(header, 'browse', newest);
@@ -229,12 +277,13 @@ class YoutubeComments {
 
   // A post page runs to a megabyte: its comments token and client settings
   // are read away from the UI isolate.
-  static Future<(String?, String?, String?, String?)> _readPostInBackground(List<int> bytes) => Isolate.run(() {
+  static Future<(String?, String?, String?, String?, String?)> _readPostInBackground(List<int> bytes) => Isolate.run(() {
         final html = utf8.decode(bytes, allowMalformed: true);
         String? find(String name) => RegExp('"$name":"([^"]+)"').firstMatch(html)?.group(1);
         final core = NativeCore.instance;
         final token = core == null ? null : jsonDecode(core.take(core.withText(html, core.youtubePostComments)) ?? 'null') as String?;
-        return (token, find('INNERTUBE_API_KEY'), find('INNERTUBE_CLIENT_VERSION'), find('VISITOR_DATA'));
+        final detail = RegExp(r'"browseId":"FEpost_detail","params":"([^"]+)"').firstMatch(html)?.group(1);
+        return (token, find('INNERTUBE_API_KEY'), find('INNERTUBE_CLIENT_VERSION'), find('VISITOR_DATA'), detail);
       });
 
   /// The token of a video's comment section, built as yt-dlp's
@@ -269,6 +318,7 @@ class YoutubeComments {
             byUploader: c['byUploader'] as bool,
             emojis: (c['emojis'] as Map<String, dynamic>?)?.cast<String, String>() ?? const {},
             rating: CommentRating.fromJson(c['rating']),
+            detailToken: c['detailToken'] as String?,
           ),
       ],
       page['continuation'] as String?,

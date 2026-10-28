@@ -432,6 +432,11 @@ class AppController extends ChangeNotifier {
   DateTime _rateLimitedUntil = DateTime(0);
   bool _updateCheckedForChallenge = false;
   int _lastDrops = 0;
+
+  /// When the current video was opened. Its first seconds are left out of
+  /// the dropped-frame checks: the first picture of a run compiles the
+  /// shaders and drops frames that later ones do not.
+  DateTime _openedAt = DateTime(2000);
   /// Ten-second windows in a row that dropped a tenth of the frames or more.
   int _dropStreak = 0;
   /// The quality automatic playback is lowered to for this run after
@@ -1840,6 +1845,7 @@ class AppController extends ChangeNotifier {
       _mpvLogLines = 0;
       _lastDrops = 0;
       _dropStreak = 0;
+      _openedAt = DateTime.now();
       // The decoder is known once frames are shown; resolving the video
       // can take longer than any fixed delay.
       _decoderPending = true;
@@ -1872,6 +1878,7 @@ class AppController extends ChangeNotifier {
     _mpvLogLines = 0;
     _lastDrops = 0;
     _dropStreak = 0;
+    _openedAt = DateTime.now();
     _decoderPending = true;
     _update(() {});
     unawaited(_addLocalSubtitles(local, serial));
@@ -1934,6 +1941,7 @@ class AppController extends ChangeNotifier {
       _mpvLogLines = 0;
       _lastDrops = 0;
       _dropStreak = 0;
+      _openedAt = DateTime.now();
       _decoderPending = true;
       _update(() {});
       return true;
@@ -4015,8 +4023,10 @@ class AppController extends ChangeNotifier {
       // Read every time, so the timings cover these 10 seconds.
       final frames = await _frameStats(platform);
       await _watchPicture(platform, frames);
-      await _lightenIfBusy(platform, frames);
-      await _stepDownIfDropping(platform, added);
+      if (DateTime.now().difference(_openedAt) >= const Duration(seconds: 20)) {
+        await _lightenIfBusy(platform, frames);
+        await _stepDownIfDropping(platform, added);
+      }
       if (added < 20 || DateTime.now().difference(_lastDropLog) < const Duration(minutes: 1)) {
         // Smooth playback is logged too, every few minutes, so a stutter can
         // be compared with how the same machine plays normally.

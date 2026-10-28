@@ -701,7 +701,6 @@ class AppController extends ChangeNotifier {
         libass: settings.libassSubtitles,
         logLevel: MPVLogLevel.warn,
       ));
-      final controller = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
       _lightRendering = null;
       await _applyProxy(player);
@@ -756,8 +755,7 @@ class AppController extends ChangeNotifier {
         tv.load();
         _tvWasSignedIn = tv.signedIn;
         this.player = player;
-        videoController = controller;
-        _outputSize = VideoOutputSize((width, height) => controller.setSize(width: width, height: height));
+        _outputSize = VideoOutputSize((width, height) async => videoController?.setSize(width: width, height: height));
         _listenTo(player);
         _dropTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkDrops());
         unawaited(_measureDecoders());
@@ -1445,6 +1443,7 @@ class AppController extends ChangeNotifier {
     final player = this.player;
     if (player == null) return;
     if (mini && playing?.id == item.id && at == null && !retryingStart) return expandMini();
+    _ensureVideo(player);
     _startTimer?.cancel();
     if (!retryingStart) _startAttempts = 0;
     // A loop belongs to the video it was set in.
@@ -1693,8 +1692,18 @@ class AppController extends ChangeNotifier {
   /// show them again.
   final _shownOptions = <String, SubtitleOption>{};
 
+  /// Makes the video's picture output, the first time a video plays. Made
+  /// at start it held up drawing the window for most of a second when the
+  /// graphics files were not in the disk cache yet, such as after an
+  /// update; a video being opened waits for its stream anyway.
+  void _ensureVideo(Player player) {
+    if (videoController != null) return;
+    videoController = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
+  }
+
   Future<bool> _openOnce(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
     final player = this.player!;
+    _ensureVideo(player);
     try {
       if (!_libmpvConfirmed) await _tools?.libmpv.markPlaying();
       if (settings.proxyMode == ProxyMode.system) await _refreshProxy(ifStale: true);

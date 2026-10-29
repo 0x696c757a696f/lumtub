@@ -825,7 +825,6 @@
   "播放顺序": "Playback order",
   "操作失败": "Action failed",
   "操作系统": "Operating system",
-  "支持特效字幕；关闭时由界面绘制，更省资源。重启后生效": "Supports styled subtitles; when off, the UI draws them, using fewer resources. Takes effect after restart",
   "收藏": "Favorites",
   "收起": "Collapse",
   "收起回复": "Hide replies",
@@ -1615,7 +1614,6 @@
   "{0}（自动翻译）": "{0} (auto-translated)",
   "（视频流不支持此类代理，视频流直接连接）": "(Video streams don't support this proxy type and connect directly)",
   "，{0} 行无法使用": ", {0} lines couldn't be used",
-  "；硬件解码和帧插值在下一段视频生效。": "; hardware decoding and frame interpolation take effect on the next video.",
   "跟随系统语言": "Follow Windows language",
   "减少": "Fewer",
   "不推荐": "Don't recommend",
@@ -2752,5 +2750,7 @@
   "泰卢固语": "Telugu",
   "显卡驱动又重置了一次，本次运行改用软件解码": "The graphics driver reset again; decoding in software until Lumtub restarts",
   "显卡驱动重置了，已重新建立画面": "The graphics driver reset; the picture was made again",
-  "显卡驱动反复重置，请重启 Lumtub": "The graphics driver keeps resetting; please restart Lumtub"
+  "显卡驱动反复重置，请重启 Lumtub": "The graphics driver keeps resetting; please restart Lumtub",
+  "；解码和帧插值的改动在下一段视频生效。": "; decoding and frame interpolation changes take effect on the next video.",
+  "支持特效字幕；关闭时由界面绘制，更省资源": "Supports styled subtitles; when off, the UI draws them, using fewer resources"
 }

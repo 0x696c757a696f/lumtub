@@ -498,7 +498,7 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
         _header(context, tr('通用')),
         SwitchItem(
           title: tr('由 mpv 绘制字幕（libass）'),
-          subtitle: tr('支持特效字幕；关闭时由界面绘制，更省资源。重启后生效'),
+          subtitle: tr('支持特效字幕；关闭时由界面绘制，更省资源'),
           leading: const Icon(Icons.layers_outlined),
           value: settings.libassSubtitles,
           onChanged: (v) => save(settings.copyWith(libassSubtitles: v)),

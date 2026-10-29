@@ -401,6 +401,9 @@ class AppController extends ChangeNotifier {
   VideoItem? _tracking;
   DateTime _lastProgressSave = DateTime(0);
   List<SkipSegment> _segments = const [];
+
+  /// The settings libmpv was last given.
+  PlayerSettings? _applied;
   final _skipped = <SkipSegment>{};
   final _http = appHttpClient();
   /// Sprite sheets of the progress bar's preview frames.
@@ -447,6 +450,9 @@ class AppController extends ChangeNotifier {
   /// The quality automatic playback is lowered to for this run after
   /// frames kept dropping; 0 while it is not.
   int _droppedCap = 0;
+
+  /// The height playback was lowered to after dropped frames, 0 for none.
+  int get droppedCap => _droppedCap;
   DateTime _lastDropLog = DateTime(0);
   DateTime _lastFrameLog = DateTime(0);
   Timer? _dropTimer;
@@ -714,6 +720,7 @@ class AppController extends ChangeNotifier {
         logLevel: MPVLogLevel.warn,
       ));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      _applied = settings;
       // Compiled shaders are kept between runs, so a video's first frame
       // does not wait for them again.
       final platform = player.platform;
@@ -2377,7 +2384,8 @@ class AppController extends ChangeNotifier {
     }
     if (jsonEncode(next.toJson()) == jsonEncode(settings.toJson())) return;
     final player = this.player;
-    if (player != null) await PlayerOptionApplicator.apply(player, next, previous: settings);
+    if (player != null) await PlayerOptionApplicator.apply(player, next, previous: _applied ?? settings);
+    _applied = next;
     _update(() => settings = next);
     await _settingsStore?.save(next);
   }
@@ -2443,7 +2451,7 @@ class AppController extends ChangeNotifier {
           _decoderPending = false;
           unawaited(inspectCurrentDecoder(delay: const Duration(milliseconds: 500)));
         }
-        if (_segments.isNotEmpty) _skipSegments(position);
+        if (_segments.isNotEmpty && settings.sponsorBlock) _skipSegments(position);
         _countWatchTime();
         final now = DateTime.now();
         if (now.difference(_lastProgressSave) > const Duration(seconds: 5)) {
@@ -3959,14 +3967,26 @@ class AppController extends ChangeNotifier {
     final store = _settingsStore;
     final player = this.player;
     if (store == null || player == null) return;
-    final oldSettings = settings;
-    final requiresNextVideo = next.hwdec != oldSettings.hwdec || next.interpolation != oldSettings.interpolation;
+    // What libmpv has: a slider preview changes [settings] only.
+    final oldSettings = _applied ?? settings;
+    final requiresNextVideo = next.hwdec != oldSettings.hwdec ||
+        next.interpolation != oldSettings.interpolation ||
+        next.hwdecCodecs != oldSettings.hwdecCodecs ||
+        next.d3d11vaZeroCopy != oldSettings.d3d11vaZeroCopy ||
+        next.directRendering != oldSettings.directRendering;
     // Lighter scaling set for a busy GPU is not in the settings, so then
     // every option is set again.
     final ignoredOptions = await PlayerOptionApplicator.apply(player, next, previous: _lightRendering == null ? oldSettings : null);
+    _applied = next;
     _lightRendering = null;
     await store.save(next);
     _update(() => settings = next);
+    // The video playing skips by the new SponsorBlock choice too.
+    if (next.sponsorBlock != oldSettings.sponsorBlock || !setEquals(next.sponsorCategories, oldSettings.sponsorCategories)) {
+      _update(() => _segments = const []);
+      final item = playing;
+      if (next.sponsorBlock && item != null) unawaited(_loadSegments(item, _playSerial));
+    }
     if (next.proxyMode != oldSettings.proxyMode ||
         next.proxyAddress != oldSettings.proxyAddress ||
         next.dnsServer != oldSettings.dnsServer ||
@@ -3985,7 +4005,7 @@ class AppController extends ChangeNotifier {
               _zeroCopyDxva2(next.hwdec) != _zeroCopyDxva2(oldSettings.hwdec) && videoController != null
                   ? tr('；DXVA2 零拷贝要重启 Lumtub 后生效。')
                   : requiresNextVideo
-                      ? tr('；硬件解码和帧插值在下一段视频生效。')
+                      ? tr('；解码和帧插值的改动在下一段视频生效。')
                       : '。'
             ])
           : tr('已保存；此 libmpv 不支持：{0}。', [ignoredOptions.join(', ')]);
@@ -4173,6 +4193,7 @@ class AppController extends ChangeNotifier {
     if (_lightRendering == 'battery' && !Power.saving) {
       _lightRendering = null;
       await PlayerOptionApplicator.apply(player, settings);
+      _applied = settings;
       logInfo('Plugged in again; scaling back to normal');
       return;
     }

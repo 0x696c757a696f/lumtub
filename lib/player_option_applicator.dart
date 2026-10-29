@@ -36,6 +36,11 @@ class PlayerOptionApplicator {
       'sub-border-size': settings.subtitleBorder.toStringAsFixed(1),
       'sub-border-style': settings.subtitleBackground ? 'background-box' : 'outline-and-shadow',
       'sub-bold': settings.subtitleBold ? 'yes' : 'no',
+      // Who draws the subtitles: libmpv (libass) or the Flutter view, which
+      // reads sub-text either way. Set here, a switch applies at once.
+      'sub-ass': settings.libassSubtitles ? 'yes' : 'no',
+      'sub-visibility': settings.libassSubtitles ? 'yes' : 'no',
+      'secondary-sub-visibility': settings.libassSubtitles ? 'yes' : 'no',
       // Tracks yt-dlp lists are added as "auto": mpv selects one only when
       // its language is in slang.
       'slang': subtitles ? language.mpvLangs : '',
@@ -97,6 +102,10 @@ class PlayerOptionApplicator {
   /// first changed, so leaving 低资源占用优先 restores them.
   static final _mpvDefaults = Expando<Map<String, String>>();
 
+  /// libmpv's own values of the free-form options, read before they are
+  /// first set, so removing one from the settings puts it back.
+  static final _customDefaults = Expando<Map<String, String>>();
+
   /// Sets [settings]' options on [player]. With [previous], the settings
   /// libmpv already has, only the options that differ are set: setting
   /// hwdec or the decoder options again restarts the video decoder, which
@@ -120,13 +129,26 @@ class PlayerOptionApplicator {
       options.putIfAbsent(entry.key, () => entry.value);
     }
     final before = previous == null ? null : optionsFor(previous);
+    final customDefaults = _customDefaults[player] ??= {};
     for (final entry in options.entries) {
       if (before != null && (before[entry.key] ?? defaults[entry.key]) == entry.value) continue;
       try {
+        if (settings.customOptions.containsKey(entry.key) && !customDefaults.containsKey(entry.key)) {
+          customDefaults[entry.key] = await platform.getProperty(entry.key);
+        }
         await platform.setProperty(entry.key, entry.value);
       } catch (_) {
         failed.add(entry.key);
       }
+    }
+    // A free-form option taken out of the settings goes back to libmpv's
+    // value, not only at the next start.
+    for (final key in previous?.customOptions.keys ?? const <String>[]) {
+      final value = customDefaults[key];
+      if (options.containsKey(key) || value == null) continue;
+      try {
+        await platform.setProperty(key, value);
+      } catch (_) {}
     }
     return failed;
   }

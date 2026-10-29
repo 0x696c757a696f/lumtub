@@ -229,6 +229,44 @@ enum ExploreLanguage {
   /// Whether [title] reads as this language.
   /// Without the library every title passes.
   bool matches(String title) => this == any || NativeCore.instance == null || titleLanguage(title) == this;
+
+  /// The language's ISO 639-1 code, which translation takes.
+  String get code => this == turkish ? 'tr' : name;
+
+  /// The country most of the language's videos come from, searched as
+  /// from when no region is picked; null where no one country leads.
+  String? get homeCountry => switch (this) {
+        any || zh || en || es || ar => null,
+        ja => 'JP',
+        ko => 'KR',
+        fr => 'FR',
+        de => 'DE',
+        pt => 'BR',
+        ru => 'RU',
+        hi || ta || te => 'IN',
+        th => 'TH',
+        vi => 'VN',
+        it => 'IT',
+        nl => 'NL',
+        turkish => 'TR',
+        id => 'ID',
+        ms => 'MY',
+        tl => 'PH',
+        pl => 'PL',
+        uk => 'UA',
+        cs => 'CZ',
+        ro => 'RO',
+        hu => 'HU',
+        el => 'GR',
+        sv => 'SE',
+        no => 'NO',
+        da => 'DK',
+        fi => 'FI',
+        he => 'IL',
+        fa => 'IR',
+        ur => 'PK',
+        bn => 'BD',
+      };
 }
 
 /// The language [title] is most likely in, or [ExploreLanguage.any] when

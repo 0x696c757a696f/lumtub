@@ -1352,8 +1352,11 @@ class AppController extends ChangeNotifier {
     final mix = exploreTopicNow.mix;
     // 全球热门 is the same everywhere, whatever region and language are set.
     final global = exploreTopicNow.global;
-    final region = global ? null : preferences.exploreRegion.gl;
     final language = global ? ExploreLanguage.any : preferences.exploreLanguage;
+    // With no region picked, a language is searched for from its home
+    // country, where YouTube ranks its videos first.
+    final picked = preferences.exploreRegion.gl;
+    final region = global ? null : picked.isNotEmpty ? picked : language.homeCountry;
     // Listed titles are machine-translated, so the language is asked of
     // each video instead (VideoLanguages).
     final spoken = language != ExploreLanguage.any && VideoLanguages.available && _videoLanguages != null;
@@ -1408,7 +1411,15 @@ class AppController extends ChangeNotifier {
 
     _update(() => explore = VideoListLoader(
           () {
-            final listing = mix ? repository.searchMix(exploreMixQueries(exploreSection), sp: sp, region: region) : repository.search(query, sp: sp, region: region);
+            Listing search(List<String> queries) =>
+                mix ? repository.searchMix(queries, sp: sp, region: region) : repository.search(queries.single, sp: sp, region: region);
+            final queries = mix ? exploreMixQueries(exploreSection) : [query];
+            // The zones' search words are Chinese, which finds Chinese
+            // videos: a language picked, or else a non-Chinese interface,
+            // is searched for in its own words.
+            final ui = youtubeHl.startsWith('zh') ? ExploreLanguage.any : ExploreLanguage.parse(youtubeHl.split('-').first);
+            final wordsIn = language != ExploreLanguage.any ? language : ui;
+            final listing = wordsIn == ExploreLanguage.any ? search(queries) : Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn)));
             final languages = _videoLanguages;
             return spoken && languages != null ? listing.refined((lines) => languages.only(lines, language)) : listing;
           },
@@ -1427,6 +1438,22 @@ class AppController extends ChangeNotifier {
           ..addListener(_passOn('explore'))
           ..loadMore());
   }
+
+  /// [queries] in [language], translated where they are in another; a
+  /// query that cannot be translated is searched as it is.
+  Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language) => Future.wait([
+        for (final query in queries)
+          if (query.trim().isEmpty || titleLanguage(query) == language)
+            Future.value(query)
+          else
+            _google.translate(query, language.code).timeout(const Duration(seconds: 10)).then((words) {
+              logInfo('Explore searches "$query" in ${language.code} as "$words"');
+              return words.trim().isEmpty ? query : words;
+            }, onError: (Object e) {
+              logInfo('Could not translate the explore search "$query" into ${language.code}: $e');
+              return query;
+            }),
+      ]);
 
   /// 全部's searches: zones of [section] picked at random each time, so
   /// every visit brings others. Personal picks are left to 为你推荐 on the

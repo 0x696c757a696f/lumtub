@@ -228,7 +228,7 @@ class HomeFeed extends ChangeNotifier {
       final query = '${words[0]} ${words[1]}';
       jobs.add(gather(FeedLane.fresh, () => sources.search(query), RecommendSource.topic, 1, 10, (_) => tr('“{0}”本周热门', [query])));
     }
-    jobs.add(gather(FeedLane.fresh, () => sources.search('热门'), RecommendSource.topic, 0.8, 12, (_) => tr('本周热门')));
+    jobs.add(gather(FeedLane.fresh, () => sources.search(tr('热门')), RecommendSource.topic, 0.8, 12, (_) => tr('本周热门')));
     final all = Future.wait(jobs);
     // Show a first page as soon as there is enough for one; the rest of the
     // sources are ranked in as they answer and fill the pages after it.

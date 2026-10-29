@@ -99,7 +99,7 @@ class YoutubeListing {
       }
     } catch (e) {
       if (any) rethrow;
-      logInfo('YouTube listing failed, using yt-dlp: $e');
+      logWarn('YouTube listing failed, using yt-dlp: $e');
     }
     if (!any) yield* fallback();
   }

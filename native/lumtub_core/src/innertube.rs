@@ -357,20 +357,37 @@ fn language_of_code(code: &str) -> Option<Language> {
     })
 }
 
+/// What a `/player` response tells of the language a video is spoken in.
+#[derive(Debug, PartialEq, Eq)]
+pub struct Spoken {
+    /// None when nothing tells.
+    pub language: Option<Language>,
+    /// The uploader's own title.
+    pub title: String,
+    /// What told: "audio", "captions", "text" or "none".
+    pub source: &'static str,
+    /// Whether YouTube would play the video to this client; an answer it
+    /// would not play, such as one asking to sign in, has no captions.
+    pub playable: bool,
+}
+
 /// The language a video is spoken in and its own title, from a `/player`
 /// response. Listings show titles machine-translated into the listing's
 /// language, so they cannot tell. In order: the original audio track, the
 /// automatic captions (which are made in the spoken language), then the
-/// script of the uploader's own title and description.
-pub fn spoken_language(data: &Value) -> Option<(Option<Language>, String)> {
+/// uploader's own title and description.
+pub fn spoken_language(data: &Value) -> Option<Spoken> {
     let details = at(data, &["videoDetails"])?;
     let title = details.get("title").and_then(Value::as_str).unwrap_or_default().to_string();
+    let playable = at(data, &["playabilityStatus", "status"]).and_then(Value::as_str).is_none_or(|status| status == "OK");
     let tracks = at(data, &["streamingData", "adaptiveFormats"]).and_then(Value::as_array);
     let audio = tracks.into_iter().flatten().filter_map(|f| f.get("audioTrack")).find(|track| {
         let name = track.get("displayName").and_then(Value::as_str).unwrap_or_default().to_lowercase();
         name.contains("original")
     });
-    let from_audio = audio.and_then(|track| track.get("id")).and_then(Value::as_str).and_then(language_of_code);
+    if let Some(language) = audio.and_then(|track| track.get("id")).and_then(Value::as_str).and_then(language_of_code) {
+        return Some(Spoken { language: Some(language), title, source: "audio", playable });
+    }
     let captions = at(data, &["captions", "playerCaptionsTracklistRenderer", "captionTracks"]).and_then(Value::as_array);
     let from_captions = captions
         .into_iter()
@@ -379,49 +396,62 @@ pub fn spoken_language(data: &Value) -> Option<(Option<Language>, String)> {
         .and_then(|track| track.get("languageCode"))
         .and_then(Value::as_str)
         .and_then(language_of_code);
-    let language = from_audio.or(from_captions).or_else(|| {
-        let by_title = title_language(&title);
-        let description: String = details.get("shortDescription").and_then(Value::as_str).unwrap_or_default().chars().take(500).collect();
-        let by_description = title_language(&description);
+    if let Some(language) = from_captions {
+        return Some(Spoken { language: Some(language), title, source: "captions", playable });
+    }
+    let description: String = details.get("shortDescription").and_then(Value::as_str).unwrap_or_default().chars().take(500).collect();
+    let by_title = title_language(&title);
+    let by_description = title_language(&description);
+    let latin = |l: Language| {
+        matches!(
+            l,
+            Language::En | Language::Es | Language::Fr | Language::De | Language::Pt | Language::It | Language::Nl | Language::Tr
+                | Language::Id | Language::Tl | Language::Pl | Language::Cs | Language::Ro | Language::Hu | Language::Sv
+                | Language::No | Language::Da | Language::Fi
+        )
+    };
+    let language = match (by_title, by_description) {
+        (Language::Any, Language::Any) => None,
+        (Language::Any, other) => Some(other),
         // A Latin title over a description in another script, such as an
         // English title for a Chinese video, goes by the description.
-        let latin = |l: Language| matches!(l, Language::En | Language::Es | Language::Fr | Language::De | Language::Pt);
-        match (by_title, by_description) {
-            (Language::Any, Language::Any) => None,
-            (Language::Any, other) => Some(other),
-            (title, description) if latin(title) && !latin(description) && description != Language::Any => Some(description),
-            (title, _) => Some(title),
-        }
-    });
-    Some((language, title))
+        (title, description) if latin(title) && !latin(description) && description != Language::Any => Some(description),
+        // Both Latin: the two together give the most text to go by.
+        (title_says, description_says) if latin(title_says) && latin(description_says) => Some(title_language(&format!("{title}\n{description}"))),
+        (title, _) => Some(title),
+    };
+    let source = if language.is_some() { "text" } else { "none" };
+    Some(Spoken { language, title, source, playable })
 }
 
 /// What [spoken_language] finds in a `/player` response, as JSON
-/// `{language, title}`: `language` is explore's index, 0 when nothing
-/// tells, and -1 for a language explore does not offer. Null when [body]
-/// is not a player response.
+/// `{language, title, source, playable}`: `language` is explore's index, 0
+/// when nothing tells, and -1 for a language explore does not offer. Null
+/// when [body] is not a player response.
 ///
 /// # Safety
 /// [body] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_spoken_language(body: *const u8, length: usize) -> *mut c_char {
     #[derive(Serialize)]
-    struct Spoken {
+    struct Out {
         language: i64,
         title: String,
+        source: &'static str,
+        playable: bool,
     }
     let Ok(data) = serde_json::from_str::<Value>(unsafe { text(body, length) }) else {
         return std::ptr::null_mut();
     };
-    let Some((language, title)) = spoken_language(&data) else {
+    let Some(spoken) = spoken_language(&data) else {
         return std::ptr::null_mut();
     };
-    let language = match language {
+    let language = match spoken.language {
         None => 0,
         Some(Language::Any) => -1,
         Some(other) => other as i64,
     };
-    give_json(&Spoken { language, title })
+    give_json(&Out { language, title: spoken.title, source: spoken.source, playable: spoken.playable })
 }
 
 /// Whether YouTube labels a video as made with AI, from its `/next`
@@ -552,7 +582,10 @@ mod tests {
                 {"languageCode": "ja", "kind": "asr"}
             ]}}
         });
-        assert_eq!(spoken_language(&asr), Some((Some(Language::Ja), "How to cook rice".into())));
+        assert_eq!(
+            spoken_language(&asr),
+            Some(Spoken { language: Some(Language::Ja), title: "How to cook rice".into(), source: "captions", playable: true })
+        );
         let original = json!({
             "videoDetails": {"title": "Voyage", "shortDescription": ""},
             "streamingData": {"adaptiveFormats": [
@@ -561,16 +594,24 @@ mod tests {
             ]},
             "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "en", "kind": "asr"}]}}
         });
-        assert_eq!(spoken_language(&original).unwrap().0, Some(Language::Fr));
+        assert_eq!(spoken_language(&original).unwrap().language, Some(Language::Fr));
+        assert_eq!(spoken_language(&original).unwrap().source, "audio");
         let chinese = json!({"videoDetails": {"title": "My trip to Chengdu", "shortDescription": "这次去成都吃了很多好吃的"}});
-        assert_eq!(spoken_language(&chinese).unwrap().0, Some(Language::Zh));
+        assert_eq!(spoken_language(&chinese).unwrap().language, Some(Language::Zh));
         let own = json!({"videoDetails": {"title": "成都旅行", "shortDescription": ""}});
-        assert_eq!(spoken_language(&own).unwrap(), (Some(Language::Zh), "成都旅行".into()));
+        let own = spoken_language(&own).unwrap();
+        assert_eq!((own.language, own.title.as_str(), own.source), (Some(Language::Zh), "成都旅行", "text"));
         let italian = json!({"videoDetails": {"title": "Ciao", "shortDescription": ""}, "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "it", "kind": "asr"}]}}});
-        assert_eq!(spoken_language(&italian).unwrap().0, Some(Language::It));
+        assert_eq!(spoken_language(&italian).unwrap().language, Some(Language::It));
         let swahili = json!({"videoDetails": {"title": "Habari", "shortDescription": ""}, "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "sw", "kind": "asr"}]}}});
-        assert_eq!(spoken_language(&swahili).unwrap().0, Some(Language::Any));
+        assert_eq!(spoken_language(&swahili).unwrap().language, Some(Language::Any));
         assert_eq!(spoken_language(&json!({"playabilityStatus": {}})), None);
+        let signed_out = json!({
+            "playabilityStatus": {"status": "LOGIN_REQUIRED"},
+            "videoDetails": {"title": "Giardinaggio", "shortDescription": "Oggi vi mostro come coltivare i pomodori sul balcone di casa, passo dopo passo."}
+        });
+        let signed_out = spoken_language(&signed_out).unwrap();
+        assert_eq!((signed_out.language, signed_out.source, signed_out.playable), (Some(Language::It), "text", false));
     }
 
     #[test]

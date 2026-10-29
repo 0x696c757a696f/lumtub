@@ -101,4 +101,25 @@ void main() {
     expect(restored.exploreLanguage, ExploreLanguage.ja);
     expect(AppPreferences.fromJson(<String, Object?>{}).exploreRegion, ExploreRegion.any);
   });
+
+  test('a region and a language say what to search in and from where', () {
+    expect(ExploreRegion.jp.searchLanguage, ExploreLanguage.ja);
+    expect(ExploreRegion.tw.searchLanguage, ExploreLanguage.zh);
+    expect(ExploreRegion.mx.searchLanguage, ExploreLanguage.es);
+    expect(ExploreRegion.ng.searchLanguage, ExploreLanguage.en);
+    expect(ExploreRegion.any.searchLanguage, ExploreLanguage.any);
+    expect(ExploreLanguage.turkish.code, 'tr');
+    expect(ExploreLanguage.it.homeCountry, 'IT');
+    expect(ExploreLanguage.en.homeCountry, isNull);
+    // Every region's search language is one explore offers.
+    for (final region in ExploreRegion.values.skip(1)) {
+      expect(region.searchLanguage, isNot(ExploreLanguage.any), reason: region.name);
+    }
+  });
+
+  test('a search translated word by word keeps each word once', () {
+    expect(searchWordsOf(['giardinaggio', 'giardinaggio']), 'giardinaggio');
+    expect(searchWordsOf(['tavola rotonda', 'discussione', 'Tavola rotonda ', '']), 'tavola rotonda discussione');
+    expect(searchWordsOf(['tecnologia', 'digitale', 'recensione']), 'tecnologia digitale recensione');
+  });
 }

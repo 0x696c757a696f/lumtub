@@ -490,9 +490,9 @@ class ToolManager {
       } on ProcessException {
         await _no7z.parent.create(recursive: true);
         await _no7z.writeAsString(DateTime.now().toIso8601String());
-        logInfo('This Windows version cannot extract 7z; using the BtbN ffmpeg');
+        logWarn('This Windows version cannot extract 7z; using the BtbN ffmpeg');
       } catch (e) {
-        logInfo('Could not install the zhongfly ffmpeg, using the BtbN one: $e');
+        logWarn('Could not install the zhongfly ffmpeg, using the BtbN one: $e');
       }
     }
     await _installBtbnFfmpeg(onProgress);

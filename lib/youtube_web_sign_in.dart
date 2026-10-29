@@ -70,7 +70,7 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube {
     try {
       return _bindings = _Bindings(core.library);
     } catch (e) {
-      logInfo('The cookie sign-in is not in this core: $e');
+      logWarn('The cookie sign-in is not in this core: $e');
       return null;
     }
   }
@@ -144,7 +144,7 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube {
         case -4:
           _finish(port);
         case -2:
-          logInfo('Cookie sign-in failed: ${message[1]}');
+          logWarn('Cookie sign-in failed: ${message[1]}');
           error = _why(message[1] as String);
           _finish(port);
       }

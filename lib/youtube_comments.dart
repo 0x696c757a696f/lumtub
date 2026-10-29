@@ -198,11 +198,11 @@ class YoutubeComments {
         if (answer != null) {
           if (answer.status >= 400 && answer.status < 500) refuseWeb(answer.status, answer.body);
           final page = answer.status == 200 ? await _readInBackground(answer.body) : const CommentPage([], null);
-          logInfo('Post $postId signed in: ${answer.status}, sort ${page.topToken != null}, comment box ${page.createParams != null}');
+          logDebug(() => 'Post $postId signed in: ${answer.status}, sort ${page.topToken != null}, comment box ${page.createParams != null}');
           if (page.topToken != null || page.comments.isNotEmpty) return await _sorted(page, 'browse', newest, post: true);
         }
       } catch (e) {
-        logInfo('Post $postId signed in failed: $e');
+        logWarn('Post $postId signed in failed: $e');
       }
     }
     if (token == null) throw FormatException(tr('这个帖子没有评论区，或评论已关闭'));
@@ -239,7 +239,7 @@ class YoutubeComments {
         if (answer.status != 200) throw StateError(tr('YouTube 返回 {0}', [answer.status]));
         final page = await _readInBackground(answer.body);
         if (page.comments.isNotEmpty || page.continuation != null || page.topToken != null || page.count.isNotEmpty) return page;
-        logInfo('The TV app was answered no comments; trying signed out · ${_start(answer.body)}');
+        logWarn('The TV app was answered no comments; trying signed out · ${_start(answer.body)}');
       }
     }
     final response = await _post(endpoint, via == null ? fallback ?? body : body);
@@ -255,13 +255,13 @@ class YoutubeComments {
   /// Stops sending the sign-in after YouTube answered [status] to it.
   void refuse(int status, [List<int> body = const []]) {
     refused = true;
-    logInfo('YouTube answered $status to the TV-code sign-in on InnerTube; comments load signed out · ${_start(body)}');
+    logWarn('YouTube answered $status to the TV-code sign-in on InnerTube; comments load signed out · ${_start(body)}');
   }
 
   /// Stops sending the cookies after YouTube answered [status] to them.
   void refuseWeb(int status, [List<int> body = const []]) {
     webRefused = true;
-    logInfo('YouTube answered $status to the cookie sign-in; posts load signed out · ${_start(body)}');
+    logWarn('YouTube answered $status to the cookie sign-in; posts load signed out · ${_start(body)}');
   }
 
   /// Likes, dislikes or takes back either, by the [action] of a
@@ -291,7 +291,7 @@ class YoutubeComments {
 
   static void _check(SignedAnswer answer, String what) {
     if (answer.status >= 400 && answer.status < 500) {
-      logInfo('YouTube answered ${answer.status} to $what · ${_start(answer.body)}');
+      logWarn('YouTube answered ${answer.status} to $what · ${_start(answer.body)}');
       throw StateError(tr('YouTube 不接受当前登录的这项操作'));
     }
     if (answer.status != 200) throw StateError(tr('YouTube 返回 {0}', [answer.status]));

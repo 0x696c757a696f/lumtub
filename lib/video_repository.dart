@@ -71,6 +71,12 @@ class Listing {
 
   bool get done => _done;
 
+  /// A listing made once [make] has what it needs, such as search words
+  /// to translate first.
+  static Listing deferred(Future<Listing> Function() make) => Listing(() async* {
+        yield* (await make())._open();
+      });
+
   /// This listing with its lines passed through [refine] first, such as
   /// to keep only videos in one language.
   Listing refined(Stream<String> Function(Stream<String> lines) refine) => Listing(() => refine(_open()), channel: channel, timeout: timeout, idleTimeout: idleTimeout);

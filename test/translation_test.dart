@@ -182,4 +182,19 @@ void main() {
     expect(find.text('Other'), findsOneWidget);
     expect(find.text('出错了'), findsOneWidget);
   });
+
+  test('the subtitle panel lists the interface and system languages once, under the original', () {
+    const italian = SubtitleOption(language: 'it', name: 'Italiano', url: 'a', kind: SubtitleKind.automatic);
+    const english = SubtitleOption(language: 'en', name: 'English', url: 'b');
+    final zh = TranslationLanguage.byCode('zh-CN');
+    final en = TranslationLanguage.byCode('en');
+    final it = TranslationLanguage.byCode('it');
+    final rows = languageRows([italian, english], italian, [('界面语言', zh), ('系统语言', en)]);
+    expect([for (final r in rows) (r.name, r.option.kind, r.option.language)], [
+      ('界面语言', SubtitleKind.translated, 'zh-Hans'),
+      ('系统语言', SubtitleKind.uploaded, 'en'),
+    ]);
+    expect(languageRows([italian], italian, [('界面语言', en), ('系统语言', en)]).map((r) => r.name), ['界面语言'], reason: 'the same language once');
+    expect(languageRows([italian], italian, [('界面语言', it), ('系统语言', en)]).map((r) => r.name), ['系统语言'], reason: 'the original stands for its language');
+  });
 }

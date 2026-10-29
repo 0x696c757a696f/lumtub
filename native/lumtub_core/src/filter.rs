@@ -110,11 +110,33 @@ fn any_in(title: &str, ranges: &[(u32, u32)]) -> bool {
     })
 }
 
+/// Whether kana in [title] make it Japanese. Chinese titles borrow `の`
+/// for 的, `・` and `ー` as punctuation and the odd katakana letter, so a
+/// title with Han characters needs other hiragana or two katakana.
+fn kana_say_japanese(title: &str) -> bool {
+    let mut hiragana = 0;
+    let mut katakana = 0;
+    let mut han = false;
+    for c in title.chars() {
+        match c as u32 {
+            0x3041..=0x309F if c != 'の' => hiragana += 1,
+            0x30A1..=0x30FA => katakana += 1,
+            0x4E00..=0x9FFF | 0x3400..=0x4DBF => han = true,
+            _ => {}
+        }
+    }
+    if han {
+        hiragana > 0 || katakana >= 2
+    } else {
+        hiragana + katakana > 0 || title.contains('の')
+    }
+}
+
 /// The language [title] is most likely in: by its script, and for Latin
 /// letters by its small words. A Latin title with no small words at all,
 /// such as "Minecraft Speedrun", is taken as English.
 pub fn title_language(title: &str) -> Language {
-    if any_in(title, &[(0x3040, 0x30FF)]) {
+    if kana_say_japanese(title) {
         return Language::Ja;
     }
     if any_in(title, &[(0xAC00, 0xD7AF), (0x1100, 0x11FF)]) {
@@ -182,7 +204,51 @@ pub fn title_language(title: &str) -> Language {
             (best, best_score) = (language, score);
         }
     }
+    // Trigrams tell the other Latin-script languages, such as Italian or
+    // Dutch, where there is text enough to go by.
+    // A title of a word or two, such as a game's name, is too little.
+    let enough = if words.len() >= 4 { 0.2 } else { 0.5 };
+    if let Some(found) = latin_detector().detect(title).filter(|info| info.confidence() >= enough).and_then(|info| latin_language(info.lang()))
+        && (best_score < 2.0 || found == best)
+    {
+        return found;
+    }
     best
+}
+
+fn latin_detector() -> &'static whatlang::Detector {
+    use whatlang::Lang::*;
+    static DETECTOR: std::sync::OnceLock<whatlang::Detector> = std::sync::OnceLock::new();
+    DETECTOR.get_or_init(|| {
+        whatlang::Detector::with_allowlist(vec![
+            Eng, Spa, Fra, Deu, Por, Ita, Nld, Tur, Ind, Tgl, Pol, Ces, Slk, Ron, Hun, Swe, Nob, Dan, Fin,
+        ])
+    })
+}
+
+fn latin_language(lang: whatlang::Lang) -> Option<Language> {
+    use whatlang::Lang::*;
+    Some(match lang {
+        Eng => Language::En,
+        Spa => Language::Es,
+        Fra => Language::Fr,
+        Deu => Language::De,
+        Por => Language::Pt,
+        Ita => Language::It,
+        Nld => Language::Nl,
+        Tur => Language::Tr,
+        Ind => Language::Id,
+        Tgl => Language::Tl,
+        Pol => Language::Pl,
+        Ces | Slk => Language::Cs,
+        Ron => Language::Ro,
+        Hun => Language::Hu,
+        Swe => Language::Sv,
+        Nob => Language::No,
+        Dan => Language::Da,
+        Fin => Language::Fi,
+        _ => return None,
+    })
 }
 
 const BAIT_WORDS: [&str; 17] = [
@@ -419,6 +485,12 @@ mod tests {
     #[test]
     fn tells_languages_apart() {
         assert_eq!(title_language("【4K】東京の夜景を歩く"), Language::Ja);
+        assert_eq!(title_language("【小Pの遊戲實況】週一不想努力啦 今天輕鬆玩遊戲"), Language::Zh);
+        assert_eq!(title_language("lijack的遊戲直播--光榮--PC--真・三國無雙 2 with 猛將傳"), Language::Zh);
+        assert_eq!(title_language("東京大学の入試問題を解説"), Language::Ja);
+        assert_eq!(title_language("【ホロライブ】新衣装お披露目"), Language::Ja);
+        assert_eq!(title_language("初音ミク 千本桜"), Language::Ja);
+        assert_eq!(title_language("ラーメン"), Language::Ja);
         assert_eq!(title_language("서울 맛집 투어"), Language::Ko);
         assert_eq!(title_language("中国历史纪录片 第一集"), Language::Zh);
         assert_eq!(title_language("Історія України"), Language::Uk);
@@ -438,6 +510,11 @@ mod tests {
         assert_eq!(title_language("Как приготовить борщ"), Language::Ru);
         assert_eq!(title_language("Phở bò Hà Nội"), Language::Vi);
         assert_eq!(title_language("2026 12 31"), Language::Any);
+        assert_eq!(title_language("Come coltivare i pomodori sul balcone di casa"), Language::It);
+        assert_eq!(title_language("Notizie internazionali di oggi: cosa sta succedendo"), Language::It);
+        assert_eq!(title_language("Hoe maak je de lekkerste appeltaart van Nederland"), Language::Nl);
+        assert_eq!(title_language("Jak zrobić najlepszą pizzę w domu"), Language::Pl);
+        assert_eq!(title_language("Evde en güzel pizza nasıl yapılır"), Language::Tr);
     }
 
     #[test]

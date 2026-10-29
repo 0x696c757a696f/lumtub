@@ -33,7 +33,7 @@ ${entry('ddddddddddd', 'Old video', now.subtract(const Duration(days: 30)))}
       if (request.url.path == '/feeds/videos.xml') return http.Response.bytes(utf8.encode(feed), 200);
       final id = (jsonDecode(request.body) as Map)['videoId'] as String;
       asked.add(id);
-      expect(request.headers['X-Goog-FieldMask'], 'videoDetails(isLive,isUpcoming)');
+      expect(request.headers['X-Goog-FieldMask'], 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming');
       return http.Response(jsonEncode({
         'videoDetails': {
           if (id == 'aaaaaaaaaaa') 'isLive': true,

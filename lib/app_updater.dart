@@ -98,7 +98,7 @@ class AppUpdater extends ChangeNotifier {
       logInfo(offer != null ? 'Lumtub update available: ${offer.version}' : 'Lumtub is up to date ($appVersion)');
     } catch (e) {
       error = '$e';
-      logInfo('Could not check Lumtub updates: $e');
+      logWarn('Could not check Lumtub updates: $e');
     } finally {
       checking = false;
       notifyListeners();
@@ -132,7 +132,7 @@ class AppUpdater extends ChangeNotifier {
       logInfo('Lumtub ${available!.version} downloaded; it installs when Lumtub closes');
     } catch (e) {
       error = '$e';
-      logInfo('Could not download the Lumtub update: $e');
+      logWarn('Could not download the Lumtub update: $e');
     } finally {
       progress = null;
       notifyListeners();
@@ -179,7 +179,7 @@ class AppUpdater extends ChangeNotifier {
         final result = launchInstaller(package: file.path, folder: folder, processId: pid, relaunch: relaunch);
         if (result == null) throw StateError('No native core');
         if (result['ok'] != true) {
-          logInfo('Could not start the Lumtub installer${result['elevated'] == true ? ' as administrator' : ''}: ${result['error']}');
+          logWarn('Could not start the Lumtub installer${result['elevated'] == true ? ' as administrator' : ''}: ${result['error']}');
           installError = result['elevated'] == true ? tr('需要管理员权限才能安装到这个文件夹') : '${result['error']}';
           notifyListeners();
           return false;
@@ -199,7 +199,7 @@ class AppUpdater extends ChangeNotifier {
       ready = null;
       return true;
     } catch (e) {
-      logInfo('Could not start the Lumtub update: $e');
+      logWarn('Could not start the Lumtub update: $e');
       return false;
     }
   }
@@ -215,7 +215,7 @@ class AppUpdater extends ChangeNotifier {
       final setupLog = File('${_directory.path}${sep}setup.log');
       if (!await outcome.exists() && await setupLog.exists()) {
         final tail = (await setupLog.readAsLines(encoding: const Utf8Codec(allowMalformed: true))).reversed.take(8).toList().reversed;
-        logInfo('Lumtub update did not finish; installer log ends with:\n${tail.join('\n')}');
+        logWarn('Lumtub update did not finish; installer log ends with:\n${tail.join('\n')}');
       }
       if (await outcome.exists()) {
         final lines = (await outcome.readAsLines()).where((line) => line.trim().isNotEmpty).toList();
@@ -233,7 +233,7 @@ class AppUpdater extends ChangeNotifier {
         if (entity is File) await entity.delete();
       }
     } catch (e) {
-      logInfo('Could not clean the update folder: $e');
+      logWarn('Could not clean the update folder: $e');
     }
   }
 

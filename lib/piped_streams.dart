@@ -236,7 +236,7 @@ class PipedStreams extends RelayServers {
         final response = await client.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
         if (response.statusCode == 200) found.addAll(parsePipedInstanceList(utf8.decode(response.bodyBytes)));
       } catch (e) {
-        logInfo('Could not read the Piped server list $url: $e');
+        logWarn('Could not read the Piped server list $url: $e');
       }
     }));
     return found;
@@ -260,7 +260,7 @@ class PipedStreams extends RelayServers {
         return PipedVideo.fromJson(candidate, data);
       } catch (e) {
         lastError = e;
-        logInfo('Piped server $candidate could not resolve $videoId: $e');
+        logWarn('Piped server $candidate could not resolve $videoId: $e');
         if (server == null) demote(candidate);
       }
     }

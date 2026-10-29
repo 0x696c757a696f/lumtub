@@ -119,11 +119,11 @@ class CommunityPosts {
             break;
           }
           final page = answer.status == 200 ? await _readInBackground(answer.body) : null;
-          logInfo('Posts of ${channel.id} signed in: ${answer.status}, ${page?.posts.length ?? 0} posts, ${page?.posts.where((p) => p.rating != null).length ?? 0} with buttons');
+          logDebug(() => 'Posts of ${channel.id} signed in: ${answer.status}, ${page?.posts.length ?? 0} posts, ${page?.posts.where((p) => p.rating != null).length ?? 0} with buttons');
           if (page != null && page.posts.isNotEmpty) return page;
         }
       } catch (e) {
-        logInfo('Posts of ${channel.id} signed in failed: $e');
+        logWarn('Posts of ${channel.id} signed in failed: $e');
       }
     }
     final response = await _client.get(Uri.parse('${channel.url}/posts?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));

@@ -175,7 +175,7 @@ class NativeCore {
         AppLog.nativeRedact = (message) => core.take(core.withText(message, core.redact)) ?? message;
         return core;
       } catch (e) {
-        logInfo('Could not load $path: $e');
+        logWarn('Could not load $path: $e');
       }
     }
     return null;

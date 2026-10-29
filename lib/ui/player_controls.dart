@@ -510,26 +510,43 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       return current == null ? -1 : chapters.indexOf(current);
     }
 
-    return StreamBuilder<int>(
+    return ValueListenableBuilder<int>(
+      valueListenable: _controller.chaptersChanged,
+      builder: (context, version, child) => StreamBuilder<int>(
         stream: _player.stream.position.map(chapterAt).distinct(),
         initialData: chapterAt(_player.state.position),
         builder: (context, _) {
           final chapters = _chapters;
           final current = Chapter.at(chapters, _player.state.position);
+          final translated = _controller.translatedChapters;
+          // Translated titles, with the original after them when 双语对照
+          // is on; the bar shows the translation alone.
+          String title(int i, {bool both = false}) {
+            final original = chapters[i].title;
+            final translation = translated != null && i < translated.length ? translated[i] : null;
+            if (translation == null || translation == original) return original;
+            return both && _controller.preferences.bilingualTranslation ? '$translation · $original' : translation;
+          }
+
+          final index = current == null ? -1 : chapters.indexOf(current);
           return _PopupMenu<int>(
             tooltip: tr('章节'),
-            value: current == null ? -1 : chapters.indexOf(current),
-            items: [for (final (i, c) in chapters.indexed) (i, '${formatPlaybackTime(c.start)}  ${c.title}')],
-            onSelected: (i) => unawaited(_player.seek(chapters[i].start)),
+            value: index,
+            items: [
+              for (final (i, c) in chapters.indexed) (i, '${formatPlaybackTime(c.start)}  ${title(i, both: true)}'),
+              if (translated == null) (-2, _controller.translatingChapters ? tr('正在翻译章节名…') : tr('翻译章节名')),
+            ],
+            onSelected: (i) => i == -2 ? unawaited(_controller.translateChapters()) : unawaited(_player.seek(chapters[i].start)),
             onOpened: _menuOpened,
             onClosed: _menuClosed,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Text('·  ${current?.title ?? chapters.first.title}  ›', style: _menuText, maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text('·  ${title(index < 0 ? 0 : index)}  ›', style: _menuText, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           );
         },
-      );
+      ),
+    );
   }
 
   Widget _buffering() => StreamBuilder<bool>(

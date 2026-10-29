@@ -146,7 +146,7 @@ class InvidiousStreams extends RelayServers {
         return parseInvidiousVideo(candidate, data);
       } catch (e) {
         lastError = e;
-        logInfo('Invidious instance $candidate could not resolve $videoId: $e');
+        logWarn('Invidious instance $candidate could not resolve $videoId: $e');
         if (server == null) demote(candidate);
       }
     }

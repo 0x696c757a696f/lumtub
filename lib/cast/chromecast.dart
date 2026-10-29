@@ -333,7 +333,7 @@ class ChromecastDevice implements CastDevice {
         await _request(castReceiverNamespace, 'receiver-0', {'type': 'STOP', 'sessionId': session}, timeout: const Duration(seconds: 3));
       }
     } on CastException catch (e) {
-      logInfo('Chromecast stop failed: $e');
+      logWarn('Chromecast stop failed: $e');
     } finally {
       await close();
     }

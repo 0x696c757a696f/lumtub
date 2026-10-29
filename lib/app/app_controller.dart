@@ -80,6 +80,7 @@ import '../stream_resolver.dart';
 import '../subtitle_files.dart';
 import '../subtitle_cues.dart';
 import '../subtitle_translation.dart';
+import '../language_guess.dart' show looksLike;
 import '../translation.dart';
 import '../translation_cache.dart';
 import '../translation_services.dart';
@@ -333,14 +334,14 @@ class AppController extends ChangeNotifier {
     try {
       source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort)).info, settings: _playback);
     } catch (e) {
-      logInfo('Cast: yt-dlp could not resolve: $e');
+      logWarn('Cast: yt-dlp could not resolve: $e');
     }
     for (final kind in RelayKind.values) {
       if (source != null) break;
       try {
         source = castSourceFromRelay(await (kind == RelayKind.piped ? _piped.fetch(item.id) : _invidious.fetch(item.id)), settings: _playback);
       } catch (e) {
-        logInfo('Cast: $kind could not resolve: $e');
+        logWarn('Cast: $kind could not resolve: $e');
       }
     }
     if (source == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
@@ -421,6 +422,13 @@ class AppController extends ChangeNotifier {
   SecureJsonFile? _translationKeyFile;
   /// The subtitle shown above the main one (双语字幕), if any.
   SubtitleOption? secondarySubtitle;
+  /// mpv's `secondary-sid` as it last said: 'no' when no second subtitle
+  /// shows. It can show one this controller did not choose, such as one
+  /// mpv brought back by itself.
+  String secondaryTrackId = 'no';
+
+  /// Whether a second subtitle shows.
+  bool get secondaryOn => secondarySubtitle != null || secondaryTrackId != 'no';
   /// The second subtitle being fetched or translated, shown as loading in
   /// the 字幕 panel rather than as 关闭.
   SubtitleOption? secondaryLoading;
@@ -631,7 +639,7 @@ class AppController extends ChangeNotifier {
       final found = await feed.accountPlaylists();
       if (feed.available) tvPlaylists = found;
     } catch (e) {
-      logInfo('Could not read the YouTube playlists: $e');
+      logWarn('Could not read the YouTube playlists: $e');
     } finally {
       tvPlaylistsLoading = false;
       if (!_disposed) notifyListeners();
@@ -697,6 +705,7 @@ class AppController extends ChangeNotifier {
       final preferencesStore = AppPreferencesStore(directories);
       // Separate files: read together rather than one after another.
       final (_, _, _, settings, preferences, _, _) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load(), channelPlayback.load(), watchTime.load()).wait;
+      AppLog.level = preferences.logLevel;
       this.channelPlayback = channelPlayback;
       this.watchTime = watchTime;
       speechStore = SpeechSubtitleStore(Directory('${directories.data.path}${Platform.pathSeparator}speech'));
@@ -719,7 +728,8 @@ class AppController extends ChangeNotifier {
         // view is turned off on the watch page. It is off by default: the
         // build that turned it on for everyone also brought dropped frames.
         libass: settings.libassSubtitles,
-        logLevel: MPVLogLevel.warn,
+        // libmpv's own notes only with the debug level; it says a lot.
+        logLevel: preferences.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn,
       ));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
       _applied = settings;
@@ -765,7 +775,12 @@ class AppController extends ChangeNotifier {
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
-        _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}video_languages.json'));
+        _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}heard_languages.json'));
+        // Answers kept before 0.2.12 went by titles, which took some Chinese
+        // ones for Japanese and every Italian one for English.
+        for (final old in ['video_languages.json', 'spoken_languages.json']) {
+          unawaited(File('${directories.cache.path}${Platform.pathSeparator}$old').delete().then((_) {}, onError: (_) {}));
+        }
         _aiFilter = AiFilter(
           _http,
           labelsFile: File('${directories.cache.path}${Platform.pathSeparator}ai_labels.json'),
@@ -855,7 +870,7 @@ class AppController extends ChangeNotifier {
       final bytes = await manager.size(settings);
       if (!_disposed) _update(() => cacheBytes = bytes);
     } on FileSystemException catch (error) {
-      logInfo('Could not measure cache size: $error');
+      logWarn('Could not measure cache size: $error');
     }
   }
 
@@ -865,7 +880,7 @@ class AppController extends ChangeNotifier {
     try {
       final freed = await trimThumbnails(directory, thumbnailCapBytes(settings.cacheLimitGb));
       if (freed > 0) {
-        logInfo('Thumbnail cache over its limit, freed ${formatBytes(freed)}');
+        logDebug(() => 'Thumbnail cache over its limit, freed ${formatBytes(freed)}');
         final manager = _cacheManager;
         if (manager != null) {
           final left = await manager.size(settings);
@@ -873,7 +888,7 @@ class AppController extends ChangeNotifier {
         }
       }
     } catch (e) {
-      logInfo('Could not trim the thumbnail cache: $e');
+      logWarn('Could not trim the thumbnail cache: $e');
     }
   }
 
@@ -1241,9 +1256,12 @@ class AppController extends ChangeNotifier {
     WordFilter? view,
     ExploreRegion? region,
     ExploreLanguage? language,
+    bool? heardOnly,
   }) {
-    if ((region != null && region != preferences.exploreRegion) || (language != null && language != preferences.exploreLanguage)) {
-      unawaited(savePreferences(preferences.copyWith(exploreRegion: region, exploreLanguage: language)));
+    if ((region != null && region != preferences.exploreRegion) ||
+        (language != null && language != preferences.exploreLanguage) ||
+        (heardOnly != null && heardOnly != preferences.exploreHeardOnly)) {
+      unawaited(savePreferences(preferences.copyWith(exploreRegion: region, exploreLanguage: language, exploreHeardOnly: heardOnly)));
       explore?.dispose();
       explore = null;
     }
@@ -1339,7 +1357,7 @@ class AppController extends ChangeNotifier {
     }
     if (_recentExplore.remove(_exploreKey) case (final at, final loader)) {
       if (DateTime.now().difference(at) < _keepExplore) {
-        logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
+        logDebug(() => 'Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
         _update(() => explore = loader..addListener(_passOn('explore')));
         return;
       }
@@ -1348,10 +1366,17 @@ class AppController extends ChangeNotifier {
     final query = exploreQuery;
     final mode = exploreMode;
     final mix = exploreTopicNow.mix;
-    // 全球热门 is the same everywhere, whatever region and language are set.
+    // 全球热门 is searched from nowhere in particular; a language picked
+    // still applies.
     final global = exploreTopicNow.global;
-    final region = global ? null : preferences.exploreRegion.gl;
-    final language = global ? ExploreLanguage.any : preferences.exploreLanguage;
+    final language = preferences.exploreLanguage;
+    // With no region picked, a language is searched for from its home
+    // country, where YouTube ranks its videos first.
+    final picked = preferences.exploreRegion.gl;
+    final region = global ? null : picked.isNotEmpty ? picked : language.homeCountry;
+    exploreLanguageCheck = null;
+    final depth = _exploreDepth;
+    _exploreDepth = 0;
     // Listed titles are machine-translated, so the language is asked of
     // each video instead (VideoLanguages).
     final spoken = language != ExploreLanguage.any && VideoLanguages.available && _videoLanguages != null;
@@ -1406,9 +1431,32 @@ class AppController extends ChangeNotifier {
 
     _update(() => explore = VideoListLoader(
           () {
-            final listing = mix ? repository.searchMix(exploreMixQueries(exploreSection), sp: sp, region: region) : repository.search(query, sp: sp, region: region);
+            Listing search(List<String> queries) =>
+                mix ? repository.searchMix(queries, sp: sp, region: region) : repository.search(queries.single, sp: sp, region: region);
+            final queries = mix ? exploreMixQueries(exploreSection) : [query];
+            // The zones' search words are Chinese, which finds Chinese
+            // videos: they are put in the language picked, else the
+            // region's, else a non-Chinese interface's.
+            final ui = youtubeHl.startsWith('zh') ? ExploreLanguage.any : ExploreLanguage.parse(youtubeHl.split('-').first);
+            final regional = global ? ExploreLanguage.any : preferences.exploreRegion.searchLanguage;
+            final wordsIn = language != ExploreLanguage.any ? language : regional != ExploreLanguage.any ? regional : ui;
+            // Taiwan and Hong Kong write traditional characters.
+            final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK');
+            // A zone of the user's own is searched as they wrote it: its
+            // words are not sent to be translated.
+            final listing = wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional) || exploreTopicNow.custom
+                ? search(queries)
+                : Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional)));
             final languages = _videoLanguages;
-            return spoken && languages != null ? listing.refined((lines) => languages.only(lines, language)) : listing;
+            return spoken && languages != null
+                ? listing.refined((lines) => languages.only(
+                      lines,
+                      language,
+                      heardOnly: preferences.exploreHeardOnly,
+                      giveUpAfter: VideoLanguages.giveUpAfterDefault * (depth + 1),
+                      done: (asked, kept) => _update(() => exploreLanguageCheck = (asked: asked, kept: kept)),
+                    ))
+                : listing;
           },
           where: where,
           fill: switch (mode) {
@@ -1426,6 +1474,35 @@ class AppController extends ChangeNotifier {
           ..loadMore());
   }
 
+  /// [queries] in [language], translated where they are in another, or
+  /// into [traditional] characters; a query that cannot be translated is
+  /// searched as it is.
+  Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language, {bool traditional = false}) {
+    final target = traditional ? 'zh-TW' : language.code;
+    Future<String> translate(String text) => _google.translate(text, target).timeout(const Duration(seconds: 10));
+    return Future.wait([
+      for (final query in queries)
+        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language))
+          Future.value(query)
+        else
+          () async {
+            try {
+              final words = query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+              // Word by word, as a search wants keywords: "科技 数码 评测"
+              // as one sentence is "Revisione digitale della tecnologia",
+              // which finds next to nothing.
+              final lines = words.length > 1 ? (await translate(words.join('\n'))).split('\n') : const <String>[];
+              final translated = lines.length == words.length ? searchWordsOf(lines) : (await translate(query)).trim();
+              logDebug(() => 'Explore searches "$query" in $target as "$translated"');
+              return translated.isEmpty ? query : translated;
+            } catch (e) {
+              logWarn('Could not translate the explore search "$query" into $target: $e');
+              return query;
+            }
+          }(),
+    ]);
+  }
+
   /// 全部's searches: zones of [section] picked at random each time, so
   /// every visit brings others. Personal picks are left to 为你推荐 on the
   /// home page.
@@ -1437,6 +1514,23 @@ class AppController extends ChangeNotifier {
     ]..shuffle(random);
     final filter = [exploreFormat.words, exploreView.words].where((w) => w.isNotEmpty).join(' ');
     return [for (final query in zones.take(6)) filter.isEmpty ? query : '$query $filter'];
+  }
+
+  /// How many videos the explore language filter asked about and kept,
+  /// once it stopped; null while it is still looking or with no language.
+  ({int asked, int kept})? exploreLanguageCheck;
+
+  /// How many times further the next explore load may look for videos in
+  /// the language picked.
+  int _exploreDepth = 0;
+
+  /// Looks again, further down the search, after the language filter
+  /// found none.
+  void searchExploreFurther() {
+    // Answers kept on disk come back at once, so going over the same
+    // videos again costs little.
+    _exploreDepth = (exploreLanguageCheck?.asked ?? 0) ~/ VideoLanguages.giveUpAfterDefault;
+    refreshExplore();
   }
 
   /// Shows 全部 or the zone shown with other videos.
@@ -1728,7 +1822,7 @@ class AppController extends ChangeNotifier {
     if (serial != _playSerial || this.player != player) return;
     final second = kept.second;
     if (second != null && secondarySubtitle?.label != second.label) {
-      logInfo('Showing ${second.language} (${second.kind.name}) as the second subtitle again');
+      logDebug(() => 'Showing ${second.language} (${second.kind.name}) as the second subtitle again');
       await setSecondarySubtitle(second);
     }
   }
@@ -1750,12 +1844,12 @@ class AppController extends ChangeNotifier {
     final folder = File(Platform.resolvedExecutable).parent.path;
     final mpv = paths?.mpv;
     final bytes = await Isolate.run(_readingPlayerFiles(folder, mpv));
-    logInfo('Read ${bytes >> 20} MB of player files in ${read.elapsedMilliseconds} ms');
+    logDebug(() => 'Read ${bytes >> 20} MB of player files in ${read.elapsedMilliseconds} ms');
     final directories = this.directories;
     if (directories != null) {
       try {
         final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders').listSync().whereType<File>().length;
-        logInfo('Shader cache holds $shaders shaders');
+        logDebug(() => 'Shader cache holds $shaders shaders');
       } catch (_) {}
     }
     await _measureDecoders();
@@ -1792,7 +1886,7 @@ class AppController extends ChangeNotifier {
     final controller = videoController = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
     // It is made after the next frame, and an idle window draws none.
     WidgetsBinding.instance.scheduleFrame();
-    unawaited(controller.platform.future.then((_) => logInfo('Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
+    unawaited(controller.platform.future.then((_) => logDebug(() => 'Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
   }
 
   Future<bool> _openOnce(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
@@ -1807,7 +1901,7 @@ class AppController extends ChangeNotifier {
       // software, say) streams instead, in a codec the rules allow.
       final localCodec = local?.videoCodec;
       if (local != null && !FormatPolicy.allows(settings, localCodec)) {
-        logInfo('The download of ${item.id} is ${localCodec!.label}, a codec the playback rules disable; playing online instead');
+        logWarn('The download of ${item.id} is ${localCodec!.label}, a codec the playback rules disable; playing online instead');
         _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [localCodec.label]));
       } else if (local != null) {
         return await _openLocal(item, serial, local, start: start, play: play);
@@ -1986,7 +2080,7 @@ class AppController extends ChangeNotifier {
   /// server not yet tried, and only when there is none shows the error.
   Future<bool> _fallBack(VideoItem item, int serial, PlaybackFailure failure, {Duration? start, bool play = true}) async {
     if (failure.kind == FailureKind.rateLimited) _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
-    if (_youtubeRefused == null) logInfo('YouTube would not play ${item.id} (${failure.kind.name}); trying Piped and Invidious');
+    if (_youtubeRefused == null) logWarn('YouTube would not play ${item.id} (${failure.kind.name}); trying Piped and Invidious');
     _youtubeRefused = failure;
     if (await _openViaRelays(item, serial, start: start, play: play)) return true;
     if (serial == _playSerial) _fail(item, PlaybackFailure(failure.kind, failure.detail, tried: [for (final k in _relaysTried) k == RelayKind.piped ? 'Piped' : 'Invidious']));
@@ -2008,7 +2102,7 @@ class AppController extends ChangeNotifier {
       logInfo('Playing ${item.id} from $name ${video.server}, took ${watch.elapsedMilliseconds} ms');
       return address;
     } catch (e) {
-      logInfo('$e; not using $name');
+      logWarn('$e; not using $name');
       return null;
     }
   }
@@ -2047,7 +2141,7 @@ class AppController extends ChangeNotifier {
         ? scheduled + const Duration(seconds: 15)
         : Duration(seconds: min(30 * (1 << min(_startAttempts, 2)), 120));
     _startAttempts++;
-    logInfo('${item.id} has not started, opening it again in ${delay.inSeconds} s');
+    logWarn('${item.id} has not started, opening it again in ${delay.inSeconds} s');
     _startTimer = Timer(delay, () {
       if (_disposed || serial != _playSerial || playing?.id != item.id || !waitingForStart) return;
       unawaited(play(item, keepMini: true, retryingStart: true));
@@ -2065,10 +2159,10 @@ class AppController extends ChangeNotifier {
       _fail(item, PlaybackFailure.classify([message, ..._recentErrors]));
       return;
     }
-    logInfo('Playback interrupted, reconnecting ${item.id} at ${_clock(position)}: $message');
+    logWarn('Playback interrupted, reconnecting ${item.id} at ${_clock(position)}: $message');
     if (_relayed == item.id) {
       _unrelayed = item.id;
-      logInfo('Playing ${item.id} without the local chunked relay');
+      logWarn('Playing ${item.id} without the local chunked relay');
     }
     _notice(tr('网络中断，正在从 {0} 重新连接…', [_clock(position)]));
     _recovering = true;
@@ -2117,7 +2211,7 @@ class AppController extends ChangeNotifier {
       return;
     }
     final again = _outputRemade.isNotEmpty;
-    logInfo('The graphics device was lost ($reason); making the video output again${again ? ' and decoding in software' : ''}');
+    logWarn('The graphics device was lost ($reason); making the video output again${again ? ' and decoding in software' : ''}');
     _recovering = true;
     try {
       await player.pause();
@@ -2176,7 +2270,7 @@ class AppController extends ChangeNotifier {
       if (main == id) await syncMainSubtitle();
       logInfo('Subtitle translation finished; track $id replaced by ${added['id']}');
     } catch (e) {
-      logInfo('Could not reload the finished subtitle translation: $e');
+      logWarn('Could not reload the finished subtitle translation: $e');
     }
   }
 
@@ -2204,7 +2298,7 @@ class AppController extends ChangeNotifier {
       final track = find(player.state.tracks) ?? await player.stream.tracks.map(find).firstWhere((t) => t != null).timeout(const Duration(seconds: 3));
       if (track != null) await player.setSubtitleTrack(track);
     } catch (e) {
-      logInfo('Could not read the selected subtitle: $e');
+      logWarn('Could not read the selected subtitle: $e');
     }
   }
 
@@ -2213,7 +2307,7 @@ class AppController extends ChangeNotifier {
     try {
       return await _subtitleFiles.pathFor(option);
     } catch (e) {
-      logInfo('Could not fetch subtitles ${option.language}: $e');
+      logWarn('Could not fetch subtitles ${option.language}: $e');
       rethrow;
     }
   }
@@ -2232,13 +2326,81 @@ class AppController extends ChangeNotifier {
     final track = player.state.track.subtitle;
     final off = track.id == 'no' || track.id == 'auto';
     final second = secondarySubtitle;
+    // A second subtitle mpv shows that no option names is read as a track.
+    final secondTrack = second != null || secondaryTrackId == 'no' ? null : player.state.tracks.subtitle.where((t) => t.id == secondaryTrackId).firstOrNull;
+    Future<List<SubtitleCue>> secondCues() => second != null ? _optionCues(second) : secondTrack != null ? _trackCues(platform, secondTrack) : Future.value(const []);
+    final hasSecond = second != null || secondTrack != null;
     final mode = preferences.subtitleListMode;
-    if (off || (second != null && mode == SubtitleListMode.second)) {
-      return second == null ? const [] : pairSubtitleCues(await _optionCues(second), const []);
+    if (off || (hasSecond && mode == SubtitleListMode.second)) {
+      return hasSecond ? pairSubtitleCues(await secondCues(), const []) : const [];
     }
     final main = await _trackCues(platform, track);
-    if (second == null || mode == SubtitleListMode.first) return pairSubtitleCues(main, const []);
-    return pairSubtitleCues(main, await _optionCues(second));
+    if (!hasSecond && mode != SubtitleListMode.first) {
+      // A translation on its own is listed with the lines it was made
+      // from, which stand first: on top, or alone with 只看第二字幕.
+      final original = listedOriginalOf(track);
+      if (original != null) {
+        final from = await _optionCues(original);
+        if (from.isNotEmpty) {
+          return switch (mode) {
+            SubtitleListMode.secondOver => pairSubtitleCues(main, from),
+            SubtitleListMode.second => pairSubtitleCues(from, const []),
+            _ => pairSubtitleCues(from, main),
+          };
+        }
+      }
+    }
+    if (!hasSecond || mode == SubtitleListMode.first) return pairSubtitleCues(main, const []);
+    return pairSubtitleCues(main, await secondCues());
+  }
+
+  /// The chapter titles of [chapterTranslationOf] translated, one for
+  /// each chapter, once asked for; untouched ones stay as they are.
+  List<String>? chapterTranslation;
+  String? chapterTranslationOf;
+  bool translatingChapters = false;
+  /// Bumped when [chapterTranslation] or [translatingChapters] changes,
+  /// for the chapter menu, which does not rebuild with everything else.
+  final chaptersChanged = ValueNotifier<int>(0);
+
+  /// [chapterTranslation] when it is the playing video's.
+  List<String>? get translatedChapters => playing != null && chapterTranslationOf == playing!.id ? chapterTranslation : null;
+
+  /// Translates the playing video's chapter titles into the language set
+  /// for translations. Nothing is sent until asked.
+  Future<void> translateChapters() async {
+    final id = playing?.id;
+    final chapters = details?.chapters ?? const [];
+    if (id == null || chapters.isEmpty || translatingChapters) return;
+    final language = preferences.translateTarget;
+    _update(() => translatingChapters = true);
+    chaptersChanged.value++;
+    try {
+      final titles = [for (final c in chapters) c.title.replaceAll('\n', ' ')];
+      final lines = (await translateForeignLines(translator, titles.join('\n'), language, (line) => looksLike(line, language))).split('\n');
+      if (playing?.id != id) return;
+      _update(() {
+        chapterTranslation = lines.length == titles.length ? lines : titles;
+        chapterTranslationOf = id;
+      });
+    } on TranslationException catch (e) {
+      _notice(e.message);
+    } catch (e) {
+      logWarn('Could not translate the chapters: $e');
+      _notice(tr('无法翻译，请检查网络或代理'));
+    } finally {
+      _update(() => translatingChapters = false);
+      chaptersChanged.value++;
+    }
+  }
+
+  /// The subtitle [track] was translated from, when it is a translation:
+  /// the video's original-language one.
+  SubtitleOption? listedOriginalOf(SubtitleTrack track) {
+    final subtitles = details?.subtitles ?? const <SubtitleOption>[];
+    final option = subtitles.where((o) => o.label == track.title).firstOrNull;
+    if (option == null || option.kind != SubtitleKind.translated) return null;
+    return originalSubtitle(subtitles, language: details?.language);
   }
 
   Future<List<SubtitleCue>> _optionCues(SubtitleOption option) => _cached('${playing?.id}\u0000${option.url}', () async => File(await _subtitleFile(option)).readAsString());
@@ -2272,7 +2434,7 @@ class AppController extends ChangeNotifier {
     try {
       text = await read();
     } catch (e) {
-      logInfo('Could not read the subtitle lines: $e');
+      logWarn('Could not read the subtitle lines: $e');
     }
     final cues = text == null ? const <SubtitleCue>[] : parseSubtitleCues(text);
     if (cues.isNotEmpty) {
@@ -2336,7 +2498,7 @@ class AppController extends ChangeNotifier {
     if (mainWanted && (mainTitle == null || (spoken != null ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage) : !speaks(mainLanguage, first)))) {
       final option = spoken ?? subtitleIn(details.subtitles, first);
       if (option != null && option.label != mainTitle) {
-        logInfo('Showing ${option.language} (${option.kind.name}) as the main subtitle');
+        logDebug(() => 'Showing ${option.language} (${option.kind.name}) as the main subtitle');
         await showSubtitle(option);
         if (serial != _playSerial || this.player != player) return;
         mainTitle = option.label;
@@ -2352,13 +2514,14 @@ class AppController extends ChangeNotifier {
     } else {
       option = target == null ? null : subtitleIn(details.subtitles, target);
       if (option == null || speaks(mainLanguage, target!)) {
-        if (wanted.isNotEmpty) logInfo('No second subtitle in $wanted beside $mainLanguage');
+        if (wanted.isNotEmpty) logWarn('No second subtitle in $wanted beside $mainLanguage');
         return;
       }
     }
     if (option.label == mainTitle || secondarySubtitle != null) return;
-    logInfo('Showing ${option.language} (${option.kind.name}) as the second subtitle');
-    await setSecondarySubtitle(option);
+    final second = option;
+    logDebug(() => 'Showing ${second.language} (${second.kind.name}) as the second subtitle');
+    await setSecondarySubtitle(second);
   }
 
   /// Keeps what was just chosen in the 字幕 panel for the videos after this
@@ -2424,6 +2587,23 @@ class AppController extends ChangeNotifier {
 
   void _listenTo(Player player) {
     void videoSize(_) => _outputSize?.video = Size((player.state.width ?? 0).toDouble(), (player.state.height ?? 0).toDouble());
+    final platform = player.platform;
+    if (platform is NativePlayer) {
+      // The subtitles shown are followed as mpv reports them, as it can
+      // change either by itself; the panel and the list read them here.
+      unawaited(platform.observeProperty('sid', (_) => syncMainSubtitle()).catchError((Object e) => logWarn('Could not follow the subtitle: $e')));
+      unawaited(platform.observeProperty('secondary-sid', (value) async {
+        secondaryTrackId = value.isEmpty || value == 'false' ? 'no' : value;
+        if (secondaryTrackId == 'no') {
+          if (secondarySubtitle != null && secondaryLoading == null) _update(() => secondarySubtitle = null);
+          return;
+        }
+        final title = player.state.tracks.subtitle.where((t) => t.id == secondaryTrackId).firstOrNull?.title;
+        if (secondarySubtitle != null && secondarySubtitle!.label != title) secondarySubtitle = null;
+        await syncMainSubtitle();
+        _update(() {});
+      }).catchError((Object e) => logWarn('Could not follow the second subtitle: $e')));
+    }
     _playerSubscriptions.addAll([
       player.stream.width.listen(videoSize),
       player.stream.height.listen(videoSize),
@@ -2485,7 +2665,7 @@ class AppController extends ChangeNotifier {
       player.stream.error.listen((message) {
         if (playing == null || message.isEmpty) return;
         if (isSubtitleError(message)) {
-          logInfo('Subtitles failed to load, video keeps playing: $message');
+          logWarn('Subtitles failed to load, video keeps playing: $message');
           return;
         }
         // FFmpeg may log the HTTP status before naming the request. Keep
@@ -2501,14 +2681,37 @@ class AppController extends ChangeNotifier {
         if ((log.level == 'error' || log.prefix == 'ytdl_hook') && _recentErrors.length < 20 && !subtitle && !isUnattributedHttpError(text)) _recentErrors.add(text);
         // curl gave up on a stream; when it was the video's, the sound
         // plays on over the last picture.
-        if (log.prefix == 'curl' && text.startsWith('transfer failed')) _streamLostIn = _playSerial;
+        final lost = log.prefix == 'curl' && text.startsWith('transfer failed');
+        if (lost) _streamLostIn = _playSerial;
+        // Data cut off mid-frame, after curl lost a stream, leaves the
+        // decoder failing on every frame over a still picture.
+        if (log.prefix == 'vd' && text.startsWith('Error while decoding frame')) {
+          final now = DateTime.now();
+          _decodeErrors
+            ..add(now)
+            ..removeWhere((at) => now.difference(at) > const Duration(seconds: 10));
+        }
+        // Opened again at once rather than after the picture watch notices.
+        if ((lost || _decodeErrors.length >= 3) && player.state.playing && DateTime.now().difference(_lastBrokenReopen) > const Duration(seconds: 30)) {
+          _lastBrokenReopen = DateTime.now();
+          _decodeErrors.clear();
+          unawaited(_recover(lost ? 'libmpv gave up on a stream' : 'The video data broke and frames stopped decoding'));
+        }
         if (PlaybackRecovery.graphicsLost(text)) unawaited(_remakeVideoOutput(player, text));
         // The same line for every frame says nothing new.
         if (text == _lastMpvLine) return;
         _lastMpvLine = text;
-        if (_mpvLogLines >= 200) return;
+        if (_mpvLogLines >= (AppLog.level == LogLevel.debug ? 2000 : 200)) return;
         _mpvLogLines++;
-        logInfo('mpv [${log.prefix}] ${log.level}: $text');
+        final line = 'mpv [${log.prefix}] ${log.level}: $text';
+        switch (log.level) {
+          case 'fatal' || 'error':
+            logError(line);
+          case 'warn':
+            logWarn(line);
+          default:
+            logDebug(() => line);
+        }
       }),
       // A stream that stops delivering data leaves mpv buffering forever.
       player.stream.buffering.listen((buffering) {
@@ -2536,7 +2739,7 @@ class AppController extends ChangeNotifier {
           return;
         }
         final limited = _youtubeRefused;
-        logInfo('Piped or Invidious address did not play ($message); ${limited != null ? 'trying the next server' : 'connecting to YouTube directly'}');
+        logWarn('Piped or Invidious address did not play ($message); ${limited != null ? 'trying the next server' : 'connecting to YouTube directly'}');
         unawaited(limited != null ? _fallBack(item, _playSerial, limited, start: position) : _open(item, _playSerial, start: position, piped: false));
         return;
       }
@@ -2549,7 +2752,7 @@ class AppController extends ChangeNotifier {
         // ytdl_hook resolve the video itself once.
         _openedResolved = null;
         _repository?.streams.forget(item.id);
-        logInfo('Prefetched address did not play ($message; $_openedOrigin); libmpv resolves ${item.id} again');
+        logWarn('Prefetched address did not play ($message; $_openedOrigin); libmpv resolves ${item.id} again');
         unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
         return;
       }
@@ -2686,7 +2889,7 @@ class AppController extends ChangeNotifier {
       try {
         await platform.command(['seek', '0', 'relative+exact']);
       } catch (e) {
-        logInfo('Could not refresh the picture after restoring: $e');
+        logWarn('Could not refresh the picture after restoring: $e');
       }
     }
   }
@@ -3276,7 +3479,7 @@ class AppController extends ChangeNotifier {
     if (!Platform.isWindows) return;
     final before = ProcessInfo.currentRss;
     releaseFreedMemory();
-    logInfo('Released idle memory: ${before >> 20} MB → ${ProcessInfo.currentRss >> 20} MB');
+    logDebug(() => 'Released idle memory: ${before >> 20} MB → ${ProcessInfo.currentRss >> 20} MB');
   }
 
   /// Opens [target]; 返回 comes back to where this was.
@@ -3595,7 +3798,7 @@ class AppController extends ChangeNotifier {
     final length = player.state.duration.inMilliseconds / 1000;
     unawaited(() async {
       final why = await sign.reportWatched(item.id, from: to < 180 ? 0 : to, to: to, length: length);
-      if (why != null) logInfo('Could not add ${item.id} to the YouTube history: $why');
+      if (why != null) logWarn('Could not add ${item.id} to the YouTube history: $why');
     }());
   }
 
@@ -3717,6 +3920,10 @@ class AppController extends ChangeNotifier {
   Future<void> savePreferences(AppPreferences next) async {
     final service = next.translation != preferences.translation;
     _update(() => preferences = next);
+    if (next.logLevel != AppLog.level) {
+      AppLog.level = next.logLevel;
+      logInfo('Log level ${next.logLevel.name}');
+    }
     if (service) _useTranslator();
     unawaited(_aiFilter?.setMode(next.aiFilter));
     try {
@@ -4053,12 +4260,18 @@ class AppController extends ChangeNotifier {
       if (json == null || _disposed) return;
       final probe = jsonDecode(json) as Map<String, dynamic>;
       final adapter = probe['adapter']?.toString() ?? '';
-      if (adapter.isEmpty || adapter == settings.decoderAdapter) return;
+      if (adapter.isEmpty) return;
       int height(String key) => (probe[key] as num?)?.toInt() ?? 0;
-      logInfo('Hardware decoding on $adapter: H.264 ${height('h264')}p, VP9 ${height('vp9')}p, AV1 ${height('av1')}p');
       final results = {
         for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? const DecoderStatus.hardware('d3d11va') : const DecoderStatus.software(),
       };
+      // Asked again at every start: a result saved earlier may have been
+      // a one-off, such as a video decoded in software after the graphics
+      // device was lost, and the automatic codecs would stay off for good.
+      final same = adapter == settings.decoderAdapter &&
+          results.entries.every((e) => (settings.decoderResults[e.key]?.isHardware ?? false) == e.value.isHardware);
+      if (same) return;
+      logInfo('Hardware decoding on $adapter: H.264 ${height('h264')}p, VP9 ${height('vp9')}p, AV1 ${height('av1')}p');
       _update(() => decodeStates = results);
       settings = settings.copyWith(decoderResults: results, decoderAdapter: adapter);
       await _settingsStore?.save(settings);
@@ -4089,10 +4302,15 @@ class AppController extends ChangeNotifier {
       if (crop != _paddingCrop) {
         _paddingCrop = crop;
         await platform.setProperty('video-crop', crop);
-        if (crop.isNotEmpty) logInfo('Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
+        if (crop.isNotEmpty) logDebug(() => 'Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
       }
-      if (normalized != null) {
-        settings = settings.copyWith(decoderResults: decodeStates);
+      // Kept as what this PC can do only when it decoded in hardware, or
+      // nothing measured it: one video in software, as after a lost
+      // graphics device or with hardware decoding off, says nothing about
+      // the GPU.
+      final measured = normalized != null && settings.decoderAdapter.isNotEmpty && (settings.decoderResults[normalized]?.isHardware ?? false);
+      if (normalized != null && !(measured && decoder.kind != DecoderKind.hardware)) {
+        settings = settings.copyWith(decoderResults: {...settings.decoderResults, normalized: decoder});
         unawaited(_settingsStore?.save(settings));
       }
       // A download older than its codec in the sidecar: only libmpv can
@@ -4100,7 +4318,7 @@ class AppController extends ChangeNotifier {
       final item = playing;
       final fileCodec = VideoCodec.of(normalized);
       if (item != null && _openedLocal == item.id && !FormatPolicy.allows(settings, fileCodec)) {
-        logInfo('The download of ${item.id} is ${fileCodec!.label}, a codec the playback rules disable; playing online instead');
+        logWarn('The download of ${item.id} is ${fileCodec!.label}, a codec the playback rules disable; playing online instead');
         _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [fileCodec.label]));
         unawaited(_open(item, _playSerial, start: player?.state.position, allowLocal: false));
       }
@@ -4134,7 +4352,7 @@ class AppController extends ChangeNotifier {
         // be compared with how the same machine plays normally.
         if (frames != null && DateTime.now().difference(_lastFrameLog) >= const Duration(minutes: 3)) {
           _lastFrameLog = DateTime.now();
-          logInfo('Frames in 10 s, $added dropped: $frames');
+          logDebug(() => 'Frames in 10 s, $added dropped: $frames');
         }
         return;
       }
@@ -4143,7 +4361,7 @@ class AppController extends ChangeNotifier {
       for (final name in ['avsync', 'estimated-vf-fps', 'container-fps', 'display-fps', 'vo-delayed-frame-count', 'mistimed-frame-count', 'decoder-frame-drop-count', 'hwdec-current', 'video-sync', 'speed', 'video-params/w', 'video-params/h', 'time-pos', 'audio-pts', 'audio-params/samplerate', 'audio-out-params/samplerate', 'current-ao', 'd3d11va-zero-copy', 'vd-lavc-dr', 'video-codec', 'video-out-params/pixelformat']) {
         values.add('$name=${await platform.getProperty(name)}');
       }
-      logInfo('Dropped $added frames in 10 s ($drops total): ${values.join(' ')}${frames == null ? '' : ' · frames $frames'}');
+      logDebug(() => 'Dropped $added frames in 10 s ($drops total): ${values.join(' ')}${frames == null ? '' : ' · frames $frames'}');
     } catch (_) {
       // Statistics are best effort.
     }
@@ -4153,6 +4371,12 @@ class AppController extends ChangeNotifier {
 
   /// The open in which libmpv's curl gave up on a stream.
   int? _streamLostIn;
+
+  /// When the decoder last failed on a frame, over the last 10 s.
+  final _decodeErrors = <DateTime>[];
+
+  /// When a lost stream or broken video data last opened the video again.
+  DateTime _lastBrokenReopen = DateTime(2000);
 
   /// The open in which the decoder was restarted for a stalled picture.
   int? _pictureRestartedIn;
@@ -4173,13 +4397,13 @@ class AppController extends ChangeNotifier {
     // A video stream that broke off, or a restart that brought nothing
     // back, needs the video opened again at the same place.
     if (drawn == 0 && (_streamLostIn == _playSerial || _pictureRestartedIn == _playSerial)) {
-      logInfo('Picture stalled while playing ($frames); the video stream is gone, reopening');
+      logWarn('Picture stalled while playing ($frames); the video stream is gone, reopening');
       _pictureRestartedIn = null;
       _streamLostIn = null;
       unawaited(_recover('The video stream stopped while the sound played on'));
       return;
     }
-    logInfo('Picture stalled while playing ($frames); ${drawn == 0 ? 'restarting the decoder' : 'registering the texture again'}');
+    logWarn('Picture stalled while playing ($frames); ${drawn == 0 ? 'restarting the decoder' : 'registering the texture again'}');
     try {
       if (drawn == 0) {
         _pictureRestartedIn = _playSerial;
@@ -4188,7 +4412,7 @@ class AppController extends ChangeNotifier {
         await outputSize.refresh();
       }
     } catch (e) {
-      logInfo('Could not bring the picture back: $e');
+      logWarn('Could not bring the picture back: $e');
     }
   }
 
@@ -4222,7 +4446,7 @@ class AppController extends ChangeNotifier {
       final busy = frames == null ? null : drawBusy(frames, double.tryParse(await platform.getProperty('container-fps')) ?? 0);
       if (busy == null) return;
       reason = 'busy';
-      logInfo('Frames take ${busy.toStringAsFixed(1)} ms to draw, most of their time');
+      logDebug(() => 'Frames take ${busy.toStringAsFixed(1)} ms to draw, most of their time');
     }
     _lightRendering = reason;
     for (final MapEntry(:key, :value) in PlayerOptionApplicator.fastRendering.entries) {
@@ -4248,7 +4472,7 @@ class AppController extends ChangeNotifier {
     final lower = stepDownHeight(height, availableHeights);
     if (lower == null) return;
     _droppedCap = lower;
-    logInfo('Frames kept dropping at ${height}p${fps.round()}; automatic quality lowered to ${lower}p for this run');
+    logWarn('Frames kept dropping at ${height}p${fps.round()}; automatic quality lowered to ${lower}p for this run');
     _notice(tr('播放一直掉帧，自动画质已降到 {0}p（本次运行有效，重新选“自动”可恢复）', ['$lower']));
     await reloadVideo();
   }
@@ -4281,7 +4505,7 @@ class AppController extends ChangeNotifier {
       for (final name in ['video-params/w', 'video-params/h', 'video-codec', 'hwdec-current', 'video-out-params/pixelformat']) {
         values.add('$name=${await platform.getProperty(name)}');
       }
-      logInfo('Memory: process ${mb(ProcessInfo.currentRss)} (peak ${mb(ProcessInfo.maxRss)}) · playback cache ${mb(total)} (ahead ${mb(ahead)}) · image cache ${mb(PaintingBinding.instance.imageCache.currentSizeBytes)} · ${values.join(' ')}');
+      logDebug(() => 'Memory: process ${mb(ProcessInfo.currentRss)} (peak ${mb(ProcessInfo.maxRss)}) · playback cache ${mb(total)} (ahead ${mb(ahead)}) · image cache ${mb(PaintingBinding.instance.imageCache.currentSizeBytes)} · ${values.join(' ')}');
     } catch (_) {
       // Statistics are best effort.
     }

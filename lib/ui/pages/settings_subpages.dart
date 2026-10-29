@@ -1008,6 +1008,16 @@ List<SettingEntry> aboutEntries(AppController controller) => [
             leading: const Icon(Icons.bug_report_outlined),
             onTap: () => openLogs(context, controller),
           ), subtitle: tr('日志 log')),
+      SettingEntry(tr('日志级别'), (context) => NormalItem(
+            title: tr('日志级别'),
+            subtitle: tr('当前：{0}。排查问题时可以临时调到「调试」，会记下更多细节', [labelOf(_logLevels, controller.preferences.logLevel)]),
+            leading: const Icon(Icons.tune_rounded),
+            onTap: () => pickFromDialog<LogLevel>(context,
+                title: tr('日志级别'),
+                value: controller.preferences.logLevel,
+                values: _logLevels,
+                onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(logLevel: v))),
+          ), subtitle: tr('日志 级别 调试 debug log level')),
       SettingEntry(tr('复制诊断信息'), (context) => NormalItem(
             title: tr('复制诊断信息'),
             subtitle: tr('版本、系统、显卡、组件和播放设置'),
@@ -1020,6 +1030,13 @@ List<SettingEntry> aboutEntries(AppController controller) => [
             leading: const Icon(Icons.gavel_rounded),
             onTap: () => showLicensePage(context: context, applicationName: 'Lumtub', applicationVersion: appVersion),
           ), subtitle: 'PiliNara mpv media_kit yt-dlp license'),
+    ];
+
+List<(LogLevel, String)> get _logLevels => [
+      (LogLevel.error, tr('错误：只记无法继续的问题')),
+      (LogLevel.warn, tr('警告：再加上已自动绕过的问题')),
+      (LogLevel.info, tr('信息：再加上主要操作（默认）')),
+      (LogLevel.debug, tr('调试：再加上每一步细节和计时')),
     ];
 
 // 关于 › 错误日志 (PiliNara's logs.dart)
@@ -1036,6 +1053,17 @@ class _LogsPage extends StatefulWidget {
 
 class _LogsPageState extends State<_LogsPage> {
   String? _text;
+
+  /// The least important level shown.
+  LogLevel _shown = LogLevel.debug;
+
+  static LogLevel _levelOf(String rest) {
+    for (final level in LogLevel.values) {
+      if (rest.startsWith(level.tag.trim())) return level;
+    }
+    // Lines from before levels were written, such as 错误 ones.
+    return rest.startsWith('错误') ? LogLevel.error : LogLevel.info;
+  }
 
   Directory? get _directory => widget.controller.directories?.logs;
 
@@ -1077,7 +1105,25 @@ class _LogsPageState extends State<_LogsPage> {
   @override
   Widget build(BuildContext context) {
     final text = _text;
-    final lines = text == null ? const <String>[] : text.split('\n').where((l) => l.isNotEmpty).toList().reversed.toList();
+    final all = text == null ? const <String>[] : text.split('\n').where((l) => l.isNotEmpty);
+    // A line without a time stamp continues the one before it, such as a
+    // stack trace, and goes with it.
+    final lines = <String>[];
+    final levels = <LogLevel>[];
+    for (final line in all) {
+      final space = line.indexOf(' ');
+      final stamped = space > 0 && DateTime.tryParse(line.substring(0, space)) != null;
+      if (!stamped && lines.isNotEmpty) {
+        lines[lines.length - 1] = '${lines.last}\n$line';
+        continue;
+      }
+      lines.add(line);
+      levels.add(_levelOf(stamped ? line.substring(space + 1) : line));
+    }
+    final shown = [
+      for (var i = lines.length - 1; i >= 0; i--)
+        if (levels[i].index <= _shown.index) (lines[i], levels[i]),
+    ];
     return Scaffold(
       appBar: AppBar(
         title: Text(tr('日志')),
@@ -1101,29 +1147,43 @@ class _LogsPageState extends State<_LogsPage> {
       ),
       body: text == null
           ? const Center(child: CircularProgressIndicator())
-          : lines.isEmpty
+          : Column(children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                child: Wrap(spacing: 8, children: [
+                  for (final (level, label) in [(LogLevel.debug, tr('全部')), (LogLevel.info, tr('信息及以上')), (LogLevel.warn, tr('警告及以上')), (LogLevel.error, tr('只看错误'))])
+                    ChoiceChip(label: Text(label), selected: _shown == level, onSelected: (_) => setState(() => _shown = level)),
+                ]),
+              ),
+              Expanded(child: shown.isEmpty
               ? Center(child: Text(tr('暂无日志'), style: TextStyle(color: context.colors.outline)))
               : SelectionArea(
                   child: ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
-                    itemCount: lines.length,
+                    itemCount: shown.length,
                     separatorBuilder: (context, i) => const Divider(height: 1),
                     itemBuilder: (context, i) {
-                      final line = lines[i];
+                      final (line, level) = shown[i];
                       final space = line.indexOf(' ');
                       final time = space > 0 ? line.substring(0, space).replaceFirst('T', ' ').split('.').first : '';
                       final rest = space > 0 ? line.substring(space + 1) : line;
-                      final error = rest.startsWith('ERROR') || rest.startsWith('错误');
+                      final color = switch (level) {
+                        LogLevel.error => context.colors.error,
+                        LogLevel.warn => context.colors.tertiary,
+                        LogLevel.debug => context.colors.outline,
+                        LogLevel.info => null,
+                      };
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           if (time.isNotEmpty) Text(time, style: TextStyle(fontSize: 12, color: context.colors.outline)),
-                          Text(rest, style: TextStyle(fontFamily: 'monospace', fontSize: 13, color: error ? context.colors.error : null)),
+                          Text(rest, style: TextStyle(fontFamily: 'monospace', fontSize: 13, color: color)),
                         ]),
                       );
                     },
                   ),
-                ),
+                )),
+            ]),
     );
   }
 }

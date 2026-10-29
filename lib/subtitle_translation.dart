@@ -74,6 +74,26 @@ SubtitleOption? originalSubtitle(List<SubtitleOption> options, {String? language
   return uploaded.where((o) => sameLanguage(o.language, automatic.language)).firstOrNull ?? automatic;
 }
 
+/// The rows under 原语言 in the subtitle panel: a subtitle in each of
+/// [targets] (a name such as 界面语言 and its language), in order, each
+/// language once and none in the language [spoken] is in. The video's own
+/// subtitle in a language comes before YouTube's translation.
+List<({String name, TranslationLanguage language, SubtitleOption option})> languageRows(
+  List<SubtitleOption> options,
+  SubtitleOption? spoken,
+  List<(String, TranslationLanguage)> targets,
+) {
+  final rows = <({String name, TranslationLanguage language, SubtitleOption option})>[];
+  for (final (name, language) in targets) {
+    if (rows.any((r) => r.language.code == language.code)) continue;
+    if (spoken != null && speaks(spoken.language, language)) continue;
+    final option = subtitleIn(options, language);
+    if (option == null || identical(option, spoken)) continue;
+    rows.add((name: name, language: language, option: option));
+  }
+  return rows;
+}
+
 /// Whether two tags name one language; Chinese scripts count as different.
 bool sameLanguage(String? a, String? b) {
   String base(String? tag) {

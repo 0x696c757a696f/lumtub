@@ -45,6 +45,7 @@ class AiFilter extends ChangeNotifier {
   static const lists = {
     'killslop': 'https://api.killslop.app/api/v1/export/youtube-channels.json',
     'aislist': 'https://raw.githubusercontent.com/theSiegs/aislist-channel-ids/main/lists/aislist_blocklist_ids.txt',
+    'aislist-warn': 'https://raw.githubusercontent.com/theSiegs/aislist-channel-ids/main/lists/aislist_warnlist_ids.txt',
   };
   static const _fields = 'contents.twoColumnWatchNextResults.results.results.contents.videoPrimaryInfoRenderer.badges';
   static const parallel = 4;

@@ -335,7 +335,7 @@ class _Player extends StatelessWidget {
                       child: PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
                     ),
                   ),
-                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle != null),
+                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label),
                 ),
               ),
               if (controller.waitingForStart && controller.playing != null)
@@ -678,7 +678,7 @@ class _UpNext extends StatelessWidget {
 /// size of the video; a small window, such as picture in picture, passes
 /// [smallWindow] with its size, which keeps the text readable and shrinks
 /// the gap below it.
-SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, bool secondary = true}) {
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary}) {
   // The view scales by area against 1080p, which makes the text tiny in a
   // small window; there it goes by the short side, and no smaller than
   // three fifths.
@@ -709,7 +709,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
     // sub-pos counts from the top; 100 is the bottom edge.
     textScaler: textScaler,
-    secondary: secondary,
+    secondaryKey: secondary,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );
 }

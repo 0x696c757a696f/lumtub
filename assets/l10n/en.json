@@ -2749,5 +2749,8 @@
   "乌尔都语": "Urdu",
   "孟加拉语": "Bengali",
   "泰米尔语": "Tamil",
-  "泰卢固语": "Telugu"
+  "泰卢固语": "Telugu",
+  "显卡驱动又重置了一次，本次运行改用软件解码": "The graphics driver reset again; decoding in software until Lumtub restarts",
+  "显卡驱动重置了，已重新建立画面": "The graphics driver reset; the picture was made again",
+  "显卡驱动反复重置，请重启 Lumtub": "The graphics driver keeps resetting; please restart Lumtub"
 }

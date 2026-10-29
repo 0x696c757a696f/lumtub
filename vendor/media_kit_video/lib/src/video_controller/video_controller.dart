@@ -156,6 +156,13 @@ class VideoController {
     );
   }
 
+  /// Lumtub: releases the video output while the [Player] lives on; a new
+  /// [VideoController] for the same [Player] makes a new one.
+  Future<void> release() async {
+    final instance = await platform.future;
+    if (instance is NativeVideoController) await instance.release();
+  }
+
   /// A [Future] that completes when the first video frame has been rendered.
   Future<void> get waitUntilFirstFrameRendered async {
     final instance = await platform.future;

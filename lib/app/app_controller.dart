@@ -425,6 +425,7 @@ class AppController extends ChangeNotifier {
   String? _secondaryAutoFor;
   bool _decoderPending = false;
   int _mpvLogLines = 0;
+  String? _lastMpvLine;
   /// yt-dlp and libmpv error lines for the video being opened, which name
   /// the cause libmpv's own error message usually leaves out.
   final _recentErrors = <String>[];
@@ -2076,6 +2077,55 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  bool _remakingOutput = false;
+  final _outputRemade = <DateTime>[];
+
+  /// The graphics device went away (a driver reset, say), so libmpv's
+  /// hardware-decoded frames no longer reach the picture, which flickers or
+  /// freezes. The video output is made again, on a new Direct3D device, and
+  /// the video reopened where it was. When that happens again soon after,
+  /// hardware decoding stays off until Lumtub restarts.
+  Future<void> _remakeVideoOutput(Player player, String reason) async {
+    final old = videoController;
+    if (_remakingOutput || _disposed || old == null || this.player != player) return;
+    _remakingOutput = true;
+    final item = _tracking ?? playing;
+    final position = _lastPosition;
+    final now = DateTime.now();
+    _outputRemade.removeWhere((at) => now.difference(at) > const Duration(minutes: 10));
+    if (_outputRemade.length >= 3) {
+      if (_outputRemade.length == 3) {
+        _outputRemade.add(now);
+        logError('The graphics device keeps getting lost; leaving the video output as it is', reason);
+        _notice(tr('显卡驱动反复重置，请重启 Lumtub'));
+      }
+      return;
+    }
+    final again = _outputRemade.isNotEmpty;
+    logInfo('The graphics device was lost ($reason); making the video output again${again ? ' and decoding in software' : ''}');
+    _recovering = true;
+    try {
+      await player.pause();
+      await old.release();
+      if (_disposed || this.player != player) return;
+      videoController = null;
+      _ensureVideo(player);
+      _outputRemade.add(now);
+      _update(() {});
+      _notice(again ? tr('显卡驱动又重置了一次，本次运行改用软件解码') : tr('显卡驱动重置了，已重新建立画面'));
+      await videoController?.platform.future;
+      // Making the output sets hwdec from the settings again.
+      final platform = player.platform;
+      if (again && platform is NativePlayer) await platform.setProperty('hwdec', 'no');
+      if (item != null && !_disposed && playing?.id == item.id) await _open(item, _playSerial, start: position > Duration.zero ? position : null);
+    } catch (e) {
+      logError('Could not make the video output again', e);
+    } finally {
+      _recovering = false;
+      _remakingOutput = false;
+    }
+  }
+
   late final _subtitleFiles = SubtitleFiles(
     _http,
     Directory('${Directory.systemTemp.path}${Platform.pathSeparator}Lumtub subtitles'),
@@ -2436,6 +2486,10 @@ class AppController extends ChangeNotifier {
         // curl gave up on a stream; when it was the video's, the sound
         // plays on over the last picture.
         if (log.prefix == 'curl' && text.startsWith('transfer failed')) _streamLostIn = _playSerial;
+        if (PlaybackRecovery.graphicsLost(text)) unawaited(_remakeVideoOutput(player, text));
+        // The same line for every frame says nothing new.
+        if (text == _lastMpvLine) return;
+        _lastMpvLine = text;
         if (_mpvLogLines >= 200) return;
         _mpvLogLines++;
         logInfo('mpv [${log.prefix}] ${log.level}: $text');

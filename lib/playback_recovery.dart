@@ -81,6 +81,14 @@ class PlaybackRecovery {
   /// Errors from reading the stream, as opposed to a broken subtitle or
   /// filter, which leave the video playing.
   static bool isNetworkError(String message) => !message.toLowerCase().contains('sub') && _network.hasMatch(message);
+
+  // DXGI_ERROR_DEVICE_REMOVED, _HUNG and _RESET.
+  static final _deviceLost = RegExp(r'\b887a000[567]\b', caseSensitive: false);
+
+  /// Whether an mpv log line says the graphics device went away, as after
+  /// a driver reset: hardware-decoded frames can no longer reach the
+  /// picture, which then flickers or freezes until the output is made again.
+  static bool graphicsLost(String text) => text.contains('Mapping hardware decoded surface failed') || _deviceLost.hasMatch(text);
 }
 
 /// Where to reopen a video after its stream failed. mpv that can no longer

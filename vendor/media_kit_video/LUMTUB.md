@@ -29,3 +29,7 @@ The changes, marked "Lumtub" in the code:
   `gpu-hwdec-interop` is `d3d11-egl` unless zero-copy `dxva2` is in `hwdec`,
   so making the output does not also make a Direct3D 9 device for the
   DXVA2 interop.
+- `lib/src/video_controller/video_controller.dart`, `native_video_controller/real.dart`:
+  `VideoController.release` frees the video output while the player lives
+  on, so Lumtub can make a new one, on a new Direct3D device, after the
+  graphics device was lost (a driver reset).

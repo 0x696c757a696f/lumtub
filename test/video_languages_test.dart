@@ -11,6 +11,7 @@ import 'package:lumtub/video_languages.dart';
 String _video(String id, String title) => jsonEncode({'id': id, 'title': title, 'channel': 'c'});
 
 void main() {
+  setUp(VideoLanguages.reset);
   final players = {
     'aaaaaaaaaaa': {
       'videoDetails': {'title': '成都美食之旅', 'shortDescription': ''},
@@ -49,9 +50,9 @@ void main() {
     final kept = await languages.only(lines, ExploreLanguage.zh).toList();
     final titles = [for (final line in kept) (jsonDecode(line) as Map)['title']];
     expect(titles, unorderedEquals(['成都美食之旅', 'A channel', '中文标题']));
-    // The first answer without captions is asked again whole, in case
-    // the field mask left them out.
-    expect(asked, 6, reason: 'every video is asked about');
+    // An answer without captions is asked again whole and of the TV app,
+    // in case either has them.
+    expect(asked, 7, reason: 'every video is asked about');
     asked = 0;
     final again = await languages.only(Stream.fromIterable([_video('aaaaaaaaaaa', 'Chengdu food trip')]), ExploreLanguage.en).toList();
     expect(again, isEmpty);
@@ -86,9 +87,10 @@ void main() {
     final languages = VideoLanguages(client);
     final kept = await languages.only(Stream.fromIterable([_video('hhhhhhhhhhh', 'Gardening on the balcony')]), ExploreLanguage.it).toList();
     expect([for (final line in kept) (jsonDecode(line) as Map)['title']], ['Giardinaggio sul balcone']);
-    expect((web, tv), (1, 1));
+    // Masked, then whole, then of the TV app.
+    expect((web, tv), (2, 1));
     await languages.only(Stream.fromIterable([_video('iiiiiiiiiii', 'More gardening')]), ExploreLanguage.it).toList();
-    expect((web, tv), (1, 2), reason: 'the TV app is asked first from then on');
+    expect((web, tv), (2, 2), reason: 'the TV app is asked first from then on');
   }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
 
   test('asks for whole answers when the field mask leaves the video out', () async {
@@ -99,15 +101,15 @@ void main() {
         return http.Response('{}', 200);
       }
       whole++;
-      return http.Response.bytes(utf8.encode(jsonEncode(players['aaaaaaaaaaa'])), 200);
+      return http.Response.bytes(utf8.encode(jsonEncode(players['bbbbbbbbbbb'])), 200);
     });
     final languages = VideoLanguages(client);
-    final kept = await languages.only(Stream.fromIterable([_video('aaaaaaaaaaa', 'Chengdu food trip'), _video('fffffffffff', 'Another trip')]), ExploreLanguage.zh).toList();
-    expect([for (final line in kept) (jsonDecode(line) as Map)['title']], ['成都美食之旅', '成都美食之旅']);
+    final kept = await languages.only(Stream.fromIterable([_video('aaaaaaaaaaa', 'Chengdu food trip'), _video('fffffffffff', 'Another trip')]), ExploreLanguage.en).toList();
+    expect([for (final line in kept) (jsonDecode(line) as Map)['title']], ['Chengdu food tour', 'Chengdu food tour']);
     expect(whole, 2);
     // The two lookups ran together; later ones skip the mask.
     final before = masked;
-    await languages.only(Stream.fromIterable([_video('ggggggggggg', 'A third trip')]), ExploreLanguage.zh).toList();
+    await languages.only(Stream.fromIterable([_video('ggggggggggg', 'A third trip')]), ExploreLanguage.en).toList();
     expect(masked, before, reason: 'the mask is dropped after it left the video out');
     expect(whole, 3);
   }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);

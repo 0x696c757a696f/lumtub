@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
@@ -79,15 +80,25 @@ class VideoLanguages {
     }
   }
 
-  /// Whether field masks may leave captions out: unknown until a masked
-  /// answer without them is asked again whole, a few times at most.
+  /// Whether answers come whole: set once a whole answer has captions its
+  /// masked one left out.
   static bool _maskDrops = false;
-  static int _maskChecks = 0;
 
-  /// Whether the TV app is asked first: the website answers without
-  /// captions when YouTube wants it signed in.
+  /// Whether the TV app is asked first: set once it has captions where
+  /// the website answered without them.
   static bool _tvFirst = false;
-  static int _tvMisses = 0;
+
+  /// Answers without captions asked again another way, a few each run:
+  /// whole, and of the other app.
+  static int _compared = 0;
+  static const _compare = 8;
+
+  @visibleForTesting
+  static void reset() {
+    _maskDrops = false;
+    _tvFirst = false;
+    _compared = 0;
+  }
 
   Future<_Read?> _fetch(String id, {required bool tv, bool whole = false}) async {
     final read = await _readInBackground(await _probe.fetch(id, whole || _maskDrops ? null : _fields, expect: 'videoDetails', tv: tv));
@@ -96,28 +107,28 @@ class VideoLanguages {
   }
 
   Future<SpokenVideo?> _ask(String id) async {
-    var read = await _fetch(id, tv: _tvFirst);
-    if (read == null) return null;
-    if (!read.spoken.heard && read.playable && !_maskDrops && _probe.masks(_fields) && _maskChecks < 3) {
-      _maskChecks++;
+    final read = await _fetch(id, tv: _tvFirst);
+    if (read == null || read.spoken.heard || _compared >= _compare) return read?.spoken;
+    // Most spoken videos have automatic captions. An answer without them
+    // may have lost them to the field mask, or to YouTube answering this
+    // app less than the other.
+    _compared++;
+    if (!_maskDrops && _probe.masks(_fields)) {
       final whole = await _fetch(id, tv: _tvFirst, whole: true);
       if (whole != null && whole.spoken.heard) {
         _maskDrops = true;
-        logWarn('The /player field mask left out captions; asking for whole answers');
+        logInfo('The /player field mask left out captions; asking for whole answers');
         return whole.spoken;
       }
     }
-    if (!read.playable && _tvMisses < 5) {
-      final other = await _fetch(id, tv: !_tvFirst);
-      if (other != null && other.spoken.heard) {
-        _tvFirst = !_tvFirst;
-        logInfo('Video languages: ${_tvFirst ? 'the website' : 'the TV app'} gets no captions without a sign-in; asking ${_tvFirst ? 'the TV app' : 'the website'}');
-        return other.spoken;
-      }
-      _tvMisses++;
-      if (other != null && other.playable) read = other;
+    final other = await _fetch(id, tv: !_tvFirst);
+    if (other != null && other.spoken.heard) {
+      _tvFirst = !_tvFirst;
+      logInfo('Video languages: ${_tvFirst ? 'the TV app' : 'the website'} answers with captions where ${_tvFirst ? 'the website' : 'the TV app'} does not; asking it first');
+      return other.spoken;
     }
-    return read.spoken;
+    if (_compared == _compare) logInfo('Video languages: $_compare answers without captions had none asked whole or of the other app either');
+    return !read.playable && other != null && other.playable ? other.spoken : read.spoken;
   }
 
   static SpokenVideo _spoken(Map<String, dynamic> read) {
@@ -213,7 +224,7 @@ class VideoLanguages {
       asked++;
       pending.add(_Pending(of(item.id).then((spoken) {
         if (spoken == null || spoken.language == null) untold++;
-        told.update(spoken?.source ?? 'error', (n) => n + 1, ifAbsent: () => 1);
+        told.update(spoken == null ? 'error' : spoken.heard ? spoken.source : '${spoken.source} ${spoken.language?.name ?? '?'}', (n) => n + 1, ifAbsent: () => 1);
         if (spoken == null) return language.matches(item.title) ? line : null;
         if (spoken.language != language) return null;
         kept++;

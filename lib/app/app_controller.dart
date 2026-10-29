@@ -1454,18 +1454,27 @@ class AppController extends ChangeNotifier {
   /// searched as it is.
   Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language, {bool traditional = false}) {
     final target = traditional ? 'zh-TW' : language.code;
+    Future<String> translate(String text) => _google.translate(text, target).timeout(const Duration(seconds: 10));
     return Future.wait([
       for (final query in queries)
         if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language))
           Future.value(query)
         else
-          _google.translate(query, target).timeout(const Duration(seconds: 10)).then((words) {
-            logDebug(() => 'Explore searches "$query" in $target as "$words"');
-            return words.trim().isEmpty ? query : words;
-          }, onError: (Object e) {
-            logWarn('Could not translate the explore search "$query" into $target: $e');
-            return query;
-          }),
+          () async {
+            try {
+              final words = query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+              // Word by word, as a search wants keywords: "科技 数码 评测"
+              // as one sentence is "Revisione digitale della tecnologia",
+              // which finds next to nothing.
+              final lines = words.length > 1 ? (await translate(words.join('\n'))).split('\n') : const <String>[];
+              final translated = lines.length == words.length ? searchWordsOf(lines) : (await translate(query)).trim();
+              logDebug(() => 'Explore searches "$query" in $target as "$translated"');
+              return translated.isEmpty ? query : translated;
+            } catch (e) {
+              logWarn('Could not translate the explore search "$query" into $target: $e');
+              return query;
+            }
+          }(),
     ]);
   }
 

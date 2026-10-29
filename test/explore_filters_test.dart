@@ -116,4 +116,10 @@ void main() {
       expect(region.searchLanguage, isNot(ExploreLanguage.any), reason: region.name);
     }
   });
+
+  test('a search translated word by word keeps each word once', () {
+    expect(searchWordsOf(['giardinaggio', 'giardinaggio']), 'giardinaggio');
+    expect(searchWordsOf(['tavola rotonda', 'discussione', 'Tavola rotonda ', '']), 'tavola rotonda discussione');
+    expect(searchWordsOf(['tecnologia', 'digitale', 'recensione']), 'tecnologia digitale recensione');
+  });
 }

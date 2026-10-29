@@ -323,3 +323,13 @@ ExploreLanguage titleLanguage(String title) {
 }
 
 final _languages = <String, ExploreLanguage>{};
+
+/// One search from words translated one by one: each kept once, as
+/// "园艺 gardening" translates to the same word twice.
+String searchWordsOf(List<String> translated) {
+  final seen = <String>{};
+  return [
+    for (final words in translated)
+      if (words.trim().isNotEmpty && seen.add(words.trim().toLowerCase())) words.trim(),
+  ].join(' ');
+}

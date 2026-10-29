@@ -1420,7 +1420,11 @@ class AppController extends ChangeNotifier {
             final ui = youtubeHl.startsWith('zh') ? ExploreLanguage.any : ExploreLanguage.parse(youtubeHl.split('-').first);
             final regional = global ? ExploreLanguage.any : preferences.exploreRegion.searchLanguage;
             final wordsIn = language != ExploreLanguage.any ? language : regional != ExploreLanguage.any ? regional : ui;
-            final listing = wordsIn == ExploreLanguage.any ? search(queries) : Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn)));
+            // Taiwan and Hong Kong write traditional characters.
+            final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK');
+            final listing = wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional)
+                ? search(queries)
+                : Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional)));
             final languages = _videoLanguages;
             return spoken && languages != null ? listing.refined((lines) => languages.only(lines, language)) : listing;
           },
@@ -1440,21 +1444,25 @@ class AppController extends ChangeNotifier {
           ..loadMore());
   }
 
-  /// [queries] in [language], translated where they are in another; a
-  /// query that cannot be translated is searched as it is.
-  Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language) => Future.wait([
-        for (final query in queries)
-          if (query.trim().isEmpty || titleLanguage(query) == language)
-            Future.value(query)
-          else
-            _google.translate(query, language.code).timeout(const Duration(seconds: 10)).then((words) {
-              logInfo('Explore searches "$query" in ${language.code} as "$words"');
-              return words.trim().isEmpty ? query : words;
-            }, onError: (Object e) {
-              logInfo('Could not translate the explore search "$query" into ${language.code}: $e');
-              return query;
-            }),
-      ]);
+  /// [queries] in [language], translated where they are in another, or
+  /// into [traditional] characters; a query that cannot be translated is
+  /// searched as it is.
+  Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language, {bool traditional = false}) {
+    final target = traditional ? 'zh-TW' : language.code;
+    return Future.wait([
+      for (final query in queries)
+        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language))
+          Future.value(query)
+        else
+          _google.translate(query, target).timeout(const Duration(seconds: 10)).then((words) {
+            logInfo('Explore searches "$query" in $target as "$words"');
+            return words.trim().isEmpty ? query : words;
+          }, onError: (Object e) {
+            logInfo('Could not translate the explore search "$query" into $target: $e');
+            return query;
+          }),
+    ]);
+  }
 
   /// 全部's searches: zones of [section] picked at random each time, so
   /// every visit brings others. Personal picks are left to 为你推荐 on the

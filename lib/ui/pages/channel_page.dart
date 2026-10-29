@@ -210,7 +210,7 @@ class PostCommentsPanel extends StatelessWidget {
         if (post.text.isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text(post.text, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, height: 1.4)),
+            child: SelectionArea(child: Text(post.text, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, height: 1.4))),
           ),
         const Divider(height: 1),
         Expanded(

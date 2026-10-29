@@ -591,7 +591,7 @@ class _ReplayChatMessage extends StatelessWidget {
               if (message.amount != null) Text(message.amount!, style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w700)),
               if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: context.colors.outline, fontSize: 12))),
             ]),
-            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 3), child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis)))),
+            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 3), child: SelectionArea(child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis))))),
             if (message.stickerUrl != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),

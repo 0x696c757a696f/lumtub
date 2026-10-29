@@ -286,16 +286,18 @@ class _CommentTile extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-            if (comment.pinned) Text(tr('置顶'), style: small.copyWith(color: colors.primary)),
-            Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: comment.byUploader ? colors.primary : null)),
-            Text(comment.published, style: small),
-          ]),
+          SelectionArea(
+            child: Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+              if (comment.pinned) Text(tr('置顶'), style: small.copyWith(color: colors.primary)),
+              Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: comment.byUploader ? colors.primary : null)),
+              Text(comment.published, style: small),
+            ]),
+          ),
           const SizedBox(height: 4),
           Translatable(
             controller: controller,
             text: comment.text,
-            builder: (context, text) => LinkedText(text, style: const TextStyle(height: 1.45), emojis: comment.emojis, onTime: onSeek ?? (_) {}, onLink: openExternal),
+            builder: (context, text) => SelectionArea(child: LinkedText(text, style: const TextStyle(height: 1.45), emojis: comment.emojis, onTime: onSeek ?? (_) {}, onLink: openExternal)),
           ),
           const SizedBox(height: 4),
           Row(children: [

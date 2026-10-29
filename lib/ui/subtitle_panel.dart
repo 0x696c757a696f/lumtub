@@ -8,7 +8,8 @@ import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleKind, SubtitleOption;
 import '../subtitle_translation.dart';
 import '../speech_subtitles.dart' show SpeechNeedsFfmpeg;
-import '../translation.dart' show TranslationException;
+import '../player_settings.dart' show SubtitleLanguage;
+import '../translation.dart' show TranslationException, TranslationLanguage;
 import 'pages/translation_settings_page.dart' show openTranslationSettings;
 import 'player_panel.dart';
 import 'common.dart' show ErrorBanner;
@@ -106,33 +107,41 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final controller = widget.controller;
     final player = widget.player;
     final offered = controller.details?.subtitles ?? const <SubtitleOption>[];
-    final target = controller.settings.subtitleLanguage.translation;
-    // Only offered when the video has no subtitle of its own in 第一字幕语言.
-    final translation = hasOwnSubtitle(offered, target) ? null : translationOf(offered, target);
-    // The video's own language, at the top so it need not be looked for.
+    // The video's own language, at the top so it need not be looked for,
+    // then the interface's and Windows', each once.
     final spoken = originalSubtitle(offered, language: controller.details?.language);
+    final chosen = controller.settings.subtitleLanguage;
+    final interface = TranslationLanguage.maybeByCode(youtubeHl);
+    final near = languageRows(offered, spoken, [
+      if (interface != null) (tr('界面语言'), interface),
+      (tr('系统语言'), SubtitleLanguage.auto.translation),
+      if (chosen != SubtitleLanguage.auto) (tr('字幕语言'), chosen.translation),
+    ]);
+    final nearOptions = [for (final r in near) r.option];
     final labels = {for (final o in offered) o.label};
+    final nearLabels = {for (final o in nearOptions) o.label};
     // Tracks mpv has that the list above does not name, such as those
     // libmpv's ytdl_hook added or a downloaded video's files.
     final others = [
       for (final t in player.state.tracks.subtitle)
-        if (_real(t) && !labels.contains(t.title) && (translation == null || t.title != translation.label))
+        if (_real(t) && !labels.contains(t.title) && !nearLabels.contains(t.title))
           (key: 't:${t.id}', label: _trackLabel(t), detail: null, option: null, track: t) as _Choice,
     ];
     final main = player.state.track.subtitle;
-    final mainKey = !_real(main) ? 'off' : labels.contains(main.title) || main.title == translation?.label ? 'o:${main.title}' : 't:${main.id}';
+    final mainKey = !_real(main) ? 'off' : labels.contains(main.title) || nearLabels.contains(main.title) ? 'o:${main.title}' : 't:${main.id}';
     final secondary = controller.secondarySubtitle;
     // Being fetched or translated still: shown as on its way, not 关闭.
     final loading = controller.secondaryLoading;
     final secondaryKey = secondary == null ? (loading == null ? 'off' : 'o:${loading.label}') : 'o:${secondary.label}';
-    _options = {for (final o in [if (translation != null) translation, ...offered]) 'o:${o.label}': o};
+    _options = {for (final o in [...nearOptions, ...offered]) 'o:${o.label}': o};
+    bool listedAbove(SubtitleOption o) => identical(o, spoken) || nearOptions.any((n) => identical(n, o));
 
     final searching = _query.isNotEmpty;
     final groups = <(String, List<_Choice>)>[
       if (others.isNotEmpty) (tr('已加载'), others),
-      (tr('视频自带'), [for (final o in offered) if (o.kind == SubtitleKind.uploaded && (searching || !identical(o, spoken))) _ofOption(o)]),
-      (tr('自动生成'), [for (final o in offered) if (o.kind == SubtitleKind.automatic && (searching || !identical(o, spoken))) _ofOption(o)]),
-      (tr('语音识别'), [for (final o in offered) if (o.kind == SubtitleKind.speech && (searching || !identical(o, spoken))) _ofOption(o)]),
+      (tr('视频自带'), [for (final o in offered) if (o.kind == SubtitleKind.uploaded && (searching || !listedAbove(o))) _ofOption(o)]),
+      (tr('自动生成'), [for (final o in offered) if (o.kind == SubtitleKind.automatic && (searching || !listedAbove(o))) _ofOption(o)]),
+      (tr('语音识别'), [for (final o in offered) if (o.kind == SubtitleKind.speech && (searching || !listedAbove(o))) _ofOption(o)]),
     ];
     final translated = [for (final o in offered) if (o.kind == SubtitleKind.translated) _ofOption(o)];
     final theme = Theme.of(context);
@@ -191,7 +200,18 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
           child: ListView(padding: const EdgeInsets.only(bottom: 12), children: [
             row((key: 'off', label: tr('关闭'), detail: null, option: null, track: null), icon: Icons.block_rounded),
             if (spoken != null && !searching) row((key: 'o:${spoken.label}', label: tr('原语言：{0}', [spoken.label]), detail: null, option: spoken, track: null), icon: Icons.record_voice_over_outlined),
-            if (translation != null) row((key: 'o:${translation.label}', label: tr('{0}（YouTube 翻译）', [target.label]), detail: null, option: translation, track: null), icon: Icons.translate_rounded),
+            if (!searching)
+              for (final r in near)
+                row(
+                  (
+                    key: 'o:${r.option.label}',
+                    label: r.option.kind == SubtitleKind.translated ? tr('{0}：{1}（YouTube 翻译）', [r.name, r.language.label]) : tr('{0}：{1}', [r.name, r.option.label]),
+                    detail: null,
+                    option: r.option,
+                    track: null,
+                  ),
+                  icon: r.option.kind == SubtitleKind.translated ? Icons.translate_rounded : Icons.subtitles_outlined,
+                ),
             for (final (title, rows) in visible) ...[heading(title), for (final c in rows) row(c)],
             if (shownTranslated.isNotEmpty) ...[
               if (searching || _allLanguages) ...[heading(tr('YouTube 自动翻译')), for (final c in shownTranslated) row(c)]

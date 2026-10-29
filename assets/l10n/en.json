@@ -2767,5 +2767,15 @@
   "调试：再加上每一步细节和计时": "Debug: also every step and timing",
   "信息及以上": "Info and above",
   "警告及以上": "Warnings and above",
-  "只看错误": "Errors only"
+  "只看错误": "Errors only",
+  "界面语言": "Interface language",
+  "系统语言": "System language",
+  "字幕语言": "Subtitle language",
+  "{0}：{1}（YouTube 翻译）": "{0}: {1} (YouTube translation)",
+  "{0}：{1}": "{0}: {1}",
+  "只留下原声音轨或自动字幕确认是这种语言的视频，不靠标题和简介猜": "Only videos whose original audio track or automatic captions confirm the language, not guessed from the title and description",
+  "只看确认的原声": "Confirmed audio only",
+  "查了 {0} 个视频，没有{1}的": "Checked {0} videos, none in {1}",
+  "可以继续往下找，或者换个分类、放宽时长和地区": "Keep looking further, or try another category or a wider duration and region",
+  "继续找": "Keep looking"
 }

@@ -207,8 +207,8 @@ class _ExplorePageState extends State<ExplorePage> {
                 changed: controller.exploreDuration != SearchDuration.any,
                 onSelected: (v) => controller.setExplore(duration: v),
               ),
-            // 全球热门 leaves region and language out.
-            if (!topic.global) ...[
+            // 全球热门 is searched from no region; the language still applies.
+            if (!topic.global)
               OptionChip(
                 icon: Icons.public_rounded,
                 value: controller.preferences.exploreRegion,
@@ -218,16 +218,25 @@ class _ExplorePageState extends State<ExplorePage> {
                 changed: controller.preferences.exploreRegion != ExploreRegion.any,
                 onSelected: (v) => controller.setExplore(region: v),
               ),
-              OptionChip(
-                icon: Icons.translate_rounded,
-                value: controller.preferences.exploreLanguage,
-                values: ExploreLanguage.values,
-                label: (v) => v == ExploreLanguage.any ? tr('语言') : v.label,
-                item: (v) => v.label,
-                changed: controller.preferences.exploreLanguage != ExploreLanguage.any,
-                onSelected: (v) => controller.setExplore(language: v),
+            OptionChip(
+              icon: Icons.translate_rounded,
+              value: controller.preferences.exploreLanguage,
+              values: ExploreLanguage.values,
+              label: (v) => v == ExploreLanguage.any ? tr('语言') : v.label,
+              item: (v) => v.label,
+              changed: controller.preferences.exploreLanguage != ExploreLanguage.any,
+              onSelected: (v) => controller.setExplore(language: v),
+            ),
+            if (controller.preferences.exploreLanguage != ExploreLanguage.any)
+              Tooltip(
+                message: tr('只留下原声音轨或自动字幕确认是这种语言的视频，不靠标题和简介猜'),
+                child: FilterChip(
+                  avatar: const Icon(Icons.hearing_rounded, size: 18),
+                  label: Text(tr('只看确认的原声')),
+                  selected: controller.preferences.exploreHeardOnly,
+                  onSelected: (v) => controller.setExplore(heardOnly: v),
+                ),
               ),
-            ],
             OptionChip(
               icon: Icons.hd_outlined,
               value: controller.exploreQuality,
@@ -256,11 +265,23 @@ class _ExplorePageState extends State<ExplorePage> {
             child: ErrorBanner(items.isEmpty ? tr('无法加载：{0}', [error]) : tr('加载更多失败：{0}', [error]), onRetry: () => loader?.loadMore(retry: true)),
           )),
         if (items.isEmpty && !loading && error == null)
-          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.explore_outlined, title: switch (mode) {
-            ExploreMode.liveUpcoming => tr('这个分类暂时没有即将开始的直播'),
-            ExploreMode.liveReplay => tr('这个分类暂时没有直播回放'),
-            _ => live ? tr('这个分类现在没有直播') : tr('这个分类暂时没有视频'),
-          })),
+          if (controller.exploreLanguageCheck case final check? when check.asked > 0)
+            SliverFillRemaining(hasScrollBody: false, child: StatusView(
+              icon: Icons.translate_rounded,
+              title: tr('查了 {0} 个视频，没有{1}的', [check.asked, controller.preferences.exploreLanguage.label]),
+              message: tr('可以继续往下找，或者换个分类、放宽时长和地区'),
+              action: FilledButton.icon(
+                onPressed: controller.searchExploreFurther,
+                icon: const Icon(Icons.search_rounded),
+                label: Text(tr('继续找')),
+              ),
+            ))
+          else
+            SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.explore_outlined, title: switch (mode) {
+              ExploreMode.liveUpcoming => tr('这个分类暂时没有即将开始的直播'),
+              ExploreMode.liveReplay => tr('这个分类暂时没有直播回放'),
+              _ => live ? tr('这个分类现在没有直播') : tr('这个分类暂时没有视频'),
+            })),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );

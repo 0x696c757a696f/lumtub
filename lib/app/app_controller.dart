@@ -1248,9 +1248,12 @@ class AppController extends ChangeNotifier {
     WordFilter? view,
     ExploreRegion? region,
     ExploreLanguage? language,
+    bool? heardOnly,
   }) {
-    if ((region != null && region != preferences.exploreRegion) || (language != null && language != preferences.exploreLanguage)) {
-      unawaited(savePreferences(preferences.copyWith(exploreRegion: region, exploreLanguage: language)));
+    if ((region != null && region != preferences.exploreRegion) ||
+        (language != null && language != preferences.exploreLanguage) ||
+        (heardOnly != null && heardOnly != preferences.exploreHeardOnly)) {
+      unawaited(savePreferences(preferences.copyWith(exploreRegion: region, exploreLanguage: language, exploreHeardOnly: heardOnly)));
       explore?.dispose();
       explore = null;
     }
@@ -1355,13 +1358,17 @@ class AppController extends ChangeNotifier {
     final query = exploreQuery;
     final mode = exploreMode;
     final mix = exploreTopicNow.mix;
-    // 全球热门 is the same everywhere, whatever region and language are set.
+    // 全球热门 is searched from nowhere in particular; a language picked
+    // still applies.
     final global = exploreTopicNow.global;
-    final language = global ? ExploreLanguage.any : preferences.exploreLanguage;
+    final language = preferences.exploreLanguage;
     // With no region picked, a language is searched for from its home
     // country, where YouTube ranks its videos first.
     final picked = preferences.exploreRegion.gl;
     final region = global ? null : picked.isNotEmpty ? picked : language.homeCountry;
+    exploreLanguageCheck = null;
+    final depth = _exploreDepth;
+    _exploreDepth = 0;
     // Listed titles are machine-translated, so the language is asked of
     // each video instead (VideoLanguages).
     final spoken = language != ExploreLanguage.any && VideoLanguages.available && _videoLanguages != null;
@@ -1427,11 +1434,21 @@ class AppController extends ChangeNotifier {
             final wordsIn = language != ExploreLanguage.any ? language : regional != ExploreLanguage.any ? regional : ui;
             // Taiwan and Hong Kong write traditional characters.
             final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK');
-            final listing = wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional)
+            // A zone of the user's own is searched as they wrote it: its
+            // words are not sent to be translated.
+            final listing = wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional) || exploreTopicNow.custom
                 ? search(queries)
                 : Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional)));
             final languages = _videoLanguages;
-            return spoken && languages != null ? listing.refined((lines) => languages.only(lines, language)) : listing;
+            return spoken && languages != null
+                ? listing.refined((lines) => languages.only(
+                      lines,
+                      language,
+                      heardOnly: preferences.exploreHeardOnly,
+                      giveUpAfter: VideoLanguages.giveUpAfterDefault * (depth + 1),
+                      done: (asked, kept) => _update(() => exploreLanguageCheck = (asked: asked, kept: kept)),
+                    ))
+                : listing;
           },
           where: where,
           fill: switch (mode) {
@@ -1489,6 +1506,23 @@ class AppController extends ChangeNotifier {
     ]..shuffle(random);
     final filter = [exploreFormat.words, exploreView.words].where((w) => w.isNotEmpty).join(' ');
     return [for (final query in zones.take(6)) filter.isEmpty ? query : '$query $filter'];
+  }
+
+  /// How many videos the explore language filter asked about and kept,
+  /// once it stopped; null while it is still looking or with no language.
+  ({int asked, int kept})? exploreLanguageCheck;
+
+  /// How many times further the next explore load may look for videos in
+  /// the language picked.
+  int _exploreDepth = 0;
+
+  /// Looks again, further down the search, after the language filter
+  /// found none.
+  void searchExploreFurther() {
+    // Answers kept on disk come back at once, so going over the same
+    // videos again costs little.
+    _exploreDepth = (exploreLanguageCheck?.asked ?? 0) ~/ VideoLanguages.giveUpAfterDefault;
+    refreshExplore();
   }
 
   /// Shows 全部 or the zone shown with other videos.

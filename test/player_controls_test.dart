@@ -186,11 +186,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('第一字幕'), findsOneWidget);
     expect(find.text('第二字幕（上方）'), findsOneWidget);
-    expect(find.text('视频自带'), findsNWidgets(2));
-    // The automatic Japanese is the video's own language, first on each side.
+    // The automatic Japanese is the video's own language, first on each
+    // side; then the interface's language and Windows' (English here),
+    // the video's own English subtitle standing for it.
     expect(find.text('原语言：日语（自动生成）'), findsNWidgets(2));
+    expect(find.text('界面语言：简体中文（YouTube 翻译）'), findsNWidgets(2));
+    expect(find.textContaining('系统语言：'), findsNWidgets(2));
+    expect(find.text('视频自带'), findsNothing);
     expect(find.text('自动生成'), findsNothing);
-    expect(find.text('简体中文（YouTube 翻译）'), findsNWidgets(2));
     // YouTube's translations wait behind a button on each side.
     expect(find.textContaining('法语'), findsNothing);
     await tester.tap(find.textContaining('更多语言').first);

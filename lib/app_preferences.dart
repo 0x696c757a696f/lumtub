@@ -57,6 +57,7 @@ class AppPreferences {
     this.hideShorts = false,
     this.aiFilter = AiFilterMode.off,
     this.logLevel = LogLevel.info,
+    this.exploreHeardOnly = false,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
     this.blockGroups = true,
@@ -139,6 +140,10 @@ class AppPreferences {
 
   /// How much goes into the log.
   final LogLevel logLevel;
+
+  /// With a language picked in explore, only videos whose audio or
+  /// automatic captions confirm it, not their title and description.
+  final bool exploreHeardOnly;
   final int minDurationMinutes;
   final bool hideWatched;
   /// Hides the groups in blocked_groups.dart from recommendations, explore
@@ -341,6 +346,7 @@ class AppPreferences {
     bool? hideShorts,
     AiFilterMode? aiFilter,
     LogLevel? logLevel,
+    bool? exploreHeardOnly,
     int? minDurationMinutes,
     bool? hideWatched,
     bool? blockGroups,
@@ -411,6 +417,7 @@ class AppPreferences {
         hideShorts: hideShorts ?? this.hideShorts,
         aiFilter: aiFilter ?? this.aiFilter,
         logLevel: logLevel ?? this.logLevel,
+        exploreHeardOnly: exploreHeardOnly ?? this.exploreHeardOnly,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
         blockGroups: blockGroups ?? this.blockGroups,
@@ -482,6 +489,7 @@ class AppPreferences {
         'hideShorts': hideShorts,
         'aiFilter': aiFilter.name,
         'logLevel': logLevel.name,
+        'exploreHeardOnly': exploreHeardOnly,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
         'blockGroups': blockGroups,
@@ -592,6 +600,7 @@ class AppPreferences {
       hideShorts: flag('hideShorts', d.hideShorts),
       aiFilter: AiFilterMode.parse(raw['aiFilter']),
       logLevel: LogLevel.parse(raw['logLevel']),
+      exploreHeardOnly: flag('exploreHeardOnly', d.exploreHeardOnly),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
       blockGroups: flag('blockGroups', d.blockGroups),

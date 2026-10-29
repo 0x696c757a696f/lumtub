@@ -38,7 +38,7 @@ class VideoLanguages {
   /// Lookups running at once.
   static const parallel = 6;
   static const _kept = 20000;
-  static const _giveUpAfter = 240;
+  static const giveUpAfterDefault = 240;
 
   static const _fields = 'videoDetails.title,videoDetails.shortDescription,captions.playerCaptionsTracklistRenderer.captionTracks.languageCode,'
       'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack,playabilityStatus.status';
@@ -189,7 +189,10 @@ class VideoLanguages {
     unawaited(Isolate.run(() {
       final out = File(path);
       out.parent.createSync(recursive: true);
-      out.writeAsStringSync(jsonEncode(raw));
+      // Written beside and then swapped in, so a crash mid-write leaves
+      // the last whole file.
+      final next = File('$path.tmp')..writeAsStringSync(jsonEncode(raw), flush: true);
+      next.renameSync(path);
     }).catchError((Object e) => logWarn('Could not save video languages: $e')));
   }
 
@@ -200,7 +203,17 @@ class VideoLanguages {
   /// language could not be asked is judged by its listed title. Each line
   /// goes out as soon as its answer is in, a few lookups ahead of the
   /// reader.
-  Stream<String> only(Stream<String> lines, ExploreLanguage language) async* {
+  ///
+  /// With [heardOnly], a video only passes when its audio or automatic
+  /// captions say so. After [giveUpAfter] videos with none kept, it stops;
+  /// [done] hears how many were asked about and kept.
+  Stream<String> only(
+    Stream<String> lines,
+    ExploreLanguage language, {
+    bool heardOnly = false,
+    int giveUpAfter = giveUpAfterDefault,
+    void Function(int asked, int kept)? done,
+  }) async* {
     final pending = <_Pending>[];
     var asked = 0, kept = 0, untold = 0;
     final told = <String, int>{};
@@ -220,13 +233,13 @@ class VideoLanguages {
         continue;
       }
       // Nothing in the first few hundred: the search found none to show.
-      if (asked >= _giveUpAfter && kept == 0) break;
+      if (asked >= giveUpAfter && kept == 0) break;
       asked++;
       pending.add(_Pending(of(item.id).then((spoken) {
         if (spoken == null || spoken.language == null) untold++;
         told.update(spoken == null ? 'error' : spoken.heard ? spoken.source : '${spoken.source} ${spoken.language?.name ?? '?'}', (n) => n + 1, ifAbsent: () => 1);
         if (spoken == null) return language.matches(item.title) ? line : null;
-        if (spoken.language != language) return null;
+        if (spoken.language != language || (heardOnly && !spoken.heard)) return null;
         kept++;
         if (spoken.title.isEmpty || spoken.title == item.title) return line;
         return jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
@@ -242,6 +255,7 @@ class VideoLanguages {
       yield* Stream.fromIterable(ready());
     }
     } finally {
+      done?.call(asked, kept);
       if (asked > 0) {
         final by = [for (final MapEntry(:key, :value) in told.entries) '$key $value'].join(', ');
         logInfo('Language ${language.name}: kept $kept of $asked videos ($untold not told; by $by)');

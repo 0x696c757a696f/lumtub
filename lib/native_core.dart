@@ -41,6 +41,8 @@ class NativeCore {
         fileSha256 = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_file_sha256'),
         youtubeNext = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_next'),
         spokenLanguage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_spoken_language'),
+        aiLabel = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_ai_label'),
+        aiChannels = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_ai_channels'),
         youtubeComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_comments'),
         youtubePosts = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_posts'),
         liveChat = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_live_chat'),
@@ -102,6 +104,10 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeNext;
   /// The spoken language and own title of a YouTube `/player` response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) spokenLanguage;
+  /// Whether a YouTube `/next` response labels the video as made with AI.
+  final Pointer<Utf8> Function(Pointer<Uint8> body, int length) aiLabel;
+  /// The channel ids and handles of KillSlop's AI channel list.
+  final Pointer<Utf8> Function(Pointer<Uint8> body, int length) aiChannels;
   /// A page of a YouTube comments response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeComments;
   /// Posts of a browse response or a posts tab's HTML.

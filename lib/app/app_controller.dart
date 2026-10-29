@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../ai_filter.dart';
 import '../app_directories.dart';
 import '../app_updater.dart';
 import '../app_log.dart';
@@ -438,6 +439,7 @@ class AppController extends ChangeNotifier {
   bool _updateCheckedForChallenge = false;
   /// The spoken language of explore's videos, for its language filter.
   VideoLanguages? _videoLanguages;
+  AiFilter? _aiFilter;
 
   int _lastDrops = 0;
 
@@ -764,6 +766,12 @@ class AppController extends ChangeNotifier {
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
         _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}video_languages.json'));
+        _aiFilter = AiFilter(
+          _http,
+          labelsFile: File('${directories.cache.path}${Platform.pathSeparator}ai_labels.json'),
+          channelsFile: File('${directories.cache.path}${Platform.pathSeparator}ai_channels.json'),
+        )..addListener(_passOn('AI filter'));
+        unawaited(_aiFilter!.setMode(preferences.aiFilter));
         downloads = _downloadsFor(paths, directories)..addListener(_passOn('downloads'));
         final library = this.library = LibraryController(libraryStore, client: _http)
           ..repository = _repository
@@ -3678,9 +3686,16 @@ class AppController extends ChangeNotifier {
     // Pages filter their lists on every rebuild, and a feed runs to a
     // thousand items: the answer is kept while the list and the preferences
     // stay. Hiding watched videos also follows which videos are finished.
-    final key = (prefs, subscriptions, search, search ? _query : null, prefs.hideWatched ? (library?.store, library?.store.finishedVersion) : null);
+    final ai = _aiFilter;
+    final key = (prefs, subscriptions, search, search ? _query : null, prefs.hideWatched ? (library?.store, library?.store.finishedVersion) : null, ai?.version);
     if (_visible[items] case (final known, final kept) when known == key) return kept;
-    final kept = _filter(items, prefs, subscriptions: subscriptions, search: search);
+    var kept = _filter(items, prefs, subscriptions: subscriptions, search: search);
+    // Subscribed channels are the viewer's own choice.
+    if (ai != null && ai.mode != AiFilterMode.off && !subscriptions) {
+      bool followed(VideoItem item) => item.channelId != null && (library?.isFollowing(item.channelId!) ?? false);
+      kept = [for (final item in kept) if (followed(item) || !ai.hides(item)) item];
+      ai.check(kept.where((item) => !followed(item)));
+    }
     _visible[items] = (key, kept);
     return kept;
   }
@@ -3703,6 +3718,7 @@ class AppController extends ChangeNotifier {
     final service = next.translation != preferences.translation;
     _update(() => preferences = next);
     if (service) _useTranslator();
+    unawaited(_aiFilter?.setMode(next.aiFilter));
     try {
       await _preferencesStore?.save(next);
     } on FileSystemException {

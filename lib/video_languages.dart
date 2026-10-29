@@ -29,7 +29,8 @@ class VideoLanguages {
   static const parallel = 6;
   static const _kept = 20000;
 
-  static const _fields = 'videoDetails(title,shortDescription),captions.playerCaptionsTracklistRenderer.captionTracks(languageCode,kind),streamingData.adaptiveFormats.audioTrack';
+  static const _fields = 'videoDetails.title,videoDetails.shortDescription,captions.playerCaptionsTracklistRenderer.captionTracks.languageCode,'
+      'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack';
   late final _probe = YoutubePlayerProbe(_client);
 
   Map<String, SpokenVideo>? _known;
@@ -52,16 +53,16 @@ class VideoLanguages {
     }
     _running++;
     try {
-      final found = await _ask(id);
-      if (found != null) {
-        if (known.length >= _kept) known.remove(known.keys.first);
-        known[id] = found;
-        _save ??= Timer(const Duration(seconds: 5), _write);
-      }
-      return found;
-    } catch (e) {
-      logInfo('Could not tell the language of $id: $e');
-      return null;
+        final found = await _ask(id);
+        if (found != null) {
+          if (known.length >= _kept) known.remove(known.keys.first);
+          known[id] = found;
+          _save ??= Timer(const Duration(seconds: 5), _write);
+        }
+        return found;
+      } catch (e) {
+        logInfo('Could not tell the language of $id: $e');
+        return null;
     } finally {
       _running--;
       if (_waiting.isNotEmpty) _waiting.removeAt(0).complete();
@@ -69,7 +70,7 @@ class VideoLanguages {
   }
 
   Future<SpokenVideo?> _ask(String id) async {
-    final read = await _readInBackground(await _probe.fetch(id, _fields));
+    final read = await _readInBackground(await _probe.fetch(id, _fields, expect: 'videoDetails'));
     if (read is! Map<String, dynamic>) return null;
     return _spoken(read);
   }
@@ -144,6 +145,7 @@ class VideoLanguages {
   /// out as soon as its answer is in, a few lookups ahead of the reader.
   Stream<String> only(Stream<String> lines, ExploreLanguage language) async* {
     final pending = <_Pending>[];
+    var asked = 0, kept = 0, untold = 0, byTitle = 0;
     Iterable<String> ready() sync* {
       for (final entry in [...pending]) {
         if (!entry.done) continue;
@@ -152,6 +154,7 @@ class VideoLanguages {
       }
     }
 
+    try {
     await for (final line in lines) {
       final item = parseListingEntry(line);
       if (item is! VideoItem) {
@@ -160,12 +163,19 @@ class VideoLanguages {
       }
       final listed = titleLanguage(item.title);
       if (listed != ExploreLanguage.en && listed != ExploreLanguage.any) {
-        if (listed == language) yield line;
+        byTitle++;
+        if (listed == language) {
+          kept++;
+          yield line;
+        }
         continue;
       }
+      asked++;
       pending.add(_Pending(of(item.id).then((spoken) {
+        if (spoken == null || spoken.language == null) untold++;
         if (spoken == null) return language.matches(item.title) ? line : null;
         if (spoken.language != language) return null;
+        kept++;
         if (spoken.title.isEmpty || spoken.title == item.title) return line;
         return jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
       })));
@@ -178,6 +188,9 @@ class VideoLanguages {
     while (pending.isNotEmpty) {
       await Future.any(pending.map((entry) => entry.future));
       yield* Stream.fromIterable(ready());
+    }
+    } finally {
+      if (asked + byTitle > 0) logInfo('Language ${language.name}: kept $kept of ${asked + byTitle} videos ($byTitle by listed title, $asked asked, $untold not told)');
     }
   }
 }

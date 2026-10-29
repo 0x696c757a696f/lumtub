@@ -57,4 +57,25 @@ void main() {
     expect(asked, 0, reason: 'answers are kept');
     folder.deleteSync(recursive: true);
   }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
+
+  test('asks for whole answers when the field mask leaves the video out', () async {
+    var masked = 0, whole = 0;
+    final client = MockClient((request) async {
+      if (request.headers.containsKey('X-Goog-FieldMask')) {
+        masked++;
+        return http.Response('{}', 200);
+      }
+      whole++;
+      return http.Response.bytes(utf8.encode(jsonEncode(players['aaaaaaaaaaa'])), 200);
+    });
+    final languages = VideoLanguages(client);
+    final kept = await languages.only(Stream.fromIterable([_video('aaaaaaaaaaa', 'Chengdu food trip'), _video('fffffffffff', 'Another trip')]), ExploreLanguage.zh).toList();
+    expect([for (final line in kept) (jsonDecode(line) as Map)['title']], ['成都美食之旅', '成都美食之旅']);
+    expect(whole, 2);
+    // The two lookups ran together; later ones skip the mask.
+    final before = masked;
+    await languages.only(Stream.fromIterable([_video('ggggggggggg', 'A third trip')]), ExploreLanguage.zh).toList();
+    expect(masked, before, reason: 'the mask is dropped after it left the video out');
+    expect(whole, 3);
+  }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
 }

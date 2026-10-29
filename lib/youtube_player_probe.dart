@@ -13,14 +13,16 @@ class YoutubePlayerProbe {
 
   final http.Client _client;
 
-  /// Whether YouTube takes a field mask; when it refuses one, whole
-  /// answers are asked for from then on.
+  /// Endpoints and masks YouTube refused or answered without what they
+  /// ask for; whole answers are asked for from then on.
   static final _refused = <String>{};
 
   /// The answer's bytes, cut down to [fields] (an `X-Goog-FieldMask`)
-  /// where YouTube allows it.
-  Future<List<int>> fetch(String id, String? fields, {String endpoint = 'player'}) async {
-    final masked = fields != null && !_refused.contains(endpoint);
+  /// where YouTube allows it. With [expect], a masked answer that lacks
+  /// that key is asked again whole, and when the whole one has it the mask
+  /// is dropped from then on.
+  Future<List<int>> fetch(String id, String? fields, {String endpoint = 'player', String? expect}) async {
+    final masked = fields != null && !_refused.contains(endpoint) && !_refused.contains('$endpoint $fields');
     final response = await _client
         .post(
           Uri.parse('https://www.youtube.com/youtubei/v1/$endpoint?prettyPrint=false'),
@@ -43,6 +45,14 @@ class YoutubePlayerProbe {
       return fetch(id, fields, endpoint: endpoint);
     }
     if (response.statusCode != 200) throw StateError('$endpoint answered HTTP ${response.statusCode}');
+    if (masked && expect != null && !utf8.decode(response.bodyBytes, allowMalformed: true).contains('"$expect"')) {
+      final whole = await fetch(id, null, endpoint: endpoint);
+      if (utf8.decode(whole, allowMalformed: true).contains('"$expect"')) {
+        _refused.add('$endpoint $fields');
+        logInfo('The /$endpoint field mask left out $expect; asking for whole answers');
+      }
+      return whole;
+    }
     return response.bodyBytes;
   }
 }

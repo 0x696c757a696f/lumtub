@@ -312,7 +312,7 @@ class LibraryController extends ChangeNotifier {
     if (checked.isEmpty) return;
     final states = await mapLimited(checked, 6, (item) async {
       try {
-        return await liveStateOf(await _probe.fetch(item.id, 'videoDetails(isLive,isUpcoming)'));
+        return await liveStateOf(await _probe.fetch(item.id, 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming', expect: 'videoDetails'));
       } catch (_) {
         return item.liveStatus;
       }

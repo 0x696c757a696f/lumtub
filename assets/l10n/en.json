@@ -2757,5 +2757,6 @@
   "AI 人工智能 生成 合成 屏蔽": "AI artificial intelligence generated synthetic hide",
   "隐藏 YouTube 标为 AI 生成的视频": "Hide videos YouTube labels as made with AI",
   "同上，再隐藏已知的 AI 量产频道": "Also hide known AI content-farm channels",
-  "当前：{0}。在首页、搜索、探索、相关视频和频道里生效，已订阅的频道不受影响；每个视频向 YouTube 查询一次 AI 标记。AI 频道列表来自 KillSlop（killslop.app，CC BY-SA 4.0）和 AiSList（CC BY-NC 4.0），每天下载更新": "Now: {0}. Applies to Home, search, Explore, related videos and channels; subscribed channels are not affected. Each video is checked once with YouTube for its AI label. The AI channel lists come from KillSlop (killslop.app, CC BY-SA 4.0) and AiSList (CC BY-NC 4.0) and are downloaded daily"
+  "当前：{0}。在首页、搜索、探索、相关视频和频道里生效，已订阅的频道不受影响；每个视频向 YouTube 查询一次 AI 标记。AI 频道列表来自 KillSlop（killslop.app，CC BY-SA 4.0）和 AiSList（CC BY-NC 4.0），每天下载更新": "Now: {0}. Applies to Home, search, Explore, related videos and channels; subscribed channels are not affected. Each video is checked once with YouTube for its AI label. The AI channel lists come from KillSlop (killslop.app, CC BY-SA 4.0) and AiSList (CC BY-NC 4.0) and are downloaded daily",
+  "澳门": "Macau"
 }

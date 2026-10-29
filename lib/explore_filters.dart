@@ -55,6 +55,7 @@ enum ExploreRegion {
   cn('中国大陆', 'CN'),
   tw('台湾', 'TW'),
   hk('香港', 'HK'),
+  mo('澳门', 'MO'),
   jp('日本', 'JP'),
   kr('韩国', 'KR'),
   // Southeast Asia
@@ -181,7 +182,7 @@ enum ExploreRegion {
   /// videos; English where explore offers no language of the region's.
   ExploreLanguage get searchLanguage => switch (gl) {
         '' => ExploreLanguage.any,
-        'CN' || 'TW' || 'HK' => ExploreLanguage.zh,
+        'CN' || 'TW' || 'HK' || 'MO' => ExploreLanguage.zh,
         'JP' => ExploreLanguage.ja,
         'KR' => ExploreLanguage.ko,
         'MY' => ExploreLanguage.ms,

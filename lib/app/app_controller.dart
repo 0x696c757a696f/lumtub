@@ -1420,8 +1420,8 @@ class AppController extends ChangeNotifier {
             final ui = youtubeHl.startsWith('zh') ? ExploreLanguage.any : ExploreLanguage.parse(youtubeHl.split('-').first);
             final regional = global ? ExploreLanguage.any : preferences.exploreRegion.searchLanguage;
             final wordsIn = language != ExploreLanguage.any ? language : regional != ExploreLanguage.any ? regional : ui;
-            // Taiwan and Hong Kong write traditional characters.
-            final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK');
+            // Taiwan, Hong Kong and Macau write traditional characters.
+            final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK' || region == 'MO');
             final listing = wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional)
                 ? search(queries)
                 : Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional)));

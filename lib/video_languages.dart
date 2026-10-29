@@ -26,8 +26,11 @@ class VideoLanguages {
   final File? file;
 
   /// Lookups running at once.
-  static const parallel = 4;
+  static const parallel = 6;
   static const _kept = 20000;
+
+  static const _fields = 'videoDetails(title,shortDescription),captions.playerCaptionsTracklistRenderer.captionTracks(languageCode,kind),streamingData.adaptiveFormats.audioTrack';
+  static bool _masked = true;
 
   Map<String, SpokenVideo>? _known;
   final _waiting = <Completer<void>>[];
@@ -40,7 +43,7 @@ class VideoLanguages {
   /// a null language when nothing in the video tells, and
   /// [ExploreLanguage.any] for a language explore does not offer.
   Future<SpokenVideo?> of(String id) async {
-    final known = _known ??= _load();
+    final known = _known ??= await (_loading ??= _load());
     if (known[id] case final found?) return found;
     while (_running >= parallel) {
       final turn = Completer<void>();
@@ -69,7 +72,11 @@ class VideoLanguages {
     final response = await _client
         .post(
           Uri.parse('https://www.youtube.com/youtubei/v1/player?prettyPrint=false'),
-          headers: YoutubeWeb.apiHeaders(),
+          headers: {
+            ...YoutubeWeb.apiHeaders(),
+            // Only the few fields read, instead of a few hundred kilobytes.
+            if (_masked) 'X-Goog-FieldMask': _fields,
+          },
           body: jsonEncode({
             'context': {
               'client': {'clientName': 'WEB', 'clientVersion': YoutubeWeb.clientVersion, 'hl': 'en', 'timeZone': 'UTC', 'utcOffsetMinutes': 0},
@@ -78,6 +85,11 @@ class VideoLanguages {
           }),
         )
         .timeout(const Duration(seconds: 15));
+    if (response.statusCode == 400 && _masked) {
+      _masked = false;
+      logInfo('YouTube refused the field mask for /player; asking for whole answers');
+      return _ask(id);
+    }
     if (response.statusCode != 200) throw StateError('player answered HTTP ${response.statusCode}');
     final read = await _readInBackground(response.bodyBytes);
     if (read is! Map<String, dynamic>) return null;
@@ -100,18 +112,24 @@ class VideoLanguages {
         return jsonDecode(core.take(core.withBytes(bytes, core.spokenLanguage)) ?? 'null');
       });
 
-  Map<String, SpokenVideo> _load() {
-    final file = this.file;
-    if (file == null || !file.existsSync()) return {};
-    try {
-      final raw = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
-      return {
-        for (final MapEntry(:key, :value) in raw.entries)
-          if (value is Map<String, dynamic>) key: _spoken(value),
-      };
-    } catch (_) {
-      return {};
-    }
+  Future<Map<String, SpokenVideo>>? _loading;
+
+  Future<Map<String, SpokenVideo>> _load() async {
+    final path = file?.path;
+    if (path == null) return {};
+    return Isolate.run(() {
+      final file = File(path);
+      if (!file.existsSync()) return <String, SpokenVideo>{};
+      try {
+        final raw = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+        return {
+          for (final MapEntry(:key, :value) in raw.entries)
+            if (value is Map<String, dynamic>) key: _spoken(value),
+        };
+      } catch (_) {
+        return <String, SpokenVideo>{};
+      }
+    });
   }
 
   void _write() {
@@ -130,50 +148,73 @@ class VideoLanguages {
           'title': value.title,
         },
     };
-    try {
-      file.parent.createSync(recursive: true);
-      file.writeAsStringSync(jsonEncode(raw));
-    } catch (e) {
-      logInfo('Could not save video languages: $e');
-    }
+    final path = file.path;
+    // Thousands of answers: encoded and written off the UI thread.
+    unawaited(Isolate.run(() {
+      final out = File(path);
+      out.parent.createSync(recursive: true);
+      out.writeAsStringSync(jsonEncode(raw));
+    }).catchError((Object e) => logInfo('Could not save video languages: $e')));
   }
 
   /// The lines of [lines] whose videos are spoken in [language], each
-  /// with the title the uploader wrote; channels and playlists pass. A
-  /// video whose language could not be asked is judged by its listed
-  /// title, as before. Lookups run ahead of the reader, in order.
+  /// with the title the uploader wrote; channels and playlists pass.
+  /// Listed titles are only ever translated into English, so a title in
+  /// any other language is the uploader's own and decides at once; only
+  /// English-looking titles are asked about. A video whose language could
+  /// not be asked is judged by its listed title, as before. Each line goes
+  /// out as soon as its answer is in, a few lookups ahead of the reader.
   Stream<String> only(Stream<String> lines, ExploreLanguage language) async* {
-    final ahead = <(Map<String, dynamic>?, String, Future<SpokenVideo?>?)>[];
-    Stream<String> settle(int keep) async* {
-      while (ahead.length > keep) {
-        final (entry, line, lookup) = ahead.removeAt(0);
-        if (entry == null || lookup == null) {
-          yield line;
-          continue;
-        }
-        final spoken = await lookup;
-        if (spoken == null) {
-          if (language.matches(entry['title']?.toString() ?? '')) yield line;
-          continue;
-        }
-        if (spoken.language != language) continue;
-        if (spoken.title.isNotEmpty && spoken.title != entry['title']) {
-          yield jsonEncode({...entry, 'title': spoken.title});
-        } else {
-          yield line;
-        }
+    final pending = <_Pending>[];
+    Iterable<String> ready() sync* {
+      for (final entry in [...pending]) {
+        if (!entry.done) continue;
+        pending.remove(entry);
+        if (entry.out case final line?) yield line;
       }
     }
 
     await for (final line in lines) {
       final item = parseListingEntry(line);
-      if (item is VideoItem) {
-        ahead.add((jsonDecode(line) as Map<String, dynamic>, line, of(item.id)));
-      } else {
-        ahead.add((null, line, null));
+      if (item is! VideoItem) {
+        yield line;
+        continue;
       }
-      yield* settle(parallel * 2);
+      final listed = titleLanguage(item.title);
+      if (listed != ExploreLanguage.en && listed != ExploreLanguage.any) {
+        if (listed == language) yield line;
+        continue;
+      }
+      pending.add(_Pending(of(item.id).then((spoken) {
+        if (spoken == null) return language.matches(item.title) ? line : null;
+        if (spoken.language != language) return null;
+        if (spoken.title.isEmpty || spoken.title == item.title) return line;
+        return jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
+      })));
+      yield* Stream.fromIterable(ready());
+      while (pending.length >= parallel * 3) {
+        await Future.any(pending.map((entry) => entry.future));
+        yield* Stream.fromIterable(ready());
+      }
     }
-    yield* settle(0);
+    while (pending.isNotEmpty) {
+      await Future.any(pending.map((entry) => entry.future));
+      yield* Stream.fromIterable(ready());
+    }
   }
+}
+
+/// A line waiting for its video's language: [out] is the line to pass on,
+/// null when the video is left out.
+class _Pending {
+  _Pending(Future<String?> answer) {
+    future = answer.then((line) {
+      out = line;
+      done = true;
+    });
+  }
+
+  late final Future<void> future;
+  bool done = false;
+  String? out;
 }

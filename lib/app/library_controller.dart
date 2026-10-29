@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -11,6 +13,7 @@ import '../map_limited.dart';
 import '../models.dart';
 import '../native_http.dart';
 import '../video_repository.dart';
+import '../youtube_player_probe.dart';
 
 export '../map_limited.dart';
 
@@ -287,6 +290,55 @@ class LibraryController extends ChangeNotifier {
     _feedLoadedAt = DateTime.now();
     notifyListeners();
     unawaited(fillMissingAvatars());
+    await _markLive();
+  }
+
+  /// Videos that were live or about to go live at the last look; they are
+  /// looked at again even once they are older than [liveWindow].
+  final _liveSeen = <String>{};
+
+  /// How recent a feed video has to be to be checked for being live: a
+  /// stream shows in the feed from when it is scheduled.
+  static const liveWindow = Duration(days: 2);
+
+  late final _probe = YoutubePlayerProbe(_client);
+
+  /// Marks the feed's videos that are live now or about to be: channel
+  /// feeds do not say, so each recent video is asked, a few at a time.
+  Future<void> _markLive() async {
+    final since = DateTime.now().subtract(liveWindow);
+    final current = feed;
+    final checked = [for (final item in current) if (_liveSeen.contains(item.id) || (item.published?.isAfter(since) ?? false)) item];
+    if (checked.isEmpty) return;
+    final states = await mapLimited(checked, 6, (item) async {
+      try {
+        return await liveStateOf(await _probe.fetch(item.id, 'videoDetails(isLive,isUpcoming)'));
+      } catch (_) {
+        return item.liveStatus;
+      }
+    });
+    final found = {for (final (i, item) in checked.indexed) item.id: states[i]};
+    _liveSeen
+      ..clear()
+      ..addAll([for (final MapEntry(:key, :value) in found.entries) if (value == 'is_live' || value == 'is_upcoming') key]);
+    if (!identical(feed, current)) return;
+    var changed = false;
+    final marked = <VideoItem>[];
+    for (final item in current) {
+      var state = found.containsKey(item.id) ? found[item.id] : item.liveStatus;
+      // A stream that was on and is not any more has ended.
+      if (state == null && (item.isLive || item.isUpcoming)) state = 'was_live';
+      if (state == null && item.liveStatus == 'was_live') state = 'was_live';
+      if (state != item.liveStatus) {
+        changed = true;
+        marked.add(item.withLiveStatus(state));
+      } else {
+        marked.add(item);
+      }
+    }
+    if (!changed) return;
+    feed = marked;
+    notifyListeners();
   }
 
   /// Looks up the picture of each followed channel that has none, a few at a
@@ -344,4 +396,17 @@ class LibraryController extends ChangeNotifier {
     if (_saveTimer != null) unawaited(flush());
     super.dispose();
   }
+}
+
+/// `is_live`, `is_upcoming` or null, from a `/player` answer's
+/// `videoDetails`.
+Future<String?> liveStateOf(List<int> bytes) async {
+  // A whole answer, when YouTube refused the field mask, runs to a few
+  // hundred kilobytes.
+  final data = bytes.length > 64 * 1024 ? await Isolate.run(() => jsonDecode(utf8.decode(bytes))) : jsonDecode(utf8.decode(bytes));
+  final details = data is Map<String, dynamic> ? data['videoDetails'] : null;
+  if (details is! Map<String, dynamic>) return null;
+  if (details['isLive'] == true) return 'is_live';
+  if (details['isUpcoming'] == true) return 'is_upcoming';
+  return null;
 }

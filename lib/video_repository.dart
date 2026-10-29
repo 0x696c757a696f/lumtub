@@ -71,6 +71,10 @@ class Listing {
 
   bool get done => _done;
 
+  /// This listing with its lines passed through [refine] first, such as
+  /// to keep only videos in one language.
+  Listing refined(Stream<String> Function(Stream<String> lines) refine) => Listing(() => refine(_open()), channel: channel, timeout: timeout, idleTimeout: idleTimeout);
+
   /// Up to [count] more entries, each a [VideoItem] or [ChannelResult].
   /// Fails when the source ends with an error before listing anything or
   /// stalls; other errors after the first entries end the listing.

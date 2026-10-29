@@ -40,6 +40,7 @@ class NativeCore {
         dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
         fileSha256 = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_file_sha256'),
         youtubeNext = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_next'),
+        spokenLanguage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_spoken_language'),
         youtubeComments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_comments'),
         youtubePosts = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_posts'),
         liveChat = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_live_chat'),
@@ -99,6 +100,8 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> path, int length) fileSha256;
   /// Related videos and localized text of a YouTube `/next` response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeNext;
+  /// The spoken language and own title of a YouTube `/player` response.
+  final Pointer<Utf8> Function(Pointer<Uint8> body, int length) spokenLanguage;
   /// A page of a YouTube comments response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeComments;
   /// Posts of a browse response or a posts tab's HTML.

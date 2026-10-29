@@ -6,6 +6,7 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 use std::os::raw::c_char;
 
+use crate::filter::{title_language, Language};
 use crate::taste::{give_json, text};
 
 /// The value at [path] of nested objects.
@@ -311,10 +312,152 @@ pub unsafe extern "C" fn lumtub_youtube_next(body: *const u8, length: usize) -> 
     give_json(&Next { related: parts.related, text })
 }
 
+/// [code], a YouTube language code such as `zh-Hant` or `en-US`, as one of
+/// explore's languages; [Language::Any] for one explore does not offer.
+fn language_of_code(code: &str) -> Option<Language> {
+    let base = code.split(['-', '_', '.']).next().unwrap_or("").to_ascii_lowercase();
+    Some(match base.as_str() {
+        "zh" | "yue" | "cmn" => Language::Zh,
+        "ja" => Language::Ja,
+        "ko" => Language::Ko,
+        "en" => Language::En,
+        "es" => Language::Es,
+        "fr" => Language::Fr,
+        "de" => Language::De,
+        "pt" => Language::Pt,
+        "ru" => Language::Ru,
+        "ar" => Language::Ar,
+        "hi" => Language::Hi,
+        "th" => Language::Th,
+        "vi" => Language::Vi,
+        "it" => Language::It,
+        "nl" => Language::Nl,
+        "tr" => Language::Tr,
+        "id" | "in" => Language::Id,
+        "ms" => Language::Ms,
+        "tl" | "fil" => Language::Tl,
+        "pl" => Language::Pl,
+        "uk" => Language::Uk,
+        "cs" => Language::Cs,
+        "ro" => Language::Ro,
+        "hu" => Language::Hu,
+        "el" => Language::El,
+        "sv" => Language::Sv,
+        "no" | "nb" | "nn" => Language::No,
+        "da" => Language::Da,
+        "fi" => Language::Fi,
+        "he" | "iw" => Language::He,
+        "fa" => Language::Fa,
+        "ur" => Language::Ur,
+        "bn" => Language::Bn,
+        "ta" => Language::Ta,
+        "te" => Language::Te,
+        "" => return None,
+        _ => Language::Any,
+    })
+}
+
+/// The language a video is spoken in and its own title, from a `/player`
+/// response. Listings show titles machine-translated into the listing's
+/// language, so they cannot tell. In order: the original audio track, the
+/// automatic captions (which are made in the spoken language), then the
+/// script of the uploader's own title and description.
+pub fn spoken_language(data: &Value) -> Option<(Option<Language>, String)> {
+    let details = at(data, &["videoDetails"])?;
+    let title = details.get("title").and_then(Value::as_str).unwrap_or_default().to_string();
+    let tracks = at(data, &["streamingData", "adaptiveFormats"]).and_then(Value::as_array);
+    let audio = tracks.into_iter().flatten().filter_map(|f| f.get("audioTrack")).find(|track| {
+        let name = track.get("displayName").and_then(Value::as_str).unwrap_or_default().to_lowercase();
+        name.contains("original")
+    });
+    let from_audio = audio.and_then(|track| track.get("id")).and_then(Value::as_str).and_then(language_of_code);
+    let captions = at(data, &["captions", "playerCaptionsTracklistRenderer", "captionTracks"]).and_then(Value::as_array);
+    let from_captions = captions
+        .into_iter()
+        .flatten()
+        .find(|track| track.get("kind").and_then(Value::as_str) == Some("asr"))
+        .and_then(|track| track.get("languageCode"))
+        .and_then(Value::as_str)
+        .and_then(language_of_code);
+    let language = from_audio.or(from_captions).or_else(|| {
+        let by_title = title_language(&title);
+        let description: String = details.get("shortDescription").and_then(Value::as_str).unwrap_or_default().chars().take(500).collect();
+        let by_description = title_language(&description);
+        // A Latin title over a description in another script, such as an
+        // English title for a Chinese video, goes by the description.
+        let latin = |l: Language| matches!(l, Language::En | Language::Es | Language::Fr | Language::De | Language::Pt);
+        match (by_title, by_description) {
+            (Language::Any, Language::Any) => None,
+            (Language::Any, other) => Some(other),
+            (title, description) if latin(title) && !latin(description) && description != Language::Any => Some(description),
+            (title, _) => Some(title),
+        }
+    });
+    Some((language, title))
+}
+
+/// What [spoken_language] finds in a `/player` response, as JSON
+/// `{language, title}`: `language` is explore's index, 0 when nothing
+/// tells, and -1 for a language explore does not offer. Null when [body]
+/// is not a player response.
+///
+/// # Safety
+/// [body] must point to [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_spoken_language(body: *const u8, length: usize) -> *mut c_char {
+    #[derive(Serialize)]
+    struct Spoken {
+        language: i64,
+        title: String,
+    }
+    let Ok(data) = serde_json::from_str::<Value>(unsafe { text(body, length) }) else {
+        return std::ptr::null_mut();
+    };
+    let Some((language, title)) = spoken_language(&data) else {
+        return std::ptr::null_mut();
+    };
+    let language = match language {
+        None => 0,
+        Some(Language::Any) => -1,
+        Some(other) => other as i64,
+    };
+    give_json(&Spoken { language, title })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn tells_the_spoken_language() {
+        let asr = json!({
+            "videoDetails": {"title": "How to cook rice", "shortDescription": ""},
+            "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [
+                {"languageCode": "en", "kind": "standard"},
+                {"languageCode": "ja", "kind": "asr"}
+            ]}}
+        });
+        assert_eq!(spoken_language(&asr), Some((Some(Language::Ja), "How to cook rice".into())));
+        let original = json!({
+            "videoDetails": {"title": "Voyage", "shortDescription": ""},
+            "streamingData": {"adaptiveFormats": [
+                {"audioTrack": {"id": "en.3", "displayName": "English"}},
+                {"audioTrack": {"id": "fr.4", "displayName": "French original"}}
+            ]},
+            "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "en", "kind": "asr"}]}}
+        });
+        assert_eq!(spoken_language(&original).unwrap().0, Some(Language::Fr));
+        let chinese = json!({"videoDetails": {"title": "My trip to Chengdu", "shortDescription": "这次去成都吃了很多好吃的"}});
+        assert_eq!(spoken_language(&chinese).unwrap().0, Some(Language::Zh));
+        let own = json!({"videoDetails": {"title": "成都旅行", "shortDescription": ""}});
+        assert_eq!(spoken_language(&own).unwrap(), (Some(Language::Zh), "成都旅行".into()));
+        let italian = json!({"videoDetails": {"title": "Ciao", "shortDescription": ""}, "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "it", "kind": "asr"}]}}});
+        assert_eq!(spoken_language(&italian).unwrap().0, Some(Language::It));
+        let swahili = json!({"videoDetails": {"title": "Habari", "shortDescription": ""}, "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "sw", "kind": "asr"}]}}});
+        assert_eq!(spoken_language(&swahili).unwrap().0, Some(Language::Any));
+        assert_eq!(spoken_language(&json!({"playabilityStatus": {}})), None);
+    }
 
     #[test]
     fn reads_text_shapes() {

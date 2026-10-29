@@ -113,7 +113,7 @@ class SubtitleViewState extends State<SubtitleView> {
   Widget _lines(TextScaler textScaler) {
     final configuration = widget.configuration;
     final main = subtitle.isEmpty ? '' : subtitle.first.trim();
-    final secondary = subtitle.length < 2 ? '' : subtitle[1].trim();
+    final secondary = subtitle.length < 2 || !configuration.secondary ? '' : subtitle[1].trim();
     final secondaryStyle = configuration.secondaryStyle;
     if (secondaryStyle == null) {
       return Text(
@@ -165,6 +165,10 @@ class SubtitleViewConfiguration {
   /// Lumtub: the gap between the secondary and the main subtitle.
   final double spacing;
 
+  /// Lumtub: whether a secondary subtitle is chosen. With none, mpv's last
+  /// secondary line stays in `Player.state.subtitle` and is not drawn.
+  final bool secondary;
+
   /// {@macro subtitle_view_configuration}
   const SubtitleViewConfiguration({
     this.visible = true,
@@ -181,6 +185,7 @@ class SubtitleViewConfiguration {
     this.textScaler,
     this.secondaryStyle,
     this.spacing = 4.0,
+    this.secondary = true,
     this.padding = const EdgeInsets.fromLTRB(
       16.0,
       0.0,

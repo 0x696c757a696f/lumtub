@@ -96,7 +96,7 @@ class SecondarySubtitle {
     final platform = player.platform;
     if (platform is! NativePlayer) return false;
     if (option == null) {
-      await platform.setProperty('secondary-sid', 'no');
+      await off(platform);
       return true;
     }
     final before = player.state.track.subtitle;
@@ -112,6 +112,12 @@ class SecondarySubtitle {
     if (player.state.track.subtitle.id == track.id && before.id != track.id) await player.setSubtitleTrack(before);
     return true;
   }
+
+  /// Turns the second subtitle off. mpv then reports its text as
+  /// unavailable, which media_kit ignores, so the last line stays in
+  /// `Player.state.subtitle`; the subtitle view is told not to draw it
+  /// (`SubtitleViewConfiguration.secondary`).
+  static Future<void> off(NativePlayer platform) => platform.setProperty('secondary-sid', 'no');
 
   static SubtitleTrack? _loaded(Player player, SubtitleOption option) =>
       player.state.tracks.subtitle.where((t) => t.title == option.label && t.id != 'auto' && t.id != 'no').firstOrNull;

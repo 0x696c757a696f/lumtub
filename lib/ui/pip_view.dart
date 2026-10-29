@@ -78,7 +78,7 @@ class _PipViewState extends State<PipView> {
     final player = _controller.player!;
     final scale = (MediaQuery.sizeOf(context).shortestSide / 280).clamp(0.6, 2.0);
     // The same subtitles as the player's, sized for the small window.
-    final subtitles = subtitleViewFor(_controller.settings, smallWindow: MediaQuery.sizeOf(context));
+    final subtitles = subtitleViewFor(_controller.settings, smallWindow: MediaQuery.sizeOf(context), secondary: _controller.secondarySubtitle != null);
     return CallbackShortcuts(
       bindings: {
         ...playerShortcuts(_controller, () => null),

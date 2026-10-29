@@ -16,7 +16,9 @@ The changes, marked "Lumtub" in the code:
   when a video opened or the player changed size.
 - `lib/src/subtitle/subtitle_view.dart`: the secondary subtitle (the second
   entry of `Player.state.subtitle`) is drawn above the main one, not below,
-  in its own style when `SubtitleViewConfiguration.secondaryStyle` is set.
+  in its own style when `SubtitleViewConfiguration.secondaryStyle` is set,
+  and not at all when `SubtitleViewConfiguration.secondary` is false (mpv
+  leaves the last secondary line behind when the track is turned off).
 - `lib/src/video_controller/native_video_controller/real.dart`: a size set
   with `setSize` is kept when the next video's size arrives, instead of
   being replaced by the video's own size.

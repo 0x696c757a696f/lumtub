@@ -1846,7 +1846,7 @@ class AppController extends ChangeNotifier {
       _tracking = null;
       if (secondarySubtitle != null) {
         secondarySubtitle = null;
-        if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
+        if (platform is NativePlayer) unawaited(SecondarySubtitle.off(platform).catchError((_) {}));
       }
       _lastPosition = start ?? Duration.zero;
       _resumePoint.start(_lastPosition);
@@ -1881,7 +1881,7 @@ class AppController extends ChangeNotifier {
     if (secondarySubtitle != null) {
       secondarySubtitle = null;
       final platform = player.platform;
-      if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
+      if (platform is NativePlayer) unawaited(SecondarySubtitle.off(platform).catchError((_) {}));
     }
     _lastPosition = start ?? Duration.zero;
     _resumePoint.start(_lastPosition);

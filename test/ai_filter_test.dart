@@ -50,6 +50,9 @@ void main() {
           ],
         }), 200);
       }
+      if (request.url.host == 'raw.githubusercontent.com') {
+        return http.Response('! AiSList blocklist by YouTube channel ID\nUCaislist000000000000000\n', 200);
+      }
       expect(request.url.path, '/youtubei/v1/next');
       final id = (jsonDecode(request.body) as Map)['videoId'] as String;
       asked.add(id);
@@ -59,6 +62,7 @@ void main() {
     final labeled = video('aaaaaaaaaaa', 'UCother00000000000000000');
     final plain = video('bbbbbbbbbbb', 'UCother00000000000000000');
     final listed = video('ccccccccccc', 'UClisted0000000000000000');
+    final aislisted = video('ddddddddddd', 'UCaislist000000000000000');
 
     await filter.setMode(AiFilterMode.labeled);
     expect(filter.hides(listed), isFalse);
@@ -75,6 +79,7 @@ void main() {
 
     await filter.setMode(AiFilterMode.labeledAndList);
     expect(filter.hides(listed), isTrue);
+    expect(filter.hides(aislisted), isTrue);
 
     await filter.setMode(AiFilterMode.off);
     expect(filter.hides(labeled), isFalse);

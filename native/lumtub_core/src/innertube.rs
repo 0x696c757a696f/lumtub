@@ -478,13 +478,28 @@ pub fn ai_channels(data: &Value) -> Vec<String> {
         .collect()
 }
 
-/// A JSON array of [`ai_channels`].
+/// The channel ids of an AiSList channel id list: one id per line,
+/// comments starting with `!`.
+pub fn listed_channel_ids(list: &str) -> Vec<String> {
+    list.lines()
+        .map(str::trim)
+        .filter(|line| line.len() == 24 && line.starts_with("UC") && line.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_'))
+        .map(str::to_string)
+        .collect()
+}
+
+/// A JSON array of [`ai_channels`] for KillSlop's JSON list, or of
+/// [`listed_channel_ids`] for a plain id list.
 ///
 /// # Safety
 /// `body` must point to `length` readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_ai_channels(body: *const u8, length: usize) -> *mut c_char {
-    let channels = serde_json::from_str::<Value>(unsafe { text(body, length) }).map(|data| ai_channels(&data)).unwrap_or_default();
+    let body = unsafe { text(body, length) };
+    let channels = match serde_json::from_str::<Value>(body) {
+        Ok(data) => ai_channels(&data),
+        Err(_) => listed_channel_ids(body),
+    };
     give_json(&channels)
 }
 
@@ -520,6 +535,12 @@ mod tests {
             {"id": "nonsense"}
         ]});
         assert_eq!(ai_channels(&list), vec!["UCs8kQREN6lwSKNgGUF9LYsA".to_string(), "@seapop".to_string()]);
+    }
+
+    #[test]
+    fn reads_a_channel_id_list() {
+        let list = "! AiSList blocklist by YouTube channel ID\n! Channels: 2\nUC---VSS6clgbT9mXRPqzzZA\r\nUC--1M2MGDAWI1EBcEzWbKJQ\n\nnot an id\nUC--1M2MGDAWI1EBcEzWbKJ\n";
+        assert_eq!(listed_channel_ids(list), vec!["UC---VSS6clgbT9mXRPqzzZA".to_string(), "UC--1M2MGDAWI1EBcEzWbKJQ".to_string()]);
     }
 
     #[test]

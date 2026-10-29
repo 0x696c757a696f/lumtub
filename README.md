@@ -40,7 +40,7 @@
 - **Languages:** English and simplified Chinese, following the Windows language. Help translate Lumtub on [Weblate](https://hosted.weblate.org/engage/lumtub/).
 - **Search:** suggestions and history, sort order, upload date and length filters, and videos, Shorts, live, channels or playlists only.
 - **Channels:** videos, Shorts, live, playlists, podcasts and community posts, with search inside the channel.
-- **AI filter (off by default):** hides videos YouTube labels as made with AI and, if you choose, channels on [KillSlop](https://killslop.app)'s AI channel list (CC BY-SA 4.0). Subscribed channels are never hidden.
+- **AI filter (off by default):** hides videos YouTube labels as made with AI and, if you choose, channels on the AI channel lists of [KillSlop](https://killslop.app) (CC BY-SA 4.0) and [AiSList](https://github.com/Override92/AiSList) (CC BY-NC 4.0), downloaded at runtime and not shipped with Lumtub. Subscribed channels are never hidden.
 - **Library:** subscriptions, history, local playlists, favorites, watch later and a play queue.
 
 ### 🎬 Watch

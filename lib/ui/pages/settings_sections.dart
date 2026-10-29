@@ -241,7 +241,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('短视频 隐藏')),
         SettingEntry(tr('屏蔽 AI 生成的视频'), (context) => NormalItem(
               title: tr('屏蔽 AI 生成的视频'),
-              subtitle: tr('当前：{0}。在首页、搜索、探索、相关视频和频道里生效，已订阅的频道不受影响；每个视频向 YouTube 查询一次 AI 标记。AI 频道列表来自 KillSlop（killslop.app，CC BY-SA 4.0），每天更新', [labelOf(_aiFilterModes, prefs.aiFilter)]),
+              subtitle: tr('当前：{0}。在首页、搜索、探索、相关视频和频道里生效，已订阅的频道不受影响；每个视频向 YouTube 查询一次 AI 标记。AI 频道列表来自 KillSlop（killslop.app，CC BY-SA 4.0）和 AiSList（CC BY-NC 4.0），每天下载更新', [labelOf(_aiFilterModes, prefs.aiFilter)]),
               leading: _icon(Icons.smart_toy_outlined),
               onTap: () => pickFromDialog<AiFilterMode>(context, title: tr('屏蔽 AI 生成的视频'), value: prefs.aiFilter, values: _aiFilterModes, onSelected: (v) => savePrefs(prefs.copyWith(aiFilter: v))),
             ), subtitle: tr('AI 人工智能 生成 合成 屏蔽')),

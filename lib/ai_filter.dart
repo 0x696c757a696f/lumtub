@@ -18,7 +18,8 @@ enum AiFilterMode {
   /// Videos YouTube labels as made with AI.
   labeled,
 
-  /// Those and the channels on KillSlop's list of AI channels.
+  /// Those and the channels on KillSlop's and AiSList's lists of AI
+  /// channels.
   labeledAndList;
 
   static AiFilterMode parse(Object? raw) => values.where((m) => m.name == raw).firstOrNull ?? off;
@@ -27,10 +28,12 @@ enum AiFilterMode {
 /// Hides AI-made videos from lists. YouTube's listings do not say which
 /// videos it labels as made with AI; each video's `/next` answer does
 /// (see `ai_label` in the Rust core), so videos are asked about once as
-/// they show and the answers are kept on disk. KillSlop's channel list
-/// (https://killslop.app, CC BY-SA 4.0) is downloaded once a day when
-/// asked for. A list drops a video once its answer is in, which
-/// [version] counts.
+/// they show and the answers are kept on disk. The AI channel lists of
+/// KillSlop (https://killslop.app, CC BY-SA 4.0) and AiSList
+/// (https://github.com/Override92/AiSList, CC BY-NC 4.0, as channel ids
+/// from https://github.com/theSiegs/aislist-channel-ids) are downloaded
+/// once a day when asked for and never shipped with Lumtub. A list drops
+/// a video once its answer is in, which [version] counts.
 class AiFilter extends ChangeNotifier {
   AiFilter(this._client, {this.labelsFile, this.channelsFile});
 
@@ -38,7 +41,11 @@ class AiFilter extends ChangeNotifier {
   final File? labelsFile;
   final File? channelsFile;
 
-  static const listUrl = 'https://api.killslop.app/api/v1/export/youtube-channels.json';
+  /// Where each AI channel list comes from, by the name it is kept under.
+  static const lists = {
+    'killslop': 'https://api.killslop.app/api/v1/export/youtube-channels.json',
+    'aislist': 'https://raw.githubusercontent.com/theSiegs/aislist-channel-ids/main/lists/aislist_blocklist_ids.txt',
+  };
   static const _fields = 'contents.twoColumnWatchNextResults.results.results.contents.videoPrimaryInfoRenderer.badges';
   static const parallel = 4;
   static const _kept = 20000;
@@ -48,6 +55,7 @@ class AiFilter extends ChangeNotifier {
   AiFilterMode mode = AiFilterMode.off;
   Map<String, bool>? _labels;
   Set<String> _channels = const {};
+  Map<String, List<String>> _listed = const {};
   DateTime? _listFetched;
   final _pending = <String>{};
   final _queue = <String>[];
@@ -147,9 +155,9 @@ class AiFilter extends ChangeNotifier {
     try {
       final labelsPath = labelsFile?.path;
       final channelsPath = channelsFile?.path;
-      final (labels, channels, fetched) = await Isolate.run(() {
+      final (labels, listed, fetched) = await Isolate.run(() {
         var labels = <String, bool>{};
-        var channels = <String>{};
+        var listed = <String, List<String>>{};
         DateTime? fetched;
         try {
           if (labelsPath != null && File(labelsPath).existsSync()) {
@@ -159,14 +167,17 @@ class AiFilter extends ChangeNotifier {
         try {
           if (channelsPath != null && File(channelsPath).existsSync()) {
             final file = File(channelsPath);
-            channels = {for (final c in jsonDecode(file.readAsStringSync()) as List) c.toString()};
-            fetched = file.lastModifiedSync();
+            final kept = jsonDecode(file.readAsStringSync());
+            listed = kept is Map
+                ? {for (final e in kept.entries) e.key.toString(): [for (final c in e.value as List) c.toString()]}
+                : {'killslop': [for (final c in kept as List) c.toString()]};
+            fetched = kept is Map ? file.lastModifiedSync() : null;
           }
         } catch (_) {}
-        return (labels, channels, fetched);
+        return (labels, listed, fetched);
       });
       _labels = labels;
-      _channels = channels;
+      _setListed(listed);
       _listFetched = fetched;
       version++;
       notifyListeners();
@@ -175,36 +186,49 @@ class AiFilter extends ChangeNotifier {
     }
   }
 
-  /// Downloads KillSlop's channel list when the copy kept is a day old.
+  void _setListed(Map<String, List<String>> listed) {
+    _listed = listed;
+    _channels = {for (final list in listed.values) ...list};
+  }
+
+  /// Downloads the AI channel lists when the copies kept are a day old. A
+  /// list that cannot be downloaded keeps its last copy.
   Future<void> refreshList({bool force = false}) async {
     if (mode != AiFilterMode.labeledAndList || !available) return;
     final fetched = _listFetched;
     if (!force && fetched != null && DateTime.now().difference(fetched) < const Duration(days: 1)) return;
-    try {
-      final response = await _client.get(Uri.parse(listUrl)).timeout(const Duration(seconds: 30));
-      if (response.statusCode != 200) throw StateError('HTTP ${response.statusCode}');
-      final body = response.bodyBytes;
-      final channels = await Isolate.run(() {
-        final core = NativeCore.instance!;
-        return [for (final c in jsonDecode(core.take(core.withBytes(body, core.aiChannels)) ?? '[]') as List) c.toString()];
-      });
-      if (channels.isEmpty) throw StateError('the list is empty');
-      _channels = channels.toSet();
-      _listFetched = DateTime.now();
-      logInfo('AI channel list: ${channels.length} channels');
-      final path = channelsFile?.path;
-      if (path != null) {
-        await Isolate.run(() {
-          final file = File(path);
-          file.parent.createSync(recursive: true);
-          file.writeAsStringSync(jsonEncode(channels));
+    final listed = Map<String, List<String>>.of(_listed);
+    var changed = false;
+    for (final MapEntry(key: name, value: url) in lists.entries) {
+      try {
+        final response = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 30));
+        if (response.statusCode != 200) throw StateError('HTTP ${response.statusCode}');
+        final body = response.bodyBytes;
+        final channels = await Isolate.run(() {
+          final core = NativeCore.instance!;
+          return [for (final c in jsonDecode(core.take(core.withBytes(body, core.aiChannels)) ?? '[]') as List) c.toString()];
         });
+        if (channels.isEmpty) throw StateError('the list is empty');
+        listed[name] = channels;
+        changed = true;
+        logInfo('AI channel list $name: ${channels.length} channels');
+      } catch (e) {
+        logInfo('Could not download the AI channel list $name: $e');
       }
-      version++;
-      notifyListeners();
-    } catch (e) {
-      logInfo('Could not download the AI channel list: $e');
     }
+    if (!changed) return;
+    _setListed(listed);
+    _listFetched = DateTime.now();
+    final path = channelsFile?.path;
+    if (path != null) {
+      await Isolate.run(() {
+        final file = File(path);
+        file.parent.createSync(recursive: true);
+        file.writeAsStringSync(jsonEncode(listed));
+      }).catchError((Object e) => logInfo('Could not save the AI channel lists: $e'));
+    }
+    version++;
+    notifyListeners();
   }
 
   /// Channels on the downloaded list.

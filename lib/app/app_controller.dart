@@ -2323,8 +2323,32 @@ class AppController extends ChangeNotifier {
       return second == null ? const [] : pairSubtitleCues(await _optionCues(second), const []);
     }
     final main = await _trackCues(platform, track);
+    if (second == null && mode != SubtitleListMode.first) {
+      // A translation on its own is listed with the lines it was made
+      // from, which stand first: on top, or alone with 只看第二字幕.
+      final original = listedOriginalOf(track);
+      if (original != null) {
+        final from = await _optionCues(original);
+        if (from.isNotEmpty) {
+          return switch (mode) {
+            SubtitleListMode.secondOver => pairSubtitleCues(main, from),
+            SubtitleListMode.second => pairSubtitleCues(from, const []),
+            _ => pairSubtitleCues(from, main),
+          };
+        }
+      }
+    }
     if (second == null || mode == SubtitleListMode.first) return pairSubtitleCues(main, const []);
     return pairSubtitleCues(main, await _optionCues(second));
+  }
+
+  /// The subtitle [track] was translated from, when it is a translation:
+  /// the video's original-language one.
+  SubtitleOption? listedOriginalOf(SubtitleTrack track) {
+    final subtitles = details?.subtitles ?? const <SubtitleOption>[];
+    final option = subtitles.where((o) => o.label == track.title).firstOrNull;
+    if (option == null || option.kind != SubtitleKind.translated) return null;
+    return originalSubtitle(subtitles, language: details?.language);
   }
 
   Future<List<SubtitleCue>> _optionCues(SubtitleOption option) => _cached('${playing?.id}\u0000${option.url}', () async => File(await _subtitleFile(option)).readAsString());

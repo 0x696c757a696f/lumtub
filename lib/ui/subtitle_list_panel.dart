@@ -69,7 +69,12 @@ class _SubtitleListState extends State<SubtitleList> {
   }
 
   /// Both subtitles are on, so there is a choice of what to list.
-  bool get _bothOn => _second != null && !const {'no', 'auto'}.contains(widget.player.state.track.subtitle.id);
+  bool get _bothOn {
+    final main = widget.player.state.track.subtitle;
+    if (const {'no', 'auto'}.contains(main.id)) return false;
+    // A translation is listed with its original lines too.
+    return _second != null || widget.controller.listedOriginalOf(main) != null;
+  }
 
   Widget _modeMenu(ColorScheme colors) => PopupMenuButton<SubtitleListMode>(
         tooltip: tr('列表显示'),

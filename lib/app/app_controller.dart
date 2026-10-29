@@ -2588,7 +2588,22 @@ class AppController extends ChangeNotifier {
         if ((log.level == 'error' || log.prefix == 'ytdl_hook') && _recentErrors.length < 20 && !subtitle && !isUnattributedHttpError(text)) _recentErrors.add(text);
         // curl gave up on a stream; when it was the video's, the sound
         // plays on over the last picture.
-        if (log.prefix == 'curl' && text.startsWith('transfer failed')) _streamLostIn = _playSerial;
+        final lost = log.prefix == 'curl' && text.startsWith('transfer failed');
+        if (lost) _streamLostIn = _playSerial;
+        // Data cut off mid-frame, after curl lost a stream, leaves the
+        // decoder failing on every frame over a still picture.
+        if (log.prefix == 'vd' && text.startsWith('Error while decoding frame')) {
+          final now = DateTime.now();
+          _decodeErrors
+            ..add(now)
+            ..removeWhere((at) => now.difference(at) > const Duration(seconds: 10));
+        }
+        // Opened again at once rather than after the picture watch notices.
+        if ((lost || _decodeErrors.length >= 3) && player.state.playing && DateTime.now().difference(_lastBrokenReopen) > const Duration(seconds: 30)) {
+          _lastBrokenReopen = DateTime.now();
+          _decodeErrors.clear();
+          unawaited(_recover(lost ? 'libmpv gave up on a stream' : 'The video data broke and frames stopped decoding'));
+        }
         if (PlaybackRecovery.graphicsLost(text)) unawaited(_remakeVideoOutput(player, text));
         // The same line for every frame says nothing new.
         if (text == _lastMpvLine) return;
@@ -4252,6 +4267,12 @@ class AppController extends ChangeNotifier {
 
   /// The open in which libmpv's curl gave up on a stream.
   int? _streamLostIn;
+
+  /// When the decoder last failed on a frame, over the last 10 s.
+  final _decodeErrors = <DateTime>[];
+
+  /// When a lost stream or broken video data last opened the video again.
+  DateTime _lastBrokenReopen = DateTime(2000);
 
   /// The open in which the decoder was restarted for a stalled picture.
   int? _pictureRestartedIn;

@@ -108,7 +108,17 @@ class VideoLanguages {
 
   Future<SpokenVideo?> _ask(String id) async {
     final read = await _fetch(id, tv: _tvFirst);
-    if (read == null || read.spoken.heard || _compared >= _compare) return read?.spoken;
+    if (read == null) {
+      // No video in the answer at all, as when YouTube wants this app to
+      // prove it is not a bot: the other one is asked.
+      final other = await _fetch(id, tv: !_tvFirst);
+      if (other != null && other.spoken.heard) {
+        _tvFirst = !_tvFirst;
+        logInfo('Video languages: ${_tvFirst ? 'the website' : 'the TV app'} answered without the video; asking ${_tvFirst ? 'the TV app' : 'the website'} first');
+      }
+      return other?.spoken;
+    }
+    if (read.spoken.heard || _compared >= _compare) return read.spoken;
     // Most spoken videos have automatic captions. An answer without them
     // may have lost them to the field mask, or to YouTube answering this
     // app less than the other.

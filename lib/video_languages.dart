@@ -9,7 +9,7 @@ import 'app_log.dart';
 import 'explore_filters.dart';
 import 'models.dart';
 import 'native_core.dart';
-import 'youtube_web.dart';
+import 'youtube_player_probe.dart';
 
 /// What a video is spoken in, and its title as the uploader wrote it.
 typedef SpokenVideo = ({ExploreLanguage? language, String title});
@@ -30,7 +30,7 @@ class VideoLanguages {
   static const _kept = 20000;
 
   static const _fields = 'videoDetails(title,shortDescription),captions.playerCaptionsTracklistRenderer.captionTracks(languageCode,kind),streamingData.adaptiveFormats.audioTrack';
-  static bool _masked = true;
+  late final _probe = YoutubePlayerProbe(_client);
 
   Map<String, SpokenVideo>? _known;
   final _waiting = <Completer<void>>[];
@@ -69,29 +69,7 @@ class VideoLanguages {
   }
 
   Future<SpokenVideo?> _ask(String id) async {
-    final response = await _client
-        .post(
-          Uri.parse('https://www.youtube.com/youtubei/v1/player?prettyPrint=false'),
-          headers: {
-            ...YoutubeWeb.apiHeaders(),
-            // Only the few fields read, instead of a few hundred kilobytes.
-            if (_masked) 'X-Goog-FieldMask': _fields,
-          },
-          body: jsonEncode({
-            'context': {
-              'client': {'clientName': 'WEB', 'clientVersion': YoutubeWeb.clientVersion, 'hl': 'en', 'timeZone': 'UTC', 'utcOffsetMinutes': 0},
-            },
-            'videoId': id,
-          }),
-        )
-        .timeout(const Duration(seconds: 15));
-    if (response.statusCode == 400 && _masked) {
-      _masked = false;
-      logInfo('YouTube refused the field mask for /player; asking for whole answers');
-      return _ask(id);
-    }
-    if (response.statusCode != 200) throw StateError('player answered HTTP ${response.statusCode}');
-    final read = await _readInBackground(response.bodyBytes);
+    final read = await _readInBackground(await _probe.fetch(id, _fields));
     if (read is! Map<String, dynamic>) return null;
     return _spoken(read);
   }

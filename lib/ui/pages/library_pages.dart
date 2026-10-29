@@ -56,11 +56,13 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
     final inGroup = group == null ? channels : [for (final c in channels) if (group.channels.contains(c.id)) c];
     final selected = inGroup.contains(_selected) ? _selected : null;
     final all = controller.visible(library.feed, subscriptions: true);
-    final feed = selected != null
+    final chosen = selected != null
         ? [for (final item in all) if (item.channelId == selected.id) item]
         : group != null
             ? [for (final item in all) if (group.channels.contains(item.channelId)) item]
             : all;
+    // Streams that are on now come first.
+    final feed = [for (final item in chosen) if (item.isLive) item, for (final item in chosen) if (!item.isLive) item];
     Widget strip({bool vertical = false}) => _ChannelStrip(
           vertical: vertical,
           itemWidth: vertical ? _railWidth - 12 : 72,
@@ -353,8 +355,11 @@ class _ChannelStripState extends State<_ChannelStrip> {
       final id = item.channelId;
       if (id != null && !latest.containsKey(id)) latest[id] = item.published;
     }
+    final live = {for (final item in widget.feed) if (item.isLive && item.channelId != null) item.channelId!};
     final rank = {for (final (i, id) in latest.keys.indexed) id: i};
-    final ordered = [...widget.channels]..sort((a, b) => (rank[a.id] ?? latest.length).compareTo(rank[b.id] ?? latest.length));
+    // Channels streaming now first, then by their newest video.
+    int order(ChannelRef channel) => (live.contains(channel.id) ? -latest.length - 1 : 0) + (rank[channel.id] ?? latest.length);
+    final ordered = [...widget.channels]..sort((a, b) => order(a).compareTo(order(b)));
     final selected = widget.selected;
     // A channel picked from the full list shows up front, so the row says
     // what the videos below are narrowed to.
@@ -377,7 +382,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
         Expanded(child: ListView(
           controller: _scroll,
           padding: const EdgeInsets.only(top: 8),
-          children: _items(ordered, selected, latest, fresh),
+          children: _items(ordered, selected, latest, fresh, live),
         )),
         const Divider(height: 1, indent: 16, endIndent: 16),
         SizedBox(height: 88, child: showAll),
@@ -385,7 +390,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
     }
     // The full list stays in reach at the right, however long the row.
     return Row(children: [
-      Expanded(child: _row(ordered, selected, latest, fresh)),
+      Expanded(child: _row(ordered, selected, latest, fresh, live)),
       Padding(
         padding: const EdgeInsets.only(right: AppStyle.pagePadding - 6),
         child: showAll,
@@ -393,7 +398,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
     ]);
   }
 
-  List<Widget> _items(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest, DateTime fresh) => [
+  List<Widget> _items(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest, DateTime fresh, Set<String> live) => [
         _StripItem(
           label: tr('全部'),
           width: widget.itemWidth,
@@ -407,12 +412,13 @@ class _ChannelStripState extends State<_ChannelStrip> {
             width: widget.itemWidth,
             selected: channel == selected,
             fresh: latest[channel.id]?.isAfter(fresh) ?? false,
+            live: live.contains(channel.id),
             onTap: () => widget.onSelect(channel),
             avatar: (radius) => ChannelAvatar(name: channel.name, radius: radius, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel)),
           ),
       ];
 
-  Widget _row(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest, DateTime fresh) {
+  Widget _row(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest, DateTime fresh, Set<String> live) {
     return Listener(
       // A mouse wheel turns vertically; the row moves sideways with it.
       onPointerSignal: (event) {
@@ -431,7 +437,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
             controller: _scroll,
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.only(left: AppStyle.pagePadding - 6),
-            children: _items(ordered, selected, latest, fresh),
+            children: _items(ordered, selected, latest, fresh, live),
           ),
         ),
       ),
@@ -440,11 +446,13 @@ class _ChannelStripState extends State<_ChannelStrip> {
 }
 
 class _StripItem extends StatelessWidget {
-  const _StripItem({required this.label, required this.width, required this.selected, required this.onTap, required this.avatar, this.fresh = false});
+  const _StripItem({required this.label, required this.width, required this.selected, required this.onTap, required this.avatar, this.fresh = false, this.live = false});
   final String label;
   final double width;
   final bool selected;
   final bool fresh;
+  /// Streaming now: a red ring and a 直播 tag, as YouTube shows it.
+  final bool live;
   final VoidCallback onTap;
   final Widget Function(double radius) avatar;
 
@@ -464,10 +472,21 @@ class _StripItem extends StatelessWidget {
             Stack(clipBehavior: Clip.none, children: [
               Container(
                 padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: selected ? colors.primary : Colors.transparent, width: 2)),
+                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: selected ? colors.primary : live ? _liveRed : Colors.transparent, width: 2)),
                 child: avatar(22),
               ),
-              if (fresh)
+              if (live)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: -6,
+                  child: Center(child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(color: _liveRed, borderRadius: BorderRadius.circular(4), border: Border.all(color: colors.surface, width: 1.5)),
+                    child: Text(tr('直播'), style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700, height: 1.2)),
+                  )),
+                )
+              else if (fresh)
                 Positioned(right: 2, top: 2, child: Container(
                   width: 10,
                   height: 10,
@@ -492,6 +511,8 @@ class _StripItem extends StatelessWidget {
     );
   }
 }
+
+const _liveRed = Color(0xFFCC0000);
 
 class _RailResizeHandle extends StatelessWidget {
   const _RailResizeHandle({required this.onDrag});

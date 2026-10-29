@@ -64,6 +64,24 @@ class VideoItem {
         isShortListing: isShortListing,
       );
 
+  /// This video with [status] as its `live_status`, such as `is_live`.
+  VideoItem withLiveStatus(String? status) => VideoItem(
+        id: id,
+        title: title,
+        channel: channel,
+        duration: duration,
+        url: url,
+        viewCount: viewCount,
+        channelId: channelId,
+        published: published,
+        liveStatus: status,
+        scheduledStart: scheduledStart,
+        width: width,
+        height: height,
+        description: description,
+        isShortListing: isShortListing,
+      );
+
   ChannelRef? get channelRef => channelId == null ? null : ChannelRef(channelId!, channel);
 
   /// The thumbnail size to load, a YouTube file name such as `hqdefault`;

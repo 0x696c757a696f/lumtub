@@ -43,6 +43,11 @@ class SubtitleViewState extends State<SubtitleView> {
   // The [StreamSubscription] to listen to the subtitle changes.
   StreamSubscription<List<String>>? subscription;
 
+  // Lumtub: with the main track turned off mpv reports its text as
+  // unavailable, which media_kit ignores, so the last line would stay.
+  late bool mainOff = widget.controller.player.state.track.subtitle.id == 'no';
+  StreamSubscription<Track>? trackSubscription;
+
   // The reference width for calculating the visible text scale factor.
   static const kTextScaleFactorReferenceWidth = 1920.0;
   // The reference height for calculating the visible text scale factor.
@@ -55,12 +60,17 @@ class SubtitleViewState extends State<SubtitleView> {
         subtitle = value;
       });
     });
+    trackSubscription = widget.controller.player.stream.track.listen((track) {
+      final off = track.subtitle.id == 'no';
+      if (off != mainOff) setState(() => mainOff = off);
+    });
     super.initState();
   }
 
   @override
   void dispose() {
     subscription?.cancel();
+    trackSubscription?.cancel();
     super.dispose();
   }
 
@@ -112,7 +122,7 @@ class SubtitleViewState extends State<SubtitleView> {
   // style when the configuration has one.
   Widget _lines(TextScaler textScaler) {
     final configuration = widget.configuration;
-    final main = subtitle.isEmpty ? '' : subtitle.first.trim();
+    final main = subtitle.isEmpty || mainOff ? '' : subtitle.first.trim();
     final secondary = subtitle.length < 2 || !configuration.secondary ? '' : subtitle[1].trim();
     final secondaryStyle = configuration.secondaryStyle;
     if (secondaryStyle == null) {

@@ -1415,10 +1415,11 @@ class AppController extends ChangeNotifier {
                 mix ? repository.searchMix(queries, sp: sp, region: region) : repository.search(queries.single, sp: sp, region: region);
             final queries = mix ? exploreMixQueries(exploreSection) : [query];
             // The zones' search words are Chinese, which finds Chinese
-            // videos: a language picked, or else a non-Chinese interface,
-            // is searched for in its own words.
+            // videos: they are put in the language picked, else the
+            // region's, else a non-Chinese interface's.
             final ui = youtubeHl.startsWith('zh') ? ExploreLanguage.any : ExploreLanguage.parse(youtubeHl.split('-').first);
-            final wordsIn = language != ExploreLanguage.any ? language : ui;
+            final regional = global ? ExploreLanguage.any : preferences.exploreRegion.searchLanguage;
+            final wordsIn = language != ExploreLanguage.any ? language : regional != ExploreLanguage.any ? regional : ui;
             final listing = wordsIn == ExploreLanguage.any ? search(queries) : Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn)));
             final languages = _videoLanguages;
             return spoken && languages != null ? listing.refined((lines) => languages.only(lines, language)) : listing;

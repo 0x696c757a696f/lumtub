@@ -176,6 +176,44 @@ enum ExploreRegion {
   final String gl;
 
   static ExploreRegion parse(Object? raw) => values.where((r) => r.name == raw).firstOrNull ?? any;
+
+  /// The language the region searches in, so a zone's words find its own
+  /// videos; English where explore offers no language of the region's.
+  ExploreLanguage get searchLanguage => switch (gl) {
+        '' => ExploreLanguage.any,
+        'CN' || 'TW' || 'HK' => ExploreLanguage.zh,
+        'JP' => ExploreLanguage.ja,
+        'KR' => ExploreLanguage.ko,
+        'MY' => ExploreLanguage.ms,
+        'TH' => ExploreLanguage.th,
+        'VN' => ExploreLanguage.vi,
+        'ID' => ExploreLanguage.id,
+        'PH' => ExploreLanguage.tl,
+        'IN' => ExploreLanguage.hi,
+        'PK' => ExploreLanguage.ur,
+        'BD' => ExploreLanguage.bn,
+        'TR' => ExploreLanguage.turkish,
+        'IL' => ExploreLanguage.he,
+        'SA' || 'AE' || 'QA' || 'KW' || 'BH' || 'OM' || 'JO' || 'LB' || 'IQ' || 'YE' || 'EG' || 'MA' || 'DZ' || 'TN' || 'LY' => ExploreLanguage.ar,
+        'FR' || 'BE' || 'LU' || 'SN' => ExploreLanguage.fr,
+        'DE' || 'AT' || 'CH' => ExploreLanguage.de,
+        'NL' => ExploreLanguage.nl,
+        'ES' || 'MX' || 'AR' || 'CL' || 'CO' || 'PE' || 'VE' || 'EC' || 'BO' || 'PY' || 'UY' || 'CR' || 'PA' || 'GT' || 'HN' || 'SV' || 'NI' || 'DO' || 'PR' => ExploreLanguage.es,
+        'PT' || 'BR' => ExploreLanguage.pt,
+        'IT' => ExploreLanguage.it,
+        'GR' || 'CY' => ExploreLanguage.el,
+        'SE' => ExploreLanguage.sv,
+        'NO' => ExploreLanguage.no,
+        'DK' => ExploreLanguage.da,
+        'FI' => ExploreLanguage.fi,
+        'PL' => ExploreLanguage.pl,
+        'CZ' || 'SK' => ExploreLanguage.cs,
+        'HU' => ExploreLanguage.hu,
+        'RO' || 'MD' => ExploreLanguage.ro,
+        'UA' => ExploreLanguage.uk,
+        'RU' || 'BY' || 'KZ' => ExploreLanguage.ru,
+        _ => ExploreLanguage.en,
+      };
 }
 
 /// The language explore's videos are spoken in. Each video is asked

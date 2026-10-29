@@ -4260,12 +4260,18 @@ class AppController extends ChangeNotifier {
       if (json == null || _disposed) return;
       final probe = jsonDecode(json) as Map<String, dynamic>;
       final adapter = probe['adapter']?.toString() ?? '';
-      if (adapter.isEmpty || adapter == settings.decoderAdapter) return;
+      if (adapter.isEmpty) return;
       int height(String key) => (probe[key] as num?)?.toInt() ?? 0;
-      logInfo('Hardware decoding on $adapter: H.264 ${height('h264')}p, VP9 ${height('vp9')}p, AV1 ${height('av1')}p');
       final results = {
         for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? const DecoderStatus.hardware('d3d11va') : const DecoderStatus.software(),
       };
+      // Asked again at every start: a result saved earlier may have been
+      // a one-off, such as a video decoded in software after the graphics
+      // device was lost, and the automatic codecs would stay off for good.
+      final same = adapter == settings.decoderAdapter &&
+          results.entries.every((e) => (settings.decoderResults[e.key]?.isHardware ?? false) == e.value.isHardware);
+      if (same) return;
+      logInfo('Hardware decoding on $adapter: H.264 ${height('h264')}p, VP9 ${height('vp9')}p, AV1 ${height('av1')}p');
       _update(() => decodeStates = results);
       settings = settings.copyWith(decoderResults: results, decoderAdapter: adapter);
       await _settingsStore?.save(settings);
@@ -4298,8 +4304,13 @@ class AppController extends ChangeNotifier {
         await platform.setProperty('video-crop', crop);
         if (crop.isNotEmpty) logDebug(() => 'Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
       }
-      if (normalized != null) {
-        settings = settings.copyWith(decoderResults: decodeStates);
+      // Kept as what this PC can do only when it decoded in hardware, or
+      // nothing measured it: one video in software, as after a lost
+      // graphics device or with hardware decoding off, says nothing about
+      // the GPU.
+      final measured = normalized != null && settings.decoderAdapter.isNotEmpty && (settings.decoderResults[normalized]?.isHardware ?? false);
+      if (normalized != null && !(measured && decoder.kind != DecoderKind.hardware)) {
+        settings = settings.copyWith(decoderResults: {...settings.decoderResults, normalized: decoder});
         unawaited(_settingsStore?.save(settings));
       }
       // A download older than its codec in the sidecar: only libmpv can

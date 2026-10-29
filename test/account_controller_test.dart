@@ -210,6 +210,12 @@ void main() {
     await pumpEventQueue();
     expect(account.signedIn, isFalse);
     expect(account.error, contains('重新登录'));
-    expect(await File('${dir.path}/google-account.bin').exists(), isFalse);
+    // The file is deleted in the background; real file I/O outlasts the
+    // event queue on Windows.
+    final saved = File('${dir.path}/google-account.bin');
+    for (var i = 0; i < 40 && await saved.exists(); i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    expect(await saved.exists(), isFalse);
   });
 }

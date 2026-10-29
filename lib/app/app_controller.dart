@@ -80,6 +80,7 @@ import '../stream_resolver.dart';
 import '../subtitle_files.dart';
 import '../subtitle_cues.dart';
 import '../subtitle_translation.dart';
+import '../language_guess.dart' show looksLike;
 import '../translation.dart';
 import '../translation_cache.dart';
 import '../translation_services.dart';
@@ -2351,6 +2352,46 @@ class AppController extends ChangeNotifier {
     }
     if (!hasSecond || mode == SubtitleListMode.first) return pairSubtitleCues(main, const []);
     return pairSubtitleCues(main, await secondCues());
+  }
+
+  /// The chapter titles of [chapterTranslationOf] translated, one for
+  /// each chapter, once asked for; untouched ones stay as they are.
+  List<String>? chapterTranslation;
+  String? chapterTranslationOf;
+  bool translatingChapters = false;
+  /// Bumped when [chapterTranslation] or [translatingChapters] changes,
+  /// for the chapter menu, which does not rebuild with everything else.
+  final chaptersChanged = ValueNotifier<int>(0);
+
+  /// [chapterTranslation] when it is the playing video's.
+  List<String>? get translatedChapters => playing != null && chapterTranslationOf == playing!.id ? chapterTranslation : null;
+
+  /// Translates the playing video's chapter titles into the language set
+  /// for translations. Nothing is sent until asked.
+  Future<void> translateChapters() async {
+    final id = playing?.id;
+    final chapters = details?.chapters ?? const [];
+    if (id == null || chapters.isEmpty || translatingChapters) return;
+    final language = preferences.translateTarget;
+    _update(() => translatingChapters = true);
+    chaptersChanged.value++;
+    try {
+      final titles = [for (final c in chapters) c.title.replaceAll('\n', ' ')];
+      final lines = (await translateForeignLines(translator, titles.join('\n'), language, (line) => looksLike(line, language))).split('\n');
+      if (playing?.id != id) return;
+      _update(() {
+        chapterTranslation = lines.length == titles.length ? lines : titles;
+        chapterTranslationOf = id;
+      });
+    } on TranslationException catch (e) {
+      _notice(e.message);
+    } catch (e) {
+      logWarn('Could not translate the chapters: $e');
+      _notice(tr('无法翻译，请检查网络或代理'));
+    } finally {
+      _update(() => translatingChapters = false);
+      chaptersChanged.value++;
+    }
   }
 
   /// The subtitle [track] was translated from, when it is a translation:

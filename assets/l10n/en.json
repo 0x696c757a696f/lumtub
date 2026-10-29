@@ -2777,5 +2777,7 @@
   "只看确认的原声": "Confirmed audio only",
   "查了 {0} 个视频，没有{1}的": "Checked {0} videos, none in {1}",
   "可以继续往下找，或者换个分类、放宽时长和地区": "Keep looking further, or try another category or a wider duration and region",
-  "继续找": "Keep looking"
+  "继续找": "Keep looking",
+  "正在翻译章节名…": "Translating chapter names…",
+  "翻译章节名": "Translate chapter names"
 }

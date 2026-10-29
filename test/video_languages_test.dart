@@ -49,12 +49,46 @@ void main() {
     final kept = await languages.only(lines, ExploreLanguage.zh).toList();
     final titles = [for (final line in kept) (jsonDecode(line) as Map)['title']];
     expect(titles, unorderedEquals(['成都美食之旅', 'A channel', '中文标题']));
-    expect(asked, 5, reason: 'every video is asked about');
+    // The first answer without captions is asked again whole, in case
+    // the field mask left them out.
+    expect(asked, 6, reason: 'every video is asked about');
     asked = 0;
     final again = await languages.only(Stream.fromIterable([_video('aaaaaaaaaaa', 'Chengdu food trip')]), ExploreLanguage.en).toList();
     expect(again, isEmpty);
     expect(asked, 0, reason: 'answers are kept');
     folder.deleteSync(recursive: true);
+  }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
+
+  test('asks the TV app when the website gets no captions', () async {
+    var web = 0, tv = 0;
+    final client = MockClient((request) async {
+      final client = ((jsonDecode(request.body) as Map)['context'] as Map)['client'] as Map;
+      if (client['clientName'] == 'TVHTML5') {
+        tv++;
+        return http.Response.bytes(utf8.encode(jsonEncode({
+          'playabilityStatus': {'status': 'OK'},
+          'videoDetails': {'title': 'Giardinaggio sul balcone', 'shortDescription': ''},
+          'captions': {
+            'playerCaptionsTracklistRenderer': {
+              'captionTracks': [
+                {'languageCode': 'it', 'kind': 'asr'},
+              ],
+            },
+          },
+        })), 200);
+      }
+      web++;
+      return http.Response.bytes(utf8.encode(jsonEncode({
+        'playabilityStatus': {'status': 'LOGIN_REQUIRED'},
+        'videoDetails': {'title': 'Giardinaggio sul balcone', 'shortDescription': ''},
+      })), 200);
+    });
+    final languages = VideoLanguages(client);
+    final kept = await languages.only(Stream.fromIterable([_video('hhhhhhhhhhh', 'Gardening on the balcony')]), ExploreLanguage.it).toList();
+    expect([for (final line in kept) (jsonDecode(line) as Map)['title']], ['Giardinaggio sul balcone']);
+    expect((web, tv), (1, 1));
+    await languages.only(Stream.fromIterable([_video('iiiiiiiiiii', 'More gardening')]), ExploreLanguage.it).toList();
+    expect((web, tv), (1, 2), reason: 'the TV app is asked first from then on');
   }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
 
   test('asks for whole answers when the field mask leaves the video out', () async {

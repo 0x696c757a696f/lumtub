@@ -765,9 +765,12 @@ class AppController extends ChangeNotifier {
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
-        _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}spoken_languages.json'));
-        // Answers kept before 0.2.12 took some Chinese titles for Japanese.
-        unawaited(File('${directories.cache.path}${Platform.pathSeparator}video_languages.json').delete().then((_) {}, onError: (_) {}));
+        _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}heard_languages.json'));
+        // Answers kept before 0.2.12 went by titles, which took some Chinese
+        // ones for Japanese and every Italian one for English.
+        for (final old in ['video_languages.json', 'spoken_languages.json']) {
+          unawaited(File('${directories.cache.path}${Platform.pathSeparator}$old').delete().then((_) {}, onError: (_) {}));
+        }
         _aiFilter = AiFilter(
           _http,
           labelsFile: File('${directories.cache.path}${Platform.pathSeparator}ai_labels.json'),

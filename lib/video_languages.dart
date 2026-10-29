@@ -12,7 +12,16 @@ import 'native_core.dart';
 import 'youtube_player_probe.dart';
 
 /// What a video is spoken in, and its title as the uploader wrote it.
-typedef SpokenVideo = ({ExploreLanguage? language, String title});
+/// [source] says what told: audio, captions, text or none.
+typedef SpokenVideo = ({ExploreLanguage? language, String title, String source});
+
+/// One `/player` answer as the Rust core read it.
+typedef _Read = ({SpokenVideo spoken, bool playable});
+
+extension on SpokenVideo {
+  /// Told by the video's audio or automatic captions, not its text.
+  bool get heard => source == 'audio' || source == 'captions';
+}
 
 /// Looks up the language a video is spoken in, which YouTube's listings do
 /// not say: they show titles machine-translated into the listing's
@@ -28,9 +37,10 @@ class VideoLanguages {
   /// Lookups running at once.
   static const parallel = 6;
   static const _kept = 20000;
+  static const _giveUpAfter = 240;
 
   static const _fields = 'videoDetails.title,videoDetails.shortDescription,captions.playerCaptionsTracklistRenderer.captionTracks.languageCode,'
-      'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack';
+      'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack,playabilityStatus.status';
   late final _probe = YoutubePlayerProbe(_client);
 
   Map<String, SpokenVideo>? _known;
@@ -54,7 +64,7 @@ class VideoLanguages {
     _running++;
     try {
         final found = await _ask(id);
-        if (found != null) {
+        if (found != null && (found.heard || found.language != null)) {
           if (known.length >= _kept) known.remove(known.keys.first);
           known[id] = found;
           _save ??= Timer(const Duration(seconds: 5), _write);
@@ -69,10 +79,45 @@ class VideoLanguages {
     }
   }
 
-  Future<SpokenVideo?> _ask(String id) async {
-    final read = await _readInBackground(await _probe.fetch(id, _fields, expect: 'videoDetails'));
+  /// Whether field masks may leave captions out: unknown until a masked
+  /// answer without them is asked again whole, a few times at most.
+  static bool _maskDrops = false;
+  static int _maskChecks = 0;
+
+  /// Whether the TV app is asked first: the website answers without
+  /// captions when YouTube wants it signed in.
+  static bool _tvFirst = false;
+  static int _tvMisses = 0;
+
+  Future<_Read?> _fetch(String id, {required bool tv, bool whole = false}) async {
+    final read = await _readInBackground(await _probe.fetch(id, whole || _maskDrops ? null : _fields, expect: 'videoDetails', tv: tv));
     if (read is! Map<String, dynamic>) return null;
-    return _spoken(read);
+    return (spoken: _spoken(read), playable: read['playable'] != false);
+  }
+
+  Future<SpokenVideo?> _ask(String id) async {
+    var read = await _fetch(id, tv: _tvFirst);
+    if (read == null) return null;
+    if (!read.spoken.heard && read.playable && !_maskDrops && _probe.masks(_fields) && _maskChecks < 3) {
+      _maskChecks++;
+      final whole = await _fetch(id, tv: _tvFirst, whole: true);
+      if (whole != null && whole.spoken.heard) {
+        _maskDrops = true;
+        logInfo('The /player field mask left out captions; asking for whole answers');
+        return whole.spoken;
+      }
+    }
+    if (!read.playable && _tvMisses < 5) {
+      final other = await _fetch(id, tv: !_tvFirst);
+      if (other != null && other.spoken.heard) {
+        _tvFirst = !_tvFirst;
+        logInfo('Video languages: ${_tvFirst ? 'the website' : 'the TV app'} gets no captions without a sign-in; asking ${_tvFirst ? 'the TV app' : 'the website'}');
+        return other.spoken;
+      }
+      _tvMisses++;
+      if (other != null && other.playable) read = other;
+    }
+    return read.spoken;
   }
 
   static SpokenVideo _spoken(Map<String, dynamic> read) {
@@ -82,7 +127,7 @@ class VideoLanguages {
         : index == 0 || index >= ExploreLanguage.values.length
             ? null
             : ExploreLanguage.values[index];
-    return (language: language, title: read['title']?.toString() ?? '');
+    return (language: language, title: read['title']?.toString() ?? '', source: read['source']?.toString() ?? 'audio');
   }
 
   // A player response runs to a few hundred kilobytes.
@@ -125,6 +170,7 @@ class VideoLanguages {
             final language => language.index,
           },
           'title': value.title,
+          'source': value.source,
         },
     };
     final path = file.path;
@@ -146,6 +192,7 @@ class VideoLanguages {
   Stream<String> only(Stream<String> lines, ExploreLanguage language) async* {
     final pending = <_Pending>[];
     var asked = 0, kept = 0, untold = 0;
+    final told = <String, int>{};
     Iterable<String> ready() sync* {
       for (final entry in [...pending]) {
         if (!entry.done) continue;
@@ -161,9 +208,12 @@ class VideoLanguages {
         yield line;
         continue;
       }
+      // Nothing in the first few hundred: the search found none to show.
+      if (asked >= _giveUpAfter && kept == 0) break;
       asked++;
       pending.add(_Pending(of(item.id).then((spoken) {
         if (spoken == null || spoken.language == null) untold++;
+        told.update(spoken?.source ?? 'error', (n) => n + 1, ifAbsent: () => 1);
         if (spoken == null) return language.matches(item.title) ? line : null;
         if (spoken.language != language) return null;
         kept++;
@@ -181,7 +231,10 @@ class VideoLanguages {
       yield* Stream.fromIterable(ready());
     }
     } finally {
-      if (asked > 0) logInfo('Language ${language.name}: kept $kept of $asked videos ($untold not told)');
+      if (asked > 0) {
+        final by = [for (final MapEntry(:key, :value) in told.entries) '$key $value'].join(', ');
+        logInfo('Language ${language.name}: kept $kept of $asked videos ($untold not told; by $by)');
+      }
     }
   }
 }

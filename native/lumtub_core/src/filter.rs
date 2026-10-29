@@ -204,7 +204,51 @@ pub fn title_language(title: &str) -> Language {
             (best, best_score) = (language, score);
         }
     }
+    // Trigrams tell the other Latin-script languages, such as Italian or
+    // Dutch, where there is text enough to go by.
+    // A title of a word or two, such as a game's name, is too little.
+    let enough = if words.len() >= 4 { 0.2 } else { 0.5 };
+    if let Some(found) = latin_detector().detect(title).filter(|info| info.confidence() >= enough).and_then(|info| latin_language(info.lang()))
+        && (best_score < 2.0 || found == best)
+    {
+        return found;
+    }
     best
+}
+
+fn latin_detector() -> &'static whatlang::Detector {
+    use whatlang::Lang::*;
+    static DETECTOR: std::sync::OnceLock<whatlang::Detector> = std::sync::OnceLock::new();
+    DETECTOR.get_or_init(|| {
+        whatlang::Detector::with_allowlist(vec![
+            Eng, Spa, Fra, Deu, Por, Ita, Nld, Tur, Ind, Tgl, Pol, Ces, Slk, Ron, Hun, Swe, Nob, Dan, Fin,
+        ])
+    })
+}
+
+fn latin_language(lang: whatlang::Lang) -> Option<Language> {
+    use whatlang::Lang::*;
+    Some(match lang {
+        Eng => Language::En,
+        Spa => Language::Es,
+        Fra => Language::Fr,
+        Deu => Language::De,
+        Por => Language::Pt,
+        Ita => Language::It,
+        Nld => Language::Nl,
+        Tur => Language::Tr,
+        Ind => Language::Id,
+        Tgl => Language::Tl,
+        Pol => Language::Pl,
+        Ces | Slk => Language::Cs,
+        Ron => Language::Ro,
+        Hun => Language::Hu,
+        Swe => Language::Sv,
+        Nob => Language::No,
+        Dan => Language::Da,
+        Fin => Language::Fi,
+        _ => return None,
+    })
 }
 
 const BAIT_WORDS: [&str; 17] = [
@@ -466,6 +510,11 @@ mod tests {
         assert_eq!(title_language("Как приготовить борщ"), Language::Ru);
         assert_eq!(title_language("Phở bò Hà Nội"), Language::Vi);
         assert_eq!(title_language("2026 12 31"), Language::Any);
+        assert_eq!(title_language("Come coltivare i pomodori sul balcone di casa"), Language::It);
+        assert_eq!(title_language("Notizie internazionali di oggi: cosa sta succedendo"), Language::It);
+        assert_eq!(title_language("Hoe maak je de lekkerste appeltaart van Nederland"), Language::Nl);
+        assert_eq!(title_language("Jak zrobić najlepszą pizzę w domu"), Language::Pl);
+        assert_eq!(title_language("Evde en güzel pizza nasıl yapılır"), Language::Tr);
     }
 
     #[test]

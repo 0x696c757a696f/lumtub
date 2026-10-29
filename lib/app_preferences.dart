@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'ai_filter.dart';
 
 import 'app_directories.dart';
 import 'blocked_groups.dart';
@@ -53,6 +54,7 @@ class AppPreferences {
     this.exploreRegion = ExploreRegion.any,
     this.exploreLanguage = ExploreLanguage.any,
     this.hideShorts = false,
+    this.aiFilter = AiFilterMode.off,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
     this.blockGroups = true,
@@ -130,6 +132,8 @@ class AppPreferences {
   final Map<String, List<String>> exploreHidden;
   /// Hides videos of a minute or less, which YouTube lists as Shorts.
   final bool hideShorts;
+  /// Hides videos labeled as made with AI, and the listed AI channels'.
+  final AiFilterMode aiFilter;
   final int minDurationMinutes;
   final bool hideWatched;
   /// Hides the groups in blocked_groups.dart from recommendations, explore
@@ -330,6 +334,7 @@ class AppPreferences {
     ExploreRegion? exploreRegion,
     ExploreLanguage? exploreLanguage,
     bool? hideShorts,
+    AiFilterMode? aiFilter,
     int? minDurationMinutes,
     bool? hideWatched,
     bool? blockGroups,
@@ -398,6 +403,7 @@ class AppPreferences {
         exploreRegion: exploreRegion ?? this.exploreRegion,
         exploreLanguage: exploreLanguage ?? this.exploreLanguage,
         hideShorts: hideShorts ?? this.hideShorts,
+        aiFilter: aiFilter ?? this.aiFilter,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
         blockGroups: blockGroups ?? this.blockGroups,
@@ -467,6 +473,7 @@ class AppPreferences {
         'exploreRegion': exploreRegion.name,
         'exploreLanguage': exploreLanguage.name,
         'hideShorts': hideShorts,
+        'aiFilter': aiFilter.name,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
         'blockGroups': blockGroups,
@@ -575,6 +582,7 @@ class AppPreferences {
       exploreRegion: ExploreRegion.parse(raw['exploreRegion']),
       exploreLanguage: ExploreLanguage.parse(raw['exploreLanguage']),
       hideShorts: flag('hideShorts', d.hideShorts),
+      aiFilter: AiFilterMode.parse(raw['aiFilter']),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
       blockGroups: flag('blockGroups', d.blockGroups),

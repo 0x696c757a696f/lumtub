@@ -43,6 +43,11 @@ class SubtitleViewState extends State<SubtitleView> {
   // The [StreamSubscription] to listen to the subtitle changes.
   StreamSubscription<List<String>>? subscription;
 
+  // Lumtub: the secondary line shown when the secondary subtitle changed,
+  // kept hidden until mpv sends another. Turned off, mpv reports the text
+  // as unavailable, which media_kit ignores, so the old line would stay.
+  String? staleSecondary;
+
   // The reference width for calculating the visible text scale factor.
   static const kTextScaleFactorReferenceWidth = 1920.0;
   // The reference height for calculating the visible text scale factor.
@@ -53,9 +58,18 @@ class SubtitleViewState extends State<SubtitleView> {
     subscription = widget.controller.player.stream.subtitle.listen((value) {
       setState(() {
         subtitle = value;
+        if (value.length < 2 || value[1] != staleSecondary) staleSecondary = null;
       });
     });
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(SubtitleView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.configuration.secondaryKey != oldWidget.configuration.secondaryKey && subtitle.length > 1 && subtitle[1].isNotEmpty) {
+      staleSecondary = subtitle[1];
+    }
   }
 
   @override
@@ -113,7 +127,7 @@ class SubtitleViewState extends State<SubtitleView> {
   Widget _lines(TextScaler textScaler) {
     final configuration = widget.configuration;
     final main = subtitle.isEmpty ? '' : subtitle.first.trim();
-    final secondary = subtitle.length < 2 ? '' : subtitle[1].trim();
+    final secondary = subtitle.length < 2 || configuration.secondaryKey == null || subtitle[1] == staleSecondary ? '' : subtitle[1].trim();
     final secondaryStyle = configuration.secondaryStyle;
     if (secondaryStyle == null) {
       return Text(
@@ -165,6 +179,10 @@ class SubtitleViewConfiguration {
   /// Lumtub: the gap between the secondary and the main subtitle.
   final double spacing;
 
+  /// Lumtub: the chosen secondary subtitle, null for none. When it changes,
+  /// the secondary line on screen goes until mpv sends the new track's.
+  final Object? secondaryKey;
+
   /// {@macro subtitle_view_configuration}
   const SubtitleViewConfiguration({
     this.visible = true,
@@ -181,6 +199,7 @@ class SubtitleViewConfiguration {
     this.textScaler,
     this.secondaryStyle,
     this.spacing = 4.0,
+    this.secondaryKey,
     this.padding = const EdgeInsets.fromLTRB(
       16.0,
       0.0,

@@ -335,7 +335,7 @@ class _Player extends StatelessWidget {
                       child: PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
                     ),
                   ),
-                  subtitleViewConfiguration: subtitleViewFor(controller.settings),
+                  subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label),
                 ),
               ),
               if (controller.waitingForStart && controller.playing != null)
@@ -591,7 +591,7 @@ class _ReplayChatMessage extends StatelessWidget {
               if (message.amount != null) Text(message.amount!, style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w700)),
               if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: context.colors.outline, fontSize: 12))),
             ]),
-            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 3), child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis)))),
+            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 3), child: SelectionArea(child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis))))),
             if (message.stickerUrl != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -678,7 +678,7 @@ class _UpNext extends StatelessWidget {
 /// size of the video; a small window, such as picture in picture, passes
 /// [smallWindow] with its size, which keeps the text readable and shrinks
 /// the gap below it.
-SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow}) {
+SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary}) {
   // The view scales by area against 1080p, which makes the text tiny in a
   // small window; there it goes by the short side, and no smaller than
   // three fifths.
@@ -709,6 +709,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
     // sub-pos counts from the top; 100 is the bottom edge.
     textScaler: textScaler,
+    secondaryKey: secondary,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );
 }

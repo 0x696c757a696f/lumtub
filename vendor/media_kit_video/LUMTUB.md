@@ -17,6 +17,9 @@ The changes, marked "Lumtub" in the code:
 - `lib/src/subtitle/subtitle_view.dart`: the secondary subtitle (the second
   entry of `Player.state.subtitle`) is drawn above the main one, not below,
   in its own style when `SubtitleViewConfiguration.secondaryStyle` is set.
+  It is drawn only while `secondaryKey` names a chosen subtitle, and when
+  that changes the old line goes at once: mpv reports the text of a track
+  turned off as unavailable, which media_kit ignores.
 - `lib/src/video_controller/native_video_controller/real.dart`: a size set
   with `setSize` is kept when the next video's size arrives, instead of
   being replaced by the video's own size.
@@ -29,3 +32,7 @@ The changes, marked "Lumtub" in the code:
   `gpu-hwdec-interop` is `d3d11-egl` unless zero-copy `dxva2` is in `hwdec`,
   so making the output does not also make a Direct3D 9 device for the
   DXVA2 interop.
+- `lib/src/video_controller/video_controller.dart`, `native_video_controller/real.dart`:
+  `VideoController.release` frees the video output while the player lives
+  on, so Lumtub can make a new one, on a new Direct3D device, after the
+  graphics device was lost (a driver reset).

@@ -717,7 +717,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 tooltip: tr('画质'),
                 label: height > 0 ? '${height}P' : (max == 0 ? tr('自动') : '${max}P'),
                 // A limit above what this video offers plays its highest.
-                value: choices.contains(max) ? max : height,
+                // Lowered for dropped frames, 自动 is not ticked, so
+                // picking it lifts the limit.
+                value: max == 0 && _controller.droppedCap > 0 ? -1 : (choices.contains(max) ? max : height),
                 values: [for (final h in choices) (h, h == 0 ? tr('自动') : '${h}P')],
                 onSelected: (h) => unawaited(_controller.setMaxHeight(h)),
                 onOpened: _menuOpened,
@@ -842,7 +844,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       PanelChoices<int>(
         label: tr('画质'),
         icon: Icons.high_quality_outlined,
-        value: settings.maxHeight,
+        value: settings.maxHeight == 0 && _controller.droppedCap > 0 ? -1 : settings.maxHeight,
         values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h))],
         onSelected: _controller.setMaxHeight,
       ),

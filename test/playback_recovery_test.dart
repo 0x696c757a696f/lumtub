@@ -106,4 +106,12 @@ void main() {
       expect(point.beforeFailure, const Duration(seconds: 12));
     });
   });
+
+  test('tells a lost graphics device from other mpv errors', () {
+    expect(PlaybackRecovery.graphicsLost('Mapping hardware decoded surface failed.'), isTrue);
+    expect(PlaybackRecovery.graphicsLost('AVHWFramesContext: Could not create the texture (887a0005)'), isTrue);
+    expect(PlaybackRecovery.graphicsLost('Could not create the texture (887A0006)'), isTrue);
+    expect(PlaybackRecovery.graphicsLost('Failed to allocate hw frames.'), isFalse);
+    expect(PlaybackRecovery.graphicsLost('Failure when receiving data from the peer'), isFalse);
+  });
 }

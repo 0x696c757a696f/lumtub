@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
+import '../../ai_filter.dart';
 import '../../app/app_controller.dart';
 import '../../blocked_groups.dart';
 import '../../feed_quality.dart';
@@ -80,6 +81,11 @@ List<(String, String)> get _scaleModes => [
 List<(String, String)> get _cacheModes => [('auto', tr('自动（推荐）')), ('yes', tr('启用')), ('no', tr('禁用'))];
 List<(ThemeMode, String)> get themeModes => [(ThemeMode.system, tr('跟随系统')), (ThemeMode.light, tr('浅色')), (ThemeMode.dark, tr('深色'))];
 List<(int, String)> get _durations => [(0, tr('不限')), (1, tr('1 分钟')), (3, tr('3 分钟')), (5, tr('5 分钟')), (10, tr('10 分钟')), (20, tr('20 分钟'))];
+List<(AiFilterMode, String)> get _aiFilterModes => [
+      (AiFilterMode.off, tr('关闭')),
+      (AiFilterMode.labeled, tr('隐藏 YouTube 标为 AI 生成的视频')),
+      (AiFilterMode.labeledAndList, tr('同上，再隐藏已知的 AI 量产频道')),
+    ];
 List<(FeedLevel, String)> get _feedLevels => [(FeedLevel.off, tr('不限')), (FeedLevel.reduce, tr('减少')), (FeedLevel.drop, tr('不推荐'))];
 List<(int, String)> get _feedIntervals => [(5, tr('5 分钟')), (10, tr('10 分钟')), (30, tr('30 分钟')), (60, tr('1 小时')), (180, tr('3 小时'))];
 List<(int, String)> get _hideTimes => [(2, tr('2 秒')), (3, tr('3 秒（默认）')), (5, tr('5 秒')), (10, tr('10 秒')), (30, tr('30 秒（便于屏幕阅读器）'))];
@@ -233,6 +239,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.hideShorts,
               onChanged: (v) => savePrefs(prefs.copyWith(hideShorts: v)),
             ), subtitle: tr('短视频 隐藏')),
+        SettingEntry(tr('屏蔽 AI 生成的视频'), (context) => NormalItem(
+              title: tr('屏蔽 AI 生成的视频'),
+              subtitle: tr('当前：{0}。在首页、搜索、探索、相关视频和频道里生效，已订阅的频道不受影响；每个视频向 YouTube 查询一次 AI 标记。AI 频道列表来自 KillSlop（killslop.app，CC BY-SA 4.0）和 AiSList（CC BY-NC 4.0），每天下载更新', [labelOf(_aiFilterModes, prefs.aiFilter)]),
+              leading: _icon(Icons.smart_toy_outlined),
+              onTap: () => pickFromDialog<AiFilterMode>(context, title: tr('屏蔽 AI 生成的视频'), value: prefs.aiFilter, values: _aiFilterModes, onSelected: (v) => savePrefs(prefs.copyWith(aiFilter: v))),
+            ), subtitle: tr('AI 人工智能 生成 合成 屏蔽')),
         SettingEntry(tr('推荐中的 Shorts 短视频'), (context) => NormalItem(
               title: tr('推荐中的 Shorts 短视频'),
               subtitle: prefs.hideShorts

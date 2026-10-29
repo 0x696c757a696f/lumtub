@@ -424,10 +424,124 @@ pub unsafe extern "C" fn lumtub_spoken_language(body: *const u8, length: usize) 
     give_json(&Spoken { language, title })
 }
 
+/// Whether YouTube labels a video as made with AI, from its `/next`
+/// answer: a badge under the player in `videoPrimaryInfoRenderer`. The
+/// "How this content was made" section alone is not enough, as dubbed
+/// videos have it too. None when the answer has no primary info to tell.
+pub fn ai_label(data: &Value) -> Option<bool> {
+    let contents = at(data, &["contents", "twoColumnWatchNextResults", "results", "results", "contents"])?.as_array()?;
+    let primary = contents.iter().find_map(|c| c.get("videoPrimaryInfoRenderer"))?;
+    let badges = primary.get("badges").and_then(Value::as_array);
+    Some(badges.is_some_and(|badges| {
+        badges.iter().filter_map(|b| b.get("metadataBadgeRenderer")).any(|badge| {
+            let style = badge.get("style").and_then(Value::as_str).unwrap_or_default();
+            let icon = at(badge, &["icon", "iconType"]).and_then(Value::as_str).unwrap_or_default();
+            let words = format!(
+                "{} {} {}",
+                text_of(badge.get("label")),
+                text_of(badge.get("tooltip")),
+                at(badge, &["accessibilityData", "label"]).and_then(Value::as_str).unwrap_or_default()
+            )
+            .to_lowercase();
+            (style.contains("SIMPLE") && icon.contains("INFO")) || words.contains("made with ai") || words.contains("synthetic") || words.starts_with("ai:")
+        })
+    }))
+}
+
+/// `{"ai": true | false | null}` for a `/next` answer; see [`ai_label`].
+///
+/// # Safety
+/// `body` must point to `length` readable bytes.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_ai_label(body: *const u8, length: usize) -> *mut c_char {
+    #[derive(Serialize)]
+    struct Label {
+        ai: Option<bool>,
+    }
+    let ai = serde_json::from_str::<Value>(unsafe { text(body, length) }).ok().and_then(|data| ai_label(&data));
+    give_json(&Label { ai })
+}
+
+/// The channels of KillSlop's list of AI channels (CC BY-SA 4.0,
+/// https://killslop.app): channel ids and lower-case @handles. Entries
+/// with a score above zero are left out; they read as disputed.
+pub fn ai_channels(data: &Value) -> Vec<String> {
+    let Some(channels) = data.get("channels").and_then(Value::as_array) else {
+        return Vec::new();
+    };
+    channels
+        .iter()
+        .filter(|c| c.get("score").and_then(Value::as_f64).unwrap_or(0.0) <= 0.0)
+        .filter_map(|c| c.get("id").and_then(Value::as_str))
+        .map(|id| if id.starts_with('@') { id.to_lowercase() } else { id.to_string() })
+        .filter(|id| id.starts_with("UC") || id.starts_with('@'))
+        .collect()
+}
+
+/// The channel ids of an AiSList channel id list: one id per line,
+/// comments starting with `!`.
+pub fn listed_channel_ids(list: &str) -> Vec<String> {
+    list.lines()
+        .map(str::trim)
+        .filter(|line| line.len() == 24 && line.starts_with("UC") && line.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_'))
+        .map(str::to_string)
+        .collect()
+}
+
+/// A JSON array of [`ai_channels`] for KillSlop's JSON list, or of
+/// [`listed_channel_ids`] for a plain id list.
+///
+/// # Safety
+/// `body` must point to `length` readable bytes.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_ai_channels(body: *const u8, length: usize) -> *mut c_char {
+    let body = unsafe { text(body, length) };
+    let channels = match serde_json::from_str::<Value>(body) {
+        Ok(data) => ai_channels(&data),
+        Err(_) => listed_channel_ids(body),
+    };
+    give_json(&channels)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn tells_the_ai_label() {
+        fn next(badges: Value) -> Value {
+            json!({"contents": {"twoColumnWatchNextResults": {"results": {"results": {"contents": [
+                {"videoPrimaryInfoRenderer": {"title": {"runs": [{"text": "A"}]}, "badges": badges}}
+            ]}}}}})
+        }
+        let ai = next(json!([{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_SIMPLE", "icon": {"iconType": "INFO"}, "label": "AI"}}]));
+        assert_eq!(ai_label(&ai), Some(true));
+        let worded = next(json!([{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_COLLECTION", "accessibilityData": {"label": "AI: Content was made with AI"}}}]));
+        assert_eq!(ai_label(&worded), Some(true));
+        let plain = next(json!([{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_SIMPLE", "label": "4K"}}]));
+        assert_eq!(ai_label(&plain), Some(false));
+        let none = json!({"contents": {"twoColumnWatchNextResults": {"results": {"results": {"contents": [{"videoPrimaryInfoRenderer": {}}]}}}}});
+        assert_eq!(ai_label(&none), Some(false));
+        assert_eq!(ai_label(&json!({"responseContext": {}})), None);
+    }
+
+    #[test]
+    fn reads_the_ai_channel_list() {
+        let list = json!({"license": "CC-BY-SA-4.0", "channels": [
+            {"id": "UCs8kQREN6lwSKNgGUF9LYsA", "score": 0},
+            {"id": "@SeaPop", "score": 0},
+            {"id": "@wsj", "score": 1},
+            {"id": "nonsense"}
+        ]});
+        assert_eq!(ai_channels(&list), vec!["UCs8kQREN6lwSKNgGUF9LYsA".to_string(), "@seapop".to_string()]);
+    }
+
+    #[test]
+    fn reads_a_channel_id_list() {
+        let list = "! AiSList blocklist by YouTube channel ID\n! Channels: 2\nUC---VSS6clgbT9mXRPqzzZA\r\nUC--1M2MGDAWI1EBcEzWbKJQ\n\nnot an id\nUC--1M2MGDAWI1EBcEzWbKJ\n";
+        assert_eq!(listed_channel_ids(list), vec!["UC---VSS6clgbT9mXRPqzzZA".to_string(), "UC--1M2MGDAWI1EBcEzWbKJQ".to_string()]);
+    }
 
     #[test]
     fn tells_the_spoken_language() {

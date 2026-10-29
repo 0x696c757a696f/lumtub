@@ -64,9 +64,18 @@ jobs:
             'User-Agent' = 'Lumtub-GitHub-Actions'
             Authorization = "Bearer $env:GITHUB_TOKEN"
           }
-          $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases/latest' -Headers $headers
-          $asset = $release.assets | Where-Object { $_.name -match "^mpv-dev-$([regex]::Escape($env:MPV_ARCH))-.+\.7z$" } | Select-Object -First 1
-          if (-not $asset) { throw "Latest release has no $env:MPV_ARCH development archive." }
+          # A new release is published before its assets finish uploading, so
+          # take the newest one that already has this architecture's archive.
+          $pattern = "^mpv-dev-$([regex]::Escape($env:MPV_ARCH))-.+\.7z$"
+          $releases = Invoke-RestMethod -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases?per_page=5' -Headers $headers
+          $release = $null
+          $asset = $null
+          foreach ($candidate in $releases) {
+            if ($candidate.draft -or $candidate.prerelease) { continue }
+            $asset = $candidate.assets | Where-Object { $_.name -match $pattern -and $_.state -eq 'uploaded' } | Select-Object -First 1
+            if ($asset) { $release = $candidate; break }
+          }
+          if (-not $asset) { throw "No recent release has a $env:MPV_ARCH development archive." }
           if ($asset.digest -notmatch '^sha256:([0-9a-fA-F]{64})$') { throw "Latest libmpv asset has no SHA-256 digest: $($asset.name)" }
           $expectedHash = $Matches[1].ToLowerInvariant()
           $downloadUri = [uri]$asset.browser_download_url

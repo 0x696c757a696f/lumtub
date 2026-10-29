@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../ai_filter.dart';
 import '../app_directories.dart';
 import '../app_updater.dart';
 import '../app_log.dart';
@@ -401,6 +402,9 @@ class AppController extends ChangeNotifier {
   VideoItem? _tracking;
   DateTime _lastProgressSave = DateTime(0);
   List<SkipSegment> _segments = const [];
+
+  /// The settings libmpv was last given.
+  PlayerSettings? _applied;
   final _skipped = <SkipSegment>{};
   final _http = appHttpClient();
   /// Sprite sheets of the progress bar's preview frames.
@@ -425,6 +429,7 @@ class AppController extends ChangeNotifier {
   String? _secondaryAutoFor;
   bool _decoderPending = false;
   int _mpvLogLines = 0;
+  String? _lastMpvLine;
   /// yt-dlp and libmpv error lines for the video being opened, which name
   /// the cause libmpv's own error message usually leaves out.
   final _recentErrors = <String>[];
@@ -434,6 +439,7 @@ class AppController extends ChangeNotifier {
   bool _updateCheckedForChallenge = false;
   /// The spoken language of explore's videos, for its language filter.
   VideoLanguages? _videoLanguages;
+  AiFilter? _aiFilter;
 
   int _lastDrops = 0;
 
@@ -446,6 +452,9 @@ class AppController extends ChangeNotifier {
   /// The quality automatic playback is lowered to for this run after
   /// frames kept dropping; 0 while it is not.
   int _droppedCap = 0;
+
+  /// The height playback was lowered to after dropped frames, 0 for none.
+  int get droppedCap => _droppedCap;
   DateTime _lastDropLog = DateTime(0);
   DateTime _lastFrameLog = DateTime(0);
   Timer? _dropTimer;
@@ -713,6 +722,7 @@ class AppController extends ChangeNotifier {
         logLevel: MPVLogLevel.warn,
       ));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      _applied = settings;
       // Compiled shaders are kept between runs, so a video's first frame
       // does not wait for them again.
       final platform = player.platform;
@@ -756,6 +766,12 @@ class AppController extends ChangeNotifier {
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
         _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}video_languages.json'));
+        _aiFilter = AiFilter(
+          _http,
+          labelsFile: File('${directories.cache.path}${Platform.pathSeparator}ai_labels.json'),
+          channelsFile: File('${directories.cache.path}${Platform.pathSeparator}ai_channels.json'),
+        )..addListener(_passOn('AI filter'));
+        unawaited(_aiFilter!.setMode(preferences.aiFilter));
         downloads = _downloadsFor(paths, directories)..addListener(_passOn('downloads'));
         final library = this.library = LibraryController(libraryStore, client: _http)
           ..repository = _repository
@@ -1845,7 +1861,7 @@ class AppController extends ChangeNotifier {
       _tracking = null;
       if (secondarySubtitle != null) {
         secondarySubtitle = null;
-        if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
+        if (platform is NativePlayer) unawaited(SecondarySubtitle.off(platform).catchError((_) {}));
       }
       _lastPosition = start ?? Duration.zero;
       _resumePoint.start(_lastPosition);
@@ -1880,7 +1896,7 @@ class AppController extends ChangeNotifier {
     if (secondarySubtitle != null) {
       secondarySubtitle = null;
       final platform = player.platform;
-      if (platform is NativePlayer) unawaited(platform.setProperty('secondary-sid', 'no').catchError((_) {}));
+      if (platform is NativePlayer) unawaited(SecondarySubtitle.off(platform).catchError((_) {}));
     }
     _lastPosition = start ?? Duration.zero;
     _resumePoint.start(_lastPosition);
@@ -2073,6 +2089,55 @@ class AppController extends ChangeNotifier {
       });
     } finally {
       _recovering = false;
+    }
+  }
+
+  bool _remakingOutput = false;
+  final _outputRemade = <DateTime>[];
+
+  /// The graphics device went away (a driver reset, say), so libmpv's
+  /// hardware-decoded frames no longer reach the picture, which flickers or
+  /// freezes. The video output is made again, on a new Direct3D device, and
+  /// the video reopened where it was. When that happens again soon after,
+  /// hardware decoding stays off until Lumtub restarts.
+  Future<void> _remakeVideoOutput(Player player, String reason) async {
+    final old = videoController;
+    if (_remakingOutput || _disposed || old == null || this.player != player) return;
+    _remakingOutput = true;
+    final item = _tracking ?? playing;
+    final position = _lastPosition;
+    final now = DateTime.now();
+    _outputRemade.removeWhere((at) => now.difference(at) > const Duration(minutes: 10));
+    if (_outputRemade.length >= 3) {
+      if (_outputRemade.length == 3) {
+        _outputRemade.add(now);
+        logError('The graphics device keeps getting lost; leaving the video output as it is', reason);
+        _notice(tr('显卡驱动反复重置，请重启 Lumtub'));
+      }
+      return;
+    }
+    final again = _outputRemade.isNotEmpty;
+    logInfo('The graphics device was lost ($reason); making the video output again${again ? ' and decoding in software' : ''}');
+    _recovering = true;
+    try {
+      await player.pause();
+      await old.release();
+      if (_disposed || this.player != player) return;
+      videoController = null;
+      _ensureVideo(player);
+      _outputRemade.add(now);
+      _update(() {});
+      _notice(again ? tr('显卡驱动又重置了一次，本次运行改用软件解码') : tr('显卡驱动重置了，已重新建立画面'));
+      await videoController?.platform.future;
+      // Making the output sets hwdec from the settings again.
+      final platform = player.platform;
+      if (again && platform is NativePlayer) await platform.setProperty('hwdec', 'no');
+      if (item != null && !_disposed && playing?.id == item.id) await _open(item, _playSerial, start: position > Duration.zero ? position : null);
+    } catch (e) {
+      logError('Could not make the video output again', e);
+    } finally {
+      _recovering = false;
+      _remakingOutput = false;
     }
   }
 
@@ -2327,7 +2392,8 @@ class AppController extends ChangeNotifier {
     }
     if (jsonEncode(next.toJson()) == jsonEncode(settings.toJson())) return;
     final player = this.player;
-    if (player != null) await PlayerOptionApplicator.apply(player, next, previous: settings);
+    if (player != null) await PlayerOptionApplicator.apply(player, next, previous: _applied ?? settings);
+    _applied = next;
     _update(() => settings = next);
     await _settingsStore?.save(next);
   }
@@ -2393,7 +2459,7 @@ class AppController extends ChangeNotifier {
           _decoderPending = false;
           unawaited(inspectCurrentDecoder(delay: const Duration(milliseconds: 500)));
         }
-        if (_segments.isNotEmpty) _skipSegments(position);
+        if (_segments.isNotEmpty && settings.sponsorBlock) _skipSegments(position);
         _countWatchTime();
         final now = DateTime.now();
         if (now.difference(_lastProgressSave) > const Duration(seconds: 5)) {
@@ -2436,6 +2502,10 @@ class AppController extends ChangeNotifier {
         // curl gave up on a stream; when it was the video's, the sound
         // plays on over the last picture.
         if (log.prefix == 'curl' && text.startsWith('transfer failed')) _streamLostIn = _playSerial;
+        if (PlaybackRecovery.graphicsLost(text)) unawaited(_remakeVideoOutput(player, text));
+        // The same line for every frame says nothing new.
+        if (text == _lastMpvLine) return;
+        _lastMpvLine = text;
         if (_mpvLogLines >= 200) return;
         _mpvLogLines++;
         logInfo('mpv [${log.prefix}] ${log.level}: $text');
@@ -3616,9 +3686,16 @@ class AppController extends ChangeNotifier {
     // Pages filter their lists on every rebuild, and a feed runs to a
     // thousand items: the answer is kept while the list and the preferences
     // stay. Hiding watched videos also follows which videos are finished.
-    final key = (prefs, subscriptions, search, search ? _query : null, prefs.hideWatched ? (library?.store, library?.store.finishedVersion) : null);
+    final ai = _aiFilter;
+    final key = (prefs, subscriptions, search, search ? _query : null, prefs.hideWatched ? (library?.store, library?.store.finishedVersion) : null, ai?.version);
     if (_visible[items] case (final known, final kept) when known == key) return kept;
-    final kept = _filter(items, prefs, subscriptions: subscriptions, search: search);
+    var kept = _filter(items, prefs, subscriptions: subscriptions, search: search);
+    // Subscribed channels are the viewer's own choice.
+    if (ai != null && ai.mode != AiFilterMode.off && !subscriptions) {
+      bool followed(VideoItem item) => item.channelId != null && (library?.isFollowing(item.channelId!) ?? false);
+      kept = [for (final item in kept) if (followed(item) || !ai.hides(item)) item];
+      ai.check(kept.where((item) => !followed(item)));
+    }
     _visible[items] = (key, kept);
     return kept;
   }
@@ -3641,6 +3718,7 @@ class AppController extends ChangeNotifier {
     final service = next.translation != preferences.translation;
     _update(() => preferences = next);
     if (service) _useTranslator();
+    unawaited(_aiFilter?.setMode(next.aiFilter));
     try {
       await _preferencesStore?.save(next);
     } on FileSystemException {
@@ -3905,14 +3983,26 @@ class AppController extends ChangeNotifier {
     final store = _settingsStore;
     final player = this.player;
     if (store == null || player == null) return;
-    final oldSettings = settings;
-    final requiresNextVideo = next.hwdec != oldSettings.hwdec || next.interpolation != oldSettings.interpolation;
+    // What libmpv has: a slider preview changes [settings] only.
+    final oldSettings = _applied ?? settings;
+    final requiresNextVideo = next.hwdec != oldSettings.hwdec ||
+        next.interpolation != oldSettings.interpolation ||
+        next.hwdecCodecs != oldSettings.hwdecCodecs ||
+        next.d3d11vaZeroCopy != oldSettings.d3d11vaZeroCopy ||
+        next.directRendering != oldSettings.directRendering;
     // Lighter scaling set for a busy GPU is not in the settings, so then
     // every option is set again.
     final ignoredOptions = await PlayerOptionApplicator.apply(player, next, previous: _lightRendering == null ? oldSettings : null);
+    _applied = next;
     _lightRendering = null;
     await store.save(next);
     _update(() => settings = next);
+    // The video playing skips by the new SponsorBlock choice too.
+    if (next.sponsorBlock != oldSettings.sponsorBlock || !setEquals(next.sponsorCategories, oldSettings.sponsorCategories)) {
+      _update(() => _segments = const []);
+      final item = playing;
+      if (next.sponsorBlock && item != null) unawaited(_loadSegments(item, _playSerial));
+    }
     if (next.proxyMode != oldSettings.proxyMode ||
         next.proxyAddress != oldSettings.proxyAddress ||
         next.dnsServer != oldSettings.dnsServer ||
@@ -3931,7 +4021,7 @@ class AppController extends ChangeNotifier {
               _zeroCopyDxva2(next.hwdec) != _zeroCopyDxva2(oldSettings.hwdec) && videoController != null
                   ? tr('；DXVA2 零拷贝要重启 Lumtub 后生效。')
                   : requiresNextVideo
-                      ? tr('；硬件解码和帧插值在下一段视频生效。')
+                      ? tr('；解码和帧插值的改动在下一段视频生效。')
                       : '。'
             ])
           : tr('已保存；此 libmpv 不支持：{0}。', [ignoredOptions.join(', ')]);
@@ -4119,6 +4209,7 @@ class AppController extends ChangeNotifier {
     if (_lightRendering == 'battery' && !Power.saving) {
       _lightRendering = null;
       await PlayerOptionApplicator.apply(player, settings);
+      _applied = settings;
       logInfo('Plugged in again; scaling back to normal');
       return;
     }

@@ -421,6 +421,13 @@ class AppController extends ChangeNotifier {
   SecureJsonFile? _translationKeyFile;
   /// The subtitle shown above the main one (双语字幕), if any.
   SubtitleOption? secondarySubtitle;
+  /// mpv's `secondary-sid` as it last said: 'no' when no second subtitle
+  /// shows. It can show one this controller did not choose, such as one
+  /// mpv brought back by itself.
+  String secondaryTrackId = 'no';
+
+  /// Whether a second subtitle shows.
+  bool get secondaryOn => secondarySubtitle != null || secondaryTrackId != 'no';
   /// The second subtitle being fetched or translated, shown as loading in
   /// the 字幕 panel rather than as 关闭.
   SubtitleOption? secondaryLoading;
@@ -2318,12 +2325,16 @@ class AppController extends ChangeNotifier {
     final track = player.state.track.subtitle;
     final off = track.id == 'no' || track.id == 'auto';
     final second = secondarySubtitle;
+    // A second subtitle mpv shows that no option names is read as a track.
+    final secondTrack = second != null || secondaryTrackId == 'no' ? null : player.state.tracks.subtitle.where((t) => t.id == secondaryTrackId).firstOrNull;
+    Future<List<SubtitleCue>> secondCues() => second != null ? _optionCues(second) : secondTrack != null ? _trackCues(platform, secondTrack) : Future.value(const []);
+    final hasSecond = second != null || secondTrack != null;
     final mode = preferences.subtitleListMode;
-    if (off || (second != null && mode == SubtitleListMode.second)) {
-      return second == null ? const [] : pairSubtitleCues(await _optionCues(second), const []);
+    if (off || (hasSecond && mode == SubtitleListMode.second)) {
+      return hasSecond ? pairSubtitleCues(await secondCues(), const []) : const [];
     }
     final main = await _trackCues(platform, track);
-    if (second == null && mode != SubtitleListMode.first) {
+    if (!hasSecond && mode != SubtitleListMode.first) {
       // A translation on its own is listed with the lines it was made
       // from, which stand first: on top, or alone with 只看第二字幕.
       final original = listedOriginalOf(track);
@@ -2338,8 +2349,8 @@ class AppController extends ChangeNotifier {
         }
       }
     }
-    if (second == null || mode == SubtitleListMode.first) return pairSubtitleCues(main, const []);
-    return pairSubtitleCues(main, await _optionCues(second));
+    if (!hasSecond || mode == SubtitleListMode.first) return pairSubtitleCues(main, const []);
+    return pairSubtitleCues(main, await secondCues());
   }
 
   /// The subtitle [track] was translated from, when it is a translation:
@@ -2535,6 +2546,23 @@ class AppController extends ChangeNotifier {
 
   void _listenTo(Player player) {
     void videoSize(_) => _outputSize?.video = Size((player.state.width ?? 0).toDouble(), (player.state.height ?? 0).toDouble());
+    final platform = player.platform;
+    if (platform is NativePlayer) {
+      // The subtitles shown are followed as mpv reports them, as it can
+      // change either by itself; the panel and the list read them here.
+      unawaited(platform.observeProperty('sid', (_) => syncMainSubtitle()).catchError((Object e) => logWarn('Could not follow the subtitle: $e')));
+      unawaited(platform.observeProperty('secondary-sid', (value) async {
+        secondaryTrackId = value.isEmpty || value == 'false' ? 'no' : value;
+        if (secondaryTrackId == 'no') {
+          if (secondarySubtitle != null && secondaryLoading == null) _update(() => secondarySubtitle = null);
+          return;
+        }
+        final title = player.state.tracks.subtitle.where((t) => t.id == secondaryTrackId).firstOrNull?.title;
+        if (secondarySubtitle != null && secondarySubtitle!.label != title) secondarySubtitle = null;
+        await syncMainSubtitle();
+        _update(() {});
+      }).catchError((Object e) => logWarn('Could not follow the second subtitle: $e')));
+    }
     _playerSubscriptions.addAll([
       player.stream.width.listen(videoSize),
       player.stream.height.listen(videoSize),

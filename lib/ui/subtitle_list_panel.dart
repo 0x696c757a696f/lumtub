@@ -44,6 +44,7 @@ class _SubtitleListState extends State<SubtitleList> {
   final _currentKey = GlobalKey();
 
   late SubtitleOption? _second = widget.controller.secondarySubtitle;
+  late String _secondTrack = widget.controller.secondaryTrackId;
   late SubtitleListMode _mode = widget.controller.preferences.subtitleListMode;
 
   @override
@@ -62,8 +63,9 @@ class _SubtitleListState extends State<SubtitleList> {
 
   void _secondChanged() {
     final mode = widget.controller.preferences.subtitleListMode;
-    if (identical(widget.controller.secondarySubtitle, _second) && mode == _mode) return;
+    if (identical(widget.controller.secondarySubtitle, _second) && widget.controller.secondaryTrackId == _secondTrack && mode == _mode) return;
     _second = widget.controller.secondarySubtitle;
+    _secondTrack = widget.controller.secondaryTrackId;
     _mode = mode;
     _reload();
   }
@@ -73,7 +75,7 @@ class _SubtitleListState extends State<SubtitleList> {
     final main = widget.player.state.track.subtitle;
     if (const {'no', 'auto'}.contains(main.id)) return false;
     // A translation is listed with its original lines too.
-    return _second != null || widget.controller.listedOriginalOf(main) != null;
+    return widget.controller.secondaryOn || widget.controller.listedOriginalOf(main) != null;
   }
 
   Widget _modeMenu(ColorScheme colors) => PopupMenuButton<SubtitleListMode>(

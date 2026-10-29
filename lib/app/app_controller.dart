@@ -765,7 +765,9 @@ class AppController extends ChangeNotifier {
         decodeStates = {...settings.decoderResults};
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
-        _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}video_languages.json'));
+        _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}spoken_languages.json'));
+        // Answers kept before 0.2.12 took some Chinese titles for Japanese.
+        unawaited(File('${directories.cache.path}${Platform.pathSeparator}video_languages.json').delete().then((_) {}, onError: (_) {}));
         _aiFilter = AiFilter(
           _http,
           labelsFile: File('${directories.cache.path}${Platform.pathSeparator}ai_labels.json'),

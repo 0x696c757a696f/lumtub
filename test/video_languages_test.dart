@@ -41,7 +41,6 @@ void main() {
       _video('aaaaaaaaaaa', 'Chengdu food trip'),
       _video('bbbbbbbbbbb', 'Chengdu food tour'),
       jsonEncode({'id': 'UCxxxxxxxxxxxxxxxxxxxxxx', 'title': 'A channel', '_type': 'url', 'ie_key': 'YoutubeTab', 'url': 'https://www.youtube.com/channel/UCxxxxxxxxxxxxxxxxxxxxxx'}),
-      // Only English titles may be translations; others are not asked.
       _video('ccccccccccc', '中文标题'),
       _video('eeeeeeeeeee', '日本語のタイトル'),
       // Not answered: judged by its listed title.
@@ -50,7 +49,7 @@ void main() {
     final kept = await languages.only(lines, ExploreLanguage.zh).toList();
     final titles = [for (final line in kept) (jsonDecode(line) as Map)['title']];
     expect(titles, unorderedEquals(['成都美食之旅', 'A channel', '中文标题']));
-    expect(asked, 3, reason: 'only the three English titles are asked about');
+    expect(asked, 5, reason: 'every video is asked about');
     asked = 0;
     final again = await languages.only(Stream.fromIterable([_video('aaaaaaaaaaa', 'Chengdu food trip')]), ExploreLanguage.en).toList();
     expect(again, isEmpty);

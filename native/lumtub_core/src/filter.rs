@@ -110,11 +110,33 @@ fn any_in(title: &str, ranges: &[(u32, u32)]) -> bool {
     })
 }
 
+/// Whether kana in [title] make it Japanese. Chinese titles borrow `の`
+/// for 的, `・` and `ー` as punctuation and the odd katakana letter, so a
+/// title with Han characters needs other hiragana or two katakana.
+fn kana_say_japanese(title: &str) -> bool {
+    let mut hiragana = 0;
+    let mut katakana = 0;
+    let mut han = false;
+    for c in title.chars() {
+        match c as u32 {
+            0x3041..=0x309F if c != 'の' => hiragana += 1,
+            0x30A1..=0x30FA => katakana += 1,
+            0x4E00..=0x9FFF | 0x3400..=0x4DBF => han = true,
+            _ => {}
+        }
+    }
+    if han {
+        hiragana > 0 || katakana >= 2
+    } else {
+        hiragana + katakana > 0 || title.contains('の')
+    }
+}
+
 /// The language [title] is most likely in: by its script, and for Latin
 /// letters by its small words. A Latin title with no small words at all,
 /// such as "Minecraft Speedrun", is taken as English.
 pub fn title_language(title: &str) -> Language {
-    if any_in(title, &[(0x3040, 0x30FF)]) {
+    if kana_say_japanese(title) {
         return Language::Ja;
     }
     if any_in(title, &[(0xAC00, 0xD7AF), (0x1100, 0x11FF)]) {
@@ -419,6 +441,12 @@ mod tests {
     #[test]
     fn tells_languages_apart() {
         assert_eq!(title_language("【4K】東京の夜景を歩く"), Language::Ja);
+        assert_eq!(title_language("【小Pの遊戲實況】週一不想努力啦 今天輕鬆玩遊戲"), Language::Zh);
+        assert_eq!(title_language("lijack的遊戲直播--光榮--PC--真・三國無雙 2 with 猛將傳"), Language::Zh);
+        assert_eq!(title_language("東京大学の入試問題を解説"), Language::Ja);
+        assert_eq!(title_language("【ホロライブ】新衣装お披露目"), Language::Ja);
+        assert_eq!(title_language("初音ミク 千本桜"), Language::Ja);
+        assert_eq!(title_language("ラーメン"), Language::Ja);
         assert_eq!(title_language("서울 맛집 투어"), Language::Ko);
         assert_eq!(title_language("中国历史纪录片 第一集"), Language::Zh);
         assert_eq!(title_language("Історія України"), Language::Uk);

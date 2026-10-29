@@ -138,14 +138,14 @@ class VideoLanguages {
 
   /// The lines of [lines] whose videos are spoken in [language], each
   /// with the title the uploader wrote; channels and playlists pass.
-  /// Listed titles are only ever translated into English, so a title in
-  /// any other language is the uploader's own and decides at once; only
-  /// English-looking titles are asked about. A video whose language could
-  /// not be asked is judged by its listed title, as before. Each line goes
-  /// out as soon as its answer is in, a few lookups ahead of the reader.
+  /// Every video is asked about: a listed title, translated or the
+  /// uploader's own, need not be in the language spoken. A video whose
+  /// language could not be asked is judged by its listed title. Each line
+  /// goes out as soon as its answer is in, a few lookups ahead of the
+  /// reader.
   Stream<String> only(Stream<String> lines, ExploreLanguage language) async* {
     final pending = <_Pending>[];
-    var asked = 0, kept = 0, untold = 0, byTitle = 0;
+    var asked = 0, kept = 0, untold = 0;
     Iterable<String> ready() sync* {
       for (final entry in [...pending]) {
         if (!entry.done) continue;
@@ -159,15 +159,6 @@ class VideoLanguages {
       final item = parseListingEntry(line);
       if (item is! VideoItem) {
         yield line;
-        continue;
-      }
-      final listed = titleLanguage(item.title);
-      if (listed != ExploreLanguage.en && listed != ExploreLanguage.any) {
-        byTitle++;
-        if (listed == language) {
-          kept++;
-          yield line;
-        }
         continue;
       }
       asked++;
@@ -190,7 +181,7 @@ class VideoLanguages {
       yield* Stream.fromIterable(ready());
     }
     } finally {
-      if (asked + byTitle > 0) logInfo('Language ${language.name}: kept $kept of ${asked + byTitle} videos ($byTitle by listed title, $asked asked, $untold not told)');
+      if (asked > 0) logInfo('Language ${language.name}: kept $kept of $asked videos ($untold not told)');
     }
   }
 }

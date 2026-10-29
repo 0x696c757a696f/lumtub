@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'ai_filter.dart';
+import 'app_log.dart';
 
 import 'app_directories.dart';
 import 'blocked_groups.dart';
@@ -55,6 +56,7 @@ class AppPreferences {
     this.exploreLanguage = ExploreLanguage.any,
     this.hideShorts = false,
     this.aiFilter = AiFilterMode.off,
+    this.logLevel = LogLevel.info,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
     this.blockGroups = true,
@@ -134,6 +136,9 @@ class AppPreferences {
   final bool hideShorts;
   /// Hides videos labeled as made with AI, and the listed AI channels'.
   final AiFilterMode aiFilter;
+
+  /// How much goes into the log.
+  final LogLevel logLevel;
   final int minDurationMinutes;
   final bool hideWatched;
   /// Hides the groups in blocked_groups.dart from recommendations, explore
@@ -335,6 +340,7 @@ class AppPreferences {
     ExploreLanguage? exploreLanguage,
     bool? hideShorts,
     AiFilterMode? aiFilter,
+    LogLevel? logLevel,
     int? minDurationMinutes,
     bool? hideWatched,
     bool? blockGroups,
@@ -404,6 +410,7 @@ class AppPreferences {
         exploreLanguage: exploreLanguage ?? this.exploreLanguage,
         hideShorts: hideShorts ?? this.hideShorts,
         aiFilter: aiFilter ?? this.aiFilter,
+        logLevel: logLevel ?? this.logLevel,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
         blockGroups: blockGroups ?? this.blockGroups,
@@ -474,6 +481,7 @@ class AppPreferences {
         'exploreLanguage': exploreLanguage.name,
         'hideShorts': hideShorts,
         'aiFilter': aiFilter.name,
+        'logLevel': logLevel.name,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
         'blockGroups': blockGroups,
@@ -583,6 +591,7 @@ class AppPreferences {
       exploreLanguage: ExploreLanguage.parse(raw['exploreLanguage']),
       hideShorts: flag('hideShorts', d.hideShorts),
       aiFilter: AiFilterMode.parse(raw['aiFilter']),
+      logLevel: LogLevel.parse(raw['logLevel']),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
       blockGroups: flag('blockGroups', d.blockGroups),

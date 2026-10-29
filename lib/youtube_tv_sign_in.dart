@@ -63,7 +63,7 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
     try {
       return _bindings = _Bindings(core.library);
     } catch (e) {
-      logInfo('The TV-code sign-in is not in this core: $e');
+      logWarn('The TV-code sign-in is not in this core: $e');
       return null;
     }
   }
@@ -111,7 +111,7 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
           _finish(port, TvSignInState.signedIn);
           unawaited(_readName());
         case 2:
-          logInfo('TV code sign-in failed: ${message[1]}');
+          logWarn('TV code sign-in failed: ${message[1]}');
           error = _why(message[1] as String);
           _finish(port, TvSignInState.signedOut);
         case 3:
@@ -156,7 +156,7 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
       name = accountName(jsonDecode(utf8.decode(answer.body)));
       _notify();
     } catch (e) {
-      logInfo('Could not read the TV-code account: $e');
+      logWarn('Could not read the TV-code account: $e');
     }
   }
 
@@ -209,7 +209,7 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
     final status = message[0] as int;
     if (status == -1) return null;
     if (status == -2) {
-      logInfo('The TV-code sign-in expired or was revoked');
+      logWarn('The TV-code sign-in expired or was revoked');
       state = TvSignInState.signedOut;
       error = tr('电视码登录已失效，请重新登录');
       _notify();

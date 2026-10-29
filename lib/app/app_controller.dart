@@ -333,14 +333,14 @@ class AppController extends ChangeNotifier {
     try {
       source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort)).info, settings: _playback);
     } catch (e) {
-      logInfo('Cast: yt-dlp could not resolve: $e');
+      logWarn('Cast: yt-dlp could not resolve: $e');
     }
     for (final kind in RelayKind.values) {
       if (source != null) break;
       try {
         source = castSourceFromRelay(await (kind == RelayKind.piped ? _piped.fetch(item.id) : _invidious.fetch(item.id)), settings: _playback);
       } catch (e) {
-        logInfo('Cast: $kind could not resolve: $e');
+        logWarn('Cast: $kind could not resolve: $e');
       }
     }
     if (source == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
@@ -631,7 +631,7 @@ class AppController extends ChangeNotifier {
       final found = await feed.accountPlaylists();
       if (feed.available) tvPlaylists = found;
     } catch (e) {
-      logInfo('Could not read the YouTube playlists: $e');
+      logWarn('Could not read the YouTube playlists: $e');
     } finally {
       tvPlaylistsLoading = false;
       if (!_disposed) notifyListeners();
@@ -697,6 +697,7 @@ class AppController extends ChangeNotifier {
       final preferencesStore = AppPreferencesStore(directories);
       // Separate files: read together rather than one after another.
       final (_, _, _, settings, preferences, _, _) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load(), channelPlayback.load(), watchTime.load()).wait;
+      AppLog.level = preferences.logLevel;
       this.channelPlayback = channelPlayback;
       this.watchTime = watchTime;
       speechStore = SpeechSubtitleStore(Directory('${directories.data.path}${Platform.pathSeparator}speech'));
@@ -719,7 +720,8 @@ class AppController extends ChangeNotifier {
         // view is turned off on the watch page. It is off by default: the
         // build that turned it on for everyone also brought dropped frames.
         libass: settings.libassSubtitles,
-        logLevel: MPVLogLevel.warn,
+        // libmpv's own notes only with the debug level; it says a lot.
+        logLevel: preferences.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn,
       ));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
       _applied = settings;
@@ -860,7 +862,7 @@ class AppController extends ChangeNotifier {
       final bytes = await manager.size(settings);
       if (!_disposed) _update(() => cacheBytes = bytes);
     } on FileSystemException catch (error) {
-      logInfo('Could not measure cache size: $error');
+      logWarn('Could not measure cache size: $error');
     }
   }
 
@@ -870,7 +872,7 @@ class AppController extends ChangeNotifier {
     try {
       final freed = await trimThumbnails(directory, thumbnailCapBytes(settings.cacheLimitGb));
       if (freed > 0) {
-        logInfo('Thumbnail cache over its limit, freed ${formatBytes(freed)}');
+        logDebug(() => 'Thumbnail cache over its limit, freed ${formatBytes(freed)}');
         final manager = _cacheManager;
         if (manager != null) {
           final left = await manager.size(settings);
@@ -878,7 +880,7 @@ class AppController extends ChangeNotifier {
         }
       }
     } catch (e) {
-      logInfo('Could not trim the thumbnail cache: $e');
+      logWarn('Could not trim the thumbnail cache: $e');
     }
   }
 
@@ -1344,7 +1346,7 @@ class AppController extends ChangeNotifier {
     }
     if (_recentExplore.remove(_exploreKey) case (final at, final loader)) {
       if (DateTime.now().difference(at) < _keepExplore) {
-        logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
+        logDebug(() => 'Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
         _update(() => explore = loader..addListener(_passOn('explore')));
         return;
       }
@@ -1458,10 +1460,10 @@ class AppController extends ChangeNotifier {
           Future.value(query)
         else
           _google.translate(query, target).timeout(const Duration(seconds: 10)).then((words) {
-            logInfo('Explore searches "$query" in $target as "$words"');
+            logDebug(() => 'Explore searches "$query" in $target as "$words"');
             return words.trim().isEmpty ? query : words;
           }, onError: (Object e) {
-            logInfo('Could not translate the explore search "$query" into $target: $e');
+            logWarn('Could not translate the explore search "$query" into $target: $e');
             return query;
           }),
     ]);
@@ -1769,7 +1771,7 @@ class AppController extends ChangeNotifier {
     if (serial != _playSerial || this.player != player) return;
     final second = kept.second;
     if (second != null && secondarySubtitle?.label != second.label) {
-      logInfo('Showing ${second.language} (${second.kind.name}) as the second subtitle again');
+      logDebug(() => 'Showing ${second.language} (${second.kind.name}) as the second subtitle again');
       await setSecondarySubtitle(second);
     }
   }
@@ -1791,12 +1793,12 @@ class AppController extends ChangeNotifier {
     final folder = File(Platform.resolvedExecutable).parent.path;
     final mpv = paths?.mpv;
     final bytes = await Isolate.run(_readingPlayerFiles(folder, mpv));
-    logInfo('Read ${bytes >> 20} MB of player files in ${read.elapsedMilliseconds} ms');
+    logDebug(() => 'Read ${bytes >> 20} MB of player files in ${read.elapsedMilliseconds} ms');
     final directories = this.directories;
     if (directories != null) {
       try {
         final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders').listSync().whereType<File>().length;
-        logInfo('Shader cache holds $shaders shaders');
+        logDebug(() => 'Shader cache holds $shaders shaders');
       } catch (_) {}
     }
     await _measureDecoders();
@@ -1833,7 +1835,7 @@ class AppController extends ChangeNotifier {
     final controller = videoController = VideoController(player, configuration: VideoControllerConfiguration(hwdec: settings.hwdec));
     // It is made after the next frame, and an idle window draws none.
     WidgetsBinding.instance.scheduleFrame();
-    unawaited(controller.platform.future.then((_) => logInfo('Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
+    unawaited(controller.platform.future.then((_) => logDebug(() => 'Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
   }
 
   Future<bool> _openOnce(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
@@ -1848,7 +1850,7 @@ class AppController extends ChangeNotifier {
       // software, say) streams instead, in a codec the rules allow.
       final localCodec = local?.videoCodec;
       if (local != null && !FormatPolicy.allows(settings, localCodec)) {
-        logInfo('The download of ${item.id} is ${localCodec!.label}, a codec the playback rules disable; playing online instead');
+        logWarn('The download of ${item.id} is ${localCodec!.label}, a codec the playback rules disable; playing online instead');
         _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [localCodec.label]));
       } else if (local != null) {
         return await _openLocal(item, serial, local, start: start, play: play);
@@ -2027,7 +2029,7 @@ class AppController extends ChangeNotifier {
   /// server not yet tried, and only when there is none shows the error.
   Future<bool> _fallBack(VideoItem item, int serial, PlaybackFailure failure, {Duration? start, bool play = true}) async {
     if (failure.kind == FailureKind.rateLimited) _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
-    if (_youtubeRefused == null) logInfo('YouTube would not play ${item.id} (${failure.kind.name}); trying Piped and Invidious');
+    if (_youtubeRefused == null) logWarn('YouTube would not play ${item.id} (${failure.kind.name}); trying Piped and Invidious');
     _youtubeRefused = failure;
     if (await _openViaRelays(item, serial, start: start, play: play)) return true;
     if (serial == _playSerial) _fail(item, PlaybackFailure(failure.kind, failure.detail, tried: [for (final k in _relaysTried) k == RelayKind.piped ? 'Piped' : 'Invidious']));
@@ -2049,7 +2051,7 @@ class AppController extends ChangeNotifier {
       logInfo('Playing ${item.id} from $name ${video.server}, took ${watch.elapsedMilliseconds} ms');
       return address;
     } catch (e) {
-      logInfo('$e; not using $name');
+      logWarn('$e; not using $name');
       return null;
     }
   }
@@ -2088,7 +2090,7 @@ class AppController extends ChangeNotifier {
         ? scheduled + const Duration(seconds: 15)
         : Duration(seconds: min(30 * (1 << min(_startAttempts, 2)), 120));
     _startAttempts++;
-    logInfo('${item.id} has not started, opening it again in ${delay.inSeconds} s');
+    logWarn('${item.id} has not started, opening it again in ${delay.inSeconds} s');
     _startTimer = Timer(delay, () {
       if (_disposed || serial != _playSerial || playing?.id != item.id || !waitingForStart) return;
       unawaited(play(item, keepMini: true, retryingStart: true));
@@ -2106,10 +2108,10 @@ class AppController extends ChangeNotifier {
       _fail(item, PlaybackFailure.classify([message, ..._recentErrors]));
       return;
     }
-    logInfo('Playback interrupted, reconnecting ${item.id} at ${_clock(position)}: $message');
+    logWarn('Playback interrupted, reconnecting ${item.id} at ${_clock(position)}: $message');
     if (_relayed == item.id) {
       _unrelayed = item.id;
-      logInfo('Playing ${item.id} without the local chunked relay');
+      logWarn('Playing ${item.id} without the local chunked relay');
     }
     _notice(tr('网络中断，正在从 {0} 重新连接…', [_clock(position)]));
     _recovering = true;
@@ -2158,7 +2160,7 @@ class AppController extends ChangeNotifier {
       return;
     }
     final again = _outputRemade.isNotEmpty;
-    logInfo('The graphics device was lost ($reason); making the video output again${again ? ' and decoding in software' : ''}');
+    logWarn('The graphics device was lost ($reason); making the video output again${again ? ' and decoding in software' : ''}');
     _recovering = true;
     try {
       await player.pause();
@@ -2217,7 +2219,7 @@ class AppController extends ChangeNotifier {
       if (main == id) await syncMainSubtitle();
       logInfo('Subtitle translation finished; track $id replaced by ${added['id']}');
     } catch (e) {
-      logInfo('Could not reload the finished subtitle translation: $e');
+      logWarn('Could not reload the finished subtitle translation: $e');
     }
   }
 
@@ -2245,7 +2247,7 @@ class AppController extends ChangeNotifier {
       final track = find(player.state.tracks) ?? await player.stream.tracks.map(find).firstWhere((t) => t != null).timeout(const Duration(seconds: 3));
       if (track != null) await player.setSubtitleTrack(track);
     } catch (e) {
-      logInfo('Could not read the selected subtitle: $e');
+      logWarn('Could not read the selected subtitle: $e');
     }
   }
 
@@ -2254,7 +2256,7 @@ class AppController extends ChangeNotifier {
     try {
       return await _subtitleFiles.pathFor(option);
     } catch (e) {
-      logInfo('Could not fetch subtitles ${option.language}: $e');
+      logWarn('Could not fetch subtitles ${option.language}: $e');
       rethrow;
     }
   }
@@ -2313,7 +2315,7 @@ class AppController extends ChangeNotifier {
     try {
       text = await read();
     } catch (e) {
-      logInfo('Could not read the subtitle lines: $e');
+      logWarn('Could not read the subtitle lines: $e');
     }
     final cues = text == null ? const <SubtitleCue>[] : parseSubtitleCues(text);
     if (cues.isNotEmpty) {
@@ -2377,7 +2379,7 @@ class AppController extends ChangeNotifier {
     if (mainWanted && (mainTitle == null || (spoken != null ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage) : !speaks(mainLanguage, first)))) {
       final option = spoken ?? subtitleIn(details.subtitles, first);
       if (option != null && option.label != mainTitle) {
-        logInfo('Showing ${option.language} (${option.kind.name}) as the main subtitle');
+        logDebug(() => 'Showing ${option.language} (${option.kind.name}) as the main subtitle');
         await showSubtitle(option);
         if (serial != _playSerial || this.player != player) return;
         mainTitle = option.label;
@@ -2393,13 +2395,14 @@ class AppController extends ChangeNotifier {
     } else {
       option = target == null ? null : subtitleIn(details.subtitles, target);
       if (option == null || speaks(mainLanguage, target!)) {
-        if (wanted.isNotEmpty) logInfo('No second subtitle in $wanted beside $mainLanguage');
+        if (wanted.isNotEmpty) logWarn('No second subtitle in $wanted beside $mainLanguage');
         return;
       }
     }
     if (option.label == mainTitle || secondarySubtitle != null) return;
-    logInfo('Showing ${option.language} (${option.kind.name}) as the second subtitle');
-    await setSecondarySubtitle(option);
+    final second = option;
+    logDebug(() => 'Showing ${second.language} (${second.kind.name}) as the second subtitle');
+    await setSecondarySubtitle(second);
   }
 
   /// Keeps what was just chosen in the 字幕 panel for the videos after this
@@ -2526,7 +2529,7 @@ class AppController extends ChangeNotifier {
       player.stream.error.listen((message) {
         if (playing == null || message.isEmpty) return;
         if (isSubtitleError(message)) {
-          logInfo('Subtitles failed to load, video keeps playing: $message');
+          logWarn('Subtitles failed to load, video keeps playing: $message');
           return;
         }
         // FFmpeg may log the HTTP status before naming the request. Keep
@@ -2547,9 +2550,17 @@ class AppController extends ChangeNotifier {
         // The same line for every frame says nothing new.
         if (text == _lastMpvLine) return;
         _lastMpvLine = text;
-        if (_mpvLogLines >= 200) return;
+        if (_mpvLogLines >= (AppLog.level == LogLevel.debug ? 2000 : 200)) return;
         _mpvLogLines++;
-        logInfo('mpv [${log.prefix}] ${log.level}: $text');
+        final line = 'mpv [${log.prefix}] ${log.level}: $text';
+        switch (log.level) {
+          case 'fatal' || 'error':
+            logError(line);
+          case 'warn':
+            logWarn(line);
+          default:
+            logDebug(() => line);
+        }
       }),
       // A stream that stops delivering data leaves mpv buffering forever.
       player.stream.buffering.listen((buffering) {
@@ -2577,7 +2588,7 @@ class AppController extends ChangeNotifier {
           return;
         }
         final limited = _youtubeRefused;
-        logInfo('Piped or Invidious address did not play ($message); ${limited != null ? 'trying the next server' : 'connecting to YouTube directly'}');
+        logWarn('Piped or Invidious address did not play ($message); ${limited != null ? 'trying the next server' : 'connecting to YouTube directly'}');
         unawaited(limited != null ? _fallBack(item, _playSerial, limited, start: position) : _open(item, _playSerial, start: position, piped: false));
         return;
       }
@@ -2590,7 +2601,7 @@ class AppController extends ChangeNotifier {
         // ytdl_hook resolve the video itself once.
         _openedResolved = null;
         _repository?.streams.forget(item.id);
-        logInfo('Prefetched address did not play ($message; $_openedOrigin); libmpv resolves ${item.id} again');
+        logWarn('Prefetched address did not play ($message; $_openedOrigin); libmpv resolves ${item.id} again');
         unawaited(_open(item, _playSerial, start: _lastPosition > Duration.zero ? _lastPosition : null, resolved: false));
         return;
       }
@@ -2727,7 +2738,7 @@ class AppController extends ChangeNotifier {
       try {
         await platform.command(['seek', '0', 'relative+exact']);
       } catch (e) {
-        logInfo('Could not refresh the picture after restoring: $e');
+        logWarn('Could not refresh the picture after restoring: $e');
       }
     }
   }
@@ -3317,7 +3328,7 @@ class AppController extends ChangeNotifier {
     if (!Platform.isWindows) return;
     final before = ProcessInfo.currentRss;
     releaseFreedMemory();
-    logInfo('Released idle memory: ${before >> 20} MB → ${ProcessInfo.currentRss >> 20} MB');
+    logDebug(() => 'Released idle memory: ${before >> 20} MB → ${ProcessInfo.currentRss >> 20} MB');
   }
 
   /// Opens [target]; 返回 comes back to where this was.
@@ -3636,7 +3647,7 @@ class AppController extends ChangeNotifier {
     final length = player.state.duration.inMilliseconds / 1000;
     unawaited(() async {
       final why = await sign.reportWatched(item.id, from: to < 180 ? 0 : to, to: to, length: length);
-      if (why != null) logInfo('Could not add ${item.id} to the YouTube history: $why');
+      if (why != null) logWarn('Could not add ${item.id} to the YouTube history: $why');
     }());
   }
 
@@ -3758,6 +3769,10 @@ class AppController extends ChangeNotifier {
   Future<void> savePreferences(AppPreferences next) async {
     final service = next.translation != preferences.translation;
     _update(() => preferences = next);
+    if (next.logLevel != AppLog.level) {
+      AppLog.level = next.logLevel;
+      logInfo('Log level ${next.logLevel.name}');
+    }
     if (service) _useTranslator();
     unawaited(_aiFilter?.setMode(next.aiFilter));
     try {
@@ -4130,7 +4145,7 @@ class AppController extends ChangeNotifier {
       if (crop != _paddingCrop) {
         _paddingCrop = crop;
         await platform.setProperty('video-crop', crop);
-        if (crop.isNotEmpty) logInfo('Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
+        if (crop.isNotEmpty) logDebug(() => 'Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
       }
       if (normalized != null) {
         settings = settings.copyWith(decoderResults: decodeStates);
@@ -4141,7 +4156,7 @@ class AppController extends ChangeNotifier {
       final item = playing;
       final fileCodec = VideoCodec.of(normalized);
       if (item != null && _openedLocal == item.id && !FormatPolicy.allows(settings, fileCodec)) {
-        logInfo('The download of ${item.id} is ${fileCodec!.label}, a codec the playback rules disable; playing online instead');
+        logWarn('The download of ${item.id} is ${fileCodec!.label}, a codec the playback rules disable; playing online instead');
         _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [fileCodec.label]));
         unawaited(_open(item, _playSerial, start: player?.state.position, allowLocal: false));
       }
@@ -4175,7 +4190,7 @@ class AppController extends ChangeNotifier {
         // be compared with how the same machine plays normally.
         if (frames != null && DateTime.now().difference(_lastFrameLog) >= const Duration(minutes: 3)) {
           _lastFrameLog = DateTime.now();
-          logInfo('Frames in 10 s, $added dropped: $frames');
+          logDebug(() => 'Frames in 10 s, $added dropped: $frames');
         }
         return;
       }
@@ -4184,7 +4199,7 @@ class AppController extends ChangeNotifier {
       for (final name in ['avsync', 'estimated-vf-fps', 'container-fps', 'display-fps', 'vo-delayed-frame-count', 'mistimed-frame-count', 'decoder-frame-drop-count', 'hwdec-current', 'video-sync', 'speed', 'video-params/w', 'video-params/h', 'time-pos', 'audio-pts', 'audio-params/samplerate', 'audio-out-params/samplerate', 'current-ao', 'd3d11va-zero-copy', 'vd-lavc-dr', 'video-codec', 'video-out-params/pixelformat']) {
         values.add('$name=${await platform.getProperty(name)}');
       }
-      logInfo('Dropped $added frames in 10 s ($drops total): ${values.join(' ')}${frames == null ? '' : ' · frames $frames'}');
+      logDebug(() => 'Dropped $added frames in 10 s ($drops total): ${values.join(' ')}${frames == null ? '' : ' · frames $frames'}');
     } catch (_) {
       // Statistics are best effort.
     }
@@ -4214,13 +4229,13 @@ class AppController extends ChangeNotifier {
     // A video stream that broke off, or a restart that brought nothing
     // back, needs the video opened again at the same place.
     if (drawn == 0 && (_streamLostIn == _playSerial || _pictureRestartedIn == _playSerial)) {
-      logInfo('Picture stalled while playing ($frames); the video stream is gone, reopening');
+      logWarn('Picture stalled while playing ($frames); the video stream is gone, reopening');
       _pictureRestartedIn = null;
       _streamLostIn = null;
       unawaited(_recover('The video stream stopped while the sound played on'));
       return;
     }
-    logInfo('Picture stalled while playing ($frames); ${drawn == 0 ? 'restarting the decoder' : 'registering the texture again'}');
+    logWarn('Picture stalled while playing ($frames); ${drawn == 0 ? 'restarting the decoder' : 'registering the texture again'}');
     try {
       if (drawn == 0) {
         _pictureRestartedIn = _playSerial;
@@ -4229,7 +4244,7 @@ class AppController extends ChangeNotifier {
         await outputSize.refresh();
       }
     } catch (e) {
-      logInfo('Could not bring the picture back: $e');
+      logWarn('Could not bring the picture back: $e');
     }
   }
 
@@ -4263,7 +4278,7 @@ class AppController extends ChangeNotifier {
       final busy = frames == null ? null : drawBusy(frames, double.tryParse(await platform.getProperty('container-fps')) ?? 0);
       if (busy == null) return;
       reason = 'busy';
-      logInfo('Frames take ${busy.toStringAsFixed(1)} ms to draw, most of their time');
+      logDebug(() => 'Frames take ${busy.toStringAsFixed(1)} ms to draw, most of their time');
     }
     _lightRendering = reason;
     for (final MapEntry(:key, :value) in PlayerOptionApplicator.fastRendering.entries) {
@@ -4289,7 +4304,7 @@ class AppController extends ChangeNotifier {
     final lower = stepDownHeight(height, availableHeights);
     if (lower == null) return;
     _droppedCap = lower;
-    logInfo('Frames kept dropping at ${height}p${fps.round()}; automatic quality lowered to ${lower}p for this run');
+    logWarn('Frames kept dropping at ${height}p${fps.round()}; automatic quality lowered to ${lower}p for this run');
     _notice(tr('播放一直掉帧，自动画质已降到 {0}p（本次运行有效，重新选“自动”可恢复）', ['$lower']));
     await reloadVideo();
   }
@@ -4322,7 +4337,7 @@ class AppController extends ChangeNotifier {
       for (final name in ['video-params/w', 'video-params/h', 'video-codec', 'hwdec-current', 'video-out-params/pixelformat']) {
         values.add('$name=${await platform.getProperty(name)}');
       }
-      logInfo('Memory: process ${mb(ProcessInfo.currentRss)} (peak ${mb(ProcessInfo.maxRss)}) · playback cache ${mb(total)} (ahead ${mb(ahead)}) · image cache ${mb(PaintingBinding.instance.imageCache.currentSizeBytes)} · ${values.join(' ')}');
+      logDebug(() => 'Memory: process ${mb(ProcessInfo.currentRss)} (peak ${mb(ProcessInfo.maxRss)}) · playback cache ${mb(total)} (ahead ${mb(ahead)}) · image cache ${mb(PaintingBinding.instance.imageCache.currentSizeBytes)} · ${values.join(' ')}');
     } catch (_) {
       // Statistics are best effort.
     }

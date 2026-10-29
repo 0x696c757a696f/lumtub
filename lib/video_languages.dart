@@ -71,7 +71,7 @@ class VideoLanguages {
         }
         return found;
       } catch (e) {
-        logInfo('Could not tell the language of $id: $e');
+        logWarn('Could not tell the language of $id: $e');
         return null;
     } finally {
       _running--;
@@ -103,7 +103,7 @@ class VideoLanguages {
       final whole = await _fetch(id, tv: _tvFirst, whole: true);
       if (whole != null && whole.spoken.heard) {
         _maskDrops = true;
-        logInfo('The /player field mask left out captions; asking for whole answers');
+        logWarn('The /player field mask left out captions; asking for whole answers');
         return whole.spoken;
       }
     }
@@ -179,7 +179,7 @@ class VideoLanguages {
       final out = File(path);
       out.parent.createSync(recursive: true);
       out.writeAsStringSync(jsonEncode(raw));
-    }).catchError((Object e) => logInfo('Could not save video languages: $e')));
+    }).catchError((Object e) => logWarn('Could not save video languages: $e')));
   }
 
   /// The lines of [lines] whose videos are spoken in [language], each

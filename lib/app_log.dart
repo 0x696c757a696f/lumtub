@@ -5,6 +5,28 @@ import 'dart:io';
 /// The app version, set by the release build with `--dart-define`.
 const appVersion = String.fromEnvironment('LUMTUB_VERSION', defaultValue: '开发版');
 
+/// How much goes into the log: each level keeps those above it too.
+enum LogLevel {
+  /// Failures the user notices, such as a video that will not play.
+  error('ERROR'),
+
+  /// Something went wrong and Lumtub worked around it.
+  warn('WARN '),
+
+  /// What Lumtub did: started, played, switched. The default.
+  info('INFO '),
+
+  /// Details for tracking a problem down, such as every lookup and timing.
+  debug('DEBUG');
+
+  const LogLevel(this.tag);
+
+  /// The level as written in the log, padded to one width.
+  final String tag;
+
+  static LogLevel parse(Object? raw) => values.where((l) => l.name == raw).firstOrNull ?? info;
+}
+
 /// A small plain-text log in the app's `logs` folder, for diagnosing problems
 /// on other people's computers. It stays on this computer and never contains
 /// tokens or signed stream addresses.
@@ -20,6 +42,9 @@ class AppLog {
   static AppLog? current;
 
   static const maxBytes = 1024 * 1024;
+
+  /// The least important level written; lines below it are dropped.
+  static LogLevel level = LogLevel.info;
 
   /// Starts the log, keeping the previous one as `lumtub.old.log` once it
   /// grows past [maxBytes].
@@ -47,9 +72,10 @@ class AppLog {
 
   /// Queues a line; lines are written together shortly after, or at once
   /// for errors, without blocking the caller.
-  void write(String level, String message) {
-    _pending.write('${DateTime.now().toIso8601String()} $level ${redact(message)}\n');
-    if (level.trim() == 'ERROR') {
+  void write(LogLevel level, String message) {
+    if (level.index > AppLog.level.index) return;
+    _pending.write('${DateTime.now().toIso8601String()} ${level.tag} ${redact(message)}\n');
+    if (level == LogLevel.error) {
       unawaited(flush());
     } else {
       _timer ??= Timer(flushDelay, () => unawaited(flush()));
@@ -106,9 +132,17 @@ class AppLog {
   }
 }
 
-void logInfo(String message) => AppLog.current?.write('INFO ', message);
+void logInfo(String message) => AppLog.current?.write(LogLevel.info, message);
+
+void logWarn(String message) => AppLog.current?.write(LogLevel.warn, message);
+
+/// Detail only written with the debug level on; the message is not built
+/// otherwise.
+void logDebug(String Function() message) {
+  if (AppLog.level == LogLevel.debug) AppLog.current?.write(LogLevel.debug, message());
+}
 
 void logError(String message, [Object? error, StackTrace? stack]) => AppLog.current?.write(
-      'ERROR',
+      LogLevel.error,
       [message, if (error != null) '$error', if (stack != null) '$stack'].join('\n'),
     );

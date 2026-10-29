@@ -181,7 +181,7 @@ Stream<MdnsService> discoverMdns({Duration timeout = const Duration(seconds: 6)}
           }
         });
       } on SocketException catch (e) {
-        logInfo('mDNS discovery cannot use $address: ${e.message}');
+        logWarn('mDNS discovery cannot use $address: ${e.message}');
       }
     }
     void ask() {

@@ -267,7 +267,7 @@ class StreamResolver {
     final watch = Stopwatch()..start();
     var result = await _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
     if (_failed(result) && _transient.hasMatch(result.stderr.toString())) {
-      logInfo('Resolving $videoId hit a network error, retrying once');
+      logWarn('Resolving $videoId hit a network error, retrying once');
       await Future<void>.delayed(const Duration(seconds: 2));
       result = await _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
     }
@@ -279,13 +279,13 @@ class StreamResolver {
     // Warnings such as a failed JavaScript challenge explain slow or
     // missing streams, so they go to the log.
     final warnings = const LineSplitter().convert(err).where((line) => line.startsWith('WARNING')).take(5).toList();
-    if (warnings.isNotEmpty) logInfo('yt-dlp warnings for $videoId:\n${warnings.join('\n')}');
+    if (warnings.isNotEmpty) logWarn('yt-dlp warnings for $videoId:\n${warnings.join('\n')}');
     final data = await decodeJsonInBackground(const LineSplitter().convert(output).last);
     if (data is! Map<String, dynamic>) throw const FormatException('Unexpected yt-dlp output');
     await infoDirectory.create(recursive: true);
     final file = _infoFile(videoId);
     await file.writeAsString(output);
-    logInfo('Resolved $videoId${background ? ' (prefetch)' : ''} in ${watch.elapsedMilliseconds} ms');
+    logDebug(() => 'Resolved $videoId${background ? ' (prefetch)' : ''} in ${watch.elapsedMilliseconds} ms');
     return ResolvedVideo(data, file, format);
   }
 

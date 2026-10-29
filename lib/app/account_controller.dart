@@ -208,7 +208,7 @@ class AccountController extends ChangeNotifier {
       _ratings[videoId] = _loadedRatings[videoId] = await _api.rating(videoId);
       notifyListeners();
     } catch (e) {
-      logInfo('Could not read the like status: $e');
+      logWarn('Could not read the like status: $e');
     }
   }
 
@@ -338,7 +338,7 @@ class AccountController extends ChangeNotifier {
   /// Google no longer takes the saved sign-in: shown as signed out, with
   /// why, rather than as signed in with nothing working.
   Future<void> _expired() async {
-    logInfo('Google sign-in expired or was revoked');
+    logWarn('Google sign-in expired or was revoked');
     await signOut(reason: tr('Google 登录已失效，请重新登录'));
   }
 

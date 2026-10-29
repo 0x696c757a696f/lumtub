@@ -71,7 +71,7 @@ class CommentsLoader extends ChangeNotifier {
       try {
         _learn((await _source.more(detail, post: _post)).comments);
       } catch (e) {
-        logInfo('Could not read the page of comment ${comment.id}: $e');
+        logWarn('Could not read the page of comment ${comment.id}: $e');
       }
       if (_found[comment.id] case final found?) return found;
     }

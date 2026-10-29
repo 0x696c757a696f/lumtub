@@ -54,7 +54,7 @@ class FrameStats {
         final page = _page();
         _pages[page] = (_pages[page] ?? 0) + 1;
         if (build > long || raster > long) {
-          logInfo('Long frame #${timing.frameNumber} ${(sinceStart.elapsedMilliseconds / 1000).toStringAsFixed(1)} s after start on $page: '
+          logDebug(() => 'Long frame #${timing.frameNumber} ${(sinceStart.elapsedMilliseconds / 1000).toStringAsFixed(1)} s after start on $page: '
               'build ${_ms(build)}, raster ${_ms(raster)}, waited ${_ms(timing.timestampInMicroseconds(FramePhase.rasterStart) - timing.timestampInMicroseconds(FramePhase.buildFinish))} for raster');
         }
       }

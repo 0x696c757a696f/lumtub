@@ -92,7 +92,7 @@ class CastController extends ChangeNotifier {
     try {
       await action(current);
     } on CastException catch (e) {
-      logInfo('Cast action failed: $e');
+      logWarn('Cast action failed: $e');
       error = e.message;
     }
     _notify();

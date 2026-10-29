@@ -54,7 +54,7 @@ class YoutubePlayerProbe {
         .timeout(const Duration(seconds: 15));
     if (response.statusCode == 400 && masked) {
       _refused.add(endpoint);
-      logInfo('YouTube refused the field mask for /$endpoint; asking for whole answers');
+      logWarn('YouTube refused the field mask for /$endpoint; asking for whole answers');
       return fetch(id, fields, endpoint: endpoint, tv: tv);
     }
     if (response.statusCode != 200) throw StateError('$endpoint answered HTTP ${response.statusCode}');
@@ -62,7 +62,7 @@ class YoutubePlayerProbe {
       final whole = await fetch(id, null, endpoint: endpoint, tv: tv);
       if (utf8.decode(whole, allowMalformed: true).contains('"$expect"')) {
         _refused.add('$endpoint $fields');
-        logInfo('The /$endpoint field mask left out $expect; asking for whole answers');
+        logWarn('The /$endpoint field mask left out $expect; asking for whole answers');
       }
       return whole;
     }

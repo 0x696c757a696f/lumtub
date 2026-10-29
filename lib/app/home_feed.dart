@@ -139,7 +139,7 @@ class HomeFeed extends ChangeNotifier {
       }));
       await partial.rename(file.path);
     } catch (e) {
-      logInfo('Could not save the recommendation cache: $e');
+      logWarn('Could not save the recommendation cache: $e');
     }
   }
 
@@ -175,7 +175,7 @@ class HomeFeed extends ChangeNotifier {
         candidates[lane]!.addAll(found.take(limit).map((item) => Candidate(item, source, seedWeight: weight, reason: reason(item))));
       } catch (e) {
         failures++;
-        logInfo('Recommendation source failed: $e');
+        logWarn('Recommendation source failed: $e');
       } finally {
         running--;
         answered++;
@@ -324,7 +324,7 @@ class HomeFeed extends ChangeNotifier {
         final list = _candidates.putIfAbsent(FeedLane.recent, () => []);
         list.insertAll(0, found.take(15).map((item) => Candidate(item, RecommendSource.related, seedWeight: 1.2, reason: tr('刚看完《{0}》，接着看', [_short(watched.title)]))));
       } catch (e) {
-        logInfo('Recommendation source failed: $e');
+        logWarn('Recommendation source failed: $e');
       }
     }
     _rankAll();
@@ -411,7 +411,7 @@ class HomeFeed extends ChangeNotifier {
               (item) => Candidate(item, RecommendSource.related, seedWeight: 0.7, reason: tr('由《{0}》延伸', [_short(seed.title)])),
             ));
       } catch (e) {
-        logInfo('Recommendation source failed: $e');
+        logWarn('Recommendation source failed: $e');
       }
     }));
     if (generation != _generation || _disposed) return;

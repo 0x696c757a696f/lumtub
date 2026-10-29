@@ -126,7 +126,7 @@ class AiFilter extends ChangeNotifier {
         ai = await _read(await _probe.fetch(id, null, endpoint: 'next'));
         if (ai != null) {
           _maskWorks = false;
-          logInfo('The /next field mask left out the AI label; asking for whole answers');
+          logWarn('The /next field mask left out the AI label; asking for whole answers');
         }
       }
       if (ai == null) return;
@@ -135,12 +135,12 @@ class AiFilter extends ChangeNotifier {
       labels[id] = ai;
       _save ??= Timer(const Duration(seconds: 10), _write);
       if (ai && mode != AiFilterMode.off) {
-        logInfo('YouTube labels $id as made with AI; hidden');
+        logDebug(() => 'YouTube labels $id as made with AI; hidden');
         version++;
         notifyListeners();
       }
     } catch (e) {
-      logInfo('Could not ask whether $id is labeled as AI: $e');
+      logWarn('Could not ask whether $id is labeled as AI: $e');
     }
   }
 
@@ -212,9 +212,9 @@ class AiFilter extends ChangeNotifier {
         if (channels.isEmpty) throw StateError('the list is empty');
         listed[name] = channels;
         changed = true;
-        logInfo('AI channel list $name: ${channels.length} channels');
+        logDebug(() => 'AI channel list $name: ${channels.length} channels');
       } catch (e) {
-        logInfo('Could not download the AI channel list $name: $e');
+        logWarn('Could not download the AI channel list $name: $e');
       }
     }
     if (!changed) return;
@@ -226,7 +226,7 @@ class AiFilter extends ChangeNotifier {
         final file = File(path);
         file.parent.createSync(recursive: true);
         file.writeAsStringSync(jsonEncode(listed));
-      }).catchError((Object e) => logInfo('Could not save the AI channel lists: $e'));
+      }).catchError((Object e) => logWarn('Could not save the AI channel lists: $e'));
     }
     version++;
     notifyListeners();
@@ -245,6 +245,6 @@ class AiFilter extends ChangeNotifier {
       final file = File(path);
       file.parent.createSync(recursive: true);
       file.writeAsStringSync(jsonEncode(copy));
-    }).catchError((Object e) => logInfo('Could not save AI labels: $e')));
+    }).catchError((Object e) => logWarn('Could not save AI labels: $e')));
   }
 }

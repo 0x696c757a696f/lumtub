@@ -38,7 +38,7 @@ class YoutubeTvFeed {
     try {
       return _browse = core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Bool), Pointer<Utf8> Function(Pointer<Uint8>, int, bool)>('lumtub_tv_browse');
     } catch (e) {
-      logInfo('The TV pages are not in this core: $e');
+      logWarn('The TV pages are not in this core: $e');
       return null;
     }
   }

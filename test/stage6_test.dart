@@ -31,8 +31,8 @@ void main() {
       final dir = await Directory.systemTemp.createTemp('lumtub_log');
       addTearDown(() => dir.delete(recursive: true));
       final log = (await AppLog.open(dir))!;
-      log.write('INFO ', '第一行');
-      log.write('ERROR', 'refresh_token=secret');
+      log.write(LogLevel.info, '第一行');
+      log.write(LogLevel.error, 'refresh_token=secret');
       await log.flush();
       final text = await log.file.readAsString();
       expect(text, contains('INFO  第一行'));
@@ -44,20 +44,44 @@ void main() {
       AppLog.current = null;
     });
 
+    test('writes only lines at or above the chosen level', () async {
+      final dir = await Directory.systemTemp.createTemp('lumtub_log');
+      addTearDown(() => dir.delete(recursive: true));
+      final log = (await AppLog.open(dir))!;
+      addTearDown(() {
+        AppLog.level = LogLevel.info;
+        AppLog.current = null;
+      });
+      var built = 0;
+      AppLog.level = LogLevel.warn;
+      logInfo('plain');
+      logWarn('worked around');
+      logDebug(() => '${built++}');
+      AppLog.level = LogLevel.debug;
+      logDebug(() => 'detail ${built++}');
+      await log.flush();
+      final text = await log.file.readAsString();
+      expect(text, isNot(contains('plain')));
+      expect(text, contains('WARN  worked around'));
+      expect(text, contains('DEBUG detail 0'));
+      expect(built, 1, reason: 'a debug line is not built below the debug level');
+      expect(LogLevel.parse('nonsense'), LogLevel.info);
+    });
+
     test('rotates during a long session once the file passes the limit', () async {
       final dir = await Directory.systemTemp.createTemp('lumtub_log');
       addTearDown(() => dir.delete(recursive: true));
       final log = (await AppLog.open(dir))!;
-      log.write('INFO ', 'x' * 1000);
+      log.write(LogLevel.info, 'x' * 1000);
       await log.flush();
       expect(await File('${dir.path}/lumtub.old.log').exists(), isFalse);
       for (var i = 0; i < 1100; i++) {
-        log.write('INFO ', 'y' * 1000);
+        log.write(LogLevel.info, 'y' * 1000);
       }
       await log.flush();
       expect(await File('${dir.path}/lumtub.old.log').exists(), isTrue);
       expect(await File('${dir.path}/lumtub.log').exists(), isFalse);
-      log.write('INFO ', 'after');
+      log.write(LogLevel.info, 'after');
       await log.flush();
       expect(await log.file.readAsLines(), hasLength(1));
       AppLog.current = null;
@@ -68,7 +92,7 @@ void main() {
       addTearDown(() => dir.delete(recursive: true));
       final log = (await AppLog.open(dir))!;
       for (var i = 0; i < 50; i++) {
-        log.write(i == 25 ? 'ERROR' : 'INFO ', 'line $i');
+        log.write(i == 25 ? LogLevel.error : LogLevel.info, 'line $i');
       }
       await log.flush();
       final lines = await log.file.readAsLines();
@@ -78,7 +102,7 @@ void main() {
       }
       expect(lines[3], contains('INFO  line 3'));
       // Without an explicit flush the timer writes them.
-      log.write('INFO ', 'later');
+      log.write(LogLevel.info, 'later');
       await Future<void>.delayed(AppLog.flushDelay + const Duration(milliseconds: 300));
       expect(await log.file.readAsLines(), hasLength(51));
       AppLog.current = null;

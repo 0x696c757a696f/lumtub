@@ -11,7 +11,7 @@ import 'l10n/l10n.dart';
 /// own message without the exception's type name. The full error is logged.
 String friendlyError(Object error) {
   final raw = '$error';
-  logInfo('Shown as an error: $raw');
+  logWarn('Shown as an error: $raw');
   final text = raw.toLowerCase();
   if (error is TimeoutException || text.contains('timed out') || text.contains('timeout')) return tr('网络超时，请检查网络或代理');
   if (RegExp(r'\b429\b').hasMatch(text) || text.contains('too many requests')) return tr('请求太频繁，YouTube 暂时限制了访问，请稍后再试');

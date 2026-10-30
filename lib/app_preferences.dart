@@ -245,12 +245,12 @@ class AppPreferences {
   /// 沉浸式翻译: comments, posts and live chat in another language show
   /// their translation under them without asking.
   final bool immersiveTranslation;
-  /// The language 沉浸式翻译 turns text into; empty follows Windows'
-  /// language, whatever [translateLanguage] is.
+  /// The language 沉浸式翻译 turns text into; empty follows the
+  /// interface's language, whatever [translateLanguage] is.
   final String immersiveLanguage;
 
-  /// [immersiveLanguage], with Windows' language for empty.
-  String get immersiveTarget => immersiveLanguage.isEmpty ? SubtitleLanguage.auto.translation.code : immersiveLanguage;
+  /// [immersiveLanguage], with the interface's language for empty.
+  String get immersiveTarget => immersiveLanguage.isEmpty ? interfaceTranslationLanguage.code : immersiveLanguage;
   /// How the translation under the original looks.
   final TranslationStyle translationStyle;
   /// The translation goes above the original instead of under it.
@@ -700,3 +700,7 @@ class AppPreferencesStore {
 
 /// A playback speed as shown to people: `2`, `1.25`.
 String rateText(double rate) => rate == rate.roundToDouble() ? rate.toStringAsFixed(0) : rate.toString();
+
+/// The interface's language as a translation target, Windows' when it has
+/// none.
+TranslationLanguage get interfaceTranslationLanguage => TranslationLanguage.maybeByCode(youtubeHl) ?? SubtitleLanguage.auto.translation;

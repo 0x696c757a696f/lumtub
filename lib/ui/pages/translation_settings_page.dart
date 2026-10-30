@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
+import '../../app_preferences.dart' show interfaceTranslationLanguage;
 import '../../l10n/l10n.dart';
 import '../../player_settings.dart' show SubtitleLanguage;
 import '../../translation.dart';
@@ -245,7 +246,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
       title: tr('沉浸式翻译'),
       leading: const Icon(AppIcons.translate),
       value: prefs.immersiveTranslation ? prefs.immersiveLanguage : _off,
-      values: [(_off, tr('关闭')), ('', tr('翻译成系统语言（{0}）', [SubtitleLanguage.auto.translation.label])), for (final l in TranslationLanguage.all) (l.code, tr('翻译成{0}', [l.label]))],
+      values: [(_off, tr('关闭')), ('', tr('翻译成界面语言（{0}）', [interfaceTranslationLanguage.label])), for (final l in TranslationLanguage.all) (l.code, tr('翻译成{0}', [l.label]))],
       onSelected: (v) => controller.savePreferences(v == _off
           ? controller.preferences.copyWith(immersiveTranslation: false)
           : controller.preferences.copyWith(immersiveTranslation: true, immersiveLanguage: v)),

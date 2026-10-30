@@ -2792,7 +2792,7 @@
   "沉浸式翻译": "Immersive translation",
   "外语内容自动在下方显示译文": "Show translations under foreign-language text automatically",
   "评论、帖子和直播聊天里的外语内容，自动在下方显示译文": "Foreign-language comments, posts and live chat show their translation underneath automatically",
-  "翻译成系统语言（{0}）": "Into the system language ({0})",
+  "翻译成界面语言（{0}）": "Into the interface language ({0})",
   "翻译成{0}": "Into {0}",
   "译文显示": "Translation layout",
   "原文在上，译文在下": "Original above, translation below",

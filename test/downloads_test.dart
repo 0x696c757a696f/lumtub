@@ -235,7 +235,7 @@ void main() {
       final m = manager();
       expect(m.add(video('aaaaaaaaaaa'), DownloadQuality.best), isNotNull);
       expect(m.add(video('aaaaaaaaaaa'), DownloadQuality.best), isNull);
-      await settle();
+      await until(() => processes.isNotEmpty);
       processes[0].err('ERROR: [youtube] aaaaaaaaaaa: Video unavailable');
       await processes[0].exit(1);
       await settle();

@@ -584,7 +584,7 @@ class _ReplayChatMessage extends StatelessWidget {
       LiveChatKind.message => AppIcons.chatCircle,
     };
     final time = message.offset == null ? '' : _chatClock(message.offset!);
-    return InkWell(
+    return ChatMessageTranslateButton(message: message, child: InkWell(
       onTap: onSeek,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
@@ -613,7 +613,7 @@ class _ReplayChatMessage extends StatelessWidget {
           ])),
         ]),
       ),
-    );
+    ));
   }
 }
 

@@ -33,8 +33,60 @@ class ChatTranslationSwitch extends StatelessWidget {
 }
 
 final _translations = Expando<Future<String?>>();
+final _asked = Expando<ValueNotifier<bool>>();
 
-/// The translation of [message] while [chatTranslation] is on; nothing
+/// Whether [message] was asked to be translated by hand.
+ValueNotifier<bool> chatMessageAsked(LiveChatMessage message) => _asked[message] ??= ValueNotifier(false);
+
+/// A small 翻译 button that shows while the pointer is over [child]; a
+/// long press does the same on touch.
+class ChatMessageTranslateButton extends StatefulWidget {
+  const ChatMessageTranslateButton({super.key, required this.message, required this.child});
+  final LiveChatMessage message;
+  final Widget child;
+
+  @override
+  State<ChatMessageTranslateButton> createState() => _ChatMessageTranslateButtonState();
+}
+
+class _ChatMessageTranslateButtonState extends State<ChatMessageTranslateButton> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final asked = chatMessageAsked(widget.message);
+    void toggle() => asked.value = !asked.value;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onLongPress: toggle,
+        child: Stack(children: [
+          widget.child,
+          if (_hover && widget.message.text.trim().isNotEmpty)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: ValueListenableBuilder(
+                valueListenable: asked,
+                builder: (context, on, _) => IconButton(
+                  tooltip: on ? tr('显示原文') : tr('翻译'),
+                  visualDensity: VisualDensity.compact,
+                  iconSize: 16,
+                  style: IconButton.styleFrom(backgroundColor: context.colors.surfaceContainerHigh),
+                  icon: Icon(AppIcons.translate),
+                  onPressed: toggle,
+                ),
+              ),
+            ),
+        ]),
+      ),
+    );
+  }
+}
+
+/// The translation of [message] while [chatTranslation] is on or it was
+/// asked for by hand; nothing
 /// when it is off or the message is already in the chosen language. Each
 /// message is translated once, when it is first shown.
 class ChatMessageTranslation extends StatelessWidget {
@@ -55,10 +107,10 @@ class ChatMessageTranslation extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder(
-        valueListenable: chatTranslation,
-        builder: (context, on, _) {
-          if (!on) return const SizedBox.shrink();
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: Listenable.merge([chatTranslation, chatMessageAsked(message)]),
+        builder: (context, _) {
+          if (!chatTranslation.value && !chatMessageAsked(message).value) return const SizedBox.shrink();
           return FutureBuilder(
             future: _translations[message] ??= _translate(),
             builder: (context, snapshot) {

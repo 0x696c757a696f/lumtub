@@ -1657,6 +1657,7 @@ class AppController extends ChangeNotifier {
       loadingReplayChat = true;
       replayChatError = null;
     });
+    logInfo('Following the live chat of ${item.id}');
     _currentChat = repository.liveChat.current(item.id).listen(
       (message) {
         if (serial != _playSerial || !_currentChatIds.add(message.id)) return;
@@ -1667,6 +1668,7 @@ class AppController extends ChangeNotifier {
         });
       },
       onError: (Object error) {
+        logWarn('The live chat of ${item.id} stopped: $error');
         if (serial == _playSerial) {
           _update(() {
             replayChatError = friendlyError(error);

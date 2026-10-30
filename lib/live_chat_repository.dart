@@ -40,6 +40,9 @@ class LiveChatRepository {
         if (proxy?.call() case final value?) ...['--proxy', value],
         if (deno != null) ...['--js-runtimes', 'deno:$deno'],
         '--write-subs',
+        // A chat still running is written to "<name>.part" until it ends;
+        // the lines are read as they arrive, so they go to the file itself.
+        '--no-part',
         '--sub-langs', 'live_chat',
         '--sub-format', 'json',
         '--output', '${directory.path}${Platform.pathSeparator}%(id)s.%(ext)s',

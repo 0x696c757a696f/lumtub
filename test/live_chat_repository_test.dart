@@ -19,6 +19,7 @@ void main() {
       '--proxy', 'http://127.0.0.1:7890',
       '--js-runtimes', 'deno:C:${Platform.pathSeparator}tools${Platform.pathSeparator}deno.exe',
       '--write-subs',
+      '--no-part',
       '--sub-langs', 'live_chat',
       '--sub-format', 'json',
       '--output', 'C:${Platform.pathSeparator}cache${Platform.pathSeparator}live-chat${Platform.pathSeparator}%(id)s.%(ext)s',

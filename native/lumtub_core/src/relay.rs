@@ -14,7 +14,7 @@ use std::collections::{HashMap, VecDeque};
 use std::io::{BufRead, BufReader, ErrorKind, Read, Write};
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::os::raw::c_char;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -123,10 +123,24 @@ impl Relay {
         let shared = Arc::new(Mutex::new(Shared::default()));
         let relay = Relay { port, shared: shared.clone() };
         std::thread::Builder::new().name("relay".into()).spawn(move || {
+            let open = Arc::new(AtomicUsize::new(0));
             for client in listener.incoming().flatten() {
+                // libmpv keeps a few connections; anything past the cap is
+                // another local program, turned away.
+                if open.load(Ordering::Relaxed) >= MAX_CONNECTIONS {
+                    continue;
+                }
+                open.fetch_add(1, Ordering::Relaxed);
                 let shared = shared.clone();
                 let fetch = fetch.clone();
-                let _ = std::thread::Builder::new().name("relay-client".into()).spawn(move || serve(client, &shared, fetch.as_ref()));
+                let done = open.clone();
+                let spawned = std::thread::Builder::new().name("relay-client".into()).spawn(move || {
+                    serve(client, &shared, fetch.as_ref());
+                    done.fetch_sub(1, Ordering::Relaxed);
+                });
+                if spawned.is_err() {
+                    open.fetch_sub(1, Ordering::Relaxed);
+                }
             }
         })?;
         Ok(relay)
@@ -245,6 +259,9 @@ pub fn byte_range(header: Option<&str>, size: u64) -> Range {
 /// and a reset can discard the end of the reply on its way to libmpv.
 fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &dyn Fetch) {
     let _ = client.set_nodelay(true);
+    // A connection left idle that long holds a place under the cap; libmpv
+    // simply opens another when it needs one.
+    let _ = client.set_read_timeout(Some(IDLE_TIMEOUT));
     let Ok(mut writer) = client.try_clone() else { return };
     let mut reader = BufReader::new(client);
     answer(&mut reader, &mut writer, shared, fetch);
@@ -345,17 +362,33 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
 
 type Request = (String, String, HashMap<String, String>);
 
+/// Connections served at once.
+const MAX_CONNECTIONS: usize = 64;
+/// How long a connection may wait for its next request.
+const IDLE_TIMEOUT: Duration = Duration::from_secs(300);
+/// The longest request or header line read.
+const MAX_LINE: u64 = 8 << 10;
+
+/// One line of at most [MAX_LINE] bytes; a longer one ends the request.
+fn read_bounded_line(reader: &mut BufReader<TcpStream>, line: &mut String) -> Option<usize> {
+    let n = reader.by_ref().take(MAX_LINE).read_line(line).ok()?;
+    if n as u64 == MAX_LINE && !line.ends_with('\n') {
+        return None;
+    }
+    Some(n)
+}
+
 fn read_request(reader: &mut BufReader<TcpStream>) -> Option<Request> {
     let mut line = String::new();
     let mut total = 0;
-    reader.read_line(&mut line).ok().filter(|&n| n > 0)?;
+    read_bounded_line(reader, &mut line).filter(|&n| n > 0)?;
     let mut parts = line.split_whitespace();
     let method = parts.next()?.to_string();
     let path = parts.next()?.to_string();
     let mut headers = HashMap::new();
     loop {
         let mut header = String::new();
-        let n = reader.read_line(&mut header).ok()?;
+        let n = read_bounded_line(reader, &mut header)?;
         total += n;
         if n == 0 || total > 32 << 10 {
             return None;
@@ -682,5 +715,16 @@ mod tests {
         let (head, _) = get(&address, Some("bytes=5000-"));
         assert!(head.starts_with("HTTP/1.1 416"), "{head}");
         assert_eq!(relay.register(target(0)), None);
+    }
+
+    #[test]
+    fn closes_on_an_overlong_line() {
+        let relay = Relay::start(fake(10, None, 200)).unwrap();
+        let mut stream = TcpStream::connect(("127.0.0.1", relay.port())).unwrap();
+        let long = "a".repeat(MAX_LINE as usize * 2);
+        let _ = write!(stream, "GET /{long} HTTP/1.1\r\n\r\n");
+        let mut all = vec![];
+        let _ = stream.read_to_end(&mut all);
+        assert!(all.is_empty());
     }
 }

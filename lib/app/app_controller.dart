@@ -1633,7 +1633,8 @@ class AppController extends ChangeNotifier {
     unawaited(_loadDetails(item, serial));
     if (settings.returnDislike) unawaited(_loadDislikes(item, serial));
     if (settings.sponsorBlock) unawaited(_loadSegments(item, serial));
-    if (await _open(item, serial, start: start, play: preferences.autoPlay)) {
+    // Another video asked for meanwhile takes over its history and queue.
+    if (await _open(item, serial, start: start, play: preferences.autoPlay) && serial == _playSerial) {
       await _applyChannelPlayback(item, player);
       if (preferences.recordHistory && !incognito) await _history?.record(item);
       if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));

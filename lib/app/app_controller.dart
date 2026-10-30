@@ -1640,8 +1640,10 @@ class AppController extends ChangeNotifier {
       if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
       final next = upNext.firstOrNull;
       if (next != null) prefetch(next);
-      if (item.isLive) {
-        _startCurrentChat(item, serial);
+      // Marked live while it opened, when the list did not know.
+      final opened = playing?.id == item.id ? playing! : item;
+      if (opened.isLive) {
+        _startCurrentChat(opened, serial);
       } else if (item.liveStatus == 'was_live') {
         unawaited(_loadReplayChat(item, serial));
       }
@@ -1937,19 +1939,29 @@ class AppController extends ChangeNotifier {
         }
         if (serial != _playSerial) return false;
       }
+      // A list may not know a video is live; yt-dlp does.
+      if (!item.isLive && video?.info['live_status'] == 'is_live') {
+        item = item.withLiveStatus('is_live');
+        if (playing?.id == item.id) _update(() => playing = item);
+      }
+      final live = item.isLive;
+      // A live stream starts at its live edge, not at a remembered spot.
+      if (live) start = null;
       final subtitles = settings.subtitleMode != SubtitleMode.off;
       // Through the relay when the app's own connections reach YouTube the
       // way libmpv's would: directly or through an HTTP proxy.
       // A video whose stream broke through it is reopened without it.
       final relay = (proxy.url == null || proxy.isHttp) && _unrelayed != item.id ? _relay : null;
       final agent = video?.userAgent;
-      final direct = video != null && video.format == format && !subtitles
+      final direct = video != null && video.format == format && !subtitles && !live
           ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent, proxy: proxy.url))
           : null;
       _relayed = direct != null && relay != null ? item.id : null;
       final platform = player.platform;
       if (platform is NativePlayer) {
-        await platform.setProperty('ytdl-format', format);
+        // A live stream plays from one HLS stream with picture and sound
+        // together: a picture and a sound stream apart drift out of sync.
+        await platform.setProperty('ytdl-format', live ? FormatPolicy.liveExpression(_playback, format) : format);
         await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null, proxy: proxy.ytDlpValue(settings.proxyMode)));
         if (direct != null && agent != null) await platform.setProperty('user-agent', agent);
       }

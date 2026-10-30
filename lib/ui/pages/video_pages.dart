@@ -10,6 +10,7 @@ import '../video_card.dart';
 import 'channel_page.dart';
 export 'history_page.dart';
 import '../../l10n/l10n.dart';
+import '../app_icons.dart';
 
 /// Home: a search prompt and the most recently watched videos.
 class HomeFeedPage extends StatelessWidget {
@@ -55,11 +56,11 @@ class HomeFeedPage extends StatelessWidget {
             tr('为你推荐'),
             subtitle: feed.loading && feed.items.isEmpty ? tr('正在根据观看记录挑选…') : tr('按你的观看兴趣在本机挑选，右键可选“不感兴趣”'),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(Icons.shuffle_rounded, size: 18), label: Text(tr('换一批'))),
+              TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(AppIcons.shuffle, size: 18), label: Text(tr('换一批'))),
               IconButton(
                 tooltip: tr('重新挑选'),
                 onPressed: feed.loading ? null : () => controller.refreshHomeFeed(force: true),
-                icon: const Icon(Icons.refresh_rounded),
+                icon: const Icon(AppIcons.arrowsClockwise),
               ),
             ]),
           )),
@@ -83,7 +84,7 @@ class HomeFeedPage extends StatelessWidget {
         ],
         if (recent.isEmpty && !showFeed)
           SliverFillRemaining(hasScrollBody: false, child: StatusView(
-            icon: Icons.play_circle_outline_rounded,
+            icon: AppIcons.playCircle,
             title: tr('还没有观看记录'),
             message: tr('搜索或粘贴 YouTube 链接开始观看，看过的视频会出现在这里。'),
           )),
@@ -109,13 +110,13 @@ class _FocusHome extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppStyle.pagePadding),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.self_improvement_rounded, size: 48, color: colors.primary),
+            Icon(AppIcons.personSimpleTaiChi, size: 48, color: colors.primary),
             const SizedBox(height: 16),
             Text(tr('专注模式'), style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(tr('首页不显示视频。想看什么就搜索，或打开订阅和稍后观看。'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline, height: 1.5)),
-            const SizedBox(height: 20),
-            FilledButton.icon(onPressed: onFocusSearch, icon: const Icon(Icons.search_rounded), label: Text(tr('搜索 (Ctrl+K)'))),
+            const SizedBox(height: 16),
+            FilledButton.icon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(tr('搜索 (Ctrl+K)'))),
             const SizedBox(height: 8),
             Wrap(spacing: 8, alignment: WrapAlignment.center, children: [
               TextButton(onPressed: () => controller.navigate(PageMode.subscriptions), child: Text(tr('订阅'))),
@@ -140,20 +141,20 @@ class _Welcome extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 8),
       child: Material(
         color: colors.primaryContainer,
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(20)),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           onTap: onFocusSearch,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
             child: Row(children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(tr('想看点什么？'), style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: colors.onPrimaryContainer)),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(tr('搜索 YouTube，或直接粘贴视频链接播放。按 Ctrl+K 随时搜索。'), style: TextStyle(color: colors.onPrimaryContainer.withValues(alpha: 0.8))),
               ])),
               const SizedBox(width: 16),
-              Icon(Icons.search_rounded, size: 40, color: colors.onPrimaryContainer.withValues(alpha: 0.6)),
+              Icon(AppIcons.magnifyingGlass, size: 40, color: colors.onPrimaryContainer.withValues(alpha: 0.6)),
             ]),
           ),
         ),
@@ -174,10 +175,10 @@ class SearchResultsPage extends StatelessWidget {
     final query = controller.query;
     if (query == null) {
       return StatusView(
-        icon: Icons.explore_outlined,
+        icon: AppIcons.compass,
         title: tr('搜索 YouTube'),
         message: tr('输入关键词，或粘贴 youtube.com / youtu.be 链接。'),
-        action: FilledButton.tonalIcon(onPressed: onFocusSearch, icon: const Icon(Icons.search_rounded), label: Text(tr('开始搜索'))),
+        action: FilledButton.tonalIcon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(tr('开始搜索'))),
       );
     }
     final results = controller.visible(controller.results, search: true);
@@ -189,14 +190,14 @@ class SearchResultsPage extends StatelessWidget {
     Widget? status;
     if (empty && error != null && !controller.searching) {
       status = StatusView(
-        icon: Icons.cloud_off_rounded,
+        icon: AppIcons.cloudSlash,
         error: true,
         title: tr('搜索失败'),
         message: error,
-        action: FilledButton.tonalIcon(onPressed: controller.retrySearch, icon: const Icon(Icons.refresh_rounded), label: Text(tr('重试'))),
+        action: FilledButton.tonalIcon(onPressed: controller.retrySearch, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('重试'))),
       );
     } else if (empty && !controller.searching) {
-      status = StatusView(icon: Icons.search_off_rounded, title: filter == SearchFilter.all ? tr('没有找到相关内容') : tr('没有找到相关{0}', [filter.label]), message: tr('换个关键词试试。'));
+      status = StatusView(icon: AppIcons.magnifyingGlassMinus, title: filter == SearchFilter.all ? tr('没有找到相关内容') : tr('没有找到相关{0}', [filter.label]), message: tr('换个关键词试试。'));
     }
     final count = [
       if (results.isNotEmpty) tr('{0} 个视频', [results.length]),
@@ -210,7 +211,7 @@ class SearchResultsPage extends StatelessWidget {
         SliverToBoxAdapter(child: PageHeader(
           '“$query”',
           subtitle: controller.searching ? tr('正在搜索…') : (count.isEmpty ? null : count),
-          trailing: IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: controller.goBack, icon: const Icon(Icons.arrow_back_rounded)),
+          trailing: IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
         )),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
@@ -219,7 +220,7 @@ class SearchResultsPage extends StatelessWidget {
               ChoiceChip(label: Text(value.label), selected: filter == value, onSelected: (_) => controller.setSearchFilter(value)),
             const SizedBox(width: 8),
             OptionChip(
-              icon: Icons.sort_rounded,
+              icon: AppIcons.sortDescending,
               value: controller.searchSort,
               values: SearchSort.values,
               label: (v) => v == SearchSort.relevance ? tr('排序') : tr('按{0}', [v.label]),
@@ -228,7 +229,7 @@ class SearchResultsPage extends StatelessWidget {
               onSelected: (v) => controller.setSearchOptions(sort: v),
             ),
             OptionChip(
-              icon: Icons.event_rounded,
+              icon: AppIcons.calendar,
               value: controller.searchDate,
               values: SearchUploadDate.values,
               label: (v) => v == SearchUploadDate.any ? tr('上传时间') : v.label,
@@ -237,7 +238,7 @@ class SearchResultsPage extends StatelessWidget {
               onSelected: (v) => controller.setSearchOptions(date: v),
             ),
             OptionChip(
-              icon: Icons.timer_outlined,
+              icon: AppIcons.timer,
               value: controller.searchDuration,
               values: SearchDuration.values,
               label: (v) => v == SearchDuration.any ? tr('时长') : v.label,

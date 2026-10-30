@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart' show Icons;
 
 import 'explore_filters.dart';
 import 'explore_topics.dart';
 import 'l10n/l10n.dart';
 import 'models.dart';
 import 'native_core.dart';
+import 'ui/app_icons.dart';
 
 // The zones of 宗教与信仰, one list per tab. Each is a YouTube search, so a
 // channel can turn up under every tradition or theme it speaks to; nothing
@@ -13,7 +13,7 @@ import 'native_core.dart';
 /// 宗教传统: the traditions, with Christianity's split a level further. Each
 /// tradition has about 8-10 sub-categories; Christianity's are its branches.
 const faithTraditionTopics = <ExploreTopic>[
-  ExploreTopic('基督宗教', Icons.church_rounded, '基督宗教 Christianity', subs: [
+  ExploreTopic('基督宗教', AppIcons.church, '基督宗教 Christianity', subs: [
     ExploreSub('天主教', '天主教 Catholic', subs: [
       ExploreSub('教宗讲话', '教宗 讲话 Pope homily'),
       ExploreSub('梵蒂冈新闻', 'Vatican News 梵蒂冈'),
@@ -52,7 +52,7 @@ const faithTraditionTopics = <ExploreTopic>[
     ]),
     ExploreSub('其他基督宗教', 'Christian denominations 基督教 教派'),
   ]),
-  ExploreTopic('伊斯兰教', Icons.mosque_rounded, '伊斯兰教 Islam', subs: [
+  ExploreTopic('伊斯兰教', AppIcons.mosque, '伊斯兰教 Islam', subs: [
     ExploreSub('古兰经', 'Quran recitation 古兰经'),
     ExploreSub('伊斯兰讲座', 'Islamic lecture khutbah 伊斯兰 讲座'),
     ExploreSub('先知传记', 'Prophet Muhammad seerah'),
@@ -63,7 +63,7 @@ const faithTraditionTopics = <ExploreTopic>[
     ExploreSub('伊斯兰神学', 'Islamic theology'),
     ExploreSub('伊斯兰文化', 'Islamic culture 伊斯兰文化'),
   ]),
-  ExploreTopic('佛教', Icons.temple_buddhist_rounded, '佛教 佛法', subs: [
+  ExploreTopic('佛教', AppIcons.buildings, '佛教 佛法', subs: [
     ExploreSub('汉传佛教', '汉传佛教 法师 开示'),
     ExploreSub('佛经', '佛经 讲解'),
     ExploreSub('禅宗', '禅宗 Zen'),
@@ -74,7 +74,7 @@ const faithTraditionTopics = <ExploreTopic>[
     ExploreSub('禅修', 'Buddhist meditation mindfulness 禅修'),
     ExploreSub('佛教历史', 'Buddhist history 佛教史'),
   ]),
-  ExploreTopic('道教与中国传统信仰', Icons.self_improvement_rounded, '道教 文化', subs: [
+  ExploreTopic('道教与中国传统信仰', AppIcons.personSimpleTaiChi, '道教 文化', subs: [
     ExploreSub('道教经典', '道德经 庄子 讲解'),
     ExploreSub('道教文化', '道教 文化 道观'),
     ExploreSub('道教修行', '道教 修行 内丹 养生'),
@@ -84,7 +84,7 @@ const faithTraditionTopics = <ExploreTopic>[
     ExploreSub('国学', '国学 传统文化'),
     ExploreSub('神话传说', '中国神话 传说 mythology'),
   ]),
-  ExploreTopic('印度教', Icons.temple_hindu_rounded, 'Hinduism 印度教', subs: [
+  ExploreTopic('印度教', AppIcons.handsPraying, 'Hinduism 印度教', subs: [
     ExploreSub('经典', 'Bhagavad Gita Upanishads explained'),
     ExploreSub('印度教哲学', 'Hindu philosophy Vedanta'),
     ExploreSub('神祇', 'Hindu gods Shiva Vishnu'),
@@ -95,7 +95,7 @@ const faithTraditionTopics = <ExploreTopic>[
     ExploreSub('历史', 'Hindu history'),
     ExploreSub('文化', 'Hindu culture festival'),
   ]),
-  ExploreTopic('犹太教', Icons.synagogue_rounded, 'Judaism 犹太教', subs: [
+  ExploreTopic('犹太教', AppIcons.synagogue, 'Judaism 犹太教', subs: [
     ExploreSub('经典', 'Torah Talmud study'),
     ExploreSub('拉比讲座', 'rabbi lecture'),
     ExploreSub('历史', 'Jewish history'),
@@ -105,7 +105,7 @@ const faithTraditionTopics = <ExploreTopic>[
     ExploreSub('卡巴拉', 'Kabbalah'),
     ExploreSub('希伯来语', 'Hebrew learning'),
   ]),
-  ExploreTopic('其他宗教', Icons.public_rounded, 'world religions', subs: [
+  ExploreTopic('其他宗教', AppIcons.globe, 'world religions', subs: [
     ExploreSub('世界宗教概览', 'world religions explained'),
     ExploreSub('锡克教', 'Sikhism'),
     ExploreSub('耆那教', 'Jainism'),
@@ -122,7 +122,7 @@ const faithTraditionTopics = <ExploreTopic>[
 /// 精选专题 holds a few entry points; the topics they touch have their own
 /// zones, so it is kept short.
 const faithStudyTopics = <ExploreTopic>[
-  ExploreTopic('精选专题', Icons.star_rounded, 'religion documentary 宗教 纪录片', subs: [
+  ExploreTopic('精选专题', AppIcons.starFill, 'religion documentary 宗教 纪录片', subs: [
     ExploreSub('今日宗教新闻', 'religion news 宗教新闻'),
     ExploreSub('世界宗教纪录片', 'world religions documentary'),
     ExploreSub('宗教历史与考古', 'biblical archaeology religious history'),
@@ -130,7 +130,7 @@ const faithStudyTopics = <ExploreTopic>[
     ExploreSub('宗教与现代科学', 'religion and science'),
     ExploreSub('优质宗教教育频道', 'religious studies lecture course'),
   ]),
-  ExploreTopic('宗教历史', Icons.history_edu_rounded, 'history of religion 宗教史', subs: [
+  ExploreTopic('宗教历史', AppIcons.scroll, 'history of religion 宗教史', subs: [
     ExploreSub('教会史', 'church history 教会史'),
     ExploreSub('早期基督教', 'early Christianity history'),
     ExploreSub('宗教改革', 'Protestant Reformation history'),
@@ -140,7 +140,7 @@ const faithStudyTopics = <ExploreTopic>[
     ExploreSub('伊斯兰黄金时代', 'Islamic Golden Age'),
     ExploreSub('古代近东', 'ancient Near East religion'),
   ]),
-  ExploreTopic('宗教哲学', Icons.psychology_rounded, 'philosophy of religion 宗教哲学', subs: [
+  ExploreTopic('宗教哲学', AppIcons.brain, 'philosophy of religion 宗教哲学', subs: [
     ExploreSub('宗教哲学', 'philosophy of religion'),
     ExploreSub('神学', 'theology lecture 神学'),
     ExploreSub('形而上学', 'metaphysics God argument'),
@@ -150,7 +150,7 @@ const faithStudyTopics = <ExploreTopic>[
     ExploreSub('伦理学', 'religious ethics'),
     ExploreSub('护教学', 'apologetics'),
   ]),
-  ExploreTopic('比较宗教学', Icons.compare_arrows_rounded, 'comparative religion 比较宗教', subs: [
+  ExploreTopic('比较宗教学', AppIcons.arrowsHorizontal, 'comparative religion 比较宗教', subs: [
     ExploreSub('世界宗教入门', 'introduction to world religions course'),
     ExploreSub('宗教异同', 'comparative religion differences'),
     ExploreSub('学术研究', 'religious studies academic'),
@@ -160,7 +160,7 @@ const faithStudyTopics = <ExploreTopic>[
     ExploreSub('神话学', 'comparative mythology'),
     ExploreSub('仪式研究', 'ritual studies religion'),
   ]),
-  ExploreTopic('经典研究', Icons.auto_stories_rounded, 'scripture study 经典', subs: [
+  ExploreTopic('经典研究', AppIcons.bookOpenText, 'scripture study 经典', subs: [
     ExploreSub('圣经', 'Bible study 圣经'),
     ExploreSub('旧约', 'Hebrew Bible Old Testament scholarship'),
     ExploreSub('新约', 'New Testament scholarship'),
@@ -171,7 +171,7 @@ const faithStudyTopics = <ExploreTopic>[
     ExploreSub('塔木德', 'Talmud study'),
     ExploreSub('死海古卷与次经', 'Dead Sea Scrolls apocrypha'),
   ]),
-  ExploreTopic('宗教与社会', Icons.groups_rounded, 'religion and society', subs: [
+  ExploreTopic('宗教与社会', AppIcons.usersThree, 'religion and society', subs: [
     ExploreSub('宗教自由', 'religious freedom'),
     ExploreSub('宗教与政治', 'religion and politics'),
     ExploreSub('世俗化', 'secularization'),
@@ -180,7 +180,7 @@ const faithStudyTopics = <ExploreTopic>[
     ExploreSub('宗教与生命伦理', 'religion bioethics'),
     ExploreSub('宗教人口趋势', 'religious demographics trends'),
   ]),
-  ExploreTopic('无神论与宗教批评', Icons.help_outline_rounded, 'atheism religion debate', subs: [
+  ExploreTopic('无神论与宗教批评', AppIcons.question, 'atheism religion debate', subs: [
     ExploreSub('无神论', 'atheism'),
     ExploreSub('不可知论', 'agnosticism'),
     ExploreSub('世俗人文主义', 'secular humanism'),
@@ -188,7 +188,7 @@ const faithStudyTopics = <ExploreTopic>[
     ExploreSub('前信徒经历', 'ex-believer deconversion story'),
     ExploreSub('圣经批判研究', 'biblical criticism historical critical'),
   ]),
-  ExploreTopic('宗教对话', Icons.forum_rounded, 'interfaith dialogue 宗教对话', subs: [
+  ExploreTopic('宗教对话', AppIcons.chatsFill, 'interfaith dialogue 宗教对话', subs: [
     ExploreSub('宗教间对话', 'interfaith dialogue'),
     ExploreSub('教派交流', 'ecumenical dialogue'),
     ExploreSub('信仰与非信仰者', 'believer atheist conversation'),
@@ -200,7 +200,7 @@ const faithStudyTopics = <ExploreTopic>[
 
 /// 文化艺术: art, buildings, music, festivals and faith around the world.
 const faithArtsTopics = <ExploreTopic>[
-  ExploreTopic('宗教艺术', Icons.palette_rounded, 'sacred art 宗教艺术', subs: [
+  ExploreTopic('宗教艺术', AppIcons.paletteFill, 'sacred art 宗教艺术', subs: [
     ExploreSub('宗教绘画', 'religious painting art history'),
     ExploreSub('圣像', 'icon painting iconography'),
     ExploreSub('宗教雕塑', 'religious sculpture'),
@@ -210,7 +210,7 @@ const faithArtsTopics = <ExploreTopic>[
     ExploreSub('唐卡与曼荼罗', 'thangka mandala'),
     ExploreSub('宗教电影', 'religious film'),
   ]),
-  ExploreTopic('宗教建筑', Icons.account_balance_rounded, 'famous religious buildings 宗教建筑', subs: [
+  ExploreTopic('宗教建筑', AppIcons.bank, 'famous religious buildings 宗教建筑', subs: [
     ExploreSub('世界著名宗教建筑', 'famous religious buildings world'),
     ExploreSub('教堂', 'cathedral architecture 教堂'),
     ExploreSub('清真寺', 'mosque architecture'),
@@ -220,7 +220,7 @@ const faithArtsTopics = <ExploreTopic>[
     ExploreSub('犹太会堂', 'synagogue architecture'),
     ExploreSub('修道院', 'monastery architecture'),
   ]),
-  ExploreTopic('宗教纪录片', Icons.movie_rounded, 'religion documentary 宗教 纪录片', subs: [
+  ExploreTopic('宗教纪录片', AppIcons.filmSlateFill, 'religion documentary 宗教 纪录片', subs: [
     ExploreSub('世界宗教', 'world religions documentary'),
     ExploreSub('修道院生活', 'monastery life documentary'),
     ExploreSub('朝圣之旅', 'pilgrimage documentary'),
@@ -228,7 +228,7 @@ const faithArtsTopics = <ExploreTopic>[
     ExploreSub('人物传记', 'religious figure biography documentary'),
     ExploreSub('信徒日常', 'daily life of believers documentary'),
   ]),
-  ExploreTopic('宗教音乐', Icons.music_note_rounded, 'sacred music', subs: [
+  ExploreTopic('宗教音乐', AppIcons.musicNoteFill, 'sacred music', subs: [
     ExploreSub('赞美诗', 'hymns choir'),
     ExploreSub('敬拜音乐', 'worship music'),
     ExploreSub('额我略圣歌', 'Gregorian chant'),
@@ -240,7 +240,7 @@ const faithArtsTopics = <ExploreTopic>[
     ExploreSub('伊斯兰颂歌', 'nasheed'),
     ExploreSub('印度圣歌', 'kirtan bhajan'),
   ]),
-  ExploreTopic('节日与习俗', Icons.celebration_rounded, 'religious festivals', subs: [
+  ExploreTopic('节日与习俗', AppIcons.confetti, 'religious festivals', subs: [
     ExploreSub('圣诞节', 'Christmas tradition 圣诞'),
     ExploreSub('复活节', 'Easter tradition 复活节'),
     ExploreSub('圣周', 'Holy Week processions'),
@@ -251,7 +251,7 @@ const faithArtsTopics = <ExploreTopic>[
     ExploreSub('光明节', 'Hanukkah'),
     ExploreSub('人生礼仪', 'religious wedding funeral rites'),
   ]),
-  ExploreTopic('世界宗教文化', Icons.public_rounded, 'religious culture around the world', subs: [
+  ExploreTopic('世界宗教文化', AppIcons.globe, 'religious culture around the world', subs: [
     ExploreSub('中国', 'China religious culture 中国 宗教文化'),
     ExploreSub('日本与韩国', 'Japan Korea religious culture'),
     ExploreSub('南亚', 'South Asia religious culture'),
@@ -265,7 +265,7 @@ const faithArtsTopics = <ExploreTopic>[
 
 /// 宗教直播: services, prayer, talks and holy places, now or coming up.
 const faithLiveTopics = <ExploreTopic>[
-  ExploreTopic('宗教礼仪', Icons.church_rounded, 'Holy Mass live 弥撒 直播', subs: [
+  ExploreTopic('宗教礼仪', AppIcons.church, 'Holy Mass live 弥撒 直播', subs: [
     ExploreSub('主日礼拜', 'Sunday church service live 主日崇拜'),
     ExploreSub('弥撒', 'Holy Mass live 弥撒'),
     ExploreSub('圣餐礼', 'Holy Communion service live'),
@@ -276,7 +276,7 @@ const faithLiveTopics = <ExploreTopic>[
     ExploreSub('佛教法会', '法会 直播'),
     ExploreSub('印度教祭仪', 'Hindu puja aarti live'),
   ]),
-  ExploreTopic('祈祷与冥想', Icons.self_improvement_rounded, 'prayer live 祈祷', subs: [
+  ExploreTopic('祈祷与冥想', AppIcons.personSimpleTaiChi, 'prayer live 祈祷', subs: [
     ExploreSub('祈祷', 'prayer live 祈祷 直播'),
     ExploreSub('玫瑰经', 'rosary live 玫瑰经'),
     ExploreSub('日课', 'Liturgy of the Hours live'),
@@ -286,7 +286,7 @@ const faithLiveTopics = <ExploreTopic>[
     ExploreSub('诵经', '诵经 直播'),
     ExploreSub('古兰经诵读', 'Quran recitation live'),
   ]),
-  ExploreTopic('宗教讲道', Icons.record_voice_over_rounded, 'sermon live', subs: [
+  ExploreTopic('宗教讲道', AppIcons.userSoundFill, 'sermon live', subs: [
     ExploreSub('牧师讲道', 'church sermon live'),
     ExploreSub('神父讲道', 'Catholic homily live'),
     ExploreSub('法师开示', '法师 开示 直播'),
@@ -295,7 +295,7 @@ const faithLiveTopics = <ExploreTopic>[
     ExploreSub('宗教讲座', 'religious lecture live'),
     ExploreSub('灵修分享', 'devotional live'),
   ]),
-  ExploreTopic('宗教音乐', Icons.music_note_rounded, 'sacred music live', subs: [
+  ExploreTopic('宗教音乐', AppIcons.musicNoteFill, 'sacred music live', subs: [
     ExploreSub('敬拜赞美', 'worship praise live'),
     ExploreSub('唱诗班', 'church choir live'),
     ExploreSub('圣咏', 'chant live'),
@@ -303,7 +303,7 @@ const faithLiveTopics = <ExploreTopic>[
     ExploreSub('宗教音乐会', 'sacred music concert live'),
     ExploreSub('苏菲与颂歌', 'qawwali nasheed live'),
   ]),
-  ExploreTopic('宗教教育', Icons.school_rounded, 'theology class live', subs: [
+  ExploreTopic('宗教教育', AppIcons.graduationCap, 'theology class live', subs: [
     ExploreSub('经典研读', 'Bible study live'),
     ExploreSub('神学课程', 'theology course live'),
     ExploreSub('教理问答', 'catechism class live'),
@@ -312,14 +312,14 @@ const faithLiveTopics = <ExploreTopic>[
     ExploreSub('塔木德课', 'Talmud class live'),
     ExploreSub('在线教学', 'religious education live'),
   ]),
-  ExploreTopic('宗教新闻', Icons.newspaper_rounded, 'Vatican live', subs: [
+  ExploreTopic('宗教新闻', AppIcons.newspaper, 'Vatican live', subs: [
     ExploreSub('宗教新闻', 'religion news live'),
     ExploreSub('教宗与梵蒂冈', 'Pope Vatican live'),
     ExploreSub('宗教会议', 'synod live'),
     ExploreSub('重要宗教事件', 'religious event live'),
     ExploreSub('宗教领袖访谈', 'religious leader interview live'),
   ]),
-  ExploreTopic('宗教节庆', Icons.celebration_rounded, 'religious festival live', subs: [
+  ExploreTopic('宗教节庆', AppIcons.confetti, 'religious festival live', subs: [
     ExploreSub('圣诞节', 'Christmas Mass live'),
     ExploreSub('复活节', 'Easter Vigil live'),
     ExploreSub('圣周游行', 'Holy Week procession live'),
@@ -328,14 +328,14 @@ const faithLiveTopics = <ExploreTopic>[
     ExploreSub('卫塞节', 'Vesak live'),
     ExploreSub('排灯节', 'Diwali live'),
   ]),
-  ExploreTopic('宗教对话', Icons.forum_rounded, 'interfaith dialogue live', subs: [
+  ExploreTopic('宗教对话', AppIcons.chatsFill, 'interfaith dialogue live', subs: [
     ExploreSub('神学辩论', 'theology debate live'),
     ExploreSub('跨宗教讨论', 'interfaith discussion live'),
     ExploreSub('圆桌座谈', 'religion panel roundtable live'),
     ExploreSub('公开问答', 'religious Q&A live'),
     ExploreSub('信仰访谈', 'faith interview live'),
   ]),
-  ExploreTopic('圣地实况', Icons.videocam_rounded, 'shrine live cam', subs: [
+  ExploreTopic('圣地实况', AppIcons.videoCamera, 'shrine live cam', subs: [
     ExploreSub('麦加', 'Makkah live'),
     ExploreSub('麦地那', 'Madinah live'),
     ExploreSub('圣伯多禄广场', "St Peter's Square live"),
@@ -347,7 +347,7 @@ const faithLiveTopics = <ExploreTopic>[
     ExploreSub('佛寺', 'Buddhist temple live cam'),
     ExploreSub('教堂', 'church live cam'),
   ]),
-  ExploreTopic('宗教电台', Icons.radio_rounded, 'Catholic radio 24/7 live', subs: [
+  ExploreTopic('宗教电台', AppIcons.radio, 'Catholic radio 24/7 live', subs: [
     ExploreSub('讲道电台', 'sermon radio 24/7'),
     ExploreSub('宗教音乐电台', 'sacred music radio 24/7'),
     ExploreSub('祈祷电台', 'prayer radio live'),

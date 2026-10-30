@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 import 'theme.dart';
+import 'app_icons.dart';
 
 /// Like and dislike under a comment or a post. With [onRate] the buttons
 /// press (signed in, from a page that carried their actions); without it
@@ -28,7 +29,7 @@ class RatingButtons extends StatelessWidget {
     if (onRate == null) {
       return Tooltip(
         message: tr('点赞数。在设置 › YouTube 账号里登录后可以点赞和点踩：视频评论用电视码登录，帖子用浏览器登录'),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.thumb_up_outlined, size: 14, color: colors.outline), const SizedBox(width: 4), count]),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(AppIcons.thumbsUp, size: 14, color: colors.outline), const SizedBox(width: 4), count]),
       );
     }
     Future<void> press(String want) async {
@@ -47,9 +48,9 @@ class RatingButtons extends StatelessWidget {
           onPressed: () => press(want),
         );
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      button('like', Icons.thumb_up_outlined, Icons.thumb_up_rounded, state == 'like' ? tr('取消点赞') : tr('点赞')),
+      button('like', AppIcons.thumbsUp, AppIcons.thumbsUpFill, state == 'like' ? tr('取消点赞') : tr('点赞')),
       count,
-      button('dislike', Icons.thumb_down_outlined, Icons.thumb_down_rounded, state == 'dislike' ? tr('取消点踩') : tr('点踩')),
+      button('dislike', AppIcons.thumbsDown, AppIcons.thumbsDownFill, state == 'dislike' ? tr('取消点踩') : tr('点踩')),
     ]);
   }
 }

@@ -7,6 +7,7 @@ import '../../youtube_web_sign_in.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../../l10n/l10n.dart';
+import '../app_icons.dart';
 
 /// The cookie sign-in, for liking posts, voting in polls and writing under
 /// posts: signing in in a browser window of its own, or importing a
@@ -95,7 +96,7 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
           )
         else if (sign.signedIn)
           ListTile(
-            leading: Icon(Icons.lock_rounded, color: colors.primary),
+            leading: Icon(AppIcons.lock, color: colors.primary),
             title: Text(tr('已用浏览器登录')),
             subtitle: Text('${tr('可以给社区帖子点赞、投票和评论')}\n${_guard(sign.guard)}'),
             isThreeLine: true,
@@ -103,7 +104,7 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
           )
         else ...[
           ListTile(
-            leading: Icon(Icons.public_rounded, color: colors.primary),
+            leading: Icon(AppIcons.globe, color: colors.primary),
             title: Text(tr('未登录')),
             subtitle: Text(tr('在一个临时的浏览器窗口里登录。Lumtub 只取 youtube.com 的 Cookie，加密保存后删除这个窗口的全部数据。')),
             trailing: FilledButton.tonal(onPressed: () => sign.signInWithBrowser(presence: _presence), child: Text(tr('用浏览器登录'))),
@@ -117,12 +118,12 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-            child: Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: _import, icon: const Icon(Icons.file_open_outlined, size: 18), label: Text(tr('改为导入 cookies.txt')))),
+            child: Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: _import, icon: const Icon(AppIcons.fileText, size: 18), label: Text(tr('改为导入 cookies.txt')))),
           ),
         ],
         if (error != null) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: ErrorBanner(error)),
         Padding(
-          padding: const EdgeInsets.fromLTRB(18, 4, 18, 8),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           child: Text(
             tr('Cookie 等于这个账号的登录状态，建议用一个小号。Cookie 只留在 Lumtub 的原生核心里，界面和日志都拿不到，只发给 youtube.com。在 Google 账号里退出所有设备后它会失效。'),
             style: widget.note,

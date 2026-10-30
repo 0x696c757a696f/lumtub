@@ -14,6 +14,7 @@ import 'pages/translation_settings_page.dart' show openTranslationSettings;
 import 'player_panel.dart';
 import 'common.dart' show ErrorBanner;
 import 'subtitle_list_panel.dart';
+import 'app_icons.dart';
 
 /// The player's 字幕 panel: the main subtitle on the left, the one shown
 /// above it (双语字幕) on the right, as PiliNara's `_SubtitleSelectPanel`
@@ -31,7 +32,7 @@ Future<void> showSubtitlePanel(BuildContext context, AppController controller, P
               Navigator.of(inner).pop();
               onList != null ? onList() : unawaited(showSubtitleList(context, controller, player));
             },
-            icon: const Icon(Icons.subject_rounded, size: 18),
+            icon: const Icon(AppIcons.textAlignLeft, size: 18),
             label: Text(tr('字幕列表')),
           ),
         ),
@@ -41,7 +42,7 @@ Future<void> showSubtitlePanel(BuildContext context, AppController controller, P
               Navigator.of(context).pop();
               onSettings();
             },
-            icon: const Icon(Icons.tune_rounded, size: 18),
+            icon: const Icon(AppIcons.slidersHorizontal, size: 18),
             label: Text(tr('字幕设置')),
           ),
         ),
@@ -168,13 +169,13 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
                   choice.label,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, color: swap ? colors.outline : isSelected ? colors.primary : colors.onSurface, fontWeight: isSelected ? FontWeight.w600 : null),
+                  style: TextStyle(fontSize: 12, color: swap ? colors.outline : isSelected ? colors.primary : colors.onSurface, fontWeight: isSelected ? FontWeight.w600 : null),
                 ),
               ),
               if (busy == choice.key)
                 const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
               else if (isSelected)
-                Icon(Icons.check_rounded, size: 18, color: colors.primary),
+                Icon(AppIcons.check, size: 18, color: colors.primary),
             ]),
           ),
         );
@@ -198,8 +199,8 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
         ),
         Expanded(
           child: ListView(padding: const EdgeInsets.only(bottom: 12), children: [
-            row((key: 'off', label: tr('关闭'), detail: null, option: null, track: null), icon: Icons.block_rounded),
-            if (spoken != null && !searching) row((key: 'o:${spoken.label}', label: tr('原语言：{0}', [spoken.label]), detail: null, option: spoken, track: null), icon: Icons.record_voice_over_outlined),
+            row((key: 'off', label: tr('关闭'), detail: null, option: null, track: null), icon: AppIcons.prohibitFill),
+            if (spoken != null && !searching) row((key: 'o:${spoken.label}', label: tr('原语言：{0}', [spoken.label]), detail: null, option: spoken, track: null), icon: AppIcons.userSound),
             if (!searching)
               for (final r in near)
                 row(
@@ -210,7 +211,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
                     option: r.option,
                     track: null,
                   ),
-                  icon: r.option.kind == SubtitleKind.translated ? Icons.translate_rounded : Icons.subtitles_outlined,
+                  icon: r.option.kind == SubtitleKind.translated ? AppIcons.translate : AppIcons.subtitles,
                 ),
             for (final (title, rows) in visible) ...[heading(title), for (final c in rows) row(c)],
             if (shownTranslated.isNotEmpty) ...[
@@ -218,7 +219,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
               else
                 TextButton.icon(
                   onPressed: () => setState(() => _allLanguages = true),
-                  icon: const Icon(Icons.expand_more_rounded, size: 18),
+                  icon: const Icon(AppIcons.caretDown, size: 18),
                   label: Text(tr('更多语言（{0} 种）', [shownTranslated.length])),
                 ),
             ],
@@ -234,7 +235,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: TextField(
-            decoration: InputDecoration(isDense: true, prefixIcon: const Icon(Icons.search_rounded, size: 20), hintText: tr('搜索语言，如 中文、ja')),
+            decoration: InputDecoration(isDense: true, prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('搜索语言，如 中文、ja')),
             onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
           ),
         ),
@@ -369,7 +370,7 @@ class _SpeechOfferState extends State<SpeechOffer> {
             ] else if (controller.canRecognizeSpeech)
               FilledButton.tonalIcon(
                 onPressed: job == null ? _run : null,
-                icon: const Icon(Icons.graphic_eq_rounded, size: 18),
+                icon: const Icon(AppIcons.waveform, size: 18),
                 label: Text(tr('用语音识别生成字幕')),
               )
             else ...[
@@ -381,7 +382,7 @@ class _SpeechOfferState extends State<SpeechOffer> {
                   await openTranslationSettings(context, controller);
                   if (mounted) setState(() {});
                 },
-                icon: const Icon(Icons.settings_outlined, size: 18),
+                icon: const Icon(AppIcons.gear, size: 18),
                 label: Text(tr('设置语音识别')),
               ),
             ],

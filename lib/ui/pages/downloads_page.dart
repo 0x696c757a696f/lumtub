@@ -14,6 +14,7 @@ import '../download_dialog.dart';
 import '../ffmpeg_dialog.dart';
 import '../common.dart';
 import '../theme.dart';
+import '../app_icons.dart';
 
 /// Asks what to download [item] as, then queues it.
 Future<void> showDownloadChoice(BuildContext context, AppController controller, VideoItem item) async {
@@ -146,12 +147,12 @@ class DownloadsPage extends StatelessWidget {
           trailing: Wrap(spacing: 8, children: [
             OutlinedButton.icon(
               onPressed: () => _changeDirectory(context, manager),
-              icon: const Icon(Icons.folder_open_rounded),
+              icon: const Icon(AppIcons.folderOpen),
               label: Text(tr('更改位置')),
             ),
             FilledButton.tonalIcon(
               onPressed: () => unawaited(openInExplorer(manager.directory)),
-              icon: const Icon(Icons.open_in_new_rounded),
+              icon: const Icon(AppIcons.arrowSquareOut),
               label: Text(tr('打开文件夹')),
             ),
           ]),
@@ -167,7 +168,7 @@ class DownloadsPage extends StatelessWidget {
         SliverFillRemaining(
           hasScrollBody: false,
           child: StatusView(
-            icon: Icons.download_for_offline_outlined,
+            icon: AppIcons.arrowCircleDown,
             title: tr('还没有下载'),
             message: tr('在视频的菜单或播放页点“下载”，视频会保存到本机，之后可以离线播放。'),
           ),
@@ -263,13 +264,13 @@ class _DownloadTile extends StatelessWidget {
       ]),
       onTap: task.status == DownloadStatus.done ? () => controller.play(item) : null,
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (task.active) button(Icons.pause_rounded, tr('暂停'), () => manager.pause(task.id)),
-        if (task.status == DownloadStatus.paused) button(Icons.play_arrow_rounded, tr('继续'), () => manager.resume(task.id)),
-        if (task.active || task.status == DownloadStatus.paused) button(Icons.close_rounded, tr('取消'), () => manager.cancel(task.id)),
-        if (failed || task.status == DownloadStatus.cancelled) button(Icons.refresh_rounded, tr('重试'), () => manager.retry(task.id)),
+        if (task.active) button(AppIcons.pauseFill, tr('暂停'), () => manager.pause(task.id)),
+        if (task.status == DownloadStatus.paused) button(AppIcons.playFill, tr('继续'), () => manager.resume(task.id)),
+        if (task.active || task.status == DownloadStatus.paused) button(AppIcons.x, tr('取消'), () => manager.cancel(task.id)),
+        if (failed || task.status == DownloadStatus.cancelled) button(AppIcons.arrowsClockwise, tr('重试'), () => manager.retry(task.id)),
         if (task.status == DownloadStatus.done && task.filePath != null)
-          button(Icons.folder_open_rounded, tr('打开所在文件夹'), () => unawaited(openInExplorer(task.filePath!, select: true))),
-        if (!task.active) button(Icons.delete_outline_rounded, tr('删除'), () => _confirmDelete(context)),
+          button(AppIcons.folderOpen, tr('打开所在文件夹'), () => unawaited(openInExplorer(task.filePath!, select: true))),
+        if (!task.active) button(AppIcons.trash, tr('删除'), () => _confirmDelete(context)),
       ]),
     );
   }

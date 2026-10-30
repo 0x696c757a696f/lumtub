@@ -8,6 +8,7 @@ import '../cast/cast_discovery.dart';
 import '../l10n/l10n.dart';
 import 'common.dart';
 import 'theme.dart';
+import 'app_icons.dart';
 
 /// Lists the TVs and Chromecasts on the network and casts the playing video
 /// to the one picked.
@@ -99,7 +100,7 @@ class _CastDialogState extends State<_CastDialog> {
           builder: (context, _) => Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             if (cast.device case final current?)
               ListTile(
-                leading: const Icon(Icons.cast_connected_rounded),
+                leading: const Icon(AppIcons.airplay),
                 title: Text(tr('正在投屏到 {0}', [current.name])),
                 trailing: TextButton(
                   onPressed: () {
@@ -121,7 +122,7 @@ class _CastDialogState extends State<_CastDialog> {
               child: ListView(shrinkWrap: true, children: [
                 for (final device in _devices)
                   ListTile(
-                    leading: Icon(device.protocol == CastProtocol.chromecast ? Icons.cast_rounded : Icons.tv_rounded),
+                    leading: Icon(device.protocol == CastProtocol.chromecast ? AppIcons.screencast : AppIcons.television),
                     title: Text(device.name, maxLines: 1, overflow: TextOverflow.ellipsis),
                     subtitle: Text(device.protocol == CastProtocol.chromecast ? 'Chromecast' : 'DLNA'),
                     onTap: () => _pick(device),
@@ -173,20 +174,20 @@ class _CastBarState extends State<CastBar> {
             color: colors.secondaryContainer,
             borderRadius: AppStyle.cardRadius,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 8, 6, 8),
+              padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
-                  Icon(Icons.cast_connected_rounded, size: 20, color: colors.onSecondaryContainer),
+                  Icon(AppIcons.airplay, size: 20, color: colors.onSecondaryContainer),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(tr('正在投屏到 {0}', [device.name]), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall?.copyWith(color: colors.onSecondaryContainer)),
                   ),
                   IconButton(
                     tooltip: playing ? tr('暂停') : tr('播放'),
-                    icon: Icon(playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
+                    icon: Icon(playing ? AppIcons.pauseFill : AppIcons.playFill),
                     onPressed: () => unawaited(cast.togglePlay()),
                   ),
-                  TextButton.icon(onPressed: () => unawaited(stopCasting(widget.controller)), icon: const Icon(Icons.cast_rounded, size: 18), label: Text(tr('停止投屏'))),
+                  TextButton.icon(onPressed: () => unawaited(stopCasting(widget.controller)), icon: const Icon(AppIcons.screencast, size: 18), label: Text(tr('停止投屏'))),
                 ]),
                 Row(children: [
                   Text(formatPlaybackTime(Duration(milliseconds: (seconds * 1000).round())), style: context.text.labelMedium),

@@ -6,6 +6,7 @@ import '../downloads/download_selection.dart';
 import '../l10n/l10n.dart';
 import '../video_codec.dart';
 import 'theme.dart';
+import 'app_icons.dart';
 
 /// What the download dialog returns: the formats picked, or just a simple
 /// [quality] when the formats could not be read.
@@ -135,7 +136,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
               Navigator.pop(context);
               widget.onCover!();
             },
-            icon: const Icon(Icons.image_outlined, size: 18),
+            icon: const Icon(AppIcons.image, size: 18),
             label: Text(tr('下载封面')),
           ),
         if (widget.onSubtitles != null)
@@ -144,7 +145,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
               Navigator.pop(context);
               widget.onSubtitles!();
             },
-            icon: const Icon(Icons.subtitles_outlined, size: 18),
+            icon: const Icon(AppIcons.subtitles, size: 18),
             label: Text(tr('下载字幕')),
           ),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
@@ -180,11 +181,11 @@ class _DownloadDialogState extends State<DownloadDialog> {
       ]),
       if (_missing != null && !_codecChosen)
         Padding(
-          padding: const EdgeInsets.only(top: 6),
+          padding: const EdgeInsets.only(top: 4),
           child: Text(tr('该视频没有 {0} 格式，请选择其他编码', [_missing!.label]), style: TextStyle(color: context.colors.error)),
         ),
       if (heights.isNotEmpty) ...[
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _section(context, tr('视频画质'), [
           for (final h in heights)
             _chip('${h}p', selected: h == video?.height, onTap: () => setState(() {
@@ -195,7 +196,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
         ]),
       ],
       if (video != null) ...[
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _section(context, tr('文件封装格式'), [
           for (final c in DownloadContainer.values)
             () {
@@ -239,7 +240,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
   Widget _section(BuildContext context, String title, List<Widget> chips) =>
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(title, style: context.text.labelLarge),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Wrap(spacing: 8, runSpacing: 6, children: chips),
       ]);
 

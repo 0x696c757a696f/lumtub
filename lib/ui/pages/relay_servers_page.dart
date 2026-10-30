@@ -8,6 +8,7 @@ import '../../relay_servers.dart';
 import '../theme.dart';
 import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
+import '../app_icons.dart';
 
 /// 设置 › Piped 服务器 / Invidious 实例: choose automatic selection or one
 /// server, measure them all, and download the public list again.
@@ -71,8 +72,8 @@ class _RelayServersPageState extends State<_RelayServersPage> {
     final updated = _piped.catalogUpdatedAt;
     return Scaffold(
       appBar: AppBar(title: Text(_isPiped ? tr('Piped 服务器') : tr('Invidious 实例')), actions: [
-        IconButton(tooltip: tr('测速'), icon: const Icon(Icons.speed_rounded), onPressed: _busy == null ? () => _run(tr('正在测速…'), _piped.remeasure) : null),
-        IconButton(tooltip: tr('更新列表'), icon: const Icon(Icons.refresh_rounded), onPressed: _busy == null ? _update : null),
+        IconButton(tooltip: tr('测速'), icon: const Icon(AppIcons.gauge), onPressed: _busy == null ? () => _run(tr('正在测速…'), _piped.remeasure) : null),
+        IconButton(tooltip: tr('更新列表'), icon: const Icon(AppIcons.arrowsClockwise), onPressed: _busy == null ? _update : null),
       ]),
       body: ListenableBuilder(
         listenable: widget.controller,
@@ -83,7 +84,7 @@ class _RelayServersPageState extends State<_RelayServersPage> {
           final auto = source == (_isPiped ? PlaybackSource.pipedAuto : PlaybackSource.invidiousAuto);
           final servers = _sorted();
           Widget option({required bool selected, required String title, String? subtitle, Widget? trailing, required VoidCallback onTap}) => ListTile(
-                leading: Icon(selected ? Icons.radio_button_checked : Icons.radio_button_unchecked, color: selected ? colors.primary : colors.outline),
+                leading: Icon(selected ? AppIcons.radioButton : AppIcons.circle, color: selected ? colors.primary : colors.outline),
                 title: Text(title),
                 subtitle: subtitle == null ? null : Text(subtitle, style: TextStyle(color: colors.outline, fontSize: 12)),
                 trailing: trailing,
@@ -100,7 +101,7 @@ class _RelayServersPageState extends State<_RelayServersPage> {
               onTap: () => editRelayServer(context, widget.controller, widget.kind),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
               child: Text(
                 '${_busy ?? '共 ${servers.length} 个，${servers.where((s) => _piped.timingOf(s) != null).length} 个可连接'}'
                 '${updated == null ? '' : ' · 列表更新于 ${updated.month}月${updated.day}日 ${updated.hour.toString().padLeft(2, '0')}:${updated.minute.toString().padLeft(2, '0')}'}',
@@ -144,6 +145,6 @@ class _Timing extends StatelessWidget {
       null when tried => (tr('无法连接'), colors.error),
       null => (tr('未测速'), colors.outline),
     };
-    return Text(text, style: TextStyle(color: color, fontSize: 13, fontFeatures: const [FontFeature.tabularFigures()]));
+    return Text(text, style: TextStyle(color: color, fontSize: 12, fontFeatures: const [FontFeature.tabularFigures()]));
   }
 }

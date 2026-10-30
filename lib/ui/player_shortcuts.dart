@@ -10,6 +10,7 @@ import '../app_preferences.dart';
 import '../l10n/l10n.dart';
 import 'lights_off.dart';
 import 'theater_mode.dart';
+import 'app_icons.dart';
 
 /// Keys shown in the shortcut help, in display order, with the steps from
 /// [prefs].
@@ -50,10 +51,10 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
   final volume = prefs.volumeStep.toDouble();
   void seek(int seconds) {
     unawaited(controller.seekBy(Duration(seconds: seconds)));
-    onFeedback?.call(seconds < 0 ? Icons.fast_rewind_rounded : Icons.fast_forward_rounded, seconds < 0 ? tr('快退{0}秒', [-seconds]) : tr('快进{0}秒', [seconds]));
+    onFeedback?.call(seconds < 0 ? AppIcons.rewindFill : AppIcons.fastForwardFill, seconds < 0 ? tr('快退{0}秒', [-seconds]) : tr('快进{0}秒', [seconds]));
   }
   void changeVolume(double delta) {
-    unawaited(controller.changeVolume(delta).then((_) => onFeedback?.call(Icons.volume_up_rounded, '${player.state.volume.round()}%')));
+    unawaited(controller.changeVolume(delta).then((_) => onFeedback?.call(AppIcons.speakerHighFill, '${player.state.volume.round()}%')));
   }
   void playOrPause() => unawaited(player.playOrPause());
   // Steps through 倍速选项 like YouTube's Shift+< and Shift+>.
@@ -61,26 +62,26 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     final next = nextSpeed(controller.settings.speeds, player.state.rate, direction);
     if (next == null) return;
     unawaited(player.setRate(next));
-    onFeedback?.call(direction > 0 ? Icons.fast_forward_rounded : Icons.slow_motion_video_rounded, '${_trim(next)}x');
+    onFeedback?.call(direction > 0 ? AppIcons.fastForwardFill : AppIcons.speedometer, '${_trim(next)}x');
   }
   // 0-9 jump to that tenth of the video, as on YouTube.
   void jumpToTenth(int tenth) {
     final duration = player.state.duration;
     if (duration <= Duration.zero) return;
     unawaited(player.seek(duration * (tenth / 10)));
-    onFeedback?.call(Icons.skip_next_rounded, '${tenth * 10}%');
+    onFeedback?.call(AppIcons.skipForwardFill, '${tenth * 10}%');
   }
   void jumpTo(bool end) {
     final duration = player.state.duration;
     unawaited(player.seek(end ? duration : Duration.zero));
-    onFeedback?.call(end ? Icons.last_page_rounded : Icons.first_page_rounded, end ? tr('结尾') : tr('开头'));
+    onFeedback?.call(end ? AppIcons.caretLineRight : AppIcons.caretLineLeft, end ? tr('结尾') : tr('开头'));
   }
   // One frame at a time, only while paused, as on YouTube.
   void stepFrame(bool forward) {
     final platform = player.platform;
     if (player.state.playing || platform is! NativePlayer) return;
     unawaited(platform.command([forward ? 'frame-step' : 'frame-back-step']).catchError((_) {}));
-    onFeedback?.call(forward ? Icons.skip_next_rounded : Icons.skip_previous_rounded, forward ? tr('下一帧') : tr('上一帧'));
+    onFeedback?.call(forward ? AppIcons.skipForwardFill : AppIcons.skipBackFill, forward ? tr('下一帧') : tr('上一帧'));
   }
   // Line by line through the main subtitle, as Language Reactor's A and D.
   void subtitleStep(int skip) {
@@ -88,7 +89,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     if (platform is! NativePlayer || player.state.track.subtitle.id == 'no') return;
     unawaited(platform.command(['sub-seek', '$skip']).catchError((_) {}));
     onFeedback?.call(
-      skip < 0 ? Icons.skip_previous_rounded : skip > 0 ? Icons.skip_next_rounded : Icons.replay_rounded,
+      skip < 0 ? AppIcons.skipBackFill : skip > 0 ? AppIcons.skipForwardFill : AppIcons.arrowCounterClockwiseFill,
       skip < 0 ? tr('上一句') : skip > 0 ? tr('下一句') : tr('重听这一句'),
     );
   }
@@ -96,7 +97,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     final text = controller.currentSubtitleText;
     if (text.isEmpty) return;
     unawaited(Clipboard.setData(ClipboardData(text: text)));
-    onFeedback?.call(Icons.content_copy_rounded, tr('已复制字幕'));
+    onFeedback?.call(AppIcons.copy, tr('已复制字幕'));
   }
   void previous() {
     if (controller.hasPrevious) unawaited(controller.playPrevious());
@@ -137,7 +138,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     const SingleActivator(LogicalKeyboardKey.keyM): () {
       unawaited(controller.toggleMute().then((_) {
         final muted = player.state.volume == 0;
-        onFeedback?.call(muted ? Icons.volume_off_rounded : Icons.volume_up_rounded, muted ? tr('静音') : '${player.state.volume.round()}%');
+        onFeedback?.call(muted ? AppIcons.speakerSlash : AppIcons.speakerHighFill, muted ? tr('静音') : '${player.state.volume.round()}%');
       }));
     },
     const SingleActivator(LogicalKeyboardKey.keyF): () => unawaited(video()?.toggleFullscreen()),
@@ -167,17 +168,20 @@ String _trim(double speed) => speed == speed.roundToDouble() ? speed.toStringAsF
 Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
+        // The list is taller than a small window; it scrolls above the button.
+        scrollable: true,
         title: Text(tr('快捷键')),
         content: SizedBox(
-          width: 360,
+          width: 420,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             for (final (keys, action) in playerShortcutHelp(prefs))
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(children: [
                   Expanded(child: Text(action)),
+                  const SizedBox(width: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(6)),
                     child: Text(keys, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                   ),

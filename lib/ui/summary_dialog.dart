@@ -8,6 +8,7 @@ import 'common.dart';
 import 'linked_text.dart';
 import 'pages/translation_settings_page.dart';
 import 'theme.dart';
+import 'app_icons.dart';
 
 /// AI 总结 of the video playing. The times in it seek the video.
 Future<void> showVideoSummary(BuildContext context, AppController controller) => showDialog<void>(
@@ -105,7 +106,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
         valueListenable: controller.speechJob,
         builder: (context, job, _) => Row(children: [
           const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(child: Text(job == null ? tr('正在读取字幕并总结…') : job.total > 1 ? '${job.stage} ${job.done} / ${job.total}' : job.stage, style: TextStyle(color: colors.onSurfaceVariant))),
         ]),
       );
@@ -113,7 +114,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
       final progress = _progress;
       body = Row(children: [
         const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
-        const SizedBox(width: 14),
+        const SizedBox(width: 12),
         Expanded(child: Text(
           progress == null || progress.$1 == 0 ? tr('正在读取字幕并总结…') : progress.$1 < progress.$2 - 1 ? tr('视频较长，正在分段整理：{0} / {1}', [progress.$1, progress.$2 - 1]) : tr('正在汇总…'),
           style: TextStyle(color: colors.onSurfaceVariant),
@@ -122,8 +123,8 @@ class _SummaryDialogState extends State<_SummaryDialog> {
     }
     return AlertDialog(
       title: Row(children: [
-        Icon(Icons.auto_awesome_rounded, color: colors.primary),
-        const SizedBox(width: 10),
+        Icon(AppIcons.sparkleFill, color: colors.primary),
+        const SizedBox(width: 8),
         Text(tr('AI 总结')),
       ]),
       content: SizedBox(width: 560, child: body),
@@ -139,7 +140,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
           ),
         // Without subtitles the summary came from the description only.
         if (controller.canSummarize && !AppController.hasOwnSubtitles(controller.details) && !_speechDone && controller.canRecognizeSpeech && controller.speechJob.value == null && (summary != null || _error != null))
-          TextButton.icon(onPressed: _fromSpeech, icon: const Icon(Icons.graphic_eq_rounded, size: 18), label: Text(tr('用语音识别重新总结'))),
+          TextButton.icon(onPressed: _fromSpeech, icon: const Icon(AppIcons.waveform, size: 18), label: Text(tr('用语音识别重新总结'))),
         if (summary != null) TextButton(onPressed: () => copyText(context, summary, tr('已复制总结')), child: Text(tr('复制'))),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('关闭'))),
       ],

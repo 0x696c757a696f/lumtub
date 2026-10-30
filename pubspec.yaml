@@ -1,7 +1,7 @@
 name: lumtub
 description: A lightweight native Windows YouTube player built with Flutter and libmpv.
 publish_to: none
-version: 0.2.14+16
+version: 0.2.15+17
 
 environment:
   sdk: '>=3.6.0 <4.0.0'
@@ -44,3 +44,10 @@ flutter:
     - family: Noto Sans CJK SC
       fonts:
         - asset: assets/fonts/NotoSansSC-Regular.ttf
+    # Phosphor icons (MIT, assets/fonts/phosphor/LICENSE).
+    - family: Phosphor
+      fonts:
+        - asset: assets/fonts/phosphor/Phosphor-Regular.ttf
+    - family: Phosphor Fill
+      fonts:
+        - asset: assets/fonts/phosphor/Phosphor-Fill.ttf

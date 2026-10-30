@@ -109,6 +109,8 @@ class AppPreferences {
     this.translation = const TranslationConfig(),
     this.subtitlesByService = false,
     this.bilingualTranslation = true,
+    this.immersiveTranslation = false,
+    this.immersiveLanguage = '',
     this.translationStyle = TranslationStyle.quote,
     this.translationFirst = false,
     this.subtitleListMode = SubtitleListMode.firstOver,
@@ -240,6 +242,15 @@ class AppPreferences {
   final bool subtitlesByService;
   /// 翻译 shows the translation under the original, not in its place.
   final bool bilingualTranslation;
+  /// 沉浸式翻译: comments, posts and live chat in another language show
+  /// their translation under them without asking.
+  final bool immersiveTranslation;
+  /// The language 沉浸式翻译 turns text into; empty follows the
+  /// interface's language, whatever [translateLanguage] is.
+  final String immersiveLanguage;
+
+  /// [immersiveLanguage], with the interface's language for empty.
+  String get immersiveTarget => immersiveLanguage.isEmpty ? interfaceTranslationLanguage.code : immersiveLanguage;
   /// How the translation under the original looks.
   final TranslationStyle translationStyle;
   /// The translation goes above the original instead of under it.
@@ -398,6 +409,8 @@ class AppPreferences {
     TranslationConfig? translation,
     bool? subtitlesByService,
     bool? bilingualTranslation,
+    bool? immersiveTranslation,
+    String? immersiveLanguage,
     TranslationStyle? translationStyle,
     bool? translationFirst,
     SubtitleListMode? subtitleListMode,
@@ -469,6 +482,8 @@ class AppPreferences {
         translation: translation ?? this.translation,
         subtitlesByService: subtitlesByService ?? this.subtitlesByService,
         bilingualTranslation: bilingualTranslation ?? this.bilingualTranslation,
+        immersiveTranslation: immersiveTranslation ?? this.immersiveTranslation,
+        immersiveLanguage: immersiveLanguage ?? this.immersiveLanguage,
         translationStyle: translationStyle ?? this.translationStyle,
         translationFirst: translationFirst ?? this.translationFirst,
         subtitleListMode: subtitleListMode ?? this.subtitleListMode,
@@ -541,6 +556,8 @@ class AppPreferences {
         'translation': translation.toJson(),
         'subtitlesByService': subtitlesByService,
         'bilingualTranslation': bilingualTranslation,
+        'immersiveTranslation': immersiveTranslation,
+        'immersiveLanguage': immersiveLanguage,
         'translationStyle': translationStyle.name,
         'translationFirst': translationFirst,
         'subtitleListMode': subtitleListMode.name,
@@ -653,6 +670,8 @@ class AppPreferences {
       translation: TranslationConfig.fromJson(raw['translation']),
       subtitlesByService: flag('subtitlesByService', d.subtitlesByService),
       bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
+      immersiveTranslation: flag('immersiveTranslation', d.immersiveTranslation),
+      immersiveLanguage: TranslationLanguage.maybeByCode(raw['immersiveLanguage'])?.code ?? '',
       translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,
       translationFirst: flag('translationFirst', d.translationFirst),
       subtitleListMode: SubtitleListMode.values.where((v) => v.name == raw['subtitleListMode']).firstOrNull ?? d.subtitleListMode,
@@ -681,3 +700,7 @@ class AppPreferencesStore {
 
 /// A playback speed as shown to people: `2`, `1.25`.
 String rateText(double rate) => rate == rate.roundToDouble() ? rate.toStringAsFixed(0) : rate.toString();
+
+/// The interface's language as a translation target, Windows' when it has
+/// none.
+TranslationLanguage get interfaceTranslationLanguage => TranslationLanguage.maybeByCode(youtubeHl) ?? SubtitleLanguage.auto.translation;

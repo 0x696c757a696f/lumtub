@@ -18,6 +18,7 @@ import 'skeleton.dart';
 import 'theme.dart';
 import '../l10n/l10n.dart';
 import 'motion.dart';
+import 'app_icons.dart';
 
 /// Height of the text below a card's thumbnail: two title lines and one
 /// channel line.
@@ -189,7 +190,7 @@ class PlaylistCard extends StatelessWidget {
                   child: ColoredBox(
                     color: Colors.black.withValues(alpha: 0.65),
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      const Icon(Icons.playlist_play_rounded, color: Colors.white, size: 28),
+                      const Icon(AppIcons.playlist, color: Colors.white, size: 28),
                       if (item.count != null) Text(tr('{0} 个视频', [item.count]), style: const TextStyle(color: Colors.white, fontSize: 12)),
                     ]),
                   ),
@@ -198,7 +199,7 @@ class PlaylistCard extends StatelessWidget {
             ),
           ),
           Expanded(child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
               Text(item.channel.isEmpty ? tr('播放列表') : tr('{0} · 播放列表', [item.channel]), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
@@ -247,7 +248,7 @@ class _CardSkeleton extends StatelessWidget {
         SkeletonBox(height: 14),
         SizedBox(height: 8),
         FractionallySizedBox(widthFactor: 0.6, child: SkeletonBox(height: 14)),
-        SizedBox(height: 10),
+        SizedBox(height: 8),
         FractionallySizedBox(widthFactor: 0.4, child: SkeletonBox(height: 11)),
       ]);
 }
@@ -376,15 +377,15 @@ class _VideoCardState extends State<VideoCard> {
               child: Stack(fit: StackFit.expand, children: [
                 AnimatedScale(
                   scale: _hovered ? 1.04 : 1,
-                  duration: Motion.of(const Duration(milliseconds: 180)),
-                  curve: Curves.easeOut,
+                  duration: Motion.of(Ease.fade),
+                  curve: Ease.curve,
                   child: LayoutBuilder(
                     builder: (context, box) => Image(
                       image: thumbnailFor(item, widget.thumbnails, width: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context))),
                       fit: BoxFit.cover,
                       gaplessPlayback: true,
                       frameBuilder: (context, child, frame, sync) => sync || frame != null ? child : ColoredBox(color: colors.surfaceContainerHighest),
-                      errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(Icons.ondemand_video_rounded, size: 40, color: colors.outline)),
+                      errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(AppIcons.televisionSimple, size: 40, color: colors.outline)),
                     ),
                   ),
                 ),
@@ -424,7 +425,7 @@ class _VideoCardState extends State<VideoCard> {
             ),
           ),
           Expanded(child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
               Text(meta.isEmpty ? 'YouTube' : meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
@@ -433,7 +434,7 @@ class _VideoCardState extends State<VideoCard> {
                   height: _reasonHeight,
                   child: Row(children: [
                     if (reason.isNotEmpty) ...[
-                      Icon(Icons.auto_awesome_outlined, size: 12, color: colors.primary),
+                      Icon(AppIcons.sparkle, size: 12, color: colors.primary),
                       const SizedBox(width: 4),
                     ],
                     Expanded(child: Text(reason, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary))),
@@ -490,7 +491,7 @@ class _QuickActionsState extends State<_QuickActions> {
                 customBorder: const CircleBorder(),
                 canRequestFocus: false,
                 onTap: onPressed,
-                child: Padding(padding: const EdgeInsets.all(6), child: Icon(icon, size: 18, color: Colors.white)),
+                child: Padding(padding: const EdgeInsets.all(4), child: Icon(icon, size: 18, color: Colors.white)),
               ),
             ),
           ),
@@ -498,14 +499,14 @@ class _QuickActionsState extends State<_QuickActions> {
     void notice(String text) => ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(text), duration: const Duration(seconds: 2)));
     return Row(mainAxisSize: MainAxisSize.min, children: [
       if (library != null)
-        button(later ? Icons.watch_later_rounded : Icons.watch_later_outlined, later ? tr('从稍后观看移除') : tr('稍后观看'), () {
+        button(later ? AppIcons.clockFill : AppIcons.clock, later ? tr('从稍后观看移除') : tr('稍后观看'), () {
           final added = library.toggleWatchLater(item);
           setState(() {});
           notice(added ? tr('已加入稍后观看') : tr('已从稍后观看移除'));
         }),
       if (controller != null && !item.isUpcoming)
-        button(Icons.queue_music_rounded, tr('加入播放队列'), () => controller.queueLast(item)),
-      button(Icons.more_vert_rounded, tr('更多（菜单键）'), widget.onMore),
+        button(AppIcons.queue, tr('加入播放队列'), () => controller.queueLast(item)),
+      button(AppIcons.dotsThreeVertical, tr('更多（菜单键）'), widget.onMore),
     ]);
   }
 }
@@ -519,8 +520,8 @@ class DurationBadge extends StatelessWidget {
   Widget build(BuildContext context) => DecoratedBox(
         decoration: BoxDecoration(color: color ?? Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(4)),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-          child: Text(label, style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w500, fontFeatures: [FontFeature.tabularFigures()])),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Text(label, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500, fontFeatures: [FontFeature.tabularFigures()])),
         ),
       );
 }
@@ -571,7 +572,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
       onTap: onOpen,
       onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: onOpen),
       child: Padding(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(4),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SizedBox(
             width: 152,
@@ -594,9 +595,9 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
+            Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, height: 1.35, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: 4),
             if (upcomingStart != null)
               Text(upcomingStart, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary, fontWeight: FontWeight.w500)),
@@ -639,33 +640,33 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
     context: context,
     position: RelativeRect.fromRect(position & const Size(1, 1), Offset.zero & overlay.size),
     items: [
-      entry('play', Icons.play_arrow_rounded, tr('播放')),
+      entry('play', AppIcons.playFill, tr('播放')),
       if (library != null) ...[
-        entry('favorite', favorite ? Icons.favorite_rounded : Icons.favorite_border_rounded, favorite ? tr('取消收藏') : tr('收藏')),
-        entry('later', later ? Icons.watch_later_rounded : Icons.watch_later_outlined, later ? tr('从稍后观看移除') : tr('稍后观看')),
-        entry('playlist', Icons.playlist_add_rounded, tr('添加到播放列表…')),
+        entry('favorite', favorite ? AppIcons.heartFill : AppIcons.heart, favorite ? tr('取消收藏') : tr('收藏')),
+        entry('later', later ? AppIcons.clockFill : AppIcons.clock, later ? tr('从稍后观看移除') : tr('稍后观看')),
+        entry('playlist', AppIcons.listPlus, tr('添加到播放列表…')),
       ],
       if (controller != null) ...[
-        entry('queueNext', Icons.playlist_play_rounded, tr('下一个播放')),
-        entry('queueLast', Icons.queue_music_rounded, tr('加入播放队列')),
+        entry('queueNext', AppIcons.playlist, tr('下一个播放')),
+        entry('queueLast', AppIcons.queue, tr('加入播放队列')),
       ],
-      if (controller?.account?.signedIn ?? false) entry('youtube', Icons.video_library_outlined, tr('保存到 YouTube 播放列表…')),
+      if (controller?.account?.signedIn ?? false) entry('youtube', AppIcons.filmReel, tr('保存到 YouTube 播放列表…')),
       if (controller != null && channel != null) ...[
-        entry('channel', Icons.account_circle_outlined, tr('查看频道')),
+        entry('channel', AppIcons.userCircle, tr('查看频道')),
         if (controller.preferences.isUnrecommended(channel.id))
-          entry('recommend', Icons.thumb_up_off_alt_outlined, tr('恢复推荐此频道'))
+          entry('recommend', AppIcons.thumbsUp, tr('恢复推荐此频道'))
         else
-          entry('unrecommend', Icons.thumb_down_off_alt_outlined, tr('不推荐此频道')),
-        entry('block', Icons.block_rounded, tr('屏蔽此频道')),
+          entry('unrecommend', AppIcons.thumbsDown, tr('不推荐此频道')),
+        entry('block', AppIcons.prohibitFill, tr('屏蔽此频道')),
       ],
       if (onRemove != null)
         removeLabel == null
-            ? entry('remove', Icons.remove_circle_outline_rounded, tr('从此列表移除'))
-            : entry('remove', Icons.thumb_down_off_alt_outlined, removeLabel),
+            ? entry('remove', AppIcons.minusCircle, tr('从此列表移除'))
+            : entry('remove', AppIcons.thumbsDown, removeLabel),
       const PopupMenuDivider(),
-      if (controller?.downloads != null && !item.isLive) entry('download', Icons.download_rounded, tr('下载')),
-      entry('copy', Icons.link_rounded, tr('复制链接')),
-      entry('browser', Icons.open_in_new_rounded, tr('在浏览器中打开')),
+      if (controller?.downloads != null && !item.isLive) entry('download', AppIcons.downloadSimple, tr('下载')),
+      entry('copy', AppIcons.link, tr('复制链接')),
+      entry('browser', AppIcons.arrowSquareOut, tr('在浏览器中打开')),
     ],
   );
   if (!context.mounted) return;
@@ -726,11 +727,11 @@ Future<void> showSaveToYoutube(BuildContext context, AppController controller, V
               for (final playlist in list)
                 SimpleDialogOption(
                   onPressed: () => Navigator.pop(context, playlist),
-                  child: ListTile(dense: true, leading: const Icon(Icons.playlist_play_rounded), title: Text(playlist.title), subtitle: Text(tr('{0} 个视频', [playlist.count]))),
+                  child: ListTile(dense: true, leading: const Icon(AppIcons.playlist), title: Text(playlist.title), subtitle: Text(tr('{0} 个视频', [playlist.count]))),
                 ),
               SimpleDialogOption(
                 onPressed: () => Navigator.pop(context, create),
-                child: ListTile(dense: true, leading: Icon(Icons.add_rounded), title: Text(tr('新建私享播放列表…'))),
+                child: ListTile(dense: true, leading: Icon(AppIcons.plus), title: Text(tr('新建私享播放列表…'))),
               ),
             ]);
           },
@@ -757,11 +758,11 @@ Future<void> showAddToPlaylist(BuildContext context, AppController controller, V
         for (final playlist in library.playlists)
           SimpleDialogOption(
             onPressed: () => Navigator.pop(context, playlist.id),
-            child: ListTile(leading: const Icon(Icons.playlist_play_rounded), title: Text(playlist.name), subtitle: Text(tr('{0} 个视频', [playlist.items.length]))),
+            child: ListTile(leading: const Icon(AppIcons.playlist), title: Text(playlist.name), subtitle: Text(tr('{0} 个视频', [playlist.items.length]))),
           ),
         SimpleDialogOption(
           onPressed: () => Navigator.pop(context, create),
-          child: ListTile(leading: Icon(Icons.add_rounded), title: Text(tr('新建播放列表'))),
+          child: ListTile(leading: Icon(AppIcons.plus), title: Text(tr('新建播放列表'))),
         ),
       ],
     ),

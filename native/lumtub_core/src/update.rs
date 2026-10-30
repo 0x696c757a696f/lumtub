@@ -173,9 +173,9 @@ pub fn script(install: &Install) -> String {
     }
     lines.extend([
         format!("  Remove-Item -LiteralPath {package} -Force"),
-        format!("  \"$(Get-Date -Format o) updated\" | Out-File -FilePath {log} -Append"),
+        format!("  \"$(Get-Date -Format o) updated\" | Out-File -FilePath {log} -Append -Encoding utf8"),
         "} catch {".to_owned(),
-        format!("  \"$(Get-Date -Format o) $_\" | Out-File -FilePath {log} -Append"),
+        format!("  \"$(Get-Date -Format o) $_\" | Out-File -FilePath {log} -Append -Encoding utf8"),
         "}".to_owned(),
     ]);
     if install.relaunch {

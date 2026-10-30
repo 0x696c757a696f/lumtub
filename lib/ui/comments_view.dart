@@ -14,6 +14,8 @@ import 'pages/channel_page.dart';
 import 'theme.dart';
 import 'translatable.dart';
 import '../l10n/l10n.dart';
+import 'app_icons.dart';
+import 'live_chat_input.dart';
 
 /// The comments under a video or a post: sort order, comments with their
 /// replies, and a button for more. It loads when first shown.
@@ -93,10 +95,10 @@ class _CommentsSectionState extends State<CommentsSection> {
           autofocus: true,
           decoration: InputDecoration(
             isDense: true,
-            prefixIcon: const Icon(Icons.search_rounded, size: 20),
+            prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20),
             hintText: tr('搜索评论内容或作者'),
             border: const OutlineInputBorder(),
-            suffixIcon: IconButton(tooltip: tr('关闭搜索'), icon: const Icon(Icons.close_rounded, size: 18), onPressed: _toggleSearch),
+            suffixIcon: IconButton(tooltip: tr('关闭搜索'), icon: const Icon(AppIcons.x, size: 18), onPressed: _toggleSearch),
           ),
           onChanged: (text) => setState(() => _words = commentQueryWords(text)),
         ),
@@ -209,12 +211,13 @@ class _CommentsSectionState extends State<CommentsSection> {
               final search = IconButton(
                 tooltip: tr('搜索评论'),
                 isSelected: _searching,
-                icon: const Icon(Icons.search_rounded),
+                icon: const Icon(AppIcons.magnifyingGlass),
                 onPressed: _toggleSearch,
               );
+              final immersive = ImmersiveTranslationSwitch(controller: widget.controller);
               return constraints.maxWidth >= 520
-                  ? Row(children: [title, const Spacer(), search, const SizedBox(width: 4), order])
-                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Row(mainAxisAlignment: MainAxisAlignment.end, children: [search, order])]);
+                  ? Row(children: [title, const Spacer(), immersive, const SizedBox(width: 4), search, const SizedBox(width: 4), order])
+                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Row(mainAxisAlignment: MainAxisAlignment.end, children: [immersive, search, order])]);
             }),
             const SizedBox(height: 8),
             if (_searching) _searchBar(context),
@@ -289,7 +292,7 @@ class _CommentTile extends StatelessWidget {
           SelectionArea(
             child: Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
               if (comment.pinned) Text(tr('置顶'), style: small.copyWith(color: colors.primary)),
-              Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: comment.byUploader ? colors.primary : null)),
+              Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: comment.byUploader ? colors.primary : null)),
               Text(comment.published, style: small),
             ]),
           ),
@@ -309,7 +312,7 @@ class _CommentTile extends StatelessWidget {
             ),
             if (comment.hearted) ...[
               const SizedBox(width: 12),
-              Tooltip(message: tr('作者喜欢'), child: Icon(Icons.favorite_rounded, size: 14, color: colors.error)),
+              Tooltip(message: tr('作者喜欢'), child: Icon(AppIcons.heartFill, size: 14, color: colors.error)),
             ],
             if (onReply != null) ...[
               const SizedBox(width: 8),
@@ -324,7 +327,7 @@ class _CommentTile extends StatelessWidget {
             TextButton.icon(
               style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
               onPressed: () => thread == null ? loader.loadReplies(comment) : loader.collapse(comment),
-              icon: Icon(thread == null ? Icons.expand_more_rounded : Icons.expand_less_rounded, size: 18),
+              icon: Icon(thread == null ? AppIcons.caretDown : AppIcons.caretUp, size: 18),
               label: Text(thread == null ? (comment.replyCount > 0 ? tr('{0} 条回复', [comment.replyCount]) : tr('查看回复')) : tr('收起回复')),
             ),
         ])),
@@ -368,7 +371,7 @@ class _CommentComposerState extends State<CommentComposer> {
 
   @override
   Widget build(BuildContext context) {
-    final small = Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 13);
+    final small = Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 12);
     // The field takes the whole width, as on YouTube, with its buttons
     // under it, so a narrow comments panel still leaves room to write.
     return Padding(
@@ -388,11 +391,11 @@ class _CommentComposerState extends State<CommentComposer> {
             hintStyle: small?.copyWith(overflow: TextOverflow.ellipsis),
             isDense: true,
             counterText: '',
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             border: const OutlineInputBorder(),
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [
           if (widget.onCancel != null) TextButton(style: _compact, onPressed: _sending ? null : widget.onCancel, child: Text(tr('取消'))),
           const SizedBox(width: 4),
@@ -411,7 +414,7 @@ class _CommentComposerState extends State<CommentComposer> {
 
   static const _compact = ButtonStyle(
     visualDensity: VisualDensity.compact,
-    textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 13)),
-    padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 14)),
+    textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12)),
+    padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 12)),
   );
 }

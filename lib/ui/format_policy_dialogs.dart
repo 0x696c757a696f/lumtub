@@ -5,6 +5,7 @@ import '../format_policy.dart';
 import '../player_settings.dart';
 import '../video_codec.dart';
 import '../widgets/pilinara_settings_tiles.dart';
+import 'app_icons.dart';
 
 /// The text under the disabled codecs, in the settings and the player menu.
 String get disabledCodecsNote => tr('禁用后，所有播放策略都不会主动选择对应编码。');
@@ -53,7 +54,7 @@ Future<void> pickPlaybackStrategy(BuildContext context, PlaybackStrategy current
         for (final strategy in PlaybackStrategy.values)
           ListTile(
             dense: true,
-            leading: Icon(strategy == current ? Icons.radio_button_checked : Icons.radio_button_unchecked),
+            leading: Icon(strategy == current ? AppIcons.radioButton : AppIcons.circle),
             title: Text(strategy.label),
             subtitle: Text(strategy.description),
             onTap: () => Navigator.pop(context, strategy),

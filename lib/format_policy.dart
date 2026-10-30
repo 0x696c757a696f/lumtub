@@ -110,10 +110,11 @@ class FormatPolicy {
   static String expression(PlayerSettings settings) => _policy(settings).expression;
 
   /// For a live stream: the best single stream with picture and sound, up
-  /// to the height cap, else [fallback].
+  /// to the height cap, else [fallback]; mpv's `ytdl` alone is spelled out,
+  /// as yt-dlp does not know it inside an expression.
   static String liveExpression(PlayerSettings settings, String fallback) {
     final cap = settings.maxHeight > 0 ? '[height<=?${settings.maxHeight}]' : '';
-    return 'b$cap[vcodec!=none][acodec!=none]/$fallback';
+    return 'b$cap[vcodec!=none][acodec!=none]/${fallback == 'ytdl' ? 'bestvideo+bestaudio/best' : fallback}';
   }
 
   /// Within the user's selected quality cap, yt-dlp first ranks by picture

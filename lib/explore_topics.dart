@@ -1,10 +1,10 @@
 import 'package:flutter/widgets.dart' show IconData;
-import 'package:flutter/material.dart' show Icons;
 
 import 'faith_topics.dart';
 import 'l10n/l10n.dart';
 import 'search_options.dart';
 import 'video_repository.dart';
+import 'ui/app_icons.dart';
 
 /// The parts of the explore page: videos, live streams, and the four tabs
 /// of 宗教与信仰.
@@ -71,7 +71,7 @@ class CustomTopic {
   final String query;
   final ExploreSection section;
 
-  ExploreTopic get topic => ExploreTopic(label, Icons.bookmark_rounded, query, custom: true);
+  ExploreTopic get topic => ExploreTopic(label, AppIcons.bookmarkSimple, query, custom: true);
 
   Map<String, dynamic> toJson() => {'label': label, 'query': query, 'section': section.name};
 
@@ -89,9 +89,9 @@ class CustomTopic {
 /// watched first. Searches mix Chinese and English words so that YouTube's
 /// videos from other countries come up too.
 const popularTopics = <ExploreTopic>[
-  ExploreTopic('全部', Icons.apps_rounded, '', mix: true),
-  ExploreTopic('全球热门', Icons.public_rounded, '', mix: true, global: true),
-  ExploreTopic('知识教育', Icons.school_rounded, '知识 科普', subs: [
+  ExploreTopic('全部', AppIcons.squaresFour, '', mix: true),
+  ExploreTopic('全球热门', AppIcons.globe, '', mix: true, global: true),
+  ExploreTopic('知识教育', AppIcons.graduationCap, '知识 科普', subs: [
     ExploreSub('科普', '科普'),
     ExploreSub('历史', '历史 纪录片'),
     ExploreSub('大学课程', '大学 公开课 lecture'),
@@ -103,7 +103,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('职场技能', '职场技能 career skills'),
     ExploreSub('儿童教育', '儿童教育 kids learning'),
   ]),
-  ExploreTopic('科技数码', Icons.memory_rounded, '科技 数码 评测', subs: [
+  ExploreTopic('科技数码', AppIcons.cpuFill, '科技 数码 评测', subs: [
     ExploreSub('数码评测', '数码 开箱 评测'),
     ExploreSub('手机', '手机 评测'),
     ExploreSub('电脑硬件', '电脑硬件 显卡 CPU'),
@@ -115,7 +115,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('操作系统', 'Windows Linux macOS 操作系统'),
     ExploreSub('网络安全', '网络安全 cybersecurity'),
   ]),
-  ExploreTopic('人工智能', Icons.auto_awesome_rounded, 'AI 人工智能', subs: [
+  ExploreTopic('人工智能', AppIcons.sparkleFill, 'AI 人工智能', subs: [
     ExploreSub('AI 资讯', 'AI 新闻 AI news'),
     ExploreSub('AI 模型', 'AI 大模型 LLM'),
     ExploreSub('AI 工具', 'AI 工具 教程'),
@@ -126,7 +126,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('机器人', '机器人 robotics'),
     ExploreSub('自动驾驶', '自动驾驶 autonomous driving'),
   ]),
-  ExploreTopic('编程开发', Icons.code_rounded, '编程 教程', subs: [
+  ExploreTopic('编程开发', AppIcons.code, '编程 教程', subs: [
     ExploreSub('编程入门', '编程入门 教程 beginner'),
     ExploreSub('Python', 'Python 教程'),
     ExploreSub('前端开发', 'JavaScript 前端 frontend'),
@@ -139,7 +139,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('开源项目', '开源项目 GitHub'),
     ExploreSub('软件开发', '软件开发 software engineering'),
   ]),
-  ExploreTopic('游戏', Icons.sports_esports_rounded, '游戏', subs: [
+  ExploreTopic('游戏', AppIcons.gameController, '游戏', subs: [
     ExploreSub('游戏实况', '游戏实况'),
     ExploreSub('游戏资讯', '游戏新闻 game news'),
     ExploreSub('评测', '游戏评测'),
@@ -151,7 +151,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('电竞', '电竞 esports'),
     ExploreSub('速通', '速通 speedrun'),
   ]),
-  ExploreTopic('音乐舞蹈', Icons.music_note_rounded, '音乐', subs: [
+  ExploreTopic('音乐舞蹈', AppIcons.musicNoteFill, '音乐', subs: [
     ExploreSub('MV', 'MV 官方'),
     ExploreSub('现场演出', '现场 live concert'),
     ExploreSub('华语流行', '华语流行 C-pop'),
@@ -166,7 +166,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('翻唱', '翻唱 cover'),
     ExploreSub('舞蹈', '舞蹈 dance'),
   ]),
-  ExploreTopic('影视动漫', Icons.movie_rounded, '电影 动画', subs: [
+  ExploreTopic('影视动漫', AppIcons.filmSlateFill, '电影 动画', subs: [
     ExploreSub('电影', '电影 movie'),
     ExploreSub('电影解说', '电影解说 movie recap'),
     ExploreSub('电视剧', '电视剧'),
@@ -179,7 +179,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('预告片', '预告片 trailer'),
     ExploreSub('幕后花絮', '幕后花絮 behind the scenes'),
   ]),
-  ExploreTopic('新闻时事', Icons.newspaper_rounded, '新闻', subs: [
+  ExploreTopic('新闻时事', AppIcons.newspaper, '新闻', subs: [
     ExploreSub('国际新闻', '国际新闻'),
     ExploreSub('社会热点', '社会热点'),
     ExploreSub('时事评论', '时事评论'),
@@ -190,7 +190,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('调查报道', '调查报道 investigative journalism'),
     ExploreSub('新闻纪录', '新闻纪录 news documentary'),
   ]),
-  ExploreTopic('播客访谈', Icons.podcasts_rounded, '播客 访谈', subs: [
+  ExploreTopic('播客访谈', AppIcons.microphoneStage, '播客 访谈', subs: [
     ExploreSub('深度对谈', '深度对谈 podcast'),
     ExploreSub('人物采访', '人物专访 interview'),
     ExploreSub('脱口秀', '脱口秀 talk show'),
@@ -201,8 +201,8 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('历史人文', '历史 人文 播客 history podcast'),
     ExploreSub('辩论', '辩论 debate'),
   ]),
-  ExploreTopic('宗教信仰', Icons.church_rounded, '宗教 信仰', opens: ExploreSection.faith),
-  ExploreTopic('科学探索', Icons.science_rounded, '科学', subs: [
+  ExploreTopic('宗教信仰', AppIcons.church, '宗教 信仰', opens: ExploreSection.faith),
+  ExploreTopic('科学探索', AppIcons.flask, '科学', subs: [
     ExploreSub('宇宙', '宇宙 天文'),
     ExploreSub('物理', '物理'),
     ExploreSub('生物', '生物'),
@@ -214,7 +214,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('能源', '能源 核聚变 energy'),
     ExploreSub('古生物', '古生物 恐龙 paleontology'),
   ]),
-  ExploreTopic('财经商业', Icons.show_chart_rounded, '财经', subs: [
+  ExploreTopic('财经商业', AppIcons.chartLine, '财经', subs: [
     ExploreSub('财经新闻', '财经新闻 markets'),
     ExploreSub('经济', '经济 分析'),
     ExploreSub('股票', '股票 美股 stock'),
@@ -226,7 +226,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('创业', '创业'),
     ExploreSub('营销', '营销 品牌 marketing'),
   ]),
-  ExploreTopic('体育健身', Icons.sports_soccer_rounded, '体育', subs: [
+  ExploreTopic('体育健身', AppIcons.soccerBall, '体育', subs: [
     ExploreSub('足球', '足球'),
     ExploreSub('篮球', '篮球 NBA'),
     ExploreSub('赛事集锦', '赛事集锦 highlights'),
@@ -239,7 +239,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('跑步', '跑步 马拉松 running'),
     ExploreSub('极限运动', '极限运动 滑雪 冲浪'),
   ]),
-  ExploreTopic('汽车交通', Icons.directions_car_rounded, '汽车', subs: [
+  ExploreTopic('汽车交通', AppIcons.car, '汽车', subs: [
     ExploreSub('汽车评测', '汽车评测'),
     ExploreSub('电动车', '电动车 EV'),
     ExploreSub('购车指南', '购车 选车 buying guide'),
@@ -252,7 +252,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('城市交通', '地铁 公交 subway'),
     ExploreSub('船舶', '船舶 轮船 ship'),
   ]),
-  ExploreTopic('美食旅行', Icons.restaurant_rounded, '美食 旅行', subs: [
+  ExploreTopic('美食旅行', AppIcons.forkKnife, '美食 旅行', subs: [
     ExploreSub('烹饪', '烹饪 做菜'),
     ExploreSub('烘焙', '烘焙 baking'),
     ExploreSub('探店', '探店 美食'),
@@ -265,7 +265,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('自驾游', '自驾游 road trip'),
     ExploreSub('酒店体验', '酒店 体验 hotel review'),
   ]),
-  ExploreTopic('娱乐生活', Icons.sentiment_very_satisfied_rounded, '生活 vlog', subs: [
+  ExploreTopic('娱乐生活', AppIcons.smiley, '生活 vlog', subs: [
     ExploreSub('Vlog', 'vlog 日常'),
     ExploreSub('搞笑', '搞笑'),
     ExploreSub('综艺', '综艺 variety show'),
@@ -278,7 +278,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('好物分享', '好物分享 haul'),
     ExploreSub('情感', '情感 恋爱'),
   ]),
-  ExploreTopic('艺术创作', Icons.brush_rounded, '艺术 创作', subs: [
+  ExploreTopic('艺术创作', AppIcons.paintBrush, '艺术 创作', subs: [
     ExploreSub('摄影', '摄影 教程'),
     ExploreSub('绘画', '绘画 插画 drawing'),
     ExploreSub('设计', '设计 design'),
@@ -291,7 +291,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('艺术史', '艺术史 美术馆 museum'),
     ExploreSub('写作', '写作 writing'),
   ]),
-  ExploreTopic('健康生活', Icons.favorite_rounded, '健康', subs: [
+  ExploreTopic('健康生活', AppIcons.heartFill, '健康', subs: [
     ExploreSub('医学科普', '医学科普'),
     ExploreSub('心理学', '心理学 心理健康'),
     ExploreSub('营养', '营养 饮食'),
@@ -303,7 +303,7 @@ const popularTopics = <ExploreTopic>[
     ExploreSub('康复理疗', '康复 理疗 rehab'),
     ExploreSub('生活方式', '生活方式 lifestyle'),
   ]),
-  ExploreTopic('自然户外', Icons.park_rounded, '自然 纪录片', subs: [
+  ExploreTopic('自然户外', AppIcons.tree, '自然 纪录片', subs: [
     ExploreSub('动物', '动物 纪录片'),
     ExploreSub('海洋', '海洋 ocean'),
     ExploreSub('生态', '生态 环境'),
@@ -322,9 +322,9 @@ const popularTopics = <ExploreTopic>[
 /// Live zones, streams that are on now; about 6-10 sub-categories each, as
 /// fewer streams are on at a time.
 const liveTopics = <ExploreTopic>[
-  ExploreTopic('全部', Icons.apps_rounded, '', mix: true),
-  ExploreTopic('宗教信仰', Icons.church_rounded, '宗教 直播', opens: ExploreSection.faithLive),
-  ExploreTopic('游戏直播', Icons.sports_esports_rounded, '游戏 直播', subs: [
+  ExploreTopic('全部', AppIcons.squaresFour, '', mix: true),
+  ExploreTopic('宗教信仰', AppIcons.church, '宗教 直播', opens: ExploreSection.faithLive),
+  ExploreTopic('游戏直播', AppIcons.gameController, '游戏 直播', subs: [
     ExploreSub('游戏实况', 'gameplay live'),
     ExploreSub('单机游戏', '单机游戏 直播'),
     ExploreSub('网络游戏', '网游 MMO 直播'),
@@ -335,7 +335,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('主机游戏', 'console gaming live'),
     ExploreSub('速通', 'speedrun live'),
   ]),
-  ExploreTopic('电竞赛事', Icons.emoji_events_rounded, 'esports live', subs: [
+  ExploreTopic('电竞赛事', AppIcons.trophy, 'esports live', subs: [
     ExploreSub('职业电竞', '电竞 比赛 esports tournament live'),
     ExploreSub('比赛解说', '电竞 解说 直播'),
     ExploreSub('英雄联盟', 'LoL Esports LCK LPL live'),
@@ -344,7 +344,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('格斗游戏', 'fighting game tournament EVO live'),
     ExploreSub('手游电竞', '手游 电竞 比赛 live'),
   ]),
-  ExploreTopic('音乐现场', Icons.music_note_rounded, '音乐 直播', subs: [
+  ExploreTopic('音乐现场', AppIcons.musicNoteFill, '音乐 直播', subs: [
     ExploreSub('演唱会', 'concert live'),
     ExploreSub('音乐节', 'music festival live'),
     ExploreSub('唱歌直播', '唱歌 直播 singing live'),
@@ -354,7 +354,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('街头演出', 'busking 街头艺人 live'),
     ExploreSub('点歌', '点歌 直播'),
   ]),
-  ExploreTopic('聊天互动', Icons.forum_rounded, '聊天 直播', subs: [
+  ExploreTopic('聊天互动', AppIcons.chatsFill, '聊天 直播', subs: [
     ExploreSub('聊天', '聊天 直播 just chatting'),
     ExploreSub('问答', 'Q&A live'),
     ExploreSub('谈话节目', 'talk show live'),
@@ -362,7 +362,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('日常生活', '日常 生活 直播 daily life live'),
     ExploreSub('电话连线', 'call-in show live'),
   ]),
-  ExploreTopic('虚拟主播', Icons.face_retouching_natural_rounded, 'vtuber', subs: [
+  ExploreTopic('虚拟主播', AppIcons.scanSmiley, 'vtuber', subs: [
     ExploreSub('VTuber', 'vtuber live'),
     ExploreSub('Hololive 彩虹社', 'hololive nijisanji live'),
     ExploreSub('中文虚拟主播', '虚拟主播 直播'),
@@ -371,7 +371,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('虚拟演出', 'virtual concert live'),
     ExploreSub('虚拟电台', 'vtuber radio'),
   ]),
-  ExploreTopic('体育赛事', Icons.sports_soccer_rounded, '体育 直播', subs: [
+  ExploreTopic('体育赛事', AppIcons.soccerBall, '体育 直播', subs: [
     ExploreSub('体育直播', 'sports live'),
     ExploreSub('足球', '足球 直播 football live'),
     ExploreSub('篮球', '篮球 NBA live'),
@@ -382,7 +382,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('赛事评论', '赛事 评论 直播'),
     ExploreSub('赛前节目', 'pre-game show live'),
   ]),
-  ExploreTopic('新闻现场', Icons.newspaper_rounded, 'news live', subs: [
+  ExploreTopic('新闻现场', AppIcons.newspaper, 'news live', subs: [
     ExploreSub('新闻直播', '新闻 直播'),
     ExploreSub('国际新闻', 'world news live'),
     ExploreSub('重大事件', 'breaking news live'),
@@ -391,7 +391,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('发布会', '新闻发布会 直播'),
     ExploreSub('天气灾害', 'weather severe live'),
   ]),
-  ExploreTopic('科技活动', Icons.memory_rounded, '科技 发布会 直播', subs: [
+  ExploreTopic('科技活动', AppIcons.cpuFill, '科技 发布会 直播', subs: [
     ExploreSub('新品发布会', 'launch event live'),
     ExploreSub('开发者大会', 'developer conference keynote live'),
     ExploreSub('展会', 'CES MWC expo live'),
@@ -400,7 +400,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('安全大会', 'security conference live'),
     ExploreSub('开箱评测', 'unboxing review live'),
   ]),
-  ExploreTopic('学习工作', Icons.menu_book_rounded, 'study with me live', subs: [
+  ExploreTopic('学习工作', AppIcons.bookOpenFill, 'study with me live', subs: [
     ExploreSub('陪你学习', 'study with me live'),
     ExploreSub('工作陪伴', 'work with me pomodoro live'),
     ExploreSub('编程直播', 'live coding'),
@@ -409,7 +409,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('语言学习', 'language learning live'),
     ExploreSub('创作过程', 'drawing 绘画 创作 live'),
   ]),
-  ExploreTopic('户外实况', Icons.landscape_rounded, '户外 直播', subs: [
+  ExploreTopic('户外实况', AppIcons.mountains, '户外 直播', subs: [
     ExploreSub('IRL 直播', 'IRL stream'),
     ExploreSub('旅行直播', 'travel live stream'),
     ExploreSub('街头漫步', 'walking live'),
@@ -419,7 +419,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('骑行', 'cycling live'),
     ExploreSub('节庆活动', 'festival parade live'),
   ]),
-  ExploreTopic('电台助眠', Icons.radio_rounded, 'lofi radio 24/7', subs: [
+  ExploreTopic('电台助眠', AppIcons.radio, 'lofi radio 24/7', subs: [
     ExploreSub('Lo-Fi', 'lofi hip hop radio'),
     ExploreSub('24 小时音乐', '24/7 music live'),
     ExploreSub('ASMR', 'ASMR live'),
@@ -430,7 +430,7 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('古典电台', 'classical music radio 24/7'),
     ExploreSub('冥想音乐', 'meditation music live'),
   ]),
-  ExploreTopic('自然实况', Icons.videocam_rounded, 'live cam 24/7', subs: [
+  ExploreTopic('自然实况', AppIcons.videoCamera, 'live cam 24/7', subs: [
     ExploreSub('动物观察', 'animal live cam'),
     ExploreSub('太空直播', 'space live ISS'),
     ExploreSub('城市摄像头', 'city live cam'),

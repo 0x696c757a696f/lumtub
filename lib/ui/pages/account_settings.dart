@@ -9,6 +9,7 @@ import '../common.dart';
 import '../theme.dart';
 import 'cookie_sign_in_tile.dart';
 import '../../l10n/l10n.dart';
+import '../app_icons.dart';
 
 /// Google sign-in, sync and the OAuth client used for it.
 class AccountSettings extends StatelessWidget {
@@ -44,7 +45,7 @@ class AccountSettings extends StatelessWidget {
                     ListTile(
                       leading: CircleAvatar(
                         backgroundColor: colors.primaryContainer,
-                        child: Icon(Icons.person_rounded, color: colors.onPrimaryContainer),
+                        child: Icon(AppIcons.userFill, color: colors.onPrimaryContainer),
                       ),
                       title: Text(account.name ?? tr('YouTube 账号')),
                       trailing: account.canWrite ? null : FilledButton.tonal(onPressed: account.signIn, child: Text(tr('重新登录以启用点赞和评论'))),
@@ -59,7 +60,7 @@ class AccountSettings extends StatelessWidget {
                       child: Wrap(spacing: 8, runSpacing: 8, children: [
                         FilledButton.tonalIcon(
                           onPressed: account.syncing ? null : account.sync,
-                          icon: account.syncing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.sync_rounded),
+                          icon: account.syncing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.arrowsCounterClockwise),
                           label: Text(tr('立即同步')),
                         ),
                         OutlinedButton(onPressed: () => _confirmSignOut(context, account), child: Text(tr('退出登录'))),
@@ -73,12 +74,12 @@ class AccountSettings extends StatelessWidget {
                     trailing: TextButton(onPressed: account.cancelSignIn, child: Text(tr('取消'))),
                   ),
                 AccountState.signedOut => ListTile(
-                    leading: Icon(Icons.account_circle_outlined, color: colors.primary),
+                    leading: Icon(AppIcons.userCircle, color: colors.primary),
                     title: Text(tr('未登录')),
                     subtitle: Text(account.client == null ? tr('这个版本没有内置 Google 客户端，需要先在下方填写你自己的客户端。') : tr('登录后可以导入订阅、播放列表和喜欢的视频，也可以点赞、评论、保存到播放列表和订阅。')),
                     trailing: FilledButton.icon(
                       onPressed: account.client == null ? null : account.signIn,
-                      icon: const Icon(Icons.login_rounded),
+                      icon: const Icon(AppIcons.signIn),
                       label: Text(tr('登录')),
                     ),
                   ),
@@ -117,7 +118,7 @@ class AccountSettings extends StatelessWidget {
               children: [CookieSignInTile(web, note: note)],
             ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Text(
               tr('登录时请用同一个 Google 账号。登录凭据加密保存在本机，只有你在 Lumtub 里点赞、评论、保存或订阅时才会修改账号，不会上传本机的观看记录。视频播放不使用账号，会员或年龄限制视频不一定能播放。'),
               style: note,
@@ -159,7 +160,7 @@ class _Intro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(18, 4, 18, 12),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(tr('登录都是可选的'), style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
@@ -182,7 +183,7 @@ class _Badge extends StatelessWidget {
       height: 24,
       alignment: Alignment.center,
       decoration: BoxDecoration(shape: BoxShape.circle, color: done ? colors.primary : colors.surfaceContainerHighest),
-      child: done ? Icon(Icons.check_rounded, size: 16, color: colors.onPrimary) : Text('$number', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: colors.onSurfaceVariant)),
+      child: done ? Icon(AppIcons.check, size: 16, color: colors.onPrimary) : Text('$number', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.onSurfaceVariant)),
     );
   }
 }
@@ -236,7 +237,7 @@ class _TvSignInTile extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       switch (sign.state) {
         TvSignInState.signedIn => ListTile(
-            leading: Icon(Icons.thumb_up_alt_outlined, color: colors.primary),
+            leading: Icon(AppIcons.thumbsUp, color: colors.primary),
             title: Text(sign.name ?? tr('已用电视码登录')),
             subtitle: Text(tr('可以给评论和社区帖子点赞、点踩')),
             trailing: Wrap(spacing: 8, children: [
@@ -259,7 +260,7 @@ class _TvSignInTile extends StatelessWidget {
                 : Row(children: [
                     Text(tr('电视码：')),
                     SelectableText(code, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2)),
-                    IconButton(tooltip: tr('复制'), icon: const Icon(Icons.copy_rounded, size: 18), onPressed: () => copyText(context, code, tr('已复制电视码'))),
+                    IconButton(tooltip: tr('复制'), icon: const Icon(AppIcons.copySimple, size: 18), onPressed: () => copyText(context, code, tr('已复制电视码'))),
                   ]),
             subtitle: Text(tr('在浏览器打开 {0}，登录 Google 账号后输入上面的电视码，完成后会自动回到这里。', [sign.address])),
             trailing: Wrap(spacing: 8, children: [
@@ -268,7 +269,7 @@ class _TvSignInTile extends StatelessWidget {
             ]),
           ),
         TvSignInState.signedOut => ListTile(
-            leading: Icon(Icons.tv_rounded, color: colors.primary),
+            leading: Icon(AppIcons.television, color: colors.primary),
             title: Text(tr('未登录')),
             subtitle: Text(tr('在浏览器里输入一串电视码完成登录，不用密码和 Cookie，随时可以在 Google 账号的第三方应用里撤销。')),
             trailing: FilledButton.tonal(onPressed: sign.signIn, child: Text(tr('用电视码登录'))),
@@ -308,7 +309,7 @@ class _ClientSettingsState extends State<_ClientSettings> {
     final candidate = OAuthClientConfig(_id.text.trim(), _secret.text.trim());
     return ExpansionTile(
       key: const PageStorageKey('expand:client'),
-      leading: const Icon(Icons.key_outlined),
+      leading: const Icon(AppIcons.key),
       title: Text(tr('自定义 Google 客户端')),
       subtitle: Text(custom
           ? tr('正在使用你自己的客户端')
@@ -327,12 +328,12 @@ class _ClientSettingsState extends State<_ClientSettings> {
         Wrap(spacing: 8, children: [
           TextButton.icon(
             onPressed: () => openExternal(YouTubeApiException.enableApiUrl),
-            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+            icon: const Icon(AppIcons.arrowSquareOut, size: 18),
             label: Text(tr('启用 YouTube Data API v3')),
           ),
           TextButton.icon(
             onPressed: () => openExternal('https://console.cloud.google.com/apis/credentials'),
-            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+            icon: const Icon(AppIcons.arrowSquareOut, size: 18),
             label: Text(tr('创建 OAuth 客户端')),
           ),
         ]),
@@ -342,7 +343,7 @@ class _ClientSettingsState extends State<_ClientSettings> {
         // tile's own saved open/closed flag, a bool, and fail to build.
         TextField(
             key: const PageStorageKey('client:id'), controller: _id, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: tr('客户端 ID'), hintText: '…apps.googleusercontent.com')),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         TextField(key: const PageStorageKey('client:secret'), controller: _secret, onChanged: (_) => setState(() {}), obscureText: true, decoration: InputDecoration(labelText: tr('客户端密钥'))),
         const SizedBox(height: 12),
         Wrap(spacing: 8, children: [
@@ -389,7 +390,7 @@ class AccountButton extends StatelessWidget {
       backgroundColor: signedIn ? colors.primaryContainer : colors.surfaceContainerHighest,
       child: signedIn && name.isNotEmpty
           ? Text(String.fromCharCode(name.runes.first).toUpperCase(), style: TextStyle(fontWeight: FontWeight.w600, color: colors.onPrimaryContainer))
-          : Icon(Icons.person_outline_rounded, size: 20, color: colors.onSurfaceVariant),
+          : Icon(AppIcons.user, size: 20, color: colors.onSurfaceVariant),
     );
     if (account == null || !signedIn) {
       return IconButton(tooltip: tr('登录 Google 账号（可选）'), onPressed: onOpenSettings, icon: avatar);
@@ -400,8 +401,8 @@ class AccountButton extends StatelessWidget {
       onSelected: (value) => value == 'sync' ? account.sync() : onOpenSettings(),
       itemBuilder: (context) => [
         PopupMenuItem(enabled: false, child: Text(name.isEmpty ? tr('YouTube 账号') : name, style: context.text.titleSmall)),
-        PopupMenuItem(value: 'sync', enabled: !account.syncing, child: ListTile(dense: true, leading: const Icon(Icons.sync_rounded), title: Text(account.syncing ? tr('正在同步…') : tr('同步订阅和播放列表')))),
-        PopupMenuItem(value: 'settings', child: ListTile(dense: true, leading: Icon(Icons.manage_accounts_outlined), title: Text(tr('账号设置')))),
+        PopupMenuItem(value: 'sync', enabled: !account.syncing, child: ListTile(dense: true, leading: const Icon(AppIcons.arrowsCounterClockwise), title: Text(account.syncing ? tr('正在同步…') : tr('同步订阅和播放列表')))),
+        PopupMenuItem(value: 'settings', child: ListTile(dense: true, leading: Icon(AppIcons.userGear), title: Text(tr('账号设置')))),
       ],
     );
   }

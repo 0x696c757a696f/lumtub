@@ -42,7 +42,7 @@ class SubtitleFiles {
   final _paths = <String, Future<String>>{};
   /// Translations still being finished in the background, by key.
   final _finishing = <String, Future<void>>{};
-  bool _cleared = false;
+  Future<void>? _cleared;
 
   /// A file holding [option], fetched once per address.
   Future<String> pathFor(SubtitleOption option) {
@@ -82,13 +82,13 @@ class SubtitleFiles {
       }
     }
     final text = result.text;
-    if (!_cleared) {
-      _cleared = true;
-      // Files of earlier launches: their addresses have expired anyway.
+    // Files of earlier launches: their addresses have expired anyway. Every
+    // fetch waits for this, so a file written meanwhile is not deleted.
+    await (_cleared ??= () async {
       try {
         if (await _folder.exists()) await _folder.delete(recursive: true);
       } catch (_) {}
-    }
+    }());
     await _folder.create(recursive: true);
     final file = File('${_folder.path}${Platform.pathSeparator}${_name(key)}.vtt');
     await file.writeAsString(text);

@@ -25,6 +25,7 @@ import 'player_shortcuts.dart';
 import 'video_box.dart';
 import 'motion.dart';
 import '../widgets/position_ticks.dart';
+import 'app_icons.dart';
 
 class PipView extends StatefulWidget {
   const PipView({super.key, required this.controller});
@@ -115,7 +116,7 @@ class _PipViewState extends State<PipView> {
                 ignoring: !_hovering,
                 child: AnimatedOpacity(
                   opacity: _hovering ? 1 : 0,
-                  duration: Motion.of(const Duration(milliseconds: 150)),
+                  duration: Motion.of(Ease.fade),
                   child: PipControls(controller: _controller, player: player, scale: scale),
                 ),
               ),
@@ -164,31 +165,31 @@ class PipControls extends StatelessWidget {
           child: Row(children: [
             const SizedBox(width: 8),
             Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12))),
-            _button(tr('退出画中画'), Icons.open_in_full_rounded, () => controller.setPip(false), 18),
+            _button(tr('退出画中画'), AppIcons.arrowsOutSimple, () => controller.setPip(false), 18),
           ]),
         ),
       ),
       Expanded(
         child: Center(
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            _button(tr('快退{0}秒', [seek]), Icons.replay_10_rounded, () => unawaited(controller.seekBy(Duration(seconds: -seek))), 26 * scale),
+            _button(tr('快退{0}秒', [seek]), AppIcons.clockCounterClockwise, () => unawaited(controller.seekBy(Duration(seconds: -seek))), 26 * scale),
             StreamBuilder<bool>(
               stream: player.stream.playing,
               initialData: player.state.playing,
               builder: (context, snapshot) => _button(
                 tr('播放/暂停 (空格)'),
-                snapshot.data == true ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
+                snapshot.data == true ? AppIcons.pauseCircle : AppIcons.playCircleFill,
                 () => unawaited(player.playOrPause()),
                 38 * scale,
               ),
             ),
-            _button(tr('快进{0}秒', [seek]), Icons.forward_10_rounded, () => unawaited(controller.seekBy(Duration(seconds: seek))), 26 * scale),
+            _button(tr('快进{0}秒', [seek]), AppIcons.clockClockwise, () => unawaited(controller.seekBy(Duration(seconds: seek))), 26 * scale),
           ]),
         ),
       ),
       Container(
         color: Colors.black.withValues(alpha: .70),
-        padding: const EdgeInsets.fromLTRB(6, 0, 20, 2),
+        padding: const EdgeInsets.fromLTRB(4, 0, 16, 2),
         child: StreamBuilder<Duration>(
           stream: coarsePosition(player),
           initialData: player.state.position,

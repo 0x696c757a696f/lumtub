@@ -11,6 +11,7 @@ import '../models.dart' show SubtitleOption;
 import '../subtitle_cues.dart';
 import 'motion.dart';
 import 'player_panel.dart';
+import 'app_icons.dart';
 
 /// 字幕列表: every line of the main subtitle beside the video, with the
 /// second subtitle's words under it, the one being spoken marked and kept
@@ -85,7 +86,7 @@ class _SubtitleListState extends State<SubtitleList> {
         itemBuilder: (context) => [
           for (final mode in SubtitleListMode.values) CheckedPopupMenuItem(value: mode, checked: mode == _mode, child: Text(mode.label)),
         ],
-        icon: Icon(Icons.view_agenda_outlined, color: colors.onSurfaceVariant),
+        icon: Icon(AppIcons.rows, color: colors.onSurfaceVariant),
       );
 
   @override
@@ -117,7 +118,7 @@ class _SubtitleListState extends State<SubtitleList> {
     if (!mounted) return;
     final built = _currentKey.currentContext;
     if (built != null) {
-      unawaited(Scrollable.ensureVisible(built, alignment: 0.3, duration: Motion.of(const Duration(milliseconds: 250)), curve: Curves.easeOut));
+      unawaited(Scrollable.ensureVisible(built, alignment: 0.3, duration: Motion.of(const Duration(milliseconds: 250)), curve: Ease.curve));
       return;
     }
     if (!_scroll.hasClients || count == 0) return;
@@ -172,7 +173,7 @@ class _SubtitleListState extends State<SubtitleList> {
             child: Row(children: [
               Expanded(
                 child: TextField(
-                  decoration: InputDecoration(isDense: true, prefixIcon: const Icon(Icons.search_rounded, size: 20), hintText: tr('搜索字幕')),
+                  decoration: InputDecoration(isDense: true, prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('搜索字幕')),
                   onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
                 ),
               ),
@@ -217,7 +218,7 @@ class _SubtitleListState extends State<SubtitleList> {
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                                 Text(
                                   top,
-                                  style: TextStyle(fontSize: 13, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
+                                  style: TextStyle(fontSize: 12, height: 1.4, color: playing ? colors.onSecondaryContainer : colors.onSurface, fontWeight: playing ? FontWeight.w600 : null),
                                 ),
                                 if (under != null) ...[
                                   const SizedBox(height: 2),
@@ -232,7 +233,7 @@ class _SubtitleListState extends State<SubtitleList> {
                               tooltip: tr('复制'),
                               visualDensity: VisualDensity.compact,
                               iconSize: 16,
-                              icon: Icon(Icons.content_copy_rounded, color: colors.outline),
+                              icon: Icon(AppIcons.copy, color: colors.outline),
                               onPressed: () => _copy(line),
                             ),
                           ]),
@@ -253,7 +254,7 @@ class _SubtitleListState extends State<SubtitleList> {
                     _follow = true;
                     _current = -1;
                   }),
-                  icon: const Icon(Icons.my_location_rounded, size: 18),
+                  icon: const Icon(AppIcons.crosshair, size: 18),
                   label: Text(tr('回到当前这句')),
                 ),
               ),

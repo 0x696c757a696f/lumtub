@@ -40,6 +40,9 @@ class LiveChatRepository {
         if (proxy?.call() case final value?) ...['--proxy', value],
         if (deno != null) ...['--js-runtimes', 'deno:$deno'],
         '--write-subs',
+        // A chat still running is written to "<name>.part" until it ends;
+        // the lines are read as they arrive, so they go to the file itself.
+        '--no-part',
         '--sub-langs', 'live_chat',
         '--sub-format', 'json',
         '--output', '${directory.path}${Platform.pathSeparator}%(id)s.%(ext)s',
@@ -95,6 +98,9 @@ class LiveChatRepository {
     lowerPriority(process.pid);
     final errors = StringBuffer();
     final errorSubscription = process.stderr.transform(utf8.decoder).listen(errors.write);
+    // Read and dropped: unread, yt-dlp's progress lines fill the pipe and
+    // it stops fetching the chat.
+    final outputSubscription = process.stdout.listen((_) {});
     var running = true;
     var exitCode = 0;
     unawaited(process.exitCode.then((code) {
@@ -144,6 +150,7 @@ class LiveChatRepository {
     } finally {
       process.kill();
       await errorSubscription.cancel();
+      await outputSubscription.cancel();
     }
   }
 }

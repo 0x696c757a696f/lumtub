@@ -191,7 +191,9 @@ class AppUpdater extends ChangeNotifier {
         final script = File('${_directory.path}${Platform.pathSeparator}install-update.ps1');
         final text = updateScript(package: file.path, processId: pid, executable: executable, portable: true, relaunch: relaunch);
         if (text == null) return false;
-        await script.writeAsString(text);
+        // Windows PowerShell reads a script without a byte order mark in the
+        // ANSI code page, which garbles a path outside it.
+        await script.writeAsBytes([0xEF, 0xBB, 0xBF, ...utf8.encode(text)]);
         await Process.start('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', script.path], mode: ProcessStartMode.detached);
         logInfo('Installing Lumtub ${available?.version ?? ''} after exit');
         await AppLog.current?.flush();
@@ -218,7 +220,7 @@ class AppUpdater extends ChangeNotifier {
         logWarn('Lumtub update did not finish; installer log ends with:\n${tail.join('\n')}');
       }
       if (await outcome.exists()) {
-        final lines = (await outcome.readAsLines()).where((line) => line.trim().isNotEmpty).toList();
+        final lines = (await outcome.readAsLines(encoding: const Utf8Codec(allowMalformed: true))).where((line) => line.trim().isNotEmpty).toList();
         final last = lines.isEmpty ? '' : lines.last.trim();
         logInfo('Last Lumtub update: $last');
         if (!last.endsWith(' updated')) {

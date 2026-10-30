@@ -35,6 +35,7 @@ import '../video_box.dart';
 import '../../l10n/l10n.dart';
 import '../motion.dart';
 import '../app_icons.dart';
+import '../live_chat_input.dart';
 
 /// Player, video details, the up-next list and the comments. On wide
 /// windows the list and the comments share a side panel, as PiliNara's
@@ -530,7 +531,11 @@ class _ReplayChatPanel extends StatelessWidget {
     final messages = controller.replayChat;
     final live = controller.playing?.isLive ?? false;
     final header = <Widget>[
-      Text(tr(live ? '聊天' : '聊天回放'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+      Row(children: [
+        Expanded(child: Text(tr(live ? '聊天' : '聊天回放'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
+        const ChatTranslationSwitch(),
+      ]),
+      if (live && controller.playing != null) LiveChatInput(controller: controller, videoId: controller.playing!.id),
       const SizedBox(height: 8),
       if (controller.loadingReplayChat) const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator())),
       if (controller.replayChatError != null) ErrorBanner(tr(live ? '无法加载聊天：{0}' : '无法加载聊天回放：{0}', [controller.replayChatError]), onRetry: controller.retryChat),
@@ -542,7 +547,7 @@ class _ReplayChatPanel extends StatelessWidget {
     // does not build the ones already shown again.
     Widget messageAt(int index) {
       final message = messages[index];
-      return _chatRows[message] ??= _ReplayChatMessage(message: message, onSeek: message.offset == null ? null : () => controller.player?.seek(message.offset!));
+      return _chatRows[message] ??= _ReplayChatMessage(controller: controller, message: message, onSeek: message.offset == null ? null : () => controller.player?.seek(message.offset!));
     }
     if (shrinkWrap) {
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -564,7 +569,8 @@ class _ReplayChatPanel extends StatelessWidget {
 final _chatRows = Expando<Widget>();
 
 class _ReplayChatMessage extends StatelessWidget {
-  const _ReplayChatMessage({required this.message, this.onSeek});
+  const _ReplayChatMessage({required this.controller, required this.message, this.onSeek});
+  final AppController controller;
   final LiveChatMessage message;
   final VoidCallback? onSeek;
 
@@ -593,6 +599,7 @@ class _ReplayChatMessage extends StatelessWidget {
               if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: context.colors.outline, fontSize: 12))),
             ]),
             if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: SelectionArea(child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis))))),
+            if (message.text.isNotEmpty) ChatMessageTranslation(controller: controller, message: message),
             if (message.stickerUrl != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),

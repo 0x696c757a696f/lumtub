@@ -4239,6 +4239,7 @@ class AppController extends ChangeNotifier {
     final ignoredOptions = await PlayerOptionApplicator.apply(player, next, previous: _lightRendering == null ? oldSettings : null);
     _applied = next;
     _lightRendering = null;
+    if (this.player case final playing?) _refitCrop(playing);
     await store.save(next);
     _update(() => settings = next);
     // The video playing skips by the new SponsorBlock choice too.
@@ -4362,7 +4363,7 @@ class AppController extends ChangeNotifier {
   Future<void> _fitCrop(NativePlayer platform, {required bool hardware}) async {
     final width = int.tryParse(await platform.getProperty('video-params/w')) ?? 0;
     final height = int.tryParse(await platform.getProperty('video-params/h')) ?? 0;
-    final crop = DecoderStatus.paddingCrop(width, height, hardware: hardware);
+    final crop = DecoderStatus.paddingCrop(width, height, hardware: hardware, fast: _fastScaling);
     await platform.setProperty('video-crop', crop);
     if (crop.isNotEmpty) logDebug(() => 'Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
   }
@@ -4477,6 +4478,9 @@ class AppController extends ChangeNotifier {
   /// is plugged in); null while it is not.
   String? _lightRendering;
 
+  /// Whether mpv scales the cheap way: 低资源占用优先, or [_lightRendering].
+  bool get _fastScaling => _lightRendering != null || (settings.strategy == PlaybackStrategy.lowResource && !settings.customOptions.containsKey('scale'));
+
   /// In 智能自动, switches mpv to the cheapest scaling (as 低资源占用优先
   /// does) on battery or with battery saver, and once drawing a frame takes
   /// most of its time: on a weak or busy GPU the filters cost dropped
@@ -4488,6 +4492,7 @@ class AppController extends ChangeNotifier {
       _lightRendering = null;
       await PlayerOptionApplicator.apply(player, settings);
       _applied = settings;
+      _refitCrop(player);
       logInfo('Plugged in again; scaling back to normal');
       return;
     }
@@ -4509,6 +4514,7 @@ class AppController extends ChangeNotifier {
         await platform.setProperty(key, value);
       } catch (_) {}
     }
+    _refitCrop(player);
     logInfo(reason == 'battery' ? 'On battery; scaling switched to the fast kind' : 'Scaling switched to the fast kind');
   }
 

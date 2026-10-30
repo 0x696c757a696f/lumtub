@@ -54,11 +54,21 @@ class DecoderStatus {
   /// draws the padding as a green line along the bottom or right. A few
   /// rows off each padded edge keeps it out on every platform; empty is no
   /// crop.
-  static String paddingCrop(int width, int height, {required bool hardware}) {
+  ///
+  /// With the fast scaling ([fast]) the picture is sampled straight from
+  /// the padded frame, measured against its padded size, so the crop
+  /// shrinks by the padding's share as well: 1080 rows become 1072.
+  static String paddingCrop(int width, int height, {required bool hardware, bool fast = false}) {
     const margin = 4;
     if (!hardware || width <= 64 || height <= 64) return '';
-    final w = width % 64 == 0 ? width : width - margin;
-    final h = height % 64 == 0 ? height : height - margin;
+    int side(int size) {
+      if (size % 64 == 0) return size;
+      if (!fast) return size - margin;
+      final padded = (size + 15) ~/ 16 * 16;
+      return size * size ~/ padded - (padded == size ? margin : 0);
+    }
+    final w = side(width);
+    final h = side(height);
     return w == width && h == height ? '' : '${w}x$h+0+0';
   }
 

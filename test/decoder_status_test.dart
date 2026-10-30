@@ -29,5 +29,8 @@ void main() {
     expect(DecoderStatus.paddingCrop(3840, 2160, hardware: true), '3840x2156+0+0');
     expect(DecoderStatus.paddingCrop(1920, 1080, hardware: false), '');
     expect(DecoderStatus.paddingCrop(0, 0, hardware: true), '');
+    expect(DecoderStatus.paddingCrop(1920, 1080, hardware: true, fast: true), '1920x1072+0+0');
+    expect(DecoderStatus.paddingCrop(640, 360, hardware: true, fast: true), '640x352+0+0');
+    expect(DecoderStatus.paddingCrop(1280, 720, hardware: true, fast: true), '1280x716+0+0');
   });
 }

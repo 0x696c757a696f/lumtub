@@ -274,8 +274,10 @@ struct Request {
 }
 
 /// Endpoints Dart may call through the sign-in; anything else is refused.
-const ENDPOINTS: [&str; 10] = [
+const ENDPOINTS: [&str; 12] = [
     "next",
+    "live_chat/get_live_chat",
+    "live_chat/send_message",
     "browse",
     "account/accounts_list",
     "comment/perform_comment_action",

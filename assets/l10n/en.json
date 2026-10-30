@@ -2779,5 +2779,14 @@
   "可以继续往下找，或者换个分类、放宽时长和地区": "Keep looking further, or try another category or a wider duration and region",
   "继续找": "Keep looking",
   "正在翻译章节名…": "Translating chapter names…",
-  "翻译章节名": "Translate chapter names"
+  "翻译章节名": "Translate chapter names",
+  "用浏览器登录（Cookie）后才能在聊天里发言": "Sign in with your browser (cookies) to write in the chat",
+  "安装包不完整，无法发言": "The installation is incomplete, so the chat can't be written in",
+  "这个直播的聊天不能发言": "This live chat can't be written in",
+  "无法打开聊天的输入框": "Couldn't open the chat box",
+  "这个账号不能在这个直播的聊天里发言": "This account can't write in this live chat",
+  "YouTube 没有收下这条消息（{0}）": "YouTube didn't accept the message ({0})",
+  "发送失败，请检查网络或代理": "Couldn't send. Check the network or proxy",
+  "在聊天里说点什么": "Say something in the chat",
+  "发送": "Send"
 }

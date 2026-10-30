@@ -1,0 +1,193 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import '../app/app_controller.dart';
+import '../l10n/l10n.dart';
+import '../language_guess.dart';
+import '../live_chat.dart';
+import '../live_chat_composer.dart';
+import '../translation.dart';
+import 'app_icons.dart';
+import 'theme.dart';
+
+/// Whether chat messages show a translation under them; for this run.
+final chatTranslation = ValueNotifier(false);
+
+/// The 翻译 switch above the chat.
+class ChatTranslationSwitch extends StatelessWidget {
+  const ChatTranslationSwitch({super.key});
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder(
+        valueListenable: chatTranslation,
+        builder: (context, on, _) => FilterChip(
+          avatar: Icon(AppIcons.translate, size: 16),
+          label: Text(tr('翻译')),
+          selected: on,
+          showCheckmark: false,
+          visualDensity: VisualDensity.compact,
+          onSelected: (value) => chatTranslation.value = value,
+        ),
+      );
+}
+
+final _translations = Expando<Future<String?>>();
+
+/// The translation of [message] while [chatTranslation] is on; nothing
+/// when it is off or the message is already in the chosen language. Each
+/// message is translated once, when it is first shown.
+class ChatMessageTranslation extends StatelessWidget {
+  const ChatMessageTranslation({super.key, required this.controller, required this.message});
+  final AppController controller;
+  final LiveChatMessage message;
+
+  Future<String?> _translate() async {
+    final language = controller.preferences.translateTarget;
+    bool done(String line) => looksLike(line, language) || !RegExp(r'\p{L}{2,}', unicode: true).hasMatch(line);
+    if (message.text.trim().isEmpty || done(message.text)) return null;
+    try {
+      final result = await translateForeignLines(controller.translator, message.text, language, done);
+      return result.trim() == message.text.trim() ? null : result;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder(
+        valueListenable: chatTranslation,
+        builder: (context, on, _) {
+          if (!on) return const SizedBox.shrink();
+          return FutureBuilder(
+            future: _translations[message] ??= _translate(),
+            builder: (context, snapshot) {
+              final text = snapshot.data;
+              if (text == null) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: Space.xs),
+                child: SelectionArea(child: Text(text, style: TextStyle(color: context.colors.onSurfaceVariant))),
+              );
+            },
+          );
+        },
+      );
+}
+
+/// The box for writing in the live chat of [videoId], as the cookie
+/// sign-in; it says why when this account cannot write there.
+class LiveChatInput extends StatefulWidget {
+  const LiveChatInput({super.key, required this.controller, required this.videoId});
+  final AppController controller;
+  final String videoId;
+
+  @override
+  State<LiveChatInput> createState() => _LiveChatInputState();
+}
+
+class _LiveChatInputState extends State<LiveChatInput> {
+  final _text = TextEditingController();
+  final _focus = FocusNode();
+  ChatBox? _box;
+  bool _sending = false;
+  String? _error;
+  int _opening = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _open();
+  }
+
+  @override
+  void didUpdateWidget(LiveChatInput old) {
+    super.didUpdateWidget(old);
+    if (old.videoId != widget.videoId) _open();
+  }
+
+  @override
+  void dispose() {
+    _text.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  Future<void> _open() async {
+    final serial = ++_opening;
+    setState(() {
+      _box = null;
+      _error = null;
+    });
+    ChatBox box;
+    try {
+      box = await LiveChatComposer(widget.controller.webSignIn).open(widget.videoId);
+    } catch (_) {
+      box = ChatBoxClosed(tr('无法打开聊天的输入框'));
+    }
+    if (mounted && serial == _opening) setState(() => _box = box);
+  }
+
+  Future<void> _send() async {
+    final box = _box;
+    final text = _text.text.trim();
+    if (box is! ChatBoxOpen || text.isEmpty || _sending) return;
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      await LiveChatComposer(widget.controller.webSignIn).send(box, text);
+      _text.clear();
+    } on StateError catch (e) {
+      _error = e.message;
+    } catch (_) {
+      _error = tr('发送失败，请检查网络或代理');
+    }
+    if (!mounted) return;
+    setState(() => _sending = false);
+    _focus.requestFocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final box = _box;
+    if (box == null) return const SizedBox(height: Space.huge, child: Center(child: SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2))));
+    if (box is ChatBoxClosed) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: Space.s),
+        child: Row(children: [
+          Icon(AppIcons.lockSimple, size: 16, color: context.colors.outline),
+          const SizedBox(width: Space.s),
+          Expanded(child: Text(box.reason, style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant))),
+          IconButton(tooltip: tr('重试'), icon: Icon(AppIcons.arrowClockwise, size: 18), onPressed: _open),
+        ]),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: Space.s),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+        Row(children: [
+          Expanded(
+            child: TextField(
+              controller: _text,
+              focusNode: _focus,
+              enabled: !_sending,
+              maxLength: 200,
+              buildCounter: (context, {required currentLength, required isFocused, required maxLength}) => null,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => unawaited(_send()),
+              decoration: InputDecoration(hintText: tr('在聊天里说点什么')),
+            ),
+          ),
+          const SizedBox(width: Space.s),
+          IconButton.filledTonal(
+            tooltip: tr('发送'),
+            onPressed: _sending ? null : () => unawaited(_send()),
+            icon: _sending ? const SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.paperPlaneRight, size: 18),
+          ),
+        ]),
+        if (_error != null) Padding(padding: const EdgeInsets.only(top: Space.xs), child: Text(_error!, style: context.text.bodySmall?.copyWith(color: context.colors.error))),
+      ]),
+    );
+  }
+}

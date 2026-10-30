@@ -168,15 +168,18 @@ String _trim(double speed) => speed == speed.roundToDouble() ? speed.toStringAsF
 Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
+        // The list is taller than a small window; it scrolls above the button.
+        scrollable: true,
         title: Text(tr('快捷键')),
         content: SizedBox(
-          width: 360,
+          width: 420,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             for (final (keys, action) in playerShortcutHelp(prefs))
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(children: [
                   Expanded(child: Text(action)),
+                  const SizedBox(width: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(6)),

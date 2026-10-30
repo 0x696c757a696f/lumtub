@@ -2585,23 +2585,39 @@ class AppController extends ChangeNotifier {
     if (item != null) await play(item);
   }
 
+  bool _subtitlesFollowing = false;
+
+  /// Reads the subtitles mpv shows after the current mpv event is handled.
+  void _followSubtitles(Player player) {
+    if (_subtitlesFollowing) return;
+    _subtitlesFollowing = true;
+    unawaited(Future(() async {
+      _subtitlesFollowing = false;
+      if (!identical(player, this.player)) return;
+      if (secondaryTrackId == 'no') {
+        if (secondarySubtitle != null && secondaryLoading == null) _update(() => secondarySubtitle = null);
+      } else {
+        final title = player.state.tracks.subtitle.where((t) => t.id == secondaryTrackId).firstOrNull?.title;
+        if (secondarySubtitle != null && secondarySubtitle!.label != title) secondarySubtitle = null;
+      }
+      await syncMainSubtitle();
+      _update(() {});
+    }));
+  }
+
   void _listenTo(Player player) {
     void videoSize(_) => _outputSize?.video = Size((player.state.width ?? 0).toDouble(), (player.state.height ?? 0).toDouble());
     final platform = player.platform;
     if (platform is NativePlayer) {
       // The subtitles shown are followed as mpv reports them, as it can
       // change either by itself; the panel and the list read them here.
-      unawaited(platform.observeProperty('sid', (_) => syncMainSubtitle()).catchError((Object e) => logWarn('Could not follow the subtitle: $e')));
+      // media_kit waits for these listeners before it reads the next mpv
+      // event, so they only schedule the work: awaiting the player here
+      // would stall playback (and deadlock on the player's lock).
+      unawaited(platform.observeProperty('sid', (_) async => _followSubtitles(player)).catchError((Object e) => logWarn('Could not follow the subtitle: $e')));
       unawaited(platform.observeProperty('secondary-sid', (value) async {
         secondaryTrackId = value.isEmpty || value == 'false' ? 'no' : value;
-        if (secondaryTrackId == 'no') {
-          if (secondarySubtitle != null && secondaryLoading == null) _update(() => secondarySubtitle = null);
-          return;
-        }
-        final title = player.state.tracks.subtitle.where((t) => t.id == secondaryTrackId).firstOrNull?.title;
-        if (secondarySubtitle != null && secondarySubtitle!.label != title) secondarySubtitle = null;
-        await syncMainSubtitle();
-        _update(() {});
+        _followSubtitles(player);
       }).catchError((Object e) => logWarn('Could not follow the second subtitle: $e')));
     }
     _playerSubscriptions.addAll([

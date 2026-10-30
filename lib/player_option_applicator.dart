@@ -42,8 +42,10 @@ class PlayerOptionApplicator {
       'sub-visibility': settings.libassSubtitles ? 'yes' : 'no',
       'secondary-sub-visibility': settings.libassSubtitles ? 'yes' : 'no',
       // Tracks yt-dlp lists are added as "auto": mpv selects one only when
-      // its language is in slang.
+      // its language is in slang. media_kit's subs-fallback=yes would pick
+      // some track even with subtitles off.
       'slang': subtitles ? language.mpvLangs : '',
+      'subs-fallback': 'default',
       // Without sub-langs mpv's ytdl_hook asks yt-dlp for every manual
       // subtitle; automatic captions must be requested by name.
       'ytdl-raw-options': ytdlRawOptions(settings),
@@ -72,7 +74,7 @@ class PlayerOptionApplicator {
   /// Options mpv's ytdl_hook passes to yt-dlp. [infoJson] is a file from an
   /// earlier extraction: yt-dlp then picks formats and subtitles from it
   /// without asking YouTube again.
-  static String ytdlRawOptions(PlayerSettings settings, {String? infoJson, String? proxy}) {
+  static String ytdlRawOptions(PlayerSettings settings, {String? infoJson, String? proxy, String? formatSort}) {
     final subtitles = settings.subtitleMode != SubtitleMode.off;
     // mpv's %length% quoting keeps a comma or equals sign, as a path may
     // have, from splitting the option.
@@ -83,6 +85,9 @@ class PlayerOptionApplicator {
       if (subtitles) 'sub-langs=${quote(settings.subtitleOriginal ? '.*-orig' : settings.subtitleLanguage.ytDlpLangs)}',
       if (subtitles && (settings.subtitleMode == SubtitleMode.always || settings.subtitleOriginal)) 'write-auto-subs=',
       if (infoJson != null) 'load-info-json=${quote(infoJson)}',
+      // The same codec ranking as the app's own resolving; yt-dlp's default
+      // prefers AV1 and VP9 over H.264.
+      if (formatSort != null) 'format-sort=${quote(formatSort)}',
       // Also for SOCKS proxies, which ytdl_hook does not take from http-proxy.
       if (proxy != null) 'proxy=${quote(proxy)}',
     ].join(',');

@@ -98,6 +98,9 @@ class LiveChatRepository {
     lowerPriority(process.pid);
     final errors = StringBuffer();
     final errorSubscription = process.stderr.transform(utf8.decoder).listen(errors.write);
+    // Read and dropped: unread, yt-dlp's progress lines fill the pipe and
+    // it stops fetching the chat.
+    final outputSubscription = process.stdout.listen((_) {});
     var running = true;
     var exitCode = 0;
     unawaited(process.exitCode.then((code) {
@@ -147,6 +150,7 @@ class LiveChatRepository {
     } finally {
       process.kill();
       await errorSubscription.cancel();
+      await outputSubscription.cancel();
     }
   }
 }

@@ -819,6 +819,9 @@ class AppController extends ChangeNotifier {
       });
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
+      if (mode == PageMode.subscriptions && preferences.feedAutoRefresh) {
+        unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
+      }
       final updater = AppUpdater(client: _http, directory: Directory('${directories.cache.path}${Platform.pathSeparator}updates'), download: manager.downloadVerified)..addListener(_passOn('updater'));
       appUpdater = updater;
       // Housekeeping waits until the first page has loaded and drawn, so
@@ -1964,7 +1967,7 @@ class AppController extends ChangeNotifier {
         // A live stream plays from one HLS stream with picture and sound
         // together: a picture and a sound stream apart drift out of sync.
         await platform.setProperty('ytdl-format', live ? FormatPolicy.liveExpression(_playback, format) : format);
-        await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null, proxy: proxy.ytDlpValue(settings.proxyMode)));
+        await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null, proxy: proxy.ytDlpValue(settings.proxyMode), formatSort: _formatSort));
         if (direct != null && agent != null) await platform.setProperty('user-agent', agent);
       }
       _tracking = null;
@@ -2621,7 +2624,10 @@ class AppController extends ChangeNotifier {
   }
 
   void _listenTo(Player player) {
-    void videoSize(_) => _outputSize?.video = Size((player.state.width ?? 0).toDouble(), (player.state.height ?? 0).toDouble());
+    void videoSize(_) {
+      _outputSize?.video = Size((player.state.width ?? 0).toDouble(), (player.state.height ?? 0).toDouble());
+      if ((player.state.width ?? 0) > 0) _refitCrop(player);
+    }
     final platform = player.platform;
     if (platform is NativePlayer) {
       // The subtitles shown are followed as mpv reports them, as it can
@@ -3071,7 +3077,7 @@ class AppController extends ChangeNotifier {
     if (saved?.rate case final kept? when kept != settings.defaultSpeed) _notice(tr('这个频道按上次的 {0}x 倍速播放', [rateText(kept)]));
     final volume = saved?.volume?.toDouble() ?? _sessionVolume;
     if (volume != null && volume != player.state.volume) await player.setVolume(volume.clamp(0.0, settings.volumeMax.toDouble()).toDouble());
-    if (this.player == player && playing == item) _playbackChannel = key;
+    if (this.player == player && playing?.id == item.id) _playbackChannel = key;
   }
 
   /// Keeps a speed or volume chosen while a channel plays for its next
@@ -4327,14 +4333,7 @@ class AppController extends ChangeNotifier {
         currentHwdec = decoder.label;
         if (normalized != null) decodeStates = {...decodeStates, normalized: decoder};
       });
-      final width = int.tryParse(await platform.getProperty('video-params/w')) ?? 0;
-      final height = int.tryParse(await platform.getProperty('video-params/h')) ?? 0;
-      final crop = DecoderStatus.paddingCrop(width, height, hardware: decoder.kind == DecoderKind.hardware);
-      if (crop != _paddingCrop) {
-        _paddingCrop = crop;
-        await platform.setProperty('video-crop', crop);
-        if (crop.isNotEmpty) logDebug(() => 'Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
-      }
+      await _fitCrop(platform, hardware: decoder.kind == DecoderKind.hardware);
       // Kept as what this PC can do only when it decoded in hardware, or
       // nothing measured it: one video in software, as after a lost
       // graphics device or with hardware decoding off, says nothing about
@@ -4358,8 +4357,32 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  /// The `video-crop` last set, so an unchanged one is not set again.
-  String _paddingCrop = '';
+  /// Sets the `video-crop` for the picture now decoded. Set every time, as
+  /// a crop kept from an earlier picture of another size is ignored.
+  Future<void> _fitCrop(NativePlayer platform, {required bool hardware}) async {
+    final width = int.tryParse(await platform.getProperty('video-params/w')) ?? 0;
+    final height = int.tryParse(await platform.getProperty('video-params/h')) ?? 0;
+    final crop = DecoderStatus.paddingCrop(width, height, hardware: hardware);
+    await platform.setProperty('video-crop', crop);
+    if (crop.isNotEmpty) logDebug(() => 'Cropping $crop of ${width}x$height to keep the decoder padding off the picture');
+  }
+
+  /// Whether a crop check for a changed picture size is already scheduled.
+  bool _cropFitting = false;
+
+  /// The picture changed size within a video (another quality): its crop
+  /// is fitted again once the size has settled.
+  void _refitCrop(Player player) {
+    final platform = player.platform;
+    if (_cropFitting || _decoderPending || platform is! NativePlayer) return;
+    _cropFitting = true;
+    unawaited(Future<void>.delayed(const Duration(milliseconds: 300), () async {
+      _cropFitting = false;
+      if (!identical(player, this.player)) return;
+      final hardware = DecoderStatus.fromMpv(await platform.getProperty('hwdec-current')).kind == DecoderKind.hardware;
+      await _fitCrop(platform, hardware: hardware);
+    }).catchError((Object _) {}));
+  }
 
   /// Logs playback timing when frames are being dropped, at most once a
   /// minute, so the log shows why a video stutters.

@@ -431,6 +431,9 @@ class VideoRepository {
       ...Platform.environment,
       if (toolDirectories.isNotEmpty)
         pathKey: [...toolDirectories, Platform.environment[pathKey] ?? ''].join(Platform.isWindows ? ';' : ':'),
+      // yt-dlp prints paths and titles in UTF-8, not the Windows code page.
+      'PYTHONUTF8': '1',
+      'PYTHONIOENCODING': 'utf-8',
       if (cacheDirectory != null) ...{
         'TMP': '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp',
         'TEMP': '${cacheDirectory!}${Platform.pathSeparator}..${Platform.pathSeparator}temp',

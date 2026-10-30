@@ -86,4 +86,8 @@ void main() {
     expect(stepDownHeight(360, [360, 240, 144]), isNull);
     expect(stepDownHeight(720, const []), isNull);
   });
+  test('mpv resolving keeps the codec ranking and picks no stray subtitle', () {
+    expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), formatSort: 'res,fps,vcodec:avc'), 'format-sort=%18%res,fps,vcodec:avc');
+    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['subs-fallback'], 'default');
+  });
 }

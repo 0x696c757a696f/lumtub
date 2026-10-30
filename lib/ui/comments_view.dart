@@ -15,6 +15,7 @@ import 'theme.dart';
 import 'translatable.dart';
 import '../l10n/l10n.dart';
 import 'app_icons.dart';
+import 'live_chat_input.dart';
 
 /// The comments under a video or a post: sort order, comments with their
 /// replies, and a button for more. It loads when first shown.
@@ -213,9 +214,10 @@ class _CommentsSectionState extends State<CommentsSection> {
                 icon: const Icon(AppIcons.magnifyingGlass),
                 onPressed: _toggleSearch,
               );
+              final immersive = ImmersiveTranslationSwitch(controller: widget.controller);
               return constraints.maxWidth >= 520
-                  ? Row(children: [title, const Spacer(), search, const SizedBox(width: 4), order])
-                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Row(mainAxisAlignment: MainAxisAlignment.end, children: [search, order])]);
+                  ? Row(children: [title, const Spacer(), immersive, const SizedBox(width: 4), search, const SizedBox(width: 4), order])
+                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Row(mainAxisAlignment: MainAxisAlignment.end, children: [immersive, search, order])]);
             }),
             const SizedBox(height: 8),
             if (_searching) _searchBar(context),

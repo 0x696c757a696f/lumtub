@@ -11,25 +11,39 @@ import '../translation.dart';
 import 'app_icons.dart';
 import 'theme.dart';
 
-/// Whether chat messages show a translation under them; for this run.
+/// 沉浸式翻译 for the live chat rows, which are kept between rebuilds and
+/// so listen to this rather than the preferences; [syncChatTranslation]
+/// follows the preference.
 final chatTranslation = ValueNotifier(false);
 
-/// The 翻译 switch above the chat.
-class ChatTranslationSwitch extends StatelessWidget {
-  const ChatTranslationSwitch({super.key});
+void syncChatTranslation(AppController controller) {
+  final on = controller.preferences.immersiveTranslation;
+  if (chatTranslation.value == on) return;
+  WidgetsBinding.instance.addPostFrameCallback((_) => chatTranslation.value = controller.preferences.immersiveTranslation);
+}
+
+/// The 沉浸式翻译 switch: comments, posts and the live chat in another
+/// language show their translation under them.
+class ImmersiveTranslationSwitch extends StatelessWidget {
+  const ImmersiveTranslationSwitch({super.key, required this.controller});
+  final AppController controller;
 
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder(
-        valueListenable: chatTranslation,
-        builder: (context, on, _) => FilterChip(
-          avatar: Icon(AppIcons.translate, size: 16),
-          label: Text(tr('翻译')),
-          selected: on,
-          showCheckmark: false,
-          visualDensity: VisualDensity.compact,
-          onSelected: (value) => chatTranslation.value = value,
-        ),
-      );
+  Widget build(BuildContext context) {
+    final on = controller.preferences.immersiveTranslation;
+    return FilterChip(
+      avatar: Icon(AppIcons.translate, size: 16),
+      label: Text(tr('沉浸式翻译')),
+      tooltip: tr('外语内容自动在下方显示译文'),
+      selected: on,
+      showCheckmark: false,
+      visualDensity: VisualDensity.compact,
+      onSelected: (value) {
+        chatTranslation.value = value;
+        unawaited(controller.savePreferences(controller.preferences.copyWith(immersiveTranslation: value)));
+      },
+    );
+  }
 }
 
 final _translations = Expando<Future<String?>>();

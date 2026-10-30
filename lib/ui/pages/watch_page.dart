@@ -530,10 +530,11 @@ class _ReplayChatPanel extends StatelessWidget {
   Widget _build(BuildContext context) {
     final messages = controller.replayChat;
     final live = controller.playing?.isLive ?? false;
+    syncChatTranslation(controller);
     final header = <Widget>[
       Row(children: [
         Expanded(child: Text(tr(live ? '聊天' : '聊天回放'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
-        const ChatTranslationSwitch(),
+        ImmersiveTranslationSwitch(controller: controller),
       ]),
       if (live && controller.playing != null) LiveChatInput(controller: controller, videoId: controller.playing!.id),
       const SizedBox(height: 8),

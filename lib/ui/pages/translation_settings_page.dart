@@ -242,6 +242,13 @@ List<Widget> _items(BuildContext context, AppController controller) {
       tip(tr('Groq 的密钥可以在 console.groq.com 免费申请；免费额度每天能识别几个小时的音频。')),
     header(tr('显示')),
     SwitchItem(
+      title: tr('沉浸式翻译'),
+      subtitle: tr('评论、帖子和直播聊天里的外语内容，自动在下方显示译文'),
+      leading: const Icon(AppIcons.translate),
+      value: prefs.immersiveTranslation,
+      onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(immersiveTranslation: v)),
+    ),
+    SwitchItem(
       title: tr('双语对照'),
       subtitle: tr('评论、简介和动态的译文和原文一起显示；关闭时译文替换原文'),
       leading: const Icon(AppIcons.columns),

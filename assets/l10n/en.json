@@ -2788,5 +2788,8 @@
   "YouTube 没有收下这条消息（{0}）": "YouTube didn't accept the message ({0})",
   "发送失败，请检查网络或代理": "Couldn't send. Check the network or proxy",
   "在聊天里说点什么": "Say something in the chat",
-  "发送": "Send"
+  "发送": "Send",
+  "沉浸式翻译": "Immersive translation",
+  "外语内容自动在下方显示译文": "Show translations under foreign-language text automatically",
+  "评论、帖子和直播聊天里的外语内容，自动在下方显示译文": "Foreign-language comments, posts and live chat show their translation underneath automatically"
 }

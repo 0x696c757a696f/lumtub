@@ -140,6 +140,25 @@ void main() {
     expect(AppPreferences.fromJson({}).translation.service, TranslationService.google);
   });
 
+  testWidgets('沉浸式翻译 shows foreign text with its translation unasked', (tester) async {
+    final fake = _Fake();
+    final controller = AppController()..translator = fake;
+    controller.preferences = controller.preferences.copyWith(translateLanguage: 'zh-CN', immersiveTranslation: true, bilingualTranslation: false);
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Column(children: [
+      Translatable(controller: controller, text: 'Hello there', builder: (context, text) => Text(text)),
+      Translatable(controller: controller, text: '你好，世界', builder: (context, text) => Text(text)),
+    ]))));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Hello there'), findsOneWidget);
+    expect(find.text('[zh-CN] Hello there'), findsOneWidget);
+    expect(fake.calls, 1);
+    await tester.tap(find.text('隐藏译文'));
+    await tester.pump();
+    expect(find.text('[zh-CN] Hello there'), findsNothing);
+  });
+
   testWidgets('translates on tap, shows the original again and reports errors', (tester) async {
     final fake = _Fake();
     final controller = AppController()..translator = fake;

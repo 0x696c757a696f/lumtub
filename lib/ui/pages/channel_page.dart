@@ -18,6 +18,7 @@ import '../translatable.dart';
 import '../video_card.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
+import '../live_chat_input.dart';
 
 /// A channel's page: header with follow button, tabs for videos, Shorts,
 /// live streams, playlists and posts, and a search inside the channel.
@@ -145,6 +146,12 @@ class _ChannelPageState extends State<ChannelPage> {
     final posts = loader.posts;
     final error = loader.error;
     return [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, Space.m),
+          child: Align(alignment: Alignment.centerLeft, child: ImmersiveTranslationSwitch(controller: controller)),
+        ),
+      ),
       SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverList.separated(

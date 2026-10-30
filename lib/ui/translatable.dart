@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -32,24 +33,50 @@ class _TranslatableState extends State<Translatable> {
   bool _showing = false;
   bool _loading = false;
   String? _error;
+  /// 沉浸式翻译 already tried this text (translated, same language or
+  /// failed), so it is not asked again on every build.
+  bool _autoTried = false;
+  /// [_showing] came from 沉浸式翻译, so turning it off hides it again.
+  bool _byImmersive = false;
 
   @override
   void didUpdateWidget(Translatable old) {
     super.didUpdateWidget(old);
     if (old.text != widget.text) {
       _translation = _language = _error = null;
-      _showing = _loading = false;
+      _showing = _loading = _autoTried = false;
     }
   }
 
-  Future<void> _toggle() async {
+  bool get _visible => _showing && !(_byImmersive && !widget.controller.preferences.immersiveTranslation);
+
+  /// For 沉浸式翻译: translates once, quietly, when the text is foreign.
+  void _auto() {
+    _autoTried = true;
+    final language = widget.controller.preferences.translateTarget;
+    final lines = widget.text.split('\n').where((l) => l.trim().isNotEmpty);
+    if (!lines.any((l) => _hasLetters(l) && !looksLike(l, language))) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_visible && !_loading) unawaited(_toggle(quiet: true));
+    });
+  }
+
+  Future<void> _toggle({bool quiet = false}) async {
     final prefs = widget.controller.preferences;
     final language = prefs.translateTarget;
-    if (_showing) return setState(() => _showing = false);
-    if (_translation != null && _language == language) return setState(() => _showing = true);
+    if (_visible) {
+      return setState(() => _showing = _byImmersive = false);
+    }
+    if (_translation != null && _language == language) {
+      return setState(() {
+        _showing = true;
+        _byImmersive = quiet;
+      });
+    }
     final text = widget.text;
     final lines = text.split('\n').where((l) => l.trim().isNotEmpty);
     if (prefs.skipSameLanguage && looksLike(text, language) && lines.every((l) => looksLike(l, language) || !_hasLetters(l))) {
+      if (quiet) return;
       return setState(() => _error = tr('已经是{0}，不用翻译', [TranslationLanguage.byCode(language).label]));
     }
     setState(() {
@@ -63,16 +90,17 @@ class _TranslatableState extends State<Translatable> {
         _translation = result;
         _language = language;
         _showing = true;
+        _byImmersive = quiet;
         _loading = false;
       });
     } on TranslationException catch (e) {
-      _fail(text, e.message);
+      _fail(text, quiet ? null : e.message);
     } catch (_) {
-      _fail(text, tr('无法翻译，请检查网络或代理'));
+      _fail(text, quiet ? null : tr('无法翻译，请检查网络或代理'));
     }
   }
 
-  void _fail(String text, String message) {
+  void _fail(String text, String? message) {
     if (!mounted || text != widget.text) return;
     setState(() {
       _error = message;
@@ -84,11 +112,13 @@ class _TranslatableState extends State<Translatable> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final prefs = widget.controller.preferences;
-    final both = prefs.bilingualTranslation;
-    final translation = _showing && both ? TranslationView(style: prefs.translationStyle, child: widget.builder(context, _translation!)) : null;
+    if (prefs.immersiveTranslation && !_autoTried && widget.text.trim().isNotEmpty) _auto();
+    // 沉浸式翻译 always shows both.
+    final both = prefs.bilingualTranslation || prefs.immersiveTranslation;
+    final translation = _visible && both ? TranslationView(style: prefs.translationStyle, child: widget.builder(context, _translation!)) : null;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       if (translation != null && prefs.translationFirst) ...[translation, const SizedBox(height: 4)],
-      widget.builder(context, _showing && !both ? _translation! : widget.text),
+      widget.builder(context, _visible && !both ? _translation! : widget.text),
       if (translation != null && !prefs.translationFirst) ...[const SizedBox(height: 4), translation],
       Padding(
         padding: widget.padding,
@@ -97,7 +127,7 @@ class _TranslatableState extends State<Translatable> {
             style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 4), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             onPressed: _loading ? null : _toggle,
             icon: _loading ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.translate, size: 16),
-            label: Text(_showing ? (both ? tr('隐藏译文') : tr('显示原文')) : tr('翻译'), style: const TextStyle(fontSize: 12)),
+            label: Text(_visible ? (both ? tr('隐藏译文') : tr('显示原文')) : tr('翻译'), style: const TextStyle(fontSize: 12)),
           ),
           if (_error != null) Text(_error!, style: TextStyle(color: colors.error, fontSize: 12)),
         ]),

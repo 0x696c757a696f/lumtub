@@ -241,34 +241,30 @@ List<Widget> _items(BuildContext context, AppController controller) {
     if (config.speech.id == 'groq')
       tip(tr('Groq 的密钥可以在 console.groq.com 免费申请；免费额度每天能识别几个小时的音频。')),
     header(tr('显示')),
-    SwitchItem(
+    PopupItem<String>(
       title: tr('沉浸式翻译'),
-      subtitle: tr('评论、帖子和直播聊天里的外语内容，自动在下方显示译文'),
       leading: const Icon(AppIcons.translate),
-      value: prefs.immersiveTranslation,
-      onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(immersiveTranslation: v)),
+      value: prefs.immersiveTranslation ? prefs.immersiveLanguage : _off,
+      values: [(_off, tr('关闭')), ('', tr('翻译成系统语言（{0}）', [SubtitleLanguage.auto.translation.label])), for (final l in TranslationLanguage.all) (l.code, tr('翻译成{0}', [l.label]))],
+      onSelected: (v) => controller.savePreferences(v == _off
+          ? controller.preferences.copyWith(immersiveTranslation: false)
+          : controller.preferences.copyWith(immersiveTranslation: true, immersiveLanguage: v)),
     ),
-    SwitchItem(
-      title: tr('双语对照'),
-      subtitle: tr('评论、简介和动态的译文和原文一起显示；关闭时译文替换原文'),
+    tip(tr('打开后，评论、帖子和直播聊天里的外语内容自动在下方显示译文；界面语言和系统语言的内容不翻。')),
+    PopupItem<_Layout>(
+      title: tr('译文显示'),
       leading: const Icon(AppIcons.columns),
-      value: prefs.bilingualTranslation,
-      onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(bilingualTranslation: v)),
+      value: !prefs.bilingualTranslation ? _Layout.replace : prefs.translationFirst ? _Layout.above : _Layout.below,
+      values: [(_Layout.below, tr('原文在上，译文在下')), (_Layout.above, tr('译文在上，原文在下')), (_Layout.replace, tr('译文替换原文'))],
+      onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(bilingualTranslation: v != _Layout.replace, translationFirst: v == _Layout.above)),
     ),
     PopupItem<TranslationStyle>(
       title: tr('译文样式'),
       leading: const Icon(AppIcons.paintRoller),
       value: prefs.translationStyle,
       values: [for (final v in TranslationStyle.values) (v, v.label)],
-      enabled: prefs.bilingualTranslation,
+      enabled: prefs.bilingualTranslation || prefs.immersiveTranslation,
       onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(translationStyle: v)),
-    ),
-    SwitchItem(
-      title: tr('译文在上方'),
-      leading: const Icon(AppIcons.arrowsDownUp),
-      value: prefs.translationFirst,
-      enabled: prefs.bilingualTranslation,
-      onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(translationFirst: v)),
     ),
     SwitchItem(
       title: tr('跳过已是目标语言的内容'),
@@ -286,6 +282,11 @@ List<Widget> _items(BuildContext context, AppController controller) {
         : tr('只有点“翻译”或使用翻译字幕时才把要翻译的文字发给所选服务。密钥用 Windows 加密保存在本机，不写进设置文件。翻过的内容在本机缓存 7 天，清理缓存时一并删除。')),
   ];
 }
+
+const _off = 'off';
+
+/// Where 翻译 puts the translation; 沉浸式翻译 always keeps both.
+enum _Layout { below, above, replace }
 
 String _masked(String key) => key.length <= 8 ? '••••' : '${key.substring(0, 3)}••••${key.substring(key.length - 4)}';
 

@@ -19,7 +19,6 @@ import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
 import '../../progress_line.dart';
-import '../../translation.dart';
 import '../../video_codec.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../../windows_env.dart' show restartApp;
@@ -950,14 +949,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               subtitle: tr('翻译：{0} · AI：{1}', [prefs.translation.service.label, controller.canSummarize ? prefs.translation.effectiveAiModel : tr('未设置')]),
               leading: _icon(AppIcons.translate),
               onTap: () => openTranslationSettings(context, controller),
-            ), subtitle: '翻译服务 AI 总结 接口 模型 语音识别 Whisper Groq 没有字幕 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
-        SettingEntry(tr('翻译目标语言'), (context) => PopupItem<String>(
-              title: tr('翻译目标语言'),
-              leading: _icon(AppIcons.translate),
-              value: prefs.translateLanguage,
-              values: [('', tr('跟随系统语言（{0}）', [SubtitleLanguage.auto.translation.label])), for (final l in TranslationLanguage.all) (l.code, l.label)],
-              onSelected: (v) => savePrefs(prefs.copyWith(translateLanguage: v)),
-            ), subtitle: '翻译 字幕 双语 语言 translate Google'),
+            ), subtitle: '翻译目标语言 沉浸式翻译 双语对照 译文 翻译服务 AI 总结 接口 模型 语音识别 Whisper Groq 没有字幕 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
         SettingEntry(tr('自动检查组件更新'), (context) => SwitchItem(
               title: tr('自动检查组件更新'),
               subtitle: tr('每天检查一次 libmpv、yt-dlp 和 Deno'),

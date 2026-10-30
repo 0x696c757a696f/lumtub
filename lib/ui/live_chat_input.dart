@@ -114,7 +114,7 @@ class ChatMessageTranslation extends StatelessWidget {
   /// translated; 沉浸式翻译 also leaves the interface's and Windows'
   /// languages alone.
   Future<String?> _translate({required bool asked}) async {
-    final language = controller.preferences.translateTarget;
+    final language = asked ? controller.preferences.translateTarget : controller.preferences.immersiveTarget;
     final known = asked ? {language} : readLanguages(controller);
     bool done(String line) => known.any((k) => looksLike(line, k)) || !RegExp(r'\p{L}{2,}', unicode: true).hasMatch(line);
     if (message.text.split('\n').every(done)) return null;

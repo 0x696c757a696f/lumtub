@@ -2791,5 +2791,12 @@
   "发送": "Send",
   "沉浸式翻译": "Immersive translation",
   "外语内容自动在下方显示译文": "Show translations under foreign-language text automatically",
-  "评论、帖子和直播聊天里的外语内容，自动在下方显示译文": "Foreign-language comments, posts and live chat show their translation underneath automatically"
+  "评论、帖子和直播聊天里的外语内容，自动在下方显示译文": "Foreign-language comments, posts and live chat show their translation underneath automatically",
+  "翻译成系统语言（{0}）": "Into the system language ({0})",
+  "翻译成{0}": "Into {0}",
+  "译文显示": "Translation layout",
+  "原文在上，译文在下": "Original above, translation below",
+  "译文在上，原文在下": "Translation above, original below",
+  "译文替换原文": "Translation replaces the original",
+  "打开后，评论、帖子和直播聊天里的外语内容自动在下方显示译文；界面语言和系统语言的内容不翻。": "When on, foreign-language comments, posts and live chat show a translation underneath; text in the interface or system language is left alone."
 }

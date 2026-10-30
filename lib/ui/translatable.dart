@@ -63,7 +63,7 @@ class _TranslatableState extends State<Translatable> {
 
   Future<void> _toggle({bool quiet = false}) async {
     final prefs = widget.controller.preferences;
-    final language = prefs.translateTarget;
+    final language = quiet ? prefs.immersiveTarget : prefs.translateTarget;
     if (_visible) {
       return setState(() => _showing = _byImmersive = false);
     }
@@ -136,10 +136,10 @@ class _TranslatableState extends State<Translatable> {
   }
 }
 
-/// The languages 沉浸式翻译 leaves alone: the one translated into, the
+/// The languages 沉浸式翻译 leaves alone: the one it translates into, the
 /// interface's and Windows'.
 Set<String> readLanguages(AppController controller) => {
-      controller.preferences.translateTarget,
+      controller.preferences.immersiveTarget,
       if (TranslationLanguage.maybeByCode(youtubeHl) case final ui?) ui.code,
       SubtitleLanguage.auto.translation.code,
     };

@@ -110,6 +110,7 @@ class AppPreferences {
     this.subtitlesByService = false,
     this.bilingualTranslation = true,
     this.immersiveTranslation = false,
+    this.immersiveLanguage = '',
     this.translationStyle = TranslationStyle.quote,
     this.translationFirst = false,
     this.subtitleListMode = SubtitleListMode.firstOver,
@@ -244,6 +245,12 @@ class AppPreferences {
   /// 沉浸式翻译: comments, posts and live chat in another language show
   /// their translation under them without asking.
   final bool immersiveTranslation;
+  /// The language 沉浸式翻译 turns text into; empty follows Windows'
+  /// language, whatever [translateLanguage] is.
+  final String immersiveLanguage;
+
+  /// [immersiveLanguage], with Windows' language for empty.
+  String get immersiveTarget => immersiveLanguage.isEmpty ? SubtitleLanguage.auto.translation.code : immersiveLanguage;
   /// How the translation under the original looks.
   final TranslationStyle translationStyle;
   /// The translation goes above the original instead of under it.
@@ -403,6 +410,7 @@ class AppPreferences {
     bool? subtitlesByService,
     bool? bilingualTranslation,
     bool? immersiveTranslation,
+    String? immersiveLanguage,
     TranslationStyle? translationStyle,
     bool? translationFirst,
     SubtitleListMode? subtitleListMode,
@@ -475,6 +483,7 @@ class AppPreferences {
         subtitlesByService: subtitlesByService ?? this.subtitlesByService,
         bilingualTranslation: bilingualTranslation ?? this.bilingualTranslation,
         immersiveTranslation: immersiveTranslation ?? this.immersiveTranslation,
+        immersiveLanguage: immersiveLanguage ?? this.immersiveLanguage,
         translationStyle: translationStyle ?? this.translationStyle,
         translationFirst: translationFirst ?? this.translationFirst,
         subtitleListMode: subtitleListMode ?? this.subtitleListMode,
@@ -548,6 +557,7 @@ class AppPreferences {
         'subtitlesByService': subtitlesByService,
         'bilingualTranslation': bilingualTranslation,
         'immersiveTranslation': immersiveTranslation,
+        'immersiveLanguage': immersiveLanguage,
         'translationStyle': translationStyle.name,
         'translationFirst': translationFirst,
         'subtitleListMode': subtitleListMode.name,
@@ -661,6 +671,7 @@ class AppPreferences {
       subtitlesByService: flag('subtitlesByService', d.subtitlesByService),
       bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
       immersiveTranslation: flag('immersiveTranslation', d.immersiveTranslation),
+      immersiveLanguage: TranslationLanguage.maybeByCode(raw['immersiveLanguage'])?.code ?? '',
       translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,
       translationFirst: flag('translationFirst', d.translationFirst),
       subtitleListMode: SubtitleListMode.values.where((v) => v.name == raw['subtitleListMode']).firstOrNull ?? d.subtitleListMode,

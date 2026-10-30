@@ -14,6 +14,7 @@ import '../../widgets/pilinara_settings_tiles.dart' show confirmDialog;
 import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../motion.dart';
+import '../app_icons.dart';
 
 /// Explore, in zones as Bilibili's 分区: videos, live streams or the tabs of
 /// 宗教与信仰, a zone and one of its sub-categories, how they are picked, and
@@ -109,8 +110,8 @@ class _ExplorePageState extends State<ExplorePage> {
           trailing: SegmentedButton<ExploreSection>(
             showSelectedIcon: false,
             segments: [
-              ButtonSegment(value: ExploreSection.popular, label: Text(ExploreSection.popular.label), icon: const Icon(Icons.video_library_rounded, size: 18)),
-              ButtonSegment(value: ExploreSection.live, label: Text(ExploreSection.live.label), icon: const Icon(Icons.sensors_rounded, size: 18)),
+              ButtonSegment(value: ExploreSection.popular, label: Text(ExploreSection.popular.label), icon: const Icon(AppIcons.filmReelFill, size: 18)),
+              ButtonSegment(value: ExploreSection.live, label: Text(ExploreSection.live.label), icon: const Icon(AppIcons.broadcast, size: 18)),
             ],
             // 宗教与信仰 shows as part of the half it was opened from.
             selected: {controller.exploreHalf},
@@ -123,7 +124,7 @@ class _ExplorePageState extends State<ExplorePage> {
             child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
               TextButton.icon(
                 onPressed: controller.leaveFaith,
-                icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                icon: const Icon(AppIcons.arrowLeft, size: 18),
                 label: Text(tr('全部分区')),
               ),
               Text(tr('宗教信仰'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
@@ -171,7 +172,7 @@ class _ExplorePageState extends State<ExplorePage> {
             ),
             if (mode.hasPeriod)
               OptionChip(
-                icon: Icons.event_rounded,
+                icon: AppIcons.calendar,
                 value: controller.explorePeriod,
                 values: explorePeriods,
                 label: (v) => v.label,
@@ -180,7 +181,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 onSelected: (v) => controller.setExplore(period: v),
               ),
             OptionChip(
-              icon: Icons.category_outlined,
+              icon: AppIcons.shapes,
               value: controller.exploreFormat,
               values: controller.exploreFormats,
               label: (v) => v == controller.exploreFormats.first ? tr('类型') : v.label,
@@ -189,7 +190,7 @@ class _ExplorePageState extends State<ExplorePage> {
               onSelected: (v) => controller.setExplore(format: v),
             ),
             OptionChip(
-              icon: Icons.visibility_outlined,
+              icon: AppIcons.eye,
               value: controller.exploreView,
               values: controller.exploreViews,
               label: (v) => v == controller.exploreViews.first ? tr('视角') : v.label,
@@ -199,7 +200,7 @@ class _ExplorePageState extends State<ExplorePage> {
             ),
             if (!live && mode != ExploreMode.long)
               OptionChip(
-                icon: Icons.timer_outlined,
+                icon: AppIcons.timer,
                 value: controller.exploreDuration,
                 values: SearchDuration.values,
                 label: (v) => v == SearchDuration.any ? tr('时长') : v.label,
@@ -210,7 +211,7 @@ class _ExplorePageState extends State<ExplorePage> {
             // 全球热门 is searched from no region; the language still applies.
             if (!topic.global)
               OptionChip(
-                icon: Icons.public_rounded,
+                icon: AppIcons.globe,
                 value: controller.preferences.exploreRegion,
                 values: ExploreRegion.values,
                 label: (v) => v == ExploreRegion.any ? tr('地区') : v.label,
@@ -219,7 +220,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 onSelected: (v) => controller.setExplore(region: v),
               ),
             OptionChip(
-              icon: Icons.translate_rounded,
+              icon: AppIcons.translate,
               value: controller.preferences.exploreLanguage,
               values: ExploreLanguage.values,
               label: (v) => v == ExploreLanguage.any ? tr('语言') : v.label,
@@ -231,14 +232,14 @@ class _ExplorePageState extends State<ExplorePage> {
               Tooltip(
                 message: tr('只留下原声音轨或自动字幕确认是这种语言的视频，不靠标题和简介猜'),
                 child: FilterChip(
-                  avatar: const Icon(Icons.hearing_rounded, size: 18),
+                  avatar: const Icon(AppIcons.ear, size: 18),
                   label: Text(tr('只看确认的原声')),
                   selected: controller.preferences.exploreHeardOnly,
                   onSelected: (v) => controller.setExplore(heardOnly: v),
                 ),
               ),
             OptionChip(
-              icon: Icons.hd_outlined,
+              icon: AppIcons.highDefinition,
               value: controller.exploreQuality,
               values: SearchQuality.values,
               label: (v) => v == SearchQuality.any ? tr('画质') : v.label,
@@ -248,7 +249,7 @@ class _ExplorePageState extends State<ExplorePage> {
             ),
             if (topic.mix)
               ActionChip(
-                avatar: const Icon(Icons.refresh_rounded, size: 18),
+                avatar: const Icon(AppIcons.arrowsClockwise, size: 18),
                 label: Text(tr('换一批')),
                 onPressed: loading ? null : controller.refreshExplore,
               ),
@@ -267,17 +268,17 @@ class _ExplorePageState extends State<ExplorePage> {
         if (items.isEmpty && !loading && error == null)
           if (controller.exploreLanguageCheck case final check? when check.asked > 0)
             SliverFillRemaining(hasScrollBody: false, child: StatusView(
-              icon: Icons.translate_rounded,
+              icon: AppIcons.translate,
               title: tr('查了 {0} 个视频，没有{1}的', [check.asked, controller.preferences.exploreLanguage.label]),
               message: tr('可以继续往下找，或者换个分类、放宽时长和地区'),
               action: FilledButton.icon(
                 onPressed: controller.searchExploreFurther,
-                icon: const Icon(Icons.search_rounded),
+                icon: const Icon(AppIcons.magnifyingGlass),
                 label: Text(tr('继续找')),
               ),
             ))
           else
-            SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.explore_outlined, title: switch (mode) {
+            SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.compass, title: switch (mode) {
               ExploreMode.liveUpcoming => tr('这个分类暂时没有即将开始的直播'),
               ExploreMode.liveReplay => tr('这个分类暂时没有直播回放'),
               _ => live ? tr('这个分类现在没有直播') : tr('这个分类暂时没有视频'),
@@ -404,7 +405,7 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
           width: 420,
           height: 480,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(tr('拖动调整顺序，置顶放到最前，关掉开关隐藏。'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 13)),
+            Text(tr('拖动调整顺序，置顶放到最前，关掉开关隐藏。'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
             const SizedBox(height: 8),
             Expanded(child: ReorderableListView.builder(
               buildDefaultDragHandles: false,
@@ -417,16 +418,16 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
                   key: ValueKey(topic.key),
                   dense: true,
                   contentPadding: EdgeInsets.zero,
-                  leading: ReorderableDragStartListener(index: i, child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.drag_indicator_rounded))),
+                  leading: ReorderableDragStartListener(index: i, child: const Padding(padding: EdgeInsets.all(4), child: Icon(AppIcons.dotsSixVertical))),
                   title: Row(children: [
                     Icon(topic.icon, size: 20, color: shown ? null : context.colors.outline),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Flexible(child: Text(topic.label, overflow: TextOverflow.ellipsis, style: TextStyle(color: shown ? null : context.colors.outline))),
                   ]),
                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                     IconButton(
                       tooltip: tr('置顶'),
-                      icon: const Icon(Icons.vertical_align_top_rounded),
+                      icon: const Icon(AppIcons.alignTop),
                       onPressed: i == 0 ? null : () => setState(() => _topics.insert(0, _topics.removeAt(i))),
                     ),
                     Switch(
@@ -496,8 +497,8 @@ class _TopicStripState extends State<TopicStrip> {
   }
 
   List<(ExploreTopic, VoidCallback)> get _extras => [
-        if (widget.onAdd case final add?) (ExploreTopic(tr('添加'), Icons.add_rounded, ''), add),
-        if (widget.onManage case final manage?) (ExploreTopic(tr('管理'), Icons.tune_rounded, ''), manage),
+        if (widget.onAdd case final add?) (ExploreTopic(tr('添加'), AppIcons.plus, ''), add),
+        if (widget.onManage case final manage?) (ExploreTopic(tr('管理'), AppIcons.slidersHorizontal, ''), manage),
       ];
 
   bool _extent(bool Function(ScrollPosition position) test) =>
@@ -542,7 +543,7 @@ class _TopicStripState extends State<TopicStrip> {
         height: 84,
         child: Row(children: [
           const SizedBox(width: AppStyle.pagePadding - 12),
-          _Arrow(icon: Icons.chevron_left_rounded, onTap: _extent((p) => p.pixels > p.minScrollExtent) ? () => _by(-_tileWidth * 4) : null),
+          _Arrow(icon: AppIcons.caretLeft, onTap: _extent((p) => p.pixels > p.minScrollExtent) ? () => _by(-_tileWidth * 4) : null),
           Expanded(child: Listener(
             // A vertical wheel turn scrolls the row.
             onPointerSignal: (event) {
@@ -583,7 +584,7 @@ class _TopicStripState extends State<TopicStrip> {
               ),
             ),
           )),
-          _Arrow(icon: Icons.chevron_right_rounded, onTap: _extent((p) => p.pixels < p.maxScrollExtent) ? () => _by(_tileWidth * 4) : null),
+          _Arrow(icon: AppIcons.caretRight, onTap: _extent((p) => p.pixels < p.maxScrollExtent) ? () => _by(_tileWidth * 4) : null),
           const SizedBox(width: AppStyle.pagePadding - 12),
         ]),
       );
@@ -607,7 +608,7 @@ class _RailTile extends StatelessWidget {
       message: onRemove == null ? topic.label : tr('{0}（右键或长按删除）', [topic.label]),
       waitDuration: const Duration(milliseconds: 600),
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         onLongPress: onRemove,
         onSecondaryTap: onRemove,
@@ -615,18 +616,18 @@ class _RailTile extends StatelessWidget {
           height: 42,
           decoration: BoxDecoration(
             color: selected ? colors.primary.withValues(alpha: 0.10) : null,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Row(children: [
             AnimatedContainer(
-              duration: Motion.of(const Duration(milliseconds: 160)),
+              duration: Motion.of(Ease.fade),
               width: 3,
               height: selected ? 20 : 0,
               decoration: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(2)),
             ),
-            const SizedBox(width: 9),
+            const SizedBox(width: 8),
             Icon(topic.icon, size: 18, color: color),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Expanded(child: Text(
               topic.label,
               maxLines: 1,
@@ -672,16 +673,16 @@ class _TopicTile extends StatelessWidget {
         onSecondaryTap: onRemove,
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           AnimatedContainer(
-            duration: Motion.of(const Duration(milliseconds: 160)),
+            duration: Motion.of(Ease.fade),
             width: 44,
             height: 44,
             decoration: BoxDecoration(
               color: selected ? colors.primary : colors.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(topic.icon, size: 22, color: selected ? colors.onPrimary : colors.onSurfaceVariant),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             topic.label,
             maxLines: 1,

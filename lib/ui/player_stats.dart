@@ -70,7 +70,7 @@ class _PlayerStatsState extends State<PlayerStats> {
     final rows = statsRows(_values);
     return IgnorePointer(
       child: Container(
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
         decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.68), borderRadius: BorderRadius.circular(8)),
         child: DefaultTextStyle(
           style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.45, fontFeatures: [FontFeature.tabularFigures()]),

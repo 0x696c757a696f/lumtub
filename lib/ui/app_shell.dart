@@ -27,6 +27,7 @@ import '../l10n/l10n.dart';
 import 'frame_stats.dart';
 import 'motion.dart';
 import 'player_shortcuts.dart';
+import 'app_icons.dart';
 
 const appName = 'Lumtub';
 
@@ -50,12 +51,12 @@ class _AppShellState extends State<AppShell> {
   late final _frames = FrameStats.start(() => _controller.onWatchPage ? (_controller.mini ? 'mini player' : 'watch') : _controller.mode.name, causes: () => _controller.rebuildCauses);
 
   static final _destinations = [
-    (PageMode.home, Icons.home_outlined, Icons.home_rounded, tr('首页')),
-    (PageMode.explore, Icons.explore_outlined, Icons.explore_rounded, tr('探索')),
-    (PageMode.subscriptions, Icons.subscriptions_outlined, Icons.subscriptions_rounded, tr('订阅')),
-    (PageMode.history, Icons.history_outlined, Icons.history_rounded, tr('历史')),
-    (PageMode.playlists, Icons.video_library_outlined, Icons.video_library_rounded, tr('播放列表')),
-    (PageMode.downloads, Icons.download_for_offline_outlined, Icons.download_for_offline_rounded, tr('下载')),
+    (PageMode.home, AppIcons.house, AppIcons.houseFill, tr('首页')),
+    (PageMode.explore, AppIcons.compass, AppIcons.compassFill, tr('探索')),
+    (PageMode.subscriptions, AppIcons.stack, AppIcons.stackFill, tr('订阅')),
+    (PageMode.history, AppIcons.clockCounterClockwise, AppIcons.clockCounterClockwiseFill, tr('历史')),
+    (PageMode.playlists, AppIcons.filmReel, AppIcons.filmReelFill, tr('播放列表')),
+    (PageMode.downloads, AppIcons.arrowCircleDown, AppIcons.arrowCircleDownFill, tr('下载')),
   ];
 
   @override
@@ -178,7 +179,7 @@ class _AppShellState extends State<AppShell> {
                           ],
                         ),
                       Expanded(child: AnimatedSwitcher(
-                        duration: Motion.of(const Duration(milliseconds: 160)),
+                        duration: Motion.of(Ease.fade),
                         // Keyed per page so each page's list keeps its scroll position
                         // (PageStorage) when the user comes back to it.
                         child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _content())),
@@ -284,16 +285,16 @@ class _TopBar extends StatelessWidget {
             borderRadius: AppStyle.cardRadius,
             onTap: () => controller.navigate(PageMode.home),
             child: Padding(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(4),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Container(
                   width: 30,
                   height: 30,
-                  decoration: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(9)),
-                  child: Icon(Icons.play_arrow_rounded, color: colors.onPrimary, size: 22),
+                  decoration: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(8)),
+                  child: Icon(AppIcons.playFill, color: colors.onPrimary, size: 22),
                 ),
                 if (wide) ...[
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Text(appName, style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.3)),
                 ],
               ]),
@@ -310,20 +311,20 @@ class _TopBar extends StatelessWidget {
             isSelected: controller.incognito,
             style: controller.incognito ? IconButton.styleFrom(backgroundColor: colors.tertiaryContainer, foregroundColor: colors.onTertiaryContainer) : null,
             onPressed: () => controller.setIncognito(!controller.incognito),
-            icon: const Icon(Icons.visibility_off_outlined),
-            selectedIcon: const Icon(Icons.visibility_off_rounded),
+            icon: const Icon(AppIcons.eyeSlash),
+            selectedIcon: const Icon(AppIcons.eyeSlashFill),
           ),
           IconButton(
             tooltip: tr('检查组件更新'),
             onPressed: ready && !controller.checking ? controller.checkUpdates : null,
-            icon: controller.checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.system_update_alt_rounded),
+            icon: controller.checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.arrowLineDown),
           ),
           IconButton(
             tooltip: tr('设置'),
             isSelected: controller.mode == PageMode.settings && !controller.onWatchPage,
             onPressed: () => openSettings(context, controller),
-            icon: const Icon(Icons.settings_outlined),
-            selectedIcon: const Icon(Icons.settings_rounded),
+            icon: const Icon(AppIcons.gear),
+            selectedIcon: const Icon(AppIcons.gearFill),
           ),
           AccountButton(account: controller.account, onOpenSettings: () => openSettings(context, controller)),
         ]),
@@ -450,8 +451,8 @@ class _SearchFieldState extends State<_SearchField> {
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: tr('搜索 YouTube，或粘贴视频链接'),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                prefixIcon: const Icon(Icons.search_rounded),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                prefixIcon: const Icon(AppIcons.magnifyingGlass),
                 suffixIcon: controller.text.isEmpty
                     ? Padding(
                         padding: const EdgeInsets.only(right: 12),
@@ -459,7 +460,7 @@ class _SearchFieldState extends State<_SearchField> {
                       )
                     : IconButton(
                         tooltip: tr('清除'),
-                        icon: const Icon(Icons.close_rounded, size: 20),
+                        icon: const Icon(AppIcons.x, size: 20),
                         onPressed: () {
                           controller.clear();
                           setState(() {});
@@ -479,7 +480,7 @@ class _SearchFieldState extends State<_SearchField> {
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: _width, minWidth: _width, maxHeight: 420),
                     child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       shrinkWrap: true,
                       itemCount: options.length,
                       itemBuilder: (context, i) {
@@ -489,10 +490,10 @@ class _SearchFieldState extends State<_SearchField> {
                           dense: true,
                           selected: highlighted,
                           selectedTileColor: context.colors.surfaceContainerHighest,
-                          leading: Icon(option.recent ? Icons.history_rounded : Icons.search_rounded, size: 20),
+                          leading: Icon(option.recent ? AppIcons.clockCounterClockwiseFill : AppIcons.magnifyingGlass, size: 20),
                           title: Text(option.text, maxLines: 1, overflow: TextOverflow.ellipsis),
                           trailing: option.recent
-                              ? IconButton(tooltip: tr('删除这条记录'), icon: const Icon(Icons.close_rounded, size: 18), onPressed: () => _remove(option.text))
+                              ? IconButton(tooltip: tr('删除这条记录'), icon: const Icon(AppIcons.x, size: 18), onPressed: () => _remove(option.text))
                               : null,
                           onTap: () => onSelected(option),
                         );
@@ -516,15 +517,15 @@ class _SetupView extends StatelessWidget {
     final error = controller.error;
     if (error != null) {
       return StatusView(
-        icon: Icons.error_outline_rounded,
+        icon: AppIcons.warningCircle,
         error: true,
         title: tr('组件安装遇到问题'),
         message: error,
-        action: FilledButton.icon(onPressed: controller.retryInitialize, icon: const Icon(Icons.refresh_rounded), label: Text(tr('重试'))),
+        action: FilledButton.icon(onPressed: controller.retryInitialize, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('重试'))),
       );
     }
     return StatusView(
-      icon: Icons.download_for_offline_outlined,
+      icon: AppIcons.arrowCircleDown,
       title: tr('正在准备播放器组件'),
       message: tr('{0}\n首次运行需要从 GitHub 下载组件，以后可以离线启动。', [controller.status]),
       action: const SizedBox(width: 240, child: LinearProgressIndicator()),
@@ -549,7 +550,7 @@ class _StatusBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
       alignment: Alignment.centerLeft,
-      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 11)),
+      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 12)),
     );
   }
 }

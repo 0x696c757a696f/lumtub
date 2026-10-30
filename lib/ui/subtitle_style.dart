@@ -139,7 +139,7 @@ class _ColorDialogState extends State<_ColorDialog> {
               labelText: tr('自定义颜色'),
               hintText: '#RRGGBB',
               prefixIcon: Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 child: Container(width: 16, height: 16, decoration: BoxDecoration(color: Color(0xFF000000 | _color), shape: BoxShape.circle, border: Border.all(color: colors.outlineVariant))),
               ),
               prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -173,7 +173,7 @@ class SubtitlePreview extends StatelessWidget {
     return Container(
       height: 150,
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       alignment: Alignment.bottomCenter,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),

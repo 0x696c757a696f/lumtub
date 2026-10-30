@@ -6,6 +6,7 @@ import '../../player_settings.dart' show SubtitleLanguage;
 import '../../translation.dart';
 import '../../translation_services.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
+import '../app_icons.dart';
 import '../translatable.dart' show TranslationView;
 
 /// 设置 › 翻译与 AI: the service behind 翻译 and translated subtitles, and
@@ -31,13 +32,13 @@ List<Widget> _items(BuildContext context, AppController controller) {
   }
 
   Widget header(String text) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
         child: Text(text, style: Theme.of(context).textTheme.titleSmall!.copyWith(color: colors.primary)),
       );
   Widget tip(String text) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(Icons.info_outline, size: 16, color: colors.outline),
+          Icon(AppIcons.info, size: 16, color: colors.outline),
           const SizedBox(width: 8),
           Expanded(child: Text(text, style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5))),
         ]),
@@ -47,7 +48,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     return NormalItem(
       title: optional ? tr('API 密钥（可选）') : tr('API 密钥'),
       subtitle: saved.isEmpty ? tr('未填写') : tr('已填写（{0}）', [_masked(saved)]),
-      leading: const Icon(Icons.key_rounded),
+      leading: const Icon(AppIcons.keyFill),
       onTap: () async {
         final typed = await showDialog<String>(context: context, builder: (context) => _KeyDialog(title: tr('{0} 的 API 密钥', [of.label]), initial: saved));
         if (typed != null) await controller.saveTranslationKey(of, typed);
@@ -72,14 +73,14 @@ List<Widget> _items(BuildContext context, AppController controller) {
   return [
     PopupItem<TranslationService>(
       title: tr('翻译服务'),
-      leading: const Icon(Icons.g_translate_rounded),
+      leading: const Icon(AppIcons.translate),
       value: service,
       values: [for (final s in TranslationService.values) (s, s.label)],
       onSelected: (v) => saveConfig((c) => c.copyWith(service: v)),
     ),
     PopupItem<String>(
       title: tr('翻译目标语言'),
-      leading: const Icon(Icons.translate_rounded),
+      leading: const Icon(AppIcons.translate),
       value: prefs.translateLanguage,
       values: [('', tr('跟随系统语言（{0}）', [SubtitleLanguage.auto.translation.label])), for (final l in TranslationLanguage.all) (l.code, l.label)],
       onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(translateLanguage: v)),
@@ -89,7 +90,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
       subtitle: service == TranslationService.google
           ? tr('选了其它翻译服务后可用；默认使用 YouTube 自带的自动翻译')
           : tr('关闭时使用 YouTube 自带的自动翻译，YouTube 拒绝时才用这个服务'),
-      leading: const Icon(Icons.subtitles_outlined),
+      leading: const Icon(AppIcons.subtitles),
       value: prefs.subtitlesByService && service != TranslationService.google,
       enabled: service != TranslationService.google,
       onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(subtitlesByService: v)),
@@ -98,18 +99,18 @@ List<Widget> _items(BuildContext context, AppController controller) {
       header(tr('微软翻译')),
       keyItem(service, optional: true),
       if ((controller.translationKeys[service.name] ?? '').isNotEmpty)
-        textItem(tr('区域'), config.microsoftRegion, config.microsoftRegion.isEmpty ? tr('全局（未填写）') : config.microsoftRegion, Icons.public_rounded, tr('Azure 资源所在区域，如 eastasia'), (v) => saveConfig((c) => c.copyWith(microsoftRegion: v))),
+        textItem(tr('区域'), config.microsoftRegion, config.microsoftRegion.isEmpty ? tr('全局（未填写）') : config.microsoftRegion, AppIcons.globe, tr('Azure 资源所在区域，如 eastasia'), (v) => saveConfig((c) => c.copyWith(microsoftRegion: v))),
       tip(tr('不填密钥时使用 Microsoft Edge 网页翻译用的免费接口；填了 Azure 密钥则走正式接口。')),
     ],
     if (service == TranslationService.deeplx) ...[
       header('DeepLX'),
-      textItem(tr('服务器地址'), config.deeplxServer, config.deeplxServer.isEmpty ? tr('未填写') : config.deeplxServer, Icons.dns_outlined, tr('例如 http://localhost:1188/translate'), (v) => saveConfig((c) => c.copyWith(deeplxServer: v))),
+      textItem(tr('服务器地址'), config.deeplxServer, config.deeplxServer.isEmpty ? tr('未填写') : config.deeplxServer, AppIcons.hardDrives, tr('例如 http://localhost:1188/translate'), (v) => saveConfig((c) => c.copyWith(deeplxServer: v))),
       keyItem(service, optional: true),
       tip(tr('DeepLX 是开源的 DeepL 网页接口转发服务，可以自己部署；只使用你信任的服务器。')),
     ],
     if (service == TranslationService.baidu) ...[
       header(tr('百度翻译')),
-      textItem('APP ID', config.baiduAppId, config.baiduAppId.isEmpty ? tr('未填写') : config.baiduAppId, Icons.badge_outlined, tr('百度翻译开放平台的 APP ID'), (v) => saveConfig((c) => c.copyWith(baiduAppId: v))),
+      textItem('APP ID', config.baiduAppId, config.baiduAppId.isEmpty ? tr('未填写') : config.baiduAppId, AppIcons.identificationBadge, tr('百度翻译开放平台的 APP ID'), (v) => saveConfig((c) => c.copyWith(baiduAppId: v))),
       keyItem(service),
     ],
     if (service == TranslationService.deepl) ...[
@@ -119,7 +120,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     ],
     if (service == TranslationService.libre) ...[
       header('LibreTranslate'),
-      textItem(tr('服务器地址'), config.libreServer, config.libreServer.isEmpty ? tr('未填写') : config.libreServer, Icons.dns_outlined, tr('例如 https://libretranslate.com'), (v) => saveConfig((c) => c.copyWith(libreServer: v))),
+      textItem(tr('服务器地址'), config.libreServer, config.libreServer.isEmpty ? tr('未填写') : config.libreServer, AppIcons.hardDrives, tr('例如 https://libretranslate.com'), (v) => saveConfig((c) => c.copyWith(libreServer: v))),
       keyItem(service, optional: true),
     ],
     const SizedBox(height: 8),
@@ -131,20 +132,20 @@ List<Widget> _items(BuildContext context, AppController controller) {
     tip(tr('AI 翻译和 AI 总结共用这一个接口，支持 OpenAI 兼容的 /chat/completions。只在你使用 AI 翻译或点“AI 总结”时才发送文字。')),
       PopupItem<String>(
         title: tr('服务商'),
-        leading: const Icon(Icons.hub_outlined),
+        leading: const Icon(AppIcons.graph),
         value: ai.id,
         values: [for (final p in AiTranslator.aiPresets) (p.id, p.label)],
         // A preset's own address and model replace those typed for another.
         onSelected: (v) => saveConfig((c) => c.copyWith(aiPreset: v, aiBaseUrl: '', aiModel: '')),
       ),
-      textItem(tr('接口地址'), config.aiBaseUrl, config.effectiveAiBaseUrl.isEmpty ? tr('未填写') : config.effectiveAiBaseUrl, Icons.link_rounded, ai.baseUrl.isEmpty ? tr('OpenAI 兼容接口，如 https://example.com/v1') : ai.baseUrl, (v) => saveConfig((c) => c.copyWith(aiBaseUrl: v))),
+      textItem(tr('接口地址'), config.aiBaseUrl, config.effectiveAiBaseUrl.isEmpty ? tr('未填写') : config.effectiveAiBaseUrl, AppIcons.link, ai.baseUrl.isEmpty ? tr('OpenAI 兼容接口，如 https://example.com/v1') : ai.baseUrl, (v) => saveConfig((c) => c.copyWith(aiBaseUrl: v))),
       NormalItem(
         title: tr('模型'),
         subtitle: config.effectiveAiModel.isEmpty ? tr('未填写') : config.effectiveAiModel,
-        leading: const Icon(Icons.memory_rounded),
+        leading: const Icon(AppIcons.cpuFill),
         trailing: IconButton(
           tooltip: tr('从接口获取模型列表'),
-          icon: const Icon(Icons.list_alt_rounded),
+          icon: const Icon(AppIcons.listDashes),
           onPressed: () => _pickModel(context, controller, (v) => saveConfig((c) => c.copyWith(aiModel: v))),
         ),
         onTap: () async {
@@ -165,7 +166,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
       header(tr('AI 翻译')),
       PopupItem<String>(
         title: tr('提示词'),
-        leading: const Icon(Icons.edit_note_rounded),
+        leading: const Icon(AppIcons.notePencil),
         value: config.promptPreset,
         values: [for (final p in AiTranslator.promptPresets) (p.id, p.label), ('custom', tr('自定义'))],
         onSelected: (v) => saveConfig((c) => c.copyWith(promptPreset: v)),
@@ -175,14 +176,14 @@ List<Widget> _items(BuildContext context, AppController controller) {
           tr('自定义提示词'),
           config.customPrompt.isEmpty ? AiTranslator.promptPresets.first.text : config.customPrompt,
           config.customPrompt.isEmpty ? tr('未填写，使用“{0}”', [AiTranslator.promptPresets.first.label]) : config.customPrompt,
-          Icons.notes_rounded,
+          AppIcons.notepad,
           '',
           (v) => saveConfig((c) => c.copyWith(customPrompt: v)),
           maxLines: 10,
         ),
       PopupItem<String>(
         title: tr('翻译风格'),
-        leading: const Icon(Icons.style_outlined),
+        leading: const Icon(AppIcons.cards),
         value: AiTone.byId(config.aiTone).id,
         values: [for (final t in AiTone.all) (t.id, t.label)],
         onSelected: (v) => saveConfig((c) => c.copyWith(aiTone: v)),
@@ -191,7 +192,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
         tr('术语表'),
         config.aiGlossary,
         config.aiGlossary.trim().isEmpty ? tr('未填写') : tr('{0} 条', [config.aiGlossary.split('\n').where((l) => l.contains('=')).length]),
-        Icons.menu_book_outlined,
+        AppIcons.bookOpen,
         tr('每行一条：原文=译文，如 Lumtub=Lumtub'),
         (v) => saveConfig((c) => c.copyWith(aiGlossary: v)),
         maxLines: 8,
@@ -199,13 +200,13 @@ List<Widget> _items(BuildContext context, AppController controller) {
       NormalItem(
         title: tr('温度'),
         subtitle: tr('{0}（越低越稳定，越高越灵活）', [config.aiTemperature.toStringAsFixed(1)]),
-        leading: const Icon(Icons.thermostat_rounded),
+        leading: const Icon(AppIcons.thermometer),
         onTap: () => pickWithSlider(context, title: tr('温度'), value: config.aiTemperature, min: 0, max: 1.5, divisions: 15, precise: 1, onSelected: (v) => saveConfig((c) => c.copyWith(aiTemperature: v))),
       ),
       NormalItem(
         title: tr('字幕上下文'),
         subtitle: config.aiContext == 0 ? tr('关闭') : tr('带上前 {0} 句，人名和语气更连贯', [config.aiContext]),
-        leading: const Icon(Icons.format_list_numbered_rounded),
+        leading: const Icon(AppIcons.listNumbers),
         onTap: () => pickWithSlider(context, title: tr('字幕上下文'), value: config.aiContext.toDouble(), min: 0, max: 10, divisions: 10, suffix: tr(' 句'), onSelected: (v) => saveConfig((c) => c.copyWith(aiContext: v.round()))),
       ),
       tip(tr('使用 OpenAI 兼容的 /chat/completions 接口。提示词里 {target} 换成目标语言，{lines} 换成行数；字幕按行翻译，返回的行数不对时会重试一次。')),
@@ -215,14 +216,14 @@ List<Widget> _items(BuildContext context, AppController controller) {
     tip(tr('视频没有字幕时，可以把音频发给语音识别服务生成带时间轴的字幕，播放和 AI 总结都能用。只在你点“用语音识别生成字幕”时才上传这个视频的音频，结果保存在本机，下次不再上传。')),
     PopupItem<String>(
       title: tr('语音识别服务'),
-      leading: const Icon(Icons.graphic_eq_rounded),
+      leading: const Icon(AppIcons.waveform),
       value: config.speech.id,
       values: [for (final p in SpeechPreset.all) (p.id, tr(p.label))],
       onSelected: (v) => saveConfig((c) => c.copyWith(speechPreset: v, speechBaseUrl: '', speechModel: '')),
     ),
-    textItem(tr('接口地址'), config.speechBaseUrl, config.effectiveSpeechBaseUrl.isEmpty ? tr('未填写') : config.effectiveSpeechBaseUrl, Icons.link_rounded,
+    textItem(tr('接口地址'), config.speechBaseUrl, config.effectiveSpeechBaseUrl.isEmpty ? tr('未填写') : config.effectiveSpeechBaseUrl, AppIcons.link,
         config.speech.baseUrl.isEmpty ? tr('OpenAI 兼容接口，如 http://localhost:8000/v1') : config.speech.baseUrl, (v) => saveConfig((c) => c.copyWith(speechBaseUrl: v))),
-    textItem(tr('模型'), config.speechModel, config.effectiveSpeechModel.isEmpty ? tr('未填写') : config.effectiveSpeechModel, Icons.memory_rounded,
+    textItem(tr('模型'), config.speechModel, config.effectiveSpeechModel.isEmpty ? tr('未填写') : config.effectiveSpeechModel, AppIcons.cpuFill,
         config.speech.model, (v) => saveConfig((c) => c.copyWith(speechModel: v))),
     Builder(builder: (context) {
       final own = controller.translationKeys['speech'] ?? '';
@@ -230,7 +231,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
       return NormalItem(
         title: config.speech.id == 'custom' ? tr('API 密钥（可选）') : tr('API 密钥'),
         subtitle: own.isNotEmpty ? tr('已填写（{0}）', [_masked(own)]) : shared ? tr('使用 AI 接口的密钥') : tr('未填写'),
-        leading: const Icon(Icons.key_rounded),
+        leading: const Icon(AppIcons.keyFill),
         onTap: () async {
           final typed = await showDialog<String>(context: context, builder: (context) => _KeyDialog(title: tr('语音识别的 API 密钥'), initial: own));
           if (typed != null) await controller.saveApiKey('speech', typed);
@@ -243,13 +244,13 @@ List<Widget> _items(BuildContext context, AppController controller) {
     SwitchItem(
       title: tr('双语对照'),
       subtitle: tr('评论、简介和动态的译文和原文一起显示；关闭时译文替换原文'),
-      leading: const Icon(Icons.vertical_split_outlined),
+      leading: const Icon(AppIcons.columns),
       value: prefs.bilingualTranslation,
       onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(bilingualTranslation: v)),
     ),
     PopupItem<TranslationStyle>(
       title: tr('译文样式'),
-      leading: const Icon(Icons.format_paint_outlined),
+      leading: const Icon(AppIcons.paintRoller),
       value: prefs.translationStyle,
       values: [for (final v in TranslationStyle.values) (v, v.label)],
       enabled: prefs.bilingualTranslation,
@@ -257,7 +258,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     ),
     SwitchItem(
       title: tr('译文在上方'),
-      leading: const Icon(Icons.swap_vert_rounded),
+      leading: const Icon(AppIcons.arrowsDownUp),
       value: prefs.translationFirst,
       enabled: prefs.bilingualTranslation,
       onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(translationFirst: v)),
@@ -265,7 +266,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     SwitchItem(
       title: tr('跳过已是目标语言的内容'),
       subtitle: tr('按文字判断，中日韩俄等语言比较准；拉丁字母的语言只认得英语'),
-      leading: const Icon(Icons.skip_next_outlined),
+      leading: const Icon(AppIcons.skipForward),
       value: prefs.skipSameLanguage,
       onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(skipSameLanguage: v)),
     ),
@@ -328,7 +329,7 @@ class _TestButtonState extends State<_TestButton> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       FilledButton.tonalIcon(
         onPressed: _testing ? null : _test,
-        icon: _testing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.play_arrow_rounded),
+        icon: _testing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.playFill),
         label: Text(widget.ai ? tr('测试 AI 接口') : tr('测试翻译')),
       ),
       if (_result != null)
@@ -374,7 +375,7 @@ class _KeyDialogState extends State<_KeyDialog> {
               hintText: tr('粘贴密钥'),
               suffixIcon: IconButton(
                 tooltip: _shown ? tr('隐藏') : tr('显示'),
-                icon: Icon(_shown ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                icon: Icon(_shown ? AppIcons.eyeSlash : AppIcons.eye),
                 onPressed: () => setState(() => _shown = !_shown),
               ),
             ),
@@ -425,14 +426,14 @@ class _StylePreview extends StatelessWidget {
     final translated = Text(tr('这个视频讲解了新引擎的工作原理。'));
     final translation = TranslationView(style: style, child: translated);
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: colors.surfaceContainerLow, borderRadius: BorderRadius.circular(12)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         if (!both) translated
         else ...[
-          if (first) ...[translation, const SizedBox(height: 6)],
+          if (first) ...[translation, const SizedBox(height: 4)],
           original,
-          if (!first) ...[const SizedBox(height: 6), translation],
+          if (!first) ...[const SizedBox(height: 4), translation],
         ],
       ]),
     );

@@ -23,6 +23,7 @@ import 'video_box.dart';
 import '../widgets/video_progress_bar.dart';
 import 'motion.dart';
 import '../widgets/position_ticks.dart';
+import 'app_icons.dart';
 
 /// The corners the card snaps to.
 enum MiniCorner { topLeft, topRight, bottomLeft, bottomRight }
@@ -155,8 +156,8 @@ class _MiniPlayerState extends State<MiniPlayer> {
       final offset = dragging ?? miniPosition(_corner, area, size);
       return Stack(children: [
         AnimatedPositioned(
-          duration: dragging == null ? Motion.of(const Duration(milliseconds: 180)) : Duration.zero,
-          curve: Curves.easeOut,
+          duration: dragging == null ? Motion.of(Ease.fade) : Duration.zero,
+          curve: Ease.curve,
           left: offset.dx,
           top: offset.dy,
           width: size.width,
@@ -179,7 +180,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
       child: Material(
         color: Colors.black,
         elevation: 8,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         clipBehavior: Clip.antiAlias,
         child: Stack(fit: StackFit.expand, children: [
           RepaintBoundary(child: _video(context)),
@@ -206,7 +207,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
             ignoring: !_hovering,
             child: AnimatedOpacity(
               opacity: _hovering ? 1 : 0,
-              duration: Motion.of(const Duration(milliseconds: 150)),
+              duration: Motion.of(Ease.fade),
               onEnd: () {
                 if (!_hovering && mounted) setState(() => _controlsBuilt = false);
               },
@@ -260,8 +261,8 @@ class _Controls extends StatelessWidget {
         Row(children: [
           const SizedBox(width: 8),
           Expanded(child: IgnorePointer(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12)))),
-          _button(tr('展开到播放页'), Icons.open_in_full_rounded, controller.expandMini, 18),
-          _button(tr('关闭小窗并停止播放'), Icons.close_rounded, controller.stopWatching, 18),
+          _button(tr('展开到播放页'), AppIcons.arrowsOutSimple, controller.expandMini, 18),
+          _button(tr('关闭小窗并停止播放'), AppIcons.x, controller.stopWatching, 18),
         ]),
       ]),
       Expanded(
@@ -271,7 +272,7 @@ class _Controls extends StatelessWidget {
             initialData: player.state.playing,
             builder: (context, snapshot) => _button(
               tr('播放/暂停 (空格)'),
-              snapshot.data == true ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
+              snapshot.data == true ? AppIcons.pauseCircle : AppIcons.playCircleFill,
               () => unawaited(player.playOrPause()),
               40,
             ),
@@ -280,7 +281,7 @@ class _Controls extends StatelessWidget {
       ),
       Container(
         color: Colors.black.withValues(alpha: .70),
-        padding: const EdgeInsets.fromLTRB(6, 0, 6, 2),
+        padding: const EdgeInsets.fromLTRB(4, 0, 4, 2),
         child: StreamBuilder<Duration>(
           stream: coarsePosition(player),
           initialData: player.state.position,

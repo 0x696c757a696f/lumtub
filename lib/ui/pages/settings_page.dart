@@ -15,6 +15,7 @@ import '../../widgets/pilinara_settings_tiles.dart';
 import '../theme.dart';
 import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
+import '../app_icons.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.controller, this.initial = SettingsCategory.account});
@@ -71,11 +72,11 @@ class _SettingsPageState extends State<SettingsPage> {
             filled: true,
             fillColor: theme.colorScheme.onInverseSurface,
             hintText: tr('搜索设置'),
-            prefixIcon: const Icon(Icons.search_rounded, size: 20),
+            prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20),
             suffixIcon: searching
                 ? IconButton(
                     tooltip: tr('清除'),
-                    icon: const Icon(Icons.close_rounded, size: 18),
+                    icon: const Icon(AppIcons.x, size: 18),
                     onPressed: () => setState(() {
                       _search.clear();
                       _query = '';
@@ -98,7 +99,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _tile(context, SettingsCategory.account, wide: wide),
         if (_controller.account?.signedIn ?? false)
           ListTile(
-            leading: const Icon(Icons.logout_outlined),
+            leading: const Icon(AppIcons.signOut),
             title: Text(tr('退出登录'), style: theme.textTheme.titleMedium),
             onTap: () async {
               if (await confirmDialog(context, title: tr('退出登录？'), content: tr('本机保存的 Google 登录凭据会被删除，订阅和播放列表保留在本机。'), confirm: tr('退出登录'))) {

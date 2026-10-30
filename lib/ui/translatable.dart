@@ -7,6 +7,7 @@ import '../l10n/l10n.dart';
 import '../language_guess.dart';
 import '../translation.dart';
 import 'theme.dart';
+import 'app_icons.dart';
 
 /// [builder]'s content for [text], with a 翻译 button under it. Tapping it
 /// translates [text] into the language chosen in the settings and shows the
@@ -86,16 +87,16 @@ class _TranslatableState extends State<Translatable> {
     final both = prefs.bilingualTranslation;
     final translation = _showing && both ? TranslationView(style: prefs.translationStyle, child: widget.builder(context, _translation!)) : null;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (translation != null && prefs.translationFirst) ...[translation, const SizedBox(height: 6)],
+      if (translation != null && prefs.translationFirst) ...[translation, const SizedBox(height: 4)],
       widget.builder(context, _showing && !both ? _translation! : widget.text),
-      if (translation != null && !prefs.translationFirst) ...[const SizedBox(height: 6), translation],
+      if (translation != null && !prefs.translationFirst) ...[const SizedBox(height: 4), translation],
       Padding(
         padding: widget.padding,
         child: Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
           TextButton.icon(
-            style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 6), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 4), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             onPressed: _loading ? null : _toggle,
-            icon: _loading ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.translate_rounded, size: 16),
+            icon: _loading ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.translate, size: 16),
             label: Text(_showing ? (both ? tr('隐藏译文') : tr('显示原文')) : tr('翻译'), style: const TextStyle(fontSize: 12)),
           ),
           if (_error != null) Text(_error!, style: TextStyle(color: colors.error, fontSize: 12)),
@@ -128,7 +129,7 @@ class _TranslationViewState extends State<TranslationView> {
     switch (widget.style) {
       case TranslationStyle.quote:
         return Container(
-          padding: const EdgeInsets.only(left: 10),
+          padding: const EdgeInsets.only(left: 8),
           decoration: BoxDecoration(border: Border(left: BorderSide(color: colors.primary.withValues(alpha: 0.6), width: 2))),
           child: child,
         );

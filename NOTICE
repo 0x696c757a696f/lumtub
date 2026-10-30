@@ -17,3 +17,7 @@ Noto Sans CJK SC (assets/fonts, from Google Fonts' Noto Sans SC build via
 the @expo-google-fonts/noto-sans-sc 0.4.4 package) is
 Copyright 2014-2021 Adobe, licensed under the SIL Open Font License 1.1
 (assets/fonts/OFL.txt).
+
+The Phosphor icon fonts (assets/fonts/phosphor, from the phosphor_flutter
+2.1.0 package) are Copyright 2020-2021 Phosphor Icons, licensed under the
+MIT License (assets/fonts/phosphor/LICENSE).

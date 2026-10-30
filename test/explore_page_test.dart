@@ -13,6 +13,7 @@ import 'package:lumtub/recommendations.dart';
 import 'package:lumtub/search_options.dart';
 import 'package:lumtub/state_media.dart';
 import 'package:lumtub/ui/pages/explore_page.dart';
+import 'package:lumtub/ui/app_icons.dart';
 
 /// Narrower than [ExplorePage.wideLayout], so zones are in a row on top.
 Future<AppController> _open(WidgetTester tester, {double width = 950}) async {
@@ -40,7 +41,7 @@ Future<void> _reveal(WidgetTester tester, String label) async {
   // The arrows appear a frame after the strip is laid out.
   await tester.pump();
   for (var turn = 0; turn < 20 && !inView(); turn++) {
-    await tester.tap(find.byIcon(Icons.chevron_right_rounded));
+    await tester.tap(find.byIcon(AppIcons.caretRight));
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
@@ -273,7 +274,7 @@ void main() {
   });
 
   test('arranges zones in the saved order and leaves hidden ones out', () {
-    const topics = [ExploreTopic('A', Icons.abc, 'a'), ExploreTopic('B', Icons.abc, 'b'), ExploreTopic('C', Icons.abc, 'c'), ExploreTopic('D', Icons.abc, 'd')];
+    const topics = [ExploreTopic('A', AppIcons.textAa, 'a'), ExploreTopic('B', AppIcons.textAa, 'b'), ExploreTopic('C', AppIcons.textAa, 'c'), ExploreTopic('D', AppIcons.textAa, 'd')];
     expect(arrangeTopics(topics, ['C', 'A'], {'B'}).map((t) => t.label), ['C', 'A', 'D']);
     expect(arrangeTopics(topics, const [], {'A', 'B', 'C', 'D'}).map((t) => t.label), ['A']);
   });

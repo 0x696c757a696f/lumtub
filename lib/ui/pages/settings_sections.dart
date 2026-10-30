@@ -35,21 +35,22 @@ import 'settings_subpages.dart';
 import 'translation_settings_page.dart';
 import 'watch_stats_page.dart';
 import '../../l10n/l10n.dart';
+import '../app_icons.dart';
 
 /// The groups in the settings list, in display order, named and ordered
 /// like PiliNara's settings page. [account] and [about] are drawn at the
 /// bottom of the list without a subtitle, as PiliNara draws them.
 enum SettingsCategory {
-  privacy('隐私设置', '屏蔽频道、观看历史、播放进度', Icons.privacy_tip_outlined),
-  recommend('首页与搜索设置', '首页内容、关键词过滤、隐藏 Shorts 和看完的视频', Icons.explore_outlined),
-  subscriptions('订阅设置', '订阅动态的刷新和过滤', Icons.dynamic_feed_outlined),
-  video('视频设置', '画质、音质、解码、缓冲、音频输出等', Icons.video_settings_outlined),
-  play('播放设置', '倍速、自动播放、播放顺序、字幕、音量、全屏、快捷键等', Icons.touch_app_outlined),
-  style('外观设置', '主题、字体、页面过渡动画、导航栏、卡片宽度、封面质量等', Icons.style_outlined),
-  extra('其它设置', '空降助手、相关视频、视频简介、组件更新、下载和缓存位置等', Icons.extension_outlined),
-  backup('备份与恢复', '导入、导出和重置设置', Icons.settings_backup_restore_rounded),
-  account('YouTube 账号', 'Google 登录、电视码登录、同步订阅和播放列表', Icons.account_circle_outlined),
-  about('关于', '版本、日志、诊断信息、开源许可', Icons.info_outline);
+  privacy('隐私设置', '屏蔽频道、观看历史、播放进度', AppIcons.shieldWarning),
+  recommend('首页与搜索设置', '首页内容、关键词过滤、隐藏 Shorts 和看完的视频', AppIcons.compass),
+  subscriptions('订阅设置', '订阅动态的刷新和过滤', AppIcons.stackSimple),
+  video('视频设置', '画质、音质、解码、缓冲、音频输出等', AppIcons.gearSix),
+  play('播放设置', '倍速、自动播放、播放顺序、字幕、音量、全屏、快捷键等', AppIcons.handTap),
+  style('外观设置', '主题、字体、页面过渡动画、导航栏、卡片宽度、封面质量等', AppIcons.cards),
+  extra('其它设置', '空降助手、相关视频、视频简介、组件更新、下载和缓存位置等', AppIcons.puzzlePiece),
+  backup('备份与恢复', '导入、导出和重置设置', AppIcons.gearFine),
+  account('YouTube 账号', 'Google 登录、电视码登录、同步订阅和播放列表', AppIcons.userCircle),
+  about('关于', '版本、日志、诊断信息、开源许可', AppIcons.info);
 
   const SettingsCategory(this._title, this._subtitle, this.icon);
   final String _title;
@@ -128,33 +129,33 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               subtitle: prefs.blockedChannels.isEmpty && prefs.blockedChannelNames.isEmpty && prefs.unrecommendedChannels.isEmpty
                   ? tr('手动添加，或在视频卡片、频道页、播放页里选“屏蔽此频道”')
                   : tr('已屏蔽 {0} 个，不推荐 {1} 个', [prefs.blockedChannels.length + prefs.blockedChannelNames.length, prefs.unrecommendedChannels.length]),
-              leading: _icon(Icons.block_rounded),
+              leading: _icon(AppIcons.prohibitFill),
               onTap: () => openBlockedChannels(context, controller),
             ), subtitle: tr('黑名单 不推荐')),
         SettingEntry(tr('记录观看历史'), (context) => SwitchItem(
               title: tr('记录观看历史'),
               subtitle: tr('关闭后新看的视频不再出现在“历史”和首页，也不再记录搜索词'),
-              leading: _icon(Icons.history_rounded),
+              leading: _icon(AppIcons.clockCounterClockwiseFill),
               value: prefs.recordHistory,
               onChanged: (v) => savePrefs(prefs.copyWith(recordHistory: v)),
             )),
         SettingEntry(tr('观看统计'), (context) => NormalItem(
               title: tr('观看统计'),
               subtitle: tr('每天看了多久、最常看的频道，只存在本机'),
-              leading: _icon(Icons.insights_rounded),
+              leading: _icon(AppIcons.chartLineUp),
               onTap: () => openWatchStats(context, controller),
             ), subtitle: tr('观看时长')),
         SettingEntry(tr('记录播放进度'), (context) => SwitchItem(
               title: tr('记录播放进度'),
               subtitle: tr('用于继续播放和卡片上的进度条'),
-              leading: _icon(Icons.timelapse_rounded),
+              leading: _icon(AppIcons.hourglassMedium),
               value: prefs.recordProgress,
               onChanged: (v) => savePrefs(prefs.copyWith(recordProgress: v)),
             )),
         SettingEntry(tr('清空观看历史'), (context) => NormalItem(
               title: tr('清空观看历史'),
               subtitle: tr('{0} 条记录', [controller.history.length]),
-              leading: _icon(Icons.delete_sweep_outlined),
+              leading: _icon(AppIcons.trashSimple),
               onTap: () async {
                 if (await confirmDialog(context, title: tr('清空观看历史？'), content: tr('只删除本机的记录，不影响 YouTube 账号。'))) await controller.clearHistory();
               },
@@ -162,7 +163,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('清空搜索记录'), (context) => NormalItem(
               title: tr('清空搜索记录'),
               subtitle: tr('搜索框下方显示的最近搜索'),
-              leading: _icon(Icons.manage_search_rounded),
+              leading: _icon(AppIcons.listMagnifyingGlass),
               onTap: () async {
                 if (await confirmDialog(context, title: tr('清空搜索记录？'), content: tr('只删除本机保存的搜索词。'))) await controller.clearSearchHistory();
               },
@@ -170,7 +171,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('清空播放进度'), (context) => NormalItem(
               title: tr('清空播放进度'),
               subtitle: tr('所有视频都从头开始播放'),
-              leading: _icon(Icons.restart_alt_rounded),
+              leading: _icon(AppIcons.arrowCounterClockwise),
               onTap: () async {
                 if (await confirmDialog(context, title: tr('清空播放进度？'), content: tr('“继续观看”和卡片上的进度条会一并清空。'))) controller.clearProgress();
               },
@@ -178,20 +179,20 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('连接的服务器'), (context) => NormalItem(
               title: tr('连接的服务器'),
               subtitle: tr('Lumtub 会连接哪些服务器、各自知道什么，能关的都可以在这里关'),
-              leading: _icon(Icons.lan_outlined),
+              leading: _icon(AppIcons.network),
               onTap: () => openPrivacyConnections(context, controller),
             ), subtitle: tr('隐私 服务器 网络 连接 遥测 第三方')),
         SettingEntry(tr('无痕模式'), (context) => SwitchItem(
               title: tr('无痕模式'),
               subtitle: tr('不记录观看历史、搜索记录和播放进度，“为你推荐”也不学习；关掉 Lumtub 后自动恢复。快捷键 Ctrl+Shift+N'),
-              leading: _icon(Icons.visibility_off_outlined),
+              leading: _icon(AppIcons.eyeSlash),
               value: controller.incognito,
               onChanged: controller.setIncognito,
             ), subtitle: tr('隐身 不记录 incognito private')),
         SettingEntry(tr('清除本地数据'), (context) => NormalItem(
               title: tr('清除本地数据'),
               subtitle: tr('选择要从这台电脑上删除的内容，收藏、播放列表和关注不会被删除'),
-              leading: _icon(Icons.cleaning_services_outlined),
+              leading: _icon(AppIcons.broom),
               onTap: () => _clearLocalData(context, controller),
             ), subtitle: tr('清除 删除 数据 隐私 重置 卸载')),
       ],
@@ -199,35 +200,35 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('专注模式：隐藏首页内容'), (context) => SwitchItem(
               title: tr('专注模式：隐藏首页内容'),
               subtitle: tr('首页不显示任何视频，只留搜索'),
-              leading: _icon(Icons.self_improvement_rounded),
+              leading: _icon(AppIcons.personSimpleTaiChi),
               value: prefs.focusHideHome,
               onChanged: (v) => savePrefs(prefs.copyWith(focusHideHome: v)),
             ), subtitle: tr('专注模式')),
         SettingEntry(tr('专注模式：隐藏相关视频'), (context) => SwitchItem(
               title: tr('专注模式：隐藏相关视频'),
               subtitle: tr('播放页不显示、也不加载相关视频，播放队列照常；与“其它设置”里的“视频页显示相关视频”是同一个开关'),
-              leading: _icon(Icons.video_library_outlined),
+              leading: _icon(AppIcons.filmReel),
               value: !prefs.showRelated,
               onChanged: (v) => savePrefs(prefs.copyWith(showRelated: !v)),
             ), subtitle: tr('专注模式')),
         SettingEntry(tr('专注模式：隐藏评论'), (context) => SwitchItem(
               title: tr('专注模式：隐藏评论'),
               subtitle: tr('播放页不显示、也不加载评论'),
-              leading: _icon(Icons.comments_disabled_outlined),
+              leading: _icon(AppIcons.chatCircleSlash),
               value: prefs.focusHideComments,
               onChanged: (v) => savePrefs(prefs.copyWith(focusHideComments: v)),
             ), subtitle: tr('专注模式')),
         SettingEntry(tr('首页显示为你推荐'), (context) => SwitchItem(
               title: tr('首页显示“为你推荐”'),
               subtitle: tr('根据本机的观看历史、收藏和关注在本机计算，不上传'),
-              leading: _icon(Icons.auto_awesome_outlined),
+              leading: _icon(AppIcons.sparkle),
               value: prefs.homeShowRecommended,
               onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecommended: v)),
             )),
         SettingEntry(tr('自动刷新为你推荐'), (context) => SwitchItem(
               title: tr('自动刷新“为你推荐”'),
               subtitle: tr('启动时和列表超过 30 分钟后重新获取；关闭后保留上次的列表，点刷新按钮才更新'),
-              leading: _icon(Icons.autorenew_rounded),
+              leading: _icon(AppIcons.arrowClockwise),
               value: prefs.homeAutoRefresh,
               enabled: prefs.homeShowRecommended,
               onChanged: (v) => savePrefs(prefs.copyWith(homeAutoRefresh: v)),
@@ -235,14 +236,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('隐藏 Shorts 短视频'), (context) => SwitchItem(
               title: tr('隐藏所有 Shorts 短视频'),
               subtitle: tr('搜索、频道、首页和探索都不显示 Shorts'),
-              leading: _icon(Icons.smartphone_rounded),
+              leading: _icon(AppIcons.deviceMobile),
               value: prefs.hideShorts,
               onChanged: (v) => savePrefs(prefs.copyWith(hideShorts: v)),
             ), subtitle: tr('短视频 隐藏')),
         SettingEntry(tr('屏蔽 AI 生成的视频'), (context) => NormalItem(
               title: tr('屏蔽 AI 生成的视频'),
               subtitle: tr('当前：{0}。在首页、搜索、探索、相关视频和频道里生效，已订阅的频道不受影响；每个视频向 YouTube 查询一次 AI 标记。AI 频道列表来自 KillSlop（killslop.app，CC BY-SA 4.0）和 AiSList（CC BY-NC 4.0），每天下载更新', [labelOf(_aiFilterModes, prefs.aiFilter)]),
-              leading: _icon(Icons.smart_toy_outlined),
+              leading: _icon(AppIcons.robot),
               onTap: () => pickFromDialog<AiFilterMode>(context, title: tr('屏蔽 AI 生成的视频'), value: prefs.aiFilter, values: _aiFilterModes, onSelected: (v) => savePrefs(prefs.copyWith(aiFilter: v))),
             ), subtitle: tr('AI 人工智能 生成 合成 屏蔽')),
         SettingEntry(tr('推荐中的 Shorts 短视频'), (context) => NormalItem(
@@ -250,14 +251,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               subtitle: prefs.hideShorts
                   ? tr('已隐藏所有 Shorts')
                   : tr('当前：{0}；Shorts 按 YouTube Shorts 标记或短时长识别，和普通竖屏视频独立；只影响首页和探索的为你推荐', [labelOf(_feedLevels, prefs.feedShorts)]),
-              leading: _icon(Icons.smartphone_rounded),
+              leading: _icon(AppIcons.deviceMobile),
               enabled: !prefs.hideShorts,
               onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的 Shorts 短视频'), value: prefs.feedShorts, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedShorts: v))),
             ), subtitle: tr('短视频 减少 不推荐')),
         SettingEntry(tr('推荐中的竖屏视频'), (context) => NormalItem(
               title: tr('推荐中的竖屏视频'),
               subtitle: tr('当前：{0}；按已知画面尺寸的高大于宽识别，和 Shorts 独立；只影响首页和探索的为你推荐', [labelOf(_feedLevels, prefs.feedVertical)]),
-              leading: _icon(Icons.stay_current_portrait_rounded),
+              leading: _icon(AppIcons.deviceMobileSpeaker),
               onTap: () => pickFromDialog<FeedLevel>(context, title: tr('推荐中的竖屏视频'), value: prefs.feedVertical, values: _feedLevels, onSelected: (v) => savePrefs(prefs.copyWith(feedVertical: v))),
             ), subtitle: tr('竖屏 减少 不推荐')),
         SettingEntry(tr('屏蔽争议宗教团体'), (context) => NormalItem(
@@ -265,7 +266,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               subtitle: prefs.blockGroups
                   ? tr('已开启，屏蔽 {0} 个团体；输入完全正确的频道名仍能搜到', [blockedGroups.where(prefs.groupOn).length])
                   : tr('已关闭'),
-              leading: _icon(Icons.block_rounded),
+              leading: _icon(AppIcons.prohibitFill),
               onTap: () => openBlockedGroups(context, controller),
             ), subtitle: tr('法轮功 全能神 新天地 统一教 邪教 异端')),
         SettingEntry(tr('屏蔽官方宣传媒体'), (context) => NormalItem(
@@ -273,13 +274,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               subtitle: prefs.blockStateMedia
                   ? tr('已开启，屏蔽 {0} 类媒体', [stateMedia.where((g) => prefs.groupOn(g, media: true)).length])
                   : tr('已关闭'),
-              leading: _icon(Icons.campaign_outlined),
+              leading: _icon(AppIcons.megaphone),
               onTap: () => openStateMedia(context, controller),
             ), subtitle: tr('CGTN 央视 RT 政府 宣传 官方媒体')),
         SettingEntry(tr('清空不感兴趣'), (context) => NormalItem(
               title: tr('清空“不感兴趣”记录'),
               subtitle: tr('{0} 个视频', [controller.homeFeed?.notInterested.videos.length ?? 0]),
-              leading: _icon(Icons.thumb_down_off_alt_outlined),
+              leading: _icon(AppIcons.thumbsDown),
               onTap: () async {
                 if (await confirmDialog(context, title: tr('清空“不感兴趣”记录？'), content: tr('被标记的视频和频道会重新出现在推荐里。'))) await controller.clearNotInterested();
               },
@@ -287,20 +288,20 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('首页显示继续观看'), (context) => SwitchItem(
               title: tr('首页显示“继续观看”'),
               subtitle: tr('没看完的视频'),
-              leading: _icon(Icons.play_circle_outline_rounded),
+              leading: _icon(AppIcons.playCircle),
               value: prefs.homeShowContinue,
               onChanged: (v) => savePrefs(prefs.copyWith(homeShowContinue: v)),
             )),
         SettingEntry(tr('首页显示最近观看'), (context) => SwitchItem(
               title: tr('首页显示“最近观看”'),
-              leading: _icon(Icons.history_toggle_off_rounded),
+              leading: _icon(AppIcons.clockCountdown),
               value: prefs.homeShowRecent,
               onChanged: (v) => savePrefs(prefs.copyWith(homeShowRecent: v)),
             )),
         SettingEntry(tr('标题关键词过滤'), (context) => NormalItem(
               title: tr('标题关键词过滤'),
               subtitle: prefs.blockedKeywords.isEmpty ? tr('点击添加') : tr('{0} 个关键词', [prefs.blockedKeywords.length]),
-              leading: _icon(Icons.filter_alt_outlined),
+              leading: _icon(AppIcons.funnelSimple),
               onTap: () async {
                 final result = await showDialog<List<String>>(
                   context: context,
@@ -312,13 +313,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('最短视频时长'), (context) => NormalItem(
               title: tr('最短视频时长'),
               subtitle: tr('当前：{0}，更短的视频不显示', [labelOf(_durations, prefs.minDurationMinutes)]),
-              leading: _icon(Icons.timer_outlined),
+              leading: _icon(AppIcons.timer),
               onTap: () => pickFromDialog<int>(context, title: tr('最短视频时长'), value: prefs.minDurationMinutes, values: _durations, onSelected: (v) => savePrefs(prefs.copyWith(minDurationMinutes: v))),
             ), subtitle: tr('时长过滤')),
         SettingEntry(tr('隐藏已看完的视频'), (context) => SwitchItem(
               title: tr('隐藏已看完的视频'),
               subtitle: tr('根据本机的播放进度判断'),
-              leading: _icon(Icons.visibility_off_outlined),
+              leading: _icon(AppIcons.eyeSlash),
               value: prefs.hideWatched,
               onChanged: (v) => savePrefs(prefs.copyWith(hideWatched: v)),
             )),
@@ -327,28 +328,28 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('进入订阅页时自动刷新'), (context) => SwitchItem(
               title: tr('进入订阅页时自动刷新'),
               subtitle: tr('关闭后只在点击刷新按钮时更新'),
-              leading: _icon(Icons.sync_rounded),
+              leading: _icon(AppIcons.arrowsCounterClockwise),
               value: prefs.feedAutoRefresh,
               onChanged: (v) => savePrefs(prefs.copyWith(feedAutoRefresh: v)),
             )),
         SettingEntry(tr('自动刷新间隔'), (context) => NormalItem(
               title: tr('自动刷新间隔'),
               subtitle: tr('当前：{0}，间隔内再次进入不重新加载', [labelOf(_feedIntervals, prefs.feedRefreshMinutes)]),
-              leading: _icon(Icons.update_rounded),
+              leading: _icon(AppIcons.clockClockwise),
               enabled: prefs.feedAutoRefresh,
               onTap: () => pickFromDialog<int>(context, title: tr('自动刷新间隔'), value: prefs.feedRefreshMinutes, values: _feedIntervals, onSelected: (v) => savePrefs(prefs.copyWith(feedRefreshMinutes: v))),
             )),
         SettingEntry(tr('订阅动态也应用过滤'), (context) => SwitchItem(
               title: tr('订阅动态也应用过滤'),
               subtitle: tr('关键词、Shorts、时长和看完的视频；屏蔽的频道总是隐藏'),
-              leading: _icon(Icons.filter_list_rounded),
+              leading: _icon(AppIcons.funnel),
               value: prefs.filterSubscriptions,
               onChanged: (v) => savePrefs(prefs.copyWith(filterSubscriptions: v)),
             )),
         SettingEntry(tr('立即刷新订阅动态'), (context) => NormalItem(
               title: tr('立即刷新订阅动态'),
               subtitle: tr('已关注 {0} 个频道', [controller.library?.channels.length ?? 0]),
-              leading: _icon(Icons.refresh_rounded),
+              leading: _icon(AppIcons.arrowsClockwise),
               onTap: () => controller.library?.refreshFeed(force: true),
             )),
       ],
@@ -356,14 +357,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('开启硬解'), (context) => SwitchItem(
               title: tr('开启硬解'),
               subtitle: tr('以较低功耗播放视频，若异常卡死请关闭'),
-              leading: _icon(Icons.memory_outlined),
+              leading: _icon(AppIcons.cpu),
               value: hardware,
               onChanged: (value) => save(settings.copyWith(hwdec: value ? 'auto-safe' : 'no')),
             ), subtitle: tr('硬件解码 hwdec')),
         SettingEntry(tr('硬解模式'), (context) => NormalItem(
               title: tr('硬解模式'),
               subtitle: hardware ? tr('当前：{0}（此项即 mpv 的 --hwdec，按顺序尝试）', [settings.hwdec]) : tr('已关闭硬解'),
-              leading: _icon(Icons.developer_board_outlined),
+              leading: _icon(AppIcons.circuitry),
               enabled: hardware,
               onTap: () async {
                 final result = await showDialog<List<String>>(
@@ -380,7 +381,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('硬解编码'), (context) => NormalItem(
               title: tr('硬解编码'),
               subtitle: tr('当前：{0}（此项即 mpv 的 --hwdec-codecs）', [settings.hwdecCodecs]),
-              leading: _icon(Icons.video_file_outlined),
+              leading: _icon(AppIcons.fileVideo),
               enabled: hardware,
               onTap: () async {
                 final result = await showDialog<List<String>>(
@@ -400,14 +401,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('D3D11VA 零拷贝'), (context) => SwitchItem(
               title: tr('D3D11VA 零拷贝'),
               subtitle: tr('此项即 mpv 的 --d3d11va-zero-copy，只对 d3d11va 有效；其他解码器选不带 -copy 的模式即为零拷贝'),
-              leading: _icon(Icons.bolt_outlined),
+              leading: _icon(AppIcons.lightning),
               enabled: hardware,
               value: settings.d3d11vaZeroCopy,
               onChanged: (v) => save(settings.copyWith(d3d11vaZeroCopy: v)),
             ), subtitle: 'd3d11va-zero-copy'),
         SettingEntry(tr('直接解码到显存'), (context) => PopupItem<String>(
               title: tr('直接解码到显存（vd-lavc-dr）'),
-              leading: _icon(Icons.memory_rounded),
+              leading: _icon(AppIcons.cpuFill),
               value: settings.directRendering,
               values: [('auto', tr('auto（默认）')), ('yes', 'yes'), ('no', 'no')],
               onSelected: (v) => save(settings.copyWith(directRendering: v)),
@@ -415,13 +416,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('默认画质'), (context) => NormalItem(
               title: tr('默认画质'),
               subtitle: tr('当前：{0}', [qualityLabel(settings.maxHeight)]),
-              leading: _icon(Icons.high_quality_outlined),
+              leading: _icon(AppIcons.sealCheck),
               onTap: () => pickFromDialog<int>(context, title: tr('默认画质'), value: settings.maxHeight, values: [for (final h in qualityHeights) (h, qualityLabel(h))], onSelected: (h) => controller.setMaxHeight(h, asDefault: true)),
             ), subtitle: tr('清晰度 分辨率')),
         SettingEntry(tr('播放策略'), (context) => NormalItem(
               title: tr('播放策略'),
               subtitle: '${settings.strategy.label}：${settings.strategy.description}',
-              leading: _icon(Icons.movie_filter_outlined),
+              leading: _icon(AppIcons.filmStrip),
               onTap: () => pickPlaybackStrategy(context, settings.strategy, (v) => save(settings.copyWith(strategy: v))),
             ), subtitle: tr('视频格式 编码 H.264 VP9 AV1 智能自动 画质优先 低资源占用')),
         for (final codec in VideoCodec.values)
@@ -430,20 +431,20 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 subtitle: codec == VideoCodec.h264 && !FormatPolicy.canDisableH264(settings)
                     ? h264NeededNote
                     : codec == VideoCodec.values.first ? disabledCodecsNote : null,
-                leading: _icon(Icons.block_outlined),
+                leading: _icon(AppIcons.prohibit),
                 value: settings.disabledCodecs.contains(codec),
                 enabled: codec != VideoCodec.h264 || FormatPolicy.canDisableH264(settings) || settings.disabledCodecs.contains(codec),
                 onChanged: (v) => toggleCodec(context, settings, codec, v, save),
               ), subtitle: tr('视频格式 禁用视频编码')),
         SettingEntry(tr('当前规则'), (context) => ListTile(
               dense: true,
-              leading: _icon(Icons.rule_rounded),
+              leading: _icon(AppIcons.checkSquare),
               title: Text(FormatPolicy.summary(settings), style: _note(context)),
             ), subtitle: tr('视频格式')),
         SettingEntry(tr('默认音质'), (context) => NormalItem(
               title: tr('默认音质'),
               subtitle: tr('当前：{0}', [settings.audioQuality.label]),
-              leading: _icon(Icons.music_note_outlined),
+              leading: _icon(AppIcons.musicNote),
               onTap: () => pickFromDialog<AudioQuality>(
                 context,
                 title: tr('默认音质'),
@@ -460,7 +461,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
           return NormalItem(
             title: tr('音频输出设备'),
             subtitle: tr('当前：{0}', [describe(settings.audioDevice)]),
-            leading: _icon(Icons.speaker_outlined),
+            leading: _icon(AppIcons.speakerHifi),
             onTap: () => pickFromDialog<String>(
               context,
               title: tr('音频输出设备'),
@@ -473,19 +474,19 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('音量均衡'), (context) => NormalItem(
               title: tr('音量均衡'),
               subtitle: tr('当前：{0}', [audioFilterPresets.where((p) => p.$1 == settings.audioFilter).map((p) => p.$2).firstOrNull ?? tr('自定义 {0}', [settings.audioFilter])]),
-              leading: _icon(Icons.equalizer_rounded),
+              leading: _icon(AppIcons.equalizer),
               onTap: () => _pickAudioFilter(context, controller),
             ), subtitle: tr('loudnorm dynaudnorm af 响度')),
         SettingEntry(tr('画面与音画同步调节'), (context) => NormalItem(
               title: tr('画面与音画同步调节'),
               subtitle: settings.picture.isEmpty && settings.audioDelayMs == 0 ? tr('亮度、对比度、饱和度、伽马、色调、音频延迟') : tr('已调整'),
-              leading: _icon(Icons.tune_rounded),
+              leading: _icon(AppIcons.slidersHorizontal),
               onTap: () => openPictureSettings(context, controller),
             ), subtitle: tr('亮度 对比度 饱和度 伽马 色调 音频延迟 audio-delay')),
         SettingEntry(tr('播放来源'), (context) => NormalItem(
               title: tr('播放来源'),
               subtitle: tr('当前：{0}{1}。Piped、Invidious 服务器替你从 YouTube 取视频，可避开限速，但它们会知道你看了哪个视频；失败、直播或开着字幕时直接连接 YouTube；YouTube 返回 429 时会自动试用它们', [settings.playbackSource.label, switch (settings.playbackSource) { PlaybackSource.pipedCustom => ' ${settings.pipedServer}', PlaybackSource.invidiousCustom => ' ${settings.invidiousServer}', _ => '' }]),
-              leading: _icon(Icons.dns_outlined),
+              leading: _icon(AppIcons.hardDrives),
               onTap: () => pickFromDialog<PlaybackSource>(
                 context,
                 title: tr('播放来源'),
@@ -500,13 +501,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('Piped 服务器'), (context) => NormalItem(
               title: tr('Piped 服务器'),
               subtitle: settings.playbackSource == PlaybackSource.pipedCustom ? tr('当前：{0}', [settings.pipedServer]) : tr('当前：自动选择最快的服务器。可测速、手动选择，列表每天自动更新'),
-              leading: _icon(Icons.speed_rounded),
+              leading: _icon(AppIcons.gauge),
               onTap: () => openRelayServers(context, controller, RelayKind.piped),
             ), subtitle: tr('Piped 服务器 测速 列表 更新 instance')),
         SettingEntry(tr('Invidious 实例'), (context) => NormalItem(
               title: tr('Invidious 实例'),
               subtitle: settings.playbackSource == PlaybackSource.invidiousCustom ? tr('当前：{0}', [settings.invidiousServer]) : tr('当前：自动选择最快的实例。可测速、手动选择，列表每天自动更新'),
-              leading: _icon(Icons.speed_rounded),
+              leading: _icon(AppIcons.gauge),
               onTap: () => openRelayServers(context, controller, RelayKind.invidious),
             ), subtitle: tr('Invidious 实例 测速 列表 更新 instance')),
         SettingEntry(tr('网络代理'), (context) {
@@ -515,7 +516,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
           return NormalItem(
             title: tr('网络代理'),
             subtitle: '${settings.proxyMode.label}。$now',
-            leading: _icon(Icons.vpn_lock_outlined),
+            leading: _icon(AppIcons.lockKey),
             onTap: () => pickFromDialog<ProxyMode>(
               context,
               title: tr('网络代理'),
@@ -531,7 +532,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('加密 DNS'), (context) => NormalItem(
               title: tr('加密 DNS'),
               subtitle: tr('当前：{0}。直连时用 DNS-over-HTTPS 查找网址，防止 DNS 被篡改；连不上时自动改用系统 DNS。开着代理时由代理解析，此项不起作用；和 Clash 的 TUN/fake-ip 模式一起用时请保持关闭', [DnsServer.label(settings.dnsServer, settings.dnsCustomUrl)]),
-              leading: _icon(Icons.dns_outlined),
+              leading: _icon(AppIcons.hardDrives),
               onTap: () => pickFromDialog<String>(
                 context,
                 title: tr('加密 DNS'),
@@ -557,25 +558,25 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('缓冲模式'), (context) => NormalItem(
               title: tr('缓冲模式'),
               subtitle: tr('当前：{0}。只使用内存，不写入磁盘', [labelOf(_cacheModes, settings.cacheMode)]),
-              leading: _icon(Icons.storage_outlined),
+              leading: _icon(AppIcons.database),
               onTap: () => pickFromDialog<String>(context, title: tr('缓冲模式'), value: settings.cacheMode, values: _cacheModes, onSelected: (value) => save(settings.copyWith(cacheMode: value))),
             ), subtitle: tr('网络缓存')),
         SettingEntry(tr('缓冲大小'), (context) => NormalItem(
               title: tr('缓冲大小'),
               subtitle: tr('当前：{0} MB，预读占用的内存上限', [settings.cacheMemoryMb]),
-              leading: _icon(Icons.sd_card_outlined),
+              leading: _icon(AppIcons.hardDrive),
               onTap: () => pickWithSlider(context, title: tr('缓冲大小'), value: settings.cacheMemoryMb.toDouble(), min: 16, max: 512, divisions: 31, suffix: ' MB', onSelected: (v) => save(settings.copyWith(cacheMemoryMb: v.round()))),
             ), subtitle: tr('内存上限')),
         SettingEntry(tr('缓冲时长'), (context) => NormalItem(
               title: tr('缓冲时长'),
               subtitle: tr('当前：{0} 秒，最多预读多久的视频', [settings.cacheSeconds]),
-              leading: _icon(Icons.timer_outlined),
+              leading: _icon(AppIcons.timer),
               onTap: () => pickWithSlider(context, title: tr('缓冲时长'), value: settings.cacheSeconds.toDouble(), min: 1, max: 300, divisions: 299, suffix: tr(' 秒'), onSelected: (v) => save(settings.copyWith(cacheSeconds: v.round()))),
             ), subtitle: tr('预读时间')),
         SettingEntry(tr('视频同步'), (context) => NormalItem(
               title: tr('视频同步'),
               subtitle: tr('当前：{0}，{1}（此项即 mpv 的 --video-sync）', [settings.videoSync.mpvValue, settings.videoSync.label]),
-              leading: _icon(Icons.sync_alt_rounded),
+              leading: _icon(AppIcons.arrowsLeftRight),
               onTap: () => pickFromDialog<VideoSync>(
                 context,
                 title: tr('视频同步'),
@@ -587,26 +588,26 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('自动同步'), (context) => NormalItem(
               title: tr('自动同步'),
               subtitle: tr('当前：{0}（此项即 mpv 的 --autosync，0 为关闭）', [settings.autosync == 0 ? tr('关闭') : settings.autosync]),
-              leading: _icon(Icons.sync_rounded),
+              leading: _icon(AppIcons.arrowsCounterClockwise),
               onTap: () => pickWithSlider(context, title: tr('自动同步'), value: settings.autosync.toDouble(), min: 0, max: 30, divisions: 30, suffix: '', onSelected: (v) => save(controller.settings.copyWith(autosync: v.round()))),
             ), subtitle: 'autosync'),
         SettingEntry(tr('视频缩放算法'), (context) => NormalItem(
               title: tr('视频缩放算法'),
               subtitle: tr('当前：{0}', [labelOf(_scaleModes, settings.scale)]),
-              leading: _icon(Icons.photo_size_select_large_rounded),
+              leading: _icon(AppIcons.imagesSquare),
               onTap: () => pickFromDialog<String>(context, title: tr('视频缩放算法'), value: settings.scale, values: _scaleModes, onSelected: (value) => save(settings.copyWith(scale: value))),
             ), subtitle: tr('scale 超分辨率')),
         SettingEntry(tr('色带消除'), (context) => SwitchItem(
               title: tr('色带消除'),
               subtitle: tr('减轻渐变中的色带，略增 GPU 负载'),
-              leading: _icon(Icons.gradient_rounded),
+              leading: _icon(AppIcons.gradient),
               value: settings.deband,
               onChanged: (value) => save(settings.copyWith(deband: value)),
             ), subtitle: 'deband'),
         SettingEntry(tr('帧插值'), (context) => SwitchItem(
               title: tr('帧插值'),
               subtitle: tr('让画面更平滑，会增加 GPU 负载。下一段视频生效'),
-              leading: _icon(Icons.animation_rounded),
+              leading: _icon(AppIcons.spiralFill),
               value: settings.interpolation,
               onChanged: (value) => save(settings.copyWith(interpolation: value)),
             ), subtitle: 'interpolation'),
@@ -616,7 +617,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
           return NormalItem(
             title: tr('自定义 mpv 参数'),
             subtitle: options.isEmpty ? tr('按 mpv.conf 格式填写，例如 d3d11va-zero-copy=yes') : tr('已设置 {0} 项{1}', [options.length, rejected.isEmpty ? '' : tr('，{0} 行无法使用', [rejected.length])]),
-            leading: _icon(Icons.code_rounded),
+            leading: _icon(AppIcons.code),
             onTap: () => _editMpvConf(context, controller),
           );
         }, subtitle: tr('mpv.conf 自定义参数')),
@@ -626,13 +627,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('倍速设置'), (context) => NormalItem(
               title: tr('倍速设置'),
               subtitle: tr('默认 {0}x，{1} 档可选', [trimSpeed(settings.defaultSpeed), settings.speeds.length]),
-              leading: _icon(Icons.speed_rounded),
+              leading: _icon(AppIcons.gauge),
               onTap: () => openPlaySpeed(context, controller),
             ), subtitle: tr('播放速度')),
         SettingEntry(tr('按频道记住倍速和音量'), (context) => SwitchItem(
               title: tr('按频道记住倍速和音量'),
               subtitle: tr('在某个频道的视频里调过的倍速和音量，下次播放这个频道时自动用上'),
-              leading: _icon(Icons.tune_rounded),
+              leading: _icon(AppIcons.slidersHorizontal),
               value: prefs.rememberChannelPlayback,
               onChanged: (v) {
                 // Off forgets what was kept, so it does not come back later.
@@ -643,13 +644,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('自动播放'), (context) => SwitchItem(
               title: tr('自动播放'),
               subtitle: tr('打开视频后立即开始播放'),
-              leading: _icon(Icons.play_arrow_rounded),
+              leading: _icon(AppIcons.playFill),
               value: prefs.autoPlay,
               onChanged: (v) => savePrefs(prefs.copyWith(autoPlay: v)),
             )),
         SettingEntry(tr('播放顺序'), (context) => PopupItem<PlayOrder>(
               title: tr('播放顺序'),
-              leading: _icon(Icons.repeat_rounded),
+              leading: _icon(AppIcons.repeat),
               value: settings.playOrder,
               values: _enumValues(PlayOrder.values, (o) => o.label),
               onSelected: controller.setPlayOrder,
@@ -657,153 +658,153 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('从上次位置继续播放'), (context) => SwitchItem(
               title: tr('从上次位置继续播放'),
               subtitle: tr('再次打开没看完的视频时跳到上次的位置'),
-              leading: _icon(Icons.history_rounded),
+              leading: _icon(AppIcons.clockCounterClockwiseFill),
               value: prefs.resumePlayback,
               onChanged: (v) => savePrefs(prefs.copyWith(resumePlayback: v)),
             ), subtitle: tr('续播 进度')),
         SettingEntry(tr('应用内小窗'), (context) => SwitchItem(
               title: tr('应用内小窗'),
               subtitle: tr('离开播放页时让视频继续在小窗里播放；关闭则停止播放'),
-              leading: _icon(Icons.picture_in_picture_rounded),
+              leading: _icon(AppIcons.pictureInpicture),
               value: prefs.miniPlayer,
               onChanged: (v) => savePrefs(prefs.copyWith(miniPlayer: v)),
             ), subtitle: tr('小窗 离开播放页 悬浮')),
         SettingEntry(tr('看完后从稍后观看移除'), (context) => SwitchItem(
               title: tr('看完后从稍后观看移除'),
               subtitle: tr('稍后观看里的视频播到结尾时自动移出列表'),
-              leading: _icon(Icons.watch_later_outlined),
+              leading: _icon(AppIcons.clock),
               value: prefs.watchLaterAutoRemove,
               onChanged: (v) => savePrefs(prefs.copyWith(watchLaterAutoRemove: v)),
             ), subtitle: tr('稍后观看 自动移除')),
         SettingEntry(tr('字幕设置'), (context) => NormalItem(
               title: tr('字幕设置'),
               subtitle: '${settings.subtitleMode.label} · ${settings.subtitleOriginal ? tr('视频原语言') : settings.subtitleLanguage.label} · ${settings.subtitleScale.toStringAsFixed(1)}×',
-              leading: _icon(Icons.subtitles_outlined),
+              leading: _icon(AppIcons.subtitles),
               onTap: () => openSubtitleSettings(context, controller),
             ), subtitle: tr('自动启用字幕 字幕语言 字幕大小')),
         SettingEntry(tr('播放器音量'), (context) => NormalItem(
               title: tr('播放器音量'),
               subtitle: tr('启动时的音量：{0}%', [settings.defaultVolume]),
-              leading: _icon(Icons.volume_up_outlined),
+              leading: _icon(AppIcons.speakerHigh),
               onTap: () => pickWithSlider(context, title: tr('播放器音量'), value: settings.defaultVolume.toDouble(), min: 0, max: 100, divisions: 20, suffix: '%', onSelected: (v) => save(settings.copyWith(defaultVolume: v.round()))),
             )),
         SettingEntry(tr('最高音量'), (context) => NormalItem(
               title: tr('最高音量'),
               subtitle: tr('当前：{0}，超过 100% 可放大声音较小的视频', [labelOf(_volumeMaxes, settings.volumeMax)]),
-              leading: _icon(Icons.campaign_outlined),
+              leading: _icon(AppIcons.megaphone),
               onTap: () => pickFromDialog<int>(context, title: tr('最高音量'), value: settings.volumeMax, values: _volumeMaxes, onSelected: (v) => save(settings.copyWith(volumeMax: v))),
             ), subtitle: tr('音量增强')),
         SettingEntry(tr('自动全屏'), (context) => SwitchItem(
               title: tr('自动全屏'),
               subtitle: tr('视频开始播放时进入全屏'),
-              leading: _icon(Icons.fullscreen_rounded),
+              leading: _icon(AppIcons.cornersOut),
               value: prefs.autoFullscreen,
               onChanged: (v) => savePrefs(prefs.copyWith(autoFullscreen: v)),
             )),
         SettingEntry(tr('播放时自动关灯'), (context) => SwitchItem(
               title: tr('播放时自动关灯'),
               subtitle: tr('视频播放时调暗视频以外的界面，暂停时恢复'),
-              leading: _icon(Icons.lightbulb_outline_rounded),
+              leading: _icon(AppIcons.lightbulb),
               value: prefs.autoLightsOff,
               onChanged: (v) => savePrefs(prefs.copyWith(autoLightsOff: v)),
             ), subtitle: tr('影院模式')),
         SettingEntry(tr('关灯暗度'), (context) => NormalItem(
               title: tr('关灯暗度'),
               subtitle: tr('关灯后视频以外变暗 {0}%', [prefs.lightsOffDim]),
-              leading: _icon(Icons.dark_mode_outlined),
+              leading: _icon(AppIcons.moon),
               onTap: () => pickWithSlider(context, title: tr('关灯暗度'), value: prefs.lightsOffDim.toDouble(), min: 50, max: 98, divisions: 48, suffix: '%', onSelected: (v) => savePrefs(prefs.copyWith(lightsOffDim: v.round()))),
             ), subtitle: tr('影院模式')),
         SettingEntry(tr('自动退出全屏'), (context) => SwitchItem(
               title: tr('自动退出全屏'),
               subtitle: tr('视频播放结束、没有下一个时退出全屏'),
-              leading: _icon(Icons.fullscreen_exit_rounded),
+              leading: _icon(AppIcons.cornersIn),
               value: prefs.exitFullscreenOnEnd,
               onChanged: (v) => savePrefs(prefs.copyWith(exitFullscreenOnEnd: v)),
             )),
         SettingEntry(tr('最小化时暂停'), (context) => SwitchItem(
               title: tr('最小化时暂停/还原时播放'),
-              leading: _icon(Icons.minimize_rounded),
+              leading: _icon(AppIcons.minus),
               value: prefs.pauseOnMinimize,
               onChanged: (v) => savePrefs(prefs.copyWith(pauseOnMinimize: v)),
             ), subtitle: tr('后台播放')),
         SettingEntry(tr('最小化时只听声音'), (context) => SwitchItem(
               title: tr('最小化时只听声音'),
               subtitle: tr('窗口最小化或收到托盘时不解码画面，还原后恢复'),
-              leading: _icon(Icons.headphones_outlined),
+              leading: _icon(AppIcons.headphones),
               value: prefs.audioOnlyInBackground,
               onChanged: (v) => savePrefs(prefs.copyWith(audioOnlyInBackground: v)),
             ), subtitle: tr('后台播放')),
         SettingEntry(tr('关闭时最小化到托盘'), (context) => SwitchItem(
               title: tr('关闭时最小化到托盘'),
               subtitle: tr('点关闭按钮时隐藏到托盘图标，继续播放；从托盘菜单退出'),
-              leading: _icon(Icons.call_to_action_outlined),
+              leading: _icon(AppIcons.layout),
               value: prefs.closeToTray,
               onChanged: (v) => savePrefs(prefs.copyWith(closeToTray: v)),
             ), subtitle: tr('托盘 后台播放')),
         SettingEntry(tr('延长播放控件显示时间'), (context) => NormalItem(
               title: tr('播放控件显示时间'),
               subtitle: tr('鼠标不动 {0} 后隐藏', [labelOf(_hideTimes, prefs.controlsHideSeconds)]),
-              leading: _icon(Icons.touch_app_outlined),
+              leading: _icon(AppIcons.handTap),
               onTap: () => pickFromDialog<int>(context, title: tr('播放控件显示时间'), value: prefs.controlsHideSeconds, values: _hideTimes, onSelected: (v) => savePrefs(prefs.copyWith(controlsHideSeconds: v))),
             ), subtitle: tr('控制栏 隐藏')),
         SettingEntry(tr('最多重放曲线'), (context) => SwitchItem(
               title: tr('进度条上方显示“最多重放”曲线'),
               subtitle: tr('热门视频才有，看哪一段被反复观看'),
-              leading: _icon(Icons.area_chart_outlined),
+              leading: _icon(AppIcons.chartBar),
               value: prefs.showHeatmap,
               onChanged: (v) => savePrefs(prefs.copyWith(showHeatmap: v)),
             ), subtitle: tr('热度 进度条 最多重放')),
         SettingEntry(tr('底部细进度条'), (context) => NormalItem(
               title: tr('底部细进度条'),
               subtitle: tr('当前：{0}；播放控件隐藏时，画面底部的一条细线', [prefs.progressLine.label]),
-              leading: _icon(Icons.linear_scale_rounded),
+              leading: _icon(AppIcons.lineSegment),
               onTap: () => pickFromDialog<ProgressLine>(context, title: tr('底部细进度条'), value: prefs.progressLine, values: [for (final v in ProgressLine.values) (v, v.label)], onSelected: (v) => savePrefs(prefs.copyWith(progressLine: v))),
             ), subtitle: tr('进度条 迷你 隐藏')),
         SettingEntry(tr('启用键盘控制'), (context) => SwitchItem(
               title: tr('启用键盘控制'),
               subtitle: tr('空格暂停、方向键快进和音量、F 全屏等'),
-              leading: _icon(Icons.keyboard_outlined),
+              leading: _icon(AppIcons.keyboard),
               value: prefs.keyboardShortcuts,
               onChanged: (v) => savePrefs(prefs.copyWith(keyboardShortcuts: v)),
             ), subtitle: tr('快捷键')),
         SettingEntry(tr('快进/快退时长'), (context) => NormalItem(
               title: tr('快进/快退时长'),
               subtitle: tr('← → 方向键：{0} 秒', [prefs.seekSeconds]),
-              leading: _icon(Icons.fast_forward_outlined),
+              leading: _icon(AppIcons.fastForward),
               enabled: prefs.keyboardShortcuts,
               onTap: () => pickWithSlider(context, title: tr('快进/快退时长'), value: prefs.seekSeconds.toDouble(), min: 1, max: 30, divisions: 29, suffix: tr(' 秒'), onSelected: (v) => savePrefs(prefs.copyWith(seekSeconds: v.round()))),
             ), subtitle: tr('方向键')),
         SettingEntry(tr('大步快进/快退时长'), (context) => NormalItem(
               title: tr('大步快进/快退时长'),
               subtitle: tr('J / L 键：{0} 秒', [prefs.longSeekSeconds]),
-              leading: _icon(Icons.double_arrow_rounded),
+              leading: _icon(AppIcons.caretDoubleRight),
               enabled: prefs.keyboardShortcuts,
               onTap: () => pickWithSlider(context, title: tr('大步快进/快退时长'), value: prefs.longSeekSeconds.toDouble(), min: 5, max: 120, divisions: 23, suffix: tr(' 秒'), onSelected: (v) => savePrefs(prefs.copyWith(longSeekSeconds: v.round()))),
             )),
         SettingEntry(tr('音量调节步长'), (context) => NormalItem(
               title: tr('音量调节步长'),
               subtitle: tr('↑ ↓ 方向键和滚轮：每次 {0}%', [prefs.volumeStep]),
-              leading: _icon(Icons.volume_down_outlined),
+              leading: _icon(AppIcons.speakerLow),
               onTap: () => pickWithSlider(context, title: tr('音量调节步长'), value: prefs.volumeStep.toDouble(), min: 1, max: 20, divisions: 19, suffix: '%', onSelected: (v) => savePrefs(prefs.copyWith(volumeStep: v.round()))),
             )),
         SettingEntry(tr('快捷键说明'), (context) => NormalItem(
               title: tr('快捷键说明'),
               subtitle: tr('查看所有播放器快捷键'),
-              leading: _icon(Icons.help_outline_rounded),
+              leading: _icon(AppIcons.question),
               onTap: () => showShortcutHelp(context, controller.preferences),
             )),
       ],
     SettingsCategory.style => [
         SettingEntry(tr('语言'), (context) => PopupItem<AppLanguage>(
               title: tr('语言'),
-              leading: _icon(Icons.translate_rounded),
+              leading: _icon(AppIcons.translate),
               value: appearance.language,
               values: [for (final l in AppLanguage.selectable) (l, l.label)],
               onSelected: (language) => changeLanguage(context, appearance.copyWith(language: language)),
             ), subtitle: 'Language 语言 English 简体中文'),
         SettingEntry(tr('主题模式'), (context) => PopupItem<ThemeMode>(
               title: tr('主题模式'),
-              leading: _icon(Icons.brightness_6_outlined),
+              leading: _icon(AppIcons.sunHorizon),
               value: appearance.themeMode,
               values: themeModes,
               onSelected: (mode) => saveLooks(appearance.copyWith(themeMode: mode)),
@@ -811,27 +812,27 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('纯黑主题'), (context) => SwitchItem(
               title: tr('纯黑主题'),
               subtitle: tr('深色模式使用纯黑背景'),
-              leading: _icon(Icons.dark_mode_outlined),
+              leading: _icon(AppIcons.moon),
               value: appearance.pureBlack,
               onChanged: (v) => saveLooks(appearance.copyWith(pureBlack: v)),
             ), subtitle: 'AMOLED'),
         SettingEntry(tr('应用主题'), (context) => NormalItem(
               title: tr('应用主题'),
               subtitle: tr('当前：{0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
-              leading: _icon(Icons.color_lens_outlined),
+              leading: _icon(AppIcons.eyedropper),
               trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
               onTap: () => openColorSelect(context, controller),
             ), subtitle: tr('主题色 颜色 调色板 动态取色')),
         SettingEntry(tr('App 字体设置'), (context) => NormalItem(
               title: tr('App 字体设置'),
               subtitle: tr('{0} · 字号 {1}%', [fontChoices.where((f) => f.$1 == appearance.fontFamily).map((f) => f.$2).firstOrNull ?? tr('系统默认'), (appearance.textScale * 100).round()]),
-              leading: _icon(Icons.text_fields_rounded),
+              leading: _icon(AppIcons.textbox),
               onTap: () => openFontSettings(context, controller),
             ), subtitle: tr('字号 字体大小')),
         SettingEntry(tr('页面过渡动画'), (context) => NormalItem(
               title: tr('页面过渡动画'),
               subtitle: tr('当前：{0}', [appearance.transition.label]),
-              leading: _icon(Icons.animation_outlined),
+              leading: _icon(AppIcons.spiral),
               onTap: () => pickFromDialog<PageTransition>(
                 context,
                 title: tr('页面过渡动画'),
@@ -846,7 +847,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 appearance.motion.label,
                 appearance.motion == MotionPreference.system ? (Motion.reduced ? tr('（系统已关闭动画）') : tr('（系统开着动画）')) : '',
               ]),
-              leading: _icon(Icons.motion_photos_off_outlined),
+              leading: _icon(AppIcons.videoCameraSlash),
               onTap: () => pickFromDialog<MotionPreference>(
                 context,
                 title: tr('减少动画'),
@@ -857,14 +858,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('动画 动效 reduce motion 无障碍')),
         SettingEntry(tr('导航栏样式'), (context) => PopupItem<NavigationStyle>(
               title: tr('导航栏样式'),
-              leading: _icon(Icons.view_sidebar_outlined),
+              leading: _icon(AppIcons.sidebar),
               value: appearance.navigation,
               values: _enumValues(NavigationStyle.values, (n) => n.label),
               onSelected: (v) => saveLooks(appearance.copyWith(navigation: v)),
             ), subtitle: tr('侧边栏 底栏')),
         SettingEntry(tr('默认启动页'), (context) => PopupItem<String>(
               title: tr('默认启动页'),
-              leading: _icon(Icons.home_outlined),
+              leading: _icon(AppIcons.house),
               value: prefs.startPage,
               values: startPages,
               onSelected: (v) => savePrefs(prefs.copyWith(startPage: v)),
@@ -872,13 +873,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('视频卡片宽度'), (context) => NormalItem(
               title: tr('视频卡片最小宽度'),
               subtitle: tr('当前：{0} 像素，越小每行的视频越多', [appearance.cardWidth.round()]),
-              leading: _icon(Icons.grid_view_rounded),
+              leading: _icon(AppIcons.gridFour),
               onTap: () => pickWithSlider(context, title: tr('视频卡片最小宽度'), value: appearance.cardWidth, min: 180, max: 420, divisions: 24, suffix: tr(' 像素'), onSelected: (v) => saveLooks(appearance.copyWith(cardWidth: v))),
             ), subtitle: tr('列宽 列数')),
         SettingEntry(tr('封面图片质量'), (context) => NormalItem(
               title: tr('封面图片质量'),
               subtitle: tr('当前：{0}', [appearance.thumbnailQuality.label]),
-              leading: _icon(Icons.image_outlined),
+              leading: _icon(AppIcons.image),
               onTap: () => pickFromDialog<ThumbnailQuality>(
                 context,
                 title: tr('封面图片质量'),
@@ -889,14 +890,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('缩略图')),
         SettingEntry(tr('视频播放页使用深色主题'), (context) => SwitchItem(
               title: tr('视频播放页使用深色主题'),
-              leading: _icon(Icons.contrast_rounded),
+              leading: _icon(AppIcons.circleHalf),
               value: appearance.darkWatchPage,
               onChanged: (v) => saveLooks(appearance.copyWith(darkWatchPage: v)),
             )),
         SettingEntry(tr('显示底部状态栏'), (context) => SwitchItem(
               title: tr('显示底部状态栏'),
               subtitle: tr('窗口底部的 libmpv 版本和状态信息'),
-              leading: _icon(Icons.horizontal_rule_rounded),
+              leading: _icon(AppIcons.lineSegment),
               value: appearance.showStatusBar,
               onChanged: (v) => saveLooks(appearance.copyWith(showStatusBar: v)),
             )),
@@ -905,7 +906,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('空降助手'), (context) => SwitchItem(
               title: tr('空降助手'),
               subtitle: settings.sponsorBlock ? tr('已开启 · 跳过 {0} 类片段，点击配置', [settings.sponsorCategories.length]) : tr('点击配置'),
-              leading: _icon(Icons.flight_takeoff_rounded),
+              leading: _icon(AppIcons.airplaneTakeoff),
               value: settings.sponsorBlock,
               onChanged: (v) => save(settings.copyWith(sponsorBlock: v)),
               onTap: () => openSponsorBlock(context, controller),
@@ -913,46 +914,46 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('显示踩数'), (context) => SwitchItem(
               title: tr('显示踩数'),
               subtitle: tr('用 Return YouTube Dislike 估算的踩数，显示在播放页；开启后会把正在看的视频 ID 发给它的服务器'),
-              leading: _icon(Icons.thumb_down_alt_outlined),
+              leading: _icon(AppIcons.thumbsDown),
               value: settings.returnDislike,
               onChanged: (v) => save(settings.copyWith(returnDislike: v)),
             ), subtitle: tr('Return YouTube Dislike 倒赞 点踩')),
         SettingEntry(tr('DeArrow 替换标题'), (context) => SwitchItem(
               title: tr('DeArrow 替换标题'),
               subtitle: tr('用 DeArrow 用户提交的标题替换标题党标题。和空降助手一样只发视频 ID 哈希的前几位，服务器不知道你在看什么'),
-              leading: _icon(Icons.title_rounded),
+              leading: _icon(AppIcons.textT),
               value: settings.deArrowTitles,
               onChanged: (v) => save(settings.copyWith(deArrowTitles: v)),
             ), subtitle: tr('DeArrow 标题党 标题 封面')),
         SettingEntry(tr('DeArrow 替换封面'), (context) => SwitchItem(
               title: tr('DeArrow 替换封面'),
               subtitle: tr('用 DeArrow 用户选的视频画面替换夸张封面。画面由它的服务器生成，开启后会把有替换封面的视频 ID 发给它'),
-              leading: _icon(Icons.image_outlined),
+              leading: _icon(AppIcons.image),
               value: settings.deArrowThumbnails,
               onChanged: (v) => save(settings.copyWith(deArrowThumbnails: v)),
             ), subtitle: tr('DeArrow 封面 缩略图')),
         SettingEntry(tr('视频页显示相关视频'), (context) => SwitchItem(
               title: tr('视频页显示相关视频'),
               subtitle: tr('按标题搜索得到；关闭后自动连播只播放队列'),
-              leading: _icon(Icons.video_library_outlined),
+              leading: _icon(AppIcons.filmReel),
               value: prefs.showRelated,
               onChanged: (v) => savePrefs(prefs.copyWith(showRelated: v)),
             )),
         SettingEntry(tr('默认展开视频简介'), (context) => SwitchItem(
               title: tr('默认展开视频简介'),
-              leading: _icon(Icons.notes_rounded),
+              leading: _icon(AppIcons.notepad),
               value: prefs.expandDescription,
               onChanged: (v) => savePrefs(prefs.copyWith(expandDescription: v)),
             )),
         SettingEntry(tr('翻译与 AI'), (context) => NormalItem(
               title: tr('翻译与 AI'),
               subtitle: tr('翻译：{0} · AI：{1}', [prefs.translation.service.label, controller.canSummarize ? prefs.translation.effectiveAiModel : tr('未设置')]),
-              leading: _icon(Icons.g_translate_rounded),
+              leading: _icon(AppIcons.translate),
               onTap: () => openTranslationSettings(context, controller),
             ), subtitle: '翻译服务 AI 总结 接口 模型 语音识别 Whisper Groq 没有字幕 DeepL 微软 LibreTranslate AI OpenAI DeepSeek Claude Gemini 通义千问 Ollama prompt 提示词 API 密钥'),
         SettingEntry(tr('翻译目标语言'), (context) => PopupItem<String>(
               title: tr('翻译目标语言'),
-              leading: _icon(Icons.translate_rounded),
+              leading: _icon(AppIcons.translate),
               value: prefs.translateLanguage,
               values: [('', tr('跟随系统语言（{0}）', [SubtitleLanguage.auto.translation.label])), for (final l in TranslationLanguage.all) (l.code, l.label)],
               onSelected: (v) => savePrefs(prefs.copyWith(translateLanguage: v)),
@@ -960,45 +961,45 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('自动检查组件更新'), (context) => SwitchItem(
               title: tr('自动检查组件更新'),
               subtitle: tr('每天检查一次 libmpv、yt-dlp 和 Deno'),
-              leading: _icon(Icons.system_update_alt_rounded),
+              leading: _icon(AppIcons.arrowLineDown),
               value: prefs.autoCheckUpdates,
               onChanged: (v) => savePrefs(prefs.copyWith(autoCheckUpdates: v)),
             )),
         SettingEntry(tr('自动更新 Lumtub'), (context) => SwitchItem(
               title: tr('自动更新 Lumtub'),
               subtitle: tr('在后台下载新版本，关闭 Lumtub 时安装，不打断使用'),
-              leading: _icon(Icons.browser_updated_rounded),
+              leading: _icon(AppIcons.monitorArrowUp),
               value: prefs.autoUpdateApp,
               onChanged: (v) => savePrefs(prefs.copyWith(autoUpdateApp: v)),
             )),
         SettingEntry(tr('组件管理'), (context) => NormalItem(
               title: tr('组件管理'),
               subtitle: 'libmpv ${controller.tools?.libmpv.current?.label ?? '内置'} · yt-dlp ${controller.tools?.ytDlpVersion ?? '未安装'}',
-              leading: _icon(Icons.extension_outlined),
+              leading: _icon(AppIcons.puzzlePiece),
               onTap: () => openComponents(context, controller),
             ), subtitle: tr('libmpv yt-dlp Deno 检查更新 回退')),
         SettingEntry(tr('缓存路径'), (context) => NormalItem(
               title: tr('缓存路径'),
               subtitle: settings.cachePath ?? controller.cacheRoot?.path ?? tr('正在准备…'),
-              leading: _icon(Icons.folder_outlined),
+              leading: _icon(AppIcons.folder),
               onTap: () => _changeCacheLocation(context, controller),
             ), subtitle: tr('缓存位置')),
         SettingEntry(tr('清理缓存'), (context) => NormalItem(
               title: tr('清理缓存'),
               subtitle: tr('已占用 {0}，只清理 Lumtub 创建的缩略图和临时文件', [formatBytes(controller.cacheBytes)]),
-              leading: _icon(Icons.cleaning_services_outlined),
+              leading: _icon(AppIcons.broom),
               onTap: controller.clearCache,
             ), subtitle: tr('缓存占用')),
         SettingEntry(tr('下载位置'), (context) => NormalItem(
               title: tr('下载位置'),
               subtitle: controller.downloads == null ? tr('正在准备…') : tr('{0}\n新的下载保存到这里，点击更改', [controller.downloads!.directory]),
-              leading: _icon(Icons.download_for_offline_outlined),
+              leading: _icon(AppIcons.arrowCircleDown),
               onTap: controller.downloads == null ? null : () => _changeDownloadLocation(context, controller),
             ), subtitle: tr('下载 保存位置 文件夹')),
         SettingEntry(tr('数据位置'), (context) => NormalItem(
               title: tr('数据位置'),
               subtitle: tr('{0}\n设置、观看记录、收藏和下载的组件都保存在这里，卸载时会保留', [controller.directories?.root.path ?? tr('正在准备…')]),
-              leading: _icon(Icons.inventory_2_outlined),
+              leading: _icon(AppIcons.archive),
               onTap: controller.directories == null ? null : () => openExternal(controller.directories!.root.path),
             )),
       ],
@@ -1006,19 +1007,19 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('导出设置'), (context) => NormalItem(
               title: tr('导出设置'),
               subtitle: tr('保存为 JSON 文件，不含账号、观看记录和本机路径'),
-              leading: _icon(Icons.upload_file_rounded),
+              leading: _icon(AppIcons.fileArrowUp),
               onTap: () => _exportSettings(context, controller),
             ), subtitle: tr('备份')),
         SettingEntry(tr('导入设置'), (context) => NormalItem(
               title: tr('导入设置'),
               subtitle: tr('从导出的文件恢复'),
-              leading: _icon(Icons.download_rounded),
+              leading: _icon(AppIcons.downloadSimple),
               onTap: () => _importSettings(context, controller),
             ), subtitle: tr('恢复')),
         SettingEntry(tr('重置所有设置'), (context) => NormalItem(
               title: tr('重置所有设置'),
               subtitle: tr('恢复默认值；观看记录、收藏、播放列表和账号不受影响'),
-              leading: _icon(Icons.restore_rounded),
+              leading: _icon(AppIcons.clockCounterClockwise),
               onTap: () async {
                 if (await confirmDialog(context, title: tr('重置所有设置？'), content: tr('播放、外观和隐私设置都会恢复默认值。'), confirm: tr('重置'))) await controller.resetSettings();
               },
@@ -1029,14 +1030,14 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
         SettingEntry(tr('关注时同步订阅'), (context) => SwitchItem(
               title: tr('关注频道时同步订阅到 YouTube'),
               subtitle: tr('登录后，关注和取消关注也会在 YouTube 账号上订阅或退订'),
-              leading: _icon(Icons.subscriptions_outlined),
+              leading: _icon(AppIcons.stack),
               value: prefs.syncFollowToYoutube,
               onChanged: (v) => savePrefs(prefs.copyWith(syncFollowToYoutube: v)),
             )),
         SettingEntry(tr('观看记录同步到 YouTube'), (context) => SwitchItem(
               title: tr('观看记录同步到 YouTube'),
               subtitle: tr('用电视码登录后，在 Lumtub 看过的视频也会记进 YouTube 账号的观看记录，YouTube 的推荐会参考它。默认关闭；无痕模式和关闭本机历史时不同步'),
-              leading: _icon(Icons.history_rounded),
+              leading: _icon(AppIcons.clockCounterClockwiseFill),
               value: prefs.syncHistoryToYoutube,
               onChanged: (v) => savePrefs(prefs.copyWith(syncHistoryToYoutube: v)),
             )),
@@ -1125,7 +1126,7 @@ class _DecoderStatusState extends State<_DecoderStatus> {
       // Its own key: an unkeyed tile shares the page's PageStorage slot with
       // the list's scroll offset, and reads that double as its open state.
       key: const PageStorageKey('expand:decoder'),
-      leading: const Icon(Icons.speed_rounded),
+      leading: const Icon(AppIcons.gauge),
       title: Text(tr('解码状态'), style: Theme.of(context).textTheme.titleMedium),
       subtitle: Text(tr('当前：{0} · {1}', [controller.currentCodec, controller.currentHwdec]), style: _subtitle(context)),
       children: [
@@ -1184,7 +1185,7 @@ class _AdvancedOptions extends StatelessWidget {
         );
     return ExpansionTile(
       key: const PageStorageKey('expand:mpv'),
-      leading: const Icon(Icons.tune_rounded),
+      leading: const Icon(AppIcons.slidersHorizontal),
       title: Text(tr('高级 libmpv 参数'), style: Theme.of(context).textTheme.titleMedium),
       subtitle: Text(tr('查看实际传给 libmpv 的参数，或恢复默认'), style: _subtitle(context)),
       children: [
@@ -1208,7 +1209,7 @@ class _AdvancedOptions extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-            child: OutlinedButton.icon(onPressed: onReset, icon: const Icon(Icons.restart_alt), label: Text(tr('恢复全部播放器默认设置'))),
+            child: OutlinedButton.icon(onPressed: onReset, icon: const Icon(AppIcons.arrowCounterClockwise), label: Text(tr('恢复全部播放器默认设置'))),
           ),
         ),
       ],

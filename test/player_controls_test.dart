@@ -13,6 +13,7 @@ import 'package:lumtub/ui/pip_view.dart';
 import 'package:lumtub/ui/player_controls.dart';
 import 'package:lumtub/ui/theme.dart';
 import 'package:lumtub/widgets/video_progress_bar.dart';
+import 'package:lumtub/ui/app_icons.dart';
 
 /// A player without libmpv: state changes are pushed through the streams
 /// the controls listen to.
@@ -134,7 +135,7 @@ void main() {
     expect(find.text('1:00 / 10:00'), findsOneWidget);
     expect(find.text('1X'), findsOneWidget, reason: '倍速');
     expect(find.text('1080P'), findsOneWidget, reason: '画质');
-    expect(find.byIcon(Icons.fullscreen_rounded), findsOneWidget);
+    expect(find.byIcon(AppIcons.cornersOut), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -161,7 +162,7 @@ void main() {
     await tester.tap(find.byTooltip('播放/暂停 (空格)'));
     await tester.pump();
     expect(player.state.playing, isTrue);
-    await tester.tap(find.byIcon(Icons.pause_circle_rounded));
+    await tester.tap(find.byIcon(AppIcons.pauseCircle));
     await tester.pump();
     expect(player.state.playing, isFalse);
     expect(tester.takeException(), isNull);
@@ -199,7 +200,7 @@ void main() {
     await tester.tap(find.textContaining('更多语言').first);
     await tester.pump();
     expect(find.text('YouTube 自动翻译'), findsNWidgets(2));
-    expect(find.byIcon(Icons.check_rounded), findsNWidgets(2), reason: 'both sides start off');
+    expect(find.byIcon(AppIcons.check), findsNWidgets(2), reason: 'both sides start off');
     await tester.tap(find.byTooltip('关闭'));
     await tester.pumpAndSettle();
     expect(find.text('第一字幕'), findsNothing);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../appearance_settings.dart';
+import 'app_icons.dart';
 
 /// A [ThemePreset] drawn as a small window in its light and its dark
 /// colours side by side, with its name under it.
@@ -20,14 +21,14 @@ class ThemePresetCard extends StatelessWidget {
           color: scheme.surface,
           padding: const EdgeInsets.all(8),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Container(height: 6, width: 30, decoration: BoxDecoration(color: scheme.onSurface.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(3))),
-            const SizedBox(height: 6),
+            Container(height: 6, width: 30, decoration: BoxDecoration(color: scheme.onSurface.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 4),
             Container(
               height: 22,
-              decoration: BoxDecoration(color: scheme.surfaceContainer, borderRadius: BorderRadius.circular(5)),
+              decoration: BoxDecoration(color: scheme.surfaceContainer, borderRadius: BorderRadius.circular(4)),
               padding: const EdgeInsets.all(4),
               child: Row(children: [
-                Container(width: 14, decoration: BoxDecoration(color: scheme.primaryContainer, borderRadius: BorderRadius.circular(3))),
+                Container(width: 14, decoration: BoxDecoration(color: scheme.primaryContainer, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(width: 4),
                 Expanded(child: Container(height: 4, decoration: BoxDecoration(color: scheme.outlineVariant, borderRadius: BorderRadius.circular(2)))),
               ]),
@@ -50,7 +51,7 @@ class ThemePresetCard extends StatelessWidget {
       selected: selected,
       label: preset.name,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: SizedBox(
           width: 150,
@@ -64,9 +65,9 @@ class ThemePresetCard extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [_half(_scheme(Brightness.light)), _half(_scheme(Brightness.dark))]),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              if (selected) ...[Icon(Icons.check_circle_rounded, size: 14, color: colors.primary), const SizedBox(width: 4)],
+              if (selected) ...[Icon(AppIcons.checkCircleFill, size: 14, color: colors.primary), const SizedBox(width: 4)],
               Text(preset.name, style: TextStyle(fontSize: 12, color: selected ? colors.primary : colors.onSurfaceVariant, fontWeight: selected ? FontWeight.w600 : null)),
             ]),
           ]),

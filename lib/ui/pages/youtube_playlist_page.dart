@@ -6,6 +6,7 @@ import '../playlist_length.dart';
 import '../theme.dart';
 import '../video_card.dart';
 import '../../l10n/l10n.dart';
+import '../app_icons.dart';
 
 /// A YouTube playlist's videos, with play-all and a link to YouTube.
 class YoutubePlaylistPage extends StatelessWidget {
@@ -17,7 +18,7 @@ class YoutubePlaylistPage extends StatelessWidget {
     final playlist = controller.youtubePlaylist;
     final loader = controller.youtubePlaylistVideos;
     if (playlist == null || loader == null) {
-      return StatusView(icon: Icons.playlist_play_rounded, title: tr('没有打开的播放列表'));
+      return StatusView(icon: AppIcons.playlist, title: tr('没有打开的播放列表'));
     }
     final items = controller.visible(loader.items);
     final error = loader.error;
@@ -26,9 +27,9 @@ class YoutubePlaylistPage extends StatelessWidget {
       onNearEnd: loader.loadMore,
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 20),
+          padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
           child: Row(children: [
-            IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: controller.goBack, icon: const Icon(Icons.arrow_back_rounded)),
+            IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
             const SizedBox(width: 8),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(playlist.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
@@ -42,11 +43,11 @@ class YoutubePlaylistPage extends StatelessWidget {
             ])),
             FilledButton.icon(
               onPressed: items.isEmpty ? null : () => controller.play(items.first, from: items),
-              icon: const Icon(Icons.play_arrow_rounded),
+              icon: const Icon(AppIcons.playFill),
               label: Text(tr('全部播放')),
             ),
             const SizedBox(width: 8),
-            IconButton(tooltip: tr('在浏览器中打开'), onPressed: () => openExternal(playlist.url), icon: const Icon(Icons.open_in_new_rounded)),
+            IconButton(tooltip: tr('在浏览器中打开'), onPressed: () => openExternal(playlist.url), icon: const Icon(AppIcons.arrowSquareOut)),
           ]),
         )),
         if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
@@ -60,7 +61,7 @@ class YoutubePlaylistPage extends StatelessWidget {
             child: ErrorBanner(items.isEmpty ? tr('无法加载播放列表：{0}', [error]) : tr('加载更多失败：{0}', [error]), onRetry: () => loader.loadMore(retry: true)),
           )),
         if (items.isEmpty && !loader.loading && error == null)
-          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.playlist_remove_rounded, title: tr('这个播放列表是空的'))),
+          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.musicNotesMinus, title: tr('这个播放列表是空的'))),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );

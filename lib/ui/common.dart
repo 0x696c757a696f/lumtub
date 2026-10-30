@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import 'theme.dart';
 import '../l10n/l10n.dart';
+import 'app_icons.dart';
 
 export '../models.dart' show formatBytes;
 
@@ -56,13 +57,13 @@ class StatusView extends StatelessWidget {
             decoration: BoxDecoration(color: error ? colors.errorContainer : colors.secondaryContainer, shape: BoxShape.circle),
             child: Icon(icon, size: 34, color: error ? colors.onErrorContainer : colors.onSecondaryContainer),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Text(title, textAlign: TextAlign.center, style: context.text.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
           if (message != null) ...[
             const SizedBox(height: 8),
             Text(message!, textAlign: TextAlign.center, maxLines: 6, overflow: TextOverflow.ellipsis, style: context.text.bodyMedium?.copyWith(color: colors.onSurfaceVariant, height: 1.5)),
           ],
-          if (action != null) ...[const SizedBox(height: 20), action!],
+          if (action != null) ...[const SizedBox(height: 16), action!],
         ]),
       ),
     ));
@@ -81,10 +82,10 @@ class ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
       decoration: BoxDecoration(color: colors.errorContainer, borderRadius: AppStyle.cardRadius),
       child: Row(children: [
-        Icon(Icons.error_outline_rounded, color: colors.onErrorContainer, size: 20),
+        Icon(AppIcons.warningCircle, color: colors.onErrorContainer, size: 20),
         const SizedBox(width: 12),
         Expanded(child: Text(message, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onErrorContainer))),
         if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('重试'))),
@@ -171,14 +172,14 @@ class OptionChip<T> extends StatelessWidget {
         menuChildren: [
           for (final v in values)
             MenuItemButton(
-              leadingIcon: Icon(v == value ? Icons.check_rounded : null, size: 18),
+              leadingIcon: Icon(v == value ? AppIcons.check : null, size: 18),
               onPressed: v == value ? null : () => onSelected(v),
               child: Text(item(v)),
             ),
         ],
         builder: (context, menu, _) => FilterChip(
           avatar: Icon(icon, size: 18),
-          label: Row(mainAxisSize: MainAxisSize.min, children: [Text(label(value)), const Icon(Icons.arrow_drop_down_rounded, size: 18)]),
+          label: Row(mainAxisSize: MainAxisSize.min, children: [Text(label(value)), const Icon(AppIcons.caretDown, size: 18)]),
           selected: changed,
           showCheckmark: false,
           onSelected: (_) => menu.isOpen ? menu.close() : menu.open(),

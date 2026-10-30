@@ -9,6 +9,7 @@ import '../common.dart';
 import '../theme.dart';
 import '../video_card.dart';
 import 'watch_stats_page.dart';
+import '../app_icons.dart';
 
 /// The watch history, with a search box, single delete from a card's menu,
 /// and a 选择 mode to delete several at once (after PiliNara's history and
@@ -50,7 +51,7 @@ class _HistoryPageState extends State<HistoryPage> {
     final signedIn = controller.tvFeed?.available ?? false;
     if (signedIn && _youtube) return _youtubeHistory(context);
     if (all.isEmpty && !signedIn) {
-      return StatusView(icon: Icons.history_rounded, title: tr('还没有观看记录'), message: tr('播放过的视频会保存在本机，最多保留 60 条。'));
+      return StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('还没有观看记录'), message: tr('播放过的视频会保存在本机，最多保留 60 条。'));
     }
     final items = filterHistory(all, _query);
     _selected.removeWhere((id) => !all.any((item) => item.id == id));
@@ -66,14 +67,14 @@ class _HistoryPageState extends State<HistoryPage> {
                   child: Text(allSelected ? tr('取消全选') : tr('全选')),
                 ),
                 const SizedBox(width: 4),
-                FilledButton.icon(onPressed: _selected.isEmpty ? null : _deleteSelected, icon: const Icon(Icons.delete_outline_rounded), label: Text(tr('删除所选'))),
+                FilledButton.icon(onPressed: _selected.isEmpty ? null : _deleteSelected, icon: const Icon(AppIcons.trash), label: Text(tr('删除所选'))),
                 const SizedBox(width: 4),
                 TextButton(onPressed: _stopSelecting, child: Text(tr('完成'))),
               ])
             : Row(mainAxisSize: MainAxisSize.min, children: [
-                TextButton.icon(onPressed: () => openWatchStats(context, widget.controller), icon: const Icon(Icons.insights_rounded), label: Text(tr('观看统计'))),
-                TextButton.icon(onPressed: () => setState(() => _selecting = true), icon: const Icon(Icons.checklist_rounded), label: Text(tr('选择'))),
-                TextButton.icon(onPressed: () => _confirmClear(context), icon: const Icon(Icons.delete_sweep_outlined), label: Text(tr('清空'))),
+                TextButton.icon(onPressed: () => openWatchStats(context, widget.controller), icon: const Icon(AppIcons.chartLineUp), label: Text(tr('观看统计'))),
+                TextButton.icon(onPressed: () => setState(() => _selecting = true), icon: const Icon(AppIcons.listChecks), label: Text(tr('选择'))),
+                TextButton.icon(onPressed: () => _confirmClear(context), icon: const Icon(AppIcons.trashSimple), label: Text(tr('清空'))),
               ]),
       )),
       if (signedIn) SliverToBoxAdapter(child: _sourceChips()),
@@ -84,10 +85,10 @@ class _HistoryPageState extends State<HistoryPage> {
           child: TextField(
             controller: _search,
             decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search_rounded),
+              prefixIcon: const Icon(AppIcons.magnifyingGlass),
               hintText: tr('搜索历史标题或频道'),
               isDense: true,
-              suffixIcon: _query.isEmpty ? null : IconButton(tooltip: tr('清除'), icon: const Icon(Icons.close_rounded), onPressed: () => setState(() {
+              suffixIcon: _query.isEmpty ? null : IconButton(tooltip: tr('清除'), icon: const Icon(AppIcons.x), onPressed: () => setState(() {
                     _search.clear();
                     _query = '';
                   })),
@@ -97,9 +98,9 @@ class _HistoryPageState extends State<HistoryPage> {
         )),
       )),
       if (all.isEmpty)
-        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.history_rounded, title: tr('还没有观看记录'), message: tr('播放过的视频会保存在本机，最多保留 60 条。')))
+        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('还没有观看记录'), message: tr('播放过的视频会保存在本机，最多保留 60 条。')))
       else if (items.isEmpty)
-        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.search_off_rounded, title: tr('没有匹配的历史记录'), message: tr('换个关键词试试。')))
+        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.magnifyingGlassMinus, title: tr('没有匹配的历史记录'), message: tr('换个关键词试试。')))
       else if (_selecting)
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
@@ -155,8 +156,8 @@ class _HistoryPageState extends State<HistoryPage> {
           tr('观看历史'),
           subtitle: tr('YouTube 账号里的观看记录'),
           trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            TextButton.icon(onPressed: () => openExternal('https://www.youtube.com/feed/history'), icon: const Icon(Icons.open_in_new_rounded), label: Text(tr('在 YouTube 管理'))),
-            TextButton.icon(onPressed: () => controller.openYoutubeHistory(reload: true), icon: const Icon(Icons.refresh_rounded), label: Text(tr('刷新'))),
+            TextButton.icon(onPressed: () => openExternal('https://www.youtube.com/feed/history'), icon: const Icon(AppIcons.arrowSquareOut), label: Text(tr('在 YouTube 管理'))),
+            TextButton.icon(onPressed: () => controller.openYoutubeHistory(reload: true), icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('刷新'))),
           ]),
         )),
         SliverToBoxAdapter(child: _sourceChips()),
@@ -165,7 +166,7 @@ class _HistoryPageState extends State<HistoryPage> {
           if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
           SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),
         ] else if (items.isEmpty && error == null)
-          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: Icons.history_rounded, title: tr('YouTube 上还没有观看记录'))),
+          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('YouTube 上还没有观看记录'))),
         if (error != null)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),

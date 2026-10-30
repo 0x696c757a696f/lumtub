@@ -53,6 +53,7 @@ import 'video_aspect.dart';
 import '../l10n/l10n.dart';
 import 'motion.dart';
 import 'smooth_wheel.dart';
+import 'app_icons.dart';
 
 /// Picture sizing, from PiliNara's `VideoFitType`.
 enum VideoFit {
@@ -89,7 +90,7 @@ const _segmentColors = {
   'filler': Color(0xFF7300FF),
 };
 
-const _menuText = TextStyle(color: Colors.white, fontSize: 13);
+const _menuText = TextStyle(color: Colors.white, fontSize: 12);
 
 /// PiliNara's control layer over the video: a title bar and a bottom bar
 /// that slide in on hover, with the progress bar, play, time, fit,
@@ -241,7 +242,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       final rate = _heldRate = _player.state.rate;
       final fast = max(2.0, rate * 2).clamp(0.25, 4.0);
       unawaited(_player.setRate(fast));
-      _showFeedback(Icons.fast_forward_rounded, tr('{0}x 倍速中', [rateText(fast)]));
+      _showFeedback(AppIcons.fastForwardFill, tr('{0}x 倍速中', [rateText(fast)]));
     } else if (_heldRate case final rate?) {
       _heldRate = null;
       unawaited(_player.setRate(rate));
@@ -273,7 +274,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       final speed = nextSpeed(_controller.settings.speeds, _player.state.rate, up ? 1 : -1);
       if (speed == null) return;
       unawaited(_player.setRate(speed));
-      _showFeedback(up ? Icons.fast_forward_rounded : Icons.slow_motion_video_rounded, '${trimSpeed(speed)}X');
+      _showFeedback(up ? AppIcons.fastForwardFill : AppIcons.speedometer, '${trimSpeed(speed)}X');
       return;
     }
     // The left half of the player sets the brightness, the right the volume.
@@ -291,11 +292,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   void _louder(double delta) => unawaited(_controller.changeVolume(delta).then((_) {
         final volume = _player.state.volume.round();
-        _showFeedback(volume == 0 ? Icons.volume_off_rounded : Icons.volume_up_rounded, '$volume%');
+        _showFeedback(volume == 0 ? AppIcons.speakerSlash : AppIcons.speakerHighFill, '$volume%');
       }));
 
   void _brighten(int delta) => unawaited(_controller.changeBrightness(delta).then((value) {
-        _showFeedback(value < 0 ? Icons.brightness_5_rounded : Icons.brightness_7_rounded, tr('亮度 {0}', [value > 0 ? '+$value' : '$value']));
+        _showFeedback(value < 0 ? AppIcons.sunDim : AppIcons.sun, tr('亮度 {0}', [value > 0 ? '+$value' : '$value']));
       }));
 
   /// Sliding a finger up or down: the side it started on, and how far it
@@ -312,7 +313,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
   void _toggleLock() {
     setState(() => _locked = !_locked);
-    _showFeedback(_locked ? Icons.lock_rounded : Icons.lock_open_rounded, _locked ? tr('已锁定') : tr('已解锁'));
+    _showFeedback(_locked ? AppIcons.lock : AppIcons.lockOpen, _locked ? tr('已锁定') : tr('已解锁'));
     _show();
   }
 
@@ -328,7 +329,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     if (touch && width > 0 && (at.localPosition.dx < width / 3 || at.localPosition.dx > width * 2 / 3)) {
       final ahead = at.localPosition.dx > width / 2;
       unawaited(_controller.seekBy(Duration(seconds: ahead ? 10 : -10)));
-      _showFeedback(ahead ? Icons.fast_forward_rounded : Icons.fast_rewind_rounded, ahead ? tr('+10 秒') : tr('-10 秒'));
+      _showFeedback(ahead ? AppIcons.fastForwardFill : AppIcons.rewindFill, ahead ? tr('+10 秒') : tr('-10 秒'));
       return;
     }
     unawaited(widget.state?.toggleFullscreen());
@@ -347,7 +348,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         : landscape
             ? const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
             : const [DeviceOrientation.portraitUp]));
-    _showFeedback(Icons.screen_rotation_rounded, !_orientationLocked ? tr('屏幕方向跟随手机') : landscape ? tr('已锁定横屏') : tr('已锁定竖屏'));
+    _showFeedback(AppIcons.deviceRotate, !_orientationLocked ? tr('屏幕方向跟随手机') : landscape ? tr('已锁定横屏') : tr('已锁定竖屏'));
   }
 
   /// A-B 循环 at the current position, saying what the press did.
@@ -355,7 +356,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     await _controller.markLoop();
     final a = _controller.loopA, b = _controller.loopB;
     _showFeedback(
-      Icons.repeat_one_rounded,
+      AppIcons.repeatOnce,
       b != null ? tr('循环 {0} – {1}', [formatPlaybackTime(a!), formatPlaybackTime(b)]) : a != null ? tr('A 点 {0}，再按一次设置 B 点', [formatPlaybackTime(a)]) : tr('已取消 A-B 循环'),
     );
   }
@@ -372,7 +373,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 DecoratedBox(
                   decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
-                  child: _IconButton(tooltip: _locked ? tr('解锁') : tr('锁定'), icon: _locked ? Icons.lock_rounded : Icons.lock_open_rounded, width: 40, onTap: _toggleLock),
+                  child: _IconButton(tooltip: _locked ? tr('解锁') : tr('锁定'), icon: _locked ? AppIcons.lock : AppIcons.lockOpen, width: 40, onTap: _toggleLock),
                 ),
                 if (_phone && !_locked) ...[
                   const SizedBox(height: 12),
@@ -380,7 +381,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                     decoration: const BoxDecoration(color: Color(0x66000000), shape: BoxShape.circle),
                     child: _IconButton(
                       tooltip: _orientationLocked ? tr('屏幕方向跟随手机') : tr('锁定屏幕方向'),
-                      icon: _orientationLocked ? Icons.screen_lock_rotation_rounded : Icons.screen_rotation_rounded,
+                      icon: _orientationLocked ? AppIcons.lockSimple : AppIcons.deviceRotate,
                       active: _orientationLocked,
                       width: 40,
                       onTap: _toggleOrientation,
@@ -590,24 +591,24 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     }
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(fullscreen ? 8 : 6, fullscreen ? 10 : 4, 8, 16),
+      padding: EdgeInsets.fromLTRB(fullscreen ? 8 : 4, fullscreen ? 8 : 4, 8, 16),
       child: Row(children: [
         _IconButton(
           tooltip: fullscreen ? tr('退出全屏') : tr('返回'),
-          icon: Icons.arrow_back_rounded,
+          icon: AppIcons.arrowLeft,
           size: 20,
           onTap: () => fullscreen ? unawaited(leaveFullscreen()) : _controller.goBack(),
         ),
         _IconButton(
           tooltip: tr('主页'),
-          icon: Icons.home_rounded,
+          icon: AppIcons.houseFill,
           size: 20,
           onTap: () async {
             await leaveFullscreen();
             _controller.navigate(PageMode.home);
           },
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 4),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
             Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: fullscreen ? 16 : 14, fontWeight: FontWeight.w500)),
@@ -618,18 +619,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         // Switches that are on show here, so the state stays visible after
         // they moved into 更多设置.
         for (final (on, icon, tip) in [
-          (_controller.pinned, Icons.push_pin_rounded, tr('窗口置顶中')),
-          (_controller.audioOnly, Icons.headphones_rounded, tr('听视频中')),
+          (_controller.pinned, AppIcons.pushPinFill, tr('窗口置顶中')),
+          (_controller.audioOnly, AppIcons.headphonesFill, tr('听视频中')),
         ])
           if (on) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tip, child: Icon(icon, color: Theme.of(context).colorScheme.inversePrimary, size: 17))),
         if (_controller.sleepAt != null || _controller.sleepAfterCurrent)
-          Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Tooltip(message: tr('定时关闭已开启'), child: Icon(Icons.bedtime_outlined, color: Colors.white, size: 18))),
+          Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Tooltip(message: tr('定时关闭已开启'), child: Icon(AppIcons.moonStars, color: Colors.white, size: 18))),
         if (!fullscreen)
           ValueListenableBuilder(
             valueListenable: lightsOff,
             builder: (context, off, _) => _IconButton(
               tooltip: off ? tr('开灯 (B)') : tr('关灯 (B)'),
-              icon: off ? Icons.lightbulb_rounded : Icons.lightbulb_outline_rounded,
+              icon: off ? AppIcons.lightbulbFill : AppIcons.lightbulb,
               size: 19,
               active: off,
               onTap: () => lightsOff.value = !off,
@@ -637,21 +638,21 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           ),
         _IconButton(
           tooltip: tr('投屏'),
-          icon: _controller.cast.active ? Icons.cast_connected_rounded : Icons.cast_rounded,
+          icon: _controller.cast.active ? AppIcons.airplay : AppIcons.screencast,
           size: 19,
           active: _controller.cast.active,
           onTap: () => unawaited(showCastDialog(context, _controller)),
         ),
         _IconButton(
           tooltip: tr('画中画'),
-          icon: Icons.picture_in_picture_alt_rounded,
+          icon: AppIcons.browsers,
           size: 19,
           onTap: () async {
             await leaveFullscreen();
             _controller.setPip(true);
           },
         ),
-        _IconButton(tooltip: tr('更多设置'), icon: Icons.tune_rounded, size: 20, onTap: () => _showMore(context)),
+        _IconButton(tooltip: tr('更多设置'), icon: AppIcons.slidersHorizontal, size: 20, onTap: () => _showMore(context)),
       ]),
     );
   }
@@ -671,10 +672,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     return SafeArea(
       top: false,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(fullscreen ? 18 : 10, 16, fullscreen ? 18 : 10, fullscreen ? 14 : 8),
+        padding: EdgeInsets.fromLTRB(fullscreen ? 16 : 8, 16, fullscreen ? 16 : 8, fullscreen ? 12 : 8),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: _PositionBuilder(
             player: _player,
             active: !_animation.isDismissed,
@@ -696,9 +697,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         Row(children: [
           _PlayPauseButton(player: _player),
           if (_controller.hasNext)
-            _IconButton(tooltip: tr('下一个 (Shift+N)'), icon: Icons.skip_next_rounded, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
+            _IconButton(tooltip: tr('下一个 (Shift+N)'), icon: AppIcons.skipForwardFill, size: 22, width: width, onTap: () => unawaited(_controller.playNext())),
           _VolumeButton(player: _player, controller: _controller, onMenuOpened: _menuOpened, onMenuClosed: _menuClosed),
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
           _PositionBuilder(
             player: _player,
             active: !_animation.isDismissed,
@@ -749,7 +750,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               valueListenable: theaterMode,
               builder: (context, theater, _) => _IconButton(
                 tooltip: theater ? tr('退出剧场模式 (T)') : tr('剧场模式 (T)'),
-                icon: Icons.crop_16_9_rounded,
+                icon: AppIcons.frameCorners,
                 size: 22,
                 width: width,
                 active: theater,
@@ -758,7 +759,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             ),
           _IconButton(
             tooltip: fullscreen ? tr('退出全屏 (F)') : tr('全屏 (F)'),
-            icon: fullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
+            icon: fullscreen ? AppIcons.cornersIn : AppIcons.cornersOut,
             size: 24,
             width: width,
             onTap: () => unawaited(widget.state?.toggleFullscreen()),
@@ -784,7 +785,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           final button = _IconButton(
             tooltip: tr('字幕'),
             width: width,
-            icon: on ? Icons.closed_caption_rounded : Icons.closed_caption_off_outlined,
+            icon: on ? AppIcons.closedCaptioningFill : AppIcons.subtitlesSlash,
             active: _controller.secondarySubtitle != null,
             onTap: () => unawaited(_openSubtitles(context)),
           );
@@ -792,7 +793,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           // While a subtitle is shown, its list is one click away.
           return Row(mainAxisSize: MainAxisSize.min, children: [
             button,
-            _IconButton(tooltip: tr('字幕列表'), width: width, icon: Icons.subject_rounded, onTap: () => unawaited(_openSubtitleList(context))),
+            _IconButton(tooltip: tr('字幕列表'), width: width, icon: AppIcons.textAlignLeft, onTap: () => unawaited(_openSubtitleList(context))),
           ]);
         },
       ),
@@ -840,18 +841,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       Padding(
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
         child: Wrap(spacing: 8, runSpacing: 8, children: [
-          PanelToggle(label: tr('窗口置顶'), icon: Icons.push_pin_outlined, value: _controller.pinned, onChanged: (_) => _controller.togglePinned()),
-          PanelToggle(label: tr('听视频'), icon: Icons.headphones_rounded, value: _controller.audioOnly, onChanged: (_) => unawaited(_controller.toggleAudioOnly())),
-          PanelToggle(label: tr('空降助手'), icon: Icons.shield_outlined, value: settings.sponsorBlock, onChanged: (_) => unawaited(_controller.toggleSponsorBlock())),
-          PanelToggle(label: tr('播放信息'), icon: Icons.info_outline_rounded, value: _controller.showStats, onChanged: (_) => _controller.toggleStats()),
-          PanelToggle(label: tr('镜像翻转'), icon: Icons.flip_rounded, value: _transform.mirrored, onChanged: (v) => unawaited(_transform.setMirrored(v))),
+          PanelToggle(label: tr('窗口置顶'), icon: AppIcons.pushPin, value: _controller.pinned, onChanged: (_) => _controller.togglePinned()),
+          PanelToggle(label: tr('听视频'), icon: AppIcons.headphonesFill, value: _controller.audioOnly, onChanged: (_) => unawaited(_controller.toggleAudioOnly())),
+          PanelToggle(label: tr('空降助手'), icon: AppIcons.shield, value: settings.sponsorBlock, onChanged: (_) => unawaited(_controller.toggleSponsorBlock())),
+          PanelToggle(label: tr('播放信息'), icon: AppIcons.info, value: _controller.showStats, onChanged: (_) => _controller.toggleStats()),
+          PanelToggle(label: tr('镜像翻转'), icon: AppIcons.flipHorizontal, value: _transform.mirrored, onChanged: (v) => unawaited(_transform.setMirrored(v))),
           PanelToggle(
             label: _controller.loopB != null ? tr('A-B 循环中') : _controller.loopA != null ? tr('设置 B 点') : tr('A-B 循环'),
-            icon: Icons.repeat_one_rounded,
+            icon: AppIcons.repeatOnce,
             value: _controller.loopA != null,
             onChanged: (_) => unawaited(_markLoop()),
           ),
-          PanelToggle(label: tr('应用内小窗'), icon: Icons.picture_in_picture_rounded, value: false, onChanged: (_) => closeThen(() async {
+          PanelToggle(label: tr('应用内小窗'), icon: AppIcons.pictureInpicture, value: false, onChanged: (_) => closeThen(() async {
             if (isFullscreen(context)) await widget.state?.exitFullscreen();
             _controller.enterMini();
           })),
@@ -860,7 +861,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       PanelHeading(tr('画面')),
       PanelChoices<int>(
         label: tr('画质'),
-        icon: Icons.high_quality_outlined,
+        icon: AppIcons.sealCheck,
         value: settings.maxHeight == 0 && _controller.droppedCap > 0 ? -1 : settings.maxHeight,
         values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h))],
         onSelected: _controller.setMaxHeight,
@@ -869,7 +870,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         valueListenable: videoFit,
         builder: (context, fit, _) => PanelChoices<VideoFit>(
           label: tr('画面比例'),
-          icon: Icons.aspect_ratio_rounded,
+          icon: AppIcons.arrowsOut,
           value: fit,
           values: [for (final f in VideoFit.values) (f, f.label)],
           onSelected: (f) => videoFit.value = f,
@@ -877,16 +878,16 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       ),
       PanelChoices<double>(
         label: tr('画面缩放'),
-        icon: Icons.zoom_in_rounded,
+        icon: AppIcons.magnifyingGlassPlus,
         value: _transform.zoom,
         values: [for (final z in PictureTransform.zoomLevels) (z, z == 1 ? tr('原始大小') : '${trimSpeed(z)}x')],
         onSelected: (z) => unawaited(_transform.setZoom(z)),
       ),
-      PanelLink(label: tr('画面与音画同步调节'), icon: Icons.tune_rounded, onTap: () => closeThen(() => openPictureSettings(context, _controller))),
+      PanelLink(label: tr('画面与音画同步调节'), icon: AppIcons.slidersHorizontal, onTap: () => closeThen(() => openPictureSettings(context, _controller))),
       PanelHeading(tr('声音')),
       PanelChoices<AudioQuality>(
         label: tr('音质'),
-        icon: Icons.music_note_outlined,
+        icon: AppIcons.musicNote,
         value: settings.audioQuality,
         values: [for (final q in AudioQuality.values) (q, q.label)],
         onSelected: (q) => unawaited(_controller.reloadVideo(_controller.settings.copyWith(audioQuality: q))),
@@ -896,7 +897,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           stream: _player.stream.track,
           builder: (context, _) => PanelChoices<String>(
             label: tr('音轨'),
-            icon: Icons.audiotrack_rounded,
+            icon: AppIcons.musicNotes,
             value: _player.state.track.audio.id,
             values: [for (final t in audio) (t.id, trackLabel(t.id, t.title, t.language))],
             collapsed: true,
@@ -906,14 +907,14 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       PanelHeading(tr('播放')),
       PanelChoices<PlayOrder>(
         label: tr('播放顺序'),
-        icon: Icons.repeat_rounded,
+        icon: AppIcons.repeat,
         value: settings.playOrder,
         values: [for (final o in PlayOrder.values) (o, o.label)],
         onSelected: _controller.setPlayOrder,
       ),
       PanelChoices<int?>(
         label: sleepAt == null ? tr('定时关闭') : tr('定时关闭（{0} 分钟后暂停）', [sleepAt.difference(DateTime.now()).inMinutes + 1]),
-        icon: Icons.bedtime_outlined,
+        icon: AppIcons.moonStars,
         value: sleeping,
         values: [(sleepOff, tr('不开启')), (sleepAfterCurrent, tr('播完当前视频后')), for (final m in const [15, 30, 45, 60, 90]) (m, tr('{0} 分钟', [m]))],
         onSelected: (minutes) {
@@ -928,7 +929,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       ),
       PanelChoices<PlaybackStrategy>(
         label: tr('播放策略'),
-        icon: Icons.movie_filter_outlined,
+        icon: AppIcons.filmStrip,
         value: settings.strategy,
         values: [for (final v in PlaybackStrategy.values) (v, v.label)],
         onSelected: (v) => unawaited(_controller.reloadVideo(_controller.settings.copyWith(strategy: v))),
@@ -936,31 +937,31 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       PanelLink(
         label: tr('禁用视频编码'),
         detail: codecs.isEmpty ? tr('无') : codecs,
-        icon: Icons.block_outlined,
+        icon: AppIcons.prohibit,
         onTap: () => pickDisabledCodecs(context, settings, (v) => _controller.reloadVideo(v)),
       ),
       PanelLink(
         label: tr('字幕'),
         detail: '${settings.subtitleMode.label} · ${settings.subtitleLanguage.label}',
-        icon: Icons.subtitles_outlined,
+        icon: AppIcons.subtitles,
         onTap: () => closeThen(() => unawaited(_openSubtitles(context))),
       ),
       PanelHeading(tr('工具')),
-      PanelLink(label: tr('截图 (S)'), detail: tr('保存到“图片\\Lumtub”并复制'), icon: Icons.photo_camera_outlined, opens: false, onTap: () => closeThen(() => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)))),
-      PanelLink(label: tr('字幕列表'), detail: tr('点一句跳过去；A / D 上一句、下一句，R 重听'), icon: Icons.subject_rounded, onTap: () => closeThen(() => unawaited(_openSubtitleList(context)))),
+      PanelLink(label: tr('截图 (S)'), detail: tr('保存到“图片\\Lumtub”并复制'), icon: AppIcons.camera, opens: false, onTap: () => closeThen(() => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)))),
+      PanelLink(label: tr('字幕列表'), detail: tr('点一句跳过去；A / D 上一句、下一句，R 重听'), icon: AppIcons.textAlignLeft, onTap: () => closeThen(() => unawaited(_openSubtitleList(context)))),
       PanelLink(
         label: tr('复制当前字幕 (Ctrl+C)'),
-        icon: Icons.content_copy_rounded,
+        icon: AppIcons.copy,
         opens: false,
         onTap: () {
           final text = _controller.currentSubtitleText;
           if (text.isEmpty) return;
           unawaited(Clipboard.setData(ClipboardData(text: text)));
-          closeThen(() => _showFeedback(Icons.content_copy_rounded, tr('已复制字幕')));
+          closeThen(() => _showFeedback(AppIcons.copy, tr('已复制字幕')));
         },
       ),
-      PanelLink(label: tr('重载视频'), detail: tr('从当前位置重新加载'), icon: Icons.refresh_rounded, opens: false, onTap: () => closeThen(() => unawaited(_controller.reloadVideo()))),
-      PanelLink(label: tr('快捷键'), icon: Icons.keyboard_outlined, onTap: () => showShortcutHelp(context, _controller.preferences)),
+      PanelLink(label: tr('重载视频'), detail: tr('从当前位置重新加载'), icon: AppIcons.arrowsClockwise, opens: false, onTap: () => closeThen(() => unawaited(_controller.reloadVideo()))),
+      PanelLink(label: tr('快捷键'), icon: AppIcons.keyboard, onTap: () => showShortcutHelp(context, _controller.preferences)),
     ]);
   }
 
@@ -1012,8 +1013,8 @@ class _HoverState extends State<_Hover> {
           behavior: HitTestBehavior.opaque,
           onTap: widget.onTap,
           child: AnimatedContainer(
-            duration: Motion.of(const Duration(milliseconds: 120)),
-            decoration: BoxDecoration(color: _over ? Colors.white.withValues(alpha: 0.14) : Colors.transparent, borderRadius: BorderRadius.circular(17)),
+            duration: Motion.of(Ease.fade),
+            decoration: BoxDecoration(color: _over ? Colors.white.withValues(alpha: 0.14) : Colors.transparent, borderRadius: BorderRadius.circular(16)),
             child: widget.child,
           ),
         ),
@@ -1167,16 +1168,16 @@ class _PopupMenu<T> extends StatelessWidget {
       color: const Color(0xEB1F1F1F),
       elevation: 6,
       menuPadding: const EdgeInsets.symmetric(vertical: _padding),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       constraints: const BoxConstraints(minWidth: 112),
       items: [
         for (final (item, label) in items)
           PopupMenuItem<T>(
             height: _itemHeight,
-            padding: const EdgeInsets.only(left: 12, right: 20),
+            padding: const EdgeInsets.only(left: 12, right: 16),
             value: item,
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              SizedBox(width: 22, child: item == value ? Icon(Icons.check_rounded, size: 16, color: theme.colorScheme.inversePrimary) : null),
+              SizedBox(width: 22, child: item == value ? Icon(AppIcons.check, size: 16, color: theme.colorScheme.inversePrimary) : null),
               Flexible(child: Text(label, style: item == value ? _menuText.copyWith(color: theme.colorScheme.inversePrimary, fontWeight: FontWeight.w600) : _menuText)),
             ]),
           ),
@@ -1260,11 +1261,11 @@ class _VolumeButtonState extends State<_VolumeButton> {
             return Row(mainAxisSize: MainAxisSize.min, children: [
               _IconButton(
                 tooltip: volume == 0 ? tr('取消静音 (M)') : tr('静音 (M)'),
-                icon: volume == 0 ? Icons.volume_off_rounded : (volume < 50 ? Icons.volume_down_rounded : Icons.volume_up_rounded),
+                icon: volume == 0 ? AppIcons.speakerSlash : (volume < 50 ? AppIcons.speakerLowFill : AppIcons.speakerHighFill),
                 onTap: () => unawaited(widget.controller.toggleMute()),
               ),
               AnimatedSize(
-                duration: Motion.of(const Duration(milliseconds: 150)),
+                duration: Motion.of(Ease.fade),
                 child: _open
                     ? SizedBox(
                         width: 96,
@@ -1296,12 +1297,12 @@ class _FeedbackBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(color: const Color(0x88000000), borderRadius: BorderRadius.circular(8)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(icon, color: Colors.white, size: 22),
-          const SizedBox(width: 6),
-          Text(text, style: const TextStyle(color: Colors.white, fontSize: 13)),
+          const SizedBox(width: 4),
+          Text(text, style: const TextStyle(color: Colors.white, fontSize: 12)),
         ]),
       );
 }

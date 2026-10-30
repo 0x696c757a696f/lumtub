@@ -6,6 +6,7 @@ import '../player_settings.dart';
 import 'pages/settings_subpages.dart' show openSubtitleSettings;
 import 'player_panel.dart';
 import 'subtitle_style.dart';
+import 'app_icons.dart';
 
 /// The subtitle look as a side panel over the player, so each change shows
 /// on the video while it is made: sliders preview as they move and save
@@ -22,7 +23,7 @@ Future<void> showSubtitleStylePanel(BuildContext context, AppController controll
               Navigator.of(inner).pop();
               openSubtitleSettings(context, controller);
             },
-            icon: const Icon(Icons.tune_rounded, size: 18),
+            icon: const Icon(AppIcons.slidersHorizontal, size: 18),
             label: Text(tr('全部字幕设置')),
           ),
         ),
@@ -152,7 +153,7 @@ class _StylePanelState extends State<_StylePanel> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: OutlinedButton.icon(
           onPressed: () => _save(_controller.settings.withDefaultSubtitleStyle()),
-          icon: const Icon(Icons.restart_alt_rounded, size: 18),
+          icon: const Icon(AppIcons.arrowCounterClockwise, size: 18),
           label: Text(tr('恢复默认样式')),
         ),
       ),

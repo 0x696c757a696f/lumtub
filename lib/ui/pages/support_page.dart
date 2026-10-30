@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/l10n.dart';
 import '../common.dart';
 import '../theme.dart';
+import '../app_icons.dart';
 
 const sponsorsPage = 'https://github.com/sponsors/0x696c757a696f';
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
@@ -41,15 +42,15 @@ class _SupportPage extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 720),
           child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 40), children: [
             const _Hero(),
-            const SizedBox(height: 28),
-            _Heading(tr('加密货币'), Icons.currency_bitcoin_rounded),
+            const SizedBox(height: 24),
+            _Heading(tr('加密货币'), AppIcons.currencyBtc),
             Container(
               margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(color: colors.errorContainer.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(12)),
               child: Row(children: [
-                Icon(Icons.warning_amber_rounded, size: 20, color: colors.onErrorContainer),
-                const SizedBox(width: 10),
+                Icon(AppIcons.warning, size: 20, color: colors.onErrorContainer),
+                const SizedBox(width: 8),
                 Expanded(child: Text(tr('转账前请确认币种和网络与地址一致，转到错误的链上无法找回。'), style: TextStyle(color: colors.onErrorContainer, height: 1.4))),
               ]),
             ),
@@ -57,10 +58,10 @@ class _SupportPage extends StatelessWidget {
             _Group(tr('比特币'), _bitcoin, note: tr('四个地址任选一个，钱包支持哪种就用哪种')),
             _Group(tr('稳定币'), _stablecoins),
             const SizedBox(height: 16),
-            _Heading(tr('其他支持方式'), Icons.volunteer_activism_outlined),
-            _Way(Icons.star_outline_rounded, tr('在 GitHub 上点个 Star'), tr('让更多人看到 Lumtub'), _repository),
-            _Way(Icons.bug_report_outlined, tr('报告问题或提建议'), tr('附上诊断信息和错误日志最有帮助'), '$_repository/issues'),
-            _Way(Icons.translate_rounded, tr('帮忙翻译'), tr('在 Weblate 上把 Lumtub 翻译成你的语言'), 'https://hosted.weblate.org/engage/lumtub/'),
+            _Heading(tr('其他支持方式'), AppIcons.handHeart),
+            _Way(AppIcons.star, tr('在 GitHub 上点个 Star'), tr('让更多人看到 Lumtub'), _repository),
+            _Way(AppIcons.bug, tr('报告问题或提建议'), tr('附上诊断信息和错误日志最有帮助'), '$_repository/issues'),
+            _Way(AppIcons.translate, tr('帮忙翻译'), tr('在 Weblate 上把 Lumtub 翻译成你的语言'), 'https://hosted.weblate.org/engage/lumtub/'),
           ]),
         ),
       ),
@@ -76,9 +77,9 @@ class _Hero extends StatelessWidget {
     final colors = context.colors;
     final text = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -90,10 +91,10 @@ class _Hero extends StatelessWidget {
           Container(
             width: 48,
             height: 48,
-            decoration: BoxDecoration(color: const Color(0xFFEA4AAA), borderRadius: BorderRadius.circular(14)),
-            child: const Icon(Icons.favorite_rounded, color: Colors.white, size: 26),
+            decoration: BoxDecoration(color: const Color(0xFFEA4AAA), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(AppIcons.heartFill, color: Colors.white, size: 26),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(child: Text(tr('支持 Lumtub'), style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w600, color: colors.onPrimaryContainer))),
         ]),
         const SizedBox(height: 16),
@@ -101,12 +102,12 @@ class _Hero extends StatelessWidget {
           tr('Lumtub 免费、开源，没有广告，也不收集你的数据。你的赞助能让它一直更新下去：更多开发时间、测试设备和代码签名证书。'),
           style: text.bodyLarge?.copyWith(color: colors.onPrimaryContainer, height: 1.5),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Wrap(spacing: 12, runSpacing: 10, crossAxisAlignment: WrapCrossAlignment.center, children: [
           FilledButton.icon(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEA4AAA), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14)),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEA4AAA), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
             onPressed: () => openExternal(sponsorsPage),
-            icon: const Icon(Icons.favorite_border_rounded, size: 20),
+            icon: const Icon(AppIcons.heart, size: 20),
             label: Text(tr('在 GitHub Sponsors 赞助')),
           ),
           Text(tr('每月或一次性，金额随意'), style: text.bodyMedium?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
@@ -150,10 +151,10 @@ class _Group extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 2),
             child: Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           ),
-          if (note != null) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 4), child: Text(note!, style: TextStyle(fontSize: 12.5, color: colors.outline))),
+          if (note != null) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 4), child: Text(note!, style: TextStyle(fontSize: 12, color: colors.outline))),
           for (final address in addresses) _AddressRow(address),
         ]),
       ),
@@ -177,13 +178,13 @@ class _AddressRow extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
                 Text(address.label, style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text(address.networks, style: TextStyle(fontSize: 12.5, color: colors.outline)),
+                Text(address.networks, style: TextStyle(fontSize: 12, color: colors.outline)),
               ]),
               const SizedBox(height: 4),
-              SelectableText(address.address, style: TextStyle(fontFamily: 'Consolas', fontFamilyFallback: const ['monospace'], fontSize: 13, color: colors.onSurfaceVariant)),
+              SelectableText(address.address, style: TextStyle(fontFamily: 'Consolas', fontFamilyFallback: const ['monospace'], fontSize: 12, color: colors.onSurfaceVariant)),
             ]),
           ),
-          IconButton(tooltip: tr('复制地址'), icon: const Icon(Icons.copy_rounded, size: 20), onPressed: () => copyText(context, address.address, tr('地址已复制'))),
+          IconButton(tooltip: tr('复制地址'), icon: const Icon(AppIcons.copySimple, size: 20), onPressed: () => copyText(context, address.address, tr('地址已复制'))),
         ]),
       ),
     );
@@ -201,7 +202,7 @@ class _Way extends StatelessWidget {
         leading: Icon(icon, color: context.colors.primary),
         title: Text(title),
         subtitle: Text(subtitle),
-        trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+        trailing: const Icon(AppIcons.arrowSquareOut, size: 18),
         onTap: () => openExternal(url),
       );
 }

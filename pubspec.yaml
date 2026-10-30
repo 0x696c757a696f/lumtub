@@ -44,3 +44,10 @@ flutter:
     - family: Noto Sans CJK SC
       fonts:
         - asset: assets/fonts/NotoSansSC-Regular.ttf
+    # Phosphor icons (MIT, assets/fonts/phosphor/LICENSE).
+    - family: Phosphor
+      fonts:
+        - asset: assets/fonts/phosphor/Phosphor-Regular.ttf
+    - family: Phosphor Fill
+      fonts:
+        - asset: assets/fonts/phosphor/Phosphor-Fill.ttf

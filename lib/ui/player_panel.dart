@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 import 'motion.dart';
+import 'app_icons.dart';
 
 /// A panel that slides in from the player's right edge, for choices that
 /// apply at once while the video keeps playing (更多设置, 字幕).
@@ -11,10 +12,10 @@ Future<void> showPlayerPanel(BuildContext context, {required String title, List<
       barrierDismissible: true,
       barrierLabel: tr('关闭'),
       barrierColor: Colors.black26,
-      transitionDuration: Motion.of(const Duration(milliseconds: 180)),
+      transitionDuration: Motion.of(Ease.fade),
       pageBuilder: (context, animation, secondary) => _Panel(title: title, actions: actions, width: width, builder: builder),
       transitionBuilder: (context, animation, secondary, child) => SlideTransition(
-        position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+        position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Ease.curve)),
         child: child,
       ),
     );
@@ -47,7 +48,7 @@ class _Panel extends StatelessWidget {
                 child: Row(children: [
                   Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
                   ...actions,
-                  IconButton(tooltip: tr('关闭'), onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.close_rounded)),
+                  IconButton(tooltip: tr('关闭'), onPressed: () => Navigator.of(context).pop(), icon: const Icon(AppIcons.x)),
                 ]),
               ),
               Expanded(child: builder(context)),
@@ -101,7 +102,7 @@ class _PanelChoicesState<T> extends State<PanelChoices<T>> {
           if (widget.icon != null) ...[Icon(widget.icon, size: 18, color: theme.colorScheme.onSurfaceVariant), const SizedBox(width: 8)],
           Text(widget.label, style: theme.textTheme.bodyMedium),
         ]),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Wrap(spacing: 6, runSpacing: 6, children: [
           for (final (v, text) in shown)
             ChoiceChip(
@@ -115,7 +116,7 @@ class _PanelChoicesState<T> extends State<PanelChoices<T>> {
             ),
           if (widget.collapsed && widget.values.length > 1)
             ActionChip(
-              avatar: Icon(_open ? Icons.expand_less_rounded : Icons.expand_more_rounded, size: 18),
+              avatar: Icon(_open ? AppIcons.caretUp : AppIcons.caretDown, size: 18),
               label: Text(_open ? tr('收起') : tr('全部 {0} 个', [widget.values.length])),
               visualDensity: VisualDensity.compact,
               onPressed: () => setState(() => _open = !_open),
@@ -150,7 +151,7 @@ class PanelToggle extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
             child: Column(children: [
               Icon(icon, size: 22, color: value ? colors.onPrimaryContainer : colors.onSurfaceVariant),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: value ? colors.onPrimaryContainer : colors.onSurface)),
             ]),
           ),
@@ -196,7 +197,7 @@ class PanelLink extends StatelessWidget {
         leading: Icon(icon, size: 20),
         title: Text(label),
         subtitle: detail == null ? null : Text(detail!, style: TextStyle(color: Theme.of(context).colorScheme.outline, fontSize: 12)),
-        trailing: opens ? const Icon(Icons.chevron_right_rounded) : null,
+        trailing: opens ? const Icon(AppIcons.caretRight) : null,
         onTap: onTap,
       );
 }

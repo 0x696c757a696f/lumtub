@@ -13,6 +13,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
+import '../ui/app_icons.dart';
 
 TextStyle _titleStyle(ThemeData theme) => theme.textTheme.titleMedium!;
 TextStyle _subtitleStyle(ThemeData theme) => theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.outline);
@@ -365,7 +366,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(icon: const Icon(Icons.add_circle_outline), onPressed: _addItem, tooltip: tr('添加')),
+            IconButton(icon: const Icon(AppIcons.plusCircle), onPressed: _addItem, tooltip: tr('添加')),
           ]),
           const SizedBox(height: 12),
           if (_items.isEmpty)
@@ -393,7 +394,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
                         onTapOutside: (_) => _commitEdit(index),
                       ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 20),
+                        icon: const Icon(AppIcons.trash, size: 20),
                         onPressed: () => _removeItem(index),
                         tooltip: tr('删除'),
                       ),
@@ -446,7 +447,7 @@ class ColorPalette extends StatelessWidget {
           width: 23,
           height: 23,
           decoration: BoxDecoration(color: colorScheme.surfaceContainer, shape: BoxShape.circle),
-          child: Icon(Icons.check_rounded, color: colorScheme.primary, size: 12),
+          child: Icon(AppIcons.check, color: colorScheme.primary, size: 12),
         ),
       ]);
     }
@@ -616,7 +617,7 @@ class _OrderBox extends StatelessWidget {
           ? null
           : ordered
               ? Text('$position', style: TextStyle(color: colors.onPrimary, fontSize: 12, fontWeight: FontWeight.bold))
-              : Icon(Icons.check_rounded, size: 16, color: colors.onPrimary),
+              : Icon(AppIcons.check, size: 16, color: colors.onPrimary),
     );
   }
 }

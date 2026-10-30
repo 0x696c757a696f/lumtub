@@ -17,6 +17,7 @@ import '../theme.dart';
 import '../translatable.dart';
 import '../video_card.dart';
 import '../../l10n/l10n.dart';
+import '../app_icons.dart';
 
 /// A channel's page: header with follow button, tabs for videos, Shorts,
 /// live streams, playlists and posts, and a search inside the channel.
@@ -73,7 +74,7 @@ class _ChannelPageState extends State<ChannelPage> {
     final loader = controller.channelVideos;
     final posts = controller.channelPosts;
     if (channel == null || (loader == null && posts == null)) {
-      return StatusView(icon: Icons.account_circle_outlined, title: tr('没有打开的频道'));
+      return StatusView(icon: AppIcons.userCircle, title: tr('没有打开的频道'));
     }
     final tab = controller.channelTab;
     final searching = controller.channelQuery != null;
@@ -135,8 +136,8 @@ class _ChannelPageState extends State<ChannelPage> {
         )),
       if (empty && !loader.loading && error == null)
         SliverFillRemaining(hasScrollBody: false, child: searching
-            ? StatusView(icon: Icons.search_off_rounded, title: tr('频道里没有找到相关内容'), message: tr('换个关键词试试。'))
-            : StatusView(icon: Icons.video_library_outlined, title: tr('这个频道没有{0}', [tab.label]))),
+            ? StatusView(icon: AppIcons.magnifyingGlassMinus, title: tr('频道里没有找到相关内容'), message: tr('换个关键词试试。'))
+            : StatusView(icon: AppIcons.filmReel, title: tr('这个频道没有{0}', [tab.label]))),
     ];
   }
 
@@ -176,8 +177,8 @@ class _ChannelPageState extends State<ChannelPage> {
         SliverFillRemaining(
           hasScrollBody: false,
           child: controller.channelQuery != null
-              ? StatusView(icon: Icons.search_off_rounded, title: tr('没有找到相关的社区帖子'), message: tr('只搜索了最近的帖子，换个关键词试试。'))
-              : StatusView(icon: Icons.forum_outlined, title: tr('这个频道还没有社区帖子')),
+              ? StatusView(icon: AppIcons.magnifyingGlassMinus, title: tr('没有找到相关的社区帖子'), message: tr('只搜索了最近的帖子，换个关键词试试。'))
+              : StatusView(icon: AppIcons.chats, title: tr('这个频道还没有社区帖子')),
         ),
     ];
   }
@@ -201,15 +202,15 @@ class PostCommentsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 8, 4),
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
           child: Row(children: [
             Expanded(child: Text(tr('帖子评论'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
-            IconButton(tooltip: tr('关闭 (Esc)'), icon: const Icon(Icons.close_rounded), onPressed: onClose),
+            IconButton(tooltip: tr('关闭 (Esc)'), icon: const Icon(AppIcons.x), onPressed: onClose),
           ]),
         ),
         if (post.text.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: SelectionArea(child: Text(post.text, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, height: 1.4))),
           ),
         const Divider(height: 1),
@@ -219,7 +220,7 @@ class PostCommentsPanel extends StatelessWidget {
             controller: controller,
             postId: post.id,
             scrollable: true,
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           ),
         ),
       ]);
@@ -247,16 +248,16 @@ class PostCard extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           ChannelAvatar(name: channel.name, radius: 16),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(child: Text(channel.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600))),
           Text(post.published, style: TextStyle(color: colors.outline, fontSize: 12)),
         ]),
         if (post.text.isNotEmpty) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Translatable(controller: controller, text: post.text, builder: (context, text) => SelectableText(text, style: const TextStyle(height: 1.5))),
         ],
         if (post.images.isNotEmpty) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           SizedBox(
             height: 240,
             child: ListView.separated(
@@ -276,21 +277,21 @@ class PostCard extends StatelessWidget {
           ),
         ],
         if (post.choices.isNotEmpty && controller.channelPosts != null) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _Poll(post: post, loader: controller.channelPosts!),
         ] else if (post.poll.isNotEmpty) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           for (final choice in post.poll)
             Container(
               width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 6),
+              margin: const EdgeInsets.only(bottom: 4),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(border: Border.all(color: colors.outlineVariant), borderRadius: BorderRadius.circular(8)),
               child: Text(choice),
             ),
         ],
         if (video != null) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           CompactVideoTile(item: video, onOpen: () => onPlay(video)),
         ],
         const SizedBox(height: 8),
@@ -304,11 +305,11 @@ class PostCard extends StatelessWidget {
           const SizedBox(width: 16),
           TextButton.icon(
             onPressed: onComments,
-            icon: const Icon(Icons.comment_outlined, size: 16),
+            icon: const Icon(AppIcons.chatCircle, size: 16),
             label: Text(post.comments.isEmpty ? tr('评论') : post.comments, style: const TextStyle(fontSize: 12)),
           ),
           const Spacer(),
-          TextButton.icon(onPressed: () => openExternal(post.url), icon: const Icon(Icons.open_in_new_rounded, size: 16), label: Text(tr('在浏览器中查看'))),
+          TextButton.icon(onPressed: () => openExternal(post.url), icon: const Icon(AppIcons.arrowSquareOut, size: 16), label: Text(tr('在浏览器中查看'))),
         ]),
       ]),
     ));
@@ -335,7 +336,7 @@ class _Poll extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       for (final (index, choice) in post.choices.indexed)
         Padding(
-          padding: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.only(bottom: 4),
           child: Material(
             color: Colors.transparent,
             shape: RoundedRectangleBorder(
@@ -357,7 +358,7 @@ class _Poll extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(children: [
-                    Icon(voted == index ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, size: 18, color: voted == index ? colors.primary : colors.outline),
+                    Icon(voted == index ? AppIcons.checkCircleFill : AppIcons.circle, size: 18, color: voted == index ? colors.primary : colors.outline),
                     const SizedBox(width: 8),
                     Expanded(child: Text(choice.text)),
                     if (voted >= 0 && choice.percent.isNotEmpty) Text(choice.percent, style: TextStyle(color: colors.outline, fontSize: 12)),
@@ -405,14 +406,14 @@ class _ChannelSearchFieldState extends State<_ChannelSearchField> {
         decoration: InputDecoration(
           isDense: true,
           hintText: _posts ? tr('搜索频道内的帖子') : tr('搜索频道内的视频'),
-          prefixIcon: const Icon(Icons.search_rounded, size: 20),
+          prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20),
           suffixIcon: ListenableBuilder(
             listenable: _text,
             builder: (context, _) => _text.text.isEmpty
                 ? const SizedBox.shrink()
                 : IconButton(
                     tooltip: tr('清除'),
-                    icon: const Icon(Icons.close_rounded, size: 18),
+                    icon: const Icon(AppIcons.x, size: 18),
                     onPressed: () {
                       _text.clear();
                       widget.controller.searchChannel('');
@@ -436,9 +437,9 @@ class ChannelHeader extends StatelessWidget {
     final colors = context.colors;
     final name = channel.name.isEmpty ? tr('YouTube 频道') : channel.name;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 20),
+      padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
       child: Row(children: [
-        if (onBack != null) IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: onBack, icon: const Icon(Icons.arrow_back_rounded)),
+        if (onBack != null) IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: onBack, icon: const Icon(AppIcons.arrowLeft)),
         const SizedBox(width: 8),
         ChannelAvatar(name: name, radius: 28),
         const SizedBox(width: 16),
@@ -449,7 +450,7 @@ class ChannelHeader extends StatelessWidget {
         ])),
         FollowButton(controller: controller, channel: channel),
         const SizedBox(width: 8),
-        IconButton(tooltip: tr('在浏览器中打开'), onPressed: () => openExternal(channel.url), icon: const Icon(Icons.open_in_new_rounded)),
+        IconButton(tooltip: tr('在浏览器中打开'), onPressed: () => openExternal(channel.url), icon: const Icon(AppIcons.arrowSquareOut)),
         ChannelMenuButton(controller: controller, channel: channel),
       ]),
     );
@@ -510,9 +511,9 @@ class ChannelResultTile extends StatelessWidget {
           const SizedBox(width: 16),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-            if (meta.isNotEmpty) Text(meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13)),
+            if (meta.isNotEmpty) Text(meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
             if (result.description.isNotEmpty)
-              Text(result.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13)),
+              Text(result.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
           ])),
           const SizedBox(width: 12),
           FollowButton(controller: controller, channel: ChannelRef(ref.id, ref.name, result.avatar ?? ref.avatar)),
@@ -538,12 +539,12 @@ class ChannelMenuButton extends StatelessWidget {
         PopupMenuItem(value: value, child: ListTile(dense: true, leading: Icon(icon), title: Text(label)));
     return PopupMenuButton<String>(
       tooltip: tr('更多'),
-      icon: const Icon(Icons.more_vert_rounded),
+      icon: const Icon(AppIcons.dotsThreeVertical),
       itemBuilder: (context) => [
         unrecommended
-            ? entry('recommend', Icons.thumb_up_off_alt_outlined, tr('恢复推荐此频道'))
-            : entry('unrecommend', Icons.thumb_down_off_alt_outlined, tr('不推荐此频道')),
-        blocked ? entry('unblock', Icons.person_outline_rounded, tr('取消屏蔽此频道')) : entry('block', Icons.block_rounded, tr('屏蔽此频道')),
+            ? entry('recommend', AppIcons.thumbsUp, tr('恢复推荐此频道'))
+            : entry('unrecommend', AppIcons.thumbsDown, tr('不推荐此频道')),
+        blocked ? entry('unblock', AppIcons.user, tr('取消屏蔽此频道')) : entry('block', AppIcons.prohibitFill, tr('屏蔽此频道')),
       ],
       onSelected: (choice) => switch (choice) {
         'recommend' => controller.setRecommendChannel(channel, true),
@@ -572,7 +573,7 @@ class FollowButton extends StatelessWidget {
     }
 
     return following
-        ? FilledButton.tonalIcon(onPressed: toggle, icon: const Icon(Icons.check_rounded), label: Text(tr('已关注')))
-        : FilledButton.icon(onPressed: toggle, icon: const Icon(Icons.add_rounded), label: Text(tr('关注')));
+        ? FilledButton.tonalIcon(onPressed: toggle, icon: const Icon(AppIcons.check), label: Text(tr('已关注')))
+        : FilledButton.icon(onPressed: toggle, icon: const Icon(AppIcons.plus), label: Text(tr('关注')));
   }
 }

@@ -8,6 +8,7 @@ import 'package:lumtub/models.dart';
 import 'package:lumtub/ui/lights_off.dart';
 import 'package:lumtub/ui/mini_player.dart';
 import 'package:lumtub/ui/theme.dart';
+import 'package:lumtub/ui/app_icons.dart';
 
 import 'player_controls_test.dart' show FakePlayer;
 
@@ -219,10 +220,10 @@ void main() {
       expect(find.byTooltip('关闭小窗并停止播放'), findsOneWidget);
 
       expect(player.state.playing, isTrue);
-      await tester.tap(find.byIcon(Icons.pause_circle_rounded));
+      await tester.tap(find.byIcon(AppIcons.pauseCircle));
       await tester.pump();
       expect(player.state.playing, isFalse);
-      expect(find.byIcon(Icons.play_circle_rounded), findsOneWidget);
+      expect(find.byIcon(AppIcons.playCircleFill), findsOneWidget);
     });
 
     testWidgets('expand goes back to the watch page', (tester) async {

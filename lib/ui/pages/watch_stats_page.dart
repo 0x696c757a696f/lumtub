@@ -8,6 +8,7 @@ import '../../models.dart' show ChannelRef;
 import '../../watch_time.dart';
 import '../../widgets/pilinara_settings_tiles.dart' show confirmDialog;
 import '../theme.dart';
+import '../app_icons.dart';
 
 /// [seconds] as 1 小时 5 分 or 12 分钟.
 String watchDuration(int seconds) {
@@ -48,7 +49,7 @@ class _WatchStatsPageState extends State<_WatchStatsPage> {
     final recording = widget.controller.preferences.recordHistory;
     return Scaffold(
       appBar: AppBar(title: Text(tr('观看统计')), actions: [
-        IconButton(tooltip: tr('清除观看统计'), icon: const Icon(Icons.delete_outline_rounded), onPressed: _clear),
+        IconButton(tooltip: tr('清除观看统计'), icon: const Icon(AppIcons.trash), onPressed: _clear),
       ]),
       body: FutureBuilder<WatchStats?>(
         future: _stats,
@@ -105,11 +106,11 @@ class _Tile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         width: 160,
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(color: context.colors.surfaceContainerHighest, borderRadius: AppStyle.cardRadius),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(label, style: TextStyle(color: context.colors.outline, fontSize: 12)),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
         ]),
       );
@@ -138,7 +139,7 @@ class _DailyBars extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: seconds == 0 ? colors.surfaceContainerHighest : colors.primary,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
                     ),
                     child: const SizedBox.expand(),
                   ),
@@ -163,7 +164,7 @@ class _ChannelRow extends StatelessWidget {
         onTap: onTap,
         borderRadius: AppStyle.cardRadius,
         child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Expanded(child: Text(name.isEmpty ? tr('未知频道') : name, maxLines: 1, overflow: TextOverflow.ellipsis)),

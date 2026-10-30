@@ -34,6 +34,7 @@ import '../../dearrow.dart';
 import '../video_box.dart';
 import '../../l10n/l10n.dart';
 import '../motion.dart';
+import '../app_icons.dart';
 
 /// Player, video details, the up-next list and the comments. On wide
 /// windows the list and the comments share a side panel, as PiliNara's
@@ -209,7 +210,7 @@ class _RatingButtons extends StatelessWidget {
           style: TextButton.styleFrom(
             foregroundColor: selected ? colors.primary : colors.onSurface,
             backgroundColor: colors.surfaceContainerHighest,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
           ),
           onPressed: signedIn
               ? () => account!.rate(item, rating)
@@ -221,9 +222,9 @@ class _RatingButtons extends StatelessWidget {
     }
 
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      button(VideoRating.like, Icons.thumb_up_outlined, Icons.thumb_up_rounded, tr('赞'), likes),
+      button(VideoRating.like, AppIcons.thumbsUp, AppIcons.thumbsUpFill, tr('赞'), likes),
       const SizedBox(width: 4),
-      button(VideoRating.dislike, Icons.thumb_down_outlined, Icons.thumb_down_rounded, tr('踩'), dislikes,
+      button(VideoRating.dislike, AppIcons.thumbsDown, AppIcons.thumbsDownFill, tr('踩'), dislikes,
           note: dislikes == null ? null : tr('踩数是 Return YouTube Dislike 的估算')),
     ]);
   }
@@ -254,33 +255,33 @@ class _Toolbar extends StatelessWidget {
             itemBuilder: (context) => [
               for (final order in PlayOrder.values) CheckedPopupMenuItem(value: order, checked: order == settings.playOrder, child: Text(order.label)),
             ],
-            child: Chip(avatar: const Icon(Icons.repeat_rounded, size: 18), label: Text(settings.playOrder.label)),
+            child: Chip(avatar: const Icon(AppIcons.repeat, size: 18), label: Text(settings.playOrder.label)),
           ),
           _RatingButtons(controller: controller),
           if (library != null) ...[
             IconButton(
               tooltip: favorite ? tr('取消收藏') : tr('收藏'),
               isSelected: favorite,
-              icon: const Icon(Icons.favorite_border_rounded),
-              selectedIcon: Icon(Icons.favorite_rounded, color: context.colors.primary),
+              icon: const Icon(AppIcons.heart),
+              selectedIcon: Icon(AppIcons.heartFill, color: context.colors.primary),
               onPressed: () => library.toggleFavorite(item),
             ),
             IconButton(
               tooltip: later ? tr('从稍后观看移除') : tr('稍后观看'),
-              icon: Icon(later ? Icons.watch_later_rounded : Icons.watch_later_outlined, color: later ? context.colors.primary : null),
+              icon: Icon(later ? AppIcons.clockFill : AppIcons.clock, color: later ? context.colors.primary : null),
               onPressed: () => library.toggleWatchLater(item),
             ),
-            IconButton(tooltip: tr('添加到播放列表'), icon: const Icon(Icons.playlist_add_rounded), onPressed: () => showAddToPlaylist(context, controller, item)),
+            IconButton(tooltip: tr('添加到播放列表'), icon: const Icon(AppIcons.listPlus), onPressed: () => showAddToPlaylist(context, controller, item)),
             if (controller.account?.signedIn ?? false)
-              IconButton(tooltip: tr('保存到 YouTube 播放列表'), icon: const Icon(Icons.video_library_outlined), onPressed: () => showSaveToYoutube(context, controller, item)),
+              IconButton(tooltip: tr('保存到 YouTube 播放列表'), icon: const Icon(AppIcons.filmReel), onPressed: () => showSaveToYoutube(context, controller, item)),
           ],
           if (controller.downloads != null && !item.isLive)
-            IconButton(tooltip: tr('下载'), icon: const Icon(Icons.download_rounded), onPressed: () => showDownloadChoice(context, controller, item)),
+            IconButton(tooltip: tr('下载'), icon: const Icon(AppIcons.downloadSimple), onPressed: () => showDownloadChoice(context, controller, item)),
           if (!item.isLive)
-            IconButton(tooltip: tr('AI 总结'), icon: const Icon(Icons.auto_awesome_outlined), onPressed: () => showVideoSummary(context, controller)),
-          IconButton(tooltip: tr('复制链接'), icon: const Icon(Icons.link_rounded), onPressed: () => copyText(context, item.url, tr('链接已复制'))),
-          IconButton(tooltip: tr('在浏览器中打开'), icon: const Icon(Icons.open_in_new_rounded), onPressed: () => openExternal(item.url)),
-          IconButton(tooltip: tr('快捷键'), icon: const Icon(Icons.keyboard_outlined), onPressed: () => showShortcutHelp(context, controller.preferences)),
+            IconButton(tooltip: tr('AI 总结'), icon: const Icon(AppIcons.sparkle), onPressed: () => showVideoSummary(context, controller)),
+          IconButton(tooltip: tr('复制链接'), icon: const Icon(AppIcons.link), onPressed: () => copyText(context, item.url, tr('链接已复制'))),
+          IconButton(tooltip: tr('在浏览器中打开'), icon: const Icon(AppIcons.arrowSquareOut), onPressed: () => openExternal(item.url)),
+          IconButton(tooltip: tr('快捷键'), icon: const Icon(AppIcons.keyboard), onPressed: () => showShortcutHelp(context, controller.preferences)),
         ],
       ),
       if (decoded)
@@ -301,7 +302,7 @@ class _BackRow extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: TextButton.icon(onPressed: onBack, icon: const Icon(Icons.arrow_back_rounded), label: Text(tr('返回'))),
+          child: TextButton.icon(onPressed: onBack, icon: const Icon(AppIcons.arrowLeft), label: Text(tr('返回'))),
         ),
       );
 }
@@ -395,11 +396,11 @@ class _Details extends StatelessWidget {
       if (controller.loadingDetails && details == null)
         const Skeleton(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SkeletonBox(width: 220, height: 14),
-          SizedBox(height: 10),
+          SizedBox(height: 8),
           SkeletonBox(height: 12),
-          SizedBox(height: 6),
+          SizedBox(height: 4),
           SkeletonBox(height: 12),
-          SizedBox(height: 6),
+          SizedBox(height: 4),
           SkeletonBox(width: 260, height: 12),
         ]))
       else if (meta.isNotEmpty || (details?.description.isNotEmpty ?? false))
@@ -441,16 +442,16 @@ class _DescriptionState extends State<_Description> {
         borderRadius: AppStyle.cardRadius,
         onTap: hasMore ? () => setState(() => _expanded = !_expanded) : null,
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             if (widget.meta.isNotEmpty) Text(widget.meta, style: context.text.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
             if (widget.description.isNotEmpty) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Translatable(
                 controller: widget.controller,
                 text: widget.description,
                 builder: (context, description) => AnimatedSize(
-                  duration: Motion.of(const Duration(milliseconds: 180)),
+                  duration: Motion.of(Ease.fade),
                   alignment: Alignment.topCenter,
                   // Times seek the video and links open in the browser, as in
                   // PiliNara; the expanded text can still be selected.
@@ -570,18 +571,18 @@ class _ReplayChatMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final icon = switch (message.kind) {
-      LiveChatKind.paidMessage => Icons.volunteer_activism_rounded,
-      LiveChatKind.paidSticker => Icons.emoji_emotions_outlined,
-      LiveChatKind.membership => Icons.workspace_premium_outlined,
-      LiveChatKind.system => Icons.info_outline_rounded,
-      LiveChatKind.message => Icons.chat_bubble_outline_rounded,
+      LiveChatKind.paidMessage => AppIcons.handHeartFill,
+      LiveChatKind.paidSticker => AppIcons.smileySticker,
+      LiveChatKind.membership => AppIcons.medal,
+      LiveChatKind.system => AppIcons.info,
+      LiveChatKind.message => AppIcons.chatCircle,
     };
     final time = message.offset == null ? '' : _chatClock(message.offset!);
     return InkWell(
       onTap: onSeek,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Icon(icon, size: 18, color: context.colors.outline),
           const SizedBox(width: 8),
@@ -591,7 +592,7 @@ class _ReplayChatMessage extends StatelessWidget {
               if (message.amount != null) Text(message.amount!, style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w700)),
               if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: context.colors.outline, fontSize: 12))),
             ]),
-            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 3), child: SelectionArea(child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis))))),
+            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: SelectionArea(child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis))))),
             if (message.stickerUrl != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -637,7 +638,7 @@ class _UpNext extends StatelessWidget {
       ])),
       if (items.isEmpty)
         Padding(
-          padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
           child: Text(
             relatedItems.isEmpty ? tr('播放队列已经到底了。播放搜索结果、播放列表或观看历史中的视频时，后面的视频会显示在这里。') : controller.settings.autoplayNext ? tr('播放队列已经到底了，自动连播会接着播放下面的相关视频。') : tr('播放队列已经到底了。打开自动连播后，会接着播放下面的相关视频。'),
             style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5),
@@ -652,7 +653,7 @@ class _UpNext extends StatelessWidget {
         if (related.loading && relatedItems.isEmpty)
           const Padding(padding: EdgeInsets.all(12), child: LinearProgressIndicator())
         else if (related.error != null)
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: ErrorBanner(tr('无法加载相关视频'), onRetry: () => related.loadMore(retry: true))),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: ErrorBanner(tr('无法加载相关视频'), onRetry: () => related.loadMore(retry: true))),
       ],
     ];
     if (shrinkWrap) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: children);
@@ -660,7 +661,7 @@ class _UpNext extends StatelessWidget {
   }
 
   Widget _header(BuildContext context, String title, String? note, {Widget? trailing}) => Padding(
-        padding: EdgeInsets.fromLTRB(6, 0, trailing == null ? 6 : 0, 8),
+        padding: EdgeInsets.fromLTRB(4, 0, trailing == null ? 4 : 0, 8),
         child: Row(children: [
           Text(title, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
           if (note != null) ...[const SizedBox(width: 8), Text(note, style: TextStyle(color: context.colors.outline, fontSize: 12))],

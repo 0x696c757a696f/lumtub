@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 import 'common.dart';
+import 'app_icons.dart';
 
 /// How long until a stream starts, as the card's headline.
 String startsIn(Duration? left) {
@@ -80,15 +81,15 @@ class _UpcomingCardState extends State<UpcomingCard> {
             fit: BoxFit.scaleDown,
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(color: const Color(0xFFE53935), borderRadius: BorderRadius.circular(999)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.sensors_rounded, size: 16, color: white),
-                  const SizedBox(width: 6),
-                  Text(tr('直播预告'), style: const TextStyle(color: white, fontSize: 13, fontWeight: FontWeight.w600)),
+                  const Icon(AppIcons.broadcast, size: 16, color: white),
+                  const SizedBox(width: 4),
+                  Text(tr('直播预告'), style: const TextStyle(color: white, fontSize: 12, fontWeight: FontWeight.w600)),
                 ]),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               Text(
                 late ? tr('即将开始') : startsIn(left),
                 style: const TextStyle(color: white, fontSize: 30, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()]),
@@ -97,14 +98,14 @@ class _UpcomingCardState extends State<UpcomingCard> {
                 const SizedBox(height: 8),
                 Text(
                   late ? tr('原定 {0} 开始，等待主播开播', [formatScheduledStart(start)]) : tr('开始于 {0}', [formatScheduledStart(start)]),
-                  style: const TextStyle(color: Color(0xDDFFFFFF), fontSize: 15),
+                  style: const TextStyle(color: Color(0xDDFFFFFF), fontSize: 14),
                 ),
               ],
-              const SizedBox(height: 22),
+              const SizedBox(height: 24),
               Row(mainAxisSize: MainAxisSize.min, children: [
                 const RepaintBoundary(child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xAAFFFFFF)))),
-                const SizedBox(width: 10),
-                Text(tr('开始后会自动播放'), style: const TextStyle(color: Color(0xAAFFFFFF), fontSize: 13)),
+                const SizedBox(width: 8),
+                Text(tr('开始后会自动播放'), style: const TextStyle(color: Color(0xAAFFFFFF), fontSize: 12)),
                 const SizedBox(width: 12),
                 TextButton(
                   onPressed: widget.onRetry,

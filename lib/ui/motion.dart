@@ -7,6 +7,14 @@ import 'package:flutter/widgets.dart';
 
 import '../appearance_settings.dart';
 
+/// Motion that settles into place: one curve, a short time for colour and
+/// opacity, a longer one for size and position.
+abstract final class Ease {
+  static const curve = Cubic(0.22, 1, 0.36, 1);
+  static const fade = Duration(milliseconds: 200);
+  static const move = Duration(milliseconds: 320);
+}
+
 /// 减少动画 for the whole app: page changes, expanding sections and hover
 /// effects finish at once. Animations that carry meaning while waiting,
 /// such as progress indicators, keep running.
@@ -28,7 +36,7 @@ abstract final class Motion {
 
   /// Scrolls [controller] to [offset], with a short animation unless
   /// animations are reduced.
-  static Future<void> scrollTo(ScrollController controller, double offset, {Duration duration = const Duration(milliseconds: 220), Curve curve = Curves.easeOutCubic}) async {
+  static Future<void> scrollTo(ScrollController controller, double offset, {Duration duration = const Duration(milliseconds: 220), Curve curve = Ease.curve}) async {
     if (reduced) return controller.jumpTo(offset);
     return controller.animateTo(offset, duration: duration, curve: curve);
   }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/ui/video_card.dart';
+import 'package:lumtub/ui/app_icons.dart';
 
 void main() {
   testWidgets('a card reached with the keyboard shows focus and its actions, and opens', (tester) async {
@@ -16,10 +17,10 @@ void main() {
         ),
       ),
     ));
-    expect(find.byIcon(Icons.more_vert_rounded), findsNothing);
+    expect(find.byIcon(AppIcons.dotsThreeVertical), findsNothing);
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pump();
-    expect(find.byIcon(Icons.more_vert_rounded), findsOneWidget);
+    expect(find.byIcon(AppIcons.dotsThreeVertical), findsOneWidget);
     expect(find.byWidgetPredicate((w) => w is DecoratedBox && w.decoration is BoxDecoration && (w.decoration as BoxDecoration).border != null), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();

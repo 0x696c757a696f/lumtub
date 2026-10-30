@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../language_guess.dart';
+import '../player_settings.dart' show SubtitleLanguage;
 import '../translation.dart';
 import 'theme.dart';
 import 'app_icons.dart';
@@ -50,12 +51,11 @@ class _TranslatableState extends State<Translatable> {
 
   bool get _visible => _showing && !(_byImmersive && !widget.controller.preferences.immersiveTranslation);
 
-  /// For 沉浸式翻译: translates once, quietly, when the text is foreign.
+  /// For 沉浸式翻译: translates once, quietly, when the text is in none of
+  /// the languages the person reads.
   void _auto() {
     _autoTried = true;
-    final language = widget.controller.preferences.translateTarget;
-    final lines = widget.text.split('\n').where((l) => l.trim().isNotEmpty);
-    if (!lines.any((l) => _hasLetters(l) && !looksLike(l, language))) return;
+    if (!needsTranslation(widget.controller, widget.text)) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_visible && !_loading) unawaited(_toggle(quiet: true));
     });
@@ -134,6 +134,20 @@ class _TranslatableState extends State<Translatable> {
       ),
     ]);
   }
+}
+
+/// The languages 沉浸式翻译 leaves alone: the one translated into, the
+/// interface's and Windows'.
+Set<String> readLanguages(AppController controller) => {
+      controller.preferences.translateTarget,
+      if (TranslationLanguage.maybeByCode(youtubeHl) case final ui?) ui.code,
+      SubtitleLanguage.auto.translation.code,
+    };
+
+/// Whether some line of [text] is in none of [readLanguages].
+bool needsTranslation(AppController controller, String text) {
+  final known = readLanguages(controller);
+  return text.split('\n').any((line) => _hasLetters(line) && !known.any((language) => looksLike(line, language)));
 }
 
 /// Whether [line] has a word in it, not just emoji, digits or a link.

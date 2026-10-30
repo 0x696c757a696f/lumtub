@@ -10,6 +10,7 @@ import '../live_chat_composer.dart';
 import '../translation.dart';
 import 'app_icons.dart';
 import 'theme.dart';
+import 'translatable.dart';
 
 /// 沉浸式翻译 for the live chat rows, which are kept between rebuilds and
 /// so listen to this rather than the preferences; [syncChatTranslation]
@@ -47,6 +48,7 @@ class ImmersiveTranslationSwitch extends StatelessWidget {
 }
 
 final _translations = Expando<Future<String?>>();
+final _askedTranslations = Expando<Future<String?>>();
 final _asked = Expando<ValueNotifier<bool>>();
 
 /// Whether [message] was asked to be translated by hand.
@@ -108,10 +110,14 @@ class ChatMessageTranslation extends StatelessWidget {
   final AppController controller;
   final LiveChatMessage message;
 
-  Future<String?> _translate() async {
+  /// Asked by hand, anything not already in the chosen language is
+  /// translated; 沉浸式翻译 also leaves the interface's and Windows'
+  /// languages alone.
+  Future<String?> _translate({required bool asked}) async {
     final language = controller.preferences.translateTarget;
-    bool done(String line) => looksLike(line, language) || !RegExp(r'\p{L}{2,}', unicode: true).hasMatch(line);
-    if (message.text.trim().isEmpty || done(message.text)) return null;
+    final known = asked ? {language} : readLanguages(controller);
+    bool done(String line) => known.any((k) => looksLike(line, k)) || !RegExp(r'\p{L}{2,}', unicode: true).hasMatch(line);
+    if (message.text.split('\n').every(done)) return null;
     try {
       final result = await translateForeignLines(controller.translator, message.text, language, done);
       return result.trim() == message.text.trim() ? null : result;
@@ -126,7 +132,7 @@ class ChatMessageTranslation extends StatelessWidget {
         builder: (context, _) {
           if (!chatTranslation.value && !chatMessageAsked(message).value) return const SizedBox.shrink();
           return FutureBuilder(
-            future: _translations[message] ??= _translate(),
+            future: chatMessageAsked(message).value ? _askedTranslations[message] ??= _translate(asked: true) : _translations[message] ??= _translate(asked: false),
             builder: (context, snapshot) {
               final text = snapshot.data;
               if (text == null) return const SizedBox.shrink();

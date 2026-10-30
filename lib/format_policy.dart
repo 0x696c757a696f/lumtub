@@ -109,6 +109,13 @@ class FormatPolicy {
   /// restricts it.
   static String expression(PlayerSettings settings) => _policy(settings).expression;
 
+  /// For a live stream: the best single stream with picture and sound, up
+  /// to the height cap, else [fallback].
+  static String liveExpression(PlayerSettings settings, String fallback) {
+    final cap = settings.maxHeight > 0 ? '[height<=?${settings.maxHeight}]' : '';
+    return 'b$cap[vcodec!=none][acodec!=none]/$fallback';
+  }
+
   /// Within the user's selected quality cap, yt-dlp first ranks by picture
   /// quality, then breaks ties by the verified decoder ladder. This keeps a
   /// 1080p AVC stream ahead of a 360p VP9 stream, while still choosing

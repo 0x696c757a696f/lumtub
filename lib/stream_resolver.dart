@@ -142,6 +142,9 @@ class StreamResolver {
   /// The format each entry of [_results] is being resolved with.
   final _formats = <String, String>{};
   final _formatSorts = <String, String?>{};
+  /// The proxy each entry of [_results] was resolved through: addresses
+  /// handed out through one may not work through another.
+  final _proxies = <String, String?>{};
 
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
@@ -168,7 +171,7 @@ class StreamResolver {
     if (lowered != null) restorePriority(lowered);
     final cached = _results[videoId];
     // Another format needs another extraction.
-    if (cached != null && _formats[videoId] == format && _formatSorts[videoId] == formatSort) {
+    if (cached != null && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call()) {
       return cached.then((video) => video.fresh ? video : _start(videoId, format, formatSort: formatSort), onError: (_) => _start(videoId, format, formatSort: formatSort));
     }
     return _start(videoId, format, formatSort: formatSort);
@@ -184,7 +187,7 @@ class StreamResolver {
   /// otherwise start one per card. While one runs, only the card asked for
   /// last waits its turn.
   void prefetch(String videoId, String format, {String? formatSort}) {
-    if (_results.containsKey(videoId) && _formats[videoId] == format && _formatSorts[videoId] == formatSort) return;
+    if (_results.containsKey(videoId) && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call()) return;
     if (_prefetching) {
       _nextPrefetch = (videoId, format, formatSort);
       return;
@@ -209,6 +212,7 @@ class StreamResolver {
     _results.remove(videoId);
     _formats.remove(videoId);
     _formatSorts.remove(videoId);
+    _proxies.remove(videoId);
     _deleteInfo(videoId);
   }
 
@@ -243,10 +247,12 @@ class StreamResolver {
     _results[videoId] = future;
     _formats[videoId] = format;
     _formatSorts[videoId] = formatSort;
+    _proxies[videoId] = proxy?.call();
     while (_results.length > _keep) {
       final oldest = _results.keys.first;
       _formats.remove(oldest);
       _formatSorts.remove(oldest);
+      _proxies.remove(oldest);
       _results.remove(oldest);
       _deleteInfo(oldest);
     }

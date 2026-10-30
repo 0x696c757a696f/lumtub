@@ -211,4 +211,9 @@ void main() {
     expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {}, strategy: PlaybackStrategy.quality), 1080).maxHeight, 0);
     expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {VideoCodec.h264}), 1600).maxHeight, 0);
   });
+
+  test('a live stream asks for one stream with picture and sound', () {
+    expect(FormatPolicy.liveExpression(const PlayerSettings(), 'bv+ba'), 'b[vcodec!=none][acodec!=none]/bv+ba');
+    expect(FormatPolicy.liveExpression(const PlayerSettings(maxHeight: 720), 'bv+ba'), 'b[height<=?720][vcodec!=none][acodec!=none]/bv+ba');
+  });
 }

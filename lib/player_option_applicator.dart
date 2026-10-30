@@ -53,6 +53,10 @@ class PlayerOptionApplicator {
       'cache-on-disk': 'no',
       // media_kit's 5 s gives up on a slow proxy before it answers.
       'network-timeout': '20',
+      // YouTube cuts a long open-ended download every couple of megabytes,
+      // and mpv's curl gives up after five cuts in a row: asked for in
+      // pieces, each reply ends cleanly and none counts as a failure.
+      'curl-max-request-size': '10MiB',
       'cache-secs': settings.cacheSeconds.toString(),
       'demuxer-max-bytes': '${settings.cacheMemoryMb}MiB',
       // What was played is kept for seeking back; mpv keeps 50 MiB, which

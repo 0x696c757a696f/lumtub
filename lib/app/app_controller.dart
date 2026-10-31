@@ -93,6 +93,8 @@ import 'account_controller.dart';
 import 'home_feed.dart';
 import 'back_stack.dart';
 import 'library_controller.dart';
+import '../playing_list.dart';
+import '../youtube_player_probe.dart';
 import 'video_list_loader.dart';
 import '../l10n/l10n.dart';
 import '../friendly_error.dart';
@@ -284,6 +286,9 @@ class AppController extends ChangeNotifier {
 
   /// The list the current video was opened from, shown as the play queue.
   List<VideoItem> queue = const [];
+  /// The playlist the playing video was opened from, for the watch page's
+  /// playlist panel; null when it came from anywhere else.
+  PlayingList? playingList;
   /// Videos lined up by hand; they play before [upNext].
   final playQueue = PlayQueue();
   VideoDetails? details;
@@ -435,6 +440,10 @@ class AppController extends ChangeNotifier {
   /// The video 第二字幕语言 was applied to, so a secondary subtitle turned
   /// off stays off.
   String? _secondaryAutoFor;
+  /// Settles once the subtitles shown by themselves for the video of
+  /// [_subtitlesSerial] are on, or are known not to need a translation.
+  Completer<void> _subtitlesReady = Completer<void>()..complete();
+  int _subtitlesSerial = 0;
   bool _decoderPending = false;
   int _mpvLogLines = 0;
   String? _lastMpvLine;
@@ -472,6 +481,9 @@ class AppController extends ChangeNotifier {
   Duration _lastPosition = Duration.zero;
   final _resumePoint = ResumePoint();
   String? _relayed;
+  /// The video opened from its stream addresses rather than through
+  /// ytdl_hook, which then adds no subtitle tracks of its own.
+  String? _openedDirect;
   String? _unrelayed;
   Timer? _stallTimer;
   Timer? _recoveryTimer;
@@ -510,6 +522,36 @@ class AppController extends ChangeNotifier {
   Stream<DownloadTask> get finishedDownloads => _finishedDownloads.stream;
 
   List<VideoItem> get history => _history?.items ?? const [];
+
+  late final _liveProbe = YoutubePlayerProbe(_http);
+  DateTime? _historyLiveChecked;
+
+  /// The history keeps a video as it was when it was watched, so a stream
+  /// watched live would stay 直播中 after it ended. Streams marked live or
+  /// upcoming there are asked again, at most every 10 minutes.
+  Future<void> checkHistoryLive() async {
+    final store = _history;
+    final last = _historyLiveChecked;
+    if (store == null || (last != null && DateTime.now().difference(last) < const Duration(minutes: 10))) return;
+    final marked = [for (final item in store.items) if (item.isLive || item.isUpcoming) item].take(20).toList();
+    if (marked.isEmpty) return;
+    _historyLiveChecked = DateTime.now();
+    final states = await mapLimited(marked, 4, (item) async {
+      try {
+        final bytes = await _liveProbe.fetch(item.id, 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming', expect: 'videoDetails');
+        // No videoDetails (a bot check or a removed video) says nothing.
+        if (!utf8.decode(bytes, allowMalformed: true).contains('"videoDetails"')) return item.liveStatus;
+        return await liveStateOf(bytes) ?? 'was_live';
+      } catch (_) {
+        return item.liveStatus;
+      }
+    });
+    final changed = {for (final (i, item) in marked.indexed) if (states[i] != item.liveStatus) item.id: states[i]};
+    if (changed.isEmpty || _disposed) return;
+    logInfo('History: ${changed.length} of ${marked.length} streams marked live changed');
+    await store.setLiveStatus(changed);
+    _update(() {});
+  }
   @visibleForTesting
   set historyStore(HistoryStore? store) => _history = store;
 
@@ -819,6 +861,7 @@ class AppController extends ChangeNotifier {
       });
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
+      unawaited(checkHistoryLive());
       if (mode == PageMode.subscriptions && preferences.feedAutoRefresh) {
         unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
       }
@@ -1581,7 +1624,7 @@ class AppController extends ChangeNotifier {
   /// Opens [item] on the watch page; [at] is where to start, else where
   /// it was left off. [keepMini] plays it in the mini player when that is
   /// where the last video was (the queue moving on by itself).
-  Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at, bool keepMini = false, bool retryingStart = false}) async {
+  Future<void> play(VideoItem item, {List<VideoItem>? from, PlayingList? list, Duration? at, bool keepMini = false, bool retryingStart = false}) async {
     final player = this.player;
     if (player == null) return;
     if (mini && playing?.id == item.id && at == null && !retryingStart) return expandMini();
@@ -1615,7 +1658,13 @@ class AppController extends ChangeNotifier {
     _update(() {
       playing = item;
       mini = keepMini && mini;
-      if (from != null) queue = List.unmodifiable(from);
+      if (list != null) {
+        playingList = list;
+        queue = List.unmodifiable(list.ordered);
+      } else if (from != null) {
+        playingList = null;
+        queue = List.unmodifiable(from);
+      }
       // A stream being waited for keeps saying so until it plays.
       if (!retryingStart) {
         playbackError = null;
@@ -1633,11 +1682,17 @@ class AppController extends ChangeNotifier {
       _skipped.clear();
       dislikes = null;
     });
+    _subtitlesSerial = serial;
+    _subtitlesReady = Completer<void>();
     unawaited(_loadDetails(item, serial));
     if (settings.returnDislike) unawaited(_loadDislikes(item, serial));
     if (settings.sponsorBlock) unawaited(_loadSegments(item, serial));
     // Another video asked for meanwhile takes over its history and queue.
-    if (await _open(item, serial, start: start, play: preferences.autoPlay) && serial == _playSerial) {
+    // Held until a translated subtitle shown by itself is ready, so the
+    // first lines are not missed; other subtitles load as it plays.
+    final hold = preferences.autoPlay && settings.subtitleMode != SubtitleMode.off && !item.isLive;
+    if (await _open(item, serial, start: start, play: preferences.autoPlay && !hold) && serial == _playSerial) {
+      if (hold) unawaited(_playOnceSubtitlesReady(serial));
       await _applyChannelPlayback(item, player);
       if (preferences.recordHistory && !incognito) await _history?.record(item);
       if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
@@ -1952,16 +2007,19 @@ class AppController extends ChangeNotifier {
       final live = item.isLive;
       // A live stream starts at its live edge, not at a remembered spot.
       if (live) start = null;
-      final subtitles = settings.subtitleMode != SubtitleMode.off;
       // Through the relay when the app's own connections reach YouTube the
       // way libmpv's would: directly or through an HTTP proxy.
       // A video whose stream broke through it is reopened without it.
       final relay = (proxy.url == null || proxy.isHttp) && _unrelayed != item.id ? _relay : null;
       final agent = video?.userAgent;
-      final direct = video != null && video.format == format && !subtitles && !live
+      // Subtitles are added by the app (see _autoSubtitles), so they do not
+      // need ytdl_hook: through it libmpv reads the streams itself, slowly
+      // once its cache is full, and YouTube cuts those connections.
+      final direct = video != null && video.format == format && !live
           ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent, proxy: proxy.url))
           : null;
       _relayed = direct != null && relay != null ? item.id : null;
+      _openedDirect = direct != null ? item.id : null;
       final platform = player.platform;
       if (platform is NativePlayer) {
         // A live stream plays from one HLS stream with picture and sound
@@ -1969,6 +2027,10 @@ class AppController extends ChangeNotifier {
         await platform.setProperty('ytdl-format', live ? FormatPolicy.liveExpression(_playback, format) : format);
         await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null, proxy: proxy.ytDlpValue(settings.proxyMode), formatSort: _formatSort));
         if (direct != null && agent != null) await platform.setProperty('user-agent', agent);
+        // The relay asks YouTube in chunks and reads each reply to its end
+        // itself; libmpv asking it in small pieces would only cut those
+        // chunks short.
+        await platform.setProperty('curl-max-request-size', _relayed == item.id ? '64MiB' : PlayerOptionApplicator.curlRequestSize);
       }
       _tracking = null;
       if (secondarySubtitle != null) {
@@ -2500,7 +2562,7 @@ class AppController extends ChangeNotifier {
     bool shown(SubtitleTrack t) => t.id != 'no' && t.id != 'auto';
     // mpv picks the track itself as the file loads and does not say so;
     // ask it for a few seconds, then pick one here.
-    for (var i = 0; i < 6 && !shown(player.state.track.subtitle); i++) {
+    for (var i = 0; i < 6 && _openedDirect != item.id && !shown(player.state.track.subtitle); i++) {
       await syncMainSubtitle();
       if (serial != _playSerial || this.player != player) return;
       if (shown(player.state.track.subtitle)) break;
@@ -2512,10 +2574,34 @@ class AppController extends ChangeNotifier {
     var mainLanguage = shown(player.state.track.subtitle) ? player.state.track.subtitle.language : null;
     final first = settings.subtitleLanguage.translation;
     final spoken = settings.subtitleOriginal ? originalSubtitle(details.subtitles, language: details.language) : null;
-    final mainWanted = settings.subtitleMode == SubtitleMode.always || mainTitle != null;
+    final wanted = settings.secondarySubtitleLanguage;
+    final target = settings.secondaryTarget;
+    // The second subtitle in the first one's language: only the second shows.
+    final alike = wanted == PlayerSettings.originalSubtitle ? settings.subtitleOriginal : !settings.subtitleOriginal && target?.code == first.code;
+    // Playback waits only for a subtitle to be translated; one the video
+    // has in the language wanted loads while it plays.
+    final manualOnly = settings.subtitleMode == SubtitleMode.manual;
+    final mainPlanned = alike ? null : spoken ?? subtitleIn(details.subtitles, first);
+    final secondPlanned = wanted == PlayerSettings.originalSubtitle ? originalSubtitle(details.subtitles, language: details.language) : target == null ? null : subtitleIn(details.subtitles, target);
+    final translating = (mainPlanned?.kind == SubtitleKind.translated && !manualOnly) || secondPlanned?.kind == SubtitleKind.translated;
+    if (!translating) _subtitlesSettled(serial);
+    if (alike) {
+      final only = wanted == PlayerSettings.originalSubtitle ? originalSubtitle(details.subtitles, language: details.language) : subtitleIn(details.subtitles, target!);
+      if (only != null && secondarySubtitle == null) {
+        logDebug(() => 'Showing ${only.language} (${only.kind.name}) as the only subtitle, in the second subtitle\'s place');
+        await player.setSubtitleTrack(SubtitleTrack.no());
+        if (serial != _playSerial || this.player != player) return;
+        await setSecondarySubtitle(only);
+        return;
+      }
+    }
+    // 有人工字幕时开启 takes an uploaded subtitle only, as mpv's own pick
+    // through ytdl_hook did.
+    final manual = settings.subtitleMode == SubtitleMode.manual;
+    final mainWanted = settings.subtitleMode == SubtitleMode.always || mainTitle != null || (manual && _openedDirect == item.id);
     if (mainWanted && (mainTitle == null || (spoken != null ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage) : !speaks(mainLanguage, first)))) {
       final option = spoken ?? subtitleIn(details.subtitles, first);
-      if (option != null && option.label != mainTitle) {
+      if (option != null && option.label != mainTitle && !(manual && mainTitle == null && option.kind != SubtitleKind.uploaded)) {
         logDebug(() => 'Showing ${option.language} (${option.kind.name}) as the main subtitle');
         await showSubtitle(option);
         if (serial != _playSerial || this.player != player) return;
@@ -2523,8 +2609,6 @@ class AppController extends ChangeNotifier {
         mainLanguage = option.language;
       }
     }
-    final wanted = settings.secondarySubtitleLanguage;
-    final target = TranslationLanguage.maybeByCode(wanted);
     final SubtitleOption? option;
     if (wanted == PlayerSettings.originalSubtitle) {
       option = originalSubtitle(details.subtitles, language: details.language);
@@ -2541,6 +2625,38 @@ class AppController extends ChangeNotifier {
     logDebug(() => 'Showing ${second.language} (${second.kind.name}) as the second subtitle');
     await setSecondarySubtitle(second);
   }
+
+  void _subtitlesSettled(int serial) {
+    if (serial == _subtitlesSerial && !_subtitlesReady.isCompleted) _subtitlesReady.complete();
+  }
+
+  /// Starts the video of [serial], opened paused, once its subtitles are
+  /// ready or after [subtitleWait], unless it was played or another video
+  /// opened meanwhile.
+  Future<void> _playOnceSubtitlesReady(int serial) async {
+    final player = this.player;
+    if (player == null) return;
+    var started = player.state.playing;
+    final watch = player.stream.playing.listen((playing) => started = started || playing);
+    final ready = _subtitlesReady;
+    try {
+      if (!ready.isCompleted) {
+        logInfo('Waiting for the subtitle translation before playing');
+        _update(() => waitingForSubtitles = true);
+      }
+      await ready.future.timeout(subtitleWait, onTimeout: () => logWarn('Subtitle translation not ready after ${subtitleWait.inSeconds} s; playing without it'));
+    } finally {
+      await watch.cancel();
+      if (waitingForSubtitles) _update(() => waitingForSubtitles = false);
+    }
+    if (serial != _playSerial || this.player != player || started) return;
+    await player.play();
+  }
+
+  static const subtitleWait = Duration(seconds: 10);
+
+  /// The video opened is held until its translated subtitle is ready.
+  bool waitingForSubtitles = false;
 
   /// Keeps what was just chosen in the 字幕 panel for the videos after this
   /// one: the first subtitle ([primary]) on or off and in which language,
@@ -3424,13 +3540,17 @@ class AppController extends ChangeNotifier {
         if (waitingForStart && item.scheduledStart == null && loaded.scheduledStart != null) _waitForStart(item);
         unawaited(_localizeDetails(item.id, serial));
         if (speech != null && loaded.subtitles.length == 1) {
+          _subtitlesSettled(serial);
           unawaited(_showSpeech(speech, serial));
         } else {
-          unawaited(_autoSubtitles(item, loaded, serial));
+          unawaited(_autoSubtitles(item, loaded, serial).whenComplete(() => _subtitlesSettled(serial)));
         }
+      } else {
+        _subtitlesSettled(serial);
       }
     } catch (_) {
       // The page still shows what the list already knew about the video.
+      _subtitlesSettled(serial);
     } finally {
       if (serial == _playSerial) _update(() => loadingDetails = false);
     }
@@ -3470,6 +3590,50 @@ class AppController extends ChangeNotifier {
     if (id != null) return ChannelRef(id, details!.channel.isNotEmpty ? details!.channel : item.channel);
     return item.channelRef;
   }
+
+  /// Whether playlist [id] is shown and played last to first.
+  bool isReversed(String id) => preferences.reversedPlaylists.contains(id);
+
+  /// Shows and plays playlist [id] last to first, or in its own order; the
+  /// playlist playing now follows at once.
+  Future<void> setReversed(String id, bool reversed) async {
+    final ids = [for (final other in preferences.reversedPlaylists) if (other != id) other, if (reversed) id];
+    final list = playingList;
+    if (list != null && list.id == id && list.reversed != reversed) {
+      _update(() {
+        playingList = list.withReversed(reversed);
+        queue = List.unmodifiable(playingList!.ordered);
+      });
+    }
+    await savePreferences(preferences.copyWith(reversedPlaylists: ids));
+  }
+
+  /// Plays playlist [id] from [start], or from its first video in the
+  /// order chosen for it.
+  Future<void> playList(String id, String title, List<VideoItem> items, {VideoItem? start}) {
+    final list = PlayingList(id: id, title: title, items: List.unmodifiable(items), reversed: isReversed(id));
+    return play(start ?? list.ordered.first, list: list);
+  }
+
+  /// Reads the rest of the open YouTube playlist, so it can be shown last
+  /// to first.
+  void loadWholeYoutubePlaylist() {
+    final loader = youtubePlaylistVideos;
+    if (loader == null || _loadingWhole == loader) return;
+    _loadingWhole = loader;
+    void more() {
+      if (!identical(loader, youtubePlaylistVideos) || !loader.hasMore || loader.error != null || loader.items.length >= 5000) {
+        loader.removeListener(more);
+        if (identical(_loadingWhole, loader)) _loadingWhole = null;
+        return;
+      }
+      if (!loader.loading) scheduleMicrotask(loader.loadMore);
+    }
+    loader.addListener(more);
+    more();
+  }
+
+  VideoListLoader? _loadingWhole;
 
   /// Videos after the current one in the queue, or the whole queue when the
   /// current video was opened from elsewhere.
@@ -3536,6 +3700,7 @@ class AppController extends ChangeNotifier {
       ++_playSerial;
     }
     if (target == PageMode.home) unawaited(refreshHomeFeed());
+    if (target == PageMode.home || target == PageMode.history) unawaited(checkHistoryLive());
     _saveProgress(now: true);
     if (target == PageMode.subscriptions && preferences.feedAutoRefresh) {
       unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));

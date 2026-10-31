@@ -455,21 +455,25 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 else
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      _focus.requestFocus();
-                      unawaited(_player.playOrPause());
-                      _show();
-                    },
-                    onDoubleTapDown: (details) => _doubleTapAt = details,
-                    onDoubleTap: _doubleTap,
-                    // A finger sliding up or down, as in phone players.
+                    // A finger sliding up or down, as in phone players; a
+                    // mouse never drags these.
                     supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus},
                     onVerticalDragStart: _dragStart,
                     onVerticalDragUpdate: _dragUpdate,
-                    // Hold for 2x, as on YouTube and in PiliNara.
-                    onLongPressStart: (_) => _holdSpeed(true),
-                    onLongPressEnd: (_) => _holdSpeed(false),
-                    onLongPressCancel: () => _holdSpeed(false),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        _focus.requestFocus();
+                        unawaited(_player.playOrPause());
+                        _show();
+                      },
+                      onDoubleTapDown: (details) => _doubleTapAt = details,
+                      onDoubleTap: _doubleTap,
+                      // Hold for 2x, as on YouTube and in PiliNara.
+                      onLongPressStart: (_) => _holdSpeed(true),
+                      onLongPressEnd: (_) => _holdSpeed(false),
+                      onLongPressCancel: () => _holdSpeed(false),
+                    ),
                   ),
                 _buffering(),
                 if (_feedback case (final icon, final text)) Center(child: IgnorePointer(child: _FeedbackBubble(icon: icon, text: text))),
@@ -553,8 +557,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,
         initialData: _player.state.buffering,
-        builder: (context, snapshot) => snapshot.data == true
-            ? const Center(child: IgnorePointer(child: SizedBox(width: 36, height: 36, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))))
+        builder: (context, snapshot) => snapshot.data == true || _controller.waitingForSubtitles
+            ? Center(
+                child: IgnorePointer(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    const SizedBox(width: 36, height: 36, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3)),
+                    if (_controller.waitingForSubtitles) ...[
+                      const SizedBox(height: 12),
+                      Text(tr('正在翻译字幕…'), style: const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4)])),
+                    ],
+                  ]),
+                ),
+              )
             : const SizedBox.shrink(),
       );
 

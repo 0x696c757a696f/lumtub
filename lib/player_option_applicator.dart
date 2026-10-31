@@ -55,10 +55,12 @@ class PlayerOptionApplicator {
       'cache-on-disk': 'no',
       // media_kit's 5 s gives up on a slow proxy before it answers.
       'network-timeout': '20',
-      // YouTube cuts a long open-ended download every couple of megabytes,
-      // and mpv's curl gives up after five cuts in a row: asked for in
-      // pieces, each reply ends cleanly and none counts as a failure.
-      'curl-max-request-size': '10MiB',
+      // YouTube cuts a download that sits unread for about half a minute,
+      // which a full cache makes it do, and mpv's curl gives up after five
+      // cuts. A 1 MiB piece fits in the socket's buffers, so each reply has
+      // been sent in full before reading pauses and none is cut; 10 MiB
+      // pieces were still cut every 2 MB.
+      'curl-max-request-size': curlRequestSize,
       'cache-secs': settings.cacheSeconds.toString(),
       'demuxer-max-bytes': '${settings.cacheMemoryMb}MiB',
       // What was played is kept for seeking back; mpv keeps 50 MiB, which
@@ -70,6 +72,10 @@ class PlayerOptionApplicator {
       ...settings.customOptions,
     };
   }
+
+  /// How much of a stream libmpv's curl asks YouTube for at a time when it
+  /// reads YouTube itself rather than through the relay.
+  static const curlRequestSize = '1MiB';
 
   /// Options mpv's ytdl_hook passes to yt-dlp. [infoJson] is a file from an
   /// earlier extraction: yt-dlp then picks formats and subtitles from it

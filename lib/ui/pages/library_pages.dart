@@ -11,6 +11,7 @@ import '../../youtube_tv_feed.dart';
 import '../common.dart';
 import '../playlist_length.dart';
 import '../theme.dart';
+import '../playlist_order_button.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
 import 'explore_page.dart';
@@ -796,7 +797,8 @@ class PlaylistDetailPage extends StatelessWidget {
         action: FilledButton.tonal(onPressed: controller.goBack, child: Text(tr('返回'))),
       );
     }
-    final items = List<VideoItem>.of(favorites ? library.favorites : later ? library.watchLater : playlist!.items);
+    final own = List<VideoItem>.of(favorites ? library.favorites : later ? library.watchLater : playlist!.items);
+    final items = controller.isReversed(id) ? own.reversed.toList() : own;
     final name = favorites ? tr('收藏') : later ? tr('稍后观看') : playlist!.name;
     void remove(VideoItem item) => favorites
         ? library.toggleFavorite(item)
@@ -818,8 +820,9 @@ class PlaylistDetailPage extends StatelessWidget {
             if (playlistLength(items, progressOf: library.progressOf) case final length?)
               Text(length, style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
           ])),
+          if (own.length > 1) ...[PlaylistOrderButton(controller: controller, id: id), const SizedBox(width: 4)],
           FilledButton.icon(
-            onPressed: items.isEmpty ? null : () => controller.play(items.first, from: items),
+            onPressed: items.isEmpty ? null : () => controller.playList(id, name, own),
             icon: const Icon(AppIcons.playFill),
             label: Text(tr('播放全部')),
           ),
@@ -841,7 +844,7 @@ class PlaylistDetailPage extends StatelessWidget {
           message: later ? tr('右键点击任意视频选“稍后观看”，或在播放页点按钮，想看的视频会先放在这里。') : tr('右键点击任意视频，或在播放页点按钮，就能添加到这里。'),
         ))
       else
-        SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items), onRemove: remove),
+        SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.playList(id, name, own, start: item), onRemove: remove),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
   }

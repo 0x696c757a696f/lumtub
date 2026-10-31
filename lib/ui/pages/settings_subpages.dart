@@ -460,8 +460,13 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
         PopupItem<String>(
           title: tr('第二字幕语言'),
           leading: const Icon(AppIcons.closedCaptioning),
-          value: settings.secondarySubtitleLanguage == PlayerSettings.originalSubtitle ? PlayerSettings.originalSubtitle : secondary?.code ?? '',
-          values: [('', tr('不显示')), (PlayerSettings.originalSubtitle, tr('视频原字幕（自带或自动生成）')), for (final l in TranslationLanguage.all) (l.code, l.label)],
+          value: const {PlayerSettings.originalSubtitle, PlayerSettings.interfaceSubtitle}.contains(settings.secondarySubtitleLanguage) ? settings.secondarySubtitleLanguage : secondary?.code ?? '',
+          values: [
+            ('', tr('不显示')),
+            (PlayerSettings.interfaceSubtitle, tr('界面语言（{0}）', [interfaceTranslationLanguage.label])),
+            (PlayerSettings.originalSubtitle, tr('视频原字幕（自带或自动生成）')),
+            for (final l in TranslationLanguage.all) (l.code, l.label),
+          ],
           enabled: settings.subtitleMode != SubtitleMode.off,
           onSelected: (v) => save(settings.copyWith(secondarySubtitleLanguage: v)),
         ),

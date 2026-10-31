@@ -21,9 +21,11 @@ class _FakeYouTube {
     server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     server.listen((request) async {
       final path = request.uri.path;
-      asked.add(path);
       final text = await utf8.decodeStream(request);
       final body = text.isEmpty ? <String, dynamic>{} : jsonDecode(text) as Map<String, dynamic>;
+      // Recorded together, once the body is read, so a request answered
+      // while another is still being read keeps its own place.
+      asked.add(path);
       bodies.add(body);
       authorizations.add(request.headers.value('authorization'));
       Object? answer;
@@ -86,9 +88,10 @@ void main() {
 
     final answer = await sign.post('next', {'videoId': 'x'});
     expect(answer!.status, 200);
-    final sent = youtube.bodies.last;
+    final at = youtube.asked.lastIndexWhere((path) => path.endsWith('/next'));
+    final sent = youtube.bodies[at];
     expect((sent['videoId'], sent['context']['client']['clientName']), ('x', 'TVHTML5'));
-    expect(youtube.authorizations.last, 'Bearer A2', reason: 'the first token had already run out');
+    expect(youtube.authorizations[at], 'Bearer A2', reason: 'the first token had already run out');
 
     await expectLater(sign.post('account/set_setting', const {}), throwsStateError);
 

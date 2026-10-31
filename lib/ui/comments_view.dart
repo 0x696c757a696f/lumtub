@@ -217,7 +217,7 @@ class _CommentsSectionState extends State<CommentsSection> {
               final immersive = ImmersiveTranslationSwitch(controller: widget.controller);
               return constraints.maxWidth >= 520
                   ? Row(children: [title, const Spacer(), immersive, const SizedBox(width: 4), search, const SizedBox(width: 4), order])
-                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Row(mainAxisAlignment: MainAxisAlignment.end, children: [immersive, search, order])]);
+                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [immersive, search, order])]);
             }),
             const SizedBox(height: 8),
             if (_searching) _searchBar(context),

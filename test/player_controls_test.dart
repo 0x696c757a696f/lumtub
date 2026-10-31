@@ -251,6 +251,18 @@ void main() {
     expect(player.seeks.single.inSeconds, closeTo(300, 2));
   });
 
+  testWidgets('a mouse click on the picture pauses and another plays again', (tester) async {
+    await pump(tester);
+    final before = player.state.playing;
+    final center = tester.getCenter(find.byType(PlayerControls));
+    await tester.tapAt(center, kind: PointerDeviceKind.mouse);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(player.state.playing, !before);
+    await tester.tapAt(center, kind: PointerDeviceKind.mouse);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(player.state.playing, before);
+  });
+
   testWidgets('keys seek by the configured step and show feedback', (tester) async {
     await controller.savePreferences(controller.preferences.copyWith(seekSeconds: 7));
     await pump(tester);

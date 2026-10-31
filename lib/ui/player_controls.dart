@@ -455,21 +455,25 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                 else
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      _focus.requestFocus();
-                      unawaited(_player.playOrPause());
-                      _show();
-                    },
-                    onDoubleTapDown: (details) => _doubleTapAt = details,
-                    onDoubleTap: _doubleTap,
-                    // A finger sliding up or down, as in phone players.
+                    // A finger sliding up or down, as in phone players; a
+                    // mouse never drags these.
                     supportedDevices: const {PointerDeviceKind.touch, PointerDeviceKind.stylus},
                     onVerticalDragStart: _dragStart,
                     onVerticalDragUpdate: _dragUpdate,
-                    // Hold for 2x, as on YouTube and in PiliNara.
-                    onLongPressStart: (_) => _holdSpeed(true),
-                    onLongPressEnd: (_) => _holdSpeed(false),
-                    onLongPressCancel: () => _holdSpeed(false),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        _focus.requestFocus();
+                        unawaited(_player.playOrPause());
+                        _show();
+                      },
+                      onDoubleTapDown: (details) => _doubleTapAt = details,
+                      onDoubleTap: _doubleTap,
+                      // Hold for 2x, as on YouTube and in PiliNara.
+                      onLongPressStart: (_) => _holdSpeed(true),
+                      onLongPressEnd: (_) => _holdSpeed(false),
+                      onLongPressCancel: () => _holdSpeed(false),
+                    ),
                   ),
                 _buffering(),
                 if (_feedback case (final icon, final text)) Center(child: IgnorePointer(child: _FeedbackBubble(icon: icon, text: text))),

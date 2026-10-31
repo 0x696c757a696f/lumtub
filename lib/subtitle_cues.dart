@@ -150,7 +150,18 @@ List<PairedCue> pairSubtitleCues(List<SubtitleCue> main, List<SubtitleCue> secon
     }
     out.add((cue: cue, second: lines.isEmpty ? null : lines.reduce(joinCueText)));
   }
-  return out;
+  // YouTube's translation of automatic captions often leaves a line empty
+  // and puts its words in the next one: that line joins the next row.
+  final joined = <PairedCue>[];
+  for (var i = 0; i < out.length; i++) {
+    var row = out[i];
+    while (row.second == null && i + 1 < out.length && out[i + 1].second != null && out[i + 1].cue.start - row.cue.end <= const Duration(seconds: 1) && out[i + 1].cue.end - row.cue.start <= _longestRow) {
+      i++;
+      row = (cue: (start: row.cue.start, end: out[i].cue.end, text: joinCueText(row.cue.text, out[i].cue.text)), second: out[i].second);
+    }
+    joined.add(row);
+  }
+  return joined;
 }
 
 const _longestRow = Duration(seconds: 15);

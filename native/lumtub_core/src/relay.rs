@@ -301,8 +301,9 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
         // an expired address (403) reaches libmpv as that status at once
         // rather than as a reply that breaks off, which it retries.
         let first = if method == "GET" {
-            match request(fetch, &target, start, (start + target.chunk - 1).min(end)) {
-                Ok(body) => Some(body),
+            let to = (start + target.chunk - 1).min(end);
+            match request(fetch, &target, start, to) {
+                Ok(body) => Some(drain(body, to + 1 - start)),
                 Err(stop) => {
                     let code = match stop {
                         Stop::Refused(code) => code,
@@ -425,6 +426,61 @@ impl Stop {
 
 type Body = Box<dyn Read + Send>;
 
+/// Bytes moved from a YouTube reply to its drained copy at a time.
+const PIECE: usize = 64 << 10;
+
+/// A YouTube reply read to its end on its own thread, at the network's
+/// pace, and handed on as libmpv asks for it. Once libmpv's cache is full it
+/// reads at playback speed; a reply left that long half-read is cut off
+/// (every ~35 s on a user's log). At most [limit] bytes wait, about one
+/// chunk, since a reply is never longer.
+struct Drained {
+    pieces: std::sync::mpsc::Receiver<std::io::Result<Vec<u8>>>,
+    current: Vec<u8>,
+    at: usize,
+}
+
+fn drain(mut body: Body, limit: u64) -> Body {
+    let (tx, rx) = std::sync::mpsc::sync_channel((limit / PIECE as u64 + 1) as usize);
+    std::thread::spawn(move || loop {
+        let mut piece = vec![0; PIECE];
+        match body.read(&mut piece) {
+            Ok(0) => break,
+            Ok(n) => {
+                piece.truncate(n);
+                // Gone when libmpv hung up; the reply is dropped with it.
+                if tx.send(Ok(piece)).is_err() {
+                    break;
+                }
+            }
+            Err(e) if e.kind() == ErrorKind::Interrupted => continue,
+            Err(e) => {
+                let _ = tx.send(Err(e));
+                break;
+            }
+        }
+    });
+    Box::new(Drained { pieces: rx, current: Vec::new(), at: 0 })
+}
+
+impl Read for Drained {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        while self.at == self.current.len() {
+            match self.pieces.recv() {
+                Ok(piece) => {
+                    self.current = piece?;
+                    self.at = 0;
+                }
+                Err(_) => return Ok(0),
+            }
+        }
+        let n = buffer.len().min(self.current.len() - self.at);
+        buffer[..n].copy_from_slice(&self.current[self.at..self.at + n]);
+        self.at += n;
+        Ok(n)
+    }
+}
+
 /// The following chunk's request, opened on a helper thread while the current
 /// chunk is still being read.
 struct Ahead<'s, 'e> {
@@ -442,7 +498,7 @@ impl<'s, 'e> Ahead<'s, 'e> {
     fn start(&mut self) {
         if let Some((from, to)) = self.next.take() {
             let (fetch, target) = (self.fetch, self.target);
-            self.handle = Some(self.scope.spawn(move || request(fetch, target, from, to)));
+            self.handle = Some(self.scope.spawn(move || request(fetch, target, from, to).map(|body| drain(body, to + 1 - from))));
         }
     }
 }
@@ -471,7 +527,7 @@ fn copy(from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>, buffe
         });
         let mut body = match prefetched {
             Some(body) => body,
-            None => request(fetch, target, next, to)?,
+            None => drain(request(fetch, target, next, to)?, to + 1 - next),
         };
         let mut received = 0u64;
         let mut failure = None;
@@ -655,6 +711,34 @@ mod tests {
         let calls = source.calls.lock().unwrap();
         assert_eq!(calls.len(), 3);
         assert!(calls[0].ends_with(&format!("&range=100-{}", 100 + CHUNK - 1)));
+    }
+
+    #[test]
+    fn drains_a_reply_before_it_is_read() {
+        struct Counted(Arc<AtomicU64>, u64);
+        impl Read for Counted {
+            fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+                let n = (self.1 - self.0.load(Ordering::SeqCst)).min(buffer.len() as u64) as usize;
+                buffer[..n].fill(7);
+                self.0.fetch_add(n as u64, Ordering::SeqCst);
+                Ok(n)
+            }
+        }
+        let read = Arc::new(AtomicU64::new(0));
+        let size = 3 * PIECE as u64 + 5;
+        let mut drained = drain(Box::new(Counted(read.clone(), size)), size);
+        // Nothing has asked for a byte yet, and the reply is in already.
+        for _ in 0..100 {
+            if read.load(Ordering::SeqCst) == size {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        assert_eq!(read.load(Ordering::SeqCst), size);
+        let mut all = Vec::new();
+        drained.read_to_end(&mut all).unwrap();
+        assert_eq!(all.len() as u64, size);
+        assert!(all.iter().all(|&b| b == 7));
     }
 
     #[test]

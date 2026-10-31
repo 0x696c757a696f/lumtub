@@ -60,7 +60,7 @@ class PlayerOptionApplicator {
       // cuts. A 1 MiB piece fits in the socket's buffers, so each reply has
       // been sent in full before reading pauses and none is cut; 10 MiB
       // pieces were still cut every 2 MB.
-      'curl-max-request-size': '1MiB',
+      'curl-max-request-size': curlRequestSize,
       'cache-secs': settings.cacheSeconds.toString(),
       'demuxer-max-bytes': '${settings.cacheMemoryMb}MiB',
       // What was played is kept for seeking back; mpv keeps 50 MiB, which
@@ -72,6 +72,10 @@ class PlayerOptionApplicator {
       ...settings.customOptions,
     };
   }
+
+  /// How much of a stream libmpv's curl asks YouTube for at a time when it
+  /// reads YouTube itself rather than through the relay.
+  static const curlRequestSize = '1MiB';
 
   /// Options mpv's ytdl_hook passes to yt-dlp. [infoJson] is a file from an
   /// earlier extraction: yt-dlp then picks formats and subtitles from it

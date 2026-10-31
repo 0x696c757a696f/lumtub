@@ -477,6 +477,9 @@ class AppController extends ChangeNotifier {
   Duration _lastPosition = Duration.zero;
   final _resumePoint = ResumePoint();
   String? _relayed;
+  /// The video opened from its stream addresses rather than through
+  /// ytdl_hook, which then adds no subtitle tracks of its own.
+  String? _openedDirect;
   String? _unrelayed;
   Timer? _stallTimer;
   Timer? _recoveryTimer;
@@ -1994,16 +1997,19 @@ class AppController extends ChangeNotifier {
       final live = item.isLive;
       // A live stream starts at its live edge, not at a remembered spot.
       if (live) start = null;
-      final subtitles = settings.subtitleMode != SubtitleMode.off;
       // Through the relay when the app's own connections reach YouTube the
       // way libmpv's would: directly or through an HTTP proxy.
       // A video whose stream broke through it is reopened without it.
       final relay = (proxy.url == null || proxy.isHttp) && _unrelayed != item.id ? _relay : null;
       final agent = video?.userAgent;
-      final direct = video != null && video.format == format && !subtitles && !live
+      // Subtitles are added by the app (see _autoSubtitles), so they do not
+      // need ytdl_hook: through it libmpv reads the streams itself, slowly
+      // once its cache is full, and YouTube cuts those connections.
+      final direct = video != null && video.format == format && !live
           ? video.directAddress(relay: relay == null ? null : (url, size) => relay.register(url, size: size, userAgent: agent, proxy: proxy.url))
           : null;
       _relayed = direct != null && relay != null ? item.id : null;
+      _openedDirect = direct != null ? item.id : null;
       final platform = player.platform;
       if (platform is NativePlayer) {
         // A live stream plays from one HLS stream with picture and sound
@@ -2011,6 +2017,10 @@ class AppController extends ChangeNotifier {
         await platform.setProperty('ytdl-format', live ? FormatPolicy.liveExpression(_playback, format) : format);
         await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null, proxy: proxy.ytDlpValue(settings.proxyMode), formatSort: _formatSort));
         if (direct != null && agent != null) await platform.setProperty('user-agent', agent);
+        // The relay asks YouTube in chunks and reads each reply to its end
+        // itself; libmpv asking it in small pieces would only cut those
+        // chunks short.
+        await platform.setProperty('curl-max-request-size', _relayed == item.id ? '64MiB' : PlayerOptionApplicator.curlRequestSize);
       }
       _tracking = null;
       if (secondarySubtitle != null) {
@@ -2542,7 +2552,7 @@ class AppController extends ChangeNotifier {
     bool shown(SubtitleTrack t) => t.id != 'no' && t.id != 'auto';
     // mpv picks the track itself as the file loads and does not say so;
     // ask it for a few seconds, then pick one here.
-    for (var i = 0; i < 6 && !shown(player.state.track.subtitle); i++) {
+    for (var i = 0; i < 6 && _openedDirect != item.id && !shown(player.state.track.subtitle); i++) {
       await syncMainSubtitle();
       if (serial != _playSerial || this.player != player) return;
       if (shown(player.state.track.subtitle)) break;
@@ -2568,10 +2578,13 @@ class AppController extends ChangeNotifier {
         return;
       }
     }
-    final mainWanted = settings.subtitleMode == SubtitleMode.always || mainTitle != null;
+    // 有人工字幕时开启 takes an uploaded subtitle only, as mpv's own pick
+    // through ytdl_hook did.
+    final manual = settings.subtitleMode == SubtitleMode.manual;
+    final mainWanted = settings.subtitleMode == SubtitleMode.always || mainTitle != null || (manual && _openedDirect == item.id);
     if (mainWanted && (mainTitle == null || (spoken != null ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage) : !speaks(mainLanguage, first)))) {
       final option = spoken ?? subtitleIn(details.subtitles, first);
-      if (option != null && option.label != mainTitle) {
+      if (option != null && option.label != mainTitle && !(manual && mainTitle == null && option.kind != SubtitleKind.uploaded)) {
         logDebug(() => 'Showing ${option.language} (${option.kind.name}) as the main subtitle');
         await showSubtitle(option);
         if (serial != _playSerial || this.player != player) return;

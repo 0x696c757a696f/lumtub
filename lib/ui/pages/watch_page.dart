@@ -37,6 +37,7 @@ import '../../l10n/l10n.dart';
 import '../motion.dart';
 import '../app_icons.dart';
 import '../live_chat_input.dart';
+import '../live_chat_list.dart';
 
 /// Player, video details, the up-next list and the comments. On wide
 /// windows the list and the comments share a side panel, as PiliNara's
@@ -537,19 +538,30 @@ class _ReplayChatPanel extends StatelessWidget {
         Expanded(child: Text(tr(live ? '聊天' : '聊天回放'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
         ImmersiveTranslationSwitch(controller: controller),
       ]),
-      if (live && controller.playing != null) LiveChatInput(controller: controller, videoId: controller.playing!.id),
       const SizedBox(height: 8),
       if (controller.loadingReplayChat) const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator())),
       if (controller.replayChatError != null) ErrorBanner(tr(live ? '无法加载聊天：{0}' : '无法加载聊天回放：{0}', [controller.replayChatError]), onRetry: controller.retryChat),
       if (!controller.loadingReplayChat && controller.replayChatError == null && messages.isEmpty)
         Padding(padding: const EdgeInsets.all(12), child: Text(tr(live ? '当前直播没有公开聊天' : '这个直播录像没有公开的聊天回放'), style: TextStyle(color: context.colors.onSurfaceVariant))),
     ];
-    if (messages.isEmpty) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: header);
+    // The box to write in stays under the messages, as on YouTube.
+    final input = live && controller.playing != null ? LiveChatInput(controller: controller, videoId: controller.playing!.id) : null;
+    if (messages.isEmpty) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [...header, if (input != null) input]);
     // The same widget for the same message, so a flush of new messages
     // does not build the ones already shown again.
     Widget messageAt(int index) {
       final message = messages[index];
       return _chatRows[message] ??= _ReplayChatMessage(controller: controller, message: message, onSeek: message.offset == null ? null : () => controller.player?.seek(message.offset!));
+    }
+    if (live) {
+      // Newest at the bottom; a list built from the bottom stays on the
+      // newest messages as they arrive while it is scrolled to the end.
+      final list = LiveChatList(messages: messages, messageAt: messageAt);
+      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        ...header,
+        if (shrinkWrap) SizedBox(height: 320, child: list) else Expanded(child: list),
+        if (input != null) Padding(padding: EdgeInsets.only(top: 8, bottom: shrinkWrap ? 0 : AppStyle.pagePadding), child: input),
+      ]);
     }
     if (shrinkWrap) {
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

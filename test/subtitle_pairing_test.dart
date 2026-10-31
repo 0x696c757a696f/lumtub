@@ -12,6 +12,15 @@ void main() {
     expect([for (final p in paired) p.second], ['你好', '世界', null]);
   });
 
+  test('a line left untranslated joins the next one, which holds its words', () {
+    final paired = pairSubtitleCues(
+      [cue(0, 3000, 'Avete davvero fatto pulizia nelle vostre'), cue(3000, 6000, 'relazioni oppure avete semplicemente'), cue(20000, 22000, 'Alone')],
+      [cue(3000, 6000, '你是否真的清理了你们的人际关系，还是刚刚停止')],
+    );
+    expect([for (final p in paired) p.cue.text], ['Avete davvero fatto pulizia nelle vostre relazioni oppure avete semplicemente', 'Alone']);
+    expect([for (final p in paired) p.second], ['你是否真的清理了你们的人际关系，还是刚刚停止', null]);
+  });
+
   test('without a second subtitle every line stands alone', () {
     final paired = pairSubtitleCues([cue(0, 1000, 'a')], const []);
     expect(paired.single.cue.text, 'a');

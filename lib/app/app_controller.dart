@@ -2411,24 +2411,30 @@ class AppController extends ChangeNotifier {
     Future<List<SubtitleCue>> secondCues() => second != null ? _optionCues(second) : secondTrack != null ? _trackCues(platform, secondTrack) : Future.value(const []);
     final hasSecond = second != null || secondTrack != null;
     final mode = preferences.subtitleListMode;
-    if (off || (hasSecond && mode == SubtitleListMode.second)) {
-      return hasSecond ? pairSubtitleCues(await secondCues(), const []) : const [];
+    // A translation on its own, as the first subtitle or as the second
+    // with the first one off, is listed with the lines it was made from,
+    // which stand first: on top, or alone with 只看第二字幕.
+    Future<List<PairedCue>?> withOriginal(List<SubtitleCue> translation, SubtitleOption? original) async {
+      if (original == null || mode == SubtitleListMode.first) return null;
+      final from = await _optionCues(original);
+      if (from.isEmpty) return null;
+      return switch (mode) {
+        SubtitleListMode.secondOver => pairSubtitleCues(translation, from),
+        SubtitleListMode.second => pairSubtitleCues(from, const []),
+        _ => pairSubtitleCues(from, translation),
+      };
     }
+
+    if (off && hasSecond) {
+      final cues = await secondCues();
+      return await withOriginal(cues, second == null ? null : _originalOf(second)) ?? pairSubtitleCues(cues, const []);
+    }
+    if (off) return const [];
+    if (hasSecond && mode == SubtitleListMode.second) return pairSubtitleCues(await secondCues(), const []);
     final main = await _trackCues(platform, track);
-    if (!hasSecond && mode != SubtitleListMode.first) {
-      // A translation on its own is listed with the lines it was made
-      // from, which stand first: on top, or alone with 只看第二字幕.
-      final original = listedOriginalOf(track);
-      if (original != null) {
-        final from = await _optionCues(original);
-        if (from.isNotEmpty) {
-          return switch (mode) {
-            SubtitleListMode.secondOver => pairSubtitleCues(main, from),
-            SubtitleListMode.second => pairSubtitleCues(from, const []),
-            _ => pairSubtitleCues(from, main),
-          };
-        }
-      }
+    if (!hasSecond) {
+      final listed = await withOriginal(main, listedOriginalOf(track));
+      if (listed != null) return listed;
     }
     if (!hasSecond || mode == SubtitleListMode.first) return pairSubtitleCues(main, const []);
     return pairSubtitleCues(main, await secondCues());
@@ -2479,8 +2485,12 @@ class AppController extends ChangeNotifier {
   SubtitleOption? listedOriginalOf(SubtitleTrack track) {
     final subtitles = details?.subtitles ?? const <SubtitleOption>[];
     final option = subtitles.where((o) => o.label == track.title).firstOrNull;
-    if (option == null || option.kind != SubtitleKind.translated) return null;
-    return originalSubtitle(subtitles, language: details?.language);
+    return option == null ? null : _originalOf(option);
+  }
+
+  SubtitleOption? _originalOf(SubtitleOption option) {
+    if (option.kind != SubtitleKind.translated) return null;
+    return originalSubtitle(details?.subtitles ?? const [], language: details?.language);
   }
 
   Future<List<SubtitleCue>> _optionCues(SubtitleOption option) => _cached('${playing?.id}\u0000${option.url}', () async => File(await _subtitleFile(option)).readAsString());
@@ -2573,27 +2583,34 @@ class AppController extends ChangeNotifier {
     var mainTitle = shown(player.state.track.subtitle) ? player.state.track.subtitle.title : null;
     var mainLanguage = shown(player.state.track.subtitle) ? player.state.track.subtitle.language : null;
     final first = settings.subtitleLanguage.translation;
-    final spoken = settings.subtitleOriginal ? originalSubtitle(details.subtitles, language: details.language) : null;
+    final original = originalSubtitle(details.subtitles, language: details.language);
+    var spoken = settings.subtitleOriginal ? original : null;
     final wanted = settings.secondarySubtitleLanguage;
     final target = settings.secondaryTarget;
-    // The second subtitle in the first one's language: only the second shows.
-    final alike = wanted == PlayerSettings.originalSubtitle ? settings.subtitleOriginal : !settings.subtitleOriginal && target?.code == first.code;
+    final manualOnly = settings.subtitleMode == SubtitleMode.manual;
+    // The second subtitle in the first one's language: the first one shows
+    // the language the video is spoken in instead, and when that is the
+    // same language too, it shows alone, as the first subtitle.
+    var alike = wanted == PlayerSettings.originalSubtitle ? settings.subtitleOriginal : !settings.subtitleOriginal && target?.code == first.code;
+    if (alike && target != null && wanted != PlayerSettings.originalSubtitle && original != null && !speaks(original.language, target)) {
+      spoken = original;
+      alike = false;
+    }
+    final mainPlanned = alike
+        ? (wanted == PlayerSettings.originalSubtitle ? original : subtitleIn(details.subtitles, target!))
+        : spoken ?? subtitleIn(details.subtitles, first);
+    final secondPlanned = alike ? null : wanted == PlayerSettings.originalSubtitle ? original : target == null ? null : subtitleIn(details.subtitles, target);
     // Playback waits only for a subtitle to be translated; one the video
     // has in the language wanted loads while it plays.
-    final manualOnly = settings.subtitleMode == SubtitleMode.manual;
-    final mainPlanned = alike ? null : spoken ?? subtitleIn(details.subtitles, first);
-    final secondPlanned = wanted == PlayerSettings.originalSubtitle ? originalSubtitle(details.subtitles, language: details.language) : target == null ? null : subtitleIn(details.subtitles, target);
     final translating = (mainPlanned?.kind == SubtitleKind.translated && !manualOnly) || secondPlanned?.kind == SubtitleKind.translated;
     if (!translating) _subtitlesSettled(serial);
     if (alike) {
-      final only = wanted == PlayerSettings.originalSubtitle ? originalSubtitle(details.subtitles, language: details.language) : subtitleIn(details.subtitles, target!);
-      if (only != null && secondarySubtitle == null) {
-        logDebug(() => 'Showing ${only.language} (${only.kind.name}) as the only subtitle, in the second subtitle\'s place');
-        await player.setSubtitleTrack(SubtitleTrack.no());
-        if (serial != _playSerial || this.player != player) return;
-        await setSecondarySubtitle(only);
-        return;
+      final only = mainPlanned;
+      if (only != null && only.label != mainTitle && !(manualOnly && only.kind != SubtitleKind.uploaded)) {
+        logDebug(() => 'Showing ${only.language} (${only.kind.name}) as the only subtitle');
+        await showSubtitle(only);
       }
+      return;
     }
     // 有人工字幕时开启 takes an uploaded subtitle only, as mpv's own pick
     // through ytdl_hook did.

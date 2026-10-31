@@ -506,12 +506,20 @@ class SubtitleOption {
     }
 
     final auto = read(automatic, true);
+    // The captions YouTube made in the language spoken ("xx-orig") come
+    // before an entry in the same language named "(Original)".
     final original = auto.where((s) => s.kind == SubtitleKind.automatic).toList();
     // yt-dlp lists the original language twice: as "xx-orig" and as "xx".
     final originalLanguages = {for (final s in original) s.language};
+    final byLanguage = <String, SubtitleOption>{};
+    for (final s in original) {
+      final listed = automatic is Map ? automatic['${s.language}-orig'] : null;
+      final orig = listed is List && _vtt(listed)?.$1 == s.url;
+      if (orig || !byLanguage.containsKey(s.language)) byLanguage[s.language] = s;
+    }
     return [
       ...read(uploaded, false),
-      ...{for (final s in original) s.language: s}.values,
+      ...byLanguage.values,
       ...auto.where((s) => s.kind == SubtitleKind.translated && !originalLanguages.contains(s.language)),
     ];
   }

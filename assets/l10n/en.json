@@ -2802,6 +2802,8 @@
   "打开后，评论、帖子和直播聊天里的外语内容自动在下方显示译文；界面语言和系统语言的内容不翻。": "When on, foreign-language comments, posts and live chat show a translation underneath; text in the interface or system language is left alone.",
   "正序": "In order",
   "倒序": "Reversed",
+  "{0} 条新消息": "{0} new messages",
+  "回到最新": "Back to the latest",
   "正在翻译字幕…": "Translating subtitles…",
   "播放列表 · {0}/{1}": "Playlist · {0}/{1}",
   "播放列表 · {0} 个": "Playlist · {0} videos",

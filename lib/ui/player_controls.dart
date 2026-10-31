@@ -557,8 +557,18 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   Widget _buffering() => StreamBuilder<bool>(
         stream: _player.stream.buffering,
         initialData: _player.state.buffering,
-        builder: (context, snapshot) => snapshot.data == true
-            ? const Center(child: IgnorePointer(child: SizedBox(width: 36, height: 36, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))))
+        builder: (context, snapshot) => snapshot.data == true || _controller.waitingForSubtitles
+            ? Center(
+                child: IgnorePointer(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    const SizedBox(width: 36, height: 36, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3)),
+                    if (_controller.waitingForSubtitles) ...[
+                      const SizedBox(height: 12),
+                      Text(tr('正在翻译字幕…'), style: const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4)])),
+                    ],
+                  ]),
+                ),
+              )
             : const SizedBox.shrink(),
       );
 

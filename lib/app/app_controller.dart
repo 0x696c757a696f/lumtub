@@ -440,6 +440,10 @@ class AppController extends ChangeNotifier {
   /// The video 第二字幕语言 was applied to, so a secondary subtitle turned
   /// off stays off.
   String? _secondaryAutoFor;
+  /// Settles once the subtitles shown by themselves for the video of
+  /// [_subtitlesSerial] are on, or are known not to need a translation.
+  Completer<void> _subtitlesReady = Completer<void>()..complete();
+  int _subtitlesSerial = 0;
   bool _decoderPending = false;
   int _mpvLogLines = 0;
   String? _lastMpvLine;
@@ -1678,11 +1682,17 @@ class AppController extends ChangeNotifier {
       _skipped.clear();
       dislikes = null;
     });
+    _subtitlesSerial = serial;
+    _subtitlesReady = Completer<void>();
     unawaited(_loadDetails(item, serial));
     if (settings.returnDislike) unawaited(_loadDislikes(item, serial));
     if (settings.sponsorBlock) unawaited(_loadSegments(item, serial));
     // Another video asked for meanwhile takes over its history and queue.
-    if (await _open(item, serial, start: start, play: preferences.autoPlay) && serial == _playSerial) {
+    // Held until a translated subtitle shown by itself is ready, so the
+    // first lines are not missed; other subtitles load as it plays.
+    final hold = preferences.autoPlay && settings.subtitleMode != SubtitleMode.off && !item.isLive;
+    if (await _open(item, serial, start: start, play: preferences.autoPlay && !hold) && serial == _playSerial) {
+      if (hold) unawaited(_playOnceSubtitlesReady(serial));
       await _applyChannelPlayback(item, player);
       if (preferences.recordHistory && !incognito) await _history?.record(item);
       if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
@@ -2568,6 +2578,13 @@ class AppController extends ChangeNotifier {
     final target = settings.secondaryTarget;
     // The second subtitle in the first one's language: only the second shows.
     final alike = wanted == PlayerSettings.originalSubtitle ? settings.subtitleOriginal : !settings.subtitleOriginal && target?.code == first.code;
+    // Playback waits only for a subtitle to be translated; one the video
+    // has in the language wanted loads while it plays.
+    final manualOnly = settings.subtitleMode == SubtitleMode.manual;
+    final mainPlanned = alike ? null : spoken ?? subtitleIn(details.subtitles, first);
+    final secondPlanned = wanted == PlayerSettings.originalSubtitle ? originalSubtitle(details.subtitles, language: details.language) : target == null ? null : subtitleIn(details.subtitles, target);
+    final translating = (mainPlanned?.kind == SubtitleKind.translated && !manualOnly) || secondPlanned?.kind == SubtitleKind.translated;
+    if (!translating) _subtitlesSettled(serial);
     if (alike) {
       final only = wanted == PlayerSettings.originalSubtitle ? originalSubtitle(details.subtitles, language: details.language) : subtitleIn(details.subtitles, target!);
       if (only != null && secondarySubtitle == null) {
@@ -2608,6 +2625,38 @@ class AppController extends ChangeNotifier {
     logDebug(() => 'Showing ${second.language} (${second.kind.name}) as the second subtitle');
     await setSecondarySubtitle(second);
   }
+
+  void _subtitlesSettled(int serial) {
+    if (serial == _subtitlesSerial && !_subtitlesReady.isCompleted) _subtitlesReady.complete();
+  }
+
+  /// Starts the video of [serial], opened paused, once its subtitles are
+  /// ready or after [subtitleWait], unless it was played or another video
+  /// opened meanwhile.
+  Future<void> _playOnceSubtitlesReady(int serial) async {
+    final player = this.player;
+    if (player == null) return;
+    var started = player.state.playing;
+    final watch = player.stream.playing.listen((playing) => started = started || playing);
+    final ready = _subtitlesReady;
+    try {
+      if (!ready.isCompleted) {
+        logInfo('Waiting for the subtitle translation before playing');
+        _update(() => waitingForSubtitles = true);
+      }
+      await ready.future.timeout(subtitleWait, onTimeout: () => logWarn('Subtitle translation not ready after ${subtitleWait.inSeconds} s; playing without it'));
+    } finally {
+      await watch.cancel();
+      if (waitingForSubtitles) _update(() => waitingForSubtitles = false);
+    }
+    if (serial != _playSerial || this.player != player || started) return;
+    await player.play();
+  }
+
+  static const subtitleWait = Duration(seconds: 10);
+
+  /// The video opened is held until its translated subtitle is ready.
+  bool waitingForSubtitles = false;
 
   /// Keeps what was just chosen in the 字幕 panel for the videos after this
   /// one: the first subtitle ([primary]) on or off and in which language,
@@ -3491,13 +3540,17 @@ class AppController extends ChangeNotifier {
         if (waitingForStart && item.scheduledStart == null && loaded.scheduledStart != null) _waitForStart(item);
         unawaited(_localizeDetails(item.id, serial));
         if (speech != null && loaded.subtitles.length == 1) {
+          _subtitlesSettled(serial);
           unawaited(_showSpeech(speech, serial));
         } else {
-          unawaited(_autoSubtitles(item, loaded, serial));
+          unawaited(_autoSubtitles(item, loaded, serial).whenComplete(() => _subtitlesSettled(serial)));
         }
+      } else {
+        _subtitlesSettled(serial);
       }
     } catch (_) {
       // The page still shows what the list already knew about the video.
+      _subtitlesSettled(serial);
     } finally {
       if (serial == _playSerial) _update(() => loadingDetails = false);
     }

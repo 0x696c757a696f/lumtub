@@ -28,4 +28,10 @@ void main() {
     expect(options[2].label, '日语（自动翻译）');
     expect(SubtitleOption.languageName('sw', 'Swahili (Original)'), 'Swahili · sw');
   });
+
+  test('the captions in the language spoken come before another entry named original', () {
+    List<Map<String, String>> vtt(String lang) => [{'ext': 'vtt', 'url': 'https://yt.example/$lang.vtt', 'name': 'Italian (Original)'}];
+    final options = SubtitleOption.listFrom(null, {'it': vtt('it'), 'it-orig': vtt('it-orig')});
+    expect(options.single.url, 'https://yt.example/it-orig.vtt');
+  });
 }

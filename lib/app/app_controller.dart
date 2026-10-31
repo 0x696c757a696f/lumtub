@@ -93,6 +93,7 @@ import 'account_controller.dart';
 import 'home_feed.dart';
 import 'back_stack.dart';
 import 'library_controller.dart';
+import '../youtube_player_probe.dart';
 import 'video_list_loader.dart';
 import '../l10n/l10n.dart';
 import '../friendly_error.dart';
@@ -510,6 +511,36 @@ class AppController extends ChangeNotifier {
   Stream<DownloadTask> get finishedDownloads => _finishedDownloads.stream;
 
   List<VideoItem> get history => _history?.items ?? const [];
+
+  late final _liveProbe = YoutubePlayerProbe(_http);
+  DateTime? _historyLiveChecked;
+
+  /// The history keeps a video as it was when it was watched, so a stream
+  /// watched live would stay 直播中 after it ended. Streams marked live or
+  /// upcoming there are asked again, at most every 10 minutes.
+  Future<void> checkHistoryLive() async {
+    final store = _history;
+    final last = _historyLiveChecked;
+    if (store == null || (last != null && DateTime.now().difference(last) < const Duration(minutes: 10))) return;
+    final marked = [for (final item in store.items) if (item.isLive || item.isUpcoming) item].take(20).toList();
+    if (marked.isEmpty) return;
+    _historyLiveChecked = DateTime.now();
+    final states = await mapLimited(marked, 4, (item) async {
+      try {
+        final bytes = await _liveProbe.fetch(item.id, 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming', expect: 'videoDetails');
+        // No videoDetails (a bot check or a removed video) says nothing.
+        if (!utf8.decode(bytes, allowMalformed: true).contains('"videoDetails"')) return item.liveStatus;
+        return await liveStateOf(bytes) ?? 'was_live';
+      } catch (_) {
+        return item.liveStatus;
+      }
+    });
+    final changed = {for (final (i, item) in marked.indexed) if (states[i] != item.liveStatus) item.id: states[i]};
+    if (changed.isEmpty || _disposed) return;
+    logInfo('History: ${changed.length} of ${marked.length} streams marked live changed');
+    await store.setLiveStatus(changed);
+    _update(() {});
+  }
   @visibleForTesting
   set historyStore(HistoryStore? store) => _history = store;
 
@@ -819,6 +850,7 @@ class AppController extends ChangeNotifier {
       });
       if (mode == PageMode.explore) _loadExplore();
       if (mode == PageMode.home) unawaited(refreshHomeFeed());
+      unawaited(checkHistoryLive());
       if (mode == PageMode.subscriptions && preferences.feedAutoRefresh) {
         unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));
       }
@@ -2512,6 +2544,20 @@ class AppController extends ChangeNotifier {
     var mainLanguage = shown(player.state.track.subtitle) ? player.state.track.subtitle.language : null;
     final first = settings.subtitleLanguage.translation;
     final spoken = settings.subtitleOriginal ? originalSubtitle(details.subtitles, language: details.language) : null;
+    final wanted = settings.secondarySubtitleLanguage;
+    final target = settings.secondaryTarget;
+    // The second subtitle in the first one's language: only the second shows.
+    final alike = wanted == PlayerSettings.originalSubtitle ? settings.subtitleOriginal : !settings.subtitleOriginal && target?.code == first.code;
+    if (alike) {
+      final only = wanted == PlayerSettings.originalSubtitle ? originalSubtitle(details.subtitles, language: details.language) : subtitleIn(details.subtitles, target!);
+      if (only != null && secondarySubtitle == null) {
+        logDebug(() => 'Showing ${only.language} (${only.kind.name}) as the only subtitle, in the second subtitle\'s place');
+        await player.setSubtitleTrack(SubtitleTrack.no());
+        if (serial != _playSerial || this.player != player) return;
+        await setSecondarySubtitle(only);
+        return;
+      }
+    }
     final mainWanted = settings.subtitleMode == SubtitleMode.always || mainTitle != null;
     if (mainWanted && (mainTitle == null || (spoken != null ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage) : !speaks(mainLanguage, first)))) {
       final option = spoken ?? subtitleIn(details.subtitles, first);
@@ -2523,8 +2569,6 @@ class AppController extends ChangeNotifier {
         mainLanguage = option.language;
       }
     }
-    final wanted = settings.secondarySubtitleLanguage;
-    final target = TranslationLanguage.maybeByCode(wanted);
     final SubtitleOption? option;
     if (wanted == PlayerSettings.originalSubtitle) {
       option = originalSubtitle(details.subtitles, language: details.language);
@@ -3536,6 +3580,7 @@ class AppController extends ChangeNotifier {
       ++_playSerial;
     }
     if (target == PageMode.home) unawaited(refreshHomeFeed());
+    if (target == PageMode.home || target == PageMode.history) unawaited(checkHistoryLive());
     _saveProgress(now: true);
     if (target == PageMode.subscriptions && preferences.feedAutoRefresh) {
       unawaited(library?.refreshFeed(interval: Duration(minutes: preferences.feedRefreshMinutes)));

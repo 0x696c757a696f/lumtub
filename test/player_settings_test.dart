@@ -207,6 +207,12 @@ vo=gpu-next
     expect(read.secondaryFont, '');
     expect(read.secondarySubtitleLanguage, '');
     expect(PlayerSettings.fromJson({'secondarySubtitleLanguage': 'original'}).secondarySubtitleLanguage, PlayerSettings.originalSubtitle);
+    // The interface's language is the second subtitle by default, also
+    // for settings saved when none was.
+    expect(PlayerSettings.fromJson({}).secondarySubtitleLanguage, PlayerSettings.interfaceSubtitle);
+    expect(PlayerSettings.fromJson({'secondarySubtitleLanguage': ''}).secondarySubtitleLanguage, PlayerSettings.interfaceSubtitle);
+    expect(PlayerSettings.fromJson(const PlayerSettings(secondarySubtitleLanguage: '').toJson()).secondarySubtitleLanguage, '');
+    expect(const PlayerSettings().secondaryTarget, interfaceTranslationLanguage);
     expect(read.subtitleOpacity, 0.1);
     expect(PlayerSettings.fromJson({}).subtitleFont, PlayerSettings.defaultSubtitleFont);
   });

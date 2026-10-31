@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
-import '../../app_preferences.dart' show interfaceTranslationLanguage;
 import '../../l10n/l10n.dart';
-import '../../player_settings.dart' show SubtitleLanguage;
+import '../../player_settings.dart' show SubtitleLanguage, interfaceTranslationLanguage;
 import '../../translation.dart';
 import '../../translation_services.dart';
 import '../../widgets/pilinara_settings_tiles.dart';

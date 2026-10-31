@@ -10,7 +10,7 @@ import 'explore_filters.dart';
 import 'feed_quality.dart';
 import 'explore_topics.dart';
 import 'models.dart';
-import 'player_settings.dart' show SubtitleLanguage;
+import 'player_settings.dart' show SubtitleLanguage, interfaceTranslationLanguage;
 import 'progress_line.dart';
 import 'translation.dart';
 import 'translation_services.dart';
@@ -700,7 +700,3 @@ class AppPreferencesStore {
 
 /// A playback speed as shown to people: `2`, `1.25`.
 String rateText(double rate) => rate == rate.roundToDouble() ? rate.toStringAsFixed(0) : rate.toString();
-
-/// The interface's language as a translation target, Windows' when it has
-/// none.
-TranslationLanguage get interfaceTranslationLanguage => TranslationLanguage.maybeByCode(youtubeHl) ?? SubtitleLanguage.auto.translation;

@@ -306,7 +306,14 @@ class PlayerSettings {
   /// [secondarySubtitleLanguage] for the video's own subtitle in its own
   /// language, uploaded or automatic.
   static const originalSubtitle = 'original';
+  /// [secondarySubtitleLanguage] for the interface's language, the default.
+  static const interfaceSubtitle = 'interface';
   final String secondarySubtitleLanguage;
+
+  /// The language [secondarySubtitleLanguage] names, null for none or the
+  /// video's own.
+  TranslationLanguage? get secondaryTarget =>
+      secondarySubtitleLanguage == interfaceSubtitle ? interfaceTranslationLanguage : TranslationLanguage.maybeByCode(secondarySubtitleLanguage);
   final double subtitleBorder;
   final bool subtitleBackground;
   final bool subtitleBold;
@@ -394,7 +401,7 @@ class PlayerSettings {
     this.subtitleMode = SubtitleMode.off,
     this.subtitleLanguage = SubtitleLanguage.auto,
     this.subtitleOriginal = false,
-    this.secondarySubtitleLanguage = '',
+    this.secondarySubtitleLanguage = interfaceSubtitle,
     this.subtitleBorder = 3,
     this.subtitleBackground = false,
     this.subtitleBold = false,
@@ -589,7 +596,7 @@ class PlayerSettings {
         'subtitleMode': subtitleMode.name,
         'subtitleLanguageV2': subtitleLanguage.name,
         'subtitleOriginal': subtitleOriginal,
-        'secondarySubtitleLanguage': secondarySubtitleLanguage,
+        'secondarySubtitleLanguageV2': secondarySubtitleLanguage,
         'subtitleBorder': subtitleBorder,
         'subtitleBackground': subtitleBackground,
         'subtitleBold': subtitleBold,
@@ -759,7 +766,14 @@ class PlayerSettings {
           ? _enumByName(SubtitleLanguage.values, raw['subtitleLanguageV2'] ?? raw['subtitleLanguage'], SubtitleLanguage.auto)
           : SubtitleLanguage.auto,
       subtitleOriginal: raw['subtitleOriginal'] == true,
-      secondarySubtitleLanguage: raw['secondarySubtitleLanguage'] == originalSubtitle ? originalSubtitle : TranslationLanguage.maybeByCode(raw['secondarySubtitleLanguage'])?.code ?? '',
+      // Saved under a new key since the interface's language became the
+      // default; none, the default before it, follows it too.
+      secondarySubtitleLanguage: switch (raw['secondarySubtitleLanguageV2'] ?? (raw['secondarySubtitleLanguage'] == '' ? null : raw['secondarySubtitleLanguage'])) {
+        null => interfaceSubtitle,
+        originalSubtitle => originalSubtitle,
+        interfaceSubtitle => interfaceSubtitle,
+        final saved => TranslationLanguage.maybeByCode(saved)?.code ?? '',
+      },
       subtitleBorder: decimal('subtitleBorder', 3, 0, 8),
       subtitleBackground: raw['subtitleBackground'] == true,
       subtitleBold: raw['subtitleBold'] == true,
@@ -846,3 +860,7 @@ class PlayerSettingsStore {
     await file.writeAsString(jsonEncode(settings.toJson()), flush: true);
   }
 }
+
+/// The interface's language as a translation target, Windows' when it has
+/// none.
+TranslationLanguage get interfaceTranslationLanguage => TranslationLanguage.maybeByCode(youtubeHl) ?? SubtitleLanguage.auto.translation;

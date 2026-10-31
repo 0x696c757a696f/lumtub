@@ -477,6 +477,14 @@ class HistoryStore {
 
   Future<void> _write() => file.writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()), flush: true);
 
+  /// Sets the live status of the videos with these ids.
+  Future<void> setLiveStatus(Map<String, String?> states) async {
+    for (final (i, item) in items.indexed) {
+      if (states.containsKey(item.id)) items[i] = item.withLiveStatus(states[item.id]);
+    }
+    await _write();
+  }
+
   Future<void> record(VideoItem item) async {
     items.removeWhere((other) => other.id == item.id);
     items.insert(0, item);

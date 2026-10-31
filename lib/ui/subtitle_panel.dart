@@ -123,13 +123,28 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final nearLabels = {for (final o in nearOptions) o.label};
     // Tracks mpv has that the list above does not name, such as those
     // libmpv's ytdl_hook added or a downloaded video's files.
+    // libmpv's ytdl_hook names YouTube's automatic captions "xx-orig":
+    // the same lines as the automatic subtitle listed in that language.
+    SubtitleOption? listedAs(SubtitleTrack t) {
+      final language = t.language ?? '';
+      if (!language.endsWith('-orig')) return null;
+      final code = language.substring(0, language.length - 5);
+      return offered.where((o) => o.kind == SubtitleKind.automatic && o.language == code).firstOrNull;
+    }
+
     final others = [
       for (final t in player.state.tracks.subtitle)
-        if (_real(t) && !labels.contains(t.title) && !nearLabels.contains(t.title))
+        if (_real(t) && !labels.contains(t.title) && !nearLabels.contains(t.title) && listedAs(t) == null)
           (key: 't:${t.id}', label: _trackLabel(t), detail: null, option: null, track: t) as _Choice,
     ];
     final main = player.state.track.subtitle;
-    final mainKey = !_real(main) ? 'off' : labels.contains(main.title) || nearLabels.contains(main.title) ? 'o:${main.title}' : 't:${main.id}';
+    final mainKey = !_real(main)
+        ? 'off'
+        : labels.contains(main.title) || nearLabels.contains(main.title)
+            ? 'o:${main.title}'
+            : listedAs(main) != null
+                ? 'o:${listedAs(main)!.label}'
+                : 't:${main.id}';
     final secondary = controller.secondarySubtitle;
     // Being fetched or translated still: shown as on its way, not 关闭.
     final loading = controller.secondaryLoading;

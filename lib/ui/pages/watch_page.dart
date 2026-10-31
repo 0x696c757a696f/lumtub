@@ -26,6 +26,7 @@ import '../skeleton.dart';
 import '../theme.dart';
 import '../translatable.dart';
 import '../play_queue_panel.dart';
+import '../playing_list_panel.dart';
 import '../video_card.dart';
 import '../upcoming_card.dart';
 import 'channel_page.dart';
@@ -484,7 +485,7 @@ class _SidePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tabs = [
-      (tr('接下来播放'), _UpNext(controller: controller)),
+      (controller.playingList != null ? tr('播放列表') : tr('接下来播放'), _UpNext(controller: controller)),
       if (comments case final comments?) (tr('评论'), _KeepAlive(child: comments)),
       if (replayChat case final chat?) (tr('聊天'), _KeepAlive(child: chat)),
     ];
@@ -635,16 +636,22 @@ class _UpNext extends StatelessWidget {
     // What 接下来播放 already lists is not repeated under 相关视频.
     final queued = {for (final item in items) item.id};
     final relatedItems = [for (final item in controller.relatedItems) if (!queued.contains(item.id)) item];
+    final autoplay = Row(mainAxisSize: MainAxisSize.min, children: [
+      Text(tr('自动连播'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
+      Transform.scale(
+        scale: 0.75,
+        child: Switch(value: controller.settings.playOrder == PlayOrder.autoPlayRelated, onChanged: (on) => unawaited(controller.setAutoplayNext(on))),
+      ),
+    ]);
     final children = <Widget>[
       if (controller.playQueue.isNotEmpty) ...[PlayQueuePanel(controller: controller), const SizedBox(height: 16)],
-      _header(context, tr('接下来播放'), items.isEmpty ? null : tr('{0} 个', [items.length]), trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text(tr('自动连播'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
-        Transform.scale(
-          scale: 0.75,
-          child: Switch(value: controller.settings.playOrder == PlayOrder.autoPlayRelated, onChanged: (on) => unawaited(controller.setAutoplayNext(on))),
-        ),
-      ])),
-      if (items.isEmpty)
+      if (controller.playingList != null)
+        PlayingListPanel(controller: controller, trailing: autoplay, shrinkWrap: shrinkWrap)
+      else
+        _header(context, tr('接下来播放'), items.isEmpty ? null : tr('{0} 个', [items.length]), trailing: autoplay),
+      if (controller.playingList != null)
+        const SizedBox.shrink()
+      else if (items.isEmpty)
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
           child: Text(

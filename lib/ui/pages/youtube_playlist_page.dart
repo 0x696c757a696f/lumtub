@@ -4,6 +4,7 @@ import '../../app/app_controller.dart';
 import '../common.dart';
 import '../playlist_length.dart';
 import '../theme.dart';
+import '../playlist_order_button.dart';
 import '../video_card.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
@@ -20,7 +21,12 @@ class YoutubePlaylistPage extends StatelessWidget {
     if (playlist == null || loader == null) {
       return StatusView(icon: AppIcons.playlist, title: tr('没有打开的播放列表'));
     }
-    final items = controller.visible(loader.items);
+    final listId = 'yt:${playlist.id}';
+    final own = controller.visible(loader.items);
+    final reversed = controller.isReversed(listId);
+    // Last to first needs the whole playlist.
+    if (reversed && loader.hasMore) WidgetsBinding.instance.addPostFrameCallback((_) => controller.loadWholeYoutubePlaylist());
+    final items = reversed ? own.reversed.toList() : own;
     final error = loader.error;
     final colors = context.colors;
     return NearEndListener(
@@ -41,8 +47,10 @@ class YoutubePlaylistPage extends StatelessWidget {
               if (playlistLength(items, progressOf: controller.library?.progressOf, partial: loader.hasMore) case final length?)
                 Text(length, style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
             ])),
+            PlaylistOrderButton(controller: controller, id: listId, onReversed: controller.loadWholeYoutubePlaylist),
+            const SizedBox(width: 4),
             FilledButton.icon(
-              onPressed: items.isEmpty ? null : () => controller.play(items.first, from: items),
+              onPressed: items.isEmpty || (reversed && loader.hasMore) ? null : () => controller.playList(listId, playlist.title, own),
               icon: const Icon(AppIcons.playFill),
               label: Text(tr('全部播放')),
             ),
@@ -50,7 +58,12 @@ class YoutubePlaylistPage extends StatelessWidget {
             IconButton(tooltip: tr('在浏览器中打开'), onPressed: () => openExternal(playlist.url), icon: const Icon(AppIcons.arrowSquareOut)),
           ]),
         )),
-        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
+        if (items.isNotEmpty && !(reversed && loader.hasMore)) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.playList(listId, playlist.title, own, start: item)),
+        if (reversed && loader.hasMore && loader.error == null)
+          SliverToBoxAdapter(child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
+            child: Text(tr('正在读取整个播放列表以便倒序显示（已读 {0} 个）…', [own.length]), style: TextStyle(color: colors.onSurfaceVariant)),
+          )),
         if (loader.loading) ...[
           if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
           SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),

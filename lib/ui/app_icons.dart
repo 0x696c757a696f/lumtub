@@ -244,6 +244,7 @@ abstract final class AppIcons {
   static const smiley = IconData(0xe436, fontFamily: 'Phosphor');
   static const smileySticker = IconData(0xe440, fontFamily: 'Phosphor');
   static const soccerBall = IconData(0xe716, fontFamily: 'Phosphor');
+  static const sortAscending = IconData(0xe444, fontFamily: 'Phosphor');
   static const sortDescending = IconData(0xe446, fontFamily: 'Phosphor');
   static const sparkle = IconData(0xe6a2, fontFamily: 'Phosphor');
   static const sparkleFill = IconData(0xe6a2, fontFamily: 'Phosphor Fill');

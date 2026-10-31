@@ -64,6 +64,7 @@ class AppPreferences {
     this.allowedGroups = const [],
     this.blockStateMedia = false,
     this.allowedMedia = const [],
+    this.reversedPlaylists = const [],
     this.enabledGroups = const [],
     this.allowedEntries = const [],
     this.blockedChannelNames = const [],
@@ -158,6 +159,8 @@ class AppPreferences {
   final bool blockStateMedia;
   /// state_media.dart group names the user unticked.
   final List<String> allowedMedia;
+  /// Playlists shown and played last to first (倒序), by id.
+  final List<String> reversedPlaylists;
   /// Groups of either list that start unticked and the user ticked.
   final List<String> enabledGroups;
   /// [BlockEntry.key]s the user unticked inside a ticked group.
@@ -364,6 +367,7 @@ class AppPreferences {
     List<String>? allowedGroups,
     bool? blockStateMedia,
     List<String>? allowedMedia,
+    List<String>? reversedPlaylists,
     List<String>? enabledGroups,
     List<String>? allowedEntries,
     List<String>? blockedChannelNames,
@@ -437,6 +441,7 @@ class AppPreferences {
         allowedGroups: allowedGroups ?? this.allowedGroups,
         blockStateMedia: blockStateMedia ?? this.blockStateMedia,
         allowedMedia: allowedMedia ?? this.allowedMedia,
+        reversedPlaylists: reversedPlaylists ?? this.reversedPlaylists,
         enabledGroups: enabledGroups ?? this.enabledGroups,
         allowedEntries: allowedEntries ?? this.allowedEntries,
         blockedChannelNames: blockedChannelNames ?? this.blockedChannelNames,
@@ -511,6 +516,7 @@ class AppPreferences {
         'allowedGroups': allowedGroups,
         'blockStateMedia': blockStateMedia,
         'allowedMedia': allowedMedia,
+        'reversedPlaylists': reversedPlaylists,
         'enabledGroups': enabledGroups,
         'allowedEntries': allowedEntries,
         'blockedChannelNames': blockedChannelNames,
@@ -606,6 +612,7 @@ class AppPreferences {
       unrecommendedChannels: channelList('unrecommendedChannels'),
       allowedGroups: strings('allowedGroups'),
       allowedMedia: strings('allowedMedia'),
+      reversedPlaylists: strings('reversedPlaylists'),
       enabledGroups: strings('enabledGroups'),
       allowedEntries: strings('allowedEntries'),
       blockedChannelNames: strings('blockedChannelNames'),

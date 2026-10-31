@@ -93,6 +93,7 @@ import 'account_controller.dart';
 import 'home_feed.dart';
 import 'back_stack.dart';
 import 'library_controller.dart';
+import '../playing_list.dart';
 import '../youtube_player_probe.dart';
 import 'video_list_loader.dart';
 import '../l10n/l10n.dart';
@@ -285,6 +286,9 @@ class AppController extends ChangeNotifier {
 
   /// The list the current video was opened from, shown as the play queue.
   List<VideoItem> queue = const [];
+  /// The playlist the playing video was opened from, for the watch page's
+  /// playlist panel; null when it came from anywhere else.
+  PlayingList? playingList;
   /// Videos lined up by hand; they play before [upNext].
   final playQueue = PlayQueue();
   VideoDetails? details;
@@ -1613,7 +1617,7 @@ class AppController extends ChangeNotifier {
   /// Opens [item] on the watch page; [at] is where to start, else where
   /// it was left off. [keepMini] plays it in the mini player when that is
   /// where the last video was (the queue moving on by itself).
-  Future<void> play(VideoItem item, {List<VideoItem>? from, Duration? at, bool keepMini = false, bool retryingStart = false}) async {
+  Future<void> play(VideoItem item, {List<VideoItem>? from, PlayingList? list, Duration? at, bool keepMini = false, bool retryingStart = false}) async {
     final player = this.player;
     if (player == null) return;
     if (mini && playing?.id == item.id && at == null && !retryingStart) return expandMini();
@@ -1647,7 +1651,13 @@ class AppController extends ChangeNotifier {
     _update(() {
       playing = item;
       mini = keepMini && mini;
-      if (from != null) queue = List.unmodifiable(from);
+      if (list != null) {
+        playingList = list;
+        queue = List.unmodifiable(list.ordered);
+      } else if (from != null) {
+        playingList = null;
+        queue = List.unmodifiable(from);
+      }
       // A stream being waited for keeps saying so until it plays.
       if (!retryingStart) {
         playbackError = null;
@@ -3514,6 +3524,50 @@ class AppController extends ChangeNotifier {
     if (id != null) return ChannelRef(id, details!.channel.isNotEmpty ? details!.channel : item.channel);
     return item.channelRef;
   }
+
+  /// Whether playlist [id] is shown and played last to first.
+  bool isReversed(String id) => preferences.reversedPlaylists.contains(id);
+
+  /// Shows and plays playlist [id] last to first, or in its own order; the
+  /// playlist playing now follows at once.
+  Future<void> setReversed(String id, bool reversed) async {
+    final ids = [for (final other in preferences.reversedPlaylists) if (other != id) other, if (reversed) id];
+    final list = playingList;
+    if (list != null && list.id == id && list.reversed != reversed) {
+      _update(() {
+        playingList = list.withReversed(reversed);
+        queue = List.unmodifiable(playingList!.ordered);
+      });
+    }
+    await savePreferences(preferences.copyWith(reversedPlaylists: ids));
+  }
+
+  /// Plays playlist [id] from [start], or from its first video in the
+  /// order chosen for it.
+  Future<void> playList(String id, String title, List<VideoItem> items, {VideoItem? start}) {
+    final list = PlayingList(id: id, title: title, items: List.unmodifiable(items), reversed: isReversed(id));
+    return play(start ?? list.ordered.first, list: list);
+  }
+
+  /// Reads the rest of the open YouTube playlist, so it can be shown last
+  /// to first.
+  void loadWholeYoutubePlaylist() {
+    final loader = youtubePlaylistVideos;
+    if (loader == null || _loadingWhole == loader) return;
+    _loadingWhole = loader;
+    void more() {
+      if (!identical(loader, youtubePlaylistVideos) || !loader.hasMore || loader.error != null || loader.items.length >= 5000) {
+        loader.removeListener(more);
+        if (identical(_loadingWhole, loader)) _loadingWhole = null;
+        return;
+      }
+      if (!loader.loading) scheduleMicrotask(loader.loadMore);
+    }
+    loader.addListener(more);
+    more();
+  }
+
+  VideoListLoader? _loadingWhole;
 
   /// Videos after the current one in the queue, or the whole queue when the
   /// current video was opened from elsewhere.

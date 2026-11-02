@@ -8,7 +8,7 @@ use serde::Serialize;
 use serde_json::{Value, json};
 use std::os::raw::c_char;
 
-use crate::innertube::{at, seconds};
+use crate::innertube::{at, members_only, seconds};
 use crate::taste::{give_json, text};
 
 /// `simpleText`, or the joined `runs` of [node].
@@ -136,6 +136,7 @@ fn video(renderer: &Value) -> Option<Value> {
         ("release_timestamp", opt(scheduled)),
         (if live { "concurrent_view_count" } else { "view_count" }, opt(views)),
         ("live_status", opt(live_status)),
+        ("availability", opt(members_only(renderer).then_some("subscriber_only"))),
     ]))
 }
 
@@ -242,6 +243,7 @@ fn lockup(model: &Value) -> Option<Value> {
         ("uploader", opt(channel)),
         ("channel_id", opt(channel_id)),
         ("uploader_id", opt(handle)),
+        ("availability", opt(members_only(model).then_some("subscriber_only"))),
     ]))
 }
 
@@ -462,6 +464,7 @@ mod tests {
             })
         );
         assert_eq!(page.entries[2]["live_status"], "is_live");
+        assert!(page.entries.iter().all(|e| e.get("availability").is_none()));
         assert_eq!(page.entries[2]["concurrent_view_count"], 1500);
         assert!(page.entries[2].get("view_count").is_none());
         assert_eq!(page.entries[3]["url"], "https://www.youtube.com/shorts/shortvideo1");
@@ -542,4 +545,16 @@ mod tests {
         assert_eq!(super::page(&more).entries[0]["id"], "aaaaaaaaaaa");
     }
 
+
+    #[test]
+    fn marks_members_only_entries() {
+        let renderer = json!({"videoId": "aaaaaaaaaaa", "title": {"runs": [{"text": "Members"}]},
+            "badges": [{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_MEMBERS_ONLY", "label": "Members only"}}]});
+        assert_eq!(video(&renderer).unwrap()["availability"], "subscriber_only");
+        let model = json!({"contentId": "bbbbbbbbbbb", "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+            "metadata": {"lockupMetadataViewModel": {"title": {"content": "Members"}, "metadata": {"contentMetadataViewModel": {"metadataRows": [
+                {"badges": [{"badgeViewModel": {"badgeText": "Members only", "badgeStyle": "BADGE_MEMBERS_ONLY"}}]}
+            ]}}}}});
+        assert_eq!(lockup(&model).unwrap()["availability"], "subscriber_only");
+    }
 }

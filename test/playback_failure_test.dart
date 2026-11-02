@@ -7,6 +7,8 @@ void main() {
   test('names the cause from yt-dlp and libmpv messages', () {
     expect(kind(['ERROR: [youtube] dQw4w9WgXcQ: Private video. Sign in if you\'ve been granted access']), FailureKind.unavailable);
     expect(kind(['ERROR: [youtube] x: Sign in to confirm your age. This video may be inappropriate']), FailureKind.unavailable);
+    expect(kind(["ERROR: [youtube] x: This video is available to this channel's members on level: Fan. Join this channel to get access to members-only content like this video, and other exclusive perks."]), FailureKind.membersOnly);
+    expect(PlaybackFailure.classify(['ERROR: [youtube] x: Join this channel to get access to members-only content']).retryable, isFalse);
     expect(kind(['ERROR: [youtube] x: Sign in to confirm you’re not a bot. Use --cookies-from-browser']), FailureKind.botCheck);
     expect(kind(['ERROR: Unable to download API page: HTTP Error 429: Too Many Requests']), FailureKind.rateLimited);
     expect(kind(['WARNING: [youtube] x: n challenge solving failed: Some formats may be missing']), FailureKind.challenge);

@@ -3,7 +3,9 @@ import 'l10n/l10n.dart';
 /// libmpv's messages, so each cause is handled its own way instead of all
 /// being retried alike.
 enum FailureKind {
-  /// Private, removed, members-only, region- or age-restricted: retrying
+  /// Members-only: only the channel's members can watch it.
+  membersOnly,
+  /// Private, removed, region- or age-restricted: retrying
   /// cannot help.
   unavailable,
   /// A live stream or premiere that has not started yet: it plays once it
@@ -40,8 +42,9 @@ class PlaybackFailure {
 
   static final _patterns = <(FailureKind, RegExp)>[
     (FailureKind.upcoming, RegExp(r'Premieres in|live event will begin|will begin in|waiting for scheduled stream', caseSensitive: false)),
+    (FailureKind.membersOnly, RegExp(r"members.only|join this channel|channel's members|subscriber_only", caseSensitive: false)),
     (FailureKind.unavailable, RegExp(
-      r"Video unavailable|Private video|video is private|members.only|join this channel|has been removed|"
+      r"Video unavailable|Private video|video is private|has been removed|"
       r"account[^.]{0,40}terminated|copyright|not available in your country|geo.?restrict|age.?restrict|confirm your age|"
       r"inappropriate|This live stream recording is not available",
       caseSensitive: false,
@@ -73,7 +76,8 @@ class PlaybackFailure {
   /// What the watch page shows: the cause and what to do about it.
   String get message {
     final reason = switch (kind) {
-      FailureKind.unavailable => tr('这个视频无法观看（私享、已删除、会员专属、地区或年龄限制）'),
+      FailureKind.membersOnly => tr('这是频道会员专属视频，只有加入该频道会员才能观看'),
+      FailureKind.unavailable => tr('这个视频无法观看（私享、已删除、地区或年龄限制）'),
       FailureKind.upcoming => tr('直播还没开始，开始后会自动播放'),
       FailureKind.rateLimited => tried.isEmpty
           ? tr('YouTube 暂时限制了请求频率（429）。已暂停预加载 10 分钟，请过几分钟再播放，或换一个代理节点')

@@ -293,7 +293,7 @@ class _VideoCardState extends State<VideoCard> {
     _prefetch?.cancel();
     _preview?.cancel();
     if (!value) return;
-    _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item, hover: true));
+    if (!widget.item.membersOnly) _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item, hover: true));
     if (widget.item.isLive || widget.item.isUpcoming) return;
     _preview = Timer(const Duration(milliseconds: 700), () {
       if (!mounted) return;
@@ -419,6 +419,7 @@ class _VideoCardState extends State<VideoCard> {
                   Positioned(right: 8, bottom: 8, child: DurationBadge(item.isLive ? tr('直播中') : tr('即将直播'), color: item.isLive ? const Color(0xFFCC0000) : null))
                 else if (item.durationLabel.isNotEmpty)
                   Positioned(right: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
+                if (item.membersOnly) const Positioned(left: 8, bottom: 8, child: MembersOnlyBadge()),
                 _ProgressBar(item: item),
                 if (_hovered) Positioned(top: 8, right: 8, child: _QuickActions(item: item, onMore: _menu)),
               ]),
@@ -526,6 +527,17 @@ class DurationBadge extends StatelessWidget {
       );
 }
 
+/// The mark on a members-only video, in the green YouTube gives it.
+class MembersOnlyBadge extends StatelessWidget {
+  const MembersOnlyBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: tr('只有加入该频道会员才能观看'),
+        child: DurationBadge(tr('会员专属'), color: const Color(0xFF2BA640)),
+      );
+}
+
 /// Compact horizontal card for the up-next list on the watch page.
 class CompactVideoTile extends StatefulWidget {
   const CompactVideoTile({super.key, required this.item, required this.onOpen, this.thumbnails});
@@ -590,6 +602,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
                     Positioned(right: 4, bottom: 4, child: DurationBadge(item.isLive ? tr('直播中') : tr('即将直播'), color: item.isLive ? const Color(0xFFCC0000) : null))
                   else if (item.durationLabel.isNotEmpty)
                     Positioned(right: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
+                  if (item.membersOnly) const Positioned(left: 4, bottom: 4, child: MembersOnlyBadge()),
                   _ProgressBar(item: item),
                 ]),
               ),

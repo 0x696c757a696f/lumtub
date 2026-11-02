@@ -1460,7 +1460,6 @@
   "这个播放列表是空的": "This playlist is empty",
   "这个版本没有内置 Google 客户端，需要先在下方填写你自己的客户端。": "This build has no built-in Google client. Enter your own client below first.",
   "这个视频关闭了评论": "Comments are turned off for this video",
-  "这个视频无法观看（私享、已删除、会员专属、地区或年龄限制）": "This video can't be watched (private, deleted, members-only, or region or age restricted)",
   "这个频道最近没有新视频": "No recent videos from this channel",
   "这个频道没有{0}": "This channel has no {0}",
   "这个频道还没有社区帖子": "This channel has no community posts yet",
@@ -2820,5 +2819,9 @@
   "正在翻译字幕…": "Translating subtitles…",
   "播放列表 · {0}/{1}": "Playlist · {0}/{1}",
   "播放列表 · {0} 个": "Playlist · {0} videos",
-  "正在读取整个播放列表以便倒序显示（已读 {0} 个）…": "Reading the whole playlist to show it in reverse ({0} read so far)…"
+  "正在读取整个播放列表以便倒序显示（已读 {0} 个）…": "Reading the whole playlist to show it in reverse ({0} read so far)…",
+  "这是频道会员专属视频，只有加入该频道会员才能观看": "This video is for the channel's members only. Join the channel's membership to watch it",
+  "这个视频无法观看（私享、已删除、地区或年龄限制）": "This video can't be watched (private, deleted, or region or age restricted)",
+  "会员专属": "Members only",
+  "只有加入该频道会员才能观看": "Only the channel's members can watch this"
 }

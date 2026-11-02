@@ -31,7 +31,10 @@ class YoutubePlayerProbe {
   ///
   /// With [tv], YouTube's TV app asks instead of the website: it gets
   /// answers the website is refused without a sign-in.
-  Future<List<int>> fetch(String id, String? fields, {String endpoint = 'player', String? expect, bool tv = false}) async {
+  ///
+  /// [hl] is the language the answer's texts are asked in: a title the
+  /// uploader translated comes back in it.
+  Future<List<int>> fetch(String id, String? fields, {String endpoint = 'player', String? expect, bool tv = false, String hl = 'en'}) async {
     final masked = fields != null && masks(fields, endpoint: endpoint);
     final response = await _client
         .post(
@@ -45,8 +48,8 @@ class YoutubePlayerProbe {
           body: jsonEncode({
             'context': {
               'client': tv
-                  ? {'clientName': 'TVHTML5', 'clientVersion': _tvVersion, 'userAgent': _tvUserAgent, 'hl': 'en', 'timeZone': 'UTC', 'utcOffsetMinutes': 0}
-                  : {'clientName': 'WEB', 'clientVersion': YoutubeWeb.clientVersion, 'hl': 'en', 'timeZone': 'UTC', 'utcOffsetMinutes': 0},
+                  ? {'clientName': 'TVHTML5', 'clientVersion': _tvVersion, 'userAgent': _tvUserAgent, 'hl': hl, 'timeZone': 'UTC', 'utcOffsetMinutes': 0}
+                  : {'clientName': 'WEB', 'clientVersion': YoutubeWeb.clientVersion, 'hl': hl, 'timeZone': 'UTC', 'utcOffsetMinutes': 0},
             },
             'videoId': id,
           }),
@@ -55,11 +58,11 @@ class YoutubePlayerProbe {
     if (response.statusCode == 400 && masked) {
       _refused.add(endpoint);
       logWarn('YouTube refused the field mask for /$endpoint; asking for whole answers');
-      return fetch(id, fields, endpoint: endpoint, tv: tv);
+      return fetch(id, fields, endpoint: endpoint, tv: tv, hl: hl);
     }
     if (response.statusCode != 200) throw StateError('$endpoint answered HTTP ${response.statusCode}');
     if (masked && expect != null && !utf8.decode(response.bodyBytes, allowMalformed: true).contains('"$expect"')) {
-      final whole = await fetch(id, null, endpoint: endpoint, tv: tv);
+      final whole = await fetch(id, null, endpoint: endpoint, tv: tv, hl: hl);
       if (utf8.decode(whole, allowMalformed: true).contains('"$expect"')) {
         _refused.add('$endpoint $fields');
         logWarn('The /$endpoint field mask left out $expect; asking for whole answers');

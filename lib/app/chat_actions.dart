@@ -1,0 +1,125 @@
+part of 'app_controller.dart';
+
+/// Live chat, chat replays and the bullet chat over the picture.
+extension ChatActions on AppController {
+  void _startCurrentChat(VideoItem item, int serial) {
+    final repository = _repository;
+    if (repository == null || serial != _playSerial) return;
+    _update(() {
+      loadingReplayChat = true;
+      replayChatError = null;
+    });
+    logInfo('Following the live chat of ${item.id}');
+    _currentChat = repository.liveChat.current(item.id).listen(
+      (message) {
+        if (serial != _playSerial || !_currentChatIds.add(message.id)) return;
+        _currentChatPending.add(message);
+        _currentChatFlushTimer ??= Timer(const Duration(milliseconds: 300), () {
+          _currentChatFlushTimer = null;
+          _flushCurrentChat(serial);
+        });
+      },
+      onError: (Object error) {
+        logWarn('The live chat of ${item.id} stopped: $error');
+        if (serial == _playSerial) {
+          _update(() {
+            replayChatError = friendlyError(error);
+            loadingReplayChat = false;
+          });
+        }
+      },
+      onDone: () {
+        _flushCurrentChat(serial);
+        if (serial == _playSerial) {
+          _update(() => loadingReplayChat = false);
+        }
+      },
+    );
+  }
+
+  void _flushCurrentChat(int serial) {
+    if (serial != _playSerial || _currentChatPending.isEmpty) return;
+    final next = [...replayChat, ..._currentChatPending];
+    _currentChatPending.clear();
+    replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
+    _syncDanmaku();
+    if (loadingReplayChat) {
+      _update(() => loadingReplayChat = false);
+    } else if (!_disposed) {
+      chatMessages.value++;
+    }
+  }
+
+  /// Whether the video playing has a chat to fly across it.
+  bool get hasChat => playing != null && (playing!.isLive || playing!.liveStatus == 'was_live');
+
+  /// Starts, feeds or stops the 弹幕 for the video playing, the chat it
+  /// has and the 弹幕 settings.
+  void _syncDanmaku() {
+    final player = this.player;
+    final item = playing;
+    final settings = preferences.danmaku;
+    final live = item?.isLive ?? false;
+    final key = player == null || item == null || !settings.enabled || !hasChat ? null : '${identityHashCode(player)}|${item.id}|$live|${settings.hashCode}';
+    if (key != _danmakuFor) {
+      _danmakuFor = key;
+      _danmaku?.stop();
+      _danmaku = null;
+      if (key == null) return;
+      _danmaku = DanmakuOverlay(player!)..start(settings, live: live);
+      if (live) {
+        // What was said before 弹幕 was turned on stays in the chat.
+        _danmaku!.skip(replayChat);
+        return;
+      }
+    }
+    _danmaku?.add(replayChat);
+  }
+
+  /// Turns 弹幕 on or off, or changes how they look.
+  Future<void> setDanmaku(DanmakuSettings settings) async {
+    await savePreferences(preferences.copyWith(danmaku: settings));
+    _syncDanmaku();
+  }
+
+  void _stopCurrentChat() {
+    _currentChatFlushTimer?.cancel();
+    _currentChatFlushTimer = null;
+    _currentChatPending.clear();
+    _currentChatIds.clear();
+    unawaited(_currentChat?.cancel());
+    _currentChat = null;
+  }
+
+  /// Asks again for the chat of the video playing after it failed.
+  void retryChat() {
+    final item = playing;
+    if (item == null) return;
+    if (item.isLive) {
+      unawaited(_currentChat?.cancel());
+      _startCurrentChat(item, _playSerial);
+    } else {
+      unawaited(_loadReplayChat(item, _playSerial));
+    }
+  }
+
+  Future<void> _loadReplayChat(VideoItem item, int serial) async {
+    final repository = _repository;
+    if (repository == null || serial != _playSerial) return;
+    _update(() {
+      loadingReplayChat = true;
+      replayChatError = null;
+    });
+    try {
+      final messages = await repository.liveChat.replay(item.id);
+      if (serial == _playSerial) {
+        _update(() => replayChat = messages);
+        _syncDanmaku();
+      }
+    } catch (error) {
+      if (serial == _playSerial) _update(() => replayChatError = friendlyError(error));
+    } finally {
+      if (serial == _playSerial) _update(() => loadingReplayChat = false);
+    }
+  }
+}

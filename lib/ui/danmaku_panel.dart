@@ -68,7 +68,7 @@ class _DanmakuPanelState extends State<DanmakuPanel> {
       label(tr('字号'), s.size.round().toString()),
       slider(s.size, 24, 72, 24, (v) => s.copyWith(size: v.roundToDouble())),
       label(tr('飘过用时'), tr('{0} 秒', [s.seconds.round()])),
-      slider(s.seconds, 4, 16, 12, (v) => s.copyWith(seconds: v.roundToDouble())),
+      slider(s.seconds, 4, 20, 16, (v) => s.copyWith(seconds: v.roundToDouble())),
       label(tr('显示区域'), ''),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),

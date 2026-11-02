@@ -10,7 +10,7 @@ import 'native_core.dart';
 
 /// How 弹幕 look: kept with the preferences.
 class DanmakuSettings {
-  const DanmakuSettings({this.enabled = false, this.opacity = 0.85, this.size = 44, this.seconds = 8, this.area = 0.5, this.paid = true});
+  const DanmakuSettings({this.enabled = false, this.opacity = 0.85, this.size = 44, this.seconds = 12, this.area = 0.5, this.paid = true});
 
   /// The chat flies across the picture.
   final bool enabled;
@@ -36,7 +36,7 @@ class DanmakuSettings {
         paid: paid ?? this.paid,
       );
 
-  Map<String, Object> toJson() => {'enabled': enabled, 'opacity': opacity, 'size': size, 'seconds': seconds, 'area': area, 'paid': paid};
+  Map<String, Object> toJson() => {'enabled': enabled, 'opacity': opacity, 'size': size, 'seconds': seconds, 'area': area, 'paid': paid, 'version': 2};
 
   factory DanmakuSettings.fromJson(Object? raw) {
     const d = DanmakuSettings();
@@ -46,7 +46,8 @@ class DanmakuSettings {
       enabled: raw['enabled'] is bool ? raw['enabled'] as bool : d.enabled,
       opacity: number('opacity', d.opacity, 0.2, 1),
       size: number('size', d.size, 24, 72),
-      seconds: number('seconds', d.seconds, 4, 16),
+      // Before version 2 the default crossed in 8 s, which read too fast.
+      seconds: raw['version'] == 2 ? number('seconds', d.seconds, 4, 20) : d.seconds,
       area: number('area', d.area, 0.25, 1),
       paid: raw['paid'] is bool ? raw['paid'] as bool : d.paid,
     );
@@ -60,6 +61,38 @@ class DanmakuSettings {
 
   @override
   int get hashCode => jsonEncode(toJson()).hashCode;
+}
+
+/// When a live message flies: at its own time, so a batch fetched at once
+/// keeps the gaps it was sent with. Messages reach the app late by up to one
+/// fetch, and the computer's clock may differ from YouTube's, so the least
+/// lateness seen counts as on time and the chat runs behind by the most
+/// lateness seen past that.
+class LiveDanmakuTiming {
+  double? _onTime;
+  double _delay = 0;
+  /// Later than this past on time, a message flies at once.
+  static const mostBehind = 15000.0;
+
+  /// The clock times, in ms, for a batch of messages sent at [sentUsec]
+  /// that arrived when the clock read [now] and the wall clock [wall] (ms).
+  List<double> starts(List<int?> sentUsec, double now, double wall) {
+    for (final sent in sentUsec) {
+      if (sent == null) continue;
+      final late = wall - sent / 1000;
+      if (_onTime == null || late < _onTime!) _onTime = late;
+    }
+    return [
+      for (final sent in sentUsec)
+        if (sent == null) now else _start(wall - sent / 1000 - _onTime!, now),
+    ];
+  }
+
+  double _start(double behind, double now) {
+    if (behind > mostBehind) return now;
+    if (behind > _delay) _delay = behind;
+    return now - behind + _delay;
+  }
 }
 
 /// Draws the chat over the picture through mpv's `osd-overlay`, laid out
@@ -79,6 +112,7 @@ class DanmakuOverlay {
   bool _live = false;
   final _liveClock = Stopwatch();
   final _added = <String>{};
+  var _timing = LiveDanmakuTiming();
   Timer? _timer;
   String _shown = '';
   bool _sending = false;
@@ -109,7 +143,9 @@ class DanmakuOverlay {
     final settings = _settings;
     if (core == null || layout == null || settings == null) return;
     final now = _liveClock.elapsedMilliseconds.toDouble();
+    final wall = DateTime.now().microsecondsSinceEpoch / 1000;
     final batch = <Map<String, Object>>[];
+    final sent = <int?>[];
     for (final message in messages) {
       if (!_added.add(message.id)) continue;
       final paid = message.kind != LiveChatKind.message;
@@ -119,9 +155,16 @@ class DanmakuOverlay {
       final start = _live ? now : message.offset?.inMilliseconds.toDouble();
       if (start == null) continue;
       batch.add({'start_ms': start, 'text': text, 'paid': paid});
+      sent.add(message.timestampUsec);
     }
     if (batch.isEmpty) return;
-    if (!_live) batch.sort((a, b) => (a['start_ms'] as double).compareTo(b['start_ms'] as double));
+    if (_live) {
+      final starts = _timing.starts(sent, now, wall);
+      for (var i = 0; i < batch.length; i++) {
+        batch[i]['start_ms'] = starts[i];
+      }
+    }
+    batch.sort((a, b) => (a['start_ms'] as double).compareTo(b['start_ms'] as double));
     core.withText(jsonEncode(batch), (bytes, length) => core.danmakuAdd(layout, bytes, length));
   }
 
@@ -173,6 +216,7 @@ class DanmakuOverlay {
     if (layout != null) _core?.danmakuFree(layout);
     _layout = null;
     _added.clear();
+    _timing = LiveDanmakuTiming();
     _liveClock.stop();
     if (_shown.isNotEmpty) {
       _shown = '';

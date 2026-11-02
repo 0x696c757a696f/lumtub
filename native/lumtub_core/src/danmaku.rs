@@ -32,7 +32,7 @@ pub struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { font_size: 44.0, duration_ms: 8000.0, area: 0.5, opacity: 0.85 }
+        Settings { font_size: 44.0, duration_ms: 12000.0, area: 0.5, opacity: 0.85 }
     }
 }
 
@@ -81,7 +81,7 @@ pub fn text_width(text: &str, size: f64) -> f64 {
             } else if c == ' ' {
                 size * 0.3
             } else {
-                size * 0.56
+                size * 0.6
             }
         })
         .sum()
@@ -151,10 +151,14 @@ impl Danmaku {
     pub fn frame(&self, now: f64) -> String {
         let duration = self.settings.duration_ms;
         let first = self.placed.partition_point(|p| p.start + duration <= now);
-        let alpha = ((1.0 - self.settings.opacity.clamp(0.0, 1.0)) * 255.0).round() as u8;
+        let opacity = self.settings.opacity.clamp(0.0, 1.0);
+        let alpha = ((1.0 - opacity) * 255.0).round() as u8;
+        // A thin, lighter outline like Bilibili's, so the text reads on a
+        // bright picture without a heavy dark edge around it.
+        let edge = ((1.0 - opacity * 0.6) * 255.0).round() as u8;
         let size = self.settings.font_size;
         let line = size * 1.25;
-        let border = (size / 16.0).max(1.5);
+        let border = (size / 30.0).max(1.0);
         let mut out = String::new();
         for p in &self.placed[first..] {
             if p.start > now {
@@ -164,7 +168,7 @@ impl Danmaku {
             let y = p.lane as f64 * line + (line - size) / 2.0;
             let colour = if p.paid { "&H38C8FF&" } else { "&HFFFFFF&" };
             out.push_str(&format!(
-                "{{\\an7\\pos({x:.1},{y:.1})\\fs{size:.0}\\bord{border:.1}\\shad0\\1c{colour}\\3c&H000000&\\alpha&H{alpha:02X}&\\q2}}{}\n",
+                "{{\\an7\\pos({x:.1},{y:.1})\\fnMicrosoft YaHei\\b1\\fs{size:.0}\\bord{border:.1}\\shad0\\blur0.6\\1c{colour}\\3c&H000000&\\1a&H{alpha:02X}&\\3a&H{edge:02X}&\\4a&HFF&\\q2}}{}\n",
                 p.text
             ));
         }
@@ -234,10 +238,10 @@ mod tests {
         assert_eq!(d.frame(999.0), "");
         assert!(d.frame(1000.0).contains("\\pos(1920.0,"));
         let width = text_width("hello", 44.0);
-        let end = d.frame(8999.0);
+        let end = d.frame(12999.0);
         let x: f64 = end.split("\\pos(").nth(1).unwrap().split(',').next().unwrap().parse().unwrap();
         assert!(x < -width + 1.0, "{x}");
-        assert_eq!(d.frame(9000.0), "");
+        assert_eq!(d.frame(13000.0), "");
     }
 
     #[test]
@@ -281,8 +285,8 @@ mod tests {
         let mut d = Danmaku::new(Settings::default());
         d.add(message(0.0, "old"));
         d.add(message(5000.0, "new"));
-        d.forget_before(9000.0);
+        d.forget_before(13000.0);
         assert_eq!(d.placed.len(), 1);
-        assert!(d.frame(9000.0).contains("new"));
+        assert!(d.frame(13000.0).contains("new"));
     }
 }

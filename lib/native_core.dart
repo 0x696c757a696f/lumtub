@@ -63,6 +63,10 @@ class NativeCore {
         blocksFinalizer = NativeFinalizer(library.lookup<NativeFinalizerFunction>('lumtub_blocks_free')),
         blocksMatch = library.lookupFunction<Bool Function(Pointer<Void>, Pointer<Uint8>, Size), bool Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_blocks_match'),
         _stringFree = library.lookupFunction<Void Function(Pointer<Utf8>), void Function(Pointer<Utf8>)>('lumtub_string_free'),
+        danmakuNew = library.lookupFunction<Pointer<Void> Function(Pointer<Uint8>, Size), Pointer<Void> Function(Pointer<Uint8>, int)>('lumtub_danmaku_new'),
+        danmakuAdd = library.lookupFunction<Uint32 Function(Pointer<Void>, Pointer<Uint8>, Size), int Function(Pointer<Void>, Pointer<Uint8>, int)>('lumtub_danmaku_add'),
+        danmakuFrame = library.lookupFunction<Pointer<Utf8> Function(Pointer<Void>, Double, Bool), Pointer<Utf8> Function(Pointer<Void>, double, bool)>('lumtub_danmaku_frame'),
+        danmakuFree = library.lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>('lumtub_danmaku_free'),
         _adopt = library.lookupFunction<IntPtr Function(Uint32), int Function(int)>('lumtub_tree_adopt'),
         _kill = library.lookupFunction<Bool Function(IntPtr, Uint32), bool Function(int, int)>('lumtub_tree_kill'),
         _close = library.lookupFunction<Void Function(IntPtr), void Function(int)>('lumtub_tree_close'),
@@ -144,6 +148,11 @@ class NativeCore {
   final NativeFinalizer blocksFinalizer;
   final bool Function(Pointer<Void> blocks, Pointer<Uint8> json, int length) blocksMatch;
   final void Function(Pointer<Utf8>) _stringFree;
+  /// 弹幕 laid out in Rust (see native/lumtub_core/src/danmaku.rs).
+  final Pointer<Void> Function(Pointer<Uint8> settings, int length) danmakuNew;
+  final int Function(Pointer<Void> danmaku, Pointer<Uint8> messages, int length) danmakuAdd;
+  final Pointer<Utf8> Function(Pointer<Void> danmaku, double nowMs, bool forget) danmakuFrame;
+  final void Function(Pointer<Void> danmaku) danmakuFree;
   final int Function(int pid) _adopt;
   final bool Function(int job, int pid) _background;
   final bool Function(bool on) _efficiencyMode;

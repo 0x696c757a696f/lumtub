@@ -115,13 +115,19 @@ class _WatchPageState extends State<WatchPage> {
       bindings: shortcuts,
       child: Focus(
         autofocus: true,
-        child: ValueListenableBuilder(valueListenable: theaterMode, builder: (context, theater, _) => LayoutBuilder(builder: (context, constraints) {
+        child: ListenableBuilder(listenable: Listenable.merge([theaterMode, theaterChatOpen]), builder: (context, _) => LayoutBuilder(builder: (context, outer) {
+          final theater = theaterMode.value;
+          final item = controller.playing;
+          final hasChat = item?.isLive == true || item?.liveStatus == 'was_live';
+          // 剧场模式 with a chat keeps it beside the video, as Twitch does.
+          final sideChat = theater && hasChat && outer.maxWidth >= 900;
+          final chatOpen = sideChat && theaterChatOpen.value;
+          final constraints = chatOpen ? outer.copyWith(maxWidth: outer.maxWidth - _theaterChatWidth) : outer;
           // 剧场模式 gives the video the whole width and stacks the panels below.
           final wide = !theater && constraints.maxWidth >= 1080;
           final mainWidth = wide ? constraints.maxWidth - _sidePanelWidth - AppStyle.pagePadding * 3 : constraints.maxWidth - AppStyle.pagePadding * 2;
           // Keep the whole player visible: never taller than the window allows.
           final playerWidth = theater ? min(constraints.maxWidth, max(320.0, (constraints.maxHeight - 8) * 16 / 9)) : min(mainWidth, max(320.0, (constraints.maxHeight - 120) * 16 / 9));
-          final item = controller.playing;
           // In the side panel the comments scroll by themselves and build
           // only what is on screen.
           // 专注模式 can leave the comments out; then they are not loaded.
@@ -136,7 +142,7 @@ class _WatchPageState extends State<WatchPage> {
                   sliver: !wide,
                   padding: wide ? const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding) : EdgeInsets.zero,
                 );
-          final replayChat = item?.isLive == true || item?.liveStatus == 'was_live' ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide) : null;
+          final replayChat = hasChat && !sideChat ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide) : null;
           final main = <Widget>[
             if (!theater) _BackRow(onBack: controller.goBack),
             Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
@@ -159,7 +165,7 @@ class _WatchPageState extends State<WatchPage> {
               const SizedBox(height: 24),
               _UpNext(controller: controller, shrinkWrap: true),
             ];
-            return CustomScrollView(slivers: [
+            final page = CustomScrollView(slivers: [
               // In 剧场模式 the player goes edge to edge.
               if (theater) SliverToBoxAdapter(child: Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video)))),
               SliverPadding(
@@ -171,6 +177,35 @@ class _WatchPageState extends State<WatchPage> {
                 SliverPadding(padding: const EdgeInsets.symmetric(horizontal: margin), sliver: comments),
               ],
               SliverPadding(padding: const EdgeInsets.fromLTRB(margin, 0, margin, margin), sliver: SliverList.list(children: rest)),
+            ]);
+            if (!sideChat) return page;
+            return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Expanded(child: page),
+              if (chatOpen)
+                SizedBox(
+                  width: _theaterChatWidth,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(border: Border(left: BorderSide(color: context.colors.outlineVariant))),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(tooltip: tr('收起聊天'), icon: const Icon(AppIcons.caretRight, size: 18), onPressed: () => theaterChatOpen.value = false),
+                        ),
+                        Expanded(child: _ReplayChatPanel(controller: controller)),
+                      ]),
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, right: 4),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: IconButton(tooltip: tr('显示聊天'), icon: const Icon(AppIcons.chats, size: 20), onPressed: () => theaterChatOpen.value = true),
+                  ),
+                ),
             ]);
           }
           return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -501,6 +536,8 @@ class _SidePanel extends StatelessWidget {
     );
   }
 }
+
+const _theaterChatWidth = 360.0;
 
 class _KeepAlive extends StatefulWidget {
   const _KeepAlive({required this.child});

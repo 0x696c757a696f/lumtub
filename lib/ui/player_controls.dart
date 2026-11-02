@@ -43,6 +43,7 @@ import 'player_panel.dart';
 import 'subtitle_list_panel.dart';
 import 'subtitle_panel.dart';
 import 'subtitle_style_panel.dart';
+import 'danmaku_panel.dart';
 import 'player_stats.dart';
 import 'screenshot_action.dart';
 import 'storyboard_preview.dart';
@@ -724,6 +725,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             ),
           ),
           Expanded(child: Align(alignment: Alignment.centerLeft, child: _chapterMenu())),
+          _danmakuButtons(width),
           _subtitleMenu(width),
           StreamBuilder<double>(
             stream: _player.stream.rate,
@@ -782,6 +784,31 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         ]),
       ),
     );
+  }
+
+  /// 弹幕 on or off and their settings, for a video with a chat.
+  Widget _danmakuButtons(double width) => ListenableBuilder(
+        listenable: _controller,
+        builder: (context, _) {
+          if (!_controller.hasChat) return const SizedBox.shrink();
+          final settings = _controller.preferences.danmaku;
+          return Row(mainAxisSize: MainAxisSize.min, children: [
+            _IconButton(
+              tooltip: settings.enabled ? tr('关闭弹幕') : tr('打开弹幕'),
+              width: width,
+              icon: settings.enabled ? AppIcons.chatsFill : AppIcons.chatCircleSlash,
+              active: settings.enabled,
+              onTap: () => unawaited(_controller.setDanmaku(settings.copyWith(enabled: !settings.enabled))),
+            ),
+            if (settings.enabled) _IconButton(tooltip: tr('弹幕设置'), width: width, icon: AppIcons.slidersHorizontal, onTap: () => unawaited(_openDanmaku(context))),
+          ]);
+        },
+      );
+
+  Future<void> _openDanmaku(BuildContext context) async {
+    _menuOpened();
+    await showDanmakuPanel(context, _controller);
+    _menuClosed();
   }
 
   Widget _subtitleMenu(double width) => ListenableBuilder(

@@ -80,6 +80,7 @@ import '../stream_resolver.dart';
 import '../subtitle_files.dart';
 import '../subtitle_cues.dart';
 import '../subtitle_translation.dart';
+import '../danmaku.dart';
 import '../language_guess.dart' show looksLike;
 import '../translation.dart';
 import '../translation_cache.dart';
@@ -1682,6 +1683,7 @@ class AppController extends ChangeNotifier {
       _skipped.clear();
       dislikes = null;
     });
+    _syncDanmaku();
     _subtitlesSerial = serial;
     _subtitlesReady = Completer<void>();
     unawaited(_loadDetails(item, serial));
@@ -1748,11 +1750,47 @@ class AppController extends ChangeNotifier {
     final next = [...replayChat, ..._currentChatPending];
     _currentChatPending.clear();
     replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
+    _syncDanmaku();
     if (loadingReplayChat) {
       _update(() => loadingReplayChat = false);
     } else if (!_disposed) {
       chatMessages.value++;
     }
+  }
+
+  DanmakuOverlay? _danmaku;
+  String? _danmakuFor;
+
+  /// Whether the video playing has a chat to fly across it.
+  bool get hasChat => playing != null && (playing!.isLive || playing!.liveStatus == 'was_live');
+
+  /// Starts, feeds or stops the 弹幕 for the video playing, the chat it
+  /// has and the 弹幕 settings.
+  void _syncDanmaku() {
+    final player = this.player;
+    final item = playing;
+    final settings = preferences.danmaku;
+    final live = item?.isLive ?? false;
+    final key = player == null || item == null || !settings.enabled || !hasChat ? null : '${identityHashCode(player)}|${item.id}|$live|${settings.hashCode}';
+    if (key != _danmakuFor) {
+      _danmakuFor = key;
+      _danmaku?.stop();
+      _danmaku = null;
+      if (key == null) return;
+      _danmaku = DanmakuOverlay(player!)..start(settings, live: live);
+      if (live) {
+        // What was said before 弹幕 was turned on stays in the chat.
+        _danmaku!.skip(replayChat);
+        return;
+      }
+    }
+    _danmaku?.add(replayChat);
+  }
+
+  /// Turns 弹幕 on or off, or changes how they look.
+  Future<void> setDanmaku(DanmakuSettings settings) async {
+    await savePreferences(preferences.copyWith(danmaku: settings));
+    _syncDanmaku();
   }
 
   void _stopCurrentChat() {
@@ -1785,7 +1823,10 @@ class AppController extends ChangeNotifier {
     });
     try {
       final messages = await repository.liveChat.replay(item.id);
-      if (serial == _playSerial) _update(() => replayChat = messages);
+      if (serial == _playSerial) {
+        _update(() => replayChat = messages);
+        _syncDanmaku();
+      }
     } catch (error) {
       if (serial == _playSerial) _update(() => replayChatError = friendlyError(error));
     } finally {
@@ -4907,6 +4948,7 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _stopCurrentChat();
+    _danmaku?.stop();
     chatMessages.dispose();
     speechJob.dispose();
     _stallTimer?.cancel();

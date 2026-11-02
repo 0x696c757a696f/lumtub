@@ -5,6 +5,7 @@ import 'app_log.dart';
 
 import 'app_directories.dart';
 import 'blocked_groups.dart';
+import 'danmaku.dart' show DanmakuSettings;
 import 'state_media.dart';
 import 'explore_filters.dart';
 import 'feed_quality.dart';
@@ -111,6 +112,7 @@ class AppPreferences {
     this.subtitlesByService = false,
     this.bilingualTranslation = true,
     this.immersiveTranslation = false,
+    this.danmaku = const DanmakuSettings(),
     this.immersiveLanguage = '',
     this.translationStyle = TranslationStyle.quote,
     this.translationFirst = false,
@@ -248,6 +250,8 @@ class AppPreferences {
   /// 沉浸式翻译: comments, posts and live chat in another language show
   /// their translation under them without asking.
   final bool immersiveTranslation;
+  /// 弹幕: the live chat or its replay flying across the picture.
+  final DanmakuSettings danmaku;
   /// The language 沉浸式翻译 turns text into; empty follows the
   /// interface's language, whatever [translateLanguage] is.
   final String immersiveLanguage;
@@ -414,6 +418,7 @@ class AppPreferences {
     bool? subtitlesByService,
     bool? bilingualTranslation,
     bool? immersiveTranslation,
+    DanmakuSettings? danmaku,
     String? immersiveLanguage,
     TranslationStyle? translationStyle,
     bool? translationFirst,
@@ -488,6 +493,7 @@ class AppPreferences {
         subtitlesByService: subtitlesByService ?? this.subtitlesByService,
         bilingualTranslation: bilingualTranslation ?? this.bilingualTranslation,
         immersiveTranslation: immersiveTranslation ?? this.immersiveTranslation,
+        danmaku: danmaku ?? this.danmaku,
         immersiveLanguage: immersiveLanguage ?? this.immersiveLanguage,
         translationStyle: translationStyle ?? this.translationStyle,
         translationFirst: translationFirst ?? this.translationFirst,
@@ -563,6 +569,7 @@ class AppPreferences {
         'subtitlesByService': subtitlesByService,
         'bilingualTranslation': bilingualTranslation,
         'immersiveTranslation': immersiveTranslation,
+        'danmaku': danmaku.toJson(),
         'immersiveLanguage': immersiveLanguage,
         'translationStyle': translationStyle.name,
         'translationFirst': translationFirst,
@@ -678,6 +685,7 @@ class AppPreferences {
       subtitlesByService: flag('subtitlesByService', d.subtitlesByService),
       bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
       immersiveTranslation: flag('immersiveTranslation', d.immersiveTranslation),
+      danmaku: DanmakuSettings.fromJson(raw['danmaku']),
       immersiveLanguage: TranslationLanguage.maybeByCode(raw['immersiveLanguage'])?.code ?? '',
       translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,
       translationFirst: flag('translationFirst', d.translationFirst),

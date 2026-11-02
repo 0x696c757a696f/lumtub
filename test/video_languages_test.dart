@@ -113,4 +113,30 @@ void main() {
     expect(masked, before, reason: 'the mask is dropped after it left the video out');
     expect(whole, 3);
   }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
+
+  test('asks titles in the language looked for, and asks again what English titles alone decided', () async {
+    final hls = <String>[];
+    final client = MockClient((request) async {
+      final hl = (((jsonDecode(request.body) as Map)['context'] as Map)['client'] as Map)['hl'] as String;
+      hls.add(hl);
+      // The uploader translated the title into English.
+      final title = hl == 'it' ? 'Il nostro viaggio in Sicilia con la famiglia' : 'Our trip to Sicily with the family';
+      return http.Response.bytes(utf8.encode(jsonEncode({
+        'playabilityStatus': {'status': 'OK'},
+        'videoDetails': {'title': title, 'shortDescription': ''},
+      })), 200);
+    });
+    final folder = Directory.systemTemp.createTempSync('languages');
+    addTearDown(() => folder.deleteSync(recursive: true));
+    final languages = VideoLanguages(client, file: File('${folder.path}/languages.json'));
+    expect((await languages.of('aaaaaaaaaaa'))?.language, ExploreLanguage.en);
+    expect(hls.toSet(), {'en'});
+    hls.clear();
+    final italian = await languages.of('aaaaaaaaaaa', asking: ExploreLanguage.it);
+    expect(italian?.language, ExploreLanguage.it);
+    expect(hls.toSet(), {'it'});
+    hls.clear();
+    await languages.of('aaaaaaaaaaa', asking: ExploreLanguage.it);
+    expect(hls, isEmpty, reason: 'the answer asked in Italian is kept');
+  }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
 }

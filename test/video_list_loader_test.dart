@@ -171,7 +171,7 @@ void main() {
     expect(VideoRepository.shelfUrl('not json'), isNull);
   });
 
-  test('ranks each page before showing it and fills strict filters', () async {
+  test('ranks every candidate gathered, not each page on its own, and fills strict filters', () async {
     final source = _Source([for (var i = 0; i < 12; i++) _video(i)]);
     final loader = VideoListLoader(
       () => Listing(source.open),
@@ -183,10 +183,35 @@ void main() {
     addTearDown(loader.dispose);
     loader.loadMore();
     await pumpEventQueue();
-    // Page one shows 0 and 2, too few, so page two is read straight away;
-    // each page comes out highest first.
-    expect(loader.items.map((v) => v.title), ['2', '0', '6', '4']);
+    // Pages are read ahead until six candidates wait; the best four show.
+    expect(loader.items.map((v) => v.title), ['10', '8', '6', '4']);
     expect(loader.loading, isFalse);
+    expect(loader.hasMore, isTrue);
+    loader.loadMore();
+    await pumpEventQueue();
+    expect(loader.items.map((v) => v.title), ['10', '8', '6', '4', '2', '0']);
+    expect(loader.hasMore, isFalse);
+    expect(source.opened, 1);
+  });
+
+  test('a candidate left out of one page still beats a worse one found later', () async {
+    final scores = [5, 9, 1, 7, 2, 8, 0, 3, 4, 6, 1, 1, 1, 1, 1, 1];
+    final source = _Source([for (var i = 0; i < scores.length; i++) _video(scores[i] * 100 + i)]);
+    final loader = VideoListLoader(() => Listing(source.open), pageSize: 2, rank: (item) => (int.parse(item.title) ~/ 100).toDouble());
+    addTearDown(loader.dispose);
+    final shown = <int>[];
+    while (loader.hasMore) {
+      loader.loadMore();
+      await pumpEventQueue();
+      if (shown.length == loader.items.length) break;
+      shown
+        ..clear()
+        ..addAll(loader.items.map((v) => int.parse(v.title) ~/ 100));
+    }
+    expect(shown, hasLength(scores.length));
+    // Each page is the best of what was gathered by then, so nothing shows
+    // after a lower score it was gathered together with.
+    expect(shown.take(4), [9, 7, 8, 5]);
   });
 
   test('a failed list retries on its own, at once when another list loads', () async {

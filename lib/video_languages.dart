@@ -45,6 +45,9 @@ class VideoLanguages {
   late final _probe = YoutubePlayerProbe(_client);
 
   Map<String, SpokenVideo>? _known;
+  /// The language the texts of a known answer were asked in, when not
+  /// English.
+  final _askedIn = <String, String>{};
   final _waiting = <Completer<void>>[];
   int _running = 0;
   Timer? _save;
@@ -54,9 +57,20 @@ class VideoLanguages {
   /// The spoken language of video [id]: null when it could not be asked;
   /// a null language when nothing in the video tells, and
   /// [ExploreLanguage.any] for a language explore does not offer.
-  Future<SpokenVideo?> of(String id) async {
+  ///
+  /// [asking] is the language looked for. The title and description are
+  /// asked in it: asked in English, an uploader's English translation of
+  /// the title would make an Italian video read as English when nothing
+  /// else tells.
+  Future<SpokenVideo?> of(String id, {ExploreLanguage asking = ExploreLanguage.any}) async {
     final known = _known ??= await (_loading ??= _load());
-    if (known[id] case final found?) return found;
+    final hl = asking == ExploreLanguage.any ? 'en' : asking.code;
+    if (known[id] case final found?) {
+      // Told by text read in English before titles were asked in the
+      // language looked for: asked again.
+      final stale = found.source == 'text' && found.language == ExploreLanguage.en && hl != 'en' && (_askedIn[id] ?? 'en') == 'en';
+      if (!stale) return found;
+    }
     while (_running >= parallel) {
       final turn = Completer<void>();
       _waiting.add(turn);
@@ -64,10 +78,19 @@ class VideoLanguages {
     }
     _running++;
     try {
-        final found = await _ask(id);
+        final found = await _ask(id, hl);
         if (found != null && (found.heard || found.language != null)) {
-          if (known.length >= _kept) known.remove(known.keys.first);
+          if (known.length >= _kept) {
+            final oldest = known.keys.first;
+            known.remove(oldest);
+            _askedIn.remove(oldest);
+          }
           known[id] = found;
+          if (hl == 'en') {
+            _askedIn.remove(id);
+          } else {
+            _askedIn[id] = hl;
+          }
           _save ??= Timer(const Duration(seconds: 5), _write);
         }
         return found;
@@ -100,18 +123,18 @@ class VideoLanguages {
     _compared = 0;
   }
 
-  Future<_Read?> _fetch(String id, {required bool tv, bool whole = false}) async {
-    final read = await _readInBackground(await _probe.fetch(id, whole || _maskDrops ? null : _fields, expect: 'videoDetails', tv: tv));
+  Future<_Read?> _fetch(String id, String hl, {required bool tv, bool whole = false}) async {
+    final read = await _readInBackground(await _probe.fetch(id, whole || _maskDrops ? null : _fields, expect: 'videoDetails', tv: tv, hl: hl));
     if (read is! Map<String, dynamic>) return null;
     return (spoken: _spoken(read), playable: read['playable'] != false);
   }
 
-  Future<SpokenVideo?> _ask(String id) async {
-    final read = await _fetch(id, tv: _tvFirst);
+  Future<SpokenVideo?> _ask(String id, String hl) async {
+    final read = await _fetch(id, hl, tv: _tvFirst);
     if (read == null) {
       // No video in the answer at all, as when YouTube wants this app to
       // prove it is not a bot: the other one is asked.
-      final other = await _fetch(id, tv: !_tvFirst);
+      final other = await _fetch(id, hl, tv: !_tvFirst);
       if (other != null && other.spoken.heard) {
         _tvFirst = !_tvFirst;
         logInfo('Video languages: ${_tvFirst ? 'the website' : 'the TV app'} answered without the video; asking ${_tvFirst ? 'the TV app' : 'the website'} first');
@@ -124,14 +147,14 @@ class VideoLanguages {
     // app less than the other.
     _compared++;
     if (!_maskDrops && _probe.masks(_fields)) {
-      final whole = await _fetch(id, tv: _tvFirst, whole: true);
+      final whole = await _fetch(id, hl, tv: _tvFirst, whole: true);
       if (whole != null && whole.spoken.heard) {
         _maskDrops = true;
         logInfo('The /player field mask left out captions; asking for whole answers');
         return whole.spoken;
       }
     }
-    final other = await _fetch(id, tv: !_tvFirst);
+    final other = await _fetch(id, hl, tv: !_tvFirst);
     if (other != null && other.spoken.heard) {
       _tvFirst = !_tvFirst;
       logInfo('Video languages: ${_tvFirst ? 'the TV app' : 'the website'} answers with captions where ${_tvFirst ? 'the website' : 'the TV app'} does not; asking it first');
@@ -162,19 +185,28 @@ class VideoLanguages {
   Future<Map<String, SpokenVideo>> _load() async {
     final path = file?.path;
     if (path == null) return {};
-    return Isolate.run(() {
+    final (known, askedIn) = await Isolate.run(() {
       final file = File(path);
-      if (!file.existsSync()) return <String, SpokenVideo>{};
+      final none = (<String, SpokenVideo>{}, <String, String>{});
+      if (!file.existsSync()) return none;
       try {
         final raw = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
-        return {
-          for (final MapEntry(:key, :value) in raw.entries)
-            if (value is Map<String, dynamic>) key: _spoken(value),
-        };
+        return (
+          {
+            for (final MapEntry(:key, :value) in raw.entries)
+              if (value is Map<String, dynamic>) key: _spoken(value),
+          },
+          {
+            for (final MapEntry(:key, :value) in raw.entries)
+              if (value is Map<String, dynamic> && value['hl'] is String) key: value['hl'] as String,
+          },
+        );
       } catch (_) {
-        return <String, SpokenVideo>{};
+        return none;
       }
     });
+    _askedIn.addAll(askedIn);
+    return known;
   }
 
   void _write() {
@@ -192,6 +224,7 @@ class VideoLanguages {
           },
           'title': value.title,
           'source': value.source,
+          if (_askedIn[key] case final hl?) 'hl': hl,
         },
     };
     final path = file.path;
@@ -245,7 +278,7 @@ class VideoLanguages {
       // Nothing in the first few hundred: the search found none to show.
       if (asked >= giveUpAfter && kept == 0) break;
       asked++;
-      pending.add(_Pending(of(item.id).then((spoken) {
+      pending.add(_Pending(of(item.id, asking: language).then((spoken) {
         if (spoken == null || spoken.language == null) untold++;
         told.update(spoken == null ? 'error' : spoken.heard ? spoken.source : '${spoken.source} ${spoken.language?.name ?? '?'}', (n) => n + 1, ifAbsent: () => 1);
         if (spoken == null) return language.matches(item.title) ? line : null;

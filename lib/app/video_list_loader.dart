@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
@@ -23,7 +24,10 @@ class VideoListLoader extends ChangeNotifier {
   /// Keeps only entries whose title passes, such as a search inside one
   /// channel tab. Pages that add nothing are skipped over, up to a limit.
   final bool Function(String title)? matches;
-  /// Orders each page's videos, highest first, before they are shown.
+  /// Orders the videos, highest first. Candidates are gathered a little
+  /// ahead of what shows, and each page shows the best of all gathered so
+  /// far: one not shown yet still competes with those found later, instead
+  /// of each page being ordered on its own.
   final double Function(VideoItem item)? rank;
   /// With [where] or [matches], pages are read until this many entries
   /// show, so a strict filter still leaves something to scroll.
@@ -46,6 +50,8 @@ class VideoListLoader extends ChangeNotifier {
   Listing? _listing;
   StreamSubscription<Object>? _subscription;
   final _seen = <String>{};
+  /// Ranked candidates not shown yet.
+  final _pool = <(VideoItem, double)>[];
   bool _disposed = false;
   /// Entries read from the listing so far, shown or not.
   int _read = 0;
@@ -99,6 +105,12 @@ class VideoListLoader extends ChangeNotifier {
   /// times on their own, sooner when another list loads again.
   void loadMore({bool retry = false}) {
     if (loading || !hasMore || (error != null && !retry)) return;
+    if (rank != null && _pool.isNotEmpty && error == null && (_listing == null || _listing!.done)) {
+      _showFromPool();
+      hasMore = _pool.isNotEmpty;
+      _notify();
+      return;
+    }
     _retryTimer?.cancel();
     _retryTimer = null;
     _failing.remove(this);
@@ -154,8 +166,7 @@ class VideoListLoader extends ChangeNotifier {
           if (order == null) {
             items = [...items, ...pendingVideos];
           } else {
-            final scored = [for (final item in pendingVideos) (item, order(item))]..sort((a, b) => b.$2.compareTo(a.$2));
-            items = [...items, for (final (item, _) in scored) item];
+            _pool.addAll([for (final item in pendingVideos) (item, order(item))]);
           }
         }
         if (pendingChannels.isNotEmpty) channels = [...channels, ...pendingChannels];
@@ -164,10 +175,16 @@ class VideoListLoader extends ChangeNotifier {
         final more = !full && !listing.done && fresh > 0;
         // A filtered page with nothing to show would leave nothing to
         // scroll, so the next one is read straight away.
-        if ((matches != null || where != null) && error == null && more && shown < fill && skipped < 25 && !_disposed) {
+        // Ranked, a few pages more are read ahead, so the best of more
+        // candidates shows first.
+        final wanting = order == null
+            ? (matches != null || where != null) && shown < fill
+            : (_pool.length < fill && (matches != null || where != null)) || (_pool.length < pageSize + pageSize ~/ 2 && skipped < 3);
+        if (error == null && more && wanting && skipped < 25 && !_disposed) {
           _page(listing, pageSize, skipped + 1, shown);
           return;
         }
+        if (order != null) _showFromPool();
         if (items.isEmpty && error == null && !more && !_disposed) {
           final why = dropped == null || dropped!.isEmpty ? '' : ', dropped ${[for (final e in dropped!.entries) '${e.value} (${e.key})'].join(', ')}';
           if (name != null) logInfo('$name has no videos to show: read $_read entries$why');
@@ -186,7 +203,7 @@ class VideoListLoader extends ChangeNotifier {
           }
         }
         loading = false;
-        hasMore = !full && (error != null || more);
+        hasMore = !full && (error != null || more || _pool.isNotEmpty);
         if (error == null) {
           if (fresh > 0) _succeeded();
         } else {
@@ -195,6 +212,17 @@ class VideoListLoader extends ChangeNotifier {
         _notify();
       },
     );
+  }
+
+  /// Shows the best page of the candidates gathered.
+  void _showFromPool() {
+    if (_pool.isEmpty) return;
+    _pool.sort((a, b) => b.$2.compareTo(a.$2));
+    final room = limit == null ? pageSize : max(0, min(pageSize, limit! - items.length));
+    final shown = _pool.take(room).map((e) => e.$1).toList();
+    _pool.removeRange(0, shown.length);
+    if (limit != null && items.length + shown.length >= limit!) _pool.clear();
+    items = [...items, ...shown];
   }
 
   void _notify() {

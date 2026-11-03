@@ -420,8 +420,8 @@ void EnterPip(double aspect, int width, int height) {
   gdk_monitor_get_workarea(monitor, &area);
   int x = area.x + area.width - width - 16, y = area.y + area.height - height - 16;
   if (shell.has_last) {
-    x = std::clamp(shell.last_x, area.x, std::max(area.x, area.x + area.width - width));
-    y = std::clamp(shell.last_y, area.y, std::max(area.y, area.y + area.height - height));
+    x = std::max(area.x, std::min(shell.last_x, area.x + area.width - width));
+    y = std::max(area.y, std::min(shell.last_y, area.y + area.height - height));
   }
   gtk_window_move(window, x, y);
 }

@@ -542,7 +542,7 @@ class _StatusBar extends StatelessWidget {
     final status = controller.status;
     final paths = controller.paths;
     final text = controller.ready && paths != null
-        ? 'libmpv ${controller.tools?.libmpv.current?.label ?? '内置'}  ·  $status'
+        ? '${controller.tools?.libmpvLabel ?? 'libmpv'}  ·  $status'
         : status;
     return Container(
       width: double.infinity,

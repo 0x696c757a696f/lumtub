@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi' show Abi;
 import 'dart:io';
 import 'dart:isolate';
 import 'package:crypto/crypto.dart';
@@ -21,7 +22,7 @@ class ToolPaths {
   final String? deno;
   const ToolPaths({required this.mpv, required this.ytDlp, this.deno});
   List<String> get executableDirectories => [
-        File(mpv).parent.path,
+        if (mpv.isNotEmpty && Platform.isWindows) File(mpv).parent.path,
         File(ytDlp).parent.path,
         if (deno != null) File(deno!).parent.path,
       ];
@@ -42,6 +43,29 @@ class ToolManager {
 
   static final _separator = Platform.pathSeparator;
 
+  /// [name] as an executable's file name on this system.
+  static String _exe(String name) => Platform.isWindows ? '$name.exe' : name;
+
+  static bool get _linuxArm64 => Abi.current() == Abi.linuxArm64;
+
+  /// Off Windows libmpv is not downloaded: the AppImage carries its own in
+  /// lib/, else the system's is found by its library name.
+  static bool get _systemMpv => !Platform.isWindows;
+
+  /// The libmpv packaged with a Linux build (the AppImage), or '' for the
+  /// system's. Named exactly, so media_kit cannot open a second libmpv
+  /// beside the one the video plugin linked.
+  static String get _linuxMpv {
+    final packaged = '${File(Platform.resolvedExecutable).parent.path}/lib/libmpv.so.2';
+    return File(packaged).existsSync() ? packaged : '';
+  }
+
+  /// libmpv's own version (mpv's `mpv-version`), once the player is made.
+  String? mpvVersion;
+
+  /// The libmpv in use, for the status bar and settings.
+  String get libmpvLabel => _systemMpv ? mpvVersion ?? 'libmpv' : 'libmpv ${libmpv.current?.label ?? tr('内置')}';
+
   Future<void> initialize() async {
     root = directories.components;
     await root.create(recursive: true);
@@ -60,11 +84,11 @@ class ToolManager {
   }
 
   Future<ToolPaths> ensureReady() async {
-    if (!Platform.isWindows) throw UnsupportedError('This prototype currently targets Windows x64.');
+    if (!Platform.isWindows && !Platform.isLinux) throw UnsupportedError('Lumtub runs on Windows and Linux.');
     // The runner already loaded a downloaded libmpv when one was selected;
     // Dart has to open that same copy.
-    final mpv = libmpv.loadedPath ?? _bundledMpv;
-    if (!File(mpv).existsSync()) throw StateError('Bundled libmpv-2.dll is missing. Re-download the Lumtub package.');
+    final mpv = _systemMpv ? _linuxMpv : libmpv.loadedPath ?? _bundledMpv;
+    if (!_systemMpv && !File(mpv).existsSync()) throw StateError('Bundled libmpv-2.dll is missing. Re-download the Lumtub package.');
     if (discover()?.ytDlp.isNotEmpty != true) {
       status('首次启动：安装 yt-dlp…');
       await _installYtDlp();
@@ -97,10 +121,10 @@ class ToolManager {
 
   ToolPaths? discover() {
     if (!root.existsSync()) return null;
-    final bundledMpv = libmpv.loadedPath ?? _bundledMpv;
-    final mpv = File(bundledMpv).existsSync() ? bundledMpv : null;
-    final yt = _findNewest('yt-dlp', 'yt-dlp.exe');
-    final deno = _findNewest('deno', 'deno.exe');
+    final bundledMpv = _systemMpv ? _linuxMpv : libmpv.loadedPath ?? _bundledMpv;
+    final mpv = _systemMpv || File(bundledMpv).existsSync() ? bundledMpv : null;
+    final yt = _findNewest('yt-dlp', _exe('yt-dlp'));
+    final deno = _findNewest('deno', _exe('deno'));
     if (mpv == null && yt == null) return null;
     return ToolPaths(mpv: mpv ?? '', ytDlp: yt ?? '', deno: deno);
   }
@@ -190,7 +214,7 @@ class ToolManager {
     }
     final errors = <String>[];
     for (final task in <(String, Future<void> Function())>[
-      ('yt-dlp', _installYtDlp), ('Deno', _installDeno), ('libmpv', _installLibmpv),
+      ('yt-dlp', _installYtDlp), ('Deno', _installDeno), if (!_systemMpv) ('libmpv', _installLibmpv),
       // Never installed by an update check: only kept current once the user has it.
       ('ffmpeg', () => installFfmpeg(onlyIfInstalled: true)),
     ]) {
@@ -213,7 +237,7 @@ class ToolManager {
   Future<Map<String, dynamic>> _release(String repository, {String? tag}) async {
     final response = await _client.get(
       Uri.parse('https://api.github.com/repos/$repository/releases/${tag == null ? 'latest' : 'tags/$tag'}'),
-      headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'Lumtub-Windows/0.1'},
+      headers: {'Accept': 'application/vnd.github+json', 'User-Agent': _userAgent},
     ).timeout(const Duration(seconds: 25));
     if (response.statusCode != 200) throw HttpException('GitHub API HTTP ${response.statusCode} for $repository');
     return jsonDecode(response.body) as Map<String, dynamic>;
@@ -256,7 +280,7 @@ class ToolManager {
     if (await temp.exists()) await temp.delete();
     try {
       final request = http.Request('GET', uri);
-      request.headers['User-Agent'] = 'Lumtub-Windows/0.1';
+      request.headers['User-Agent'] = _userAgent;
       final result = await _client.send(request).timeout(const Duration(seconds: 30));
       if (result.statusCode != 200) throw HttpException('Download failed: HTTP ${result.statusCode}');
       final sink = temp.openWrite();
@@ -298,13 +322,13 @@ class ToolManager {
     var dest = Directory('${group.path}$_separator$tag');
     // A version rolled back by the user is not installed again.
     if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
-    if (await File('${dest.path}${_separator}yt-dlp.exe').exists()) {
+    if (await File('${dest.path}$_separator${_exe('yt-dlp')}').exists()) {
       if (await Directory('${dest.path}${_separator}_internal').exists()) return;
       // The same release as the single-file build in use, unpacked, beside
       // it: the running one cannot be replaced, and the newer name wins.
       dest = Directory('${dest.path}-dir');
       if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
-      if (await File('${dest.path}${_separator}yt-dlp.exe').exists()) return;
+      if (await File('${dest.path}$_separator${_exe('yt-dlp')}').exists()) return;
     }
     status('下载 yt-dlp {0}…', [tag]);
     final partial = Directory('${dest.path}.partial');
@@ -330,8 +354,13 @@ class ToolManager {
     await into.create(recursive: true);
     await _extractZip(archive, into);
     await archive.delete();
-    final exe = File('${into.path}${_separator}yt-dlp.exe');
-    if (!await exe.exists()) throw StateError('$ytDlpFolderAsset has no yt-dlp.exe');
+    if (!Platform.isWindows) {
+      // mpv's ytdl_hook, used for live videos, looks for it as yt-dlp.
+      final named = File('${into.path}$_separator$_ytDlpInArchive');
+      if (await named.exists()) await named.rename('${into.path}${_separator}yt-dlp');
+    }
+    final exe = File('${into.path}$_separator${_exe('yt-dlp')}');
+    if (!await exe.exists()) throw StateError('$ytDlpFolderAsset has no ${_exe('yt-dlp')}');
     return exe;
   }
 
@@ -350,7 +379,10 @@ class ToolManager {
     }
   }
 
-  static const ytDlpFolderAsset = 'yt-dlp_win.zip';
+  static String get ytDlpFolderAsset => Platform.isWindows ? 'yt-dlp_win.zip' : _linuxArm64 ? 'yt-dlp_linux_aarch64.zip' : 'yt-dlp_linux.zip';
+
+  /// The executable's name in the Linux archive.
+  static String get _ytDlpInArchive => _linuxArm64 ? 'yt-dlp_linux_aarch64' : 'yt-dlp_linux';
 
   /// Deletes all but the newest [keep] usable versions in [group]; rolled
   /// back versions stay as markers so they are not downloaded again.
@@ -365,6 +397,7 @@ class ToolManager {
   }
 
   Future<void> _installLibmpv() async {
+    if (_systemMpv) return;
     final release = await _release('zhongfly/mpv-winbuild');
     final tag = _safeTag(release['tag_name']);
     final build = LibmpvBuild(tag, libmpvVariantForThisProcess());
@@ -419,17 +452,18 @@ class ToolManager {
     final release = await _release('denoland/deno');
     final tag = _safeTag(release['tag_name']);
     final dest = Directory('${root.path}${Platform.pathSeparator}deno${Platform.pathSeparator}$tag');
-    if (await File('${dest.path}${Platform.pathSeparator}deno.exe').exists()) return;
+    if (await File('${dest.path}$_separator${_exe('deno')}').exists()) return;
     status('下载 Deno {0}…', [tag]);
-    final asset = _asset(release, (name) => name == 'deno-x86_64-pc-windows-msvc.zip');
+    final target = Platform.isWindows ? 'x86_64-pc-windows-msvc' : _linuxArm64 ? 'aarch64-unknown-linux-gnu' : 'x86_64-unknown-linux-gnu';
+    final asset = _asset(release, (name) => name == 'deno-$target.zip');
     final archive = await _downloadVerified(asset, Directory('${root.path}${Platform.pathSeparator}downloads'));
     final partial = Directory('${dest.path}.partial');
     if (await partial.exists()) await partial.delete(recursive: true);
     await partial.create(recursive: true);
     try {
       await _extractZip(archive, partial);
-      if (!await File('${partial.path}${Platform.pathSeparator}deno.exe').exists()) {
-        throw StateError('Deno release did not contain deno.exe');
+      if (!await File('${partial.path}$_separator${_exe('deno')}').exists()) {
+        throw StateError('Deno release did not contain ${_exe('deno')}');
       }
       await dest.parent.create(recursive: true);
       await partial.rename(dest.path);
@@ -443,11 +477,11 @@ class ToolManager {
 
   /// The folder holding the newest installed ffmpeg and ffprobe, if any.
   String? get ffmpegDirectory {
-    final exe = _findNewest('ffmpeg', 'ffmpeg.exe');
+    final exe = _findNewest('ffmpeg', _exe('ffmpeg'));
     return exe == null ? null : File(exe).parent.path;
   }
 
-  String? get ffmpegVersion => _versionOf(_findNewest('ffmpeg', 'ffmpeg.exe'));
+  String? get ffmpegVersion => _versionOf(_findNewest('ffmpeg', _exe('ffmpeg')));
 
   /// Bytes on disk of the installed ffmpeg, or null without it.
   int? get ffmpegBytes {
@@ -462,6 +496,13 @@ class ToolManager {
 
   /// The download size in bytes the release lists for the ffmpeg archive.
   Future<int?> ffmpegDownloadSize() async {
+    if (!Platform.isWindows) {
+      final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
+      final assets = (release['assets'] as List? ?? const []).whereType<Map>();
+      final name = linuxFfmpegAssetName(assets.map((a) => a['name']?.toString() ?? ''), arm64: _linuxArm64);
+      final size = assets.where((a) => a['name'] == name).firstOrNull?['size'];
+      return size is int ? size : null;
+    }
     try {
       if (!await _no7z.exists()) {
         final size = (await _zhongflyFfmpeg()).$2['size'];
@@ -483,6 +524,7 @@ class ToolManager {
   /// [onlyIfInstalled] nothing happens for a user who never installed it.
   Future<void> installFfmpeg({bool onlyIfInstalled = false, void Function(int received, int? total)? onProgress}) async {
     if (onlyIfInstalled && ffmpegDirectory == null) return;
+    if (!Platform.isWindows) return _installLinuxFfmpeg(onProgress);
     if (!await _no7z.exists()) {
       try {
         await _installZhongflyFfmpeg(onProgress);
@@ -552,7 +594,7 @@ class ToolManager {
     if (await File('${dest.path}${_separator}ffmpeg.exe').exists()) return;
     status('下载 ffmpeg {0}…', [folder]);
     // The hash comes from the checksum file of the same release, over HTTPS.
-    final sums = await _client.get(_assetUri(_asset(release, (name) => name == ffmpegChecksumsAsset)), headers: {'User-Agent': 'Lumtub-Windows/0.1'}).timeout(const Duration(seconds: 30));
+    final sums = await _client.get(_assetUri(_asset(release, (name) => name == ffmpegChecksumsAsset)), headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 30));
     if (sums.statusCode != 200) throw HttpException('Checksum file HTTP ${sums.statusCode}');
     final expected = parseChecksums(sums.body)[assetName];
     if (expected == null) throw StateError('No checksum listed for $assetName');
@@ -570,6 +612,50 @@ class ToolManager {
       if (await partial.exists()) await partial.delete(recursive: true);
       rethrow;
     } finally {
+      if (await archive.exists()) await archive.delete();
+    }
+    await _prune(Directory('${root.path}${_separator}ffmpeg'), keep: 2);
+  }
+
+  /// The static LGPL build from BtbN, unpacked by the system's tar.
+  Future<void> _installLinuxFfmpeg(void Function(int received, int? total)? onProgress) async {
+    final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
+    final assets = (release['assets'] as List? ?? const []).whereType<Map<String, dynamic>>().toList();
+    final assetName = linuxFfmpegAssetName(assets.map((a) => a['name']?.toString() ?? ''), arm64: _linuxArm64);
+    if (assetName == null) throw StateError('No LGPL Linux ffmpeg build in the $ffmpegRepository release');
+    final asset = _asset(release, (name) => name == assetName);
+    final folder = ffmpegFolderName(assetName, asset['updated_at']?.toString());
+    final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
+    if (await File('${dest.path}${_separator}ffmpeg').exists()) return;
+    status('下载 ffmpeg {0}…', [folder]);
+    final sums = await _client.get(_assetUri(_asset(release, (name) => name == ffmpegChecksumsAsset)), headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 30));
+    if (sums.statusCode != 200) throw HttpException('Checksum file HTTP ${sums.statusCode}');
+    final expected = parseChecksums(sums.body)[assetName];
+    if (expected == null) throw StateError('No checksum listed for $assetName');
+    final archive = await _downloadVerified(asset, Directory('${root.path}${_separator}downloads'), sha256Hex: expected, onProgress: onProgress);
+    final partial = Directory('${dest.path}.partial');
+    final whole = Directory('${dest.path}.all');
+    for (final dir in [partial, whole]) {
+      if (await dir.exists()) await dir.delete(recursive: true);
+      await dir.create(recursive: true);
+    }
+    try {
+      final result = await Process.run('tar', ['-xJf', archive.path, '-C', whole.path]);
+      if (result.exitCode != 0) throw ProcessException('tar', ['-xJf', archive.path], result.stderr.toString(), result.exitCode);
+      for (final name in ['ffmpeg', 'ffprobe']) {
+        final found = whole.listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('${_separator}bin$_separator$name')).firstOrNull;
+        if (found == null) throw StateError('ffmpeg archive lacks $name');
+        await found.copy('${partial.path}$_separator$name');
+      }
+      await Process.run('chmod', ['+x', '--', '${partial.path}${_separator}ffmpeg', '${partial.path}${_separator}ffprobe']);
+      final check = await runWithTimeout('${partial.path}${_separator}ffmpeg', ['-version'], timeout: const Duration(seconds: 30));
+      if (check.exitCode != 0) throw StateError('ffmpeg $folder failed its self-check');
+      await partial.rename(dest.path);
+    } catch (_) {
+      if (await partial.exists()) await partial.delete(recursive: true);
+      rethrow;
+    } finally {
+      if (await whole.exists()) await whole.delete(recursive: true);
       if (await archive.exists()) await archive.delete();
     }
     await _prune(Directory('${root.path}${_separator}ffmpeg'), keep: 2);
@@ -614,11 +700,17 @@ class ToolManager {
   }
 
   Future<void> _extractZip(File archive, Directory into) async {
+    if (!Platform.isWindows) {
+      await extractZip(archive, into);
+      return;
+    }
     final result = await Process.run('tar.exe', ['-xf', archive.path, '-C', into.path]);
     if (result.exitCode != 0) {
       throw ProcessException('tar.exe', ['-xf', archive.path, '-C', into.path], result.stderr.toString(), result.exitCode);
     }
   }
+
+  static String get _userAgent => Platform.isWindows ? 'Lumtub-Windows/0.1' : 'Lumtub-${Platform.operatingSystem}/0.1';
 
   void dispose() => _client.close();
 }

@@ -1,0 +1,59 @@
+import 'dart:ffi';
+import 'dart:io';
+import 'package:ffi/ffi.dart';
+
+import 'app_log.dart';
+
+typedef _SetEnvNative = Int32 Function(Pointer<Utf16>, Pointer<Utf16>);
+typedef _SetEnvDart = int Function(Pointer<Utf16>, Pointer<Utf16>);
+
+/// Prepend tool paths to the CURRENT process environment.
+/// This allows mpv's built-in ytdl_hook.lua to discover yt-dlp.
+void addToPath(Iterable<String> directories) {
+  final separator = Platform.isWindows ? ';' : ':';
+  final prefixes = directories.where((p) => p.trim().isNotEmpty).join(separator);
+  if (prefixes.isEmpty) return;
+  final value = '$prefixes$separator${Platform.environment['PATH'] ?? ''}';
+  if (Platform.isWindows) {
+    final kernel = DynamicLibrary.open('kernel32.dll');
+    final setEnv = kernel.lookupFunction<_SetEnvNative, _SetEnvDart>('SetEnvironmentVariableW');
+    final key = 'PATH'.toNativeUtf16();
+    final native = value.toNativeUtf16();
+    try {
+      if (setEnv(key, native) == 0) throw const FileSystemException('Could not update PATH for player');
+    } finally {
+      calloc.free(key);
+      calloc.free(native);
+    }
+    return;
+  }
+  final setEnv = DynamicLibrary.process().lookupFunction<Int32 Function(Pointer<Utf8>, Pointer<Utf8>, Int32), int Function(Pointer<Utf8>, Pointer<Utf8>, int)>('setenv');
+  final key = 'PATH'.toNativeUtf8();
+  final native = value.toNativeUtf8();
+  try {
+    if (setEnv(key, native, 1) != 0) throw const FileSystemException('Could not update PATH for player');
+  } finally {
+    calloc.free(key);
+    calloc.free(native);
+  }
+}
+
+/// Starts Lumtub again and ends this process, such as after the language
+/// changed.
+Future<void> restartApp() async {
+  await Process.start(Platform.resolvedExecutable, const [], mode: ProcessStartMode.detached);
+  await AppLog.current?.flush();
+  exit(0);
+}
+
+/// Opens [target], a web address, file or folder, with the desktop's
+/// default program (xdg-open). Does nothing on Windows, which has its own
+/// ways.
+Future<void> openWithDesktop(String target) async {
+  if (Platform.isWindows) return;
+  try {
+    await Process.start(Platform.isMacOS ? 'open' : 'xdg-open', [target], mode: ProcessStartMode.detached);
+  } catch (e) {
+    logWarn('Could not open $target: $e');
+  }
+}

@@ -22,7 +22,9 @@ Future<HashSet<String>> queryDecoders(int handle) {
       return _decoders;
     }
 
-    NativeLibrary.ensureInitialized();
+    // Lumtub: the libmpv MediaKit.ensureInitialized already opened. Calling
+    // NativeLibrary.ensureInitialized() again searched the default names and
+    // could open a second, different libmpv (the system's on Linux).
     final mpv = MPV(DynamicLibrary.open(NativeLibrary.path));
 
     if (_decoders.isEmpty) {

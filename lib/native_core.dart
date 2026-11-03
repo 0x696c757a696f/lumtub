@@ -41,6 +41,8 @@ class NativeCore {
         sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
         dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
         fileSha256 = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_file_sha256'),
+        _vaultSeal = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vault_seal'),
+        _vaultOpen = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vault_open'),
         youtubeNext = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_next'),
         spokenLanguage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_spoken_language'),
         aiLabel = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_ai_label'),
@@ -115,6 +117,16 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) sponsorSegments;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) dearrowBranding;
   final Pointer<Utf8> Function(Pointer<Uint8> path, int length) fileSha256;
+  final Pointer<Utf8> Function(Pointer<Uint8> text, int length) _vaultSeal;
+  final Pointer<Utf8> Function(Pointer<Uint8> hex, int length) _vaultOpen;
+
+  /// [text] sealed under the key the system keyring keeps, as hex; null
+  /// when it could not be sealed. It may wait on the keyring, so run it on
+  /// another isolate.
+  String? vaultSeal(String text) => take(withText(text, _vaultSeal));
+
+  /// What [vaultSeal] sealed into [hex]; null when it does not open.
+  String? vaultOpen(String hex) => take(withText(hex, _vaultOpen));
   /// Related videos and localized text of a YouTube `/next` response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeNext;
   /// The spoken language and own title of a YouTube `/player` response.
@@ -187,6 +199,8 @@ class NativeCore {
     final paths = [
       if (Platform.environment['LUMTUB_CORE_DLL'] case final path? when path.isNotEmpty) path,
       '${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}$fileName',
+      // The Linux bundle keeps its libraries in lib/.
+      if (Platform.isLinux) '${File(Platform.resolvedExecutable).parent.path}/lib/$fileName',
     ];
     for (final path in paths) {
       if (!File(path).existsSync()) continue;

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import 'theme.dart';
 import '../l10n/l10n.dart';
+import '../system_env.dart';
 import 'app_icons.dart';
 
 export '../models.dart' show formatBytes;
@@ -145,7 +146,8 @@ String formatScheduledStart(DateTime date) {
 /// Opens a web link in the default browser.
 Future<void> openExternal(String url) async {
   final uri = Uri.tryParse(url);
-  if (!Platform.isWindows || uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) return;
+  if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) return;
+  if (!Platform.isWindows) return openWithDesktop(uri.toString());
   // rundll32 passes the whole address on; explorer.exe can drop everything
   // after the first '&'.
   await Process.start('rundll32.exe', ['url.dll,FileProtocolHandler', uri.toString()]);

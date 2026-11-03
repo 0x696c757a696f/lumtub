@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
@@ -21,7 +22,7 @@ import '../../player_settings.dart';
 import '../../progress_line.dart';
 import '../../video_codec.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
-import '../../windows_env.dart' show restartApp;
+import '../../system_env.dart' show restartApp;
 import '../../windows_video_info.dart';
 import '../common.dart';
 import '../format_policy_dialogs.dart';
@@ -397,7 +398,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 }
               },
             ), subtitle: 'hwdec-codecs h264 hevc vp9 av1'),
-        SettingEntry(tr('D3D11VA 零拷贝'), (context) => SwitchItem(
+        if (Platform.isWindows) SettingEntry(tr('D3D11VA 零拷贝'), (context) => SwitchItem(
               title: tr('D3D11VA 零拷贝'),
               subtitle: tr('此项即 mpv 的 --d3d11va-zero-copy，只对 d3d11va 有效；其他解码器选不带 -copy 的模式即为零拷贝'),
               leading: _icon(AppIcons.lightning),
@@ -966,7 +967,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             )),
         SettingEntry(tr('组件管理'), (context) => NormalItem(
               title: tr('组件管理'),
-              subtitle: 'libmpv ${controller.tools?.libmpv.current?.label ?? '内置'} · yt-dlp ${controller.tools?.ytDlpVersion ?? '未安装'}',
+              subtitle: '${controller.tools?.libmpvLabel ?? 'libmpv'} · yt-dlp ${controller.tools?.ytDlpVersion ?? tr('未安装')}',
               leading: _icon(AppIcons.puzzlePiece),
               onTap: () => openComponents(context, controller),
             ), subtitle: tr('libmpv yt-dlp Deno 检查更新 回退')),

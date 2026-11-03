@@ -72,6 +72,35 @@ class NetworkProxy {
     return socks == null ? null : normalize(socks.contains('://') ? socks : 'socks5://$socks');
   }
 
+  /// The Linux proxy: the environment's https_proxy or all_proxy, else
+  /// GNOME's proxy setting (gsettings), which other desktops often share.
+  static Future<NetworkProxy> linux({Map<String, String>? environment, Future<String?> Function(String key)? gsettings}) async {
+    final env = environment ?? Platform.environment;
+    for (final name in ['https_proxy', 'HTTPS_PROXY', 'http_proxy', 'HTTP_PROXY', 'all_proxy', 'ALL_PROXY']) {
+      final value = env[name]?.trim() ?? '';
+      if (value.isNotEmpty) return NetworkProxy(normalize(value.contains('://') ? value : 'http://$value'));
+    }
+    final read = gsettings ?? _gsettings;
+    if (await read('org.gnome.system.proxy mode') != 'manual') return direct;
+    for (final (schema, scheme) in [('https', 'http'), ('http', 'http'), ('socks', 'socks5')]) {
+      final host = await read('org.gnome.system.proxy.$schema host') ?? '';
+      final port = int.tryParse(await read('org.gnome.system.proxy.$schema port') ?? '') ?? 0;
+      if (host.isNotEmpty && port > 0) return NetworkProxy(normalize('$scheme://$host:$port'));
+    }
+    return direct;
+  }
+
+  static Future<String?> _gsettings(String key) async {
+    try {
+      final result = await Process.run('gsettings', ['get', ...key.split(' ')]).timeout(const Duration(seconds: 3));
+      if (result.exitCode != 0) return null;
+      final text = result.stdout.toString().trim();
+      return text.startsWith("'") && text.endsWith("'") && text.length >= 2 ? text.substring(1, text.length - 1) : text;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// The Windows proxy, read from the registry as the browsers read it.
   static Future<NetworkProxy> windows() async {
     if (!Platform.isWindows) return direct;
@@ -100,7 +129,7 @@ class NetworkProxy {
   }
 
   static Future<NetworkProxy> resolve(ProxyMode mode, String address) async => switch (mode) {
-        ProxyMode.system => await windows(),
+        ProxyMode.system => Platform.isLinux ? await linux() : await windows(),
         ProxyMode.off => direct,
         ProxyMode.custom => NetworkProxy(normalize(address)),
       };

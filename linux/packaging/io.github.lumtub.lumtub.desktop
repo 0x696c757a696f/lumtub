@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Lumtub
+GenericName=YouTube player
+Comment=A lightweight YouTube player
+Exec=lumtub %U
+Icon=io.github.lumtub.lumtub
+Terminal=false
+Categories=AudioVideo;Video;Player;
+Keywords=YouTube;video;player;
+StartupWMClass=io.github.lumtub.lumtub

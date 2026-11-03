@@ -5,3 +5,4 @@ analyzer:
     - vendor/**
     - build/**
     - windows/**
+    - linux/**

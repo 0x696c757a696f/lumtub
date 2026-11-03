@@ -88,7 +88,7 @@ import '../translation_services.dart';
 import 'posts_loader.dart';
 import '../video_output_size.dart';
 import '../video_repository.dart';
-import '../windows_env.dart';
+import '../system_env.dart';
 import '../windows_video_info.dart';
 import 'account_controller.dart';
 import 'home_feed.dart';
@@ -770,8 +770,8 @@ class AppController extends ChangeNotifier with _ExploreState {
       // The proxy comes before the component downloads, which use it too.
       await (_refreshProxy(), cacheManager.prepare(settings), manager.initialize()).wait;
       final paths = await manager.ensureReady();
-      addToWindowsPath(paths.executableDirectories);
-      MediaKit.ensureInitialized(libmpv: paths.mpv);
+      addToPath(paths.executableDirectories);
+      MediaKit.ensureInitialized(libmpv: paths.mpv.isEmpty ? null : paths.mpv);
       final player = Player(configuration: PlayerConfiguration(
         bufferSize: settings.cacheMemoryMb * 1024 * 1024,
         // With libass, libmpv draws the subtitles and the Flutter subtitle
@@ -782,6 +782,11 @@ class AppController extends ChangeNotifier with _ExploreState {
         logLevel: preferences.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn,
       ));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      if (!Platform.isWindows && player.platform is NativePlayer) {
+        try {
+          manager.mpvVersion = await (player.platform as NativePlayer).getProperty('mpv-version');
+        } catch (_) {}
+      }
       _applied = settings;
       // Compiled shaders are kept between runs, so a video's first frame
       // does not wait for them again.
@@ -843,7 +848,7 @@ class AppController extends ChangeNotifier with _ExploreState {
           ..addListener(_passOn('library'));
         account = AccountController(
           clientFile: File('${directories.data.path}${Platform.pathSeparator}google-client.json'),
-          credentials: SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}google-account.bin'), DpapiProtector()),
+          credentials: SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}google-account.bin'), SecretProtector.forThisSystem()),
           client: _http,
           library: library,
           notice: _notice,
@@ -889,7 +894,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       unawaited(account?.load());
       _translationCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}translations.json'));
       _useTranslator();
-      _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), DpapiProtector());
+      _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), SecretProtector.forThisSystem());
       unawaited(_loadTranslationKeys());
       logInfo('Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
@@ -2764,7 +2769,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       'Windows ${Platform.operatingSystemVersion}',
       tr('CPU 核心 {0}', [Platform.numberOfProcessors]),
       'GPU ${windowsVideoInfo.gpuNames.isEmpty ? '未知' : windowsVideoInfo.gpuNames.join(' / ')}',
-      'libmpv ${tools?.libmpv.current?.label ?? '内置'}',
+      tools?.libmpvLabel ?? 'libmpv',
       'yt-dlp ${tools?.ytDlpVersion ?? '未安装'}',
       'Deno ${tools?.denoVersion ?? '未安装'}',
       tr('硬件解码设置 {0} · 当前 {1} · {2}', [settings.hwdec, currentCodec, currentHwdec]),
@@ -2848,7 +2853,7 @@ int _readPlayerFiles(String folder, String? mpv) {
   final files = <File>[
     for (final entry in Directory(folder).listSync())
       if (entry is File && entry.path.toLowerCase().endsWith('.dll')) entry,
-    if (mpv != null && !mpv.toLowerCase().startsWith(folder.toLowerCase())) File(mpv),
+    if (mpv != null && mpv.isNotEmpty && !mpv.toLowerCase().startsWith(folder.toLowerCase())) File(mpv),
     if (Platform.isWindows) File('${Platform.environment['SystemRoot'] ?? r'C:\Windows'}\\System32\\d3dcompiler_47.dll'),
   ];
   var total = 0;

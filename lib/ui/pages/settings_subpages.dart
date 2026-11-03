@@ -706,7 +706,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
   @override
   void initState() {
     super.initState();
-    if (Platform.isWindows) {
+    if (Platform.isWindows || Platform.isLinux) {
       WindowsShell.systemFontFamilies().then((fonts) {
         if (mounted) setState(() => _systemFonts = fonts);
       });
@@ -887,7 +887,7 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
         NormalItem(
           title: 'libmpv',
           subtitle: [
-            '${libmpv.usesDownload ? '已更新' : '内置'}：${current?.label ?? '未知版本'}',
+            if (!Platform.isWindows) tools.libmpvLabel else '${libmpv.usesDownload ? tr('已更新') : tr('内置')}：${current?.label ?? tr('未知版本')}',
             if (pendingRestart) tr('重启后使用 {0}', [next.label]),
           ].join('\n'),
           leading: const Icon(AppIcons.filmSlate),

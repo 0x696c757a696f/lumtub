@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'l10n/l10n.dart';
+import 'system_env.dart';
 
 /// Read-only access to the account's YouTube data, as older versions asked.
 const youtubeReadonlyScope = 'https://www.googleapis.com/auth/youtube.readonly';
@@ -218,6 +219,8 @@ class GoogleAuth {
       // rundll32 passes the whole address to the default browser; explorer.exe
       // can drop everything after the first '&'.
       await Process.start('rundll32.exe', ['url.dll,FileProtocolHandler', uri.toString()]);
+    } else {
+      await openWithDesktop(uri.toString());
     }
   }
 

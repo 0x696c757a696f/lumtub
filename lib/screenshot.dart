@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'system_env.dart';
+
 import 'package:media_kit/media_kit.dart';
 
 /// Where screenshots go: Pictures\Lumtub of the signed-in Windows user.
@@ -33,8 +35,24 @@ Future<File?> takeScreenshot(Player player, {required String title, Directory? d
   return await file.exists() ? file : null;
 }
 
-/// Puts the picture at [file] on the Windows clipboard, best effort.
+/// Puts the picture at [file] on the clipboard, best effort. On Linux it
+/// takes wl-copy (Wayland) or xclip (X11), when installed.
 Future<void> copyImageToClipboard(File file) async {
+  if (Platform.isLinux) {
+    try {
+      if (Platform.environment['WAYLAND_DISPLAY']?.isNotEmpty ?? false) {
+        final copy = await Process.start('wl-copy', ['--type', 'image/png']);
+        await copy.stdin.addStream(file.openRead());
+        await copy.stdin.close();
+        await copy.exitCode.timeout(const Duration(seconds: 10));
+      } else {
+        await Process.run('xclip', ['-selection', 'clipboard', '-t', 'image/png', '-i', file.path]).timeout(const Duration(seconds: 10));
+      }
+    } catch (_) {
+      // Neither is installed; the file is saved.
+    }
+    return;
+  }
   if (!Platform.isWindows) return;
   final path = file.path.replaceAll("'", "''");
   try {
@@ -50,8 +68,8 @@ Future<void> copyImageToClipboard(File file) async {
   }
 }
 
-/// Shows [file] selected in Explorer.
+/// Shows [file] selected in Explorer, or its folder in the file manager.
 Future<void> revealInFolder(File file) async {
-  if (!Platform.isWindows) return;
+  if (!Platform.isWindows) return openWithDesktop(file.parent.path);
   await Process.start('explorer.exe', ['/select,${file.path}']);
 }

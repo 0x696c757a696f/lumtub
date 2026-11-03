@@ -367,6 +367,109 @@ jobs:
           path: installer/Lumtub_*_windows-${{ matrix.package_arch }}-setup.exe
           if-no-files-found: error
 
+  linux:
+    name: Linux ${{ matrix.package_arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package_arch: x64
+            appimage_arch: x86_64
+            appimagetool_sha256: 46fdd785094c7f6e545b61afcfb0f3d98d8eab243f644b4b17698c01d06083d1
+    # Pinned, so a new default Ubuntu changes nothing; the build itself runs
+    # in Debian 12, whose glibc 2.36 sets the oldest Linux the AppImage runs on.
+    runs-on: ubuntu-24.04
+    container: debian:12
+    env:
+      FLUTTER_VERSION: 3.47.7
+      PACKAGE_ARCH: ${{ matrix.package_arch }}
+    permissions:
+      contents: read
+    steps:
+      - name: Linux - install build tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl git unzip xz-utils zip file patchelf \
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libmpv-dev libfontconfig-dev python3
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Linux - install Flutter stable SDK
+        run: |
+          git config --global --add safe.directory '*'
+          archive="$RUNNER_TEMP/flutter.tar.xz"
+          curl -fsSL -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz"
+          tar -xJf "$archive" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Linux - install the Rust toolchain
+        run: |
+          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          "$HOME/.cargo/bin/rustc" --version
+
+      - name: Linux - cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: linux-${{ matrix.package_arch }}
+
+      - name: Linux - build the Rust core
+        run: |
+          manifest=native/lumtub_core/Cargo.toml
+          cargo test --manifest-path "$manifest" --release
+          cargo build --manifest-path "$manifest" --release --lib
+          core="$PWD/native/lumtub_core/target/release/liblumtub_core.so"
+          echo "liblumtub_core.so: $(stat -c %s "$core") bytes"
+          echo "LUMTUB_CORE_DLL=$core" >> "$GITHUB_ENV"
+
+      - name: Linux - get packages
+        run: flutter pub get
+
+      - name: Linux - run unit tests
+        run: flutter test
+
+      - name: Linux - determine package version
+        run: |
+          base=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)
+          if [ "${GITHUB_REF#refs/tags/v}" != "$GITHUB_REF" ]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            version="$base-$(echo "$GITHUB_SHA" | cut -c1-7)"
+          fi
+          echo "$version" | grep -Eq '^[0-9A-Za-z.+-]+$' || { echo "Unexpected version: $version"; exit 1; }
+          echo "LUMTUB_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Version $version"
+
+      - name: Linux - build release
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
+        run: flutter build linux --release --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE="linux-$PACKAGE_ARCH" --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
+
+      - name: Linux - package AppImage
+        env:
+          APPIMAGE_ARCH: ${{ matrix.appimage_arch }}
+          APPIMAGETOOL_SHA256: ${{ matrix.appimagetool_sha256 }}
+        run: |
+          bundle="build/linux/$PACKAGE_ARCH/release/bundle"
+          linux/packaging/make-appdir.sh "$bundle" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/AppDir"
+          cp LICENSE NOTICE "$RUNNER_TEMP/AppDir/usr/bin/"
+          tool="$RUNNER_TEMP/appimagetool"
+          curl -fsSL -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-$APPIMAGE_ARCH.AppImage"
+          echo "$APPIMAGETOOL_SHA256  $tool" | sha256sum -c -
+          chmod +x "$tool"
+          # No FUSE in the container: the tool unpacks itself and runs.
+          APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$APPIMAGE_ARCH" "$tool" --no-appstream "$RUNNER_TEMP/AppDir" "Lumtub_${LUMTUB_VERSION}_linux-$PACKAGE_ARCH.AppImage"
+          ls -l Lumtub_*.AppImage
+
+      - name: Linux - upload AppImage
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Lumtub-linux-${{ matrix.package_arch }}-appimage
+          path: Lumtub_*_linux-${{ matrix.package_arch }}.AppImage
+          if-no-files-found: error
+
   release:
     name: Windows Release
     needs: windows
@@ -383,6 +486,8 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: dist
+          # The Linux AppImage joins releases once it has been tried.
+          pattern: Lumtub-windows-*
           merge-multiple: true
       - name: Windows - sign update packages
         env:

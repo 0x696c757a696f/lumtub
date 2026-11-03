@@ -13,7 +13,7 @@ extension PictureHealth on AppController {
       if (adapter.isEmpty) return;
       int height(String key) => (probe[key] as num?)?.toInt() ?? 0;
       final results = {
-        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? const DecoderStatus.hardware('d3d11va') : const DecoderStatus.software(),
+        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? DecoderStatus.hardware(Platform.isWindows ? 'd3d11va' : 'vaapi') : const DecoderStatus.software(),
       };
       // Asked again at every start: a result saved earlier may have been
       // a one-off, such as a video decoded in software after the graphics

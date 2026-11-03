@@ -1,15 +1,52 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 import 'l10n/l10n.dart';
+import 'native_core.dart';
 
-/// Encrypts bytes so only the current Windows user can read them back.
+/// Encrypts bytes so only the current user can read them back.
 abstract class SecretProtector {
   Uint8List protect(Uint8List data);
   Uint8List unprotect(Uint8List data);
+
+  /// DPAPI on Windows, else the native core's vault: a key kept by the
+  /// system keyring.
+  static SecretProtector forThisSystem() => Platform.isWindows ? DpapiProtector() : VaultProtector();
+}
+
+/// The native core's vault (lumtub_vault_seal): AES-256-GCM under a key
+/// the Secret Service keyring keeps on Linux, the keychain on macOS. Where
+/// there is no keyring only the file's permissions keep it.
+class VaultProtector implements SecretProtector {
+  static final _magic = ascii.encode('LTVH');
+
+  @override
+  Uint8List protect(Uint8List data) {
+    final core = NativeCore.instance;
+    final sealed = core?.vaultSeal(utf8.decode(data));
+    if (sealed == null) throw FileSystemException(tr('无法加密账号凭据'));
+    return Uint8List.fromList([..._magic, ...ascii.encode(sealed)]);
+  }
+
+  @override
+  Uint8List unprotect(Uint8List data) {
+    if (data.length < _magic.length || !_listEquals(data.sublist(0, _magic.length), _magic)) throw const FormatException('Not a sealed file');
+    final plain = NativeCore.instance?.vaultOpen(ascii.decode(data.sublist(_magic.length)));
+    if (plain == null) throw FileSystemException(tr('无法解密账号凭据'));
+    return Uint8List.fromList(utf8.encode(plain));
+  }
+
+  static bool _listEquals(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
 }
 
 /// Windows DPAPI (CryptProtectData), tied to the signed-in Windows user. The
@@ -76,7 +113,11 @@ class SecureJsonFile {
   Future<Map<String, dynamic>?> read() async {
     try {
       if (!await file.exists()) return null;
-      final data = jsonDecode(utf8.decode(protector.unprotect(await file.readAsBytes())));
+      final bytes = await file.readAsBytes();
+      final protector = this.protector;
+      // The keyring may take a while to answer: never on the window's isolate.
+      final plain = protector is VaultProtector ? await Isolate.run(() => protector.unprotect(bytes)) : protector.unprotect(bytes);
+      final data = jsonDecode(utf8.decode(plain));
       return data is Map<String, dynamic> ? data : null;
     } catch (_) {
       return null;
@@ -85,7 +126,11 @@ class SecureJsonFile {
 
   Future<void> write(Map<String, dynamic> value) async {
     final temporary = File('${file.path}.tmp');
-    await temporary.writeAsBytes(protector.protect(Uint8List.fromList(utf8.encode(jsonEncode(value)))), flush: true);
+    final plain = Uint8List.fromList(utf8.encode(jsonEncode(value)));
+    final protector = this.protector;
+    final sealed = protector is VaultProtector ? await Isolate.run(() => protector.protect(plain)) : protector.protect(plain);
+    await temporary.writeAsBytes(sealed, flush: true);
+    if (!Platform.isWindows) await Process.run('chmod', ['600', temporary.path]);
     await temporary.rename(file.path);
   }
 

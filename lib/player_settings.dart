@@ -137,11 +137,28 @@ enum VideoSync {
   String get label => tr(_label);
 }
 
-/// mpv's `--hwdec` decoders that exist on Windows, from PiliNara's
+/// mpv's `--hwdec` decoders that exist on this system, from PiliNara's
 /// `HwDecType`. The setting is an ordered list; mpv tries them in turn.
 /// Decoders without "-copy" hand frames to the renderer in GPU memory (zero
 /// copy); "-copy" ones copy them back to system memory first.
-final hwdecChoices = <(String, String)>[
+List<(String, String)> get hwdecChoices => Platform.isWindows ? _windowsHwdec : _linuxHwdec;
+
+final _linuxHwdec = <(String, String)>[
+  ('no', tr('软件解码')),
+  ('auto', tr('任意可用的硬件解码器')),
+  ('auto-safe', tr('最佳且稳定的硬件解码器（默认）')),
+  ('auto-copy', tr('带拷贝的最佳硬件解码器')),
+  ('vaapi', tr('VA-API（Intel、AMD，零拷贝）')),
+  ('vaapi-copy', tr('VA-API（回拷）')),
+  ('nvdec', tr('NVDEC（NVIDIA 独占，零拷贝）')),
+  ('nvdec-copy', tr('NVDEC（NVIDIA 独占，回拷）')),
+  ('vulkan', tr('Vulkan（实验性，零拷贝）')),
+  ('vulkan-copy', tr('Vulkan（实验性，回拷）')),
+  ('cuda', tr('CUDA（NVIDIA 独占，过时，零拷贝）')),
+  ('cuda-copy', tr('CUDA（NVIDIA 独占，过时，回拷）')),
+];
+
+final _windowsHwdec = <(String, String)>[
   ('no', tr('软件解码')),
   ('auto', tr('任意可用的硬件解码器')),
   ('auto-safe', tr('最佳且稳定的硬件解码器（默认）')),
@@ -814,7 +831,7 @@ class PlayerSettings {
   /// [value] if it is a comma list of known decoders, else null.
   static String? validHwdec(String? value) {
     if (value == null) return null;
-    final known = {for (final (name, _) in hwdecChoices) name};
+    final known = {for (final (name, _) in [..._windowsHwdec, ..._linuxHwdec]) name};
     final parts = value.split(',').map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty || parts.any((p) => !known.contains(p)) || parts.toSet().length != parts.length) return null;
     return parts.join(',');

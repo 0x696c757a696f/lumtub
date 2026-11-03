@@ -206,6 +206,16 @@ impl Sealer {
     /// A new key; one behind the user's confirmation asks for it. [reason]
     /// is what the system's prompt says.
     pub fn new(presence: bool, reason: &str) -> Sealer {
+        // A keyring holds one key for the app: one already there is used
+        // again, so that files sealed earlier still open.
+        for &mode in keys::modes(presence) {
+            if let Some(key) = keys::existing(mode, reason)
+                && key.len() == 32
+                && let Some(key) = Secret::new(&key)
+            {
+                return Sealer { key: Some(key), mode, wrapped: vec![mode] };
+            }
+        }
         if let Some(key) = random(32) {
             for &mode in keys::modes(presence) {
                 let Some(wrapped) = keys::wrap(mode, &key, reason) else { continue };
@@ -561,6 +571,11 @@ mod keys {
         if flags == NCRYPT_PAD_OAEP_FLAG { info as *const _ as _ } else { std::ptr::null() }
     }
 
+    /// Every file carries its own wrapped key here.
+    pub fn existing(_: u8, _: &str) -> Option<Locked> {
+        None
+    }
+
     pub fn wrap(mode: u8, data: &[u8], _reason: &str) -> Option<Vec<u8>> {
         debug_assert!([WINDOWS_HELLO, TPM_OAEP, TPM_PKCS1].contains(&mode));
         let key = key(mode, true).ok()?;
@@ -642,6 +657,11 @@ mod keys {
         options
     }
 
+    /// The key kept in the keychain, if there is one.
+    pub fn existing(mode: u8, reason: &str) -> Option<Locked> {
+        unwrap(mode, &[mode], reason).ok()
+    }
+
     /// Keeps [data] in the keychain; the item stands for the wrapped key.
     pub fn wrap(mode: u8, data: &[u8], _reason: &str) -> Option<Vec<u8>> {
         let _ = delete_generic_password_options(options(mode, false));
@@ -686,6 +706,11 @@ mod keys {
         })
     }
 
+    /// The key kept in the keyring, if there is one.
+    pub fn existing(mode: u8, reason: &str) -> Option<Locked> {
+        unwrap(mode, &[mode], reason).ok()
+    }
+
     pub fn wrap(_mode: u8, data: &[u8], _reason: &str) -> Option<Vec<u8>> {
         run(async |keyring| {
             keyring.unlock().await.map_err(|e| e.to_string())?;
@@ -722,11 +747,48 @@ mod keys {
     pub fn modes(_presence: bool) -> &'static [u8] {
         &[]
     }
+    pub fn existing(_: u8, _: &str) -> Option<Locked> {
+        None
+    }
     pub fn wrap(_: u8, _: &[u8], _: &str) -> Option<Vec<u8>> {
         None
     }
     pub fn unwrap(_: u8, _: &[u8], _: &str) -> Result<Locked, Failure> {
         Err(Failure::Broken("the file was sealed on another system".into()))
+    }
+}
+
+/// [text] sealed for Dart, as hex; null when it could not be sealed. Free
+/// it with `lumtub_string_free`.
+///
+/// # Safety
+/// [text] must point to [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_vault_seal(text: *const u8, length: usize) -> *mut std::os::raw::c_char {
+    let plain = unsafe { crate::taste::text(text, length) };
+    match Sealer::new(false, "Lumtub").seal(plain.as_bytes()) {
+        Some(sealed) => crate::taste::give(sealed.iter().map(|b| format!("{b:02x}")).collect()),
+        None => std::ptr::null_mut(),
+    }
+}
+
+/// The text [lumtub_vault_seal] sealed into [hex]; null when it does not
+/// open. Free it with `lumtub_string_free`.
+///
+/// # Safety
+/// [hex] must point to [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_vault_open(hex: *const u8, length: usize) -> *mut std::os::raw::c_char {
+    let hex = unsafe { crate::taste::text(hex, length) };
+    if hex.len() % 2 != 0 {
+        return std::ptr::null_mut();
+    }
+    let Some(sealed) = (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(hex.get(i..i + 2)?, 16).ok()).collect::<Option<Vec<u8>>>() else {
+        return std::ptr::null_mut();
+    };
+    match open(&sealed, "Lumtub") {
+        Ok((plain, _)) => std::str::from_utf8(&plain).map_or(std::ptr::null_mut(), |text| crate::taste::give(text.to_owned())),
+        Err(_) => std::ptr::null_mut(),
     }
 }
 

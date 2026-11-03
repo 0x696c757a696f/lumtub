@@ -988,10 +988,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         onTap: () => closeThen(() => unawaited(_openSubtitles(context))),
       ),
       PanelHeading(tr('工具')),
-      PanelLink(label: tr('截图 (S)'), detail: tr('保存到“图片\\Lumtub”并复制'), icon: AppIcons.camera, opens: false, onTap: () => closeThen(() => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)))),
+      PanelLink(label: tr('截图 (S)'), detail: Platform.isWindows ? tr('保存到“图片\\Lumtub”并复制') : tr('保存到“图片\\Lumtub”并复制').replaceAll('\\', '/'), icon: AppIcons.camera, opens: false, onTap: () => closeThen(() => unawaited(captureScreenshot(context, _controller, onFeedback: _showFeedback)))),
       PanelLink(label: tr('字幕列表'), detail: tr('点一句跳过去；A / D 上一句、下一句，R 重听'), icon: AppIcons.textAlignLeft, onTap: () => closeThen(() => unawaited(_openSubtitleList(context)))),
       PanelLink(
-        label: tr('复制当前字幕 (Ctrl+C)'),
+        label: keyNames(tr('复制当前字幕 (Ctrl+C)')),
         icon: AppIcons.copy,
         opens: false,
         onTap: () {

@@ -446,7 +446,7 @@ class ChannelHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
       child: Row(children: [
-        if (onBack != null) IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: onBack, icon: const Icon(AppIcons.arrowLeft)),
+        if (onBack != null) IconButton(tooltip: keyNames(tr('返回 (Alt+←)')), onPressed: onBack, icon: const Icon(AppIcons.arrowLeft)),
         const SizedBox(width: 8),
         ChannelAvatar(name: name, radius: 28),
         const SizedBox(width: 16),

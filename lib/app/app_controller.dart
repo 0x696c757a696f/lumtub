@@ -2611,16 +2611,15 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// Closes the video in libmpv rather than pausing it, so its cache,
   /// decoded frames and textures are freed, then hands the freed memory back
-  /// to Windows. Coming back to the video opens it again where it was left.
+  /// to the system. Coming back to the video opens it again where it was left.
   void _unload() {
     final player = this.player;
     if (player == null) return;
     unawaited(player.stop().then((_) => releaseMemory()));
   }
 
-  /// Hands memory freed by closed videos back to Windows.
+  /// Hands memory freed by closed videos back to the system.
   void releaseMemory() {
-    if (!Platform.isWindows) return;
     final before = ProcessInfo.currentRss;
     releaseFreedMemory();
     logDebug(() => 'Released idle memory: ${before >> 20} MB → ${ProcessInfo.currentRss >> 20} MB');

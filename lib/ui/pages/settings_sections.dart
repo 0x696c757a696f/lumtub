@@ -184,7 +184,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('隐私 服务器 网络 连接 遥测 第三方')),
         SettingEntry(tr('无痕模式'), (context) => SwitchItem(
               title: tr('无痕模式'),
-              subtitle: tr('不记录观看历史、搜索记录和播放进度，“为你推荐”也不学习；关掉 Lumtub 后自动恢复。快捷键 Ctrl+Shift+N'),
+              subtitle: keyNames(tr('不记录观看历史、搜索记录和播放进度，“为你推荐”也不学习；关掉 Lumtub 后自动恢复。快捷键 Ctrl+Shift+N')),
               leading: _icon(AppIcons.eyeSlash),
               value: controller.incognito,
               onChanged: controller.setIncognito,

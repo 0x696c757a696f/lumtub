@@ -309,7 +309,7 @@ class _TopBar extends StatelessWidget {
           ))),
           const SizedBox(width: 16),
           IconButton(
-            tooltip: controller.incognito ? tr('无痕模式已开启，点击关闭 (Ctrl+Shift+N)') : tr('无痕模式：不记录观看和搜索 (Ctrl+Shift+N)'),
+            tooltip: keyNames(controller.incognito ? tr('无痕模式已开启，点击关闭 (Ctrl+Shift+N)') : tr('无痕模式：不记录观看和搜索 (Ctrl+Shift+N)')),
             isSelected: controller.incognito,
             style: controller.incognito ? IconButton.styleFrom(backgroundColor: colors.tertiaryContainer, foregroundColor: colors.onTertiaryContainer) : null,
             onPressed: () => controller.setIncognito(!controller.incognito),
@@ -458,7 +458,7 @@ class _SearchFieldState extends State<_SearchField> {
                 suffixIcon: controller.text.isEmpty
                     ? Padding(
                         padding: const EdgeInsets.only(right: 12),
-                        child: Center(widthFactor: 1, child: Text('Ctrl+K', style: TextStyle(fontSize: 12, color: context.colors.outline))),
+                        child: Center(widthFactor: 1, child: Text(keyNames('Ctrl+K'), style: TextStyle(fontSize: 12, color: context.colors.outline))),
                       )
                     : IconButton(
                         tooltip: tr('清除'),

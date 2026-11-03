@@ -116,7 +116,7 @@ class _FocusHome extends StatelessWidget {
             const SizedBox(height: 8),
             Text(tr('首页不显示视频。想看什么就搜索，或打开订阅和稍后观看。'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline, height: 1.5)),
             const SizedBox(height: 16),
-            FilledButton.icon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(tr('搜索 (Ctrl+K)'))),
+            FilledButton.icon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(keyNames(tr('搜索 (Ctrl+K)')))),
             const SizedBox(height: 8),
             Wrap(spacing: 8, alignment: WrapAlignment.center, children: [
               TextButton(onPressed: () => controller.navigate(PageMode.subscriptions), child: Text(tr('订阅'))),
@@ -151,7 +151,7 @@ class _Welcome extends StatelessWidget {
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(tr('想看点什么？'), style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: colors.onPrimaryContainer)),
                 const SizedBox(height: 4),
-                Text(tr('搜索 YouTube，或直接粘贴视频链接播放。按 Ctrl+K 随时搜索。'), style: TextStyle(color: colors.onPrimaryContainer.withValues(alpha: 0.8))),
+                Text(keyNames(tr('搜索 YouTube，或直接粘贴视频链接播放。按 Ctrl+K 随时搜索。')), style: TextStyle(color: colors.onPrimaryContainer.withValues(alpha: 0.8))),
               ])),
               const SizedBox(width: 16),
               Icon(AppIcons.magnifyingGlass, size: 40, color: colors.onPrimaryContainer.withValues(alpha: 0.6)),
@@ -211,7 +211,7 @@ class SearchResultsPage extends StatelessWidget {
         SliverToBoxAdapter(child: PageHeader(
           '“$query”',
           subtitle: controller.searching ? tr('正在搜索…') : (count.isEmpty ? null : count),
-          trailing: IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
+          trailing: IconButton(tooltip: keyNames(tr('返回 (Alt+←)')), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
         )),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),

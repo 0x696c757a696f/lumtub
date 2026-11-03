@@ -809,7 +809,7 @@ class PlaylistDetailPage extends StatelessWidget {
       SliverToBoxAdapter(child: Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
         child: Row(children: [
-          IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
+          IconButton(tooltip: keyNames(tr('返回 (Alt+←)')), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
           const SizedBox(width: 8),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),

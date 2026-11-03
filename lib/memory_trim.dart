@@ -1,13 +1,15 @@
 import 'dart:ffi';
 import 'dart:io';
 
-/// Hands memory the process has freed back to Windows.
+/// Hands memory the process has freed back to the system.
 ///
 /// libmpv frees a closed video's cache and frames, but the C heap keeps the
 /// freed pages committed for reuse, so Task Manager still shows them.
 /// Compacting every heap decommits the free pages. Nothing in use is touched,
-/// so nothing has to be paged back in afterwards. Does nothing off Windows.
+/// so nothing has to be paged back in afterwards. On Linux glibc's
+/// malloc_trim and on macOS malloc_zone_pressure_relief do the same.
 void releaseFreedMemory() {
+  if (Platform.isLinux || Platform.isMacOS) return _releaseUnix();
   if (!Platform.isWindows) return;
   try {
     final count = _getProcessHeaps(0, nullptr);
@@ -20,6 +22,18 @@ void releaseFreedMemory() {
       }
     } finally {
       _free(heaps);
+    }
+  } catch (_) {}
+}
+
+void _releaseUnix() {
+  try {
+    final process = DynamicLibrary.process();
+    if (Platform.isMacOS) {
+      process.lookupFunction<Size Function(Pointer<Void>, Size), int Function(Pointer<Void>, int)>('malloc_zone_pressure_relief')(nullptr, 0);
+    } else {
+      // Absent outside glibc, as on musl.
+      process.lookupFunction<Int32 Function(Size), int Function(int)>('malloc_trim')(0);
     }
   } catch (_) {}
 }

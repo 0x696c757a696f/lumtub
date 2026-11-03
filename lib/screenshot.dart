@@ -2,14 +2,14 @@ import 'dart:async';
 import 'dart:io';
 
 import 'system_env.dart';
+import 'user_folders.dart';
 
 import 'package:media_kit/media_kit.dart';
 
-/// Where screenshots go: Pictures\Lumtub of the signed-in Windows user.
+/// Where screenshots go: Lumtub in the user's pictures folder.
 Directory screenshotDirectory([Map<String, String>? environment]) {
-  final env = environment ?? Platform.environment;
-  final home = env['USERPROFILE'] ?? env['HOME'] ?? '.';
-  return Directory('$home${Platform.pathSeparator}Pictures${Platform.pathSeparator}Lumtub');
+  final pictures = userFolder(UserFolder.pictures, environment: environment) ?? '.';
+  return Directory('$pictures${Platform.pathSeparator}Lumtub');
 }
 
 /// A file name for a screenshot of [title] at [position]: the title cut to

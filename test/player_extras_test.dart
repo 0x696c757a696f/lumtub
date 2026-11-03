@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -114,9 +116,10 @@ void main() {
     });
 
     test('screenshots go to Pictures\\Lumtub under the user profile', () {
-      final dir = screenshotDirectory({'USERPROFILE': 'C:\\Users\\me'});
-      expect(dir.path, endsWith('Pictures${dir.path.contains('/') ? '/' : '\\'}Lumtub'));
-      expect(dir.path, startsWith('C:\\Users\\me'));
+      final home = Platform.isWindows ? 'C:\\Users\\me' : '/nonexistent/me';
+      final dir = screenshotDirectory({Platform.isWindows ? 'USERPROFILE' : 'HOME': home});
+      expect(dir.path, endsWith('Pictures${Platform.pathSeparator}Lumtub'));
+      expect(dir.path, startsWith(home));
     });
 
     test('keep awake holds the display until every holder lets go', () {

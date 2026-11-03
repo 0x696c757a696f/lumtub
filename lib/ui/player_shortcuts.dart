@@ -12,10 +12,15 @@ import '../l10n/l10n.dart';
 import 'lights_off.dart';
 import 'theater_mode.dart';
 import 'app_icons.dart';
+import 'common.dart';
 
 /// Keys shown in the shortcut help, in display order, with the steps from
 /// [prefs].
 List<(String, String)> playerShortcutHelp(AppPreferences prefs) => [
+      for (final (keys, action) in _shortcutHelp(prefs)) (keyNames(keys), action),
+    ];
+
+List<(String, String)> _shortcutHelp(AppPreferences prefs) => [
       (tr('空格 / K'), tr('播放或暂停')),
       ('← / →', tr('后退或前进 {0} 秒', [prefs.seekSeconds])),
       ('J / L', tr('后退或前进 {0} 秒', [prefs.longSeekSeconds])),

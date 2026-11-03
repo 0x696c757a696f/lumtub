@@ -15,6 +15,7 @@ import '../video_codec.dart';
 import 'download_models.dart';
 import 'download_selection.dart';
 import '../native_core.dart';
+import '../user_folders.dart';
 
 /// Per-call settings the manager reads when a download starts.
 class DownloadOptions {
@@ -153,11 +154,11 @@ class DownloadManager extends ChangeNotifier {
   /// Whether ffmpeg is there to merge video and audio streams.
   bool get canMerge => ffmpegDirectory?.call() != null;
 
-  /// The folder for downloads when none was chosen: Videos\Lumtub.
+  /// The folder for downloads when none was chosen: Lumtub in the user's
+  /// videos folder (Videos, or Movies on macOS).
   static String defaultDirectoryFor(Map<String, String> env, String fallback) {
-    final home = env['USERPROFILE'];
-    if (home == null || home.trim().isEmpty) return fallback;
-    return '$home${Platform.pathSeparator}Videos${Platform.pathSeparator}Lumtub';
+    final videos = userFolder(UserFolder.videos, environment: env);
+    return videos == null ? fallback : '$videos${Platform.pathSeparator}Lumtub';
   }
 
   /// The directory holding ffmpeg among [directories] and `PATH`, or null.

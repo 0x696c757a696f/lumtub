@@ -188,3 +188,7 @@ class OptionChip<T> extends StatelessWidget {
         ),
       );
 }
+
+/// [text] naming keys as this system's keyboard does: ⌘ and ⌥ on a Mac for
+/// Ctrl and Alt.
+String keyNames(String text) => Platform.isMacOS ? text.replaceAll('Ctrl + ', '⌘ + ').replaceAll('Ctrl+', '⌘').replaceAll('Alt + ', '⌥ + ').replaceAll('Alt+', '⌥') : text;

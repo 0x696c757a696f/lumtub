@@ -6,8 +6,20 @@ import 'package:lumtub/ffmpeg_component.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/network_proxy.dart';
 import 'package:lumtub/secure_store.dart';
+import 'package:lumtub/user_folders.dart';
 
 void main() {
+  test('user folders follow each system', () {
+    expect(userFolder(UserFolder.videos, environment: {'USERPROFILE': r'C:\Users\me'}, windows: true), r'C:\Users\me\Videos');
+    expect(userFolder(UserFolder.videos, environment: {'HOME': '/Users/me'}, windows: false, mac: true), '/Users/me/Movies');
+    expect(userFolder(UserFolder.pictures, environment: {'HOME': '/nonexistent/me'}, windows: false, mac: false), '/nonexistent/me/Pictures');
+    expect(userFolder(UserFolder.videos, environment: {}, windows: false, mac: false), isNull);
+    const dirs = '# comment\nXDG_VIDEOS_DIR="\$HOME/视频"\nXDG_PICTURES_DIR="\$HOME/"\n';
+    expect(xdgUserDir(dirs, 'VIDEOS', '/home/me'), '/home/me/视频');
+    expect(xdgUserDir(dirs, 'PICTURES', '/home/me'), isNull);
+    expect(xdgUserDir(dirs, 'MUSIC', '/home/me'), isNull);
+  });
+
   group('Linux system proxy', () {
     test('the environment comes first', () async {
       final proxy = await NetworkProxy.linux(environment: {'https_proxy': 'http://10.0.0.2:3128/'}, gsettings: (_) async => fail('not asked'));

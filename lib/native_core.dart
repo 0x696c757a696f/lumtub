@@ -35,6 +35,8 @@ class NativeCore {
         redact = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_redact'),
         subtitleCues = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_subtitle_cues'),
         _looksLike = library.lookupFunction<Bool Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_looks_like'),
+        _resolved = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_resolved'),
+        _edl = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_edl'),
         hashPrefix = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_hash_prefix'),
         sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
         dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
@@ -99,6 +101,15 @@ class NativeCore {
 
   /// Whether [source] looks to be in [target] already, from its script.
   bool looksLike(String source, String target) => withText(source, (s, sl) => withText(target, (t, tl) => _looksLike(s, sl, t, tl)));
+  final Pointer<Utf8> Function(Pointer<Uint8> info, int length, Pointer<Uint8> ask, int askLength) _resolved;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _edl;
+
+  /// What yt-dlp's answer [info] offers for the rules in [ask], as JSON
+  /// (native/lumtub_core/src/resolved.rs).
+  String? resolved(String info, String ask) => take(withText(info, (i, il) => withText(ask, (a, al) => _resolved(i, il, a, al))));
+
+  /// An mpv EDL address playing [addresses] as one video.
+  String? edl(List<String> addresses) => take(withText(jsonEncode(addresses), _edl));
   /// The first four hex digits of a video id's SHA-256.
   final Pointer<Utf8> Function(Pointer<Uint8> videoId, int length) hashPrefix;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) sponsorSegments;

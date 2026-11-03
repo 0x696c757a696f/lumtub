@@ -32,11 +32,18 @@ class AppWindow {
   /// Whether the window is on a Wayland desktop, where keeping it on top
   /// and placing it are up to the desktop.
   static bool get onWayland {
-    if (!Platform.isLinux) return false;
+    if (!waylandDesktop) return false;
     final env = Platform.environment;
-    final backend = env['GDK_BACKEND'] ?? '';
-    return (env['WAYLAND_DISPLAY'] ?? '').isNotEmpty && !backend.startsWith('x11');
+    return env['LUMTUB_X11'] != '1' && !(env['GDK_BACKEND'] ?? '').startsWith('x11');
   }
+
+  /// Whether this is a Linux Wayland desktop, whichever way the window
+  /// draws on it.
+  static bool get waylandDesktop => Platform.isLinux && (Platform.environment['WAYLAND_DISPLAY'] ?? '').isNotEmpty;
+
+  /// The marker the runner reads at start (linux/runner/main.cc) to draw
+  /// the window through XWayland.
+  static File x11Marker(Directory data) => File('${data.path}/x11-mode');
   static const _channel = MethodChannel('lumtub/windows_shell');
   static bool _nativePip = false;
 

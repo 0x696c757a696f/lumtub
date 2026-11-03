@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -12,6 +13,7 @@ import '../../feed_quality.dart';
 import '../../format_policy.dart';
 import '../../state_media.dart';
 import '../../app_log.dart';
+import '../../app_window.dart';
 import '../../app_preferences.dart';
 import '../../appearance_settings.dart';
 import '../../decoder_status.dart';
@@ -741,6 +743,8 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.closeToTray,
               onChanged: (v) => savePrefs(prefs.copyWith(closeToTray: v)),
             ), subtitle: tr('托盘 后台播放')),
+        if (AppWindow.waylandDesktop && controller.directories != null)
+          SettingEntry(tr('X11 兼容模式'), (context) => _X11ModeSwitch(data: controller.directories!.data), subtitle: tr('Wayland 置顶 画中画')),
         SettingEntry(tr('延长播放控件显示时间'), (context) => NormalItem(
               title: tr('播放控件显示时间'),
               subtitle: tr('鼠标不动 {0} 后隐藏', [labelOf(_hideTimes, prefs.controlsHideSeconds)]),
@@ -1384,3 +1388,44 @@ Future<void> _editMpvConf(BuildContext context, AppController controller) async 
 }
 
 TextStyle _subtitle(BuildContext context) => Theme.of(context).textTheme.labelMedium!.copyWith(color: context.colors.outline);
+
+/// Linux on Wayland: draw the window through XWayland from the next start,
+/// so it can stay on top and picture in picture can be placed.
+class _X11ModeSwitch extends StatefulWidget {
+  const _X11ModeSwitch({required this.data});
+
+  final Directory data;
+
+  @override
+  State<_X11ModeSwitch> createState() => _X11ModeSwitchState();
+}
+
+class _X11ModeSwitchState extends State<_X11ModeSwitch> {
+  late bool _on = AppWindow.x11Marker(widget.data).existsSync();
+
+  Future<void> _set(bool on) async {
+    final marker = AppWindow.x11Marker(widget.data);
+    try {
+      if (on) {
+        await marker.writeAsString('');
+      } else if (await marker.exists()) {
+        await marker.delete();
+      }
+    } catch (_) {
+      return;
+    }
+    setState(() => _on = on);
+    if (!mounted) return;
+    final restart = await confirmDialog(context, title: tr('重启后生效'), content: tr('Lumtub 重启后改用新的显示方式。现在重启吗？'), confirm: tr('立即重启'));
+    if (restart) await restartApp();
+  }
+
+  @override
+  Widget build(BuildContext context) => SwitchItem(
+        title: tr('X11 兼容模式'),
+        subtitle: tr('通过 XWayland 显示窗口，置顶和画中画能保持在最上层；高分屏缩放下画面可能略模糊'),
+        leading: const Icon(AppIcons.layout),
+        value: _on,
+        onChanged: (v) => unawaited(_set(v)),
+      );
+}

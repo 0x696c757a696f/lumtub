@@ -2839,5 +2839,10 @@
   "蘋方": "PingFang (Traditional)",
   "文泉驿微米黑": "WenQuanYi Micro Hei",
   "没有找到设备。请确认电视和电脑在同一个局域网，电视已开启投屏（DLNA 或 Chromecast），并允许本程序访问本地网络。": "No devices found. Make sure the TV and this computer are on the same network, casting (DLNA or Chromecast) is on on the TV, and Lumtub may use the local network.",
-  "Wayland 桌面不允许程序把窗口保持在最上层或摆放位置，窗口可能被其他窗口挡住。": "Wayland desktops don't let apps keep a window on top or place it, so other windows may cover it."
+  "X11 兼容模式": "X11 compatibility mode",
+  "Wayland 置顶 画中画": "Wayland on top picture in picture",
+  "重启后生效": "Takes effect after a restart",
+  "Lumtub 重启后改用新的显示方式。现在重启吗？": "Lumtub uses the new display mode after it restarts. Restart now?",
+  "通过 XWayland 显示窗口，置顶和画中画能保持在最上层；高分屏缩放下画面可能略模糊": "Draws the window through XWayland so pinning and picture in picture stay on top; may look slightly blurry with display scaling",
+  "Wayland 桌面不允许程序把窗口保持在最上层，窗口可能被其他窗口挡住。可在设置 › 播放设置 › X11 兼容模式中改用 X11 显示。": "Wayland desktops don't let apps keep a window on top, so other windows may cover it. Settings › Playback settings › X11 compatibility mode draws it through X11 instead."
 }

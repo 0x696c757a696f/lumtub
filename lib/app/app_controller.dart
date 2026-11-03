@@ -231,7 +231,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   void _noteWaylandTop() {
     if (_waylandNoted || !AppWindow.onWayland) return;
     _waylandNoted = true;
-    _notice(tr('Wayland 桌面不允许程序把窗口保持在最上层或摆放位置，窗口可能被其他窗口挡住。'));
+    _notice(tr('Wayland 桌面不允许程序把窗口保持在最上层，窗口可能被其他窗口挡住。可在设置 › 播放设置 › X11 兼容模式中改用 X11 显示。'));
   }
 
   /// Whether the watch page shows [playing].

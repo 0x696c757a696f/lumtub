@@ -557,6 +557,9 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
 
 void linux_shell_attach(GtkWindow* window) {
   shell.window = window;
+  // The display is open: programs Lumtub starts, such as the browser for
+  // signing in, keep the desktop's own choice.
+  if (getenv("LUMTUB_X11") != nullptr) unsetenv("GDK_BACKEND");
   g_signal_connect(window, "delete-event", G_CALLBACK(OnDelete), nullptr);
   gtk_window_set_icon_from_file(window, IconPath().c_str(), nullptr);
   StartMpris();

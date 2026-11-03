@@ -101,24 +101,92 @@ mod imp {
 
 #[cfg(unix)]
 mod imp {
-    //! Without job objects the tree is found when it is needed: [kill]
-    //! walks the processes whose parent is in the tree. A child that
-    //! outlived its parent has been handed to init by then and is missed,
-    //! which yt-dlp's ffmpeg and Deno, ended with yt-dlp, do not do.
+    //! Without job objects the tree is followed as it grows: every second
+    //! the processes whose parent is in a tree join it, remembered with
+    //! their start time. A child that outlives its parent is handed to
+    //! init and no longer looks related, but it was seen before then, so
+    //! [kill] and [close] still end it, as Windows ends what is left in a
+    //! job when it closes; so does Lumtub quitting. The start time keeps a
+    //! reused pid from being mistaken for one seen earlier.
+
+    use std::collections::HashMap;
+    use std::sync::{Mutex, Once};
+    use std::time::Duration;
+
+    type Member = (libc::pid_t, u64);
+
+    /// Each tree by its first process: the processes seen in it.
+    static TREES: Mutex<Option<HashMap<libc::pid_t, Vec<Member>>>> = Mutex::new(None);
+    static WATCH: Once = Once::new();
+
+    fn trees() -> std::sync::MutexGuard<'static, Option<HashMap<libc::pid_t, Vec<Member>>>> {
+        TREES.lock().unwrap_or_else(|e| e.into_inner())
+    }
 
     /// The "job" is the first process's id.
     pub fn adopt(pid: u32) -> isize {
+        let Ok(root) = libc::pid_t::try_from(pid) else { return 0 };
+        let Some(started) = started(root) else { return 0 };
+        trees().get_or_insert_with(HashMap::new).insert(root, vec![(root, started)]);
+        WATCH.call_once(|| {
+            // Lumtub quitting ends the trees, as closing its job objects does
+            // on Windows.
+            unsafe { libc::atexit(end_all) };
+            let _ = std::thread::Builder::new().name("lumtub-tree".into()).spawn(|| loop {
+                std::thread::sleep(Duration::from_secs(1));
+                let roots: Vec<_> = trees().as_ref().map(|t| t.keys().copied().collect()).unwrap_or_default();
+                for root in roots {
+                    grow(root);
+                }
+            });
+        });
         pid as isize
     }
 
-    pub fn kill(job: isize, _code: u32) -> bool {
-        let Ok(root) = libc::pid_t::try_from(job) else { return false };
-        if root <= 1 {
-            return false;
+    extern "C" fn end_all() {
+        // Never waits at exit for a lock some thread may keep.
+        let Ok(held) = TREES.try_lock() else { return };
+        let roots: Vec<_> = held.as_ref().map(|t| t.keys().copied().collect()).unwrap_or_default();
+        drop(held);
+        for root in roots {
+            close(root as isize);
         }
-        // Stopped first, so none starts another while the tree is read.
-        let mut tree = vec![root];
-        unsafe { libc::kill(root, libc::SIGSTOP) };
+    }
+
+    /// Adds the processes started since by the tree's members.
+    fn grow(root: libc::pid_t) {
+        let Some(mut members) = trees().as_ref().and_then(|t| t.get(&root).cloned()) else { return };
+        let mut i = 0;
+        while i < members.len() {
+            let (pid, start) = members[i];
+            if started(pid) == Some(start) {
+                for child in children(pid) {
+                    if !members.iter().any(|m| m.0 == child)
+                        && let Some(at) = started(child)
+                    {
+                        members.push((child, at));
+                    }
+                }
+            }
+            i += 1;
+        }
+        if let Some(tree) = trees().as_mut().and_then(|t| t.get_mut(&root)) {
+            for member in members {
+                if !tree.contains(&member) {
+                    tree.push(member);
+                }
+            }
+        }
+    }
+
+    /// The members of the tree still running: those seen before and their
+    /// descendants now, each stopped so none starts another meanwhile.
+    fn stop_all(root: libc::pid_t) -> Vec<libc::pid_t> {
+        let known = trees().as_ref().and_then(|t| t.get(&root).cloned()).unwrap_or_else(|| started(root).map(|s| vec![(root, s)]).unwrap_or_default());
+        let mut tree: Vec<libc::pid_t> = known.iter().filter(|(pid, start)| started(*pid) == Some(*start)).map(|m| m.0).collect();
+        for pid in &tree {
+            unsafe { libc::kill(*pid, libc::SIGSTOP) };
+        }
         let mut i = 0;
         while i < tree.len() {
             for child in children(tree[i]) {
@@ -129,14 +197,63 @@ mod imp {
             }
             i += 1;
         }
+        tree
+    }
+
+    pub fn kill(job: isize, _code: u32) -> bool {
+        let Ok(root) = libc::pid_t::try_from(job) else { return false };
+        if root <= 1 {
+            return false;
+        }
         let mut any = false;
-        for pid in tree.iter().rev() {
+        for pid in stop_all(root).iter().rev() {
             any |= unsafe { libc::kill(*pid, libc::SIGKILL) } == 0;
         }
         any
     }
 
-    pub fn close(_job: isize) {}
+    /// The first process has ended: what it left running is ended too.
+    pub fn close(job: isize) {
+        let Ok(root) = libc::pid_t::try_from(job) else { return };
+        if root <= 1 {
+            return;
+        }
+        for pid in stop_all(root).iter().rev() {
+            unsafe { libc::kill(*pid, libc::SIGKILL) };
+        }
+        if let Some(trees) = trees().as_mut() {
+            trees.remove(&root);
+        }
+    }
+
+    /// When [pid] started, in the system's own units; None once it is gone.
+    #[cfg(target_os = "linux")]
+    pub fn started(pid: libc::pid_t) -> Option<u64> {
+        let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
+        let rest = &stat[stat.rfind(')')? + 1..];
+        let mut fields = rest.split_whitespace();
+        // A zombie has ended; only its parent's wait is left.
+        if fields.next()? == "Z" {
+            return None;
+        }
+        // Field 22, counted from the state, field 3.
+        fields.nth(18)?.parse().ok()
+    }
+
+    #[cfg(target_os = "macos")]
+    pub fn started(pid: libc::pid_t) -> Option<u64> {
+        let mut info: libc::proc_bsdinfo = unsafe { std::mem::zeroed() };
+        let size = std::mem::size_of::<libc::proc_bsdinfo>() as libc::c_int;
+        // SAFETY: [info] is a proc_bsdinfo of the size given.
+        let got = unsafe { libc::proc_pidinfo(pid, libc::PROC_PIDTBSDINFO, 0, (&mut info as *mut libc::proc_bsdinfo).cast(), size) };
+        // SZOMB is 5.
+        (got == size && info.pbi_status != 5).then(|| info.pbi_start_tvsec * 1_000_000 + info.pbi_start_tvusec)
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    pub fn started(pid: libc::pid_t) -> Option<u64> {
+        (unsafe { libc::kill(pid, 0) } == 0).then_some(0)
+    }
 
     /// Below normal priority, which the processes it starts inherit.
     pub fn background(_job: isize, pid: u32) -> bool {
@@ -335,6 +452,21 @@ mod tests {
             let state = std::fs::read_to_string(format!("/proc/{pid}/stat")).unwrap_or_default();
             assert!(state.is_empty() || state.contains(") Z"), "{pid} still runs: {state}");
         }
+    }
+
+    #[test]
+    fn closing_a_tree_ends_what_its_first_process_left_running() {
+        let mut shell = Command::new("sh").args(["-c", "sleep 30 & echo $!; sleep 2.5"]).stdout(std::process::Stdio::piped()).spawn().unwrap();
+        let job = super::lumtub_tree_adopt(shell.id());
+        let mut line = String::new();
+        std::io::BufRead::read_line(&mut std::io::BufReader::new(shell.stdout.take().unwrap()), &mut line).unwrap();
+        let orphan: libc::pid_t = line.trim().parse().unwrap();
+        shell.wait().unwrap();
+        // Handed to init now, no longer a child of the tree.
+        assert!(super::imp::started(orphan).is_some());
+        super::lumtub_tree_close(job);
+        std::thread::sleep(Duration::from_millis(200));
+        assert!(super::imp::started(orphan).is_none(), "{orphan} still runs");
     }
 }
 

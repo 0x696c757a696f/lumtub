@@ -3,7 +3,10 @@ import OpenGL.GL
 import OpenGL.GL3
 
 public class OpenGLHelpers {
-  static public func createPixelFormat() -> CGLPixelFormatObj {
+  // Lumtub: nil when no OpenGL renderer fits (a virtual machine without an
+  // accelerated one), so the caller can draw in software instead of
+  // crashing on a nil pixel format.
+  static public func createPixelFormat() -> CGLPixelFormatObj? {
     // from mpv
     let attributes: [CGLPixelFormatAttribute] = [
       kCGLPFAOpenGLProfile,
@@ -17,32 +20,46 @@ public class OpenGLHelpers {
       kCGLPFASupportsAutomaticGraphicsSwitching,
       _CGLPixelFormatAttribute(rawValue: 0),
     ]
+    let plain: [CGLPixelFormatAttribute] = [
+      kCGLPFAOpenGLProfile,
+      CGLPixelFormatAttribute(kCGLOGLPVersion_3_2_Core.rawValue),
+      kCGLPFAAccelerated,
+      kCGLPFADoubleBuffer,
+      kCGLPFAAllowOfflineRenderers,
+      _CGLPixelFormatAttribute(rawValue: 0),
+    ]
 
-    var npix: GLint = 0
-    var pixelFormat: CGLPixelFormatObj?
-    CGLChoosePixelFormat(attributes, &pixelFormat, &npix)
-
-    return pixelFormat!
+    for wanted in [attributes, plain] {
+      var npix: GLint = 0
+      var pixelFormat: CGLPixelFormatObj?
+      if CGLChoosePixelFormat(wanted, &pixelFormat, &npix) == kCGLNoError,
+        let found = pixelFormat
+      {
+        return found
+      }
+    }
+    NSLog("OpenGLHelpers: no accelerated OpenGL pixel format")
+    return nil
   }
 
   static public func createContext(
     _ pixelFormat: CGLPixelFormatObj
-  ) -> CGLContextObj {
+  ) -> CGLContextObj? {
     var context: CGLContextObj?
     let error = CGLCreateContext(pixelFormat, nil, &context)
     if error != kCGLNoError {
       let errS = String(cString: CGLErrorString(error))
       NSLog(errS)
-      exit(1)
+      return nil
     }
 
-    return context!
+    return context
   }
 
   static public func createTextureCache(
     _ context: CGLContextObj,
     _ pixelFormat: CGLPixelFormatObj
-  ) -> CVOpenGLTextureCache {
+  ) -> CVOpenGLTextureCache? {
     var textureCache: CVOpenGLTextureCache?
 
     let cvret: CVReturn = CVOpenGLTextureCacheCreate(
@@ -53,9 +70,12 @@ public class OpenGLHelpers {
       nil,
       &textureCache
     )
-    assert(cvret == kCVReturnSuccess, "CVOpenGLTextureCacheCreate")
+    if cvret != kCVReturnSuccess {
+      NSLog("CVOpenGLTextureCacheCreate: \(cvret)")
+      return nil
+    }
 
-    return textureCache!
+    return textureCache
   }
 
   static public func createPixelBuffer(_ size: CGSize) -> CVPixelBuffer {

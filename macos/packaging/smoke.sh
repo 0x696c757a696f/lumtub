@@ -35,6 +35,13 @@ kill "$app" 2> /dev/null
 wait "$app"
 code=$?
 cp -r "$HOME/Library/Application Support/Lumtub/logs" "$out/logs" 2> /dev/null || true
+if [ "$code" -gt 128 ]; then
+  # The crash report is written a few seconds after the crash.
+  for _ in $(seq 30); do
+    ls "$HOME"/Library/Logs/DiagnosticReports/Lumtub* > /dev/null 2>&1 && break
+    sleep 2
+  done
+fi
 for report in "$HOME"/Library/Logs/DiagnosticReports/Lumtub*; do
   [ -e "$report" ] && cp "$report" "$out/"
 done

@@ -87,32 +87,38 @@ public class VideoOutput: NSObject {
       )
     }
 
-    if enableHardwareAcceleration {
-      texture = SafeResizableTexture(
-        TextureHW(
-          handle: handle,
-          // Use `weak self` to prevent memory leaks
-          updateCallback: { [weak self]() in
-            guard let that = self else {
-              return
-            }
-            that.updateCallback()
+    let software = { () -> ResizableTextureProtocol in
+      TextureSW(
+        handle: handle,
+        // Use `weak self` to prevent memory leaks
+        updateCallback: { [weak self]() in
+          guard let that = self else {
+            return
           }
-        )
+          that.updateCallback()
+        }
       )
+    }
+    // Lumtub: without a usable OpenGL renderer, the video is drawn in
+    // software rather than the app crashing.
+    if enableHardwareAcceleration,
+      let hardware = TextureHW(
+        handle: handle,
+        // Use `weak self` to prevent memory leaks
+        updateCallback: { [weak self]() in
+          guard let that = self else {
+            return
+          }
+          that.updateCallback()
+        }
+      )
+    {
+      texture = SafeResizableTexture(hardware)
     } else {
-      texture = SafeResizableTexture(
-        TextureSW(
-          handle: handle,
-          // Use `weak self` to prevent memory leaks
-          updateCallback: { [weak self]() in
-            guard let that = self else {
-              return
-            }
-            that.updateCallback()
-          }
-        )
-      )
+      if enableHardwareAcceleration {
+        NSLog("VideoOutput: OpenGL unavailable; drawing in software")
+      }
+      texture = SafeResizableTexture(software())
     }
 
     DispatchQueue.main.sync { [weak self]() in

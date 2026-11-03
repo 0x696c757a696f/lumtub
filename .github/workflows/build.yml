@@ -475,6 +475,21 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$APPIMAGE_ARCH" "$tool" --no-appstream "$RUNNER_TEMP/AppDir" "Lumtub_${LUMTUB_VERSION}_linux-$PACKAGE_ARCH.AppImage"
           ls -l Lumtub_*.AppImage
 
+      - name: Linux - smoke test the AppImage
+        run: |
+          apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri libegl1 libgles2 ffmpeg imagemagick
+          linux/packaging/smoke.sh Lumtub_*_linux-$PACKAGE_ARCH.AppImage "$RUNNER_TEMP/smoke"
+
+      - name: Linux - upload smoke test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: smoke-linux-${{ matrix.package_arch }}
+          path: |
+            ${{ runner.temp }}/smoke
+            !${{ runner.temp }}/smoke/test.mp4
+          if-no-files-found: ignore
+
       - name: Linux - upload AppImage
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -595,6 +610,19 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: macos/packaging/package.sh build/macos/Build/Products/Release/Lumtub.app "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg" "FFmpeg ${FFMPEG_TAG#n} (LGPL)" "Lumtub_${LUMTUB_VERSION}_macos-universal.dmg"
+
+      - name: macOS - smoke test the DMG
+        run: macos/packaging/smoke.sh Lumtub_*_macos-universal.dmg "$RUNNER_TEMP/smoke"
+
+      - name: macOS - upload smoke test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: smoke-macos-universal
+          path: |
+            ${{ runner.temp }}/smoke
+            !${{ runner.temp }}/smoke/test.mp4
+          if-no-files-found: ignore
 
       - name: macOS - upload DMG
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

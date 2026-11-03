@@ -106,6 +106,7 @@ part 'settings_actions.dart';
 part 'picture_health.dart';
 part 'chat_actions.dart';
 part 'subtitle_actions.dart';
+part 'smoke_check.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
@@ -916,6 +917,7 @@ class AppController extends ChangeNotifier with _ExploreState {
         logError('Initialization failed', e);
       });
     }
+    if (SmokeCheck.requested) unawaited(runSmokeCheck());
   }
 
   /// Checks for a new Lumtub now and downloads it, for the settings page.

@@ -124,17 +124,26 @@ const bundledFont = 'Noto Sans CJK SC';
 /// Proportional ‘ ’ “ ” taken from the bundled face's pwid forms.
 const quotesFont = 'Lumtub Quotes';
 
-/// The default choice: [bundledFont] when the system language is Chinese,
+/// The default choice: [bundledFont] when the system language is
+/// simplified Chinese,
 /// which it is made for, else the system UI font.
 const autoFont = 'auto';
 
-/// Whether the system language is one [bundledFont] is made for.
-bool Function() systemFitsBundledFont = () => PlatformDispatcher.instance.locale.languageCode == 'zh';
+/// Whether the system language is simplified Chinese, which [bundledFont]
+/// is made for.
+bool Function() systemFitsBundledFont = () => isSimplifiedChinese(PlatformDispatcher.instance.locale);
+
+bool isSimplifiedChinese(Locale locale) {
+  if (locale.languageCode != 'zh') return false;
+  final script = locale.scriptCode;
+  if (script != null) return script == 'Hans';
+  return !const {'TW', 'HK', 'MO'}.contains(locale.countryCode);
+}
 
 /// Fonts offered in Settings: automatic, the bundled one, then fonts that
 /// ship with Windows and cover Chinese; null is the system UI font.
 final fontChoices = <(String?, String)>[
-  (autoFont, tr('自动（默认）：中文系统用 Noto Sans CJK SC，其他用系统字体')),
+  (autoFont, tr('自动（默认）：简体中文系统用 Noto Sans CJK SC，其他用系统字体')),
   (bundledFont, tr('Noto Sans CJK SC（内置）')),
   (null, tr('系统默认')),
   ('Microsoft YaHei UI', tr('微软雅黑')),

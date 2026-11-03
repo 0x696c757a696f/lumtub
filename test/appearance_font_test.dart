@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/appearance_settings.dart';
 
@@ -19,5 +21,15 @@ void main() {
     final chosen = AppearanceSettings.fromJson(const AppearanceSettings(fontFamily: bundledFont).toJson());
     expect(chosen.font, bundledFont);
     expect(AppearanceSettings.fromJson({'fontFamily': 'Segoe UI'}).font, 'Segoe UI');
+  });
+
+  test('only simplified Chinese counts', () {
+    expect(isSimplifiedChinese(const Locale('zh', 'CN')), isTrue);
+    expect(isSimplifiedChinese(const Locale('zh', 'SG')), isTrue);
+    expect(isSimplifiedChinese(const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans', countryCode: 'HK')), isTrue);
+    expect(isSimplifiedChinese(const Locale('zh', 'TW')), isFalse);
+    expect(isSimplifiedChinese(const Locale('zh', 'HK')), isFalse);
+    expect(isSimplifiedChinese(const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant')), isFalse);
+    expect(isSimplifiedChinese(const Locale('ja', 'JP')), isFalse);
   });
 }

@@ -90,7 +90,7 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
     expect(await file.read(), {'token': 'secret-value'});
     file.file.writeAsBytesSync([...file.file.readAsBytesSync().take(20), 0x30, 0x30]);
     expect(await file.read(), isNull);
-  }, skip: NativeCore.instance == null ? 'needs lumtub_core' : null);
+  }, skip: NativeCore.instance == null ? 'needs lumtub_core' : _keychainLocked);
 
   test('the macOS proxy comes from scutil, HTTPS first', () async {
     const both = '<dictionary> {\n  HTTPEnable : 1\n  HTTPPort : 7890\n  HTTPProxy : 127.0.0.1\n  HTTPSEnable : 1\n  HTTPSPort : 7891\n  HTTPSProxy : 127.0.0.1\n}';
@@ -116,3 +116,7 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
     expect(image.statSync().modeString(), 'rwxr-xr-x');
   }, skip: Platform.isWindows ? 'Linux only' : null);
 }
+
+/// A CI Mac has no unlocked login keychain, where the vault keeps its key;
+/// asking for it waits on a prompt nobody answers.
+final String? _keychainLocked = Platform.isMacOS && Platform.environment['CI'] == 'true' ? 'no login keychain on CI' : null;

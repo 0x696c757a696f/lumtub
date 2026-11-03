@@ -663,7 +663,7 @@ class ToolManager {
         if (found == null) throw StateError('ffmpeg archive lacks $name');
         await found.copy('${partial.path}$_separator$name');
       }
-      await Process.run('chmod', ['+x', '--', '${partial.path}${_separator}ffmpeg', '${partial.path}${_separator}ffprobe']);
+      await Process.run('chmod', ['+x', '${partial.path}${_separator}ffmpeg', '${partial.path}${_separator}ffprobe']);
       final check = await runWithTimeout('${partial.path}${_separator}ffmpeg', ['-version'], timeout: const Duration(seconds: 30));
       if (check.exitCode != 0) throw StateError('ffmpeg $folder failed its self-check');
       await partial.rename(dest.path);

@@ -232,7 +232,7 @@ Future<List<String>> extractZip(File archive, Directory into, {String? Function(
     if (!Platform.isWindows) {
       for (var i = 0; i < executable.length; i += 200) {
         final batch = executable.sublist(i, i + 200 > executable.length ? executable.length : i + 200);
-        final result = await Process.run('chmod', ['+x', '--', ...batch]);
+        final result = await Process.run('chmod', ['+x', ...batch]);
         if (result.exitCode != 0) throw FileSystemException('Could not make files executable: ${result.stderr}');
       }
     }

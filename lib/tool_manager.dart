@@ -248,9 +248,64 @@ class ToolManager {
       Uri.parse('https://api.github.com/repos/$repository/releases/${tag == null ? 'latest' : 'tags/$tag'}'),
       headers: {'Accept': 'application/vnd.github+json', 'User-Agent': _userAgent},
     ).timeout(const Duration(seconds: 25));
-    if (response.statusCode != 200) throw HttpException('GitHub API HTTP ${response.statusCode} for $repository');
-    return jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode == 200) return jsonDecode(response.body) as Map<String, dynamic>;
+    // The API allows 60 unsigned requests an hour per address, which a
+    // shared address can use up; releases that list their SHA-256 sums in
+    // a file are still read from github.com itself.
+    final sums = _sumsFiles[repository];
+    if (sums != null && (response.statusCode == 403 || response.statusCode == 429)) {
+      try {
+        return await _releaseFromSums(repository, sums, tag: tag);
+      } catch (_) {}
+    }
+    throw HttpException('GitHub API HTTP ${response.statusCode} for $repository');
   }
+
+  static const _sumsFiles = {'yt-dlp/yt-dlp-nightly-builds': 'SHA2-256SUMS'};
+
+  Future<Map<String, dynamic>> _releaseFromSums(String repository, String sumsFile, {String? tag}) async {
+    var name = tag;
+    if (name == null) {
+      final request = http.Request('GET', Uri.parse('https://github.com/$repository/releases/latest'))
+        ..followRedirects = false
+        ..headers['User-Agent'] = _userAgent;
+      final answer = await _client.send(request).timeout(const Duration(seconds: 25));
+      await answer.stream.drain<void>();
+      name = releaseTagOfRedirect(repository, answer.headers['location']);
+      if (name == null) throw HttpException('No latest release redirect for $repository');
+    }
+    final base = 'https://github.com/$repository/releases/download/${Uri.encodeComponent(name)}';
+    final response = await _client.get(Uri.parse('$base/$sumsFile'), headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 25));
+    if (response.statusCode != 200) throw HttpException('$sumsFile HTTP ${response.statusCode} for $repository');
+    return {
+      'tag_name': name,
+      'assets': [
+        for (final (hash, file) in parseSha256Sums(response.body))
+          {'name': file, 'browser_download_url': '$base/${Uri.encodeComponent(file)}', 'digest': 'sha256:$hash'},
+      ],
+    };
+  }
+
+  /// The tag a github.com `releases/latest` redirect points at.
+  static String? releaseTagOfRedirect(String repository, String? location) {
+    if (location == null) return null;
+    final uri = Uri.tryParse(location);
+    if (uri == null || uri.host != 'github.com') return null;
+    final prefix = '$repository/releases/tag'.split('/');
+    final parts = uri.pathSegments;
+    if (parts.length != prefix.length + 1) return null;
+    for (var i = 0; i < prefix.length; i++) {
+      if (parts[i].toLowerCase() != prefix[i].toLowerCase()) return null;
+    }
+    final tag = parts.last;
+    return tag.isEmpty ? null : tag;
+  }
+
+  /// `hash  name` lines of a SHA-256 sums file.
+  static List<(String, String)> parseSha256Sums(String body) => [
+        for (final line in body.split('\n'))
+          if (RegExp(r'^([a-fA-F0-9]{64}) [ *]?(\S.*?)\s*$').firstMatch(line) case final m?) (m[1]!.toLowerCase(), m[2]!),
+      ];
 
   Map<String, dynamic> _asset(Map<String, dynamic> release, bool Function(String) accept) {
     final raw = release['assets'];

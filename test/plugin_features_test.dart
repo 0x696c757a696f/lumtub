@@ -183,7 +183,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: VideoActions(controller: controller, child: HomeFeedPage(controller: controller, onFocusSearch: () => searched = true)))));
     expect(find.text('专注模式'), findsOneWidget);
     expect(find.text('为你推荐'), findsNothing);
-    await tester.tap(find.text('搜索 (Ctrl+K)'));
+    await tester.tap(find.text(Platform.isMacOS ? '搜索 (⌘K)' : '搜索 (Ctrl+K)'));
     expect(searched, isTrue);
   });
 }

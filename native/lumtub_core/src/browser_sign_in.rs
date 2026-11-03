@@ -53,13 +53,24 @@ pub fn find_browser() -> Option<PathBuf> {
     APPS.iter().find_map(|app| roots.iter().map(|root| root.join(format!("{app}.app/Contents/MacOS/{app}"))).find(|p| p.is_file()))
 }
 
-/// Linux: Chromium-based browsers on the PATH, as their packages name them.
+/// Linux: Chromium-based browsers on the PATH, as their packages name
+/// them (Snap's among them), then those installed from Flathub.
 #[cfg(all(unix, not(target_os = "macos")))]
 pub fn find_browser() -> Option<PathBuf> {
     const NAMES: [&str; 9] = ["google-chrome-stable", "google-chrome", "microsoft-edge-stable", "microsoft-edge", "brave-browser", "brave", "chromium", "chromium-browser", "vivaldi-stable"];
-    let path = std::env::var_os("PATH")?;
-    let folders: Vec<PathBuf> = std::env::split_paths(&path).collect();
-    NAMES.iter().find_map(|name| folders.iter().map(|folder| folder.join(name)).find(|p| p.is_file()))
+    const FLATPAKS: [&str; 5] = ["com.google.Chrome", "com.microsoft.Edge", "com.brave.Browser", "org.chromium.Chromium", "com.vivaldi.Vivaldi"];
+    let mut folders: Vec<PathBuf> = std::env::var_os("PATH").map(|path| std::env::split_paths(&path).collect()).unwrap_or_default();
+    // Snap's commands, also when the PATH Lumtub was started with lacks them.
+    folders.push(PathBuf::from("/snap/bin"));
+    let on_path = NAMES.iter().find_map(|name| folders.iter().map(|folder| folder.join(name)).find(|p| p.is_file()));
+    on_path.or_else(|| {
+        let mut exports = Vec::new();
+        if let Some(home) = std::env::var_os("HOME") {
+            exports.push(PathBuf::from(home).join(".local/share/flatpak/exports/bin"));
+        }
+        exports.push(PathBuf::from("/var/lib/flatpak/exports/bin"));
+        FLATPAKS.iter().find_map(|id| exports.iter().map(|folder| folder.join(id)).find(|p| p.is_file()))
+    })
 }
 
 /// The browser to open: Edge, then the default browser if it is
@@ -124,6 +135,11 @@ pub fn browser_name(exe: &Path) -> String {
         "brave" | "brave browser" | "brave-browser" => "Brave".into(),
         "vivaldi" | "vivaldi-stable" => "Vivaldi".into(),
         "chromium" | "chromium-browser" => "Chromium".into(),
+        "com.google" => "Google Chrome".into(),
+        "com.microsoft" => "Microsoft Edge".into(),
+        "com.brave" => "Brave".into(),
+        "org.chromium" => "Chromium".into(),
+        "com.vivaldi" => "Vivaldi".into(),
         "opera" | "launcher" => "Opera".into(),
         _ => name,
     }
@@ -275,6 +291,20 @@ pub enum Outcome {
     Failed(String),
 }
 
+/// The sign-in's own profile folder. A browser from Snap or Flatpak may
+/// write only inside its own folder in the home directory, so its profile
+/// goes there; any other gets one under [folder].
+fn profile_for(exe: &Path, folder: &Path) -> PathBuf {
+    let path = exe.to_string_lossy();
+    let name = exe.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let home = std::env::var_os("HOME").map(PathBuf::from);
+    match home {
+        Some(home) if path.starts_with("/snap/bin/") => home.join("snap").join(&name).join("common").join("lumtub-sign-in"),
+        Some(home) if path.contains("/flatpak/exports/bin/") => home.join(".var").join("app").join(&name).join("lumtub-sign-in"),
+        _ => folder.join("browser-sign-in"),
+    }
+}
+
 fn remove_profile(profile: &Path) {
     for _ in 0..20 {
         if std::fs::remove_dir_all(profile).is_ok() || !profile.exists() {
@@ -402,7 +432,7 @@ fn read_profile(exe: &Path, profile: &Path, current: impl Fn() -> bool) -> Resul
 pub fn sign_in(exe: &Path, folder: &Path, url: &str, opened: impl FnOnce(), reading: impl FnOnce()) -> Outcome {
     let attempt = ATTEMPT.fetch_add(1, Ordering::SeqCst) + 1;
     let current = || ATTEMPT.load(Ordering::SeqCst) == attempt;
-    let profile = folder.join("browser-sign-in");
+    let profile = profile_for(exe, folder);
     remove_profile(&profile);
     if std::fs::create_dir_all(&profile).is_err() {
         return Outcome::Failed("could not make the browser's profile folder".into());
@@ -443,6 +473,18 @@ pub fn cancel() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn sandboxed_browsers_get_a_profile_they_may_write() {
+        let home = PathBuf::from(std::env::var_os("HOME").unwrap());
+        let folder = Path::new("/data");
+        assert_eq!(profile_for(Path::new("/snap/bin/chromium"), folder), home.join("snap/chromium/common/lumtub-sign-in"));
+        assert_eq!(profile_for(Path::new("/var/lib/flatpak/exports/bin/com.google.Chrome"), folder), home.join(".var/app/com.google.Chrome/lumtub-sign-in"));
+        assert_eq!(profile_for(Path::new("/usr/bin/google-chrome-stable"), folder), folder.join("browser-sign-in"));
+        assert_eq!(browser_name(Path::new("/var/lib/flatpak/exports/bin/com.brave.Browser")), "Brave");
+        assert_eq!(browser_name(Path::new("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")), "Google Chrome");
+    }
 
     #[test]
     fn knows_chromium_browsers() {

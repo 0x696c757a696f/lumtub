@@ -1,7 +1,8 @@
 # media_kit_video 2.0.1, patched for Lumtub
 
 Copied from pub.dev (MIT, see LICENSE) with the Windows, Linux and macOS
-plugins kept (`linux/` and `macos/` are unchanged from 2.0.1).
+plugins kept (`linux/`, `macos/` and the `common/darwin/` it builds from
+are unchanged from 2.0.1).
 The changes, marked "Lumtub" in the code:
 
 - `windows/angle_surface_manager.cc`, `video_output.cc`: libmpv draws

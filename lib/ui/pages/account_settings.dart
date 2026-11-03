@@ -112,7 +112,7 @@ class AccountSettings extends StatelessWidget {
             _Section(
               number: tv == null ? 2 : 3,
               title: tr('浏览器登录'),
-              purpose: tr('只用于给社区帖子点赞、投票和评论'),
+              purpose: tr('用于给社区帖子点赞、投票和评论，在直播聊天里发言，以及播放会员专属视频'),
               signedIn: web.signedIn,
               expanded: web.signedIn || web.waiting || web.error != null,
               children: [CookieSignInTile(web, note: note)],

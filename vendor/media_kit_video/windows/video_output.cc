@@ -108,6 +108,8 @@ VideoOutput::VideoOutput(int64_t handle,
   future.get();
 }
 
+std::atomic<bool> VideoOutput::engine_closing_{false};
+
 VideoOutput::~VideoOutput() {
   destroyed_ = true;
   // Stop libmpv callbacks and drain rendering before releasing any surfaces.
@@ -131,10 +133,10 @@ VideoOutput::~VideoOutput() {
     texture_id = texture_id_;
     texture_id_ = 0;
   }
-  if (texture_id) {
+  if (texture_id && !engine_closing_) {
     UnregisterTexture(texture_id);
   }
-  {
+  if (!engine_closing_) {
     std::unique_lock<std::mutex> lock(textures_mutex_);
     textures_unregistered_.wait(
         lock, [this]() { return pending_texture_unregistrations_ == 0; });

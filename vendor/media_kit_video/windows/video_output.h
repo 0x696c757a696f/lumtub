@@ -42,6 +42,10 @@ typedef struct _VideoOutputConfiguration {
 
 class VideoOutput {
  public:
+  // Lumtub: set once the plugin is torn down with the engine; textures are then
+  // left to the engine instead of being unregistered.
+  static std::atomic<bool> engine_closing_;
+
   int64_t texture_id() const { return texture_id_; }
   int64_t width() const {
     // H/W

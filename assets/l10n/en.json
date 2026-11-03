@@ -1460,7 +1460,6 @@
   "这个播放列表是空的": "This playlist is empty",
   "这个版本没有内置 Google 客户端，需要先在下方填写你自己的客户端。": "This build has no built-in Google client. Enter your own client below first.",
   "这个视频关闭了评论": "Comments are turned off for this video",
-  "这个视频无法观看（私享、已删除、会员专属、地区或年龄限制）": "This video can't be watched (private, deleted, members-only, or region or age restricted)",
   "这个频道最近没有新视频": "No recent videos from this channel",
   "这个频道没有{0}": "This channel has no {0}",
   "这个频道还没有社区帖子": "This channel has no community posts yet",
@@ -2645,7 +2644,6 @@
   "登录都是可选的": "Signing in is optional",
   "浏览器登录": "Browser sign-in",
   "同步订阅和播放列表，给视频点赞、评论、订阅。推荐，大多数人只需要这一个": "Sync subscriptions and playlists; like, comment and subscribe. Recommended; most people need only this one",
-  "只用于给社区帖子点赞、投票和评论": "Only for liking, voting and commenting on community posts",
   "不登录也能搜索和播放。想用哪项功能，就只登录对应的那一个；打勾的是已经登录的。": "Search and playback work without it. Sign in only to the one with the feature you want; ticked ones are signed in.",
   "；DXVA2 零拷贝要重启 Lumtub 后生效。": "; zero-copy DXVA2 takes effect after restarting Lumtub.",
   "柬埔寨": "Cambodia",
@@ -2820,5 +2818,11 @@
   "正在翻译字幕…": "Translating subtitles…",
   "播放列表 · {0}/{1}": "Playlist · {0}/{1}",
   "播放列表 · {0} 个": "Playlist · {0} videos",
-  "正在读取整个播放列表以便倒序显示（已读 {0} 个）…": "Reading the whole playlist to show it in reverse ({0} read so far)…"
+  "正在读取整个播放列表以便倒序显示（已读 {0} 个）…": "Reading the whole playlist to show it in reverse ({0} read so far)…",
+  "这个视频无法观看（私享、已删除、地区或年龄限制）": "This video can't be watched (private, deleted, or region or age restricted)",
+  "会员专属": "Members only",
+  "只有加入该频道会员才能观看": "Only the channel's members can watch this",
+  "这是频道会员专属视频，浏览器登录的账号不是这个频道的会员": "This video is for the channel's members only, and the account signed in under Browser sign-in isn't a member",
+  "这是频道会员专属视频。如果你是这个频道的会员，在 设置 › YouTube 账号 › 浏览器登录 登录后就能播放": "This video is for the channel's members only. If you're a member, sign in under Settings › YouTube account › Browser sign-in to play it",
+  "用于给社区帖子点赞、投票和评论，在直播聊天里发言，以及播放会员专属视频": "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos"
 }

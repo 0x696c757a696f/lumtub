@@ -5,17 +5,20 @@ import 'dart:math';
 
 import 'app_log.dart';
 import 'background_json.dart';
-import 'format_policy.dart';
 import 'models.dart';
+import 'native_core.dart';
 import 'player_settings.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
 import 'video_codec.dart';
 
 /// What yt-dlp found for one video: every format, the ones picked for
-/// [format], and the metadata the watch page shows.
+/// [format], and the metadata the watch page shows. What the formats offer
+/// is read by lumtub_core (native/lumtub_core/src/resolved.rs).
 class ResolvedVideo {
-  ResolvedVideo(this.info, this.file, this.format, {DateTime? now}) : fetched = now ?? DateTime.now();
+  ResolvedVideo(this.info, this.file, this.format, {DateTime? now, String? text})
+      : fetched = now ?? DateTime.now(),
+        _text = text;
 
   final Map<String, dynamic> info;
   /// [info] saved for `--load-info-json`.
@@ -23,14 +26,26 @@ class ResolvedVideo {
   /// The yt-dlp format expression [info] was resolved with.
   final String format;
   final DateTime fetched;
+  /// [info] as yt-dlp printed it.
+  String? _text;
+  final _summaries = <String, Map<String, dynamic>?>{};
+
+  /// The core's reading of [info] for the codecs [settings] disable and
+  /// the height [cap]; null without the core.
+  Map<String, dynamic>? _summary([PlayerSettings? settings, int cap = 0]) {
+    final disabled = settings == null ? const <String>[] : [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.name];
+    return _summaries.putIfAbsent('${disabled.join(',')}/$cap', () {
+      final core = NativeCore.instance;
+      if (core == null) return null;
+      final answer = core.resolved(_text ??= jsonEncode(info), jsonEncode({'disabled': disabled, 'cap': cap, 'fetched': fetched.millisecondsSinceEpoch ~/ 1000}));
+      return answer == null ? null : jsonDecode(answer) as Map<String, dynamic>;
+    });
+  }
 
   /// Stream addresses carry their expiry time; they are used well before it.
   DateTime get expires {
-    final limit = fetched.add(const Duration(hours: 1));
-    final expire = int.tryParse(Uri.tryParse(_tracks.firstOrNull?['url']?.toString() ?? '')?.queryParameters['expire'] ?? '');
-    if (expire == null) return limit;
-    final at = DateTime.fromMillisecondsSinceEpoch(expire * 1000).subtract(const Duration(minutes: 15));
-    return at.isBefore(limit) ? at : limit;
+    final at = _summary()?['expires'];
+    return at is int ? DateTime.fromMillisecondsSinceEpoch(at * 1000) : fetched.add(const Duration(hours: 1));
   }
 
   bool get fresh => DateTime.now().isBefore(expires);
@@ -38,24 +53,18 @@ class ResolvedVideo {
   /// For the log when an address is refused: how old it is, and which
   /// YouTube client and formats yt-dlp took it from.
   String get origin {
-    final tracks = _tracks;
-    final clients = {for (final t in tracks) Uri.tryParse(t['url']?.toString() ?? '')?.queryParameters['c'] ?? '?'};
-    return 'resolved ${DateTime.now().difference(fetched).inSeconds} s ago, client ${clients.join('/')}, formats ${tracks.map((t) => t['format_id']).join('+')}';
+    final summary = _summary();
+    final clients = (summary?['clients'] as List?)?.join('/') ?? '?';
+    final formats = (summary?['formats'] as List?)?.join('+') ?? '?';
+    return 'resolved ${DateTime.now().difference(fetched).inSeconds} s ago, client $clients, formats $formats';
   }
 
   VideoDetails get details => VideoDetails.fromJson(info);
 
   /// Video heights this video offers, highest first; with [settings], only
   /// those that exist in a codec it allows.
-  List<int> heightsFor([PlayerSettings? settings]) {
-    final formats = info['formats'];
-    if (formats is! List) return const [];
-    final heights = <int>{
-      for (final f in formats.whereType<Map>())
-        if (f['vcodec'] != null && f['vcodec'] != 'none' && f['height'] is int && (f['height'] as int) > 0 && (settings == null || FormatPolicy.allowsName(settings, f['vcodec']))) f['height'] as int,
-    };
-    return heights.toList()..sort((a, b) => b.compareTo(a));
-  }
+  List<int> heightsFor([PlayerSettings? settings]) =>
+      ((_summary(settings)?[settings == null ? 'allHeights' : 'heights'] as List?) ?? const []).cast<int>();
 
   List<int> get heights => heightsFor();
 
@@ -63,24 +72,13 @@ class ResolvedVideo {
   /// [settings] disable: that height, those codecs, and the tallest height
   /// that does play.
   ({int height, List<VideoCodec> codecs, int playing})? lostToDisabled(PlayerSettings settings, int cap) {
-    final formats = info['formats'];
-    if (formats is! List) return null;
-    final byHeight = <int, Set<VideoCodec>>{};
-    for (final f in formats.whereType<Map>()) {
-      final height = f['height'], codec = VideoCodec.of(f['vcodec']);
-      if (height is int && height > 0 && codec != null && (cap <= 0 || height <= cap)) (byHeight[height] ??= {}).add(codec);
-    }
-    if (byHeight.isEmpty) return null;
-    final tallest = byHeight.keys.reduce(max);
-    final allowed = [for (final e in byHeight.entries) if (e.value.any((c) => FormatPolicy.allows(settings, c))) e.key];
-    if (allowed.isEmpty || allowed.contains(tallest)) return null;
-    return (height: tallest, codecs: byHeight[tallest]!.toList()..sort((a, b) => a.index.compareTo(b.index)), playing: allowed.reduce(max));
-  }
-
-  List<Map<String, dynamic>> get _tracks {
-    final requested = info['requested_formats'];
-    if (requested is List && requested.isNotEmpty) return requested.whereType<Map<String, dynamic>>().toList();
-    return info['url'] is String ? [info] : const [];
+    final lost = _summary(settings, max(0, cap))?['lost'];
+    if (lost is! Map) return null;
+    return (
+      height: lost['height'] as int,
+      codecs: [for (final name in lost['codecs'] as List) if (VideoCodec.byName(name) case final codec?) codec],
+      playing: lost['playing'] as int,
+    );
   }
 
   /// An mpv EDL address that plays the picked formats directly, the way
@@ -91,35 +89,29 @@ class ResolvedVideo {
   /// [directUrl] with each stream address passed through [relay], which
   /// may return another address for it (see `ChunkedRelay`).
   String? directAddress({String? Function(String url, int? size)? relay}) {
-    if (info['is_live'] == true || info['live_status'] == 'is_live') return null;
-    final tracks = _tracks;
-    if (tracks.isEmpty) return null;
-    final streams = <String>[];
-    for (final track in tracks) {
-      final url = track['url']?.toString() ?? '';
-      final protocol = track['protocol']?.toString() ?? '';
-      if (track['fragments'] != null || !(protocol == 'https' || protocol == 'http') || !url.startsWith('http')) return null;
-      final size = track['filesize'] is int ? track['filesize'] as int : null;
-      final address = relay?.call(url, size) ?? url;
-      streams.add('!new_stream;!no_clip;!no_chapters;%${utf8.encode(address).length}%$address');
-    }
-    return 'edl://${streams.join(';')}';
+    final streams = _summary()?['streams'];
+    if (streams is! List || streams.isEmpty) return null;
+    final addresses = [
+      for (final stream in streams.cast<Map>())
+        relay?.call(stream['url'] as String, stream['size'] as int?) ?? stream['url'] as String,
+    ];
+    return NativeCore.instance?.edl(addresses);
   }
 
   /// The User-Agent the stream addresses were issued for.
-  String? get userAgent {
-    for (final track in [..._tracks, info]) {
-      final headers = track['http_headers'];
-      if (headers is Map && headers['User-Agent'] != null) return headers['User-Agent'].toString();
-    }
-    return null;
-  }
+  String? get userAgent => _summary()?['userAgent'] as String?;
 }
 
-/// Runs yt-dlp once per video ahead of playback and keeps the result, so
-/// libmpv does not have to extract it again: the watch page, the quality
-/// menu and playback share one extraction, and a card the pointer rests on
-/// can be resolved before it is clicked.
+/// The cookie sign-in, handed to yt-dlp only for a members-only video,
+/// which YouTube shows only to a signed-in member.
+abstract interface class MembersCookies {
+  bool get signedIn;
+  /// Writes the cookies to [path]; false when they cannot be had.
+  Future<bool> writeCookies(String path);
+  /// Wipes and deletes what [writeCookies] wrote.
+  void wipeCookies(String path);
+}
+
 class StreamResolver {
   StreamResolver(this.ytDlpPath, {this.cacheDirectory, this.deno, this.proxy, required this.infoDirectory, Map<String, String>? environment})
       : _environment = environment {
@@ -137,6 +129,9 @@ class StreamResolver {
   final Directory infoDirectory;
   final Map<String, String>? _environment;
 
+  /// The cookie sign-in, for members-only videos.
+  MembersCookies? Function()? members;
+
   static const _keep = 12;
   final _results = <String, Future<ResolvedVideo>>{};
   /// The format each entry of [_results] is being resolved with.
@@ -149,10 +144,11 @@ class StreamResolver {
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
 
-  List<String> arguments(String videoId, String format, {String? formatSort}) {
+  List<String> arguments(String videoId, String format, {String? formatSort, String? cookies}) {
     final proxy = this.proxy?.call();
     return [
       if (proxy != null) ...['--proxy', proxy],
+        if (cookies != null) ...['--cookies', cookies],
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
         if (deno != null) ...['--js-runtimes', 'deno:${deno!}'],
         '--extractor-retries', '3',
@@ -165,16 +161,18 @@ class StreamResolver {
   }
 
   /// The resolved video, from the cache while it is fresh.
-  Future<ResolvedVideo> resolve(String videoId, String format, {String? formatSort}) {
+  /// [membersOnly] (as a list marked it) asks signed in from the start.
+  Future<ResolvedVideo> resolve(String videoId, String format, {String? formatSort, bool membersOnly = false}) {
     // A card prefetched in the background is now being waited on.
     final lowered = _lowered[videoId];
     if (lowered != null) restorePriority(lowered);
     final cached = _results[videoId];
     // Another format needs another extraction.
     if (cached != null && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call()) {
-      return cached.then((video) => video.fresh ? video : _start(videoId, format, formatSort: formatSort), onError: (_) => _start(videoId, format, formatSort: formatSort));
+      return cached.then((video) => video.fresh ? video : _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly),
+          onError: (_) => _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly));
     }
-    return _start(videoId, format, formatSort: formatSort);
+    return _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly);
   }
 
   /// The extraction of [videoId] if one is running or done; never starts
@@ -227,13 +225,23 @@ class StreamResolver {
     }
   }
 
-  /// Deletes info files older than [maxAge] that earlier runs left behind.
+  /// Deletes info files older than [maxAge] that earlier runs left behind,
+  /// and cookie files a crash left, after a few minutes.
   Future<void> deleteStaleInfo({Duration maxAge = const Duration(days: 1)}) async {
     try {
       if (!await infoDirectory.exists()) return;
       final limit = DateTime.now().subtract(maxAge);
+      final cookieLimit = DateTime.now().subtract(const Duration(minutes: 5));
       await for (final entity in infoDirectory.list()) {
-        if (entity is! File || !entity.path.endsWith('.json')) continue;
+        if (entity is! File) continue;
+        if (entity.path.endsWith('.cookies.txt')) {
+          if ((await entity.lastModified()).isBefore(cookieLimit)) {
+            await entity.writeAsBytes(List<int>.filled(await entity.length(), 0), flush: true);
+            await entity.delete();
+          }
+          continue;
+        }
+        if (!entity.path.endsWith('.json')) continue;
         if ((await entity.lastModified()).isBefore(limit)) await entity.delete();
       }
     } on FileSystemException {
@@ -241,8 +249,8 @@ class StreamResolver {
     }
   }
 
-  Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false}) {
-    final future = _run(videoId, format, formatSort: formatSort, background: background);
+  Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false}) {
+    final future = _run(videoId, format, formatSort: formatSort, background: background, membersOnly: membersOnly);
     _results.remove(videoId);
     _results[videoId] = future;
     _formats[videoId] = format;
@@ -269,13 +277,27 @@ class StreamResolver {
   /// Whether [error] is a network failure that resolving already retried.
   static bool isTransient(Object error) => _transient.hasMatch('$error');
 
-  Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false}) async {
+  /// What yt-dlp says about a video only the channel's members may watch.
+  static final membersOnlyError = RegExp(r"members.only|join this channel|channel's members", caseSensitive: false);
+
+  Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false}) async {
     final watch = Stopwatch()..start();
-    var result = await _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
+    // Background runs never open the cookies: that may bring up Windows Hello.
+    final cookies = background ? null : members?.call();
+    final signedIn = cookies != null && cookies.signedIn;
+    Future<ProcessResult> run({bool signed = false}) =>
+        signed ? _signedIn(cookies!, videoId, format, formatSort: formatSort) : _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
+    var signed = membersOnly && signedIn;
+    var result = await run(signed: signed);
     if (_failed(result) && _transient.hasMatch(result.stderr.toString())) {
       logWarn('Resolving $videoId hit a network error, retrying once');
       await Future<void>.delayed(const Duration(seconds: 2));
-      result = await _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
+      result = await run(signed: signed);
+    }
+    if (_failed(result) && !signed && signedIn && membersOnlyError.hasMatch(result.stderr.toString())) {
+      logInfo('$videoId is members-only, asking again signed in');
+      signed = true;
+      result = await run(signed: true);
     }
     final output = result.stdout.toString().trim();
     final err = result.stderr.toString().trim();
@@ -286,24 +308,43 @@ class StreamResolver {
     // missing streams, so they go to the log.
     final warnings = const LineSplitter().convert(err).where((line) => line.startsWith('WARNING')).take(5).toList();
     if (warnings.isNotEmpty) logWarn('yt-dlp warnings for $videoId:\n${warnings.join('\n')}');
-    final data = await decodeJsonInBackground(const LineSplitter().convert(output).last);
+    final line = const LineSplitter().convert(output).last;
+    final data = await decodeJsonInBackground(line);
     if (data is! Map<String, dynamic>) throw const FormatException('Unexpected yt-dlp output');
     await infoDirectory.create(recursive: true);
     final file = _infoFile(videoId);
     await file.writeAsString(output);
     logDebug(() => 'Resolved $videoId${background ? ' (prefetch)' : ''} in ${watch.elapsedMilliseconds} ms');
-    return ResolvedVideo(data, file, format);
+    return ResolvedVideo(data, file, format, text: line);
+  }
+
+  static int _cookieFiles = 0;
+
+  /// yt-dlp for [videoId] with the signed-in cookies, in a file of their
+  /// own that is wiped as soon as yt-dlp is done.
+  Future<ProcessResult> _signedIn(MembersCookies cookies, String videoId, String format, {String? formatSort}) async {
+    await infoDirectory.create(recursive: true);
+    final path = '${infoDirectory.path}${Platform.pathSeparator}$videoId-${_cookieFiles++}.cookies.txt';
+    try {
+      if (!await cookies.writeCookies(path)) {
+        logWarn('The cookie sign-in could not be opened for $videoId');
+        return await _ytDlp(videoId, format, formatSort: formatSort);
+      }
+      return await _ytDlp(videoId, format, formatSort: formatSort, cookies: path);
+    } finally {
+      cookies.wipeCookies(path);
+    }
   }
 
   bool _failed(ProcessResult result) => result.exitCode != 0 || result.stdout.toString().trim().isEmpty;
 
   /// yt-dlp for [videoId]; [background] (the video id) runs it at low
   /// priority until [resolve] asks for that video.
-  Future<ProcessResult> _ytDlp(String videoId, String format, {String? formatSort, String? background}) async {
+  Future<ProcessResult> _ytDlp(String videoId, String format, {String? formatSort, String? background, String? cookies}) async {
     try {
       return await runWithTimeout(
         ytDlpPath,
-        arguments(videoId, format, formatSort: formatSort),
+        arguments(videoId, format, formatSort: formatSort, cookies: cookies),
         timeout: const Duration(seconds: 45),
         environment: _environment,
         onStart: (process) {

@@ -41,6 +41,9 @@ MediaKitVideoPlugin::MediaKitVideoPlugin(
 
 MediaKitVideoPlugin::~MediaKitVideoPlugin() {
   channel_->SetMethodCallHandler(nullptr);
+  // Lumtub: the engine is going away; its texture registrar can no longer be asked
+  // to unregister anything (doing so crashed in flutter_windows.dll).
+  VideoOutput::engine_closing_ = true;
   // Drain producers before their main-thread queue and mutex are destroyed.
   video_output_manager_.reset();
   if (flutter_window_ && original_window_proc_) {

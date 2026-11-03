@@ -104,5 +104,6 @@ VideoItem videoFromCore(Map<String, dynamic> v) {
     viewCount: (v['viewCount'] as num?)?.toInt(),
     url: 'https://www.youtube.com/watch?v=$id',
     liveStatus: v['live'] == true ? 'is_live' : null,
+    membersOnly: v['membersOnly'] == true,
   );
 }

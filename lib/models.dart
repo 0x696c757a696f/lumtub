@@ -25,6 +25,9 @@ class VideoItem {
   final String? description;
   /// Listed as a Short (a /shorts/ address), whatever its length.
   final bool isShortListing;
+  /// Listed with YouTube's members-only badge: only the channel's members
+  /// can watch it.
+  final bool membersOnly;
 
   bool get isLive => liveStatus == 'is_live';
   bool get isUpcoming => liveStatus == 'is_upcoming';
@@ -44,6 +47,7 @@ class VideoItem {
     this.height,
     this.description,
     this.isShortListing = false,
+    this.membersOnly = false,
   });
 
   /// This video credited to [ref], keeping the known name when [ref] has none.
@@ -62,6 +66,7 @@ class VideoItem {
         height: height,
         description: description,
         isShortListing: isShortListing,
+        membersOnly: membersOnly,
       );
 
   /// This video with [status] as its `live_status`, such as `is_live`.
@@ -80,6 +85,7 @@ class VideoItem {
         height: height,
         description: description,
         isShortListing: isShortListing,
+        membersOnly: membersOnly,
       );
 
   ChannelRef? get channelRef => channelId == null ? null : ChannelRef(channelId!, channel);
@@ -114,6 +120,7 @@ class VideoItem {
         if (height != null) 'height': height,
         if (description != null) 'description': description,
         if (isShortListing) 'is_short': true,
+        if (membersOnly) 'availability': 'subscriber_only',
       };
 
   // Compiled once: every listing entry and saved item comes through here.
@@ -156,6 +163,7 @@ class VideoItem {
       height: height is num ? height.toInt() : null,
       description: description is String && description.isNotEmpty ? description.substring(0, description.length < 120 ? description.length : 120) : null,
       isShortListing: map['is_short'] == true || listed.contains('/shorts/'),
+      membersOnly: map['availability'] == 'subscriber_only',
     );
   }
 

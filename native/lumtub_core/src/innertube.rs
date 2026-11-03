@@ -114,6 +114,28 @@ pub struct Video {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub view_count: Option<u64>,
     pub live: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub members_only: bool,
+}
+
+/// Whether a listed video carries YouTube's members-only badge, whose style
+/// is `BADGE_STYLE_TYPE_MEMBERS_ONLY` (or `BADGE_MEMBERS_ONLY` in the newer
+/// view models) whatever the interface language says on it.
+pub(crate) fn members_only(node: &Value) -> bool {
+    match node {
+        Value::String(text) => text.contains("MEMBERS_ONLY"),
+        Value::Object(map) => members_only_in(map),
+        Value::Array(list) => list.iter().any(members_only),
+        _ => false,
+    }
+}
+
+/// [members_only] for an object, skipping what the uploader writes.
+fn members_only_in(map: &Map<String, Value>) -> bool {
+    map.iter().any(|(key, value)| match key.as_str() {
+        "title" | "headline" | "descriptionSnippet" | "detailedMetadataSnippets" | "navigationEndpoint" => false,
+        _ => members_only(value),
+    })
 }
 
 fn video_id(node: &Map<String, Value>, key: &str) -> Option<String> {
@@ -133,6 +155,7 @@ fn compact(node: &Map<String, Value>) -> Option<Video> {
         duration: seconds(&text_of(node.get("lengthText"))),
         view_count: count(&text_of(node.get("viewCountText"))),
         live: badges.contains("直播") || badges.to_uppercase().contains("LIVE") || watching,
+        members_only: members_only_in(node),
     })
 }
 
@@ -182,6 +205,7 @@ fn lockup(value: &Value) -> Option<Video> {
         duration: badges.iter().find_map(|badge| seconds(badge)),
         view_count,
         live: badges.iter().any(|b| b.contains("直播") || b.to_uppercase() == "LIVE"),
+        members_only: members_only(value),
     })
 }
 
@@ -666,9 +690,29 @@ mod tests {
         ]});
         let videos = related(&data);
         assert_eq!(videos.iter().map(|v| v.id.as_str()).collect::<Vec<_>>(), ["aaaaaaaaaaa", "bbbbbbbbbbb", "ddddddddddd"]);
-        assert_eq!(videos[0], Video { id: "aaaaaaaaaaa".into(), title: "Old".into(), channel: "Chan".into(), channel_id: Some("UCabc".into()), duration: Some(600), view_count: Some(1000), live: false });
-        assert_eq!(videos[1], Video { id: "bbbbbbbbbbb".into(), title: "New".into(), channel: "Other".into(), channel_id: Some("UCdef".into()), duration: Some(3723), view_count: Some(120_000), live: false });
+        assert_eq!(videos[0], Video { id: "aaaaaaaaaaa".into(), title: "Old".into(), channel: "Chan".into(), channel_id: Some("UCabc".into()), duration: Some(600), view_count: Some(1000), live: false, members_only: false });
+        assert_eq!(videos[1], Video { id: "bbbbbbbbbbb".into(), title: "New".into(), channel: "Other".into(), channel_id: Some("UCdef".into()), duration: Some(3723), view_count: Some(120_000), live: false, members_only: false });
         assert!(videos[2].live);
+        assert!(videos.iter().all(|v| !v.members_only));
+    }
+
+    #[test]
+    fn marks_members_only_videos_by_badge_style() {
+        let data = json!({"contents": [
+            {"compactVideoRenderer": {
+                "videoId": "aaaaaaaaaaa", "title": {"simpleText": "BADGE_STYLE_TYPE_MEMBERS_ONLY in a title"},
+                "badges": [{"metadataBadgeRenderer": {"style": "BADGE_STYLE_TYPE_MEMBERS_ONLY", "label": "会员专享"}}]
+            }},
+            {"lockupViewModel": {
+                "contentId": "bbbbbbbbbbb", "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                "metadata": {"lockupMetadataViewModel": {"title": {"content": "New"}, "metadata": {"contentMetadataViewModel": {"metadataRows": [
+                    {"badges": [{"badgeViewModel": {"badgeText": "Members only", "badgeStyle": "BADGE_MEMBERS_ONLY"}}]}
+                ]}}}}
+            }},
+            {"compactVideoRenderer": {"videoId": "ccccccccccc", "title": {"simpleText": "BADGE_STYLE_TYPE_MEMBERS_ONLY"}}}
+        ]});
+        let videos = related(&data);
+        assert_eq!(videos.iter().map(|v| v.members_only).collect::<Vec<_>>(), [true, true, false]);
     }
 
     #[test]

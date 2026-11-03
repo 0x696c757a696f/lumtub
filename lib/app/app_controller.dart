@@ -962,7 +962,7 @@ class AppController extends ChangeNotifier with _ExploreState {
         toolDirectories: paths.executableDirectories,
         proxy: () => proxy.ytDlpValue(this.settings.proxyMode),
         client: _http,
-      );
+      )..streams.members = () => webSignIn;
 
   DownloadManager _downloadsFor(ToolPaths paths, AppDirectories directories) => DownloadManager(
         file: File('${directories.data.path}${Platform.pathSeparator}downloads.json'),
@@ -1443,7 +1443,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       ResolvedVideo? video;
       if (resolved) {
         try {
-          video = await _repository!.streams.resolve(item.id, format, formatSort: formatSort);
+          video = await _repository!.streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly);
         } catch (e) {
           _recentErrors.add('$e');
           final failure = PlaybackFailure.classify(['$e']);
@@ -1631,6 +1631,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     _recovery.cancelPending();
     logError('Playback failed ${item.id} (${failure.kind.name}): ${failure.detail}');
     if (failure.kind == FailureKind.noFormat) failure = PlaybackFailure(failure.kind, failure.detail, disabled: FormatPolicy.disabledNames(settings));
+    if (failure.kind == FailureKind.membersOnly) failure = PlaybackFailure(failure.kind, failure.detail, signedIn: webSignIn?.signedIn == true);
     switch (failure.kind) {
       case FailureKind.rateLimited:
         _rateLimitedUntil = DateTime.now().add(const Duration(minutes: 10));
@@ -2449,7 +2450,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       } else {
         try {
           // The extraction playback uses carries the details too.
-          final resolved = await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort);
+          final resolved = await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort, membersOnly: item.membersOnly);
           loaded = resolved.details;
           if (serial == _playSerial) {
             _update(() => availableHeights = resolved.heightsFor(settings));
@@ -2741,6 +2742,14 @@ class AppController extends ChangeNotifier with _ExploreState {
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     await player?.pause();
+    // The video output goes while the engine still runs: left to the
+    // engine's own teardown, unregistering its texture crashed Flutter.
+    try {
+      await videoController?.release().timeout(const Duration(seconds: 3));
+    } catch (e) {
+      logWarn('The video output was not released before exit: $e');
+    }
+    videoController = null;
     await player?.dispose();
     logInfo('Lumtub exited normally');
     await AppLog.current?.flush();

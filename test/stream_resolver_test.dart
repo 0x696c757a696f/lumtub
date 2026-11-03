@@ -99,6 +99,42 @@ void main() {
     expect(log.readAsLinesSync().map((line) => line.substring(line.length - 11)), ['aaaaaaaaaaa', 'ccccccccccc']);
   });
 
+  test('asks again signed in for a members-only video, and wipes the cookies', () async {
+    if (Platform.isWindows) return;
+    final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
+    addTearDown(() => dir.delete(recursive: true));
+    final log = File('${dir.path}/log');
+    final script = File('${dir.path}/fake-yt-dlp');
+    await script.writeAsString('#!/bin/sh\n'
+        'cookies=""\nwhile [ \$# -gt 0 ]; do [ "\$1" = --cookies ] && cookies="\$2"; shift; done\n'
+        'if [ -z "\$cookies" ]; then echo none >> ${log.path}; echo "ERROR: [youtube] x: Join this channel to get access to members-only content like this video" >&2; exit 1; fi\n'
+        'cat "\$cookies" >> ${log.path}\n'
+        'cat <<\'JSON\'\n${jsonEncode(_info())}\nJSON\n');
+    await Process.run('chmod', ['+x', script.path]);
+    final cookies = _FakeCookies();
+    final resolver = StreamResolver(script.path, infoDirectory: Directory('${dir.path}/info'))..members = () => cookies;
+    await resolver.resolve('dQw4w9WgXcQ', 'ytdl');
+    expect(log.readAsLinesSync(), ['none', 'SAPISID=x']);
+    expect(cookies.written, hasLength(1));
+    expect(cookies.wiped, cookies.written);
+    expect(File(cookies.written.single).existsSync(), isFalse);
+    // A list that marked it asks signed in at once.
+    await log.writeAsString('');
+    resolver.forget('dQw4w9WgXcQ');
+    await resolver.resolve('dQw4w9WgXcQ', 'ytdl', membersOnly: true);
+    expect(log.readAsLinesSync(), ['SAPISID=x']);
+    // Signed out, the error stands and nothing is written.
+    cookies.signedIn = false;
+    resolver.forget('dQw4w9WgXcQ');
+    await expectLater(resolver.resolve('dQw4w9WgXcQ', 'ytdl'), throwsA(isA<StateError>()));
+    expect(cookies.written, hasLength(2));
+    // Background prefetches never open the cookies.
+    cookies.signedIn = true;
+    resolver.prefetch('aaaaaaaaaaa', 'ytdl');
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    expect(cookies.written, hasLength(2));
+  });
+
   test('a failed resolution is not kept', () async {
     if (Platform.isWindows) return;
     final dir = await Directory.systemTemp.createTemp('lumtub_resolve');
@@ -180,4 +216,25 @@ void main() {
     resolver.forget(ids.last);
     expect(File('${info.path}/${ids.last}.json').existsSync(), isFalse);
   });
+}
+
+class _FakeCookies implements MembersCookies {
+  @override
+  bool signedIn = true;
+  final written = <String>[];
+  final wiped = <String>[];
+
+  @override
+  Future<bool> writeCookies(String path) async {
+    written.add(path);
+    await File(path).writeAsString('SAPISID=x\n');
+    return true;
+  }
+
+  @override
+  void wipeCookies(String path) {
+    wiped.add(path);
+    final file = File(path);
+    if (file.existsSync()) file.deleteSync();
+  }
 }

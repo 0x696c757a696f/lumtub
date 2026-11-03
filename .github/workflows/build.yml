@@ -488,6 +488,7 @@ jobs:
     runs-on: macos-15
     env:
       FLUTTER_VERSION: 3.47.7
+      FFMPEG_TAG: n8.0
     permissions:
       contents: read
     steps:
@@ -549,21 +550,51 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
         run: flutter build macos --release --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=macos-universal --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
 
-      - name: macOS - package DMG
+      - name: macOS - restore ffmpeg
+        id: ffmpeg-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/ffmpeg
+          key: macos-ffmpeg-${{ env.FFMPEG_TAG }}-${{ hashFiles('macos/packaging/build-ffmpeg.sh') }}
+
+      - name: macOS - build ffmpeg
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
         run: |
-          app=build/macos/Build/Products/Release/Lumtub.app
-          cp "$LUMTUB_CORE_DLL" "$app/Contents/Frameworks/"
-          cp LICENSE NOTICE "$app/Contents/Resources/"
-          # Not notarized: signed ad hoc, as Apple silicon runs no unsigned code.
-          codesign --force --deep --sign - "$app"
-          codesign --verify --deep --strict "$app"
-          for binary in "$app/Contents/MacOS/Lumtub" "$app/Contents/Frameworks/liblumtub_core.dylib"; do lipo -info "$binary"; done
-          stage="$RUNNER_TEMP/dmg"
-          mkdir -p "$stage"
-          cp -R "$app" "$stage/"
-          ln -s /Applications "$stage/Applications"
-          hdiutil create -volname Lumtub -srcfolder "$stage" -fs HFS+ -format UDZO -ov "Lumtub_${LUMTUB_VERSION}_macos-universal.dmg"
-          ls -l Lumtub_*.dmg
+          git clone --quiet --depth 1 --branch "$FFMPEG_TAG" https://github.com/FFmpeg/FFmpeg.git "$RUNNER_TEMP/ffmpeg-src"
+          git -C "$RUNNER_TEMP/ffmpeg-src" rev-parse HEAD
+          macos/packaging/build-ffmpeg.sh "$RUNNER_TEMP/ffmpeg-src" "$RUNNER_TEMP/ffmpeg"
+
+      - name: macOS - import the signing certificate
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          # Only once a Developer ID certificate is in the repository's
+          # secrets; until then the app is signed ad hoc.
+          if [ -z "$APPLE_CERTIFICATE_P12" ]; then
+            echo "No Developer ID certificate; signing ad hoc."
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          password=$(openssl rand -hex 16)
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/cert.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" > /dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          identity=$(security find-identity -v -p codesigning "$keychain" | sed -n 's/.*"\(Developer ID Application:.*\)"/\1/p' | head -1)
+          [ -n "$identity" ] || { echo "The certificate is not a Developer ID Application one."; exit 1; }
+          echo "APPLE_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+
+      - name: macOS - package DMG
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: macos/packaging/package.sh build/macos/Build/Products/Release/Lumtub.app "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg" "FFmpeg ${FFMPEG_TAG#n} (LGPL)" "Lumtub_${LUMTUB_VERSION}_macos-universal.dmg"
 
       - name: macOS - upload DMG
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

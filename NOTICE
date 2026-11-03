@@ -21,3 +21,10 @@ Copyright 2014-2021 Adobe, licensed under the SIL Open Font License 1.1
 The Phosphor icon fonts (assets/fonts/phosphor, from the phosphor_flutter
 2.1.0 package) are Copyright 2020-2021 Phosphor Icons, licensed under the
 MIT License (assets/fonts/phosphor/LICENSE).
+
+The macOS app includes ffmpeg and ffprobe built from the FFmpeg source
+(https://ffmpeg.org, tag named in Contents/Resources/ffmpeg-version.txt)
+by macos/packaging/build-ffmpeg.sh. FFmpeg is licensed under the GNU
+Lesser General Public License version 2.1 or later; this build enables no
+GPL or nonfree parts. Its source code is available at
+https://ffmpeg.org/download.html.

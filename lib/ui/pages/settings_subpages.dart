@@ -15,6 +15,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../app_updater.dart';
+import '../../tool_manager.dart';
 import '../../app/app_controller.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
@@ -908,7 +909,7 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
                   ? tr('未安装（合并高画质下载时按需安装）')
                   : tr('{0} · 占用 {1}', [tools.ffmpegVersion!, formatBytes(tools.ffmpegBytes ?? 0)]),
           leading: const Icon(AppIcons.gitMerge),
-          trailing: controller.installingFfmpeg
+          trailing: controller.installingFfmpeg || ToolManager.bundledFfmpegDirectory != null
               ? null
               : Row(mainAxisSize: MainAxisSize.min, children: [
                   TextButton(onPressed: controller.installFfmpeg, child: Text(tools.ffmpegVersion == null ? tr('安装') : tr('更新'))),
@@ -923,7 +924,10 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
           onTap: controller.checkUpdates,
         ),
         _tip(context, tr('新 libmpv 出错时会自动改回内置版本。yt-dlp 更新后若无法播放，可以回退到上一版。')),
-        _tip(context, tr('ffmpeg 是可选组件，只用于合并高画质视频和音频，不会自动下载。使用 zhongfly/mpv-winbuild 的 LGPL 版本（无法安装时改用 BtbN/FFmpeg-Builds 的），源代码见 https://ffmpeg.org/download.html。')),
+        if (Platform.isMacOS)
+          _tip(context, tr('macOS 版自带 ffmpeg，只用于合并高画质视频和音频：从 FFmpeg 源代码按 LGPL 构建，只含封装格式，不含编解码器，源代码见 https://ffmpeg.org/download.html。'))
+        else
+          _tip(context, tr('ffmpeg 是可选组件，只用于合并高画质视频和音频，不会自动下载。使用 zhongfly/mpv-winbuild 的 LGPL 版本（无法安装时改用 BtbN/FFmpeg-Builds 的），源代码见 https://ffmpeg.org/download.html。')),
       ];
     });
 

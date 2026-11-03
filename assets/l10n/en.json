@@ -2829,7 +2829,8 @@
   "这是频道会员专属视频，浏览器登录的账号不是这个频道的会员": "This video is for the channel's members only, and the account signed in under Browser sign-in isn't a member",
   "这是频道会员专属视频。如果你是这个频道的会员，在 设置 › YouTube 账号 › 浏览器登录 登录后就能播放": "This video is for the channel's members only. If you're a member, sign in under Settings › YouTube account › Browser sign-in to play it",
   "用于给社区帖子点赞、投票和评论，在直播聊天里发言，以及播放会员专属视频": "For liking, voting and commenting on community posts, writing in live chat, and playing members-only videos",
-  "macOS 版暂时不能安装 ffmpeg": "ffmpeg can't be installed in the macOS version yet",
   "VideoToolbox（零拷贝）": "VideoToolbox (zero-copy)",
-  "VideoToolbox（回拷）": "VideoToolbox (copy-back)"
+  "VideoToolbox（回拷）": "VideoToolbox (copy-back)",
+  "安装包不完整：缺少 ffmpeg。请重新安装 Lumtub。": "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.",
+  "macOS 版自带 ffmpeg，只用于合并高画质视频和音频：从 FFmpeg 源代码按 LGPL 构建，只含封装格式，不含编解码器，源代码见 https://ffmpeg.org/download.html。": "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html."
 }

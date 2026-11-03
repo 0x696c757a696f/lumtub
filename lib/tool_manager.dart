@@ -488,17 +488,39 @@ class ToolManager {
   }
 
   // ffmpeg: optional, installed on demand (see ffmpeg_component.dart).
+  // The macOS app carries its own, made for copying streams only.
+
+  /// The folder of the ffmpeg and ffprobe inside the macOS app, if there.
+  static String? get bundledFfmpegDirectory {
+    if (!Platform.isMacOS) return null;
+    final dir = File(Platform.resolvedExecutable).parent.path;
+    return File('$dir/ffmpeg').existsSync() && File('$dir/ffprobe').existsSync() ? dir : null;
+  }
 
   /// The folder holding the newest installed ffmpeg and ffprobe, if any.
   String? get ffmpegDirectory {
+    if (bundledFfmpegDirectory case final bundled?) return bundled;
     final exe = _findNewest('ffmpeg', _exe('ffmpeg'));
     return exe == null ? null : File(exe).parent.path;
   }
 
-  String? get ffmpegVersion => _versionOf(_findNewest('ffmpeg', _exe('ffmpeg')));
+  String? get ffmpegVersion {
+    if (bundledFfmpegDirectory case final bundled?) {
+      try {
+        final file = File('${File(bundled).parent.path}/Resources/ffmpeg-version.txt');
+        return file.existsSync() ? file.readAsStringSync().trim() : 'ffmpeg';
+      } on FileSystemException {
+        return 'ffmpeg';
+      }
+    }
+    return _versionOf(_findNewest('ffmpeg', _exe('ffmpeg')));
+  }
 
   /// Bytes on disk of the installed ffmpeg, or null without it.
   int? get ffmpegBytes {
+    if (bundledFfmpegDirectory case final bundled?) {
+      return File('$bundled/ffmpeg').lengthSync() + File('$bundled/ffprobe').lengthSync();
+    }
     final dir = ffmpegDirectory;
     if (dir == null) return null;
     var total = 0;
@@ -539,7 +561,10 @@ class ToolManager {
   /// [onlyIfInstalled] nothing happens for a user who never installed it.
   Future<void> installFfmpeg({bool onlyIfInstalled = false, void Function(int received, int? total)? onProgress}) async {
     if (onlyIfInstalled && ffmpegDirectory == null) return;
-    if (Platform.isMacOS) throw StateError(tr('macOS 版暂时不能安装 ffmpeg'));
+    if (Platform.isMacOS) {
+      if (bundledFfmpegDirectory != null) return;
+      throw StateError(tr('安装包不完整：缺少 ffmpeg。请重新安装 Lumtub。'));
+    }
     if (!Platform.isWindows) return _installLinuxFfmpeg(onProgress);
     if (!await _no7z.exists()) {
       try {
@@ -679,6 +704,7 @@ class ToolManager {
 
   /// Deletes every installed ffmpeg.
   Future<void> removeFfmpeg() async {
+    if (Platform.isMacOS) return;
     final dir = Directory('${root.path}${_separator}ffmpeg');
     if (await dir.exists()) await dir.delete(recursive: true);
   }

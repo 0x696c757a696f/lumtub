@@ -1861,7 +1861,8 @@
   "这是频道会员专属视频，浏览器登录的账号不是这个频道的会员": "這是頻道會員專屬影片，瀏覽器登入的帳號不是這個頻道的會員",
   "这是频道会员专属视频。如果你是这个频道的会员，在 设置 › YouTube 账号 › 浏览器登录 登录后就能播放": "這是頻道會員專屬影片。如果你是這個頻道的會員，在 設定 › YouTube 賬號 › 瀏覽器登入 登入後就能播放",
   "用于给社区帖子点赞、投票和评论，在直播聊天里发言，以及播放会员专属视频": "用於給社群貼文按讚、投票和留言，在直播聊天室發言，以及播放會員專屬影片",
-  "macOS 版暂时不能安装 ffmpeg": "macOS 版暫時不能安裝 ffmpeg",
   "VideoToolbox（零拷贝）": "VideoToolbox（零拷貝）",
-  "VideoToolbox（回拷）": "VideoToolbox（回拷）"
+  "VideoToolbox（回拷）": "VideoToolbox（回拷）",
+  "安装包不完整：缺少 ffmpeg。请重新安装 Lumtub。": "安裝包不完整：缺少 ffmpeg。請重新安裝 Lumtub。",
+  "macOS 版自带 ffmpeg，只用于合并高画质视频和音频：从 FFmpeg 源代码按 LGPL 构建，只含封装格式，不含编解码器，源代码见 https://ffmpeg.org/download.html。": "macOS 版自帶 ffmpeg，只用於合併高畫質影片和音訊：從 FFmpeg 原始碼按 LGPL 建置，只含封裝格式，不含編解碼器，原始碼見 https://ffmpeg.org/download.html。"
 }

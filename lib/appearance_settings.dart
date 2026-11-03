@@ -120,6 +120,9 @@ enum ThumbnailQuality {
 /// The font bundled with Lumtub and used by default.
 const bundledFont = 'Noto Sans CJK SC';
 
+/// Proportional ‘ ’ “ ” taken from the bundled face's pwid forms.
+const quotesFont = 'Lumtub Quotes';
+
 /// Fonts offered in Settings: the bundled one, then fonts that ship with
 /// Windows and cover Chinese; null is the system UI font.
 final fontChoices = <(String?, String)>[

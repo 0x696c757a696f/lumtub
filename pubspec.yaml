@@ -44,6 +44,10 @@ flutter:
     - family: Noto Sans CJK SC
       fonts:
         - asset: assets/fonts/NotoSansSC-Regular.ttf
+    # The same face's proportional curly quotes, cut out with fontTools.
+    - family: Lumtub Quotes
+      fonts:
+        - asset: assets/fonts/LumtubQuotes-Regular.ttf
     # Phosphor icons (MIT, assets/fonts/phosphor/LICENSE).
     - family: Phosphor
       fonts:

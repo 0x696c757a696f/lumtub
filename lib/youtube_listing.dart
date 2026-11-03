@@ -27,12 +27,14 @@ class YoutubeListing {
         if (sp != null && sp.isNotEmpty) 'params': Uri.decodeQueryComponent(sp),
       }, region: region);
 
-  /// The uploads, Shorts or live streams of channel [channelId].
+  /// The uploads, Shorts, live streams or playlists of channel
+  /// [channelId].
   Stream<String> channelTab(String channelId, ChannelTab tab) => _pages('browse', {
         'browseId': channelId,
         'params': switch (tab) {
           ChannelTab.shorts => 'EgZzaG9ydHPyBgUKA5oBAA%3D%3D',
           ChannelTab.live => 'EgdzdHJlYW1z8gYECgJ6AA%3D%3D',
+          ChannelTab.playlists => 'EglwbGF5bGlzdHPyBgQKAkIA',
           _ => 'EgZ2aWRlb3PyBgQKAjoA',
         },
       });
@@ -41,7 +43,7 @@ class YoutubeListing {
   Stream<String> playlist(String id) => _pages('browse', {'browseId': 'VL$id'});
 
   /// Whether [tab] can be read through [channelTab].
-  static bool hasTab(ChannelTab tab) => tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live;
+  static bool hasTab(ChannelTab tab) => tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live || tab == ChannelTab.playlists;
 
   // A results page runs to a megabyte.
   static Future<Object?> _readInBackground(List<int> bytes) => Isolate.run(() {
@@ -49,8 +51,13 @@ class YoutubeListing {
         return jsonDecode(core.take(core.withBytes(bytes, core.youtubeListing)) ?? 'null');
       });
 
-  Stream<String> _pages(String endpoint, Map<String, Object> first, {String? region}) async* {
+  Stream<String> _pages(String endpoint, Map<String, Object> first, {String? region, Set<String>? followed}) async* {
     final seen = <String>{};
+    // Rows (a channel's playlist sections) show their first few items;
+    // each whole row is read after the page that showed it.
+    followed ??= {};
+    followed.add('${first['browseId']} ${first['params']}');
+    final shelves = <Map<String, Object>>[];
     Map<String, Object> body = first;
     for (var page = 0; page < 50; page++) {
       final response = await _client
@@ -82,9 +89,24 @@ class YoutubeListing {
         added++;
         yield jsonEncode(entry);
       }
+      for (final shelf in (read['shelves'] as List? ?? const []).cast<Map<String, dynamic>>()) {
+        if (followed.add('${shelf['browseId']} ${shelf['params']}')) shelves.add({'browseId': '${shelf['browseId']}', 'params': '${shelf['params']}'});
+      }
       final next = read['continuation'];
-      if (next is! String || added == 0) return;
+      if (next is! String || added == 0) break;
       body = {'continuation': next};
+    }
+    for (final shelf in shelves) {
+      try {
+        await for (final line in _pages(endpoint, shelf, region: region, followed: followed)) {
+          final id = (jsonDecode(line) as Map)['id'];
+          if (id is String && !seen.add(id)) continue;
+          yield line;
+        }
+      } catch (e) {
+        // The row's first items are already listed.
+        logWarn('YouTube listing row failed: $e');
+      }
     }
   }
 

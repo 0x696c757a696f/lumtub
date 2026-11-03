@@ -108,8 +108,11 @@ ThemeData buildAppTheme(
   };
   // Component styles below are used as they are, not merged with the
   // theme's text theme, so they carry the font themselves.
-  final fallback = fontFamily == bundledFont ? null : const [bundledFont];
-  TextStyle font(TextStyle style) => style.copyWith(fontFamily: fontFamily, fontFamilyFallback: fallback);
+  // The bundled CJK face draws Western curly quotes full width, so the
+  // default text starts with a face holding only proportional ones.
+  final family = fontFamily == bundledFont ? quotesFont : fontFamily;
+  const fallback = [bundledFont];
+  TextStyle font(TextStyle style) => style.copyWith(fontFamily: family, fontFamilyFallback: fallback);
   // Every button: a visible ring when reached by keyboard, label in
   // semibold on the type scale.
   final focusRing = WidgetStateProperty.resolveWith<BorderSide?>((states) => states.contains(WidgetState.focused) ? BorderSide(color: scheme.primary, width: 2) : null);
@@ -121,7 +124,7 @@ ThemeData buildAppTheme(
   const buttonShape = WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(Radii.l))));
   final theme = ThemeData(
     useMaterial3: true,
-    fontFamily: fontFamily,
+    fontFamily: family,
     // Characters a chosen Windows font lacks come from the bundled one.
     fontFamilyFallback: fallback,
     colorScheme: scheme,

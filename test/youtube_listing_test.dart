@@ -19,6 +19,23 @@ Map<String, Object> _video(String id) => {
       },
     };
 
+Map<String, Object> _tab(List<Object> sections) => {
+      'contents': {
+        'twoColumnBrowseResultsRenderer': {
+          'tabs': [
+            {
+              'tabRenderer': {
+                'selected': true,
+                'content': {'sectionListRenderer': {'contents': sections}},
+              },
+            },
+          ],
+        },
+      },
+    };
+
+Map<String, Object> _playlist(String id) => {'lockupViewModel': {'contentId': id, 'contentType': 'LOCKUP_CONTENT_TYPE_PLAYLIST'}};
+
 void main() {
   final skip = NativeCore.instance == null ? 'needs lumtub_core (LUMTUB_CORE_DLL)' : null;
 
@@ -70,6 +87,43 @@ void main() {
     final items = await VideoRepository('/no/yt-dlp', client: client).channelTab(channel, ChannelTab.shorts).next(5).toList();
     expect(items.cast<VideoItem>().single.id, 'ddddddddddd');
     expect(params, 'EgZzaG9ydHPyBgUKA5oBAA%3D%3D');
+  }, skip: skip);
+
+  test('a playlists tab made of rows lists each whole row after the rows', () async {
+    final asked = <Map<String, dynamic>>[];
+    final client = MockClient((request) async {
+      final body = jsonDecode(request.body) as Map<String, dynamic>;
+      asked.add(body);
+      final answer = body['params'] == 'ROW'
+          ? _tab([
+              {
+                'itemSectionRenderer': {
+                  'contents': [
+                    {'gridRenderer': {'items': [_playlist('PLrowrowrow1'), _playlist('PLrowrowrow2'), _playlist('PLrowrowrow3')]}},
+                  ],
+                },
+              },
+            ])
+          : _tab([
+              {
+                'itemSectionRenderer': {
+                  'contents': [
+                    {
+                      'shelfRenderer': {
+                        'endpoint': {'browseEndpoint': {'browseId': 'UCaaaaaaaaaaaaaaaaaaaaaa', 'params': 'ROW'}},
+                        'content': {'horizontalListRenderer': {'items': [_playlist('PLrowrowrow1')]}},
+                      },
+                    },
+                  ],
+                },
+              },
+            ]);
+      return http.Response(jsonEncode(answer), 200);
+    });
+    final lines = await YoutubeListing(client).channelTab('UCaaaaaaaaaaaaaaaaaaaaaa', ChannelTab.playlists).toList();
+    final ids = [for (final line in lines) (jsonDecode(line) as Map)['id']];
+    expect(ids, ['PLrowrowrow1', 'PLrowrowrow2', 'PLrowrowrow3']);
+    expect([for (final b in asked) b['params']], ['EglwbGF5bGlzdHPyBgQKAkIA', 'ROW']);
   }, skip: skip);
 
   test('falls back when the web API fails or finds nothing, not after it listed something', () async {

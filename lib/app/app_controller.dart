@@ -230,9 +230,29 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// Wayland desktops decide themselves which window is on top and where
   /// it goes; said once per run.
   void _noteWaylandTop() {
-    if (_waylandNoted || !AppWindow.onWayland) return;
+    if (_waylandNoted || !AppWindow.onWayland || AppWindow.keepsAboveOnWayland) return;
     _waylandNoted = true;
-    _notice(tr('Wayland 桌面不允许程序把窗口保持在最上层，窗口可能被其他窗口挡住。可在设置 › 播放设置 › X11 兼容模式中改用 X11 显示。'));
+    if (!_disposed) _waylandTopNotes.add(null);
+  }
+
+  final _waylandTopNotes = StreamController<void>.broadcast();
+
+  /// Said when a window should stay on top on a Wayland desktop that does
+  /// not allow it; the page offers [switchToX11].
+  Stream<void> get waylandTopNotes => _waylandTopNotes.stream;
+
+  /// Turns on X11 compatibility mode and starts Lumtub again in it.
+  Future<void> switchToX11() async {
+    final data = directories?.data;
+    if (data == null) return;
+    try {
+      await AppWindow.x11Marker(data).writeAsString('');
+    } catch (e) {
+      _notice(tr('无法切换：{0}', ['$e']));
+      return;
+    }
+    await shutdown(install: false);
+    await restartApp();
   }
 
   /// Whether the watch page shows [playing].
@@ -2837,6 +2857,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (!_shutDown) unawaited(player?.dispose());
     _tools?.dispose();
     unawaited(_notices.close());
+    unawaited(_waylandTopNotes.close());
     unawaited(_finishedDownloads.close());
     super.dispose();
   }

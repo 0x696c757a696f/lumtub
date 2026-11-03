@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/services.dart';
 
+import 'kwin_keep_above.dart';
+
 /// The picture-in-picture window's ratio for a video [aspect] (width over
 /// height): 16:9 when unknown, and never extreme.
 double pipAspectOf(double aspect) => aspect.isFinite && aspect > 0 ? aspect.clamp(0.4, 3.0) : 16 / 9;
@@ -44,6 +46,14 @@ class AppWindow {
   /// The marker the runner reads at start (linux/runner/main.cc) to draw
   /// the window through XWayland.
   static File x11Marker(Directory data) => File('${data.path}/x11-mode');
+  /// Whether the desktop keeps the window on top for Lumtub, as KWin does
+  /// for its script, so nothing need be said about Wayland.
+  static bool get keepsAboveOnWayland => onWayland && KWinKeepAbove.available;
+
+  static void _keepAboveOnKde(bool on) {
+    if (keepsAboveOnWayland) KWinKeepAbove.set(on);
+  }
+
   static const _channel = MethodChannel('lumtub/windows_shell');
   static bool _nativePip = false;
 
@@ -146,7 +156,10 @@ class AppWindow {
 
   /// Keeps the window above the others, or lets it go back among them.
   static bool setTopmost(bool on) {
-    if (_native) return _call('setTopmost', on);
+    if (_native) {
+      _keepAboveOnKde(on);
+      return _call('setTopmost', on);
+    }
     final window = handle;
     if (window == null) return false;
     return _setWindowPos!(window, on ? _topmost : _notTopmost, 0, 0, 0, 0, _noMove | _noSize | _noActivate) != 0;
@@ -168,6 +181,7 @@ class AppWindow {
       if (_nativePip) return false;
       _nativePip = true;
       final (:width, :height) = pipSizeFor(aspect, shortSide: shortSide);
+      _keepAboveOnKde(true);
       return _call('enterPip', {'aspect': pipAspectOf(aspect), 'width': width, 'height': height});
     }
     final window = handle;
@@ -253,6 +267,7 @@ class AppWindow {
     if (_native) {
       if (!_nativePip) return false;
       _nativePip = false;
+      _keepAboveOnKde(keepOnTop);
       return _call('exitPip', keepOnTop);
     }
     final window = handle;

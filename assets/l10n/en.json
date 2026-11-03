@@ -2846,5 +2846,7 @@
   "重启后生效": "Takes effect after a restart",
   "Lumtub 重启后改用新的显示方式。现在重启吗？": "Lumtub uses the new display mode after it restarts. Restart now?",
   "通过 XWayland 显示窗口，置顶和画中画能保持在最上层；高分屏缩放下画面可能略模糊": "Draws the window through XWayland so pinning and picture in picture stay on top; may look slightly blurry with display scaling",
-  "Wayland 桌面不允许程序把窗口保持在最上层，窗口可能被其他窗口挡住。可在设置 › 播放设置 › X11 兼容模式中改用 X11 显示。": "Wayland desktops don't let apps keep a window on top, so other windows may cover it. Settings › Playback settings › X11 compatibility mode draws it through X11 instead."
+  "这个 Wayland 桌面不允许程序把窗口保持在最上层。改用 X11 兼容模式后可以置顶，需要重启 Lumtub。": "This Wayland desktop doesn't let apps keep a window on top. X11 compatibility mode allows it and needs a restart of Lumtub.",
+  "切换并重启": "Switch and restart",
+  "无法切换：{0}": "Could not switch: {0}"
 }

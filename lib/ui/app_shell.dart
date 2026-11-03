@@ -46,6 +46,7 @@ class _AppShellState extends State<AppShell> {
   final _searchText = TextEditingController();
   final _searchFocus = FocusNode(debugLabel: 'search');
   StreamSubscription<String>? _notices;
+  StreamSubscription<void>? _waylandTop;
   StreamSubscription<DownloadTask>? _finished;
 
   AppController get _controller => widget.controller;
@@ -66,6 +67,15 @@ class _AppShellState extends State<AppShell> {
     _frames;
     _notices = _controller.notices.listen((message) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    });
+    _waylandTop = _controller.waylandTopNotes.listen((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(tr('这个 Wayland 桌面不允许程序把窗口保持在最上层。改用 X11 兼容模式后可以置顶，需要重启 Lumtub。')),
+        duration: const Duration(seconds: 12),
+        showCloseIcon: true,
+        action: SnackBarAction(label: tr('切换并重启'), onPressed: () => unawaited(_controller.switchToX11())),
+      ));
     });
     if (NativeCore.instance == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -88,6 +98,7 @@ class _AppShellState extends State<AppShell> {
   @override
   void dispose() {
     unawaited(_notices?.cancel());
+    unawaited(_waylandTop?.cancel());
     unawaited(_finished?.cancel());
     _searchText.dispose();
     _searchFocus.dispose();

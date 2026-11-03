@@ -15,7 +15,7 @@ constexpr char kChannel[] = "lumtub/windows_shell";
 constexpr char kMprisPath[] = "/org/mpris/MediaPlayer2";
 
 // libayatana-appindicator3, loaded when the system has it.
-using IndicatorNew = void* (*)(const char*, const char*, int);
+using IndicatorNew = void* (*)(const char*, const char*, int, const char*);
 using IndicatorSetStatus = void (*)(void*, int);
 using IndicatorSetMenu = void (*)(void*, GtkMenu*);
 using IndicatorSetTitle = void (*)(void*, const char*);
@@ -100,7 +100,7 @@ bool LoadIndicator() {
     if (library != nullptr) break;
   }
   if (library == nullptr) return false;
-  shell.indicator_new = reinterpret_cast<IndicatorNew>(dlsym(library, "app_indicator_new"));
+  shell.indicator_new = reinterpret_cast<IndicatorNew>(dlsym(library, "app_indicator_new_with_path"));
   shell.indicator_set_status = reinterpret_cast<IndicatorSetStatus>(dlsym(library, "app_indicator_set_status"));
   shell.indicator_set_menu = reinterpret_cast<IndicatorSetMenu>(dlsym(library, "app_indicator_set_menu"));
   shell.indicator_set_title = reinterpret_cast<IndicatorSetTitle>(dlsym(library, "app_indicator_set_title"));
@@ -164,7 +164,10 @@ bool TrayRuns() {
 bool HideToTray() {
   if (!TrayRuns() || !LoadIndicator()) return false;
   if (shell.indicator == nullptr) {
-    shell.indicator = shell.indicator_new("lumtub", IconPath().c_str(), kCategoryApplicationStatus);
+    // An icon name looked up in the app's own folder: tray hosts read a
+    // name with a theme path, not every one reads a file path.
+    const std::string folder = ExecutableDirectory() + "/data";
+    shell.indicator = shell.indicator_new("lumtub", "lumtub", kCategoryApplicationStatus, folder.c_str());
     if (shell.indicator == nullptr) return false;
     if (shell.indicator_set_title != nullptr) shell.indicator_set_title(shell.indicator, "Lumtub");
     BuildMenu();

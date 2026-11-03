@@ -730,8 +730,8 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
             void save(String? family) => controller.saveAppearance(family == null ? appearance.copyWith(clearFontFamily: true) : appearance.copyWith(fontFamily: family));
             Widget option(String? family, String label) => RadioListTile<String?>(
                   value: family,
-                  title: Text(label, style: TextStyle(fontFamily: family)),
-                  subtitle: family == null ? null : Text(family, style: TextStyle(color: context.colors.outline, fontSize: 12)),
+                  title: Text(label, style: TextStyle(fontFamily: family == autoFont ? appearance.font : family)),
+                  subtitle: family == null || family == autoFont ? null : Text(family, style: TextStyle(color: context.colors.outline, fontSize: 12)),
                 );
             final theme = Theme.of(context);
             return RadioGroup<String?>(
@@ -760,7 +760,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
                   child: Row(children: [
                     Expanded(child: Slider(min: 0.8, max: 1.4, divisions: 12, value: appearance.textScale, label: '${(appearance.textScale * 100).round()}%', onChanged: (v) => controller.saveAppearance(appearance.copyWith(textScale: (v * 100).round() / 100)))),
                     SizedBox(width: 48, child: Text('${(appearance.textScale * 100).round()}%')),
-                    TextButton(onPressed: () => controller.saveAppearance(appearance.copyWith(textScale: 1, fontFamily: bundledFont)), child: Text(tr('重置'))),
+                    TextButton(onPressed: () => controller.saveAppearance(appearance.copyWith(textScale: 1, fontFamily: autoFont)), child: Text(tr('重置'))),
                   ]),
                 ),
                 _header(context, tr('预览')),

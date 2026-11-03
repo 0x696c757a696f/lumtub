@@ -100,7 +100,7 @@ class _WatchPageState extends State<WatchPage> {
     final key = appearance.themeKey(controller.accentColor);
     if (key != _darkKey) {
       _darkKey = key;
-      _dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.fontFamily);
+      _dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.font);
     }
     final dark = _dark!;
     return Theme(data: dark, child: Material(color: dark.colorScheme.surface, child: page));

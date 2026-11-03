@@ -91,7 +91,7 @@ class _LumtubAppState extends State<LumtubApp> {
           brightness,
           variant: appearance.schemeVariant,
           pureBlack: appearance.pureBlack,
-          fontFamily: appearance.fontFamily,
+          fontFamily: appearance.font,
           transition: Motion.reduced ? PageTransition.none : appearance.transition,
           highContrast: highContrast,
         );

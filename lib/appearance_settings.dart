@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 
@@ -123,10 +124,18 @@ const bundledFont = 'Noto Sans CJK SC';
 /// Proportional ‘ ’ “ ” taken from the bundled face's pwid forms.
 const quotesFont = 'Lumtub Quotes';
 
-/// Fonts offered in Settings: the bundled one, then fonts that ship with
-/// Windows and cover Chinese; null is the system UI font.
+/// The default choice: [bundledFont] when the system language is Chinese,
+/// which it is made for, else the system UI font.
+const autoFont = 'auto';
+
+/// Whether the system language is one [bundledFont] is made for.
+bool Function() systemFitsBundledFont = () => PlatformDispatcher.instance.locale.languageCode == 'zh';
+
+/// Fonts offered in Settings: automatic, the bundled one, then fonts that
+/// ship with Windows and cover Chinese; null is the system UI font.
 final fontChoices = <(String?, String)>[
-  (bundledFont, tr('Noto Sans CJK SC（默认，内置）')),
+  (autoFont, tr('自动（默认）：中文系统用 Noto Sans CJK SC，其他用系统字体')),
+  (bundledFont, tr('Noto Sans CJK SC（内置）')),
   (null, tr('系统默认')),
   ('Microsoft YaHei UI', tr('微软雅黑')),
   ('DengXian', tr('等线')),
@@ -167,7 +176,7 @@ class AppearanceSettings {
     this.systemAccent = false,
     this.schemeVariant = DynamicSchemeVariant.tonalSpot,
     this.pureBlack = false,
-    this.fontFamily = bundledFont,
+    this.fontFamily = autoFont,
     this.textScale = 1.0,
     this.transition = PageTransition.fade,
     this.motion = MotionPreference.system,
@@ -222,8 +231,11 @@ class AppearanceSettings {
         language: language ?? this.language,
       );
 
+  /// The family text is drawn in; null is the system UI font.
+  String? get font => fontFamily == autoFont ? (systemFitsBundledFont() ? bundledFont : null) : fontFamily;
+
   /// What a theme is built from; themes are rebuilt only when it changes.
-  Object themeKey(Color seed) => (seed, schemeVariant, pureBlack, fontFamily, transition);
+  Object themeKey(Color seed) => (seed, schemeVariant, pureBlack, font, transition);
 
   Map<String, dynamic> toJson() => {
         'themeMode': themeMode.name,
@@ -233,6 +245,7 @@ class AppearanceSettings {
         'schemeVariant': schemeVariant.name,
         'pureBlack': pureBlack,
         'fontFamily': fontFamily ?? 'system',
+        'fontVersion': 2,
         'textScale': textScale,
         'transition': transition.name,
         'motion': motion.name,
@@ -259,9 +272,13 @@ class AppearanceSettings {
       systemAccent: raw['systemAccent'] == true,
       schemeVariant: _byName(DynamicSchemeVariant.values, raw['schemeVariant'], DynamicSchemeVariant.tonalSpot),
       pureBlack: raw['pureBlack'] == true,
-      // Earlier builds wrote nothing for the system font; it now defaults to
-      // the bundled one.
-      fontFamily: font == 'system' ? null : font?.trim().isNotEmpty == true ? font : bundledFont,
+      // Earlier builds wrote nothing for the system font, and wrote the
+      // bundled one as their default; both now mean automatic.
+      fontFamily: font == 'system'
+          ? null
+          : font == null || font.trim().isEmpty || (font == bundledFont && raw['fontVersion'] != 2)
+              ? autoFont
+              : font,
       textScale: scale is num ? scale.toDouble().clamp(0.8, 1.4) : 1.0,
       transition: _byName(PageTransition.values, raw['transition'], PageTransition.fade),
       motion: _byName(MotionPreference.values, raw['motion'], MotionPreference.system),

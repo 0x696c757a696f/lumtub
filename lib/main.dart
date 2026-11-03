@@ -106,7 +106,7 @@ class _LumtubAppState extends State<LumtubApp> {
     super.initState();
     final controller = widget.controller;
     unawaited(controller.initialize());
-    if (Platform.isWindows || Platform.isLinux) _shell = WindowsShellSync(controller, WindowsShell());
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) _shell = WindowsShellSync(controller, WindowsShell());
     if (controller.appearance.systemAccent) unawaited(controller.refreshWindowsAccent());
     // Closing the window ends the process without disposing widgets, so the
     // player and unsaved progress are released here first.

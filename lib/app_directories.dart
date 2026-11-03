@@ -47,6 +47,8 @@ class AppDirectories {
         ? Directory('$dataHome/lumtub')
         : Platform.isLinux && userHome != null && userHome.startsWith('/')
         ? Directory('$userHome/.local/share/lumtub')
+        : Platform.isMacOS && userHome != null && userHome.startsWith('/')
+        ? Directory('$userHome/Library/Application Support/Lumtub')
         : localAppData == null || localAppData.trim().isEmpty
         ? Directory('${(await getApplicationSupportDirectory()).path}${Platform.pathSeparator}Lumtub')
         : Directory('$localAppData${Platform.pathSeparator}Lumtub');

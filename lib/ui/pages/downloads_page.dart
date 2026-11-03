@@ -42,7 +42,7 @@ Future<void> _saveExtra(BuildContext context, AppController controller, Future<S
     final path = await save();
     messenger?.showSnackBar(SnackBar(
       content: Text(tr('已保存：{0}', [path.split(Platform.pathSeparator).last])),
-      action: Platform.isWindows || Platform.isLinux ? SnackBarAction(label: tr('打开文件夹'), onPressed: () => unawaited(openInExplorer(path, select: true))) : null,
+      action: Platform.isWindows || Platform.isLinux || Platform.isMacOS ? SnackBarAction(label: tr('打开文件夹'), onPressed: () => unawaited(openInExplorer(path, select: true))) : null,
     ));
   } catch (e) {
     messenger?.showSnackBar(SnackBar(content: Text(tr('保存失败：{0}', ['$e'.replaceFirst('Bad state: ', '')]))));
@@ -122,6 +122,11 @@ class _SubtitleSaveDialogState extends State<_SubtitleSaveDialog> {
 /// Shows [path] in Windows Explorer; a file is selected in its folder.
 /// Elsewhere the file manager opens the folder.
 Future<void> openInExplorer(String path, {bool select = false}) async {
+  // Finder shows the file selected in its folder with open -R.
+  if (Platform.isMacOS && select) {
+    await Process.start('open', ['-R', path], mode: ProcessStartMode.detached);
+    return;
+  }
   if (!Platform.isWindows) return openWithDesktop(select ? File(path).parent.path : path);
   await Process.start('explorer.exe', [select ? '/select,$path' : path]);
 }

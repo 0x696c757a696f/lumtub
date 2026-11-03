@@ -482,6 +482,96 @@ jobs:
           path: Lumtub_*_linux-${{ matrix.package_arch }}.AppImage
           if-no-files-found: error
 
+  macos:
+    name: macOS universal
+    # Pinned like the others; Apple silicon, building for both CPUs.
+    runs-on: macos-15
+    env:
+      FLUTTER_VERSION: 3.47.7
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: macOS - install Flutter stable SDK
+        run: |
+          archive="$RUNNER_TEMP/flutter.zip"
+          curl -fsSL -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_$FLUTTER_VERSION-stable.zip"
+          unzip -q "$archive" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+
+      - name: macOS - install the Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --target aarch64-apple-darwin,x86_64-apple-darwin
+          rustup default stable
+
+      - name: macOS - cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: macos-universal
+
+      - name: macOS - build the Rust core
+        run: |
+          manifest=native/lumtub_core/Cargo.toml
+          cargo test --manifest-path "$manifest" --release
+          for target in aarch64-apple-darwin x86_64-apple-darwin; do
+            MACOSX_DEPLOYMENT_TARGET=12.0 cargo build --manifest-path "$manifest" --release --lib --target "$target"
+          done
+          core="$RUNNER_TEMP/liblumtub_core.dylib"
+          lipo -create -output "$core" native/lumtub_core/target/{aarch64,x86_64}-apple-darwin/release/liblumtub_core.dylib
+          install_name_tool -id @rpath/liblumtub_core.dylib "$core"
+          lipo -info "$core"
+          echo "LUMTUB_CORE_DLL=$core" >> "$GITHUB_ENV"
+
+      - name: macOS - get packages
+        run: flutter pub get
+
+      - name: macOS - run unit tests
+        run: flutter test
+
+      - name: macOS - determine package version
+        run: |
+          base=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)
+          if [ "${GITHUB_REF#refs/tags/v}" != "$GITHUB_REF" ]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            version="$base-$(echo "$GITHUB_SHA" | cut -c1-7)"
+          fi
+          echo "$version" | grep -Eq '^[0-9A-Za-z.+-]+$' || { echo "Unexpected version: $version"; exit 1; }
+          echo "LUMTUB_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Version $version"
+
+      - name: macOS - build release
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
+        run: flutter build macos --release --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=macos-universal --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
+
+      - name: macOS - package DMG
+        run: |
+          app=build/macos/Build/Products/Release/Lumtub.app
+          cp "$LUMTUB_CORE_DLL" "$app/Contents/Frameworks/"
+          cp LICENSE NOTICE "$app/Contents/Resources/"
+          # Not notarized: signed ad hoc, as Apple silicon runs no unsigned code.
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep --strict "$app"
+          for binary in "$app/Contents/MacOS/Lumtub" "$app/Contents/Frameworks/liblumtub_core.dylib"; do lipo -info "$binary"; done
+          stage="$RUNNER_TEMP/dmg"
+          mkdir -p "$stage"
+          cp -R "$app" "$stage/"
+          ln -s /Applications "$stage/Applications"
+          hdiutil create -volname Lumtub -srcfolder "$stage" -fs HFS+ -format UDZO -ov "Lumtub_${LUMTUB_VERSION}_macos-universal.dmg"
+          ls -l Lumtub_*.dmg
+
+      - name: macOS - upload DMG
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Lumtub-macos-universal-dmg
+          path: Lumtub_*_macos-universal.dmg
+          if-no-files-found: error
+
   release:
     name: Windows Release
     needs: [windows, linux]
@@ -498,7 +588,8 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: dist
-          pattern: Lumtub-*
+          # The macOS DMG joins once it has been tried.
+          pattern: Lumtub-{windows,linux}-*
           merge-multiple: true
       - name: Windows - sign update packages
         env:

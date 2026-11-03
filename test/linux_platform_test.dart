@@ -92,6 +92,15 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
     expect(await file.read(), isNull);
   }, skip: NativeCore.instance == null ? 'needs lumtub_core' : null);
 
+  test('the macOS proxy comes from scutil, HTTPS first', () async {
+    const both = '<dictionary> {\n  HTTPEnable : 1\n  HTTPPort : 7890\n  HTTPProxy : 127.0.0.1\n  HTTPSEnable : 1\n  HTTPSPort : 7891\n  HTTPSProxy : 127.0.0.1\n}';
+    expect((await NetworkProxy.mac(scutil: () async => both)).url, 'http://127.0.0.1:7891');
+    const socks = '<dictionary> {\n  HTTPEnable : 0\n  SOCKSEnable : 1\n  SOCKSPort : 1080\n  SOCKSProxy : 10.0.0.2\n}';
+    expect((await NetworkProxy.mac(scutil: () async => socks)).url, 'socks5://10.0.0.2:1080');
+    expect((await NetworkProxy.mac(scutil: () async => '<dictionary> {\n  HTTPEnable : 0\n}')).url, isNull);
+    expect((await NetworkProxy.mac(scutil: () async => null)).url, isNull);
+  });
+
   test('an update replaces the AppImage by rename, keeping the running file intact', () async {
     final temp = await Directory.systemTemp.createTemp('lumtub-appimage');
     addTearDown(() => temp.delete(recursive: true));

@@ -90,6 +90,31 @@ class NetworkProxy {
     return direct;
   }
 
+  /// The macOS proxy of the active network service, as `scutil --proxy`
+  /// prints it (the setting in System Settings › Network › Proxies).
+  static Future<NetworkProxy> mac({Future<String?> Function()? scutil}) async {
+    final text = await (scutil ?? _scutil)() ?? '';
+    final values = {
+      for (final match in RegExp(r'^\s*(\w+)\s*:\s*(\S+)\s*$', multiLine: true).allMatches(text)) match.group(1)!: match.group(2)!,
+    };
+    for (final (key, scheme) in [('HTTPS', 'http'), ('HTTP', 'http'), ('SOCKS', 'socks5')]) {
+      if (values['${key}Enable'] != '1') continue;
+      final host = values['${key}Proxy'] ?? '';
+      final port = int.tryParse(values['${key}Port'] ?? '') ?? 0;
+      if (host.isNotEmpty && port > 0) return NetworkProxy(normalize('$scheme://$host:$port'));
+    }
+    return direct;
+  }
+
+  static Future<String?> _scutil() async {
+    try {
+      final result = await Process.run('/usr/sbin/scutil', ['--proxy']).timeout(const Duration(seconds: 3));
+      return result.exitCode == 0 ? result.stdout.toString() : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<String?> _gsettings(String key) async {
     try {
       final result = await Process.run('gsettings', ['get', ...key.split(' ')]).timeout(const Duration(seconds: 3));
@@ -129,7 +154,11 @@ class NetworkProxy {
   }
 
   static Future<NetworkProxy> resolve(ProxyMode mode, String address) async => switch (mode) {
-        ProxyMode.system => Platform.isLinux ? await linux() : await windows(),
+        ProxyMode.system => Platform.isLinux
+            ? await linux()
+            : Platform.isMacOS
+                ? await mac()
+                : await windows(),
         ProxyMode.off => direct,
         ProxyMode.custom => NetworkProxy(normalize(address)),
       };

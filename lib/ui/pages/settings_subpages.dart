@@ -706,7 +706,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
   @override
   void initState() {
     super.initState();
-    if (Platform.isWindows || Platform.isLinux) {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       WindowsShell.systemFontFamilies().then((fonts) {
         if (mounted) setState(() => _systemFonts = fonts);
       });

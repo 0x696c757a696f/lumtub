@@ -201,6 +201,8 @@ class NativeCore {
       '${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}$fileName',
       // The Linux bundle keeps its libraries in lib/.
       if (Platform.isLinux) '${File(Platform.resolvedExecutable).parent.path}/lib/$fileName',
+      // The macOS app keeps it in Contents/Frameworks.
+      if (Platform.isMacOS) '${File(Platform.resolvedExecutable).parent.parent.path}/Frameworks/$fileName',
     ];
     for (final path in paths) {
       if (!File(path).existsSync()) continue;

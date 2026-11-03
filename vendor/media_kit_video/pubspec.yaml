@@ -32,5 +32,7 @@ flutter:
     platforms:
       linux:
         pluginClass: MediaKitVideoPlugin
+      macos:
+        pluginClass: MediaKitVideoPlugin
       windows:
         pluginClass: MediaKitVideoPluginCApi

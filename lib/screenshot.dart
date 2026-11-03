@@ -53,6 +53,14 @@ Future<void> copyImageToClipboard(File file) async {
     }
     return;
   }
+  if (Platform.isMacOS) {
+    try {
+      await Process.run('osascript', ['-e', 'on run argv', '-e', 'set the clipboard to (read (POSIX file (item 1 of argv)) as «class PNGf»)', '-e', 'end run', file.path]).timeout(const Duration(seconds: 10));
+    } catch (_) {
+      // The file is saved.
+    }
+    return;
+  }
   if (!Platform.isWindows) return;
   final path = file.path.replaceAll("'", "''");
   try {

@@ -47,9 +47,11 @@ class ToolManager {
   static String _exe(String name) => Platform.isWindows ? '$name.exe' : name;
 
   static bool get _linuxArm64 => Abi.current() == Abi.linuxArm64;
+  static bool get _macArm64 => Abi.current() == Abi.macosArm64;
 
   /// Off Windows libmpv is not downloaded: the AppImage carries its own in
-  /// lib/, else the system's is found by its library name.
+  /// lib/, the macOS app its Mpv.framework, else the system's is found by
+  /// its library name.
   static bool get _systemMpv => !Platform.isWindows;
 
   /// The libmpv packaged with a Linux build (the AppImage), or '' for the
@@ -84,7 +86,7 @@ class ToolManager {
   }
 
   Future<ToolPaths> ensureReady() async {
-    if (!Platform.isWindows && !Platform.isLinux) throw UnsupportedError('Lumtub runs on Windows and Linux.');
+    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) throw UnsupportedError('Lumtub runs on Windows, Linux and macOS.');
     // The runner already loaded a downloaded libmpv when one was selected;
     // Dart has to open that same copy.
     final mpv = _systemMpv ? _linuxMpv : libmpv.loadedPath ?? _bundledMpv;
@@ -379,10 +381,16 @@ class ToolManager {
     }
   }
 
-  static String get ytDlpFolderAsset => Platform.isWindows ? 'yt-dlp_win.zip' : _linuxArm64 ? 'yt-dlp_linux_aarch64.zip' : 'yt-dlp_linux.zip';
+  static String get ytDlpFolderAsset => Platform.isWindows
+      ? 'yt-dlp_win.zip'
+      : Platform.isMacOS
+          ? 'yt-dlp_macos.zip'
+          : _linuxArm64
+              ? 'yt-dlp_linux_aarch64.zip'
+              : 'yt-dlp_linux.zip';
 
-  /// The executable's name in the Linux archive.
-  static String get _ytDlpInArchive => _linuxArm64 ? 'yt-dlp_linux_aarch64' : 'yt-dlp_linux';
+  /// The executable's name in the Linux or macOS archive.
+  static String get _ytDlpInArchive => Platform.isMacOS ? 'yt-dlp_macos' : _linuxArm64 ? 'yt-dlp_linux_aarch64' : 'yt-dlp_linux';
 
   /// Deletes all but the newest [keep] usable versions in [group]; rolled
   /// back versions stay as markers so they are not downloaded again.
@@ -454,7 +462,13 @@ class ToolManager {
     final dest = Directory('${root.path}${Platform.pathSeparator}deno${Platform.pathSeparator}$tag');
     if (await File('${dest.path}$_separator${_exe('deno')}').exists()) return;
     status('下载 Deno {0}…', [tag]);
-    final target = Platform.isWindows ? 'x86_64-pc-windows-msvc' : _linuxArm64 ? 'aarch64-unknown-linux-gnu' : 'x86_64-unknown-linux-gnu';
+    final target = Platform.isWindows
+        ? 'x86_64-pc-windows-msvc'
+        : Platform.isMacOS
+            ? (_macArm64 ? 'aarch64-apple-darwin' : 'x86_64-apple-darwin')
+            : _linuxArm64
+                ? 'aarch64-unknown-linux-gnu'
+                : 'x86_64-unknown-linux-gnu';
     final asset = _asset(release, (name) => name == 'deno-$target.zip');
     final archive = await _downloadVerified(asset, Directory('${root.path}${Platform.pathSeparator}downloads'));
     final partial = Directory('${dest.path}.partial');
@@ -496,6 +510,7 @@ class ToolManager {
 
   /// The download size in bytes the release lists for the ffmpeg archive.
   Future<int?> ffmpegDownloadSize() async {
+    if (Platform.isMacOS) return null;
     if (!Platform.isWindows) {
       final release = await _release(ffmpegRepository, tag: ffmpegReleaseTag);
       final assets = (release['assets'] as List? ?? const []).whereType<Map>();
@@ -524,6 +539,7 @@ class ToolManager {
   /// [onlyIfInstalled] nothing happens for a user who never installed it.
   Future<void> installFfmpeg({bool onlyIfInstalled = false, void Function(int received, int? total)? onProgress}) async {
     if (onlyIfInstalled && ffmpegDirectory == null) return;
+    if (Platform.isMacOS) throw StateError(tr('macOS 版暂时不能安装 ffmpeg'));
     if (!Platform.isWindows) return _installLinuxFfmpeg(onProgress);
     if (!await _no7z.exists()) {
       try {

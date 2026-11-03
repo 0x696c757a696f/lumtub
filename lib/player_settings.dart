@@ -141,7 +141,20 @@ enum VideoSync {
 /// `HwDecType`. The setting is an ordered list; mpv tries them in turn.
 /// Decoders without "-copy" hand frames to the renderer in GPU memory (zero
 /// copy); "-copy" ones copy them back to system memory first.
-List<(String, String)> get hwdecChoices => Platform.isWindows ? _windowsHwdec : _linuxHwdec;
+List<(String, String)> get hwdecChoices => Platform.isWindows
+    ? _windowsHwdec
+    : Platform.isMacOS
+        ? _macHwdec
+        : _linuxHwdec;
+
+final _macHwdec = <(String, String)>[
+  ('no', tr('软件解码')),
+  ('auto', tr('任意可用的硬件解码器')),
+  ('auto-safe', tr('最佳且稳定的硬件解码器（默认）')),
+  ('auto-copy', tr('带拷贝的最佳硬件解码器')),
+  ('videotoolbox', tr('VideoToolbox（零拷贝）')),
+  ('videotoolbox-copy', tr('VideoToolbox（回拷）')),
+];
 
 final _linuxHwdec = <(String, String)>[
   ('no', tr('软件解码')),
@@ -831,7 +844,7 @@ class PlayerSettings {
   /// [value] if it is a comma list of known decoders, else null.
   static String? validHwdec(String? value) {
     if (value == null) return null;
-    final known = {for (final (name, _) in [..._windowsHwdec, ..._linuxHwdec]) name};
+    final known = {for (final (name, _) in [..._windowsHwdec, ..._linuxHwdec, ..._macHwdec]) name};
     final parts = value.split(',').map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty || parts.any((p) => !known.contains(p)) || parts.toSet().length != parts.length) return null;
     return parts.join(',');

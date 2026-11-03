@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/app_window.dart';
@@ -21,12 +23,22 @@ void main() {
     expect(pipAspectOf(0.1), 0.4);
   });
 
-  test('without a player the ratio is 16:9 and entering does nothing off Windows', () {
+  test('without a player the ratio is 16:9 and picture in picture is left only once entered', () {
+    TestWidgetsFlutterBinding.ensureInitialized();
     final controller = AppController();
     expect(controller.videoAspect, 16 / 9);
     controller.updatePipAspect();
-    expect(AppWindow.enterPip(aspect: 16 / 9), isFalse);
-    expect(AppWindow.exitPip(), isFalse);
     expect(controller.pip, isFalse);
+    if (Platform.isWindows) {
+      expect(AppWindow.enterPip(aspect: 16 / 9), isFalse);
+      expect(AppWindow.exitPip(), isFalse);
+      return;
+    }
+    // Linux and macOS: the runner moves the window; nothing answers here.
+    expect(AppWindow.exitPip(), isFalse);
+    expect(AppWindow.enterPip(aspect: 16 / 9), isTrue);
+    expect(AppWindow.enterPip(aspect: 16 / 9), isFalse);
+    expect(AppWindow.exitPip(), isTrue);
+    expect(AppWindow.exitPip(), isFalse);
   });
 }

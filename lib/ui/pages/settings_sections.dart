@@ -1123,7 +1123,7 @@ class _DecoderStatusState extends State<_DecoderStatus> {
       title: Text(tr('解码状态'), style: Theme.of(context).textTheme.titleMedium),
       subtitle: Text(tr('当前：{0} · {1}', [controller.currentCodec, controller.currentHwdec]), style: _subtitle(context)),
       children: [
-        ListTile(dense: true, title: const Text('GPU'), subtitle: Text(info.gpuNames.isEmpty ? tr('尚未检测到或无法读取') : info.gpuNames.join('\n'))),
+        if (Platform.isWindows) ListTile(dense: true, title: const Text('GPU'), subtitle: Text(info.gpuNames.isEmpty ? tr('尚未检测到或无法读取') : info.gpuNames.join('\n'))),
         ListTile(
           dense: true,
           title: Text(tr('当前实际解码方式')),
@@ -1139,12 +1139,18 @@ class _DecoderStatusState extends State<_DecoderStatus> {
               return Text(status.label, style: TextStyle(color: status.isVerified ? colors.primary : colors.onSurfaceVariant));
             }),
           ),
-        _extension(context, 'VP9 Video Extensions', info.vp9Extension, 'https://apps.microsoft.com/detail/9n4d0msmp0pt'),
-        _extension(context, 'AV1 Video Extension', info.av1Extension, 'https://apps.microsoft.com/detail/9mvzqvxjbq9v'),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-          child: Text(tr('状态只在实际播放对应编码后更新。商店扩展是 Windows Media Foundation 组件，不是 Lumtub 必需的，也不能让不支持的显卡获得硬件解码。'), style: _note(context)),
-        ),
+        if (Platform.isWindows) ...[
+          _extension(context, 'VP9 Video Extensions', info.vp9Extension, 'https://apps.microsoft.com/detail/9n4d0msmp0pt'),
+          _extension(context, 'AV1 Video Extension', info.av1Extension, 'https://apps.microsoft.com/detail/9mvzqvxjbq9v'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            child: Text(tr('状态只在实际播放对应编码后更新。商店扩展是 Windows Media Foundation 组件，不是 Lumtub 必需的，也不能让不支持的显卡获得硬件解码。'), style: _note(context)),
+          ),
+        ] else
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            child: Text(tr('状态只在实际播放对应编码后更新。'), style: _note(context)),
+          ),
       ],
     );
   }
@@ -1187,7 +1193,7 @@ class _AdvancedOptions extends StatelessWidget {
         option('deband', settings.deband ? 'yes' : 'no', tr('色带消除'), tr('立即')),
         option('interpolation', settings.interpolation ? 'yes' : 'no', tr('帧插值'), tr('下一段视频')),
         option('hwdec-codecs', settings.hwdecCodecs, tr('硬解编码'), tr('下一段视频')),
-        option('d3d11va-zero-copy', settings.d3d11vaZeroCopy ? 'yes' : 'no', tr('D3D11VA 零拷贝'), tr('下一段视频')),
+        if (Platform.isWindows) option('d3d11va-zero-copy', settings.d3d11vaZeroCopy ? 'yes' : 'no', tr('D3D11VA 零拷贝'), tr('下一段视频')),
         option('vd-lavc-dr', settings.directRendering, tr('直接解码到显存'), tr('下一段视频')),
         option('video-sync', settings.videoSync.mpvValue, tr('视频同步'), tr('立即')),
         option('autosync', settings.autosync == 0 ? 'no' : '${settings.autosync}', tr('自动同步'), tr('立即')),

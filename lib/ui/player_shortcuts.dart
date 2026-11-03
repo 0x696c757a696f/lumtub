@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -122,7 +123,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     const SingleActivator(LogicalKeyboardKey.keyA): () => subtitleStep(-1),
     const SingleActivator(LogicalKeyboardKey.keyD): () => subtitleStep(1),
     const SingleActivator(LogicalKeyboardKey.keyR): () => subtitleStep(0),
-    const SingleActivator(LogicalKeyboardKey.keyC, control: true): copySubtitle,
+    SingleActivator(LogicalKeyboardKey.keyC, control: !Platform.isMacOS, meta: Platform.isMacOS): copySubtitle,
     if (onScreenshot != null) const SingleActivator(LogicalKeyboardKey.keyS): onScreenshot,
     const SingleActivator(LogicalKeyboardKey.space): playOrPause,
     const SingleActivator(LogicalKeyboardKey.keyK): playOrPause,

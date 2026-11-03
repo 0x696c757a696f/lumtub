@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:media_kit/media_kit.dart';
 
@@ -11,7 +12,7 @@ class PlayerOptionApplicator {
     return {
       'hwdec': settings.hwdec,
       'hwdec-codecs': settings.hwdecCodecs,
-      'd3d11va-zero-copy': settings.d3d11vaZeroCopy ? 'yes' : 'no',
+      if (Platform.isWindows) 'd3d11va-zero-copy': settings.d3d11vaZeroCopy ? 'yes' : 'no',
       'vd-lavc-dr': settings.directRendering,
       // Not 'no': mpv reads that as -1, which inverts the audio clock
       // smoothing and makes the picture run ahead of the sound.
@@ -28,7 +29,7 @@ class PlayerOptionApplicator {
       if (settings.strategy == PlaybackStrategy.lowResource) ...fastRendering,
       'video-sync': settings.videoSync.mpvValue,
       'sub-scale': settings.subtitleScale.toStringAsFixed(1),
-      'sub-font': settings.subtitleFont.isEmpty ? 'sans-serif' : settings.subtitleFont,
+      'sub-font': settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont),
       'sub-color': PlayerSettings.mpvColor(settings.subtitleColor, settings.subtitleOpacity),
       'sub-pos': settings.subtitlePosition.toString(),
       // The secondary subtitle (libass) sits just above the main one.

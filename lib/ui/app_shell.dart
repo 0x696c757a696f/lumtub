@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -126,8 +127,9 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) => CallbackShortcuts(
         bindings: {
-          const SingleActivator(LogicalKeyboardKey.keyK, control: true): _focusSearch,
-          const SingleActivator(LogicalKeyboardKey.keyN, control: true, shift: true): () => _controller.setIncognito(!_controller.incognito),
+          // ⌘ on a Mac where Windows and Linux take Ctrl.
+          SingleActivator(LogicalKeyboardKey.keyK, control: !Platform.isMacOS, meta: Platform.isMacOS): _focusSearch,
+          SingleActivator(LogicalKeyboardKey.keyN, control: !Platform.isMacOS, meta: Platform.isMacOS, shift: true): () => _controller.setIncognito(!_controller.incognito),
           const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): _back,
           // Esc goes back too, except on the watch page, where it leaves
           // full screen and closes panels.

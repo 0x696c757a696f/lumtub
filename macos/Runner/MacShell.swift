@@ -4,7 +4,8 @@ import MediaPlayer
 
 /// The macOS side of lib/windows_shell.dart, on the same method channel:
 /// the media keys and Now Playing in Control Center (MPRemoteCommandCenter),
-/// the menu bar icon for "close to tray", and the installed font families.
+/// the menu bar icon for "close to tray", the installed font families, and
+/// the window kept on top or made a picture-in-picture window.
 final class MacShell: NSObject, NSWindowDelegate {
   private let channel: FlutterMethodChannel
   private weak var window: NSWindow?
@@ -14,6 +15,9 @@ final class MacShell: NSObject, NSWindowDelegate {
   private var info: [String: Any] = [:]
   private var artworkAddress = ""
   private var playing = false
+  private var pipBefore: (frame: NSRect, style: NSWindow.StyleMask, minSize: NSSize)?
+  private var lastPipOrigin: NSPoint?
+  private var dragMonitor: Any?
 
   init(window: NSWindow, messenger: FlutterBinaryMessenger) {
     channel = FlutterMethodChannel(name: "lumtub/windows_shell", binaryMessenger: messenger)
@@ -51,6 +55,20 @@ final class MacShell: NSObject, NSWindowDelegate {
       }
       publish()
       updateMenu()
+    case "setTopmost":
+      window?.level = (call.arguments as? Bool ?? false) ? .floating : .normal
+    case "enterPip":
+      let width = arguments["width"] as? Double ?? 498
+      let height = arguments["height"] as? Double ?? 280
+      enterPip(aspect: arguments["aspect"] as? Double ?? 16 / 9, size: NSSize(width: width, height: height))
+    case "exitPip":
+      exitPip(keepOnTop: call.arguments as? Bool ?? false)
+    case "setPipAspect":
+      setPipAspect(call.arguments as? Double ?? 0)
+    case "startDrag":
+      follow(resize: false)
+    case "startResize":
+      follow(resize: true)
     case "setButtons":
       let commands = MPRemoteCommandCenter.shared()
       commands.nextTrackCommand.isEnabled = arguments["next"] as? Bool ?? false
@@ -123,6 +141,73 @@ final class MacShell: NSObject, NSWindowDelegate {
       guard let event = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
       self?.channel.invokeMethod("seek", arguments: Int(event.positionTime * 1000))
       return .success
+    }
+  }
+
+  // MARK: Picture in picture
+
+  private func enterPip(aspect: Double, size: NSSize) {
+    guard let window, pipBefore == nil, !window.styleMask.contains(.fullScreen), aspect > 0 else { return }
+    pipBefore = (window.frame, window.styleMask, window.minSize)
+    window.styleMask = [.borderless, .resizable]
+    window.hasShadow = true
+    window.minSize = NSSize(width: 120, height: 120)
+    window.level = .floating
+    window.contentAspectRatio = NSSize(width: aspect, height: 1)
+    let area = (window.screen ?? NSScreen.main)?.visibleFrame ?? window.frame
+    var origin = NSPoint(x: area.maxX - size.width - 16, y: area.minY + 16)
+    if let last = lastPipOrigin {
+      origin.x = min(max(last.x, area.minX), max(area.minX, area.maxX - size.width))
+      origin.y = min(max(last.y, area.minY), max(area.minY, area.maxY - size.height))
+    }
+    window.setFrame(NSRect(origin: origin, size: size), display: true)
+  }
+
+  private func exitPip(keepOnTop: Bool) {
+    guard let window, let before = pipBefore else { return }
+    pipBefore = nil
+    lastPipOrigin = window.frame.origin
+    window.styleMask = before.style
+    // Setting the increments clears the kept ratio.
+    window.contentResizeIncrements = NSSize(width: 1, height: 1)
+    window.minSize = before.minSize
+    window.level = keepOnTop ? .floating : .normal
+    window.setFrame(before.frame, display: true)
+  }
+
+  private func setPipAspect(_ aspect: Double) {
+    guard let window, pipBefore != nil, aspect > 0 else { return }
+    let frame = window.frame
+    let height = frame.width / aspect
+    window.contentAspectRatio = NSSize(width: aspect, height: 1)
+    window.setFrame(NSRect(x: frame.minX, y: frame.maxY - height, width: frame.width, height: height), display: true)
+  }
+
+  /// Moves the window with the pointer, or resizes it from the bottom-right
+  /// corner keeping its ratio, until the button is released.
+  private func follow(resize: Bool) {
+    guard let window, NSEvent.pressedMouseButtons & 1 != 0 else { return }
+    if let monitor = dragMonitor { NSEvent.removeMonitor(monitor) }
+    let start = NSEvent.mouseLocation
+    let frame = window.frame
+    let ratio = window.contentAspectRatio
+    dragMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseUp]) { [weak self] event in
+      guard let self, let window = self.window else { return event }
+      if event.type == .leftMouseUp {
+        if let monitor = self.dragMonitor { NSEvent.removeMonitor(monitor) }
+        self.dragMonitor = nil
+        return event
+      }
+      let now = NSEvent.mouseLocation
+      let dx = now.x - start.x, dy = now.y - start.y
+      if resize {
+        let width = max(160, frame.width + dx)
+        let height = ratio.width > 0 ? width * ratio.height / ratio.width : max(90, frame.height - dy)
+        window.setFrame(NSRect(x: frame.minX, y: frame.maxY - height, width: width, height: height), display: true)
+      } else {
+        window.setFrameOrigin(NSPoint(x: frame.minX + dx, y: frame.minY + dy))
+      }
+      return event
     }
   }
 

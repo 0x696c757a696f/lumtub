@@ -3,12 +3,22 @@ import 'dart:io';
 
 /// Lowers a helper process to below-normal priority so that yt-dlp parsing
 /// pages in the background never competes with the interface or playback.
-/// Does nothing off Windows or when the process has already ended.
-void lowerPriority(int pid) => _setPriority(pid, _belowNormalPriorityClass);
+/// Does nothing when the process has already ended. On Linux and macOS it
+/// is a nice value of 5, which the processes it starts inherit.
+void lowerPriority(int pid) {
+  if (Platform.isWindows) return _setPriority(pid, _belowNormalPriorityClass);
+  try {
+    _setPriorityUnix(_prioProcess, pid, 5);
+  } catch (_) {}
+}
 
 /// Puts a process lowered with [lowerPriority] back to normal, for example
-/// once the user is waiting on it.
+/// once the user is waiting on it. Windows only: elsewhere only root may
+/// raise a priority again, and a nice value of 5 is a mild one.
 void restorePriority(int pid) => _setPriority(pid, _normalPriorityClass);
+
+const _prioProcess = 0;
+final _setPriorityUnix = DynamicLibrary.process().lookupFunction<Int32 Function(Int32, Uint32, Int32), int Function(int, int, int)>('setpriority');
 
 void _setPriority(int pid, int priorityClass) {
   if (!Platform.isWindows) return;

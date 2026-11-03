@@ -99,7 +99,98 @@ mod imp {
     }
 }
 
-#[cfg(not(windows))]
+#[cfg(unix)]
+mod imp {
+    //! Without job objects the tree is found when it is needed: [kill]
+    //! walks the processes whose parent is in the tree. A child that
+    //! outlived its parent has been handed to init by then and is missed,
+    //! which yt-dlp's ffmpeg and Deno, ended with yt-dlp, do not do.
+
+    /// The "job" is the first process's id.
+    pub fn adopt(pid: u32) -> isize {
+        pid as isize
+    }
+
+    pub fn kill(job: isize, _code: u32) -> bool {
+        let Ok(root) = libc::pid_t::try_from(job) else { return false };
+        if root <= 1 {
+            return false;
+        }
+        // Stopped first, so none starts another while the tree is read.
+        let mut tree = vec![root];
+        unsafe { libc::kill(root, libc::SIGSTOP) };
+        let mut i = 0;
+        while i < tree.len() {
+            for child in children(tree[i]) {
+                if !tree.contains(&child) {
+                    unsafe { libc::kill(child, libc::SIGSTOP) };
+                    tree.push(child);
+                }
+            }
+            i += 1;
+        }
+        let mut any = false;
+        for pid in tree.iter().rev() {
+            any |= unsafe { libc::kill(*pid, libc::SIGKILL) } == 0;
+        }
+        any
+    }
+
+    pub fn close(_job: isize) {}
+
+    /// Below normal priority, which the processes it starts inherit.
+    pub fn background(_job: isize, pid: u32) -> bool {
+        unsafe { libc::setpriority(libc::PRIO_PROCESS, pid as libc::id_t, 10) == 0 }
+    }
+
+    pub fn efficient_self(_on: bool) -> bool {
+        false
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn children(parent: libc::pid_t) -> Vec<libc::pid_t> {
+        let Ok(entries) = std::fs::read_dir("/proc") else { return Vec::new() };
+        entries
+            .flatten()
+            .filter_map(|entry| entry.file_name().to_str()?.parse::<libc::pid_t>().ok())
+            .filter(|pid| parent_of(*pid) == Some(parent))
+            .collect()
+    }
+
+    /// The parent in /proc/<pid>/stat: the field after the command name,
+    /// which is in parentheses and may itself hold spaces and ')'.
+    #[cfg(target_os = "linux")]
+    fn parent_of(pid: libc::pid_t) -> Option<libc::pid_t> {
+        let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
+        let rest = &stat[stat.rfind(')')? + 1..];
+        rest.split_whitespace().nth(1)?.parse().ok()
+    }
+
+    #[cfg(target_os = "macos")]
+    pub fn children(parent: libc::pid_t) -> Vec<libc::pid_t> {
+        const PROC_PPID_ONLY: u32 = 6;
+        unsafe extern "C" {
+            fn proc_listpids(kind: u32, info: u32, buffer: *mut libc::c_void, size: libc::c_int) -> libc::c_int;
+        }
+        let mut pids = vec![0 as libc::pid_t; 4096];
+        let size = (pids.len() * std::mem::size_of::<libc::pid_t>()) as libc::c_int;
+        // The answer is in bytes.
+        let bytes = unsafe { proc_listpids(PROC_PPID_ONLY, parent as u32, pids.as_mut_ptr().cast(), size) };
+        if bytes <= 0 {
+            return Vec::new();
+        }
+        pids.truncate(bytes as usize / std::mem::size_of::<libc::pid_t>());
+        pids.retain(|pid| *pid > 0);
+        pids
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    pub fn children(_parent: libc::pid_t) -> Vec<libc::pid_t> {
+        Vec::new()
+    }
+}
+
+#[cfg(not(any(windows, unix)))]
 mod imp {
     pub fn adopt(_pid: u32) -> isize {
         0
@@ -220,3 +311,30 @@ mod tests {
         lumtub_tree_close(0);
     }
 }
+
+#[cfg(all(test, target_os = "linux"))]
+mod tests {
+    use std::process::Command;
+    use std::time::{Duration, Instant};
+
+    #[test]
+    fn killing_a_tree_ends_the_processes_it_started() {
+        let mut shell = Command::new("sh").args(["-c", "sleep 30 & sleep 30 & wait"]).spawn().unwrap();
+        let root = shell.id();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while super::imp::children(root as libc::pid_t).len() < 2 && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        let sleepers = super::imp::children(root as libc::pid_t);
+        assert_eq!(sleepers.len(), 2);
+        let job = super::lumtub_tree_adopt(root);
+        assert!(super::lumtub_tree_kill(job, 1));
+        shell.wait().unwrap();
+        std::thread::sleep(Duration::from_millis(100));
+        for pid in sleepers {
+            let state = std::fs::read_to_string(format!("/proc/{pid}/stat")).unwrap_or_default();
+            assert!(state.is_empty() || state.contains(") Z"), "{pid} still runs: {state}");
+        }
+    }
+}
+

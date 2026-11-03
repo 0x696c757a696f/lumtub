@@ -662,6 +662,13 @@ class PlayerSettings {
   /// that read well over video.
   static const defaultSubtitleFont = 'Microsoft YaHei';
 
+  /// [font] as libass should ask for it here: the default Windows font
+  /// becomes the system's own Chinese font on macOS and Linux.
+  static String fontForThisSystem(String font) {
+    if (font != defaultSubtitleFont || Platform.isWindows) return font;
+    return Platform.isMacOS ? 'PingFang SC' : 'Noto Sans CJK SC';
+  }
+
   /// These settings with the subtitle style of a fresh install.
   PlayerSettings withDefaultSubtitleStyle() {
     const d = PlayerSettings();

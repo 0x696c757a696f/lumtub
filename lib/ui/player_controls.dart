@@ -271,7 +271,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     if (event is! PointerScrollEvent || SmoothWheel.isFollowUp(event)) return;
     final up = event.scrollDelta.dy < 0;
     // Ctrl + wheel steps through 倍速选项, as Enhancer for YouTube does.
-    if (HardwareKeyboard.instance.isControlPressed) {
+    if (HardwareKeyboard.instance.isControlPressed || (Platform.isMacOS && HardwareKeyboard.instance.isMetaPressed)) {
       final speed = nextSpeed(_controller.settings.speeds, _player.state.rate, up ? 1 : -1);
       if (speed == null) return;
       unawaited(_player.setRate(speed));

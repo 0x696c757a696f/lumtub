@@ -16,7 +16,7 @@ void main() {
   test('the layout gets its settings in the names lumtub_core reads', () {
     final json = jsonDecode(const DanmakuSettings(seconds: 6).layoutJson) as Map;
     expect(json['duration_ms'], 6000);
-    expect(json.keys, containsAll(['font_size', 'area', 'opacity']));
+    expect(json.keys, containsAll(['font_size', 'area', 'opacity', 'font']));
   });
 
   test('a live batch keeps the gaps its messages were sent with', () {

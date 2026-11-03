@@ -28,11 +28,13 @@ pub struct Settings {
     pub area: f64,
     /// 0 (invisible) to 1.
     pub opacity: f64,
+    /// The font family, bold.
+    pub font: String,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { font_size: 44.0, duration_ms: 12000.0, area: 0.5, opacity: 0.85 }
+        Settings { font_size: 44.0, duration_ms: 12000.0, area: 0.5, opacity: 0.85, font: "Microsoft YaHei".into() }
     }
 }
 
@@ -160,6 +162,8 @@ impl Danmaku {
         let line = size * 1.25;
         let border = (size / 30.0).max(1.0);
         let mut out = String::new();
+        // An override tag ends at '}' and '\\' starts the next one.
+        let font: String = self.settings.font.chars().filter(|c| !matches!(c, '{' | '}' | '\\' | '\n' | '\r')).collect();
         for p in &self.placed[first..] {
             if p.start > now {
                 break;
@@ -168,7 +172,7 @@ impl Danmaku {
             let y = p.lane as f64 * line + (line - size) / 2.0;
             let colour = if p.paid { "&H38C8FF&" } else { "&HFFFFFF&" };
             out.push_str(&format!(
-                "{{\\an7\\pos({x:.1},{y:.1})\\fnMicrosoft YaHei\\b1\\fs{size:.0}\\bord{border:.1}\\shad0\\blur0.6\\1c{colour}\\3c&H000000&\\1a&H{alpha:02X}&\\3a&H{edge:02X}&\\4a&HFF&\\q2}}{}\n",
+                "{{\\an7\\pos({x:.1},{y:.1})\\fn{font}\\b1\\fs{size:.0}\\bord{border:.1}\\shad0\\blur0.6\\1c{colour}\\3c&H000000&\\1a&H{alpha:02X}&\\3a&H{edge:02X}&\\4a&HFF&\\q2}}{}\n",
                 p.text
             ));
         }

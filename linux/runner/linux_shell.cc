@@ -4,6 +4,7 @@
 #include <fontconfig/fontconfig.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <set>
 #include <string>
@@ -51,6 +52,14 @@ struct Shell {
   bool can_next = false;
   bool can_previous = false;
   int track = 0;
+
+  // Picture in picture: how the window was before, and where it was left.
+  bool pip = false;
+  bool above = false;
+  bool was_maximized = false;
+  int before_x = 0, before_y = 0, before_width = 0, before_height = 0;
+  bool has_last = false;
+  int last_x = 0, last_y = 0;
 };
 
 Shell shell;
@@ -365,6 +374,96 @@ int64_t IntArg(FlValue* args, const char* key) {
   return value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_INT ? fl_value_get_int(value) : 0;
 }
 
+double DoubleArg(FlValue* args, const char* key) {
+  FlValue* value = key != nullptr && args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_MAP ? fl_value_lookup_string(args, key) : args;
+  if (value == nullptr) return 0;
+  if (fl_value_get_type(value) == FL_VALUE_TYPE_FLOAT) return fl_value_get_float(value);
+  if (fl_value_get_type(value) == FL_VALUE_TYPE_INT) return static_cast<double>(fl_value_get_int(value));
+  return 0;
+}
+
+bool BoolValue(FlValue* value) { return value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_BOOL && fl_value_get_bool(value); }
+
+// Keeps the window's ratio while it is resized; 0 lets it go.
+void KeepAspect(double aspect) {
+  if (aspect <= 0) {
+    gtk_window_set_geometry_hints(shell.window, nullptr, nullptr, static_cast<GdkWindowHints>(0));
+    gtk_widget_set_size_request(GTK_WIDGET(shell.window), 480, 360);
+    return;
+  }
+  GdkGeometry geometry = {};
+  geometry.min_width = 120;
+  geometry.min_height = 120;
+  geometry.min_aspect = aspect;
+  geometry.max_aspect = aspect;
+  gtk_widget_set_size_request(GTK_WIDGET(shell.window), -1, -1);
+  gtk_window_set_geometry_hints(shell.window, nullptr, &geometry, static_cast<GdkWindowHints>(GDK_HINT_ASPECT | GDK_HINT_MIN_SIZE));
+}
+
+void EnterPip(double aspect, int width, int height) {
+  GtkWindow* window = shell.window;
+  if (window == nullptr || shell.pip) return;
+  shell.pip = true;
+  shell.was_maximized = gtk_window_is_maximized(window);
+  if (shell.was_maximized) gtk_window_unmaximize(window);
+  gtk_window_get_position(window, &shell.before_x, &shell.before_y);
+  gtk_window_get_size(window, &shell.before_width, &shell.before_height);
+  gtk_window_set_decorated(window, FALSE);
+  gtk_window_set_keep_above(window, TRUE);
+  KeepAspect(aspect);
+  gtk_window_resize(window, width, height);
+  // Wayland compositors place windows themselves and ignore this.
+  GdkWindow* surface = gtk_widget_get_window(GTK_WIDGET(window));
+  GdkMonitor* monitor = surface != nullptr ? gdk_display_get_monitor_at_window(gdk_window_get_display(surface), surface) : nullptr;
+  if (monitor == nullptr) return;
+  GdkRectangle area;
+  gdk_monitor_get_workarea(monitor, &area);
+  int x = area.x + area.width - width - 16, y = area.y + area.height - height - 16;
+  if (shell.has_last) {
+    x = std::clamp(shell.last_x, area.x, std::max(area.x, area.x + area.width - width));
+    y = std::clamp(shell.last_y, area.y, std::max(area.y, area.y + area.height - height));
+  }
+  gtk_window_move(window, x, y);
+}
+
+void ExitPip(bool keep_on_top) {
+  GtkWindow* window = shell.window;
+  if (window == nullptr || !shell.pip) return;
+  shell.pip = false;
+  gtk_window_get_position(window, &shell.last_x, &shell.last_y);
+  shell.has_last = true;
+  KeepAspect(0);
+  gtk_window_set_decorated(window, TRUE);
+  gtk_window_set_keep_above(window, keep_on_top);
+  shell.above = keep_on_top;
+  gtk_window_resize(window, shell.before_width, shell.before_height);
+  gtk_window_move(window, shell.before_x, shell.before_y);
+  if (shell.was_maximized) gtk_window_maximize(window);
+}
+
+void SetPipAspect(double aspect) {
+  if (shell.window == nullptr || !shell.pip || aspect <= 0) return;
+  int width = 0, height = 0;
+  gtk_window_get_size(shell.window, &width, &height);
+  KeepAspect(aspect);
+  gtk_window_resize(shell.window, width, static_cast<int>(width / aspect + 0.5));
+}
+
+// Moves or resizes the window with the pointer, from a press on the picture.
+void BeginDrag(bool resize) {
+  GtkWindow* window = shell.window;
+  if (window == nullptr) return;
+  GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(window));
+  GdkDevice* pointer = gdk_seat_get_pointer(gdk_display_get_default_seat(display));
+  int x = 0, y = 0;
+  gdk_device_get_position(pointer, nullptr, &x, &y);
+  if (resize) {
+    gtk_window_begin_resize_drag(window, GDK_WINDOW_EDGE_SOUTH_EAST, 1, x, y, GDK_CURRENT_TIME);
+  } else {
+    gtk_window_begin_move_drag(window, 1, x, y, GDK_CURRENT_TIME);
+  }
+}
+
 void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
   const std::string method = fl_method_call_get_name(call);
   FlValue* args = fl_method_call_get_args(call);
@@ -408,6 +507,17 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
       g_dbus_connection_emit_signal(shell.bus, nullptr, kMprisPath, "org.mpris.MediaPlayer2.Player", "Seeked",
                                     g_variant_new("(x)", position * 1000), nullptr);
     }
+  } else if (method == "setTopmost") {
+    shell.above = BoolValue(args);
+    if (shell.window != nullptr) gtk_window_set_keep_above(shell.window, shell.above);
+  } else if (method == "enterPip") {
+    EnterPip(DoubleArg(args, "aspect"), static_cast<int>(DoubleArg(args, "width") + 0.5), static_cast<int>(DoubleArg(args, "height") + 0.5));
+  } else if (method == "exitPip") {
+    ExitPip(BoolValue(args));
+  } else if (method == "setPipAspect") {
+    SetPipAspect(DoubleArg(args, nullptr));
+  } else if (method == "startDrag" || method == "startResize") {
+    BeginDrag(method == "startResize");
   } else if (method == "setButtons") {
     shell.can_next = BoolArg(args, "next");
     shell.can_previous = BoolArg(args, "previous");

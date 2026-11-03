@@ -1864,5 +1864,6 @@
   "VideoToolbox（零拷贝）": "VideoToolbox（零拷貝）",
   "VideoToolbox（回拷）": "VideoToolbox（回拷）",
   "安装包不完整：缺少 ffmpeg。请重新安装 Lumtub。": "安裝包不完整：缺少 ffmpeg。請重新安裝 Lumtub。",
-  "macOS 版自带 ffmpeg，只用于合并高画质视频和音频：从 FFmpeg 源代码按 LGPL 构建，只含封装格式，不含编解码器，源代码见 https://ffmpeg.org/download.html。": "macOS 版自帶 ffmpeg，只用於合併高畫質影片和音訊：從 FFmpeg 原始碼按 LGPL 建置，只含封裝格式，不含編解碼器，原始碼見 https://ffmpeg.org/download.html。"
+  "macOS 版自带 ffmpeg，只用于合并高画质视频和音频：从 FFmpeg 源代码按 LGPL 构建，只含封装格式，不含编解码器，源代码见 https://ffmpeg.org/download.html。": "macOS 版自帶 ffmpeg，只用於合併高畫質影片和音訊：從 FFmpeg 原始碼按 LGPL 建置，只含封裝格式，不含編解碼器，原始碼見 https://ffmpeg.org/download.html。",
+  "状态只在实际播放对应编码后更新。": "狀態只在實際播放對應編碼後更新。"
 }

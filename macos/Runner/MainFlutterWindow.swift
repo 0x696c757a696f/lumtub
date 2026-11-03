@@ -17,4 +17,9 @@ class MainFlutterWindow: NSWindow {
 
     super.awakeFromNib()
   }
+
+  // Picture in picture makes the window borderless, which by default
+  // could take neither the keyboard nor the menu bar.
+  override var canBecomeKey: Bool { true }
+  override var canBecomeMain: Bool { true }
 }

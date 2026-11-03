@@ -7,6 +7,7 @@ import 'package:media_kit/media_kit.dart';
 import 'app_log.dart';
 import 'live_chat.dart';
 import 'native_core.dart';
+import 'player_settings.dart';
 
 /// How 弹幕 look: kept with the preferences.
 class DanmakuSettings {
@@ -54,7 +55,7 @@ class DanmakuSettings {
   }
 
   /// What the layout in lumtub_core needs.
-  String get layoutJson => jsonEncode({'font_size': size, 'duration_ms': seconds * 1000, 'area': area, 'opacity': opacity});
+  String get layoutJson => jsonEncode({'font_size': size, 'duration_ms': seconds * 1000, 'area': area, 'opacity': opacity, 'font': PlayerSettings.fontForThisSystem(PlayerSettings.defaultSubtitleFont)});
 
   @override
   bool operator ==(Object other) => other is DanmakuSettings && jsonEncode(toJson()) == jsonEncode(other.toJson());

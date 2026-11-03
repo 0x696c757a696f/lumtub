@@ -159,7 +159,51 @@ pub fn probe() -> Option<Decoders> {
     }
 }
 
-#[cfg(not(any(windows, target_os = "linux")))]
+/// macOS: asked of VideoToolbox, the interface libmpv's videotoolbox uses.
+/// VP9 and AV1 are supplemental decoders that are registered first, as
+/// FFmpeg does. VideoToolbox gives no size limit, so the usual ones of
+/// Apple's media engines are assumed.
+#[cfg(target_os = "macos")]
+pub fn probe() -> Option<Decoders> {
+    #[link(name = "VideoToolbox", kind = "framework")]
+    unsafe extern "C" {
+        fn VTIsHardwareDecodeSupported(codec: u32) -> u8;
+        fn VTRegisterSupplementalVideoDecoderIfAvailable(codec: u32);
+    }
+    const H264: u32 = u32::from_be_bytes(*b"avc1");
+    const VP9: u32 = u32::from_be_bytes(*b"vp09");
+    const AV1: u32 = u32::from_be_bytes(*b"av01");
+
+    // SAFETY: VideoToolbox functions taking a four-character codec code.
+    let supported = |codec: u32, height: u32| -> u32 {
+        unsafe {
+            if codec != H264 {
+                VTRegisterSupplementalVideoDecoderIfAvailable(codec);
+            }
+            if VTIsHardwareDecodeSupported(codec) != 0 { height } else { 0 }
+        }
+    };
+    Some(Decoders {
+        adapter: format!("{} VideoToolbox", model()),
+        h264: supported(H264, 2160),
+        vp9: supported(VP9, 4320),
+        av1: supported(AV1, 4320),
+    })
+}
+
+#[cfg(target_os = "macos")]
+fn model() -> String {
+    let mut buffer = [0u8; 128];
+    let mut size = buffer.len();
+    // SAFETY: sysctlbyname writes at most [size] bytes into [buffer].
+    let found = unsafe { libc::sysctlbyname(c"hw.model".as_ptr(), buffer.as_mut_ptr().cast(), &mut size, std::ptr::null_mut(), 0) } == 0;
+    if !found {
+        return "Mac".into();
+    }
+    String::from_utf8_lossy(&buffer[..size]).trim_end_matches('\0').to_string()
+}
+
+#[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
 pub fn probe() -> Option<Decoders> {
     None
 }

@@ -65,7 +65,16 @@ class AppUpdater extends ChangeNotifier {
   static bool get portable => File('${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}portable.txt').existsSync();
 
   /// Whether this build can install updates itself.
-  static bool get canInstall => (Platform.isWindows || appImage != null) && appPackage.isNotEmpty && appBuilt != null;
+  static bool get canInstall => (Platform.isWindows || appImage != null || macApp != null) && appPackage.isNotEmpty && appBuilt != null;
+
+  /// The app bundle this macOS build runs from, which an update replaces,
+  /// when Lumtub may write the folder it is in.
+  static String? get macApp {
+    if (!Platform.isMacOS) return null;
+    final app = File(Platform.resolvedExecutable).parent.parent.parent.path;
+    if (!app.endsWith('.app') || app.startsWith('/Volumes/')) return null;
+    return macBundleWritable(app) ? app : null;
+  }
 
   /// The AppImage file this Linux build runs from, which an update replaces.
   static String? get appImage {
@@ -182,7 +191,13 @@ class AppUpdater extends ChangeNotifier {
     final portable = file.path.endsWith('.zip');
     try {
       final image = appImage;
-      if (image != null) {
+      final app = macApp;
+      if (app != null) {
+        await replaceMacApp(file, app);
+        logInfo('Installed Lumtub ${available?.version ?? ''} to $app');
+        await AppLog.current?.flush();
+        if (relaunch) await relaunchAfterExit(app, pid, open: true);
+      } else if (image != null) {
         await replaceAppImage(file, image);
         logInfo('Installed Lumtub ${available?.version ?? ''} to $image');
         await AppLog.current?.flush();
@@ -215,7 +230,7 @@ class AppUpdater extends ChangeNotifier {
       return true;
     } catch (e) {
       logWarn('Could not start the Lumtub update: $e');
-      if (appImage != null) {
+      if (appImage != null || macApp != null) {
         installError = e is FileSystemException ? (e.osError?.message ?? e.message) : '$e';
         notifyListeners();
       }
@@ -279,9 +294,65 @@ Future<void> replaceAppImage(File update, String image) async {
 }
 
 /// Starts [image] once process [processId] has ended; a second Lumtub
-/// started earlier would only bring the closing one to the front.
-Future<void> relaunchAfterExit(String image, int processId) async {
-  await Process.start('/bin/sh', ['-c', r'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; exec "$2"', 'lumtub-relaunch', '$processId', image], mode: ProcessStartMode.detached);
+/// started earlier would only bring the closing one to the front. An app
+/// bundle is started with [open].
+Future<void> relaunchAfterExit(String image, int processId, {bool open = false}) async {
+  final start = open ? r'exec /usr/bin/open -n "$2"' : r'exec "$2"';
+  await Process.start('/bin/sh', ['-c', r'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; ' + start, 'lumtub-relaunch', '$processId', image], mode: ProcessStartMode.detached);
+}
+
+/// Whether the folder holding [app] and the bundle itself can be replaced.
+bool macBundleWritable(String app) {
+  try {
+    final probe = File('${File(app).parent.path}/.lumtub-write-test-$pid');
+    probe.writeAsStringSync('');
+    probe.deleteSync();
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Puts the app from the verified disk image [update] in place of the
+/// bundle [app]. The new bundle is copied next to the old one first and
+/// swapped in by renames; the running program keeps its open files.
+/// Lumtub downloads the image itself, so it carries no quarantine mark and
+/// opens without Gatekeeper's first-launch check.
+Future<void> replaceMacApp(File update, String app) async {
+  final mount = await Directory.systemTemp.createTemp('lumtub-update-');
+  final next = '$app.update';
+  final old = '$app.old';
+  Future<void> run(String program, List<String> arguments) async {
+    final result = await Process.run(program, arguments);
+    if (result.exitCode != 0) throw StateError('$program failed: ${result.stderr}'.trim());
+  }
+
+  try {
+    await run('/usr/bin/hdiutil', ['attach', '-nobrowse', '-readonly', '-noautoopen', '-mountpoint', mount.path, update.path]);
+    try {
+      final bundles = mount.listSync().where((e) => e.path.endsWith('.app')).toList();
+      if (bundles.length != 1) throw StateError('The disk image holds ${bundles.length} apps');
+      await Process.run('/bin/rm', ['-rf', next]);
+      await run('/usr/bin/ditto', [bundles.single.path, next]);
+    } finally {
+      await Process.run('/usr/bin/hdiutil', ['detach', '-force', mount.path]);
+    }
+    await Process.run('/usr/bin/xattr', ['-dr', 'com.apple.quarantine', next]);
+    await Process.run('/bin/rm', ['-rf', old]);
+    await Directory(app).rename(old);
+    try {
+      await Directory(next).rename(app);
+    } catch (_) {
+      await Directory(old).rename(app);
+      rethrow;
+    }
+    await Process.run('/bin/rm', ['-rf', old]);
+    await update.delete();
+  } finally {
+    try {
+      await mount.delete();
+    } catch (_) {}
+  }
 }
 
 /// The update [release] (GitHub's JSON) offers a build of [current] made at

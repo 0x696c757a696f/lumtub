@@ -654,14 +654,15 @@ jobs:
         env:
           LUMTUB_UPDATE_KEY: ${{ secrets.LUMTUB_UPDATE_KEY }}
         run: |
-          # Each installer, ZIP and AppImage gets a .sig (Ed25519 + ML-DSA-65); Lumtub
+          # Each installer, ZIP, AppImage and DMG gets a .sig (Ed25519 + ML-DSA-65); Lumtub
           # installs an update only when both signatures hold.
           if [[ -z "$LUMTUB_UPDATE_KEY" ]]; then
             echo "::error::The LUMTUB_UPDATE_KEY secret is not set; the release would not update itself."
             exit 1
           fi
           rustup update stable
-          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage
+          shopt -s nullglob
+          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg
       - name: Windows - publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

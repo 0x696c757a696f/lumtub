@@ -1465,6 +1465,7 @@
   "这个播放列表是空的": "This playlist is empty",
   "这个版本没有内置 Google 客户端，需要先在下方填写你自己的客户端。": "This build has no built-in Google client. Enter your own client below first.",
   "这个视频关闭了评论": "Comments are turned off for this video",
+  "作者关闭了这个视频的赞和踩": "The uploader turned off likes and dislikes for this video",
   "这个频道最近没有新视频": "No recent videos from this channel",
   "这个频道没有{0}": "This channel has no {0}",
   "这个频道还没有社区帖子": "This channel has no community posts yet",

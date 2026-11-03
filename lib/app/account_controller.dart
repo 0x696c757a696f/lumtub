@@ -196,6 +196,10 @@ class AccountController extends ChangeNotifier {
 
   /// What [videoId]'s [rating] count gains or loses from the rating
   /// pressed here since the count was read.
+  /// Videos whose uploader turned rating off, learned when rating failed.
+  final _ratingOff = <String>{};
+  bool ratingOff(String videoId) => _ratingOff.contains(videoId);
+
   int ratingChange(String videoId, VideoRating rating) {
     final now = _ratings[videoId] ?? VideoRating.none;
     final loaded = _loadedRatings[videoId] ?? VideoRating.none;
@@ -230,6 +234,12 @@ class AccountController extends ChangeNotifier {
       });
     } catch (e) {
       _ratings[item.id] = previous;
+      if (e is YouTubeApiException && e.reason == 'videoRatingDisabled') {
+        _ratingOff.add(item.id);
+        notice('$e');
+        notifyListeners();
+        return;
+      }
       _failed(tr('操作失败'), e);
     }
   }

@@ -238,10 +238,11 @@ class _RatingButtons extends StatelessWidget {
     final dislikes = controller.dislikes?.dislikes;
     Widget button(VideoRating rating, IconData icon, IconData selectedIcon, String label, int? count, {String? note}) {
       final selected = signedIn && account!.ratingOf(item.id) == rating;
+      final off = signedIn && account!.ratingOff(item.id);
       final shown = count == null || !signedIn ? count : (count + account!.ratingChange(item.id, rating)).clamp(0, 1 << 62);
       return Tooltip(
         message: [
-          if (!signedIn) tr('登录 Google 账号后可以{0}', [label]) else if (selected) tr('取消{0}', [label]) else label,
+          if (!signedIn) tr('登录 Google 账号后可以{0}', [label]) else if (off) tr('作者关闭了这个视频的赞和踩') else if (selected) tr('取消{0}', [label]) else label,
           if (note != null) note,
         ].join('\n'),
         child: TextButton.icon(
@@ -250,7 +251,9 @@ class _RatingButtons extends StatelessWidget {
             backgroundColor: colors.surfaceContainerHighest,
             padding: const EdgeInsets.symmetric(horizontal: 12),
           ),
-          onPressed: signedIn
+          onPressed: off
+              ? null
+              : signedIn
               ? () => account!.rate(item, rating)
               : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('登录 Google 账号后可以{0}', [label])))),
           icon: Icon(selected ? selectedIcon : icon, size: 20),

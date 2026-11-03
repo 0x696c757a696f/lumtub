@@ -239,6 +239,7 @@ class YouTubeApiException implements Exception {
         'youtubeSignupRequired' => tr('这个 Google 账号还没有 YouTube 频道'),
         'insufficientPermissions' || 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' => tr('登录时没有授予修改权限，请重新登录 Google 账号'),
         'commentsDisabled' => tr('这个视频关闭了评论'),
+        'videoRatingDisabled' => tr('作者关闭了这个视频的赞和踩'),
         'forbidden' when status == 403 => tr('YouTube 拒绝了这个操作'),
         'subscriptionForbidden' => tr('不能订阅这个频道'),
         'videoNotFound' => tr('找不到这个视频'),

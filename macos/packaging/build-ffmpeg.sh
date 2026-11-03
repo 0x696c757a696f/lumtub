@@ -24,7 +24,7 @@ for arch in arm64 x86_64; do
       --cc="clang -arch $arch" \
       --extra-cflags="-mmacosx-version-min=12.0" --extra-ldflags="-mmacosx-version-min=12.0" \
       --disable-autodetect --enable-videotoolbox --enable-audiotoolbox \
-      --disable-network --disable-x86asm --disable-devices \
+      --disable-network --disable-x86asm --disable-devices --enable-indev=lavfi \
       --disable-doc --disable-debug --disable-ffplay --enable-ffmpeg --enable-ffprobe \
       --disable-protocols --enable-protocol=file,pipe
     make -j"$jobs" ffmpeg ffprobe

@@ -35,6 +35,17 @@ kill "$app" 2> /dev/null
 wait "$app"
 code=$?
 cp -r "$HOME/Library/Application Support/Lumtub/logs" "$out/logs" 2> /dev/null || true
+for report in "$HOME"/Library/Logs/DiagnosticReports/Lumtub*; do
+  [ -e "$report" ] && cp "$report" "$out/"
+done
+if [ ! -s "$out/result.json" ]; then
+  echo "--- app output"; tail -n 60 "$out/stdout.txt" 2> /dev/null
+  echo "--- log"; tail -n 60 "$out"/logs/*.log 2> /dev/null
+  for report in "$out"/Lumtub*.ips "$out"/Lumtub*.crash; do
+    [ -e "$report" ] || continue
+    echo "--- $report"; head -c 12000 "$report"; echo
+  done
+fi
 rm -rf "$out/Lumtub.app"
 cat "$out/result.json" 2> /dev/null || echo "No result written."
 echo "Exit code $code"

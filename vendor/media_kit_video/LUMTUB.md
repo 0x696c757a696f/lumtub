@@ -36,3 +36,7 @@ The changes, marked "Lumtub" in the code:
   `VideoController.release` frees the video output while the player lives
   on, so Lumtub can make a new one, on a new Direct3D device, after the
   graphics device was lost (a driver reset).
+- `windows/media_kit_video_plugin.cc`, `video_output.cc`, `video_output.h`
+  (`engine_closing_`): when the plugin is destroyed with the engine at exit,
+  video outputs no longer unregister their textures; the engine's texture
+  registrar was already gone and the call crashed in flutter_windows.dll.

@@ -2742,6 +2742,14 @@ class AppController extends ChangeNotifier with _ExploreState {
     _stallTimer?.cancel();
     _recoveryTimer?.cancel();
     await player?.pause();
+    // The video output goes while the engine still runs: left to the
+    // engine's own teardown, unregistering its texture crashed Flutter.
+    try {
+      await videoController?.release().timeout(const Duration(seconds: 3));
+    } catch (e) {
+      logWarn('The video output was not released before exit: $e');
+    }
+    videoController = null;
     await player?.dispose();
     logInfo('Lumtub exited normally');
     await AppLog.current?.flush();

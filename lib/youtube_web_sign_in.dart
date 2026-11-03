@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:io';
 import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
@@ -10,6 +11,7 @@ import 'app_log.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
 import 'native_http.dart';
+import 'stream_resolver.dart';
 import 'youtube_tv_sign_in.dart';
 import 'youtube_web.dart';
 
@@ -30,7 +32,7 @@ enum CookieGuard { presence, hardware, keyring, account, file }
 /// posts take. The cookies, their encryption and every request made with
 /// them live in the Rust core (native/lumtub_core/src/web_account.rs,
 /// vault.rs, browser_sign_in.rs); this side never sees them.
-class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube {
+class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCookies {
   YoutubeWebSignIn({required this.folder, this.base});
 
   /// Where the sealed cookies are kept.
@@ -211,6 +213,40 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube {
     return (status: status, body: message[1] as Uint8List);
   }
 
+  /// Writes the signed-in cookies to [path] for one yt-dlp run, a
+  /// members-only video's; false when signed out or the user closed the
+  /// system's prompt. The caller wipes the file with [wipeCookies].
+  @override
+  Future<bool> writeCookies(String path) async {
+    final native = _native;
+    final write = native?.cookiesFile;
+    if (native == null || write == null || !signedIn) return false;
+    final port = ReceivePort('lumtub cookies file');
+    if (!_withText(jsonEncode({'path': path, 'ask': true}), (p, n) => write(port.sendPort.nativePort, p, n))) {
+      port.close();
+      return false;
+    }
+    final message = await port.first as List;
+    port.close();
+    if (!unlocked) _refresh();
+    if (message[0] == -3) logWarn('Could not write the cookies for yt-dlp: ${message[1]}');
+    return message[0] == 0;
+  }
+
+  @override
+  void wipeCookies(String path) {
+    final wipe = _native?.wipeCookies;
+    if (wipe != null) {
+      _withText(path, (p, n) => wipe(p, n));
+    } else {
+      try {
+        File(path).deleteSync();
+      } on FileSystemException {
+        // Not written.
+      }
+    }
+  }
+
   void _notify() {
     if (!_disposed) notifyListeners();
   }
@@ -245,7 +281,13 @@ class _Bindings {
         browserSignIn = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_web_browser_sign_in'),
         browserCancel = library.lookupFunction<Void Function(), void Function()>('lumtub_web_browser_cancel'),
         signOut = library.lookupFunction<Void Function(), void Function()>('lumtub_web_sign_out'),
-        innertube = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_web_innertube');
+        innertube = library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_web_innertube'),
+        cookiesFile = library.providesSymbol('lumtub_web_cookies_file')
+            ? library.lookupFunction<Bool Function(Int64, Pointer<Uint8>, Size), bool Function(int, Pointer<Uint8>, int)>('lumtub_web_cookies_file')
+            : null,
+        wipeCookies = library.providesSymbol('lumtub_web_wipe_cookies')
+            ? library.lookupFunction<Void Function(Pointer<Uint8>, Size), void Function(Pointer<Uint8>, int)>('lumtub_web_wipe_cookies')
+            : null;
 
   final Pointer<Utf8> Function(Pointer<Uint8>, int) open;
   final Pointer<Utf8> Function() status;
@@ -254,4 +296,6 @@ class _Bindings {
   final void Function() browserCancel;
   final void Function() signOut;
   final bool Function(int port, Pointer<Uint8>, int) innertube;
+  final bool Function(int port, Pointer<Uint8>, int)? cookiesFile;
+  final void Function(Pointer<Uint8>, int)? wipeCookies;
 }

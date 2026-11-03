@@ -30,19 +30,21 @@ enum FailureKind {
 }
 
 class PlaybackFailure {
-  const PlaybackFailure(this.kind, this.detail, {this.tried = const [], this.disabled = ''});
+  const PlaybackFailure(this.kind, this.detail, {this.tried = const [], this.disabled = '', this.signedIn = false});
 
   final FailureKind kind;
   /// The Piped or Invidious servers that were tried after YouTube said 429.
   final List<String> tried;
   /// Names of the codecs the user disabled, for [FailureKind.noFormat].
   final String disabled;
+  /// For [FailureKind.membersOnly]: yt-dlp asked with the cookie sign-in.
+  final bool signedIn;
   /// The message it was read from.
   final String detail;
 
   static final _patterns = <(FailureKind, RegExp)>[
     (FailureKind.upcoming, RegExp(r'Premieres in|live event will begin|will begin in|waiting for scheduled stream', caseSensitive: false)),
-    (FailureKind.membersOnly, RegExp(r"members.only|join this channel|channel's members|subscriber_only", caseSensitive: false)),
+    (FailureKind.membersOnly, RegExp(r"members.only|join this channel|channel's members", caseSensitive: false)),
     (FailureKind.unavailable, RegExp(
       r"Video unavailable|Private video|video is private|has been removed|"
       r"account[^.]{0,40}terminated|copyright|not available in your country|geo.?restrict|age.?restrict|confirm your age|"
@@ -76,7 +78,9 @@ class PlaybackFailure {
   /// What the watch page shows: the cause and what to do about it.
   String get message {
     final reason = switch (kind) {
-      FailureKind.membersOnly => tr('这是频道会员专属视频，只有加入该频道会员才能观看'),
+      FailureKind.membersOnly => signedIn
+          ? tr('这是频道会员专属视频，浏览器登录的账号不是这个频道的会员')
+          : tr('这是频道会员专属视频。如果你是这个频道的会员，在 设置 › YouTube 账号 › 浏览器登录 登录后就能播放'),
       FailureKind.unavailable => tr('这个视频无法观看（私享、已删除、地区或年龄限制）'),
       FailureKind.upcoming => tr('直播还没开始，开始后会自动播放'),
       FailureKind.rateLimited => tried.isEmpty

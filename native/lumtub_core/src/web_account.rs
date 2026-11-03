@@ -523,6 +523,60 @@ pub extern "C" fn lumtub_web_sign_out() {
     }
 }
 
+/// [jar] as a Netscape cookies.txt for yt-dlp's `--cookies`.
+pub fn cookies_txt(jar: &Jar, expires: u64) -> Zeroizing<String> {
+    let mut text = Zeroizing::new(String::from("# Netscape HTTP Cookie File\n"));
+    for (name, value) in &jar.0 {
+        text.push_str(&format!(".youtube.com\tTRUE\t/\tTRUE\t{expires}\t{name}\t{value}\n"));
+    }
+    text
+}
+
+/// Writes the signed-in cookies to the file [json] `{"path", "ask"}` for one
+/// yt-dlp run that needs them, a members-only video's; whoever asked wipes
+/// it with [lumtub_web_wipe_cookies] once yt-dlp is done. Answers on [port]
+/// `[0]`, `[-1]` signed out, `[-4]` Windows Hello was closed, or `[-3, why]`.
+///
+/// # Safety
+/// [json] must point to [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_web_cookies_file(port: i64, json: *const u8, length: usize) -> bool {
+    let options: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
+    let Some(path) = options.get("path").and_then(Value::as_str).map(PathBuf::from) else { return false };
+    let ask = options.get("ask").and_then(Value::as_bool).unwrap_or(false);
+    runtime().spawn_blocking(move || {
+        let fail = |code: i64, why: Option<String>| {
+            post(port, std::iter::once(Item::Int(code)).chain(why.map(Item::Text)).collect());
+        };
+        match unlock(ask) {
+            Ok(()) => {}
+            Err(Shut::SignedOut) => return fail(-1, None),
+            Err(Shut::Declined) => return fail(-4, None),
+            Err(Shut::Broken(why)) => return fail(-3, Some(why)),
+        }
+        let expires = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0) + 3600;
+        let text = {
+            let session = session();
+            session.open.as_ref().and_then(|(secret, _)| secret.reveal(|header| cookies_txt(&read_cookies(std::str::from_utf8(header).unwrap_or("")), expires)))
+        };
+        let Some(text) = text else { return fail(-1, None) };
+        match vault::write_private(&path, text.as_bytes()) {
+            Ok(()) => fail(0, None),
+            Err(e) => fail(-3, Some(e.to_string())),
+        }
+    });
+    true
+}
+
+/// Wipes and deletes a file [lumtub_web_cookies_file] wrote.
+///
+/// # Safety
+/// [path] must point to [length] bytes of UTF-8.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_web_wipe_cookies(path: *const u8, length: usize) {
+    shred(Path::new(unsafe { text(path, length) }));
+}
+
 /// Makes the InnerTube request [json] `{"endpoint", "body", "hl",
 /// "language", "clientVersion", "ask"}` as the signed-in website,
 /// answering on [port].
@@ -541,6 +595,17 @@ pub unsafe extern "C" fn lumtub_web_innertube(port: i64, json: *const u8, length
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn writes_cookies_txt_that_reads_back() {
+        let jar = read_cookies("SID=a; SAPISID=b; HSID=c");
+        let text = cookies_txt(&jar, 1_900_000_000);
+        assert!(text.starts_with("# Netscape HTTP Cookie File\n"));
+        assert!(text.contains(".youtube.com\tTRUE\t/\tTRUE\t1900000000\tSAPISID\tb\n"));
+        let again = read_cookies(&text);
+        assert_eq!(again.header(), "SID=a; SAPISID=b; HSID=c");
+        assert!(again.signed_in());
+    }
 
     #[test]
     fn reads_cookies_txt_and_headers() {

@@ -120,6 +120,16 @@ class ResolvedVideo {
 /// libmpv does not have to extract it again: the watch page, the quality
 /// menu and playback share one extraction, and a card the pointer rests on
 /// can be resolved before it is clicked.
+/// The cookie sign-in, handed to yt-dlp only for a members-only video,
+/// which YouTube shows only to a signed-in member.
+abstract interface class MembersCookies {
+  bool get signedIn;
+  /// Writes the cookies to [path]; false when they cannot be had.
+  Future<bool> writeCookies(String path);
+  /// Wipes and deletes what [writeCookies] wrote.
+  void wipeCookies(String path);
+}
+
 class StreamResolver {
   StreamResolver(this.ytDlpPath, {this.cacheDirectory, this.deno, this.proxy, required this.infoDirectory, Map<String, String>? environment})
       : _environment = environment {
@@ -137,6 +147,9 @@ class StreamResolver {
   final Directory infoDirectory;
   final Map<String, String>? _environment;
 
+  /// The cookie sign-in, for members-only videos.
+  MembersCookies? Function()? members;
+
   static const _keep = 12;
   final _results = <String, Future<ResolvedVideo>>{};
   /// The format each entry of [_results] is being resolved with.
@@ -149,10 +162,11 @@ class StreamResolver {
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
 
-  List<String> arguments(String videoId, String format, {String? formatSort}) {
+  List<String> arguments(String videoId, String format, {String? formatSort, String? cookies}) {
     final proxy = this.proxy?.call();
     return [
       if (proxy != null) ...['--proxy', proxy],
+        if (cookies != null) ...['--cookies', cookies],
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
         if (deno != null) ...['--js-runtimes', 'deno:${deno!}'],
         '--extractor-retries', '3',
@@ -165,16 +179,18 @@ class StreamResolver {
   }
 
   /// The resolved video, from the cache while it is fresh.
-  Future<ResolvedVideo> resolve(String videoId, String format, {String? formatSort}) {
+  /// [membersOnly] (as a list marked it) asks signed in from the start.
+  Future<ResolvedVideo> resolve(String videoId, String format, {String? formatSort, bool membersOnly = false}) {
     // A card prefetched in the background is now being waited on.
     final lowered = _lowered[videoId];
     if (lowered != null) restorePriority(lowered);
     final cached = _results[videoId];
     // Another format needs another extraction.
     if (cached != null && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call()) {
-      return cached.then((video) => video.fresh ? video : _start(videoId, format, formatSort: formatSort), onError: (_) => _start(videoId, format, formatSort: formatSort));
+      return cached.then((video) => video.fresh ? video : _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly),
+          onError: (_) => _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly));
     }
-    return _start(videoId, format, formatSort: formatSort);
+    return _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly);
   }
 
   /// The extraction of [videoId] if one is running or done; never starts
@@ -227,13 +243,23 @@ class StreamResolver {
     }
   }
 
-  /// Deletes info files older than [maxAge] that earlier runs left behind.
+  /// Deletes info files older than [maxAge] that earlier runs left behind,
+  /// and cookie files a crash left, after a few minutes.
   Future<void> deleteStaleInfo({Duration maxAge = const Duration(days: 1)}) async {
     try {
       if (!await infoDirectory.exists()) return;
       final limit = DateTime.now().subtract(maxAge);
+      final cookieLimit = DateTime.now().subtract(const Duration(minutes: 5));
       await for (final entity in infoDirectory.list()) {
-        if (entity is! File || !entity.path.endsWith('.json')) continue;
+        if (entity is! File) continue;
+        if (entity.path.endsWith('.cookies.txt')) {
+          if ((await entity.lastModified()).isBefore(cookieLimit)) {
+            await entity.writeAsBytes(List<int>.filled(await entity.length(), 0), flush: true);
+            await entity.delete();
+          }
+          continue;
+        }
+        if (!entity.path.endsWith('.json')) continue;
         if ((await entity.lastModified()).isBefore(limit)) await entity.delete();
       }
     } on FileSystemException {
@@ -241,8 +267,8 @@ class StreamResolver {
     }
   }
 
-  Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false}) {
-    final future = _run(videoId, format, formatSort: formatSort, background: background);
+  Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false}) {
+    final future = _run(videoId, format, formatSort: formatSort, background: background, membersOnly: membersOnly);
     _results.remove(videoId);
     _results[videoId] = future;
     _formats[videoId] = format;
@@ -269,13 +295,27 @@ class StreamResolver {
   /// Whether [error] is a network failure that resolving already retried.
   static bool isTransient(Object error) => _transient.hasMatch('$error');
 
-  Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false}) async {
+  /// What yt-dlp says about a video only the channel's members may watch.
+  static final membersOnlyError = RegExp(r"members.only|join this channel|channel's members", caseSensitive: false);
+
+  Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false}) async {
     final watch = Stopwatch()..start();
-    var result = await _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
+    // Background runs never open the cookies: that may bring up Windows Hello.
+    final cookies = background ? null : members?.call();
+    final signedIn = cookies != null && cookies.signedIn;
+    Future<ProcessResult> run({bool signed = false}) =>
+        signed ? _signedIn(cookies!, videoId, format, formatSort: formatSort) : _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
+    var signed = membersOnly && signedIn;
+    var result = await run(signed: signed);
     if (_failed(result) && _transient.hasMatch(result.stderr.toString())) {
       logWarn('Resolving $videoId hit a network error, retrying once');
       await Future<void>.delayed(const Duration(seconds: 2));
-      result = await _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
+      result = await run(signed: signed);
+    }
+    if (_failed(result) && !signed && signedIn && membersOnlyError.hasMatch(result.stderr.toString())) {
+      logInfo('$videoId is members-only, asking again signed in');
+      signed = true;
+      result = await run(signed: true);
     }
     final output = result.stdout.toString().trim();
     final err = result.stderr.toString().trim();
@@ -295,15 +335,33 @@ class StreamResolver {
     return ResolvedVideo(data, file, format);
   }
 
+  static int _cookieFiles = 0;
+
+  /// yt-dlp for [videoId] with the signed-in cookies, in a file of their
+  /// own that is wiped as soon as yt-dlp is done.
+  Future<ProcessResult> _signedIn(MembersCookies cookies, String videoId, String format, {String? formatSort}) async {
+    await infoDirectory.create(recursive: true);
+    final path = '${infoDirectory.path}${Platform.pathSeparator}$videoId-${_cookieFiles++}.cookies.txt';
+    try {
+      if (!await cookies.writeCookies(path)) {
+        logWarn('The cookie sign-in could not be opened for $videoId');
+        return await _ytDlp(videoId, format, formatSort: formatSort);
+      }
+      return await _ytDlp(videoId, format, formatSort: formatSort, cookies: path);
+    } finally {
+      cookies.wipeCookies(path);
+    }
+  }
+
   bool _failed(ProcessResult result) => result.exitCode != 0 || result.stdout.toString().trim().isEmpty;
 
   /// yt-dlp for [videoId]; [background] (the video id) runs it at low
   /// priority until [resolve] asks for that video.
-  Future<ProcessResult> _ytDlp(String videoId, String format, {String? formatSort, String? background}) async {
+  Future<ProcessResult> _ytDlp(String videoId, String format, {String? formatSort, String? background, String? cookies}) async {
     try {
       return await runWithTimeout(
         ytDlpPath,
-        arguments(videoId, format, formatSort: formatSort),
+        arguments(videoId, format, formatSort: formatSort, cookies: cookies),
         timeout: const Duration(seconds: 45),
         environment: _environment,
         onStart: (process) {

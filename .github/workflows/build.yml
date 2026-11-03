@@ -374,11 +374,16 @@ jobs:
       matrix:
         include:
           - package_arch: x64
+            runner: ubuntu-24.04
             appimage_arch: x86_64
             appimagetool_sha256: 46fdd785094c7f6e545b61afcfb0f3d98d8eab243f644b4b17698c01d06083d1
+          - package_arch: arm64
+            runner: ubuntu-24.04-arm
+            appimage_arch: aarch64
+            appimagetool_sha256: 04f45ea45b5aa07bb2b071aed9dbf7a5185d3953b11b47358c1311f11ea94a96
     # Pinned, so a new default Ubuntu changes nothing; the build itself runs
     # in Debian 12, whose glibc 2.36 sets the oldest Linux the AppImage runs on.
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
     container: debian:12
     env:
       FLUTTER_VERSION: 3.47.7
@@ -397,10 +402,17 @@ jobs:
       - name: Linux - install Flutter stable SDK
         run: |
           git config --global --add safe.directory '*'
-          archive="$RUNNER_TEMP/flutter.tar.xz"
-          curl -fsSL -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz"
-          tar -xJf "$archive" -C "$RUNNER_TEMP"
+          if [ "$PACKAGE_ARCH" = x64 ]; then
+            archive="$RUNNER_TEMP/flutter.tar.xz"
+            curl -fsSL -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz"
+            tar -xJf "$archive" -C "$RUNNER_TEMP"
+          else
+            # Flutter publishes no arm64 Linux SDK archive; the same release
+            # from git fetches its arm64 Dart SDK and engine on first run.
+            git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          fi
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
 
       - name: Linux - install the Rust toolchain
         run: |
@@ -472,7 +484,7 @@ jobs:
 
   release:
     name: Windows Release
-    needs: windows
+    needs: [windows, linux]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -486,21 +498,20 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: dist
-          # The Linux AppImage joins releases once it has been tried.
-          pattern: Lumtub-windows-*
+          pattern: Lumtub-*
           merge-multiple: true
       - name: Windows - sign update packages
         env:
           LUMTUB_UPDATE_KEY: ${{ secrets.LUMTUB_UPDATE_KEY }}
         run: |
-          # Each installer and ZIP gets a .sig (Ed25519 + ML-DSA-65); Lumtub
+          # Each installer, ZIP and AppImage gets a .sig (Ed25519 + ML-DSA-65); Lumtub
           # installs an update only when both signatures hold.
           if [[ -z "$LUMTUB_UPDATE_KEY" ]]; then
             echo "::error::The LUMTUB_UPDATE_KEY secret is not set; the release would not update itself."
             exit 1
           fi
           rustup update stable
-          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip
+          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage
       - name: Windows - publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

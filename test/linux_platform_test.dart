@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/app_updater.dart';
 import 'package:lumtub/ffmpeg_component.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/network_proxy.dart';
@@ -90,4 +91,19 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
     file.file.writeAsBytesSync([...file.file.readAsBytesSync().take(20), 0x30, 0x30]);
     expect(await file.read(), isNull);
   }, skip: NativeCore.instance == null ? 'needs lumtub_core' : null);
+
+  test('an update replaces the AppImage by rename, keeping the running file intact', () async {
+    final temp = await Directory.systemTemp.createTemp('lumtub-appimage');
+    addTearDown(() => temp.delete(recursive: true));
+    final image = File('${temp.path}/Lumtub.AppImage')..writeAsStringSync('old');
+    final open = image.openSync();
+    addTearDown(open.closeSync);
+    final update = File('${temp.path}/download.AppImage')..writeAsStringSync('new');
+    await replaceAppImage(update, image.path);
+    expect(image.readAsStringSync(), 'new');
+    expect(update.existsSync(), isFalse);
+    expect(File('${image.path}.update').existsSync(), isFalse);
+    expect(String.fromCharCodes(open.readSync(3)), 'old');
+    expect(image.statSync().modeString(), 'rwxr-xr-x');
+  }, skip: Platform.isWindows ? 'Linux only' : null);
 }

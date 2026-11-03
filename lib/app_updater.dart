@@ -65,7 +65,14 @@ class AppUpdater extends ChangeNotifier {
   static bool get portable => File('${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}portable.txt').existsSync();
 
   /// Whether this build can install updates itself.
-  static bool get canInstall => Platform.isWindows && appPackage.isNotEmpty && appBuilt != null;
+  static bool get canInstall => (Platform.isWindows || appImage != null) && appPackage.isNotEmpty && appBuilt != null;
+
+  /// The AppImage file this Linux build runs from, which an update replaces.
+  static String? get appImage {
+    if (!Platform.isLinux) return null;
+    final path = Platform.environment['APPIMAGE'] ?? '';
+    return path.isEmpty ? null : path;
+  }
 
   /// Checks now and then every six hours, downloading what it finds when
   /// [download] says so.
@@ -174,7 +181,13 @@ class AppUpdater extends ChangeNotifier {
     final executable = Platform.resolvedExecutable;
     final portable = file.path.endsWith('.zip');
     try {
-      if (!portable) {
+      final image = appImage;
+      if (image != null) {
+        await replaceAppImage(file, image);
+        logInfo('Installed Lumtub ${available?.version ?? ''} to $image');
+        await AppLog.current?.flush();
+        if (relaunch) await relaunchAfterExit(image, pid);
+      } else if (!portable) {
         final folder = File(executable).parent.path;
         final result = launchInstaller(package: file.path, folder: folder, processId: pid, relaunch: relaunch);
         if (result == null) throw StateError('No native core');
@@ -202,6 +215,10 @@ class AppUpdater extends ChangeNotifier {
       return true;
     } catch (e) {
       logWarn('Could not start the Lumtub update: $e');
+      if (appImage != null) {
+        installError = e is FileSystemException ? (e.osError?.message ?? e.message) : '$e';
+        notifyListeners();
+      }
       return false;
     }
   }
@@ -244,6 +261,27 @@ class AppUpdater extends ChangeNotifier {
     _timer?.cancel();
     super.dispose();
   }
+}
+
+/// Puts the verified AppImage [update] in place of [image]. The running
+/// program keeps the old file open, so it is replaced by a rename on the
+/// same file system, never written over.
+Future<void> replaceAppImage(File update, String image) async {
+  final next = File('$image.update');
+  await update.copy(next.path);
+  final chmod = await Process.run('chmod', ['755', next.path]);
+  if (chmod.exitCode != 0) {
+    await next.delete();
+    throw StateError('chmod failed: ${chmod.stderr}');
+  }
+  await next.rename(image);
+  await update.delete();
+}
+
+/// Starts [image] once process [processId] has ended; a second Lumtub
+/// started earlier would only bring the closing one to the front.
+Future<void> relaunchAfterExit(String image, int processId) async {
+  await Process.start('/bin/sh', ['-c', r'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; exec "$2"', 'lumtub-relaunch', '$processId', image], mode: ProcessStartMode.detached);
 }
 
 /// The update [release] (GitHub's JSON) offers a build of [current] made at

@@ -221,6 +221,17 @@ class AppController extends ChangeNotifier with _ExploreState {
   void togglePinned() {
     if (!AppWindow.setTopmost(!pinned || pip)) return _notice(tr('无法设置窗口置顶'));
     _update(() => pinned = !pinned);
+    if (pinned) _noteWaylandTop();
+  }
+
+  bool _waylandNoted = false;
+
+  /// Wayland desktops decide themselves which window is on top and where
+  /// it goes; said once per run.
+  void _noteWaylandTop() {
+    if (_waylandNoted || !AppWindow.onWayland) return;
+    _waylandNoted = true;
+    _notice(tr('Wayland 桌面不允许程序把窗口保持在最上层或摆放位置，窗口可能被其他窗口挡住。'));
   }
 
   /// Whether the watch page shows [playing].
@@ -249,6 +260,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     final ok = on ? AppWindow.enterPip(aspect: videoAspect) : AppWindow.exitPip(keepOnTop: pinned);
     if (on && !ok) return _notice(tr('无法进入画中画'));
     _update(() => pip = on);
+    if (on) _noteWaylandTop();
   }
 
   VideoOutputSize? _outputSize;

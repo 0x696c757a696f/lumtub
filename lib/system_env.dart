@@ -41,7 +41,17 @@ void addToPath(Iterable<String> directories) {
 /// Starts Lumtub again and ends this process, such as after the language
 /// changed.
 Future<void> restartApp() async {
-  await Process.start(Platform.resolvedExecutable, const [], mode: ProcessStartMode.detached);
+  if (Platform.isWindows) {
+    await Process.start(Platform.resolvedExecutable, const [], mode: ProcessStartMode.detached);
+  } else {
+    // Started once this process has ended: on Linux a copy started now
+    // would only hand itself to this one, which then quits, and an
+    // AppImage's mounted folder goes away with it, so the image itself is
+    // started.
+    final appImage = Platform.environment['APPIMAGE'];
+    final target = Platform.isLinux && appImage != null && appImage.isNotEmpty ? appImage : Platform.resolvedExecutable;
+    await Process.start('/bin/sh', ['-c', r'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; exec "$2"', 'lumtub-restart', '$pid', target], mode: ProcessStartMode.detached);
+  }
   await AppLog.current?.flush();
   exit(0);
 }

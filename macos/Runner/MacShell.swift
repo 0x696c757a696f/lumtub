@@ -1,5 +1,6 @@
 import Cocoa
 import FlutterMacOS
+import IOKit.pwr_mgt
 import MediaPlayer
 
 /// The macOS side of lib/windows_shell.dart, on the same method channel:
@@ -18,6 +19,7 @@ final class MacShell: NSObject, NSWindowDelegate {
   private var pipBefore: (frame: NSRect, style: NSWindow.StyleMask, minSize: NSSize)?
   private var lastPipOrigin: NSPoint?
   private var dragMonitor: Any?
+  private var awake: IOPMAssertionID = 0
 
   init(window: NSWindow, messenger: FlutterBinaryMessenger) {
     channel = FlutterMethodChannel(name: "lumtub/windows_shell", binaryMessenger: messenger)
@@ -55,6 +57,8 @@ final class MacShell: NSObject, NSWindowDelegate {
       }
       publish()
       updateMenu()
+    case "setKeepAwake":
+      setKeepAwake(call.arguments as? Bool ?? false)
     case "setTopmost":
       window?.level = (call.arguments as? Bool ?? false) ? .floating : .normal
     case "enterPip":
@@ -109,10 +113,28 @@ final class MacShell: NSObject, NSWindowDelegate {
       guard let data, let image = NSImage(data: data) else { return }
       DispatchQueue.main.async {
         guard let self, self.artworkAddress == address, !self.info.isEmpty else { return }
-        self.info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+        self.info[MPMediaItemPropertyArtwork] = MacShell.artwork(image)
         self.publish()
       }
     }.resume()
+  }
+
+  /// Made outside the main queue's closures: MediaPlayer asks for the
+  /// picture on a queue of its own.
+  private nonisolated static func artwork(_ image: NSImage) -> MPMediaItemArtwork {
+    MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+  }
+
+  /// Keeps the display from sleeping while a video plays.
+  private func setKeepAwake(_ on: Bool) {
+    if on, awake == 0 {
+      var id: IOPMAssertionID = 0
+      let made = IOPMAssertionCreateWithName(kIOPMAssertionTypeNoDisplaySleep as CFString, IOPMAssertionLevel(kIOPMAssertionLevelOn), "Lumtub is playing a video" as CFString, &id)
+      if made == kIOReturnSuccess { awake = id }
+    } else if !on, awake != 0 {
+      IOPMAssertionRelease(awake)
+      awake = 0
+    }
   }
 
   private func send(_ button: String) {
@@ -161,6 +183,13 @@ final class MacShell: NSObject, NSWindowDelegate {
       origin.y = min(max(last.y, area.minY), max(area.minY, area.maxY - size.height))
     }
     window.setFrame(NSRect(origin: origin, size: size), display: true)
+    refocus(window)
+  }
+
+  /// A changed style mask can take the keyboard from the Flutter view.
+  private func refocus(_ window: NSWindow) {
+    window.makeKeyAndOrderFront(nil)
+    if let view = window.contentViewController?.view { window.makeFirstResponder(view) }
   }
 
   private func exitPip(keepOnTop: Bool) {
@@ -173,6 +202,7 @@ final class MacShell: NSObject, NSWindowDelegate {
     window.minSize = before.minSize
     window.level = keepOnTop ? .floating : .normal
     window.setFrame(before.frame, display: true)
+    refocus(window)
   }
 
   private func setPipAspect(_ aspect: Double) {

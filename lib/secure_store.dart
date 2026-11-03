@@ -129,8 +129,13 @@ class SecureJsonFile {
     final plain = Uint8List.fromList(utf8.encode(jsonEncode(value)));
     final protector = this.protector;
     final sealed = protector is VaultProtector ? await Isolate.run(() => protector.protect(plain)) : protector.protect(plain);
+    if (!Platform.isWindows) {
+      // Readable by the user alone before anything is in it.
+      await temporary.writeAsBytes(const [], flush: true);
+      final chmod = await Process.run('chmod', ['600', temporary.path]);
+      if (chmod.exitCode != 0) throw FileSystemException('chmod failed: ${chmod.stderr}', temporary.path);
+    }
     await temporary.writeAsBytes(sealed, flush: true);
-    if (!Platform.isWindows) await Process.run('chmod', ['600', temporary.path]);
     await temporary.rename(file.path);
   }
 

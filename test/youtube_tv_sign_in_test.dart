@@ -74,6 +74,10 @@ void main() {
   }
 
   test('signs in with the TV app\'s client, keeps the sign-in, and makes requests as the TV app', () async {
+    if (Platform.isMacOS && Platform.environment['CI'] == 'true') {
+      markTestSkipped('the account vault needs the login keychain, which a CI Mac lacks');
+      return;
+    }
     final sign = YoutubeTvSignIn(folder: dir.path, base: youtube.base);
     final codes = <String?>[];
     sign.addListener(() => codes.add(sign.code));

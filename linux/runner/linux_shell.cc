@@ -60,6 +60,9 @@ struct Shell {
   int before_x = 0, before_y = 0, before_width = 0, before_height = 0;
   bool has_last = false;
   int last_x = 0, last_y = 0;
+
+  // The screen saver held off while a video plays.
+  guint inhibit = 0;
 };
 
 Shell shell;
@@ -405,9 +408,11 @@ void EnterPip(double aspect, int width, int height) {
   if (window == nullptr || shell.pip) return;
   shell.pip = true;
   shell.was_maximized = gtk_window_is_maximized(window);
-  if (shell.was_maximized) gtk_window_unmaximize(window);
+  // Unmaximizing takes effect later; the size read now would still be the
+  // maximized one, and the window comes back maximized anyway.
   gtk_window_get_position(window, &shell.before_x, &shell.before_y);
   gtk_window_get_size(window, &shell.before_width, &shell.before_height);
+  if (shell.was_maximized) gtk_window_unmaximize(window);
   gtk_window_set_decorated(window, FALSE);
   gtk_window_set_keep_above(window, TRUE);
   KeepAspect(aspect);
@@ -436,9 +441,12 @@ void ExitPip(bool keep_on_top) {
   gtk_window_set_decorated(window, TRUE);
   gtk_window_set_keep_above(window, keep_on_top);
   shell.above = keep_on_top;
-  gtk_window_resize(window, shell.before_width, shell.before_height);
-  gtk_window_move(window, shell.before_x, shell.before_y);
-  if (shell.was_maximized) gtk_window_maximize(window);
+  if (shell.was_maximized) {
+    gtk_window_maximize(window);
+  } else {
+    gtk_window_resize(window, shell.before_width, shell.before_height);
+    gtk_window_move(window, shell.before_x, shell.before_y);
+  }
 }
 
 void SetPipAspect(double aspect) {
@@ -461,6 +469,20 @@ void BeginDrag(bool resize) {
     gtk_window_begin_resize_drag(window, GDK_WINDOW_EDGE_SOUTH_EAST, 1, x, y, GDK_CURRENT_TIME);
   } else {
     gtk_window_begin_move_drag(window, 1, x, y, GDK_CURRENT_TIME);
+  }
+}
+
+// Keeps the screen from blanking or locking while [on]: GTK asks the
+// desktop's session manager, the portal or the screen saver, whichever
+// answers.
+void SetKeepAwake(bool on) {
+  GtkApplication* application = shell.window != nullptr ? gtk_window_get_application(shell.window) : nullptr;
+  if (application == nullptr) return;
+  if (on && shell.inhibit == 0) {
+    shell.inhibit = gtk_application_inhibit(application, shell.window, GTK_APPLICATION_INHIBIT_IDLE, "Playing a video");
+  } else if (!on && shell.inhibit != 0) {
+    gtk_application_uninhibit(application, shell.inhibit);
+    shell.inhibit = 0;
   }
 }
 
@@ -507,6 +529,8 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
       g_dbus_connection_emit_signal(shell.bus, nullptr, kMprisPath, "org.mpris.MediaPlayer2.Player", "Seeked",
                                     g_variant_new("(x)", position * 1000), nullptr);
     }
+  } else if (method == "setKeepAwake") {
+    SetKeepAwake(BoolValue(args));
   } else if (method == "setTopmost") {
     shell.above = BoolValue(args);
     if (shell.window != nullptr) gtk_window_set_keep_above(shell.window, shell.above);

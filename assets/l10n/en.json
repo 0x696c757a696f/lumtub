@@ -2833,5 +2833,11 @@
   "VideoToolbox（回拷）": "VideoToolbox (copy-back)",
   "安装包不完整：缺少 ffmpeg。请重新安装 Lumtub。": "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.",
   "macOS 版自带 ffmpeg，只用于合并高画质视频和音频：从 FFmpeg 源代码按 LGPL 构建，只含封装格式，不含编解码器，源代码见 https://ffmpeg.org/download.html。": "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.",
-  "状态只在实际播放对应编码后更新。": "The status updates only after a video in that format has played."
+  "状态只在实际播放对应编码后更新。": "The status updates only after a video in that format has played.",
+  "苹方": "PingFang",
+  "冬青黑体": "Hiragino Sans GB",
+  "蘋方": "PingFang (Traditional)",
+  "文泉驿微米黑": "WenQuanYi Micro Hei",
+  "没有找到设备。请确认电视和电脑在同一个局域网，电视已开启投屏（DLNA 或 Chromecast），并允许本程序访问本地网络。": "No devices found. Make sure the TV and this computer are on the same network, casting (DLNA or Chromecast) is on on the TV, and Lumtub may use the local network.",
+  "Wayland 桌面不允许程序把窗口保持在最上层或摆放位置，窗口可能被其他窗口挡住。": "Wayland desktops don't let apps keep a window on top or place it, so other windows may cover it."
 }

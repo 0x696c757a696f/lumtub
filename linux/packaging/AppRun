@@ -1,0 +1,27 @@
+#!/bin/sh
+# Starts Lumtub from the AppImage. Each library under lib/fallback is used
+# only when the system has none of that name.
+here=$(dirname "$(readlink -f "$0")")
+known=$( (ldconfig -p || /sbin/ldconfig -p) 2>/dev/null)
+extra=
+for dir in "$here"/usr/bin/lib/fallback/*/; do
+  [ -d "$dir" ] || continue
+  name=$(basename "$dir")
+  case "$known" in
+    *"/$name
+"* | *"/$name") continue ;;
+  esac
+  if [ -z "$known" ]; then
+    found=
+    for system in /usr/lib64 /usr/lib /lib64 /lib /usr/lib/x86_64-linux-gnu /usr/lib/aarch64-linux-gnu; do
+      [ -e "$system/$name" ] && found=1 && break
+    done
+    [ -n "$found" ] && continue
+  fi
+  extra="$extra${extra:+:}${dir%/}"
+done
+if [ -n "$extra" ]; then
+  LD_LIBRARY_PATH="$extra${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+  export LD_LIBRARY_PATH
+fi
+exec "$here/usr/bin/lumtub" "$@"

@@ -16,7 +16,9 @@ Directory screenshotDirectory([Map<String, String>? environment]) {
 /// 40 characters and cleaned of what Windows does not allow in names.
 String screenshotName(String title, Duration position, DateTime now) {
   final clean = title.replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1f]'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
-  final short = clean.length > 40 ? clean.substring(0, 40).trim() : clean;
+  // A leading dot would hide the file on Linux and macOS.
+  final visible = clean.replaceFirst(RegExp(r'^[.\s]+'), '');
+  final short = visible.length > 40 ? visible.substring(0, 40).trim() : visible;
   String two(int n) => n.toString().padLeft(2, '0');
   final time = '${two(position.inHours)}-${two(position.inMinutes % 60)}-${two(position.inSeconds % 60)}';
   final stamp = '${now.year}${two(now.month)}${two(now.day)}-${two(now.hour)}${two(now.minute)}${two(now.second)}';
@@ -46,7 +48,8 @@ Future<void> copyImageToClipboard(File file) async {
         await copy.stdin.close();
         await copy.exitCode.timeout(const Duration(seconds: 10));
       } else {
-        await Process.run('xclip', ['-selection', 'clipboard', '-t', 'image/png', '-i', file.path]).timeout(const Duration(seconds: 10));
+        // xclip stays behind to hold the clipboard, so it is not waited for.
+        await Process.start('xclip', ['-selection', 'clipboard', '-t', 'image/png', '-i', file.path], mode: ProcessStartMode.detached);
       }
     } catch (_) {
       // Neither is installed; the file is saved.

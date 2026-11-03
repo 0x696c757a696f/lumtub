@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
@@ -5,8 +7,38 @@ import '../player_settings.dart';
 import '../widgets/pilinara_settings_tiles.dart';
 import 'pages/watch_page.dart' show subtitleViewFor;
 
-/// Font families Windows installs, offered before a typed name.
-const subtitleFonts = [
+/// Font families this system installs, offered before a typed name.
+List<(String, String)> get subtitleFonts => Platform.isMacOS ? _macFonts : Platform.isLinux ? _linuxFonts : _windowsFonts;
+
+const _macFonts = [
+  ('', '默认'),
+  ('PingFang SC', '苹方'),
+  ('Hiragino Sans GB', '冬青黑体'),
+  ('Songti SC', '宋体'),
+  ('Kaiti SC', '楷体'),
+  ('PingFang TC', '蘋方'),
+  ('Helvetica Neue', 'Helvetica Neue'),
+  ('Arial', 'Arial'),
+  ('Verdana', 'Verdana'),
+  ('Georgia', 'Georgia'),
+  ('Hiragino Sans', 'Hiragino Sans'),
+  ('Apple SD Gothic Neo', 'Apple SD Gothic Neo'),
+];
+
+const _linuxFonts = [
+  ('', '默认'),
+  ('Noto Sans CJK SC', 'Noto Sans CJK SC'),
+  ('Noto Serif CJK SC', 'Noto Serif CJK SC'),
+  ('WenQuanYi Micro Hei', '文泉驿微米黑'),
+  ('Noto Sans CJK TC', 'Noto Sans CJK TC'),
+  ('Noto Sans', 'Noto Sans'),
+  ('DejaVu Sans', 'DejaVu Sans'),
+  ('Liberation Sans', 'Liberation Sans'),
+  ('Noto Sans CJK JP', 'Noto Sans CJK JP'),
+  ('Noto Sans CJK KR', 'Noto Sans CJK KR'),
+];
+
+const _windowsFonts = [
   ('', '默认'),
   ('Microsoft YaHei', '微软雅黑'),
   ('DengXian', '等线'),

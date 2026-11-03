@@ -206,15 +206,30 @@ impl Sealer {
     /// A new key; one behind the user's confirmation asks for it. [reason]
     /// is what the system's prompt says.
     pub fn new(presence: bool, reason: &str) -> Sealer {
+        // One at a time: two first seals at once would each make a key and
+        // the second would replace the first.
+        static MAKING: std::sync::Mutex<()> = std::sync::Mutex::new(());
+        let _making = MAKING.lock().unwrap_or_else(|e| e.into_inner());
         // A keyring holds one key for the app: one already there is used
         // again, so that files sealed earlier still open.
+        let mut unsure = false;
         for &mode in keys::modes(presence) {
-            if let Some(key) = keys::existing(mode, reason)
-                && key.len() == 32
-                && let Some(key) = Secret::new(&key)
-            {
-                return Sealer { key: Some(key), mode, wrapped: vec![mode] };
+            match keys::existing(mode, reason) {
+                Ok(Some(key)) if key.len() == 32 => {
+                    if let Some(key) = Secret::new(&key) {
+                        return Sealer { key: Some(key), mode, wrapped: vec![mode] };
+                    }
+                }
+                Ok(_) => {}
+                Err(_) => unsure = true,
             }
+        }
+        // A keyring that did not answer, or whose prompt was dismissed, may
+        // still hold the key: a new one would replace it and every file
+        // sealed with it would never open again. Kept unencrypted this time
+        // instead, by the file's permissions.
+        if unsure {
+            return Sealer { key: None, mode: PLAIN, wrapped: Vec::new() };
         }
         if let Some(key) = random(32) {
             for &mode in keys::modes(presence) {
@@ -426,12 +441,19 @@ mod account {
 /// Writes [data] to [file] by way of a temporary file, readable by the
 /// user alone.
 pub fn write_private(file: &std::path::Path, data: &[u8]) -> std::io::Result<()> {
-    let temporary = file.with_extension("tmp");
+    let mut name = file.as_os_str().to_owned();
+    name.push(".tmp");
+    let temporary = std::path::PathBuf::from(name);
     let mut options = std::fs::OpenOptions::new();
     options.write(true).create(true).truncate(true);
     #[cfg(unix)]
     std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
-    std::io::Write::write_all(&mut options.open(&temporary)?, data)?;
+    let mut out = options.open(&temporary)?;
+    // A temporary file left by a crash keeps the mode it was made with.
+    #[cfg(unix)]
+    out.set_permissions(std::os::unix::fs::PermissionsExt::from_mode(0o600))?;
+    std::io::Write::write_all(&mut out, data)?;
+    drop(out);
     std::fs::rename(&temporary, file)
 }
 
@@ -572,8 +594,8 @@ mod keys {
     }
 
     /// Every file carries its own wrapped key here.
-    pub fn existing(_: u8, _: &str) -> Option<Locked> {
-        None
+    pub fn existing(_: u8, _: &str) -> Result<Option<Locked>, Failure> {
+        Ok(None)
     }
 
     pub fn wrap(mode: u8, data: &[u8], _reason: &str) -> Option<Vec<u8>> {
@@ -638,6 +660,8 @@ mod keys {
     const ACCOUNT: &str = "vault key";
     /// errSecUserCanceled.
     const CANCELLED: i32 = -128;
+    /// errSecItemNotFound.
+    const NOT_FOUND: i32 = -25300;
 
     pub fn modes(presence: bool) -> &'static [u8] {
         if presence { &[KEYCHAIN_PRESENCE, KEYCHAIN] } else { &[KEYCHAIN] }
@@ -657,9 +681,19 @@ mod keys {
         options
     }
 
-    /// The key kept in the keychain, if there is one.
-    pub fn existing(mode: u8, reason: &str) -> Option<Locked> {
-        unwrap(mode, &[mode], reason).ok()
+    /// The key kept in the keychain: none only when the keychain says it
+    /// has no such item.
+    pub fn existing(mode: u8, _reason: &str) -> Result<Option<Locked>, Failure> {
+        match generic_password(options(mode, false)) {
+            Ok(mut key) => {
+                let out = Locked::from(&key);
+                zeroize::Zeroize::zeroize(&mut key);
+                out.map(Some).ok_or(Failure::Broken("out of memory".into()))
+            }
+            Err(e) if e.code() == NOT_FOUND => Ok(None),
+            Err(e) if e.code() == CANCELLED => Err(Failure::Cancelled),
+            Err(e) => Err(Failure::Broken(format!("the keychain would not give the key: {}", e.code()))),
+        }
     }
 
     /// Keeps [data] in the keychain; the item stands for the wrapped key.
@@ -697,24 +731,61 @@ mod keys {
         &[SECRET_SERVICE]
     }
 
-    /// Runs [work] on the Secret Service, here on this thread.
-    fn run<T>(work: impl AsyncFnOnce(oo7::Keyring) -> Result<T, String>) -> Result<T, String> {
+    const NO_KEY: &str = "the keyring has no key";
+
+    /// Set once no Secret Service answered: none is asked again until
+    /// Lumtub restarts, so that each save does not wait for it.
+    static UNREACHABLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+    /// Runs [work] on the Secret Service, here on this thread. Unlocking
+    /// waits for the user; everything else answers within 10 seconds.
+    fn run<T: Send>(work: impl AsyncFnOnce(oo7::Keyring) -> Result<T, String> + Send) -> Result<T, String> {
+        use std::sync::atomic::Ordering;
+        if UNREACHABLE.load(Ordering::Relaxed) {
+            return Err("no keyring answered".to_owned());
+        }
+        // Called from a thread that runs async work itself, such as the one
+        // making web requests, which cannot wait for another runtime.
+        if tokio::runtime::Handle::try_current().is_ok() {
+            return std::thread::scope(|scope| scope.spawn(|| run_here(work)).join().unwrap_or_else(|_| Err("the keyring thread failed".to_owned())));
+        }
+        run_here(work)
+    }
+
+    fn run_here<T>(work: impl AsyncFnOnce(oo7::Keyring) -> Result<T, String>) -> Result<T, String> {
+        use std::sync::atomic::Ordering;
         let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().map_err(|e| e.to_string())?;
         runtime.block_on(async {
-            let keyring = tokio::time::timeout(Duration::from_secs(10), oo7::Keyring::new()).await.map_err(|_| "no keyring answered".to_owned())?.map_err(|e| e.to_string())?;
+            let keyring = match tokio::time::timeout(Duration::from_secs(10), oo7::Keyring::new()).await {
+                Ok(Ok(keyring)) => keyring,
+                Ok(Err(e)) => {
+                    UNREACHABLE.store(true, Ordering::Relaxed);
+                    return Err(e.to_string());
+                }
+                Err(_) => {
+                    UNREACHABLE.store(true, Ordering::Relaxed);
+                    return Err("no keyring answered".to_owned());
+                }
+            };
             work(keyring).await
         })
     }
 
-    /// The key kept in the keyring, if there is one.
-    pub fn existing(mode: u8, reason: &str) -> Option<Locked> {
-        unwrap(mode, &[mode], reason).ok()
+    /// The key kept in the keyring: none only when the keyring answers
+    /// that it has none.
+    pub fn existing(mode: u8, reason: &str) -> Result<Option<Locked>, Failure> {
+        match unwrap(mode, &[mode], reason) {
+            Ok(key) => Ok(Some(key)),
+            Err(Failure::Broken(why)) if why == NO_KEY => Ok(None),
+            Err(e) => Err(e),
+        }
     }
 
     pub fn wrap(_mode: u8, data: &[u8], _reason: &str) -> Option<Vec<u8>> {
         run(async |keyring| {
             keyring.unlock().await.map_err(|e| e.to_string())?;
-            keyring.create_item("Lumtub", &ATTRIBUTES, oo7::Secret::blob(data), true).await.map_err(|e| e.to_string())
+            // Only ever called when the keyring said it had no key.
+            keyring.create_item("Lumtub", &ATTRIBUTES, oo7::Secret::blob(data), false).await.map_err(|e| e.to_string())
         })
         .ok()?;
         Some(vec![SECRET_SERVICE])
@@ -726,7 +797,7 @@ mod keys {
         }
         let key = run(async |keyring| {
             let items = keyring.search_items(&ATTRIBUTES).await.map_err(|e| e.to_string())?;
-            let item = items.first().ok_or("the keyring has no key")?;
+            let item = items.first().ok_or(NO_KEY)?;
             if item.is_locked().await.unwrap_or(false) {
                 item.unlock().await.map_err(|e| e.to_string())?;
             }
@@ -747,8 +818,8 @@ mod keys {
     pub fn modes(_presence: bool) -> &'static [u8] {
         &[]
     }
-    pub fn existing(_: u8, _: &str) -> Option<Locked> {
-        None
+    pub fn existing(_: u8, _: &str) -> Result<Option<Locked>, Failure> {
+        Ok(None)
     }
     pub fn wrap(_: u8, _: &[u8], _: &str) -> Option<Vec<u8>> {
         None

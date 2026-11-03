@@ -44,6 +44,13 @@ class ToolManager {
   static final _separator = Platform.pathSeparator;
 
   /// [name] as an executable's file name on this system.
+  /// Lets [path] run off Windows, whatever mode the archive gave it.
+  static Future<void> _makeExecutable(String path) async {
+    if (Platform.isWindows) return;
+    final chmod = await Process.run('chmod', ['755', path]);
+    if (chmod.exitCode != 0) throw StateError('chmod $path failed: ${chmod.stderr}');
+  }
+
   static String _exe(String name) => Platform.isWindows ? '$name.exe' : name;
 
   static bool get _linuxArm64 => Abi.current() == Abi.linuxArm64;
@@ -363,6 +370,7 @@ class ToolManager {
     }
     final exe = File('${into.path}$_separator${_exe('yt-dlp')}');
     if (!await exe.exists()) throw StateError('$ytDlpFolderAsset has no ${_exe('yt-dlp')}');
+    await _makeExecutable(exe.path);
     return exe;
   }
 
@@ -479,6 +487,7 @@ class ToolManager {
       if (!await File('${partial.path}$_separator${_exe('deno')}').exists()) {
         throw StateError('Deno release did not contain ${_exe('deno')}');
       }
+      await _makeExecutable('${partial.path}$_separator${_exe('deno')}');
       await dest.parent.create(recursive: true);
       await partial.rename(dest.path);
     } catch (_) {

@@ -5,10 +5,24 @@ import 'package:lumtub/app_updater.dart';
 import 'package:lumtub/ffmpeg_component.dart';
 import 'package:lumtub/native_core.dart';
 import 'package:lumtub/network_proxy.dart';
+import 'package:lumtub/power.dart';
+import 'package:lumtub/screenshot.dart';
 import 'package:lumtub/secure_store.dart';
 import 'package:lumtub/user_folders.dart';
 
 void main() {
+  test('only a discharging system battery saves power on Linux', () {
+    expect(Power.linuxSupplySaving('Battery\n', 'Discharging\n', ''), isTrue);
+    expect(Power.linuxSupplySaving('Battery', 'Charging', ''), isFalse);
+    expect(Power.linuxSupplySaving('Battery', 'Discharging', 'Device'), isFalse);
+    expect(Power.linuxSupplySaving('Mains', 'Discharging', ''), isFalse);
+  });
+
+  test('a screenshot name never starts with a dot', () {
+    expect(screenshotName('.hidden title', Duration.zero, DateTime(2026)), startsWith('hidden title_'));
+    expect(screenshotName('...', Duration.zero, DateTime(2026)), startsWith('Lumtub_'));
+  });
+
   test('user folders follow each system', () {
     expect(userFolder(UserFolder.videos, environment: {'USERPROFILE': r'C:\Users\me'}, windows: true), r'C:\Users\me\Videos');
     expect(userFolder(UserFolder.videos, environment: {'HOME': '/Users/me'}, windows: false, mac: true), '/Users/me/Movies');

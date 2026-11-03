@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -116,7 +118,7 @@ class _CastDialogState extends State<_CastDialog> {
             ] else if (_devices.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(tr('没有找到设备。请确认电视和电脑在同一个局域网，电视已开启投屏（DLNA 或 Chromecast），并允许本程序通过 Windows 防火墙。'), style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5)),
+                child: Text(Platform.isWindows ? tr('没有找到设备。请确认电视和电脑在同一个局域网，电视已开启投屏（DLNA 或 Chromecast），并允许本程序通过 Windows 防火墙。') : tr('没有找到设备。请确认电视和电脑在同一个局域网，电视已开启投屏（DLNA 或 Chromecast），并允许本程序访问本地网络。'), style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5)),
               ),
             Flexible(
               child: ListView(shrinkWrap: true, children: [

@@ -41,8 +41,30 @@ pub fn is_chromium(exe: &Path) -> bool {
     }
 }
 
+/// macOS: Chromium-based browsers in Applications, the user's own first.
+#[cfg(target_os = "macos")]
+pub fn find_browser() -> Option<PathBuf> {
+    const APPS: [&str; 5] = ["Google Chrome", "Microsoft Edge", "Brave Browser", "Chromium", "Vivaldi"];
+    let mut roots = Vec::new();
+    if let Some(home) = std::env::var_os("HOME") {
+        roots.push(PathBuf::from(home).join("Applications"));
+    }
+    roots.push(PathBuf::from("/Applications"));
+    APPS.iter().find_map(|app| roots.iter().map(|root| root.join(format!("{app}.app/Contents/MacOS/{app}"))).find(|p| p.is_file()))
+}
+
+/// Linux: Chromium-based browsers on the PATH, as their packages name them.
+#[cfg(all(unix, not(target_os = "macos")))]
+pub fn find_browser() -> Option<PathBuf> {
+    const NAMES: [&str; 9] = ["google-chrome-stable", "google-chrome", "microsoft-edge-stable", "microsoft-edge", "brave-browser", "brave", "chromium", "chromium-browser", "vivaldi-stable"];
+    let path = std::env::var_os("PATH")?;
+    let folders: Vec<PathBuf> = std::env::split_paths(&path).collect();
+    NAMES.iter().find_map(|name| folders.iter().map(|folder| folder.join(name)).find(|p| p.is_file()))
+}
+
 /// The browser to open: Edge, then the default browser if it is
 /// Chromium-based, then Chrome.
+#[cfg(windows)]
 pub fn find_browser() -> Option<PathBuf> {
     let installed = |parts: &[&str]| {
         ["ProgramFiles(x86)", "ProgramFiles", "LOCALAPPDATA"]
@@ -77,11 +99,6 @@ fn app_path(name: &str) -> Option<PathBuf> {
     })
 }
 
-#[cfg(not(windows))]
-fn app_path(_name: &str) -> Option<PathBuf> {
-    None
-}
-
 #[cfg(windows)]
 fn default_browser() -> Option<PathBuf> {
     use windows_sys::Win32::UI::Shell::{ASSOCF_IS_PROTOCOL, ASSOCSTR_EXECUTABLE, AssocQueryStringW};
@@ -98,19 +115,15 @@ fn default_browser() -> Option<PathBuf> {
     Some(PathBuf::from(String::from_utf16_lossy(&buffer[..end]))).filter(|p| p.is_file())
 }
 
-#[cfg(not(windows))]
-fn default_browser() -> Option<PathBuf> {
-    None
-}
-
 /// The browser's name for messages, from its executable.
 pub fn browser_name(exe: &Path) -> String {
     let name = exe.file_stem().and_then(|n| n.to_str()).unwrap_or("browser").to_ascii_lowercase();
     match name.as_str() {
-        "msedge" => "Microsoft Edge".into(),
-        "chrome" => "Google Chrome".into(),
-        "brave" => "Brave".into(),
-        "vivaldi" => "Vivaldi".into(),
+        "msedge" | "microsoft edge" | "microsoft-edge" | "microsoft-edge-stable" => "Microsoft Edge".into(),
+        "chrome" | "google chrome" | "google-chrome" | "google-chrome-stable" => "Google Chrome".into(),
+        "brave" | "brave browser" | "brave-browser" => "Brave".into(),
+        "vivaldi" | "vivaldi-stable" => "Vivaldi".into(),
+        "chromium" | "chromium-browser" => "Chromium".into(),
         "opera" | "launcher" => "Opera".into(),
         _ => name,
     }

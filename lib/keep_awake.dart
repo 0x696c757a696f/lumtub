@@ -1,8 +1,11 @@
 import 'dart:ffi';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
+
 /// Keeps the display on while a video plays, through Windows'
-/// SetThreadExecutionState. The setting belongs to the calling thread (the
+/// SetThreadExecutionState; on Linux and macOS the runner holds off the
+/// screen saver (linux_shell.cc, MacShell.swift). The setting belongs to the calling thread (the
 /// UI thread, where every call here comes from) and several players can
 /// ask at once, such as the page and its fullscreen copy, so the display is
 /// released only when the last one lets go.
@@ -18,7 +21,18 @@ class KeepAwake {
   static final _setThreadExecutionState =
       Platform.isWindows ? DynamicLibrary.open('kernel32.dll').lookupFunction<Uint32 Function(Uint32), int Function(int)>('SetThreadExecutionState') : null;
 
-  static void _systemApply(int flags) => _setThreadExecutionState?.call(flags);
+  static bool? _shellAwake;
+
+  static void _systemApply(int flags) {
+    if (Platform.isWindows) {
+      _setThreadExecutionState?.call(flags);
+      return;
+    }
+    final awake = flags & _displayRequired != 0;
+    if (awake == _shellAwake) return;
+    _shellAwake = awake;
+    const MethodChannel('lumtub/windows_shell').invokeMethod<void>('setKeepAwake', awake).catchError((Object _) {});
+  }
 
   static bool _hidden = false;
 

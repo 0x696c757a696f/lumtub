@@ -2586,7 +2586,6 @@
   "YouTube 不接受当前登录的这项操作": "YouTube does not accept this action from the current sign-in",
   "Lumtub 要使用你保存的 YouTube 登录": "Lumtub wants to use your saved YouTube sign-in",
   "Cookie 登录没有启动": "The cookie sign-in did not start",
-  "没有找到 Edge、Chrome 或其他 Chromium 内核的浏览器，请改用导入 cookies.txt": "No Edge, Chrome or other Chromium-based browser was found. Import a cookies.txt instead.",
   "这些 Cookie 没有登录 YouTube": "These cookies are not signed in to YouTube",
   "文件里没有 youtube.com 的 Cookie": "The file has no youtube.com cookies",
   "Cookie 登录失败（{0}）": "Cookie sign-in failed ({0})",
@@ -2848,5 +2847,6 @@
   "通过 XWayland 显示窗口，置顶和画中画能保持在最上层；高分屏缩放下画面可能略模糊": "Draws the window through XWayland so pinning and picture in picture stay on top; may look slightly blurry with display scaling",
   "这个 Wayland 桌面不允许程序把窗口保持在最上层。改用 X11 兼容模式后可以置顶，需要重启 Lumtub。": "This Wayland desktop doesn't let apps keep a window on top. X11 compatibility mode allows it and needs a restart of Lumtub.",
   "切换并重启": "Switch and restart",
-  "无法切换：{0}": "Could not switch: {0}"
+  "无法切换：{0}": "Could not switch: {0}",
+  "没有找到 Edge、Chrome、Firefox 或其他 Chromium 内核的浏览器，请改用导入 cookies.txt": "No Edge, Chrome, Firefox or other Chromium-based browser was found. Import a cookies.txt instead."
 }

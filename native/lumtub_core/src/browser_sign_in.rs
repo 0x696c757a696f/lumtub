@@ -1,9 +1,10 @@
 //! Signing in to YouTube in a browser window of its own: Edge, or the
-//! default browser when it is Chromium-based, or Chrome, opened with a
-//! fresh profile of its own. The user signs in there as on any browser and
-//! closes the window; the profile is then opened again without a window,
-//! its YouTube cookies are read through the DevTools port on 127.0.0.1 and
-//! the profile is deleted. The user's own browser profiles are never opened.
+//! default browser when it is Chromium-based or Firefox, or Chrome, or
+//! Firefox, opened with a fresh profile of its own. The user signs in there
+//! as on any browser and closes the window; the profile is then opened again
+//! without a window, its YouTube cookies are read through the DevTools port
+//! (Chromium) or the WebDriver BiDi port (Firefox) on 127.0.0.1 and the
+//! profile is deleted. The user's own browser profiles are never opened.
 
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
@@ -30,6 +31,13 @@ const PATIENCE: Duration = Duration::from_secs(15 * 60);
 /// Executable names of Chromium-based browsers, which take the flags used here.
 const CHROMIUM: [&str; 8] = ["msedge.exe", "chrome.exe", "brave.exe", "vivaldi.exe", "chromium.exe", "opera.exe", "thorium.exe", "browser.exe"];
 
+/// Whether [exe] is Firefox, which is driven through WebDriver BiDi.
+pub fn is_firefox(exe: &Path) -> bool {
+    let path = exe.to_string_lossy().to_ascii_lowercase();
+    let name = path.rsplit(['\\', '/']).next().unwrap_or("");
+    matches!(name.strip_suffix(".exe").unwrap_or(name), "firefox" | "org.mozilla.firefox")
+}
+
 pub fn is_chromium(exe: &Path) -> bool {
     let path = exe.to_string_lossy().to_ascii_lowercase();
     let name = path.rsplit(['\\', '/']).next().unwrap_or("");
@@ -41,7 +49,8 @@ pub fn is_chromium(exe: &Path) -> bool {
     }
 }
 
-/// macOS: Chromium-based browsers in Applications, the user's own first.
+/// macOS: Chromium-based browsers in Applications, the user's own first,
+/// then Firefox.
 #[cfg(target_os = "macos")]
 pub fn find_browser() -> Option<PathBuf> {
     const APPS: [&str; 5] = ["Google Chrome", "Microsoft Edge", "Brave Browser", "Chromium", "Vivaldi"];
@@ -50,11 +59,14 @@ pub fn find_browser() -> Option<PathBuf> {
         roots.push(PathBuf::from(home).join("Applications"));
     }
     roots.push(PathBuf::from("/Applications"));
-    APPS.iter().find_map(|app| roots.iter().map(|root| root.join(format!("{app}.app/Contents/MacOS/{app}"))).find(|p| p.is_file()))
+    APPS.iter()
+        .find_map(|app| roots.iter().map(|root| root.join(format!("{app}.app/Contents/MacOS/{app}"))).find(|p| p.is_file()))
+        .or_else(|| roots.iter().map(|root| root.join("Firefox.app/Contents/MacOS/firefox")).find(|p| p.is_file()))
 }
 
 /// Linux: Chromium-based browsers on the PATH, as their packages name
-/// them (Snap's among them), then those installed from Flathub.
+/// them (Snap's among them), then those installed from Flathub, then
+/// Firefox the same way.
 #[cfg(all(unix, not(target_os = "macos")))]
 pub fn find_browser() -> Option<PathBuf> {
     const NAMES: [&str; 9] = ["google-chrome-stable", "google-chrome", "microsoft-edge-stable", "microsoft-edge", "brave-browser", "brave", "chromium", "chromium-browser", "vivaldi-stable"];
@@ -62,19 +74,21 @@ pub fn find_browser() -> Option<PathBuf> {
     let mut folders: Vec<PathBuf> = std::env::var_os("PATH").map(|path| std::env::split_paths(&path).collect()).unwrap_or_default();
     // Snap's commands, also when the PATH Lumtub was started with lacks them.
     folders.push(PathBuf::from("/snap/bin"));
-    let on_path = NAMES.iter().find_map(|name| folders.iter().map(|folder| folder.join(name)).find(|p| p.is_file()));
-    on_path.or_else(|| {
-        let mut exports = Vec::new();
-        if let Some(home) = std::env::var_os("HOME") {
-            exports.push(PathBuf::from(home).join(".local/share/flatpak/exports/bin"));
-        }
-        exports.push(PathBuf::from("/var/lib/flatpak/exports/bin"));
-        FLATPAKS.iter().find_map(|id| exports.iter().map(|folder| folder.join(id)).find(|p| p.is_file()))
-    })
+    let mut exports = Vec::new();
+    if let Some(home) = std::env::var_os("HOME") {
+        exports.push(PathBuf::from(home).join(".local/share/flatpak/exports/bin"));
+    }
+    exports.push(PathBuf::from("/var/lib/flatpak/exports/bin"));
+    let first = |names: &[&str], folders: &[PathBuf]| names.iter().find_map(|name| folders.iter().map(|folder| folder.join(name)).find(|p| p.is_file()));
+    first(&NAMES, &folders)
+        .or_else(|| first(&FLATPAKS, &exports))
+        .or_else(|| first(&["firefox"], &folders))
+        .or_else(|| first(&["org.mozilla.firefox"], &exports))
 }
 
-/// The browser to open: Edge, then the default browser if it is
-/// Chromium-based, then Chrome.
+/// The browser to open: the default browser if it is Firefox, else Edge,
+/// then the default browser if it is Chromium-based, then Chrome, then
+/// Firefox.
 #[cfg(windows)]
 pub fn find_browser() -> Option<PathBuf> {
     let installed = |parts: &[&str]| {
@@ -84,11 +98,17 @@ pub fn find_browser() -> Option<PathBuf> {
             .map(|root| parts.iter().fold(PathBuf::from(root), |p, part| p.join(part)))
             .find(|p| p.is_file())
     };
-    installed(&["Microsoft", "Edge", "Application", "msedge.exe"])
+    let default = default_browser();
+    default
+        .clone()
+        .filter(|p| is_firefox(p))
+        .or_else(|| installed(&["Microsoft", "Edge", "Application", "msedge.exe"]))
         .or_else(|| app_path("msedge.exe"))
-        .or_else(|| default_browser().filter(|p| is_chromium(p)))
+        .or_else(|| default.filter(|p| is_chromium(p)))
         .or_else(|| installed(&["Google", "Chrome", "Application", "chrome.exe"]))
         .or_else(|| app_path("chrome.exe"))
+        .or_else(|| installed(&["Mozilla Firefox", "firefox.exe"]))
+        .or_else(|| app_path("firefox.exe"))
 }
 
 /// Where [name] is installed, as its installer registered under App Paths.
@@ -140,13 +160,14 @@ pub fn browser_name(exe: &Path) -> String {
         "com.brave" => "Brave".into(),
         "org.chromium" => "Chromium".into(),
         "com.vivaldi" => "Vivaldi".into(),
+        "firefox" | "org.mozilla" => "Mozilla Firefox".into(),
         "opera" | "launcher" => "Opera".into(),
         _ => name,
     }
 }
 
-/// A minimal WebSocket client for the browser's DevTools port, which only
-/// ever listens on 127.0.0.1.
+/// A minimal WebSocket client for the browser's DevTools or WebDriver BiDi
+/// port, which only ever listens on 127.0.0.1.
 struct Socket {
     stream: TcpStream,
     next: u64,
@@ -244,7 +265,9 @@ impl Socket {
     }
 }
 
-/// The youtube.com cookies in a DevTools `Storage.getCookies` answer.
+/// The youtube.com cookies in a DevTools `Storage.getCookies` or a
+/// WebDriver BiDi `storage.getCookies` answer; BiDi gives a value as
+/// `{"type": "string", "value": ...}`.
 pub fn youtube_cookies(answer: &[u8]) -> Jar {
     let value: Value = serde_json::from_slice(answer).unwrap_or_default();
     let mut jar = Jar::default();
@@ -253,7 +276,12 @@ pub fn youtube_cookies(answer: &[u8]) -> Jar {
         if domain != "youtube.com" && !domain.ends_with(".youtube.com") {
             continue;
         }
-        if let (Some(name), Some(value)) = (cookie.get("name").and_then(Value::as_str), cookie.get("value").and_then(Value::as_str)) {
+        let value = cookie.get("value").and_then(|v| match v.get("type").and_then(Value::as_str) {
+            Some("string") => v.get("value").and_then(Value::as_str),
+            Some(_) => None,
+            None => v.as_str(),
+        });
+        if let (Some(name), Some(value)) = (cookie.get("name").and_then(Value::as_str), value) {
             jar.set(name, value);
         }
     }
@@ -273,6 +301,24 @@ fn listening(said: &str) -> Option<(u16, String)> {
     let (host, path) = address.split_once('/')?;
     let port = host.rsplit_once(':')?.1.parse().ok()?;
     Some((port, format!("/{path}")))
+}
+
+/// The port in Firefox's "WebDriver BiDi listening on ws://127.0.0.1:<port>"
+/// line.
+fn bidi_listening(said: &str) -> Option<u16> {
+    let address = said.lines().find_map(|l| l.trim().split_once("WebDriver BiDi listening on ws://").map(|(_, a)| a))?;
+    let host = address.split('/').next()?;
+    host.rsplit_once(':')?.1.trim().parse().ok().filter(|&port| port != 0)
+}
+
+/// Why a WebDriver BiDi answer is an error, if it is one.
+fn bidi_error(answer: &[u8]) -> Option<String> {
+    let value: Value = serde_json::from_slice(answer).unwrap_or_default();
+    if value.get("type").and_then(Value::as_str) != Some("error") {
+        return None;
+    }
+    let text = |key| value.get(key).and_then(Value::as_str).unwrap_or("");
+    Some(format!("{}: {}", text("error"), text("message")))
 }
 
 /// The DevTools port and path the browser wrote into its profile.
@@ -314,9 +360,9 @@ fn remove_profile(profile: &Path) {
     }
 }
 
-fn close(browser: &mut Child, profile: &Path, socket: Option<&mut Socket>) {
+fn close(browser: &mut Child, profile: &Path, socket: Option<&mut Socket>, method: &str) {
     if let Some(socket) = socket {
-        let _ = socket.call("Browser.close", json!({}));
+        let _ = socket.call(method, json!({}));
     }
     let deadline = Instant::now() + Duration::from_secs(10);
     while Instant::now() < deadline {
@@ -331,13 +377,13 @@ fn close(browser: &mut Child, profile: &Path, socket: Option<&mut Socket>) {
 
 /// Whether a browser still has [profile] open. Chromium holds `lockfile`
 /// open without delete sharing on Windows and deletes it on exit; elsewhere
-/// it keeps the `SingletonLock` link.
+/// it keeps the `SingletonLock` link. Firefox holds `parent.lock` on Windows
+/// and keeps the `lock` link elsewhere.
 fn profile_in_use(profile: &Path) -> bool {
     if cfg!(windows) {
-        let lock = profile.join("lockfile");
-        lock.exists() && std::fs::remove_file(&lock).is_err()
+        ["lockfile", "parent.lock"].iter().map(|name| profile.join(name)).any(|lock| lock.exists() && std::fs::remove_file(&lock).is_err())
     } else {
-        profile.join("SingletonLock").symlink_metadata().is_ok()
+        ["SingletonLock", "lock"].iter().any(|name| profile.join(name).symlink_metadata().is_ok())
     }
 }
 
@@ -364,12 +410,20 @@ fn wait_closed(browser: &mut Child, profile: &Path, current: impl Fn() -> bool, 
 }
 
 /// Opens [profile] again in [exe] without a window and reads its YouTube
-/// cookies through the DevTools port. An empty error: cancelled.
+/// cookies through the DevTools port, or the WebDriver BiDi port for
+/// Firefox. An empty error: cancelled.
 fn read_profile(exe: &Path, profile: &Path, current: impl Fn() -> bool) -> Result<Jar, String> {
+    let firefox = is_firefox(exe);
     let _ = std::fs::remove_file(profile.join("DevToolsActivePort"));
-    let mut browser = Command::new(exe)
-        .arg(format!("--user-data-dir={}", profile.display()))
-        .args(["--headless=new", "--remote-debugging-port=0", "--no-first-run", "--no-default-browser-check", "--disable-sync", "about:blank"])
+    let mut command = Command::new(exe);
+    if firefox {
+        command.args(["-headless", "-no-remote", "-profile"]).arg(profile).args(["--remote-debugging-port", "0", "about:blank"]);
+    } else {
+        command
+            .arg(format!("--user-data-dir={}", profile.display()))
+            .args(["--headless=new", "--remote-debugging-port=0", "--no-first-run", "--no-default-browser-check", "--disable-sync", "about:blank"]);
+    }
+    let mut browser = command
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
         .spawn()
@@ -395,16 +449,10 @@ fn read_profile(exe: &Path, profile: &Path, current: impl Fn() -> bool) -> Resul
         if !current() {
             break String::new();
         }
-        if let Some(Ok(mut socket)) = devtools(profile).or_else(|| listening(&heard())).map(|(port, path)| Socket::connect(port, &path)) {
-            let read = match socket.call("Storage.getCookies", json!({})) {
-                Ok(mut answer) => {
-                    let jar = youtube_cookies(&answer);
-                    answer.zeroize();
-                    Ok(jar)
-                }
-                Err(e) => Err(format!("could not read the cookies: {e}")),
-            };
-            close(&mut browser, profile, Some(&mut socket));
+        let address = if firefox { bidi_listening(&heard()).map(|port| (port, "/session".to_owned())) } else { devtools(profile).or_else(|| listening(&heard())) };
+        if let Some(Ok(mut socket)) = address.map(|(port, path)| Socket::connect(port, &path)) {
+            let read = if firefox { read_bidi(&mut socket) } else { read_devtools(&mut socket) };
+            close(&mut browser, profile, Some(&mut socket), if firefox { "browser.close" } else { "Browser.close" });
             return read;
         }
         // Like the window, the process started may hand over to another
@@ -419,9 +467,54 @@ fn read_profile(exe: &Path, profile: &Path, current: impl Fn() -> bool) -> Resul
         }
         std::thread::sleep(Duration::from_millis(300));
     };
-    close(&mut browser, profile, None);
+    close(&mut browser, profile, None, "");
     Err(failed)
 }
+
+fn read_devtools(socket: &mut Socket) -> Result<Jar, String> {
+    match socket.call("Storage.getCookies", json!({})) {
+        Ok(mut answer) => {
+            let jar = youtube_cookies(&answer);
+            answer.zeroize();
+            Ok(jar)
+        }
+        Err(e) => Err(format!("could not read the cookies: {e}")),
+    }
+}
+
+fn read_bidi(socket: &mut Socket) -> Result<Jar, String> {
+    let started = socket.call("session.new", json!({"capabilities": {}})).map_err(|e| format!("could not start a session: {e}"))?;
+    if let Some(why) = bidi_error(&started) {
+        return Err(format!("could not start a session: {why}"));
+    }
+    match socket.call("storage.getCookies", json!({})) {
+        Ok(mut answer) => {
+            let read = match bidi_error(&answer) {
+                Some(why) => Err(format!("could not read the cookies: {why}")),
+                None => Ok(youtube_cookies(&answer)),
+            };
+            answer.zeroize();
+            read
+        }
+        Err(e) => Err(format!("could not read the cookies: {e}")),
+    }
+}
+
+/// Settings that keep a fresh Firefox profile from opening welcome pages,
+/// asking to be the default browser or talking to the user on the way out.
+const FIREFOX_SETTINGS: &str = r#"user_pref("browser.shell.checkDefaultBrowser", false);
+user_pref("browser.startup.homepage_override.mstone", "ignore");
+user_pref("startup.homepage_welcome_url", "");
+user_pref("startup.homepage_welcome_url.additional", "");
+user_pref("browser.aboutwelcome.enabled", false);
+user_pref("browser.warnOnQuit", false);
+user_pref("browser.tabs.warnOnClose", false);
+user_pref("browser.sessionstore.resume_from_crash", false);
+user_pref("datareporting.policy.dataSubmissionEnabled", false);
+user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
+user_pref("toolkit.telemetry.reportingpolicy.firstRun", false);
+user_pref("remote.active-protocols", 1);
+"#;
 
 /// Opens [exe] with a fresh profile under [folder] at the sign-in page and
 /// waits, on this thread, for the user to sign in and close the window.
@@ -432,16 +525,20 @@ fn read_profile(exe: &Path, profile: &Path, current: impl Fn() -> bool) -> Resul
 pub fn sign_in(exe: &Path, folder: &Path, url: &str, opened: impl FnOnce(), reading: impl FnOnce()) -> Outcome {
     let attempt = ATTEMPT.fetch_add(1, Ordering::SeqCst) + 1;
     let current = || ATTEMPT.load(Ordering::SeqCst) == attempt;
+    let firefox = is_firefox(exe);
     let profile = profile_for(exe, folder);
     remove_profile(&profile);
-    if std::fs::create_dir_all(&profile).is_err() {
+    if std::fs::create_dir_all(&profile).is_err() || (firefox && std::fs::write(profile.join("user.js"), FIREFOX_SETTINGS).is_err()) {
+        remove_profile(&profile);
         return Outcome::Failed("could not make the browser's profile folder".into());
     }
-    let started = Command::new(exe)
-        .arg(format!("--user-data-dir={}", profile.display()))
-        .args(["--no-first-run", "--no-default-browser-check", "--disable-sync", "--new-window"])
-        .arg(url)
-        .spawn();
+    let mut command = Command::new(exe);
+    if firefox {
+        command.args(["-no-remote", "-profile"]).arg(&profile).args(["-new-window", url]);
+    } else {
+        command.arg(format!("--user-data-dir={}", profile.display())).args(["--no-first-run", "--no-default-browser-check", "--disable-sync", "--new-window"]).arg(url);
+    }
+    let started = command.spawn();
     let mut browser = match started {
         Ok(child) => child,
         Err(e) => {
@@ -482,6 +579,8 @@ mod tests {
         assert_eq!(profile_for(Path::new("/snap/bin/chromium"), folder), home.join("snap/chromium/common/lumtub-sign-in"));
         assert_eq!(profile_for(Path::new("/var/lib/flatpak/exports/bin/com.google.Chrome"), folder), home.join(".var/app/com.google.Chrome/lumtub-sign-in"));
         assert_eq!(profile_for(Path::new("/usr/bin/google-chrome-stable"), folder), folder.join("browser-sign-in"));
+        assert_eq!(profile_for(Path::new("/snap/bin/firefox"), folder), home.join("snap/firefox/common/lumtub-sign-in"));
+        assert_eq!(profile_for(Path::new("/var/lib/flatpak/exports/bin/org.mozilla.firefox"), folder), home.join(".var/app/org.mozilla.firefox/lumtub-sign-in"));
         assert_eq!(browser_name(Path::new("/var/lib/flatpak/exports/bin/com.brave.Browser")), "Brave");
         assert_eq!(browser_name(Path::new("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")), "Google Chrome");
     }
@@ -492,6 +591,12 @@ mod tests {
         assert!(is_chromium(Path::new(r"C:\Users\a\AppData\Local\Programs\Opera\launcher.exe")));
         assert!(is_chromium(Path::new(r"C:\Users\a\AppData\Local\Yandex\YandexBrowser\Application\browser.exe")));
         assert!(!is_chromium(Path::new(r"C:\Program Files\Mozilla Firefox\firefox.exe")));
+        assert!(is_firefox(Path::new(r"C:\Program Files\Mozilla Firefox\firefox.exe")));
+        assert!(is_firefox(Path::new("/Applications/Firefox.app/Contents/MacOS/firefox")));
+        assert!(is_firefox(Path::new("/var/lib/flatpak/exports/bin/org.mozilla.firefox")));
+        assert!(!is_firefox(Path::new(r"C:\Program Files\Google\Chrome\Application\chrome.exe")));
+        assert_eq!(browser_name(Path::new("/snap/bin/firefox")), "Mozilla Firefox");
+        assert_eq!(browser_name(Path::new("/var/lib/flatpak/exports/bin/org.mozilla.firefox")), "Mozilla Firefox");
         assert!(!is_chromium(Path::new(r"C:\Other\browser.exe")));
         assert_eq!(browser_name(Path::new("msedge.exe")), "Microsoft Edge");
     }
@@ -510,6 +615,33 @@ mod tests {
         let mut half = Jar::default();
         half.set("SAPISID", "a");
         assert!(!finished(&half));
+    }
+
+    #[test]
+    fn reads_youtube_cookies_from_bidi() {
+        let answer = json!({"type": "success", "id": 2, "result": {"cookies": [
+            {"name": "SAPISID", "value": {"type": "string", "value": "a/b"}, "domain": ".youtube.com"},
+            {"name": "SID", "value": {"type": "string", "value": "g"}, "domain": ".google.com"},
+            {"name": "LOGIN_INFO", "value": {"type": "string", "value": "L"}, "domain": ".youtube.com"},
+            {"name": "BIN", "value": {"type": "base64", "value": "AAE="}, "domain": ".youtube.com"},
+            {"name": "PREF", "value": {"type": "string", "value": "hl=en"}, "domain": "www.youtube.com"},
+        ]}});
+        let jar = youtube_cookies(answer.to_string().as_bytes());
+        assert_eq!(jar.header(), "SAPISID=a/b; LOGIN_INFO=L; PREF=hl=en");
+        assert!(finished(&jar));
+        assert!(youtube_cookies(b"not json").is_empty());
+    }
+
+    #[test]
+    fn reads_the_bidi_address_and_errors() {
+        let said = "console.warn: something\nWebDriver BiDi listening on ws://127.0.0.1:9222\n";
+        assert_eq!(bidi_listening(said), Some(9222));
+        assert_eq!(bidi_listening("WebDriver BiDi listening on ws://127.0.0.1:41000/session\n"), Some(41000));
+        assert_eq!(bidi_listening("DevTools listening on ws://127.0.0.1:41235/devtools/browser/0b1c"), None);
+        assert_eq!(bidi_listening("nothing here"), None);
+        let failed = json!({"type": "error", "id": 1, "error": "session not created", "message": "busy"});
+        assert_eq!(bidi_error(failed.to_string().as_bytes()), Some("session not created: busy".to_owned()));
+        assert_eq!(bidi_error(json!({"type": "success", "id": 1, "result": {}}).to_string().as_bytes()), None);
     }
 
     #[test]

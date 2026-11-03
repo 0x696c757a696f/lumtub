@@ -168,7 +168,7 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
   }
 
   static String _why(String code) => switch (code) {
-        'no browser' => tr('没有找到 Edge、Chrome 或其他 Chromium 内核的浏览器，请改用导入 cookies.txt'),
+        'no browser' => tr('没有找到 Edge、Chrome、Firefox 或其他 Chromium 内核的浏览器，请改用导入 cookies.txt'),
         'not signed in' => tr('这些 Cookie 没有登录 YouTube'),
         'closed before signing in' => tr('浏览器窗口关闭时还没有登录 YouTube，请登录完成后再关闭'),
         'no youtube.com cookies' => tr('文件里没有 youtube.com 的 Cookie'),

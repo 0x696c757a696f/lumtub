@@ -87,18 +87,6 @@ public class VideoOutput: NSObject {
       )
     }
 
-    let software = { () -> ResizableTextureProtocol in
-      TextureSW(
-        handle: handle,
-        // Use `weak self` to prevent memory leaks
-        updateCallback: { [weak self]() in
-          guard let that = self else {
-            return
-          }
-          that.updateCallback()
-        }
-      )
-    }
     // Lumtub: without a usable OpenGL renderer, the video is drawn in
     // software rather than the app crashing.
     if enableHardwareAcceleration,
@@ -118,7 +106,18 @@ public class VideoOutput: NSObject {
       if enableHardwareAcceleration {
         NSLog("VideoOutput: OpenGL unavailable; drawing in software")
       }
-      texture = SafeResizableTexture(software())
+      texture = SafeResizableTexture(
+        TextureSW(
+          handle: handle,
+          // Use `weak self` to prevent memory leaks
+          updateCallback: { [weak self]() in
+            guard let that = self else {
+              return
+            }
+            that.updateCallback()
+          }
+        )
+      )
     }
 
     DispatchQueue.main.sync { [weak self]() in

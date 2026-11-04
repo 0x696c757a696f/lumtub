@@ -269,9 +269,16 @@ class ToolManager {
       final request = http.Request('GET', Uri.parse('https://github.com/$repository/releases/latest'))
         ..followRedirects = false
         ..headers['User-Agent'] = _userAgent;
-      final answer = await _client.send(request).timeout(const Duration(seconds: 25));
-      await answer.stream.drain<void>();
-      name = releaseTagOfRedirect(repository, answer.headers['location']);
+      // The Rust client always follows redirects, so the redirect itself is
+      // read with Dart's own client, which uses the app's proxy overrides.
+      final plain = http.Client();
+      try {
+        final answer = await plain.send(request).timeout(const Duration(seconds: 25));
+        await answer.stream.drain<void>();
+        name = releaseTagOfRedirect(repository, answer.headers['location']);
+      } finally {
+        plain.close();
+      }
       if (name == null) throw HttpException('No latest release redirect for $repository');
     }
     final base = 'https://github.com/$repository/releases/download/${Uri.encodeComponent(name)}';

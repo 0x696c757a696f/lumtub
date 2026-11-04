@@ -109,6 +109,7 @@ void main() {
     await tester.tap(find.text('OLED 纯黑'));
     await tester.pumpAndSettle();
     expect(controller.appearance.pureBlack, isTrue);
+    await tester.pump(const Duration(seconds: 1));
     expect(tester.takeException(), isNull);
   });
 

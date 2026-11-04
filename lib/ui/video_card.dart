@@ -165,7 +165,11 @@ class PlaylistCard extends StatelessWidget {
     final colors = context.colors;
     final cover = item.thumbnail;
     return Card(
+      color: Colors.transparent,
+      shape: const RoundedRectangleBorder(borderRadius: AppStyle.cardRadius),
+      clipBehavior: Clip.none,
       child: InkWell(
+        borderRadius: AppStyle.cardRadius,
         onTap: onOpen,
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           AspectRatio(
@@ -199,9 +203,10 @@ class PlaylistCard extends StatelessWidget {
             ),
           ),
           Expanded(child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            padding: const EdgeInsets.fromLTRB(2, 10, 2, 4),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
+              Flexible(child: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
+              const SizedBox(height: Space.xs),
               Text(item.channel.isEmpty ? tr('播放列表') : tr('{0} · 播放列表', [item.channel]), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
             ]),
           )),
@@ -363,8 +368,14 @@ class _VideoCardState extends State<VideoCard> {
       if (item.channel.isNotEmpty) item.channel,
       if (item.viewCount != null) tr('{0}次观看', [formatCount(item.viewCount!)]),
     ].join(' · ');
+    // A picture and text on the page, as YouTube shows them: no box round.
     final card = Card(
+      color: Colors.transparent,
+      shape: const RoundedRectangleBorder(borderRadius: AppStyle.cardRadius),
+      clipBehavior: Clip.none,
       child: InkWell(
+        borderRadius: AppStyle.cardRadius,
+        hoverColor: Colors.transparent,
         onTap: widget.onOpen,
         onHover: _pointerOver,
         onFocusChange: _focus,
@@ -426,9 +437,10 @@ class _VideoCardState extends State<VideoCard> {
             ),
           ),
           Expanded(child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            padding: const EdgeInsets.fromLTRB(2, 10, 2, 4),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
+              Flexible(child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
+              const SizedBox(height: Space.xs),
               Text(meta.isEmpty ? 'YouTube' : meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
               if (widget.reason case final reason?)
                 SizedBox(

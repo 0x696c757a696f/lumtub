@@ -17,6 +17,8 @@ A real native player with danmaku, bilingual subtitles, AI summaries and a recom
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
+<img src="docs/screenshots/watch.png" alt="Lumtub playing a video, with Up next beside it" width="860">
+
 [Why people switch](#why-people-switch) · [Features](#features) · [Get it](#get-it) · [Privacy](#privacy-you-can-check) · [FAQ](#faq) · [Support](#support-lumtub)
 
 </div>
@@ -38,6 +40,13 @@ A real native player with danmaku, bilingual subtitles, AI summaries and a recom
 Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 
 ## Features
+
+<table>
+<tr>
+<td><img src="docs/screenshots/channel.png" alt="A channel page in the light theme"></td>
+<td><img src="docs/screenshots/search.png" alt="Search results with channels and playlists in the dark theme"></td>
+</tr>
+</table>
 
 ### 🎬 A player that respects your hardware
 - **Hardware decoding tuned to your GPU.** Lumtub probes what your graphics card really decodes and picks H.264, VP9 or AV1 to match, so 4K stays smooth on a laptop.

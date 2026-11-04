@@ -165,6 +165,8 @@ class AppearanceSettings {
   final DynamicSchemeVariant schemeVariant;
   /// True black backgrounds in dark mode.
   final bool pureBlack;
+  /// Smaller rows, menus and fields, so more fits on screen.
+  final bool compact;
   final String? fontFamily;
   final double textScale;
   final PageTransition transition;
@@ -185,6 +187,7 @@ class AppearanceSettings {
     this.systemAccent = false,
     this.schemeVariant = DynamicSchemeVariant.tonalSpot,
     this.pureBlack = false,
+    this.compact = false,
     this.fontFamily = autoFont,
     this.textScale = 1.0,
     this.transition = PageTransition.fade,
@@ -209,6 +212,7 @@ class AppearanceSettings {
     bool? systemAccent,
     DynamicSchemeVariant? schemeVariant,
     bool? pureBlack,
+    bool? compact,
     String? fontFamily,
     bool clearFontFamily = false,
     double? textScale,
@@ -228,6 +232,7 @@ class AppearanceSettings {
         systemAccent: systemAccent ?? this.systemAccent,
         schemeVariant: schemeVariant ?? this.schemeVariant,
         pureBlack: pureBlack ?? this.pureBlack,
+        compact: compact ?? this.compact,
         fontFamily: clearFontFamily ? null : fontFamily ?? this.fontFamily,
         textScale: textScale ?? this.textScale,
         transition: transition ?? this.transition,
@@ -244,7 +249,7 @@ class AppearanceSettings {
   String? get font => fontFamily == autoFont ? (systemFitsBundledFont() ? bundledFont : null) : fontFamily;
 
   /// What a theme is built from; themes are rebuilt only when it changes.
-  Object themeKey(Color seed) => (seed, schemeVariant, pureBlack, font, transition);
+  Object themeKey(Color seed) => (seed, schemeVariant, pureBlack, compact, font, transition);
 
   Map<String, dynamic> toJson() => {
         'themeMode': themeMode.name,
@@ -253,6 +258,7 @@ class AppearanceSettings {
         'systemAccent': systemAccent,
         'schemeVariant': schemeVariant.name,
         'pureBlack': pureBlack,
+        'compact': compact,
         'fontFamily': fontFamily ?? 'system',
         'fontVersion': 2,
         'textScale': textScale,
@@ -281,6 +287,7 @@ class AppearanceSettings {
       systemAccent: raw['systemAccent'] == true,
       schemeVariant: _byName(DynamicSchemeVariant.values, raw['schemeVariant'], DynamicSchemeVariant.tonalSpot),
       pureBlack: raw['pureBlack'] == true,
+      compact: raw['compact'] == true,
       // Earlier builds wrote nothing for the system font, and wrote the
       // bundled one as their default; both now mean automatic.
       fontFamily: font == 'system'

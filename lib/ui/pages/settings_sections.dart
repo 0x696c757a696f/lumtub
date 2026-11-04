@@ -820,6 +820,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: appearance.pureBlack,
               onChanged: (v) => saveLooks(appearance.copyWith(pureBlack: v)),
             ), subtitle: 'AMOLED'),
+        SettingEntry(tr('紧凑模式'), (context) => SwitchItem(
+              title: tr('紧凑模式'),
+              subtitle: tr('列表、菜单和设置项的行距更小，一屏能看到更多内容'),
+              leading: _icon(AppIcons.rows),
+              value: appearance.compact,
+              onChanged: (v) => saveLooks(appearance.copyWith(compact: v)),
+            ), subtitle: tr('行距 密度')),
         SettingEntry(tr('应用主题'), (context) => NormalItem(
               title: tr('应用主题'),
               subtitle: tr('当前：{0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),

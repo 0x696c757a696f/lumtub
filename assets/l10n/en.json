@@ -2848,5 +2848,8 @@
   "这个 Wayland 桌面不允许程序把窗口保持在最上层。改用 X11 兼容模式后可以置顶，需要重启 Lumtub。": "This Wayland desktop doesn't let apps keep a window on top. X11 compatibility mode allows it and needs a restart of Lumtub.",
   "切换并重启": "Switch and restart",
   "无法切换：{0}": "Could not switch: {0}",
-  "没有找到 Edge、Chrome、Firefox 或其他 Chromium 内核的浏览器，请改用导入 cookies.txt": "No Edge, Chrome, Firefox or other Chromium-based browser was found. Import a cookies.txt instead."
+  "没有找到 Edge、Chrome、Firefox 或其他 Chromium 内核的浏览器，请改用导入 cookies.txt": "No Edge, Chrome, Firefox or other Chromium-based browser was found. Import a cookies.txt instead.",
+  "紧凑模式": "Compact mode",
+  "列表、菜单和设置项的行距更小，一屏能看到更多内容": "Tighter lists, menus and settings rows, so more fits on screen",
+  "行距 密度": "spacing density"
 }

@@ -163,6 +163,7 @@ ThemeData buildAppTheme(
   Brightness brightness, {
   DynamicSchemeVariant variant = DynamicSchemeVariant.tonalSpot,
   bool pureBlack = false,
+  bool compact = false,
   String? fontFamily,
   PageTransition transition = PageTransition.fade,
   bool highContrast = false,
@@ -228,7 +229,7 @@ ThemeData buildAppTheme(
     colorScheme: scheme,
     scaffoldBackgroundColor: scheme.surface,
     canvasColor: scheme.surface,
-    visualDensity: VisualDensity.standard,
+    visualDensity: compact ? VisualDensity.compact : VisualDensity.standard,
     // No ink ripples: a flat wash on hover and press.
     splashFactory: NoSplash.splashFactory,
     hoverColor: scheme.onSurface.withValues(alpha: 0.05),
@@ -254,6 +255,8 @@ ThemeData buildAppTheme(
       selectedColor: scheme.onSurface,
       selectedTileColor: scheme.secondaryContainer,
       iconColor: scheme.onSurfaceVariant,
+      dense: compact ? true : null,
+      minVerticalPadding: compact ? 2 : null,
     ),
     navigationRailTheme: NavigationRailThemeData(
       backgroundColor: Colors.transparent,
@@ -277,7 +280,7 @@ ThemeData buildAppTheme(
       fillColor: dark ? scheme.surfaceContainerLow : scheme.surface,
       hoverColor: Colors.transparent,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: Space.m, vertical: Space.m),
+      contentPadding: EdgeInsets.symmetric(horizontal: Space.m, vertical: compact ? Space.s : Space.m),
       border: OutlineInputBorder(borderRadius: AppStyle.controlRadius, borderSide: border),
       enabledBorder: OutlineInputBorder(borderRadius: AppStyle.controlRadius, borderSide: border),
       disabledBorder: OutlineInputBorder(borderRadius: AppStyle.controlRadius, borderSide: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5))),

@@ -51,7 +51,7 @@ class ThemePresetCard extends StatelessWidget {
       selected: selected,
       label: preset.name,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: SizedBox(
           width: 150,
@@ -59,7 +59,7 @@ class ThemePresetCard extends StatelessWidget {
             Container(
               height: 84,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: selected ? colors.primary : colors.outlineVariant, width: selected ? 2.5 : 1),
               ),
               clipBehavior: Clip.antiAlias,

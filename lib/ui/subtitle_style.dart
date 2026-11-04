@@ -208,7 +208,7 @@ class SubtitlePreview extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       alignment: Alignment.bottomCenter,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF37474F), Color(0xFF101418)]),
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [

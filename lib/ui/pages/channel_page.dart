@@ -427,7 +427,6 @@ class _ChannelSearchFieldState extends State<_ChannelSearchField> {
                     },
                   ),
           ),
-          border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
         ),
       );
 }

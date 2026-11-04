@@ -47,7 +47,7 @@ class _SupportPage extends StatelessWidget {
             Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: colors.errorContainer.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: colors.errorContainer.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(8)),
               child: Row(children: [
                 Icon(AppIcons.warning, size: 20, color: colors.onErrorContainer),
                 const SizedBox(width: 8),
@@ -79,7 +79,7 @@ class _Hero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -91,7 +91,7 @@ class _Hero extends StatelessWidget {
           Container(
             width: 48,
             height: 48,
-            decoration: BoxDecoration(color: const Color(0xFFEA4AAA), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: const Color(0xFFEA4AAA), borderRadius: BorderRadius.circular(8)),
             child: const Icon(AppIcons.heartFill, color: Colors.white, size: 26),
           ),
           const SizedBox(width: 12),
@@ -146,7 +146,7 @@ class _Group extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
       color: colors.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: colors.outlineVariant)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: colors.outlineVariant)),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

@@ -487,8 +487,9 @@ class _SearchFieldState extends State<_SearchField> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Material(
-                  elevation: 6,
-                  borderRadius: BorderRadius.circular(12),
+                  elevation: 4,
+                  shadowColor: Colors.black.withValues(alpha: 0.25),
+                  shape: RoundedRectangleBorder(borderRadius: AppStyle.cardRadius, side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
                   clipBehavior: Clip.antiAlias,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: _width, minWidth: _width, maxHeight: 420),

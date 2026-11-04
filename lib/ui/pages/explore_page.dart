@@ -667,7 +667,7 @@ class _TopicTile extends StatelessWidget {
       message: onRemove == null ? topic.label : tr('{0}（右键或长按删除）', [topic.label]),
       waitDuration: const Duration(milliseconds: 600),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         onLongPress: onRemove,
         onSecondaryTap: onRemove,
@@ -678,7 +678,7 @@ class _TopicTile extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: selected ? colors.primary : colors.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(topic.icon, size: 22, color: selected ? colors.onPrimary : colors.onSurfaceVariant),
           ),

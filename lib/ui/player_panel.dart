@@ -34,9 +34,9 @@ class _Panel extends StatelessWidget {
     return Align(
       alignment: Alignment.centerRight,
       child: Material(
-        elevation: 8,
-        color: theme.colorScheme.surfaceContainerHigh,
-        borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+        elevation: 2,
+        color: theme.colorScheme.surface,
+        shape: Border(left: BorderSide(color: theme.colorScheme.outlineVariant)),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
           width: width.clamp(0, size.width - 24).toDouble(),
@@ -142,10 +142,10 @@ class PanelToggle extends StatelessWidget {
     return SizedBox(
       width: 116,
       child: Material(
-        color: value ? colors.primaryContainer : colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
+        color: value ? colors.primaryContainer : Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: value ? colors.primary : colors.outlineVariant)),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           onTap: () => onChanged(!value),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),

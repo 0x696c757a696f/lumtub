@@ -204,7 +204,7 @@ class _Section extends StatelessWidget {
     final colors = context.colors;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), border: Border.all(color: colors.outlineVariant)),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: colors.outlineVariant)),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         key: PageStorageKey('account:$number'),

@@ -435,7 +435,7 @@ class _StylePreview extends StatelessWidget {
     final translation = TranslationView(style: style, child: translated);
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: colors.surfaceContainerLow, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: colors.surfaceContainerLow, borderRadius: BorderRadius.circular(8)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         if (!both) translated
         else ...[

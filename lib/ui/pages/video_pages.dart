@@ -140,21 +140,21 @@ class _Welcome extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 8),
       child: Material(
-        color: colors.primaryContainer,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        color: colors.surfaceContainerLow,
+        shape: RoundedRectangleBorder(borderRadius: AppStyle.cardRadius, side: BorderSide(color: colors.outlineVariant)),
         child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
           onTap: onFocusSearch,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
             child: Row(children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(tr('想看点什么？'), style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: colors.onPrimaryContainer)),
+                Text(tr('想看点什么？'), style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: colors.onSurface)),
                 const SizedBox(height: 4),
-                Text(keyNames(tr('搜索 YouTube，或直接粘贴视频链接播放。按 Ctrl+K 随时搜索。')), style: TextStyle(color: colors.onPrimaryContainer.withValues(alpha: 0.8))),
+                Text(keyNames(tr('搜索 YouTube，或直接粘贴视频链接播放。按 Ctrl+K 随时搜索。')), style: TextStyle(color: colors.onSurfaceVariant)),
               ])),
               const SizedBox(width: 16),
-              Icon(AppIcons.magnifyingGlass, size: 40, color: colors.onPrimaryContainer.withValues(alpha: 0.6)),
+              Icon(AppIcons.magnifyingGlass, size: 40, color: colors.onSurfaceVariant),
             ]),
           ),
         ),

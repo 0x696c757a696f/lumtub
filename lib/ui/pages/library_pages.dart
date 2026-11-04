@@ -469,7 +469,7 @@ class _StripItem extends StatelessWidget {
       waitDuration: const Duration(milliseconds: 600),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         child: SizedBox(
           width: width,
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [

@@ -82,7 +82,7 @@ class _UpcomingCardState extends State<UpcomingCard> {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(color: const Color(0xFFE53935), borderRadius: BorderRadius.circular(999)),
+                decoration: BoxDecoration(color: const Color(0xFFE53935), borderRadius: BorderRadius.circular(6)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   const Icon(AppIcons.broadcast, size: 16, color: white),
                   const SizedBox(width: 4),

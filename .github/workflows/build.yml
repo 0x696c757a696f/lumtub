@@ -523,7 +523,7 @@ jobs:
         if: steps.wanted.outputs.run == 'true'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends xvfb xauth xdotool imagemagick libgl1-mesa-dri fonts-noto-core fonts-noto-cjk
+          sudo apt-get install -y --no-install-recommends xvfb xauth xdotool imagemagick libgl1-mesa-dri libegl1 libgles2 libgtk-3-0t64 fonts-noto-core fonts-noto-cjk
           chmod +x "$RUNNER_TEMP"/app/Lumtub_*.AppImage
           linux/packaging/showcase.sh "$RUNNER_TEMP"/app/Lumtub_*.AppImage "$RUNNER_TEMP/shots"
       - name: Push the pictures
@@ -533,7 +533,7 @@ jobs:
           git checkout --orphan readme-shots
           git rm -rfq .
           git clean -fdxq
-          cp "$RUNNER_TEMP"/shots/*.png "$RUNNER_TEMP"/shots/lumtub.log . 2> /dev/null || true
+          cp "$RUNNER_TEMP"/shots/*.png "$RUNNER_TEMP"/shots/*.log "$RUNNER_TEMP"/shots/stdout.txt . 2> /dev/null || true
           git add -A
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Pictures of $sha"
           git push -f origin readme-shots

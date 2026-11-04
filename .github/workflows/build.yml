@@ -523,7 +523,7 @@ jobs:
         if: steps.wanted.outputs.run == 'true'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends xvfb xauth xdotool imagemagick libgl1-mesa-dri libegl1 libgles2 libgtk-3-0t64 fonts-noto-core fonts-noto-cjk
+          sudo apt-get install -y --no-install-recommends xvfb xauth xdotool imagemagick libgl1-mesa-dri libegl1 libgles2 libgtk-3-0t64 libpulse0 libasound2t64 libxkbcommon0 libdrm2 libgbm1 fonts-noto-core fonts-noto-cjk
           chmod +x "$RUNNER_TEMP"/app/Lumtub_*.AppImage
           linux/packaging/showcase.sh "$RUNNER_TEMP"/app/Lumtub_*.AppImage "$RUNNER_TEMP/shots"
       - name: Push the pictures

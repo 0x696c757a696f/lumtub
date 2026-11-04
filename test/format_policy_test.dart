@@ -212,9 +212,10 @@ void main() {
     expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {VideoCodec.h264}), 1600).maxHeight, 0);
   });
 
-  test('a live stream asks for one stream with picture and sound', () {
-    expect(FormatPolicy.liveExpression(const PlayerSettings(), 'bv+ba'), 'b[vcodec!=none][acodec!=none]/bv+ba');
-    expect(FormatPolicy.liveExpression(const PlayerSettings(maxHeight: 720), 'bv+ba'), 'b[height<=?720][vcodec!=none][acodec!=none]/bv+ba');
-    expect(FormatPolicy.liveExpression(const PlayerSettings(), 'ytdl'), 'b[vcodec!=none][acodec!=none]/bestvideo+bestaudio/best');
+  test('a live stream takes one stream with picture and sound up to 1080p, split streams above', () {
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}), 'bv+ba'), 'bv*[height>1080]+ba/b[vcodec!=none][acodec!=none]/bv+ba');
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}, maxHeight: 720), 'bv+ba'), 'b[height<=?720][vcodec!=none][acodec!=none]/bv+ba');
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}, maxHeight: 1440), 'bv+ba'), 'bv*[height>1080][height<=?1440]+ba/b[height<=?1440][vcodec!=none][acodec!=none]/bv+ba');
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {VideoCodec.av1}), 'ytdl'), 'bv*[height>1080][vcodec!*=av01]+ba/b[vcodec!=none][acodec!=none]/bestvideo+bestaudio/best');
   });
 }

@@ -109,12 +109,27 @@ class FormatPolicy {
   /// restricts it.
   static String expression(PlayerSettings settings) => _policy(settings).expression;
 
-  /// For a live stream: the best single stream with picture and sound, up
-  /// to the height cap, else [fallback]; mpv's `ytdl` alone is spelled out,
-  /// as yt-dlp does not know it inside an expression.
+  /// For a live stream: above 1080p, where YouTube has no stream with
+  /// picture and sound together, the best picture in an allowed codec with
+  /// the best sound; else the best single stream with both, up to the
+  /// height cap; else [fallback]. A picture and a sound stream apart can
+  /// drift, so the split one is taken only when it is taller than any
+  /// single stream. mpv's `ytdl` alone is spelled out, as yt-dlp does not
+  /// know it inside an expression.
   static String liveExpression(PlayerSettings settings, String fallback) {
     final cap = settings.maxHeight > 0 ? '[height<=?${settings.maxHeight}]' : '';
-    return 'b$cap[vcodec!=none][acodec!=none]/${fallback == 'ytdl' ? 'bestvideo+bestaudio/best' : fallback}';
+    final excluded = [
+      for (final codec in VideoCodec.values)
+        if (settings.disabledCodecs.contains(codec))
+          ...switch (codec) {
+            VideoCodec.h264 => ['avc1', 'h264'],
+            VideoCodec.vp9 => ['vp09', 'vp9'],
+            VideoCodec.av1 => ['av01'],
+            VideoCodec.vp8 => ['vp8'],
+          },
+    ].map((name) => '[vcodec!*=$name]').join();
+    final tall = settings.maxHeight > 0 && settings.maxHeight <= 1080 ? '' : 'bv*[height>1080]$cap$excluded+ba/';
+    return '${tall}b$cap[vcodec!=none][acodec!=none]/${fallback == 'ytdl' ? 'bestvideo+bestaudio/best' : fallback}';
   }
 
   /// Within the user's selected quality cap, yt-dlp first ranks by picture

@@ -1520,7 +1520,8 @@ class AppController extends ChangeNotifier with _ExploreState {
       final platform = player.platform;
       if (platform is NativePlayer) {
         // A live stream plays from one HLS stream with picture and sound
-        // together: a picture and a sound stream apart drift out of sync.
+        // together up to 1080p: a picture and a sound stream apart can
+        // drift out of sync, so they are taken only above it.
         await platform.setProperty('ytdl-format', live ? FormatPolicy.liveExpression(_playback, format) : format);
         await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null, proxy: proxy.ytDlpValue(settings.proxyMode), formatSort: _formatSort));
         if (direct != null && agent != null) await platform.setProperty('user-agent', agent);

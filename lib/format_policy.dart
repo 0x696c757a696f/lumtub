@@ -53,14 +53,7 @@ class FormatPolicy {
   /// yt-dlp's and mpv's defaults apply, minus the disabled codecs.
   static _Policy _policy(PlayerSettings settings, {int displayHeight = 0}) {
     final core = NativeCore.instance;
-    final json = jsonEncode({
-      'strategy': settings.strategy.name,
-      'disabled': [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.name],
-      'hardware': [for (final c in VideoCodec.values) if (hardware(settings, c)) c.name],
-      'maxHeight': settings.maxHeight,
-      'audio': settings.audioQuality.name,
-      'display': max(0, displayHeight),
-    });
+    final json = settingsJson(settings, displayHeight: displayHeight);
     final answer = core?.take(core.withText(json, core.formatPolicy));
     if (answer == null) {
       return _Policy([for (final c in VideoCodec.values) if (allows(settings, c)) c], 'ytdl', null, 0);
@@ -73,6 +66,16 @@ class FormatPolicy {
       data['displayHeight'] as int,
     );
   }
+
+  /// [settings] as lumtub_core's format policy reads them.
+  static String settingsJson(PlayerSettings settings, {int displayHeight = 0}) => jsonEncode({
+        'strategy': settings.strategy.name,
+        'disabled': [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.name],
+        'hardware': [for (final c in VideoCodec.values) if (hardware(settings, c)) c.name],
+        'maxHeight': settings.maxHeight,
+        'audio': settings.audioQuality.name,
+        'display': max(0, displayHeight),
+      });
 
   /// The allowed codecs, most preferred first.
   ///

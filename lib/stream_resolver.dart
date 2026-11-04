@@ -5,8 +5,11 @@ import 'dart:math';
 
 import 'app_log.dart';
 import 'background_json.dart';
+import 'package:http/http.dart' as http;
+
 import 'models.dart';
 import 'native_core.dart';
+import 'native_http.dart';
 import 'player_settings.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
@@ -179,6 +182,54 @@ class StreamResolver {
   /// yt-dlp.
   Future<ResolvedVideo>? cached(String videoId) => _results[videoId];
 
+  /// Extractions that have finished, by video id.
+  final _done = <String, ResolvedVideo>{};
+
+  /// Whether a fresh extraction of [videoId] with [format] is already done.
+  bool resolved(String videoId, String format) {
+    final video = _done[videoId];
+    return video != null && video.format == format && video.fresh;
+  }
+
+  http.Client? _quickClient;
+
+  /// A quick start for [videoId]: YouTube's visionOS client's streams,
+  /// picked by the format policy [policy] (`FormatPolicy.settingsJson`),
+  /// without yt-dlp. Null when the video cannot be started that way (live,
+  /// ciphered, refused, not answered within a few seconds); [resolve]
+  /// still has the whole answer.
+  Future<ResolvedVideo?> quick(String videoId, String format, String policy) async {
+    final core = NativeCore.instance;
+    final request = core?.quickRequest(videoId);
+    if (core == null || request == null) return null;
+    final watch = Stopwatch()..start();
+    try {
+      final parts = jsonDecode(request) as Map<String, dynamic>;
+      final response = await (_quickClient ??= appHttpClient())
+          .post(
+            Uri.parse('https://www.youtube.com/youtubei/v1/player?prettyPrint=false'),
+            headers: {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()},
+            body: jsonEncode(parts['body']),
+          )
+          .timeout(const Duration(seconds: 6));
+      if (response.statusCode != 200) {
+        logInfo('Quick start of $videoId: /player answered HTTP ${response.statusCode}');
+        return null;
+      }
+      final text = core.quickInfo(utf8.decode(response.bodyBytes, allowMalformed: true), policy);
+      if (text == null) {
+        logInfo('Quick start of $videoId: left to yt-dlp');
+        return null;
+      }
+      final info = jsonDecode(text) as Map<String, dynamic>;
+      logInfo('Quick start of $videoId in ${watch.elapsedMilliseconds} ms');
+      return ResolvedVideo(info, _infoFile(videoId), format, text: text);
+    } catch (e) {
+      logInfo('Quick start of $videoId failed: $e');
+      return null;
+    }
+  }
+
   /// Starts resolving [videoId] in the background, if not already done.
   /// One at a time, at low priority: each extraction runs YouTube's
   /// JavaScript for seconds, and a pointer passing over a grid would
@@ -208,6 +259,7 @@ class StreamResolver {
   /// failed to play.
   void forget(String videoId) {
     _results.remove(videoId);
+    _done.remove(videoId);
     _formats.remove(videoId);
     _formatSorts.remove(videoId);
     _proxies.remove(videoId);
@@ -252,6 +304,7 @@ class StreamResolver {
   Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false}) {
     final future = _run(videoId, format, formatSort: formatSort, background: background, membersOnly: membersOnly);
     _results.remove(videoId);
+    _done.remove(videoId);
     _results[videoId] = future;
     _formats[videoId] = format;
     _formatSorts[videoId] = formatSort;
@@ -262,10 +315,13 @@ class StreamResolver {
       _formatSorts.remove(oldest);
       _proxies.remove(oldest);
       _results.remove(oldest);
+      _done.remove(oldest);
       _deleteInfo(oldest);
     }
     // A failure is not kept, so the next attempt runs yt-dlp again.
-    future.then((_) {}, onError: (_) {
+    future.then((video) {
+      if (identical(_results[videoId], future)) _done[videoId] = video;
+    }, onError: (_) {
       if (identical(_results[videoId], future)) forget(videoId);
     });
     return future;

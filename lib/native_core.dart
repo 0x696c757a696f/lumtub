@@ -37,6 +37,8 @@ class NativeCore {
         _looksLike = library.lookupFunction<Bool Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_looks_like'),
         _resolved = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_resolved'),
         _edl = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_edl'),
+        _quickRequest = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_quick_request'),
+        _quickInfo = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_quick_info'),
         hashPrefix = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_hash_prefix'),
         sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
         dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
@@ -112,6 +114,18 @@ class NativeCore {
 
   /// An mpv EDL address playing [addresses] as one video.
   String? edl(List<String> addresses) => take(withText(jsonEncode(addresses), _edl));
+
+  final Pointer<Utf8> Function(Pointer<Uint8> id, int length) _quickRequest;
+  final Pointer<Utf8> Function(Pointer<Uint8> player, int playerLength, Pointer<Uint8> settings, int settingsLength) _quickInfo;
+
+  /// The `/player` request (`body` and `headers`) for a quick start of
+  /// [videoId] (native/lumtub_core/src/quick.rs).
+  String? quickRequest(String videoId) => take(withText(videoId, _quickRequest));
+
+  /// yt-dlp's answer, as playback reads it, for the `/player` answer
+  /// [player] and the format policy [settings]; null when the video cannot
+  /// be started that way.
+  String? quickInfo(String player, String settings) => take(withText(player, (p, pl) => withText(settings, (s, sl) => _quickInfo(p, pl, s, sl))));
   /// The first four hex digits of a video id's SHA-256.
   final Pointer<Utf8> Function(Pointer<Uint8> videoId, int length) hashPrefix;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) sponsorSegments;

@@ -1450,6 +1450,9 @@ class AppController extends ChangeNotifier with _ExploreState {
     unawaited(controller.platform.future.then((_) => logDebug(() => 'Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
   }
 
+  /// The play whose first open already tried a quick start.
+  int? _quickSerial;
+
   Future<bool> _openOnce(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
     final player = this.player!;
     _ensureVideo(player);
@@ -1483,7 +1486,16 @@ class AppController extends ChangeNotifier with _ExploreState {
       ResolvedVideo? video;
       if (resolved) {
         try {
-          video = await _repository!.streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly);
+          final streams = _repository!.streams;
+          var pending = streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly);
+          // The first open of a video also asks YouTube directly; whichever
+          // answers first starts it. A reopen after a failure waits for yt-dlp.
+          if (_quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
+            _quickSerial = serial;
+            final full = pending;
+            pending = Future.any([full, streams.quick(item.id, format, FormatPolicy.settingsJson(_playback)).then((quick) => quick ?? full)]);
+          }
+          video = await pending;
         } catch (e) {
           _recentErrors.add('$e');
           final failure = PlaybackFailure.classify(['$e']);

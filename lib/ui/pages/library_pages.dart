@@ -70,6 +70,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
           itemWidth: vertical ? _railWidth - 12 : 72,
           channels: inGroup,
           feed: library.feed,
+          live: library.liveChannels,
           selected: selected,
           thumbnails: controller.thumbnailDirectory,
           onSelect: _select,
@@ -321,9 +322,11 @@ File? _avatarFile(Directory? thumbnails, ChannelRef channel) =>
 /// mouse wheel too. Those that posted most recently come first, and a dot
 /// marks an upload in the last two days.
 class _ChannelStrip extends StatefulWidget {
-  const _ChannelStrip({this.vertical = false, this.itemWidth = 72, required this.channels, required this.feed, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll});
+  const _ChannelStrip({this.vertical = false, this.itemWidth = 72, required this.channels, required this.feed, required this.live, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll});
   final List<ChannelRef> channels;
   final List<VideoItem> feed;
+  /// Channels streaming now.
+  final Set<String> live;
   final ChannelRef? selected;
   final Directory? thumbnails;
   final ValueChanged<ChannelRef?> onSelect;
@@ -357,7 +360,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
       final id = item.channelId;
       if (id != null && !latest.containsKey(id)) latest[id] = item.published;
     }
-    final live = {for (final item in widget.feed) if (item.isLive && item.channelId != null) item.channelId!};
+    final live = widget.live;
     final rank = {for (final (i, id) in latest.keys.indexed) id: i};
     // Channels streaming now first, then by their newest video.
     int order(ChannelRef channel) => (live.contains(channel.id) ? -latest.length - 1 : 0) + (rank[channel.id] ?? latest.length);

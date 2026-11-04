@@ -398,6 +398,9 @@ jobs:
             clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libmpv-dev libfontconfig-dev libssl-dev desktop-file-utils python3
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # The pull request's own commit, to read whether it asks for README pictures.
+          fetch-depth: 2
 
       - name: Linux - install Flutter stable SDK
         run: |
@@ -480,6 +483,23 @@ jobs:
           apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri libegl1 libgles2 ffmpeg imagemagick
           linux/packaging/smoke.sh Lumtub_*_linux-$PACKAGE_ARCH.AppImage "$RUNNER_TEMP/smoke"
 
+      - name: Linux - README pictures
+        if: matrix.package_arch == 'x64'
+        run: |
+          message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
+          if echo "$message" | grep -qF '[showcase]'; then
+            apt-get install -y --no-install-recommends xdotool fonts-noto-core fonts-noto-cjk
+            linux/packaging/showcase.sh Lumtub_*_linux-x64.AppImage "$RUNNER_TEMP/shots"
+          fi
+
+      - name: Linux - upload README pictures
+        if: matrix.package_arch == 'x64'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: readme-shots
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+
       - name: Linux - upload smoke test results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -499,9 +519,9 @@ jobs:
 
   showcase:
     name: README pictures
-    # Runs only for a commit whose message contains [showcase]: plays the
-    # Linux AppImage on a virtual display and pushes pictures of its pages to
-    # the readme-shots branch.
+    # Runs only for a commit whose message contains [showcase]: pushes the
+    # pictures the Linux x64 job took of the AppImage's pages to the
+    # readme-shots branch.
     needs: linux
     runs-on: ubuntu-24.04
     permissions:
@@ -517,15 +537,8 @@ jobs:
       - if: steps.wanted.outputs.run == 'true'
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          name: Lumtub-linux-x64-appimage
-          path: ${{ runner.temp }}/app
-      - name: Take the pictures
-        if: steps.wanted.outputs.run == 'true'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends xvfb xauth xdotool imagemagick libgl1-mesa-dri libegl1 libgles2 libgtk-3-0t64 libpulse0 libasound2t64 libxkbcommon0 libdrm2 libgbm1 fonts-noto-core fonts-noto-cjk
-          chmod +x "$RUNNER_TEMP"/app/Lumtub_*.AppImage
-          linux/packaging/showcase.sh "$RUNNER_TEMP"/app/Lumtub_*.AppImage "$RUNNER_TEMP/shots"
+          name: readme-shots
+          path: ${{ runner.temp }}/shots
       - name: Push the pictures
         if: steps.wanted.outputs.run == 'true'
         run: |

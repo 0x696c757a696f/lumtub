@@ -497,6 +497,45 @@ jobs:
           path: Lumtub_*_linux-${{ matrix.package_arch }}.AppImage
           if-no-files-found: error
 
+  showcase:
+    name: README pictures
+    # Runs only for a commit whose message contains [showcase]: plays the
+    # Linux AppImage on a virtual display and pushes pictures of its pages to
+    # the readme-shots branch.
+    needs: linux
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Check whether pictures are wanted
+        id: wanted
+        run: |
+          if git log -1 --format=%B | grep -qF '[showcase]'; then echo "run=true" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.wanted.outputs.run == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: Lumtub-linux-x64-appimage
+      - name: Take the pictures
+        if: steps.wanted.outputs.run == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb xauth xdotool imagemagick libgl1-mesa-dri fonts-noto-core fonts-noto-cjk
+          chmod +x Lumtub_*.AppImage
+          linux/packaging/showcase.sh Lumtub_*.AppImage "$RUNNER_TEMP/shots"
+      - name: Push the pictures
+        if: steps.wanted.outputs.run == 'true'
+        run: |
+          sha=$(git rev-parse --short HEAD)
+          git checkout --orphan readme-shots
+          git rm -rfq .
+          cp "$RUNNER_TEMP"/shots/*.png "$RUNNER_TEMP"/shots/lumtub.log . 2> /dev/null || true
+          git add -A
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Pictures of $sha"
+          git push -f origin readme-shots
+
   macos:
     name: macOS universal
     # Pinned like the others; Apple silicon, building for both CPUs.

@@ -9,6 +9,7 @@ import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
 import 'package:flutter/gestures.dart' show GestureBinding, PointerEvent;
 import 'package:flutter/services.dart' show HardwareKeyboard, KeyEvent, MethodChannel;
 import 'package:flutter/widgets.dart' show WidgetsBinding;
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -937,7 +938,7 @@ class AppController extends ChangeNotifier with _ExploreState {
         logError('Initialization failed', e);
       });
     }
-    if (SmokeCheck.requested) unawaited(runSmokeCheck());
+    if (SmokeCheck.requested) unawaited(Platform.environment['LUMTUB_SHOWCASE']?.isNotEmpty == true ? runShowcase() : runSmokeCheck());
   }
 
   /// Checks for a new Lumtub now and downloads it, for the settings page.

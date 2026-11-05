@@ -26,14 +26,22 @@ class YouTubeAccountApi {
   /// Playlists larger than this are cut, to keep syncing quick and cheap.
   static const maxPlaylistItems = 500;
 
-  /// The account's channel name and its "liked videos" playlist.
-  Future<({String name, String? likes})> me() async {
+  /// The account's channel name, its picture and its "liked videos" playlist.
+  Future<({String name, String? avatar, String? likes})> me() async {
     final data = await _get('channels', {'part': 'snippet,contentDetails', 'mine': 'true'});
     final items = data['items'];
-    if (items is! List || items.isEmpty || items.first is! Map) return (name: tr('YouTube account'), likes: null);
+    if (items is! List || items.isEmpty || items.first is! Map) return (name: tr('YouTube account'), avatar: null, likes: null);
     final channel = items.first as Map;
     final likes = (channel['contentDetails'] as Map?)?['relatedPlaylists']?['likes'];
-    return (name: (channel['snippet'] as Map?)?['title']?.toString() ?? tr('YouTube account'), likes: likes is String && likes.isNotEmpty ? likes : null);
+    final snippet = channel['snippet'] as Map?;
+    final pictures = snippet?['thumbnails'] as Map?;
+    final picture = (pictures?['medium'] ?? pictures?['default']) as Map?;
+    final avatar = picture?['url']?.toString();
+    return (
+      name: snippet?['title']?.toString() ?? tr('YouTube account'),
+      avatar: avatar != null && avatar.startsWith('https://') ? avatar : null,
+      likes: likes is String && likes.isNotEmpty ? likes : null,
+    );
   }
 
   Future<List<ChannelRef>> subscriptions() async {

@@ -42,6 +42,8 @@ class AccountController extends ChangeNotifier {
   AccountState state = AccountState.signedOut;
   OAuthClientConfig? customClient;
   String? name;
+  /// The account's channel picture, an https address.
+  String? avatar;
   DateTime? lastSync;
   bool syncing = false;
   String? error;
@@ -73,6 +75,7 @@ class AccountController extends ChangeNotifier {
     if (token is String && token.isNotEmpty) {
       _refreshToken = token;
       name = saved?['name']?.toString();
+      avatar = saved?['avatar']?.toString();
       lastSync = DateTime.tryParse(saved?['last_sync']?.toString() ?? '');
       scope = saved?['scope']?.toString();
       likesPlaylist = saved?['likes']?.toString();
@@ -109,6 +112,7 @@ class AccountController extends ChangeNotifier {
       scope = tokens.scope ?? youtubeScope;
       final me = await _api.me();
       name = me.name;
+      avatar = me.avatar;
       likesPlaylist = me.likes;
       state = AccountState.signedIn;
       await _save();
@@ -137,6 +141,7 @@ class AccountController extends ChangeNotifier {
     _refreshToken = null;
     _tokens = null;
     name = null;
+    avatar = null;
     lastSync = null;
     scope = null;
     likesPlaylist = null;
@@ -159,7 +164,15 @@ class AccountController extends ChangeNotifier {
       final api = _api;
       final channels = await api.subscriptions();
       final added = library.followAll(channels);
-      final likesId = likes ?? (await api.me()).likes;
+      var likesId = likes;
+      // Sign-ins from before the picture was kept learn it at their next sync.
+      if (likesId == null || avatar == null) {
+        final me = await api.me();
+        likesId ??= me.likes;
+        name = me.name;
+        avatar = me.avatar;
+        notifyListeners();
+      }
       likesPlaylist = likesId;
       final remote = await api.playlists();
       final mirrored = <String, ({String name, List<VideoItem> items})>{};
@@ -359,6 +372,7 @@ class AccountController extends ChangeNotifier {
       await credentials.write({
         'refresh_token': token,
         'name': name,
+        if (avatar != null) 'avatar': avatar,
         if (lastSync != null) 'last_sync': lastSync!.toIso8601String(),
         if (scope != null) 'scope': scope,
         if (likesPlaylist != null) 'likes': likesPlaylist,

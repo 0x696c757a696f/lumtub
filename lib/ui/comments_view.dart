@@ -125,6 +125,7 @@ class _CommentsSectionState extends State<CommentsSection> {
   YoutubeComment _own(String text) => YoutubeComment(
         id: 'own:${DateTime.now().microsecondsSinceEpoch}',
         author: widget.controller.account?.name ?? tr('Me'),
+        avatar: widget.controller.account?.avatar,
         text: text,
         published: tr('Just now'),
       );

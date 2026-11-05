@@ -8,6 +8,7 @@ import '../../youtube_web_sign_in.dart';
 import '../common.dart';
 import '../theme.dart';
 import 'cookie_sign_in_tile.dart';
+import 'channel_page.dart' show ChannelAvatar;
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
 
@@ -43,10 +44,12 @@ class AccountSettings extends StatelessWidget {
               switch (account.state) {
                 AccountState.signedIn => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: colors.primaryContainer,
-                        child: Icon(AppIcons.userFill, color: colors.onPrimaryContainer),
-                      ),
+                      leading: account.avatar == null
+                          ? CircleAvatar(
+                              backgroundColor: colors.primaryContainer,
+                              child: Icon(AppIcons.userFill, color: colors.onPrimaryContainer),
+                            )
+                          : ChannelAvatar(name: account.name ?? '', image: account.avatar, radius: 20),
                       title: Text(account.name ?? tr('YouTube account')),
                       trailing: account.canWrite ? null : FilledButton.tonal(onPressed: account.signIn, child: Text(tr('Sign in again to enable likes and comments'))),
                       subtitle: Text(account.syncing
@@ -385,13 +388,16 @@ class AccountButton extends StatelessWidget {
     final account = this.account;
     final signedIn = account?.signedIn ?? false;
     final name = account?.name ?? '';
-    final avatar = CircleAvatar(
-      radius: 16,
-      backgroundColor: signedIn ? colors.primaryContainer : colors.surfaceContainerHighest,
-      child: signedIn && name.isNotEmpty
-          ? Text(String.fromCharCode(name.runes.first).toUpperCase(), style: TextStyle(fontWeight: FontWeight.w600, color: colors.onPrimaryContainer))
-          : Icon(AppIcons.user, size: 20, color: colors.onSurfaceVariant),
-    );
+    final avatar = signedIn && account?.avatar != null
+        // The picture, or the name's first letter while it cannot load.
+        ? ChannelAvatar(name: name, image: account!.avatar, radius: 16)
+        : CircleAvatar(
+            radius: 16,
+            backgroundColor: signedIn ? colors.primaryContainer : colors.surfaceContainerHighest,
+            child: signedIn && name.isNotEmpty
+                ? Text(String.fromCharCode(name.runes.first).toUpperCase(), style: TextStyle(fontWeight: FontWeight.w600, color: colors.onPrimaryContainer))
+                : Icon(AppIcons.user, size: 20, color: colors.onSurfaceVariant),
+          );
     if (account == null || !signedIn) {
       return IconButton(tooltip: tr('Sign in with Google (optional)'), onPressed: onOpenSettings, icon: avatar);
     }

@@ -382,7 +382,8 @@ mod tests {
                 {"name": "Lumtub_0.2.2-1234567_windows-x64.zip"},
                 {"name": "Lumtub_0.2.2-1234567_linux-x64.AppImage.sig"},
                 {"name": "Lumtub_0.2.2-1234567_linux-x64.AppImage"},
-                {"name": "Lumtub_0.2.2-1234567_macos-universal.dmg"},
+                {"name": "Lumtub_0.2.2-1234567_macos-arm64.dmg"},
+                {"name": "Lumtub_0.2.2-1234567_macos-x64.dmg"},
             ],
         })
     }
@@ -396,7 +397,8 @@ mod tests {
         assert_eq!(name("windows-x64-v3", true), Some("Lumtub_0.2.2-1234567_windows-x64-v3.zip"));
         assert_eq!(name("linux-x64", false), Some("Lumtub_0.2.2-1234567_linux-x64.AppImage"));
         assert_eq!(name("linux-arm64", false), None);
-        assert_eq!(name("macos-universal", false), Some("Lumtub_0.2.2-1234567_macos-universal.dmg"));
+        assert_eq!(name("macos-arm64", false), Some("Lumtub_0.2.2-1234567_macos-arm64.dmg"));
+        assert_eq!(name("macos-x64", false), Some("Lumtub_0.2.2-1234567_macos-x64.dmg"));
         assert_eq!(name("windows-arm64", false), None);
         assert_eq!(name("", false), None);
     }

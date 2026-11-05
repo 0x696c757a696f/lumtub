@@ -598,8 +598,9 @@ jobs:
           git push -f origin readme-shots
 
   macos:
-    name: macOS universal
-    # Pinned like the others; Apple silicon, building for both CPUs.
+    name: macOS
+    # Pinned like the others; Apple silicon, building once for both CPUs and
+    # packing a DMG thinned to each.
     runs-on: macos-15
     env:
       FLUTTER_VERSION: 3.47.7
@@ -666,7 +667,7 @@ jobs:
         env:
           GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
-        run: flutter build macos --release --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=macos-universal --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
+        run: flutter build macos --release --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=macos --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
 
       - name: macOS - restore ffmpeg
         id: ffmpeg-cache
@@ -707,22 +708,32 @@ jobs:
           [ -n "$identity" ] || { echo "The certificate is not a Developer ID Application one."; exit 1; }
           echo "APPLE_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
 
-      - name: macOS - package DMG
+      - name: macOS - package DMGs
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-        run: macos/packaging/package.sh build/macos/Build/Products/Release/Lumtub.app "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg" "FFmpeg ${FFMPEG_TAG#n} (LGPL)" "Lumtub_${LUMTUB_VERSION}_macos-universal.dmg"
+        run: |
+          app=build/macos/Build/Products/Release/Lumtub.app
+          ffmpeg_version="FFmpeg ${FFMPEG_TAG#n} (LGPL)"
+          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg" "$ffmpeg_version" "Lumtub_${LUMTUB_VERSION}_macos-arm64.dmg" arm64
+          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg" "$ffmpeg_version" "Lumtub_${LUMTUB_VERSION}_macos-x64.dmg" x86_64
 
-      - name: macOS - smoke test the DMG
-        run: macos/packaging/smoke.sh Lumtub_*_macos-universal.dmg "$RUNNER_TEMP/smoke"
+      - name: macOS - smoke test the Apple silicon DMG
+        run: macos/packaging/smoke.sh Lumtub_*_macos-arm64.dmg "$RUNNER_TEMP/smoke"
+
+      - name: macOS - smoke test the Intel DMG under Rosetta
+        continue-on-error: true
+        run: |
+          arch -x86_64 /usr/bin/true || softwareupdate --install-rosetta --agree-to-license
+          macos/packaging/smoke.sh Lumtub_*_macos-x64.dmg "$RUNNER_TEMP/smoke-intel"
 
       - name: macOS - README pictures
         continue-on-error: true
         run: |
           message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
           if echo "$message" | grep -qF '[showcase]'; then
-            macos/packaging/showcase.sh Lumtub_*_macos-universal.dmg "$RUNNER_TEMP/shots"
+            macos/packaging/showcase.sh Lumtub_*_macos-arm64.dmg "$RUNNER_TEMP/shots"
           fi
 
       - name: macOS - upload README pictures
@@ -736,21 +747,30 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: smoke-macos-universal
+          name: smoke-macos
           path: |
             ${{ runner.temp }}/smoke
+            ${{ runner.temp }}/smoke-intel
             !${{ runner.temp }}/smoke/test.mp4
+            !${{ runner.temp }}/smoke-intel/test.mp4
           if-no-files-found: ignore
 
-      - name: macOS - upload DMG
+      - name: macOS - upload Apple silicon DMG
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: Lumtub-macos-universal-dmg
-          path: Lumtub_*_macos-universal.dmg
+          name: Lumtub-macos-arm64-dmg
+          path: Lumtub_*_macos-arm64.dmg
+          if-no-files-found: error
+
+      - name: macOS - upload Intel DMG
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Lumtub-macos-x64-dmg
+          path: Lumtub_*_macos-x64.dmg
           if-no-files-found: error
 
   release:
-    name: Windows Release
+    name: Release
     needs: [windows, linux]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest

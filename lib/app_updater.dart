@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi' show Abi;
 import 'dart:io';
 import 'dart:isolate';
 
@@ -13,6 +14,10 @@ import 'native_core.dart';
 /// The package this build is, such as `windows-x64-v3`; empty for builds
 /// made outside CI, which never update themselves.
 const appPackage = String.fromEnvironment('LUMTUB_PACKAGE');
+
+/// The release file this build updates from. The Mac app is built once for
+/// both CPUs and shipped thinned to each, so it asks for the one it runs on.
+String get updatePackage => appPackage == 'macos' ? 'macos-${Abi.current() == Abi.macosArm64 ? 'arm64' : 'x64'}' : appPackage;
 
 /// When this build's commit was made, from CI.
 final appBuilt = DateTime.tryParse(const String.fromEnvironment('LUMTUB_BUILT'));
@@ -108,7 +113,7 @@ class AppUpdater extends ChangeNotifier {
       if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
       final json = jsonDecode(response.body);
       if (json is! Map<String, dynamic>) throw const FormatException('Invalid GitHub release response');
-      final offer = offerOf(json, current: appVersion, built: appBuilt, package: appPackage, portable: portable);
+      final offer = offerOf(json, current: appVersion, built: appBuilt, package: updatePackage, portable: portable);
       available = offer;
       if (offer == null) ready = null;
       logInfo(offer != null ? 'Lumtub update available: ${offer.version}' : 'Lumtub is up to date ($appVersion)');

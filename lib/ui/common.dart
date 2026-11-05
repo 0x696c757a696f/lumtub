@@ -180,13 +180,20 @@ class OptionChip<T> extends StatelessWidget {
             ),
         ],
         builder: (context, menu, _) => FilterChip(
-          avatar: Icon(icon, size: 18),
-          label: Row(mainAxisSize: MainAxisSize.min, children: [Text(label(value)), const Icon(AppIcons.caretDown, size: 18)]),
+          avatar: Icon(icon, size: 18, color: chipForeground(context, changed)),
+          label: Row(mainAxisSize: MainAxisSize.min, children: [Text(label(value)), Icon(AppIcons.caretDown, size: 18, color: chipForeground(context, changed))]),
           selected: changed,
           showCheckmark: false,
           onSelected: (_) => menu.isOpen ? menu.close() : menu.open(),
         ),
       );
+}
+
+/// The colour of an icon on a chip: the page colour on a selected chip,
+/// which is filled with the text colour.
+Color chipForeground(BuildContext context, bool selected) {
+  final scheme = Theme.of(context).colorScheme;
+  return selected ? scheme.surface : scheme.onSurface;
 }
 
 /// [text] naming keys as this system's keyboard does: ⌘ and ⌥ on a Mac for

@@ -9,6 +9,7 @@ import '../live_chat.dart';
 import '../live_chat_composer.dart';
 import '../translation.dart';
 import 'app_icons.dart';
+import 'common.dart';
 import 'theme.dart';
 import 'translatable.dart';
 
@@ -33,7 +34,7 @@ class ImmersiveTranslationSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final on = controller.preferences.immersiveTranslation;
     return FilterChip(
-      avatar: Icon(AppIcons.translate, size: 16),
+      avatar: Icon(AppIcons.translate, size: 16, color: chipForeground(context, on)),
       label: Text(tr('Immersive translation')),
       tooltip: tr('Show translations under foreign-language text automatically'),
       selected: on,

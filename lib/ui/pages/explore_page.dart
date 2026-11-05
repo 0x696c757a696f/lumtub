@@ -232,7 +232,7 @@ class _ExplorePageState extends State<ExplorePage> {
               Tooltip(
                 message: tr('Only videos whose original audio track or automatic captions confirm the language, not guessed from the title and description'),
                 child: FilterChip(
-                  avatar: const Icon(AppIcons.ear, size: 18),
+                  avatar: Icon(AppIcons.ear, size: 18, color: chipForeground(context, controller.preferences.exploreHeardOnly)),
                   label: Text(tr('Confirmed audio only')),
                   selected: controller.preferences.exploreHeardOnly,
                   onSelected: (v) => controller.setExplore(heardOnly: v),

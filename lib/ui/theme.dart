@@ -332,7 +332,13 @@ ThemeData buildAppTheme(
       selectedColor: scheme.onSurface,
       checkmarkColor: scheme.surface,
       showCheckmark: false,
-      labelStyle: font(TextStyle(fontSize: 14, height: 20 / 14, color: scheme.onSurface)),
+      // A selected chip is filled with the text colour, so its label
+      // turns to the page colour to stay readable.
+      labelStyle: font(TextStyle(
+        fontSize: 14,
+        height: 20 / 14,
+        color: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.selected) ? scheme.surface : scheme.onSurface),
+      )),
       secondaryLabelStyle: font(TextStyle(fontSize: 14, height: 20 / 14, color: scheme.surface, fontWeight: FontWeight.w600)),
       padding: const EdgeInsets.symmetric(horizontal: Space.s),
       labelPadding: const EdgeInsets.symmetric(horizontal: 4),

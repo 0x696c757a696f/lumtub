@@ -528,7 +528,7 @@ jobs:
         run: |
           message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
           if echo "$message" | grep -qF '[showcase]'; then
-            apt-get install -y --no-install-recommends xdotool fonts-noto-core fonts-noto-cjk
+            apt-get install -y --no-install-recommends xdotool fonts-noto-core fonts-noto-cjk bc
             linux/packaging/showcase.sh Lumtub_*_linux-x64.AppImage "$RUNNER_TEMP/shots"
           fi
 
@@ -590,7 +590,7 @@ jobs:
             from="$RUNNER_TEMP/shots/readme-shots-$system"
             [ -d "$from" ] || continue
             mkdir -p "$system"
-            cp "$from"/*.png "$from"/*.log "$from"/stdout.txt "$system/" 2> /dev/null || true
+            cp "$from"/*.png "$from"/*.log "$from"/stdout.txt "$from"/promo-*.mp4 "$from"/tour.gif "$system/" 2> /dev/null || true
           done
           git add -A
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Pictures of $sha"

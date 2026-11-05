@@ -55,6 +55,7 @@ extension SmokeCheck on AppController {
         await player.seek(const Duration(minutes: 1, seconds: 40));
         await shot('watch-dark', settle: const Duration(seconds: 12));
       }
+      if (Platform.environment['LUMTUB_TOUR'] == '1') await _tour(folder);
     } catch (e) {
       logError('Showcase failed', e);
     }
@@ -62,6 +63,101 @@ extension SmokeCheck on AppController {
       await shutdown(install: false).timeout(const Duration(seconds: 20));
     } catch (_) {}
     exit(0);
+  }
+
+  /// A recorded walk through the app for the promo video. The build script
+  /// starts recording when `rec-start` appears and stops at `rec-stop`; it
+  /// runs each `xdo-*` file's text as xdotool arguments on the window
+  /// (%W stands for it). Each scene's start, in milliseconds since the
+  /// recording began, goes to scenes.txt.
+  Future<void> _tour(Directory folder) async {
+    final scenes = File('${folder.path}/scenes.txt');
+    final clock = Stopwatch();
+    var step = 0;
+    Future<void> wait(num seconds) => Future<void>.delayed(Duration(milliseconds: (seconds * 1000).round()));
+    Future<void> scene(String name) => scenes.writeAsString('$name ${clock.elapsedMilliseconds}\n', mode: FileMode.append);
+    Future<void> signal(String name, [String text = '']) async {
+      final file = File('${folder.path}/$name');
+      await file.writeAsString(text);
+      final waited = Stopwatch()..start();
+      while (file.existsSync() && waited.elapsed < const Duration(seconds: 10)) {
+        await wait(0.1);
+      }
+    }
+
+    Future<void> xdo(String args) => signal('xdo-${(step++).toString().padLeft(3, '0')}', args);
+    final player = this.player;
+    final start = appearance;
+    try {
+      await saveAppearance(start.copyWith(themeMode: ThemeMode.dark, palette: ''));
+      navigate(PageMode.home);
+      await wait(4);
+      await signal('rec-start');
+      clock.start();
+      await wait(1);
+
+      await scene('home');
+      await wait(1.5);
+      await xdo('mousemove --window %W 640 420 click --repeat 5 --delay 400 5');
+      await wait(2.5);
+      await xdo('mousemove --window %W 640 420 click --repeat 5 --delay 300 4');
+
+      navigate(PageMode.explore);
+      await wait(0.5);
+      await scene('explore');
+      await wait(5);
+
+      if (player != null) {
+        unawaited(play(VideoItem(id: 'aqz-KE-bpKQ', title: 'Big Buck Bunny', channel: 'Blender', url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ')));
+        final playing = Stopwatch()..start();
+        while (playing.elapsed < const Duration(seconds: 90) && player.state.position < const Duration(seconds: 2)) {
+          await wait(0.3);
+        }
+        await player.seek(const Duration(minutes: 7, seconds: 5));
+        await wait(2);
+        await scene('watch');
+        await wait(7);
+        await player.pause();
+      }
+
+      navigate(PageMode.home);
+      await wait(1);
+      await scene('palettes');
+      final looks = <(String, ThemeMode)>[
+        ('', ThemeMode.light),
+        ('ricePaper', ThemeMode.light),
+        ('inkBamboo', ThemeMode.light),
+        ('rime', ThemeMode.light),
+        ('sandstone', ThemeMode.light),
+        ('fallingPetals', ThemeMode.light),
+        ('candlelight', ThemeMode.dark),
+        ('nightVoyage', ThemeMode.dark),
+        ('pineSoot', ThemeMode.dark),
+        ('duskHills', ThemeMode.dark),
+        ('', ThemeMode.dark),
+      ];
+      for (final (palette, mode) in looks) {
+        await saveAppearance(appearance.copyWith(palette: palette, themeMode: mode));
+        await wait(1.2);
+      }
+
+      navigate(PageMode.settings);
+      await wait(1);
+      await scene('languages');
+      for (final tag in ['en', 'zh-Hans', 'ja', 'ko', 'es', 'fr', 'de', 'ru', 'ar', 'hi', 'pt', 'he', 'th', 'vi', 'uk', 'el', 'bn', 'fa', 'my', 'ka', 'am', 'eo', 'la', 'en']) {
+        setLanguage(AppLanguage(tag));
+        _update(() {});
+        await wait(0.8);
+      }
+      await scene('end');
+      await wait(1);
+      await signal('rec-stop');
+    } catch (e) {
+      logError('Tour failed', e);
+      await signal('rec-stop');
+    }
+    setLanguage(start.language);
+    await saveAppearance(start);
   }
 
   Future<void> runSmokeCheck() async {

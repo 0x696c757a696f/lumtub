@@ -51,6 +51,9 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # The pull request's own commit, to read whether it asks for README pictures.
+          fetch-depth: 2
 
       - name: Windows - verify latest zhongfly libmpv
         shell: pwsh
@@ -371,7 +374,26 @@ jobs:
           & $iscc.Source "/DAppVersion=$env:LUMTUB_VERSION" "/DSourceDir=$source" "/DOutputDir=$output" "/DPackageArch=$env:PACKAGE_ARCH" "/DInstallArch=$env:INSTALL_ARCH" 'windows/installer/lumtub.iss'
           if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed.' }
 
-      - name: Windows - upload portable ZIP
+      - name: Windows - README pictures
+        if: matrix.package_arch == 'x64'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $message = git log -1 --format=%B HEAD^2 2> $null
+          if ($LASTEXITCODE -ne 0) { $message = git log -1 --format=%B HEAD }
+          if (-not (($message -join "`n").Contains('[showcase]'))) { exit 0 }
+          Set-DisplayResolution -Width 1920 -Height 1080 -Force -ErrorAction SilentlyContinue
+          $package = "Lumtub_$env:LUMTUB_VERSION`_windows-$env:PACKAGE_ARCH"
+          windows/packaging/showcase.ps1 (Resolve-Path "$package/lumtub.exe").Path "$env:RUNNER_TEMP/shots"
+
+      - name: Windows - upload README pictures
+        if: matrix.package_arch == 'x64'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: readme-shots-windows
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Lumtub-windows-${{ matrix.package_arch }}-portable
@@ -514,7 +536,7 @@ jobs:
         if: matrix.package_arch == 'x64'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: readme-shots
+          name: readme-shots-linux
           path: ${{ runner.temp }}/shots
           if-no-files-found: ignore
 
@@ -538,9 +560,9 @@ jobs:
   showcase:
     name: README pictures
     # Runs only for a commit whose message contains [showcase]: pushes the
-    # pictures the Linux x64 job took of the AppImage's pages to the
-    # readme-shots branch.
-    needs: linux
+    # pictures the Windows x64, Linux x64 and macOS jobs took of the app's
+    # pages to the readme-shots branch, one folder per system.
+    needs: [windows, linux, macos]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -555,7 +577,7 @@ jobs:
       - if: steps.wanted.outputs.run == 'true'
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          name: readme-shots
+          pattern: readme-shots-*
           path: ${{ runner.temp }}/shots
       - name: Push the pictures
         if: steps.wanted.outputs.run == 'true'
@@ -564,7 +586,12 @@ jobs:
           git checkout --orphan readme-shots
           git rm -rfq .
           git clean -fdxq
-          cp "$RUNNER_TEMP"/shots/*.png "$RUNNER_TEMP"/shots/*.log "$RUNNER_TEMP"/shots/stdout.txt . 2> /dev/null || true
+          for system in windows linux macos; do
+            from="$RUNNER_TEMP/shots/readme-shots-$system"
+            [ -d "$from" ] || continue
+            mkdir -p "$system"
+            cp "$from"/*.png "$from"/*.log "$from"/stdout.txt "$system/" 2> /dev/null || true
+          done
           git add -A
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Pictures of $sha"
           git push -f origin readme-shots
@@ -580,6 +607,9 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # The pull request's own commit, to read whether it asks for README pictures.
+          fetch-depth: 2
 
       - name: macOS - install Flutter stable SDK
         run: |
@@ -685,6 +715,21 @@ jobs:
 
       - name: macOS - smoke test the DMG
         run: macos/packaging/smoke.sh Lumtub_*_macos-universal.dmg "$RUNNER_TEMP/smoke"
+
+      - name: macOS - README pictures
+        continue-on-error: true
+        run: |
+          message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
+          if echo "$message" | grep -qF '[showcase]'; then
+            macos/packaging/showcase.sh Lumtub_*_macos-universal.dmg "$RUNNER_TEMP/shots"
+          fi
+
+      - name: macOS - upload README pictures
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: readme-shots-macos
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
 
       - name: macOS - upload smoke test results
         if: always()

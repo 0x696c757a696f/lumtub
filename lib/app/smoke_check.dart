@@ -42,6 +42,8 @@ extension SmokeCheck on AppController {
         await shot('search-$theme');
         openChannel(const ChannelRef('UCSMOQeBJ2RAnuFungnQOxLg', 'Blender'));
         await shot('channel-$theme');
+        navigate(PageMode.settings);
+        await shot('settings-$theme', settle: const Duration(seconds: 5));
       }
       final player = this.player;
       if (player != null) {

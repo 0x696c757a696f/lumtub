@@ -19,30 +19,30 @@ void main() {
 
   testWidgets('an AI model shows its provider, endpoint, model, key and prompt', (tester) async {
     await open(tester, const TranslationConfig(service: TranslationService.ai, aiPreset: 'deepseek'));
-    for (final text in ['服务商', 'DeepSeek', 'https://api.deepseek.com/v1', 'deepseek-chat', 'API 密钥', '字幕翻译（逐行对应）', '测试翻译']) {
+    for (final text in ['Provider', 'DeepSeek', 'https://api.deepseek.com/v1', 'deepseek-chat', 'API key', 'Subtitles (line for line)', 'Test translation']) {
       expect(find.text(text), findsWidgets, reason: text);
     }
-    expect(find.text('自定义提示词'), findsNothing);
+    expect(find.text('Custom prompt'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('the AI interface shows whichever service translates', (tester) async {
     await open(tester, const TranslationConfig(service: TranslationService.deepl, aiPreset: 'deepseek'));
-    for (final text in ['AI 接口', 'https://api.deepseek.com/v1', 'deepseek-chat', '测试 AI 接口', '测试翻译', '语音识别服务', 'Groq（Whisper，免费额度）', 'whisper-large-v3-turbo']) {
+    for (final text in ['AI interface', 'https://api.deepseek.com/v1', 'deepseek-chat', 'Test AI interface', 'Test translation', 'Speech recognition service', 'Groq (Whisper, free tier)', 'whisper-large-v3-turbo']) {
       expect(find.text(text), findsWidgets, reason: text);
     }
-    expect(find.text('AI 翻译'), findsNothing);
-    expect(find.text('提示词'), findsNothing);
+    expect(find.text('AI translation'), findsNothing);
+    expect(find.text('Prompt'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('a key is asked for with the text hidden', (tester) async {
     await open(tester, const TranslationConfig(service: TranslationService.deepl));
-    expect(find.text('未填写'), findsWidgets);
-    await tester.tap(find.text('API 密钥').first);
+    expect(find.text('Not set'), findsWidgets);
+    await tester.tap(find.text('API key').first);
     await tester.pumpAndSettle();
     expect(tester.widget<TextField>(find.byType(TextField)).obscureText, isTrue);
-    await tester.tap(find.byTooltip('显示'));
+    await tester.tap(find.byTooltip('Show'));
     await tester.pump();
     expect(tester.widget<TextField>(find.byType(TextField)).obscureText, isFalse);
   });

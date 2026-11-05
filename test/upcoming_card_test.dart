@@ -7,12 +7,12 @@ import 'package:lumtub/ui/upcoming_card.dart';
 
 void main() {
   test('counts down to the start', () {
-    expect(startsIn(null), '即将开始');
-    expect(startsIn(const Duration(seconds: -30)), '即将开始');
-    expect(startsIn(const Duration(seconds: 42)), '42 秒后开始');
-    expect(startsIn(const Duration(minutes: 12, seconds: 5)), '12 分 5 秒后开始');
-    expect(startsIn(const Duration(hours: 2, minutes: 13, seconds: 50)), '2 小时 13 分后开始');
-    expect(startsIn(const Duration(days: 3, hours: 4, minutes: 1)), '3 天 4 小时后开始');
+    expect(startsIn(null), 'Starting soon');
+    expect(startsIn(const Duration(seconds: -30)), 'Starting soon');
+    expect(startsIn(const Duration(seconds: 42)), 'Starts in 42 s');
+    expect(startsIn(const Duration(minutes: 12, seconds: 5)), 'Starts in 12 min 5 s');
+    expect(startsIn(const Duration(hours: 2, minutes: 13, seconds: 50)), 'Starts in 2 h 13 min');
+    expect(startsIn(const Duration(days: 3, hours: 4, minutes: 1)), 'Starts in 3 d 4 h');
   });
 
   test('details carry the scheduled start of an upcoming stream only', () {
@@ -34,10 +34,10 @@ void main() {
         ),
       ),
     ));
-    expect(find.text('直播预告'), findsOneWidget);
-    expect(find.text('2 小时 5 分后开始'), findsOneWidget);
-    expect(find.textContaining('开始于'), findsOneWidget);
-    await tester.tap(find.text('现在重试'));
+    expect(find.text('Upcoming live'), findsOneWidget);
+    expect(find.text('Starts in 2 h 5 min'), findsOneWidget);
+    expect(find.textContaining(RegExp(r'^Starts (?!in )')), findsOneWidget);
+    await tester.tap(find.text('Try now'));
     expect(retried, 1);
     await tester.pumpWidget(const SizedBox());
   });

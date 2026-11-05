@@ -8,7 +8,7 @@ import 'download_formats.dart';
 
 /// The file a download is muxed into.
 enum DownloadContainer {
-  auto('自动（推荐）'),
+  auto('Auto (recommended)'),
   mkv('MKV'),
   mp4('MP4'),
   webm('WebM');
@@ -34,10 +34,10 @@ class ContainerPlan {
 /// Why [problem], a lumtub_core problem code, keeps a container from
 /// holding the streams.
 String? _problem(Object? problem) => switch (problem) {
-      'mp4Vp8' => tr('MP4 不能容纳 VP8'),
-      'mp4Audio' => tr('MP4 没有可用的音轨'),
-      'webmH264' => tr('WebM 不能容纳 H.264'),
-      'webmAudio' => tr('WebM 没有可用的音轨'),
+      'mp4Vp8' => tr('MP4 cannot hold VP8'),
+      'mp4Audio' => tr('No audio track fits MP4'),
+      'webmH264' => tr('WebM cannot hold H.264'),
+      'webmAudio' => tr('No audio track fits WebM'),
       _ => null,
     };
 
@@ -84,7 +84,7 @@ class DownloadSelection {
   final int? size;
 
   /// What the downloads list shows, such as `VP9 · 1080p · MP4`.
-  String get label => audioOnly ? tr('仅音频') : '${codec?.label ?? ''} · ${height}p · ${container.label}';
+  String get label => audioOnly ? tr('Audio only') : '${codec?.label ?? ''} · ${height}p · ${container.label}';
 
   /// Whether ffmpeg has to join a video and an audio stream.
   bool get needsMerge => !audioOnly && videoId != null && audioId != null;
@@ -180,4 +180,4 @@ class DownloadDefaults {
 }
 
 /// The about-size text of [bytes] for the summary line.
-String approximateSize(int bytes) => tr('约 {0}', [formatBytes(bytes)]);
+String approximateSize(int bytes) => tr('about {0}', [formatBytes(bytes)]);

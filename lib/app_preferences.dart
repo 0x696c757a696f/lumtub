@@ -22,21 +22,21 @@ import 'l10n/l10n.dart';
 /// This must be evaluated after the selected language is loaded, instead of
 /// once during library initialization.
 List<(String, String)> get startPages => [
-      ('home', tr('首页')),
-      ('explore', tr('探索')),
-      ('subscriptions', tr('订阅')),
-      ('history', tr('历史')),
-      ('playlists', tr('播放列表')),
+      ('home', tr('Home')),
+      ('explore', tr('Explore')),
+      ('subscriptions', tr('Subscriptions')),
+      ('history', tr('History')),
+      ('playlists', tr('Playlist')),
     ];
 
 /// Behaviour and content preferences that are neither player options nor
 /// looks: privacy, filters, start page and how the watch page behaves.
 /// What 字幕列表 lists while a first and a second subtitle are on.
 enum SubtitleListMode {
-  firstOver('双语，第一字幕在上'),
-  secondOver('双语，第二字幕在上'),
-  first('只看第一字幕'),
-  second('只看第二字幕');
+  firstOver('Both, first subtitle on top'),
+  secondOver('Both, second subtitle on top'),
+  first('First subtitle only'),
+  second('Second subtitle only');
 
   const SubtitleListMode(this._label);
   final String _label;
@@ -615,7 +615,7 @@ class AppPreferences {
       if (value is! Map) return const {};
       return {
         for (final entry in value.entries)
-          if (entry.value is List) '${entry.key}': [for (final k in entry.value as List) '$k'],
+          if (entry.value is List) '${entry.key}': [for (final k in entry.value as List) legacyTopicKeys['$k'] ?? '$k'],
       };
     }
     final start = raw['startPage']?.toString();

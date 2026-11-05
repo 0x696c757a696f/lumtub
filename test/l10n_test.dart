@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/appearance_settings.dart';
+import 'package:lumtub/explore_filters.dart';
 import 'package:lumtub/explore_topics.dart';
 import 'package:lumtub/faith_topics.dart';
 import 'package:lumtub/l10n/l10n.dart';
@@ -12,50 +13,56 @@ import 'package:lumtub/models.dart';
 import 'package:lumtub/ui/pages/explore_page.dart';
 import 'package:lumtub/ui/pages/settings_page.dart';
 import 'package:lumtub/ui/pages/settings_sections.dart';
+import 'package:lumtub/ui/subtitle_style.dart';
 import 'package:lumtub/ui/theme.dart';
 
-/// The first argument of every tr('…') call in lib/, as the running app
-/// passes it.
+/// The first argument of every tr('…') and tr("…") call in lib/, as the
+/// running app passes it.
 Set<String> _sourceKeys() {
-  final call = RegExp(r"\btr\('((?:[^'\\]|\\.)*)'");
+  final call = RegExp(r"""\btr\((?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")""");
   String decode(String s) => s.replaceAllMapped(RegExp(r'\\(.)'), (m) => switch (m[1]) { 'n' => '\n', 't' => '\t', _ => m[1]! });
   return {
     for (final file in Directory('lib').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart')))
-      for (final m in call.allMatches(file.readAsStringSync())) decode(m[1]!),
+      for (final m in call.allMatches(file.readAsStringSync())) decode(m[1] ?? m[2]!),
   };
 }
+
+final _cjk = RegExp(r'[\u3040-\u30ff\u3400-\u9fff\uff00-\uffef]');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadTranslations);
-  tearDown(() => setLanguage(AppLanguage.zhHans));
+  tearDown(() => setLanguage(AppLanguage.en));
 
-  test('every translatable string has English text', () {
+  test('every translatable string is English and has simplified Chinese text', () {
     final keys = _sourceKeys();
     expect(keys.length, greaterThan(900));
-    final english = translations['en']!;
-    expect(keys.where((k) => !english.containsKey(k)).toList(), isEmpty, reason: 'add these to assets/l10n/en.json');
+    final chinese = translations['zh-Hans']!;
+    expect(keys.where((k) => !chinese.containsKey(k)).toList(), isEmpty, reason: 'add these to assets/l10n/zh-Hans.json');
+    // Search words may name things in Chinese as well; text shown may not.
+    expect(keys.where((k) => _cjk.hasMatch(k) && !k.startsWith('Falun Gong ')).toList(), isEmpty, reason: 'the source strings are English');
+    expect(translations, isNot(contains('en')), reason: 'English is the source and needs no file');
   });
 
-  test('every translation keeps the placeholders and translates only strings English has', () {
-    final keys = translations['en']!.keys.toSet();
+  test('every translation keeps the placeholders and translates only strings simplified Chinese has', () {
+    final keys = translations['zh-Hans']!.keys.toSet();
     final placeholder = RegExp(r'\{\d+\}');
     Set<String?> placeholders(String s) => placeholder.allMatches(s).map((m) => m[0]).toSet();
     for (final MapEntry(key: tag, value: strings) in translations.entries) {
       for (final MapEntry(:key, :value) in strings.entries) {
-        expect(keys, contains(key), reason: '$tag: not in en.json');
+        expect(keys, contains(key), reason: '$tag: not in zh-Hans.json');
         expect(placeholders(value), placeholders(key), reason: '$tag: $key');
       }
     }
   });
 
   test('only translations covering nine strings in ten are offered', () {
-    final english = translations['en']!.length;
+    final source = translations['zh-Hans']!.length;
     for (final MapEntry(key: tag, value: strings) in translations.entries) {
-      if (tag == 'en') continue;
+      if (tag == 'zh-Hans') continue;
       final offered = AppLanguage.selectable.any((l) => l.tag == tag);
-      expect(offered, strings.length >= english * completeEnough, reason: '$tag: ${strings.length} of $english');
-      stdout.writeln('Translation $tag: ${(strings.length * 100 / english).toStringAsFixed(0)}%');
+      expect(offered, strings.length >= source * completeEnough, reason: '$tag: ${strings.length} of $source');
+      stdout.writeln('Translation $tag: ${(strings.length * 100 / source).toStringAsFixed(0)}%');
     }
   });
 
@@ -69,27 +76,57 @@ void main() {
 
   test('translates with placeholders and falls back to the source text', () {
     setLanguage(AppLanguage.en);
-    expect(tr('冷门宝藏'), 'Hidden gems');
-    expect(tr('还没有翻译的文字'), '还没有翻译的文字');
+    expect(tr('Hidden gems'), 'Hidden gems');
+    expect(tr('Text with no translation yet'), 'Text with no translation yet');
     expect(ExploreMode.gems.label, 'Hidden gems');
     expect(formatCount(1234567), '1.2M');
-    setLanguage(const AppLanguage('zh-Hant'));
-    expect(tr('冷门宝藏'), '冷門寶藏');
-    expect(formatCount(1234567), '123萬');
-    setLanguage(const AppLanguage('xx'));
-    expect(tr('冷门宝藏'), 'Hidden gems', reason: 'a language without the string falls back to English');
     setLanguage(AppLanguage.zhHans);
-    expect(tr('冷门宝藏'), '冷门宝藏');
+    expect(tr('Hidden gems'), '冷门宝藏');
+    expect(tr('Current: {0}', ['720p']), '当前：720p');
+    expect(trLog('Current: {0}', ['720p']), 'Current: 720p', reason: 'the log is in English whatever the interface language');
+    expect(ExploreMode.gems.label, '冷门宝藏');
     expect(formatCount(1234567), '123万');
+    setLanguage(const AppLanguage('zh-Hant'));
+    expect(tr('Hidden gems'), '冷門寶藏');
+    expect(formatCount(1234567), '123萬');
+    setLanguage(const AppLanguage('de'));
+    expect(tr('Hidden gems'), isNot('Hidden gems'));
+    expect(tr('Text with no translation yet'), 'Text with no translation yet');
+    setLanguage(const AppLanguage('xx'));
+    expect(tr('Hidden gems'), 'Hidden gems', reason: 'a language without the string falls back to English');
+  });
+
+  test('traditional Chinese falls back to simplified Chinese, other languages to English', () {
+    final simplified = translations['zh-Hans']!;
+    final saved = {for (final tag in ['zh-Hant', 'zh-HK', 'de']) tag: translations[tag]!};
+    addTearDown(() => translations.addAll(saved));
+    // A string each file leaves out.
+    for (final MapEntry(key: tag, value: strings) in saved.entries) {
+      translations[tag] = {...strings}..remove('Hidden gems');
+    }
+    for (final tag in ['zh-Hant', 'zh-HK']) {
+      setLanguage(AppLanguage(tag));
+      expect(tr('Hidden gems'), simplified['Hidden gems'], reason: tag);
+      expect(tr('Subtitles'), saved[tag]!['Subtitles'], reason: tag);
+    }
+    setLanguage(const AppLanguage('de'));
+    expect(tr('Hidden gems'), 'Hidden gems');
+  });
+
+  test('a font name is never translated, a country of the same name is', () {
+    setLanguage(const AppLanguage('de'));
+    expect(ExploreRegion.ge.label, 'Georgien');
+    expect(subtitleFontLabel('Georgia'), 'Georgia');
   });
 
   test('custom zones keep their own names and keys in every language', () {
-    setLanguage(AppLanguage.en);
+    setLanguage(AppLanguage.zhHans);
     const custom = CustomTopic('额我略圣歌', 'Gregorian chant', ExploreSection.popular);
     expect(custom.topic.label, '额我略圣歌');
     final faith = faithTraditionTopics.first;
-    expect(faith.key, '基督宗教');
-    expect(faith.label, 'Christianity');
+    expect(faith.key, 'Christianity');
+    expect(faith.label, '基督宗教');
+    expect(legacyTopicKeys['基督宗教'], faith.key);
   });
 
   testWidgets('the explore page lays out in English', (tester) async {
@@ -141,7 +178,7 @@ void main() {
       }
       await tester.tap(find.text(SettingsCategory.style.title).first);
       await tester.pump();
-      expect(find.text(tr('语言')), findsOneWidget);
+      expect(find.text(tr('Language')), findsOneWidget);
     });
   }
 

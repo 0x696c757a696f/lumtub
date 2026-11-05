@@ -7,12 +7,12 @@ import 'package:lumtub/friendly_error.dart';
 
 void main() {
   test('network failures read as something to act on', () {
-    expect(friendlyError(TimeoutException('x')), contains('超时'));
-    expect(friendlyError(const SocketException('Failed host lookup: www.youtube.com')), contains('连不上'));
-    expect(friendlyError(http.ClientException('could not connect (error sending request)')), contains('连不上'));
-    expect(friendlyError(Exception('HTTP 429 Too Many Requests')), contains('太频繁'));
+    expect(friendlyError(TimeoutException('x')), contains('timed out'));
+    expect(friendlyError(const SocketException('Failed host lookup: www.youtube.com')), contains("Can't reach"));
+    expect(friendlyError(http.ClientException('could not connect (error sending request)')), contains("Can't reach"));
+    expect(friendlyError(Exception('HTTP 429 Too Many Requests')), contains('Too many requests'));
     expect(friendlyError(Exception('HTTP 403')), contains('403'));
-    expect(friendlyError(const HandshakeException('CERTIFICATE_VERIFY_FAILED')), contains('安全连接'));
+    expect(friendlyError(const HandshakeException('CERTIFICATE_VERIFY_FAILED')), contains('secure connection'));
   });
 
   test('other errors keep their message without the type name', () {

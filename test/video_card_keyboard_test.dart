@@ -13,7 +13,7 @@ void main() {
         body: SizedBox(
           width: 320,
           height: 300,
-          child: VideoCard(item: const VideoItem(id: 'abcdefghijk', title: '标题', channel: '频道', url: 'u'), onOpen: () => opened++),
+          child: VideoCard(item: const VideoItem(id: 'abcdefghijk', title: '标题', channel: 'Channel', url: 'u'), onOpen: () => opened++),
         ),
       ),
     ));
@@ -27,6 +27,6 @@ void main() {
     expect(opened, 1);
     await tester.sendKeyEvent(LogicalKeyboardKey.contextMenu);
     await tester.pumpAndSettle();
-    expect(find.text('复制链接'), findsOneWidget);
+    expect(find.text('Copy link'), findsOneWidget);
   });
 }

@@ -19,9 +19,9 @@ const defaultSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 3.0];
 /// How playback picks among the codecs that are not disabled; see
 /// `FormatPolicy`.
 enum PlaybackStrategy {
-  auto('智能自动（推荐）', '根据硬件解码能力和视频画质自动选择'),
-  quality('画质优先', '优先分辨率、帧率和画质，允许软件解码'),
-  lowResource('低资源占用优先', '尽可能使用硬件解码，降低 CPU 占用');
+  auto('Smart auto (recommended)', 'Chosen automatically from hardware decoding support and video quality'),
+  quality('Quality first', 'Prefers resolution, frame rate and quality; software decoding allowed'),
+  lowResource('Low resource use first', 'Uses hardware decoding wherever possible to lower CPU use');
 
   const PlaybackStrategy(this._label, this._description);
   final String _label;
@@ -31,9 +31,9 @@ enum PlaybackStrategy {
 }
 
 enum AudioQuality {
-  best('最高'),
-  medium('中等（≤128 kbps）'),
-  low('省流（≤64 kbps）');
+  best('Highest'),
+  medium('Medium (≤128 kbps)'),
+  low('Data saver (≤64 kbps)');
 
   const AudioQuality(this._label);
   final String _label;
@@ -43,11 +43,11 @@ enum AudioQuality {
 /// What happens when a video ends. Named and ordered like PiliNara's
 /// `PlayRepeat`.
 enum PlayOrder {
-  pause('播完暂停'),
-  listOrder('顺序播放'),
-  singleCycle('单个循环'),
-  listCycle('列表循环'),
-  autoPlayRelated('自动连播');
+  pause('Pause when finished'),
+  listOrder('Play in order'),
+  singleCycle('Loop one'),
+  listCycle('Loop list'),
+  autoPlayRelated('Autoplay next');
 
   const PlayOrder(this._label);
   final String _label;
@@ -55,9 +55,9 @@ enum PlayOrder {
 }
 
 enum SubtitleMode {
-  off('不自动开启'),
-  manual('有人工字幕时开启'),
-  always('总是开启（含自动生成字幕）');
+  off("Don't turn on automatically"),
+  manual('On when human-made subtitles exist'),
+  always('Always on (including auto-generated)');
 
   const SubtitleMode(this._label);
   final String _label;
@@ -67,23 +67,23 @@ enum SubtitleMode {
 enum SubtitleLanguage {
   /// Windows' language when one below is, else English. Not the
   /// interface's.
-  auto('跟随系统语言', '', ''),
-  zh('简体中文优先', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng'),
-  zhHant('繁體中文優先', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng'),
-  en('英语优先', 'en.*', 'en,eng,en-US,en-GB'),
-  ja('日语优先', '(ja|en).*', 'ja,jpn,en,eng'),
-  ko('韩语优先', '(ko|en).*', 'ko,kor,en,eng'),
-  fr('法语优先', '(fr|en).*', 'fr,fre,fra,en,eng'),
-  de('德语优先', '(de|en).*', 'de,ger,deu,en,eng'),
-  es('西班牙语优先', '(es|en).*', 'es,spa,en,eng'),
-  pt('葡萄牙语优先', '(pt|en).*', 'pt,pt-BR,por,en,eng'),
-  ru('俄语优先', '(ru|en).*', 'ru,rus,en,eng'),
-  it('意大利语优先', '(it|en).*', 'it,ita,en,eng'),
-  vi('越南语优先', '(vi|en).*', 'vi,vie,en,eng'),
-  th('泰语优先', '(th|en).*', 'th,tha,en,eng'),
-  id('印尼语优先', '(id|en).*', 'id,ind,en,eng'),
-  ar('阿拉伯语优先', '(ar|en).*', 'ar,ara,en,eng'),
-  hi('印地语优先', '(hi|en).*', 'hi,hin,en,eng');
+  auto('Follow Windows language', '', ''),
+  zh('Prefer Simplified Chinese', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng'),
+  zhHant('Prefer Traditional Chinese', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng'),
+  en('English first', 'en.*', 'en,eng,en-US,en-GB'),
+  ja('Prefer Japanese', '(ja|en).*', 'ja,jpn,en,eng'),
+  ko('Korean first', '(ko|en).*', 'ko,kor,en,eng'),
+  fr('Prefer French', '(fr|en).*', 'fr,fre,fra,en,eng'),
+  de('Prefer German', '(de|en).*', 'de,ger,deu,en,eng'),
+  es('Spanish first', '(es|en).*', 'es,spa,en,eng'),
+  pt('Portuguese first', '(pt|en).*', 'pt,pt-BR,por,en,eng'),
+  ru('Prefer Russian', '(ru|en).*', 'ru,rus,en,eng'),
+  it('Prefer Italian', '(it|en).*', 'it,ita,en,eng'),
+  vi('Vietnamese first', '(vi|en).*', 'vi,vie,en,eng'),
+  th('Prefer Thai', '(th|en).*', 'th,tha,en,eng'),
+  id('Prefer Indonesian', '(id|en).*', 'id,ind,en,eng'),
+  ar('Arabic first', '(ar|en).*', 'ar,ara,en,eng'),
+  hi('Prefer Hindi', '(hi|en).*', 'hi,hin,en,eng');
 
   const SubtitleLanguage(this._label, this._ytDlpLangs, this._mpvLangs);
   final String _label;
@@ -120,15 +120,15 @@ enum SubtitleLanguage {
 
 /// mpv's `--video-sync` modes, as PiliNara lists them.
 enum VideoSync {
-  audio('audio', '跟随音频（默认）'),
-  displayResample('display-resample', '按显示器刷新率重采样（更平滑）'),
-  displayResampleVdrop('display-resample-vdrop', '重采样，必要时丢帧'),
-  displayResampleDesync('display-resample-desync', '重采样，不同步音频'),
-  displayTempo('display-tempo', '按显示器刷新率变速音频'),
-  displayVdrop('display-vdrop', '跟随显示器，丢弃或重复视频帧'),
-  displayAdrop('display-adrop', '跟随显示器，丢弃或重复音频'),
-  displayDesync('display-desync', '跟随显示器，不同步音频'),
-  desync('desync', '不同步（仅调试用）');
+  audio('audio', 'Sync to audio (default)'),
+  displayResample('display-resample', 'Resample to display refresh rate (smoother)'),
+  displayResampleVdrop('display-resample-vdrop', 'Resample, drop frames if needed'),
+  displayResampleDesync('display-resample-desync', "Resample, don't sync audio"),
+  displayTempo('display-tempo', 'Resample audio to display refresh rate'),
+  displayVdrop('display-vdrop', 'Sync to display, drop or repeat video frames'),
+  displayAdrop('display-adrop', 'Sync to display, drop or repeat audio'),
+  displayDesync('display-desync', "Sync to display, don't sync audio"),
+  desync('desync', "Don't sync (debug only)");
 
   const VideoSync(this._mpvValue, this._label);
   final String _mpvValue;
@@ -148,50 +148,50 @@ List<(String, String)> get hwdecChoices => Platform.isWindows
         : _linuxHwdec;
 
 final _macHwdec = <(String, String)>[
-  ('no', tr('软件解码')),
-  ('auto', tr('任意可用的硬件解码器')),
-  ('auto-safe', tr('最佳且稳定的硬件解码器（默认）')),
-  ('auto-copy', tr('带拷贝的最佳硬件解码器')),
-  ('videotoolbox', tr('VideoToolbox（零拷贝）')),
-  ('videotoolbox-copy', tr('VideoToolbox（回拷）')),
+  ('no', tr('Software decoding')),
+  ('auto', tr('Any available hardware decoder')),
+  ('auto-safe', tr('Best stable hardware decoder (default)')),
+  ('auto-copy', tr('Best hardware decoder with copy-back')),
+  ('videotoolbox', tr('VideoToolbox (zero-copy)')),
+  ('videotoolbox-copy', tr('VideoToolbox (copy-back)')),
 ];
 
 final _linuxHwdec = <(String, String)>[
-  ('no', tr('软件解码')),
-  ('auto', tr('任意可用的硬件解码器')),
-  ('auto-safe', tr('最佳且稳定的硬件解码器（默认）')),
-  ('auto-copy', tr('带拷贝的最佳硬件解码器')),
-  ('vaapi', tr('VA-API（Intel、AMD，零拷贝）')),
-  ('vaapi-copy', tr('VA-API（回拷）')),
-  ('nvdec', tr('NVDEC（NVIDIA 独占，零拷贝）')),
-  ('nvdec-copy', tr('NVDEC（NVIDIA 独占，回拷）')),
-  ('vulkan', tr('Vulkan（实验性，零拷贝）')),
-  ('vulkan-copy', tr('Vulkan（实验性，回拷）')),
-  ('cuda', tr('CUDA（NVIDIA 独占，过时，零拷贝）')),
-  ('cuda-copy', tr('CUDA（NVIDIA 独占，过时，回拷）')),
+  ('no', tr('Software decoding')),
+  ('auto', tr('Any available hardware decoder')),
+  ('auto-safe', tr('Best stable hardware decoder (default)')),
+  ('auto-copy', tr('Best hardware decoder with copy-back')),
+  ('vaapi', tr('VA-API (Intel, AMD, zero-copy)')),
+  ('vaapi-copy', tr('VA-API (copy-back)')),
+  ('nvdec', tr('NVDEC (NVIDIA only, zero-copy)')),
+  ('nvdec-copy', tr('NVDEC (NVIDIA only, copy-back)')),
+  ('vulkan', tr('Vulkan (experimental, zero-copy)')),
+  ('vulkan-copy', tr('Vulkan (experimental, copy-back)')),
+  ('cuda', tr('CUDA (NVIDIA only, legacy, zero-copy)')),
+  ('cuda-copy', tr('CUDA (NVIDIA only, legacy, copy-back)')),
 ];
 
 final _windowsHwdec = <(String, String)>[
-  ('no', tr('软件解码')),
-  ('auto', tr('任意可用的硬件解码器')),
-  ('auto-safe', tr('最佳且稳定的硬件解码器（默认）')),
-  ('auto-copy', tr('带拷贝的最佳硬件解码器')),
-  ('d3d12va', tr('DirectX 12（Windows 10 及以上，零拷贝）')),
-  ('d3d12va-copy', tr('DirectX 12（回拷）')),
-  ('d3d11va', tr('DirectX 11（Windows 8 及以上，零拷贝）')),
-  ('d3d11va-copy', tr('DirectX 11（回拷）')),
-  ('dxva2', tr('DXVA2（Windows 7 及以上，零拷贝）')),
-  ('dxva2-copy', tr('DXVA2（回拷）')),
-  ('nvdec', tr('NVDEC（NVIDIA 独占，零拷贝）')),
-  ('nvdec-copy', tr('NVDEC（NVIDIA 独占，回拷）')),
-  ('vulkan', tr('Vulkan（实验性，零拷贝）')),
-  ('vulkan-copy', tr('Vulkan（实验性，回拷）')),
-  ('cuda', tr('CUDA（NVIDIA 独占，过时，零拷贝）')),
-  ('cuda-copy', tr('CUDA（NVIDIA 独占，过时，回拷）')),
-  ('amf', tr('AMF（AMD 独占，零拷贝）')),
-  ('amf-copy', tr('AMF（AMD 独占，回拷）')),
-  ('qsv', tr('Quick Sync Video（Intel 独占，零拷贝）')),
-  ('qsv-copy', tr('Quick Sync Video（Intel 独占，回拷）')),
+  ('no', tr('Software decoding')),
+  ('auto', tr('Any available hardware decoder')),
+  ('auto-safe', tr('Best stable hardware decoder (default)')),
+  ('auto-copy', tr('Best hardware decoder with copy-back')),
+  ('d3d12va', tr('DirectX 12 (Windows 10 and later, zero-copy)')),
+  ('d3d12va-copy', tr('DirectX 12 (copy-back)')),
+  ('d3d11va', tr('DirectX 11 (Windows 8 and later, zero-copy)')),
+  ('d3d11va-copy', tr('DirectX 11 (copy-back)')),
+  ('dxva2', tr('DXVA2 (Windows 7 and later, zero-copy)')),
+  ('dxva2-copy', tr('DXVA2 (copy-back)')),
+  ('nvdec', tr('NVDEC (NVIDIA only, zero-copy)')),
+  ('nvdec-copy', tr('NVDEC (NVIDIA only, copy-back)')),
+  ('vulkan', tr('Vulkan (experimental, zero-copy)')),
+  ('vulkan-copy', tr('Vulkan (experimental, copy-back)')),
+  ('cuda', tr('CUDA (NVIDIA only, legacy, zero-copy)')),
+  ('cuda-copy', tr('CUDA (NVIDIA only, legacy, copy-back)')),
+  ('amf', tr('AMF (AMD only, zero-copy)')),
+  ('amf-copy', tr('AMF (AMD only, copy-back)')),
+  ('qsv', tr('Quick Sync Video (Intel only, zero-copy)')),
+  ('qsv-copy', tr('Quick Sync Video (Intel only, copy-back)')),
 ];
 
 /// Codecs offered for `--hwdec-codecs`.
@@ -200,9 +200,9 @@ const defaultHwdecCodecs = 'h264,vc1,hevc,vp8,vp9,av1,prores,ffv1';
 
 /// PiliNara's 音量均衡 presets, as mpv `--af` filters.
 List<(String, String)> get audioFilterPresets => [
-  ('', tr('关闭')),
-  ('dynaudnorm=g=5:f=250:r=0.9:p=0.5', tr('预设 dynaudnorm（动态均衡）')),
-  ('loudnorm=I=-16:LRA=11:TP=-1.5', tr('预设 loudnorm（响度标准化）')),
+  ('', tr('Close')),
+  ('dynaudnorm=g=5:f=250:r=0.9:p=0.5', tr('Preset dynaudnorm (dynamic normalization)')),
+  ('loudnorm=I=-16:LRA=11:TP=-1.5', tr('Preset loudnorm (loudness normalization)')),
 ];
 
 /// Picture adjustments PiliNara offers in its player, as mpv properties.
@@ -211,11 +211,11 @@ List<(String, String)> get audioFilterPresets => [
 int pictureLimit(String key) => key == 'brightness' ? 50 : 100;
 
 List<(String, String)> get pictureProperties => [
-      ('brightness', tr('亮度')),
-      ('contrast', tr('对比度')),
-      ('saturation', tr('饱和度')),
-      ('gamma', tr('伽马')),
-      ('hue', tr('色调')),
+      ('brightness', tr('Brightness')),
+      ('contrast', tr('Contrast')),
+      ('saturation', tr('Saturation')),
+      ('gamma', tr('Gamma')),
+      ('hue', tr('Hue')),
     ];
 
 /// Options a custom line may not set: ones that load code or files, write
@@ -241,7 +241,7 @@ typedef RejectedOption = (String line, String reason);
     final comment = line.indexOf(RegExp(r'\s#'));
     if (comment >= 0) line = line.substring(0, comment).trim();
     if (line.startsWith('[')) {
-      rejected.add((raw.trim(), tr('不支持配置组（profile）')));
+      rejected.add((raw.trim(), tr("Profiles aren't supported")));
       continue;
     }
     if (line.startsWith('--')) line = line.substring(2);
@@ -873,9 +873,9 @@ class PlayerSettings {
 
   /// Why a custom option cannot be applied, or null when it can.
   static String? customOptionProblem(String key, String value) {
-    if (!RegExp(r'^[a-z0-9][a-z0-9_\-/]*$').hasMatch(key)) return tr('参数名无效');
-    if (_blockedOptions.contains(key) || _blockedPrefixes.any(key.startsWith)) return tr('Lumtub 不允许设置此参数');
-    if (value.length > 500 || value.contains(RegExp(r'[\r\n;]'))) return tr('参数值无效');
+    if (!RegExp(r'^[a-z0-9][a-z0-9_\-/]*$').hasMatch(key)) return tr('Invalid option name');
+    if (_blockedOptions.contains(key) || _blockedPrefixes.any(key.startsWith)) return tr("Lumtub doesn't allow setting this option");
+    if (value.length > 500 || value.contains(RegExp(r'[\r\n;]'))) return tr('Invalid option value');
     return null;
   }
 
@@ -884,14 +884,14 @@ class PlayerSettings {
 
 /// SponsorBlock's categories with the names PiliNara shows for them.
 final sponsorCategoryNames = {
-  'sponsor': (tr('赞助广告'), tr('付费推广、付费推荐和直接广告')),
-  'selfpromo': (tr('自我推广'), tr('无偿推广：周边、捐赠或合作者的信息')),
-  'interaction': (tr('求赞求订阅'), tr('提醒点赞、订阅或关注')),
-  'intro': (tr('片头'), tr('没有实际内容的开场动画、暂停画面')),
-  'outro': (tr('片尾'), tr('结尾致谢、片尾动画和下期预告')),
-  'preview': (tr('回顾与预告'), tr('本集精彩片段或上期回顾')),
-  'music_offtopic': (tr('音乐：非音乐部分'), tr('音乐视频中的非音乐片段')),
-  'filler': (tr('离题闲聊'), tr('与主题无关、只为娱乐的片段')),
+  'sponsor': (tr('Sponsor'), tr('Paid promotions, paid referrals and direct ads')),
+  'selfpromo': (tr('Self-promotion'), tr('Unpaid promotion: merch, donations or collaborator info')),
+  'interaction': (tr('Like and subscribe reminders'), tr('Reminders to like, subscribe or follow')),
+  'intro': (tr('Intro'), tr('Intro animations and pause screens with no real content')),
+  'outro': (tr('Outro'), tr('End credits, outro animations and next-episode previews')),
+  'preview': (tr('Recaps & previews'), tr('Highlights or recap of the previous episode')),
+  'music_offtopic': (tr('Music: non-music section'), tr('Non-music segments in music videos')),
+  'filler': (tr('Off-topic chatter'), tr('Off-topic segments just for entertainment')),
 };
 
 class PlayerSettingsStore {

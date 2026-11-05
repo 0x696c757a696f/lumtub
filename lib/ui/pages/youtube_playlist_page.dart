@@ -19,7 +19,7 @@ class YoutubePlaylistPage extends StatelessWidget {
     final playlist = controller.youtubePlaylist;
     final loader = controller.youtubePlaylistVideos;
     if (playlist == null || loader == null) {
-      return StatusView(icon: AppIcons.playlist, title: tr('没有打开的播放列表'));
+      return StatusView(icon: AppIcons.playlist, title: tr('No playlist open'));
     }
     final listId = 'yt:${playlist.id}';
     final own = controller.visible(loader.items);
@@ -35,13 +35,13 @@ class YoutubePlaylistPage extends StatelessWidget {
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
           child: Row(children: [
-            IconButton(tooltip: keyNames(tr('返回 (Alt+←)')), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
+            IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
             const SizedBox(width: 8),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(playlist.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 2),
               Text(
-                [if (playlist.channel.isNotEmpty) playlist.channel, if (playlist.count != null) tr('{0} 个视频', [playlist.count]), tr('YouTube 播放列表')].join(' · '),
+                [if (playlist.channel.isNotEmpty) playlist.channel, if (playlist.count != null) tr('{0} videos', [playlist.count]), tr('YouTube playlists')].join(' · '),
                 style: TextStyle(color: colors.onSurfaceVariant),
               ),
               if (playlistLength(items, progressOf: controller.library?.progressOf, partial: loader.hasMore) case final length?)
@@ -52,17 +52,17 @@ class YoutubePlaylistPage extends StatelessWidget {
             FilledButton.icon(
               onPressed: items.isEmpty || (reversed && loader.hasMore) ? null : () => controller.playList(listId, playlist.title, own),
               icon: const Icon(AppIcons.playFill),
-              label: Text(tr('全部播放')),
+              label: Text(tr('Play all')),
             ),
             const SizedBox(width: 8),
-            IconButton(tooltip: tr('在浏览器中打开'), onPressed: () => openExternal(playlist.url), icon: const Icon(AppIcons.arrowSquareOut)),
+            IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(playlist.url), icon: const Icon(AppIcons.arrowSquareOut)),
           ]),
         )),
         if (items.isNotEmpty && !(reversed && loader.hasMore)) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.playList(listId, playlist.title, own, start: item)),
         if (reversed && loader.hasMore && loader.error == null)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-            child: Text(tr('正在读取整个播放列表以便倒序显示（已读 {0} 个）…', [own.length]), style: TextStyle(color: colors.onSurfaceVariant)),
+            child: Text(tr('Reading the whole playlist to show it in reverse ({0} read so far)…', [own.length]), style: TextStyle(color: colors.onSurfaceVariant)),
           )),
         if (loader.loading) ...[
           if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
@@ -71,10 +71,10 @@ class YoutubePlaylistPage extends StatelessWidget {
         if (error != null)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-            child: ErrorBanner(items.isEmpty ? tr('无法加载播放列表：{0}', [error]) : tr('加载更多失败：{0}', [error]), onRetry: () => loader.loadMore(retry: true)),
+            child: ErrorBanner(items.isEmpty ? tr("Couldn't load playlist: {0}", [error]) : tr("Couldn't load more: {0}", [error]), onRetry: () => loader.loadMore(retry: true)),
           )),
         if (items.isEmpty && !loader.loading && error == null)
-          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.musicNotesMinus, title: tr('这个播放列表是空的'))),
+          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.musicNotesMinus, title: tr('This playlist is empty'))),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );

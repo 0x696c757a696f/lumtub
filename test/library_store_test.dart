@@ -54,7 +54,7 @@ void main() {
 
     final playlist = library.createPlaylist('  稍后观看 ');
     expect(playlist.name, '稍后观看');
-    expect(library.createPlaylist('').name, '新播放列表');
+    expect(library.createPlaylist('').name, 'Untitled playlist');
     expect(library.addToPlaylist(playlist, video), isTrue);
     expect(library.addToPlaylist(playlist, video), isFalse);
 
@@ -67,7 +67,7 @@ void main() {
   test('saves and loads everything', () async {
     final library = store();
     library.toggleFavorite(video);
-    library.addToPlaylist(library.createPlaylist('音乐'), other);
+    library.addToPlaylist(library.createPlaylist('Music'), other);
     library.toggleFollow(channel);
     library.setProgress(video.id, const Duration(seconds: 42), const Duration(minutes: 3));
     await library.save();
@@ -76,7 +76,7 @@ void main() {
     await loaded.load();
     expect(loaded.favorites.single.id, video.id);
     expect(loaded.favorites.single.channelRef, channel);
-    expect(loaded.playlists.single.name, '音乐');
+    expect(loaded.playlists.single.name, 'Music');
     expect(loaded.playlists.single.items.single.id, other.id);
     expect(loaded.channels.single.name, 'Rick Astley');
     expect(loaded.progressOf(video.id)!.position, const Duration(seconds: 42));

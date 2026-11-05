@@ -170,12 +170,12 @@ class VideoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final text = layout == VideoLayout.text;
-    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
-    final status = item.isLive ? tr('直播中') : item.isUpcoming ? tr('即将直播') : null;
+    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
+    final status = item.isLive ? tr('Live now') : item.isUpcoming ? tr('Upcoming live') : null;
     final meta = [
       if (upcomingStart != null) upcomingStart,
       if (item.channel.isNotEmpty) item.channel,
-      if (item.viewCount != null) tr('{0}次观看', [formatCount(item.viewCount!)]),
+      if (item.viewCount != null) tr('{0} views', [formatCount(item.viewCount!)]),
       if (text && status == null && item.durationLabel.isNotEmpty) item.durationLabel,
     ].join(' · ');
     return InkWell(
@@ -222,7 +222,7 @@ class VideoRow extends StatelessWidget {
                 const SizedBox(width: Space.s),
               ],
               if (text && item.membersOnly) ...[
-                Text(tr('会员专属'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2BA640))),
+                Text(tr('Members only'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2BA640))),
                 const SizedBox(width: Space.s),
               ],
               Expanded(child: Text(meta.isEmpty ? 'YouTube' : meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline))),
@@ -310,7 +310,7 @@ class PlaylistCard extends StatelessWidget {
                     color: Colors.black.withValues(alpha: 0.65),
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                       const Icon(AppIcons.playlist, color: Colors.white, size: 28),
-                      if (item.count != null) Text(tr('{0} 个视频', [item.count]), style: const TextStyle(color: Colors.white, fontSize: 12)),
+                      if (item.count != null) Text(tr('{0} videos', [item.count]), style: const TextStyle(color: Colors.white, fontSize: 12)),
                     ]),
                   ),
                 ),
@@ -322,7 +322,7 @@ class PlaylistCard extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Flexible(child: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
               const SizedBox(height: Space.xs),
-              Text(item.channel.isEmpty ? tr('播放列表') : tr('{0} · 播放列表', [item.channel]), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
+              Text(item.channel.isEmpty ? tr('Playlist') : tr('{0} · Playlist', [item.channel]), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
             ]),
           )),
         ]),
@@ -478,11 +478,11 @@ class _VideoCardState extends State<VideoCard> {
     final item = widget.item;
     _branding = _brandingNow();
     final colors = context.colors;
-    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
+    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
     final meta = [
       if (upcomingStart != null) upcomingStart,
       if (item.channel.isNotEmpty) item.channel,
-      if (item.viewCount != null) tr('{0}次观看', [formatCount(item.viewCount!)]),
+      if (item.viewCount != null) tr('{0} views', [formatCount(item.viewCount!)]),
     ].join(' · ');
     // A picture and text on the page, as YouTube shows them: no box round.
     final card = Card(
@@ -547,7 +547,7 @@ class _VideoCardState extends State<VideoCard> {
                   ])),
                 ],
                 if (item.isLive || item.isUpcoming)
-                  Positioned(right: 8, bottom: 8, child: DurationBadge(item.isLive ? tr('直播中') : tr('即将直播'), color: item.isLive ? const Color(0xFFCC0000) : null))
+                  Positioned(right: 8, bottom: 8, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
                 else if (item.durationLabel.isNotEmpty)
                   Positioned(right: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
                 if (item.membersOnly) const Positioned(left: 8, bottom: 8, child: MembersOnlyBadge()),
@@ -632,14 +632,14 @@ class _QuickActionsState extends State<_QuickActions> {
     void notice(String text) => ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(text), duration: const Duration(seconds: 2)));
     return Row(mainAxisSize: MainAxisSize.min, children: [
       if (library != null)
-        button(later ? AppIcons.clockFill : AppIcons.clock, later ? tr('从稍后观看移除') : tr('稍后观看'), () {
+        button(later ? AppIcons.clockFill : AppIcons.clock, later ? tr('Remove from Watch later') : tr('Watch later'), () {
           final added = library.toggleWatchLater(item);
           setState(() {});
-          notice(added ? tr('已加入稍后观看') : tr('已从稍后观看移除'));
+          notice(added ? tr('Added to Watch later') : tr('Removed from Watch later'));
         }),
       if (controller != null && !item.isUpcoming)
-        button(AppIcons.queue, tr('加入播放队列'), () => controller.queueLast(item)),
-      button(AppIcons.dotsThreeVertical, tr('更多（菜单键）'), widget.onMore),
+        button(AppIcons.queue, tr('Add to play queue'), () => controller.queueLast(item)),
+      button(AppIcons.dotsThreeVertical, tr('More (Menu key)'), widget.onMore),
     ]);
   }
 }
@@ -665,8 +665,8 @@ class MembersOnlyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Tooltip(
-        message: tr('只有加入该频道会员才能观看'),
-        child: DurationBadge(tr('会员专属'), color: const Color(0xFF2BA640)),
+        message: tr("Only the channel's members can watch this"),
+        child: DurationBadge(tr('Members only'), color: const Color(0xFF2BA640)),
       );
 }
 
@@ -710,7 +710,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
   Widget build(BuildContext context) {
     _branding = _brandingNow();
     final colors = context.colors;
-    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
+    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
     return InkWell(
       borderRadius: AppStyle.cardRadius,
       onTap: onOpen,
@@ -733,7 +733,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                   ),
                   if (item.isLive || item.isUpcoming)
-                    Positioned(right: 4, bottom: 4, child: DurationBadge(item.isLive ? tr('直播中') : tr('即将直播'), color: item.isLive ? const Color(0xFFCC0000) : null))
+                    Positioned(right: 4, bottom: 4, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
                   else if (item.durationLabel.isNotEmpty)
                     Positioned(right: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
                   if (item.membersOnly) const Positioned(left: 4, bottom: 4, child: MembersOnlyBadge()),
@@ -787,33 +787,33 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
     context: context,
     position: RelativeRect.fromRect(position & const Size(1, 1), Offset.zero & overlay.size),
     items: [
-      entry('play', AppIcons.playFill, tr('播放')),
+      entry('play', AppIcons.playFill, tr('Play')),
       if (library != null) ...[
-        entry('favorite', favorite ? AppIcons.heartFill : AppIcons.heart, favorite ? tr('取消收藏') : tr('收藏')),
-        entry('later', later ? AppIcons.clockFill : AppIcons.clock, later ? tr('从稍后观看移除') : tr('稍后观看')),
-        entry('playlist', AppIcons.listPlus, tr('添加到播放列表…')),
+        entry('favorite', favorite ? AppIcons.heartFill : AppIcons.heart, favorite ? tr('Remove from favorites') : tr('Favorites')),
+        entry('later', later ? AppIcons.clockFill : AppIcons.clock, later ? tr('Remove from Watch later') : tr('Watch later')),
+        entry('playlist', AppIcons.listPlus, tr('Add to playlist…')),
       ],
       if (controller != null) ...[
-        entry('queueNext', AppIcons.playlist, tr('下一个播放')),
-        entry('queueLast', AppIcons.queue, tr('加入播放队列')),
+        entry('queueNext', AppIcons.playlist, tr('Play next')),
+        entry('queueLast', AppIcons.queue, tr('Add to play queue')),
       ],
-      if (controller?.account?.signedIn ?? false) entry('youtube', AppIcons.filmReel, tr('保存到 YouTube 播放列表…')),
+      if (controller?.account?.signedIn ?? false) entry('youtube', AppIcons.filmReel, tr('Save to YouTube playlist…')),
       if (controller != null && channel != null) ...[
-        entry('channel', AppIcons.userCircle, tr('查看频道')),
+        entry('channel', AppIcons.userCircle, tr('View channel')),
         if (controller.preferences.isUnrecommended(channel.id))
-          entry('recommend', AppIcons.thumbsUp, tr('恢复推荐此频道'))
+          entry('recommend', AppIcons.thumbsUp, tr('Recommend this channel again'))
         else
-          entry('unrecommend', AppIcons.thumbsDown, tr('不推荐此频道')),
-        entry('block', AppIcons.prohibitFill, tr('屏蔽此频道')),
+          entry('unrecommend', AppIcons.thumbsDown, tr("Don't recommend this channel")),
+        entry('block', AppIcons.prohibitFill, tr('Block this channel')),
       ],
       if (onRemove != null)
         removeLabel == null
-            ? entry('remove', AppIcons.minusCircle, tr('从此列表移除'))
+            ? entry('remove', AppIcons.minusCircle, tr('Remove from this list'))
             : entry('remove', AppIcons.thumbsDown, removeLabel),
       const PopupMenuDivider(),
-      if (controller?.downloads != null && !item.isLive) entry('download', AppIcons.downloadSimple, tr('下载')),
-      entry('copy', AppIcons.link, tr('复制链接')),
-      entry('browser', AppIcons.arrowSquareOut, tr('在浏览器中打开')),
+      if (controller?.downloads != null && !item.isLive) entry('download', AppIcons.downloadSimple, tr('Downloads')),
+      entry('copy', AppIcons.link, tr('Copy link')),
+      entry('browser', AppIcons.arrowSquareOut, tr('Open in browser')),
     ],
   );
   if (!context.mounted) return;
@@ -822,10 +822,10 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
       onOpen();
     case 'favorite':
       final added = library!.toggleFavorite(item);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('已收藏') : tr('已取消收藏'))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('Favorited') : tr('Removed from favorites'))));
     case 'later':
       final added = library!.toggleWatchLater(item);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('已加入稍后观看') : tr('已从稍后观看移除'))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('Added to Watch later') : tr('Removed from Watch later'))));
     case 'queueNext':
       controller!.queueNext(item);
     case 'queueLast':
@@ -845,7 +845,7 @@ Future<void> showVideoMenu(BuildContext context, VideoItem item, Offset position
     case 'download':
       await showDownloadChoice(context, controller!, item);
     case 'copy':
-      await copyText(context, item.url, tr('链接已复制'));
+      await copyText(context, item.url, tr('Link copied'));
     case 'browser':
       await openExternal(item.url);
   }
@@ -861,7 +861,7 @@ Future<void> showSaveToYoutube(BuildContext context, AppController controller, V
   final choice = await showDialog<Object>(
     context: context,
     builder: (context) => SimpleDialog(
-      title: Text(tr('保存到 YouTube 播放列表')),
+      title: Text(tr('Save to YouTube playlist')),
       children: [
         FutureBuilder<List<RemotePlaylist>>(
           future: playlists,
@@ -874,11 +874,11 @@ Future<void> showSaveToYoutube(BuildContext context, AppController controller, V
               for (final playlist in list)
                 SimpleDialogOption(
                   onPressed: () => Navigator.pop(context, playlist),
-                  child: ListTile(dense: true, leading: const Icon(AppIcons.playlist), title: Text(playlist.title), subtitle: Text(tr('{0} 个视频', [playlist.count]))),
+                  child: ListTile(dense: true, leading: const Icon(AppIcons.playlist), title: Text(playlist.title), subtitle: Text(tr('{0} videos', [playlist.count]))),
                 ),
               SimpleDialogOption(
                 onPressed: () => Navigator.pop(context, create),
-                child: ListTile(dense: true, leading: Icon(AppIcons.plus), title: Text(tr('新建私享播放列表…'))),
+                child: ListTile(dense: true, leading: Icon(AppIcons.plus), title: Text(tr('New private playlist…'))),
               ),
             ]);
           },
@@ -888,7 +888,7 @@ Future<void> showSaveToYoutube(BuildContext context, AppController controller, V
   );
   if (!context.mounted || choice == null) return;
   if (choice is RemotePlaylist) return account.saveToPlaylist(item, playlist: choice);
-  final title = await promptText(context, title: tr('新建 YouTube 播放列表'), hint: tr('播放列表名称'), confirm: tr('创建并保存'));
+  final title = await promptText(context, title: tr('New YouTube playlist'), hint: tr('Playlist name'), confirm: tr('Create and save'));
   if (title != null && title.trim().isNotEmpty) await account.saveToPlaylist(item, newTitle: title);
 }
 
@@ -900,16 +900,16 @@ Future<void> showAddToPlaylist(BuildContext context, AppController controller, V
   final choice = await showDialog<String>(
     context: context,
     builder: (context) => SimpleDialog(
-      title: Text(tr('添加到播放列表')),
+      title: Text(tr('Add to playlist')),
       children: [
         for (final playlist in library.playlists)
           SimpleDialogOption(
             onPressed: () => Navigator.pop(context, playlist.id),
-            child: ListTile(leading: const Icon(AppIcons.playlist), title: Text(playlist.name), subtitle: Text(tr('{0} 个视频', [playlist.items.length]))),
+            child: ListTile(leading: const Icon(AppIcons.playlist), title: Text(playlist.name), subtitle: Text(tr('{0} videos', [playlist.items.length]))),
           ),
         SimpleDialogOption(
           onPressed: () => Navigator.pop(context, create),
-          child: ListTile(leading: Icon(AppIcons.plus), title: Text(tr('新建播放列表'))),
+          child: ListTile(leading: Icon(AppIcons.plus), title: Text(tr('New playlist'))),
         ),
       ],
     ),
@@ -918,11 +918,11 @@ Future<void> showAddToPlaylist(BuildContext context, AppController controller, V
   final playlist = choice == create ? await _createPlaylist(context, controller) : library.playlist(choice);
   if (playlist == null || !context.mounted) return;
   final added = library.addToPlaylist(playlist, item);
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('已添加到“{0}”', [playlist.name]) : tr('“{0}”里已经有这个视频', [playlist.name]))));
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? tr('Added to "{0}"', [playlist.name]) : tr('This video is already in "{0}"', [playlist.name]))));
 }
 
 Future<LocalPlaylist?> _createPlaylist(BuildContext context, AppController controller) async {
-  final name = await promptText(context, title: tr('新建播放列表'), hint: tr('播放列表名称'), confirm: tr('创建'));
+  final name = await promptText(context, title: tr('New playlist'), hint: tr('Playlist name'), confirm: tr('Create'));
   return name == null ? null : controller.library?.createPlaylist(name);
 }
 
@@ -940,7 +940,7 @@ Future<String?> promptText(BuildContext context, {required String title, require
         onSubmitted: (value) => Navigator.pop(context, value),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
         FilledButton(onPressed: () => Navigator.pop(context, text.text), child: Text(confirm)),
       ],
     ),

@@ -20,11 +20,11 @@ class PlayQueuePanel extends StatelessWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(4, 0, 0, 4),
         child: Row(children: [
-          Text(tr('播放队列'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+          Text(tr('Play queue'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(width: 8),
-          Text(tr('{0} 个', [items.length]), style: TextStyle(color: context.colors.outline, fontSize: 12)),
+          Text(tr('{0}', [items.length]), style: TextStyle(color: context.colors.outline, fontSize: 12)),
           const Spacer(),
-          TextButton(onPressed: controller.clearQueue, child: Text(tr('清空'))),
+          TextButton(onPressed: controller.clearQueue, child: Text(tr('Clear all'))),
         ]),
       ),
       ReorderableListView.builder(
@@ -37,7 +37,7 @@ class PlayQueuePanel extends StatelessWidget {
           final item = items[i];
           return Row(key: ValueKey(item.id), children: [
             Expanded(child: CompactVideoTile(item: item, thumbnails: controller.thumbnailDirectory, onOpen: () => controller.playQueued(item))),
-            IconButton(tooltip: tr('从队列移除'), visualDensity: VisualDensity.compact, onPressed: () => controller.removeQueued(item.id), icon: const Icon(AppIcons.x, size: 18)),
+            IconButton(tooltip: tr('Remove from queue'), visualDensity: VisualDensity.compact, onPressed: () => controller.removeQueued(item.id), icon: const Icon(AppIcons.x, size: 18)),
             ReorderableDragStartListener(index: i, child: const Padding(padding: EdgeInsets.only(right: 4), child: Icon(AppIcons.equals, size: 20))),
           ]);
         },

@@ -22,7 +22,7 @@ Future<void> showCastDialog(BuildContext context, AppController controller) =>
 Future<void> castTo(AppController controller, CastDevice device, ScaffoldMessengerState messenger) async {
   final player = controller.player;
   if (player == null) return;
-  messenger.showSnackBar(SnackBar(content: Text(tr('正在投屏到 {0}…', [device.name]))));
+  messenger.showSnackBar(SnackBar(content: Text(tr('Casting to {0}…', [device.name]))));
   final wasPlaying = player.state.playing;
   try {
     final media = await controller.castMedia(player.state.position, device);
@@ -33,7 +33,7 @@ Future<void> castTo(AppController controller, CastDevice device, ScaffoldMesseng
     if (wasPlaying) unawaited(player.play());
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(tr('无法投屏：{0}', [e.message]))));
+      ..showSnackBar(SnackBar(content: Text(tr('Cannot cast: {0}', [e.message]))));
   }
 }
 
@@ -94,7 +94,7 @@ class _CastDialogState extends State<_CastDialog> {
   Widget build(BuildContext context) {
     final cast = widget.controller.cast;
     return AlertDialog(
-      title: Text(tr('投屏')),
+      title: Text(tr('Cast')),
       content: SizedBox(
         width: 380,
         child: ListenableBuilder(
@@ -103,24 +103,24 @@ class _CastDialogState extends State<_CastDialog> {
             if (cast.device case final current?)
               ListTile(
                 leading: const Icon(AppIcons.airplay),
-                title: Text(tr('正在投屏到 {0}', [current.name])),
+                title: Text(tr('Casting to {0}', [current.name])),
                 trailing: TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                     unawaited(stopCasting(widget.controller));
                   },
-                  child: Text(tr('停止投屏')),
+                  child: Text(tr('Stop casting')),
                 ),
               ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(tr('投屏画质')),
-              subtitle: Text(widget.controller.preferences.castMaxHeight > 1080 ? tr('4K 以上用 VP9 或 AV1，最高 60 帧，需要较新的电视或 Chromecast') : tr('1080p H.264，几乎所有电视都能播放')),
+              title: Text(tr('Cast quality')),
+              subtitle: Text(widget.controller.preferences.castMaxHeight > 1080 ? tr('Above 1080p the picture is VP9 or AV1 at up to 60 fps, which needs a newer TV or Chromecast') : tr('1080p H.264, which nearly every TV plays')),
               trailing: DropdownButton<int>(
                 value: widget.controller.preferences.castMaxHeight,
                 underline: const SizedBox.shrink(),
                 items: [
-                  DropdownMenuItem(value: 1080, child: Text(tr('自动（1080p）'))),
+                  DropdownMenuItem(value: 1080, child: Text(tr('Auto (1080p)'))),
                   const DropdownMenuItem(value: 2160, child: Text('4K')),
                   const DropdownMenuItem(value: 4320, child: Text('8K')),
                 ],
@@ -133,11 +133,11 @@ class _CastDialogState extends State<_CastDialog> {
             ),
             if (_searching) ...[
               const LinearProgressIndicator(),
-              Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(tr('正在搜索设备…'), style: TextStyle(color: context.colors.onSurfaceVariant))),
+              Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(tr('Searching for devices…'), style: TextStyle(color: context.colors.onSurfaceVariant))),
             ] else if (_devices.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(Platform.isWindows ? tr('没有找到设备。请确认电视和电脑在同一个局域网，电视已开启投屏（DLNA 或 Chromecast），并允许本程序通过 Windows 防火墙。') : tr('没有找到设备。请确认电视和电脑在同一个局域网，电视已开启投屏（DLNA 或 Chromecast），并允许本程序访问本地网络。'), style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5)),
+                child: Text(Platform.isWindows ? tr('No devices found. Make sure the TV and this computer are on the same network, casting (DLNA or Chromecast) is turned on, and this app is allowed through the Windows firewall.') : tr('No devices found. Make sure the TV and this computer are on the same network, casting (DLNA or Chromecast) is on on the TV, and Lumtub may use the local network.'), style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5)),
               ),
             Flexible(
               child: ListView(shrinkWrap: true, children: [
@@ -154,8 +154,8 @@ class _CastDialogState extends State<_CastDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: _searching ? null : _startSearch, child: Text(tr('刷新'))),
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('关闭'))),
+        TextButton(onPressed: _searching ? null : _startSearch, child: Text(tr('Refresh'))),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('Close'))),
       ],
     );
   }
@@ -201,14 +201,14 @@ class _CastBarState extends State<CastBar> {
                   Icon(AppIcons.airplay, size: 20, color: colors.onSecondaryContainer),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(tr('正在投屏到 {0}', [device.name]), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall?.copyWith(color: colors.onSecondaryContainer)),
+                    child: Text(tr('Casting to {0}', [device.name]), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall?.copyWith(color: colors.onSecondaryContainer)),
                   ),
                   IconButton(
-                    tooltip: playing ? tr('暂停') : tr('播放'),
+                    tooltip: playing ? tr('Pause') : tr('Play'),
                     icon: Icon(playing ? AppIcons.pauseFill : AppIcons.playFill),
                     onPressed: () => unawaited(cast.togglePlay()),
                   ),
-                  TextButton.icon(onPressed: () => unawaited(stopCasting(widget.controller)), icon: const Icon(AppIcons.screencast, size: 18), label: Text(tr('停止投屏'))),
+                  TextButton.icon(onPressed: () => unawaited(stopCasting(widget.controller)), icon: const Icon(AppIcons.screencast, size: 18), label: Text(tr('Stop casting'))),
                 ]),
                 Row(children: [
                   Text(formatPlaybackTime(Duration(milliseconds: (seconds * 1000).round())), style: context.text.labelMedium),
@@ -225,7 +225,7 @@ class _CastBarState extends State<CastBar> {
                   ),
                   Text(formatPlaybackTime(duration), style: context.text.labelMedium),
                 ]),
-                if (cast.error case final error?) Text(tr('无法投屏：{0}', [error]), style: TextStyle(color: colors.error, fontSize: 12)),
+                if (cast.error case final error?) Text(tr('Cannot cast: {0}', [error]), style: TextStyle(color: colors.error, fontSize: 12)),
               ]),
             ),
           ),

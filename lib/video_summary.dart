@@ -50,7 +50,7 @@ String _clean(String reply) => reply.replaceAll(RegExp(r'<think>[\s\S]*?</think>
 /// notes per part and a summary of them for a long one.
 Future<String> summarizeTranscript(AiTranslator ai, String title, SummaryTranscript transcript, {void Function(int done, int total)? onProgress}) async {
   final chunks = transcript.chunks;
-  if (chunks.isEmpty) throw TranslationException(tr('字幕是空的，无法总结'));
+  if (chunks.isEmpty) throw TranslationException(tr('The subtitles are empty, so there is nothing to summarize'));
   final system = _system(summaryLanguage);
   if (chunks.length == 1) return _clean(await ai.complete(system, 'Title: $title\n\nTranscript:\n${chunks.first}'));
   final notes = <String>[];
@@ -84,5 +84,5 @@ Future<String> summarizeDescription(AiTranslator ai, String title, String descri
   final text = description.length > 6000 ? description.substring(0, 6000) : description;
   final list = chapters.isEmpty ? '' : '\n\nChapters:\n${[for (final c in chapters) '[${_clock(c.start)}] ${c.title}'].join('\n')}';
   final summary = _clean(await ai.complete(system, 'Title: $title\n\nDescription:\n$text$list'));
-  return '${tr('这个视频没有字幕，以下只根据标题、简介和章节整理，可能不完整。')}\n\n$summary';
+  return '${tr('This video has no subtitles. This summary uses only the title, description and chapters, so it may be incomplete.')}\n\n$summary';
 }

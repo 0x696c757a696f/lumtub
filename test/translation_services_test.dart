@@ -71,18 +71,18 @@ void main() {
 
     test('rejects unsupported languages and maps errors', () async {
       final ok = MockClient((_) async => _json({'translations': []}));
-      expect(await _fails(DeepLTranslator(ok, key: 'k').translate('a', 'th')), tr('DeepL 不支持这种语言'));
+      expect(await _fails(DeepLTranslator(ok, key: 'k').translate('a', 'th')), tr('DeepL does not support this language'));
       for (final entry in {
-        403: tr('DeepL 密钥无效'),
-        456: tr('DeepL 本月额度已用完'),
-        429: tr('翻译请求太频繁，请稍后再试'),
-        500: tr('翻译服务暂时不可用（{0}）', [500]),
+        403: tr('The DeepL key is not valid'),
+        456: tr('The DeepL quota for this month is used up'),
+        429: tr('Too many translation requests. Please try again later.'),
+        500: tr('Translation service temporarily unavailable ({0})', [500]),
       }.entries) {
         final client = MockClient((_) async => http.Response('', entry.key));
         expect(await _fails(DeepLTranslator(client, key: 'k').translate('a', 'de')), entry.value);
       }
       final broken = MockClient((_) async => throw http.ClientException('down'));
-      expect(await _fails(DeepLTranslator(broken, key: 'k').translate('a', 'de')), tr('无法翻译，请检查网络或代理'));
+      expect(await _fails(DeepLTranslator(broken, key: 'k').translate('a', 'de')), tr('Translation failed. Check your network or proxy.'));
     });
 
     test('returns empty input as is and caches results', () async {
@@ -144,9 +144,9 @@ void main() {
       expect(await MicrosoftTranslator(client, key: 'k').translate(text, 'de'), text);
       expect(calls, 3);
       final unauthorized = MockClient((_) async => http.Response('', 401));
-      expect(await _fails(MicrosoftTranslator(unauthorized, key: 'k').translate('a', 'de')), tr('微软翻译密钥无效'));
+      expect(await _fails(MicrosoftTranslator(unauthorized, key: 'k').translate('a', 'de')), tr('The Microsoft Translator key is not valid'));
       final busy = MockClient((_) async => http.Response('', 429));
-      expect(await _fails(MicrosoftTranslator(busy, key: 'k').translate('a', 'de')), tr('翻译请求太频繁，请稍后再试'));
+      expect(await _fails(MicrosoftTranslator(busy, key: 'k').translate('a', 'de')), tr('Too many translation requests. Please try again later.'));
     });
   });
 
@@ -184,10 +184,10 @@ void main() {
     test('needs a http or https server', () async {
       final client = MockClient((_) async => _json({'translatedText': 'x'}));
       for (final server in ['', 'libre.example.com', 'ftp://x.com']) {
-        expect(await _fails(LibreTranslator(client, server: server).translate('a', 'fr')), tr('请填写 LibreTranslate 服务器地址'));
+        expect(await _fails(LibreTranslator(client, server: server).translate('a', 'fr')), tr('Fill in the LibreTranslate server address'));
       }
       final failing = MockClient((_) async => http.Response('', 503));
-      expect(await _fails(LibreTranslator(failing, server: 'http://x.com').translate('a', 'fr')), tr('翻译服务暂时不可用（{0}）', [503]));
+      expect(await _fails(LibreTranslator(failing, server: 'http://x.com').translate('a', 'fr')), tr('Translation service temporarily unavailable ({0})', [503]));
     });
   });
 
@@ -249,7 +249,7 @@ void main() {
         calls++;
         return reply('一');
       });
-      expect(await _fails(make(client).translate('one\ntwo', 'zh-CN')), tr('AI 返回的行数不对，无法对齐字幕'));
+      expect(await _fails(make(client).translate('one\ntwo', 'zh-CN')), tr('The AI returned a different number of lines, so the subtitles cannot be aligned'));
       expect(calls, 2);
     });
 
@@ -268,10 +268,10 @@ void main() {
 
     test('maps errors', () async {
       for (final entry in {
-        401: tr('AI 接口密钥无效'),
-        404: tr('AI 接口地址或模型名不对'),
-        429: tr('翻译请求太频繁，请稍后再试'),
-        500: tr('翻译服务暂时不可用（{0}）', [500]),
+        401: tr('The AI API key is not valid'),
+        404: tr('The AI endpoint address or model name is wrong'),
+        429: tr('Too many translation requests. Please try again later.'),
+        500: tr('Translation service temporarily unavailable ({0})', [500]),
       }.entries) {
         final client = MockClient((_) async => http.Response('', entry.key));
         expect(await _fails(make(client).translate('a', 'en')), entry.value);
@@ -349,7 +349,7 @@ void main() {
     test('a missing key gives a translator that throws', () async {
       for (final service in [TranslationService.deepl, TranslationService.baidu, TranslationService.ai]) {
         final translator = translatorFor(TranslationConfig(service: service), {}, client, fallback: fallback);
-        expect(await _fails(translator.translate('a', 'en')), tr('请先在设置里填写 {0} 的密钥', [service.label]));
+        expect(await _fails(translator.translate('a', 'en')), tr('Fill in the key for {0} in Settings first', [service.label]));
         expect(await translator.translate(' ', 'en'), ' ');
       }
     });
@@ -413,7 +413,7 @@ void main() {
       expect(await translator.translate('a\nb', 'zh-CN'), '译a\n译b');
       expect(bodies.first['target_lang'], 'ZH');
       expect(translator.endpoint.toString(), 'http://localhost:1188/translate');
-      expect(await _fails(DeepLXTranslator(client, server: '').translate('x', 'en')), tr('请填写 DeepLX 服务器地址'));
+      expect(await _fails(DeepLXTranslator(client, server: '').translate('x', 'en')), tr('Fill in the DeepLX server address'));
     });
 
     test('Baidu signs requests and reads trans_result', () async {
@@ -426,7 +426,7 @@ void main() {
       expect(form['to'], 'jp');
       expect(form['sign'], hasLength(32));
       final failing = MockClient((_) async => _json({'error_code': '54004'}));
-      expect(await _fails(BaiduTranslator(failing, appId: 'id', key: 'k').translate('a', 'en')), tr('百度翻译账户余额不足'));
+      expect(await _fails(BaiduTranslator(failing, appId: 'id', key: 'k').translate('a', 'en')), tr('The Baidu Translate account is out of credit'));
     });
 
     test('AI style, glossary, temperature and context reach the request', () async {

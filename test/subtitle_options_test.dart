@@ -24,8 +24,8 @@ void main() {
       ('ja', SubtitleKind.translated),
     ]);
     expect(options.first.url, 'https://yt.example/zh-Hant.vtt');
-    expect(options[1].label, '英语（自动生成）');
-    expect(options[2].label, '日语（自动翻译）');
+    expect(options[1].label, 'English (auto-generated)');
+    expect(options[2].label, 'Japanese (auto-translated)');
     expect(SubtitleOption.languageName('sw', 'Swahili (Original)'), 'Swahili · sw');
   });
 

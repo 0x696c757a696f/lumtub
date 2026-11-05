@@ -89,7 +89,7 @@ class ErrorBanner extends StatelessWidget {
         Icon(AppIcons.warningCircle, color: colors.onErrorContainer, size: 20),
         const SizedBox(width: 12),
         Expanded(child: Text(message, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onErrorContainer))),
-        if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('重试'))),
+        if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('Retry'))),
       ]),
     );
   }
@@ -134,7 +134,7 @@ String formatPlaybackTime(Duration value) {
   return hours > 0 ? '$hours:$minutes:$seconds' : '${value.inMinutes}:$seconds';
 }
 
-String formatDate(DateTime date) => tr('{0}年{1}月{2}日', [date.year, date.month, date.day]);
+String formatDate(DateTime date) => tr('{1}/{2}/{0}', [date.year, date.month, date.day]);
 
 /// An exact local start time for an upcoming stream.
 String formatScheduledStart(DateTime date) {

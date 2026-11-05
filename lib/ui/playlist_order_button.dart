@@ -23,7 +23,7 @@ class PlaylistOrderButton extends StatelessWidget {
         if (!reversed) onReversed?.call();
       },
       icon: Icon(reversed ? AppIcons.sortDescending : AppIcons.sortAscending, size: 18),
-      label: Text(reversed ? tr('倒序') : tr('正序')),
+      label: Text(reversed ? tr('Reversed') : tr('In order')),
     );
   }
 }

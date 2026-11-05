@@ -13,7 +13,7 @@ class LibmpvBuild {
   bool get isV3 => variant == v3Variant;
   bool get isArm64 => variant == arm64Variant;
   String get folderName => '$tag-$variant';
-  String get label => '$tag（${isArm64 ? 'ARM64' : isV3 ? 'x86-64-v3' : 'x86-64'}）';
+  String get label => '$tag (${isArm64 ? 'ARM64' : isV3 ? 'x86-64-v3' : 'x86-64'})';
 
   static const v3Variant = 'x86_64-v3';
   static const baseVariant = 'x86_64';

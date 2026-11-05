@@ -14,7 +14,7 @@ extension SettingsActions on AppController {
     try {
       await _preferencesStore?.save(next);
     } on FileSystemException {
-      _notice(tr('设置未能保存，本次运行仍然生效。'));
+      _notice(tr("Couldn't save settings. They still apply for this session."));
     }
   }
 
@@ -47,7 +47,7 @@ extension SettingsActions on AppController {
       keys.isEmpty ? await file.delete() : await file.write(keys);
     } catch (e) {
       logError('Could not save the translation key', e);
-      _notice(tr('密钥未能保存，本次运行仍然生效。'));
+      _notice(tr('The key could not be saved; it works until Lumtub closes.'));
     }
   }
 
@@ -61,7 +61,7 @@ extension SettingsActions on AppController {
   /// service translates.
   Future<String> testAi() async {
     final ai = aiServiceFor(preferences.translation, translationKeys, _http);
-    if (ai == null) throw TranslationException(tr('请先填写 AI 接口的地址、模型和密钥'));
+    if (ai == null) throw TranslationException(tr('Fill in the AI interface address, model and key first'));
     final answer = await ai.complete('Answer in one short sentence.', 'Say hello and name the model you are.');
     return answer.replaceAll(RegExp(r'<think>[\s\S]*?</think>'), '').trim();
   }
@@ -72,7 +72,7 @@ extension SettingsActions on AppController {
   void blockChannel(ChannelRef channel) {
     if (preferences.isBlocked(channel.id)) return;
     unawaited(savePreferences(preferences.copyWith(blockedChannels: [...preferences.blockedChannels, channel])));
-    _notice(tr('已屏蔽“{0}”，可在 设置 › 隐私设置 中解除', [channel.name.isEmpty ? channel.id : channel.name]));
+    _notice(tr('Blocked "{0}". You can unblock it in Settings › Privacy', [channel.name.isEmpty ? channel.id : channel.name]));
   }
 
   /// Blocks a channel the user typed in: a link or id with its `UC…` id,
@@ -97,7 +97,7 @@ extension SettingsActions on AppController {
     final rest = preferences.unrecommendedChannels.where((c) => c.id != channel.id).toList();
     unawaited(savePreferences(preferences.copyWith(unrecommendedChannels: recommend ? rest : [...rest, channel])));
     final name = channel.name.isEmpty ? channel.id : channel.name;
-    _notice(recommend ? tr('已恢复推荐“{0}”', [name]) : tr('不再推荐“{0}”的视频，搜索和关注不受影响', [name]));
+    _notice(recommend ? tr('{0} can be recommended again', [name]) : tr("{0} won't be recommended any more; search and follows are unaffected", [name]));
   }
 
   void unblockChannel(String id) =>
@@ -105,7 +105,7 @@ extension SettingsActions on AppController {
 
   void clearProgress() {
     library?.clearProgress();
-    _notice(tr('播放进度已清空。'));
+    _notice(tr('Playback progress cleared.'));
   }
 
   /// Reads the Windows accent colour for [AppearanceSettings.systemAccent].
@@ -160,7 +160,7 @@ extension SettingsActions on AppController {
     await saveSettings(PlayerSettings(cachePath: settings.cachePath, cacheLimitGb: settings.cacheLimitGb, decoderResults: settings.decoderResults));
     await saveAppearance(const AppearanceSettings());
     await savePreferences(const AppPreferences());
-    _notice(tr('已恢复默认设置。'));
+    _notice(tr('Default settings restored.'));
   }
 
   Future<void> saveAppearance(AppearanceSettings next) async {
@@ -183,7 +183,7 @@ extension SettingsActions on AppController {
     try {
       await _appearanceStore?.save(appearance);
     } on FileSystemException {
-      _notice(tr('外观设置未能保存，本次运行仍然生效。'));
+      _notice(tr("Couldn't save appearance settings. They still apply for this session."));
     }
   }
 
@@ -191,13 +191,13 @@ extension SettingsActions on AppController {
   Future<void> rollBackLibmpv() async {
     await _tools?.libmpv.rollBack();
     _update(() {});
-    _notice(tr('已改回内置 libmpv，重启 Lumtub 后生效。'));
+    _notice(tr('Reverted to the built-in libmpv. Restart Lumtub to apply.'));
   }
 
   Future<void> rollBackYtDlp() async {
     await _tools?.rollBackYtDlp();
     _update(() {});
-    _notice(tr('已改回上一个 yt-dlp，重启 Lumtub 后生效。'));
+    _notice(tr('Reverted to the previous yt-dlp. Restart Lumtub to apply.'));
   }
 
   /// Whether starting a download in [quality] merges, goes single-file or
@@ -234,7 +234,7 @@ extension SettingsActions on AppController {
       return true;
     } catch (e) {
       logError('ffmpeg installation failed', e);
-      _notice(tr('ffmpeg 安装失败：{0}', [e]));
+      _notice(tr('Could not install ffmpeg: {0}', [e]));
       return false;
     } finally {
       _update(() => installingFfmpeg = false);
@@ -245,7 +245,7 @@ extension SettingsActions on AppController {
     try {
       await _tools?.removeFfmpeg();
     } on FileSystemException catch (e) {
-      _notice(tr('无法删除 ffmpeg（可能正在使用）：{0}', [e.message]));
+      _notice(tr('Could not remove ffmpeg (it may be in use): {0}', [e.message]));
     }
     _update(() {});
   }
@@ -300,14 +300,14 @@ extension SettingsActions on AppController {
         library?.repository = _repository;
       }
       status = ignoredOptions.isEmpty
-          ? tr('播放器设置已保存{0}', [
+          ? tr('Player settings saved{0}', [
               _zeroCopyDxva2(next.hwdec) != _zeroCopyDxva2(oldSettings.hwdec) && videoController != null
-                  ? tr('；DXVA2 零拷贝要重启 Lumtub 后生效。')
+                  ? tr('; zero-copy DXVA2 takes effect after restarting Lumtub.')
                   : requiresNextVideo
-                      ? tr('；解码和帧插值的改动在下一段视频生效。')
-                      : '。'
+                      ? tr('; decoding and frame interpolation changes take effect on the next video.')
+                      : tr('.')
             ])
-          : tr('已保存；此 libmpv 不支持：{0}。', [ignoredOptions.join(', ')]);
+          : tr('Saved; not supported by this libmpv: {0}.', [ignoredOptions.join(', ')]);
     });
   }
 
@@ -332,7 +332,7 @@ extension SettingsActions on AppController {
     try {
       await Process.start('explorer.exe', [url]);
     } catch (_) {
-      _notice(tr('无法打开 Microsoft Store 链接。'));
+      _notice(tr("Couldn't open the Microsoft Store link."));
     }
   }
 
@@ -353,34 +353,34 @@ extension SettingsActions on AppController {
         await saveSettings(next);
       }
       _update(() => cacheBytes = 0);
-      _notice(tr('缓存位置已保存。yt-dlp 缓存在下一次搜索时使用新位置。'));
+      _notice(tr("Cache location saved. yt-dlp's cache will use the new location on the next search."));
     } on FileSystemException catch (error) {
-      _notice(tr('新缓存位置不可用，继续使用原位置：{0}', [error.message]));
+      _notice(tr('New cache location unavailable, still using the original: {0}', [error.message]));
     }
   }
 
   Future<void> clearCache() async {
     final manager = _cacheManager;
     if (manager == null) return;
-    if (!ensureNotPlaying(tr('正在播放时不会清理缓存。请先返回列表。'))) return;
+    if (!ensureNotPlaying(tr("The cache can't be cleared during playback. Go back to the list first."))) return;
     try {
       _translationCache.clear();
       final (:freed, :skipped) = await manager.clear(settings);
       final left = await manager.size(settings);
       _update(() => cacheBytes = left);
       _notice(skipped == 0
-          ? tr('已清理 {0} 缓存。', [formatBytes(freed)])
-          : tr('已清理 {0} 缓存；{1} 个文件正被使用，留到下次。', [formatBytes(freed), skipped]));
+          ? tr('Cleared {0} of cache.', [formatBytes(freed)])
+          : tr('Cleared {0} of cache; {1} files in use were left for next time.', [formatBytes(freed), skipped]));
     } on FileSystemException catch (error) {
       logError('Could not clear the cache', error);
-      _notice(tr('清理缓存失败：{0}', [error.message]));
+      _notice(tr('Could not clear the cache: {0}', [error.message]));
     }
   }
 
   /// 清除本地数据: removes the chosen [kinds] from this computer. Favourites,
   /// playlists and followed channels are never touched here.
   Future<void> clearLocalData(Set<LocalData> kinds) async {
-    if (kinds.contains(LocalData.cache) && !ensureNotPlaying(tr('正在播放时不会清理缓存。请先返回列表。'))) return;
+    if (kinds.contains(LocalData.cache) && !ensureNotPlaying(tr("The cache can't be cleared during playback. Go back to the list first."))) return;
     logInfo('Clearing local data: ${kinds.map((k) => k.name).join(', ')}');
     for (final kind in LocalData.values.where(kinds.contains)) {
       try {
@@ -415,6 +415,6 @@ extension SettingsActions on AppController {
       }
     }
     _update(() {});
-    _notice(tr('已清除所选的本地数据'));
+    _notice(tr('The chosen local data was cleared'));
   }
 }

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:lumtub/app/app_controller.dart';
+import 'package:lumtub/l10n/l10n.dart';
 import 'package:lumtub/models.dart';
 import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/ui/lights_off.dart';
@@ -111,11 +112,13 @@ void main() {
   late AppController controller;
   late FakePlayer player;
 
+  setUpAll(loadTranslations);
+
   setUp(() {
     controller = AppController();
     player = FakePlayer();
     controller.player = player;
-    controller.playing = const VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: '频道', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    controller.playing = const VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: 'Channel', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   });
 
   Future<void> pump(WidgetTester tester) async {
@@ -133,15 +136,15 @@ void main() {
     await pump(tester);
     expect(find.text('测试视频标题'), findsOneWidget);
     expect(find.text('1:00 / 10:00'), findsOneWidget);
-    expect(find.text('1X'), findsOneWidget, reason: '倍速');
-    expect(find.text('1080P'), findsOneWidget, reason: '画质');
+    expect(find.text('1X'), findsOneWidget, reason: 'Speed');
+    expect(find.text('1080P'), findsOneWidget, reason: 'Quality');
     expect(find.byIcon(AppIcons.cornersOut), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('the top bar is PiliNara\'s: back and home, then the switches', (tester) async {
     await pump(tester);
-    for (final tip in ['返回', '主页', '投屏', '画中画', '更多设置']) {
+    for (final tip in ['Back', 'Home', 'Cast', 'Picture in picture', 'More settings']) {
       expect(find.byTooltip(tip), findsOneWidget, reason: tip);
     }
     expect(tester.takeException(), isNull);
@@ -157,9 +160,9 @@ void main() {
     ));
     await tester.pump();
     expect(find.text('测试视频标题'), findsOneWidget);
-    expect(find.byTooltip('退出画中画'), findsOneWidget);
-    expect(find.byTooltip('主页'), findsNothing);
-    await tester.tap(find.byTooltip('播放/暂停 (空格)'));
+    expect(find.byTooltip('Leave picture in picture'), findsOneWidget);
+    expect(find.byTooltip('Home'), findsNothing);
+    await tester.tap(find.byTooltip('Play/Pause (Space)'));
     await tester.pump();
     expect(player.state.playing, isTrue);
     await tester.tap(find.byIcon(AppIcons.pauseCircle));
@@ -169,6 +172,10 @@ void main() {
   });
 
   testWidgets('the subtitle panel puts the first and second subtitle side by side', (tester) async {
+    // In simplified Chinese, so the interface's language and Windows'
+    // (English here) are two.
+    setLanguage(AppLanguage.zhHans);
+    addTearDown(() => setLanguage(AppLanguage.en));
     controller.details = const VideoDetails(title: '测试视频标题', channel: '频道', subtitles: [
       SubtitleOption(language: 'en', name: 'English', url: 'https://yt.example/api/timedtext?v=1&lang=en'),
       SubtitleOption(language: 'ja', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=ja', kind: SubtitleKind.automatic),
@@ -209,12 +216,14 @@ void main() {
 
   testWidgets('字幕列表 opens from 更多设置 and asks for a subtitle first', (tester) async {
     await pump(tester);
-    await tester.tap(find.byTooltip('更多设置'));
+    await tester.tap(find.byTooltip('More settings'));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('字幕列表'), 200, scrollable: find.byType(Scrollable).last);
-    await tester.tap(find.text('字幕列表'));
+    await tester.scrollUntilVisible(find.text('Subtitle list'), 200, scrollable: find.byType(Scrollable).last);
+    await tester.ensureVisible(find.text('Subtitle list'));
     await tester.pumpAndSettle();
-    expect(find.text('先打开一条字幕'), findsOneWidget);
+    await tester.tap(find.text('Subtitle list'));
+    await tester.pumpAndSettle();
+    expect(find.text('Turn on a subtitle first'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -233,7 +242,7 @@ void main() {
 
   testWidgets('the fit choice in 更多设置 changes the picture fit', (tester) async {
     await pump(tester);
-    await tester.tap(find.byTooltip('更多设置'));
+    await tester.tap(find.byTooltip('More settings'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('16:9'));
     await tester.pumpAndSettle();
@@ -270,38 +279,38 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.pump();
-    expect(find.text('快进7秒'), findsOneWidget);
+    expect(find.text('Forward 7 s'), findsOneWidget);
     await tester.pump(const Duration(seconds: 1));
-    expect(find.text('快进7秒'), findsNothing);
+    expect(find.text('Forward 7 s'), findsNothing);
   });
 
   testWidgets('the more panel applies choices and stays open', (tester) async {
     await pump(tester);
-    await tester.tap(find.byTooltip('更多设置'));
+    await tester.tap(find.byTooltip('More settings'));
     await tester.pumpAndSettle();
     final panel = find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first;
-    for (final item in ['窗口置顶', '听视频', '空降助手', '播放信息', '镜像翻转', '画质', '画面比例']) {
+    for (final item in ['Keep window on top', 'Listen only', 'SponsorBlock', 'Playback info', 'Mirror', 'Quality', 'Aspect ratio']) {
       expect(find.text(item), findsWidgets, reason: item);
     }
-    await tester.scrollUntilVisible(find.text('30 分钟'), 60, scrollable: panel);
+    await tester.scrollUntilVisible(find.text('30 min'), 60, scrollable: panel);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('30 分钟'));
+    await tester.tap(find.text('30 min'));
     await tester.pumpAndSettle();
     expect(controller.sleepAt, isNotNull);
     // Still open, with the time left in the label.
-    expect(find.textContaining('分钟后暂停'), findsOneWidget);
-    await tester.ensureVisible(find.text('不开启'));
+    expect(find.textContaining('pauses in'), findsOneWidget);
+    await tester.ensureVisible(find.text('Off'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('不开启'));
+    await tester.tap(find.text('Off'));
     await tester.pumpAndSettle();
     expect(controller.sleepAt, isNull);
-    for (final item in ['播放策略', '禁用视频编码', '字幕', '截图 (S)', '重载视频', '快捷键']) {
+    for (final item in ['Playback strategy', 'Disabled video codecs', 'Subtitles', 'Screenshot (S)', 'Reload video', 'Keyboard shortcuts']) {
       await tester.scrollUntilVisible(find.text(item), 60, scrollable: panel);
       expect(find.text(item), findsWidgets, reason: item);
     }
-    await tester.tap(find.byTooltip('关闭'));
+    await tester.tap(find.byTooltip('Close'));
     await tester.pumpAndSettle();
-    expect(find.text('播放策略'), findsNothing);
+    expect(find.text('Playback strategy'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -338,10 +347,10 @@ void main() {
     lightsOff.value = false;
     await tester.tap(find.byType(PlayerControls), warnIfMissed: false);
     await tester.pump();
-    await tester.tap(find.byTooltip('关灯 (B)'));
+    await tester.tap(find.byTooltip('Lights off (B)'));
     await tester.pump();
     expect(lightsOff.value, isTrue);
-    expect(find.byTooltip('开灯 (B)'), findsOneWidget);
+    expect(find.byTooltip('Lights on (B)'), findsOneWidget);
     lightsOff.value = false;
     await tester.pump(const Duration(seconds: 4));
   });
@@ -351,16 +360,16 @@ void main() {
     await tester.tap(find.byType(PlayerControls), warnIfMissed: false);
     await tester.pump();
     final playing = player.state.playing;
-    await tester.tap(find.byTooltip('锁定'));
+    await tester.tap(find.byTooltip('Lock'));
     await tester.pump();
-    expect(find.byTooltip('解锁'), findsOneWidget);
-    expect(find.byTooltip('更多设置'), findsNothing);
+    expect(find.byTooltip('Unlock'), findsOneWidget);
+    expect(find.byTooltip('More settings'), findsNothing);
     await tester.tapAt(tester.getRect(find.byType(PlayerControls)).center + const Offset(150, 0));
     await tester.pump(const Duration(milliseconds: 400));
     expect(player.state.playing, playing);
-    await tester.tap(find.byTooltip('解锁'));
+    await tester.tap(find.byTooltip('Unlock'));
     await tester.pump();
-    expect(find.byTooltip('更多设置'), findsOneWidget);
+    expect(find.byTooltip('More settings'), findsOneWidget);
     await tester.pump(const Duration(seconds: 10));
     expect(tester.takeException(), isNull);
   });

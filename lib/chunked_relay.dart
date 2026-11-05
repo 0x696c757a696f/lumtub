@@ -208,7 +208,7 @@ class ChunkedRelay implements StreamRelay {
         if (reply.statusCode == HttpStatus.ok || reply.statusCode == HttpStatus.partialContent) return reply;
         await reply.drain<void>();
         // A 403 means the address expired; the app reopens the video.
-        if (reply.statusCode == HttpStatus.forbidden || attempt >= 1) throw _Upstream(tr('YouTube 返回 {0}', [reply.statusCode]));
+        if (reply.statusCode == HttpStatus.forbidden || attempt >= 1) throw _Upstream(tr('YouTube returned {0}', [reply.statusCode]));
       } on IOException catch (e) {
         // A connection YouTube dropped, before any byte of this reply.
         if (attempt >= 1) throw _Upstream('$e');

@@ -28,7 +28,7 @@ void main() {
     expect(base.isReplacedBy(const LibmpvBuild('20261019', LibmpvBuild.arm64Variant)), isFalse);
     expect(LibmpvBuild.fromFolderName('20261018-aarch64'), arm);
     expect(LibmpvBuild.fromVersionFile('20261018\naarch64\n'), arm);
-    expect(arm.label, '20261018（ARM64）');
+    expect(arm.label, '20261018 (ARM64)');
   });
 
   test('a newer release or the AVX2 build of the same release replaces a build', () {

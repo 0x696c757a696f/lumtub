@@ -40,7 +40,7 @@ class YoutubeRelated {
             }),
           )
           .timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
+      if (response.statusCode != 200) throw StateError(tr('YouTube returned {0}', [response.statusCode]));
       return _readInBackground(response.bodyBytes);
     }()
       ..ignore();

@@ -5,10 +5,10 @@ import 'l10n/l10n.dart';
 
 /// How YouTube orders search results.
 enum SearchSort {
-  relevance('相关度', 0),
-  date('上传日期', 2),
-  views('观看次数', 3),
-  rating('评分', 1);
+  relevance('Relevance', 0),
+  date('Upload date', 2),
+  views('Views', 3),
+  rating('Rating', 1);
 
   const SearchSort(this._label, this.code);
   final String _label;
@@ -17,12 +17,12 @@ enum SearchSort {
 }
 
 enum SearchUploadDate {
-  any('不限时间', 0),
-  hour('1 小时内', 1),
-  today('今天', 2),
-  week('本周', 3),
-  month('本月', 4),
-  year('今年', 5);
+  any('Any time', 0),
+  hour('Last hour', 1),
+  today('Today', 2),
+  week('This week', 3),
+  month('This month', 4),
+  year('This year', 5);
 
   const SearchUploadDate(this._label, this.code);
   final String _label;
@@ -31,10 +31,10 @@ enum SearchUploadDate {
 }
 
 enum SearchDuration {
-  any('不限时长', 0),
-  short('4 分钟以内', 1),
-  medium('4–20 分钟', 3),
-  long('20 分钟以上', 2);
+  any('Any duration', 0),
+  short('Under 4 minutes', 1),
+  medium('4–20 minutes', 3),
+  long('Over 20 minutes', 2);
 
   const SearchDuration(this._label, this.code);
   final String _label;
@@ -44,8 +44,8 @@ enum SearchDuration {
 
 /// Picture features a video must have.
 enum SearchQuality {
-  any('不限画质', []),
-  hd('高清 1080p', [0x20, 1]),
+  any('Any quality', []),
+  hd('HD 1080p', [0x20, 1]),
   uhd('4K', [0x70, 1]),
   hdr('HDR', [0xC8, 0x01, 1]);
 

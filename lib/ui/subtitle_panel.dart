@@ -23,7 +23,7 @@ import 'app_icons.dart';
 /// swaps the two sides.
 Future<void> showSubtitlePanel(BuildContext context, AppController controller, Player player, {required VoidCallback onSettings, VoidCallback? onList}) => showPlayerPanel(
       context,
-      title: tr('字幕'),
+      title: tr('Subtitles'),
       width: 560,
       actions: [
         Builder(
@@ -33,7 +33,7 @@ Future<void> showSubtitlePanel(BuildContext context, AppController controller, P
               onList != null ? onList() : unawaited(showSubtitleList(context, controller, player));
             },
             icon: const Icon(AppIcons.textAlignLeft, size: 18),
-            label: Text(tr('字幕列表')),
+            label: Text(tr('Subtitle list')),
           ),
         ),
         Builder(
@@ -43,7 +43,7 @@ Future<void> showSubtitlePanel(BuildContext context, AppController controller, P
               onSettings();
             },
             icon: const Icon(AppIcons.slidersHorizontal, size: 18),
-            label: Text(tr('字幕设置')),
+            label: Text(tr('Subtitle settings')),
           ),
         ),
       ],
@@ -114,9 +114,9 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     final chosen = controller.settings.subtitleLanguage;
     final interface = TranslationLanguage.maybeByCode(youtubeHl);
     final near = languageRows(offered, spoken, [
-      if (interface != null) (tr('界面语言'), interface),
-      (tr('系统语言'), SubtitleLanguage.auto.translation),
-      if (chosen != SubtitleLanguage.auto) (tr('字幕语言'), chosen.translation),
+      if (interface != null) (tr('Interface language'), interface),
+      (tr('System language'), SubtitleLanguage.auto.translation),
+      if (chosen != SubtitleLanguage.auto) (tr('Subtitle language'), chosen.translation),
     ]);
     final nearOptions = [for (final r in near) r.option];
     final labels = {for (final o in offered) o.label};
@@ -154,10 +154,10 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
 
     final searching = _query.isNotEmpty;
     final groups = <(String, List<_Choice>)>[
-      if (others.isNotEmpty) (tr('已加载'), others),
-      (tr('视频自带'), [for (final o in offered) if (o.kind == SubtitleKind.uploaded && (searching || !listedAbove(o))) _ofOption(o)]),
-      (tr('自动生成'), [for (final o in offered) if (o.kind == SubtitleKind.automatic && (searching || !listedAbove(o))) _ofOption(o)]),
-      (tr('语音识别'), [for (final o in offered) if (o.kind == SubtitleKind.speech && (searching || !listedAbove(o))) _ofOption(o)]),
+      if (others.isNotEmpty) (tr('Loaded'), others),
+      (tr('From the video'), [for (final o in offered) if (o.kind == SubtitleKind.uploaded && (searching || !listedAbove(o))) _ofOption(o)]),
+      (tr('Auto-generated'), [for (final o in offered) if (o.kind == SubtitleKind.automatic && (searching || !listedAbove(o))) _ofOption(o)]),
+      (tr('Speech recognition'), [for (final o in offered) if (o.kind == SubtitleKind.speech && (searching || !listedAbove(o))) _ofOption(o)]),
     ];
     final translated = [for (final o in offered) if (o.kind == SubtitleKind.translated) _ofOption(o)];
     final theme = Theme.of(context);
@@ -210,18 +210,18 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-          child: Text(primary ? tr('第一字幕') : tr('第二字幕（上方）'), style: theme.textTheme.titleSmall),
+          child: Text(primary ? tr('First subtitle') : tr('Second subtitle (above)'), style: theme.textTheme.titleSmall),
         ),
         Expanded(
           child: ListView(padding: const EdgeInsets.only(bottom: 12), children: [
-            row((key: 'off', label: tr('关闭'), detail: null, option: null, track: null), icon: AppIcons.prohibitFill),
-            if (spoken != null && !searching) row((key: 'o:${spoken.label}', label: tr('原语言：{0}', [spoken.label]), detail: null, option: spoken, track: null), icon: AppIcons.userSound),
+            row((key: 'off', label: tr('Close'), detail: null, option: null, track: null), icon: AppIcons.prohibitFill),
+            if (spoken != null && !searching) row((key: 'o:${spoken.label}', label: tr('Original: {0}', [spoken.label]), detail: null, option: spoken, track: null), icon: AppIcons.userSound),
             if (!searching)
               for (final r in near)
                 row(
                   (
                     key: 'o:${r.option.label}',
-                    label: r.option.kind == SubtitleKind.translated ? tr('{0}：{1}（YouTube 翻译）', [r.name, r.language.label]) : tr('{0}：{1}', [r.name, r.option.label]),
+                    label: r.option.kind == SubtitleKind.translated ? tr('{0}: {1} (YouTube translation)', [r.name, r.language.label]) : tr('{0}: {1}', [r.name, r.option.label]),
                     detail: null,
                     option: r.option,
                     track: null,
@@ -230,16 +230,16 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
                 ),
             for (final (title, rows) in visible) ...[heading(title), for (final c in rows) row(c)],
             if (shownTranslated.isNotEmpty) ...[
-              if (searching || _allLanguages) ...[heading(tr('YouTube 自动翻译')), for (final c in shownTranslated) row(c)]
+              if (searching || _allLanguages) ...[heading(tr('YouTube auto-translate')), for (final c in shownTranslated) row(c)]
               else
                 TextButton.icon(
                   onPressed: () => setState(() => _allLanguages = true),
                   icon: const Icon(AppIcons.caretDown, size: 18),
-                  label: Text(tr('更多语言（{0} 种）', [shownTranslated.length])),
+                  label: Text(tr('More languages ({0})', [shownTranslated.length])),
                 ),
             ],
             if (searching && visible.isEmpty && shownTranslated.isEmpty)
-              Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(tr('没有匹配的语言'), style: TextStyle(color: colors.outline)))),
+              Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(tr('No matching languages'), style: TextStyle(color: colors.outline)))),
           ]),
         ),
       ]);
@@ -250,7 +250,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: TextField(
-            decoration: InputDecoration(isDense: true, prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('搜索语言，如 中文、ja')),
+            decoration: InputDecoration(isDense: true, prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Search language, e.g. Chinese, ja')),
             onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
           ),
         ),
@@ -258,7 +258,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
         Expanded(
           child: Center(
             child: controller.loadingDetails
-                ? Text(tr('正在读取字幕列表…'), style: TextStyle(color: colors.outline))
+                ? Text(tr('Reading the subtitle list…'), style: TextStyle(color: colors.outline))
                 : SpeechOffer(controller: controller, onDone: () => setState(() {})),
           ),
         )
@@ -323,7 +323,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
 
   static String _trackLabel(SubtitleTrack t) {
     final parts = [if (t.title != null && t.title!.isNotEmpty) t.title!, if (t.language != null && t.language!.isNotEmpty) t.language!];
-    return parts.isEmpty ? tr('轨道 {0}', [t.id]) : parts.join(' · ');
+    return parts.isEmpty ? tr('Track {0}', [t.id]) : parts.join(' · ');
   }
 }
 
@@ -373,7 +373,7 @@ class _SpeechOfferState extends State<SpeechOffer> {
         builder: (context, job, _) {
           final mine = job != null && job.videoId == controller.playing?.id;
           return Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(widget.message ?? tr('这个视频没有字幕'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline)),
+            Text(widget.message ?? tr('This video has no subtitles'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline)),
             const SizedBox(height: 12),
             if (mine) ...[
               SizedBox(
@@ -386,10 +386,10 @@ class _SpeechOfferState extends State<SpeechOffer> {
               FilledButton.tonalIcon(
                 onPressed: job == null ? _run : null,
                 icon: const Icon(AppIcons.waveform, size: 18),
-                label: Text(tr('用语音识别生成字幕')),
+                label: Text(tr('Make subtitles with speech recognition')),
               )
             else ...[
-              Text(tr('语音识别会把这个视频的音频发给你在“翻译与 AI”里设置的服务（如 Groq、OpenAI），生成带时间轴的字幕。'),
+              Text(tr("Speech recognition sends this video's audio to the service you set up under Translation & AI (such as Groq or OpenAI) and makes timed subtitles."),
                   textAlign: TextAlign.center, style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5)),
               const SizedBox(height: 8),
               TextButton.icon(
@@ -398,13 +398,13 @@ class _SpeechOfferState extends State<SpeechOffer> {
                   if (mounted) setState(() {});
                 },
                 icon: const Icon(AppIcons.gear, size: 18),
-                label: Text(tr('设置语音识别')),
+                label: Text(tr('Set up speech recognition')),
               ),
             ],
             if (_error case final error? when !mine) ...[
               const SizedBox(height: 12),
               _needsFfmpeg
-                  ? ErrorBanner(error, onRetry: () => _run(withFfmpeg: true), retryLabel: tr('安装 ffmpeg 并继续'))
+                  ? ErrorBanner(error, onRetry: () => _run(withFfmpeg: true), retryLabel: tr('Install ffmpeg and continue'))
                   : ErrorBanner(error, onRetry: controller.canRecognizeSpeech ? _run : null),
             ],
           ]);

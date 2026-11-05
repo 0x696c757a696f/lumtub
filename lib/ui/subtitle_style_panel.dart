@@ -14,7 +14,7 @@ import 'app_icons.dart';
 /// stay on the 字幕设置 page.
 Future<void> showSubtitleStylePanel(BuildContext context, AppController controller) => showPlayerPanel(
       context,
-      title: tr('字幕样式'),
+      title: tr('Subtitle style'),
       width: 420,
       actions: [
         Builder(
@@ -24,7 +24,7 @@ Future<void> showSubtitleStylePanel(BuildContext context, AppController controll
               openSubtitleSettings(context, controller);
             },
             icon: const Icon(AppIcons.slidersHorizontal, size: 18),
-            label: Text(tr('全部字幕设置')),
+            label: Text(tr('All subtitle settings')),
           ),
         ),
       ],
@@ -86,8 +86,8 @@ class _StylePanelState extends State<_StylePanel> {
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
         child: SegmentedButton<bool>(
           segments: [
-            ButtonSegment(value: false, label: Text(tr('第一字幕'))),
-            ButtonSegment(value: true, label: Text(tr('第二字幕')), enabled: !s.libassSubtitles),
+            ButtonSegment(value: false, label: Text(tr('First subtitle'))),
+            ButtonSegment(value: true, label: Text(tr('Second subtitle')), enabled: !s.libassSubtitles),
           ],
           selected: {second},
           onSelectionChanged: (v) => setState(() => _second = v.first),
@@ -96,16 +96,16 @@ class _StylePanelState extends State<_StylePanel> {
       if (s.libassSubtitles)
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Text(tr('由 mpv 绘制字幕时，第二字幕使用第一字幕的样式。'), style: TextStyle(fontSize: 12, color: colors.outline)),
+          child: Text(tr("While mpv draws subtitles, the second subtitle uses the first one's style."), style: TextStyle(fontSize: 12, color: colors.outline)),
         ),
       ListTile(
-        title: Text(tr('字体')),
+        title: Text(tr('Font')),
         trailing: Text(subtitleFontLabel(font), style: TextStyle(color: colors.primary)),
         onTap: () => pickSubtitleFont(context, font, (v) => _save(look(_controller.settings, font: v))),
       ),
-      label(tr('大小'), '${scale.toStringAsFixed(1)}×'),
+      label(tr('Size'), '${scale.toStringAsFixed(1)}×'),
       slider(value: scale, min: 0.5, max: 3, divisions: 25, apply: (v) => look(_controller.settings, scale: (v * 10).round() / 10)),
-      label(tr('颜色'), subtitleColorLabel(color)),
+      label(tr('Color'), subtitleColorLabel(color)),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
         child: Wrap(spacing: 8, runSpacing: 8, children: [
@@ -127,25 +127,25 @@ class _StylePanelState extends State<_StylePanel> {
               ),
             ),
           ActionChip(
-            label: Text(tr('自定义')),
+            label: Text(tr('Custom')),
             onPressed: () => pickSubtitleColor(context, color, (v) => _save(look(_controller.settings, color: v))),
           ),
         ]),
       ),
-      label(tr('不透明度'), '${(opacity * 100).round()}%'),
+      label(tr('Opacity'), '${(opacity * 100).round()}%'),
       slider(value: opacity, min: 0.1, max: 1, divisions: 18, apply: (v) => look(_controller.settings, opacity: (v * 20).round() / 20)),
       const Divider(height: 24),
-      label(tr('字幕位置'), '${s.subtitlePosition}%'),
+      label(tr('Subtitle position'), '${s.subtitlePosition}%'),
       slider(value: s.subtitlePosition.toDouble(), min: 0, max: 100, divisions: 100, apply: (v) => _controller.settings.copyWith(subtitlePosition: v.round())),
-      label(tr('描边粗细'), s.subtitleBorder.toStringAsFixed(1)),
+      label(tr('Outline thickness'), s.subtitleBorder.toStringAsFixed(1)),
       slider(value: s.subtitleBorder, min: 0, max: 8, divisions: 16, apply: (v) => _controller.settings.copyWith(subtitleBorder: v)),
       SwitchListTile(
-        title: Text(tr('背景色块')),
+        title: Text(tr('Background box')),
         value: s.subtitleBackground,
         onChanged: (v) => _save(_controller.settings.copyWith(subtitleBackground: v)),
       ),
       SwitchListTile(
-        title: Text(tr('粗体')),
+        title: Text(tr('Bold')),
         value: s.subtitleBold,
         onChanged: (v) => _save(_controller.settings.copyWith(subtitleBold: v)),
       ),
@@ -154,7 +154,7 @@ class _StylePanelState extends State<_StylePanel> {
         child: OutlinedButton.icon(
           onPressed: () => _save(_controller.settings.withDefaultSubtitleStyle()),
           icon: const Icon(AppIcons.arrowCounterClockwise, size: 18),
-          label: Text(tr('恢复默认样式')),
+          label: Text(tr('Restore default style')),
         ),
       ),
     ]);

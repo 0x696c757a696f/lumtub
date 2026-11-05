@@ -38,9 +38,9 @@ class DnsServer {
 
   /// What the menu shows for setting [id].
   static String label(String id, String customUrl) => switch (id) {
-        '' => tr('关闭（使用系统 DNS）'),
-        custom => normalize(customUrl) == null ? tr('自定义') : tr('自定义：{0}', [normalize(customUrl)]),
-        _ => of(id, customUrl)?.name ?? tr('关闭（使用系统 DNS）'),
+        '' => tr('Off (system DNS)'),
+        custom => normalize(customUrl) == null ? tr('Custom') : tr('Custom: {0}', [normalize(customUrl)]),
+        _ => of(id, customUrl)?.name ?? tr('Off (system DNS)'),
       };
 
   /// An `https://` DoH address, `https://` added when missing and
@@ -63,7 +63,7 @@ typedef DnsTest = ({bool ok, List<String> addresses, int milliseconds, String er
 /// Looks [host] up over [server] alone, without the system fallback, off the
 /// UI thread.
 Future<DnsTest> testDnsServer(DnsServer server, {String host = 'www.youtube.com'}) async {
-  if (NativeCore.instance == null) return (ok: false, addresses: const <String>[], milliseconds: 0, error: tr('缺少原生核心'));
+  if (NativeCore.instance == null) return (ok: false, addresses: const <String>[], milliseconds: 0, error: tr('The native core is missing'));
   final settings = jsonEncode(server.toJson());
   final answer = await Isolate.run(() {
     final core = NativeCore.instance!;
@@ -71,7 +71,7 @@ Future<DnsTest> testDnsServer(DnsServer server, {String host = 'www.youtube.com'
     return core.take(core.withText(settings, (s, sl) => core.withText(host, (h, hl) => test(s, sl, h, hl))));
   });
   final json = answer == null ? null : jsonDecode(answer) as Map<String, Object?>;
-  if (json == null) return (ok: false, addresses: const <String>[], milliseconds: 0, error: tr('没有回应'));
+  if (json == null) return (ok: false, addresses: const <String>[], milliseconds: 0, error: tr('No answer'));
   return (
     ok: json['ok'] == true,
     addresses: [for (final a in (json['addresses'] as List?) ?? const []) a.toString()],

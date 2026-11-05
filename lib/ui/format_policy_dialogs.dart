@@ -8,13 +8,13 @@ import '../widgets/pilinara_settings_tiles.dart';
 import 'app_icons.dart';
 
 /// The text under the disabled codecs, in the settings and the player menu.
-String get disabledCodecsNote => tr('禁用后，所有播放策略都不会主动选择对应编码。');
+String get disabledCodecsNote => tr('Once disabled, no playback strategy picks that codec.');
 
 /// Said when a choice would disable every codec YouTube plays.
-String get lastCodecNote => tr('H.264、VP9、AV1 至少保留一个，否则视频无法播放');
+String get lastCodecNote => tr('Keep at least one of H.264, VP9 and AV1, or no video can play');
 
 /// Said where H.264 cannot be disabled.
-String get h264NeededNote => tr('VP9 和 AV1 都不能硬解，不能禁用 H.264，否则所有视频都要用 CPU 软解');
+String get h264NeededNote => tr('VP9 and AV1 are not decoded in hardware here, so H.264 cannot be disabled, or every video would be decoded on the CPU');
 
 /// [settings] with [codec] disabled or enabled again; null when that would
 /// leave nothing to play.
@@ -49,7 +49,7 @@ Future<void> pickPlaybackStrategy(BuildContext context, PlaybackStrategy current
   final result = await showDialog<PlaybackStrategy>(
     context: context,
     builder: (context) => SimpleDialog(
-      title: Text(tr('播放策略')),
+      title: Text(tr('Playback strategy')),
       children: [
         for (final strategy in PlaybackStrategy.values)
           ListTile(
@@ -71,7 +71,7 @@ Future<void> pickDisabledCodecs(BuildContext context, PlayerSettings settings, V
   final result = await showDialog<List<VideoCodec>>(
     context: context,
     builder: (context) => OrderedMultiSelectDialog<VideoCodec>(
-      title: tr('禁用视频编码'),
+      title: tr('Disabled video codecs'),
       ordered: false,
       initValues: current,
       values: [for (final codec in VideoCodec.values) (codec, codec.label, disabledCodecsNote)],

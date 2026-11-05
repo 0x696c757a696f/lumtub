@@ -91,10 +91,10 @@ class WindowsShell {
   /// menu has the translated [labels]; off, closing exits as usual.
   Future<void> setTray({required bool enabled}) => _send('setTray', {
         'enabled': enabled,
-        'show': tr('显示窗口'),
-        'playPause': tr('播放/暂停'),
-        'next': tr('下一个'),
-        'exit': tr('退出'),
+        'show': tr('Show window'),
+        'playPause': tr('Play/Pause'),
+        'next': tr('Next'),
+        'exit': tr('Exit'),
       });
 }
 

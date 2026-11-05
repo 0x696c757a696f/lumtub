@@ -30,10 +30,10 @@ class YouTubeAccountApi {
   Future<({String name, String? likes})> me() async {
     final data = await _get('channels', {'part': 'snippet,contentDetails', 'mine': 'true'});
     final items = data['items'];
-    if (items is! List || items.isEmpty || items.first is! Map) return (name: tr('YouTube 账号'), likes: null);
+    if (items is! List || items.isEmpty || items.first is! Map) return (name: tr('YouTube account'), likes: null);
     final channel = items.first as Map;
     final likes = (channel['contentDetails'] as Map?)?['relatedPlaylists']?['likes'];
-    return (name: (channel['snippet'] as Map?)?['title']?.toString() ?? tr('YouTube 账号'), likes: likes is String && likes.isNotEmpty ? likes : null);
+    return (name: (channel['snippet'] as Map?)?['title']?.toString() ?? tr('YouTube account'), likes: likes is String && likes.isNotEmpty ? likes : null);
   }
 
   Future<List<ChannelRef>> subscriptions() async {
@@ -149,7 +149,7 @@ class YouTubeAccountApi {
     final id = item['id'];
     if (id is! String || id.isEmpty) return null;
     final count = (item['contentDetails'] as Map?)?['itemCount'];
-    return RemotePlaylist(id, (item['snippet'] as Map?)?['title']?.toString() ?? tr('播放列表'), count is num ? count.toInt() : 0);
+    return RemotePlaylist(id, (item['snippet'] as Map?)?['title']?.toString() ?? tr('Playlist'), count is num ? count.toInt() : 0);
   }
 
   /// Deleted and private videos stay in playlists without an owner; they
@@ -230,20 +230,20 @@ class YouTubeApiException implements Exception {
 
   /// What [toString] says when the client's project has not turned the
   /// API on, so the settings page can offer a way there.
-  static String get apiNotEnabled => tr('这个 Google 客户端所在的 Google Cloud 项目还没有启用 YouTube Data API v3。点“去启用”，确认顶部选中的是创建这个客户端的项目，点“启用”，等几分钟后再登录。');
+  static String get apiNotEnabled => tr('The Google Cloud project of this client has not enabled YouTube Data API v3. Click "Enable it", check that the project that owns this client is selected at the top, click "Enable", then wait a few minutes and sign in again.');
 
   @override
   String toString() => switch (reason) {
-        'quotaExceeded' || 'dailyLimitExceeded' => tr('YouTube API 今日配额已用完，请明天再同步'),
+        'quotaExceeded' || 'dailyLimitExceeded' => tr("Today's YouTube API quota is used up. Please sync again tomorrow."),
         'accessNotConfigured' => apiNotEnabled,
-        'youtubeSignupRequired' => tr('这个 Google 账号还没有 YouTube 频道'),
-        'insufficientPermissions' || 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' => tr('登录时没有授予修改权限，请重新登录 Google 账号'),
-        'commentsDisabled' => tr('这个视频关闭了评论'),
-        'videoRatingDisabled' => tr('作者关闭了这个视频的赞和踩'),
-        'forbidden' when status == 403 => tr('YouTube 拒绝了这个操作'),
-        'subscriptionForbidden' => tr('不能订阅这个频道'),
-        'videoNotFound' => tr('找不到这个视频'),
-        _ when status == 401 => tr('登录已失效，请重新登录'),
-        _ => tr('YouTube API 请求失败（HTTP {0}{1}）', [status, reason == null ? '' : ' · $reason']),
+        'youtubeSignupRequired' => tr("This Google account doesn't have a YouTube channel yet"),
+        'insufficientPermissions' || 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' => tr("Edit permission wasn't granted during sign-in. Please sign in to your Google account again"),
+        'commentsDisabled' => tr('Comments are turned off for this video'),
+        'videoRatingDisabled' => tr('The uploader turned off likes and dislikes for this video'),
+        'forbidden' when status == 403 => tr('YouTube rejected this action'),
+        'subscriptionForbidden' => tr("Can't subscribe to this channel"),
+        'videoNotFound' => tr('Video not found'),
+        _ when status == 401 => tr('Sign-in expired. Please sign in again'),
+        _ => tr('YouTube API request failed (HTTP {0}{1})', [status, reason == null ? '' : ' · $reason']),
       };
 }

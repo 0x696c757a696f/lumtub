@@ -35,7 +35,7 @@ class PlayingListPanel extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(Space.xs, Space.xxs, 0, Space.xs),
         child: Row(children: [
           Text(
-            index < 0 ? tr('播放列表 · {0} 个', [ordered.length]) : tr('播放列表 · {0}/{1}', [index + 1, ordered.length]),
+            index < 0 ? tr('Playlist · {0} videos', [ordered.length]) : tr('Playlist · {0}/{1}', [index + 1, ordered.length]),
             style: TextStyle(color: colors.outline, fontSize: 12),
           ),
           const SizedBox(width: Space.xs),

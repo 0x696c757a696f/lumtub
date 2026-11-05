@@ -13,7 +13,7 @@ void main() {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    const channel = ChannelRef('UCaaaaaaaaaaaaaaaaaaaaaa', '频道');
+    const channel = ChannelRef('UCaaaaaaaaaaaaaaaaaaaaaa', 'Channel');
     final controller = AppController()
       ..ready = true
       ..channel = channel
@@ -54,7 +54,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(PostCommentsPanel), findsOneWidget);
     expect(find.byType(ChannelPage, skipOffstage: true), findsNothing);
-    await tester.tap(find.byTooltip('关闭 (Esc)'));
+    await tester.tap(find.byTooltip('Close (Esc)'));
     await tester.pumpAndSettle();
     expect(find.byType(PostCommentsPanel), findsNothing);
   });

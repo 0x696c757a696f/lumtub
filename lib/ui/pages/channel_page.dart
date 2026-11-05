@@ -75,7 +75,7 @@ class _ChannelPageState extends State<ChannelPage> {
     final loader = controller.channelVideos;
     final posts = controller.channelPosts;
     if (channel == null || (loader == null && posts == null)) {
-      return StatusView(icon: AppIcons.userCircle, title: tr('没有打开的频道'));
+      return StatusView(icon: AppIcons.userCircle, title: tr('No channel open'));
     }
     final tab = controller.channelTab;
     final searching = controller.channelQuery != null;
@@ -91,12 +91,12 @@ class _ChannelPageState extends State<ChannelPage> {
           child: Row(children: [
             Expanded(child: searching
                 ? Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                    Text(tr('搜索“{0}”', [controller.channelQuery]), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    Text(tr('Search "{0}"', [controller.channelQuery]), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                     // 全部 is YouTube's channel search; the others filter
                     // one tab by title.
                     for (final value in <ChannelTab?>[null, ...ChannelTab.values])
                       ChoiceChip(
-                        label: Text(value?.label ?? tr('全部')),
+                        label: Text(value?.label ?? tr('All')),
                         selected: controller.channelSearchTab == value,
                         onSelected: (_) => controller.searchChannel(controller.channelQuery!, within: value),
                       ),
@@ -133,12 +133,12 @@ class _ChannelPageState extends State<ChannelPage> {
       if (error != null)
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-          child: ErrorBanner(empty ? tr('无法加载：{0}', [error]) : tr('加载更多失败：{0}', [error]), onRetry: () => loader.loadMore(retry: true)),
+          child: ErrorBanner(empty ? tr("Couldn't load: {0}", [error]) : tr("Couldn't load more: {0}", [error]), onRetry: () => loader.loadMore(retry: true)),
         )),
       if (empty && !loader.loading && error == null)
         SliverFillRemaining(hasScrollBody: false, child: searching
-            ? StatusView(icon: AppIcons.magnifyingGlassMinus, title: tr('频道里没有找到相关内容'), message: tr('换个关键词试试。'))
-            : StatusView(icon: AppIcons.filmReel, title: tr('这个频道没有{0}', [tab.label]))),
+            ? StatusView(icon: AppIcons.magnifyingGlassMinus, title: tr('Nothing found in this channel'), message: tr('Try other keywords.'))
+            : StatusView(icon: AppIcons.filmReel, title: tr('This channel has no {0}', [tab.label]))),
     ];
   }
 
@@ -178,14 +178,14 @@ class _ChannelPageState extends State<ChannelPage> {
       if (error != null)
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-          child: ErrorBanner(posts.isEmpty ? tr('无法加载社区帖子：{0}', [error]) : tr('加载更多失败：{0}', [error]), onRetry: () => loader.loadMore(retry: true)),
+          child: ErrorBanner(posts.isEmpty ? tr("Couldn't load community posts: {0}", [error]) : tr("Couldn't load more: {0}", [error]), onRetry: () => loader.loadMore(retry: true)),
         )),
       if (posts.isEmpty && !loader.loading && error == null)
         SliverFillRemaining(
           hasScrollBody: false,
           child: controller.channelQuery != null
-              ? StatusView(icon: AppIcons.magnifyingGlassMinus, title: tr('没有找到相关的社区帖子'), message: tr('只搜索了最近的帖子，换个关键词试试。'))
-              : StatusView(icon: AppIcons.chats, title: tr('这个频道还没有社区帖子')),
+              ? StatusView(icon: AppIcons.magnifyingGlassMinus, title: tr('No community posts found'), message: tr('Only recent posts were searched. Try other keywords.'))
+              : StatusView(icon: AppIcons.chats, title: tr('This channel has no community posts yet')),
         ),
     ];
   }
@@ -211,8 +211,8 @@ class PostCommentsPanel extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
           child: Row(children: [
-            Expanded(child: Text(tr('帖子评论'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
-            IconButton(tooltip: tr('关闭 (Esc)'), icon: const Icon(AppIcons.x), onPressed: onClose),
+            Expanded(child: Text(tr('Post comments'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
+            IconButton(tooltip: tr('Close (Esc)'), icon: const Icon(AppIcons.x), onPressed: onClose),
           ]),
         ),
         if (post.text.isNotEmpty)
@@ -315,10 +315,10 @@ class PostCard extends StatelessWidget {
           TextButton.icon(
             onPressed: onComments,
             icon: const Icon(AppIcons.chatCircle, size: 16),
-            label: Text(post.comments.isEmpty ? tr('评论') : post.comments, style: const TextStyle(fontSize: 12)),
+            label: Text(post.comments.isEmpty ? tr('Comments') : post.comments, style: const TextStyle(fontSize: 12)),
           ),
           const Spacer(),
-          TextButton.icon(onPressed: () => openExternal(post.url), icon: const Icon(AppIcons.arrowSquareOut, size: 16), label: Text(tr('在浏览器中查看'))),
+          TextButton.icon(onPressed: () => openExternal(post.url), icon: const Icon(AppIcons.arrowSquareOut, size: 16), label: Text(tr('View in browser'))),
         ]),
       ]),
     ));
@@ -414,14 +414,14 @@ class _ChannelSearchFieldState extends State<_ChannelSearchField> {
         onSubmitted: (text) => widget.controller.searchChannel(text, within: _posts ? ChannelTab.posts : widget.controller.channelSearchTab),
         decoration: InputDecoration(
           isDense: true,
-          hintText: _posts ? tr('搜索频道内的帖子') : tr('搜索频道内的视频'),
+          hintText: _posts ? tr("Search this channel's posts") : tr('Search videos in this channel'),
           prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20),
           suffixIcon: ListenableBuilder(
             listenable: _text,
             builder: (context, _) => _text.text.isEmpty
                 ? const SizedBox.shrink()
                 : IconButton(
-                    tooltip: tr('清除'),
+                    tooltip: tr('Clear'),
                     icon: const Icon(AppIcons.x, size: 18),
                     onPressed: () {
                       _text.clear();
@@ -443,22 +443,22 @@ class ChannelHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final name = channel.name.isEmpty ? tr('YouTube 频道') : channel.name;
+    final name = channel.name.isEmpty ? tr('YouTube channels') : channel.name;
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
       child: Row(children: [
-        if (onBack != null) IconButton(tooltip: keyNames(tr('返回 (Alt+←)')), onPressed: onBack, icon: const Icon(AppIcons.arrowLeft)),
+        if (onBack != null) IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: const Icon(AppIcons.arrowLeft)),
         const SizedBox(width: 8),
         ChannelAvatar(name: name, radius: 28),
         const SizedBox(width: 16),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
-          Text(tr('YouTube 频道'), style: TextStyle(color: colors.onSurfaceVariant)),
+          Text(tr('YouTube channels'), style: TextStyle(color: colors.onSurfaceVariant)),
         ])),
         FollowButton(controller: controller, channel: channel),
         const SizedBox(width: 8),
-        IconButton(tooltip: tr('在浏览器中打开'), onPressed: () => openExternal(channel.url), icon: const Icon(AppIcons.arrowSquareOut)),
+        IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(channel.url), icon: const Icon(AppIcons.arrowSquareOut)),
         ChannelMenuButton(controller: controller, channel: channel),
       ]),
     );
@@ -510,7 +510,7 @@ class ChannelResultTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final ref = result.ref;
-    final name = ref.name.isEmpty ? tr('YouTube 频道') : ref.name;
+    final name = ref.name.isEmpty ? tr('YouTube channels') : ref.name;
     final meta = [if (result.handle != null) result.handle!, if (result.subscribers != null) result.subscribers!].join(' · ');
     return Card(child: InkWell(
       onTap: () => controller.openChannel(ref),
@@ -548,13 +548,13 @@ class ChannelMenuButton extends StatelessWidget {
     PopupMenuItem<String> entry(String value, IconData icon, String label) =>
         PopupMenuItem(value: value, child: ListTile(dense: true, leading: Icon(icon), title: Text(label)));
     return PopupMenuButton<String>(
-      tooltip: tr('更多'),
+      tooltip: tr('More'),
       icon: const Icon(AppIcons.dotsThreeVertical),
       itemBuilder: (context) => [
         unrecommended
-            ? entry('recommend', AppIcons.thumbsUp, tr('恢复推荐此频道'))
-            : entry('unrecommend', AppIcons.thumbsDown, tr('不推荐此频道')),
-        blocked ? entry('unblock', AppIcons.user, tr('取消屏蔽此频道')) : entry('block', AppIcons.prohibitFill, tr('屏蔽此频道')),
+            ? entry('recommend', AppIcons.thumbsUp, tr('Recommend this channel again'))
+            : entry('unrecommend', AppIcons.thumbsDown, tr("Don't recommend this channel")),
+        blocked ? entry('unblock', AppIcons.user, tr('Unblock this channel')) : entry('block', AppIcons.prohibitFill, tr('Block this channel')),
       ],
       onSelected: (choice) => switch (choice) {
         'recommend' => controller.setRecommendChannel(channel, true),
@@ -579,11 +579,11 @@ class FollowButton extends StatelessWidget {
     void toggle() {
       final now = controller.toggleFollow(channel);
       final youtube = (controller.account?.canWrite ?? false) && controller.preferences.syncFollowToYoutube;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(now ? (youtube ? tr('已关注，并在 YouTube 上订阅') : tr('已关注，新视频会出现在“订阅”里')) : (youtube ? tr('已取消关注和 YouTube 订阅') : tr('已取消关注')))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(now ? (youtube ? tr('Followed and subscribed on YouTube') : tr('Followed. New videos will appear in "Subscriptions"')) : (youtube ? tr('Unfollowed and unsubscribed on YouTube') : tr('Unfollowed')))));
     }
 
     return following
-        ? FilledButton.tonalIcon(onPressed: toggle, icon: const Icon(AppIcons.check), label: Text(tr('已关注')))
-        : FilledButton.icon(onPressed: toggle, icon: const Icon(AppIcons.plus), label: Text(tr('关注')));
+        ? FilledButton.tonalIcon(onPressed: toggle, icon: const Icon(AppIcons.check), label: Text(tr('Following')))
+        : FilledButton.icon(onPressed: toggle, icon: const Icon(AppIcons.plus), label: Text(tr('Follow')));
   }
 }

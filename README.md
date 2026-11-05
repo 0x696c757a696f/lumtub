@@ -229,7 +229,7 @@ flutter build windows --release
 
 ### Translations
 
-Source strings are simplified Chinese wrapped in `tr('…')`; translations live in `assets/l10n` and are managed on [Weblate](https://hosted.weblate.org/engage/lumtub/). See [TRANSLATING.md](TRANSLATING.md).
+Source strings are English wrapped in `tr('…')`; translations, simplified Chinese included, live in `assets/l10n` keyed by that English text and are managed on [Weblate](https://hosted.weblate.org/engage/lumtub/). See [TRANSLATING.md](TRANSLATING.md).
 
 </details>
 

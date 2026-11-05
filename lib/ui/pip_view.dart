@@ -168,25 +168,25 @@ class PipControls extends StatelessWidget {
           child: Row(children: [
             const SizedBox(width: 8),
             Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12))),
-            _button(tr('退出画中画'), AppIcons.arrowsOutSimple, () => controller.setPip(false), 18),
+            _button(tr('Leave picture in picture'), AppIcons.arrowsOutSimple, () => controller.setPip(false), 18),
           ]),
         ),
       ),
       Expanded(
         child: Center(
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            _button(tr('快退{0}秒', [seek]), AppIcons.clockCounterClockwise, () => unawaited(controller.seekBy(Duration(seconds: -seek))), 26 * scale),
+            _button(tr('Back {0} s', [seek]), AppIcons.clockCounterClockwise, () => unawaited(controller.seekBy(Duration(seconds: -seek))), 26 * scale),
             StreamBuilder<bool>(
               stream: player.stream.playing,
               initialData: player.state.playing,
               builder: (context, snapshot) => _button(
-                tr('播放/暂停 (空格)'),
+                tr('Play/Pause (Space)'),
                 snapshot.data == true ? AppIcons.pauseCircle : AppIcons.playCircleFill,
                 () => unawaited(player.playOrPause()),
                 38 * scale,
               ),
             ),
-            _button(tr('快进{0}秒', [seek]), AppIcons.clockClockwise, () => unawaited(controller.seekBy(Duration(seconds: seek))), 26 * scale),
+            _button(tr('Forward {0} s', [seek]), AppIcons.clockClockwise, () => unawaited(controller.seekBy(Duration(seconds: seek))), 26 * scale),
           ]),
         ),
       ),

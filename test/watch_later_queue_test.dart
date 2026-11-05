@@ -161,18 +161,18 @@ void main() {
   testWidgets('the watch later page lists, plays and clears', (tester) async {
     controller.openPlaylistId = AppController.watchLaterPlaylistId;
     await pump(tester, PlaylistDetailPage(controller: controller));
-    expect(find.text('稍后观看是空的'), findsOneWidget);
+    expect(find.text('Watch later is empty'), findsOneWidget);
 
     library.toggleWatchLater(videos[0]);
     library.toggleWatchLater(videos[1]);
     await pump(tester, PlaylistDetailPage(controller: controller));
-    expect(find.text('稍后观看'), findsOneWidget);
+    expect(find.text('Watch later'), findsOneWidget);
     expect(find.text('视频 0'), findsOneWidget);
-    expect(find.text('播放全部'), findsOneWidget);
+    expect(find.text('Play all'), findsOneWidget);
 
-    await tester.tap(find.text('清空'));
+    await tester.tap(find.text('Clear all'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, '清空'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Clear all'));
     await tester.pumpAndSettle();
     expect(library.watchLater, isEmpty);
     unawaited(library.flush());
@@ -181,7 +181,7 @@ void main() {
   testWidgets('the library page has a watch later entry', (tester) async {
     library.toggleWatchLater(videos[0]);
     await pump(tester, PlaylistsPage(controller: controller));
-    expect(find.text('稍后观看'), findsOneWidget);
+    expect(find.text('Watch later'), findsOneWidget);
     unawaited(library.flush());
   });
 
@@ -189,12 +189,12 @@ void main() {
     controller.queueLast(videos[0]);
     controller.queueLast(videos[1]);
     await pump(tester, SingleChildScrollView(child: PlayQueuePanel(controller: controller)));
-    expect(find.text('播放队列'), findsOneWidget);
+    expect(find.text('Play queue'), findsOneWidget);
     expect(find.text('视频 0'), findsOneWidget);
     expect(find.text('视频 1'), findsOneWidget);
-    await tester.tap(find.byTooltip('从队列移除').first);
+    await tester.tap(find.byTooltip('Remove from queue').first);
     expect(controller.playQueue.items.map((v) => v.id), [videos[1].id]);
-    await tester.tap(find.text('清空'));
+    await tester.tap(find.text('Clear all'));
     expect(controller.playQueue.isEmpty, isTrue);
   });
 
@@ -226,20 +226,20 @@ void main() {
       expect(find.byType(VideoCard), findsOneWidget);
       await tester.enterText(find.byType(TextField), 'nothing like this');
       await tester.pump();
-      expect(find.text('没有匹配的历史记录'), findsOneWidget);
+      expect(find.text('No matching history'), findsOneWidget);
       await tester.enterText(find.byType(TextField), '');
       await tester.pump();
 
-      await tester.tap(find.text('选择'));
+      await tester.tap(find.text('Select'));
       await tester.pump();
-      await tester.tap(find.text('全选'));
+      await tester.tap(find.text('Tick all'));
       await tester.pump();
-      expect(find.text('已选 5 个'), findsOneWidget);
+      expect(find.text('5 selected'), findsOneWidget);
       await tester.tap(find.byType(Checkbox).first);
       await tester.pump();
-      expect(find.text('已选 4 个'), findsOneWidget);
+      expect(find.text('4 selected'), findsOneWidget);
       await tester.runAsync(() async {
-        await tester.tap(find.text('删除所选'));
+        await tester.tap(find.text('Delete selected'));
         await Future<void>.delayed(const Duration(milliseconds: 100));
       });
       await tester.pump();

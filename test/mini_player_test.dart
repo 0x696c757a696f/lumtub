@@ -12,7 +12,7 @@ import 'package:lumtub/ui/app_icons.dart';
 
 import 'player_controls_test.dart' show FakePlayer;
 
-const _video = VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: '频道', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+const _video = VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: 'Channel', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
 
 void main() {
   late AppController controller;
@@ -216,8 +216,8 @@ void main() {
     testWidgets('hovering shows play/pause, expand and close', (tester) async {
       await pumpCard(tester);
       await hover(tester);
-      expect(find.byTooltip('展开到播放页'), findsOneWidget);
-      expect(find.byTooltip('关闭小窗并停止播放'), findsOneWidget);
+      expect(find.byTooltip('Back to the watch page'), findsOneWidget);
+      expect(find.byTooltip('Close the mini player and stop playback'), findsOneWidget);
 
       expect(player.state.playing, isTrue);
       await tester.tap(find.byIcon(AppIcons.pauseCircle));
@@ -229,7 +229,7 @@ void main() {
     testWidgets('expand goes back to the watch page', (tester) async {
       await pumpCard(tester);
       await hover(tester);
-      await tester.tap(find.byTooltip('展开到播放页'));
+      await tester.tap(find.byTooltip('Back to the watch page'));
       await tester.pump();
       expect(controller.mini, isFalse);
       expect(controller.onWatchPage, isTrue);
@@ -239,7 +239,7 @@ void main() {
     testWidgets('close stops the video', (tester) async {
       await pumpCard(tester);
       await hover(tester);
-      await tester.tap(find.byTooltip('关闭小窗并停止播放'));
+      await tester.tap(find.byTooltip('Close the mini player and stop playback'));
       await tester.pump();
       expect(controller.mini, isFalse);
       expect(controller.playing, isNull);

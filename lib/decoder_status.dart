@@ -85,8 +85,8 @@ class DecoderStatus {
   bool get isVerified => kind != DecoderKind.unverified;
 
   String get label => switch (kind) {
-        DecoderKind.unverified => tr('尚未验证'),
-        DecoderKind.software => tr('软件解码已验证'),
+        DecoderKind.unverified => tr('Not verified yet'),
+        DecoderKind.software => tr('Software decoding verified'),
         DecoderKind.hardware => hwdec!,
       };
 

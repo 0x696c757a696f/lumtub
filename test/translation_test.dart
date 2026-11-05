@@ -156,7 +156,7 @@ void main() {
     expect(find.text('Hello there'), findsOneWidget);
     expect(find.text('[zh-CN] Hello there'), findsOneWidget);
     expect(fake.calls, 1);
-    await tester.tap(find.text('隐藏译文'));
+    await tester.tap(find.text('Hide translation'));
     await tester.pump();
     expect(find.text('[zh-CN] Hello there'), findsNothing);
   });
@@ -169,27 +169,27 @@ void main() {
     expect(find.text('Hello'), findsOneWidget);
     expect(fake.calls, 0);
     // 双语对照 (the default) keeps the original above the translation.
-    await tester.tap(find.text('翻译'));
+    await tester.tap(find.text('Translation'));
     await tester.pump();
     await tester.pump();
     expect(find.text('Hello'), findsOneWidget);
     expect(find.text('[zh-CN] Hello'), findsOneWidget);
-    await tester.tap(find.text('隐藏译文'));
+    await tester.tap(find.text('Hide translation'));
     await tester.pump();
     expect(find.text('[zh-CN] Hello'), findsNothing);
     expect(fake.calls, 1);
     fake.calls = 0;
     controller.preferences = controller.preferences.copyWith(bilingualTranslation: false);
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(key: const ValueKey('replace'), controller: controller, text: 'Hello', builder: (context, text) => Text(text)))));
-    await tester.tap(find.text('翻译'));
+    await tester.tap(find.text('Translation'));
     await tester.pump();
     await tester.pump();
     expect(find.text('[zh-CN] Hello'), findsOneWidget);
-    await tester.tap(find.text('显示原文'));
+    await tester.tap(find.text('Show original'));
     await tester.pump();
     expect(find.text('Hello'), findsOneWidget);
     // Showing the translation again does not ask a second time.
-    await tester.tap(find.text('翻译'));
+    await tester.tap(find.text('Translation'));
     await tester.pump();
     expect(find.text('[zh-CN] Hello'), findsOneWidget);
     expect(fake.calls, 1);
@@ -197,7 +197,7 @@ void main() {
     final failing = _Fake()..fail = true;
     controller.translator = failing;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Translatable(key: const ValueKey('b'), controller: controller, text: 'Other', builder: (context, text) => Text(text)))));
-    await tester.tap(find.text('翻译'));
+    await tester.tap(find.text('Translation'));
     await tester.pump();
     await tester.pump();
     expect(find.text('Other'), findsOneWidget);
@@ -210,12 +210,12 @@ void main() {
     final zh = TranslationLanguage.byCode('zh-CN');
     final en = TranslationLanguage.byCode('en');
     final it = TranslationLanguage.byCode('it');
-    final rows = languageRows([italian, english], italian, [('界面语言', zh), ('系统语言', en)]);
+    final rows = languageRows([italian, english], italian, [('Interface language', zh), ('System language', en)]);
     expect([for (final r in rows) (r.name, r.option.kind, r.option.language)], [
-      ('界面语言', SubtitleKind.translated, 'zh-Hans'),
-      ('系统语言', SubtitleKind.uploaded, 'en'),
+      ('Interface language', SubtitleKind.translated, 'zh-Hans'),
+      ('System language', SubtitleKind.uploaded, 'en'),
     ]);
-    expect(languageRows([italian], italian, [('界面语言', en), ('系统语言', en)]).map((r) => r.name), ['界面语言'], reason: 'the same language once');
-    expect(languageRows([italian], italian, [('界面语言', it), ('系统语言', en)]).map((r) => r.name), ['系统语言'], reason: 'the original stands for its language');
+    expect(languageRows([italian], italian, [('Interface language', en), ('System language', en)]).map((r) => r.name), ['Interface language'], reason: 'the same language once');
+    expect(languageRows([italian], italian, [('Interface language', it), ('System language', en)]).map((r) => r.name), ['System language'], reason: 'the original stands for its language');
   });
 }

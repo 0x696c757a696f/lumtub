@@ -184,7 +184,7 @@ extension SubtitleActions on AppController {
       _notice(e.message);
     } catch (e) {
       logWarn('Could not translate the chapters: $e');
-      _notice(tr('无法翻译，请检查网络或代理'));
+      _notice(tr('Translation failed. Check your network or proxy.'));
     } finally {
       _update(() => translatingChapters = false);
       chaptersChanged.value++;
@@ -269,7 +269,7 @@ extension SubtitleActions on AppController {
       }
     } catch (e) {
       logError('Could not load subtitles ${option.language}', e);
-      _notice(tr('无法加载这条字幕'));
+      _notice(tr("Couldn't load these subtitles"));
     }
   }
 
@@ -427,11 +427,11 @@ extension SubtitleActions on AppController {
       final loaded = option == null || player.state.tracks.subtitle.any((t) => t.title == option.label);
       final file = loaded ? null : await _subtitleFile(option);
       if (this.player != player) return;
-      if (!await SecondarySubtitle.set(player, option, file: file)) throw StateError('字幕未加载');
+      if (!await SecondarySubtitle.set(player, option, file: file)) throw StateError('Subtitles not loaded');
       _update(() => secondarySubtitle = option);
     } catch (e) {
       logError('Could not set secondary subtitles ${option?.language}', e);
-      _notice(tr('无法加载这条字幕'));
+      _notice(tr("Couldn't load these subtitles"));
     } finally {
       if (identical(secondaryLoading, option)) _update(() => secondaryLoading = null);
     }
@@ -484,10 +484,10 @@ extension SubtitleActions on AppController {
     final repository = _repository;
     final paths = this.paths;
     final store = speechStore;
-    if (item == null || details == null || repository == null || paths == null || store == null) throw TranslationException(tr('没有正在播放的视频'));
-    if (speechJob.value != null) throw TranslationException(tr('正在识别另一个视频，请稍候'));
+    if (item == null || details == null || repository == null || paths == null || store == null) throw TranslationException(tr('No video is playing'));
+    if (speechJob.value != null) throw TranslationException(tr('Another video is being recognized, please wait'));
     final config = preferences.translation;
-    if (!canRecognizeSpeech) throw TranslationException(tr('请先在“翻译与 AI”里设置语音识别接口和密钥'));
+    if (!canRecognizeSpeech) throw TranslationException(tr('Set up the speech recognition service and key under Translation & AI first'));
     final recognizer = SpeechRecognizer(_http, baseUrl: config.effectiveSpeechBaseUrl, key: speechKeyFor(config, translationKeys), model: config.effectiveSpeechModel);
     final serial = _playSerial;
     final folder = Directory('${(directories?.cache ?? Directory.systemTemp).path}${Platform.pathSeparator}speech-${item.id}');
@@ -508,7 +508,7 @@ extension SubtitleActions on AppController {
     }
 
     try {
-      stage(tr('正在下载音频…'));
+      stage(tr('Downloading audio…'));
       List<SpeechPart> parts;
       try {
         parts = await fetch();
@@ -517,30 +517,30 @@ extension SubtitleActions on AppController {
           keepAudio = true;
           rethrow;
         }
-        stage(tr('正在安装 ffmpeg…'));
-        if (!await installFfmpeg()) throw TranslationException(tr('ffmpeg 没装好，无法分段识别'));
-        stage(tr('正在下载音频…'));
+        stage(tr('Installing ffmpeg…'));
+        if (!await installFfmpeg()) throw TranslationException(tr('ffmpeg was not installed, so the audio cannot be split'));
+        stage(tr('Downloading audio…'));
         parts = await fetch();
       }
       final hint = details.language?.split('-').first.toLowerCase();
       final answers = List<({Duration offset, Map<String, dynamic> answer})?>.filled(parts.length, null);
       var done = 0;
       var next = 0;
-      stage(tr('正在识别语音…'), 0, parts.length);
+      stage(tr('Recognizing speech…'), 0, parts.length);
       // Two parts at a time: twice as fast without the burst a free tier
       // answers with 429.
       Future<void> worker() async {
         while (next < parts.length) {
           final i = next++;
           answers[i] = (offset: parts[i].offset, answer: await recognizer.transcribe(parts[i].file, language: hint));
-          stage(tr('正在识别语音…'), ++done, parts.length);
+          stage(tr('Recognizing speech…'), ++done, parts.length);
         }
       }
 
       await Future.wait([for (var i = 0; i < min(2, parts.length); i++) worker()]);
       final heard = [for (final a in answers) a!];
       final vtt = await speechVtt(heard);
-      if (!vtt.contains('-->')) throw TranslationException(tr('没有识别出说话的内容'));
+      if (!vtt.contains('-->')) throw TranslationException(tr('No speech was recognized'));
       final language = (hint == null || hint.isEmpty ? null : details.language) ?? speechLanguageTag(heard.first.answer['language']) ?? 'und';
       final file = await store.save(item.id, language, vtt);
       logInfo('Recognized speech of ${item.id} in ${parts.length} part(s)');
@@ -555,7 +555,7 @@ extension SubtitleActions on AppController {
       rethrow;
     } catch (e) {
       logError('Speech recognition failed for ${item.id}', e);
-      throw TranslationException(tr('语音识别失败：{0}', [e]));
+      throw TranslationException(tr('Speech recognition failed: {0}', [e]));
     } finally {
       speechJob.value = null;
       try {

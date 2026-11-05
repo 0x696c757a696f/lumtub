@@ -68,7 +68,7 @@ void main() {
       case '/youtube/v3/subscriptions':
         return json({'items': [{'snippet': {'title': 'Rick Astley', 'resourceId': {'channelId': 'UCuAXFkgsw1L7xaCfnd5JJOw'}}}]});
       case '/youtube/v3/playlists':
-        return json({'items': [{'id': 'PL1', 'snippet': {'title': '音乐'}, 'contentDetails': {'itemCount': 1}}]});
+        return json({'items': [{'id': 'PL1', 'snippet': {'title': 'Music'}, 'contentDetails': {'itemCount': 1}}]});
       case '/youtube/v3/playlistItems':
         final id = request.url.queryParameters['playlistId'];
         return json({'items': [{'snippet': {'title': '$id 视频', 'videoOwnerChannelId': 'UCuAXFkgsw1L7xaCfnd5JJOw'}, 'contentDetails': {'videoId': id == 'LL' ? 'dQw4w9WgXcQ' : 'aaaaaaaaaaa'}}]});
@@ -105,8 +105,8 @@ void main() {
     }
     expect(account.error, isNull);
     expect(library.isFollowing('UCuAXFkgsw1L7xaCfnd5JJOw'), isTrue);
-    expect(library.playlists.map((p) => (p.id, p.name, p.items.single.id)), [('yt:LL', '喜欢的视频', 'dQw4w9WgXcQ'), ('yt:PL1', '音乐', 'aaaaaaaaaaa')]);
-    expect(notices.last, contains('新增 1 个'));
+    expect(library.playlists.map((p) => (p.id, p.name, p.items.single.id)), [('yt:LL', 'Liked videos', 'dQw4w9WgXcQ'), ('yt:PL1', 'Music', 'aaaaaaaaaaa')]);
+    expect(notices.last, contains('1 new'));
 
     // The token on disk is encrypted, and comes back after a restart.
     final raw = await File('${dir.path}/google-account.bin').readAsBytes();
@@ -179,7 +179,7 @@ void main() {
       'DELETE subscriptions id=sub-1',
     ]);
     expect(library.playlists.firstWhere((p) => p.id == 'yt:PLnew').items.single.id, video.id);
-    expect(notices, containsAll(['已点赞', '评论已发布', '回复已发布', '已保存到 YouTube 播放列表“稍后”']));
+    expect(notices, containsAll(['Liked', 'Comment posted', 'Reply posted', 'Saved to YouTube playlist "稍后"']));
   });
 
   test('a read-only sign-in from an older version asks to sign in again', () async {
@@ -191,7 +191,7 @@ void main() {
     expect(account.canWrite, isFalse);
     await account.rate(const VideoItem(id: 'bbbbbbbbbbb', title: '', channel: '', url: ''), VideoRating.like);
     expect(writes, isEmpty);
-    expect(notices.single, contains('重新登录'));
+    expect(notices.single, contains('Sign in to Google again'));
   });
 
   test('a sign-in Google no longer takes shows as signed out, saying so', () async {
@@ -209,7 +209,7 @@ void main() {
     await expectLater(account.accessToken(), throwsA(isA<OAuthException>()));
     await pumpEventQueue();
     expect(account.signedIn, isFalse);
-    expect(account.error, contains('重新登录'));
+    expect(account.error, contains('Please sign in again'));
     // The file is deleted in the background; real file I/O outlasts the
     // event queue on Windows.
     final saved = File('${dir.path}/google-account.bin');

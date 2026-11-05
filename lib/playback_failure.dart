@@ -79,23 +79,23 @@ class PlaybackFailure {
   String get message {
     final reason = switch (kind) {
       FailureKind.membersOnly => signedIn
-          ? tr('这是频道会员专属视频，浏览器登录的账号不是这个频道的会员')
-          : tr('这是频道会员专属视频。如果你是这个频道的会员，在 设置 › YouTube 账号 › 浏览器登录 登录后就能播放'),
-      FailureKind.unavailable => tr('这个视频无法观看（私享、已删除、地区或年龄限制）'),
-      FailureKind.upcoming => tr('直播还没开始，开始后会自动播放'),
+          ? tr("This video is for the channel's members only, and the account signed in under Browser sign-in isn't a member")
+          : tr("This video is for the channel's members only. If you're a member, sign in under Settings › YouTube account › Browser sign-in to play it"),
+      FailureKind.unavailable => tr("This video can't be watched (private, deleted, or region or age restricted)"),
+      FailureKind.upcoming => tr("This stream hasn't started yet. It will play as soon as it begins"),
       FailureKind.rateLimited => tried.isEmpty
-          ? tr('YouTube 暂时限制了请求频率（429）。已暂停预加载 10 分钟，请过几分钟再播放，或换一个代理节点')
-          : tr('YouTube 暂时限制了请求频率（429），改用 {0} 也没有成功。已暂停预加载 10 分钟，请过几分钟再播放，或换一个代理节点', [tried.join('、')]),
-      FailureKind.botCheck => tr('YouTube 要求验证“不是机器人”，说明当前 IP 被怀疑。可以换一个代理节点，或在 设置 › 播放 › 播放来源 选 Piped 或 Invidious'),
-      FailureKind.challenge => tr('解不开 YouTube 的 JavaScript 验证，通常是 yt-dlp 过旧。已开始检查组件更新，更新后重启 Lumtub 生效'),
-      FailureKind.forbidden => tr('YouTube 拒绝了视频地址（403）。已重新解析仍失败，可以换一个代理节点，或在 设置 › 播放 › 播放来源 选 Piped 或 Invidious'),
-      FailureKind.noFormat => disabled.isEmpty ? tr('没有可播放的视频流。') : tr('没有符合格式规则的可播放视频流（已禁用：{0}）。可在设置的「视频设置」中调整。', [disabled]),
-      FailureKind.network => tr('网络连接失败，请检查网络或代理'),
+          ? tr('YouTube is rate-limiting requests (429). Preloading is paused for 10 minutes. Try playing again in a few minutes, or switch proxy nodes.')
+          : tr('YouTube is temporarily rate-limiting requests (429), and {0} also failed. Preloading is paused for 10 minutes. Try again in a few minutes or switch proxy node.', [tried.join(tr(', '))]),
+      FailureKind.botCheck => tr('YouTube requires a "not a robot" check, meaning the current IP is flagged. Try another proxy node, or choose Piped or Invidious in Settings › Playback › Playback source'),
+      FailureKind.challenge => tr("Couldn't solve YouTube's JavaScript challenge, usually because yt-dlp is outdated. Checking for component updates now; restart Lumtub after updating."),
+      FailureKind.forbidden => tr('YouTube rejected the video URL (403). Re-parsing still failed. Try another proxy node, or choose Piped or Invidious in Settings › Playback › Playback source'),
+      FailureKind.noFormat => disabled.isEmpty ? tr('No playable video stream.') : tr('No playable video stream matches the format rules (disabled: {0}). You can change this under Settings → Video settings.', [disabled]),
+      FailureKind.network => tr("Couldn't connect. Check your network or proxy."),
       FailureKind.unknown => '',
     };
     if (kind == FailureKind.upcoming) return reason;
     // The servers named in the 429 message are said here for the others.
-    final servers = tried.isEmpty || kind == FailureKind.rateLimited ? '' : tr('（也试过 {0}）', [tried.join('、')]);
+    final servers = tried.isEmpty || kind == FailureKind.rateLimited ? '' : tr(' (also tried {0})', [tried.join(tr(', '))]);
     final shown = detail.length > 300 ? '${detail.substring(0, 300)}…' : detail;
     if (reason.isEmpty) return '$shown$servers';
     return shown.isEmpty ? '$reason$servers' : '$reason$servers\n$shown';

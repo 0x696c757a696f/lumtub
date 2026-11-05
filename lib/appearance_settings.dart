@@ -11,25 +11,25 @@ import 'sun_times.dart';
 /// Seed colours offered in Settings; the first is the default. The first
 /// six are Lumtub's own, the rest PiliNara's palette.
 final accentChoices = <(String, Color)>[
-  (tr('YouTube 红'), Color(0xFFE53935)),
-  (tr('青绿'), Color(0xFF26A69A)),
-  (tr('天蓝'), Color(0xFF1E88E5)),
-  (tr('紫罗兰'), Color(0xFF7E57C2)),
-  (tr('琥珀'), Color(0xFFFFB300)),
-  (tr('粉红'), Color(0xFFEC407A)),
-  (tr('默认绿'), Color(0xFF5CB67B)),
-  (tr('橙色'), Colors.orange),
-  (tr('黄色'), Colors.yellow),
-  (tr('酸橙色'), Colors.lime),
-  (tr('浅绿色'), Colors.lightGreen),
-  (tr('青色'), Colors.teal),
-  (tr('蓝绿色'), Colors.cyan),
-  (tr('浅蓝色'), Colors.lightBlue),
-  (tr('靛蓝色'), Colors.indigo),
-  (tr('深紫色'), Colors.deepPurple),
-  (tr('蓝灰色'), Colors.blueGrey),
-  (tr('棕色'), Colors.brown),
-  (tr('灰色'), Colors.grey),
+  (tr('YouTube red'), Color(0xFFE53935)),
+  (tr('Cyan green'), Color(0xFF26A69A)),
+  (tr('Sky blue'), Color(0xFF1E88E5)),
+  (tr('Violet'), Color(0xFF7E57C2)),
+  (tr('Amber'), Color(0xFFFFB300)),
+  (tr('Pink'), Color(0xFFEC407A)),
+  (tr('Default green'), Color(0xFF5CB67B)),
+  (tr('Orange'), Colors.orange),
+  (tr('Yellow'), Colors.yellow),
+  (tr('Lime'), Colors.lime),
+  (tr('Light green'), Colors.lightGreen),
+  (tr('Cyan'), Colors.teal),
+  (tr('Teal'), Colors.cyan),
+  (tr('Light blue'), Colors.lightBlue),
+  (tr('Indigo'), Colors.indigo),
+  (tr('Deep purple'), Colors.deepPurple),
+  (tr('Blue gray'), Colors.blueGrey),
+  (tr('Brown'), Colors.brown),
+  (tr('Gray'), Colors.grey),
 ];
 
 /// A ready-made look: a seed colour and palette style, each shown light
@@ -48,36 +48,36 @@ class ThemePreset {
 }
 
 const themePresets = [
-  ThemePreset('经典红', 0xFFE53935, DynamicSchemeVariant.tonalSpot),
-  ThemePreset('海湾蓝', 0xFF1E88E5, DynamicSchemeVariant.fidelity),
-  ThemePreset('森林绿', 0xFF2E7D32, DynamicSchemeVariant.tonalSpot),
-  ThemePreset('青瓷', 0xFF26A69A, DynamicSchemeVariant.content),
-  ThemePreset('薰衣草', 0xFF7E57C2, DynamicSchemeVariant.tonalSpot),
-  ThemePreset('樱花', 0xFFEC407A, DynamicSchemeVariant.tonalSpot),
-  ThemePreset('日落', 0xFFF4511E, DynamicSchemeVariant.vibrant),
-  ThemePreset('石墨', 0xFF607D8B, DynamicSchemeVariant.neutral),
-  ThemePreset('OLED 纯黑', 0xFF9E9E9E, DynamicSchemeVariant.monochrome, pureBlack: true),
+  ThemePreset('Classic red', 0xFFE53935, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('Bay blue', 0xFF1E88E5, DynamicSchemeVariant.fidelity),
+  ThemePreset('Forest green', 0xFF2E7D32, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('Celadon', 0xFF26A69A, DynamicSchemeVariant.content),
+  ThemePreset('Lavender', 0xFF7E57C2, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('Sakura', 0xFFEC407A, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('Sunset', 0xFFF4511E, DynamicSchemeVariant.vibrant),
+  ThemePreset('Graphite', 0xFF607D8B, DynamicSchemeVariant.neutral),
+  ThemePreset('OLED black', 0xFF9E9E9E, DynamicSchemeVariant.monochrome, pureBlack: true),
 ];
 
 /// Material's palette styles with the names PiliNara uses.
 final schemeVariantNames = {
-  DynamicSchemeVariant.tonalSpot: tr('默认（Tonal Spot）'),
-  DynamicSchemeVariant.fidelity: tr('保真（Fidelity）'),
-  DynamicSchemeVariant.content: tr('内容（Content）'),
-  DynamicSchemeVariant.vibrant: tr('鲜艳（Vibrant）'),
-  DynamicSchemeVariant.expressive: tr('表现力（Expressive）'),
-  DynamicSchemeVariant.neutral: tr('中性（Neutral）'),
-  DynamicSchemeVariant.monochrome: tr('单色（Monochrome）'),
-  DynamicSchemeVariant.rainbow: tr('彩虹（Rainbow）'),
-  DynamicSchemeVariant.fruitSalad: tr('水果沙拉（Fruit Salad）'),
+  DynamicSchemeVariant.tonalSpot: tr('Default (Tonal Spot)'),
+  DynamicSchemeVariant.fidelity: tr('Fidelity'),
+  DynamicSchemeVariant.content: tr('Content'),
+  DynamicSchemeVariant.vibrant: tr('Vibrant'),
+  DynamicSchemeVariant.expressive: tr('Expressive'),
+  DynamicSchemeVariant.neutral: tr('Neutral'),
+  DynamicSchemeVariant.monochrome: tr('Monochrome'),
+  DynamicSchemeVariant.rainbow: tr('Rainbow'),
+  DynamicSchemeVariant.fruitSalad: tr('Fruit Salad'),
 };
 
 enum PageTransition {
-  fade('淡入淡出（默认）'),
-  zoom('缩放'),
-  slide('上滑'),
-  cupertino('左右滑动'),
-  none('无动画');
+  fade('Fade (default)'),
+  zoom('Scale'),
+  slide('Swipe up'),
+  cupertino('Swipe left or right'),
+  none('No animation');
 
   const PageTransition(this._label);
   final String _label;
@@ -87,9 +87,9 @@ enum PageTransition {
 /// 减少动画: whether page changes, expanding sections and hover effects
 /// animate.
 enum MotionPreference {
-  system('跟随系统'),
-  reduced('减少动画'),
-  full('保留动画');
+  system('Follow system'),
+  reduced('Reduce animations'),
+  full('Keep animations');
 
   const MotionPreference(this._label);
   final String _label;
@@ -97,9 +97,9 @@ enum MotionPreference {
 }
 
 enum NavigationStyle {
-  auto('自动（窗口较宽时用侧边栏）'),
-  rail('始终使用侧边栏'),
-  bottom('始终使用底栏');
+  auto('Auto (sidebar on wide windows)'),
+  rail('Always use sidebar'),
+  bottom('Always use bottom bar');
 
   const NavigationStyle(this._label);
   final String _label;
@@ -107,10 +107,10 @@ enum NavigationStyle {
 }
 
 enum ThumbnailQuality {
-  medium('mqdefault', '标准（320×180，最省流量）'),
-  high('hqdefault', '高（480×360，默认）'),
-  standard('sddefault', '较高（640×480）'),
-  max('maxresdefault', '最高（1280×720，部分视频没有）');
+  medium('mqdefault', 'Standard (320×180, uses the least data)'),
+  high('hqdefault', 'High (480×360, default)'),
+  standard('sddefault', 'Higher (640×480)'),
+  max('maxresdefault', 'Highest (1280×720, not available for some videos)');
 
   const ThumbnailQuality(this._file, this._label);
   final String _file;
@@ -144,11 +144,11 @@ bool isSimplifiedChinese(Locale locale) {
 /// Fonts offered in Settings: automatic, the bundled one, then fonts that
 /// ship with Windows and cover Chinese; null is the system UI font.
 final fontChoices = <(String?, String)>[
-  (autoFont, tr('自动（默认）：简体中文系统用 Noto Sans CJK SC，其他用系统字体')),
-  (bundledFont, tr('Noto Sans CJK SC（内置）')),
-  (null, tr('系统默认')),
-  ('Microsoft YaHei UI', tr('微软雅黑')),
-  ('DengXian', tr('等线')),
+  (autoFont, tr('Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise')),
+  (bundledFont, tr('Noto Sans CJK SC (built-in)')),
+  (null, tr('System default')),
+  ('Microsoft YaHei UI', tr('Microsoft YaHei')),
+  ('DengXian', tr('DengXian')),
 ];
 
 /// The narrowest a video card may get; set from [AppearanceSettings.cardWidth].
@@ -162,10 +162,10 @@ VideoLayout videoLayout = VideoLayout.grid;
 
 /// 护眼暖色: when the window is warmed.
 enum EyeCare {
-  off('关闭'),
-  always('一直开启'),
-  sun('日落到日出'),
-  hours('自定义时间段');
+  off('Close'),
+  always('Always on'),
+  sun('Sunset to sunrise'),
+  hours('Set hours');
 
   const EyeCare(this._label);
   final String _label;
@@ -174,9 +174,9 @@ enum EyeCare {
 
 /// When the dark theme is used instead of [AppearanceSettings.themeMode].
 enum DarkSchedule {
-  off('按主题模式'),
-  sun('日落到日出'),
-  hours('自定义时间段');
+  off('By theme mode'),
+  sun('Sunset to sunrise'),
+  hours('Set hours');
 
   const DarkSchedule(this._label);
   final String _label;
@@ -185,9 +185,9 @@ enum DarkSchedule {
 
 /// How video lists are laid out.
 enum VideoLayout {
-  grid('网格（默认）'),
-  list('列表'),
-  text('纯文字');
+  grid('Grid (default)'),
+  list('List'),
+  text('Text only');
 
   const VideoLayout(this._label);
   final String _label;
@@ -293,7 +293,7 @@ class AppearanceSettings {
   /// The chosen colour; [systemAccent] is resolved by the app.
   Color get accent => accentIndex < 0 ? Color(customAccent) : accentChoices[accentIndex].$2;
 
-  String get accentLabel => systemAccent ? tr('跟随 Windows 强调色') : accentIndex < 0 ? tr('自定义') : accentChoices[accentIndex].$1;
+  String get accentLabel => systemAccent ? tr('Follow Windows accent color') : accentIndex < 0 ? tr('Custom') : accentChoices[accentIndex].$1;
 
   AppearanceSettings copyWith({
     ThemeMode? themeMode,

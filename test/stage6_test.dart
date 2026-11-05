@@ -154,14 +154,14 @@ void main() {
       'demuxer-cache-duration': '31.37',
       'cache-speed': '3145728',
     }).map((row) => MapEntry(row.$1, row.$2)));
-    expect(rows['分辨率'], '1920x1080');
-    expect(rows['解码'], '硬件 d3d11va');
-    expect(rows['帧率'], '59.94 / 源 59.940');
-    expect(rows['丢帧'], '输出 0 · 解码 2 · 延迟 5');
-    expect(rows['音画偏差'], '-12 ms · 显示 60 Hz');
-    expect(rows['码率'], '视频 2512 kbps · 音频 —');
-    expect(rows['缓冲'], '31.4 秒');
-    expect(rows['下载速度'], '3.0 MB/s');
-    expect(Map.fromEntries(statsRows({'hwdec-current': 'no'}).map((r) => MapEntry(r.$1, r.$2)))['解码'], '软件解码');
+    expect(rows['Resolution'], '1920x1080');
+    expect(rows['Decoding'], 'Hardware d3d11va');
+    expect(rows['Frame rate'], '59.94 / source 59.940');
+    expect(rows['Dropped frames'], 'Output 0 · Decode 2 · Delay 5');
+    expect(rows['A/V offset'], '-12 ms · display 60 Hz');
+    expect(rows['Bitrate'], 'Video 2512 kbps · Audio —');
+    expect(rows['Buffering'], '31.4 s');
+    expect(rows['Download speed'], '3.0 MB/s');
+    expect(Map.fromEntries(statsRows({'hwdec-current': 'no'}).map((r) => MapEntry(r.$1, r.$2)))['Decoding'], 'Software decoding');
   });
 }

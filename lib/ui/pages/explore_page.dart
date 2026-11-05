@@ -47,19 +47,19 @@ class _ExplorePageState extends State<ExplorePage> {
     final subNow = controller.exploreSubNow;
     final name = [topic.label, if (subNow != null) subNow.label, if (controller.exploreLeafNow case final leafNow?) leafNow.label].join(' · ');
     final subtitle = switch (mode) {
-      ExploreMode.curated => tr('{0} · 相关度高的完整内容，少标题党，每个频道最多 3 个', [name]),
-      ExploreMode.popular when topic.global => tr('全球热门 · 不限地区和语言，{0}观看最多，每个频道最多 2 个', [controller.explorePeriod.label]),
-      ExploreMode.popular when topic.mix => tr('全部 · 各分区{0}观看最多的视频，每个频道最多 2 个', [controller.explorePeriod.label]),
-      ExploreMode.popular => tr('{0} · {1}观看最多', [name, controller.explorePeriod.label]),
-      ExploreMode.forYou => tr('{0} · 按你的观看记录排列', [name]),
-      ExploreMode.gems => tr('{0} · 播放不到 5 万的好视频', [name]),
-      ExploreMode.fresh => tr('{0} · 本周新发、播放不到 5000，来自你没看过的频道', [name]),
-      ExploreMode.long => tr('{0} · 今年观看最多的 20 分钟以上视频', [name]),
-      ExploreMode.latest => tr('{0} · 最新上传', [name]),
-      ExploreMode.liveViewers => tr('{0}直播 · 按观看人数排列', [name]),
-      ExploreMode.liveLatest => tr('{0}直播 · 最新开播', [name]),
-      ExploreMode.liveUpcoming => tr('{0} · 即将开始的直播', [name]),
-      ExploreMode.liveReplay => tr('{0} · 最近的直播回放', [name]),
+      ExploreMode.curated => tr('{0} · Relevant full-length videos, less clickbait, up to 3 per channel', [name]),
+      ExploreMode.popular when topic.global => tr('Global trending · Most watched in any region or language ({0}), up to 2 per channel', [controller.explorePeriod.label]),
+      ExploreMode.popular when topic.mix => tr('All · most watched {0} across the zones, at most 2 per channel', [controller.explorePeriod.label]),
+      ExploreMode.popular => tr('{0} · most watched {1}', [name, controller.explorePeriod.label]),
+      ExploreMode.forYou => tr('{0} · Based on your watch history', [name]),
+      ExploreMode.gems => tr('{0} · Great videos with under 50K views', [name]),
+      ExploreMode.fresh => tr('{0} · New this week, under 5,000 views, from channels you have not watched', [name]),
+      ExploreMode.long => tr('{0} · Most watched videos over 20 minutes this year', [name]),
+      ExploreMode.latest => tr('{0} · Latest uploads', [name]),
+      ExploreMode.liveViewers => tr('{0} live · By viewers', [name]),
+      ExploreMode.liveLatest => tr('{0} live · Just started', [name]),
+      ExploreMode.liveUpcoming => tr('{0} · Upcoming streams', [name]),
+      ExploreMode.liveReplay => tr('{0} · Recent stream replays', [name]),
     };
     Widget strip({bool vertical = false}) => TopicStrip(
           key: ValueKey((section, vertical)),
@@ -105,7 +105,7 @@ class _ExplorePageState extends State<ExplorePage> {
       onNearEnd: () => loader?.loadMore(),
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: PageHeader(
-          tr('探索'),
+          tr('Explore'),
           subtitle: subtitle,
           trailing: SegmentedButton<ExploreSection>(
             showSelectedIcon: false,
@@ -125,9 +125,9 @@ class _ExplorePageState extends State<ExplorePage> {
               TextButton.icon(
                 onPressed: controller.leaveFaith,
                 icon: const Icon(AppIcons.arrowLeft, size: 18),
-                label: Text(tr('全部分区')),
+                label: Text(tr('All categories')),
               ),
-              Text(tr('宗教信仰'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              Text(tr('Religion & faith'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(width: 8),
               SegmentedButton<ExploreSection>(
                 showSelectedIcon: false,
@@ -142,7 +142,7 @@ class _ExplorePageState extends State<ExplorePage> {
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 4, AppStyle.pagePadding, 0),
             child: Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final (i, label) in [tr('全部'), for (final s in topic.subs) s.label].indexed)
+              for (final (i, label) in [tr('All'), for (final s in topic.subs) s.label].indexed)
                 ChoiceChip(label: Text(label), selected: sub == i, onSelected: (_) => controller.setExplore(sub: i)),
             ]),
           )),
@@ -150,7 +150,7 @@ class _ExplorePageState extends State<ExplorePage> {
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 0),
             child: Wrap(spacing: 6, runSpacing: 6, children: [
-              for (final (i, label) in [tr('全部{0}', [subNow.label]), for (final s in subNow.subs) s.label].indexed)
+              for (final (i, label) in [tr('All {0}', [subNow.label]), for (final s in subNow.subs) s.label].indexed)
                 FilterChip(
                   label: Text(label),
                   visualDensity: VisualDensity.compact,
@@ -184,7 +184,7 @@ class _ExplorePageState extends State<ExplorePage> {
               icon: AppIcons.shapes,
               value: controller.exploreFormat,
               values: controller.exploreFormats,
-              label: (v) => v == controller.exploreFormats.first ? tr('类型') : v.label,
+              label: (v) => v == controller.exploreFormats.first ? tr('Type') : v.label,
               item: (v) => v.label,
               changed: controller.exploreFormat != controller.exploreFormats.first,
               onSelected: (v) => controller.setExplore(format: v),
@@ -193,7 +193,7 @@ class _ExplorePageState extends State<ExplorePage> {
               icon: AppIcons.eye,
               value: controller.exploreView,
               values: controller.exploreViews,
-              label: (v) => v == controller.exploreViews.first ? tr('视角') : v.label,
+              label: (v) => v == controller.exploreViews.first ? tr('Viewpoint') : v.label,
               item: (v) => v.label,
               changed: controller.exploreView != controller.exploreViews.first,
               onSelected: (v) => controller.setExplore(view: v),
@@ -203,7 +203,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 icon: AppIcons.timer,
                 value: controller.exploreDuration,
                 values: SearchDuration.values,
-                label: (v) => v == SearchDuration.any ? tr('时长') : v.label,
+                label: (v) => v == SearchDuration.any ? tr('Duration') : v.label,
                 item: (v) => v.label,
                 changed: controller.exploreDuration != SearchDuration.any,
                 onSelected: (v) => controller.setExplore(duration: v),
@@ -214,7 +214,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 icon: AppIcons.globe,
                 value: controller.preferences.exploreRegion,
                 values: ExploreRegion.values,
-                label: (v) => v == ExploreRegion.any ? tr('地区') : v.label,
+                label: (v) => v == ExploreRegion.any ? tr('Region') : v.label,
                 item: (v) => v.label,
                 changed: controller.preferences.exploreRegion != ExploreRegion.any,
                 onSelected: (v) => controller.setExplore(region: v),
@@ -223,17 +223,17 @@ class _ExplorePageState extends State<ExplorePage> {
               icon: AppIcons.translate,
               value: controller.preferences.exploreLanguage,
               values: ExploreLanguage.values,
-              label: (v) => v == ExploreLanguage.any ? tr('语言') : v.label,
+              label: (v) => v == ExploreLanguage.any ? tr('Language') : v.label,
               item: (v) => v.label,
               changed: controller.preferences.exploreLanguage != ExploreLanguage.any,
               onSelected: (v) => controller.setExplore(language: v),
             ),
             if (controller.preferences.exploreLanguage != ExploreLanguage.any)
               Tooltip(
-                message: tr('只留下原声音轨或自动字幕确认是这种语言的视频，不靠标题和简介猜'),
+                message: tr('Only videos whose original audio track or automatic captions confirm the language, not guessed from the title and description'),
                 child: FilterChip(
                   avatar: const Icon(AppIcons.ear, size: 18),
-                  label: Text(tr('只看确认的原声')),
+                  label: Text(tr('Confirmed audio only')),
                   selected: controller.preferences.exploreHeardOnly,
                   onSelected: (v) => controller.setExplore(heardOnly: v),
                 ),
@@ -242,7 +242,7 @@ class _ExplorePageState extends State<ExplorePage> {
               icon: AppIcons.highDefinition,
               value: controller.exploreQuality,
               values: SearchQuality.values,
-              label: (v) => v == SearchQuality.any ? tr('画质') : v.label,
+              label: (v) => v == SearchQuality.any ? tr('Quality') : v.label,
               item: (v) => v.label,
               changed: controller.exploreQuality != SearchQuality.any,
               onSelected: (v) => controller.setExplore(quality: v),
@@ -250,7 +250,7 @@ class _ExplorePageState extends State<ExplorePage> {
             if (topic.mix)
               ActionChip(
                 avatar: const Icon(AppIcons.arrowsClockwise, size: 18),
-                label: Text(tr('换一批')),
+                label: Text(tr('Shuffle')),
                 onPressed: loading ? null : controller.refreshExplore,
               ),
           ]),
@@ -263,25 +263,25 @@ class _ExplorePageState extends State<ExplorePage> {
         if (error != null)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-            child: ErrorBanner(items.isEmpty ? tr('无法加载：{0}', [error]) : tr('加载更多失败：{0}', [error]), onRetry: () => loader?.loadMore(retry: true)),
+            child: ErrorBanner(items.isEmpty ? tr("Couldn't load: {0}", [error]) : tr("Couldn't load more: {0}", [error]), onRetry: () => loader?.loadMore(retry: true)),
           )),
         if (items.isEmpty && !loading && error == null)
           if (controller.exploreLanguageCheck case final check? when check.asked > 0)
             SliverFillRemaining(hasScrollBody: false, child: StatusView(
               icon: AppIcons.translate,
-              title: tr('查了 {0} 个视频，没有{1}的', [check.asked, controller.preferences.exploreLanguage.label]),
-              message: tr('可以继续往下找，或者换个分类、放宽时长和地区'),
+              title: tr('Checked {0} videos, none in {1}', [check.asked, controller.preferences.exploreLanguage.label]),
+              message: tr('Keep looking further, or try another category or a wider duration and region'),
               action: FilledButton.icon(
                 onPressed: controller.searchExploreFurther,
                 icon: const Icon(AppIcons.magnifyingGlass),
-                label: Text(tr('继续找')),
+                label: Text(tr('Keep looking')),
               ),
             ))
           else
             SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.compass, title: switch (mode) {
-              ExploreMode.liveUpcoming => tr('这个分类暂时没有即将开始的直播'),
-              ExploreMode.liveReplay => tr('这个分类暂时没有直播回放'),
-              _ => live ? tr('这个分类现在没有直播') : tr('这个分类暂时没有视频'),
+              ExploreMode.liveUpcoming => tr('No upcoming streams in this category'),
+              ExploreMode.liveReplay => tr('No stream replays in this category'),
+              _ => live ? tr('No live streams in this category right now') : tr('No videos in this category right now'),
             })),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
@@ -294,7 +294,7 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Future<void> _removeTopic(BuildContext context, ExploreSection section, ExploreTopic topic) async {
-    final ok = await confirmDialog(context, title: tr('删除分类'), content: tr('删除自定义分类“{0}”？', [topic.label]), confirm: tr('删除'));
+    final ok = await confirmDialog(context, title: tr('Delete category'), content: tr('Delete custom category "{0}"?', [topic.label]), confirm: tr('Delete'));
     if (ok) await controller.removeExploreTopic(section, topic.label);
   }
 
@@ -343,7 +343,7 @@ class _AddTopicDialogState extends State<_AddTopicDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: Text(tr('添加分类')),
+        title: Text(tr('Add category')),
         content: SizedBox(
           width: 380,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -351,13 +351,13 @@ class _AddTopicDialogState extends State<_AddTopicDialog> {
               controller: _label,
               autofocus: true,
               maxLength: 8,
-              decoration: InputDecoration(labelText: tr('名称'), hintText: tr('例如：天主教音乐')),
+              decoration: InputDecoration(labelText: tr('Name'), hintText: tr('e.g. Catholic music')),
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _submit(),
             ),
             TextField(
               controller: _query,
-              decoration: InputDecoration(labelText: tr('搜索词（可选）'), hintText: tr('留空则用名称搜索，例如：Gregorian chant 额我略圣歌')),
+              decoration: InputDecoration(labelText: tr('Search terms (optional)'), hintText: tr('Leave empty to search by name, e.g. Gregorian chant')),
               onSubmitted: (_) => _submit(),
             ),
             const SizedBox(height: 16),
@@ -373,8 +373,8 @@ class _AddTopicDialogState extends State<_AddTopicDialog> {
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
-          FilledButton(onPressed: _label.text.trim().isEmpty ? null : _submit, child: Text(tr('添加'))),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+          FilledButton(onPressed: _label.text.trim().isEmpty ? null : _submit, child: Text(tr('Add'))),
         ],
       );
 }
@@ -400,12 +400,12 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: Text(tr('管理{0}分区', [widget.section.label])),
+        title: Text(tr('Manage {0} categories', [widget.section.label])),
         content: SizedBox(
           width: 420,
           height: 480,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(tr('拖动调整顺序，置顶放到最前，关掉开关隐藏。'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
+            Text(tr('Drag to reorder, pin to move to the top, turn off the switch to hide.'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
             const SizedBox(height: 8),
             Expanded(child: ReorderableListView.builder(
               buildDefaultDragHandles: false,
@@ -426,7 +426,7 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
                   ]),
                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                     IconButton(
-                      tooltip: tr('置顶'),
+                      tooltip: tr('Pinned'),
                       icon: const Icon(AppIcons.alignTop),
                       onPressed: i == 0 ? null : () => setState(() => _topics.insert(0, _topics.removeAt(i))),
                     ),
@@ -448,10 +448,10 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
                 ..addAll(widget.defaults);
               _hidden.clear();
             }),
-            child: Text(tr('恢复默认')),
+            child: Text(tr('Restore default')),
           ),
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
-          FilledButton(onPressed: () => Navigator.pop(context, ([for (final t in _topics) t.key], _hidden)), child: Text(tr('保存'))),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(context, ([for (final t in _topics) t.key], _hidden)), child: Text(tr('Save'))),
         ],
       );
 }
@@ -497,8 +497,8 @@ class _TopicStripState extends State<TopicStrip> {
   }
 
   List<(ExploreTopic, VoidCallback)> get _extras => [
-        if (widget.onAdd case final add?) (ExploreTopic(tr('添加'), AppIcons.plus, ''), add),
-        if (widget.onManage case final manage?) (ExploreTopic(tr('管理'), AppIcons.slidersHorizontal, ''), manage),
+        if (widget.onAdd case final add?) (ExploreTopic(tr('Add'), AppIcons.plus, ''), add),
+        if (widget.onManage case final manage?) (ExploreTopic(tr('Manage'), AppIcons.slidersHorizontal, ''), manage),
       ];
 
   bool _extent(bool Function(ScrollPosition position) test) =>
@@ -605,7 +605,7 @@ class _RailTile extends StatelessWidget {
     final colors = context.colors;
     final color = selected ? colors.primary : quiet ? colors.onSurfaceVariant : colors.onSurface;
     return Tooltip(
-      message: onRemove == null ? topic.label : tr('{0}（右键或长按删除）', [topic.label]),
+      message: onRemove == null ? topic.label : tr('{0} (right-click or long-press to delete)', [topic.label]),
       waitDuration: const Duration(milliseconds: 600),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
@@ -664,7 +664,7 @@ class _TopicTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Tooltip(
-      message: onRemove == null ? topic.label : tr('{0}（右键或长按删除）', [topic.label]),
+      message: onRemove == null ? topic.label : tr('{0} (right-click or long-press to delete)', [topic.label]),
       waitDuration: const Duration(milliseconds: 600),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),

@@ -16,12 +16,12 @@ import 'l10n/l10n.dart';
 import 'native_core.dart';
 
 enum SearchFilter {
-  all('全部', null),
-  videos('视频', 'EgIQAQ%253D%253D'),
+  all('All', null),
+  videos('Videos', 'EgIQAQ%253D%253D'),
   shorts('Shorts', 'EgIQCQ%253D%253D'),
-  live('直播', 'EgJAAQ%253D%253D'),
-  channels('频道', 'EgIQAg%253D%253D'),
-  playlists('播放列表', 'EgIQAw%253D%253D');
+  live('Live', 'EgJAAQ%253D%253D'),
+  channels('Channel', 'EgIQAg%253D%253D'),
+  playlists('Playlist', 'EgIQAw%253D%253D');
 
   const SearchFilter(this._label, this.sp);
   final String _label;
@@ -33,12 +33,12 @@ enum SearchFilter {
 /// The tabs of a channel page; [path] is the channel URL's tab, null for
 /// posts, which yt-dlp does not list.
 enum ChannelTab {
-  videos('视频', '/videos'),
+  videos('Videos', '/videos'),
   shorts('Shorts', '/shorts'),
-  live('直播', '/streams'),
-  playlists('播放列表', '/playlists'),
-  podcasts('播客', '/podcasts'),
-  posts('社区', null);
+  live('Live', '/streams'),
+  playlists('Playlist', '/playlists'),
+  podcasts('Podcasts', '/podcasts'),
+  posts('Community', null);
 
   const ChannelTab(this._label, this.path);
   final String _label;
@@ -117,7 +117,7 @@ class Listing {
   Future<bool> _move(StreamIterator<String> lines) async {
     final bool more;
     try {
-      more = await lines.moveNext().timeout(timeout, onTimeout: () => throw TimeoutException(tr('yt-dlp 加载超时')));
+      more = await lines.moveNext().timeout(timeout, onTimeout: () => throw TimeoutException(tr('yt-dlp timed out loading')));
     } catch (e) {
       close();
       if (_found == 0 || e is TimeoutException) rethrow;

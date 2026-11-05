@@ -103,7 +103,7 @@ class AccountController extends ChangeNotifier {
     notifyListeners();
     try {
       final tokens = await auth.signIn();
-      if (tokens.refreshToken == null) throw OAuthException(tr('Google 没有返回长期凭据，请重试'));
+      if (tokens.refreshToken == null) throw OAuthException(tr("Google didn't return long-term credentials. Please try again."));
       _tokens = tokens;
       _refreshToken = tokens.refreshToken;
       scope = tokens.scope ?? youtubeScope;
@@ -113,7 +113,7 @@ class AccountController extends ChangeNotifier {
       state = AccountState.signedIn;
       await _save();
       notifyListeners();
-      notice(tr('已登录 {0}', [me.name]));
+      notice(tr('Signed in as {0}', [me.name]));
       unawaited(sync(likes: me.likes));
     } catch (e) {
       logError('Google sign-in failed', e);
@@ -163,7 +163,7 @@ class AccountController extends ChangeNotifier {
       likesPlaylist = likesId;
       final remote = await api.playlists();
       final mirrored = <String, ({String name, List<VideoItem> items})>{};
-      if (likesId != null) mirrored[likesId] = (name: tr('喜欢的视频'), items: await api.playlistItems(likesId));
+      if (likesId != null) mirrored[likesId] = (name: tr('Liked videos'), items: await api.playlistItems(likesId));
       for (final playlist in remote) {
         mirrored[playlist.id] = (name: playlist.title, items: playlist.count == 0 ? const [] : await api.playlistItems(playlist.id));
       }
@@ -171,7 +171,7 @@ class AccountController extends ChangeNotifier {
       lastSync = DateTime.now();
       await _save();
       logInfo('YouTube sync done: ${channels.length} subscriptions, ${mirrored.length} playlists');
-      notice(tr('同步完成：{0} 个订阅（新增 {1} 个），{2} 个播放列表', [channels.length, added, mirrored.length]));
+      notice(tr('Sync complete: {0} subscriptions ({1} new), {2} playlists', [channels.length, added, mirrored.length]));
     } catch (e) {
       logError('YouTube sync failed', e);
       if (!(e is OAuthException && e.revoked)) error = '$e';
@@ -228,9 +228,9 @@ class AccountController extends ChangeNotifier {
       await _api.rate(item.id, next);
       _mirrorLike(item, next == VideoRating.like);
       notice(switch (next) {
-        VideoRating.like => tr('已点赞'),
-        VideoRating.dislike => tr('已点踩，YouTube 会减少类似推荐'),
-        VideoRating.none => tr('已取消'),
+        VideoRating.like => tr('Liked'),
+        VideoRating.dislike => tr('Disliked. YouTube will show fewer similar recommendations'),
+        VideoRating.none => tr('Canceled'),
       });
     } catch (e) {
       _ratings[item.id] = previous;
@@ -240,7 +240,7 @@ class AccountController extends ChangeNotifier {
         notifyListeners();
         return;
       }
-      _failed(tr('操作失败'), e);
+      _failed(tr('Action failed'), e);
     }
   }
 
@@ -264,10 +264,10 @@ class AccountController extends ChangeNotifier {
       } else {
         await _api.reply(parentId, text.trim());
       }
-      notice(parentId == null ? tr('评论已发布') : tr('回复已发布'));
+      notice(parentId == null ? tr('Comment posted') : tr('Reply posted'));
       return true;
     } catch (e) {
-      _failed(tr('发布失败'), e);
+      _failed(tr("Couldn't post"), e);
       return false;
     }
   }
@@ -278,7 +278,7 @@ class AccountController extends ChangeNotifier {
     try {
       return await _api.playlists();
     } catch (e) {
-      _failed(tr('无法读取 YouTube 播放列表'), e);
+      _failed(tr("Couldn't read YouTube playlists"), e);
       return const [];
     }
   }
@@ -292,9 +292,9 @@ class AccountController extends ChangeNotifier {
       await _api.addToPlaylist(target.id, item.id);
       final local = library.playlists.where((p) => p.id == '${LibraryController.remotePrefix}${target.id}').firstOrNull;
       library.mirrorRemotePlaylist(target.id, target.title, [...?local?.items.where((v) => v.id != item.id), item]);
-      notice(tr('已保存到 YouTube 播放列表“{0}”', [target.title]));
+      notice(tr('Saved to YouTube playlist "{0}"', [target.title]));
     } catch (e) {
-      _failed(tr('保存失败'), e);
+      _failed(tr('Save failed'), e);
     }
   }
 
@@ -308,19 +308,19 @@ class AccountController extends ChangeNotifier {
         await _api.unsubscribe(channel.id);
       }
     } catch (e) {
-      _failed(subscribed ? tr('YouTube 订阅失败') : tr('取消 YouTube 订阅失败'), e);
+      _failed(subscribed ? tr('YouTube subscription failed') : tr("Couldn't unsubscribe on YouTube"), e);
     }
   }
 
   bool _writable() {
     if (canWrite) return true;
-    notice(signedIn ? tr('需要重新登录 Google 账号，授予点赞、评论等权限') : tr('请先在设置里登录 Google 账号'));
+    notice(signedIn ? tr('Sign in to Google again to grant permissions for likes, comments and more') : tr('Sign in to your Google account in Settings first'));
     return false;
   }
 
   void _failed(String what, Object e) {
     logError(what, e);
-    notice('$what：$e');
+    notice(tr('{0}: {1}', [what, e]));
     notifyListeners();
   }
 
@@ -334,7 +334,7 @@ class AccountController extends ChangeNotifier {
     if (tokens != null && !tokens.expired) return tokens.accessToken;
     final refreshToken = _refreshToken;
     final config = client;
-    if (refreshToken == null || config == null) throw OAuthException(tr('请先登录 Google 账号'));
+    if (refreshToken == null || config == null) throw OAuthException(tr('Sign in to your Google account first'));
     try {
       final fresh = await GoogleAuth(config, _client).refresh(refreshToken);
       _tokens = fresh;
@@ -349,7 +349,7 @@ class AccountController extends ChangeNotifier {
   /// why, rather than as signed in with nothing working.
   Future<void> _expired() async {
     logWarn('Google sign-in expired or was revoked');
-    await signOut(reason: tr('Google 登录已失效，请重新登录'));
+    await signOut(reason: tr('Google sign-in has expired. Please sign in again'));
   }
 
   Future<void> _save() async {
@@ -364,7 +364,7 @@ class AccountController extends ChangeNotifier {
         if (likesPlaylist != null) 'likes': likesPlaylist,
       });
     } on FileSystemException catch (e) {
-      error = tr('无法保存登录凭据：{0}', [e.message]);
+      error = tr("Couldn't save sign-in credentials: {0}", [e.message]);
     }
   }
 

@@ -35,7 +35,7 @@ class ToolManager {
   final void Function(String shown, String logged) report;
   ToolManager(this.directories, this.report);
 
-  void status(String zh, [List<Object?> args = const []]) => report(tr(zh, args), trLog(zh, args));
+  void status(String text, [List<Object?> args = const []]) => report(tr(text, args), trLog(text, args));
 
   late final Directory root;
   late final LibmpvState libmpv;
@@ -73,7 +73,7 @@ class ToolManager {
   String? mpvVersion;
 
   /// The libmpv in use, for the status bar and settings.
-  String get libmpvLabel => _systemMpv ? mpvVersion ?? 'libmpv' : 'libmpv ${libmpv.current?.label ?? tr('内置')}';
+  String get libmpvLabel => _systemMpv ? mpvVersion ?? 'libmpv' : 'libmpv ${libmpv.current?.label ?? tr('Built-in')}';
 
   Future<void> initialize() async {
     root = directories.components;
@@ -99,7 +99,7 @@ class ToolManager {
     final mpv = _systemMpv ? _linuxMpv : libmpv.loadedPath ?? _bundledMpv;
     if (!_systemMpv && !File(mpv).existsSync()) throw StateError('Bundled libmpv-2.dll is missing. Re-download the Lumtub package.');
     if (discover()?.ytDlp.isNotEmpty != true) {
-      status('首次启动：安装 yt-dlp…');
+      status('First launch: installing yt-dlp…');
       await _installYtDlp();
     }
     // Deno is needed by some YouTube JavaScript challenge paths. Optional at startup.
@@ -109,14 +109,14 @@ class ToolManager {
     final failedAt = denoFailed.existsSync() ? denoFailed.lastModifiedSync() : null;
     if (discover()?.deno == null && (failedAt == null || DateTime.now().difference(failedAt) > const Duration(hours: 6))) {
       try {
-        status('安装 YouTube 解析所需的 Deno…');
+        status('Installing Deno, needed for YouTube extraction…');
         await _installDeno();
         if (denoFailed.existsSync()) denoFailed.deleteSync();
       } catch (e) {
         try {
           denoFailed.writeAsStringSync('$e');
         } catch (_) {}
-        status('Deno 暂时不可用，可以稍后从工具更新中重试：{0}', [e]);
+        status('Deno is unavailable for now. You can retry later from tool updates: {0}', [e]);
       }
     }
     final ready = discover();
@@ -228,7 +228,7 @@ class ToolManager {
       ('ffmpeg', () => installFfmpeg(onlyIfInstalled: true)),
     ]) {
       try {
-        status('检查 {0} 更新…', [task.$1]);
+        status('Check for {0} updates…', [task.$1]);
         await task.$2();
       } catch (e) {
         errors.add('${task.$1}: $e');
@@ -236,10 +236,10 @@ class ToolManager {
     }
     if (errors.isEmpty) {
       await stamp.writeAsString(DateTime.now().toIso8601String());
-      status('更新检查完成。如有新版，重启应用后启用。');
+      status('Update check complete. New versions take effect after restarting the app.');
     } else {
       await stamp.writeAsString('${DateTime.now().toIso8601String()} failed');
-      status('部分组件更新失败，现有版本不受影响：{0}', [errors.join(' / ')]);
+      status('Some components failed to update; current versions are unaffected: {0}', [errors.join(' / ')]);
     }
   }
 
@@ -401,7 +401,7 @@ class ToolManager {
       if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
       if (await File('${dest.path}$_separator${_exe('yt-dlp')}').exists()) return;
     }
-    status('下载 yt-dlp {0}…', [tag]);
+    status('Downloading yt-dlp {0}…', [tag]);
     final partial = Directory('${dest.path}.partial');
     if (await partial.exists()) await partial.delete(recursive: true);
     try {
@@ -491,7 +491,7 @@ class ToolManager {
       final names = (release['assets'] as List? ?? const []).whereType<Map>().map((asset) => asset['name']?.toString() ?? '');
       final assetName = libmpvAssetName(names, build.variant);
       if (assetName == null) throw StateError('No libmpv archive for this CPU in $tag');
-      status('下载 libmpv {0}…', [build.label]);
+      status('Downloading libmpv {0}…', [build.label]);
       final archive = await _downloadVerified(_asset(release, (name) => name == assetName), Directory('${root.path}${_separator}downloads'));
       final partial = Directory('${dest.path}.partial');
       if (await partial.exists()) await partial.delete(recursive: true);
@@ -503,7 +503,7 @@ class ToolManager {
           // Windows before 11 23H2 has no 7z support in tar.exe; do not
           // download every new release only to fail again.
           await no7z.writeAsString(DateTime.now().toIso8601String());
-          throw StateError(tr('此版本 Windows 无法解压 7z，继续使用内置 libmpv'));
+          throw StateError(tr("This version of Windows can't extract 7z files. Still using the built-in libmpv"));
         }
         final found = partial.listSync(recursive: true).whereType<File>().where((f) => f.path.toLowerCase().endsWith('${_separator}libmpv-2.dll'));
         if (found.isEmpty) throw StateError('libmpv archive $tag has no libmpv-2.dll');
@@ -531,7 +531,7 @@ class ToolManager {
     final tag = _safeTag(release['tag_name']);
     final dest = Directory('${root.path}${Platform.pathSeparator}deno${Platform.pathSeparator}$tag');
     if (await File('${dest.path}$_separator${_exe('deno')}').exists()) return;
-    status('下载 Deno {0}…', [tag]);
+    status('Downloading Deno {0}…', [tag]);
     final target = Platform.isWindows
         ? 'x86_64-pc-windows-msvc'
         : Platform.isMacOS
@@ -634,7 +634,7 @@ class ToolManager {
     if (onlyIfInstalled && ffmpegDirectory == null) return;
     if (Platform.isMacOS) {
       if (bundledFfmpegDirectory != null) return;
-      throw StateError(tr('安装包不完整：缺少 ffmpeg。请重新安装 Lumtub。'));
+      throw StateError(tr('The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.'));
     }
     if (!Platform.isWindows) return _installLinuxFfmpeg(onProgress);
     if (!await _no7z.exists()) {
@@ -667,7 +667,7 @@ class ToolManager {
     final folder = zhongflyFfmpegFolderName(asset['name'].toString(), tag);
     final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
     if (await File('${dest.path}${_separator}ffmpeg.exe').exists()) return;
-    status('下载 ffmpeg {0}…', [folder]);
+    status('Downloading ffmpeg {0}…', [folder]);
     // Checked against the SHA-256 digest GitHub lists for the asset.
     final archive = await _downloadVerified(asset, Directory('${root.path}${_separator}downloads'), onProgress: onProgress);
     final partial = Directory('${dest.path}.partial');
@@ -704,7 +704,7 @@ class ToolManager {
     final folder = ffmpegFolderName(assetName, asset['updated_at']?.toString());
     final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
     if (await File('${dest.path}${_separator}ffmpeg.exe').exists()) return;
-    status('下载 ffmpeg {0}…', [folder]);
+    status('Downloading ffmpeg {0}…', [folder]);
     // The hash comes from the checksum file of the same release, over HTTPS.
     final sums = await _client.get(_assetUri(_asset(release, (name) => name == ffmpegChecksumsAsset)), headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 30));
     if (sums.statusCode != 200) throw HttpException('Checksum file HTTP ${sums.statusCode}');
@@ -739,7 +739,7 @@ class ToolManager {
     final folder = ffmpegFolderName(assetName, asset['updated_at']?.toString());
     final dest = Directory('${root.path}${_separator}ffmpeg$_separator$folder');
     if (await File('${dest.path}${_separator}ffmpeg').exists()) return;
-    status('下载 ffmpeg {0}…', [folder]);
+    status('Downloading ffmpeg {0}…', [folder]);
     final sums = await _client.get(_assetUri(_asset(release, (name) => name == ffmpegChecksumsAsset)), headers: {'User-Agent': _userAgent}).timeout(const Duration(seconds: 30));
     if (sums.statusCode != 200) throw HttpException('Checksum file HTTP ${sums.statusCode}');
     final expected = parseChecksums(sums.body)[assetName];

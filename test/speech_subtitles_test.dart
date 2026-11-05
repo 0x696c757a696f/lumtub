@@ -52,9 +52,9 @@ void main() {
       }
     }
 
-    expect(await failure(401, {}), '语音识别接口密钥无效');
-    expect(await failure(429, {}), '语音识别接口请求太频繁或额度用完了，稍后再试');
-    expect(await failure(200, {'text': 'only text'}), '这个语音识别服务不返回时间轴，无法生成字幕');
+    expect(await failure(401, {}), 'The speech recognition key is not valid');
+    expect(await failure(429, {}), 'Too many speech recognition requests or the quota is used up; try again later');
+    expect(await failure(200, {'text': 'only text'}), 'This speech recognition service returns no timing, so it cannot make subtitles');
   });
 
   test('reads where each part starts from ffmpeg\'s segment list', () {
@@ -105,7 +105,7 @@ void main() {
   test('a recognized track is the original and can be translated', () async {
     final file = File('${dir.path}/vid.en.vtt')..writeAsStringSync('WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nhello\n');
     final speech = SubtitleOption(language: 'en', name: '', url: file.uri.toString(), kind: SubtitleKind.speech);
-    expect(speech.label, contains('语音识别'));
+    expect(speech.label, contains('speech recognition'));
     expect(originalSubtitle([speech], language: null), same(speech));
     final translated = translationOf([speech], TranslationLanguage.all.firstWhere((l) => l.code == 'zh-CN'))!;
     final files = SubtitleFiles(MockClient((_) async => http.Response('', 500)), Directory('${dir.path}/subs'), _Upper.new);

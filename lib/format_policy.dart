@@ -142,14 +142,14 @@ class FormatPolicy {
   static String? formatSort(PlayerSettings settings) => _policy(settings).formatSort;
 
   /// Names of the disabled codecs, e.g. `AV1、VP9`, or empty.
-  static String disabledNames(PlayerSettings settings) => [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.label].join('、');
+  static String disabledNames(PlayerSettings settings) => [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.label].join(tr(', '));
 
   /// A one-line summary of the rule in force, for the settings page.
   static String summary(PlayerSettings settings) {
     final disabled = disabledNames(settings);
-    final order = settings.strategy == PlaybackStrategy.quality ? tr('按分辨率和帧率择优') : [for (final c in codecOrder(settings)) c.label].join(' › ');
-    final rule = tr('当前规则：{0}，编码顺序 {1}', [settings.strategy.label, order.isEmpty ? tr('无') : order]);
-    return disabled.isEmpty ? rule : '$rule${tr('，已禁用 {0}', [disabled])}';
+    final order = settings.strategy == PlaybackStrategy.quality ? tr('best resolution and frame rate first') : [for (final c in codecOrder(settings)) c.label].join(' › ');
+    final rule = tr('Current rule: {0}, codec order {1}', [settings.strategy.label, order.isEmpty ? tr('None') : order]);
+    return disabled.isEmpty ? rule : '$rule${tr(', disabled: {0}', [disabled])}';
   }
 }
 

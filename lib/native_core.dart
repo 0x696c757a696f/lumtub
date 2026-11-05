@@ -238,7 +238,7 @@ class NativeCore {
   static String get fileName => Platform.isWindows ? 'lumtub_core.dll' : Platform.isMacOS ? 'liblumtub_core.dylib' : 'liblumtub_core.so';
 
   /// What Lumtub says when the library is missing.
-  static String get missingMessage => tr('安装包不完整：缺少 {0}，推荐和屏蔽不可用，画质只能按默认选择。请重新安装 Lumtub。', [fileName]);
+  static String get missingMessage => tr('This install is incomplete: {0} is missing, so recommendations and blocking are off and quality uses the defaults. Please reinstall Lumtub.', [fileName]);
 
   static NativeCore? _load() {
     final paths = [

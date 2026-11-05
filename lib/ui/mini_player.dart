@@ -264,8 +264,8 @@ class _Controls extends StatelessWidget {
         Row(children: [
           const SizedBox(width: 8),
           Expanded(child: IgnorePointer(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12)))),
-          _button(tr('展开到播放页'), AppIcons.arrowsOutSimple, controller.expandMini, 18),
-          _button(tr('关闭小窗并停止播放'), AppIcons.x, controller.stopWatching, 18),
+          _button(tr('Back to the watch page'), AppIcons.arrowsOutSimple, controller.expandMini, 18),
+          _button(tr('Close the mini player and stop playback'), AppIcons.x, controller.stopWatching, 18),
         ]),
       ]),
       Expanded(
@@ -274,7 +274,7 @@ class _Controls extends StatelessWidget {
             stream: player.stream.playing,
             initialData: player.state.playing,
             builder: (context, snapshot) => _button(
-              tr('播放/暂停 (空格)'),
+              tr('Play/Pause (Space)'),
               snapshot.data == true ? AppIcons.pauseCircle : AppIcons.playCircleFill,
               () => unawaited(player.playOrPause()),
               40,

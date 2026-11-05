@@ -60,7 +60,7 @@ void main() {
     // 新人新作: this week, videos only.
     expect(base64.decode(exploreParams(ExploreMode.fresh).replaceAll('%253D', '=')), [0x12, 4, 0x08, 3, 0x10, 1]);
     // 全球热门 is a mix of the video zones, after 全部.
-    expect(popularTopics.take(2).map((t) => (t.label, t.mix, t.global)), [('全部', true, false), ('全球热门', true, true)]);
+    expect(popularTopics.take(2).map((t) => (t.label, t.mix, t.global)), [('All', true, false), ('Global trending', true, true)]);
     final hdr = base64.decode(searchParams(quality: SearchQuality.hdr)!.replaceAll('%253D', '='));
     expect(hdr, [0x12, 3, 0xC8, 0x01, 1]);
     final uhd = base64.decode(exploreParams(ExploreMode.liveViewers, quality: SearchQuality.uhd).replaceAll('%253D', '='));
@@ -97,15 +97,15 @@ void main() {
   });
 
   test('宗教与信仰 has four tabs of zones, with Christianity split twice', () {
-    expect(ExploreSection.faithTabs.map((s) => s.label), ['宗教传统', '宗教学术', '文化艺术', '宗教直播']);
+    expect(ExploreSection.faithTabs.map((s) => s.label), ['Traditions', 'Study', 'Culture & art', 'Faith live']);
     final christian = faithTraditionTopics.first;
-    expect(christian.label, '基督宗教');
-    expect(christian.subs.map((s) => s.label), ['天主教', '东正教', '新教', '东方正统教会', '其他基督宗教']);
+    expect(christian.label, 'Christianity');
+    expect(christian.subs.map((s) => s.label), ['Catholic', 'Eastern Orthodox', 'Protestant', 'Oriental Orthodox', 'Other Christian']);
     final catholic = christian.subs.first;
-    expect(catholic.subs.map((s) => s.label), containsAll(['教宗讲话', '梵蒂冈新闻', '弥撒', '圣事', '圣人传记', '修会生活', '教会音乐']));
-    expect(christian.subs[2].subs.map((s) => s.label), containsAll(['路德宗', '改革宗', '圣公会', '卫理宗', '浸信会', '五旬节派', '福音派']));
-    expect(faithTraditionTopics.map((t) => t.label), containsAll(['伊斯兰教', '佛教', '道教与中国传统信仰', '印度教', '犹太教', '其他宗教']));
-    expect(faithStudyTopics.map((t) => t.label), containsAll(['宗教历史', '宗教哲学', '比较宗教学', '宗教与社会', '无神论与宗教批评', '宗教对话']));
+    expect(catholic.subs.map((s) => s.label), containsAll(["The Pope's words", 'Vatican news', 'Mass', 'Sacraments', 'Lives of the saints', 'Religious life', 'Church music']));
+    expect(christian.subs[2].subs.map((s) => s.label), containsAll(['Lutheran', 'Reformed', 'Anglican', 'Methodist', 'Baptist', 'Pentecostal', 'Evangelical']));
+    expect(faithTraditionTopics.map((t) => t.label), containsAll(['Islam', 'Buddhism', 'Taoism & Chinese religion', 'Hinduism', 'Judaism', 'Other religions']));
+    expect(faithStudyTopics.map((t) => t.label), containsAll(['Religious history', 'Philosophy of religion', 'Comparative religion', 'Religion and society', 'Atheism and critique', 'Dialogue']));
     expect(faithLiveTopics, hasLength(10));
     for (final section in ExploreSection.values) {
       final topics = exploreTopicsOf(section);
@@ -118,7 +118,7 @@ void main() {
       }
     }
     // Among the video zones, 宗教信仰 opens the tabs.
-    expect(popularTopics.singleWhere((t) => t.label == '宗教信仰').opens, ExploreSection.faith);
+    expect(popularTopics.singleWhere((t) => t.label == 'Religion & faith').opens, ExploreSection.faith);
     expect(ExploreMode.of(ExploreSection.faith).first, ExploreMode.curated);
     expect(ExploreMode.of(ExploreSection.popular), isNot(contains(ExploreMode.curated)));
     expect(ExploreMode.of(ExploreSection.faithLive), [ExploreMode.liveViewers, ExploreMode.liveLatest, ExploreMode.liveUpcoming, ExploreMode.liveReplay]);
@@ -143,7 +143,7 @@ void main() {
 
   test('blocked groups show in a search only for the exact channel name, and the setting turns it off', () {
     VideoItem video(String id, String title, String channel) => VideoItem(id: id.padRight(11, '0'), title: title, channel: channel, url: '');
-    final items = [video('a', '新闻', 'NTD Television'), video('b', 'Shen Yun 2026', 'Shen Yun Performing Arts'), video('c', '弥撒', 'EWTN')];
+    final items = [video('a', 'News', 'NTD Television'), video('b', 'Shen Yun 2026', 'Shen Yun Performing Arts'), video('c', 'Mass', 'EWTN')];
     final controller = AppController();
     String ids(List<VideoItem> list) => list.map((v) => v.id[0]).join();
     expect(ids(controller.visible(items)), 'c');
@@ -279,7 +279,7 @@ void main() {
     expect(arrangeTopics(topics, const [], {'A', 'B', 'C', 'D'}).map((t) => t.label), ['A']);
   });
 
-  test('custom zones, order and hidden zones round-trip through the preferences', () {
+  test('custom zones, order and hidden zones round-trip through the preferences, Chinese zone keys saved before too', () {
     const prefs = AppPreferences(
       exploreCustomTopics: [CustomTopic('额我略圣歌', 'Gregorian chant', ExploreSection.popular), CustomTopic('朝拜圣体', 'Eucharistic adoration live', ExploreSection.live)],
       exploreOrder: {'popular': ['宗教信仰', 'custom:额我略圣歌']},
@@ -290,8 +290,11 @@ void main() {
       ('额我略圣歌', 'Gregorian chant', ExploreSection.popular),
       ('朝拜圣体', 'Eucharistic adoration live', ExploreSection.live),
     ]);
-    expect(back.exploreOrder, {'popular': ['宗教信仰', 'custom:额我略圣歌']});
-    expect(back.exploreHidden, {'popular': ['游戏']});
+    // Zones saved by their Chinese names before the interface was in English
+    // come back under their keys now; custom zones keep the name typed.
+    expect(back.exploreOrder, {'popular': ['Religion & faith', 'custom:额我略圣歌']});
+    expect(back.exploreHidden, {'popular': ['Gaming']});
+    expect(arrangeTopics(popularTopics, back.exploreOrder['popular']!, back.exploreHidden['popular']!.toSet()).first.label, 'Religion & faith');
     final live = exploreTopicsOf(ExploreSection.live, back.exploreCustomTopics);
     expect(live.last.label, '朝拜圣体');
     expect(live.last.custom, isTrue);
@@ -313,41 +316,41 @@ void main() {
     final controller = await _open(tester);
     // 全部 comes first: a mix of zones, with 换一批.
     expect(controller.exploreTopicNow.mix, isTrue);
-    expect(find.text('换一批'), findsOneWidget);
-    await tester.tap(find.text('知识教育'));
+    expect(find.text('Shuffle'), findsOneWidget);
+    await tester.tap(find.text('Education'));
     await tester.pump();
-    expect(find.text('知识教育 · 本月观看最多'), findsOneWidget);
-    expect(find.text('换一批'), findsNothing);
+    expect(find.text('Education · most watched This month'), findsOneWidget);
+    expect(find.text('Shuffle'), findsNothing);
 
-    await tester.tap(find.text('历史'));
+    await tester.tap(find.text('History'));
     await tester.pump();
     expect(controller.exploreQuery, '历史 纪录片');
-    expect(find.text('知识教育 · 历史 · 本月观看最多'), findsOneWidget);
+    expect(find.text('Education · History · most watched This month'), findsOneWidget);
 
-    await tester.tap(find.text('最新'));
+    await tester.tap(find.text('Latest'));
     await tester.pump();
     expect(controller.exploreMode, ExploreMode.latest);
     expect(controller.exploreSub, 2);
 
-    await _reveal(tester, '游戏');
-    await tester.tap(find.text('游戏'));
+    await _reveal(tester, 'Gaming');
+    await tester.tap(find.text('Gaming'));
     await tester.pump();
     expect(controller.exploreSub, 0);
-    await tester.tap(find.text('攻略'));
+    await tester.tap(find.text('Guides'));
     await tester.pump();
     expect(controller.exploreQuery, '游戏攻略');
     expect(controller.exploreMode, ExploreMode.latest);
 
-    await tester.tap(find.text('直播').first);
+    await tester.tap(find.text('Live').first);
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreSection, ExploreSection.live);
     expect(controller.exploreMode, ExploreMode.liveViewers);
-    expect(find.text('全部直播 · 按观看人数排列'), findsOneWidget);
-    expect(find.text('换一批'), findsOneWidget);
-    expect(find.text('本月'), findsNothing);
+    expect(find.text('All live · By viewers'), findsOneWidget);
+    expect(find.text('Shuffle'), findsOneWidget);
+    expect(find.text('This month'), findsNothing);
 
-    await _reveal(tester, '电台助眠');
-    await tester.tap(find.text('电台助眠'));
+    await _reveal(tester, 'Radio for sleep');
+    await tester.tap(find.text('Radio for sleep'));
     await tester.pump();
     await tester.tap(find.text('Lo-Fi'));
     await tester.pump();
@@ -357,153 +360,153 @@ void main() {
 
   testWidgets('宗教与信仰: tabs, three levels, filters and stream states', (tester) async {
     final controller = await _open(tester);
-    await tester.tap(find.text('知识教育'));
+    await tester.tap(find.text('Education'));
     await tester.pump();
-    await tester.tap(find.text('数学'));
+    await tester.tap(find.text('Math'));
     await tester.pump();
-    await _reveal(tester, '宗教信仰');
-    await tester.tap(find.text('宗教信仰'));
+    await _reveal(tester, 'Religion & faith');
+    await tester.tap(find.text('Religion & faith'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreSection, ExploreSection.faith);
     expect(controller.exploreMode, ExploreMode.curated);
-    expect(controller.exploreTopicNow.label, '基督宗教');
-    expect(find.text('宗教学术'), findsOneWidget);
+    expect(controller.exploreTopicNow.label, 'Christianity');
+    expect(find.text('Study'), findsOneWidget);
 
-    await tester.tap(find.text('天主教'));
+    await tester.tap(find.text('Catholic'));
     await tester.pump();
-    expect(find.text('全部天主教'), findsOneWidget);
-    await tester.tap(find.text('弥撒'));
+    expect(find.text('All Catholic'), findsOneWidget);
+    await tester.tap(find.text('Mass'));
     await tester.pump();
     expect(controller.exploreQuery, 'Holy Mass 弥撒');
-    expect(find.text('基督宗教 · 天主教 · 弥撒 · 相关度高的完整内容，少标题党，每个频道最多 3 个'), findsOneWidget);
+    expect(find.text('Christianity · Catholic · Mass · Relevant full-length videos, less clickbait, up to 3 per channel'), findsOneWidget);
 
-    await tester.tap(find.text('类型'));
+    await tester.tap(find.text('Type'));
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(find.text('纪录片').last);
+    await tester.tap(find.text('Documentary').last);
     await tester.pump(const Duration(milliseconds: 300));
     expect(controller.exploreQuery, 'Holy Mass 弥撒 documentary 纪录片');
 
     // Another sub-category starts on all of it.
-    await tester.tap(find.text('新教'));
+    await tester.tap(find.text('Protestant'));
     await tester.pump();
     expect(controller.exploreLeaf, 0);
-    expect(find.text('福音派'), findsOneWidget);
+    expect(find.text('Evangelical'), findsOneWidget);
 
-    await tester.tap(find.text('宗教学术'));
+    await tester.tap(find.text('Study'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreSection, ExploreSection.faithStudy);
     expect(controller.exploreMode, ExploreMode.curated);
-    expect(controller.exploreTopicNow.label, '精选专题');
+    expect(controller.exploreTopicNow.label, 'Featured');
 
-    await tester.tap(find.text('宗教直播'));
+    await tester.tap(find.text('Faith live'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreMode, ExploreMode.liveViewers);
     // The 类型 picked for videos applies to live streams too.
     expect(controller.exploreFormat, FaithFormat.documentary);
-    await tester.tap(find.text('纪录片').first);
+    await tester.tap(find.text('Documentary').first);
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(find.text('不限').last);
+    await tester.tap(find.text('Any').last);
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(find.text('即将开播'));
+    await tester.tap(find.text('Upcoming'));
     await tester.pump();
     expect(controller.exploreMode, ExploreMode.liveUpcoming);
     expect(controller.exploreQuery, 'Holy Mass live 弥撒 直播');
 
     // Back to the video zones, on the one shown before.
-    await tester.tap(find.text('全部分区'));
+    await tester.tap(find.text('All categories'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreSection, ExploreSection.popular);
     expect(controller.exploreMode, ExploreMode.popular);
-    expect(controller.exploreTopicNow.label, '知识教育');
+    expect(controller.exploreTopicNow.label, 'Education');
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('every zone has 类型 and 视角, with lists of its own outside 宗教与信仰', (tester) async {
     final controller = await _open(tester);
-    await tester.tap(find.text('知识教育'));
+    await tester.tap(find.text('Education'));
     await tester.pump();
-    await tester.tap(find.text('类型'));
+    await tester.tap(find.text('Type'));
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(find.text('教程').last);
+    await tester.tap(find.text('Tutorials').last);
     await tester.pump(const Duration(milliseconds: 300));
     expect(controller.exploreQuery, endsWith('tutorial 教程'));
-    await tester.tap(find.text('视角'));
+    await tester.tap(find.text('Viewpoint'));
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(find.text('入门科普').last);
+    await tester.tap(find.text('Beginner-friendly').last);
     await tester.pump(const Duration(milliseconds: 300));
     expect(controller.exploreQuery, endsWith('tutorial 教程 beginner explained 入门'));
     // 直播 keeps them.
-    await tester.tap(find.text('直播').first);
+    await tester.tap(find.text('Live').first);
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreFormat, ContentFormat.tutorial);
-    expect(find.text('教程'), findsOneWidget);
+    expect(find.text('Tutorials'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('a wide window lists the zones down the left', (tester) async {
     final controller = await _open(tester, width: 1280);
-    final first = tester.getTopLeft(find.text('全部').first);
-    final second = tester.getTopLeft(find.text('知识教育').first);
+    final first = tester.getTopLeft(find.text('All').first);
+    final second = tester.getTopLeft(find.text('Education').first);
     expect(first.dx, lessThan(TopicStrip.railWidth));
     expect(second.dx, first.dx);
     expect(second.dy, greaterThan(first.dy));
-    expect(find.text('管理'), findsOneWidget);
-    await tester.tap(find.text('知识教育').first);
+    expect(find.text('Manage'), findsOneWidget);
+    await tester.tap(find.text('Education').first);
     await tester.pump();
-    expect(controller.exploreTopicNow.label, '知识教育');
+    expect(controller.exploreTopicNow.label, 'Education');
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('adds and removes a custom zone', (tester) async {
     final controller = await _open(tester);
-    await _reveal(tester, '添加');
-    await tester.tap(find.text('添加'));
+    await _reveal(tester, 'Add');
+    await tester.tap(find.text('Add'));
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('添加分类'), findsOneWidget);
+    expect(find.text('Add category'), findsOneWidget);
     final fields = find.descendant(of: find.byType(AlertDialog), matching: find.byType(TextField));
-    await tester.enterText(fields.at(0), '额我略圣歌');
+    await tester.enterText(fields.at(0), 'Chant');
     await tester.enterText(fields.at(1), 'Gregorian chant');
     await tester.pump();
-    await tester.tap(find.widgetWithText(FilledButton, '添加'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Add'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(controller.preferences.exploreCustomTopics.single.query, 'Gregorian chant');
-    expect(controller.exploreTopicNow.label, '额我略圣歌');
+    expect(controller.exploreTopicNow.label, 'Chant');
     expect(controller.exploreQuery, 'Gregorian chant');
 
-    await _reveal(tester, '额我略圣歌');
-    await tester.longPress(find.text('额我略圣歌').last);
+    await _reveal(tester, 'Chant');
+    await tester.longPress(find.text('Chant').last);
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(find.widgetWithText(TextButton, '删除'));
+    await tester.tap(find.widgetWithText(TextButton, 'Delete'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(controller.preferences.exploreCustomTopics, isEmpty);
-    expect(controller.exploreTopicNow.label, '全部');
+    expect(controller.exploreTopicNow.label, 'All');
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('pins and hides zones from the manage dialog', (tester) async {
     final controller = await _open(tester);
-    await _reveal(tester, '管理');
-    await tester.tap(find.text('管理'));
+    await _reveal(tester, 'Manage');
+    await tester.tap(find.text('Manage'));
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('管理视频分区'), findsOneWidget);
+    expect(find.text('Manage Videos categories'), findsOneWidget);
 
     // Hide the first zone, then pin 游戏 to the front.
     await tester.tap(find.byType(Switch).first);
     await tester.pump();
-    final faith = find.ancestor(of: find.text('游戏'), matching: find.byType(ListTile));
+    final faith = find.ancestor(of: find.text('Gaming'), matching: find.byType(ListTile));
     await tester.ensureVisible(faith);
     await tester.pump();
-    await tester.tap(find.descendant(of: faith, matching: find.byTooltip('置顶')));
+    await tester.tap(find.descendant(of: faith, matching: find.byTooltip('Pinned')));
     await tester.pump();
-    await tester.tap(find.widgetWithText(FilledButton, '保存'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
     await tester.pump(const Duration(milliseconds: 300));
 
     final topics = controller.exploreTopicsFor(ExploreSection.popular);
-    expect(topics.first.label, '游戏');
-    expect(topics.map((t) => t.label), isNot(contains('全部')));
-    expect(controller.preferences.exploreHidden['popular'], ['全部']);
+    expect(topics.first.label, 'Gaming');
+    expect(topics.map((t) => t.label), isNot(contains('All')));
+    expect(controller.preferences.exploreHidden['popular'], ['All']);
     // The zone shown was hidden, so the strip starts over on its first.
-    expect(controller.exploreTopicNow.label, '游戏');
+    expect(controller.exploreTopicNow.label, 'Gaming');
     expect(tester.takeException(), isNull);
   });
 }

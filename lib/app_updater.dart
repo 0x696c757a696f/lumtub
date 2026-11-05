@@ -213,7 +213,7 @@ class AppUpdater extends ChangeNotifier {
         if (result == null) throw StateError('No native core');
         if (result['ok'] != true) {
           logWarn('Could not start the Lumtub installer${result['elevated'] == true ? ' as administrator' : ''}: ${result['error']}');
-          installError = result['elevated'] == true ? tr('需要管理员权限才能安装到这个文件夹') : '${result['error']}';
+          installError = result['elevated'] == true ? tr('Administrator rights are needed to install into this folder') : '${result['error']}';
           notifyListeners();
           return false;
         }

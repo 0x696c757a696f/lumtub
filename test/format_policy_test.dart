@@ -193,9 +193,9 @@ void main() {
 
     test('summary and names list them', () {
       const settings = PlayerSettings(disabledCodecs: {VideoCodec.vp9, VideoCodec.av1});
-      expect(FormatPolicy.disabledNames(settings), 'AV1、VP9');
-      expect(FormatPolicy.summary(settings), contains('已禁用 AV1、VP9'));
-      expect(FormatPolicy.summary(const PlayerSettings(disabledCodecs: {})), isNot(contains('已禁用')));
+      expect(FormatPolicy.disabledNames(settings), 'AV1, VP9');
+      expect(FormatPolicy.summary(settings), contains('disabled: AV1, VP9'));
+      expect(FormatPolicy.summary(const PlayerSettings(disabledCodecs: {})), isNot(contains('disabled')));
     });
   });
 

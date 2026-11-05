@@ -10,15 +10,15 @@ import 'theme.dart';
 
 /// How long until a stream starts, as the card's headline.
 String startsIn(Duration? left) {
-  if (left == null || left < const Duration(seconds: 1)) return tr('即将开始');
+  if (left == null || left < const Duration(seconds: 1)) return tr('Starting soon');
   final days = left.inDays;
   final hours = left.inHours.remainder(24);
   final minutes = left.inMinutes.remainder(60);
   final seconds = left.inSeconds.remainder(60);
-  if (days > 0) return tr('{0} 天 {1} 小时后开始', [days, hours]);
-  if (left.inHours > 0) return tr('{0} 小时 {1} 分后开始', [left.inHours, minutes]);
-  if (minutes > 0) return tr('{0} 分 {1} 秒后开始', [minutes, seconds]);
-  return tr('{0} 秒后开始', [seconds]);
+  if (days > 0) return tr('Starts in {0} d {1} h', [days, hours]);
+  if (left.inHours > 0) return tr('Starts in {0} h {1} min', [left.inHours, minutes]);
+  if (minutes > 0) return tr('Starts in {0} min {1} s', [minutes, seconds]);
+  return tr('Starts in {0} s', [seconds]);
 }
 
 /// Covers the player while a live stream or premiere has not started: its
@@ -89,18 +89,18 @@ class _UpcomingCardState extends State<UpcomingCard> {
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   const Icon(AppIcons.broadcast, size: 16, color: white),
                   const SizedBox(width: 4),
-                  Text(tr('直播预告'), style: const TextStyle(color: white, fontSize: 12, fontWeight: FontWeight.w600)),
+                  Text(tr('Upcoming live'), style: const TextStyle(color: white, fontSize: 12, fontWeight: FontWeight.w600)),
                 ]),
               ),
               const SizedBox(height: 16),
               Text(
-                late ? tr('即将开始') : startsIn(left),
+                late ? tr('Starting soon') : startsIn(left),
                 style: const TextStyle(color: white, fontSize: 30, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()]),
               ),
               if (start != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  late ? tr('原定 {0} 开始，等待主播开播', [formatScheduledStart(start)]) : tr('开始于 {0}', [formatScheduledStart(start)]),
+                  late ? tr('Scheduled for {0}, waiting for the stream to begin', [formatScheduledStart(start)]) : tr('Starts {0}', [formatScheduledStart(start)]),
                   style: const TextStyle(color: Color(0xDDFFFFFF), fontSize: 14),
                 ),
               ],
@@ -108,12 +108,12 @@ class _UpcomingCardState extends State<UpcomingCard> {
               Row(mainAxisSize: MainAxisSize.min, children: [
                 const RepaintBoundary(child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xAAFFFFFF)))),
                 const SizedBox(width: 8),
-                Text(tr('开始后会自动播放'), style: const TextStyle(color: Color(0xAAFFFFFF), fontSize: 12)),
+                Text(tr('Plays as soon as it begins'), style: const TextStyle(color: Color(0xAAFFFFFF), fontSize: 12)),
                 const SizedBox(width: 12),
                 TextButton(
                   onPressed: widget.onRetry,
                   style: TextButton.styleFrom(foregroundColor: white),
-                  child: Text(tr('现在重试')),
+                  child: Text(tr('Try now')),
                 ),
               ]),
             ]),

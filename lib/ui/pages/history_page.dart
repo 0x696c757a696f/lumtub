@@ -51,30 +51,30 @@ class _HistoryPageState extends State<HistoryPage> {
     final signedIn = controller.tvFeed?.available ?? false;
     if (signedIn && _youtube) return _youtubeHistory(context);
     if (all.isEmpty && !signedIn) {
-      return StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('还没有观看记录'), message: tr('播放过的视频会保存在本机，最多保留 60 条。'));
+      return StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to 60 entries.'));
     }
     final items = filterHistory(all, _query);
     _selected.removeWhere((id) => !all.any((item) => item.id == id));
     final allSelected = items.isNotEmpty && items.every((item) => _selected.contains(item.id));
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
-        tr('观看历史'),
-        subtitle: _selecting ? tr('已选 {0} 个', [_selected.length]) : tr('{0} 个视频 · 仅保存在本机', [all.length]),
+        tr('Watch history'),
+        subtitle: _selecting ? tr('{0} selected', [_selected.length]) : tr('{0} videos · Saved on this device only', [all.length]),
         trailing: _selecting
             ? Row(mainAxisSize: MainAxisSize.min, children: [
                 TextButton(
                   onPressed: items.isEmpty ? null : () => setState(() => allSelected ? _selected.clear() : _selected.addAll(items.map((item) => item.id))),
-                  child: Text(allSelected ? tr('取消全选') : tr('全选')),
+                  child: Text(allSelected ? tr('Untick all') : tr('Tick all')),
                 ),
                 const SizedBox(width: 4),
-                FilledButton.icon(onPressed: _selected.isEmpty ? null : _deleteSelected, icon: const Icon(AppIcons.trash), label: Text(tr('删除所选'))),
+                FilledButton.icon(onPressed: _selected.isEmpty ? null : _deleteSelected, icon: const Icon(AppIcons.trash), label: Text(tr('Delete selected'))),
                 const SizedBox(width: 4),
-                TextButton(onPressed: _stopSelecting, child: Text(tr('完成'))),
+                TextButton(onPressed: _stopSelecting, child: Text(tr('Done'))),
               ])
             : Row(mainAxisSize: MainAxisSize.min, children: [
-                TextButton.icon(onPressed: () => openWatchStats(context, widget.controller), icon: const Icon(AppIcons.chartLineUp), label: Text(tr('观看统计'))),
-                TextButton.icon(onPressed: () => setState(() => _selecting = true), icon: const Icon(AppIcons.listChecks), label: Text(tr('选择'))),
-                TextButton.icon(onPressed: () => _confirmClear(context), icon: const Icon(AppIcons.trashSimple), label: Text(tr('清空'))),
+                TextButton.icon(onPressed: () => openWatchStats(context, widget.controller), icon: const Icon(AppIcons.chartLineUp), label: Text(tr('Watch statistics'))),
+                TextButton.icon(onPressed: () => setState(() => _selecting = true), icon: const Icon(AppIcons.listChecks), label: Text(tr('Select'))),
+                TextButton.icon(onPressed: () => _confirmClear(context), icon: const Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
               ]),
       )),
       if (signedIn) SliverToBoxAdapter(child: _sourceChips()),
@@ -86,9 +86,9 @@ class _HistoryPageState extends State<HistoryPage> {
             controller: _search,
             decoration: InputDecoration(
               prefixIcon: const Icon(AppIcons.magnifyingGlass),
-              hintText: tr('搜索历史标题或频道'),
+              hintText: tr('Search history by title or channel'),
               isDense: true,
-              suffixIcon: _query.isEmpty ? null : IconButton(tooltip: tr('清除'), icon: const Icon(AppIcons.x), onPressed: () => setState(() {
+              suffixIcon: _query.isEmpty ? null : IconButton(tooltip: tr('Clear'), icon: const Icon(AppIcons.x), onPressed: () => setState(() {
                     _search.clear();
                     _query = '';
                   })),
@@ -98,9 +98,9 @@ class _HistoryPageState extends State<HistoryPage> {
         )),
       )),
       if (all.isEmpty)
-        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('还没有观看记录'), message: tr('播放过的视频会保存在本机，最多保留 60 条。')))
+        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to 60 entries.')))
       else if (items.isEmpty)
-        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.magnifyingGlassMinus, title: tr('没有匹配的历史记录'), message: tr('换个关键词试试。')))
+        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.magnifyingGlassMinus, title: tr('No matching history'), message: tr('Try other keywords.')))
       else if (_selecting)
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
@@ -120,7 +120,7 @@ class _HistoryPageState extends State<HistoryPage> {
           thumbnails: controller.thumbnailDirectory,
           onOpen: (item) => controller.play(item, from: items),
           onRemove: (item) => controller.removeFromHistory({item.id}),
-          removeLabel: tr('从历史记录中删除'),
+          removeLabel: tr('Delete from history'),
         ),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
@@ -129,8 +129,8 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget _sourceChips() => Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 12),
         child: Wrap(spacing: 8, children: [
-          ChoiceChip(label: Text(tr('本机')), selected: !_youtube, onSelected: (_) => setState(() => _youtube = false)),
-          ChoiceChip(label: Text(tr('YouTube 账号')), selected: _youtube, onSelected: (_) => setState(() {
+          ChoiceChip(label: Text(tr('This computer')), selected: !_youtube, onSelected: (_) => setState(() => _youtube = false)),
+          ChoiceChip(label: Text(tr('YouTube account')), selected: _youtube, onSelected: (_) => setState(() {
                 _youtube = true;
                 _stopSelecting();
               })),
@@ -145,7 +145,7 @@ class _HistoryPageState extends State<HistoryPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) controller.openYoutubeHistory();
       });
-      return CustomScrollView(slivers: [SliverToBoxAdapter(child: PageHeader(tr('观看历史'))), SliverToBoxAdapter(child: _sourceChips()), const SliverSkeletonGrid(rows: 3)]);
+      return CustomScrollView(slivers: [SliverToBoxAdapter(child: PageHeader(tr('Watch history'))), SliverToBoxAdapter(child: _sourceChips()), const SliverSkeletonGrid(rows: 3)]);
     }
     final items = controller.visible(loader.items);
     final error = loader.error;
@@ -153,11 +153,11 @@ class _HistoryPageState extends State<HistoryPage> {
       onNearEnd: loader.loadMore,
       child: CustomScrollView(key: const PageStorageKey('youtube-history'), slivers: [
         SliverToBoxAdapter(child: PageHeader(
-          tr('观看历史'),
-          subtitle: tr('YouTube 账号里的观看记录'),
+          tr('Watch history'),
+          subtitle: tr('Watch history in your YouTube account'),
           trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            TextButton.icon(onPressed: () => openExternal('https://www.youtube.com/feed/history'), icon: const Icon(AppIcons.arrowSquareOut), label: Text(tr('在 YouTube 管理'))),
-            TextButton.icon(onPressed: () => controller.openYoutubeHistory(reload: true), icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('刷新'))),
+            TextButton.icon(onPressed: () => openExternal('https://www.youtube.com/feed/history'), icon: const Icon(AppIcons.arrowSquareOut), label: Text(tr('Manage on YouTube'))),
+            TextButton.icon(onPressed: () => controller.openYoutubeHistory(reload: true), icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
           ]),
         )),
         SliverToBoxAdapter(child: _sourceChips()),
@@ -166,11 +166,11 @@ class _HistoryPageState extends State<HistoryPage> {
           if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
           SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),
         ] else if (items.isEmpty && error == null)
-          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('YouTube 上还没有观看记录'))),
+          SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history on YouTube yet'))),
         if (error != null)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-            child: ErrorBanner(tr('无法加载 YouTube 观看记录：{0}', [error]), onRetry: () => loader.loadMore(retry: true)),
+            child: ErrorBanner(tr('Could not load the YouTube watch history: {0}', [error]), onRetry: () => loader.loadMore(retry: true)),
           )),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
@@ -190,11 +190,11 @@ class _HistoryPageState extends State<HistoryPage> {
 
   Future<void> _confirmClear(BuildContext context) async {
     final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-      title: Text(tr('清空观看历史？')),
-      content: Text(tr('本机保存的全部观看记录都会被删除，无法恢复。')),
+      title: Text(tr('Clear watch history?')),
+      content: Text(tr("All watch history saved on this device will be deleted. This can't be undone.")),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('取消'))),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('清空'))),
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Clear all'))),
       ],
     ));
     if (confirmed == true) await controller.clearHistory();

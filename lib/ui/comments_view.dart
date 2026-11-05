@@ -96,9 +96,9 @@ class _CommentsSectionState extends State<CommentsSection> {
           decoration: InputDecoration(
             isDense: true,
             prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20),
-            hintText: tr('搜索评论内容或作者'),
+            hintText: tr('Search comment text or authors'),
             border: const OutlineInputBorder(),
-            suffixIcon: IconButton(tooltip: tr('关闭搜索'), icon: const Icon(AppIcons.x, size: 18), onPressed: _toggleSearch),
+            suffixIcon: IconButton(tooltip: tr('Close search'), icon: const Icon(AppIcons.x, size: 18), onPressed: _toggleSearch),
           ),
           onChanged: (text) => setState(() => _words = commentQueryWords(text)),
         ),
@@ -106,13 +106,13 @@ class _CommentsSectionState extends State<CommentsSection> {
         const SizedBox(height: 4),
         Row(children: [
           Expanded(child: Text(
-            loader.loadingAll ? tr('正在加载全部评论… 已加载 {0} 条', [loader.comments.length]) : tr('在已加载的 {0} 条评论里搜索', [loader.comments.length]),
+            loader.loadingAll ? tr('Loading all comments… {0} so far', [loader.comments.length]) : tr('Searching the {0} comments loaded', [loader.comments.length]),
             style: TextStyle(color: colors.outline, fontSize: 12),
           )),
           if (loader.loadingAll)
-            TextButton(onPressed: loader.stopLoadingAll, child: Text(tr('停止')))
+            TextButton(onPressed: loader.stopLoadingAll, child: Text(tr('Stop')))
           else if (loader.hasMore)
-            TextButton(onPressed: loader.loadAll, child: Text(tr('加载全部评论再搜'))),
+            TextButton(onPressed: loader.loadAll, child: Text(tr('Load all comments and search'))),
         ]),
       ]),
     );
@@ -124,9 +124,9 @@ class _CommentsSectionState extends State<CommentsSection> {
 
   YoutubeComment _own(String text) => YoutubeComment(
         id: 'own:${DateTime.now().microsecondsSinceEpoch}',
-        author: widget.controller.account?.name ?? tr('我'),
+        author: widget.controller.account?.name ?? tr('Me'),
         text: text,
-        published: tr('刚刚'),
+        published: tr('Just now'),
       );
 
   Future<bool> _post(String text) async {
@@ -173,7 +173,7 @@ class _CommentsSectionState extends State<CommentsSection> {
       if (_replyingTo == comment.id)
         Padding(
           padding: const EdgeInsets.only(left: 44, bottom: 8),
-          child: CommentComposer(hint: tr('回复 {0}…', [comment.author]), autofocus: true, onSubmit: (text) => _reply(comment, text), onCancel: () => setState(() => _replyingTo = null)),
+          child: CommentComposer(hint: tr('Reply to {0}…', [comment.author]), autofocus: true, onSubmit: (text) => _reply(comment, text), onCancel: () => setState(() => _replyingTo = null)),
         ),
       if (thread != null) ...[
         for (final reply in thread.replies) tile(reply, reply: true),
@@ -182,9 +182,9 @@ class _CommentsSectionState extends State<CommentsSection> {
           child: thread.loading
               ? const Padding(padding: EdgeInsets.all(8), child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
               : error != null
-                  ? ErrorBanner(tr('无法加载回复：{0}', [error]), onRetry: () => loader.loadReplies(comment))
+                  ? ErrorBanner(tr("Couldn't load replies: {0}", [error]), onRetry: () => loader.loadReplies(comment))
                   : thread.next != null
-                      ? TextButton(onPressed: () => loader.loadReplies(comment), child: Text(tr('更多回复')))
+                      ? TextButton(onPressed: () => loader.loadReplies(comment), child: Text(tr('More replies')))
                       : const SizedBox.shrink(),
         ),
       ],
@@ -203,26 +203,26 @@ class _CommentsSectionState extends State<CommentsSection> {
               final order = SegmentedButton<bool>(
                 showSelectedIcon: false,
                 style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                segments: [ButtonSegment(value: false, label: Text(tr('热门'))), ButtonSegment(value: true, label: Text(tr('最新')))],
+                segments: [ButtonSegment(value: false, label: Text(tr('Popular'))), ButtonSegment(value: true, label: Text(tr('Latest')))],
                 selected: {loader.newest},
                 onSelectionChanged: (value) => loader.setNewest(value.first),
               );
-              final title = Text(loader.count.isEmpty ? tr('评论') : tr('评论 · {0}', [loader.count]), style: Theme.of(context).textTheme.titleMedium);
+              final title = Text(loader.count.isEmpty ? tr('Comments') : tr('Comments · {0}', [loader.count]), style: Theme.of(context).textTheme.titleMedium);
               final search = IconButton(
-                tooltip: tr('搜索评论'),
+                tooltip: tr('Search comments'),
                 isSelected: _searching,
                 icon: const Icon(AppIcons.magnifyingGlass),
                 onPressed: _toggleSearch,
               );
               final immersive = ImmersiveTranslationSwitch(controller: widget.controller);
               return constraints.maxWidth >= 520
-                  ? Row(children: [title, const Spacer(), immersive, const SizedBox(width: 4), search, const SizedBox(width: 4), order])
+                  ? Row(children: [Expanded(child: title), immersive, const SizedBox(width: 4), search, const SizedBox(width: 4), order])
                   : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 8), Wrap(spacing: 4, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [immersive, search, order])]);
             }),
             const SizedBox(height: 8),
             if (_searching) _searchBar(context),
-            if (_canWrite) CommentComposer(hint: tr('添加评论…'), onSubmit: _post)
-            else if (loader.canCreate) CommentComposer(hint: tr('添加评论…'), onSubmit: _create),
+            if (_canWrite) CommentComposer(hint: tr('Add a comment…'), onSubmit: _post)
+            else if (loader.canCreate) CommentComposer(hint: tr('Add a comment…'), onSubmit: _create),
           ];
           final prefs = widget.controller.preferences;
           final shown = [for (final comment in loader.comments) if (!prefs.blocksCommenter(comment.author, comment.channelId) && (_words.isEmpty || _matches(comment))) comment];
@@ -230,13 +230,13 @@ class _CommentsSectionState extends State<CommentsSection> {
             if (loader.loading)
               const Padding(padding: EdgeInsets.all(16), child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))))
             else if (error != null)
-              ErrorBanner(loader.comments.isEmpty ? tr('无法加载评论：{0}', [error]) : tr('加载更多评论失败：{0}', [error]), onRetry: () => loader.loadMore(retry: true))
+              ErrorBanner(loader.comments.isEmpty ? tr("Couldn't load comments: {0}", [error]) : tr("Couldn't load more comments: {0}", [error]), onRetry: () => loader.loadMore(retry: true))
             else if (loader.started && loader.comments.isEmpty)
-              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('还没有评论，或评论已关闭'), style: TextStyle(color: colors.outline)))
+              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('No comments yet, or comments are turned off'), style: TextStyle(color: colors.outline)))
             else if (_words.isNotEmpty && shown.isEmpty && !loader.loadingAll)
-              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('已加载的评论里没有找到'), style: TextStyle(color: colors.outline)))
+              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(tr('No match in the comments loaded'), style: TextStyle(color: colors.outline)))
             else if (loader.hasMore)
-              Center(child: TextButton(onPressed: loader.loadMore, child: Text(tr('加载更多评论')))),
+              Center(child: TextButton(onPressed: loader.loadMore, child: Text(tr('Load more comments')))),
           ];
           Widget item(BuildContext context, int index) {
             // Not during the build that asked for it.
@@ -291,7 +291,7 @@ class _CommentTile extends StatelessWidget {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SelectionArea(
             child: Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-              if (comment.pinned) Text(tr('置顶'), style: small.copyWith(color: colors.primary)),
+              if (comment.pinned) Text(tr('Pinned'), style: small.copyWith(color: colors.primary)),
               Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: comment.byUploader ? colors.primary : null)),
               Text(comment.published, style: small),
             ]),
@@ -312,14 +312,14 @@ class _CommentTile extends StatelessWidget {
             ),
             if (comment.hearted) ...[
               const SizedBox(width: 12),
-              Tooltip(message: tr('作者喜欢'), child: Icon(AppIcons.heartFill, size: 14, color: colors.error)),
+              Tooltip(message: tr('Liked by creator'), child: Icon(AppIcons.heartFill, size: 14, color: colors.error)),
             ],
             if (onReply != null) ...[
               const SizedBox(width: 8),
               TextButton(
                 style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8)),
                 onPressed: onReply,
-                child: Text(tr('回复'), style: TextStyle(fontSize: 12)),
+                child: Text(tr('Reply'), style: TextStyle(fontSize: 12)),
               ),
             ],
           ]),
@@ -328,7 +328,7 @@ class _CommentTile extends StatelessWidget {
               style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
               onPressed: () => thread == null ? loader.loadReplies(comment) : loader.collapse(comment),
               icon: Icon(thread == null ? AppIcons.caretDown : AppIcons.caretUp, size: 18),
-              label: Text(thread == null ? (comment.replyCount > 0 ? tr('{0} 条回复', [comment.replyCount]) : tr('查看回复')) : tr('收起回复')),
+              label: Text(thread == null ? (comment.replyCount > 0 ? tr('{0} replies', [comment.replyCount]) : tr('View replies')) : tr('Hide replies')),
             ),
         ])),
       ]),
@@ -397,14 +397,14 @@ class _CommentComposerState extends State<CommentComposer> {
         ),
         const SizedBox(height: 4),
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          if (widget.onCancel != null) TextButton(style: _compact, onPressed: _sending ? null : widget.onCancel, child: Text(tr('取消'))),
+          if (widget.onCancel != null) TextButton(style: _compact, onPressed: _sending ? null : widget.onCancel, child: Text(tr('Cancel'))),
           const SizedBox(width: 4),
           ListenableBuilder(
             listenable: _text,
             builder: (context, _) => FilledButton(
               style: _compact,
               onPressed: _sending || _text.text.trim().isEmpty ? null : _send,
-              child: _sending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(tr('发布')),
+              child: _sending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(tr('Publish')),
             ),
           ),
         ]),

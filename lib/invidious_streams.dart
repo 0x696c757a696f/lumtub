@@ -119,7 +119,7 @@ class InvidiousStreams extends RelayServers {
   @override
   bool isHealthy(http.Response response) => response.statusCode == 200 && response.body.contains(probeVideo);
   @override
-  String get pausedMessage => tr('Invidious 最近连续失败，暂时不用');
+  String get pausedMessage => tr('Invidious has failed recently, temporarily disabled');
 
   @override
   Future<Set<String>> downloadCatalog() async {
@@ -134,7 +134,7 @@ class InvidiousStreams extends RelayServers {
 
   Future<PipedVideo> _fetch(String videoId, String? server) async {
     final order = server != null ? [server] : (await servers()).take(2).toList();
-    if (order.isEmpty) throw StateError(tr('没有可用的 Invidious 实例'));
+    if (order.isEmpty) throw StateError(tr('No Invidious instance available'));
     Object? lastError;
     for (final candidate in order) {
       try {
@@ -150,6 +150,6 @@ class InvidiousStreams extends RelayServers {
         if (server == null) demote(candidate);
       }
     }
-    throw StateError(tr('Invidious 解析失败：{0}', [lastError]));
+    throw StateError(tr('Invidious parsing failed: {0}', [lastError]));
   }
 }

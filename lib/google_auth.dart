@@ -76,7 +76,7 @@ class OAuthTokens {
 
   static OAuthTokens parse(String body, {String? previousRefreshToken}) {
     final data = jsonDecode(body);
-    if (data is! Map || data['access_token'] is! String) throw OAuthException(tr('Google 返回的令牌格式不正确'));
+    if (data is! Map || data['access_token'] is! String) throw OAuthException(tr('Google returned a malformed token'));
     final seconds = data['expires_in'] is num ? (data['expires_in'] as num).toInt() : 3600;
     return OAuthTokens(
       accessToken: data['access_token'] as String,
@@ -140,9 +140,9 @@ class GoogleAuth {
         await _openBrowser(authorizationUri(redirectUri: redirectUri, pkce: pkce, state: state));
       } catch (_) {
         callback.ignore();
-        throw OAuthException(tr('无法打开浏览器'));
+        throw OAuthException(tr("Couldn't open the browser"));
       }
-      final code = await callback.timeout(timeout, onTimeout: () => throw OAuthException(tr('登录超时，请重试')));
+      final code = await callback.timeout(timeout, onTimeout: () => throw OAuthException(tr('Sign-in timed out. Please try again')));
       return await _token({
         'grant_type': 'authorization_code',
         'code': code,
@@ -173,14 +173,14 @@ class GoogleAuth {
       }
       final ok = query['state'] == state && query['code'] != null;
       request.response.headers.contentType = ContentType.html;
-      request.response.write(_page(ok ? tr('登录成功') : tr('登录没有完成'), ok ? tr('可以关闭这个页面，回到 Lumtub。') : tr('请回到 Lumtub 重试。')));
+      request.response.write(_page(ok ? tr('Signed in successfully') : tr("Sign-in wasn't completed"), ok ? tr('You can close this page and return to Lumtub.') : tr('Go back to Lumtub and try again.')));
       await request.response.close();
-      if (query['state'] != state) throw OAuthException(tr('登录回调校验失败，请重试'));
+      if (query['state'] != state) throw OAuthException(tr('Sign-in callback verification failed. Please try again'));
       final error = query['error'];
-      if (error != null) throw OAuthException(error == 'access_denied' ? tr('已取消授权') : tr('Google 拒绝了登录：{0}', [error]));
+      if (error != null) throw OAuthException(error == 'access_denied' ? tr('Authorization revoked') : tr('Google refused the sign-in: {0}', [error]));
       return query['code']!;
     }
-    throw OAuthException(tr('登录已取消'));
+    throw OAuthException(tr('Sign-in canceled'));
   }
 
   Future<OAuthTokens> refresh(String refreshToken) => _token({'grant_type': 'refresh_token', 'refresh_token': refreshToken}, previousRefreshToken: refreshToken);
@@ -201,7 +201,7 @@ class GoogleAuth {
     }).timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) {
       final error = _errorCode(response.body);
-      throw OAuthException(tr('Google 登录失败（{0}）', [error]), revoked: error == 'invalid_grant');
+      throw OAuthException(tr('Google sign-in failed ({0})', [error]), revoked: error == 'invalid_grant');
     }
     return OAuthTokens.parse(response.body, previousRefreshToken: previousRefreshToken);
   }
@@ -211,7 +211,7 @@ class GoogleAuth {
       final data = jsonDecode(body);
       if (data is Map && data['error'] is String) return data['error'] as String;
     } catch (_) {}
-    return tr('HTTP 错误');
+    return tr('HTTP error');
   }
 
   static Future<void> _openInBrowser(Uri uri) async {

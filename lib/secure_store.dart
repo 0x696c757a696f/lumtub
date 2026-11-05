@@ -28,7 +28,7 @@ class VaultProtector implements SecretProtector {
   Uint8List protect(Uint8List data) {
     final core = NativeCore.instance;
     final sealed = core?.vaultSeal(utf8.decode(data));
-    if (sealed == null) throw FileSystemException(tr('无法加密账号凭据'));
+    if (sealed == null) throw FileSystemException(tr("Couldn't encrypt the account credentials"));
     return Uint8List.fromList([..._magic, ...ascii.encode(sealed)]);
   }
 
@@ -36,7 +36,7 @@ class VaultProtector implements SecretProtector {
   Uint8List unprotect(Uint8List data) {
     if (data.length < _magic.length || !_listEquals(data.sublist(0, _magic.length), _magic)) throw const FormatException('Not a sealed file');
     final plain = NativeCore.instance?.vaultOpen(ascii.decode(data.sublist(_magic.length)));
-    if (plain == null) throw FileSystemException(tr('无法解密账号凭据'));
+    if (plain == null) throw FileSystemException(tr("Couldn't decrypt the account credentials"));
     return Uint8List.fromList(utf8.encode(plain));
   }
 
@@ -82,7 +82,7 @@ class DpapiProtector implements SecretProtector {
         ..pbData = arena<Uint8>(_entropy.length);
       entropy.ref.pbData.asTypedList(_entropy.length).setAll(0, _entropy);
       if (call(input, nullptr, entropy, nullptr, nullptr, _uiForbidden, output) == 0) {
-        throw FileSystemException(tr('Windows 无法加密或解密账号凭据'));
+        throw FileSystemException(tr("Windows couldn't encrypt or decrypt the account credentials"));
       }
       try {
         return Uint8List.fromList(output.ref.pbData.asTypedList(output.ref.cbData));

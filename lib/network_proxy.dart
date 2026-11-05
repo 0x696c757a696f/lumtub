@@ -8,9 +8,9 @@ import 'native_core.dart';
 enum ProxyMode {
   /// The proxy set in Windows (as Clash, v2rayN and similar tools set it),
   /// or none when Windows has none.
-  system('跟随系统（推荐）'),
-  off('不使用代理'),
-  custom('手动填写');
+  system('Follow system (recommended)'),
+  off('No proxy'),
+  custom('Enter manually');
 
   const ProxyMode(this._label);
   final String _label;

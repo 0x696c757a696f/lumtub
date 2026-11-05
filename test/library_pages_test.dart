@@ -48,7 +48,7 @@ void main() {
 
   testWidgets('subscriptions explain how to follow a channel', (tester) async {
     await pump(tester, SubscriptionsPage(controller: controller));
-    expect(find.text('还没有关注频道'), findsOneWidget);
+    expect(find.text('No followed channels yet'), findsOneWidget);
   });
 
   testWidgets('subscriptions show followed channels and their feed', (tester) async {
@@ -72,23 +72,23 @@ void main() {
     // A wide window lists the channels in a column on the left.
     await pump(tester, SubscriptionsPage(controller: controller));
     expect(tester.getTopLeft(find.text('Rick Astley').first).dx, lessThan(100));
-    expect(find.text('全部 101 个'), findsOneWidget);
+    expect(find.text('Show all 101'), findsOneWidget);
 
     await pump(tester, SubscriptionsPage(controller: controller), width: 900);
     final strip = find.byWidgetPredicate((w) => w is ListView && w.scrollDirection == Axis.horizontal);
     Finder inStrip(String text) => find.descendant(of: strip, matching: find.text(text));
     // The channel that just posted comes right after 全部, in the same row.
     final rick = tester.getTopLeft(inStrip('Rick Astley'));
-    expect(tester.getTopLeft(find.text('全部')).dx, lessThan(rick.dx));
+    expect(tester.getTopLeft(find.text('All')).dx, lessThan(rick.dx));
     expect(find.text('视频 0'), findsOneWidget);
 
     await tester.tap(find.text('频道 3'));
     await tester.pump();
     expect(find.text('视频 0'), findsNothing);
-    expect(find.text('这个频道最近没有新视频'), findsOneWidget);
+    expect(find.text('No recent videos from this channel'), findsOneWidget);
     await tester.tap(inStrip('Rick Astley'));
     await tester.pump();
-    expect(find.text('Rick Astley 的新视频'), findsOneWidget);
+    expect(find.text('New from Rick Astley'), findsOneWidget);
     expect(find.text('视频 0'), findsOneWidget);
 
     // A mouse wheel scrolls the row sideways.
@@ -99,14 +99,14 @@ void main() {
     expect(tester.getTopLeft(inStrip('频道 3')).dx, lessThan(before));
 
     // The full list searches by name and narrows the page to the pick.
-    await tester.tap(find.text('全部 101 个'));
+    await tester.tap(find.text('Show all 101'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), '频道 42');
     await tester.pump();
     expect(find.widgetWithText(ListTile, '频道 7'), findsNothing);
     await tester.tap(find.widgetWithText(ListTile, '频道 42'));
     await tester.pumpAndSettle();
-    expect(find.text('频道 42 的新视频'), findsOneWidget);
+    expect(find.text('New from 频道 42'), findsOneWidget);
     expect(tester.takeException(), isNull);
     unawaited(library.flush());
   });
@@ -134,20 +134,20 @@ void main() {
       library.addToPlaylist(playlist, video);
     }
     await pump(tester, PlaylistsPage(controller: controller));
-    expect(find.text('收藏'), findsOneWidget);
+    expect(find.text('Favorites'), findsOneWidget);
     expect(find.text('周末歌单'), findsOneWidget);
-    expect(find.text('3 个视频'), findsOneWidget);
+    expect(find.text('3 videos'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     controller.openPlaylistId = playlist.id;
     await pump(tester, PlaylistDetailPage(controller: controller));
-    expect(find.text('播放全部'), findsOneWidget);
+    expect(find.text('Play all'), findsOneWidget);
     expect(find.text('视频 2'), findsOneWidget);
-    expect(find.byTooltip('重命名'), findsOneWidget);
+    expect(find.byTooltip('Rename'), findsOneWidget);
 
     controller.openPlaylistId = AppController.favoritesPlaylistId;
     await pump(tester, PlaylistDetailPage(controller: controller));
-    expect(find.byTooltip('重命名'), findsNothing);
+    expect(find.byTooltip('Rename'), findsNothing);
     expect(find.text('视频 0'), findsOneWidget);
     expect(tester.takeException(), isNull);
     // Cancels the delayed save, which the test clock would never run.
@@ -163,8 +163,8 @@ void main() {
     await tester.pump();
     expect(find.text('Rick Astley'), findsWidgets);
     expect(find.text('视频 5'), findsOneWidget);
-    expect(find.text('搜索频道内的视频'), findsOneWidget);
-    await tester.tap(find.text('关注'));
+    expect(find.text('Search videos in this channel'), findsOneWidget);
+    await tester.tap(find.text('Follow'));
     await tester.pump();
     expect(library.isFollowing(channel.id), isTrue);
     expect(tester.takeException(), isNull);

@@ -6,10 +6,10 @@ import 'download_selection.dart';
 /// an audio stream, so the video qualities then take the best single-file
 /// (progressive) format, which on YouTube is usually 360p.
 enum DownloadQuality {
-  best('最高画质', null),
+  best('Best quality', null),
   p1080('1080p', 1080),
   p720('720p', 720),
-  audio('仅音频（m4a）', null, audioOnly: true);
+  audio('Audio only (m4a)', null, audioOnly: true);
 
   const DownloadQuality(this._label, this.maxHeight, {this.audioOnly = false});
   final String _label;

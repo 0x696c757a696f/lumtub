@@ -34,8 +34,8 @@ class ImmersiveTranslationSwitch extends StatelessWidget {
     final on = controller.preferences.immersiveTranslation;
     return FilterChip(
       avatar: Icon(AppIcons.translate, size: 16),
-      label: Text(tr('沉浸式翻译')),
-      tooltip: tr('外语内容自动在下方显示译文'),
+      label: Text(tr('Immersive translation')),
+      tooltip: tr('Show translations under foreign-language text automatically'),
       selected: on,
       showCheckmark: false,
       visualDensity: VisualDensity.compact,
@@ -86,7 +86,7 @@ class _ChatMessageTranslateButtonState extends State<ChatMessageTranslateButton>
               child: ValueListenableBuilder(
                 valueListenable: asked,
                 builder: (context, on, _) => IconButton(
-                  tooltip: on ? tr('显示原文') : tr('翻译'),
+                  tooltip: on ? tr('Show original') : tr('Translation'),
                   visualDensity: VisualDensity.compact,
                   iconSize: 16,
                   style: IconButton.styleFrom(backgroundColor: context.colors.surfaceContainerHigh),
@@ -194,7 +194,7 @@ class _LiveChatInputState extends State<LiveChatInput> {
     try {
       box = await LiveChatComposer(widget.controller.webSignIn).open(widget.videoId);
     } catch (_) {
-      box = ChatBoxClosed(tr('无法打开聊天的输入框'));
+      box = ChatBoxClosed(tr("Couldn't open the chat box"));
     }
     if (mounted && serial == _opening) setState(() => _box = box);
   }
@@ -213,7 +213,7 @@ class _LiveChatInputState extends State<LiveChatInput> {
     } on StateError catch (e) {
       _error = e.message;
     } catch (_) {
-      _error = tr('发送失败，请检查网络或代理');
+      _error = tr("Couldn't send. Check the network or proxy");
     }
     if (!mounted) return;
     setState(() => _sending = false);
@@ -231,7 +231,7 @@ class _LiveChatInputState extends State<LiveChatInput> {
           Icon(AppIcons.lockSimple, size: 16, color: context.colors.outline),
           const SizedBox(width: Space.s),
           Expanded(child: Text(box.reason, style: context.text.bodySmall?.copyWith(color: context.colors.onSurfaceVariant))),
-          IconButton(tooltip: tr('重试'), icon: Icon(AppIcons.arrowClockwise, size: 18), onPressed: _open),
+          IconButton(tooltip: tr('Retry'), icon: Icon(AppIcons.arrowClockwise, size: 18), onPressed: _open),
         ]),
       );
     }
@@ -248,12 +248,12 @@ class _LiveChatInputState extends State<LiveChatInput> {
               buildCounter: (context, {required currentLength, required isFocused, required maxLength}) => null,
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => unawaited(_send()),
-              decoration: InputDecoration(hintText: tr('在聊天里说点什么')),
+              decoration: InputDecoration(hintText: tr('Say something in the chat')),
             ),
           ),
           const SizedBox(width: Space.s),
           IconButton.filledTonal(
-            tooltip: tr('发送'),
+            tooltip: tr('Send'),
             onPressed: _sending ? null : () => unawaited(_send()),
             icon: _sending ? const SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.paperPlaneRight, size: 18),
           ),

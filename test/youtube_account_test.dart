@@ -60,8 +60,8 @@ void main() {
 
   test('explains common API errors', () async {
     final api = YouTubeAccountApi(MockClient((_) async => http.Response('{"error":{"code":403,"errors":[{"reason":"quotaExceeded"}]}}', 403)), () async => 't');
-    await expectLater(api.playlists(), throwsA(predicate((e) => '$e'.contains('配额'))));
+    await expectLater(api.playlists(), throwsA(predicate((e) => '$e'.contains('quota'))));
     expect('${const YouTubeApiException(403, 'accessNotConfigured')}', contains('YouTube Data API v3'));
-    expect('${const YouTubeApiException(401, null)}', contains('重新登录'));
+    expect('${const YouTubeApiException(401, null)}', contains('sign in again'));
   });
 }

@@ -42,6 +42,8 @@ class NativeCore {
         _castStart = library.lookupFunction<Uint16 Function(), int Function()>('lumtub_cast_start'),
         _castRegister = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_cast_register'),
         _castLog = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_cast_log'),
+        _castExpired = library.lookupFunction<Bool Function(), bool Function()>('lumtub_cast_expired'),
+        _castRenew = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_cast_renew'),
         hashPrefix = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_hash_prefix'),
         sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
         dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
@@ -133,6 +135,16 @@ class NativeCore {
   final int Function() _castStart;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _castRegister;
   final Pointer<Utf8> Function() _castLog;
+  final bool Function() _castExpired;
+  final int Function(Pointer<Uint8> json, int length) _castRenew;
+
+  /// Whether YouTube refused a cast stream's address and new ones are
+  /// wanted.
+  bool castExpired() => _castExpired();
+
+  /// Replaces cast stream addresses, `{old: new}`; how many streams took one.
+  int castRenew(Map<String, String> addresses) =>
+      withText(jsonEncode([for (final e in addresses.entries) {'old': e.key, 'new': e.value}]), _castRenew);
 
   /// Starts the server that streams videos to TVs on the local network
   /// (native/lumtub_core/src/cast.rs) once; its port, or 0.

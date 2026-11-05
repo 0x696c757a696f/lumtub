@@ -421,6 +421,16 @@ void main() {
       final uhd = castSplitFromYtDlp(info, maxHeight: 2160)!;
       expect((uhd.video.split('?').first, uhd.codec, uhd.fitsTransportStream), ('https://g/315', 'vp9', false));
       expect(castSplitFromYtDlp(info, maxHeight: 4320)!.codec, 'av1');
+      expect((split.videoFormat, split.audioFormat), ('299', '140'));
+      final renewed = split.renewedFrom({
+        'formats': [
+          {'format_id': '299', 'url': 'https://g/299?expire=2000000000'},
+          {'format_id': '140', 'url': 'https://g/140?new'},
+        ],
+      })!;
+      expect((renewed.video, renewed.audio, renewed.videoFormat), ('https://g/299?expire=2000000000', 'https://g/140?new', '299'));
+      expect(renewed.expires, DateTime.fromMillisecondsSinceEpoch(2000000000 * 1000));
+      expect(split.renewedFrom({'formats': [{'format_id': '299', 'url': 'https://x'}]}), isNull);
       expect(split.audio, startsWith('https://g/140?'));
       expect((split.height, split.videoSize, split.audioSize), (1080, 1000, 1000));
       // The size can come from the address alone.

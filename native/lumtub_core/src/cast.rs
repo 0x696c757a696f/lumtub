@@ -18,7 +18,7 @@ use std::collections::{HashMap, VecDeque};
 use std::io::{BufReader, ErrorKind, Read, Write};
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::os::raw::c_char;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
@@ -579,17 +579,95 @@ fn webm_fragment(data: Vec<u8>, number: u64, frame: u32) -> Result<Fragment, &'s
 
 // ---- reading from YouTube ----
 
-/// Bytes of one file read in order from a position, in chunks.
-struct Reader<'a> {
-    fetch: &'a dyn Fetch,
-    target: &'a Target,
-    position: u64,
-    body: Option<(crate::relay::Body, u64)>,
+/// A stream's address, which the app replaces when YouTube lets it expire.
+pub struct Address {
+    url: Mutex<String>,
+    /// Set when YouTube refused the address; cleared by a new one.
+    expired: AtomicBool,
 }
 
-impl<'a> Reader<'a> {
-    fn new(fetch: &'a dyn Fetch, target: &'a Target, position: u64) -> Self {
-        Reader { fetch, target, position, body: None }
+impl Address {
+    fn new(url: String) -> Arc<Address> {
+        Arc::new(Address { url: Mutex::new(url), expired: AtomicBool::new(false) })
+    }
+
+    fn get(&self) -> String {
+        self.url.lock().unwrap().clone()
+    }
+}
+
+/// How long a refused address waits for the app to bring a new one.
+const RENEW_WAIT: Duration = Duration::from_secs(60);
+
+/// A chunk's reply being opened on another thread.
+type Opening = std::thread::JoinHandle<Result<crate::relay::Body, Stop>>;
+
+/// Bytes of one file read in order from a position, in chunks; the next
+/// chunk is asked for while the current one is read.
+struct Reader {
+    fetch: Arc<dyn Fetch>,
+    target: Target,
+    address: Arc<Address>,
+    stop: Arc<AtomicBool>,
+    position: u64,
+    body: Option<(crate::relay::Body, u64)>,
+    ahead: Option<(u64, u64, Opening)>,
+}
+
+impl Reader {
+    fn new(fetch: Arc<dyn Fetch>, target: &Target, address: Arc<Address>, stop: Arc<AtomicBool>, position: u64) -> Self {
+        Reader { fetch, target: target.clone(), address, stop, position, body: None, ahead: None }
+    }
+
+    fn last_of(&self, from: u64) -> u64 {
+        (from + self.target.chunk.max(1) - 1).min(self.target.size.saturating_sub(1))
+    }
+
+    /// Bytes `from` to `last`, read to their end on another thread.
+    fn open(&self, from: u64, last: u64) -> Opening {
+        let (fetch, mut target) = (self.fetch.clone(), self.target.clone());
+        target.url = self.address.get();
+        std::thread::spawn(move || request(fetch.as_ref(), &target, from, last).map(|body| drain(body, last + 1 - from)))
+    }
+
+    /// The reply for the chunk at the current position: the one asked for
+    /// ahead when it is that one. A refused address waits for a new one.
+    fn next_body(&mut self) -> Result<(), String> {
+        let from = self.position;
+        let last = self.last_of(from);
+        if last < from {
+            return Err(format!("read past the end at byte {from}"));
+        }
+        let mut waited = Duration::ZERO;
+        loop {
+            let pending = match self.ahead.take() {
+                Some((f, l, handle)) if f == from && l == last => handle,
+                _ => self.open(from, last),
+            };
+            let tried = self.address.get();
+            match pending.join().unwrap_or_else(|_| Err(Stop::Upstream("failed".into()))) {
+                Ok(body) => {
+                    self.body = Some((body, last));
+                    if last + 1 < self.target.size {
+                        let next = last + 1;
+                        let next_last = self.last_of(next);
+                        self.ahead = Some((next, next_last, self.open(next, next_last)));
+                    }
+                    return Ok(());
+                }
+                Err(Stop::Refused(status @ (403 | 410))) => {
+                    self.address.expired.store(true, Ordering::SeqCst);
+                    while self.address.get() == tried {
+                        if waited >= RENEW_WAIT || self.stop.load(Ordering::Relaxed) {
+                            return Err(format!("YouTube answered {status} and no new address came"));
+                        }
+                        std::thread::sleep(Duration::from_millis(500));
+                        waited += Duration::from_millis(500);
+                    }
+                }
+                Err(stop) => return Err(stop.why()),
+            }
+        }
     }
 
     /// Exactly `n` bytes from the current position.
@@ -598,13 +676,11 @@ impl<'a> Reader<'a> {
         let mut filled = 0;
         let mut retries = 0;
         while filled < out.len() {
+            if self.stop.load(Ordering::Relaxed) {
+                return Err(String::new());
+            }
             if self.body.is_none() {
-                let last = (self.position + self.target.chunk.max(1) - 1).min(self.target.size.saturating_sub(1));
-                if last < self.position {
-                    return Err(format!("read past the end at byte {}", self.position));
-                }
-                let body = request(self.fetch, self.target, self.position, last).map_err(|s: Stop| s.why())?;
-                self.body = Some((drain(body, last + 1 - self.position), last));
+                self.next_body()?;
             }
             let (body, last) = self.body.as_mut().unwrap();
             let last = *last;
@@ -612,6 +688,8 @@ impl<'a> Reader<'a> {
                 Ok(0) => {
                     self.body = None;
                     if self.position <= last {
+                        // Asked again from the missing byte, not ahead.
+                        self.ahead = None;
                         retries += 1;
                         if retries > 2 {
                             return Err(format!("YouTube broke off at byte {}", self.position));
@@ -629,6 +707,7 @@ impl<'a> Reader<'a> {
                 Err(e) if e.kind() == ErrorKind::Interrupted => {}
                 Err(e) => {
                     self.body = None;
+                    self.ahead = None;
                     retries += 1;
                     if retries > 2 {
                         return Err(e.to_string());
@@ -648,10 +727,12 @@ impl<'a> Reader<'a> {
 }
 
 /// Reads the head of `target` until its index is there.
-pub fn fetch_head(fetch: &dyn Fetch, target: &Target) -> Result<Track, String> {
+pub fn fetch_head(fetch: &Arc<dyn Fetch>, target: &Target) -> Result<Track, String> {
     let mut want = (64u64 << 10).min(target.size);
+    let address = Address::new(target.url.clone());
     loop {
-        let data = Reader::new(fetch, target, 0).take(want)?;
+        let mut reader = Reader::new(fetch.clone(), &Target { chunk: want.max(1), ..target.clone() }, address.clone(), Arc::new(AtomicBool::new(false)), 0);
+        let data = reader.take(want)?;
         let head = if cast_webm::is_webm(&data) {
             match cast_webm::read_head(&data, target.size) {
                 cast_webm::Read::Head(head) => Head::Track(Box::new(webm_track(&head, target.size))),
@@ -675,31 +756,47 @@ pub fn fetch_head(fetch: &dyn Fetch, target: &Target) -> Result<Track, String> {
     }
 }
 
-/// One track's fragments, in order from a segment.
-struct Source<'a> {
-    track: &'a Track,
-    reader: Reader<'a>,
-    next: usize,
+/// Fragments read ahead of the stream, per track.
+const AHEAD: usize = 2;
+
+/// Reads `track`'s fragments from segment `first` on its own thread, up to
+/// [AHEAD] ahead of the stream; empty fragments are skipped.
+fn produce<'s>(scope: &'s std::thread::Scope<'s, '_>, track: &'s Track, mut reader: Reader, first: usize) -> std::sync::mpsc::Receiver<Result<Fragment, String>> {
+    let (tx, rx) = std::sync::mpsc::sync_channel(AHEAD);
+    scope.spawn(move || {
+        let mut next = first;
+        while let Some(&segment) = track.segments.get(next) {
+            next += 1;
+            let read = if segment.size > FRAGMENT_LIMIT {
+                Err("fragment too large".to_string())
+            } else {
+                reader.seek(segment.offset);
+                reader.take(segment.size).and_then(|data| match track.webm {
+                    Some((number, frame)) => webm_fragment(data, number, frame).map_err(String::from),
+                    None => fragment(data, segment.offset, track.defaults).map_err(String::from),
+                })
+            };
+            match read {
+                Ok(f) if f.samples.is_empty() => {}
+                Ok(f) => {
+                    if tx.send(Ok(f)).is_err() {
+                        return;
+                    }
+                }
+                Err(e) => {
+                    let _ = tx.send(Err(e));
+                    return;
+                }
+            }
+        }
+    });
+    rx
 }
 
-impl<'a> Source<'a> {
-    fn new(fetch: &'a dyn Fetch, target: &'a Target, track: &'a Track, first: usize) -> Self {
-        let offset = track.segments.get(first).map_or(0, |s| s.offset);
-        Source { track, reader: Reader::new(fetch, target, offset), next: first }
-    }
-
-    fn fragment(&mut self) -> Result<Option<Fragment>, String> {
-        let Some(&segment) = self.track.segments.get(self.next) else { return Ok(None) };
-        if segment.size > FRAGMENT_LIMIT {
-            return Err("fragment too large".into());
-        }
-        self.reader.seek(segment.offset);
-        let data = self.reader.take(segment.size)?;
-        self.next += 1;
-        match self.track.webm {
-            Some((number, frame)) => webm_fragment(data, number, frame).map(Some).map_err(String::from),
-            None => fragment(data, segment.offset, self.track.defaults).map(Some).map_err(String::from),
-        }
+fn next_fragment(fragments: &std::sync::mpsc::Receiver<Result<Fragment, String>>) -> Result<Option<Fragment>, String> {
+    match fragments.recv() {
+        Ok(read) => read.map(Some),
+        Err(_) => Ok(None),
     }
 }
 
@@ -1033,6 +1130,7 @@ fn ticks90(ticks: u64, timescale: u32) -> u64 {
 pub struct Session {
     video_target: Target,
     audio_target: Target,
+    addresses: [Arc<Address>; 2],
     video: Track,
     audio: Track,
     start: f64,
@@ -1042,7 +1140,7 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(ask: Ask, fetch: &dyn Fetch) -> Result<Session, String> {
+    pub fn new(ask: Ask, fetch: &Arc<dyn Fetch>) -> Result<Session, String> {
         let (video, audio) = std::thread::scope(|scope| {
             let video = scope.spawn(|| fetch_head(fetch, &ask.video));
             let audio = fetch_head(fetch, &ask.audio);
@@ -1055,7 +1153,8 @@ impl Session {
         if ask.kind == Kind::Ts && (!matches!(video.codec, Codec::Avc { .. }) || !matches!(audio.codec, Codec::Aac { .. })) {
             return Err("only H.264 with AAC goes into a transport stream".into());
         }
-        Ok(Session { video_target: ask.video, audio_target: ask.audio, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, generation: AtomicU64::new(0) })
+        let addresses = [Address::new(ask.video.url.clone()), Address::new(ask.audio.url.clone())];
+        Ok(Session { video_target: ask.video, audio_target: ask.audio, addresses, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, generation: AtomicU64::new(0) })
     }
 
     /// Where the stream really starts, in seconds: the keyframe at or
@@ -1073,12 +1172,45 @@ impl Session {
 
     /// Writes the stream into `into` until it ends, the client goes away or
     /// a newer request for this session starts.
-    pub fn stream(&self, fetch: &dyn Fetch, into: &mut dyn Write) -> Result<(), String> {
+    pub fn stream(&self, fetch: &Arc<dyn Fetch>, into: &mut dyn Write) -> Result<(), String> {
+        let stop = Arc::new(AtomicBool::new(false));
+        std::thread::scope(|scope| {
+            let result = self.write(scope, fetch, &stop, into);
+            stop.store(true, Ordering::Relaxed);
+            result
+        })
+    }
+
+    /// Whether YouTube refused one of the addresses and the app has not
+    /// brought a new one yet.
+    pub fn expired(&self) -> bool {
+        self.addresses.iter().any(|a| a.expired.load(Ordering::SeqCst))
+    }
+
+    /// Replaces the address `old` with `new`; whether it was one of these.
+    pub fn renew(&self, old: &str, new: &str) -> bool {
+        let mut renewed = false;
+        for address in &self.addresses {
+            let mut url = address.url.lock().unwrap();
+            if *url == old {
+                *url = new.to_string();
+                address.expired.store(false, Ordering::SeqCst);
+                renewed = true;
+            }
+        }
+        renewed
+    }
+
+    fn write<'s>(&'s self, scope: &'s std::thread::Scope<'s, '_>, fetch: &Arc<dyn Fetch>, stop: &Arc<AtomicBool>, into: &mut dyn Write) -> Result<(), String> {
         let generation = self.generation.fetch_add(1, Ordering::SeqCst) + 1;
         let current = || self.generation.load(Ordering::SeqCst) == generation;
         let first_video = segment_at(&self.video, self.start);
-        let mut video = Source::new(fetch, &self.video_target, &self.video, first_video);
-        let mut v = video.fragment()?;
+        let reader = |i: usize, target: &Target, track: &Track, first: usize| {
+            let offset = track.segments.get(first).map_or(0, |s| s.offset);
+            Reader::new(fetch.clone(), target, self.addresses[i].clone(), stop.clone(), offset)
+        };
+        let video = produce(scope, &self.video, reader(0, &self.video_target, &self.video, first_video), first_video);
+        let mut v = next_fragment(&video)?;
         // The picture starts at its first keyframe; the sound at the same time.
         if let Some(f) = v.as_mut() {
             let keyframe = f.samples.iter().position(|s| s.sync).unwrap_or(0);
@@ -1087,14 +1219,15 @@ impl Session {
         let Some(origin) = v.as_ref().and_then(|f| f.samples.first()).map(|s| s.time) else { return Err("no picture".into()) };
         let seconds = origin as f64 / self.video.timescale as f64;
         let audio_origin = (seconds * self.audio.timescale as f64).round() as u64;
-        let mut audio = Source::new(fetch, &self.audio_target, &self.audio, segment_at(&self.audio, seconds));
-        let mut a = audio.fragment()?;
+        let first_audio = segment_at(&self.audio, seconds);
+        let audio = produce(scope, &self.audio, reader(1, &self.audio_target, &self.audio, first_audio), first_audio);
+        let mut a = next_fragment(&audio)?;
         while let Some(f) = a.as_mut() {
             f.samples.retain(|s| s.time >= audio_origin);
             if !f.samples.is_empty() {
                 break;
             }
-            a = audio.fragment()?;
+            a = next_fragment(&audio)?;
         }
         let rebase = [origin, audio_origin];
         let mut out = Vec::with_capacity(1 << 20);
@@ -1116,7 +1249,7 @@ impl Session {
                         (None, Some(_)) => 1,
                         (Some(x), Some(y)) => usize::from(y < x),
                     };
-                    let (slot, source) = if pick == 0 { (&mut v, &mut video) } else { (&mut a, &mut audio) };
+                    let (slot, source) = if pick == 0 { (&mut v, &video) } else { (&mut a, &audio) };
                     if let Some(f) = slot.as_ref() {
                         mp4_fragment(&mut out, sequence, pick as u32 + 1, f, &f.samples, rebase[pick]);
                         sequence += 1;
@@ -1163,11 +1296,11 @@ impl Session {
                         out.clear();
                     }
                     if v.as_ref().is_some_and(|f| at[0] >= f.samples.len()) {
-                        v = next_fragment(&mut video)?;
+                        v = next_fragment(&video)?;
                         at[0] = 0;
                     }
                     if a.as_ref().is_some_and(|f| at[1] >= f.samples.len()) {
-                        a = next_fragment(&mut audio)?;
+                        a = next_fragment(&audio)?;
                         at[1] = 0;
                     }
                 }
@@ -1175,15 +1308,6 @@ impl Session {
             }
         }
         Ok(())
-    }
-}
-
-fn next_fragment(source: &mut Source) -> Result<Option<Fragment>, String> {
-    loop {
-        match source.fragment()? {
-            Some(f) if f.samples.is_empty() => continue,
-            other => return Ok(other),
-        }
     }
 }
 
@@ -1232,7 +1356,7 @@ impl Server {
                 open.fetch_add(1, Ordering::Relaxed);
                 let (shared, fetch, done) = (shared.clone(), fetch.clone(), open.clone());
                 let spawned = std::thread::Builder::new().name("cast-client".into()).spawn(move || {
-                    serve(client, &shared, fetch.as_ref());
+                    serve(client, &shared, &fetch);
                     done.fetch_sub(1, Ordering::Relaxed);
                 });
                 if spawned.is_err() {
@@ -1251,7 +1375,7 @@ impl Server {
     /// `/<token>.ts`, and where it starts, or why it cannot be streamed.
     pub fn register(&self, ask: Ask) -> Result<(String, f64), String> {
         let kind = ask.kind;
-        let session = Session::new(ask, self.fetch.as_ref())?;
+        let session = Session::new(ask, &self.fetch)?;
         let start = session.starts_at();
         let token = token().ok_or("no randomness")?;
         let mut shared = self.shared.lock().unwrap();
@@ -1265,12 +1389,23 @@ impl Server {
         Ok((format!("/{token}.{}", if kind == Kind::Ts { "ts" } else { "mp4" }), start))
     }
 
+    /// Whether a session's address was refused and waits for a new one.
+    pub fn expired(&self) -> bool {
+        self.shared.lock().unwrap().sessions.values().any(|s| s.expired())
+    }
+
+    /// Gives every session streaming from `old` the address `new`; how
+    /// many did.
+    pub fn renew(&self, old: &str, new: &str) -> usize {
+        self.shared.lock().unwrap().sessions.values().filter(|s| s.renew(old, new)).count()
+    }
+
     pub fn take_log(&self) -> Vec<String> {
         self.shared.lock().unwrap().log.drain(..).collect()
     }
 }
 
-fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &dyn Fetch) {
+fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &Arc<dyn Fetch>) {
     let _ = client.set_read_timeout(Some(Duration::from_secs(30)));
     let _ = client.set_write_timeout(Some(Duration::from_secs(60)));
     let peer = client.peer_addr().map(|a| a.ip().to_string()).unwrap_or_default();
@@ -1335,6 +1470,30 @@ pub unsafe extern "C" fn lumtub_cast_register(json: *const u8, len: usize) -> *m
     })
 }
 
+/// Whether YouTube refused a cast stream's address and the app should
+/// bring new ones with [lumtub_cast_renew].
+#[unsafe(no_mangle)]
+pub extern "C" fn lumtub_cast_expired() -> bool {
+    SERVER.get().is_some_and(Server::expired)
+}
+
+#[derive(Deserialize)]
+struct Renewal {
+    old: String,
+    new: String,
+}
+
+/// Replaces stream addresses: [json] is a list of `{"old", "new"}`. The
+/// number of addresses replaced.
+///
+/// # Safety
+/// [json] points at [len] readable bytes.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lumtub_cast_renew(json: *const u8, len: usize) -> u32 {
+    let (Some(server), Ok(renewals)) = (SERVER.get(), serde_json::from_str::<Vec<Renewal>>(unsafe { crate::taste::text(json, len) })) else { return 0 };
+    renewals.iter().map(|r| server.renew(&r.old, &r.new) as u32).sum()
+}
+
 /// The server's log lines since the last call, as a JSON array.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_cast_log() -> *mut c_char {
@@ -1346,19 +1505,32 @@ pub extern "C" fn lumtub_cast_log() -> *mut c_char {
 mod tests {
     use super::*;
 
-    /// Serves a local file like googlevideo serves a stream.
-    struct Files(HashMap<String, Vec<u8>>);
+    /// Serves local files like googlevideo serves streams: each reply cut
+    /// after `cut` bytes when set, and an address holding `expired` refused.
+    struct Files {
+        data: HashMap<String, Vec<u8>>,
+        cut: Option<usize>,
+        expired: Option<&'static str>,
+    }
 
     impl Fetch for Files {
         fn get(&self, _: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String> {
-            let (name, range) = url.split_once("?range=").or_else(|| url.split_once("&range=")).ok_or("no range")?;
-            let name = name.trim_end_matches("?x");
-            let data = self.0.get(name).ok_or("unknown")?;
+            if self.expired.is_some_and(|e| url.contains(e)) {
+                return Ok((403, Box::new(std::io::empty())));
+            }
+            let (address, range) = url.split_once("&range=").ok_or("no range")?;
+            let name = address.split('?').next().unwrap();
+            let data = self.data.get(name).ok_or("unknown")?;
             let (a, b) = range.split_once('-').ok_or("bad range")?;
             let (a, b): (usize, usize) = (a.parse().unwrap(), b.parse().unwrap());
             let b = b.min(data.len() - 1);
-            Ok((206, Box::new(std::io::Cursor::new(data[a..=b].to_vec()))))
+            let end = self.cut.map_or(b + 1, |cut| (a + cut).min(b + 1));
+            Ok((206, Box::new(std::io::Cursor::new(data[a..end].to_vec()))))
         }
+    }
+
+    fn files(data: HashMap<String, Vec<u8>>) -> Arc<dyn Fetch> {
+        Arc::new(Files { data, cut: None, expired: None })
     }
 
     fn target(name: &str, size: usize) -> Target {
@@ -1400,7 +1572,8 @@ mod tests {
     fn joins_dash_files() {
         let Ok(dir) = std::env::var("LUMTUB_CAST_SAMPLES") else { return };
         let (Some(v), Some(a)) = (sample(&dir, "v.mp4"), sample(&dir, "a.mp4")) else { return };
-        let files = Files(HashMap::from([("v.mp4".to_string(), v.clone()), ("a.mp4".to_string(), a.clone())]));
+        let both = HashMap::from([("v.mp4".to_string(), v.clone()), ("a.mp4".to_string(), a.clone())]);
+        let files = files(both.clone());
         for (kind, start, name) in [(Kind::Mp4, 0, "out.mp4"), (Kind::Ts, 0, "out.ts"), (Kind::Mp4, 9_500, "seek.mp4"), (Kind::Ts, 9_500, "seek.ts")] {
             let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: start, kind };
             let session = Session::new(ask, &files).expect("session");
@@ -1412,7 +1585,7 @@ mod tests {
         // VP9 from WebM and AV1 from MP4, each with the AAC sound.
         for (picture, start, name) in [("vp9.webm", 0, "vp9.mp4"), ("vp9.webm", 7_000, "vp9-seek.mp4"), ("av1.mp4", 0, "av1-out.mp4")] {
             let Some(p) = sample(&dir, picture) else { continue };
-            let files = Files(HashMap::from([(picture.to_string(), p.clone()), ("a.mp4".to_string(), a.clone())]));
+            let files = super::tests::files(HashMap::from([(picture.to_string(), p.clone()), ("a.mp4".to_string(), a.clone())]));
             let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: start, kind: Kind::Mp4 };
             let session = Session::new(ask, &files).expect("session");
             let mut out = Vec::new();
@@ -1422,8 +1595,34 @@ mod tests {
             let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Ts };
             assert!(Session::new(ask, &files).is_err());
         }
+        // Replies cut short every 300 kB, and an address refused until renewed.
+        let reference = std::fs::read(format!("{dir}/out.mp4")).unwrap();
+        let cutting: Arc<dyn Fetch> = Arc::new(Files { data: both.clone(), cut: Some(300_000), expired: None });
+        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4 };
+        let session = Session::new(ask, &cutting).expect("session");
+        let mut out = Vec::new();
+        session.stream(&cutting, &mut out).expect("stream");
+        assert_eq!(out, reference);
+        let expiring: Arc<dyn Fetch> = Arc::new(Files { data: both.clone(), cut: None, expired: Some("old=1") });
+        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4 };
+        let session = Arc::new(Session::new(ask, &files).expect("session"));
+        session.renew("v.mp4?x", "v.mp4?old=1");
+        let renewer = {
+            let session = session.clone();
+            std::thread::spawn(move || {
+                while !session.expired() {
+                    std::thread::sleep(Duration::from_millis(50));
+                }
+                assert!(session.renew("v.mp4?old=1", "v.mp4?new=1"));
+            })
+        };
+        let mut out = Vec::new();
+        session.stream(&expiring, &mut out).expect("stream");
+        renewer.join().unwrap();
+        assert!(!session.expired());
+        assert_eq!(out, reference);
         // The same stream through the server, as a TV reads it.
-        let server = Server::start(Arc::new(Files(files.0.clone()))).expect("listen");
+        let server = Server::start(files.clone()).expect("listen");
         let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Ts };
         let (path, start) = server.register(ask).expect("register");
         assert_eq!(start, 0.0);
@@ -1440,8 +1639,7 @@ mod tests {
     fn serves_a_session_over_http() {
         let mut v = Vec::new();
         put_box(&mut v, b"ftyp", |o| o.extend_from_slice(b"isom"));
-        let files = Arc::new(Files(HashMap::from([("v.mp4".to_string(), v.clone())])));
-        let server = Server::start(files.clone()).expect("listen");
+        let server = Server::start(files(HashMap::from([("v.mp4".to_string(), v.clone())]))).expect("listen");
         let ask = Ask { video: target("v.mp4", v.len()), audio: target("v.mp4", v.len()), start_ms: 0, kind: Kind::Mp4 };
         assert!(server.register(ask).unwrap_err().contains("picture"));
         let mut client = TcpStream::connect(("127.0.0.1", server.port())).unwrap();

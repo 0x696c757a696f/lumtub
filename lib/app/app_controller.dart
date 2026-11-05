@@ -411,14 +411,18 @@ class AppController extends ChangeNotifier with _ExploreState {
     return CastMedia(url: source.url, title: title, mime: source.mime, start: start);
   }
 
-  Timer? _castLog;
+  Timer? _castWatch;
 
   /// [split] joined by lumtub_core's cast server from [start]: an MPEG
   /// transport stream for a DLNA renderer, a fragmented MP4 for a
-  /// Chromecast. Seeking starts it again from the new position.
+  /// Chromecast. Seeking starts it again from the new position. While it
+  /// is cast, the server's log is copied into the app's, and the stream
+  /// addresses are renewed before YouTube lets them expire or once it has
+  /// refused one.
   Future<CastMedia> _joinedCast(CastSplit split, CastDevice device, Duration start, String title, Map<String, dynamic> info) async {
     final core = NativeCore.instance;
-    if (core == null) throw StateError('no lumtub_core');
+    final videoId = playing?.id;
+    if (core == null || videoId == null) throw StateError('no lumtub_core');
     // The cast server fetches YouTube itself, directly or through an HTTP proxy.
     if (proxy.url != null && !proxy.isHttp) throw StateError('a SOCKS proxy is set');
     final port = core.castStart();
@@ -430,16 +434,49 @@ class AppController extends ChangeNotifier with _ExploreState {
     final agent = info['http_headers'] is Map ? (info['http_headers'] as Map)['User-Agent']?.toString() : null;
     final duration = info['duration'] is num ? Duration(milliseconds: ((info['duration'] as num) * 1000).round()) : null;
     Map<String, dynamic> target(String url, int size) => {'url': url, 'size': size, if (agent != null) 'userAgent': agent, if (proxy.url != null) 'proxy': proxy.url};
-    _castLog ??= Timer.periodic(const Duration(seconds: 5), (timer) {
+    var current = split;
+    var renewing = false;
+    Future<void> renew() async {
+      renewing = true;
+      try {
+        _repository!.streams.forget(videoId);
+        final fresh = (await _repository!.streams.resolve(videoId, _format, formatSort: _formatSort)).info;
+        final next = current.renewedFrom(fresh);
+        if (next == null) {
+          logWarn('Cast: the new extraction lacks formats ${current.videoFormat}+${current.audioFormat}');
+          return;
+        }
+        final taken = core.castRenew({current.video: next.video, current.audio: next.audio});
+        logInfo('Cast: renewed the stream addresses ($taken streams)');
+        current = next;
+      } catch (e) {
+        logWarn('Cast: could not renew the stream addresses: $e');
+      } finally {
+        renewing = false;
+      }
+    }
+
+    _castWatch?.cancel();
+    // The device may take a while to load; the watch ends once it was seen
+    // casting this video and no longer is, or if it never started.
+    var seen = false;
+    _castWatch = Timer.periodic(const Duration(seconds: 5), (timer) {
       for (final line in (jsonDecode(core.castLog() ?? '[]') as List).cast<String>()) {
         logInfo(line);
       }
-      if (!cast.active) {
+      final casting = cast.active && cast.videoId == videoId;
+      seen |= casting;
+      if (!casting && (seen || timer.tick > 12)) {
         timer.cancel();
-        _castLog = null;
+        if (identical(_castWatch, timer)) _castWatch = null;
+        return;
       }
+      final expires = current.expires;
+      final soon = expires != null && expires.difference(DateTime.now()) < const Duration(minutes: 20);
+      if (!renewing && (soon || core.castExpired())) unawaited(renew());
     });
     Future<CastMedia> from(Duration at) async {
+      final split = current;
       final ask = jsonEncode({
         'video': target(split.video, split.videoSize),
         'audio': target(split.audio, split.audioSize),

@@ -61,7 +61,7 @@ CastSource? castSourceFromRelay(PipedVideo video, {PlayerSettings? settings}) {
 /// A picture stream and a sound stream the app joins for a TV
 /// (native/lumtub_core/src/cast.rs): MP4 or WebM files with an index.
 class CastSplit {
-  const CastSplit({required this.video, required this.videoSize, required this.audio, required this.audioSize, required this.height, this.fps = 30, this.codec = 'h264'});
+  const CastSplit({required this.video, required this.videoSize, required this.audio, required this.audioSize, required this.height, this.fps = 30, this.codec = 'h264', this.videoFormat = '', this.audioFormat = ''});
   final String video;
   final int videoSize;
   final String audio;
@@ -71,6 +71,28 @@ class CastSplit {
 
   /// h264, vp9 or av1.
   final String codec;
+
+  /// yt-dlp's format ids of the two streams, to find them again in a newer
+  /// extraction.
+  final String videoFormat;
+  final String audioFormat;
+
+  /// When YouTube stops accepting the addresses, from their `expire`.
+  DateTime? get expires {
+    final seconds = int.tryParse(Uri.tryParse(video)?.queryParameters['expire'] ?? '');
+    return seconds == null ? null : DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+  }
+
+  /// The same two streams in a newer yt-dlp extraction [info], with fresh
+  /// addresses; null when it lacks either.
+  CastSplit? renewedFrom(Map<String, dynamic> info) {
+    final formats = info['formats'];
+    if (formats is! List) return null;
+    String? url(String id) => formats.whereType<Map>().where((f) => f['format_id']?.toString() == id && f['url'] is String).map((f) => f['url'] as String).firstOrNull;
+    final (v, a) = (url(videoFormat), url(audioFormat));
+    if (v == null || a == null) return null;
+    return CastSplit(video: v, videoSize: videoSize, audio: a, audioSize: audioSize, height: height, fps: fps, codec: codec, videoFormat: videoFormat, audioFormat: audioFormat);
+  }
 
   /// Whether the picture fits an MPEG transport stream, which DLNA
   /// renderers take most reliably.
@@ -138,6 +160,8 @@ CastSplit? castSplitFromYtDlp(Map<String, dynamic> info, {int maxHeight = _castM
     height: (video['height'] as num).toInt(),
     fps: best!.$2,
     codec: _castCodec(video)!,
+    videoFormat: video['format_id']?.toString() ?? '',
+    audioFormat: audio['format_id']?.toString() ?? '',
   );
 }
 

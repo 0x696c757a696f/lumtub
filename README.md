@@ -5,19 +5,22 @@
 ### The YouTube app YouTube never made for your desktop.
 
 **No ads in the way. No browser eating your RAM. No feed that follows you around.**<br>
-A real native player with danmaku, bilingual subtitles, AI summaries and a recommendation feed that lives only on your PC.
+A real native player with danmaku, bilingual subtitles, AI summaries and a recommendation feed that lives only on your computer.<br>
+For **Windows, Linux and macOS**.
 
 [![Download](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=Download&style=for-the-badge&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
 [![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/0x696c757a696f)
 
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 ![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078D4?logo=windows)
-![Linux](https://img.shields.io/badge/Linux-coming_soon-FCC624?logo=linux&logoColor=black)
-![macOS](https://img.shields.io/badge/macOS-coming_soon-000000?logo=apple)
+![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux&logoColor=black)
+![macOS](https://img.shields.io/badge/macOS-preview-000000?logo=apple)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
 <img src="docs/screenshots/watch.png" alt="Lumtub playing a video, with Up next beside it" width="860">
+
+▶ **[Watch the one-minute tour](docs/promo/promo-en.mp4)**
 
 [Pain points](#the-things-youve-put-up-with-for-years) · [Why people switch](#why-people-switch) · [Features](#features) · [Get it](#get-it) · [Privacy](#privacy-you-can-check) · [FAQ](#faq) · [Support](#support-lumtub)
 
@@ -32,7 +35,7 @@ Every YouTube viewer knows these. None of them is hard to fix; they just aren't 
 | You know this one | What Lumtub does |
 |---|---|
 | 🔥 **The laptop fan takes off at 1080p.** The browser picks AV1 or VP9 even when your GPU can't decode it, and the CPU does the work. | Lumtub tests what **your** graphics card decodes in hardware and only picks those codecs. Same picture, a fraction of the power. |
-| 🕳️ **One curious click and your feed is ruined for a week.** | The For you feed is worked out **on your PC**, every card says why it's there, and "Not interested" actually removes the reason. |
+| 🕳️ **One curious click and your feed is ruined for a week.** | The For you feed is worked out **on your computer**, every card says why it's there, and "Not interested" actually removes the reason. |
 | 🗣️ **"This video is sponsored by…", "smash that like button", a 40-second intro.** | **SponsorBlock** skips them for you, by the community's timestamps. |
 | 😱 **Shocked faces and ALL-CAPS titles that lie.** | **DeArrow** swaps in honest titles and thumbnails written by other viewers. |
 | 🤖 **AI-generated slop everywhere.** | An opt-in **AI filter** hides videos labelled as AI and channels on community AI-slop lists. |
@@ -43,7 +46,7 @@ Every YouTube viewer knows these. None of them is hard to fix; they just aren't 
 | 💬 **Live chat flies past at 1,000 messages a minute.** | **Danmaku** across the picture, or a chat that holds still while you read. |
 | 💾 **Saving a video for the train needs Premium.** | Download any format YouTube really has, joined without re-encoding, and play it offline in the app. |
 | 🎧 **Music stops when you minimise the window.** | **Background playback** from the tray, media keys included. |
-| 🕵️ **Everything you watch builds a profile of you.** | No account needed and no telemetry. Your history, searches and recommendations never leave your PC. |
+| 🕵️ **Everything you watch builds a profile of you.** | No account needed and no telemetry. Your history, searches and recommendations never leave your computer. |
 
 ## Why people switch
 
@@ -51,7 +54,7 @@ Every YouTube viewer knows these. None of them is hard to fix; they just aren't 
 |---|---|---|
 | Player | Web player, software fallback, tab throttling | **mpv with hardware decoding**, smooth 4K, HDR and 60 fps |
 | Memory | A whole Chromium per tab | **Native app**, no browser inside |
-| Recommendations | Built from everything Google knows about you | **Worked out on your own PC**, every card says why |
+| Recommendations | Built from everything Google knows about you | **Worked out on your own computer**, every card says why |
 | Subtitles | One language at a time | **Two at once**, plus AI translation and speech-to-text when a video has none |
 | Live chat | Side panel only | Side panel, theater column **or danmaku across the picture** |
 | Sponsor segments, AI slop | Extensions you install and trust yourself | **Built in**, all opt-in |
@@ -63,8 +66,14 @@ Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 
 <table>
 <tr>
-<td><img src="docs/screenshots/channel.png" alt="A channel page in the light theme"></td>
-<td><img src="docs/screenshots/search.png" alt="Search results with channels and playlists in the dark theme"></td>
+<td align="center"><img src="docs/screenshots/windows.png" alt="A channel page on Windows in the light theme"><br><b>Windows</b></td>
+<td align="center"><img src="docs/screenshots/macos.png" alt="A video playing on macOS"><br><b>macOS</b></td>
+<td align="center"><img src="docs/screenshots/linux.png" alt="The Explore page on Linux in the dark theme"><br><b>Linux</b></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/search.png" alt="Search results with channels and playlists"><br>Search that finds channels and playlists too</td>
+<td align="center"><img src="docs/screenshots/settings.png" alt="Appearance settings"><br>Palettes, warm light, compact and low-resource modes</td>
+<td align="center"><img src="docs/screenshots/tour.gif" alt="Switching between the ten palettes"><br>Ten palettes, light and dark</td>
 </tr>
 </table>
 
@@ -88,7 +97,7 @@ Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 - **AI summaries** of a video from its subtitles, before you spend 40 minutes on it.
 - **AI filter (opt-in):** hide videos labelled as AI-generated and channels on community AI-slop lists.
 - **Focus mode** hides the home feed, comments and related videos when you just want to watch.
-- **Watch statistics** stay on your PC and show where your time goes.
+- **Watch statistics** stay on your computer and show where your time goes.
 
 ### 🔴 Live, like it should be
 - **Danmaku**: live chat and chat replays fly across the picture, Bilibili style, with a thin outline that stays readable.
@@ -110,7 +119,7 @@ Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 ### 🔐 Accounts only if you want them
 - **Google sign-in** for subscriptions, playlists, likes, comments and saving to YouTube playlists.
 - **TV-code or browser sign-in** for community posts, polls, comment likes and **members-only videos** you have access to.
-- Credentials are encrypted on your PC, protected by TPM or Windows Hello where available.
+- Credentials are encrypted on your computer, protected by TPM or Windows Hello on Windows and the keyring on Linux and macOS.
 
 ### ⚙️ Small things that add up
 - SponsorBlock, Return YouTube Dislike and DeArrow built in, all off by default.
@@ -134,14 +143,18 @@ Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 | `windows-x64-v3` | Most PCs from 2015 on (AVX2) — **pick this if unsure** |
 | `windows-x64` | Older x64 CPUs |
 | `windows-arm64` | Windows on ARM laptops |
+| `linux-x64` AppImage | 64-bit PCs with glibc 2.36 or newer (Debian 12, Ubuntu 24.04, Fedora 37 and later) |
+| `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 |
 
-Use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.
+**Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed.<br>
+**Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place.<br>
+The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.
 
-**Linux (AppImage) and macOS (DMG)** builds already run in testing and are coming to releases soon. ⭐ Star or watch the repository to hear when they land.
+**macOS** (separate DMGs for Apple silicon and Intel) is in testing and comes to releases once it has been tried on real Macs. ⭐ Star or watch the repository to hear when it lands.
 
 ## Privacy you can check
 
-🔒 Your recommendations, history, searches, statistics and "Not interested" choices never leave your PC. Lumtub never reads your browser's cookies or profiles. The optional browser sign-in opens a separate, temporary window, keeps only YouTube's cookies, encrypts them on your PC and deletes everything else. Syncing your watch history to YouTube is off unless you turn it on.
+🔒 Your recommendations, history, searches, statistics and "Not interested" choices never leave your computer. Lumtub never reads your browser's cookies or profiles. The optional browser sign-in opens a separate, temporary window, keeps only YouTube's cookies, encrypts them on your computer and deletes everything else. Syncing your watch history to YouTube is off unless you turn it on.
 
 Videos play straight from YouTube. Only if you pick a Piped or Invidious server, or YouTube refuses and Lumtub falls back to one, does that server see which video you watch.
 
@@ -155,7 +168,7 @@ Everything is open source under the GPL, so none of this has to be taken on trus
 
 **Do I need a Google account?** No. Everything except account features (likes, comments, syncing) works signed out.
 
-**Where is my data?** `%LOCALAPPDATA%\Lumtub` for the installed app, or the `userdata` folder next to `lumtub.exe` for the portable version. Settings can be exported and imported.
+**Where is my data?** On Windows in `%LOCALAPPDATA%\Lumtub`, or the `userdata` folder next to `lumtub.exe` for the portable version. On Linux in `~/.local/share/lumtub`, on macOS in `~/Library/Application Support/Lumtub`. Settings can be exported and imported.
 
 **Was this called YTPlus?** Yes, until October 2026. Updating keeps your settings, library and sign-in.
 

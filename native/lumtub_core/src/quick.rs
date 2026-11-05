@@ -149,7 +149,7 @@ pub fn info(player: &Value, settings: &Settings) -> Option<Value> {
     };
     let sounds = || formats.iter().filter(|f| !f.video && f.default_audio);
     let audio = sounds()
-        .filter(|f| f.bitrate <= limit + limit / 10)
+        .filter(|f| f.bitrate <= limit.saturating_add(limit / 10))
         .max_by_key(|f| f.bitrate)
         .or_else(|| sounds().min_by_key(|f| f.bitrate))?;
     Some(json!({

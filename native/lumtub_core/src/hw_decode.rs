@@ -86,12 +86,20 @@ pub fn probe() -> Option<Decoders> {
     const VP9_PROFILE0: c_int = 19;
     const AV1_PROFILE0: c_int = 32;
 
-    unsafe fn open(name: &CStr) -> Option<*mut c_void> {
-        let library = unsafe { libc::dlopen(name.as_ptr(), libc::RTLD_NOW | libc::RTLD_LOCAL) };
-        (!library.is_null()).then_some(library)
+    /// A dlopen handle, closed when dropped.
+    struct Library(*mut c_void);
+    impl Drop for Library {
+        fn drop(&mut self) {
+            // SAFETY: [self.0] came from dlopen and is closed only here.
+            unsafe { libc::dlclose(self.0) };
+        }
     }
-    unsafe fn symbol<T>(library: *mut c_void, name: &CStr) -> Option<T> {
-        let found = unsafe { libc::dlsym(library, name.as_ptr()) };
+    unsafe fn open(name: &CStr) -> Option<Library> {
+        let library = unsafe { libc::dlopen(name.as_ptr(), libc::RTLD_NOW | libc::RTLD_LOCAL) };
+        (!library.is_null()).then_some(Library(library))
+    }
+    unsafe fn symbol<T>(library: &Library, name: &CStr) -> Option<T> {
+        let found = unsafe { libc::dlsym(library.0, name.as_ptr()) };
         // SAFETY: T is the function pointer type of [name].
         (!found.is_null()).then(|| unsafe { std::mem::transmute_copy::<*mut c_void, T>(&found) })
     }
@@ -100,15 +108,15 @@ pub fn probe() -> Option<Decoders> {
     unsafe {
         let va = open(c"libva.so.2")?;
         let drm = open(c"libva-drm.so.2")?;
-        let get_display: unsafe extern "C" fn(c_int) -> Display = symbol(drm, c"vaGetDisplayDRM")?;
-        let initialize: unsafe extern "C" fn(Display, *mut c_int, *mut c_int) -> c_int = symbol(va, c"vaInitialize")?;
-        let terminate: unsafe extern "C" fn(Display) -> c_int = symbol(va, c"vaTerminate")?;
-        let vendor: unsafe extern "C" fn(Display) -> *const std::ffi::c_char = symbol(va, c"vaQueryVendorString")?;
-        let max_profiles: unsafe extern "C" fn(Display) -> c_int = symbol(va, c"vaMaxNumProfiles")?;
-        let query_profiles: unsafe extern "C" fn(Display, *mut c_int, *mut c_int) -> c_int = symbol(va, c"vaQueryConfigProfiles")?;
-        let max_entrypoints: unsafe extern "C" fn(Display) -> c_int = symbol(va, c"vaMaxNumEntrypoints")?;
-        let query_entrypoints: unsafe extern "C" fn(Display, c_int, *mut c_int, *mut c_int) -> c_int = symbol(va, c"vaQueryConfigEntrypoints")?;
-        let get_attributes: unsafe extern "C" fn(Display, c_int, c_int, *mut Attrib, c_int) -> c_int = symbol(va, c"vaGetConfigAttributes")?;
+        let get_display: unsafe extern "C" fn(c_int) -> Display = symbol(&drm, c"vaGetDisplayDRM")?;
+        let initialize: unsafe extern "C" fn(Display, *mut c_int, *mut c_int) -> c_int = symbol(&va, c"vaInitialize")?;
+        let terminate: unsafe extern "C" fn(Display) -> c_int = symbol(&va, c"vaTerminate")?;
+        let vendor: unsafe extern "C" fn(Display) -> *const std::ffi::c_char = symbol(&va, c"vaQueryVendorString")?;
+        let max_profiles: unsafe extern "C" fn(Display) -> c_int = symbol(&va, c"vaMaxNumProfiles")?;
+        let query_profiles: unsafe extern "C" fn(Display, *mut c_int, *mut c_int) -> c_int = symbol(&va, c"vaQueryConfigProfiles")?;
+        let max_entrypoints: unsafe extern "C" fn(Display) -> c_int = symbol(&va, c"vaMaxNumEntrypoints")?;
+        let query_entrypoints: unsafe extern "C" fn(Display, c_int, *mut c_int, *mut c_int) -> c_int = symbol(&va, c"vaQueryConfigEntrypoints")?;
+        let get_attributes: unsafe extern "C" fn(Display, c_int, c_int, *mut Attrib, c_int) -> c_int = symbol(&va, c"vaGetConfigAttributes")?;
 
         let mut nodes: Vec<_> = std::fs::read_dir("/dev/dri").ok()?.flatten().map(|e| e.path()).filter(|p| p.file_name().is_some_and(|n| n.to_string_lossy().starts_with("renderD"))).collect();
         nodes.sort();
@@ -120,6 +128,7 @@ pub fn probe() -> Option<Decoders> {
             }
             let (mut major, mut minor) = (0, 0);
             if initialize(display, &mut major, &mut minor) != 0 {
+                terminate(display);
                 continue;
             }
             let name = vendor(display);

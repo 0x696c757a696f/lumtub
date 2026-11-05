@@ -38,6 +38,13 @@ Future<void> main() async {
   };
   // Load the theme before the first frame so the window never flashes the
   // wrong colours.
+  // The translations come first: the saved language is only recognised once
+  // they say which languages can be chosen.
+  try {
+    await loadTranslations();
+  } catch (e) {
+    logError('Could not read the translations', e);
+  }
   AppearanceSettingsStore? store;
   var appearance = const AppearanceSettings();
   try {
@@ -45,11 +52,6 @@ Future<void> main() async {
     appearance = await store.load();
   } catch (_) {
     // Directories are created again, with errors reported, during startup.
-  }
-  try {
-    await loadTranslations();
-  } catch (e) {
-    logError('Could not read the translations', e);
   }
   setLanguage(appearance.language);
   runApp(LumtubApp(controller: AppController(appearance: appearance, appearanceStore: store)));

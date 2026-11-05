@@ -59,6 +59,14 @@ void main() {
     }
   });
 
+  test('a saved language other than Chinese or English is kept', () {
+    for (final language in AppLanguage.selectable) {
+      final saved = AppearanceSettings.fromJson(const AppearanceSettings().copyWith(language: language).toJson());
+      expect(saved.language, language);
+    }
+    expect(AppLanguage.selectable.length, greaterThan(60));
+  });
+
   test('translates with placeholders and falls back to the source text', () {
     setLanguage(AppLanguage.en);
     expect(tr('冷门宝藏'), 'Hidden gems');

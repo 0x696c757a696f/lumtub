@@ -70,7 +70,7 @@ jobs:
           # A new release is published before its assets finish uploading, so
           # take the newest one that already has this architecture's archive.
           $pattern = "^mpv-dev-$([regex]::Escape($env:MPV_ARCH))-.+\.7z$"
-          $releases = Invoke-RestMethod -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases?per_page=5' -Headers $headers
+          $releases = Invoke-RestMethod -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases?per_page=5' -Headers $headers
           $release = $null
           $asset = $null
           foreach ($candidate in $releases) {
@@ -86,14 +86,14 @@ jobs:
           $archive = Join-Path $env:RUNNER_TEMP $asset.name
           $extractDir = Join-Path $env:RUNNER_TEMP 'lumtub-mpv-check'
           New-Item -ItemType Directory -Force -Path $extractDir | Out-Null
-          Invoke-WebRequest -Uri $downloadUri -OutFile $archive -Headers $headers
+          Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri $downloadUri -OutFile $archive -Headers $headers
           $actualHash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($actualHash -ne $expectedHash) { throw "SHA-256 mismatch for $($asset.name)" }
           & tar.exe -xf $archive -C $extractDir 2>$null
           $library = Get-ChildItem -LiteralPath $extractDir -Filter 'libmpv-2.dll' -File -Recurse | Select-Object -First 1
           if (-not $library) {
             $sevenZip = Join-Path $env:RUNNER_TEMP '7zr.exe'
-            Invoke-WebRequest -Uri 'https://www.7-zip.org/a/7zr.exe' -OutFile $sevenZip
+            Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://www.7-zip.org/a/7zr.exe' -OutFile $sevenZip
             & $sevenZip x -y "-o$extractDir" $archive | Out-Null
             if ($LASTEXITCODE -ne 0) { throw 'Could not extract the latest libmpv archive.' }
             $library = Get-ChildItem -LiteralPath $extractDir -Filter 'libmpv-2.dll' -File -Recurse | Select-Object -First 1
@@ -109,7 +109,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $archive = Join-Path $env:RUNNER_TEMP "flutter_windows_$env:FLUTTER_VERSION-stable.zip"
           $destination = Join-Path $env:RUNNER_TEMP 'flutter-sdk'
-          Invoke-WebRequest -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_$env:FLUTTER_VERSION-stable.zip" -OutFile $archive
+          Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_$env:FLUTTER_VERSION-stable.zip" -OutFile $archive
           Expand-Archive -LiteralPath $archive -DestinationPath $destination -Force
           $flutterBin = Join-Path $destination 'flutter/bin'
           if (-not (Test-Path -LiteralPath $flutterBin)) { throw 'Flutter SDK did not contain flutter/bin.' }
@@ -198,7 +198,7 @@ jobs:
 
           # Headers from the archive media_kit uses on x64 (same MD5 check).
           $archive = Join-Path $env:RUNNER_TEMP 'ANGLE.7z'
-          Invoke-WebRequest -Uri 'https://github.com/alexmercerind/flutter-windows-ANGLE-OpenGL-ES/releases/download/v1.0.1/ANGLE.7z' -OutFile $archive
+          Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://github.com/alexmercerind/flutter-windows-ANGLE-OpenGL-ES/releases/download/v1.0.1/ANGLE.7z' -OutFile $archive
           $md5 = (Get-FileHash -LiteralPath $archive -Algorithm MD5).Hash.ToLowerInvariant()
           if ($md5 -ne 'e866f13e8d552348058afaafe869b1ed') { throw 'ANGLE header archive failed its MD5 check.' }
           $headers = Join-Path $env:RUNNER_TEMP 'angle-headers'
@@ -228,7 +228,7 @@ jobs:
           if (-not (Get-Command rustup -ErrorAction SilentlyContinue)) {
             $hostTriple = if ($env:PACKAGE_ARCH -eq 'arm64') { 'aarch64-pc-windows-msvc' } else { 'x86_64-pc-windows-msvc' }
             $init = Join-Path $env:RUNNER_TEMP 'rustup-init.exe'
-            Invoke-WebRequest -Uri "https://static.rust-lang.org/rustup/dist/$hostTriple/rustup-init.exe" -OutFile $init
+            Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri "https://static.rust-lang.org/rustup/dist/$hostTriple/rustup-init.exe" -OutFile $init
             & $init -y --profile minimal --no-modify-path
             if ($LASTEXITCODE -ne 0) { throw 'rustup-init failed.' }
             $cargoBin = Join-Path $env:USERPROFILE '.cargo\bin'
@@ -516,7 +516,10 @@ jobs:
           echo "$APPIMAGETOOL_SHA256  $tool" | sha256sum -c -
           chmod +x "$tool"
           # No FUSE in the container: the tool unpacks itself and runs.
-          APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$APPIMAGE_ARCH" "$tool" --no-appstream "$RUNNER_TEMP/AppDir" "Lumtub_${LUMTUB_VERSION}_linux-$PACKAGE_ARCH.AppImage"
+          # The runtime appimagetool would fetch itself, with retries.
+          runtime="$RUNNER_TEMP/runtime"
+          curl -fsSL --retry 5 --retry-all-errors -o "$runtime" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$APPIMAGE_ARCH"
+          APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$APPIMAGE_ARCH" "$tool" --runtime-file "$runtime" --no-appstream "$RUNNER_TEMP/AppDir" "Lumtub_${LUMTUB_VERSION}_linux-$PACKAGE_ARCH.AppImage"
           ls -l Lumtub_*.AppImage
 
       - name: Linux - smoke test the AppImage

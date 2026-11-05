@@ -201,6 +201,12 @@ vo=gpu-next
     expect(reset.secondarySubtitleLanguage, 'ja');
   });
 
+  test('a second subtitle chosen at 0.8 stays at 0.8; only old saves move to 0.9', () {
+    final chosen = PlayerSettings.fromJson(const PlayerSettings().copyWith(secondaryScale: 0.8).toJson());
+    expect(chosen.secondaryScale, 0.8);
+    expect(PlayerSettings.fromJson({'secondaryScale': 0.8}).secondaryScale, 0.9);
+  });
+
   test('refuses font names and languages mpv or the app cannot take', () {
     final read = PlayerSettings.fromJson({'subtitleFont': 'Arial, "x"', 'secondaryFont': '', 'secondarySubtitleLanguage': 'xx', 'subtitleOpacity': 0});
     expect(read.subtitleFont, '');

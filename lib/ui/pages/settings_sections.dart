@@ -25,7 +25,6 @@ import '../../player_settings.dart';
 import '../../progress_line.dart';
 import '../../video_codec.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
-import '../../system_env.dart' show restartApp;
 import '../../windows_video_info.dart';
 import '../common.dart';
 import '../format_policy_dialogs.dart';
@@ -177,7 +176,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
     await controller.saveAppearance(next);
     if (!context.mounted || next.language.resolved == currentLanguage) return;
     final restart = await confirmDialog(context, title: tr('重启后切换语言'), content: tr('Lumtub 重启后以新的语言显示。现在重启吗？'), confirm: tr('立即重启'));
-    if (restart) await restartApp();
+    if (restart) await controller.restart();
   }
 
   final hardware = settings.hwdec != 'no';
@@ -814,7 +813,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               onChanged: (v) => savePrefs(prefs.copyWith(closeToTray: v)),
             ), subtitle: tr('托盘 后台播放')),
         if (AppWindow.waylandDesktop && controller.directories != null)
-          SettingEntry(tr('X11 兼容模式'), (context) => _X11ModeSwitch(data: controller.directories!.data), subtitle: tr('Wayland 置顶 画中画')),
+          SettingEntry(tr('X11 兼容模式'), (context) => _X11ModeSwitch(controller: controller, data: controller.directories!.data), subtitle: tr('Wayland 置顶 画中画')),
         SettingEntry(tr('延长播放控件显示时间'), (context) => NormalItem(
               title: tr('播放控件显示时间'),
               subtitle: tr('鼠标不动 {0} 后隐藏', [labelOf(_hideTimes, prefs.controlsHideSeconds)]),
@@ -1549,8 +1548,9 @@ TextStyle _subtitle(BuildContext context) => Theme.of(context).textTheme.labelMe
 /// Linux on Wayland: draw the window through XWayland from the next start,
 /// so it can stay on top and picture in picture can be placed.
 class _X11ModeSwitch extends StatefulWidget {
-  const _X11ModeSwitch({required this.data});
+  const _X11ModeSwitch({required this.controller, required this.data});
 
+  final AppController controller;
   final Directory data;
 
   @override
@@ -1574,7 +1574,7 @@ class _X11ModeSwitchState extends State<_X11ModeSwitch> {
     setState(() => _on = on);
     if (!mounted) return;
     final restart = await confirmDialog(context, title: tr('重启后生效'), content: tr('Lumtub 重启后改用新的显示方式。现在重启吗？'), confirm: tr('立即重启'));
-    if (restart) await restartApp();
+    if (restart) await widget.controller.restart();
   }
 
   @override

@@ -252,6 +252,11 @@ class AppController extends ChangeNotifier with _ExploreState {
       _notice(tr('无法切换：{0}', ['$e']));
       return;
     }
+    await restart();
+  }
+
+  /// Saves everything still waiting to be written, then starts Lumtub again.
+  Future<void> restart() async {
     await shutdown(install: false);
     await restartApp();
   }
@@ -2888,6 +2893,10 @@ class AppController extends ChangeNotifier with _ExploreState {
     await downloads?.flush();
     await _translationCache.save();
     await _flushAppearance();
+    if (_brightnessSave?.isActive ?? false) {
+      _brightnessSave!.cancel();
+      await _settingsStore?.save(settings);
+    }
     for (final subscription in _playerSubscriptions) {
       await subscription.cancel();
     }

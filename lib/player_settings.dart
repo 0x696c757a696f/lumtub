@@ -617,6 +617,7 @@ class PlayerSettings {
         'cacheSeconds': cacheSeconds,
         'cacheMemoryMb': cacheMemoryMb,
         'bufferDefaults': 2,
+        'subtitleStyleVersion': 2,
         'strategy': strategy.name,
         'disabledCodecs': chosenCodecs == null ? null : [for (final c in VideoCodec.values) if (chosenCodecs!.contains(c)) c.name],
         'audioQuality': audioQuality.name,
@@ -729,7 +730,7 @@ class PlayerSettings {
     if (conf.isEmpty && raw['customOptions'] is Map) {
       conf = [for (final entry in (raw['customOptions'] as Map).entries) '${entry.key}=${entry.value}'].join('\n');
     }
-    if (conf.length > 20000) conf = '';
+    if (conf.length > 200000) conf = '';
     final picture = <String, int>{};
     if (raw['picture'] is Map) {
       for (final (key, _) in pictureProperties) {
@@ -783,8 +784,9 @@ class PlayerSettings {
       subtitleColor: number('subtitleColor', 0xFFFFFF, 0, 0xFFFFFF),
       subtitleOpacity: decimal('subtitleOpacity', 1.0, 0.1, 1.0),
       secondaryFont: raw.containsKey('secondaryFont') ? cleanFont(raw['secondaryFont']) : defaultSubtitleFont,
-      // 0.8 was the default before it grew to 0.9, too small to read.
-      secondaryScale: raw['secondaryScale'] == 0.8 ? 0.9 : decimal('secondaryScale', 0.9, 0.5, 3.0),
+      // 0.8 was the default before it grew to 0.9, too small to read;
+      // from subtitleStyleVersion 2 on, a saved 0.8 was chosen.
+      secondaryScale: raw['secondaryScale'] == 0.8 && raw['subtitleStyleVersion'] != 2 ? 0.9 : decimal('secondaryScale', 0.9, 0.5, 3.0),
       secondaryColor: number('secondaryColor', 0xFFE7A8, 0, 0xFFFFFF),
       secondaryOpacity: decimal('secondaryOpacity', 0.95, 0.1, 1.0),
       cacheMode: choice('cacheMode', {'auto', 'yes', 'no'}, 'auto'),
@@ -847,7 +849,7 @@ class PlayerSettings {
       invidiousServer: normalizePipedServer(raw['invidiousServer']?.toString() ?? '') ?? '',
       directRendering: choice('directRendering', {'auto', 'yes', 'no'}, 'auto'),
       autosync: number('autosync', 0, 0, 100),
-      audioFilter: filter.length > 300 || filter.contains(RegExp(r'[\r\n]')) ? '' : filter,
+      audioFilter: filter.length > 4000 || filter.contains(RegExp(r'[\r\n]')) ? '' : filter,
       picture: picture,
       audioDelayMs: number('audioDelayMs', 0, -5000, 5000),
     );

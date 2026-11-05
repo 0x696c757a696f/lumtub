@@ -21,7 +21,7 @@ while kill -0 "$app" 2> /dev/null; do
   if [ -e "$out/rec-start" ]; then
     eval "$(xdotool getwindowgeometry --shell "$window")"
     ffmpeg -hide_banner -loglevel error -y -f x11grab -draw_mouse 0 -framerate 30 -video_size "${WIDTH}x${HEIGHT}" -i "$DISPLAY+$X,$Y" \
-      -c:v libx264 -preset veryfast -crf 16 -pix_fmt yuv420p "$out/tour.mp4" < /dev/null &
+      -c:v libx264 -preset veryfast -crf 16 -pix_fmt yuv420p "$out/$(cat "$out/rec-start")" < /dev/null &
     recorder=$!
     sleep 1
     rm -f "$out/rec-start"
@@ -52,6 +52,5 @@ chmod +x "$out/run.sh"
 xvfb-run -a -s "-screen 0 1920x1200x24" "$out/run.sh" "$out" "$appimage"
 cp "$out/home/.local/share/lumtub/logs/lumtub.log" "$out/" 2> /dev/null || true
 rm -rf "$out/home" "$out/run.sh"
-[ -s "$out/tour.mp4" ] && "$(dirname "$0")/promo.sh" "$out"
 ls -l "$out"
 tail -n 40 "$out/stdout.txt"

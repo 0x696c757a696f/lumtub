@@ -588,6 +588,32 @@ jobs:
         with:
           pattern: readme-shots-*
           path: ${{ runner.temp }}/shots
+      - name: Cache the narration voice
+        if: steps.wanted.outputs.run == 'true'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/kokoro
+          key: kokoro-v1.0
+      - name: Make the promo videos
+        if: steps.wanted.outputs.run == 'true'
+        continue-on-error: true
+        run: |
+          # Kokoro (Apache-2.0) reads the narration; the files are checked
+          # against the hashes they had when this was written.
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-cjk fontconfig
+          voice="$RUNNER_TEMP/kokoro"
+          mkdir -p "$voice"
+          for file in kokoro-v1.0.onnx voices-v1.0.bin; do
+            [ -s "$voice/$file" ] || curl -fsSL --retry 5 --retry-all-errors -o "$voice/$file" "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/$file"
+          done
+          (cd "$voice" && sha256sum -c) <<'SUMS'
+          7d5df8ecf7d4b1878015a32686053fd0eebe2bc377234608764cc0ef3636a6c5  kokoro-v1.0.onnx
+          bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d  voices-v1.0.bin
+          SUMS
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -q kokoro-onnx==0.6.1 'misaki[zh]==0.7.4' scipy==1.18.1 pillow==13.0.0
+          "$RUNNER_TEMP/venv/bin/python" linux/packaging/promo.py "$RUNNER_TEMP/shots/readme-shots-linux" "$voice/kokoro-v1.0.onnx" "$voice/voices-v1.0.bin"
       - name: Push the pictures
         if: steps.wanted.outputs.run == 'true'
         run: |

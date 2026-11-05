@@ -6,7 +6,8 @@
 //! do. Only addresses the app registered are served, only on 127.0.0.1.
 //!
 //! Every connection runs on its own thread, so the stream's bytes never
-//! pass through Dart. TLS is the operating system's (SChannel on Windows).
+//! pass through Dart. TLS is the operating system's (SChannel on Windows)
+//! unless another certificate list was chosen (see [crate::roots]).
 
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
@@ -40,6 +41,11 @@ pub struct Target {
     /// Bytes fetched from YouTube per request.
     #[serde(default = "chunk")]
     pub chunk: u64,
+    /// For a live stream's picture or sound, the name it shares with the
+    /// other: it is served as it grows, a fragment at a time, and both
+    /// start at the same fragment (see [crate::relay_live]).
+    #[serde(default)]
+    pub live: Option<String>,
 }
 
 fn chunk() -> u64 {
@@ -51,6 +57,8 @@ struct Shared {
     targets: HashMap<String, Target>,
     order: VecDeque<String>,
     log: VecDeque<String>,
+    /// The fragment each live pair starts at, by its shared name.
+    live_starts: VecDeque<(String, u64)>,
 }
 
 pub struct Relay {
@@ -61,57 +69,98 @@ pub struct Relay {
 /// What the relay reads from YouTube: the reply's status and body.
 pub trait Fetch: Send + Sync {
     fn get(&self, target: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String>;
+
+    /// [Fetch::get], with the newest fragment of a live stream YouTube
+    /// names in `x-head-seqnum`.
+    fn get_live(&self, target: &Target, url: &str) -> Result<(u16, Option<u64>, Box<dyn Read + Send>), String> {
+        self.get(target, url).map(|(status, body)| (status, None, body))
+    }
 }
 
-/// HTTP with the operating system's TLS, one agent per proxy.
+/// HTTP with the app's TLS, one client per proxy and certificate list.
 #[derive(Default)]
 pub struct Web {
-    agents: Mutex<HashMap<Option<String>, ureq::Agent>>,
+    clients: Mutex<HashMap<(Option<String>, crate::roots::Roots), reqwest::Client>>,
 }
 
+/// How long YouTube may take to start answering.
+const ANSWER_WAIT: Duration = Duration::from_secs(20);
+
 impl Web {
-    fn agent(&self, proxy: &Option<String>) -> Result<ureq::Agent, String> {
-        let mut agents = self.agents.lock().unwrap();
-        if let Some(agent) = agents.get(proxy) {
-            return Ok(agent.clone());
+    fn client(&self, proxy: &Option<String>) -> Result<reqwest::Client, String> {
+        let roots = crate::roots::current();
+        let key = (proxy.clone(), roots);
+        let mut clients = self.clients.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(client) = clients.get(&key) {
+            return Ok(client.clone());
         }
-        let proxy_config = match proxy {
-            Some(p) => Some(ureq::Proxy::new(p).map_err(|e| e.to_string())?),
-            None => None,
+        let mut builder = reqwest::Client::builder()
+            .connect_timeout(Duration::from_secs(15))
+            .read_timeout(Duration::from_secs(120))
+            .pool_idle_timeout(Duration::from_secs(90))
+            .tcp_nodelay(true)
+            .http2_adaptive_window(true)
+            // Stream bytes are not compressed; asking for them as they are
+            // keeps every range exactly as long as the request said.
+            .no_gzip()
+            .no_brotli()
+            .no_deflate()
+            .redirect(reqwest::redirect::Policy::limited(10))
+            // 加密 DNS, when it is on, finds YouTube's stream servers too.
+            .dns_resolver(Arc::new(crate::dns::LiveResolver));
+        builder = match proxy {
+            Some(p) => builder.proxy(reqwest::Proxy::all(p).map_err(|e| e.to_string())?),
+            None => builder.no_proxy(),
         };
-        let config = ureq::Agent::config_builder()
-            .http_status_as_error(false)
-            .proxy(proxy_config)
-            // The system's certificate store, as libmpv and the rest of the app
-            // use: a proxy or security tool that inspects HTTPS installs its own
-            // root there, and a fixed list of roots would reject every stream.
-            .tls_config(
-                ureq::tls::TlsConfig::builder()
-                    .provider(ureq::tls::TlsProvider::NativeTls)
-                    .root_certs(ureq::tls::RootCerts::PlatformVerifier)
-                    .build(),
-            )
-            .timeout_connect(Some(Duration::from_secs(15)))
-            .timeout_recv_response(Some(Duration::from_secs(20)))
-            .timeout_recv_body(Some(Duration::from_secs(120)))
-            .build();
-        // 加密 DNS, when it is on, finds YouTube's stream servers too.
-        let agent = ureq::Agent::with_parts(config, ureq::unversioned::transport::DefaultConnector::default(), crate::dns::BlockingResolver);
-        agents.insert(proxy.clone(), agent.clone());
-        Ok(agent)
+        // The system's certificate store unless another list was chosen, as
+        // libmpv and the rest of the app: a proxy or security tool that
+        // inspects HTTPS installs its own root there.
+        let client = crate::roots::apply(builder, roots).build().map_err(|e| e.to_string())?;
+        clients.insert(key, client.clone());
+        Ok(client)
     }
 }
 
 impl Fetch for Web {
     fn get(&self, target: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String> {
-        let agent = self.agent(&target.proxy)?;
-        let mut request = agent.get(url);
+        self.get_live(target, url).map(|(status, _, body)| (status, body))
+    }
+
+    fn get_live(&self, target: &Target, url: &str) -> Result<(u16, Option<u64>, Box<dyn Read + Send>), String> {
+        let client = self.client(&target.proxy)?;
+        let mut request = client.get(url);
         if let Some(ua) = &target.user_agent {
             request = request.header("User-Agent", ua);
         }
-        let reply = request.call().map_err(|e| e.to_string())?;
+        let reply = crate::http::runtime()
+            .block_on(async { tokio::time::timeout(ANSWER_WAIT, request.send()).await })
+            .map_err(|_| "no answer in 20 s".to_string())?
+            .map_err(|e| e.to_string())?;
         let status = reply.status().as_u16();
-        Ok((status, Box::new(reply.into_body().into_reader())))
+        let head = reply.headers().get("x-head-seqnum").and_then(|v| v.to_str().ok()).and_then(|v| v.trim().parse().ok());
+        Ok((status, head, Box::new(Reply { reply, piece: bytes::Bytes::new() })))
+    }
+}
+
+/// A reply's body, read on the calling thread a network piece at a time.
+struct Reply {
+    reply: reqwest::Response,
+    piece: bytes::Bytes,
+}
+
+impl Read for Reply {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        while self.piece.is_empty() {
+            match crate::http::runtime().block_on(self.reply.chunk()) {
+                Ok(Some(piece)) => self.piece = piece,
+                Ok(None) => return Ok(0),
+                Err(e) => return Err(std::io::Error::other(e)),
+            }
+        }
+        let n = buffer.len().min(self.piece.len());
+        buffer[..n].copy_from_slice(&self.piece[..n]);
+        self.piece = self.piece.slice(n..);
+        Ok(n)
     }
 }
 
@@ -153,7 +202,7 @@ impl Relay {
     /// A loopback address that serves [target], or none when its size is
     /// unknown (it is needed for seeking).
     pub fn register(&self, mut target: Target) -> Option<String> {
-        if target.size == 0 || target.url.is_empty() || target.chunk == 0 {
+        if (target.size == 0 && target.live.is_none()) || target.url.is_empty() || target.chunk == 0 {
             return None;
         }
         if target.mime.is_none() {
@@ -175,6 +224,21 @@ impl Relay {
     pub fn take_log(&self) -> Vec<String> {
         self.shared.lock().unwrap().log.drain(..).collect()
     }
+}
+
+/// The fragment the live pair [pair] starts at: [crate::relay_live::BEHIND]
+/// before the newest, [head], for whichever of its streams asks first.
+fn live_start(shared: &Mutex<Shared>, pair: &str, head: u64) -> u64 {
+    let mut shared = shared.lock().unwrap();
+    if let Some((_, start)) = shared.live_starts.iter().find(|(name, _)| name == pair) {
+        return *start;
+    }
+    let start = head.saturating_sub(crate::relay_live::BEHIND);
+    shared.live_starts.push_back((pair.to_string(), start));
+    while shared.live_starts.len() > KEEP {
+        shared.live_starts.pop_front();
+    }
+    start
 }
 
 fn log(shared: &Mutex<Shared>, line: String) {
@@ -285,6 +349,16 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
             }
             continue;
         };
+        if let Some(pair) = target.live.clone() {
+            if method == "GET" {
+                let start = |head: u64| live_start(shared, &pair, head);
+                crate::relay_live::stream(writer, &target, fetch, start, |line| log(shared, line));
+            } else {
+                let mime = target.mime.as_deref().unwrap_or("application/octet-stream");
+                let _ = write!(writer, "HTTP/1.1 200 OK\r\nContent-Type: {mime}\r\nConnection: close\r\n\r\n");
+            }
+            return;
+        }
         let size = target.size;
         let (status, start, end) = match byte_range(headers.get("range").map(String::as_str), size) {
             Range::Whole => ("200 OK", 0, size - 1),
@@ -361,7 +435,7 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
     }
 }
 
-type Request = (String, String, HashMap<String, String>);
+pub(crate) type Request = (String, String, HashMap<String, String>);
 
 /// Connections served at once.
 const MAX_CONNECTIONS: usize = 64;
@@ -379,7 +453,7 @@ fn read_bounded_line(reader: &mut BufReader<TcpStream>, line: &mut String) -> Op
     Some(n)
 }
 
-fn read_request(reader: &mut BufReader<TcpStream>) -> Option<Request> {
+pub(crate) fn read_request(reader: &mut BufReader<TcpStream>) -> Option<Request> {
     let mut line = String::new();
     let mut total = 0;
     read_bounded_line(reader, &mut line).filter(|&n| n > 0)?;
@@ -405,7 +479,7 @@ fn read_request(reader: &mut BufReader<TcpStream>) -> Option<Request> {
     Some((method, path, headers))
 }
 
-enum Stop {
+pub(crate) enum Stop {
     /// libmpv hung up, most often to seek.
     Client,
     /// YouTube's side failed.
@@ -415,7 +489,7 @@ enum Stop {
 }
 
 impl Stop {
-    fn why(&self) -> String {
+    pub(crate) fn why(&self) -> String {
         match self {
             Stop::Client => "libmpv hung up".into(),
             Stop::Upstream(message) => message.clone(),
@@ -424,7 +498,7 @@ impl Stop {
     }
 }
 
-type Body = Box<dyn Read + Send>;
+pub(crate) type Body = Box<dyn Read + Send>;
 
 /// Bytes moved from a YouTube reply to its drained copy at a time.
 const PIECE: usize = 64 << 10;
@@ -440,7 +514,7 @@ struct Drained {
     at: usize,
 }
 
-fn drain(mut body: Body, limit: u64) -> Body {
+pub(crate) fn drain(mut body: Body, limit: u64) -> Body {
     let (tx, rx) = std::sync::mpsc::sync_channel((limit / PIECE as u64 + 1) as usize);
     std::thread::spawn(move || loop {
         let mut piece = vec![0; PIECE];
@@ -566,7 +640,7 @@ fn copy(from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>, buffe
     Ok(())
 }
 
-fn request(fetch: &dyn Fetch, target: &Target, from: u64, to: u64) -> Result<Box<dyn Read + Send>, Stop> {
+pub(crate) fn request(fetch: &dyn Fetch, target: &Target, from: u64, to: u64) -> Result<Box<dyn Read + Send>, Stop> {
     // Appended as text: rebuilding the query could re-encode signed values.
     let url = format!("{}&range={from}-{to}", target.url);
     let mut attempt = 0;
@@ -636,8 +710,8 @@ mod tests {
     #[ignore]
     fn fetches_https_with_the_system_roots() {
         let proxy = std::env::var("LUMTUB_TEST_PROXY").ok();
-        let target = Target { url: String::new(), size: 0, user_agent: None, mime: None, proxy, chunk: chunk() };
-        let (status, mut body) = Web::default().get(&target, "https://static.crates.io/crates/ureq/3.5.0/download").expect("fetch");
+        let target = Target { url: String::new(), size: 0, user_agent: None, mime: None, proxy, chunk: chunk(), live: None };
+        let (status, mut body) = Web::default().get(&target, "https://static.crates.io/crates/bytes/1.11.1/download").expect("fetch");
         assert_eq!(status, 200);
         let mut bytes = Vec::new();
         body.read_to_end(&mut bytes).unwrap();
@@ -683,7 +757,7 @@ mod tests {
     }
 
     fn target(size: u64) -> Target {
-        Target { url: "https://example.com/videoplayback?mime=video%2Fwebm&clen=1".into(), size, user_agent: None, mime: None, proxy: None, chunk: CHUNK }
+        Target { url: "https://example.com/videoplayback?mime=video%2Fwebm&clen=1".into(), size, user_agent: None, mime: None, proxy: None, chunk: CHUNK, live: None }
     }
 
     #[test]

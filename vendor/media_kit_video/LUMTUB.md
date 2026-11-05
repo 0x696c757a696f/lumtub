@@ -1,6 +1,7 @@
 # media_kit_video 2.0.1, patched for Lumtub
 
-Copied from pub.dev (MIT, see LICENSE) with only the Windows plugin kept.
+Copied from pub.dev (MIT, see LICENSE) with the Windows, Linux and macOS
+plugins kept (`linux/` is unchanged from 2.0.1).
 The changes, marked "Lumtub" in the code:
 
 - `windows/angle_surface_manager.cc`, `video_output.cc`: libmpv draws
@@ -40,3 +41,12 @@ The changes, marked "Lumtub" in the code:
   (`engine_closing_`): when the plugin is destroyed with the engine at exit,
   video outputs no longer unregister their textures; the engine's texture
   registrar was already gone and the call crashed in flutter_windows.dll.
+- `lib/src/utils/query_decoders.dart`: uses the libmpv already opened
+  instead of calling `NativeLibrary.ensureInitialized()` again, which
+  searched the default library names and, in the Linux AppImage, opened the
+  system's libmpv beside the packaged one.
+- `macos/Classes/plugin/TextureHW.swift`, `gl/OpenGLHelpers.swift`,
+  `VideoOutput.swift` (in `macos/Classes/plugin/common/` and
+  `common/darwin/`): when no accelerated OpenGL pixel format, context or
+  texture cache can be made (a Mac virtual machine), the video is drawn in
+  software instead of the app stopping on a nil value or `exit(1)`.

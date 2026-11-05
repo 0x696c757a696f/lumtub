@@ -5,8 +5,11 @@ import 'dart:math';
 
 import 'app_log.dart';
 import 'background_json.dart';
+import 'package:http/http.dart' as http;
+
 import 'models.dart';
 import 'native_core.dart';
+import 'native_http.dart';
 import 'player_settings.dart';
 import 'process_priority.dart';
 import 'process_runner.dart';
@@ -140,11 +143,15 @@ class StreamResolver {
   /// The proxy each entry of [_results] was resolved through: addresses
   /// handed out through one may not work through another.
   final _proxies = <String, String?>{};
+  /// The entries of [_results] resolved with `live`.
+  final _lives = <String>{};
 
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
 
-  List<String> arguments(String videoId, String format, {String? formatSort, String? cookies}) {
+  /// [live] also lists a live stream's separate picture and sound above
+  /// 1080p, which have no manifest (see `LiveSplit`).
+  List<String> arguments(String videoId, String format, {String? formatSort, String? cookies, bool live = false}) {
     final proxy = this.proxy?.call();
     return [
       if (proxy != null) ...['--proxy', proxy],
@@ -152,6 +159,7 @@ class StreamResolver {
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
         if (deno != null) ...['--js-runtimes', 'deno:${deno!}'],
         '--extractor-retries', '3',
+        if (live) ...['--extractor-args', 'youtube:formats=incomplete'],
         '--no-playlist',
         '--dump-single-json',
         '--format', expressionOf(format),
@@ -162,22 +170,71 @@ class StreamResolver {
 
   /// The resolved video, from the cache while it is fresh.
   /// [membersOnly] (as a list marked it) asks signed in from the start.
-  Future<ResolvedVideo> resolve(String videoId, String format, {String? formatSort, bool membersOnly = false}) {
+  /// [live]: see [arguments].
+  Future<ResolvedVideo> resolve(String videoId, String format, {String? formatSort, bool membersOnly = false, bool live = false}) {
     // A card prefetched in the background is now being waited on.
     final lowered = _lowered[videoId];
     if (lowered != null) restorePriority(lowered);
     final cached = _results[videoId];
     // Another format needs another extraction.
-    if (cached != null && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call()) {
-      return cached.then((video) => video.fresh ? video : _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly),
-          onError: (_) => _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly));
+    if (cached != null && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call() && (_lives.contains(videoId) || !live)) {
+      return cached.then((video) => video.fresh ? video : _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly, live: live),
+          onError: (_) => _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly, live: live));
     }
-    return _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly);
+    return _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly, live: live);
   }
 
   /// The extraction of [videoId] if one is running or done; never starts
   /// yt-dlp.
   Future<ResolvedVideo>? cached(String videoId) => _results[videoId];
+
+  /// Extractions that have finished, by video id.
+  final _done = <String, ResolvedVideo>{};
+
+  /// Whether a fresh extraction of [videoId] with [format] is already done.
+  bool resolved(String videoId, String format) {
+    final video = _done[videoId];
+    return video != null && video.format == format && video.fresh;
+  }
+
+  http.Client? _quickClient;
+
+  /// A quick start for [videoId]: YouTube's visionOS client's streams,
+  /// picked by the format policy [policy] (`FormatPolicy.settingsJson`),
+  /// without yt-dlp. Null when the video cannot be started that way (live,
+  /// ciphered, refused, not answered within a few seconds); [resolve]
+  /// still has the whole answer.
+  Future<ResolvedVideo?> quick(String videoId, String format, String policy) async {
+    final core = NativeCore.instance;
+    final request = core?.quickRequest(videoId);
+    if (core == null || request == null) return null;
+    final watch = Stopwatch()..start();
+    try {
+      final parts = jsonDecode(request) as Map<String, dynamic>;
+      final response = await (_quickClient ??= appHttpClient())
+          .post(
+            Uri.parse('https://www.youtube.com/youtubei/v1/player?prettyPrint=false'),
+            headers: {'Content-Type': 'application/json', ...(parts['headers'] as Map).cast<String, String>()},
+            body: jsonEncode(parts['body']),
+          )
+          .timeout(const Duration(seconds: 6));
+      if (response.statusCode != 200) {
+        logInfo('Quick start of $videoId: /player answered HTTP ${response.statusCode}');
+        return null;
+      }
+      final text = core.quickInfo(utf8.decode(response.bodyBytes, allowMalformed: true), policy);
+      if (text == null) {
+        logInfo('Quick start of $videoId: left to yt-dlp');
+        return null;
+      }
+      final info = jsonDecode(text) as Map<String, dynamic>;
+      logInfo('Quick start of $videoId in ${watch.elapsedMilliseconds} ms');
+      return ResolvedVideo(info, _infoFile(videoId), format, text: text);
+    } catch (e) {
+      logInfo('Quick start of $videoId failed: $e');
+      return null;
+    }
+  }
 
   /// Starts resolving [videoId] in the background, if not already done.
   /// One at a time, at low priority: each extraction runs YouTube's
@@ -208,9 +265,11 @@ class StreamResolver {
   /// failed to play.
   void forget(String videoId) {
     _results.remove(videoId);
+    _done.remove(videoId);
     _formats.remove(videoId);
     _formatSorts.remove(videoId);
     _proxies.remove(videoId);
+    _lives.remove(videoId);
     _deleteInfo(videoId);
   }
 
@@ -249,23 +308,33 @@ class StreamResolver {
     }
   }
 
-  Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false}) {
-    final future = _run(videoId, format, formatSort: formatSort, background: background, membersOnly: membersOnly);
+  Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false, bool live = false}) {
+    final future = _run(videoId, format, formatSort: formatSort, background: background, membersOnly: membersOnly, live: live);
     _results.remove(videoId);
+    _done.remove(videoId);
     _results[videoId] = future;
     _formats[videoId] = format;
     _formatSorts[videoId] = formatSort;
     _proxies[videoId] = proxy?.call();
+    if (live) {
+      _lives.add(videoId);
+    } else {
+      _lives.remove(videoId);
+    }
     while (_results.length > _keep) {
       final oldest = _results.keys.first;
       _formats.remove(oldest);
       _formatSorts.remove(oldest);
       _proxies.remove(oldest);
+      _lives.remove(oldest);
       _results.remove(oldest);
+      _done.remove(oldest);
       _deleteInfo(oldest);
     }
     // A failure is not kept, so the next attempt runs yt-dlp again.
-    future.then((_) {}, onError: (_) {
+    future.then((video) {
+      if (identical(_results[videoId], future)) _done[videoId] = video;
+    }, onError: (_) {
       if (identical(_results[videoId], future)) forget(videoId);
     });
     return future;
@@ -280,13 +349,13 @@ class StreamResolver {
   /// What yt-dlp says about a video only the channel's members may watch.
   static final membersOnlyError = RegExp(r"members.only|join this channel|channel's members", caseSensitive: false);
 
-  Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false}) async {
+  Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false, bool live = false}) async {
     final watch = Stopwatch()..start();
     // Background runs never open the cookies: that may bring up Windows Hello.
     final cookies = background ? null : members?.call();
     final signedIn = cookies != null && cookies.signedIn;
     Future<ProcessResult> run({bool signed = false}) =>
-        signed ? _signedIn(cookies!, videoId, format, formatSort: formatSort) : _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
+        signed ? _signedIn(cookies!, videoId, format, formatSort: formatSort, live: live) : _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null, live: live);
     var signed = membersOnly && signedIn;
     var result = await run(signed: signed);
     if (_failed(result) && _transient.hasMatch(result.stderr.toString())) {
@@ -322,15 +391,15 @@ class StreamResolver {
 
   /// yt-dlp for [videoId] with the signed-in cookies, in a file of their
   /// own that is wiped as soon as yt-dlp is done.
-  Future<ProcessResult> _signedIn(MembersCookies cookies, String videoId, String format, {String? formatSort}) async {
+  Future<ProcessResult> _signedIn(MembersCookies cookies, String videoId, String format, {String? formatSort, bool live = false}) async {
     await infoDirectory.create(recursive: true);
     final path = '${infoDirectory.path}${Platform.pathSeparator}$videoId-${_cookieFiles++}.cookies.txt';
     try {
       if (!await cookies.writeCookies(path)) {
         logWarn('The cookie sign-in could not be opened for $videoId');
-        return await _ytDlp(videoId, format, formatSort: formatSort);
+        return await _ytDlp(videoId, format, formatSort: formatSort, live: live);
       }
-      return await _ytDlp(videoId, format, formatSort: formatSort, cookies: path);
+      return await _ytDlp(videoId, format, formatSort: formatSort, cookies: path, live: live);
     } finally {
       cookies.wipeCookies(path);
     }
@@ -340,11 +409,11 @@ class StreamResolver {
 
   /// yt-dlp for [videoId]; [background] (the video id) runs it at low
   /// priority until [resolve] asks for that video.
-  Future<ProcessResult> _ytDlp(String videoId, String format, {String? formatSort, String? background, String? cookies}) async {
+  Future<ProcessResult> _ytDlp(String videoId, String format, {String? formatSort, String? background, String? cookies, bool live = false}) async {
     try {
       return await runWithTimeout(
         ytDlpPath,
-        arguments(videoId, format, formatSort: formatSort, cookies: cookies),
+        arguments(videoId, format, formatSort: formatSort, cookies: cookies, live: live),
         timeout: const Duration(seconds: 45),
         environment: _environment,
         onStart: (process) {

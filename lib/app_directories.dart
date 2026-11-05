@@ -7,7 +7,8 @@ import 'package:path_provider/path_provider.dart';
 /// They live under LocalAppData, so the installed package initialises without
 /// elevation, or for the portable package in the userdata folder next to the
 /// executable: the Windows runner (windows/runner/data_root.cpp) picks one
-/// and passes it on as LUMTUB_HOME. Only files created by Lumtub are kept here.
+/// and passes it on as LUMTUB_HOME. On Linux they live in
+/// `$XDG_DATA_HOME/lumtub` (`~/.local/share/lumtub`). Only files created by Lumtub are kept here.
 class AppDirectories {
   final Directory root;
   final Directory config;
@@ -38,8 +39,16 @@ class AppDirectories {
     final env = environment ?? Platform.environment;
     final home = env['LUMTUB_HOME'];
     final localAppData = env['LOCALAPPDATA'];
+    final dataHome = env['XDG_DATA_HOME'];
+    final userHome = env['HOME'];
     final root = home != null && home.trim().isNotEmpty
         ? Directory(home)
+        : Platform.isLinux && dataHome != null && dataHome.startsWith('/')
+        ? Directory('$dataHome/lumtub')
+        : Platform.isLinux && userHome != null && userHome.startsWith('/')
+        ? Directory('$userHome/.local/share/lumtub')
+        : Platform.isMacOS && userHome != null && userHome.startsWith('/')
+        ? Directory('$userHome/Library/Application Support/Lumtub')
         : localAppData == null || localAppData.trim().isEmpty
         ? Directory('${(await getApplicationSupportDirectory()).path}${Platform.pathSeparator}Lumtub')
         : Directory('$localAppData${Platform.pathSeparator}Lumtub');

@@ -57,3 +57,113 @@ CastSource? castSourceFromRelay(PipedVideo video, {PlayerSettings? settings}) {
     });
   return CastSource(sorted.first.url, height: sorted.first.height);
 }
+
+/// A picture stream and a sound stream the app joins for a TV
+/// (native/lumtub_core/src/cast.rs): MP4 or WebM files with an index.
+class CastSplit {
+  const CastSplit({required this.video, required this.videoSize, required this.audio, required this.audioSize, required this.height, this.fps = 30, this.codec = 'h264', this.videoFormat = '', this.audioFormat = ''});
+  final String video;
+  final int videoSize;
+  final String audio;
+  final int audioSize;
+  final int height;
+  final int fps;
+
+  /// h264, vp9 or av1.
+  final String codec;
+
+  /// yt-dlp's format ids of the two streams, to find them again in a newer
+  /// extraction.
+  final String videoFormat;
+  final String audioFormat;
+
+  /// When YouTube stops accepting the addresses, from their `expire`.
+  DateTime? get expires {
+    final seconds = int.tryParse(Uri.tryParse(video)?.queryParameters['expire'] ?? '');
+    return seconds == null ? null : DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+  }
+
+  /// The same two streams in a newer yt-dlp extraction [info], with fresh
+  /// addresses; null when it lacks either.
+  CastSplit? renewedFrom(Map<String, dynamic> info) {
+    final formats = info['formats'];
+    if (formats is! List) return null;
+    String? url(String id) => formats.whereType<Map>().where((f) => f['format_id']?.toString() == id && f['url'] is String).map((f) => f['url'] as String).firstOrNull;
+    final (v, a) = (url(videoFormat), url(audioFormat));
+    if (v == null || a == null) return null;
+    return CastSplit(video: v, videoSize: videoSize, audio: a, audioSize: audioSize, height: height, fps: fps, codec: codec, videoFormat: videoFormat, audioFormat: audioFormat);
+  }
+
+  /// Whether the picture fits an MPEG transport stream, which DLNA
+  /// renderers take most reliably.
+  bool get fitsTransportStream => codec == 'h264';
+}
+
+int _sizeOf(Map f) {
+  if (f['filesize'] is num) return (f['filesize'] as num).toInt();
+  final clen = Uri.tryParse(f['url']?.toString() ?? '')?.queryParameters['clen'];
+  return int.tryParse(clen ?? '') ?? 0;
+}
+
+/// The picture codec of a yt-dlp format a TV may be sent, or null.
+String? _castCodec(Map f) {
+  final v = f['vcodec']?.toString() ?? 'none';
+  final ext = f['ext']?.toString();
+  if (_isH264(v) && ext == 'mp4') return 'h264';
+  if ((v.startsWith('vp09') || v == 'vp9') && ext == 'webm') return 'vp9';
+  if (v.startsWith('av01') && ext == 'mp4') return 'av1';
+  return null;
+}
+
+/// The best picture up to [maxHeight] and the main AAC sound of a yt-dlp
+/// extraction, as plain https files of known size. Up to 1080p only H.264
+/// is taken, which nearly every TV decodes; above it VP9 or AV1 too (H.264
+/// first, then VP9, at the same height and frame rate). Null when YouTube
+/// lists no such pair.
+CastSplit? castSplitFromYtDlp(Map<String, dynamic> info, {int maxHeight = _castMaxHeight}) {
+  final formats = info['formats'];
+  if (formats is! List) return null;
+  bool plain(Map f) => (f['url']?.toString() ?? '').startsWith('https://') && f['protocol'] == 'https' && f['fragments'] == null && f['has_drm'] != true;
+  const codecRank = {'h264': 2, 'vp9': 1, 'av1': 0};
+  Map? video;
+  (int, int, int, int)? best;
+  Map? audio;
+  (int, int, int, int)? bestAudio;
+  for (final f in formats.whereType<Map>()) {
+    if (!plain(f) || _sizeOf(f) <= 0) continue;
+    final v = f['vcodec']?.toString() ?? 'none';
+    final a = f['acodec']?.toString() ?? 'none';
+    if (a == 'none' && v != 'none') {
+      final codec = _castCodec(f);
+      if (codec == null || (maxHeight <= _castMaxHeight && codec != 'h264')) continue;
+      final height = f['height'] is num ? (f['height'] as num).toInt() : 0;
+      final fps = f['fps'] is num ? (f['fps'] as num).round() : 30;
+      if (height <= 0 || height > maxHeight) continue;
+      final rank = (height, fps, codecRank[codec]!, f['tbr'] is num ? (f['tbr'] as num).round() : 0);
+      if (best == null || _beats(rank, best)) (video, best) = (f, rank);
+    } else if (v == 'none' && a.startsWith('mp4a') && (f['ext'] == 'm4a' || f['ext'] == 'mp4')) {
+      final note = '${f['format_note'] ?? ''} ${f['format_id'] ?? ''}'.toLowerCase();
+      if (note.contains('drc')) continue;
+      final language = f['language_preference'] is num ? (f['language_preference'] as num).toInt() : 0;
+      final abr = f['abr'] is num ? (f['abr'] as num).round() : 0;
+      // The original or default track first, then about 128 kbit/s AAC LC.
+      final rank = (language, abr <= 160 ? 1 : 0, abr, 0);
+      if (bestAudio == null || _beats(rank, bestAudio)) (audio, bestAudio) = (f, rank);
+    }
+  }
+  if (video == null || audio == null) return null;
+  return CastSplit(
+    video: video['url'] as String,
+    videoSize: _sizeOf(video),
+    audio: audio['url'] as String,
+    audioSize: _sizeOf(audio),
+    height: (video['height'] as num).toInt(),
+    fps: best!.$2,
+    codec: _castCodec(video)!,
+    videoFormat: video['format_id']?.toString() ?? '',
+    audioFormat: audio['format_id']?.toString() ?? '',
+  );
+}
+
+bool _beats((int, int, int, int) a, (int, int, int, int) b) =>
+    a.$1 != b.$1 ? a.$1 > b.$1 : a.$2 != b.$2 ? a.$2 > b.$2 : a.$3 != b.$3 ? a.$3 > b.$3 : a.$4 > b.$4;

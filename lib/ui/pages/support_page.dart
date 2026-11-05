@@ -35,7 +35,7 @@ class _SupportPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Scaffold(
-      appBar: AppBar(title: Text(tr('支持开发'))),
+      appBar: AppBar(title: Text(tr('Support development'))),
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
@@ -43,25 +43,25 @@ class _SupportPage extends StatelessWidget {
           child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 40), children: [
             const _Hero(),
             const SizedBox(height: 24),
-            _Heading(tr('加密货币'), AppIcons.currencyBtc),
+            _Heading(tr('Cryptocurrency'), AppIcons.currencyBtc),
             Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: colors.errorContainer.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: colors.errorContainer.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(8)),
               child: Row(children: [
                 Icon(AppIcons.warning, size: 20, color: colors.onErrorContainer),
                 const SizedBox(width: 8),
-                Expanded(child: Text(tr('转账前请确认币种和网络与地址一致，转到错误的链上无法找回。'), style: TextStyle(color: colors.onErrorContainer, height: 1.4))),
+                Expanded(child: Text(tr('Before sending, check that the coin and network match the address. Funds sent on the wrong chain cannot be recovered.'), style: TextStyle(color: colors.onErrorContainer, height: 1.4))),
               ]),
             ),
-            _Group(tr('以太坊和 EVM 链'), const [_evm], note: tr('同一个地址可在所有 EVM 链上收款')),
-            _Group(tr('比特币'), _bitcoin, note: tr('四个地址任选一个，钱包支持哪种就用哪种')),
-            _Group(tr('稳定币'), _stablecoins),
+            _Group(tr('Ethereum and EVM chains'), const [_evm], note: tr('The same address receives on every EVM chain')),
+            _Group(tr('Bitcoin'), _bitcoin, note: tr('Use any of the four, whichever your wallet supports')),
+            _Group(tr('Stablecoins'), _stablecoins),
             const SizedBox(height: 16),
-            _Heading(tr('其他支持方式'), AppIcons.handHeart),
-            _Way(AppIcons.star, tr('在 GitHub 上点个 Star'), tr('让更多人看到 Lumtub'), _repository),
-            _Way(AppIcons.bug, tr('报告问题或提建议'), tr('附上诊断信息和错误日志最有帮助'), '$_repository/issues'),
-            _Way(AppIcons.translate, tr('帮忙翻译'), tr('在 Weblate 上把 Lumtub 翻译成你的语言'), 'https://hosted.weblate.org/engage/lumtub/'),
+            _Heading(tr('Other ways to help'), AppIcons.handHeart),
+            _Way(AppIcons.star, tr('Star it on GitHub'), tr('Helps more people find Lumtub'), _repository),
+            _Way(AppIcons.bug, tr('Report a bug or suggest an idea'), tr('Diagnostics and the error log help most'), '$_repository/issues'),
+            _Way(AppIcons.translate, tr('Help translate'), tr('Translate Lumtub into your language on Weblate'), 'https://hosted.weblate.org/engage/lumtub/'),
           ]),
         ),
       ),
@@ -79,7 +79,7 @@ class _Hero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -91,15 +91,15 @@ class _Hero extends StatelessWidget {
           Container(
             width: 48,
             height: 48,
-            decoration: BoxDecoration(color: const Color(0xFFEA4AAA), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: const Color(0xFFEA4AAA), borderRadius: BorderRadius.circular(8)),
             child: const Icon(AppIcons.heartFill, color: Colors.white, size: 26),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(tr('支持 Lumtub'), style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w600, color: colors.onPrimaryContainer))),
+          Expanded(child: Text(tr('Support Lumtub'), style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w600, color: colors.onPrimaryContainer))),
         ]),
         const SizedBox(height: 16),
         Text(
-          tr('Lumtub 免费、开源，没有广告，也不收集你的数据。你的赞助能让它一直更新下去：更多开发时间、测试设备和代码签名证书。'),
+          tr('Lumtub is free and open source, with no ads and no data collection. Sponsoring keeps it updated: more development time, test devices and a code-signing certificate.'),
           style: text.bodyLarge?.copyWith(color: colors.onPrimaryContainer, height: 1.5),
         ),
         const SizedBox(height: 16),
@@ -108,9 +108,9 @@ class _Hero extends StatelessWidget {
             style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEA4AAA), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
             onPressed: () => openExternal(sponsorsPage),
             icon: const Icon(AppIcons.heart, size: 20),
-            label: Text(tr('在 GitHub Sponsors 赞助')),
+            label: Text(tr('Sponsor on GitHub')),
           ),
-          Text(tr('每月或一次性，金额随意'), style: text.bodyMedium?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
+          Text(tr('Monthly or one-time, any amount'), style: text.bodyMedium?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
         ]),
       ]),
     );
@@ -146,7 +146,7 @@ class _Group extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
       color: colors.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: colors.outlineVariant)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: colors.outlineVariant)),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -170,7 +170,7 @@ class _AddressRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return InkWell(
-      onTap: () => copyText(context, address.address, tr('地址已复制')),
+      onTap: () => copyText(context, address.address, tr('Address copied')),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
         child: Row(children: [
@@ -184,7 +184,7 @@ class _AddressRow extends StatelessWidget {
               SelectableText(address.address, style: TextStyle(fontFamily: 'Consolas', fontFamilyFallback: const ['monospace'], fontSize: 12, color: colors.onSurfaceVariant)),
             ]),
           ),
-          IconButton(tooltip: tr('复制地址'), icon: const Icon(AppIcons.copySimple, size: 20), onPressed: () => copyText(context, address.address, tr('地址已复制'))),
+          IconButton(tooltip: tr('Copy address'), icon: const Icon(AppIcons.copySimple, size: 20), onPressed: () => copyText(context, address.address, tr('Address copied'))),
         ]),
       ),
     );

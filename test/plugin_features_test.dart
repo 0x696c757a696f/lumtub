@@ -35,7 +35,7 @@ void main() {
   setUp(() => dir = Directory.systemTemp.createTempSync('lumtub_plugins'));
   tearDown(() => dir.deleteSync(recursive: true));
 
-  group('按频道记住倍速和音量', () {
+  group('Remember speed and volume per channel', () {
     test('keys by channel id, else by name', () {
       expect(ChannelPlayback.keyOf(const VideoItem(id: 'a', title: '', channel: 'Name', channelId: 'UC1', url: '')), 'UC1');
       expect(ChannelPlayback.keyOf(const VideoItem(id: 'a', title: '', channel: 'Name', url: '')), 'name:Name');
@@ -61,7 +61,7 @@ void main() {
     });
   });
 
-  group('观看统计', () {
+  group('Watch statistics', () {
     test('adds up seconds per day and channel in lumtub_core', () async {
       final file = File('${dir.path}/watch_time.json');
       final time = WatchTime(file)
@@ -79,15 +79,15 @@ void main() {
     });
 
     test('durations read as people say them', () {
-      expect(watchDuration(0), '0 分钟');
-      expect(watchDuration(30), '不到 1 分钟');
-      expect(watchDuration(125), '2 分钟');
-      expect(watchDuration(3600), '1 小时');
-      expect(watchDuration(3900), '1 小时 5 分');
+      expect(watchDuration(0), '0 min');
+      expect(watchDuration(30), 'Under 1 min');
+      expect(watchDuration(125), '2 min');
+      expect(watchDuration(3600), '1 h');
+      expect(watchDuration(3900), '1 h 5 min');
     });
   });
 
-  group('AI 总结', () {
+  group('AI summary', () {
     test('lumtub_core turns subtitles into timed paragraphs', () async {
       final transcript = await summaryTranscript(_vtt(20));
       expect(transcript.chunks, hasLength(1));
@@ -128,7 +128,7 @@ void main() {
       expect(canSummarizeDescription('short', chapters), isTrue);
       final summary = await summarizeDescription(ai, 'Title', 'About the video', chapters);
       expect(asked, contains('[1:05] Setup'));
-      expect(summary, startsWith('这个视频没有字幕'));
+      expect(summary, startsWith('This video has no subtitles'));
       expect(summary, endsWith('- [1:05] Setup'));
     });
 
@@ -153,11 +153,11 @@ void main() {
       const VideoItem(id: 'a', title: '', channel: '', url: '', duration: 3600),
       const VideoItem(id: 'b', title: '', channel: '', url: '', duration: 1200),
     ];
-    expect(playlistLength(items), '共 1 小时 20 分');
-    expect(playlistLength([...items, const VideoItem(id: 'c', title: '', channel: '', url: '')]), '至少 1 小时 20 分');
-    expect(playlistLength(items, partial: true), '至少 1 小时 20 分');
-    expect(playlistLength(items, progressOf: (id) => id == 'a' ? const WatchProgress(Duration(minutes: 50), Duration(hours: 1)) : null), '共 1 小时 20 分 · 还剩 30 分钟');
-    expect(playlistLength(items, progressOf: (_) => const WatchProgress(Duration(hours: 1), Duration(hours: 1))), '共 1 小时 20 分 · 已全部看完');
+    expect(playlistLength(items), '1 h 20 min in total');
+    expect(playlistLength([...items, const VideoItem(id: 'c', title: '', channel: '', url: '')]), 'At least 1 h 20 min');
+    expect(playlistLength(items, partial: true), 'At least 1 h 20 min');
+    expect(playlistLength(items, progressOf: (id) => id == 'a' ? const WatchProgress(Duration(minutes: 50), Duration(hours: 1)) : null), '1 h 20 min in total · 30 min left');
+    expect(playlistLength(items, progressOf: (_) => const WatchProgress(Duration(hours: 1), Duration(hours: 1))), '1 h 20 min in total · all watched');
     expect(playlistLength(const []), isNull);
   });
 
@@ -181,9 +181,9 @@ void main() {
       ..preferences = const AppPreferences(focusHideHome: true);
     var searched = false;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: VideoActions(controller: controller, child: HomeFeedPage(controller: controller, onFocusSearch: () => searched = true)))));
-    expect(find.text('专注模式'), findsOneWidget);
-    expect(find.text('为你推荐'), findsNothing);
-    await tester.tap(find.text('搜索 (Ctrl+K)'));
+    expect(find.text('Focus mode'), findsOneWidget);
+    expect(find.text('For you'), findsNothing);
+    await tester.tap(find.text(Platform.isMacOS ? 'Search (⌘K)' : 'Search (Ctrl+K)'));
     expect(searched, isTrue);
   });
 }

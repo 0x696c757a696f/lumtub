@@ -55,7 +55,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
     super.initState();
     widget.loadFormats().then((formats) {
       if (!mounted) return;
-      if (formats.video.isEmpty && formats.audio.isEmpty) throw StateError(tr('没有找到可下载的格式'));
+      if (formats.video.isEmpty && formats.audio.isEmpty) throw StateError(tr('No downloadable formats found'));
       setState(() {
         _formats = formats;
         _applyDefaults(formats);
@@ -88,7 +88,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
     if (formats == null || _audioOnly || !_codecChosen || _container == DownloadContainer.auto) return;
     final plan = planDownload(formats, codec: _codec, height: _wantedHeight, container: _container);
     if (plan.problem != null) {
-      _containerNote = tr('{0}：{1}，已改为自动封装', [_container.label, plan.problem]);
+      _containerNote = tr('{0}: {1}; switched to automatic container', [_container.label, plan.problem]);
       _container = DownloadContainer.auto;
     }
   }
@@ -126,7 +126,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
     final plan = _plan;
     final selection = plan?.selection;
     return AlertDialog(
-      title: Text(tr('下载视频')),
+      title: Text(tr('Download video')),
       content: SizedBox(width: 460, child: SingleChildScrollView(child: _body(context))),
       actionsOverflowButtonSpacing: 4,
       actions: [
@@ -137,7 +137,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
               widget.onCover!();
             },
             icon: const Icon(AppIcons.image, size: 18),
-            label: Text(tr('下载封面')),
+            label: Text(tr('Download cover')),
           ),
         if (widget.onSubtitles != null)
           TextButton.icon(
@@ -146,10 +146,10 @@ class _DownloadDialogState extends State<DownloadDialog> {
               widget.onSubtitles!();
             },
             icon: const Icon(AppIcons.subtitles, size: 18),
-            label: Text(tr('下载字幕')),
+            label: Text(tr('Download subtitles')),
           ),
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
-        if (_formats != null) FilledButton(onPressed: selection == null ? null : () => _submit(selection), child: Text(tr('开始下载'))),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+        if (_formats != null) FilledButton(onPressed: selection == null ? null : () => _submit(selection), child: Text(tr('Start download'))),
       ],
     );
   }
@@ -163,7 +163,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
         child: Row(children: [
           const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
           const SizedBox(width: 16),
-          Expanded(child: Text(tr('正在读取视频格式…'))),
+          Expanded(child: Text(tr('Reading video formats…'))),
         ]),
       );
     }
@@ -174,19 +174,19 @@ class _DownloadDialogState extends State<DownloadDialog> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
       Text(widget.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.text.bodySmall),
       const SizedBox(height: 12),
-      _section(context, tr('视频编码'), [
-        if (formats.video.isNotEmpty) _chip(tr('自动（最佳可用格式）'), selected: _codecChosen && !_audioOnly && _codec == null, onTap: () => _pickCodec(null)),
+      _section(context, tr('Video codec'), [
+        if (formats.video.isNotEmpty) _chip(tr('Auto (best available format)'), selected: _codecChosen && !_audioOnly && _codec == null, onTap: () => _pickCodec(null)),
         for (final c in formats.codecs) _chip(c.label, selected: _codecChosen && !_audioOnly && _codec == c, onTap: () => _pickCodec(c)),
-        if (audio.isNotEmpty) _chip(tr('仅音频'), selected: _audioOnly, onTap: () => _pickCodec(null, audioOnly: true)),
+        if (audio.isNotEmpty) _chip(tr('Audio only'), selected: _audioOnly, onTap: () => _pickCodec(null, audioOnly: true)),
       ]),
       if (_missing != null && !_codecChosen)
         Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text(tr('该视频没有 {0} 格式，请选择其他编码', [_missing!.label]), style: TextStyle(color: context.colors.error)),
+          child: Text(tr('This video has no {0} format; choose another codec', [_missing!.label]), style: TextStyle(color: context.colors.error)),
         ),
       if (heights.isNotEmpty) ...[
         const SizedBox(height: 12),
-        _section(context, tr('视频画质'), [
+        _section(context, tr('Video quality'), [
           for (final h in heights)
             _chip('${h}p', selected: h == video?.height, onTap: () => setState(() {
                   _wantedHeight = h;
@@ -197,7 +197,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
       ],
       if (video != null) ...[
         const SizedBox(height: 12),
-        _section(context, tr('文件封装格式'), [
+        _section(context, tr('Container'), [
           for (final c in DownloadContainer.values)
             () {
               final problem = c == DownloadContainer.auto ? null : planContainer(c, video.codec, audio).problem;
@@ -211,7 +211,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
           if (c != DownloadContainer.auto && planContainer(c, video.codec, audio).problem != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('${c.label}：${planContainer(c, video.codec, audio).problem}', style: context.text.bodySmall),
+              child: Text(tr('{0}: {1}', [c.label, planContainer(c, video.codec, audio).problem]), style: context.text.bodySmall),
             ),
         if (_containerNote != null) Padding(padding: const EdgeInsets.only(top: 4), child: Text(_containerNote!, style: context.text.bodySmall)),
       ],
@@ -219,7 +219,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
       if (plan?.selection != null) Text(_summary(plan!.selection!), style: context.text.titleSmall),
       if (!widget.canMerge && !_audioOnly) ...[
         const SizedBox(height: 8),
-        Text(tr('没有 ffmpeg 时无法合并画面和声音，视频会下载为 YouTube 提供的单文件格式（通常为 360p）。首次选择高画质时可以按需安装 ffmpeg。'), style: context.text.bodySmall),
+        Text(tr('Without ffmpeg, video and audio cannot be merged, so videos download as the single-file format YouTube provides (usually 360p). You can install ffmpeg on demand the first time you pick a high quality.'), style: context.text.bodySmall),
       ],
     ]);
   }
@@ -227,14 +227,14 @@ class _DownloadDialogState extends State<DownloadDialog> {
   /// 当前选择: `VP9 · 1080p · 自动封装（WebM） · 约 850 MB`.
   String _summary(DownloadSelection s) {
     final parts = s.audioOnly
-        ? [tr('仅音频')]
+        ? [tr('Audio only')]
         : [
             s.codec!.label,
             '${s.height}p',
-            _container == DownloadContainer.auto ? tr('自动封装（{0}）', [s.container.label]) : s.container.label,
+            _container == DownloadContainer.auto ? tr('Automatic container ({0})', [s.container.label]) : s.container.label,
           ];
     if (s.size != null) parts.add(approximateSize(s.size!));
-    return tr('当前选择：{0}', [parts.join(' · ')]);
+    return tr('Current selection: {0}', [parts.join(' · ')]);
   }
 
   Widget _section(BuildContext context, String title, List<Widget> chips) =>
@@ -251,9 +251,9 @@ class _DownloadDialogState extends State<DownloadDialog> {
 
   /// The formats could not be read: say why, and offer the simple choices.
   Widget _fallback(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-        Text(tr('无法读取视频格式：{0}', ['$_error'.replaceFirst('Bad state: ', '')]), maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.error)),
+        Text(tr('Could not read video formats: {0}', ['$_error'.replaceFirst('Bad state: ', '')]), maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.error)),
         const SizedBox(height: 8),
-        Text(tr('可以改用简单选项下载。'), style: context.text.bodySmall),
+        Text(tr('You can download with the simple options instead.'), style: context.text.bodySmall),
         const SizedBox(height: 8),
         for (final q in DownloadQuality.values)
           ListTile(dense: true, title: Text(q.label), onTap: () => Navigator.pop(context, DownloadChoice(q))),

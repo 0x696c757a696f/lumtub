@@ -19,7 +19,7 @@ import 'app_icons.dart';
 /// or a right click copies the line.
 Future<void> showSubtitleList(BuildContext context, AppController controller, Player player) => showPlayerPanel(
       context,
-      title: tr('字幕列表'),
+      title: tr('Subtitle list'),
       width: 420,
       builder: (context) => SubtitleList(controller: controller, player: player),
     );
@@ -80,7 +80,7 @@ class _SubtitleListState extends State<SubtitleList> {
   }
 
   Widget _modeMenu(ColorScheme colors) => PopupMenuButton<SubtitleListMode>(
-        tooltip: tr('列表显示'),
+        tooltip: tr('List shows'),
         initialValue: _mode,
         onSelected: (mode) => unawaited(widget.controller.savePreferences(widget.controller.preferences.copyWith(subtitleListMode: mode))),
         itemBuilder: (context) => [
@@ -133,7 +133,7 @@ class _SubtitleListState extends State<SubtitleList> {
 
   void _copy(PairedCue line) {
     unawaited(Clipboard.setData(ClipboardData(text: [line.cue.text, if (line.second != null) line.second!].join('\n'))));
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(tr('已复制字幕')), duration: const Duration(seconds: 1)));
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(tr('Subtitle copied')), duration: const Duration(seconds: 1)));
   }
 
   static String _clock(Duration d) {
@@ -155,7 +155,7 @@ class _SubtitleListState extends State<SubtitleList> {
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
-                const {'no', 'auto'}.contains(widget.player.state.track.subtitle.id) && widget.controller.secondarySubtitle == null ? tr('先打开一条字幕') : tr('这条字幕无法列出'),
+                const {'no', 'auto'}.contains(widget.player.state.track.subtitle.id) && widget.controller.secondarySubtitle == null ? tr('Turn on a subtitle first') : tr("This subtitle can't be listed"),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: colors.outline),
               ),
@@ -173,7 +173,7 @@ class _SubtitleListState extends State<SubtitleList> {
             child: Row(children: [
               Expanded(
                 child: TextField(
-                  decoration: InputDecoration(isDense: true, prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('搜索字幕')),
+                  decoration: InputDecoration(isDense: true, prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Search subtitles')),
                   onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
                 ),
               ),
@@ -230,7 +230,7 @@ class _SubtitleListState extends State<SubtitleList> {
                               ]),
                             ),
                             IconButton(
-                              tooltip: tr('复制'),
+                              tooltip: tr('Copy'),
                               visualDensity: VisualDensity.compact,
                               iconSize: 16,
                               icon: Icon(AppIcons.copy, color: colors.outline),
@@ -255,7 +255,7 @@ class _SubtitleListState extends State<SubtitleList> {
                     _current = -1;
                   }),
                   icon: const Icon(AppIcons.crosshair, size: 18),
-                  label: Text(tr('回到当前这句')),
+                  label: Text(tr('Back to the current line')),
                 ),
               ),
             ),

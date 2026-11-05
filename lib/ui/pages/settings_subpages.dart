@@ -15,6 +15,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../app_updater.dart';
+import '../../tool_manager.dart';
 import '../../app/app_controller.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
@@ -30,6 +31,7 @@ import '../../widgets/pilinara_settings_tiles.dart';
 import '../common.dart';
 import '../subtitle_style.dart';
 import '../theme.dart';
+import '../palettes.dart';
 import '../theme_preset_card.dart';
 import 'settings_sections.dart';
 import 'support_page.dart';
@@ -72,53 +74,53 @@ Widget _tip(BuildContext context, String text) => Padding(
 Future<void> openBlockedChannels(BuildContext context, AppController controller) => _push(
       context,
       controller,
-      tr('屏蔽频道'),
+      tr('Blocked channels'),
       (context) {
         final prefs = controller.preferences;
         final outline = TextStyle(color: context.colors.outline, fontSize: 12);
         return [
-          _header(context, tr('屏蔽的频道')),
+          _header(context, tr('Blocked channels')),
           if (prefs.blockedChannels.isEmpty && prefs.blockedChannelNames.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(tr('还没有屏蔽任何频道。点右上角“添加”，或在视频卡片的右键菜单、频道页、播放页里选“屏蔽此频道”。'), style: TextStyle(color: context.colors.outline, height: 1.6)),
+              child: Text(tr('No channels blocked yet. Use “Add” at the top right, or choose “Block this channel” on a video card, channel page or the watch page.'), style: TextStyle(color: context.colors.outline, height: 1.6)),
             ),
           for (final channel in prefs.blockedChannels)
             ListTile(
               leading: const Icon(AppIcons.userMinus),
               title: Text(channel.name.isEmpty ? channel.id : channel.name),
               subtitle: Text(channel.id, style: outline),
-              trailing: TextButton(onPressed: () => controller.unblockChannel(channel.id), child: Text(tr('移除'))),
+              trailing: TextButton(onPressed: () => controller.unblockChannel(channel.id), child: Text(tr('Remove'))),
             ),
           for (final name in prefs.blockedChannelNames)
             ListTile(
               leading: const Icon(AppIcons.userMinus),
               title: Text(name),
-              subtitle: Text(tr('按名称屏蔽'), style: outline),
-              trailing: TextButton(onPressed: () => controller.unblockChannelName(name), child: Text(tr('移除'))),
+              subtitle: Text(tr('Blocked by name'), style: outline),
+              trailing: TextButton(onPressed: () => controller.unblockChannelName(name), child: Text(tr('Remove'))),
             ),
-          _tip(context, tr('屏蔽的频道不会出现在首页、探索、搜索、相关视频和订阅动态中。名单只保存在本机。')),
-          _header(context, tr('不推荐的频道')),
+          _tip(context, tr('Blocked channels never show in the home feed, Explore, search, related videos or the subscription feed. The list stays on this computer.')),
+          _header(context, tr('Channels not recommended')),
           if (prefs.unrecommendedChannels.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(tr('还没有。在视频卡片的右键菜单、频道页或播放页里选“不推荐此频道”。'), style: TextStyle(color: context.colors.outline, height: 1.6)),
+              child: Text(tr("None yet. Choose “Don't recommend this channel” on a video card, channel page or the watch page."), style: TextStyle(color: context.colors.outline, height: 1.6)),
             ),
           for (final channel in prefs.unrecommendedChannels)
             ListTile(
               leading: const Icon(AppIcons.thumbsDown),
               title: Text(channel.name.isEmpty ? channel.id : channel.name),
               subtitle: Text(channel.id, style: outline),
-              trailing: TextButton(onPressed: () => controller.setRecommendChannel(channel, true), child: Text(tr('恢复推荐'))),
+              trailing: TextButton(onPressed: () => controller.setRecommendChannel(channel, true), child: Text(tr('Recommend again'))),
             ),
-          _tip(context, tr('不推荐的频道不会出现在首页推荐、探索和相关视频里，但搜索和关注不受影响。')),
+          _tip(context, tr('Channels not recommended stay out of the home feed, Explore and related videos, but still show in searches and follows.')),
         ];
       },
       actions: [
         Builder(builder: (context) => TextButton.icon(
               onPressed: () => _addBlockedChannel(context, controller),
               icon: const Icon(AppIcons.plus),
-              label: Text(tr('添加')),
+              label: Text(tr('Add')),
             )),
         const SizedBox(width: 8),
       ],
@@ -129,68 +131,68 @@ Future<void> _addBlockedChannel(BuildContext context, AppController controller) 
   final typed = await showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text(tr('屏蔽频道')),
+      title: Text(tr('Blocked channels')),
       content: SizedBox(
         width: 420,
         child: TextField(
           controller: text,
           autofocus: true,
           decoration: InputDecoration(
-            labelText: tr('频道链接或完整名称'),
-            helperText: tr('链接里有 UC 开头的频道 ID 时按 ID 屏蔽，否则按名称完全一致屏蔽'),
+            labelText: tr('Channel link or full name'),
+            helperText: tr('A link with a channel ID starting with UC blocks by ID; anything else blocks the channel with exactly that name'),
             helperMaxLines: 2,
           ),
           onSubmitted: (v) => Navigator.pop(context, v),
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
-        FilledButton(onPressed: () => Navigator.pop(context, text.text), child: Text(tr('屏蔽'))),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+        FilledButton(onPressed: () => Navigator.pop(context, text.text), child: Text(tr('Block'))),
       ],
     ),
   );
   text.dispose();
   if (typed == null) return;
   final blocked = controller.blockChannelTyped(typed);
-  if (blocked != null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('已屏蔽“{0}”', [blocked]))));
+  if (blocked != null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Blocked “{0}”', [blocked]))));
 }
 
 // 首页与搜索设置 › 屏蔽争议宗教团体
 
 /// The groups of blocked_groups.dart, all on or off and one by one.
-Future<void> openBlockedGroups(BuildContext context, AppController controller) => _push(context, controller, tr('屏蔽争议宗教团体'), (context) {
+Future<void> openBlockedGroups(BuildContext context, AppController controller) => _push(context, controller, tr('Block controversial religious groups'), (context) {
       final prefs = controller.preferences;
       void save(AppPreferences next) => controller.savePreferences(next);
       return [
         SwitchListTile(
           secondary: const Icon(AppIcons.prohibitFill),
-          title: Text(tr('屏蔽争议宗教团体')),
-          subtitle: Text(tr('推荐、探索、相关视频和搜索里不显示下列团体自己的频道和视频；其他频道发的相关报道，以及搜索这些名字，都不受影响')),
+          title: Text(tr('Block controversial religious groups')),
+          subtitle: Text(tr("Channels and videos of the groups below are left out of recommendations, Explore, related videos and search; other channels' reports about them, and searches for their names, are not affected")),
           value: prefs.blockGroups,
           onChanged: (v) => save(prefs.copyWith(blockGroups: v)),
         ),
-        _tip(context, tr('搜索时输入完全正确的频道名（区分大小写，多一个字或少一个字都不行），仍能找到这个频道和它的视频。关注的频道照常出现在订阅里。')),
-        _header(context, tr('屏蔽哪些')),
+        _tip(context, tr("Searching for a channel's exact name (letter case included; not one character more or less) still finds that channel and its videos. Followed channels still show in subscriptions.")),
+        _header(context, tr('Groups to block')),
         ..._groupTiles(context, controller, blockedGroups, media: false),
-        _tip(context, tr('点一个团体可以看它的完整名单，逐项取消。只按频道名、@账号和频道 ID 匹配，不看标题和简介；名单只保存在本机。还想屏蔽别的，可以用 首页与搜索设置 › 标题关键词过滤，或 隐私设置 › 屏蔽频道。')),
+        _tip(context, tr('Tap a group to see its whole list and untick entries one by one. Only channel names, @handles and channel IDs are matched, never titles or descriptions, and the list stays on this computer. To block more, use Home & search › Title keyword filter, or Privacy › Blocked channels.')),
       ];
     });
 
-Future<void> openStateMedia(BuildContext context, AppController controller) => _push(context, controller, tr('屏蔽官方宣传媒体'), (context) {
+Future<void> openStateMedia(BuildContext context, AppController controller) => _push(context, controller, tr('Block state propaganda media'), (context) {
       final prefs = controller.preferences;
       void save(AppPreferences next) => controller.savePreferences(next);
       return [
         SwitchListTile(
           secondary: const Icon(AppIcons.megaphone),
-          title: Text(tr('屏蔽官方宣传媒体')),
-          subtitle: Text(tr('推荐、探索、相关视频和搜索里不显示下列政府宣传媒体自己的频道和视频')),
+          title: Text(tr('Block state propaganda media')),
+          subtitle: Text(tr('Channels and videos of the government propaganda outlets below are hidden from recommendations, Explore, related videos and search')),
           value: prefs.blockStateMedia,
           onChanged: (v) => save(prefs.copyWith(blockStateMedia: v)),
         ),
-        _tip(context, tr('只按频道名判断，别的频道转载或报道它们的视频照常显示。BBC、NHK、PBS 这类编辑独立的公共媒体不在其中。搜索完全正确的频道名（区分大小写）仍能找到。')),
-        _header(context, tr('屏蔽哪些')),
+        _tip(context, tr('Only the channel name counts, so videos from other channels that repost or report on them still show. Editorially independent public broadcasters such as the BBC, NHK and PBS are not included. Searching for the exact channel name (case-sensitive) still finds them.')),
+        _header(context, tr('Groups to block')),
         ..._groupTiles(context, controller, stateMedia, media: true),
-        _tip(context, tr('名单只保存在本机。漏掉的频道可以在 隐私设置 › 屏蔽频道 里自己加。')),
+        _tip(context, tr('The list stays on this computer. Add any channel it misses under Privacy › Blocked channels.')),
       ];
     });
 
@@ -223,10 +225,10 @@ List<Widget> _groupTiles(BuildContext context, AppController controller, List<Bl
             [
               if (group.note case final note?) tr(note),
               [
-                tr('{0} 项', [entries.length]),
-                if (off > 0) tr('{0} 项已取消', [off]),
-                if (!group.onByDefault) tr('默认不屏蔽'),
-                entries.take(4).map((e) => e.label).join('、'),
+                tr('{0} entries', [entries.length]),
+                if (off > 0) tr('{0} unticked', [off]),
+                if (!group.onByDefault) tr('Not blocked by default'),
+                entries.take(4).map((e) => e.label).join(tr(', ')),
               ].join(' · '),
             ].join('\n'),
             maxLines: group.note == null ? 1 : 3,
@@ -255,8 +257,8 @@ Future<void> _openGroupEntries(BuildContext context, AppController controller, B
     final groupOn = prefs.groupOn(group, media: media) && (media ? prefs.blockStateMedia : prefs.blockGroups);
     return [
       SwitchListTile(
-        title: Text(tr('屏蔽这一组')),
-        subtitle: Text(media ? tr('需要先打开“屏蔽官方宣传媒体”') : tr('需要先打开“屏蔽争议宗教团体”')),
+        title: Text(tr('Block this group')),
+        subtitle: Text(media ? tr('Needs "Block state propaganda media" on') : tr('Needs "Block controversial religious groups" on')),
         value: prefs.groupOn(group, media: media),
         onChanged: (on) => controller.savePreferences(_withGroup(prefs, group, on, media: media)),
       ),
@@ -268,7 +270,7 @@ Future<void> _openGroupEntries(BuildContext context, AppController controller, B
               dense: true,
               enabled: groupOn,
               title: Text(entry.label),
-              subtitle: entry.forms.length > 1 ? Text(entry.forms.skip(1).join('、'), style: TextStyle(color: context.colors.outline, fontSize: 12)) : null,
+              subtitle: entry.forms.length > 1 ? Text(entry.forms.skip(1).join(tr(', ')), style: TextStyle(color: context.colors.outline, fontSize: 12)) : null,
               value: !allowed.contains(entry.key),
               onChanged: (on) => controller.savePreferences(prefs.copyWith(
                 allowedEntries: on == true ? [...prefs.allowedEntries.where((k) => k != entry.key)] : [...prefs.allowedEntries, entry.key],
@@ -276,13 +278,13 @@ Future<void> _openGroupEntries(BuildContext context, AppController controller, B
             ),
         ],
       _tip(context, switch (media) {
-        true => tr('频道名是这几个字，或以它开头（后面接空格或符号），就会被屏蔽。'),
-        false => tr('“标题和频道名里的词”出现在标题或频道名里就屏蔽；“频道名”只看频道名，是这几个字或以它开头才屏蔽；@账号和频道 ID 要完全一致。'),
+        true => tr('A channel is blocked when its name is one of these or starts with one, followed by a space or sign.'),
+        false => tr('"Words in titles and channel names" block wherever they appear in a title or channel name; "Channel names" only count the channel name, which must be the name or start with it; @handles and channel ids must match exactly.'),
       }),
     ];
   }, actions: [
-    TextButton(onPressed: () => setAll(true), child: Text(tr('全选'))),
-    TextButton(onPressed: () => setAll(false), child: Text(tr('全不选'))),
+    TextButton(onPressed: () => setAll(true), child: Text(tr('Tick all'))),
+    TextButton(onPressed: () => setAll(false), child: Text(tr('Untick all'))),
   ]);
 }
 
@@ -296,24 +298,24 @@ Future<void> openPlaySpeed(BuildContext context, AppController controller) {
     final value = await showDialog<double>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(tr('添加倍速')),
+        title: Text(tr('Add speed')),
         content: TextField(
           controller: text,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(labelText: tr('自定义倍速'), helperText: tr('0.1 到 5 之间')),
+          decoration: InputDecoration(labelText: tr('Custom speed'), helperText: tr('Between 0.1 and 5')),
           onSubmitted: (v) => Navigator.pop(context, double.tryParse(v)),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'), style: TextStyle(color: context.colors.outline))),
-          TextButton(onPressed: () => Navigator.pop(context, double.tryParse(text.text)), child: Text(tr('确认'))),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'), style: TextStyle(color: context.colors.outline))),
+          TextButton(onPressed: () => Navigator.pop(context, double.tryParse(text.text)), child: Text(tr('Confirm'))),
         ],
       ),
     );
     text.dispose();
     if (value == null) return;
     if (value < 0.1 || value > 5) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('倍速需在 0.1 到 5 之间'))));
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Speed must be between 0.1 and 5'))));
       return;
     }
     final speed = (value * 100).round() / 100;
@@ -329,10 +331,10 @@ Future<void> openPlaySpeed(BuildContext context, AppController controller) {
       builder: (context) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Padding(padding: const EdgeInsets.all(12), child: Text('${trimSpeed(speed)}x', style: Theme.of(context).textTheme.titleMedium)),
-          ListTile(leading: const Icon(AppIcons.checkCircle), title: Text(tr('设置为默认倍速')), onTap: () => Navigator.pop(context, 0)),
+          ListTile(leading: const Icon(AppIcons.checkCircle), title: Text(tr('Set as default speed')), onTap: () => Navigator.pop(context, 0)),
           ListTile(
             leading: const Icon(AppIcons.trash),
-            title: Text(tr('删除该项')),
+            title: Text(tr('Delete this item')),
             enabled: settings.speeds.length > 1 && speed != settings.defaultSpeed,
             onTap: () => Navigator.pop(context, 1),
           ),
@@ -346,16 +348,16 @@ Future<void> openPlaySpeed(BuildContext context, AppController controller) {
   return _push(
     context,
     controller,
-    tr('倍速设置'),
+    tr('Speed settings'),
     actions: [
       Builder(
         builder: (context) => TextButton(
           onPressed: () async {
-            if (await confirmDialog(context, title: tr('重置倍速？'), content: tr('恢复默认的倍速列表，默认倍速改回 1x。'), confirm: tr('重置'))) {
+            if (await confirmDialog(context, title: tr('Reset speed?'), content: tr('Restores the default speed list and sets the default speed back to 1x.'), confirm: tr('Reset'))) {
               save(controller.settings.copyWith(speeds: defaultSpeeds, defaultSpeed: 1));
             }
           },
-          child: Text(tr('重置')),
+          child: Text(tr('Reset')),
         ),
       ),
       const SizedBox(width: 8),
@@ -365,15 +367,15 @@ Future<void> openPlaySpeed(BuildContext context, AppController controller) {
       return [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Text(tr('点击下方按钮设置默认（首选）倍速或删除'), style: TextStyle(color: context.colors.outline)),
+          child: Text(tr('Tap the buttons below to set the default (preferred) speed or delete it'), style: TextStyle(color: context.colors.outline)),
         ),
-        ListTile(title: Text(tr('默认倍速')), subtitle: Text('${trimSpeed(settings.defaultSpeed)}x')),
+        ListTile(title: Text(tr('Default speed')), subtitle: Text('${trimSpeed(settings.defaultSpeed)}x')),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
           child: Row(children: [
-            Text(tr('倍速列表'), style: Theme.of(context).textTheme.titleMedium),
+            Text(tr('Speed list'), style: Theme.of(context).textTheme.titleMedium),
             const Spacer(),
-            TextButton(onPressed: () => add(context), child: Text(tr('添加'))),
+            TextButton(onPressed: () => add(context), child: Text(tr('Add'))),
           ]),
         ),
         Padding(
@@ -385,7 +387,7 @@ Future<void> openPlaySpeed(BuildContext context, AppController controller) {
                   : FilledButton.tonal(onPressed: () => edit(context, speed), child: Text('${trimSpeed(speed)}x')),
           ]),
         ),
-        _tip(context, tr('播放器底栏的倍速菜单使用这里的列表。')),
+        _tip(context, tr("The speed menu in the player's bottom bar uses this list.")),
       ];
     },
   );
@@ -393,7 +395,7 @@ Future<void> openPlaySpeed(BuildContext context, AppController controller) {
 
 // 播放设置 › 字幕设置
 
-Future<void> openSubtitleSettings(BuildContext context, AppController controller) => _push(context, controller, tr('字幕设置'), (context) {
+Future<void> openSubtitleSettings(BuildContext context, AppController controller) => _push(context, controller, tr('Subtitle settings'), (context) {
       final settings = controller.settings;
       void save(PlayerSettings next) => controller.saveSettings(next);
       // Read when a picker closes, so two quick changes do not undo each other.
@@ -412,21 +414,21 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
       }) =>
           [
             NormalItem(
-              title: tr('字体'),
+              title: tr('Font'),
               subtitle: subtitleFontLabel(font),
               leading: const Icon(AppIcons.textAUnderline),
               enabled: enabled,
               onTap: () => pickSubtitleFont(context, font, setFont),
             ),
             NormalItem(
-              title: tr('大小'),
+              title: tr('Size'),
               subtitle: '${scale.toStringAsFixed(1)}×',
               leading: const Icon(AppIcons.textAa),
               enabled: enabled,
-              onTap: () => pickWithSlider(context, title: tr('大小'), value: scale, min: 0.5, max: 3, divisions: 25, suffix: '×', precise: 1, onSelected: (v) => setScale((v * 10).round() / 10)),
+              onTap: () => pickWithSlider(context, title: tr('Size'), value: scale, min: 0.5, max: 3, divisions: 25, suffix: '×', precise: 1, onSelected: (v) => setScale((v * 10).round() / 10)),
             ),
             NormalItem(
-              title: tr('颜色'),
+              title: tr('Color'),
               subtitle: subtitleColorLabel(color),
               leading: const Icon(AppIcons.palette),
               trailing: Container(width: 20, height: 20, decoration: BoxDecoration(color: Color(0xFF000000 | color), shape: BoxShape.circle, border: Border.all(color: context.colors.outlineVariant))),
@@ -434,7 +436,7 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
               onTap: () => pickSubtitleColor(context, color, setColor),
             ),
             NormalItem(
-              title: tr('不透明度'),
+              title: tr('Opacity'),
               subtitle: percent(opacity),
               leading: const Icon(AppIcons.drop),
               enabled: enabled,
@@ -444,27 +446,27 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
       final secondary = TranslationLanguage.maybeByCode(settings.secondarySubtitleLanguage);
       return [
         PopupItem<SubtitleMode>(
-          title: tr('自动启用字幕'),
+          title: tr('Turn on subtitles automatically'),
           leading: const Icon(AppIcons.subtitles),
           value: settings.subtitleMode,
           values: [for (final m in SubtitleMode.values) (m, m.label)],
           onSelected: (v) => save(settings.copyWith(subtitleMode: v)),
         ),
         PopupItem<Object>(
-          title: tr('第一字幕语言'),
+          title: tr('First subtitle language'),
           leading: const Icon(AppIcons.translate),
           value: settings.subtitleOriginal ? PlayerSettings.originalSubtitle : settings.subtitleLanguage,
-          values: [(PlayerSettings.originalSubtitle, tr('视频原语言')), for (final l in SubtitleLanguage.values) (l, l.label)],
+          values: [(PlayerSettings.originalSubtitle, tr("Video's own language")), for (final l in SubtitleLanguage.values) (l, l.label)],
           onSelected: (v) => save(v is SubtitleLanguage ? settings.copyWith(subtitleLanguage: v, subtitleOriginal: false) : settings.copyWith(subtitleOriginal: true)),
         ),
         PopupItem<String>(
-          title: tr('第二字幕语言'),
+          title: tr('Second subtitle language'),
           leading: const Icon(AppIcons.closedCaptioning),
           value: const {PlayerSettings.originalSubtitle, PlayerSettings.interfaceSubtitle}.contains(settings.secondarySubtitleLanguage) ? settings.secondarySubtitleLanguage : secondary?.code ?? '',
           values: [
-            ('', tr('不显示')),
-            (PlayerSettings.interfaceSubtitle, tr('界面语言（{0}）', [interfaceTranslationLanguage.label])),
-            (PlayerSettings.originalSubtitle, tr('视频原字幕（自带或自动生成）')),
+            ('', tr('Never')),
+            (PlayerSettings.interfaceSubtitle, tr('Interface language ({0})', [interfaceTranslationLanguage.label])),
+            (PlayerSettings.originalSubtitle, tr("Video's own language (uploaded or auto-generated)")),
             for (final l in TranslationLanguage.all) (l.code, l.label),
           ],
           enabled: settings.subtitleMode != SubtitleMode.off,
@@ -473,11 +475,11 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
         _tip(
           context,
           settings.subtitleMode == SubtitleMode.off
-              ? tr('先开启“自动启用字幕”，第二字幕才会自动显示。')
-              : tr('第一字幕按“第一字幕语言”显示，视频没有这种语言时用 YouTube 翻译。第二字幕显示在上方，“视频原字幕”是视频说话语言的字幕；和第一字幕相同时不显示。'),
+              ? tr('Turn on “Turn on subtitles automatically” first, so the second subtitle can show by itself.')
+              : tr('The first subtitle is shown in the first subtitle language, translated by YouTube when the video has none in it. The second subtitle appears above it; "Video\'s own language" is the subtitle in the language spoken in the video. It is hidden when it matches the first.'),
         ),
         SubtitlePreview(settings: settings),
-        _header(context, tr('第一字幕样式')),
+        _header(context, tr('First subtitle style')),
         ...look(
           font: settings.subtitleFont,
           scale: settings.subtitleScale,
@@ -488,8 +490,8 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           setColor: (v) => save(now().copyWith(subtitleColor: v)),
           setOpacity: (v) => save(now().copyWith(subtitleOpacity: v)),
         ),
-        _header(context, tr('第二字幕样式')),
-        if (settings.libassSubtitles) _tip(context, tr('由 mpv 绘制字幕时，第二字幕使用第一字幕的样式。')),
+        _header(context, tr('Second subtitle style')),
+        if (settings.libassSubtitles) _tip(context, tr("While mpv draws subtitles, the second subtitle uses the first one's style.")),
         ...look(
           font: settings.secondaryFont,
           scale: settings.secondaryScale,
@@ -501,70 +503,70 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
           setColor: (v) => save(now().copyWith(secondaryColor: v)),
           setOpacity: (v) => save(now().copyWith(secondaryOpacity: v)),
         ),
-        _header(context, tr('通用')),
+        _header(context, tr('General')),
         SwitchItem(
-          title: tr('由 mpv 绘制字幕（libass）'),
-          subtitle: tr('支持特效字幕；关闭时由界面绘制，更省资源'),
+          title: tr('Subtitles rendered by mpv (libass)'),
+          subtitle: tr('Supports styled subtitles; when off, the UI draws them, using fewer resources'),
           leading: const Icon(AppIcons.stack),
           value: settings.libassSubtitles,
           onChanged: (v) => save(settings.copyWith(libassSubtitles: v)),
         ),
         NormalItem(
-          title: tr('字幕位置'),
-          subtitle: tr('当前：{0}%（100 为画面底部）', [settings.subtitlePosition]),
+          title: tr('Subtitle position'),
+          subtitle: tr('Current: {0}% (100 is the bottom of the frame)', [settings.subtitlePosition]),
           leading: const Icon(AppIcons.alignBottom),
-          onTap: () => pickWithSlider(context, title: tr('字幕位置'), value: settings.subtitlePosition.toDouble(), min: 0, max: 100, divisions: 100, suffix: '%', onSelected: (v) => save(now().copyWith(subtitlePosition: v.round()))),
+          onTap: () => pickWithSlider(context, title: tr('Subtitle position'), value: settings.subtitlePosition.toDouble(), min: 0, max: 100, divisions: 100, suffix: '%', onSelected: (v) => save(now().copyWith(subtitlePosition: v.round()))),
         ),
         NormalItem(
-          title: tr('描边粗细'),
-          subtitle: tr('当前：{0}', [settings.subtitleBorder.toStringAsFixed(1)]),
+          title: tr('Outline thickness'),
+          subtitle: tr('Current: {0}', [settings.subtitleBorder.toStringAsFixed(1)]),
           leading: const Icon(AppIcons.rectangleDashed),
-          onTap: () => pickWithSlider(context, title: tr('描边粗细'), value: settings.subtitleBorder, min: 0, max: 8, divisions: 16, suffix: '', precise: 1, onSelected: (v) => save(now().copyWith(subtitleBorder: v))),
+          onTap: () => pickWithSlider(context, title: tr('Outline thickness'), value: settings.subtitleBorder, min: 0, max: 8, divisions: 16, suffix: '', precise: 1, onSelected: (v) => save(now().copyWith(subtitleBorder: v))),
         ),
         SwitchItem(
-          title: tr('背景色块'),
-          subtitle: tr('在字幕后面加半透明黑底，替代描边'),
+          title: tr('Background box'),
+          subtitle: tr('Add a semi-transparent black background behind subtitles instead of an outline'),
           leading: const Icon(AppIcons.rectangle),
           value: settings.subtitleBackground,
           onChanged: (v) => save(settings.copyWith(subtitleBackground: v)),
         ),
         SwitchItem(
-          title: tr('粗体'),
+          title: tr('Bold'),
           leading: const Icon(AppIcons.textB),
           value: settings.subtitleBold,
           onChanged: (v) => save(settings.copyWith(subtitleBold: v)),
         ),
         NormalItem(
-          title: tr('恢复默认样式'),
-          subtitle: tr('微软雅黑，第一字幕白色，第二字幕小一号的浅金色'),
+          title: tr('Restore default style'),
+          subtitle: tr('Microsoft YaHei, a white first subtitle and a smaller light gold second one'),
           leading: const Icon(AppIcons.arrowCounterClockwise),
           onTap: () => save(now().withDefaultSubtitleStyle()),
         ),
-        _tip(context, tr('字幕由 yt-dlp 获取，没有人工字幕时使用自动生成的字幕。语言和启用方式从下一个视频开始生效，样式立即生效。')),
+        _tip(context, tr('Subtitles are fetched by yt-dlp; auto-generated subtitles are used when no manual ones exist. Language and enable settings take effect from the next video; styles apply immediately.')),
       ];
     });
 
 // 其它设置 › 空降助手
 
-Future<void> openSponsorBlock(BuildContext context, AppController controller) => _push(context, controller, tr('空降助手'), (context) {
+Future<void> openSponsorBlock(BuildContext context, AppController controller) => _push(context, controller, tr('SponsorBlock'), (context) {
       final settings = controller.settings;
       void save(PlayerSettings next) => controller.saveSettings(next);
       return [
         SwitchItem(
-          title: tr('开启空降助手'),
-          subtitle: tr('自动跳过赞助、自我推广等片段'),
+          title: tr('Enable SponsorBlock'),
+          subtitle: tr('Automatically skip sponsors, self-promotion and other segments'),
           leading: const Icon(AppIcons.airplaneTakeoff),
           value: settings.sponsorBlock,
           onChanged: (v) => save(settings.copyWith(sponsorBlock: v)),
         ),
         SwitchItem(
-          title: tr('跳过时显示提示'),
+          title: tr('Show a notice when skipping'),
           leading: const Icon(AppIcons.bell),
           value: settings.sponsorNotice,
           enabled: settings.sponsorBlock,
           onChanged: (v) => save(settings.copyWith(sponsorNotice: v)),
         ),
-        _header(context, tr('跳过的片段类型')),
+        _header(context, tr('Segment types to skip')),
         for (final MapEntry(key: category, value: (name, description)) in sponsorCategoryNames.entries)
           CheckboxListTile(
             title: Text(name),
@@ -577,13 +579,13 @@ Future<void> openSponsorBlock(BuildContext context, AppController controller) =>
               save(controller.settings.copyWith(sponsorCategories: next));
             },
           ),
-        _tip(context, tr('片段数据来自 SponsorBlock 社区（sponsor.ajay.app）。查询时只发送视频 ID 哈希值的前 4 位，不发送账号或观看记录。')),
+        _tip(context, tr('Segment data comes from the SponsorBlock community (sponsor.ajay.app). Lookups send only the first 4 characters of the video ID hash, never your account or watch history.')),
       ];
     });
 
 // 外观设置 › 应用主题 (PiliNara's color_select.dart)
 
-Future<void> openColorSelect(BuildContext context, AppController controller) => _push(context, controller, tr('选择应用主题'), (context) {
+Future<void> openColorSelect(BuildContext context, AppController controller) => _push(context, controller, tr('Choose app theme'), (context) {
       final appearance = controller.appearance;
       final brightness = Theme.of(context).brightness;
       void save(AppearanceSettings next) => controller.saveAppearance(next);
@@ -599,7 +601,16 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
           );
       final windows = controller.windowsAccent;
       return [
-        _header(context, tr('主题预设')),
+        _header(context, tr('Color scheme')),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Wrap(spacing: 12, runSpacing: 12, children: [
+            for (final palette in palettes)
+              PaletteCard(palette: palette, selected: appearance.palette == palette.id, onTap: () => save(controller.appearance.copyWith(palette: palette.id))),
+          ]),
+        ),
+        _tip(context, tr('A color scheme changes the background, text and accent of the whole window, in light and dark. Choosing a theme or color below goes back to the neutral scheme.')),
+        _header(context, tr('Theme presets')),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Wrap(spacing: 12, runSpacing: 12, children: [
@@ -607,33 +618,33 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
               ThemePresetCard(preset: preset, selected: preset.isApplied(appearance), onTap: () => save(preset.applyTo(controller.appearance))),
           ]),
         ),
-        _tip(context, tr('每套主题都有浅色和深色，跟随下面的“主题模式”。')),
-        _header(context, tr('自定义')),
+        _tip(context, tr('Each theme has a light and a dark version; Theme mode below picks which.')),
+        _header(context, tr('Custom')),
         PopupItem<ThemeMode>(
-          title: tr('主题模式'),
+          title: tr('Theme mode'),
           leading: const Icon(AppIcons.flashlight),
           value: appearance.themeMode,
           values: themeModes,
           onSelected: (mode) => save(appearance.copyWith(themeMode: mode)),
         ),
         PopupItem<DynamicSchemeVariant>(
-          title: tr('调色板风格'),
+          title: tr('Palette style'),
           leading: const Icon(AppIcons.palette),
           value: appearance.schemeVariant,
           values: [for (final e in schemeVariantNames.entries) (e.key, e.value)],
           onSelected: (v) => save(appearance.copyWith(schemeVariant: v)),
         ),
         ListTile(
-          title: Text(tr('跟随 Windows 强调色')),
-          subtitle: Text(windows == null ? tr('无法读取系统强调色') : tr('在 Windows 设置 › 个性化 › 颜色 中更改'), style: TextStyle(color: context.colors.outline, fontSize: 12)),
+          title: Text(tr('Follow Windows accent color')),
+          subtitle: Text(windows == null ? tr("Couldn't read the system accent color") : tr('Change it in Windows Settings › Personalization › Colors'), style: TextStyle(color: context.colors.outline, fontSize: 12)),
           enabled: windows != null,
           leading: Checkbox(
             value: appearance.systemAccent,
-            onChanged: windows == null ? null : (v) => save(appearance.copyWith(systemAccent: v ?? false)),
+            onChanged: windows == null ? null : (v) => save(appearance.copyWith(palette: '', systemAccent: v ?? false)),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
           ),
-          onTap: windows == null ? null : () => save(appearance.copyWith(systemAccent: !appearance.systemAccent)),
+          onTap: windows == null ? null : () => save(appearance.copyWith(palette: '', systemAccent: !appearance.systemAccent)),
         ),
         AnimatedSize(
           duration: Motion.of(const Duration(milliseconds: 200)),
@@ -642,24 +653,24 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
               : Padding(
                   padding: const EdgeInsets.all(12),
                   child: Wrap(spacing: 22, runSpacing: 18, alignment: WrapAlignment.center, children: [
-                    swatch(Color(appearance.customAccent), tr('自定义'), appearance.accentIndex < 0, () async {
+                    swatch(Color(appearance.customAccent), tr('Custom'), appearance.accentIndex < 0, () async {
                       final color = await showDialog<Color>(
                         context: context,
                         builder: (context) => AlertDialog(
                           clipBehavior: Clip.hardEdge,
                           contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                          title: Text(tr('自定义颜色')),
+                          title: Text(tr('Custom color')),
                           content: SlideColorPicker(color: Color(appearance.customAccent)),
                         ),
                       );
-                      if (color != null) save(controller.appearance.copyWith(accentIndex: -1, customAccent: color.toARGB32()));
+                      if (color != null) save(controller.appearance.copyWith(palette: '', accentIndex: -1, customAccent: color.toARGB32()));
                     }),
                     for (var i = 0; i < accentChoices.length; i++)
-                      swatch(accentChoices[i].$2, accentChoices[i].$1, appearance.accentIndex == i, () => save(controller.appearance.copyWith(accentIndex: i))),
+                      swatch(accentChoices[i].$2, accentChoices[i].$1, appearance.accentIndex == i, () => save(controller.appearance.copyWith(palette: '', accentIndex: i))),
                   ]),
                 ),
         ),
-        _header(context, tr('预览')),
+        _header(context, tr('Preview')),
         IgnorePointer(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -667,14 +678,14 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(tr('标题文字'), style: Theme.of(context).textTheme.titleMedium),
+                  Text(tr('Title text'), style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 4),
-                  Text(tr('次要说明文字'), style: TextStyle(color: context.colors.outline)),
+                  Text(tr('Secondary text'), style: TextStyle(color: context.colors.outline)),
                   const SizedBox(height: 12),
                   Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                    FilledButton(onPressed: () {}, child: Text(tr('订阅'))),
-                    FilledButton.tonal(onPressed: () {}, child: Text(tr('收藏'))),
-                    OutlinedButton(onPressed: () {}, child: Text(tr('分享'))),
+                    FilledButton(onPressed: () {}, child: Text(tr('Subscriptions'))),
+                    FilledButton.tonal(onPressed: () {}, child: Text(tr('Favorites'))),
+                    OutlinedButton(onPressed: () {}, child: Text(tr('Share'))),
                     Switch(value: true, onChanged: (_) {}),
                   ]),
                   const SizedBox(height: 12),
@@ -706,7 +717,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
   @override
   void initState() {
     super.initState();
-    if (Platform.isWindows) {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       WindowsShell.systemFontFamilies().then((fonts) {
         if (mounted) setState(() => _systemFonts = fonts);
       });
@@ -717,7 +728,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(tr('App 字体设置'))),
+        appBar: AppBar(title: Text(tr('App font'))),
         body: ListenableBuilder(
           listenable: widget.controller,
           builder: (context, _) {
@@ -729,51 +740,51 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
             void save(String? family) => controller.saveAppearance(family == null ? appearance.copyWith(clearFontFamily: true) : appearance.copyWith(fontFamily: family));
             Widget option(String? family, String label) => RadioListTile<String?>(
                   value: family,
-                  title: Text(label, style: TextStyle(fontFamily: family)),
-                  subtitle: family == null ? null : Text(family, style: TextStyle(color: context.colors.outline, fontSize: 12)),
+                  title: Text(label, style: TextStyle(fontFamily: family == autoFont ? appearance.font : family)),
+                  subtitle: family == null || family == autoFont ? null : Text(family, style: TextStyle(color: context.colors.outline, fontSize: 12)),
                 );
             final theme = Theme.of(context);
             return RadioGroup<String?>(
               groupValue: appearance.fontFamily,
               onChanged: save,
               child: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
-                _header(context, tr('字体')),
+                _header(context, tr('Font')),
                 for (final (family, label) in fontChoices) option(family, label),
-                _header(context, tr('已安装的系统字体')),
+                _header(context, tr('Installed system fonts')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextField(
                     onChanged: (value) => setState(() => _query = value),
-                    decoration: InputDecoration(prefixIcon: const Icon(AppIcons.magnifyingGlass), hintText: tr('搜索已安装字体')),
+                    decoration: InputDecoration(prefixIcon: const Icon(AppIcons.magnifyingGlass), hintText: tr('Search installed fonts')),
                   ),
                 ),
                 if (_systemFonts == null)
                   const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()))
                 else if (system.isEmpty)
-                  Padding(padding: const EdgeInsets.all(16), child: Text(tr('没有匹配的已安装字体'), style: TextStyle(color: context.colors.outline)))
+                  Padding(padding: const EdgeInsets.all(16), child: Text(tr('No installed fonts match'), style: TextStyle(color: context.colors.outline)))
                 else
                   for (final family in system) option(family, family),
-                _header(context, tr('字号')),
+                _header(context, tr('Font size')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(children: [
                     Expanded(child: Slider(min: 0.8, max: 1.4, divisions: 12, value: appearance.textScale, label: '${(appearance.textScale * 100).round()}%', onChanged: (v) => controller.saveAppearance(appearance.copyWith(textScale: (v * 100).round() / 100)))),
                     SizedBox(width: 48, child: Text('${(appearance.textScale * 100).round()}%')),
-                    TextButton(onPressed: () => controller.saveAppearance(appearance.copyWith(textScale: 1, fontFamily: bundledFont)), child: Text(tr('重置'))),
+                    TextButton(onPressed: () => controller.saveAppearance(appearance.copyWith(textScale: 1, fontFamily: autoFont)), child: Text(tr('Reset'))),
                   ]),
                 ),
-                _header(context, tr('预览')),
+                _header(context, tr('Preview')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(tr('Lumtub 让 YouTube 在 Windows 上更好用'), style: theme.textTheme.titleLarge),
+                    Text(tr('Lumtub makes YouTube better on Windows'), style: theme.textTheme.titleLarge),
                     const SizedBox(height: 4),
-                    Text(tr('敏捷的棕色狐狸跳过了懒狗。0123456789'), style: theme.textTheme.bodyMedium),
+                    Text(tr('The quick brown fox jumps over the lazy dog. 0123456789'), style: theme.textTheme.bodyMedium),
                     const SizedBox(height: 4),
-                    Text(tr('频道名称 · 12 万次观看 · 3 天前'), style: theme.textTheme.labelMedium!.copyWith(color: context.colors.outline)),
+                    Text(tr('Channel name · 120K views · 3 days ago'), style: theme.textTheme.labelMedium!.copyWith(color: context.colors.outline)),
                   ]),
                 ),
-                _tip(context, tr('Noto Sans CJK SC 随 Lumtub 安装；系统字体从当前 Windows 用户的字体集合读取。')),
+                _tip(context, tr("Noto Sans CJK SC is bundled with Lumtub. System fonts are read from the current Windows user's font collection.")),
               ]),
             );
           },
@@ -820,7 +831,7 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
             ),
           ),
           SizedBox(width: 64, child: Text('$value$suffix', textAlign: TextAlign.end)),
-          IconButton(tooltip: tr('重置'), icon: const Icon(AppIcons.arrowCounterClockwise, size: 20), onPressed: value == 0 ? null : onReset),
+          IconButton(tooltip: tr('Reset'), icon: const Icon(AppIcons.arrowCounterClockwise, size: 20), onPressed: value == 0 ? null : onReset),
         ]),
       );
 
@@ -829,7 +840,7 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
     final controller = widget.controller;
     return Scaffold(
       appBar: AppBar(
-        title: Text(tr('画面与音画同步调节')),
+        title: Text(tr('Video and A/V sync adjustments')),
         actions: [
           TextButton(
             onPressed: () {
@@ -843,15 +854,15 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
               controller.previewProperty('audio-delay', '0');
               _save();
             },
-            child: Text(tr('全部重置')),
+            child: Text(tr('Reset all')),
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
-        _header(context, tr('画面')),
+        _header(context, tr('Video')),
         for (final (key, label) in pictureProperties)
-          _slider(label, _picture[key] ?? 0, -100, 100, '', (v) {
+          _slider(label, _picture[key] ?? 0, -pictureLimit(key), pictureLimit(key), '', (v) {
             setState(() => _picture[key] = v);
             controller.previewProperty(key, '$v');
           }, () {
@@ -859,8 +870,8 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
             controller.previewProperty(key, '0');
             _save();
           }),
-        _header(context, tr('音画同步')),
-        _slider(tr('音频延迟'), _audioDelay, -2000, 2000, ' ms', (v) {
+        _header(context, tr('A/V sync')),
+        _slider(tr('Audio delay'), _audioDelay, -2000, 2000, ' ms', (v) {
           setState(() => _audioDelay = (v / 10).round() * 10);
           controller.previewProperty('audio-delay', '${_audioDelay / 1000}');
         }, () {
@@ -868,7 +879,7 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
           controller.previewProperty('audio-delay', '0');
           _save();
         }),
-        _tip(context, tr('拖动时立即在正在播放的视频上预览。音频延迟为正时声音推后，为负时声音提前。这些值对之后的所有视频都生效。')),
+        _tip(context, tr('Previews live on the playing video while dragging. Positive audio delay plays sound later; negative plays it earlier. These values apply to all subsequent videos.')),
       ]),
     );
   }
@@ -876,9 +887,9 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
 
 // 其它设置 › 组件管理
 
-Future<void> openComponents(BuildContext context, AppController controller) => _push(context, controller, tr('组件管理'), (context) {
+Future<void> openComponents(BuildContext context, AppController controller) => _push(context, controller, tr('Components'), (context) {
       final tools = controller.tools;
-      if (tools == null || !controller.ready) return [NormalItem(title: tr('正在准备组件…'))];
+      if (tools == null || !controller.ready) return [NormalItem(title: tr('Preparing components…'))];
       final libmpv = tools.libmpv;
       final current = libmpv.current;
       final next = libmpv.selected;
@@ -887,92 +898,95 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
         NormalItem(
           title: 'libmpv',
           subtitle: [
-            '${libmpv.usesDownload ? '已更新' : '内置'}：${current?.label ?? '未知版本'}',
-            if (pendingRestart) tr('重启后使用 {0}', [next.label]),
+            if (!Platform.isWindows) tools.libmpvLabel else tr('{0}: {1}', [libmpv.usesDownload ? tr('Updated') : tr('Built-in'), current?.label ?? tr('Unknown version')]),
+            if (pendingRestart) tr('Uses {0} after restart', [next.label]),
           ].join('\n'),
           leading: const Icon(AppIcons.filmSlate),
-          trailing: libmpv.usesDownload || pendingRestart ? TextButton(onPressed: controller.rollBackLibmpv, child: Text(tr('改回内置'))) : null,
+          trailing: libmpv.usesDownload || pendingRestart ? TextButton(onPressed: controller.rollBackLibmpv, child: Text(tr('Revert to built-in'))) : null,
         ),
         NormalItem(
           title: 'yt-dlp',
-          subtitle: tools.ytDlpVersion ?? tr('未安装'),
+          subtitle: tools.ytDlpVersion ?? tr('Not installed'),
           leading: const Icon(AppIcons.terminal),
-          trailing: tools.canRollBackYtDlp ? TextButton(onPressed: controller.rollBackYtDlp, child: Text(tr('回退上一版'))) : null,
+          trailing: tools.canRollBackYtDlp ? TextButton(onPressed: controller.rollBackYtDlp, child: Text(tr('Roll back to previous version'))) : null,
         ),
-        NormalItem(title: 'Deno', subtitle: tools.denoVersion ?? tr('未安装'), leading: const Icon(AppIcons.code)),
+        NormalItem(title: 'Deno', subtitle: tools.denoVersion ?? tr('Not installed'), leading: const Icon(AppIcons.code)),
         NormalItem(
           title: 'ffmpeg',
           subtitle: controller.installingFfmpeg
-              ? tr('正在安装… {0}', [controller.ffmpegProgress == null ? '' : '${(controller.ffmpegProgress! * 100).round()}%'])
+              ? tr('Installing… {0}', [controller.ffmpegProgress == null ? '' : '${(controller.ffmpegProgress! * 100).round()}%'])
               : tools.ffmpegVersion == null
-                  ? tr('未安装（合并高画质下载时按需安装）')
-                  : tr('{0} · 占用 {1}', [tools.ffmpegVersion!, formatBytes(tools.ffmpegBytes ?? 0)]),
+                  ? tr('Not installed (installed on demand when merging high-quality downloads)')
+                  : tr('{0} · {1} on disk', [tools.ffmpegVersion!, formatBytes(tools.ffmpegBytes ?? 0)]),
           leading: const Icon(AppIcons.gitMerge),
-          trailing: controller.installingFfmpeg
+          trailing: controller.installingFfmpeg || ToolManager.bundledFfmpegDirectory != null
               ? null
               : Row(mainAxisSize: MainAxisSize.min, children: [
-                  TextButton(onPressed: controller.installFfmpeg, child: Text(tools.ffmpegVersion == null ? tr('安装') : tr('更新'))),
-                  if (tools.ffmpegVersion != null) TextButton(onPressed: controller.removeFfmpeg, child: Text(tr('移除'))),
+                  TextButton(onPressed: controller.installFfmpeg, child: Text(tools.ffmpegVersion == null ? tr('Install') : tr('Update'))),
+                  if (tools.ffmpegVersion != null) TextButton(onPressed: controller.removeFfmpeg, child: Text(tr('Remove'))),
                 ]),
         ),
         NormalItem(
-          title: controller.checking ? tr('正在检查更新…') : tr('立即检查更新'),
-          subtitle: tr('只从官方 GitHub Release 下载并校验 SHA-256，重启后启用'),
+          title: controller.checking ? tr('Checking for updates…') : tr('Check for updates now'),
+          subtitle: tr('Downloads only from the official GitHub Release and verifies SHA-256. Takes effect after restart'),
           leading: const Icon(AppIcons.arrowLineDown),
           enabled: !controller.checking,
           onTap: controller.checkUpdates,
         ),
-        _tip(context, tr('新 libmpv 出错时会自动改回内置版本。yt-dlp 更新后若无法播放，可以回退到上一版。')),
-        _tip(context, tr('ffmpeg 是可选组件，只用于合并高画质视频和音频，不会自动下载。使用 zhongfly/mpv-winbuild 的 LGPL 版本（无法安装时改用 BtbN/FFmpeg-Builds 的），源代码见 https://ffmpeg.org/download.html。')),
+        _tip(context, tr("New libmpv falls back to the built-in version automatically if it fails. If videos won't play after a yt-dlp update, you can roll back to the previous version.")),
+        if (Platform.isMacOS)
+          _tip(context, tr('The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.'))
+        else
+          _tip(context, tr('ffmpeg is an optional component used only to merge high-quality video and audio, and is never downloaded automatically. It is the LGPL build from zhongfly/mpv-winbuild (or from BtbN/FFmpeg-Builds where that cannot be installed); source code: https://ffmpeg.org/download.html.')),
       ];
     });
 
 // 关于 (PiliNara's about/view.dart)
 
 List<SettingEntry> aboutEntries(AppController controller) => [
-      SettingEntry(tr('版本'), (context) => Padding(
+      SettingEntry(tr('Version'), (context) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(children: [
               Icon(AppIcons.monitorPlayFill, size: 72, color: context.colors.primary),
               const SizedBox(height: 4),
               Text('Lumtub', style: Theme.of(context).textTheme.titleMedium!.copyWith(height: 2)),
-              Text(tr('使用 Flutter 和 mpv 开发的 YouTube 第三方客户端'), style: TextStyle(color: context.colors.outline)),
+              Text(tr('A third-party YouTube client built with Flutter and mpv'), style: TextStyle(color: context.colors.outline)),
               const SizedBox(height: 8),
               ListTile(
-                title: Text(tr('当前版本')),
+                title: Text(tr('Current version')),
                 leading: const Icon(AppIcons.gitCommit),
                 trailing: Text(appVersion, style: TextStyle(fontSize: 14, color: context.colors.outline)),
-                onTap: () => copyText(context, appVersion, tr('版本号已复制')),
+                onTap: () => copyText(context, appVersion, tr('Version number copied')),
               ),
             ]),
-          ), subtitle: tr('当前版本 更新')),
-      SettingEntry(tr('检查更新'), (context) {
+          ), subtitle: tr('Current version update')),
+      SettingEntry(tr('Check for updates'), (context) {
         final updater = controller.appUpdater;
         final release = updater?.available;
         final progress = updater?.progress;
         final String title, subtitle;
         if (updater?.ready != null) {
-          title = tr('新版本 {0} 已下载', [release?.version ?? '']);
-          subtitle = updater?.installError != null ? tr('安装没有开始：{0}。点击重试', [updater!.installError!]) : tr('关闭 Lumtub 时自动安装，点击立即重启并更新');
+          title = tr('Version {0} downloaded', [release?.version ?? '']);
+          subtitle = updater?.installError != null ? tr("The installer didn't start: {0}. Click to try again", [updater!.installError!]) : tr('Installs when Lumtub closes; click to restart and update now');
         } else if (progress != null) {
-          title = tr('正在下载新版本 {0}…', [release?.version ?? '']);
+          title = tr('Downloading version {0}…', [release?.version ?? '']);
           subtitle = '${(progress * 100).round()}%';
         } else if (updater?.checking ?? false) {
-          title = tr('正在检查软件更新…');
-          subtitle = tr('启动时和每 6 小时自动检查，也可立即检查');
+          title = tr('Checking for app updates…');
+          subtitle = tr('Checked at startup and every 6 hours; you can also check now.');
         } else if (release != null && updater?.rejected == release.version) {
-          title = tr('有新版本：{0}', [release.version]);
-          subtitle = tr('安装包的签名验证没通过，没有安装。点击打开 GitHub Release 手动下载');
+          title = tr('Update available: {0}', [release.version]);
+          subtitle = tr('The installer failed its signature check and was not installed. Click to download it from GitHub Releases');
         } else if (release != null) {
-          title = tr('有新版本：{0}', [release.version]);
+          title = tr('Update available: {0}', [release.version]);
           subtitle = !AppUpdater.canInstall || release.asset == null
-              ? tr('点击打开 GitHub Release 下载')
+              ? tr('Click to open the GitHub Release download.')
               : updater?.error != null
-                  ? tr('下载失败：{0}。点击重试', [updater!.error!])
-                  : tr('点击下载，关闭 Lumtub 时自动安装');
+                  ? tr('Download failed: {0}. Click to retry', [updater!.error!])
+                  : tr('Click to download; it installs when Lumtub closes');
         } else {
-          title = tr('检查更新');
-          subtitle = updater?.error == null ? tr('启动时和每 6 小时自动检查，也可立即检查') : tr('检查软件更新失败：{0}', [updater!.error!]);
+          title = tr('Check for updates');
+          subtitle = updater?.error == null ? tr('Checked at startup and every 6 hours; you can also check now.') : tr('Could not check for app updates: {0}', [updater!.error!]);
         }
         return NormalItem(
           title: title,
@@ -985,64 +999,64 @@ List<SettingEntry> aboutEntries(AppController controller) => [
             final found = controller.appUpdater?.available;
             if (found != null && (!AppUpdater.canInstall || found.asset == null || controller.appUpdater?.rejected == found.version)) openExternal(found.page.isEmpty ? '$_repository/releases' : found.page);
             if (found == null && context.mounted && controller.appUpdater?.error == null) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('已是最新版本'))));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Lumtub is up to date'))));
             }
           },
         );
-      }, subtitle: tr('发布页 新版本 自动更新')),
-      SettingEntry(tr('支持开发'), (context) => NormalItem(
-            title: tr('支持开发'),
-            subtitle: tr('通过 GitHub Sponsors 或加密货币赞助 Lumtub'),
+      }, subtitle: tr('Release page new version auto update')),
+      SettingEntry(tr('Support development'), (context) => NormalItem(
+            title: tr('Support development'),
+            subtitle: tr('Sponsor Lumtub on GitHub Sponsors or with crypto'),
             leading: const Icon(AppIcons.heartFill, color: Color(0xFFEA4AAA)),
             onTap: () => openSupport(context),
-          ), subtitle: tr('赞助 捐赠 sponsor donate')),
-      SettingEntry(tr('源代码'), (context) => NormalItem(
-            title: tr('Github 仓库'),
+          ), subtitle: tr('sponsor donate support')),
+      SettingEntry(tr('Source code'), (context) => NormalItem(
+            title: tr('GitHub repository'),
             subtitle: 'github.com/0x696c757a696f/lumtub',
             leading: const Icon(AppIcons.code),
             onTap: () => openExternal(_repository),
-          ), subtitle: tr('GitHub 源代码')),
-      SettingEntry(tr('问题反馈'), (context) => NormalItem(
-            title: tr('问题反馈'),
-            subtitle: tr('在 GitHub 提交 issue，请附上诊断信息和错误日志'),
+          ), subtitle: tr('GitHub source code')),
+      SettingEntry(tr('Feedback'), (context) => NormalItem(
+            title: tr('Feedback'),
+            subtitle: tr('File an issue on GitHub with the diagnostics and error log attached'),
             leading: const Icon(AppIcons.chatCenteredText),
             onTap: () => openExternal('$_repository/issues'),
           ), subtitle: 'issue bug'),
-      SettingEntry(tr('错误日志'), (context) => NormalItem(
-            title: tr('错误日志'),
-            subtitle: tr('只保存在本机，不记录登录凭据和视频流地址'),
+      SettingEntry(tr('Error log'), (context) => NormalItem(
+            title: tr('Error log'),
+            subtitle: tr('Stored only on this device. Sign-in credentials and stream URLs are never saved'),
             leading: const Icon(AppIcons.bug),
             onTap: () => openLogs(context, controller),
-          ), subtitle: tr('日志 log')),
-      SettingEntry(tr('日志级别'), (context) => NormalItem(
-            title: tr('日志级别'),
-            subtitle: tr('当前：{0}。排查问题时可以临时调到「调试」，会记下更多细节', [labelOf(_logLevels, controller.preferences.logLevel)]),
+          ), subtitle: tr('Log')),
+      SettingEntry(tr('Log level'), (context) => NormalItem(
+            title: tr('Log level'),
+            subtitle: tr('Now: {0}. Set it to Debug for a while to track a problem down; it records more detail', [labelOf(_logLevels, controller.preferences.logLevel)]),
             leading: const Icon(AppIcons.slidersHorizontal),
             onTap: () => pickFromDialog<LogLevel>(context,
-                title: tr('日志级别'),
+                title: tr('Log level'),
                 value: controller.preferences.logLevel,
                 values: _logLevels,
                 onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(logLevel: v))),
-          ), subtitle: tr('日志 级别 调试 debug log level')),
-      SettingEntry(tr('复制诊断信息'), (context) => NormalItem(
-            title: tr('复制诊断信息'),
-            subtitle: tr('版本、系统、显卡、组件和播放设置'),
+          ), subtitle: tr('log level debug verbose')),
+      SettingEntry(tr('Copy diagnostics'), (context) => NormalItem(
+            title: tr('Copy diagnostics'),
+            subtitle: tr('Version, system, graphics card, components and playback settings'),
             leading: const Icon(AppIcons.copy),
-            onTap: () => copyText(context, controller.diagnostics(), tr('诊断信息已复制')),
-          ), subtitle: tr('反馈 问题')),
-      SettingEntry(tr('开源许可'), (context) => NormalItem(
-            title: tr('开源许可'),
-            subtitle: tr('GPLv3；部分界面改编自 PiliNara，播放基于 mpv、media_kit 和 yt-dlp'),
+            onTap: () => copyText(context, controller.diagnostics(), tr('Diagnostics copied')),
+          ), subtitle: tr('feedback issues')),
+      SettingEntry(tr('Open source licenses'), (context) => NormalItem(
+            title: tr('Open source licenses'),
+            subtitle: tr('GPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp'),
             leading: const Icon(AppIcons.gavel),
             onTap: () => showLicensePage(context: context, applicationName: 'Lumtub', applicationVersion: appVersion),
           ), subtitle: 'PiliNara mpv media_kit yt-dlp license'),
     ];
 
 List<(LogLevel, String)> get _logLevels => [
-      (LogLevel.error, tr('错误：只记无法继续的问题')),
-      (LogLevel.warn, tr('警告：再加上已自动绕过的问题')),
-      (LogLevel.info, tr('信息：再加上主要操作（默认）')),
-      (LogLevel.debug, tr('调试：再加上每一步细节和计时')),
+      (LogLevel.error, tr('Errors: only problems Lumtub could not get past')),
+      (LogLevel.warn, tr('Warnings: also problems Lumtub worked around')),
+      (LogLevel.info, tr('Info: also what Lumtub did (default)')),
+      (LogLevel.debug, tr('Debug: also every step and timing')),
     ];
 
 // 关于 › 错误日志 (PiliNara's logs.dart)
@@ -1095,7 +1109,7 @@ class _LogsPageState extends State<_LogsPage> {
   }
 
   Future<void> _clear() async {
-    if (!await confirmDialog(context, title: tr('清空日志？'), content: tr('删除本机保存的 Lumtub 日志。'), confirm: tr('清空'))) return;
+    if (!await confirmDialog(context, title: tr('Clear logs?'), content: tr('Deletes Lumtub logs saved on this device.'), confirm: tr('Clear all'))) return;
     for (final name in const ['lumtub.old.log', 'lumtub.log']) {
       try {
         final file = _file(name);
@@ -1105,7 +1119,7 @@ class _LogsPageState extends State<_LogsPage> {
       }
     }
     await _load();
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('已清空'))));
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Cleared'))));
   }
 
   @override
@@ -1132,20 +1146,20 @@ class _LogsPageState extends State<_LogsPage> {
     ];
     return Scaffold(
       appBar: AppBar(
-        title: Text(tr('日志')),
+        title: Text(tr('Logs')),
         actions: [
           PopupMenuButton<int>(
             onSelected: (value) => switch (value) {
-              0 => copyText(context, text ?? '', tr('复制成功')),
+              0 => copyText(context, text ?? '', tr('Copied')),
               1 => openExternal('$_repository/issues'),
               2 => _directory == null ? null : openExternal(_directory!.path),
               _ => _clear(),
             },
             itemBuilder: (context) => [
-              PopupMenuItem(value: 0, child: Text(tr('复制日志'))),
-              PopupMenuItem(value: 1, child: Text(tr('错误反馈'))),
-              PopupMenuItem(value: 2, child: Text(tr('打开日志文件夹'))),
-              PopupMenuItem(value: 3, child: Text(tr('清空日志'))),
+              PopupMenuItem(value: 0, child: Text(tr('Copy log'))),
+              PopupMenuItem(value: 1, child: Text(tr('Bug reports'))),
+              PopupMenuItem(value: 2, child: Text(tr('Open log folder'))),
+              PopupMenuItem(value: 3, child: Text(tr('Clear logs'))),
             ],
           ),
           const SizedBox(width: 4),
@@ -1157,12 +1171,12 @@ class _LogsPageState extends State<_LogsPage> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
                 child: Wrap(spacing: 8, children: [
-                  for (final (level, label) in [(LogLevel.debug, tr('全部')), (LogLevel.info, tr('信息及以上')), (LogLevel.warn, tr('警告及以上')), (LogLevel.error, tr('只看错误'))])
+                  for (final (level, label) in [(LogLevel.debug, tr('All')), (LogLevel.info, tr('Info and above')), (LogLevel.warn, tr('Warnings and above')), (LogLevel.error, tr('Errors only'))])
                     ChoiceChip(label: Text(label), selected: _shown == level, onSelected: (_) => setState(() => _shown = level)),
                 ]),
               ),
               Expanded(child: shown.isEmpty
-              ? Center(child: Text(tr('暂无日志'), style: TextStyle(color: context.colors.outline)))
+              ? Center(child: Text(tr('No logs yet'), style: TextStyle(color: context.colors.outline)))
               : SelectionArea(
                   child: ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
@@ -1196,7 +1210,7 @@ class _LogsPageState extends State<_LogsPage> {
 
 /// 连接的服务器: every service Lumtub talks to, when, and what it learns,
 /// with a switch where it can be turned off.
-Future<void> openPrivacyConnections(BuildContext context, AppController controller) => _push(context, controller, tr('连接的服务器'), (context) {
+Future<void> openPrivacyConnections(BuildContext context, AppController controller) => _push(context, controller, tr('Connected servers'), (context) {
       final settings = controller.settings;
       final prefs = controller.preferences;
       void saveSettings(PlayerSettings next) => controller.saveSettings(next);
@@ -1216,27 +1230,27 @@ Future<void> openPrivacyConnections(BuildContext context, AppController controll
       final dns = DnsServer.of(settings.dnsServer, settings.dnsCustomUrl);
       final relay = settings.playbackSource != PlaybackSource.youtube;
       return [
-        _tip(context, tr('Lumtub 没有统计、遥测或崩溃上报，不上传观看历史、Cookie 或账号数据。下面是它会连接的全部服务器；开着代理时都经过代理。')),
-        _header(context, tr('必需')),
-        row(AppIcons.monitorPlay, 'YouTube', 'www.youtube.com · *.googlevideo.com · i.ytimg.com', tr('搜索、列表、播放和缩略图。YouTube 会看到你的 IP 和看了哪些视频，和用浏览器看一样'), state: tr('必需')),
-        row(AppIcons.listMagnifyingGlass, tr('YouTube 搜索建议'), 'suggestqueries-clients6.youtube.com', tr('在搜索框打字时，把已输入的文字发给 YouTube 取建议'), state: tr('打字时')),
-        _header(context, tr('可以关闭')),
-        row(AppIcons.arrowLineDown, tr('更新检查'), 'api.github.com · github.com', tr('检查和下载 Lumtub、libmpv、yt-dlp 等组件的新版本；GitHub 只看到你的 IP'),
+        _tip(context, tr('Lumtub has no analytics, telemetry or crash reporting, and never uploads watch history, cookies or account data. These are all the servers it connects to; with a proxy on, all go through it.')),
+        _header(context, tr('Required')),
+        row(AppIcons.monitorPlay, 'YouTube', 'www.youtube.com · *.googlevideo.com · i.ytimg.com', tr('Search, lists, playback and thumbnails. YouTube sees your IP and what you watch, as in a browser'), state: tr('Required')),
+        row(AppIcons.listMagnifyingGlass, tr('YouTube search suggestions'), 'suggestqueries-clients6.youtube.com', tr('While you type in the search box, the text so far is sent to YouTube for suggestions'), state: tr('While typing')),
+        _header(context, tr('Can be turned off')),
+        row(AppIcons.arrowLineDown, tr('Update checks'), 'api.github.com · github.com', tr('Checks for and downloads new versions of Lumtub, libmpv, yt-dlp and other components; GitHub sees only your IP'),
             value: prefs.autoCheckUpdates, onChanged: (v) => savePrefs(prefs.copyWith(autoCheckUpdates: v, autoUpdateApp: v && prefs.autoUpdateApp))),
-        row(AppIcons.fastForward, tr('空降助手（SponsorBlock）'), 'sponsor.ajay.app', tr('播放时用视频 ID 的哈希前缀查询赞助片段，服务器不知道具体是哪个视频'),
+        row(AppIcons.fastForward, tr('SponsorBlock'), 'sponsor.ajay.app', tr("Sponsor segments are looked up by a prefix of the video ID's hash, so the server doesn't learn which video"),
             value: settings.sponsorBlock, onChanged: (v) => saveSettings(settings.copyWith(sponsorBlock: v))),
-        row(AppIcons.textT, 'DeArrow', 'sponsor.ajay.app · dearrow-thumb.ajay.app', tr('用社区提交的标题和封面替换标题党；标题用视频 ID 的哈希前缀查询，替换的封面图按视频 ID 下载'),
+        row(AppIcons.textT, 'DeArrow', 'sponsor.ajay.app · dearrow-thumb.ajay.app', tr("Replaces clickbait with community titles and thumbnails; titles are looked up by a prefix of the video ID's hash, replacement thumbnails are downloaded by video ID"),
             value: settings.deArrowTitles || settings.deArrowThumbnails, onChanged: (v) => saveSettings(settings.copyWith(deArrowTitles: v, deArrowThumbnails: v))),
-        row(AppIcons.thumbsDown, 'Return YouTube Dislike', 'returnyoutubedislikeapi.com', tr('播放页显示估算的踩数；会把正在看的视频 ID 发给它'),
+        row(AppIcons.thumbsDown, 'Return YouTube Dislike', 'returnyoutubedislikeapi.com', tr('Shows estimated dislikes on the watch page; sends it the ID of the video you watch'),
             value: settings.returnDislike, onChanged: (v) => saveSettings(settings.copyWith(returnDislike: v))),
-        row(AppIcons.translate, tr('翻译'), controller.preferences.translation.service.label, tr('只在你点“翻译”、开启字幕翻译或使用 AI 总结时，把文字发给所选服务'),
-            state: tr('点击时'), onTap: () => openTranslationSettings(context, controller)),
-        row(AppIcons.graph, tr('Piped / Invidious'), relay ? settings.playbackSource.label : tr('当前未使用'), tr('替你从 YouTube 取视频；它们会知道你看了哪个视频。YouTube 返回 429 时也会临时试用'),
-            state: relay ? tr('使用中') : tr('仅备用')),
-        row(AppIcons.hardDrives, tr('加密 DNS'), dns?.url ?? tr('当前未使用'), tr('直连时查找网址；DNS 服务器会知道你访问了哪些网站，但看不到具体内容'), state: dns == null ? tr('关闭') : tr('使用中')),
-        row(AppIcons.userCircle, tr('Google 账号'), 'accounts.google.com · oauth2.googleapis.com · www.googleapis.com', tr('只在登录后同步订阅、播放列表、点赞和评论'),
-            state: controller.account?.signedIn ?? false ? tr('已登录') : tr('未登录')),
-        row(AppIcons.television, tr('电视码登录'), 'www.youtube.com/o/oauth2 · www.youtube.com/youtubei', tr('只在登录后给评论和帖子点赞、点踩，以 YouTube 电视版的身份请求'),
-            state: controller.tvSignIn?.signedIn ?? false ? tr('已登录') : tr('未登录')),
+        row(AppIcons.translate, tr('Translation'), controller.preferences.translation.service.label, tr('Text is sent to the chosen service only when you click Translate, turn on subtitle translation or use AI summary'),
+            state: tr('When pressed'), onTap: () => openTranslationSettings(context, controller)),
+        row(AppIcons.graph, tr('Piped / Invidious'), relay ? settings.playbackSource.label : tr('Not in use'), tr('Fetch videos from YouTube for you; they learn which video you watch. Also tried briefly when YouTube answers 429'),
+            state: relay ? tr('In use') : tr('Fallback only')),
+        row(AppIcons.hardDrives, tr('Encrypted DNS'), dns?.url ?? tr('Not in use'), tr('Looks up host names on a direct connection; the DNS server learns which sites you visit, not what you do there'), state: dns == null ? tr('Close') : tr('In use')),
+        row(AppIcons.userCircle, tr('Google account'), 'accounts.google.com · oauth2.googleapis.com · www.googleapis.com', tr('Only after signing in, to sync subscriptions, playlists, likes and comments'),
+            state: controller.account?.signedIn ?? false ? tr('Signed in') : tr('Signed out')),
+        row(AppIcons.television, tr('TV-code sign-in'), 'www.youtube.com/o/oauth2 · www.youtube.com/youtubei', tr("Only after signing in: likes and dislikes on comments and posts, requested as YouTube's TV app"),
+            state: controller.tvSignIn?.signedIn ?? false ? tr('Signed in') : tr('Signed out')),
       ];
     });

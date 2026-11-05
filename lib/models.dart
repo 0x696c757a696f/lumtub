@@ -252,7 +252,7 @@ class ChannelResult {
     }
     return ChannelResult(
       ChannelRef(id, (map['channel'] ?? map['title'] ?? '').toString()),
-      subscribers: followers is num ? tr('{0} 位订阅者', [formatCount(followers.toInt())]) : null,
+      subscribers: followers is num ? tr('{0} subscribers', [formatCount(followers.toInt())]) : null,
       handle: map['uploader_id']?.toString(),
       avatar: ChannelRef.avatarUrl(avatar),
       description: map['description']?.toString() ?? '',
@@ -291,7 +291,7 @@ class PlaylistResult {
     }
     return PlaylistResult(
       id: id,
-      title: map['title']?.toString() ?? tr('播放列表'),
+      title: map['title']?.toString() ?? tr('Playlist'),
       channel: (map['channel'] ?? map['uploader'] ?? '').toString(),
       count: count is num ? count.toInt() : null,
       thumbnail: thumbnail != null && thumbnail.startsWith('https://') ? thumbnail : null,
@@ -323,17 +323,26 @@ Object? parseListingEntry(String line) {
   }
 }
 
-/// Formats a count the way Chinese YouTube does: 9,999 / 1.2万 / 3.4亿.
+/// Formats a count the way YouTube does in the interface language: 1.2K
+/// in most, 1.2万 / 3.4亿 in Chinese, 1.2万 / 3.4億 in Japanese, 1.2만 /
+/// 3.4억 in Korean.
 String formatCount(int value) {
-  if (!currentLanguage.isChinese) {
-    if (value < 1000) return '$value';
-    if (value < 1000000) return '${_trim(value / 1000)}K';
-    if (value < 1000000000) return '${_trim(value / 1000000)}M';
-    return '${_trim(value / 1000000000)}B';
+  final (tenThousand, hundredMillion) = switch (currentLanguage.tag) {
+    'zh-Hans' => ('万', '亿'),
+    'zh-Hant' || 'zh-HK' => ('萬', '億'),
+    'ja' => ('万', '億'),
+    'ko' => ('만', '억'),
+    _ => ('', ''),
+  };
+  if (tenThousand.isNotEmpty) {
+    if (value < 10000) return '$value';
+    if (value < 100000000) return '${_trim(value / 10000)}$tenThousand';
+    return '${_trim(value / 100000000)}$hundredMillion';
   }
-  if (value < 10000) return '$value';
-  if (value < 100000000) return tr('{0}万', [_trim(value / 10000)]);
-  return tr('{0}亿', [_trim(value / 100000000)]);
+  if (value < 1000) return '$value';
+  if (value < 1000000) return '${_trim(value / 1000)}K';
+  if (value < 1000000000) return '${_trim(value / 1000000)}M';
+  return '${_trim(value / 1000000000)}B';
 }
 
 String _trim(double value) => value >= 100 ? value.toStringAsFixed(0) : value.toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '');
@@ -485,9 +494,9 @@ class SubtitleOption {
   /// The label shown in menus, such as "中文（简体） · zh-Hans".
   String get label => switch (kind) {
         SubtitleKind.uploaded => languageName(language, name),
-        SubtitleKind.automatic => tr('{0}（自动生成）', [languageName(language, name)]),
-        SubtitleKind.translated => tr('{0}（自动翻译）', [languageName(language, name)]),
-        SubtitleKind.speech => tr('{0}（语音识别）', [languageName(language, name)]),
+        SubtitleKind.automatic => tr('{0} (auto-generated)', [languageName(language, name)]),
+        SubtitleKind.translated => tr('{0} (auto-translated)', [languageName(language, name)]),
+        SubtitleKind.speech => tr('{0} (speech recognition)', [languageName(language, name)]),
       };
 
   /// yt-dlp's `subtitles` and `automatic_captions` maps. Automatic
@@ -539,10 +548,10 @@ class SubtitleOption {
   }
 
   static final _names = {
-    'zh-Hans': tr('中文（简体）'), 'zh-CN': tr('中文（中国）'), 'zh-Hant': tr('中文（繁體）'), 'zh-TW': tr('中文（台灣）'), 'zh-HK': tr('中文（香港）'), 'zh': tr('中文'),
-    'en': tr('英语'), 'en-US': tr('英语（美国）'), 'en-GB': tr('英语（英国）'), 'ja': tr('日语'), 'ko': tr('韩语'), 'fr': tr('法语'), 'de': tr('德语'), 'es': tr('西班牙语'),
-    'pt': tr('葡萄牙语'), 'pt-BR': tr('葡萄牙语（巴西）'), 'ru': tr('俄语'), 'it': tr('意大利语'), 'vi': tr('越南语'), 'th': tr('泰语'), 'id': tr('印尼语'), 'ms': tr('马来语'),
-    'ar': tr('阿拉伯语'), 'hi': tr('印地语'), 'tr': tr('土耳其语'), 'nl': tr('荷兰语'), 'pl': tr('波兰语'), 'uk': tr('乌克兰语'), 'fil': tr('菲律宾语'),
+    'zh-Hans': tr('Chinese (Simplified)'), 'zh-CN': tr('Chinese (China)'), 'zh-Hant': tr('Chinese (Traditional)'), 'zh-TW': tr('Chinese (Taiwan)'), 'zh-HK': tr('Chinese (Hong Kong)'), 'zh': tr('Chinese'),
+    'en': tr('English'), 'en-US': tr('English (US)'), 'en-GB': tr('English (UK)'), 'ja': tr('Japanese'), 'ko': tr('Korean'), 'fr': tr('French'), 'de': tr('German'), 'es': tr('Spanish'),
+    'pt': tr('Portuguese'), 'pt-BR': tr('Portuguese (Brazil)'), 'ru': tr('Russian'), 'it': tr('Italian'), 'vi': tr('Vietnamese'), 'th': tr('Thai'), 'id': tr('Indonesian'), 'ms': tr('Malay'),
+    'ar': tr('Arabic'), 'hi': tr('Hindi'), 'tr': tr('Turkish'), 'nl': tr('Dutch'), 'pl': tr('Polish'), 'uk': tr('Ukrainian'), 'fil': tr('Filipino'),
   };
 
   /// A Chinese name for [code], else YouTube's own [name], else the code.

@@ -60,24 +60,24 @@ class LiveChatComposer {
   /// The chat box of live video [videoId].
   Future<ChatBox> open(String videoId) async {
     final web = this.web;
-    if (web == null || !web.signedIn) return ChatBoxClosed(tr('用浏览器登录（Cookie）后才能在聊天里发言'));
+    if (web == null || !web.signedIn) return ChatBoxClosed(tr('Sign in with your browser (cookies) to write in the chat'));
     _bind();
-    if (_composer == null) return ChatBoxClosed(tr('安装包不完整，无法发言'));
+    if (_composer == null) return ChatBoxClosed(tr("The installation is incomplete, so the chat can't be written in"));
     final watch = await web.post('next', {'videoId': videoId});
-    if (watch == null) return ChatBoxClosed(tr('用浏览器登录（Cookie）后才能在聊天里发言'));
+    if (watch == null) return ChatBoxClosed(tr('Sign in with your browser (cookies) to write in the chat'));
     final continuation = watch.status == 200 ? _read(watch.body)['continuation'] as String? : null;
     if (continuation == null) {
       logWarn('No live chat box for $videoId (watch page answered ${watch.status})');
-      return ChatBoxClosed(tr('这个直播的聊天不能发言'));
+      return ChatBoxClosed(tr("This live chat can't be written in"));
     }
     final chat = await web.post('live_chat/get_live_chat', {'continuation': continuation});
     if (chat == null || chat.status != 200) {
       logWarn('The live chat of $videoId answered ${chat?.status}');
-      return ChatBoxClosed(tr('无法打开聊天的输入框'));
+      return ChatBoxClosed(tr("Couldn't open the chat box"));
     }
     final box = _read(chat.body);
     if (box['params'] case final String params) return ChatBoxOpen(params);
-    return ChatBoxClosed(box['restricted'] as String? ?? tr('这个账号不能在这个直播的聊天里发言'));
+    return ChatBoxClosed(box['restricted'] as String? ?? tr("This account can't write in this live chat"));
   }
 
   /// Sends [text] through [box]; throws a message for the user when
@@ -86,15 +86,15 @@ class LiveChatComposer {
     final web = this.web;
     final core = NativeCore.instance;
     final made = _sendBody;
-    if (web == null || core == null || made == null) throw StateError(tr('用浏览器登录（Cookie）后才能在聊天里发言'));
+    if (web == null || core == null || made == null) throw StateError(tr('Sign in with your browser (cookies) to write in the chat'));
     final id = List.generate(16, (_) => Random.secure().nextInt(36).toRadixString(36)).join();
     final request = core.take(core.withText(jsonEncode({'params': box.params, 'text': text, 'clientMessageId': id}), made));
     if (request == null) return;
     final answer = await web.post('live_chat/send_message', (jsonDecode(request) as Map).cast<String, Object?>(), ask: true);
-    if (answer == null) throw StateError(tr('用浏览器登录（Cookie）后才能在聊天里发言'));
+    if (answer == null) throw StateError(tr('Sign in with your browser (cookies) to write in the chat'));
     if (answer.status != 200) {
       logWarn('YouTube answered ${answer.status} to a live chat message');
-      throw StateError(tr('YouTube 没有收下这条消息（{0}）', [answer.status]));
+      throw StateError(tr("YouTube didn't accept the message ({0})", [answer.status]));
     }
   }
 }

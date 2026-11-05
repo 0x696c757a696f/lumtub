@@ -142,7 +142,7 @@ void main() {
           return [video('pop', channelId: 'UCpop')];
         },
       ));
-      expect(query, '热门');
+      expect(query, 'Popular');
       expect(feed.items, hasLength(1));
     });
 
@@ -204,7 +204,7 @@ void main() {
                       'title': {'simpleText': '标题'},
                       'longBylineText': {
                         'runs': [
-                          {'text': '频道', 'navigationEndpoint': {'browseEndpoint': {'browseId': 'UCxxxxxxxxxxxxxxxxxxxxxx'}}},
+                          {'text': 'Channel', 'navigationEndpoint': {'browseEndpoint': {'browseId': 'UCxxxxxxxxxxxxxxxxxxxxxx'}}},
                         ],
                       },
                       'lengthText': {'simpleText': '12:34'},
@@ -220,7 +220,7 @@ void main() {
       });
       expect(items, hasLength(1));
       final item = items.single;
-      expect((item.id, item.title, item.channel, item.channelId, item.duration, item.viewCount), ('abcdefghijk', '标题', '频道', 'UCxxxxxxxxxxxxxxxxxxxxxx', 754, 120000));
+      expect((item.id, item.title, item.channel, item.channelId, item.duration, item.viewCount), ('abcdefghijk', '标题', 'Channel', 'UCxxxxxxxxxxxxxxxxxxxxxx', 754, 120000));
     });
 
     test('reads lockup view models and skips playlists', () {
@@ -295,7 +295,7 @@ void main() {
     test('keeps the reason of the stronger source', () {
       final taste = TasteProfile.from(history: const []);
       final picked = recommend([
-        Candidate(video('v', channelId: 'UCa'), RecommendSource.topic, reason: '热门'),
+        Candidate(video('v', channelId: 'UCa'), RecommendSource.topic, reason: 'Popular'),
         Candidate(video('v', channelId: 'UCa'), RecommendSource.related, reason: '看过《A》的人也在看'),
       ], taste: taste);
       expect(picked.single.reason, '看过《A》的人也在看');
@@ -339,6 +339,6 @@ void main() {
 
     final next = video('w2', title: '手冲 咖啡豆', channelId: 'UCbeans');
     await feed.learn(next, sources([next, ...watched]), skipped: false);
-    expect(feed.reasons[feed.items.first.id], startsWith('刚看完《手冲 咖啡豆》'));
+    expect(feed.reasons[feed.items.first.id], startsWith('Just watched "手冲 咖啡豆"'));
   });
 }

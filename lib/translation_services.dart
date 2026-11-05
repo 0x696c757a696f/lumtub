@@ -10,13 +10,13 @@ import 'translation_cache.dart';
 
 /// The engines a person can pick for translating subtitles and comments.
 enum TranslationService {
-  google('Google 翻译（免费）'),
-  microsoft('微软翻译（免费，可填密钥）'),
+  google('Google Translate (free)'),
+  microsoft('Microsoft Translator (free, key optional)'),
   deepl('DeepL'),
-  deeplx('DeepLX（免密钥）'),
-  baidu('百度翻译'),
+  deeplx('DeepLX (no key)'),
+  baidu('Baidu Translate'),
   libre('LibreTranslate'),
-  ai('AI 大模型');
+  ai('AI model');
 
   const TranslationService(this._label);
   final String _label;
@@ -57,16 +57,16 @@ Future<String> _post(http.Client client, Uri uri, Map<String, String> headers, S
   try {
     response = await client.post(uri, headers: headers, body: body).timeout(timeout);
   } catch (_) {
-    throw TranslationException(tr('无法翻译，请检查网络或代理'));
+    throw TranslationException(tr('Translation failed. Check your network or proxy.'));
   }
   final status = response.statusCode;
   if (status == 200) return utf8.decode(response.bodyBytes);
   if (errors.containsKey(status)) throw TranslationException(errors[status]!);
-  if (status == 429) throw TranslationException(tr('翻译请求太频繁，请稍后再试'));
-  throw TranslationException(tr('翻译服务暂时不可用（{0}）', [status]));
+  if (status == 429) throw TranslationException(tr('Too many translation requests. Please try again later.'));
+  throw TranslationException(tr('Translation service temporarily unavailable ({0})', [status]));
 }
 
-TranslationException _unrecognized() => TranslationException(tr('翻译服务返回了无法识别的内容'));
+TranslationException _unrecognized() => TranslationException(tr('Translation service returned unrecognized content'));
 
 Object? _decode(String body) {
   try {
@@ -161,14 +161,14 @@ class DeepLTranslator extends _LineTranslator {
   @override
   Future<List<String>> translateBatch(List<String> lines, String target) async {
     final code = languageCode(target);
-    if (code == null) throw TranslationException(tr('DeepL 不支持这种语言'));
+    if (code == null) throw TranslationException(tr('DeepL does not support this language'));
     final body = [for (final line in lines) 'text=${Uri.encodeQueryComponent(line)}', 'target_lang=$code'].join('&');
     final reply = await _post(
       client,
       endpoint,
       {'Authorization': 'DeepL-Auth-Key ${key.trim()}', 'Content-Type': 'application/x-www-form-urlencoded'},
       body,
-      {403: tr('DeepL 密钥无效'), 456: tr('DeepL 本月额度已用完')},
+      {403: tr('The DeepL key is not valid'), 456: tr('The DeepL quota for this month is used up')},
       const Duration(seconds: 30),
     );
     final data = _decode(reply);
@@ -198,9 +198,9 @@ class MicrosoftTranslator extends _LineTranslator {
     try {
       response = await client.get(Uri.https('edge.microsoft.com', '/translate/auth')).timeout(const Duration(seconds: 15));
     } catch (_) {
-      throw TranslationException(tr('无法翻译，请检查网络或代理'));
+      throw TranslationException(tr('Translation failed. Check your network or proxy.'));
     }
-    if (response.statusCode != 200 || response.body.trim().isEmpty) throw TranslationException(tr('翻译服务暂时不可用（{0}）', [response.statusCode]));
+    if (response.statusCode != 200 || response.body.trim().isEmpty) throw TranslationException(tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
     _tokenUntil = DateTime.now().add(const Duration(minutes: 8));
     return _token = response.body.trim();
   }
@@ -228,7 +228,7 @@ class MicrosoftTranslator extends _LineTranslator {
       uri,
       headers,
       jsonEncode([for (final line in lines) {'Text': line}]),
-      {401: tr('微软翻译密钥无效')},
+      {401: tr('The Microsoft Translator key is not valid')},
       const Duration(seconds: 30),
     );
     final data = _decode(reply);
@@ -259,7 +259,7 @@ class DeepLXTranslator extends _LineTranslator {
   Uri get endpoint {
     final uri = Uri.tryParse(server.trim());
     if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) {
-      throw TranslationException(tr('请填写 DeepLX 服务器地址'));
+      throw TranslationException(tr('Fill in the DeepLX server address'));
     }
     return uri.path.isEmpty || uri.path == '/' ? uri.replace(path: '/translate') : uri;
   }
@@ -267,14 +267,14 @@ class DeepLXTranslator extends _LineTranslator {
   @override
   Future<List<String>> translateBatch(List<String> lines, String target) async {
     final code = DeepLTranslator.languageCode(target);
-    if (code == null) throw TranslationException(tr('DeepL 不支持这种语言'));
+    if (code == null) throw TranslationException(tr('DeepL does not support this language'));
     Future<String> one(String text) async {
       final reply = await _post(
         client,
         endpoint,
         {'Content-Type': 'application/json', if (key.trim().isNotEmpty) 'Authorization': 'Bearer ${key.trim()}'},
         jsonEncode({'text': text, 'source_lang': 'auto', 'target_lang': code == 'ZH-HANS' || code == 'ZH-HANT' ? 'ZH' : code.split('-').first}),
-        {401: tr('DeepLX 密钥无效')},
+        {401: tr('The DeepLX key is invalid')},
         const Duration(seconds: 30),
       );
       final data = _decode(reply);
@@ -311,7 +311,7 @@ class BaiduTranslator extends _LineTranslator {
 
   @override
   Future<List<String>> translateBatch(List<String> lines, String target) async {
-    if (appId.trim().isEmpty) throw TranslationException(tr('请先在设置里填写百度翻译的 APP ID'));
+    if (appId.trim().isEmpty) throw TranslationException(tr('Fill in the Baidu Translate APP ID in Settings first'));
     final query = lines.join('\n');
     final salt = '${DateTime.now().millisecondsSinceEpoch}';
     final sign = md5.convert(utf8.encode('${appId.trim()}$query$salt${key.trim()}')).toString();
@@ -327,10 +327,10 @@ class BaiduTranslator extends _LineTranslator {
     final data = _decode(reply);
     if (data is Map && data['error_code'] != null && '${data['error_code']}' != '52000') {
       throw TranslationException(switch ('${data['error_code']}') {
-        '52003' || '54001' => tr('百度翻译的 APP ID 或密钥无效'),
-        '54003' || '54005' => tr('翻译请求太频繁，请稍后再试'),
-        '54004' => tr('百度翻译账户余额不足'),
-        final code => tr('翻译服务暂时不可用（{0}）', [code]),
+        '52003' || '54001' => tr('The Baidu Translate APP ID or key is invalid'),
+        '54003' || '54005' => tr('Too many translation requests. Please try again later.'),
+        '54004' => tr('The Baidu Translate account is out of credit'),
+        final code => tr('Translation service temporarily unavailable ({0})', [code]),
       });
     }
     if (data is Map && data['trans_result'] is List) {
@@ -359,7 +359,7 @@ class LibreTranslator extends _LineTranslator {
     final base = server.trim().replaceAll(RegExp(r'/+$'), '');
     final uri = Uri.tryParse('$base/translate');
     if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) {
-      throw TranslationException(tr('请填写 LibreTranslate 服务器地址'));
+      throw TranslationException(tr('Fill in the LibreTranslate server address'));
     }
     return uri;
   }
@@ -395,16 +395,16 @@ class AiTone {
   String get label => tr(_label);
 
   static const all = [
-    AiTone('default', '跟随提示词', ''),
-    AiTone('neutral', '中性', 'Use a neutral, plain tone.'),
-    AiTone('casual', '口语', 'Use a casual, spoken tone, as people talk.'),
-    AiTone('formal', '正式', 'Use a formal, polite tone.'),
-    AiTone('literal', '直译', 'Stay as close to the original wording as the target language allows.'),
-    AiTone('idiomatic', '意译', 'Convey the meaning freely with idiomatic expressions rather than the original wording.'),
-    AiTone('technical', '技术', 'Use precise technical terminology.'),
-    AiTone('academic', '学术', 'Use an academic, precise register.'),
-    AiTone('literary', '文学', 'Use a literary, expressive style.'),
-    AiTone('humorous', '幽默', 'Keep jokes, puns and humour working in the target language.'),
+    AiTone('default', 'As the prompt says', ''),
+    AiTone('neutral', 'Neutral tone', 'Use a neutral, plain tone.'),
+    AiTone('casual', 'Casual', 'Use a casual, spoken tone, as people talk.'),
+    AiTone('formal', 'Formal', 'Use a formal, polite tone.'),
+    AiTone('literal', 'Literal', 'Stay as close to the original wording as the target language allows.'),
+    AiTone('idiomatic', 'Idiomatic', 'Convey the meaning freely with idiomatic expressions rather than the original wording.'),
+    AiTone('technical', 'Technical', 'Use precise technical terminology.'),
+    AiTone('academic', 'Academic', 'Use an academic, precise register.'),
+    AiTone('literary', 'Literary', 'Use a literary, expressive style.'),
+    AiTone('humorous', 'Humorous', 'Keep jokes, puns and humour working in the target language.'),
   ];
 
   static AiTone byId(String id) => all.firstWhere((t) => t.id == id, orElse: () => all.first);
@@ -448,31 +448,31 @@ class AiTranslator extends _CachedTranslator {
     AiPreset('deepseek', 'DeepSeek', 'https://api.deepseek.com/v1', 'deepseek-chat'),
     AiPreset('anthropic', 'Anthropic Claude', 'https://api.anthropic.com/v1', 'claude-haiku-5-5'),
     AiPreset('gemini', 'Google Gemini', 'https://generativelanguage.googleapis.com/v1beta/openai', 'gemini-2.5-flash'),
-    AiPreset('qwen', '通义千问', 'https://dashscope.aliyuncs.com/compatible-mode/v1', 'qwen-plus'),
-    AiPreset('zhipu', '智谱 GLM', 'https://open.bigmodel.cn/api/paas/v4', 'glm-4-flash'),
-    AiPreset('siliconflow', '硅基流动', 'https://api.siliconflow.cn/v1', 'Qwen/Qwen2.5-7B-Instruct'),
+    AiPreset('qwen', 'Qwen', 'https://dashscope.aliyuncs.com/compatible-mode/v1', 'qwen-plus'),
+    AiPreset('zhipu', 'Zhipu GLM', 'https://open.bigmodel.cn/api/paas/v4', 'glm-4-flash'),
+    AiPreset('siliconflow', 'SiliconFlow', 'https://api.siliconflow.cn/v1', 'Qwen/Qwen2.5-7B-Instruct'),
     AiPreset('openrouter', 'OpenRouter', 'https://openrouter.ai/api/v1', 'openai/gpt-4o-mini'),
-    AiPreset('ollama', 'Ollama（本机）', 'http://localhost:11434/v1', 'qwen2.5'),
-    AiPreset('custom', '自定义', '', ''),
+    AiPreset('ollama', 'Ollama (this computer)', 'http://localhost:11434/v1', 'qwen2.5'),
+    AiPreset('custom', 'Custom', '', ''),
   ];
 
   static const promptPresets = [
     PromptPreset(
       'subtitle',
-      '字幕翻译（逐行对应）',
+      'Subtitles (line for line)',
       'You are a professional subtitle translator. Translate the user\'s text into {target}. $_lineRule'
           'Keep names and terms consistent throughout, and keep each line short and natural, like a subtitle.',
     ),
     PromptPreset(
       'natural',
-      '自然口语',
+      'Natural',
       'You are a translator who writes natural, conversational language. Translate the user\'s text into {target} the way a native speaker would say it, '
           'using idiomatic expressions instead of word-for-word renderings. $_lineRule'
           'Keep names and terms consistent throughout, and keep each line short.',
     ),
     PromptPreset(
       'faithful',
-      '忠实直译',
+      'Faithful',
       'You are a precise translator. Translate the user\'s text into {target} as literally and faithfully as possible without adding or omitting anything. $_lineRule'
           'Keep proper nouns and technical terms in the original language in parentheses after their translation on first use, and keep them consistent afterwards.',
     ),
@@ -527,7 +527,7 @@ class AiTranslator extends _CachedTranslator {
     if (first.length == lines.length) return first;
     final second = _split(await _ask(input, lines.length, target, 'Return exactly ${lines.length} lines.', context));
     if (second.length == lines.length) return second;
-    throw TranslationException(tr('AI 返回的行数不对，无法对齐字幕'));
+    throw TranslationException(tr('The AI returned a different number of lines, so the subtitles cannot be aligned'));
   }
 
   /// The system prompt with the target, line count, style and terms filled in.
@@ -564,7 +564,7 @@ class AiTranslator extends _CachedTranslator {
     final base = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
     final uri = Uri.tryParse('$base/chat/completions');
     if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) {
-      throw TranslationException(tr('AI 接口地址或模型名不对'));
+      throw TranslationException(tr('The AI endpoint address or model name is wrong'));
     }
     final body = {'model': model, 'temperature': temperature, 'messages': messages};
     final reply = await _post(
@@ -575,7 +575,7 @@ class AiTranslator extends _CachedTranslator {
         if (key.trim().isNotEmpty) 'Authorization': 'Bearer ${key.trim()}',
       },
       jsonEncode(body),
-      {401: tr('AI 接口密钥无效'), 404: tr('AI 接口地址或模型名不对')},
+      {401: tr('The AI API key is not valid'), 404: tr('The AI endpoint address or model name is wrong')},
       timeout,
     );
     final data = _decode(reply);
@@ -592,15 +592,15 @@ class AiTranslator extends _CachedTranslator {
   static Future<List<String>> listModels(http.Client client, String baseUrl, String key) async {
     final base = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
     final uri = Uri.tryParse('$base/models');
-    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) throw TranslationException(tr('AI 接口地址或模型名不对'));
+    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) throw TranslationException(tr('The AI endpoint address or model name is wrong'));
     final http.Response response;
     try {
       response = await client.get(uri, headers: {if (key.trim().isNotEmpty) 'Authorization': 'Bearer ${key.trim()}'}).timeout(const Duration(seconds: 20));
     } catch (_) {
-      throw TranslationException(tr('无法翻译，请检查网络或代理'));
+      throw TranslationException(tr('Translation failed. Check your network or proxy.'));
     }
-    if (response.statusCode == 401) throw TranslationException(tr('AI 接口密钥无效'));
-    if (response.statusCode != 200) throw TranslationException(tr('翻译服务暂时不可用（{0}）', [response.statusCode]));
+    if (response.statusCode == 401) throw TranslationException(tr('The AI API key is not valid'));
+    if (response.statusCode != 200) throw TranslationException(tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
     final data = _decode(utf8.decode(response.bodyBytes));
     final list = data is Map ? data['data'] ?? data['models'] : data;
     if (list is! List) throw _unrecognized();
@@ -829,21 +829,21 @@ Translator translatorFor(TranslationConfig config, Map<String, String> keys, htt
     case TranslationService.google:
       return fallback;
     case TranslationService.deepl:
-      if (key.isEmpty) return _FailingTranslator(tr('请先在设置里填写 {0} 的密钥', [service.label]));
+      if (key.isEmpty) return _FailingTranslator(tr('Fill in the key for {0} in Settings first', [service.label]));
       return DeepLTranslator(client, key: key);
     case TranslationService.microsoft:
       return MicrosoftTranslator(client, key: key, region: config.microsoftRegion);
     case TranslationService.deeplx:
       return DeepLXTranslator(client, server: config.deeplxServer, key: key);
     case TranslationService.baidu:
-      if (key.isEmpty) return _FailingTranslator(tr('请先在设置里填写 {0} 的密钥', [service.label]));
+      if (key.isEmpty) return _FailingTranslator(tr('Fill in the key for {0} in Settings first', [service.label]));
       return BaiduTranslator(client, appId: config.baiduAppId, key: key);
     case TranslationService.libre:
       return LibreTranslator(client, server: config.libreServer, key: key);
     case TranslationService.ai:
       final baseUrl = config.effectiveAiBaseUrl;
       final keyOptional = config.aiPreset == 'ollama' || config.aiPreset == 'custom' || _isLocalUrl(baseUrl);
-      if (key.isEmpty && !keyOptional) return _FailingTranslator(tr('请先在设置里填写 {0} 的密钥', [service.label]));
+      if (key.isEmpty && !keyOptional) return _FailingTranslator(tr('Fill in the key for {0} in Settings first', [service.label]));
       return AiTranslator(
         client,
         baseUrl: baseUrl,
@@ -880,9 +880,9 @@ class SpeechPreset {
   final String? sameKeyAs;
 
   static const all = [
-    SpeechPreset('groq', 'Groq（Whisper，免费额度）', 'https://api.groq.com/openai/v1', 'whisper-large-v3-turbo'),
-    SpeechPreset('openai', 'OpenAI（Whisper）', 'https://api.openai.com/v1', 'whisper-1', sameKeyAs: 'openai'),
-    SpeechPreset('custom', '自定义（OpenAI 兼容）', '', 'whisper-1'),
+    SpeechPreset('groq', 'Groq (Whisper, free tier)', 'https://api.groq.com/openai/v1', 'whisper-large-v3-turbo'),
+    SpeechPreset('openai', 'OpenAI (Whisper)', 'https://api.openai.com/v1', 'whisper-1', sameKeyAs: 'openai'),
+    SpeechPreset('custom', 'Custom (OpenAI-compatible)', '', 'whisper-1'),
   ];
 
   static SpeechPreset byId(String id) => all.firstWhere((p) => p.id == id, orElse: () => all.first);

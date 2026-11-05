@@ -5,6 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/native_core.dart';
 
 Future<bool> _running(int pid) async {
+  if (!Platform.isWindows) {
+    // A killed process can linger as a zombie until it is reaped.
+    final out = await Process.run('ps', ['-o', 'stat=', '-p', '$pid']);
+    final state = out.stdout.toString().trim();
+    return state.isNotEmpty && !state.startsWith('Z');
+  }
   final out = await Process.run('tasklist', ['/FI', 'PID eq $pid', '/NH']);
   return out.stdout.toString().contains('$pid');
 }
@@ -31,16 +37,18 @@ void main() {
 
   // CI builds lumtub_core.dll first and points LUMTUB_CORE_DLL at it.
   test('killing a tree ends the processes it started', () async {
-    final process = await ProcessTree.start('powershell.exe', [
-      '-NoProfile',
-      '-Command',
-      r"$p = Start-Process -PassThru -WindowStyle Hidden ping -ArgumentList '-n','60','127.0.0.1'; Write-Output $p.Id; Start-Sleep 60",
-    ]);
+    final process = Platform.isWindows
+        ? await ProcessTree.start('powershell.exe', [
+            '-NoProfile',
+            '-Command',
+            r"$p = Start-Process -PassThru -WindowStyle Hidden ping -ArgumentList '-n','60','127.0.0.1'; Write-Output $p.Id; Start-Sleep 60",
+          ])
+        : await ProcessTree.start('/bin/sh', ['-c', r'sleep 60 & echo $!; wait']);
     expect(process, isA<ProcessTree>());
     final grandchild = int.parse((await process.stdout.transform(utf8.decoder).transform(const LineSplitter()).first).trim());
     expect(await _running(grandchild), isTrue);
     expect(process.kill(), isTrue);
     await process.exitCode;
     expect(await _goneSoon(grandchild), isTrue);
-  }, skip: !Platform.isWindows ? 'job objects are Windows only' : NativeCore.instance == null ? 'lumtub_core.dll is not built' : null, timeout: const Timeout(Duration(seconds: 60)));
+  }, skip: NativeCore.instance == null ? 'lumtub_core.dll is not built' : null, timeout: const Timeout(Duration(seconds: 60)));
 }

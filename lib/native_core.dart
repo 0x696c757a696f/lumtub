@@ -37,10 +37,19 @@ class NativeCore {
         _looksLike = library.lookupFunction<Bool Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_looks_like'),
         _resolved = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_resolved'),
         _edl = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_edl'),
+        _quickRequest = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_quick_request'),
+        _quickInfo = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_quick_info'),
+        _castStart = library.lookupFunction<Uint16 Function(), int Function()>('lumtub_cast_start'),
+        _castRegister = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_cast_register'),
+        _castLog = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_cast_log'),
+        _castExpired = library.lookupFunction<Bool Function(), bool Function()>('lumtub_cast_expired'),
+        _castRenew = library.lookupFunction<Uint32 Function(Pointer<Uint8>, Size), int Function(Pointer<Uint8>, int)>('lumtub_cast_renew'),
         hashPrefix = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_hash_prefix'),
         sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
         dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
         fileSha256 = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_file_sha256'),
+        _vaultSeal = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vault_seal'),
+        _vaultOpen = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_vault_open'),
         youtubeNext = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_next'),
         spokenLanguage = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_spoken_language'),
         aiLabel = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_ai_label'),
@@ -110,11 +119,59 @@ class NativeCore {
 
   /// An mpv EDL address playing [addresses] as one video.
   String? edl(List<String> addresses) => take(withText(jsonEncode(addresses), _edl));
+
+  final Pointer<Utf8> Function(Pointer<Uint8> id, int length) _quickRequest;
+  final Pointer<Utf8> Function(Pointer<Uint8> player, int playerLength, Pointer<Uint8> settings, int settingsLength) _quickInfo;
+
+  /// The `/player` request (`body` and `headers`) for a quick start of
+  /// [videoId] (native/lumtub_core/src/quick.rs).
+  String? quickRequest(String videoId) => take(withText(videoId, _quickRequest));
+
+  /// yt-dlp's answer, as playback reads it, for the `/player` answer
+  /// [player] and the format policy [settings]; null when the video cannot
+  /// be started that way.
+  String? quickInfo(String player, String settings) => take(withText(player, (p, pl) => withText(settings, (s, sl) => _quickInfo(p, pl, s, sl))));
+
+  final int Function() _castStart;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _castRegister;
+  final Pointer<Utf8> Function() _castLog;
+  final bool Function() _castExpired;
+  final int Function(Pointer<Uint8> json, int length) _castRenew;
+
+  /// Whether YouTube refused a cast stream's address and new ones are
+  /// wanted.
+  bool castExpired() => _castExpired();
+
+  /// Replaces cast stream addresses, `{old: new}`; how many streams took one.
+  int castRenew(Map<String, String> addresses) =>
+      withText(jsonEncode([for (final e in addresses.entries) {'old': e.key, 'new': e.value}]), _castRenew);
+
+  /// Starts the server that streams videos to TVs on the local network
+  /// (native/lumtub_core/src/cast.rs) once; its port, or 0.
+  int castStart() => _castStart();
+
+  /// Registers a picture and a sound stream to be joined for a TV; the
+  /// answer's `path` on the server, or its `error`. Blocks while YouTube is
+  /// asked for both files' heads.
+  String? castRegister(String json) => take(withText(json, _castRegister));
+
+  /// The cast server's log lines since the last call, as a JSON array.
+  String? castLog() => take(_castLog());
   /// The first four hex digits of a video id's SHA-256.
   final Pointer<Utf8> Function(Pointer<Uint8> videoId, int length) hashPrefix;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) sponsorSegments;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) dearrowBranding;
   final Pointer<Utf8> Function(Pointer<Uint8> path, int length) fileSha256;
+  final Pointer<Utf8> Function(Pointer<Uint8> text, int length) _vaultSeal;
+  final Pointer<Utf8> Function(Pointer<Uint8> hex, int length) _vaultOpen;
+
+  /// [text] sealed under the key the system keyring keeps, as hex; null
+  /// when it could not be sealed. It may wait on the keyring, so run it on
+  /// another isolate.
+  String? vaultSeal(String text) => take(withText(text, _vaultSeal));
+
+  /// What [vaultSeal] sealed into [hex]; null when it does not open.
+  String? vaultOpen(String hex) => take(withText(hex, _vaultOpen));
   /// Related videos and localized text of a YouTube `/next` response.
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeNext;
   /// The spoken language and own title of a YouTube `/player` response.
@@ -181,12 +238,16 @@ class NativeCore {
   static String get fileName => Platform.isWindows ? 'lumtub_core.dll' : Platform.isMacOS ? 'liblumtub_core.dylib' : 'liblumtub_core.so';
 
   /// What Lumtub says when the library is missing.
-  static String get missingMessage => tr('安装包不完整：缺少 {0}，推荐和屏蔽不可用，画质只能按默认选择。请重新安装 Lumtub。', [fileName]);
+  static String get missingMessage => tr('This install is incomplete: {0} is missing, so recommendations and blocking are off and quality uses the defaults. Please reinstall Lumtub.', [fileName]);
 
   static NativeCore? _load() {
     final paths = [
       if (Platform.environment['LUMTUB_CORE_DLL'] case final path? when path.isNotEmpty) path,
       '${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}$fileName',
+      // The Linux bundle keeps its libraries in lib/.
+      if (Platform.isLinux) '${File(Platform.resolvedExecutable).parent.path}/lib/$fileName',
+      // The macOS app keeps it in Contents/Frameworks.
+      if (Platform.isMacOS) '${File(Platform.resolvedExecutable).parent.parent.path}/Frameworks/$fileName',
     ];
     for (final path in paths) {
       if (!File(path).existsSync()) continue;

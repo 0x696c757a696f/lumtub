@@ -3,6 +3,9 @@ import 'dart:math';
 import 'dart:io';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/services.dart';
+
+import 'kwin_keep_above.dart';
 
 /// The picture-in-picture window's ratio for a video [aspect] (width over
 /// height): 16:9 when unknown, and never extreme.
@@ -21,8 +24,43 @@ double pipAspectOf(double aspect) => aspect.isFinite && aspect > 0 ? aspect.clam
 /// Picture in picture follows PiliNara's desktop one (GPLv3,
 /// lib/plugin/pl_player/controller.dart): 280 on the short side, always on
 /// top, the ratio kept, the last place remembered.
+/// On Linux and macOS the runner does the same on the shell's channel
+/// (linux/runner/linux_shell.cc, macos/Runner/MacShell.swift).
 class AppWindow {
   AppWindow._();
+
+  static bool get _native => !Platform.isWindows;
+
+  /// Whether the window is on a Wayland desktop, where keeping it on top
+  /// and placing it are up to the desktop.
+  static bool get onWayland {
+    if (!waylandDesktop) return false;
+    final env = Platform.environment;
+    return env['LUMTUB_X11'] != '1' && !(env['GDK_BACKEND'] ?? '').startsWith('x11');
+  }
+
+  /// Whether this is a Linux Wayland desktop, whichever way the window
+  /// draws on it.
+  static bool get waylandDesktop => Platform.isLinux && (Platform.environment['WAYLAND_DISPLAY'] ?? '').isNotEmpty;
+
+  /// The marker the runner reads at start (linux/runner/main.cc) to draw
+  /// the window through XWayland.
+  static File x11Marker(Directory data) => File('${data.path}/x11-mode');
+  /// Whether the desktop keeps the window on top for Lumtub, as KWin does
+  /// for its script, so nothing need be said about Wayland.
+  static bool get keepsAboveOnWayland => onWayland && KWinKeepAbove.available;
+
+  static void _keepAboveOnKde(bool on) {
+    if (keepsAboveOnWayland) KWinKeepAbove.set(on);
+  }
+
+  static const _channel = MethodChannel('lumtub/windows_shell');
+  static bool _nativePip = false;
+
+  static bool _call(String method, [Object? arguments]) {
+    _channel.invokeMethod<void>(method, arguments).catchError((Object _) {});
+    return true;
+  }
 
   static final _user32 = Platform.isWindows ? DynamicLibrary.open('user32.dll') : null;
   static final _kernel32 = Platform.isWindows ? DynamicLibrary.open('kernel32.dll') : null;
@@ -118,6 +156,10 @@ class AppWindow {
 
   /// Keeps the window above the others, or lets it go back among them.
   static bool setTopmost(bool on) {
+    if (_native) {
+      _keepAboveOnKde(on);
+      return _call('setTopmost', on);
+    }
     final window = handle;
     if (window == null) return false;
     return _setWindowPos!(window, on ? _topmost : _notTopmost, 0, 0, 0, 0, _noMove | _noSize | _noActivate) != 0;
@@ -135,6 +177,13 @@ class AppWindow {
   /// resized (window_placement.cpp, flutter_window.cpp). Returns false when
   /// the window is not there.
   static bool enterPip({required double aspect, double shortSide = 280}) {
+    if (_native) {
+      if (_nativePip) return false;
+      _nativePip = true;
+      final (:width, :height) = pipSizeFor(aspect, shortSide: shortSide);
+      _keepAboveOnKde(true);
+      return _call('enterPip', {'aspect': pipAspectOf(aspect), 'width': width, 'height': height});
+    }
     final window = handle;
     if (window == null || _before != null) return false;
     final rect = calloc<_Rect>();
@@ -179,6 +228,7 @@ class AppWindow {
 
   /// A different video: the same width, the height of its new [aspect].
   static bool setPipAspect(double aspect) {
+    if (_native) return _nativePip && _call('setPipAspect', pipAspectOf(aspect));
     final window = handle;
     if (window == null || _before == null) return false;
     final rect = calloc<_Rect>();
@@ -214,6 +264,12 @@ class AppWindow {
   /// Puts the window back where and how it was before [enterPip]: its
   /// caption, size, position and maximized state.
   static bool exitPip({bool keepOnTop = false}) {
+    if (_native) {
+      if (!_nativePip) return false;
+      _nativePip = false;
+      _keepAboveOnKde(keepOnTop);
+      return _call('exitPip', keepOnTop);
+    }
     final window = handle;
     final before = _before;
     if (window == null || before == null) return false;
@@ -241,11 +297,11 @@ class AppWindow {
   /// Lets the user drag the window by pressing on the picture, as on a
   /// title bar. Call it from a pointer-down; it returns when the button is
   /// released.
-  static void startDrag() => _startNonClient(_htCaption);
+  static void startDrag() => _native ? _call('startDrag') : _startNonClient(_htCaption);
 
   /// The same for resizing from the bottom-right corner; the runner keeps
   /// the video's ratio.
-  static void startResize() => _startNonClient(_htBottomRight);
+  static void startResize() => _native ? _call('startResize') : _startNonClient(_htBottomRight);
 
   static void _startNonClient(int hit) {
     final window = handle;

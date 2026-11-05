@@ -71,11 +71,11 @@ class _SettingsPageState extends State<SettingsPage> {
             isDense: true,
             filled: true,
             fillColor: theme.colorScheme.onInverseSurface,
-            hintText: tr('搜索设置'),
+            hintText: tr('Search settings'),
             prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20),
             suffixIcon: searching
                 ? IconButton(
-                    tooltip: tr('清除'),
+                    tooltip: tr('Clear'),
                     icon: const Icon(AppIcons.x, size: 18),
                     onPressed: () => setState(() {
                       _search.clear();
@@ -100,9 +100,9 @@ class _SettingsPageState extends State<SettingsPage> {
         if (_controller.account?.signedIn ?? false)
           ListTile(
             leading: const Icon(AppIcons.signOut),
-            title: Text(tr('退出登录'), style: theme.textTheme.titleMedium),
+            title: Text(tr('Sign out'), style: theme.textTheme.titleMedium),
             onTap: () async {
-              if (await confirmDialog(context, title: tr('退出登录？'), content: tr('本机保存的 Google 登录凭据会被删除，订阅和播放列表保留在本机。'), confirm: tr('退出登录'))) {
+              if (await confirmDialog(context, title: tr('Sign out?'), content: tr('The Google sign-in credentials saved on this device will be deleted. Subscriptions and playlists stay on this device.'), confirm: tr('Sign out'))) {
                 await _controller.account?.signOut();
               }
             },
@@ -177,7 +177,7 @@ class _SearchResults extends StatelessWidget {
     return [
       Padding(
         padding: const EdgeInsets.all(32),
-        child: Text(tr('没有找到相关设置'), textAlign: TextAlign.center, style: TextStyle(color: context.colors.outline)),
+        child: Text(tr('No matching settings'), textAlign: TextAlign.center, style: TextStyle(color: context.colors.outline)),
       ),
     ];
   }

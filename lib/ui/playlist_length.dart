@@ -21,7 +21,7 @@ String? playlistLength(List<VideoItem> items, {WatchProgress? Function(String id
     left += progress == null ? seconds : progress.finished ? 0 : (seconds - progress.position.inSeconds).clamp(0, seconds);
   }
   if (total == 0) return null;
-  final length = unknown ? tr('至少 {0}', [watchDuration(total)]) : tr('共 {0}', [watchDuration(total)]);
+  final length = unknown ? tr('At least {0}', [watchDuration(total)]) : tr('{0} in total', [watchDuration(total)]);
   if (progressOf == null || left == total) return length;
-  return left == 0 ? tr('{0} · 已全部看完', [length]) : tr('{0} · 还剩 {1}', [length, watchDuration(left)]);
+  return left == 0 ? tr('{0} · all watched', [length]) : tr('{0} · {1} left', [length, watchDuration(left)]);
 }

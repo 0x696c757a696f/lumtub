@@ -52,6 +52,10 @@ class LibraryStore {
   final playlists = <LocalPlaylist>[];
   final channels = <ChannelRef>[];
   final channelGroups = <ChannelGroup>[];
+  /// Followed channels' videos that were live or about to go live at the
+  /// last look, by video id: the channel's id and `is_live` or
+  /// `is_upcoming`. Shown at once on the next launch, then checked again.
+  final liveVideos = <String, (String, String)>{};
   // Insertion order is age order, so the oldest entry is dropped first.
   final _progress = <String, (int, int)>{};
 
@@ -64,7 +68,7 @@ class LibraryStore {
       watchLater.addAll(_items(data['watchLater']));
       for (final raw in data['playlists'] is List ? data['playlists'] as List : const []) {
         if (raw is! Map || raw['id'] is! String) continue;
-        playlists.add(LocalPlaylist(id: raw['id'] as String, name: raw['name']?.toString() ?? tr('播放列表'), items: _items(raw['items'])));
+        playlists.add(LocalPlaylist(id: raw['id'] as String, name: raw['name']?.toString() ?? tr('Playlist'), items: _items(raw['items'])));
       }
       for (final raw in data['channels'] is List ? data['channels'] as List : const []) {
         final channel = ChannelRef.fromJson(raw);
@@ -74,6 +78,14 @@ class LibraryStore {
         if (raw is! Map || raw['name'] is! String || (raw['name'] as String).trim().isEmpty) continue;
         final ids = raw['channels'] is List ? {for (final id in raw['channels'] as List) if (id is String) id} : <String>{};
         channelGroups.add(ChannelGroup((raw['name'] as String).trim(), ids));
+      }
+      final live = data['live'];
+      if (live is Map) {
+        for (final MapEntry(:key, :value) in live.entries) {
+          if (key is String && value is List && value.length == 2 && value[0] is String && (value[1] == 'is_live' || value[1] == 'is_upcoming')) {
+            liveVideos[key] = (value[0] as String, value[1] as String);
+          }
+        }
       }
       final progress = data['progress'];
       if (progress is Map) {
@@ -107,6 +119,7 @@ class LibraryStore {
         'playlists': playlists.map((playlist) => playlist.toJson()).toList(),
         'channels': channels.map((channel) => channel.toJson()).toList(),
         'groups': channelGroups.map((group) => group.toJson()).toList(),
+        'live': {for (final MapEntry(:key, :value) in liveVideos.entries) key: [value.$1, value.$2]},
         'progress': {for (final entry in _progress.entries) entry.key: [entry.value.$1, entry.value.$2]},
       };
 
@@ -180,7 +193,7 @@ class LibraryStore {
   }
 
   LocalPlaylist createPlaylist(String name) {
-    final playlist = LocalPlaylist(id: DateTime.now().microsecondsSinceEpoch.toRadixString(36), name: name.trim().isEmpty ? tr('新播放列表') : name.trim());
+    final playlist = LocalPlaylist(id: DateTime.now().microsecondsSinceEpoch.toRadixString(36), name: name.trim().isEmpty ? tr('Untitled playlist') : name.trim());
     playlists.add(playlist);
     return playlist;
   }

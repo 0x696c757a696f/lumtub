@@ -22,21 +22,21 @@ import 'l10n/l10n.dart';
 /// This must be evaluated after the selected language is loaded, instead of
 /// once during library initialization.
 List<(String, String)> get startPages => [
-      ('home', tr('首页')),
-      ('explore', tr('探索')),
-      ('subscriptions', tr('订阅')),
-      ('history', tr('历史')),
-      ('playlists', tr('播放列表')),
+      ('home', tr('Home')),
+      ('explore', tr('Explore')),
+      ('subscriptions', tr('Subscriptions')),
+      ('history', tr('History')),
+      ('playlists', tr('Playlist')),
     ];
 
 /// Behaviour and content preferences that are neither player options nor
 /// looks: privacy, filters, start page and how the watch page behaves.
 /// What 字幕列表 lists while a first and a second subtitle are on.
 enum SubtitleListMode {
-  firstOver('双语，第一字幕在上'),
-  secondOver('双语，第二字幕在上'),
-  first('只看第一字幕'),
-  second('只看第二字幕');
+  firstOver('Both, first subtitle on top'),
+  secondOver('Both, second subtitle on top'),
+  first('First subtitle only'),
+  second('Second subtitle only');
 
   const SubtitleListMode(this._label);
   final String _label;
@@ -66,6 +66,7 @@ class AppPreferences {
     this.blockStateMedia = false,
     this.allowedMedia = const [],
     this.reversedPlaylists = const [],
+    this.castMaxHeight = 1080,
     this.enabledGroups = const [],
     this.allowedEntries = const [],
     this.blockedChannelNames = const [],
@@ -163,6 +164,10 @@ class AppPreferences {
   final List<String> allowedMedia;
   /// Playlists shown and played last to first (倒序), by id.
   final List<String> reversedPlaylists;
+  /// 投屏画质: the tallest picture sent to a TV, 1080, 2160 or 4320. Above
+  /// 1080 the picture is VP9 or AV1 at up to 60 fps, which only newer TVs
+  /// decode.
+  final int castMaxHeight;
   /// Groups of either list that start unticked and the user ticked.
   final List<String> enabledGroups;
   /// [BlockEntry.key]s the user unticked inside a ticked group.
@@ -372,6 +377,7 @@ class AppPreferences {
     bool? blockStateMedia,
     List<String>? allowedMedia,
     List<String>? reversedPlaylists,
+    int? castMaxHeight,
     List<String>? enabledGroups,
     List<String>? allowedEntries,
     List<String>? blockedChannelNames,
@@ -447,6 +453,7 @@ class AppPreferences {
         blockStateMedia: blockStateMedia ?? this.blockStateMedia,
         allowedMedia: allowedMedia ?? this.allowedMedia,
         reversedPlaylists: reversedPlaylists ?? this.reversedPlaylists,
+        castMaxHeight: castMaxHeight ?? this.castMaxHeight,
         enabledGroups: enabledGroups ?? this.enabledGroups,
         allowedEntries: allowedEntries ?? this.allowedEntries,
         blockedChannelNames: blockedChannelNames ?? this.blockedChannelNames,
@@ -523,6 +530,7 @@ class AppPreferences {
         'blockStateMedia': blockStateMedia,
         'allowedMedia': allowedMedia,
         'reversedPlaylists': reversedPlaylists,
+        'castMaxHeight': castMaxHeight,
         'enabledGroups': enabledGroups,
         'allowedEntries': allowedEntries,
         'blockedChannelNames': blockedChannelNames,
@@ -607,7 +615,7 @@ class AppPreferences {
       if (value is! Map) return const {};
       return {
         for (final entry in value.entries)
-          if (entry.value is List) '${entry.key}': [for (final k in entry.value as List) '$k'],
+          if (entry.value is List) '${entry.key}': [for (final k in entry.value as List) legacyTopicKeys['$k'] ?? '$k'],
       };
     }
     final start = raw['startPage']?.toString();
@@ -620,6 +628,7 @@ class AppPreferences {
       allowedGroups: strings('allowedGroups'),
       allowedMedia: strings('allowedMedia'),
       reversedPlaylists: strings('reversedPlaylists'),
+      castMaxHeight: number('castMaxHeight', d.castMaxHeight, 1080, 4320),
       enabledGroups: strings('enabledGroups'),
       allowedEntries: strings('allowedEntries'),
       blockedChannelNames: strings('blockedChannelNames'),

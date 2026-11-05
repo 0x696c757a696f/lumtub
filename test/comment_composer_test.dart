@@ -5,11 +5,11 @@ import 'package:lumtub/ui/comments_view.dart';
 void main() {
   testWidgets('posts the text and clears the field once it went through', (tester) async {
     final sent = <String>[];
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CommentComposer(hint: '添加评论…', onSubmit: (text) async {
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CommentComposer(hint: 'Add a comment…', onSubmit: (text) async {
       sent.add(text);
       return true;
     }))));
-    final send = find.widgetWithText(FilledButton, '发布');
+    final send = find.widgetWithText(FilledButton, 'Publish');
     expect(tester.widget<FilledButton>(send).onPressed, isNull);
     await tester.enterText(find.byType(TextField), '  第一条  ');
     await tester.pump();

@@ -86,7 +86,7 @@ class CommentsLoader extends ChangeNotifier {
   Future<String?> rate(YoutubeComment comment, String want) async {
     final before = ratingOf(comment);
     final rating = await _ratingFor(comment);
-    if (rating == null) return tr('YouTube 没有给这条评论点赞按钮');
+    if (rating == null) return tr("YouTube didn't give this comment a like button");
     final action = rating.actionFor(before, want);
     if (action == null) return null;
     _rated[comment.id] = before == want ? '' : want;
@@ -221,7 +221,7 @@ class CommentsLoader extends ChangeNotifier {
   /// Writes [text] under the post. Returns why it failed, or null.
   Future<String?> create(String text) async {
     final params = createParams;
-    if (params == null) return tr('这个帖子没有评论框');
+    if (params == null) return tr('This post has no comment box');
     try {
       await _source.create(params, text);
       return null;

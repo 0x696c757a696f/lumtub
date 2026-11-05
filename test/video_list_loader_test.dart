@@ -125,7 +125,7 @@ void main() {
     expect(loader.items, hasLength(1));
     final result = loader.channels.single;
     expect(result.ref.name, 'Kurzgesagt');
-    expect(result.subscribers, '2400万 位订阅者');
+    expect(result.subscribers, '24M subscribers');
     expect(result.handle, '@kurzgesagt');
     expect(result.avatar, 'https://yt3.ggpht.com/a=s176');
   });
@@ -259,7 +259,7 @@ void main() {
     limited.loadMore();
     await pumpEventQueue();
     await Future<void>.delayed(const Duration(milliseconds: 60));
-    expect(limited.error, contains('太频繁'));
+    expect(limited.error, contains('Too many requests'));
   });
 
   test('tries again when the first answer is empty', () async {

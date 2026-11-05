@@ -74,12 +74,20 @@ pub fn is_newer(current: &str, tag: &str, published: Option<i64>, built: Option<
 }
 
 /// The file of a release for [package] (such as `windows-x64-v3`): the
-/// portable ZIP or the installer.
+/// portable ZIP or the installer; for Linux (`linux-x64`), the AppImage.
 pub fn asset_of<'a>(release: &'a Value, package: &str, portable: bool) -> Option<&'a Value> {
     if package.is_empty() {
         return None;
     }
-    let suffix = if portable { format!("_{package}.zip") } else { format!("_{package}-setup.exe") };
+    let suffix = if package.starts_with("linux-") {
+        format!("_{package}.AppImage")
+    } else if package.starts_with("macos-") {
+        format!("_{package}.dmg")
+    } else if portable {
+        format!("_{package}.zip")
+    } else {
+        format!("_{package}-setup.exe")
+    };
     release.get("assets")?.as_array()?.iter().find(|asset| asset.get("name").and_then(Value::as_str).is_some_and(|name| name.ends_with(&suffix)))
 }
 
@@ -372,6 +380,10 @@ mod tests {
                 {"name": "Lumtub_0.2.2-1234567_windows-x64-setup.exe.sig"},
                 {"name": "Lumtub_0.2.2-1234567_windows-x64-setup.exe"},
                 {"name": "Lumtub_0.2.2-1234567_windows-x64.zip"},
+                {"name": "Lumtub_0.2.2-1234567_linux-x64.AppImage.sig"},
+                {"name": "Lumtub_0.2.2-1234567_linux-x64.AppImage"},
+                {"name": "Lumtub_0.2.2-1234567_macos-arm64.dmg"},
+                {"name": "Lumtub_0.2.2-1234567_macos-x64.dmg"},
             ],
         })
     }
@@ -383,6 +395,10 @@ mod tests {
         assert_eq!(name("windows-x64", false), Some("Lumtub_0.2.2-1234567_windows-x64-setup.exe"));
         assert_eq!(name("windows-x64", true), Some("Lumtub_0.2.2-1234567_windows-x64.zip"));
         assert_eq!(name("windows-x64-v3", true), Some("Lumtub_0.2.2-1234567_windows-x64-v3.zip"));
+        assert_eq!(name("linux-x64", false), Some("Lumtub_0.2.2-1234567_linux-x64.AppImage"));
+        assert_eq!(name("linux-arm64", false), None);
+        assert_eq!(name("macos-arm64", false), Some("Lumtub_0.2.2-1234567_macos-arm64.dmg"));
+        assert_eq!(name("macos-x64", false), Some("Lumtub_0.2.2-1234567_macos-x64.dmg"));
         assert_eq!(name("windows-arm64", false), None);
         assert_eq!(name("", false), None);
     }

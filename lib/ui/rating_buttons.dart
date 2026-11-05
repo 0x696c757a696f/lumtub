@@ -28,7 +28,7 @@ class RatingButtons extends StatelessWidget {
     final onRate = this.onRate;
     if (onRate == null) {
       return Tooltip(
-        message: tr('点赞数。在设置 › YouTube 账号里登录后可以点赞和点踩：视频评论用电视码登录，帖子用浏览器登录'),
+        message: tr('Likes. Sign in under Settings › YouTube account to like and dislike: with a TV code for video comments, with a browser for posts'),
         child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(AppIcons.thumbsUp, size: 14, color: colors.outline), const SizedBox(width: 4), count]),
       );
     }
@@ -48,9 +48,9 @@ class RatingButtons extends StatelessWidget {
           onPressed: () => press(want),
         );
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      button('like', AppIcons.thumbsUp, AppIcons.thumbsUpFill, state == 'like' ? tr('取消点赞') : tr('点赞')),
+      button('like', AppIcons.thumbsUp, AppIcons.thumbsUpFill, state == 'like' ? tr('Remove like') : tr('Like')),
       count,
-      button('dislike', AppIcons.thumbsDown, AppIcons.thumbsDownFill, state == 'dislike' ? tr('取消点踩') : tr('点踩')),
+      button('dislike', AppIcons.thumbsDown, AppIcons.thumbsDownFill, state == 'dislike' ? tr('Remove dislike') : tr('Dislike')),
     ]);
   }
 }

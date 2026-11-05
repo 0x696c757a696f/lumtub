@@ -26,10 +26,10 @@ void main() {
       ..homeFeed = feed;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: VideoActions(controller: controller, child: HomeFeedPage(controller: controller, onFocusSearch: () {})))));
     await tester.pump();
-    expect(find.text('为你推荐'), findsOneWidget);
-    expect(find.text('换一批'), findsOneWidget);
+    expect(find.text('For you'), findsOneWidget);
+    expect(find.text('Shuffle'), findsOneWidget);
     expect(find.text('推荐视频 0'), findsOneWidget);
-    await tester.tap(find.text('换一批'));
+    await tester.tap(find.text('Shuffle'));
     await tester.pump();
     expect(tester.takeException(), isNull);
   });

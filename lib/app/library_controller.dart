@@ -251,7 +251,11 @@ class LibraryController extends ChangeNotifier {
     if (!force && loadedAt != null && DateTime.now().difference(loadedAt) < interval) return;
     final channels = List.of(store.channels);
     loadingFeed = true;
+    _checked.clear();
     notifyListeners();
+    // What was live at the last look is asked about again at once, while
+    // the feeds load, so the 直播 marks are right before the feed is in.
+    final early = _checkLive([for (final MapEntry(:key, :value) in store.liveVideos.entries) (key, value.$1)]);
     final failures = <String>[];
     // A few requests at a time: hundreds of imported subscriptions would
     // otherwise open hundreds of connections at once and, where the feed
@@ -284,51 +288,94 @@ class LibraryController extends ChangeNotifier {
       results[i] = list;
       if (list == null) failures.add(channels[i].name.isEmpty ? channels[i].id : channels[i].name);
     }
-    feed = mergeFeeds([for (final list in results) if (list != null) list]).take(maxFeedItems).toList();
+    final merged = mergeFeeds([for (final list in results) if (list != null) list]).take(maxFeedItems).toList();
+    feed = _marked(merged) ?? merged;
     feedFailures = failures;
     loadingFeed = false;
     _feedLoadedAt = DateTime.now();
     notifyListeners();
     unawaited(fillMissingAvatars());
+    await early;
     await _markLive();
   }
-
-  /// Videos that were live or about to go live at the last look; they are
-  /// looked at again even once they are older than [liveWindow].
-  final _liveSeen = <String>{};
 
   /// How recent a feed video has to be to be checked for being live: a
   /// stream shows in the feed from when it is scheduled.
   static const liveWindow = Duration(days: 2);
 
+  /// Live lookups in flight at once.
+  static const liveConcurrency = 6;
+
   late final _probe = YoutubePlayerProbe(_client);
 
+  /// What this refresh learnt, by video id: `is_live`, `is_upcoming`,
+  /// `was_live` for one that has ended since the last look, or null.
+  final _checked = <String, String?>{};
+
+  Timer? _liveTimer;
+
+  /// Channels streaming now, as far as is known: from the feed, and from
+  /// the last look until it is checked again.
+  Set<String> get liveChannels => {
+        for (final item in feed) if (item.isLive && item.channelId != null) item.channelId!,
+        for (final (channel, status) in store.liveVideos.values) if (status == 'is_live') channel,
+      };
+
   /// Marks the feed's videos that are live now or about to be: channel
-  /// feeds do not say, so each recent video is asked, a few at a time.
+  /// feeds do not say, so each recent video is asked, a few at a time,
+  /// those live at the last look first.
   Future<void> _markLive() async {
     final since = DateTime.now().subtract(liveWindow);
-    final current = feed;
-    final checked = [for (final item in current) if (_liveSeen.contains(item.id) || (item.published?.isAfter(since) ?? false)) item];
-    if (checked.isEmpty) return;
-    final states = await mapLimited(checked, 6, (item) async {
+    final checked = [
+      for (final item in feed)
+        if (!_checked.containsKey(item.id) && (store.liveVideos.containsKey(item.id) || (item.published?.isAfter(since) ?? false))) (item.id, item.channelId),
+    ];
+    await _checkLive(checked);
+  }
+
+  /// Asks whether each of [videos] (id, channel id) is live, showing each
+  /// answer within a moment rather than after the last one.
+  Future<void> _checkLive(List<(String, String?)> videos) async {
+    if (videos.isEmpty) return;
+    await mapLimited(videos, liveConcurrency, (video) async {
+      final (id, channel) = video;
+      String? state;
       try {
-        return await liveStateOf(await _probe.fetch(item.id, 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming', expect: 'videoDetails'));
+        state = await liveStateOf(await _probe.fetch(id, 'videoDetails.videoId,videoDetails.isLive,videoDetails.isUpcoming', expect: 'videoDetails'));
       } catch (_) {
-        return item.liveStatus;
+        // Offline or refused: what was known stays.
+        return;
       }
+      final known = store.liveVideos[id];
+      // A stream that was on at the last look and is not any more has ended.
+      _checked[id] = state ?? (known != null ? 'was_live' : null);
+      if (state != null && channel != null) {
+        store.liveVideos[id] = (channel, state);
+      } else if (state == null) {
+        store.liveVideos.remove(id);
+      }
+      if (known?.$2 != state) _liveTimer ??= Timer(const Duration(milliseconds: 300), _showLive);
     });
-    final found = {for (final (i, item) in checked.indexed) item.id: states[i]};
-    _liveSeen
-      ..clear()
-      ..addAll([for (final MapEntry(:key, :value) in found.entries) if (value == 'is_live' || value == 'is_upcoming') key]);
-    if (!identical(feed, current)) return;
+    _liveTimer?.cancel();
+    _showLive();
+  }
+
+  void _showLive() {
+    _liveTimer = null;
+    final marked = _marked(feed);
+    if (marked != null) feed = marked;
+    _changed();
+  }
+
+  /// [items] with what is known about which are live, or null when nothing
+  /// changes.
+  List<VideoItem>? _marked(List<VideoItem> items) {
     var changed = false;
     final marked = <VideoItem>[];
-    for (final item in current) {
-      var state = found.containsKey(item.id) ? found[item.id] : item.liveStatus;
+    for (final item in items) {
+      var state = _checked.containsKey(item.id) ? _checked[item.id] : store.liveVideos[item.id]?.$2 ?? item.liveStatus;
       // A stream that was on and is not any more has ended.
-      if (state == null && (item.isLive || item.isUpcoming)) state = 'was_live';
-      if (state == null && item.liveStatus == 'was_live') state = 'was_live';
+      if (state == null && (item.isLive || item.isUpcoming || item.liveStatus == 'was_live')) state = 'was_live';
       if (state != item.liveStatus) {
         changed = true;
         marked.add(item.withLiveStatus(state));
@@ -336,9 +383,7 @@ class LibraryController extends ChangeNotifier {
         marked.add(item);
       }
     }
-    if (!changed) return;
-    feed = marked;
-    notifyListeners();
+    return changed ? marked : null;
   }
 
   /// Looks up the picture of each followed channel that has none, a few at a
@@ -393,6 +438,7 @@ class LibraryController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _liveTimer?.cancel();
     if (_saveTimer != null) unawaited(flush());
     super.dispose();
   }

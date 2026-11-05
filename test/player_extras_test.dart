@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -114,9 +116,10 @@ void main() {
     });
 
     test('screenshots go to Pictures\\Lumtub under the user profile', () {
-      final dir = screenshotDirectory({'USERPROFILE': 'C:\\Users\\me'});
-      expect(dir.path, endsWith('Pictures${dir.path.contains('/') ? '/' : '\\'}Lumtub'));
-      expect(dir.path, startsWith('C:\\Users\\me'));
+      final home = Platform.isWindows ? 'C:\\Users\\me' : '/nonexistent/me';
+      final dir = screenshotDirectory({Platform.isWindows ? 'USERPROFILE' : 'HOME': home});
+      expect(dir.path, endsWith('Pictures${Platform.pathSeparator}Lumtub'));
+      expect(dir.path, startsWith(home));
     });
 
     test('keep awake holds the display until every holder lets go', () {
@@ -185,7 +188,7 @@ void main() {
       controller = AppController();
       player = FakePlayer();
       controller.player = player;
-      controller.playing = const VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: '频道', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+      controller.playing = const VideoItem(id: 'dQw4w9WgXcQ', title: '测试视频标题', channel: 'Channel', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
     });
 
     test('maps the YouTube keys without clashing with the old ones', () {
@@ -264,12 +267,12 @@ void main() {
     testWidgets('T toggles theater mode and the bottom bar has its button', (tester) async {
       addTearDown(() => theaterMode.value = false);
       await pump(tester);
-      expect(find.byTooltip('剧场模式 (T)'), findsOneWidget);
+      expect(find.byTooltip('Theater mode (T)'), findsOneWidget);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyT);
       await tester.pump();
       expect(theaterMode.value, isTrue);
-      expect(find.byTooltip('退出剧场模式 (T)'), findsOneWidget);
-      await tester.tap(find.byTooltip('退出剧场模式 (T)'));
+      expect(find.byTooltip('Exit theater mode (T)'), findsOneWidget);
+      await tester.tap(find.byTooltip('Exit theater mode (T)'));
       await tester.pump();
       expect(theaterMode.value, isFalse);
     });

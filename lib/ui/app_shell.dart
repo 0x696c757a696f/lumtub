@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ import 'pages/downloads_page.dart';
 import 'pages/explore_page.dart';
 import 'pages/library_pages.dart';
 import 'pages/settings_page.dart';
+import 'pages/settings_sections.dart';
 import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
 import 'pages/youtube_playlist_page.dart';
@@ -45,18 +47,19 @@ class _AppShellState extends State<AppShell> {
   final _searchText = TextEditingController();
   final _searchFocus = FocusNode(debugLabel: 'search');
   StreamSubscription<String>? _notices;
+  StreamSubscription<void>? _waylandTop;
   StreamSubscription<DownloadTask>? _finished;
 
   AppController get _controller => widget.controller;
   late final _frames = FrameStats.start(() => _controller.onWatchPage ? (_controller.mini ? 'mini player' : 'watch') : _controller.mode.name, causes: () => _controller.rebuildCauses);
 
   static final _destinations = [
-    (PageMode.home, AppIcons.house, AppIcons.houseFill, tr('首页')),
-    (PageMode.explore, AppIcons.compass, AppIcons.compassFill, tr('探索')),
-    (PageMode.subscriptions, AppIcons.stack, AppIcons.stackFill, tr('订阅')),
-    (PageMode.history, AppIcons.clockCounterClockwise, AppIcons.clockCounterClockwiseFill, tr('历史')),
-    (PageMode.playlists, AppIcons.filmReel, AppIcons.filmReelFill, tr('播放列表')),
-    (PageMode.downloads, AppIcons.arrowCircleDown, AppIcons.arrowCircleDownFill, tr('下载')),
+    (PageMode.home, AppIcons.house, AppIcons.houseFill, tr('Home')),
+    (PageMode.explore, AppIcons.compass, AppIcons.compassFill, tr('Explore')),
+    (PageMode.subscriptions, AppIcons.stack, AppIcons.stackFill, tr('Subscriptions')),
+    (PageMode.history, AppIcons.clockCounterClockwise, AppIcons.clockCounterClockwiseFill, tr('History')),
+    (PageMode.playlists, AppIcons.filmReel, AppIcons.filmReelFill, tr('Playlist')),
+    (PageMode.downloads, AppIcons.arrowCircleDown, AppIcons.arrowCircleDownFill, tr('Downloads')),
   ];
 
   @override
@@ -65,6 +68,15 @@ class _AppShellState extends State<AppShell> {
     _frames;
     _notices = _controller.notices.listen((message) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    });
+    _waylandTop = _controller.waylandTopNotes.listen((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(tr("This Wayland desktop doesn't let apps keep a window on top. X11 compatibility mode allows it and needs a restart of Lumtub.")),
+        duration: const Duration(seconds: 12),
+        showCloseIcon: true,
+        action: SnackBarAction(label: tr('Switch and restart'), onPressed: () => unawaited(_controller.switchToX11())),
+      ));
     });
     if (NativeCore.instance == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -77,9 +89,9 @@ class _AppShellState extends State<AppShell> {
       final path = task.filePath;
       if (!mounted || path == null) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(tr('已下载：{0}', [task.item.title]), maxLines: 2, overflow: TextOverflow.ellipsis),
+        content: Text(tr('Downloaded: {0}', [task.item.title]), maxLines: 2, overflow: TextOverflow.ellipsis),
         duration: const Duration(seconds: 8),
-        action: SnackBarAction(label: tr('打开所在文件夹'), onPressed: () => unawaited(openInExplorer(path, select: true))),
+        action: SnackBarAction(label: tr('Show in folder'), onPressed: () => unawaited(openInExplorer(path, select: true))),
       ));
     });
   }
@@ -87,6 +99,7 @@ class _AppShellState extends State<AppShell> {
   @override
   void dispose() {
     unawaited(_notices?.cancel());
+    unawaited(_waylandTop?.cancel());
     unawaited(_finished?.cancel());
     _searchText.dispose();
     _searchFocus.dispose();
@@ -126,8 +139,9 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) => CallbackShortcuts(
         bindings: {
-          const SingleActivator(LogicalKeyboardKey.keyK, control: true): _focusSearch,
-          const SingleActivator(LogicalKeyboardKey.keyN, control: true, shift: true): () => _controller.setIncognito(!_controller.incognito),
+          // ⌘ on a Mac where Windows and Linux take Ctrl.
+          SingleActivator(LogicalKeyboardKey.keyK, control: !Platform.isMacOS, meta: Platform.isMacOS): _focusSearch,
+          SingleActivator(LogicalKeyboardKey.keyN, control: !Platform.isMacOS, meta: Platform.isMacOS, shift: true): () => _controller.setIncognito(!_controller.incognito),
           const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): _back,
           // Esc goes back too, except on the watch page, where it leaves
           // full screen and closes panels.
@@ -168,6 +182,7 @@ class _AppShellState extends State<AppShell> {
                     Row(children: [
                       if (rail)
                         NavigationRail(
+                          backgroundColor: context.tones.chrome,
                           selectedIndex: _selectedIndex,
                           labelType: NavigationRailLabelType.all,
                           minWidth: 76,
@@ -239,7 +254,7 @@ class _AppShellState extends State<AppShell> {
       PageMode.channel => ChannelPage(controller: controller),
       PageMode.playlist => PlaylistDetailPage(controller: controller),
       PageMode.youtubePlaylist => YoutubePlaylistPage(controller: controller),
-      PageMode.settings => SettingsPage(controller: controller),
+      PageMode.settings => SettingsPage(controller: controller, initial: SmokeCheck.requested ? SettingsCategory.style : SettingsCategory.account),
     };
   }
 }
@@ -257,7 +272,7 @@ void openSettings(BuildContext context, AppController controller) {
           onPointerDown: (event) {
             if (event.buttons == kBackMouseButton) back();
           },
-          child: Focus(autofocus: true, child: Scaffold(appBar: AppBar(title: Text(tr('设置'))), body: SettingsPage(controller: controller))),
+          child: Focus(autofocus: true, child: Scaffold(appBar: AppBar(title: Text(tr('Settings'))), body: SettingsPage(controller: controller))),
         ),
       );
     },
@@ -276,7 +291,8 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final ready = controller.ready;
-    return SizedBox(
+    return Container(
+      color: context.tones.chrome,
       height: AppStyle.topBarHeight,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -307,7 +323,7 @@ class _TopBar extends StatelessWidget {
           ))),
           const SizedBox(width: 16),
           IconButton(
-            tooltip: controller.incognito ? tr('无痕模式已开启，点击关闭 (Ctrl+Shift+N)') : tr('无痕模式：不记录观看和搜索 (Ctrl+Shift+N)'),
+            tooltip: keyNames(controller.incognito ? tr('Incognito mode is on; click to turn it off (Ctrl+Shift+N)') : tr("Incognito mode: don't record watching and searching (Ctrl+Shift+N)")),
             isSelected: controller.incognito,
             style: controller.incognito ? IconButton.styleFrom(backgroundColor: colors.tertiaryContainer, foregroundColor: colors.onTertiaryContainer) : null,
             onPressed: () => controller.setIncognito(!controller.incognito),
@@ -315,12 +331,12 @@ class _TopBar extends StatelessWidget {
             selectedIcon: const Icon(AppIcons.eyeSlashFill),
           ),
           IconButton(
-            tooltip: tr('检查组件更新'),
+            tooltip: tr('Check for component updates'),
             onPressed: ready && !controller.checking ? controller.checkUpdates : null,
             icon: controller.checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.arrowLineDown),
           ),
           IconButton(
-            tooltip: tr('设置'),
+            tooltip: tr('Settings'),
             isSelected: controller.mode == PageMode.settings && !controller.onWatchPage,
             onPressed: () => openSettings(context, controller),
             icon: const Icon(AppIcons.gear),
@@ -450,16 +466,16 @@ class _SearchFieldState extends State<_SearchField> {
               onChanged: (_) => setState(() => _picking = false),
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
-                hintText: tr('搜索 YouTube，或粘贴视频链接'),
+                hintText: tr('Search YouTube, or paste a video link'),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 prefixIcon: const Icon(AppIcons.magnifyingGlass),
                 suffixIcon: controller.text.isEmpty
                     ? Padding(
                         padding: const EdgeInsets.only(right: 12),
-                        child: Center(widthFactor: 1, child: Text('Ctrl+K', style: TextStyle(fontSize: 12, color: context.colors.outline))),
+                        child: Center(widthFactor: 1, child: Text(keyNames('Ctrl+K'), style: TextStyle(fontSize: 12, color: context.colors.outline))),
                       )
                     : IconButton(
-                        tooltip: tr('清除'),
+                        tooltip: tr('Clear'),
                         icon: const Icon(AppIcons.x, size: 20),
                         onPressed: () {
                           controller.clear();
@@ -474,8 +490,9 @@ class _SearchFieldState extends State<_SearchField> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Material(
-                  elevation: 6,
-                  borderRadius: BorderRadius.circular(12),
+                  elevation: 4,
+                  shadowColor: Colors.black.withValues(alpha: 0.25),
+                  shape: RoundedRectangleBorder(borderRadius: AppStyle.cardRadius, side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
                   clipBehavior: Clip.antiAlias,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: _width, minWidth: _width, maxHeight: 420),
@@ -493,7 +510,7 @@ class _SearchFieldState extends State<_SearchField> {
                           leading: Icon(option.recent ? AppIcons.clockCounterClockwiseFill : AppIcons.magnifyingGlass, size: 20),
                           title: Text(option.text, maxLines: 1, overflow: TextOverflow.ellipsis),
                           trailing: option.recent
-                              ? IconButton(tooltip: tr('删除这条记录'), icon: const Icon(AppIcons.x, size: 18), onPressed: () => _remove(option.text))
+                              ? IconButton(tooltip: tr('Delete this entry'), icon: const Icon(AppIcons.x, size: 18), onPressed: () => _remove(option.text))
                               : null,
                           onTap: () => onSelected(option),
                         );
@@ -519,15 +536,15 @@ class _SetupView extends StatelessWidget {
       return StatusView(
         icon: AppIcons.warningCircle,
         error: true,
-        title: tr('组件安装遇到问题'),
+        title: tr('Component installation ran into a problem'),
         message: error,
-        action: FilledButton.icon(onPressed: controller.retryInitialize, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('重试'))),
+        action: FilledButton.icon(onPressed: controller.retryInitialize, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('Retry'))),
       );
     }
     return StatusView(
       icon: AppIcons.arrowCircleDown,
-      title: tr('正在准备播放器组件'),
-      message: tr('{0}\n首次运行需要从 GitHub 下载组件，以后可以离线启动。', [controller.status]),
+      title: tr('Preparing player components'),
+      message: tr('{0}\nThe first run downloads components from GitHub; after that Lumtub can start offline.', [controller.status]),
       action: const SizedBox(width: 240, child: LinearProgressIndicator()),
     );
   }
@@ -542,13 +559,13 @@ class _StatusBar extends StatelessWidget {
     final status = controller.status;
     final paths = controller.paths;
     final text = controller.ready && paths != null
-        ? 'libmpv ${controller.tools?.libmpv.current?.label ?? '内置'}  ·  $status'
+        ? '${controller.tools?.libmpvLabel ?? 'libmpv'}  ·  $status'
         : status;
     return Container(
       width: double.infinity,
       height: 26,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
+      decoration: BoxDecoration(color: context.tones.chrome, border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
       alignment: Alignment.centerLeft,
       child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 12)),
     );

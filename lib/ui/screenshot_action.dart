@@ -21,14 +21,14 @@ Future<void> captureScreenshot(BuildContext context, AppController controller, {
     final file = await takeScreenshot(player, title: title);
     if (file == null) throw StateError('no file written');
     unawaited(copyImageToClipboard(file));
-    onFeedback?.call(AppIcons.cameraFill, tr('截图已保存并复制'));
+    onFeedback?.call(AppIcons.cameraFill, tr('Screenshot saved and copied'));
     messenger?.showSnackBar(SnackBar(
-      content: Text(tr('截图已保存：{0}', [file.path])),
-      action: SnackBarAction(label: tr('打开文件夹'), onPressed: () => unawaited(revealInFolder(file))),
+      content: Text(tr('Screenshot saved: {0}', [file.path])),
+      action: SnackBarAction(label: tr('Open folder'), onPressed: () => unawaited(revealInFolder(file))),
     ));
   } catch (e) {
     logError('Screenshot failed', e);
-    onFeedback?.call(AppIcons.warningCircle, tr('截图失败'));
-    messenger?.showSnackBar(SnackBar(content: Text(tr('截图失败'))));
+    onFeedback?.call(AppIcons.warningCircle, tr('Screenshot failed'));
+    messenger?.showSnackBar(SnackBar(content: Text(tr('Screenshot failed'))));
   }
 }

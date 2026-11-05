@@ -193,9 +193,9 @@ void main() {
 
     test('summary and names list them', () {
       const settings = PlayerSettings(disabledCodecs: {VideoCodec.vp9, VideoCodec.av1});
-      expect(FormatPolicy.disabledNames(settings), 'AV1、VP9');
-      expect(FormatPolicy.summary(settings), contains('已禁用 AV1、VP9'));
-      expect(FormatPolicy.summary(const PlayerSettings(disabledCodecs: {})), isNot(contains('已禁用')));
+      expect(FormatPolicy.disabledNames(settings), 'AV1, VP9');
+      expect(FormatPolicy.summary(settings), contains('disabled: AV1, VP9'));
+      expect(FormatPolicy.summary(const PlayerSettings(disabledCodecs: {})), isNot(contains('disabled')));
     });
   });
 
@@ -212,9 +212,10 @@ void main() {
     expect(FormatPolicy.forDisplay(const PlayerSettings(disabledCodecs: {VideoCodec.h264}), 1600).maxHeight, 0);
   });
 
-  test('a live stream asks for one stream with picture and sound', () {
-    expect(FormatPolicy.liveExpression(const PlayerSettings(), 'bv+ba'), 'b[vcodec!=none][acodec!=none]/bv+ba');
-    expect(FormatPolicy.liveExpression(const PlayerSettings(maxHeight: 720), 'bv+ba'), 'b[height<=?720][vcodec!=none][acodec!=none]/bv+ba');
-    expect(FormatPolicy.liveExpression(const PlayerSettings(), 'ytdl'), 'b[vcodec!=none][acodec!=none]/bestvideo+bestaudio/best');
+  test('a live stream takes one stream with picture and sound up to 1080p, split streams above', () {
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}), 'bv+ba'), 'bv*[height>1080][protocol^=m3u8]+ba[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bv+ba');
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}, maxHeight: 720), 'bv+ba'), 'b[height<=?720][vcodec!=none][acodec!=none]/bv+ba');
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}, maxHeight: 1440), 'bv+ba'), 'bv*[height>1080][protocol^=m3u8][height<=?1440]+ba[protocol^=m3u8]/b[height<=?1440][vcodec!=none][acodec!=none]/bv+ba');
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {VideoCodec.av1}), 'ytdl'), 'bv*[height>1080][protocol^=m3u8][vcodec!*=av01]+ba[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bestvideo+bestaudio/best');
   });
 }

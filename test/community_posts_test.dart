@@ -98,7 +98,7 @@ void main() {
     });
     final posts = CommunityPosts(client);
     final first = await posts.first(const ChannelRef('UCuAXFkgsw1L7xaCfnd5JJOw', 'Rick'));
-    expect(requests.single.url.toString(), 'https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/posts?hl=zh-CN');
+    expect(requests.single.url.toString(), 'https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/posts?hl=en');
     final next = await posts.next(first.continuation!);
     expect(next.posts.single.id, 'Ugkx4');
     expect(next.continuation, isNull);

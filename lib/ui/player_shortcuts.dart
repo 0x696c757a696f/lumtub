@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,34 +12,40 @@ import '../l10n/l10n.dart';
 import 'lights_off.dart';
 import 'theater_mode.dart';
 import 'app_icons.dart';
+import 'common.dart';
 
 /// Keys shown in the shortcut help, in display order, with the steps from
 /// [prefs].
 List<(String, String)> playerShortcutHelp(AppPreferences prefs) => [
-      (tr('空格 / K'), tr('播放或暂停')),
-      ('← / →', tr('后退或前进 {0} 秒', [prefs.seekSeconds])),
-      ('J / L', tr('后退或前进 {0} 秒', [prefs.longSeekSeconds])),
-      ('↑ / ↓', tr('音量加减 {0}%', [prefs.volumeStep])),
-      ('Shift + < / >', tr('减速或加速播放')),
-      (tr('按住画面'), tr('临时 2 倍速')),
-      (tr('Ctrl + 滚轮'), tr('减速或加速播放')),
-      ('M', tr('静音')),
-      ('F', tr('全屏')),
-      ('Esc', tr('退出全屏')),
-      ('Shift + N / ]', tr('下一个视频')),
-      ('Shift + P / [', tr('上一个视频')),
-      (', / .', tr('暂停时逐帧后退或前进')),
-      ('0 - 9', tr('跳到视频的 0% - 90%')),
-      ('Home / End', tr('跳到开头或结尾')),
-      ('A / D', tr('上一句或下一句字幕')),
-      ('R', tr('重听这一句')),
-      ('Ctrl + C', tr('复制当前字幕')),
-      ('T', tr('剧场模式')),
-      ('B', tr('关灯')),
-      ('S', tr('截图')),
-      ('I', tr('显示或隐藏播放统计')),
-      (tr('Alt + ← / 鼠标后退键'), tr('返回上一页')),
-      ('Ctrl + K', tr('搜索')),
+      for (final (keys, action) in _shortcutHelp(prefs)) (keyNames(keys), action),
+    ];
+
+List<(String, String)> _shortcutHelp(AppPreferences prefs) => [
+      (tr('Space / K'), tr('Play or pause')),
+      ('← / →', tr('Seek back or forward {0} seconds', [prefs.seekSeconds])),
+      ('J / L', tr('Seek back or forward {0} seconds', [prefs.longSeekSeconds])),
+      ('↑ / ↓', tr('Volume up/down {0}%', [prefs.volumeStep])),
+      ('Shift + < / >', tr('Slow down or speed up playback')),
+      (tr('Hold on the video'), tr('Hold for 2x speed')),
+      (tr('Ctrl + wheel'), tr('Slow down or speed up playback')),
+      ('M', tr('Mute')),
+      ('F', tr('Fullscreen')),
+      ('Esc', tr('Exit fullscreen')),
+      ('Shift + N / ]', tr('Next video')),
+      ('Shift + P / [', tr('Previous video')),
+      (', / .', tr('Step back or forward one frame while paused')),
+      ('0 - 9', tr('Jump to 0% - 90% of the video')),
+      ('Home / End', tr('Jump to the start or end')),
+      ('A / D', tr('Previous or next subtitle line')),
+      ('R', tr('Replay this line')),
+      ('Ctrl + C', tr('Copy the current subtitle')),
+      ('T', tr('Theater mode')),
+      ('B', tr('Lights off')),
+      ('S', tr('Screenshot')),
+      ('I', tr('Show or hide playback stats')),
+      (tr('Alt + ← / mouse back button'), tr('Go back')),
+      ('Ctrl + K', tr('Search')),
+      ('Ctrl + Shift + N', tr('Incognito mode')),
     ];
 
 /// Player key bindings, used both on the watch page and inside the player
@@ -51,7 +58,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
   final volume = prefs.volumeStep.toDouble();
   void seek(int seconds) {
     unawaited(controller.seekBy(Duration(seconds: seconds)));
-    onFeedback?.call(seconds < 0 ? AppIcons.rewindFill : AppIcons.fastForwardFill, seconds < 0 ? tr('快退{0}秒', [-seconds]) : tr('快进{0}秒', [seconds]));
+    onFeedback?.call(seconds < 0 ? AppIcons.rewindFill : AppIcons.fastForwardFill, seconds < 0 ? tr('Back {0} s', [-seconds]) : tr('Forward {0} s', [seconds]));
   }
   void changeVolume(double delta) {
     unawaited(controller.changeVolume(delta).then((_) => onFeedback?.call(AppIcons.speakerHighFill, '${player.state.volume.round()}%')));
@@ -72,16 +79,21 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     onFeedback?.call(AppIcons.skipForwardFill, '${tenth * 10}%');
   }
   void jumpTo(bool end) {
+    if (end && controller.playing?.isLive == true) {
+      unawaited(controller.goLive());
+      onFeedback?.call(AppIcons.caretLineRight, tr('Live'));
+      return;
+    }
     final duration = player.state.duration;
     unawaited(player.seek(end ? duration : Duration.zero));
-    onFeedback?.call(end ? AppIcons.caretLineRight : AppIcons.caretLineLeft, end ? tr('结尾') : tr('开头'));
+    onFeedback?.call(end ? AppIcons.caretLineRight : AppIcons.caretLineLeft, end ? tr('End') : tr('Start'));
   }
   // One frame at a time, only while paused, as on YouTube.
   void stepFrame(bool forward) {
     final platform = player.platform;
     if (player.state.playing || platform is! NativePlayer) return;
     unawaited(platform.command([forward ? 'frame-step' : 'frame-back-step']).catchError((_) {}));
-    onFeedback?.call(forward ? AppIcons.skipForwardFill : AppIcons.skipBackFill, forward ? tr('下一帧') : tr('上一帧'));
+    onFeedback?.call(forward ? AppIcons.skipForwardFill : AppIcons.skipBackFill, forward ? tr('Next frame') : tr('Previous frame'));
   }
   // Line by line through the main subtitle, as Language Reactor's A and D.
   void subtitleStep(int skip) {
@@ -90,14 +102,14 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     unawaited(platform.command(['sub-seek', '$skip']).catchError((_) {}));
     onFeedback?.call(
       skip < 0 ? AppIcons.skipBackFill : skip > 0 ? AppIcons.skipForwardFill : AppIcons.arrowCounterClockwiseFill,
-      skip < 0 ? tr('上一句') : skip > 0 ? tr('下一句') : tr('重听这一句'),
+      skip < 0 ? tr('Previous line') : skip > 0 ? tr('Next line') : tr('Replay this line'),
     );
   }
   void copySubtitle() {
     final text = controller.currentSubtitleText;
     if (text.isEmpty) return;
     unawaited(Clipboard.setData(ClipboardData(text: text)));
-    onFeedback?.call(AppIcons.copy, tr('已复制字幕'));
+    onFeedback?.call(AppIcons.copy, tr('Subtitle copied'));
   }
   void previous() {
     if (controller.hasPrevious) unawaited(controller.playPrevious());
@@ -122,7 +134,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     const SingleActivator(LogicalKeyboardKey.keyA): () => subtitleStep(-1),
     const SingleActivator(LogicalKeyboardKey.keyD): () => subtitleStep(1),
     const SingleActivator(LogicalKeyboardKey.keyR): () => subtitleStep(0),
-    const SingleActivator(LogicalKeyboardKey.keyC, control: true): copySubtitle,
+    SingleActivator(LogicalKeyboardKey.keyC, control: !Platform.isMacOS, meta: Platform.isMacOS): copySubtitle,
     if (onScreenshot != null) const SingleActivator(LogicalKeyboardKey.keyS): onScreenshot,
     const SingleActivator(LogicalKeyboardKey.space): playOrPause,
     const SingleActivator(LogicalKeyboardKey.keyK): playOrPause,
@@ -138,7 +150,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     const SingleActivator(LogicalKeyboardKey.keyM): () {
       unawaited(controller.toggleMute().then((_) {
         final muted = player.state.volume == 0;
-        onFeedback?.call(muted ? AppIcons.speakerSlash : AppIcons.speakerHighFill, muted ? tr('静音') : '${player.state.volume.round()}%');
+        onFeedback?.call(muted ? AppIcons.speakerSlash : AppIcons.speakerHighFill, muted ? tr('Mute') : '${player.state.volume.round()}%');
       }));
     },
     const SingleActivator(LogicalKeyboardKey.keyF): () => unawaited(video()?.toggleFullscreen()),
@@ -170,7 +182,7 @@ Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => sho
       builder: (context) => AlertDialog(
         // The list is taller than a small window; it scrolls above the button.
         scrollable: true,
-        title: Text(tr('快捷键')),
+        title: Text(tr('Keyboard shortcuts')),
         content: SizedBox(
           width: 420,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -189,7 +201,7 @@ Future<void> showShortcutHelp(BuildContext context, AppPreferences prefs) => sho
               ),
           ]),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('知道了')))],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Got it')))],
       ),
     );
 

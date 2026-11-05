@@ -1,39 +1,40 @@
 # Translating Lumtub
 
-Lumtub's interface is written in simplified Chinese and translated into
-other languages. Every translation is one JSON file in
+Lumtub's interface is written in English and translated into other
+languages. Every translation is one JSON file in
 [`assets/l10n`](assets/l10n), named by its language tag: `de.json`,
-`ja.json`, `pt-BR.json`, `zh-Hant.json`. No code needs to change to add a
-language.
+`ja.json`, `pt-BR.json`, `zh-Hans.json`, `zh-Hant.json`. No code needs to
+change to add a language.
 
 ## How a file looks
 
-Each key is the simplified-Chinese text as it appears in the code. Its value
-is the translation. Start from [`en.json`](assets/l10n/en.json), which has
-every string with its English text:
+Each key is the English text as it appears in the code. Its value is the
+translation. [`zh-Hans.json`](assets/l10n/zh-Hans.json) has every string,
+so it is the list of keys to start from:
 
 ```json
 {
-  "冷门宝藏": "Hidden gems",
-  "无法加载聊天回放：{0}": "Couldn't load chat replay: {0}"
+  "Hidden gems": "冷门宝藏",
+  "Couldn't load chat replay: {0}": "无法加载聊天回放：{0}"
 }
 ```
 
-To translate into German, copy `en.json` to `de.json` and replace each
-English value with German:
+To translate into German, copy `zh-Hans.json` to `de.json` and replace each
+value with German:
 
 ```json
 {
-  "冷门宝藏": "Versteckte Perlen",
-  "无法加载聊天回放：{0}": "Chat-Wiedergabe konnte nicht geladen werden: {0}"
+  "Hidden gems": "Versteckte Perlen",
+  "Couldn't load chat replay: {0}": "Chat-Wiedergabe konnte nicht geladen werden: {0}"
 }
 ```
 
-- Never change a key. A key that is not in `en.json` is an error.
+- Never change a key. A key that is not in `zh-Hans.json` is an error.
 - Keep every placeholder (`{0}`, `{1}` …). Their order may change.
 - Keep line breaks (`\n`) where the English has them.
 - Leave a value empty (`""`) or remove the line if you have not translated
-  it yet. Missing strings are shown in English.
+  it yet. Missing strings are shown in English; in traditional Chinese
+  (`zh-Hant`, `zh-HK`) they are shown in simplified Chinese first.
 - Product and format names stay as they are: YouTube, Lumtub, yt-dlp,
   FFmpeg, libmpv, H.264, VP9, AV1, SponsorBlock, DeArrow.
 - The log is always English and is not translated.
@@ -61,6 +62,6 @@ To work with the files directly instead:
    every placeholder is kept.
 3. After it is merged, the next release includes it.
 
-New strings appear in `en.json` as Lumtub grows. Until a translation has
+New strings appear in the code and in `zh-Hans.json` as Lumtub grows. Until a translation has
 them they are shown in English, and a translation that falls below 90% is
 not offered again until it catches up.

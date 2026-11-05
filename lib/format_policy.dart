@@ -53,14 +53,7 @@ class FormatPolicy {
   /// yt-dlp's and mpv's defaults apply, minus the disabled codecs.
   static _Policy _policy(PlayerSettings settings, {int displayHeight = 0}) {
     final core = NativeCore.instance;
-    final json = jsonEncode({
-      'strategy': settings.strategy.name,
-      'disabled': [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.name],
-      'hardware': [for (final c in VideoCodec.values) if (hardware(settings, c)) c.name],
-      'maxHeight': settings.maxHeight,
-      'audio': settings.audioQuality.name,
-      'display': max(0, displayHeight),
-    });
+    final json = settingsJson(settings, displayHeight: displayHeight);
     final answer = core?.take(core.withText(json, core.formatPolicy));
     if (answer == null) {
       return _Policy([for (final c in VideoCodec.values) if (allows(settings, c)) c], 'ytdl', null, 0);
@@ -73,6 +66,16 @@ class FormatPolicy {
       data['displayHeight'] as int,
     );
   }
+
+  /// [settings] as lumtub_core's format policy reads them.
+  static String settingsJson(PlayerSettings settings, {int displayHeight = 0}) => jsonEncode({
+        'strategy': settings.strategy.name,
+        'disabled': [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.name],
+        'hardware': [for (final c in VideoCodec.values) if (hardware(settings, c)) c.name],
+        'maxHeight': settings.maxHeight,
+        'audio': settings.audioQuality.name,
+        'display': max(0, displayHeight),
+      });
 
   /// The allowed codecs, most preferred first.
   ///
@@ -109,12 +112,29 @@ class FormatPolicy {
   /// restricts it.
   static String expression(PlayerSettings settings) => _policy(settings).expression;
 
-  /// For a live stream: the best single stream with picture and sound, up
-  /// to the height cap, else [fallback]; mpv's `ytdl` alone is spelled out,
-  /// as yt-dlp does not know it inside an expression.
+  /// For a live stream: above 1080p, where YouTube has no stream with
+  /// picture and sound together, the best picture in an allowed codec with
+  /// the best sound; else the best single stream with both, up to the
+  /// height cap; else [fallback]. A picture and a sound stream apart can
+  /// drift, so the split one is taken only when it is taller than any
+  /// single stream. mpv's `ytdl` alone is spelled out, as yt-dlp does not
+  /// know it inside an expression.
   static String liveExpression(PlayerSettings settings, String fallback) {
     final cap = settings.maxHeight > 0 ? '[height<=?${settings.maxHeight}]' : '';
-    return 'b$cap[vcodec!=none][acodec!=none]/${fallback == 'ytdl' ? 'bestvideo+bestaudio/best' : fallback}';
+    final excluded = [
+      for (final codec in VideoCodec.values)
+        if (settings.disabledCodecs.contains(codec))
+          ...switch (codec) {
+            VideoCodec.h264 => ['avc1', 'h264'],
+            VideoCodec.vp9 => ['vp09', 'vp9'],
+            VideoCodec.av1 => ['av01'],
+            VideoCodec.vp8 => ['vp8'],
+          },
+    ].map((name) => '[vcodec!*=$name]').join();
+    // Only HLS: the live picture and sound without a manifest answer one
+    // fragment per request, which libmpv cannot follow (see LiveSplit).
+    final tall = settings.maxHeight > 0 && settings.maxHeight <= 1080 ? '' : 'bv*[height>1080][protocol^=m3u8]$cap$excluded+ba[protocol^=m3u8]/';
+    return '${tall}b$cap[vcodec!=none][acodec!=none]/${fallback == 'ytdl' ? 'bestvideo+bestaudio/best' : fallback}';
   }
 
   /// Within the user's selected quality cap, yt-dlp first ranks by picture
@@ -124,14 +144,14 @@ class FormatPolicy {
   static String? formatSort(PlayerSettings settings) => _policy(settings).formatSort;
 
   /// Names of the disabled codecs, e.g. `AV1、VP9`, or empty.
-  static String disabledNames(PlayerSettings settings) => [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.label].join('、');
+  static String disabledNames(PlayerSettings settings) => [for (final c in VideoCodec.values) if (settings.disabledCodecs.contains(c)) c.label].join(tr(', '));
 
   /// A one-line summary of the rule in force, for the settings page.
   static String summary(PlayerSettings settings) {
     final disabled = disabledNames(settings);
-    final order = settings.strategy == PlaybackStrategy.quality ? tr('按分辨率和帧率择优') : [for (final c in codecOrder(settings)) c.label].join(' › ');
-    final rule = tr('当前规则：{0}，编码顺序 {1}', [settings.strategy.label, order.isEmpty ? tr('无') : order]);
-    return disabled.isEmpty ? rule : '$rule${tr('，已禁用 {0}', [disabled])}';
+    final order = settings.strategy == PlaybackStrategy.quality ? tr('best resolution and frame rate first') : [for (final c in codecOrder(settings)) c.label].join(' › ');
+    final rule = tr('Current rule: {0}, codec order {1}', [settings.strategy.label, order.isEmpty ? tr('None') : order]);
+    return disabled.isEmpty ? rule : '$rule${tr(', disabled: {0}', [disabled])}';
   }
 }
 

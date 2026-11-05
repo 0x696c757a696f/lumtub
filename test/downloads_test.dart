@@ -351,7 +351,8 @@ void main() {
   });
 
   test('the default folder is Videos/Lumtub, else a fallback', () {
-    expect(DownloadManager.defaultDirectoryFor({'USERPROFILE': 'C:/Users/me'}, 'F'), endsWith('Videos${Platform.pathSeparator}Lumtub'));
+    final env = Platform.isWindows ? {'USERPROFILE': 'C:/Users/me'} : {'HOME': '/nonexistent/me'};
+    expect(DownloadManager.defaultDirectoryFor(env, 'F'), endsWith('${Platform.isMacOS ? 'Movies' : 'Videos'}${Platform.pathSeparator}Lumtub'));
     expect(DownloadManager.defaultDirectoryFor({}, 'F'), 'F');
   });
 }

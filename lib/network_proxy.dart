@@ -8,9 +8,9 @@ import 'native_core.dart';
 enum ProxyMode {
   /// The proxy set in Windows (as Clash, v2rayN and similar tools set it),
   /// or none when Windows has none.
-  system('跟随系统（推荐）'),
-  off('不使用代理'),
-  custom('手动填写');
+  system('Follow system (recommended)'),
+  off('No proxy'),
+  custom('Enter manually');
 
   const ProxyMode(this._label);
   final String _label;
@@ -72,6 +72,60 @@ class NetworkProxy {
     return socks == null ? null : normalize(socks.contains('://') ? socks : 'socks5://$socks');
   }
 
+  /// The Linux proxy: the environment's https_proxy or all_proxy, else
+  /// GNOME's proxy setting (gsettings), which other desktops often share.
+  static Future<NetworkProxy> linux({Map<String, String>? environment, Future<String?> Function(String key)? gsettings}) async {
+    final env = environment ?? Platform.environment;
+    for (final name in ['https_proxy', 'HTTPS_PROXY', 'http_proxy', 'HTTP_PROXY', 'all_proxy', 'ALL_PROXY']) {
+      final value = env[name]?.trim() ?? '';
+      if (value.isNotEmpty) return NetworkProxy(normalize(value.contains('://') ? value : 'http://$value'));
+    }
+    final read = gsettings ?? _gsettings;
+    if (await read('org.gnome.system.proxy mode') != 'manual') return direct;
+    for (final (schema, scheme) in [('https', 'http'), ('http', 'http'), ('socks', 'socks5')]) {
+      final host = await read('org.gnome.system.proxy.$schema host') ?? '';
+      final port = int.tryParse(await read('org.gnome.system.proxy.$schema port') ?? '') ?? 0;
+      if (host.isNotEmpty && port > 0) return NetworkProxy(normalize('$scheme://$host:$port'));
+    }
+    return direct;
+  }
+
+  /// The macOS proxy of the active network service, as `scutil --proxy`
+  /// prints it (the setting in System Settings › Network › Proxies).
+  static Future<NetworkProxy> mac({Future<String?> Function()? scutil}) async {
+    final text = await (scutil ?? _scutil)() ?? '';
+    final values = {
+      for (final match in RegExp(r'^\s*(\w+)\s*:\s*(\S+)\s*$', multiLine: true).allMatches(text)) match.group(1)!: match.group(2)!,
+    };
+    for (final (key, scheme) in [('HTTPS', 'http'), ('HTTP', 'http'), ('SOCKS', 'socks5')]) {
+      if (values['${key}Enable'] != '1') continue;
+      final host = values['${key}Proxy'] ?? '';
+      final port = int.tryParse(values['${key}Port'] ?? '') ?? 0;
+      if (host.isNotEmpty && port > 0) return NetworkProxy(normalize('$scheme://$host:$port'));
+    }
+    return direct;
+  }
+
+  static Future<String?> _scutil() async {
+    try {
+      final result = await Process.run('/usr/sbin/scutil', ['--proxy']).timeout(const Duration(seconds: 3));
+      return result.exitCode == 0 ? result.stdout.toString() : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<String?> _gsettings(String key) async {
+    try {
+      final result = await Process.run('gsettings', ['get', ...key.split(' ')]).timeout(const Duration(seconds: 3));
+      if (result.exitCode != 0) return null;
+      final text = result.stdout.toString().trim();
+      return text.startsWith("'") && text.endsWith("'") && text.length >= 2 ? text.substring(1, text.length - 1) : text;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// The Windows proxy, read from the registry as the browsers read it.
   static Future<NetworkProxy> windows() async {
     if (!Platform.isWindows) return direct;
@@ -100,7 +154,11 @@ class NetworkProxy {
   }
 
   static Future<NetworkProxy> resolve(ProxyMode mode, String address) async => switch (mode) {
-        ProxyMode.system => await windows(),
+        ProxyMode.system => Platform.isLinux
+            ? await linux()
+            : Platform.isMacOS
+                ? await mac()
+                : await windows(),
         ProxyMode.off => direct,
         ProxyMode.custom => NetworkProxy(normalize(address)),
       };

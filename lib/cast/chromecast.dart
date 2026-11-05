@@ -181,9 +181,9 @@ Future<Socket> _secureConnect(InternetAddress host, int port) =>
 
 /// A Chromecast, driven through the Default Media Receiver.
 class ChromecastDevice implements CastDevice {
-  ChromecastDevice({required this.id, required this.name, required this.host, this.port = 8009, CastConnector? connector}) : _connector = connector ?? _secureConnect;
+  ChromecastDevice({required this.id, required this.name, required this.address, this.port = 8009, CastConnector? connector}) : _connector = connector ?? _secureConnect;
 
-  factory ChromecastDevice.fromService(MdnsService service) => ChromecastDevice(id: service.id, name: service.name, host: service.host, port: service.port);
+  factory ChromecastDevice.fromService(MdnsService service) => ChromecastDevice(id: service.id, name: service.name, address: service.host, port: service.port);
 
   @override
   final String id;
@@ -191,7 +191,10 @@ class ChromecastDevice implements CastDevice {
   final String name;
   @override
   CastProtocol get protocol => CastProtocol.chromecast;
-  final InternetAddress host;
+  final InternetAddress address;
+  @override
+  String get host => address.address;
+  @override
   final int port;
   final CastConnector _connector;
 
@@ -211,7 +214,7 @@ class ChromecastDevice implements CastDevice {
     if (_socket != null) return;
     final Socket socket;
     try {
-      socket = await _connector(host, port);
+      socket = await _connector(address, port);
     } on SocketException catch (e) {
       throw CastException(e.message);
     } on TimeoutException {

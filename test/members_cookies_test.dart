@@ -5,6 +5,10 @@ import 'package:lumtub/youtube_web_sign_in.dart';
 
 void main() {
   test('writes the signed-in cookies for yt-dlp and wipes them after', () async {
+    if (Platform.isMacOS && Platform.environment['CI'] == 'true') {
+      markTestSkipped('the account vault needs the login keychain, which a CI Mac lacks');
+      return;
+    }
     if (!YoutubeWebSignIn.available) {
       expect(Platform.environment['LUMTUB_CORE_DLL'], isNull, reason: 'the core was given but not loaded');
       markTestSkipped('no native core');

@@ -24,6 +24,7 @@ import '../summary_dialog.dart';
 import '../theater_mode.dart';
 import '../skeleton.dart';
 import '../theme.dart';
+import '../warm_layer.dart';
 import '../translatable.dart';
 import '../play_queue_panel.dart';
 import '../playing_list_panel.dart';
@@ -36,6 +37,7 @@ import '../video_box.dart';
 import '../../l10n/l10n.dart';
 import '../motion.dart';
 import '../app_icons.dart';
+import '../palettes.dart';
 import '../live_chat_input.dart';
 import '../live_chat_list.dart';
 
@@ -97,10 +99,11 @@ class _WatchPageState extends State<WatchPage> {
     final page = _page(context, controller);
     if (!appearance.darkWatchPage || Theme.of(context).brightness == Brightness.dark) return page;
     // ColorScheme.fromSeed is costly and the page rebuilds on every notify.
-    final key = appearance.themeKey(controller.accentColor);
+    final warmth = context.tones.warmth;
+    final key = (appearance.themeKey(controller.accentColor), warmth);
     if (key != _darkKey) {
       _darkKey = key;
-      _dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.fontFamily);
+      _dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.font, palette: paletteOf(appearance.palette), warmth: warmth);
     }
     final dark = _dark!;
     return Theme(data: dark, child: Material(color: dark.colorScheme.surface, child: page));
@@ -151,7 +154,7 @@ class _WatchPageState extends State<WatchPage> {
             _Toolbar(controller: controller),
             if (controller.playbackError != null && !controller.waitingForStart) ...[
               const SizedBox(height: 12),
-              ErrorBanner(tr('播放失败：{0}', [controller.playbackError]), onRetry: controller.retryPlayback),
+              ErrorBanner(tr('Playback failed: {0}', [controller.playbackError]), onRetry: controller.retryPlayback),
             ],
             const SizedBox(height: 16),
             _Details(controller: controller),
@@ -191,7 +194,7 @@ class _WatchPageState extends State<WatchPage> {
                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                         Align(
                           alignment: Alignment.centerRight,
-                          child: IconButton(tooltip: tr('收起聊天'), icon: const Icon(AppIcons.caretRight, size: 18), onPressed: () => theaterChatOpen.value = false),
+                          child: IconButton(tooltip: tr('Hide chat'), icon: const Icon(AppIcons.caretRight, size: 18), onPressed: () => theaterChatOpen.value = false),
                         ),
                         Expanded(child: _ReplayChatPanel(controller: controller)),
                       ]),
@@ -203,7 +206,7 @@ class _WatchPageState extends State<WatchPage> {
                   padding: const EdgeInsets.only(top: 4, right: 4),
                   child: Align(
                     alignment: Alignment.topCenter,
-                    child: IconButton(tooltip: tr('显示聊天'), icon: const Icon(AppIcons.chats, size: 20), onPressed: () => theaterChatOpen.value = true),
+                    child: IconButton(tooltip: tr('Show chat'), icon: const Icon(AppIcons.chats, size: 20), onPressed: () => theaterChatOpen.value = true),
                   ),
                 ),
             ]);
@@ -238,10 +241,11 @@ class _RatingButtons extends StatelessWidget {
     final dislikes = controller.dislikes?.dislikes;
     Widget button(VideoRating rating, IconData icon, IconData selectedIcon, String label, int? count, {String? note}) {
       final selected = signedIn && account!.ratingOf(item.id) == rating;
+      final off = signedIn && account!.ratingOff(item.id);
       final shown = count == null || !signedIn ? count : (count + account!.ratingChange(item.id, rating)).clamp(0, 1 << 62);
       return Tooltip(
         message: [
-          if (!signedIn) tr('登录 Google 账号后可以{0}', [label]) else if (selected) tr('取消{0}', [label]) else label,
+          if (!signedIn) tr('Sign in to Google to {0}', [label]) else if (off) tr('The uploader turned off likes and dislikes for this video') else if (selected) tr('Cancel {0}', [label]) else label,
           if (note != null) note,
         ].join('\n'),
         child: TextButton.icon(
@@ -250,9 +254,11 @@ class _RatingButtons extends StatelessWidget {
             backgroundColor: colors.surfaceContainerHighest,
             padding: const EdgeInsets.symmetric(horizontal: 12),
           ),
-          onPressed: signedIn
+          onPressed: off
+              ? null
+              : signedIn
               ? () => account!.rate(item, rating)
-              : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('登录 Google 账号后可以{0}', [label])))),
+              : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Sign in to Google to {0}', [label])))),
           icon: Icon(selected ? selectedIcon : icon, size: 20),
           label: Text(shown == null ? label : formatCount(shown)),
         ),
@@ -260,10 +266,10 @@ class _RatingButtons extends StatelessWidget {
     }
 
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      button(VideoRating.like, AppIcons.thumbsUp, AppIcons.thumbsUpFill, tr('赞'), likes),
+      button(VideoRating.like, AppIcons.thumbsUp, AppIcons.thumbsUpFill, tr('Like'), likes),
       const SizedBox(width: 4),
-      button(VideoRating.dislike, AppIcons.thumbsDown, AppIcons.thumbsDownFill, tr('踩'), dislikes,
-          note: dislikes == null ? null : tr('踩数是 Return YouTube Dislike 的估算')),
+      button(VideoRating.dislike, AppIcons.thumbsDown, AppIcons.thumbsDownFill, tr('Dislike'), dislikes,
+          note: dislikes == null ? null : tr("The dislike count is Return YouTube Dislike's estimate")),
     ]);
   }
 }
@@ -276,7 +282,7 @@ class _Toolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final item = controller.playing!;
     final settings = controller.settings;
-    final decoded = controller.currentCodec != tr('尚未播放视频');
+    final decoded = controller.currentCodec != tr('No video played yet');
     final library = controller.library;
     final favorite = library?.isFavorite(item.id) ?? false;
     final later = library?.isWatchLater(item.id) ?? false;
@@ -287,7 +293,7 @@ class _Toolbar extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           PopupMenuButton<PlayOrder>(
-            tooltip: tr('播放顺序'),
+            tooltip: tr('Playback order'),
             initialValue: settings.playOrder,
             onSelected: controller.setPlayOrder,
             itemBuilder: (context) => [
@@ -298,34 +304,34 @@ class _Toolbar extends StatelessWidget {
           _RatingButtons(controller: controller),
           if (library != null) ...[
             IconButton(
-              tooltip: favorite ? tr('取消收藏') : tr('收藏'),
+              tooltip: favorite ? tr('Remove from favorites') : tr('Favorites'),
               isSelected: favorite,
               icon: const Icon(AppIcons.heart),
               selectedIcon: Icon(AppIcons.heartFill, color: context.colors.primary),
               onPressed: () => library.toggleFavorite(item),
             ),
             IconButton(
-              tooltip: later ? tr('从稍后观看移除') : tr('稍后观看'),
+              tooltip: later ? tr('Remove from Watch later') : tr('Watch later'),
               icon: Icon(later ? AppIcons.clockFill : AppIcons.clock, color: later ? context.colors.primary : null),
               onPressed: () => library.toggleWatchLater(item),
             ),
-            IconButton(tooltip: tr('添加到播放列表'), icon: const Icon(AppIcons.listPlus), onPressed: () => showAddToPlaylist(context, controller, item)),
+            IconButton(tooltip: tr('Add to playlist'), icon: const Icon(AppIcons.listPlus), onPressed: () => showAddToPlaylist(context, controller, item)),
             if (controller.account?.signedIn ?? false)
-              IconButton(tooltip: tr('保存到 YouTube 播放列表'), icon: const Icon(AppIcons.filmReel), onPressed: () => showSaveToYoutube(context, controller, item)),
+              IconButton(tooltip: tr('Save to YouTube playlist'), icon: const Icon(AppIcons.filmReel), onPressed: () => showSaveToYoutube(context, controller, item)),
           ],
           if (controller.downloads != null && !item.isLive)
-            IconButton(tooltip: tr('下载'), icon: const Icon(AppIcons.downloadSimple), onPressed: () => showDownloadChoice(context, controller, item)),
+            IconButton(tooltip: tr('Downloads'), icon: const Icon(AppIcons.downloadSimple), onPressed: () => showDownloadChoice(context, controller, item)),
           if (!item.isLive)
-            IconButton(tooltip: tr('AI 总结'), icon: const Icon(AppIcons.sparkle), onPressed: () => showVideoSummary(context, controller)),
-          IconButton(tooltip: tr('复制链接'), icon: const Icon(AppIcons.link), onPressed: () => copyText(context, item.url, tr('链接已复制'))),
-          IconButton(tooltip: tr('在浏览器中打开'), icon: const Icon(AppIcons.arrowSquareOut), onPressed: () => openExternal(item.url)),
-          IconButton(tooltip: tr('快捷键'), icon: const Icon(AppIcons.keyboard), onPressed: () => showShortcutHelp(context, controller.preferences)),
+            IconButton(tooltip: tr('AI summary'), icon: const Icon(AppIcons.sparkle), onPressed: () => showVideoSummary(context, controller)),
+          IconButton(tooltip: tr('Copy link'), icon: const Icon(AppIcons.link), onPressed: () => copyText(context, item.url, tr('Link copied'))),
+          IconButton(tooltip: tr('Open in browser'), icon: const Icon(AppIcons.arrowSquareOut), onPressed: () => openExternal(item.url)),
+          IconButton(tooltip: tr('Keyboard shortcuts'), icon: const Icon(AppIcons.keyboard), onPressed: () => showShortcutHelp(context, controller.preferences)),
         ],
       ),
       if (decoded)
         Padding(
           padding: const EdgeInsets.only(top: 8, left: 4),
-          child: Text(tr('解码：{0} · {1}', [controller.currentCodec, controller.currentHwdec]), style: TextStyle(fontSize: 12, color: context.colors.outline)),
+          child: Text(tr('Decoding: {0} · {1}', [controller.currentCodec, controller.currentHwdec]), style: TextStyle(fontSize: 12, color: context.colors.outline)),
         ),
     ]);
   }
@@ -340,7 +346,7 @@ class _BackRow extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: TextButton.icon(onPressed: onBack, icon: const Icon(AppIcons.arrowLeft), label: Text(tr('返回'))),
+          child: TextButton.icon(onPressed: onBack, icon: const Icon(AppIcons.arrowLeft), label: Text(tr('Back'))),
         ),
       );
 }
@@ -370,8 +376,11 @@ class _Player extends StatelessWidget {
                   // they measure the size it is drawn at.
                   controls: (state) => VideoBox(
                     controller: controller,
-                    child: RepaintBoundary(
-                      child: PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
+                    child: WarmLayer(
+                      behind: true,
+                      child: RepaintBoundary(
+                        child: PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
+                      ),
                     ),
                   ),
                   subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label),
@@ -399,8 +408,8 @@ class _Details extends StatelessWidget {
     final details = controller.details;
     final views = details?.viewCount ?? item.viewCount;
     final meta = [
-      if (item.isUpcoming && item.scheduledStart != null) tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]),
-      if (views != null) tr('{0}次观看', [formatCount(views)]),
+      if (item.isUpcoming && item.scheduledStart != null) tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]),
+      if (views != null) tr('{0} views', [formatCount(views)]),
       if (details?.uploadDate != null) formatDate(details!.uploadDate!),
     ].join(' · ');
     final channel = details?.channel.isNotEmpty == true ? details!.channel : item.channel;
@@ -421,9 +430,9 @@ class _Details extends StatelessWidget {
           Flexible(child: Text(channel.isEmpty ? 'YouTube' : channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall)),
           const SizedBox(width: 8),
           if (channelRef != null)
-            TextButton(onPressed: () => controller.openChannel(channelRef), child: Text(tr('查看频道')))
+            TextButton(onPressed: () => controller.openChannel(channelRef), child: Text(tr('View channel')))
           else if (details?.channelUrl != null)
-            TextButton(onPressed: () => openExternal(details!.channelUrl!), child: Text(tr('查看频道'))),
+            TextButton(onPressed: () => openExternal(details!.channelUrl!), child: Text(tr('View channel'))),
         ])),
         if (channelRef != null) ...[
           FollowButton(controller: controller, channel: channelRef),
@@ -500,7 +509,7 @@ class _DescriptionState extends State<_Description> {
               ),
               if (hasMore) ...[
                 const SizedBox(height: 4),
-                Text(_expanded ? tr('收起') : tr('展开'), style: TextStyle(color: colors.primary, fontWeight: FontWeight.w600)),
+                Text(_expanded ? tr('Collapse') : tr('Expand'), style: TextStyle(color: colors.primary, fontWeight: FontWeight.w600)),
               ],
             ],
           ]),
@@ -521,9 +530,9 @@ class _SidePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tabs = [
-      (controller.playingList != null ? tr('播放列表') : tr('接下来播放'), _UpNext(controller: controller)),
-      if (comments case final comments?) (tr('评论'), _KeepAlive(child: comments)),
-      if (replayChat case final chat?) (tr('聊天'), _KeepAlive(child: chat)),
+      (controller.playingList != null ? tr('Playlist') : tr('Up next'), _UpNext(controller: controller)),
+      if (comments case final comments?) (tr('Comments'), _KeepAlive(child: comments)),
+      if (replayChat case final chat?) (tr('Chat'), _KeepAlive(child: chat)),
     ];
     return DefaultTabController(
       key: ValueKey(tabs.length),
@@ -572,14 +581,14 @@ class _ReplayChatPanel extends StatelessWidget {
     syncChatTranslation(controller);
     final header = <Widget>[
       Row(children: [
-        Expanded(child: Text(tr(live ? '聊天' : '聊天回放'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
+        Expanded(child: Text(tr(live ? 'Chat' : 'Chat replay'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
         ImmersiveTranslationSwitch(controller: controller),
       ]),
       const SizedBox(height: 8),
       if (controller.loadingReplayChat) const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator())),
-      if (controller.replayChatError != null) ErrorBanner(tr(live ? '无法加载聊天：{0}' : '无法加载聊天回放：{0}', [controller.replayChatError]), onRetry: controller.retryChat),
+      if (controller.replayChatError != null) ErrorBanner(tr(live ? "Couldn't load the chat: {0}" : "Couldn't load chat replay: {0}", [controller.replayChatError]), onRetry: controller.retryChat),
       if (!controller.loadingReplayChat && controller.replayChatError == null && messages.isEmpty)
-        Padding(padding: const EdgeInsets.all(12), child: Text(tr(live ? '当前直播没有公开聊天' : '这个直播录像没有公开的聊天回放'), style: TextStyle(color: context.colors.onSurfaceVariant))),
+        Padding(padding: const EdgeInsets.all(12), child: Text(tr(live ? 'This live stream has no public chat' : 'This live replay has no public chat replay'), style: TextStyle(color: context.colors.onSurfaceVariant))),
     ];
     // The box to write in stays under the messages, as on YouTube.
     final input = live && controller.playing != null ? LiveChatInput(controller: controller, videoId: controller.playing!.id) : null;
@@ -645,7 +654,7 @@ class _ReplayChatMessage extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Expanded(child: Text(message.author.isEmpty ? tr('系统消息') : message.author, style: const TextStyle(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              Expanded(child: Text(message.author.isEmpty ? tr('System message') : message.author, style: const TextStyle(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
               if (message.amount != null) Text(message.amount!, style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w700)),
               if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: context.colors.outline, fontSize: 12))),
             ]),
@@ -655,6 +664,8 @@ class _ReplayChatMessage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Image.network(
+                  color: context.pictureWarmth,
+                  colorBlendMode: BlendMode.multiply,
                   message.stickerUrl!,
                   height: 56,
                   cacheHeight: (56 * MediaQuery.devicePixelRatioOf(context)).round(),
@@ -686,7 +697,7 @@ class _UpNext extends StatelessWidget {
     final queued = {for (final item in items) item.id};
     final relatedItems = [for (final item in controller.relatedItems) if (!queued.contains(item.id)) item];
     final autoplay = Row(mainAxisSize: MainAxisSize.min, children: [
-      Text(tr('自动连播'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
+      Text(tr('Autoplay next'), style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
       Transform.scale(
         scale: 0.75,
         child: Switch(value: controller.settings.playOrder == PlayOrder.autoPlayRelated, onChanged: (on) => unawaited(controller.setAutoplayNext(on))),
@@ -697,14 +708,14 @@ class _UpNext extends StatelessWidget {
       if (controller.playingList != null)
         PlayingListPanel(controller: controller, trailing: autoplay, shrinkWrap: shrinkWrap)
       else
-        _header(context, tr('接下来播放'), items.isEmpty ? null : tr('{0} 个', [items.length]), trailing: autoplay),
+        _header(context, tr('Up next'), items.isEmpty ? null : tr('{0}', [items.length]), trailing: autoplay),
       if (controller.playingList != null)
         const SizedBox.shrink()
       else if (items.isEmpty)
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
           child: Text(
-            relatedItems.isEmpty ? tr('播放队列已经到底了。播放搜索结果、播放列表或观看历史中的视频时，后面的视频会显示在这里。') : controller.settings.autoplayNext ? tr('播放队列已经到底了，自动连播会接着播放下面的相关视频。') : tr('播放队列已经到底了。打开自动连播后，会接着播放下面的相关视频。'),
+            relatedItems.isEmpty ? tr("You've reached the end of the queue. When playing videos from search results, playlists or watch history, the following videos appear here.") : controller.settings.autoplayNext ? tr("You've reached the end of the queue. Autoplay will continue with the related videos below.") : tr("You've reached the end of the queue. Turn on Autoplay to play the related videos below next."),
             style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5),
           ),
         )
@@ -712,12 +723,12 @@ class _UpNext extends StatelessWidget {
         for (final item in shrinkWrap ? items.take(20) : items) _tile(item, null),
       if (related != null) ...[
         const SizedBox(height: 16),
-        _header(context, tr('相关视频'), tr('按标题搜索')),
+        _header(context, tr('Related videos'), tr('Search by title')),
         for (final item in relatedItems) _tile(item, relatedItems),
         if (related.loading && relatedItems.isEmpty)
           const Padding(padding: EdgeInsets.all(12), child: LinearProgressIndicator())
         else if (related.error != null)
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: ErrorBanner(tr('无法加载相关视频'), onRetry: () => related.loadMore(retry: true))),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: ErrorBanner(tr("Couldn't load related videos"), onRetry: () => related.loadMore(retry: true))),
       ],
     ];
     if (shrinkWrap) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: children);

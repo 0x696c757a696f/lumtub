@@ -1,10 +1,21 @@
 /// What a TV or speaker is asked to play.
 class CastMedia {
-  const CastMedia({required this.url, required this.title, this.mime = 'video/mp4', this.start = Duration.zero});
+  const CastMedia({required this.url, required this.title, this.mime = 'video/mp4', this.start = Duration.zero, this.offset = Duration.zero, this.duration, this.restart});
   final String url;
   final String title;
   final String mime;
   final Duration start;
+
+  /// Where in the video the stream begins, for a stream the app joins
+  /// itself: the device counts its position from there.
+  final Duration offset;
+
+  /// The video's length, when the device cannot tell it from the stream.
+  final Duration? duration;
+
+  /// The same video streamed from another position, for a stream the
+  /// device cannot seek in itself.
+  final Future<CastMedia> Function(Duration at)? restart;
 }
 
 enum CastState { loading, playing, paused, stopped }
@@ -25,6 +36,11 @@ abstract class CastDevice {
   String get id;
   String get name;
   CastProtocol get protocol;
+
+  /// The device's address and a port it listens on, to find which of this
+  /// computer's addresses reaches it.
+  String get host;
+  int get port;
 
   /// Starts [media] at [CastMedia.start].
   Future<void> load(CastMedia media);

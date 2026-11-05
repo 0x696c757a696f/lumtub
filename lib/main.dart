@@ -17,6 +17,7 @@ import 'ui/app_shell.dart';
 import 'ui/frame_stats.dart';
 import 'ui/motion.dart';
 import 'ui/smooth_wheel.dart';
+import 'ui/palettes.dart';
 import 'ui/theme.dart';
 import 'windows_shell.dart';
 
@@ -24,11 +25,6 @@ Future<void> main() async {
   FrameStats.sinceStart.start();
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) SmoothWheel.install();
-  // Decoded thumbnails and avatars: Flutter keeps up to 1000 and 100 MiB.
-  // Pages rebuild them from the disk cache quickly, so fewer are kept.
-  PaintingBinding.instance.imageCache
-    ..maximumSize = 300
-    ..maximumSizeBytes = 64 << 20;
   // Before any HTTP client exists, so all of them follow the proxy setting.
   HttpOverrides.global = appHttpOverrides;
   final reportFlutterError = FlutterError.onError;
@@ -42,6 +38,13 @@ Future<void> main() async {
   };
   // Load the theme before the first frame so the window never flashes the
   // wrong colours.
+  // The translations come first: the saved language is only recognised once
+  // they say which languages can be chosen.
+  try {
+    await loadTranslations();
+  } catch (e) {
+    logError('Could not read the translations', e);
+  }
   AppearanceSettingsStore? store;
   var appearance = const AppearanceSettings();
   try {
@@ -49,11 +52,6 @@ Future<void> main() async {
     appearance = await store.load();
   } catch (_) {
     // Directories are created again, with errors reported, during startup.
-  }
-  try {
-    await loadTranslations();
-  } catch (e) {
-    logError('Could not read the translations', e);
   }
   setLanguage(appearance.language);
   runApp(LumtubApp(controller: AppController(appearance: appearance, appearanceStore: store)));
@@ -80,10 +78,19 @@ class _LumtubAppState extends State<LumtubApp> {
   late final AppLifecycleListener _lifecycle;
   bool _pausedByMinimize = false;
   WindowsShellSync? _shell;
+  // The dark theme and 护眼暖色 can follow the clock or the sun.
+  Timer? _clock;
+  DateTime _now = DateTime.now();
 
   void _updateThemes(AppearanceSettings appearance, Color accent) {
-    Motion.update(appearance.motion);
-    final key = (appearance.themeKey(accent), Motion.reduced);
+    Motion.update(appearance.effectiveMotion);
+    // Decoded thumbnails and avatars; pages rebuild them from the disk
+    // cache quickly, so few are kept, fewer in 低占用模式.
+    PaintingBinding.instance.imageCache
+      ..maximumSize = appearance.lowResource ? 120 : 300
+      ..maximumSizeBytes = (appearance.lowResource ? 24 : 64) << 20;
+    final warmth = appearance.warmAt(DateTime.now()) ? appearance.warmth : 0.0;
+    final key = (appearance.themeKey(accent), Motion.reduced, warmth);
     if (key == _themeKey) return;
     _themeKey = key;
     ThemeData build(Brightness brightness, {bool highContrast = false}) => buildAppTheme(
@@ -91,9 +98,12 @@ class _LumtubAppState extends State<LumtubApp> {
           brightness,
           variant: appearance.schemeVariant,
           pureBlack: appearance.pureBlack,
-          fontFamily: appearance.fontFamily,
+          compact: appearance.compact,
+          fontFamily: appearance.font,
           transition: Motion.reduced ? PageTransition.none : appearance.transition,
           highContrast: highContrast,
+          palette: paletteOf(appearance.palette),
+          warmth: warmth,
         );
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
@@ -106,7 +116,16 @@ class _LumtubAppState extends State<LumtubApp> {
     super.initState();
     final controller = widget.controller;
     unawaited(controller.initialize());
-    if (Platform.isWindows) _shell = WindowsShellSync(controller, WindowsShell());
+    _clock = Timer.periodic(const Duration(minutes: 1), (_) {
+      final appearance = controller.appearance;
+      final now = DateTime.now();
+      if (appearance.themeModeAt(now) != appearance.themeModeAt(_now) || appearance.warmAt(now) != appearance.warmAt(_now)) {
+        setState(() => _now = now);
+      } else {
+        _now = now;
+      }
+    });
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) _shell = WindowsShellSync(controller, WindowsShell());
     if (controller.appearance.systemAccent) unawaited(controller.refreshWindowsAccent());
     // Closing the window ends the process without disposing widgets, so the
     // player and unsaved progress are released here first.
@@ -148,6 +167,7 @@ class _LumtubAppState extends State<LumtubApp> {
   @override
   void dispose() {
     _lifecycle.dispose();
+    _clock?.cancel();
     _shell?.dispose();
     widget.controller.dispose();
     super.dispose();
@@ -162,11 +182,11 @@ class _LumtubAppState extends State<LumtubApp> {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: appName,
-            themeMode: appearance.themeMode,
+            themeMode: appearance.themeModeAt(DateTime.now()),
             // Material's own text (tooltips, dialogs) in the language chosen
             // at start.
-            locale: currentLanguage.locale,
-            supportedLocales: [for (final l in AppLanguage.selectable) if (l.locale case final locale?) locale],
+            locale: _materialLocale(currentLanguage.locale),
+            supportedLocales: {for (final l in AppLanguage.selectable) if (_materialLocale(l.locale) case final locale?) locale}.toList(),
             localizationsDelegates: GlobalMaterialLocalizations.delegates,
             theme: _light,
             darkTheme: _dark,
@@ -175,7 +195,7 @@ class _LumtubAppState extends State<LumtubApp> {
             // The font size setting scales on top of Windows' text size.
             builder: (context, child) {
               final media = MediaQuery.of(context);
-              _matchTitleBar(Theme.of(context).colorScheme);
+              _matchTitleBar(Theme.of(context));
               return MediaQuery(
                 data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale), disableAnimations: media.disableAnimations || Motion.reduced),
                 child: child!,
@@ -188,17 +208,25 @@ class _LumtubAppState extends State<LumtubApp> {
       );
 }
 
+/// [locale] where Flutter has its own dialogs, date pickers and tooltips
+/// in it, else English for those; Lumtub's own text still follows the
+/// chosen language.
+Locale? _materialLocale(Locale? locale) =>
+    locale == null || GlobalMaterialLocalizations.delegate.isSupported(locale) ? locale : const Locale('en');
+
 Object? _titleBar;
 
 /// The Windows title bar in the page's own colours, so the window reads as
 /// one surface in light and dark themes.
-void _matchTitleBar(ColorScheme scheme) {
+void _matchTitleBar(ThemeData theme) {
   if (!Platform.isWindows) return;
-  final key = (scheme.surface, scheme.onSurface, scheme.brightness);
+  final scheme = theme.colorScheme;
+  final caption = theme.extension<AppTones>()?.chrome ?? scheme.surface;
+  final key = (caption, scheme.onSurface, scheme.brightness);
   if (key == _titleBar) return;
   _titleBar = key;
   WidgetsBinding.instance.addPostFrameCallback((_) => AppWindow.setTitleBar(
-        caption: scheme.surface.toARGB32(),
+        caption: caption.toARGB32(),
         text: scheme.onSurface.toARGB32(),
         dark: scheme.brightness == Brightness.dark,
       ));

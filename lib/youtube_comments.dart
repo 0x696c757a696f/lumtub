@@ -185,7 +185,7 @@ class YoutubeComments {
   /// The first page of comments under community post [postId].
   Future<CommentPage> post(String postId, {bool newest = false}) async {
     final response = await _client.get(Uri.parse('https://www.youtube.com/post/$postId?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
+    if (response.statusCode != 200) throw StateError(tr('YouTube returned {0}', [response.statusCode]));
     final (token, apiKey, clientVersion, visitorData, detail) = await _readPostInBackground(response.bodyBytes);
     _apiKey = apiKey ?? _apiKey;
     _clientVersion = clientVersion ?? _clientVersion;
@@ -205,7 +205,7 @@ class YoutubeComments {
         logWarn('Post $postId signed in failed: $e');
       }
     }
-    if (token == null) throw FormatException(tr('这个帖子没有评论区，或评论已关闭'));
+    if (token == null) throw FormatException(tr('This post has no comments section, or comments are turned off'));
     final header = await _request('browse', {'continuation': token}, post: true);
     return _sorted(header, 'browse', newest, post: true);
   }
@@ -236,14 +236,14 @@ class YoutubeComments {
           identical(via, web) ? refuseWeb(answer.status, answer.body) : refuse(answer.status, answer.body);
           return _request(endpoint, fallback ?? body, signedOut: true, post: post);
         }
-        if (answer.status != 200) throw StateError(tr('YouTube 返回 {0}', [answer.status]));
+        if (answer.status != 200) throw StateError(tr('YouTube returned {0}', [answer.status]));
         final page = await _readInBackground(answer.body);
         if (page.comments.isNotEmpty || page.continuation != null || page.topToken != null || page.count.isNotEmpty) return page;
         logWarn('The TV app was answered no comments; trying signed out · ${_start(answer.body)}');
       }
     }
     final response = await _post(endpoint, via == null ? fallback ?? body : body);
-    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
+    if (response.statusCode != 200) throw StateError(tr('YouTube returned {0}', [response.statusCode]));
     return _readInBackground(response.bodyBytes);
   }
 
@@ -276,7 +276,7 @@ class YoutubeComments {
             ? await web!.post('comment/perform_comment_action', {'actions': [action]}, ask: true)
             : await via.post('comment/perform_comment_action', {'actions': [action]});
     if (answer == null) {
-      throw StateError(post ? tr('需要先在设置 › YouTube 账号里用浏览器登录（Cookie）') : tr('需要先在设置 › YouTube 账号里用电视码登录'));
+      throw StateError(post ? tr('Sign in with a browser (cookies) in Settings › YouTube account first') : tr('Sign in with a TV code in Settings › YouTube account first'));
     }
     _check(answer, 'a comment action');
   }
@@ -285,16 +285,16 @@ class YoutubeComments {
   /// cookie sign-in.
   Future<void> create(String params, String text) async {
     final answer = webSignedIn ? await web!.post('comment/create_comment', {'commentText': text, 'createCommentParams': params}, ask: true) : null;
-    if (answer == null) throw StateError(tr('需要先在设置 › YouTube 账号里用浏览器登录（Cookie）'));
+    if (answer == null) throw StateError(tr('Sign in with a browser (cookies) in Settings › YouTube account first'));
     _check(answer, 'a new comment');
   }
 
   static void _check(SignedAnswer answer, String what) {
     if (answer.status >= 400 && answer.status < 500) {
       logWarn('YouTube answered ${answer.status} to $what · ${_start(answer.body)}');
-      throw StateError(tr('YouTube 不接受当前登录的这项操作'));
+      throw StateError(tr('YouTube does not accept this action from the current sign-in'));
     }
-    if (answer.status != 200) throw StateError(tr('YouTube 返回 {0}', [answer.status]));
+    if (answer.status != 200) throw StateError(tr('YouTube returned {0}', [answer.status]));
   }
 
   Future<http.Response> _post(String endpoint, Map<String, Object?> body) {

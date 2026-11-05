@@ -111,15 +111,15 @@ List<(String, String)> statsRows(Map<String, String> v) {
   final height = value('video-params/h');
   final hwdec = value('hwdec-current');
   return [
-    (tr('视频'), or(value('video-codec'))),
-    (tr('分辨率'), width.isEmpty || height.isEmpty ? '—' : '${width}x$height'),
-    (tr('解码'), hwdec.isEmpty || hwdec == 'no' ? tr('软件解码') : tr('硬件 {0}', [hwdec])),
-    (tr('帧率'), tr('{0} / 源 {1}', [number('estimated-vf-fps'), number('container-fps', digits: 3)])),
-    (tr('丢帧'), tr('输出 {0} · 解码 {1} · 延迟 {2}', [or(value('frame-drop-count')), or(value('decoder-frame-drop-count')), or(value('vo-delayed-frame-count'))])),
-    (tr('音画偏差'), value('avsync').isEmpty ? '—' : tr('{0} ms · 显示 {1} Hz', [((double.tryParse(value('avsync')) ?? 0) * 1000).round(), number('display-fps', digits: 0)])),
-    (tr('码率'), tr('视频 {0} · 音频 {1}', [kbps('video-bitrate'), kbps('audio-bitrate')])),
-    (tr('音频'), or(value('audio-codec-name'))),
-    (tr('缓冲'), value('demuxer-cache-duration').isEmpty ? '—' : tr('{0} 秒', [number('demuxer-cache-duration', digits: 1)])),
-    (tr('下载速度'), speed(value('cache-speed'))),
+    (tr('Videos'), or(value('video-codec'))),
+    (tr('Resolution'), width.isEmpty || height.isEmpty ? '—' : '${width}x$height'),
+    (tr('Decoding'), hwdec.isEmpty || hwdec == 'no' ? tr('Software decoding') : tr('Hardware {0}', [hwdec])),
+    (tr('Frame rate'), tr('{0} / source {1}', [number('estimated-vf-fps'), number('container-fps', digits: 3)])),
+    (tr('Dropped frames'), tr('Output {0} · Decode {1} · Delay {2}', [or(value('frame-drop-count')), or(value('decoder-frame-drop-count')), or(value('vo-delayed-frame-count'))])),
+    (tr('A/V offset'), value('avsync').isEmpty ? '—' : tr('{0} ms · display {1} Hz', [((double.tryParse(value('avsync')) ?? 0) * 1000).round(), number('display-fps', digits: 0)])),
+    (tr('Bitrate'), tr('Video {0} · Audio {1}', [kbps('video-bitrate'), kbps('audio-bitrate')])),
+    (tr('Audio'), or(value('audio-codec-name'))),
+    (tr('Buffering'), value('demuxer-cache-duration').isEmpty ? '—' : tr('{0} s', [number('demuxer-cache-duration', digits: 1)])),
+    (tr('Download speed'), speed(value('cache-speed'))),
   ];
 }

@@ -71,7 +71,7 @@ class LiveChatListState extends State<LiveChatList> {
             child: FilledButton.tonalIcon(
               onPressed: _toLatest,
               icon: const Icon(AppIcons.caretDown, size: 16),
-              label: Text(waiting > 0 ? tr('{0} 条新消息', [waiting]) : tr('回到最新')),
+              label: Text(waiting > 0 ? tr('{0} new messages', [waiting]) : tr('Back to the latest')),
             ),
           ),
         ),

@@ -29,21 +29,21 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
   static String? get _presenceName => Platform.isWindows
       ? 'Windows Hello'
       : Platform.isMacOS
-          ? tr('Touch ID 或密码')
+          ? tr('Touch ID or password')
           : null;
 
   static String _guard(CookieGuard? guard) => switch (guard) {
-        CookieGuard.presence => tr('用 {0} 保护：每次打开 Lumtub 后第一次用到时验证一次', [_presenceName ?? tr('系统验证')]),
-        CookieGuard.hardware => tr('用这台电脑的 TPM 芯片加密，拷到别处解不开'),
-        CookieGuard.keyring => tr('用系统钥匙串加密保存'),
-        CookieGuard.account => tr('用 Windows 账号加密保存（这台电脑没有可用的 TPM）'),
-        CookieGuard.file => tr('只靠文件权限保护（这台设备没有可用的系统钥匙串）'),
-        null => tr('已加密保存'),
+        CookieGuard.presence => tr('Protected by {0}: confirmed once the first time it is needed after Lumtub starts', [_presenceName ?? tr('system confirmation')]),
+        CookieGuard.hardware => tr("Encrypted with this PC's TPM chip; a copy cannot be opened anywhere else"),
+        CookieGuard.keyring => tr('Kept encrypted in the system keychain'),
+        CookieGuard.account => tr('Encrypted with your Windows account (this PC has no usable TPM)'),
+        CookieGuard.file => tr('Protected only by file permissions (this device has no usable system keychain)'),
+        null => tr('Kept encrypted'),
       };
 
   Future<void> _import() async {
     final file = await openFile(acceptedTypeGroups: [
-      XTypeGroup(label: tr('Cookie 文件'), extensions: const ['txt'])
+      XTypeGroup(label: tr('Cookie file'), extensions: const ['txt'])
     ]);
     if (file == null || !mounted) return;
     var delete = true;
@@ -51,21 +51,21 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(tr('导入 cookies.txt？')),
+          title: Text(tr('Import cookies.txt?')),
           content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(tr('只取 youtube.com 的 Cookie，加密后保存在本机。')),
+            Text(tr('Only the youtube.com cookies are taken and kept encrypted on this device.')),
             const SizedBox(height: 8),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               value: delete,
               onChanged: (value) => setState(() => delete = value ?? true),
-              title: Text(tr('导入后清除并删除这个文件（推荐）')),
-              subtitle: Text(tr('留在磁盘上的 cookies.txt 是明文，谁拿到都能登录你的账号。')),
+              title: Text(tr('Wipe and delete the file after importing (recommended)')),
+              subtitle: Text(tr('A cookies.txt left on disk is plain text: anyone who gets it can use your account.')),
             ),
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('取消'))),
-            FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('导入'))),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
+            FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Import'))),
           ],
         ),
       ),
@@ -86,46 +86,46 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
           ListTile(
             leading: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
             title: Text(sign.reading
-                ? tr('正在读取登录…')
+                ? tr('Reading the sign-in…')
                 : sign.browser == null
-                    ? tr('正在打开浏览器…')
-                    : tr('请在 {0} 窗口里登录 YouTube', [sign.browser!])),
-            subtitle: Text(tr('看到 YouTube 首页后关闭这个浏览器窗口，Lumtub 会自动读取登录。这是一个临时的独立窗口，不会碰你平时浏览器里的数据。')),
+                    ? tr('Opening the browser…')
+                    : tr('Sign in to YouTube in the {0} window', [sign.browser!])),
+            subtitle: Text(tr("Once YouTube's home page shows, close this browser window and Lumtub reads the sign-in. It is a separate temporary window and never touches your usual browser's data.")),
             isThreeLine: true,
-            trailing: sign.browser == null || sign.reading ? null : TextButton(onPressed: sign.cancel, child: Text(tr('取消'))),
+            trailing: sign.browser == null || sign.reading ? null : TextButton(onPressed: sign.cancel, child: Text(tr('Cancel'))),
           )
         else if (sign.signedIn)
           ListTile(
             leading: Icon(AppIcons.lock, color: colors.primary),
-            title: Text(tr('已用浏览器登录')),
-            subtitle: Text('${tr('可以给社区帖子点赞、投票和评论')}\n${_guard(sign.guard)}'),
+            title: Text(tr('Signed in with a browser')),
+            subtitle: Text('${tr('You can like, vote in and comment on community posts')}\n${_guard(sign.guard)}'),
             isThreeLine: true,
-            trailing: OutlinedButton(onPressed: sign.signOut, child: Text(tr('退出'))),
+            trailing: OutlinedButton(onPressed: sign.signOut, child: Text(tr('Exit'))),
           )
         else ...[
           ListTile(
             leading: Icon(AppIcons.globe, color: colors.primary),
-            title: Text(tr('未登录')),
-            subtitle: Text(tr('在一个临时的浏览器窗口里登录。Lumtub 只取 youtube.com 的 Cookie，加密保存后删除这个窗口的全部数据。')),
-            trailing: FilledButton.tonal(onPressed: () => sign.signInWithBrowser(presence: _presence), child: Text(tr('用浏览器登录'))),
+            title: Text(tr('Signed out')),
+            subtitle: Text(tr("Sign in in a temporary browser window. Lumtub takes only the youtube.com cookies, keeps them encrypted, then deletes all of that window's data.")),
+            trailing: FilledButton.tonal(onPressed: () => sign.signInWithBrowser(presence: _presence), child: Text(tr('Sign in with a browser'))),
           ),
           if (presence != null)
             SwitchListTile(
               value: _presence,
               onChanged: (value) => setState(() => _presence = value),
-              title: Text(tr('用 {0} 保护', [presence])),
-              subtitle: Text(tr('每次打开 Lumtub 后第一次用到登录时验证一次。电脑上的其他程序没法悄悄解开 Cookie。')),
+              title: Text(tr('Protect with {0}', [presence])),
+              subtitle: Text(tr('Confirm once the first time the sign-in is needed after Lumtub starts. Other programs on the computer cannot open the cookies unnoticed.')),
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-            child: Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: _import, icon: const Icon(AppIcons.fileText, size: 18), label: Text(tr('改为导入 cookies.txt')))),
+            child: Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: _import, icon: const Icon(AppIcons.fileText, size: 18), label: Text(tr('Import a cookies.txt instead')))),
           ),
         ],
         if (error != null) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: ErrorBanner(error)),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           child: Text(
-            tr('Cookie 等于这个账号的登录状态，建议用一个小号。Cookie 只留在 Lumtub 的原生核心里，界面和日志都拿不到，只发给 youtube.com。在 Google 账号里退出所有设备后它会失效。'),
+            tr("Cookies are the account's signed-in session, so a secondary account is a good idea. They stay in Lumtub's native core, out of reach of the interface and the log, and go only to youtube.com. Signing out of all devices in your Google account ends them."),
             style: widget.note,
           ),
         ),

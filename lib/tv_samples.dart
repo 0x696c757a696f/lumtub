@@ -36,5 +36,5 @@ Future<String> saveTvSamples(SignedInnerTube signIn, Directory logs) async {
     }
   }
   logInfo('TV samples saved: ${results.join(' · ')}');
-  return tr('已保存到 {0}', [folder.path]);
+  return tr('Saved to {0}', [folder.path]);
 }

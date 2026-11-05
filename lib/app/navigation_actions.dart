@@ -351,12 +351,12 @@ extension NavigationActions on AppController {
   /// 不感兴趣: hides [item] and shows less from its channel.
   Future<void> dismissRecommendation(VideoItem item) async {
     await homeFeed?.dismiss(item);
-    _notice(tr('将减少推荐类似内容'));
+    _notice(tr("You'll see fewer recommendations like this"));
   }
 
   Future<void> clearNotInterested() async {
     await homeFeed?.notInterested.clear();
-    _notice(tr('已清空“不感兴趣”记录'));
+    _notice(tr('Cleared "Not interested" history'));
   }
 
   /// Shows the current search's results of another kind.
@@ -367,7 +367,7 @@ extension NavigationActions on AppController {
 
   Future<void> clearSearchHistory() async {
     await searchHistory?.clear();
-    _notice(tr('搜索记录已清空。'));
+    _notice(tr('Search history cleared.'));
   }
 
   /// Forgets the videos with these [ids] from the watch history.
@@ -379,6 +379,6 @@ extension NavigationActions on AppController {
   Future<void> clearHistory() async {
     await _history?.clear();
     _update(() {});
-    _notice(tr('观看历史已清空。'));
+    _notice(tr('Watch history cleared.'));
   }
 }

@@ -17,22 +17,22 @@ class TranslationLanguage {
   static const defaultCode = 'zh-CN';
 
   static const all = [
-    TranslationLanguage('zh-CN', '简体中文', 'zh-Hans'),
-    TranslationLanguage('zh-TW', '繁體中文', 'zh-Hant'),
-    TranslationLanguage('en', '英语'),
-    TranslationLanguage('ja', '日语'),
-    TranslationLanguage('ko', '韩语'),
-    TranslationLanguage('fr', '法语'),
-    TranslationLanguage('de', '德语'),
-    TranslationLanguage('es', '西班牙语'),
-    TranslationLanguage('pt', '葡萄牙语'),
-    TranslationLanguage('ru', '俄语'),
-    TranslationLanguage('it', '意大利语'),
-    TranslationLanguage('vi', '越南语'),
-    TranslationLanguage('th', '泰语'),
-    TranslationLanguage('id', '印尼语'),
-    TranslationLanguage('ar', '阿拉伯语'),
-    TranslationLanguage('hi', '印地语'),
+    TranslationLanguage('zh-CN', 'Simplified Chinese', 'zh-Hans'),
+    TranslationLanguage('zh-TW', 'Traditional Chinese', 'zh-Hant'),
+    TranslationLanguage('en', 'English'),
+    TranslationLanguage('ja', 'Japanese'),
+    TranslationLanguage('ko', 'Korean'),
+    TranslationLanguage('fr', 'French'),
+    TranslationLanguage('de', 'German'),
+    TranslationLanguage('es', 'Spanish'),
+    TranslationLanguage('pt', 'Portuguese'),
+    TranslationLanguage('ru', 'Russian'),
+    TranslationLanguage('it', 'Italian'),
+    TranslationLanguage('vi', 'Vietnamese'),
+    TranslationLanguage('th', 'Thai'),
+    TranslationLanguage('id', 'Indonesian'),
+    TranslationLanguage('ar', 'Arabic'),
+    TranslationLanguage('hi', 'Hindi'),
   ];
 
   /// The language for a saved [code], else simplified Chinese.
@@ -45,12 +45,12 @@ class TranslationLanguage {
 /// How a translation shown under its original looks, as KISS Translator
 /// offers them.
 enum TranslationStyle {
-  quote('引用竖线'),
-  plain('无样式'),
-  highlight('背景高亮'),
-  underline('虚线下划线'),
-  box('虚线框'),
-  blur('模糊（悬停显示）');
+  quote('Quote bar'),
+  plain('Plain'),
+  highlight('Highlighted'),
+  underline('Dashed underline'),
+  box('Dashed box'),
+  blur('Blurred (hover to reveal)');
 
   const TranslationStyle(this._label);
   final String _label;
@@ -103,13 +103,13 @@ class GoogleTranslator implements Translator {
     final uri = Uri.https('translate.googleapis.com', '/translate_a/single', {'client': 'gtx', 'sl': 'auto', 'tl': target, 'dt': 't', 'q': chunk});
     try {
       final response = await _client.get(uri).timeout(const Duration(seconds: 15));
-      if (response.statusCode == 429) throw TranslationException(tr('翻译请求太频繁，请稍后再试'));
-      if (response.statusCode != 200) throw TranslationException(tr('翻译服务暂时不可用（{0}）', [response.statusCode]));
+      if (response.statusCode == 429) throw TranslationException(tr('Too many translation requests. Please try again later.'));
+      if (response.statusCode != 200) throw TranslationException(tr('Translation service temporarily unavailable ({0})', [response.statusCode]));
       return parseResponse(utf8.decode(response.bodyBytes));
     } on TranslationException {
       rethrow;
     } catch (_) {
-      throw TranslationException(tr('无法翻译，请检查网络或代理'));
+      throw TranslationException(tr('Translation failed. Check your network or proxy.'));
     }
   }
 
@@ -123,7 +123,7 @@ class GoogleTranslator implements Translator {
     } on FormatException {
       // Falls through to the error below.
     }
-    throw TranslationException(tr('翻译服务返回了无法识别的内容'));
+    throw TranslationException(tr('Translation service returned unrecognized content'));
   }
 
   /// [text] cut into pieces of at most [max] characters, at line ends and

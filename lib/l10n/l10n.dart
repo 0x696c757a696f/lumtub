@@ -4,10 +4,9 @@ import 'dart:ui' show Locale, PlatformDispatcher;
 import 'package:flutter/services.dart' show AssetBundle, AssetManifest, rootBundle;
 
 /// A language the interface can be shown in. The source strings are
-/// simplified Chinese, each wrapped in a tr call; every other
-/// language is a file in assets/l10n named by its language tag, mapping
-/// each source string to its translation. English (en.json) is the one
-/// translators start from.
+/// English, each wrapped in a tr call; every other language, simplified
+/// Chinese included, is a file in assets/l10n named by its language tag,
+/// mapping each source string to its translation.
 class AppLanguage {
   const AppLanguage(this.tag);
 
@@ -22,7 +21,7 @@ class AppLanguage {
 
   /// The language's own name, the same in every language.
   String get nativeName => _nativeNames[tag] ?? tag;
-  String get label => this == system ? tr('跟随系统') : nativeName;
+  String get label => this == system ? tr('Follow system') : nativeName;
   Locale? get locale => this == system ? null : Locale.fromSubtags(languageCode: tag.split('-').first, scriptCode: _script(tag), countryCode: _country(tag));
   bool get isChinese => tag.startsWith('zh');
 
@@ -34,7 +33,10 @@ class AppLanguage {
     final offered = selectable.where((l) => l != system).toList();
     for (final candidate in [
       locale.toLanguageTag(),
+      if (locale.countryCode != null) '${locale.languageCode}-${locale.countryCode}',
       if (locale.scriptCode != null) '${locale.languageCode}-${locale.scriptCode}',
+      // Windows may call Norwegian no rather than nb.
+      if (locale.languageCode == 'no') 'nb',
       if (locale.languageCode == 'zh' && const {'TW', 'HK', 'MO'}.contains(locale.countryCode)) 'zh-Hant',
       locale.languageCode
     ]) {
@@ -43,8 +45,9 @@ class AppLanguage {
     return locale.languageCode == 'zh' ? zhHans : en;
   }
 
-  /// What can be chosen in settings: the source language, and every
-  /// translation that covers at least [completeEnough] of the strings.
+  /// What can be chosen in settings: simplified Chinese, the source
+  /// language English, and every other translation that covers at least
+  /// [completeEnough] of the strings.
   static List<AppLanguage> get selectable => [system, zhHans, en, for (final tag in _complete) AppLanguage(tag)];
 
   static AppLanguage parse(Object? raw) {
@@ -66,9 +69,8 @@ class AppLanguage {
 /// interface never shows a mix of languages.
 const completeEnough = 0.9;
 
-AppLanguage _current = AppLanguage.zhHans; // source language, until main() calls setLanguage
+AppLanguage _current = AppLanguage.en; // source language, until main() calls setLanguage
 Map<String, String> _strings = const {};
-Map<String, String> _english = const {};
 final _translations = <String, Map<String, String>>{};
 var _complete = <String>[];
 
@@ -80,18 +82,18 @@ Future<void> loadTranslations([AssetBundle? bundle]) async {
   for (final path in manifest.listAssets().where((p) => p.startsWith('assets/l10n/') && p.endsWith('.json'))) {
     // Weblate may name a file zh_Hant as well as zh-Hant.
     final tag = path.substring('assets/l10n/'.length, path.length - '.json'.length).replaceAll('_', '-');
-    // Simplified Chinese is the source text in the code; a file for it is not a translation.
-    if (tag == AppLanguage.zhHans.tag) continue;
     final map = (jsonDecode(await bundle.loadString(path)) as Map<String, dynamic>).map((k, v) => MapEntry(k, v as String));
     _translations[tag] = {
       for (final e in map.entries)
         if (e.value.isNotEmpty) e.key: e.value
     };
   }
-  _english = _translations['en'] ?? const {};
+  // Simplified Chinese translates every string, so its keys stand for the
+  // strings in the code.
+  final source = _translations[AppLanguage.zhHans.tag] ?? const {};
   _complete = [
     for (final MapEntry(:key, :value) in _translations.entries)
-      if (key != 'en' && _english.isNotEmpty && value.keys.where(_english.containsKey).length >= _english.length * completeEnough) key,
+      if (key != AppLanguage.zhHans.tag && key != AppLanguage.en.tag && source.isNotEmpty && value.keys.where(source.containsKey).length >= source.length * completeEnough) key,
   ]..sort();
 }
 
@@ -103,14 +105,14 @@ AppLanguage get currentLanguage => _current;
 
 /// Shows the interface in [language] from now on. Text already on screen
 /// changes after a restart. A string a translation leaves out is shown in
-/// English, or for Chinese in simplified Chinese.
+/// English, or for traditional Chinese in simplified Chinese.
 void setLanguage(AppLanguage language) {
   _current = language.resolved;
   _strings = switch (_current) {
-    AppLanguage.zhHans => const {},
-    AppLanguage.en => _english,
-    final l when l.isChinese => _translations[l.tag] ?? const {},
-    final l => {..._english, ...?_translations[l.tag]},
+    AppLanguage.en => const {},
+    AppLanguage.zhHans => _translations[AppLanguage.zhHans.tag] ?? const {},
+    final l when l.isChinese => {...?_translations[AppLanguage.zhHans.tag], ...?_translations[l.tag]},
+    final l => _translations[l.tag] ?? const {},
   };
 }
 
@@ -119,6 +121,9 @@ void setLanguage(AppLanguage language) {
 String get youtubeHl => switch (_current.tag) {
       'zh-Hans' => 'zh-CN',
       'zh-Hant' => 'zh-TW',
+      'he' => 'iw',
+      // Languages YouTube itself is not offered in.
+      'eo' || 'la' || 'tk' || 'ti' => 'en',
       final tag => tag,
     };
 
@@ -129,12 +134,12 @@ String get youtubeAcceptLanguage => switch (_current.tag) {
       final tag => '$tag,${tag.split('-').first};q=0.9,en;q=0.8',
     };
 
-/// [zh] in the current language, with `{0}`, `{1}`… replaced by [args].
-/// Text with no translation stays as written.
-String tr(String zh, [List<Object?> args = const []]) => _fill(_strings[zh] ?? zh, args);
+/// [text] in the current language, with `{0}`, `{1}`… replaced by [args].
+/// Text with no translation stays as written, in English.
+String tr(String text, [List<Object?> args = const []]) => _fill(_strings[text] ?? text, args);
 
-/// [zh] in English whatever the interface language, for the log.
-String trLog(String zh, [List<Object?> args = const []]) => _fill(_english[zh] ?? zh, args);
+/// [text] in English whatever the interface language, for the log.
+String trLog(String text, [List<Object?> args = const []]) => _fill(text, args);
 
 String _fill(String text, List<Object?> args) {
   if (args.isEmpty) return text;
@@ -155,6 +160,7 @@ const _nativeNames = {
   'zh-Hant': '繁體中文',
   'en': 'English',
   'ar': 'العربية',
+  'bn': 'বাংলা',
   'cs': 'Čeština',
   'da': 'Dansk',
   'de': 'Deutsch',
@@ -183,4 +189,45 @@ const _nativeNames = {
   'tr': 'Türkçe',
   'uk': 'Українська',
   'vi': 'Tiếng Việt',
+  'ti': 'ትግርኛ',
+  'tk': 'Türkmençe',
+  'ur': 'اردو',
+  'my': 'မြန်မာ',
+  'eo': 'Esperanto',
+  'la': 'Latina',
+  'zh-HK': '中文（香港）',
+  'af': 'Afrikaans',
+  'sq': 'Shqip',
+  'am': 'አማርኛ',
+  'hy': 'Հայերեն',
+  'az': 'Azərbaycan',
+  'eu': 'Euskara',
+  'be': 'Беларуская',
+  'bg': 'Български',
+  'km': 'ខ្មែរ',
+  'et': 'Eesti',
+  'fil': 'Filipino',
+  'gl': 'Galego',
+  'ka': 'ქართული',
+  'gu': 'ગુજરાતી',
+  'is': 'Íslenska',
+  'jv': 'Basa Jawa',
+  'kn': 'ಕನ್ನಡ',
+  'lo': 'ລາວ',
+  'lv': 'Latviešu',
+  'lt': 'Lietuvių',
+  'mk': 'Македонски',
+  'ml': 'മലയാളം',
+  'mr': 'मराठी',
+  'mn': 'Монгол',
+  'ne': 'नेपाली',
+  'pa': 'ਪੰਜਾਬੀ',
+  'si': 'සිංහල',
+  'sk': 'Slovenčina',
+  'su': 'Basa Sunda',
+  'sw': 'Kiswahili',
+  'ta': 'தமிழ்',
+  'te': 'తెలుగు',
+  'uz': 'Oʻzbek',
+  'zu': 'isiZulu',
 };

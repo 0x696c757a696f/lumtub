@@ -3,8 +3,9 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 
-/// Whether Windows runs on battery or with battery saver on, when Lumtub
-/// does less in the background and draws the picture the cheap way.
+/// Whether the computer runs on battery (or, on Windows, with battery saver
+/// on), when Lumtub does less in the background and draws the picture the
+/// cheap way.
 abstract final class Power {
   static final _getSystemPowerStatus = Platform.isWindows
       ? DynamicLibrary.open('kernel32.dll').lookupFunction<Int32 Function(Pointer<Uint8>), int Function(Pointer<Uint8>)>('GetSystemPowerStatus')
@@ -22,6 +23,8 @@ abstract final class Power {
   }
 
   static bool _read() {
+    if (Platform.isLinux) return _readLinux();
+    if (Platform.isMacOS) return _readMac();
     final call = _getSystemPowerStatus;
     if (call == null) return false;
     // SYSTEM_POWER_STATUS: ACLineStatus, BatteryFlag, BatteryLifePercent,
@@ -37,4 +40,36 @@ abstract final class Power {
 
   /// On battery (AC line 0) or with battery saver on (system status 1).
   static bool savingOf({required int acLine, required int systemStatus}) => acLine == 0 || systemStatus == 1;
+
+  /// Linux: a battery discharging, read from /sys/class/power_supply.
+  static bool _readLinux() {
+    try {
+      final supplies = Directory('/sys/class/power_supply').listSync();
+      return supplies.any((supply) => linuxSupplySaving(_readOr('${supply.path}/type'), _readOr('${supply.path}/status'), _readOr('${supply.path}/scope')));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// A system battery (not a mouse's or a phone's) that is discharging.
+  static bool linuxSupplySaving(String type, String status, String scope) =>
+      type.trim() == 'Battery' && status.trim() == 'Discharging' && scope.trim() != 'Device';
+
+  static String _readOr(String path) {
+    try {
+      return File(path).readAsStringSync();
+    } catch (_) {
+      return '';
+    }
+  }
+
+  /// macOS: pmset says where the power comes from.
+  static bool _readMac() {
+    try {
+      final result = Process.runSync('pmset', ['-g', 'batt']);
+      return result.exitCode == 0 && result.stdout.toString().contains("'Battery Power'");
+    } catch (_) {
+      return false;
+    }
+  }
 }

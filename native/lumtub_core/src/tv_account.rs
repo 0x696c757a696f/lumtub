@@ -496,7 +496,8 @@ pub unsafe extern "C" fn lumtub_tv_innertube(port: i64, json: *const u8, length:
 }
 
 /// The credential on disk: `{"refresh_token": …}` as JSON, encrypted with
-/// Windows DPAPI for the current user, the same way the Google sign-in is.
+/// Windows DPAPI for the current user, the same way the Google sign-in is;
+/// elsewhere sealed by the vault. Readable by the user alone.
 mod store {
     use std::path::Path;
 
@@ -518,10 +519,8 @@ mod store {
 
     pub fn save(file: &Path, credential: &Credential) -> Result<(), String> {
         let data = serde_json::to_vec(&json!({"refresh_token": credential.refresh, "client_id": credential.client_id, "client_secret": credential.client_secret})).map_err(|e| e.to_string())?;
-        let sealed = protect::protect(&data).ok_or("Windows could not encrypt the sign-in")?;
-        let temporary = file.with_extension("bin.tmp");
-        std::fs::write(&temporary, sealed).map_err(|e| e.to_string())?;
-        std::fs::rename(&temporary, file).map_err(|e| e.to_string())
+        let sealed = protect::protect(&data).ok_or("the system could not encrypt the sign-in")?;
+        crate::vault::write_private(file, &sealed).map_err(|e| e.to_string())
     }
 
     #[cfg(windows)]
@@ -563,15 +562,23 @@ mod store {
         }
     }
 
-    // Elsewhere only tests run; the file is kept as it is.
+    /// Elsewhere sealed like the other account files, with the key the
+    /// keychain or Secret Service keeps.
     #[cfg(not(windows))]
     mod protect {
+        use crate::vault::{Sealer, open};
+
         pub fn protect(data: &[u8]) -> Option<Vec<u8>> {
-            Some(data.to_vec())
+            Sealer::new(false, "Lumtub").seal(data)
         }
 
         pub fn unprotect(data: &[u8]) -> Option<Vec<u8>> {
-            Some(data.to_vec())
+            match open(data, "Lumtub") {
+                Ok((plain, _)) => Some(plain.to_vec()),
+                // Saved unsealed by an earlier build; sealed when next saved.
+                Err(_) if data.first() == Some(&b'{') => Some(data.to_vec()),
+                Err(_) => None,
+            }
         }
     }
 }

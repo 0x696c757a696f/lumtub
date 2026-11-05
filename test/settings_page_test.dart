@@ -29,44 +29,46 @@ void main() {
     }
     await tester.tap(find.text(SettingsCategory.video.title));
     await tester.pump();
-    expect(find.text('默认画质'), findsOneWidget);
-    expect(find.text('开启硬解'), findsOneWidget);
+    expect(find.text('Default quality'), findsOneWidget);
+    expect(find.text('Enable hardware decoding'), findsOneWidget);
     expect(find.byType(Switch), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('narrow windows open a group on its own page', (tester) async {
     await pump(tester, width: 600);
-    expect(find.text('默认画质'), findsNothing);
+    expect(find.text('Default quality'), findsNothing);
     await tester.tap(find.text(SettingsCategory.play.title));
     await tester.pumpAndSettle();
     expect(find.widgetWithText(AppBar, SettingsCategory.play.title), findsOneWidget);
-    expect(find.text('播放顺序'), findsOneWidget);
+    expect(find.text('Playback order'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('search finds rows across groups', (tester) async {
     await pump(tester);
-    await tester.enterText(find.byType(TextField).first, '硬解');
+    await tester.enterText(find.byType(TextField).first, 'hardware decod');
     await tester.pump();
-    expect(find.text('开启硬解'), findsOneWidget);
-    expect(find.text('硬解模式'), findsOneWidget);
-    expect(find.text('自动连播'), findsNothing);
+    expect(find.text('Enable hardware decoding'), findsOneWidget);
+    expect(find.text('Hardware decoding mode'), findsOneWidget);
+    expect(find.text('Autoplay next'), findsNothing);
     await tester.enterText(find.byType(TextField).first, '没有这种设置');
     await tester.pump();
-    expect(find.text('没有找到相关设置'), findsOneWidget);
+    expect(find.text('No matching settings'), findsOneWidget);
   });
 
   testWidgets('the theme mode menu changes the theme mode', (tester) async {
     await pump(tester);
     await tester.tap(find.text(SettingsCategory.style.title));
     await tester.pump();
-    await tester.tap(find.text('主题模式'));
+    await tester.tap(find.text('Theme mode'));
     await tester.pumpAndSettle();
     // The menu item's text sits under its ink; the tap still lands on the item.
-    await tester.tap(find.text('深色'), warnIfMissed: false);
+    await tester.tap(find.text('Dark'), warnIfMissed: false);
     await tester.pumpAndSettle();
     expect(controller.appearance.themeMode, ThemeMode.dark);
+    // Settings are written a moment after the last change.
+    await tester.pump(const Duration(seconds: 1));
   });
 
   Future<void> openRow(WidgetTester tester, SettingsCategory category, String row) async {
@@ -80,13 +82,13 @@ void main() {
   testWidgets('sub-pages open from their rows', (tester) async {
     await pump(tester);
     for (final (category, row, title, content) in [
-      (SettingsCategory.play, '倍速设置', '倍速设置', '倍速列表'),
-      (SettingsCategory.play, '字幕设置', '字幕设置', '第一字幕语言'),
-      (SettingsCategory.extra, '翻译与 AI', '翻译与 AI', 'Google 翻译（免费）'),
-      (SettingsCategory.style, '应用主题', '选择应用主题', '调色板风格'),
-      (SettingsCategory.style, 'App 字体设置', 'App 字体设置', '微软雅黑'),
-      (SettingsCategory.extra, '组件管理', '组件管理', '正在准备组件…'),
-      (SettingsCategory.about, '错误日志', '日志', '暂无日志'),
+      (SettingsCategory.play, 'Speed settings', 'Speed settings', 'Speed list'),
+      (SettingsCategory.play, 'Subtitle settings', 'Subtitle settings', 'First subtitle language'),
+      (SettingsCategory.extra, 'Translation & AI', 'Translation & AI', 'Google Translate (free)'),
+      (SettingsCategory.style, 'App theme', 'Choose app theme', 'Palette style'),
+      (SettingsCategory.style, 'App font', 'App font', 'Microsoft YaHei'),
+      (SettingsCategory.extra, 'Components', 'Components', 'Preparing components…'),
+      (SettingsCategory.about, 'Error log', 'Logs', 'No logs yet'),
     ]) {
       await openRow(tester, category, row);
       expect(find.widgetWithText(AppBar, title), findsOneWidget, reason: row);
@@ -99,42 +101,43 @@ void main() {
 
   testWidgets('a theme preset sets the colour and palette style in one tap', (tester) async {
     await pump(tester);
-    await openRow(tester, SettingsCategory.style, '应用主题');
-    expect(find.text('经典红'), findsOneWidget);
-    await tester.tap(find.text('森林绿'));
+    await openRow(tester, SettingsCategory.style, 'App theme');
+    expect(find.text('Classic red'), findsOneWidget);
+    await tester.tap(find.text('Forest green'));
     await tester.pumpAndSettle();
     final appearance = controller.appearance;
     expect((appearance.accentIndex, appearance.customAccent, appearance.pureBlack), (-1, 0xFF2E7D32, false));
-    await tester.scrollUntilVisible(find.text('OLED 纯黑'), 60, scrollable: find.byType(Scrollable).last);
-    await tester.tap(find.text('OLED 纯黑'));
+    await tester.scrollUntilVisible(find.text('OLED black'), 60, scrollable: find.byType(Scrollable).last);
+    await tester.tap(find.text('OLED black'));
     await tester.pumpAndSettle();
     expect(controller.appearance.pureBlack, isTrue);
+    await tester.pump(const Duration(seconds: 1));
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('the SponsorBlock row opens its categories and keeps its switch', (tester) async {
     await pump(tester);
-    await openRow(tester, SettingsCategory.extra, '空降助手');
-    expect(find.text('跳过的片段类型'), findsOneWidget);
+    await openRow(tester, SettingsCategory.extra, 'SponsorBlock');
+    expect(find.text('Segment types to skip'), findsOneWidget);
     expect(find.byType(CheckboxListTile), findsNWidgets(8));
   });
 
   testWidgets('blocked channels can be removed', (tester) async {
     await controller.savePreferences(controller.preferences.copyWith(blockedChannels: const [ChannelRef('UC0123456789abcdefghijkl', '测试频道')]));
     await pump(tester);
-    await openRow(tester, SettingsCategory.privacy, '屏蔽频道');
+    await openRow(tester, SettingsCategory.privacy, 'Blocked channels');
     expect(find.text('测试频道'), findsOneWidget);
-    await tester.tap(find.text('移除'));
+    await tester.tap(find.text('Remove'));
     await tester.pumpAndSettle();
     expect(controller.preferences.blockedChannels, isEmpty);
-    expect(find.textContaining('还没有屏蔽任何频道'), findsOneWidget);
+    expect(find.textContaining('No channels blocked yet'), findsOneWidget);
   });
 
   testWidgets('account and about sit at the bottom without a subtitle', (tester) async {
     await pump(tester);
     expect(find.text(SettingsCategory.video.subtitle), findsOneWidget);
     expect(find.text(SettingsCategory.about.subtitle), findsNothing);
-    expect(find.text('退出登录'), findsNothing);
+    expect(find.text('Sign out'), findsNothing);
   });
 
   testWidgets('block lists open to their entries, each tickable', (tester) async {
@@ -147,19 +150,19 @@ void main() {
     ));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.text('法轮功相关（待核实）'), findsOneWidget);
-    await tester.tap(find.text('法轮功相关自媒体'));
+    expect(find.text('Falun Gong-linked (unproven)'), findsOneWidget);
+    await tester.tap(find.text('Falun Gong-linked hosts and shows'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('频道名 · '), findsOneWidget);
+    expect(find.textContaining('Channel names · '), findsOneWidget);
     await tester.tap(find.widgetWithText(CheckboxListTile, '文昭谈古论今'));
     await tester.pump();
     expect(controller.preferences.allowedEntries.single, endsWith('/channel/文昭谈古论今'));
     expect(controller.preferences.blocksChannel('文昭談古論今'), isFalse);
     expect(controller.preferences.blocksChannel('江峰时刻'), isTrue);
-    await tester.tap(find.text('全不选'));
+    await tester.tap(find.text('Untick all'));
     await tester.pump();
     expect(controller.preferences.blocksChannel('江峰时刻'), isFalse);
-    await tester.tap(find.text('全选'));
+    await tester.tap(find.text('Tick all'));
     await tester.pump();
     expect(controller.preferences.allowedEntries, isEmpty);
     expect(tester.takeException(), isNull);

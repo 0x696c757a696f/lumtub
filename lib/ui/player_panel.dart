@@ -10,7 +10,7 @@ Future<void> showPlayerPanel(BuildContext context, {required String title, List<
       context: context,
       useRootNavigator: true,
       barrierDismissible: true,
-      barrierLabel: tr('关闭'),
+      barrierLabel: tr('Close'),
       barrierColor: Colors.black26,
       transitionDuration: Motion.of(Ease.fade),
       pageBuilder: (context, animation, secondary) => _Panel(title: title, actions: actions, width: width, builder: builder),
@@ -34,9 +34,9 @@ class _Panel extends StatelessWidget {
     return Align(
       alignment: Alignment.centerRight,
       child: Material(
-        elevation: 8,
-        color: theme.colorScheme.surfaceContainerHigh,
-        borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+        elevation: 2,
+        color: theme.colorScheme.surface,
+        shape: Border(left: BorderSide(color: theme.colorScheme.outlineVariant)),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
           width: width.clamp(0, size.width - 24).toDouble(),
@@ -48,7 +48,7 @@ class _Panel extends StatelessWidget {
                 child: Row(children: [
                   Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
                   ...actions,
-                  IconButton(tooltip: tr('关闭'), onPressed: () => Navigator.of(context).pop(), icon: const Icon(AppIcons.x)),
+                  IconButton(tooltip: tr('Close'), onPressed: () => Navigator.of(context).pop(), icon: const Icon(AppIcons.x)),
                 ]),
               ),
               Expanded(child: builder(context)),
@@ -100,7 +100,7 @@ class _PanelChoicesState<T> extends State<PanelChoices<T>> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           if (widget.icon != null) ...[Icon(widget.icon, size: 18, color: theme.colorScheme.onSurfaceVariant), const SizedBox(width: 8)],
-          Text(widget.label, style: theme.textTheme.bodyMedium),
+          Flexible(child: Text(widget.label, style: theme.textTheme.bodyMedium)),
         ]),
         const SizedBox(height: 4),
         Wrap(spacing: 6, runSpacing: 6, children: [
@@ -117,7 +117,7 @@ class _PanelChoicesState<T> extends State<PanelChoices<T>> {
           if (widget.collapsed && widget.values.length > 1)
             ActionChip(
               avatar: Icon(_open ? AppIcons.caretUp : AppIcons.caretDown, size: 18),
-              label: Text(_open ? tr('收起') : tr('全部 {0} 个', [widget.values.length])),
+              label: Text(_open ? tr('Collapse') : tr('Show all {0}', [widget.values.length])),
               visualDensity: VisualDensity.compact,
               onPressed: () => setState(() => _open = !_open),
             ),
@@ -142,10 +142,10 @@ class PanelToggle extends StatelessWidget {
     return SizedBox(
       width: 116,
       child: Material(
-        color: value ? colors.primaryContainer : colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
+        color: value ? colors.primaryContainer : Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: value ? colors.primary : colors.outlineVariant)),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           onTap: () => onChanged(!value),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),

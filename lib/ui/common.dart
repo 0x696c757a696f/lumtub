@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import 'theme.dart';
 import '../l10n/l10n.dart';
+import '../system_env.dart';
 import 'app_icons.dart';
 
 export '../models.dart' show formatBytes;
@@ -88,7 +89,7 @@ class ErrorBanner extends StatelessWidget {
         Icon(AppIcons.warningCircle, color: colors.onErrorContainer, size: 20),
         const SizedBox(width: 12),
         Expanded(child: Text(message, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onErrorContainer))),
-        if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('重试'))),
+        if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('Retry'))),
       ]),
     );
   }
@@ -133,7 +134,7 @@ String formatPlaybackTime(Duration value) {
   return hours > 0 ? '$hours:$minutes:$seconds' : '${value.inMinutes}:$seconds';
 }
 
-String formatDate(DateTime date) => tr('{0}年{1}月{2}日', [date.year, date.month, date.day]);
+String formatDate(DateTime date) => tr('{1}/{2}/{0}', [date.year, date.month, date.day]);
 
 /// An exact local start time for an upcoming stream.
 String formatScheduledStart(DateTime date) {
@@ -145,7 +146,8 @@ String formatScheduledStart(DateTime date) {
 /// Opens a web link in the default browser.
 Future<void> openExternal(String url) async {
   final uri = Uri.tryParse(url);
-  if (!Platform.isWindows || uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) return;
+  if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) return;
+  if (!Platform.isWindows) return openWithDesktop(uri.toString());
   // rundll32 passes the whole address on; explorer.exe can drop everything
   // after the first '&'.
   await Process.start('rundll32.exe', ['url.dll,FileProtocolHandler', uri.toString()]);
@@ -178,11 +180,22 @@ class OptionChip<T> extends StatelessWidget {
             ),
         ],
         builder: (context, menu, _) => FilterChip(
-          avatar: Icon(icon, size: 18),
-          label: Row(mainAxisSize: MainAxisSize.min, children: [Text(label(value)), const Icon(AppIcons.caretDown, size: 18)]),
+          avatar: Icon(icon, size: 18, color: chipForeground(context, changed)),
+          label: Row(mainAxisSize: MainAxisSize.min, children: [Text(label(value)), Icon(AppIcons.caretDown, size: 18, color: chipForeground(context, changed))]),
           selected: changed,
           showCheckmark: false,
           onSelected: (_) => menu.isOpen ? menu.close() : menu.open(),
         ),
       );
 }
+
+/// The colour of an icon on a chip: the page colour on a selected chip,
+/// which is filled with the text colour.
+Color chipForeground(BuildContext context, bool selected) {
+  final scheme = Theme.of(context).colorScheme;
+  return selected ? scheme.surface : scheme.onSurface;
+}
+
+/// [text] naming keys as this system's keyboard does: ⌘ and ⌥ on a Mac for
+/// Ctrl and Alt.
+String keyNames(String text) => Platform.isMacOS ? text.replaceAll('Ctrl + ', '⌘ + ').replaceAll('Ctrl+', '⌘').replaceAll('Alt + ', '⌥ + ').replaceAll('Alt+', '⌥') : text;

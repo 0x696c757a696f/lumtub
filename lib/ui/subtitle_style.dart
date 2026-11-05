@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
@@ -5,21 +7,52 @@ import '../player_settings.dart';
 import '../widgets/pilinara_settings_tiles.dart';
 import 'pages/watch_page.dart' show subtitleViewFor;
 
-/// Font families Windows installs, offered before a typed name.
-const subtitleFonts = [
-  ('', '默认'),
-  ('Microsoft YaHei', '微软雅黑'),
-  ('DengXian', '等线'),
-  ('SimHei', '黑体'),
-  ('SimSun', '宋体'),
-  ('KaiTi', '楷体'),
-  ('Microsoft JhengHei', '微軟正黑體'),
-  ('Segoe UI', 'Segoe UI'),
-  ('Arial', 'Arial'),
-  ('Verdana', 'Verdana'),
-  ('Georgia', 'Georgia'),
-  ('Yu Gothic', 'Yu Gothic'),
-  ('Malgun Gothic', 'Malgun Gothic'),
+/// Font families this system installs, offered before a typed name, each
+/// with the name to translate, or null for one shown as it is written.
+List<(String, String?)> get subtitleFonts => Platform.isMacOS ? _macFonts : Platform.isLinux ? _linuxFonts : _windowsFonts;
+
+const _macFonts = [
+  ('', 'Default'),
+  ('PingFang SC', 'PingFang'),
+  ('Hiragino Sans GB', 'Hiragino Sans GB'),
+  ('Songti SC', 'SimSun'),
+  ('Kaiti SC', 'KaiTi'),
+  ('PingFang TC', 'PingFang (Traditional)'),
+  ('Helvetica Neue', null),
+  ('Arial', null),
+  ('Verdana', null),
+  ('Georgia', null),
+  ('Hiragino Sans', null),
+  ('Apple SD Gothic Neo', null),
+];
+
+const _linuxFonts = [
+  ('', 'Default'),
+  ('Noto Sans CJK SC', null),
+  ('Noto Serif CJK SC', null),
+  ('WenQuanYi Micro Hei', 'WenQuanYi Micro Hei'),
+  ('Noto Sans CJK TC', null),
+  ('Noto Sans', null),
+  ('DejaVu Sans', null),
+  ('Liberation Sans', null),
+  ('Noto Sans CJK JP', null),
+  ('Noto Sans CJK KR', null),
+];
+
+const _windowsFonts = [
+  ('', 'Default'),
+  ('Microsoft YaHei', 'Microsoft YaHei'),
+  ('DengXian', 'DengXian'),
+  ('SimHei', 'Sans-serif (Hei)'),
+  ('SimSun', 'SimSun'),
+  ('KaiTi', 'KaiTi'),
+  ('Microsoft JhengHei', 'Microsoft JhengHei'),
+  ('Segoe UI', null),
+  ('Arial', null),
+  ('Verdana', null),
+  ('Georgia', null),
+  ('Yu Gothic', null),
+  ('Malgun Gothic', null),
 ];
 
 const subtitleColors = [
@@ -29,7 +62,7 @@ const subtitleColors = [
 
 String subtitleFontLabel(String font) {
   for (final (name, label) in subtitleFonts) {
-    if (name == font) return tr(label);
+    if (name == font) return label == null ? name : tr(label);
   }
   return font;
 }
@@ -43,11 +76,11 @@ Future<void> pickSubtitleFont(BuildContext context, String current, ValueChanged
   final chosen = await showDialog<String>(
     context: context,
     builder: (context) => SelectDialog<String>(
-      title: tr('字体'),
+      title: tr('Font'),
       value: known ? current : custom,
       values: [
-        for (final (name, label) in subtitleFonts) (name, tr(label)),
-        (custom, known ? tr('其它字体…') : tr('其它字体：{0}', [current])),
+        for (final (name, label) in subtitleFonts) (name, label == null ? name : tr(label)),
+        (custom, known ? tr('Other font…') : tr('Other font: {0}', [current])),
       ],
     ),
   );
@@ -59,11 +92,11 @@ Future<void> pickSubtitleFont(BuildContext context, String current, ValueChanged
   final typed = await showDialog<String>(
     context: context,
     builder: (context) => TextEditDialog(
-      title: tr('其它字体'),
+      title: tr('Other font'),
       initialText: known ? '' : current,
-      hintText: tr('已安装的字体名，如 Noto Sans SC'),
+      hintText: tr('Name of an installed font, such as Noto Sans SC'),
       helper: (text) => Text(
-        text.trim().isNotEmpty && PlayerSettings.cleanFont(text).isEmpty ? tr('字体名不能包含逗号、分号或引号') : tr('Windows 没有这个字体时使用默认字体'),
+        text.trim().isNotEmpty && PlayerSettings.cleanFont(text).isEmpty ? tr('A font name cannot contain commas, semicolons or quotes') : tr('The default font is used when Windows does not have this one'),
         style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.outline),
       ),
     ),
@@ -105,7 +138,7 @@ class _ColorDialogState extends State<_ColorDialog> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return AlertDialog(
-      title: Text(tr('颜色')),
+      title: Text(tr('Color')),
       content: SizedBox(
         width: 300,
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -136,7 +169,7 @@ class _ColorDialogState extends State<_ColorDialog> {
             controller: _text,
             decoration: InputDecoration(
               isDense: true,
-              labelText: tr('自定义颜色'),
+              labelText: tr('Custom color'),
               hintText: '#RRGGBB',
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(8),
@@ -152,8 +185,8 @@ class _ColorDialogState extends State<_ColorDialog> {
         ]),
       ),
       actions: [
-        TextButton(onPressed: Navigator.of(context).pop, child: Text(tr('取消'), style: TextStyle(color: colors.outline))),
-        TextButton(onPressed: () => Navigator.pop(context, _color), child: Text(tr('确定'))),
+        TextButton(onPressed: Navigator.of(context).pop, child: Text(tr('Cancel'), style: TextStyle(color: colors.outline))),
+        TextButton(onPressed: () => Navigator.pop(context, _color), child: Text(tr('OK'))),
       ],
     );
   }
@@ -176,13 +209,13 @@ class SubtitlePreview extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       alignment: Alignment.bottomCenter,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF37474F), Color(0xFF101418)]),
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text(tr('第二字幕在这里显示'), textAlign: TextAlign.center, style: shrink(view.secondaryStyle ?? view.style)),
+        Text(tr('The second subtitle shows here'), textAlign: TextAlign.center, style: shrink(view.secondaryStyle ?? view.style)),
         const SizedBox(height: 2),
-        Text(tr('第一字幕在这里显示'), textAlign: TextAlign.center, style: shrink(view.style)),
+        Text(tr('The first subtitle shows here'), textAlign: TextAlign.center, style: shrink(view.style)),
       ]),
     );
   }
@@ -191,7 +224,7 @@ class SubtitlePreview extends StatelessWidget {
 /// Opacity as a percentage slider.
 Future<void> pickSubtitleOpacity(BuildContext context, double current, ValueChanged<double> onSelected) => pickWithSlider(
       context,
-      title: tr('不透明度'),
+      title: tr('Opacity'),
       value: (current * 100).roundToDouble(),
       min: 10,
       max: 100,

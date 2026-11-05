@@ -314,6 +314,15 @@ fn continuation(item: &Value) -> Option<String> {
 pub struct Page {
     pub entries: Vec<Value>,
     pub continuation: Option<String>,
+    /// Browse requests (`browseId`, `params`) for the whole of each row a
+    /// channel tab shows only the start of.
+    pub shelves: Vec<Value>,
+}
+
+fn json_shelf(endpoint: &Value) -> Option<Value> {
+    let id = endpoint.get("browseId")?.as_str()?;
+    let params = endpoint.get("params")?.as_str()?;
+    Some(serde_json::json!({"browseId": id, "params": params}))
 }
 
 fn contents(list: &[Value], page: &mut Page) {
@@ -327,10 +336,15 @@ fn contents(list: &[Value], page: &mut Page) {
         } else if let Some(section) = content.get("itemSectionRenderer").or_else(|| content.get("richSectionRenderer").and_then(|s| s.get("content"))) {
             for item in section.get("contents").and_then(Value::as_array).into_iter().flatten().filter(|v| v.is_object()) {
                 if let Some(grid) = item.get("gridRenderer").or_else(|| item.get("reelShelfRenderer")) {
-                    page.entries.extend(grid.get("items").and_then(Value::as_array).into_iter().flatten().filter_map(basic));
+                    contents(grid.get("items").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default(), page);
                 } else if let Some(shelf) = item.get("shelfRenderer") {
-                    let inner = at(shelf, &["content", "verticalListRenderer", "items"]).or_else(|| at(shelf, &["content", "expandedShelfContentsRenderer", "items"])).or_else(|| at(shelf, &["content", "gridRenderer", "items"]));
+                    let inner = ["verticalListRenderer", "expandedShelfContentsRenderer", "gridRenderer", "horizontalListRenderer"].iter().find_map(|k| at(shelf, &["content", k, "items"]));
                     page.entries.extend(inner.and_then(Value::as_array).into_iter().flatten().filter_map(basic));
+                    // A row shows only its first items; its title links to
+                    // the whole list.
+                    if let Some(endpoint) = at(shelf, &["endpoint", "browseEndpoint"]).filter(|e| e.get("params").and_then(Value::as_str).is_some_and(|p| !p.is_empty())) {
+                        page.shelves.extend(json_shelf(endpoint));
+                    }
                 } else if let Some(grid) = item.get("richGridRenderer").or_else(|| item.get("playlistVideoListRenderer")) {
                     contents(grid.get("contents").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default(), page);
                 } else if let Some(entry) = basic(item) {
@@ -341,6 +355,9 @@ fn contents(list: &[Value], page: &mut Page) {
             }
         } else if let Some(grid) = content.get("richGridRenderer") {
             contents(grid.get("contents").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default(), page);
+        } else if let Some(entry) = basic(content) {
+            // Grid items, and the grid's continuation pages.
+            page.entries.push(entry);
         }
     }
 }
@@ -508,6 +525,41 @@ mod tests {
         let next = page(&more);
         assert_eq!(next.entries.len(), 1);
         assert_eq!(next.continuation, None);
+    }
+
+    #[test]
+    fn reads_playlist_rows_and_links_to_each_whole_row() {
+        let tab = json!({"contents": {"twoColumnBrowseResultsRenderer": {"tabs": [{"tabRenderer": {"selected": true, "content": {"sectionListRenderer": {"contents": [
+            {"itemSectionRenderer": {"contents": [{"shelfRenderer": {
+                "endpoint": {"browseEndpoint": {"browseId": "UCxxxxxxxxxxxxxxxxxxxxxx", "params": "SHELF"}},
+                "content": {"horizontalListRenderer": {"items": [
+                    {"lockupViewModel": {"contentId": "PLrowrowrow1", "contentType": "LOCKUP_CONTENT_TYPE_PLAYLIST", "metadata": {"lockupMetadataViewModel": {"title": {"content": "Genesis"}}}}},
+                    {"gridPlaylistRenderer": {"playlistId": "PLrowrowrow2", "title": {"simpleText": "Exodus"}}}
+                ]}}
+            }}]}},
+            {"itemSectionRenderer": {"contents": [{"shelfRenderer": {"content": {"horizontalListRenderer": {"items": [
+                {"lockupViewModel": {"contentId": "PLrowrowrow3", "contentType": "LOCKUP_CONTENT_TYPE_PLAYLIST"}}
+            ]}}}}]}}
+        ]}}}}]}}});
+        let read = page(&tab);
+        let ids: Vec<&str> = read.entries.iter().filter_map(|e| e["id"].as_str()).collect();
+        assert_eq!(ids, ["PLrowrowrow1", "PLrowrowrow2", "PLrowrowrow3"]);
+        assert_eq!(read.entries[0]["title"], "Genesis");
+        assert_eq!(read.shelves, [json!({"browseId": "UCxxxxxxxxxxxxxxxxxxxxxx", "params": "SHELF"})]);
+
+        let grid = json!({"contents": {"twoColumnBrowseResultsRenderer": {"tabs": [{"tabRenderer": {"selected": true, "content": {"sectionListRenderer": {"contents": [
+            {"itemSectionRenderer": {"contents": [{"gridRenderer": {"items": [
+                {"lockupViewModel": {"contentId": "PLgridgrid01", "contentType": "LOCKUP_CONTENT_TYPE_PLAYLIST"}},
+                {"continuationItemRenderer": {"continuationEndpoint": {"continuationCommand": {"token": "GRID"}}}}
+            ]}}]}}
+        ]}}}}]}}});
+        let first = page(&grid);
+        assert_eq!(first.entries[0]["id"], "PLgridgrid01");
+        assert_eq!(first.continuation.as_deref(), Some("GRID"));
+        let more = page(&json!({"onResponseReceivedActions": [{"appendContinuationItemsAction": {"continuationItems": [
+            {"lockupViewModel": {"contentId": "PLgridgrid02", "contentType": "LOCKUP_CONTENT_TYPE_PLAYLIST"}}
+        ]}}]}));
+        assert_eq!(more.entries[0]["id"], "PLgridgrid02");
     }
 
     #[test]

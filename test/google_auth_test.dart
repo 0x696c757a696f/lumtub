@@ -60,7 +60,7 @@ void main() {
     expect(tokens.accessToken, 'access-1');
     expect(tokens.refreshToken, 'refresh-1');
     expect(tokens.expired, isFalse);
-    expect(browserPage, contains('登录成功'));
+    expect(browserPage, contains('Signed in successfully'));
     expect(tokenRequest['grant_type'], 'authorization_code');
     expect(tokenRequest['code'], 'the-code');
     expect(tokenRequest['client_id'], config.id);
@@ -82,8 +82,8 @@ void main() {
     }
 
     expect(await callback({'code': 'c', 'state': 'expected'}), 'c');
-    expect('${await callback({'code': 'c', 'state': 'forged'})}', contains('校验失败'));
-    expect('${await callback({'error': 'access_denied', 'state': 'expected'})}', '已取消授权');
+    expect('${await callback({'code': 'c', 'state': 'forged'})}', contains('verification failed'));
+    expect('${await callback({'error': 'access_denied', 'state': 'expected'})}', 'Authorization revoked');
   });
 
   test('refresh keeps the refresh token and reports a revoked grant', () async {

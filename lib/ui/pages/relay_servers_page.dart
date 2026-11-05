@@ -32,7 +32,7 @@ class _RelayServersPageState extends State<_RelayServersPage> {
   @override
   void initState() {
     super.initState();
-    if (!_piped.catalog.any(_piped.wasTried)) unawaited(_run(tr('正在测速…'), _piped.servers));
+    if (!_piped.catalog.any(_piped.wasTried)) unawaited(_run(tr('Testing speed…'), _piped.servers));
   }
 
   Future<void> _run(String label, Future<void> Function() task) async {
@@ -45,7 +45,7 @@ class _RelayServersPageState extends State<_RelayServersPage> {
     }
   }
 
-  Future<void> _update() => _run(tr('正在更新列表并测速…'), () async {
+  Future<void> _update() => _run(tr('Updating list and testing speed…'), () async {
         await _piped.updateCatalog();
         await _piped.remeasure();
       });
@@ -71,9 +71,9 @@ class _RelayServersPageState extends State<_RelayServersPage> {
     final colors = context.colors;
     final updated = _piped.catalogUpdatedAt;
     return Scaffold(
-      appBar: AppBar(title: Text(_isPiped ? tr('Piped 服务器') : tr('Invidious 实例')), actions: [
-        IconButton(tooltip: tr('测速'), icon: const Icon(AppIcons.gauge), onPressed: _busy == null ? () => _run(tr('正在测速…'), _piped.remeasure) : null),
-        IconButton(tooltip: tr('更新列表'), icon: const Icon(AppIcons.arrowsClockwise), onPressed: _busy == null ? _update : null),
+      appBar: AppBar(title: Text(_isPiped ? tr('Piped servers') : tr('Invidious instance')), actions: [
+        IconButton(tooltip: tr('Speed test'), icon: const Icon(AppIcons.gauge), onPressed: _busy == null ? () => _run(tr('Testing speed…'), _piped.remeasure) : null),
+        IconButton(tooltip: tr('Update list'), icon: const Icon(AppIcons.arrowsClockwise), onPressed: _busy == null ? _update : null),
       ]),
       body: ListenableBuilder(
         listenable: widget.controller,
@@ -92,19 +92,19 @@ class _RelayServersPageState extends State<_RelayServersPage> {
               );
           return ListView(padding: const EdgeInsets.only(bottom: 40), children: [
             if (_busy != null) const LinearProgressIndicator() else const SizedBox(height: 4),
-            option(selected: auto, title: tr('自动选择最快的服务器'), subtitle: tr('每 3 小时重新测速，失败时换下一个'), onTap: () => _choose(null)),
+            option(selected: auto, title: tr('Pick the fastest server automatically'), subtitle: tr('Retest speed every 3 hours and switch to the next server on failure'), onTap: () => _choose(null)),
             if (custom != null && !servers.contains(custom))
-              option(selected: true, title: Uri.parse(custom).host, subtitle: tr('手动填写的地址'), onTap: () {}),
+              option(selected: true, title: Uri.parse(custom).host, subtitle: tr('Manually entered address'), onTap: () {}),
             option(
               selected: false,
-              title: tr('手动填写地址…'),
+              title: tr('Enter address manually…'),
               onTap: () => editRelayServer(context, widget.controller, widget.kind),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
               child: Text(
-                '${_busy ?? '共 ${servers.length} 个，${servers.where((s) => _piped.timingOf(s) != null).length} 个可连接'}'
-                '${updated == null ? '' : ' · 列表更新于 ${updated.month}月${updated.day}日 ${updated.hour.toString().padLeft(2, '0')}:${updated.minute.toString().padLeft(2, '0')}'}',
+                '${_busy ?? tr('{0} in all, {1} reachable', [servers.length, servers.where((s) => _piped.timingOf(s) != null).length])}'
+                '${updated == null ? '' : tr(' · list updated {0}/{1} at {2}', [updated.month, updated.day, '${updated.hour.toString().padLeft(2, '0')}:${updated.minute.toString().padLeft(2, '0')}'])}',
                 style: Theme.of(context).textTheme.titleSmall!.copyWith(color: colors.primary),
               ),
             ),
@@ -120,8 +120,8 @@ class _RelayServersPageState extends State<_RelayServersPage> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Text(
                 _isPiped
-                    ? tr('列表每天从 Piped 官方文档（public-instances）和 piped-instances.kavin.rocks 自动更新。测速只访问各服务器的 /healthcheck；能连接不代表能播放，YouTube 经常拦截公共服务器，这时会自动改为直接连接 YouTube。')
-                    : tr('列表每天从 api.invidious.io 自动更新，只保留开启了 API 的 https 实例。测速会让实例解析一个公开的短视频，能解析才算可连接；YouTube 常拦截公共实例，失败时会自动改为直接连接 YouTube。'),
+                    ? tr("The list updates daily from the official Piped docs (public-instances) and piped-instances.kavin.rocks. Speed tests only hit each server's /healthcheck; connecting doesn't guarantee playback. YouTube often blocks public servers, in which case Lumtub falls back to connecting to YouTube directly.")
+                    : tr('The list is updated daily from api.invidious.io and keeps only https instances with the API enabled. Speed tests have the instance resolve a public short video; an instance counts as connectable only if it resolves. YouTube often blocks public instances, so on failure it automatically switches to direct YouTube connection.'),
                 style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5),
               ),
             ),
@@ -142,8 +142,8 @@ class _Timing extends StatelessWidget {
     final colors = context.colors;
     final (text, color) = switch (ms) {
       final ms? => ('$ms ms', ms < 300 ? Colors.green : (ms < 1000 ? Colors.orange : colors.error)),
-      null when tried => (tr('无法连接'), colors.error),
-      null => (tr('未测速'), colors.outline),
+      null when tried => (tr("Couldn't connect"), colors.error),
+      null => (tr('Not tested'), colors.outline),
     };
     return Text(text, style: TextStyle(color: color, fontSize: 12, fontFeatures: const [FontFeature.tabularFigures()]));
   }

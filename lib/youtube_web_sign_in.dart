@@ -84,7 +84,7 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
   bool get signedIn => _signedIn;
 
   /// What the system's prompt says when it asks to open the cookies.
-  static String get reason => tr('Lumtub 要使用你保存的 YouTube 登录');
+  static String get reason => tr('Lumtub wants to use your saved YouTube sign-in');
 
   void load() {
     final native = _native;
@@ -153,7 +153,7 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
       _notify();
     });
     if (!begin(port)) {
-      error = tr('Cookie 登录没有启动');
+      error = tr('The cookie sign-in did not start');
       _finish(port);
       _notify();
     }
@@ -168,11 +168,11 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
   }
 
   static String _why(String code) => switch (code) {
-        'no browser' => tr('没有找到 Edge、Chrome 或其他 Chromium 内核的浏览器，请改用导入 cookies.txt'),
-        'not signed in' => tr('这些 Cookie 没有登录 YouTube'),
-        'closed before signing in' => tr('浏览器窗口关闭时还没有登录 YouTube，请登录完成后再关闭'),
-        'no youtube.com cookies' => tr('文件里没有 youtube.com 的 Cookie'),
-        _ => tr('Cookie 登录失败（{0}）', [code]),
+        'no browser' => tr('No Edge, Chrome, Firefox or other Chromium-based browser was found. Import a cookies.txt instead.'),
+        'not signed in' => tr('These cookies are not signed in to YouTube'),
+        'closed before signing in' => tr('The browser window was closed before you signed in to YouTube. Sign in first, then close it.'),
+        'no youtube.com cookies' => tr('The file has no youtube.com cookies'),
+        _ => tr('Cookie sign-in failed ({0})', [code]),
       };
 
   /// Closes the browser window of a sign-in that is waiting.

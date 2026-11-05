@@ -53,31 +53,31 @@ class _FfmpegQuestionState extends State<_FfmpegQuestion> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(tr('需要安装 ffmpeg')),
+      title: Text(tr('ffmpeg is needed')),
       content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         FutureBuilder<int?>(
           future: widget.size,
           builder: (context, snapshot) {
             final size = snapshot.data;
             return Text(size == null
-                ? tr('合并高画质视频和音频需要 ffmpeg，现在下载并安装（LGPL 版，来自 zhongfly/mpv-winbuild，经 SHA-256 校验）。')
-                : tr('合并高画质视频和音频需要 ffmpeg，现在下载并安装（下载约 {0}，LGPL 版，来自 zhongfly/mpv-winbuild，经 SHA-256 校验）。', [formatBytes(size)]));
+                ? tr('Merging high-quality video and audio needs ffmpeg. Download and install it now (the LGPL build from zhongfly/mpv-winbuild, verified with SHA-256).')
+                : tr('Merging high-quality video and audio needs ffmpeg. Download and install it now (about {0} to download, the LGPL build from zhongfly/mpv-winbuild, verified with SHA-256).', [formatBytes(size)]));
           },
         ),
         const SizedBox(height: 8),
-        Text(tr('也可以只下载单文件格式（通常为 360p），不需要 ffmpeg。')),
+        Text(tr('Or download only the single-file format (usually 360p), which does not need ffmpeg.')),
         CheckboxListTile(
           contentPadding: EdgeInsets.zero,
           controlAffinity: ListTileControlAffinity.leading,
           value: _remember,
           onChanged: (v) => setState(() => _remember = v ?? false),
-          title: Text(tr('选择单文件格式时不再询问')),
+          title: Text(tr("Don't ask again when I choose single-file")),
         ),
       ]),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
-        TextButton(onPressed: () => Navigator.pop(context, _Answer.single(remember: _remember)), child: Text(tr('只下单文件格式'))),
-        FilledButton(onPressed: () => Navigator.pop(context, const _Answer.install()), child: Text(tr('下载并继续'))),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+        TextButton(onPressed: () => Navigator.pop(context, _Answer.single(remember: _remember)), child: Text(tr('Single-file only'))),
+        FilledButton(onPressed: () => Navigator.pop(context, const _Answer.install()), child: Text(tr('Download and continue'))),
       ],
     );
   }
@@ -91,7 +91,7 @@ class _FfmpegProgress extends StatelessWidget {
   Widget build(BuildContext context) => PopScope(
         canPop: false,
         child: AlertDialog(
-          title: Text(tr('正在安装 ffmpeg…')),
+          title: Text(tr('Installing ffmpeg…')),
           content: ListenableBuilder(
             listenable: controller,
             builder: (context, _) => LinearProgressIndicator(value: controller.ffmpegProgress),

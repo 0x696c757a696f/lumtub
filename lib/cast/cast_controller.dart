@@ -16,6 +16,7 @@ class CastController extends ChangeNotifier {
   String? title;
   /// The id of the video being cast.
   String? videoId;
+  CastMedia? _media;
   Timer? _poll;
   var _seenPlaying = false;
   var _misses = 0;
@@ -52,9 +53,10 @@ class CastController extends ChangeNotifier {
       throw e is CastException ? e : CastException('$e');
     }
     device = target;
+    _media = media;
     title = media.title;
     this.videoId = videoId;
-    status = CastStatus(state: CastState.loading, position: media.start);
+    status = CastStatus(state: CastState.loading, position: media.offset + media.start, duration: media.duration ?? Duration.zero);
     _seenPlaying = false;
     _misses = 0;
     _startPolling();
@@ -64,7 +66,7 @@ class CastController extends ChangeNotifier {
   Future<void> _refresh() async {
     final current = device;
     if (current == null) return;
-    final next = await current.status();
+    var next = await current.status();
     if (device != current) return;
     if (next == null) {
       // A device that stays silent has gone away.
@@ -75,6 +77,10 @@ class CastController extends ChangeNotifier {
       return;
     }
     _misses = 0;
+    final media = _media;
+    if (media != null && (media.offset > Duration.zero || media.duration != null)) {
+      next = CastStatus(state: next.state, position: media.offset + next.position, duration: media.duration ?? next.duration);
+    }
     if (next.state == CastState.playing) _seenPlaying = true;
     if (next.state == CastState.stopped && _seenPlaying) {
       // Finished on the device, or stopped with its remote.
@@ -107,6 +113,23 @@ class CastController extends ChangeNotifier {
       });
 
   Future<void> seek(Duration position) => _run((d) async {
+        final restart = _media?.restart;
+        if (restart != null) {
+          // The stream the app joins cannot be seeked in; it starts again
+          // from the keyframe before [position].
+          final CastMedia media;
+          try {
+            media = await restart(position);
+          } catch (e) {
+            throw CastException('$e');
+          }
+          if (device != d) return;
+          _seenPlaying = false;
+          await d.load(media);
+          _media = media;
+          status = CastStatus(state: CastState.loading, position: media.offset, duration: media.duration ?? status?.duration ?? Duration.zero);
+          return;
+        }
         await d.seek(position);
         final s = status;
         if (s != null) status = CastStatus(state: s.state, position: position, duration: s.duration);
@@ -129,6 +152,7 @@ class CastController extends ChangeNotifier {
     _poll = null;
     final current = device;
     device = null;
+    _media = null;
     if (current != null) {
       try {
         await (stopDevice ? current.stop() : current.close());

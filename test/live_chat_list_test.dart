@@ -30,7 +30,7 @@ void main() {
     await tester.pumpWidget(chat(messages(43)));
     await tester.pump();
     expect(tester.getTopLeft(find.text('message 30')).dy, before);
-    expect(find.text('3 条新消息'), findsOneWidget);
+    expect(find.text('3 new messages'), findsOneWidget);
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
     expect(find.text('message 42'), findsOneWidget);

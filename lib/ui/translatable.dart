@@ -77,7 +77,7 @@ class _TranslatableState extends State<Translatable> {
     final lines = text.split('\n').where((l) => l.trim().isNotEmpty);
     if (prefs.skipSameLanguage && looksLike(text, language) && lines.every((l) => looksLike(l, language) || !_hasLetters(l))) {
       if (quiet) return;
-      return setState(() => _error = tr('已经是{0}，不用翻译', [TranslationLanguage.byCode(language).label]));
+      return setState(() => _error = tr('Already in {0}, nothing to translate', [TranslationLanguage.byCode(language).label]));
     }
     setState(() {
       _loading = true;
@@ -96,7 +96,7 @@ class _TranslatableState extends State<Translatable> {
     } on TranslationException catch (e) {
       _fail(text, quiet ? null : e.message);
     } catch (_) {
-      _fail(text, quiet ? null : tr('无法翻译，请检查网络或代理'));
+      _fail(text, quiet ? null : tr('Translation failed. Check your network or proxy.'));
     }
   }
 
@@ -127,7 +127,7 @@ class _TranslatableState extends State<Translatable> {
             style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 4), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             onPressed: _loading ? null : _toggle,
             icon: _loading ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.translate, size: 16),
-            label: Text(_visible ? (both ? tr('隐藏译文') : tr('显示原文')) : tr('翻译'), style: const TextStyle(fontSize: 12)),
+            label: Text(_visible ? (both ? tr('Hide translation') : tr('Show original')) : tr('Translation'), style: const TextStyle(fontSize: 12)),
           ),
           if (_error != null) Text(_error!, style: TextStyle(color: colors.error, fontSize: 12)),
         ]),

@@ -87,7 +87,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
     final summary = _summary;
     final Widget body;
     if (!controller.canSummarize) {
-      body = Text(tr('AI 总结使用“设置 › 翻译与 AI”里的 AI 接口（OpenAI、DeepSeek、Ollama 等）。设置好接口和密钥后再试。只会发送视频标题和字幕文字。'), style: TextStyle(color: colors.onSurfaceVariant, height: 1.5));
+      body = Text(tr('AI summary uses the AI interface under Settings › Translation & AI (OpenAI, DeepSeek, Ollama and others). Set up the interface and key, then try again. Only the video title and subtitle text are sent.'), style: TextStyle(color: colors.onSurfaceVariant, height: 1.5));
     } else if (summary != null) {
       body = SingleChildScrollView(
         child: SelectionArea(
@@ -100,14 +100,14 @@ class _SummaryDialogState extends State<_SummaryDialog> {
         ),
       );
     } else if (_error case final error?) {
-      body = _needsFfmpeg ? ErrorBanner(error, onRetry: () => _fromSpeech(withFfmpeg: true), retryLabel: tr('安装 ffmpeg 并继续')) : ErrorBanner(error, onRetry: _run);
+      body = _needsFfmpeg ? ErrorBanner(error, onRetry: () => _fromSpeech(withFfmpeg: true), retryLabel: tr('Install ffmpeg and continue')) : ErrorBanner(error, onRetry: _run);
     } else if (controller.speechJob.value != null) {
       body = ValueListenableBuilder(
         valueListenable: controller.speechJob,
         builder: (context, job, _) => Row(children: [
           const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
           const SizedBox(width: 12),
-          Expanded(child: Text(job == null ? tr('正在读取字幕并总结…') : job.total > 1 ? '${job.stage} ${job.done} / ${job.total}' : job.stage, style: TextStyle(color: colors.onSurfaceVariant))),
+          Expanded(child: Text(job == null ? tr('Reading the subtitles and summarizing…') : job.total > 1 ? '${job.stage} ${job.done} / ${job.total}' : job.stage, style: TextStyle(color: colors.onSurfaceVariant))),
         ]),
       );
     } else {
@@ -116,7 +116,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
         const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
         const SizedBox(width: 12),
         Expanded(child: Text(
-          progress == null || progress.$1 == 0 ? tr('正在读取字幕并总结…') : progress.$1 < progress.$2 - 1 ? tr('视频较长，正在分段整理：{0} / {1}', [progress.$1, progress.$2 - 1]) : tr('正在汇总…'),
+          progress == null || progress.$1 == 0 ? tr('Reading the subtitles and summarizing…') : progress.$1 < progress.$2 - 1 ? tr('Long video, going through it in parts: {0} / {1}', [progress.$1, progress.$2 - 1]) : tr('Putting it together…'),
           style: TextStyle(color: colors.onSurfaceVariant),
         )),
       ]);
@@ -125,7 +125,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
       title: Row(children: [
         Icon(AppIcons.sparkleFill, color: colors.primary),
         const SizedBox(width: 8),
-        Text(tr('AI 总结')),
+        Text(tr('AI summary')),
       ]),
       content: SizedBox(width: 560, child: body),
       actions: [
@@ -136,13 +136,13 @@ class _SummaryDialogState extends State<_SummaryDialog> {
               if (mounted) setState(() {});
               if (mounted && controller.canSummarize && _summary == null) _run();
             },
-            child: Text(tr('设置 AI 接口')),
+            child: Text(tr('Set up AI service')),
           ),
         // Without subtitles the summary came from the description only.
         if (controller.canSummarize && !AppController.hasOwnSubtitles(controller.details) && !_speechDone && controller.canRecognizeSpeech && controller.speechJob.value == null && (summary != null || _error != null))
-          TextButton.icon(onPressed: _fromSpeech, icon: const Icon(AppIcons.waveform, size: 18), label: Text(tr('用语音识别重新总结'))),
-        if (summary != null) TextButton(onPressed: () => copyText(context, summary, tr('已复制总结')), child: Text(tr('复制'))),
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('关闭'))),
+          TextButton.icon(onPressed: _fromSpeech, icon: const Icon(AppIcons.waveform, size: 18), label: Text(tr('Summarize again with speech recognition'))),
+        if (summary != null) TextButton(onPressed: () => copyText(context, summary, tr('Summary copied')), child: Text(tr('Copy'))),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
       ],
     );
   }

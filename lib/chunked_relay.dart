@@ -17,6 +17,12 @@ abstract interface class StreamRelay {
   /// [proxy] is the HTTP proxy to fetch through, null for none.
   String? register(String url, {int? size, String? userAgent, String? proxy});
 
+  /// A loopback address that serves the live stream [url] as it grows,
+  /// fragment after fragment; the picture and the sound of one play share
+  /// [pair], so both start at the same fragment. Null when this relay
+  /// cannot serve live streams.
+  String? registerLive(String url, {required String pair, String? userAgent, String? proxy});
+
   Future<void> close();
 }
 
@@ -64,6 +70,13 @@ class NativeRelay implements StreamRelay {
     final length = size ?? int.tryParse(Uri.tryParse(url)?.queryParameters['clen'] ?? '');
     if (length == null || length <= 0) return null;
     final json = jsonEncode({'url': url, 'size': length, 'userAgent': userAgent, 'proxy': proxy, 'chunk': chunkSize});
+    _watchLog();
+    return _core.take(_core.withText(json, _core.relayRegister));
+  }
+
+  @override
+  String? registerLive(String url, {required String pair, String? userAgent, String? proxy}) {
+    final json = jsonEncode({'url': url, 'size': 0, 'userAgent': userAgent, 'proxy': proxy, 'chunk': chunkSize, 'live': pair});
     _watchLog();
     return _core.take(_core.withText(json, _core.relayRegister));
   }
@@ -117,6 +130,9 @@ class ChunkedRelay implements StreamRelay {
     }
     return 'http://127.0.0.1:${server.port}/$token';
   }
+
+  @override
+  String? registerLive(String url, {required String pair, String? userAgent, String? proxy}) => null;
 
   Future<void> _serve(HttpRequest request) async {
     final response = request.response;
@@ -208,7 +224,7 @@ class ChunkedRelay implements StreamRelay {
         if (reply.statusCode == HttpStatus.ok || reply.statusCode == HttpStatus.partialContent) return reply;
         await reply.drain<void>();
         // A 403 means the address expired; the app reopens the video.
-        if (reply.statusCode == HttpStatus.forbidden || attempt >= 1) throw _Upstream(tr('YouTube 返回 {0}', [reply.statusCode]));
+        if (reply.statusCode == HttpStatus.forbidden || attempt >= 1) throw _Upstream(tr('YouTube returned {0}', [reply.statusCode]));
       } on IOException catch (e) {
         // A connection YouTube dropped, before any byte of this reply.
         if (attempt >= 1) throw _Upstream('$e');

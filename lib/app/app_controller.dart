@@ -9,6 +9,7 @@ import 'package:flutter/painting.dart' show Color, PaintingBinding, Size;
 import 'package:flutter/gestures.dart' show GestureBinding, PointerEvent;
 import 'package:flutter/services.dart' show HardwareKeyboard, KeyEvent, MethodChannel;
 import 'package:flutter/widgets.dart' show WidgetsBinding;
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -35,6 +36,7 @@ import '../sponsor_block.dart';
 import '../appearance_settings.dart';
 import '../cache_manager.dart';
 import '../decoder_status.dart';
+import '../live_split.dart';
 import '../native_core.dart';
 import '../encrypted_dns.dart';
 import '../native_http.dart';
@@ -88,7 +90,7 @@ import '../translation_services.dart';
 import 'posts_loader.dart';
 import '../video_output_size.dart';
 import '../video_repository.dart';
-import '../windows_env.dart';
+import '../system_env.dart';
 import '../windows_video_info.dart';
 import 'account_controller.dart';
 import 'home_feed.dart';
@@ -106,6 +108,7 @@ part 'settings_actions.dart';
 part 'picture_health.dart';
 part 'chat_actions.dart';
 part 'subtitle_actions.dart';
+part 'smoke_check.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
@@ -127,8 +130,8 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   int cacheBytes = 0;
   Map<String, DecoderStatus> decodeStates = const {};
-  String currentCodec = tr('尚未播放视频');
-  String currentHwdec = tr('尚未验证');
+  String currentCodec = tr('No video played yet');
+  String currentHwdec = tr('Not verified yet');
   WindowsVideoInfo windowsVideoInfo = const WindowsVideoInfo();
   PlayerSettings settings = const PlayerSettings();
   VideoItem? playing;
@@ -137,7 +140,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool checking = false;
   /// Lumtub's own updates; null until the components are ready.
   AppUpdater? appUpdater;
-  String status = tr('正在准备 Windows 原生播放器…');
+  String status = tr('Preparing the Windows native player…');
   /// Startup failure; the setup screen shows it with a retry button.
   String? error;
   String? playbackError;
@@ -219,8 +222,44 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool audioOnly = false;
 
   void togglePinned() {
-    if (!AppWindow.setTopmost(!pinned || pip)) return _notice(tr('无法设置窗口置顶'));
+    if (!AppWindow.setTopmost(!pinned || pip)) return _notice(tr('Could not keep the window on top'));
     _update(() => pinned = !pinned);
+    if (pinned) _noteWaylandTop();
+  }
+
+  bool _waylandNoted = false;
+
+  /// Wayland desktops decide themselves which window is on top and where
+  /// it goes; said once per run.
+  void _noteWaylandTop() {
+    if (_waylandNoted || !AppWindow.onWayland || AppWindow.keepsAboveOnWayland) return;
+    _waylandNoted = true;
+    if (!_disposed) _waylandTopNotes.add(null);
+  }
+
+  final _waylandTopNotes = StreamController<void>.broadcast();
+
+  /// Said when a window should stay on top on a Wayland desktop that does
+  /// not allow it; the page offers [switchToX11].
+  Stream<void> get waylandTopNotes => _waylandTopNotes.stream;
+
+  /// Turns on X11 compatibility mode and starts Lumtub again in it.
+  Future<void> switchToX11() async {
+    final data = directories?.data;
+    if (data == null) return;
+    try {
+      await AppWindow.x11Marker(data).writeAsString('');
+    } catch (e) {
+      _notice(tr('Could not switch: {0}', ['$e']));
+      return;
+    }
+    await restart();
+  }
+
+  /// Saves everything still waiting to be written, then starts Lumtub again.
+  Future<void> restart() async {
+    await shutdown(install: false);
+    await restartApp();
   }
 
   /// Whether the watch page shows [playing].
@@ -247,8 +286,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   void setPip(bool on) {
     if (on == pip) return;
     final ok = on ? AppWindow.enterPip(aspect: videoAspect) : AppWindow.exitPip(keepOnTop: pinned);
-    if (on && !ok) return _notice(tr('无法进入画中画'));
+    if (on && !ok) return _notice(tr('Could not open picture in picture'));
     _update(() => pip = on);
+    if (on) _noteWaylandTop();
   }
 
   VideoOutputSize? _outputSize;
@@ -281,12 +321,12 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (platform is! NativePlayer) return;
     await platform.setProperty('vid', audioOnly ? 'auto' : 'no');
     _update(() => audioOnly = !audioOnly);
-    _notice(audioOnly ? tr('只听声音，不解码画面') : tr('已恢复画面'));
+    _notice(audioOnly ? tr('Audio only; the picture is not decoded') : tr('Picture back on'));
   }
 
   Future<void> toggleSponsorBlock() async {
     await saveSettings(settings.copyWith(sponsorBlock: !settings.sponsorBlock));
-    _notice(settings.sponsorBlock ? tr('已开启 SponsorBlock 跳过片段') : tr('已关闭 SponsorBlock'));
+    _notice(settings.sponsorBlock ? tr('SponsorBlock turned on') : tr('SponsorBlock turned off'));
   }
 
   /// Videos like the one playing, found by searching for its title.
@@ -338,16 +378,31 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The TV or Chromecast the video is cast to, if any.
   final cast = CastController();
 
-  /// What to cast of [playing]: one progressive mp4 with sound, from the
-  /// yt-dlp extraction or else from a Piped or Invidious server.
-  Future<CastMedia> castMedia(Duration start) async {
+  /// What to cast of [playing] to [device]: the picture and sound streams
+  /// joined by lumtub_core when YouTube has a better picture apart than
+  /// together (up to 1080p), else one progressive mp4 with sound, from the
+  /// yt-dlp extraction or from a Piped or Invidious server.
+  Future<CastMedia> castMedia(Duration start, CastDevice device) async {
     final item = playing;
-    if (item == null || item.isLive || _repository == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
+    if (item == null || item.isLive || _repository == null) throw CastException(tr('No stream can be cast (a single MP4 address with sound is needed)'));
+    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
     CastSource? source;
+    Map<String, dynamic>? info;
     try {
-      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort)).info, settings: _playback);
+      info = (await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort)).info;
+      source = castSourceFromYtDlp(info, settings: _playback);
     } catch (e) {
       logWarn('Cast: yt-dlp could not resolve: $e');
+    }
+    if (info != null) {
+      final split = castSplitFromYtDlp(info, maxHeight: preferences.castMaxHeight);
+      if (split != null && split.height > (source?.height ?? 0)) {
+        try {
+          return await _joinedCast(split, device, start, title, info);
+        } catch (e) {
+          logWarn('Cast: could not join the ${split.height}p picture with its sound: $e');
+        }
+      }
     }
     for (final kind in RelayKind.values) {
       if (source != null) break;
@@ -357,9 +412,92 @@ class AppController extends ChangeNotifier with _ExploreState {
         logWarn('Cast: $kind could not resolve: $e');
       }
     }
-    if (source == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
-    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
+    if (source == null) throw CastException(tr('No stream can be cast (a single MP4 address with sound is needed)'));
+    logInfo('Casting the ${source.height}p file with picture and sound together');
     return CastMedia(url: source.url, title: title, mime: source.mime, start: start);
+  }
+
+  Timer? _castWatch;
+
+  /// [split] joined by lumtub_core's cast server from [start]: an MPEG
+  /// transport stream for a DLNA renderer, a fragmented MP4 for a
+  /// Chromecast. Seeking starts it again from the new position. While it
+  /// is cast, the server's log is copied into the app's, and the stream
+  /// addresses are renewed before YouTube lets them expire or once it has
+  /// refused one.
+  Future<CastMedia> _joinedCast(CastSplit split, CastDevice device, Duration start, String title, Map<String, dynamic> info) async {
+    final core = NativeCore.instance;
+    final videoId = playing?.id;
+    if (core == null || videoId == null) throw StateError('no lumtub_core');
+    // The cast server fetches YouTube itself, directly or through an HTTP proxy.
+    if (proxy.url != null && !proxy.isHttp) throw StateError('a SOCKS proxy is set');
+    final port = core.castStart();
+    if (port == 0) throw StateError('the cast server could not listen');
+    final socket = await Socket.connect(device.host, device.port, timeout: const Duration(seconds: 4));
+    final here = socket.address.address;
+    socket.destroy();
+    final ts = device.protocol == CastProtocol.dlna && split.fitsTransportStream;
+    final agent = info['http_headers'] is Map ? (info['http_headers'] as Map)['User-Agent']?.toString() : null;
+    final duration = info['duration'] is num ? Duration(milliseconds: ((info['duration'] as num) * 1000).round()) : null;
+    Map<String, dynamic> target(String url, int size) => {'url': url, 'size': size, if (agent != null) 'userAgent': agent, if (proxy.url != null) 'proxy': proxy.url};
+    var current = split;
+    var renewing = false;
+    Future<void> renew() async {
+      renewing = true;
+      try {
+        _repository!.streams.forget(videoId);
+        final fresh = (await _repository!.streams.resolve(videoId, _format, formatSort: _formatSort)).info;
+        final next = current.renewedFrom(fresh);
+        if (next == null) {
+          logWarn('Cast: the new extraction lacks formats ${current.videoFormat}+${current.audioFormat}');
+          return;
+        }
+        final taken = core.castRenew({current.video: next.video, current.audio: next.audio});
+        logInfo('Cast: renewed the stream addresses ($taken streams)');
+        current = next;
+      } catch (e) {
+        logWarn('Cast: could not renew the stream addresses: $e');
+      } finally {
+        renewing = false;
+      }
+    }
+
+    _castWatch?.cancel();
+    // The device may take a while to load; the watch ends once it was seen
+    // casting this video and no longer is, or if it never started.
+    var seen = false;
+    _castWatch = Timer.periodic(const Duration(seconds: 5), (timer) {
+      for (final line in (jsonDecode(core.castLog() ?? '[]') as List).cast<String>()) {
+        logInfo(line);
+      }
+      final casting = cast.active && cast.videoId == videoId;
+      seen |= casting;
+      if (!casting && (seen || timer.tick > 12)) {
+        timer.cancel();
+        if (identical(_castWatch, timer)) _castWatch = null;
+        return;
+      }
+      final expires = current.expires;
+      final soon = expires != null && expires.difference(DateTime.now()) < const Duration(minutes: 20);
+      if (!renewing && (soon || core.castExpired())) unawaited(renew());
+    });
+    Future<CastMedia> from(Duration at) async {
+      final split = current;
+      final ask = jsonEncode({
+        'video': target(split.video, split.videoSize),
+        'audio': target(split.audio, split.audioSize),
+        'startMs': at.inMilliseconds,
+        'kind': ts ? 'ts' : 'mp4',
+      });
+      final answer = jsonDecode(await Isolate.run(() => NativeCore.instance?.castRegister(ask) ?? '{"error":"no lumtub_core"}')) as Map<String, dynamic>;
+      final path = answer['path'];
+      if (path is! String) throw StateError('${answer['error']}');
+      final begins = Duration(milliseconds: (((answer['start'] as num?) ?? 0) * 1000).round());
+      logInfo('Casting ${split.height}p${split.fps} ${split.codec} joined by lumtub_core from ${begins.inSeconds} s as ${ts ? 'MPEG-TS' : 'MP4'}');
+      return CastMedia(url: 'http://$here:$port$path', title: title, mime: ts ? 'video/mpeg' : 'video/mp4', offset: begins, duration: duration, restart: from);
+    }
+
+    return from(start);
   }
 
   /// The Piped servers, for 设置 › Piped 服务器.
@@ -402,8 +540,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   Color get accentColor => appearance.systemAccent && windowsAccent != null ? windowsAccent! : appearance.accent;
 
   static void _applyAppearanceGlobals(AppearanceSettings appearance) {
-    VideoItem.thumbnailFile = appearance.thumbnailQuality.file;
+    VideoItem.thumbnailFile = appearance.effectiveThumbnails.file;
     videoCardMinWidth = appearance.cardWidth;
+    lowResourceMode = appearance.lowResource;
+    videoLayout = appearance.layout;
   }
 
   int _playSerial = 0;
@@ -637,7 +777,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   Future<String> saveTvSamples() async {
     final sign = tvSignIn;
     final logs = directories?.logs;
-    if (sign == null || !sign.signedIn || logs == null) return tr('需要先在设置 › YouTube 账号里用电视码登录');
+    if (sign == null || !sign.signedIn || logs == null) return tr('Sign in with a TV code in Settings › YouTube account first');
     return tv_samples.saveTvSamples(sign, logs);
   }
 
@@ -730,7 +870,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (value == incognito) return;
     _update(() => incognito = value);
     _translationCache.persist = !value;
-    _notice(value ? tr('已开启无痕模式：这次看过、搜过的内容都不会被记下') : tr('已关闭无痕模式'));
+    _notice(value ? tr('Incognito mode is on: nothing you watch or search now will be remembered') : tr('Incognito mode is off'));
     logInfo(value ? 'Incognito on' : 'Incognito off');
   }
 
@@ -770,8 +910,8 @@ class AppController extends ChangeNotifier with _ExploreState {
       // The proxy comes before the component downloads, which use it too.
       await (_refreshProxy(), cacheManager.prepare(settings), manager.initialize()).wait;
       final paths = await manager.ensureReady();
-      addToWindowsPath(paths.executableDirectories);
-      MediaKit.ensureInitialized(libmpv: paths.mpv);
+      addToPath(paths.executableDirectories);
+      MediaKit.ensureInitialized(libmpv: paths.mpv.isEmpty ? null : paths.mpv);
       final player = Player(configuration: PlayerConfiguration(
         bufferSize: settings.cacheMemoryMb * 1024 * 1024,
         // With libass, libmpv draws the subtitles and the Flutter subtitle
@@ -782,6 +922,11 @@ class AppController extends ChangeNotifier with _ExploreState {
         logLevel: preferences.logLevel == LogLevel.debug ? MPVLogLevel.info : MPVLogLevel.warn,
       ));
       final ignoredOptions = await PlayerOptionApplicator.apply(player, settings);
+      if (!Platform.isWindows && player.platform is NativePlayer) {
+        try {
+          manager.mpvVersion = await (player.platform as NativePlayer).getProperty('mpv-version');
+        } catch (_) {}
+      }
       _applied = settings;
       // Compiled shaders are kept between runs, so a video's first frame
       // does not wait for them again.
@@ -843,7 +988,7 @@ class AppController extends ChangeNotifier with _ExploreState {
           ..addListener(_passOn('library'));
         account = AccountController(
           clientFile: File('${directories.data.path}${Platform.pathSeparator}google-client.json'),
-          credentials: SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}google-account.bin'), DpapiProtector()),
+          credentials: SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}google-account.bin'), SecretProtector.forThisSystem()),
           client: _http,
           library: library,
           notice: _notice,
@@ -864,7 +1009,7 @@ class AppController extends ChangeNotifier with _ExploreState {
         _thumbnailTrimTimer?.cancel();
         _thumbnailTrimTimer = Timer.periodic(const Duration(hours: 1), (_) => _trimThumbnails());
         ready = true;
-        status = ignoredOptions.isEmpty ? tr('就绪 · 解码方式将在播放时验证') : tr('就绪 · 已忽略不支持的设置：{0}', [ignoredOptions.join(', ')]);
+        status = ignoredOptions.isEmpty ? tr('Ready · Decoding method will be verified during playback') : tr('Ready · Ignored unsupported settings: {0}', [ignoredOptions.join(', ')]);
         error = null;
       });
       if (mode == PageMode.explore) _loadExplore();
@@ -889,16 +1034,17 @@ class AppController extends ChangeNotifier with _ExploreState {
       unawaited(account?.load());
       _translationCache = TranslationCache(file: File('${directories.cache.path}${Platform.pathSeparator}translations.json'));
       _useTranslator();
-      _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), DpapiProtector());
+      _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), SecretProtector.forThisSystem());
       unawaited(_loadTranslationKeys());
       logInfo('Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
       _update(() {
         error = e.toString();
-        status = tr('初始化失败');
+        status = tr('Initialization failed');
         logError('Initialization failed', e);
       });
     }
+    if (SmokeCheck.requested) unawaited(Platform.environment['LUMTUB_SHOWCASE']?.isNotEmpty == true ? runShowcase() : runSmokeCheck());
   }
 
   /// Checks for a new Lumtub now and downloads it, for the settings page.
@@ -949,7 +1095,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   void retryInitialize() {
     _update(() {
       error = null;
-      status = tr('重新安装组件…');
+      status = tr('Reinstall components…');
     });
     unawaited(initialize());
   }
@@ -1004,7 +1150,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       try {
         response = await _http.get(Uri.https('i.ytimg.com', '/vi/${item.id}/$name.jpg')).timeout(const Duration(seconds: 20));
       } catch (_) {
-        throw StateError(tr('无法下载封面，请检查网络或代理'));
+        throw StateError(tr("Couldn't download the cover; check the network or proxy"));
       }
       // YouTube answers a missing size with a small placeholder or 404.
       if (response.statusCode != 200 || response.bodyBytes.length < 2000) continue;
@@ -1013,7 +1159,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       await file.writeAsBytes(response.bodyBytes);
       return file.path;
     }
-    throw StateError(tr('这个视频没有封面'));
+    throw StateError(tr('This video has no cover image'));
   }
 
   /// The subtitles [item] offers, with the one translated into 第一字幕语言
@@ -1039,15 +1185,15 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   void download(VideoItem item, DownloadQuality quality, {DownloadSelection? selection}) {
     final manager = downloads;
-    if (manager == null || item.isLive || item.isUpcoming) return _notice(tr('直播无法下载'));
-    _notice(manager.add(item, quality, selection: selection) == null ? tr('已在下载列表中') : tr('已加入下载'));
+    if (manager == null || item.isLive || item.isUpcoming) return _notice(tr('Live streams cannot be downloaded'));
+    _notice(manager.add(item, quality, selection: selection) == null ? tr('Already in the download list') : tr('Added to downloads'));
   }
 
   /// The streams [videoId] can be downloaded as, from the extraction the
   /// player shares (one yt-dlp run per video).
   Future<DownloadFormats> downloadFormats(String videoId) async {
     final repository = _repository;
-    if (repository == null) throw StateError(tr('组件尚未就绪'));
+    if (repository == null) throw StateError(tr('Components are not ready yet'));
     final info = (await repository.streams.resolve(videoId, _format, formatSort: _formatSort)).info;
     // Automatic picks follow the playback order, so a download is in a codec
     // this PC decodes well; the quality strategy takes the best picture.
@@ -1073,6 +1219,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       proxy: nativeProxy(next.url),
       system: settings.proxyMode == ProxyMode.system,
       dns: DnsServer.of(settings.dnsServer, settings.dnsCustomUrl),
+      roots: settings.certificateRoots,
     );
     if (next.url != proxy.url) logInfo(next.url == null ? 'Network: direct connection' : 'Network: using proxy ${next.redacted}');
     proxy = next;
@@ -1116,7 +1263,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (query.isEmpty || !ready) return;
     final asUrl = parseYoutubeId(query);
     if (asUrl != null) {
-      await play(VideoItem(id: asUrl, title: tr('YouTube 视频 · {0}', [asUrl]), channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$asUrl'));
+      await play(VideoItem(id: asUrl, title: tr('YouTube video · {0}', [asUrl]), channel: 'YouTube', url: 'https://www.youtube.com/watch?v=$asUrl'));
       return;
     }
     if (query != _query || mode != PageMode.explore || onWatchPage) _remember();
@@ -1259,7 +1406,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       if (hold) unawaited(_playOnceSubtitlesReady(serial));
       await _applyChannelPlayback(item, player);
       if (preferences.recordHistory && !incognito) await _history?.record(item);
-      if (start != null && at == null) _notice(tr('从 {0} 继续播放', [_clock(start)]));
+      if (start != null && at == null) _notice(tr('Resume from {0}', [_clock(start)]));
       final next = upNext.firstOrNull;
       if (next != null) prefetch(next);
       // Marked live while it opened, when the list did not know.
@@ -1318,7 +1465,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       // Each segment is skipped once, so seeking back into it plays it.
       _skipped.add(segment);
       unawaited(player?.seek(segment.end));
-      if (settings.sponsorNotice) _notice(tr('已跳过{0}', [sponsorCategories[segment.category] ?? tr('片段')]));
+      if (settings.sponsorNotice) _notice(tr('Skipped {0}', [sponsorCategories[segment.category] ?? tr('Segments')]));
       return;
     }
   }
@@ -1410,6 +1557,9 @@ class AppController extends ChangeNotifier with _ExploreState {
     unawaited(controller.platform.future.then((_) => logDebug(() => 'Video output made in ${made.elapsedMilliseconds} ms'), onError: (Object error) => logError('Video output failed', error)));
   }
 
+  /// The play whose first open already tried a quick start.
+  int? _quickSerial;
+
   Future<bool> _openOnce(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
     final player = this.player!;
     _ensureVideo(player);
@@ -1423,7 +1573,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       final localCodec = local?.videoCodec;
       if (local != null && !FormatPolicy.allows(settings, localCodec)) {
         logWarn('The download of ${item.id} is ${localCodec!.label}, a codec the playback rules disable; playing online instead');
-        _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [localCodec.label]));
+        _notice(tr('The downloaded file is {0}, which the playback rules disable; streaming instead', [localCodec.label]));
       } else if (local != null) {
         return await _openLocal(item, serial, local, start: start, play: play);
       }
@@ -1443,7 +1593,16 @@ class AppController extends ChangeNotifier with _ExploreState {
       ResolvedVideo? video;
       if (resolved) {
         try {
-          video = await _repository!.streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly);
+          final streams = _repository!.streams;
+          var pending = streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly, live: item.isLive);
+          // The first open of a video also asks YouTube directly; whichever
+          // answers first starts it. A reopen after a failure waits for yt-dlp.
+          if (_quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
+            _quickSerial = serial;
+            final full = pending;
+            pending = Future.any([full, streams.quick(item.id, format, FormatPolicy.settingsJson(_playback)).then((quick) => quick ?? full)]);
+          }
+          video = await pending;
         } catch (e) {
           _recentErrors.add('$e');
           final failure = PlaybackFailure.classify(['$e']);
@@ -1478,10 +1637,13 @@ class AppController extends ChangeNotifier with _ExploreState {
           : null;
       _relayed = direct != null && relay != null ? item.id : null;
       _openedDirect = direct != null ? item.id : null;
+      final split = live && video != null && relay != null && _liveSplitOff != item.id ? _liveSplitAddress(video, relay) : null;
+      _liveSplit = split != null ? item.id : null;
       final platform = player.platform;
       if (platform is NativePlayer) {
         // A live stream plays from one HLS stream with picture and sound
-        // together: a picture and a sound stream apart drift out of sync.
+        // together up to 1080p: a picture and a sound stream apart can
+        // drift out of sync, so they are taken only above it.
         await platform.setProperty('ytdl-format', live ? FormatPolicy.liveExpression(_playback, format) : format);
         await platform.setProperty('ytdl-raw-options', PlayerOptionApplicator.ytdlRawOptions(settings, infoJson: direct == null ? video?.file.path : null, proxy: proxy.ytDlpValue(settings.proxyMode), formatSort: _formatSort));
         if (direct != null && agent != null) await platform.setProperty('user-agent', agent);
@@ -1500,7 +1662,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       _openedResolved = video == null ? null : item.id;
       _openedOrigin = video?.origin;
       if (video != null) _update(() => availableHeights = video!.heightsFor(settings));
-      await player.open(Media(direct ?? item.url, start: start), play: play);
+      await player.open(Media(direct ?? split ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;
@@ -1516,6 +1678,27 @@ class AppController extends ChangeNotifier with _ExploreState {
       if (serial == _playSerial) _fail(item, PlaybackFailure.classify(['$e', ..._recentErrors]));
       return false;
     }
+  }
+
+  /// The live stream opened as its picture and sound above 1080p, joined
+  /// fragment by fragment in the relay (see [LiveSplit]).
+  String? _liveSplit;
+  /// The live stream whose split picture and sound failed soon after
+  /// opening, so it plays from HLS instead, up to 1080p.
+  String? _liveSplitOff;
+
+  /// An mpv address playing [video]'s live picture above 1080p with its
+  /// sound through [relay], or null when there is none within the cap.
+  String? _liveSplitAddress(ResolvedVideo video, StreamRelay relay) {
+    final split = LiveSplit.pick(video.info, _playback);
+    if (split == null) return null;
+    final pair = '${video.info['id']}-${DateTime.now().microsecondsSinceEpoch}';
+    final proxy = this.proxy.url;
+    final picture = relay.registerLive(split.videoUrl, pair: pair, userAgent: split.userAgent, proxy: proxy);
+    final sound = relay.registerLive(split.audioUrl, pair: pair, userAgent: split.userAgent, proxy: proxy);
+    if (picture == null || sound == null) return null;
+    logInfo('Live ${video.info['id']} plays ${split.label} through the relay');
+    return NativeCore.instance?.edl([picture, sound]);
   }
 
   /// Plays the downloaded file of [item] instead of asking YouTube.
@@ -1683,7 +1866,13 @@ class AppController extends ChangeNotifier with _ExploreState {
       _unrelayed = item.id;
       logWarn('Playing ${item.id} without the local chunked relay');
     }
-    _notice(tr('网络中断，正在从 {0} 重新连接…', [_clock(position)]));
+    // A split live stream that broke at once is played from HLS; one that
+    // played a while gets new addresses and stays split.
+    if (_liveSplit == item.id && DateTime.now().difference(_openedAt) < const Duration(minutes: 1)) {
+      _liveSplitOff = item.id;
+      logWarn('Playing live ${item.id} from HLS, up to 1080p');
+    }
+    _notice(tr('Connection lost, reconnecting from {0}…', [_clock(position)]));
     _recovering = true;
     _recoveryTimer?.cancel();
     final serial = _playSerial;
@@ -1725,7 +1914,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       if (_outputRemade.length == 3) {
         _outputRemade.add(now);
         logError('The graphics device keeps getting lost; leaving the video output as it is', reason);
-        _notice(tr('显卡驱动反复重置，请重启 Lumtub'));
+        _notice(tr('The graphics driver keeps resetting; please restart Lumtub'));
       }
       return;
     }
@@ -1740,7 +1929,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       _ensureVideo(player);
       _outputRemade.add(now);
       _update(() {});
-      _notice(again ? tr('显卡驱动又重置了一次，本次运行改用软件解码') : tr('显卡驱动重置了，已重新建立画面'));
+      _notice(again ? tr('The graphics driver reset again; decoding in software until Lumtub restarts') : tr('The graphics driver reset; the picture was made again'));
       await videoController?.platform.future;
       // Making the output sets hwdec from the settings again.
       final platform = player.platform;
@@ -1852,8 +2041,10 @@ class AppController extends ChangeNotifier with _ExploreState {
       }),
       player.stream.completed.listen((done) {
         if (!done || playing == null) return;
-        if (_tracking != null && PlaybackRecovery.endedEarly(_lastPosition, player.state.duration)) {
-          unawaited(_recover(tr('视频在 {0} 意外结束', [_clock(_lastPosition)])));
+        // A live stream through the relay ends only when its fragments
+        // stopped coming.
+        if (_tracking != null && (_liveSplit == _tracking!.id || PlaybackRecovery.endedEarly(_lastPosition, player.state.duration))) {
+          unawaited(_recover(tr('Video ended unexpectedly at {0}', [_clock(_lastPosition)])));
           return;
         }
         _saveProgress();
@@ -1918,7 +2109,7 @@ class AppController extends ChangeNotifier with _ExploreState {
         _stallTimer?.cancel();
         if (!buffering || _tracking == null) return;
         _stallTimer = Timer(PlaybackRecovery.stallTimeout, () {
-          if (player.state.buffering && player.state.playing) unawaited(_recover(tr('缓冲超过 {0} 秒没有进展', [PlaybackRecovery.stallTimeout.inSeconds])));
+          if (player.state.buffering && player.state.playing) unawaited(_recover(tr('No buffering progress for over {0} seconds', [PlaybackRecovery.stallTimeout.inSeconds])));
         });
       }),
     ]);
@@ -1975,7 +2166,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (done != null && preferences.watchLaterAutoRemove) library?.removeWatchLater(done.id);
     if (sleepAfterCurrent) {
       _update(() => sleepAfterCurrent = false);
-      _notice(tr('定时关闭：当前视频已播完'));
+      _notice(tr('Sleep timer: current video finished'));
       return;
     }
     if (await playQueued()) return;
@@ -2015,14 +2206,14 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// 下一个播放: [item] goes to the front of [playQueue].
   void queueNext(VideoItem item) {
     _update(() => playQueue.addNext(item));
-    _notice(tr('将在当前视频之后播放'));
+    _notice(tr('Will play after the current video'));
   }
 
   /// 加入播放队列: [item] goes to the end of [playQueue].
   void queueLast(VideoItem item) {
     final added = playQueue.addLast(item);
     _update(() {});
-    _notice(added ? tr('已加入播放队列') : tr('播放队列里已经有这个视频'));
+    _notice(added ? tr('Added to the play queue') : tr('The play queue already has this video'));
   }
 
   void removeQueued(String id) => _update(() => playQueue.remove(id));
@@ -2121,7 +2312,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     _sleepTimer = after == null ? null : Timer(after, () {
       unawaited(player?.pause());
       _update(() => sleepAt = null);
-      _notice(tr('定时关闭：已暂停播放'));
+      _notice(tr('Sleep timer: playback paused'));
     });
     _update(() {
       sleepAt = after == null ? null : DateTime.now().add(after);
@@ -2175,6 +2366,27 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (target < Duration.zero) target = Duration.zero;
     if (duration > Duration.zero && target > duration) target = duration;
     await player.seek(target);
+  }
+
+  /// How far behind its live edge a live stream may play before the
+  /// player offers to jump back to it.
+  static const liveBehind = Duration(seconds: 20);
+
+  /// Jumps a live stream to its newest moment, at normal speed, playing.
+  /// The last seconds are left alone: libmpv at the very end of a live
+  /// playlist waits for segments that do not exist yet.
+  Future<void> goLive() async {
+    final player = this.player;
+    if (player == null) return;
+    // The split stream cannot seek; it is opened again at the newest fragment.
+    if (_liveSplit != null && _liveSplit == playing?.id) return reloadVideo();
+    final duration = player.state.duration;
+    if (duration > Duration.zero) {
+      final target = duration - const Duration(seconds: 3);
+      await player.seek(target < Duration.zero ? Duration.zero : target);
+    }
+    if (player.state.rate != 1) await player.setRate(1);
+    if (!player.state.playing) await player.play();
   }
 
   /// A-B 循环: where the loop starts, then where it ends; mpv plays the
@@ -2237,7 +2449,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     final rate = saved?.rate ?? settings.defaultSpeed;
     if (rate != player.state.rate) await player.setRate(rate);
     // Said once, so a speed that came back on its own is not a surprise.
-    if (saved?.rate case final kept? when kept != settings.defaultSpeed) _notice(tr('这个频道按上次的 {0}x 倍速播放', [rateText(kept)]));
+    if (saved?.rate case final kept? when kept != settings.defaultSpeed) _notice(tr('This channel plays at its last speed, {0}x', [rateText(kept)]));
     final volume = saved?.volume?.toDouble() ?? _sessionVolume;
     if (volume != null && volume != player.state.volume) await player.setVolume(volume.clamp(0.0, settings.volumeMax.toDouble()).toDouble());
     if (this.player == player && playing?.id == item.id) _playbackChannel = key;
@@ -2279,10 +2491,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   Future<String> summarize({void Function(int done, int total)? onProgress}) async {
     final item = playing;
     final details = this.details;
-    if (item == null) throw TranslationException(tr('没有正在播放的视频'));
+    if (item == null) throw TranslationException(tr('No video is playing'));
     if (_summaries[item.id] case final done?) return done;
     final ai = aiServiceFor(preferences.translation, translationKeys, _http);
-    if (ai == null) throw TranslationException(tr('请先在“翻译与 AI”里设置 AI 接口和密钥'));
+    if (ai == null) throw TranslationException(tr('Set up the AI interface and key under Translation & AI first'));
     final subtitles = details?.subtitles ?? const <SubtitleOption>[];
     final option = originalSubtitle(subtitles, language: details?.language) ?? subtitles.firstOrNull;
     final title = details?.title.isNotEmpty == true ? details!.title : item.title;
@@ -2292,7 +2504,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       // and chapters are all there is to go on.
       final description = details?.description ?? '';
       final chapters = [for (final c in details?.chapters ?? const <Chapter>[]) (start: c.start, title: c.title)];
-      if (!canSummarizeDescription(description, chapters)) throw TranslationException(tr('这个视频没有字幕，简介也太短，无法总结'));
+      if (!canSummarizeDescription(description, chapters)) throw TranslationException(tr('This video has no subtitles and its description is too short to summarize'));
       summary = await summarizeDescription(ai, title, description, chapters);
       logInfo('Summarized ${item.id} from its description');
     } else {
@@ -2335,7 +2547,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, settings.volumeMax.toDouble()).toDouble());
   }
 
-  /// The video's brightness, -100 to 100, as 画面与音画同步调节 keeps it.
+  /// The video's brightness, within [pictureLimit], as 画面与音画同步调节 keeps it.
   int get brightness => settings.picture['brightness'] ?? 0;
   Timer? _brightnessSave;
 
@@ -2343,7 +2555,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// saved, and shown to the rest of the app, once the changes pause, not
   /// at every wheel notch or slide step.
   Future<int> changeBrightness(int delta) async {
-    final value = (brightness + delta).clamp(-100, 100);
+    final value = (brightness + delta).clamp(-pictureLimit('brightness'), pictureLimit('brightness'));
     settings = settings.copyWith(picture: {...settings.picture, 'brightness': value});
     _brightnessSave?.cancel();
     _brightnessSave = Timer(const Duration(seconds: 1), () {
@@ -2382,9 +2594,9 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (height > 1080) {
       final usable = [VideoCodec.vp9, VideoCodec.av1].where((codec) => !next.disabledCodecs.contains(codec));
       if (usable.isEmpty) {
-        if (asDefault) _notice(tr('VP9 和 AV1 都已禁用，H.264 最高只能到 1080p'));
+        if (asDefault) _notice(tr('VP9 and AV1 are both disabled, and H.264 stops at 1080p'));
       } else if (!usable.any((codec) => FormatPolicy.hardware(next, codec))) {
-        _notice(tr('这台电脑不能硬解 VP9 和 AV1，1440p 和 4K 只能用 CPU 软解，占用会很高'));
+        _notice(tr('This PC cannot decode VP9 or AV1 in hardware, so 1440p and 4K are decoded on the CPU and use a lot of it'));
       }
     }
     await reloadVideo(next);
@@ -2456,7 +2668,7 @@ class AppController extends ChangeNotifier with _ExploreState {
             _update(() => availableHeights = resolved.heightsFor(settings));
             final lost = resolved.lostToDisabled(settings, _playback.maxHeight);
             if (lost != null) {
-              _notice(tr('这个视频的 {0}p 只有 {1}，已被禁用，正在播放 {2}p', [lost.height, lost.codecs.map((c) => c.label).join(' / '), lost.playing]));
+              _notice(tr("This video's {0}p is only in {1}, which is disabled; playing {2}p", [lost.height, lost.codecs.map((c) => c.label).join(' / '), lost.playing]));
             }
           }
         } catch (e) {
@@ -2606,16 +2818,15 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// Closes the video in libmpv rather than pausing it, so its cache,
   /// decoded frames and textures are freed, then hands the freed memory back
-  /// to Windows. Coming back to the video opens it again where it was left.
+  /// to the system. Coming back to the video opens it again where it was left.
   void _unload() {
     final player = this.player;
     if (player == null) return;
     unawaited(player.stop().then((_) => releaseMemory()));
   }
 
-  /// Hands memory freed by closed videos back to Windows.
+  /// Hands memory freed by closed videos back to the system.
   void releaseMemory() {
-    if (!Platform.isWindows) return;
     final before = ProcessInfo.currentRss;
     releaseFreedMemory();
     logDebug(() => 'Released idle memory: ${before >> 20} MB → ${ProcessInfo.currentRss >> 20} MB');
@@ -2735,6 +2946,10 @@ class AppController extends ChangeNotifier with _ExploreState {
     await downloads?.flush();
     await _translationCache.save();
     await _flushAppearance();
+    if (_brightnessSave?.isActive ?? false) {
+      _brightnessSave!.cancel();
+      await _settingsStore?.save(settings);
+    }
     for (final subscription in _playerSubscriptions) {
       await subscription.cancel();
     }
@@ -2762,15 +2977,15 @@ class AppController extends ChangeNotifier with _ExploreState {
     return [
       'Lumtub $appVersion',
       'Windows ${Platform.operatingSystemVersion}',
-      tr('CPU 核心 {0}', [Platform.numberOfProcessors]),
-      'GPU ${windowsVideoInfo.gpuNames.isEmpty ? '未知' : windowsVideoInfo.gpuNames.join(' / ')}',
-      'libmpv ${tools?.libmpv.current?.label ?? '内置'}',
-      'yt-dlp ${tools?.ytDlpVersion ?? '未安装'}',
-      'Deno ${tools?.denoVersion ?? '未安装'}',
-      tr('硬件解码设置 {0} · 当前 {1} · {2}', [settings.hwdec, currentCodec, currentHwdec]),
-      tr('画质上限 {0} · 播放策略 {1} · 禁用编码 {2} · 音质 {3}', [settings.maxHeight == 0 ? tr('自动') : '${settings.maxHeight}p', settings.strategy.label, FormatPolicy.disabledNames(settings).isEmpty ? tr('无') : FormatPolicy.disabledNames(settings), settings.audioQuality.label]),
-      tr('缓存 {0} · {1} 秒 · {2} MB', [settings.cacheMode, settings.cacheSeconds, settings.cacheMemoryMb]),
-      tr('数据目录 {0}', [directories?.root.path ?? tr('未知')]),
+      tr('CPU cores {0}', [Platform.numberOfProcessors]),
+      'GPU ${windowsVideoInfo.gpuNames.isEmpty ? 'Unknown' : windowsVideoInfo.gpuNames.join(' / ')}',
+      tools?.libmpvLabel ?? 'libmpv',
+      'yt-dlp ${tools?.ytDlpVersion ?? 'Not installed'}',
+      'Deno ${tools?.denoVersion ?? 'Not installed'}',
+      tr('Hardware decoding setting {0} · current {1} · {2}', [settings.hwdec, currentCodec, currentHwdec]),
+      tr('Quality cap {0} · Strategy {1} · Disabled codecs {2} · Audio {3}', [settings.maxHeight == 0 ? tr('Auto') : '${settings.maxHeight}p', settings.strategy.label, FormatPolicy.disabledNames(settings).isEmpty ? tr('None') : FormatPolicy.disabledNames(settings), settings.audioQuality.label]),
+      tr('Cache {0} · {1} s · {2} MB', [settings.cacheMode, settings.cacheSeconds, settings.cacheMemoryMb]),
+      tr('Data folder {0}', [directories?.root.path ?? tr('Unknown')]),
     ].join('\n');
   }
 
@@ -2819,6 +3034,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (!_shutDown) unawaited(player?.dispose());
     _tools?.dispose();
     unawaited(_notices.close());
+    unawaited(_waylandTopNotes.close());
     unawaited(_finishedDownloads.close());
     super.dispose();
   }
@@ -2826,13 +3042,13 @@ class AppController extends ChangeNotifier with _ExploreState {
 
 /// What 清除本地数据 can remove.
 enum LocalData {
-  history('观看历史和搜索记录'),
-  progress('播放进度'),
-  recommendations('“不感兴趣”记录'),
-  cache('缓存（视频、缩略图、翻译）'),
-  account('Google 账号登录'),
-  keys('翻译服务的 API 密钥'),
-  settings('所有设置（恢复默认）');
+  history('Watch history and searches'),
+  progress('Playback progress'),
+  recommendations('“Not interested” marks'),
+  cache('Cache (video, thumbnails, translations)'),
+  account('Google account sign-in'),
+  keys('Translation service API keys'),
+  settings('All settings (back to defaults)');
 
   const LocalData(this._label);
   final String _label;
@@ -2848,7 +3064,7 @@ int _readPlayerFiles(String folder, String? mpv) {
   final files = <File>[
     for (final entry in Directory(folder).listSync())
       if (entry is File && entry.path.toLowerCase().endsWith('.dll')) entry,
-    if (mpv != null && !mpv.toLowerCase().startsWith(folder.toLowerCase())) File(mpv),
+    if (mpv != null && mpv.isNotEmpty && !mpv.toLowerCase().startsWith(folder.toLowerCase())) File(mpv),
     if (Platform.isWindows) File('${Platform.environment['SystemRoot'] ?? r'C:\Windows'}\\System32\\d3dcompiler_47.dll'),
   ];
   var total = 0;

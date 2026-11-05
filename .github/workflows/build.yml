@@ -14,6 +14,11 @@ on:
   pull_request:
     branches: [main]
 
+# A newer push to a pull request makes its earlier run moot.
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   windows:
     name: Windows ${{ matrix.package_arch }}
@@ -51,6 +56,9 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # The pull request's own commit, to read whether it asks for README pictures.
+          fetch-depth: 2
 
       - name: Windows - verify latest zhongfly libmpv
         shell: pwsh
@@ -67,7 +75,7 @@ jobs:
           # A new release is published before its assets finish uploading, so
           # take the newest one that already has this architecture's archive.
           $pattern = "^mpv-dev-$([regex]::Escape($env:MPV_ARCH))-.+\.7z$"
-          $releases = Invoke-RestMethod -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases?per_page=5' -Headers $headers
+          $releases = Invoke-RestMethod -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases?per_page=5' -Headers $headers
           $release = $null
           $asset = $null
           foreach ($candidate in $releases) {
@@ -83,14 +91,14 @@ jobs:
           $archive = Join-Path $env:RUNNER_TEMP $asset.name
           $extractDir = Join-Path $env:RUNNER_TEMP 'lumtub-mpv-check'
           New-Item -ItemType Directory -Force -Path $extractDir | Out-Null
-          Invoke-WebRequest -Uri $downloadUri -OutFile $archive -Headers $headers
+          Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri $downloadUri -OutFile $archive -Headers $headers
           $actualHash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($actualHash -ne $expectedHash) { throw "SHA-256 mismatch for $($asset.name)" }
           & tar.exe -xf $archive -C $extractDir 2>$null
           $library = Get-ChildItem -LiteralPath $extractDir -Filter 'libmpv-2.dll' -File -Recurse | Select-Object -First 1
           if (-not $library) {
             $sevenZip = Join-Path $env:RUNNER_TEMP '7zr.exe'
-            Invoke-WebRequest -Uri 'https://www.7-zip.org/a/7zr.exe' -OutFile $sevenZip
+            Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://www.7-zip.org/a/7zr.exe' -OutFile $sevenZip
             & $sevenZip x -y "-o$extractDir" $archive | Out-Null
             if ($LASTEXITCODE -ne 0) { throw 'Could not extract the latest libmpv archive.' }
             $library = Get-ChildItem -LiteralPath $extractDir -Filter 'libmpv-2.dll' -File -Recurse | Select-Object -First 1
@@ -106,7 +114,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $archive = Join-Path $env:RUNNER_TEMP "flutter_windows_$env:FLUTTER_VERSION-stable.zip"
           $destination = Join-Path $env:RUNNER_TEMP 'flutter-sdk'
-          Invoke-WebRequest -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_$env:FLUTTER_VERSION-stable.zip" -OutFile $archive
+          Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_$env:FLUTTER_VERSION-stable.zip" -OutFile $archive
           Expand-Archive -LiteralPath $archive -DestinationPath $destination -Force
           $flutterBin = Join-Path $destination 'flutter/bin'
           if (-not (Test-Path -LiteralPath $flutterBin)) { throw 'Flutter SDK did not contain flutter/bin.' }
@@ -195,7 +203,7 @@ jobs:
 
           # Headers from the archive media_kit uses on x64 (same MD5 check).
           $archive = Join-Path $env:RUNNER_TEMP 'ANGLE.7z'
-          Invoke-WebRequest -Uri 'https://github.com/alexmercerind/flutter-windows-ANGLE-OpenGL-ES/releases/download/v1.0.1/ANGLE.7z' -OutFile $archive
+          Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri 'https://github.com/alexmercerind/flutter-windows-ANGLE-OpenGL-ES/releases/download/v1.0.1/ANGLE.7z' -OutFile $archive
           $md5 = (Get-FileHash -LiteralPath $archive -Algorithm MD5).Hash.ToLowerInvariant()
           if ($md5 -ne 'e866f13e8d552348058afaafe869b1ed') { throw 'ANGLE header archive failed its MD5 check.' }
           $headers = Join-Path $env:RUNNER_TEMP 'angle-headers'
@@ -225,7 +233,7 @@ jobs:
           if (-not (Get-Command rustup -ErrorAction SilentlyContinue)) {
             $hostTriple = if ($env:PACKAGE_ARCH -eq 'arm64') { 'aarch64-pc-windows-msvc' } else { 'x86_64-pc-windows-msvc' }
             $init = Join-Path $env:RUNNER_TEMP 'rustup-init.exe'
-            Invoke-WebRequest -Uri "https://static.rust-lang.org/rustup/dist/$hostTriple/rustup-init.exe" -OutFile $init
+            Invoke-WebRequest -MaximumRetryCount 5 -RetryIntervalSec 5 -Uri "https://static.rust-lang.org/rustup/dist/$hostTriple/rustup-init.exe" -OutFile $init
             & $init -y --profile minimal --no-modify-path
             if ($LASTEXITCODE -ne 0) { throw 'rustup-init failed.' }
             $cargoBin = Join-Path $env:USERPROFILE '.cargo\bin'
@@ -245,6 +253,24 @@ jobs:
         with:
           workspaces: native/lumtub_core
           key: ${{ matrix.package_arch }}
+
+      # ring, which rustls uses for the Mozilla and Google certificate lists,
+      # is built with clang on Windows on Arm.
+      - name: Windows - find clang
+        if: matrix.package_arch == 'arm64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (-not (Get-Command clang -ErrorAction SilentlyContinue)) {
+            $llvm = 'C:\Program Files\LLVM\bin'
+            if (-not (Test-Path (Join-Path $llvm 'clang.exe'))) {
+              choco install llvm -y --no-progress
+              if ($LASTEXITCODE -ne 0) { throw 'Installing LLVM failed.' }
+            }
+            $env:PATH = "$llvm;$env:PATH"
+            $llvm | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          }
+          clang --version
 
       - name: Windows - build the Rust core
         shell: pwsh
@@ -353,6 +379,26 @@ jobs:
           & $iscc.Source "/DAppVersion=$env:LUMTUB_VERSION" "/DSourceDir=$source" "/DOutputDir=$output" "/DPackageArch=$env:PACKAGE_ARCH" "/DInstallArch=$env:INSTALL_ARCH" 'windows/installer/lumtub.iss'
           if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed.' }
 
+      - name: Windows - README pictures
+        if: matrix.package_arch == 'x64'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $message = git log -1 --format=%B HEAD^2 2> $null
+          if ($LASTEXITCODE -ne 0) { $message = git log -1 --format=%B HEAD }
+          if (-not (($message -join "`n").Contains('[showcase]'))) { exit 0 }
+          Set-DisplayResolution -Width 1920 -Height 1080 -Force -ErrorAction SilentlyContinue
+          $package = "Lumtub_$env:LUMTUB_VERSION`_windows-$env:PACKAGE_ARCH"
+          windows/packaging/showcase.ps1 (Resolve-Path "$package/lumtub.exe").Path "$env:RUNNER_TEMP/shots"
+
+      - name: Windows - upload README pictures
+        if: matrix.package_arch == 'x64'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: readme-shots-windows
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+
       - name: Windows - upload portable ZIP
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -367,9 +413,399 @@ jobs:
           path: installer/Lumtub_*_windows-${{ matrix.package_arch }}-setup.exe
           if-no-files-found: error
 
+  linux:
+    name: Linux ${{ matrix.package_arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package_arch: x64
+            runner: ubuntu-24.04
+            appimage_arch: x86_64
+            appimagetool_sha256: 46fdd785094c7f6e545b61afcfb0f3d98d8eab243f644b4b17698c01d06083d1
+          - package_arch: arm64
+            runner: ubuntu-24.04-arm
+            appimage_arch: aarch64
+            appimagetool_sha256: 04f45ea45b5aa07bb2b071aed9dbf7a5185d3953b11b47358c1311f11ea94a96
+    # Pinned, so a new default Ubuntu changes nothing; the build itself runs
+    # in Debian 12, whose glibc 2.36 sets the oldest Linux the AppImage runs on.
+    runs-on: ${{ matrix.runner }}
+    container: debian:12
+    env:
+      FLUTTER_VERSION: 3.47.7
+      PACKAGE_ARCH: ${{ matrix.package_arch }}
+    permissions:
+      contents: read
+    steps:
+      - name: Linux - install build tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl git unzip xz-utils zip file patchelf \
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libmpv-dev libfontconfig-dev libssl-dev desktop-file-utils python3
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # The pull request's own commit, to read whether it asks for README pictures.
+          fetch-depth: 2
+
+      - name: Linux - install Flutter stable SDK
+        run: |
+          git config --global --add safe.directory '*'
+          if [ "$PACKAGE_ARCH" = x64 ]; then
+            archive="$RUNNER_TEMP/flutter.tar.xz"
+            curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz"
+            tar -xJf "$archive" -C "$RUNNER_TEMP"
+          else
+            # Flutter publishes no arm64 Linux SDK archive; the same release
+            # from git fetches its arm64 Dart SDK and engine on first run.
+            git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          fi
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+
+      - name: Linux - install the Rust toolchain
+        run: |
+          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          "$HOME/.cargo/bin/rustc" --version
+
+      - name: Linux - cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: linux-${{ matrix.package_arch }}
+
+      - name: Linux - build the Rust core
+        run: |
+          manifest=native/lumtub_core/Cargo.toml
+          cargo test --manifest-path "$manifest" --release
+          cargo build --manifest-path "$manifest" --release --lib
+          core="$PWD/native/lumtub_core/target/release/liblumtub_core.so"
+          echo "liblumtub_core.so: $(stat -c %s "$core") bytes"
+          echo "LUMTUB_CORE_DLL=$core" >> "$GITHUB_ENV"
+
+      - name: Linux - get packages
+        run: flutter pub get
+
+      - name: Linux - run unit tests
+        run: flutter test
+
+      - name: Linux - determine package version
+        run: |
+          base=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)
+          if [ "${GITHUB_REF#refs/tags/v}" != "$GITHUB_REF" ]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            version="$base-$(echo "$GITHUB_SHA" | cut -c1-7)"
+          fi
+          echo "$version" | grep -Eq '^[0-9A-Za-z.+-]+$' || { echo "Unexpected version: $version"; exit 1; }
+          echo "LUMTUB_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Version $version"
+
+      - name: Linux - build release
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
+        run: flutter build linux --release --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE="linux-$PACKAGE_ARCH" --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
+
+      - name: Linux - package AppImage
+        env:
+          APPIMAGE_ARCH: ${{ matrix.appimage_arch }}
+          APPIMAGETOOL_SHA256: ${{ matrix.appimagetool_sha256 }}
+        run: |
+          bundle="build/linux/$PACKAGE_ARCH/release/bundle"
+          linux/packaging/make-appdir.sh "$bundle" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/AppDir"
+          cp LICENSE NOTICE "$RUNNER_TEMP/AppDir/usr/bin/"
+          tool="$RUNNER_TEMP/appimagetool"
+          curl -fsSL --retry 5 --retry-all-errors -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-$APPIMAGE_ARCH.AppImage"
+          echo "$APPIMAGETOOL_SHA256  $tool" | sha256sum -c -
+          chmod +x "$tool"
+          # No FUSE in the container: the tool unpacks itself and runs.
+          # The runtime appimagetool would fetch itself, with retries.
+          runtime="$RUNNER_TEMP/runtime"
+          curl -fsSL --retry 5 --retry-all-errors -o "$runtime" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$APPIMAGE_ARCH"
+          APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$APPIMAGE_ARCH" "$tool" --runtime-file "$runtime" --no-appstream "$RUNNER_TEMP/AppDir" "Lumtub_${LUMTUB_VERSION}_linux-$PACKAGE_ARCH.AppImage"
+          ls -l Lumtub_*.AppImage
+
+      - name: Linux - smoke test the AppImage
+        run: |
+          apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri libegl1 libgles2 ffmpeg imagemagick
+          linux/packaging/smoke.sh Lumtub_*_linux-$PACKAGE_ARCH.AppImage "$RUNNER_TEMP/smoke"
+
+      - name: Linux - README pictures
+        if: matrix.package_arch == 'x64'
+        run: |
+          message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
+          if echo "$message" | grep -qF '[showcase]'; then
+            apt-get install -y --no-install-recommends xdotool fonts-noto-core fonts-noto-cjk bc
+            linux/packaging/showcase.sh Lumtub_*_linux-x64.AppImage "$RUNNER_TEMP/shots"
+          fi
+
+      - name: Linux - upload README pictures
+        if: matrix.package_arch == 'x64'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: readme-shots-linux
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+
+      - name: Linux - upload smoke test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: smoke-linux-${{ matrix.package_arch }}
+          path: |
+            ${{ runner.temp }}/smoke
+            !${{ runner.temp }}/smoke/test.mp4
+          if-no-files-found: ignore
+
+      - name: Linux - upload AppImage
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Lumtub-linux-${{ matrix.package_arch }}-appimage
+          path: Lumtub_*_linux-${{ matrix.package_arch }}.AppImage
+          if-no-files-found: error
+
+  showcase:
+    name: README pictures
+    # Runs only for a commit whose message contains [showcase]: pushes the
+    # pictures the Windows x64, Linux x64 and macOS jobs took of the app's
+    # pages to the readme-shots branch, one folder per system.
+    needs: [windows, linux, macos]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Check whether pictures are wanted
+        id: wanted
+        run: |
+          if git log -1 --format=%B | grep -qF '[showcase]'; then echo "run=true" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.wanted.outputs.run == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: readme-shots-*
+          path: ${{ runner.temp }}/shots
+      - name: Cache the narration voice
+        if: steps.wanted.outputs.run == 'true'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/kokoro
+          key: kokoro-v1.0
+      - name: Make the promo videos
+        if: steps.wanted.outputs.run == 'true'
+        continue-on-error: true
+        run: |
+          # Kokoro (Apache-2.0) reads the narration; the files are checked
+          # against the hashes they had when this was written.
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-cjk fontconfig
+          voice="$RUNNER_TEMP/kokoro"
+          mkdir -p "$voice"
+          for file in kokoro-v1.0.onnx voices-v1.0.bin; do
+            [ -s "$voice/$file" ] || curl -fsSL --retry 5 --retry-all-errors -o "$voice/$file" "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/$file"
+          done
+          (cd "$voice" && sha256sum -c) <<'SUMS'
+          7d5df8ecf7d4b1878015a32686053fd0eebe2bc377234608764cc0ef3636a6c5  kokoro-v1.0.onnx
+          bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d  voices-v1.0.bin
+          SUMS
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -q kokoro-onnx==0.6.1 'misaki[zh]==0.7.4' scipy==1.18.1 pillow==13.0.0
+          "$RUNNER_TEMP/venv/bin/python" linux/packaging/promo.py "$RUNNER_TEMP/shots/readme-shots-linux" "$voice/kokoro-v1.0.onnx" "$voice/voices-v1.0.bin"
+      - name: Push the pictures
+        if: steps.wanted.outputs.run == 'true'
+        run: |
+          sha=$(git rev-parse --short HEAD)
+          git checkout --orphan readme-shots
+          git rm -rfq .
+          git clean -fdxq
+          for system in windows linux macos; do
+            from="$RUNNER_TEMP/shots/readme-shots-$system"
+            [ -d "$from" ] || continue
+            mkdir -p "$system"
+            cp "$from"/*.png "$from"/*.log "$from"/stdout.txt "$from"/promo-*.mp4 "$from"/tour.gif "$system/" 2> /dev/null || true
+          done
+          git add -A
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Pictures of $sha"
+          git push -f origin readme-shots
+
+  macos:
+    name: macOS
+    # Pinned like the others; Apple silicon, building once for both CPUs and
+    # packing a DMG thinned to each.
+    runs-on: macos-15
+    env:
+      FLUTTER_VERSION: 3.47.7
+      FFMPEG_TAG: n8.0
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # The pull request's own commit, to read whether it asks for README pictures.
+          fetch-depth: 2
+
+      - name: macOS - install Flutter stable SDK
+        run: |
+          archive="$RUNNER_TEMP/flutter.zip"
+          curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_$FLUTTER_VERSION-stable.zip"
+          unzip -q "$archive" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+
+      - name: macOS - install the Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --target aarch64-apple-darwin,x86_64-apple-darwin
+          rustup default stable
+
+      - name: macOS - cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: macos-universal
+
+      - name: macOS - build the Rust core
+        run: |
+          manifest=native/lumtub_core/Cargo.toml
+          cargo test --manifest-path "$manifest" --release
+          for target in aarch64-apple-darwin x86_64-apple-darwin; do
+            MACOSX_DEPLOYMENT_TARGET=12.0 cargo build --manifest-path "$manifest" --release --lib --target "$target"
+          done
+          core="$RUNNER_TEMP/liblumtub_core.dylib"
+          lipo -create -output "$core" native/lumtub_core/target/{aarch64,x86_64}-apple-darwin/release/liblumtub_core.dylib
+          install_name_tool -id @rpath/liblumtub_core.dylib "$core"
+          lipo -info "$core"
+          echo "LUMTUB_CORE_DLL=$core" >> "$GITHUB_ENV"
+
+      - name: macOS - get packages
+        run: flutter pub get
+
+      - name: macOS - run unit tests
+        run: flutter test
+
+      - name: macOS - determine package version
+        run: |
+          base=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)
+          if [ "${GITHUB_REF#refs/tags/v}" != "$GITHUB_REF" ]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            version="$base-$(echo "$GITHUB_SHA" | cut -c1-7)"
+          fi
+          echo "$version" | grep -Eq '^[0-9A-Za-z.+-]+$' || { echo "Unexpected version: $version"; exit 1; }
+          echo "LUMTUB_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Version $version"
+
+      - name: macOS - build release
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
+        run: flutter build macos --release --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=macos --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
+
+      - name: macOS - restore ffmpeg
+        id: ffmpeg-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/ffmpeg
+          key: macos-ffmpeg-${{ env.FFMPEG_TAG }}-${{ hashFiles('macos/packaging/build-ffmpeg.sh') }}
+
+      - name: macOS - build ffmpeg
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --quiet --depth 1 --branch "$FFMPEG_TAG" https://github.com/FFmpeg/FFmpeg.git "$RUNNER_TEMP/ffmpeg-src"
+          git -C "$RUNNER_TEMP/ffmpeg-src" rev-parse HEAD
+          macos/packaging/build-ffmpeg.sh "$RUNNER_TEMP/ffmpeg-src" "$RUNNER_TEMP/ffmpeg"
+
+      - name: macOS - import the signing certificate
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          # Only once a Developer ID certificate is in the repository's
+          # secrets; until then the app is signed ad hoc.
+          if [ -z "$APPLE_CERTIFICATE_P12" ]; then
+            echo "No Developer ID certificate; signing ad hoc."
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          password=$(openssl rand -hex 16)
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/cert.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" > /dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          identity=$(security find-identity -v -p codesigning "$keychain" | sed -n 's/.*"\(Developer ID Application:.*\)"/\1/p' | head -1)
+          [ -n "$identity" ] || { echo "The certificate is not a Developer ID Application one."; exit 1; }
+          echo "APPLE_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+
+      - name: macOS - package DMGs
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          app=build/macos/Build/Products/Release/Lumtub.app
+          ffmpeg_version="FFmpeg ${FFMPEG_TAG#n} (LGPL)"
+          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg" "$ffmpeg_version" "Lumtub_${LUMTUB_VERSION}_macos-arm64.dmg" arm64
+          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg" "$ffmpeg_version" "Lumtub_${LUMTUB_VERSION}_macos-x64.dmg" x86_64
+
+      - name: macOS - smoke test the Apple silicon DMG
+        run: macos/packaging/smoke.sh Lumtub_*_macos-arm64.dmg "$RUNNER_TEMP/smoke"
+
+      - name: macOS - smoke test the Intel DMG under Rosetta
+        continue-on-error: true
+        run: |
+          arch -x86_64 /usr/bin/true || softwareupdate --install-rosetta --agree-to-license
+          macos/packaging/smoke.sh Lumtub_*_macos-x64.dmg "$RUNNER_TEMP/smoke-intel"
+
+      - name: macOS - README pictures
+        continue-on-error: true
+        run: |
+          message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
+          if echo "$message" | grep -qF '[showcase]'; then
+            macos/packaging/showcase.sh Lumtub_*_macos-arm64.dmg "$RUNNER_TEMP/shots"
+          fi
+
+      - name: macOS - upload README pictures
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: readme-shots-macos
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+
+      - name: macOS - upload smoke test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: smoke-macos
+          path: |
+            ${{ runner.temp }}/smoke
+            ${{ runner.temp }}/smoke-intel
+            !${{ runner.temp }}/smoke/test.mp4
+            !${{ runner.temp }}/smoke-intel/test.mp4
+          if-no-files-found: ignore
+
+      - name: macOS - upload Apple silicon DMG
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Lumtub-macos-arm64-dmg
+          path: Lumtub_*_macos-arm64.dmg
+          if-no-files-found: error
+
+      - name: macOS - upload Intel DMG
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Lumtub-macos-x64-dmg
+          path: Lumtub_*_macos-x64.dmg
+          if-no-files-found: error
+
   release:
-    name: Windows Release
-    needs: windows
+    name: Release
+    needs: [windows, linux]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -383,19 +819,22 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: dist
+          # The macOS DMG joins once it has been tried.
+          pattern: Lumtub-{windows,linux}-*
           merge-multiple: true
       - name: Windows - sign update packages
         env:
           LUMTUB_UPDATE_KEY: ${{ secrets.LUMTUB_UPDATE_KEY }}
         run: |
-          # Each installer and ZIP gets a .sig (Ed25519 + ML-DSA-65); Lumtub
+          # Each installer, ZIP, AppImage and DMG gets a .sig (Ed25519 + ML-DSA-65); Lumtub
           # installs an update only when both signatures hold.
           if [[ -z "$LUMTUB_UPDATE_KEY" ]]; then
             echo "::error::The LUMTUB_UPDATE_KEY secret is not set; the release would not update itself."
             exit 1
           fi
           rustup update stable
-          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip
+          shopt -s nullglob
+          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg
       - name: Windows - publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

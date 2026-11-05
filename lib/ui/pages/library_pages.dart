@@ -47,11 +47,11 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
     if (channels.isEmpty) {
       return StatusView(
         icon: AppIcons.stack,
-        title: tr('还没有关注频道'),
-        message: tr('在播放页或频道页点“关注”，频道的新视频就会出现在这里。也可以登录 Google 账号，导入 YouTube 订阅。关注列表只保存在本机。'),
+        title: tr('No followed channels yet'),
+        message: tr('Tap "Follow" on a player or channel page, and the channel\'s new videos will show up here. You can also sign in with Google to import your YouTube subscriptions. Your follow list is stored only on this device.'),
         action: controller.account?.signedIn ?? false
             ? null
-            : FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: const Icon(AppIcons.signIn), label: Text(tr('登录并导入订阅'))),
+            : FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: const Icon(AppIcons.signIn), label: Text(tr('Sign in and import subscriptions'))),
       );
     }
     final group = library.channelGroups.contains(_group) ? _group : null;
@@ -70,6 +70,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
           itemWidth: vertical ? _railWidth - 12 : 72,
           channels: inGroup,
           feed: library.feed,
+          live: library.liveChannels,
           selected: selected,
           thumbnails: controller.thumbnailDirectory,
           onSelect: _select,
@@ -94,11 +95,11 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
   Widget _page(BuildContext context, LibraryController library, List<ChannelRef> channels, ChannelRef? selected, List<VideoItem> feed, Widget? strip, ChannelGroup? group) {
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
-        tr('订阅'),
-        subtitle: tr('{0} 个频道 · 仅保存在本机', [channels.length]),
+        tr('Subscriptions'),
+        subtitle: tr('{0} channels · Saved on this device only', [channels.length]),
         trailing: library.loadingFeed
             ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
-            : TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('刷新'))),
+            : TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
       )),
       SliverToBoxAdapter(child: _GroupChips(
         groups: library.channelGroups,
@@ -115,16 +116,16 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
           child: Row(children: [
             Expanded(child: Text(
-              tr('{0} 的新视频', [selected.name.isEmpty ? selected.id : selected.name]),
+              tr('New from {0}', [selected.name.isEmpty ? selected.id : selected.name]),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             )),
-            TextButton(onPressed: () => _select(null), child: Text(tr('显示全部'))),
+            TextButton(onPressed: () => _select(null), child: Text(tr('Show all'))),
             FilledButton.tonalIcon(
               onPressed: () => controller.openChannel(selected),
               icon: const Icon(AppIcons.caretRight),
-              label: Text(tr('进入频道')),
+              label: Text(tr('Open channel')),
             ),
           ]),
         )),
@@ -133,8 +134,8 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.cardSpacing),
           child: ErrorBanner(
             library.feedFailures.length > 5
-                ? tr('{0} 等 {1} 个频道暂时无法加载', [library.feedFailures.take(5).join('、'), library.feedFailures.length])
-                : tr('这些频道暂时无法加载：{0}', [library.feedFailures.join('、')]),
+                ? tr('{0} and others, {1} channels in all, could not be loaded', [library.feedFailures.take(5).join(tr(', ')), library.feedFailures.length])
+                : tr("Couldn't load these channels right now: {0}", [library.feedFailures.join(tr(', '))]),
             onRetry: () => library.refreshFeed(force: true),
           ),
         )),
@@ -145,17 +146,17 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       else if (group != null && group.channels.isEmpty)
         SliverFillRemaining(hasScrollBody: false, child: StatusView(
           icon: AppIcons.folderOpen,
-          title: tr('这个分组还没有频道'),
-          action: FilledButton.tonal(onPressed: () => showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels)), child: Text(tr('选择频道'))),
+          title: tr('This group has no channels yet'),
+          action: FilledButton.tonal(onPressed: () => showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels)), child: Text(tr('Choose channels'))),
         ))
       else if (selected != null)
         SliverFillRemaining(hasScrollBody: false, child: StatusView(
           icon: AppIcons.tray,
-          title: tr('这个频道最近没有新视频'),
-          action: FilledButton.tonal(onPressed: () => controller.openChannel(selected), child: Text(tr('进入频道看全部视频'))),
+          title: tr('No recent videos from this channel'),
+          action: FilledButton.tonal(onPressed: () => controller.openChannel(selected), child: Text(tr('Open the channel for all its videos'))),
         ))
       else
-        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.tray, title: tr('暂时没有新视频'))),
+        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.tray, title: tr('No new videos yet'))),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
   }
@@ -174,14 +175,14 @@ class _GroupChips extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 8),
         child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
           if (groups.isNotEmpty) ...[
-            ChoiceChip(label: Text(tr('全部')), selected: selected == null, onSelected: (_) => onSelect(null)),
+            ChoiceChip(label: Text(tr('All')), selected: selected == null, onSelected: (_) => onSelect(null)),
             for (final group in groups)
               ChoiceChip(label: Text('${group.name} · ${group.channels.length}'), selected: selected == group, onSelected: (_) => onSelect(selected == group ? null : group)),
           ],
           TextButton.icon(
             onPressed: onManage,
             icon: Icon(groups.isEmpty ? AppIcons.folderPlus : AppIcons.pencilSimple, size: 18),
-            label: Text(groups.isEmpty ? tr('新建分组') : tr('管理分组')),
+            label: Text(groups.isEmpty ? tr('New group') : tr('Manage groups')),
           ),
         ]),
       );
@@ -198,16 +199,16 @@ class _ManageGroups extends StatelessWidget {
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(initial.isEmpty ? tr('新建分组') : tr('重命名分组')),
+        title: Text(initial.isEmpty ? tr('New group') : tr('Rename group')),
         content: TextField(
           controller: text,
           autofocus: true,
-          decoration: InputDecoration(labelText: tr('分组名称')),
+          decoration: InputDecoration(labelText: tr('Group name')),
           onSubmitted: (v) => Navigator.pop(context, v),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
-          TextButton(onPressed: () => Navigator.pop(context, text.text), child: Text(tr('确认'))),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+          TextButton(onPressed: () => Navigator.pop(context, text.text), child: Text(tr('Confirm'))),
         ],
       ),
     );
@@ -217,29 +218,29 @@ class _ManageGroups extends StatelessWidget {
   Widget build(BuildContext context) => ListenableBuilder(
         listenable: library,
         builder: (context, _) => AlertDialog(
-          title: Text(tr('订阅分组')),
+          title: Text(tr('Subscription groups')),
           content: SizedBox(
             width: 420,
             child: library.channelGroups.isEmpty
-                ? Text(tr('把关注的频道分成几组，比如“学习”“音乐”，订阅页可以只看一组的新视频。'), style: TextStyle(color: context.colors.outline, height: 1.5))
+                ? Text(tr("Sort the channels you follow into groups, such as “Learning” or “Music”, and see one group's new videos at a time on the Subscriptions page."), style: TextStyle(color: context.colors.outline, height: 1.5))
                 : ListView(shrinkWrap: true, children: [
                     for (final group in library.channelGroups)
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(AppIcons.folder),
                         title: Text(group.name),
-                        subtitle: Text(tr('{0} 个频道', [group.channels.length])),
+                        subtitle: Text(tr('{0} channels', [group.channels.length])),
                         onTap: () => showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels)),
                         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                           IconButton(
-                            tooltip: tr('重命名'),
+                            tooltip: tr('Rename'),
                             icon: const Icon(AppIcons.pencilLine),
                             onPressed: () async {
                               final name = await _askName(context, initial: group.name);
                               if (name != null && name.trim().isNotEmpty) library.renameGroup(group, name);
                             },
                           ),
-                          IconButton(tooltip: tr('删除分组'), icon: const Icon(AppIcons.trash), onPressed: () => library.removeGroup(group)),
+                          IconButton(tooltip: tr('Delete group'), icon: const Icon(AppIcons.trash), onPressed: () => library.removeGroup(group)),
                         ]),
                       ),
                   ]),
@@ -253,9 +254,9 @@ class _ManageGroups extends StatelessWidget {
                 await showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels));
               },
               icon: const Icon(AppIcons.plus),
-              label: Text(tr('新建分组')),
+              label: Text(tr('New group')),
             ),
-            TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('完成'))),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Done'))),
           ],
         ),
       );
@@ -283,13 +284,13 @@ class _GroupChannelsState extends State<_GroupChannels> {
     return ListenableBuilder(
       listenable: widget.library,
       builder: (context, _) => AlertDialog(
-        title: Text(tr('“{0}”里的频道', [group.name])),
+        title: Text(tr('Channels in “{0}”', [group.name])),
         content: SizedBox(
           width: 420,
           height: 480,
           child: Column(children: [
             TextField(
-              decoration: InputDecoration(isDense: true, prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('筛选频道'), border: const OutlineInputBorder()),
+              decoration: InputDecoration(isDense: true, prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Filter channels'), border: const OutlineInputBorder()),
               onChanged: (v) => setState(() => _filter = v.trim()),
             ),
             const SizedBox(height: 8),
@@ -308,7 +309,7 @@ class _GroupChannelsState extends State<_GroupChannels> {
             )),
           ]),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('完成')))],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Done')))],
       ),
     );
   }
@@ -321,9 +322,11 @@ File? _avatarFile(Directory? thumbnails, ChannelRef channel) =>
 /// mouse wheel too. Those that posted most recently come first, and a dot
 /// marks an upload in the last two days.
 class _ChannelStrip extends StatefulWidget {
-  const _ChannelStrip({this.vertical = false, this.itemWidth = 72, required this.channels, required this.feed, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll});
+  const _ChannelStrip({this.vertical = false, this.itemWidth = 72, required this.channels, required this.feed, required this.live, required this.selected, required this.thumbnails, required this.onSelect, required this.onShowAll});
   final List<ChannelRef> channels;
   final List<VideoItem> feed;
+  /// Channels streaming now.
+  final Set<String> live;
   final ChannelRef? selected;
   final Directory? thumbnails;
   final ValueChanged<ChannelRef?> onSelect;
@@ -357,7 +360,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
       final id = item.channelId;
       if (id != null && !latest.containsKey(id)) latest[id] = item.published;
     }
-    final live = {for (final item in widget.feed) if (item.isLive && item.channelId != null) item.channelId!};
+    final live = widget.live;
     final rank = {for (final (i, id) in latest.keys.indexed) id: i};
     // Channels streaming now first, then by their newest video.
     int order(ChannelRef channel) => (live.contains(channel.id) ? -latest.length - 1 : 0) + (rank[channel.id] ?? latest.length);
@@ -372,7 +375,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
     }
     final fresh = DateTime.now().subtract(const Duration(days: 2));
     final showAll = _StripItem(
-      label: tr('全部 {0} 个', [widget.channels.length]),
+      label: tr('Show all {0}', [widget.channels.length]),
       width: widget.itemWidth,
       selected: false,
       onTap: widget.onShowAll,
@@ -402,7 +405,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
 
   List<Widget> _items(List<ChannelRef> ordered, ChannelRef? selected, Map<String, DateTime?> latest, DateTime fresh, Set<String> live) => [
         _StripItem(
-          label: tr('全部'),
+          label: tr('All'),
           width: widget.itemWidth,
           selected: selected == null,
           onTap: () => widget.onSelect(null),
@@ -466,7 +469,7 @@ class _StripItem extends StatelessWidget {
       waitDuration: const Duration(milliseconds: 600),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         child: SizedBox(
           width: width,
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -485,7 +488,7 @@ class _StripItem extends StatelessWidget {
                   child: Center(child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                     decoration: BoxDecoration(color: _liveRed, borderRadius: BorderRadius.circular(4), border: Border.all(color: colors.surface, width: 1.5)),
-                    child: Text(tr('直播'), style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700, height: 1.2)),
+                    child: Text(tr('Live'), style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700, height: 1.2)),
                   )),
                 )
               else if (fresh)
@@ -565,13 +568,13 @@ class _AllChannelsState extends State<_AllChannels> {
               onChanged: (value) => setState(() => _query = value),
               decoration: InputDecoration(
                 prefixIcon: const Icon(AppIcons.magnifyingGlass),
-                hintText: tr('在 {0} 个关注的频道里搜索', [widget.channels.length]),
+                hintText: tr('Search {0} followed channels', [widget.channels.length]),
               ),
             ),
           ),
           Expanded(
             child: matches.isEmpty
-                ? Center(child: Text(tr('没有匹配的频道')))
+                ? Center(child: Text(tr('No matching channels')))
                 : ListView.builder(
                     itemCount: matches.length,
                     itemBuilder: (context, i) {
@@ -580,7 +583,7 @@ class _AllChannelsState extends State<_AllChannels> {
                         leading: ChannelAvatar(name: channel.name, radius: 18, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel)),
                         title: Text(channel.name.isEmpty ? channel.id : channel.name, maxLines: 1, overflow: TextOverflow.ellipsis),
                         trailing: IconButton(
-                          tooltip: tr('进入频道'),
+                          tooltip: tr('Open channel'),
                           icon: const Icon(AppIcons.arrowSquareOut),
                           onPressed: () {
                             Navigator.pop(context);
@@ -611,21 +614,21 @@ class PlaylistsPage extends StatelessWidget {
     final library = controller.library;
     if (library == null) return const SizedBox.shrink();
     final entries = [
-      (AppController.favoritesPlaylistId, tr('收藏'), library.favorites, AppIcons.heartFill),
-      (AppController.watchLaterPlaylistId, tr('稍后观看'), library.watchLater, AppIcons.clockFill),
+      (AppController.favoritesPlaylistId, tr('Favorites'), library.favorites, AppIcons.heartFill),
+      (AppController.watchLaterPlaylistId, tr('Watch later'), library.watchLater, AppIcons.clockFill),
       for (final playlist in library.playlists) (playlist.id, playlist.name, playlist.items, LibraryController.isRemote(playlist) ? AppIcons.monitorPlay : AppIcons.playlist),
     ];
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: PageHeader(
-        tr('播放列表'),
-        subtitle: tr('仅保存在本机'),
+        tr('Playlist'),
+        subtitle: tr('Saved on this device only'),
         trailing: FilledButton.tonalIcon(
           onPressed: () async {
-            final name = await promptText(context, title: tr('新建播放列表'), hint: tr('播放列表名称'), confirm: tr('创建'));
+            final name = await promptText(context, title: tr('New playlist'), hint: tr('Playlist name'), confirm: tr('Create'));
             if (name != null) library.createPlaylist(name);
           },
           icon: const Icon(AppIcons.plus),
-          label: Text(tr('新建')),
+          label: Text(tr('New')),
         ),
       )),
       SliverVideoLayout(
@@ -644,7 +647,7 @@ class PlaylistsPage extends StatelessWidget {
       if (library.playlists.isEmpty)
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.all(AppStyle.pagePadding),
-          child: Text(tr('右键点击任意视频，可以收藏或添加到播放列表。'), style: TextStyle(color: context.colors.onSurfaceVariant)),
+          child: Text(tr('Right-click any video to add it to favorites or a playlist.'), style: TextStyle(color: context.colors.onSurfaceVariant)),
         )),
       if (controller.tvFeed?.available ?? false) ..._youtubePlaylists(context),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
@@ -655,16 +658,16 @@ class PlaylistsPage extends StatelessWidget {
   List<Widget> _youtubePlaylists(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => controller.ensureTvPlaylists());
     final lists = [
-      PlaylistResult(id: YoutubeTvFeed.watchLaterId, title: tr('稍后观看')),
+      PlaylistResult(id: YoutubeTvFeed.watchLaterId, title: tr('Watch later')),
       ...controller.tvPlaylists,
     ];
     return [
       SliverToBoxAdapter(child: PageHeader(
-        tr('YouTube 账号'),
-        subtitle: tr('保存在 YouTube 上的播放列表'),
+        tr('YouTube account'),
+        subtitle: tr('Playlists saved on YouTube'),
         trailing: controller.tvPlaylistsLoading
             ? const Padding(padding: EdgeInsets.all(8), child: SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)))
-            : TextButton.icon(onPressed: controller.loadTvPlaylists, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('刷新'))),
+            : TextButton.icon(onPressed: controller.loadTvPlaylists, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
       )),
       SliverVideoLayout(
         count: lists.length,
@@ -738,11 +741,13 @@ class _PlaylistCard extends StatelessWidget {
               borderRadius: AppStyle.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
                 if (thumbnailUrl case final url? when items.isEmpty)
-                  Image(image: ResizeImage.resizeIfNeeded(480, null, NetworkImage(url)), fit: BoxFit.cover, errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline)))
+                  Image(color: context.pictureWarmth, colorBlendMode: BlendMode.multiply, image: ResizeImage.resizeIfNeeded(480, null, NetworkImage(url)), fit: BoxFit.cover, errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline)))
                 else if (items.isEmpty)
                   ColoredBox(color: colors.surfaceContainerHighest, child: Icon(icon, size: 40, color: colors.outline))
                 else
                   Image(
+                    color: context.pictureWarmth,
+                    colorBlendMode: BlendMode.multiply,
                     image: thumbnailFor(items.first, thumbnails),
                     fit: BoxFit.cover,
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
@@ -768,7 +773,7 @@ class _PlaylistCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: Text(name, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.onSurface))),
-              if (_shownCount case final shown?) Text(tr('{0} 个视频', [shown]), style: TextStyle(fontSize: 12, color: colors.outline)),
+              if (_shownCount case final shown?) Text(tr('{0} videos', [shown]), style: TextStyle(fontSize: 12, color: colors.outline)),
             ]),
           )),
         ]),
@@ -793,13 +798,13 @@ class PlaylistDetailPage extends StatelessWidget {
     if (!favorites && !later && playlist == null) {
       return StatusView(
         icon: AppIcons.musicNotesMinus,
-        title: tr('播放列表已删除'),
-        action: FilledButton.tonal(onPressed: controller.goBack, child: Text(tr('返回'))),
+        title: tr('Playlist deleted'),
+        action: FilledButton.tonal(onPressed: controller.goBack, child: Text(tr('Back'))),
       );
     }
     final own = List<VideoItem>.of(favorites ? library.favorites : later ? library.watchLater : playlist!.items);
     final items = controller.isReversed(id) ? own.reversed.toList() : own;
-    final name = favorites ? tr('收藏') : later ? tr('稍后观看') : playlist!.name;
+    final name = favorites ? tr('Favorites') : later ? tr('Watch later') : playlist!.name;
     void remove(VideoItem item) => favorites
         ? library.toggleFavorite(item)
         : later
@@ -809,12 +814,12 @@ class PlaylistDetailPage extends StatelessWidget {
       SliverToBoxAdapter(child: Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
         child: Row(children: [
-          IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
+          IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
           const SizedBox(width: 8),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
             Text(
-              playlist != null && LibraryController.isRemote(playlist) ? tr('{0} 个视频 · 来自 YouTube 账号，同步时会更新', [items.length]) : tr('{0} 个视频 · 仅保存在本机', [items.length]),
+              playlist != null && LibraryController.isRemote(playlist) ? tr('{0} videos · From your YouTube account, updated on sync', [items.length]) : tr('{0} videos · Saved on this device only', [items.length]),
               style: TextStyle(color: context.colors.onSurfaceVariant),
             ),
             if (playlistLength(items, progressOf: library.progressOf) case final length?)
@@ -824,24 +829,24 @@ class PlaylistDetailPage extends StatelessWidget {
           FilledButton.icon(
             onPressed: items.isEmpty ? null : () => controller.playList(id, name, own),
             icon: const Icon(AppIcons.playFill),
-            label: Text(tr('播放全部')),
+            label: Text(tr('Play all')),
           ),
           if (later && items.isNotEmpty) ...[
             const SizedBox(width: 4),
-            TextButton.icon(onPressed: () => _clearLater(context, library), icon: const Icon(AppIcons.trashSimple), label: Text(tr('清空'))),
+            TextButton.icon(onPressed: () => _clearLater(context, library), icon: const Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
           ],
           if (playlist != null) ...[
             const SizedBox(width: 4),
-            IconButton(tooltip: tr('重命名'), onPressed: () => _rename(context, library, playlist), icon: const Icon(AppIcons.pencilSimple)),
-            IconButton(tooltip: tr('删除播放列表'), onPressed: () => _delete(context, library, playlist), icon: const Icon(AppIcons.trash)),
+            IconButton(tooltip: tr('Rename'), onPressed: () => _rename(context, library, playlist), icon: const Icon(AppIcons.pencilSimple)),
+            IconButton(tooltip: tr('Delete playlist'), onPressed: () => _delete(context, library, playlist), icon: const Icon(AppIcons.trash)),
           ],
         ]),
       )),
       if (items.isEmpty)
         SliverFillRemaining(hasScrollBody: false, child: StatusView(
           icon: favorites ? AppIcons.heart : later ? AppIcons.clock : AppIcons.listPlus,
-          title: favorites ? tr('还没有收藏视频') : later ? tr('稍后观看是空的') : tr('这个播放列表是空的'),
-          message: later ? tr('右键点击任意视频选“稍后观看”，或在播放页点按钮，想看的视频会先放在这里。') : tr('右键点击任意视频，或在播放页点按钮，就能添加到这里。'),
+          title: favorites ? tr('No favorite videos yet') : later ? tr('Watch later is empty') : tr('This playlist is empty'),
+          message: later ? tr('Right-click any video and choose "Watch later", or use the button on the watch page, to keep videos here for later.') : tr('Right-click any video, or tap the button on the player page, to add it here.'),
         ))
       else
         SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.playList(id, name, own, start: item), onRemove: remove),
@@ -851,28 +856,28 @@ class PlaylistDetailPage extends StatelessWidget {
 
   Future<void> _clearLater(BuildContext context, LibraryController library) async {
     final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-      title: Text(tr('清空稍后观看？')),
-      content: Text(tr('只清空这个列表，视频和观看记录不受影响。')),
+      title: Text(tr('Clear Watch later?')),
+      content: Text(tr('Only this list is cleared; videos and watch history are not affected.')),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('取消'))),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('清空'))),
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Clear all'))),
       ],
     ));
     if (confirmed == true) library.clearWatchLater();
   }
 
   Future<void> _rename(BuildContext context, LibraryController library, LocalPlaylist playlist) async {
-    final name = await promptText(context, title: tr('重命名播放列表'), hint: tr('播放列表名称'), confirm: tr('保存'), initial: playlist.name);
+    final name = await promptText(context, title: tr('Rename playlist'), hint: tr('Playlist name'), confirm: tr('Save'), initial: playlist.name);
     if (name != null) library.renamePlaylist(playlist, name);
   }
 
   Future<void> _delete(BuildContext context, LibraryController library, LocalPlaylist playlist) async {
     final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-      title: Text(tr('删除“{0}”？', [playlist.name])),
-      content: Text(tr('只删除这个播放列表，视频和观看记录不受影响。')),
+      title: Text(tr('Delete "{0}"?', [playlist.name])),
+      content: Text(tr('Only deletes this playlist. Videos and watch history are not affected.')),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('取消'))),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('删除'))),
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Cancel'))),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Delete'))),
       ],
     ));
     if (confirmed == true) {

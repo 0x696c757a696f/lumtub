@@ -50,4 +50,38 @@ ${entry('ddddddddddd', 'Old video', now.subtract(const Duration(days: 30)))}
     expect(asked, isNot(contains('ddddddddddd')), reason: 'old videos are not asked about');
     dir.deleteSync(recursive: true);
   });
+
+  test('remembers live videos, shows them at once and checks them first', () async {
+    final now = DateTime.now();
+    final feed = '''<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom">
+${entry('aaaaaaaaaaa', 'Streaming now', now.subtract(const Duration(hours: 1)))}
+${entry('ddddddddddd', 'Ended stream', now.subtract(const Duration(days: 30)))}
+</feed>''';
+    final asked = <String>[];
+    final client = MockClient((request) async {
+      if (request.url.path == '/feeds/videos.xml') return http.Response.bytes(utf8.encode(feed), 200);
+      final id = (jsonDecode(request.body) as Map)['videoId'] as String;
+      asked.add(id);
+      return http.Response(jsonEncode({
+        'videoDetails': {if (id == 'aaaaaaaaaaa') 'isLive': true},
+      }), 200);
+    });
+    final dir = Directory.systemTemp.createTempSync('live');
+    final file = File('${dir.path}/library.json');
+    final store = LibraryStore(file);
+    store.toggleFollow(channel);
+    store.liveVideos['ddddddddddd'] = (channel.id, 'is_live');
+    final library = LibraryController(store, client: client);
+    expect(library.liveChannels, {channel.id}, reason: 'the last look shows before any request');
+    await library.refreshFeed(force: true);
+    expect(asked.first, 'ddddddddddd', reason: 'what was live is asked first');
+    expect({for (final item in library.feed) item.id: item.liveStatus}, {'aaaaaaaaaaa': 'is_live', 'ddddddddddd': 'was_live'});
+    expect(store.liveVideos, {'aaaaaaaaaaa': (channel.id, 'is_live')});
+    await library.flush();
+    final again = LibraryStore(file);
+    await again.load();
+    expect(again.liveVideos, {'aaaaaaaaaaa': (channel.id, 'is_live')});
+    dir.deleteSync(recursive: true);
+  });
 }

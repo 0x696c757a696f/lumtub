@@ -9,8 +9,9 @@ import 'l10n/l10n.dart';
 /// The runner's side of Windows' media overlay (System Media Transport
 /// Controls: media keys, Bluetooth buttons, the volume flyout, the lock
 /// screen) and the tray icon, over a method channel. The native half is
-/// windows/runner/windows_shell.cpp; off Windows nothing answers and every
-/// call is ignored.
+/// windows/runner/windows_shell.cpp; on Linux linux/runner/linux_shell.cc
+/// answers with MPRIS and a StatusNotifier tray icon. Elsewhere nothing
+/// answers and every call is ignored.
 class WindowsShell {
   WindowsShell({MethodChannel? channel, this.timelineInterval = const Duration(seconds: 1)})
       : _channel = channel ?? const MethodChannel(channelName) {
@@ -90,10 +91,10 @@ class WindowsShell {
   /// menu has the translated [labels]; off, closing exits as usual.
   Future<void> setTray({required bool enabled}) => _send('setTray', {
         'enabled': enabled,
-        'show': tr('显示窗口'),
-        'playPause': tr('播放/暂停'),
-        'next': tr('下一个'),
-        'exit': tr('退出'),
+        'show': tr('Show window'),
+        'playPause': tr('Play/Pause'),
+        'next': tr('Next'),
+        'exit': tr('Exit'),
       });
 }
 

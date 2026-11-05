@@ -146,13 +146,13 @@ void main() {
         expect(plan.audio!.id, '140');
       }
       expect(planContainer(DownloadContainer.mp4, VideoCodec.vp9, audio.where((a) => a.isOpus).toList()).audio!.id, '251');
-      expect(planContainer(DownloadContainer.mp4, VideoCodec.vp8, audio).problem, 'MP4 不能容纳 VP8');
+      expect(planContainer(DownloadContainer.mp4, VideoCodec.vp8, audio).problem, 'MP4 cannot hold VP8');
     });
 
     test('webm takes Opus and not H.264', () {
       expect(planContainer(DownloadContainer.webm, VideoCodec.vp9, audio).audio!.id, '251');
-      expect(planContainer(DownloadContainer.webm, VideoCodec.h264, audio).problem, 'WebM 不能容纳 H.264');
-      expect(planContainer(DownloadContainer.webm, VideoCodec.vp9, audio.where((a) => a.isAac).toList()).problem, 'WebM 没有可用的音轨');
+      expect(planContainer(DownloadContainer.webm, VideoCodec.h264, audio).problem, 'WebM cannot hold H.264');
+      expect(planContainer(DownloadContainer.webm, VideoCodec.vp9, audio.where((a) => a.isAac).toList()).problem, 'No audio track fits WebM');
     });
 
     test('mkv takes anything', () {
@@ -173,7 +173,7 @@ void main() {
     test('is missing for a container that does not fit, with the reason', () {
       final plan = planDownload(parsed(), codec: VideoCodec.h264, container: DownloadContainer.webm);
       expect(plan.selection, isNull);
-      expect(plan.problem, 'WebM 不能容纳 H.264');
+      expect(plan.problem, 'WebM cannot hold H.264');
     });
 
     test('audio only takes the best m4a', () {
@@ -307,15 +307,15 @@ void main() {
       expect(find.text('VP9'), findsOneWidget);
       expect(find.text('AV1'), findsNothing);
       expect(find.text('H.264'), findsOneWidget);
-      expect(find.text('仅音频'), findsOneWidget);
-      expect(find.text('自动（最佳可用格式）'), findsOneWidget);
+      expect(find.text('Audio only'), findsOneWidget);
+      expect(find.text('Auto (best available format)'), findsOneWidget);
       expect(find.text('2160p'), findsOneWidget);
-      expect(find.textContaining('当前选择：VP9 · 2160p · 自动封装（WebM）'), findsOneWidget);
+      expect(find.textContaining('Current selection: VP9 · 2160p · Automatic container (WebM)'), findsOneWidget);
       await tester.tap(find.text('H.264'));
       await tester.pump();
       expect(find.text('2160p'), findsNothing);
       expect(find.text('1080p'), findsOneWidget);
-      expect(find.textContaining('H.264 · 1080p · 自动封装（MP4）'), findsOneWidget);
+      expect(find.textContaining('H.264 · 1080p · Automatic container (MP4)'), findsOneWidget);
     });
 
     testWidgets('shows a loading indicator while the formats are read', (tester) async {
@@ -334,7 +334,7 @@ void main() {
       expect(find.text('1440p'), findsOneWidget);
       await tester.tap(find.text('H.264'));
       await tester.pump();
-      expect(find.text('WebM：WebM 不能容纳 H.264'), findsOneWidget);
+      expect(find.text('WebM: WebM cannot hold H.264'), findsOneWidget);
       final webm = tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'WebM'));
       expect(webm.onSelected, isNull);
     });
@@ -342,11 +342,11 @@ void main() {
     testWidgets('a remembered codec the video lacks is reported and nothing is chosen for the user', (tester) async {
       await open(tester, () async => parsed(av1: false), defaults: const DownloadDefaults(codec: 'av1', height: 1080));
       await tester.pumpAndSettle();
-      expect(find.text('该视频没有 AV1 格式，请选择其他编码'), findsOneWidget);
+      expect(find.text('This video has no AV1 format; choose another codec'), findsOneWidget);
       expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed, isNull);
       await tester.tap(find.text('H.264'));
       await tester.pump();
-      expect(find.text('该视频没有 AV1 格式，请选择其他编码'), findsNothing);
+      expect(find.text('This video has no AV1 format; choose another codec'), findsNothing);
       expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed, isNotNull);
     });
 
@@ -355,7 +355,7 @@ void main() {
       await open(tester, () async => parsed(), defaults: const DownloadDefaults(codec: 'vp9', height: 1440, container: DownloadContainer.mp4), onClosed: (c) => choice = c);
       await tester.pumpAndSettle();
       expect(find.textContaining('VP9 · 1440p · MP4'), findsOneWidget);
-      await tester.tap(find.text('开始下载'));
+      await tester.tap(find.text('Start download'));
       await tester.pumpAndSettle();
       expect(choice!.selection!.videoId, '271');
       expect(choice!.selection!.audioId, '140');
@@ -366,15 +366,15 @@ void main() {
     testWidgets('a remembered container that does not fit goes back to auto, with a note', (tester) async {
       await open(tester, () async => parsed(), defaults: const DownloadDefaults(codec: 'h264', container: DownloadContainer.webm));
       await tester.pumpAndSettle();
-      expect(find.textContaining('已改为自动封装'), findsOneWidget);
-      expect(find.textContaining('H.264 · 1080p · 自动封装（MP4）'), findsOneWidget);
+      expect(find.textContaining('switched to automatic container'), findsOneWidget);
+      expect(find.textContaining('H.264 · 1080p · Automatic container (MP4)'), findsOneWidget);
     });
 
     testWidgets('when the formats cannot be read it shows the error and the simple choices', (tester) async {
       DownloadChoice? choice;
       await open(tester, () => Future.error(StateError('boom')), onClosed: (c) => choice = c);
       await tester.pumpAndSettle();
-      expect(find.textContaining('无法读取视频格式：boom'), findsOneWidget);
+      expect(find.textContaining('Could not read video formats: boom'), findsOneWidget);
       for (final q in DownloadQuality.values) {
         expect(find.text(q.label), findsOneWidget);
       }

@@ -1,33 +1,35 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 
 import 'app_directories.dart';
 import 'l10n/l10n.dart';
+import 'sun_times.dart';
 
 /// Seed colours offered in Settings; the first is the default. The first
 /// six are Lumtub's own, the rest PiliNara's palette.
 final accentChoices = <(String, Color)>[
-  (tr('YouTube 红'), Color(0xFFE53935)),
-  (tr('青绿'), Color(0xFF26A69A)),
-  (tr('天蓝'), Color(0xFF1E88E5)),
-  (tr('紫罗兰'), Color(0xFF7E57C2)),
-  (tr('琥珀'), Color(0xFFFFB300)),
-  (tr('粉红'), Color(0xFFEC407A)),
-  (tr('默认绿'), Color(0xFF5CB67B)),
-  (tr('橙色'), Colors.orange),
-  (tr('黄色'), Colors.yellow),
-  (tr('酸橙色'), Colors.lime),
-  (tr('浅绿色'), Colors.lightGreen),
-  (tr('青色'), Colors.teal),
-  (tr('蓝绿色'), Colors.cyan),
-  (tr('浅蓝色'), Colors.lightBlue),
-  (tr('靛蓝色'), Colors.indigo),
-  (tr('深紫色'), Colors.deepPurple),
-  (tr('蓝灰色'), Colors.blueGrey),
-  (tr('棕色'), Colors.brown),
-  (tr('灰色'), Colors.grey),
+  (tr('YouTube red'), Color(0xFFE53935)),
+  (tr('Cyan green'), Color(0xFF26A69A)),
+  (tr('Sky blue'), Color(0xFF1E88E5)),
+  (tr('Violet'), Color(0xFF7E57C2)),
+  (tr('Amber'), Color(0xFFFFB300)),
+  (tr('Pink'), Color(0xFFEC407A)),
+  (tr('Default green'), Color(0xFF5CB67B)),
+  (tr('Orange'), Colors.orange),
+  (tr('Yellow'), Colors.yellow),
+  (tr('Lime'), Colors.lime),
+  (tr('Light green'), Colors.lightGreen),
+  (tr('Cyan'), Colors.teal),
+  (tr('Teal'), Colors.cyan),
+  (tr('Light blue'), Colors.lightBlue),
+  (tr('Indigo'), Colors.indigo),
+  (tr('Deep purple'), Colors.deepPurple),
+  (tr('Blue gray'), Colors.blueGrey),
+  (tr('Brown'), Colors.brown),
+  (tr('Gray'), Colors.grey),
 ];
 
 /// A ready-made look: a seed colour and palette style, each shown light
@@ -40,42 +42,42 @@ class ThemePreset {
   final DynamicSchemeVariant variant;
   final bool pureBlack;
 
-  bool isApplied(AppearanceSettings a) => !a.systemAccent && a.accentIndex < 0 && a.customAccent == seed && a.schemeVariant == variant && a.pureBlack == pureBlack;
+  bool isApplied(AppearanceSettings a) => a.palette.isEmpty && !a.systemAccent && a.accentIndex < 0 && a.customAccent == seed && a.schemeVariant == variant && a.pureBlack == pureBlack;
 
-  AppearanceSettings applyTo(AppearanceSettings a) => a.copyWith(systemAccent: false, accentIndex: -1, customAccent: seed, schemeVariant: variant, pureBlack: pureBlack);
+  AppearanceSettings applyTo(AppearanceSettings a) => a.copyWith(palette: '', systemAccent: false, accentIndex: -1, customAccent: seed, schemeVariant: variant, pureBlack: pureBlack);
 }
 
 const themePresets = [
-  ThemePreset('经典红', 0xFFE53935, DynamicSchemeVariant.tonalSpot),
-  ThemePreset('海湾蓝', 0xFF1E88E5, DynamicSchemeVariant.fidelity),
-  ThemePreset('森林绿', 0xFF2E7D32, DynamicSchemeVariant.tonalSpot),
-  ThemePreset('青瓷', 0xFF26A69A, DynamicSchemeVariant.content),
-  ThemePreset('薰衣草', 0xFF7E57C2, DynamicSchemeVariant.tonalSpot),
-  ThemePreset('樱花', 0xFFEC407A, DynamicSchemeVariant.tonalSpot),
-  ThemePreset('日落', 0xFFF4511E, DynamicSchemeVariant.vibrant),
-  ThemePreset('石墨', 0xFF607D8B, DynamicSchemeVariant.neutral),
-  ThemePreset('OLED 纯黑', 0xFF9E9E9E, DynamicSchemeVariant.monochrome, pureBlack: true),
+  ThemePreset('Classic red', 0xFFE53935, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('Bay blue', 0xFF1E88E5, DynamicSchemeVariant.fidelity),
+  ThemePreset('Forest green', 0xFF2E7D32, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('Celadon', 0xFF26A69A, DynamicSchemeVariant.content),
+  ThemePreset('Lavender', 0xFF7E57C2, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('Sakura', 0xFFEC407A, DynamicSchemeVariant.tonalSpot),
+  ThemePreset('Sunset', 0xFFF4511E, DynamicSchemeVariant.vibrant),
+  ThemePreset('Graphite', 0xFF607D8B, DynamicSchemeVariant.neutral),
+  ThemePreset('OLED black', 0xFF9E9E9E, DynamicSchemeVariant.monochrome, pureBlack: true),
 ];
 
 /// Material's palette styles with the names PiliNara uses.
 final schemeVariantNames = {
-  DynamicSchemeVariant.tonalSpot: tr('默认（Tonal Spot）'),
-  DynamicSchemeVariant.fidelity: tr('保真（Fidelity）'),
-  DynamicSchemeVariant.content: tr('内容（Content）'),
-  DynamicSchemeVariant.vibrant: tr('鲜艳（Vibrant）'),
-  DynamicSchemeVariant.expressive: tr('表现力（Expressive）'),
-  DynamicSchemeVariant.neutral: tr('中性（Neutral）'),
-  DynamicSchemeVariant.monochrome: tr('单色（Monochrome）'),
-  DynamicSchemeVariant.rainbow: tr('彩虹（Rainbow）'),
-  DynamicSchemeVariant.fruitSalad: tr('水果沙拉（Fruit Salad）'),
+  DynamicSchemeVariant.tonalSpot: tr('Default (Tonal Spot)'),
+  DynamicSchemeVariant.fidelity: tr('Fidelity'),
+  DynamicSchemeVariant.content: tr('Content'),
+  DynamicSchemeVariant.vibrant: tr('Vibrant'),
+  DynamicSchemeVariant.expressive: tr('Expressive'),
+  DynamicSchemeVariant.neutral: tr('Neutral'),
+  DynamicSchemeVariant.monochrome: tr('Monochrome'),
+  DynamicSchemeVariant.rainbow: tr('Rainbow'),
+  DynamicSchemeVariant.fruitSalad: tr('Fruit Salad'),
 };
 
 enum PageTransition {
-  fade('淡入淡出（默认）'),
-  zoom('缩放'),
-  slide('上滑'),
-  cupertino('左右滑动'),
-  none('无动画');
+  fade('Fade (default)'),
+  zoom('Scale'),
+  slide('Swipe up'),
+  cupertino('Swipe left or right'),
+  none('No animation');
 
   const PageTransition(this._label);
   final String _label;
@@ -85,9 +87,9 @@ enum PageTransition {
 /// 减少动画: whether page changes, expanding sections and hover effects
 /// animate.
 enum MotionPreference {
-  system('跟随系统'),
-  reduced('减少动画'),
-  full('保留动画');
+  system('Follow system'),
+  reduced('Reduce animations'),
+  full('Keep animations');
 
   const MotionPreference(this._label);
   final String _label;
@@ -95,9 +97,9 @@ enum MotionPreference {
 }
 
 enum NavigationStyle {
-  auto('自动（窗口较宽时用侧边栏）'),
-  rail('始终使用侧边栏'),
-  bottom('始终使用底栏');
+  auto('Auto (sidebar on wide windows)'),
+  rail('Always use sidebar'),
+  bottom('Always use bottom bar');
 
   const NavigationStyle(this._label);
   final String _label;
@@ -105,10 +107,10 @@ enum NavigationStyle {
 }
 
 enum ThumbnailQuality {
-  medium('mqdefault', '标准（320×180，最省流量）'),
-  high('hqdefault', '高（480×360，默认）'),
-  standard('sddefault', '较高（640×480）'),
-  max('maxresdefault', '最高（1280×720，部分视频没有）');
+  medium('mqdefault', 'Standard (320×180, uses the least data)'),
+  high('hqdefault', 'High (480×360, default)'),
+  standard('sddefault', 'Higher (640×480)'),
+  max('maxresdefault', 'Highest (1280×720, not available for some videos)');
 
   const ThumbnailQuality(this._file, this._label);
   final String _file;
@@ -120,17 +122,79 @@ enum ThumbnailQuality {
 /// The font bundled with Lumtub and used by default.
 const bundledFont = 'Noto Sans CJK SC';
 
-/// Fonts offered in Settings: the bundled one, then fonts that ship with
-/// Windows and cover Chinese; null is the system UI font.
+/// Proportional ‘ ’ “ ” taken from the bundled face's pwid forms.
+const quotesFont = 'Lumtub Quotes';
+
+/// The default choice: [bundledFont] when the system language is
+/// simplified Chinese,
+/// which it is made for, else the system UI font.
+const autoFont = 'auto';
+
+/// Whether the system language is simplified Chinese, which [bundledFont]
+/// is made for.
+bool Function() systemFitsBundledFont = () => isSimplifiedChinese(PlatformDispatcher.instance.locale);
+
+bool isSimplifiedChinese(Locale locale) {
+  if (locale.languageCode != 'zh') return false;
+  final script = locale.scriptCode;
+  if (script != null) return script == 'Hans';
+  return !const {'TW', 'HK', 'MO'}.contains(locale.countryCode);
+}
+
+/// Fonts offered in Settings: automatic, the bundled one, then fonts that
+/// ship with Windows and cover Chinese; null is the system UI font.
 final fontChoices = <(String?, String)>[
-  (bundledFont, tr('Noto Sans CJK SC（默认，内置）')),
-  (null, tr('系统默认')),
-  ('Microsoft YaHei UI', tr('微软雅黑')),
-  ('DengXian', tr('等线')),
+  (autoFont, tr('Automatic (default): Noto Sans CJK SC on a Simplified Chinese system, the system font otherwise')),
+  (bundledFont, tr('Noto Sans CJK SC (built-in)')),
+  (null, tr('System default')),
+  ('Microsoft YaHei UI', tr('Microsoft YaHei')),
+  ('DengXian', tr('DengXian')),
 ];
 
 /// The narrowest a video card may get; set from [AppearanceSettings.cardWidth].
 double videoCardMinWidth = 250.0;
+
+/// [AppearanceSettings.lowResource], for code that has no settings at hand.
+bool lowResourceMode = false;
+
+/// [AppearanceSettings.layout], for the video lists.
+VideoLayout videoLayout = VideoLayout.grid;
+
+/// 护眼暖色: when the window is warmed.
+enum EyeCare {
+  off('Close'),
+  always('Always on'),
+  sun('Sunset to sunrise'),
+  hours('Set hours');
+
+  const EyeCare(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
+/// When the dark theme is used instead of [AppearanceSettings.themeMode].
+enum DarkSchedule {
+  off('By theme mode'),
+  sun('Sunset to sunrise'),
+  hours('Set hours');
+
+  const DarkSchedule(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
+/// How video lists are laid out.
+enum VideoLayout {
+  grid('Grid (default)'),
+  list('List'),
+  text('Text only');
+
+  const VideoLayout(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
+int _hour(Object? raw, int fallback) => raw is int && raw >= 0 && raw < 24 ? raw : fallback;
 
 T _byName<T extends Enum>(List<T> values, Object? name, T fallback) => values.where((v) => v.name == name).firstOrNull ?? fallback;
 
@@ -144,6 +208,8 @@ class AppearanceSettings {
   final DynamicSchemeVariant schemeVariant;
   /// True black backgrounds in dark mode.
   final bool pureBlack;
+  /// Smaller rows, menus and fields, so more fits on screen.
+  final bool compact;
   final String? fontFamily;
   final double textScale;
   final PageTransition transition;
@@ -156,6 +222,22 @@ class AppearanceSettings {
   final bool showStatusBar;
   /// The interface language; it applies after a restart.
   final AppLanguage language;
+  /// A [Palette] id from lib/ui/palettes.dart, or '' for the neutral one.
+  final String palette;
+  final EyeCare eyeCare;
+  /// How warm 护眼暖色 makes the window, 0.1 to 1.
+  final double warmth;
+  /// [EyeCare.hours]: from this hour until [eyeCareEnd].
+  final int eyeCareStart;
+  final int eyeCareEnd;
+  final DarkSchedule darkSchedule;
+  /// [DarkSchedule.hours]: dark from this hour until [darkEnd].
+  final int darkStart;
+  final int darkEnd;
+  /// 低占用模式: no animations, small thumbnails, no hover loading and a
+  /// smaller image cache.
+  final bool lowResource;
+  final VideoLayout layout;
 
   const AppearanceSettings({
     this.themeMode = ThemeMode.system,
@@ -164,7 +246,8 @@ class AppearanceSettings {
     this.systemAccent = false,
     this.schemeVariant = DynamicSchemeVariant.tonalSpot,
     this.pureBlack = false,
-    this.fontFamily = bundledFont,
+    this.compact = false,
+    this.fontFamily = autoFont,
     this.textScale = 1.0,
     this.transition = PageTransition.fade,
     this.motion = MotionPreference.system,
@@ -174,12 +257,43 @@ class AppearanceSettings {
     this.darkWatchPage = false,
     this.showStatusBar = true,
     this.language = AppLanguage.system,
+    this.palette = '',
+    this.eyeCare = EyeCare.off,
+    this.warmth = 0.4,
+    this.eyeCareStart = 20,
+    this.eyeCareEnd = 7,
+    this.darkSchedule = DarkSchedule.off,
+    this.darkStart = 19,
+    this.darkEnd = 7,
+    this.lowResource = false,
+    this.layout = VideoLayout.grid,
   });
+
+  /// Whether 护眼暖色 is on at [now].
+  bool warmAt(DateTime now) => switch (eyeCare) {
+        EyeCare.off => false,
+        EyeCare.always => true,
+        EyeCare.sun => SunTimes.here.isNight(now),
+        EyeCare.hours => inHours(now, eyeCareStart, eyeCareEnd),
+      };
+
+  /// The theme mode at [now]: [themeMode], or light and dark by [darkSchedule].
+  ThemeMode themeModeAt(DateTime now) => switch (darkSchedule) {
+        DarkSchedule.off => themeMode,
+        DarkSchedule.sun => SunTimes.here.isNight(now) ? ThemeMode.dark : ThemeMode.light,
+        DarkSchedule.hours => inHours(now, darkStart, darkEnd) ? ThemeMode.dark : ThemeMode.light,
+      };
+
+  /// The thumbnails asked for: the smallest in 低占用模式.
+  ThumbnailQuality get effectiveThumbnails => lowResource ? ThumbnailQuality.medium : thumbnailQuality;
+
+  /// Animations as chosen, none in 低占用模式.
+  MotionPreference get effectiveMotion => lowResource ? MotionPreference.reduced : motion;
 
   /// The chosen colour; [systemAccent] is resolved by the app.
   Color get accent => accentIndex < 0 ? Color(customAccent) : accentChoices[accentIndex].$2;
 
-  String get accentLabel => systemAccent ? tr('跟随 Windows 强调色') : accentIndex < 0 ? tr('自定义') : accentChoices[accentIndex].$1;
+  String get accentLabel => systemAccent ? tr('Follow Windows accent color') : accentIndex < 0 ? tr('Custom') : accentChoices[accentIndex].$1;
 
   AppearanceSettings copyWith({
     ThemeMode? themeMode,
@@ -188,6 +302,7 @@ class AppearanceSettings {
     bool? systemAccent,
     DynamicSchemeVariant? schemeVariant,
     bool? pureBlack,
+    bool? compact,
     String? fontFamily,
     bool clearFontFamily = false,
     double? textScale,
@@ -199,6 +314,16 @@ class AppearanceSettings {
     bool? darkWatchPage,
     bool? showStatusBar,
     AppLanguage? language,
+    String? palette,
+    EyeCare? eyeCare,
+    double? warmth,
+    int? eyeCareStart,
+    int? eyeCareEnd,
+    DarkSchedule? darkSchedule,
+    int? darkStart,
+    int? darkEnd,
+    bool? lowResource,
+    VideoLayout? layout,
   }) =>
       AppearanceSettings(
         themeMode: themeMode ?? this.themeMode,
@@ -207,6 +332,7 @@ class AppearanceSettings {
         systemAccent: systemAccent ?? this.systemAccent,
         schemeVariant: schemeVariant ?? this.schemeVariant,
         pureBlack: pureBlack ?? this.pureBlack,
+        compact: compact ?? this.compact,
         fontFamily: clearFontFamily ? null : fontFamily ?? this.fontFamily,
         textScale: textScale ?? this.textScale,
         transition: transition ?? this.transition,
@@ -217,10 +343,23 @@ class AppearanceSettings {
         darkWatchPage: darkWatchPage ?? this.darkWatchPage,
         showStatusBar: showStatusBar ?? this.showStatusBar,
         language: language ?? this.language,
+        palette: palette ?? this.palette,
+        eyeCare: eyeCare ?? this.eyeCare,
+        warmth: warmth ?? this.warmth,
+        eyeCareStart: eyeCareStart ?? this.eyeCareStart,
+        eyeCareEnd: eyeCareEnd ?? this.eyeCareEnd,
+        darkSchedule: darkSchedule ?? this.darkSchedule,
+        darkStart: darkStart ?? this.darkStart,
+        darkEnd: darkEnd ?? this.darkEnd,
+        lowResource: lowResource ?? this.lowResource,
+        layout: layout ?? this.layout,
       );
 
+  /// The family text is drawn in; null is the system UI font.
+  String? get font => fontFamily == autoFont ? (systemFitsBundledFont() ? bundledFont : null) : fontFamily;
+
   /// What a theme is built from; themes are rebuilt only when it changes.
-  Object themeKey(Color seed) => (seed, schemeVariant, pureBlack, fontFamily, transition);
+  Object themeKey(Color seed) => (seed, schemeVariant, pureBlack, compact, font, transition, palette);
 
   Map<String, dynamic> toJson() => {
         'themeMode': themeMode.name,
@@ -229,7 +368,9 @@ class AppearanceSettings {
         'systemAccent': systemAccent,
         'schemeVariant': schemeVariant.name,
         'pureBlack': pureBlack,
+        'compact': compact,
         'fontFamily': fontFamily ?? 'system',
+        'fontVersion': 2,
         'textScale': textScale,
         'transition': transition.name,
         'motion': motion.name,
@@ -239,6 +380,16 @@ class AppearanceSettings {
         'darkWatchPage': darkWatchPage,
         'showStatusBar': showStatusBar,
         'language': language.tag,
+        'palette': palette,
+        'eyeCare': eyeCare.name,
+        'warmth': warmth,
+        'eyeCareStart': eyeCareStart,
+        'eyeCareEnd': eyeCareEnd,
+        'darkSchedule': darkSchedule.name,
+        'darkStart': darkStart,
+        'darkEnd': darkEnd,
+        'lowResource': lowResource,
+        'layout': layout.name,
       };
 
   factory AppearanceSettings.fromJson(Object? raw) {
@@ -256,9 +407,14 @@ class AppearanceSettings {
       systemAccent: raw['systemAccent'] == true,
       schemeVariant: _byName(DynamicSchemeVariant.values, raw['schemeVariant'], DynamicSchemeVariant.tonalSpot),
       pureBlack: raw['pureBlack'] == true,
-      // Earlier builds wrote nothing for the system font; it now defaults to
-      // the bundled one.
-      fontFamily: font == 'system' ? null : font?.trim().isNotEmpty == true ? font : bundledFont,
+      compact: raw['compact'] == true,
+      // Earlier builds wrote nothing for the system font, and wrote the
+      // bundled one as their default; both now mean automatic.
+      fontFamily: font == 'system'
+          ? null
+          : font == null || font.trim().isEmpty || (font == bundledFont && raw['fontVersion'] != 2)
+              ? autoFont
+              : font,
       textScale: scale is num ? scale.toDouble().clamp(0.8, 1.4) : 1.0,
       transition: _byName(PageTransition.values, raw['transition'], PageTransition.fade),
       motion: _byName(MotionPreference.values, raw['motion'], MotionPreference.system),
@@ -268,6 +424,16 @@ class AppearanceSettings {
       darkWatchPage: raw['darkWatchPage'] == true,
       showStatusBar: raw['showStatusBar'] != false,
       language: AppLanguage.parse(raw['language']),
+      palette: raw['palette'] is String ? raw['palette'] as String : '',
+      eyeCare: _byName(EyeCare.values, raw['eyeCare'], EyeCare.off),
+      warmth: raw['warmth'] is num ? (raw['warmth'] as num).toDouble().clamp(0.1, 1.0) : 0.4,
+      eyeCareStart: _hour(raw['eyeCareStart'], 20),
+      eyeCareEnd: _hour(raw['eyeCareEnd'], 7),
+      darkSchedule: _byName(DarkSchedule.values, raw['darkSchedule'], DarkSchedule.off),
+      darkStart: _hour(raw['darkStart'], 19),
+      darkEnd: _hour(raw['darkEnd'], 7),
+      lowResource: raw['lowResource'] == true,
+      layout: _byName(VideoLayout.values, raw['layout'], VideoLayout.grid),
     );
   }
 }

@@ -127,12 +127,12 @@ class CommunityPosts {
       }
     }
     final response = await _client.get(Uri.parse('${channel.url}/posts?hl=$youtubeHl'), headers: _headers).timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
+    if (response.statusCode != 200) throw StateError(tr('YouTube returned {0}', [response.statusCode]));
     final (page, apiKey, clientVersion, visitorData) = await _readPageInBackground(response.bodyBytes);
     _apiKey = apiKey;
     _clientVersion = clientVersion;
     _visitorData = visitorData;
-    if (page == null) throw FormatException(tr('没有在频道页面里找到帖子数据'));
+    if (page == null) throw FormatException(tr('No post data found on the channel page'));
     return page;
   }
 
@@ -166,7 +166,7 @@ class CommunityPosts {
           }),
         )
         .timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw StateError(tr('YouTube 返回 {0}', [response.statusCode]));
+    if (response.statusCode != 200) throw StateError(tr('YouTube returned {0}', [response.statusCode]));
     return await _readInBackground(response.bodyBytes) ?? const PostPage([], null);
   }
 

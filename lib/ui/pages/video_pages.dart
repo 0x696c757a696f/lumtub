@@ -38,27 +38,27 @@ class HomeFeedPage extends StatelessWidget {
         // The search box is at the top already; the prompt greets a first start.
         if (recent.isEmpty && unfinished.isEmpty && !showFeed) SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
         if (unfinished.isNotEmpty) ...[
-          SliverToBoxAdapter(child: PageHeader(tr('继续观看'), subtitle: tr('从上次停下的地方接着看'))),
+          SliverToBoxAdapter(child: PageHeader(tr('Continue watching'), subtitle: tr('Pick up where you left off'))),
           SliverVideoGrid(items: unfinished, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: unfinished)),
           const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
         ],
         if (recent.isNotEmpty) ...[
           SliverToBoxAdapter(child: PageHeader(
-            tr('最近观看'),
-            subtitle: tr('来自本机观看历史'),
-            trailing: TextButton(onPressed: () => controller.navigate(PageMode.history), child: Text(tr('查看全部'))),
+            tr('Recently watched'),
+            subtitle: tr('From your watch history on this device'),
+            trailing: TextButton(onPressed: () => controller.navigate(PageMode.history), child: Text(tr('View all'))),
           )),
           SliverVideoGrid(items: recent, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: recent)),
           const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
         ],
         if (showFeed) ...[
           SliverToBoxAdapter(child: PageHeader(
-            tr('为你推荐'),
-            subtitle: feed.loading && feed.items.isEmpty ? tr('正在根据观看记录挑选…') : tr('按你的观看兴趣在本机挑选，右键可选“不感兴趣”'),
+            tr('For you'),
+            subtitle: feed.loading && feed.items.isEmpty ? tr('Picking from your watch history…') : tr('Picked on this device from what you watch; right-click a video for "Not interested"'),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(AppIcons.shuffle, size: 18), label: Text(tr('换一批'))),
+              TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(AppIcons.shuffle, size: 18), label: Text(tr('Shuffle'))),
               IconButton(
-                tooltip: tr('重新挑选'),
+                tooltip: tr('Pick again'),
                 onPressed: feed.loading ? null : () => controller.refreshHomeFeed(force: true),
                 icon: const Icon(AppIcons.arrowsClockwise),
               ),
@@ -70,7 +70,7 @@ class HomeFeedPage extends StatelessWidget {
               thumbnails: controller.thumbnailDirectory,
               onOpen: (item) => controller.play(item, from: feed.items),
               onRemove: controller.dismissRecommendation,
-              removeLabel: tr('不感兴趣'),
+              removeLabel: tr('Not interested'),
               reasons: feed.reasons,
             ),
           if (feed.loading || feed.loadingMore) ...[
@@ -79,14 +79,14 @@ class HomeFeedPage extends StatelessWidget {
           ] else if (feed.error case final error? when feed.items.isEmpty)
             SliverToBoxAdapter(child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-              child: ErrorBanner(tr('无法加载推荐：{0}', [error]), onRetry: () => controller.refreshHomeFeed(force: true)),
+              child: ErrorBanner(tr("Couldn't load recommendations: {0}", [error]), onRetry: () => controller.refreshHomeFeed(force: true)),
             )),
         ],
         if (recent.isEmpty && !showFeed)
           SliverFillRemaining(hasScrollBody: false, child: StatusView(
             icon: AppIcons.playCircle,
-            title: tr('还没有观看记录'),
-            message: tr('搜索或粘贴 YouTube 链接开始观看，看过的视频会出现在这里。'),
+            title: tr('No watch history yet'),
+            message: tr("Search or paste a YouTube link to start watching. Videos you've watched will appear here."),
           )),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
@@ -112,16 +112,16 @@ class _FocusHome extends StatelessWidget {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Icon(AppIcons.personSimpleTaiChi, size: 48, color: colors.primary),
             const SizedBox(height: 16),
-            Text(tr('专注模式'), style: Theme.of(context).textTheme.titleLarge),
+            Text(tr('Focus mode'), style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            Text(tr('首页不显示视频。想看什么就搜索，或打开订阅和稍后观看。'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline, height: 1.5)),
+            Text(tr('No videos on the home page. Search for what you want to watch, or open Subscriptions and Watch later.'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline, height: 1.5)),
             const SizedBox(height: 16),
-            FilledButton.icon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(tr('搜索 (Ctrl+K)'))),
+            FilledButton.icon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(keyNames(tr('Search (Ctrl+K)')))),
             const SizedBox(height: 8),
             Wrap(spacing: 8, alignment: WrapAlignment.center, children: [
-              TextButton(onPressed: () => controller.navigate(PageMode.subscriptions), child: Text(tr('订阅'))),
-              TextButton(onPressed: () => controller.navigate(PageMode.playlists), child: Text(tr('稍后观看与播放列表'))),
-              TextButton(onPressed: () => controller.savePreferences(controller.preferences.copyWith(focusHideHome: false)), child: Text(tr('显示首页内容'))),
+              TextButton(onPressed: () => controller.navigate(PageMode.subscriptions), child: Text(tr('Subscriptions'))),
+              TextButton(onPressed: () => controller.navigate(PageMode.playlists), child: Text(tr('Watch later and playlists'))),
+              TextButton(onPressed: () => controller.savePreferences(controller.preferences.copyWith(focusHideHome: false)), child: Text(tr('Show the home page'))),
             ]),
           ]),
         ),
@@ -140,21 +140,21 @@ class _Welcome extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 8, AppStyle.pagePadding, 8),
       child: Material(
-        color: colors.primaryContainer,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        color: colors.surfaceContainerLow,
+        shape: RoundedRectangleBorder(borderRadius: AppStyle.cardRadius, side: BorderSide(color: colors.outlineVariant)),
         child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
           onTap: onFocusSearch,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
             child: Row(children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(tr('想看点什么？'), style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: colors.onPrimaryContainer)),
+                Text(tr('What do you want to watch?'), style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: colors.onSurface)),
                 const SizedBox(height: 4),
-                Text(tr('搜索 YouTube，或直接粘贴视频链接播放。按 Ctrl+K 随时搜索。'), style: TextStyle(color: colors.onPrimaryContainer.withValues(alpha: 0.8))),
+                Text(keyNames(tr('Search YouTube, or paste a video link to play it. Press Ctrl+K to search anytime.')), style: TextStyle(color: colors.onSurfaceVariant)),
               ])),
               const SizedBox(width: 16),
-              Icon(AppIcons.magnifyingGlass, size: 40, color: colors.onPrimaryContainer.withValues(alpha: 0.6)),
+              Icon(AppIcons.magnifyingGlass, size: 40, color: colors.onSurfaceVariant),
             ]),
           ),
         ),
@@ -176,9 +176,9 @@ class SearchResultsPage extends StatelessWidget {
     if (query == null) {
       return StatusView(
         icon: AppIcons.compass,
-        title: tr('搜索 YouTube'),
-        message: tr('输入关键词，或粘贴 youtube.com / youtu.be 链接。'),
-        action: FilledButton.tonalIcon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(tr('开始搜索'))),
+        title: tr('Search YouTube'),
+        message: tr('Enter keywords, or paste a youtube.com / youtu.be link.'),
+        action: FilledButton.tonalIcon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(tr('Start searching'))),
       );
     }
     final results = controller.visible(controller.results, search: true);
@@ -192,26 +192,26 @@ class SearchResultsPage extends StatelessWidget {
       status = StatusView(
         icon: AppIcons.cloudSlash,
         error: true,
-        title: tr('搜索失败'),
+        title: tr('Search failed'),
         message: error,
-        action: FilledButton.tonalIcon(onPressed: controller.retrySearch, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('重试'))),
+        action: FilledButton.tonalIcon(onPressed: controller.retrySearch, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('Retry'))),
       );
     } else if (empty && !controller.searching) {
-      status = StatusView(icon: AppIcons.magnifyingGlassMinus, title: filter == SearchFilter.all ? tr('没有找到相关内容') : tr('没有找到相关{0}', [filter.label]), message: tr('换个关键词试试。'));
+      status = StatusView(icon: AppIcons.magnifyingGlassMinus, title: filter == SearchFilter.all ? tr('Nothing found') : tr('No {0} found', [filter.label]), message: tr('Try other keywords.'));
     }
     final count = [
-      if (results.isNotEmpty) tr('{0} 个视频', [results.length]),
-      if (channels.isNotEmpty) tr('{0} 个频道', [channels.length]),
-      if (playlists.isNotEmpty) tr('{0} 个播放列表', [playlists.length]),
-    ].join('，');
+      if (results.isNotEmpty) tr('{0} videos', [results.length]),
+      if (channels.isNotEmpty) tr('{0} channels', [channels.length]),
+      if (playlists.isNotEmpty) tr('{0} playlists', [playlists.length]),
+    ].join(tr(', '));
     return NearEndListener(
       // Fetch the next page shortly before the end of the results is reached.
       onNearEnd: controller.loadMoreResults,
       child: CustomScrollView(key: const PageStorageKey('list'), slivers: [
         SliverToBoxAdapter(child: PageHeader(
           '“$query”',
-          subtitle: controller.searching ? tr('正在搜索…') : (count.isEmpty ? null : count),
-          trailing: IconButton(tooltip: tr('返回 (Alt+←)'), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
+          subtitle: controller.searching ? tr('Searching…') : (count.isEmpty ? null : count),
+          trailing: IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
         )),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
@@ -223,8 +223,8 @@ class SearchResultsPage extends StatelessWidget {
               icon: AppIcons.sortDescending,
               value: controller.searchSort,
               values: SearchSort.values,
-              label: (v) => v == SearchSort.relevance ? tr('排序') : tr('按{0}', [v.label]),
-              item: (v) => tr('按{0}', [v.label]),
+              label: (v) => v == SearchSort.relevance ? tr('Sort') : tr('By {0}', [v.label]),
+              item: (v) => tr('By {0}', [v.label]),
               changed: controller.searchSort != SearchSort.relevance,
               onSelected: (v) => controller.setSearchOptions(sort: v),
             ),
@@ -232,7 +232,7 @@ class SearchResultsPage extends StatelessWidget {
               icon: AppIcons.calendar,
               value: controller.searchDate,
               values: SearchUploadDate.values,
-              label: (v) => v == SearchUploadDate.any ? tr('上传时间') : v.label,
+              label: (v) => v == SearchUploadDate.any ? tr('Upload time') : v.label,
               item: (v) => v.label,
               changed: controller.searchDate != SearchUploadDate.any,
               onSelected: (v) => controller.setSearchOptions(date: v),
@@ -241,7 +241,7 @@ class SearchResultsPage extends StatelessWidget {
               icon: AppIcons.timer,
               value: controller.searchDuration,
               values: SearchDuration.values,
-              label: (v) => v == SearchDuration.any ? tr('时长') : v.label,
+              label: (v) => v == SearchDuration.any ? tr('Duration') : v.label,
               item: (v) => v.label,
               changed: controller.searchDuration != SearchDuration.any,
               onSelected: (v) => controller.setSearchOptions(duration: v),
@@ -272,7 +272,7 @@ class SearchResultsPage extends StatelessWidget {
           if (error != null && !empty)
             SliverToBoxAdapter(child: Padding(
               padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, AppStyle.cardSpacing, AppStyle.pagePadding, 0),
-              child: ErrorBanner(tr('加载更多失败：{0}', [error]), onRetry: () => controller.loadMoreResults(retry: true)),
+              child: ErrorBanner(tr("Couldn't load more: {0}", [error]), onRetry: () => controller.loadMoreResults(retry: true)),
             )),
         ],
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),

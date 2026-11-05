@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/player_option_applicator.dart';
 import 'package:lumtub/player_settings.dart';
@@ -51,7 +53,7 @@ void main() {
       mpvConf: 'vd-lavc-dr=yes\nhwdec-codecs=h264,av1',
     );
     final options = PlayerOptionApplicator.optionsFor(settings);
-    expect(options['d3d11va-zero-copy'], 'yes');
+    expect(options['d3d11va-zero-copy'], Platform.isWindows ? 'yes' : isNull);
     expect(options['autosync'], '30');
     expect(options['af'], 'dynaudnorm=g=5:f=250:r=0.9:p=0.5');
     expect(options['contrast'], '12');

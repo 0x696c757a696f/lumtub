@@ -130,10 +130,10 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
   }
 
   static String _why(String code) => switch (code) {
-        'access_denied' => tr('已在 YouTube 拒绝授权'),
-        'expired_token' => tr('电视码已过期，请重新获取'),
-        'invalid_grant' => tr('电视码登录已失效，请重新登录'),
-        _ => tr('YouTube 授权失败（{0}）', [code]),
+        'access_denied' => tr('Access was denied on YouTube'),
+        'expired_token' => tr('The TV code has expired. Get a new one'),
+        'invalid_grant' => tr('The TV-code sign-in has expired. Please sign in again'),
+        _ => tr('YouTube authorization failed ({0})', [code]),
       };
 
   void cancel() {
@@ -211,7 +211,7 @@ class YoutubeTvSignIn extends ChangeNotifier implements SignedInnerTube {
     if (status == -2) {
       logWarn('The TV-code sign-in expired or was revoked');
       state = TvSignInState.signedOut;
-      error = tr('电视码登录已失效，请重新登录');
+      error = tr('The TV-code sign-in has expired. Please sign in again');
       _notify();
       return null;
     }

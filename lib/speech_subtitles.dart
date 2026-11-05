@@ -28,7 +28,7 @@ class SpeechRecognizer {
   /// The timed segments of [audio], as `verbose_json` has them.
   Future<Map<String, dynamic>> transcribe(File audio, {String? language}) async {
     final uri = Uri.tryParse('$baseUrl/audio/transcriptions');
-    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) throw TranslationException(tr('语音识别接口地址不对'));
+    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) throw TranslationException(tr('The speech recognition address is not valid'));
     final request = http.MultipartRequest('POST', uri)
       ..fields['model'] = model
       ..fields['response_format'] = 'verbose_json'
@@ -42,25 +42,25 @@ class SpeechRecognizer {
     } on TranslationException {
       rethrow;
     } catch (e) {
-      throw TranslationException(tr('连不上语音识别接口：{0}', [e]));
+      throw TranslationException(tr('Could not reach the speech recognition service: {0}', [e]));
     }
     switch (response.statusCode) {
       case 200:
         break;
       case 401 || 403:
-        throw TranslationException(tr('语音识别接口密钥无效'));
+        throw TranslationException(tr('The speech recognition key is not valid'));
       case 404:
-        throw TranslationException(tr('语音识别接口地址或模型名不对'));
+        throw TranslationException(tr('The speech recognition address or model name is wrong'));
       case 413:
-        throw TranslationException(tr('音频太大，语音识别接口不接受'));
+        throw TranslationException(tr('The audio is too large for the speech recognition service'));
       case 429:
-        throw TranslationException(tr('语音识别接口请求太频繁或额度用完了，稍后再试'));
+        throw TranslationException(tr('Too many speech recognition requests or the quota is used up; try again later'));
       default:
-        throw TranslationException(tr('语音识别接口出错（{0}）', [response.statusCode]));
+        throw TranslationException(tr('The speech recognition service failed ({0})', [response.statusCode]));
     }
     final json = await decodeJsonInBackground(utf8.decode(response.bodyBytes, allowMalformed: true));
-    if (json is! Map<String, dynamic>) throw TranslationException(tr('语音识别接口返回的内容看不懂'));
-    if (json['segments'] is! List) throw TranslationException(tr('这个语音识别服务不返回时间轴，无法生成字幕'));
+    if (json is! Map<String, dynamic>) throw TranslationException(tr('The speech recognition service answered with something unreadable'));
+    if (json['segments'] is! List) throw TranslationException(tr('This speech recognition service returns no timing, so it cannot make subtitles'));
     return json;
   }
 }
@@ -68,7 +68,7 @@ class SpeechRecognizer {
 /// A video too long for one request, while ffmpeg, which cuts it, is not
 /// installed. The audio fetched stays for the next try.
 class SpeechNeedsFfmpeg extends TranslationException {
-  SpeechNeedsFfmpeg() : super(tr('视频较长，需要 ffmpeg 才能分段识别（和下载用的是同一个）。'));
+  SpeechNeedsFfmpeg() : super(tr('This video is long and needs ffmpeg (the same one downloads use) to be recognized in parts.'));
 }
 
 /// One stretch of audio to recognize and where in the video it starts.
@@ -127,13 +127,13 @@ class SpeechAudio {
         onStart: (process) => lowerPriority(process.pid),
       );
       printed = const LineSplitter().convert(result.stdout.toString()).where((l) => l.contains('|')).lastOrNull;
-      if (result.exitCode != 0 || printed == null) throw TranslationException(tr('没能下载这个视频的音频'));
+      if (result.exitCode != 0 || printed == null) throw TranslationException(tr("Could not download this video's audio"));
       await fetched.writeAsString(printed);
     }
     final split = printed.indexOf('|');
     final seconds = double.tryParse(printed.substring(0, split)) ?? 0;
     final audio = File(printed.substring(split + 1).trim());
-    if (!await audio.exists()) throw TranslationException(tr('没能下载这个视频的音频'));
+    if (!await audio.exists()) throw TranslationException(tr("Could not download this video's audio"));
     final size = await audio.length();
     final length = Duration(milliseconds: (seconds * 1000).round());
     final count = max((size / partBytes).ceil(), (length.inSeconds / partLength.inSeconds).ceil());
@@ -164,7 +164,7 @@ class SpeechAudio {
       timeout: const Duration(minutes: 5),
       onStart: (process) => lowerPriority(process.pid),
     );
-    if (result.exitCode != 0 || !await list.exists()) throw TranslationException(tr('没能把音频分段'));
+    if (result.exitCode != 0 || !await list.exists()) throw TranslationException(tr('Could not split the audio'));
     return parseSegmentList(await list.readAsString(), folder);
   }
 

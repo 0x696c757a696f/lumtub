@@ -10,6 +10,7 @@ import '../../downloads/download_models.dart';
 import '../../downloads/download_selection.dart';
 import '../../l10n/l10n.dart';
 import '../../models.dart';
+import '../../system_env.dart';
 import '../download_dialog.dart';
 import '../ffmpeg_dialog.dart';
 import '../common.dart';
@@ -40,11 +41,11 @@ Future<void> _saveExtra(BuildContext context, AppController controller, Future<S
   try {
     final path = await save();
     messenger?.showSnackBar(SnackBar(
-      content: Text(tr('已保存：{0}', [path.split(Platform.pathSeparator).last])),
-      action: Platform.isWindows ? SnackBarAction(label: tr('打开文件夹'), onPressed: () => unawaited(openInExplorer(path, select: true))) : null,
+      content: Text(tr('Saved: {0}', [path.split(Platform.pathSeparator).last])),
+      action: Platform.isWindows || Platform.isLinux || Platform.isMacOS ? SnackBarAction(label: tr('Open folder'), onPressed: () => unawaited(openInExplorer(path, select: true))) : null,
     ));
   } catch (e) {
-    messenger?.showSnackBar(SnackBar(content: Text(tr('保存失败：{0}', ['$e'.replaceFirst('Bad state: ', '')]))));
+    messenger?.showSnackBar(SnackBar(content: Text(tr('Could not save: {0}', ['$e'.replaceFirst('Bad state: ', '')]))));
   }
 }
 
@@ -55,12 +56,12 @@ Future<void> _chooseSubtitle(BuildContext context, AppController controller, Vid
   try {
     options = await controller.subtitleOptionsFor(item);
   } catch (e) {
-    messenger?.showSnackBar(SnackBar(content: Text(tr('无法读取字幕列表'))));
+    messenger?.showSnackBar(SnackBar(content: Text(tr("Couldn't read the subtitle list"))));
     return;
   }
   if (!context.mounted) return;
   if (options.isEmpty) {
-    messenger?.showSnackBar(SnackBar(content: Text(tr('这个视频没有字幕'))));
+    messenger?.showSnackBar(SnackBar(content: Text(tr('This video has no subtitles'))));
     return;
   }
   final picked = await showDialog<(SubtitleOption, bool)>(context: context, builder: (context) => _SubtitleSaveDialog(options: options));
@@ -82,7 +83,7 @@ class _SubtitleSaveDialogState extends State<_SubtitleSaveDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: Text(tr('下载字幕')),
+        title: Text(tr('Download subtitles')),
         content: SizedBox(
           width: 420,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -96,7 +97,7 @@ class _SubtitleSaveDialogState extends State<_SubtitleSaveDialog> {
                       RadioListTile<SubtitleOption>(
                         dense: true,
                         value: o,
-                        title: Text(o.kind == SubtitleKind.translated ? tr('{0}（YouTube 翻译）', [SubtitleOption.languageName(o.language, o.name)]) : o.label),
+                        title: Text(o.kind == SubtitleKind.translated ? tr('{0} (YouTube translation)', [SubtitleOption.languageName(o.language, o.name)]) : o.label),
                       ),
                   ]),
                 ),
@@ -112,15 +113,21 @@ class _SubtitleSaveDialogState extends State<_SubtitleSaveDialog> {
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
-          FilledButton(onPressed: () => Navigator.pop(context, (_option, _srt)), child: Text(tr('保存'))),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(context, (_option, _srt)), child: Text(tr('Save'))),
         ],
       );
 }
 
 /// Shows [path] in Windows Explorer; a file is selected in its folder.
+/// Elsewhere the file manager opens the folder.
 Future<void> openInExplorer(String path, {bool select = false}) async {
-  if (!Platform.isWindows) return;
+  // Finder shows the file selected in its folder with open -R.
+  if (Platform.isMacOS && select) {
+    await Process.start('open', ['-R', path], mode: ProcessStartMode.detached);
+    return;
+  }
+  if (!Platform.isWindows) return openWithDesktop(select ? File(path).parent.path : path);
   await Process.start('explorer.exe', [select ? '/select,$path' : path]);
 }
 
@@ -142,18 +149,18 @@ class DownloadsPage extends StatelessWidget {
     return CustomScrollView(slivers: [
       SliverToBoxAdapter(
         child: PageHeader(
-          tr('下载'),
-          subtitle: tr('{0} 个视频 · 最多同时下载 {1} 个', [tasks.length, manager.maxConcurrent]),
+          tr('Downloads'),
+          subtitle: tr('{0} videos · up to {1} at a time', [tasks.length, manager.maxConcurrent]),
           trailing: Wrap(spacing: 8, children: [
             OutlinedButton.icon(
               onPressed: () => _changeDirectory(context, manager),
               icon: const Icon(AppIcons.folderOpen),
-              label: Text(tr('更改位置')),
+              label: Text(tr('Change location')),
             ),
             FilledButton.tonalIcon(
               onPressed: () => unawaited(openInExplorer(manager.directory)),
               icon: const Icon(AppIcons.arrowSquareOut),
-              label: Text(tr('打开文件夹')),
+              label: Text(tr('Open folder')),
             ),
           ]),
         ),
@@ -161,7 +168,7 @@ class DownloadsPage extends StatelessWidget {
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-          child: Text(tr('保存位置：{0}', [manager.directory]), style: context.text.bodySmall),
+          child: Text(tr('Saved in: {0}', [manager.directory]), style: context.text.bodySmall),
         ),
       ),
       if (tasks.isEmpty)
@@ -169,8 +176,8 @@ class DownloadsPage extends StatelessWidget {
           hasScrollBody: false,
           child: StatusView(
             icon: AppIcons.arrowCircleDown,
-            title: tr('还没有下载'),
-            message: tr('在视频的菜单或播放页点“下载”，视频会保存到本机，之后可以离线播放。'),
+            title: tr('No downloads yet'),
+            message: tr('Choose "Download" in a video\'s menu or on its watch page. The video is saved on this computer and plays offline afterwards.'),
           ),
         )
       else
@@ -203,25 +210,25 @@ class _DownloadTile extends StatelessWidget {
   String _status() {
     switch (task.status) {
       case DownloadStatus.queued:
-        return tr('等待中');
+        return tr('Waiting');
       case DownloadStatus.downloading:
         final parts = [
           if (task.fraction != null) '${(task.fraction! * 100).toStringAsFixed(1)}%',
           if (task.total != null) '${formatBytes(task.downloaded)} / ${formatBytes(task.total!)}',
           formatSpeed(task.speed),
-          if (task.eta != null) tr('剩余 {0}', [formatEta(task.eta)]),
+          if (task.eta != null) tr('{0} left', [formatEta(task.eta)]),
         ].where((s) => s.isNotEmpty);
-        return parts.isEmpty ? tr('正在下载…') : parts.join(' · ');
+        return parts.isEmpty ? tr('Downloading…') : parts.join(' · ');
       case DownloadStatus.paused:
-        return tr('已暂停');
+        return tr('Paused');
       case DownloadStatus.done:
         final bytes = task.filePath == null ? null : _sizes[task.filePath!] ??= _sizeOf(task.filePath!);
         final size = bytes == null ? '' : ' · ${formatBytes(bytes)}';
-        return '${tr('已完成')} · ${task.qualityLabel}$size';
+        return '${tr('Completed')} · ${task.qualityLabel}$size';
       case DownloadStatus.failed:
-        return tr('下载失败：{0}', [task.error ?? '']);
+        return tr('Download failed: {0}', [task.error ?? '']);
       case DownloadStatus.cancelled:
-        return tr('已取消');
+        return tr('Canceled');
     }
   }
 
@@ -249,6 +256,8 @@ class _DownloadTile extends StatelessWidget {
           width: 96,
           height: 54,
           child: Image.network(
+            color: context.pictureWarmth,
+            colorBlendMode: BlendMode.multiply,
             item.thumbnail,
             cacheWidth: (96 * MediaQuery.devicePixelRatioOf(context)).ceil(),
             fit: BoxFit.cover,
@@ -264,13 +273,13 @@ class _DownloadTile extends StatelessWidget {
       ]),
       onTap: task.status == DownloadStatus.done ? () => controller.play(item) : null,
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (task.active) button(AppIcons.pauseFill, tr('暂停'), () => manager.pause(task.id)),
-        if (task.status == DownloadStatus.paused) button(AppIcons.playFill, tr('继续'), () => manager.resume(task.id)),
-        if (task.active || task.status == DownloadStatus.paused) button(AppIcons.x, tr('取消'), () => manager.cancel(task.id)),
-        if (failed || task.status == DownloadStatus.cancelled) button(AppIcons.arrowsClockwise, tr('重试'), () => manager.retry(task.id)),
+        if (task.active) button(AppIcons.pauseFill, tr('Pause'), () => manager.pause(task.id)),
+        if (task.status == DownloadStatus.paused) button(AppIcons.playFill, tr('Resume'), () => manager.resume(task.id)),
+        if (task.active || task.status == DownloadStatus.paused) button(AppIcons.x, tr('Cancel'), () => manager.cancel(task.id)),
+        if (failed || task.status == DownloadStatus.cancelled) button(AppIcons.arrowsClockwise, tr('Retry'), () => manager.retry(task.id)),
         if (task.status == DownloadStatus.done && task.filePath != null)
-          button(AppIcons.folderOpen, tr('打开所在文件夹'), () => unawaited(openInExplorer(task.filePath!, select: true))),
-        if (!task.active) button(AppIcons.trash, tr('删除'), () => _confirmDelete(context)),
+          button(AppIcons.folderOpen, tr('Show in folder'), () => unawaited(openInExplorer(task.filePath!, select: true))),
+        if (!task.active) button(AppIcons.trash, tr('Delete'), () => _confirmDelete(context)),
       ]),
     );
   }
@@ -280,12 +289,12 @@ class _DownloadTile extends StatelessWidget {
     final choice = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(tr('删除这个下载？')),
-        content: Text(tr('可以只从列表移除，也可以同时删除磁盘上的视频文件。')),
+        title: Text(tr('Delete this download?')),
+        content: Text(tr('Remove it from the list only, or also delete the video file on disk.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('只移除'))),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('同时删除文件'))),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Remove from list only'))),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('Delete the files too'))),
         ],
       ),
     );

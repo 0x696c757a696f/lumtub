@@ -18,16 +18,16 @@ enum RelayKind { piped, invidious }
 /// Where playback streams come from.
 enum PlaybackSource {
   /// The fastest working public Piped server.
-  pipedAuto('Piped · 自动选择服务器'),
+  pipedAuto('Piped · Auto-select server'),
   /// The Piped server the user named.
-  pipedCustom('Piped · 指定服务器'),
+  pipedCustom('Piped · Specific server'),
   /// The fastest working public Invidious instance.
-  invidiousAuto('Invidious · 自动选择实例'),
+  invidiousAuto('Invidious · Auto-select instance'),
   /// The Invidious instance the user named.
-  invidiousCustom('Invidious · 指定实例'),
+  invidiousCustom('Invidious · Specified instance'),
   /// Straight from YouTube through yt-dlp; the default, so no third party
   /// learns what is watched unless YouTube refuses (429) or fails.
-  youtube('直接连接 YouTube（默认）');
+  youtube('Connect to YouTube directly (default)');
 
   const PlaybackSource(this._label);
   final String _label;
@@ -226,7 +226,7 @@ class PipedStreams extends RelayServers {
   @override
   Uri healthUrl(String server) => Uri.parse('$server/healthcheck');
   @override
-  String get pausedMessage => tr('Piped 最近连续失败，暂时不用');
+  String get pausedMessage => tr('Piped failed repeatedly; skipping it for now');
 
   @override
   Future<Set<String>> downloadCatalog() async {
@@ -248,7 +248,7 @@ class PipedStreams extends RelayServers {
 
   Future<PipedVideo> _fetch(String videoId, String? server) async {
     final order = server != null ? [server] : (await servers()).take(2).toList();
-    if (order.isEmpty) throw StateError(tr('没有可用的 Piped 服务器'));
+    if (order.isEmpty) throw StateError(tr('No Piped servers available'));
     Object? lastError;
     for (final candidate in order) {
       try {
@@ -264,6 +264,6 @@ class PipedStreams extends RelayServers {
         if (server == null) demote(candidate);
       }
     }
-    throw StateError(tr('Piped 解析失败：{0}', [lastError]));
+    throw StateError(tr('Piped failed to resolve: {0}', [lastError]));
   }
 }

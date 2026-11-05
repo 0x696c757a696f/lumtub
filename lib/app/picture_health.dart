@@ -13,7 +13,7 @@ extension PictureHealth on AppController {
       if (adapter.isEmpty) return;
       int height(String key) => (probe[key] as num?)?.toInt() ?? 0;
       final results = {
-        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? const DecoderStatus.hardware('d3d11va') : const DecoderStatus.software(),
+        for (final key in ['h264', 'vp9', 'av1']) key: height(key) >= 1080 ? DecoderStatus.hardware(Platform.isWindows ? 'd3d11va' : Platform.isMacOS ? 'videotoolbox' : 'vaapi') : const DecoderStatus.software(),
       };
       // Asked again at every start: a result saved earlier may have been
       // a one-off, such as a video decoded in software after the graphics
@@ -33,7 +33,7 @@ extension PictureHealth on AppController {
   Future<void> inspectCurrentDecoder({Duration delay = Duration.zero}) async {
     final platform = player?.platform;
     if (platform is! NativePlayer) {
-      _notice(tr('当前播放器无法读取 libmpv 解码状态。'));
+      _notice(tr("The current player can't read libmpv's decoding status."));
       return;
     }
     try {
@@ -42,7 +42,7 @@ extension PictureHealth on AppController {
       final decoder = DecoderStatus.fromMpv(await platform.getProperty('hwdec-current'));
       final normalized = DecoderStatus.codecKey(codec);
       _update(() {
-        currentCodec = codec.isEmpty ? tr('尚未验证') : codec;
+        currentCodec = codec.isEmpty ? tr('Not verified yet') : codec;
         currentHwdec = decoder.label;
         if (normalized != null) decodeStates = {...decodeStates, normalized: decoder};
       });
@@ -62,11 +62,11 @@ extension PictureHealth on AppController {
       final fileCodec = VideoCodec.of(normalized);
       if (item != null && _openedLocal == item.id && !FormatPolicy.allows(settings, fileCodec)) {
         logWarn('The download of ${item.id} is ${fileCodec!.label}, a codec the playback rules disable; playing online instead');
-        _notice(tr('下载的文件是 {0} 编码，已按播放规则改为在线播放', [fileCodec.label]));
+        _notice(tr('The downloaded file is {0}, which the playback rules disable; streaming instead', [fileCodec.label]));
         unawaited(_open(item, _playSerial, start: player?.state.position, allowLocal: false));
       }
     } catch (_) {
-      _update(() => currentHwdec = tr('尚未验证'));
+      _update(() => currentHwdec = tr('Not verified yet'));
     }
   }
 
@@ -221,7 +221,7 @@ extension PictureHealth on AppController {
     if (lower == null) return;
     _droppedCap = lower;
     logWarn('Frames kept dropping at ${height}p${fps.round()}; automatic quality lowered to ${lower}p for this run');
-    _notice(tr('播放一直掉帧，自动画质已降到 {0}p（本次运行有效，重新选“自动”可恢复）', ['$lower']));
+    _notice(tr('Frames kept dropping, so automatic quality is lowered to {0}p for this run (choose Auto again to undo)', ['$lower']));
     await reloadVideo();
   }
 

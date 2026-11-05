@@ -68,6 +68,28 @@ String? ffmpegAssetName(Iterable<String> names, String variant) {
   return null;
 }
 
+/// The static LGPL Linux build among the release's asset [names]
+/// (`ffmpeg-n7.1-latest-linux64-lgpl-7.1.tar.xz`, the newest numbered one,
+/// else the `master` one), for ARM64 when [arm64].
+String? linuxFfmpegAssetName(Iterable<String> names, {required bool arm64}) {
+  final platform = arm64 ? 'linuxarm64' : 'linux64';
+  final numbered = RegExp('^ffmpeg-n(\\d+)\\.(\\d+)(?:\\.\\d+)?-latest-$platform-lgpl-\\d+\\.\\d+(?:\\.\\d+)?\\.tar\\.xz\$');
+  String? best;
+  var bestKey = -1;
+  for (final name in names) {
+    final match = numbered.firstMatch(name);
+    if (match == null) continue;
+    final key = int.parse(match[1]!) * 1000 + int.parse(match[2]!);
+    if (key > bestKey) {
+      best = name;
+      bestKey = key;
+    }
+  }
+  if (best != null) return best;
+  final master = 'ffmpeg-master-latest-$platform-lgpl.tar.xz';
+  return names.contains(master) ? master : null;
+}
+
 /// The folder name for a build: its version from [assetName] and the date
 /// the asset was [updatedAt] (ISO 8601), such as `n7.1-20261021`. A date in
 /// the name makes newer builds sort last.
@@ -124,8 +146,18 @@ final _crcTable = List<int>.generate(256, (n) {
 /// Writes `ffmpeg.exe`, `ffprobe.exe` and any DLLs of the zip [archive],
 /// at its top or in `bin/`, into [into], flat, and nothing else (no ffplay, headers, docs). Returns the names written. Throws a
 /// [FormatException] for a damaged archive or a failed CRC check.
-Future<List<String>> extractFfmpegBinaries(File archive, Directory into) async {
+Future<List<String>> extractFfmpegBinaries(File archive, Directory into) {
   final wanted = RegExp(r'^(?:[^/]+/)?(?:bin/)?((?:ffmpeg|ffprobe)\.exe|[A-Za-z0-9_+-][A-Za-z0-9._+-]*\.dll)$', caseSensitive: false);
+  return extractZip(archive, into, select: (name) => wanted.firstMatch(name)?[1]);
+}
+
+/// Writes the files of the zip [archive] into [into], each at the path
+/// [select] gives for its name (null skips it), or at its own path.
+/// Folders, links and paths leaving [into] are skipped; files the archive
+/// marks executable are made executable off Windows. Returns the paths
+/// written, relative to [into]. Throws a [FormatException] for a damaged
+/// archive or a failed CRC check.
+Future<List<String>> extractZip(File archive, Directory into, {String? Function(String name)? select}) async {
   final raf = await archive.open();
   try {
     final length = await raf.length();
@@ -149,26 +181,33 @@ Future<List<String>> extractFfmpegBinaries(File archive, Directory into) async {
     final directory = ByteData.sublistView(await raf.read(dirSize));
     final bytes = directory.buffer.asUint8List(directory.offsetInBytes, directory.lengthInBytes);
     final written = <String>[];
+    final executable = <String>[];
     var p = 0;
     for (var i = 0; i < count; i++) {
       if (p + 46 > directory.lengthInBytes || directory.getUint32(p, Endian.little) != 0x02014b50) throw const FormatException('Damaged zip directory');
+      final madeOnUnix = directory.getUint8(p + 5) == 3;
       final method = directory.getUint16(p + 10, Endian.little);
       final crc = directory.getUint32(p + 16, Endian.little);
       final packed = directory.getUint32(p + 20, Endian.little);
       final size = directory.getUint32(p + 24, Endian.little);
       final nameLength = directory.getUint16(p + 28, Endian.little);
       final skip = nameLength + directory.getUint16(p + 30, Endian.little) + directory.getUint16(p + 32, Endian.little);
+      final mode = madeOnUnix ? directory.getUint32(p + 38, Endian.little) >> 16 : 0;
       final offset = directory.getUint32(p + 42, Endian.little);
       final name = utf8.decode(bytes.sublist(p + 46, p + 46 + nameLength), allowMalformed: true).replaceAll('\\', '/');
       p += 46 + skip;
-      final match = wanted.firstMatch(name);
-      if (match == null) continue;
+      if (name.endsWith('/') || (madeOnUnix && mode & 0xF000 != 0 && mode & 0xF000 != 0x8000)) continue;
+      final path = select == null ? name : select(name);
+      if (path == null) continue;
+      final parts = path.split('/');
+      if (path.startsWith('/') || parts.any((part) => part.isEmpty || part == '.' || part == '..' || part.contains(':'))) continue;
       await raf.setPosition(offset);
       final local = ByteData.sublistView(await raf.read(30));
       if (local.getUint32(0, Endian.little) != 0x04034b50) throw const FormatException('Damaged zip entry');
       final start = offset + 30 + local.getUint16(26, Endian.little) + local.getUint16(28, Endian.little);
       if (method != 0 && method != 8) throw FormatException('Unsupported zip compression $method');
-      final target = File('${into.path}${Platform.pathSeparator}${match[1]!}');
+      final target = File([into.path, ...parts].join(Platform.pathSeparator));
+      await target.parent.create(recursive: true);
       var checksum = 0;
       var total = 0;
       final sink = target.openWrite();
@@ -187,7 +226,15 @@ Future<List<String>> extractFfmpegBinaries(File archive, Directory into) async {
         await target.delete();
         throw FormatException('Zip entry $name is damaged');
       }
-      written.add(target.uri.pathSegments.last);
+      written.add(path);
+      if (mode & 0x49 != 0) executable.add(target.path);
+    }
+    if (!Platform.isWindows) {
+      for (var i = 0; i < executable.length; i += 200) {
+        final batch = executable.sublist(i, i + 200 > executable.length ? executable.length : i + 200);
+        final result = await Process.run('chmod', ['+x', ...batch]);
+        if (result.exitCode != 0) throw FileSystemException('Could not make files executable: ${result.stderr}');
+      }
     }
     return written;
   } finally {

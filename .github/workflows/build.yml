@@ -246,6 +246,24 @@ jobs:
           workspaces: native/lumtub_core
           key: ${{ matrix.package_arch }}
 
+      # ring, which rustls uses for the Mozilla and Google certificate lists,
+      # is built with clang on Windows on Arm.
+      - name: Windows - find clang
+        if: matrix.package_arch == 'arm64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (-not (Get-Command clang -ErrorAction SilentlyContinue)) {
+            $llvm = 'C:\Program Files\LLVM\bin'
+            if (-not (Test-Path (Join-Path $llvm 'clang.exe'))) {
+              choco install llvm -y --no-progress
+              if ($LASTEXITCODE -ne 0) { throw 'Installing LLVM failed.' }
+            }
+            $env:PATH = "$llvm;$env:PATH"
+            $llvm | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          }
+          clang --version
+
       - name: Windows - build the Rust core
         shell: pwsh
         run: |

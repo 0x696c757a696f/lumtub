@@ -1,6 +1,7 @@
 //! The app's HTTP client: one pooled connection set for every request the
 //! Dart side makes (API calls, thumbnails, translations, updates), with
-//! HTTP/2, compressed bodies, the system's TLS and the app's proxy.
+//! HTTP/2, compressed bodies, the system's TLS (or the certificate list
+//! chosen in [crate::roots]) and the app's proxy.
 //!
 //! Dart hands each request over with an id and the native port of a
 //! `ReceivePort`; the answer comes back on that port as messages:
@@ -104,6 +105,9 @@ struct Settings {
     /// 加密 DNS for direct connections.
     #[serde(default)]
     dns: crate::dns::Settings,
+    /// The certificate authorities every connection trusts.
+    #[serde(default)]
+    roots: crate::roots::Roots,
 }
 
 fn build(settings: &Settings) -> reqwest::Client {
@@ -124,7 +128,9 @@ fn build(settings: &Settings) -> reqwest::Client {
     if let Some(doh) = crate::dns::current() {
         builder = builder.dns_resolver(std::sync::Arc::new(crate::dns::Resolver(doh)));
     }
-    builder.build().unwrap_or_else(|_| reqwest::Client::new())
+    builder = crate::roots::apply(builder, settings.roots);
+    // A list of its own is kept even then, rather than the system's store.
+    builder.build().unwrap_or_else(|_| crate::roots::apply(reqwest::Client::builder(), settings.roots).build().unwrap_or_default())
 }
 
 static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
@@ -144,7 +150,7 @@ pub(crate) fn client() -> reqwest::Client {
     CLIENT.read().unwrap_or_else(|e| e.into_inner()).clone()
 }
 
-static CLIENT: LazyLock<RwLock<reqwest::Client>> = LazyLock::new(|| RwLock::new(build(&Settings { proxy: None, system: true, dns: Default::default() })));
+static CLIENT: LazyLock<RwLock<reqwest::Client>> = LazyLock::new(|| RwLock::new(build(&Settings { proxy: None, system: true, dns: Default::default(), roots: Default::default() })));
 static RUNNING: LazyLock<Mutex<HashMap<i64, AbortHandle>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[derive(Deserialize)]
@@ -252,7 +258,8 @@ pub unsafe extern "C" fn lumtub_http_init(post: PostCObject) {
 }
 
 /// Sets the proxy and 加密 DNS from JSON `{"proxy": "socks5://…" | null,
-/// "system": bool, "dns": {"url", "bootstrap"}}`;
+/// "system": bool, "dns": {"url", "bootstrap"}, "roots": "system" |
+/// "mozilla" | "google"}`;
 /// connections already open finish on the old route.
 ///
 /// # Safety
@@ -260,6 +267,7 @@ pub unsafe extern "C" fn lumtub_http_init(post: PostCObject) {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_http_configure(json: *const u8, length: usize) {
     let settings: Settings = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
+    crate::roots::set(settings.roots);
     crate::dns::set(settings.dns.clone());
     *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = build(&settings);
 }

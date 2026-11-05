@@ -379,6 +379,9 @@ class PlayerSettings {
   /// the system resolver.
   final String dnsServer;
   final String dnsCustomUrl;
+  /// The certificate authorities the app's HTTPS trusts: `system` (the
+  /// system's store), `mozilla` or `google`.
+  final String certificateRoots;
   /// Where playback streams come from: YouTube directly by default.
   final PlaybackSource playbackSource;
   /// The Piped API server for [PlaybackSource.pipedCustom].
@@ -453,6 +456,7 @@ class PlayerSettings {
     this.proxyAddress = '',
     this.dnsServer = '',
     this.dnsCustomUrl = '',
+    this.certificateRoots = 'system',
     this.playbackSource = PlaybackSource.youtube,
     this.pipedServer = '',
     this.invidiousServer = '',
@@ -522,6 +526,7 @@ class PlayerSettings {
     String? proxyAddress,
     String? dnsServer,
     String? dnsCustomUrl,
+    String? certificateRoots,
     PlaybackSource? playbackSource,
     String? pipedServer,
     String? invidiousServer,
@@ -583,6 +588,7 @@ class PlayerSettings {
         proxyAddress: proxyAddress ?? this.proxyAddress,
         dnsServer: dnsServer ?? this.dnsServer,
         dnsCustomUrl: dnsCustomUrl ?? this.dnsCustomUrl,
+        certificateRoots: certificateRoots ?? this.certificateRoots,
         playbackSource: playbackSource ?? this.playbackSource,
         pipedServer: pipedServer ?? this.pipedServer,
         invidiousServer: invidiousServer ?? this.invidiousServer,
@@ -647,6 +653,7 @@ class PlayerSettings {
         'proxyAddress': proxyAddress,
         'dnsServer': dnsServer,
         'dnsCustomUrl': dnsCustomUrl,
+        'certificateRoots': certificateRoots,
         'playbackSourceV2': playbackSource.name,
         'pipedServer': pipedServer,
         'invidiousServer': invidiousServer,
@@ -832,6 +839,7 @@ class PlayerSettings {
       proxyAddress: NetworkProxy.normalize(raw['proxyAddress']?.toString() ?? '') ?? '',
       dnsServer: raw['dnsServer']?.toString() ?? '',
       dnsCustomUrl: raw['dnsCustomUrl']?.toString() ?? '',
+      certificateRoots: const ['mozilla', 'google'].contains(raw['certificateRoots']) ? raw['certificateRoots'] as String : 'system',
       // V2: the default became direct YouTube (2026-10-21); the old key held
       // the old default for everyone who never chose.
       playbackSource: _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),

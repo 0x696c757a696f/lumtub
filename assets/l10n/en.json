@@ -2855,5 +2855,11 @@
   "投屏画质": "Cast quality",
   "4K 以上用 VP9 或 AV1，最高 60 帧，需要较新的电视或 Chromecast": "Above 1080p the picture is VP9 or AV1 at up to 60 fps, which needs a newer TV or Chromecast",
   "1080p H.264，几乎所有电视都能播放": "1080p H.264, which nearly every TV plays",
-  "自动（1080p）": "Auto (1080p)"
+  "自动（1080p）": "Auto (1080p)",
+  "证书来源": "Certificate authorities",
+  "系统（默认）": "System (default)",
+  "Mozilla（Firefox 使用的列表）": "Mozilla (the list Firefox uses)",
+  "Google（Chrome 使用的列表）": "Google (the list Chrome uses)",
+  "当前：{0}。选 Mozilla 或 Google 时只信任该列表里的证书机构，系统里另装的根证书不再被信任；公司网络、杀毒软件或代理工具检查 HTTPS 时会连不上，请保持“系统”。直播和 yt-dlp 自己的请求不受此项影响": "Now: {0}. With Mozilla or Google, only the certificate authorities on that list are trusted, not root certificates added to the system; where a company network, antivirus or proxy tool inspects HTTPS, connections fail, so keep System. Live streams and yt-dlp's own requests are not affected",
+  "证书 CA 根证书 TLS HTTPS Mozilla Google Chrome Firefox": "certificate CA root TLS HTTPS Mozilla Google Chrome Firefox"
 }

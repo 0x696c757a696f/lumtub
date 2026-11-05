@@ -6,7 +6,8 @@
 //! do. Only addresses the app registered are served, only on 127.0.0.1.
 //!
 //! Every connection runs on its own thread, so the stream's bytes never
-//! pass through Dart. TLS is the operating system's (SChannel on Windows).
+//! pass through Dart. TLS is the operating system's (SChannel on Windows)
+//! unless another certificate list was chosen (see [crate::roots]).
 
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
@@ -63,55 +64,85 @@ pub trait Fetch: Send + Sync {
     fn get(&self, target: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String>;
 }
 
-/// HTTP with the operating system's TLS, one agent per proxy.
+/// HTTP with the app's TLS, one client per proxy and certificate list.
 #[derive(Default)]
 pub struct Web {
-    agents: Mutex<HashMap<Option<String>, ureq::Agent>>,
+    clients: Mutex<HashMap<(Option<String>, crate::roots::Roots), reqwest::Client>>,
 }
 
+/// How long YouTube may take to start answering.
+const ANSWER_WAIT: Duration = Duration::from_secs(20);
+
 impl Web {
-    fn agent(&self, proxy: &Option<String>) -> Result<ureq::Agent, String> {
-        let mut agents = self.agents.lock().unwrap();
-        if let Some(agent) = agents.get(proxy) {
-            return Ok(agent.clone());
+    fn client(&self, proxy: &Option<String>) -> Result<reqwest::Client, String> {
+        let roots = crate::roots::current();
+        let key = (proxy.clone(), roots);
+        let mut clients = self.clients.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(client) = clients.get(&key) {
+            return Ok(client.clone());
         }
-        let proxy_config = match proxy {
-            Some(p) => Some(ureq::Proxy::new(p).map_err(|e| e.to_string())?),
-            None => None,
+        let mut builder = reqwest::Client::builder()
+            .connect_timeout(Duration::from_secs(15))
+            .read_timeout(Duration::from_secs(120))
+            .pool_idle_timeout(Duration::from_secs(90))
+            .tcp_nodelay(true)
+            .http2_adaptive_window(true)
+            // Stream bytes are not compressed; asking for them as they are
+            // keeps every range exactly as long as the request said.
+            .no_gzip()
+            .no_brotli()
+            .no_deflate()
+            .redirect(reqwest::redirect::Policy::limited(10))
+            // 加密 DNS, when it is on, finds YouTube's stream servers too.
+            .dns_resolver(Arc::new(crate::dns::LiveResolver));
+        builder = match proxy {
+            Some(p) => builder.proxy(reqwest::Proxy::all(p).map_err(|e| e.to_string())?),
+            None => builder.no_proxy(),
         };
-        let config = ureq::Agent::config_builder()
-            .http_status_as_error(false)
-            .proxy(proxy_config)
-            // The system's certificate store, as libmpv and the rest of the app
-            // use: a proxy or security tool that inspects HTTPS installs its own
-            // root there, and a fixed list of roots would reject every stream.
-            .tls_config(
-                ureq::tls::TlsConfig::builder()
-                    .provider(ureq::tls::TlsProvider::NativeTls)
-                    .root_certs(ureq::tls::RootCerts::PlatformVerifier)
-                    .build(),
-            )
-            .timeout_connect(Some(Duration::from_secs(15)))
-            .timeout_recv_response(Some(Duration::from_secs(20)))
-            .timeout_recv_body(Some(Duration::from_secs(120)))
-            .build();
-        // 加密 DNS, when it is on, finds YouTube's stream servers too.
-        let agent = ureq::Agent::with_parts(config, ureq::unversioned::transport::DefaultConnector::default(), crate::dns::BlockingResolver);
-        agents.insert(proxy.clone(), agent.clone());
-        Ok(agent)
+        // The system's certificate store unless another list was chosen, as
+        // libmpv and the rest of the app: a proxy or security tool that
+        // inspects HTTPS installs its own root there.
+        let client = crate::roots::apply(builder, roots).build().map_err(|e| e.to_string())?;
+        clients.insert(key, client.clone());
+        Ok(client)
     }
 }
 
 impl Fetch for Web {
     fn get(&self, target: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String> {
-        let agent = self.agent(&target.proxy)?;
-        let mut request = agent.get(url);
+        let client = self.client(&target.proxy)?;
+        let mut request = client.get(url);
         if let Some(ua) = &target.user_agent {
             request = request.header("User-Agent", ua);
         }
-        let reply = request.call().map_err(|e| e.to_string())?;
+        let reply = crate::http::runtime()
+            .block_on(async { tokio::time::timeout(ANSWER_WAIT, request.send()).await })
+            .map_err(|_| "no answer in 20 s".to_string())?
+            .map_err(|e| e.to_string())?;
         let status = reply.status().as_u16();
-        Ok((status, Box::new(reply.into_body().into_reader())))
+        Ok((status, Box::new(Reply { reply, piece: bytes::Bytes::new() })))
+    }
+}
+
+/// A reply's body, read on the calling thread a network piece at a time.
+struct Reply {
+    reply: reqwest::Response,
+    piece: bytes::Bytes,
+}
+
+impl Read for Reply {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        while self.piece.is_empty() {
+            match crate::http::runtime().block_on(self.reply.chunk()) {
+                Ok(Some(piece)) => self.piece = piece,
+                Ok(None) => return Ok(0),
+                Err(e) => return Err(std::io::Error::other(e)),
+            }
+        }
+        let n = buffer.len().min(self.piece.len());
+        buffer[..n].copy_from_slice(&self.piece[..n]);
+        self.piece = self.piece.slice(n..);
+        Ok(n)
     }
 }
 
@@ -637,7 +668,7 @@ mod tests {
     fn fetches_https_with_the_system_roots() {
         let proxy = std::env::var("LUMTUB_TEST_PROXY").ok();
         let target = Target { url: String::new(), size: 0, user_agent: None, mime: None, proxy, chunk: chunk() };
-        let (status, mut body) = Web::default().get(&target, "https://static.crates.io/crates/ureq/3.5.0/download").expect("fetch");
+        let (status, mut body) = Web::default().get(&target, "https://static.crates.io/crates/bytes/1.11.1/download").expect("fetch");
         assert_eq!(status, 200);
         let mut bytes = Vec::new();
         body.read_to_end(&mut bytes).unwrap();

@@ -1888,5 +1888,11 @@
   "投屏画质": "投屏畫質",
   "4K 以上用 VP9 或 AV1，最高 60 帧，需要较新的电视或 Chromecast": "4K 以上用 VP9 或 AV1，最高 60 幀，需要較新的電視或 Chromecast",
   "1080p H.264，几乎所有电视都能播放": "1080p H.264，幾乎所有電視都能播放",
-  "自动（1080p）": "自動（1080p）"
+  "自动（1080p）": "自動（1080p）",
+  "证书来源": "憑證來源",
+  "系统（默认）": "系統（預設）",
+  "Mozilla（Firefox 使用的列表）": "Mozilla（Firefox 使用的清單）",
+  "Google（Chrome 使用的列表）": "Google（Chrome 使用的清單）",
+  "当前：{0}。选 Mozilla 或 Google 时只信任该列表里的证书机构，系统里另装的根证书不再被信任；公司网络、杀毒软件或代理工具检查 HTTPS 时会连不上，请保持“系统”。直播和 yt-dlp 自己的请求不受此项影响": "目前：{0}。選 Mozilla 或 Google 時只信任該清單裡的憑證機構，系統裡另外安裝的根憑證不再被信任；公司網路、防毒軟體或代理工具檢查 HTTPS 時會連不上，請保持「系統」。直播和 yt-dlp 自己的請求不受此項影響",
+  "证书 CA 根证书 TLS HTTPS Mozilla Google Chrome Firefox": "憑證 CA 根憑證 TLS HTTPS Mozilla Google Chrome Firefox"
 }

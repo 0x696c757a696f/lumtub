@@ -557,6 +557,19 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 },
               ),
             ), subtitle: tr('DNS DoH DNS-over-HTTPS Cloudflare Google Quad9 加密 污染')),
+        SettingEntry(tr('证书来源'), (context) {
+          final roots = [
+            ('system', tr('系统（默认）')),
+            ('mozilla', tr('Mozilla（Firefox 使用的列表）')),
+            ('google', tr('Google（Chrome 使用的列表）')),
+          ];
+          return NormalItem(
+            title: tr('证书来源'),
+            subtitle: tr('当前：{0}。选 Mozilla 或 Google 时只信任该列表里的证书机构，系统里另装的根证书不再被信任；公司网络、杀毒软件或代理工具检查 HTTPS 时会连不上，请保持“系统”。直播和 yt-dlp 自己的请求不受此项影响', [labelOf(roots, settings.certificateRoots)]),
+            leading: _icon(AppIcons.sealCheck),
+            onTap: () => pickFromDialog<String>(context, title: tr('证书来源'), value: settings.certificateRoots, values: roots, onSelected: (value) => save(settings.copyWith(certificateRoots: value))),
+          );
+        }, subtitle: tr('证书 CA 根证书 TLS HTTPS Mozilla Google Chrome Firefox')),
         SettingEntry(tr('缓冲模式'), (context) => NormalItem(
               title: tr('缓冲模式'),
               subtitle: tr('当前：{0}。只使用内存，不写入磁盘', [labelOf(_cacheModes, settings.cacheMode)]),

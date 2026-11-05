@@ -288,7 +288,8 @@ extension SettingsActions on AppController {
     if (next.proxyMode != oldSettings.proxyMode ||
         next.proxyAddress != oldSettings.proxyAddress ||
         next.dnsServer != oldSettings.dnsServer ||
-        next.dnsCustomUrl != oldSettings.dnsCustomUrl) {
+        next.dnsCustomUrl != oldSettings.dnsCustomUrl ||
+        next.certificateRoots != oldSettings.certificateRoots) {
       await _refreshProxy();
     }
     _update(() {

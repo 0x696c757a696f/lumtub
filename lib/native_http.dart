@@ -56,10 +56,12 @@ abstract final class NativeHttp {
   /// Routes new connections through [proxy] (`http://…` or `socks5://…`);
   /// with none, through the system's proxy when [system], else directly.
   /// [dns] looks names up for direct connections instead of the system.
-  static void configure({String? proxy, bool system = false, DnsServer? dns}) {
+  /// [roots] names the certificate authorities trusted: `system`,
+  /// `mozilla` or `google`.
+  static void configure({String? proxy, bool system = false, DnsServer? dns, String roots = 'system'}) {
     final native = _native;
     if (native == null) return;
-    final bytes = utf8.encode(jsonEncode({'proxy': proxy, 'system': system, 'dns': dns?.toJson() ?? const {}}));
+    final bytes = utf8.encode(jsonEncode({'proxy': proxy, 'system': system, 'dns': dns?.toJson() ?? const {}, 'roots': roots}));
     _withBytes(bytes, (p, n) => native.configure(p, n));
   }
 

@@ -1,7 +1,8 @@
 name: Refresh lockfiles
 
 # Dependabot raises direct dependencies only; this moves every package in
-# pubspec.lock and Cargo.lock to the newest version the constraints allow.
+# pubspec.lock and Cargo.lock to the newest version the constraints allow,
+# and takes the newest Chrome Root Store.
 # The result goes to the deps/lockfiles branch and Build checks it; Merge
 # dependency updates then brings it into main.
 on:
@@ -32,6 +33,8 @@ jobs:
         run: |
           rustup update stable
           cargo update --manifest-path native/lumtub_core/Cargo.toml
+      - name: Chrome Root Store
+        run: native/lumtub_core/roots/update-chrome.sh
       - name: Push and build
         env:
           GH_TOKEN: ${{ github.token }}
@@ -45,6 +48,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git switch -c deps/lockfiles
+          git add -A native/lumtub_core/roots
           git commit -qam "Refresh lockfiles"
           git push --force origin deps/lockfiles
           gh workflow run build.yml --ref deps/lockfiles

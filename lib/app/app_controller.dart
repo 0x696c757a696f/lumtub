@@ -1211,6 +1211,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       proxy: nativeProxy(next.url),
       system: settings.proxyMode == ProxyMode.system,
       dns: DnsServer.of(settings.dnsServer, settings.dnsCustomUrl),
+      roots: settings.certificateRoots,
     );
     if (next.url != proxy.url) logInfo(next.url == null ? 'Network: direct connection' : 'Network: using proxy ${next.redacted}');
     proxy = next;

@@ -36,6 +36,8 @@ pub struct Settings {
 
 pub struct Doh {
     url: String,
+    /// The certificate authorities [client] trusts.
+    roots: crate::roots::Roots,
     client: reqwest::Client,
     cache: Mutex<HashMap<String, (Vec<IpAddr>, Instant)>>,
 }
@@ -67,7 +69,9 @@ impl Doh {
                 builder = builder.resolve_to_addrs(host, &addrs);
             }
         }
-        Some(Doh { url: url.to_string(), client: builder.build().ok()?, cache: Mutex::new(HashMap::new()) })
+        let roots = crate::roots::current();
+        builder = crate::roots::apply(builder, roots);
+        Some(Doh { url: url.to_string(), roots, client: builder.build().ok()?, cache: Mutex::new(HashMap::new()) })
     }
 
     async fn ask(&self, name: &Name, kind: RecordType) -> Result<(Vec<IpAddr>, u64), Failure> {
@@ -163,10 +167,11 @@ pub fn current() -> Option<Arc<Doh>> {
     CURRENT.read().unwrap_or_else(|e| e.into_inner()).clone()
 }
 
-/// Switches to [settings]; returns whether anything changed.
+/// Switches to [settings], or to the certificate authorities now chosen;
+/// returns whether anything changed.
 pub fn set(settings: Settings) -> bool {
     let mut old = SETTINGS.lock().unwrap_or_else(|e| e.into_inner());
-    if *old == settings {
+    if *old == settings && current().is_none_or(|doh| doh.roots == crate::roots::current()) {
         return false;
     }
     *CURRENT.write().unwrap_or_else(|e| e.into_inner()) = Doh::new(&settings).map(Arc::new);
@@ -204,39 +209,21 @@ impl reqwest::dns::Resolve for Resolver {
     }
 }
 
-/// [Doh] for ureq, which the relay's threads call outside any runtime.
+/// Whichever 加密 DNS is on at each lookup, else the system's, for the
+/// relay's clients, which outlive a change of the setting.
 #[derive(Debug, Default)]
-pub struct BlockingResolver;
+pub struct LiveResolver;
 
-impl ureq::unversioned::resolver::Resolver for BlockingResolver {
-    fn resolve(
-        &self,
-        uri: &ureq::http::Uri,
-        config: &ureq::config::Config,
-        timeout: ureq::unversioned::transport::NextTimeout,
-    ) -> Result<ureq::unversioned::resolver::ResolvedSocketAddrs, ureq::Error> {
-        let fallback = || ureq::unversioned::resolver::DefaultResolver::default().resolve(uri, config, timeout);
-        let (Some(doh), Some(host)) = (current(), uri.host()) else {
-            return fallback();
-        };
-        let host = host.trim_start_matches('[').trim_end_matches(']').to_string();
-        if host.parse::<IpAddr>().is_ok() {
-            return fallback();
-        }
-        let port = uri.port_u16().unwrap_or(if uri.scheme_str() == Some("http") { 80 } else { 443 });
-        match crate::http::runtime().block_on(doh.lookup(&host)) {
-            Ok(ips) => {
-                let mut out = BlockingResolver.empty();
-                for ip in ips {
-                    if out.try_push(SocketAddr::new(ip, port)).is_err() {
-                        break;
-                    }
-                }
-                Ok(out)
-            }
-            Err(Failure::NoSuchName) => Err(ureq::Error::HostNotFound),
-            Err(Failure::Server(_)) => fallback(),
-        }
+impl reqwest::dns::Resolve for LiveResolver {
+    fn resolve(&self, name: reqwest::dns::Name) -> reqwest::dns::Resolving {
+        let host = name.as_str().to_string();
+        Box::pin(async move {
+            let addrs = match current() {
+                Some(doh) => resolve(doh, host, 0).await?,
+                None => tokio::task::spawn_blocking(move || system(&host, 0)).await.map_err(std::io::Error::other)??,
+            };
+            Ok(Box::new(addrs.into_iter()) as reqwest::dns::Addrs)
+        })
     }
 }
 

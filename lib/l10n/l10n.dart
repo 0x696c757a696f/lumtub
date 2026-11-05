@@ -155,6 +155,7 @@ const _nativeNames = {
   'zh-Hant': '繁體中文',
   'en': 'English',
   'ar': 'العربية',
+  'bn': 'বাংলা',
   'cs': 'Čeština',
   'da': 'Dansk',
   'de': 'Deutsch',

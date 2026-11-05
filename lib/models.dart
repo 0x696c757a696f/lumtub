@@ -323,8 +323,20 @@ Object? parseListingEntry(String line) {
   }
 }
 
-/// Formats a count the way Chinese YouTube does: 9,999 / 1.2万 / 3.4亿.
+/// Formats a count the way YouTube does in the interface language: 1.2K
+/// in most, 1.2万 / 3.4亿 in Chinese, 1.2万 / 3.4億 in Japanese, 1.2만 /
+/// 3.4억 in Korean.
 String formatCount(int value) {
+  final (tenThousand, hundredMillion) = switch (currentLanguage.tag) {
+    'ja' => ('万', '億'),
+    'ko' => ('만', '억'),
+    _ => ('', ''),
+  };
+  if (tenThousand.isNotEmpty) {
+    if (value < 10000) return '$value';
+    if (value < 100000000) return '${_trim(value / 10000)}$tenThousand';
+    return '${_trim(value / 100000000)}$hundredMillion';
+  }
   if (!currentLanguage.isChinese) {
     if (value < 1000) return '$value';
     if (value < 1000000) return '${_trim(value / 1000)}K';

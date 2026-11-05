@@ -256,6 +256,8 @@ class _DownloadTile extends StatelessWidget {
           width: 96,
           height: 54,
           child: Image.network(
+            color: context.pictureWarmth,
+            colorBlendMode: BlendMode.multiply,
             item.thumbnail,
             cacheWidth: (96 * MediaQuery.devicePixelRatioOf(context)).ceil(),
             fit: BoxFit.cover,

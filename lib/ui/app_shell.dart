@@ -181,6 +181,7 @@ class _AppShellState extends State<AppShell> {
                     Row(children: [
                       if (rail)
                         NavigationRail(
+                          backgroundColor: context.tones.chrome,
                           selectedIndex: _selectedIndex,
                           labelType: NavigationRailLabelType.all,
                           minWidth: 76,
@@ -289,7 +290,8 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final ready = controller.ready;
-    return SizedBox(
+    return Container(
+      color: context.tones.chrome,
       height: AppStyle.topBarHeight,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -562,7 +564,7 @@ class _StatusBar extends StatelessWidget {
       width: double.infinity,
       height: 26,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
+      decoration: BoxDecoration(color: context.tones.chrome, border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
       alignment: Alignment.centerLeft,
       child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 12)),
     );

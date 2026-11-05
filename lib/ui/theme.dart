@@ -1,8 +1,11 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import '../appearance_settings.dart';
 import 'palettes.dart';
+import 'warm_layer.dart';
 
 /// Shared spacing and shapes: flat, hairline borders, small corners.
 abstract final class AppStyle {
@@ -169,6 +172,7 @@ ThemeData buildAppTheme(
   PageTransition transition = PageTransition.fade,
   bool highContrast = false,
   Palette? palette,
+  double warmth = 0,
 }) {
   final dark = brightness == Brightness.dark;
   // A palette brings its own accent for each mode.
@@ -181,6 +185,11 @@ ThemeData buildAppTheme(
     scheme = paletteScheme(scheme, palette, brightness, pureBlack: pureBlack);
   } else {
     scheme = _neutralScheme(scheme, seed, brightness, pureBlack: pureBlack);
+  }
+  var chrome = highContrast ? null : paletteChrome(palette, brightness, pureBlack: pureBlack);
+  if (warmth > 0 && !highContrast) {
+    scheme = warmScheme(scheme, warmth);
+    if (chrome != null) chrome = warmColor(chrome, warmth);
   }
   final builder = switch (transition) {
     PageTransition.fade => const FadeForwardsPageTransitionsBuilder(),
@@ -452,7 +461,24 @@ ThemeData buildAppTheme(
       TargetPlatform.android: builder,
     }),
   );
-  return theme.copyWith(textTheme: _typeScale(theme.textTheme));
+  return theme.copyWith(textTheme: _typeScale(theme.textTheme), extensions: [AppTones(chrome: chrome, warmth: highContrast ? 0 : warmth)]);
+}
+
+/// What the colour scheme does not carry: the palette's top bar and side
+/// rail, and how warm 护眼暖色 makes pictures and video.
+class AppTones extends ThemeExtension<AppTones> {
+  const AppTones({this.chrome, this.warmth = 0});
+  final Color? chrome;
+  final double warmth;
+
+  @override
+  AppTones copyWith({Color? chrome, double? warmth}) => AppTones(chrome: chrome ?? this.chrome, warmth: warmth ?? this.warmth);
+
+  @override
+  AppTones lerp(AppTones? other, double t) => AppTones(
+        chrome: Color.lerp(chrome, other?.chrome, t),
+        warmth: lerpDouble(warmth, other?.warmth ?? 0, t)!,
+      );
 }
 
 class _NoTransitionsBuilder extends PageTransitionsBuilder {
@@ -465,4 +491,10 @@ class _NoTransitionsBuilder extends PageTransitionsBuilder {
 extension ThemeShortcuts on BuildContext {
   ColorScheme get colors => Theme.of(this).colorScheme;
   TextTheme get text => Theme.of(this).textTheme;
+  AppTones get tones => Theme.of(this).extension<AppTones>() ?? const AppTones();
+  /// Multiplied into thumbnails and avatars under 护眼暖色, none otherwise.
+  Color? get pictureWarmth {
+    final w = tones.warmth;
+    return w <= 0.001 ? null : WarmLayer.tint(w);
+  }
 }

@@ -24,6 +24,7 @@ import '../widgets/video_progress_bar.dart';
 import 'motion.dart';
 import '../widgets/position_ticks.dart';
 import 'app_icons.dart';
+import 'warm_layer.dart';
 
 /// The corners the card snaps to.
 enum MiniCorner { topLeft, topRight, bottomLeft, bottomRight }
@@ -137,10 +138,12 @@ class _MiniPlayerState extends State<MiniPlayer> {
     if (controller == null) return const SizedBox.expand();
     return VideoBox(
       controller: _controller,
-      child: Video(
-        controller: controller,
-        controls: NoVideoControls,
-        subtitleViewConfiguration: const SubtitleViewConfiguration(visible: false),
+      child: WarmLayer(
+        child: Video(
+          controller: controller,
+          controls: NoVideoControls,
+          subtitleViewConfiguration: const SubtitleViewConfiguration(visible: false),
+        ),
       ),
     );
   }

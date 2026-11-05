@@ -73,4 +73,23 @@ void main() {
     expect(tint.g, greaterThan(tint.b));
     expect(WarmLayer.tint(0), const Color(0xFFFFFFFF));
   });
+
+  test('the warm light keeps every palette readable and its own', () {
+    for (final palette in [null, ...palettes]) {
+      for (final brightness in Brightness.values) {
+        final theme = buildAppTheme(Colors.red, brightness, palette: palette, warmth: 1);
+        final plain = buildAppTheme(Colors.red, brightness, palette: palette).colorScheme;
+        final scheme = theme.colorScheme;
+        final what = '${palette?.id} ${brightness.name}';
+        expect(_contrast(scheme.onSurface, scheme.surface), greaterThanOrEqualTo(10), reason: what);
+        expect(_contrast(scheme.onSurfaceVariant, scheme.surface), greaterThanOrEqualTo(4.0), reason: what);
+        if (palette != null) expect(_contrast(scheme.primary, scheme.surface), greaterThanOrEqualTo(4.0), reason: what);
+        // The accent moves a quarter as far as the page.
+        expect(scheme.primary, warmColor(plain.primary, 0.25), reason: what);
+        expect(theme.extension<AppTones>()!.warmth, 1);
+        final chrome = palette?.of(brightness).chrome;
+        if (chrome != null) expect(theme.extension<AppTones>()!.chrome, warmColor(chrome, 1), reason: what);
+      }
+    }
+  });
 }

@@ -19,7 +19,6 @@ import 'ui/motion.dart';
 import 'ui/smooth_wheel.dart';
 import 'ui/palettes.dart';
 import 'ui/theme.dart';
-import 'ui/warm_layer.dart';
 import 'windows_shell.dart';
 
 Future<void> main() async {
@@ -88,7 +87,8 @@ class _LumtubAppState extends State<LumtubApp> {
     PaintingBinding.instance.imageCache
       ..maximumSize = appearance.lowResource ? 120 : 300
       ..maximumSizeBytes = (appearance.lowResource ? 24 : 64) << 20;
-    final key = (appearance.themeKey(accent), Motion.reduced);
+    final warmth = appearance.warmAt(DateTime.now()) ? appearance.warmth : 0.0;
+    final key = (appearance.themeKey(accent), Motion.reduced, warmth);
     if (key == _themeKey) return;
     _themeKey = key;
     ThemeData build(Brightness brightness, {bool highContrast = false}) => buildAppTheme(
@@ -101,6 +101,7 @@ class _LumtubAppState extends State<LumtubApp> {
           transition: Motion.reduced ? PageTransition.none : appearance.transition,
           highContrast: highContrast,
           palette: paletteOf(appearance.palette),
+          warmth: warmth,
         );
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
@@ -192,10 +193,10 @@ class _LumtubAppState extends State<LumtubApp> {
             // The font size setting scales on top of Windows' text size.
             builder: (context, child) {
               final media = MediaQuery.of(context);
-              _matchTitleBar(Theme.of(context).colorScheme);
+              _matchTitleBar(Theme.of(context));
               return MediaQuery(
                 data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale), disableAnimations: media.disableAnimations || Motion.reduced),
-                child: WarmLayer(warmth: appearance.warmAt(DateTime.now()) ? appearance.warmth : 0, child: child!),
+                child: child!,
               );
             },
             home: child,
@@ -209,13 +210,15 @@ Object? _titleBar;
 
 /// The Windows title bar in the page's own colours, so the window reads as
 /// one surface in light and dark themes.
-void _matchTitleBar(ColorScheme scheme) {
+void _matchTitleBar(ThemeData theme) {
   if (!Platform.isWindows) return;
-  final key = (scheme.surface, scheme.onSurface, scheme.brightness);
+  final scheme = theme.colorScheme;
+  final caption = theme.extension<AppTones>()?.chrome ?? scheme.surface;
+  final key = (caption, scheme.onSurface, scheme.brightness);
   if (key == _titleBar) return;
   _titleBar = key;
   WidgetsBinding.instance.addPostFrameCallback((_) => AppWindow.setTitleBar(
-        caption: scheme.surface.toARGB32(),
+        caption: caption.toARGB32(),
         text: scheme.onSurface.toARGB32(),
         dark: scheme.brightness == Brightness.dark,
       ));

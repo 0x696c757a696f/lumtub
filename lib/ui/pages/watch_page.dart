@@ -24,6 +24,7 @@ import '../summary_dialog.dart';
 import '../theater_mode.dart';
 import '../skeleton.dart';
 import '../theme.dart';
+import '../warm_layer.dart';
 import '../translatable.dart';
 import '../play_queue_panel.dart';
 import '../playing_list_panel.dart';
@@ -98,10 +99,11 @@ class _WatchPageState extends State<WatchPage> {
     final page = _page(context, controller);
     if (!appearance.darkWatchPage || Theme.of(context).brightness == Brightness.dark) return page;
     // ColorScheme.fromSeed is costly and the page rebuilds on every notify.
-    final key = appearance.themeKey(controller.accentColor);
+    final warmth = context.tones.warmth;
+    final key = (appearance.themeKey(controller.accentColor), warmth);
     if (key != _darkKey) {
       _darkKey = key;
-      _dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.font, palette: paletteOf(appearance.palette));
+      _dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.font, palette: paletteOf(appearance.palette), warmth: warmth);
     }
     final dark = _dark!;
     return Theme(data: dark, child: Material(color: dark.colorScheme.surface, child: page));
@@ -374,8 +376,11 @@ class _Player extends StatelessWidget {
                   // they measure the size it is drawn at.
                   controls: (state) => VideoBox(
                     controller: controller,
-                    child: RepaintBoundary(
-                      child: PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
+                    child: WarmLayer(
+                      behind: true,
+                      child: RepaintBoundary(
+                        child: PlayerControls(player: state.widget.controller.player, state: state, controller: controller),
+                      ),
                     ),
                   ),
                   subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label),
@@ -659,6 +664,8 @@ class _ReplayChatMessage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Image.network(
+                  color: context.pictureWarmth,
+                  colorBlendMode: BlendMode.multiply,
                   message.stickerUrl!,
                   height: 56,
                   cacheHeight: (56 * MediaQuery.devicePixelRatioOf(context)).round(),

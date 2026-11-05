@@ -26,6 +26,7 @@ import 'video_box.dart';
 import 'motion.dart';
 import '../widgets/position_ticks.dart';
 import 'app_icons.dart';
+import 'warm_layer.dart';
 
 class PipView extends StatefulWidget {
   const PipView({super.key, required this.controller});
@@ -99,10 +100,12 @@ class _PipViewState extends State<PipView> {
             child: Stack(fit: StackFit.expand, children: [
               VideoBox(
                 controller: _controller,
-                child: Video(
-                  controller: _controller.videoController!,
-                  controls: NoVideoControls,
-                  subtitleViewConfiguration: subtitles,
+                child: WarmLayer(
+                  child: Video(
+                    controller: _controller.videoController!,
+                    controls: NoVideoControls,
+                    subtitleViewConfiguration: subtitles,
+                  ),
                 ),
               ),
               // Press and move to drag the window; double-click to go back.

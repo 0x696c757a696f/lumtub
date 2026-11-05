@@ -226,6 +226,8 @@ class _SelectRow extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image(
+                  color: context.pictureWarmth,
+                  colorBlendMode: BlendMode.multiply,
                   image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
                   fit: BoxFit.cover,
                   errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 import 'common.dart';
 import 'app_icons.dart';
+import 'theme.dart';
 
 /// How long until a stream starts, as the card's headline.
 String startsIn(Duration? left) {
@@ -62,6 +63,8 @@ class _UpcomingCardState extends State<UpcomingCard> {
           ImageFiltered(
             imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16, tileMode: TileMode.decal),
             child: Image(
+              color: context.pictureWarmth,
+              colorBlendMode: BlendMode.multiply,
               image: widget.thumbnail,
               fit: BoxFit.cover,
               errorBuilder: (context, _, __) => const SizedBox.shrink(),

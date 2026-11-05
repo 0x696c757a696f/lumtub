@@ -274,6 +274,8 @@ class PostCard extends StatelessWidget {
               itemBuilder: (context, i) => ClipRRect(
                 borderRadius: AppStyle.thumbnailRadius,
                 child: Image.network(
+                  color: context.pictureWarmth,
+                  colorBlendMode: BlendMode.multiply,
                   post.images[i],
                   cacheHeight: (240 * MediaQuery.devicePixelRatioOf(context)).ceil(),
                   fit: BoxFit.cover,
@@ -487,6 +489,8 @@ class ChannelAvatar extends StatelessWidget {
     if (url == null) return fallback;
     final file = cacheFile;
     return ClipOval(child: Image(
+      color: context.pictureWarmth,
+      colorBlendMode: BlendMode.multiply,
       image: ResizeImage.resizeIfNeeded((radius * 4).round(), null, file == null ? NetworkImage(url) : CachedThumbnail(url, file)),
       width: radius * 2,
       height: radius * 2,

@@ -194,6 +194,8 @@ class VideoRow extends StatelessWidget {
                   borderRadius: AppStyle.controlRadius,
                   child: Stack(fit: StackFit.expand, children: [
                     Image(
+                      color: context.pictureWarmth,
+                      colorBlendMode: BlendMode.multiply,
                       image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
                       fit: BoxFit.cover,
                       gaplessPlayback: true,
@@ -290,6 +292,8 @@ class PlaylistCard extends StatelessWidget {
               child: Stack(fit: StackFit.expand, children: [
                 if (cover != null)
                   LayoutBuilder(builder: (context, box) => Image.network(
+                    color: context.pictureWarmth,
+                    colorBlendMode: BlendMode.multiply,
                     cover,
                     cacheWidth: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context), largest: 480),
                     fit: BoxFit.cover,
@@ -504,6 +508,8 @@ class _VideoCardState extends State<VideoCard> {
                   curve: Ease.curve,
                   child: LayoutBuilder(
                     builder: (context, box) => Image(
+                      color: context.pictureWarmth,
+                      colorBlendMode: BlendMode.multiply,
                       image: thumbnailFor(item, widget.thumbnails, width: thumbnailDecodeWidth(box.maxWidth, MediaQuery.devicePixelRatioOf(context))),
                       fit: BoxFit.cover,
                       gaplessPlayback: true,
@@ -516,6 +522,8 @@ class _VideoCardState extends State<VideoCard> {
                   AnimatedSwitcher(
                     duration: Motion.of(const Duration(milliseconds: 250)),
                     child: Image(
+                      color: context.pictureWarmth,
+                      colorBlendMode: BlendMode.multiply,
                       // The frames are cached on disk like thumbnails, so
                       // hovering the same card again reads no network.
                       image: _frameImage(item, _frame),
@@ -718,6 +726,8 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
                 borderRadius: BorderRadius.circular(8),
                 child: Stack(fit: StackFit.expand, children: [
                   Image(
+                    color: context.pictureWarmth,
+                    colorBlendMode: BlendMode.multiply,
                     image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
                     fit: BoxFit.cover,
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),

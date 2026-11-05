@@ -131,7 +131,9 @@ class FormatPolicy {
             VideoCodec.vp8 => ['vp8'],
           },
     ].map((name) => '[vcodec!*=$name]').join();
-    final tall = settings.maxHeight > 0 && settings.maxHeight <= 1080 ? '' : 'bv*[height>1080]$cap$excluded+ba/';
+    // Only HLS: the live picture and sound without a manifest answer one
+    // fragment per request, which libmpv cannot follow (see LiveSplit).
+    final tall = settings.maxHeight > 0 && settings.maxHeight <= 1080 ? '' : 'bv*[height>1080][protocol^=m3u8]$cap$excluded+ba[protocol^=m3u8]/';
     return '${tall}b$cap[vcodec!=none][acodec!=none]/${fallback == 'ytdl' ? 'bestvideo+bestaudio/best' : fallback}';
   }
 

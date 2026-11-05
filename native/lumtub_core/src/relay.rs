@@ -41,6 +41,11 @@ pub struct Target {
     /// Bytes fetched from YouTube per request.
     #[serde(default = "chunk")]
     pub chunk: u64,
+    /// For a live stream's picture or sound, the name it shares with the
+    /// other: it is served as it grows, a fragment at a time, and both
+    /// start at the same fragment (see [crate::relay_live]).
+    #[serde(default)]
+    pub live: Option<String>,
 }
 
 fn chunk() -> u64 {
@@ -52,6 +57,8 @@ struct Shared {
     targets: HashMap<String, Target>,
     order: VecDeque<String>,
     log: VecDeque<String>,
+    /// The fragment each live pair starts at, by its shared name.
+    live_starts: VecDeque<(String, u64)>,
 }
 
 pub struct Relay {
@@ -62,6 +69,12 @@ pub struct Relay {
 /// What the relay reads from YouTube: the reply's status and body.
 pub trait Fetch: Send + Sync {
     fn get(&self, target: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String>;
+
+    /// [Fetch::get], with the newest fragment of a live stream YouTube
+    /// names in `x-head-seqnum`.
+    fn get_live(&self, target: &Target, url: &str) -> Result<(u16, Option<u64>, Box<dyn Read + Send>), String> {
+        self.get(target, url).map(|(status, body)| (status, None, body))
+    }
 }
 
 /// HTTP with the app's TLS, one client per proxy and certificate list.
@@ -110,6 +123,10 @@ impl Web {
 
 impl Fetch for Web {
     fn get(&self, target: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String> {
+        self.get_live(target, url).map(|(status, _, body)| (status, body))
+    }
+
+    fn get_live(&self, target: &Target, url: &str) -> Result<(u16, Option<u64>, Box<dyn Read + Send>), String> {
         let client = self.client(&target.proxy)?;
         let mut request = client.get(url);
         if let Some(ua) = &target.user_agent {
@@ -120,7 +137,8 @@ impl Fetch for Web {
             .map_err(|_| "no answer in 20 s".to_string())?
             .map_err(|e| e.to_string())?;
         let status = reply.status().as_u16();
-        Ok((status, Box::new(Reply { reply, piece: bytes::Bytes::new() })))
+        let head = reply.headers().get("x-head-seqnum").and_then(|v| v.to_str().ok()).and_then(|v| v.trim().parse().ok());
+        Ok((status, head, Box::new(Reply { reply, piece: bytes::Bytes::new() })))
     }
 }
 
@@ -184,7 +202,7 @@ impl Relay {
     /// A loopback address that serves [target], or none when its size is
     /// unknown (it is needed for seeking).
     pub fn register(&self, mut target: Target) -> Option<String> {
-        if target.size == 0 || target.url.is_empty() || target.chunk == 0 {
+        if (target.size == 0 && target.live.is_none()) || target.url.is_empty() || target.chunk == 0 {
             return None;
         }
         if target.mime.is_none() {
@@ -206,6 +224,21 @@ impl Relay {
     pub fn take_log(&self) -> Vec<String> {
         self.shared.lock().unwrap().log.drain(..).collect()
     }
+}
+
+/// The fragment the live pair [pair] starts at: [crate::relay_live::BEHIND]
+/// before the newest, [head], for whichever of its streams asks first.
+fn live_start(shared: &Mutex<Shared>, pair: &str, head: u64) -> u64 {
+    let mut shared = shared.lock().unwrap();
+    if let Some((_, start)) = shared.live_starts.iter().find(|(name, _)| name == pair) {
+        return *start;
+    }
+    let start = head.saturating_sub(crate::relay_live::BEHIND);
+    shared.live_starts.push_back((pair.to_string(), start));
+    while shared.live_starts.len() > KEEP {
+        shared.live_starts.pop_front();
+    }
+    start
 }
 
 fn log(shared: &Mutex<Shared>, line: String) {
@@ -316,6 +349,16 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
             }
             continue;
         };
+        if let Some(pair) = target.live.clone() {
+            if method == "GET" {
+                let start = |head: u64| live_start(shared, &pair, head);
+                crate::relay_live::stream(writer, &target, fetch, start, |line| log(shared, line));
+            } else {
+                let mime = target.mime.as_deref().unwrap_or("application/octet-stream");
+                let _ = write!(writer, "HTTP/1.1 200 OK\r\nContent-Type: {mime}\r\nConnection: close\r\n\r\n");
+            }
+            return;
+        }
         let size = target.size;
         let (status, start, end) = match byte_range(headers.get("range").map(String::as_str), size) {
             Range::Whole => ("200 OK", 0, size - 1),
@@ -667,7 +710,7 @@ mod tests {
     #[ignore]
     fn fetches_https_with_the_system_roots() {
         let proxy = std::env::var("LUMTUB_TEST_PROXY").ok();
-        let target = Target { url: String::new(), size: 0, user_agent: None, mime: None, proxy, chunk: chunk() };
+        let target = Target { url: String::new(), size: 0, user_agent: None, mime: None, proxy, chunk: chunk(), live: None };
         let (status, mut body) = Web::default().get(&target, "https://static.crates.io/crates/bytes/1.11.1/download").expect("fetch");
         assert_eq!(status, 200);
         let mut bytes = Vec::new();
@@ -714,7 +757,7 @@ mod tests {
     }
 
     fn target(size: u64) -> Target {
-        Target { url: "https://example.com/videoplayback?mime=video%2Fwebm&clen=1".into(), size, user_agent: None, mime: None, proxy: None, chunk: CHUNK }
+        Target { url: "https://example.com/videoplayback?mime=video%2Fwebm&clen=1".into(), size, user_agent: None, mime: None, proxy: None, chunk: CHUNK, live: None }
     }
 
     #[test]

@@ -566,50 +566,6 @@ jobs:
           path: Lumtub_*_linux-${{ matrix.package_arch }}.AppImage
           if-no-files-found: error
 
-  live-probe:
-    name: Live formats probe
-    # Runs only for a commit whose message contains [live-probe]: lists the
-    # formats yt-dlp finds for a few 4K live streams, with and without the
-    # DASH formats it leaves out for live streams, and tries them in mpv.
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - name: Check whether the probe is wanted
-        id: wanted
-        run: |
-          if git log -1 --format=%B | grep -qF '[live-probe]'; then echo "run=true" >> "$GITHUB_OUTPUT"; fi
-      - name: Probe live formats
-        if: steps.wanted.outputs.run == 'true'
-        continue-on-error: true
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq mpv >/dev/null
-          python3 -m venv "$RUNNER_TEMP/yt" && "$RUNNER_TEMP/yt/bin/pip" install -q -U 'yt-dlp[default]'
-          curl -fsSL -o "$RUNNER_TEMP/deno.zip" https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip
-          unzip -q -o "$RUNNER_TEMP/deno.zip" -d "$RUNNER_TEMP/yt/bin"
-          export PATH="$RUNNER_TEMP/yt/bin:$PATH"
-          yt-dlp --version
-          ids="T9i7SKYx3rY bFt5M9_NoS8 $(yt-dlp --flat-playlist --print id --playlist-end 2 'ytsearch2:4k live now' || true)"
-          echo "ids: $ids"
-          for id in $ids; do
-            echo "::group::$id default"
-            yt-dlp -F "https://www.youtube.com/watch?v=$id" 2>&1 | tail -40
-            echo "::endgroup::"
-            echo "::group::$id formats=incomplete"
-            yt-dlp -F --extractor-args youtube:formats=incomplete "https://www.youtube.com/watch?v=$id" 2>&1 | tail -60
-            yt-dlp -j -f 'bv*[height>1080]+ba' --extractor-args youtube:formats=incomplete "https://www.youtube.com/watch?v=$id" 2>/dev/null \
-              | python3 -c 'import json,sys; d=json.load(sys.stdin); [print(f["format_id"], f.get("protocol"), f.get("height"), (f.get("manifest_url") or "")[:120], len(f.get("fragments") or [])) for f in d.get("requested_formats") or [d]]' || true
-            echo "::endgroup::"
-          done
-          id=$(echo "$ids" | head -1)
-          echo "::group::mpv DASH above 1080p"
-          timeout 90 mpv --no-config --vo=null --ao=null --frames=300 -v \
-            --ytdl-format='bv*[height>1080]+ba/b' \
-            --ytdl-raw-options=extractor-args=youtube:formats=incomplete \
-            "https://www.youtube.com/watch?v=$id" 2>&1 | grep -iE 'ytdl|video|height|fps|error|fail|dash|edl|Playing|Exiting' | head -80
-          echo "::endgroup::"
-
   showcase:
     name: README pictures
     # Runs only for a commit whose message contains [showcase]: pushes the

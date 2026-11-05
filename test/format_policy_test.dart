@@ -213,9 +213,9 @@ void main() {
   });
 
   test('a live stream takes one stream with picture and sound up to 1080p, split streams above', () {
-    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}), 'bv+ba'), 'bv*[height>1080]+ba/b[vcodec!=none][acodec!=none]/bv+ba');
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}), 'bv+ba'), 'bv*[height>1080][protocol^=m3u8]+ba[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bv+ba');
     expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}, maxHeight: 720), 'bv+ba'), 'b[height<=?720][vcodec!=none][acodec!=none]/bv+ba');
-    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}, maxHeight: 1440), 'bv+ba'), 'bv*[height>1080][height<=?1440]+ba/b[height<=?1440][vcodec!=none][acodec!=none]/bv+ba');
-    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {VideoCodec.av1}), 'ytdl'), 'bv*[height>1080][vcodec!*=av01]+ba/b[vcodec!=none][acodec!=none]/bestvideo+bestaudio/best');
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {}, maxHeight: 1440), 'bv+ba'), 'bv*[height>1080][protocol^=m3u8][height<=?1440]+ba[protocol^=m3u8]/b[height<=?1440][vcodec!=none][acodec!=none]/bv+ba');
+    expect(FormatPolicy.liveExpression(const PlayerSettings(disabledCodecs: {VideoCodec.av1}), 'ytdl'), 'bv*[height>1080][protocol^=m3u8][vcodec!*=av01]+ba[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bestvideo+bestaudio/best');
   });
 }

@@ -143,11 +143,15 @@ class StreamResolver {
   /// The proxy each entry of [_results] was resolved through: addresses
   /// handed out through one may not work through another.
   final _proxies = <String, String?>{};
+  /// The entries of [_results] resolved with `live`.
+  final _lives = <String>{};
 
   /// mpv's own default when no format was chosen.
   static String expressionOf(String format) => format == 'ytdl' ? 'bestvideo+bestaudio/best' : format;
 
-  List<String> arguments(String videoId, String format, {String? formatSort, String? cookies}) {
+  /// [live] also lists a live stream's separate picture and sound above
+  /// 1080p, which have no manifest (see `LiveSplit`).
+  List<String> arguments(String videoId, String format, {String? formatSort, String? cookies, bool live = false}) {
     final proxy = this.proxy?.call();
     return [
       if (proxy != null) ...['--proxy', proxy],
@@ -155,6 +159,7 @@ class StreamResolver {
         if (cacheDirectory != null) ...['--cache-dir', cacheDirectory!],
         if (deno != null) ...['--js-runtimes', 'deno:${deno!}'],
         '--extractor-retries', '3',
+        if (live) ...['--extractor-args', 'youtube:formats=incomplete'],
         '--no-playlist',
         '--dump-single-json',
         '--format', expressionOf(format),
@@ -165,17 +170,18 @@ class StreamResolver {
 
   /// The resolved video, from the cache while it is fresh.
   /// [membersOnly] (as a list marked it) asks signed in from the start.
-  Future<ResolvedVideo> resolve(String videoId, String format, {String? formatSort, bool membersOnly = false}) {
+  /// [live]: see [arguments].
+  Future<ResolvedVideo> resolve(String videoId, String format, {String? formatSort, bool membersOnly = false, bool live = false}) {
     // A card prefetched in the background is now being waited on.
     final lowered = _lowered[videoId];
     if (lowered != null) restorePriority(lowered);
     final cached = _results[videoId];
     // Another format needs another extraction.
-    if (cached != null && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call()) {
-      return cached.then((video) => video.fresh ? video : _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly),
-          onError: (_) => _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly));
+    if (cached != null && _formats[videoId] == format && _formatSorts[videoId] == formatSort && _proxies[videoId] == proxy?.call() && (_lives.contains(videoId) || !live)) {
+      return cached.then((video) => video.fresh ? video : _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly, live: live),
+          onError: (_) => _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly, live: live));
     }
-    return _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly);
+    return _start(videoId, format, formatSort: formatSort, membersOnly: membersOnly, live: live);
   }
 
   /// The extraction of [videoId] if one is running or done; never starts
@@ -263,6 +269,7 @@ class StreamResolver {
     _formats.remove(videoId);
     _formatSorts.remove(videoId);
     _proxies.remove(videoId);
+    _lives.remove(videoId);
     _deleteInfo(videoId);
   }
 
@@ -301,19 +308,25 @@ class StreamResolver {
     }
   }
 
-  Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false}) {
-    final future = _run(videoId, format, formatSort: formatSort, background: background, membersOnly: membersOnly);
+  Future<ResolvedVideo> _start(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false, bool live = false}) {
+    final future = _run(videoId, format, formatSort: formatSort, background: background, membersOnly: membersOnly, live: live);
     _results.remove(videoId);
     _done.remove(videoId);
     _results[videoId] = future;
     _formats[videoId] = format;
     _formatSorts[videoId] = formatSort;
     _proxies[videoId] = proxy?.call();
+    if (live) {
+      _lives.add(videoId);
+    } else {
+      _lives.remove(videoId);
+    }
     while (_results.length > _keep) {
       final oldest = _results.keys.first;
       _formats.remove(oldest);
       _formatSorts.remove(oldest);
       _proxies.remove(oldest);
+      _lives.remove(oldest);
       _results.remove(oldest);
       _done.remove(oldest);
       _deleteInfo(oldest);
@@ -336,13 +349,13 @@ class StreamResolver {
   /// What yt-dlp says about a video only the channel's members may watch.
   static final membersOnlyError = RegExp(r"members.only|join this channel|channel's members", caseSensitive: false);
 
-  Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false}) async {
+  Future<ResolvedVideo> _run(String videoId, String format, {String? formatSort, bool background = false, bool membersOnly = false, bool live = false}) async {
     final watch = Stopwatch()..start();
     // Background runs never open the cookies: that may bring up Windows Hello.
     final cookies = background ? null : members?.call();
     final signedIn = cookies != null && cookies.signedIn;
     Future<ProcessResult> run({bool signed = false}) =>
-        signed ? _signedIn(cookies!, videoId, format, formatSort: formatSort) : _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null);
+        signed ? _signedIn(cookies!, videoId, format, formatSort: formatSort, live: live) : _ytDlp(videoId, format, formatSort: formatSort, background: background ? videoId : null, live: live);
     var signed = membersOnly && signedIn;
     var result = await run(signed: signed);
     if (_failed(result) && _transient.hasMatch(result.stderr.toString())) {
@@ -378,15 +391,15 @@ class StreamResolver {
 
   /// yt-dlp for [videoId] with the signed-in cookies, in a file of their
   /// own that is wiped as soon as yt-dlp is done.
-  Future<ProcessResult> _signedIn(MembersCookies cookies, String videoId, String format, {String? formatSort}) async {
+  Future<ProcessResult> _signedIn(MembersCookies cookies, String videoId, String format, {String? formatSort, bool live = false}) async {
     await infoDirectory.create(recursive: true);
     final path = '${infoDirectory.path}${Platform.pathSeparator}$videoId-${_cookieFiles++}.cookies.txt';
     try {
       if (!await cookies.writeCookies(path)) {
         logWarn('The cookie sign-in could not be opened for $videoId');
-        return await _ytDlp(videoId, format, formatSort: formatSort);
+        return await _ytDlp(videoId, format, formatSort: formatSort, live: live);
       }
-      return await _ytDlp(videoId, format, formatSort: formatSort, cookies: path);
+      return await _ytDlp(videoId, format, formatSort: formatSort, cookies: path, live: live);
     } finally {
       cookies.wipeCookies(path);
     }
@@ -396,11 +409,11 @@ class StreamResolver {
 
   /// yt-dlp for [videoId]; [background] (the video id) runs it at low
   /// priority until [resolve] asks for that video.
-  Future<ProcessResult> _ytDlp(String videoId, String format, {String? formatSort, String? background, String? cookies}) async {
+  Future<ProcessResult> _ytDlp(String videoId, String format, {String? formatSort, String? background, String? cookies, bool live = false}) async {
     try {
       return await runWithTimeout(
         ytDlpPath,
-        arguments(videoId, format, formatSort: formatSort, cookies: cookies),
+        arguments(videoId, format, formatSort: formatSort, cookies: cookies, live: live),
         timeout: const Duration(seconds: 45),
         environment: _environment,
         onStart: (process) {

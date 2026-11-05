@@ -36,6 +36,7 @@ import '../sponsor_block.dart';
 import '../appearance_settings.dart';
 import '../cache_manager.dart';
 import '../decoder_status.dart';
+import '../live_split.dart';
 import '../native_core.dart';
 import '../encrypted_dns.dart';
 import '../native_http.dart';
@@ -1593,7 +1594,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       if (resolved) {
         try {
           final streams = _repository!.streams;
-          var pending = streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly);
+          var pending = streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly, live: item.isLive);
           // The first open of a video also asks YouTube directly; whichever
           // answers first starts it. A reopen after a failure waits for yt-dlp.
           if (_quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
@@ -1636,6 +1637,8 @@ class AppController extends ChangeNotifier with _ExploreState {
           : null;
       _relayed = direct != null && relay != null ? item.id : null;
       _openedDirect = direct != null ? item.id : null;
+      final split = live && video != null && relay != null && _liveSplitOff != item.id ? _liveSplitAddress(video, relay) : null;
+      _liveSplit = split != null ? item.id : null;
       final platform = player.platform;
       if (platform is NativePlayer) {
         // A live stream plays from one HLS stream with picture and sound
@@ -1659,7 +1662,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       _openedResolved = video == null ? null : item.id;
       _openedOrigin = video?.origin;
       if (video != null) _update(() => availableHeights = video!.heightsFor(settings));
-      await player.open(Media(direct ?? item.url, start: start), play: play);
+      await player.open(Media(direct ?? split ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;
@@ -1675,6 +1678,27 @@ class AppController extends ChangeNotifier with _ExploreState {
       if (serial == _playSerial) _fail(item, PlaybackFailure.classify(['$e', ..._recentErrors]));
       return false;
     }
+  }
+
+  /// The live stream opened as its picture and sound above 1080p, joined
+  /// fragment by fragment in the relay (see [LiveSplit]).
+  String? _liveSplit;
+  /// The live stream whose split picture and sound failed soon after
+  /// opening, so it plays from HLS instead, up to 1080p.
+  String? _liveSplitOff;
+
+  /// An mpv address playing [video]'s live picture above 1080p with its
+  /// sound through [relay], or null when there is none within the cap.
+  String? _liveSplitAddress(ResolvedVideo video, StreamRelay relay) {
+    final split = LiveSplit.pick(video.info, _playback);
+    if (split == null) return null;
+    final pair = '${video.info['id']}-${DateTime.now().microsecondsSinceEpoch}';
+    final proxy = this.proxy.url;
+    final picture = relay.registerLive(split.videoUrl, pair: pair, userAgent: split.userAgent, proxy: proxy);
+    final sound = relay.registerLive(split.audioUrl, pair: pair, userAgent: split.userAgent, proxy: proxy);
+    if (picture == null || sound == null) return null;
+    logInfo('Live ${video.info['id']} plays ${split.label} through the relay');
+    return NativeCore.instance?.edl([picture, sound]);
   }
 
   /// Plays the downloaded file of [item] instead of asking YouTube.
@@ -1841,6 +1865,12 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (_relayed == item.id) {
       _unrelayed = item.id;
       logWarn('Playing ${item.id} without the local chunked relay');
+    }
+    // A split live stream that broke at once is played from HLS; one that
+    // played a while gets new addresses and stays split.
+    if (_liveSplit == item.id && DateTime.now().difference(_openedAt) < const Duration(minutes: 1)) {
+      _liveSplitOff = item.id;
+      logWarn('Playing live ${item.id} from HLS, up to 1080p');
     }
     _notice(tr('Connection lost, reconnecting from {0}…', [_clock(position)]));
     _recovering = true;
@@ -2011,7 +2041,9 @@ class AppController extends ChangeNotifier with _ExploreState {
       }),
       player.stream.completed.listen((done) {
         if (!done || playing == null) return;
-        if (_tracking != null && PlaybackRecovery.endedEarly(_lastPosition, player.state.duration)) {
+        // A live stream through the relay ends only when its fragments
+        // stopped coming.
+        if (_tracking != null && (_liveSplit == _tracking!.id || PlaybackRecovery.endedEarly(_lastPosition, player.state.duration))) {
           unawaited(_recover(tr('Video ended unexpectedly at {0}', [_clock(_lastPosition)])));
           return;
         }
@@ -2346,6 +2378,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   Future<void> goLive() async {
     final player = this.player;
     if (player == null) return;
+    // The split stream cannot seek; it is opened again at the newest fragment.
+    if (_liveSplit != null && _liveSplit == playing?.id) return reloadVideo();
     final duration = player.state.duration;
     if (duration > Duration.zero) {
       final target = duration - const Duration(seconds: 3);

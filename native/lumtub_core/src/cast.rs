@@ -1536,7 +1536,7 @@ mod tests {
     }
 
     fn target(name: &str, size: usize) -> Target {
-        Target { url: format!("{name}?x"), size: size as u64, user_agent: None, mime: None, proxy: None, chunk: 1 << 20 }
+        Target { url: format!("{name}?x"), size: size as u64, user_agent: None, mime: None, proxy: None, chunk: 1 << 20, live: None }
     }
 
     fn sample(dir: &str, name: &str) -> Option<Vec<u8>> {

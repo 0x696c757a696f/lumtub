@@ -35,8 +35,8 @@ pub struct Frame {
     pub key: bool,
 }
 
-const EBML: u32 = 0x1A45_DFA3;
-const SEGMENT: u32 = 0x1853_8067;
+pub(crate) const EBML: u32 = 0x1A45_DFA3;
+pub(crate) const SEGMENT: u32 = 0x1853_8067;
 const INFO: u32 = 0x1549_A966;
 const TIMECODE_SCALE: u32 = 0x2A_D7B1;
 const TRACKS: u32 = 0x1654_AE6B;
@@ -61,7 +61,7 @@ const CUE_TIME: u32 = 0xB3;
 const CUE_POSITIONS: u32 = 0xB7;
 const CUE_TRACK: u32 = 0xF7;
 const CUE_CLUSTER: u32 = 0xF1;
-const CLUSTER: u32 = 0x1F43_B675;
+pub(crate) const CLUSTER: u32 = 0x1F43_B675;
 const TIMECODE: u32 = 0xE7;
 const SIMPLE_BLOCK: u32 = 0xA3;
 const BLOCK_GROUP: u32 = 0xA0;
@@ -71,10 +71,10 @@ const REFERENCE: u32 = 0xFB;
 /// An element: its id, where its data starts and ends (`end` may lie past
 /// the bytes read, or is `usize::MAX` for an unknown size).
 #[derive(Debug, Clone, Copy)]
-struct Element {
-    id: u32,
-    data: usize,
-    end: usize,
+pub(crate) struct Element {
+    pub(crate) id: u32,
+    pub(crate) data: usize,
+    pub(crate) end: usize,
 }
 
 fn vint(b: &[u8], at: usize, keep_marker: bool) -> Option<(u64, usize)> {
@@ -90,7 +90,7 @@ fn vint(b: &[u8], at: usize, keep_marker: bool) -> Option<(u64, usize)> {
     Some((value, length))
 }
 
-fn element(b: &[u8], at: usize) -> Option<Element> {
+pub(crate) fn element(b: &[u8], at: usize) -> Option<Element> {
     let (id, n) = vint(b, at, true)?;
     if n > 4 {
         return None;

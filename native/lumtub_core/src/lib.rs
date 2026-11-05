@@ -11,6 +11,7 @@ pub mod format_policy;
 pub mod process_tree;
 pub mod redact;
 pub mod relay;
+pub mod relay_live;
 pub mod socks;
 pub mod subtitles;
 pub mod system_proxy;

@@ -35,6 +35,7 @@ extension SmokeCheck on AppController {
         final theme = dark ? 'dark' : 'light';
         navigate(PageMode.home);
         await shot('home-$theme', settle: Duration(seconds: dark ? 8 : 40));
+        clearSearch();
         navigate(PageMode.explore);
         await shot('explore-$theme');
         if (dark) continue;
@@ -45,6 +46,7 @@ extension SmokeCheck on AppController {
         navigate(PageMode.settings);
         await shot('settings-$theme', settle: const Duration(seconds: 5));
       }
+      if (Platform.environment['LUMTUB_TOUR'] == '1') await _tour(folder);
       final player = this.player;
       if (player != null) {
         unawaited(play(VideoItem(id: 'aqz-KE-bpKQ', title: 'Big Buck Bunny', channel: 'Blender', url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ')));
@@ -55,7 +57,6 @@ extension SmokeCheck on AppController {
         await player.seek(const Duration(minutes: 1, seconds: 40));
         await shot('watch-dark', settle: const Duration(seconds: 12));
       }
-      if (Platform.environment['LUMTUB_TOUR'] == '1') await _tour(folder);
     } catch (e) {
       logError('Showcase failed', e);
     }
@@ -102,6 +103,7 @@ extension SmokeCheck on AppController {
       await wait(2.5);
       await xdo('mousemove --window %W 640 420 click --repeat 5 --delay 300 4');
 
+      clearSearch();
       navigate(PageMode.explore);
       await wait(0.5);
       await scene('explore');
@@ -118,10 +120,11 @@ extension SmokeCheck on AppController {
         await scene('watch');
         await wait(7);
         await player.pause();
+        stopWatching();
       }
 
-      navigate(PageMode.home);
-      await wait(1);
+      openChannel(const ChannelRef('UCSMOQeBJ2RAnuFungnQOxLg', 'Blender'));
+      await wait(4);
       await scene('palettes');
       final looks = <(String, ThemeMode)>[
         ('', ThemeMode.light),

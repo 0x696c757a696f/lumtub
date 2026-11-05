@@ -16,6 +16,7 @@ import 'pages/downloads_page.dart';
 import 'pages/explore_page.dart';
 import 'pages/library_pages.dart';
 import 'pages/settings_page.dart';
+import 'pages/settings_sections.dart';
 import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
 import 'pages/youtube_playlist_page.dart';
@@ -253,7 +254,7 @@ class _AppShellState extends State<AppShell> {
       PageMode.channel => ChannelPage(controller: controller),
       PageMode.playlist => PlaylistDetailPage(controller: controller),
       PageMode.youtubePlaylist => YoutubePlaylistPage(controller: controller),
-      PageMode.settings => SettingsPage(controller: controller),
+      PageMode.settings => SettingsPage(controller: controller, initial: SmokeCheck.requested ? SettingsCategory.style : SettingsCategory.account),
     };
   }
 }

@@ -394,6 +394,7 @@ jobs:
           path: ${{ runner.temp }}/shots
           if-no-files-found: ignore
 
+      - name: Windows - upload portable ZIP
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Lumtub-windows-${{ matrix.package_arch }}-portable

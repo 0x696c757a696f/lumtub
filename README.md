@@ -19,11 +19,31 @@ A real native player with danmaku, bilingual subtitles, AI summaries and a recom
 
 <img src="docs/screenshots/watch.png" alt="Lumtub playing a video, with Up next beside it" width="860">
 
-[Why people switch](#why-people-switch) · [Features](#features) · [Get it](#get-it) · [Privacy](#privacy-you-can-check) · [FAQ](#faq) · [Support](#support-lumtub)
+[Pain points](#the-things-youve-put-up-with-for-years) · [Why people switch](#why-people-switch) · [Features](#features) · [Get it](#get-it) · [Privacy](#privacy-you-can-check) · [FAQ](#faq) · [Support](#support-lumtub)
 
 </div>
 
 ---
+
+## The things you've put up with for years
+
+Every YouTube viewer knows these. None of them is hard to fix; they just aren't fixed in the browser.
+
+| You know this one | What Lumtub does |
+|---|---|
+| 🔥 **The laptop fan takes off at 1080p.** The browser picks AV1 or VP9 even when your GPU can't decode it, and the CPU does the work. | Lumtub tests what **your** graphics card decodes in hardware and only picks those codecs. Same picture, a fraction of the power. |
+| 🕳️ **One curious click and your feed is ruined for a week.** | The For you feed is worked out **on your PC**, every card says why it's there, and "Not interested" actually removes the reason. |
+| 🗣️ **"This video is sponsored by…", "smash that like button", a 40-second intro.** | **SponsorBlock** skips them for you, by the community's timestamps. |
+| 😱 **Shocked faces and ALL-CAPS titles that lie.** | **DeArrow** swaps in honest titles and thumbnails written by other viewers. |
+| 🤖 **AI-generated slop everywhere.** | An opt-in **AI filter** hides videos labelled as AI and channels on community AI-slop lists. |
+| 📱 **Shorts in your search, your subscriptions, your home page.** | **Hide all Shorts**, everywhere, with one switch. |
+| 👎 **The dislike count is gone, so you can't spot the scam tutorial.** | **Return YouTube Dislike** brings back an estimate. |
+| 🌍 **"Italian" search results full of English, auto-dubbed audio instead of the real voice.** | Filter by the language people **actually speak**, checked from the audio and captions, and the original audio track plays first. |
+| 🈶 **Foreign videos give you one subtitle at a time, machine-translated line by line.** | **Two subtitles at once**, AI translation with context, and speech-to-text when a video has no subtitles at all. |
+| 💬 **Live chat flies past at 1,000 messages a minute.** | **Danmaku** across the picture, or a chat that holds still while you read. |
+| 💾 **Saving a video for the train needs Premium.** | Download any format YouTube really has, joined without re-encoding, and play it offline in the app. |
+| 🎧 **Music stops when you minimise the window.** | **Background playback** from the tray, media keys included. |
+| 🕵️ **Everything you watch builds a profile of you.** | No account needed and no telemetry. Your history, searches and recommendations never leave your PC. |
 
 ## Why people switch
 
@@ -95,9 +115,10 @@ Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 ### ⚙️ Small things that add up
 - SponsorBlock, Return YouTube Dislike and DeArrow built in, all off by default.
 - Proxy support (system, HTTP or SOCKS5) and optional encrypted DNS.
-- Light and dark themes, accent colours, fonts and card sizes.
+- Accent colours, fonts and card sizes.
 - Block any channel, or just stop it being recommended.
-- English and simplified Chinese, following your system language. More via [Weblate](https://hosted.weblate.org/engage/lumtub/).
+- **72 interface languages**, from Arabic and Hebrew (right to left) to Zulu, Esperanto and Latin, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
+- Ten restrained palettes, light and dark, plus an optional warm light for the evening.
 - Signed automatic updates for the app, yt-dlp and libmpv, with rollback if a new component breaks.
 
 ## Get it

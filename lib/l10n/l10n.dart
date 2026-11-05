@@ -119,6 +119,9 @@ void setLanguage(AppLanguage language) {
 String get youtubeHl => switch (_current.tag) {
       'zh-Hans' => 'zh-CN',
       'zh-Hant' => 'zh-TW',
+      'he' => 'iw',
+      // Languages YouTube itself is not offered in.
+      'eo' || 'la' || 'tk' || 'ti' => 'en',
       final tag => tag,
     };
 
@@ -189,4 +192,5 @@ const _nativeNames = {
   'ur': 'اردو',
   'my': 'မြန်မာ',
   'eo': 'Esperanto',
+  'la': 'Latina',
 };

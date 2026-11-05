@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/appearance_settings.dart';
@@ -135,6 +136,35 @@ void main() {
       expect(find.text(tr('语言')), findsOneWidget);
     });
   }
+
+  testWidgets('every offered language lays out the settings, right to left where it reads so', (tester) async {
+    tester.view.physicalSize = const Size(1280, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    for (final language in AppLanguage.selectable.skip(1)) {
+      setLanguage(language);
+      final wanted = language.locale!;
+      final locale = GlobalMaterialLocalizations.delegate.isSupported(wanted) ? wanted : const Locale('en');
+      final controller = AppController();
+      await tester.pumpWidget(MaterialApp(
+        key: ValueKey(language.tag),
+        locale: locale,
+        supportedLocales: [locale],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        theme: buildAppTheme(Colors.red, Brightness.light),
+        home: Scaffold(body: SettingsPage(controller: controller)),
+      ));
+      await tester.pump();
+      final rtl = const {'ar', 'he', 'fa', 'ur'}.contains(wanted.languageCode);
+      expect(Directionality.of(tester.element(find.byType(SettingsPage))), rtl ? TextDirection.rtl : TextDirection.ltr, reason: language.tag);
+      for (final category in SettingsCategory.values) {
+        expect(find.text(category.title), findsWidgets, reason: '${language.tag} ${category.title}');
+        await tester.tap(find.text(category.title).first);
+        await tester.pump();
+        expect(tester.takeException(), isNull, reason: '${language.tag} ${category.title}');
+      }
+    }
+  });
 
   test('the language follows Windows unless English or simplified Chinese was saved', () {
     expect(AppLanguage.parse('en'), AppLanguage.en);

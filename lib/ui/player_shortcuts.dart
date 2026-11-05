@@ -45,6 +45,7 @@ List<(String, String)> _shortcutHelp(AppPreferences prefs) => [
       ('I', tr('Show or hide playback stats')),
       (tr('Alt + ← / mouse back button'), tr('Go back')),
       ('Ctrl + K', tr('Search')),
+      ('Ctrl + Shift + N', tr('Incognito mode')),
     ];
 
 /// Player key bindings, used both on the watch page and inside the player
@@ -78,6 +79,11 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     onFeedback?.call(AppIcons.skipForwardFill, '${tenth * 10}%');
   }
   void jumpTo(bool end) {
+    if (end && controller.playing?.isLive == true) {
+      unawaited(controller.goLive());
+      onFeedback?.call(AppIcons.caretLineRight, tr('Live'));
+      return;
+    }
     final duration = player.state.duration;
     unawaited(player.seek(end ? duration : Duration.zero));
     onFeedback?.call(end ? AppIcons.caretLineRight : AppIcons.caretLineLeft, end ? tr('End') : tr('Start'));

@@ -2336,6 +2336,25 @@ class AppController extends ChangeNotifier with _ExploreState {
     await player.seek(target);
   }
 
+  /// How far behind its live edge a live stream may play before the
+  /// player offers to jump back to it.
+  static const liveBehind = Duration(seconds: 20);
+
+  /// Jumps a live stream to its newest moment, at normal speed, playing.
+  /// The last seconds are left alone: libmpv at the very end of a live
+  /// playlist waits for segments that do not exist yet.
+  Future<void> goLive() async {
+    final player = this.player;
+    if (player == null) return;
+    final duration = player.state.duration;
+    if (duration > Duration.zero) {
+      final target = duration - const Duration(seconds: 3);
+      await player.seek(target < Duration.zero ? Duration.zero : target);
+    }
+    if (player.state.rate != 1) await player.setRate(1);
+    if (!player.state.playing) await player.play();
+  }
+
   /// A-B 循环: where the loop starts, then where it ends; mpv plays the
   /// part between them again and again.
   Duration? loopA;

@@ -719,10 +719,15 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
             player: _player,
             active: !_animation.isDismissed,
             seconds: true,
-            builder: (context) => Text(
-              '${formatPlaybackTime(_player.state.position)} / ${formatPlaybackTime(_player.state.duration)}',
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
-            ),
+            builder: (context) => _controller.playing?.isLive == true
+                ? _LiveButton(
+                    behind: _player.state.duration - _player.state.position > AppController.liveBehind,
+                    onTap: () => unawaited(_controller.goLive()),
+                  )
+                : Text(
+                    '${formatPlaybackTime(_player.state.position)} / ${formatPlaybackTime(_player.state.duration)}',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontFeatures: [FontFeature.tabularFigures()]),
+                  ),
           ),
           Expanded(child: Align(alignment: Alignment.centerLeft, child: _chapterMenu())),
           _danmakuButtons(width),
@@ -1011,6 +1016,31 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
 
 /// PiliNara's `ComBtn`: a bare white icon with a tooltip, with a soft
 /// round highlight under the mouse.
+/// The live mark of a live stream: a red dot while it plays at its newest
+/// moment, a grey one with "Back to live" once it has fallen behind;
+/// pressing it jumps to the newest moment.
+class _LiveButton extends StatelessWidget {
+  const _LiveButton({required this.behind, required this.onTap});
+  final bool behind;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: tr('Jump to the newest moment (End)'),
+        child: _Hover(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: behind ? Colors.white54 : const Color(0xFFFF2D2D))),
+              const SizedBox(width: 6),
+              Text(behind ? tr('Back to live') : tr('Live'), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+            ]),
+          ),
+        ),
+      );
+}
+
 class _IconButton extends StatelessWidget {
   const _IconButton({required this.tooltip, required this.icon, required this.onTap, this.size = 22, this.width = 34, this.active = false});
   final String tooltip;

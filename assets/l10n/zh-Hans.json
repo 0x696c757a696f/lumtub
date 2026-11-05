@@ -2898,5 +2898,7 @@
   ".": "。",
   "{0}. {1}": "{0}。{1}",
   "{0} in all, {1} reachable": "共 {0} 个，{1} 个可连接",
-  " · list updated {0}/{1} at {2}": " · 列表更新于 {0}月{1}日 {2}"
+  " · list updated {0}/{1} at {2}": " · 列表更新于 {0}月{1}日 {2}",
+  "Back to live": "回到直播",
+  "Jump to the newest moment (End)": "跳到直播最新进度 (End)"
 }

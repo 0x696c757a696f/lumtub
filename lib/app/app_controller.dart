@@ -2494,7 +2494,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (player != null) await player.setVolume((player.state.volume + delta).clamp(0.0, settings.volumeMax.toDouble()).toDouble());
   }
 
-  /// The video's brightness, -100 to 100, as 画面与音画同步调节 keeps it.
+  /// The video's brightness, within [pictureLimit], as 画面与音画同步调节 keeps it.
   int get brightness => settings.picture['brightness'] ?? 0;
   Timer? _brightnessSave;
 
@@ -2502,7 +2502,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// saved, and shown to the rest of the app, once the changes pause, not
   /// at every wheel notch or slide step.
   Future<int> changeBrightness(int delta) async {
-    final value = (brightness + delta).clamp(-100, 100);
+    final value = (brightness + delta).clamp(-pictureLimit('brightness'), pictureLimit('brightness'));
     settings = settings.copyWith(picture: {...settings.picture, 'brightness': value});
     _brightnessSave?.cancel();
     _brightnessSave = Timer(const Duration(seconds: 1), () {

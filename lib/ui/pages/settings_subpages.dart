@@ -862,7 +862,7 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
       body: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
         _header(context, tr('画面')),
         for (final (key, label) in pictureProperties)
-          _slider(label, _picture[key] ?? 0, -100, 100, '', (v) {
+          _slider(label, _picture[key] ?? 0, -pictureLimit(key), pictureLimit(key), '', (v) {
             setState(() => _picture[key] = v);
             controller.previewProperty(key, '$v');
           }, () {

@@ -206,6 +206,10 @@ List<(String, String)> get audioFilterPresets => [
 ];
 
 /// Picture adjustments PiliNara offers in its player, as mpv properties.
+/// How far each picture property may go either way. Brightness stops short
+/// of mpv's ±100, which turns the picture all black or all white.
+int pictureLimit(String key) => key == 'brightness' ? 50 : 100;
+
 List<(String, String)> get pictureProperties => [
       ('brightness', tr('亮度')),
       ('contrast', tr('对比度')),
@@ -735,7 +739,7 @@ class PlayerSettings {
     if (raw['picture'] is Map) {
       for (final (key, _) in pictureProperties) {
         final value = (raw['picture'] as Map)[key];
-        if (value is num && value != 0) picture[key] = value.toInt().clamp(-100, 100);
+        if (value is num && value != 0) picture[key] = value.toInt().clamp(-pictureLimit(key), pictureLimit(key));
       }
     }
     final codecs = (raw['hwdecCodecs']?.toString() ?? defaultHwdecCodecs).split(',').map((c) => c.trim()).where(hwdecCodecChoices.contains).toList();

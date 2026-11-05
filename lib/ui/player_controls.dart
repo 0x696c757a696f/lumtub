@@ -403,9 +403,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   void _dragUpdate(DragUpdateDetails details) {
     final height = context.size?.height ?? 0;
     if (height <= 0) return;
-    // The player's full height is the whole range: 100 % volume, or 200
-    // brightness steps from -100 to 100.
-    _dragSteps -= (details.primaryDelta ?? 0) / height * (_dragLeft ? 200 : 100);
+    // The player's full height is the whole range: 100 % volume, or every
+    // brightness step from the darkest to the brightest allowed.
+    _dragSteps -= (details.primaryDelta ?? 0) / height * (_dragLeft ? 2 * pictureLimit('brightness') : 100);
     final whole = _dragSteps.truncate();
     if (whole == 0) return;
     _dragSteps -= whole;

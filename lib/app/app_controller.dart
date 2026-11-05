@@ -389,7 +389,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       logWarn('Cast: yt-dlp could not resolve: $e');
     }
     if (info != null) {
-      final split = castSplitFromYtDlp(info, settings: _playback);
+      final split = castSplitFromYtDlp(info, maxHeight: preferences.castMaxHeight);
       if (split != null && split.height > (source?.height ?? 0)) {
         try {
           return await _joinedCast(split, device, start, title, info);
@@ -426,7 +426,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     final socket = await Socket.connect(device.host, device.port, timeout: const Duration(seconds: 4));
     final here = socket.address.address;
     socket.destroy();
-    final ts = device.protocol == CastProtocol.dlna;
+    final ts = device.protocol == CastProtocol.dlna && split.fitsTransportStream;
     final agent = info['http_headers'] is Map ? (info['http_headers'] as Map)['User-Agent']?.toString() : null;
     final duration = info['duration'] is num ? Duration(milliseconds: ((info['duration'] as num) * 1000).round()) : null;
     Map<String, dynamic> target(String url, int size) => {'url': url, 'size': size, if (agent != null) 'userAgent': agent, if (proxy.url != null) 'proxy': proxy.url};
@@ -450,7 +450,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       final path = answer['path'];
       if (path is! String) throw StateError('${answer['error']}');
       final begins = Duration(milliseconds: (((answer['start'] as num?) ?? 0) * 1000).round());
-      logInfo('Casting ${split.height}p joined by lumtub_core from ${begins.inSeconds} s as ${ts ? 'MPEG-TS' : 'MP4'}');
+      logInfo('Casting ${split.height}p${split.fps} ${split.codec} joined by lumtub_core from ${begins.inSeconds} s as ${ts ? 'MPEG-TS' : 'MP4'}');
       return CastMedia(url: 'http://$here:$port$path', title: title, mime: ts ? 'video/mpeg' : 'video/mp4', offset: begins, duration: duration, restart: from);
     }
 

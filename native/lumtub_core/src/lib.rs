@@ -36,6 +36,7 @@ pub mod web_account;
 pub mod resolved;
 pub mod quick;
 pub mod cast;
+pub mod cast_webm;
 
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]

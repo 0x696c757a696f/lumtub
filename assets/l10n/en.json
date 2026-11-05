@@ -2851,5 +2851,9 @@
   "没有找到 Edge、Chrome、Firefox 或其他 Chromium 内核的浏览器，请改用导入 cookies.txt": "No Edge, Chrome, Firefox or other Chromium-based browser was found. Import a cookies.txt instead.",
   "紧凑模式": "Compact mode",
   "列表、菜单和设置项的行距更小，一屏能看到更多内容": "Tighter lists, menus and settings rows, so more fits on screen",
-  "行距 密度": "spacing density"
+  "行距 密度": "spacing density",
+  "投屏画质": "Cast quality",
+  "4K 以上用 VP9 或 AV1，最高 60 帧，需要较新的电视或 Chromecast": "Above 1080p the picture is VP9 or AV1 at up to 60 fps, which needs a newer TV or Chromecast",
+  "1080p H.264，几乎所有电视都能播放": "1080p H.264, which nearly every TV plays",
+  "自动（1080p）": "Auto (1080p)"
 }

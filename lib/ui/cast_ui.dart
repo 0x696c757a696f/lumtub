@@ -112,6 +112,25 @@ class _CastDialogState extends State<_CastDialog> {
                   child: Text(tr('停止投屏')),
                 ),
               ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(tr('投屏画质')),
+              subtitle: Text(widget.controller.preferences.castMaxHeight > 1080 ? tr('4K 以上用 VP9 或 AV1，最高 60 帧，需要较新的电视或 Chromecast') : tr('1080p H.264，几乎所有电视都能播放')),
+              trailing: DropdownButton<int>(
+                value: widget.controller.preferences.castMaxHeight,
+                underline: const SizedBox.shrink(),
+                items: [
+                  DropdownMenuItem(value: 1080, child: Text(tr('自动（1080p）'))),
+                  const DropdownMenuItem(value: 2160, child: Text('4K')),
+                  const DropdownMenuItem(value: 4320, child: Text('8K')),
+                ],
+                onChanged: (height) async {
+                  if (height == null) return;
+                  await widget.controller.savePreferences(widget.controller.preferences.copyWith(castMaxHeight: height));
+                  if (mounted) setState(() {});
+                },
+              ),
+            ),
             if (_searching) ...[
               const LinearProgressIndicator(),
               Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(tr('正在搜索设备…'), style: TextStyle(color: context.colors.onSurfaceVariant))),

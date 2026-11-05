@@ -11,6 +11,7 @@
 //! from YouTube in chunks the way the loopback relay reads them. Only
 //! registered sessions are served, under random tokens.
 
+use crate::cast_webm;
 use crate::relay::{Fetch, Stop, Target, Web, drain, read_request, request};
 use serde::Deserialize;
 use std::collections::{HashMap, VecDeque};
@@ -64,6 +65,8 @@ pub struct Track {
     /// presentation starts into the media.
     shift: u64,
     segments: Vec<Segment>,
+    /// For a WebM file: its track number and frame duration in ticks.
+    webm: Option<(u64, u32)>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -245,7 +248,7 @@ fn track(data: &[u8], moov: Atom, sidx: Atom) -> Result<Track, &'static str> {
     if segments.is_empty() {
         return Err("empty index");
     }
-    Ok(Track { trak: whole(data, trak), mvhd: whole(data, mvhd), timescale, video, codec, defaults, shift, segments })
+    Ok(Track { trak: whole(data, trak), mvhd: whole(data, mvhd), timescale, video, codec, defaults, shift, segments, webm: None })
 }
 
 fn codec(data: &[u8], stsd: Atom) -> Codec {
@@ -464,6 +467,116 @@ fn read_traf(data: &[u8], moof: Atom, traf: Atom, base: u64, defaults: Defaults,
     Ok(())
 }
 
+// ---- WebM pictures ----
+
+/// A WebM picture track as the MP4 writer takes it: a `trak` with a `vp09`
+/// sample entry, and its clusters as segments.
+fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
+    let mut trak = Vec::new();
+    put_box(&mut trak, b"trak", |o| {
+        put_box(o, b"tkhd", |o| {
+            o.extend_from_slice(&3u32.to_be_bytes());
+            o.extend_from_slice(&[0; 8]);
+            o.extend_from_slice(&1u32.to_be_bytes());
+            o.extend_from_slice(&[0; 4 + 4 + 8 + 2 + 2 + 2 + 2]);
+            for v in [0x0001_0000u32, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000] {
+                o.extend_from_slice(&v.to_be_bytes());
+            }
+            o.extend_from_slice(&((head.width as u32) << 16).to_be_bytes());
+            o.extend_from_slice(&((head.height as u32) << 16).to_be_bytes());
+        });
+        put_box(o, b"mdia", |o| {
+            put_box(o, b"mdhd", |o| {
+                o.extend_from_slice(&[0; 12]);
+                o.extend_from_slice(&head.timescale.to_be_bytes());
+                o.extend_from_slice(&[0, 0, 0, 0, 0x55, 0xc4, 0, 0]);
+            });
+            put_box(o, b"hdlr", |o| {
+                o.extend_from_slice(&[0; 8]);
+                o.extend_from_slice(b"vide");
+                o.extend_from_slice(&[0; 12]);
+                o.extend_from_slice(b"VideoHandler\0");
+            });
+            put_box(o, b"minf", |o| {
+                put_box(o, b"vmhd", |o| o.extend_from_slice(&[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]));
+                put_box(o, b"dinf", |o| {
+                    put_box(o, b"dref", |o| {
+                        o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
+                        put_box(o, b"url ", |o| o.extend_from_slice(&[0, 0, 0, 1]));
+                    });
+                });
+                put_box(o, b"stbl", |o| {
+                    put_box(o, b"stsd", |o| {
+                        o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
+                        put_box(o, b"vp09", |o| {
+                            o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
+                            o.extend_from_slice(&[0; 16]);
+                            o.extend_from_slice(&head.width.to_be_bytes());
+                            o.extend_from_slice(&head.height.to_be_bytes());
+                            o.extend_from_slice(&0x0048_0000u32.to_be_bytes());
+                            o.extend_from_slice(&0x0048_0000u32.to_be_bytes());
+                            o.extend_from_slice(&[0, 0, 0, 0, 0, 1]);
+                            o.extend_from_slice(&[0; 32]);
+                            o.extend_from_slice(&[0, 0x18, 0xff, 0xff]);
+                            o.extend_from_slice(&head.vpcc);
+                        });
+                    });
+                    for kind in [b"stts", b"stsc", b"stco"] {
+                        put_box(o, kind, |o| o.extend_from_slice(&[0; 8]));
+                    }
+                    put_box(o, b"stsz", |o| o.extend_from_slice(&[0; 12]));
+                });
+            });
+        });
+    });
+    let mut mvhd = Vec::new();
+    put_box(&mut mvhd, b"mvhd", |o| {
+        o.extend_from_slice(&[0; 12]);
+        o.extend_from_slice(&1000u32.to_be_bytes());
+        o.extend_from_slice(&[0; 4]);
+        o.extend_from_slice(&0x0001_0000u32.to_be_bytes());
+        o.extend_from_slice(&[0x01, 0x00, 0, 0]);
+        o.extend_from_slice(&[0; 8]);
+        for v in [0x0001_0000u32, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000] {
+            o.extend_from_slice(&v.to_be_bytes());
+        }
+        o.extend_from_slice(&[0; 24]);
+        o.extend_from_slice(&2u32.to_be_bytes());
+    });
+    let segments = head
+        .clusters
+        .iter()
+        .enumerate()
+        .map(|(i, &(offset, start))| Segment { offset, size: head.clusters.get(i + 1).map_or(total, |n| n.0) - offset, start })
+        .collect();
+    Track {
+        trak,
+        mvhd,
+        timescale: head.timescale,
+        video: true,
+        codec: Codec::Other,
+        defaults: Defaults::default(),
+        shift: 0,
+        segments,
+        webm: Some((head.number, head.frame)),
+    }
+}
+
+/// One WebM cluster's frames as samples; each lasts until the next, the
+/// last as long as the file says a frame lasts (or as the one before it).
+fn webm_fragment(data: Vec<u8>, number: u64, frame: u32) -> Result<Fragment, &'static str> {
+    let frames = cast_webm::frames(&data, number)?;
+    let mut samples: Vec<Sample> = Vec::with_capacity(frames.len());
+    for (i, f) in frames.iter().enumerate() {
+        let duration = match frames.get(i + 1) {
+            Some(next) if next.time > f.time => (next.time - f.time) as u32,
+            _ => samples.last().map_or(frame, |s| s.duration).max(1),
+        };
+        samples.push(Sample { at: f.at, size: f.size, time: f.time, duration, offset: 0, sync: f.key });
+    }
+    Ok(Fragment { data, samples })
+}
+
 // ---- reading from YouTube ----
 
 /// Bytes of one file read in order from a position, in chunks.
@@ -539,7 +652,16 @@ pub fn fetch_head(fetch: &dyn Fetch, target: &Target) -> Result<Track, String> {
     let mut want = (64u64 << 10).min(target.size);
     loop {
         let data = Reader::new(fetch, target, 0).take(want)?;
-        match read_head(&data) {
+        let head = if cast_webm::is_webm(&data) {
+            match cast_webm::read_head(&data, target.size) {
+                cast_webm::Read::Head(head) => Head::Track(Box::new(webm_track(&head, target.size))),
+                cast_webm::Read::More(more) => Head::More(more),
+                cast_webm::Read::Unusable(why) => Head::Unusable(why),
+            }
+        } else {
+            read_head(&data)
+        };
+        match head {
             Head::Track(track) => return Ok(*track),
             Head::Unusable(why) => return Err(why.into()),
             Head::More(more) => {
@@ -574,7 +696,10 @@ impl<'a> Source<'a> {
         self.reader.seek(segment.offset);
         let data = self.reader.take(segment.size)?;
         self.next += 1;
-        fragment(data, segment.offset, self.track.defaults).map(Some).map_err(String::from)
+        match self.track.webm {
+            Some((number, frame)) => webm_fragment(data, number, frame).map(Some).map_err(String::from),
+            None => fragment(data, segment.offset, self.track.defaults).map(Some).map_err(String::from),
+        }
     }
 }
 
@@ -1283,6 +1408,19 @@ mod tests {
             session.stream(&files, &mut out).expect("stream");
             std::fs::write(format!("{dir}/{name}"), &out).unwrap();
             assert!(out.len() > 100_000);
+        }
+        // VP9 from WebM and AV1 from MP4, each with the AAC sound.
+        for (picture, start, name) in [("vp9.webm", 0, "vp9.mp4"), ("vp9.webm", 7_000, "vp9-seek.mp4"), ("av1.mp4", 0, "av1-out.mp4")] {
+            let Some(p) = sample(&dir, picture) else { continue };
+            let files = Files(HashMap::from([(picture.to_string(), p.clone()), ("a.mp4".to_string(), a.clone())]));
+            let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: start, kind: Kind::Mp4 };
+            let session = Session::new(ask, &files).expect("session");
+            let mut out = Vec::new();
+            session.stream(&files, &mut out).expect("stream");
+            std::fs::write(format!("{dir}/{name}"), &out).unwrap();
+            assert!(out.len() > 100_000);
+            let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Ts };
+            assert!(Session::new(ask, &files).is_err());
         }
         // The same stream through the server, as a TV reads it.
         let server = Server::start(Arc::new(Files(files.0.clone()))).expect("listen");

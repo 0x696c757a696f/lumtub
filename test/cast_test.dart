@@ -383,7 +383,7 @@ void main() {
       expect(castSourceFromYtDlp({}), isNull);
     });
 
-    test('what to cast joins the best H.264 picture up to 1080p with the main sound', () {
+    test('what to cast joins the best picture up to the cast quality with the main sound', () {
       Map<String, dynamic> f(String id, {String v = 'none', String a = 'none', int? h, int fps = 30, String ext = 'mp4', num? size = 1000, int lang = -1, int abr = 0, String note = '', int clen = 1000}) => {
             'format_id': id,
             'url': 'https://g/$id?clen=$clen',
@@ -405,6 +405,9 @@ void main() {
           f('299', v: 'avc1.64002a', h: 1080, fps: 60),
           f('264', v: 'avc1.640032', h: 1440),
           f('248', v: 'vp9', h: 1080, ext: 'webm'),
+          f('315', v: 'vp9', h: 2160, fps: 60, ext: 'webm'),
+          f('401', v: 'av01.0.13M.08', h: 2160, fps: 60),
+          f('571', v: 'av01.0.16M.08', h: 4320, fps: 60),
           f('136', v: 'avc1.4d401f', h: 720, size: null),
           f('140-drc', a: 'mp4a.40.2', ext: 'm4a', lang: 10, abr: 129, note: 'DRC'),
           f('140', a: 'mp4a.40.2', ext: 'm4a', lang: 10, abr: 129),
@@ -413,7 +416,11 @@ void main() {
         ],
       };
       final split = castSplitFromYtDlp(info)!;
-      expect(split.video, startsWith('https://g/137?'));
+      expect(split.video, startsWith('https://g/299?'));
+      expect((split.fps, split.codec, split.fitsTransportStream), (60, 'h264', true));
+      final uhd = castSplitFromYtDlp(info, maxHeight: 2160)!;
+      expect((uhd.video.split('?').first, uhd.codec, uhd.fitsTransportStream), ('https://g/315', 'vp9', false));
+      expect(castSplitFromYtDlp(info, maxHeight: 4320)!.codec, 'av1');
       expect(split.audio, startsWith('https://g/140?'));
       expect((split.height, split.videoSize, split.audioSize), (1080, 1000, 1000));
       // The size can come from the address alone.
@@ -499,7 +506,9 @@ void main() {
       expect(device.calls, ['load http://lan/10.ts', 'load http://lan/60.ts']);
       expect(controller.status?.position, const Duration(seconds: 58));
       device.next = const CastStatus(state: CastState.playing, position: Duration(seconds: 3), duration: Duration(seconds: 9));
-      await Future<void>.delayed(const Duration(milliseconds: 1100));
+      for (var i = 0; i < 50 && controller.status?.position != const Duration(seconds: 61); i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
       expect(controller.status?.position, const Duration(seconds: 61));
       expect(controller.status?.duration, const Duration(minutes: 5));
     });

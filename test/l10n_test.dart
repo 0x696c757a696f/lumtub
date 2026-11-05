@@ -68,7 +68,7 @@ void main() {
     setLanguage(const AppLanguage('zh-Hant'));
     expect(tr('冷门宝藏'), '冷門寶藏');
     expect(formatCount(1234567), '123萬');
-    setLanguage(const AppLanguage('nl'));
+    setLanguage(const AppLanguage('xx'));
     expect(tr('冷门宝藏'), 'Hidden gems', reason: 'a language without the string falls back to English');
     setLanguage(AppLanguage.zhHans);
     expect(tr('冷门宝藏'), '冷门宝藏');

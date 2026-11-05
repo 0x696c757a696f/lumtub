@@ -38,10 +38,6 @@ STORY = {
                  'A feed that answers to you', ['Worked out on your PC', 'Every card says why']),
         'explore': ('Explore by topic, by region, even by the language people actually speak.',
                     'Find what is really worth it', ['Topics', 'Regions', 'Spoken language']),
-        'watch': ('A native player with hardware decoding. Smooth, quiet 4K at sixty frames.',
-                  'Smooth 4K. Silent fans.', ['Hardware decoding', '4K 60 fps', 'No browser']),
-        'palettes': ('Ten restrained palettes, light or dark, and a warm light for late nights.',
-                     'Make it yours', ['10 palettes', 'Warm light']),
         'languages': ('Seventy-two interface languages, right to left scripts included.',
                       'Speaks 72 languages', ['72 languages', 'Right to left']),
         'features': ('Sponsor skipping, dual subtitles, danmaku, downloads and background play. All built in.',
@@ -57,10 +53,6 @@ STORY = {
                  '推荐只在本机计算', ['不上传观看记录', '每张卡片说明原因']),
         'explore': ('按分区、按地区，甚至按视频里真正说的语言，发现好内容。',
                     '按真实语言发现好内容', ['分区', '地区', '真实语种']),
-        'watch': ('原生播放器，硬件解码，四K 六十帧，画面流畅，风扇安静。',
-                  '硬件解码，4K 也安静', ['硬件解码', '4K 60 帧', '不靠浏览器']),
-        'palettes': ('十套克制的配色，浅色深色随心切换，深夜还有护眼暖光。',
-                     '十套配色，随心切换', ['10 套配色', '护眼暖光']),
         'languages': ('七十二种界面语言，从右到左的文字也排得整整齐齐。',
                       '72 种界面语言', ['72 种语言', '从右到左']),
         'features': ('跳过赞助、双语字幕、弹幕、下载、后台播放，全都内置。',
@@ -70,7 +62,7 @@ STORY = {
 }
 
 # Recorded scenes, with the playback speed each is shown at.
-SCREENS = [('home', 1.0), ('explore', 1.0), ('watch', 1.0), ('palettes', 2.2), ('languages', 3.0)]
+SCREENS = [('home', 1.0), ('explore', 1.0), ('palettes', 2.2), ('languages', 3.0)]
 
 
 def ease_out(x):
@@ -109,8 +101,12 @@ FONTS = Fonts()
 def text_image(text, size, color=(255, 255, 255)):
     font = FONTS.get(size)
     box = font.getbbox(text)
-    img = Image.new('RGBA', (box[2] - box[0] + 8, int(size * 1.35)), (0, 0, 0, 0))
-    ImageDraw.Draw(img).text((4 - box[0], int(size * 0.12)), text, font=font, fill=color)
+    ascent, descent = font.getmetrics()
+    # The font's own ascent and descent, so no accent or descender is cut,
+    # with the empty space above capitals trimmed alike for every line.
+    top = int(size * 0.18)
+    img = Image.new('RGBA', (box[2] - box[0] + 8, ascent + descent - top + 6), (0, 0, 0, 0))
+    ImageDraw.Draw(img).text((4 - box[0], 3 - top), text, font=font, fill=color)
     return img
 
 
@@ -344,7 +340,7 @@ class Painter:
         frame = self.clips[name].at(t)
         zoom = 1.0 + 0.08 * (t / seg.duration)
         cw, ch = 1600 / zoom, 900 / zoom
-        fx, fy = {'watch': (0.35, 0.4), 'languages': (0.3, 0.3)}.get(name, (0.5, 0.35))
+        fx, fy = {'languages': (0.3, 0.3)}.get(name, (0.5, 0.35))
         x0, y0 = (1600 - cw) * fx, (900 - ch) * fy
         shot = frame.crop((int(x0), int(y0), int(x0 + cw), int(y0 + ch))).resize(self.window, Image.BILINEAR).convert('RGBA')
         shot.putalpha(self.mask)
@@ -377,7 +373,10 @@ class Painter:
         img = rounded((480, 220), 26, (34, 34, 42, 255))
         accent = rounded((60, 8), 4, RED + (255,))
         img.alpha_composite(accent, (40, 44))
-        txt = text_image(label, 54)
+        size = 54
+        while text_image(label, size).width > 480 - 72 and size > 30:
+            size -= 2
+        txt = text_image(label, size)
         img.alpha_composite(txt, (36, 220 - txt.height - 40))
         return img
 
@@ -646,7 +645,7 @@ def gif(folder, scenes):
 
 def main():
     folder, model, voices = sys.argv[1:4]
-    langs = sys.argv[4].split(',') if len(sys.argv) > 4 else ['en', 'zh']
+    langs = sys.argv[4].split(',') if len(sys.argv) > 4 else ['en']
     voice = Voice(model, voices)
     for lang in langs:
         tour, scenes = recording(folder, lang)

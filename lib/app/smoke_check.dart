@@ -47,8 +47,7 @@ extension SmokeCheck on AppController {
         await shot('settings-$theme', settle: const Duration(seconds: 5));
       }
       if (Platform.environment['LUMTUB_TOUR'] == '1') {
-        await _tour(folder, '');
-        await _tour(folder, 'zh-Hans');
+        await _tour(folder);
       }
       final player = this.player;
       if (player != null) {
@@ -69,15 +68,14 @@ extension SmokeCheck on AppController {
     exit(0);
   }
 
-  /// A recorded walk through the app for the promo video, in [language]
-  /// (empty for the system's). The build script starts recording to the
-  /// file `rec-start` names and stops at `rec-stop`; it runs each `xdo-*`
-  /// file's text as xdotool arguments on the window (%W stands for it).
-  /// Each scene's start, in milliseconds since the recording began, goes
-  /// to scenes.txt, or `scenes-<language>.txt`.
-  Future<void> _tour(Directory folder, String language) async {
-    final suffix = language.isEmpty ? '' : '-$language';
-    final scenes = File('${folder.path}/scenes$suffix.txt');
+  /// A recorded walk through the app's pages for the promo video; no video
+  /// plays, as the build machine has no graphics card to play one smoothly.
+  /// The build script starts recording to the file `rec-start` names and
+  /// stops at `rec-stop`; it runs each `xdo-*` file's text as xdotool
+  /// arguments on the window (%W stands for it). Each scene's start, in
+  /// milliseconds since the recording began, goes to scenes.txt.
+  Future<void> _tour(Directory folder) async {
+    final scenes = File('${folder.path}/scenes.txt');
     final clock = Stopwatch();
     var step = 0;
     Future<void> wait(num seconds) => Future<void>.delayed(Duration(milliseconds: (seconds * 1000).round()));
@@ -92,21 +90,12 @@ extension SmokeCheck on AppController {
     }
 
     Future<void> xdo(String args) => signal('xdo-${(step++).toString().padLeft(3, '0')}', args);
-    final player = this.player;
     final start = appearance;
-    final startSettings = settings;
     try {
-      if (language.isNotEmpty) {
-        setLanguage(AppLanguage(language));
-        _update(() {});
-      }
-      // The build machine decodes in software while it records; 720p keeps
-      // the picture smooth.
-      await saveSettings(settings.copyWith(maxHeight: 720));
       await saveAppearance(start.copyWith(themeMode: ThemeMode.dark, palette: ''));
       navigate(PageMode.home);
       await wait(4);
-      await signal('rec-start', 'tour$suffix.mp4');
+      await signal('rec-start', 'tour.mp4');
       clock.start();
       await wait(1);
 
@@ -121,20 +110,6 @@ extension SmokeCheck on AppController {
       await wait(0.5);
       await scene('explore');
       await wait(5);
-
-      if (player != null) {
-        unawaited(play(VideoItem(id: 'aqz-KE-bpKQ', title: 'Big Buck Bunny', channel: 'Blender', url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ')));
-        final playing = Stopwatch()..start();
-        while (playing.elapsed < const Duration(seconds: 90) && player.state.position < const Duration(seconds: 2)) {
-          await wait(0.3);
-        }
-        await player.seek(const Duration(minutes: 7, seconds: 5));
-        await wait(2);
-        await scene('watch');
-        await wait(7);
-        await player.pause();
-        stopWatching();
-      }
 
       openChannel(const ChannelRef('UCSMOQeBJ2RAnuFungnQOxLg', 'Blender'));
       await wait(4);
@@ -173,7 +148,6 @@ extension SmokeCheck on AppController {
       await signal('rec-stop');
     }
     setLanguage(start.language);
-    await saveSettings(startSettings);
     await saveAppearance(start);
   }
 

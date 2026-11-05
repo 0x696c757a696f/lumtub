@@ -361,7 +361,7 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
     }
 }
 
-type Request = (String, String, HashMap<String, String>);
+pub(crate) type Request = (String, String, HashMap<String, String>);
 
 /// Connections served at once.
 const MAX_CONNECTIONS: usize = 64;
@@ -379,7 +379,7 @@ fn read_bounded_line(reader: &mut BufReader<TcpStream>, line: &mut String) -> Op
     Some(n)
 }
 
-fn read_request(reader: &mut BufReader<TcpStream>) -> Option<Request> {
+pub(crate) fn read_request(reader: &mut BufReader<TcpStream>) -> Option<Request> {
     let mut line = String::new();
     let mut total = 0;
     read_bounded_line(reader, &mut line).filter(|&n| n > 0)?;
@@ -405,7 +405,7 @@ fn read_request(reader: &mut BufReader<TcpStream>) -> Option<Request> {
     Some((method, path, headers))
 }
 
-enum Stop {
+pub(crate) enum Stop {
     /// libmpv hung up, most often to seek.
     Client,
     /// YouTube's side failed.
@@ -415,7 +415,7 @@ enum Stop {
 }
 
 impl Stop {
-    fn why(&self) -> String {
+    pub(crate) fn why(&self) -> String {
         match self {
             Stop::Client => "libmpv hung up".into(),
             Stop::Upstream(message) => message.clone(),
@@ -424,7 +424,7 @@ impl Stop {
     }
 }
 
-type Body = Box<dyn Read + Send>;
+pub(crate) type Body = Box<dyn Read + Send>;
 
 /// Bytes moved from a YouTube reply to its drained copy at a time.
 const PIECE: usize = 64 << 10;
@@ -440,7 +440,7 @@ struct Drained {
     at: usize,
 }
 
-fn drain(mut body: Body, limit: u64) -> Body {
+pub(crate) fn drain(mut body: Body, limit: u64) -> Body {
     let (tx, rx) = std::sync::mpsc::sync_channel((limit / PIECE as u64 + 1) as usize);
     std::thread::spawn(move || loop {
         let mut piece = vec![0; PIECE];
@@ -566,7 +566,7 @@ fn copy(from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>, buffe
     Ok(())
 }
 
-fn request(fetch: &dyn Fetch, target: &Target, from: u64, to: u64) -> Result<Box<dyn Read + Send>, Stop> {
+pub(crate) fn request(fetch: &dyn Fetch, target: &Target, from: u64, to: u64) -> Result<Box<dyn Read + Send>, Stop> {
     // Appended as text: rebuilding the query could re-encode signed values.
     let url = format!("{}&range={from}-{to}", target.url);
     let mut attempt = 0;

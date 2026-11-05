@@ -25,7 +25,7 @@ Future<void> castTo(AppController controller, CastDevice device, ScaffoldMesseng
   messenger.showSnackBar(SnackBar(content: Text(tr('正在投屏到 {0}…', [device.name]))));
   final wasPlaying = player.state.playing;
   try {
-    final media = await controller.castMedia(player.state.position);
+    final media = await controller.castMedia(player.state.position, device);
     await player.pause();
     await controller.cast.start(device, media, videoId: controller.playing?.id);
     messenger.hideCurrentSnackBar();

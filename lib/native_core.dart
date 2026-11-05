@@ -39,6 +39,9 @@ class NativeCore {
         _edl = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_edl'),
         _quickRequest = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_quick_request'),
         _quickInfo = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size, Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_quick_info'),
+        _castStart = library.lookupFunction<Uint16 Function(), int Function()>('lumtub_cast_start'),
+        _castRegister = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_cast_register'),
+        _castLog = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_cast_log'),
         hashPrefix = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_hash_prefix'),
         sponsorSegments = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_sponsor_segments'),
         dearrowBranding = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_dearrow_branding'),
@@ -126,6 +129,22 @@ class NativeCore {
   /// [player] and the format policy [settings]; null when the video cannot
   /// be started that way.
   String? quickInfo(String player, String settings) => take(withText(player, (p, pl) => withText(settings, (s, sl) => _quickInfo(p, pl, s, sl))));
+
+  final int Function() _castStart;
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) _castRegister;
+  final Pointer<Utf8> Function() _castLog;
+
+  /// Starts the server that streams videos to TVs on the local network
+  /// (native/lumtub_core/src/cast.rs) once; its port, or 0.
+  int castStart() => _castStart();
+
+  /// Registers a picture and a sound stream to be joined for a TV; the
+  /// answer's `path` on the server, or its `error`. Blocks while YouTube is
+  /// asked for both files' heads.
+  String? castRegister(String json) => take(withText(json, _castRegister));
+
+  /// The cast server's log lines since the last call, as a JSON array.
+  String? castLog() => take(_castLog());
   /// The first four hex digits of a video id's SHA-256.
   final Pointer<Utf8> Function(Pointer<Uint8> videoId, int length) hashPrefix;
   final Pointer<Utf8> Function(Pointer<Uint8> json, int length) sponsorSegments;

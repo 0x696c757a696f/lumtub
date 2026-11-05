@@ -372,16 +372,31 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The TV or Chromecast the video is cast to, if any.
   final cast = CastController();
 
-  /// What to cast of [playing]: one progressive mp4 with sound, from the
-  /// yt-dlp extraction or else from a Piped or Invidious server.
-  Future<CastMedia> castMedia(Duration start) async {
+  /// What to cast of [playing] to [device]: the picture and sound streams
+  /// joined by lumtub_core when YouTube has a better picture apart than
+  /// together (up to 1080p), else one progressive mp4 with sound, from the
+  /// yt-dlp extraction or from a Piped or Invidious server.
+  Future<CastMedia> castMedia(Duration start, CastDevice device) async {
     final item = playing;
     if (item == null || item.isLive || _repository == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
+    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
     CastSource? source;
+    Map<String, dynamic>? info;
     try {
-      source = castSourceFromYtDlp((await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort)).info, settings: _playback);
+      info = (await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort)).info;
+      source = castSourceFromYtDlp(info, settings: _playback);
     } catch (e) {
       logWarn('Cast: yt-dlp could not resolve: $e');
+    }
+    if (info != null) {
+      final split = castSplitFromYtDlp(info, settings: _playback);
+      if (split != null && split.height > (source?.height ?? 0)) {
+        try {
+          return await _joinedCast(split, device, start, title, info);
+        } catch (e) {
+          logWarn('Cast: could not join the ${split.height}p picture with its sound: $e');
+        }
+      }
     }
     for (final kind in RelayKind.values) {
       if (source != null) break;
@@ -392,8 +407,54 @@ class AppController extends ChangeNotifier with _ExploreState {
       }
     }
     if (source == null) throw CastException(tr('没有可以投屏的视频流（需要带声音的 MP4 地址）'));
-    final title = details?.title.isNotEmpty == true ? details!.title : item.title;
+    logInfo('Casting the ${source.height}p file with picture and sound together');
     return CastMedia(url: source.url, title: title, mime: source.mime, start: start);
+  }
+
+  Timer? _castLog;
+
+  /// [split] joined by lumtub_core's cast server from [start]: an MPEG
+  /// transport stream for a DLNA renderer, a fragmented MP4 for a
+  /// Chromecast. Seeking starts it again from the new position.
+  Future<CastMedia> _joinedCast(CastSplit split, CastDevice device, Duration start, String title, Map<String, dynamic> info) async {
+    final core = NativeCore.instance;
+    if (core == null) throw StateError('no lumtub_core');
+    // The cast server fetches YouTube itself, directly or through an HTTP proxy.
+    if (proxy.url != null && !proxy.isHttp) throw StateError('a SOCKS proxy is set');
+    final port = core.castStart();
+    if (port == 0) throw StateError('the cast server could not listen');
+    final socket = await Socket.connect(device.host, device.port, timeout: const Duration(seconds: 4));
+    final here = socket.address.address;
+    socket.destroy();
+    final ts = device.protocol == CastProtocol.dlna;
+    final agent = info['http_headers'] is Map ? (info['http_headers'] as Map)['User-Agent']?.toString() : null;
+    final duration = info['duration'] is num ? Duration(milliseconds: ((info['duration'] as num) * 1000).round()) : null;
+    Map<String, dynamic> target(String url, int size) => {'url': url, 'size': size, if (agent != null) 'userAgent': agent, if (proxy.url != null) 'proxy': proxy.url};
+    _castLog ??= Timer.periodic(const Duration(seconds: 5), (timer) {
+      for (final line in (jsonDecode(core.castLog() ?? '[]') as List).cast<String>()) {
+        logInfo(line);
+      }
+      if (!cast.active) {
+        timer.cancel();
+        _castLog = null;
+      }
+    });
+    Future<CastMedia> from(Duration at) async {
+      final ask = jsonEncode({
+        'video': target(split.video, split.videoSize),
+        'audio': target(split.audio, split.audioSize),
+        'startMs': at.inMilliseconds,
+        'kind': ts ? 'ts' : 'mp4',
+      });
+      final answer = jsonDecode(await Isolate.run(() => NativeCore.instance?.castRegister(ask) ?? '{"error":"no lumtub_core"}')) as Map<String, dynamic>;
+      final path = answer['path'];
+      if (path is! String) throw StateError('${answer['error']}');
+      final begins = Duration(milliseconds: (((answer['start'] as num?) ?? 0) * 1000).round());
+      logInfo('Casting ${split.height}p joined by lumtub_core from ${begins.inSeconds} s as ${ts ? 'MPEG-TS' : 'MP4'}');
+      return CastMedia(url: 'http://$here:$port$path', title: title, mime: ts ? 'video/mpeg' : 'video/mp4', offset: begins, duration: duration, restart: from);
+    }
+
+    return from(start);
   }
 
   /// The Piped servers, for 设置 › Piped 服务器.

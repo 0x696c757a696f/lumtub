@@ -72,6 +72,10 @@ class _FakeCastDevice implements CastDevice {
   String get name => 'Fake';
   @override
   CastProtocol get protocol => CastProtocol.dlna;
+  @override
+  String get host => '192.168.1.20';
+  @override
+  int get port => 8080;
   final calls = <String>[];
   CastStatus? next;
   @override
@@ -324,7 +328,7 @@ void main() {
     final device = ChromecastDevice(
       id: 'c1',
       name: 'Cast',
-      host: InternetAddress.loopbackIPv4,
+      address: InternetAddress.loopbackIPv4,
       port: server.port,
       connector: (host, port) => Socket.connect(host, port),
     );
@@ -377,6 +381,45 @@ void main() {
       expect(castSourceFromYtDlp(info)?.height, 720);
       expect(castSourceFromYtDlp({'formats': [format('webm', height: 720, ext: 'webm')]}), isNull);
       expect(castSourceFromYtDlp({}), isNull);
+    });
+
+    test('what to cast joins the best H.264 picture up to 1080p with the main sound', () {
+      Map<String, dynamic> f(String id, {String v = 'none', String a = 'none', int? h, int fps = 30, String ext = 'mp4', num? size = 1000, int lang = -1, int abr = 0, String note = '', int clen = 1000}) => {
+            'format_id': id,
+            'url': 'https://g/$id?clen=$clen',
+            'protocol': 'https',
+            'vcodec': v,
+            'acodec': a,
+            if (h != null) 'height': h,
+            'fps': fps,
+            'ext': ext,
+            if (size != null) 'filesize': size,
+            'language_preference': lang,
+            'abr': abr,
+            'format_note': note,
+          };
+      final info = {
+        'formats': [
+          f('18', v: 'avc1.42001E', a: 'mp4a.40.2', h: 360),
+          f('137', v: 'avc1.640028', h: 1080),
+          f('299', v: 'avc1.64002a', h: 1080, fps: 60),
+          f('264', v: 'avc1.640032', h: 1440),
+          f('248', v: 'vp9', h: 1080, ext: 'webm'),
+          f('136', v: 'avc1.4d401f', h: 720, size: null),
+          f('140-drc', a: 'mp4a.40.2', ext: 'm4a', lang: 10, abr: 129, note: 'DRC'),
+          f('140', a: 'mp4a.40.2', ext: 'm4a', lang: 10, abr: 129),
+          f('140-dub', a: 'mp4a.40.2', ext: 'm4a', lang: -1, abr: 129),
+          f('251', a: 'opus', ext: 'webm', lang: 10, abr: 140),
+        ],
+      };
+      final split = castSplitFromYtDlp(info)!;
+      expect(split.video, startsWith('https://g/137?'));
+      expect(split.audio, startsWith('https://g/140?'));
+      expect((split.height, split.videoSize, split.audioSize), (1080, 1000, 1000));
+      // The size can come from the address alone.
+      final bare = castSplitFromYtDlp({'formats': [f('136', v: 'avc1.4d401f', h: 720, size: null, clen: 5000), f('140', a: 'mp4a.40.2', ext: 'm4a', abr: 129)]})!;
+      expect((bare.height, bare.videoSize), (720, 5000));
+      expect(castSplitFromYtDlp({'formats': [f('137', v: 'avc1.640028', h: 1080)]}), isNull);
     });
 
     test('skips muxed streams in a disabled codec', () {
@@ -441,6 +484,24 @@ void main() {
       expect(controller.pollInterval, const Duration(seconds: 1));
       await controller.stop();
       expect(controller.active, isFalse);
+    });
+
+    test('a joined stream is started again to seek and counts from its offset', () async {
+      final device = _FakeCastDevice();
+      final controller = CastController();
+      addTearDown(controller.dispose);
+      late CastMedia Function(Duration) joined;
+      joined = (at) => CastMedia(url: 'http://lan/${at.inSeconds}.ts', title: 'T', offset: at - const Duration(seconds: 2), duration: const Duration(minutes: 5), restart: (at) async => joined(at));
+      await controller.start(device, joined(const Duration(seconds: 10)));
+      expect(controller.status?.position, const Duration(seconds: 8));
+      expect(controller.status?.duration, const Duration(minutes: 5));
+      await controller.seek(const Duration(seconds: 60));
+      expect(device.calls, ['load http://lan/10.ts', 'load http://lan/60.ts']);
+      expect(controller.status?.position, const Duration(seconds: 58));
+      device.next = const CastStatus(state: CastState.playing, position: Duration(seconds: 3), duration: Duration(seconds: 9));
+      await Future<void>.delayed(const Duration(milliseconds: 1100));
+      expect(controller.status?.position, const Duration(seconds: 61));
+      expect(controller.status?.duration, const Duration(minutes: 5));
     });
 
     test('a failed load leaves no session and reports the message', () async {

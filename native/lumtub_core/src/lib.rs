@@ -35,9 +35,10 @@ pub mod vault;
 pub mod web_account;
 pub mod resolved;
 pub mod quick;
+pub mod cast;
 
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    32
+    33
 }

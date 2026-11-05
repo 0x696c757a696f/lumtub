@@ -447,7 +447,7 @@ jobs:
           git config --global --add safe.directory '*'
           if [ "$PACKAGE_ARCH" = x64 ]; then
             archive="$RUNNER_TEMP/flutter.tar.xz"
-            curl -fsSL -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz"
+            curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz"
             tar -xJf "$archive" -C "$RUNNER_TEMP"
           else
             # Flutter publishes no arm64 Linux SDK archive; the same release
@@ -511,7 +511,7 @@ jobs:
           linux/packaging/make-appdir.sh "$bundle" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/AppDir"
           cp LICENSE NOTICE "$RUNNER_TEMP/AppDir/usr/bin/"
           tool="$RUNNER_TEMP/appimagetool"
-          curl -fsSL -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-$APPIMAGE_ARCH.AppImage"
+          curl -fsSL --retry 5 --retry-all-errors -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-$APPIMAGE_ARCH.AppImage"
           echo "$APPIMAGETOOL_SHA256  $tool" | sha256sum -c -
           chmod +x "$tool"
           # No FUSE in the container: the tool unpacks itself and runs.
@@ -614,7 +614,7 @@ jobs:
       - name: macOS - install Flutter stable SDK
         run: |
           archive="$RUNNER_TEMP/flutter.zip"
-          curl -fsSL -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_$FLUTTER_VERSION-stable.zip"
+          curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_$FLUTTER_VERSION-stable.zip"
           unzip -q "$archive" -d "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/flutter/bin/flutter" --version

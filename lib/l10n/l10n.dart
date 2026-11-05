@@ -184,4 +184,9 @@ const _nativeNames = {
   'tr': 'Türkçe',
   'uk': 'Українська',
   'vi': 'Tiếng Việt',
+  'ti': 'ትግርኛ',
+  'tk': 'Türkmençe',
+  'ur': 'اردو',
+  'my': 'မြန်မာ',
+  'eo': 'Esperanto',
 };

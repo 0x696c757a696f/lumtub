@@ -183,8 +183,8 @@ class _LumtubAppState extends State<LumtubApp> {
             themeMode: appearance.themeModeAt(DateTime.now()),
             // Material's own text (tooltips, dialogs) in the language chosen
             // at start.
-            locale: currentLanguage.locale,
-            supportedLocales: [for (final l in AppLanguage.selectable) if (l.locale case final locale?) locale],
+            locale: _materialLocale(currentLanguage.locale),
+            supportedLocales: {for (final l in AppLanguage.selectable) if (_materialLocale(l.locale) case final locale?) locale}.toList(),
             localizationsDelegates: GlobalMaterialLocalizations.delegates,
             theme: _light,
             darkTheme: _dark,
@@ -205,6 +205,12 @@ class _LumtubAppState extends State<LumtubApp> {
         child: AppShell(controller: widget.controller),
       );
 }
+
+/// [locale] where Flutter has its own dialogs, date pickers and tooltips
+/// in it, else English for those; Lumtub's own text still follows the
+/// chosen language.
+Locale? _materialLocale(Locale? locale) =>
+    locale == null || GlobalMaterialLocalizations.delegate.isSupported(locale) ? locale : const Locale('en');
 
 Object? _titleBar;
 

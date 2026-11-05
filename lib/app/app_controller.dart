@@ -534,8 +534,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   Color get accentColor => appearance.systemAccent && windowsAccent != null ? windowsAccent! : appearance.accent;
 
   static void _applyAppearanceGlobals(AppearanceSettings appearance) {
-    VideoItem.thumbnailFile = appearance.thumbnailQuality.file;
+    VideoItem.thumbnailFile = appearance.effectiveThumbnails.file;
     videoCardMinWidth = appearance.cardWidth;
+    lowResourceMode = appearance.lowResource;
+    videoLayout = appearance.layout;
   }
 
   int _playSerial = 0;

@@ -67,6 +67,8 @@ void main() {
     await tester.tap(find.text('深色'), warnIfMissed: false);
     await tester.pumpAndSettle();
     expect(controller.appearance.themeMode, ThemeMode.dark);
+    // Settings are written a moment after the last change.
+    await tester.pump(const Duration(seconds: 1));
   });
 
   Future<void> openRow(WidgetTester tester, SettingsCategory category, String row) async {

@@ -36,6 +36,7 @@ import '../video_box.dart';
 import '../../l10n/l10n.dart';
 import '../motion.dart';
 import '../app_icons.dart';
+import '../palettes.dart';
 import '../live_chat_input.dart';
 import '../live_chat_list.dart';
 
@@ -100,7 +101,7 @@ class _WatchPageState extends State<WatchPage> {
     final key = appearance.themeKey(controller.accentColor);
     if (key != _darkKey) {
       _darkKey = key;
-      _dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.font);
+      _dark = buildAppTheme(controller.accentColor, Brightness.dark, variant: appearance.schemeVariant, pureBlack: appearance.pureBlack, fontFamily: appearance.font, palette: paletteOf(appearance.palette));
     }
     final dark = _dark!;
     return Theme(data: dark, child: Material(color: dark.colorScheme.surface, child: page));

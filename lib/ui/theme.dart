@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import '../appearance_settings.dart';
+import 'palettes.dart';
 
 /// Shared spacing and shapes: flat, hairline borders, small corners.
 abstract final class AppStyle {
@@ -167,12 +168,17 @@ ThemeData buildAppTheme(
   String? fontFamily,
   PageTransition transition = PageTransition.fade,
   bool highContrast = false,
+  Palette? palette,
 }) {
   final dark = brightness == Brightness.dark;
+  // A palette brings its own accent for each mode.
+  if (palette != null && !highContrast) seed = palette.of(brightness).accent;
   var scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness, dynamicSchemeVariant: variant, contrastLevel: highContrast ? 1.0 : 0.0);
   if (highContrast) {
     // Windows' high contrast themes: borders and secondary text as strong as text.
     scheme = scheme.copyWith(outline: scheme.onSurface, outlineVariant: scheme.onSurfaceVariant, surface: dark ? Colors.black : Colors.white);
+  } else if (palette != null) {
+    scheme = paletteScheme(scheme, palette, brightness, pureBlack: pureBlack);
   } else {
     scheme = _neutralScheme(scheme, seed, brightness, pureBlack: pureBlack);
   }

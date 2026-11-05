@@ -12,6 +12,7 @@ import '../../blocked_groups.dart';
 import '../../feed_quality.dart';
 import '../../format_policy.dart';
 import '../../state_media.dart';
+import '../../sun_times.dart';
 import '../../app_log.dart';
 import '../../app_window.dart';
 import '../../app_preferences.dart';
@@ -30,6 +31,7 @@ import '../common.dart';
 import '../format_policy_dialogs.dart';
 import '../player_shortcuts.dart';
 import '../motion.dart';
+import '../palettes.dart';
 import '../theme.dart';
 import 'account_settings.dart';
 import 'relay_servers_page.dart';
@@ -104,6 +106,61 @@ String labelOf<T>(List<(T, String)> values, T value) {
 List<(T, String)> _enumValues<T extends Enum>(List<T> values, String Function(T) label) => [for (final v in values) (v, label(v))];
 
 Widget _icon(IconData icon) => Icon(icon);
+
+String _hoursLabel(int start, int end) => tr('{0}:00 到 {1}:00', [start, end]);
+
+/// Today's sunrise and sunset for 日落到日出, as the settings show them.
+String _sunLabel() {
+  final sun = SunTimes.here;
+  final times = sun.on(DateTime.now());
+  String clock(DateTime t) => '${t.hour}:${t.minute.toString().padLeft(2, '0')}';
+  if (times == null) return sun.polarNight(DateTime.now()) ? tr('今天是极夜') : tr('今天是极昼');
+  return tr('今天 {0} 日出，{1} 日落', [clock(times.$1), clock(times.$2)]);
+}
+
+String _darkLabel(AppearanceSettings a) => switch (a.darkSchedule) {
+      DarkSchedule.off => themeModes.firstWhere((m) => m.$1 == a.themeMode).$2,
+      DarkSchedule.sun => tr('日落到日出用深色（{0}）', [_sunLabel()]),
+      DarkSchedule.hours => tr('{0} 用深色', [_hoursLabel(a.darkStart, a.darkEnd)]),
+    };
+
+String _eyeCareLabel(AppearanceSettings a) => switch (a.eyeCare) {
+      EyeCare.sun => tr('日落到日出（{0}）', [_sunLabel()]),
+      EyeCare.hours => _hoursLabel(a.eyeCareStart, a.eyeCareEnd),
+      _ => a.eyeCare.label,
+    };
+
+/// Asks for a span of hours, which may run through midnight.
+Future<(int, int)?> _pickHours(BuildContext context, String title, int start, int end) => showDialog<(int, int)>(
+      context: context,
+      builder: (context) {
+        var from = start;
+        var to = end;
+        Widget hour(int value, ValueChanged<int> changed) => DropdownButton<int>(
+              value: value,
+              items: [for (var h = 0; h < 24; h++) DropdownMenuItem(value: h, child: Text('$h:00'))],
+              onChanged: (v) => v == null ? null : changed(v),
+            );
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: Text(title),
+            content: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text(tr('从')),
+              const SizedBox(width: Space.s),
+              hour(from, (v) => setState(() => from = v)),
+              const SizedBox(width: Space.m),
+              Text(tr('到')),
+              const SizedBox(width: Space.s),
+              hour(to, (v) => setState(() => to = v)),
+            ]),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('取消'))),
+              FilledButton(onPressed: () => Navigator.pop(context, (from, to)), child: Text(tr('确定'))),
+            ],
+          ),
+        );
+      },
+    );
 
 List<SettingEntry> settingEntries(SettingsCategory category, AppController controller) {
   final settings = controller.settings;
@@ -819,13 +876,93 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               values: [for (final l in AppLanguage.selectable) (l, l.label)],
               onSelected: (language) => changeLanguage(context, appearance.copyWith(language: language)),
             ), subtitle: 'Language 语言 English 简体中文'),
-        SettingEntry(tr('主题模式'), (context) => PopupItem<ThemeMode>(
+        SettingEntry(tr('主题模式'), (context) => NormalItem(
               title: tr('主题模式'),
+              subtitle: _darkLabel(appearance),
               leading: _icon(AppIcons.sunHorizon),
-              value: appearance.themeMode,
-              values: themeModes,
-              onSelected: (mode) => saveLooks(appearance.copyWith(themeMode: mode)),
-            ), subtitle: tr('深色 浅色')),
+              onTap: () => pickFromDialog<String>(
+                context,
+                title: tr('主题模式'),
+                value: appearance.darkSchedule == DarkSchedule.off ? appearance.themeMode.name : appearance.darkSchedule.name,
+                values: [
+                  for (final (mode, label) in themeModes) (mode.name, label),
+                  (DarkSchedule.sun.name, tr('日落到日出用深色')),
+                  (DarkSchedule.hours.name, tr('自定义时间段用深色')),
+                ],
+                onSelected: (choice) async {
+                  if (choice == DarkSchedule.sun.name) return saveLooks(appearance.copyWith(darkSchedule: DarkSchedule.sun));
+                  if (choice == DarkSchedule.hours.name) {
+                    final hours = await _pickHours(context, tr('深色时间段'), appearance.darkStart, appearance.darkEnd);
+                    if (hours != null) saveLooks(controller.appearance.copyWith(darkSchedule: DarkSchedule.hours, darkStart: hours.$1, darkEnd: hours.$2));
+                    return;
+                  }
+                  saveLooks(appearance.copyWith(darkSchedule: DarkSchedule.off, themeMode: ThemeMode.values.byName(choice)));
+                },
+              ),
+            ), subtitle: tr('深色 浅色 日出 日落 定时 夜间')),
+        if (appearance.darkSchedule == DarkSchedule.hours)
+          SettingEntry(tr('深色时间段'), (context) => NormalItem(
+                title: tr('深色时间段'),
+                subtitle: _hoursLabel(appearance.darkStart, appearance.darkEnd),
+                leading: _icon(AppIcons.clock),
+                onTap: () async {
+                  final hours = await _pickHours(context, tr('深色时间段'), appearance.darkStart, appearance.darkEnd);
+                  if (hours != null) saveLooks(controller.appearance.copyWith(darkStart: hours.$1, darkEnd: hours.$2));
+                },
+              )),
+        SettingEntry(tr('配色'), (context) => NormalItem(
+              title: tr('配色'),
+              subtitle: tr('当前：{0}', [paletteOf(appearance.palette)?.name ?? tr('中性（默认）')]),
+              leading: _icon(AppIcons.palette),
+              onTap: () => openColorSelect(context, controller),
+            ), subtitle: tr('配色 主题 宣纸 烛光 墨竹 雾凇 松烟 夜航 暮山 樱落 砂岩 高对比')),
+        SettingEntry(tr('护眼暖色'), (context) => NormalItem(
+              title: tr('护眼暖色'),
+              subtitle: tr('当前：{0}。给整个窗口（包括视频）加一层暖光，减少蓝光；黑色不变，白色变成暖白纸色', [_eyeCareLabel(appearance)]),
+              leading: _icon(AppIcons.eye),
+              onTap: () => pickFromDialog<EyeCare>(
+                context,
+                title: tr('护眼暖色'),
+                value: appearance.eyeCare,
+                values: _enumValues(EyeCare.values, (e) => e.label),
+                onSelected: (care) async {
+                  if (care != EyeCare.hours) return saveLooks(appearance.copyWith(eyeCare: care));
+                  final hours = await _pickHours(context, tr('护眼时间段'), appearance.eyeCareStart, appearance.eyeCareEnd);
+                  if (hours != null) saveLooks(controller.appearance.copyWith(eyeCare: care, eyeCareStart: hours.$1, eyeCareEnd: hours.$2));
+                },
+              ),
+            ), subtitle: tr('护眼 暖色 蓝光 夜间模式 夜灯 色温')),
+        if (appearance.eyeCare == EyeCare.hours)
+          SettingEntry(tr('护眼时间段'), (context) => NormalItem(
+                title: tr('护眼时间段'),
+                subtitle: _hoursLabel(appearance.eyeCareStart, appearance.eyeCareEnd),
+                leading: _icon(AppIcons.clock),
+                onTap: () async {
+                  final hours = await _pickHours(context, tr('护眼时间段'), appearance.eyeCareStart, appearance.eyeCareEnd);
+                  if (hours != null) saveLooks(controller.appearance.copyWith(eyeCareStart: hours.$1, eyeCareEnd: hours.$2));
+                },
+              )),
+        if (appearance.eyeCare != EyeCare.off)
+          SettingEntry(tr('暖色强度'), (context) => NormalItem(
+                title: tr('暖色强度'),
+                subtitle: tr('当前：{0}%', [(appearance.warmth * 100).round()]),
+                leading: _icon(AppIcons.sun),
+                onTap: () => pickWithSlider(context, title: tr('暖色强度'), value: (appearance.warmth * 100).roundToDouble(), min: 10, max: 100, divisions: 18, suffix: '%', onSelected: (v) => saveLooks(appearance.copyWith(warmth: v / 100))),
+              )),
+        SettingEntry(tr('低占用模式'), (context) => SwitchItem(
+              title: tr('低占用模式'),
+              subtitle: tr('关掉动画，用最小的封面图，鼠标停在视频上时不预先加载，图片缓存更小。适合旧电脑或笔记本省电'),
+              leading: _icon(AppIcons.gauge),
+              value: appearance.lowResource,
+              onChanged: (v) => saveLooks(appearance.copyWith(lowResource: v)),
+            ), subtitle: tr('省电 性能 低配 内存 流畅')),
+        SettingEntry(tr('视频列表样式'), (context) => PopupItem<VideoLayout>(
+              title: tr('视频列表样式'),
+              leading: _icon(AppIcons.listDashes),
+              value: appearance.layout,
+              values: _enumValues(VideoLayout.values, (l) => l.label),
+              onSelected: (v) => saveLooks(appearance.copyWith(layout: v)),
+            ), subtitle: tr('列表 网格 纯文字 布局')),
         SettingEntry(tr('纯黑主题'), (context) => SwitchItem(
               title: tr('纯黑主题'),
               subtitle: tr('深色模式使用纯黑背景'),

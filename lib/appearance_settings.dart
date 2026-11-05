@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'app_directories.dart';
 import 'l10n/l10n.dart';
+import 'sun_times.dart';
 
 /// Seed colours offered in Settings; the first is the default. The first
 /// six are Lumtub's own, the rest PiliNara's palette.
@@ -41,9 +42,9 @@ class ThemePreset {
   final DynamicSchemeVariant variant;
   final bool pureBlack;
 
-  bool isApplied(AppearanceSettings a) => !a.systemAccent && a.accentIndex < 0 && a.customAccent == seed && a.schemeVariant == variant && a.pureBlack == pureBlack;
+  bool isApplied(AppearanceSettings a) => a.palette.isEmpty && !a.systemAccent && a.accentIndex < 0 && a.customAccent == seed && a.schemeVariant == variant && a.pureBlack == pureBlack;
 
-  AppearanceSettings applyTo(AppearanceSettings a) => a.copyWith(systemAccent: false, accentIndex: -1, customAccent: seed, schemeVariant: variant, pureBlack: pureBlack);
+  AppearanceSettings applyTo(AppearanceSettings a) => a.copyWith(palette: '', systemAccent: false, accentIndex: -1, customAccent: seed, schemeVariant: variant, pureBlack: pureBlack);
 }
 
 const themePresets = [
@@ -153,6 +154,48 @@ final fontChoices = <(String?, String)>[
 /// The narrowest a video card may get; set from [AppearanceSettings.cardWidth].
 double videoCardMinWidth = 250.0;
 
+/// [AppearanceSettings.lowResource], for code that has no settings at hand.
+bool lowResourceMode = false;
+
+/// [AppearanceSettings.layout], for the video lists.
+VideoLayout videoLayout = VideoLayout.grid;
+
+/// 护眼暖色: when the window is warmed.
+enum EyeCare {
+  off('关闭'),
+  always('一直开启'),
+  sun('日落到日出'),
+  hours('自定义时间段');
+
+  const EyeCare(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
+/// When the dark theme is used instead of [AppearanceSettings.themeMode].
+enum DarkSchedule {
+  off('按主题模式'),
+  sun('日落到日出'),
+  hours('自定义时间段');
+
+  const DarkSchedule(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
+/// How video lists are laid out.
+enum VideoLayout {
+  grid('网格（默认）'),
+  list('列表'),
+  text('纯文字');
+
+  const VideoLayout(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
+int _hour(Object? raw, int fallback) => raw is int && raw >= 0 && raw < 24 ? raw : fallback;
+
 T _byName<T extends Enum>(List<T> values, Object? name, T fallback) => values.where((v) => v.name == name).firstOrNull ?? fallback;
 
 class AppearanceSettings {
@@ -179,6 +222,22 @@ class AppearanceSettings {
   final bool showStatusBar;
   /// The interface language; it applies after a restart.
   final AppLanguage language;
+  /// A [Palette] id from lib/ui/palettes.dart, or '' for the neutral one.
+  final String palette;
+  final EyeCare eyeCare;
+  /// How warm 护眼暖色 makes the window, 0.1 to 1.
+  final double warmth;
+  /// [EyeCare.hours]: from this hour until [eyeCareEnd].
+  final int eyeCareStart;
+  final int eyeCareEnd;
+  final DarkSchedule darkSchedule;
+  /// [DarkSchedule.hours]: dark from this hour until [darkEnd].
+  final int darkStart;
+  final int darkEnd;
+  /// 低占用模式: no animations, small thumbnails, no hover loading and a
+  /// smaller image cache.
+  final bool lowResource;
+  final VideoLayout layout;
 
   const AppearanceSettings({
     this.themeMode = ThemeMode.system,
@@ -198,7 +257,38 @@ class AppearanceSettings {
     this.darkWatchPage = false,
     this.showStatusBar = true,
     this.language = AppLanguage.system,
+    this.palette = '',
+    this.eyeCare = EyeCare.off,
+    this.warmth = 0.4,
+    this.eyeCareStart = 20,
+    this.eyeCareEnd = 7,
+    this.darkSchedule = DarkSchedule.off,
+    this.darkStart = 19,
+    this.darkEnd = 7,
+    this.lowResource = false,
+    this.layout = VideoLayout.grid,
   });
+
+  /// Whether 护眼暖色 is on at [now].
+  bool warmAt(DateTime now) => switch (eyeCare) {
+        EyeCare.off => false,
+        EyeCare.always => true,
+        EyeCare.sun => SunTimes.here.isNight(now),
+        EyeCare.hours => inHours(now, eyeCareStart, eyeCareEnd),
+      };
+
+  /// The theme mode at [now]: [themeMode], or light and dark by [darkSchedule].
+  ThemeMode themeModeAt(DateTime now) => switch (darkSchedule) {
+        DarkSchedule.off => themeMode,
+        DarkSchedule.sun => SunTimes.here.isNight(now) ? ThemeMode.dark : ThemeMode.light,
+        DarkSchedule.hours => inHours(now, darkStart, darkEnd) ? ThemeMode.dark : ThemeMode.light,
+      };
+
+  /// The thumbnails asked for: the smallest in 低占用模式.
+  ThumbnailQuality get effectiveThumbnails => lowResource ? ThumbnailQuality.medium : thumbnailQuality;
+
+  /// Animations as chosen, none in 低占用模式.
+  MotionPreference get effectiveMotion => lowResource ? MotionPreference.reduced : motion;
 
   /// The chosen colour; [systemAccent] is resolved by the app.
   Color get accent => accentIndex < 0 ? Color(customAccent) : accentChoices[accentIndex].$2;
@@ -224,6 +314,16 @@ class AppearanceSettings {
     bool? darkWatchPage,
     bool? showStatusBar,
     AppLanguage? language,
+    String? palette,
+    EyeCare? eyeCare,
+    double? warmth,
+    int? eyeCareStart,
+    int? eyeCareEnd,
+    DarkSchedule? darkSchedule,
+    int? darkStart,
+    int? darkEnd,
+    bool? lowResource,
+    VideoLayout? layout,
   }) =>
       AppearanceSettings(
         themeMode: themeMode ?? this.themeMode,
@@ -243,13 +343,23 @@ class AppearanceSettings {
         darkWatchPage: darkWatchPage ?? this.darkWatchPage,
         showStatusBar: showStatusBar ?? this.showStatusBar,
         language: language ?? this.language,
+        palette: palette ?? this.palette,
+        eyeCare: eyeCare ?? this.eyeCare,
+        warmth: warmth ?? this.warmth,
+        eyeCareStart: eyeCareStart ?? this.eyeCareStart,
+        eyeCareEnd: eyeCareEnd ?? this.eyeCareEnd,
+        darkSchedule: darkSchedule ?? this.darkSchedule,
+        darkStart: darkStart ?? this.darkStart,
+        darkEnd: darkEnd ?? this.darkEnd,
+        lowResource: lowResource ?? this.lowResource,
+        layout: layout ?? this.layout,
       );
 
   /// The family text is drawn in; null is the system UI font.
   String? get font => fontFamily == autoFont ? (systemFitsBundledFont() ? bundledFont : null) : fontFamily;
 
   /// What a theme is built from; themes are rebuilt only when it changes.
-  Object themeKey(Color seed) => (seed, schemeVariant, pureBlack, compact, font, transition);
+  Object themeKey(Color seed) => (seed, schemeVariant, pureBlack, compact, font, transition, palette);
 
   Map<String, dynamic> toJson() => {
         'themeMode': themeMode.name,
@@ -270,6 +380,16 @@ class AppearanceSettings {
         'darkWatchPage': darkWatchPage,
         'showStatusBar': showStatusBar,
         'language': language.tag,
+        'palette': palette,
+        'eyeCare': eyeCare.name,
+        'warmth': warmth,
+        'eyeCareStart': eyeCareStart,
+        'eyeCareEnd': eyeCareEnd,
+        'darkSchedule': darkSchedule.name,
+        'darkStart': darkStart,
+        'darkEnd': darkEnd,
+        'lowResource': lowResource,
+        'layout': layout.name,
       };
 
   factory AppearanceSettings.fromJson(Object? raw) {
@@ -304,6 +424,16 @@ class AppearanceSettings {
       darkWatchPage: raw['darkWatchPage'] == true,
       showStatusBar: raw['showStatusBar'] != false,
       language: AppLanguage.parse(raw['language']),
+      palette: raw['palette'] is String ? raw['palette'] as String : '',
+      eyeCare: _byName(EyeCare.values, raw['eyeCare'], EyeCare.off),
+      warmth: raw['warmth'] is num ? (raw['warmth'] as num).toDouble().clamp(0.1, 1.0) : 0.4,
+      eyeCareStart: _hour(raw['eyeCareStart'], 20),
+      eyeCareEnd: _hour(raw['eyeCareEnd'], 7),
+      darkSchedule: _byName(DarkSchedule.values, raw['darkSchedule'], DarkSchedule.off),
+      darkStart: _hour(raw['darkStart'], 19),
+      darkEnd: _hour(raw['darkEnd'], 7),
+      lowResource: raw['lowResource'] == true,
+      layout: _byName(VideoLayout.values, raw['layout'], VideoLayout.grid),
     );
   }
 }

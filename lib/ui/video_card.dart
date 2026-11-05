@@ -102,7 +102,24 @@ class SliverVideoGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
-        sliver: SliverLayoutBuilder(builder: (context, constraints) {
+        sliver: videoLayout != VideoLayout.grid
+            ? SliverFixedExtentList(
+                itemExtent: VideoRow.heightFor(videoLayout, reason: reasons != null),
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) => VideoRow(
+                    key: ValueKey(items[i].id),
+                    item: items[i],
+                    layout: videoLayout,
+                    thumbnails: thumbnails,
+                    onOpen: () => onOpen(items[i]),
+                    onRemove: onRemove == null ? null : () => onRemove!(items[i]),
+                    removeLabel: removeLabel,
+                    reason: reasons == null ? null : reasons![items[i].id] ?? '',
+                  ),
+                  childCount: items.length,
+                ),
+              )
+            : SliverLayoutBuilder(builder: (context, constraints) {
           final layout = gridLayoutFor(constraints.crossAxisExtent);
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -128,6 +145,100 @@ class SliverVideoGrid extends StatelessWidget {
           );
         }),
       );
+}
+
+/// A video as one row of a list: a small thumbnail or none, the title, the
+/// channel and views, for 列表 and 纯文字. Fewer and smaller pictures than
+/// the grid, so long lists scroll lighter.
+class VideoRow extends StatelessWidget {
+  const VideoRow({super.key, required this.item, required this.layout, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason});
+  final VideoItem item;
+  final VideoLayout layout;
+  final VoidCallback onOpen;
+  final Directory? thumbnails;
+  final VoidCallback? onRemove;
+  final String? removeLabel;
+  final String? reason;
+
+  static const _thumbWidth = 168.0;
+
+  static double heightFor(VideoLayout layout, {bool reason = false}) => (layout == VideoLayout.text ? 60.0 : _thumbWidth * 9 / 16 + Space.s * 2) + (reason ? _reasonHeight : 0);
+
+  void _menu(BuildContext context, Offset position) => unawaited(showVideoMenu(context, item, position, onOpen: onOpen, onRemove: onRemove, removeLabel: removeLabel));
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final text = layout == VideoLayout.text;
+    final upcomingStart = item.isUpcoming && item.scheduledStart != null ? tr('开始于 {0}', [formatScheduledStart(item.scheduledStart!)]) : null;
+    final status = item.isLive ? tr('直播中') : item.isUpcoming ? tr('即将直播') : null;
+    final meta = [
+      if (upcomingStart != null) upcomingStart,
+      if (item.channel.isNotEmpty) item.channel,
+      if (item.viewCount != null) tr('{0}次观看', [formatCount(item.viewCount!)]),
+      if (text && status == null && item.durationLabel.isNotEmpty) item.durationLabel,
+    ].join(' · ');
+    return InkWell(
+      borderRadius: AppStyle.controlRadius,
+      onTap: onOpen,
+      onSecondaryTapUp: (details) => _menu(context, details.globalPosition),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: Space.s, horizontal: Space.xs),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          if (!text) ...[
+            SizedBox(
+              width: _thumbWidth,
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: ClipRRect(
+                  borderRadius: AppStyle.controlRadius,
+                  child: Stack(fit: StackFit.expand, children: [
+                    Image(
+                      image: thumbnailFor(item, thumbnails, width: 320, size: 'mqdefault'),
+                      fit: BoxFit.cover,
+                      gaplessPlayback: true,
+                      errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
+                    ),
+                    if (status != null)
+                      Positioned(right: 4, bottom: 4, child: DurationBadge(status, color: item.isLive ? const Color(0xFFCC0000) : null))
+                    else if (item.durationLabel.isNotEmpty)
+                      Positioned(right: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
+                    if (item.membersOnly) const Positioned(left: 4, bottom: 4, child: MembersOnlyBadge()),
+                    _ProgressBar(item: item),
+                  ]),
+                ),
+              ),
+            ),
+            const SizedBox(width: Space.m),
+          ],
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(titleFor(item), maxLines: text ? 1 : 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface)),
+            const SizedBox(height: Space.xs),
+            Row(children: [
+              if (text && status != null) ...[
+                Text(status, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: item.isLive ? const Color(0xFFCC0000) : colors.primary)),
+                const SizedBox(width: Space.s),
+              ],
+              if (text && item.membersOnly) ...[
+                Text(tr('会员专属'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2BA640))),
+                const SizedBox(width: Space.s),
+              ],
+              Expanded(child: Text(meta.isEmpty ? 'YouTube' : meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline))),
+            ]),
+            if (reason case final reason? when reason.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: Space.xs),
+                child: Row(children: [
+                  Icon(AppIcons.sparkle, size: 12, color: colors.primary),
+                  const SizedBox(width: 4),
+                  Expanded(child: Text(reason, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary))),
+                ]),
+              ),
+          ])),
+        ]),
+      ),
+    );
+  }
 }
 
 /// YouTube playlists as a grid of cards.
@@ -297,7 +408,8 @@ class _VideoCardState extends State<VideoCard> {
     });
     _prefetch?.cancel();
     _preview?.cancel();
-    if (!value) return;
+    // 低占用模式 loads nothing until a video is opened.
+    if (!value || lowResourceMode) return;
     if (!widget.item.membersOnly) _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item, hover: true));
     if (widget.item.isLive || widget.item.isUpcoming) return;
     _preview = Timer(const Duration(milliseconds: 700), () {

@@ -590,7 +590,7 @@ jobs:
           unzip -q -o "$RUNNER_TEMP/deno.zip" -d "$RUNNER_TEMP/yt/bin"
           export PATH="$RUNNER_TEMP/yt/bin:$PATH"
           yt-dlp --version
-          ids=$(yt-dlp --flat-playlist --print id --playlist-end 4 'https://www.youtube.com/results?search_query=4k+live&sp=EgRAAXAB' || true)
+          ids="T9i7SKYx3rY bFt5M9_NoS8 $(yt-dlp --flat-playlist --print id --playlist-end 2 'ytsearch2:4k live now' || true)"
           echo "ids: $ids"
           for id in $ids; do
             echo "::group::$id default"
@@ -598,6 +598,8 @@ jobs:
             echo "::endgroup::"
             echo "::group::$id formats=incomplete"
             yt-dlp -F --extractor-args youtube:formats=incomplete "https://www.youtube.com/watch?v=$id" 2>&1 | tail -60
+            yt-dlp -j -f 'bv*[height>1080]+ba' --extractor-args youtube:formats=incomplete "https://www.youtube.com/watch?v=$id" 2>/dev/null \
+              | python3 -c 'import json,sys; d=json.load(sys.stdin); [print(f["format_id"], f.get("protocol"), f.get("height"), (f.get("manifest_url") or "")[:120], len(f.get("fragments") or [])) for f in d.get("requested_formats") or [d]]' || true
             echo "::endgroup::"
           done
           id=$(echo "$ids" | head -1)

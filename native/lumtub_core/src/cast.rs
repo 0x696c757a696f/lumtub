@@ -640,9 +640,9 @@ impl Reader {
         }
         let mut waited = Duration::ZERO;
         loop {
-            let pending = match self.ahead.take() {
-                Some((f, l, handle)) if f == from && l == last => handle,
-                _ => self.open(from, last),
+            let (pending, early) = match self.ahead.take() {
+                Some((f, l, handle)) if f == from && l == last => (handle, true),
+                _ => (self.open(from, last), false),
             };
             let tried = self.address.get();
             match pending.join().unwrap_or_else(|_| Err(Stop::Upstream("failed".into()))) {
@@ -665,6 +665,8 @@ impl Reader {
                         waited += Duration::from_millis(500);
                     }
                 }
+                // A reply asked for ahead may have failed long ago; ask now.
+                Err(Stop::Upstream(_)) if early => {}
                 Err(stop) => return Err(stop.why()),
             }
         }

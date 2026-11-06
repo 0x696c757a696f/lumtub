@@ -139,24 +139,16 @@ class DeepLTranslator extends _LineTranslator {
     return Uri.https(host, '/v2/translate');
   }
 
-  static String? languageCode(String target) {
-    switch (target) {
-      case 'zh-CN':
-        return 'ZH-HANS';
-      case 'zh-TW':
-        return 'ZH-HANT';
-      case 'en':
-        return 'EN-US';
-      case 'pt':
-        return 'PT-BR';
-      case 'vi':
-      case 'th':
-      case 'hi':
-        return null;
-      default:
-        return target.toUpperCase();
-    }
-  }
+  static String? languageCode(String target) => switch (target) {
+        'zh-CN' => 'ZH-HANS',
+        'zh-TW' => 'ZH-HANT',
+        'en' => 'EN-US',
+        'pt' => 'PT-BR',
+        'iw' => 'HE',
+        'no' => 'NB',
+        'ar' || 'bg' || 'cs' || 'da' || 'de' || 'el' || 'es' || 'et' || 'fi' || 'fr' || 'hu' || 'id' || 'it' || 'ja' || 'ko' || 'lt' || 'lv' || 'nl' || 'pl' || 'ro' || 'ru' || 'sk' || 'sv' || 'tr' || 'uk' => target.toUpperCase(),
+        _ => null,
+      };
 
   @override
   Future<List<String>> translateBatch(List<String> lines, String target) async {
@@ -211,6 +203,10 @@ class MicrosoftTranslator extends _LineTranslator {
   static String languageCode(String target) => switch (target) {
         'zh-CN' => 'zh-Hans',
         'zh-TW' => 'zh-Hant',
+        'iw' => 'he',
+        'tl' => 'fil',
+        'jw' => 'jv',
+        'no' => 'nb',
         _ => target,
       };
 
@@ -352,6 +348,10 @@ class LibreTranslator extends _LineTranslator {
   static String languageCode(String target) => switch (target) {
         'zh-CN' => 'zh-Hans',
         'zh-TW' => 'zh-Hant',
+        'iw' => 'he',
+        'tl' => 'fil',
+        'jw' => 'jv',
+        'no' => 'nb',
         _ => target,
       };
 
@@ -533,7 +533,7 @@ class AiTranslator extends _CachedTranslator {
   /// The system prompt with the target, line count, style and terms filled in.
   String systemPrompt(String target, int count, List<String> context) {
     final parts = [
-      prompt.replaceAll('{target}', TranslationLanguage.byCode(target).label).replaceAll('{lines}', '$count'),
+      prompt.replaceAll('{target}', TranslationLanguage.byCode(target).englishName).replaceAll('{lines}', '$count'),
       if (tone.isNotEmpty) tone,
       if (glossaryLines.isNotEmpty) 'Always translate these terms as given (original = translation):\n${glossaryLines.join('\n')}',
       if (context.isNotEmpty) 'For context only, these lines came just before; do not translate or repeat them:\n${context.join('\n')}',

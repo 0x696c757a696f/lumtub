@@ -21,10 +21,13 @@ SubtitleOption translatedOption(SubtitleOption source, TranslationLanguage targe
   );
 }
 
-/// The subtitle of [options] in [target]: one YouTube lists, else the first
-/// original-language track translated. Null when the video has no subtitle
-/// in another language to translate.
-SubtitleOption? translationOf(List<SubtitleOption> options, TranslationLanguage target) {
+/// The subtitle of [options] in [target]: [from] translated when it is
+/// one of the video's own in another language, so a second subtitle says
+/// what the first one does, line for line; else one YouTube lists, else the
+/// first original-language track translated. Null when the video has no
+/// subtitle in another language to translate.
+SubtitleOption? translationOf(List<SubtitleOption> options, TranslationLanguage target, {SubtitleOption? from}) {
+  if (from != null && from.kind != SubtitleKind.translated && !speaks(from.language, target)) return translatedOption(from, target);
   final listed = options.where((o) => o.kind == SubtitleKind.translated && speaks(o.language, target)).firstOrNull;
   if (listed != null) return listed;
   final source = options.where((o) => o.kind != SubtitleKind.translated && !speaks(o.language, target)).firstOrNull;
@@ -39,18 +42,18 @@ bool speaks(String? language, TranslationLanguage target) {
   if (tag.isEmpty) return false;
   if (target.code == 'zh-CN') return const {'zh', 'zh-hans', 'zh-cn', 'zh-sg', 'chi', 'zho'}.contains(tag);
   if (target.code == 'zh-TW') return const {'zh-hant', 'zh-tw', 'zh-hk', 'zh-mo'}.contains(tag);
-  final code = target.code.toLowerCase();
-  return tag == code || tag.startsWith('$code-');
+  return target.tags.any((code) => tag == code.toLowerCase() || tag.startsWith('${code.toLowerCase()}-'));
 }
 
 /// The subtitle of [options] to show in [target]: one the video has in
-/// that language, uploaded before automatic, else YouTube's translation.
-SubtitleOption? subtitleIn(List<SubtitleOption> options, TranslationLanguage target) {
+/// that language, uploaded before automatic, else a translation, of [from]
+/// when it can be.
+SubtitleOption? subtitleIn(List<SubtitleOption> options, TranslationLanguage target, {SubtitleOption? from}) {
   for (final kind in [SubtitleKind.uploaded, SubtitleKind.automatic, SubtitleKind.speech]) {
     final own = options.where((o) => o.kind == kind && speaks(o.language, target)).firstOrNull;
     if (own != null) return own;
   }
-  return translationOf(options, target);
+  return translationOf(options, target, from: from);
 }
 
 /// Whether the video has a subtitle of its own (not translated) in [target].

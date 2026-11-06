@@ -11,7 +11,7 @@ import 'explore_filters.dart';
 import 'feed_quality.dart';
 import 'explore_topics.dart';
 import 'models.dart';
-import 'player_settings.dart' show SubtitleLanguage, interfaceTranslationLanguage;
+import 'player_settings.dart' show interfaceTranslationLanguage;
 import 'progress_line.dart';
 import 'translation.dart';
 import 'translation_services.dart';
@@ -242,11 +242,11 @@ class AppPreferences {
   /// The user chose single-file downloads and not to be asked to install ffmpeg.
   final bool skipFfmpegPrompt;
   /// The language 翻译 turns text into (a TranslationLanguage code); empty
-  /// follows Windows' language.
+  /// follows the interface's language.
   final String translateLanguage;
 
-  /// [translateLanguage], with Windows' language for empty.
-  String get translateTarget => translateLanguage.isEmpty ? SubtitleLanguage.auto.translation.code : translateLanguage;
+  /// [translateLanguage], with the interface's language for empty.
+  String get translateTarget => translateLanguage.isEmpty ? interfaceTranslationLanguage.code : translateLanguage;
 
   /// Which service 翻译 uses, and its settings; the keys are kept apart.
   final TranslationConfig translation;

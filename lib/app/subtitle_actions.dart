@@ -342,7 +342,9 @@ extension SubtitleActions on AppController {
       option = originalSubtitle(details.subtitles, language: details.language);
       if (option == null || sameLanguage(option.language, mainLanguage)) return;
     } else {
-      option = target == null ? null : subtitleIn(details.subtitles, target);
+      // A translation is of the first subtitle, so the two line up.
+      final main = details.subtitles.where((o) => o.label == mainTitle).firstOrNull;
+      option = target == null ? null : subtitleIn(details.subtitles, target, from: main);
       if (option == null || speaks(mainLanguage, target!)) {
         if (wanted.isNotEmpty) logWarn('No second subtitle in $wanted beside $mainLanguage');
         return;

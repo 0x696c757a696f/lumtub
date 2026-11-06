@@ -8,8 +8,8 @@ import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleKind, SubtitleOption;
 import '../subtitle_translation.dart';
 import '../speech_subtitles.dart' show SpeechNeedsFfmpeg;
-import '../player_settings.dart' show SubtitleLanguage;
-import '../translation.dart' show TranslationException, TranslationLanguage;
+import '../player_settings.dart' show SubtitleLanguage, interfaceTranslationLanguage;
+import '../translation.dart' show TranslationException;
 import 'pages/translation_settings_page.dart' show openTranslationSettings;
 import 'player_panel.dart';
 import 'common.dart' show ErrorBanner;
@@ -112,10 +112,9 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
     // then the interface's and Windows', each once.
     final spoken = originalSubtitle(offered, language: controller.details?.language);
     final chosen = controller.settings.subtitleLanguage;
-    final interface = TranslationLanguage.maybeByCode(youtubeHl);
     final near = languageRows(offered, spoken, [
-      if (interface != null) (tr('Interface language'), interface),
-      (tr('System language'), SubtitleLanguage.auto.translation),
+      (tr('Interface language'), interfaceTranslationLanguage),
+      (tr('System language'), SubtitleLanguage.systemTranslation),
       if (chosen != SubtitleLanguage.auto) (tr('Subtitle language'), chosen.translation),
     ]);
     final nearOptions = [for (final r in near) r.option];

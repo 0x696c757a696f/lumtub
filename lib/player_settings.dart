@@ -64,58 +64,92 @@ enum SubtitleMode {
   String get label => tr(_label);
 }
 
-enum SubtitleLanguage {
-  /// Windows' language when one below is, else English. Not the
-  /// interface's.
-  auto('Follow Windows language', '', ''),
-  zh('Prefer Simplified Chinese', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng'),
-  zhHant('Prefer Traditional Chinese', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng'),
-  en('English first', 'en.*', 'en,eng,en-US,en-GB'),
-  ja('Prefer Japanese', '(ja|en).*', 'ja,jpn,en,eng'),
-  ko('Korean first', '(ko|en).*', 'ko,kor,en,eng'),
-  fr('Prefer French', '(fr|en).*', 'fr,fre,fra,en,eng'),
-  de('Prefer German', '(de|en).*', 'de,ger,deu,en,eng'),
-  es('Spanish first', '(es|en).*', 'es,spa,en,eng'),
-  pt('Portuguese first', '(pt|en).*', 'pt,pt-BR,por,en,eng'),
-  ru('Prefer Russian', '(ru|en).*', 'ru,rus,en,eng'),
-  it('Prefer Italian', '(it|en).*', 'it,ita,en,eng'),
-  vi('Vietnamese first', '(vi|en).*', 'vi,vie,en,eng'),
-  th('Prefer Thai', '(th|en).*', 'th,tha,en,eng'),
-  id('Prefer Indonesian', '(id|en).*', 'id,ind,en,eng'),
-  ar('Arabic first', '(ar|en).*', 'ar,ara,en,eng'),
-  hi('Prefer Hindi', '(hi|en).*', 'hi,hin,en,eng');
+/// The language the first subtitle is looked for in: one of
+/// [TranslationLanguage.all], or [auto] for the interface's.
+class SubtitleLanguage {
+  const SubtitleLanguage._(this.name, this._code, [this._ytDlpLangs, this._mpvLangs]);
 
-  const SubtitleLanguage(this._label, this._ytDlpLangs, this._mpvLangs);
-  final String _label;
-  String get label => tr(_label);
+  /// What settings save.
+  final String name;
+  final String _code;
+  final String? _ytDlpLangs;
+  final String? _mpvLangs;
+
+  /// The interface's language.
+  static const auto = SubtitleLanguage._('auto', '');
+  static const zh = SubtitleLanguage._('zh', 'zh-CN', '(zh|en).*', 'zh-Hans,zh-CN,zh-SG,zh,zh-Hant,zh-TW,zh-HK,chi,zho,en,eng');
+  static const zhHant = SubtitleLanguage._('zhHant', 'zh-TW', '(zh|en).*', 'zh-Hant,zh-TW,zh-HK,zh,zh-Hans,zh-CN,chi,zho,en,eng');
+  static const en = SubtitleLanguage._('en', 'en', 'en.*', 'en,eng,en-US,en-GB');
+  static const ja = SubtitleLanguage._('ja', 'ja', '(ja|en).*', 'ja,jpn,en,eng');
+  static const ko = SubtitleLanguage._('ko', 'ko', '(ko|en).*', 'ko,kor,en,eng');
+  static const fr = SubtitleLanguage._('fr', 'fr', '(fr|en).*', 'fr,fre,fra,en,eng');
+  static const de = SubtitleLanguage._('de', 'de', '(de|en).*', 'de,ger,deu,en,eng');
+  static const es = SubtitleLanguage._('es', 'es', '(es|en).*', 'es,spa,en,eng');
+  static const pt = SubtitleLanguage._('pt', 'pt', '(pt|en).*', 'pt,pt-BR,por,en,eng');
+  static const ru = SubtitleLanguage._('ru', 'ru', '(ru|en).*', 'ru,rus,en,eng');
+  static const it = SubtitleLanguage._('it', 'it', '(it|en).*', 'it,ita,en,eng');
+  static const vi = SubtitleLanguage._('vi', 'vi', '(vi|en).*', 'vi,vie,en,eng');
+  static const th = SubtitleLanguage._('th', 'th', '(th|en).*', 'th,tha,en,eng');
+  static const id = SubtitleLanguage._('id', 'id', '(id|en).*', 'id,ind,en,eng');
+  static const ar = SubtitleLanguage._('ar', 'ar', '(ar|en).*', 'ar,ara,en,eng');
+  static const hi = SubtitleLanguage._('hi', 'hi', '(hi|en).*', 'hi,hin,en,eng');
+
+  static const _named = [auto, zh, zhHant, en, ja, ko, fr, de, es, pt, ru, it, vi, th, id, ar, hi];
+
+  /// Every choice: [auto], then each translation language.
+  static final List<SubtitleLanguage> values = [
+    ..._named,
+    for (final l in TranslationLanguage.all)
+      if (!_named.any((n) => n._code == l.code)) SubtitleLanguage._(l.code, l.code),
+  ];
+
+  /// The choice saved as [name]; null for an unknown one.
+  static SubtitleLanguage? byName(Object? name) => values.where((l) => l.name == name).firstOrNull;
+
+  String get label => this == auto ? tr('Interface language ({0})', [resolved.label]) : translation.label;
+
   /// yt-dlp's `--sub-langs` value; a regex without commas so it fits in
   /// mpv's `ytdl-raw-options` list.
-  final String _ytDlpLangs;
-  String get ytDlpLangs => tr(resolved._ytDlpLangs);
+  String get ytDlpLangs {
+    final l = resolved;
+    return l._ytDlpLangs ?? '(${[...l.translation.tags, 'en'].join('|')}).*';
+  }
+
   /// mpv's `slang`, in order of preference.
-  final String _mpvLangs;
-  String get mpvLangs => tr(resolved._mpvLangs);
+  String get mpvLangs {
+    final l = resolved;
+    return l._mpvLangs ?? [...l.translation.tags, 'en', 'eng'].join(',');
+  }
 
   /// Windows' language; tests replace it.
   static Locale Function() systemLocale = () => PlatformDispatcher.instance.locale;
 
-  /// The language subtitles are translated into when a video has none in
-  /// this one.
-  TranslationLanguage get translation => switch (resolved) {
-        zh => TranslationLanguage.byCode('zh-CN'),
-        zhHant => TranslationLanguage.byCode('zh-TW'),
-        final l => TranslationLanguage.maybeByCode(l.name) ?? TranslationLanguage.byCode('en'),
+  /// Windows' language as a translation language, English when there is
+  /// none for it.
+  static TranslationLanguage get systemTranslation => switch (systemLocale()) {
+        Locale(languageCode: 'zh', scriptCode: 'Hant') || Locale(languageCode: 'zh', countryCode: 'TW' || 'HK' || 'MO') => TranslationLanguage.byCode('zh-TW'),
+        Locale(:final languageCode) => TranslationLanguage.ofTag(languageCode) ?? TranslationLanguage.byCode('en'),
       };
 
+  /// The language subtitles are translated into when a video has none in
+  /// this one.
+  TranslationLanguage get translation => this == auto ? interfaceTranslationLanguage : TranslationLanguage.byCode(_code);
+
   /// [auto] as the language it stands for.
-  SubtitleLanguage get resolved => this != auto
-      ? this
-      : switch (systemLocale()) {
-          Locale(languageCode: 'zh', scriptCode: 'Hant') => zhHant,
-          Locale(languageCode: 'zh', countryCode: 'TW' || 'HK' || 'MO') => zhHant,
-          Locale(languageCode: 'zh') => zh,
-          Locale(:final languageCode) => values.where((l) => l.index > zhHant.index && l.name == languageCode).firstOrNull ?? en,
-        };
+  SubtitleLanguage get resolved {
+    if (this != auto) return this;
+    final code = interfaceTranslationLanguage.code;
+    return values.where((l) => l != auto && l._code == code).firstOrNull ?? en;
+  }
+
+  @override
+  bool operator ==(Object other) => other is SubtitleLanguage && other.name == name;
+
+  @override
+  int get hashCode => name.hashCode;
+
+  @override
+  String toString() => name;
 }
 
 /// mpv's `--video-sync` modes, as PiliNara lists them.
@@ -807,7 +841,7 @@ class PlayerSettings {
       // Saved under a new key since 跟随界面语言 came; 简体中文优先, the
       // default before it, saved under the old one now follows too.
       subtitleLanguage: raw.containsKey('subtitleLanguageV2') || raw['subtitleLanguage'] != 'zh'
-          ? _enumByName(SubtitleLanguage.values, raw['subtitleLanguageV2'] ?? raw['subtitleLanguage'], SubtitleLanguage.auto)
+          ? SubtitleLanguage.byName(raw['subtitleLanguageV2'] ?? raw['subtitleLanguage']) ?? SubtitleLanguage.auto
           : SubtitleLanguage.auto,
       subtitleOriginal: raw['subtitleOriginal'] == true,
       // Saved under a new key since the interface's language became the
@@ -905,6 +939,5 @@ class PlayerSettingsStore {
   }
 }
 
-/// The interface's language as a translation target, Windows' when it has
-/// none.
-TranslationLanguage get interfaceTranslationLanguage => TranslationLanguage.maybeByCode(youtubeHl) ?? SubtitleLanguage.auto.translation;
+/// The interface's language as a translation target.
+TranslationLanguage get interfaceTranslationLanguage => TranslationLanguage.ofTag(currentLanguage.tag) ?? TranslationLanguage.byCode('en');

@@ -61,16 +61,26 @@ class _ExplorePageState extends State<ExplorePage> {
       ExploreMode.liveUpcoming => tr('{0} · Upcoming streams', [name]),
       ExploreMode.liveReplay => tr('{0} · Recent stream replays', [name]),
     };
-    Widget strip({bool vertical = false}) => TopicStrip(
-          key: ValueKey((section, vertical)),
-          vertical: vertical,
-          topics: controller.exploreTopicsFor(section),
-          selected: controller.exploreTopic,
-          onSelected: (i) => controller.setExplore(topic: i),
-          onAdd: () => _addTopic(context, section),
-          onManage: () => _manageTopics(context, section),
-          onRemove: (topic) => _removeTopic(context, section, topic),
-        );
+    // 宗教与信仰 keeps the zones in place, with 宗教信仰 chosen among them;
+    // its own traditions are a row above the videos.
+    final half = controller.exploreHalf;
+    Widget strip({bool vertical = false}) {
+      final topics = controller.exploreTopicsFor(half);
+      return TopicStrip(
+        key: ValueKey((half, vertical)),
+        vertical: vertical,
+        topics: topics,
+        selected: section.isFaith ? topics.indexWhere((t) => t.opens != null) : controller.exploreTopic,
+        onSelected: (i) {
+          if (section.isFaith && topics[i].opens != null) return;
+          controller.setExplore(section: half, topic: i);
+        },
+        onAdd: () => _addTopic(context, half),
+        onManage: () => _manageTopics(context, half),
+        onRemove: (topic) => _removeTopic(context, half, topic),
+      );
+    }
+
     // A wide window lists the zones down the left, as Bilibili's 分区 does,
     // leaving the full width below the filters to the videos.
     return LayoutBuilder(builder: (context, constraints) {
@@ -121,19 +131,35 @@ class _ExplorePageState extends State<ExplorePage> {
         if (section.isFaith)
           SliverToBoxAdapter(child: Padding(
             padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 0, AppStyle.pagePadding, 4),
-            child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-              TextButton.icon(
-                onPressed: controller.leaveFaith,
-                icon: const Icon(AppIcons.arrowLeft, size: 18),
-                label: Text(tr('All categories')),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: SegmentedButton<ExploreSection>(
+                  showSelectedIcon: false,
+                  segments: [for (final s in ExploreSection.faithTabs) ButtonSegment(value: s, label: Text(s.label))],
+                  selected: {section},
+                  onSelectionChanged: (value) => controller.setExplore(section: value.first),
+                ),
               ),
-              Text(tr('Religion & faith'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-              const SizedBox(width: 8),
-              SegmentedButton<ExploreSection>(
-                showSelectedIcon: false,
-                segments: [for (final s in ExploreSection.faithTabs) ButtonSegment(value: s, label: Text(s.label))],
-                selected: {section},
-                onSelectionChanged: (value) => controller.setExplore(section: value.first),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                  for (final (i, faith) in controller.exploreTopicsFor(section).indexed)
+                    GestureDetector(
+                      onLongPress: faith.custom ? () => _removeTopic(context, section, faith) : null,
+                      onSecondaryTap: faith.custom ? () => _removeTopic(context, section, faith) : null,
+                      child: ChoiceChip(
+                        avatar: Icon(faith.icon, size: 18),
+                        label: Text(faith.label),
+                        showCheckmark: false,
+                        selected: i == controller.exploreTopic,
+                        onSelected: (_) => controller.setExplore(topic: i),
+                      ),
+                    ),
+                  IconButton(tooltip: tr('Add'), icon: const Icon(AppIcons.plus, size: 18), onPressed: () => _addTopic(context, section)),
+                  IconButton(tooltip: tr('Manage'), icon: const Icon(AppIcons.slidersHorizontal, size: 18), onPressed: () => _manageTopics(context, section)),
+                ]),
               ),
             ]),
           )),

@@ -145,18 +145,8 @@ extension ExploreActions on AppController {
     _loadExplore();
   }
 
-  /// Leaves 宗教与信仰 for the video zones, on the zone shown before.
   /// 视频 or 直播, whichever 宗教信仰 was opened from while its tabs show.
   ExploreSection get exploreHalf => exploreSection.isFaith ? _topicBeforeFaith.$1 : exploreSection;
-
-  void leaveFaith() {
-    final (section, topic) = _topicBeforeFaith;
-    final topics = exploreTopicsFor(section);
-    final index = topic.clamp(0, topics.length - 1);
-    // Not back into 宗教信仰 itself, say when it is pinned first.
-    final back = topics[index].opens == null ? index : topics.indexWhere((t) => t.opens == null);
-    if (back >= 0) setExplore(section: section, topic: back);
-  }
 
   /// Shows another part, zone, sub-category, mode, period or filter of the
   /// explore page. A new part starts on its first zone, and on its usual

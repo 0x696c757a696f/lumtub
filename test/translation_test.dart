@@ -89,6 +89,24 @@ void main() {
     expect(translationOf(const [], target), isNull);
   });
 
+  test('a second subtitle translates the first one shown, so their lines match', () {
+    const zh = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=zh-Hans');
+    const en = SubtitleOption(language: 'en', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=en');
+    final latin = TranslationLanguage.byCode('la');
+    expect(Uri.parse(subtitleIn([zh, en], latin)!.url).queryParameters['lang'], 'zh-Hans');
+    final second = subtitleIn([zh, en], latin, from: en)!;
+    expect(Uri.parse(second.url).queryParameters, {'v': '1', 'lang': 'en', 'tlang': 'la'});
+    // A first subtitle that is itself a translation is not translated again.
+    final shown = translatedOption(zh, TranslationLanguage.byCode('en'));
+    expect(Uri.parse(subtitleIn([zh, en], latin, from: shown)!.url).queryParameters['lang'], 'zh-Hans');
+    // Every interface language can be a target, under each tag it goes by.
+    expect(speaks('he', TranslationLanguage.byCode('iw')), isTrue);
+    expect(speaks('fil', TranslationLanguage.byCode('tl')), isTrue);
+    expect(speaks('nb', TranslationLanguage.byCode('no')), isTrue);
+    expect(TranslationLanguage.ofTag('zh-HK')?.code, 'zh-TW');
+    expect(TranslationLanguage.ofTag('jv')?.youtube, 'jv');
+  });
+
   test('tells languages apart by script and finds the second subtitle', () {
     final simplified = TranslationLanguage.byCode('zh-CN');
     final traditional = TranslationLanguage.byCode('zh-TW');

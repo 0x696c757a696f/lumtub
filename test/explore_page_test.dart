@@ -30,7 +30,7 @@ Future<AppController> _open(WidgetTester tester, {double width = 950}) async {
 }
 
 /// Scrolls the zone strip with its arrow until [label] is in view.
-Future<void> _reveal(WidgetTester tester, String label) async {
+Future<void> _reveal(WidgetTester tester, String label, {bool back = false}) async {
   bool inView() {
     final found = find.text(label);
     if (found.evaluate().isEmpty) return false;
@@ -41,7 +41,7 @@ Future<void> _reveal(WidgetTester tester, String label) async {
   // The arrows appear a frame after the strip is laid out.
   await tester.pump();
   for (var turn = 0; turn < 20 && !inView(); turn++) {
-    await tester.tap(find.byIcon(AppIcons.caretRight));
+    await tester.tap(find.byIcon(back ? AppIcons.caretLeft : AppIcons.caretRight));
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
@@ -412,8 +412,12 @@ void main() {
     expect(controller.exploreMode, ExploreMode.liveUpcoming);
     expect(controller.exploreQuery, 'Holy Mass live 弥撒 直播');
 
-    // Back to the video zones, on the one shown before.
-    await tester.tap(find.text('All categories'));
+    // The zones stay down the side, with Religion & faith chosen; another
+    // one leaves it.
+    expect(find.text('Religion & faith'), findsOneWidget);
+    expect(find.text('All categories'), findsNothing);
+    await _reveal(tester, 'Education', back: true);
+    await tester.tap(find.text('Education'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(controller.exploreSection, ExploreSection.popular);
     expect(controller.exploreMode, ExploreMode.popular);

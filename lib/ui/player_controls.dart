@@ -52,6 +52,7 @@ import 'theater_mode.dart';
 import 'video_box.dart';
 import 'video_aspect.dart';
 import '../l10n/l10n.dart';
+import '../video_codec.dart' show heightLabel;
 import 'motion.dart';
 import 'smooth_wheel.dart';
 import 'app_icons.dart';
@@ -754,12 +755,12 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               final choices = _controller.qualityChoices;
               return _TextMenu<int>(
                 tooltip: tr('Quality'),
-                label: height > 0 ? '${height}P' : (max == 0 ? tr('Auto') : '${max}P'),
+                label: height > 0 ? heightLabel(height, _controller.availableFrameRates[height], 'P') : (max == 0 ? tr('Auto') : heightLabel(max, _controller.availableFrameRates[max], 'P')),
                 // A limit above what this video offers plays its highest.
                 // Lowered for dropped frames, 自动 is not ticked, so
                 // picking it lifts the limit.
                 value: max == 0 && _controller.droppedCap > 0 ? -1 : (choices.contains(max) ? max : height),
-                values: [for (final h in choices) (h, h == 0 ? tr('Auto') : '${h}P')],
+                values: [for (final h in choices) (h, h == 0 ? tr('Auto') : heightLabel(h, _controller.availableFrameRates[h], 'P'))],
                 onSelected: (h) => unawaited(_controller.setMaxHeight(h)),
                 onOpened: _menuOpened,
                 onClosed: _menuClosed,
@@ -909,7 +910,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
         label: tr('Quality'),
         icon: AppIcons.sealCheck,
         value: settings.maxHeight == 0 && _controller.droppedCap > 0 ? -1 : settings.maxHeight,
-        values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h))],
+        values: [for (final h in _controller.qualityChoices) (h, qualityLabel(h, _controller.availableFrameRates[h]))],
         onSelected: _controller.setMaxHeight,
       ),
       ValueListenableBuilder(

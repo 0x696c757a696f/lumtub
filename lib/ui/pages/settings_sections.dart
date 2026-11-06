@@ -74,7 +74,7 @@ class SettingEntry {
   bool matches(String query) => title.toLowerCase().contains(query) || (subtitle?.toLowerCase().contains(query) ?? false);
 }
 
-String qualityLabel(int height) => height == 0 ? tr('Auto (up to screen resolution)') : '${height}p';
+String qualityLabel(int height, [int? fps]) => height == 0 ? tr('Auto (up to screen resolution)') : heightLabel(height, fps);
 
 List<(String, String)> get _scaleModes => [
       ('spline36', tr('Spline36 (default)')),

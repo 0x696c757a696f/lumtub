@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/stream_resolver.dart';
+import 'package:lumtub/video_codec.dart';
 
 Map<String, dynamic> _info({int? expire}) {
   final exp = expire ?? DateTime.now().add(const Duration(hours: 6)).millisecondsSinceEpoch ~/ 1000;
@@ -41,6 +43,22 @@ void main() {
     expect(relayed, contains(tracks[1]));
     expect(video.heights, [1080, 720]);
     expect(video.details.channelId, 'UCuAXFkgsw1L7xaCfnd5JJOw');
+  });
+
+  test('labels heights with more than 30 frames a second as YouTube does', () {
+    final info = _info();
+    info['formats'] = [
+      {'format_id': '299', 'vcodec': 'avc1', 'height': 1080, 'fps': 60},
+      {'format_id': '137', 'vcodec': 'avc1', 'height': 1080, 'fps': 30},
+      {'format_id': '308', 'vcodec': 'vp9', 'height': 1440, 'fps': 50},
+      {'format_id': '136', 'vcodec': 'avc1', 'height': 720, 'fps': 25},
+    ];
+    final video = ResolvedVideo(info, file, 'f');
+    expect(video.frameRatesFor(const PlayerSettings(disabledCodecs: {})), {1440: 50, 1080: 60});
+    expect(video.frameRatesFor(const PlayerSettings(disabledCodecs: {VideoCodec.vp9})), {1080: 60});
+    expect([for (final h in video.heightsFor(const PlayerSettings(disabledCodecs: {}))) heightLabel(h, video.frameRatesFor(const PlayerSettings(disabledCodecs: {}))[h])], ['1440p50', '1080p60', '720p']);
+    expect(heightLabel(1080, 29.97, 'P'), '1080P');
+    expect(heightLabel(2160, 59.94, 'P'), '2160P60');
   });
 
   test('leaves live and fragmented streams to ytdl_hook', () {

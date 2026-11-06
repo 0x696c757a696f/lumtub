@@ -71,6 +71,13 @@ class ResolvedVideo {
 
   List<int> get heights => heightsFor();
 
+  /// The most frames a second of each height [heightsFor] lists, where
+  /// above 30, for labels such as 1080p60.
+  Map<int, int> frameRatesFor(PlayerSettings settings) => {
+        for (final MapEntry(:key, :value) in ((_summary(settings)?['frameRates'] as Map?) ?? const {}).entries)
+          if (int.tryParse('$key') case final height?) height: (value as num).toInt(),
+      };
+
   /// When the tallest picture up to [cap] (0 for none) exists only in codecs
   /// [settings] disable: that height, those codecs, and the tallest height
   /// that does play.

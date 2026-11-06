@@ -40,3 +40,6 @@ enum VideoCodec {
   /// yt-dlp filters dropping this codec, one per name prefix.
   String get excludeFilter => [for (final p in prefixes) '[vcodec!^=$p]'].join();
 }
+
+/// 1080p, or 1080p60 for more than 30 frames a second, as YouTube writes it.
+String heightLabel(int height, [num? fps, String p = 'p']) => fps != null && fps > 30.5 ? '$height$p${fps.round()}' : '$height$p';

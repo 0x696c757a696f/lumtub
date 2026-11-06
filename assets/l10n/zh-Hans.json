@@ -2900,5 +2900,6 @@
   "{0} in all, {1} reachable": "共 {0} 个，{1} 个可连接",
   " · list updated {0}/{1} at {2}": " · 列表更新于 {0}月{1}日 {2}",
   "Back to live": "回到直播",
-  "Jump to the newest moment (End)": "跳到直播最新进度 (End)"
+  "Jump to the newest moment (End)": "跳到直播最新进度 (End)",
+  "Codecs left out are decoded on the CPU. To never play a codec, disable it below.": "没勾选的编码改用 CPU 解码。想完全不播某种编码，请在下面禁用它。"
 }

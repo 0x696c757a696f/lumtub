@@ -36,10 +36,14 @@ class FormatPolicy {
     return settings.hwdec == 'no' || ((settings.decoderResults[key]?.isVerified ?? false) && !hardware(settings, codec));
   }
 
-  /// Whether this PC decodes [codec] in hardware, as measured.
+  /// Whether this PC decodes [codec] in hardware, as measured, and
+  /// hardware decoding is still on for it (Hardware-decoded codecs).
   static bool hardware(PlayerSettings settings, VideoCodec codec) {
     final key = decoderKey(codec);
-    return settings.hwdec != 'no' && key != null && (settings.decoderResults[key]?.isHardware ?? false);
+    return settings.hwdec != 'no' &&
+        key != null &&
+        settings.hwdecCodecs.split(',').map((c) => c.trim()).contains(key) &&
+        (settings.decoderResults[key]?.isHardware ?? false);
   }
 
   /// Whether [codec] may play. Null (audio, unknown names) is not filtered.

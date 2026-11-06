@@ -299,10 +299,12 @@ class PlayerSettings {
   Set<VideoCodec> get disabledCodecs => chosenCodecs ?? automaticCodecs;
 
   /// The codecs disabled for the user: VP9 and AV1 unless this PC decodes
-  /// them in hardware, so playback stays light. Above 1080p, which H.264
-  /// cannot reach, VP9 stays enabled even in software.
+  /// them in hardware (measured, and still listed in [hwdecCodecs]), so
+  /// playback stays light. Above 1080p, which H.264 cannot reach, VP9 stays
+  /// enabled even in software.
   Set<VideoCodec> get automaticCodecs {
-    bool hardware(String key) => hwdec != 'no' && (decoderResults[key]?.isHardware ?? false);
+    final listed = hwdecCodecs.split(',').map((c) => c.trim()).toSet();
+    bool hardware(String key) => hwdec != 'no' && listed.contains(key) && (decoderResults[key]?.isHardware ?? false);
     final off = {if (!hardware('av1')) VideoCodec.av1, if (!hardware('vp9')) VideoCodec.vp9};
     if (maxHeight > 1080 && off.length == 2) off.remove(VideoCodec.vp9);
     return off;

@@ -438,7 +438,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: 'hwdec D3D11VA D3D12VA DXVA2 NVDEC Vulkan AMF QSV'),
         SettingEntry(tr('Hardware-decoded codecs'), (context) => NormalItem(
               title: tr('Hardware-decoded codecs'),
-              subtitle: tr("Current: {0} (this is mpv's --hwdec-codecs)", [settings.hwdecCodecs]),
+              subtitle: '${tr("Current: {0} (this is mpv's --hwdec-codecs)", [settings.hwdecCodecs])}\n${tr('Codecs left out are decoded on the CPU. To never play a codec, disable it below.')}',
               leading: _icon(AppIcons.fileVideo),
               enabled: hardware,
               onTap: () async {

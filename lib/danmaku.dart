@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:math' as math;
 
 import 'package:media_kit/media_kit.dart';
 
@@ -8,6 +9,7 @@ import 'app_log.dart';
 import 'live_chat.dart';
 import 'native_core.dart';
 import 'player_settings.dart';
+import 'ui/danmaku_picture.dart';
 
 /// How 弹幕 look: kept with the preferences.
 class DanmakuSettings {
@@ -100,6 +102,8 @@ class LiveDanmakuTiming {
 /// Draws the chat over the picture through mpv's `osd-overlay`, laid out
 /// by lumtub_core. A replay's messages fly at their place in the video; a
 /// live stream's as they arrive, on a clock that stops while paused.
+/// Messages with emoji, which libass cannot draw, are drawn by Flutter as
+/// pictures and shown with mpv's `overlay-add`.
 class DanmakuOverlay {
   DanmakuOverlay(this.player);
 
@@ -107,6 +111,26 @@ class DanmakuOverlay {
   /// mpv's overlay ids are per client; this one is only the 弹幕's.
   static const _overlay = '47';
   static const _frame = Duration(milliseconds: 33);
+  /// mpv takes `overlay-add` ids 0 to 63.
+  static const _pictureSlots = 64;
+  /// Live messages with emoji kept to draw: more than can be on screen.
+  static const _keptLive = 500;
+
+  DanmakuPainter? _painter;
+  int _nextPicture = 0;
+  int _generation = 0;
+  final _pictureParts = <int, (List<DanmakuPart>, bool)>{};
+  /// The latest drawing of each picture.
+  final _bitmaps = <int, DanmakuBitmap>{};
+  final _drawing = <int>{};
+  /// The overlay each picture on screen has, and what mpv reads there.
+  final _slots = <int, int>{};
+  final _onScreen = <int, DanmakuBitmap>{};
+  final _freeSlots = [for (var i = _pictureSlots - 1; i >= 0; i--) i];
+  String _shownEvents = '';
+  double _osdWidth = 1920;
+  double _osdHeight = 1080;
+  int _ticks = 0;
 
   Pointer<Void>? _layout;
   NativeCore? _core;
@@ -131,6 +155,9 @@ class DanmakuOverlay {
     _settings = settings;
     _live = live;
     _layout = core.withText(settings.layoutJson, core.danmakuNew);
+    _painter = DanmakuPainter(font: PlayerSettings.fontForThisSystem(PlayerSettings.defaultSubtitleFont), size: settings.size, opacity: settings.opacity);
+    _generation++;
+    unawaited(_readOsdSize());
     _liveClock
       ..reset()
       ..start();
@@ -156,7 +183,16 @@ class DanmakuOverlay {
       if (text.trim().isEmpty) continue;
       final start = _live ? now : message.offset?.inMilliseconds.toDouble();
       if (start == null) continue;
-      batch.add({'start_ms': start, 'text': text, 'paid': paid});
+      final entry = <String, Object>{'start_ms': start, 'text': text, 'paid': paid};
+      final parts = danmakuParts(text, message.emojis);
+      final painter = _painter;
+      if (parts != null && painter != null) {
+        final id = _nextPicture++;
+        _pictureParts[id] = (parts, paid);
+        entry['picture'] = id;
+        entry['width'] = painter.measure(parts, _osdWidth, _osdHeight);
+      }
+      batch.add(entry);
       sent.add(message.timestampUsec);
     }
     if (batch.isEmpty) return;
@@ -187,28 +223,140 @@ class DanmakuOverlay {
       if (!playing && _liveClock.isRunning) _liveClock.stop();
     }
     final now = _live ? _liveClock.elapsedMilliseconds.toDouble() : player.state.position.inMilliseconds.toDouble();
-    final events = core.take(core.danmakuFrame(layout, now, _live)) ?? '';
-    if (events == _shown) return;
-    _shown = events;
-    unawaited(_show(events));
+    if (++_ticks % 30 == 0) unawaited(_readOsdSize());
+    final frame = core.take(core.danmakuFrame(layout, now, _live)) ?? '';
+    if (frame == _shown) return;
+    _shown = frame;
+    final events = StringBuffer();
+    final pictures = <(int, double, double)>[];
+    for (final line in frame.split('\n')) {
+      if (line.isEmpty) continue;
+      if (line.startsWith('!')) {
+        final fields = line.substring(1).split(' ');
+        final id = int.tryParse(fields[0]);
+        final x = double.tryParse(fields.elementAtOrNull(1) ?? '');
+        final y = double.tryParse(fields.elementAtOrNull(2) ?? '');
+        if (id != null && x != null && y != null) pictures.add((id, x, y));
+      } else {
+        events.writeln(line);
+      }
+    }
+    unawaited(_show('$events', pictures));
   }
 
-  Future<void> _show(String events) async {
+  Future<void> _readOsdSize() async {
+    final platform = player.platform;
+    if (platform is! NativePlayer) return;
+    try {
+      final width = double.tryParse(await platform.getProperty('osd-width')) ?? 0;
+      final height = double.tryParse(await platform.getProperty('osd-height')) ?? 0;
+      if (width > 0 && height > 0) {
+        _osdWidth = width;
+        _osdHeight = height;
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _show(String events, List<(int, double, double)> pictures) async {
     final platform = player.platform;
     if (platform is! NativePlayer) return;
     _sending = true;
     try {
-      if (events.isEmpty) {
-        await platform.command(['osd-overlay', _overlay, 'none', '']);
-      } else {
-        await platform.command(['osd-overlay', _overlay, 'ass-events', events, '1920', '1080', '0', 'no', 'no']);
+      final sent = <Future<void>>[];
+      if (events != _shownEvents) {
+        _shownEvents = events;
+        if (events.isEmpty) {
+          sent.add(platform.command(['osd-overlay', _overlay, 'none', '']));
+        } else {
+          sent.add(platform.command(['osd-overlay', _overlay, 'ass-events', events, '1920', '1080', '0', 'no', 'no']));
+        }
       }
+      sent.addAll(_placePictures(platform, pictures));
+      await Future.wait(sent);
     } catch (e) {
       logWarn('Could not draw the danmaku: $e');
       stop();
     } finally {
       _sending = false;
     }
+  }
+
+  /// Moves each picture on screen to where the layout puts it, cut at the
+  /// edges of the OSD, and takes the ones gone off it.
+  List<Future<void>> _placePictures(NativePlayer platform, List<(int, double, double)> pictures) {
+    final sent = <Future<void>>[];
+    final placed = <int>{};
+    final osdWidth = _osdWidth.floor();
+    for (final (id, x, y) in pictures) {
+      final bitmap = _bitmaps[id];
+      if (bitmap == null || (bitmap.scale - _osdHeight).abs() > 2) _draw(id);
+      if (bitmap == null) continue;
+      final left = (x * _osdWidth / 1920 - bitmap.left).round();
+      final top = (y * _osdHeight / 1080).round();
+      final cut = math.max(0, -left);
+      final width = math.min(bitmap.width - cut, osdWidth - math.max(0, left));
+      if (width <= 0 || top < 0) continue;
+      final slot = _slots[id] ?? (_freeSlots.isEmpty ? null : _freeSlots.removeLast());
+      if (slot == null) continue;
+      _slots[id] = slot;
+      placed.add(id);
+      final before = _onScreen[slot];
+      _onScreen[slot] = bitmap;
+      sent.add(platform.command([
+        'overlay-add', '$slot', '${math.max(0, left)}', '$top', '&${bitmap.pixels.address + cut * 4}', '0', 'bgra', '$width', '${bitmap.height}', '${bitmap.stride}',
+      ]).then((_) {
+        if (before != null && before != bitmap) _release(before);
+      }));
+    }
+    for (final id in _slots.keys.where((id) => !placed.contains(id)).toList()) {
+      final slot = _slots.remove(id)!;
+      sent.add(platform.command(['overlay-remove', '$slot']).then((_) {
+        final shown = _onScreen.remove(slot);
+        _freeSlots.add(slot);
+        if (shown != null) _release(shown);
+      }));
+    }
+    final visible = {for (final (id, _, _) in pictures) id};
+    for (final id in _bitmaps.keys.where((id) => !visible.contains(id)).toList()) {
+      _release(_bitmaps.remove(id)!);
+    }
+    // A live message is gone for good once it has left the picture; a
+    // replay may come back to one.
+    if (_live && _pictureParts.length > _keptLive) {
+      final old = _pictureParts.keys.where((id) => !visible.contains(id)).take(_pictureParts.length - _keptLive).toList();
+      old.forEach(_pictureParts.remove);
+    }
+    return sent;
+  }
+
+  void _draw(int id) {
+    final painter = _painter;
+    final parts = _pictureParts[id];
+    if (painter == null || parts == null || !_drawing.add(id)) return;
+    final generation = _generation;
+    painter.draw(parts.$1, osdHeight: _osdHeight, paid: parts.$2).then((bitmap) {
+      _drawing.remove(id);
+      if (bitmap == null) return;
+      if (generation != _generation) {
+        bitmap.free();
+        return;
+      }
+      final before = _bitmaps[id];
+      _bitmaps[id] = bitmap;
+      if (before != null) _release(before);
+      // Shown at the next frame even while paused.
+      _shown = '';
+    }, onError: (Object e) {
+      _drawing.remove(id);
+      logWarn('Could not draw a danmaku picture: $e');
+    });
+  }
+
+  /// Frees [bitmap] once nothing shows it, a moment later so a frame mpv
+  /// is drawing just then still reads it.
+  void _release(DanmakuBitmap bitmap) {
+    if (_bitmaps.containsValue(bitmap) || _onScreen.containsValue(bitmap)) return;
+    Timer(const Duration(milliseconds: 500), bitmap.free);
   }
 
   void stop() {
@@ -220,9 +368,12 @@ class DanmakuOverlay {
     _added.clear();
     _timing = LiveDanmakuTiming();
     _liveClock.stop();
-    if (_shown.isNotEmpty) {
+    _generation++;
+    _painter = null;
+    _pictureParts.clear();
+    if (_shown.isNotEmpty || _slots.isNotEmpty) {
       _shown = '';
-      unawaited(_show(''));
+      unawaited(_show('', const []));
     }
   }
 }

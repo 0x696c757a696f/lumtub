@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "നേതാവിനെ ദൈവവൽക്കരിക്കുന്നതും അത്ഭുത പ്രചാരണവും നടത്തുന്ന ചാനലുകൾ",
   "Minimize to tray": "ട്രേയിലേക്ക് മിനിമൈസ് ചെയ്യുക",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "മിനിമൈസ് ചെയ്യുമ്പോൾ വിൻഡോ ട്രേ ഐക്കണിലേക്ക് മറയുകയും ടാസ്‌ക്ബാറിൽ നിന്ന് ഒഴിവാകുകയും ചെയ്യും; തിരികെ കൊണ്ടുവരാൻ ഐക്കണിൽ ക്ലിക്ക് ചെയ്യുക",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "വിൻഡോ മിനിമൈസ് ചെയ്തെന്ന് Wayland ആപ്പുകളെ അറിയിക്കുന്നില്ല; ഇതിനായി X11 അനുയോജ്യത മോഡ് ഓണാക്കുക",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

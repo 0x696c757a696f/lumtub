@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "ឆានែលគោរពបូជាមេដឹកនាំ និងផ្សព្វផ្សាយអព្ភូតហេតុ",
   "Minimize to tray": "បង្រួមអប្បបរមាទៅថាស",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "ការបង្រួមអប្បបរមានឹងលាក់បង្អួចទៅរូបតំណាងក្នុងថាស ហើយដកវាចេញពីរបារកិច្ចការ ចុចរូបតំណាងដើម្បីយកវាត្រឡប់មកវិញ",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland មិនប្រាប់កម្មវិធីថាបង្អួចរបស់ពួកវាត្រូវបានបង្រួមអប្បបរមាទេ សូមបើក \"ម៉ូដត្រូវគ្នា X11\" សម្រាប់ការនេះ",
   ", ": ", ",
   ".": "។",
   "{0}. {1}": "{0}។ {1}",

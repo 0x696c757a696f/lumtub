@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 
 import 'app/app_controller.dart';
+import 'app_window.dart';
+import 'kwin_keep_above.dart';
 import 'l10n/l10n.dart';
 
 /// The runner's side of Windows' media overlay (System Media Transport
@@ -143,6 +145,7 @@ class WindowsShellSync {
     if (tray != _tray) {
       _tray = tray;
       unawaited(shell.setTray(enabled: tray.$1, minimize: tray.$2));
+      if (AppWindow.onWayland) unawaited(KWinMinimizeWatch.set(tray.$2));
     }
     final video = controller.playing;
     if (video?.id != _videoId) {

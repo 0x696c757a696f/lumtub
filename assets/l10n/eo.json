@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Kanaloj pri adoro de gvidantoj kaj promocio de mirakloj",
   "Minimize to tray": "Minimumigi al pleto",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Minimumigo kaŝas la fenestron en la pletan bildsimbolon kaj forigas ĝin de la taskobreto; alklaku la bildsimbolon por reigi ĝin",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland ne diras al aplikaĵoj ke ilia fenestro estis minimumigita; ŝaltu kongruan reĝimon X11 por tio",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

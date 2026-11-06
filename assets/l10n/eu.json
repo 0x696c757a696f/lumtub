@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Liderren gurtza eta mirarien sustapeneko kanalak",
   "Minimize to tray": "Minimizatu erretilura",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Minimizatzean leihoa erretiluko ikonoan ezkutatzen da eta zeregin-barratik kentzen da; egin klik ikonoan berreskuratzeko",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland-ek ez die aplikazioei esaten leihoa minimizatu dela; horretarako, aktibatu X11 bateragarritasun modua",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

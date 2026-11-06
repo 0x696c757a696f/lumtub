@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "ನಾಯಕ ಆರಾಧನೆ ಮತ್ತು ಪವಾಡ ಪ್ರಚಾರ ಚಾನಲ್‌ಗಳು",
   "Minimize to tray": "ಟ್ರೇಗೆ ಮಿನಿಮೈಜ್ ಮಾಡಿ",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "ಮಿನಿಮೈಜ್ ಮಾಡಿದಾಗ ವಿಂಡೋ ಟ್ರೇ ಐಕಾನ್‌ಗೆ ಮರೆಯಾಗುತ್ತದೆ ಮತ್ತು ಟಾಸ್ಕ್‌ಬಾರ್‌ನಿಂದ ತೆಗೆಯಲ್ಪಡುತ್ತದೆ; ಮರಳಿ ತರಲು ಐಕಾನ್ ಕ್ಲಿಕ್ ಮಾಡಿ",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland ಆ್ಯಪ್‌ಗಳಿಗೆ ಅವುಗಳ ವಿಂಡೋ ಮಿನಿಮೈಜ್ ಆಗಿದೆ ಎಂದು ತಿಳಿಸುವುದಿಲ್ಲ; ಇದಕ್ಕಾಗಿ \"X11 ಹೊಂದಾಣಿಕೆ ಮೋಡ್\" ಆನ್ ಮಾಡಿ",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

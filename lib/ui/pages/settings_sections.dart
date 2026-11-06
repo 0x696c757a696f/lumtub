@@ -798,9 +798,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('tray background playback')),
         SettingEntry(tr('Minimize to tray'), (context) => SwitchItem(
               title: tr('Minimize to tray'),
-              subtitle: AppWindow.onWayland
-                  ? tr('Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this')
-                  : tr('Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back'),
+              subtitle: tr('Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back'),
               leading: _icon(AppIcons.minus),
               value: prefs.minimizeToTray,
               onChanged: (v) => savePrefs(prefs.copyWith(minimizeToTray: v)),

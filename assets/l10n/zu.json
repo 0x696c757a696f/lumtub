@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Iziteshi zokukhonzwa kwabaholi nokukhuthaza izimangaliso",
   "Minimize to tray": "Nciphisela kutreyi",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Ukunciphisa kufihla ifasitela kusithonjana setreyi futhi kulikhiphe kubha yomsebenzi; chofoza isithonjana ukulibuyisa",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "I-Wayland ayitsheli ama-app ukuthi ifasitela lincishisiwe; vula imodi ehambisana ne-X11 kulokhu",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

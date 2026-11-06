@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Johtajan jumalointia ja ihmeiden mainontaa tekevät kanavat",
   "Minimize to tray": "Pienennä ilmaisinalueelle",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Pienennys piilottaa ikkunan ilmaisinalueen kuvakkeeseen ja poistaa sen tehtäväpalkista; palauta napsauttamalla kuvaketta",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland ei kerro sovelluksille, että niiden ikkuna on pienennetty; ota tätä varten käyttöön X11-yhteensopivuustila",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

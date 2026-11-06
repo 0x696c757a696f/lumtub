@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Yetakchilarni ilohiylashtirish va mo'jizalar targ'ibot kanallari",
   "Minimize to tray": "Treyga kichraytirish",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Kichraytirilganda oyna trey belgisiga yashiriladi va vazifalar panelidan olinadi; qaytarish uchun belgini bosing",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland ilovalarga oyna kichraytirilganini bildirmaydi; buning uchun X11 moslik rejimini yoqing",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

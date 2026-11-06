@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "قنوات تأليه القادة والترويج للمعجزات",
   "Minimize to tray": "التصغير إلى منطقة الإشعارات",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "يخفي التصغير النافذة في أيقونة منطقة الإشعارات ويزيلها من شريط المهام؛ انقر على الأيقونة لإعادتها",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "لا يُبلغ Wayland التطبيقات بأن نافذتها قد صُغّرت؛ فعّل وضع التوافق مع X11 لذلك",
   ", ": "، ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Kanalen die leiders vergoddelijken en wonderen promoten",
   "Minimize to tray": "Minimaliseren naar systeemvak",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Bij minimaliseren wordt het venster verborgen in het systeemvak en van de taakbalk gehaald; klik op het pictogram om het terug te halen",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland meldt apps niet dat het venster is geminimaliseerd; schakel hiervoor de X11-compatibiliteitsmodus in",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

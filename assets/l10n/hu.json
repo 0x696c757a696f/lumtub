@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Vezetőimádatot és csodákat népszerűsítő csatornák",
   "Minimize to tray": "Kis méretre állítás a tálcára",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Kis méretre állításkor az ablak a tálcaikonra rejtőzik, és eltűnik a tálcáról; kattints az ikonra a visszahozásához",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "A Wayland nem jelzi az alkalmazásoknak, hogy az ablakuk kis méretre lett állítva; ehhez kapcsold be az „X11 kompatibilitási mód” beállítást",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

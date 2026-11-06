@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Các kênh thần thánh hóa lãnh tụ và quảng bá phép màu",
   "Minimize to tray": "Thu nhỏ xuống khay",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Thu nhỏ sẽ ẩn cửa sổ xuống biểu tượng khay và gỡ khỏi thanh tác vụ; nhấp vào biểu tượng để mở lại",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland không báo cho ứng dụng biết cửa sổ đã thu nhỏ; hãy bật chế độ tương thích X11 cho việc này",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

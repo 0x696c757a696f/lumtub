@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Канали з обожненням лідерів і пропагандою чудес",
   "Minimize to tray": "Згортати в трей",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Згортання ховає вікно в значок у треї та прибирає його з панелі завдань; клацніть значок, щоб повернути",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland не повідомляє програмам, що вікно згорнуто; для цього увімкніть режим сумісності з X11",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

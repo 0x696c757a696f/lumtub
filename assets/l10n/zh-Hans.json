@@ -908,7 +908,6 @@
   "Minimize to tray on close": "关闭时最小化到托盘",
   "Minimize to tray": "最小化到托盘",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "最小化时把窗口收进托盘图标，不占任务栏；点图标即可恢复",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland 不会告诉应用窗口已最小化；要用这项请开启 X11 兼容模式",
   "The close button hides the window to the tray icon and playback continues; exit from the tray menu": "点关闭按钮时隐藏到托盘图标，继续播放；从托盘菜单退出",
   "tray background playback": "托盘 后台播放",
   "Show window": "显示窗口",

@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Chaînes de culte du chef et de promotion de miracles",
   "Minimize to tray": "Réduire dans la zone de notification",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "La réduction masque la fenêtre dans l'icône de la zone de notification et la retire de la barre des tâches ; cliquez sur l'icône pour la rétablir",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland n'informe pas les applications que leur fenêtre a été réduite ; activez pour cela le « Mode de compatibilité X11 »",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

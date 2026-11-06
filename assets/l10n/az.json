@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Liderin ilahiləşdirilməsi və möcüzə təbliği kanalları",
   "Minimize to tray": "Tepsiyə kiçilt",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Kiçiltmə pəncərəni tepsi nişanına gizlədir və tapşırıqlar panelindən çıxarır; geri qaytarmaq üçün nişana klikləyin",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland tətbiqlərə pəncərələrinin kiçildiyini bildirmir; bunun üçün X11 uyğunluq rejimini aktiv edin",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "ช่องที่ยกย่องผู้นำเป็นเทพและโฆษณาปาฏิหาริย์",
   "Minimize to tray": "ย่อไปที่ถาดระบบ",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "เมื่อย่อ หน้าต่างจะซ่อนไปที่ไอคอนในถาดระบบและหายจากแถบงาน คลิกไอคอนเพื่อเรียกกลับมา",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland ไม่แจ้งแอปว่าหน้าต่างถูกย่อ ให้เปิดโหมดเข้ากันได้กับ X11 สำหรับกรณีนี้",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

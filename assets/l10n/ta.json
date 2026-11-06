@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "தலைவர் தெய்வமாக்கல், அற்புத விளம்பரச் சேனல்கள்",
   "Minimize to tray": "தட்டுக்குச் சிறிதாக்கு",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "சிறிதாக்கினால் சாளரம் தட்டு ஐகானுக்குள் மறைந்து, பணிப்பட்டியிலிருந்து நீங்கும்; ஐகானைக் கிளிக் செய்தால் திரும்பும்",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "சாளரம் சிறிதாக்கப்பட்டதை Wayland பயன்பாடுகளுக்குத் தெரிவிக்காது; இதற்கு X11 இணக்கப் பயன்முறையை இயக்கவும்",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

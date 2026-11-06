@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "නායක නමස්කාරය සහ ආශ්චර්ය ප්‍රවර්ධන නාලිකා",
   "Minimize to tray": "තැටි පෙට්ටියට අවම කරන්න",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "අවම කළ විට කවුළුව තැටි පෙට්ටි අයිකනයට සැඟවී කාර්ය තීරුවෙන් ඉවත් වේ; නැවත ගෙන ඒමට අයිකනය click කරන්න",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "කවුළුව අවම කළ බව Wayland යෙදුම්වලට නොදන්වයි; මේ සඳහා X11 ගැළපුම් ප්‍රකාරය සක්‍රිය කරන්න",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

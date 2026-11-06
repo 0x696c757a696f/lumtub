@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "નેતાને દૈવી ગણતી અને ચમત્કારોનો પ્રચાર કરતી ચેનલ",
   "Minimize to tray": "ટ્રેમાં નાનું કરો",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "નાનું કરવાથી વિન્ડો ટ્રે આઇકનમાં છુપાઈ જાય છે અને ટાસ્કબારમાંથી દૂર થાય છે; પાછી લાવવા આઇકન પર ક્લિક કરો",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland ઍપ્સને જણાવતું નથી કે તેમની વિન્ડો નાની કરાઈ છે; આ માટે \"X11 સુસંગતતા મોડ\" ચાલુ કરો",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

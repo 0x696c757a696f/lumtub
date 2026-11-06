@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "کانال‌های تقدیس رهبر و تبلیغ معجزه",
   "Minimize to tray": "کوچک‌سازی به سینی سیستم",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "کوچک‌سازی، پنجره را در نماد سینی سیستم پنهان می‌کند و از نوار وظیفه برمی‌دارد؛ برای بازگرداندن روی نماد کلیک کنید",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland به برنامه‌ها نمی‌گوید پنجره‌شان کوچک شده است؛ برای این کار حالت سازگاری X11 را روشن کنید",
   ", ": "، ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

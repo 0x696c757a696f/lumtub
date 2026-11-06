@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Kanäle mit Führerverehrung und Wunderpropaganda",
   "Minimize to tray": "In den Infobereich minimieren",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Beim Minimieren wird das Fenster im Infobereich-Symbol ausgeblendet und verschwindet aus der Taskleiste; zum Zurückholen auf das Symbol klicken",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland teilt Apps nicht mit, dass ihr Fenster minimiert wurde; aktiviere dafür den X11-Kompatibilitätsmodus",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

@@ -582,6 +582,7 @@ void linux_shell_attach(GtkWindow* window) {
   if (getenv("LUMTUB_X11") != nullptr) unsetenv("GDK_BACKEND");
   g_signal_connect(window, "delete-event", G_CALLBACK(OnDelete), nullptr);
   g_signal_connect(window, "window-state-event", G_CALLBACK(OnWindowState), nullptr);
+  g_signal_connect(window, "map", G_CALLBACK(+[](GtkWidget*, gpointer) { HookHeaderBar(); }), nullptr);
   gtk_window_set_icon_from_file(window, IconPath().c_str(), nullptr);
   StartMpris();
 }

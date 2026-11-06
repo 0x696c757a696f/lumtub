@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "የመሪ አምልኮ እና ተአምር ማስተዋወቂያ ቻናሎች",
   "Minimize to tray": "ወደ ትሪ አሳንስ",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "ማሳነስ መስኮቱን ወደ ትሪ አዶ ይደብቃል እና ከተግባር አሞሌ ያስወግደዋል፤ ለመመለስ አዶውን ጠቅ ያድርጉ",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland መስኮቱ መቀነሱን ለመተግበሪያዎች አይነግርም፤ ለዚህ የX11 ተኳሃኝነት ሁነታን ያብሩ",
   ", ": "፣ ",
   ".": "።",
   "{0}. {1}": "{0}። {1}",

@@ -2901,7 +2901,6 @@
   " · list updated {0}/{1} at {2}": " · 清單更新於 {0}月{1}日 {2}",
   "Minimize to tray": "最小化到系統匣",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "最小化時會把視窗收進系統匣圖示，不佔工作列；點圖示即可還原",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland 不會告訴應用程式視窗已最小化；要用這項請開啟 X11 相容模式",
   "Back to live": "回到直播",
   "Jump to the newest moment (End)": "跳到直播最新進度 (End)",
   "Set by Low resource mode": "由「低資源模式」接管",

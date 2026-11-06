@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Rásir sem upphefja leiðtoga og kynna kraftaverk",
   "Minimize to tray": "Minnka í kerfisbakka",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Þegar glugginn er minnkaður hverfur hann í tákn í kerfisbakka og hverfur af verkefnastikunni; smelltu á táknið til að sækja hann aftur",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland lætur forrit ekki vita að gluggi þeirra hafi verið minnkaður; kveiktu á „X11-samhæfniham“ til að nota þetta",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Kanály zbožšťující vůdce a propagující zázraky",
   "Minimize to tray": "Minimalizovat do oznamovací oblasti",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Minimalizace skryje okno do ikony v oznamovací oblasti a odebere ho z hlavního panelu; kliknutím na ikonu ho vrátíte",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland aplikacím neříká, že bylo jejich okno minimalizováno; zapněte pro to režim kompatibility s X11",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

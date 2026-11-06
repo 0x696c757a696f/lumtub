@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Kanale që lartësojnë udhëheqësin dhe promovojnë mrekulli",
   "Minimize to tray": "Minimizo në tabaka",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Minimizimi e fsheh dritaren te ikona në tabaka dhe e heq nga shiriti i detyrave; kliko ikonën për ta rikthyer",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland nuk u tregon aplikacioneve se dritarja u minimizua; për këtë aktivizo modalitetin e pajtueshmërisë X11",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

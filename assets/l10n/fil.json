@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Mga channel ng pagsamba sa lider at promosyon ng mga himala",
   "Minimize to tray": "I-minimize sa tray",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Itinatago ng pag-minimize ang window sa tray icon at inaalis ito sa taskbar; i-click ang icon para ibalik",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Hindi sinasabi ng Wayland sa mga app na na-minimize ang kanilang window; i-on ang X11 compatibility mode para dito",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

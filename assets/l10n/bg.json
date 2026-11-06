@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Канали за обожествяване на лидери и промотиране на чудеса",
   "Minimize to tray": "Минимизиране в трея",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Минимизирането скрива прозореца в иконата в трея и го премахва от лентата на задачите; щракнете върху иконата, за да го върнете",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland не уведомява приложенията, че прозорецът им е минимизиран; включете режима на съвместимост с X11 за това",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

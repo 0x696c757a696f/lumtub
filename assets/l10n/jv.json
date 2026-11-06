@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Kanal pangkultusan pemimpin lan promosi mukjizat",
   "Minimize to tray": "Ciutaké menyang baki",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Nalika diciutaké, jendela didhelikaké menyang ikon baki lan dicopot saka bilah tugas; klik ikon kanggo mbalèkaké",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland ora ngandhani aplikasi yèn jendelané diciutaké; kanggo iki, aktifaké \"Mode kompatibilitas X11\"",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

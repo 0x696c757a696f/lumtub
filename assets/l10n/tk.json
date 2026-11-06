@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Ýolbaşçyny ylahylaşdyrýan we gudrat mahabatyny ýaýradýan kanallar",
   "Minimize to tray": "Tabaga kiçelt",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Kiçeltmek penjiräni tabak nyşanyna gizleýär we iş panelinden aýyrýar; gaýtarmak üçin nyşana basyň",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland programmalara penjiriň kiçeldilendigini habar bermeýär; munuň üçin X11 sazlaşyk režimini açyň",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

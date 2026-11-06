@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "ခေါင်းဆောင်ကို နတ်ဘုရားအဖြစ် ကိုးကွယ်ခြင်းနှင့် ဖြစ်ရပ်ထူးဖော်ပြခြင်း ချန်နယ်များ",
   "Minimize to tray": "ထရေးသို့ ချုံ့ရန်",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "ချုံ့လိုက်လျှင် ဝင်းဒိုးကို ထရေးအိုင်ကွန်သို့ ဖျောက်ပြီး တာ့စ်ဘားမှ ဖယ်ထားမည်၊ ပြန်ယူရန် အိုင်ကွန်ကို နှိပ်ပါ",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "ဝင်းဒိုးကို ချုံ့ထားကြောင်း Wayland က အက်ပ်များကို မပြောပါ၊ ထို့ကြောင့် X11 လိုက်ဖက်မှုမုဒ်ကို ဖွင့်ပါ",
   ", ": "၊ ",
   ".": "။",
   "{0}. {1}": "{0}။ {1}",

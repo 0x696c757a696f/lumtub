@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Līderu pielūgsmes un brīnumu popularizēšanas kanāli",
   "Minimize to tray": "Minimizēt uz paziņojumu apgabalu",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Minimizējot logs tiek paslēpts paziņojumu apgabala ikonā un pazūd no uzdevumjoslas; noklikšķiniet uz ikonas, lai to atjaunotu",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland neinformē lietotnes, ka logs ir minimizēts; šim ieslēdziet X11 saderības režīmu",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

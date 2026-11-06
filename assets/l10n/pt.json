@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Canais de culto ao líder e promoção de milagres",
   "Minimize to tray": "Minimizar para a bandeja",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Ao minimizar, a janela fica oculta no ícone da bandeja e sai da barra de tarefas; clique no ícone para restaurá-la",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "O Wayland não avisa os aplicativos de que a janela foi minimizada; ative o modo de compatibilidade X11 para isso",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

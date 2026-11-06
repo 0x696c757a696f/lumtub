@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "Κανάλια λατρείας ηγετών και προώθησης θαυμάτων",
   "Minimize to tray": "Ελαχιστοποίηση στο δίσκο συστήματος",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Η ελαχιστοποίηση κρύβει το παράθυρο στο εικονίδιο του δίσκου συστήματος και το αφαιρεί από τη γραμμή εργασιών· κάντε κλικ στο εικονίδιο για να το επαναφέρετε",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Το Wayland δεν ενημερώνει τις εφαρμογές ότι το παράθυρό τους ελαχιστοποιήθηκε· ενεργοποιήστε για αυτό τη λειτουργία συμβατότητας X11",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

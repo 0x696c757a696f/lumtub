@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "ਆਗੂ-ਪੂਜਾ ਅਤੇ ਚਮਤਕਾਰ-ਪ੍ਰਚਾਰ ਵਾਲੇ ਚੈਨਲ",
   "Minimize to tray": "ਟ੍ਰੇ ਵਿੱਚ ਛੋਟਾ ਕਰੋ",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "ਛੋਟਾ ਕਰਨ 'ਤੇ ਵਿੰਡੋ ਟ੍ਰੇ ਆਈਕਨ ਵਿੱਚ ਲੁਕ ਜਾਂਦੀ ਹੈ ਅਤੇ ਟਾਸਕਬਾਰ ਤੋਂ ਹਟ ਜਾਂਦੀ ਹੈ; ਵਾਪਸ ਲਿਆਉਣ ਲਈ ਆਈਕਨ 'ਤੇ ਕਲਿੱਕ ਕਰੋ",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland ਐਪਾਂ ਨੂੰ ਨਹੀਂ ਦੱਸਦਾ ਕਿ ਵਿੰਡੋ ਛੋਟੀ ਕੀਤੀ ਗਈ ਹੈ; ਇਸ ਲਈ X11 ਅਨੁਕੂਲਤਾ ਮੋਡ ਚਾਲੂ ਕਰੋ",
   ", ": ", ",
   ".": ".",
   "{0}. {1}": "{0}. {1}",

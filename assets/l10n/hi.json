@@ -2896,7 +2896,6 @@
   "Leader worship and miracle promotion channels": "नेता के देवत्वारोपण और चमत्कार प्रचार वाले चैनल",
   "Minimize to tray": "ट्रे में मिनिमाइज़ करें",
   "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "मिनिमाइज़ करने पर विंडो ट्रे आइकन में छिप जाती है और टास्कबार से हट जाती है; वापस लाने के लिए आइकन पर क्लिक करें",
-  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland ऐप्स को नहीं बताता कि उनकी विंडो मिनिमाइज़ हुई है; इसके लिए \"X11 संगतता मोड\" चालू करें",
   ", ": ", ",
   ".": "।",
   "{0}. {1}": "{0}। {1}",

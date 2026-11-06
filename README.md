@@ -178,6 +178,12 @@ Everything is open source under the GPL, so none of this has to be taken on trus
 
 **Where is my data?** On Windows in `%LOCALAPPDATA%\Lumtub`, or the `userdata` folder next to `lumtub.exe` for the portable version. On Linux in `~/.local/share/lumtub`, on macOS in `~/Library/Application Support/Lumtub`. Settings can be exported and imported.
 
+**Which Linux systems does it run on?** Any distribution with glibc 2.36 or newer: Debian 12, Ubuntu 24.04, Fedora 37 and later. Ubuntu 22.04 and older, and musl systems such as Alpine, are not supported. On NixOS start it with `appimage-run`.
+
+**Why is there no tray icon on GNOME?** GNOME shows tray icons only with the AppIndicator extension. Ubuntu has it built in; on Fedora and other plain GNOME installs, add [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/). Without it, closing or minimizing to the tray minimizes the window normally instead.
+
+**Why does Linux forget my sign-in?** Lumtub keeps it encrypted in the system keyring (GNOME Keyring or KWallet). A desktop without one, such as a bare window manager, needs `gnome-keyring` or `kwallet` installed and running.
+
 **Was this called YTPlus?** Yes, until October 2026. Updating keeps your settings, library and sign-in.
 
 ## Support Lumtub

@@ -66,21 +66,21 @@ class _DanmakuPanelState extends State<DanmakuPanel> {
       label(tr('Opacity'), '${(s.opacity * 100).round()}%'),
       slider(s.opacity, 0.2, 1, 16, (v) => s.copyWith(opacity: v)),
       label(tr('Font size'), s.size.round().toString()),
-      slider(s.size, 24, 72, 24, (v) => s.copyWith(size: v.roundToDouble())),
+      slider(s.size, 24, 96, 36, (v) => s.copyWith(size: v.roundToDouble())),
       label(tr('Time to cross'), tr('{0} s', [s.seconds.round()])),
       slider(s.seconds, 4, 20, 16, (v) => s.copyWith(seconds: v.roundToDouble())),
       label(tr('Area'), ''),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-        child: SegmentedButton<double>(
-          segments: [
-            ButtonSegment(value: 0.25, label: Text(tr('Top quarter'))),
-            ButtonSegment(value: 0.5, label: Text(tr('Top half'))),
-            ButtonSegment(value: 1.0, label: Text(tr('Fullscreen'))),
-          ],
-          selected: {DanmakuSettings.areas.reduce((a, b) => (a - s.area).abs() <= (b - s.area).abs() ? a : b)},
-          onSelectionChanged: s.enabled ? (v) => save(s.copyWith(area: v.first)) : null,
-        ),
+        // Chips wrap onto a second line where the names run long.
+        child: Wrap(spacing: 8, runSpacing: 8, children: [
+          for (final (area, name) in [(0.25, tr('Top quarter')), (0.5, tr('Top half')), (1.0, tr('Fullscreen'))])
+            ChoiceChip(
+              label: Text(name),
+              selected: area == DanmakuSettings.areas.reduce((a, b) => (a - s.area).abs() <= (b - s.area).abs() ? a : b),
+              onSelected: s.enabled ? (_) => save(s.copyWith(area: area)) : null,
+            ),
+        ]),
       ),
       SwitchListTile(
         title: Text(tr('Show Super Chats and memberships')),

@@ -11,6 +11,9 @@ void main() {
     expect((wild.opacity, wild.size, wild.seconds, wild.area), (1.0, 24.0, 20.0, 0.25));
     expect(DanmakuSettings.fromJson(null), const DanmakuSettings());
     expect(DanmakuSettings.fromJson({'enabled': true, 'seconds': 8}).seconds, 12, reason: 'the old, too fast default is not kept');
+    expect(DanmakuSettings.fromJson({'size': 44, 'version': 2}).size, 52, reason: 'the old, too small default is not kept');
+    expect(DanmakuSettings.fromJson({'size': 60, 'version': 2}).size, 60, reason: 'a size someone chose is kept');
+    expect(DanmakuSettings.fromJson({'size': 90, 'version': 3}).size, 90);
   });
 
   test('the layout gets its settings in the names lumtub_core reads', () {

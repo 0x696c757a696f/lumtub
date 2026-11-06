@@ -11,7 +11,7 @@ import 'player_settings.dart';
 
 /// How 弹幕 look: kept with the preferences.
 class DanmakuSettings {
-  const DanmakuSettings({this.enabled = false, this.opacity = 0.85, this.size = 44, this.seconds = 12, this.area = 0.5, this.paid = true});
+  const DanmakuSettings({this.enabled = false, this.opacity = 0.85, this.size = 52, this.seconds = 12, this.area = 0.5, this.paid = true});
 
   /// The chat flies across the picture.
   final bool enabled;
@@ -37,7 +37,7 @@ class DanmakuSettings {
         paid: paid ?? this.paid,
       );
 
-  Map<String, Object> toJson() => {'enabled': enabled, 'opacity': opacity, 'size': size, 'seconds': seconds, 'area': area, 'paid': paid, 'version': 2};
+  Map<String, Object> toJson() => {'enabled': enabled, 'opacity': opacity, 'size': size, 'seconds': seconds, 'area': area, 'paid': paid, 'version': 3};
 
   factory DanmakuSettings.fromJson(Object? raw) {
     const d = DanmakuSettings();
@@ -46,9 +46,10 @@ class DanmakuSettings {
     return DanmakuSettings(
       enabled: raw['enabled'] is bool ? raw['enabled'] as bool : d.enabled,
       opacity: number('opacity', d.opacity, 0.2, 1),
-      size: number('size', d.size, 24, 72),
+      // Before version 3 the default was 44, which read too small.
+      size: (raw['version'] is! int || (raw['version'] as int) < 3) && raw['size'] == 44 ? d.size : number('size', d.size, 24, 96),
       // Before version 2 the default crossed in 8 s, which read too fast.
-      seconds: raw['version'] == 2 ? number('seconds', d.seconds, 4, 20) : d.seconds,
+      seconds: raw['version'] is int && (raw['version'] as int) >= 2 ? number('seconds', d.seconds, 4, 20) : d.seconds,
       area: number('area', d.area, 0.25, 1),
       paid: raw['paid'] is bool ? raw['paid'] as bool : d.paid,
     );

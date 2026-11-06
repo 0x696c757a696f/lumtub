@@ -14,7 +14,7 @@ For **Windows, Linux and macOS**.
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 ![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078D4?logo=windows)
 ![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux&logoColor=black)
-![macOS](https://img.shields.io/badge/macOS-preview-000000?logo=apple)
+![macOS](https://img.shields.io/badge/macOS-Apple%20silicon%20%7C%20Intel-000000?logo=apple)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
@@ -145,13 +145,14 @@ Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 | `windows-arm64` | Windows on ARM laptops |
 | `linux-x64` AppImage | 64-bit PCs with glibc 2.36 or newer (Debian 12, Ubuntu 24.04, Fedora 37 and later) |
 | `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 |
+| `macos-arm64` DMG | Macs with Apple silicon (M1 and later) |
+| `macos-x64` DMG | Intel Macs |
 
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.
 
-**macOS** (separate DMGs for Apple silicon and Intel) is in testing and comes to releases once it has been tried on real Macs. ⭐ Star or watch the repository to hear when it lands.<br>
-Lumtub is not notarized by Apple yet, so macOS stops it the first time it opens. Drag it into Applications, then either run this once in Terminal:
+**macOS:** open the DMG and drag Lumtub into Applications. Lumtub is not notarized by Apple yet, so macOS stops it the first time it opens. Either run this once in Terminal:
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/Lumtub.app
@@ -188,7 +189,7 @@ Every feature above exists because someone sponsored the time to build it.
 
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/Sponsor_on_GitHub-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" height="44"></a>
 
-**Monthly sponsors** decide what comes next: Linux and macOS releases, Android, a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
+**Monthly sponsors** decide what comes next: Android, a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
 One-time gifts of any amount are just as welcome. The same page is in the app under Settings › About › Support development.
 
 </div>

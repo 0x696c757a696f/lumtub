@@ -1169,7 +1169,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     final repository = _repository;
     final offered = known?.subtitles ?? (repository == null ? const <SubtitleOption>[] : (await repository.details(item.id)).subtitles);
     final target = settings.subtitleLanguage.translation;
-    final translation = hasOwnSubtitle(offered, target) ? null : translationOf(offered, target);
+    final translation = hasOwnSubtitle(offered, target) ? null : translationOf(offered, target, language: known?.language);
     return [if (translation != null) translation, ...offered.where((o) => o.kind != SubtitleKind.translated)];
   }
 

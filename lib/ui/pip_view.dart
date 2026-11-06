@@ -201,7 +201,7 @@ class PipControls extends StatelessWidget {
             buffered: player.state.buffer,
             total: player.state.duration,
             color: Colors.white,
-            onSeek: (time) => unawaited(player.seek(time)),
+            onSeek: (time) => unawaited(controller.seek(time)),
           ),
         ),
       ),

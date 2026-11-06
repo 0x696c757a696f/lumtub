@@ -1221,7 +1221,6 @@
   "Buffer size": "Grando de bufro",
   "Buffer duration": "Daŭro de bufro",
   "Buffering mode": "Reĝimo de bufrado",
-  "No buffering progress for over {0} seconds": "Neniu progreso de bufrado dum pli ol {0} sekundoj",
   "Cache {0} · {1} s · {2} MB": "Kaŝmemoro {0} · {1} s · {2} MB",
   "Cache folder": "Loko de kaŝmemoro",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Loko de kaŝmemoro konservita. La kaŝmemoro de yt-dlp uzos la novan lokon ĉe la sekva serĉo.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "tigraja",
   "Turkmen": "turkmena",
   "Uzbek": "uzbeka",
-  "Zulu": "zulua"
+  "Zulu": "zulua",
+  "This live stream cannot go back further at this quality": "Ĉi tiu rekta elsendo ne povas iri pli malantaŭen je ĉi tiu kvalito"
 }

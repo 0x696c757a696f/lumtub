@@ -1221,7 +1221,6 @@
   "Buffer size": "Buferio dydis",
   "Buffer duration": "Buferio trukmė",
   "Buffering mode": "Buferio režimas",
-  "No buffering progress for over {0} seconds": "Buferis nesikeičia ilgiau nei {0} s",
   "Cache {0} · {1} s · {2} MB": "Talpykla {0} · {1} s · {2} MB",
   "Cache folder": "Talpyklos vieta",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Talpyklos vieta išsaugota. yt-dlp talpykla naują vietą naudos kitos paieškos metu.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "tigrinijos",
   "Turkmen": "turkmėnų",
   "Uzbek": "uzbekų",
-  "Zulu": "zulų"
+  "Zulu": "zulų",
+  "This live stream cannot go back further at this quality": "Šios tiesioginės transliacijos šia kokybe toliau atsukti negalima"
 }

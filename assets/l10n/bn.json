@@ -1221,7 +1221,6 @@
   "Buffer size": "বাফারের আকার",
   "Buffer duration": "বাফারের সময়কাল",
   "Buffering mode": "বাফারিং মোড",
-  "No buffering progress for over {0} seconds": "{0} সেকেন্ডের বেশি বাফারিংয়ে কোনো অগ্রগতি নেই",
   "Cache {0} · {1} s · {2} MB": "ক্যাশে {0} · {1} সে. · {2} MB",
   "Cache folder": "ক্যাশের অবস্থান",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "ক্যাশের অবস্থান সংরক্ষিত হয়েছে। পরের অনুসন্ধান থেকে yt-dlp-এর ক্যাশে নতুন অবস্থান ব্যবহার করবে।",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "তিগ্রিনিয়া",
   "Turkmen": "তুর্কমেন",
   "Uzbek": "উজবেক",
-  "Zulu": "জুলু"
+  "Zulu": "জুলু",
+  "This live stream cannot go back further at this quality": "এই মানে লাইভ স্ট্রিমটি আর পিছনে যেতে পারে না"
 }

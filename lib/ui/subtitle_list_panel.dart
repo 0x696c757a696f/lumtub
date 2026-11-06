@@ -205,7 +205,7 @@ class _SubtitleListState extends State<SubtitleList> {
                       child: InkWell(
                         onTap: () {
                           _follow = true;
-                          unawaited(widget.player.seek(cue.start));
+                          unawaited(widget.controller.seek(cue.start));
                         },
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),

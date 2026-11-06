@@ -1221,7 +1221,6 @@
   "Buffer size": "ዓቐን ቡፈር",
   "Buffer duration": "ንውሓት ቡፈር",
   "Buffering mode": "ኩነታት ቡፈሪንግ",
-  "No buffering progress for over {0} seconds": "ልዕሊ {0} ሰከንድ ቡፈሪንግ ኣይገሸገረን",
   "Cache {0} · {1} s · {2} MB": "ካሽ {0} · {1} ሰከንድ · {2} MB",
   "Cache folder": "ቦታ ካሽ",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "ቦታ ካሽ ተዓቂቡ። ካሽ yt-dlp ኣብ ዝመጽእ ድለያ ሓድሽ ቦታ ይጥቀም።",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "ትግርኛ",
   "Turkmen": "ቱርክመንኛ",
   "Uzbek": "ኡዝቤክኛ",
-  "Zulu": "ዙሉ"
+  "Zulu": "ዙሉ",
+  "This live stream cannot go back further at this quality": "እዚ ቀጥታ ስርጭት ብዚ ጽሬት ካብዚ ንድሕሪት ክምለስ ኣይክእልን"
 }

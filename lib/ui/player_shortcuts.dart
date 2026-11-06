@@ -75,7 +75,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
   void jumpToTenth(int tenth) {
     final duration = player.state.duration;
     if (duration <= Duration.zero) return;
-    unawaited(player.seek(duration * (tenth / 10)));
+    unawaited(controller.seek(duration * (tenth / 10)));
     onFeedback?.call(AppIcons.skipForwardFill, '${tenth * 10}%');
   }
   void jumpTo(bool end) {
@@ -85,7 +85,7 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
       return;
     }
     final duration = player.state.duration;
-    unawaited(player.seek(end ? duration : Duration.zero));
+    unawaited(controller.seek(end ? duration : Duration.zero));
     onFeedback?.call(end ? AppIcons.caretLineRight : AppIcons.caretLineLeft, end ? tr('End') : tr('Start'));
   }
   // One frame at a time, only while paused, as on YouTube.

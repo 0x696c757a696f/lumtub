@@ -1221,7 +1221,6 @@
   "Buffer size": "Bufferstørrelse",
   "Buffer duration": "Buffervarighet",
   "Buffering mode": "Bufringsmodus",
-  "No buffering progress for over {0} seconds": "Ingen bufringsfremdrift på over {0} sekunder",
   "Cache {0} · {1} s · {2} MB": "Hurtigbuffer {0} · {1} s · {2} MB",
   "Cache folder": "Hurtigbufferplassering",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Hurtigbufferplasseringen er lagret. yt-dlps hurtigbuffer bruker den nye plasseringen ved neste søk.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "tigrinja",
   "Turkmen": "turkmensk",
   "Uzbek": "usbekisk",
-  "Zulu": "zulu"
+  "Zulu": "zulu",
+  "This live stream cannot go back further at this quality": "Denne direktesendingen kan ikke spoles lenger tilbake i denne kvaliteten"
 }

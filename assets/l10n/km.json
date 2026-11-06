@@ -1221,7 +1221,6 @@
   "Buffer size": "ទំហំផ្ទុកទុក",
   "Buffer duration": "រយៈពេលផ្ទុកទុក",
   "Buffering mode": "ម៉ូដផ្ទុកទុក",
-  "No buffering progress for over {0} seconds": "ការផ្ទុកទុកមិនមានវឌ្ឍនភាពលើសពី {0} វិនាទី",
   "Cache {0} · {1} s · {2} MB": "ឃ្លាំងសម្ងាត់ {0} · {1} វិនាទី · {2} MB",
   "Cache folder": "ទីតាំងឃ្លាំងសម្ងាត់",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "បានរក្សាទុកទីតាំងឃ្លាំងសម្ងាត់។ ឃ្លាំងសម្ងាត់ yt-dlp នឹងប្រើទីតាំងថ្មីនៅការស្វែងរកលើកក្រោយ។",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "ទីគ្រីញ៉ា",
   "Turkmen": "ទួកម៉េន",
   "Uzbek": "អ៊ូសបេគ",
-  "Zulu": "ហ្សូលូ"
+  "Zulu": "ហ្សូលូ",
+  "This live stream cannot go back further at this quality": "ការផ្សាយផ្ទាល់នេះមិនអាចថយក្រោយបន្ថែមទៀតនៅគុណភាពនេះបានទេ"
 }

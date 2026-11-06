@@ -1221,7 +1221,6 @@
   "Buffer size": "اندازه بافر",
   "Buffer duration": "مدت بافر",
   "Buffering mode": "حالت بافر",
-  "No buffering progress for over {0} seconds": "بافر بیش از {0} ثانیه پیشرفتی نداشته است",
   "Cache {0} · {1} s · {2} MB": "حافظه نهان {0} · {1} ثانیه · {2} MB",
   "Cache folder": "محل حافظه نهان",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "محل حافظه نهان ذخیره شد. حافظه نهان yt-dlp در جستجوی بعدی از محل جدید استفاده می‌کند.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "تیگرینیایی",
   "Turkmen": "ترکمنی",
   "Uzbek": "ازبکی",
-  "Zulu": "زولو"
+  "Zulu": "زولو",
+  "This live stream cannot go back further at this quality": "این پخش زنده با این کیفیت بیشتر از این به عقب برنمی‌گردد"
 }

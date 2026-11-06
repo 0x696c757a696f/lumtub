@@ -7,6 +7,11 @@
 //! A message no lane can take is dropped rather than drawn over another.
 //! [Danmaku::frame] then writes the messages on screen at a moment as ASS
 //! events with absolute positions, for an overlay [WIDTH] × [HEIGHT].
+//!
+//! A message with emoji is drawn by the app as a picture instead, since
+//! libass draws neither pictures nor colour glyphs: it comes with its
+//! measured width and a picture id, and the frame names where that picture
+//! goes on a line of its own, `!id x y`, which no ASS event starts with.
 
 use std::ffi::c_char;
 
@@ -45,6 +50,11 @@ pub struct Message {
     /// Paid messages and stickers stand out in gold.
     #[serde(default)]
     pub paid: bool,
+    /// Drawn by the app as this picture, [width] wide at [HEIGHT].
+    #[serde(default)]
+    pub picture: Option<u32>,
+    #[serde(default)]
+    pub width: Option<f64>,
 }
 
 #[derive(Debug, Clone)]
@@ -54,6 +64,7 @@ struct Placed {
     lane: usize,
     text: String,
     paid: bool,
+    picture: Option<u32>,
 }
 
 pub struct Danmaku {
@@ -132,13 +143,16 @@ impl Danmaku {
         if text.is_empty() {
             return false;
         }
-        let width = text_width(&text, self.settings.font_size);
+        let width = match (message.picture, message.width) {
+            (Some(_), Some(width)) if width.is_finite() && width > 0.0 => width,
+            _ => text_width(&text, self.settings.font_size),
+        };
         let start = message.start_ms;
         let lane = (0..self.lanes.len()).find(|&i| self.lanes[i].is_none_or(|before| self.fits(before, start, width)));
         let Some(lane) = lane else { return false };
         self.lanes[lane] = Some((start, width));
         let at = self.placed.partition_point(|p| p.start <= start);
-        self.placed.insert(at, Placed { start, width, lane, text, paid: message.paid });
+        self.placed.insert(at, Placed { start, width, lane, text, paid: message.paid, picture: message.picture });
         true
     }
 
@@ -149,7 +163,9 @@ impl Danmaku {
         self.placed.drain(..gone);
     }
 
-    /// The messages on screen at [now], one ASS event per line.
+    /// The messages on screen at [now], one ASS event or picture per line;
+    /// a picture's line is `!id x y`, its top left corner at [HEIGHT], the
+    /// top of its lane.
     pub fn frame(&self, now: f64) -> String {
         let duration = self.settings.duration_ms;
         let first = self.placed.partition_point(|p| p.start + duration <= now);
@@ -169,6 +185,10 @@ impl Danmaku {
                 break;
             }
             let x = WIDTH - (now - p.start) * self.speed(p.width);
+            if let Some(id) = p.picture {
+                out.push_str(&format!("!{id} {x:.1} {:.1}\n", p.lane as f64 * line));
+                continue;
+            }
             let y = p.lane as f64 * line + (line - size) / 2.0;
             let colour = if p.paid { "&H38C8FF&" } else { "&HFFFFFF&" };
             out.push_str(&format!(
@@ -192,7 +212,8 @@ pub unsafe extern "C" fn lumtub_danmaku_new(settings: *const u8, length: usize) 
 }
 
 /// Adds messages, `[{"start_ms": 0, "text": "…", "paid": false}, …]` in the
-/// order they were sent, and returns how many found a lane.
+/// order they were sent, a picture's with `"picture": id, "width": w`, and
+/// returns how many found a lane.
 ///
 /// # Safety
 /// [danmaku] must come from `lumtub_danmaku_new`; [messages] must point to
@@ -204,7 +225,7 @@ pub unsafe extern "C" fn lumtub_danmaku_add(danmaku: *mut Danmaku, messages: *co
     messages.into_iter().map(|m| danmaku.add(m) as u32).sum()
 }
 
-/// The ASS events on screen at [now_ms]; forgets the ones gone when
+/// The ASS events and pictures on screen at [now_ms]; forgets the ones gone when
 /// [forget] is true. Free the text with `lumtub_string_free`.
 ///
 /// # Safety
@@ -232,7 +253,7 @@ mod tests {
     use super::*;
 
     fn message(start_ms: f64, text: &str) -> Message {
-        Message { start_ms, text: text.into(), paid: false }
+        Message { start_ms, text: text.into(), paid: false, picture: None, width: None }
     }
 
     #[test]
@@ -292,5 +313,18 @@ mod tests {
         d.forget_before(13000.0);
         assert_eq!(d.placed.len(), 1);
         assert!(d.frame(13000.0).contains("new"));
+    }
+
+    #[test]
+    fn a_picture_is_placed_with_its_own_width_and_named_on_its_own_line() {
+        let mut d = Danmaku::new(Settings::default());
+        assert!(d.add(Message { start_ms: 0.0, text: ":wave: hi".into(), paid: false, picture: Some(7), width: Some(300.0) }));
+        assert!(d.add(message(0.0, "plain")));
+        assert_eq!(d.placed[0].width, 300.0);
+        let frame = d.frame(1200.0);
+        let mut lines = frame.lines();
+        let x = WIDTH - 1200.0 * (WIDTH + 300.0) / 12000.0;
+        assert_eq!(lines.next().unwrap(), format!("!7 {x:.1} 0.0"));
+        assert!(lines.next().unwrap().starts_with("{\\an7"));
     }
 }

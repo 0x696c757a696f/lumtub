@@ -1221,7 +1221,6 @@
   "Buffer size": "Laki ng buffer",
   "Buffer duration": "Haba ng buffer",
   "Buffering mode": "Mode ng buffering",
-  "No buffering progress for over {0} seconds": "Walang progress ang buffering nang mahigit {0} segundo",
   "Cache {0} · {1} s · {2} MB": "Cache {0} · {1} s · {2} MB",
   "Cache folder": "Lokasyon ng cache",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Na-save ang lokasyon ng cache. Gagamitin ng cache ng yt-dlp ang bagong lokasyon sa susunod na paghahanap.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "Tigrinya",
   "Turkmen": "Turkmen",
   "Uzbek": "Uzbek",
-  "Zulu": "Zulu"
+  "Zulu": "Zulu",
+  "This live stream cannot go back further at this quality": "Hindi na maibabalik pa ang live stream na ito sa ganitong kalidad"
 }

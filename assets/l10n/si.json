@@ -1221,7 +1221,6 @@
   "Buffer size": "බෆර ප්‍රමාණය",
   "Buffer duration": "බෆර කාලසීමාව",
   "Buffering mode": "බෆරකරණ ප්‍රකාරය",
-  "No buffering progress for over {0} seconds": "තත්පර {0}කට වැඩි කාලයක් බෆරකරණ ප්‍රගතියක් නැත",
   "Cache {0} · {1} s · {2} MB": "හැඹිලිය {0} · {1} තත්. · {2} MB",
   "Cache folder": "හැඹිලි ස්ථානය",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "හැඹිලි ස්ථානය සුරකින ලදී. yt-dlp හි හැඹිලිය ඊළඟ සෙවීමේදී නව ස්ථානය භාවිතා කරයි.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "ටිග්‍රින්යා",
   "Turkmen": "තුර්ක්මෙන්",
   "Uzbek": "උස්බෙක්",
-  "Zulu": "සුලු"
+  "Zulu": "සුලු",
+  "This live stream cannot go back further at this quality": "මෙම ගුණත්වයෙන් මෙම සජීවී විකාශනය තවත් පසුපසට යා නොහැක"
 }

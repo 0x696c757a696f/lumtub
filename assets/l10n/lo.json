@@ -1221,7 +1221,6 @@
   "Buffer size": "ຂະໜາດບັບເຟີ",
   "Buffer duration": "ໄລຍະເວລາບັບເຟີ",
   "Buffering mode": "ໂໝດບັບເຟີ",
-  "No buffering progress for over {0} seconds": "ບັບເຟີບໍ່ມີຄວາມຄືບໜ້າເກີນ {0} ວິນາທີ",
   "Cache {0} · {1} s · {2} MB": "ແຄດ {0} · {1} ວິ · {2} MB",
   "Cache folder": "ທີ່ຕັ້ງແຄດ",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "ບັນທຶກທີ່ຕັ້ງແຄດແລ້ວ. ແຄດຂອງ yt-dlp ຈະໃຊ້ທີ່ຕັ້ງໃໝ່ໃນການຄົ້ນຫາຄັ້ງຕໍ່ໄປ.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "ຕິກຣິນຢາ",
   "Turkmen": "ເຕີກເມນ",
   "Uzbek": "ອຸສເບກ",
-  "Zulu": "ຊູລູ"
+  "Zulu": "ຊູລູ",
+  "This live stream cannot go back further at this quality": "ການຖ່າຍທອດສົດນີ້ບໍ່ສາມາດຖອຍຫຼັງໄປອີກໃນຄຸນນະພາບນີ້"
 }

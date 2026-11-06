@@ -1221,7 +1221,6 @@
   "Buffer size": "Saiz penimbal",
   "Buffer duration": "Tempoh penimbal",
   "Buffering mode": "Mod penimbalan",
-  "No buffering progress for over {0} seconds": "Tiada kemajuan penimbalan selama lebih {0} saat",
   "Cache {0} · {1} s · {2} MB": "Cache {0} · {1} s · {2} MB",
   "Cache folder": "Lokasi cache",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Lokasi cache disimpan. Cache yt-dlp akan menggunakan lokasi baharu pada carian seterusnya.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "Tigrinya",
   "Turkmen": "Turkmen",
   "Uzbek": "Uzbek",
-  "Zulu": "Zulu"
+  "Zulu": "Zulu",
+  "This live stream cannot go back further at this quality": "Strim langsung ini tidak boleh berundur lebih jauh pada kualiti ini"
 }

@@ -1221,7 +1221,6 @@
   "Buffer size": "버퍼 크기",
   "Buffer duration": "버퍼 시간",
   "Buffering mode": "버퍼링 모드",
-  "No buffering progress for over {0} seconds": "{0}초 넘게 버퍼링이 진행되지 않습니다",
   "Cache {0} · {1} s · {2} MB": "캐시 {0} · {1}초 · {2} MB",
   "Cache folder": "캐시 위치",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "캐시 위치를 저장했습니다. yt-dlp 캐시는 다음 검색부터 새 위치를 사용합니다.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "티그리냐어",
   "Turkmen": "튀르크멘어",
   "Uzbek": "우즈베크어",
-  "Zulu": "줄루어"
+  "Zulu": "줄루어",
+  "This live stream cannot go back further at this quality": "이 화질에서는 라이브 방송을 더 이상 되감을 수 없습니다"
 }

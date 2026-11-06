@@ -1221,7 +1221,6 @@
   "Buffer size": "バッファーサイズ",
   "Buffer duration": "バッファー時間",
   "Buffering mode": "バッファーモード",
-  "No buffering progress for over {0} seconds": "{0} 秒以上バッファリングが進んでいません",
   "Cache {0} · {1} s · {2} MB": "キャッシュ {0} · {1} 秒 · {2} MB",
   "Cache folder": "キャッシュの場所",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "キャッシュの場所を保存しました。yt-dlp のキャッシュは次回の検索から新しい場所を使用します。",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "ティグリニャ語",
   "Turkmen": "トルクメン語",
   "Uzbek": "ウズベク語",
-  "Zulu": "ズールー語"
+  "Zulu": "ズールー語",
+  "This live stream cannot go back further at this quality": "この画質ではライブ配信をこれ以上巻き戻せません"
 }

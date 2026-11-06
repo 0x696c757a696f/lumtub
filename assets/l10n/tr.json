@@ -1221,7 +1221,6 @@
   "Buffer size": "Ara bellek boyutu",
   "Buffer duration": "Ara bellek süresi",
   "Buffering mode": "Ara bellek modu",
-  "No buffering progress for over {0} seconds": "Ara belleğe almada {0} saniyeden uzun süredir ilerleme yok",
   "Cache {0} · {1} s · {2} MB": "Önbellek {0} · {1} sn · {2} MB",
   "Cache folder": "Önbellek konumu",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Önbellek konumu kaydedildi. yt-dlp önbelleği bir sonraki aramada yeni konumu kullanacak.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "Tigrinya",
   "Turkmen": "Türkmence",
   "Uzbek": "Özbekçe",
-  "Zulu": "Zuluca"
+  "Zulu": "Zuluca",
+  "This live stream cannot go back further at this quality": "Bu canlı yayın bu kalitede daha fazla geri sarılamaz"
 }

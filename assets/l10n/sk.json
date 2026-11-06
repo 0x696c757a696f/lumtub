@@ -1221,7 +1221,6 @@
   "Buffer size": "Veľkosť vyrovnávacej pamäte",
   "Buffer duration": "Dĺžka vyrovnávacej pamäte",
   "Buffering mode": "Režim vyrovnávacej pamäte",
-  "No buffering progress for over {0} seconds": "Načítanie sa už viac ako {0} s nepohlo",
   "Cache {0} · {1} s · {2} MB": "Vyrovnávacia pamäť {0} · {1} s · {2} MB",
   "Cache folder": "Umiestnenie vyrovnávacej pamäte",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Umiestnenie vyrovnávacej pamäte bolo uložené. Vyrovnávacia pamäť yt-dlp použije nové umiestnenie pri ďalšom vyhľadávaní.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "tigriňa",
   "Turkmen": "turkménčina",
   "Uzbek": "uzbečtina",
-  "Zulu": "zuluština"
+  "Zulu": "zuluština",
+  "This live stream cannot go back further at this quality": "Tento živý prenos sa v tejto kvalite nedá vrátiť ďalej"
 }

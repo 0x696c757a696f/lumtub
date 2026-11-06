@@ -1221,7 +1221,6 @@
   "Buffer size": "Ukuran buffer",
   "Buffer duration": "Dawa buffer",
   "Buffering mode": "Mode buffer",
-  "No buffering progress for over {0} seconds": "Buffer ora ana kemajuan luwih saka {0} detik",
   "Cache {0} · {1} s · {2} MB": "Cache {0} · {1} detik · {2} MB",
   "Cache folder": "Lokasi cache",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Lokasi cache wis disimpen. Cache yt-dlp bakal nganggo lokasi anyar nalika panelusuran sabanjuré.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "Tigrinya",
   "Turkmen": "Turkmen",
   "Uzbek": "Uzbek",
-  "Zulu": "Zulu"
+  "Zulu": "Zulu",
+  "This live stream cannot go back further at this quality": "Siaran langsung iki ora bisa mundur luwih adoh ing kualitas iki"
 }

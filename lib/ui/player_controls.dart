@@ -543,7 +543,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               for (final (i, c) in chapters.indexed) (i, '${formatPlaybackTime(c.start)}  ${title(i, both: true)}'),
               if (translated == null) (-2, _controller.translatingChapters ? tr('Translating chapter names…') : tr('Translate chapter names')),
             ],
-            onSelected: (i) => i == -2 ? unawaited(_controller.translateChapters()) : unawaited(_player.seek(chapters[i].start)),
+            onSelected: (i) => i == -2 ? unawaited(_controller.translateChapters()) : unawaited(_controller.seek(chapters[i].start)),
             onOpened: _menuOpened,
             onClosed: _menuClosed,
             child: Padding(
@@ -705,7 +705,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               preview: _preview,
               heatmap: _controller.preferences.showHeatmap ? _heatmap?.values : null,
               labelOf: _chapters.isEmpty ? null : (time) => '${formatPlaybackTime(time)} · ${Chapter.at(_chapters, time)?.title ?? ''}',
-              onSeek: (time) => unawaited(_player.seek(time)),
+              onSeek: (time) => unawaited(_controller.seek(time)),
             ),
           ),
         ),

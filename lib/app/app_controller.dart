@@ -354,6 +354,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   final _currentChatIds = <String>{};
   /// Heights the playing video offers, highest first; empty until known.
   List<int> availableHeights = const [];
+  /// The most frames a second of [availableHeights], where above 30.
+  Map<int, int> availableFrameRates = const {};
   /// Heights for the quality menu: automatic, then only what the playing
   /// video offers (just automatic until that is known).
   List<int> get qualityChoices => [0, ...({...availableHeights}.toList()..sort((a, b) => b.compareTo(a)))];
@@ -1386,6 +1388,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       loadingReplayChat = false;
       replayChatError = null;
       availableHeights = const [];
+      availableFrameRates = const {};
       related?.dispose();
       related = null;
       _segments = const [];
@@ -1661,7 +1664,12 @@ class AppController extends ChangeNotifier with _ExploreState {
       _resumePoint.start(_lastPosition);
       _openedResolved = video == null ? null : item.id;
       _openedOrigin = video?.origin;
-      if (video != null) _update(() => availableHeights = video!.heightsFor(settings));
+      if (video != null) {
+        _update(() {
+          availableHeights = video!.heightsFor(settings);
+          availableFrameRates = video.frameRatesFor(settings);
+        });
+      }
       await player.open(Media(direct ?? split ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
@@ -1799,7 +1807,10 @@ class AppController extends ChangeNotifier with _ExploreState {
       final video = await (kind == RelayKind.piped ? _piped.fetch(item.id, server: server) : _invidious.fetch(item.id, server: server));
       final address = video.edl(_playback);
       if (address == null) return null;
-      _update(() => availableHeights = video.heightsFor(settings));
+      _update(() {
+        availableHeights = video.heightsFor(settings);
+        availableFrameRates = const {};
+      });
       logInfo('Playing ${item.id} from $name ${video.server}, took ${watch.elapsedMilliseconds} ms');
       return address;
     } catch (e) {
@@ -2665,7 +2676,10 @@ class AppController extends ChangeNotifier with _ExploreState {
           final resolved = await _repository!.streams.resolve(item.id, _format, formatSort: _formatSort, membersOnly: item.membersOnly);
           loaded = resolved.details;
           if (serial == _playSerial) {
-            _update(() => availableHeights = resolved.heightsFor(settings));
+            _update(() {
+              availableHeights = resolved.heightsFor(settings);
+              availableFrameRates = resolved.frameRatesFor(settings);
+            });
             final lost = resolved.lostToDisabled(settings, _playback.maxHeight);
             if (lost != null) {
               _notice(tr("This video's {0}p is only in {1}, which is disabled; playing {2}p", [lost.height, lost.codecs.map((c) => c.label).join(' / '), lost.playing]));

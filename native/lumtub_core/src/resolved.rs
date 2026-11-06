@@ -4,6 +4,7 @@
 //! whether mpv can play the picked formats straight from their addresses.
 //! It reads yt-dlp's `--dump-single-json` answer as yt-dlp printed it.
 
+use std::collections::BTreeMap;
 use std::ffi::c_char;
 
 use serde::{Deserialize, Serialize};
@@ -48,6 +49,10 @@ pub struct Summary {
     /// Heights offered in an allowed codec, highest first.
     pub heights: Vec<u32>,
     pub all_heights: Vec<u32>,
+    /// The most frames a second of each height in [heights], when above 30,
+    /// for labels such as 1080p60.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub frame_rates: BTreeMap<u32, u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lost: Option<Lost>,
     /// The picked streams, when mpv can open them directly; none for live
@@ -119,6 +124,7 @@ pub fn summary(info: &Value, ask: &Ask) -> Summary {
     }
     let allows = |codec: &Codec| !ask.disabled.contains(codec);
     let mut heights: Vec<u32> = Vec::new();
+    let mut frame_rates: BTreeMap<u32, u32> = BTreeMap::new();
     for format in info.get("formats").and_then(Value::as_array).into_iter().flatten() {
         let height = format.get("height").and_then(Value::as_u64).filter(|h| *h > 0).map(|h| h as u32);
         let codec = format.get("vcodec").and_then(Value::as_str).filter(|c| *c != "none");
@@ -126,8 +132,15 @@ pub fn summary(info: &Value, ask: &Ask) -> Summary {
         if !all.contains(&height) {
             all.push(height);
         }
-        if Codec::of(codec).is_none_or(|c| allows(&c)) && !heights.contains(&height) {
-            heights.push(height);
+        if Codec::of(codec).is_none_or(|c| allows(&c)) {
+            if !heights.contains(&height) {
+                heights.push(height);
+            }
+            let fps = format.get("fps").and_then(Value::as_f64).filter(|f| f.is_finite() && *f > 30.5).map(|f| f.round() as u32);
+            if let Some(fps) = fps {
+                let most = frame_rates.entry(height).or_insert(fps);
+                *most = (*most).max(fps);
+            }
         }
     }
     heights.sort_unstable_by(|a, b| b.cmp(a));
@@ -149,6 +162,7 @@ pub fn summary(info: &Value, ask: &Ask) -> Summary {
         formats,
         heights,
         all_heights: all,
+        frame_rates,
         lost,
         streams: streams(info, &tracks),
         user_agent,
@@ -208,6 +222,24 @@ mod tests {
                 {"format_id": "140", "url": "https://r1.googlevideo.com/videoplayback?expire=1900003600&c=WEB&itag=140", "protocol": "https"}
             ]
         })
+    }
+
+    #[test]
+    fn frame_rates_label_heights_above_30() {
+        let info = json!({"formats": [
+            {"height": 1080, "vcodec": "avc1.640028", "fps": 30},
+            {"height": 1080, "vcodec": "vp09.00.40.08", "fps": 60},
+            {"height": 720, "vcodec": "avc1.4d401f", "fps": 59.94},
+            {"height": 480, "vcodec": "avc1.4d401e", "fps": 25},
+            {"height": 1440, "vcodec": "vp09.00.50.08", "fps": 50}
+        ]});
+        let s = summary(&info, &Ask::default());
+        assert_eq!(s.frame_rates, BTreeMap::from([(720, 60), (1080, 60), (1440, 50)]));
+        let json = serde_json::to_value(&s).unwrap();
+        assert_eq!(json["frameRates"], json!({"720": 60, "1080": 60, "1440": 50}));
+        // A disabled codec's frames do not count.
+        let s = summary(&info, &Ask { disabled: vec![Codec::Vp9], ..Ask::default() });
+        assert_eq!(s.frame_rates, BTreeMap::from([(720, 60)]));
     }
 
     #[test]

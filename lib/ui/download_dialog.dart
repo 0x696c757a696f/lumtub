@@ -95,6 +95,11 @@ class _DownloadDialogState extends State<DownloadDialog> {
 
   List<int> get _heights => _formats!.heightsFor(_codec);
 
+  /// The most frames a second at [height] in the chosen codec.
+  double? _fps(int height) => _formats!.video
+      .where((f) => f.height == height && (_codec == null || f.codec == _codec))
+      .fold<double?>(null, (most, f) => f.fps == null || (most != null && most >= f.fps!) ? most : f.fps);
+
   DownloadPlan? get _plan {
     final formats = _formats;
     if (formats == null || !_codecChosen) return null;
@@ -188,7 +193,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
         const SizedBox(height: 12),
         _section(context, tr('Video quality'), [
           for (final h in heights)
-            _chip('${h}p', selected: h == video?.height, onTap: () => setState(() {
+            _chip(heightLabel(h, _fps(h)), selected: h == video?.height, onTap: () => setState(() {
                   _wantedHeight = h;
                   _containerNote = null;
                   _checkContainer();
@@ -230,7 +235,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
         ? [tr('Audio only')]
         : [
             s.codec!.label,
-            '${s.height}p',
+            heightLabel(s.height!, _formats?.video.where((f) => f.id == s.videoId).firstOrNull?.fps),
             _container == DownloadContainer.auto ? tr('Automatic container ({0})', [s.container.label]) : s.container.label,
           ];
     if (s.size != null) parts.add(approximateSize(s.size!));

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:media_kit/media_kit.dart';
 
@@ -127,6 +128,21 @@ bool sameLanguage(String? a, String? b) {
   return x.isNotEmpty && x == base(b);
 }
 
+/// The subtitle tracks libmpv has now, by id. media_kit's copy of the
+/// list arrives later and keeps a replaced track for a while.
+Future<Map<String, SubtitleTrack>> mpvSubtitleTracks(NativePlayer platform) async {
+  final list = jsonDecode(await platform.getProperty('track-list'));
+  return {
+    if (list is List)
+      for (final t in list.whereType<Map>())
+        if (t['type'] == 'sub' && t['id'] != null) '${t['id']}': SubtitleTrack('${t['id']}', t['title'] as String?, t['lang'] as String?),
+  };
+}
+
+/// [option]'s track among [tracks], if it is loaded.
+SubtitleTrack? subtitleTrackOf(Map<String, SubtitleTrack> tracks, SubtitleOption option) =>
+    tracks.values.where((t) => t.title == option.label).firstOrNull;
+
 /// Sets and clears mpv's secondary subtitle.
 class SecondarySubtitle {
   /// Shows [option] as the secondary subtitle, adding the track to [player]
@@ -139,17 +155,17 @@ class SecondarySubtitle {
       await off(platform);
       return true;
     }
-    final before = player.state.track.subtitle;
-    var track = _loaded(player, option);
+    final before = await platform.getProperty('sid');
+    var track = subtitleTrackOf(await mpvSubtitleTracks(platform), option);
     if (track == null) {
       // "auto" adds the track without choosing it as the main subtitle.
       await platform.command(['sub-add', file ?? option.url, 'auto', option.label, option.language]);
-      track = await _waitFor(player, option);
+      track = subtitleTrackOf(await mpvSubtitleTracks(platform), option);
       if (track == null) return false;
     }
     await platform.setProperty('secondary-sid', track.id);
     // mpv may have picked the new track as the main one too.
-    if (player.state.track.subtitle.id == track.id && before.id != track.id) await player.setSubtitleTrack(before);
+    if (await platform.getProperty('sid') == track.id && before != track.id) await platform.setProperty('sid', before.isEmpty ? 'no' : before);
     return true;
   }
 
@@ -159,16 +175,4 @@ class SecondarySubtitle {
   /// (`SubtitleViewConfiguration.secondary`).
   static Future<void> off(NativePlayer platform) => platform.setProperty('secondary-sid', 'no');
 
-  static SubtitleTrack? _loaded(Player player, SubtitleOption option) =>
-      player.state.tracks.subtitle.where((t) => t.title == option.label && t.id != 'auto' && t.id != 'no').firstOrNull;
-
-  static Future<SubtitleTrack?> _waitFor(Player player, SubtitleOption option) async {
-    if (_loaded(player, option) != null) return _loaded(player, option);
-    try {
-      await player.stream.tracks.firstWhere((_) => _loaded(player, option) != null).timeout(const Duration(seconds: 8));
-    } on TimeoutException {
-      return null;
-    }
-    return _loaded(player, option);
-  }
 }

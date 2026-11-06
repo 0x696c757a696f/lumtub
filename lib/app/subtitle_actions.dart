@@ -85,19 +85,17 @@ extension SubtitleActions on AppController {
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return;
     try {
+      final tracks = await mpvSubtitleTracks(platform);
       final second = await platform.getProperty('secondary-sid');
       if (secondarySubtitle == null && second.isNotEmpty && second != 'no') {
-        final title = player.state.tracks.subtitle.where((t) => t.id == second).firstOrNull?.title;
+        final title = tracks[second]?.title;
         final option = details?.subtitles.where((o) => o.label == title).firstOrNull;
         if (option != null) _update(() => secondarySubtitle = option);
       }
-    } catch (_) {}
-    try {
       final sid = await platform.getProperty('sid');
       if (sid.isEmpty || sid == player.state.track.subtitle.id) return;
       if (sid == 'no') return await player.setSubtitleTrack(SubtitleTrack.no());
-      SubtitleTrack? find(Tracks tracks) => tracks.subtitle.where((t) => t.id == sid).firstOrNull;
-      final track = find(player.state.tracks) ?? await player.stream.tracks.map(find).firstWhere((t) => t != null).timeout(const Duration(seconds: 3));
+      final track = player.state.tracks.subtitle.where((t) => t.id == sid).firstOrNull ?? tracks[sid];
       if (track != null) await player.setSubtitleTrack(track);
     } catch (e) {
       logWarn('Could not read the selected subtitle: $e');
@@ -123,11 +121,15 @@ extension SubtitleActions on AppController {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return const [];
-    final track = player.state.track.subtitle;
+    // Read from libmpv: media_kit's own idea of the tracks falls behind when
+    // a finished translation replaces a track or mpv picks one itself.
+    final shown = await _mpvSubtitles(platform);
+    final track = shown?.main ?? player.state.track.subtitle;
     final off = track.id == 'no' || track.id == 'auto';
     final second = secondarySubtitle;
     // A second subtitle mpv shows that no option names is read as a track.
-    final secondTrack = second != null || secondaryTrackId == 'no' ? null : player.state.tracks.subtitle.where((t) => t.id == secondaryTrackId).firstOrNull;
+    final secondId = shown?.second ?? secondaryTrackId;
+    final secondTrack = second != null || secondId == 'no' ? null : shown?.tracks[secondId] ?? player.state.tracks.subtitle.where((t) => t.id == secondId).firstOrNull;
     Future<List<SubtitleCue>> secondCues() => second != null ? _optionCues(second) : secondTrack != null ? _trackCues(platform, secondTrack) : Future.value(const []);
     final hasSecond = second != null || secondTrack != null;
     final mode = preferences.subtitleListMode;
@@ -199,6 +201,21 @@ extension SubtitleActions on AppController {
     return option == null ? null : _originalOf(option);
   }
 
+  /// The main and second subtitle libmpv shows now, and its subtitle
+  /// tracks by id; null when it cannot be asked.
+  Future<({SubtitleTrack main, String second, Map<String, SubtitleTrack> tracks})?> _mpvSubtitles(NativePlayer platform) async {
+    try {
+      final tracks = await mpvSubtitleTracks(platform);
+      String id(String value) => value.isEmpty || value == 'false' ? 'no' : value;
+      final sid = id(await platform.getProperty('sid'));
+      final second = id(await platform.getProperty('secondary-sid'));
+      return (main: sid == 'no' ? SubtitleTrack.no() : tracks[sid] ?? SubtitleTrack.no(), second: second, tracks: tracks);
+    } catch (e) {
+      logWarn('Could not read the subtitles shown: $e');
+      return null;
+    }
+  }
+
   SubtitleOption? _originalOf(SubtitleOption option) {
     if (option.kind != SubtitleKind.translated) return null;
     return originalSubtitle(details?.subtitles ?? const [], language: details?.language);
@@ -257,8 +274,8 @@ extension SubtitleActions on AppController {
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return;
     _shownOptions[option.label] = option;
-    final loaded = player.state.tracks.subtitle.where((t) => t.title == option.label).firstOrNull;
     try {
+      final loaded = subtitleTrackOf(await mpvSubtitleTracks(platform), option);
       if (loaded != null) {
         await player.setSubtitleTrack(loaded);
       } else {
@@ -426,7 +443,8 @@ extension SubtitleActions on AppController {
     if (player == null) return;
     if (option != null) _update(() => secondaryLoading = option);
     try {
-      final loaded = option == null || player.state.tracks.subtitle.any((t) => t.title == option.label);
+      final platform = player.platform;
+      final loaded = option == null || platform is NativePlayer && subtitleTrackOf(await mpvSubtitleTracks(platform), option) != null;
       final file = loaded ? null : await _subtitleFile(option);
       if (this.player != player) return;
       if (!await SecondarySubtitle.set(player, option, file: file)) throw StateError('Subtitles not loaded');
@@ -448,9 +466,12 @@ extension SubtitleActions on AppController {
       if (!identical(player, this.player)) return;
       if (secondaryTrackId == 'no') {
         if (secondarySubtitle != null && secondaryLoading == null) _update(() => secondarySubtitle = null);
-      } else {
-        final title = player.state.tracks.subtitle.where((t) => t.id == secondaryTrackId).firstOrNull?.title;
-        if (secondarySubtitle != null && secondarySubtitle!.label != title) secondarySubtitle = null;
+      } else if (secondarySubtitle != null) {
+        final platform = player.platform;
+        try {
+          final title = platform is NativePlayer ? (await mpvSubtitleTracks(platform))[secondaryTrackId]?.title : null;
+          if (title != null && secondarySubtitle!.label != title) secondarySubtitle = null;
+        } catch (_) {}
       }
       await syncMainSubtitle();
       _update(() {});

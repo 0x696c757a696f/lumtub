@@ -150,7 +150,14 @@ Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.
 
-**macOS** (separate DMGs for Apple silicon and Intel) is in testing and comes to releases once it has been tried on real Macs. ⭐ Star or watch the repository to hear when it lands.
+**macOS** (separate DMGs for Apple silicon and Intel) is in testing and comes to releases once it has been tried on real Macs. ⭐ Star or watch the repository to hear when it lands.<br>
+Lumtub is not notarized by Apple yet, so macOS stops it the first time it opens. Drag it into Applications, then either run this once in Terminal:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/Lumtub.app
+```
+
+or open it, click **Done**, and choose **Open Anyway** next to Lumtub in **System Settings › Privacy & Security**. Updates after that open normally.
 
 ## Privacy you can check
 

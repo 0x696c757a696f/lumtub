@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Rërë e ngrohtë, me terrakotë te pjesët e ngritura",
   "Kailasa and Nithyananda": "Kailasa dhe Nithyananda",
   "Ching Hai and Sai Baba media": "Media e Ching Hai dhe Sai Baba",
-  "Leader worship and miracle promotion channels": "Kanale që lartësojnë udhëheqësin dhe promovojnë mrekulli"
+  "Leader worship and miracle promotion channels": "Kanale që lartësojnë udhëheqësin dhe promovojnë mrekulli",
+  "Minimize to tray": "Minimizo në tabaka",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Minimizimi e fsheh dritaren te ikona në tabaka dhe e heq nga shiriti i detyrave; kliko ikonën për ta rikthyer",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland nuk u tregon aplikacioneve se dritarja u minimizua; për këtë aktivizo modalitetin e pajtueshmërisë X11",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "Gjithsej {0}, {1} të arritshme",
+  " · list updated {0}/{1} at {2}": " · lista u përditësua më {1}/{0} në {2}",
+  "Back to live": "Kthehu te drejtpërdrejti",
+  "Jump to the newest moment (End)": "Shko te momenti më i fundit (End)",
+  "Set by Low resource mode": "Caktohet nga «Modaliteti me burime të ulëta»",
+  "Set by the {0} color scheme": "Caktohet nga skema e ngjyrave {0}",
+  "Not needed while Pause when minimized is on": "Nuk nevojitet kur «Pezullo kur minimizohet» është aktiv",
+  "Needs Save playback position in Privacy settings": "Kërkon «Ruaj pozicionin e luajtjes» te «Cilësimet e privatësisë»",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "E bën lëvizjen më të qetë por rrit ngarkesën e GPU. Hyn në fuqi në videon tjetër. Kërkon sinkronizim të videos me ekranin, ndaj kur «Sinkronizimi i videos» është me audion, përdor display-resample."
 }

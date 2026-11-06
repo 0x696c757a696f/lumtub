@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "خلفية رملية دافئة تظهر فيها ألوان الطين المحروق في العناصر البارزة",
   "Kailasa and Nithyananda": "كايلاسا ونيثيانندا",
   "Ching Hai and Sai Baba media": "وسائل إعلام تشينغ هاي وسائي بابا",
-  "Leader worship and miracle promotion channels": "قنوات تأليه القادة والترويج للمعجزات"
+  "Leader worship and miracle promotion channels": "قنوات تأليه القادة والترويج للمعجزات",
+  "Minimize to tray": "التصغير إلى منطقة الإشعارات",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "يخفي التصغير النافذة في أيقونة منطقة الإشعارات ويزيلها من شريط المهام؛ انقر على الأيقونة لإعادتها",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "لا يُبلغ Wayland التطبيقات بأن نافذتها قد صُغّرت؛ فعّل وضع التوافق مع X11 لذلك",
+  ", ": "، ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "الإجمالي {0}، والمتاح {1}",
+  " · list updated {0}/{1} at {2}": " · تم تحديث القائمة {1}/{0} في {2}",
+  "Back to live": "العودة إلى البث المباشر",
+  "Jump to the newest moment (End)": "الانتقال إلى أحدث لحظة (End)",
+  "Set by Low resource mode": "مضبوط بواسطة «وضع الموارد المنخفضة»",
+  "Set by the {0} color scheme": "مضبوط بواسطة نظام الألوان {0}",
+  "Not needed while Pause when minimized is on": "غير مطلوب أثناء تفعيل «إيقاف مؤقت عند التصغير»",
+  "Needs Save playback position in Privacy settings": "يتطلب «حفظ موضع التشغيل» في «إعدادات الخصوصية»",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "يجعل الحركة أكثر سلاسة لكنه يزيد حمل GPU. يسري عند الفيديو التالي. ويتطلب مزامنة الفيديو مع الشاشة، لذا عند ضبط مزامنة الفيديو على الصوت يستخدم display-resample."
 }

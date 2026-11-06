@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Hlýr sandbakgrunnur með terrakotta í upphleyptum hlutum",
   "Kailasa and Nithyananda": "Kailasa og Nithyananda",
   "Ching Hai and Sai Baba media": "Miðlar Ching Hai og Sai Baba",
-  "Leader worship and miracle promotion channels": "Rásir sem upphefja leiðtoga og kynna kraftaverk"
+  "Leader worship and miracle promotion channels": "Rásir sem upphefja leiðtoga og kynna kraftaverk",
+  "Minimize to tray": "Minnka í kerfisbakka",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Þegar glugginn er minnkaður hverfur hann í tákn í kerfisbakka og hverfur af verkefnastikunni; smelltu á táknið til að sækja hann aftur",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland lætur forrit ekki vita að gluggi þeirra hafi verið minnkaður; kveiktu á „X11-samhæfniham“ til að nota þetta",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "{0} alls, {1} aðgengileg",
+  " · list updated {0}/{1} at {2}": " · listi uppfærður {1}.{0}. kl. {2}",
+  "Back to live": "Aftur í beina útsendingu",
+  "Jump to the newest moment (End)": "Fara á nýjasta augnablikið (End)",
+  "Set by Low resource mode": "Stillt af „Sparnaðarstilling“",
+  "Set by the {0} color scheme": "Stillt af litasamsetningunni {0}",
+  "Not needed while Pause when minimized is on": "Ekki nauðsynlegt á meðan „Setja í bið þegar minnkað“ er virkt",
+  "Needs Save playback position in Privacy settings": "Krefst „Vista stöðu í spilun“ í „Persónuverndarstillingar“",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Gerir hreyfingu mýkri en eykur álag á skjákort. Tekur gildi í næsta myndbandi. Krefst samstillingar myndbands við skjáinn, svo þegar myndsamstilling er stillt á hljóð er display-resample notað."
 }

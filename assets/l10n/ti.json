@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "ሃሩር ሓመድ ድሕረ-ባይታ፣ ቀይሕ ሓመድ ኣብ ዝልዕል",
   "Kailasa and Nithyananda": "ካይላሳን ኒቲያናንዳን",
   "Ching Hai and Sai Baba media": "መራኸቢ ቺንግ ሃይን ሳይ ባባን",
-  "Leader worship and miracle promotion channels": "ቻነላት ኣምልኾ መራሕቲን ፕሮፓጋንዳ ተኣምራትን"
+  "Leader worship and miracle promotion channels": "ቻነላት ኣምልኾ መራሕቲን ፕሮፓጋንዳ ተኣምራትን",
+  "Minimize to tray": "ናብ ትሬይ ንኣሽቶ",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "ምንኣሽ መስኮት ናብ ኣይኮን ትሬይ ይሕብኦ ካብ ታስክባር ድማ የወጽኦ፤ ንምምላስ ኣይኮኑ ጠውቕ",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland መስኮት ከም ዝተንእሰ ንመተሓሳሰብታት ኣይነግርን፤ ንዚ X11 ምስምማዕ ኩነታት ኣብሪህ",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "ጠቕላላ {0}፣ ዝበጽሑ {1}",
+  " · list updated {0}/{1} at {2}": " · ዝርዝር ተሓዲሱ {1}/{0} ሰዓት {2}",
+  "Back to live": "ናብ ቀጥታ ተመለስ",
+  "Jump to the newest moment (End)": "ናብ ሓዲሽ እዋን ሰጉር (End)",
+  "Set by Low resource mode": "ብ\"ትሑት ሃብቲ ኩነታት\" ዝተቐመጠ",
+  "Set by the {0} color scheme": "ብ{0} ሕብሪ መርሃ ዝተቐመጠ",
+  "Not needed while Pause when minimized is on": "\"ምስ ተንእሰ ደው በል\" ክነቃል ከሎ ኣየድልን",
+  "Needs Save playback position in Privacy settings": "ኣብ \"ቅጥዕታት ሓባሬታ\" \"ቦታ ጸወታ ኣቐምጥ\" የድሊ",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "ምንቅስቓስ ዝያዳ ለሰ ይገብር፣ ግን GPU የክብድ። ኣብ ቀጻሊ ቪዲዮ ይሰርሕ። ምስ ስክሪን ምስምማዕ ቪዲዮ የድሊ፣ ስለዚ \"ምስምማዕ ቪዲዮ\" ምስ ድምጺ እንተኾነ display-resample ይጥቀም።"
 }

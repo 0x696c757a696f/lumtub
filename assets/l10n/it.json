@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Sabbia calda, con la terracotta negli elementi in rilievo",
   "Kailasa and Nithyananda": "Kailasa e Nithyananda",
   "Ching Hai and Sai Baba media": "Media di Ching Hai e Sai Baba",
-  "Leader worship and miracle promotion channels": "Canali di venerazione del leader e di promozione di miracoli"
+  "Leader worship and miracle promotion channels": "Canali di venerazione del leader e di promozione di miracoli",
+  "Minimize to tray": "Riduci all'area di notifica",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "La riduzione nasconde la finestra nell'icona dell'area di notifica e la toglie dalla barra delle applicazioni; fai clic sull'icona per riaprirla",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland non comunica alle app che la loro finestra è stata ridotta a icona; per questo attiva la «Modalità di compatibilità X11»",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "{0} in totale, {1} raggiungibili",
+  " · list updated {0}/{1} at {2}": " · elenco aggiornato il {1}/{0} alle {2}",
+  "Back to live": "Torna al live",
+  "Jump to the newest moment (End)": "Vai al momento più recente (End)",
+  "Set by Low resource mode": "Impostato da «Modalità a basso consumo»",
+  "Set by the {0} color scheme": "Impostato dallo schema di colori {0}",
+  "Not needed while Pause when minimized is on": "Non necessario finché «Pausa quando ridotto a icona» è attivo",
+  "Needs Save playback position in Privacy settings": "Richiede «Salva la posizione di riproduzione» in «Impostazioni privacy»",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Rende il movimento più fluido ma aumenta il carico della GPU. Ha effetto dal video successivo. Richiede la sincronizzazione del video con lo schermo, quindi con la sincronizzazione video impostata sull'audio usa display-resample."
 }

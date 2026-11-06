@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "רקע חול חם, עם טרקוטה באלמנטים הבולטים",
   "Kailasa and Nithyananda": "קיילאסה וניתיאננדה",
   "Ching Hai and Sai Baba media": "מדיה של צ'ינג האי וסאי באבא",
-  "Leader worship and miracle promotion channels": "ערוצי הערצת מנהיגים וקידום ניסים"
+  "Leader worship and miracle promotion channels": "ערוצי הערצת מנהיגים וקידום ניסים",
+  "Minimize to tray": "מזעור למגש",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "מזעור מסתיר את החלון לסמל במגש ומסיר אותו משורת המשימות; לחיצה על הסמל מחזירה אותו",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland לא מדווח ליישומים שהחלון שלהם מוזער; להפעלה הפעילו את \"מצב תאימות X11\"",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "{0} בסך הכול, {1} זמינים",
+  " · list updated {0}/{1} at {2}": " · הרשימה עודכנה ב-{1}/{0} בשעה {2}",
+  "Back to live": "חזרה לשידור החי",
+  "Jump to the newest moment (End)": "מעבר לרגע האחרון (End)",
+  "Set by Low resource mode": "נקבע לפי \"מצב צריכת משאבים נמוכה\"",
+  "Set by the {0} color scheme": "נקבע לפי ערכת הצבעים {0}",
+  "Not needed while Pause when minimized is on": "לא נחוץ כל עוד \"השהיה בעת מזעור\" פעילה",
+  "Needs Save playback position in Privacy settings": "דורש \"שמירת מיקום ההפעלה\" ב\"הגדרות פרטיות\"",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "מחליק את התנועה, אך מגביר את העומס על ה-GPU. ייכנס לתוקף בסרטון הבא. נדרש סנכרון וידאו לתצוגה, ולכן כשסנכרון הווידאו מוגדר לפי השמע נעשה שימוש ב-display-resample."
 }

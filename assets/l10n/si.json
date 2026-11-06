@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "ඉහළ නැංවූ දෙයෙහි ටෙරකොටා සහිත උණුසුම් වැලි",
   "Kailasa and Nithyananda": "කයිලාසා සහ නිත්‍යානන්ද",
   "Ching Hai and Sai Baba media": "චිං හයි සහ සායි බාබා මාධ්‍ය",
-  "Leader worship and miracle promotion channels": "නායක නමස්කාරය සහ ආශ්චර්ය ප්‍රවර්ධන නාලිකා"
+  "Leader worship and miracle promotion channels": "නායක නමස්කාරය සහ ආශ්චර්ය ප්‍රවර්ධන නාලිකා",
+  "Minimize to tray": "තැටි පෙට්ටියට අවම කරන්න",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "අවම කළ විට කවුළුව තැටි පෙට්ටි අයිකනයට සැඟවී කාර්ය තීරුවෙන් ඉවත් වේ; නැවත ගෙන ඒමට අයිකනය click කරන්න",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "කවුළුව අවම කළ බව Wayland යෙදුම්වලට නොදන්වයි; මේ සඳහා X11 ගැළපුම් ප්‍රකාරය සක්‍රිය කරන්න",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "මුළු {0}, ළඟා විය හැක්කේ {1}",
+  " · list updated {0}/{1} at {2}": " · ලැයිස්තුව {0}/{1} {2} ට යාවත්කාලීන කරන ලදී",
+  "Back to live": "සජීවීයට ආපසු",
+  "Jump to the newest moment (End)": "නවතම මොහොතට පනින්න (End)",
+  "Set by Low resource mode": "“අඩු සම්පත් ප්‍රකාරය” මගින් සකසා ඇත",
+  "Set by the {0} color scheme": "“{0}” වර්ණ ක්‍රමය මගින් සකසා ඇත",
+  "Not needed while Pause when minimized is on": "“අවම කළ විට විරාම කරන්න” සක්‍රිය විට අවශ්‍ය නැත",
+  "Needs Save playback position in Privacy settings": "“රහස්‍යතා සැකසුම්” තුළ “ධාවන ස්ථානය සුරකින්න” අවශ්‍යයි",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "චලනය සුමට කරයි, නමුත් GPU භාරය වැඩි කරයි. ඊළඟ වීඩියෝවේ සිට බලපායි. මේ සඳහා සංදර්ශකයට වීඩියෝ සමමුහූර්තය අවශ්‍ය නිසා, වීඩියෝ සමමුහූර්තය ශ්‍රව්‍යයට සකසා ඇති විට display-resample භාවිත වේ."
 }

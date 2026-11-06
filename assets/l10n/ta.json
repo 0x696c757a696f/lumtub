@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "வெப்ப மணல் பின்னணி; உயர்ந்த இடங்களில் சிவப்புக் களிமண் நிறம் தெரியும்",
   "Kailasa and Nithyananda": "கைலாசாவும் நித்யானந்தாவும்",
   "Ching Hai and Sai Baba media": "சிங் ஹாய், சாய் பாபா ஊடகங்கள்",
-  "Leader worship and miracle promotion channels": "தலைவர் தெய்வமாக்கல், அற்புத விளம்பரச் சேனல்கள்"
+  "Leader worship and miracle promotion channels": "தலைவர் தெய்வமாக்கல், அற்புத விளம்பரச் சேனல்கள்",
+  "Minimize to tray": "தட்டுக்குச் சிறிதாக்கு",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "சிறிதாக்கினால் சாளரம் தட்டு ஐகானுக்குள் மறைந்து, பணிப்பட்டியிலிருந்து நீங்கும்; ஐகானைக் கிளிக் செய்தால் திரும்பும்",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "சாளரம் சிறிதாக்கப்பட்டதை Wayland பயன்பாடுகளுக்குத் தெரிவிக்காது; இதற்கு X11 இணக்கப் பயன்முறையை இயக்கவும்",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "மொத்தம் {0}, இணைக்கக்கூடியவை {1}",
+  " · list updated {0}/{1} at {2}": " · பட்டியல் புதுப்பிப்பு {1}/{0} {2} மணிக்கு",
+  "Back to live": "நேரலைக்குத் திரும்பு",
+  "Jump to the newest moment (End)": "புதிய தருணத்துக்குச் செல் (End)",
+  "Set by Low resource mode": "\"குறைந்த வளப் பயன்முறை\" அமைத்தது",
+  "Set by the {0} color scheme": "{0} வண்ணத் தொகுப்பால் அமைக்கப்பட்டது",
+  "Not needed while Pause when minimized is on": "\"சிறிதாக்கும்போது இடைநிறுத்து\" இயக்கத்தில் இருக்கும்போது தேவையில்லை",
+  "Needs Save playback position in Privacy settings": "\"தனியுரிமை அமைப்புகள்\" இல் \"இயக்க நிலையைச் சேமி\" தேவை",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "இயக்கத்தை மென்மையாக்கும், ஆனால் GPU சுமை கூடும். அடுத்த வீடியோவில் செயல்படும். இதற்கு வீடியோவைத் திரையுடன் ஒத்திசைக்க வேண்டும்; \"வீடியோ ஒத்திசைவு\" ஒலி எனில் display-resample பயன்படுத்தப்படும்."
 }

@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Areia quente, com terracota nos elementos em relevo",
   "Kailasa and Nithyananda": "Kailasa e Nithyananda",
   "Ching Hai and Sai Baba media": "Mídia de Ching Hai e Sai Baba",
-  "Leader worship and miracle promotion channels": "Canais de culto ao líder e promoção de milagres"
+  "Leader worship and miracle promotion channels": "Canais de culto ao líder e promoção de milagres",
+  "Minimize to tray": "Minimizar para a bandeja",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Ao minimizar, a janela fica oculta no ícone da bandeja e sai da barra de tarefas; clique no ícone para restaurá-la",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "O Wayland não avisa os aplicativos de que a janela foi minimizada; ative o modo de compatibilidade X11 para isso",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "{0} no total, {1} acessíveis",
+  " · list updated {0}/{1} at {2}": " · lista atualizada em {1}/{0} às {2}",
+  "Back to live": "Voltar ao vivo",
+  "Jump to the newest moment (End)": "Ir para o momento mais recente (End)",
+  "Set by Low resource mode": "Definido por “Modo de baixo consumo”",
+  "Set by the {0} color scheme": "Definido pelo esquema de cores “{0}”",
+  "Not needed while Pause when minimized is on": "Desnecessário enquanto “Pausar ao minimizar” estiver ativado",
+  "Needs Save playback position in Privacy settings": "Requer “Salvar a posição de reprodução” em “Configurações de privacidade”",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Deixa o movimento mais suave, mas aumenta a carga da GPU. Entra em vigor no próximo vídeo. Requer sincronia do vídeo com a tela; com a sincronia do vídeo definida como áudio, é usado display-resample."
 }

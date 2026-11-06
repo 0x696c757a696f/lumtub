@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Varma sablo, kun terakoto en la leviĝintaj partoj",
   "Kailasa and Nithyananda": "Kailasa kaj Nithyananda",
   "Ching Hai and Sai Baba media": "Amaskomunikilaro de Ching Hai kaj Sai Baba",
-  "Leader worship and miracle promotion channels": "Kanaloj pri adoro de gvidantoj kaj promocio de mirakloj"
+  "Leader worship and miracle promotion channels": "Kanaloj pri adoro de gvidantoj kaj promocio de mirakloj",
+  "Minimize to tray": "Minimumigi al pleto",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Minimumigo kaŝas la fenestron en la pletan bildsimbolon kaj forigas ĝin de la taskobreto; alklaku la bildsimbolon por reigi ĝin",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland ne diras al aplikaĵoj ke ilia fenestro estis minimumigita; ŝaltu kongruan reĝimon X11 por tio",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "{0} entute, {1} atingeblaj",
+  " · list updated {0}/{1} at {2}": " · listo ĝisdatigita {1}/{0} je {2}",
+  "Back to live": "Reen al viva",
+  "Jump to the newest moment (End)": "Salti al la plej nova momento (End)",
+  "Set by Low resource mode": "Agordita de «Ŝparreĝimo»",
+  "Set by the {0} color scheme": "Agordita de la kolorskemo {0}",
+  "Not needed while Pause when minimized is on": "Ne necesas dum «Paŭzi kiam minimumigita» estas ŝaltita",
+  "Needs Save playback position in Privacy settings": "Postulas «Konservi ludpozicion» en «Agordoj de privateco»",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Glatigas movadon sed pliigas la ŝarĝon de GPU. Efikas ĉe la sekva video. Ĝi bezonas videosinkronigon al la ekrano, do kun videosinkronigo al sono ĝi uzas display-resample."
 }

@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "თბილი ქვიშისფერი ფონი, ამობურცულ ადგილებზე ტერაკოტას ელფერით",
   "Kailasa and Nithyananda": "კაილასა და ნითიანანდა",
   "Ching Hai and Sai Baba media": "ჩინგ ჰაისა და საი ბაბას მედია",
-  "Leader worship and miracle promotion channels": "ლიდერის განდიდებისა და სასწაულების პროპაგანდისტული არხები"
+  "Leader worship and miracle promotion channels": "ლიდერის განდიდებისა და სასწაულების პროპაგანდისტული არხები",
+  "Minimize to tray": "უჯრაში ჩაკეცვა",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "ჩაკეცვისას ფანჯარა უჯრის ხატულაში იმალება და სამუშაო ზოლიდან ქრება; დასაბრუნებლად დააწკაპუნეთ ხატულაზე",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland აპებს არ აცნობებს, რომ მათი ფანჯარა ჩაიკეცა; ამისთვის ჩართეთ „X11 თავსებადობის რეჟიმი“",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "სულ {0}, ხელმისაწვდომია {1}",
+  " · list updated {0}/{1} at {2}": " · სია განახლდა {1}/{0}, {2}",
+  "Back to live": "პირდაპირ ეთერზე დაბრუნება",
+  "Jump to the newest moment (End)": "უახლეს მომენტზე გადასვლა (End)",
+  "Set by Low resource mode": "დაყენებულია „დაბალი რესურსების რეჟიმით“",
+  "Set by the {0} color scheme": "დაყენებულია ფერთა სქემით: {0}",
+  "Not needed while Pause when minimized is on": "საჭირო არ არის, სანამ ჩართულია „პაუზა ჩაკეცვისას“",
+  "Needs Save playback position in Privacy settings": "საჭიროა „დაკვრის პოზიციის შენახვა“ განყოფილებაში „კონფიდენციალურობის პარამეტრები“",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "მოძრაობას უფრო გლუვს ხდის, მაგრამ GPU-ს დატვირთვას ზრდის. ძალაში შედის შემდეგი ვიდეოდან. საჭიროა ვიდეოს ეკრანთან სინქრონიზაცია, ამიტომ როცა ვიდეოს სინქრონიზაცია აუდიოზეა დაყენებული, გამოიყენება display-resample."
 }

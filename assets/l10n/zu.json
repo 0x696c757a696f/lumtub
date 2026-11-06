@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Isihlabathi esifudumele, ne-terracotta kokuphakeme",
   "Kailasa and Nithyananda": "Kailasa noNithyananda",
   "Ching Hai and Sai Baba media": "Izindaba zikaChing Hai noSai Baba",
-  "Leader worship and miracle promotion channels": "Iziteshi zokukhonzwa kwabaholi nokukhuthaza izimangaliso"
+  "Leader worship and miracle promotion channels": "Iziteshi zokukhonzwa kwabaholi nokukhuthaza izimangaliso",
+  "Minimize to tray": "Nciphisela kutreyi",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Ukunciphisa kufihla ifasitela kusithonjana setreyi futhi kulikhiphe kubha yomsebenzi; chofoza isithonjana ukulibuyisa",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "I-Wayland ayitsheli ama-app ukuthi ifasitela lincishisiwe; vula imodi ehambisana ne-X11 kulokhu",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "Konke {0}, {1} ayafinyeleleka",
+  " · list updated {0}/{1} at {2}": " · uhlu lubuyekezwe {1}/{0} ngo-{2}",
+  "Back to live": "Buyela bukhoma",
+  "Jump to the newest moment (End)": "Yiya esikhathini sakamuva (End)",
+  "Set by Low resource mode": "Kusethwe \"Imodi yezinsiza ezincane\"",
+  "Set by the {0} color scheme": "Kusethwe uhlelo lombala we-{0}",
+  "Not needed while Pause when minimized is on": "Akudingeki uma \"Misa uma kuncishisiwe\" ivuliwe",
+  "Needs Save playback position in Privacy settings": "Kudinga \"Gcina indawo yokudlala\" ku-\"Izilungiselelo zobumfihlo\"",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Yenza ukuhamba kugudle kodwa kwengeze umthwalo we-GPU. Kusebenza evidiyweni elandelayo. Idinga ukuvumelana kwevidiyo nesibonisi, ngakho uma \"Ukuvumelana kwevidiyo\" kusethwe kumsindo isebenzisa i-display-resample."
 }

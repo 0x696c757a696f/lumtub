@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Nền cát ấm, chỗ nổi lên ánh màu đất nung",
   "Kailasa and Nithyananda": "Kailasa và Nithyananda",
   "Ching Hai and Sai Baba media": "Truyền thông Ching Hai và Sai Baba",
-  "Leader worship and miracle promotion channels": "Các kênh thần thánh hóa lãnh tụ và quảng bá phép màu"
+  "Leader worship and miracle promotion channels": "Các kênh thần thánh hóa lãnh tụ và quảng bá phép màu",
+  "Minimize to tray": "Thu nhỏ xuống khay",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Thu nhỏ sẽ ẩn cửa sổ xuống biểu tượng khay và gỡ khỏi thanh tác vụ; nhấp vào biểu tượng để mở lại",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland không báo cho ứng dụng biết cửa sổ đã thu nhỏ; hãy bật chế độ tương thích X11 cho việc này",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "Tổng {0}, kết nối được {1}",
+  " · list updated {0}/{1} at {2}": " · danh sách cập nhật {1}/{0} lúc {2}",
+  "Back to live": "Quay lại trực tiếp",
+  "Jump to the newest moment (End)": "Chuyển đến thời điểm mới nhất (End)",
+  "Set by Low resource mode": "Do \"Chế độ tiết kiệm tài nguyên\" đặt",
+  "Set by the {0} color scheme": "Do bảng màu {0} đặt",
+  "Not needed while Pause when minimized is on": "Không cần khi bật \"Tạm dừng khi thu nhỏ\"",
+  "Needs Save playback position in Privacy settings": "Cần bật \"Lưu vị trí đang phát\" trong \"Cài đặt quyền riêng tư\"",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Giúp hình ảnh chuyển động mượt hơn nhưng tăng tải GPU. Có hiệu lực ở video tiếp theo. Cần đồng bộ video theo màn hình, nên khi \"Đồng bộ video\" đặt theo âm thanh sẽ dùng display-resample."
 }

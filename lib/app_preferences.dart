@@ -96,6 +96,7 @@ class AppPreferences {
     this.pauseOnMinimize = false,
     this.audioOnlyInBackground = false,
     this.closeToTray = false,
+    this.minimizeToTray = false,
     this.keyboardShortcuts = true,
     this.seekSeconds = 5,
     this.longSeekSeconds = 10,
@@ -221,6 +222,8 @@ class AppPreferences {
   final bool audioOnlyInBackground;
   /// Closing the window hides it to the tray icon instead of exiting.
   final bool closeToTray;
+  /// Minimising the window hides it to the tray icon.
+  final bool minimizeToTray;
   final bool keyboardShortcuts;
   final int seekSeconds;
   final int longSeekSeconds;
@@ -407,6 +410,7 @@ class AppPreferences {
     bool? pauseOnMinimize,
     bool? audioOnlyInBackground,
     bool? closeToTray,
+    bool? minimizeToTray,
     bool? keyboardShortcuts,
     int? seekSeconds,
     int? longSeekSeconds,
@@ -483,6 +487,7 @@ class AppPreferences {
         pauseOnMinimize: pauseOnMinimize ?? this.pauseOnMinimize,
         audioOnlyInBackground: audioOnlyInBackground ?? this.audioOnlyInBackground,
         closeToTray: closeToTray ?? this.closeToTray,
+        minimizeToTray: minimizeToTray ?? this.minimizeToTray,
         keyboardShortcuts: keyboardShortcuts ?? this.keyboardShortcuts,
         seekSeconds: seekSeconds ?? this.seekSeconds,
         longSeekSeconds: longSeekSeconds ?? this.longSeekSeconds,
@@ -560,6 +565,7 @@ class AppPreferences {
         'pauseOnMinimize': pauseOnMinimize,
         'audioOnlyInBackground': audioOnlyInBackground,
         'closeToTray': closeToTray,
+        'minimizeToTray': minimizeToTray,
         'keyboardShortcuts': keyboardShortcuts,
         'seekSeconds': seekSeconds,
         'longSeekSeconds': longSeekSeconds,
@@ -671,6 +677,7 @@ class AppPreferences {
       pauseOnMinimize: flag('pauseOnMinimize', d.pauseOnMinimize),
       audioOnlyInBackground: flag('audioOnlyInBackground', d.audioOnlyInBackground),
       closeToTray: flag('closeToTray', d.closeToTray),
+      minimizeToTray: flag('minimizeToTray', d.minimizeToTray),
       keyboardShortcuts: flag('keyboardShortcuts', d.keyboardShortcuts),
       seekSeconds: number('seekSeconds', 5, 1, 60),
       longSeekSeconds: number('longSeekSeconds', 10, 1, 120),

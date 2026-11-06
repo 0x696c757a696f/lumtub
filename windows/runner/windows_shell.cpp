@@ -27,6 +27,7 @@ namespace media = winrt::Windows::Media;
 
 constexpr UINT kMediaButtonMessage = WM_APP + 1;  // wparam: MediaButton, lparam: milliseconds for a seek
 constexpr UINT kTrayMessage = WM_APP + 2;         // lparam: the mouse message on the tray icon
+constexpr UINT kHideMessage = WM_APP + 3;         // hides a just-minimised window to the tray
 constexpr UINT kTrayIconId = 1;
 
 enum MediaButton : WPARAM { kPlay = 1, kPause, kNext, kPrevious, kStop, kSeek };
@@ -241,11 +242,12 @@ void WindowsShell::HandleCall(const flutter::MethodCall<EncodableValue>& call,
       return;
     } else if (method == "setTray") {
       close_to_tray_ = BoolArg(args, "enabled");
+      minimize_to_tray_ = BoolArg(args, "minimize");
       show_label_ = Widen(StringArg(args, "show"));
       play_pause_label_ = Widen(StringArg(args, "playPause"));
       next_label_ = Widen(StringArg(args, "next"));
       exit_label_ = Widen(StringArg(args, "exit"));
-      if (!close_to_tray_) RemoveTrayIcon();
+      if (!close_to_tray_ && !minimize_to_tray_ && tray_icon_) ShowFromTray();
     } else if (media_ && method == "setMetadata") {
       media_->SetMetadata(StringArg(args, "title"), StringArg(args, "artist"), StringArg(args, "thumbnail"));
     } else if (media_ && method == "setStatus") {
@@ -272,6 +274,15 @@ bool WindowsShell::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRE
     case WM_CLOSE:
       if (!close_to_tray_) return false;
       HideToTray();
+      *result = 0;
+      return true;
+    case WM_SIZE:
+      // After Flutter has seen the window minimised, whichever way it was
+      // (button, taskbar, Win+M, Win+Down).
+      if (wparam == SIZE_MINIMIZED && minimize_to_tray_) ::PostMessage(window_, kHideMessage, 0, 0);
+      return false;
+    case kHideMessage:
+      if (minimize_to_tray_ && ::IsIconic(window_)) HideToTray();
       *result = 0;
       return true;
     case kMediaButtonMessage:
@@ -348,6 +359,7 @@ void WindowsShell::ShowTrayMenu() {
     case kTrayExit:
       // The normal close path, so Dart saves progress and releases the player.
       close_to_tray_ = false;
+      minimize_to_tray_ = false;
       RemoveTrayIcon();
       ::PostMessage(window_, WM_CLOSE, 0, 0);
       break;

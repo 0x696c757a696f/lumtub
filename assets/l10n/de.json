@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Warmer Sandgrund, mit Terrakotta an erhabenen Stellen",
   "Kailasa and Nithyananda": "Kailasa und Nithyananda",
   "Ching Hai and Sai Baba media": "Medien von Ching Hai und Sai Baba",
-  "Leader worship and miracle promotion channels": "Kanäle mit Führerverehrung und Wunderpropaganda"
+  "Leader worship and miracle promotion channels": "Kanäle mit Führerverehrung und Wunderpropaganda",
+  "Minimize to tray": "In den Infobereich minimieren",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Beim Minimieren wird das Fenster im Infobereich-Symbol ausgeblendet und verschwindet aus der Taskleiste; zum Zurückholen auf das Symbol klicken",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland teilt Apps nicht mit, dass ihr Fenster minimiert wurde; aktiviere dafür den X11-Kompatibilitätsmodus",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "{0} insgesamt, {1} erreichbar",
+  " · list updated {0}/{1} at {2}": " · Liste aktualisiert am {1}.{0}. um {2}",
+  "Back to live": "Zurück zu Live",
+  "Jump to the newest moment (End)": "Zum neuesten Moment springen (End)",
+  "Set by Low resource mode": "Festgelegt durch Ressourcensparmodus",
+  "Set by the {0} color scheme": "Festgelegt durch das Farbschema {0}",
+  "Not needed while Pause when minimized is on": "Nicht nötig, solange „Beim Minimieren pausieren“ aktiv ist",
+  "Needs Save playback position in Privacy settings": "Erfordert „Wiedergabeposition speichern“ in den Datenschutzeinstellungen",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Macht Bewegungen flüssiger, erhöht aber die GPU-Last. Wird beim nächsten Video wirksam. Dafür ist die Videosynchronisierung mit der Anzeige nötig; bei Synchronisierung mit Audio wird daher display-resample verwendet."
 }

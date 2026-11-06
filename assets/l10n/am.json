@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "ሞቅ ያለ አሸዋ፣ በከፍ ባለው ላይ ቴራኮታ ያለው",
   "Kailasa and Nithyananda": "ካይላሳ እና ኒቲያናንዳ",
   "Ching Hai and Sai Baba media": "የቺንግ ሃይ እና ሳይ ባባ ሚዲያ",
-  "Leader worship and miracle promotion channels": "የመሪ አምልኮ እና ተአምር ማስተዋወቂያ ቻናሎች"
+  "Leader worship and miracle promotion channels": "የመሪ አምልኮ እና ተአምር ማስተዋወቂያ ቻናሎች",
+  "Minimize to tray": "ወደ ትሪ አሳንስ",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "ማሳነስ መስኮቱን ወደ ትሪ አዶ ይደብቃል እና ከተግባር አሞሌ ያስወግደዋል፤ ለመመለስ አዶውን ጠቅ ያድርጉ",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland መስኮቱ መቀነሱን ለመተግበሪያዎች አይነግርም፤ ለዚህ የX11 ተኳሃኝነት ሁነታን ያብሩ",
+  ", ": "፣ ",
+  ".": "።",
+  "{0}. {1}": "{0}። {1}",
+  "{0} in all, {1} reachable": "በአጠቃላይ {0}፣ {1} ተደራሽ",
+  " · list updated {0}/{1} at {2}": " · ዝርዝር ተዘምኗል {0}/{1} በ{2}",
+  "Back to live": "ወደ ቀጥታ ተመለስ",
+  "Jump to the newest moment (End)": "ወደ አዲሱ ቅጽበት ዝለል (End)",
+  "Set by Low resource mode": "በ ዝቅተኛ ሀብት ሁነታ የተቀናበረ",
+  "Set by the {0} color scheme": "በ{0} የቀለም ገጽታ የተቀናበረ",
+  "Not needed while Pause when minimized is on": "ሲቀነስ ባለበት አቁም ሲበራ አያስፈልግም",
+  "Needs Save playback position in Privacy settings": "በየግላዊነት ቅንብሮች ውስጥ የመልሶ ማጫወት ቦታን አስቀምጥ ያስፈልጋል",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "እንቅስቃሴን ለስላሳ ያደርጋል ነገር ግን የ GPU ጭነትን ይጨምራል። በሚቀጥለው ቪዲዮ ላይ ተግባራዊ ይሆናል። ቪዲዮን ከማሳያው ጋር ማመሳሰል ያስፈልገዋል፣ ስለዚህ የቪዲዮ ማመሳሰል ከድምፅ ጋር ሲሆን display-resample ይጠቀማል።"
 }

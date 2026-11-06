@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Silts smilšu fons ar terakotas toni paceltajos elementos",
   "Kailasa and Nithyananda": "Kailasa un Nithyananda",
   "Ching Hai and Sai Baba media": "Ching Hai un Sai Baba mediji",
-  "Leader worship and miracle promotion channels": "Līderu pielūgsmes un brīnumu popularizēšanas kanāli"
+  "Leader worship and miracle promotion channels": "Līderu pielūgsmes un brīnumu popularizēšanas kanāli",
+  "Minimize to tray": "Minimizēt uz paziņojumu apgabalu",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Minimizējot logs tiek paslēpts paziņojumu apgabala ikonā un pazūd no uzdevumjoslas; noklikšķiniet uz ikonas, lai to atjaunotu",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland neinformē lietotnes, ka logs ir minimizēts; šim ieslēdziet X11 saderības režīmu",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "Kopā {0}, pieejami {1}",
+  " · list updated {0}/{1} at {2}": " · saraksts atjaunināts {0}/{1} plkst. {2}",
+  "Back to live": "Atpakaļ uz tiešraidi",
+  "Jump to the newest moment (End)": "Pāriet uz jaunāko brīdi (End)",
+  "Set by Low resource mode": "Iestatīts ar „Zema resursu patēriņa režīms“",
+  "Set by the {0} color scheme": "Iestatīts ar krāsu shēmu „{0}“",
+  "Not needed while Pause when minimized is on": "Nav vajadzīgs, kamēr ieslēgts „Apturēt, kad logs ir minimizēts“",
+  "Needs Save playback position in Privacy settings": "Nepieciešams „Saglabāt atskaņošanas pozīciju“ sadaļā „Konfidencialitātes iestatījumi“",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Padara kustību plūstošāku, bet palielina GPU slodzi. Stājas spēkā nākamajam video. Tam nepieciešama video sinhronizācija ar displeju, tāpēc, ja video sinhronizācija ir iestatīta uz audio, tiek izmantots display-resample."
 }

@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Varm sand, med terrakotta i det upphöjda",
   "Kailasa and Nithyananda": "Kailasa och Nithyananda",
   "Ching Hai and Sai Baba media": "Ching Hai- och Sai Baba-medier",
-  "Leader worship and miracle promotion channels": "Kanaler som förhärligar ledare och sprider underverk"
+  "Leader worship and miracle promotion channels": "Kanaler som förhärligar ledare och sprider underverk",
+  "Minimize to tray": "Minimera till systemfältet",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Minimering döljer fönstret i systemfältsikonen och tar bort det från aktivitetsfältet. Klicka på ikonen för att få tillbaka det.",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland talar inte om för appar att fönstret minimerats. Aktivera X11-kompatibilitetsläge för det här.",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "Totalt {0}, {1} nåbara",
+  " · list updated {0}/{1} at {2}": " · listan uppdaterad {1}/{0} kl. {2}",
+  "Back to live": "Tillbaka till live",
+  "Jump to the newest moment (End)": "Hoppa till det senaste ögonblicket (End)",
+  "Set by Low resource mode": "Styrs av \"Resurssnålt läge\"",
+  "Set by the {0} color scheme": "Styrs av färgschemat {0}",
+  "Not needed while Pause when minimized is on": "Behövs inte när \"Pausa vid minimering\" är på",
+  "Needs Save playback position in Privacy settings": "Kräver \"Spara uppspelningsposition\" i \"Integritetsinställningar\"",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Gör rörelser jämnare men ökar GPU-belastningen. Börjar gälla vid nästa video. Den kräver videosynk mot skärmen, så när \"Videosynkronisering\" är inställd på ljud används display-resample."
 }

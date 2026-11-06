@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Ýyly gum fon, çykyp duran ýerlerde terrakota reňki",
   "Kailasa and Nithyananda": "Kailasa we Nithyananda",
   "Ching Hai and Sai Baba media": "Çing Haý we Saý Baba metbugaty",
-  "Leader worship and miracle promotion channels": "Ýolbaşçyny ylahylaşdyrýan we gudrat mahabatyny ýaýradýan kanallar"
+  "Leader worship and miracle promotion channels": "Ýolbaşçyny ylahylaşdyrýan we gudrat mahabatyny ýaýradýan kanallar",
+  "Minimize to tray": "Tabaga kiçelt",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Kiçeltmek penjiräni tabak nyşanyna gizleýär we iş panelinden aýyrýar; gaýtarmak üçin nyşana basyň",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland programmalara penjiriň kiçeldilendigini habar bermeýär; munuň üçin X11 sazlaşyk režimini açyň",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "Jemi {0}, elýeterli {1}",
+  " · list updated {0}/{1} at {2}": " · sanaw {1}/{0} sagat {2} täzelendi",
+  "Back to live": "Göni ýaýlyma dolan",
+  "Jump to the newest moment (End)": "Iň soňky pursada geç (End)",
+  "Set by Low resource mode": "\"Pes serişde režimi\" tarapyndan bellenýär",
+  "Set by the {0} color scheme": "{0} reňk shemasy tarapyndan bellenýär",
+  "Not needed while Pause when minimized is on": "\"Kiçeldilende togtat\" açykka gerek däl",
+  "Needs Save playback position in Privacy settings": "\"Gizlinlik sazlamalary\" içinde \"Oýnatma ýerini sakla\" gerek",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Hereketi tekizleýär, ýöne GPU ýüküni artdyrýar. Indiki wideodan başlap güýje girýär. Ekran bilen wideo sinhronlamasy gerek, şonuň üçin \"Wideo sinhronlamasy\" ses bolsa display-resample ulanylýar."
 }

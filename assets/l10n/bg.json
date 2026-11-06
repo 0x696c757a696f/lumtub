@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Топъл пясъчен фон, с цвят на теракота в издигнатите елементи",
   "Kailasa and Nithyananda": "Кайласа и Нитянанда",
   "Ching Hai and Sai Baba media": "Чинг Хай и медиите на Сай Баба",
-  "Leader worship and miracle promotion channels": "Канали за обожествяване на лидери и промотиране на чудеса"
+  "Leader worship and miracle promotion channels": "Канали за обожествяване на лидери и промотиране на чудеса",
+  "Minimize to tray": "Минимизиране в трея",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Минимизирането скрива прозореца в иконата в трея и го премахва от лентата на задачите; щракнете върху иконата, за да го върнете",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland не уведомява приложенията, че прозорецът им е минимизиран; включете режима на съвместимост с X11 за това",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "Общо {0}, достъпни {1}",
+  " · list updated {0}/{1} at {2}": " · списъкът е обновен на {1}.{0} в {2}",
+  "Back to live": "Обратно към предаването на живо",
+  "Jump to the newest moment (End)": "Към най-новия момент (End)",
+  "Set by Low resource mode": "Зададено от „Режим с ниско потребление“",
+  "Set by the {0} color scheme": "Зададено от цветовата схема {0}",
+  "Not needed while Pause when minimized is on": "Не е нужно, докато „Пауза при минимизиране“ е включена",
+  "Needs Save playback position in Privacy settings": "Изисква „Запомняне на напредъка на възпроизвеждане“ в „Настройки за поверителност“",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Прави движението по-плавно, но увеличава натоварването на GPU. Влиза в сила при следващото видео. Изисква синхронизиране на видеото с дисплея, затова при синхронизация според звука се използва display-resample."
 }

@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Teplý piesok s terakotou na vyvýšených miestach",
   "Kailasa and Nithyananda": "Kailasa a Nithyananda",
   "Ching Hai and Sai Baba media": "Médiá Ching Hai a Sai Baba",
-  "Leader worship and miracle promotion channels": "Kanály zbožšťujúce vodcov a propagujúce zázraky"
+  "Leader worship and miracle promotion channels": "Kanály zbožšťujúce vodcov a propagujúce zázraky",
+  "Minimize to tray": "Minimalizovať do oznamovacej oblasti",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Minimalizovaním sa okno skryje do ikony v oznamovacej oblasti a zmizne z panela úloh; kliknutím na ikonu ho obnovíte",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland neinformuje aplikácie o minimalizácii okna; zapnite na to režim kompatibility X11",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "Spolu {0}, dostupných {1}",
+  " · list updated {0}/{1} at {2}": " · zoznam aktualizovaný {1}. {0}. o {2}",
+  "Back to live": "Späť na živé vysielanie",
+  "Jump to the newest moment (End)": "Prejsť na najnovší moment (End)",
+  "Set by Low resource mode": "Nastavené v „Režim nízkej spotreby zdrojov“",
+  "Set by the {0} color scheme": "Nastavené farebnou schémou „{0}“",
+  "Not needed while Pause when minimized is on": "Nepotrebné, keď je zapnuté „Pozastaviť pri minimalizácii“",
+  "Needs Save playback position in Privacy settings": "Vyžaduje „Ukladať pozíciu prehrávania“ v časti „Súkromie“",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Robí pohyb plynulejším, no zvyšuje zaťaženie GPU. Prejaví sa pri ďalšom videu. Vyžaduje synchronizáciu videa s displejom, takže pri synchronizácii podľa zvuku sa použije display-resample."
 }

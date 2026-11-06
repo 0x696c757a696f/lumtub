@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Φόντο θερμής άμμου, με τερακότα στα υπερυψωμένα στοιχεία",
   "Kailasa and Nithyananda": "Kailasa και Nithyananda",
   "Ching Hai and Sai Baba media": "Μέσα του Ching Hai και του Sai Baba",
-  "Leader worship and miracle promotion channels": "Κανάλια λατρείας ηγετών και προώθησης θαυμάτων"
+  "Leader worship and miracle promotion channels": "Κανάλια λατρείας ηγετών και προώθησης θαυμάτων",
+  "Minimize to tray": "Ελαχιστοποίηση στο δίσκο συστήματος",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Η ελαχιστοποίηση κρύβει το παράθυρο στο εικονίδιο του δίσκου συστήματος και το αφαιρεί από τη γραμμή εργασιών· κάντε κλικ στο εικονίδιο για να το επαναφέρετε",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Το Wayland δεν ενημερώνει τις εφαρμογές ότι το παράθυρό τους ελαχιστοποιήθηκε· ενεργοποιήστε για αυτό τη λειτουργία συμβατότητας X11",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "{0} συνολικά, {1} προσβάσιμα",
+  " · list updated {0}/{1} at {2}": " · η λίστα ενημερώθηκε {1}/{0} στις {2}",
+  "Back to live": "Επιστροφή στο ζωντανό",
+  "Jump to the newest moment (End)": "Μετάβαση στην πιο πρόσφατη στιγμή (End)",
+  "Set by Low resource mode": "Ορίζεται από τη «Λειτουργία χαμηλής κατανάλωσης πόρων»",
+  "Set by the {0} color scheme": "Ορίζεται από το χρωματικό θέμα {0}",
+  "Not needed while Pause when minimized is on": "Δεν χρειάζεται όταν είναι ενεργή η «Παύση κατά την ελαχιστοποίηση»",
+  "Needs Save playback position in Privacy settings": "Απαιτεί την «Αποθήκευση θέσης αναπαραγωγής» στις «Ρυθμίσεις απορρήτου»",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Κάνει την κίνηση πιο ομαλή αλλά αυξάνει το φορτίο του GPU. Ισχύει από το επόμενο βίντεο. Απαιτεί συγχρονισμό βίντεο με την οθόνη, οπότε με συγχρονισμό βίντεο στον ήχο χρησιμοποιεί display-resample."
 }

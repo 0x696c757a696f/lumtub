@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "ಬೆಚ್ಚಗಿನ ಮರಳು, ಎತ್ತರಿಸಿದ್ದರಲ್ಲಿ ಟೆರಾಕೋಟಾದೊಂದಿಗೆ",
   "Kailasa and Nithyananda": "ಕೈಲಾಸ ಮತ್ತು ನಿತ್ಯಾನಂದ",
   "Ching Hai and Sai Baba media": "ಚಿಂಗ್ ಹೈ ಮತ್ತು ಸಾಯಿ ಬಾಬಾ ಮಾಧ್ಯಮ",
-  "Leader worship and miracle promotion channels": "ನಾಯಕ ಆರಾಧನೆ ಮತ್ತು ಪವಾಡ ಪ್ರಚಾರ ಚಾನಲ್‌ಗಳು"
+  "Leader worship and miracle promotion channels": "ನಾಯಕ ಆರಾಧನೆ ಮತ್ತು ಪವಾಡ ಪ್ರಚಾರ ಚಾನಲ್‌ಗಳು",
+  "Minimize to tray": "ಟ್ರೇಗೆ ಮಿನಿಮೈಜ್ ಮಾಡಿ",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "ಮಿನಿಮೈಜ್ ಮಾಡಿದಾಗ ವಿಂಡೋ ಟ್ರೇ ಐಕಾನ್‌ಗೆ ಮರೆಯಾಗುತ್ತದೆ ಮತ್ತು ಟಾಸ್ಕ್‌ಬಾರ್‌ನಿಂದ ತೆಗೆಯಲ್ಪಡುತ್ತದೆ; ಮರಳಿ ತರಲು ಐಕಾನ್ ಕ್ಲಿಕ್ ಮಾಡಿ",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland ಆ್ಯಪ್‌ಗಳಿಗೆ ಅವುಗಳ ವಿಂಡೋ ಮಿನಿಮೈಜ್ ಆಗಿದೆ ಎಂದು ತಿಳಿಸುವುದಿಲ್ಲ; ಇದಕ್ಕಾಗಿ \"X11 ಹೊಂದಾಣಿಕೆ ಮೋಡ್\" ಆನ್ ಮಾಡಿ",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "ಒಟ್ಟು {0}, ತಲುಪಬಹುದಾದ {1}",
+  " · list updated {0}/{1} at {2}": " · ಪಟ್ಟಿ {1}/{0} ರಂದು {2} ಕ್ಕೆ ನವೀಕರಿಸಲಾಗಿದೆ",
+  "Back to live": "ಲೈವ್‌ಗೆ ಹಿಂತಿರುಗಿ",
+  "Jump to the newest moment (End)": "ಇತ್ತೀಚಿನ ಕ್ಷಣಕ್ಕೆ ಹೋಗಿ (End)",
+  "Set by Low resource mode": "\"ಕಡಿಮೆ ಸಂಪನ್ಮೂಲ ಮೋಡ್\" ಹೊಂದಿಸಿದೆ",
+  "Set by the {0} color scheme": "{0} ಬಣ್ಣ ಯೋಜನೆಯಿಂದ ಹೊಂದಿಸಲಾಗಿದೆ",
+  "Not needed while Pause when minimized is on": "\"ಮಿನಿಮೈಜ್ ಮಾಡಿದಾಗ ವಿರಾಮಗೊಳಿಸಿ\" ಆನ್ ಇರುವಾಗ ಅಗತ್ಯವಿಲ್ಲ",
+  "Needs Save playback position in Privacy settings": "\"ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳು\" ನಲ್ಲಿ \"ಪ್ಲೇಬ್ಯಾಕ್ ಸ್ಥಾನ ಉಳಿಸಿ\" ಅಗತ್ಯ",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "ಚಲನೆಯನ್ನು ಸುಗಮಗೊಳಿಸುತ್ತದೆ ಆದರೆ GPU ಲೋಡ್ ಹೆಚ್ಚಿಸುತ್ತದೆ. ಮುಂದಿನ ವೀಡಿಯೊದಲ್ಲಿ ಜಾರಿಗೆ ಬರುತ್ತದೆ. ಇದಕ್ಕೆ ವೀಡಿಯೊವನ್ನು ಡಿಸ್‌ಪ್ಲೇಗೆ ಸಿಂಕ್ ಮಾಡುವುದು ಬೇಕು, ಆದ್ದರಿಂದ ವೀಡಿಯೊ ಸಿಂಕ್ ಆಡಿಯೊಗೆ ಹೊಂದಿಸಿದ್ದರೆ display-resample ಬಳಸುತ್ತದೆ."
 }

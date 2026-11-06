@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Mchanga joto, na terakota kwenye vilivyoinuliwa",
   "Kailasa and Nithyananda": "Kailasa na Nithyananda",
   "Ching Hai and Sai Baba media": "Vyombo vya habari vya Ching Hai na Sai Baba",
-  "Leader worship and miracle promotion channels": "Vituo vya kumwabudu kiongozi na kutangaza miujiza"
+  "Leader worship and miracle promotion channels": "Vituo vya kumwabudu kiongozi na kutangaza miujiza",
+  "Minimize to tray": "Punguza hadi treya",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Kupunguza huficha dirisha hadi ikoni ya treya na kuliondoa kwenye upau wa kazi; bofya ikoni ili kulirudisha",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland haiambii programu kuwa dirisha lake limepunguzwa; washa hali ya uoanifu ya X11 kwa hili",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "Jumla {0}, {1} zinapatikana",
+  " · list updated {0}/{1} at {2}": " · orodha ilisasishwa {1}/{0} saa {2}",
+  "Back to live": "Rudi moja kwa moja",
+  "Jump to the newest moment (End)": "Ruka hadi wakati wa karibuni zaidi (End)",
+  "Set by Low resource mode": "Imewekwa na \"Hali ya rasilimali chache\"",
+  "Set by the {0} color scheme": "Imewekwa na mpangilio wa rangi wa {0}",
+  "Not needed while Pause when minimized is on": "Haihitajiki wakati \"Sitisha ikipunguzwa\" imewashwa",
+  "Needs Save playback position in Privacy settings": "Inahitaji \"Hifadhi mahali pa uchezaji\" katika \"Mipangilio ya faragha\"",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Hufanya mwendo kuwa laini lakini huongeza mzigo wa GPU. Huanza kutumika kwenye video inayofuata. Inahitaji usawazishaji wa video na skrini, kwa hiyo \"Usawazishaji wa video\" ukiwa wa sauti hutumia display-resample."
 }

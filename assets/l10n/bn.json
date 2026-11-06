@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "উষ্ণ বালি, উঁচু অংশে টেরাকোটা",
   "Kailasa and Nithyananda": "কৈলাস ও নিত্যানন্দ",
   "Ching Hai and Sai Baba media": "চিং হাই ও সাই বাবার মিডিয়া",
-  "Leader worship and miracle promotion channels": "নেতা-পূজা ও অলৌকিকতা প্রচারের চ্যানেল"
+  "Leader worship and miracle promotion channels": "নেতা-পূজা ও অলৌকিকতা প্রচারের চ্যানেল",
+  "Minimize to tray": "ট্রেতে মিনিমাইজ করুন",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "মিনিমাইজ করলে উইন্ডো ট্রে আইকনে লুকিয়ে যায় এবং টাস্কবার থেকে সরে যায়; ফিরিয়ে আনতে আইকনে ক্লিক করুন",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland অ্যাপগুলোকে জানায় না যে তাদের উইন্ডো মিনিমাইজ হয়েছে; এজন্য X11 সামঞ্জস্য মোড চালু করুন",
+  ", ": ", ",
+  ".": "।",
+  "{0}. {1}": "{0}। {1}",
+  "{0} in all, {1} reachable": "মোট {0}টি, {1}টি পাওয়া যাচ্ছে",
+  " · list updated {0}/{1} at {2}": " · তালিকা হালনাগাদ {1}/{0} তারিখে {2}-এ",
+  "Back to live": "লাইভে ফিরুন",
+  "Jump to the newest moment (End)": "সর্বশেষ মুহূর্তে যান (End)",
+  "Set by Low resource mode": "“কম রিসোর্স মোড” দ্বারা নির্ধারিত",
+  "Set by the {0} color scheme": "{0} রঙের স্কিম দ্বারা নির্ধারিত",
+  "Not needed while Pause when minimized is on": "“মিনিমাইজ করলে বিরতি দিন” চালু থাকলে প্রয়োজন নেই",
+  "Needs Save playback position in Privacy settings": "“গোপনীয়তা সেটিংস”-এ “প্লেব্যাকের অবস্থান সংরক্ষণ করুন” প্রয়োজন",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "গতিকে মসৃণ করে কিন্তু GPU-তে চাপ বাড়ায়। পরের ভিডিও থেকে কার্যকর হয়। এর জন্য ডিসপ্লের সঙ্গে ভিডিও সিঙ্ক দরকার, তাই ভিডিও সিঙ্ক অডিওতে সেট থাকলে এটি display-resample ব্যবহার করে।"
 }

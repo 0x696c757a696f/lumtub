@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Mainit na buhangin, na may terracotta sa mga nakaangat",
   "Kailasa and Nithyananda": "Kailasa at Nithyananda",
   "Ching Hai and Sai Baba media": "Media ng Ching Hai at Sai Baba",
-  "Leader worship and miracle promotion channels": "Mga channel ng pagsamba sa lider at promosyon ng mga himala"
+  "Leader worship and miracle promotion channels": "Mga channel ng pagsamba sa lider at promosyon ng mga himala",
+  "Minimize to tray": "I-minimize sa tray",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Itinatago ng pag-minimize ang window sa tray icon at inaalis ito sa taskbar; i-click ang icon para ibalik",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Hindi sinasabi ng Wayland sa mga app na na-minimize ang kanilang window; i-on ang X11 compatibility mode para dito",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "{0} lahat, {1} ang maaabot",
+  " · list updated {0}/{1} at {2}": " · na-update ang listahan noong {0}/{1} nang {2}",
+  "Back to live": "Bumalik sa live",
+  "Jump to the newest moment (End)": "Lumipat sa pinakabagong sandali (End)",
+  "Set by Low resource mode": "Itinakda ng Low resource mode",
+  "Set by the {0} color scheme": "Itinakda ng color scheme na {0}",
+  "Not needed while Pause when minimized is on": "Hindi kailangan habang naka-on ang I-pause kapag na-minimize",
+  "Needs Save playback position in Privacy settings": "Kailangan ang I-save ang posisyon ng playback sa Mga setting ng privacy",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Mas pinapakinis ang galaw pero dinaragdagan ang load ng GPU. Magiging epektibo sa susunod na video. Kailangan nito ng video sync sa display, kaya kapag naka-audio ang video sync ay gumagamit ito ng display-resample."
 }

@@ -2898,5 +2898,15 @@
   ".": "。",
   "{0}. {1}": "{0}。{1}",
   "{0} in all, {1} reachable": "共 {0} 個，{1} 個可連線",
-  " · list updated {0}/{1} at {2}": " · 清單更新於 {0}月{1}日 {2}"
+  " · list updated {0}/{1} at {2}": " · 清單更新於 {0}月{1}日 {2}",
+  "Minimize to tray": "最小化到系統匣",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "最小化時會把視窗收進系統匣圖示，不佔工作列；點圖示即可還原",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland 不會告訴應用程式視窗已最小化；要用這項請開啟 X11 相容模式",
+  "Back to live": "回到直播",
+  "Jump to the newest moment (End)": "跳到直播最新進度 (End)",
+  "Set by Low resource mode": "由「低資源模式」接管",
+  "Set by the {0} color scheme": "由配色「{0}」決定",
+  "Not needed while Pause when minimized is on": "已開啟「最小化時暫停」，這項用不到",
+  "Needs Save playback position in Privacy settings": "需要先在「隱私設定」裡開啟「記錄播放進度」",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "讓畫面更平滑，會增加 GPU 負載。下一段影片生效。補幀需要影片跟隨螢幕同步，「影片同步」為「跟隨音訊」時會改用 display-resample。"
 }

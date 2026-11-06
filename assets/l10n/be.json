@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Цёплы пясок, на выпуклым — адценне тэракоты",
   "Kailasa and Nithyananda": "Кайласа і Нітыянанда",
   "Ching Hai and Sai Baba media": "СМІ Чын Хай і Сай Бабы",
-  "Leader worship and miracle promotion channels": "Каналы з абагаўленнем лідараў і прапагандай цудаў"
+  "Leader worship and miracle promotion channels": "Каналы з абагаўленнем лідараў і прапагандай цудаў",
+  "Minimize to tray": "Згортваць у вобласць апавяшчэнняў",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Пры згортванні акно хаваецца ў значок вобласці апавяшчэнняў і знікае з панэлі задач; націсніце значок, каб вярнуць яго",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland не паведамляе праграмам, што іх акно згорнута; для гэтага ўключыце рэжым сумяшчальнасці з X11",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "Усяго {0}, даступных {1}",
+  " · list updated {0}/{1} at {2}": " · спіс абноўлены {1}.{0} у {2}",
+  "Back to live": "Назад у эфір",
+  "Jump to the newest moment (End)": "Перайсці да апошняга моманту (End)",
+  "Set by Low resource mode": "Задана рэжымам «Рэжым эканоміі рэсурсаў»",
+  "Set by the {0} color scheme": "Задана каляровай схемай {0}",
+  "Not needed while Pause when minimized is on": "Не патрэбна, пакуль уключана «Прыпыняць пры згортванні»",
+  "Needs Save playback position in Privacy settings": "Патрабуецца «Захоўваць месца прайгравання» ў «Налады прыватнасці»",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Робіць рух плыўнейшым, але павялічвае нагрузку на GPU. Уступае ў сілу з наступным відэа. Патрабуе сінхранізацыі відэа з дысплеем, таму пры сінхранізацыі з гукам выкарыстоўваецца display-resample."
 }

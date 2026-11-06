@@ -87,6 +87,14 @@ void main() {
     expect((byMethod['setMetadata'] as Map)['thumbnail'], contains('/b/'));
     expect(byMethod['setButtons'], {'next': true, 'previous': true});
     expect((byMethod['setTray'] as Map)['enabled'], isTrue);
+    expect((byMethod['setTray'] as Map)['minimize'], isFalse);
+    calls.clear();
+    controller
+      ..preferences = const AppPreferences(closeToTray: true, minimizeToTray: true)
+      ..notifyListeners();
+    await Future<void>.delayed(Duration.zero);
+    final tray = calls.where((c) => c.method == 'setTray').single.arguments as Map;
+    expect((tray['enabled'], tray['minimize']), (true, true));
     sync.dispose();
   });
 
@@ -99,8 +107,8 @@ void main() {
 
   test('the new window settings are off by default and round trip', () {
     const defaults = AppPreferences();
-    expect((defaults.closeToTray, defaults.audioOnlyInBackground), (false, false));
-    final copy = AppPreferences.fromJson(defaults.copyWith(closeToTray: true, audioOnlyInBackground: true).toJson());
-    expect((copy.closeToTray, copy.audioOnlyInBackground), (true, true));
+    expect((defaults.closeToTray, defaults.minimizeToTray, defaults.audioOnlyInBackground), (false, false, false));
+    final copy = AppPreferences.fromJson(defaults.copyWith(closeToTray: true, minimizeToTray: true, audioOnlyInBackground: true).toJson());
+    expect((copy.closeToTray, copy.minimizeToTray, copy.audioOnlyInBackground), (true, true, true));
   });
 }

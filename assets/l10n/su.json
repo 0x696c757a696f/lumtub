@@ -2893,5 +2893,20 @@
   "Warm sand, with terracotta in what is raised": "Keusik haneut, kalayan terakota dina anu ngaluhur",
   "Kailasa and Nithyananda": "Kailasa jeung Nithyananda",
   "Ching Hai and Sai Baba media": "Média Suma Ching Hai jeung Sai Baba",
-  "Leader worship and miracle promotion channels": "Saluran pamujaan pamingpin jeung propaganda mukjizat"
+  "Leader worship and miracle promotion channels": "Saluran pamujaan pamingpin jeung propaganda mukjizat",
+  "Minimize to tray": "Minimalkeun ka tray",
+  "Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back": "Minimalkeun nyumputkeun jandéla ka ikon tray jeung miceun tina taskbar; klik ikonna pikeun mulangkeun",
+  "Wayland does not tell apps their window was minimized; turn on X11 compatibility mode for this": "Wayland teu méré weruh aplikasi yén jandélana diminimalkeun; hurungkeun mode kasaluyuan X11 pikeun ieu",
+  ", ": ", ",
+  ".": ".",
+  "{0}. {1}": "{0}. {1}",
+  "{0} in all, {1} reachable": "Jumlahna {0}, {1} bisa dihontal",
+  " · list updated {0}/{1} at {2}": " · daptar diropéa {1}/{0} jam {2}",
+  "Back to live": "Balik ka live",
+  "Jump to the newest moment (End)": "Luncat ka momen panganyarna (End)",
+  "Set by Low resource mode": "Diatur ku \"Mode sumber daya low\"",
+  "Set by the {0} color scheme": "Diatur ku skéma warna {0}",
+  "Not needed while Pause when minimized is on": "Teu diperlukeun waktu \"Eureun samentara waktu diminimalkeun\" hurung",
+  "Needs Save playback position in Privacy settings": "Peryogi \"Catet kamajuan pamuteran\" dina \"Setélan privasi\"",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "Ngajadikeun gerak leuwih lemes, tapi nambahan beban GPU. Lumaku dina vidéo salajengna. Peryogi sinkronisasi vidéo ka layar, jadi lamun \"Sinkronisasi vidéo\" diset turutan audio, anu dipaké display-resample."
 }

@@ -12,6 +12,7 @@ final class MacShell: NSObject, NSWindowDelegate {
   private weak var window: NSWindow?
   private var statusItem: NSStatusItem?
   private var closeToTray = false
+  private(set) var minimizeToTray = false
   private var labels: [String: String] = [:]
   private var info: [String: Any] = [:]
   private var artworkAddress = ""
@@ -90,10 +91,12 @@ final class MacShell: NSObject, NSWindowDelegate {
       publish()
     case "setTray":
       closeToTray = arguments["enabled"] as? Bool ?? false
+      minimizeToTray = arguments["minimize"] as? Bool ?? false
       for key in ["show", "playPause", "next", "exit"] {
         if let label = arguments[key] as? String { labels[key] = label }
       }
-      setStatusItem(closeToTray)
+      setStatusItem(closeToTray || minimizeToTray)
+      if !closeToTray, !minimizeToTray, window?.isVisible == false { showWindow() }
     default:
       result(FlutterMethodNotImplemented)
       return

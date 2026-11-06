@@ -308,9 +308,9 @@ extension SubtitleActions on AppController {
       alike = false;
     }
     final mainPlanned = alike
-        ? (wanted == PlayerSettings.originalSubtitle ? original : subtitleIn(details.subtitles, target!))
-        : spoken ?? subtitleIn(details.subtitles, first);
-    final secondPlanned = alike ? null : wanted == PlayerSettings.originalSubtitle ? original : target == null ? null : subtitleIn(details.subtitles, target);
+        ? (wanted == PlayerSettings.originalSubtitle ? original : subtitleIn(details.subtitles, target!, language: details.language))
+        : spoken ?? subtitleIn(details.subtitles, first, language: details.language);
+    final secondPlanned = alike ? null : wanted == PlayerSettings.originalSubtitle ? original : target == null ? null : subtitleIn(details.subtitles, target, language: details.language);
     // Playback waits only for a subtitle to be translated; one the video
     // has in the language wanted loads while it plays.
     final translating = (mainPlanned?.kind == SubtitleKind.translated && !manualOnly) || secondPlanned?.kind == SubtitleKind.translated;
@@ -328,7 +328,7 @@ extension SubtitleActions on AppController {
     final manual = settings.subtitleMode == SubtitleMode.manual;
     final mainWanted = settings.subtitleMode == SubtitleMode.always || mainTitle != null || (manual && _openedDirect == item.id);
     if (mainWanted && (mainTitle == null || (spoken != null ? spoken.label != mainTitle && !sameLanguage(spoken.language, mainLanguage) : !speaks(mainLanguage, first)))) {
-      final option = spoken ?? subtitleIn(details.subtitles, first);
+      final option = spoken ?? subtitleIn(details.subtitles, first, language: details.language);
       if (option != null && option.label != mainTitle && !(manual && mainTitle == null && option.kind != SubtitleKind.uploaded)) {
         logDebug(() => 'Showing ${option.language} (${option.kind.name}) as the main subtitle');
         await showSubtitle(option);
@@ -342,7 +342,9 @@ extension SubtitleActions on AppController {
       option = originalSubtitle(details.subtitles, language: details.language);
       if (option == null || sameLanguage(option.language, mainLanguage)) return;
     } else {
-      option = target == null ? null : subtitleIn(details.subtitles, target);
+      // A translation is of the first subtitle, so the two line up.
+      final main = details.subtitles.where((o) => o.label == mainTitle).firstOrNull;
+      option = target == null ? null : subtitleIn(details.subtitles, target, from: main, language: details.language);
       if (option == null || speaks(mainLanguage, target!)) {
         if (wanted.isNotEmpty) logWarn('No second subtitle in $wanted beside $mainLanguage');
         return;

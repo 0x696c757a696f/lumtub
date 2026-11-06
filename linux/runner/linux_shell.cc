@@ -28,6 +28,7 @@ struct Shell {
   FlMethodChannel* channel = nullptr;
 
   bool close_to_tray = false;
+  bool minimize_to_tray = false;
   std::string show_label = "Show";
   std::string play_pause_label = "Play/Pause";
   std::string next_label = "Next";
@@ -120,6 +121,7 @@ void ShowFromTray() {
 void ExitFromTray() {
   // The normal close path, so Dart saves progress and releases the player.
   shell.close_to_tray = false;
+  shell.minimize_to_tray = false;
   if (shell.indicator != nullptr) shell.indicator_set_status(shell.indicator, kStatusPassive);
   gtk_widget_show(GTK_WIDGET(shell.window));
   gtk_window_close(shell.window);
@@ -184,6 +186,45 @@ gboolean OnDelete(GtkWidget*, GdkEvent*, gpointer) {
   return TRUE;
 }
 
+// Lumtub's own title bar: its minimise button goes to the tray directly, as
+// Wayland would not tell the window it was minimised.
+void OnMinimizeButton(GtkButton*, gpointer) {
+  if (shell.minimize_to_tray && HideToTray()) return;
+  gtk_window_iconify(shell.window);
+}
+
+void HookMinimizeButtons(GtkWidget* widget, gpointer) {
+  if (GTK_IS_BUTTON(widget) && gtk_style_context_has_class(gtk_widget_get_style_context(widget), "minimize") &&
+      g_object_get_data(G_OBJECT(widget), "lumtub-minimize") == nullptr) {
+    g_signal_handlers_disconnect_matched(widget, G_SIGNAL_MATCH_DATA, 0, 0, nullptr, nullptr, shell.window);
+    g_signal_connect(widget, "clicked", G_CALLBACK(OnMinimizeButton), nullptr);
+    g_object_set_data(G_OBJECT(widget), "lumtub-minimize", GINT_TO_POINTER(1));
+  }
+  if (GTK_IS_CONTAINER(widget)) gtk_container_forall(GTK_CONTAINER(widget), HookMinimizeButtons, nullptr);
+}
+
+void HookHeaderBar() {
+  GtkWidget* bar = gtk_window_get_titlebar(shell.window);
+  if (bar != nullptr) HookMinimizeButtons(bar, nullptr);
+}
+
+// A minimised window goes to the tray; without a tray it stays minimised.
+// Wayland tells no window that it was minimised, so there it stays too.
+gboolean OnWindowState(GtkWidget*, GdkEventWindowState* event, gpointer) {
+  g_idle_add(+[](gpointer) -> gboolean {
+    HookHeaderBar();
+    return G_SOURCE_REMOVE;
+  }, nullptr);
+  const bool minimised = (event->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && (event->new_window_state & GDK_WINDOW_STATE_ICONIFIED);
+  if (minimised && shell.minimize_to_tray) {
+    g_idle_add(+[](gpointer) -> gboolean {
+      if (shell.minimize_to_tray && gtk_widget_get_visible(GTK_WIDGET(shell.window))) HideToTray();
+      return G_SOURCE_REMOVE;
+    }, nullptr);
+  }
+  return FALSE;
+}
+
 // ---- MPRIS ----------------------------------------------------------------
 
 constexpr char kIntrospection[] = R"XML(
@@ -223,6 +264,9 @@ constexpr char kIntrospection[] = R"XML(
     <property name="CanPause" type="b" access="read"/>
     <property name="CanSeek" type="b" access="read"/>
     <property name="CanControl" type="b" access="read"/>
+  </interface>
+  <interface name="io.github.lumtub.Window">
+    <method name="Minimized"/>
   </interface>
 </node>)XML";
 
@@ -281,6 +325,14 @@ void CallMethod(GDBusConnection*, const gchar*, const gchar*, const gchar*, cons
   const std::string name(method);
   if (name == "Raise") {
     ShowFromTray();
+  } else if (name == "Minimized") {
+    // KWin's script reports a minimised window, which Wayland itself does not.
+    if (shell.minimize_to_tray && gtk_widget_get_visible(GTK_WIDGET(shell.window))) {
+      g_idle_add(+[](gpointer) -> gboolean {
+        if (shell.minimize_to_tray && gtk_widget_get_visible(GTK_WIDGET(shell.window))) HideToTray();
+        return G_SOURCE_REMOVE;
+      }, nullptr);
+    }
   } else if (name == "Quit") {
     ExitFromTray();
   } else if (name == "Next") {
@@ -499,13 +551,15 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
   }
   if (method == "setTray") {
     shell.close_to_tray = BoolArg(args, "enabled");
+    shell.minimize_to_tray = BoolArg(args, "minimize");
     shell.show_label = StringArg(args, "show");
     shell.play_pause_label = StringArg(args, "playPause");
     shell.next_label = StringArg(args, "next");
     shell.exit_label = StringArg(args, "exit");
     if (shell.indicator != nullptr) {
       BuildMenu();
-      if (!shell.close_to_tray) shell.indicator_set_status(shell.indicator, kStatusPassive);
+      if (!shell.close_to_tray && !shell.minimize_to_tray && !gtk_widget_get_visible(GTK_WIDGET(shell.window))) ShowFromTray();
+      if (!shell.close_to_tray && !shell.minimize_to_tray) shell.indicator_set_status(shell.indicator, kStatusPassive);
     }
   } else if (method == "setMetadata") {
     shell.title = StringArg(args, "title");
@@ -564,6 +618,8 @@ void linux_shell_attach(GtkWindow* window) {
   // signing in, keep the desktop's own choice.
   if (getenv("LUMTUB_X11") != nullptr) unsetenv("GDK_BACKEND");
   g_signal_connect(window, "delete-event", G_CALLBACK(OnDelete), nullptr);
+  g_signal_connect(window, "window-state-event", G_CALLBACK(OnWindowState), nullptr);
+  g_signal_connect(window, "map", G_CALLBACK(+[](GtkWidget*, gpointer) { HookHeaderBar(); }), nullptr);
   gtk_window_set_icon_from_file(window, IconPath().c_str(), nullptr);
   StartMpris();
 }

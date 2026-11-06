@@ -436,26 +436,6 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 if (result != null && result.isNotEmpty) save(controller.settings.copyWith(hwdec: result.join(',')));
               },
             ), subtitle: 'hwdec D3D11VA D3D12VA DXVA2 NVDEC Vulkan AMF QSV'),
-        SettingEntry(tr('Hardware-decoded codecs'), (context) => NormalItem(
-              title: tr('Hardware-decoded codecs'),
-              subtitle: tr("Current: {0} (this is mpv's --hwdec-codecs)", [settings.hwdecCodecs]),
-              leading: _icon(AppIcons.fileVideo),
-              enabled: hardware,
-              onTap: () async {
-                final result = await showDialog<List<String>>(
-                  context: context,
-                  builder: (context) => OrderedMultiSelectDialog<String>(
-                    title: tr('Try hardware decoding only for these codecs'),
-                    ordered: false,
-                    initValues: settings.hwdecCodecs.split(','),
-                    values: [for (final codec in hwdecCodecChoices) (codec, codec, null)],
-                  ),
-                );
-                if (result != null && result.isNotEmpty) {
-                  save(controller.settings.copyWith(hwdecCodecs: [for (final c in hwdecCodecChoices) if (result.contains(c)) c].join(',')));
-                }
-              },
-            ), subtitle: 'hwdec-codecs h264 hevc vp9 av1'),
         if (Platform.isWindows) SettingEntry(tr('D3D11VA zero-copy'), (context) => SwitchItem(
               title: tr('D3D11VA zero-copy'),
               subtitle: tr("This is mpv's --d3d11va-zero-copy and only works with d3d11va. For other decoders, pick a mode without -copy for zero-copy"),
@@ -677,7 +657,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: 'deband'),
         SettingEntry(tr('Frame interpolation'), (context) => SwitchItem(
               title: tr('Frame interpolation'),
-              subtitle: tr('Makes motion smoother but increases GPU load. Takes effect on the next video.'),
+              subtitle: tr('Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.'),
               leading: _icon(AppIcons.spiralFill),
               value: settings.interpolation,
               onChanged: (value) => save(settings.copyWith(interpolation: value)),
@@ -728,9 +708,10 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('Autoplay next, loop')),
         SettingEntry(tr('Resume from last position'), (context) => SwitchItem(
               title: tr('Resume from last position'),
-              subtitle: tr('Jump to where you left off when reopening an unfinished video'),
+              subtitle: prefs.recordProgress ? tr('Jump to where you left off when reopening an unfinished video') : tr('Needs Save playback position in Privacy settings'),
               leading: _icon(AppIcons.clockCounterClockwiseFill),
               value: prefs.resumePlayback,
+              enabled: prefs.recordProgress,
               onChanged: (v) => savePrefs(prefs.copyWith(resumePlayback: v)),
             ), subtitle: tr('Resume progress')),
         SettingEntry(tr('In-app mini player'), (context) => SwitchItem(
@@ -800,9 +781,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('Background playback')),
         SettingEntry(tr('Audio only when minimized'), (context) => SwitchItem(
               title: tr('Audio only when minimized'),
-              subtitle: tr('Decode no picture while the window is minimized or in the tray; restored with the window'),
+              subtitle: prefs.pauseOnMinimize
+                  ? tr('Not needed while Pause when minimized is on')
+                  : tr('Decode no picture while the window is minimized or in the tray; restored with the window'),
               leading: _icon(AppIcons.headphones),
               value: prefs.audioOnlyInBackground,
+              enabled: !prefs.pauseOnMinimize,
               onChanged: (v) => savePrefs(prefs.copyWith(audioOnlyInBackground: v)),
             ), subtitle: tr('Background playback')),
         SettingEntry(tr('Minimize to tray on close'), (context) => SwitchItem(
@@ -811,6 +795,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.layout),
               value: prefs.closeToTray,
               onChanged: (v) => savePrefs(prefs.copyWith(closeToTray: v)),
+            ), subtitle: tr('tray background playback')),
+        SettingEntry(tr('Minimize to tray'), (context) => SwitchItem(
+              title: tr('Minimize to tray'),
+              subtitle: tr('Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back'),
+              leading: _icon(AppIcons.minus),
+              value: prefs.minimizeToTray,
+              onChanged: (v) => savePrefs(prefs.copyWith(minimizeToTray: v)),
             ), subtitle: tr('tray background playback')),
         if (AppWindow.waylandDesktop && controller.directories != null)
           SettingEntry(tr('X11 compatibility mode'), (context) => _X11ModeSwitch(controller: controller, data: controller.directories!.data), subtitle: tr('Wayland on top picture in picture')),
@@ -978,7 +969,10 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('spacing density')),
         SettingEntry(tr('App theme'), (context) => NormalItem(
               title: tr('App theme'),
-              subtitle: tr('Current: {0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
+              subtitle: switch (paletteOf(appearance.palette)) {
+                final palette? => tr('Set by the {0} color scheme', [palette.name]),
+                null => tr('Current: {0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
+              },
               leading: _icon(AppIcons.eyedropper),
               trailing: CircleAvatar(radius: 12, backgroundColor: controller.accentColor),
               onTap: () => openColorSelect(context, controller),
@@ -1003,10 +997,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             )),
         SettingEntry(tr('Reduce animations'), (context) => NormalItem(
               title: tr('Reduce animations'),
-              subtitle: tr('Current: {0}{1}. With fewer animations, page changes, expanding sections and hover effects finish at once', [
-                appearance.motion.label,
-                appearance.motion == MotionPreference.system ? (Motion.reduced ? tr(' (animations are off in the system)') : tr(' (animations are on in the system)')) : '',
-              ]),
+              subtitle: appearance.lowResource
+                  ? tr('Set by Low resource mode')
+                  : tr('Current: {0}{1}. With fewer animations, page changes, expanding sections and hover effects finish at once', [
+                      appearance.motion.label,
+                      appearance.motion == MotionPreference.system ? (Motion.reduced ? tr(' (animations are off in the system)') : tr(' (animations are on in the system)')) : '',
+                    ]),
+              enabled: !appearance.lowResource,
               leading: _icon(AppIcons.videoCameraSlash),
               onTap: () => pickFromDialog<MotionPreference>(
                 context,
@@ -1038,7 +1035,8 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('column width columns')),
         SettingEntry(tr('Thumbnail quality'), (context) => NormalItem(
               title: tr('Thumbnail quality'),
-              subtitle: tr('Current: {0}', [appearance.thumbnailQuality.label]),
+              subtitle: appearance.lowResource ? tr('Set by Low resource mode') : tr('Current: {0}', [appearance.thumbnailQuality.label]),
+              enabled: !appearance.lowResource,
               leading: _icon(AppIcons.image),
               onTap: () => pickFromDialog<ThumbnailQuality>(
                 context,
@@ -1352,7 +1350,7 @@ class _AdvancedOptions extends StatelessWidget {
         option('scale', settings.scale, tr('Video scaling algorithm'), tr('Immediately')),
         option('deband', settings.deband ? 'yes' : 'no', tr('Debanding'), tr('Immediately')),
         option('interpolation', settings.interpolation ? 'yes' : 'no', tr('Frame interpolation'), tr('Next segment')),
-        option('hwdec-codecs', settings.hwdecCodecs, tr('Hardware-decoded codecs'), tr('Next segment')),
+        option('hwdec-codecs', defaultHwdecCodecs, tr('Hardware-decoded codecs'), tr('Next segment')),
         if (Platform.isWindows) option('d3d11va-zero-copy', settings.d3d11vaZeroCopy ? 'yes' : 'no', tr('D3D11VA zero-copy'), tr('Next segment')),
         option('vd-lavc-dr', settings.directRendering, tr('Decode directly to video memory'), tr('Next segment')),
         option('video-sync', settings.videoSync.mpvValue, tr('Video sync'), tr('Immediately')),

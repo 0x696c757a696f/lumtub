@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/explore_filters.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/l10n/l10n.dart';
 import 'package:lumtub/player_settings.dart';
 import 'package:lumtub/video_repository.dart';
 import 'package:lumtub/youtube_related.dart';
@@ -71,22 +72,35 @@ void main() {
     expect(details.localized(details.title, details.description, likes: 5).likeCount, 5);
   });
 
-  test('subtitles follow Windows\' language unless another is chosen', () {
+  test('subtitles follow the interface language unless another is chosen', () {
     expect(const PlayerSettings().subtitleLanguage, SubtitleLanguage.auto);
-    final saved = SubtitleLanguage.systemLocale;
-    addTearDown(() => SubtitleLanguage.systemLocale = saved);
-    var locale = const Locale('zh', 'CN');
-    SubtitleLanguage.systemLocale = () => locale;
+    addTearDown(() => setLanguage(AppLanguage.en));
+    setLanguage(AppLanguage.zhHans);
     expect(SubtitleLanguage.auto.mpvLangs, SubtitleLanguage.zh.mpvLangs);
-    locale = const Locale('zh', 'TW');
+    setLanguage(const AppLanguage('zh-Hant'));
     expect(SubtitleLanguage.auto.resolved, SubtitleLanguage.zhHant);
-    locale = const Locale('de', 'DE');
+    setLanguage(const AppLanguage('zh-HK'));
+    expect(SubtitleLanguage.auto.translation.code, 'zh-TW');
+    setLanguage(const AppLanguage('de'));
     expect(SubtitleLanguage.auto.resolved, SubtitleLanguage.de);
     expect(SubtitleLanguage.auto.translation.code, 'de');
-    locale = const Locale('nl', 'NL');
-    expect(SubtitleLanguage.auto.resolved, SubtitleLanguage.en);
-    locale = const Locale('zh', 'HK');
-    expect(SubtitleLanguage.auto.translation.code, 'zh-TW');
+    // Every interface language has subtitles of its own.
+    setLanguage(const AppLanguage('he'));
+    expect(SubtitleLanguage.auto.translation.code, 'iw');
+    expect(SubtitleLanguage.auto.mpvLangs, 'iw,he,en,eng');
+    expect(SubtitleLanguage.auto.ytDlpLangs, '(iw|he|en).*');
+    setLanguage(const AppLanguage('fil'));
+    expect(SubtitleLanguage.auto.translation.code, 'tl');
+    setLanguage(const AppLanguage('la'));
+    expect(SubtitleLanguage.auto.translation.code, 'la');
+    expect(SubtitleLanguage.byName('pl')?.translation.code, 'pl');
+    // Windows' language is still known on its own.
+    final saved = SubtitleLanguage.systemLocale;
+    addTearDown(() => SubtitleLanguage.systemLocale = saved);
+    SubtitleLanguage.systemLocale = () => const Locale('zh', 'HK');
+    expect(SubtitleLanguage.systemTranslation.code, 'zh-TW');
+    SubtitleLanguage.systemLocale = () => const Locale('nb', 'NO');
+    expect(SubtitleLanguage.systemTranslation.code, 'no');
     // 简体中文优先, the old default, now follows; a choice saved since stays.
     expect(PlayerSettings.fromJson({'subtitleLanguage': 'zh'}).subtitleLanguage, SubtitleLanguage.auto);
     expect(PlayerSettings.fromJson({'subtitleLanguage': 'ja'}).subtitleLanguage, SubtitleLanguage.ja);

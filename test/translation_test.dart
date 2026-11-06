@@ -75,11 +75,12 @@ void main() {
     expect(AppPreferences.fromJson(const AppPreferences().toJson()).bilingualTranslation, isTrue);
   });
 
-  test('translated subtitles use a listed track or translate the original', () {
+  test('translated subtitles translate the original, or use a listed track', () {
     const en = SubtitleOption(language: 'en', name: 'English', url: 'https://yt.example/api/timedtext?v=1&lang=en&fmt=vtt', kind: SubtitleKind.automatic);
     const zh = SubtitleOption(language: 'zh-Hans', name: 'Chinese', url: 'https://yt.example/zh.vtt', kind: SubtitleKind.translated);
     final target = TranslationLanguage.byCode('zh-CN');
-    expect(translationOf([en, zh], target), zh);
+    expect(Uri.parse(translationOf([en, zh], target)!.url).queryParameters['tlang'], 'zh-Hans');
+    expect(translationOf([zh], target), zh);
     final derived = translationOf([en], target)!;
     expect(derived.kind, SubtitleKind.translated);
     expect(derived.language, 'zh-Hans');
@@ -87,6 +88,29 @@ void main() {
     // Nothing to translate when the only subtitle is already in the target language.
     expect(translationOf([const SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/a.vtt')], target), isNull);
     expect(translationOf(const [], target), isNull);
+  });
+
+  test('a second subtitle translates the first one shown, so their lines match', () {
+    const en = SubtitleOption(language: 'en', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=en');
+    const zh = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=zh-Hans');
+    const asr = SubtitleOption(language: 'zh-Hans', name: '', url: 'https://yt.example/api/timedtext?v=1&lang=zh-Hans&kind=asr', kind: SubtitleKind.automatic);
+    final latin = TranslationLanguage.byCode('la');
+    Map<String, String> query(SubtitleOption? o) => Uri.parse(o!.url).queryParameters;
+    // Alone, a translation is of the creator's subtitle in the language
+    // spoken, not of the first listed or of YouTube's automatic one.
+    expect(query(subtitleIn([en, zh, asr], latin, language: 'zh-Hans')), {'v': '1', 'lang': 'zh-Hans', 'tlang': 'la'});
+    expect(query(subtitleIn([en, zh, asr], latin)), {'v': '1', 'lang': 'zh-Hans', 'tlang': 'la'});
+    // Beside a first subtitle, it is of that one.
+    expect(query(subtitleIn([zh, en, asr], latin, from: en)), {'v': '1', 'lang': 'en', 'tlang': 'la'});
+    // A first subtitle that is itself a translation lends its source.
+    final shown = translatedOption(asr, TranslationLanguage.byCode('en'));
+    expect(query(subtitleIn([zh, en, asr], latin, from: shown)), {'v': '1', 'lang': 'zh-Hans', 'kind': 'asr', 'tlang': 'la'});
+    // Every interface language can be a target, under each tag it goes by.
+    expect(speaks('he', TranslationLanguage.byCode('iw')), isTrue);
+    expect(speaks('fil', TranslationLanguage.byCode('tl')), isTrue);
+    expect(speaks('nb', TranslationLanguage.byCode('no')), isTrue);
+    expect(TranslationLanguage.ofTag('zh-HK')?.code, 'zh-TW');
+    expect(TranslationLanguage.ofTag('jv')?.youtube, 'jv');
   });
 
   test('tells languages apart by script and finds the second subtitle', () {

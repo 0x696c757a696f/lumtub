@@ -39,6 +39,12 @@ void main() {
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['loop-file'], 'no');
   });
 
+  test('interpolation times video to the display when sync follows the audio', () {
+    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(interpolation: true))['video-sync'], 'display-resample');
+    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings(interpolation: true, videoSync: VideoSync.displayTempo))['video-sync'], 'display-tempo');
+    expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['video-sync'], 'audio');
+  });
+
   test('autosync off is 0, not no, which mpv reads as -1', () {
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['autosync'], '0');
   });

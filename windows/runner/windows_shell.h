@@ -38,6 +38,7 @@ class WindowsShell {
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
   std::unique_ptr<Media> media_;
   bool close_to_tray_ = false;
+  bool minimize_to_tray_ = false;
   bool tray_icon_ = false;
   std::wstring show_label_ = L"Show window", play_pause_label_ = L"Play/Pause",
                next_label_ = L"Next", exit_label_ = L"Exit";

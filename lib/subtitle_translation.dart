@@ -21,14 +21,34 @@ SubtitleOption translatedOption(SubtitleOption source, TranslationLanguage targe
   );
 }
 
-/// The subtitle of [options] in [target]: one YouTube lists, else the first
-/// original-language track translated. Null when the video has no subtitle
-/// in another language to translate.
-SubtitleOption? translationOf(List<SubtitleOption> options, TranslationLanguage target) {
+/// The subtitle of [options] in [target], translated by YouTube from:
+/// 1. [from], the first subtitle shown, so a second one says the same thing
+///    line for line; when [from] is itself a translation, its source;
+/// 2. else the video's own subtitle in the language it is spoken in
+///    ([language], yt-dlp's tag), the creator's before YouTube's automatic
+///    one, as a translation of a translation loses more;
+/// 3. else any subtitle of the video's in another language.
+/// Null when the video has no subtitle in another language to translate.
+SubtitleOption? translationOf(List<SubtitleOption> options, TranslationLanguage target, {SubtitleOption? from, String? language}) {
+  if (from != null) {
+    final source = from.kind == SubtitleKind.translated ? _untranslated(from) : from;
+    if (source != null && !speaks(source.language, target)) return translatedOption(source, target);
+  }
+  final original = originalSubtitle(options, language: language);
+  if (original != null && original.kind != SubtitleKind.translated && !speaks(original.language, target)) return translatedOption(original, target);
   final listed = options.where((o) => o.kind == SubtitleKind.translated && speaks(o.language, target)).firstOrNull;
   if (listed != null) return listed;
   final source = options.where((o) => o.kind != SubtitleKind.translated && !speaks(o.language, target)).firstOrNull;
   return source == null ? null : translatedOption(source, target);
+}
+
+/// What a YouTube translation was made from: its address without `tlang`,
+/// in the language its `lang` names.
+SubtitleOption? _untranslated(SubtitleOption option) {
+  final uri = Uri.tryParse(option.url);
+  final language = uri?.queryParameters['lang'];
+  if (uri == null || language == null || !uri.queryParameters.containsKey('tlang')) return null;
+  return SubtitleOption(language: language, name: '', url: uri.replace(queryParameters: {...uri.queryParameters}..remove('tlang')).toString(), kind: SubtitleKind.automatic);
 }
 
 /// Whether a subtitle tagged [language] (YouTube's or mpv's tag) is in
@@ -39,18 +59,18 @@ bool speaks(String? language, TranslationLanguage target) {
   if (tag.isEmpty) return false;
   if (target.code == 'zh-CN') return const {'zh', 'zh-hans', 'zh-cn', 'zh-sg', 'chi', 'zho'}.contains(tag);
   if (target.code == 'zh-TW') return const {'zh-hant', 'zh-tw', 'zh-hk', 'zh-mo'}.contains(tag);
-  final code = target.code.toLowerCase();
-  return tag == code || tag.startsWith('$code-');
+  return target.tags.any((code) => tag == code.toLowerCase() || tag.startsWith('${code.toLowerCase()}-'));
 }
 
 /// The subtitle of [options] to show in [target]: one the video has in
-/// that language, uploaded before automatic, else YouTube's translation.
-SubtitleOption? subtitleIn(List<SubtitleOption> options, TranslationLanguage target) {
+/// that language, uploaded before automatic, else a translation, of [from]
+/// when it can be.
+SubtitleOption? subtitleIn(List<SubtitleOption> options, TranslationLanguage target, {SubtitleOption? from, String? language}) {
   for (final kind in [SubtitleKind.uploaded, SubtitleKind.automatic, SubtitleKind.speech]) {
     final own = options.where((o) => o.kind == kind && speaks(o.language, target)).firstOrNull;
     if (own != null) return own;
   }
-  return translationOf(options, target);
+  return translationOf(options, target, from: from, language: language);
 }
 
 /// Whether the video has a subtitle of its own (not translated) in [target].
@@ -87,7 +107,7 @@ List<({String name, TranslationLanguage language, SubtitleOption option})> langu
   for (final (name, language) in targets) {
     if (rows.any((r) => r.language.code == language.code)) continue;
     if (spoken != null && speaks(spoken.language, language)) continue;
-    final option = subtitleIn(options, language);
+    final option = subtitleIn(options, language, from: spoken);
     if (option == null || identical(option, spoken)) continue;
     rows.add((name: name, language: language, option: option));
   }

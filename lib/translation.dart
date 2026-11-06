@@ -5,17 +5,27 @@ import 'package:http/http.dart' as http;
 import 'l10n/l10n.dart';
 
 /// A language text can be translated into. [code] is Google Translate's;
-/// [youtube] is the `tlang` YouTube's auto-translated captions use.
+/// [youtube] is the `tlang` YouTube's auto-translated captions use; [tags]
+/// are every tag a subtitle in it may carry.
 class TranslationLanguage {
-  const TranslationLanguage(this.code, this._label, [String? youtube]) : youtube = youtube ?? code;
+  const TranslationLanguage(this.code, this._label, [String? youtube, this._aliases = const []]) : youtube = youtube ?? code;
   final String code;
   final String youtube;
   final String _label;
+  final List<String> _aliases;
   String get label => tr(_label);
+
+  /// The language's name in English, for prompts.
+  String get englishName => _label;
+
+  /// [code], [youtube] and the other tags this language goes by.
+  Iterable<String> get tags => {code, youtube, ..._aliases};
 
   /// The default before Windows' language was followed.
   static const defaultCode = 'zh-CN';
 
+  /// One for each interface language, so subtitles and translations can
+  /// always be in the language Lumtub is shown in.
   static const all = [
     TranslationLanguage('zh-CN', 'Simplified Chinese', 'zh-Hans'),
     TranslationLanguage('zh-TW', 'Traditional Chinese', 'zh-Hant'),
@@ -33,6 +43,62 @@ class TranslationLanguage {
     TranslationLanguage('id', 'Indonesian'),
     TranslationLanguage('ar', 'Arabic'),
     TranslationLanguage('hi', 'Hindi'),
+    TranslationLanguage('af', 'Afrikaans'),
+    TranslationLanguage('sq', 'Albanian'),
+    TranslationLanguage('am', 'Amharic'),
+    TranslationLanguage('hy', 'Armenian'),
+    TranslationLanguage('az', 'Azerbaijani'),
+    TranslationLanguage('eu', 'Basque'),
+    TranslationLanguage('be', 'Belarusian'),
+    TranslationLanguage('bn', 'Bengali'),
+    TranslationLanguage('bg', 'Bulgarian'),
+    TranslationLanguage('my', 'Burmese'),
+    TranslationLanguage('cs', 'Czech'),
+    TranslationLanguage('da', 'Danish'),
+    TranslationLanguage('nl', 'Dutch'),
+    TranslationLanguage('eo', 'Esperanto'),
+    TranslationLanguage('et', 'Estonian'),
+    TranslationLanguage('tl', 'Filipino', 'fil', ['fil']),
+    TranslationLanguage('fi', 'Finnish'),
+    TranslationLanguage('gl', 'Galician'),
+    TranslationLanguage('ka', 'Georgian'),
+    TranslationLanguage('el', 'Greek'),
+    TranslationLanguage('gu', 'Gujarati'),
+    TranslationLanguage('iw', 'Hebrew', 'iw', ['he']),
+    TranslationLanguage('hu', 'Hungarian'),
+    TranslationLanguage('is', 'Icelandic'),
+    TranslationLanguage('jw', 'Javanese', 'jv', ['jv']),
+    TranslationLanguage('kn', 'Kannada'),
+    TranslationLanguage('km', 'Khmer'),
+    TranslationLanguage('lo', 'Lao'),
+    TranslationLanguage('la', 'Latin'),
+    TranslationLanguage('lv', 'Latvian'),
+    TranslationLanguage('lt', 'Lithuanian'),
+    TranslationLanguage('mk', 'Macedonian'),
+    TranslationLanguage('ms', 'Malay'),
+    TranslationLanguage('ml', 'Malayalam'),
+    TranslationLanguage('mr', 'Marathi'),
+    TranslationLanguage('mn', 'Mongolian'),
+    TranslationLanguage('ne', 'Nepali'),
+    TranslationLanguage('no', 'Norwegian', 'no', ['nb', 'nn']),
+    TranslationLanguage('fa', 'Persian'),
+    TranslationLanguage('pl', 'Polish'),
+    TranslationLanguage('pa', 'Punjabi'),
+    TranslationLanguage('ro', 'Romanian'),
+    TranslationLanguage('si', 'Sinhala'),
+    TranslationLanguage('sk', 'Slovak'),
+    TranslationLanguage('su', 'Sundanese'),
+    TranslationLanguage('sw', 'Swahili'),
+    TranslationLanguage('sv', 'Swedish'),
+    TranslationLanguage('ta', 'Tamil'),
+    TranslationLanguage('te', 'Telugu'),
+    TranslationLanguage('ti', 'Tigrinya'),
+    TranslationLanguage('tr', 'Turkish'),
+    TranslationLanguage('tk', 'Turkmen'),
+    TranslationLanguage('uk', 'Ukrainian'),
+    TranslationLanguage('ur', 'Urdu'),
+    TranslationLanguage('uz', 'Uzbek'),
+    TranslationLanguage('zu', 'Zulu'),
   ];
 
   /// The language for a saved [code], else simplified Chinese.
@@ -40,6 +106,16 @@ class TranslationLanguage {
 
   /// The language for a saved [code]; null for none or an unknown one.
   static TranslationLanguage? maybeByCode(Object? code) => all.where((l) => l.code == code).firstOrNull;
+
+  /// The language a language [tag] (an interface language's, Windows' or a
+  /// subtitle's) names; Chinese by script, null when none is.
+  static TranslationLanguage? ofTag(String tag) {
+    final t = tag.toLowerCase().replaceAll('_', '-');
+    if (const {'zh', 'zh-hans', 'zh-cn', 'zh-sg'}.contains(t)) return all[0];
+    if (const {'zh-hant', 'zh-tw', 'zh-hk', 'zh-mo'}.contains(t)) return all[1];
+    final base = t.split('-').first;
+    return all.where((l) => l.tags.contains(base)).firstOrNull;
+  }
 }
 
 /// How a translation shown under its original looks, as KISS Translator

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
 import '../../l10n/l10n.dart';
-import '../../player_settings.dart' show SubtitleLanguage, interfaceTranslationLanguage;
+import '../../player_settings.dart' show interfaceTranslationLanguage;
 import '../../translation.dart';
 import '../../translation_services.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
@@ -82,7 +82,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
       title: tr('Translation target language'),
       leading: const Icon(AppIcons.translate),
       value: prefs.translateLanguage,
-      values: [('', tr('Follow system language ({0})', [SubtitleLanguage.auto.translation.label])), for (final l in TranslationLanguage.all) (l.code, l.label)],
+      values: [('', tr('Interface language ({0})', [interfaceTranslationLanguage.label])), for (final l in TranslationLanguage.all) (l.code, l.label)],
       onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(translateLanguage: v)),
     ),
     SwitchItem(

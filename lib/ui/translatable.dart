@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
 import '../language_guess.dart';
-import '../player_settings.dart' show SubtitleLanguage;
+import '../player_settings.dart' show SubtitleLanguage, interfaceTranslationLanguage;
 import '../translation.dart';
 import 'theme.dart';
 import 'app_icons.dart';
@@ -140,8 +140,8 @@ class _TranslatableState extends State<Translatable> {
 /// interface's and Windows'.
 Set<String> readLanguages(AppController controller) => {
       controller.preferences.immersiveTarget,
-      if (TranslationLanguage.maybeByCode(youtubeHl) case final ui?) ui.code,
-      SubtitleLanguage.auto.translation.code,
+      interfaceTranslationLanguage.code,
+      SubtitleLanguage.systemTranslation.code,
     };
 
 /// Whether some line of [text] is in none of [readLanguages].

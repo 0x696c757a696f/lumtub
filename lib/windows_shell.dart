@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 
 import 'app/app_controller.dart';
+import 'app_window.dart';
+import 'kwin_keep_above.dart';
 import 'l10n/l10n.dart';
 
 /// The runner's side of Windows' media overlay (System Media Transport
@@ -87,10 +89,12 @@ class WindowsShell {
     await _send('setTimeline', {'position': position.inMilliseconds, 'duration': duration.inMilliseconds});
   }
 
-  /// With [enabled] the close button hides the window to a tray icon whose
-  /// menu has the translated [labels]; off, closing exits as usual.
-  Future<void> setTray({required bool enabled}) => _send('setTray', {
+  /// With [enabled] the close button, and with [minimize] minimising, hides
+  /// the window to a tray icon whose menu has translated labels; off,
+  /// closing exits and minimising minimises as usual.
+  Future<void> setTray({required bool enabled, bool minimize = false}) => _send('setTray', {
         'enabled': enabled,
+        'minimize': minimize,
         'show': tr('Show window'),
         'playPause': tr('Play/Pause'),
         'next': tr('Next'),
@@ -114,7 +118,8 @@ class WindowsShellSync {
   Player? _player;
   final List<StreamSubscription<Object?>> _subscriptions = [];
   String? _videoId;
-  bool? _hasNext, _hasPrevious, _tray;
+  bool? _hasNext, _hasPrevious;
+  (bool, bool)? _tray;
   Duration _duration = Duration.zero;
 
   void _button(String button) {
@@ -136,10 +141,11 @@ class WindowsShellSync {
   void _changed() {
     final player = controller.player;
     if (player != null && player != _player) _attach(player);
-    final tray = controller.preferences.closeToTray;
+    final tray = (controller.preferences.closeToTray, controller.preferences.minimizeToTray);
     if (tray != _tray) {
       _tray = tray;
-      unawaited(shell.setTray(enabled: tray));
+      unawaited(shell.setTray(enabled: tray.$1, minimize: tray.$2));
+      if (AppWindow.onWayland) unawaited(KWinMinimizeWatch.set(tray.$2));
     }
     final video = controller.playing;
     if (video?.id != _videoId) {

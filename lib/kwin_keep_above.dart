@@ -52,3 +52,48 @@ for (const window of windows) {
     return result.exitCode == 0 ? '${result.stdout}' : null;
   }
 }
+
+/// Hiding Lumtub to the tray when it is minimised on KDE Plasma under
+/// Wayland, where no program is told it was: a KWin script, left loaded
+/// while the setting is on, tells the runner over D-Bus.
+class KWinMinimizeWatch {
+  KWinMinimizeWatch._();
+
+  static const _name = 'lumtub-minimize-to-tray';
+
+  /// The script that calls the runner's Minimized method when a window of
+  /// process [processId] is minimised, for KWin 6 and 5.
+  static String script(int processId) => '''
+const service = 'org.mpris.MediaPlayer2.lumtub.instance$processId';
+function minimized(window) {
+  if (window.pid === $processId && window.minimized) callDBus(service, '/org/mpris/MediaPlayer2', 'io.github.lumtub.Window', 'Minimized');
+}
+if (workspace.windowList) {
+  const watch = (window) => {
+    if (window.pid === $processId) window.minimizedChanged.connect(() => minimized(window));
+  };
+  workspace.windowList().forEach(watch);
+  workspace.windowAdded.connect(watch);
+} else {
+  workspace.clientMinimized.connect(minimized);
+}
+''';
+
+  /// Starts or stops watching; one script at a time, whichever Lumtub
+  /// loaded it last.
+  static Future<void> set(bool on) async {
+    if (!KWinKeepAbove.available) return;
+    try {
+      await KWinKeepAbove._call('/Scripting', 'org.kde.kwin.Scripting.unloadScript', const [_name]);
+      if (!on) return;
+      final folder = Directory('${Directory.systemTemp.path}/lumtub-kwin-$pid');
+      await folder.create(recursive: true);
+      final file = File('${folder.path}/minimize-to-tray.js');
+      await file.writeAsString(script(pid));
+      final loaded = await KWinKeepAbove._call('/Scripting', 'org.kde.kwin.Scripting.loadScript', [file.path, _name]);
+      final id = loaded == null ? null : KWinKeepAbove.scriptId(loaded);
+      if (id == null || id < 0) return;
+      await KWinKeepAbove._call('/Scripting/Script$id', 'org.kde.kwin.Script.run', const []) ?? await KWinKeepAbove._call('/$id', 'org.kde.kwin.Script.run', const []);
+    } catch (_) {}
+  }
+}

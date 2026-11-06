@@ -14,7 +14,7 @@ For **Windows, Linux and macOS**.
 [![Build](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml/badge.svg)](https://github.com/0x696c757a696f/lumtub/actions/workflows/build.yml)
 ![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078D4?logo=windows)
 ![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux&logoColor=black)
-![macOS](https://img.shields.io/badge/macOS-preview-000000?logo=apple)
+![macOS](https://img.shields.io/badge/macOS-Apple%20silicon%20%7C%20Intel-000000?logo=apple)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
@@ -145,12 +145,20 @@ Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 | `windows-arm64` | Windows on ARM laptops |
 | `linux-x64` AppImage | 64-bit PCs with glibc 2.36 or newer (Debian 12, Ubuntu 24.04, Fedora 37 and later) |
 | `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 |
+| `macos-arm64` DMG | Macs with Apple silicon (M1 and later) |
+| `macos-x64` DMG | Intel Macs |
 
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.
 
-**macOS** (separate DMGs for Apple silicon and Intel) is in testing and comes to releases once it has been tried on real Macs. ⭐ Star or watch the repository to hear when it lands.
+**macOS:** open the DMG and drag Lumtub into Applications. Lumtub is not notarized by Apple yet, so macOS stops it the first time it opens. Either run this once in Terminal:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/Lumtub.app
+```
+
+or open it, click **Done**, and choose **Open Anyway** next to Lumtub in **System Settings › Privacy & Security**. Updates after that open normally.
 
 ## Privacy you can check
 
@@ -170,6 +178,12 @@ Everything is open source under the GPL, so none of this has to be taken on trus
 
 **Where is my data?** On Windows in `%LOCALAPPDATA%\Lumtub`, or the `userdata` folder next to `lumtub.exe` for the portable version. On Linux in `~/.local/share/lumtub`, on macOS in `~/Library/Application Support/Lumtub`. Settings can be exported and imported.
 
+**Which Linux systems does it run on?** Any distribution with glibc 2.36 or newer: Debian 12, Ubuntu 24.04, Fedora 37 and later. Ubuntu 22.04 and older, and musl systems such as Alpine, are not supported. On NixOS start it with `appimage-run`.
+
+**Why is there no tray icon on GNOME?** GNOME shows tray icons only with the AppIndicator extension. Ubuntu has it built in; on Fedora and other plain GNOME installs, add [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/). Without it, closing or minimizing to the tray minimizes the window normally instead.
+
+**Why does Linux forget my sign-in?** Lumtub keeps it encrypted in the system keyring (GNOME Keyring or KWallet). A desktop without one, such as a bare window manager, needs `gnome-keyring` or `kwallet` installed and running.
+
 **Was this called YTPlus?** Yes, until October 2026. Updating keeps your settings, library and sign-in.
 
 ## Support Lumtub
@@ -181,7 +195,7 @@ Every feature above exists because someone sponsored the time to build it.
 
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/Sponsor_on_GitHub-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" height="44"></a>
 
-**Monthly sponsors** decide what comes next: Linux and macOS releases, Android, a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
+**Monthly sponsors** decide what comes next: Android, a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
 One-time gifts of any amount are just as welcome. The same page is in the app under Settings › About › Support development.
 
 </div>

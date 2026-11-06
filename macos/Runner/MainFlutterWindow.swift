@@ -30,4 +30,14 @@ class MainFlutterWindow: NSWindow {
   // could take neither the keyboard nor the menu bar.
   override var canBecomeKey: Bool { true }
   override var canBecomeMain: Bool { true }
+
+  // The yellow button and ⌘M hide the window to the menu bar icon when the
+  // setting is on.
+  override func miniaturize(_ sender: Any?) {
+    if shell?.minimizeToTray == true {
+      orderOut(nil)
+    } else {
+      super.miniaturize(sender)
+    }
+  }
 }

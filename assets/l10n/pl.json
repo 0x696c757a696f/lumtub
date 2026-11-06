@@ -1221,7 +1221,6 @@
   "Buffer size": "Rozmiar bufora",
   "Buffer duration": "Czas buforowania",
   "Buffering mode": "Tryb buforowania",
-  "No buffering progress for over {0} seconds": "Brak postępu buforowania od ponad {0} s",
   "Cache {0} · {1} s · {2} MB": "Pamięć podręczna {0} · {1} s · {2} MB",
   "Cache folder": "Lokalizacja pamięci podręcznej",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Zapisano lokalizację pamięci podręcznej. Pamięć podręczna yt-dlp użyje nowej lokalizacji przy następnym wyszukiwaniu.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "tigrinia",
   "Turkmen": "turkmeński",
   "Uzbek": "uzbecki",
-  "Zulu": "zulu"
+  "Zulu": "zulu",
+  "This live stream cannot go back further at this quality": "Tej transmisji na żywo nie da się cofnąć dalej w tej jakości"
 }

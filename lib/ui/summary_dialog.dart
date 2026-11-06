@@ -94,7 +94,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
           child: LinkedText(summary, style: const TextStyle(height: 1.6), onTime: (time) {
             // Out of the way so the moment shows; the summary is kept and
             // opens again at once.
-            controller.player?.seek(time);
+            controller.seek(time);
             Navigator.pop(context);
           }, onLink: openExternal),
         ),

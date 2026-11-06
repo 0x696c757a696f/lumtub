@@ -1221,7 +1221,6 @@
   "Buffer size": "Pufferméret",
   "Buffer duration": "Pufferelés hossza",
   "Buffering mode": "Pufferelési mód",
-  "No buffering progress for over {0} seconds": "A pufferelés {0} másodperce nem halad",
   "Cache {0} · {1} s · {2} MB": "Gyorsítótár: {0} · {1} mp · {2} MB",
   "Cache folder": "Gyorsítótár helye",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "A gyorsítótár helye mentve. A yt-dlp gyorsítótára a következő keresésnél már az új helyet használja.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "tigrinya",
   "Turkmen": "türkmén",
   "Uzbek": "üzbég",
-  "Zulu": "zulu"
+  "Zulu": "zulu",
+  "This live stream cannot go back further at this quality": "Ez az élő adás ebben a minőségben nem tekerhető tovább vissza"
 }

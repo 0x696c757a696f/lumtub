@@ -1221,7 +1221,6 @@
   "Buffer size": "Kích thước bộ đệm",
   "Buffer duration": "Thời lượng bộ đệm",
   "Buffering mode": "Chế độ bộ đệm",
-  "No buffering progress for over {0} seconds": "Quá {0} giây bộ đệm không có tiến triển",
   "Cache {0} · {1} s · {2} MB": "Bộ nhớ đệm {0} · {1} giây · {2} MB",
   "Cache folder": "Vị trí bộ nhớ đệm",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Đã lưu vị trí bộ nhớ đệm. Bộ nhớ đệm yt-dlp sẽ dùng vị trí mới ở lần tìm kiếm tiếp theo.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "Tiếng Tigrinya",
   "Turkmen": "Tiếng Turkmen",
   "Uzbek": "Tiếng Uzbek",
-  "Zulu": "Tiếng Zulu"
+  "Zulu": "Tiếng Zulu",
+  "This live stream cannot go back further at this quality": "Không thể tua buổi phát trực tiếp này lùi xa hơn ở chất lượng này"
 }

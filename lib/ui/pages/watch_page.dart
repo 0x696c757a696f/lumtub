@@ -140,7 +140,7 @@ class _WatchPageState extends State<WatchPage> {
                   key: ValueKey('comments:${item.id}'),
                   controller: controller,
                   videoId: item.id,
-                  onSeek: (position) => controller.player?.seek(position),
+                  onSeek: (position) => controller.seek(position),
                   scrollable: wide,
                   sliver: !wide,
                   padding: wide ? const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding) : EdgeInsets.zero,
@@ -476,7 +476,7 @@ class _Description extends StatefulWidget {
 class _DescriptionState extends State<_Description> {
   late bool _expanded = widget.expanded;
 
-  void _seek(Duration time) => unawaited(widget.controller.player?.seek(time));
+  void _seek(Duration time) => unawaited(widget.controller.seek(time));
 
   @override
   Widget build(BuildContext context) {
@@ -597,7 +597,7 @@ class _ReplayChatPanel extends StatelessWidget {
     // does not build the ones already shown again.
     Widget messageAt(int index) {
       final message = messages[index];
-      return _chatRows[message] ??= _ReplayChatMessage(controller: controller, message: message, onSeek: message.offset == null ? null : () => controller.player?.seek(message.offset!));
+      return _chatRows[message] ??= _ReplayChatMessage(controller: controller, message: message, onSeek: message.offset == null ? null : () => controller.seek(message.offset!));
     }
     if (live) {
       // Newest at the bottom; a list built from the bottom stays on the

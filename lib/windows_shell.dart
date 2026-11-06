@@ -108,7 +108,7 @@ class WindowsShellSync {
   WindowsShellSync(this.controller, this.shell) {
     shell
       ..onButton = _button
-      ..onSeek = (position) => unawaited(controller.player?.seek(position));
+      ..onSeek = (position) => unawaited(controller.seek(position));
     controller.addListener(_changed);
     _changed();
   }

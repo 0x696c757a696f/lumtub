@@ -1221,7 +1221,6 @@
   "Buffer size": "Tamaño del búfer",
   "Buffer duration": "Duración del búfer",
   "Buffering mode": "Modo de búfer",
-  "No buffering progress for over {0} seconds": "El búfer no avanza desde hace más de {0} segundos",
   "Cache {0} · {1} s · {2} MB": "Caché {0} · {1} s · {2} MB",
   "Cache folder": "Ubicación de la caché",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Ubicación de la caché guardada. La caché de yt-dlp usará la nueva ubicación en la próxima búsqueda.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "tigriña",
   "Turkmen": "turcomano",
   "Uzbek": "uzbeko",
-  "Zulu": "zulú"
+  "Zulu": "zulú",
+  "This live stream cannot go back further at this quality": "Esta emisión en directo no puede retroceder más con esta calidad"
 }

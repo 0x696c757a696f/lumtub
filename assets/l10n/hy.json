@@ -1221,7 +1221,6 @@
   "Buffer size": "Բուֆերի չափ",
   "Buffer duration": "Բուֆերի տևողություն",
   "Buffering mode": "Բուֆերավորման ռեժիմ",
-  "No buffering progress for over {0} seconds": "Բուֆերավորման առաջընթաց չկա {0} վայրկյանից ավելի",
   "Cache {0} · {1} s · {2} MB": "Քեշ {0} · {1} վրկ · {2} ՄԲ",
   "Cache folder": "Քեշի վայր",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Քեշի վայրը պահպանվեց։ yt-dlp-ի քեշը հաջորդ որոնման ժամանակ կօգտագործի նոր վայրը։",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "տիգրինյա",
   "Turkmen": "թուրքմեներեն",
   "Uzbek": "ուզբեկերեն",
-  "Zulu": "զուլուերեն"
+  "Zulu": "զուլուերեն",
+  "This live stream cannot go back further at this quality": "Այս ուղիղ հեռարձակումը այս որակով չի կարող ավելի հետ գնալ"
 }

@@ -1221,7 +1221,6 @@
   "Buffer size": "حجم التخزين المؤقت",
   "Buffer duration": "مدة التخزين المؤقت",
   "Buffering mode": "وضع التخزين المؤقت",
-  "No buffering progress for over {0} seconds": "لا يوجد تقدم في التخزين المؤقت منذ أكثر من {0} ثانية",
   "Cache {0} · {1} s · {2} MB": "الذاكرة المؤقتة {0} · {1} ث · {2} MB",
   "Cache folder": "موقع الذاكرة المؤقتة",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "تم حفظ موقع الذاكرة المؤقتة. ستستخدم ذاكرة yt-dlp المؤقتة الموقع الجديد عند البحث التالي.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "التغرينية",
   "Turkmen": "التركمانية",
   "Uzbek": "الأوزبكية",
-  "Zulu": "الزولو"
+  "Zulu": "الزولو",
+  "This live stream cannot go back further at this quality": "لا يمكن الرجوع أكثر في هذا البث المباشر بهذه الجودة"
 }

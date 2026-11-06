@@ -1221,7 +1221,6 @@
   "Buffer size": "Размер буфера",
   "Buffer duration": "Длительность буфера",
   "Buffering mode": "Режим буферизации",
-  "No buffering progress for over {0} seconds": "Буферизация не продвигается более {0} с",
   "Cache {0} · {1} s · {2} MB": "Кэш {0} · {1} с · {2} МБ",
   "Cache folder": "Расположение кэша",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Расположение кэша сохранено. Кэш yt-dlp будет использовать новое расположение при следующем поиске.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "тигринья",
   "Turkmen": "туркменский",
   "Uzbek": "узбекский",
-  "Zulu": "зулу"
+  "Zulu": "зулу",
+  "This live stream cannot go back further at this quality": "В этом качестве прямую трансляцию нельзя перемотать дальше назад"
 }

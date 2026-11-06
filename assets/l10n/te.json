@@ -1221,7 +1221,6 @@
   "Buffer size": "బఫర్ పరిమాణం",
   "Buffer duration": "బఫర్ వ్యవధి",
   "Buffering mode": "బఫరింగ్ మోడ్",
-  "No buffering progress for over {0} seconds": "{0} సెకన్లకు పైగా బఫరింగ్‌లో పురోగతి లేదు",
   "Cache {0} · {1} s · {2} MB": "కాష్ {0} · {1} సె. · {2} MB",
   "Cache folder": "కాష్ స్థానం",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "కాష్ స్థానం సేవ్ చేయబడింది. తదుపరి శోధనలో yt-dlp కాష్ కొత్త స్థానాన్ని ఉపయోగిస్తుంది.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "టిగ్రిన్యా",
   "Turkmen": "తుర్క్‌మెన్",
   "Uzbek": "ఉజ్బెక్",
-  "Zulu": "జులు"
+  "Zulu": "జులు",
+  "This live stream cannot go back further at this quality": "ఈ నాణ్యతలో ఈ లైవ్ స్ట్రీమ్ ఇంకా వెనక్కి వెళ్లదు"
 }

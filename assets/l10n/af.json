@@ -1221,7 +1221,6 @@
   "Buffer size": "Buffergrootte",
   "Buffer duration": "Bufferduur",
   "Buffering mode": "Bufferingmodus",
-  "No buffering progress for over {0} seconds": "Geen bufferingvordering vir meer as {0} sekondes nie",
   "Cache {0} · {1} s · {2} MB": "Kas {0} · {1} s · {2} MB",
   "Cache folder": "Kasligging",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Kasligging gestoor. yt-dlp se kas sal die nuwe ligging by die volgende soektog gebruik.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "Tigrinya",
   "Turkmen": "Turkmeens",
   "Uzbek": "Oesbekies",
-  "Zulu": "Zoeloe"
+  "Zulu": "Zoeloe",
+  "This live stream cannot go back further at this quality": "Hierdie regstreekse uitsending kan nie by hierdie gehalte verder teruggaan nie"
 }

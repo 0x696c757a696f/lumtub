@@ -1221,7 +1221,6 @@
   "Buffer size": "የቋት መጠን",
   "Buffer duration": "የቋት ቆይታ",
   "Buffering mode": "የቋት ሁነታ",
-  "No buffering progress for over {0} seconds": "ከ{0} ሴኮንዶች በላይ የቋት እድገት የለም",
   "Cache {0} · {1} s · {2} MB": "መሸጎጫ {0} · {1} ሴኮንድ · {2} MB",
   "Cache folder": "የመሸጎጫ ቦታ",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "የመሸጎጫ ቦታ ተቀምጧል። የ yt-dlp መሸጎጫ በሚቀጥለው ፍለጋ አዲሱን ቦታ ይጠቀማል።",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "ትግርኛ",
   "Turkmen": "ቱርክመንኛ",
   "Uzbek": "ኡዝበክኛ",
-  "Zulu": "ዙሉኛ"
+  "Zulu": "ዙሉኛ",
+  "This live stream cannot go back further at this quality": "ይህ የቀጥታ ስርጭት በዚህ ጥራት ከዚህ በላይ ወደ ኋላ መመለስ አይችልም"
 }

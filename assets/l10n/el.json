@@ -1221,7 +1221,6 @@
   "Buffer size": "Μέγεθος προσωρινής αποθήκευσης",
   "Buffer duration": "Διάρκεια προσωρινής αποθήκευσης",
   "Buffering mode": "Λειτουργία προσωρινής αποθήκευσης",
-  "No buffering progress for over {0} seconds": "Καμία πρόοδος στην προσωρινή αποθήκευση για πάνω από {0} δευτερόλεπτα",
   "Cache {0} · {1} s · {2} MB": "Προσωρινή μνήμη {0} · {1} δλ. · {2} MB",
   "Cache folder": "Θέση προσωρινής μνήμης",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Η θέση προσωρινής μνήμης αποθηκεύτηκε. Η προσωρινή μνήμη του yt-dlp θα χρησιμοποιήσει τη νέα θέση στην επόμενη αναζήτηση.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "Τιγκρίνια",
   "Turkmen": "Τουρκμενικά",
   "Uzbek": "Ουζμπεκικά",
-  "Zulu": "Ζουλού"
+  "Zulu": "Ζουλού",
+  "This live stream cannot go back further at this quality": "Αυτή η ζωντανή μετάδοση δεν μπορεί να γυρίσει πιο πίσω σε αυτή την ποιότητα"
 }

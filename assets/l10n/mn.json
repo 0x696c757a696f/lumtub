@@ -1221,7 +1221,6 @@
   "Buffer size": "Буферийн хэмжээ",
   "Buffer duration": "Буферийн хугацаа",
   "Buffering mode": "Буферийн горим",
-  "No buffering progress for over {0} seconds": "Буфер {0} секундээс удаан ахиц гараагүй",
   "Cache {0} · {1} s · {2} MB": "Кэш {0} · {1} сек · {2} MB",
   "Cache folder": "Кэшийн байршил",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Кэшийн байршил хадгалагдлаа. yt-dlp-ийн кэш дараагийн хайлтаас шинэ байршлыг ашиглана.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "тигриня",
   "Turkmen": "туркмен",
   "Uzbek": "узбек",
-  "Zulu": "зулу"
+  "Zulu": "зулу",
+  "This live stream cannot go back further at this quality": "Энэ шууд дамжуулалтыг энэ чанараар цааш ухрааж болохгүй"
 }

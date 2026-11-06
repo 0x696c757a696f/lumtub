@@ -1221,7 +1221,6 @@
   "Buffer size": "Magnitudo memoriae intermediae",
   "Buffer duration": "Duratio memoriae intermediae",
   "Buffering mode": "Modus praeonerandi",
-  "No buffering progress for over {0} seconds": "Nullus progressus praeonerandi per plus quam {0} secunda",
   "Cache {0} · {1} s · {2} MB": "Cella memoriae {0} · {1} s · {2} MB",
   "Cache folder": "Locus cellae memoriae",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Locus cellae memoriae servatus. Cella memoriae yt-dlp novo loco in quaestione proxima utetur.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "Tigrinia",
   "Turkmen": "Turcmenica",
   "Uzbek": "Uzbecica",
-  "Zulu": "Zulu"
+  "Zulu": "Zulu",
+  "This live stream cannot go back further at this quality": "Haec transmissio viva hac qualitate longius retro ire non potest"
 }

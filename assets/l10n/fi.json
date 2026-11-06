@@ -1221,7 +1221,6 @@
   "Buffer size": "Puskurin koko",
   "Buffer duration": "Puskurin kesto",
   "Buffering mode": "Puskurointitila",
-  "No buffering progress for over {0} seconds": "Puskurointi ei ole edennyt yli {0} sekuntiin",
   "Cache {0} · {1} s · {2} MB": "Välimuisti {0} · {1} s · {2} Mt",
   "Cache folder": "Välimuistin sijainti",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Välimuistin sijainti tallennettu. yt-dlp:n välimuisti käyttää uutta sijaintia seuraavasta hausta alkaen.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "tigrinja",
   "Turkmen": "turkmeeni",
   "Uzbek": "uzbekki",
-  "Zulu": "zulu"
+  "Zulu": "zulu",
+  "This live stream cannot go back further at this quality": "Tätä suoraa lähetystä ei voi kelata kauemmas taaksepäin tällä laadulla"
 }

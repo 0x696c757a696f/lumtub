@@ -1221,7 +1221,6 @@
   "Buffer size": "Puhvri suurus",
   "Buffer duration": "Puhvri kestus",
   "Buffering mode": "Puhverdamisrežiim",
-  "No buffering progress for over {0} seconds": "Puhverdamine pole {0} sekundi jooksul edenenud",
   "Cache {0} · {1} s · {2} MB": "Vahemälu {0} · {1} s · {2} MB",
   "Cache folder": "Vahemälu asukoht",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "Vahemälu asukoht on salvestatud. yt-dlp vahemälu kasutab uut asukohta järgmisel otsingul.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "tigrinja",
   "Turkmen": "turkmeeni",
   "Uzbek": "usbeki",
-  "Zulu": "suulu"
+  "Zulu": "suulu",
+  "This live stream cannot go back further at this quality": "Seda otseülekannet ei saa selle kvaliteediga kaugemale tagasi kerida"
 }

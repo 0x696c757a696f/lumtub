@@ -1221,7 +1221,6 @@
   "Buffer size": "ကြိုတင်ဖတ်ထားမှု အရွယ်အစား",
   "Buffer duration": "ကြိုတင်ဖတ်ထားမှု ကြာချိန်",
   "Buffering mode": "ကြိုတင်ဖတ်ခြင်းမုဒ်",
-  "No buffering progress for over {0} seconds": "ကြိုတင်ဖတ်ခြင်းတွင် {0} စက္ကန့်ကျော် တိုးတက်မှုမရှိပါ",
   "Cache {0} · {1} s · {2} MB": "ကက်ရှ် {0} · {1} စက္ကန့် · {2} MB",
   "Cache folder": "ကက်ရှ်တည်နေရာ",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "ကက်ရှ်တည်နေရာကို သိမ်းပြီးပါပြီ။ yt-dlp ကက်ရှ်သည် နောက်ရှာဖွေမှုတွင် တည်နေရာအသစ်ကို သုံးမည်။",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "တီဂ်ရင်ညာ",
   "Turkmen": "တာ့ခ်မင်",
   "Uzbek": "ဥဇဘတ်",
-  "Zulu": "ဇူလူး"
+  "Zulu": "ဇူလူး",
+  "This live stream cannot go back further at this quality": "ဤအရည်အသွေးဖြင့် ဤတိုက်ရိုက်ထုတ်လွှင့်မှုကို ထပ်မံနောက်ပြန်၍ မရပါ"
 }

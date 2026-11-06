@@ -1221,7 +1221,6 @@
   "Buffer size": "பஃபர் அளவு",
   "Buffer duration": "பஃபர் நேரம்",
   "Buffering mode": "பஃபரிங் முறை",
-  "No buffering progress for over {0} seconds": "{0} விநாடிகளுக்கு மேல் பஃபரிங்கில் முன்னேற்றம் இல்லை",
   "Cache {0} · {1} s · {2} MB": "தற்காலிகச் சேமிப்பு {0} · {1} வி · {2} MB",
   "Cache folder": "தற்காலிகச் சேமிப்பு இடம்",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "தற்காலிகச் சேமிப்பு இடம் சேமிக்கப்பட்டது. அடுத்த தேடலில் yt-dlp தற்காலிகச் சேமிப்பு புதிய இடத்தைப் பயன்படுத்தும்.",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "டிக்ரின்யா",
   "Turkmen": "துருக்மென்",
   "Uzbek": "உஸ்பெக்",
-  "Zulu": "ஜுலு"
+  "Zulu": "ஜுலு",
+  "This live stream cannot go back further at this quality": "இந்தத் தரத்தில் இந்த நேரலையை மேலும் பின்னோக்கிச் செல்ல முடியாது"
 }

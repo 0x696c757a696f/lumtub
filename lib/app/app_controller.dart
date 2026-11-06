@@ -1692,8 +1692,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// fragment by fragment in the relay (see [LiveSplit]).
   String? _liveSplit;
   /// The live stream whose split picture and sound failed soon after
-  /// opening, so it plays from HLS instead, up to 1080p.
+  /// opening twice, so it plays from HLS instead, up to 1080p.
   String? _liveSplitOff;
+  /// The live stream whose split picture and sound failed soon after
+  /// opening once: it gets one more try before HLS.
+  String? _liveSplitBroke;
 
   /// An mpv address playing [video]'s live picture above 1080p with its
   /// sound through [relay], or null when there is none within the cap.
@@ -1877,11 +1880,16 @@ class AppController extends ChangeNotifier with _ExploreState {
       _unrelayed = item.id;
       logWarn('Playing ${item.id} without the local chunked relay');
     }
-    // A split live stream that broke at once is played from HLS; one that
-    // played a while gets new addresses and stays split.
+    // A split live stream that broke at once twice is played from HLS; one
+    // that played a while, or broke once, gets new addresses and stays
+    // split.
     if (_liveSplit == item.id && DateTime.now().difference(_openedAt) < const Duration(minutes: 1)) {
-      _liveSplitOff = item.id;
-      logWarn('Playing live ${item.id} from HLS, up to 1080p');
+      if (_liveSplitBroke == item.id) {
+        _liveSplitOff = item.id;
+        logWarn('Playing live ${item.id} from HLS, up to 1080p');
+      } else {
+        _liveSplitBroke = item.id;
+      }
     }
     _notice(tr('Connection lost, reconnecting from {0}…', [_clock(position)]));
     _recovering = true;
@@ -2120,7 +2128,7 @@ class AppController extends ChangeNotifier with _ExploreState {
         _stallTimer?.cancel();
         if (!buffering || _tracking == null) return;
         _stallTimer = Timer(PlaybackRecovery.stallTimeout, () {
-          if (player.state.buffering && player.state.playing) unawaited(_recover(tr('No buffering progress for over {0} seconds', [PlaybackRecovery.stallTimeout.inSeconds])));
+          if (player.state.buffering && player.state.playing) unawaited(_recover('No buffering progress for over ${PlaybackRecovery.stallTimeout.inSeconds} seconds'));
         });
       }),
     ]);
@@ -2376,7 +2384,36 @@ class AppController extends ChangeNotifier with _ExploreState {
     final duration = player.state.duration;
     if (target < Duration.zero) target = Duration.zero;
     if (duration > Duration.zero && target > duration) target = duration;
+    await seek(target);
+  }
+
+  /// Seeks the playing video to [target]. The split live stream holds only
+  /// the fragments fetched so far, and a seek outside them would leave the
+  /// decoder without a keyframe, broken until the next: forward then goes
+  /// to the newest moment, backward stays where it is.
+  Future<void> seek(Duration target) async {
+    final player = this.player;
+    if (player == null) return;
+    if (_liveSplit != null && _liveSplit == playing?.id && !await _splitHolds(player, target)) {
+      if (target > player.state.position) return goLive();
+      _notice(tr('This live stream cannot go back further at this quality'));
+      return;
+    }
     await player.seek(target);
+  }
+
+  /// Whether libmpv's cache holds [target] of the split live stream.
+  Future<bool> _splitHolds(Player player, Duration target) async {
+    final platform = player.platform;
+    if (platform is! NativePlayer) return false;
+    try {
+      final cache = jsonDecode(await platform.getProperty('demuxer-cache-state'));
+      final ranges = cache is Map ? cache['seekable-ranges'] : null;
+      final at = target.inMilliseconds / 1000;
+      return ranges is List && ranges.any((r) => r is Map && r['start'] is num && r['end'] is num && at >= (r['start'] as num) && at <= (r['end'] as num) - 1);
+    } catch (_) {
+      return false;
+    }
   }
 
   /// How far behind its live edge a live stream may play before the

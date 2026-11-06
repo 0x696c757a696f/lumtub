@@ -1223,7 +1223,6 @@
   "Buffer size": "缓冲大小",
   "Buffer duration": "缓冲时长",
   "Buffering mode": "缓冲模式",
-  "No buffering progress for over {0} seconds": "缓冲超过 {0} 秒没有进展",
   "Cache {0} · {1} s · {2} MB": "缓存 {0} · {1} 秒 · {2} MB",
   "Cache folder": "缓存位置",
   "Cache location saved. yt-dlp's cache will use the new location on the next search.": "缓存位置已保存。yt-dlp 缓存在下一次搜索时使用新位置。",
@@ -2943,5 +2942,6 @@
   "Tigrinya": "提格利尼亚语",
   "Turkmen": "土库曼语",
   "Uzbek": "乌兹别克语",
-  "Zulu": "祖鲁语"
+  "Zulu": "祖鲁语",
+  "This live stream cannot go back further at this quality": "这个画质的直播不能再往回退了"
 }

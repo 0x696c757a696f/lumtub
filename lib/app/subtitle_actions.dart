@@ -123,11 +123,15 @@ extension SubtitleActions on AppController {
     final player = this.player;
     final platform = player?.platform;
     if (player == null || platform is! NativePlayer) return const [];
-    final track = player.state.track.subtitle;
+    // Read from libmpv: media_kit's own idea of the tracks falls behind when
+    // a finished translation replaces a track or mpv picks one itself.
+    final shown = await _shownSubtitles(platform);
+    final track = shown?.main ?? player.state.track.subtitle;
     final off = track.id == 'no' || track.id == 'auto';
     final second = secondarySubtitle;
     // A second subtitle mpv shows that no option names is read as a track.
-    final secondTrack = second != null || secondaryTrackId == 'no' ? null : player.state.tracks.subtitle.where((t) => t.id == secondaryTrackId).firstOrNull;
+    final secondId = shown?.second ?? secondaryTrackId;
+    final secondTrack = second != null || secondId == 'no' ? null : shown?.tracks[secondId] ?? player.state.tracks.subtitle.where((t) => t.id == secondId).firstOrNull;
     Future<List<SubtitleCue>> secondCues() => second != null ? _optionCues(second) : secondTrack != null ? _trackCues(platform, secondTrack) : Future.value(const []);
     final hasSecond = second != null || secondTrack != null;
     final mode = preferences.subtitleListMode;
@@ -197,6 +201,26 @@ extension SubtitleActions on AppController {
     final subtitles = details?.subtitles ?? const <SubtitleOption>[];
     final option = subtitles.where((o) => o.label == track.title).firstOrNull;
     return option == null ? null : _originalOf(option);
+  }
+
+  /// The main and second subtitle libmpv shows now, and its subtitle
+  /// tracks by id; null when it cannot be asked.
+  Future<({SubtitleTrack main, String second, Map<String, SubtitleTrack> tracks})?> _shownSubtitles(NativePlayer platform) async {
+    try {
+      final list = jsonDecode(await platform.getProperty('track-list'));
+      final tracks = <String, SubtitleTrack>{
+        if (list is List)
+          for (final t in list.whereType<Map>())
+            if (t['type'] == 'sub' && t['id'] != null) '${t['id']}': SubtitleTrack('${t['id']}', t['title'] as String?, t['lang'] as String?),
+      };
+      String id(String value) => value.isEmpty || value == 'false' ? 'no' : value;
+      final sid = id(await platform.getProperty('sid'));
+      final second = id(await platform.getProperty('secondary-sid'));
+      return (main: sid == 'no' ? SubtitleTrack.no() : tracks[sid] ?? SubtitleTrack.no(), second: second, tracks: tracks);
+    } catch (e) {
+      logWarn('Could not read the subtitles shown: $e');
+      return null;
+    }
   }
 
   SubtitleOption? _originalOf(SubtitleOption option) {

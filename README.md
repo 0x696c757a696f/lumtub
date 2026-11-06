@@ -20,7 +20,7 @@ For **Windows, Linux and macOS**.
 
 <img src="docs/screenshots/watch.png" alt="Lumtub playing a video, with Up next beside it" width="860">
 
-<a href="docs/promo/promo-en.mp4"><img src="docs/promo/poster.jpg" alt="Watch the 42-second tour of Lumtub" width="640"></a>
+https://github.com/user-attachments/assets/4ec072a1-6496-46b2-bcba-9b29df811646
 
 [Pain points](#the-things-youve-put-up-with-for-years) · [Why people switch](#why-people-switch) · [Features](#features) · [Get it](#get-it) · [Privacy](#privacy-you-can-check) · [FAQ](#faq) · [Support](#support-lumtub)
 

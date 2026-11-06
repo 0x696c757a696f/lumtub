@@ -11,7 +11,7 @@ class PlayerOptionApplicator {
     final language = settings.subtitleLanguage;
     return {
       'hwdec': settings.hwdec,
-      'hwdec-codecs': settings.hwdecCodecs,
+      'hwdec-codecs': defaultHwdecCodecs,
       if (Platform.isWindows) 'd3d11va-zero-copy': settings.d3d11vaZeroCopy ? 'yes' : 'no',
       'vd-lavc-dr': settings.directRendering,
       // Not 'no': mpv reads that as -1, which inverts the audio clock
@@ -27,7 +27,8 @@ class PlayerOptionApplicator {
       // fast profile does: a 4K frame shrunk to a window is most of the GPU
       // work after decoding.
       if (settings.strategy == PlaybackStrategy.lowResource) ...fastRendering,
-      'video-sync': settings.videoSync.mpvValue,
+      // Interpolation works only when video is timed to the display.
+      'video-sync': settings.interpolation && settings.videoSync == VideoSync.audio ? VideoSync.displayResample.mpvValue : settings.videoSync.mpvValue,
       'sub-scale': settings.subtitleScale.toStringAsFixed(1),
       'sub-font': settings.subtitleFont.isEmpty ? 'sans-serif' : PlayerSettings.fontForThisSystem(settings.subtitleFont),
       'sub-color': PlayerSettings.mpvColor(settings.subtitleColor, settings.subtitleOpacity),

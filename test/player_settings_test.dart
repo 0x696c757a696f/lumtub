@@ -167,7 +167,6 @@ vo=gpu-next
   test('PiliNara mpv options survive a round trip', () {
     const original = PlayerSettings(
       hwdec: 'd3d12va,d3d11va',
-      hwdecCodecs: 'h264,av1',
       d3d11vaZeroCopy: true,
       directRendering: 'yes',
       autosync: 30,

@@ -28,7 +28,6 @@ void main() {
     expect(const PlayerSettings(decoderResults: {'vp9': _hw, 'av1': soft}).disabledCodecs, {VideoCodec.av1});
     expect(const PlayerSettings(decoderResults: {'vp9': _hw, 'av1': _hw}).disabledCodecs, isEmpty);
     expect(const PlayerSettings(decoderResults: {'vp9': soft, 'av1': soft}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
-    expect(const PlayerSettings(hwdecCodecs: 'h264,vp9', decoderResults: {'vp9': _hw, 'av1': _hw}).disabledCodecs, {VideoCodec.av1});
     // H.264 stops at 1080p: above it VP9 stays enabled, even in software.
     expect(const PlayerSettings(maxHeight: 2160, decoderResults: {'vp9': soft}).disabledCodecs, {VideoCodec.av1});
     expect(const PlayerSettings(maxHeight: 1080, decoderResults: {'vp9': soft}).disabledCodecs, {VideoCodec.av1, VideoCodec.vp9});
@@ -62,8 +61,6 @@ void main() {
     expect(FormatPolicy.canDisableH264(const PlayerSettings()), isFalse);
     expect(FormatPolicy.canDisableH264(const PlayerSettings(decoderResults: {'av1': _hw})), isTrue);
     expect(FormatPolicy.canDisableH264(const PlayerSettings(hwdec: 'no', decoderResults: {'av1': _hw})), isFalse);
-    // A codec taken off Hardware-decoded codecs is decoded on the CPU.
-    expect(FormatPolicy.canDisableH264(const PlayerSettings(hwdecCodecs: 'h264,vp9', decoderResults: {'av1': _hw})), isFalse);
   });
 
   test('knows when VP9 or AV1 can only be decoded in software', () {

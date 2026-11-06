@@ -194,8 +194,9 @@ final _windowsHwdec = <(String, String)>[
   ('qsv-copy', tr('Quick Sync Video (Intel only, copy-back)')),
 ];
 
-/// Codecs offered for `--hwdec-codecs`.
-const hwdecCodecChoices = ['h264', 'hevc', 'vp8', 'vp9', 'av1', 'vc1', 'mpeg2video', 'mpeg4', 'wmv3', 'prores', 'prores_raw', 'ffv1', 'dpx'];
+/// The codecs libmpv tries hardware decoding for: YouTube's own and the
+/// common ones of downloaded or local files. Which of YouTube's codecs play
+/// at all is up to the disabled codecs.
 const defaultHwdecCodecs = 'h264,vc1,hevc,vp8,vp9,av1,prores,ffv1';
 
 /// PiliNara's 音量均衡 presets, as mpv `--af` filters.
@@ -299,12 +300,10 @@ class PlayerSettings {
   Set<VideoCodec> get disabledCodecs => chosenCodecs ?? automaticCodecs;
 
   /// The codecs disabled for the user: VP9 and AV1 unless this PC decodes
-  /// them in hardware (measured, and still listed in [hwdecCodecs]), so
-  /// playback stays light. Above 1080p, which H.264 cannot reach, VP9 stays
-  /// enabled even in software.
+  /// them in hardware, so playback stays light. Above 1080p, which H.264
+  /// cannot reach, VP9 stays enabled even in software.
   Set<VideoCodec> get automaticCodecs {
-    final listed = hwdecCodecs.split(',').map((c) => c.trim()).toSet();
-    bool hardware(String key) => hwdec != 'no' && listed.contains(key) && (decoderResults[key]?.isHardware ?? false);
+    bool hardware(String key) => hwdec != 'no' && (decoderResults[key]?.isHardware ?? false);
     final off = {if (!hardware('av1')) VideoCodec.av1, if (!hardware('vp9')) VideoCodec.vp9};
     if (maxHeight > 1080 && off.length == 2) off.remove(VideoCodec.vp9);
     return off;
@@ -370,8 +369,6 @@ class PlayerSettings {
   /// Extra libmpv options in mpv.conf syntax, applied after all others.
   final String mpvConf;
   final Map<String, DecoderStatus> decoderResults;
-  /// `--hwdec-codecs`: codecs hardware decoding is tried for.
-  final String hwdecCodecs;
   /// `--d3d11va-zero-copy`.
   final bool d3d11vaZeroCopy;
   /// libmpv draws subtitles itself (libass), so the mpv subtitle options
@@ -455,7 +452,6 @@ class PlayerSettings {
     this.cacheLimitGb,
     this.mpvConf = '',
     this.decoderResults = const {},
-    this.hwdecCodecs = defaultHwdecCodecs,
     this.d3d11vaZeroCopy = false,
     this.libassSubtitles = false,
     this.proxyMode = ProxyMode.system,
@@ -525,7 +521,6 @@ class PlayerSettings {
     bool clearCacheLimit = false,
     String? mpvConf,
     Map<String, DecoderStatus>? decoderResults,
-    String? hwdecCodecs,
     bool? d3d11vaZeroCopy,
     bool? libassSubtitles,
     ProxyMode? proxyMode,
@@ -587,7 +582,6 @@ class PlayerSettings {
         cacheLimitGb: clearCacheLimit ? null : cacheLimitGb ?? this.cacheLimitGb,
         mpvConf: mpvConf ?? this.mpvConf,
         decoderResults: decoderResults ?? this.decoderResults,
-        hwdecCodecs: hwdecCodecs ?? this.hwdecCodecs,
         d3d11vaZeroCopy: d3d11vaZeroCopy ?? this.d3d11vaZeroCopy,
         libassSubtitles: libassSubtitles ?? this.libassSubtitles,
         proxyMode: proxyMode ?? this.proxyMode,
@@ -653,7 +647,6 @@ class PlayerSettings {
         if (cachePath != null) 'cachePath': cachePath,
         if (cacheLimitGb != null) 'cacheLimitGb': cacheLimitGb,
         'mpvConf': mpvConf,
-        'hwdecCodecs': hwdecCodecs,
         'd3d11vaZeroCopy': d3d11vaZeroCopy,
         'libassSubtitles': libassSubtitles,
         'proxyMode': proxyMode.name,
@@ -744,7 +737,6 @@ class PlayerSettings {
         if (value is num && value != 0) picture[key] = value.toInt().clamp(-pictureLimit(key), pictureLimit(key));
       }
     }
-    final codecs = (raw['hwdecCodecs']?.toString() ?? defaultHwdecCodecs).split(',').map((c) => c.trim()).where(hwdecCodecChoices.contains).toList();
     final filter = raw['audioFilter']?.toString() ?? '';
     if (raw['decoderResults'] is Map) {
       for (final entry in (raw['decoderResults'] as Map).entries) {
@@ -840,7 +832,6 @@ class PlayerSettings {
       cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),
       mpvConf: conf,
       decoderResults: results,
-      hwdecCodecs: codecs.isEmpty ? defaultHwdecCodecs : codecs.join(','),
       d3d11vaZeroCopy: raw['d3d11vaZeroCopy'] == true,
       libassSubtitles: raw['libassSubtitles'] == true,
       proxyMode: _enumByName(ProxyMode.values, raw['proxyMode'], ProxyMode.system),

@@ -2901,5 +2901,9 @@
   " · list updated {0}/{1} at {2}": " · 列表更新于 {0}月{1}日 {2}",
   "Back to live": "回到直播",
   "Jump to the newest moment (End)": "跳到直播最新进度 (End)",
-  "Codecs left out are decoded on the CPU. To never play a codec, disable it below.": "没勾选的编码改用 CPU 解码。想完全不播某种编码，请在下面禁用它。"
+  "Set by Low resource mode": "由「低占用模式」接管",
+  "Set by the {0} color scheme": "由配色「{0}」决定",
+  "Not needed while Pause when minimized is on": "已开启「最小化时暂停」，这项用不到",
+  "Needs Save playback position in Privacy settings": "需要先在「隐私设置」里开启「记录播放进度」",
+  "Makes motion smoother but increases GPU load. Takes effect on the next video. It needs video sync to the display, so with video sync set to audio it uses display-resample.": "让画面更平滑，会增加 GPU 负载。下一段视频生效。插帧需要视频跟随屏幕刷新同步，「视频同步」为「跟随音频」时会自动改用 display-resample。"
 }

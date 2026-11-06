@@ -268,7 +268,6 @@ extension SettingsActions on AppController {
     final oldSettings = _applied ?? settings;
     final requiresNextVideo = next.hwdec != oldSettings.hwdec ||
         next.interpolation != oldSettings.interpolation ||
-        next.hwdecCodecs != oldSettings.hwdecCodecs ||
         next.d3d11vaZeroCopy != oldSettings.d3d11vaZeroCopy ||
         next.directRendering != oldSettings.directRendering;
     // Lighter scaling set for a busy GPU is not in the settings, so then

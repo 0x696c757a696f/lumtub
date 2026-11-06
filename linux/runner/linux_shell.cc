@@ -186,9 +186,35 @@ gboolean OnDelete(GtkWidget*, GdkEvent*, gpointer) {
   return TRUE;
 }
 
+// Lumtub's own title bar: its minimise button goes to the tray directly, as
+// Wayland would not tell the window it was minimised.
+void OnMinimizeButton(GtkButton*, gpointer) {
+  if (shell.minimize_to_tray && HideToTray()) return;
+  gtk_window_iconify(shell.window);
+}
+
+void HookMinimizeButtons(GtkWidget* widget, gpointer) {
+  if (GTK_IS_BUTTON(widget) && gtk_style_context_has_class(gtk_widget_get_style_context(widget), "minimize") &&
+      g_object_get_data(G_OBJECT(widget), "lumtub-minimize") == nullptr) {
+    g_signal_handlers_disconnect_matched(widget, G_SIGNAL_MATCH_DATA, 0, 0, nullptr, nullptr, shell.window);
+    g_signal_connect(widget, "clicked", G_CALLBACK(OnMinimizeButton), nullptr);
+    g_object_set_data(G_OBJECT(widget), "lumtub-minimize", GINT_TO_POINTER(1));
+  }
+  if (GTK_IS_CONTAINER(widget)) gtk_container_forall(GTK_CONTAINER(widget), HookMinimizeButtons, nullptr);
+}
+
+void HookHeaderBar() {
+  GtkWidget* bar = gtk_window_get_titlebar(shell.window);
+  if (bar != nullptr) HookMinimizeButtons(bar, nullptr);
+}
+
 // A minimised window goes to the tray; without a tray it stays minimised.
 // Wayland tells no window that it was minimised, so there it stays too.
 gboolean OnWindowState(GtkWidget*, GdkEventWindowState* event, gpointer) {
+  g_idle_add(+[](gpointer) -> gboolean {
+    HookHeaderBar();
+    return G_SOURCE_REMOVE;
+  }, nullptr);
   const bool minimised = (event->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && (event->new_window_state & GDK_WINDOW_STATE_ICONIFIED);
   if (minimised && shell.minimize_to_tray) {
     g_idle_add(+[](gpointer) -> gboolean {
@@ -238,6 +264,9 @@ constexpr char kIntrospection[] = R"XML(
     <property name="CanPause" type="b" access="read"/>
     <property name="CanSeek" type="b" access="read"/>
     <property name="CanControl" type="b" access="read"/>
+  </interface>
+  <interface name="io.github.lumtub.Window">
+    <method name="Minimized"/>
   </interface>
 </node>)XML";
 
@@ -296,6 +325,14 @@ void CallMethod(GDBusConnection*, const gchar*, const gchar*, const gchar*, cons
   const std::string name(method);
   if (name == "Raise") {
     ShowFromTray();
+  } else if (name == "Minimized") {
+    // KWin's script reports a minimised window, which Wayland itself does not.
+    if (shell.minimize_to_tray && gtk_widget_get_visible(GTK_WIDGET(shell.window))) {
+      g_idle_add(+[](gpointer) -> gboolean {
+        if (shell.minimize_to_tray && gtk_widget_get_visible(GTK_WIDGET(shell.window))) HideToTray();
+        return G_SOURCE_REMOVE;
+      }, nullptr);
+    }
   } else if (name == "Quit") {
     ExitFromTray();
   } else if (name == "Next") {

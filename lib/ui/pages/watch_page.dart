@@ -754,11 +754,16 @@ class _UpNext extends StatelessWidget {
 /// size of the video; a small window, such as picture in picture, passes
 /// [smallWindow] with its size, which keeps the text readable and shrinks
 /// the gap below it.
+/// The text scale for subtitles in a window of [size]: the 32 px base
+/// becomes 5.5% of the short side, between 13 and 32 px.
+double smallSubtitleScale(Size size) => (size.shortestSide * 0.055).clamp(13.0, 32.0) / 32;
+
 SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallWindow, Object? secondary}) {
   // The view scales by area against 1080p, which makes the text tiny in a
-  // small window; there it goes by the short side, and no smaller than
-  // three fifths.
-  final textScaler = smallWindow == null ? null : TextScaler.linear((smallWindow.shortestSide / 720).clamp(0.6, 1.0));
+  // small window. There a line is about a twentieth of the picture's
+  // height, as on a TV, but never under 13 px, which stays readable, nor
+  // over the full-size text.
+  final textScaler = smallWindow == null ? null : TextScaler.linear(smallSubtitleScale(smallWindow));
   final paddingScale = smallWindow == null ? 1.0 : (smallWindow.shortestSide / 720).clamp(0.3, 1.0);
   if (settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;

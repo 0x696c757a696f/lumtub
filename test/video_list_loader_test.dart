@@ -194,6 +194,34 @@ void main() {
     expect(source.opened, 1);
   });
 
+  test('a slow strict filter shows what it found while it reads on', () async {
+    final lines = StreamController<String>();
+    final loader = VideoListLoader(
+      () => Listing(() => lines.stream),
+      pageSize: 2,
+      where: (item) => int.parse(item.title) % 3 == 0,
+      fill: 3,
+      rank: (item) => double.parse(item.title),
+      readAhead: false,
+    );
+    addTearDown(loader.dispose);
+    loader.loadMore();
+    for (var i = 0; i < 4; i++) {
+      lines.add(_video(i));
+    }
+    await pumpEventQueue();
+    // Each find shows as its page ends, while the next one is read.
+    expect(loader.items.map((v) => v.title), ['0', '3']);
+    expect(loader.loading, isTrue);
+    for (var i = 4; i < 7; i++) {
+      lines.add(_video(i));
+    }
+    await lines.close();
+    await pumpEventQueue();
+    expect(loader.items.map((v) => v.title), ['0', '3', '6']);
+    expect(loader.loading, isFalse);
+  });
+
   test('a candidate left out of one page still beats a worse one found later', () async {
     final scores = [5, 9, 1, 7, 2, 8, 0, 3, 4, 6, 1, 1, 1, 1, 1, 1];
     final source = _Source([for (var i = 0; i < scores.length; i++) _video(scores[i] * 100 + i)]);

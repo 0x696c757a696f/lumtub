@@ -13,7 +13,7 @@ import '../friendly_error.dart';
 /// them. One [Listing] serves every page, so each page continues where the
 /// last one stopped.
 class VideoListLoader extends ChangeNotifier {
-  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1, this.name, this.dropped});
+  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1, this.readAhead = true, this.name, this.dropped});
 
   final Listing Function() _open;
   final int pageSize;
@@ -32,6 +32,10 @@ class VideoListLoader extends ChangeNotifier {
   /// With [where] or [matches], pages are read until this many entries
   /// show, so a strict filter still leaves something to scroll.
   final int fill;
+  /// Whether ranked candidates are gathered a few pages ahead. Off where
+  /// each entry costs a lookup, such as the explore language filter: what
+  /// was found then shows as it is found.
+  final bool readAhead;
   /// What the list is, for the log; a list that comes back empty is logged
   /// with how many entries were read and, from [dropped], why they were
   /// left out.
@@ -179,8 +183,13 @@ class VideoListLoader extends ChangeNotifier {
         // candidates shows first.
         final wanting = order == null
             ? (matches != null || where != null) && shown < fill
-            : (_pool.length < fill && (matches != null || where != null)) || (_pool.length < pageSize + pageSize ~/ 2 && skipped < 3);
+            : (_pool.length < fill && (matches != null || where != null)) || (readAhead && _pool.length < pageSize + pageSize ~/ 2 && skipped < 3);
         if (error == null && more && wanting && skipped < 25 && !_disposed) {
+          // What was found so far shows while the next page is read.
+          if (pendingVideos.isNotEmpty && (order == null || !readAhead)) {
+            if (order != null) _showFromPool();
+            _notify();
+          }
           _page(listing, pageSize, skipped + 1, shown);
           return;
         }

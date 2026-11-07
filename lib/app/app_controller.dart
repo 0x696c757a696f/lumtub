@@ -427,6 +427,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// is cast, the server's log is copied into the app's, and the stream
   /// addresses are renewed before YouTube lets them expire or once it has
   /// refused one.
+  /// Registers a cast stream away from the UI isolate. A static function so
+  /// the closure sent to the isolate captures nothing but [ask]; one made
+  /// inside [_joinedCast] would carry its timer along, which cannot be sent.
+  static Future<String> _castRegister(String ask) => Isolate.run(() => NativeCore.instance?.castRegister(ask) ?? '{"error":"no lumtub_core"}');
+
   Future<CastMedia> _joinedCast(CastSplit split, CastDevice device, Duration start, String title, Map<String, dynamic> info) async {
     final core = NativeCore.instance;
     final videoId = playing?.id;
@@ -490,7 +495,7 @@ class AppController extends ChangeNotifier with _ExploreState {
         'startMs': at.inMilliseconds,
         'kind': ts ? 'ts' : 'mp4',
       });
-      final answer = jsonDecode(await Isolate.run(() => NativeCore.instance?.castRegister(ask) ?? '{"error":"no lumtub_core"}')) as Map<String, dynamic>;
+      final answer = jsonDecode(await _castRegister(ask)) as Map<String, dynamic>;
       final path = answer['path'];
       if (path is! String) throw StateError('${answer['error']}');
       final begins = Duration(milliseconds: (((answer['start'] as num?) ?? 0) * 1000).round());

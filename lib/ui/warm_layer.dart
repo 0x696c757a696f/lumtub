@@ -55,14 +55,17 @@ class _Warm extends CustomPainter {
 
 /// [color] under the warm light of [warmth], for the window's own
 /// colours. A multiply would turn a pale blue page olive; instead each
-/// colour moves toward lamplit paper of the same lightness, so a palette
-/// passes through a quiet neutral on its way to warm and keeps its
-/// contrast.
+/// colour moves toward a grey as bright as it, lit by the same lamp as
+/// the video ([WarmLayer.tint]), so a palette passes through a quiet
+/// neutral on its way to warm and keeps its contrast. White turns the
+/// colour of lamplit paper too, as warm as a white picture: going by
+/// lightness alone, it stayed white.
 Color warmColor(Color color, double warmth) {
   final w = warmth.clamp(0.0, 1.0);
   if (w == 0) return color;
-  final lightness = HSLColor.fromColor(color).lightness;
-  final paper = HSLColor.fromAHSL(color.a, 34, 0.55, lightness).toColor();
+  final grey = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+  final lamp = WarmLayer.tint(w);
+  final paper = Color.from(alpha: color.a, red: grey * lamp.r, green: grey * lamp.g, blue: grey * lamp.b);
   return Color.lerp(color, paper, 0.7 * w)!;
 }
 

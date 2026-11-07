@@ -72,6 +72,15 @@ void main() {
     expect(tint.r, 1);
     expect(tint.g, greaterThan(tint.b));
     expect(WarmLayer.tint(0), const Color(0xFFFFFFFF));
+    // A white page warms as a white picture does, not only grey ones.
+    final page = warmColor(const Color(0xFFFFFFFF), 1);
+    expect(page.r, closeTo(1, 0.01));
+    expect(page.b, lessThan(0.8));
+    expect(warmColor(const Color(0xFF000000), 1), const Color(0xFF000000));
+    // A pale blue page goes warm, not olive.
+    final blue = warmColor(const Color(0xFFE6EFF4), 1);
+    expect(blue.r, greaterThan(blue.g));
+    expect(blue.g, greaterThan(blue.b));
   });
 
   test('the warm light keeps every palette readable and its own', () {

@@ -1,0 +1,13 @@
+[IMPORTANT:flutter/shell/platform/embedder/embedder_surface_metal_impeller.mm(53)] Using the Impeller rendering backend (MetalSDF).
+2026-11-07 17:35:22.471 Lumtub[38293:114061] VideoOutput: enableHardwareAcceleration: true
+2026-11-07 17:35:22.496 Lumtub[38293:114061] OpenGLHelpers: no accelerated OpenGL pixel format
+2026-11-07 17:35:22.496 Lumtub[38293:114061] VideoOutput: OpenGL unavailable; drawing in software
+flutter: VideoOutput.Resize
+flutter: {handle: 4872493616, id: 105553177200736, rect: {height: 0.0, width: 0.0, left: 0.0, top: 0.0}}
+flutter: NativeVideoController: Texture ID: 105553177200736
+2026-11-07 17:38:09.819 Lumtub[38293:114061] TextureSW: resize: 1920.0x1080.0
+flutter: VideoOutput.Resize
+flutter: {rect: {top: 0.0, height: 1080.0, width: 1920.0, left: 0.0}, id: 105553177200736, handle: 4872493616}
+2026-11-07 17:38:10.020 Lumtub[38293:114061] TextureSW: resize: 774.0x436.0
+flutter: VideoOutput.Resize
+flutter: {handle: 4872493616, id: 105553177200736, rect: {width: 774.0, top: 0.0, left: 0.0, height: 436.0}}

@@ -1,0 +1,18 @@
+package:media_kit_libs_windows_video registered.
+media_kit: ANGLESurfaceManager: Direct3D Feature Level: 11_0
+1 1
+media_kit: VideoOutput: Create Texture: 2459349027312
+media_kit: VideoOutput: Using H/W rendering.
+VideoOutput.Resize
+{handle: 2459318950576, id: 2459349027312, rect: {height: 0, left: 0, top: 0, width: 0}}
+NativeVideoController: Texture ID: 2459349027312
+1920 1080
+media_kit: ANGLESurfaceManager: Direct3D Feature Level: 11_0
+media_kit: VideoOutput: Create Texture: 2459357010560
+VideoOutput.Resize
+{handle: 2459318950576, id: 2459357010560, rect: {height: 1080, left: 0, top: 0, width: 1920}}
+700 394
+media_kit: ANGLESurfaceManager: Direct3D Feature Level: 11_0
+media_kit: VideoOutput: Create Texture: 2459357011328
+VideoOutput.Resize
+{handle: 2459318950576, id: 2459357011328, rect: {height: 394, left: 0, top: 0, width: 700}}

@@ -1593,7 +1593,6 @@
   "(None)": "(Yok)",
   "{0} (auto-generated)": "{0} (otomatik oluşturuldu)",
   "{0} (auto-translated)": "{0} (otomatik çevrildi)",
-  "(Video streams don't support this proxy type and connect directly)": "(Video akışları bu proxy türünü desteklemez, doğrudan bağlanır)",
   ", {0} lines couldn't be used": ", {0} satır kullanılamadı",
   "Follow Windows language": "Windows dilini takip et",
   "Fewer": "Daha az",

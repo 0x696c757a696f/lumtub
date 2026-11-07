@@ -1593,7 +1593,6 @@
   "(None)": "(нет)",
   "{0} (auto-generated)": "{0} (автоматические)",
   "{0} (auto-translated)": "{0} (автоперевод)",
-  "(Video streams don't support this proxy type and connect directly)": "(Для потокового видео этот тип прокси не поддерживается, оно подключается напрямую)",
   ", {0} lines couldn't be used": ", строк, которые нельзя использовать: {0}",
   "Follow Windows language": "Как язык Windows",
   "Fewer": "Реже",

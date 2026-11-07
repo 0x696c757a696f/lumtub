@@ -1593,7 +1593,6 @@
   "(None)": "(Κανένα)",
   "{0} (auto-generated)": "{0} (αυτόματα δημιουργημένοι)",
   "{0} (auto-translated)": "{0} (αυτόματη μετάφραση)",
-  "(Video streams don't support this proxy type and connect directly)": "(Οι ροές βίντεο δεν υποστηρίζουν αυτόν τον τύπο διακομιστή μεσολάβησης και συνδέονται απευθείας)",
   ", {0} lines couldn't be used": ", {0} γραμμές δεν μπόρεσαν να χρησιμοποιηθούν",
   "Follow Windows language": "Ακολούθηση της γλώσσας των Windows",
   "Fewer": "Λιγότερα",

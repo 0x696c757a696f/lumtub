@@ -1593,7 +1593,6 @@
   "(None)": "(Không có)",
   "{0} (auto-generated)": "{0} (tự động tạo)",
   "{0} (auto-translated)": "{0} (dịch tự động)",
-  "(Video streams don't support this proxy type and connect directly)": "(Luồng video không hỗ trợ loại proxy này, luồng video sẽ kết nối thẳng)",
   ", {0} lines couldn't be used": ", {0} dòng không dùng được",
   "Follow Windows language": "Theo ngôn ngữ hệ thống",
   "Fewer": "Ít hơn",

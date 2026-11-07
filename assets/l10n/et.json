@@ -1593,7 +1593,6 @@
   "(None)": "(puudub)",
   "{0} (auto-generated)": "{0} (automaatselt loodud)",
   "{0} (auto-translated)": "{0} (automaatselt tõlgitud)",
-  "(Video streams don't support this proxy type and connect directly)": "(Videovood seda tüüpi puhverserverit ei toeta, seega ühendutakse otse)",
   ", {0} lines couldn't be used": ", {0} rida ei saanud kasutada",
   "Follow Windows language": "Järgi Windowsi keelt",
   "Fewer": "Vähem",

@@ -1593,7 +1593,6 @@
   "(None)": "(မရှိ)",
   "{0} (auto-generated)": "{0} (အလိုအလျောက်ထုတ်သည်)",
   "{0} (auto-translated)": "{0} (အလိုအလျောက် ဘာသာပြန်သည်)",
-  "(Video streams don't support this proxy type and connect directly)": "(ဗီဒီယိုစီးကြောင်းသည် ဤပရောက်စီအမျိုးအစားကို မပံ့ပိုးသဖြင့် တိုက်ရိုက်ချိတ်ဆက်သည်)",
   ", {0} lines couldn't be used": "၊ စာကြောင်း {0} ကြောင်းကို မသုံးနိုင်ပါ",
   "Follow Windows language": "Windows ဘာသာစကားကို လိုက်ရန်",
   "Fewer": "လျှော့ရန်",

@@ -1593,7 +1593,6 @@
   "(None)": "(Nėra)",
   "{0} (auto-generated)": "{0} (sugeneruota automatiškai)",
   "{0} (auto-translated)": "{0} (išversta automatiškai)",
-  "(Video streams don't support this proxy type and connect directly)": "(Vaizdo srautai šio tipo tarpinių serverių nepalaiko ir jungiasi tiesiogiai)",
   ", {0} lines couldn't be used": ", {0} eilučių nepavyko panaudoti",
   "Follow Windows language": "Kaip „Windows“ kalba",
   "Fewer": "Mažiau",

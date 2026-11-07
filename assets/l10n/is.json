@@ -1593,7 +1593,6 @@
   "(None)": "(Ekkert)",
   "{0} (auto-generated)": "{0} (sjálfvirkt gert)",
   "{0} (auto-translated)": "{0} (sjálfvirk þýðing)",
-  "(Video streams don't support this proxy type and connect directly)": "(Myndstraumar styðja ekki þessa gerð milliþjóns og tengjast beint)",
   ", {0} lines couldn't be used": ", ekki var hægt að nota {0} línur",
   "Follow Windows language": "Fylgja tungumáli Windows",
   "Fewer": "Færri",

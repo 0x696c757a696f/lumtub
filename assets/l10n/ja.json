@@ -1593,7 +1593,6 @@
   "(None)": "（なし）",
   "{0} (auto-generated)": "{0}（自動生成）",
   "{0} (auto-translated)": "{0}（自動翻訳）",
-  "(Video streams don't support this proxy type and connect directly)": "（動画ストリームはこの種類のプロキシに対応していないため、直接接続されます）",
   ", {0} lines couldn't be used": "、{0} 行は使用できませんでした",
   "Follow Windows language": "Windows の言語に合わせる",
   "Fewer": "減らす",

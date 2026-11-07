@@ -153,15 +153,28 @@ class NetworkProxy {
     }
   }
 
-  static Future<NetworkProxy> resolve(ProxyMode mode, String address) async => switch (mode) {
-        ProxyMode.system => Platform.isLinux
-            ? await linux()
-            : Platform.isMacOS
-                ? await mac()
-                : await windows(),
-        ProxyMode.off => direct,
-        ProxyMode.custom => NetworkProxy(normalize(address)),
-      };
+  static Future<NetworkProxy> resolve(ProxyMode mode, String address) async {
+    final found = switch (mode) {
+      ProxyMode.system => Platform.isLinux
+          ? await linux()
+          : Platform.isMacOS
+              ? await mac()
+              : await windows(),
+      ProxyMode.off => direct,
+      ProxyMode.custom => NetworkProxy(normalize(address)),
+    };
+    return NetworkProxy(remoteDns(found.url));
+  }
+
+  /// [url] with a SOCKS proxy asked to look host names up itself, as
+  /// browsers do: a name looked up here may get a tampered answer, or none
+  /// for a host only the proxy can reach.
+  static String? remoteDns(String? url) {
+    if (url == null) return null;
+    if (url.startsWith('socks5://')) return 'socks5h://${url.substring(9)}';
+    if (url.startsWith('socks4://')) return 'socks4a://${url.substring(9)}';
+    return url;
+  }
 }
 
 /// The overrides main installs; the controller updates their route.

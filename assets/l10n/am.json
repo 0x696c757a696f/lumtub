@@ -1593,7 +1593,6 @@
   "(None)": "(ምንም)",
   "{0} (auto-generated)": "{0} (በራስ-ሰር የተፈጠረ)",
   "{0} (auto-translated)": "{0} (በራስ-ሰር የተተረጎመ)",
-  "(Video streams don't support this proxy type and connect directly)": "(የቪዲዮ ዥረቶች ይህን የተኪ ዓይነት አይደግፉም እና በቀጥታ ይገናኛሉ)",
   ", {0} lines couldn't be used": "፣ {0} መስመሮች ጥቅም ላይ ሊውሉ አልቻሉም",
   "Follow Windows language": "የ Windows ቋንቋን ተከተል",
   "Fewer": "ያነሰ",

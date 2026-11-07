@@ -1593,7 +1593,6 @@
   "(None)": "(Ոչինչ)",
   "{0} (auto-generated)": "{0} (ավտոմատ ստեղծված)",
   "{0} (auto-translated)": "{0} (ավտոմատ թարգմանված)",
-  "(Video streams don't support this proxy type and connect directly)": "(Տեսահոսքերը չեն աջակցում պրոքսիի այս տեսակը և միանում են անմիջապես)",
   ", {0} lines couldn't be used": ", {0} տող հնարավոր չեղավ օգտագործել",
   "Follow Windows language": "Հետևել Windows-ի լեզվին",
   "Fewer": "Ավելի քիչ",

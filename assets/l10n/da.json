@@ -1593,7 +1593,6 @@
   "(None)": "(Ingen)",
   "{0} (auto-generated)": "{0} (automatisk genereret)",
   "{0} (auto-translated)": "{0} (automatisk oversat)",
-  "(Video streams don't support this proxy type and connect directly)": "(Videostreams understøtter ikke denne proxytype og opretter direkte forbindelse)",
   ", {0} lines couldn't be used": ", {0} linjer kunne ikke bruges",
   "Follow Windows language": "Følg Windows-sproget",
   "Fewer": "Færre",

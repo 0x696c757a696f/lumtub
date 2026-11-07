@@ -1593,7 +1593,6 @@
   "(None)": "(ไม่มี)",
   "{0} (auto-generated)": "{0} (สร้างอัตโนมัติ)",
   "{0} (auto-translated)": "{0} (แปลอัตโนมัติ)",
-  "(Video streams don't support this proxy type and connect directly)": "(สตรีมวิดีโอไม่รองรับพร็อกซีประเภทนี้ จึงเชื่อมต่อโดยตรง)",
   ", {0} lines couldn't be used": " มี {0} บรรทัดที่ใช้ไม่ได้",
   "Follow Windows language": "ตามภาษาของ Windows",
   "Fewer": "น้อยลง",

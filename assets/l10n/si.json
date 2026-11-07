@@ -1593,7 +1593,6 @@
   "(None)": "(කිසිවක් නැත)",
   "{0} (auto-generated)": "{0} (ස්වයංජනිත)",
   "{0} (auto-translated)": "{0} (ස්වයං-පරිවර්තිත)",
-  "(Video streams don't support this proxy type and connect directly)": "(වීඩියෝ ප්‍රවාහ මෙම ප්‍රොක්සි වර්ගයට සහාය නොදක්වන අතර කෙලින්ම සම්බන්ධ වේ)",
   ", {0} lines couldn't be used": ", පේළි {0}ක් භාවිතා කළ නොහැකි විය",
   "Follow Windows language": "Windows භාෂාව අනුගමනය කරන්න",
   "Fewer": "අඩුවෙන්",

@@ -1595,7 +1595,6 @@
   "(None)": "（无）",
   "{0} (auto-generated)": "{0}（自动生成）",
   "{0} (auto-translated)": "{0}（自动翻译）",
-  "(Video streams don't support this proxy type and connect directly)": "（视频流不支持此类代理，视频流直接连接）",
   ", {0} lines couldn't be used": "，{0} 行无法使用",
   "Follow Windows language": "跟随系统语言",
   "Fewer": "减少",

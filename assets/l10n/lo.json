@@ -1593,7 +1593,6 @@
   "(None)": "(ບໍ່ມີ)",
   "{0} (auto-generated)": "{0} (ສ້າງອັດຕະໂນມັດ)",
   "{0} (auto-translated)": "{0} (ແປອັດຕະໂນມັດ)",
-  "(Video streams don't support this proxy type and connect directly)": "(ສະຕຣີມວິດີໂອບໍ່ຮອງຮັບພຣັອກຊີປະເພດນີ້ ແລະ ຈະເຊື່ອມຕໍ່ໂດຍກົງ)",
   ", {0} lines couldn't be used": ", {0} ແຖວໃຊ້ບໍ່ໄດ້",
   "Follow Windows language": "ຕາມພາສາ Windows",
   "Fewer": "ໜ້ອຍລົງ",

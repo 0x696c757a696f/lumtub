@@ -1593,7 +1593,6 @@
   "(None)": "(Nessuno)",
   "{0} (auto-generated)": "{0} (generati automaticamente)",
   "{0} (auto-translated)": "{0} (tradotti automaticamente)",
-  "(Video streams don't support this proxy type and connect directly)": "(I flussi video non supportano questo tipo di proxy e si connettono direttamente)",
   ", {0} lines couldn't be used": ", {0} righe non utilizzabili",
   "Follow Windows language": "Segui la lingua di Windows",
   "Fewer": "Meno",

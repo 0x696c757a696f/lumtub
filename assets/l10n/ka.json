@@ -1593,7 +1593,6 @@
   "(None)": "(არცერთი)",
   "{0} (auto-generated)": "{0} (ავტომატურად გენერირებული)",
   "{0} (auto-translated)": "{0} (ავტომატურად თარგმნილი)",
-  "(Video streams don't support this proxy type and connect directly)": "(ვიდეო ნაკადი ამ ტიპის პროქსის მხარს არ უჭერს და პირდაპირ დაუკავშირდება)",
   ", {0} lines couldn't be used": ", {0} ხაზი ვერ გამოიყენება",
   "Follow Windows language": "Windows-ის ენის მიხედვით",
   "Fewer": "ნაკლები",

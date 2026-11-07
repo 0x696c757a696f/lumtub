@@ -1593,7 +1593,6 @@
   "(None)": "(Nincs)",
   "{0} (auto-generated)": "{0} (automatikusan generált)",
   "{0} (auto-translated)": "{0} (automatikusan fordított)",
-  "(Video streams don't support this proxy type and connect directly)": "(A videóforgalom nem támogatja ezt a proxytípust, ezért közvetlenül csatlakozik)",
   ", {0} lines couldn't be used": ", {0} sor nem használható",
   "Follow Windows language": "A Windows nyelvének követése",
   "Fewer": "Kevesebb",

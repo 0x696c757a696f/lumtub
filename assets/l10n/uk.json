@@ -1593,7 +1593,6 @@
   "(None)": "(Немає)",
   "{0} (auto-generated)": "{0} (створені автоматично)",
   "{0} (auto-translated)": "{0} (перекладені автоматично)",
-  "(Video streams don't support this proxy type and connect directly)": "(Відеопотоки не підтримують цей тип проксі й підключаються напряму)",
   ", {0} lines couldn't be used": ", рядків, які не вдалося використати: {0}",
   "Follow Windows language": "Як мова Windows",
   "Fewer": "Менше",

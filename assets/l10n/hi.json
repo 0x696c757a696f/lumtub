@@ -1593,7 +1593,6 @@
   "(None)": "(कोई नहीं)",
   "{0} (auto-generated)": "{0} (अपने आप बने)",
   "{0} (auto-translated)": "{0} (अपने आप अनुवादित)",
-  "(Video streams don't support this proxy type and connect directly)": "(वीडियो स्ट्रीम इस प्रकार के प्रॉक्सी का समर्थन नहीं करतीं और सीधे कनेक्ट होती हैं)",
   ", {0} lines couldn't be used": ", {0} पंक्तियाँ इस्तेमाल नहीं की जा सकीं",
   "Follow Windows language": "Windows की भाषा के अनुसार",
   "Fewer": "कम",

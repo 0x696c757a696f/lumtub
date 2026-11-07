@@ -1593,7 +1593,6 @@
   "(None)": "(Žiadne)",
   "{0} (auto-generated)": "{0} (automaticky generované)",
   "{0} (auto-translated)": "{0} (automaticky preložené)",
-  "(Video streams don't support this proxy type and connect directly)": "(Videopreno tento typ proxy servera nepodporuje a pripojí sa priamo)",
   ", {0} lines couldn't be used": ", riadky, ktoré sa nedali použiť: {0}",
   "Follow Windows language": "Podľa jazyka Windowsu",
   "Fewer": "Menej",

@@ -1593,7 +1593,6 @@
   "(None)": "(Ei mitään)",
   "{0} (auto-generated)": "{0} (automaattisesti luotu)",
   "{0} (auto-translated)": "{0} (automaattisesti käännetty)",
-  "(Video streams don't support this proxy type and connect directly)": "(Videovirrat eivät tue tämän tyyppistä välityspalvelinta, joten ne yhdistävät suoraan)",
   ", {0} lines couldn't be used": ", {0} riviä ei voitu käyttää",
   "Follow Windows language": "Seuraa järjestelmän kieltä",
   "Fewer": "Vähemmän",

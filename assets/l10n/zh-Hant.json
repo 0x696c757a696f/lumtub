@@ -1593,7 +1593,6 @@
   "(None)": "（無）",
   "{0} (auto-generated)": "{0}（自動生成）",
   "{0} (auto-translated)": "{0}（自動翻譯）",
-  "(Video streams don't support this proxy type and connect directly)": "（影片流不支援此類代理，影片流直接連線）",
   ", {0} lines couldn't be used": "，{0} 行無法使用",
   "Follow Windows language": "跟隨 Windows 語言",
   "Fewer": "減少",

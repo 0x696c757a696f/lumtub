@@ -25,6 +25,7 @@ import 'motion.dart';
 import '../widgets/position_ticks.dart';
 import 'app_icons.dart';
 import 'warm_layer.dart';
+import 'pages/watch_page.dart' show subtitleViewFor;
 
 /// The corners the card snaps to.
 enum MiniCorner { topLeft, topRight, bottomLeft, bottomRight }
@@ -139,10 +140,12 @@ class _MiniPlayerState extends State<MiniPlayer> {
     return VideoBox(
       controller: _controller,
       child: WarmLayer(
-        child: Video(
-          controller: controller,
-          controls: NoVideoControls,
-          subtitleViewConfiguration: const SubtitleViewConfiguration(visible: false),
+        child: LayoutBuilder(
+          builder: (context, constraints) => Video(
+            controller: controller,
+            controls: NoVideoControls,
+            subtitleViewConfiguration: subtitleViewFor(_controller.settings, smallWindow: constraints.biggest, secondary: _controller.secondarySubtitle?.label),
+          ),
         ),
       ),
     );

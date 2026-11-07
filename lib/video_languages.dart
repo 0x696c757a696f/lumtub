@@ -39,6 +39,9 @@ class VideoLanguages {
   static const parallel = 6;
   static const _kept = 20000;
   static const giveUpAfterDefault = 240;
+  /// Videos answered before hearing alone is given up on, when fewer than
+  /// one in ten of them could be heard.
+  static const unheardAfter = 40;
 
   static const _fields = 'videoDetails.title,videoDetails.shortDescription,captions.playerCaptionsTracklistRenderer.captionTracks.languageCode,'
       'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack,streamingData.adaptiveFormats.xtags,playabilityStatus.status';
@@ -263,7 +266,13 @@ class VideoLanguages {
     void Function(int asked, int kept)? done,
   }) async* {
     final pending = <_Pending>[];
-    var asked = 0, kept = 0, untold = 0;
+    var asked = 0, kept = 0, untold = 0, heard = 0;
+    // YouTube often leaves captions and audio tracks out of the answers it
+    // gives this app: then hardly any video can be heard, and only
+    // hearing would keep none. Once that is plain, titles judge again, and
+    // the videos held back for want of hearing are let through.
+    var strict = heardOnly;
+    final held = <String>[];
     final told = <String, int>{};
     Iterable<String> ready() sync* {
       // In the order listed, which is the order the search ranked them:
@@ -271,6 +280,16 @@ class VideoLanguages {
       while (pending.isNotEmpty && pending.first.done) {
         if (pending.removeAt(0).out case final line?) yield line;
       }
+    }
+
+    Iterable<String> unstrict(int after) sync* {
+      final answered = asked - pending.length;
+      if (!strict || answered < after || heard * 10 >= answered) return;
+      strict = false;
+      logInfo('Language ${language.name}: YouTube told $heard of $answered videos by captions or audio; judging by title too');
+      kept += held.length;
+      yield* held;
+      held.clear();
     }
 
     try {
@@ -285,14 +304,24 @@ class VideoLanguages {
       asked++;
       pending.add(_Pending(of(item.id, asking: language).then((spoken) {
         if (spoken == null || spoken.language == null) untold++;
+        if (spoken != null && spoken.heard) heard++;
         told.update(spoken == null ? 'error' : spoken.heard ? spoken.source : '${spoken.source} ${spoken.language?.name ?? '?'}', (n) => n + 1, ifAbsent: () => 1);
-        if (spoken == null) return !heardOnly && language.matches(item.title) ? line : null;
-        if (spoken.language != language || (heardOnly && !spoken.heard)) return null;
+        final shown = spoken == null || spoken.title.isEmpty || spoken.title == item.title ? line : jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
+        final byText = spoken == null ? language.matches(item.title) : spoken.language == language;
+        if (!byText) return null;
+        if (spoken != null && spoken.heard) {
+          kept++;
+          return shown;
+        }
+        if (strict) {
+          held.add(shown);
+          return null;
+        }
         kept++;
-        if (spoken.title.isEmpty || spoken.title == item.title) return line;
-        return jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
+        return shown;
       })));
       yield* Stream.fromIterable(ready());
+      yield* Stream.fromIterable(unstrict(unheardAfter));
       while (pending.length >= parallel * 3) {
         await pending.first.future;
         yield* Stream.fromIterable(ready());
@@ -302,6 +331,7 @@ class VideoLanguages {
       await pending.first.future;
       yield* Stream.fromIterable(ready());
     }
+    yield* Stream.fromIterable(unstrict(10));
     } finally {
       done?.call(asked, kept);
       if (asked > 0) {

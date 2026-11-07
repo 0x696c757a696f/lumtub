@@ -253,14 +253,20 @@ impl Relay {
     }
 }
 
-/// The fragment the live pair [pair] starts at: [crate::relay_live::BEHIND]
-/// before the newest, [head], for whichever of its streams asks first.
-fn live_start(shared: &Mutex<Shared>, pair: &str, head: u64) -> u64 {
-    let mut shared = shared.lock().unwrap();
-    if let Some((_, start)) = shared.live_starts.iter().find(|(name, _)| name == pair) {
-        return *start;
+/// The fragment the live pair [pair] starts at: [behind] fragments before
+/// the newest, [head], for whichever of its streams asks first.
+fn live_start(shared: &Mutex<Shared>, pair: &str, head: u64, behind: &dyn Fn() -> u64) -> u64 {
+    let known = |shared: &Shared| shared.live_starts.iter().find(|(name, _)| name == pair).map(|(_, start)| *start);
+    if let Some(start) = known(&shared.lock().unwrap()) {
+        return start;
     }
-    let start = head.saturating_sub(crate::relay_live::BEHIND);
+    // Measured unlocked, as it asks YouTube; the other stream may have
+    // started meanwhile, and then its start stands.
+    let start = head.saturating_sub(behind());
+    let mut shared = shared.lock().unwrap();
+    if let Some(start) = known(&shared) {
+        return start;
+    }
     shared.live_starts.push_back((pair.to_string(), start));
     while shared.live_starts.len() > KEEP {
         shared.live_starts.pop_front();
@@ -378,7 +384,7 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
         };
         if let Some(pair) = target.live.clone() {
             if method == "GET" {
-                let start = |head: u64| live_start(shared, &pair, head);
+                let start = |head: u64, behind: &dyn Fn() -> u64| live_start(shared, &pair, head, behind);
                 crate::relay_live::stream(writer, &target, fetch, start, |line| log(shared, line));
             } else {
                 let mime = target.mime.as_deref().unwrap_or("application/octet-stream");

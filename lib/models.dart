@@ -136,7 +136,8 @@ class VideoItem {
     if (id.isEmpty) throw const FormatException('Missing YouTube video ID');
     final name = map['channel'] ?? map['uploader'] ?? map['uploader_id'] ?? '';
     final value = map['duration'];
-    final views = map['view_count'];
+    // Streams list the people watching now instead.
+    final views = map['view_count'] ?? map['concurrent_view_count'];
     final channelId = map['channel_id']?.toString();
     final width = map['width'];
     final height = map['height'];

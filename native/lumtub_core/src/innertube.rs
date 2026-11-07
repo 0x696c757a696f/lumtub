@@ -376,6 +376,41 @@ fn language_of_code(code: &str) -> Option<Language> {
         "bn" => Language::Bn,
         "ta" => Language::Ta,
         "te" => Language::Te,
+        "af" => Language::Af,
+        "am" => Language::Am,
+        "az" => Language::Az,
+        "be" => Language::Be,
+        "bg" => Language::Bg,
+        "eo" => Language::Eo,
+        "et" => Language::Et,
+        "eu" => Language::Eu,
+        "gl" => Language::Gl,
+        "gu" => Language::Gu,
+        "hy" => Language::Hy,
+        "is" => Language::Is,
+        "jv" => Language::Jv,
+        "ka" => Language::Ka,
+        "km" => Language::Km,
+        "kn" => Language::Kn,
+        "la" => Language::La,
+        "lo" => Language::Lo,
+        "lt" => Language::Lt,
+        "lv" => Language::Lv,
+        "mk" => Language::Mk,
+        "ml" => Language::Ml,
+        "mn" => Language::Mn,
+        "mr" => Language::Mr,
+        "my" => Language::My,
+        "ne" => Language::Ne,
+        "pa" => Language::Pa,
+        "si" => Language::Si,
+        "sk" => Language::Sk,
+        "sq" => Language::Sq,
+        "su" => Language::Su,
+        "sw" => Language::Sw,
+        "ti" => Language::Ti,
+        "tk" => Language::Tk,
+        "uz" => Language::Uz,
         "" => return None,
         _ => Language::Any,
     })
@@ -405,11 +440,7 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
     let title = details.get("title").and_then(Value::as_str).unwrap_or_default().to_string();
     let playable = at(data, &["playabilityStatus", "status"]).and_then(Value::as_str).is_none_or(|status| status == "OK");
     let tracks = at(data, &["streamingData", "adaptiveFormats"]).and_then(Value::as_array);
-    let audio = tracks.into_iter().flatten().filter_map(|f| f.get("audioTrack")).find(|track| {
-        let name = track.get("displayName").and_then(Value::as_str).unwrap_or_default().to_lowercase();
-        name.contains("original")
-    });
-    if let Some(language) = audio.and_then(|track| track.get("id")).and_then(Value::as_str).and_then(language_of_code) {
+    if let Some(language) = tracks.and_then(|formats| original_audio(formats)).and_then(language_of_code) {
         return Some(Spoken { language: Some(language), title, source: "audio", playable });
     }
     let captions = at(data, &["captions", "playerCaptionsTracklistRenderer", "captionTracks"]).and_then(Value::as_array);
@@ -431,7 +462,9 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
             l,
             Language::En | Language::Es | Language::Fr | Language::De | Language::Pt | Language::It | Language::Nl | Language::Tr
                 | Language::Id | Language::Tl | Language::Pl | Language::Cs | Language::Ro | Language::Hu | Language::Sv
-                | Language::No | Language::Da | Language::Fi
+                | Language::No | Language::Da | Language::Fi | Language::Af | Language::Az | Language::Eo | Language::Et
+                | Language::Eu | Language::Gl | Language::Is | Language::Jv | Language::La | Language::Lt | Language::Lv
+                | Language::Sk | Language::Sq | Language::Su | Language::Sw | Language::Tk | Language::Uz
         )
     };
     let language = match (by_title, by_description) {
@@ -446,6 +479,79 @@ pub fn spoken_language(data: &Value) -> Option<Spoken> {
     };
     let source = if language.is_some() { "text" } else { "none" };
     Some(Spoken { language, title, source, playable })
+}
+
+/// The language code of the original audio track among [formats], when
+/// the video has tracks in several languages: the one whose `xtags` say
+/// `acont=original`, else the one whose name says so, else the only
+/// language there is. Names are in the language asked in, so "original"
+/// is looked for in a few; a default track is not taken for the original,
+/// as YouTube makes a dub in the viewer's language the default.
+fn original_audio(formats: &[Value]) -> Option<&str> {
+    const ORIGINAL: [&str; 16] = [
+        "original", "オリジナル", "原声", "原聲", "原始", "원본", "оригинал", "orijinal", "oryginał", "asli", "gốc", "ต้นฉบับ", "मूल", "أصلي", "מקורי", "πρωτότυπ",
+    ];
+    let tracks: Vec<(&str, &Value, &Value)> = formats
+        .iter()
+        .filter_map(|format| {
+            let track = format.get("audioTrack")?;
+            Some((track.get("id")?.as_str()?.split('.').next()?, track, format))
+        })
+        .filter(|(code, _, _)| !code.is_empty())
+        .collect();
+    let tagged = tracks.iter().find(|(_, _, format)| format.get("xtags").and_then(Value::as_str).and_then(audio_content).as_deref() == Some("original"));
+    let named = || {
+        tracks.iter().find(|(_, track, _)| {
+            let name = track.get("displayName").and_then(Value::as_str).unwrap_or_default().to_lowercase();
+            !name.contains("descriptive") && ORIGINAL.iter().any(|word| name.contains(word))
+        })
+    };
+    if let Some((code, _, _)) = tagged.or_else(named) {
+        return Some(code);
+    }
+    let first = tracks.first()?.0;
+    tracks.iter().all(|(code, _, _)| *code == first).then_some(first)
+}
+
+/// The `acont` of a format's `xtags`: original, dubbed, dubbed-auto or
+/// descriptive. They come as `key=value:key=value` text, or as base64 of
+/// a protobuf list of key and value strings.
+fn audio_content(xtags: &str) -> Option<String> {
+    if let Some(value) = xtags.split(':').find_map(|pair| pair.strip_prefix("acont=")) {
+        return Some(value.to_string());
+    }
+    let bytes = base64_any(xtags)?;
+    let at = bytes.windows(5).position(|w| w == b"acont")? + 5;
+    let rest = bytes.get(at..)?;
+    if rest.first() != Some(&0x12) {
+        return None;
+    }
+    let length = *rest.get(1)? as usize;
+    String::from_utf8(rest.get(2..2 + length)?.to_vec()).ok()
+}
+
+/// [text] decoded from base64, standard or URL-safe, padded or not.
+fn base64_any(text: &str) -> Option<Vec<u8>> {
+    let mut out = Vec::with_capacity(text.len() * 3 / 4);
+    let (mut buffer, mut bits) = (0u32, 0u32);
+    for c in text.trim_end_matches('=').bytes() {
+        let value = match c {
+            b'A'..=b'Z' => c - b'A',
+            b'a'..=b'z' => c - b'a' + 26,
+            b'0'..=b'9' => c - b'0' + 52,
+            b'+' | b'-' => 62,
+            b'/' | b'_' => 63,
+            _ => return None,
+        };
+        buffer = (buffer << 6) | value as u32;
+        bits += 6;
+        if bits >= 8 {
+            bits -= 8;
+            out.push((buffer >> bits) as u8);
+            buffer &= (1 << bits) - 1;
+        }
+    }
+    Some(out)
 }
 
 /// What [spoken_language] finds in a `/player` response, as JSON
@@ -620,6 +726,53 @@ mod tests {
         });
         assert_eq!(spoken_language(&original).unwrap().language, Some(Language::Fr));
         assert_eq!(spoken_language(&original).unwrap().source, "audio");
+        // Asked in Japanese, with the Italian dub as the default track.
+        let tagged = json!({
+            "videoDetails": {"title": "Viaggio", "shortDescription": ""},
+            "streamingData": {"adaptiveFormats": [
+                {"audioTrack": {"id": "it.3", "displayName": "イタリア語", "audioIsDefault": true}, "xtags": "acont=dubbed-auto:lang=it"},
+                {"audioTrack": {"id": "en.4", "displayName": "英語"}, "xtags": "acont=original:lang=en"}
+            ]}
+        });
+        assert_eq!(spoken_language(&tagged).unwrap().language, Some(Language::En));
+        let protobuf = |pairs: &[(&str, &str)]| {
+            let mut bytes = Vec::new();
+            for (key, value) in pairs {
+                let entry = [&[0x0a, key.len() as u8][..], key.as_bytes(), &[0x12, value.len() as u8], value.as_bytes()].concat();
+                bytes.extend([0x0a, entry.len() as u8]);
+                bytes.extend(entry);
+            }
+            const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+            let mut text = String::new();
+            for chunk in bytes.chunks(3) {
+                let n = chunk.iter().enumerate().fold(0u32, |n, (i, b)| n | (*b as u32) << (16 - 8 * i));
+                for i in 0..=chunk.len() {
+                    text.push(ALPHABET[(n >> (18 - 6 * i) & 63) as usize] as char);
+                }
+            }
+            text
+        };
+        assert_eq!(audio_content(&protobuf(&[("acont", "original"), ("lang", "en")])).as_deref(), Some("original"));
+        assert_eq!(audio_content(&protobuf(&[("lang", "it"), ("acont", "dubbed-auto")])).as_deref(), Some("dubbed-auto"));
+        let named = json!({
+            "videoDetails": {"title": "Viaggio", "shortDescription": ""},
+            "streamingData": {"adaptiveFormats": [
+                {"audioTrack": {"id": "it.3", "displayName": "意大利语", "audioIsDefault": true}},
+                {"audioTrack": {"id": "en.4", "displayName": "英语（原声）"}}
+            ]}
+        });
+        assert_eq!(spoken_language(&named).unwrap().language, Some(Language::En));
+        // A dub made the default, and nothing says which is the original:
+        // the captions tell.
+        let untold = json!({
+            "videoDetails": {"title": "Viaggio", "shortDescription": ""},
+            "streamingData": {"adaptiveFormats": [
+                {"audioTrack": {"id": "it.3", "displayName": "Italiano", "audioIsDefault": true}},
+                {"audioTrack": {"id": "en.4", "displayName": "Inglese"}}
+            ]},
+            "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "en", "kind": "asr"}]}}
+        });
+        assert_eq!((spoken_language(&untold).unwrap().language, spoken_language(&untold).unwrap().source), (Some(Language::En), "captions"));
         let chinese = json!({"videoDetails": {"title": "My trip to Chengdu", "shortDescription": "这次去成都吃了很多好吃的"}});
         assert_eq!(spoken_language(&chinese).unwrap().language, Some(Language::Zh));
         let own = json!({"videoDetails": {"title": "成都旅行", "shortDescription": ""}});
@@ -627,8 +780,8 @@ mod tests {
         assert_eq!((own.language, own.title.as_str(), own.source), (Some(Language::Zh), "成都旅行", "text"));
         let italian = json!({"videoDetails": {"title": "Ciao", "shortDescription": ""}, "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "it", "kind": "asr"}]}}});
         assert_eq!(spoken_language(&italian).unwrap().language, Some(Language::It));
-        let swahili = json!({"videoDetails": {"title": "Habari", "shortDescription": ""}, "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "sw", "kind": "asr"}]}}});
-        assert_eq!(spoken_language(&swahili).unwrap().language, Some(Language::Any));
+        let zulu = json!({"videoDetails": {"title": "Sawubona", "shortDescription": ""}, "captions": {"playerCaptionsTracklistRenderer": {"captionTracks": [{"languageCode": "zu", "kind": "asr"}]}}});
+        assert_eq!(spoken_language(&zulu).unwrap().language, Some(Language::Any));
         assert_eq!(spoken_language(&json!({"playabilityStatus": {}})), None);
         let signed_out = json!({
             "playabilityStatus": {"status": "LOGIN_REQUIRED"},

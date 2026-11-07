@@ -59,8 +59,11 @@ void main() {
     expect(exploreParams(ExploreMode.long), 'CAMSBggFEAEYAg%253D%253D');
     // 新人新作: this week, videos only.
     expect(base64.decode(exploreParams(ExploreMode.fresh).replaceAll('%253D', '=')), [0x12, 4, 0x08, 3, 0x10, 1]);
-    // 全球热门 is a mix of the video zones, after 全部.
-    expect(popularTopics.take(2).map((t) => (t.label, t.mix, t.global)), [('All', true, false), ('Global trending', true, true)]);
+    // 全部 mixes the video zones; region and language pick where from.
+    expect(popularTopics.take(2).map((t) => (t.label, t.mix)), [('All', true), ('Education', false)]);
+    expect(liveTopics.map((t) => t.label).take(3), ['All', 'Gaming live streams', 'Chat & interaction']);
+    expect(liveTopics.last.label, '24/7 live');
+    expect(legacyTopicKeys['Radio for sleep'], '24/7 live');
     final hdr = base64.decode(searchParams(quality: SearchQuality.hdr)!.replaceAll('%253D', '='));
     expect(hdr, [0x12, 3, 0xC8, 0x01, 1]);
     final uhd = base64.decode(exploreParams(ExploreMode.liveViewers, quality: SearchQuality.uhd).replaceAll('%253D', '='));
@@ -84,7 +87,11 @@ void main() {
           expect(topic.subs, isEmpty, reason: topic.label);
           continue;
         }
-        expect(topic.subs.length, inInclusiveRange(min, max), reason: '${section.name} ${topic.label}');
+        // A zone of groups, as 24/7 live: each group holds the range.
+        final groups = topic.subs.every((s) => s.subs.isNotEmpty) ? topic.subs.map((s) => s.subs) : [topic.subs];
+        for (final subs in groups) {
+          expect(subs.length, inInclusiveRange(min, max), reason: '${section.name} ${topic.label}');
+        }
         expect(topic.subs.map((s) => s.label).toSet(), hasLength(topic.subs.length), reason: '${topic.label} labels');
         expect(topic.subs.map((s) => s.query).toSet(), hasLength(topic.subs.length), reason: '${topic.label} queries');
       }
@@ -349,7 +356,9 @@ void main() {
     expect(find.text('Shuffle'), findsOneWidget);
     expect(find.text('This month'), findsNothing);
 
-    await _reveal(tester, 'Radio for sleep');
+    await _reveal(tester, '24/7 live');
+    await tester.tap(find.text('24/7 live'));
+    await tester.pump();
     await tester.tap(find.text('Radio for sleep'));
     await tester.pump();
     await tester.tap(find.text('Lo-Fi'));

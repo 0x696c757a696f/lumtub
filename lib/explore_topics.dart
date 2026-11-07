@@ -40,7 +40,7 @@ class ExploreSub {
 /// One explore zone, as Bilibili's 分区: what it is called, the search
 /// behind it and its sub-categories.
 class ExploreTopic {
-  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false, this.opens, this.mix = false, this.global = false});
+  const ExploreTopic(this._label, this.icon, this.query, {this.subs = const [], this.custom = false, this.opens, this.mix = false});
   final String _label;
   /// The name shown; a user's own is shown as typed.
   String get label => custom ? _label : tr(_label);
@@ -55,8 +55,6 @@ class ExploreTopic {
   /// 全部: a mix of the other zones, with one of the history's interests
   /// when there is a history, rather than a search of its own.
   final bool mix;
-  /// 全球热门: a [mix] that leaves out the region and language filters.
-  final bool global;
 
   /// Names the zone in the saved order and hidden lists; custom zones as
   /// `custom:<label>`.
@@ -68,7 +66,6 @@ class ExploreTopic {
 /// zones now, so a saved order and hidden list keep working.
 const legacyTopicKeys = {
   '全部': 'All',
-  '全球热门': 'Global trending',
   '知识教育': 'Education',
   '科技数码': 'Tech & gadgets',
   '人工智能': 'Artificial intelligence',
@@ -95,11 +92,14 @@ const legacyTopicKeys = {
   '虚拟主播': 'VTubers',
   '体育赛事': 'Sports events',
   '新闻现场': 'On the scene',
-  '科技活动': 'Tech events',
+  '科技活动': 'Tech & development',
+  'Tech events': 'Tech & development',
   '学习工作': 'Study & work',
   '户外实况': 'Outdoor live',
-  '电台助眠': 'Radio for sleep',
-  '自然实况': 'Nature footage',
+  '电台助眠': '24/7 live',
+  '自然实况': '24/7 live',
+  'Radio for sleep': '24/7 live',
+  'Nature footage': '24/7 live',
   '基督宗教': 'Christianity',
   '伊斯兰教': 'Islam',
   '佛教': 'Buddhism',
@@ -158,7 +158,6 @@ class CustomTopic {
 /// videos from other countries come up too.
 const popularTopics = <ExploreTopic>[
   ExploreTopic('All', AppIcons.squaresFour, '', mix: true),
-  ExploreTopic('Global trending', AppIcons.globe, '', mix: true, global: true),
   ExploreTopic('Education', AppIcons.graduationCap, '知识 科普', subs: [
     ExploreSub('Popular science', '科普'),
     ExploreSub('History', '历史 纪录片'),
@@ -391,7 +390,6 @@ const popularTopics = <ExploreTopic>[
 /// fewer streams are on at a time.
 const liveTopics = <ExploreTopic>[
   ExploreTopic('All', AppIcons.squaresFour, '', mix: true),
-  ExploreTopic('Religion & faith', AppIcons.church, '宗教 直播', opens: ExploreSection.faithLive),
   ExploreTopic('Gaming live streams', AppIcons.gameController, '游戏 直播', subs: [
     ExploreSub("Let's plays", 'gameplay live'),
     ExploreSub('Single-player games', '单机游戏 直播'),
@@ -403,14 +401,13 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('Console gaming', 'console gaming live'),
     ExploreSub('Speedruns', 'speedrun live'),
   ]),
-  ExploreTopic('Esports', AppIcons.trophy, 'esports live', subs: [
-    ExploreSub('Pro esports', '电竞 比赛 esports tournament live'),
-    ExploreSub('Match commentary', '电竞 解说 直播'),
-    ExploreSub('League of Legends', 'LoL Esports LCK LPL live'),
-    ExploreSub('Valorant CS2', 'Valorant CS2 tournament live'),
-    ExploreSub('Dota 2', 'Dota 2 tournament live'),
-    ExploreSub('Fighting games', 'fighting game tournament EVO live'),
-    ExploreSub('Mobile esports', '手游 电竞 比赛 live'),
+  ExploreTopic('Chat & interaction', AppIcons.chatsFill, '聊天 直播', subs: [
+    ExploreSub('Chat', '聊天 直播 just chatting'),
+    ExploreSub('Q&A', 'Q&A live'),
+    ExploreSub('Talk shows', 'talk show live'),
+    ExploreSub('Stand-up comedy', 'stand-up comedy live'),
+    ExploreSub('Phone calls', 'call-in show live'),
+    ExploreSub('Podcasts', 'podcast live'),
   ]),
   ExploreTopic('Live music', AppIcons.musicNoteFill, '音乐 直播', subs: [
     ExploreSub('Concerts', 'concert live'),
@@ -422,22 +419,14 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('Street performances', 'busking 街头艺人 live'),
     ExploreSub('Song requests', '点歌 直播'),
   ]),
-  ExploreTopic('Chat & interaction', AppIcons.chatsFill, '聊天 直播', subs: [
-    ExploreSub('Chat', '聊天 直播 just chatting'),
-    ExploreSub('Q&A', 'Q&A live'),
-    ExploreSub('Talk shows', 'talk show live'),
-    ExploreSub('Stand-up comedy', 'stand-up comedy live'),
-    ExploreSub('Daily life', '日常 生活 直播 daily life live'),
-    ExploreSub('Phone calls', 'call-in show live'),
-  ]),
-  ExploreTopic('VTubers', AppIcons.scanSmiley, 'vtuber', subs: [
-    ExploreSub('VTuber', 'vtuber live'),
-    ExploreSub('Hololive NIJISANJI', 'hololive nijisanji live'),
-    ExploreSub('Chinese VTubers', '虚拟主播 直播'),
-    ExploreSub('Singing streams', '歌回 vtuber singing'),
-    ExploreSub('Gaming VTubers', 'vtuber gaming live'),
-    ExploreSub('Virtual concerts', 'virtual concert live'),
-    ExploreSub('Virtual radio', 'vtuber radio'),
+  ExploreTopic('Esports', AppIcons.trophy, 'esports live', subs: [
+    ExploreSub('Pro esports', '电竞 比赛 esports tournament live'),
+    ExploreSub('Match commentary', '电竞 解说 直播'),
+    ExploreSub('League of Legends', 'LoL Esports LCK LPL live'),
+    ExploreSub('Valorant CS2', 'Valorant CS2 tournament live'),
+    ExploreSub('Dota 2', 'Dota 2 tournament live'),
+    ExploreSub('Fighting games', 'fighting game tournament EVO live'),
+    ExploreSub('Mobile esports', '手游 电竞 比赛 live'),
   ]),
   ExploreTopic('Sports events', AppIcons.soccerBall, '体育 直播', subs: [
     ExploreSub('Live sports', 'sports live'),
@@ -459,14 +448,38 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('Launch events', '新闻发布会 直播'),
     ExploreSub('Weather disasters', 'weather severe live'),
   ]),
-  ExploreTopic('Tech events', AppIcons.cpuFill, '科技 发布会 直播', subs: [
-    ExploreSub('Product launches', 'launch event live'),
-    ExploreSub('Developer conferences', 'developer conference keynote live'),
-    ExploreSub('Trade shows', 'CES MWC expo live'),
-    ExploreSub('AI conference', 'AI summit keynote live'),
-    ExploreSub('Tech talks', 'tech talk live'),
-    ExploreSub('Security conferences', 'security conference live'),
-    ExploreSub('Unboxing & reviews', 'unboxing review live'),
+  ExploreTopic('VTubers', AppIcons.scanSmiley, 'vtuber', subs: [
+    ExploreSub('VTuber', 'vtuber live'),
+    ExploreSub('Hololive NIJISANJI', 'hololive nijisanji live'),
+    ExploreSub('Chinese VTubers', '虚拟主播 直播'),
+    ExploreSub('Singing streams', '歌回 vtuber singing'),
+    ExploreSub('Gaming VTubers', 'vtuber gaming live'),
+    ExploreSub('Virtual concerts', 'virtual concert live'),
+    ExploreSub('Virtual radio', 'vtuber radio'),
+  ]),
+  ExploreTopic('Lifestyle & fashion', AppIcons.smiley, '生活 直播 lifestyle live', subs: [
+    ExploreSub('Daily life', '日常 生活 直播 daily life live'),
+    ExploreSub('Fashion & beauty', 'makeup fashion 穿搭 美妆 live'),
+    ExploreSub('Home renovation', 'home decor 家居 live'),
+    ExploreSub('Pets', 'pets 宠物 live'),
+    ExploreSub('Vlogs', 'vlog live stream'),
+    ExploreSub('Shopping', 'shopping haul live'),
+  ]),
+  ExploreTopic('Food & cooking', AppIcons.forkKnife, '美食 直播 cooking live', subs: [
+    ExploreSub('Cooking', 'home cooking 家常菜 live'),
+    ExploreSub('Baking', 'baking 烘焙 live'),
+    ExploreSub('Restaurant kitchens', 'restaurant kitchen live'),
+    ExploreSub('Street food', 'street food live'),
+    ExploreSub('Mukbang', 'mukbang live'),
+    ExploreSub('Coffee', 'coffee barista live'),
+  ]),
+  ExploreTopic('Art & creativity', AppIcons.paintBrush, '绘画 创作 直播 art live', subs: [
+    ExploreSub('Painting', 'drawing painting 绘画 live'),
+    ExploreSub('Design', 'design live'),
+    ExploreSub('3D modeling', 'blender 3D modeling live'),
+    ExploreSub('Crafts', 'crafts 手工 live'),
+    ExploreSub('Music production', 'music production live'),
+    ExploreSub('Woodworking', 'woodworking live'),
   ]),
   ExploreTopic('Study & work', AppIcons.bookOpenFill, 'study with me live', subs: [
     ExploreSub('Study with me', 'study with me live'),
@@ -476,6 +489,18 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('Open courses', 'lecture 公开课 live'),
     ExploreSub('Language learning', 'language learning live'),
     ExploreSub('Creative process', 'drawing 绘画 创作 live'),
+  ]),
+  ExploreTopic('Tech & development', AppIcons.cpuFill, '科技 直播 tech live', subs: [
+    ExploreSub('Product launches', 'launch event live'),
+    ExploreSub('Developer conferences', 'developer conference keynote live'),
+    ExploreSub('Trade shows', 'CES MWC expo live'),
+    ExploreSub('AI conference', 'AI summit keynote live'),
+    ExploreSub('Tech talks', 'tech talk live'),
+    ExploreSub('Security conferences', 'security conference live'),
+    ExploreSub('Unboxing & reviews', 'unboxing review live'),
+    ExploreSub('Coding streams', 'live coding programming'),
+    ExploreSub('Open source projects', 'open source development live'),
+    ExploreSub('PC hardware', 'hardware build electronics live'),
   ]),
   ExploreTopic('Outdoor live', AppIcons.mountains, '户外 直播', subs: [
     ExploreSub('IRL streams', 'IRL stream'),
@@ -487,27 +512,46 @@ const liveTopics = <ExploreTopic>[
     ExploreSub('Cycling', 'cycling live'),
     ExploreSub('Festivals', 'festival parade live'),
   ]),
-  ExploreTopic('Radio for sleep', AppIcons.radio, 'lofi radio 24/7', subs: [
-    ExploreSub('Lo-Fi', 'lofi hip hop radio'),
-    ExploreSub('24/7 music', '24/7 music live'),
-    ExploreSub('ASMR', 'ASMR live'),
-    ExploreSub('White noise', 'white noise live'),
-    ExploreSub('Rain sounds', 'rain sounds live'),
-    ExploreSub('Sleep music', 'sleep music live'),
-    ExploreSub('Jazz radio', 'jazz radio 24/7'),
-    ExploreSub('Classical radio', 'classical music radio 24/7'),
-    ExploreSub('Meditation music', 'meditation music live'),
+  ExploreTopic('Finance & business', AppIcons.chartLine, '财经 直播 finance live', subs: [
+    ExploreSub('Financial markets', 'stock market 股市 live'),
+    ExploreSub('Economics', 'economy analysis live'),
+    ExploreSub('Interviews', 'business interview live'),
+    ExploreSub('Live trading', 'day trading live'),
+    ExploreSub('Investing', 'investing 投资 live'),
+    ExploreSub('Entrepreneurship', 'startup entrepreneur live'),
   ]),
-  ExploreTopic('Nature footage', AppIcons.videoCamera, 'live cam 24/7', subs: [
-    ExploreSub('Animal watching', 'animal live cam'),
-    ExploreSub('Space live streams', 'space live ISS'),
-    ExploreSub('City cams', 'city live cam'),
-    ExploreSub('Birds', 'bird feeder live cam'),
-    ExploreSub('Marine aquariums', 'aquarium ocean live cam'),
-    ExploreSub('Railways', 'train cam railway live'),
-    ExploreSub('Ports & ships', 'harbor ship cam live'),
-    ExploreSub('Landscapes', 'scenic live cam 4K'),
-    ExploreSub('Volcanoes & weather', 'volcano weather live cam'),
+  ExploreTopic('Health & fitness', AppIcons.heartFill, '健身 直播 fitness live', subs: [
+    ExploreSub('Fitness', 'workout 健身 live'),
+    ExploreSub('Yoga & meditation', 'yoga live'),
+    ExploreSub('Sports coaching', 'sports training coaching live'),
+    ExploreSub('Health talks', 'health talk live'),
+    ExploreSub('Running', 'running marathon live'),
+    ExploreSub('Dance workouts', 'dance workout live'),
+  ]),
+  ExploreTopic('Religion & faith', AppIcons.church, '宗教 直播', opens: ExploreSection.faithLive),
+  ExploreTopic('24/7 live', AppIcons.radio, '24/7 live', subs: [
+    ExploreSub('Radio for sleep', 'lofi radio 24/7', subs: [
+      ExploreSub('Lo-Fi', 'lofi hip hop radio'),
+      ExploreSub('24/7 music', '24/7 music live'),
+      ExploreSub('ASMR', 'ASMR live'),
+      ExploreSub('White noise', 'white noise live'),
+      ExploreSub('Rain sounds', 'rain sounds live'),
+      ExploreSub('Sleep music', 'sleep music live'),
+      ExploreSub('Jazz radio', 'jazz radio 24/7'),
+      ExploreSub('Classical radio', 'classical music radio 24/7'),
+      ExploreSub('Meditation music', 'meditation music live'),
+    ]),
+    ExploreSub('Nature footage', 'live cam 24/7', subs: [
+      ExploreSub('Animal watching', 'animal live cam'),
+      ExploreSub('Space live streams', 'space live ISS'),
+      ExploreSub('City cams', 'city live cam'),
+      ExploreSub('Birds', 'bird feeder live cam'),
+      ExploreSub('Marine aquariums', 'aquarium ocean live cam'),
+      ExploreSub('Railways', 'train cam railway live'),
+      ExploreSub('Ports & ships', 'harbor ship cam live'),
+      ExploreSub('Landscapes', 'scenic live cam 4K'),
+      ExploreSub('Volcanoes & weather', 'volcano weather live cam'),
+    ]),
   ]),
 ];
 
@@ -574,6 +618,10 @@ enum ExploreMode {
 
   /// Whether the period chips apply.
   bool get hasPeriod => this == popular;
+
+  /// Whether the list shows the most watched first: by views, or by
+  /// people watching now for streams.
+  bool get byViews => this == popular || this == long || this == liveViewers;
 }
 
 /// 冷门宝藏: videos of at least four minutes with at most this many views.

@@ -41,7 +41,7 @@ class VideoLanguages {
   static const giveUpAfterDefault = 240;
 
   static const _fields = 'videoDetails.title,videoDetails.shortDescription,captions.playerCaptionsTracklistRenderer.captionTracks.languageCode,'
-      'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack,playabilityStatus.status';
+      'captions.playerCaptionsTracklistRenderer.captionTracks.kind,streamingData.adaptiveFormats.audioTrack,streamingData.adaptiveFormats.xtags,playabilityStatus.status';
   late final _probe = YoutubePlayerProbe(_client);
 
   Map<String, SpokenVideo>? _known;
@@ -111,8 +111,9 @@ class VideoLanguages {
   /// the website answered without them.
   static bool _tvFirst = false;
 
-  /// Answers without captions asked again another way, a few each run:
-  /// whole, and of the other app.
+  /// Answers without captions asked again whole, to learn whether the
+  /// field mask loses them: a few each run. Every one is still asked of
+  /// the other app.
   static int _compared = 0;
   static const _compare = 8;
 
@@ -141,12 +142,12 @@ class VideoLanguages {
       }
       return other?.spoken;
     }
-    if (read.spoken.heard || _compared >= _compare) return read.spoken;
+    if (read.spoken.heard) return read.spoken;
     // Most spoken videos have automatic captions. An answer without them
     // may have lost them to the field mask, or to YouTube answering this
     // app less than the other.
-    _compared++;
-    if (!_maskDrops && _probe.masks(_fields)) {
+    if (!_maskDrops && _compared < _compare && _probe.masks(_fields)) {
+      _compared++;
       final whole = await _fetch(id, hl, tv: _tvFirst, whole: true);
       if (whole != null && whole.spoken.heard) {
         _maskDrops = true;
@@ -160,7 +161,6 @@ class VideoLanguages {
       logInfo('Video languages: ${_tvFirst ? 'the TV app' : 'the website'} answers with captions where ${_tvFirst ? 'the website' : 'the TV app'} does not; asking it first');
       return other.spoken;
     }
-    if (_compared == _compare) logInfo('Video languages: $_compare answers without captions had none asked whole or of the other app either');
     return !read.playable && other != null && other.playable ? other.spoken : read.spoken;
   }
 
@@ -243,9 +243,9 @@ class VideoLanguages {
   /// with the title the uploader wrote; channels and playlists pass.
   /// Every video is asked about: a listed title, translated or the
   /// uploader's own, need not be in the language spoken. A video whose
-  /// language could not be asked is judged by its listed title. Each line
-  /// goes out as soon as its answer is in, a few lookups ahead of the
-  /// reader.
+  /// language could not be asked is judged by its listed title. Lines go
+  /// out in the order they came, each once its answer and those before it
+  /// are in, a few lookups ahead of the reader.
   ///
   /// With [heardOnly], a video only passes when its audio or automatic
   /// captions say so. After [giveUpAfter] videos with none kept, it stops;
@@ -261,10 +261,10 @@ class VideoLanguages {
     var asked = 0, kept = 0, untold = 0;
     final told = <String, int>{};
     Iterable<String> ready() sync* {
-      for (final entry in [...pending]) {
-        if (!entry.done) continue;
-        pending.remove(entry);
-        if (entry.out case final line?) yield line;
+      // In the order listed, which is the order the search ranked them:
+      // a slow answer holds back the ones after it.
+      while (pending.isNotEmpty && pending.first.done) {
+        if (pending.removeAt(0).out case final line?) yield line;
       }
     }
 
@@ -281,7 +281,7 @@ class VideoLanguages {
       pending.add(_Pending(of(item.id, asking: language).then((spoken) {
         if (spoken == null || spoken.language == null) untold++;
         told.update(spoken == null ? 'error' : spoken.heard ? spoken.source : '${spoken.source} ${spoken.language?.name ?? '?'}', (n) => n + 1, ifAbsent: () => 1);
-        if (spoken == null) return language.matches(item.title) ? line : null;
+        if (spoken == null) return !heardOnly && language.matches(item.title) ? line : null;
         if (spoken.language != language || (heardOnly && !spoken.heard)) return null;
         kept++;
         if (spoken.title.isEmpty || spoken.title == item.title) return line;
@@ -289,12 +289,12 @@ class VideoLanguages {
       })));
       yield* Stream.fromIterable(ready());
       while (pending.length >= parallel * 3) {
-        await Future.any(pending.map((entry) => entry.future));
+        await pending.first.future;
         yield* Stream.fromIterable(ready());
       }
     }
     while (pending.isNotEmpty) {
-      await Future.any(pending.map((entry) => entry.future));
+      await pending.first.future;
       yield* Stream.fromIterable(ready());
     }
     } finally {

@@ -48,7 +48,6 @@ class _ExplorePageState extends State<ExplorePage> {
     final name = [topic.label, if (subNow != null) subNow.label, if (controller.exploreLeafNow case final leafNow?) leafNow.label].join(' · ');
     final subtitle = switch (mode) {
       ExploreMode.curated => tr('{0} · Relevant full-length videos, less clickbait, up to 3 per channel', [name]),
-      ExploreMode.popular when topic.global => tr('Global trending · Most watched in any region or language ({0}), up to 2 per channel', [controller.explorePeriod.label]),
       ExploreMode.popular when topic.mix => tr('All · most watched {0} across the zones, at most 2 per channel', [controller.explorePeriod.label]),
       ExploreMode.popular => tr('{0} · most watched {1}', [name, controller.explorePeriod.label]),
       ExploreMode.forYou => tr('{0} · Based on your watch history', [name]),
@@ -234,17 +233,15 @@ class _ExplorePageState extends State<ExplorePage> {
                 changed: controller.exploreDuration != SearchDuration.any,
                 onSelected: (v) => controller.setExplore(duration: v),
               ),
-            // 全球热门 is searched from no region; the language still applies.
-            if (!topic.global)
-              OptionChip(
-                icon: AppIcons.globe,
-                value: controller.preferences.exploreRegion,
-                values: ExploreRegion.values,
-                label: (v) => v == ExploreRegion.any ? tr('Region') : v.label,
-                item: (v) => v.label,
-                changed: controller.preferences.exploreRegion != ExploreRegion.any,
-                onSelected: (v) => controller.setExplore(region: v),
-              ),
+            OptionChip(
+              icon: AppIcons.globe,
+              value: controller.preferences.exploreRegion,
+              values: ExploreRegion.values,
+              label: (v) => v == ExploreRegion.any ? tr('Region') : v.label,
+              item: (v) => v.label,
+              changed: controller.preferences.exploreRegion != ExploreRegion.any,
+              onSelected: (v) => controller.setExplore(region: v),
+            ),
             OptionChip(
               icon: AppIcons.translate,
               value: controller.preferences.exploreLanguage,

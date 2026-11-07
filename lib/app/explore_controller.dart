@@ -230,7 +230,7 @@ extension ExploreActions on AppController {
     _loadExplore();
   }
 
-  Object get _exploreKey => (exploreSection, exploreTopic, exploreSub, exploreLeaf, exploreMode, explorePeriod, exploreDuration, exploreQuality, exploreFormat, exploreView, preferences.exploreRegion, preferences.exploreLanguage);
+  Object get _exploreKey => (exploreSection, exploreTopic, exploreSub, exploreLeaf, exploreMode, explorePeriod, exploreDuration, exploreQuality, exploreFormat, exploreView, preferences.exploreRegion, preferences.exploreLanguage, preferences.exploreHeardOnly);
 
   void _putAwayExplore() {
     final loader = explore;
@@ -268,14 +268,11 @@ extension ExploreActions on AppController {
     final query = exploreQuery;
     final mode = exploreMode;
     final mix = exploreTopicNow.mix;
-    // 全球热门 is searched from nowhere in particular; a language picked
-    // still applies.
-    final global = exploreTopicNow.global;
     final language = preferences.exploreLanguage;
     // With no region picked, a language is searched for from its home
     // country, where YouTube ranks its videos first.
     final picked = preferences.exploreRegion.gl;
-    final region = global ? null : picked.isNotEmpty ? picked : language.homeCountry;
+    final region = picked.isNotEmpty ? picked : language.homeCountry;
     exploreLanguageCheck = null;
     final depth = _exploreDepth;
     _exploreDepth = 0;
@@ -340,7 +337,7 @@ extension ExploreActions on AppController {
             // videos: they are put in the language picked, else the
             // region's, else a non-Chinese interface's.
             final ui = youtubeHl.startsWith('zh') ? ExploreLanguage.any : ExploreLanguage.parse(youtubeHl.split('-').first);
-            final regional = global ? ExploreLanguage.any : preferences.exploreRegion.searchLanguage;
+            final regional = preferences.exploreRegion.searchLanguage;
             final wordsIn = language != ExploreLanguage.any ? language : regional != ExploreLanguage.any ? regional : ui;
             // Taiwan and Hong Kong write traditional characters.
             final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK');
@@ -366,9 +363,13 @@ extension ExploreActions on AppController {
             ExploreMode.liveUpcoming => 4,
             _ => faith != null || mix || language != ExploreLanguage.any ? 8 : 1,
           },
-          rank: taste == null
-              ? null
-              : (item) => AppController.exploreScore(taste, item) - (feedMix?.penaltyOf(item) ?? 0),
+          // Most watched first, as YouTube ranks each search but not the
+          // searches 全部 mixes, nor what is left after the filters.
+          rank: taste != null
+              ? (item) => AppController.exploreScore(taste, item) - (feedMix?.penaltyOf(item) ?? 0)
+              : mode.byViews
+                  ? (item) => (item.viewCount ?? -1).toDouble()
+                  : null,
           name: 'Explore ${exploreSection.name} · ${exploreTopicNow.label} · ${mode.name}',
           dropped: dropped,
         )

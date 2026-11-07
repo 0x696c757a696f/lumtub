@@ -58,7 +58,7 @@ class AppPreferences {
     this.hideShorts = false,
     this.aiFilter = AiFilterMode.off,
     this.logLevel = LogLevel.info,
-    this.exploreHeardOnly = false,
+    this.exploreHeardOnly = true,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
     this.blockGroups = true,
@@ -149,7 +149,9 @@ class AppPreferences {
   final LogLevel logLevel;
 
   /// With a language picked in explore, only videos whose audio or
-  /// automatic captions confirm it, not their title and description.
+  /// automatic captions confirm it, not their title and description,
+  /// which uploaders translate. On by default; kept under a new key, so
+  /// that it starts on also where the old default was saved.
   final bool exploreHeardOnly;
   final int minDurationMinutes;
   final bool hideWatched;
@@ -527,7 +529,7 @@ class AppPreferences {
         'hideShorts': hideShorts,
         'aiFilter': aiFilter.name,
         'logLevel': logLevel.name,
-        'exploreHeardOnly': exploreHeardOnly,
+        'exploreHeardOnlyV2': exploreHeardOnly,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
         'blockGroups': blockGroups,
@@ -646,7 +648,7 @@ class AppPreferences {
       hideShorts: flag('hideShorts', d.hideShorts),
       aiFilter: AiFilterMode.parse(raw['aiFilter']),
       logLevel: LogLevel.parse(raw['logLevel']),
-      exploreHeardOnly: flag('exploreHeardOnly', d.exploreHeardOnly),
+      exploreHeardOnly: flag('exploreHeardOnlyV2', d.exploreHeardOnly),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
       blockGroups: flag('blockGroups', d.blockGroups),

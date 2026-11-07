@@ -2942,5 +2942,20 @@
   "Turkmen": "turkmeeni",
   "Uzbek": "usbeki",
   "Zulu": "suulu",
-  "This live stream cannot go back further at this quality": "Seda otseülekannet ei saa selle kvaliteediga kaugemale tagasi kerida"
+  "This live stream cannot go back further at this quality": "Seda otseülekannet ei saa selle kvaliteediga kaugemale tagasi kerida",
+  "Vlogs": "Vlogid",
+  "Shopping": "Ostlemine",
+  "Mukbang": "Mukbang",
+  "Coffee": "Kohv",
+  "Dance workouts": "Tantsutreeningud",
+  "Sports coaching": "Spordiõpe",
+  "Health talks": "Terviseteemalised vestlused",
+  "Live trading": "Kauplemine otse",
+  "Restaurant kitchens": "Restoranide köögid",
+  "Lifestyle & fashion": "Elustiil ja mood",
+  "Food & cooking": "Toit ja kokkamine",
+  "Tech & development": "Tehnoloogia ja arendus",
+  "Health & fitness": "Tervis ja fitness",
+  "24/7 live": "24/7 otse",
+  "{0} watching": "{0} vaatab"
 }

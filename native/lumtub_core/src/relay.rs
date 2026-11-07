@@ -380,7 +380,7 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
                 Ok(body) => Some(drain(body, to + 1 - start)),
                 Err(stop) => {
                     let code = match stop {
-                        Stop::Refused(code) => code,
+                        Stop::Refused(code, _) => code,
                         _ => 502,
                     };
                     log(shared, format!("Chunked relay stopped before answering: {}", stop.why()));
@@ -484,8 +484,9 @@ pub(crate) enum Stop {
     Client,
     /// YouTube's side failed.
     Upstream(String),
-    /// YouTube answered with this status instead of the bytes.
-    Refused(u16),
+    /// YouTube answered with this status instead of the bytes, and what
+    /// was asked and answered, for the log.
+    Refused(u16, String),
 }
 
 impl Stop {
@@ -493,7 +494,8 @@ impl Stop {
         match self {
             Stop::Client => "libmpv hung up".into(),
             Stop::Upstream(message) => message.clone(),
-            Stop::Refused(status) => format!("YouTube answered {status}"),
+            Stop::Refused(status, detail) if detail.is_empty() => format!("YouTube answered {status}"),
+            Stop::Refused(status, detail) => format!("YouTube answered {status} ({detail})"),
         }
     }
 }
@@ -591,7 +593,7 @@ fn copy(from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>, buffe
         let prefetched = opened.or_else(|| match pending {
             Some(handle) => match handle.join() {
                 Ok(Ok(body)) => Some(body),
-                Ok(Err(stop @ (Stop::Upstream(_) | Stop::Refused(_)))) => {
+                Ok(Err(stop @ (Stop::Upstream(_) | Stop::Refused(..)))) => {
                     log(shared, format!("Prefetch of the next chunk failed ({}), requesting again", stop.why()));
                     None
                 }
@@ -647,10 +649,10 @@ pub(crate) fn request(fetch: &dyn Fetch, target: &Target, from: u64, to: u64) ->
     loop {
         match fetch.get(target, &url) {
             Ok((200 | 206, body)) => return Ok(body),
-            Ok((status, _)) => {
+            Ok((status, body)) => {
                 // A 403 means the address expired; the app reopens the video.
                 if status == 403 || attempt >= 1 {
-                    return Err(Stop::Refused(status));
+                    return Err(Stop::Refused(status, refusal(target, body)));
                 }
             }
             Err(e) => {
@@ -663,6 +665,38 @@ pub(crate) fn request(fetch: &dyn Fetch, target: &Target, from: u64, to: u64) ->
         }
         attempt += 1;
     }
+}
+
+/// What was asked and what YouTube said when it refused an address: the
+/// client it was made for, the server, how long it had left, whether a
+/// user agent went with it and the start of the reply. No signature or
+/// other value of the address is written.
+fn refusal(target: &Target, body: Box<dyn Read + Send>) -> String {
+    let mut said = Vec::new();
+    let _ = body.take(300).read_to_end(&mut said);
+    let said: String = String::from_utf8_lossy(&said).chars().map(|c| if c.is_control() { ' ' } else { c }).collect();
+    let host = target.url.split("://").nth(1).and_then(|rest| rest.split(['/', '?']).next()).unwrap_or("?");
+    let left = query(&target.url, "expire").and_then(|e| e.parse::<i64>().ok()).map(|e| {
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() as i64;
+        format!("{} s", e - now)
+    });
+    let mut parts = vec![
+        format!("client {}", query(&target.url, "c").unwrap_or_else(|| "?".into())),
+        format!("host {host}"),
+        format!("expires in {}", left.as_deref().unwrap_or("?")),
+        format!("user agent {}", if target.user_agent.is_some() { "sent" } else { "none" }),
+        format!("proxy {}", if target.proxy.is_some() { "yes" } else { "no" }),
+    ];
+    for name in ["pot", "n", "sig", "lsig"] {
+        if query(&target.url, name).is_some() {
+            parts.push(format!("has {name}"));
+        }
+    }
+    let said = said.trim();
+    if !said.is_empty() {
+        parts.push(format!("said \"{said}\""));
+    }
+    parts.join(", ")
 }
 
 static RELAY: OnceLock<Relay> = OnceLock::new();
@@ -873,6 +907,20 @@ mod tests {
         let (head, _) = get(&address, Some("bytes=5000-"));
         assert!(head.starts_with("HTTP/1.1 416"), "{head}");
         assert_eq!(relay.register(target(0)), None);
+    }
+
+    #[test]
+    fn a_refusal_says_what_was_asked_without_the_address() {
+        let mut target = target(1000);
+        target.url = "https://rr1---sn-x.googlevideo.com/videoplayback?c=TVHTML5&expire=9999999999&sig=SECRET&n=abc&clen=1".into();
+        target.user_agent = Some("ua".into());
+        let detail = refusal(&target, Box::new(Cursor::new(b"Forbidden\n".to_vec())));
+        assert!(detail.contains("client TVHTML5"), "{detail}");
+        assert!(detail.contains("host rr1---sn-x.googlevideo.com"), "{detail}");
+        assert!(detail.contains("user agent sent"), "{detail}");
+        assert!(detail.contains("has sig") && detail.contains("has n") && !detail.contains("has pot"), "{detail}");
+        assert!(detail.contains("said \"Forbidden\""), "{detail}");
+        assert!(!detail.contains("SECRET") && !detail.contains("abc"), "{detail}");
     }
 
     #[test]

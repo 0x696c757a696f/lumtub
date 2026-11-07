@@ -91,7 +91,14 @@ void main() {
       // A raw socket, as HttpServer holds small writes back.
       final raw = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
       raw.listen((socket) {
-        socket.write('HTTP/1.1 200 OK\r\ncontent-type: text/plain\r\ntransfer-encoding: chunked\r\n\r\n5\r\nstart\r\n');
+        // Answers once the request is in, or the client takes the reply
+        // for a message it never asked for.
+        var answered = false;
+        socket.listen((_) {
+          if (answered) return;
+          answered = true;
+          socket.write('HTTP/1.1 200 OK\r\ncontent-type: text/plain\r\ntransfer-encoding: chunked\r\n\r\n5\r\nstart\r\n');
+        }, onError: (Object _) {});
         unawaited(hold.future.then((_) => socket.destroy()));
       });
       final streamed = await client.send(http.Request('GET', Uri.parse('http://127.0.0.1:${raw.port}/')));

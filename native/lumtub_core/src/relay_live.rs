@@ -24,6 +24,12 @@ const AT_ONCE: usize = 3;
 const GIVE_UP: Duration = Duration::from_secs(45);
 /// Pause between asking for a fragment that is not out yet.
 const RETRY: Duration = Duration::from_millis(500);
+/// Pauses between asking again for the newest fragment while YouTube's
+/// server answers 5xx or not at all: a live's server can be unavailable
+/// for a while, and reopening only asks the same one. About 10 s in all,
+/// within libmpv's 20 s wait for an answer.
+const HEAD_WAITS: [Duration; 5] =
+    [Duration::from_millis(500), Duration::from_secs(1), Duration::from_secs(2), Duration::from_secs(3), Duration::from_secs(4)];
 
 /// One fragment's bytes and the newest fragment YouTube named with it.
 struct Fragment {
@@ -115,7 +121,23 @@ fn fetch_fragment(fetch: &dyn Fetch, target: &Target, base: &str, sq: u64) -> Re
 /// or YouTube stops answering.
 pub(crate) fn stream(writer: &mut impl Write, target: &Target, fetch: &dyn Fetch, start_at: impl FnOnce(u64) -> u64, log: impl Fn(String)) {
     let base = base(&target.url);
-    let head = match fetch.get_live(target, &base) {
+    let mut waits = HEAD_WAITS.iter();
+    let newest = loop {
+        let answer = fetch.get_live(target, &base);
+        let passing = matches!(answer, Ok((500..=599, _, _)) | Err(_));
+        match waits.next() {
+            Some(wait) if passing => {
+                let why = match &answer {
+                    Ok((status, _, _)) => format!("HTTP {status}"),
+                    Err(e) => e.clone(),
+                };
+                log(format!("Live stream gave no newest fragment ({why}); asking again in {} ms", wait.as_millis()));
+                std::thread::sleep(*wait);
+            }
+            _ => break answer,
+        }
+    };
+    let head = match newest {
         Ok((200, Some(head), _)) => head,
         Ok((status, head, _)) => {
             log(format!("Live stream gave no newest fragment (HTTP {status}, head {head:?})"));
@@ -323,6 +345,31 @@ mod tests {
         let mut client = Client { bytes: vec![], limit: usize::MAX };
         stream(&mut client, &target(), &Dead, |h| h, |_| {});
         assert!(String::from_utf8_lossy(&client.bytes).starts_with("HTTP/1.1 403"));
+    }
+
+    #[test]
+    fn asks_again_while_the_server_is_unavailable() {
+        struct Busy {
+            live: Live,
+            busy: AtomicU64,
+        }
+        impl Fetch for Busy {
+            fn get(&self, target: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String> {
+                self.get_live(target, url).map(|(s, _, b)| (s, b))
+            }
+            fn get_live(&self, target: &Target, url: &str) -> Result<(u16, Option<u64>, Box<dyn Read + Send>), String> {
+                if self.busy.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1)).is_ok() {
+                    return Ok((503, None, Box::new(Cursor::new(vec![]))));
+                }
+                self.live.get_live(target, url)
+            }
+        }
+        let busy = Busy { live: Live::new(20), busy: AtomicU64::new(2) };
+        let lines = Mutex::new(vec![]);
+        let mut client = Client { bytes: vec![], limit: 120 };
+        stream(&mut client, &target(), &busy, |head| head - BEHIND, |line| lines.lock().unwrap().push(line));
+        assert!(body(&client).starts_with("17;"), "{}", body(&client));
+        assert_eq!(lines.lock().unwrap().len(), 2);
     }
 
     #[test]

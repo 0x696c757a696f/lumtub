@@ -134,9 +134,9 @@ void _tests(bool native) {
     final (target, _) = await startTarget();
     final socks = await FakeSocks.start(target.port);
     final bridge = await start('socks5://127.0.0.1:${socks.server.port}');
-    final answer = await ask(bridge, 'CONNECT 127.0.0.1:80 HTTP/1.1\r\n\r\n', thenSend: get);
+    final answer = await ask(bridge, 'CONNECT 192.0.2.1:80 HTTP/1.1\r\n\r\n', thenSend: get);
     expect(answer, startsWith('HTTP/1.1 200'));
-    expect(socks.asked, ['1:127.0.0.1']);
+    expect(socks.asked, ['1:192.0.2.1']);
     await bridge.close();
     await socks.close();
     await target.close(force: true);
@@ -176,7 +176,7 @@ void _tests(bool native) {
 
   test('when the SOCKS proxy refuses or is down the request fails and never goes direct', () async {
     final (target, seen) = await startTarget();
-    final connect = 'CONNECT 127.0.0.1:${target.port} HTTP/1.1\r\n\r\n';
+    final connect = 'CONNECT 192.0.2.1:${target.port} HTTP/1.1\r\n\r\n';
     final refusing = await FakeSocks.start(target.port, replyCode: 5);
     var bridge = await start('socks5://127.0.0.1:${refusing.server.port}');
     expect(await ask(bridge, connect), startsWith('HTTP/1.1 502'));
@@ -187,9 +187,22 @@ void _tests(bool native) {
     await dead.close();
     bridge = await start('socks5://127.0.0.1:$deadPort');
     expect(await ask(bridge, connect), startsWith('HTTP/1.1 502'));
-    expect(await ask(bridge, 'GET http://127.0.0.1:${target.port}/ HTTP/1.1\r\n\r\n'), startsWith('HTTP/1.1 502'));
+    expect(await ask(bridge, 'GET http://192.0.2.1:${target.port}/ HTTP/1.1\r\n\r\n'), startsWith('HTTP/1.1 502'));
     expect(await ask(bridge, 'nonsense\r\n\r\n'), startsWith('HTTP/1.1 400'));
     expect(seen, isEmpty);
+    await bridge.close();
+    await target.close(force: true);
+  });
+
+  test("this PC is reached directly, as through the proxy it would be the proxy's own machine", () async {
+    final (target, seen) = await startTarget();
+    final dead = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+    final deadPort = dead.port;
+    await dead.close();
+    final bridge = await start('socks5h://127.0.0.1:$deadPort');
+    expect(await ask(bridge, 'CONNECT 127.0.0.1:${target.port} HTTP/1.1\r\n\r\n', thenSend: get), contains('hello'));
+    expect(await ask(bridge, 'CONNECT localhost:${target.port} HTTP/1.1\r\n\r\n', thenSend: get), contains('hello'));
+    expect(seen, ['/', '/']);
     await bridge.close();
     await target.close(force: true);
   });

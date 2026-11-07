@@ -1626,10 +1626,10 @@ class AppController extends ChangeNotifier with _ExploreState {
       final live = item.isLive;
       // A live stream starts at its live edge, not at a remembered spot.
       if (live) start = null;
-      // Through the relay when the app's own connections reach YouTube the
-      // way libmpv's would: directly or through an HTTP proxy.
+      // Through the relay, which reaches YouTube as libmpv would: directly
+      // or through the proxy, a SOCKS one too.
       // A video whose stream broke through it is reopened without it.
-      final relay = (proxy.url == null || proxy.isHttp) && _unrelayed != item.id ? _relay : null;
+      final relay = _unrelayed != item.id ? _relay : null;
       final agent = video?.userAgent;
       // Subtitles are added by the app (see _autoSubtitles), so they do not
       // need ytdl_hook: through it libmpv reads the streams itself, slowly

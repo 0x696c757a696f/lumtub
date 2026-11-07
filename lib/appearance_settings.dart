@@ -278,12 +278,14 @@ class AppearanceSettings {
 
   /// Whether 护眼暖色 is on at [now].
   /// How warm the window is at [now]: [warmth] while the warm light is
-  /// on, and on a schedule, in between for half an hour either side of
-  /// sunset and sunrise or the hours set. It moves in twelve steps of five
-  /// minutes, so the window is redrawn only that often.
+  /// on. Following the sun it moves with the sun's height through dusk
+  /// and dawn ([SunTimes.nightness]); on the hours set, over the half
+  /// hour either side. Either way in twelve steps, so the window is
+  /// redrawn only that often.
   double warmthAt(DateTime now) {
     if (eyeCare == EyeCare.off) return 0;
     if (eyeCare == EyeCare.always) return warmth;
+    if (eyeCare == EyeCare.sun) return warmth * (SunTimes.here.nightness(now) * 12).round() / 12;
     final step = DateTime.fromMillisecondsSinceEpoch(now.millisecondsSinceEpoch ~/ _step.inMilliseconds * _step.inMilliseconds);
     var on = 0;
     for (var i = -6; i < 6; i++) {

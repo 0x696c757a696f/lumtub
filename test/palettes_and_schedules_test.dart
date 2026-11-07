@@ -100,6 +100,18 @@ void main() {
     expect(at(19, 47), at(19, 49));
     expect({for (var m = 0; m < 60; m++) at(19 + (30 + m) ~/ 60, (30 + m) % 60)}, hasLength(12));
     expect(const AppearanceSettings(eyeCare: EyeCare.always, warmth: 0.6).warmthAt(DateTime(2026, 11, 7, 12)), 0.6);
+    // By the sun's height: Rome at noon is day, at midnight night, and a
+    // quarter of an hour after sunset partly warm.
+    final rome = SunTimes.at(41.9, 12.5);
+    final noon = DateTime.utc(2026, 6, 21, 11);
+    expect(rome.elevation(noon), closeTo(71.5, 1));
+    expect(rome.elevation(DateTime.utc(2026, 6, 21, 23)), lessThan(-20));
+    final sunset = rome.on(DateTime(2026, 6, 21))!.$2;
+    expect(rome.elevation(sunset), closeTo(-0.833, 0.5));
+    expect(rome.nightness(noon), 0);
+    expect(rome.nightness(DateTime.utc(2026, 6, 21, 23)), 1);
+    final dusk = rome.nightness(sunset.add(const Duration(minutes: 15)));
+    expect(dusk, inExclusiveRange(0.2, 1));
   });
 
   test('the warm light keeps every palette readable and its own', () {

@@ -115,6 +115,8 @@ class _LumtubAppState extends State<LumtubApp> {
   void initState() {
     super.initState();
     final controller = widget.controller;
+    _shown = _shownOf(controller);
+    controller.addListener(_rebuildIfShownChanged);
     unawaited(controller.initialize());
     _clock = Timer.periodic(const Duration(minutes: 1), (_) {
       final appearance = controller.appearance;
@@ -164,8 +166,21 @@ class _LumtubAppState extends State<LumtubApp> {
     );
   }
 
+  /// What the window around the pages is built from: the controller
+  /// notifies on every list and player change, which the shell listens to
+  /// itself, so the app around it rebuilds only when one of these changes.
+  Object? _shown;
+  static Object _shownOf(AppController controller) => (controller.appearance, controller.accentColor, currentLanguage);
+
+  void _rebuildIfShownChanged() {
+    final shown = _shownOf(widget.controller);
+    if (shown == _shown) return;
+    setState(() => _shown = shown);
+  }
+
   @override
   void dispose() {
+    widget.controller.removeListener(_rebuildIfShownChanged);
     _lifecycle.dispose();
     _clock?.cancel();
     _shell?.dispose();
@@ -174,9 +189,8 @@ class _LumtubAppState extends State<LumtubApp> {
   }
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-        listenable: widget.controller,
-        builder: (context, child) {
+  Widget build(BuildContext context) => Builder(
+        builder: (context) {
           final appearance = widget.controller.appearance;
           _updateThemes(appearance, widget.controller.accentColor);
           return MaterialApp(
@@ -201,11 +215,12 @@ class _LumtubAppState extends State<LumtubApp> {
                 child: child!,
               );
             },
-            home: child,
+            home: _pages,
           );
         },
-        child: AppShell(controller: widget.controller),
       );
+
+  late final Widget _pages = AppShell(controller: widget.controller);
 }
 
 /// [locale] where Flutter has its own dialogs, date pickers and tooltips

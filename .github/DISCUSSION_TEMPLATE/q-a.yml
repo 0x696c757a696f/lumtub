@@ -1,0 +1,20 @@
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question / 你的问题
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: System / 系统
+      options:
+        - Windows
+        - macOS
+        - Linux
+  - type: input
+    id: version
+    attributes:
+      label: Lumtub version / 版本
+      description: Settings › About / 设置 › 关于

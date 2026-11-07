@@ -1020,7 +1020,7 @@ List<SettingEntry> aboutEntries(AppController controller) => [
             title: tr('Feedback'),
             subtitle: tr('File an issue on GitHub with the diagnostics and error log attached'),
             leading: const Icon(AppIcons.chatCenteredText),
-            onTap: () => openExternal('$_repository/issues'),
+            onTap: () => openExternal('$_repository/issues/new/choose'),
           ), subtitle: 'issue bug'),
       SettingEntry(tr('Error log'), (context) => NormalItem(
             title: tr('Error log'),
@@ -1151,7 +1151,7 @@ class _LogsPageState extends State<_LogsPage> {
           PopupMenuButton<int>(
             onSelected: (value) => switch (value) {
               0 => copyText(context, text ?? '', tr('Copied')),
-              1 => openExternal('$_repository/issues'),
+              1 => openExternal('$_repository/issues/new/choose'),
               2 => _directory == null ? null : openExternal(_directory!.path),
               _ => _clear(),
             },

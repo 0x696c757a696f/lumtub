@@ -550,7 +550,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('Invidious instance speed test list update instance')),
         SettingEntry(tr('Network proxy'), (context) {
           final proxy = controller.proxy;
-          final now = proxy.url == null ? tr('Currently connecting directly') : tr('Currently using {0}{1}', [proxy.url, proxy.isHttp ? '' : tr("(Video streams don't support this proxy type and connect directly)")]);
+          final now = proxy.url == null ? tr('Currently connecting directly') : tr('Currently using {0}{1}', [proxy.url, '']);
           return NormalItem(
             title: tr('Network proxy'),
             subtitle: tr('{0}. {1}', [settings.proxyMode.label, now]),

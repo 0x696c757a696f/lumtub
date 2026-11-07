@@ -127,6 +127,20 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
     expect((await NetworkProxy.mac(scutil: () async => null)).url, isNull);
   });
 
+  test('a PAC script set on macOS or GNOME gives the proxy it names', () async {
+    const pac = '<dictionary> {\n  HTTPEnable : 0\n  ProxyAutoConfigEnable : 1\n  ProxyAutoConfigURLString : http://127.0.0.1:7890/pac\n}';
+    final asked = <String>[];
+    Future<String?> fetch(String url) async {
+      asked.add(url);
+      return 'socks5h://127.0.0.1:7890';
+    }
+    expect((await NetworkProxy.mac(scutil: () async => pac, fetchPac: fetch)).url, 'socks5h://127.0.0.1:7890');
+    final gnome = {'org.gnome.system.proxy mode': 'auto', 'org.gnome.system.proxy autoconfig-url': 'file:///etc/proxy.pac'};
+    expect((await NetworkProxy.linux(environment: const {}, gsettings: (key) async => gnome[key], fetchPac: fetch)).url, 'socks5h://127.0.0.1:7890');
+    expect(asked, ['http://127.0.0.1:7890/pac', 'file:///etc/proxy.pac']);
+    expect((await NetworkProxy.pac('http://x/pac', fetch: (_) async => null)).url, isNull);
+  });
+
   test('an update replaces the AppImage by rename, keeping the running file intact', () async {
     final temp = await Directory.systemTemp.createTemp('lumtub-appimage');
     addTearDown(() => temp.delete(recursive: true));

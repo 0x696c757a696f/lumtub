@@ -48,6 +48,41 @@ pub enum Language {
     Bn,
     Ta,
     Te,
+    Af,
+    Am,
+    Az,
+    Be,
+    Bg,
+    Eo,
+    Et,
+    Eu,
+    Gl,
+    Gu,
+    Hy,
+    Is,
+    Jv,
+    Ka,
+    Km,
+    Kn,
+    La,
+    Lo,
+    Lt,
+    Lv,
+    Mk,
+    Ml,
+    Mn,
+    Mr,
+    My,
+    Ne,
+    Pa,
+    Si,
+    Sk,
+    Sq,
+    Su,
+    Sw,
+    Ti,
+    Tk,
+    Uz,
 }
 
 const VIETNAMESE: &str = "ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ";
@@ -148,8 +183,28 @@ pub fn title_language(title: &str) -> Language {
     if any_in(title, &[(0x0E00, 0x0E7F)]) {
         return Language::Th;
     }
+    // Scripts of one language each among explore's.
+    for (ranges, language) in [
+        (&[(0x0A80u32, 0x0AFFu32)][..], Language::Gu),
+        (&[(0x0A00, 0x0A7F)], Language::Pa),
+        (&[(0x0C80, 0x0CFF)], Language::Kn),
+        (&[(0x0D00, 0x0D7F)], Language::Ml),
+        (&[(0x0D80, 0x0DFF)], Language::Si),
+        (&[(0x0E80, 0x0EFF)], Language::Lo),
+        (&[(0x1000, 0x109F)], Language::My),
+        (&[(0x10A0, 0x10FF), (0x1C90, 0x1CBF)], Language::Ka),
+        (&[(0x0530, 0x058F)], Language::Hy),
+        (&[(0x1780, 0x17FF)], Language::Km),
+        // Ge'ez: Amharic, the more common of the two that write it.
+        (&[(0x1200, 0x137F)], Language::Am),
+    ] {
+        if any_in(title, ranges) {
+            return language;
+        }
+    }
     if any_in(title, &[(0x0900, 0x097F)]) {
-        return Language::Hi;
+        // Devanagari: Hindi unless the words are Marathi's or Nepali's.
+        return devanagari(title).unwrap_or(Language::Hi);
     }
     if any_in(title, &[(0x0980, 0x09FF)]) {
         return Language::Bn;
@@ -177,10 +232,20 @@ pub fn title_language(title: &str) -> Language {
         return Language::Ar;
     }
     if any_in(title, &[(0x0400, 0x04FF)]) {
-        if title.to_lowercase().contains(['і', 'ї', 'є', 'ґ']) {
+        let lower = title.to_lowercase();
+        if lower.contains(['ї', 'є', 'ґ']) {
             return Language::Uk;
         }
-        return Language::Ru;
+        if lower.contains('ў') {
+            return Language::Be;
+        }
+        if lower.contains(['ѓ', 'ќ', 'ѕ', 'љ', 'њ', 'џ']) {
+            return Language::Mk;
+        }
+        if lower.contains(['ө', 'ү']) {
+            return Language::Mn;
+        }
+        return cyrillic(title).unwrap_or(if lower.contains('і') { Language::Uk } else { Language::Ru });
     }
     let lower = title.to_lowercase();
     if lower.chars().any(|c| VIETNAMESE.contains(c)) {
@@ -221,9 +286,41 @@ fn latin_detector() -> &'static whatlang::Detector {
     static DETECTOR: std::sync::OnceLock<whatlang::Detector> = std::sync::OnceLock::new();
     DETECTOR.get_or_init(|| {
         whatlang::Detector::with_allowlist(vec![
-            Eng, Spa, Fra, Deu, Por, Ita, Nld, Tur, Ind, Tgl, Pol, Ces, Slk, Ron, Hun, Swe, Nob, Dan, Fin,
+            Eng, Spa, Fra, Deu, Por, Ita, Nld, Tur, Ind, Tgl, Pol, Ces, Slk, Ron, Hun, Swe, Nob, Dan, Fin, Aze, Epo,
+            Est, Jav, Lat, Lit, Lav, Tuk, Uzb,
         ])
     })
+}
+
+/// The language whatlang reads [title] as among [langs], which share its
+/// script (Devanagari or Cyrillic), when it is sure enough.
+fn shared_script(cell: &'static std::sync::OnceLock<whatlang::Detector>, langs: &[whatlang::Lang], title: &str) -> Option<Language> {
+    use whatlang::Lang::*;
+    let detector = cell.get_or_init(|| whatlang::Detector::with_allowlist(langs.to_vec()));
+    let info = detector.detect(title).filter(|info| info.confidence() >= 0.5)?;
+    Some(match info.lang() {
+        Hin => Language::Hi,
+        Mar => Language::Mr,
+        Nep => Language::Ne,
+        Rus => Language::Ru,
+        Ukr => Language::Uk,
+        Bel => Language::Be,
+        Bul => Language::Bg,
+        Mkd => Language::Mk,
+        _ => return None,
+    })
+}
+
+fn devanagari(title: &str) -> Option<Language> {
+    use whatlang::Lang::*;
+    static DETECTOR: std::sync::OnceLock<whatlang::Detector> = std::sync::OnceLock::new();
+    shared_script(&DETECTOR, &[Hin, Mar, Nep], title)
+}
+
+fn cyrillic(title: &str) -> Option<Language> {
+    use whatlang::Lang::*;
+    static DETECTOR: std::sync::OnceLock<whatlang::Detector> = std::sync::OnceLock::new();
+    shared_script(&DETECTOR, &[Rus, Ukr, Bel, Bul, Mkd], title)
 }
 
 fn latin_language(lang: whatlang::Lang) -> Option<Language> {
@@ -240,7 +337,17 @@ fn latin_language(lang: whatlang::Lang) -> Option<Language> {
         Ind => Language::Id,
         Tgl => Language::Tl,
         Pol => Language::Pl,
-        Ces | Slk => Language::Cs,
+        Ces => Language::Cs,
+        Slk => Language::Sk,
+        Aze => Language::Az,
+        Epo => Language::Eo,
+        Est => Language::Et,
+        Jav => Language::Jv,
+        Lat => Language::La,
+        Lit => Language::Lt,
+        Lav => Language::Lv,
+        Tuk => Language::Tk,
+        Uzb => Language::Uz,
         Ron => Language::Ro,
         Hun => Language::Hu,
         Swe => Language::Sv,
@@ -515,6 +622,25 @@ mod tests {
         assert_eq!(title_language("Hoe maak je de lekkerste appeltaart van Nederland"), Language::Nl);
         assert_eq!(title_language("Jak zrobić najlepszą pizzę w domu"), Language::Pl);
         assert_eq!(title_language("Evde en güzel pizza nasıl yapılır"), Language::Tr);
+        assert_eq!(title_language("ગુજરાતી ભોજન બનાવવાની રીત"), Language::Gu);
+        assert_eq!(title_language("ಬೆಂಗಳೂರು ನಗರ ಪ್ರವಾಸ"), Language::Kn);
+        assert_eq!(title_language("ശ്രീലങ്കൻ യാത്ര"), Language::Ml);
+        assert_eq!(title_language("ශ්‍රී ලංකා සංචාරය"), Language::Si);
+        assert_eq!(title_language("ອາຫານລາວ"), Language::Lo);
+        assert_eq!(title_language("မြန်မာ သီချင်း"), Language::My);
+        assert_eq!(title_language("საქართველოს ისტორია"), Language::Ka);
+        assert_eq!(title_language("Հայաստանի պատմություն"), Language::Hy);
+        assert_eq!(title_language("ប្រវត្តិសាស្ត្រកម្ពុជា"), Language::Km);
+        assert_eq!(title_language("የኢትዮጵያ ታሪክ"), Language::Am);
+        assert_eq!(title_language("ਪੰਜਾਬੀ ਗੀਤ"), Language::Pa);
+        assert_eq!(title_language("Гісторыя Беларусі ў XX стагоддзі"), Language::Be);
+        assert_eq!(title_language("Историја на Македонија и Охрид, ѕвездите"), Language::Mk);
+        assert_eq!(title_language("Монгол улсын түүх"), Language::Mn);
+        assert_eq!(title_language("Как да си направим най-хубавата баница у дома"), Language::Bg);
+        assert_eq!(title_language("भारत का इतिहास और संस्कृति"), Language::Hi);
+        assert_eq!(title_language("Kaip išsikepti skaniausią duoną namuose"), Language::Lt);
+        assert_eq!(title_language("Kā pagatavot garšīgāko maizi mājās"), Language::Lv);
+        assert_eq!(title_language("Ako upiecť najlepší chlieb doma za hodinu"), Language::Sk);
     }
 
     #[test]

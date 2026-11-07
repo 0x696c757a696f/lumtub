@@ -49,7 +49,7 @@ void main() {
     ]);
     final kept = await languages.only(lines, ExploreLanguage.zh).toList();
     final titles = [for (final line in kept) (jsonDecode(line) as Map)['title']];
-    expect(titles, unorderedEquals(['成都美食之旅', 'A channel', '中文标题']));
+    expect(titles, ['A channel', '成都美食之旅', '中文标题'], reason: 'videos keep the order listed');
     // An answer without captions is asked again whole and of the TV app,
     // in case either has them.
     expect(asked, 7, reason: 'every video is asked about');
@@ -133,10 +133,15 @@ void main() {
     expect(hls.toSet(), {'en'});
     hls.clear();
     final italian = await languages.of('aaaaaaaaaaa', asking: ExploreLanguage.it);
-    expect(italian?.language, ExploreLanguage.it);
+    // Only a guess from a title the uploader may have translated: the
+    // strict filter does not take it.
+    expect((italian?.language, italian?.source), (ExploreLanguage.it, 'text'));
     expect(hls.toSet(), {'it'});
     hls.clear();
     await languages.of('aaaaaaaaaaa', asking: ExploreLanguage.it);
     expect(hls, isEmpty, reason: 'the answer asked in Italian is kept');
+    final line = _video('aaaaaaaaaaa', 'Our trip to Sicily with the family');
+    expect(await languages.only(Stream.value(line), ExploreLanguage.it, heardOnly: true).toList(), isEmpty);
+    expect(await languages.only(Stream.value(line), ExploreLanguage.it).toList(), hasLength(1));
   }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
 }

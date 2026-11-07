@@ -238,6 +238,13 @@ pub fn connect(proxy: &Proxy, host: &str, port: u16) -> std::io::Result<TcpStrea
 
 /// As [connect], with the proxy's address already resolved when known.
 fn connect_to(proxy: &Proxy, address: Option<SocketAddr>, host: &str, port: u16) -> std::io::Result<TcpStream> {
+    // This PC (the app's own relay) is reached directly: through the proxy,
+    // 127.0.0.1 would be the proxy server's own machine.
+    if host.eq_ignore_ascii_case("localhost") || host.parse::<IpAddr>().is_ok_and(|ip| ip.is_loopback()) {
+        let socket = TcpStream::connect((host, port))?;
+        socket.set_nodelay(true)?;
+        return Ok(socket);
+    }
     let address = match address {
         Some(address) => address,
         None => (proxy.host.as_str(), proxy.port).to_socket_addrs()?.next().ok_or_else(|| err("no address for the SOCKS proxy"))?,

@@ -1,0 +1,53 @@
+name: Bug report / 问题反馈
+description: Something does not work as it should / 某个功能不正常
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please search the [existing issues](https://github.com/0x696c757a696f/lumtub/issues?q=is%3Aissue) first.
+        感谢反馈！请先搜索一下[已有的 issue](https://github.com/0x696c757a696f/lumtub/issues?q=is%3Aissue)。
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened / 发生了什么
+      description: What you saw, and what you expected instead. Screenshots help. / 你看到了什么，原本期望怎样。可以附截图。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 复现步骤
+      description: The video link helps a lot if it only happens with some videos. / 如果只在某些视频出现，请附上视频链接。
+      placeholder: |
+        1. Open …
+        2. Click …
+        3. …
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: System / 系统
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics / 诊断信息
+      description: In Lumtub, Settings › About › Copy diagnostics, then paste here. It has the version, system, graphics card, components and playback settings. / 在 Lumtub 的 设置 › 关于 › 复制诊断信息，然后粘贴到这里。里面有版本、系统、显卡、组件和播放设置。
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log / 日志
+      description: |
+        Settings › About › Error log, or attach the file. It holds no passwords or stream addresses.
+        设置 › 关于 › 错误日志，或者直接附上日志文件。日志里不含密码和视频地址。
+        Windows: `%LOCALAPPDATA%\Lumtub\logs\lumtub.log` · macOS: `~/Library/Application Support/Lumtub/logs/lumtub.log` · Linux: `~/.local/share/lumtub/logs/lumtub.log`

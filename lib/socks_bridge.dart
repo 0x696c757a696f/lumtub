@@ -195,6 +195,11 @@ class _Reader {
 /// Opens a tunnel to [host]:[port] through the SOCKS proxy [proxy]. socks5h
 /// and socks4a send the name to the proxy; socks5 and socks4 resolve it here.
 Future<_Reader> _connectViaSocks(Uri proxy, String host, int port) async {
+  // This PC (the app's own relay) is reached directly: through the proxy,
+  // 127.0.0.1 would be the proxy server's own machine.
+  if (host.toLowerCase() == 'localhost' || (InternetAddress.tryParse(host)?.isLoopback ?? false)) {
+    return _Reader(await Socket.connect(host, port, timeout: _timeout));
+  }
   final socket = await Socket.connect(proxy.host, proxy.port, timeout: _timeout);
   final reader = _Reader(socket);
   try {

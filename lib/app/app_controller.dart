@@ -431,8 +431,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     final core = NativeCore.instance;
     final videoId = playing?.id;
     if (core == null || videoId == null) throw StateError('no lumtub_core');
-    // The cast server fetches YouTube itself, directly or through an HTTP proxy.
-    if (proxy.url != null && !proxy.isHttp) throw StateError('a SOCKS proxy is set');
+    // The cast server fetches YouTube itself, directly or through the proxy.
     final port = core.castStart();
     if (port == 0) throw StateError('the cast server could not listen');
     final socket = await Socket.connect(device.host, device.port, timeout: const Duration(seconds: 4));
@@ -1603,7 +1602,14 @@ class AppController extends ChangeNotifier with _ExploreState {
           if (_quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
             _quickSerial = serial;
             final full = pending;
-            pending = Future.any([full, streams.quick(item.id, format, FormatPolicy.settingsJson(_playback)).then((quick) => quick ?? full)]);
+            pending = Future.any([
+              full,
+              streams.quick(item.id, format, FormatPolicy.settingsJson(_playback)).then((quick) {
+                if (quick == null) return full;
+                streams.unhurried(item.id);
+                return quick;
+              }),
+            ]);
           }
           video = await pending;
         } catch (e) {
@@ -1627,10 +1633,10 @@ class AppController extends ChangeNotifier with _ExploreState {
       final live = item.isLive;
       // A live stream starts at its live edge, not at a remembered spot.
       if (live) start = null;
-      // Through the relay when the app's own connections reach YouTube the
-      // way libmpv's would: directly or through an HTTP proxy.
+      // Through the relay, which reaches YouTube as libmpv would: directly
+      // or through the proxy, a SOCKS one too.
       // A video whose stream broke through it is reopened without it.
-      final relay = (proxy.url == null || proxy.isHttp) && _unrelayed != item.id ? _relay : null;
+      final relay = _unrelayed != item.id ? _relay : null;
       final agent = video?.userAgent;
       // Subtitles are added by the app (see _autoSubtitles), so they do not
       // need ytdl_hook: through it libmpv reads the streams itself, slowly

@@ -25,12 +25,7 @@ http.Client appHttpClient() {
 
 /// [url] for the Rust client, which reaches a SOCKS proxy itself. Names are
 /// looked up by the proxy, as the bridge does, so blocked DNS does not matter.
-String? nativeProxy(String? url) {
-  if (url == null) return null;
-  if (url.startsWith('socks5://')) return 'socks5h://${url.substring(9)}';
-  if (url.startsWith('socks4://')) return 'socks4a://${url.substring(9)}';
-  return url;
-}
+String? nativeProxy(String? url) => NetworkProxy.remoteDns(url);
 
 /// The Rust side of [NativeHttpClient], shared by every client.
 abstract final class NativeHttp {

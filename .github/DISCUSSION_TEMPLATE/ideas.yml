@@ -1,0 +1,8 @@
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea / 你的想法
+      description: What it would help with, and how you picture it. / 想解决什么问题，你设想怎么用。
+    validations:
+      required: true

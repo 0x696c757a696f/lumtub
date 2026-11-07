@@ -2474,8 +2474,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   }
 
   /// How far behind its live edge a live stream may play before the
-  /// player offers to jump back to it.
-  static const liveBehind = Duration(seconds: 20);
+  /// player offers to jump back to it. A split stream above 1080p starts
+  /// about 20 s behind on purpose (see relay_live.rs BEHIND).
+  static const liveBehind = Duration(seconds: 30);
 
   /// Jumps a live stream to its newest moment, at normal speed, playing.
   /// The last seconds are left alone: libmpv at the very end of a live

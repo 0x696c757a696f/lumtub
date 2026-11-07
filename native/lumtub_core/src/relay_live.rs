@@ -15,8 +15,11 @@ use std::io::{Read, Write};
 use std::time::{Duration, Instant};
 
 /// Fragments behind the newest a stream starts at, so libmpv can fill its
-/// cache before it reaches the edge.
-pub const BEHIND: u64 = 3;
+/// cache before it reaches the edge. About 20 s, near YouTube's own player:
+/// with 3 (about 6 s) every pause in a broadcaster's upload longer than
+/// that stopped the picture (the user's log: no new fragment for a minute,
+/// and stalls between).
+pub const BEHIND: u64 = 10;
 /// Fragments asked for at once while there are that many to catch up on.
 const AT_ONCE: usize = 3;
 /// How long a fragment may stay unavailable before the stream ends and the
@@ -303,7 +306,7 @@ mod tests {
         assert!(!text.contains("Content-Length"));
         let served: Vec<u64> = body(&client).split(';').filter(|s| !s.is_empty()).map(|s| s.parse().unwrap()).collect();
         assert!(served.len() > 10, "{served:?}");
-        let expected: Vec<u64> = (97..97 + served.len() as u64).collect();
+        let expected: Vec<u64> = (100 - BEHIND..100 - BEHIND + served.len() as u64).collect();
         assert_eq!(served, expected);
         // The old sq of the address is replaced, never sent twice.
         assert!(live.calls.lock().unwrap().iter().all(|url| url.matches("sq=").count() <= 1 && !url.contains("sq=7")));
@@ -319,18 +322,18 @@ mod tests {
         let audio = Live::new(52);
         let mut second = Client { bytes: vec![], limit: 120 };
         stream(&mut second, &target(), &audio, start, |_| {});
-        assert!(body(&first).starts_with("47;"));
-        assert!(body(&second).starts_with("47;"));
+        assert!(body(&first).starts_with(&format!("{};", 50 - BEHIND)));
+        assert!(body(&second).starts_with(&format!("{};", 50 - BEHIND)));
     }
 
     #[test]
     fn a_refused_fragment_ends_the_stream() {
-        let mut live = Live::new(10);
-        live.refuse_from = Some(9);
+        let mut live = Live::new(20);
+        live.refuse_from = Some(20 - BEHIND + 2);
         let mut client = Client { bytes: vec![], limit: usize::MAX };
         let lines = Mutex::new(vec![]);
         stream(&mut client, &target(), &live, |head| head - BEHIND, |line| lines.lock().unwrap().push(line));
-        assert_eq!(body(&client), "7;8;");
+        assert_eq!(body(&client), format!("{};{};", 20 - BEHIND, 21 - BEHIND));
         assert!(lines.lock().unwrap().iter().any(|l| l.contains("403")));
     }
 
@@ -368,7 +371,7 @@ mod tests {
         let lines = Mutex::new(vec![]);
         let mut client = Client { bytes: vec![], limit: 120 };
         stream(&mut client, &target(), &busy, |head| head - BEHIND, |line| lines.lock().unwrap().push(line));
-        assert!(body(&client).starts_with("17;"), "{}", body(&client));
+        assert!(body(&client).starts_with(&format!("{};", 20 - BEHIND)), "{}", body(&client));
         assert_eq!(lines.lock().unwrap().len(), 2);
     }
 

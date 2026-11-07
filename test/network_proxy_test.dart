@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/network_proxy.dart';
 import 'package:lumtub/player_option_applicator.dart';
 import 'package:lumtub/player_settings.dart';
@@ -30,6 +31,17 @@ void main() {
     expect(NetworkProxy.remoteDns('http://h:1'), 'http://h:1');
     expect((await NetworkProxy.resolve(ProxyMode.custom, 'socks5://127.0.0.1:7891')).url, 'socks5h://127.0.0.1:7891');
   });
+
+  test('the proxy a PAC script names is read by lumtub_core', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    server.listen((request) => request.response
+      ..write('function FindProxyForURL(url, host) { if (shExpMatch(host, "*.lan")) return "DIRECT"; return "PROXY 127.0.0.1:7890; DIRECT"; }')
+      ..close());
+    final port = server.port;
+    expect((await NetworkProxy.pac('http://127.0.0.1:$port/proxy.pac')).url, 'http://127.0.0.1:7890');
+    await server.close(force: true);
+    expect((await NetworkProxy.pac('http://127.0.0.1:$port/proxy.pac')).url, isNull);
+  }, skip: NativeCore.instance == null ? 'needs lumtub_core' : null);
 
   test('tells yt-dlp to connect directly only when the proxy is off', () {
     expect(NetworkProxy.direct.ytDlpValue(ProxyMode.off), '');

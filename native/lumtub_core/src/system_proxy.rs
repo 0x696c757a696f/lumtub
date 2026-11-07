@@ -8,6 +8,8 @@ use std::os::raw::c_char;
 pub struct SystemProxy {
     pub enabled: bool,
     pub server: String,
+    /// The address of the proxy auto-config script (AutoConfigURL), if set.
+    pub pac: String,
 }
 
 #[cfg(windows)]
@@ -24,23 +26,27 @@ pub fn read() -> Option<SystemProxy> {
         RegGetValueW(HKEY_CURRENT_USER, key.as_ptr(), wide("ProxyEnable").as_ptr(), RRF_RT_REG_DWORD, std::ptr::null_mut(), (&raw mut enabled).cast(), &mut size)
     };
     if status != 0 {
-        return Some(SystemProxy { enabled: false, server: String::new() });
+        enabled = 0;
     }
-    let name = wide("ProxyServer");
-    let mut size = 0u32;
-    let status = unsafe { RegGetValueW(HKEY_CURRENT_USER, key.as_ptr(), name.as_ptr(), RRF_RT_REG_SZ, std::ptr::null_mut(), std::ptr::null_mut(), &mut size) };
-    let mut server = String::new();
-    if status == 0 && size > 0 {
+    let string = |name: &str| {
+        let name = wide(name);
+        let mut size = 0u32;
+        let status = unsafe { RegGetValueW(HKEY_CURRENT_USER, key.as_ptr(), name.as_ptr(), RRF_RT_REG_SZ, std::ptr::null_mut(), std::ptr::null_mut(), &mut size) };
+        if status != 0 || size == 0 {
+            return String::new();
+        }
         let mut buffer = vec![0u16; (size as usize).div_ceil(2)];
         let status = unsafe {
             RegGetValueW(HKEY_CURRENT_USER, key.as_ptr(), name.as_ptr(), RRF_RT_REG_SZ, std::ptr::null_mut(), buffer.as_mut_ptr().cast(), &mut size)
         };
-        if status == 0 {
-            let end = buffer.iter().position(|&c| c == 0).unwrap_or(buffer.len());
-            server = String::from_utf16_lossy(&buffer[..end]).trim().to_owned();
+        if status != 0 {
+            return String::new();
         }
-    }
-    Some(SystemProxy { enabled: enabled != 0, server })
+        let end = buffer.iter().position(|&c| c == 0).unwrap_or(buffer.len());
+        String::from_utf16_lossy(&buffer[..end]).trim().to_owned()
+    };
+    let (server, pac) = (string("ProxyServer"), string("AutoConfigURL"));
+    Some(SystemProxy { enabled: enabled != 0, server, pac })
 }
 
 #[cfg(not(windows))]
@@ -48,7 +54,7 @@ pub fn read() -> Option<SystemProxy> {
     None
 }
 
-/// [read] as JSON `{enabled, server}`, or null off Windows.
+/// [read] as JSON `{enabled, server, pac}`, or null off Windows.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_system_proxy() -> *mut c_char {
     read().map_or(std::ptr::null_mut(), |proxy| crate::taste::give_json(&proxy))

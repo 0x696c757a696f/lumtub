@@ -300,7 +300,20 @@ class ChromecastDevice implements CastDevice {
           'contentType': media.mime,
           'streamType': 'BUFFERED',
           'metadata': {'metadataType': 0, 'title': media.title},
+          if (media.subtitles case final subtitles?)
+            'tracks': [
+              {
+                'trackId': 1,
+                'type': 'TEXT',
+                'subtype': 'SUBTITLES',
+                'trackContentId': subtitles.vtt,
+                'trackContentType': 'text/vtt',
+                'name': media.title,
+                if (subtitles.language case final language?) 'language': language,
+              },
+            ],
         },
+        if (media.subtitles != null) 'activeTrackIds': [1],
       }, timeout: const Duration(seconds: 20));
       if (reply['type'] != 'MEDIA_STATUS') throw CastException('${reply['type']}${reply['reason'] != null ? ': ${reply['reason']}' : ''}');
       final status = parseMediaStatus(reply);

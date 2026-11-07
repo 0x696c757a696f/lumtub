@@ -162,6 +162,25 @@ extension SubtitleActions on AppController {
     return pairSubtitleCues(main, await secondCues());
   }
 
+  /// The lines to cast with the video: the subtitle shown, with the second
+  /// one above it when that is on too, or the second alone; empty when
+  /// none is shown or its lines cannot be read.
+  Future<({List<SubtitleCue> cues, String? language})> castSubtitleCues() async {
+    final player = this.player;
+    final platform = player?.platform;
+    if (player == null || platform is! NativePlayer) return (cues: const <SubtitleCue>[], language: null);
+    final shown = await _mpvSubtitles(platform);
+    final track = shown?.main ?? player.state.track.subtitle;
+    final off = track.id == 'no' || track.id == 'auto';
+    final second = secondarySubtitle;
+    final secondId = shown?.second ?? secondaryTrackId;
+    final secondTrack = second != null || secondId == 'no' ? null : shown?.tracks[secondId] ?? player.state.tracks.subtitle.where((t) => t.id == secondId).firstOrNull;
+    final main = off ? const <SubtitleCue>[] : await _trackCues(platform, track);
+    final other = second != null ? await _optionCues(second) : secondTrack != null ? await _trackCues(platform, secondTrack) : const <SubtitleCue>[];
+    final language = off ? second?.language ?? secondTrack?.language : track.language;
+    return (cues: castSubtitleLines(main, other), language: language);
+  }
+
   /// [chapterTranslation] when it is the playing video's.
   List<String>? get translatedChapters => playing != null && chapterTranslationOf == playing!.id ? chapterTranslation : null;
 

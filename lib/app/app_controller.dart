@@ -44,6 +44,7 @@ import '../live_chat.dart';
 import '../models.dart';
 import '../network_proxy.dart';
 import '../socks_bridge.dart';
+import '../cast/cast_subtitles.dart';
 import '../cast/cast_controller.dart';
 import '../channel_playback.dart';
 import '../speech_subtitles.dart';
@@ -388,6 +389,9 @@ class AppController extends ChangeNotifier with _ExploreState {
     final item = playing;
     if (item == null || item.isLive || _repository == null) throw CastException(tr('No stream can be cast (a single MP4 address with sound is needed)'));
     final title = details?.title.isNotEmpty == true ? details!.title : item.title;
+    // What is shown now goes to the TV too: one subtitle, or two.
+    final subtitles = await castSubtitleCues();
+    if (subtitles.cues.isNotEmpty) logInfo('Cast: with ${subtitles.cues.length} subtitle lines');
     CastSource? source;
     Map<String, dynamic>? info;
     try {
@@ -400,7 +404,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       final split = castSplitFromYtDlp(info, maxHeight: preferences.castMaxHeight);
       if (split != null && split.height > (source?.height ?? 0)) {
         try {
-          return await _joinedCast(split, device, start, title, info);
+          return await _joinedCast(split, device, start, title, info, subtitles);
         } catch (e) {
           logWarn('Cast: could not join the ${split.height}p picture with its sound: $e');
         }
@@ -416,7 +420,23 @@ class AppController extends ChangeNotifier with _ExploreState {
     }
     if (source == null) throw CastException(tr('No stream can be cast (a single MP4 address with sound is needed)'));
     logInfo('Casting the ${source.height}p file with picture and sound together');
-    return CastMedia(url: source.url, title: title, mime: source.mime, start: start);
+    CastSubtitles? lines;
+    if (subtitles.cues.isNotEmpty) {
+      try {
+        lines = await CastSubtitleServer.instance.register(subtitles.cues, host: await _addressFacing(device), language: subtitles.language);
+      } catch (e) {
+        logWarn('Cast: could not serve the subtitles: $e');
+      }
+    }
+    return CastMedia(url: source.url, title: title, mime: source.mime, start: start, subtitles: lines);
+  }
+
+  /// This PC's address on the network [device] is on.
+  static Future<String> _addressFacing(CastDevice device) async {
+    final socket = await Socket.connect(device.host, device.port, timeout: const Duration(seconds: 4));
+    final here = socket.address.address;
+    socket.destroy();
+    return here;
   }
 
   Timer? _castWatch;
@@ -432,16 +452,14 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// inside [_joinedCast] would carry its timer along, which cannot be sent.
   static Future<String> _castRegister(String ask) => Isolate.run(() => NativeCore.instance?.castRegister(ask) ?? '{"error":"no lumtub_core"}');
 
-  Future<CastMedia> _joinedCast(CastSplit split, CastDevice device, Duration start, String title, Map<String, dynamic> info) async {
+  Future<CastMedia> _joinedCast(CastSplit split, CastDevice device, Duration start, String title, Map<String, dynamic> info, ({List<SubtitleCue> cues, String? language}) subtitles) async {
     final core = NativeCore.instance;
     final videoId = playing?.id;
     if (core == null || videoId == null) throw StateError('no lumtub_core');
     // The cast server fetches YouTube itself, directly or through the proxy.
     final port = core.castStart();
     if (port == 0) throw StateError('the cast server could not listen');
-    final socket = await Socket.connect(device.host, device.port, timeout: const Duration(seconds: 4));
-    final here = socket.address.address;
-    socket.destroy();
+    final here = await _addressFacing(device);
     final ts = device.protocol == CastProtocol.dlna && split.fitsTransportStream;
     final agent = info['http_headers'] is Map ? (info['http_headers'] as Map)['User-Agent']?.toString() : null;
     final duration = info['duration'] is num ? Duration(milliseconds: ((info['duration'] as num) * 1000).round()) : null;
@@ -500,7 +518,16 @@ class AppController extends ChangeNotifier with _ExploreState {
       if (path is! String) throw StateError('${answer['error']}');
       final begins = Duration(milliseconds: (((answer['start'] as num?) ?? 0) * 1000).round());
       logInfo('Casting ${split.height}p${split.fps} ${split.codec} joined by lumtub_core from ${begins.inSeconds} s as ${ts ? 'MPEG-TS' : 'MP4'}');
-      return CastMedia(url: 'http://$here:$port$path', title: title, mime: ts ? 'video/mpeg' : 'video/mp4', offset: begins, duration: duration, restart: from);
+      // The device counts time from where this stream begins.
+      CastSubtitles? lines;
+      if (subtitles.cues.isNotEmpty) {
+        try {
+          lines = await CastSubtitleServer.instance.register(subtitles.cues, host: here, offset: begins, language: subtitles.language);
+        } catch (e) {
+          logWarn('Cast: could not serve the subtitles: $e');
+        }
+      }
+      return CastMedia(url: 'http://$here:$port$path', title: title, mime: ts ? 'video/mpeg' : 'video/mp4', offset: begins, duration: duration, restart: from, subtitles: lines);
     }
 
     return from(start);

@@ -126,12 +126,22 @@ Map<String, String> parseSoapResponse(String xml) {
 /// DIDL-Lite metadata naming the video, which many renderers want. A
 /// stream that is not [seekable] tells the renderer not to ask for byte
 /// ranges.
-String didlLite({required String title, required String url, required String mime, bool seekable = true}) =>
+///
+/// [subtitles] is an SRT address, named the ways renderers look for one:
+/// a second `res` (most), Samsung's `sec:CaptionInfoEx` and the
+/// `upnp:subtitle` some players read. A renderer that knows none of them
+/// plays without.
+String didlLite({required String title, required String url, required String mime, bool seekable = true, String? subtitles}) =>
     '<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:dc="http://purl.org/dc/elements/1.1/" '
-    'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">'
+    'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/"'
+    '${subtitles == null ? '' : ' xmlns:sec="http://www.sec.co.kr/"'}>'
     '<item id="0" parentID="-1" restricted="1"><dc:title>${xmlEscape(title)}</dc:title>'
     '<upnp:class>object.item.videoItem</upnp:class>'
     '<res protocolInfo="http-get:*:$mime:DLNA.ORG_OP=${seekable ? '01' : '00'};DLNA.ORG_FLAGS=01700000000000000000000000000000">${xmlEscape(url)}</res>'
+    '${subtitles == null ? '' : '<res protocolInfo="http-get:*:text/srt:*">${xmlEscape(subtitles)}</res>'
+        '<sec:CaptionInfoEx sec:type="srt">${xmlEscape(subtitles)}</sec:CaptionInfoEx>'
+        '<sec:CaptionInfo sec:type="srt">${xmlEscape(subtitles)}</sec:CaptionInfo>'
+        '<upnp:subtitle>${xmlEscape(subtitles)}</upnp:subtitle>'}'
     '</item></DIDL-Lite>';
 
 /// `H:MM:SS` as UPnP writes positions.
@@ -200,7 +210,7 @@ class DlnaDevice implements CastDevice {
   Future<void> load(CastMedia media) async {
     await _soap('SetAVTransportURI', {
       'CurrentURI': media.url,
-      'CurrentURIMetaData': didlLite(title: media.title, url: media.url, mime: media.mime, seekable: media.restart == null),
+      'CurrentURIMetaData': didlLite(title: media.title, url: media.url, mime: media.mime, seekable: media.restart == null, subtitles: media.subtitles?.srt),
     });
     await _soap('Play', {'Speed': '1'});
     if (media.start > const Duration(seconds: 1)) unawaited(_seekWhenReady(media.start));

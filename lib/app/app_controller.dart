@@ -378,6 +378,17 @@ class AppController extends ChangeNotifier with _ExploreState {
   late final _piped = PipedStreams(_http);
   late final _invidious = InvidiousStreams(_http);
 
+  /// Drops the last video's padding crop before another opens: kept, it
+  /// cuts the new picture to the old one's size, which for a larger video
+  /// shows one corner of it enlarged until the crop is fitted again.
+  static Future<void> _forgetCrop(Player player) async {
+    final platform = player.platform;
+    if (platform is! NativePlayer) return;
+    try {
+      await platform.setProperty('video-crop', '');
+    } catch (_) {}
+  }
+
   /// The TV or Chromecast the video is cast to, if any.
   final cast = CastController();
 
@@ -645,6 +656,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// the dropped-frame checks: the first picture of a run compiles the
   /// shaders and drops frames that later ones do not.
   DateTime _openedAt = DateTime(2000);
+  /// The video libmpv was last told to open; its file loads after.
+  String? _openIssued;
   /// Ten-second windows in a row that dropped a tenth of the frames or more.
   int _dropStreak = 0;
   /// The quality automatic playback is lowered to for this run after
@@ -1708,12 +1721,14 @@ class AppController extends ChangeNotifier with _ExploreState {
           availableFrameRates = video.frameRatesFor(settings);
         });
       }
+      await _forgetCrop(player);
       await player.open(Media(direct ?? split ?? item.url, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;
       _dropStreak = 0;
       _openedAt = DateTime.now();
+      _openIssued = item.id;
       // The decoder is known once frames are shown; resolving the video
       // can take longer than any fixed delay.
       _decoderPending = true;
@@ -1765,12 +1780,14 @@ class AppController extends ChangeNotifier with _ExploreState {
     _lastPosition = start ?? Duration.zero;
     _resumePoint.start(_lastPosition);
     _openedLocal = item.id;
+    await _forgetCrop(player);
     await player.open(Media(local.file.path, start: start), play: play);
     if (serial == _playSerial) _tracking = item;
     _mpvLogLines = 0;
     _lastDrops = 0;
     _dropStreak = 0;
     _openedAt = DateTime.now();
+    _openIssued = item.id;
     _decoderPending = true;
     _update(() {});
     unawaited(_addLocalSubtitles(local, serial));
@@ -1808,12 +1825,14 @@ class AppController extends ChangeNotifier with _ExploreState {
       _resumePoint.start(_lastPosition);
       _openedResolved = null;
       _openedVia = item.id;
+      await _forgetCrop(player);
       await player.open(Media(address, start: start), play: play);
       if (serial == _playSerial) _tracking = item;
       _mpvLogLines = 0;
       _lastDrops = 0;
       _dropStreak = 0;
       _openedAt = DateTime.now();
+      _openIssued = item.id;
       _decoderPending = true;
       _update(() {});
       return true;

@@ -74,6 +74,9 @@ class VideoLanguages {
       final stale = found.source == 'text' && found.language == ExploreLanguage.en && hl != 'en' && (_askedIn[id] ?? 'en') == 'en';
       if (!stale) return found;
     }
+    // YouTube stopped answering this app for now: asking more would only
+    // keep it refusing, playback included. The title judges meanwhile.
+    if (_resting case final until? when DateTime.now().isBefore(until)) return null;
     while (_running >= parallel) {
       final turn = Completer<void>();
       _waiting.add(turn);
@@ -120,8 +123,25 @@ class VideoLanguages {
   static int _compared = 0;
   static const _compare = 8;
 
+  /// Until when no video is asked about, after YouTube left the video out
+  /// of half of the last answers.
+  static DateTime? _resting;
+  static final _recent = <bool>[];
+  static const rest = Duration(minutes: 10);
+
+  static void _answered(bool withVideo) {
+    _recent.add(withVideo);
+    if (_recent.length > 20) _recent.removeAt(0);
+    if (_recent.length < 20 || _recent.where((v) => !v).length < 10) return;
+    _recent.clear();
+    _resting = DateTime.now().add(rest);
+    logWarn('Video languages: YouTube left the video out of half of the last 20 answers; asking none for ${rest.inMinutes} minutes, titles judge meanwhile');
+  }
+
   @visibleForTesting
   static void reset() {
+    _resting = null;
+    _recent.clear();
     _maskDrops = false;
     _tvFirst = false;
     _compared = 0;
@@ -143,8 +163,10 @@ class VideoLanguages {
         _tvFirst = !_tvFirst;
         logInfo('Video languages: ${_tvFirst ? 'the website' : 'the TV app'} answered without the video; asking ${_tvFirst ? 'the TV app' : 'the website'} first');
       }
+      _answered(other != null);
       return other?.spoken;
     }
+    _answered(true);
     if (read.spoken.heard) return read.spoken;
     // Most spoken videos have automatic captions. An answer without them
     // may have lost them to the field mask, or to YouTube answering this

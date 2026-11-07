@@ -156,4 +156,18 @@ void main() {
     final kept = await languages.only(Stream.fromIterable(lines), ExploreLanguage.en, heardOnly: true).toList();
     expect(kept, hasLength(50), reason: 'none could be heard, so the titles decide');
   }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
+  test('stops asking for a while once YouTube leaves the video out', () async {
+    var calls = 0;
+    final client = MockClient((request) async {
+      calls++;
+      return http.Response('{"playabilityStatus":{"status":"LOGIN_REQUIRED"}}', 200);
+    });
+    final languages = VideoLanguages(client);
+    String id(int i) => 'w${i.toString().padLeft(10, '0')}';
+    final lines = [for (var i = 0; i < 60; i++) _video(id(i), 'A long walk through the old town of Edinburgh at night')];
+    final kept = await languages.only(Stream.fromIterable(lines), ExploreLanguage.en).toList();
+    expect(kept, hasLength(60), reason: 'titles judge what could not be asked');
+    // Twenty lookups of two requests each, and a few already running.
+    expect(calls, lessThan(60));
+  }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
 }

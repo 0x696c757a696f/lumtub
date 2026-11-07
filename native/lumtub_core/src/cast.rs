@@ -655,7 +655,7 @@ impl Reader {
                     }
                     return Ok(());
                 }
-                Err(Stop::Refused(status @ (403 | 410))) => {
+                Err(Stop::Refused(status @ (403 | 410), _)) => {
                     self.address.expired.store(true, Ordering::SeqCst);
                     while self.address.get() == tried {
                         if waited >= RENEW_WAIT || self.stop.load(Ordering::Relaxed) {

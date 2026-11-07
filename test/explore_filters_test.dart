@@ -132,6 +132,10 @@ void main() {
   });
 
   test('a search translated word by word keeps each word once', () {
+    expect(searchPhrasesOf('科技 数码 评测'), ['科技', '数码', '评测']);
+    expect(searchPhrasesOf('stand-up comedy live'), ['stand-up comedy live']);
+    expect(searchPhrasesOf('议会 国会 parliament live'), ['议会', '国会', 'parliament live']);
+    expect(searchPhrasesOf(' ゲーム 実況  live stream '), ['ゲーム', '実況', 'live stream']);
     expect(searchWordsOf(['giardinaggio', 'giardinaggio']), 'giardinaggio');
     expect(searchWordsOf(['tavola rotonda', 'discussione', 'Tavola rotonda ', '']), 'tavola rotonda discussione');
     expect(searchWordsOf(['tecnologia', 'digitale', 'recensione']), 'tecnologia digitale recensione');

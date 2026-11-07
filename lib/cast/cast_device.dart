@@ -1,6 +1,8 @@
+import 'cast_subtitles.dart';
+
 /// What a TV or speaker is asked to play.
 class CastMedia {
-  const CastMedia({required this.url, required this.title, this.mime = 'video/mp4', this.start = Duration.zero, this.offset = Duration.zero, this.duration, this.restart});
+  const CastMedia({required this.url, required this.title, this.mime = 'video/mp4', this.start = Duration.zero, this.offset = Duration.zero, this.duration, this.restart, this.subtitles});
   final String url;
   final String title;
   final String mime;
@@ -16,6 +18,9 @@ class CastMedia {
   /// The same video streamed from another position, for a stream the
   /// device cannot seek in itself.
   final Future<CastMedia> Function(Duration at)? restart;
+
+  /// The subtitles shown when the cast began, timed to this stream.
+  final CastSubtitles? subtitles;
 }
 
 enum CastState { loading, playing, paused, stopped }

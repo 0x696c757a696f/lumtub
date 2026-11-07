@@ -397,6 +397,27 @@ final _languages = <String, ExploreLanguage>{};
 
 /// One search from words translated one by one: each kept once, as
 /// "园艺 gardening" translates to the same word twice.
+/// [query] in the pieces a translation keeps the sense of: each Chinese or
+/// Japanese keyword alone, as they are listed apart, and each run of words
+/// in a spaced script together, since "stand-up comedy live" word by word
+/// is "stare in piedi commedia vivere".
+List<String> searchPhrasesOf(String query) {
+  final cjk = RegExp(r'[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]');
+  final phrases = <String>[];
+  var run = <String>[];
+  for (final word in query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty)) {
+    if (cjk.hasMatch(word)) {
+      if (run.isNotEmpty) phrases.add(run.join(' '));
+      run = [];
+      phrases.add(word);
+    } else {
+      run.add(word);
+    }
+  }
+  if (run.isNotEmpty) phrases.add(run.join(' '));
+  return phrases;
+}
+
 String searchWordsOf(List<String> translated) {
   final seen = <String>{};
   return [

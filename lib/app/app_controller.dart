@@ -431,8 +431,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     final core = NativeCore.instance;
     final videoId = playing?.id;
     if (core == null || videoId == null) throw StateError('no lumtub_core');
-    // The cast server fetches YouTube itself, directly or through an HTTP proxy.
-    if (proxy.url != null && !proxy.isHttp) throw StateError('a SOCKS proxy is set');
+    // The cast server fetches YouTube itself, directly or through the proxy.
     final port = core.castStart();
     if (port == 0) throw StateError('the cast server could not listen');
     final socket = await Socket.connect(device.host, device.port, timeout: const Duration(seconds: 4));

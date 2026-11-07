@@ -252,7 +252,7 @@ class ToolManager {
     // The API allows 60 unsigned requests an hour per address, which a
     // shared address can use up; releases that list their SHA-256 sums in
     // a file are still read from github.com itself.
-    final sums = _sumsFiles[repository];
+    final sums = _sumsFileOf(repository);
     if (sums != null && (response.statusCode == 403 || response.statusCode == 429)) {
       try {
         return await _releaseFromSums(repository, sums, tag: tag);
@@ -261,7 +261,16 @@ class ToolManager {
     throw HttpException('GitHub API HTTP ${response.statusCode} for $repository');
   }
 
-  static const _sumsFiles = {'yt-dlp/yt-dlp-nightly-builds': 'SHA2-256SUMS'};
+  /// The file in [repository]'s releases with the SHA-256 sums of the
+  /// packages wanted; Deno has one beside each package.
+  String? _sumsFileOf(String repository) => switch (repository) {
+        'yt-dlp/yt-dlp-nightly-builds' => 'SHA2-256SUMS',
+        'denoland/deno' => '$_denoPackage.sha256sum',
+        _ => null,
+      };
+
+  /// Deno's package for this computer.
+  String get _denoPackage => 'deno-${Platform.isWindows ? 'x86_64-pc-windows-msvc' : Platform.isMacOS ? (_macArm64 ? 'aarch64-apple-darwin' : 'x86_64-apple-darwin') : _linuxArm64 ? 'aarch64-unknown-linux-gnu' : 'x86_64-unknown-linux-gnu'}.zip';
 
   Future<Map<String, dynamic>> _releaseFromSums(String repository, String sumsFile, {String? tag}) async {
     var name = tag;
@@ -532,14 +541,7 @@ class ToolManager {
     final dest = Directory('${root.path}${Platform.pathSeparator}deno${Platform.pathSeparator}$tag');
     if (await File('${dest.path}$_separator${_exe('deno')}').exists()) return;
     status('Downloading Deno {0}…', [tag]);
-    final target = Platform.isWindows
-        ? 'x86_64-pc-windows-msvc'
-        : Platform.isMacOS
-            ? (_macArm64 ? 'aarch64-apple-darwin' : 'x86_64-apple-darwin')
-            : _linuxArm64
-                ? 'aarch64-unknown-linux-gnu'
-                : 'x86_64-unknown-linux-gnu';
-    final asset = _asset(release, (name) => name == 'deno-$target.zip');
+    final asset = _asset(release, (name) => name == _denoPackage);
     final archive = await _downloadVerified(asset, Directory('${root.path}${Platform.pathSeparator}downloads'));
     final partial = Directory('${dest.path}.partial');
     if (await partial.exists()) await partial.delete(recursive: true);

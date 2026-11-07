@@ -2957,5 +2957,7 @@
   "Tech & development": "टेक और डेवलपमेंट",
   "Health & fitness": "स्वास्थ्य और फ़िटनेस",
   "24/7 live": "24/7 लाइव",
-  "{0} watching": "{0} लोग देख रहे हैं"
+  "{0} watching": "{0} लोग देख रहे हैं",
+  "Color temperature": "रंग तापमान",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, कम मान यानी ज़्यादा गर्म; शेड्यूल पर यह एक घंटे में धीरे-धीरे बदलता है"
 }

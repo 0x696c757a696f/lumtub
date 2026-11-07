@@ -2957,5 +2957,7 @@
   "Tech & development": "فناوری و توسعه",
   "Health & fitness": "سلامت و تناسب اندام",
   "24/7 live": "پخش زنده 24 ساعته",
-  "{0} watching": "{0} نفر در حال تماشا"
+  "{0} watching": "{0} نفر در حال تماشا",
+  "Color temperature": "دمای رنگ",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K، هرچه کمتر باشد گرم‌تر است؛ در حالت زمان‌بندی، طی یک ساعت تغییر می‌کند"
 }

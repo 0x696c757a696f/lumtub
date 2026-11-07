@@ -2957,5 +2957,7 @@
   "Tech & development": "Công nghệ & phát triển",
   "Health & fitness": "Sức khỏe & thể hình",
   "24/7 live": "Trực tiếp 24/7",
-  "{0} watching": "{0} người đang xem"
+  "{0} watching": "{0} người đang xem",
+  "Color temperature": "Nhiệt độ màu",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, càng thấp càng ấm; khi đặt lịch, màu thay đổi dần trong một giờ"
 }

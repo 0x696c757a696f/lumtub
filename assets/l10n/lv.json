@@ -2957,5 +2957,7 @@
   "Tech & development": "Tehnoloģijas un izstrāde",
   "Health & fitness": "Veselība un fitness",
   "24/7 live": "Tiešraides 24/7",
-  "{0} watching": "Skatās: {0}"
+  "{0} watching": "Skatās: {0}",
+  "Color temperature": "Krāsu temperatūra",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, zemāka vērtība nozīmē siltāku; pēc grafika tā mainās stundas laikā"
 }

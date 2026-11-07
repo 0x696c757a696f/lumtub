@@ -2957,5 +2957,7 @@
   "Tech & development": "テック・開発",
   "Health & fitness": "健康・フィットネス",
   "24/7 live": "24時間ライブ",
-  "{0} watching": "{0} 人が視聴中"
+  "{0} watching": "{0} 人が視聴中",
+  "Color temperature": "色温度",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K、低いほど暖かい色になります。スケジュール設定時は1時間かけて徐々に変化します"
 }

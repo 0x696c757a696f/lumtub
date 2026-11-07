@@ -225,8 +225,15 @@ class AppearanceSettings {
   /// A [Palette] id from lib/ui/palettes.dart, or '' for the neutral one.
   final String palette;
   final EyeCare eyeCare;
-  /// How warm 护眼暖色 makes the window, 0.1 to 1.
+  /// How warm 护眼暖色 makes the window, 0.1 to 1: the colour
+  /// temperature of the light, from 6040 K down to 1900 K
+  /// ([kelvinOf], [warmthOf]).
   final double warmth;
+
+  /// The colour temperature [warmth] stands for, and back: the window is
+  /// white at 6500 K, a candle at 1900 K.
+  static int kelvinOf(double warmth) => (6500 - warmth * 4600).round();
+  static double warmthOf(int kelvin) => ((6500 - kelvin) / 4600).clamp(0.1, 1.0);
   /// [EyeCare.hours]: from this hour until [eyeCareEnd].
   final int eyeCareStart;
   final int eyeCareEnd;
@@ -270,6 +277,23 @@ class AppearanceSettings {
   });
 
   /// Whether 护眼暖色 is on at [now].
+  /// How warm the window is at [now]: [warmth] while the warm light is
+  /// on, and on a schedule, in between for half an hour either side of
+  /// sunset and sunrise or the hours set. It moves in twelve steps of five
+  /// minutes, so the window is redrawn only that often.
+  double warmthAt(DateTime now) {
+    if (eyeCare == EyeCare.off) return 0;
+    if (eyeCare == EyeCare.always) return warmth;
+    final step = DateTime.fromMillisecondsSinceEpoch(now.millisecondsSinceEpoch ~/ _step.inMilliseconds * _step.inMilliseconds);
+    var on = 0;
+    for (var i = -6; i < 6; i++) {
+      if (warmAt(step.add(_step * i + _step ~/ 2))) on++;
+    }
+    return warmth * on / 12;
+  }
+
+  static const _step = Duration(minutes: 5);
+
   bool warmAt(DateTime now) => switch (eyeCare) {
         EyeCare.off => false,
         EyeCare.always => true,

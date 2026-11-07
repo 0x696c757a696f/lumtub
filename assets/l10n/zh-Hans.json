@@ -2957,5 +2957,7 @@
   "Tech & development": "科技与开发",
   "Health & fitness": "健康与健身",
   "24/7 live": "24 小时直播",
-  "{0} watching": "{0}人正在观看"
+  "{0} watching": "{0}人正在观看",
+  "Color temperature": "色温",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K，越低越暖；定时开启时会在一小时内逐渐变化"
 }

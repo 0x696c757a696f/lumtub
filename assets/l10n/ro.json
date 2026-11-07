@@ -2957,5 +2957,7 @@
   "Tech & development": "Tehnologie și dezvoltare",
   "Health & fitness": "Sănătate și fitness",
   "24/7 live": "Live 24/7",
-  "{0} watching": "{0} spectatori"
+  "{0} watching": "{0} spectatori",
+  "Color temperature": "Temperatura culorii",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, mai mic înseamnă mai cald; cu program, se schimbă treptat într-o oră"
 }

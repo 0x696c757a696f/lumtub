@@ -933,12 +933,21 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 },
               )),
         if (appearance.eyeCare != EyeCare.off)
-          SettingEntry(tr('Warmth'), (context) => NormalItem(
-                title: tr('Warmth'),
-                subtitle: tr('Now: {0}%', [(appearance.warmth * 100).round()]),
+          SettingEntry(tr('Color temperature'), (context) => NormalItem(
+                title: tr('Color temperature'),
+                subtitle: tr('{0} K, lower is warmer; on a schedule it changes over an hour', [AppearanceSettings.kelvinOf(appearance.warmth)]),
                 leading: _icon(AppIcons.sun),
-                onTap: () => pickWithSlider(context, title: tr('Warmth'), value: (appearance.warmth * 100).roundToDouble(), min: 10, max: 100, divisions: 18, suffix: '%', onSelected: (v) => saveLooks(appearance.copyWith(warmth: v / 100))),
-              )),
+                onTap: () => pickWithSlider(
+                  context,
+                  title: tr('Color temperature'),
+                  value: (AppearanceSettings.kelvinOf(appearance.warmth) / 100).roundToDouble() * 100,
+                  min: 1900,
+                  max: 6000,
+                  divisions: 41,
+                  suffix: ' K',
+                  onSelected: (v) => saveLooks(appearance.copyWith(warmth: AppearanceSettings.warmthOf(v.round()))),
+                ),
+              ), subtitle: tr('eye care warm blue light night mode night light color temperature')),
         SettingEntry(tr('Low resource mode'), (context) => SwitchItem(
               title: tr('Low resource mode'),
               subtitle: tr('No animations, the smallest thumbnails, nothing loaded while the pointer rests on a video, and a smaller image cache. For older computers or to save laptop battery'),

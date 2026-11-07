@@ -2957,5 +2957,7 @@
   "Tech & development": "Технології та розробка",
   "Health & fitness": "Здоров’я та фітнес",
   "24/7 live": "Цілодобові ефіри",
-  "{0} watching": "Дивляться: {0}"
+  "{0} watching": "Дивляться: {0}",
+  "Color temperature": "Колірна температура",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, чим менше, тим тепліше; за розкладом змінюється протягом години"
 }

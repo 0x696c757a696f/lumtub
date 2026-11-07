@@ -2957,5 +2957,7 @@
   "Tech & development": "Tech at development",
   "Health & fitness": "Kalusugan at fitness",
   "24/7 live": "24/7 live",
-  "{0} watching": "{0} ang nanonood"
+  "{0} watching": "{0} ang nanonood",
+  "Color temperature": "Temperatura ng kulay",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, mas mababa ay mas warm; kapag naka-iskedyul, unti-unti itong nagbabago sa loob ng isang oras"
 }

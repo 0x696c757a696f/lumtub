@@ -2957,5 +2957,7 @@
   "Tech & development": "ເທັກໂນໂລຊີ ແລະ ການພັດທະນາ",
   "Health & fitness": "ສຸຂະພາບ ແລະ ການອອກກຳລັງກາຍ",
   "24/7 live": "ສົດ 24/7",
-  "{0} watching": "ກຳລັງເບິ່ງ {0}"
+  "{0} watching": "ກຳລັງເບິ່ງ {0}",
+  "Color temperature": "ອຸນຫະພູມສີ",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, ຍິ່ງຕ່ຳຍິ່ງອຸ່ນ; ເມື່ອຕັ້ງເວລາ ຈະປ່ຽນຄ່ອຍໆພາຍໃນໜຶ່ງຊົ່ວໂມງ"
 }

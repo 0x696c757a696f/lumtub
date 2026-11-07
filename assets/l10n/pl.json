@@ -2957,5 +2957,7 @@
   "Tech & development": "Technologia i programowanie",
   "Health & fitness": "Zdrowie i fitness",
   "24/7 live": "Całodobowo na żywo",
-  "{0} watching": "Ogląda: {0}"
+  "{0} watching": "Ogląda: {0}",
+  "Color temperature": "Temperatura barwowa",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, niższa wartość oznacza cieplejszy odcień; przy harmonogramie zmienia się przez godzinę"
 }

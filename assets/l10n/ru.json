@@ -2957,5 +2957,7 @@
   "Tech & development": "Технологии и разработка",
   "Health & fitness": "Здоровье и фитнес",
   "24/7 live": "Круглосуточные эфиры",
-  "{0} watching": "Смотрят: {0}"
+  "{0} watching": "Смотрят: {0}",
+  "Color temperature": "Цветовая температура",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, чем ниже, тем теплее; по расписанию меняется плавно в течение часа"
 }

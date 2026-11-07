@@ -2957,5 +2957,7 @@
   "Tech & development": "Teknologji dhe zhvillim",
   "Health & fitness": "Shëndet dhe fitnes",
   "24/7 live": "Drejtpërdrejt 24/7",
-  "{0} watching": "{0} po shikojnë"
+  "{0} watching": "{0} po shikojnë",
+  "Color temperature": "Temperatura e ngjyrës",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, më e ulët është më e ngrohtë; sipas orarit ndryshon gradualisht brenda një ore"
 }

@@ -2957,5 +2957,7 @@
   "Tech & development": "Teknoloji ve geliştirme",
   "Health & fitness": "Sağlık ve fitness",
   "24/7 live": "7/24 canlı",
-  "{0} watching": "{0} kişi izliyor"
+  "{0} watching": "{0} kişi izliyor",
+  "Color temperature": "Renk sıcaklığı",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, düşük değer daha sıcaktır; zamanlamada bir saat içinde kademeli olarak değişir"
 }

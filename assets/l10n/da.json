@@ -2957,5 +2957,7 @@
   "Tech & development": "Teknologi og udvikling",
   "Health & fitness": "Sundhed og fitness",
   "24/7 live": "24/7 live",
-  "{0} watching": "{0} ser med"
+  "{0} watching": "{0} ser med",
+  "Color temperature": "Farvetemperatur",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, lavere er varmere; efter tidsplan ændres den over en time"
 }

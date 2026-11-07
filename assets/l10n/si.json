@@ -2957,5 +2957,7 @@
   "Tech & development": "තාක්ෂණය සහ සංවර්ධනය",
   "Health & fitness": "සෞඛ්‍යය සහ ශරීර යෝග්‍යතාව",
   "24/7 live": "24/7 සජීවී",
-  "{0} watching": "{0} දෙනෙක් නරඹමින්"
+  "{0} watching": "{0} දෙනෙක් නරඹමින්",
+  "Color temperature": "වර්ණ උෂ්ණත්වය",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, අඩු වන තරමට උණුසුම් වේ; කාලසටහනකදී පැයක් තුළ සෙමින් වෙනස් වේ"
 }

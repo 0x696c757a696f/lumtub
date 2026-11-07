@@ -2957,5 +2957,7 @@
   "Tech & development": "التقنية والتطوير",
   "Health & fitness": "الصحة واللياقة",
   "24/7 live": "بث مباشر على مدار الساعة",
-  "{0} watching": "{0} يشاهدون الآن"
+  "{0} watching": "{0} يشاهدون الآن",
+  "Color temperature": "درجة حرارة اللون",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K، كلما انخفضت زاد الدفء؛ وعند الجدولة تتغير تدريجيًا خلال ساعة"
 }

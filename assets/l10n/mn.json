@@ -2957,5 +2957,7 @@
   "Tech & development": "Технологи, хөгжүүлэлт",
   "Health & fitness": "Эрүүл мэнд, фитнес",
   "24/7 live": "24/7 шууд",
-  "{0} watching": "{0} үзэж байна"
+  "{0} watching": "{0} үзэж байна",
+  "Color temperature": "Өнгөний температур",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, бага байх тусам дулаан; хуваарьтай үед нэг цагийн дотор аажмаар өөрчлөгдөнө"
 }

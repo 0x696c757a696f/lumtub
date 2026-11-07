@@ -83,6 +83,25 @@ void main() {
     expect(blue.g, greaterThan(blue.b));
   });
 
+  test('the warm light is set as a colour temperature and comes on over an hour', () {
+    expect(AppearanceSettings.kelvinOf(AppearanceSettings.warmthOf(3400)), 3400);
+    expect(AppearanceSettings.kelvinOf(1), 1900);
+    // A candle takes all the blue out of white; 6000 K hardly any.
+    expect(WarmLayer.tint(AppearanceSettings.warmthOf(1900)).b, lessThan(0.05));
+    expect(WarmLayer.tint(AppearanceSettings.warmthOf(6000)).b, greaterThan(0.9));
+    const hours = AppearanceSettings(eyeCare: EyeCare.hours, eyeCareStart: 20, eyeCareEnd: 7, warmth: 0.6);
+    double at(int hour, int minute) => hours.warmthAt(DateTime(2026, 11, 7, hour, minute));
+    expect(at(12, 0), 0);
+    expect(at(19, 25), 0);
+    expect(at(20, 0), closeTo(0.3, 0.001), reason: 'halfway at the hour set');
+    expect(at(20, 35), 0.6);
+    expect(at(7, 0), closeTo(0.3, 0.001));
+    // In twelve steps, each lasting five minutes.
+    expect(at(19, 47), at(19, 49));
+    expect({for (var m = 0; m < 60; m++) at(19 + (30 + m) ~/ 60, (30 + m) % 60)}, hasLength(12));
+    expect(const AppearanceSettings(eyeCare: EyeCare.always, warmth: 0.6).warmthAt(DateTime(2026, 11, 7, 12)), 0.6);
+  });
+
   test('the warm light keeps every palette readable and its own', () {
     for (final palette in [null, ...palettes]) {
       for (final brightness in Brightness.values) {

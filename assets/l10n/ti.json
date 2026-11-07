@@ -2957,5 +2957,7 @@
   "Tech & development": "ቴክኖሎጂን ልምዓትን",
   "Health & fitness": "ጥዕናን ኣካላዊ ምንቅስቓስን",
   "24/7 live": "24/7 ቀጥታ",
-  "{0} watching": "{0} ይዕዘቡ ኣለዉ"
+  "{0} watching": "{0} ይዕዘቡ ኣለዉ",
+  "Color temperature": "ሙቀት ሕብሪ",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K፣ ትሕት ክብል ዝበለ ይውዕዕ፤ ብመርሐ ግብር ኽኸውን ከሎ ኣብ ሓደ ሰዓት ቀስ ብቀስ ይቕየር"
 }

@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
+import '../appearance_settings.dart';
 import 'motion.dart';
 import 'theme.dart';
 
@@ -17,10 +20,25 @@ class WarmLayer extends StatelessWidget {
   final Widget child;
   final bool behind;
 
-  /// What white becomes at [warmth].
+  /// What white becomes at [warmth]: the colour of a black body at its
+  /// temperature ([AppearanceSettings.kelvinOf]) against one at 6500 K,
+  /// the white of a screen, as night light tools such as f.lux take it.
   static Color tint(double warmth) {
     final w = warmth.clamp(0.0, 1.0);
-    return Color.from(alpha: 1, red: 1, green: 1 - 0.12 * w, blue: 1 - 0.40 * w);
+    if (w == 0) return const Color(0xFFFFFFFF);
+    final light = _blackBody(AppearanceSettings.kelvinOf(w).toDouble());
+    final white = _blackBody(6500);
+    return Color.from(alpha: 1, red: (light.$1 / white.$1).clamp(0, 1), green: (light.$2 / white.$2).clamp(0, 1), blue: (light.$3 / white.$3).clamp(0, 1));
+  }
+
+  /// A black body's colour at [kelvin], 1000 to 40000 K, by Tanner
+  /// Helland's fit of the CIE 1964 colour matching data, on a scale of 255.
+  static (double, double, double) _blackBody(double kelvin) {
+    final t = kelvin / 100;
+    final red = t <= 66 ? 255.0 : 329.698727446 * pow(t - 60, -0.1332047592);
+    final green = t <= 66 ? 99.4708025861 * log(t) - 161.1195681661 : 288.1221695283 * pow(t - 60, -0.0755148492);
+    final blue = t >= 66 ? 255.0 : t <= 19 ? 0.0 : 138.5177312231 * log(t - 10) - 305.0447927307;
+    return (red.clamp(0, 255).toDouble(), green.clamp(0, 255).toDouble(), blue.clamp(0, 255).toDouble());
   }
 
   @override
@@ -63,9 +81,14 @@ class _Warm extends CustomPainter {
 Color warmColor(Color color, double warmth) {
   final w = warmth.clamp(0.0, 1.0);
   if (w == 0) return color;
-  final grey = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+  // Lit by the lamp but as bright as before where it can be, so text
+  // keeps its contrast even by candlelight.
+  double brightness(double r, double g, double b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  final grey = brightness(color.r, color.g, color.b);
   final lamp = WarmLayer.tint(w);
-  final paper = Color.from(alpha: color.a, red: grey * lamp.r, green: grey * lamp.g, blue: grey * lamp.b);
+  final lift = grey / brightness(lamp.r, lamp.g, lamp.b);
+  double lit(double channel) => (channel * lift).clamp(0.0, 1.0);
+  final paper = Color.from(alpha: color.a, red: lit(lamp.r), green: lit(lamp.g), blue: lit(lamp.b));
   return Color.lerp(color, paper, 0.7 * w)!;
 }
 

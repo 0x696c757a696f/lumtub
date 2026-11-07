@@ -2957,5 +2957,7 @@
   "Tech & development": "Tecnologia e desenvolvimento",
   "Health & fitness": "Saúde e fitness",
   "24/7 live": "Ao vivo 24 horas",
-  "{0} watching": "{0} assistindo"
+  "{0} watching": "{0} assistindo",
+  "Color temperature": "Temperatura de cor",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, quanto menor, mais quente; com agendamento, muda gradualmente ao longo de uma hora"
 }

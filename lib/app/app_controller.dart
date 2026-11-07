@@ -1602,7 +1602,14 @@ class AppController extends ChangeNotifier with _ExploreState {
           if (_quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
             _quickSerial = serial;
             final full = pending;
-            pending = Future.any([full, streams.quick(item.id, format, FormatPolicy.settingsJson(_playback)).then((quick) => quick ?? full)]);
+            pending = Future.any([
+              full,
+              streams.quick(item.id, format, FormatPolicy.settingsJson(_playback)).then((quick) {
+                if (quick == null) return full;
+                streams.unhurried(item.id);
+                return quick;
+              }),
+            ]);
           }
           video = await pending;
         } catch (e) {

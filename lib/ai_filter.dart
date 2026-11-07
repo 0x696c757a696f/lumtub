@@ -144,11 +144,15 @@ class AiFilter extends ChangeNotifier {
     }
   }
 
-  static Future<bool?> _read(List<int> bytes) => Isolate.run(() {
-        final core = NativeCore.instance!;
-        final read = jsonDecode(core.take(core.withBytes(bytes, core.aiLabel)) ?? '{}');
-        return read is Map ? read['ai'] as bool? : null;
-      });
+  /// A masked answer is read here, a whole one in the background: see
+  /// VideoLanguages.
+  static Future<bool?> _read(List<int> bytes) async => bytes.length < 32 << 10 ? _label(bytes) : Isolate.run(() => _label(bytes));
+
+  static bool? _label(List<int> bytes) {
+    final core = NativeCore.instance!;
+    final read = jsonDecode(core.take(core.withBytes(bytes, core.aiLabel)) ?? '{}');
+    return read is Map ? read['ai'] as bool? : null;
+  }
 
   Future<void> _loadOnce() async {
     if (_labels != null || _loading) return;

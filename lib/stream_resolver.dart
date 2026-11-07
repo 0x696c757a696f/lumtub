@@ -424,13 +424,28 @@ class StreamResolver {
         timeout: const Duration(seconds: 45),
         environment: _environment,
         onStart: (process) {
+          _working[videoId] = process.pid;
           if (background == null) return;
           lowerPriority(process.pid);
           _lowered[background] = process.pid;
         },
       );
     } finally {
-      if (background != null) _lowered.remove(background);
+      _working.remove(videoId);
+      _lowered.remove(videoId);
     }
+  }
+
+  /// The yt-dlp running for each video.
+  final _working = <String, int>{};
+
+  /// Lowers the yt-dlp still reading [videoId] once a quick start has
+  /// played it: its answer is still wanted, for the qualities, subtitles
+  /// and a reopen, but not at the cost of the starting video.
+  void unhurried(String videoId) {
+    final pid = _working[videoId];
+    if (pid == null || _lowered.containsKey(videoId)) return;
+    lowerPriority(pid);
+    _lowered[videoId] = pid;
   }
 }

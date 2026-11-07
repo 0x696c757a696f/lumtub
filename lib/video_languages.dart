@@ -175,10 +175,15 @@ class VideoLanguages {
   }
 
   // A player response runs to a few hundred kilobytes.
-  static Future<Object?> _readInBackground(List<int> bytes) => Isolate.run(() {
-        final core = NativeCore.instance!;
-        return jsonDecode(core.take(core.withBytes(bytes, core.spokenLanguage)) ?? 'null');
-      });
+  /// A masked answer of a few kilobytes is read here: starting an isolate
+  /// and copying it there takes longer than reading it. A whole one goes
+  /// to the background.
+  static Future<Object?> _readInBackground(List<int> bytes) async => bytes.length < 32 << 10 ? _read(bytes) : Isolate.run(() => _read(bytes));
+
+  static Object? _read(List<int> bytes) {
+    final core = NativeCore.instance!;
+    return jsonDecode(core.take(core.withBytes(bytes, core.spokenLanguage)) ?? 'null');
+  }
 
   Future<Map<String, SpokenVideo>>? _loading;
 

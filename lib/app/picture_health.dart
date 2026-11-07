@@ -140,7 +140,19 @@ extension PictureHealth on AppController {
     final match = frames == null ? null : RegExp(r'frames=(\d+)/(\d+)').firstMatch(frames);
     final outputSize = _outputSize;
     if (match == null || outputSize == null || !outputSize.onScreen || audioOnly || _backgroundAudioOnly || _windowHidden) return;
-    if ((player?.state.width ?? 0) == 0 || DateTime.now().difference(_lastPictureFix) < const Duration(minutes: 1)) return;
+    if (DateTime.now().difference(_lastPictureFix) < const Duration(minutes: 1)) return;
+    if ((player?.state.width ?? 0) == 0) {
+      // A picture stream YouTube refused as the video opened leaves the
+      // sound and subtitles playing over black, with no size: opened again
+      // with new addresses once it has had time to start.
+      final vid = await platform.getProperty('vid');
+      if (vid.isEmpty || vid == 'no' || vid == 'false' || DateTime.now().difference(_openedAt) < const Duration(seconds: 15)) return;
+      if ((await platform.getProperty('video-out-params/w')).isNotEmpty) return;
+      _lastPictureFix = DateTime.now();
+      logWarn('No picture while playing ($frames); the video stream did not open, reopening with new addresses');
+      unawaited(_recover('The video stream did not open while the sound played'));
+      return;
+    }
     final drawn = int.parse(match[1]!), shown = int.parse(match[2]!);
     if (drawn > 0 && shown > 0) return;
     _lastPictureFix = DateTime.now();

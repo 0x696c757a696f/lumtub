@@ -370,6 +370,9 @@ extension ExploreActions on AppController {
               : mode.byViews
                   ? (item) => (item.viewCount ?? -1).toDouble()
                   : null,
+          // Each video is looked up for the language filter: shown as
+          // found rather than gathered pages ahead.
+          readAhead: !spoken,
           name: 'Explore ${exploreSection.name} · ${exploreTopicNow.label} · ${mode.name}',
           dropped: dropped,
         )

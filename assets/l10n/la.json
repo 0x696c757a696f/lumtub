@@ -2957,5 +2957,7 @@
   "Tech & development": "Technologia et progressio",
   "Health & fitness": "Salus et exercitatio",
   "24/7 live": "24/7 in vivo",
-  "{0} watching": "{0} spectant"
+  "{0} watching": "{0} spectant",
+  "Color temperature": "Temperatura coloris",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, quo minor, eo calidior; ex horario intra horam paulatim mutatur"
 }

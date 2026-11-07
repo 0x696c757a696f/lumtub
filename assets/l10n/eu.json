@@ -2957,5 +2957,7 @@
   "Tech & development": "Teknologia eta garapena",
   "Health & fitness": "Osasuna eta fitnessa",
   "24/7 live": "24/7 zuzenean",
-  "{0} watching": "{0} ari dira ikusten"
+  "{0} watching": "{0} ari dira ikusten",
+  "Color temperature": "Kolore-tenperatura",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, zenbat eta baxuagoa, orduan eta beroagoa; ordutegiarekin, ordubetean aldatzen da"
 }

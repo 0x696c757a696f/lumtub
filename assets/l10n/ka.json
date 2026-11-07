@@ -2957,5 +2957,7 @@
   "Tech & development": "ტექნოლოგიები და დეველოპმენტი",
   "Health & fitness": "ჯანმრთელობა და ფიტნესი",
   "24/7 live": "24/7 პირდაპირი ეთერი",
-  "{0} watching": "უყურებს {0}"
+  "{0} watching": "უყურებს {0}",
+  "Color temperature": "ფერის ტემპერატურა",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, რაც დაბალია, მით უფრო თბილია; განრიგით ერთი საათის განმავლობაში იცვლება"
 }

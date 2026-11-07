@@ -74,6 +74,28 @@ class SunTimes {
     return (local(transit - hour), local(transit + hour));
   }
 
+  /// How high the sun stands at [now], in degrees above the horizon,
+  /// below it negative; to about a tenth of a degree, without refraction.
+  double elevation(DateTime now) {
+    final rad = pi / 180;
+    final d = now.toUtc().millisecondsSinceEpoch / 86400000 + 2440587.5 - 2451545.0;
+    final anomaly = (357.529 + 0.98560028 * d) * rad;
+    final mean = 280.459 + 0.98564736 * d;
+    final longitudeOfSun = (mean + 1.915 * sin(anomaly) + 0.020 * sin(2 * anomaly)) * rad;
+    final tilt = (23.439 - 0.00000036 * d) * rad;
+    final ascension = atan2(cos(tilt) * sin(longitudeOfSun), cos(longitudeOfSun));
+    final declination = asin(sin(tilt) * sin(longitudeOfSun));
+    final sidereal = (18.697374558 + 24.06570982441908 * d) * 15 * rad;
+    final hourAngle = sidereal + longitude * rad - ascension;
+    return asin(sin(latitude * rad) * sin(declination) + cos(latitude * rad) * cos(declination) * cos(hourAngle)) / rad;
+  }
+
+  /// How far into the night [now] is, 0 by day to 1 by night, by the
+  /// sun's height as Redshift takes it: day down to 3° above the horizon,
+  /// night from 6° below, where civil twilight ends, and evenly between,
+  /// so dusk lasts as long as it does outside.
+  double nightness(DateTime now) => ((3 - elevation(now)) / 9).clamp(0.0, 1.0);
+
   /// Whether the sun stays down all of [day].
   bool polarNight(DateTime day) {
     final month = day.month;

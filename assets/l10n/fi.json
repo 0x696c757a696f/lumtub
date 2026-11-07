@@ -2957,5 +2957,7 @@
   "Tech & development": "Teknologia ja kehitys",
   "Health & fitness": "Terveys ja kuntoilu",
   "24/7 live": "24/7 livenä",
-  "{0} watching": "{0} katsoo"
+  "{0} watching": "{0} katsoo",
+  "Color temperature": "Värilämpötila",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, pienempi on lämpimämpi; aikataululla se muuttuu tunnin aikana"
 }

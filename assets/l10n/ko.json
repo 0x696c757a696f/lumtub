@@ -2957,5 +2957,7 @@
   "Tech & development": "기술·개발",
   "Health & fitness": "건강·피트니스",
   "24/7 live": "24시간 라이브",
-  "{0} watching": "{0}명 시청 중"
+  "{0} watching": "{0}명 시청 중",
+  "Color temperature": "색온도",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, 낮을수록 따뜻합니다. 예약 시에는 한 시간에 걸쳐 서서히 바뀝니다"
 }

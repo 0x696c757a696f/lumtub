@@ -2957,5 +2957,7 @@
   "Tech & development": "ቴክኖሎጂ እና ልማት",
   "Health & fitness": "ጤና እና የአካል ብቃት",
   "24/7 live": "24/7 ቀጥታ",
-  "{0} watching": "{0} እየተመለከቱ ነው"
+  "{0} watching": "{0} እየተመለከቱ ነው",
+  "Color temperature": "የቀለም ሙቀት",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K፣ ዝቅ ሲል ይሞቃል፤ በጊዜ ሰሌዳ ሲሆን በአንድ ሰዓት ውስጥ ቀስ በቀስ ይለወጣል"
 }

@@ -2957,5 +2957,7 @@
   "Tech & development": "Technologie a vývoj",
   "Health & fitness": "Zdraví a fitness",
   "24/7 live": "Nonstop živě",
-  "{0} watching": "Sleduje: {0}"
+  "{0} watching": "Sleduje: {0}",
+  "Color temperature": "Teplota barev",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, nižší hodnota je teplejší; podle plánu se mění během hodiny"
 }

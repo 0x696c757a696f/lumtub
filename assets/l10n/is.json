@@ -2957,5 +2957,7 @@
   "Tech & development": "Tækni og þróun",
   "Health & fitness": "Heilsa og líkamsrækt",
   "24/7 live": "Beint allan sólarhringinn",
-  "{0} watching": "{0} að horfa"
+  "{0} watching": "{0} að horfa",
+  "Color temperature": "Litahiti",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, lægra er hlýrra; með áætlun breytist það smám saman á einni klukkustund"
 }

@@ -2957,5 +2957,7 @@
   "Tech & development": "Tehnoloogia ja arendus",
   "Health & fitness": "Tervis ja fitness",
   "24/7 live": "24/7 otse",
-  "{0} watching": "{0} vaatab"
+  "{0} watching": "{0} vaatab",
+  "Color temperature": "Värvitemperatuur",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, madalam on soojem; ajakava korral muutub see ühe tunni jooksul"
 }

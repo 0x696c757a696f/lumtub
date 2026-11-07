@@ -2957,5 +2957,7 @@
   "Tech & development": "Teknologi & pengembangan",
   "Health & fitness": "Kesehatan & kebugaran",
   "24/7 live": "Live 24/7",
-  "{0} watching": "{0} menonton"
+  "{0} watching": "{0} menonton",
+  "Color temperature": "Suhu warna",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, makin rendah makin hangat; dengan jadwal, berubah bertahap selama satu jam"
 }

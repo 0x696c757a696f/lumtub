@@ -2957,5 +2957,7 @@
   "Tech & development": "Tecnologia e sviluppo",
   "Health & fitness": "Salute e fitness",
   "24/7 live": "Dirette 24/7",
-  "{0} watching": "{0} spettatori"
+  "{0} watching": "{0} spettatori",
+  "Color temperature": "Temperatura colore",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, più basso è più caldo; con la programmazione cambia gradualmente in un'ora"
 }

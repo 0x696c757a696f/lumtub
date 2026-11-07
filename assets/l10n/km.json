@@ -2957,5 +2957,7 @@
   "Tech & development": "បច្ចេកវិទ្យា និងការអភិវឌ្ឍ",
   "Health & fitness": "សុខភាព និងកាយសម្បទា",
   "24/7 live": "ផ្សាយផ្ទាល់ 24/7",
-  "{0} watching": "កំពុងមើល {0}"
+  "{0} watching": "កំពុងមើល {0}",
+  "Color temperature": "សីតុណ្ហភាពពណ៌",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K ទាបជាង គឺកក់ក្តៅជាង; នៅពេលកំណត់ពេល វាផ្លាស់ប្តូរបណ្តើរៗក្នុងរយៈពេលមួយម៉ោង"
 }

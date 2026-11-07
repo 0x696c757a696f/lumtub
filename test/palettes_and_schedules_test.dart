@@ -72,6 +72,46 @@ void main() {
     expect(tint.r, 1);
     expect(tint.g, greaterThan(tint.b));
     expect(WarmLayer.tint(0), const Color(0xFFFFFFFF));
+    // A white page warms as a white picture does, not only grey ones.
+    final page = warmColor(const Color(0xFFFFFFFF), 1);
+    expect(page.r, closeTo(1, 0.01));
+    expect(page.b, lessThan(0.8));
+    expect(warmColor(const Color(0xFF000000), 1), const Color(0xFF000000));
+    // A pale blue page goes warm, not olive.
+    final blue = warmColor(const Color(0xFFE6EFF4), 1);
+    expect(blue.r, greaterThan(blue.g));
+    expect(blue.g, greaterThan(blue.b));
+  });
+
+  test('the warm light is set as a colour temperature and comes on over an hour', () {
+    expect(AppearanceSettings.kelvinOf(AppearanceSettings.warmthOf(3400)), 3400);
+    expect(AppearanceSettings.kelvinOf(1), 1900);
+    // A candle takes all the blue out of white; 6000 K hardly any.
+    expect(WarmLayer.tint(AppearanceSettings.warmthOf(1900)).b, lessThan(0.05));
+    expect(WarmLayer.tint(AppearanceSettings.warmthOf(6000)).b, greaterThan(0.9));
+    const hours = AppearanceSettings(eyeCare: EyeCare.hours, eyeCareStart: 20, eyeCareEnd: 7, warmth: 0.6);
+    double at(int hour, int minute) => hours.warmthAt(DateTime(2026, 11, 7, hour, minute));
+    expect(at(12, 0), 0);
+    expect(at(19, 25), 0);
+    expect(at(20, 0), closeTo(0.3, 0.001), reason: 'halfway at the hour set');
+    expect(at(20, 35), 0.6);
+    expect(at(7, 0), closeTo(0.3, 0.001));
+    // In twelve steps, each lasting five minutes.
+    expect(at(19, 47), at(19, 49));
+    expect({for (var m = 0; m < 60; m++) at(19 + (30 + m) ~/ 60, (30 + m) % 60)}, hasLength(12));
+    expect(const AppearanceSettings(eyeCare: EyeCare.always, warmth: 0.6).warmthAt(DateTime(2026, 11, 7, 12)), 0.6);
+    // By the sun's height: Rome at noon is day, at midnight night, and a
+    // quarter of an hour after sunset partly warm.
+    final rome = SunTimes.at(41.9, 12.5);
+    final noon = DateTime.utc(2026, 6, 21, 11);
+    expect(rome.elevation(noon), closeTo(71.5, 1));
+    expect(rome.elevation(DateTime.utc(2026, 6, 21, 23)), lessThan(-20));
+    final sunset = rome.on(DateTime(2026, 6, 21))!.$2;
+    expect(rome.elevation(sunset), closeTo(-0.833, 0.5));
+    expect(rome.nightness(noon), 0);
+    expect(rome.nightness(DateTime.utc(2026, 6, 21, 23)), 1);
+    final dusk = rome.nightness(sunset.add(const Duration(minutes: 15)));
+    expect(dusk, inExclusiveRange(0.2, 1));
   });
 
   test('the warm light keeps every palette readable and its own', () {

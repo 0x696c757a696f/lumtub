@@ -2957,5 +2957,7 @@
   "Tech & development": "Teknolojia na uundaji",
   "Health & fitness": "Afya na mazoezi",
   "24/7 live": "Moja kwa moja saa 24/7",
-  "{0} watching": "Wanatazama: {0}"
+  "{0} watching": "Wanatazama: {0}",
+  "Color temperature": "Joto la rangi",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, chini zaidi ni joto zaidi; kwa ratiba hubadilika polepole ndani ya saa moja"
 }

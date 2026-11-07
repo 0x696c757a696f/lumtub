@@ -2957,5 +2957,7 @@
   "Tech & development": "Texnologiya va dasturlash",
   "Health & fitness": "Salomatlik va fitnes",
   "24/7 live": "24/7 jonli efir",
-  "{0} watching": "{0} kishi tomosha qilmoqda"
+  "{0} watching": "{0} kishi tomosha qilmoqda",
+  "Color temperature": "Rang harorati",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, past bo'lsa iliqroq; jadval bo'yicha bir soat ichida asta-sekin o'zgaradi"
 }

@@ -89,7 +89,7 @@ class _LumtubAppState extends State<LumtubApp> {
     PaintingBinding.instance.imageCache
       ..maximumSize = appearance.lowResource ? 120 : 300
       ..maximumSizeBytes = (appearance.lowResource ? 24 : 64) << 20;
-    final warmth = appearance.warmAt(DateTime.now()) ? appearance.warmth : 0.0;
+    final warmth = appearance.warmthAt(DateTime.now());
     final key = (appearance.themeKey(accent), Motion.reduced, warmth);
     if (key == _themeKey) return;
     _themeKey = key;
@@ -121,7 +121,7 @@ class _LumtubAppState extends State<LumtubApp> {
     _clock = Timer.periodic(const Duration(minutes: 1), (_) {
       final appearance = controller.appearance;
       final now = DateTime.now();
-      if (appearance.themeModeAt(now) != appearance.themeModeAt(_now) || appearance.warmAt(now) != appearance.warmAt(_now)) {
+      if (appearance.themeModeAt(now) != appearance.themeModeAt(_now) || appearance.warmthAt(now) != appearance.warmthAt(_now)) {
         setState(() => _now = now);
       } else {
         _now = now;

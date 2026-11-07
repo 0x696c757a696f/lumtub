@@ -2957,5 +2957,7 @@
   "Tech & development": "Teknik och utveckling",
   "Health & fitness": "Hälsa och träning",
   "24/7 live": "Direkt dygnet runt",
-  "{0} watching": "{0} tittar"
+  "{0} watching": "{0} tittar",
+  "Color temperature": "Färgtemperatur",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, lägre är varmare; med schema ändras den gradvis under en timme"
 }

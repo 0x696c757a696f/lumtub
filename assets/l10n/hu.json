@@ -2957,5 +2957,7 @@
   "Tech & development": "Technológia és fejlesztés",
   "Health & fitness": "Egészség és fitnesz",
   "24/7 live": "0–24 élő",
-  "{0} watching": "{0} nézi"
+  "{0} watching": "{0} nézi",
+  "Color temperature": "Színhőmérséklet",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, minél alacsonyabb, annál melegebb; ütemezés esetén egy óra alatt változik"
 }

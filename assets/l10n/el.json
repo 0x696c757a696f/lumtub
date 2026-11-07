@@ -2957,5 +2957,7 @@
   "Tech & development": "Τεχνολογία και ανάπτυξη",
   "Health & fitness": "Υγεία και γυμναστική",
   "24/7 live": "24/7 ζωντανά",
-  "{0} watching": "{0} παρακολουθούν"
+  "{0} watching": "{0} παρακολουθούν",
+  "Color temperature": "Θερμοκρασία χρώματος",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, χαμηλότερη τιμή σημαίνει θερμότερο· με πρόγραμμα αλλάζει σταδιακά σε μία ώρα"
 }

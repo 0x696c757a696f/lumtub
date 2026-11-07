@@ -2957,5 +2957,7 @@
   "Tech & development": "ടെക്കും ഡെവലപ്മെന്റും",
   "Health & fitness": "ആരോഗ്യവും ഫിറ്റ്നസും",
   "24/7 live": "24/7 തത്സമയം",
-  "{0} watching": "{0} പേർ കാണുന്നു"
+  "{0} watching": "{0} പേർ കാണുന്നു",
+  "Color temperature": "വർണ്ണ താപനില",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, കുറഞ്ഞാൽ കൂടുതൽ ഊഷ്മളം; ഷെഡ്യൂൾ പ്രകാരമാണെങ്കിൽ ഒരു മണിക്കൂർ കൊണ്ട് ക്രമേണ മാറും"
 }

@@ -2957,5 +2957,7 @@
   "Tech & development": "Tech en ontwikkeling",
   "Health & fitness": "Gezondheid en fitness",
   "24/7 live": "24/7 live",
-  "{0} watching": "{0} kijkers"
+  "{0} watching": "{0} kijkers",
+  "Color temperature": "Kleurtemperatuur",
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K, lager is warmer; volgens schema verandert dit geleidelijk over een uur"
 }

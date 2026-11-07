@@ -10,6 +10,7 @@ pub mod downloads;
 pub mod format_policy;
 pub mod process_tree;
 pub mod redact;
+pub mod backup;
 pub mod relay;
 pub mod relay_live;
 pub mod socks;

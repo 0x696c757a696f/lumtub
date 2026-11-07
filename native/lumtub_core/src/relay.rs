@@ -126,7 +126,32 @@ impl Fetch for Web {
         self.get_live(target, url).map(|(status, _, body)| (status, body))
     }
 
+    /// Read from the backup of a server that failed, and from the backup
+    /// at once when this one answers 5xx or not at all (see [crate::backup]).
     fn get_live(&self, target: &Target, url: &str) -> Result<(u16, Option<u64>, Box<dyn Read + Send>), String> {
+        let url = crate::backup::steer(url);
+        let answer = self.ask(target, &url);
+        let status = answer.as_ref().ok().map(|(status, _, _)| *status);
+        if crate::backup::worth_backup(status) {
+            if let Some(other) = crate::backup::backup(&url) {
+                if let Ok(reply) = self.ask(target, &other) {
+                    if !crate::backup::worth_backup(Some(reply.0)) {
+                        let why = match &answer {
+                            Ok((status, _, _)) => format!("HTTP {status}"),
+                            Err(e) => e.clone(),
+                        };
+                        crate::backup::avoid(&url, &other, &why);
+                        return Ok(reply);
+                    }
+                }
+            }
+        }
+        answer
+    }
+}
+
+impl Web {
+    fn ask(&self, target: &Target, url: &str) -> Result<(u16, Option<u64>, Box<dyn Read + Send>), String> {
         let client = self.client(&target.proxy)?;
         let mut request = client.get(url);
         if let Some(ua) = &target.user_agent {
@@ -222,7 +247,9 @@ impl Relay {
 
     /// The log lines since the last call.
     pub fn take_log(&self) -> Vec<String> {
-        self.shared.lock().unwrap().log.drain(..).collect()
+        let mut lines: Vec<String> = self.shared.lock().unwrap().log.drain(..).collect();
+        lines.extend(crate::backup::take_log());
+        lines
     }
 }
 
@@ -260,7 +287,7 @@ fn token(url: &str) -> String {
 }
 
 /// The value of [name] in [url]'s query, percent-decoded.
-fn query(url: &str, name: &str) -> Option<String> {
+pub(crate) fn query(url: &str, name: &str) -> Option<String> {
     let query = url.split_once('?')?.1.split('#').next()?;
     query.split('&').find_map(|pair| {
         let (key, value) = pair.split_once('=')?;

@@ -1363,7 +1363,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// 为你推荐 in a zone: title words and channels like the history's
   /// first, then more viewed.
   static double exploreScore(TasteProfile taste, VideoItem item) {
-    final views = item.viewCount ?? 0;
+    final views = item.viewCount ?? item.watching ?? 0;
     return 0.55 * taste.titleMatch(item) + 0.35 * max(0.0, taste.channelAffinity(item)) + 0.1 * min(1.0, log(views + 1) / ln10 / 7);
   }
 

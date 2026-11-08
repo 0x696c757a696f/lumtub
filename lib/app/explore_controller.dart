@@ -80,6 +80,21 @@ extension ExploreActions on AppController {
         exploreView.words,
       ].where((w) => w.isNotEmpty).join(' ');
 
+  /// Wider searches than [exploreQuery], narrowest first, read once it
+  /// runs out: the sub-category's, then the zone's, then the zone's
+  /// without the format and view words.
+  List<String> get exploreBroaderQueries {
+    final words = [exploreFormat.words, exploreView.words].where((w) => w.isNotEmpty).join(' ');
+    String withWords(String query) => words.isEmpty ? query : '$query $words';
+    final leaf = exploreLeafNow;
+    final queries = <String>{
+      if (leaf != null && exploreSubNow != null) withWords(exploreSubNow!.query),
+      withWords(exploreTopicNow.query),
+      exploreTopicNow.query,
+    }..remove(exploreQuery);
+    return [for (final query in queries) if (query.trim().isNotEmpty) query];
+  }
+
   /// Adds a category of the user's own and shows it.
   Future<void> addExploreTopic(CustomTopic topic) async {
     final kept = preferences.exploreCustomTopics.where((t) => !(t.section == topic.section && t.label == topic.label)).toList();
@@ -267,6 +282,7 @@ extension ExploreActions on AppController {
       loader.dispose();
     }
     final query = exploreQuery;
+    final broader = exploreBroaderQueries;
     final mode = exploreMode;
     final mix = exploreTopicNow.mix;
     final language = preferences.exploreLanguage;
@@ -339,7 +355,7 @@ extension ExploreActions on AppController {
     _update(() => explore = VideoListLoader(
           () {
             Listing search(List<String> queries) =>
-                mix ? repository.searchMix(queries, sp: sp, region: region) : repository.search(queries.single, sp: sp, region: region);
+                queries.length > 1 ? repository.searchMix(queries, sp: sp, region: region) : repository.search(queries.single, sp: sp, region: region);
             final queries = mix ? exploreMixQueries(exploreSection) : [query];
             // The zones' search words are Chinese, which finds Chinese
             // videos: they are put in the language picked, else the
@@ -351,9 +367,17 @@ extension ExploreActions on AppController {
             final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK');
             // A zone of the user's own is searched as they wrote it: its
             // words are not sent to be translated.
-            final listing = wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional) || exploreTopicNow.custom
+            Listing searchIn(List<String> queries) => wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional) || exploreTopicNow.custom
                 ? search(queries)
                 : Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional)));
+            // A narrow search that runs out goes on with wider ones, so a
+            // sub-category with few videos still fills the page.
+            var listing = searchIn(queries);
+            if (!mix && !exploreTopicNow.custom) {
+              for (final wider in broader) {
+                listing = listing.followedBy(() => searchIn([wider]), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$wider"'));
+              }
+            }
             final languages = _videoLanguages;
             return spoken && languages != null
                 ? listing.refined((lines) => languages.only(
@@ -376,11 +400,15 @@ extension ExploreActions on AppController {
           rank: taste != null
               ? (item) => AppController.exploreScore(taste, item) - (feedMix?.penaltyOf(item) ?? 0)
               : mode.byViews
-                  ? (item) => (item.viewCount ?? -1).toDouble()
+                  ? (item) => (item.audience ?? -1).toDouble()
                   : null,
           // Each video is looked up for the language filter: shown as
           // found rather than gathered pages ahead.
           readAhead: !spoken,
+          // Upcoming streams and replays are few among a date-sorted
+          // search's videos: a few pages are read, then the page offers to
+          // keep looking rather than reading on unasked.
+          pages: mode == ExploreMode.liveUpcoming || mode == ExploreMode.liveReplay ? 8 : 25,
           name: 'Explore ${exploreSection.name} · ${exploreTopicNow.label} · ${mode.name}',
           dropped: dropped,
         )

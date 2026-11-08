@@ -306,11 +306,23 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
             ))
           else
-            SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.compass, title: switch (mode) {
-              ExploreMode.liveUpcoming => tr('No upcoming streams in this category'),
-              ExploreMode.liveReplay => tr('No stream replays in this category'),
-              _ => live ? tr('No live streams in this category right now') : tr('No videos in this category right now'),
-            })),
+            SliverFillRemaining(hasScrollBody: false, child: StatusView(
+              icon: AppIcons.compass,
+              title: switch (mode) {
+                ExploreMode.liveUpcoming => tr('No upcoming streams in this category'),
+                ExploreMode.liveReplay => tr('No stream replays in this category'),
+                _ => live ? tr('No live streams in this category right now') : tr('No videos in this category right now'),
+              },
+              // Found but all hidden reads differently from nothing found.
+              message: loader != null && loader.read > 0 ? tr('{0} were found, and your filters and settings left all of them out', [loader.read]) : null,
+              action: loader != null && loader.hasMore
+                  ? FilledButton.icon(
+                      onPressed: () => loader.loadMore(),
+                      icon: const Icon(AppIcons.magnifyingGlass),
+                      label: Text(tr('Keep looking')),
+                    )
+                  : null,
+            )),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );

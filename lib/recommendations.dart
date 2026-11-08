@@ -286,7 +286,7 @@ List<Recommendation> recommend(
       's': candidate.source.weight * candidate.seedWeight,
       'p': penalty + 0.6 * (notInterested?.channels[key] ?? 0),
       if (item.published case final published?) 'a': clock.difference(published).inHours,
-      if (item.viewCount case final views?) 'v': views,
+      if (item.viewCount ?? item.watching case final views?) 'v': views,
       if (item.duration case final duration?) 'd': duration,
     });
   }

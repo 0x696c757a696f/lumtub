@@ -13,7 +13,7 @@ import '../friendly_error.dart';
 /// them. One [Listing] serves every page, so each page continues where the
 /// last one stopped.
 class VideoListLoader extends ChangeNotifier {
-  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1, this.readAhead = true, this.name, this.dropped});
+  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1, this.readAhead = true, this.pages = 25, this.name, this.dropped});
 
   final Listing Function() _open;
   final int pageSize;
@@ -36,6 +36,9 @@ class VideoListLoader extends ChangeNotifier {
   /// each entry costs a lookup, such as the explore language filter: what
   /// was found then shows as it is found.
   final bool readAhead;
+  /// At most this many pages are read for one [loadMore] while the filters
+  /// leave nothing to show; the next [loadMore] reads on from there.
+  final int pages;
   /// What the list is, for the log; a list that comes back empty is logged
   /// with how many entries were read and, from [dropped], why they were
   /// left out.
@@ -59,6 +62,7 @@ class VideoListLoader extends ChangeNotifier {
   bool _disposed = false;
   /// Entries read from the listing so far, shown or not.
   int _read = 0;
+  int get read => _read;
   int _emptyRetries = 0;
 
   /// Waits before reading an empty list again.
@@ -186,7 +190,7 @@ class VideoListLoader extends ChangeNotifier {
         final wanting = order == null
             ? (matches != null || where != null) && shown < fill
             : (_pool.length < fill && (matches != null || where != null)) || (readAhead && _pool.length < pageSize + pageSize ~/ 2 && skipped < 3);
-        if (error == null && more && wanting && skipped < 25 && !_disposed) {
+        if (error == null && more && wanting && skipped < pages - 1 && !_disposed) {
           // What was found so far shows while the next page is read.
           if (pendingVideos.isNotEmpty && (order == null || !readAhead)) {
             if (order != null) _showFromPool();

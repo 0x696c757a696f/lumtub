@@ -2992,5 +2992,6 @@
   "{0}: {1} s": "{0}：{1} 秒",
   "{0} and scroll wheel: {1}% per step": "{0} 和滚轮：每次 {1}%",
   "Choose the keys for seeking, volume, fullscreen and more": "设置快进快退、音量、全屏等功能的按键",
-  "mouse back": "鼠标 返回"
+  "mouse back": "鼠标 返回",
+  "{0} were found, and your filters and settings left all of them out": "找到了 {0} 个，但都被你的筛选和设置排除了"
 }

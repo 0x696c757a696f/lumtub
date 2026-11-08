@@ -86,6 +86,14 @@ class Listing {
   /// to keep only videos in one language.
   Listing refined(Stream<String> Function(Stream<String> lines) refine) => Listing(() => refine(_open()), channel: channel, timeout: timeout, idleTimeout: idleTimeout);
 
+  /// This listing, then [then]'s once this one ends, such as a wider
+  /// search after a narrow one ran out; [switched] is called between.
+  Listing followedBy(Listing Function() then, {void Function()? switched}) => Listing(() async* {
+        yield* _open();
+        switched?.call();
+        yield* then()._open();
+      }, channel: channel, timeout: timeout, idleTimeout: idleTimeout);
+
   /// Up to [count] more entries, each a [VideoItem] or [ChannelResult].
   /// Fails when the source ends with an error before listing anything or
   /// stalls; other errors after the first entries end the listing.

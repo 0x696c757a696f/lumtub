@@ -340,4 +340,43 @@ void main() {
     expect(opened, 3);
     expect(loader.items.map((v) => v.id), ['abcdefghijk']);
   });
+
+  test('a narrow listing that runs out goes on with a wider one', () async {
+    var switched = 0;
+    final listing = Listing(() => Stream.fromIterable([_video(0), _video(1)]))
+        .followedBy(() => Listing(() => Stream.fromIterable([_video(1), _video(2), _video(3)])), switched: () => switched++);
+    final loader = VideoListLoader(() => listing, pageSize: 10);
+    addTearDown(loader.dispose);
+    loader.loadMore();
+    await pumpEventQueue();
+    expect(loader.items.map((v) => v.title), ['0', '1', '2', '3']);
+    expect(switched, 1);
+  });
+
+  test('reads at most its pages while filters leave nothing, then reads on when asked', () async {
+    final source = _Source([for (var i = 0; i < 40; i++) _video(i)]);
+    final loader = VideoListLoader(() => Listing(source.open), pageSize: 2, pages: 3, where: (item) => item.title == '20');
+    addTearDown(loader.dispose);
+    loader.loadMore();
+    await pumpEventQueue();
+    expect(loader.items, isEmpty);
+    expect(loader.read, 6);
+    expect(loader.hasMore, isTrue);
+    for (var i = 0; i < 3 && loader.items.isEmpty; i++) {
+      loader.loadMore();
+      await pumpEventQueue();
+    }
+    expect(loader.items.map((v) => v.title), ['20']);
+  });
+
+  test('a live stream keeps its watchers apart from views', () {
+    final live = VideoItem.fromJson({'id': 'abcdefghijk', 'title': 't', 'live_status': 'is_live', 'concurrent_view_count': 1500});
+    expect(live.viewCount, isNull);
+    expect(live.watching, 1500);
+    expect(live.audience, 1500);
+    expect(VideoItem.fromJson(live.toJson()).watching, 1500);
+    final video = VideoItem.fromJson({'id': 'abcdefghijk', 'title': 't', 'view_count': 9});
+    expect(video.audience, 9);
+    expect(video.watching, isNull);
+  });
 }

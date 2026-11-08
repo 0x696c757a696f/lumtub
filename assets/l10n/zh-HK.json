@@ -2959,5 +2959,6 @@
   "24/7 live": "24 小時直播",
   "{0} watching": "{0}人正在觀看",
   "Color temperature": "色溫",
-  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K，數值越低越暖；按時段啟用時會在一小時內逐漸變化"
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K，數值越低越暖；按時段啟用時會在一小時內逐漸變化",
+  "{0} were found, and your filters and settings left all of them out": "找到了 {0} 個，但都被你的篩選和設定排除了"
 }

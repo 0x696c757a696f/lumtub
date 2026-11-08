@@ -19,7 +19,7 @@ void main() {
     final made = await Process.run('/usr/bin/hdiutil', ['create', '-quiet', '-volname', 'Lumtub', '-srcfolder', '${temp.path}/image', '-format', 'UDZO', dmg.path]);
     expect(made.exitCode, 0, reason: '${made.stderr}');
 
-    expect(macBundleWritable(app), isTrue);
+    expect(canReplace(app), isTrue);
     await replaceMacApp(dmg, app);
     expect(File('$app/Contents/MacOS/Lumtub').readAsStringSync(), 'new');
     expect(Directory('$app.old').existsSync(), isFalse);

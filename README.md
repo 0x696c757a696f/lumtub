@@ -1,11 +1,9 @@
 <div align="center">
 
-# ▶ Lumtub
+# ▶ Lumtub — Watch YouTube your way.
 
-### The YouTube app YouTube never made for your desktop.
-
-**No ads in the way. No browser eating your RAM. No feed that follows you around.**<br>
-A real native player with danmaku, bilingual subtitles, AI summaries and a recommendation feed that lives only on your computer.<br>
+**A desktop YouTube client with mpv playback, on-device recommendations you can understand and control, bilingual subtitles and live chat as danmaku on the video.**<br>
+Watch without signing in; connect your account only when you want to interact.<br>
 For **Windows, Linux and macOS**.
 
 [![Download](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=Download&style=for-the-badge&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
@@ -22,45 +20,21 @@ For **Windows, Linux and macOS**.
 
 https://github.com/user-attachments/assets/4ec072a1-6496-46b2-bcba-9b29df811646
 
-[Pain points](#the-things-youve-put-up-with-for-years) · [Why people switch](#why-people-switch) · [Features](#features) · [Get it](#get-it) · [Privacy](#privacy-you-can-check) · [FAQ](#faq) · [Support](#support-lumtub)
+[What's different](#what-makes-lumtub-different) · [Features](#features) · [Get it](#get-it) · [Privacy](#privacy-what-stays-local-and-what-doesnt) · [FAQ](#faq) · [Support](#support-lumtub)
 
 </div>
 
 ---
 
-## The things you've put up with for years
+## What makes Lumtub different
 
-Every YouTube viewer knows these. None of them is hard to fix; they just aren't fixed in the browser.
+- **Recommendations you can read and steer.** The For you feed is computed on your computer from your own history. Every card says why it is there, and "Not interested" removes that reason instead of being ignored.
+- **mpv playback that checks your hardware.** Videos play through mpv and libmpv, not a web page. Lumtub tests which codecs your GPU really decodes and prefers those formats, to avoid software decoding where hardware decoding is available. The Stats overlay shows what is actually in use. Real CPU, memory and battery use depend on your hardware, the video format and the features you turn on.
+- **Watch in any language.** The original audio track plays first. Show two subtitles at once (original and your language), translate with sentence context, and generate subtitles for videos that have none. Titles, descriptions, comments and chat can be translated too. Translation, speech-to-text and summaries are optional and may use a third-party service or your own API key.
+- **Live chat on the video.** Chat and chat replays can fly across the picture as danmaku, Bilibili style, or stay in a side panel that holds still while you read.
+- **No account to watch.** Search, playback, subscriptions and recommendations work signed out. Sign in only for likes, comments, playlists, members-only videos and other interaction.
 
-| You know this one | What Lumtub does |
-|---|---|
-| 🔥 **The laptop fan takes off at 1080p.** The browser picks AV1 or VP9 even when your GPU can't decode it, and the CPU does the work. | Lumtub tests what **your** graphics card decodes in hardware and only picks those codecs. Same picture, a fraction of the power. |
-| 🕳️ **One curious click and your feed is ruined for a week.** | The For you feed is worked out **on your computer**, every card says why it's there, and "Not interested" actually removes the reason. |
-| 🗣️ **"This video is sponsored by…", "smash that like button", a 40-second intro.** | **SponsorBlock** skips them for you, by the community's timestamps. |
-| 😱 **Shocked faces and ALL-CAPS titles that lie.** | **DeArrow** swaps in honest titles and thumbnails written by other viewers. |
-| 🤖 **AI-generated slop everywhere.** | An opt-in **AI filter** hides videos labelled as AI and channels on community AI-slop lists. |
-| 📱 **Shorts in your search, your subscriptions, your home page.** | **Hide all Shorts**, everywhere, with one switch. |
-| 👎 **The dislike count is gone, so you can't spot the scam tutorial.** | **Return YouTube Dislike** brings back an estimate. |
-| 🌍 **"Italian" search results full of English, auto-dubbed audio instead of the real voice.** | Filter by the language people **actually speak**, checked from the audio and captions, and the original audio track plays first. |
-| 🈶 **Foreign videos give you one subtitle at a time, machine-translated line by line.** | **Two subtitles at once**, AI translation with context, and speech-to-text when a video has no subtitles at all. |
-| 💬 **Live chat flies past at 1,000 messages a minute.** | **Danmaku** across the picture, or a chat that holds still while you read. |
-| 💾 **Saving a video for the train needs Premium.** | Download any format YouTube really has, joined without re-encoding, and play it offline in the app. |
-| 🎧 **Music stops when you minimise the window.** | **Background playback** from the tray, media keys included. |
-| 🕵️ **Everything you watch builds a profile of you.** | No account needed and no telemetry. Your history, searches and recommendations never leave your computer. |
-
-## Why people switch
-
-|  | YouTube in a browser | **Lumtub** |
-|---|---|---|
-| Player | Web player, software fallback, tab throttling | **mpv with hardware decoding**, smooth 4K, HDR and 60 fps |
-| Memory | A whole Chromium per tab | **Native app**, no browser inside |
-| Recommendations | Built from everything Google knows about you | **Worked out on your own computer**, every card says why |
-| Subtitles | One language at a time | **Two at once**, plus AI translation and speech-to-text when a video has none |
-| Live chat | Side panel only | Side panel, theater column **or danmaku across the picture** |
-| Sponsor segments, AI slop | Extensions you install and trust yourself | **Built in**, all opt-in |
-| Downloads | Not for free | **Any format the video really has**, no re-encoding |
-
-Lumtub is free, open source and has no ads, accounts or telemetry of its own.
+Lumtub is free and open source, with no ads, no accounts of its own and no telemetry.
 
 ## Features
 
@@ -77,57 +51,40 @@ Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 </tr>
 </table>
 
-### 🎬 A player that respects your hardware
-- **Hardware decoding tuned to your GPU.** Lumtub probes what your graphics card really decodes and picks H.264, VP9 or AV1 to match, so 4K stays smooth on a laptop.
-- **Live streams up to their best quality**, 1440p and 4K included, starting right at the live edge.
-- **Theater mode, mini player, borderless picture-in-picture** that stays on top.
-- **Lights off**, A-B loop, double-tap to seek, wheel or swipe for brightness and volume, storyboard previews and the "most replayed" heatmap.
-- **Speed and volume remembered per channel.** Podcasts at 1.5×, music at 1×, automatically.
-- **Cast** to Chromecast and DLNA TVs. Windows media keys and a tray icon.
-
-### 💬 Subtitles and translation, done properly
-- **Bilingual subtitles:** original on one line, your language on the other, with styles you can tune live.
-- **Immersive translation** of titles, descriptions, comments, posts and live chat, so foreign-language channels read like local ones.
-- **AI translation** with sentence context, using machine translation services or any OpenAI-compatible model you choose.
-- **Speech-to-text subtitles** for videos that have none (Groq, OpenAI or your own endpoint).
-- **Translate chapter names** in one click.
-
-### 🧠 Smarter, not creepier
-- **"For you" feed computed locally.** It mixes your long-term interests, recent ones, exploration and what's popular, and tells you why each video is there. "Not interested" works.
-- **AI summaries** of a video from its subtitles, before you spend 40 minutes on it.
-- **AI filter (opt-in):** hide videos labelled as AI-generated and channels on community AI-slop lists.
-- **Focus mode** hides the home feed, comments and related videos when you just want to watch.
-- **Watch statistics** stay on your computer and show where your time goes.
-
-### 🔴 Live, like it should be
-- **Danmaku**: live chat and chat replays fly across the picture, Bilibili style, with a thin outline that stays readable.
-- **Chat that keeps up**: newest at the bottom, holds still while you scroll up, translate any message.
-- **Write in chat** after an optional sign-in.
-- **Live markers** on your subscriptions show who is streaming right now.
-
-### 🧭 Find things worth watching
-- **Explore by category**, Bilibili style: dozens of zones with sub-categories, sorted by For you, Popular, Latest, Hidden gems, New creators or Long videos.
-- **Filter by spoken language**, not just title. Lumtub checks the audio and captions of every result, so "Italian" means people speaking Italian.
-- **Filter by region, quality (4K, HDR), length and type.** Add your own zones.
+### 🧠 Recommendations and discovery
+- **"For you" feed computed locally**, mixing long-term interests, recent ones, exploration and what's popular, with the reason shown on each video.
+- **Explore by category**, Bilibili style, sorted by For you, Popular, Latest, Hidden gems, New creators or Long videos. Filter by spoken language (checked from audio and captions), region, quality, length and type, and add your own zones.
 - **Channel pages** with videos, Shorts, live, playlists, podcasts and community posts, plus search inside the channel.
 - **Subscription groups**, playlists with total and remaining length, watch later and a play queue.
+- **Focus mode** hides the home feed, comments and related videos. **Watch statistics** stay on your computer.
 
-### ⬇️ Downloads that just work
-- Pick any format YouTube really serves; video and audio are joined without re-encoding.
-- Downloaded videos play inside Lumtub, offline.
+### 🎬 Player
+- Hardware decoding matched to your GPU; live streams at their best quality, starting at the live edge.
+- Theater mode, mini player, borderless picture-in-picture, lights off, A-B loop, storyboard previews and the "most replayed" heatmap.
+- Speed and volume remembered per channel; background playback with media keys and a tray icon.
+- **Cast** to Chromecast and DLNA TVs.
+- **Downloads:** pick any format YouTube serves, joined without re-encoding, and play it offline in Lumtub.
+
+### 💬 Subtitles and translation
+- **Bilingual subtitles** with styles you can tune live, and one-click translation of chapter names.
+- **AI translation** through machine translation services or any OpenAI-compatible model you choose.
+- **Speech-to-text subtitles** (Groq, OpenAI or your own endpoint) and **AI summaries** of a video from its subtitles. These need a service or API key that you provide, and some providers charge.
+
+### 🔴 Live
+- Danmaku for live chat and replays, or a chat that keeps up: newest at the bottom, translate any message, write in chat after signing in.
+- Live markers on your subscriptions.
 
 ### 🔐 Accounts only if you want them
-- **Google sign-in** for subscriptions, playlists, likes, comments and saving to YouTube playlists.
-- **TV-code or browser sign-in** for community posts, polls, comment likes and **members-only videos** you have access to.
+- Google, TV-code or browser sign-in for subscriptions, playlists, likes, comments, community posts, polls and **members-only videos** you have access to.
 - Credentials are encrypted on your computer, protected by TPM or Windows Hello on Windows and the keyring on Linux and macOS.
 
-### ⚙️ Small things that add up
-- SponsorBlock, Return YouTube Dislike and DeArrow built in, all off by default.
-- Proxy support (system, HTTP or SOCKS5) and optional encrypted DNS.
-- Accent colours, fonts and card sizes.
+### Also built in
+These are also found in other YouTube clients, and all are opt-in here:
+- **SponsorBlock**, **DeArrow** titles and thumbnails, **Return YouTube Dislike**, hide all Shorts, and an AI filter that hides videos labelled as AI and channels on community AI-slop lists.
+- Proxy support (system, HTTP or SOCKS5), optional encrypted DNS, and Piped or Invidious servers as a fallback.
+- **72 interface languages**, right to left included, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
+- Ten palettes, light and dark, plus an optional warm light, fonts and card sizes.
 - Block any channel, or just stop it being recommended.
-- **72 interface languages**, from Arabic and Hebrew (right to left) to Zulu, Esperanto and Latin, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
-- Ten restrained palettes, light and dark, plus an optional warm light for the evening.
 - Signed automatic updates for the app, yt-dlp and libmpv, with rollback if a new component breaks.
 
 ## Get it
@@ -148,6 +105,7 @@ Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 | `macos-arm64` DMG | Macs with Apple silicon (M1 and later) |
 | `macos-x64` DMG | Intel Macs |
 
+File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.
@@ -160,11 +118,17 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 or open it, click **Done**, and choose **Open Anyway** next to Lumtub in **System Settings › Privacy & Security**. Updates after that open normally.
 
-## Privacy you can check
 
-🔒 Your recommendations, history, searches, statistics and "Not interested" choices never leave your computer. Lumtub never reads your browser's cookies or profiles. The optional browser sign-in opens a separate, temporary window, keeps only YouTube's cookies, encrypts them on your computer and deletes everything else. Syncing your watch history to YouTube is off unless you turn it on.
+## Privacy: what stays local and what doesn't
 
-Videos play straight from YouTube. Only if you pick a Piped or Invidious server, or YouTube refuses and Lumtub falls back to one, does that server see which video you watch.
+Stays on your computer: your watch history, statistics, "Not interested" choices and the recommendation model itself. Recommendations are computed locally. Lumtub never reads your browser's cookies or profiles. The optional browser sign-in opens a separate, temporary window, keeps only YouTube's cookies, encrypts them on your computer and deletes everything else. Syncing your watch history to YouTube is off unless you turn it on.
+
+Leaves your computer, because the feature needs it:
+- **YouTube** receives the requests needed to search, load and play videos, and your account actions when signed in. Your search terms go to YouTube like any search.
+- **A Piped or Invidious server** sees which video you watch, only if you pick one or YouTube refuses and Lumtub falls back to it.
+- **Translation, speech-to-text and AI summaries** send the text or audio involved to the service you configure. All are optional and off until you set them up.
+- **SponsorBlock, DeArrow and Return YouTube Dislike** contact their own servers when enabled, using a short hash prefix of the video id where the service supports it.
+- **Updates** download from GitHub.
 
 Everything is open source under the GPL, so none of this has to be taken on trust.
 
@@ -175,6 +139,8 @@ Everything is open source under the GPL, so none of this has to be taken on trus
 **Will it break when YouTube changes something?** Sometimes, briefly. Lumtub updates yt-dlp on its own, and fixes usually arrive within days.
 
 **Do I need a Google account?** No. Everything except account features (likes, comments, syncing) works signed out.
+
+**Is everything free?** Lumtub is. Some optional AI features (translation, speech-to-text, summaries) use third-party services or your own API keys, and those providers may charge.
 
 **Where is my data?** On Windows in `%LOCALAPPDATA%\Lumtub`, or the `userdata` folder next to `lumtub.exe` for the portable version. On Linux in `~/.local/share/lumtub`, on macOS in `~/Library/Application Support/Lumtub`. Settings can be exported and imported.
 
@@ -191,7 +157,7 @@ Everything is open source under the GPL, so none of this has to be taken on trus
 <div align="center">
 
 **Lumtub is built by one developer, in the open, with no ads and no tracking.**<br>
-Every feature above exists because someone sponsored the time to build it.
+Sponsors pay for the time to build it.
 
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/Sponsor_on_GitHub-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" height="44"></a>
 

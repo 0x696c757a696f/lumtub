@@ -584,11 +584,18 @@ pub struct Address {
     url: Mutex<String>,
     /// Set when YouTube refused the address; cleared by a new one.
     expired: AtomicBool,
+    /// Whether the app can bring a new one: not while a session is being
+    /// registered, as nothing asks for it then.
+    renewable: bool,
 }
 
 impl Address {
     fn new(url: String) -> Arc<Address> {
-        Arc::new(Address { url: Mutex::new(url), expired: AtomicBool::new(false) })
+        Arc::new(Address { url: Mutex::new(url), expired: AtomicBool::new(false), renewable: true })
+    }
+
+    fn fixed(url: String) -> Arc<Address> {
+        Arc::new(Address { url: Mutex::new(url), expired: AtomicBool::new(false), renewable: false })
     }
 
     fn get(&self) -> String {
@@ -654,6 +661,9 @@ impl Reader {
                         self.ahead = Some((next, next_last, self.open(next, next_last)));
                     }
                     return Ok(());
+                }
+                Err(Stop::Refused(status @ (403 | 410), _)) if !self.address.renewable => {
+                    return Err(format!("YouTube answered {status}"));
                 }
                 Err(Stop::Refused(status @ (403 | 410), _)) => {
                     self.address.expired.store(true, Ordering::SeqCst);
@@ -731,7 +741,7 @@ impl Reader {
 /// Reads the head of `target` until its index is there.
 pub fn fetch_head(fetch: &Arc<dyn Fetch>, target: &Target) -> Result<Track, String> {
     let mut want = (64u64 << 10).min(target.size);
-    let address = Address::new(target.url.clone());
+    let address = Address::fixed(target.url.clone());
     loop {
         let mut reader = Reader::new(fetch.clone(), &Target { chunk: want.max(1), ..target.clone() }, address.clone(), Arc::new(AtomicBool::new(false)), 0);
         let data = reader.take(want)?;
@@ -1413,13 +1423,19 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &Arc<dyn Fetch>) {
     let peer = client.peer_addr().map(|a| a.ip().to_string()).unwrap_or_default();
     let Ok(mut writer) = client.try_clone() else { return };
     let mut reader = BufReader::new(client);
-    let Some((method, path, _headers)) = read_request(&mut reader) else { return };
+    let Some((method, path, headers)) = read_request(&mut reader) else {
+        log(shared, format!("{peer} connected but sent no request"));
+        return;
+    };
     let token = path.trim_start_matches('/').split(['.', '?']).next().unwrap_or("").to_string();
     let session = shared.lock().unwrap().sessions.get(&token).cloned();
+    let asked = describe_request(&peer, &method, &path, &headers);
     let Some(session) = session.filter(|_| method == "GET" || method == "HEAD") else {
+        log(shared, format!("{asked}: answered 404"));
         let _ = writer.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
         return;
     };
+    log(shared, format!("{asked}: answered 200"));
     let mut head = format!("HTTP/1.1 200 OK\r\nContent-Type: {}\r\nCache-Control: no-cache\r\nConnection: close\r\n", session.mime());
     head.push_str("transferMode.dlna.org: Streaming\r\ncontentFeatures.dlna.org: DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000\r\n\r\n");
     if writer.write_all(head.as_bytes()).is_err() || method == "HEAD" {
@@ -1435,6 +1451,19 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &Arc<dyn Fetch>) {
     let _ = out.flush();
     drop(out);
     let _ = writer.shutdown(Shutdown::Both);
+}
+
+/// One request for the log: who asked what, and how, with no address.
+fn describe_request(peer: &str, method: &str, path: &str, headers: &HashMap<String, String>) -> String {
+    let kind = path.rsplit_once('.').map_or("", |(_, ext)| ext.split('?').next().unwrap_or(""));
+    let mut line = format!("{peer} asked {method} for a .{kind} stream");
+    if let Some(range) = headers.get("range") {
+        line.push_str(&format!(", range {range}"));
+    }
+    if let Some(agent) = headers.get("user-agent") {
+        line.push_str(&format!(", user agent {}", agent.chars().take(80).collect::<String>()));
+    }
+    line
 }
 
 static SERVER: OnceLock<Server> = OnceLock::new();
@@ -1623,6 +1652,13 @@ mod tests {
         renewer.join().unwrap();
         assert!(!session.expired());
         assert_eq!(out, reference);
+        // While a session is registered nothing can renew it, so a refused
+        // address fails at once.
+        let started = std::time::Instant::now();
+        let ask = Ask { video: target("v.mp4?old=1", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4 };
+        let refused = Session::new(ask, &expiring).err().expect("refused");
+        assert_eq!(refused, "picture: YouTube answered 403");
+        assert!(started.elapsed() < Duration::from_secs(5));
         // The same stream through the server, as a TV reads it.
         let server = Server::start(files.clone()).expect("listen");
         let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Ts };
@@ -1649,5 +1685,7 @@ mod tests {
         let mut answer = String::new();
         client.read_to_string(&mut answer).unwrap();
         assert!(answer.starts_with("HTTP/1.1 404"));
+        let log = server.take_log();
+        assert!(log.iter().any(|l| l.starts_with("127.0.0.1 asked GET for a .mp4 stream") && l.ends_with("answered 404")), "{log:?}");
     }
 }

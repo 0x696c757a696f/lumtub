@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} ከምኡውን ናይ ምሕላፍ ጎማ: ኣብ ነፍሲ ወከፍ ስጉምቲ {1}%",
   "{0} was taken from \"{1}\"": "{0} ካብ “{1}” ተወሲዱ",
   "{0} were found, and your filters and settings left all of them out": "{0} ተረኺቦም፣ ግን ማጻሕጸሒታትኩምን ቅጥዕታትኩምን ንኹሎም ኣዕለልዎም",
-  "{0}: {1} s": "{0}: {1} ሰ"
+  "{0}: {1} s": "{0}: {1} ሰ",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ተለቪዥን ቪድዮ ካብ Lumtub ገና ኣይሓተተን። እንተዘይጀሚሩ፣ ፋየርዎል ኣብዚ ኮምፕዩተር Lumtub ክዐግት ይኽእል እዩ፤ ኣብዚ ኔትወርክ ኣፍቅድ።"
 }

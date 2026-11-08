@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} እና የማሸብለያ ጎማ፦ በእያንዳንዱ እርምጃ {1}%",
   "{0} was taken from \"{1}\"": "{0} ከ“{1}” ተወስዷል",
   "{0} were found, and your filters and settings left all of them out": "{0} ተገኝተዋል፣ ነገር ግን ማጣሪያዎችዎ እና ቅንብሮችዎ ሁሉንም አስቀርተዋቸዋል",
-  "{0}: {1} s": "{0}፦ {1} ሰ"
+  "{0}: {1} s": "{0}፦ {1} ሰ",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ቴሌቪዥኑ ቪዲዮውን ከ Lumtub ገና አልጠየቀም። ካልጀመረ፣ በዚህ ኮምፒውተር ላይ ያለ ፋየርዎል Lumtub ን እየከለከለ ሊሆን ይችላል፤ በዚህ አውታረ መረብ ላይ እንዲሠራ ይፍቀዱለት።"
 }

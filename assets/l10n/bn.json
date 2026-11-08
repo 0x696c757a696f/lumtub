@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} এবং স্ক্রল হুইল: প্রতি ধাপে {1}%",
   "{0} was taken from \"{1}\"": "{0} “{1}” থেকে নেওয়া হয়েছে",
   "{0} were found, and your filters and settings left all of them out": "{0}টি পাওয়া গেছে, কিন্তু আপনার ফিল্টার ও সেটিংস সবগুলোই বাদ দিয়েছে",
-  "{0}: {1} s": "{0}: {1} সে."
+  "{0}: {1} s": "{0}: {1} সে.",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "টিভি এখনও Lumtub-এর কাছে ভিডিওটি চায়নি। শুরু না হলে, এই কম্পিউটারের ফায়ারওয়াল হয়তো Lumtub-কে আটকে দিচ্ছে; এই নেটওয়ার্কে এটিকে অনুমতি দিন।"
 }

@@ -506,9 +506,15 @@ class AppController extends ChangeNotifier with _ExploreState {
     // The device may take a while to load; the watch ends once it was seen
     // casting this video and no longer is, or if it never started.
     var seen = false;
+    var asked = false;
     _castWatch = Timer.periodic(const Duration(seconds: 5), (timer) {
       for (final line in (jsonDecode(core.castLog() ?? '[]') as List).cast<String>()) {
+        asked |= line.contains(' asked ');
         logInfo(line);
+      }
+      if (!asked && timer.tick == 4) {
+        logWarn('Cast: ${device.name} has not asked for the stream in 20 s');
+        _notice(tr('The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.'));
       }
       final casting = cast.active && cast.videoId == videoId;
       seen |= casting;
@@ -521,7 +527,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       final soon = expires != null && expires.difference(DateTime.now()) < const Duration(minutes: 20);
       if (!renewing && (soon || core.castExpired())) unawaited(renew());
     });
-    Future<CastMedia> from(Duration at) async {
+    Future<CastMedia> from(Duration at, {bool again = false}) async {
       final split = current;
       final ask = jsonEncode({
         'video': target(split.video, split.videoSize),
@@ -530,6 +536,13 @@ class AppController extends ChangeNotifier with _ExploreState {
         'kind': ts ? 'ts' : 'mp4',
       });
       final answer = jsonDecode(await _castRegister(ask)) as Map<String, dynamic>;
+      // An address YouTube refuses at once is asked for anew, once.
+      if (!again && answer['path'] is! String && '${answer['error']}'.contains(RegExp(r'answered 4(03|10)'))) {
+        logWarn('Cast: YouTube refused the stream addresses (${answer['error']}); resolving again');
+        final before = current;
+        await renew();
+        if (!identical(before, current)) return from(at, again: true);
+      }
       final path = answer['path'];
       if (path is! String) throw StateError('${answer['error']}');
       final begins = Duration(milliseconds: (((answer['start'] as num?) ?? 0) * 1000).round());

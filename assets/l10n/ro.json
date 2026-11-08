@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} și rotița mouse-ului: {1}% pe pas",
   "{0} was taken from \"{1}\"": "{0} a fost preluat din „{1}”",
   "{0} were found, and your filters and settings left all of them out": "Au fost găsite {0}, dar filtrele și setările tale le-au exclus pe toate",
-  "{0}: {1} s": "{0}: {1} s"
+  "{0}: {1} s": "{0}: {1} s",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Televizorul nu a cerut încă videoclipul de la Lumtub. Dacă nu pornește, un firewall de pe acest computer poate bloca Lumtub; permite-l în această rețea."
 }

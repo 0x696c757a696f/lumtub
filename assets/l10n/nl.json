@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} en scrollwiel: {1}% per stap",
   "{0} was taken from \"{1}\"": "{0} is overgenomen uit “{1}”",
   "{0} were found, and your filters and settings left all of them out": "{0} gevonden, maar je filters en instellingen hebben ze allemaal weggelaten",
-  "{0}: {1} s": "{0}: {1} s"
+  "{0}: {1} s": "{0}: {1} s",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "De tv heeft de video nog niet bij Lumtub opgevraagd. Als het niet start, blokkeert mogelijk een firewall op deze computer Lumtub; sta het toe op dit netwerk."
 }

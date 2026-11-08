@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} និងកង់រមូរ៖ {1}% ក្នុងមួយជំហាន",
   "{0} was taken from \"{1}\"": "{0} ត្រូវបានយកចេញពី “{1}”",
   "{0} were found, and your filters and settings left all of them out": "បានរកឃើញ {0} ប៉ុន្តែតម្រង និងការកំណត់របស់អ្នកបានដកចេញទាំងអស់",
-  "{0}: {1} s": "{0}៖ {1} វិ"
+  "{0}: {1} s": "{0}៖ {1} វិ",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ទូរទស្សន៍មិនទាន់បានស្នើសុំវីដេអូពី Lumtub នៅឡើយទេ។ ប្រសិនបើវាមិនចាប់ផ្តើម ជញ្ជាំងភ្លើងលើកុំព្យូទ័រនេះអាចកំពុងរារាំង Lumtub សូមអនុញ្ញាតវានៅលើបណ្តាញនេះ។"
 }

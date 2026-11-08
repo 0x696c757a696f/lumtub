@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} 및 스크롤 휠: 단계당 {1}%",
   "{0} was taken from \"{1}\"": "{0}을(를) “{1}”에서 가져왔습니다",
   "{0} were found, and your filters and settings left all of them out": "{0}개를 찾았지만 필터와 설정 때문에 모두 제외되었습니다",
-  "{0}: {1} s": "{0}: {1}초"
+  "{0}: {1} s": "{0}: {1}초",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "TV가 아직 Lumtub에 동영상을 요청하지 않았습니다. 재생이 시작되지 않으면 이 컴퓨터의 방화벽이 Lumtub를 차단하고 있을 수 있습니다. 이 네트워크에서 Lumtub를 허용하세요."
 }

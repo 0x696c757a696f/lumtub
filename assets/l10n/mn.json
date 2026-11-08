@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} болон гүйлгэх дугуй: алхам бүрд {1}%",
   "{0} was taken from \"{1}\"": "{0}-г “{1}”-аас авсан",
   "{0} were found, and your filters and settings left all of them out": "{0} олдсон боловч таны шүүлтүүр болон тохиргоо бүгдийг нь хассан",
-  "{0}: {1} s": "{0}: {1} сек"
+  "{0}: {1} s": "{0}: {1} сек",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Телевиз Lumtub-аас видеог хараахан хүсээгүй байна. Эхлэхгүй бол энэ компьютерийн галт хана Lumtub-ийг хаасан байж магадгүй; энэ сүлжээнд зөвшөөрнө үү."
 }

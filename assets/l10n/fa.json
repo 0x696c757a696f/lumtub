@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} و چرخ ماوس: {1}% در هر گام",
   "{0} was taken from \"{1}\"": "{0} از «{1}» برداشته شد",
   "{0} were found, and your filters and settings left all of them out": "{0} یافت شد، اما فیلترها و تنظیمات شما همه را کنار گذاشتند",
-  "{0}: {1} s": "{0}: {1} ثانیه"
+  "{0}: {1} s": "{0}: {1} ثانیه",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "تلویزیون هنوز ویدیو را از Lumtub درخواست نکرده است. اگر پخش شروع نشد، شاید دیوار آتش این رایانه جلوی Lumtub را گرفته باشد؛ به آن در این شبکه اجازه دهید."
 }

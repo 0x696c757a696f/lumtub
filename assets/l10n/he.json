@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} וגלגלת העכבר: {1}% לכל צעד",
   "{0} was taken from \"{1}\"": "{0} נלקח מ-\"{1}\"",
   "{0} were found, and your filters and settings left all of them out": "נמצאו {0}, אבל המסננים וההגדרות שלכם השמיטו את כולם",
-  "{0}: {1} s": "{0}: {1} שנ׳"
+  "{0}: {1} s": "{0}: {1} שנ׳",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "הטלוויזיה עדיין לא ביקשה את הסרטון מ-Lumtub. אם הוא לא מתחיל, ייתכן שחומת אש במחשב הזה חוסמת את Lumtub; אפשרו לה לפעול ברשת הזו."
 }

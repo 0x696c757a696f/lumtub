@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} va aylantirish g'ildiragi: har qadamda {1}%",
   "{0} was taken from \"{1}\"": "{0} “{1}” dan olindi",
   "{0} were found, and your filters and settings left all of them out": "{0} topildi, lekin filtrlar va sozlamalaringiz hammasini chiqarib tashladi",
-  "{0}: {1} s": "{0}: {1} s"
+  "{0}: {1} s": "{0}: {1} s",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Televizor videoni hali Lumtub'dan so'ramadi. Agar boshlanmasa, bu kompyuterdagi xavfsizlik devori Lumtub'ni bloklayotgan bo'lishi mumkin; unga ushbu tarmoqda ruxsat bering."
 }

@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} at scroll wheel: {1}% bawat hakbang",
   "{0} was taken from \"{1}\"": "Kinuha ang {0} mula sa “{1}”",
   "{0} were found, and your filters and settings left all of them out": "Nakahanap ng {0}, pero inalis silang lahat ng iyong mga filter at setting",
-  "{0}: {1} s": "{0}: {1} s"
+  "{0}: {1} s": "{0}: {1} s",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Hindi pa humihingi ng video ang TV sa Lumtub. Kung hindi ito magsimula, maaaring hinaharang ng firewall sa computer na ito ang Lumtub; payagan ito sa network na ito."
 }

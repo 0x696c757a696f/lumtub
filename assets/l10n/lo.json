@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} ແລະ ລໍ້ເລື່ອນ: {1}% ຕໍ່ຂັ້ນ",
   "{0} was taken from \"{1}\"": "{0} ຖືກເອົາມາຈາກ “{1}”",
   "{0} were found, and your filters and settings left all of them out": "ພົບ {0} ແຕ່ຕົວກັ່ນຕອງ ແລະ ການຕັ້ງຄ່າຂອງທ່ານໄດ້ເອົາທັງໝົດອອກ",
-  "{0}: {1} s": "{0}: {1} ວິ"
+  "{0}: {1} s": "{0}: {1} ວິ",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ໂທລະທັດຍັງບໍ່ໄດ້ຂໍວິດີໂອຈາກ Lumtub. ຖ້າບໍ່ເລີ່ມ, ອາດມີໄຟວໍຢູ່ຄອມພິວເຕີເຄື່ອງນີ້ກຳລັງບລັອກ Lumtub; ກະລຸນາອະນຸຍາດມັນໃນເຄືອຂ່າຍນີ້."
 }

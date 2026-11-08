@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} és görgetőkerék: {1}% lépésenként",
   "{0} was taken from \"{1}\"": "{0} át lett véve innen: „{1}”",
   "{0} were found, and your filters and settings left all of them out": "{0} találat, de a szűrőid és beállításaid mindet kihagyták",
-  "{0}: {1} s": "{0}: {1} mp"
+  "{0}: {1} s": "{0}: {1} mp",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "A tévé még nem kérte el a videót a Lumtubtól. Ha nem indul el, lehet, hogy a számítógép tűzfala blokkolja a Lumtubot; engedélyezd ezen a hálózaton."
 }

@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} и колесо прокрутки: {1}% за шаг",
   "{0} was taken from \"{1}\"": "{0} взято из «{1}»",
   "{0} were found, and your filters and settings left all of them out": "Найдено: {0}, но ваши фильтры и настройки исключили всё",
-  "{0}: {1} s": "{0}: {1} с"
+  "{0}: {1} s": "{0}: {1} с",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Телевизор ещё не запросил видео у Lumtub. Если воспроизведение не начнётся, возможно, брандмауэр на этом компьютере блокирует Lumtub; разрешите ему работу в этой сети."
 }

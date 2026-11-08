@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} და გადახვევის ბორბალი: {1}% ერთ ნაბიჯზე",
   "{0} was taken from \"{1}\"": "{0} აღებულია „{1}“-დან",
   "{0} were found, and your filters and settings left all of them out": "ნაპოვნია {0}, მაგრამ თქვენმა ფილტრებმა და პარამეტრებმა ყველა გამორიცხა",
-  "{0}: {1} s": "{0}: {1} წმ"
+  "{0}: {1} s": "{0}: {1} წმ",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ტელევიზორს Lumtub-ისთვის ვიდეო ჯერ არ მოუთხოვია. თუ არ დაიწყო, შესაძლოა ამ კომპიუტერის ბრანდმაუერი ბლოკავს Lumtub-ს; დაუშვით ის ამ ქსელში."
 }

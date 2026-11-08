@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} a kolečko myši: {1} % na krok",
   "{0} was taken from \"{1}\"": "{0} bylo převzato z „{1}“",
   "{0} were found, and your filters and settings left all of them out": "Nalezeno: {0}, ale vaše filtry a nastavení je všechny vyřadily",
-  "{0}: {1} s": "{0}: {1} s"
+  "{0}: {1} s": "{0}: {1} s",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Televize si od Lumtubu zatím video nevyžádala. Pokud se nespustí, může Lumtub blokovat firewall v tomto počítači; povolte ho v této síti."
 }

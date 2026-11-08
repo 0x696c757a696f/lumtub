@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} ir slinkties ratukas: {1} % per žingsnį",
   "{0} was taken from \"{1}\"": "{0} paimta iš „{1}“",
   "{0} were found, and your filters and settings left all of them out": "Rasta: {0}, bet jūsų filtrai ir nustatymai juos visus praleido",
-  "{0}: {1} s": "{0}: {1} s"
+  "{0}: {1} s": "{0}: {1} s",
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Televizorius dar neprašė vaizdo įrašo iš „Lumtub“. Jei jis nepasileidžia, gali būti, kad šio kompiuterio ugniasienė blokuoja „Lumtub“; leiskite jį šiame tinkle."
 }

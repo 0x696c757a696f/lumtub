@@ -53,6 +53,7 @@ import '../video_summary.dart';
 import '../watch_time.dart';
 import '../cast/cast_device.dart';
 import '../cast/cast_stream.dart';
+import '../cast/dlna.dart';
 import '../invidious_streams.dart';
 import '../piped_streams.dart';
 import '../search_options.dart';
@@ -477,6 +478,8 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (port == 0) throw StateError('the cast server could not listen');
     final here = await _addressFacing(device);
     final ts = device.protocol == CastProtocol.dlna && split.fitsTransportStream;
+    // Apple's players take a transport stream only as HLS; TVs take it whole.
+    final hls = ts && device is DlnaDevice && device.apple;
     final agent = info['http_headers'] is Map ? (info['http_headers'] as Map)['User-Agent']?.toString() : null;
     final duration = info['duration'] is num ? Duration(milliseconds: ((info['duration'] as num) * 1000).round()) : null;
     Map<String, dynamic> target(String url, int size) => {'url': url, 'size': size, if (agent != null) 'userAgent': agent, if (proxy.url != null) 'proxy': proxy.url};
@@ -533,7 +536,8 @@ class AppController extends ChangeNotifier with _ExploreState {
         'video': target(split.video, split.videoSize),
         'audio': target(split.audio, split.audioSize),
         'startMs': at.inMilliseconds,
-        'kind': ts ? 'ts' : 'mp4',
+        'kind': hls ? 'hls' : ts ? 'ts' : 'mp4',
+        if (duration != null) 'durationMs': duration.inMilliseconds,
       });
       final answer = jsonDecode(await _castRegister(ask)) as Map<String, dynamic>;
       // An address YouTube refuses at once is asked for anew, once.
@@ -546,7 +550,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       final path = answer['path'];
       if (path is! String) throw StateError('${answer['error']}');
       final begins = Duration(milliseconds: (((answer['start'] as num?) ?? 0) * 1000).round());
-      logInfo('Casting ${split.height}p${split.fps} ${split.codec} joined by lumtub_core from ${begins.inSeconds} s as ${ts ? 'MPEG-TS' : 'MP4'}');
+      logInfo('Casting ${split.height}p${split.fps} ${split.codec} joined by lumtub_core from ${begins.inSeconds} s as ${hls ? 'HLS' : ts ? 'MPEG-TS' : 'MP4'}');
       // The device counts time from where this stream begins.
       CastSubtitles? lines;
       if (subtitles.cues.isNotEmpty) {
@@ -556,7 +560,7 @@ class AppController extends ChangeNotifier with _ExploreState {
           logWarn('Cast: could not serve the subtitles: $e');
         }
       }
-      return CastMedia(url: 'http://$here:$port$path', title: title, mime: ts ? 'video/mpeg' : 'video/mp4', offset: begins, duration: duration, restart: from, subtitles: lines);
+      return CastMedia(url: 'http://$here:$port$path', title: title, mime: hls ? 'application/vnd.apple.mpegurl' : ts ? 'video/mpeg' : 'video/mp4', offset: begins, duration: duration, restart: from, subtitles: lines);
     }
 
     return from(start);

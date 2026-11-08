@@ -118,6 +118,15 @@ void main() {
       expect(relative.avTransport?.controlUrl.toString(), 'http://10.0.0.5:49152/upnp/control/AVTransport');
     });
 
+    test('tells renderers on Apple devices from TVs', () {
+      expect(parseDeviceDescription(_description, Uri.parse('http://192.168.1.20:8080/desc.xml')).apple, isFalse);
+      expect(looksApple('iPhone - Nero Receiver'), isTrue);
+      expect(looksApple('电视助手: iPhone'), isTrue);
+      expect(looksApple('Living room Mac mini'), isTrue);
+      expect(looksApple('Samsung QN90 Smart TV'), isFalse);
+      expect(looksApple('Machine room TV'), isFalse);
+    });
+
     test('builds a SOAP envelope with escaped arguments', () {
       final body = soapEnvelope('urn:schemas-upnp-org:service:AVTransport:1', 'SetAVTransportURI', {'InstanceID': '0', 'CurrentURI': 'http://x/v?a=1&b=2'});
       expect(body, contains('<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'));

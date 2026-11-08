@@ -71,10 +71,13 @@ class UpnpService {
 
 /// A UPnP device description, as far as casting needs it.
 class DlnaDescription {
-  const DlnaDescription({required this.name, required this.udn, required this.services});
+  const DlnaDescription({required this.name, required this.udn, required this.services, this.apple = false});
   final String name;
   final String udn;
   final List<UpnpService> services;
+  /// Whether the renderer runs on an iPhone, iPad or Mac, where players
+  /// take a transport stream only as HLS.
+  final bool apple;
 
   UpnpService? get avTransport => services.where((s) => s.type.startsWith(avTransportPrefix)).firstOrNull;
 }
@@ -92,8 +95,12 @@ DlnaDescription parseDeviceDescription(String xml, Uri location) {
     services.add(UpnpService(type, base.resolve(control)));
   }
   final name = xmlText(xml, 'friendlyName');
-  return DlnaDescription(name: name == null || name.isEmpty ? location.host : name, udn: xmlText(xml, 'UDN') ?? location.toString(), services: services);
+  final about = [name, for (final tag in ['manufacturer', 'modelName', 'modelDescription']) xmlText(xml, tag)].whereType<String>().join(' ');
+  return DlnaDescription(name: name == null || name.isEmpty ? location.host : name, udn: xmlText(xml, 'UDN') ?? location.toString(), services: services, apple: looksApple(about));
 }
+
+/// Whether a renderer described as [about] runs on Apple's systems.
+bool looksApple(String about) => RegExp(r'\b(iPhone|iPad|iPod|iOS|iPadOS|macOS|Mac|MacBook|iMac|Apple)\b', caseSensitive: false).hasMatch(about);
 
 /// The SOAP request body for [action] of [serviceType].
 String soapEnvelope(String serviceType, String action, Map<String, String> arguments) => '<?xml version="1.0" encoding="utf-8"?>'
@@ -167,7 +174,7 @@ CastState dlnaState(String? transportState) => switch (transportState) {
 
 /// A UPnP media renderer, driven through its AVTransport service.
 class DlnaDevice implements CastDevice {
-  DlnaDevice({required this.name, required this.id, required this.serviceType, required this.controlUrl, HttpClient? client})
+  DlnaDevice({required this.name, required this.id, required this.serviceType, required this.controlUrl, this.apple = false, HttpClient? client})
       : _client = (client ?? HttpClient())..connectionTimeout = const Duration(seconds: 5);
 
   @override
@@ -182,6 +189,8 @@ class DlnaDevice implements CastDevice {
   int get port => controlUrl.port;
   final String serviceType;
   final Uri controlUrl;
+  /// See [DlnaDescription.apple].
+  final bool apple;
   final HttpClient _client;
 
   Future<Map<String, String>> _soap(String action, [Map<String, String> arguments = const {}]) async {
@@ -285,7 +294,7 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
       final description = parseDeviceDescription(xml, found.location);
       final service = description.avTransport;
       if (service == null || !seen.add(description.udn) || controller.isClosed) return;
-      controller.add(DlnaDevice(name: description.name, id: description.udn, serviceType: service.type, controlUrl: service.controlUrl));
+      controller.add(DlnaDevice(name: description.name, id: description.udn, serviceType: service.type, controlUrl: service.controlUrl, apple: description.apple));
     } catch (e) {
       logWarn('Could not read the DLNA device description ${found.location}: $e');
     }

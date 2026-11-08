@@ -114,6 +114,7 @@ part 'picture_health.dart';
 part 'chat_actions.dart';
 part 'subtitle_actions.dart';
 part 'smoke_check.dart';
+part 'diagnostics.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
@@ -2774,6 +2775,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The audio outputs libmpv reports, "auto" first.
   List<AudioDevice> get audioDevices => player?.state.audioDevices ?? const [];
 
+  /// The codec and height the playback test plays at, while it runs.
+  PlayerSettings? _benchmark;
+
   String get _format => FormatPolicy.expression(_playback);
 
   String? get _formatSort => FormatPolicy.formatSort(_playback);
@@ -2781,6 +2785,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// [settings] as playback picks streams with them: automatic quality is
   /// capped at the tallest display.
   PlayerSettings get _playback {
+    if (_benchmark case final fixed?) return fixed;
     final playback = FormatPolicy.forDisplay(settings, _displayHeight);
     if (_droppedCap == 0 || settings.maxHeight != 0 || (playback.maxHeight > 0 && playback.maxHeight <= _droppedCap)) return playback;
     return playback.copyWith(maxHeight: _droppedCap);

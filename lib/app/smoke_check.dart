@@ -173,6 +173,15 @@ extension SmokeCheck on AppController {
         } catch (e) {
           results['youtube'] = {'played': false, 'error': '$e'};
         }
+        // Reported only; YouTube often refuses build machines.
+        try {
+          final checks = await runNetworkCheck((_) {}).timeout(const Duration(minutes: 3));
+          results['network'] = [for (final c in checks) '${c.name}: ${c.skipped ? 'skipped' : c.ok ? 'ok' : 'failed'} ${c.ms ?? ''} ms · ${c.route} · ${c.detail}'];
+          final samples = await runPlaybackTest((_) {}, seconds: 5).timeout(const Duration(minutes: 4));
+          results['playbackTest'] = [for (final s in samples) '${s.codec.label}: ${s.error ?? '${s.picture} ${s.decoder} cpu ${s.cpuPercent?.round()}% ${s.memoryMb} MB dropped ${s.dropped}'}'];
+        } catch (e) {
+          results['diagnostics'] = '$e';
+        }
       }
     } catch (e, stack) {
       results['error'] = '$e\n$stack';

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -569,8 +570,10 @@ class ChannelMenuButton extends StatelessWidget {
             ? entry('recommend', AppIcons.thumbsUp, tr('Recommend this channel again'))
             : entry('unrecommend', AppIcons.thumbsDown, tr("Don't recommend this channel")),
         blocked ? entry('unblock', AppIcons.user, tr('Unblock this channel')) : entry('block', AppIcons.prohibitFill, tr('Block this channel')),
+        entry('join', AppIcons.medal, tr('Join as a member on YouTube in your browser')),
       ],
       onSelected: (choice) => switch (choice) {
+        'join' => unawaited(openExternal('${channel.url}/join')),
         'recommend' => controller.setRecommendChannel(channel, true),
         'unrecommend' => controller.setRecommendChannel(channel, false),
         'unblock' => controller.unblockChannel(channel.id),

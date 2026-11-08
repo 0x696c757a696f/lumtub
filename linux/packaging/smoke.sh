@@ -18,7 +18,7 @@ cat > "$out/run.sh" <<'RUN'
 #!/usr/bin/env bash
 out=$1 appimage=$2
 HOME="$out/home" APPIMAGE_EXTRACT_AND_RUN=1 LUMTUB_SMOKE="$out/result.json" LUMTUB_SMOKE_VIDEO="$out/test.mp4" \
-  LUMTUB_SMOKE_YOUTUBE=jNQXAC9IVRw timeout 420 "$appimage" > "$out/stdout.txt" 2>&1 &
+  LUMTUB_SMOKE_YOUTUBE=jNQXAC9IVRw timeout 720 "$appimage" > "$out/stdout.txt" 2>&1 &
 app=$!
 shot=0
 while kill -0 "$app" 2> /dev/null; do

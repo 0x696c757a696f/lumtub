@@ -6,6 +6,8 @@
 Watch without signing in; connect your account only when you want to interact.<br>
 For **Windows, Linux and macOS**.
 
+**English** · [简体中文](README.zh-Hans.md)
+
 [![Download](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=Download&style=for-the-badge&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
 [![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/0x696c757a696f)
 
@@ -62,7 +64,8 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 - Hardware decoding matched to your GPU; live streams at their best quality, starting at the live edge.
 - Theater mode, mini player, borderless picture-in-picture, lights off, A-B loop, storyboard previews and the "most replayed" heatmap.
 - Speed and volume remembered per channel; background playback with media keys and a tray icon.
-- **Cast** to Chromecast and DLNA TVs.
+- **Cast** to Chromecast and DLNA TVs, and to AirPlay receivers (preview).
+- **Diagnostics:** a network check of the proxy, exit addresses and each kind of request, and a built-in playback test of H.264, VP9 and AV1 on your computer (processor, memory, dropped frames).
 - **Downloads:** pick any format YouTube serves, joined without re-encoding, and play it offline in Lumtub.
 
 ### 💬 Subtitles and translation
@@ -73,6 +76,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 ### 🔴 Live
 - Danmaku for live chat and replays, or a chat that keeps up: newest at the bottom, translate any message, write in chat after signing in.
 - Live markers on your subscriptions.
+- Super Chat and channel memberships open YouTube's payment pages in your browser.
 
 ### 🔐 Accounts only if you want them
 - Google, TV-code or browser sign-in for subscriptions, playlists, likes, comments, community posts, polls and **members-only videos** you have access to.

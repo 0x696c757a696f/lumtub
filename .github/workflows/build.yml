@@ -451,7 +451,7 @@ jobs:
             libavcodec-dev libavformat-dev libavutil-dev libavfilter-dev libavdevice-dev libswscale-dev libswresample-dev \
             libass-dev libva-dev libvdpau-dev libdrm-dev libgbm-dev libegl-dev libgl-dev \
             libx11-dev libxext-dev libxinerama-dev libxrandr-dev libxss-dev libxpresent-dev libxv-dev libxkbcommon-dev \
-            libwayland-dev wayland-protocols libpulse-dev libasound2-dev libpipewire-0.3-dev \
+            libwayland-dev wayland-protocols libpulse-dev libasound2-dev \
             liblcms2-dev libuchardet-dev libjpeg-dev zlib1g-dev
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

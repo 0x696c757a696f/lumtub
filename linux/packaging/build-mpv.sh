@@ -4,6 +4,8 @@
 # a working GPU driver does; 0.35.1 is the libmpv the AppImage carried
 # before. Only the library, without the mpv player; Lua, JavaScript and
 # the manual are left out because their packages are not installed.
+# So is PipeWire output: 0.35's crashes when PipeWire has no client
+# configuration, and PulseAudio output plays through PipeWire anyway.
 #
 #   build-mpv.sh <mpv source> <prefix>
 set -euo pipefail

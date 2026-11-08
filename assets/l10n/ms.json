@@ -2990,5 +2990,6 @@
   "{0} was taken from \"{1}\"": "{0} diambil daripada “{1}”",
   "{0} were found, and your filters and settings left all of them out": "{0} ditemui, tetapi penapis dan tetapan anda mengecualikan kesemuanya",
   "{0}: {1} s": "{0}: {1} saat",
-  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "TV belum meminta video daripada Lumtub. Jika tidak bermula, tembok api pada komputer ini mungkin menyekat Lumtub; benarkannya pada rangkaian ini."
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "TV belum meminta video daripada Lumtub. Jika tidak bermula, tembok api pada komputer ini mungkin menyekat Lumtub; benarkannya pada rangkaian ini.",
+  "Cast format": "Format Cast"
 }

@@ -2990,5 +2990,6 @@
   "{0} was taken from \"{1}\"": "{0} взято з «{1}»",
   "{0} were found, and your filters and settings left all of them out": "Знайдено: {0}, але ваші фільтри й налаштування виключили все",
   "{0}: {1} s": "{0}: {1} с",
-  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Телевізор ще не запитав відео в Lumtub. Якщо відтворення не почнеться, можливо, брандмауер на цьому комп’ютері блокує Lumtub; дозвольте йому працювати в цій мережі."
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Телевізор ще не запитав відео в Lumtub. Якщо відтворення не почнеться, можливо, брандмауер на цьому комп’ютері блокує Lumtub; дозвольте йому працювати в цій мережі.",
+  "Cast format": "Формат трансляції на екран"
 }

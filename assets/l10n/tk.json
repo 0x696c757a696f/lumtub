@@ -2990,5 +2990,6 @@
   "{0} was taken from \"{1}\"": "{0} “{1}” sanawyndan alyndy",
   "{0} were found, and your filters and settings left all of them out": "{0} tapyldy, ýöne süzgüçleriňiz we sazlamalaryňyz hemmesini çykardy",
   "{0}: {1} s": "{0}: {1} sek",
-  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Telewizor wideony Lumtub-dan entek soramady. Başlamasa, bu kompýuterdäki brandmauer Lumtub-y petiklän bolmagy mümkin; ony şu tordan geçmäge rugsat beriň."
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Telewizor wideony Lumtub-dan entek soramady. Başlamasa, bu kompýuterdäki brandmauer Lumtub-y petiklän bolmagy mümkin; ony şu tordan geçmäge rugsat beriň.",
+  "Cast format": "Ekrana geçirme formaty"
 }

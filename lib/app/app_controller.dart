@@ -477,9 +477,16 @@ class AppController extends ChangeNotifier with _ExploreState {
     final port = core.castStart();
     if (port == 0) throw StateError('the cast server could not listen');
     final here = await _addressFacing(device);
-    final ts = device.protocol == CastProtocol.dlna && split.fitsTransportStream;
     // Apple's players take a transport stream only as HLS; TVs take it whole.
-    final hls = ts && device is DlnaDevice && device.apple;
+    // A format chosen for the device wins; TS and HLS carry H.264 and AAC only.
+    final kind = switch (preferences.castFormats[device.id]) {
+      'ts' || 'hls' when !split.fitsTransportStream => 'mp4',
+      final String chosen => chosen,
+      null when device.protocol == CastProtocol.dlna && split.fitsTransportStream => device is DlnaDevice && device.apple ? 'hls' : 'ts',
+      null => 'mp4',
+    };
+    final hls = kind == 'hls';
+    final ts = kind == 'ts';
     final agent = info['http_headers'] is Map ? (info['http_headers'] as Map)['User-Agent']?.toString() : null;
     final duration = info['duration'] is num ? Duration(milliseconds: ((info['duration'] as num) * 1000).round()) : null;
     Map<String, dynamic> target(String url, int size) => {'url': url, 'size': size, if (agent != null) 'userAgent': agent, if (proxy.url != null) 'proxy': proxy.url};
@@ -536,7 +543,7 @@ class AppController extends ChangeNotifier with _ExploreState {
         'video': target(split.video, split.videoSize),
         'audio': target(split.audio, split.audioSize),
         'startMs': at.inMilliseconds,
-        'kind': hls ? 'hls' : ts ? 'ts' : 'mp4',
+        'kind': kind,
         if (duration != null) 'durationMs': duration.inMilliseconds,
       });
       final answer = jsonDecode(await _castRegister(ask)) as Map<String, dynamic>;

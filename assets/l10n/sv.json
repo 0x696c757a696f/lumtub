@@ -2990,5 +2990,6 @@
   "{0} was taken from \"{1}\"": "{0} togs från ”{1}”",
   "{0} were found, and your filters and settings left all of them out": "{0} hittades, men dina filter och inställningar uteslöt alla",
   "{0}: {1} s": "{0}: {1} s",
-  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Tv:n har inte begärt videon från Lumtub än. Om den inte startar kan en brandvägg på den här datorn blockera Lumtub; tillåt den på det här nätverket."
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Tv:n har inte begärt videon från Lumtub än. Om den inte startar kan en brandvägg på den här datorn blockera Lumtub; tillåt den på det här nätverket.",
+  "Cast format": "Castingformat"
 }

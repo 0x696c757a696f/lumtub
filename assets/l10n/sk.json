@@ -2990,5 +2990,6 @@
   "{0} was taken from \"{1}\"": "{0} bolo prevzaté z „{1}“",
   "{0} were found, and your filters and settings left all of them out": "Nájdené: {0}, ale vaše filtre a nastavenia ich všetky vynechali",
   "{0}: {1} s": "{0}: {1} s",
-  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Televízor si od Lumtubu zatiaľ video nevyžiadal. Ak sa nespustí, môže Lumtub blokovať firewall v tomto počítači; povoľte ho v tejto sieti."
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Televízor si od Lumtubu zatiaľ video nevyžiadal. Ak sa nespustí, môže Lumtub blokovať firewall v tomto počítači; povoľte ho v tejto sieti.",
+  "Cast format": "Formát odosielania"
 }

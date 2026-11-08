@@ -2990,5 +2990,6 @@
   "{0} was taken from \"{1}\"": "{0} “{1}” වෙතින් ගන්නා ලදී",
   "{0} were found, and your filters and settings left all of them out": "{0} හමු විය, නමුත් ඔබේ පෙරහන් සහ සැකසුම් ඒ සියල්ල ඉවත් කළේය",
   "{0}: {1} s": "{0}: {1} තත්.",
-  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "රූපවාහිනිය තවමත් Lumtub වෙතින් වීඩියෝව ඉල්ලා නැත. එය ආරම්භ නොවන්නේ නම්, මෙම පරිගණකයේ ෆයර්වෝලය Lumtub අවහිර කරනවා විය හැක; මෙම ජාලයේ එයට ඉඩ දෙන්න."
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "රූපවාහිනිය තවමත් Lumtub වෙතින් වීඩියෝව ඉල්ලා නැත. එය ආරම්භ නොවන්නේ නම්, මෙම පරිගණකයේ ෆයර්වෝලය Lumtub අවහිර කරනවා විය හැක; මෙම ජාලයේ එයට ඉඩ දෙන්න.",
+  "Cast format": "විකාශන ආකෘතිය"
 }

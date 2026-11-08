@@ -2990,5 +2990,6 @@
   "{0} was taken from \"{1}\"": "{0}, “{1}” içinden alındı",
   "{0} were found, and your filters and settings left all of them out": "{0} bulundu, ancak filtreleriniz ve ayarlarınız hepsini dışarıda bıraktı",
   "{0}: {1} s": "{0}: {1} sn",
-  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "TV, videoyu henüz Lumtub'dan istemedi. Başlamazsa bu bilgisayardaki bir güvenlik duvarı Lumtub'ı engelliyor olabilir; bu ağda ona izin verin."
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "TV, videoyu henüz Lumtub'dan istemedi. Başlamazsa bu bilgisayardaki bir güvenlik duvarı Lumtub'ı engelliyor olabilir; bu ağda ona izin verin.",
+  "Cast format": "Yayın biçimi"
 }

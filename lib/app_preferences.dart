@@ -68,6 +68,7 @@ class AppPreferences {
     this.allowedMedia = const [],
     this.reversedPlaylists = const [],
     this.castMaxHeight = 1080,
+    this.castFormats = const {},
     this.enabledGroups = const [],
     this.allowedEntries = const [],
     this.blockedChannelNames = const [],
@@ -182,6 +183,9 @@ class AppPreferences {
   /// 1080 the picture is VP9 or AV1 at up to 60 fps, which only newer TVs
   /// decode.
   final int castMaxHeight;
+  /// The stream format chosen for a DLNA renderer, by its id: `ts`, `hls`
+  /// or `mp4`; a renderer not here gets the one Lumtub picks.
+  final Map<String, String> castFormats;
   /// Groups of either list that start unticked and the user ticked.
   final List<String> enabledGroups;
   /// [BlockEntry.key]s the user unticked inside a ticked group.
@@ -411,6 +415,7 @@ class AppPreferences {
     bool? listsAsked,
     List<String>? reversedPlaylists,
     int? castMaxHeight,
+    Map<String, String>? castFormats,
     List<String>? enabledGroups,
     List<String>? allowedEntries,
     List<String>? blockedChannelNames,
@@ -493,6 +498,7 @@ class AppPreferences {
         listsAsked: listsAsked ?? this.listsAsked,
         reversedPlaylists: reversedPlaylists ?? this.reversedPlaylists,
         castMaxHeight: castMaxHeight ?? this.castMaxHeight,
+        castFormats: castFormats ?? this.castFormats,
         enabledGroups: enabledGroups ?? this.enabledGroups,
         allowedEntries: allowedEntries ?? this.allowedEntries,
         blockedChannelNames: blockedChannelNames ?? this.blockedChannelNames,
@@ -576,6 +582,7 @@ class AppPreferences {
         'listsAsked': listsAsked,
         'reversedPlaylists': reversedPlaylists,
         'castMaxHeight': castMaxHeight,
+        'castFormats': castFormats,
         'enabledGroups': enabledGroups,
         'allowedEntries': allowedEntries,
         'blockedChannelNames': blockedChannelNames,
@@ -678,6 +685,11 @@ class AppPreferences {
       allowedMedia: strings('allowedMedia'),
       reversedPlaylists: strings('reversedPlaylists'),
       castMaxHeight: number('castMaxHeight', d.castMaxHeight, 1080, 4320),
+      castFormats: {
+        if (raw['castFormats'] case final Map<String, dynamic> formats)
+          for (final MapEntry(:key, :value) in formats.entries)
+            if (value case 'ts' || 'hls' || 'mp4') key: value as String,
+      },
       enabledGroups: strings('enabledGroups'),
       allowedEntries: strings('allowedEntries'),
       blockedChannelNames: strings('blockedChannelNames'),

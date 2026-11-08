@@ -2990,5 +2990,6 @@
   "{0} was taken from \"{1}\"": "{0} “{1}” માંથી લેવામાં આવ્યું",
   "{0} were found, and your filters and settings left all of them out": "{0} મળ્યા, પરંતુ તમારા ફિલ્ટર અને સેટિંગ્સે બધાને બાકાત રાખ્યા",
   "{0}: {1} s": "{0}: {1} સે",
-  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ટીવીએ હજી Lumtub પાસે વીડિયો માંગ્યો નથી. જો શરૂ ન થાય, તો આ કમ્પ્યુટરનું ફાયરવૉલ કદાચ Lumtub ને અવરોધી રહ્યું છે; આ નેટવર્ક પર તેને મંજૂરી આપો."
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ટીવીએ હજી Lumtub પાસે વીડિયો માંગ્યો નથી. જો શરૂ ન થાય, તો આ કમ્પ્યુટરનું ફાયરવૉલ કદાચ Lumtub ને અવરોધી રહ્યું છે; આ નેટવર્ક પર તેને મંજૂરી આપો.",
+  "Cast format": "કાસ્ટ ફોર્મેટ"
 }

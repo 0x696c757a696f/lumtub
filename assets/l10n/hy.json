@@ -2990,5 +2990,6 @@
   "{0} was taken from \"{1}\"": "{0}-ը վերցվել է «{1}»-ից",
   "{0} were found, and your filters and settings left all of them out": "Գտնվել է {0}, բայց ձեր զտիչներն ու կարգավորումները բոլորը բացառել են",
   "{0}: {1} s": "{0}․ {1} վ",
-  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Հեռուստացույցը դեռ չի խնդրել տեսանյութը Lumtub-ից։ Եթե չսկսվի, հնարավոր է՝ այս համակարգչի firewall-ը արգելափակում է Lumtub-ը․ թույլատրեք այն այս ցանցում։"
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Հեռուստացույցը դեռ չի խնդրել տեսանյութը Lumtub-ից։ Եթե չսկսվի, հնարավոր է՝ այս համակարգչի firewall-ը արգելափակում է Lumtub-ը․ թույլատրեք այն այս ցանցում։",
+  "Cast format": "Հեռարձակման ձևաչափ"
 }

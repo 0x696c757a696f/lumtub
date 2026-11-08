@@ -2990,5 +2990,6 @@
   "{0} was taken from \"{1}\"": "{0} foi retirado de “{1}”",
   "{0} were found, and your filters and settings left all of them out": "{0} encontrados, mas seus filtros e configurações excluíram todos",
   "{0}: {1} s": "{0}: {1} s",
-  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "A TV ainda não pediu o vídeo ao Lumtub. Se não começar, um firewall neste computador pode estar bloqueando o Lumtub; permita-o nesta rede."
+  "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "A TV ainda não pediu o vídeo ao Lumtub. Se não começar, um firewall neste computador pode estar bloqueando o Lumtub; permita-o nesta rede.",
+  "Cast format": "Formato da transmissão"
 }

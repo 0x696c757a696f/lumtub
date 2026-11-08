@@ -85,6 +85,21 @@ class _CastDialogState extends State<_CastDialog> {
     );
   }
 
+  static String? _formatName(String? format) => switch (format) {
+        'ts' => 'MPEG-TS',
+        'hls' => 'HLS',
+        'mp4' => 'MP4',
+        _ => null,
+      };
+
+  Future<void> _setFormat(CastDevice device, String format) async {
+    final prefs = widget.controller.preferences;
+    final formats = {...prefs.castFormats}..remove(device.id);
+    if (format.isNotEmpty) formats[device.id] = format;
+    await widget.controller.savePreferences(prefs.copyWith(castFormats: formats));
+    if (mounted) setState(() {});
+  }
+
   void _pick(CastDevice device) {
     Navigator.of(context).pop();
     unawaited(castTo(widget.controller, device, widget.messenger));
@@ -145,8 +160,17 @@ class _CastDialogState extends State<_CastDialog> {
                   ListTile(
                     leading: Icon(device.protocol == CastProtocol.chromecast ? AppIcons.screencast : AppIcons.television),
                     title: Text(device.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: Text(device.protocol == CastProtocol.chromecast ? 'Chromecast' : 'DLNA'),
+                    subtitle: Text([device.protocol == CastProtocol.chromecast ? 'Chromecast' : 'DLNA', if (_formatName(widget.controller.preferences.castFormats[device.id]) case final format?) format].join(' · ')),
                     onTap: () => _pick(device),
+                    trailing: PopupMenuButton<String>(
+                      tooltip: tr('Cast format'),
+                      icon: const Icon(AppIcons.dotsThreeVertical),
+                      onSelected: (format) => _setFormat(device, format),
+                      itemBuilder: (context) => [
+                        for (final format in const ['', 'ts', 'hls', 'mp4'])
+                          CheckedPopupMenuItem(value: format, checked: (widget.controller.preferences.castFormats[device.id] ?? '') == format, child: Text(_formatName(format) ?? tr('Auto'))),
+                      ],
+                    ),
                   ),
               ]),
             ),

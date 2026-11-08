@@ -39,6 +39,11 @@ class _ExplorePageState extends State<ExplorePage> {
   Widget build(BuildContext context) {
     final loader = controller.explore;
     final items = controller.visible(loader?.items ?? const []);
+    // The AI filter can hide videos after they were listed: when it hides
+    // them all, the next page is read rather than the page left empty.
+    if (loader != null && items.isEmpty && loader.items.isNotEmpty && !loader.loading && loader.hasMore && loader.error == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => loader.loadMore());
+    }
     final error = loader?.error;
     final loading = loader == null || loader.loading;
     final section = controller.exploreSection;
@@ -149,7 +154,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       onLongPress: faith.custom ? () => _removeTopic(context, section, faith) : null,
                       onSecondaryTap: faith.custom ? () => _removeTopic(context, section, faith) : null,
                       child: ChoiceChip(
-                        avatar: Icon(faith.icon, size: 18),
+                        avatar: Icon(faith.icon, size: 18, color: chipForeground(context, i == controller.exploreTopic)),
                         label: Text(faith.label),
                         showCheckmark: false,
                         selected: i == controller.exploreTopic,
@@ -301,11 +306,23 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
             ))
           else
-            SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.compass, title: switch (mode) {
-              ExploreMode.liveUpcoming => tr('No upcoming streams in this category'),
-              ExploreMode.liveReplay => tr('No stream replays in this category'),
-              _ => live ? tr('No live streams in this category right now') : tr('No videos in this category right now'),
-            })),
+            SliverFillRemaining(hasScrollBody: false, child: StatusView(
+              icon: AppIcons.compass,
+              title: switch (mode) {
+                ExploreMode.liveUpcoming => tr('No upcoming streams in this category'),
+                ExploreMode.liveReplay => tr('No stream replays in this category'),
+                _ => live ? tr('No live streams in this category right now') : tr('No videos in this category right now'),
+              },
+              // Found but all hidden reads differently from nothing found.
+              message: loader != null && loader.read > 0 ? tr('{0} were found, and your filters and settings left all of them out', [loader.read]) : null,
+              action: loader != null && loader.hasMore
+                  ? FilledButton.icon(
+                      onPressed: () => loader.loadMore(),
+                      icon: const Icon(AppIcons.magnifyingGlass),
+                      label: Text(tr('Keep looking')),
+                    )
+                  : null,
+            )),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),
     );

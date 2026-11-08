@@ -1,0 +1,15 @@
+! id: order-of-the-solar-temple
+! name: Order of the Solar Temple
+! name.zh-Hans: 太阳圣殿教
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Order_of_the_Solar_Temple
+! legacy: 太阳圣殿教
+
+:xc095532d | ^太阳圣殿
+    legacy: 太阳圣殿教/channel/太阳圣殿
+:xebea04fa | ^太陽聖殿
+    legacy: 太阳圣殿教/channel/太陽聖殿
+:solar-temple | ^Solar Temple
+    legacy: 太阳圣殿教/channel/Solar Temple

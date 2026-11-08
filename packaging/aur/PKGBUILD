@@ -1,0 +1,42 @@
+# Maintainer: Your Name <you@example.com>
+pkgname=lumtub-bin
+pkgver=0.2.29
+_commit=0000000
+pkgrel=1
+pkgdesc='Desktop YouTube client with mpv playback, local recommendations, bilingual subtitles and live danmaku'
+arch=('x86_64' 'aarch64')
+url='https://github.com/0x696c757a696f/lumtub'
+license=('GPL-3.0-or-later')
+# Unpacked here, so no FUSE is needed. The AppImage carries libmpv and
+# what it needs; GTK, the graphics and the sound stacks are the system's.
+depends=('glibc' 'gtk3' 'fontconfig' 'libglvnd' 'libxkbcommon' 'alsa-lib' 'libpulse')
+provides=('lumtub')
+conflicts=('lumtub')
+options=('!strip' '!debug')
+noextract=("Lumtub_${pkgver}-${_commit}_linux-x64.AppImage" "Lumtub_${pkgver}-${_commit}_linux-arm64.AppImage")
+source=('lumtub.png' 'io.github.lumtub.lumtub.desktop')
+source_x86_64=("Lumtub_${pkgver}-${_commit}_linux-x64.AppImage::https://github.com/0x696c757a696f/lumtub/releases/download/v${pkgver}-${_commit}/Lumtub_${pkgver}-${_commit}_linux-x64.AppImage")
+source_aarch64=("Lumtub_${pkgver}-${_commit}_linux-arm64.AppImage::https://github.com/0x696c757a696f/lumtub/releases/download/v${pkgver}-${_commit}/Lumtub_${pkgver}-${_commit}_linux-arm64.AppImage")
+sha256sums=('45e00520389500c9a3dd0bfc8054799f996d7eddb54575c4e8413aa9a8bf0a8e'
+            '87dc0991ee3a8588386aecac2478e97560fbae909cb970320b3c175ff72684c2')
+sha256sums_x86_64=('0000000000000000000000000000000000000000000000000000000000000000')
+sha256sums_aarch64=('0000000000000000000000000000000000000000000000000000000000000000')
+
+package() {
+  case "$CARCH" in
+    x86_64) _arch=x64 ;;
+    aarch64) _arch=arm64 ;;
+  esac
+  local image="Lumtub_${pkgver}-${_commit}_linux-${_arch}.AppImage"
+  chmod +x "$image"
+  rm -rf squashfs-root
+  "./$image" --appimage-extract > /dev/null
+  install -d "$pkgdir/opt"
+  cp -a squashfs-root "$pkgdir/opt/lumtub"
+  chmod -R u=rwX,go=rX "$pkgdir/opt/lumtub"
+  install -d "$pkgdir/usr/bin"
+  printf '#!/bin/sh\nexec /opt/lumtub/AppRun "$@"\n' > "$pkgdir/usr/bin/lumtub"
+  chmod 755 "$pkgdir/usr/bin/lumtub"
+  install -Dm644 io.github.lumtub.lumtub.desktop "$pkgdir/usr/share/applications/io.github.lumtub.lumtub.desktop"
+  install -Dm644 lumtub.png "$pkgdir/usr/share/icons/hicolor/256x256/apps/io.github.lumtub.lumtub.png"
+}

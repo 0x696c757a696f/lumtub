@@ -1,0 +1,21 @@
+! id: heavens-gate
+! name: Heaven's Gate
+! name.zh-Hans: 天堂之门
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Heaven%27s_Gate_(religious_group)
+! legacy: 天堂之门
+
+:x19d75be6 | ^天堂之门
+    legacy: 天堂之门/channel/天堂之门
+:x01d7361e | ^天堂之門
+    legacy: 天堂之门/channel/天堂之門
+:heavens-gate | ^Heaven's Gate
+    legacy: 天堂之门/channel/Heaven's Gate
+:heavens-gate-channel | ^Heavens Gate
+    legacy: 天堂之门/channel/Heavens Gate
+:marshall-applewhite | ^Marshall Applewhite
+    legacy: 天堂之门/channel/Marshall Applewhite
+:x8ee5abd0 | ^Heaven’s Gate
+    legacy: 天堂之门/channel/Heaven’s Gate

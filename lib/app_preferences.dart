@@ -6,7 +6,6 @@ import 'app_log.dart';
 import 'app_directories.dart';
 import 'blocked_groups.dart';
 import 'danmaku.dart' show DanmakuSettings;
-import 'state_media.dart';
 import 'explore_filters.dart';
 import 'feed_quality.dart';
 import 'explore_topics.dart';
@@ -61,9 +60,11 @@ class AppPreferences {
     this.exploreHeardOnly = true,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
-    this.blockGroups = true,
+    this.blockGroups = false,
     this.allowedGroups = const [],
     this.blockStateMedia = false,
+    this.blockOtherLists = true,
+    this.listsAsked = false,
     this.allowedMedia = const [],
     this.reversedPlaylists = const [],
     this.castMaxHeight = 1080,
@@ -158,8 +159,9 @@ class AppPreferences {
   final bool exploreHeardOnly;
   final int minDurationMinutes;
   final bool hideWatched;
-  /// Hides the groups in blocked_groups.dart from recommendations, explore
-  /// and search, unless a search names the channel exactly.
+  /// Hides the lists of lists/religion from recommendations, explore and
+  /// search, unless a search names the channel exactly. Off for a new
+  /// install until the first run asks ([listsAsked]).
   final bool blockGroups;
   /// [BlockedGroup.name]s the user unticked, so they show.
   final List<String> allowedGroups;
@@ -168,6 +170,12 @@ class AppPreferences {
   final bool blockStateMedia;
   /// state_media.dart group names the user unticked.
   final List<String> allowedMedia;
+  /// Hides the lists of every other category of lists/ (scams, malware,
+  /// fake cures and the rest), of which only safety lists start ticked.
+  final bool blockOtherLists;
+  /// Whether the first run asked which block lists to turn on; true for
+  /// preferences saved before it asked.
+  final bool listsAsked;
   /// Playlists shown and played last to first (倒序), by id.
   final List<String> reversedPlaylists;
   /// 投屏画质: the tallest picture sent to a TV, 1080, 2160 or 4320. Above
@@ -310,21 +318,28 @@ class AppPreferences {
   /// Remembered per channel for these preferences, as each test goes
   /// through the native core.
   bool blocksChannel(String name, {String? id, String? handle}) {
-    if (!blockGroups && !blockStateMedia) return false;
+    if (!blockGroups && !blockStateMedia && !blockOtherLists) return false;
     final memo = _blockMemo[this] ??= <String, bool>{};
     if (memo.length > 20000) memo.clear();
-    return memo['channel\n$id\n$handle\n$name'] ??= (blockGroups && _matchers.groups.channel(name, id: id, handle: handle)) || blocksMediaChannel(name);
+    return memo['channel\n$id\n$handle\n$name'] ??= (blockGroups && _matchers.groups.channel(name, id: id, handle: handle)) ||
+        blocksMediaChannel(name) ||
+        (blockOtherLists && _matchers.others.channel(name, id: id, handle: handle));
   }
 
-  /// Whether [group] of either list is ticked.
-  bool groupOn(BlockedGroup group, {bool media = false}) =>
-      group.onByDefault ? !(media ? allowedMedia : allowedGroups).contains(group.name) : enabledGroups.contains(group.name);
+  /// Whether [group] is ticked. A list of [otherLists] starts ticked only
+  /// when its file says `default: on`.
+  bool groupOn(BlockedGroup group, {bool media = false}) {
+    if (otherLists.contains(group)) return group.defaultOn ? !allowedGroups.contains(group.name) : enabledGroups.contains(group.name);
+    return group.onByDefault ? !(media ? allowedMedia : allowedGroups).contains(group.name) : enabledGroups.contains(group.name);
+  }
 
-  ({BlockMatcher groups, BlockMatcher media}) get _matchers => _matcherCache[this] ??= (
+  ({BlockMatcher groups, BlockMatcher media, BlockMatcher others}) get _matchers => _matcherCache[this] ??= (
         groups: BlockMatcher([for (final g in blockedGroups) if (groupOn(g)) g], allowedEntries: allowedEntries.toSet()),
         media: BlockMatcher([for (final g in stateMedia) if (groupOn(g, media: true)) g], allowedEntries: allowedEntries.toSet()),
+        // Lists that only label or demote are not left out.
+        others: BlockMatcher([for (final g in otherLists) if (groupOn(g) && (g.action == 'hide' || g.action == 'quiet')) g], allowedEntries: allowedEntries.toSet()),
       );
-  static final _matcherCache = Expando<({BlockMatcher groups, BlockMatcher media})>();
+  static final _matcherCache = Expando<({BlockMatcher groups, BlockMatcher media, BlockMatcher others})>();
 
   /// Whether a channel called [name] is state media the user blocks.
   bool blocksMediaChannel(String name) => blockStateMedia && _matchers.media.channel(name);
@@ -392,6 +407,8 @@ class AppPreferences {
     List<String>? allowedGroups,
     bool? blockStateMedia,
     List<String>? allowedMedia,
+    bool? blockOtherLists,
+    bool? listsAsked,
     List<String>? reversedPlaylists,
     int? castMaxHeight,
     List<String>? enabledGroups,
@@ -472,6 +489,8 @@ class AppPreferences {
         allowedGroups: allowedGroups ?? this.allowedGroups,
         blockStateMedia: blockStateMedia ?? this.blockStateMedia,
         allowedMedia: allowedMedia ?? this.allowedMedia,
+        blockOtherLists: blockOtherLists ?? this.blockOtherLists,
+        listsAsked: listsAsked ?? this.listsAsked,
         reversedPlaylists: reversedPlaylists ?? this.reversedPlaylists,
         castMaxHeight: castMaxHeight ?? this.castMaxHeight,
         enabledGroups: enabledGroups ?? this.enabledGroups,
@@ -553,6 +572,8 @@ class AppPreferences {
         'allowedGroups': allowedGroups,
         'blockStateMedia': blockStateMedia,
         'allowedMedia': allowedMedia,
+        'blockOtherLists': blockOtherLists,
+        'listsAsked': listsAsked,
         'reversedPlaylists': reversedPlaylists,
         'castMaxHeight': castMaxHeight,
         'enabledGroups': enabledGroups,
@@ -671,8 +692,11 @@ class AppPreferences {
       exploreHeardOnly: flag('exploreHeardOnlyV2', d.exploreHeardOnly),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
-      blockGroups: flag('blockGroups', d.blockGroups),
+      // Saved before new installs started with it off and asked.
+      blockGroups: flag('blockGroups', true),
       blockStateMedia: flag('blockStateMedia', d.blockStateMedia),
+      blockOtherLists: flag('blockOtherLists', d.blockOtherLists),
+      listsAsked: flag('listsAsked', true),
       filterSubscriptions: flag('filterSubscriptions', d.filterSubscriptions),
       homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
       homeShowRecent: flag('homeShowRecent', d.homeShowRecent),

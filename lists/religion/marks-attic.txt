@@ -1,0 +1,26 @@
+! id: marks-attic
+! name: Mark's Attic
+! name.zh-Hans: 马可楼
+! category: religion
+! action: hide
+! default: off
+! legacy: 马可楼
+
+:x83f59104 | ^马可楼
+    legacy: 马可楼/channel/马可楼
+    status: unproven
+:x77de3a79 | ^馬可樓
+    legacy: 马可楼/channel/馬可樓
+    status: unproven
+:xaa339ded | ^世界福音化传道协会
+    legacy: 马可楼/channel/世界福音化传道协会
+    status: unproven
+:xe788781e | ^世界福音化傳道協會
+    legacy: 马可楼/channel/世界福音化傳道協會
+    status: unproven
+:marks-attic | ^Mark's Attic
+    legacy: 马可楼/channel/Mark's Attic
+    status: unproven
+:marks-attic-channel | ^Mark’s Attic
+    legacy: 马可楼/channel/Mark’s Attic
+    status: unproven

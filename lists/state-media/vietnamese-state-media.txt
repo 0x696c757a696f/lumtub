@@ -1,0 +1,25 @@
+! id: vietnamese-state-media
+! name: Vietnamese state media
+! name.zh-Hans: 越南官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State radio and television and the Communist Party paper
+! source: https://en.wikipedia.org/wiki/Media_of_Vietnam
+
+:vietnam-television | ^Vietnam Television
+    reviewed: 2026-11-08
+:vtv | =VTV
+    reviewed: 2026-11-08
+:voice-of-vietnam | ^Voice of Vietnam
+    reviewed: 2026-11-08
+:vov | =VOV
+    reviewed: 2026-11-08
+:vov-news | ^VOV News
+    reviewed: 2026-11-08
+:vovtv | ^VOVTV
+    reviewed: 2026-11-08
+:nhan-dan | ^Nhân Dân
+    reviewed: 2026-11-08
+:vietnamplus | ^VietnamPlus
+    reviewed: 2026-11-08

@@ -1,0 +1,58 @@
+! id: belarusian-state-media
+! name: Belarusian state media
+! name.zh-Hans: 白俄罗斯官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State broadcaster and state news agency
+! source: https://en.wikipedia.org/wiki/Belteleradiocompany
+! legacy: 白俄罗斯官方媒体
+
+:belarus-1 | ^Belarus 1
+    legacy: 白俄罗斯官方媒体/channel/Belarus 1
+:belarus-2 | ^Belarus 2
+    legacy: 白俄罗斯官方媒体/channel/Belarus 2
+:belarus-24 | ^Belarus 24
+    legacy: 白俄罗斯官方媒体/channel/Belarus 24
+:belarus-5 | ^Belarus 5
+    legacy: 白俄罗斯官方媒体/channel/Belarus 5
+:1 | ^Беларусь 1
+    legacy: 白俄罗斯官方媒体/channel/Беларусь 1
+:2 | ^Беларусь 2
+    legacy: 白俄罗斯官方媒体/channel/Беларусь 2
+:24 | ^Беларусь 24
+    legacy: 白俄罗斯官方媒体/channel/Беларусь 24
+:5 | ^Беларусь 5
+    legacy: 白俄罗斯官方媒体/channel/Беларусь 5
+:belta | ^BelTA
+    legacy: 白俄罗斯官方媒体/channel/BelTA
+:xc684b64c | ^БелТА
+    legacy: 白俄罗斯官方媒体/channel/БелТА
+:belteleradiocompany | ^Belteleradiocompany
+    legacy: 白俄罗斯官方媒体/channel/Belteleradiocompany
+:x92aadd10 | ^Белтелерадиокомпания
+    legacy: 白俄罗斯官方媒体/channel/Белтелерадиокомпания
+:x0247d32c | ^ОНТ
+    legacy: 白俄罗斯官方媒体/channel/ОНТ
+:x8451a802 | ^СТВ
+    legacy: 白俄罗斯官方媒体/channel/СТВ
+:x9dcfaa70 | ^Первый информационный
+    legacy: 白俄罗斯官方媒体/channel/Первый информационный
+:radio-belarus | ^Radio Belarus
+    legacy: 白俄罗斯官方媒体/channel/Radio Belarus
+:xeebe4968 | ^Радио Беларусь
+    legacy: 白俄罗斯官方媒体/channel/Радио Беларусь
+:belarus-segodnya | ^Belarus Segodnya
+    legacy: 白俄罗斯官方媒体/channel/Belarus Segodnya
+:x27e1ba1b | ^СБ Беларусь сегодня
+    legacy: 白俄罗斯官方媒体/channel/СБ Беларусь сегодня
+:x20e30137 | ^СБ. Беларусь сегодня
+    legacy: 白俄罗斯官方媒体/channel/СБ. Беларусь сегодня
+:x74a3a1c4 | ^Звязда
+    legacy: 白俄罗斯官方媒体/channel/Звязда
+:ont | =ONT
+    legacy: 白俄罗斯官方媒体/exact/ONT
+:stv | =STV
+    legacy: 白俄罗斯官方媒体/exact/STV
+:btrc | =BTRC
+    legacy: 白俄罗斯官方媒体/exact/BTRC

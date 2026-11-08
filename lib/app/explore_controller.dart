@@ -80,6 +80,21 @@ extension ExploreActions on AppController {
         exploreView.words,
       ].where((w) => w.isNotEmpty).join(' ');
 
+  /// Wider searches than [exploreQuery], narrowest first, read once it
+  /// runs out: the sub-category's, then the zone's, then the zone's
+  /// without the format and view words.
+  List<String> get exploreBroaderQueries {
+    final words = [exploreFormat.words, exploreView.words].where((w) => w.isNotEmpty).join(' ');
+    String withWords(String query) => words.isEmpty ? query : '$query $words';
+    final leaf = exploreLeafNow;
+    final queries = <String>{
+      if (leaf != null && exploreSubNow != null) withWords(exploreSubNow!.query),
+      withWords(exploreTopicNow.query),
+      exploreTopicNow.query,
+    }..remove(exploreQuery);
+    return [for (final query in queries) if (query.trim().isNotEmpty) query];
+  }
+
   /// Adds a category of the user's own and shows it.
   Future<void> addExploreTopic(CustomTopic topic) async {
     final kept = preferences.exploreCustomTopics.where((t) => !(t.section == topic.section && t.label == topic.label)).toList();
@@ -236,7 +251,8 @@ extension ExploreActions on AppController {
     final loader = explore;
     explore = null;
     if (loader == null) return;
-    if (exploreTopicNow.mix || loader.error != null) {
+    // An empty list is looked for again next time, not shown again.
+    if (exploreTopicNow.mix || loader.error != null || loader.items.isEmpty) {
       loader.dispose();
       return;
     }
@@ -266,6 +282,7 @@ extension ExploreActions on AppController {
       loader.dispose();
     }
     final query = exploreQuery;
+    final broader = exploreBroaderQueries;
     final mode = exploreMode;
     final mix = exploreTopicNow.mix;
     final language = preferences.exploreLanguage;
@@ -288,7 +305,11 @@ extension ExploreActions on AppController {
     final feedMix = mode == ExploreMode.forYou ? preferences.feedMix : null;
     final notInterested = homeFeed?.notInterested;
     final faith = exploreSection.isFaith ? faithFilter() : null;
-    final seen = mix ? {for (final item in history) item.id, ...?homeFeed?.items.map((item) => item.id)} : const <String>{};
+    // A live stream goes on after it was watched: only videos are left out
+    // of 全部 once seen.
+    final seen = mix && !exploreSection.isLive ? {for (final item in history) item.id, ...?homeFeed?.items.map((item) => item.id)} : const <String>{};
+    final prefs = preferences;
+    final ai = _aiFilter;
     final known = mode == ExploreMode.fresh
         ? {for (final item in history) TasteProfile.channelKey(item), for (final channel in library?.channels ?? const <ChannelRef>[]) channel.id}
         : const <String>{};
@@ -300,8 +321,11 @@ extension ExploreActions on AppController {
 
     bool where(VideoItem item) {
       if (notInterested != null && notInterested.videos.contains(item.id)) return drop('not interested');
-      // Left out here too, so that hiding them still fills the page.
-      if (preferences.blocksGroup(item) || preferences.isUnrecommended(item.channelId)) return drop('blocked');
+      // What the page would hide is left out here too, so that hiding it
+      // still fills the page (see [AppController.visible]).
+      if (prefs.blocksGroup(item) || prefs.isUnrecommended(item.channelId)) return drop('blocked');
+      if (!prefs.shows(item, watched: library?.progressOf(item.id)?.finished ?? false)) return drop('settings');
+      if (ai != null && ai.hides(item) && !(item.channelId != null && (library?.isFollowing(item.channelId!) ?? false))) return drop('AI filter');
       // "Don't recommend" is a hard exclusion.  "Fewer" remains in the
       // list, but its score is reduced below in the ranking callback.
       if (feedMix != null && feedMix.penaltyOf(item) == null) return drop('Shorts or vertical');
@@ -331,7 +355,7 @@ extension ExploreActions on AppController {
     _update(() => explore = VideoListLoader(
           () {
             Listing search(List<String> queries) =>
-                mix ? repository.searchMix(queries, sp: sp, region: region) : repository.search(queries.single, sp: sp, region: region);
+                queries.length > 1 ? repository.searchMix(queries, sp: sp, region: region) : repository.search(queries.single, sp: sp, region: region);
             final queries = mix ? exploreMixQueries(exploreSection) : [query];
             // The zones' search words are Chinese, which finds Chinese
             // videos: they are put in the language picked, else the
@@ -343,9 +367,17 @@ extension ExploreActions on AppController {
             final traditional = wordsIn == ExploreLanguage.zh && (region == 'TW' || region == 'HK');
             // A zone of the user's own is searched as they wrote it: its
             // words are not sent to be translated.
-            final listing = wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional) || exploreTopicNow.custom
+            Listing searchIn(List<String> queries) => wordsIn == ExploreLanguage.any || (wordsIn == ExploreLanguage.zh && !traditional) || exploreTopicNow.custom
                 ? search(queries)
                 : Listing.deferred(() async => search(await _searchWordsIn(queries, wordsIn, traditional: traditional)));
+            // A narrow search that runs out goes on with wider ones, so a
+            // sub-category with few videos still fills the page.
+            var listing = searchIn(queries);
+            if (!mix && !exploreTopicNow.custom) {
+              for (final wider in broader) {
+                listing = listing.followedBy(() => searchIn([wider]), switched: () => logInfo('Explore ${exploreSection.name} · ${exploreTopicNow.label}: ran out, searching "$wider"'));
+              }
+            }
             final languages = _videoLanguages;
             return spoken && languages != null
                 ? listing.refined((lines) => languages.only(
@@ -368,11 +400,15 @@ extension ExploreActions on AppController {
           rank: taste != null
               ? (item) => AppController.exploreScore(taste, item) - (feedMix?.penaltyOf(item) ?? 0)
               : mode.byViews
-                  ? (item) => (item.viewCount ?? -1).toDouble()
+                  ? (item) => (item.audience ?? -1).toDouble()
                   : null,
           // Each video is looked up for the language filter: shown as
           // found rather than gathered pages ahead.
           readAhead: !spoken,
+          // Upcoming streams and replays are few among a date-sorted
+          // search's videos: a few pages are read, then the page offers to
+          // keep looking rather than reading on unasked.
+          pages: mode == ExploreMode.liveUpcoming || mode == ExploreMode.liveReplay ? 8 : 25,
           name: 'Explore ${exploreSection.name} · ${exploreTopicNow.label} · ${mode.name}',
           dropped: dropped,
         )
@@ -382,13 +418,16 @@ extension ExploreActions on AppController {
 
   /// [queries] in [language], translated where they are in another, or
   /// into [traditional] characters; a query that cannot be translated is
-  /// searched as it is.
+  /// searched as it is. Only Chinese, Japanese and Korean words are
+  /// translated: words in Latin letters are names and terms a search
+  /// keeps (Blender, lofi, keynote), and a query of them alone is searched
+  /// as written.
   Future<List<String>> _searchWordsIn(List<String> queries, ExploreLanguage language, {bool traditional = false}) {
     final target = traditional ? 'zh-TW' : language.code;
     Future<String> translate(String text) => _google.translate(text, target).timeout(const Duration(seconds: 10));
     return Future.wait([
       for (final query in queries)
-        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language))
+        if (query.trim().isEmpty || (!traditional && titleLanguage(query) == language) || !searchPhrasesOf(query).any(isCjkPhrase))
           Future.value(query)
         else
           () async {
@@ -397,8 +436,13 @@ extension ExploreActions on AppController {
               // as one sentence is "Revisione digitale della tecnologia",
               // which finds next to nothing.
               final words = searchPhrasesOf(query);
-              final lines = words.length > 1 ? (await translate(words.join('\n'))).split('\n') : const <String>[];
-              final translated = lines.length == words.length ? searchWordsOf(lines) : (await translate(query)).trim();
+              final asked = [for (final w in words) if (isCjkPhrase(w) && searchGlossary[w] == null) w];
+              final lines = asked.isEmpty ? const <String>[] : (await translate(asked.join('\n'))).split('\n');
+              if (lines.length != asked.length) throw StateError('${lines.length} lines for ${asked.length} phrases');
+              var next = 0;
+              final translated = searchWordsOf([
+                for (final w in words) !isCjkPhrase(w) ? w : searchGlossary[w] ?? lines[next++],
+              ]);
               logDebug(() => 'Explore searches "$query" in $target as "$translated"');
               return translated.isEmpty ? query : translated;
             } catch (e) {
@@ -416,7 +460,9 @@ extension ExploreActions on AppController {
   List<String> exploreMixQueries(ExploreSection section, {Random? random}) {
     final zones = [
       for (final topic in exploreTopicsFor(section))
-        if (!topic.mix && topic.opens == null) topic.subs.isEmpty ? topic.query : (topic.subs.toList()..shuffle(random)).first.query,
+        // Live streams are few in any one sub-category: a live mix searches
+        // each zone as a whole.
+        if (!topic.mix && topic.opens == null) topic.subs.isEmpty || section.isLive ? topic.query : (topic.subs.toList()..shuffle(random)).first.query,
     ]..shuffle(random);
     final filter = [exploreFormat.words, exploreView.words].where((w) => w.isNotEmpty).join(' ');
     return [for (final query in zones.take(6)) filter.isEmpty ? query : '$query $filter'];

@@ -407,7 +407,8 @@ class _Details extends StatelessWidget {
     final views = details?.viewCount ?? item.viewCount;
     final meta = [
       if (item.isUpcoming && item.scheduledStart != null) tr('Starts {0}', [formatScheduledStart(item.scheduledStart!)]),
-      if (views != null) tr('{0} views', [formatCount(views)]),
+      if (item.isLive && item.watching != null) tr('{0} watching', [formatCount(item.watching!)])
+      else if (views != null) tr('{0} views', [formatCount(views)]),
       if (details?.uploadDate != null) formatDate(details!.uploadDate!),
     ].join(' · ');
     final channel = details?.channel.isNotEmpty == true ? details!.channel : item.channel;

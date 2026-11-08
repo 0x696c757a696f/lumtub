@@ -1,0 +1,17 @@
+! id: flds
+! name: FLDS
+! name.zh-Hans: FLDS
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Fundamentalist_Church_of_Jesus_Christ_of_Latter-Day_Saints
+! legacy: FLDS
+
+:flds | ^FLDS
+    legacy: FLDS/channel/FLDS
+:xd6702527 | ^基本教义派耶稣基督
+    legacy: FLDS/channel/基本教义派耶稣基督
+:x5163d1c2 | ^基本教義派耶穌基督
+    legacy: FLDS/channel/基本教義派耶穌基督
+:warren-jeffs | ^Warren Jeffs
+    legacy: FLDS/channel/Warren Jeffs

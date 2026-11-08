@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' show Locale;
 
@@ -43,6 +44,25 @@ void main() {
     final mixed = await VideoRepository.interleave([() => lines('a', 4), failing, () => lines('b', 2), () => lines('c', 5)], run: 2).toList();
     expect(mixed, ['a0', 'a1', 'b0', 'b1', 'c0', 'c1', 'a2', 'a3', 'c2', 'c3', 'c4']);
     expect(VideoRepository.interleave([failing]).toList(), throwsStateError);
+  });
+
+  test('a slow search in a mix holds back none of the others', () async {
+    final slow = StreamController<String>();
+    final mixed = <String>[];
+    final reading = VideoRepository.interleave([() => slow.stream, () => Stream.fromIterable(['b0', 'b1', 'b2', 'b3'])], run: 2).listen(mixed.add);
+    await pumpEventQueue();
+    expect(mixed, ['b0', 'b1', 'b2', 'b3']);
+    final ended = reading.asFuture<void>();
+    slow.add('a0');
+    unawaited(slow.close());
+    await ended;
+    expect(mixed.last, 'a0');
+  });
+
+  test('only Chinese, Japanese and Korean words of a search are translated', () {
+    expect(searchPhrasesOf('blender 3D modeling live').where(isCjkPhrase), isEmpty);
+    expect(searchPhrasesOf('游戏 直播 Minecraft'), ['游戏', '直播', 'Minecraft']);
+    expect(searchGlossary['直播'], 'live');
   });
 
   test('details take the translated title, description and chapter names', () {

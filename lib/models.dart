@@ -8,7 +8,10 @@ class VideoItem {
   final String channel;
   final int? duration;
   final String url;
+  /// Views in all; a stream that is live lists [watching] instead.
   final int? viewCount;
+  /// People watching a live stream now, when listed.
+  final int? watching;
   /// The channel's `UC…` id, when the source listed it.
   final String? channelId;
   /// Upload time, known for subscription feed entries.
@@ -30,6 +33,8 @@ class VideoItem {
   final bool membersOnly;
 
   bool get isLive => liveStatus == 'is_live';
+  /// What a card shows: people watching for a live stream, else views.
+  int? get audience => isLive ? watching ?? viewCount : viewCount;
   bool get isUpcoming => liveStatus == 'is_upcoming';
 
   const VideoItem({
@@ -39,6 +44,7 @@ class VideoItem {
     this.duration,
     required this.url,
     this.viewCount,
+    this.watching,
     this.channelId,
     this.published,
     this.liveStatus,
@@ -58,6 +64,7 @@ class VideoItem {
         duration: duration,
         url: url,
         viewCount: viewCount,
+        watching: watching,
         channelId: ref.id,
         published: published,
         liveStatus: liveStatus,
@@ -77,6 +84,7 @@ class VideoItem {
         duration: duration,
         url: url,
         viewCount: viewCount,
+        watching: watching,
         channelId: channelId,
         published: published,
         liveStatus: status,
@@ -112,6 +120,7 @@ class VideoItem {
         'duration': duration,
         'url': url,
         if (viewCount != null) 'view_count': viewCount,
+        if (watching != null) 'concurrent_view_count': watching,
         if (channelId != null) 'channel_id': channelId,
         if (published != null) 'published': published!.toUtc().toIso8601String(),
         if (liveStatus != null) 'live_status': liveStatus,
@@ -137,7 +146,8 @@ class VideoItem {
     final name = map['channel'] ?? map['uploader'] ?? map['uploader_id'] ?? '';
     final value = map['duration'];
     // Streams list the people watching now instead.
-    final views = map['view_count'] ?? map['concurrent_view_count'];
+    final views = map['view_count'];
+    final watching = map['concurrent_view_count'];
     final channelId = map['channel_id']?.toString();
     final width = map['width'];
     final height = map['height'];
@@ -156,6 +166,7 @@ class VideoItem {
       duration: value is num ? value.toInt() : null,
       url: 'https://www.youtube.com/watch?v=$id',
       viewCount: views is num ? views.toInt() : null,
+      watching: watching is num ? watching.toInt() : null,
       channelId: channelId != null && ChannelRef.isValidId(channelId) ? channelId : null,
       published: DateTime.tryParse(map['published']?.toString() ?? ''),
       liveStatus: liveStatus,

@@ -175,7 +175,7 @@ class VideoRow extends StatelessWidget {
     final meta = [
       if (upcomingStart != null) upcomingStart,
       if (item.channel.isNotEmpty) item.channel,
-      if (item.viewCount != null) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(item.viewCount!)]),
+      if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
       if (text && status == null && item.durationLabel.isNotEmpty) item.durationLabel,
     ].join(' · ');
     return InkWell(
@@ -482,7 +482,7 @@ class _VideoCardState extends State<VideoCard> {
     final meta = [
       if (upcomingStart != null) upcomingStart,
       if (item.channel.isNotEmpty) item.channel,
-      if (item.viewCount != null) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(item.viewCount!)]),
+      if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
     ].join(' · ');
     // A picture and text on the page, as YouTube shows them: no box round.
     final card = Card(

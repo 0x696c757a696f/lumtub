@@ -1,0 +1,32 @@
+! id: venezuelan-state-media
+! name: Venezuelan state media
+! name.zh-Hans: 委内瑞拉官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: teleSUR is funded by several governments, not Venezuela's alone
+! source: https://en.wikipedia.org/wiki/Venezolana_de_Televisi%C3%B3n
+! legacy: 委内瑞拉官方媒体
+
+:telesur | ^teleSUR
+    legacy: 委内瑞拉官方媒体/channel/teleSUR
+:venezolana-de-televisi-n | ^Venezolana de Televisión
+    legacy: 委内瑞拉官方媒体/channel/Venezolana de Televisión
+:tves | ^TVes
+    legacy: 委内瑞拉官方媒体/channel/TVes
+:vive-tv | ^ViVe TV
+    legacy: 委内瑞拉官方媒体/channel/ViVe TV
+:vila-tv | ^Ávila TV
+    legacy: 委内瑞拉官方媒体/channel/Ávila TV
+:agencia-venezolana-de-noticias | ^Agencia Venezolana de Noticias
+    legacy: 委内瑞拉官方媒体/channel/Agencia Venezolana de Noticias
+:radio-nacional-de-venezuela | ^Radio Nacional de Venezuela
+    legacy: 委内瑞拉官方媒体/channel/Radio Nacional de Venezuela
+:correo-del-orinoco | ^Correo del Orinoco
+    legacy: 委内瑞拉官方媒体/channel/Correo del Orinoco
+:vtv | =VTV
+    legacy: 委内瑞拉官方媒体/exact/VTV
+:avn | =AVN
+    legacy: 委内瑞拉官方媒体/exact/AVN
+:rnv | =RNV
+    legacy: 委内瑞拉官方媒体/exact/RNV

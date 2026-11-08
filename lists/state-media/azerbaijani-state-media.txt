@@ -1,0 +1,15 @@
+! id: azerbaijani-state-media
+! name: Azerbaijani state media
+! name.zh-Hans: 阿塞拜疆官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State-owned television channels
+! source: https://en.wikipedia.org/wiki/Media_of_Azerbaijan
+
+:aztv | =AzTV
+    reviewed: 2026-11-08
+:idman-tv | ^Idman TV
+    reviewed: 2026-11-08
+:medeniyyet-tv | ^Medeniyyet TV
+    reviewed: 2026-11-08

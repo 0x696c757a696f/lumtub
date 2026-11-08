@@ -1,0 +1,30 @@
+! id: happy-science
+! name: Happy Science
+! name.zh-Hans: 幸福科学
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Happy_Science
+! legacy: 幸福科学
+
+:x6a27d782 | ^幸福科学
+    legacy: 幸福科学/channel/幸福科学
+:x5c27c178 | ^幸福科學
+    legacy: 幸福科学/channel/幸福科學
+:x2871a5b1 | ^大川隆法
+    legacy: 幸福科学/channel/大川隆法
+:happy-science | ^Happy Science
+    legacy: 幸福科学/channel/Happy Science
+:ryuho-okawa | ^Ryuho Okawa
+    legacy: 幸福科学/channel/Ryuho Okawa
+
+:irh-press | ^IRH Press
+    reviewed: 2026-11-08
+:ari-production | ^ARI Production
+    reviewed: 2026-11-08
+:new-star-production | ^New Star Production
+    reviewed: 2026-11-08
+:hs-pictures-studio | ^HS Pictures
+    reviewed: 2026-11-08
+:happiness-realization-party | ^Happiness Realization Party
+    reviewed: 2026-11-08

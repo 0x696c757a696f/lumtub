@@ -1,0 +1,42 @@
+! id: turkish-state-media
+! name: Turkish state media
+! name.zh-Hans: 土耳其国家媒体
+! category: state-media
+! action: hide
+! default: off
+! suggested: no
+! note: Turkey's state broadcaster and official news agency
+! source: https://en.wikipedia.org/wiki/Turkish_Radio_and_Television_Corporation
+! legacy: 土耳其国家媒体
+
+:trt-world | ^TRT World
+    legacy: 土耳其国家媒体/channel/TRT World
+:trt-haber | ^TRT Haber
+    legacy: 土耳其国家媒体/channel/TRT Haber
+:trt | ^TRT عربي
+    legacy: 土耳其国家媒体/channel/TRT عربي
+:trt-arabic | ^TRT Arabic
+    legacy: 土耳其国家媒体/channel/TRT Arabic
+:trt-deutsch | ^TRT Deutsch
+    legacy: 土耳其国家媒体/channel/TRT Deutsch
+:trt-balkan | ^TRT Balkan
+    legacy: 土耳其国家媒体/channel/TRT Balkan
+:trt-afrika | ^TRT Afrika
+    legacy: 土耳其国家媒体/channel/TRT Afrika
+:trt-fran-ais | ^TRT Français
+    legacy: 土耳其国家媒体/channel/TRT Français
+:trt-channel | ^TRT Русский
+    legacy: 土耳其国家媒体/channel/TRT Русский
+:anadolu-agency | ^Anadolu Agency
+    legacy: 土耳其国家媒体/channel/Anadolu Agency
+:anadolu-ajans | ^Anadolu Ajansı
+    legacy: 土耳其国家媒体/channel/Anadolu Ajansı
+:x69135df5 | ^阿纳多卢通讯社
+    legacy: 土耳其国家媒体/channel/阿纳多卢通讯社
+:trt-exact | =TRT
+    legacy: 土耳其国家媒体/exact/TRT
+:aa | =AA
+    legacy: 土耳其国家媒体/exact/AA
+
+:trt-world-channel | UC7fWeaHhqgM4Ry-RMpM2YYw | @trtworld
+    reviewed: 2026-11-08

@@ -78,14 +78,16 @@ class AppUpdater extends ChangeNotifier {
     if (!Platform.isMacOS) return null;
     final app = File(Platform.resolvedExecutable).parent.parent.parent.path;
     if (!app.endsWith('.app') || app.startsWith('/Volumes/')) return null;
-    return macBundleWritable(app) ? app : null;
+    return canReplace(app) ? app : null;
   }
 
-  /// The AppImage file this Linux build runs from, which an update replaces.
+  /// The AppImage file this Linux build runs from, which an update replaces,
+  /// when Lumtub may write the folder it is in: one a package manager put
+  /// in a system folder is updated by that package manager.
   static String? get appImage {
     if (!Platform.isLinux) return null;
     final path = Platform.environment['APPIMAGE'] ?? '';
-    return path.isEmpty ? null : path;
+    return path.isEmpty || !canReplace(path) ? null : path;
   }
 
   /// Checks now and then every six hours, downloading what it finds when
@@ -306,8 +308,9 @@ Future<void> relaunchAfterExit(String image, int processId, {bool open = false})
   await Process.start('/bin/sh', ['-c', r'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; ' + start, 'lumtub-relaunch', '$processId', image], mode: ProcessStartMode.detached);
 }
 
-/// Whether the folder holding [app] and the bundle itself can be replaced.
-bool macBundleWritable(String app) {
+/// Whether the folder holding [app] (a macOS bundle or an AppImage) can be
+/// written, so that [app] can be replaced.
+bool canReplace(String app) {
   try {
     final probe = File('${File(app).parent.path}/.lumtub-write-test-$pid');
     probe.writeAsStringSync('');

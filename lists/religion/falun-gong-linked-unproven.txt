@@ -1,0 +1,62 @@
+! id: falun-gong-linked-unproven
+! name: Falun Gong-linked (unproven)
+! name.zh-Hans: 法轮功相关（待核实）
+! category: religion
+! action: hide
+! default: off
+! legacy: 法轮功相关（待核实）
+
+:x8dbe752f | ^西岸观察 | ^西岸觀察
+    legacy: 法轮功相关（待核实）/channel/西岸观察
+    status: unproven
+:x2d424de8 | ^金泉看世界
+    legacy: 法轮功相关（待核实）/channel/金泉看世界
+    status: unproven
+:x74dae0dc | ^文睿看世界
+    legacy: 法轮功相关（待核实）/channel/文睿看世界
+    status: unproven
+:x196ccf0a | ^有冇搞错 | ^有冇搞錯
+    legacy: 法轮功相关（待核实）/channel/有冇搞错
+    status: unproven
+:xd3e61352 | ^纪元生活 | ^紀元生活
+    legacy: 法轮功相关（待核实）/channel/纪元生活
+    status: unproven
+:xeca2d731 | ^新视野 | ^新視野
+    legacy: 法轮功相关（待核实）/channel/新视野
+    status: unproven
+:x2bfcea4f | ^财经向前看 | ^財經向前看
+    legacy: 法轮功相关（待核实）/channel/财经向前看
+    status: unproven
+:xb30bb0e2 | ^慧月瞰今昔
+    legacy: 法轮功相关（待核实）/channel/慧月瞰今昔
+    status: unproven
+:xcb443ce8 | ^澳洲生活台 | ^澳洲生活臺
+    legacy: 法轮功相关（待核实）/channel/澳洲生活台
+    status: unproven
+:x7d1f20b2 | ^纪载香港 | ^紀載香港
+    legacy: 法轮功相关（待核实）/channel/纪载香港
+    status: unproven
+:xd2719382 | ^公民老黑
+    legacy: 法轮功相关（待核实）/channel/公民老黑
+    status: unproven
+:x8c37749b | ^紫菱讲故事 | ^紫菱講故事
+    legacy: 法轮功相关（待核实）/channel/紫菱讲故事
+    status: unproven
+:xf2ea5131 | ^信不信由你
+    legacy: 法轮功相关（待核实）/channel/信不信由你
+    status: unproven
+:xaeeb550c | ^镜像世界 | ^鏡像世界 | ^映象世界
+    legacy: 法轮功相关（待核实）/channel/镜像世界
+    status: unproven
+:x4aa14dc0 | ^新奇世界
+    legacy: 法轮功相关（待核实）/channel/新奇世界
+    status: unproven
+:x7a09e712 | ^珍言真语 | ^珍言真語
+    legacy: 法轮功相关（待核实）/channel/珍言真语
+    status: unproven
+:x48a59c27 | ^正知卓见 | ^正知卓見
+    legacy: 法轮功相关（待核实）/channel/正知卓见
+    status: unproven
+:x09fdd9e5 | ^清透世界
+    legacy: 法轮功相关（待核实）/channel/清透世界
+    status: unproven

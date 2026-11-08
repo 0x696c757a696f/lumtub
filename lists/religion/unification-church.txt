@@ -1,0 +1,38 @@
+! id: unification-church
+! name: Unification Church
+! name.zh-Hans: 统一教
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Unification_Church
+! legacy: 统一教
+
+:x5e5932c0 | ^统一教
+    legacy: 统一教/channel/统一教
+:xadf1ed2a | ^統一教
+    legacy: 统一教/channel/統一教
+:xf7529aa1 | ^文鲜明
+    legacy: 统一教/channel/文鲜明
+:x02b145e3 | ^文鮮明
+    legacy: 统一教/channel/文鮮明
+:xb56f227b | ^家庭联合
+    legacy: 统一教/channel/家庭联合
+:xb41b8168 | ^家庭聯合
+    legacy: 统一教/channel/家庭聯合
+:x78cc13a7 | ^世界和平统一家庭
+    legacy: 统一教/channel/世界和平统一家庭
+:xe1f90805 | ^世界和平統一家庭
+    legacy: 统一教/channel/世界和平統一家庭
+:unification-church | ^Unification Church
+    legacy: 统一教/channel/Unification Church
+:sun-myung-moon | ^Sun Myung Moon
+    legacy: 统一教/channel/Sun Myung Moon
+:moonies | ^Moonies
+    legacy: 统一教/channel/Moonies
+:family-federation-for-world-peace | ^Family Federation for World Peace
+    legacy: 统一教/channel/Family Federation for World Peace
+
+:segye-ilbo | ^Segye Ilbo
+    reviewed: 2026-11-08
+:sekai-nippo | ^Sekai Nippo
+    reviewed: 2026-11-08

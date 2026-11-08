@@ -7,7 +7,7 @@ VideoItem _from(String channel) => VideoItem.fromJson({'id': 'aaaaaaaaaaa', 'tit
 
 void main() {
   test('hosts tied to the Falun Gong media are blocked by their channel name, in either script', () {
-    const prefs = AppPreferences();
+    const prefs = AppPreferences(blockGroups: true);
     for (final channel in ['天亮时分', '天亮時分', '章天亮', '陈破空', '陳破空', '陳破空 Chen Pokong', 'Chen Pokong', 'Tianliang Times', '熱點互動', '石濤聚焦', '乾淨世界', 'Gan Jing World', '李天笑', 'Trevor Loudon']) {
       expect(prefs.blocksGroup(_from(channel)), isTrue, reason: channel);
     }

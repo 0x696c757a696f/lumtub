@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
+PackageIdentifier: Lumtub.Lumtub
+PackageVersion: 0.2.29
+# The Inno Setup installer runs for the current user only (PrivilegesRequired=lowest).
+InstallerType: inno
+Scope: user
+MinimumOSVersion: 10.0.0.0
+UpgradeBehavior: install
+ReleaseDate: 2026-11-08
+Installers:
+- Architecture: x64
+  InstallerUrl: https://github.com/0x696c757a696f/lumtub/releases/download/v0.2.29-0000000/Lumtub_0.2.29-0000000_windows-x64-setup.exe
+  InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+  ProductCode: '{6F1C2E9A-3B7D-4C55-9E2A-8D4F1A7B9C31}_is1'
+  AppsAndFeaturesEntries:
+  - DisplayVersion: 0.2.29-0000000
+    ProductCode: '{6F1C2E9A-3B7D-4C55-9E2A-8D4F1A7B9C31}_is1'
+- Architecture: arm64
+  InstallerUrl: https://github.com/0x696c757a696f/lumtub/releases/download/v0.2.29-0000000/Lumtub_0.2.29-0000000_windows-arm64-setup.exe
+  InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+  ProductCode: '{6F1C2E9A-3B7D-4C55-9E2A-8D4F1A7B9C31}_is1'
+  AppsAndFeaturesEntries:
+  - DisplayVersion: 0.2.29-0000000
+    ProductCode: '{6F1C2E9A-3B7D-4C55-9E2A-8D4F1A7B9C31}_is1'
+ManifestType: installer
+ManifestVersion: 1.6.0

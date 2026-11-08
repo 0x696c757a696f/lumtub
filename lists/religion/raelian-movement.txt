@@ -1,0 +1,19 @@
+! id: raelian-movement
+! name: Raëlian Movement
+! name.zh-Hans: 雷尔运动
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Ra%C3%ABlism
+! legacy: 雷尔运动
+
+:x7fe87b1c | ^雷尔运动
+    legacy: 雷尔运动/channel/雷尔运动
+:xeb29ac8a | ^雷爾運動
+    legacy: 雷尔运动/channel/雷爾運動
+:raelian | ^Raelian
+    legacy: 雷尔运动/channel/Raelian
+:ra-lian | ^Raëlian
+    legacy: 雷尔运动/channel/Raëlian
+:rael-movement | ^Rael movement
+    legacy: 雷尔运动/channel/Rael movement

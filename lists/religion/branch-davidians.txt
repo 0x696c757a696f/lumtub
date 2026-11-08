@@ -1,0 +1,23 @@
+! id: branch-davidians
+! name: Branch Davidians
+! name.zh-Hans: 大卫教派
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Branch_Davidians
+! legacy: 大卫教派
+
+:x8fdc0cc4 | ^大卫教派
+    legacy: 大卫教派/channel/大卫教派
+:xc07705d4 | ^大衛教派
+    legacy: 大卫教派/channel/大衛教派
+:x9b513220 | ^韦科惨案
+    legacy: 大卫教派/channel/韦科惨案
+:xd727fed1 | ^韋科慘案
+    legacy: 大卫教派/channel/韋科慘案
+:branch-davidian | ^Branch Davidian
+    legacy: 大卫教派/channel/Branch Davidian
+:waco-siege | ^Waco siege
+    legacy: 大卫教派/channel/Waco siege
+:david-koresh | ^David Koresh
+    legacy: 大卫教派/channel/David Koresh

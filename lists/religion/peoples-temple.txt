@@ -1,0 +1,27 @@
+! id: peoples-temple
+! name: Peoples Temple
+! name.zh-Hans: 人民圣殿教
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Peoples_Temple
+! legacy: 人民圣殿教
+
+:x45f693a5 | ^人民圣殿
+    legacy: 人民圣殿教/channel/人民圣殿
+:xb59d69a8 | ^人民聖殿
+    legacy: 人民圣殿教/channel/人民聖殿
+:x6b292aa8 | ^琼斯镇
+    legacy: 人民圣殿教/channel/琼斯镇
+:xbd164431 | ^瓊斯鎮
+    legacy: 人民圣殿教/channel/瓊斯鎮
+:peoples-temple | ^Peoples Temple
+    legacy: 人民圣殿教/channel/Peoples Temple
+:peoples-temple-channel | ^People's Temple
+    legacy: 人民圣殿教/channel/People's Temple
+:jonestown | ^Jonestown
+    legacy: 人民圣殿教/channel/Jonestown
+:jim-jones | ^Jim Jones
+    legacy: 人民圣殿教/channel/Jim Jones
+:x467f479a | ^People’s Temple
+    legacy: 人民圣殿教/channel/People’s Temple

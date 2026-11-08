@@ -1,0 +1,278 @@
+! id: additional-spiritual-and-religious-channels
+! name: Additional spiritual and religious channels
+! name.zh-Hans: 补充的灵性导师与宗教频道
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/True_Buddha_School
+! source: https://en.wikipedia.org/wiki/Rajneesh_movement
+! legacy: 补充的灵性导师与宗教频道
+
+:x584e711b | =心灵法门
+    legacy: 补充的灵性导师与宗教频道/exact/心灵法门
+:x301dbb80 | =心靈法門
+    legacy: 补充的灵性导师与宗教频道/exact/心靈法門
+:x6aebd8d1 | =卢台长
+    legacy: 补充的灵性导师与宗教频道/exact/卢台长
+:x4eabf26a | =盧台長
+    legacy: 补充的灵性导师与宗教频道/exact/盧台長
+:guan-yin-citta | =Guan Yin Citta
+    legacy: 补充的灵性导师与宗教频道/exact/Guan Yin Citta
+:x735a07d5 | =真佛宗
+    legacy: 补充的灵性导师与宗教频道/exact/真佛宗
+:true-buddha-school | =True Buddha School
+    legacy: 补充的灵性导师与宗教频道/exact/True Buddha School
+:x13fb5a87 | =佛教如來宗
+    legacy: 补充的灵性导师与宗教频道/exact/佛教如來宗
+:x31b4cf14 | =妙禪師父
+    legacy: 补充的灵性导师与宗教频道/exact/妙禪師父
+:x6df4f717 | =印心佛法
+    legacy: 补充的灵性导师与宗教频道/exact/印心佛法
+:cgm | =CGM基督教福音宣教會
+    legacy: 补充的灵性导师与宗教频道/exact/CGM基督教福音宣教會
+:xdb7cc0f4 | =攝理教
+    legacy: 补充的灵性导师与宗教频道/exact/攝理教
+:manmin | =Manmin
+    legacy: 补充的灵性导师与宗教频道/exact/Manmin
+:gcntv | =GCNTV
+    legacy: 补充的灵性导师与宗教频道/exact/GCNTV
+:twin-flames-universe | =Twin Flames Universe
+    legacy: 补充的灵性导师与宗教频道/exact/Twin Flames Universe
+:jeff-and-shaleia | =Jeff and Shaleia
+    legacy: 补充的灵性导师与宗教频道/exact/Jeff and Shaleia
+:adidam | =Adidam
+    legacy: 补充的灵性导师与宗教频道/exact/Adidam
+:adi-da-samraj | =Adi Da Samraj
+    legacy: 补充的灵性导师与宗教频道/exact/Adi Da Samraj
+:summit-lighthouse | =Summit Lighthouse
+    legacy: 补充的灵性导师与宗教频道/exact/Summit Lighthouse
+:ascended-master-teachings | =Ascended Master Teachings
+    legacy: 补充的灵性导师与宗教频道/exact/Ascended Master Teachings
+:xfbf4266c | =金菩提
+    legacy: 补充的灵性导师与宗教频道/exact/金菩提
+:jinbodhi | =JinBodhi
+    legacy: 补充的灵性导师与宗教频道/exact/JinBodhi
+:bodhi-meditation | =Bodhi Meditation
+    legacy: 补充的灵性导师与宗教频道/exact/Bodhi Meditation
+:energy-bagua | =Energy Bagua
+    legacy: 补充的灵性导师与宗教频道/exact/Energy Bagua
+:xe1c33757 | =八卦内功
+    legacy: 补充的灵性导师与宗教频道/exact/八卦内功
+:xe2ac3cc9 | =八卦內功
+    legacy: 补充的灵性导师与宗教频道/exact/八卦內功
+:x2ea86926 | =全能神教会
+    legacy: 补充的灵性导师与宗教频道/exact/全能神教会
+:x47e78881 | =全能神教會
+    legacy: 补充的灵性导师与宗教频道/exact/全能神教會
+:the-church-of-almighty-god | =The Church of Almighty God
+    legacy: 补充的灵性导师与宗教频道/exact/The Church of Almighty God
+:eastern-lightning | =Eastern Lightning
+    legacy: 补充的灵性导师与宗教频道/exact/Eastern Lightning
+:nithyananda | =Nithyananda
+    legacy: 补充的灵性导师与宗教频道/exact/Nithyananda
+:shrikailasa | =SHRIKAILASA
+    legacy: 补充的灵性导师与宗教频道/exact/SHRIKAILASA
+:la-luz-del-mundo | =La Luz del Mundo
+    legacy: 补充的灵性导师与宗教频道/exact/La Luz del Mundo
+:alph-lukau | =Alph Lukau
+    legacy: 补充的灵性导师与宗教频道/exact/Alph Lukau
+:alleluia-ministries | =Alleluia Ministries
+    legacy: 补充的灵性导师与宗教频道/exact/Alleluia Ministries
+:emmanuel-tv | =Emmanuel TV
+    legacy: 补充的灵性导师与宗教频道/exact/Emmanuel TV
+:the-last-reformation | =The Last Reformation
+    legacy: 补充的灵性导师与宗教频道/exact/The Last Reformation
+:ramthas-school-of-enlightenment | =Ramtha’s School of Enlightenment
+    legacy: 补充的灵性导师与宗教频道/exact/Ramtha’s School of Enlightenment
+:kryon | =Kryon
+    legacy: 补充的灵性导师与宗教频道/exact/Kryon
+:bashar-higher-mind | =Bashar Higher Mind
+    legacy: 补充的灵性导师与宗教频道/exact/Bashar Higher Mind
+:osho-international | =OSHO International
+    legacy: 补充的灵性导师与宗教频道/exact/OSHO International
+:mooji | =Mooji
+    legacy: 补充的灵性导师与宗教频道/exact/Mooji
+:isha-foundation | =Isha Foundation
+    legacy: 补充的灵性导师与宗教频道/exact/Isha Foundation
+:eckankar | =ECKANKAR
+    legacy: 补充的灵性导师与宗教频道/exact/ECKANKAR
+:x2f52733c | =创造丰盛
+    legacy: 补充的灵性导师与宗教频道/exact/创造丰盛
+:x26f4e24e | =創造豐盛
+    legacy: 补充的灵性导师与宗教频道/exact/創造豐盛
+:abraham-hicks | =Abraham-Hicks
+    legacy: 补充的灵性导师与宗教频道/exact/Abraham-Hicks
+:access-consciousness | =Access Consciousness
+    legacy: 补充的灵性导师与宗教频道/exact/Access Consciousness
+:thetahealing | =ThetaHealing
+    legacy: 补充的灵性导师与宗教频道/exact/ThetaHealing
+:bruno-gr-ning | =Bruno Gröning
+    legacy: 补充的灵性导师与宗教频道/exact/Bruno Gröning
+:pranic-healing | =Pranic Healing
+    legacy: 补充的灵性导师与宗教频道/exact/Pranic Healing
+:bodhimeditation | @BodhiMeditation
+    legacy: 补充的灵性导师与宗教频道/handle/@BodhiMeditation
+:energybagua | @EnergyBagua
+    legacy: 补充的灵性导师与宗教频道/handle/@EnergyBagua
+:energybaguaen | @EnergyBaguaEn
+    legacy: 补充的灵性导师与宗教频道/handle/@EnergyBaguaEn
+:energybaguaid | @EnergyBaguaID
+    legacy: 补充的灵性导师与宗教频道/handle/@EnergyBaguaID
+:jinbodhi-en | @jinbodhi-en
+    legacy: 补充的灵性导师与宗教频道/handle/@jinbodhi-en
+:jinbodhi-kr | @jinbodhi-kr
+    legacy: 补充的灵性导师与宗教频道/handle/@jinbodhi-kr
+:bodhimeditationkr | @BodhiMeditationKR
+    legacy: 补充的灵性导师与宗教频道/handle/@BodhiMeditationKR
+:putimalaysia | @PutiMalaysia
+    legacy: 补充的灵性导师与宗教频道/handle/@PutiMalaysia
+:iglesialaluzdelmundo | @IglesiaLaLuzdelMundo
+    legacy: 补充的灵性导师与宗教频道/handle/@IglesiaLaLuzdelMundo
+:radiolldmhoy | @Radiolldmhoy
+    legacy: 补充的灵性导师与宗教频道/handle/@Radiolldmhoy
+:pastoralphlukauofficial | @PastorAlphLukauofficial
+    legacy: 补充的灵性导师与宗教频道/handle/@PastorAlphLukauofficial
+:official-amitv | @Official_AMITV
+    legacy: 补充的灵性导师与宗教频道/handle/@Official_AMITV
+:emmanueltv-live | @EmmanuelTV-Live
+    legacy: 补充的灵性导师与宗教频道/handle/@EmmanuelTV-Live
+:thelastreformation | @TheLastReformation
+    legacy: 补充的灵性导师与宗教频道/handle/@TheLastReformation
+:thelastreformationfrance | @thelastreformationfrance
+    legacy: 补充的灵性导师与宗教频道/handle/@thelastreformationfrance
+:thelastreformationuk | @thelastreformationuk
+    legacy: 补充的灵性导师与宗教频道/handle/@thelastreformationuk
+:rsewebteam | @RSEWebTeam
+    legacy: 补充的灵性导师与宗教频道/handle/@RSEWebTeam
+:krseradio | @KRSERADIO
+    legacy: 补充的灵性导师与宗教频道/handle/@KRSERADIO
+:kryonleecarroll3491 | @kryonleecarroll3491
+    legacy: 补充的灵性导师与宗教频道/handle/@kryonleecarroll3491
+:basharhighermind99 | @BasharHigherMind99
+    legacy: 补充的灵性导师与宗教频道/handle/@BasharHigherMind99
+:oshointernational | @OSHOInternational
+    legacy: 补充的灵性导师与宗教频道/handle/@OSHOInternational
+:moojiji | @Moojiji
+    legacy: 补充的灵性导师与宗教频道/handle/@Moojiji
+:moojiitaliano | @Moojiitaliano
+    legacy: 补充的灵性导师与宗教频道/handle/@Moojiitaliano
+:sadhguruchinese | @SadhguruChinese
+    legacy: 补充的灵性导师与宗教频道/handle/@SadhguruChinese
+:sadhgurutraditionalchinese | @sadhgurutraditionalchinese
+    legacy: 补充的灵性导师与宗教频道/handle/@sadhgurutraditionalchinese
+:ishafoundation | @ishafoundation
+    legacy: 补充的灵性导师与宗教频道/handle/@ishafoundation
+:eckankar-handle | @eckankar
+    legacy: 补充的灵性导师与宗教频道/handle/@eckankar
+:jinbodhi-vn | @jinbodhi-vn
+    legacy: 补充的灵性导师与宗教频道/handle/@jinbodhi-vn
+:accessconsciousness | @accessconsciousness
+    legacy: 补充的灵性导师与宗教频道/handle/@accessconsciousness
+:thetahealingvianna | @ThetaHealingVianna
+    legacy: 补充的灵性导师与宗教频道/handle/@ThetaHealingVianna
+:uc8aqzc9ij7ggptu3u5mcj7a | UC8AqZc9Ij7GGptu3U5Mcj7A
+    legacy: 补充的灵性导师与宗教频道/id/UC8AqZc9Ij7GGptu3U5Mcj7A
+:ucjat3xga5s2qizsygvd2cia | UCJAt3XGA5S2qiZSygvd2cIA
+    legacy: 补充的灵性导师与宗教频道/id/UCJAt3XGA5S2qiZSygvd2cIA
+:ucpdi-gkjdpkv1mzfnlwyc5w | UCPDI_GKjDpKV1mzFnLwyC5w
+    legacy: 补充的灵性导师与宗教频道/id/UCPDI_GKjDpKV1mzFnLwyC5w
+:ucuk4yvtfvwkdzcem9p6kwaa | UCuk4yvTFVwkdZCEM9p6KWaA
+    legacy: 补充的灵性导师与宗教频道/id/UCuk4yvTFVwkdZCEM9p6KWaA
+:ucxxzceoqlvewbddrvt10f4q | UCxxZCeOQLvEWbdDRvt10f4Q
+    legacy: 补充的灵性导师与宗教频道/id/UCxxZCeOQLvEWbdDRvt10f4Q
+:ucvermealcdv6ofdk5wbc-yq | UCVERMeALCDV6OFdK5wbC-YQ
+    legacy: 补充的灵性导师与宗教频道/id/UCVERMeALCDV6OFdK5wbC-YQ
+:uctqqhvgp94vf7ktrann8xpw | UCTQqhVgp94Vf7KTrANN8Xpw
+    legacy: 补充的灵性导师与宗教频道/id/UCTQqhVgp94Vf7KTrANN8Xpw
+:ucll20r-kqlapx-5ft-n3cow | UCLl20r-KQlapX_5fT-N3cOw
+    legacy: 补充的灵性导师与宗教频道/id/UCLl20r-KQlapX_5fT-N3cOw
+:ucswyzbtdj2udpe-ytkldufq | UCsWyzBTDj2uDPe-YtKLDUFQ
+    legacy: 补充的灵性导师与宗教频道/id/UCsWyzBTDj2uDPe-YtKLDUFQ
+:ucnkwfeakrmq6lefwxhgl3na | UCNkWFeAkrMq6LEfwxHGl3nA
+    legacy: 补充的灵性导师与宗教频道/id/UCNkWFeAkrMq6LEfwxHGl3nA
+:ucdr4vl3pcqrup0cv3qwzfmg | UCDr4vL3pCQRup0cV3qWZFmg
+    legacy: 补充的灵性导师与宗教频道/id/UCDr4vL3pCQRup0cV3qWZFmg
+:uci4gmat8st0gv6h6p4dfkmw | UCi4gMat8ST0GV6H6P4dfkMw
+    legacy: 补充的灵性导师与宗教频道/id/UCi4gMat8ST0GV6H6P4dfkMw
+:ucqnrkvegfho3q8clt6rwp5a | UCQnRKVEgfHO3q8cLT6Rwp5A
+    legacy: 补充的灵性导师与宗教频道/id/UCQnRKVEgfHO3q8cLT6Rwp5A
+:uc9rp6ixuugnegds0djlvf-g | UC9Rp6IXUugNEgDs0DJLvf_g
+    legacy: 补充的灵性导师与宗教频道/id/UC9Rp6IXUugNEgDs0DJLvf_g
+:uceso2lgqdeynyawrbr11xga | UCESo2LGqdEynYAWRbr11XGA
+    legacy: 补充的灵性导师与宗教频道/id/UCESo2LGqdEynYAWRbr11XGA
+:ucbubsrty41vzskp-rr3ivoq | UCBuBSRtY41VzSkP_RR3IVoQ
+    legacy: 补充的灵性导师与宗教频道/id/UCBuBSRtY41VzSkP_RR3IVoQ
+:uc8akmqemmkwispysr6ei1ia | UC8aKMQEmMkWiSpYSR6EI1iA
+    legacy: 补充的灵性导师与宗教频道/id/UC8aKMQEmMkWiSpYSR6EI1iA
+:ucdbvc-yj4jqjngtgfijizna | UCdbvc-yJ4JQjNGTgFiJIZNA
+    legacy: 补充的灵性导师与宗教频道/id/UCdbvc-yJ4JQjNGTgFiJIZNA
+:ucjl5wtw8jgbr1vfpp2ylonq | UCjl5wTW8jGBR1Vfpp2yLoNQ
+    legacy: 补充的灵性导师与宗教频道/id/UCjl5wTW8jGBR1Vfpp2yLoNQ
+:uck89ped76qutmb08hvsy49q | UCk89pEd76qutMB08hVSY49Q
+    legacy: 补充的灵性导师与宗教频道/id/UCk89pEd76qutMB08hVSY49Q
+:ucbrcyi55panuu4ofia75yeg | UCBRcyI55pANUU4Ofia75yEg
+    legacy: 补充的灵性导师与宗教频道/id/UCBRcyI55pANUU4Ofia75yEg
+:uc2pfkwhv43s6oc-ndal2vxw | UC2Pfkwhv43s6oC-NDAl2vXw
+    legacy: 补充的灵性导师与宗教频道/id/UC2Pfkwhv43s6oC-NDAl2vXw
+:ucx7ei8-ad5lgro-xwku6rxw | UCX7ei8-AD5lgRO_XWku6RXw
+    legacy: 补充的灵性导师与宗教频道/id/UCX7ei8-AD5lgRO_XWku6RXw
+:ucd0tvuz53-t5uu2mnd05apq | UCd0tVUZ53-T5UU2MnD05apQ
+    legacy: 补充的灵性导师与宗教频道/id/UCd0tVUZ53-T5UU2MnD05apQ
+:uclmjy6l7o6ymfk01o69fo9q | UCLMJY6l7o6YMfK01o69fo9Q
+    legacy: 补充的灵性导师与宗教频道/id/UCLMJY6l7o6YMfK01o69fo9Q
+:ucyk-3e-pgumrnh6kbkiacww | UCyK-3e-PGUmrnH6KBKIacww
+    legacy: 补充的灵性导师与宗教频道/id/UCyK-3e-PGUmrnH6KBKIacww
+:ucpcjif6x8rthvl2vzrkj33q | UCpcJIF6X8RtHvl2vZRKJ33Q
+    legacy: 补充的灵性导师与宗教频道/id/UCpcJIF6X8RtHvl2vZRKJ33Q
+:ucokzrhw3casihzn60k2mtkq | UCOkZrhW3cASIhZN60K2mTkQ
+    legacy: 补充的灵性导师与宗教频道/id/UCOkZrhW3cASIhZN60K2mTkQ
+:ucebafeduqfmbddlgjuxiwvg | UCeBAfedUQFMbDDLGjuXIwvg
+    legacy: 补充的灵性导师与宗教频道/id/UCeBAfedUQFMbDDLGjuXIwvg
+:uc-z8eruoltrlaaopy0gxzsa | UC_z8ERuOLTrlAaopY0gxzsA
+    legacy: 补充的灵性导师与宗教频道/id/UC_z8ERuOLTrlAaopY0gxzsA
+:ucxdmzx6s5iu9xqa5axpj3la | UCXdMzx6s5IU9xQA5aXPJ3LA
+    legacy: 补充的灵性导师与宗教频道/id/UCXdMzx6s5IU9xQA5aXPJ3LA
+:ucyeef44sll-5o07hocfirsw | UCYeeF44slL_5o07hoCfIRsw
+    legacy: 补充的灵性导师与宗教频道/id/UCYeeF44slL_5o07hoCfIRsw
+:uc0zr8dxbfnrgt1ksmr18prg | UC0Zr8DXBfnRGT1kSMR18pRg
+    legacy: 补充的灵性导师与宗教频道/id/UC0Zr8DXBfnRGT1kSMR18pRg
+:uctgb6fvavmcjav1mskquzeg | UCTgB6FVaVMCjaV1mSkqUzEg
+    legacy: 补充的灵性导师与宗教频道/id/UCTgB6FVaVMCjaV1mSkqUzEg
+:ucmeycoa9lmrds1em9k7kanw | UCMeYcOA9lMRDS1eM9k7Kanw
+    legacy: 补充的灵性导师与宗教频道/id/UCMeYcOA9lMRDS1eM9k7Kanw
+:ucp-zsddbsvlh3flxwp7ajog | UCP-zsdDBSvlh3FlXwP7ajog
+    legacy: 补充的灵性导师与宗教频道/id/UCP-zsdDBSvlh3FlXwP7ajog
+:ucaylulpa1rqjyyyz4ov6ccw | UCaylUlPa1RqjyyYz4oV6cCw
+    legacy: 补充的灵性导师与宗教频道/id/UCaylUlPa1RqjyyYz4oV6cCw
+:ucf0fnlkk7d5jwsxi8ne5cxw | UCf0fNlKk7D5JwsXi8ne5cxw
+    legacy: 补充的灵性导师与宗教频道/id/UCf0fNlKk7D5JwsXi8ne5cxw
+:ucxonu8qnflim00yxuyv17rq | UCxONu8QnFlim00YxUYv17RQ
+    legacy: 补充的灵性导师与宗教频道/id/UCxONu8QnFlim00YxUYv17RQ
+:uchryrqwgp7jnuez6yd2suxg | UCHRyrQWgP7JNuEZ6yd2sUXg
+    legacy: 补充的灵性导师与宗教频道/id/UCHRyrQWgP7JNuEZ6yd2sUXg
+:uckv-ujdqw5gqx5hkr76yrjg | UCKv-uJdqW5gQx5HkR76yRJg
+    legacy: 补充的灵性导师与宗教频道/id/UCKv-uJdqW5gQx5HkR76yRJg
+:uc-zy8y8bc3bcojatb8tncqq | UC-zY8Y8BC3bcOjAtb8tnCqQ
+    legacy: 补充的灵性导师与宗教频道/id/UC-zY8Y8BC3bcOjAtb8tnCqQ
+:uca9ff3xvwgkbjklq-4-nwbq | UCA9ff3XVWgKBjklq-4_NWbQ
+    legacy: 补充的灵性导师与宗教频道/id/UCA9ff3XVWgKBjklq-4_NWbQ
+:ucnavqwhxftadvqcyucbwogg | UCnAvqWHXFtadVQCyUcBwOGg
+    legacy: 补充的灵性导师与宗教频道/id/UCnAvqWHXFtadVQCyUcBwOGg
+:uccjpnud3tri2cl-2mudrhbg | UCCJPNud3Tri2CL-2MuDrhBg
+    legacy: 补充的灵性导师与宗教频道/id/UCCJPNud3Tri2CL-2MuDrhBg
+:ucwcforkfi3uyx-ynwlm3hwq | UCWcfoRKfi3uYx_YNwLm3hwQ
+    legacy: 补充的灵性导师与宗教频道/id/UCWcfoRKfi3uYx_YNwLm3hwQ
+:ucm-xfjz9vxoiifaqjoiqvmg | UCm_xFjZ9VxOiIfaQjOiQvMg
+    legacy: 补充的灵性导师与宗教频道/id/UCm_xFjZ9VxOiIfaQjOiQvMg
+:uckxya19-jmzhkzndkzrm6ua | UCkXYA19-jmzhKZndkZRm6UA
+    legacy: 补充的灵性导师与宗教频道/id/UCkXYA19-jmzhKZndkZRm6UA
+:ucscytd8t6wrk71hd6u2itag | UCScyTd8t6wRK71Hd6U2ITAg
+    legacy: 补充的灵性导师与宗教频道/id/UCScyTd8t6wRK71Hd6U2ITAg
+:uc7sjyif-9mvtqn3rv6rmngq | UC7sjyIF-9MvtqN3Rv6rMNGQ
+    legacy: 补充的灵性导师与宗教频道/id/UC7sjyIF-9MvtqN3Rv6rMNGQ
+:ucfvq-m5tg0ob1rn7mcicmnq | UCFvQ_m5tg0ob1Rn7mciCmnQ
+    legacy: 补充的灵性导师与宗教频道/id/UCFvQ_m5tg0ob1Rn7mciCmnQ
+:ucfqkmt-pkfqb7dxyrts28ka | UCfqkmt_PKfqB7dXyRtS28KA
+    legacy: 补充的灵性导师与宗教频道/id/UCfqkmt_PKfqB7dXyRtS28KA
+:ucwyno48bbazomfgxthrdypw | UCwYNO48BBaZOmfGxtHRDYPw
+    legacy: 补充的灵性导师与宗教频道/id/UCwYNO48BBaZOmfGxtHRDYPw

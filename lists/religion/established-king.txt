@@ -1,0 +1,11 @@
+! id: established-king
+! name: Established King
+! name.zh-Hans: 被立王
+! category: religion
+! action: hide
+! default: off
+! source: https://zh.wikipedia.org/wiki/被立王
+! legacy: 被立王
+
+:x11eb463c | ^被立王
+    legacy: 被立王/channel/被立王

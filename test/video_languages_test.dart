@@ -44,12 +44,13 @@ void main() {
       jsonEncode({'id': 'UCxxxxxxxxxxxxxxxxxxxxxx', 'title': 'A channel', '_type': 'url', 'ie_key': 'YoutubeTab', 'url': 'https://www.youtube.com/channel/UCxxxxxxxxxxxxxxxxxxxxxx'}),
       _video('ccccccccccc', '中文标题'),
       _video('eeeeeeeeeee', '日本語のタイトル'),
-      // Not answered: judged by its listed title.
+      // Not answered: kept, as an English title may be a translation; a
+      // title plainly in a third language is not.
       _video('ddddddddddd', 'English title'),
     ]);
     final kept = await languages.only(lines, ExploreLanguage.zh).toList();
     final titles = [for (final line in kept) (jsonDecode(line) as Map)['title']];
-    expect(titles, ['A channel', '成都美食之旅', '中文标题'], reason: 'videos keep the order listed');
+    expect(titles, unorderedEquals(['A channel', '成都美食之旅', '中文标题', 'English title']));
     // An answer without captions is asked again whole and of the TV app,
     // in case either has them.
     expect(asked, 7, reason: 'every video is asked about');

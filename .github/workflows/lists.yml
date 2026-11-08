@@ -1,0 +1,61 @@
+name: Block lists
+
+# Reads every list strictly and prints what a pull request changes. Runs
+# without secrets; signing happens on main only, in a later job.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'lists/**'
+      - 'native/lumtub_core/src/lists.rs'
+      - 'native/lumtub_core/src/bin/lumtub-lists.rs'
+      - '.github/workflows/lists.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'lists/**'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check lists
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install the Rust toolchain
+        run: |
+          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: lists
+
+      - name: Build the list checker
+        run: cargo build --manifest-path native/lumtub_core/Cargo.toml --release --bin lumtub-lists
+
+      - name: Check the lists and show what changed
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          tool=native/lumtub_core/target/release/lumtub-lists
+          "$tool" check lists
+          rm -rf "$RUNNER_TEMP/base"
+          mkdir -p "$RUNNER_TEMP/base"
+          if git cat-file -e "$BASE^{tree}" 2>/dev/null && git ls-tree -d "$BASE" lists | grep -q .; then
+            git archive "$BASE" lists | tar -x -C "$RUNNER_TEMP/base"
+          fi
+          {
+            echo '### Block list changes'
+            echo '```'
+            "$tool" check lists --base "$RUNNER_TEMP/base/lists"
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"

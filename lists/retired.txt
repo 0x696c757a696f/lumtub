@@ -1,0 +1,2 @@
+# Record keys (list-id/slug) that were removed. A key here can never be
+# used again, so a saved choice can never point at a different channel.

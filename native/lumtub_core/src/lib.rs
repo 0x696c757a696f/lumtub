@@ -41,6 +41,7 @@ pub mod cast;
 pub mod cast_webm;
 pub mod roots;
 pub mod pac;
+pub mod lists;
 
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]

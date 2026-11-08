@@ -92,18 +92,28 @@ extension SmokeCheck on AppController {
     ChannelRef('UCLA_DiR1FfKNvjuUpBHmylQ', 'NASA'),
   ];
 
+  /// Videos YouTube finds for [query] that are neither live nor short.
+  Future<List<VideoItem>> _showcaseSearch(String query, {int count = 10}) async {
+    final repository = _repository;
+    if (repository == null) return const [];
+    final listing = repository.search(query, sp: searchParams(type: SearchFilter.videos));
+    try {
+      final found = (await listing.next(count).toList().timeout(const Duration(seconds: 60))).whereType<VideoItem>();
+      return found.where((v) => !v.isLive && !v.isUpcoming && (v.duration ?? 0) > 120).toList();
+    } catch (e) {
+      logWarn('Showcase could not search for $query: $e');
+      return const [];
+    } finally {
+      listing.close();
+    }
+  }
+
   Future<void> _seedShowcase() async {
-    final library = this.library;
-    if (library == null) return;
-    library.followAll(_showcaseChannels);
+    library?.followAll(_showcaseChannels);
     for (final channel in _showcaseChannels) {
-      try {
-        final uploads = await library.uploadsOf(channel).timeout(const Duration(seconds: 30));
-        for (final item in uploads.where((v) => !v.isLive && !v.isUpcoming && (v.duration ?? 0) > 120).take(2).toList().reversed) {
-          await _history?.record(item);
-        }
-      } catch (e) {
-        logWarn('Showcase could not read ${channel.name}: $e');
+      final found = await _showcaseSearch(channel.name);
+      for (final item in found.where((v) => v.channel.toLowerCase().contains(channel.name.split(' ').first.toLowerCase())).take(2).toList().reversed) {
+        await _history?.record(item);
       }
     }
     logInfo('Showcase history: ${history.length} videos');
@@ -131,28 +141,42 @@ extension SmokeCheck on AppController {
   /// interface language: 为你推荐 with its reasons, a video with two
   /// subtitles, a live stream with 弹幕, and 探索 by spoken language.
   Future<void> _featureShots(Future<void> Function(String name, {Duration settle}) shot, String suffix) async {
-    final player = this.player;
     final settingsBefore = settings;
     final danmakuBefore = preferences.danmaku;
-    await saveAppearance(appearance.copyWith(themeMode: ThemeMode.dark));
-    await refreshHomeFeed(force: true);
-    navigate(PageMode.home);
-    await shot('home-reasons$suffix', settle: const Duration(seconds: 30));
+    Future<void> part(String name, Future<void> Function() run) async {
+      try {
+        await run();
+      } catch (e, stack) {
+        logError('Showcase $name$suffix failed', e, stack);
+      }
+    }
 
-    setExplore(language: suffix.isEmpty ? ExploreLanguage.it : ExploreLanguage.ja);
-    clearSearch();
-    navigate(PageMode.explore);
-    await shot('explore-language$suffix');
-    setExplore(language: ExploreLanguage.any);
+    await saveAppearance(appearance.copyWith(themeMode: ThemeMode.dark));
+    await part('home-reasons', () async {
+      await refreshHomeFeed(force: true);
+      navigate(PageMode.home);
+      await shot('home-reasons$suffix', settle: const Duration(seconds: 30));
+    });
+    await part('explore-language', () async {
+      clearSearch();
+      navigate(PageMode.explore);
+      setExplore(section: ExploreSection.popular, language: suffix.isEmpty ? ExploreLanguage.it : ExploreLanguage.ja);
+      // Science rather than everything, which is mostly the news.
+      final science = exploreTopicsFor(exploreSection).indexWhere((t) => t.key == 'Science');
+      if (science >= 0) setExplore(topic: science);
+      await shot('explore-language$suffix');
+      setExplore(topic: 0, language: ExploreLanguage.any);
+    });
+    final player = this.player;
     if (player == null) return;
 
     // A video with English captions, with a translation under them: Chinese
     // under English for the English interface, and English under Chinese
     // for the Chinese one.
-    final library = this.library;
-    final uploads = library == null ? const <VideoItem>[] : await library.uploadsOf(_showcaseChannels.first).timeout(const Duration(seconds: 30), onTimeout: () => const []);
-    final video = uploads.where((v) => !v.isLive && !v.isUpcoming && (v.duration ?? 0) > 240).firstOrNull;
-    if (video != null) {
+    await part('watch-subtitles', () async {
+      final found = await _showcaseSearch('Kurzgesagt In a Nutshell');
+      final video = found.where((v) => v.channel.contains('Kurzgesagt') && (v.duration ?? 0) > 240).firstOrNull;
+      if (video == null) throw StateError('No Kurzgesagt video found');
       await setDanmaku(danmakuBefore.copyWith(enabled: false));
       await saveSettings(settingsBefore.copyWith(
         subtitleMode: SubtitleMode.always,
@@ -170,15 +194,17 @@ extension SmokeCheck on AppController {
       logInfo('Showcase subtitles of ${video.id}: ${both ? 'both shown' : 'not both'}');
       await shot('watch-subtitles$suffix', settle: const Duration(milliseconds: 300));
       await player.stop();
-    }
+    });
 
     // A live stream whose chat flies across the picture.
-    await saveSettings(settingsBefore.copyWith(subtitleMode: SubtitleMode.off));
-    await setDanmaku(danmakuBefore.copyWith(enabled: true));
-    unawaited(play(VideoItem(id: 'jfKfPfyJRdk', title: 'lofi hip hop radio', channel: 'Lofi Girl', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', liveStatus: 'is_live')));
-    await _waitFor(() => player.state.position >= const Duration(seconds: 3), const Duration(seconds: 120));
-    await shot('danmaku$suffix', settle: const Duration(seconds: 40));
-    await player.stop();
+    await part('danmaku', () async {
+      await saveSettings(settingsBefore.copyWith(subtitleMode: SubtitleMode.off));
+      await setDanmaku(danmakuBefore.copyWith(enabled: true));
+      unawaited(play(VideoItem(id: 'jfKfPfyJRdk', title: 'lofi hip hop radio', channel: 'Lofi Girl', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', liveStatus: 'is_live')));
+      await _waitFor(() => player.state.position >= const Duration(seconds: 3), const Duration(seconds: 120));
+      await shot('danmaku$suffix', settle: const Duration(seconds: 40));
+      await player.stop();
+    });
     await setDanmaku(danmakuBefore);
     await saveSettings(settingsBefore);
   }

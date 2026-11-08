@@ -568,7 +568,7 @@ jobs:
 
       - name: Linux - smoke test the AppImage
         run: |
-          apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri libegl1 libgles2 ffmpeg imagemagick
+          apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri libegl1 libgles2 ffmpeg imagemagick gdb
           linux/packaging/smoke.sh Lumtub_*_linux-$PACKAGE_ARCH.AppImage "$RUNNER_TEMP/smoke"
 
       - name: Linux - README pictures

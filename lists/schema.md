@@ -10,7 +10,7 @@ Each list is one file, `<category>/<id>.txt`. `lumtub-lists check lists` reads t
 | P1 quality | `ai-slop`, `clickbait-reuploads`, `religion` | off, offered on first run |
 | P2 viewpoint | `state-media`, `influence-operations`, `new-age`, `misinformation-farms`, `deceptive-marketing` | off, offered on first run |
 
-Only a list of P0 categories may be `default: on`. P0 lists take no `topic` and only confirmed records.
+Only a list of P0 categories may be `default: on`. P0 lists take no `topic` and only confirmed records. A confirmed record needs a `source`: its own on P0 lists, its own or the list's elsewhere. A removed record whose key is not added to `retired.txt` fails the check.
 
 ## Syntax
 

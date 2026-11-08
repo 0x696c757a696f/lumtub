@@ -28,15 +28,21 @@ fn run() -> Result<(), String> {
         }
         ["check", dir, "--base", base] => {
             let (all, retired) = load(dir)?;
-            let old = if Path::new(base).is_dir() { load(base).map(|(l, _)| l).unwrap_or_default() } else { Vec::new() };
+            // No base folder means the lists are new; a base that does not
+            // read is an error, not an empty start.
+            let old = if Path::new(base).is_dir() { load(base).map_err(|e| format!("the base lists: {e}"))?.0 } else { Vec::new() };
             let lines = lists::diff(&old, &all, &retired);
+            let problems = lists::unretired(&old, &all, &retired);
             if lines.is_empty() {
                 println!("No change to the lists");
             }
             for line in lines {
                 println!("{line}");
             }
-            Ok(())
+            for problem in &problems {
+                eprintln!("{problem}");
+            }
+            if problems.is_empty() { Ok(()) } else { Err(format!("{} removed record(s) missing from retired.txt", problems.len())) }
         }
         ["build", dir, out, version] => {
             let version: u64 = version.parse().map_err(|_| format!("{version} is not a version number"))?;

@@ -344,6 +344,13 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
             err(1, format!("the record {} is unproven, and a safety list takes confirmed records only", record.slug));
         }
     }
+    for record in records.iter().filter(|r| r.status != Some(Status::Unproven) && r.sources.is_empty()) {
+        if safety {
+            err(1, format!("the record {} has no source, and every record of a safety list needs its own", record.slug));
+        } else if sources.is_empty() {
+            err(1, format!("the record {} is confirmed but neither it nor the list has a source", record.slug));
+        }
+    }
     if !errors.is_empty() {
         return Err(errors);
     }
@@ -426,9 +433,26 @@ fn conditions(record: &Record) -> Vec<String> {
     all
 }
 
+/// Record keys of [old] that [new] dropped without writing them to
+/// [retired]: a check fails on these, since a saved choice could later
+/// point at a different channel.
+pub fn unretired(old: &[List], new: &[List], retired: &HashSet<String>) -> Vec<String> {
+    let mut problems = Vec::new();
+    for list in old {
+        let now = new.iter().find(|n| n.id == list.id);
+        for record in &list.records {
+            let key = format!("{}/{}", list.id, record.slug);
+            if !now.is_some_and(|n| n.records.iter().any(|r| r.slug == record.slug)) && !retired.contains(&key) {
+                problems.push(format!("{key} was removed but is not in retired.txt"));
+            }
+        }
+    }
+    problems
+}
+
 /// What changed from [old] to [new], one line each, for review: lists and
-/// records added or removed, conditions, actions and defaults changed. A
-/// record removed without being written to retired.txt is flagged too.
+/// records added or removed, and changes to conditions, actions, defaults,
+/// status, sources, review dates and notes.
 pub fn diff(old: &[List], new: &[List], retired: &HashSet<String>) -> Vec<String> {
     let mut lines = Vec::new();
     for list in old.iter().filter(|o| !new.iter().any(|n| n.id == o.id)) {
@@ -464,6 +488,22 @@ pub fn diff(old: &[List], new: &[List], retired: &HashSet<String>) -> Vec<String
                     let removed: Vec<_> = was.iter().filter(|c| !now.contains(c)).cloned().collect();
                     if !added.is_empty() || !removed.is_empty() {
                         lines.push(format!("~ {key}: +[{}] -[{}]", added.join(" | "), removed.join(" | ")));
+                    }
+                    let was = before.records.iter().find(|r| r.slug == record.slug).unwrap();
+                    if was.status != record.status {
+                        lines.push(format!("~ {key} status {:?} -> {:?}", was.status.unwrap_or(Status::Confirmed), record.status.unwrap_or(Status::Confirmed)));
+                    }
+                    for source in record.sources.iter().filter(|s| !was.sources.contains(s)) {
+                        lines.push(format!("~ {key} + source {source}"));
+                    }
+                    for source in was.sources.iter().filter(|s| !record.sources.contains(s)) {
+                        lines.push(format!("~ {key} - source {source}"));
+                    }
+                    if was.reviewed != record.reviewed {
+                        lines.push(format!("~ {key} reviewed {} -> {}", was.reviewed.as_deref().unwrap_or("-"), record.reviewed.as_deref().unwrap_or("-")));
+                    }
+                    if was.note != record.note {
+                        lines.push(format!("~ {key} note changed"));
                     }
                 }
             }
@@ -522,7 +562,7 @@ mod tests {
 
     #[test]
     fn spaces_stay_inside_names_and_pipes_can_be_escaped() {
-        let text = "! id: a\n! name: A\n! category: new-age\n! action: quiet\n! default: off\n:x |  =Jeff and Shaleia  | =A \\| B | =C \\\\ D\r\n";
+        let text = "! id: a\n! name: A\n! category: new-age\n! action: quiet\n! default: off\n:x |  =Jeff and Shaleia  | =A \\| B | =C \\\\ D\r\n    source: https://example.org/x\n";
         let list = parse(text, "a").unwrap();
         assert_eq!(list.records[0].names, vec!["Jeff and Shaleia", "A | B", "C \\ D"]);
     }
@@ -580,15 +620,19 @@ mod tests {
 
     #[test]
     fn safety_lists_alone_start_on_and_take_no_topic_or_unproven_record() {
-        let ok = "! id: s\n! name: S\n! category: financial-scams, malware-phishing\n! action: hide\n! default: on\n:a | UCaaaaaaaaaaaaaaaaaaaaaa\n";
+        let ok = "! id: s\n! name: S\n! category: financial-scams, malware-phishing\n! action: hide\n! default: on\n:a | UCaaaaaaaaaaaaaaaaaaaaaa\n    source: https://example.org/a\n";
         assert!(parse(ok, "s").unwrap().default_on);
+        let unsourced = ok.replace("    source: https://example.org/a\n", "").replace("! default: on\n", "! default: on\n! source: https://example.org/list\n");
+        let messages: Vec<String> = parse(&unsourced, "s").unwrap_err().into_iter().map(|e| e.message).collect();
+        assert_eq!(messages, vec!["the record a has no source, and every record of a safety list needs its own"]);
         let bad = "! id: s\n! name: S\n! category: financial-scams\n! action: hide\n! default: on\n! topic: crypto\n:a | UCaaaaaaaaaaaaaaaaaaaaaa\n    status: unproven\n";
         let messages: Vec<String> = parse(bad, "s").unwrap_err().into_iter().map(|e| e.message).collect();
         assert!(messages.iter().any(|m| m.starts_with("a safety list has no topic")));
         assert!(messages.contains(&"the record a is unproven, and a safety list takes confirmed records only".to_string()));
         let mixed = "! id: m\n! name: M\n! category: medical-fraud, new-age\n! action: quiet\n! default: on\n:a | =A\n";
         let messages: Vec<String> = parse(mixed, "m").unwrap_err().into_iter().map(|e| e.message).collect();
-        assert_eq!(messages, vec!["only a list of safety categories alone may be on by default"]);
+        assert!(messages.contains(&"only a list of safety categories alone may be on by default".to_string()));
+        assert!(messages.contains(&"the record a is confirmed but neither it nor the list has a source".to_string()));
     }
 
     #[test]
@@ -598,11 +642,13 @@ mod tests {
         std::fs::create_dir_all(dir.join("religion")).unwrap();
         std::fs::write(dir.join("religion/falun-gong-media.txt"), EXAMPLE).unwrap();
         let (old, _) = load_dir(&dir).unwrap();
-        let changed = EXAMPLE.replace(" | ^NTD\n", "\n").replace(":epoch-times", ":the-paper") + ":shen-yun | @ShenYun\n";
+        let changed = EXAMPLE.replace(" | ^NTD\n", "\n").replace(":epoch-times", ":the-paper") + ":shen-yun | @ShenYun\n    source: https://example.org/s\n";
         std::fs::write(dir.join("religion/falun-gong-media.txt"), changed).unwrap();
         std::fs::write(dir.join("retired.txt"), "falun-gong-media/epoch-times\n").unwrap();
         let (new, retired) = load_dir(&dir).unwrap();
         let lines = diff(&old, &new, &retired);
+        assert!(unretired(&old, &new, &retired).is_empty());
+        assert_eq!(unretired(&old, &new, &HashSet::new()), vec!["falun-gong-media/epoch-times was removed but is not in retired.txt"]);
         assert!(lines.contains(&"- falun-gong-media/epoch-times".to_string()), "{lines:#?}");
         assert!(lines.contains(&"+ falun-gong-media/shen-yun: @shenyun".to_string()), "{lines:#?}");
         assert!(lines.contains(&"~ falun-gong-media/ntd: +[] -[^NTD]".to_string()), "{lines:#?}");

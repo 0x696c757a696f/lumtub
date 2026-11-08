@@ -1,0 +1,17 @@
+! id: aum-shinrikyo
+! name: Aum Shinrikyo
+! name.zh-Hans: 奥姆真理教
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Aum_Shinrikyo
+! legacy: 奥姆真理教
+
+:xc62da990 | ^奥姆真理教
+    legacy: 奥姆真理教/channel/奥姆真理教
+:xda9eebc6 | ^奧姆真理教
+    legacy: 奥姆真理教/channel/奧姆真理教
+:aum-shinrikyo | ^Aum Shinrikyo
+    legacy: 奥姆真理教/channel/Aum Shinrikyo
+:x59b75ad8 | ^麻原彰晃
+    legacy: 奥姆真理教/channel/麻原彰晃

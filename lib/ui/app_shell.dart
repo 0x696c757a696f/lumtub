@@ -30,6 +30,7 @@ import 'frame_stats.dart';
 import 'motion.dart';
 import 'player_shortcuts.dart';
 import 'app_icons.dart';
+import 'block_lists_prompt.dart';
 
 const appName = 'Lumtub';
 
@@ -85,6 +86,11 @@ class _AppShellState extends State<AppShell> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(NativeCore.missingMessage), duration: const Duration(minutes: 1), showCloseIcon: true));
         }
+      });
+    }
+    if (!_controller.preferences.listsAsked && !SmokeCheck.requested) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(askBlockLists(context, _controller));
       });
     }
     _finished = _controller.finishedDownloads.listen((task) {

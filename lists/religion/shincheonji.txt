@@ -1,0 +1,19 @@
+! id: shincheonji
+! name: Shincheonji
+! name.zh-Hans: 新天地
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Shincheonji
+! legacy: 新天地
+
+:xb05cfb3c | ^新天地
+    legacy: 新天地/channel/新天地
+:x2d1df937 | ^李万熙
+    legacy: 新天地/channel/李万熙
+:x77317e24 | ^李萬熙
+    legacy: 新天地/channel/李萬熙
+:shincheonji | ^Shincheonji
+    legacy: 新天地/channel/Shincheonji
+:lee-man-hee | ^Lee Man-hee
+    legacy: 新天地/channel/Lee Man-hee

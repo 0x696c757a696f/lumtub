@@ -1,0 +1,26 @@
+! id: church-of-almighty-god
+! name: Church of Almighty God
+! name.zh-Hans: 全能神
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Eastern_Lightning
+! legacy: 全能神
+
+:xa409a96c | ^全能神
+    legacy: 全能神/channel/全能神
+:xbf978fe7 | ^东方闪电
+    legacy: 全能神/channel/东方闪电
+:x6f365b91 | ^東方閃電
+    legacy: 全能神/channel/東方閃電
+:x43e9ff3a | ^实际神
+    legacy: 全能神/channel/实际神
+:xd4a40414 | ^實際神
+    legacy: 全能神/channel/實際神
+:church-of-almighty-god | ^Church of Almighty God
+    legacy: 全能神/channel/Church of Almighty God
+:eastern-lightning | ^Eastern Lightning
+    legacy: 全能神/channel/Eastern Lightning
+
+:word-appears-in-the-flesh | ^The Word Appears in the Flesh
+    reviewed: 2026-11-08

@@ -1,0 +1,153 @@
+! id: kailasa-and-nithyananda
+! name: Kailasa and Nithyananda
+! name.zh-Hans: 凯拉萨与尼希亚南达
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Nithyananda
+! legacy: 凯拉萨与尼希亚南达
+
+:kailasa | =KAILASA
+    legacy: 凯拉萨与尼希亚南达/exact/KAILASA
+:kailasas-sph-nithyananda | =KAILASA's SPH Nithyananda
+    legacy: 凯拉萨与尼希亚南达/exact/KAILASA's SPH Nithyananda
+:kailasa-news | =KAILASA News
+    legacy: 凯拉萨与尼希亚南达/exact/KAILASA News
+:united-states-of-kailasa | =United States of KAILASA
+    legacy: 凯拉萨与尼希亚南达/exact/United States of KAILASA
+:kailasas-nithyananda-yoga | =KAILASA's Nithyananda Yoga
+    legacy: 凯拉萨与尼希亚南达/exact/KAILASA's Nithyananda Yoga
+:nithyananda | =Nithyananda
+    legacy: 凯拉萨与尼希亚南达/exact/Nithyananda
+:x7ed1769a | =尼希亚南达
+    legacy: 凯拉萨与尼希亚南达/exact/尼希亚南达
+:x6b484900 | =尼希亞南達
+    legacy: 凯拉萨与尼希亚南达/exact/尼希亞南達
+:x75c27531 | =凯拉萨
+    legacy: 凯拉萨与尼希亚南达/exact/凯拉萨
+:xdd0f6e08 | =凱拉薩
+    legacy: 凯拉萨与尼希亚南达/exact/凱拉薩
+:kailaasa-chinese | ^Kailaasa - Chinese
+    legacy: 凯拉萨与尼希亚南达/channel/Kailaasa - Chinese
+:kailasas-sph-nithyananda-chinese | ^KAILASA's SPH Nithyananda - Chinese
+    legacy: 凯拉萨与尼希亚南达/channel/KAILASA's SPH Nithyananda - Chinese
+:xac198c95 | ^凯拉萨的尼希亚南达瑜伽 | ^凱拉薩的尼希亞南達瑜伽
+    legacy: 凯拉萨与尼希亚南达/channel/凯拉萨的尼希亚南达瑜伽
+:chinese-nithyananda-gurukul | ^Chinese Nithyananda Gurukul
+    legacy: 凯拉萨与尼希亚南达/channel/Chinese Nithyananda Gurukul
+:x890b5e99 | ^凯拉萨洛杉矶中文频道 | ^凱拉薩洛杉磯中文頻道
+    legacy: 凯拉萨与尼希亚南达/channel/凯拉萨洛杉矶中文频道
+:shrikailasa-in-taiwan | ^台灣凱拉薩 SHRIKAILASA IN TAIWAN
+    legacy: 凯拉萨与尼希亚南达/channel/台灣凱拉薩 SHRIKAILASA IN TAIWAN
+:paramashivasena-chinese | ^Paramashivasena Chinese
+    legacy: 凯拉萨与尼希亚南达/channel/Paramashivasena Chinese
+:x5170487f | ^凱拉薩超意識喜悅生活館
+    legacy: 凯拉萨与尼希亚南达/channel/凱拉薩超意識喜悅生活館
+:enriching-spirituality | ^Enriching Spirituality
+    legacy: 凯拉萨与尼希亚南达/channel/Enriching Spirituality
+:words-of-abundance | ^Words of Abundance
+    legacy: 凯拉萨与尼希亚南达/channel/Words of Abundance
+:hinduism-now | ^Hinduism Now
+    legacy: 凯拉萨与尼希亚南达/channel/Hinduism Now
+:the-avatar-clicks | ^The Avatar Clicks
+    legacy: 凯拉萨与尼希亚南达/channel/The Avatar Clicks
+:kailasas-nithyananda-keerthanalaya | ^KAILASA's Nithyananda Keerthanalaya
+    legacy: 凯拉萨与尼希亚南达/channel/KAILASA's Nithyananda Keerthanalaya
+:kailasas-nithyananda-real-reels | ^KAILASA's Nithyananda Real Reels
+    legacy: 凯拉萨与尼希亚南达/channel/KAILASA's Nithyananda Real Reels
+:kailasas-nithyananda-top-secrets | ^KAILASA's Nithyananda Top Secrets
+    legacy: 凯拉萨与尼希亚南达/channel/KAILASA's Nithyananda Top Secrets
+:autobiography-of-the-avatar-from-kailasa | ^Autobiography of the Avatar from KAILASA
+    legacy: 凯拉萨与尼希亚南达/channel/Autobiography of the Avatar from KAILASA
+:kailasa-nepal | ^KAILASA NEPAL
+    legacy: 凯拉萨与尼希亚南达/channel/KAILASA NEPAL
+:nithyanandachinese | @NithyanandaChinese
+    legacy: 凯拉萨与尼希亚南达/handle/@NithyanandaChinese
+:taiwankailasa1314 | @taiwankailasa1314
+    legacy: 凯拉萨与尼希亚南达/handle/@taiwankailasa1314
+:nithyanandayogachinese | @nithyanandayogachinese
+    legacy: 凯拉萨与尼希亚南达/handle/@nithyanandayogachinese
+:egurukulchinesetw | @eGurukulChineseTW
+    legacy: 凯拉萨与尼希亚南达/handle/@eGurukulChineseTW
+:kailasalachinese | @KailasaLAChinese
+    legacy: 凯拉萨与尼希亚南达/handle/@KailasaLAChinese
+:shrikailasaintaiwan9676 | @shrikailasaintaiwan9676
+    legacy: 凯拉萨与尼希亚南达/handle/@shrikailasaintaiwan9676
+:enrichingspirituality4444 | @enrichingspirituality4444
+    legacy: 凯拉萨与尼希亚南达/handle/@enrichingspirituality4444
+:srinithyananda | @SriNithyananda
+    legacy: 凯拉萨与尼希亚南达/handle/@SriNithyananda
+:kailasanews | @KAILASANews
+    legacy: 凯拉萨与尼希亚南达/handle/@KAILASANews
+:kailasacountry | @kailasacountry
+    legacy: 凯拉萨与尼希亚南达/handle/@kailasacountry
+:nithyanandayoga | @nithyanandayoga
+    legacy: 凯拉萨与尼希亚南达/handle/@nithyanandayoga
+:hinduismnow | @HinduismNow
+    legacy: 凯拉萨与尼希亚南达/handle/@HinduismNow
+:theavatarclick | @TheAvatarClick
+    legacy: 凯拉萨与尼希亚南达/handle/@TheAvatarClick
+:kailasamusic | @kailasamusic
+    legacy: 凯拉萨与尼希亚南达/handle/@kailasamusic
+:kailasanepal | @KailasaNepal
+    legacy: 凯拉萨与尼希亚南达/handle/@KailasaNepal
+:kailasasphtamil | @KailasaSPHTamil
+    legacy: 凯拉萨与尼希亚南达/handle/@KailasaSPHTamil
+:ucewpzibpfgb8s53fzn-w4mg | UCewpZIBPFGB8S53fZn-W4mg
+    legacy: 凯拉萨与尼希亚南达/id/UCewpZIBPFGB8S53fZn-W4mg
+:ucvbkdnjkm0frh39hxwq076a | UCVBKDnjkM0fRH39HXWq076A
+    legacy: 凯拉萨与尼希亚南达/id/UCVBKDnjkM0fRH39HXWq076A
+:ucjvd52ohdaepql5gv2ov0sa | UCjvd52oHdaEpqL5GV2oV0SA
+    legacy: 凯拉萨与尼希亚南达/id/UCjvd52oHdaEpqL5GV2oV0SA
+:ucavsea4f8ef-mf-szv9reqa | UCaVSEA4F8Ef-mF-sZV9reQA
+    legacy: 凯拉萨与尼希亚南达/id/UCaVSEA4F8Ef-mF-sZV9reQA
+:ucrjorlnlphxlkl7flvvjuga | UCrjORLNlPHXLkl7fLvvJugA
+    legacy: 凯拉萨与尼希亚南达/id/UCrjORLNlPHXLkl7fLvvJugA
+:ucehxmbxvvd9hxx77pk2ibxw | UCeHXmbXVVd9hXX77Pk2Ibxw
+    legacy: 凯拉萨与尼希亚南达/id/UCeHXmbXVVd9hXX77Pk2Ibxw
+:uc9om-qeiyiptakbe9veg5uw | UC9OM-qeiYIPtAkBe9veG5uw
+    legacy: 凯拉萨与尼希亚南达/id/UC9OM-qeiYIPtAkBe9veG5uw
+:ucy83l4ntoauwxoe0zhyh3bq | UCY83L4ntOaUWxoE0Zhyh3bQ
+    legacy: 凯拉萨与尼希亚南达/id/UCY83L4ntOaUWxoE0Zhyh3bQ
+:ucx3e-k5vknuahmpdx-epsra | UCx3e_K5VKnUAhmPdx_EpsRA
+    legacy: 凯拉萨与尼希亚南达/id/UCx3e_K5VKnUAhmPdx_EpsRA
+:uc4y4ale-fja7epugfiwzsxg | UC4Y4ALe-fJA7epugfiwZsXg
+    legacy: 凯拉萨与尼希亚南达/id/UC4Y4ALe-fJA7epugfiwZsXg
+:ucucjpgxudlnwdcuddd93uhg | UCUCjPGxUDlNwdCudDD93UHg
+    legacy: 凯拉萨与尼希亚南达/id/UCUCjPGxUDlNwdCudDD93UHg
+:ucfwruxdi5dyhxg9ynag5ixq | UCfwruXdi5dyHxg9YNaG5IXQ
+    legacy: 凯拉萨与尼希亚南达/id/UCfwruXdi5dyHxg9YNaG5IXQ
+:ucszwulh2dyz1d45bgo7h9qa | UCszwulh2dYz1d45bGo7h9qA
+    legacy: 凯拉萨与尼希亚南达/id/UCszwulh2dYz1d45bGo7h9qA
+:ucxqgt-kpxshw9feecsw3t-q | UCxQgt_kpxsHW9feECsw3T-Q
+    legacy: 凯拉萨与尼希亚南达/id/UCxQgt_kpxsHW9feECsw3T-Q
+:uct2scanam3frn0ld-qbrt9w | UCt2sCanam3FRn0Ld-qBRt9w
+    legacy: 凯拉萨与尼希亚南达/id/UCt2sCanam3FRn0Ld-qBRt9w
+:ucgdmywir2xbzokymfknd-mg | UCgDMywiR2XbZOkYmFknD-mg
+    legacy: 凯拉萨与尼希亚南达/id/UCgDMywiR2XbZOkYmFknD-mg
+:uc2s7zbdrkpuzt03dvucvjnq | UC2S7ZBdRKPUzT03dVUCvjnQ
+    legacy: 凯拉萨与尼希亚南达/id/UC2S7ZBdRKPUzT03dVUCvjnQ
+:ucu7lp32xedomusmh0qn3oyq | UCu7lP32xedomuSmh0qn3oYQ
+    legacy: 凯拉萨与尼希亚南达/id/UCu7lP32xedomuSmh0qn3oYQ
+:uch75mkfpsi88zazmrkucseq | UCh75MkfPsI88ZazMrkuCseQ
+    legacy: 凯拉萨与尼希亚南达/id/UCh75MkfPsI88ZazMrkuCseQ
+:ucyamgv38u8e-rapiqxn8s5g | UCYAmGv38u8e_RapIQXn8S5g
+    legacy: 凯拉萨与尼希亚南达/id/UCYAmGv38u8e_RapIQXn8S5g
+:ucdj5sl5bgnatpkj5yo0c1xq | UCDj5sl5bgnaTPkJ5YO0c1xQ
+    legacy: 凯拉萨与尼希亚南达/id/UCDj5sl5bgnaTPkJ5YO0c1xQ
+:ucfuaknqiokxdufuiemb2r2a | UCFuAKnQiOKXduFUiEmB2R2A
+    legacy: 凯拉萨与尼希亚南达/id/UCFuAKnQiOKXduFUiEmB2R2A
+:ucyzdldtksge-ahm5as0sgza | UCYZDlDtKsGe_ahm5as0SgzA
+    legacy: 凯拉萨与尼希亚南达/id/UCYZDlDtKsGe_ahm5as0SgzA
+:ucz70wbgzsfkzd8uhnqdqqtw | UCz70wBGZsfkZD8UHnQDQQtw
+    legacy: 凯拉萨与尼希亚南达/id/UCz70wBGZsfkZD8UHnQDQQtw
+:ucnbv5cbrlmuj0zndmvtrnsg | UCnbv5cbRLMUJ0zndmVTRnSg
+    legacy: 凯拉萨与尼希亚南达/id/UCnbv5cbRLMUJ0zndmVTRnSg
+:ucnh0vqgeh8qtwln5kxd-sbg | UCNH0vqGEh8qTwlN5KXD_Sbg
+    legacy: 凯拉萨与尼希亚南达/id/UCNH0vqGEh8qTwlN5KXD_Sbg
+:ucv-bufcuynkvhnvbn3mklyw | UCv_BUFcUynkVhNvbn3MkLyw
+    legacy: 凯拉萨与尼希亚南达/id/UCv_BUFcUynkVhNvbn3MkLyw
+:ucdjfcvtnjcw1fdfy5dbnkag | UCdJfCvTnjcw1FdFy5DBNKAg
+    legacy: 凯拉萨与尼希亚南达/id/UCdJfCvTnjcw1FdFy5DBNKAg
+:ucmxb0b8afyqip6-5d5pvjqw | UCMxB0b8AFYQip6_5d5PvjQw
+    legacy: 凯拉萨与尼希亚南达/id/UCMxB0b8AFYQip6_5d5PvjQw

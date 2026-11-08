@@ -1,0 +1,135 @@
+! id: chinese-state-media
+! name: Chinese state media
+! name.zh-Hans: 中国官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State-run media and ruling-party papers
+! source: https://en.wikipedia.org/wiki/China_Media_Group
+! legacy: 中国官方媒体
+
+:cgtn | ^CGTN
+    legacy: 中国官方媒体/channel/CGTN
+:china-global-television | ^China Global Television
+    legacy: 中国官方媒体/channel/China Global Television
+:xb0ed2585 | ^中国国际电视台
+    legacy: 中国官方媒体/channel/中国国际电视台
+:cctv | ^CCTV
+    legacy: 中国官方媒体/channel/CCTV
+:xed6ee24c | ^央视
+    legacy: 中国官方媒体/channel/央视
+:x738dab9e | ^中国中央电视台
+    legacy: 中国官方媒体/channel/中国中央电视台
+:xb96cdbe4 | ^中央电视台
+    legacy: 中国官方媒体/channel/中央电视台
+:x3dffc937 | ^中央广播电视总台
+    legacy: 中国官方媒体/channel/中央广播电视总台
+:china-media-group | ^China Media Group
+    legacy: 中国官方媒体/channel/China Media Group
+:china-daily | ^China Daily
+    legacy: 中国官方媒体/channel/China Daily
+:x86d6c9c4 | ^中国日报
+    legacy: 中国官方媒体/channel/中国日报
+:global-times | ^Global Times
+    legacy: 中国官方媒体/channel/Global Times
+:x5f05739b | ^环球时报
+    legacy: 中国官方媒体/channel/环球时报
+:xd5878e78 | ^環球時報
+    legacy: 中国官方媒体/channel/環球時報
+:xinhua | ^Xinhua
+    legacy: 中国官方媒体/channel/Xinhua
+:china-xinhua | ^China Xinhua
+    legacy: 中国官方媒体/channel/China Xinhua
+:new-china-tv | ^New China TV
+    legacy: 中国官方媒体/channel/New China TV
+:x0ccc5ab4 | ^新华社
+    legacy: 中国官方媒体/channel/新华社
+:x131b6511 | ^新華社
+    legacy: 中国官方媒体/channel/新華社
+:xa3cedb69 | ^新华网
+    legacy: 中国官方媒体/channel/新华网
+:peoples-daily | ^People's Daily
+    legacy: 中国官方媒体/channel/People's Daily
+:peoples-daily-channel | ^People’s Daily
+    legacy: 中国官方媒体/channel/People’s Daily
+:x83f0680f | ^人民日报
+    legacy: 中国官方媒体/channel/人民日报
+:xef9c1013 | ^人民日報
+    legacy: 中国官方媒体/channel/人民日報
+:xd65f67ac | ^人民网
+    legacy: 中国官方媒体/channel/人民网
+:china-news-service | ^China News Service
+    legacy: 中国官方媒体/channel/China News Service
+:x4151dbef | ^中国新闻社
+    legacy: 中国官方媒体/channel/中国新闻社
+:x664ef02e | ^中国新闻网
+    legacy: 中国官方媒体/channel/中国新闻网
+:x7b84bf24 | ^中國新聞網
+    legacy: 中国官方媒体/channel/中國新聞網
+:x0826ef14 | ^中新网
+    legacy: 中国官方媒体/channel/中新网
+:x5f30ea09 | ^中新社
+    legacy: 中国官方媒体/channel/中新社
+:chinanews | ^ChinaNews
+    legacy: 中国官方媒体/channel/ChinaNews
+:china-radio-international | ^China Radio International
+    legacy: 中国官方媒体/channel/China Radio International
+:x025985e1 | ^中国国际广播电台
+    legacy: 中国官方媒体/channel/中国国际广播电台
+:x62674617 | ^国际在线
+    legacy: 中国官方媒体/channel/国际在线
+:china-plus | ^China Plus
+    legacy: 中国官方媒体/channel/China Plus
+:x3177be35 | ^中国之声
+    legacy: 中国官方媒体/channel/中国之声
+:china-org-cn | ^China.org.cn
+    legacy: 中国官方媒体/channel/China.org.cn
+:x2e3ed906 | ^参考消息
+    legacy: 中国官方媒体/channel/参考消息
+:reference-news | ^Reference News
+    legacy: 中国官方媒体/channel/Reference News
+:xb5cc85c9 | ^光明日报
+    legacy: 中国官方媒体/channel/光明日报
+:xae714f8b | ^经济日报
+    legacy: 中国官方媒体/channel/经济日报
+:x1a9224b7 | ^中国青年报
+    legacy: 中国官方媒体/channel/中国青年报
+:ipanda | ^iPanda
+    legacy: 中国官方媒体/channel/iPanda
+:x9704c163 | ^熊猫频道
+    legacy: 中国官方媒体/channel/熊猫频道
+:xef6e06d2 | ^中国军网
+    legacy: 中国官方媒体/channel/中国军网
+:xe5069605 | ^解放军报
+    legacy: 中国官方媒体/channel/解放军报
+:pla-daily | ^PLA Daily
+    legacy: 中国官方媒体/channel/PLA Daily
+:xf1c05f82 | ^大公报
+    legacy: 中国官方媒体/channel/大公报
+:x5dc8e886 | ^大公報
+    legacy: 中国官方媒体/channel/大公報
+:x2b1295c1 | ^文汇报
+    legacy: 中国官方媒体/channel/文汇报
+:xfc63e315 | ^文匯報
+    legacy: 中国官方媒体/channel/文匯報
+:xc91b9661 | ^大公文汇
+    legacy: 中国官方媒体/channel/大公文汇
+:xe14c8929 | ^大公文匯
+    legacy: 中国官方媒体/channel/大公文匯
+:ta-kung-pao | ^Ta Kung Pao
+    legacy: 中国官方媒体/channel/Ta Kung Pao
+:wen-wei-po | ^Wen Wei Po
+    legacy: 中国官方媒体/channel/Wen Wei Po
+:cri | =CRI
+    legacy: 中国官方媒体/exact/CRI
+:cnr | =CNR
+    legacy: 中国官方媒体/exact/CNR
+:cmg | =CMG
+    legacy: 中国官方媒体/exact/CMG
+:xa8370c75 | =中国网
+    legacy: 中国官方媒体/exact/中国网
+
+:cgtn-arabic-channel | UCQmJk0ErE_FiorcLBsDKORA | @CGTNArabic
+    reviewed: 2026-11-08
+:cgtn-espanol-channel | UCd94YCD7yp6d-YZSRYWyeFA | @CGTNEspanol
+    reviewed: 2026-11-08

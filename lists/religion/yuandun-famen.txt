@@ -1,0 +1,13 @@
+! id: yuandun-famen
+! name: Yuandun Famen
+! name.zh-Hans: 圆顿法门
+! category: religion
+! action: hide
+! default: off
+! source: https://zh.wikipedia.org/wiki/圆顿法门
+! legacy: 圆顿法门
+
+:xbb667fc6 | ^圆顿法门
+    legacy: 圆顿法门/channel/圆顿法门
+:xec7a381f | ^圓頓法門
+    legacy: 圆顿法门/channel/圓頓法門

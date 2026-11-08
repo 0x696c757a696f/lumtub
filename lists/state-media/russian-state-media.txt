@@ -1,0 +1,137 @@
+! id: russian-state-media
+! name: Russian state media
+! name.zh-Hans: 俄罗斯官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State-run or state-controlled; NTV, REN TV and Izvestia are owned by state or pro-government capital rather than run by the state
+! source: https://en.wikipedia.org/wiki/RT_(TV_network)
+! legacy: 俄罗斯官方媒体
+
+:russia-today | ^Russia Today
+    legacy: 俄罗斯官方媒体/channel/Russia Today
+:rt-arabic | ^RT Arabic
+    legacy: 俄罗斯官方媒体/channel/RT Arabic
+:rt-en-espa-ol | ^RT en Español
+    legacy: 俄罗斯官方媒体/channel/RT en Español
+:rt-documentary | ^RT Documentary
+    legacy: 俄罗斯官方媒体/channel/RT Documentary
+:rt-balkan | ^RT Balkan
+    legacy: 俄罗斯官方媒体/channel/RT Balkan
+:rt-india | ^RT India
+    legacy: 俄罗斯官方媒体/channel/RT India
+:rt-de | ^RT DE
+    legacy: 俄罗斯官方媒体/channel/RT DE
+:rt-france | ^RT France
+    legacy: 俄罗斯官方媒体/channel/RT France
+:rt-news | ^RT News
+    legacy: 俄罗斯官方媒体/channel/RT News
+:rt | ^RT на русском
+    legacy: 俄罗斯官方媒体/channel/RT на русском
+:x0c25861f | ^今日俄罗斯
+    legacy: 俄罗斯官方媒体/channel/今日俄罗斯
+:xad659e81 | ^今日俄羅斯
+    legacy: 俄罗斯官方媒体/channel/今日俄羅斯
+:sputnik | ^Sputnik
+    legacy: 俄罗斯官方媒体/channel/Sputnik
+:x7a7b527b | ^卫星通讯社
+    legacy: 俄罗斯官方媒体/channel/卫星通讯社
+:x63056472 | ^衛星通訊社
+    legacy: 俄罗斯官方媒体/channel/衛星通訊社
+:tass | ^TASS
+    legacy: 俄罗斯官方媒体/channel/TASS
+:xfa875be6 | ^ТАСС
+    legacy: 俄罗斯官方媒体/channel/ТАСС
+:x15d5842b | ^塔斯社
+    legacy: 俄罗斯官方媒体/channel/塔斯社
+:ria-novosti | ^RIA Novosti
+    legacy: 俄罗斯官方媒体/channel/RIA Novosti
+:x519c2d66 | ^РИА Новости
+    legacy: 俄罗斯官方媒体/channel/РИА Новости
+:x2725b548 | ^俄新社
+    legacy: 俄罗斯官方媒体/channel/俄新社
+:rossiya-segodnya | ^Rossiya Segodnya
+    legacy: 俄罗斯官方媒体/channel/Rossiya Segodnya
+:xb43a0c16 | ^Россия сегодня
+    legacy: 俄罗斯官方媒体/channel/Россия сегодня
+:ruptly | ^Ruptly
+    legacy: 俄罗斯官方媒体/channel/Ruptly
+:1 | ^Россия 1
+    legacy: 俄罗斯官方媒体/channel/Россия 1
+:24 | ^Россия 24
+    legacy: 俄罗斯官方媒体/channel/Россия 24
+:xdc135a6d | ^Россия К
+    legacy: 俄罗斯官方媒体/channel/Россия К
+:rossiya-1 | ^Rossiya 1
+    legacy: 俄罗斯官方媒体/channel/Rossiya 1
+:rossiya-24 | ^Rossiya 24
+    legacy: 俄罗斯官方媒体/channel/Rossiya 24
+:xdb133beb | ^ВГТРК
+    legacy: 俄罗斯官方媒体/channel/ВГТРК
+:vgtrk | ^VGTRK
+    legacy: 俄罗斯官方媒体/channel/VGTRK
+:x530f9670 | ^Вести
+    legacy: 俄罗斯官方媒体/channel/Вести
+:vesti | ^Vesti
+    legacy: 俄罗斯官方媒体/channel/Vesti
+:xdf8ceeb4 | ^Первый канал
+    legacy: 俄罗斯官方媒体/channel/Первый канал
+:channel-one-russia | ^Channel One Russia
+    legacy: 俄罗斯官方媒体/channel/Channel One Russia
+:x8c07724c | ^俄罗斯第一频道
+    legacy: 俄罗斯官方媒体/channel/俄罗斯第一频道
+:x99cae1de | ^Телеканал Звезда
+    legacy: 俄罗斯官方媒体/channel/Телеканал Звезда
+:xea247870 | ^ТВ Центр
+    legacy: 俄罗斯官方媒体/channel/ТВ Центр
+:tv-tsentr | ^TV Tsentr
+    legacy: 俄罗斯官方媒体/channel/TV Tsentr
+:x910b0dc8 | ^Российская газета
+    legacy: 俄罗斯官方媒体/channel/Российская газета
+:rossiyskaya-gazeta | ^Rossiyskaya Gazeta
+    legacy: 俄罗斯官方媒体/channel/Rossiyskaya Gazeta
+:xd9e0f8d4 | ^Известия
+    legacy: 俄罗斯官方媒体/channel/Известия
+:izvestia | ^Izvestia
+    legacy: 俄罗斯官方媒体/channel/Izvestia
+:x80bebe7d | ^НТВ
+    legacy: 俄罗斯官方媒体/channel/НТВ
+:x135fa250 | ^РЕН ТВ
+    legacy: 俄罗斯官方媒体/channel/РЕН ТВ
+:ren-tv | ^REN TV
+    legacy: 俄罗斯官方媒体/channel/REN TV
+:rt-exact | =RT
+    legacy: 俄罗斯官方媒体/exact/RT
+:ntv | =NTV
+    legacy: 俄罗斯官方媒体/exact/NTV
+:x0b48f3bf | =Звезда
+    legacy: 俄罗斯官方媒体/exact/Звезда
+:zvezda | =Zvezda
+    legacy: 俄罗斯官方媒体/exact/Zvezda
+:xacac8336 | =ОТР
+    legacy: 俄罗斯官方媒体/exact/ОТР
+
+:rt-hindi | ^RT Hindi
+    reviewed: 2026-11-08
+:rt-uk | ^RT UK
+    reviewed: 2026-11-08
+:rt-america | ^RT America
+    reviewed: 2026-11-08
+:rt-brazil | ^RT Brazil
+    reviewed: 2026-11-08
+:rt-chinese | ^RT Chinese
+    reviewed: 2026-11-08
+:actualidad-rt | ^Actualidad RT
+    reviewed: 2026-11-08
+:rusiya-al-yaum | ^Rusiya Al-Yaum
+    reviewed: 2026-11-08
+:rt-en-francais | ^RT en Français
+    reviewed: 2026-11-08
+:redfish | =Redfish
+    reviewed: 2026-11-08
+:maffick | ^Maffick
+    reviewed: 2026-11-08
+:in-the-now | =In the NOW
+    reviewed: 2026-11-08
+:radio-sputnik | ^Radio Sputnik
+    reviewed: 2026-11-08

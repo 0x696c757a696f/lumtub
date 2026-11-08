@@ -1,0 +1,15 @@
+! id: eritrean-state-media
+! name: Eritrean state media
+! name.zh-Hans: 厄立特里亚官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: Every outlet comes from the Ministry of Information
+! source: https://en.wikipedia.org/wiki/Media_of_Eritrea
+
+:eri-tv | ^Eri-TV
+    reviewed: 2026-11-08
+:dimtsi-hafash | ^Dimtsi Hafash
+    reviewed: 2026-11-08
+:eritrea-profile | ^Eritrea Profile
+    reviewed: 2026-11-08

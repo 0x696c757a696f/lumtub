@@ -1,0 +1,19 @@
+! id: turkmen-state-media
+! name: Turkmen state media
+! name.zh-Hans: 土库曼斯坦官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: State-controlled television, news agency and papers
+! source: https://en.wikipedia.org/wiki/Media_of_Turkmenistan
+
+:altyn-asyr | ^Altyn Asyr
+    reviewed: 2026-11-08
+:turkmen-owazy | ^Türkmen Owazy
+    reviewed: 2026-11-08
+:watan-habarlary | ^Watan Habarlary
+    reviewed: 2026-11-08
+:state-news-agency-of-turkmenistan | ^State News Agency of Turkmenistan
+    reviewed: 2026-11-08
+:neytralny-turkmenistan | ^Neytralny Turkmenistan
+    reviewed: 2026-11-08

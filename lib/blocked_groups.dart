@@ -1,101 +1,105 @@
 import 'dart:convert';
 import 'dart:ffi';
 
-import 'blocked_channels.dart';
 import 'l10n/l10n.dart';
 import 'models.dart';
 import 'native_core.dart';
 
-/// Names of groups the user does not want recommended: movements that
-/// governments or the mainstream churches have called heretical or
-/// destructive, with their founders, aliases and media, in simplified and
-/// traditional Chinese and English. A video whose channel is one of them
-/// (by name, @handle or id) is left out of the home feed, explore, related
-/// videos and search results while AppPreferences.blockGroups is on. Titles
-/// and descriptions are never matched: other channels' reports about the
-/// group, and searches for its names, stay. Only a search for a channel's
-/// exact name, letter case included, finds that channel.
-const blockedGroups = <BlockedGroup>[
-  BlockedGroup('法轮功', 'Falun Gong', ['法轮功', '法輪功', '法轮大法', '法輪大法', '李洪志', '明慧网', '明慧網', '神韵艺术团', '神韻藝術團', '大纪元', '大紀元', 'The Epoch Times', '新唐人', 'Falun Gong', 'Falun Dafa', 'Li Hongzhi', 'Minghui', 'Shen Yun', 'Epoch Times', 'NTD Television']),
-  // Matched by channel only (blocked_channels.dart): their names are
-  // ordinary words that would hide unrelated videos if titles counted.
-  BlockedGroup('法轮功相关自媒体', 'Falun Gong-linked hosts and shows', []),
-  BlockedGroup('法轮功相关（待核实）', 'Falun Gong-linked (unproven)', []),
-  BlockedGroup('全能神', 'Church of Almighty God', ['全能神', '东方闪电', '東方閃電', '实际神', '實際神', 'Church of Almighty God', 'Eastern Lightning']),
-  BlockedGroup('新天地', 'Shincheonji', ['新天地', '李万熙', '李萬熙', 'Shincheonji', 'Lee Man-hee']),
-  BlockedGroup('统一教', 'Unification Church', ['统一教', '統一教', '文鲜明', '文鮮明', '家庭联合', '家庭聯合', '世界和平统一家庭', '世界和平統一家庭', 'Unification Church', 'Sun Myung Moon', 'Moonies', 'Family Federation for World Peace']),
-  BlockedGroup('母亲上帝', 'World Mission Society Church of God', ['母亲上帝', '母親上帝', '安商洪', '张吉子', '張吉子', '世界福音宣教协会', '世界福音宣教協會', 'World Mission Society', 'Ahnsahnghong', 'Zahng Gil-jah', 'God the Mother']),
-  BlockedGroup('万民中央教会', 'Manmin Central Church', ['万民中央教会', '萬民中央教會', '李载禄', '李載祿', 'Manmin Central Church', 'Jaerock Lee']),
-  BlockedGroup('马可楼', "Mark's Attic", ['马可楼', '馬可樓', '世界福音化传道协会', '世界福音化傳道協會', "Mark's Attic", 'Mark’s Attic']),
-  BlockedGroup('救赎派', 'Good News Mission (Guwonpa)', ['救赎派', '救贖派', '朴玉洙', '樸玉洙', '基督教福音浸信会', '基督教福音浸信會', 'Good News Mission', 'Ock Soo Park', 'Guwonpa']),
-  BlockedGroup('呼喊派', 'Shouters', ['呼喊派', '常受教']),
-  BlockedGroup('门徒会', 'Disciples Association', ['门徒会', '門徒會', '三赎基督', '三贖基督', '二两粮', '二兩糧']),
-  BlockedGroup('被立王', 'Established King', ['被立王']),
-  BlockedGroup('主神教', 'Lord God Sect', ['主神教']),
-  BlockedGroup('三班仆人派', 'Three Grades of Servants', ['三班仆人', '三班僕人']),
-  BlockedGroup('灵灵教', 'Lingling Sect', ['灵灵教', '靈靈教']),
-  BlockedGroup('华南教会', 'South China Church', ['华南教会', '華南教會']),
-  BlockedGroup('圆顿法门', 'Yuandun Famen', ['圆顿法门', '圓頓法門']),
-  BlockedGroup('幸福科学', 'Happy Science', ['幸福科学', '幸福科學', '大川隆法', 'Happy Science', 'Ryuho Okawa']),
-  BlockedGroup('耶和华见证人', "Jehovah's Witnesses", ['耶和华见证人', '耶和華見證人', '守望台', '守望臺', "Jehovah's Witness", 'Jehovah’s Witness', 'JW.org', 'JW Broadcasting']),
-  BlockedGroup('科学教', 'Scientology', ['科学神教', '科學神教', '山达基', '山達基', '戴尼提', 'Scientology', 'Dianetics', 'L. Ron Hubbard']),
-  BlockedGroup('人民圣殿教', 'Peoples Temple', ['人民圣殿', '人民聖殿', '琼斯镇', '瓊斯鎮', 'Peoples Temple', "People's Temple", 'Jonestown', 'Jim Jones', 'People’s Temple']),
-  BlockedGroup('大卫教派', 'Branch Davidians', ['大卫教派', '大衛教派', '韦科惨案', '韋科慘案', 'Branch Davidian', 'Waco siege', 'David Koresh']),
-  BlockedGroup('天堂之门', "Heaven's Gate", ['天堂之门', '天堂之門', "Heaven's Gate", 'Heavens Gate', 'Marshall Applewhite', 'Heaven’s Gate']),
-  BlockedGroup('太阳圣殿教', 'Order of the Solar Temple', ['太阳圣殿', '太陽聖殿', 'Solar Temple']),
-  BlockedGroup('曼森家族', 'Manson Family', ['曼森家族', 'Manson Family', 'Charles Manson']),
-  BlockedGroup('天父的儿女', 'Children of God (The Family International)', ['天父的儿女', '天父的兒女', 'Family International', 'David Berg']),
-  BlockedGroup('雷尔运动', 'Raëlian Movement', ['雷尔运动', '雷爾運動', 'Raelian', 'Raëlian', 'Rael movement']),
-  // User-supplied channels and networks. These use exact channel names,
-  // handles and IDs in blocked_channels.dart; titles and descriptions stay searchable.
-  BlockedGroup('凯拉萨与尼希亚南达', 'Kailasa and Nithyananda', [], exact: ['KAILASA', "KAILASA's SPH Nithyananda", 'KAILASA News', 'United States of KAILASA', "KAILASA's Nithyananda Yoga", 'Nithyananda', '尼希亚南达', '尼希亞南達', '凯拉萨', '凱拉薩']),
-  BlockedGroup('清海与赛巴巴媒体', 'Ching Hai and Sai Baba media', [], exact: ['SupremeMasterTV Web', 'SMSpirit', 'SriSathyaSaiOfficial', 'SriSathyaSaiMandarin', 'SriSathyaSaiSpeaksOfficial', 'SriSathyaSaiBhajans', 'PrasanthiMandirLiveRadioSai', 'SriSathyaSaiKidsWorld']),
-  BlockedGroup('领袖神化与神迹宣传频道', 'Leader worship and miracle promotion channels', [], exact: ['Saint MSG', 'Dera Sacha Sauda', 'KALKI', 'Sri Amma Bhagavan', 'Dr and Master Sha', 'Shri Mataji Teachings', 'Shri Mataji Excerpts', 'Sahaja Workshop', 'Bhakti Marga', 'Awakening with Brahma Kumaris', 'Benny Hinn Ministries', 'This Is Your Day', 'Prophet Shepherd Bushiri', 'Shepherd Bushiri Sermon', 'The Jesus Nation RSA', 'Uebert Angel', 'Uebert Angel Highlight', 'GoodNews City', 'Copeland Ministries', 'Kenneth Copeland Africa', 'Prophet Jeremiah DreamFarm', 'LoveWorld Philippines', 'Kingdom of Jesus Christ']),
-  // User-added channels are exact channel-name matches. Their words are not searched in titles or descriptions.
-  BlockedGroup('补充的灵性导师与宗教频道', 'Additional spiritual and religious channels', [], exact: [
-    '心灵法门', '心靈法門', '卢台长', '盧台長', 'Guan Yin Citta', '真佛宗', 'True Buddha School', '佛教如來宗', '妙禪師父', '印心佛法', 'CGM基督教福音宣教會', '攝理教',
-    'Manmin', 'GCNTV', 'Twin Flames Universe', 'Jeff and Shaleia', 'Adidam', 'Adi Da Samraj', 'Summit Lighthouse', 'Ascended Master Teachings',
-    '金菩提', 'JinBodhi', 'Bodhi Meditation', 'Energy Bagua', '八卦内功', '八卦內功', '全能神教会', '全能神教會', 'The Church of Almighty God', 'Eastern Lightning',
-    'Nithyananda', 'SHRIKAILASA', 'La Luz del Mundo', 'Alph Lukau', 'Alleluia Ministries', 'Emmanuel TV', 'The Last Reformation', 'Ramtha’s School of Enlightenment', 'Kryon', 'Bashar Higher Mind',
-    'OSHO International', 'Mooji', 'Isha Foundation', 'ECKANKAR', '创造丰盛', '創造豐盛', 'Abraham-Hicks', 'Access Consciousness', 'ThetaHealing', 'Bruno Gröning', 'Pranic Healing',
-  ]),
-  BlockedGroup('FLDS', 'FLDS', ['FLDS', '基本教义派耶稣基督', '基本教義派耶穌基督', 'Warren Jeffs']),
-  BlockedGroup('NXIVM', 'NXIVM', ['NXIVM', 'Keith Raniere']),
-  BlockedGroup('奥姆真理教', 'Aum Shinrikyo', ['奥姆真理教', '奧姆真理教', 'Aum Shinrikyo', '麻原彰晃']),
+/// The block lists, kept as text files under lists/ (see lists/schema.md)
+/// and built into lumtub_core, which reads and checks them. Each list is a
+/// [BlockedGroup]. Only channel names, @handles and channel ids are
+/// matched, never titles or descriptions: other channels' reports about a
+/// group, and searches for its names, stay.
+class BlockLists {
+  BlockLists._(this.all);
+
+  /// Every list in lists/, read once from lumtub_core; none without it.
+  static final BlockLists instance = BlockLists._(_read());
+
+  final List<BlockedGroup> all;
+
+  static List<BlockedGroup> _read() {
+    final core = NativeCore.instance;
+    final text = core?.take(core.blockLists());
+    if (text == null) return const [];
+    final lists = (jsonDecode(text) as Map<String, dynamic>)['lists'] as List<dynamic>;
+    return [for (final list in lists) BlockedGroup.fromJson(list as Map<String, dynamic>)];
+  }
+
+  List<BlockedGroup> inCategory(String category) => [for (final list in all) if (list.categories.contains(category)) list];
+}
+
+/// Movements that governments or the mainstream churches have called
+/// heretical or destructive, with their founders, aliases and media
+/// (lists/religion), left out while AppPreferences.blockGroups is on.
+final blockedGroups = BlockLists.instance.inCategory('religion');
+
+/// Media a government runs to speak for it (lists/state-media), left out
+/// while AppPreferences.blockStateMedia is on. Public broadcasters with
+/// editorial independence (BBC, NHK, PBS and the like) are not listed.
+final stateMedia = BlockLists.instance.inCategory('state-media');
+
+/// The lists of every other category (scams, malware, fake cures and the
+/// rest of lists/schema.md), left out while AppPreferences.blockOtherLists
+/// is on. Lists marked label or demote are not acted on yet.
+final otherLists = [
+  for (final list in BlockLists.instance.all)
+    if (!list.categories.contains('religion') && !list.categories.contains('state-media')) list,
 ];
 
-/// One group: its name, the name shown in settings, and the words that
-/// name it.
+/// One list: its name, the name shown in settings, and its entries.
 class BlockedGroup {
-  const BlockedGroup(this.name, this._label, this.words, {this.onByDefault = true, this.exact = const [], this.note});
-  /// Saved in the preferences when the user ticks or unticks it, and the
-  /// key of blocked_channels.dart; it stays the same in every language.
+  BlockedGroup({
+    required this.name,
+    required this.id,
+    required String label,
+    required this.entries,
+    this.categories = const [],
+    this.action = 'hide',
+    this.defaultOn = false,
+    this.onByDefault = true,
+    this.note,
+  }) : _label = label;
+
+  factory BlockedGroup.fromJson(Map<String, dynamic> json) {
+    final id = json['id'] as String;
+    final legacy = (json['legacy'] as List<dynamic>?)?.cast<String>() ?? const [];
+    final name = legacy.isNotEmpty ? legacy.first : id;
+    List<String> strings(Object? value) => (value as List<dynamic>?)?.cast<String>() ?? const [];
+    return BlockedGroup(
+      name: name,
+      id: id,
+      label: json['name'] as String,
+      categories: strings(json['categories']),
+      action: json['action'] as String? ?? 'hide',
+      defaultOn: json['default_on'] == true,
+      onByDefault: json['suggested'] != false,
+      note: json['note'] as String?,
+      entries: [
+        for (final record in (json['records'] as List<dynamic>).cast<Map<String, dynamic>>())
+          BlockEntry.fromRecord(name, id, record),
+      ],
+    );
+  }
+
+  /// Saved in the preferences when the user ticks or unticks it: the name
+  /// it had before the lists were files (`legacy` in its file), else its id.
   final String name;
+  /// The list file's id.
+  final String id;
   final String _label;
   String get label => tr(_label);
-  final List<String> words;
-  /// Channel names matched only in full: abbreviations such as RT, AA or
-  /// NTV would otherwise catch unrelated channels that start with them.
-  final List<String> exact;
+  final List<String> categories;
+  /// hide, quiet, demote or label.
+  final String action;
+  /// On for a new install (only safety lists may be).
+  final bool defaultOn;
+  /// Ticked when its category is turned on; `suggested: no` in its file
+  /// leaves it for the user to tick.
+  final bool onByDefault;
   /// How the group's members relate to a government, shown in settings.
   final String? note;
-  /// Groups that are not proven to belong start unticked.
-  final bool onByDefault;
-
-  /// Everything matched for this group, each of which can be unticked:
-  /// its [words] as channel names, then the channels of blocked_channels.dart.
-  List<BlockEntry> entries() {
-    final channels = blockedChannels[name];
-    return [
-      for (final word in words) BlockEntry(name, BlockKind.channel, [word]),
-      for (final word in exact) BlockEntry(name, BlockKind.exact, [word]),
-      if (channels != null) ...[
-        for (final forms in channels.names) BlockEntry(name, BlockKind.channel, forms),
-        for (final handle in channels.handles) BlockEntry(name, BlockKind.handle, [handle]),
-        for (final id in channels.ids) BlockEntry(name, BlockKind.id, [id]),
-      ],
-    ];
-  }
+  final List<BlockEntry> entries;
 }
 
 /// How an entry of a block list is matched.
@@ -112,16 +116,45 @@ enum BlockKind {
   String get label => tr(_label);
 }
 
-/// One name, handle or id of a block list; [forms] are its spellings, the
-/// first shown.
+/// One record of a block list: a channel by its names, @handles and ids.
 class BlockEntry {
-  const BlockEntry(this.group, this.kind, this.forms);
+  const BlockEntry(this.group, this.kind, this.forms, {required this.key, this.prefixes = const [], this.names = const [], this.handles = const [], this.ids = const []});
+
+  factory BlockEntry.fromRecord(String group, String list, Map<String, dynamic> record) {
+    List<String> strings(String key) => (record[key] as List<dynamic>?)?.cast<String>() ?? const [];
+    final prefixes = strings('prefixes'), names = strings('names'), ids = strings('ids');
+    final handles = [for (final h in strings('handles')) '@$h'];
+    final (kind, forms) = prefixes.isNotEmpty
+        ? (BlockKind.channel, prefixes)
+        : names.isNotEmpty
+            ? (BlockKind.exact, names)
+            : handles.isNotEmpty
+                ? (BlockKind.handle, handles)
+                : (BlockKind.id, ids);
+    final legacy = strings('legacy');
+    return BlockEntry(
+      group,
+      kind,
+      [...forms, if (kind != BlockKind.exact) ...names, if (kind != BlockKind.handle) ...handles, if (kind != BlockKind.id) ...ids],
+      key: legacy.isNotEmpty ? legacy.first : '$list/${record['slug']}',
+      prefixes: prefixes,
+      names: names,
+      handles: handles,
+      ids: ids,
+    );
+  }
+
   final String group;
   final BlockKind kind;
+  /// Its spellings, the first shown.
   final List<String> forms;
   String get label => forms.first;
   /// Saved in AppPreferences.allowedEntries when the user unticks it.
-  String get key => '$group/${kind.name}/${forms.first}';
+  final String key;
+  final List<String> prefixes;
+  final List<String> names;
+  final List<String> handles;
+  final List<String> ids;
 }
 
 /// Tests videos and channels against block lists, leaving out the groups
@@ -129,27 +162,20 @@ class BlockEntry {
 /// is done by lumtub_core (native/lumtub_core/src/filter.rs).
 class BlockMatcher implements Finalizable {
   factory BlockMatcher(List<BlockedGroup> groups, {Set<String> allowedGroups = const {}, Set<String> allowedEntries = const {}}) {
-    final channels = <String>[], exact = <String>{}, handles = <String>{}, ids = <String>{};
+    final channels = <String>{}, exact = <String>{}, handles = <String>{}, ids = <String>{};
     for (final group in groups) {
       if (allowedGroups.contains(group.name)) continue;
-      for (final entry in group.entries()) {
+      for (final entry in group.entries) {
         if (allowedEntries.contains(entry.key)) continue;
-        final forms = [for (final form in entry.forms) entry.kind == BlockKind.id ? form : form.toLowerCase()];
-        switch (entry.kind) {
-          case BlockKind.channel:
-            channels.addAll(forms);
-          case BlockKind.exact:
-            exact.addAll(forms);
-          case BlockKind.handle:
-            handles.addAll(forms);
-          case BlockKind.id:
-            ids.addAll(forms);
-        }
+        channels.addAll(entry.prefixes.map((p) => p.toLowerCase()));
+        exact.addAll(entry.names.map((n) => n.toLowerCase()));
+        handles.addAll(entry.handles.map((h) => h.toLowerCase()));
+        ids.addAll(entry.ids);
       }
     }
     final core = NativeCore.instance;
     if (core == null) return BlockMatcher._(null, nullptr);
-    final json = jsonEncode({'channels': channels, 'exact': exact.toList(), 'handles': handles.toList(), 'ids': ids.toList()});
+    final json = jsonEncode({'channels': channels.toList(), 'exact': exact.toList(), 'handles': handles.toList(), 'ids': ids.toList()});
     final handle = core.withText(json, core.blocksNew);
     final matcher = BlockMatcher._(core, handle);
     if (handle != nullptr) core.blocksFinalizer.attach(matcher, handle.cast());

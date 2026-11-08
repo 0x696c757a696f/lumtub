@@ -83,6 +83,9 @@ pub struct List {
     pub categories: Vec<String>,
     pub action: Action,
     pub default_on: bool,
+    /// Whether turning its category on in settings or on the first run
+    /// ticks this list too; `suggested: no` leaves it for the user to tick.
+    pub suggested: bool,
     /// Words a search names this list's subject by.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub topics: Vec<String>,
@@ -154,6 +157,7 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
     let mut categories = Vec::new();
     let mut action = None;
     let mut default_on = None;
+    let mut suggested = true;
     let mut note = None;
     let mut topics = Vec::new();
     let mut sources = Vec::new();
@@ -226,6 +230,11 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
                     "on" => default_on = Some(true),
                     "off" => default_on = Some(false),
                     _ => err(line, format!("default is on or off, not {value}")),
+                },
+                "suggested" => match value.as_str() {
+                    "yes" => suggested = true,
+                    "no" => suggested = false,
+                    _ => err(line, format!("suggested is yes or no, not {value}")),
                 },
                 "note" => note = Some(value),
                 "topic" if !value.is_empty() => topics.push(value),
@@ -354,7 +363,7 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
     if !errors.is_empty() {
         return Err(errors);
     }
-    Ok(List { id, name, names, categories, action, default_on, topics, note, sources, legacy, records })
+    Ok(List { id, name, names, categories, action, default_on, suggested, topics, note, sources, legacy, records })
 }
 
 fn date_ok(text: &str) -> bool {
@@ -374,7 +383,6 @@ pub struct Bundle<'a> {
 /// top. Each list must sit in the folder of one of its categories.
 pub fn load_dir(dir: &std::path::Path) -> Result<(Vec<List>, HashSet<String>), Vec<String>> {
     let mut problems = Vec::new();
-    let mut lists = Vec::new();
     let retired = match std::fs::read_to_string(dir.join("retired.txt")) {
         Ok(text) => text.lines().map(str::trim).filter(|l| !l.is_empty() && !l.starts_with('#')).map(String::from).collect(),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => HashSet::new(),
@@ -385,42 +393,85 @@ pub fn load_dir(dir: &std::path::Path) -> Result<(Vec<List>, HashSet<String>), V
         Err(e) => return Err(vec![format!("{}: {e}", dir.display())]),
     };
     folders.sort();
+    let mut files = Vec::new();
     for folder in folders {
         let category = folder.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_string();
-        if tier(&category).is_none() {
-            problems.push(format!("{category}/ is not a category"));
-            continue;
+        let mut paths: Vec<_> = std::fs::read_dir(&folder).into_iter().flatten().filter_map(Result::ok).map(|e| e.path()).collect();
+        paths.sort();
+        if paths.is_empty() {
+            files.push((category.clone(), String::new(), Ok(String::new())));
         }
-        let mut files: Vec<_> = std::fs::read_dir(&folder).into_iter().flatten().filter_map(Result::ok).map(|e| e.path()).collect();
-        files.sort();
-        for file in files {
-            let shown = format!("{category}/{}", file.file_name().and_then(|n| n.to_str()).unwrap_or_default());
-            let Some(file_id) = file.file_name().and_then(|n| n.to_str()).and_then(|n| n.strip_suffix(".txt")) else {
-                problems.push(format!("{shown}: only .txt files belong here"));
-                continue;
-            };
+        for file in paths {
+            let name = file.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_string();
             let text = match std::fs::read(&file).map(String::from_utf8) {
-                Ok(Ok(text)) => text,
-                Ok(Err(_)) => {
-                    problems.push(format!("{shown}: not UTF-8"));
-                    continue;
-                }
-                Err(e) => {
-                    problems.push(format!("{shown}: {e}"));
-                    continue;
-                }
+                Ok(Ok(text)) => Ok(text),
+                Ok(Err(_)) => Err("not UTF-8".to_string()),
+                Err(e) => Err(e.to_string()),
             };
-            match parse(&text, file_id) {
-                Ok(list) if !list.categories.contains(&category) => {
-                    problems.push(format!("{shown}: the list is not in the {category} category"));
-                }
-                Ok(list) => lists.push(list),
-                Err(errors) => problems.extend(errors.iter().map(|e| format!("{shown}: {e}"))),
-            }
+            files.push((category.clone(), name, text));
         }
     }
+    let (lists, mut found) = parse_files(files.iter().map(|(c, n, t)| (c.as_str(), n.as_str(), t.as_ref().map(String::as_str).map_err(String::as_str))));
+    problems.append(&mut found);
     problems.extend(check_all(&lists, &retired));
     if problems.is_empty() { Ok((lists, retired)) } else { Err(problems) }
+}
+
+/// Parses list files given as (category folder, file name, text or the
+/// reason it could not be read). A folder with no files comes with an
+/// empty file name, so that an unknown folder is still reported.
+pub fn parse_files<'a>(files: impl IntoIterator<Item = (&'a str, &'a str, Result<&'a str, &'a str>)>) -> (Vec<List>, Vec<String>) {
+    let mut lists = Vec::new();
+    let mut problems = Vec::new();
+    let mut unknown = HashSet::new();
+    for (category, name, text) in files {
+        if tier(category).is_none() {
+            if unknown.insert(category.to_string()) {
+                problems.push(format!("{category}/ is not a category"));
+            }
+            continue;
+        }
+        if name.is_empty() {
+            continue;
+        }
+        let shown = format!("{category}/{name}");
+        let Some(file_id) = name.strip_suffix(".txt") else {
+            problems.push(format!("{shown}: only .txt files belong here"));
+            continue;
+        };
+        let text = match text {
+            Ok(text) => text,
+            Err(why) => {
+                problems.push(format!("{shown}: {why}"));
+                continue;
+            }
+        };
+        match parse(text, file_id) {
+            Ok(list) if !list.categories.iter().any(|c| c == category) => {
+                problems.push(format!("{shown}: the list is not in the {category} category"));
+            }
+            Ok(list) => lists.push(list),
+            Err(errors) => problems.extend(errors.iter().map(|e| format!("{shown}: {e}"))),
+        }
+    }
+    (lists, problems)
+}
+
+mod built {
+    include!(concat!(env!("OUT_DIR"), "/lists_files.rs"));
+}
+
+/// The lists under `lists/` as this library was built with them, compiled
+/// once.
+pub fn built_in() -> &'static [List] {
+    static LISTS: std::sync::OnceLock<Vec<List>> = std::sync::OnceLock::new();
+    LISTS.get_or_init(|| parse_files(built::FILES.iter().map(|(c, n, t)| (*c, *n, Ok(*t)))).0)
+}
+
+/// The built-in lists as JSON (a [Bundle] with version 0), for the app.
+#[unsafe(no_mangle)]
+pub extern "C" fn lumtub_lists() -> *mut std::ffi::c_char {
+    crate::taste::give_json(&Bundle { version: 0, built: "", lists: built_in() })
 }
 
 fn conditions(record: &Record) -> Vec<String> {

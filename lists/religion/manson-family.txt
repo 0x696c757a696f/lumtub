@@ -1,0 +1,15 @@
+! id: manson-family
+! name: Manson Family
+! name.zh-Hans: 曼森家族
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Manson_Family
+! legacy: 曼森家族
+
+:x4b4f3424 | ^曼森家族
+    legacy: 曼森家族/channel/曼森家族
+:manson-family | ^Manson Family
+    legacy: 曼森家族/channel/Manson Family
+:charles-manson | ^Charles Manson
+    legacy: 曼森家族/channel/Charles Manson

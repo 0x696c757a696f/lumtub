@@ -1,0 +1,48 @@
+! id: ching-hai-and-sai-baba-media
+! name: Ching Hai and Sai Baba media
+! name.zh-Hans: 清海与赛巴巴媒体
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Ching_Hai
+! source: https://en.wikipedia.org/wiki/Sathya_Sai_Baba
+! legacy: 清海与赛巴巴媒体
+
+:suprememastertv-web | =SupremeMasterTV Web
+    legacy: 清海与赛巴巴媒体/exact/SupremeMasterTV Web
+:smspirit | =SMSpirit
+    legacy: 清海与赛巴巴媒体/exact/SMSpirit
+:srisathyasaiofficial | =SriSathyaSaiOfficial
+    legacy: 清海与赛巴巴媒体/exact/SriSathyaSaiOfficial
+:srisathyasaimandarin | =SriSathyaSaiMandarin
+    legacy: 清海与赛巴巴媒体/exact/SriSathyaSaiMandarin
+:srisathyasaispeaksofficial | =SriSathyaSaiSpeaksOfficial
+    legacy: 清海与赛巴巴媒体/exact/SriSathyaSaiSpeaksOfficial
+:srisathyasaibhajans | =SriSathyaSaiBhajans
+    legacy: 清海与赛巴巴媒体/exact/SriSathyaSaiBhajans
+:prasanthimandirliveradiosai | =PrasanthiMandirLiveRadioSai
+    legacy: 清海与赛巴巴媒体/exact/PrasanthiMandirLiveRadioSai
+:srisathyasaikidsworld | =SriSathyaSaiKidsWorld
+    legacy: 清海与赛巴巴媒体/exact/SriSathyaSaiKidsWorld
+:srisathyasaiofficial-handle | @SriSathyaSaiOfficial
+    legacy: 清海与赛巴巴媒体/handle/@SriSathyaSaiOfficial
+:srisathyasaimandarin-handle | @SriSathyaSaiMandarin
+    legacy: 清海与赛巴巴媒体/handle/@SriSathyaSaiMandarin
+:srisathyasaispeaksofficial-handle | @SriSathyaSaiSpeaksOfficial
+    legacy: 清海与赛巴巴媒体/handle/@SriSathyaSaiSpeaksOfficial
+:srisathyasaibhajans-handle | @SriSathyaSaiBhajans
+    legacy: 清海与赛巴巴媒体/handle/@SriSathyaSaiBhajans
+:prasanthimandirliveradiosai-handle | @PrasanthiMandirLiveRadioSai
+    legacy: 清海与赛巴巴媒体/handle/@PrasanthiMandirLiveRadioSai
+:srisathyasaikidsworld-handle | @SriSathyaSaiKidsWorld
+    legacy: 清海与赛巴巴媒体/handle/@SriSathyaSaiKidsWorld
+:srisathyasaihindi | @SriSathyaSaiHindi
+    legacy: 清海与赛巴巴媒体/handle/@SriSathyaSaiHindi
+:srisathyasaitelugu | @SriSathyaSaiTelugu
+    legacy: 清海与赛巴巴媒体/handle/@SriSathyaSaiTelugu
+:srisathyasaitamil | @SriSathyaSaiTamil
+    legacy: 清海与赛巴巴媒体/handle/@SriSathyaSaiTamil
+:srisathyasaimalayalam | @SriSathyaSaiMalayalam
+    legacy: 清海与赛巴巴媒体/handle/@SriSathyaSaiMalayalam
+:srisathyasaikannada | @SriSathyaSaiKannada
+    legacy: 清海与赛巴巴媒体/handle/@SriSathyaSaiKannada

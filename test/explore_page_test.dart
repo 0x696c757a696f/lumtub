@@ -152,6 +152,7 @@ void main() {
     VideoItem video(String id, String title, String channel) => VideoItem(id: id.padRight(11, '0'), title: title, channel: channel, url: '');
     final items = [video('a', 'News', 'NTD Television'), video('b', 'Shen Yun 2026', 'Shen Yun Performing Arts'), video('c', 'Mass', 'EWTN')];
     final controller = AppController();
+    controller.preferences = controller.preferences.copyWith(blockGroups: true);
     String ids(List<VideoItem> list) => list.map((v) => v.id[0]).join();
     expect(ids(controller.visible(items)), 'c');
     controller.debugQuery = 'NTD Televisio';
@@ -194,7 +195,7 @@ void main() {
     controller.preferences = controller.preferences.copyWith(enabledGroups: ['美国政府国际广播']);
     expect(ids(controller.visible(items)), 'bd');
     // One entry can be unticked on its own.
-    final cgtn = stateMedia.first.entries().firstWhere((e) => e.label == 'CGTN');
+    final cgtn = stateMedia.expand((g) => g.entries).firstWhere((e) => e.label == 'CGTN');
     controller.preferences = controller.preferences.copyWith(allowedEntries: [cgtn.key]);
     expect(ids(controller.visible(items)), 'abd');
     final restored = AppPreferences.fromJson(jsonDecode(jsonEncode(controller.preferences.toJson())));
@@ -204,7 +205,7 @@ void main() {
   });
 
   test('Falun Gong channels are blocked by name, @handle and id; unproven ones too unless unticked', () {
-    final prefs = const AppPreferences();
+    final prefs = const AppPreferences(blockGroups: true);
     expect(prefs.blocksChannel('文昭談古論今 -Wen Zhao Official'), isTrue);
     expect(prefs.blocksChannel('江峰时刻'), isTrue);
     expect(prefs.blocksChannel('Some host', handle: '@WenZhaoOfficial'), isTrue);
@@ -214,7 +215,7 @@ void main() {
     expect(prefs.blocksGroup(VideoItem(id: 'x'.padRight(11, '0'), title: '采访文昭谈古论今', channel: 'BBC News 中文', url: '')), isFalse);
     expect(prefs.blocksChannel('西岸觀察'), isTrue);
     expect(prefs.copyWith(allowedGroups: ['法轮功相关（待核实）']).blocksChannel('西岸观察'), isFalse);
-    final wenzhao = blockedGroups.firstWhere((g) => g.name == '法轮功相关自媒体').entries().firstWhere((e) => e.label == '文昭谈古论今');
+    final wenzhao = blockedGroups.firstWhere((g) => g.name == '法轮功相关自媒体').entries.firstWhere((e) => e.label == '文昭谈古论今');
     expect(wenzhao.forms, contains('文昭談古論今'));
     expect(prefs.copyWith(allowedEntries: [wenzhao.key]).blocksChannel('文昭談古論今'), isFalse);
     expect(prefs.copyWith(allowedGroups: ['法轮功相关自媒体']).blocksChannel('江峰时刻'), isFalse);
@@ -250,12 +251,16 @@ void main() {
     expect(back.allowedGroups, ['NXIVM']);
     expect(back.blockedChannelNames, ['X']);
     expect(back.blockGroups, isFalse);
-    expect(const AppPreferences().blockGroups, isTrue);
+    expect(const AppPreferences().blockGroups, isFalse);
+    expect(const AppPreferences().listsAsked, isFalse);
+    // Preferences saved before the first-run question keep blocking.
+    expect(AppPreferences.fromJson({}).blockGroups, isTrue);
+    expect(AppPreferences.fromJson({}).listsAsked, isTrue);
   });
 
   test('block lists hide the blocked channel only, never other channels\' videos naming it', () {
     VideoItem video(String title, [String channel = 'Some channel']) => VideoItem(id: 'x'.padRight(11, '0'), title: title, channel: channel, url: '');
-    const prefs = AppPreferences();
+    const prefs = AppPreferences(blockGroups: true);
     // The blocked channel's own videos go; third-party reports stay.
     expect(prefs.blocksGroup(video('今日时事', '江峰时刻')), isTrue);
     expect(prefs.blocksGroup(video('江峰是谁？一个独立调查', 'BBC News 中文')), isFalse);

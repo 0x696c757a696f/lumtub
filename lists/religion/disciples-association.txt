@@ -1,0 +1,26 @@
+! id: disciples-association
+! name: Disciples Association
+! name.zh-Hans: 门徒会
+! category: religion
+! action: hide
+! default: off
+! legacy: 门徒会
+
+:x23f46230 | ^门徒会
+    legacy: 门徒会/channel/门徒会
+    status: unproven
+:xb1853e63 | ^門徒會
+    legacy: 门徒会/channel/門徒會
+    status: unproven
+:xaa26c538 | ^三赎基督
+    legacy: 门徒会/channel/三赎基督
+    status: unproven
+:x7363dab0 | ^三贖基督
+    legacy: 门徒会/channel/三贖基督
+    status: unproven
+:x42e13096 | ^二两粮
+    legacy: 门徒会/channel/二两粮
+    status: unproven
+:x40a43eb4 | ^二兩糧
+    legacy: 门徒会/channel/二兩糧
+    status: unproven

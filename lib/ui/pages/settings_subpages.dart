@@ -22,7 +22,6 @@ import '../../app_preferences.dart';
 import '../../blocked_groups.dart';
 import '../../encrypted_dns.dart';
 import '../../piped_streams.dart';
-import '../../state_media.dart';
 import '../../appearance_settings.dart';
 import '../../player_settings.dart';
 import '../../translation.dart';
@@ -211,7 +210,7 @@ List<Widget> _groupTiles(BuildContext context, AppController controller, List<Bl
   return [
     for (final group in groups)
       Builder(builder: (context) {
-        final entries = group.entries();
+        final entries = group.entries;
         final off = entries.where((e) => allowed.contains(e.key)).length;
         return ListTile(
           dense: true,
@@ -244,7 +243,7 @@ List<Widget> _groupTiles(BuildContext context, AppController controller, List<Bl
 
 /// Everything [group] blocks, each tickable on its own.
 Future<void> _openGroupEntries(BuildContext context, AppController controller, BlockedGroup group, {required bool media}) {
-  final entries = group.entries();
+  final entries = group.entries;
   void setAll(bool on) {
     final keys = {for (final e in entries) e.key};
     final rest = controller.preferences.allowedEntries.where((k) => !keys.contains(k));

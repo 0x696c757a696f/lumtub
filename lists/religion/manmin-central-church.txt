@@ -1,0 +1,21 @@
+! id: manmin-central-church
+! name: Manmin Central Church
+! name.zh-Hans: 万民中央教会
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Manmin_Central_Church
+! legacy: 万民中央教会
+
+:x18cd2a52 | ^万民中央教会
+    legacy: 万民中央教会/channel/万民中央教会
+:xe55bee6e | ^萬民中央教會
+    legacy: 万民中央教会/channel/萬民中央教會
+:x3ef22781 | ^李载禄
+    legacy: 万民中央教会/channel/李载禄
+:x04235ad4 | ^李載祿
+    legacy: 万民中央教会/channel/李載祿
+:manmin-central-church | ^Manmin Central Church
+    legacy: 万民中央教会/channel/Manmin Central Church
+:jaerock-lee | ^Jaerock Lee
+    legacy: 万民中央教会/channel/Jaerock Lee

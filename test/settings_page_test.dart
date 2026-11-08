@@ -144,6 +144,7 @@ void main() {
     tester.view.physicalSize = const Size(1000, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
+    controller.preferences = controller.preferences.copyWith(blockGroups: true);
     await tester.pumpWidget(MaterialApp(
       theme: buildAppTheme(Colors.red, Brightness.light),
       home: Builder(builder: (context) => Scaffold(body: TextButton(onPressed: () => openBlockedGroups(context, controller), child: const Text('open')))),

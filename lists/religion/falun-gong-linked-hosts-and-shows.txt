@@ -1,0 +1,195 @@
+! id: falun-gong-linked-hosts-and-shows
+! name: Falun Gong-linked hosts and shows
+! name.zh-Hans: 法轮功相关自媒体
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/The_Epoch_Times
+! legacy: 法轮功相关自媒体
+
+:xd45b8194 | ^文昭谈古论今 | ^文昭談古論今
+    legacy: 法轮功相关自媒体/channel/文昭谈古论今
+:x37024dc9 | ^文昭思绪飞扬 | ^文昭思緒飛揚
+    legacy: 法轮功相关自媒体/channel/文昭思绪飞扬
+:xdb3ad2dc | ^江峰时刻 | ^江峯時刻 | ^江峰時刻
+    legacy: 法轮功相关自媒体/channel/江峰时刻
+:xd620ff66 | ^江峰·视界 | ^江峯·視界 | ^江峰·視界
+    legacy: 法轮功相关自媒体/channel/江峰·视界
+:xcc8dee09 | ^江峰视界 | ^江峯視界 | ^江峰視界
+    legacy: 法轮功相关自媒体/channel/江峰视界
+:xe7b6cda6 | ^江峰·奥妙 | ^江峯·奧妙 | ^江峰·奧妙
+    legacy: 法轮功相关自媒体/channel/江峰·奥妙
+:x75fd6d71 | ^江峰奥妙 | ^江峯奧妙 | ^江峰奧妙
+    legacy: 法轮功相关自媒体/channel/江峰奥妙
+:xd97542d0 | ^江峰读书会 | ^江峯讀書會 | ^江峰讀書會
+    legacy: 法轮功相关自媒体/channel/江峰读书会
+:x52da7023 | ^天亮时分 | ^天亮時分
+    legacy: 法轮功相关自媒体/channel/天亮时分
+:x18a63ac4 | ^天亮论政 | ^天亮論政
+    legacy: 法轮功相关自媒体/channel/天亮论政
+:xd7831fe3 | ^章天亮
+    legacy: 法轮功相关自媒体/channel/章天亮
+:xb5d1dcbe | ^陈破空 | ^陳破空
+    legacy: 法轮功相关自媒体/channel/陈破空
+:chen-pokong | ^Chen Pokong
+    legacy: 法轮功相关自媒体/channel/Chen Pokong
+:tianliang-times | ^Tianliang Times
+    legacy: 法轮功相关自媒体/channel/Tianliang Times
+:tianliang-zhang | ^Tianliang Zhang
+    legacy: 法轮功相关自媒体/channel/Tianliang Zhang
+:zhang-tianliang | ^Zhang Tianliang
+    legacy: 法轮功相关自媒体/channel/Zhang Tianliang
+:x82cf1062 | ^石涛聚焦 | ^石濤聚焦
+    legacy: 法轮功相关自媒体/channel/石涛聚焦
+:xaccf884e | ^石涛评述 | ^石濤評述
+    legacy: 法轮功相关自媒体/channel/石涛评述
+:x0ceca537 | ^涛哥侃电影 | ^濤哥侃電影
+    legacy: 法轮功相关自媒体/channel/涛哥侃电影
+:xcd25412c | ^李天笑
+    legacy: 法轮功相关自媒体/channel/李天笑
+:x6fea6006 | ^谢田 | ^謝田
+    legacy: 法轮功相关自媒体/channel/谢田
+:x20f9aafa | ^钟原 | ^鍾原
+    legacy: 法轮功相关自媒体/channel/钟原
+:xb9a22900 | ^夏小强 | ^夏小強
+    legacy: 法轮功相关自媒体/channel/夏小强
+:x3bc762c9 | ^程晓容 | ^程曉容
+    legacy: 法轮功相关自媒体/channel/程晓容
+:facts-matter-with-roman-balmakov | ^Facts Matter With Roman Balmakov
+    legacy: 法轮功相关自媒体/channel/Facts Matter With Roman Balmakov
+:roman-balmakov | ^Roman Balmakov
+    legacy: 法轮功相关自媒体/channel/Roman Balmakov
+:eye-opener-with-michael-lewis | ^Eye Opener With Michael Lewis
+    legacy: 法轮功相关自媒体/channel/Eye Opener With Michael Lewis
+:crossroads-with-joshua-philipp | ^Crossroads with Joshua Philipp
+    legacy: 法轮功相关自媒体/channel/Crossroads with Joshua Philipp
+:joshua-philipp | ^Joshua Philipp
+    legacy: 法轮功相关自媒体/channel/Joshua Philipp
+:trevor-loudon | ^Trevor Loudon
+    legacy: 法轮功相关自媒体/channel/Trevor Loudon
+:brendon-fallon | ^Brendon Fallon
+    legacy: 法轮功相关自媒体/channel/Brendon Fallon
+:x84b8dda9 | ^新闻看点 | ^新聞看點
+    legacy: 法轮功相关自媒体/channel/新闻看点
+:x1729481b | ^李沐阳 | ^李沐陽
+    legacy: 法轮功相关自媒体/channel/李沐阳
+:x3d3be781 | ^沐阳看点 | ^沐陽看點
+    legacy: 法轮功相关自媒体/channel/沐阳看点
+:x382d044c | ^远见快评 | ^遠見快評
+    legacy: 法轮功相关自媒体/channel/远见快评
+:xdd7a9426 | ^唐靖远 | ^唐靖遠
+    legacy: 法轮功相关自媒体/channel/唐靖远
+:x756966f8 | ^靖远开讲 | ^靖遠開講
+    legacy: 法轮功相关自媒体/channel/靖远开讲
+:xc34224b0 | ^大宇拍案惊奇 | ^大宇拍案驚奇
+    legacy: 法轮功相关自媒体/channel/大宇拍案惊奇
+:x56ef0e0b | ^新闻拍案惊奇 | ^新聞拍案驚奇
+    legacy: 法轮功相关自媒体/channel/新闻拍案惊奇
+:life | ^大宇Life
+    legacy: 法轮功相关自媒体/channel/大宇Life
+:x200d747d | ^方菲时间 | ^方菲時間
+    legacy: 法轮功相关自媒体/channel/方菲时间
+:xd61bdbea | ^方伟时间 | ^方偉時間
+    legacy: 法轮功相关自媒体/channel/方伟时间
+:x69d42790 | ^世界的十字路口
+    legacy: 法轮功相关自媒体/channel/世界的十字路口
+:x3ccd37ec | ^时事金扫描 | ^時事金掃描
+    legacy: 法轮功相关自媒体/channel/时事金扫描
+:x954d16c6 | ^横河观点 | ^橫河觀點
+    legacy: 法轮功相关自媒体/channel/横河观点
+:xffdbdcca | ^秦鹏政经观察 | ^秦鵬政經觀察
+    legacy: 法轮功相关自媒体/channel/秦鹏政经观察
+:x9ccec4a6 | ^杰森视角 | ^傑森視角
+    legacy: 法轮功相关自媒体/channel/杰森视角
+:xbdbd2088 | ^老北京茶馆 | ^老北京茶館
+    legacy: 法轮功相关自媒体/channel/老北京茶馆
+:xc828cbed | ^林澜对话 | ^林瀾對話
+    legacy: 法轮功相关自媒体/channel/林澜对话
+:xbd00a965 | ^石山视点 | ^石山視點
+    legacy: 法轮功相关自媒体/channel/石山视点
+:xfd9f3f31 | ^菁英论坛 | ^菁英論壇
+    legacy: 法轮功相关自媒体/channel/菁英论坛
+:xf83dd8a7 | ^薇羽看世间 | ^薇羽看世間
+    legacy: 法轮功相关自媒体/channel/薇羽看世间
+:x6d7e2c29 | ^萧茗看世界 | ^蕭茗看世界
+    legacy: 法轮功相关自媒体/channel/萧茗看世界
+:xa6192423 | ^雪儿主播 | ^雪兒主播
+    legacy: 法轮功相关自媒体/channel/雪儿主播
+:xb473d6ca | ^新闻最嘲点 | ^新聞最嘲點
+    legacy: 法轮功相关自媒体/channel/新闻最嘲点
+:x1a7ce87c | ^姜光宇
+    legacy: 法轮功相关自媒体/channel/姜光宇
+:xd9323c96 | ^李军工作室 | ^李軍工作室
+    legacy: 法轮功相关自媒体/channel/李军工作室
+:x2ca196a5 | ^大陆新闻解毒 | ^大陸新聞解毒
+    legacy: 法轮功相关自媒体/channel/大陆新闻解毒
+:x660314fc | ^探索时分 | ^探索時分
+    legacy: 法轮功相关自媒体/channel/探索时分
+:xd3178612 | ^周子定
+    legacy: 法轮功相关自媒体/channel/周子定
+:x132fdef5 | ^马克时空 | ^馬克時空
+    legacy: 法轮功相关自媒体/channel/马克时空
+:x70242dc0 | ^笑谈风云 | ^笑談風雲
+    legacy: 法轮功相关自媒体/channel/笑谈风云
+:x4ac16aee | ^未解之谜·扶摇 | ^未解之謎·扶搖
+    legacy: 法轮功相关自媒体/channel/未解之谜·扶摇
+:xeed56bfb | ^未解之谜 扶摇 | ^未解之謎 扶搖
+    legacy: 法轮功相关自媒体/channel/未解之谜 扶摇
+:x030ed599 | ^馨香雅句
+    legacy: 法轮功相关自媒体/channel/馨香雅句
+:x87c92f7b | ^古韵流芳 | ^古韻流芳
+    legacy: 法轮功相关自媒体/channel/古韵流芳
+:x31ea7717 | ^文史大观园 | ^文史大觀園
+    legacy: 法轮功相关自媒体/channel/文史大观园
+:x91502203 | ^谈古论今话中医 | ^談古論今話中醫
+    legacy: 法轮功相关自媒体/channel/谈古论今话中医
+:xcd27401b | ^胡乃文开讲 | ^胡乃文開講
+    legacy: 法轮功相关自媒体/channel/胡乃文开讲
+:x66fdf863 | ^她健康
+    legacy: 法轮功相关自媒体/channel/她健康
+:she-health | ^She Health
+    legacy: 法轮功相关自媒体/channel/She Health
+:x7d8baab9 | ^天庭小子
+    legacy: 法轮功相关自媒体/channel/天庭小子
+:xad8d469b | ^小乾坤
+    legacy: 法轮功相关自媒体/channel/小乾坤
+:china-uncensored | ^China Uncensored
+    legacy: 法轮功相关自媒体/channel/China Uncensored
+:china-unscripted | ^China Unscripted
+    legacy: 法轮功相关自媒体/channel/China Unscripted
+:wenzhaoofficial | @wenzhaoofficial
+    legacy: 法轮功相关自媒体/handle/@wenzhaoofficial
+:wenzhaostudio | @wenzhaostudio
+    legacy: 法轮功相关自媒体/handle/@wenzhaostudio
+:realjiangfeng | @realjiangfeng
+    legacy: 法轮功相关自媒体/handle/@realjiangfeng
+:jiangfengyangsheng | @jiangfengyangsheng
+    legacy: 法轮功相关自媒体/handle/@jiangfengyangsheng
+:jiangfengreading | @jiangfengreading
+    legacy: 法轮功相关自媒体/handle/@jiangfengreading
+:muyangshow | @MuYangShow
+    legacy: 法轮功相关自媒体/handle/@MuYangShow
+:muyangopinion | @muyangopinion
+    legacy: 法轮功相关自媒体/handle/@muyangopinion
+:cantomuyang | @cantomuyang
+    legacy: 法轮功相关自媒体/handle/@cantomuyang
+:jingyuantalk | @jingyuantalk
+    legacy: 法轮功相关自媒体/handle/@jingyuantalk
+:dayutalk | @dayutalk
+    legacy: 法轮功相关自媒体/handle/@dayutalk
+:dayushow | @DayuShow
+    legacy: 法轮功相关自媒体/handle/@DayuShow
+:fangfeitime | @fangfeitime
+    legacy: 法轮功相关自媒体/handle/@fangfeitime
+:tianliangtimes | @TianliangTimes
+    legacy: 法轮功相关自媒体/handle/@TianliangTimes
+:tianliangzhang | @TianliangZhang
+    legacy: 法轮功相关自媒体/handle/@TianliangZhang
+:beijingteahouse | @beijingteahouse
+    legacy: 法轮功相关自媒体/handle/@beijingteahouse
+:chinauncensored | @ChinaUncensored
+    legacy: 法轮功相关自媒体/handle/@ChinaUncensored
+:chinaunscripted | @ChinaUnscripted
+    legacy: 法轮功相关自媒体/handle/@ChinaUnscripted
+:ucxptuwjp9wl-z0xme5norla | UCxPTUWjp9wl_z0XmE5noRLA
+    legacy: 法轮功相关自媒体/id/UCxPTUWjp9wl_z0XmE5noRLA

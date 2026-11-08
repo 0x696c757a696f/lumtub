@@ -1,0 +1,31 @@
+! id: world-mission-society-church-of-god
+! name: World Mission Society Church of God
+! name.zh-Hans: 母亲上帝
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/World_Mission_Society_Church_of_God
+! legacy: 母亲上帝
+
+:x161744fe | ^母亲上帝
+    legacy: 母亲上帝/channel/母亲上帝
+:xd0a54996 | ^母親上帝
+    legacy: 母亲上帝/channel/母親上帝
+:xe819684f | ^安商洪
+    legacy: 母亲上帝/channel/安商洪
+:xd9e8f4b9 | ^张吉子
+    legacy: 母亲上帝/channel/张吉子
+:x893fd83e | ^張吉子
+    legacy: 母亲上帝/channel/張吉子
+:x02487de9 | ^世界福音宣教协会
+    legacy: 母亲上帝/channel/世界福音宣教协会
+:x59727461 | ^世界福音宣教協會
+    legacy: 母亲上帝/channel/世界福音宣教協會
+:world-mission-society | ^World Mission Society
+    legacy: 母亲上帝/channel/World Mission Society
+:ahnsahnghong | ^Ahnsahnghong
+    legacy: 母亲上帝/channel/Ahnsahnghong
+:zahng-gil-jah | ^Zahng Gil-jah
+    legacy: 母亲上帝/channel/Zahng Gil-jah
+:god-the-mother | ^God the Mother
+    legacy: 母亲上帝/channel/God the Mother

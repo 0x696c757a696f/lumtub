@@ -1,0 +1,50 @@
+! id: iranian-state-media
+! name: Iranian state media
+! name.zh-Hans: 伊朗官方媒体
+! category: state-media
+! action: hide
+! default: off
+! note: IRIB channels and IRNA are state media; Fars, Tasnim and Mehr are tied to the Revolutionary Guards or state bodies
+! source: https://en.wikipedia.org/wiki/Islamic_Republic_of_Iran_Broadcasting
+! legacy: 伊朗官方媒体
+
+:press-tv | ^Press TV
+    legacy: 伊朗官方媒体/channel/Press TV
+:presstv | ^PressTV
+    legacy: 伊朗官方媒体/channel/PressTV
+:irib | ^IRIB
+    legacy: 伊朗官方媒体/channel/IRIB
+:islamic-republic-of-iran-broadcasting | ^Islamic Republic of Iran Broadcasting
+    legacy: 伊朗官方媒体/channel/Islamic Republic of Iran Broadcasting
+:x710189c4 | ^伊朗国家广播电视台
+    legacy: 伊朗官方媒体/channel/伊朗国家广播电视台
+:hispantv | ^HispanTV
+    legacy: 伊朗官方媒体/channel/HispanTV
+:al-alam | ^Al-Alam
+    legacy: 伊朗官方媒体/channel/Al-Alam
+:al-alam-channel | ^Al Alam
+    legacy: 伊朗官方媒体/channel/Al Alam
+:irinn | ^IRINN
+    legacy: 伊朗官方媒体/channel/IRINN
+:irna | ^IRNA
+    legacy: 伊朗官方媒体/channel/IRNA
+:islamic-republic-news-agency | ^Islamic Republic News Agency
+    legacy: 伊朗官方媒体/channel/Islamic Republic News Agency
+:pars-today | ^Pars Today
+    legacy: 伊朗官方媒体/channel/Pars Today
+:sahar-tv | ^Sahar TV
+    legacy: 伊朗官方媒体/channel/Sahar TV
+:al-kawthar | ^Al-Kawthar
+    legacy: 伊朗官方媒体/channel/Al-Kawthar
+:al-kawthar-channel | ^Al Kawthar
+    legacy: 伊朗官方媒体/channel/Al Kawthar
+:fars-news | ^Fars News
+    legacy: 伊朗官方媒体/channel/Fars News
+:tasnim | ^Tasnim
+    legacy: 伊朗官方媒体/channel/Tasnim
+:mehr-news | ^Mehr News
+    legacy: 伊朗官方媒体/channel/Mehr News
+:x146935bb | =العالم
+    legacy: 伊朗官方媒体/exact/العالم
+:isna | =ISNA
+    legacy: 伊朗官方媒体/exact/ISNA

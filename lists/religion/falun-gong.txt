@@ -1,0 +1,157 @@
+! id: falun-gong
+! name: Falun Gong
+! name.zh-Hans: 法轮功
+! category: religion
+! action: hide
+! default: off
+! source: https://en.wikipedia.org/wiki/Falun_Gong
+! legacy: 法轮功
+
+:xd16167e0 | ^法轮功
+    legacy: 法轮功/channel/法轮功
+:xd1faf744 | ^法輪功
+    legacy: 法轮功/channel/法輪功
+:xbac2b7a7 | ^法轮大法
+    legacy: 法轮功/channel/法轮大法
+:x81f0c98b | ^法輪大法
+    legacy: 法轮功/channel/法輪大法
+:x4cf28339 | ^李洪志
+    legacy: 法轮功/channel/李洪志
+:x82678196 | ^明慧网
+    legacy: 法轮功/channel/明慧网
+:xe169aa23 | ^明慧網
+    legacy: 法轮功/channel/明慧網
+:xe7779850 | ^神韵艺术团
+    legacy: 法轮功/channel/神韵艺术团
+:x6951d90d | ^神韻藝術團
+    legacy: 法轮功/channel/神韻藝術團
+:x12676c76 | ^大纪元
+    legacy: 法轮功/channel/大纪元
+:xca4b9b70 | ^大紀元
+    legacy: 法轮功/channel/大紀元
+:the-epoch-times | ^The Epoch Times
+    legacy: 法轮功/channel/The Epoch Times
+:x94195952 | ^新唐人
+    legacy: 法轮功/channel/新唐人
+:falun-gong | ^Falun Gong
+    legacy: 法轮功/channel/Falun Gong
+:falun-dafa | ^Falun Dafa
+    legacy: 法轮功/channel/Falun Dafa
+:li-hongzhi | ^Li Hongzhi
+    legacy: 法轮功/channel/Li Hongzhi
+:minghui | ^Minghui
+    legacy: 法轮功/channel/Minghui
+:shen-yun | ^Shen Yun
+    legacy: 法轮功/channel/Shen Yun
+:epoch-times | ^Epoch Times
+    legacy: 法轮功/channel/Epoch Times
+:ntd-television | ^NTD Television
+    legacy: 法轮功/channel/NTD Television
+:x3cbe0f6c | ^纪元头条 | ^紀元頭條
+    legacy: 法轮功/channel/纪元头条
+:epochtv | ^EpochTV
+    legacy: 法轮功/channel/EpochTV
+:ntd | ^NTD
+    legacy: 法轮功/channel/NTD
+:xa45f848e | ^中国禁闻 | ^中國禁聞
+    legacy: 法轮功/channel/中国禁闻
+:xed2fa807 | ^新闻大破解 | ^新聞大破解
+    legacy: 法轮功/channel/新闻大破解
+:x2d36803a | ^希望之声 | ^希望之聲
+    legacy: 法轮功/channel/希望之声
+:soh | ^SOH
+    legacy: 法轮功/channel/SOH
+:x28b9224f | ^看中国 | ^看中國
+    legacy: 法轮功/channel/看中国
+:vision-times | ^Vision Times
+    legacy: 法轮功/channel/Vision Times
+:x28f3eff2 | ^阿波罗新闻网 | ^阿波羅新聞網
+    legacy: 法轮功/channel/阿波罗新闻网
+:x82c08d09 | ^阿波罗网 | ^阿波羅網
+    legacy: 法轮功/channel/阿波罗网
+:x62cc1b34 | ^人民报 | ^人民報
+    legacy: 法轮功/channel/人民报
+:x787f3283 | ^明慧
+    legacy: 法轮功/channel/明慧
+:xf943732f | ^正见网 | ^正見網
+    legacy: 法轮功/channel/正见网
+:x5090dd78 | ^追查国际 | ^追查國際
+    legacy: 法轮功/channel/追查国际
+:woipfg | ^WOIPFG
+    legacy: 法轮功/channel/WOIPFG
+:xc68cb549 | ^全球退党服务中心 | ^全球退黨服務中心
+    legacy: 法轮功/channel/全球退党服务中心
+:xbf961d49 | ^神韵 | ^神韻
+    legacy: 法轮功/channel/神韵
+:china-in-focus | ^China in Focus
+    legacy: 法轮功/channel/China in Focus
+:facts-matter | ^Facts Matter
+    legacy: 法轮功/channel/Facts Matter
+:american-thought-leaders | ^American Thought Leaders
+    legacy: 法轮功/channel/American Thought Leaders
+:china-observer | ^China Observer
+    legacy: 法轮功/channel/China Observer
+:china-insights | ^China Insights
+    legacy: 法轮功/channel/China Insights
+:x2fd07cb4 | ^热点互动 | ^熱點互動
+    legacy: 法轮功/channel/热点互动
+:x81cf9dc2 | ^大陆新闻解读 | ^大陸新聞解讀
+    legacy: 法轮功/channel/大陆新闻解读
+:x1b939c07 | ^中国解密 | ^中國解密
+    legacy: 法轮功/channel/中国解密
+:xb52fe568 | ^真观点 | ^真觀點
+    legacy: 法轮功/channel/真观点
+:x7170efaa | ^传奇时代 | ^傳奇時代
+    legacy: 法轮功/channel/传奇时代
+:xce265bb9 | ^我们告诉未来 | ^我們告訴未來
+    legacy: 法轮功/channel/我们告诉未来
+:x1c23ddd1 | ^九评共产党 | ^九評共產黨
+    legacy: 法轮功/channel/九评共产党
+:x9e649702 | ^漫谈党文化 | ^漫談黨文化
+    legacy: 法轮功/channel/漫谈党文化
+:x68a1c96c | ^百年红祸 | ^百年紅禍
+    legacy: 法轮功/channel/百年红祸
+:1-1 | ^健康1+1
+    legacy: 法轮功/channel/健康1+1
+:xb59d5a5c | ^干净世界 | ^乾淨世界
+    legacy: 法轮功/channel/干净世界
+:gan-jing-world | ^Gan Jing World
+    legacy: 法轮功/channel/Gan Jing World
+:ganjing-world | ^GanJing World
+    legacy: 法轮功/channel/GanJing World
+:sound-of-hope | ^Sound of Hope
+    legacy: 法轮功/channel/Sound of Hope
+:epoch-health | ^Epoch Health
+    legacy: 法轮功/channel/Epoch Health
+:minghuitv | @MinghuiTV
+    legacy: 法轮功/handle/@MinghuiTV
+:falungonginfo | @falungonginfo
+    legacy: 法轮功/handle/@falungonginfo
+:shenyun | @shenyun
+    legacy: 法轮功/handle/@shenyun
+:ntdchinese | @NTDCHINESE
+    legacy: 法轮功/handle/@NTDCHINESE
+:ntdaptv | @ntdaptv
+    legacy: 法轮功/handle/@ntdaptv
+:soh-tv | @soh_tv
+    legacy: 法轮功/handle/@soh_tv
+:kzg | @kzg
+    legacy: 法轮功/handle/@kzg
+:chinainfocusntd | @ChinainFocusNTD
+    legacy: 法轮功/handle/@ChinainFocusNTD
+:factsmatterroman | @FactsMatterRoman
+    legacy: 法轮功/handle/@FactsMatterRoman
+:chinaobserver0 | @ChinaObserver0
+    legacy: 法轮功/handle/@ChinaObserver0
+:chinainsights4458 | @chinainsights4458
+    legacy: 法轮功/handle/@chinainsights4458
+:ntdnews | @ntdnews
+    legacy: 法轮功/handle/@ntdnews
+:epochtimesdigital | @epochtimesdigital
+    legacy: 法轮功/handle/@epochtimesdigital
+:ntdspanish | @NTDSpanish
+    legacy: 法轮功/handle/@NTDSpanish
+:ucak-sbmzp79a4k2caqqodlq | UCAk-SBMZp79a4k2CAqqoDLQ
+    legacy: 法轮功/id/UCAk-SBMZp79a4k2CAqqoDLQ
+:uchy4xobo9z03nceb6pl-yzg | UCHY4xOBo9z03nceB6Pl-yzg
+    legacy: 法轮功/id/UCHY4xOBo9z03nceB6Pl-yzg

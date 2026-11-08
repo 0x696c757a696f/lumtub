@@ -190,13 +190,12 @@ class _WatchPageState extends State<WatchPage> {
                     decoration: BoxDecoration(border: Border(left: BorderSide(color: context.colors.outlineVariant))),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: IconButton(tooltip: tr('Hide chat'), icon: const Icon(AppIcons.caretRight, size: 18), onPressed: () => theaterChatOpen.value = false),
-                        ),
-                        Expanded(child: _ReplayChatPanel(controller: controller)),
-                      ]),
+                      // The hide button sits in the chat's own title row, so the
+                      // chat starts as high as the video.
+                      child: _ReplayChatPanel(
+                        controller: controller,
+                        trailing: IconButton(tooltip: tr('Hide chat'), icon: const Icon(AppIcons.caretRight, size: 18), onPressed: () => theaterChatOpen.value = false),
+                      ),
                     ),
                   ),
                 )
@@ -567,9 +566,11 @@ class _KeepAliveState extends State<_KeepAlive> with AutomaticKeepAliveClientMix
 }
 
 class _ReplayChatPanel extends StatelessWidget {
-  const _ReplayChatPanel({required this.controller, this.shrinkWrap = false});
+  const _ReplayChatPanel({required this.controller, this.shrinkWrap = false, this.trailing});
   final AppController controller;
   final bool shrinkWrap;
+  /// At the end of the title row.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(listenable: controller.chatMessages, builder: (context, _) => _build(context));
@@ -584,6 +585,7 @@ class _ReplayChatPanel extends StatelessWidget {
         Expanded(child: Text(tr(live ? 'Chat' : 'Chat replay'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
         if (messages.any((m) => m.color != null) || controller.chatTicker.isNotEmpty) SuperChatHighlightSwitch(controller: controller),
         ImmersiveTranslationSwitch(controller: controller),
+        if (trailing != null) trailing!,
       ]),
       const SizedBox(height: 8),
       if (live && controller.chatTicker.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: 8), child: SuperChatStrip(controller: controller)),

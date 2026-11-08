@@ -2975,5 +2975,22 @@
   "Super Chat: pay and send on YouTube in your browser": "超级留言：在浏览器里到 YouTube 付款并发送",
   "Super Thanks: pay and comment on YouTube in your browser": "超级感谢：在浏览器里到 YouTube 付款并留言",
   "Super Chats in colour and pinned on top: on": "超级留言按金额上色并置顶：开",
-  "Super Chats in colour and pinned on top: off": "超级留言按金额上色并置顶：关"
+  "Super Chats in colour and pinned on top: off": "超级留言按金额上色并置顶：关",
+  "Volume up {0}%": "音量加 {0}%",
+  "Volume down {0}%": "音量减 {0}%",
+  "Slow down playback": "减速播放",
+  "Speed up playback": "加速播放",
+  "Right click on the video": "在视频上右键",
+  "Exit fullscreen, or else go back": "退出全屏，不在全屏时返回",
+  "{0} was taken from \"{1}\"": "{0} 已从“{1}”移过来",
+  "Customize shortcuts": "自定义快捷键",
+  "0-9 and the media keys stay as they are.": "0-9 和媒体键不能更改。",
+  "Add a key": "添加按键",
+  "Press a key": "按下按键",
+  "0-9 and the media keys stay as they are; press another key.": "0-9 和媒体键不能更改，请换一个键。",
+  "Press the key or key combination to use.": "按下要使用的键或组合键。",
+  "{0}: {1} s": "{0}：{1} 秒",
+  "{0} and scroll wheel: {1}% per step": "{0} 和滚轮：每次 {1}%",
+  "Choose the keys for seeking, volume, fullscreen and more": "设置快进快退、音量、全屏等功能的按键",
+  "mouse back": "鼠标 返回"
 }

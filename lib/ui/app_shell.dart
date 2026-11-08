@@ -75,6 +75,8 @@ class _AppShellState extends State<AppShell> {
         content: Text(tr("This Wayland desktop doesn't let apps keep a window on top. X11 compatibility mode allows it and needs a restart of Lumtub.")),
         duration: const Duration(seconds: 12),
         showCloseIcon: true,
+        // With an action Flutter keeps a snack bar until it is closed.
+        persist: false,
         action: SnackBarAction(label: tr('Switch and restart'), onPressed: () => unawaited(_controller.switchToX11())),
       ));
     });
@@ -91,6 +93,8 @@ class _AppShellState extends State<AppShell> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(tr('Downloaded: {0}', [task.item.title]), maxLines: 2, overflow: TextOverflow.ellipsis),
         duration: const Duration(seconds: 8),
+        // With an action Flutter keeps a snack bar until it is closed.
+        persist: false,
         action: SnackBarAction(label: tr('Show in folder'), onPressed: () => unawaited(openInExplorer(path, select: true))),
       ));
     });

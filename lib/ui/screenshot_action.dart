@@ -24,6 +24,8 @@ Future<void> captureScreenshot(BuildContext context, AppController controller, {
     onFeedback?.call(AppIcons.cameraFill, tr('Screenshot saved and copied'));
     messenger?.showSnackBar(SnackBar(
       content: Text(tr('Screenshot saved: {0}', [file.path])),
+      // With an action Flutter keeps a snack bar until it is closed.
+      persist: false,
       action: SnackBarAction(label: tr('Open folder'), onPressed: () => unawaited(revealInFolder(file))),
     ));
   } catch (e) {

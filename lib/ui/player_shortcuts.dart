@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart' show NativePlayer;
@@ -9,44 +7,78 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../app/app_controller.dart';
 import '../app_preferences.dart';
 import '../l10n/l10n.dart';
+import '../shortcut_bindings.dart';
 import 'lights_off.dart';
 import 'theater_mode.dart';
 import 'app_icons.dart';
 import 'common.dart';
 
-/// Keys shown in the shortcut help, in display order, with the steps from
-/// [prefs].
-List<(String, String)> playerShortcutHelp(AppPreferences prefs) => [
-      for (final (keys, action) in _shortcutHelp(prefs)) (keyNames(keys), action),
-    ];
+/// What [action] does, as the settings and the help name it.
+String shortcutActionLabel(PlayerAction action, AppPreferences prefs) => switch (action) {
+      PlayerAction.playPause => tr('Play or pause'),
+      PlayerAction.seekBack => tr('Back {0} s', [prefs.seekSeconds]),
+      PlayerAction.seekForward => tr('Forward {0} s', [prefs.seekSeconds]),
+      PlayerAction.longSeekBack => tr('Back {0} s', [prefs.longSeekSeconds]),
+      PlayerAction.longSeekForward => tr('Forward {0} s', [prefs.longSeekSeconds]),
+      PlayerAction.volumeUp => tr('Volume up {0}%', [prefs.volumeStep]),
+      PlayerAction.volumeDown => tr('Volume down {0}%', [prefs.volumeStep]),
+      PlayerAction.mute => tr('Mute'),
+      PlayerAction.slower => tr('Slow down playback'),
+      PlayerAction.faster => tr('Speed up playback'),
+      PlayerAction.fullscreen => tr('Fullscreen'),
+      PlayerAction.exitFullscreen => tr('Exit fullscreen'),
+      PlayerAction.previous => tr('Previous video'),
+      PlayerAction.next => tr('Next video'),
+      PlayerAction.frameBack => tr('Previous frame'),
+      PlayerAction.frameForward => tr('Next frame'),
+      PlayerAction.start => tr('Start'),
+      PlayerAction.end => tr('End'),
+      PlayerAction.lineBack => tr('Previous line'),
+      PlayerAction.lineNext => tr('Next line'),
+      PlayerAction.lineReplay => tr('Replay this line'),
+      PlayerAction.copySubtitle => tr('Copy the current subtitle'),
+      PlayerAction.theater => tr('Theater mode'),
+      PlayerAction.lightsOff => tr('Lights off'),
+      PlayerAction.screenshot => tr('Screenshot'),
+      PlayerAction.stats => tr('Show or hide playback stats'),
+    };
 
-List<(String, String)> _shortcutHelp(AppPreferences prefs) => [
-      (tr('Space / K'), tr('Play or pause')),
-      ('← / →', tr('Seek back or forward {0} seconds', [prefs.seekSeconds])),
-      ('J / L', tr('Seek back or forward {0} seconds', [prefs.longSeekSeconds])),
-      ('↑ / ↓', tr('Volume up/down {0}%', [prefs.volumeStep])),
-      ('Shift + < / >', tr('Slow down or speed up playback')),
-      (tr('Hold on the video'), tr('Hold for 2x speed')),
-      (tr('Ctrl + wheel'), tr('Slow down or speed up playback')),
-      ('M', tr('Mute')),
-      ('F', tr('Fullscreen')),
-      ('Esc', tr('Exit fullscreen')),
-      ('Shift + N / ]', tr('Next video')),
-      ('Shift + P / [', tr('Previous video')),
-      (', / .', tr('Step back or forward one frame while paused')),
-      ('0 - 9', tr('Jump to 0% - 90% of the video')),
-      ('Home / End', tr('Jump to the start or end')),
-      ('A / D', tr('Previous or next subtitle line')),
-      ('R', tr('Replay this line')),
-      ('Ctrl + C', tr('Copy the current subtitle')),
-      ('T', tr('Theater mode')),
-      ('B', tr('Lights off')),
-      ('S', tr('Screenshot')),
-      ('I', tr('Show or hide playback stats')),
-      (tr('Alt + ← / mouse back button'), tr('Go back')),
-      ('Ctrl + K', tr('Search')),
-      ('Ctrl + Shift + N', tr('Incognito mode')),
-    ];
+/// Keys shown in the shortcut help, in display order, with the keys and
+/// steps from [prefs].
+List<(String, String)> playerShortcutHelp(AppPreferences prefs) {
+  final keys = shortcutKeys(prefs.shortcutKeys);
+  String of(PlayerAction action) => keys[action]!.map((k) => k.label).join(', ');
+  String pair(PlayerAction a, PlayerAction b) => [of(a), of(b)].where((k) => k.isNotEmpty).join(' / ');
+  final rows = <(String, String)>[
+    (of(PlayerAction.playPause), tr('Play or pause')),
+    (pair(PlayerAction.seekBack, PlayerAction.seekForward), tr('Seek back or forward {0} seconds', [prefs.seekSeconds])),
+    (pair(PlayerAction.longSeekBack, PlayerAction.longSeekForward), tr('Seek back or forward {0} seconds', [prefs.longSeekSeconds])),
+    (pair(PlayerAction.volumeUp, PlayerAction.volumeDown), tr('Volume up/down {0}%', [prefs.volumeStep])),
+    (pair(PlayerAction.slower, PlayerAction.faster), tr('Slow down or speed up playback')),
+    (tr('Hold on the video'), tr('Hold for 2x speed')),
+    (keyNames(tr('Ctrl + wheel')), tr('Slow down or speed up playback')),
+    (of(PlayerAction.mute), tr('Mute')),
+    (of(PlayerAction.fullscreen), tr('Fullscreen')),
+    (of(PlayerAction.exitFullscreen), tr('Exit fullscreen')),
+    if (prefs.rightClickBack) (tr('Right click on the video'), tr('Exit fullscreen, or else go back')),
+    (of(PlayerAction.next), tr('Next video')),
+    (of(PlayerAction.previous), tr('Previous video')),
+    (pair(PlayerAction.frameBack, PlayerAction.frameForward), tr('Step back or forward one frame while paused')),
+    ('0 - 9', tr('Jump to 0% - 90% of the video')),
+    (pair(PlayerAction.start, PlayerAction.end), tr('Jump to the start or end')),
+    (pair(PlayerAction.lineBack, PlayerAction.lineNext), tr('Previous or next subtitle line')),
+    (of(PlayerAction.lineReplay), tr('Replay this line')),
+    (of(PlayerAction.copySubtitle), tr('Copy the current subtitle')),
+    (of(PlayerAction.theater), tr('Theater mode')),
+    (of(PlayerAction.lightsOff), tr('Lights off')),
+    (of(PlayerAction.screenshot), tr('Screenshot')),
+    (of(PlayerAction.stats), tr('Show or hide playback stats')),
+    (keyNames(tr('Alt + ← / mouse back button')), tr('Go back')),
+    (keyNames('Ctrl + K'), tr('Search')),
+    (keyNames('Ctrl + Shift + N'), tr('Incognito mode')),
+  ];
+  return [for (final row in rows) if (row.$1.isNotEmpty) row];
+}
 
 /// Player key bindings, used both on the watch page and inside the player
 /// controls, which keep focus while the video is fullscreen. [onFeedback]
@@ -115,54 +147,59 @@ Map<ShortcutActivator, VoidCallback> playerShortcuts(AppController controller, V
     if (controller.hasPrevious) unawaited(controller.playPrevious());
   }
   void next() => unawaited(controller.playNext());
+  void mute() {
+    unawaited(controller.toggleMute().then((_) {
+      final muted = player.state.volume == 0;
+      onFeedback?.call(muted ? AppIcons.speakerSlash : AppIcons.speakerHighFill, muted ? tr('Mute') : '${player.state.volume.round()}%');
+    }));
+  }
+  void exitFullscreen() {
+    final state = video();
+    if (state != null && state.isFullscreen()) unawaited(state.exitFullscreen());
+  }
+  VoidCallback? run(PlayerAction action) => switch (action) {
+        PlayerAction.playPause => playOrPause,
+        PlayerAction.seekBack => () => seek(-prefs.seekSeconds),
+        PlayerAction.seekForward => () => seek(prefs.seekSeconds),
+        PlayerAction.longSeekBack => () => seek(-prefs.longSeekSeconds),
+        PlayerAction.longSeekForward => () => seek(prefs.longSeekSeconds),
+        PlayerAction.volumeUp => () => changeVolume(volume),
+        PlayerAction.volumeDown => () => changeVolume(-volume),
+        PlayerAction.mute => mute,
+        PlayerAction.slower => () => stepSpeed(-1),
+        PlayerAction.faster => () => stepSpeed(1),
+        PlayerAction.fullscreen => () => unawaited(video()?.toggleFullscreen()),
+        PlayerAction.exitFullscreen => exitFullscreen,
+        PlayerAction.previous => previous,
+        PlayerAction.next => next,
+        PlayerAction.frameBack => () => stepFrame(false),
+        PlayerAction.frameForward => () => stepFrame(true),
+        PlayerAction.start => () => jumpTo(false),
+        PlayerAction.end => () => jumpTo(true),
+        PlayerAction.lineBack => () => subtitleStep(-1),
+        PlayerAction.lineNext => () => subtitleStep(1),
+        PlayerAction.lineReplay => () => subtitleStep(0),
+        PlayerAction.copySubtitle => copySubtitle,
+        PlayerAction.theater => () => theaterMode.value = !theaterMode.value,
+        PlayerAction.lightsOff => () => lightsOff.value = !lightsOff.value,
+        PlayerAction.screenshot => onScreenshot,
+        PlayerAction.stats => controller.toggleStats,
+      };
   const digits = [LogicalKeyboardKey.digit0, LogicalKeyboardKey.digit1, LogicalKeyboardKey.digit2, LogicalKeyboardKey.digit3, LogicalKeyboardKey.digit4, LogicalKeyboardKey.digit5, LogicalKeyboardKey.digit6, LogicalKeyboardKey.digit7, LogicalKeyboardKey.digit8, LogicalKeyboardKey.digit9];
   const numpad = [LogicalKeyboardKey.numpad0, LogicalKeyboardKey.numpad1, LogicalKeyboardKey.numpad2, LogicalKeyboardKey.numpad3, LogicalKeyboardKey.numpad4, LogicalKeyboardKey.numpad5, LogicalKeyboardKey.numpad6, LogicalKeyboardKey.numpad7, LogicalKeyboardKey.numpad8, LogicalKeyboardKey.numpad9];
   final bindings = <ShortcutActivator, VoidCallback>{
+    for (final MapEntry(:key, :value) in shortcutKeys(prefs.shortcutKeys).entries)
+      if (run(key) case final callback?)
+        for (final combo in value) combo.activator: callback,
     for (var i = 0; i < 10; i++) ...{
       SingleActivator(digits[i]): () => jumpToTenth(i),
       SingleActivator(numpad[i]): () => jumpToTenth(i),
     },
-    const SingleActivator(LogicalKeyboardKey.home): () => jumpTo(false),
-    const SingleActivator(LogicalKeyboardKey.end): () => jumpTo(true),
-    const SingleActivator(LogicalKeyboardKey.comma): () => stepFrame(false),
-    const SingleActivator(LogicalKeyboardKey.period): () => stepFrame(true),
-    const SingleActivator(LogicalKeyboardKey.bracketLeft): previous,
-    const SingleActivator(LogicalKeyboardKey.bracketRight): next,
-    const SingleActivator(LogicalKeyboardKey.keyP, shift: true): previous,
-    const SingleActivator(LogicalKeyboardKey.keyT): () => theaterMode.value = !theaterMode.value,
-    const SingleActivator(LogicalKeyboardKey.keyB): () => lightsOff.value = !lightsOff.value,
-    const SingleActivator(LogicalKeyboardKey.keyA): () => subtitleStep(-1),
-    const SingleActivator(LogicalKeyboardKey.keyD): () => subtitleStep(1),
-    const SingleActivator(LogicalKeyboardKey.keyR): () => subtitleStep(0),
-    SingleActivator(LogicalKeyboardKey.keyC, control: !Platform.isMacOS, meta: Platform.isMacOS): copySubtitle,
-    if (onScreenshot != null) const SingleActivator(LogicalKeyboardKey.keyS): onScreenshot,
-    const SingleActivator(LogicalKeyboardKey.space): playOrPause,
-    const SingleActivator(LogicalKeyboardKey.keyK): playOrPause,
     const SingleActivator(LogicalKeyboardKey.mediaPlayPause): playOrPause,
     const SingleActivator(LogicalKeyboardKey.mediaPlay): () => unawaited(player.play()),
     const SingleActivator(LogicalKeyboardKey.mediaPause): () => unawaited(player.pause()),
-    const SingleActivator(LogicalKeyboardKey.arrowLeft): () => seek(-prefs.seekSeconds),
-    const SingleActivator(LogicalKeyboardKey.arrowRight): () => seek(prefs.seekSeconds),
-    const SingleActivator(LogicalKeyboardKey.keyJ): () => seek(-prefs.longSeekSeconds),
-    const SingleActivator(LogicalKeyboardKey.keyL): () => seek(prefs.longSeekSeconds),
-    const SingleActivator(LogicalKeyboardKey.arrowUp): () => changeVolume(volume),
-    const SingleActivator(LogicalKeyboardKey.arrowDown): () => changeVolume(-volume),
-    const SingleActivator(LogicalKeyboardKey.keyM): () {
-      unawaited(controller.toggleMute().then((_) {
-        final muted = player.state.volume == 0;
-        onFeedback?.call(muted ? AppIcons.speakerSlash : AppIcons.speakerHighFill, muted ? tr('Mute') : '${player.state.volume.round()}%');
-      }));
-    },
-    const SingleActivator(LogicalKeyboardKey.keyF): () => unawaited(video()?.toggleFullscreen()),
-    const SingleActivator(LogicalKeyboardKey.escape): () {
-      final state = video();
-      if (state != null && state.isFullscreen()) unawaited(state.exitFullscreen());
-    },
-    const SingleActivator(LogicalKeyboardKey.keyN, shift: true): () => unawaited(controller.playNext()),
-    const SingleActivator(LogicalKeyboardKey.mediaTrackNext): () => unawaited(controller.playNext()),
-    const SingleActivator(LogicalKeyboardKey.keyI): controller.toggleStats,
-    const SingleActivator(LogicalKeyboardKey.period, shift: true): () => stepSpeed(1),
-    const SingleActivator(LogicalKeyboardKey.comma, shift: true): () => stepSpeed(-1),
+    const SingleActivator(LogicalKeyboardKey.mediaTrackNext): next,
+    const SingleActivator(LogicalKeyboardKey.mediaTrackPrevious): previous,
   };
   return {for (final MapEntry(:key, :value) in bindings.entries) NotWhileTyping(key): value};
 }

@@ -42,6 +42,8 @@ Future<void> _saveExtra(BuildContext context, AppController controller, Future<S
     final path = await save();
     messenger?.showSnackBar(SnackBar(
       content: Text(tr('Saved: {0}', [path.split(Platform.pathSeparator).last])),
+      // With an action Flutter keeps a snack bar until it is closed.
+      persist: false,
       action: Platform.isWindows || Platform.isLinux || Platform.isMacOS ? SnackBarAction(label: tr('Open folder'), onPressed: () => unawaited(openInExplorer(path, select: true))) : null,
     ));
   } catch (e) {

@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} inventa sunt, sed filtra et optiones tuae omnia omiserunt",
   "{0}: {1} s": "{0}: {1} s",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Televisio nondum a Lumtub videum petiit. Si non incipit, murus ignis in hoc computro fortasse Lumtub impedit; permitte eum in hac rete.",
-  "Cast format": "Forma transmissionis"
+  "Cast format": "Forma transmissionis",
+  "Pair with {0}": "Coniungere cum {0}",
+  "Enter the PIN shown on the TV.": "Insere PIN in televisione ostensum.",
+  "Pair": "Coniungere",
+  "Pairing failed: {0}": "Coniunctio defecit: {0}"
 }

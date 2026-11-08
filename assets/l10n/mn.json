@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} олдсон боловч таны шүүлтүүр болон тохиргоо бүгдийг нь хассан",
   "{0}: {1} s": "{0}: {1} сек",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Телевиз Lumtub-аас видеог хараахан хүсээгүй байна. Эхлэхгүй бол энэ компьютерийн галт хана Lumtub-ийг хаасан байж магадгүй; энэ сүлжээнд зөвшөөрнө үү.",
-  "Cast format": "Дамжуулалтын формат"
+  "Cast format": "Дамжуулалтын формат",
+  "Pair with {0}": "{0}-тэй холбох",
+  "Enter the PIN shown on the TV.": "Зурагтан дээр харуулсан PIN кодыг оруулна уу.",
+  "Pair": "Холбох",
+  "Pairing failed: {0}": "Холбож чадсангүй: {0}"
 }

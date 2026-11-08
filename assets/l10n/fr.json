@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} trouvés, mais vos filtres et paramètres les ont tous exclus",
   "{0}: {1} s": "{0} : {1} s",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Le téléviseur n’a pas encore demandé la vidéo à Lumtub. Si la lecture ne démarre pas, un pare-feu de cet ordinateur bloque peut-être Lumtub ; autorisez-le sur ce réseau.",
-  "Cast format": "Format de diffusion"
+  "Cast format": "Format de diffusion",
+  "Pair with {0}": "Associer à {0}",
+  "Enter the PIN shown on the TV.": "Saisissez le code PIN affiché sur le téléviseur.",
+  "Pair": "Associer",
+  "Pairing failed: {0}": "Échec de l'association : {0}"
 }

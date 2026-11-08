@@ -6,11 +6,12 @@ import 'dart:typed_data';
 import '../app_log.dart';
 import 'cast_net.dart';
 
-// Minimal multicast DNS for finding Chromecasts: one PTR question for
-// _googlecast._tcp.local and a reader for the PTR, SRV, TXT, A and AAAA
-// records that come back.
+// Minimal multicast DNS for finding Chromecasts and AirPlay receivers: one
+// PTR question for the service and a reader for the PTR, SRV, TXT, A and
+// AAAA records that come back.
 
 const googleCastService = '_googlecast._tcp.local';
+const airPlayService = '_airplay._tcp.local';
 
 /// A DNS query packet asking for the PTR records of [service].
 Uint8List mdnsQuery(String service) {
@@ -25,13 +26,16 @@ Uint8List mdnsQuery(String service) {
   return out.toBytes();
 }
 
-/// A Chromecast found by mDNS.
+/// A device found by mDNS.
 class MdnsService {
-  const MdnsService({required this.id, required this.name, required this.host, required this.port});
+  const MdnsService({required this.id, required this.name, required this.host, required this.port, this.txt = const {}});
   final String id;
   final String name;
   final InternetAddress host;
   final int port;
+
+  /// Its TXT record, keys in lower case.
+  final Map<String, String> txt;
 }
 
 /// Collects the records of mDNS replies; a service is complete once its
@@ -110,6 +114,7 @@ class MdnsCollector {
                 name: _txt[instance]?['fn'] ?? instance.split('.').first,
                 host: address,
                 port: port,
+                txt: _txt[instance] ?? const {},
               ),
       ];
 
@@ -144,13 +149,13 @@ class MdnsCollector {
   }
 }
 
-/// Asks the LAN for Chromecasts for [timeout], emitting each service once.
+/// Asks the LAN for [service] for [timeout], emitting each device once.
 /// The question goes out from a high port, so replies come back unicast and
 /// nothing has to share port 5353 with the system's own mDNS.
-Stream<MdnsService> discoverMdns({Duration timeout = const Duration(seconds: 6)}) {
+Stream<MdnsService> discoverMdns({String service = googleCastService, Duration timeout = const Duration(seconds: 6)}) {
   final controller = StreamController<MdnsService>();
   final sockets = <RawDatagramSocket>[];
-  final collector = MdnsCollector();
+  final collector = MdnsCollector(service: service);
   final seen = <String>{};
   Timer? finish;
   Timer? repeat;
@@ -166,7 +171,7 @@ Stream<MdnsService> discoverMdns({Duration timeout = const Duration(seconds: 6)}
 
   controller.onListen = () async {
     final target = InternetAddress('224.0.0.251');
-    final query = mdnsQuery(googleCastService);
+    final query = mdnsQuery(service);
     for (final address in await localIPv4Addresses()) {
       try {
         final socket = await RawDatagramSocket.bind(address, 0);
@@ -176,8 +181,8 @@ Stream<MdnsService> discoverMdns({Duration timeout = const Duration(seconds: 6)}
           final packet = socket.receive();
           if (packet == null) return;
           collector.add(packet.data);
-          for (final service in collector.services) {
-            if (seen.add(service.id) && !controller.isClosed) controller.add(service);
+          for (final found in collector.services) {
+            if (seen.add(found.id) && !controller.isClosed) controller.add(found);
           }
         });
       } on SocketException catch (e) {

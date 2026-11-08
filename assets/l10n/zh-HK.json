@@ -2991,5 +2991,9 @@
   "{0} was taken from \"{1}\"": "{0} 已經由「{1}」搬過嚟",
   "{0}: {1} s": "{0}：{1} 秒",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "電視仲未向 Lumtub 索取影片。如果一直未能開始播放，可能是這部電腦的防火牆擋住了 Lumtub，請允許它在目前的網絡中通訊。",
-  "Cast format": "投屏格式"
+  "Cast format": "投屏格式",
+  "Pair with {0}": "與 {0} 配對",
+  "Enter the PIN shown on the TV.": "輸入電視上顯示的 PIN 碼。",
+  "Pair": "配對",
+  "Pairing failed: {0}": "配對失敗：{0}"
 }

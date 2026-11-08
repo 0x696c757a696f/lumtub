@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} gevonden, maar je filters en instellingen hebben ze allemaal weggelaten",
   "{0}: {1} s": "{0}: {1} s",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "De tv heeft de video nog niet bij Lumtub opgevraagd. Als het niet start, blokkeert mogelijk een firewall op deze computer Lumtub; sta het toe op dit netwerk.",
-  "Cast format": "Castformaat"
+  "Cast format": "Castformaat",
+  "Pair with {0}": "Koppelen met {0}",
+  "Enter the PIN shown on the TV.": "Voer de pincode in die op de tv wordt getoond.",
+  "Pair": "Koppelen",
+  "Pairing failed: {0}": "Koppelen mislukt: {0}"
 }

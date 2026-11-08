@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} topildi, lekin filtrlar va sozlamalaringiz hammasini chiqarib tashladi",
   "{0}: {1} s": "{0}: {1} s",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Televizor videoni hali Lumtub'dan so'ramadi. Agar boshlanmasa, bu kompyuterdagi xavfsizlik devori Lumtub'ni bloklayotgan bo'lishi mumkin; unga ushbu tarmoqda ruxsat bering.",
-  "Cast format": "Translyatsiya formati"
+  "Cast format": "Translyatsiya formati",
+  "Pair with {0}": "{0} bilan juftlash",
+  "Enter the PIN shown on the TV.": "Televizorda ko'rsatilgan PIN kodni kiriting.",
+  "Pair": "Juftlash",
+  "Pairing failed: {0}": "Juftlashmadi: {0}"
 }

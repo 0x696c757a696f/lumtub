@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "พบ {0} แต่ตัวกรองและการตั้งค่าของคุณตัดออกทั้งหมด",
   "{0}: {1} s": "{0}: {1} วิ",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ทีวียังไม่ได้ขอวิดีโอจาก Lumtub หากไม่เริ่มเล่น อาจเป็นเพราะไฟร์วอลล์ในคอมพิวเตอร์เครื่องนี้ปิดกั้น Lumtub โปรดอนุญาตให้ใช้งานในเครือข่ายนี้",
-  "Cast format": "รูปแบบการแคสต์"
+  "Cast format": "รูปแบบการแคสต์",
+  "Pair with {0}": "จับคู่กับ {0}",
+  "Enter the PIN shown on the TV.": "ป้อน PIN ที่แสดงบนทีวี",
+  "Pair": "จับคู่",
+  "Pairing failed: {0}": "จับคู่ไม่สำเร็จ: {0}"
 }

@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "ნაპოვნია {0}, მაგრამ თქვენმა ფილტრებმა და პარამეტრებმა ყველა გამორიცხა",
   "{0}: {1} s": "{0}: {1} წმ",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ტელევიზორს Lumtub-ისთვის ვიდეო ჯერ არ მოუთხოვია. თუ არ დაიწყო, შესაძლოა ამ კომპიუტერის ბრანდმაუერი ბლოკავს Lumtub-ს; დაუშვით ის ამ ქსელში.",
-  "Cast format": "გადაცემის ფორმატი"
+  "Cast format": "გადაცემის ფორმატი",
+  "Pair with {0}": "დაწყვილება {0}-თან",
+  "Enter the PIN shown on the TV.": "შეიყვანეთ ტელევიზორზე ნაჩვენები PIN-კოდი.",
+  "Pair": "დაწყვილება",
+  "Pairing failed: {0}": "დაწყვილება ვერ მოხერხდა: {0}"
 }

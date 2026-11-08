@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "ພົບ {0} ແຕ່ຕົວກັ່ນຕອງ ແລະ ການຕັ້ງຄ່າຂອງທ່ານໄດ້ເອົາທັງໝົດອອກ",
   "{0}: {1} s": "{0}: {1} ວິ",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ໂທລະທັດຍັງບໍ່ໄດ້ຂໍວິດີໂອຈາກ Lumtub. ຖ້າບໍ່ເລີ່ມ, ອາດມີໄຟວໍຢູ່ຄອມພິວເຕີເຄື່ອງນີ້ກຳລັງບລັອກ Lumtub; ກະລຸນາອະນຸຍາດມັນໃນເຄືອຂ່າຍນີ້.",
-  "Cast format": "ຮູບແບບການຄາສຕ໌"
+  "Cast format": "ຮູບແບບການຄາສຕ໌",
+  "Pair with {0}": "ຈັບຄູ່ກັບ {0}",
+  "Enter the PIN shown on the TV.": "ໃສ່ PIN ທີ່ສະແດງຢູ່ໜ້າທີວີ.",
+  "Pair": "ຈັບຄູ່",
+  "Pairing failed: {0}": "ຈັບຄູ່ບໍ່ສຳເລັດ: {0}"
 }

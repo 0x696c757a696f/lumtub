@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "Au fost găsite {0}, dar filtrele și setările tale le-au exclus pe toate",
   "{0}: {1} s": "{0}: {1} s",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Televizorul nu a cerut încă videoclipul de la Lumtub. Dacă nu pornește, un firewall de pe acest computer poate bloca Lumtub; permite-l în această rețea.",
-  "Cast format": "Formatul transmiterii"
+  "Cast format": "Formatul transmiterii",
+  "Pair with {0}": "Asociază cu {0}",
+  "Enter the PIN shown on the TV.": "Introdu codul PIN afișat pe televizor.",
+  "Pair": "Asociază",
+  "Pairing failed: {0}": "Asocierea a eșuat: {0}"
 }

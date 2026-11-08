@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "បានរកឃើញ {0} ប៉ុន្តែតម្រង និងការកំណត់របស់អ្នកបានដកចេញទាំងអស់",
   "{0}: {1} s": "{0}៖ {1} វិ",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ទូរទស្សន៍មិនទាន់បានស្នើសុំវីដេអូពី Lumtub នៅឡើយទេ។ ប្រសិនបើវាមិនចាប់ផ្តើម ជញ្ជាំងភ្លើងលើកុំព្យូទ័រនេះអាចកំពុងរារាំង Lumtub សូមអនុញ្ញាតវានៅលើបណ្តាញនេះ។",
-  "Cast format": "ទម្រង់បញ្ជូនអេក្រង់"
+  "Cast format": "ទម្រង់បញ្ជូនអេក្រង់",
+  "Pair with {0}": "ផ្គូផ្គងជាមួយ {0}",
+  "Enter the PIN shown on the TV.": "បញ្ចូលលេខ PIN ដែលបង្ហាញនៅលើទូរទស្សន៍។",
+  "Pair": "ផ្គូផ្គង",
+  "Pairing failed: {0}": "ការផ្គូផ្គងបរាជ័យ៖ {0}"
 }

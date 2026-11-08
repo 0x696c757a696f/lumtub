@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "Βρέθηκαν {0}, αλλά τα φίλτρα και οι ρυθμίσεις σας τα άφησαν όλα εκτός",
   "{0}: {1} s": "{0}: {1} δ",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Η τηλεόραση δεν έχει ζητήσει ακόμα το βίντεο από το Lumtub. Αν δεν ξεκινήσει, ίσως ένα τείχος προστασίας σε αυτόν τον υπολογιστή μπλοκάρει το Lumtub· επιτρέψτε το σε αυτό το δίκτυο.",
-  "Cast format": "Μορφή μετάδοσης"
+  "Cast format": "Μορφή μετάδοσης",
+  "Pair with {0}": "Αντιστοίχιση με {0}",
+  "Enter the PIN shown on the TV.": "Εισαγάγετε το PIN που εμφανίζεται στην τηλεόραση.",
+  "Pair": "Αντιστοίχιση",
+  "Pairing failed: {0}": "Η αντιστοίχιση απέτυχε: {0}"
 }

@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "Գտնվել է {0}, բայց ձեր զտիչներն ու կարգավորումները բոլորը բացառել են",
   "{0}: {1} s": "{0}․ {1} վ",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Հեռուստացույցը դեռ չի խնդրել տեսանյութը Lumtub-ից։ Եթե չսկսվի, հնարավոր է՝ այս համակարգչի firewall-ը արգելափակում է Lumtub-ը․ թույլատրեք այն այս ցանցում։",
-  "Cast format": "Հեռարձակման ձևաչափ"
+  "Cast format": "Հեռարձակման ձևաչափ",
+  "Pair with {0}": "Զուգակցել {0}-ի հետ",
+  "Enter the PIN shown on the TV.": "Մուտքագրեք հեռուստացույցի էկրանին ցուցադրված PIN-ը։",
+  "Pair": "Զուգակցել",
+  "Pairing failed: {0}": "Զուգակցումը ձախողվեց՝ {0}"
 }

@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "Atopáronse {0}, pero os teus filtros e axustes excluíronos todos",
   "{0}: {1} s": "{0}: {1} s",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "O televisor aínda non lle pediu o vídeo a Lumtub. Se non comeza, pode que un firewall deste ordenador estea bloqueando Lumtub; permítello nesta rede.",
-  "Cast format": "Formato da transmisión"
+  "Cast format": "Formato da transmisión",
+  "Pair with {0}": "Vincular con {0}",
+  "Enter the PIN shown on the TV.": "Introduce o PIN que aparece na televisión.",
+  "Pair": "Vincular",
+  "Pairing failed: {0}": "Produciuse un erro ao vincular: {0}"
 }

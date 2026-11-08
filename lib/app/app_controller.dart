@@ -51,6 +51,7 @@ import '../channel_playback.dart';
 import '../speech_subtitles.dart';
 import '../video_summary.dart';
 import '../watch_time.dart';
+import '../cast/airplay.dart';
 import '../cast/cast_device.dart';
 import '../cast/cast_stream.dart';
 import '../cast/dlna.dart';
@@ -398,6 +399,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The TV or Chromecast the video is cast to, if any.
   final cast = CastController();
 
+  /// The keys kept from pairing with AirPlay receivers.
+  final airPlayPairings = AirPlayPairings();
+
   /// What to cast of [playing] to [device]: the picture and sound streams
   /// joined by lumtub_core when YouTube has a better picture apart than
   /// together (up to 1080p), else one progressive mp4 with sound, from the
@@ -483,6 +487,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       'ts' || 'hls' when !split.fitsTransportStream => 'mp4',
       final String chosen => chosen,
       null when device.protocol == CastProtocol.dlna && split.fitsTransportStream => device is DlnaDevice && device.apple ? 'hls' : 'ts',
+      null when device.protocol == CastProtocol.airplay && split.fitsTransportStream => 'hls',
       null => 'mp4',
     };
     // HLS and MKV carry the lines inside the stream, timed from the start
@@ -566,7 +571,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       logInfo('Casting ${split.height}p${split.fps} ${split.codec} joined by lumtub_core from ${begins.inSeconds} s as ${const {'hls': 'HLS', 'ts': 'MPEG-TS', 'mkv': 'MKV'}[kind] ?? 'MP4'}${inside ? ' with ${subtitles.cues.length} subtitle lines inside' : ''}');
       // The device counts time from where this stream begins.
       CastSubtitles? lines;
-      if (subtitles.cues.isNotEmpty && !(inside && device.protocol == CastProtocol.dlna)) {
+      if (subtitles.cues.isNotEmpty && !(inside && device.protocol != CastProtocol.chromecast)) {
         try {
           lines = await CastSubtitleServer.instance.register(subtitles.cues, host: here, offset: begins, language: subtitles.language);
         } catch (e) {
@@ -1118,6 +1123,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       _useTranslator();
       _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), SecretProtector.forThisSystem());
       unawaited(_loadTranslationKeys());
+      airPlayPairings.file = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}airplay-pairings.bin'), SecretProtector.forThisSystem());
       logInfo('Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
       _update(() {

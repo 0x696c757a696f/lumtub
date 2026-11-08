@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "Nalezeno: {0}, ale vaše filtry a nastavení je všechny vyřadily",
   "{0}: {1} s": "{0}: {1} s",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Televize si od Lumtubu zatím video nevyžádala. Pokud se nespustí, může Lumtub blokovat firewall v tomto počítači; povolte ho v této síti.",
-  "Cast format": "Formát přenosu na obrazovku"
+  "Cast format": "Formát přenosu na obrazovku",
+  "Pair with {0}": "Spárovat s {0}",
+  "Enter the PIN shown on the TV.": "Zadejte PIN zobrazený na televizi.",
+  "Pair": "Spárovat",
+  "Pairing failed: {0}": "Párování se nezdařilo: {0}"
 }

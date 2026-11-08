@@ -33,7 +33,7 @@ class CastStatus {
   final Duration duration;
 }
 
-enum CastProtocol { dlna, chromecast }
+enum CastProtocol { dlna, chromecast, airplay }
 
 /// A device that plays an address it is handed, whichever protocol it speaks.
 /// Failures are thrown as [CastException] with a short message.

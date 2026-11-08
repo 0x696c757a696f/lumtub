@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} ditemukan, tetapi filter dan setelan Anda mengecualikan semuanya",
   "{0}: {1} s": "{0}: {1} dtk",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "TV belum meminta video dari Lumtub. Jika tidak mulai diputar, firewall di komputer ini mungkin memblokir Lumtub; izinkan Lumtub di jaringan ini.",
-  "Cast format": "Format cast"
+  "Cast format": "Format cast",
+  "Pair with {0}": "Pasangkan dengan {0}",
+  "Enter the PIN shown on the TV.": "Masukkan PIN yang ditampilkan di TV.",
+  "Pair": "Pasangkan",
+  "Pairing failed: {0}": "Gagal memasangkan: {0}"
 }

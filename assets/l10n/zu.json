@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} atholakele, kodwa izihlungi nezilungiselelo zakho ziwashiye wonke ngaphandle",
   "{0}: {1} s": "{0}: {1} s",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "I-TV ayikacelli ividiyo ku-Lumtub. Uma ingaqali, i-firewall kule khompyutha ingase ivimbe i-Lumtub; yivumele kule nethiwekhi.",
-  "Cast format": "Ifomethi yokudlulisela"
+  "Cast format": "Ifomethi yokudlulisela",
+  "Pair with {0}": "Bhanqa no-{0}",
+  "Enter the PIN shown on the TV.": "Faka i-PIN eboniswa kumabonakude.",
+  "Pair": "Bhanqa",
+  "Pairing failed: {0}": "Ukubhanqa kuhlulekile: {0}"
 }

@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "U gjetën {0}, por filtrat dhe cilësimet e tua i lanë të gjitha jashtë",
   "{0}: {1} s": "{0}: {1} s",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Televizori ende nuk e ka kërkuar videon nga Lumtub. Nëse nuk nis, ndoshta firewall-i në këtë kompjuter po e bllokon Lumtub; lejoje në këtë rrjet.",
-  "Cast format": "Formati i transmetimit"
+  "Cast format": "Formati i transmetimit",
+  "Pair with {0}": "Çifto me {0}",
+  "Enter the PIN shown on the TV.": "Fut PIN-in që shfaqet në televizor.",
+  "Pair": "Çifto",
+  "Pairing failed: {0}": "Çiftimi dështoi: {0}"
 }

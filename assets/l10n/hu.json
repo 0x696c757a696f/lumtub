@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} találat, de a szűrőid és beállításaid mindet kihagyták",
   "{0}: {1} s": "{0}: {1} mp",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "A tévé még nem kérte el a videót a Lumtubtól. Ha nem indul el, lehet, hogy a számítógép tűzfala blokkolja a Lumtubot; engedélyezd ezen a hálózaton.",
-  "Cast format": "Átküldés formátuma"
+  "Cast format": "Átküldés formátuma",
+  "Pair with {0}": "Párosítás ezzel: {0}",
+  "Enter the PIN shown on the TV.": "Adja meg a tévén megjelenő PIN-kódot.",
+  "Pair": "Párosítás",
+  "Pairing failed: {0}": "A párosítás sikertelen: {0}"
 }

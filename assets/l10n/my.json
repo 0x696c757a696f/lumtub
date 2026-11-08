@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} တွေ့ပါသည်၊ သို့သော် သင့်စစ်ထုတ်မှုများနှင့် ဆက်တင်များက အားလုံးကို ချန်လှပ်ထားသည်",
   "{0}: {1} s": "{0}: {1} စက္ကန့်",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "တီဗီက Lumtub ထံမှ ဗီဒီယိုကို မတောင်းသေးပါ။ မစတင်ပါက ဤကွန်ပျူတာရှိ ဖိုင်ယာဝေါလ်က Lumtub ကို ပိတ်ဆို့နေနိုင်ပါသည်။ ဤကွန်ရက်တွင် ခွင့်ပြုပေးပါ။",
-  "Cast format": "ကာစ်လုပ်သည့် ဖော်မက်"
+  "Cast format": "ကာစ်လုပ်သည့် ဖော်မက်",
+  "Pair with {0}": "{0} နှင့် တွဲချိတ်ရန်",
+  "Enter the PIN shown on the TV.": "ရုပ်သံဖန်သားပြင်ပေါ်တွင် ပြထားသော PIN ကို ထည့်ပါ။",
+  "Pair": "တွဲချိတ်ရန်",
+  "Pairing failed: {0}": "တွဲချိတ်၍ မရပါ- {0}"
 }

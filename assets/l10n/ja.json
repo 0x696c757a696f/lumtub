@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} 件見つかりましたが、フィルターと設定によりすべて除外されました",
   "{0}: {1} s": "{0}: {1} 秒",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "テレビがまだ Lumtub に動画を要求していません。再生が始まらない場合は、このコンピューターのファイアウォールが Lumtub をブロックしている可能性があります。このネットワークで Lumtub を許可してください。",
-  "Cast format": "キャスト形式"
+  "Cast format": "キャスト形式",
+  "Pair with {0}": "{0} とペアリング",
+  "Enter the PIN shown on the TV.": "テレビに表示されているPINを入力してください。",
+  "Pair": "ペアリング",
+  "Pairing failed: {0}": "ペアリングに失敗しました：{0}"
 }

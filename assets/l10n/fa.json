@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} یافت شد، اما فیلترها و تنظیمات شما همه را کنار گذاشتند",
   "{0}: {1} s": "{0}: {1} ثانیه",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "تلویزیون هنوز ویدیو را از Lumtub درخواست نکرده است. اگر پخش شروع نشد، شاید دیوار آتش این رایانه جلوی Lumtub را گرفته باشد؛ به آن در این شبکه اجازه دهید.",
-  "Cast format": "قالب ارسال به صفحه"
+  "Cast format": "قالب ارسال به صفحه",
+  "Pair with {0}": "جفت‌سازی با {0}",
+  "Enter the PIN shown on the TV.": "پین نمایش‌داده‌شده روی تلویزیون را وارد کنید.",
+  "Pair": "جفت‌سازی",
+  "Pairing failed: {0}": "جفت‌سازی ناموفق بود: {0}"
 }

@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "Nakahanap ng {0}, pero inalis silang lahat ng iyong mga filter at setting",
   "{0}: {1} s": "{0}: {1} s",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "Hindi pa humihingi ng video ang TV sa Lumtub. Kung hindi ito magsimula, maaaring hinaharang ng firewall sa computer na ito ang Lumtub; payagan ito sa network na ito.",
-  "Cast format": "Format ng cast"
+  "Cast format": "Format ng cast",
+  "Pair with {0}": "I-pair sa {0}",
+  "Enter the PIN shown on the TV.": "Ilagay ang PIN na ipinapakita sa TV.",
+  "Pair": "I-pair",
+  "Pairing failed: {0}": "Hindi nagtagumpay ang pag-pair: {0}"
 }

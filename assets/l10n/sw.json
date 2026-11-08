@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} zimepatikana, lakini vichujio na mipangilio yako ziliziacha zote nje",
   "{0}: {1} s": "{0}: sekunde {1}",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "TV bado haijaomba video kutoka Lumtub. Isipoanza, huenda ngome kwenye kompyuta hii inazuia Lumtub; iruhusu kwenye mtandao huu.",
-  "Cast format": "Muundo wa kutuma kwenye skrini"
+  "Cast format": "Muundo wa kutuma kwenye skrini",
+  "Pair with {0}": "Oanisha na {0}",
+  "Enter the PIN shown on the TV.": "Weka PIN inayoonyeshwa kwenye TV.",
+  "Pair": "Oanisha",
+  "Pairing failed: {0}": "Kuoanisha kumeshindwa: {0}"
 }

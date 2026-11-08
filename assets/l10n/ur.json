@@ -2991,5 +2991,9 @@
   "{0} were found, and your filters and settings left all of them out": "{0} ملے، لیکن آپ کے فلٹرز اور سیٹنگز نے سب کو خارج کر دیا",
   "{0}: {1} s": "{0}: {1} سیکنڈ",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "ٹی وی نے ابھی تک Lumtub سے ویڈیو نہیں مانگی۔ اگر شروع نہ ہو تو ممکن ہے اس کمپیوٹر کا فائر وال Lumtub کو روک رہا ہو؛ اسے اس نیٹ ورک پر اجازت دیں۔",
-  "Cast format": "کاسٹ فارمیٹ"
+  "Cast format": "کاسٹ فارمیٹ",
+  "Pair with {0}": "{0} کے ساتھ جوڑیں",
+  "Enter the PIN shown on the TV.": "ٹی وی پر دکھایا گیا PIN درج کریں۔",
+  "Pair": "جوڑیں",
+  "Pairing failed: {0}": "جوڑنا ناکام رہا: {0}"
 }

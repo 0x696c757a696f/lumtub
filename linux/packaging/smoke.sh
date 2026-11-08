@@ -34,5 +34,11 @@ code=$?
 cp -r "$out/home/.local/share/lumtub/logs" "$out/logs" 2> /dev/null || true
 rm -rf "$out/home"
 cat "$out/result.json" 2> /dev/null || echo "No result written."
+if [[ $code -ne 0 ]]; then
+  echo "--- end of the app's output"
+  tail -n 40 "$out/stdout.txt" 2> /dev/null
+  echo "--- end of its log"
+  tail -n 60 "$out"/logs/*.log 2> /dev/null
+fi
 echo "Exit code $code"
 exit "$code"

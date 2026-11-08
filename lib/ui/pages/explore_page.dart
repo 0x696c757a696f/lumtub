@@ -154,7 +154,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       onLongPress: faith.custom ? () => _removeTopic(context, section, faith) : null,
                       onSecondaryTap: faith.custom ? () => _removeTopic(context, section, faith) : null,
                       child: ChoiceChip(
-                        avatar: Icon(faith.icon, size: 18),
+                        avatar: Icon(faith.icon, size: 18, color: chipForeground(context, i == controller.exploreTopic)),
                         label: Text(faith.label),
                         showCheckmark: false,
                         selected: i == controller.exploreTopic,

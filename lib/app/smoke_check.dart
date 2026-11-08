@@ -30,6 +30,7 @@ extension SmokeCheck on AppController {
     }
 
     try {
+      await _seedShowcase();
       for (final dark in [false, true]) {
         await saveAppearance(appearance.copyWith(themeMode: dark ? ThemeMode.dark : ThemeMode.light));
         final theme = dark ? 'dark' : 'light';
@@ -49,6 +50,20 @@ extension SmokeCheck on AppController {
       if (Platform.environment['LUMTUB_TOUR'] == '1') {
         await _tour(folder);
       }
+      final start = appearance;
+      for (final language in ['', 'zh-Hans']) {
+        if (language.isNotEmpty) {
+          setLanguage(AppLanguage(language));
+          _update(() {});
+        }
+        try {
+          await _featureShots(shot, language.isEmpty ? '' : '-$language');
+        } catch (e) {
+          logError('Feature pictures failed', e);
+        }
+      }
+      setLanguage(start.language);
+      _update(() {});
       final player = this.player;
       if (player != null) {
         unawaited(play(VideoItem(id: 'aqz-KE-bpKQ', title: 'Big Buck Bunny', channel: 'Blender', url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ')));
@@ -66,6 +81,106 @@ extension SmokeCheck on AppController {
       await shutdown(install: false).timeout(const Duration(seconds: 20));
     } catch (_) {}
     exit(0);
+  }
+
+  /// Channels followed and videos watched before the pictures, so 为你推荐
+  /// has something to go on and its cards say why they are there.
+  static const _showcaseChannels = [
+    ChannelRef('UCsXVk37bltHxD1rDPwtNM8Q', 'Kurzgesagt – In a Nutshell'),
+    ChannelRef('UCSMOQeBJ2RAnuFungnQOxLg', 'Blender'),
+    ChannelRef('UCYO_jab_esuFRV4b17AJtAw', '3Blue1Brown'),
+    ChannelRef('UCLA_DiR1FfKNvjuUpBHmylQ', 'NASA'),
+  ];
+
+  Future<void> _seedShowcase() async {
+    final library = this.library;
+    if (library == null) return;
+    library.followAll(_showcaseChannels);
+    for (final channel in _showcaseChannels) {
+      try {
+        final uploads = await library.uploadsOf(channel).timeout(const Duration(seconds: 30));
+        for (final item in uploads.where((v) => !v.isLive && !v.isUpcoming && (v.duration ?? 0) > 120).take(2).toList().reversed) {
+          await _history?.record(item);
+        }
+      } catch (e) {
+        logWarn('Showcase could not read ${channel.name}: $e');
+      }
+    }
+    logInfo('Showcase history: ${history.length} videos');
+    await refreshHomeFeed(force: true);
+  }
+
+  Future<String> _mpvText(String name) async {
+    final native = player?.platform;
+    if (native is! NativePlayer) return '';
+    try {
+      return await native.getProperty(name);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  Future<void> _waitFor(bool Function() done, Duration limit) async {
+    final clock = Stopwatch()..start();
+    while (!done() && clock.elapsed < limit) {
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    }
+  }
+
+  /// Pictures of what sets Lumtub apart, named with [suffix] for the
+  /// interface language: 为你推荐 with its reasons, a video with two
+  /// subtitles, a live stream with 弹幕, and 探索 by spoken language.
+  Future<void> _featureShots(Future<void> Function(String name, {Duration settle}) shot, String suffix) async {
+    final player = this.player;
+    final settingsBefore = settings;
+    final danmakuBefore = preferences.danmaku;
+    await saveAppearance(appearance.copyWith(themeMode: ThemeMode.dark));
+    await refreshHomeFeed(force: true);
+    navigate(PageMode.home);
+    await shot('home-reasons$suffix', settle: const Duration(seconds: 30));
+
+    setExplore(language: suffix.isEmpty ? ExploreLanguage.it : ExploreLanguage.ja);
+    clearSearch();
+    navigate(PageMode.explore);
+    await shot('explore-language$suffix');
+    setExplore(language: ExploreLanguage.any);
+    if (player == null) return;
+
+    // A video with English captions, with a translation under them: Chinese
+    // under English for the English interface, and English under Chinese
+    // for the Chinese one.
+    final library = this.library;
+    final uploads = library == null ? const <VideoItem>[] : await library.uploadsOf(_showcaseChannels.first).timeout(const Duration(seconds: 30), onTimeout: () => const []);
+    final video = uploads.where((v) => !v.isLive && !v.isUpcoming && (v.duration ?? 0) > 240).firstOrNull;
+    if (video != null) {
+      await setDanmaku(danmakuBefore.copyWith(enabled: false));
+      await saveSettings(settingsBefore.copyWith(
+        subtitleMode: SubtitleMode.always,
+        secondarySubtitleLanguage: suffix.isEmpty ? 'zh-CN' : PlayerSettings.originalSubtitle,
+      ));
+      unawaited(play(video));
+      await _waitFor(() => player.state.position >= const Duration(seconds: 3), const Duration(seconds: 120));
+      await player.seek(Duration(seconds: (video.duration! * 0.3).round()));
+      var both = false;
+      final clock = Stopwatch()..start();
+      while (!both && clock.elapsed < const Duration(seconds: 60)) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        both = (await _mpvText('sub-text')).trim().isNotEmpty && (await _mpvText('secondary-sub-text')).trim().isNotEmpty;
+      }
+      logInfo('Showcase subtitles of ${video.id}: ${both ? 'both shown' : 'not both'}');
+      await shot('watch-subtitles$suffix', settle: const Duration(milliseconds: 300));
+      await player.stop();
+    }
+
+    // A live stream whose chat flies across the picture.
+    await saveSettings(settingsBefore.copyWith(subtitleMode: SubtitleMode.off));
+    await setDanmaku(danmakuBefore.copyWith(enabled: true));
+    unawaited(play(VideoItem(id: 'jfKfPfyJRdk', title: 'lofi hip hop radio', channel: 'Lofi Girl', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', liveStatus: 'is_live')));
+    await _waitFor(() => player.state.position >= const Duration(seconds: 3), const Duration(seconds: 120));
+    await shot('danmaku$suffix', settle: const Duration(seconds: 40));
+    await player.stop();
+    await setDanmaku(danmakuBefore);
+    await saveSettings(settingsBefore);
   }
 
   /// A recorded walk through the app's pages for the promo video; no video

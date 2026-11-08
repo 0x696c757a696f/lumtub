@@ -3,9 +3,10 @@
 
     promo.py <folder> <kokoro model> <kokoro voices>
 
-The folder holds tour.mp4 and scenes.txt from linux/packaging/showcase.sh,
-and tour-zh-Hans.mp4 and scenes-zh-Hans.txt recorded in Chinese.
-The cut has animated titles over the recording, a narration read by Kokoro
+The folder holds what linux/packaging/showcase.sh made: the pictures of
+the features (watch-subtitles, danmaku, home-reasons, each also with
+-zh-Hans for the Chinese interface), and tour.mp4 with scenes.txt.
+The cut has animated titles over them, a narration read by Kokoro
 (Apache-2.0), and music and sound effects synthesised here, so nothing in
 the video comes from elsewhere.
 """
@@ -31,42 +32,29 @@ URL = 'github.com/0x696c757a696f/lumtub'
 STORY = {
     'en': {
         'voice': 'af_heart',
-        'hook': (['Watching YouTube in a browser?', 'Screaming fans.', 'Endless ads.', 'A feed that knows too much.'],
-                 'YouTube in a browser', ['Screaming fans', 'Endless ads', 'A feed that knows too much']),
-        'brand': (["There's a better way.", 'Lumtub. The YouTube app your desktop deserves.'], 'The YouTube app your desktop deserves'),
-        'home': ('Your recommendations are worked out on your own computer, and every card tells you why.',
-                 'A feed that answers to you', ['Worked out on your PC', 'Every card says why']),
-        'explore': ('Explore by topic, by region, even by the language people actually speak.',
-                    'Find what is really worth it', ['Topics', 'Regions', 'Spoken language']),
-        'palettes': ('Ten restrained palettes, light or dark, and a warm light for late nights.',
-                     'Make it yours', ['10 palettes', 'Warm light']),
-        'languages': ('Seventy-two interface languages, right to left scripts included.',
-                      'Speaks 72 languages', ['72 languages', 'Right to left']),
-        'features': ('Sponsor skipping, dual subtitles, danmaku, downloads and background play. All built in.',
-                     'All built in', ['Skip sponsors', 'Dual subtitles', 'Danmaku', 'Downloads', 'Background play', 'Hide Shorts']),
-        'outro': (['Free. Open source. No ads.', 'Get Lumtub today.'], 'Free · Open source · No ads', 'Download free'),
+        'brand': (['Lumtub.', 'YouTube, made for your desktop.'], 'YouTube, made for your desktop'),
+        'subtitles': ('Two subtitles at once, in any two languages.', 'Bilingual subtitles', ['Any two languages', 'Translated as it plays']),
+        'danmaku': ('Live chat flies across the picture, as danmaku.', 'Danmaku', ['Live chat', 'Chat replay']),
+        'home': ('Recommendations are worked out on your own computer, and every card says why.',
+                 'A feed that explains itself', ['Worked out on your PC', 'Every card says why']),
+        'palettes': ('Ten palettes, and seventy-two languages.', 'Make it yours', ['10 palettes', '72 languages']),
+        'outro': (['Free. Open source. No ads.'], 'Free · Open source · No ads', 'Download free'),
     },
     'zh': {
         'voice': 'zf_xiaoxiao',
-        'hook': (['在浏览器里看 YouTube？', '风扇狂转，', '广告打断，', '推荐越看越歪。'],
-                 '在浏览器里看 YouTube', ['风扇狂转', '广告打断', '推荐越看越歪']),
-        'brand': (['是时候换个方式了。', 'Lumtub，桌面上本该有的 YouTube 客户端。'], '桌面上本该有的 YouTube 客户端'),
-        'home': ('为你推荐只在你自己的电脑上计算，每张卡片都告诉你为什么。',
-                 '推荐只在本机计算', ['不上传观看记录', '每张卡片说明原因']),
-        'explore': ('按分区、按地区，甚至按视频里真正说的语言，发现好内容。',
-                    '按真实语言发现好内容', ['分区', '地区', '真实语种']),
-        'palettes': ('十套克制的配色，浅色深色随心切换，深夜还有护眼暖光。',
-                     '换成你喜欢的样子', ['10 套配色', '护眼暖光']),
-        'languages': ('七十二种界面语言，从右到左的文字也排得整整齐齐。',
-                      '72 种界面语言', ['72 种语言', '从右到左']),
-        'features': ('跳过赞助、双语字幕、弹幕、下载、后台播放，全都内置。',
-                     '全都内置', ['跳过赞助片段', '双语字幕', '弹幕', '原画下载', '后台播放', '隐藏 Shorts']),
-        'outro': (['免费、开源、没有广告。', '现在就下载 Lumtub。'], '免费 · 开源 · 无广告', '免费下载'),
+        'brand': (['Lumtub，', '为桌面打造的 YouTube 客户端。'], '为桌面打造的 YouTube 客户端'),
+        'subtitles': ('双语字幕，任选两种语言同时显示。', '双语字幕', ['任选两种语言', '边播边翻译']),
+        'danmaku': ('直播聊天变成弹幕，从画面上飞过。', '弹幕', ['直播聊天', '聊天回放']),
+        'home': ('推荐只在你自己的电脑上计算，每张卡片都说明原因。', '会解释自己的推荐', ['只在本机计算', '每张卡片说明原因']),
+        'palettes': ('十套配色，七十二种界面语言。', '换成你喜欢的样子', ['10 套配色', '72 种语言']),
+        'outro': (['免费、开源、没有广告。'], '免费 · 开源 · 无广告', '免费下载'),
     },
 }
 
-# Recorded scenes, with the playback speed each is shown at.
-SCREENS = [('home', 1.0), ('explore', 1.0), ('palettes', 2.2), ('languages', 3.0)]
+# What each scene shows: a picture the showcase took (named for the
+# interface language, else the English one), or a stretch of the recorded
+# tour at a playback speed.
+SCREENS = [('subtitles', 'watch-subtitles'), ('danmaku', 'danmaku'), ('home', 'home-reasons'), ('palettes', 2.5)]
 
 
 def ease_out(x):
@@ -229,34 +217,53 @@ class Voice:
         return np.concatenate(parts), cues
 
 
-def build(story, voice, scenes, lang):
+def build(story, voice, scenes, lang, folder):
     v = story['voice']
     segments = []
-    lines, header, items = story['hook']
-    audio, cues = voice.lines(lang, v, lines, gap=0.22)
-    segments.append(Segment('hook', len(audio) / RATE + 0.9, audio, cues, {'header': header, 'items': items}))
     lines, tagline = story['brand']
-    audio, cues = voice.lines(lang, v, lines, gap=0.35)
-    segments.append(Segment('brand', len(audio) / RATE + 0.8, audio, cues, {'tagline': tagline}))
-    for name, speed in SCREENS:
-        if name not in scenes:
-            continue
+    audio, cues = voice.lines(lang, v, lines, gap=0.3)
+    segments.append(Segment('brand', len(audio) / RATE + 0.6, audio, cues, {'tagline': tagline}))
+    for name, source in SCREENS:
         said, title, chips = story[name]
+        data = {'name': name, 'title': title, 'chips': chips}
+        if isinstance(source, str):
+            still = picture(folder, source, lang)
+            if still is None:
+                continue
+            data['still'] = still
+        else:
+            if name not in scenes:
+                continue
+            start, end = scenes[name]
+            data.update({'from': start + 0.3, 'to': end, 'speed': source})
         audio = voice.say(lang, v, said)
-        start, end = scenes[name]
-        segments.append(Segment('screen', max(len(audio) / RATE + 0.9, 4.0), audio, [0.0],
-                                {'name': name, 'title': title, 'chips': chips, 'from': start + 0.3, 'to': end, 'speed': speed}))
-    said, title, tiles = story['features']
-    audio = voice.say(lang, v, said)
-    segments.append(Segment('features', len(audio) / RATE + 1.0, audio, [0.0], {'title': title, 'tiles': tiles}))
+        segments.append(Segment('screen', max(len(audio) / RATE + 0.6, 3.0), audio, [0.0], data))
     lines, title, button = story['outro']
-    audio, cues = voice.lines(lang, v, lines, gap=0.35)
-    segments.append(Segment('outro', len(audio) / RATE + 2.6, audio, cues, {'title': title, 'button': button}))
+    audio, cues = voice.lines(lang, v, lines, gap=0.3)
+    segments.append(Segment('outro', len(audio) / RATE + 2.4, audio, cues, {'title': title, 'button': button}))
     at = 0.0
     for s in segments:
         s.start = at
         at += s.duration - OVERLAP
     return segments, at + OVERLAP
+
+
+def picture(folder, name, lang):
+    """The showcase's picture [name] in [lang]'s interface, else in English."""
+    for file in ([f'{name}-zh-Hans.png'] if lang == 'zh' else []) + [f'{name}.png']:
+        path = os.path.join(folder, file)
+        if os.path.exists(path):
+            img = Image.open(path).convert('RGB')
+            # Cut to 16:9 around the middle, as the tour's frames are.
+            w, h = img.size
+            if w * 9 > h * 16:
+                cut = (w - h * 16 // 9) // 2
+                img = img.crop((cut, 0, w - cut, h))
+            else:
+                cut = (h - w * 9 // 16) // 2
+                img = img.crop((0, cut, w, h - cut))
+            return img.resize((1600, 900), Image.LANCZOS)
+    return None
 
 
 class Painter:
@@ -305,24 +312,6 @@ class Painter:
         img.alpha_composite(dot, (12, 26))
         return img
 
-    def hook(self, img, seg, t):
-        header = self.text(seg.data['header'], 64, (200, 200, 210))
-        place(img, header, W / 2, 290, alpha=ease_out(t / 0.5), center=True)
-        for i, item in enumerate(seg.data['items']):
-            cue = seg.cues[i + 1] if i + 1 < len(seg.cues) else seg.cues[-1]
-            p = (t - cue) / 0.35
-            if p <= 0:
-                continue
-            y = 480 + i * 170
-            struck = ease_out((t - cue - 0.55) / 0.3)
-            color = tuple(int(255 - (255 - c) * struck) for c in (150, 150, 160))
-            big = self.text(item, 120, color if struck >= 1 else (255, 255, 255))
-            place(img, big, W / 2, y, alpha=min(1, p * 2), scale=0.6 + 0.4 * ease_back(p), center=True)
-            if struck > 0:
-                d = ImageDraw.Draw(img)
-                x0 = W / 2 - big.width / 2 - 20
-                d.line((x0, y + 38, x0 + (big.width + 40) * struck, y + 38), fill=RED + (255,), width=14)
-
     def brand(self, img, seg, t):
         p = ease_back((t - 0.15) / 0.55)
         size = 240
@@ -339,12 +328,15 @@ class Painter:
     def screen(self, img, seg, t):
         d = seg.data
         name = d['name']
-        if name not in self.clips:
-            self.clips[name] = Clip(self.tour, d['from'], d['to'], d['speed'], (1600, 900))
-        frame = self.clips[name].at(t)
+        if 'still' in d:
+            frame = d['still']
+        else:
+            if name not in self.clips:
+                self.clips[name] = Clip(self.tour, d['from'], d['to'], d['speed'], (1600, 900))
+            frame = self.clips[name].at(t)
         zoom = 1.0 + 0.08 * (t / seg.duration)
         cw, ch = 1600 / zoom, 900 / zoom
-        fx, fy = {'languages': (0.3, 0.3)}.get(name, (0.5, 0.35))
+        fx, fy = {'subtitles': (0.5, 0.85), 'danmaku': (0.5, 0.15)}.get(name, (0.5, 0.35))
         x0, y0 = (1600 - cw) * fx, (900 - ch) * fy
         shot = frame.crop((int(x0), int(y0), int(x0 + cw), int(y0 + ch))).resize(self.window, Image.BILINEAR).convert('RGBA')
         shot.putalpha(self.mask)
@@ -359,30 +351,6 @@ class Painter:
                 continue
             chip = self.chip(label)
             place(img, chip, W - 250 - chip.width, 860 - (len(d['chips']) - 1 - i) * 84, alpha=min(1, p * 2), scale=0.7 + 0.3 * ease_back(p))
-
-    def features(self, img, seg, t):
-        self.headline(img, seg.data['title'], t, y=120)
-        tiles = seg.data['tiles']
-        spread = max(0.3, (seg.duration - 1.6) / len(tiles))
-        for i, label in enumerate(tiles):
-            p = (t - 0.4 - i * spread) / 0.35
-            if p <= 0:
-                continue
-            col, row = i % 3, i // 3
-            tile = self.image(('tile', label), lambda label=label: self._tile(label))
-            cx, cy = 420 + col * 540, 470 + row * 280
-            place(img, tile, cx, cy, alpha=min(1, p * 2), scale=0.6 + 0.4 * ease_back(p), center=True)
-
-    def _tile(self, label):
-        img = rounded((480, 220), 26, (34, 34, 42, 255))
-        accent = rounded((60, 8), 4, RED + (255,))
-        img.alpha_composite(accent, (40, 44))
-        size = 54
-        while text_image(label, size).width > 480 - 72 and size > 30:
-            size -= 2
-        txt = text_image(label, size)
-        img.alpha_composite(txt, (36, 220 - txt.height - 40))
-        return img
 
     def outro(self, img, seg, t):
         p = ease_back((t - 0.1) / 0.5)
@@ -593,17 +561,9 @@ def mix(segments, total):
     add(fx, drop - 1.4, np.stack([riser(rng, 1.4)] * 2), 0.8)
     add(fx, drop, np.stack([impact(rng)] * 2), 0.7)
     for s in segments:
-        if s.kind == 'hook':
-            for c in s.cues[1:]:
-                add(fx, s.start + c, np.stack([pop(420)] * 2), 0.5)
-                add(fx, s.start + c + 0.55, np.stack([whoosh(rng, 0.25)] * 2), 0.25)
-        elif s.kind == 'screen':
+        if s.kind == 'screen':
             for i in range(len(s.data['chips'])):
                 add(fx, s.start + 0.9 + i * 0.45, np.stack([pop(660 + 80 * i)] * 2), 0.3)
-        elif s.kind == 'features':
-            spread = max(0.3, (s.duration - 1.6) / len(s.data['tiles']))
-            for i in range(len(s.data['tiles'])):
-                add(fx, s.start + 0.4 + i * spread, np.stack([pop(500 + 60 * i)] * 2), 0.35)
         elif s.kind == 'outro':
             add(fx, s.start + 0.1, np.stack([pop(380)] * 2), 0.4)
             cue = s.cues[-1] if len(s.cues) > 1 else 1.4
@@ -649,12 +609,12 @@ def gif(folder, scenes):
 
 def main():
     folder, model, voices = sys.argv[1:4]
-    langs = sys.argv[4].split(',') if len(sys.argv) > 4 else ['en']
+    langs = sys.argv[4].split(',') if len(sys.argv) > 4 else ['en', 'zh']
     voice = Voice(model, voices)
     for lang in langs:
         tour, scenes = recording(folder, lang)
         scenes = read_scenes(scenes)
-        segments, total = build(STORY[lang], voice, scenes, lang)
+        segments, total = build(STORY[lang], voice, scenes, lang, folder)
         audio = os.path.join(folder, f'promo-{lang}.wav')
         write_wav(audio, mix(segments, total))
         render(segments, total, tour, os.path.join(folder, f'promo-{lang}.mp4'), audio)

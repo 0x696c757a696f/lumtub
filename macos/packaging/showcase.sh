@@ -29,7 +29,7 @@ swiftc -O -o "$work/window" "$work/window.swift"
 rm -rf "$HOME/Library/Application Support/Lumtub"
 LUMTUB_SHOWCASE="$out" "$work/Lumtub.app/Contents/MacOS/Lumtub" > "$out/stdout.txt" 2>&1 &
 app=$!
-end=$((SECONDS + 900))
+end=$((SECONDS + 1500))
 while kill -0 "$app" 2> /dev/null && [ "$SECONDS" -lt "$end" ]; do
   for want in "$out"/want-*; do
     [ -e "$want" ] || continue

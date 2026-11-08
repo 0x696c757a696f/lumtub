@@ -13,7 +13,7 @@ out=$(cd "$out" && pwd)
 cat > "$out/run.sh" <<'RUN'
 #!/usr/bin/env bash
 out=$1 appimage=$2
-HOME="$out/home" LANG=en_US.UTF-8 APPIMAGE_EXTRACT_AND_RUN=1 LUMTUB_SHOWCASE="$out" LUMTUB_TOUR=1 timeout 1200 "$appimage" > "$out/stdout.txt" 2>&1 &
+HOME="$out/home" LANG=en_US.UTF-8 APPIMAGE_EXTRACT_AND_RUN=1 LUMTUB_SHOWCASE="$out" LUMTUB_TOUR=1 timeout 1800 "$appimage" > "$out/stdout.txt" 2>&1 &
 app=$!
 recorder=
 while kill -0 "$app" 2> /dev/null; do

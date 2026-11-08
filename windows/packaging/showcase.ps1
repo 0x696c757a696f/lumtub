@@ -23,7 +23,7 @@ public static class ShowcaseWindow {
 $env:LUMTUB_SHOWCASE = $Out
 $app = Start-Process -FilePath $Exe -PassThru -RedirectStandardOutput (Join-Path $Out 'stdout.txt') -RedirectStandardError (Join-Path $Out 'stderr.txt')
 $clock = [Diagnostics.Stopwatch]::StartNew()
-while (-not $app.HasExited -and $clock.Elapsed.TotalSeconds -lt 900) {
+while (-not $app.HasExited -and $clock.Elapsed.TotalSeconds -lt 1500) {
   foreach ($want in Get-ChildItem -Path $Out -Filter 'want-*' -File -ErrorAction SilentlyContinue) {
     $name = $want.Name.Substring(5)
     $app.Refresh()

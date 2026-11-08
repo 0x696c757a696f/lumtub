@@ -2,6 +2,8 @@
 
 Each list is one file, `<category>/<id>.txt`. `lumtub-lists check lists` reads them all as the app will; CI runs it on every pull request and prints what changed. A removed record's key goes in `retired.txt` and is never used again.
 
+Anyone can suggest a channel: open a pull request that edits these files, or an issue with the "Block list entry" form. Every entry needs a public source.
+
 ## Categories
 
 | tier | categories | new install |

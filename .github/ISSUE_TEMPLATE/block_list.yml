@@ -1,0 +1,34 @@
+name: Block list entry / 屏蔽列表条目
+description: Suggest a channel to add to a block list, or one listed by mistake / 建议加入屏蔽列表的频道，或被误列的频道
+labels: [block-list]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Add or remove / 添加还是移除
+      options:
+        - Add / 添加
+        - Remove (listed by mistake) / 移除（误列）
+    validations:
+      required: true
+  - type: input
+    id: list
+    attributes:
+      label: List / 列表
+      description: Which list it belongs in, such as "Russian state media", or a new one. The lists are in the lists folder of the repository. / 属于哪个列表，比如“俄罗斯官方媒体”，或者新建一个。列表都在仓库的 lists 文件夹里。
+    validations:
+      required: true
+  - type: textarea
+    id: channel
+    attributes:
+      label: Channel / 频道
+      description: The channel's link, @handle or name, one per line. / 频道链接、@handle 或名字，一行一个。
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source / 来源
+      description: A public source showing who runs the channel, such as Wikipedia, a news report, a regulator or court. Entries without a source are not added. / 能说明这个频道归谁运营的公开来源，比如维基百科、新闻报道、监管机构或法院。没有来源的条目不会加入。
+    validations:
+      required: true

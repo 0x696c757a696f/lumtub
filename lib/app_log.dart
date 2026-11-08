@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'l10n/l10n.dart';
+
 /// The app version, set by the release build with `--dart-define`.
 const appVersion = String.fromEnvironment('LUMTUB_VERSION', defaultValue: '开发版');
 
@@ -74,7 +76,7 @@ class AppLog {
   /// for errors, without blocking the caller.
   void write(LogLevel level, String message) {
     if (level.index > AppLog.level.index) return;
-    _pending.write('${DateTime.now().toIso8601String()} ${level.tag} ${redact(message)}\n');
+    _pending.write('${DateTime.now().toIso8601String()} ${level.tag} ${redact(inEnglish(message))}\n');
     if (level == LogLevel.error) {
       unawaited(flush());
     } else {

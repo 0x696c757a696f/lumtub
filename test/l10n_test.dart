@@ -96,6 +96,14 @@ void main() {
     expect(tr('Hidden gems'), 'Hidden gems', reason: 'a language without the string falls back to English');
   });
 
+  test('translated text that ends up in a log line is written in English', () {
+    setLanguage(AppLanguage.zhHans);
+    final error = StateError(tr('YouTube returned {0}', [403]));
+    final label = ExploreMode.gems.label;
+    expect(inEnglish('Comments failed: $error; mode $label'), 'Comments failed: Bad state: YouTube returned 403; mode Hidden gems');
+    expect(inEnglish('Search "成都旅行"'), 'Search "成都旅行"', reason: 'what YouTube or the user wrote stays as it is');
+  });
+
   test('traditional Chinese falls back to simplified Chinese, other languages to English', () {
     final simplified = translations['zh-Hans']!;
     final saved = {for (final tag in ['zh-Hant', 'zh-HK', 'de']) tag: translations[tag]!};

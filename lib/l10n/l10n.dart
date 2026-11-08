@@ -136,7 +136,34 @@ String get youtubeAcceptLanguage => switch (_current.tag) {
 
 /// [text] in the current language, with `{0}`, `{1}`… replaced by [args].
 /// Text with no translation stays as written, in English.
-String tr(String text, [List<Object?> args = const []]) => _fill(_strings[text] ?? text, args);
+String tr(String text, [List<Object?> args = const []]) {
+  final translated = _strings[text];
+  if (translated == null) return _fill(text, args);
+  final shown = _fill(translated, args);
+  if (shown.length > 1 && shown != text && !_ascii.hasMatch(shown)) {
+    _english.remove(shown);
+    _english[shown] = _fill(text, args);
+    if (_english.length > _englishKept) _english.remove(_english.keys.first);
+  }
+  return shown;
+}
+
+/// Translated texts [tr] gave lately, each with its English, so that the
+/// log stays in English when one of them ends up in a message.
+final _english = <String, String>{};
+const _englishKept = 500;
+final _ascii = RegExp(r'^[\x00-\x7F]*$');
+
+/// [message] with the translations [tr] gave in it put back in English.
+String inEnglish(String message) {
+  if (_english.isEmpty || _ascii.hasMatch(message)) return message;
+  final found = [for (final shown in _english.keys) if (message.contains(shown)) shown]..sort((a, b) => b.length.compareTo(a.length));
+  var out = message;
+  for (final shown in found) {
+    out = out.replaceAll(shown, _english[shown]!);
+  }
+  return out;
+}
 
 /// [text] in English whatever the interface language, for the log.
 String trLog(String text, [List<Object?> args = const []]) => _fill(text, args);

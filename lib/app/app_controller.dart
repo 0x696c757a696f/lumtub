@@ -85,6 +85,7 @@ import '../subtitle_files.dart';
 import '../subtitle_cues.dart';
 import '../subtitle_translation.dart';
 import '../danmaku.dart';
+import '../comment_danmaku.dart';
 import '../language_guess.dart' show looksLike;
 import '../translation.dart';
 import '../translation_cache.dart';
@@ -1470,6 +1471,9 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   DanmakuOverlay? _danmaku;
   String? _danmakuFor;
+  /// The timed comments flown on a video without a chat, and its id.
+  List<LiveChatMessage> _commentDanmaku = const [];
+  String? _commentDanmakuFor;
 
   static String _clock(Duration d) {
     final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');

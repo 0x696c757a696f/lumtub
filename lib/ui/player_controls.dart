@@ -792,11 +792,11 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     );
   }
 
-  /// 弹幕 on or off and their settings, for a video with a chat.
+  /// 弹幕 on or off and their settings: a video's chat, or its timed comments.
   Widget _danmakuButtons(double width) => ListenableBuilder(
         listenable: _controller,
         builder: (context, _) {
-          if (!_controller.hasChat) return const SizedBox.shrink();
+          if (!_controller.hasDanmaku) return const SizedBox.shrink();
           final settings = _controller.preferences.danmaku;
           return Row(mainAxisSize: MainAxisSize.min, children: [
             _IconButton(

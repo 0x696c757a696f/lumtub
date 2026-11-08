@@ -59,7 +59,7 @@ class _DanmakuPanelState extends State<DanmakuPanel> {
     return ListView(padding: const EdgeInsets.only(bottom: 16), children: [
       SwitchListTile(
         title: Text(tr('Show bullet chat')),
-        subtitle: Text(tr('Live chat and chat replays fly across the picture')),
+        subtitle: Text(tr('Live chat, chat replays and comments that name a moment fly across the picture')),
         value: s.enabled,
         onChanged: (on) => save(s.copyWith(enabled: on)),
       ),
@@ -86,6 +86,12 @@ class _DanmakuPanelState extends State<DanmakuPanel> {
         title: Text(tr('Show Super Chats and memberships')),
         value: s.paid,
         onChanged: s.enabled ? (on) => save(s.copyWith(paid: on)) : null,
+      ),
+      SwitchListTile(
+        title: Text(tr('Comments that name a moment')),
+        subtitle: Text(tr('On videos without a chat, a comment such as "1:23 the best part" flies at 1:23')),
+        value: s.comments,
+        onChanged: s.enabled ? (on) => save(s.copyWith(comments: on)) : null,
       ),
     ]);
   }

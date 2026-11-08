@@ -2959,5 +2959,8 @@
   "24/7 live": "24 小时直播",
   "{0} watching": "{0}人正在观看",
   "Color temperature": "色温",
-  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K，越低越暖；定时开启时会在一小时内逐渐变化"
+  "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K，越低越暖；定时开启时会在一小时内逐渐变化",
+  "Live chat, chat replays and comments that name a moment fly across the picture": "直播聊天、聊天回放和写了时间点的评论会从画面上飘过",
+  "Comments that name a moment": "带时间点的评论",
+  "On videos without a chat, a comment such as \"1:23 the best part\" flies at 1:23": "没有聊天的视频里，像\"1:23 这段最好看\"这样的评论会在 1:23 飘过"
 }

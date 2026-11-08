@@ -143,7 +143,7 @@ Lumtub is free, open source and has no ads, accounts or telemetry of its own.
 | `windows-x64-v3` | Most PCs from 2015 on (AVX2) — **pick this if unsure** |
 | `windows-x64` | Older x64 CPUs |
 | `windows-arm64` | Windows on ARM laptops |
-| `linux-x64` AppImage | 64-bit PCs with glibc 2.36 or newer (Debian 12, Ubuntu 24.04, Fedora 37 and later) |
+| `linux-x64` AppImage | 64-bit PCs with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 and later) |
 | `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 |
 | `macos-arm64` DMG | Macs with Apple silicon (M1 and later) |
 | `macos-x64` DMG | Intel Macs |
@@ -178,7 +178,7 @@ Everything is open source under the GPL, so none of this has to be taken on trus
 
 **Where is my data?** On Windows in `%LOCALAPPDATA%\Lumtub`, or the `userdata` folder next to `lumtub.exe` for the portable version. On Linux in `~/.local/share/lumtub`, on macOS in `~/Library/Application Support/Lumtub`. Settings can be exported and imported.
 
-**Which Linux systems does it run on?** Any distribution with glibc 2.36 or newer: Debian 12, Ubuntu 24.04, Fedora 37 and later. Ubuntu 22.04 and older, and musl systems such as Alpine, are not supported. On NixOS start it with `appimage-run`.
+**Which Linux systems does it run on?** Any distribution with glibc 2.35 or newer: Ubuntu 22.04, Debian 12, Fedora 36 and later. Ubuntu 20.04 and older, and musl systems such as Alpine, are not supported. On NixOS start it with `appimage-run`.
 
 **Why is there no tray icon on GNOME?** GNOME shows tray icons only with the AppIndicator extension. Ubuntu has it built in; on Fedora and other plain GNOME installs, add [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/). Without it, closing or minimizing to the tray minimizes the window normally instead.
 

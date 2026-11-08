@@ -75,7 +75,7 @@ class VideoLanguages {
       if (!stale) return found;
     }
     // YouTube stopped answering this app for now: asking more would only
-    // keep it refusing, playback included. The title judges meanwhile.
+    // keep it refusing, playback included. Videos pass unchecked meanwhile.
     if (_resting case final until? when DateTime.now().isBefore(until)) return null;
     while (_running >= parallel) {
       final turn = Completer<void>();
@@ -135,7 +135,7 @@ class VideoLanguages {
     if (_recent.length < 20 || _recent.where((v) => !v).length < 10) return;
     _recent.clear();
     _resting = DateTime.now().add(rest);
-    logWarn('Video languages: YouTube left the video out of half of the last 20 answers; asking none for ${rest.inMinutes} minutes, titles judge meanwhile');
+    logWarn('Video languages: YouTube left the video out of half of the last 20 answers; asking none for ${rest.inMinutes} minutes, videos pass unchecked meanwhile');
   }
 
   @visibleForTesting
@@ -273,9 +273,11 @@ class VideoLanguages {
   /// with the title the uploader wrote; channels and playlists pass.
   /// Every video is asked about: a listed title, translated or the
   /// uploader's own, need not be in the language spoken. A video whose
-  /// language could not be asked is judged by its listed title. Lines go
-  /// out in the order they came, each once its answer and those before it
-  /// are in, a few lookups ahead of the reader.
+  /// language could not be asked at all is kept unless [heardOnly] or its
+  /// listed title is plainly in a third language: listings are asked in
+  /// English, so an English title says nothing, and judging by it would
+  /// leave out every video while YouTube does not answer. Lines go out as
+  /// their answers come in, a few lookups ahead of the reader.
   ///
   /// With [heardOnly], a video only passes when its audio or automatic
   /// captions say so. After [giveUpAfter] videos with none kept, it stops;
@@ -288,7 +290,7 @@ class VideoLanguages {
     void Function(int asked, int kept)? done,
   }) async* {
     final pending = <_Pending>[];
-    var asked = 0, kept = 0, untold = 0, heard = 0;
+    var asked = 0, kept = 0, untold = 0, heard = 0, unasked = 0;
     // YouTube often leaves captions and audio tracks out of the answers it
     // gives this app: then hardly any video can be heard, and only
     // hearing would keep none. Once that is plain, titles judge again, and
@@ -297,10 +299,10 @@ class VideoLanguages {
     final held = <String>[];
     final told = <String, int>{};
     Iterable<String> ready() sync* {
-      // In the order listed, which is the order the search ranked them:
-      // a slow answer holds back the ones after it.
-      while (pending.isNotEmpty && pending.first.done) {
-        if (pending.removeAt(0).out case final line?) yield line;
+      // As answered: a slow answer holds back no other.
+      for (final done in pending.where((p) => p.done).toList()) {
+        pending.remove(done);
+        if (done.out case final line?) yield line;
       }
     }
 
@@ -329,7 +331,8 @@ class VideoLanguages {
         if (spoken != null && spoken.heard) heard++;
         told.update(spoken == null ? 'error' : spoken.heard ? spoken.source : '${spoken.source} ${spoken.language?.name ?? '?'}', (n) => n + 1, ifAbsent: () => 1);
         final shown = spoken == null || spoken.title.isEmpty || spoken.title == item.title ? line : jsonEncode({...jsonDecode(line) as Map<String, dynamic>, 'title': spoken.title});
-        final byText = spoken == null ? language.matches(item.title) : spoken.language == language;
+        if (spoken == null) unasked++;
+        final byText = spoken == null ? _mayBe(item.title, language) : spoken.language == language;
         if (!byText) return null;
         if (spoken != null && spoken.heard) {
           kept++;
@@ -345,12 +348,12 @@ class VideoLanguages {
       yield* Stream.fromIterable(ready());
       yield* Stream.fromIterable(unstrict(unheardAfter));
       while (pending.length >= parallel * 3) {
-        await pending.first.future;
+        await Future.any([for (final p in pending) p.future]);
         yield* Stream.fromIterable(ready());
       }
     }
     while (pending.isNotEmpty) {
-      await pending.first.future;
+      await Future.any([for (final p in pending) p.future]);
       yield* Stream.fromIterable(ready());
     }
     yield* Stream.fromIterable(unstrict(10));
@@ -358,10 +361,18 @@ class VideoLanguages {
       done?.call(asked, kept);
       if (asked > 0) {
         final by = [for (final MapEntry(:key, :value) in told.entries) '$key $value'].join(', ');
-        logInfo('Language ${language.name}: kept $kept of $asked videos ($untold not told; by $by)');
+        logInfo('Language ${language.name}: kept $kept of $asked videos ($untold not told, $unasked kept unchecked; by $by)');
       }
     }
   }
+}
+
+/// Whether a video listed as [title] may be spoken in [language] when
+/// nothing else tells: an English title may be YouTube's translation.
+bool _mayBe(String title, ExploreLanguage language) {
+  if (language.matches(title)) return true;
+  final read = titleLanguage(title);
+  return read == ExploreLanguage.en || read == ExploreLanguage.any;
 }
 
 /// A line waiting for its video's language: [out] is the line to pass on,

@@ -39,6 +39,11 @@ class _ExplorePageState extends State<ExplorePage> {
   Widget build(BuildContext context) {
     final loader = controller.explore;
     final items = controller.visible(loader?.items ?? const []);
+    // The AI filter can hide videos after they were listed: when it hides
+    // them all, the next page is read rather than the page left empty.
+    if (loader != null && items.isEmpty && loader.items.isNotEmpty && !loader.loading && loader.hasMore && loader.error == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => loader.loadMore());
+    }
     final error = loader?.error;
     final loading = loader == null || loader.loading;
     final section = controller.exploreSection;

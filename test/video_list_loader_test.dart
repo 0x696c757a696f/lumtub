@@ -112,6 +112,40 @@ void main() {
     expect(loader.hasMore, isFalse);
   });
 
+  test('channels count for nothing towards a strict filter, and a source failing part way is not an empty list', () async {
+    String channel(int i) => jsonEncode({'_type': 'url', 'ie_key': 'YoutubeTab', 'id': 'UC${i.toString().padLeft(22, 'x')}', 'title': 'c$i'});
+    final loader = VideoListLoader(
+      () => Listing(() async* {
+        for (var i = 0; i < 6; i++) {
+          yield channel(i);
+        }
+        yield _video(1);
+        yield _video(2);
+        throw StateError('connection reset');
+      }),
+      pageSize: 4,
+      fill: 2,
+      where: (item) => item.title != '1',
+    );
+    addTearDown(loader.dispose);
+    loader.loadMore();
+    await pumpEventQueue();
+    expect(loader.items.map((v) => v.title), ['2'], reason: 'pages of channels alone are read past');
+    final strict = VideoListLoader(
+      () => Listing(() async* {
+        yield _video(1);
+        throw StateError('connection reset');
+      }),
+      where: (item) => false,
+      fill: 8,
+    );
+    addTearDown(strict.dispose);
+    strict.loadMore();
+    await pumpEventQueue();
+    expect(strict.items, isEmpty);
+    expect(strict.error, isNotNull, reason: 'the failure shows, with a way to retry');
+  });
+
   test('keeps channels apart from videos', () async {
     final channel = jsonEncode({
       '_type': 'url', 'ie_key': 'YoutubeTab', 'id': 'UCsXVk37bltHxD1rDPwtNM8Q', 'title': 'Kurzgesagt',

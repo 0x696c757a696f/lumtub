@@ -59,6 +59,11 @@ class YoutubeListing {
     followed.add('${first['browseId']} ${first['params']}');
     final shelves = <Map<String, Object>>[];
     Map<String, Object> body = first;
+    final tokens = <String>{};
+    // A page can hold only videos already listed, or parts the core does
+    // not read: the next may still have videos. A few such pages in a row
+    // end it.
+    var empty = 0;
     for (var page = 0; page < 50; page++) {
       final response = await _client
           .post(
@@ -93,7 +98,8 @@ class YoutubeListing {
         if (followed.add('${shelf['browseId']} ${shelf['params']}')) shelves.add({'browseId': '${shelf['browseId']}', 'params': '${shelf['params']}'});
       }
       final next = read['continuation'];
-      if (next is! String || added == 0) break;
+      empty = added == 0 ? empty + 1 : 0;
+      if (next is! String || !tokens.add(next) || empty >= 3) break;
       body = {'continuation': next};
     }
     for (final shelf in shelves) {

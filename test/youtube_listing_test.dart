@@ -71,6 +71,31 @@ void main() {
     expect(listing.done, isTrue);
   }, skip: skip);
 
+  test('a page with no new videos does not end a search that goes on', () async {
+    var pages = 0;
+    final client = MockClient((request) async {
+      final body = jsonDecode(request.body) as Map;
+      pages++;
+      final token = body['continuation'] as String?;
+      final items = switch (token) {
+        null => [_video('aaaaaaaaaaa')],
+        'P1' => [_video('aaaaaaaaaaa')],
+        _ => [_video('bbbbbbbbbbb')],
+      };
+      final next = switch (token) { null => 'P1', 'P1' => 'P2', _ => 'P1' };
+      return http.Response(jsonEncode({
+        'onResponseReceivedCommands': [{'appendContinuationItemsAction': {'continuationItems': [
+          {'itemSectionRenderer': {'contents': items}},
+          {'continuationItemRenderer': {'continuationEndpoint': {'continuationCommand': {'token': next}}}},
+        ]}}],
+      }), 200);
+    });
+    final repository = VideoRepository('/no/yt-dlp', client: client);
+    final items = (await repository.search('cats', filter: SearchFilter.videos).next(10).toList()).cast<VideoItem>();
+    expect(items.map((v) => v.id), ['aaaaaaaaaaa', 'bbbbbbbbbbb']);
+    expect(pages, 3, reason: 'a token seen before ends it');
+  }, skip: skip);
+
   test('reads a channel tab with its params', () async {
     String? params;
     final client = MockClient((request) async {

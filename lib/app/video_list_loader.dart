@@ -147,6 +147,8 @@ class VideoListLoader extends ChangeNotifier {
         fresh++;
         _read++;
         final match = matches;
+        // Channels and playlists show, but only videos count towards [fill]:
+        // a page of channels alone is still a page without videos.
         if (entry is ChannelResult) {
           if (match != null || !_seen.add(entry.ref.id)) return;
           pendingChannels.add(entry);
@@ -157,8 +159,8 @@ class VideoListLoader extends ChangeNotifier {
           if (where?.call(entry) == false || (match != null && !match(entry.title)) || !_seen.add(entry.id)) return;
           if (limit != null && items.length + pendingVideos.length >= limit!) return;
           pendingVideos.add(entry);
+          shown++;
         }
-        shown++;
       },
       onError: (Object e) {
         _cause = '$e';
@@ -194,6 +196,13 @@ class VideoListLoader extends ChangeNotifier {
           return;
         }
         if (order != null) _showFromPool();
+        // Nothing to show and the source failed part way: that failure is
+        // what the page reports, not an empty list.
+        final late = listing.lateError;
+        if (items.isEmpty && _pool.isEmpty && error == null && late != null) {
+          _cause = '$late';
+          error = friendlyError(late);
+        }
         if (items.isEmpty && error == null && !more && !_disposed) {
           final why = dropped == null || dropped!.isEmpty ? '' : ', dropped ${[for (final e in dropped!.entries) '${e.value} (${e.key})'].join(', ')}';
           if (name != null) logInfo('$name has no videos to show: read $_read entries$why');

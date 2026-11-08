@@ -401,8 +401,17 @@ final _languages = <String, ExploreLanguage>{};
 /// Japanese keyword alone, as they are listed apart, and each run of words
 /// in a spaced script together, since "stand-up comedy live" word by word
 /// is "stare in piedi commedia vivere".
+final _cjk = RegExp(r'[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]');
+
+/// Whether [phrase] has Chinese, Japanese or Korean in it.
+bool isCjkPhrase(String phrase) => _cjk.hasMatch(phrase);
+
+/// Search words put the same way in every language, as YouTube titles
+/// write them.
+const searchGlossary = {'直播': 'live', '实况': 'live', '直播间': 'live'};
+
 List<String> searchPhrasesOf(String query) {
-  final cjk = RegExp(r'[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]');
+  final cjk = _cjk;
   final phrases = <String>[];
   var run = <String>[];
   for (final word in query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty)) {

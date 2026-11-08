@@ -71,6 +71,11 @@ class Listing {
 
   bool get done => _done;
 
+  /// The error that ended the listing after its first entries, which
+  /// otherwise reads as its end: a list with nothing left to show after
+  /// its filters reports it instead of calling itself empty.
+  Object? lateError;
+
   /// A listing made once [make] has what it needs, such as search words
   /// to translate first.
   static Listing deferred(Future<Listing> Function() make) => Listing(() async* {
@@ -121,6 +126,7 @@ class Listing {
     } catch (e) {
       close();
       if (_found == 0 || e is TimeoutException) rethrow;
+      lateError = e;
       return false;
     }
     if (!more) _done = true;
@@ -233,46 +239,64 @@ class VideoRepository {
   Listing searchMix(List<String> queries, {String? sp, String? region}) =>
       Listing(() => interleave([for (final q in queries) () => search(q, sp: sp, region: region)._open()]));
 
-  /// Lines from each of [sources] in turn, [run] at a time, each started
-  /// only when first read.
-  static Stream<String> interleave(List<Stream<String> Function()> sources, {int run = 3}) async* {
-    final open = <StreamIterator<String>>[];
+  /// Lines from each of [sources] in turn, up to [run] at a time from each.
+  /// Up to [parallel] sources are read at once and a source with nothing
+  /// ready yet is passed over, so one slow search holds back no other;
+  /// the next source starts when one ends. Each source reads at most
+  /// [ahead] lines before it waits to be taken from.
+  static Stream<String> interleave(List<Stream<String> Function()> sources, {int run = 3, int parallel = 4, int ahead = 40}) async* {
     final pending = [...sources];
+    final feeds = <_Feed>[];
+    var signal = Completer<void>();
+    void wake() {
+      if (!signal.isCompleted) signal.complete();
+    }
+
+    void start() {
+      while (feeds.length < parallel && pending.isNotEmpty) {
+        feeds.add(_Feed(pending.removeAt(0)(), ahead, wake));
+      }
+    }
+
     Object? lastError;
     var yielded = false;
     var i = 0;
     try {
-      while (open.isNotEmpty || pending.isNotEmpty) {
-        if (pending.isNotEmpty && i >= open.length) open.add(StreamIterator(pending.removeAt(0)()));
-        final lines = open[i];
-        var taken = 0;
-        var ended = false;
-        try {
-          while (taken < run) {
-            if (!await lines.moveNext()) {
-              ended = true;
-              break;
-            }
-            taken++;
-            yielded = true;
-            yield lines.current;
+      start();
+      while (feeds.isNotEmpty) {
+        _Feed? ready;
+        for (var k = 0; k < feeds.length; k++) {
+          final feed = feeds[(i + k) % feeds.length];
+          if (feed.lines.isNotEmpty || feed.ended) {
+            i = (i + k) % feeds.length;
+            ready = feed;
+            break;
           }
-        } catch (e) {
-          lastError = e;
-          ended = true;
         }
-        if (ended) {
-          await lines.cancel();
-          open.removeAt(i);
+        if (ready == null) {
+          await signal.future;
+          signal = Completer<void>();
+          continue;
+        }
+        var taken = 0;
+        while (taken < run && ready.lines.isNotEmpty) {
+          taken++;
+          yielded = true;
+          yield ready.take();
+        }
+        if (ready.ended && ready.lines.isEmpty) {
+          lastError = ready.error ?? lastError;
+          feeds.removeAt(i);
+          start();
         } else {
           i++;
         }
-        if (i >= open.length && pending.isEmpty) i = 0;
+        if (feeds.isNotEmpty) i %= feeds.length;
       }
       if (!yielded && lastError != null) throw lastError;
     } finally {
-      for (final lines in open) {
-        await lines.cancel();
+      for (final feed in feeds) {
+        await feed.cancel();
       }
     }
   }
@@ -491,4 +515,37 @@ class HistoryStore {
     if (items.length > 60) items.removeRange(60, items.length);
     await _write();
   }
+}
+
+/// One source of [VideoRepository.interleave], read ahead into [lines].
+class _Feed {
+  _Feed(Stream<String> source, this._ahead, this._wake) {
+    _subscription = source.listen(
+      (line) {
+        lines.add(line);
+        if (lines.length >= _ahead) _subscription.pause();
+        _wake();
+      },
+      onError: (Object e) => error = e,
+      onDone: () {
+        ended = true;
+        _wake();
+      },
+    );
+  }
+
+  final int _ahead;
+  final void Function() _wake;
+  late final StreamSubscription<String> _subscription;
+  final lines = <String>[];
+  bool ended = false;
+  Object? error;
+
+  String take() {
+    final line = lines.removeAt(0);
+    if (_subscription.isPaused && lines.length < _ahead) _subscription.resume();
+    return line;
+  }
+
+  Future<void> cancel() => _subscription.cancel();
 }

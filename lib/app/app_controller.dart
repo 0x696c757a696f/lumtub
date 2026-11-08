@@ -345,6 +345,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   VideoDetails? details;
   bool loadingDetails = false;
   List<LiveChatMessage> replayChat = const [];
+  /// Recent Super Chats of the live chat, newest first, with when each
+  /// leaves the strip over the chat.
+  List<(LiveChatMessage, DateTime)> chatTicker = const [];
 
   /// Fires when a live chat gains messages, which happens several times a
   /// second: only the chat panel listens, not the whole app.
@@ -1432,6 +1435,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       details = null;
       loadingDetails = true;
       replayChat = const [];
+      chatTicker = const [];
       loadingReplayChat = false;
       replayChatError = null;
       availableHeights = const [];

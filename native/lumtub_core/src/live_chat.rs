@@ -38,6 +38,14 @@ pub struct Message {
     pub amount: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sticker_url: Option<String>,
+    /// The colour YouTube gives a Super Chat or Super Sticker by its
+    /// amount, as ARGB.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<u32>,
+    /// How long YouTube keeps a Super Chat of this colour in the strip
+    /// over the chat, in seconds.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ticker_seconds: Option<u32>,
     #[serde(skip_serializing_if = "Emojis::is_empty")]
     pub emojis: Emojis,
 }
@@ -90,6 +98,7 @@ fn message(item: &Value, offset_ms: Option<i64>) -> Option<Message> {
     let text = ["message", "headerSubtext", "headerPrimaryText"].iter().map(|key| chat_text(renderer.get(*key), &mut emojis)).find(|t| !t.is_empty()).unwrap_or_default();
     let mut ignored = Emojis::new();
     let amount = chat_text(renderer.get("purchaseAmountText"), &mut ignored);
+    let color = ["bodyBackgroundColor", "backgroundColor"].iter().find_map(|key| integer(renderer.get(*key))).and_then(|c| u32::try_from(c).ok());
     Some(Message {
         id,
         kind,
@@ -101,8 +110,37 @@ fn message(item: &Value, offset_ms: Option<i64>) -> Option<Message> {
         author_avatar: last_thumbnail(renderer.get("authorPhoto").filter(|p| p.is_object())),
         amount: (!amount.is_empty()).then_some(amount),
         sticker_url: last_thumbnail(renderer.get("sticker").filter(|s| s.is_object())),
+        color,
+        ticker_seconds: color.map(ticker_seconds).filter(|s| *s > 0),
         emojis,
     })
+}
+
+/// How long a Super Chat stays in the strip over the chat, from the
+/// colour of its amount tier: blue and cyan not at all, green 2 minutes,
+/// yellow 5, orange 10, magenta 30 and red an hour.
+fn ticker_seconds(argb: u32) -> u32 {
+    let [r, g, b] = [(argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF].map(|c| c as f32 / 255.0);
+    let (max, min) = (r.max(g).max(b), r.min(g).min(b));
+    if max - min < 0.1 {
+        return 120;
+    }
+    let delta = max - min;
+    let hue = if max == r {
+        60.0 * ((g - b) / delta).rem_euclid(6.0)
+    } else if max == g {
+        60.0 * ((b - r) / delta + 2.0)
+    } else {
+        60.0 * ((r - g) / delta + 4.0)
+    };
+    match hue {
+        h if !(15.0..350.0).contains(&h) => 3600,
+        h if h < 38.0 => 600,
+        h if h < 75.0 => 300,
+        h if h < 175.0 => 120,
+        h if h < 290.0 => 0,
+        _ => 1800,
+    }
 }
 
 /// The chat items of one yt-dlp `live_chat` line. Status actions without a
@@ -300,7 +338,7 @@ mod tests {
             {"markChatItemAsDeletedAction": {}}
         ]}});
         let live = json!({"actions": [{"addChatItemAction": {"item": {"liveChatPaidStickerRenderer": {
-            "id": "s1", "purchaseAmountText": {"simpleText": "$5.00"}, "sticker": {"thumbnails": [{"url": "https://s/1"}]}
+            "id": "s1", "purchaseAmountText": {"simpleText": "$5.00"}, "backgroundColor": 4280150454u32, "sticker": {"thumbnails": [{"url": "https://s/1"}]}
         }}}}]});
         let messages = lines(&format!("{replay}\n\n{live}\nnot json\n"));
         assert_eq!(messages.len(), 2);
@@ -317,6 +355,8 @@ mod tests {
                 author_avatar: Some("https://a/l".into()),
                 amount: None,
                 sticker_url: None,
+                color: None,
+                ticker_seconds: None,
                 emojis: Emojis::new(),
             }
         );
@@ -333,6 +373,9 @@ mod tests {
         assert_eq!(custom.text, "\u{1F600} :_wave:");
         assert_eq!(custom.emojis, Emojis::from([(":_wave:".into(), "https://yt3/l".into())]));
         assert_eq!((sticker.kind, sticker.offset_ms, sticker.amount.as_deref(), sticker.sticker_url.as_deref()), (Kind::PaidSticker, None, Some("$5.00"), Some("https://s/1")));
+        assert_eq!((sticker.color, sticker.ticker_seconds), (Some(0xFF1DE9B6), Some(120)));
+        let tiers = [0xFF1E88E5u32, 0xFF00E5FF, 0xFF1DE9B6, 0xFFFFCA28, 0xFFF57C00, 0xFFE91E63, 0xFFE62117].map(ticker_seconds);
+        assert_eq!(tiers, [0, 0, 120, 300, 600, 1800, 3600]);
     }
 
     #[test]

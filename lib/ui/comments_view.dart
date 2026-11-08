@@ -276,6 +276,7 @@ class _CommentTile extends StatelessWidget {
     final small = TextStyle(color: colors.outline, fontSize: 12);
     final thread = loader.replies[comment.id];
     final channelId = comment.channelId;
+    final canOpen = channelId != null && ChannelRef.isValidId(channelId);
     void openAuthor() {
       // From a page over the app (a post's comments), go back to it first.
       if (ModalRoute.of(context) case final route? when !route.isFirst) Navigator.of(context).pop();
@@ -286,15 +287,21 @@ class _CommentTile extends StatelessWidget {
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         InkWell(
           customBorder: const CircleBorder(),
-          onTap: channelId != null && ChannelRef.isValidId(channelId) ? openAuthor : null,
-          child: ChannelAvatar(name: comment.author.replaceFirst(RegExp(r'^@'), ''), image: comment.avatar, radius: reply ? 12 : 16),
+          onTap: canOpen ? openAuthor : null,
+          child: ChannelAvatar(name: comment.author.replaceFirst(RegExp(r'^@'), ''), image: comment.avatar, channelId: comment.avatar == null ? channelId : null, radius: reply ? 12 : 16),
         ),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SelectionArea(
             child: Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
               if (comment.pinned) Text(tr('Pinned'), style: small.copyWith(color: colors.primary)),
-              Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: comment.byUploader ? colors.primary : null)),
+              MouseRegion(
+                cursor: canOpen ? SystemMouseCursors.click : MouseCursor.defer,
+                child: GestureDetector(
+                  onTap: canOpen ? openAuthor : null,
+                  child: Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: comment.byUploader ? colors.primary : null)),
+                ),
+              ),
               Text(comment.published, style: small),
             ]),
           ),

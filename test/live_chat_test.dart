@@ -56,6 +56,7 @@ void main() {
     final paid = {
       ...textRenderer('paid-1', 'Keep it up!'),
       'purchaseAmountText': {'simpleText': '\$4.99'},
+      'bodyBackgroundColor': 4280150454,
     };
     final sticker = {
       ...textRenderer('sticker-1', ''),
@@ -83,6 +84,8 @@ void main() {
       (LiveChatKind.membership, null, 'Member for 3 months'),
     ]);
     expect(messages[1].stickerUrl, 'https://example.test/sticker-large');
+    expect((messages[0].color, messages[0].tickerSeconds), (0xFF1DE9B6, 120));
+    expect((messages[1].color, messages[1].tickerSeconds), (null, null));
   });
 
   test('ignores non-chat actions and unknown renderers', () {

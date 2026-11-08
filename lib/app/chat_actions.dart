@@ -40,6 +40,14 @@ extension ChatActions on AppController {
   void _flushCurrentChat(int serial) {
     if (serial != _playSerial || _currentChatPending.isEmpty) return;
     final next = [...replayChat, ..._currentChatPending];
+    final now = DateTime.now();
+    final ticker = [
+      for (final message in _currentChatPending.reversed)
+        if (message.tickerSeconds case final seconds?) (message, now.add(Duration(seconds: seconds))),
+      for (final entry in chatTicker)
+        if (entry.$2.isAfter(now)) entry,
+    ];
+    if (ticker.length != chatTicker.length || ticker.isNotEmpty) chatTicker = List.unmodifiable(ticker.take(50));
     _currentChatPending.clear();
     replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
     _syncDanmaku();

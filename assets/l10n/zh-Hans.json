@@ -2962,5 +2962,16 @@
   "{0} K, lower is warmer; on a schedule it changes over an hour": "{0} K，越低越暖；定时开启时会在一小时内逐渐变化",
   "Live chat, chat replays and comments that name a moment fly across the picture": "直播聊天、聊天回放和写了时间点的评论会从画面上飘过",
   "Comments that name a moment": "带时间点的评论",
-  "On videos without a chat, a comment such as \"1:23 the best part\" flies at 1:23": "没有聊天的视频里，像\"1:23 这段最好看\"这样的评论会在 1:23 飘过"
+  "On videos without a chat, a comment such as \"1:23 the best part\" flies at 1:23": "没有聊天的视频里，像\"1:23 这段最好看\"这样的评论会在 1:23 飘过",
+  "Emoji": "表情",
+  "Channel's emoji": "频道表情",
+  "{0} (for members)": "{0}（会员专属）",
+  "Smileys": "笑脸",
+  "Gestures": "手势",
+  "Hearts": "爱心与符号",
+  "Nature": "动物与自然",
+  "Food": "食物",
+  "Activities": "活动与物品",
+  "Super Chat: pay and send on YouTube in your browser": "超级留言：在浏览器里到 YouTube 付款并发送",
+  "Super Thanks: pay and comment on YouTube in your browser": "超级感谢：在浏览器里到 YouTube 付款并留言"
 }

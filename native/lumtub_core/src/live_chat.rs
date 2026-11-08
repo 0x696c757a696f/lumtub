@@ -153,6 +153,47 @@ pub struct Composer {
     pub params: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub restricted: Option<String>,
+    /// The channel's own emoji the chat offers.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub emojis: Vec<ChatEmoji>,
+}
+
+/// A channel emoji: what to send for it, how it is typed and its picture.
+/// [locked] ones are for the channel's members.
+#[derive(Serialize, Debug, PartialEq, Clone)]
+pub struct ChatEmoji {
+    pub id: String,
+    pub shortcut: String,
+    pub url: String,
+    pub locked: bool,
+}
+
+/// The first array under key [name] anywhere in [node].
+fn find_array<'a>(node: &'a Value, name: &str) -> Option<&'a Vec<Value>> {
+    match node {
+        Value::Object(map) => match map.get(name) {
+            Some(Value::Array(found)) => Some(found),
+            _ => map.values().filter(|v| v.is_object() || v.is_array()).find_map(|v| find_array(v, name)),
+        },
+        Value::Array(list) => list.iter().find_map(|v| find_array(v, name)),
+        _ => None,
+    }
+}
+
+/// The channel emoji listed in a chat answer (`emojis` of the live chat).
+fn chat_emojis(answer: &Value) -> Vec<ChatEmoji> {
+    let Some(list) = find_array(answer, "emojis") else { return Vec::new() };
+    list.iter()
+        .filter(|e| e.get("isCustomEmoji").and_then(Value::as_bool) == Some(true))
+        .filter_map(|e| {
+            let id = e.get("emojiId")?.as_str()?.to_owned();
+            let shortcut = e.get("shortcuts")?.as_array()?.iter().filter_map(Value::as_str).find(|s| s.starts_with(':') && s.ends_with(':'))?.to_owned();
+            let url = e.pointer("/image/thumbnails")?.as_array()?.last()?.get("url")?.as_str()?;
+            let url = if url.starts_with("//") { format!("https:{url}") } else { url.to_owned() };
+            let locked = e.get("isLocked").and_then(Value::as_bool).unwrap_or(false);
+            Some(ChatEmoji { id, shortcut, url, locked })
+        })
+        .collect()
 }
 
 pub fn composer(answer: &Value) -> Composer {
@@ -165,7 +206,7 @@ pub fn composer(answer: &Value) -> Composer {
     } else {
         find_object(answer, "liveChatRestrictedParticipationRenderer").map(|r| text_of(r.get("message"))).filter(|t| !t.is_empty())
     };
-    Composer { continuation, params, restricted }
+    Composer { continuation, params, restricted, emojis: chat_emojis(answer) }
 }
 
 #[derive(Deserialize)]
@@ -174,6 +215,40 @@ struct Send {
     params: String,
     text: String,
     client_message_id: String,
+    /// Shortcut to emoji id of the channel emoji that can be sent.
+    #[serde(default)]
+    emojis: std::collections::HashMap<String, String>,
+}
+
+/// [text] as the website's message segments: each known channel emoji
+/// shortcut (`:_wave:`) as its emoji, the rest as text.
+fn segments(text: &str, emojis: &std::collections::HashMap<String, String>) -> Vec<Value> {
+    let mut out = Vec::new();
+    let mut plain = String::new();
+    let mut rest = text;
+    while let Some(start) = rest.find(':') {
+        let after = &rest[start + 1..];
+        let found = after.find(':').map(|end| &rest[start..start + end + 2]).filter(|code| emojis.contains_key(*code));
+        match found {
+            Some(code) => {
+                plain.push_str(&rest[..start]);
+                if !plain.is_empty() {
+                    out.push(serde_json::json!({"text": std::mem::take(&mut plain)}));
+                }
+                out.push(serde_json::json!({"emojiId": emojis[code]}));
+                rest = &rest[start + code.len()..];
+            }
+            None => {
+                plain.push_str(&rest[..=start]);
+                rest = after;
+            }
+        }
+    }
+    plain.push_str(rest);
+    if !plain.is_empty() {
+        out.push(serde_json::json!({"text": plain}));
+    }
+    out
 }
 
 /// The `live_chat/send_message` request for [text].
@@ -181,7 +256,7 @@ fn send_body(send: &Send) -> Value {
     serde_json::json!({
         "params": send.params,
         "clientMessageId": send.client_message_id,
-        "richMessage": {"textSegments": [{"text": send.text}]},
+        "richMessage": {"textSegments": segments(&send.text, &send.emojis)},
     })
 }
 
@@ -267,11 +342,30 @@ mod tests {
         assert_eq!(composer(&next).continuation.as_deref(), Some("0ofMyAN"));
         let chat = json!({"continuationContents": {"liveChatContinuation": {"actionPanel": {"liveChatMessageInputRenderer": {
             "sendButton": {"buttonRenderer": {"serviceEndpoint": {"sendLiveChatMessageEndpoint": {"params": "Q2lrcU"}}}}}}}}});
-        assert_eq!(composer(&chat), Composer { continuation: None, params: Some("Q2lrcU".into()), restricted: None });
+        assert_eq!(composer(&chat), Composer { continuation: None, params: Some("Q2lrcU".into()), restricted: None, emojis: vec![] });
         let members = json!({"continuationContents": {"liveChatContinuation": {"actionPanel": {"liveChatRestrictedParticipationRenderer": {
             "message": {"runs": [{"text": "Chat is in "}, {"text": "members-only mode"}]}}}}}});
         assert_eq!(composer(&members).restricted.as_deref(), Some("Chat is in members-only mode"));
-        let body = send_body(&Send { params: "p".into(), text: "hi".into(), client_message_id: "c".into() });
+        let body = send_body(&Send { params: "p".into(), text: "hi".into(), client_message_id: "c".into(), emojis: Default::default() });
         assert_eq!(body, json!({"params": "p", "clientMessageId": "c", "richMessage": {"textSegments": [{"text": "hi"}]}}));
+    }
+
+    #[test]
+    fn reads_and_sends_channel_emoji() {
+        let chat = json!({"continuationContents": {"liveChatContinuation": {"emojis": [
+            {"emojiId": "UCx/wave", "shortcuts": [":_wave:", ":_hello:"], "isCustomEmoji": true, "image": {"thumbnails": [{"url": "//yt3/s"}, {"url": "//yt3/l"}]}},
+            {"emojiId": "UCx/vip", "shortcuts": [":_vip:"], "isCustomEmoji": true, "isLocked": true, "image": {"thumbnails": [{"url": "https://yt3/v"}]}},
+            {"emojiId": "\u{1F600}", "shortcuts": [":grinning:"], "image": {"thumbnails": [{"url": "https://e/g"}]}}
+        ]}}});
+        assert_eq!(composer(&chat).emojis, vec![
+            ChatEmoji { id: "UCx/wave".into(), shortcut: ":_wave:".into(), url: "https://yt3/l".into(), locked: false },
+            ChatEmoji { id: "UCx/vip".into(), shortcut: ":_vip:".into(), url: "https://yt3/v".into(), locked: true },
+        ]);
+        let emojis = std::collections::HashMap::from([(":_wave:".to_string(), "UCx/wave".to_string())]);
+        assert_eq!(segments("hi :_wave::_wave: at 10:30 :_nope: 😀", &emojis), vec![
+            json!({"text": "hi "}), json!({"emojiId": "UCx/wave"}), json!({"emojiId": "UCx/wave"}), json!({"text": " at 10:30 :_nope: 😀"}),
+        ]);
+        assert_eq!(segments(":_wave:", &emojis), vec![json!({"emojiId": "UCx/wave"})]);
+        assert_eq!(segments("a:b", &emojis), vec![json!({"text": "a:b"})]);
     }
 }

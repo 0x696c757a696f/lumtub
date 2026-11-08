@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,7 +20,7 @@ void main() {
       expect(KeyCombo.parse(combo.id)!.activator.trigger, combo.key);
     }
     expect(KeyCombo.parse('nonsense'), isNull);
-    expect(parenLeft.label, 'Shift + 9');
+    expect(parenLeft.label, Platform.isMacOS ? '⇧ + 9' : 'Shift + 9');
     expect(const KeyCombo(LogicalKeyboardKey.arrowLeft).label, '←');
   });
 

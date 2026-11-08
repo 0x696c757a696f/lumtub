@@ -23,12 +23,14 @@ import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
 import '../../progress_line.dart';
+import '../../shortcut_bindings.dart';
 import '../../video_codec.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../../windows_video_info.dart';
 import '../common.dart';
 import '../format_policy_dialogs.dart';
 import '../player_shortcuts.dart';
+import '../shortcut_settings.dart';
 import '../motion.dart';
 import '../palettes.dart';
 import '../theme.dart';
@@ -833,24 +835,38 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('Keyboard shortcuts')),
         SettingEntry(tr('Seek duration'), (context) => NormalItem(
               title: tr('Seek duration'),
-              subtitle: tr('← → arrow keys: {0} s', [prefs.seekSeconds]),
+              subtitle: tr('{0}: {1} s', [_keysOf(prefs, PlayerAction.seekBack, PlayerAction.seekForward), prefs.seekSeconds]),
               leading: _icon(AppIcons.fastForward),
               enabled: prefs.keyboardShortcuts,
               onTap: () => pickWithSlider(context, title: tr('Seek duration'), value: prefs.seekSeconds.toDouble(), min: 1, max: 30, divisions: 29, suffix: tr(' s'), onSelected: (v) => savePrefs(prefs.copyWith(seekSeconds: v.round()))),
             ), subtitle: tr('Arrow keys')),
         SettingEntry(tr('Long seek duration'), (context) => NormalItem(
               title: tr('Long seek duration'),
-              subtitle: tr('J / L keys: {0} s', [prefs.longSeekSeconds]),
+              subtitle: tr('{0}: {1} s', [_keysOf(prefs, PlayerAction.longSeekBack, PlayerAction.longSeekForward), prefs.longSeekSeconds]),
               leading: _icon(AppIcons.caretDoubleRight),
               enabled: prefs.keyboardShortcuts,
               onTap: () => pickWithSlider(context, title: tr('Long seek duration'), value: prefs.longSeekSeconds.toDouble(), min: 5, max: 120, divisions: 23, suffix: tr(' s'), onSelected: (v) => savePrefs(prefs.copyWith(longSeekSeconds: v.round()))),
             )),
         SettingEntry(tr('Volume step'), (context) => NormalItem(
               title: tr('Volume step'),
-              subtitle: tr('↑ ↓ arrow keys and scroll wheel: {0}% per step', [prefs.volumeStep]),
+              subtitle: tr('{0} and scroll wheel: {1}% per step', [_keysOf(prefs, PlayerAction.volumeUp, PlayerAction.volumeDown), prefs.volumeStep]),
               leading: _icon(AppIcons.speakerLow),
               onTap: () => pickWithSlider(context, title: tr('Volume step'), value: prefs.volumeStep.toDouble(), min: 1, max: 20, divisions: 19, suffix: '%', onSelected: (v) => savePrefs(prefs.copyWith(volumeStep: v.round()))),
             )),
+        SettingEntry(tr('Customize shortcuts'), (context) => NormalItem(
+              title: tr('Customize shortcuts'),
+              subtitle: tr('Choose the keys for seeking, volume, fullscreen and more'),
+              leading: _icon(AppIcons.keyboard),
+              enabled: prefs.keyboardShortcuts,
+              onTap: () => showShortcutSettings(context, controller),
+            ), subtitle: tr('Keyboard shortcuts')),
+        SettingEntry(tr('Right click on the video'), (context) => SwitchItem(
+              title: tr('Right click on the video'),
+              subtitle: tr('Exit fullscreen, or else go back'),
+              leading: _icon(AppIcons.handTap),
+              value: prefs.rightClickBack,
+              onChanged: (v) => savePrefs(prefs.copyWith(rightClickBack: v)),
+            ), subtitle: tr('mouse back')),
         SettingEntry(tr('Keyboard shortcuts help'), (context) => NormalItem(
               title: tr('Keyboard shortcuts help'),
               subtitle: tr('View all player shortcuts'),
@@ -1592,4 +1608,10 @@ class _X11ModeSwitchState extends State<_X11ModeSwitch> {
         value: _on,
         onChanged: (v) => unawaited(_set(v)),
       );
+}
+
+/// The keys of two opposite actions, as `← / →`.
+String _keysOf(AppPreferences prefs, PlayerAction a, PlayerAction b) {
+  final keys = shortcutKeys(prefs.shortcutKeys);
+  return [for (final action in [a, b]) keys[action]!.map((k) => k.label).join(', ')].where((k) => k.isNotEmpty).join(' / ');
 }

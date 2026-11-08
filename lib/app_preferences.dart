@@ -101,6 +101,8 @@ class AppPreferences {
     this.seekSeconds = 5,
     this.longSeekSeconds = 10,
     this.volumeStep = 5,
+    this.shortcutKeys = const {},
+    this.rightClickBack = false,
     this.controlsHideSeconds = 3,
     this.showHeatmap = true,
     this.progressLine = ProgressLine.always,
@@ -231,6 +233,11 @@ class AppPreferences {
   final int seekSeconds;
   final int longSeekSeconds;
   final int volumeStep;
+  /// Keys chosen for player actions, by [PlayerAction] name; actions not
+  /// here keep their default keys.
+  final Map<String, List<String>> shortcutKeys;
+  /// A right click on the video leaves fullscreen, or else goes back.
+  final bool rightClickBack;
   final int controlsHideSeconds;
   /// The 最多重放 curve above the progress bar.
   final bool showHeatmap;
@@ -421,6 +428,8 @@ class AppPreferences {
     int? seekSeconds,
     int? longSeekSeconds,
     int? volumeStep,
+    Map<String, List<String>>? shortcutKeys,
+    bool? rightClickBack,
     int? controlsHideSeconds,
     bool? showHeatmap,
     ProgressLine? progressLine,
@@ -499,6 +508,8 @@ class AppPreferences {
         seekSeconds: seekSeconds ?? this.seekSeconds,
         longSeekSeconds: longSeekSeconds ?? this.longSeekSeconds,
         volumeStep: volumeStep ?? this.volumeStep,
+        shortcutKeys: shortcutKeys ?? this.shortcutKeys,
+        rightClickBack: rightClickBack ?? this.rightClickBack,
         controlsHideSeconds: controlsHideSeconds ?? this.controlsHideSeconds,
         showHeatmap: showHeatmap ?? this.showHeatmap,
         progressLine: progressLine ?? this.progressLine,
@@ -578,6 +589,8 @@ class AppPreferences {
         'seekSeconds': seekSeconds,
         'longSeekSeconds': longSeekSeconds,
         'volumeStep': volumeStep,
+        'shortcutKeys': shortcutKeys,
+        'rightClickBack': rightClickBack,
         'controlsHideSeconds': controlsHideSeconds,
         'showHeatmap': showHeatmap,
         'progressLine': progressLine.name,
@@ -691,6 +704,8 @@ class AppPreferences {
       seekSeconds: number('seekSeconds', 5, 1, 60),
       longSeekSeconds: number('longSeekSeconds', 10, 1, 120),
       volumeStep: number('volumeStep', 5, 1, 25),
+      shortcutKeys: keyLists('shortcutKeys'),
+      rightClickBack: flag('rightClickBack', d.rightClickBack),
       controlsHideSeconds: number('controlsHideSeconds', 3, 1, 30),
       showHeatmap: flag('showHeatmap', d.showHeatmap),
       progressLine: ProgressLine.parse(raw['progressLine'], d.progressLine),

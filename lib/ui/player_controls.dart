@@ -475,6 +475,10 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
                       onLongPressStart: (_) => _holdSpeed(true),
                       onLongPressEnd: (_) => _holdSpeed(false),
                       onLongPressCancel: () => _holdSpeed(false),
+                      // As in wiliwili: out of fullscreen first, then back.
+                      onSecondaryTap: !_controller.preferences.rightClickBack
+                          ? null
+                          : () => fullscreen ? unawaited(widget.state?.exitFullscreen()) : _controller.goBack(),
                     ),
                   ),
                 _buffering(),

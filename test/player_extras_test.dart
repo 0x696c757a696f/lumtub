@@ -14,6 +14,7 @@ import 'package:lumtub/progress_line.dart';
 import 'package:lumtub/screenshot.dart';
 import 'package:lumtub/storyboard.dart';
 import 'package:lumtub/ui/player_controls.dart';
+import 'package:lumtub/shortcut_bindings.dart';
 import 'package:lumtub/ui/player_shortcuts.dart';
 import 'package:lumtub/ui/theater_mode.dart';
 import 'package:lumtub/ui/theme.dart';
@@ -245,6 +246,23 @@ void main() {
       await tester.tap(find.byType(PlayerControls), warnIfMissed: false);
       await tester.pump(const Duration(milliseconds: 400));
     }
+
+    testWidgets('keys chosen in the settings drive the player, and right click goes back', (tester) async {
+      await controller.savePreferences(controller.preferences.copyWith(
+        shortcutKeys: withShortcutKeys(const {}, PlayerAction.seekBack, [const KeyCombo(LogicalKeyboardKey.bracketLeft)]),
+        rightClickBack: true,
+      ));
+      await pump(tester);
+      final before = player.seeks.length;
+      await tester.sendKeyEvent(LogicalKeyboardKey.bracketLeft);
+      await tester.pump();
+      expect(player.seeks.length, before + 1);
+      expect(controller.playing?.id, 'dQw4w9WgXcQ', reason: '[ no longer goes to the previous video');
+      expect(controller.onWatchPage, isTrue);
+      await tester.tap(find.byType(PlayerControls), buttons: kSecondaryButton, warnIfMissed: false);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(controller.onWatchPage, isFalse);
+    });
 
     testWidgets('number keys jump to tenths, Home and End to the ends', (tester) async {
       await pump(tester);

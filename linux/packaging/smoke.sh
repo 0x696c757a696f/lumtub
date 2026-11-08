@@ -47,8 +47,9 @@ if [[ $code -ne 0 ]] && command -v gdb > /dev/null; then
     cd "$out" && "$appimage" --appimage-extract > /dev/null
     mkdir -p "$out/home"
     HOME="$out/home" LUMTUB_SMOKE="$out/result-gdb.json" LUMTUB_SMOKE_VIDEO="$out/test.mp4" LUMTUB_SMOKE_YOUTUBE=jNQXAC9IVRw \
-      timeout 300 xvfb-run -a -s "-screen 0 1600x1000x24" gdb -q -batch -ex 'handle SIGPIPE nostop noprint' -ex run -ex 'thread apply all bt 25' \
-      --args "$out/squashfs-root/usr/bin/lumtub" 2>&1 | grep -v '^\[New Thread\|^\[Thread .* exited' | tail -n 200
+      timeout 300 xvfb-run -a -s "-screen 0 1600x1000x24" gdb -q -batch -ex 'handle SIGPIPE nostop noprint' -ex run -ex bt -ex 'thread apply all bt 25' \
+      --args "$out/squashfs-root/usr/bin/lumtub" > "$out/gdb.txt" 2>&1
+    grep -v '^\[New Thread\|^\[Thread .* exited\|^\[Detaching' "$out/gdb.txt" | grep -B5 -A60 -m1 'received signal\|exited with code' || tail -n 80 "$out/gdb.txt"
     rm -rf "$out/squashfs-root" "$out/home"
   )
 fi

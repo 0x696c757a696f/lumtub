@@ -20,6 +20,7 @@ void main() {
     expect(options['deband'], 'yes');
     expect(options['cache-secs'], '45');
     expect(options['demuxer-max-bytes'], '128MiB');
+    expect(options['demuxer-donate-buffer'], 'no');
   });
   test('subtitle preferences become slang and yt-dlp options', () {
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['slang'], '');

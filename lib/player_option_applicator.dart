@@ -68,6 +68,11 @@ class PlayerOptionApplicator {
       // What was played is kept for seeking back; mpv keeps 50 MiB, which
       // goes on top of the forward cache above.
       'demuxer-max-back-bytes': '${(settings.cacheMemoryMb ~/ 4).clamp(16, 50)}MiB',
+      // Without this mpv lends the back cache whatever of the forward cache
+      // cache-secs leaves unused, so what was played grew to the whole
+      // 150 MiB plus the above (the user's log: 187 MB on a live; checked
+      // with mpv on a live HLS stream: 184 MB with it, 43 MB without).
+      'demuxer-donate-buffer': 'no',
       'volume-max': settings.volumeMax.toString(),
       'audio-device': settings.audioDevice,
       'loop-file': settings.playOrder == PlayOrder.singleCycle ? 'inf' : 'no',

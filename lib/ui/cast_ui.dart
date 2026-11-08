@@ -89,6 +89,7 @@ class _CastDialogState extends State<_CastDialog> {
         'ts' => 'MPEG-TS',
         'hls' => 'HLS',
         'mp4' => 'MP4',
+        'mkv' => 'MKV',
         _ => null,
       };
 
@@ -167,7 +168,7 @@ class _CastDialogState extends State<_CastDialog> {
                       icon: const Icon(AppIcons.dotsThreeVertical),
                       onSelected: (format) => _setFormat(device, format),
                       itemBuilder: (context) => [
-                        for (final format in const ['', 'ts', 'hls', 'mp4'])
+                        for (final format in const ['', 'ts', 'hls', 'mp4', 'mkv'])
                           CheckedPopupMenuItem(value: format, checked: (widget.controller.preferences.castFormats[device.id] ?? '') == format, child: Text(_formatName(format) ?? tr('Auto'))),
                       ],
                     ),

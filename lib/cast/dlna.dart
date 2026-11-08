@@ -100,7 +100,7 @@ DlnaDescription parseDeviceDescription(String xml, Uri location) {
 }
 
 /// Whether a renderer described as [about] runs on Apple's systems.
-bool looksApple(String about) => RegExp(r'\b(iPhone|iPad|iPod|iOS|iPadOS|macOS|Mac|MacBook|iMac|Apple)\b', caseSensitive: false).hasMatch(about);
+bool looksApple(String about) => RegExp(r'\b(iPhone|iPad|iPod|iOS|iPadOS|tvOS|Apple TV|macOS|Mac|MacBook|iMac|Apple)\b', caseSensitive: false).hasMatch(about);
 
 /// The SOAP request body for [action] of [serviceType].
 String soapEnvelope(String serviceType, String action, Map<String, String> arguments) => '<?xml version="1.0" encoding="utf-8"?>'

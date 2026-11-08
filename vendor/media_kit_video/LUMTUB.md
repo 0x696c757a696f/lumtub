@@ -21,6 +21,9 @@ The changes, marked "Lumtub" in the code:
   It is drawn only while `secondaryKey` names a chosen subtitle, and when
   that changes the old line goes at once: mpv reports the text of a track
   turned off as unavailable, which media_kit ignores.
+  Each subtitle is kept to two lines where it can be (drawn down to 85 %
+  of its size), its wrapped lines evened out, no wider than 90 % of the
+  picture (`SubtitleLine`).
 - `lib/src/video_controller/native_video_controller/real.dart`: a size set
   with `setSize` is kept when the next video's size arrives, instead of
   being replaced by the video's own size.

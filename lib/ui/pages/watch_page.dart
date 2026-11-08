@@ -717,7 +717,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
   if (settings.libassSubtitles) return const SubtitleViewConfiguration(visible: false);
   final border = settings.subtitleBorder;
   TextStyle style(String font, double scale, int color, double opacity) => TextStyle(
-        height: 1.4,
+        height: 1.3,
         fontSize: 32 * scale,
         fontFamily: font.isEmpty ? null : font,
         // Where the font is missing (another system), the bundled one.
@@ -739,6 +739,7 @@ SubtitleViewConfiguration subtitleViewFor(PlayerSettings settings, {Size? smallW
     secondaryStyle: style(settings.secondaryFont, settings.secondaryScale, settings.secondaryColor, settings.secondaryOpacity),
     // sub-pos counts from the top; 100 is the bottom edge.
     textScaler: textScaler,
+    spacing: 6,
     secondaryKey: secondary,
     padding: EdgeInsets.fromLTRB(16 * paddingScale, 0, 16 * paddingScale, (24 + (100 - settings.subtitlePosition) * 4.0) * paddingScale),
   );

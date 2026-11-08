@@ -485,8 +485,9 @@ class AppController extends ChangeNotifier with _ExploreState {
       null when device.protocol == CastProtocol.dlna && split.fitsTransportStream => device is DlnaDevice && device.apple ? 'hls' : 'ts',
       null => 'mp4',
     };
-    final hls = kind == 'hls';
-    final ts = kind == 'ts';
+    // HLS and MKV carry the lines inside the stream, timed from the start
+    // of the video; there no other subtitle file goes with them.
+    final inside = (kind == 'hls' || kind == 'mkv') && subtitles.cues.isNotEmpty;
     final agent = info['http_headers'] is Map ? (info['http_headers'] as Map)['User-Agent']?.toString() : null;
     final duration = info['duration'] is num ? Duration(milliseconds: ((info['duration'] as num) * 1000).round()) : null;
     Map<String, dynamic> target(String url, int size) => {'url': url, 'size': size, if (agent != null) 'userAgent': agent, if (proxy.url != null) 'proxy': proxy.url};
@@ -545,6 +546,11 @@ class AppController extends ChangeNotifier with _ExploreState {
         'startMs': at.inMilliseconds,
         'kind': kind,
         if (duration != null) 'durationMs': duration.inMilliseconds,
+        if (inside)
+          'subtitles': {
+            'language': subtitles.language ?? '',
+            'cues': [for (final cue in subtitles.cues) [cue.start.inMilliseconds, cue.end.inMilliseconds, cue.text]],
+          },
       });
       final answer = jsonDecode(await _castRegister(ask)) as Map<String, dynamic>;
       // An address YouTube refuses at once is asked for anew, once.
@@ -557,17 +563,17 @@ class AppController extends ChangeNotifier with _ExploreState {
       final path = answer['path'];
       if (path is! String) throw StateError('${answer['error']}');
       final begins = Duration(milliseconds: (((answer['start'] as num?) ?? 0) * 1000).round());
-      logInfo('Casting ${split.height}p${split.fps} ${split.codec} joined by lumtub_core from ${begins.inSeconds} s as ${hls ? 'HLS' : ts ? 'MPEG-TS' : 'MP4'}');
+      logInfo('Casting ${split.height}p${split.fps} ${split.codec} joined by lumtub_core from ${begins.inSeconds} s as ${const {'hls': 'HLS', 'ts': 'MPEG-TS', 'mkv': 'MKV'}[kind] ?? 'MP4'}${inside ? ' with ${subtitles.cues.length} subtitle lines inside' : ''}');
       // The device counts time from where this stream begins.
       CastSubtitles? lines;
-      if (subtitles.cues.isNotEmpty) {
+      if (subtitles.cues.isNotEmpty && !(inside && device.protocol == CastProtocol.dlna)) {
         try {
           lines = await CastSubtitleServer.instance.register(subtitles.cues, host: here, offset: begins, language: subtitles.language);
         } catch (e) {
           logWarn('Cast: could not serve the subtitles: $e');
         }
       }
-      return CastMedia(url: 'http://$here:$port$path', title: title, mime: hls ? 'application/vnd.apple.mpegurl' : ts ? 'video/mpeg' : 'video/mp4', offset: begins, duration: duration, restart: from, subtitles: lines);
+      return CastMedia(url: 'http://$here:$port$path', title: title, mime: const {'hls': 'application/vnd.apple.mpegurl', 'ts': 'video/mpeg', 'mkv': 'video/x-matroska'}[kind] ?? 'video/mp4', offset: begins, duration: duration, restart: from, subtitles: lines);
     }
 
     return from(start);

@@ -3,15 +3,17 @@
 //! its better pictures and its sound as separate fragmented MP4 files, and
 //! a TV takes one address; the index (`sidx`) at the head of each file says
 //! where every fragment starts, so the two are read fragment by fragment
-//! and written out as one fragmented MP4 (for Chromecast) or as an MPEG
-//! transport stream (for DLNA renderers, which take it most reliably).
+//! and written out as one fragmented MP4 (for Chromecast), an MPEG
+//! transport stream (for DLNA renderers, which take it most reliably), an
+//! HLS playlist of transport stream segments (for Apple's players) or
+//! Matroska (any picture, with a subtitle track).
 //!
 //! The stream starts at the keyframe at or before the asked position;
 //! seeking registers the video again from the new position. Bytes are read
 //! from YouTube in chunks the way the loopback relay reads them. Only
 //! registered sessions are served, under random tokens.
 
-use crate::cast_webm;
+use crate::{cast_mkv, cast_webm};
 use crate::relay::{Fetch, Stop, Target, Web, drain, read_request, request};
 use serde::Deserialize;
 use std::collections::{HashMap, VecDeque};
@@ -40,6 +42,17 @@ pub enum Kind {
     /// An HLS playlist of transport stream segments, for Apple's players,
     /// which play a transport stream only that way.
     Hls,
+    /// Matroska, which carries any of the pictures and a subtitle track.
+    Mkv,
+}
+
+/// The subtitle lines to send inside the stream: start and end in
+/// milliseconds from the start of the video, and the text.
+#[derive(Deserialize, Default)]
+pub struct Subtitles {
+    #[serde(default)]
+    pub language: String,
+    pub cues: Vec<(u64, u64, String)>,
 }
 
 #[derive(Deserialize)]
@@ -53,6 +66,9 @@ pub struct Ask {
     /// The video's length, for the last segment of an HLS playlist.
     #[serde(default)]
     pub duration_ms: u64,
+    /// Lines for HLS (a WebVTT rendition) and MKV (a text track).
+    #[serde(default)]
+    pub subtitles: Option<Subtitles>,
 }
 
 /// One file's place in the stream: what its header says and where its
@@ -834,6 +850,29 @@ fn put_box(out: &mut Vec<u8>, kind: &[u8; 4], body: impl FnOnce(&mut Vec<u8>)) {
     out[start..start + 4].copy_from_slice(&size.to_be_bytes());
 }
 
+/// How Matroska names a track's codec, from its sample entry.
+fn mkv_track(track: &Track) -> Result<cast_mkv::TrackInfo, String> {
+    let data = &track.trak;
+    let trak = atoms(data, 0, data.len()).into_iter().next().ok_or("no trak")?;
+    let stsd = path(data, trak, &[b"mdia", b"minf", b"stbl", b"stsd"]).ok_or("no stsd")?;
+    let entry = atoms(data, stsd.body + 8, stsd.end.min(data.len())).into_iter().next().filter(|e| e.end <= data.len()).ok_or("no sample entry")?;
+    let config = |from: usize, kind: &[u8; 4]| atoms(data, from, entry.end).into_iter().find(|a| &a.kind == kind && a.end <= data.len()).map(|a| data[a.body..a.end].to_vec());
+    if track.video {
+        let size = (be16(data, entry.body + 24).unwrap_or(0), be16(data, entry.body + 26).unwrap_or(0));
+        let (codec, private) = match &entry.kind {
+            b"avc1" | b"avc3" => ("V_MPEG4/ISO/AVC", Some(config(entry.body + 78, b"avcC").ok_or("no avcC")?)),
+            b"vp09" => ("V_VP9", None),
+            b"av01" => ("V_AV1", Some(config(entry.body + 78, b"av1C").ok_or("no av1C")?)),
+            _ => return Err("a picture MKV does not take here".into()),
+        };
+        return Ok(cast_mkv::TrackInfo { codec, private, video: Some(size), audio: None });
+    }
+    let Codec::Aac { profile, frequency, channels } = track.codec else { return Err("sound other than AAC".into()) };
+    const RATES: [u32; 13] = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
+    let bits = ((profile as u16 + 1) << 11) | ((frequency as u16) << 7) | ((channels as u16) << 3);
+    Ok(cast_mkv::TrackInfo { codec: "A_AAC", private: Some(bits.to_be_bytes().to_vec()), video: None, audio: Some((RATES[frequency as usize] as f64, channels)) })
+}
+
 /// `trak` with its `tkhd` track id set to `id`.
 fn renumbered(trak: &[u8], id: u32) -> Vec<u8> {
     let mut trak = trak.to_vec();
@@ -1154,6 +1193,7 @@ pub struct Session {
     start: f64,
     kind: Kind,
     duration: f64,
+    subtitles: Option<Subtitles>,
     /// Raised by each request, so an older one for the same session stops.
     generation: AtomicU64,
     /// HLS segments made last, as players often ask for one twice.
@@ -1174,8 +1214,12 @@ impl Session {
         if matches!(ask.kind, Kind::Ts | Kind::Hls) && (!matches!(video.codec, Codec::Avc { .. }) || !matches!(audio.codec, Codec::Aac { .. })) {
             return Err("only H.264 with AAC goes into a transport stream".into());
         }
+        if ask.kind == Kind::Mkv {
+            mkv_track(&video)?;
+            mkv_track(&audio)?;
+        }
         let addresses = [Address::new(ask.video.url.clone()), Address::new(ask.audio.url.clone())];
-        Ok(Session { video_target: ask.video, audio_target: ask.audio, addresses, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, duration: ask.duration_ms as f64 / 1000.0, generation: AtomicU64::new(0), made: Mutex::new(VecDeque::new()) })
+        Ok(Session { video_target: ask.video, audio_target: ask.audio, addresses, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, duration: ask.duration_ms as f64 / 1000.0, subtitles: ask.subtitles.filter(|s| !s.cues.is_empty()), generation: AtomicU64::new(0), made: Mutex::new(VecDeque::new()) })
     }
 
     /// Where the stream really starts, in seconds: the keyframe at or
@@ -1189,6 +1233,7 @@ impl Session {
             Kind::Mp4 => "video/mp4",
             Kind::Ts => "video/mpeg",
             Kind::Hls => "application/vnd.apple.mpegurl",
+            Kind::Mkv => "video/x-matroska",
         }
     }
 
@@ -1209,13 +1254,53 @@ impl Session {
             .collect()
     }
 
-    /// The HLS playlist, its segments named `<token>/<index>.ts`.
-    pub fn playlist(&self, token: &str) -> String {
+    /// The playlist asked for first: with subtitles, a master playlist
+    /// naming the picture's playlist and a WebVTT rendition; else the
+    /// picture's playlist itself.
+    pub fn master(&self, token: &str) -> String {
+        let Some(subtitles) = &self.subtitles else { return self.playlist(&format!("{token}/")) };
+        let seconds = self.duration.max(1.0);
+        let bandwidth = ((self.video_target.size + self.audio_target.size) as f64 * 8.0 / seconds).round() as u64;
+        let language = subtitles.language.replace('"', "");
+        let name = if language.is_empty() { "Subtitles".to_string() } else { language.clone() };
+        let language = if language.is_empty() { String::new() } else { format!(",LANGUAGE=\"{language}\"") };
+        format!(
+            "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"subs\",NAME=\"{name}\"{language},DEFAULT=YES,AUTOSELECT=YES,FORCED=NO,URI=\"{token}/subtitles.m3u8\"\n#EXT-X-STREAM-INF:BANDWIDTH={},SUBTITLES=\"subs\"\n{token}/video.m3u8\n",
+            bandwidth.max(1)
+        )
+    }
+
+    /// The subtitles' playlist: one WebVTT file for the whole stream.
+    pub fn subtitle_playlist(&self) -> String {
+        let length: f64 = self.hls_segments().iter().map(|s| s.2).sum();
+        format!("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-PLAYLIST-TYPE:VOD\n#EXT-X-TARGETDURATION:{}\n#EXT-X-MEDIA-SEQUENCE:0\n#EXTINF:{length:.3},\nsubtitles.vtt\n#EXT-X-ENDLIST\n", length.ceil() as u64)
+    }
+
+    /// The subtitles as WebVTT, timed like the segments: a time from the
+    /// start of the video is that far past the segments' base timestamp.
+    pub fn vtt(&self) -> String {
+        let mut out = format!("WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:{TS_BASE},LOCAL:00:00:00.000\n\n");
+        let clock = |ms: u64| format!("{:02}:{:02}:{:02}.{:03}", ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, ms % 1000);
+        let from = (self.starts_at() * 1000.0) as u64;
+        for (start, end, text) in self.subtitles.iter().flat_map(|s| s.cues.iter()) {
+            let text = text.replace("-->", "->");
+            let text = text.lines().filter(|l| !l.trim().is_empty()).collect::<Vec<_>>().join("\n");
+            if *end > from && !text.is_empty() {
+                out.push_str(&format!("{} --> {}\n{text}\n\n", clock(*start), clock(*end)));
+            }
+        }
+        out
+    }
+
+    /// The picture's HLS playlist, its segments named `<prefix><index>.ts`:
+    /// `<token>/` when it is the first playlist, nothing when it sits under
+    /// the token beside the subtitles.
+    pub fn playlist(&self, prefix: &str) -> String {
         let segments = self.hls_segments();
         let longest = segments.iter().map(|s| s.2).fold(1.0f64, f64::max).ceil() as u64;
         let mut out = format!("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-PLAYLIST-TYPE:VOD\n#EXT-X-TARGETDURATION:{longest}\n#EXT-X-MEDIA-SEQUENCE:0\n");
         for (index, _, length) in segments {
-            out.push_str(&format!("#EXTINF:{length:.3},\n{token}/{index}.ts\n"));
+            out.push_str(&format!("#EXTINF:{length:.3},\n{prefix}{index}.ts\n"));
         }
         out.push_str("#EXT-X-ENDLIST\n");
         out
@@ -1354,6 +1439,57 @@ impl Session {
         let mut out = Vec::with_capacity(1 << 20);
         match self.kind {
             Kind::Hls => return Err("an HLS session is read segment by segment".into()),
+            Kind::Mkv => {
+                let (picture, sound) = (mkv_track(&self.video)?, mkv_track(&self.audio)?);
+                let from = seconds;
+                let length = if self.duration > from { (self.duration - from) * 1000.0 } else { 0.0 };
+                out.extend_from_slice(&cast_mkv::head(&picture, &sound, self.subtitles.as_ref().map(|s| s.language.as_str()), length));
+                into.write_all(&out).map_err(|_| String::new())?;
+                out.clear();
+                let from_ms = (from * 1000.0).round() as i64;
+                let mut cues = self.subtitles.iter().flat_map(|s| s.cues.iter()).filter(|c| c.1 as i64 > from_ms).peekable();
+                let mut clusters = cast_mkv::Clusters::default();
+                let timescales = [self.video.timescale, self.audio.timescale];
+                let shifts = [self.video.shift as i64, self.audio.shift as i64];
+                let ms = |ticks: i64, i: usize| ticks * 1000 / timescales[i] as i64;
+                let mut at = [0usize, 0usize];
+                loop {
+                    if !current() {
+                        return Ok(());
+                    }
+                    let time = |f: &Option<Fragment>, i: usize, at: usize| f.as_ref().and_then(|f| f.samples.get(at)).map(|s| ms(s.time as i64 - rebase[i] as i64, i));
+                    let pick = match (time(&v, 0, at[0]), time(&a, 1, at[1])) {
+                        (None, None) => break,
+                        (Some(_), None) => 0,
+                        (None, Some(_)) => 1,
+                        (Some(x), Some(y)) => usize::from(y < x),
+                    };
+                    let (f, s) = if pick == 0 { (v.as_ref().unwrap(), v.as_ref().unwrap().samples[at[0]]) } else { (a.as_ref().unwrap(), a.as_ref().unwrap().samples[at[1]]) };
+                    let shown = ms(s.time as i64 - rebase[pick] as i64 + s.offset as i64 - shifts[pick], pick).max(0);
+                    let decoded = ms(s.time as i64 - rebase[pick] as i64, pick);
+                    while let Some(cue) = cues.next_if(|c| (c.0 as i64 - from_ms) <= decoded) {
+                        let start = (cue.0 as i64 - from_ms).max(0);
+                        let end = cue.1 as i64 - from_ms;
+                        clusters.text(&mut out, start, (end - start).max(1) as u64, &cue.2);
+                    }
+                    clusters.frame(&mut out, if pick == 0 { cast_mkv::VIDEO } else { cast_mkv::AUDIO }, shown, pick == 1 || s.sync, &f.data[s.at..s.at + s.size]);
+                    at[pick] += 1;
+                    if out.len() >= 64 << 10 {
+                        into.write_all(&out).map_err(|_| String::new())?;
+                        out.clear();
+                    }
+                    if v.as_ref().is_some_and(|f| at[0] >= f.samples.len()) {
+                        v = next_fragment(&video)?;
+                        at[0] = 0;
+                    }
+                    if a.as_ref().is_some_and(|f| at[1] >= f.samples.len()) {
+                        a = next_fragment(&audio)?;
+                        at[1] = 0;
+                    }
+                }
+                clusters.flush(&mut out);
+                into.write_all(&out).map_err(|_| String::new())?;
+            }
             Kind::Mp4 => {
                 out.extend_from_slice(&mp4_head(&self.video, &self.audio));
                 let mut sequence = 1u32;
@@ -1512,6 +1648,7 @@ impl Server {
             Kind::Ts => "ts",
             Kind::Mp4 => "mp4",
             Kind::Hls => "m3u8",
+            Kind::Mkv => "mkv",
         }), start))
     }
 
@@ -1552,7 +1689,10 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &Arc<dyn Fetch>) {
     if session.kind == Kind::Hls {
         let segment = path.trim_start_matches('/').split_once('/').map(|(_, rest)| rest.split(['.', '?']).next().unwrap_or(""));
         let body = match segment {
-            None => Ok((Arc::new(session.playlist(&token).into_bytes()), "application/vnd.apple.mpegurl")),
+            None => Ok((Arc::new(session.master(&token).into_bytes()), "application/vnd.apple.mpegurl")),
+            Some("video") => Ok((Arc::new(session.playlist("").into_bytes()), "application/vnd.apple.mpegurl")),
+            Some("subtitles") if path.contains(".vtt") => Ok((Arc::new(session.vtt().into_bytes()), "text/vtt; charset=utf-8")),
+            Some("subtitles") => Ok((Arc::new(session.subtitle_playlist().into_bytes()), "application/vnd.apple.mpegurl")),
             Some(index) => match index.parse::<usize>() {
                 Ok(index) => session.hls_segment(fetch, index).map(|b| (b, "video/mp2t")),
                 Err(_) => Err("no such segment".to_string()),
@@ -1769,7 +1909,7 @@ mod tests {
         let both = HashMap::from([("v.mp4".to_string(), v.clone()), ("a.mp4".to_string(), a.clone())]);
         let files = files(both.clone());
         for (kind, start, name) in [(Kind::Mp4, 0, "out.mp4"), (Kind::Ts, 0, "out.ts"), (Kind::Mp4, 9_500, "seek.mp4"), (Kind::Ts, 9_500, "seek.ts")] {
-            let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: start, kind, duration_ms: 0 };
+            let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: start, kind, duration_ms: 0, subtitles: None };
             let session = Session::new(ask, &files).expect("session");
             let mut out = Vec::new();
             session.stream(&files, &mut out).expect("stream");
@@ -1780,25 +1920,37 @@ mod tests {
         for (picture, start, name) in [("vp9.webm", 0, "vp9.mp4"), ("vp9.webm", 7_000, "vp9-seek.mp4"), ("av1.mp4", 0, "av1-out.mp4")] {
             let Some(p) = sample(&dir, picture) else { continue };
             let files = super::tests::files(HashMap::from([(picture.to_string(), p.clone()), ("a.mp4".to_string(), a.clone())]));
-            let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: start, kind: Kind::Mp4, duration_ms: 0 };
+            let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: start, kind: Kind::Mp4, duration_ms: 0, subtitles: None };
             let session = Session::new(ask, &files).expect("session");
             let mut out = Vec::new();
             session.stream(&files, &mut out).expect("stream");
             std::fs::write(format!("{dir}/{name}"), &out).unwrap();
             assert!(out.len() > 100_000);
-            let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Ts, duration_ms: 0 };
+            let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Ts, duration_ms: 0, subtitles: None };
             assert!(Session::new(ask, &files).is_err());
+        }
+        // As Matroska with a subtitle track: H.264, VP9 from WebM and AV1.
+        let lines = || Some(Subtitles { language: "en".into(), cues: vec![(500, 2_500, "First line".into()), (8_000, 12_000, "Second\nline".into())] });
+        for (picture, start, name) in [("v.mp4", 0, "out.mkv"), ("v.mp4", 9_500, "seek.mkv"), ("vp9.webm", 0, "vp9.mkv"), ("av1.mp4", 0, "av1.mkv")] {
+            let Some(p) = sample(&dir, picture) else { continue };
+            let files = super::tests::files(HashMap::from([(picture.to_string(), p.clone()), ("a.mp4".to_string(), a.clone())]));
+            let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: start, kind: Kind::Mkv, duration_ms: 20_000, subtitles: lines() };
+            let session = Session::new(ask, &files).expect("session");
+            let mut out = Vec::new();
+            session.stream(&files, &mut out).expect("stream");
+            std::fs::write(format!("{dir}/{name}"), &out).unwrap();
+            assert!(out.len() > 100_000 && out.starts_with(&[0x1A, 0x45, 0xDF, 0xA3]));
         }
         // Replies cut short every 300 kB, and an address refused until renewed.
         let reference = std::fs::read(format!("{dir}/out.mp4")).unwrap();
         let cutting: Arc<dyn Fetch> = Arc::new(Files { data: both.clone(), cut: Some(300_000), expired: None });
-        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0 };
+        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0, subtitles: None };
         let session = Session::new(ask, &cutting).expect("session");
         let mut out = Vec::new();
         session.stream(&cutting, &mut out).expect("stream");
         assert_eq!(out, reference);
         let expiring: Arc<dyn Fetch> = Arc::new(Files { data: both.clone(), cut: None, expired: Some("old=1") });
-        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0 };
+        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0, subtitles: None };
         let session = Arc::new(Session::new(ask, &files).expect("session"));
         session.renew("v.mp4?x", "v.mp4?old=1");
         let renewer = {
@@ -1818,13 +1970,13 @@ mod tests {
         // While a session is registered nothing can renew it, so a refused
         // address fails at once.
         let started = std::time::Instant::now();
-        let ask = Ask { video: target("v.mp4?old=1", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0 };
+        let ask = Ask { video: target("v.mp4?old=1", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0, subtitles: None };
         let refused = Session::new(ask, &expiring).err().expect("refused");
         assert_eq!(refused, "picture: YouTube answered 403");
         assert!(started.elapsed() < Duration::from_secs(5));
         // The same stream through the server, as a TV reads it.
         let server = Server::start(files.clone()).expect("listen");
-        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Ts, duration_ms: 0 };
+        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Ts, duration_ms: 0, subtitles: None };
         let (path, start) = server.register(ask).expect("register");
         assert_eq!(start, 0.0);
         let mut client = TcpStream::connect(("127.0.0.1", server.port())).unwrap();
@@ -1843,7 +1995,7 @@ mod tests {
             let at = answer.windows(4).position(|w| w == b"\r\n\r\n").unwrap();
             (String::from_utf8_lossy(&answer[..at]).to_string(), answer[at + 4..].to_vec())
         };
-        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Hls, duration_ms: 20_000 };
+        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Hls, duration_ms: 20_000, subtitles: None };
         let (path, _) = server.register(ask).expect("register");
         assert!(path.ends_with(".m3u8"));
         let (head, playlist) = get(&path, "");
@@ -1866,6 +2018,30 @@ mod tests {
         assert!(head.starts_with("HTTP/1.1 206") && head.contains("Content-Range: bytes 0-1/"), "{head}");
         assert_eq!(part.len(), 2);
         std::fs::write(format!("{dir}/hls-joined.ts"), &joined).unwrap();
+        // With subtitles, a master playlist names the picture's and theirs.
+        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Hls, duration_ms: 20_000, subtitles: lines() };
+        let (path, _) = server.register(ask).expect("register");
+        let token = path.trim_start_matches('/').trim_end_matches(".m3u8").to_string();
+        let master = String::from_utf8(get(&path, "").1).unwrap();
+        assert!(master.contains("TYPE=SUBTITLES") && master.contains(&format!("URI=\"{token}/subtitles.m3u8\"")) && master.contains(&format!("\n{token}/video.m3u8\n")), "{master}");
+        let video = String::from_utf8(get(&format!("/{token}/video.m3u8"), "").1).unwrap();
+        assert!(video.contains("\n0.ts\n"), "{video}");
+        let (head, segment) = get(&format!("/{token}/0.ts"), "");
+        assert!(head.contains("video/mp2t") && segment[0] == 0x47);
+        let subtitles = String::from_utf8(get(&format!("/{token}/subtitles.m3u8"), "").1).unwrap();
+        assert!(subtitles.contains("\nsubtitles.vtt\n"), "{subtitles}");
+        let (head, vtt) = get(&format!("/{token}/subtitles.vtt"), "");
+        let vtt = String::from_utf8(vtt).unwrap();
+        assert!(head.contains("text/vtt"));
+        assert_eq!(vtt, "WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:180000,LOCAL:00:00:00.000\n\n00:00:00.500 --> 00:00:02.500\nFirst line\n\n00:00:08.000 --> 00:00:12.000\nSecond\nline\n\n");
+        std::fs::create_dir_all(format!("{dir}/subs")).unwrap();
+        std::fs::write(format!("{dir}/subs/master.m3u8"), master.replace(&format!("{token}/"), "")).unwrap();
+        std::fs::write(format!("{dir}/subs/video.m3u8"), &video).unwrap();
+        std::fs::write(format!("{dir}/subs/subtitles.m3u8"), &subtitles).unwrap();
+        std::fs::write(format!("{dir}/subs/subtitles.vtt"), &vtt).unwrap();
+        for name in video.lines().filter(|l| !l.starts_with('#')) {
+            std::fs::write(format!("{dir}/subs/{name}"), get(&format!("/{token}/{name}"), "").1).unwrap();
+        }
     }
 
     #[test]
@@ -1873,7 +2049,7 @@ mod tests {
         let mut v = Vec::new();
         put_box(&mut v, b"ftyp", |o| o.extend_from_slice(b"isom"));
         let server = Server::start(files(HashMap::from([("v.mp4".to_string(), v.clone())]))).expect("listen");
-        let ask = Ask { video: target("v.mp4", v.len()), audio: target("v.mp4", v.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0 };
+        let ask = Ask { video: target("v.mp4", v.len()), audio: target("v.mp4", v.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0, subtitles: None };
         assert!(server.register(ask).unwrap_err().contains("picture"));
         let mut client = TcpStream::connect(("127.0.0.1", server.port())).unwrap();
         client.write_all(b"GET /0123456789abcdef.mp4 HTTP/1.1\r\nHost: x\r\n\r\n").unwrap();

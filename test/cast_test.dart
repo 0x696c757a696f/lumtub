@@ -122,7 +122,7 @@ void main() {
     test('keeps the cast format chosen for each device', () {
       final saved = AppPreferences.fromJson(jsonDecode(jsonEncode(const AppPreferences(castFormats: {'uuid:tv': 'mp4', 'uuid:phone': 'hls'}).toJson())) as Map<String, dynamic>);
       expect(saved.castFormats, {'uuid:tv': 'mp4', 'uuid:phone': 'hls'});
-      expect(AppPreferences.fromJson({'castFormats': {'a': 'webm', 'b': 'ts'}}).castFormats, {'b': 'ts'});
+      expect(AppPreferences.fromJson({'castFormats': {'a': 'webm', 'b': 'ts', 'c': 'mkv'}}).castFormats, {'b': 'ts', 'c': 'mkv'});
     });
 
     test('tells renderers on Apple devices from TVs', () {
@@ -130,6 +130,7 @@ void main() {
       expect(looksApple('iPhone - Nero Receiver'), isTrue);
       expect(looksApple('电视助手: iPhone'), isTrue);
       expect(looksApple('Living room Mac mini'), isTrue);
+      expect(looksApple('Bedroom (tvOS 18) Infuse'), isTrue);
       expect(looksApple('Samsung QN90 Smart TV'), isFalse);
       expect(looksApple('Machine room TV'), isFalse);
     });

@@ -130,24 +130,107 @@ class SubtitleViewState extends State<SubtitleView> {
     final secondary = subtitle.length < 2 || configuration.secondaryKey == null || subtitle[1] == staleSecondary ? '' : subtitle[1].trim();
     final secondaryStyle = configuration.secondaryStyle;
     if (secondaryStyle == null) {
-      return Text(
+      return SubtitleLine(
         [if (secondary.isNotEmpty) secondary, if (main.isNotEmpty) main].join('\n'),
         style: configuration.style,
         textAlign: configuration.textAlign,
         textScaler: textScaler,
+        lines: 4,
       );
     }
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (secondary.isNotEmpty)
-          Text(secondary, style: secondaryStyle, textAlign: configuration.textAlign, textScaler: textScaler),
-        if (secondary.isNotEmpty && main.isNotEmpty) SizedBox(height: configuration.spacing),
+          SubtitleLine(secondary, style: secondaryStyle, textAlign: configuration.textAlign, textScaler: textScaler),
+        if (secondary.isNotEmpty && main.isNotEmpty) SizedBox(height: textScaler.scale(configuration.spacing)),
         if (main.isNotEmpty)
-          Text(main, style: configuration.style, textAlign: configuration.textAlign, textScaler: textScaler),
+          SubtitleLine(main, style: configuration.style, textAlign: configuration.textAlign, textScaler: textScaler),
       ],
     );
   }
+}
+
+// Lumtub: one subtitle, kept to [lines] lines where it can be. Text that
+// would wrap past them is drawn a little smaller, down to [_smallest] of its
+// size, and wrapped lines are evened out, so a cue never ends on a lone word.
+// Lines run no wider than [_widest] of the picture.
+class SubtitleLine extends StatelessWidget {
+  const SubtitleLine(this.text, {required this.style, required this.textAlign, required this.textScaler, this.lines = 2});
+
+  final String text;
+  final TextStyle style;
+  final TextAlign textAlign;
+  final TextScaler textScaler;
+  final int lines;
+
+  static const _smallest = 0.85;
+  static const _widest = 0.9;
+
+  static final _layouts = <Object, _Fit>{};
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final room = constraints.maxWidth.isFinite ? constraints.maxWidth : MediaQuery.sizeOf(context).width;
+      final fit = layout(text, style, textScaler, room * _widest, lines, Directionality.of(context));
+      final shown = fit.shrink == 1.0 ? style : style.copyWith(fontSize: (style.fontSize ?? 14) * fit.shrink);
+      return SizedBox(
+        width: fit.width,
+        child: Text(text, style: shown, textAlign: textAlign, textScaler: textScaler),
+      );
+    });
+  }
+
+  /// The size factor and line width for [text] in lines of at most [room].
+  static _Fit layout(String text, TextStyle style, TextScaler scaler, double room, int lines, TextDirection direction) {
+    final key = Object.hash(text, style, scaler, room.floor(), lines);
+    final known = _layouts[key];
+    if (known != null) return known;
+    final painter = TextPainter(text: TextSpan(text: text, style: style), textDirection: direction, textScaler: scaler, textAlign: TextAlign.center);
+    int count(double width) {
+      painter.layout(maxWidth: width);
+      return painter.computeLineMetrics().length;
+    }
+
+    var shrink = 1.0;
+    var wrapped = count(room);
+    if (wrapped > lines) {
+      painter.text = TextSpan(text: text, style: style.copyWith(fontSize: (style.fontSize ?? 14) * _smallest));
+      final smaller = count(room);
+      if (smaller < wrapped) {
+        shrink = _smallest;
+        wrapped = smaller;
+      } else {
+        painter.text = TextSpan(text: text, style: style);
+      }
+    }
+    var width = room;
+    if (wrapped > 1) {
+      // The narrowest width that keeps the same number of lines.
+      var low = room / 2, high = room;
+      for (var i = 0; i < 8; i++) {
+        final middle = (low + high) / 2;
+        if (count(middle) > wrapped) {
+          low = middle;
+        } else {
+          high = middle;
+        }
+      }
+      width = min(room, high + 1);
+    } else {
+      width = min(room, painter.maxIntrinsicWidth + 1);
+    }
+    painter.dispose();
+    if (_layouts.length > 64) _layouts.clear();
+    return _layouts[key] = _Fit(shrink, width);
+  }
+}
+
+class _Fit {
+  const _Fit(this.shrink, this.width);
+  final double shrink;
+  final double width;
 }
 
 /// {@template subtitle_view_configuration}

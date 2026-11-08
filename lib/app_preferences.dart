@@ -688,7 +688,7 @@ class AppPreferences {
       castFormats: {
         if (raw['castFormats'] case final Map<String, dynamic> formats)
           for (final MapEntry(:key, :value) in formats.entries)
-            if (value case 'ts' || 'hls' || 'mp4') key: value as String,
+            if (value case 'ts' || 'hls' || 'mp4' || 'mkv') key: value as String,
       },
       enabledGroups: strings('enabledGroups'),
       allowedEntries: strings('allowedEntries'),

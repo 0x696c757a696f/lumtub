@@ -20,6 +20,8 @@ class LiveChatMessage {
     this.authorAvatar,
     this.amount,
     this.stickerUrl,
+    this.color,
+    this.tickerSeconds,
     this.emojis = const {},
   });
 
@@ -36,6 +38,10 @@ class LiveChatMessage {
   final String? amount;
   /// The Super Sticker image, when this is a paid sticker.
   final String? stickerUrl;
+  /// The colour of a Super Chat's amount tier, as ARGB.
+  final int? color;
+  /// How long YouTube keeps this Super Chat in the strip over the chat.
+  final int? tickerSeconds;
   /// Custom emoji in [text]: shortcut to picture address.
   final Map<String, String> emojis;
 
@@ -64,6 +70,8 @@ class LiveChatMessage {
           authorAvatar: m['authorAvatar'] as String?,
           amount: m['amount'] as String?,
           stickerUrl: m['stickerUrl'] as String?,
+          color: (m['color'] as num?)?.toInt(),
+          tickerSeconds: (m['tickerSeconds'] as num?)?.toInt(),
           emojis: (m['emojis'] as Map<String, dynamic>?)?.cast<String, String>() ?? const {},
         ),
     ];

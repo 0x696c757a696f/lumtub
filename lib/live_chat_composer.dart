@@ -15,8 +15,25 @@ sealed class ChatBox {
 }
 
 class ChatBoxOpen extends ChatBox {
-  const ChatBoxOpen(this.params);
+  const ChatBoxOpen(this.params, {this.emojis = const []});
   final String params;
+  /// The channel's own emoji in this chat.
+  final List<ChannelEmoji> emojis;
+}
+
+/// A channel emoji of a live chat: typed as [shortcut] (`:_wave:`), sent as
+/// [id]; [locked] ones are for the channel's members.
+class ChannelEmoji {
+  const ChannelEmoji({required this.id, required this.shortcut, required this.url, this.locked = false});
+  final String id;
+  final String shortcut;
+  final String url;
+  final bool locked;
+
+  static ChannelEmoji? fromJson(Object? raw) {
+    if (raw is! Map || raw['id'] is! String || raw['shortcut'] is! String || raw['url'] is! String) return null;
+    return ChannelEmoji(id: raw['id'] as String, shortcut: raw['shortcut'] as String, url: raw['url'] as String, locked: raw['locked'] == true);
+  }
 }
 
 class ChatBoxClosed extends ChatBox {
@@ -76,7 +93,10 @@ class LiveChatComposer {
       return ChatBoxClosed(tr("Couldn't open the chat box"));
     }
     final box = _read(chat.body);
-    if (box['params'] case final String params) return ChatBoxOpen(params);
+    if (box['params'] case final String params) {
+      final emojis = (box['emojis'] as List? ?? const []).map(ChannelEmoji.fromJson).whereType<ChannelEmoji>().toList();
+      return ChatBoxOpen(params, emojis: emojis);
+    }
     return ChatBoxClosed(box['restricted'] as String? ?? tr("This account can't write in this live chat"));
   }
 
@@ -88,7 +108,12 @@ class LiveChatComposer {
     final made = _sendBody;
     if (web == null || core == null || made == null) throw StateError(tr('Sign in with your browser (cookies) to write in the chat'));
     final id = List.generate(16, (_) => Random.secure().nextInt(36).toRadixString(36)).join();
-    final request = core.take(core.withText(jsonEncode({'params': box.params, 'text': text, 'clientMessageId': id}), made));
+    final request = core.take(core.withText(jsonEncode({
+      'params': box.params,
+      'text': text,
+      'clientMessageId': id,
+      'emojis': {for (final e in box.emojis) if (!e.locked) e.shortcut: e.id},
+    }), made));
     if (request == null) return;
     final answer = await web.post('live_chat/send_message', (jsonDecode(request) as Map).cast<String, Object?>(), ask: true);
     if (answer == null) throw StateError(tr('Sign in with your browser (cookies) to write in the chat'));

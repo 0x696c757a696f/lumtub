@@ -46,6 +46,7 @@ import '../network_proxy.dart';
 import '../socks_bridge.dart';
 import '../cast/cast_subtitles.dart';
 import '../cast/cast_controller.dart';
+import '../channel_avatar_lookup.dart';
 import '../channel_playback.dart';
 import '../speech_subtitles.dart';
 import '../video_summary.dart';
@@ -84,6 +85,7 @@ import '../subtitle_files.dart';
 import '../subtitle_cues.dart';
 import '../subtitle_translation.dart';
 import '../danmaku.dart';
+import '../comment_danmaku.dart';
 import '../language_guess.dart' show looksLike;
 import '../translation.dart';
 import '../translation_cache.dart';
@@ -343,6 +345,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   VideoDetails? details;
   bool loadingDetails = false;
   List<LiveChatMessage> replayChat = const [];
+  /// Recent Super Chats of the live chat, newest first, with when each
+  /// leaves the strip over the chat.
+  List<(LiveChatMessage, DateTime)> chatTicker = const [];
 
   /// Fires when a live chat gains messages, which happens several times a
   /// second: only the chat panel listens, not the whole app.
@@ -1017,6 +1022,7 @@ class AppController extends ChangeNotifier with _ExploreState {
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
         _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}heard_languages.json'));
+        ChannelAvatarLookup.instance.configure(_http, File('${directories.cache.path}${Platform.pathSeparator}channel_avatars.json'));
         // Answers kept before 0.2.12 went by titles, which took some Chinese
         // ones for Japanese and every Italian one for English.
         for (final old in ['video_languages.json', 'spoken_languages.json']) {
@@ -1429,6 +1435,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       details = null;
       loadingDetails = true;
       replayChat = const [];
+      chatTicker = const [];
       loadingReplayChat = false;
       replayChatError = null;
       availableHeights = const [];
@@ -1468,6 +1475,9 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   DanmakuOverlay? _danmaku;
   String? _danmakuFor;
+  /// The timed comments flown on a video without a chat, and its id.
+  List<LiveChatMessage> _commentDanmaku = const [];
+  String? _commentDanmakuFor;
 
   static String _clock(Duration d) {
     final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');

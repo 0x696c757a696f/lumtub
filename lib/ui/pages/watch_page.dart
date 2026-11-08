@@ -8,14 +8,13 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../../app/app_controller.dart';
 import '../../appearance_settings.dart' show bundledFont;
 import '../../models.dart';
-import '../../live_chat.dart';
 import '../../player_settings.dart';
 import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
 import '../cast_ui.dart';
 import '../common.dart';
-import '../emoji_text.dart';
 import '../lights_off.dart';
+import '../live_chat_rows.dart';
 import '../linked_text.dart';
 import '../player_controls.dart';
 import '../player_shortcuts.dart';
@@ -422,7 +421,7 @@ class _Details extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       Row(children: [
-        ChannelAvatar(name: channel.isEmpty ? 'YouTube' : channel),
+        ChannelAvatar(name: channel.isEmpty ? 'YouTube' : channel, image: channelRef?.avatar, channelId: channelRef?.id),
         const SizedBox(width: 12),
         // The name and its link take the free space, so the follow button
         // and menu sit at the right edge.
@@ -579,12 +578,15 @@ class _ReplayChatPanel extends StatelessWidget {
     final messages = controller.replayChat;
     final live = controller.playing?.isLive ?? false;
     syncChatTranslation(controller);
+    syncSuperChatHighlights(controller);
     final header = <Widget>[
       Row(children: [
         Expanded(child: Text(tr(live ? 'Chat' : 'Chat replay'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
+        if (messages.any((m) => m.color != null) || controller.chatTicker.isNotEmpty) SuperChatHighlightSwitch(controller: controller),
         ImmersiveTranslationSwitch(controller: controller),
       ]),
       const SizedBox(height: 8),
+      if (live && controller.chatTicker.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: 8), child: SuperChatStrip(controller: controller)),
       if (controller.loadingReplayChat) const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator())),
       if (controller.replayChatError != null) ErrorBanner(tr(live ? "Couldn't load the chat: {0}" : "Couldn't load chat replay: {0}", [controller.replayChatError]), onRetry: controller.retryChat),
       if (!controller.loadingReplayChat && controller.replayChatError == null && messages.isEmpty)
@@ -597,7 +599,7 @@ class _ReplayChatPanel extends StatelessWidget {
     // does not build the ones already shown again.
     Widget messageAt(int index) {
       final message = messages[index];
-      return _chatRows[message] ??= _ReplayChatMessage(controller: controller, message: message, onSeek: message.offset == null ? null : () => controller.seek(message.offset!));
+      return _chatRows[message] ??= ChatMessageRow(controller: controller, message: message, onSeek: message.offset == null ? null : () => controller.seek(message.offset!));
     }
     if (live) {
       // Newest at the bottom; a list built from the bottom stays on the
@@ -627,62 +629,6 @@ class _ReplayChatPanel extends StatelessWidget {
 }
 
 final _chatRows = Expando<Widget>();
-
-class _ReplayChatMessage extends StatelessWidget {
-  const _ReplayChatMessage({required this.controller, required this.message, this.onSeek});
-  final AppController controller;
-  final LiveChatMessage message;
-  final VoidCallback? onSeek;
-
-  @override
-  Widget build(BuildContext context) {
-    final icon = switch (message.kind) {
-      LiveChatKind.paidMessage => AppIcons.handHeartFill,
-      LiveChatKind.paidSticker => AppIcons.smileySticker,
-      LiveChatKind.membership => AppIcons.medal,
-      LiveChatKind.system => AppIcons.info,
-      LiveChatKind.message => AppIcons.chatCircle,
-    };
-    final time = message.offset == null ? '' : _chatClock(message.offset!);
-    return ChatMessageTranslateButton(message: message, child: InkWell(
-      onTap: onSeek,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(icon, size: 18, color: context.colors.outline),
-          const SizedBox(width: 8),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(child: Text(message.author.isEmpty ? tr('System message') : message.author, style: const TextStyle(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
-              if (message.amount != null) Text(message.amount!, style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w700)),
-              if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: context.colors.outline, fontSize: 12))),
-            ]),
-            if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: SelectionArea(child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis))))),
-            if (message.text.isNotEmpty) ChatMessageTranslation(controller: controller, message: message),
-            if (message.stickerUrl != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Image.network(
-                  color: context.pictureWarmth,
-                  colorBlendMode: BlendMode.multiply,
-                  message.stickerUrl!,
-                  height: 56,
-                  cacheHeight: (56 * MediaQuery.devicePixelRatioOf(context)).round(),
-                  errorBuilder: (context, error, stack) => const SizedBox.shrink(),
-                ),
-              ),
-          ])),
-        ]),
-      ),
-    ));
-  }
-}
-
-String _chatClock(Duration value) {
-  final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
-  return value.inHours > 0 ? '${value.inHours}:${value.inMinutes.remainder(60).toString().padLeft(2, '0')}:$seconds' : '${value.inMinutes}:$seconds';
-}
 
 class _UpNext extends StatelessWidget {
   const _UpNext({required this.controller, this.shrinkWrap = false});

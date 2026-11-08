@@ -40,6 +40,14 @@ extension ChatActions on AppController {
   void _flushCurrentChat(int serial) {
     if (serial != _playSerial || _currentChatPending.isEmpty) return;
     final next = [...replayChat, ..._currentChatPending];
+    final now = DateTime.now();
+    final ticker = [
+      for (final message in _currentChatPending.reversed)
+        if (message.tickerSeconds case final seconds?) (message, now.add(Duration(seconds: seconds))),
+      for (final entry in chatTicker)
+        if (entry.$2.isAfter(now)) entry,
+    ];
+    if (ticker.length != chatTicker.length || ticker.isNotEmpty) chatTicker = List.unmodifiable(ticker.take(50));
     _currentChatPending.clear();
     replayChat = List.unmodifiable(next.length > 2000 ? next.sublist(next.length - 2000) : next);
     _syncDanmaku();
@@ -53,6 +61,10 @@ extension ChatActions on AppController {
   /// Whether the video playing has a chat to fly across it.
   bool get hasChat => playing != null && (playing!.isLive || playing!.liveStatus == 'was_live');
 
+  /// Whether 弹幕 can fly over the video playing: its chat, or else the
+  /// comments that name a moment of it.
+  bool get hasDanmaku => playing != null && !playing!.isUpcoming;
+
   /// Starts, feeds or stops the 弹幕 for the video playing, the chat it
   /// has and the 弹幕 settings.
   void _syncDanmaku() {
@@ -60,7 +72,8 @@ extension ChatActions on AppController {
     final item = playing;
     final settings = preferences.danmaku;
     final live = item?.isLive ?? false;
-    final key = player == null || item == null || !settings.enabled || !hasChat ? null : '${identityHashCode(player)}|${item.id}|$live|${settings.hashCode}';
+    final chat = hasChat;
+    final key = player == null || item == null || !settings.enabled || !hasDanmaku || (!chat && !settings.comments) ? null : '${identityHashCode(player)}|${item.id}|$live|${settings.hashCode}';
     if (key != _danmakuFor) {
       _danmakuFor = key;
       _danmaku?.stop();
@@ -73,7 +86,45 @@ extension ChatActions on AppController {
         return;
       }
     }
-    _danmaku?.add(replayChat);
+    if (chat) {
+      _danmaku?.add(replayChat);
+    } else {
+      _loadCommentDanmaku(item!);
+      if (_commentDanmakuFor == item.id) _danmaku?.add(_commentDanmaku);
+    }
+  }
+
+  /// Pages of comments read for the moments they name.
+  static const _commentPages = 4;
+
+  /// Reads the first comments of [item], once, for the lines that name a
+  /// moment of it, and flies them as they come.
+  void _loadCommentDanmaku(VideoItem item) {
+    if (_commentDanmakuFor == item.id) return;
+    _commentDanmakuFor = item.id;
+    _commentDanmaku = const [];
+    unawaited(() async {
+      final read = <YoutubeComment>[];
+      try {
+        var page = await comments.video(item.id);
+        for (var i = 0;; i++) {
+          read.addAll(page.comments);
+          if (_commentDanmakuFor != item.id) return;
+          final length = item.duration == null ? null : Duration(seconds: item.duration!);
+          final timed = timedComments(read, length: length);
+          if (timed.length != _commentDanmaku.length) {
+            _commentDanmaku = timed;
+            _syncDanmaku();
+          }
+          final next = page.continuation;
+          if (next == null || i + 1 >= _commentPages) break;
+          page = await comments.more(next);
+        }
+        logInfo('Bullet chat of ${item.id}: ${_commentDanmaku.length} lines from ${read.length} comments');
+      } catch (e) {
+        logWarn('Could not read the comments of ${item.id} for bullet chat: $e');
+      }
+    }());
   }
 
   /// Turns 弹幕 on or off, or changes how they look.

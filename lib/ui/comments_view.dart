@@ -15,6 +15,7 @@ import 'theme.dart';
 import 'translatable.dart';
 import '../l10n/l10n.dart';
 import 'app_icons.dart';
+import 'emoji_picker.dart';
 import 'live_chat_input.dart';
 
 /// The comments under a video or a post: sort order, comments with their
@@ -222,7 +223,7 @@ class _CommentsSectionState extends State<CommentsSection> {
             }),
             const SizedBox(height: 8),
             if (_searching) _searchBar(context),
-            if (_canWrite) CommentComposer(hint: tr('Add a comment…'), onSubmit: _post)
+            if (_canWrite) CommentComposer(hint: tr('Add a comment…'), onSubmit: _post, thanksFor: widget.videoId)
             else if (loader.canCreate) CommentComposer(hint: tr('Add a comment…'), onSubmit: _create),
           ];
           final prefs = widget.controller.preferences;
@@ -275,6 +276,7 @@ class _CommentTile extends StatelessWidget {
     final small = TextStyle(color: colors.outline, fontSize: 12);
     final thread = loader.replies[comment.id];
     final channelId = comment.channelId;
+    final canOpen = channelId != null && ChannelRef.isValidId(channelId);
     void openAuthor() {
       // From a page over the app (a post's comments), go back to it first.
       if (ModalRoute.of(context) case final route? when !route.isFirst) Navigator.of(context).pop();
@@ -285,15 +287,21 @@ class _CommentTile extends StatelessWidget {
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         InkWell(
           customBorder: const CircleBorder(),
-          onTap: channelId != null && ChannelRef.isValidId(channelId) ? openAuthor : null,
-          child: ChannelAvatar(name: comment.author.replaceFirst(RegExp(r'^@'), ''), image: comment.avatar, radius: reply ? 12 : 16),
+          onTap: canOpen ? openAuthor : null,
+          child: ChannelAvatar(name: comment.author.replaceFirst(RegExp(r'^@'), ''), image: comment.avatar, channelId: comment.avatar == null ? channelId : null, radius: reply ? 12 : 16),
         ),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SelectionArea(
             child: Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
               if (comment.pinned) Text(tr('Pinned'), style: small.copyWith(color: colors.primary)),
-              Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: comment.byUploader ? colors.primary : null)),
+              MouseRegion(
+                cursor: canOpen ? SystemMouseCursors.click : MouseCursor.defer,
+                child: GestureDetector(
+                  onTap: canOpen ? openAuthor : null,
+                  child: Text(comment.author, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: comment.byUploader ? colors.primary : null)),
+                ),
+              ),
               Text(comment.published, style: small),
             ]),
           ),
@@ -339,12 +347,13 @@ class _CommentTile extends StatelessWidget {
 
 /// A field for writing a comment or reply, with 发布 and, for replies, 取消.
 class CommentComposer extends StatefulWidget {
-  const CommentComposer({super.key, required this.hint, required this.onSubmit, this.onCancel, this.autofocus = false});
+  const CommentComposer({super.key, required this.hint, required this.onSubmit, this.onCancel, this.autofocus = false, this.thanksFor});
   final String hint;
   /// Posts the text; returns whether it went through.
   final Future<bool> Function(String text) onSubmit;
   final VoidCallback? onCancel;
   final bool autofocus;
+  final String? thanksFor;
 
   @override
   State<CommentComposer> createState() => _CommentComposerState();
@@ -352,11 +361,13 @@ class CommentComposer extends StatefulWidget {
 
 class _CommentComposerState extends State<CommentComposer> {
   final _text = TextEditingController();
+  final _focus = FocusNode();
   bool _sending = false;
 
   @override
   void dispose() {
     _text.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -380,6 +391,7 @@ class _CommentComposerState extends State<CommentComposer> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         TextField(
           controller: _text,
+          focusNode: _focus,
           autofocus: widget.autofocus,
           enabled: !_sending,
           minLines: 1,
@@ -398,6 +410,14 @@ class _CommentComposerState extends State<CommentComposer> {
         ),
         const SizedBox(height: 4),
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          if (!_sending) EmojiButton(field: _text, focus: _focus, size: 16),
+          if (widget.thanksFor case final videoId?)
+            IconButton(
+              tooltip: tr('Super Thanks: pay and comment on YouTube in your browser'),
+              icon: const Icon(AppIcons.handHeart, size: 16),
+              onPressed: () => unawaited(openExternal('https://www.youtube.com/watch?v=$videoId')),
+            ),
+          const Spacer(),
           if (widget.onCancel != null) TextButton(style: _compact, onPressed: _sending ? null : widget.onCancel, child: Text(tr('Cancel'))),
           const SizedBox(width: 4),
           ListenableBuilder(

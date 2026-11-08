@@ -419,7 +419,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
             fresh: latest[channel.id]?.isAfter(fresh) ?? false,
             live: live.contains(channel.id),
             onTap: () => widget.onSelect(channel),
-            avatar: (radius) => ChannelAvatar(name: channel.name, radius: radius, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel)),
+            avatar: (radius) => ChannelAvatar(name: channel.name, radius: radius, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel), channelId: channel.id),
           ),
       ];
 
@@ -580,7 +580,7 @@ class _AllChannelsState extends State<_AllChannels> {
                     itemBuilder: (context, i) {
                       final channel = matches[i];
                       return ListTile(
-                        leading: ChannelAvatar(name: channel.name, radius: 18, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel)),
+                        leading: ChannelAvatar(name: channel.name, radius: 18, image: channel.avatar, cacheFile: _avatarFile(widget.thumbnails, channel), channelId: channel.id),
                         title: Text(channel.name.isEmpty ? channel.id : channel.name, maxLines: 1, overflow: TextOverflow.ellipsis),
                         trailing: IconButton(
                           tooltip: tr('Open channel'),

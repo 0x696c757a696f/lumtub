@@ -114,6 +114,7 @@ class AppPreferences {
     this.subtitlesByService = false,
     this.bilingualTranslation = true,
     this.immersiveTranslation = false,
+    this.superChatHighlights = true,
     this.danmaku = const DanmakuSettings(),
     this.immersiveLanguage = '',
     this.translationStyle = TranslationStyle.quote,
@@ -260,6 +261,9 @@ class AppPreferences {
   /// 沉浸式翻译: comments, posts and live chat in another language show
   /// their translation under them without asking.
   final bool immersiveTranslation;
+  /// Super Chats in their amount's colour, and the strip of recent ones
+  /// over the live chat.
+  final bool superChatHighlights;
   /// 弹幕: the live chat or its replay flying across the picture.
   final DanmakuSettings danmaku;
   /// The language 沉浸式翻译 turns text into; empty follows the
@@ -430,6 +434,7 @@ class AppPreferences {
     bool? subtitlesByService,
     bool? bilingualTranslation,
     bool? immersiveTranslation,
+    bool? superChatHighlights,
     DanmakuSettings? danmaku,
     String? immersiveLanguage,
     TranslationStyle? translationStyle,
@@ -507,6 +512,7 @@ class AppPreferences {
         subtitlesByService: subtitlesByService ?? this.subtitlesByService,
         bilingualTranslation: bilingualTranslation ?? this.bilingualTranslation,
         immersiveTranslation: immersiveTranslation ?? this.immersiveTranslation,
+        superChatHighlights: superChatHighlights ?? this.superChatHighlights,
         danmaku: danmaku ?? this.danmaku,
         immersiveLanguage: immersiveLanguage ?? this.immersiveLanguage,
         translationStyle: translationStyle ?? this.translationStyle,
@@ -585,6 +591,7 @@ class AppPreferences {
         'subtitlesByService': subtitlesByService,
         'bilingualTranslation': bilingualTranslation,
         'immersiveTranslation': immersiveTranslation,
+        'superChatHighlights': superChatHighlights,
         'danmaku': danmaku.toJson(),
         'immersiveLanguage': immersiveLanguage,
         'translationStyle': translationStyle.name,
@@ -703,6 +710,7 @@ class AppPreferences {
       subtitlesByService: flag('subtitlesByService', d.subtitlesByService),
       bilingualTranslation: flag('bilingualTranslation', d.bilingualTranslation),
       immersiveTranslation: flag('immersiveTranslation', d.immersiveTranslation),
+      superChatHighlights: flag('superChatHighlights', d.superChatHighlights),
       danmaku: DanmakuSettings.fromJson(raw['danmaku']),
       immersiveLanguage: TranslationLanguage.maybeByCode(raw['immersiveLanguage'])?.code ?? '',
       translationStyle: TranslationStyle.values.where((v) => v.name == raw['translationStyle']).firstOrNull ?? d.translationStyle,

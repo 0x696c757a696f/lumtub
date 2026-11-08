@@ -10,6 +10,7 @@ import '../live_chat_composer.dart';
 import '../translation.dart';
 import 'app_icons.dart';
 import 'common.dart';
+import 'emoji_picker.dart';
 import 'theme.dart';
 import 'translatable.dart';
 
@@ -252,7 +253,12 @@ class _LiveChatInputState extends State<LiveChatInput> {
               decoration: InputDecoration(hintText: tr('Say something in the chat')),
             ),
           ),
-          const SizedBox(width: Space.s),
+          EmojiButton(field: _text, focus: _focus, channel: box is ChatBoxOpen ? box.emojis : const []),
+          IconButton(
+            tooltip: tr('Super Chat: pay and send on YouTube in your browser'),
+            icon: Icon(AppIcons.handHeart, size: 18),
+            onPressed: () => unawaited(openExternal('https://www.youtube.com/watch?v=${widget.videoId}')),
+          ),
           IconButton.filledTonal(
             tooltip: tr('Send'),
             onPressed: _sending ? null : () => unawaited(_send()),

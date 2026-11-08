@@ -20,6 +20,7 @@ void main() {
     expect(options['deband'], 'yes');
     expect(options['cache-secs'], '45');
     expect(options['demuxer-max-bytes'], '128MiB');
+    expect(options['demuxer-donate-buffer'], 'no');
   });
   test('subtitle preferences become slang and yt-dlp options', () {
     expect(PlayerOptionApplicator.optionsFor(const PlayerSettings())['slang'], '');
@@ -32,6 +33,15 @@ void main() {
       r'load-info-json=%34%C:\Users\A,B\info\dQw4w9WgXcQ.json',
     );
     expect(PlayerOptionApplicator.ytdlRawOptions(const PlayerSettings(), infoJson: '/tmp/x.json'), 'load-info-json=/tmp/x.json');
+  });
+
+  test('the low-resource strategy reads less ahead and keeps less behind', () {
+    final light = PlayerOptionApplicator.optionsFor(const PlayerSettings(strategy: PlaybackStrategy.lowResource));
+    expect([light['cache-secs'], light['demuxer-max-bytes'], light['demuxer-max-back-bytes']], ['30', '64MiB', '16MiB']);
+    final lower = PlayerOptionApplicator.optionsFor(const PlayerSettings(strategy: PlaybackStrategy.lowResource, cacheSeconds: 10, cacheMemoryMb: 32));
+    expect([lower['cache-secs'], lower['demuxer-max-bytes']], ['10', '32MiB']);
+    final normal = PlayerOptionApplicator.optionsFor(const PlayerSettings());
+    expect([normal['cache-secs'], normal['demuxer-max-bytes'], normal['demuxer-max-back-bytes']], ['60', '150MiB', '37MiB']);
   });
 
   test('single cycle loops the file in mpv', () {

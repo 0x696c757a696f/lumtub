@@ -13,7 +13,7 @@ import 'ui/danmaku_picture.dart';
 
 /// How 弹幕 look: kept with the preferences.
 class DanmakuSettings {
-  const DanmakuSettings({this.enabled = false, this.opacity = 0.85, this.size = 52, this.seconds = 12, this.area = 0.5, this.paid = true});
+  const DanmakuSettings({this.enabled = false, this.opacity = 0.85, this.size = 52, this.seconds = 12, this.area = 0.5, this.paid = true, this.comments = true});
 
   /// The chat flies across the picture.
   final bool enabled;
@@ -27,19 +27,23 @@ class DanmakuSettings {
   final double area;
   /// Super Chats, stickers and memberships too.
   final bool paid;
+  /// On a video without a chat, the comments that name a moment of it fly
+  /// at that moment.
+  final bool comments;
 
   static const areas = [0.25, 0.5, 1.0];
 
-  DanmakuSettings copyWith({bool? enabled, double? opacity, double? size, double? seconds, double? area, bool? paid}) => DanmakuSettings(
+  DanmakuSettings copyWith({bool? enabled, double? opacity, double? size, double? seconds, double? area, bool? paid, bool? comments}) => DanmakuSettings(
         enabled: enabled ?? this.enabled,
         opacity: opacity ?? this.opacity,
         size: size ?? this.size,
         seconds: seconds ?? this.seconds,
         area: area ?? this.area,
         paid: paid ?? this.paid,
+        comments: comments ?? this.comments,
       );
 
-  Map<String, Object> toJson() => {'enabled': enabled, 'opacity': opacity, 'size': size, 'seconds': seconds, 'area': area, 'paid': paid, 'version': 3};
+  Map<String, Object> toJson() => {'enabled': enabled, 'opacity': opacity, 'size': size, 'seconds': seconds, 'area': area, 'paid': paid, 'comments': comments, 'version': 3};
 
   factory DanmakuSettings.fromJson(Object? raw) {
     const d = DanmakuSettings();
@@ -54,6 +58,7 @@ class DanmakuSettings {
       seconds: raw['version'] is int && (raw['version'] as int) >= 2 ? number('seconds', d.seconds, 4, 20) : d.seconds,
       area: number('area', d.area, 0.25, 1),
       paid: raw['paid'] is bool ? raw['paid'] as bool : d.paid,
+      comments: raw['comments'] is bool ? raw['comments'] as bool : d.comments,
     );
   }
 

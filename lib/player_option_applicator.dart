@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:media_kit/media_kit.dart';
 
@@ -7,6 +8,7 @@ import 'player_settings.dart';
 
 class PlayerOptionApplicator {
   static Map<String, String> optionsFor(PlayerSettings settings) {
+    final light = settings.strategy == PlaybackStrategy.lowResource;
     final subtitles = settings.subtitleMode != SubtitleMode.off;
     final language = settings.subtitleLanguage;
     return {
@@ -63,11 +65,18 @@ class PlayerOptionApplicator {
       // been sent in full before reading pauses and none is cut; 10 MiB
       // pieces were still cut every 2 MB.
       'curl-max-request-size': curlRequestSize,
-      'cache-secs': settings.cacheSeconds.toString(),
-      'demuxer-max-bytes': '${settings.cacheMemoryMb}MiB',
+      // 低资源占用优先 reads at most 30 s and 64 MiB ahead and keeps 16 MiB
+      // of what was played; lower settings stay as they are.
+      'cache-secs': (light ? math.min(settings.cacheSeconds, 30) : settings.cacheSeconds).toString(),
+      'demuxer-max-bytes': '${light ? math.min(settings.cacheMemoryMb, 64) : settings.cacheMemoryMb}MiB',
       // What was played is kept for seeking back; mpv keeps 50 MiB, which
       // goes on top of the forward cache above.
-      'demuxer-max-back-bytes': '${(settings.cacheMemoryMb ~/ 4).clamp(16, 50)}MiB',
+      'demuxer-max-back-bytes': '${light ? 16 : (settings.cacheMemoryMb ~/ 4).clamp(16, 50)}MiB',
+      // Without this mpv lends the back cache whatever of the forward cache
+      // cache-secs leaves unused, so what was played grew to the whole
+      // 150 MiB plus the above (the user's log: 187 MB on a live; checked
+      // with mpv on a live HLS stream: 184 MB with it, 43 MB without).
+      'demuxer-donate-buffer': 'no',
       'volume-max': settings.volumeMax.toString(),
       'audio-device': settings.audioDevice,
       'loop-file': settings.playOrder == PlayOrder.singleCycle ? 'inf' : 'no',

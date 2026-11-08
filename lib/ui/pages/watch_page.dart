@@ -422,7 +422,7 @@ class _Details extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       Row(children: [
-        ChannelAvatar(name: channel.isEmpty ? 'YouTube' : channel),
+        ChannelAvatar(name: channel.isEmpty ? 'YouTube' : channel, image: channelRef?.avatar, channelId: channelRef?.id),
         const SizedBox(width: 12),
         // The name and its link take the free space, so the follow button
         // and menu sit at the right edge.

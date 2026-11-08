@@ -46,6 +46,7 @@ import '../network_proxy.dart';
 import '../socks_bridge.dart';
 import '../cast/cast_subtitles.dart';
 import '../cast/cast_controller.dart';
+import '../channel_avatar_lookup.dart';
 import '../channel_playback.dart';
 import '../speech_subtitles.dart';
 import '../video_summary.dart';
@@ -1017,6 +1018,7 @@ class AppController extends ChangeNotifier with _ExploreState {
         _history = history;
         _repository = _repositoryFor(paths, cacheManager, settings);
         _videoLanguages = VideoLanguages(_http, file: File('${directories.cache.path}${Platform.pathSeparator}heard_languages.json'));
+        ChannelAvatarLookup.instance.configure(_http, File('${directories.cache.path}${Platform.pathSeparator}channel_avatars.json'));
         // Answers kept before 0.2.12 went by titles, which took some Chinese
         // ones for Japanese and every Italian one for English.
         for (final old in ['video_languages.json', 'spoken_languages.json']) {

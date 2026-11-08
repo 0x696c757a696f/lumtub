@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../app/app_controller.dart';
 import '../../app/posts_loader.dart';
 import '../../app/video_list_loader.dart';
+import '../../channel_avatar_lookup.dart';
 import '../../community_posts.dart';
 import '../../models.dart';
 import '../../thumbnail_cache.dart';
@@ -254,7 +255,7 @@ class PostCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          ChannelAvatar(name: channel.name, radius: 16),
+          ChannelAvatar(name: channel.name, radius: 16, image: channel.avatar, channelId: channel.id),
           const SizedBox(width: 8),
           Expanded(child: Text(channel.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600))),
           Text(post.published, style: TextStyle(color: colors.outline, fontSize: 12)),
@@ -449,7 +450,7 @@ class ChannelHeader extends StatelessWidget {
       child: Row(children: [
         if (onBack != null) IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: const Icon(AppIcons.arrowLeft)),
         const SizedBox(width: 8),
-        ChannelAvatar(name: name, radius: 28),
+        ChannelAvatar(name: name, radius: 28, image: channel.avatar, channelId: channel.id),
         const SizedBox(width: 16),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
@@ -465,13 +466,15 @@ class ChannelHeader extends StatelessWidget {
   }
 }
 
-/// A round avatar: the channel's picture when a search listed one, else the
-/// first letter of its name.
+/// A round avatar: the channel's picture when a search listed one or it was
+/// looked up by [channelId], else the first letter of its name.
 class ChannelAvatar extends StatelessWidget {
-  const ChannelAvatar({super.key, required this.name, this.radius = 18, this.image, this.cacheFile});
+  const ChannelAvatar({super.key, required this.name, this.radius = 18, this.image, this.cacheFile, this.channelId});
   final String name;
   final double radius;
   final String? image;
+  /// Looks the picture up when [image] is not known.
+  final String? channelId;
   /// Where the picture is kept once downloaded, so a long list of
   /// subscriptions does not fetch every picture again on each visit.
   final File? cacheFile;
@@ -486,7 +489,18 @@ class ChannelAvatar extends StatelessWidget {
       child: Text(letter, style: TextStyle(fontSize: radius * 0.85, fontWeight: FontWeight.w600, color: colors.onPrimaryContainer)),
     );
     final url = image;
-    if (url == null) return fallback;
+    if (url == null) {
+      if (channelId == null) return fallback;
+      final lookup = ChannelAvatarLookup.instance;
+      return ListenableBuilder(
+        listenable: lookup,
+        builder: (context, _) {
+          final found = lookup.of(channelId);
+          return found == null ? fallback : ChannelAvatar(name: name, radius: radius, image: found);
+        },
+      );
+    }
+    if (channelId != null) ChannelAvatarLookup.instance.remember(channelId!, url);
     final file = cacheFile;
     return ClipOval(child: Image(
       color: context.pictureWarmth,
@@ -517,7 +531,7 @@ class ChannelResultTile extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: Row(children: [
-          ChannelAvatar(name: name, radius: 30, image: result.avatar),
+          ChannelAvatar(name: name, radius: 30, image: result.avatar, channelId: ref.id),
           const SizedBox(width: 16),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),

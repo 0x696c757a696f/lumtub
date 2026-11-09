@@ -12,7 +12,7 @@ import 'ui/app_icons.dart';
 
 /// 宗教传统: the traditions, with Christianity's split a level further. Each
 /// tradition has about 8-10 sub-categories; Christianity's are its branches.
-const faithTraditionTopics = <ExploreTopic>[
+final faithTraditionTopics = <ExploreTopic>[
   ExploreTopic('Christianity', AppIcons.church, '基督宗教 Christianity', subs: [
     ExploreSub('Catholic', '天主教 Catholic', subs: [
       ExploreSub("The Pope's words", '教宗 讲话 Pope homily'),
@@ -121,7 +121,7 @@ const faithTraditionTopics = <ExploreTopic>[
 /// 宗教学术: history, philosophy and the study of religion, believing or not.
 /// 精选专题 holds a few entry points; the topics they touch have their own
 /// zones, so it is kept short.
-const faithStudyTopics = <ExploreTopic>[
+final faithStudyTopics = <ExploreTopic>[
   ExploreTopic('Featured', AppIcons.starFill, 'religion documentary 宗教 纪录片', subs: [
     ExploreSub('Religion news today', 'religion news 宗教新闻'),
     ExploreSub('World religion documentaries', 'world religions documentary'),
@@ -199,7 +199,7 @@ const faithStudyTopics = <ExploreTopic>[
 ];
 
 /// 文化艺术: art, buildings, music, festivals and faith around the world.
-const faithArtsTopics = <ExploreTopic>[
+final faithArtsTopics = <ExploreTopic>[
   ExploreTopic('Sacred art', AppIcons.paletteFill, 'sacred art 宗教艺术', subs: [
     ExploreSub('Religious painting', 'religious painting art history'),
     ExploreSub('Icons', 'icon painting iconography'),
@@ -264,7 +264,7 @@ const faithArtsTopics = <ExploreTopic>[
 ];
 
 /// 宗教直播: services, prayer, talks and holy places, now or coming up.
-const faithLiveTopics = <ExploreTopic>[
+final faithLiveTopics = <ExploreTopic>[
   ExploreTopic('Liturgy', AppIcons.church, 'Holy Mass live 弥撒 直播', subs: [
     ExploreSub('Sunday service', 'Sunday church service live 主日崇拜'),
     ExploreSub('Mass', 'Holy Mass live 弥撒'),

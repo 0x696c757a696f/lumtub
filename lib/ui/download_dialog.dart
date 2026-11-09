@@ -141,7 +141,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
               Navigator.pop(context);
               widget.onCover!();
             },
-            icon: const Icon(AppIcons.image, size: 18),
+            icon: Icon(AppIcons.image, size: 18),
             label: Text(tr('Download cover')),
           ),
         if (widget.onSubtitles != null)
@@ -150,7 +150,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
               Navigator.pop(context);
               widget.onSubtitles!();
             },
-            icon: const Icon(AppIcons.subtitles, size: 18),
+            icon: Icon(AppIcons.subtitles, size: 18),
             label: Text(tr('Download subtitles')),
           ),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Cancel'))),

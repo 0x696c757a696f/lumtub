@@ -47,23 +47,35 @@ import '../app_icons.dart';
 /// like PiliNara's settings page. [account] and [about] are drawn at the
 /// bottom of the list without a subtitle, as PiliNara draws them.
 enum SettingsCategory {
-  privacy('Privacy settings', 'Blocked channels, watch history, playback progress', AppIcons.shieldWarning),
-  recommend('Home & search settings', 'Home content, keyword filters, hiding Shorts and watched videos', AppIcons.compass),
-  subscriptions('Subscription settings', 'Subscription feed refresh and filtering', AppIcons.stackSimple),
-  video('Video settings', 'Quality, audio quality, decoding, buffering, audio output and more', AppIcons.gearSix),
-  play('Playback settings', 'Speed, autoplay, play order, subtitles, volume, fullscreen, shortcuts and more', AppIcons.handTap),
-  style('Appearance', 'Theme, fonts, page transitions, navigation bar, card width, thumbnail quality and more', AppIcons.cards),
-  extra('Other settings', 'SponsorBlock, related videos, descriptions, component updates, download and cache locations and more', AppIcons.puzzlePiece),
-  backup('Backup & restore', 'Import, export and reset settings', AppIcons.gearFine),
-  account('YouTube account', 'Google sign-in, TV-code sign-in, syncing subscriptions and playlists', AppIcons.userCircle),
-  about('About', 'Version, logs, diagnostics, open-source licenses', AppIcons.info);
+  privacy('Privacy settings', 'Blocked channels, watch history, playback progress'),
+  recommend('Home & search settings', 'Home content, keyword filters, hiding Shorts and watched videos'),
+  subscriptions('Subscription settings', 'Subscription feed refresh and filtering'),
+  video('Video settings', 'Quality, audio quality, decoding, buffering, audio output and more'),
+  play('Playback settings', 'Speed, autoplay, play order, subtitles, volume, fullscreen, shortcuts and more'),
+  style('Appearance', 'Theme, fonts, page transitions, navigation bar, card width, thumbnail quality and more'),
+  extra('Other settings', 'SponsorBlock, related videos, descriptions, component updates, download and cache locations and more'),
+  backup('Backup & restore', 'Import, export and reset settings'),
+  account('YouTube account', 'Google sign-in, TV-code sign-in, syncing subscriptions and playlists'),
+  about('About', 'Version, logs, diagnostics, open-source licenses');
 
-  const SettingsCategory(this._title, this._subtitle, this.icon);
+  const SettingsCategory(this._title, this._subtitle);
+
+  IconData get icon => switch (this) {
+        privacy => AppIcons.shieldWarning,
+        recommend => AppIcons.compass,
+        subscriptions => AppIcons.stackSimple,
+        video => AppIcons.gearSix,
+        play => AppIcons.handTap,
+        style => AppIcons.cards,
+        extra => AppIcons.puzzlePiece,
+        backup => AppIcons.gearFine,
+        account => AppIcons.userCircle,
+        about => AppIcons.info,
+      };
   final String _title;
   String get title => tr(_title);
   final String _subtitle;
   String get subtitle => tr(_subtitle);
-  final IconData icon;
 }
 
 /// One searchable row of a settings group.
@@ -922,13 +934,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               subtitle: tr('Current: {0}', [SkinLibrary.instance.byId(appearance.skin)?.nameIn(currentLanguage.tag) ?? tr('Standard')]),
               leading: _icon(AppIcons.paintBrush),
               onTap: () => openSkins(context, controller),
-            ), subtitle: tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')),
-        SettingEntry(tr('Color scheme'), (context) => NormalItem(
-              title: tr('Color scheme'),
-              subtitle: tr('Current: {0}', [paletteOf(appearance.palette)?.name ?? tr('Neutral (default)')]),
-              leading: _icon(AppIcons.palette),
-              onTap: () => openColorSelect(context, controller),
-            ), subtitle: tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')),
+            ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')}'),
         SettingEntry(tr('Warm light'), (context) => NormalItem(
               title: tr('Warm light'),
               subtitle: tr('Now: {0}. Lays a warm light over the whole window, video included, with less blue; black stays black and white turns warm like paper', [_eyeCareLabel(appearance)]),
@@ -1001,7 +1007,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('spacing density')),
         SettingEntry(tr('App theme'), (context) => NormalItem(
               title: tr('App theme'),
-              subtitle: switch (paletteOf(appearance.palette)) {
+              subtitle: switch (paletteForSkin(appearance.skin)) {
                 final palette? => tr('Set by the {0} color scheme', [palette.name]),
                 null => tr('Current: {0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
               },
@@ -1309,7 +1315,7 @@ class _DecoderStatusState extends State<_DecoderStatus> {
       // Its own key: an unkeyed tile shares the page's PageStorage slot with
       // the list's scroll offset, and reads that double as its open state.
       key: const PageStorageKey('expand:decoder'),
-      leading: const Icon(AppIcons.gauge),
+      leading: Icon(AppIcons.gauge),
       title: Text(tr('Decoding status'), style: Theme.of(context).textTheme.titleMedium),
       subtitle: Text(tr('Current: {0} · {1}', [controller.currentCodec, controller.currentHwdec]), style: _subtitle(context)),
       children: [
@@ -1374,7 +1380,7 @@ class _AdvancedOptions extends StatelessWidget {
         );
     return ExpansionTile(
       key: const PageStorageKey('expand:mpv'),
-      leading: const Icon(AppIcons.slidersHorizontal),
+      leading: Icon(AppIcons.slidersHorizontal),
       title: Text(tr('Advanced libmpv options'), style: Theme.of(context).textTheme.titleMedium),
       subtitle: Text(tr('See the options passed to libmpv, or restore defaults'), style: _subtitle(context)),
       children: [
@@ -1398,7 +1404,7 @@ class _AdvancedOptions extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-            child: OutlinedButton.icon(onPressed: onReset, icon: const Icon(AppIcons.arrowCounterClockwise), label: Text(tr('Restore all player defaults'))),
+            child: OutlinedButton.icon(onPressed: onReset, icon: Icon(AppIcons.arrowCounterClockwise), label: Text(tr('Restore all player defaults'))),
           ),
         ),
       ],
@@ -1611,7 +1617,7 @@ class _X11ModeSwitchState extends State<_X11ModeSwitch> {
   Widget build(BuildContext context) => SwitchItem(
         title: tr('X11 compatibility mode'),
         subtitle: tr('Draws the window through XWayland so pinning and picture in picture stay on top; may look slightly blurry with display scaling'),
-        leading: const Icon(AppIcons.layout),
+        leading: Icon(AppIcons.layout),
         value: _on,
         onChanged: (v) => unawaited(_set(v)),
       );

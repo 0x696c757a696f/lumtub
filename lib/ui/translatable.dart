@@ -126,7 +126,7 @@ class _TranslatableState extends State<Translatable> {
           TextButton.icon(
             style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 4), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             onPressed: _loading ? null : _toggle,
-            icon: _loading ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.translate, size: 16),
+            icon: _loading ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.translate, size: 16),
             label: Text(_visible ? (both ? tr('Hide translation') : tr('Show original')) : tr('Translation'), style: const TextStyle(fontSize: 12)),
           ),
           if (_error != null) Text(_error!, style: TextStyle(color: colors.error, fontSize: 12)),

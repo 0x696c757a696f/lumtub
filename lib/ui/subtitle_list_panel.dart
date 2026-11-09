@@ -173,7 +173,7 @@ class _SubtitleListState extends State<SubtitleList> {
             child: Row(children: [
               Expanded(
                 child: TextField(
-                  decoration: InputDecoration(isDense: true, prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Search subtitles')),
+                  decoration: InputDecoration(isDense: true, prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Search subtitles')),
                   onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
                 ),
               ),
@@ -254,7 +254,7 @@ class _SubtitleListState extends State<SubtitleList> {
                     _follow = true;
                     _current = -1;
                   }),
-                  icon: const Icon(AppIcons.crosshair, size: 18),
+                  icon: Icon(AppIcons.crosshair, size: 18),
                   label: Text(tr('Back to the current line')),
                 ),
               ),

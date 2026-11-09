@@ -56,11 +56,11 @@ class HomeFeedPage extends StatelessWidget {
             tr('For you'),
             subtitle: feed.loading && feed.items.isEmpty ? tr('Picking from your watch history…') : touchFirst ? null : tr('Picked on this device from what you watch; right-click a video for "Not interested"'),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(AppIcons.shuffle, size: 18), label: Text(tr('Shuffle'))),
+              TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: Icon(AppIcons.shuffle, size: 18), label: Text(tr('Shuffle'))),
               IconButton(
                 tooltip: tr('Pick again'),
                 onPressed: feed.loading ? null : () => controller.refreshHomeFeed(force: true),
-                icon: const Icon(AppIcons.arrowsClockwise),
+                icon: Icon(AppIcons.arrowsClockwise),
               ),
             ]),
           )),
@@ -116,7 +116,7 @@ class _FocusHome extends StatelessWidget {
             const SizedBox(height: 8),
             Text(tr('No videos on the home page. Search for what you want to watch, or open Subscriptions and Watch later.'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline, height: 1.5)),
             const SizedBox(height: 16),
-            FilledButton.icon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(touchFirst ? tr('Search') : keyNames(tr('Search (Ctrl+K)')))),
+            FilledButton.icon(onPressed: onFocusSearch, icon: Icon(AppIcons.magnifyingGlass), label: Text(touchFirst ? tr('Search') : keyNames(tr('Search (Ctrl+K)')))),
             const SizedBox(height: 8),
             Wrap(spacing: 8, alignment: WrapAlignment.center, children: [
               TextButton(onPressed: () => controller.navigate(PageMode.subscriptions), child: Text(tr('Subscriptions'))),
@@ -178,7 +178,7 @@ class SearchResultsPage extends StatelessWidget {
         icon: AppIcons.compass,
         title: tr('Search YouTube'),
         message: tr('Enter keywords, or paste a youtube.com / youtu.be link.'),
-        action: FilledButton.tonalIcon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(tr('Start searching'))),
+        action: FilledButton.tonalIcon(onPressed: onFocusSearch, icon: Icon(AppIcons.magnifyingGlass), label: Text(tr('Start searching'))),
       );
     }
     final results = controller.visible(controller.results, search: true);
@@ -194,7 +194,7 @@ class SearchResultsPage extends StatelessWidget {
         error: true,
         title: tr('Search failed'),
         message: error,
-        action: FilledButton.tonalIcon(onPressed: controller.retrySearch, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('Retry'))),
+        action: FilledButton.tonalIcon(onPressed: controller.retrySearch, icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Retry'))),
       );
     } else if (empty && !controller.searching) {
       status = StatusView(icon: AppIcons.magnifyingGlassMinus, title: filter == SearchFilter.all ? tr('Nothing found') : tr('No {0} found', [filter.label]), message: tr('Try other keywords.'));
@@ -211,7 +211,7 @@ class SearchResultsPage extends StatelessWidget {
         SliverToBoxAdapter(child: PageHeader(
           '“$query”',
           subtitle: controller.searching ? tr('Searching…') : (count.isEmpty ? null : count),
-          trailing: IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
+          trailing: IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: Icon(AppIcons.arrowLeft)),
         )),
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),

@@ -118,7 +118,7 @@ class _CookieSignInTileState extends State<CookieSignInTile> {
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-            child: Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: _import, icon: const Icon(AppIcons.fileText, size: 18), label: Text(tr('Import a cookies.txt instead')))),
+            child: Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: _import, icon: Icon(AppIcons.fileText, size: 18), label: Text(tr('Import a cookies.txt instead')))),
           ),
         ],
         if (error != null) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), child: ErrorBanner(error)),

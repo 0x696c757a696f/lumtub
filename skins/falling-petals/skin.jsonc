@@ -1,0 +1,46 @@
+// Falling Petals: one of Lumtub's colour schemes as a skin. It follows the theme
+// mode: "colors" are the light side, "overrides.dark" the dark one.
+// 樱落：Lumtub 的配色方案之一。跟随浅色/深色模式："colors" 是浅色，"overrides.dark" 是深色。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "falling-petals",
+  "name": "Falling Petals",
+  "names": {
+    "zh-Hans": "樱落",
+    "zh-Hant": "櫻落"
+  },
+  "description": "Pale blush, with cards like white petals",
+  "descriptions": {
+    "zh-Hans": "淡粉底色，卡片是白色花瓣",
+    "zh-Hant": "淡粉底色，卡片如白色花瓣"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "colors": {
+    "page": "#f8ecef",
+    "text": "#2c1d22",
+    "accent": "#ae375c",
+    "card": "#fffafb",
+    "selected": "#f3d3dc"
+  },
+  "window": {
+    "titleBar": {
+      "height": 32
+    },
+    "menuBar": {}
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#1e1418",
+        "text": "#f2e1e6",
+        "accent": "#f083a3",
+        "card": "#2a1c22",
+        "selected": "#45252f"
+      }
+    }
+  }
+}

@@ -25,6 +25,7 @@ import 'mini_player.dart';
 import 'pip_view.dart';
 import 'theme.dart';
 import 'video_card.dart';
+import 'window_chrome.dart';
 import '../l10n/l10n.dart';
 import 'frame_stats.dart';
 import 'motion.dart';
@@ -34,6 +35,7 @@ import 'block_lists_prompt.dart';
 import 'skin_chrome.dart';
 import 'skin_paint.dart';
 import '../skins/skin_library.dart';
+import '../skins/skin.dart';
 import '../window_frame.dart';
 import '../device.dart';
 
@@ -81,6 +83,9 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
     _frames;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) WindowChrome.menus.value = _menus;
+    });
     _notices = _controller.notices.listen((message) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     });
@@ -122,6 +127,7 @@ class _AppShellState extends State<AppShell> {
 
   @override
   void dispose() {
+    if (WindowChrome.menus.value == _menus) WindowChrome.menus.value = null;
     unawaited(_notices?.cancel());
     unawaited(_waylandTop?.cancel());
     unawaited(_finished?.cancel());
@@ -156,36 +162,29 @@ class _AppShellState extends State<AppShell> {
     return category;
   }
 
-  bool? _customFrame;
-
-  /// Takes the system title bar away while a skin draws its own, and gives
-  /// it back when not.
-  void _useCustomFrame(bool on) {
-    if (_customFrame == on || (!on && _customFrame == null)) {
-      _customFrame = on;
-      return;
-    }
-    _customFrame = on;
-    unawaited(WindowFrame.setCustom(on));
-  }
-
   /// The menus of a skin's menu bar: what the window's buttons and
   /// shortcuts already do, gathered under File, View, Play and Help.
-  List<SkinMenu> _menus() {
+  List<SkinMenu> _menus({required bool appMenu}) {
     final c = _controller;
     final primary = Platform.isMacOS ? (LogicalKeyboardKey key, {bool shift = false}) => SingleActivator(key, meta: true, shift: shift) : (LogicalKeyboardKey key, {bool shift = false}) => SingleActivator(key, control: true, shift: shift);
     final player = c.player;
     final appearance = c.appearance;
     void save(AppearanceSettings next) => unawaited(c.saveAppearance(next));
+    final settings = SkinMenuEntry(tr('S&ettings'), () => openSettings(context, c), shortcut: primary(LogicalKeyboardKey.comma));
+    final exit = SkinMenuEntry(tr('E&xit'), () => unawaited(WindowFrame.close()), shortcut: appMenu ? primary(LogicalKeyboardKey.keyQ) : null);
+    final about = SkinMenuEntry(tr('&About Lumtub'), () => openSettings(context, c, category: SettingsCategory.about));
     return [
+      if (appMenu) SkinMenu(appName, [about, const SkinMenuEntry.divider(), settings, const SkinMenuEntry.divider(), exit], bold: true),
       SkinMenu(tr('&File'), [
         SkinMenuEntry(tr('&Search or open a link…'), _focusSearch, shortcut: primary(LogicalKeyboardKey.keyK)),
         SkinMenuEntry(tr('&Downloads'), () => c.navigate(PageMode.downloads)),
         SkinMenuEntry(tr('&Incognito mode'), () => c.setIncognito(!c.incognito), shortcut: primary(LogicalKeyboardKey.keyN, shift: true), checked: c.incognito),
-        const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('S&ettings'), () => openSettings(context, c)),
-        const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('E&xit'), () => unawaited(WindowFrame.close())),
+        if (!appMenu) ...[
+          const SkinMenuEntry.divider(),
+          settings,
+          const SkinMenuEntry.divider(),
+          exit,
+        ],
       ]),
       SkinMenu(tr('&View'), [
         for (final (i, d) in _destinations.indexed) SkinMenuEntry(d.$4, () => _select(i), checked: _selectedIndex == i && !c.onWatchPage),
@@ -210,8 +209,10 @@ class _AppShellState extends State<AppShell> {
           if (folder != null) unawaited(openInExplorer(folder.path));
         }),
         SkinMenuEntry(tr('How to &make a skin'), () => unawaited(openExternal('https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md'))),
-        const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('&About Lumtub'), () => openSettings(context, c, category: SettingsCategory.about)),
+        if (!appMenu) ...[
+          const SkinMenuEntry.divider(),
+          about,
+        ],
       ]),
     ];
   }
@@ -295,24 +296,22 @@ class _AppShellState extends State<AppShell> {
               }
               final wide = constraints.maxWidth >= 720;
               final skin = context.skin;
-              final ownTitleBar = usesSkinTitleBar(skin, systemTitleBar: _controller.appearance.systemTitleBar);
-              _useCustomFrame(ownTitleBar);
-              // Phones, tablets and TVs have no menu bar: the skin brings
-              // its colours, fonts and controls only.
-              final menuBar = WindowFrame.supported ? skin?.menuBar : null;
-              final menus = menuBar != null ? _menus() : const <SkinMenu>[];
               final rail = switch (_controller.appearance.navigation) {
                 NavigationStyle.auto => wide,
                 NavigationStyle.rail => true,
                 NavigationStyle.bottom => false,
               };
-              Widget page(Widget child) => skin == null ? child : SkinBackdrop(skin: skin, plain: _controller.appearance.lowResource, child: child);
+              final tabs = rail ? null : skin?.tabs;
+              Widget tabBar(SkinTabs tabs) => SkinTabBar(
+                    tabs: tabs,
+                    destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
+                    selected: _selectedIndex,
+                    onSelected: _select,
+                  );
               final scaffold = Scaffold(
                 // Below Android's status bar and camera cutout; the
                 // navigation bar keeps clear of the gesture bar itself.
-                body: page(SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
-                  if (ownTitleBar) SkinTitleBarView(bar: skin!.titleBar!, title: appName),
-                  if (menuBar case final bar?) CallbackShortcuts(bindings: menuShortcuts(menus), child: SkinMenuBarView(bar: bar, menus: menus, clock: bar.clock)),
+                body: SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
                   _TopBar(
                     wide: wide,
                     controller: _controller,
@@ -320,9 +319,10 @@ class _AppShellState extends State<AppShell> {
                     searchFocus: _searchFocus,
                     onSubmit: _submitSearch,
                   ),
+                  if (tabs != null && tabs.top) tabBar(tabs),
                   Expanded(child: Stack(children: [
                     Row(children: [
-                      if (rail && skin != null)
+                      if (rail && skin != null && skin.drawsRail)
                         SkinRail(
                           skin: skin,
                           destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
@@ -346,7 +346,7 @@ class _AppShellState extends State<AppShell> {
                         duration: Motion.of(Ease.fade),
                         // Keyed per page so each page's list keeps its scroll position
                         // (PageStorage) when the user comes back to it.
-                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_content()) : _content())),
+                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _veiled(skin, !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_content()) : _content()))),
                       )),
                     ]),
                     // The video keeps playing over the pages; the watch page
@@ -356,8 +356,8 @@ class _AppShellState extends State<AppShell> {
                   ])),
                   // No status line on phones, tablets and TVs: the room goes to the page.
                   if (_controller.appearance.showStatusBar && !touchFirst) _StatusBar(controller: _controller),
-                ]))),
-                bottomNavigationBar: rail ? null : NavigationBar(
+                ])),
+                bottomNavigationBar: rail || (tabs != null && tabs.top) ? null : tabs != null ? tabBar(tabs) : NavigationBar(
                   height: 64,
                   // Six labels do not fit a phone's width side by side.
                   labelBehavior: MediaQuery.sizeOf(context).width < 600 ? NavigationDestinationLabelBehavior.onlyShowSelected : null,
@@ -371,31 +371,35 @@ class _AppShellState extends State<AppShell> {
               // 关灯 darkens the whole window but the player, under dialogs
               // and menus, which are routes above the shell.
               final watching = _controller.onWatchPage && !_controller.mini && _controller.videoController != null;
-              final framed = ownTitleBar
-                  ? ResizeEdges(child: scaffold)
-                  // Android's back button and gesture go back through the
-                  // pages first; on the first page they leave the app.
-                  : WindowFrame.supported
-                  ? scaffold
-                  : PopScope(
-                      canPop: !_controller.canGoBack,
-                      onPopInvokedWithResult: (didPop, _) {
-                        if (!didPop) _back();
-                      },
-                      child: scaffold,
-                    );
               return ValueListenableBuilder(
                 valueListenable: lightsOff,
                 builder: (context, off, child) => Stack(fit: StackFit.expand, children: [
                   child!,
                   if (off && watching) Positioned.fill(child: LightsOffLayer(dim: _controller.preferences.lightsOffDim / 100)),
                 ]),
-                child: framed,
+                // Android's back button and gesture go back through the
+                // pages first; on the first page they leave the app.
+                child: WindowFrame.supported
+                    ? scaffold
+                    : PopScope(
+                        canPop: !_controller.canGoBack,
+                        onPopInvokedWithResult: (didPop, _) {
+                          if (!didPop) _back();
+                        },
+                        child: scaffold,
+                      ),
               );
             }),
           ),
         ),
       );
+
+  /// A skin with a busy picture behind lays some of its page colour over
+  /// it under the pages, so what is written on them reads.
+  Widget _veiled(Skin? skin, Widget page) {
+    if (skin == null || skin.veil == 0 || _controller.appearance.lowResource) return page;
+    return ColoredBox(color: skin.colors.page.withValues(alpha: skin.veil), child: page);
+  }
 
   String get _pageKey => !_controller.ready ? 'setup' : _controller.onWatchPage ? 'watch' : switch (_controller.mode) {
         PageMode.channel => 'channel:${_controller.channel?.id}',
@@ -477,7 +481,7 @@ class _TopBar extends StatelessWidget {
             onTap: () => controller.navigate(PageMode.home),
             child: Padding(
               padding: const EdgeInsets.all(4),
-              child: skin != null ? SkinWordmark(skin: skin, name: appName, showName: wide) : Row(mainAxisSize: MainAxisSize.min, children: [
+              child: skin != null && skin.hasLogo ? SkinWordmark(skin: skin, name: appName, showName: wide) : Row(mainAxisSize: MainAxisSize.min, children: [
                 Container(
                   width: 30,
                   height: 30,
@@ -502,20 +506,20 @@ class _TopBar extends StatelessWidget {
             isSelected: controller.incognito,
             style: controller.incognito ? IconButton.styleFrom(backgroundColor: colors.tertiaryContainer, foregroundColor: colors.onTertiaryContainer) : null,
             onPressed: () => controller.setIncognito(!controller.incognito),
-            icon: const Icon(AppIcons.eyeSlash),
+            icon: Icon(AppIcons.eyeSlash),
             selectedIcon: const Icon(AppIcons.eyeSlashFill),
           ),
           // Phones and TVs have no yt-dlp or ffmpeg to update.
           if (!touchFirst) IconButton(
             tooltip: tr('Check for component updates'),
             onPressed: ready && !controller.checking ? controller.checkUpdates : null,
-            icon: controller.checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.arrowLineDown),
+            icon: controller.checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.arrowLineDown),
           ),
           IconButton(
             tooltip: tr('Settings'),
             isSelected: controller.mode == PageMode.settings && !controller.onWatchPage,
             onPressed: () => openSettings(context, controller),
-            icon: const Icon(AppIcons.gear),
+            icon: Icon(AppIcons.gear),
             selectedIcon: const Icon(AppIcons.gearFill),
           ),
           AccountButton(account: controller.account, onOpenSettings: () => openSettings(context, controller)),
@@ -656,7 +660,7 @@ class _SearchFieldState extends State<_SearchField> {
                 // A phone's box is too narrow for the whole sentence.
                 hintText: touchFirst && MediaQuery.sizeOf(context).width < 600 ? tr('Search') : tr('Search YouTube, or paste a video link'),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                prefixIcon: const Icon(AppIcons.magnifyingGlass),
+                prefixIcon: Icon(AppIcons.magnifyingGlass),
                 suffixIcon: controller.text.isEmpty && touchFirst
                     ? null
                     : controller.text.isEmpty
@@ -666,7 +670,7 @@ class _SearchFieldState extends State<_SearchField> {
                       )
                     : IconButton(
                         tooltip: tr('Clear'),
-                        icon: const Icon(AppIcons.x, size: 20),
+                        icon: Icon(AppIcons.x, size: 20),
                         onPressed: () {
                           controller.clear();
                           setState(() {});
@@ -700,7 +704,7 @@ class _SearchFieldState extends State<_SearchField> {
                           leading: Icon(option.recent ? AppIcons.clockCounterClockwiseFill : AppIcons.magnifyingGlass, size: 20),
                           title: Text(option.text, maxLines: 1, overflow: TextOverflow.ellipsis),
                           trailing: option.recent
-                              ? IconButton(tooltip: tr('Delete this entry'), icon: const Icon(AppIcons.x, size: 18), onPressed: () => _remove(option.text))
+                              ? IconButton(tooltip: tr('Delete this entry'), icon: Icon(AppIcons.x, size: 18), onPressed: () => _remove(option.text))
                               : null,
                           onTap: () => onSelected(option),
                         );
@@ -728,7 +732,7 @@ class _SetupView extends StatelessWidget {
         error: true,
         title: tr('Component installation ran into a problem'),
         message: error,
-        action: FilledButton.icon(onPressed: controller.retryInitialize, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('Retry'))),
+        action: FilledButton.icon(onPressed: controller.retryInitialize, icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Retry'))),
       );
     }
     return StatusView(

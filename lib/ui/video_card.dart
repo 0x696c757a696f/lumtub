@@ -315,7 +315,7 @@ class PlaylistCard extends StatelessWidget {
                   child: ColoredBox(
                     color: Colors.black.withValues(alpha: 0.65),
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      const Icon(AppIcons.playlist, color: Colors.white, size: 28),
+                      Icon(AppIcons.playlist, color: Colors.white, size: 28),
                       if (item.count != null) Text(tr('{0} videos', [item.count]), style: const TextStyle(color: Colors.white, fontSize: 12)),
                     ]),
                   ),
@@ -895,7 +895,7 @@ Future<void> showSaveToYoutube(BuildContext context, AppController controller, V
               for (final playlist in list)
                 SimpleDialogOption(
                   onPressed: () => Navigator.pop(context, playlist),
-                  child: ListTile(dense: true, leading: const Icon(AppIcons.playlist), title: Text(playlist.title), subtitle: Text(tr('{0} videos', [playlist.count]))),
+                  child: ListTile(dense: true, leading: Icon(AppIcons.playlist), title: Text(playlist.title), subtitle: Text(tr('{0} videos', [playlist.count]))),
                 ),
               SimpleDialogOption(
                 onPressed: () => Navigator.pop(context, create),
@@ -926,7 +926,7 @@ Future<void> showAddToPlaylist(BuildContext context, AppController controller, V
         for (final playlist in library.playlists)
           SimpleDialogOption(
             onPressed: () => Navigator.pop(context, playlist.id),
-            child: ListTile(leading: const Icon(AppIcons.playlist), title: Text(playlist.name), subtitle: Text(tr('{0} videos', [playlist.items.length]))),
+            child: ListTile(leading: Icon(AppIcons.playlist), title: Text(playlist.name), subtitle: Text(tr('{0} videos', [playlist.items.length]))),
           ),
         SimpleDialogOption(
           onPressed: () => Navigator.pop(context, create),

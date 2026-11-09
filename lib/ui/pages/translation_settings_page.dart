@@ -73,14 +73,14 @@ List<Widget> _items(BuildContext context, AppController controller) {
   return [
     PopupItem<TranslationService>(
       title: tr('Translation service'),
-      leading: const Icon(AppIcons.translate),
+      leading: Icon(AppIcons.translate),
       value: service,
       values: [for (final s in TranslationService.values) (s, s.label)],
       onSelected: (v) => saveConfig((c) => c.copyWith(service: v)),
     ),
     PopupItem<String>(
       title: tr('Translation target language'),
-      leading: const Icon(AppIcons.translate),
+      leading: Icon(AppIcons.translate),
       value: prefs.translateLanguage,
       values: [('', tr('Interface language ({0})', [interfaceTranslationLanguage.label])), for (final l in TranslationLanguage.all) (l.code, l.label)],
       onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(translateLanguage: v)),
@@ -90,7 +90,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
       subtitle: service == TranslationService.google
           ? tr("Available once another service is chosen; YouTube's own auto-translate is used by default")
           : tr("When off, YouTube's own auto-translate is used, and this service only when YouTube refuses"),
-      leading: const Icon(AppIcons.subtitles),
+      leading: Icon(AppIcons.subtitles),
       value: prefs.subtitlesByService && service != TranslationService.google,
       enabled: service != TranslationService.google,
       onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(subtitlesByService: v)),
@@ -132,7 +132,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     tip(tr('AI translation and AI summary share this one interface (OpenAI-compatible /chat/completions). Text is sent only when you use AI translation or click AI summary.')),
       PopupItem<String>(
         title: tr('Provider'),
-        leading: const Icon(AppIcons.graph),
+        leading: Icon(AppIcons.graph),
         value: ai.id,
         values: [for (final p in AiTranslator.aiPresets) (p.id, p.label)],
         // A preset's own address and model replace those typed for another.
@@ -145,7 +145,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
         leading: const Icon(AppIcons.cpuFill),
         trailing: IconButton(
           tooltip: tr('Get the model list from the endpoint'),
-          icon: const Icon(AppIcons.listDashes),
+          icon: Icon(AppIcons.listDashes),
           onPressed: () => _pickModel(context, controller, (v) => saveConfig((c) => c.copyWith(aiModel: v))),
         ),
         onTap: () async {
@@ -166,7 +166,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
       header(tr('AI translation')),
       PopupItem<String>(
         title: tr('Prompt'),
-        leading: const Icon(AppIcons.notePencil),
+        leading: Icon(AppIcons.notePencil),
         value: config.promptPreset,
         values: [for (final p in AiTranslator.promptPresets) (p.id, p.label), ('custom', tr('Custom'))],
         onSelected: (v) => saveConfig((c) => c.copyWith(promptPreset: v)),
@@ -183,7 +183,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
         ),
       PopupItem<String>(
         title: tr('Translation style'),
-        leading: const Icon(AppIcons.cards),
+        leading: Icon(AppIcons.cards),
         value: AiTone.byId(config.aiTone).id,
         values: [for (final t in AiTone.all) (t.id, t.label)],
         onSelected: (v) => saveConfig((c) => c.copyWith(aiTone: v)),
@@ -200,13 +200,13 @@ List<Widget> _items(BuildContext context, AppController controller) {
       NormalItem(
         title: tr('Temperature'),
         subtitle: tr('{0} (lower is steadier, higher is freer)', [config.aiTemperature.toStringAsFixed(1)]),
-        leading: const Icon(AppIcons.thermometer),
+        leading: Icon(AppIcons.thermometer),
         onTap: () => pickWithSlider(context, title: tr('Temperature'), value: config.aiTemperature, min: 0, max: 1.5, divisions: 15, precise: 1, onSelected: (v) => saveConfig((c) => c.copyWith(aiTemperature: v))),
       ),
       NormalItem(
         title: tr('Subtitle context'),
         subtitle: config.aiContext == 0 ? tr('Close') : tr('Sends the previous {0} lines so names and tone stay consistent', [config.aiContext]),
-        leading: const Icon(AppIcons.listNumbers),
+        leading: Icon(AppIcons.listNumbers),
         onTap: () => pickWithSlider(context, title: tr('Subtitle context'), value: config.aiContext.toDouble(), min: 0, max: 10, divisions: 10, suffix: tr(' lines'), onSelected: (v) => saveConfig((c) => c.copyWith(aiContext: v.round()))),
       ),
       tip(tr('Uses an OpenAI-compatible /chat/completions endpoint. In the prompt, {target} becomes the target language and {lines} the number of lines. Subtitles are translated line by line, and a reply with the wrong number of lines is retried once.')),
@@ -216,7 +216,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     tip(tr('When a video has no subtitles, its audio can be sent to a speech recognition service to make timed subtitles for playback and AI summary. The audio is uploaded only when you click “Make subtitles with speech recognition”; the result is kept on this computer and not uploaded again.')),
     PopupItem<String>(
       title: tr('Speech recognition service'),
-      leading: const Icon(AppIcons.waveform),
+      leading: Icon(AppIcons.waveform),
       value: config.speech.id,
       values: [for (final p in SpeechPreset.all) (p.id, tr(p.label))],
       onSelected: (v) => saveConfig((c) => c.copyWith(speechPreset: v, speechBaseUrl: '', speechModel: '')),
@@ -243,7 +243,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     header(tr('Show')),
     PopupItem<String>(
       title: tr('Immersive translation'),
-      leading: const Icon(AppIcons.translate),
+      leading: Icon(AppIcons.translate),
       value: prefs.immersiveTranslation ? prefs.immersiveLanguage : _off,
       values: [(_off, tr('Close')), ('', tr('Into the interface language ({0})', [interfaceTranslationLanguage.label])), for (final l in TranslationLanguage.all) (l.code, tr('Into {0}', [l.label]))],
       onSelected: (v) => controller.savePreferences(v == _off
@@ -253,14 +253,14 @@ List<Widget> _items(BuildContext context, AppController controller) {
     tip(tr('When on, foreign-language comments, posts and live chat show a translation underneath; text in the interface or system language is left alone.')),
     PopupItem<_Layout>(
       title: tr('Translation layout'),
-      leading: const Icon(AppIcons.columns),
+      leading: Icon(AppIcons.columns),
       value: !prefs.bilingualTranslation ? _Layout.replace : prefs.translationFirst ? _Layout.above : _Layout.below,
       values: [(_Layout.below, tr('Original above, translation below')), (_Layout.above, tr('Translation above, original below')), (_Layout.replace, tr('Translation replaces the original'))],
       onSelected: (v) => controller.savePreferences(controller.preferences.copyWith(bilingualTranslation: v != _Layout.replace, translationFirst: v == _Layout.above)),
     ),
     PopupItem<TranslationStyle>(
       title: tr('Translation look'),
-      leading: const Icon(AppIcons.paintRoller),
+      leading: Icon(AppIcons.paintRoller),
       value: prefs.translationStyle,
       values: [for (final v in TranslationStyle.values) (v, v.label)],
       enabled: prefs.bilingualTranslation || prefs.immersiveTranslation,
@@ -269,7 +269,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     SwitchItem(
       title: tr('Skip text already in the target language'),
       subtitle: tr('Judged from the script: reliable for Chinese, Japanese, Korean, Russian and the like; of Latin-script languages only English is recognised'),
-      leading: const Icon(AppIcons.skipForward),
+      leading: Icon(AppIcons.skipForward),
       value: prefs.skipSameLanguage,
       onChanged: (v) => controller.savePreferences(controller.preferences.copyWith(skipSameLanguage: v)),
     ),

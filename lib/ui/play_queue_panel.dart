@@ -37,8 +37,8 @@ class PlayQueuePanel extends StatelessWidget {
           final item = items[i];
           return Row(key: ValueKey(item.id), children: [
             Expanded(child: CompactVideoTile(item: item, thumbnails: controller.thumbnailDirectory, onOpen: () => controller.playQueued(item))),
-            IconButton(tooltip: tr('Remove from queue'), visualDensity: VisualDensity.compact, onPressed: () => controller.removeQueued(item.id), icon: const Icon(AppIcons.x, size: 18)),
-            ReorderableDragStartListener(index: i, child: const Padding(padding: EdgeInsets.only(right: 4), child: Icon(AppIcons.equals, size: 20))),
+            IconButton(tooltip: tr('Remove from queue'), visualDensity: VisualDensity.compact, onPressed: () => controller.removeQueued(item.id), icon: Icon(AppIcons.x, size: 18)),
+            ReorderableDragStartListener(index: i, child: Padding(padding: EdgeInsets.only(right: 4), child: Icon(AppIcons.equals, size: 20))),
           ]);
         },
       ),

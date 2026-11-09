@@ -75,10 +75,13 @@
       },
       "text": "#111111",
       "align": "center",
+      "titlePlate": "#dddddd",
       "buttons": {
+        "placement": "split",
+        "glyphs": "classic",
         "size": [
-          18,
-          18
+          14,
+          14
         ],
         "icon": "#222222",
         "surface": {
@@ -130,6 +133,10 @@
       }
     },
     "menuBar": {
+      "position": "top",
+      "appMenu": true,
+      "underlineKeys": false,
+      "height": 22,
       "surface": {
         "fill": {
           "linear": {
@@ -257,6 +264,10 @@
     },
     "navSelectedText": "#000000",
     "navText": "#222222"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "emboss"
   },
   "cards": {
     "video": {

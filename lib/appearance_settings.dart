@@ -229,6 +229,14 @@ class AppearanceSettings {
   final String skin;
   /// Under a skin with its own title bar: keep the system's instead.
   final bool systemTitleBar;
+  /// Under a skin with a menu bar: no title bar; the window buttons sit in
+  /// the menu bar.
+  final bool hideTitleBar;
+  /// Under a glass skin: how solid its panes are, 0.3 to 1.
+  final double glassOpacity;
+  /// Under a glass skin on a computer: the window lets the desktop through,
+  /// blurred where the system can.
+  final bool seeThrough;
   final EyeCare eyeCare;
   /// How warm 护眼暖色 makes the window, 0.1 to 1: the colour
   /// temperature of the light, from 6040 K down to 1900 K
@@ -272,6 +280,9 @@ class AppearanceSettings {
     this.palette = '',
     this.skin = '',
     this.systemTitleBar = false,
+    this.hideTitleBar = false,
+    this.glassOpacity = 1,
+    this.seeThrough = false,
     this.eyeCare = EyeCare.off,
     this.warmth = 0.4,
     this.eyeCareStart = 20,
@@ -350,6 +361,9 @@ class AppearanceSettings {
     String? palette,
     String? skin,
     bool? systemTitleBar,
+    bool? hideTitleBar,
+    double? glassOpacity,
+    bool? seeThrough,
     EyeCare? eyeCare,
     double? warmth,
     int? eyeCareStart,
@@ -381,6 +395,9 @@ class AppearanceSettings {
         palette: palette ?? this.palette,
         skin: skin ?? this.skin,
         systemTitleBar: systemTitleBar ?? this.systemTitleBar,
+        hideTitleBar: hideTitleBar ?? this.hideTitleBar,
+        glassOpacity: glassOpacity ?? this.glassOpacity,
+        seeThrough: seeThrough ?? this.seeThrough,
         eyeCare: eyeCare ?? this.eyeCare,
         warmth: warmth ?? this.warmth,
         eyeCareStart: eyeCareStart ?? this.eyeCareStart,
@@ -420,6 +437,9 @@ class AppearanceSettings {
         'palette': palette,
         'skin': skin,
         'systemTitleBar': systemTitleBar,
+        'hideTitleBar': hideTitleBar,
+        'glassOpacity': glassOpacity,
+        'seeThrough': seeThrough,
         'eyeCare': eyeCare.name,
         'warmth': warmth,
         'eyeCareStart': eyeCareStart,
@@ -463,9 +483,17 @@ class AppearanceSettings {
       darkWatchPage: raw['darkWatchPage'] == true,
       showStatusBar: raw['showStatusBar'] != false,
       language: AppLanguage.parse(raw['language']),
-      palette: raw['palette'] is String ? raw['palette'] as String : '',
-      skin: raw['skin'] is String ? raw['skin'] as String : '',
+      // The colour schemes are skins now: a saved one becomes its skin.
+      palette: '',
+      skin: switch ((raw['skin'], raw['palette'])) {
+        (final String skin, _) when skin.isNotEmpty => skin,
+        (_, final String palette) when palette.isNotEmpty => paletteSkinId(palette),
+        _ => '',
+      },
       systemTitleBar: raw['systemTitleBar'] == true,
+      hideTitleBar: raw['hideTitleBar'] == true,
+      glassOpacity: raw['glassOpacity'] is num ? (raw['glassOpacity'] as num).toDouble().clamp(0.3, 1.0) : 1,
+      seeThrough: raw['seeThrough'] == true,
       eyeCare: _byName(EyeCare.values, raw['eyeCare'], EyeCare.off),
       warmth: raw['warmth'] is num ? (raw['warmth'] as num).toDouble().clamp(0.1, 1.0) : 0.4,
       eyeCareStart: _hour(raw['eyeCareStart'], 20),
@@ -512,3 +540,6 @@ class AppearanceSettingsStore {
     await file.writeAsString(jsonEncode(settings.toJson()), flush: true);
   }
 }
+
+/// The skin a colour scheme saved before 0.2.30 became: ricePaper → rice-paper.
+String paletteSkinId(String palette) => palette.replaceAllMapped(RegExp('[A-Z]'), (m) => '-${m[0]!.toLowerCase()}');

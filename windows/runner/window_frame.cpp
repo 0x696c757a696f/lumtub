@@ -1,5 +1,6 @@
 #include "window_frame.h"
 
+#include <commctrl.h>
 #include <dwmapi.h>
 
 #include <cmath>
@@ -60,6 +61,28 @@ WindowFrame::WindowFrame(HWND window, flutter::BinaryMessenger* messenger) : win
 
 WindowFrame::~WindowFrame() {
   channel_->SetMethodCallHandler(nullptr);
+  if (view_) ::RemoveWindowSubclass(view_, ViewProc, 1);
+}
+
+void WindowFrame::AttachView(HWND view) {
+  if (view_) ::RemoveWindowSubclass(view_, ViewProc, 1);
+  view_ = view;
+  if (view_) ::SetWindowSubclass(view_, ViewProc, 1, reinterpret_cast<DWORD_PTR>(this));
+}
+
+LRESULT CALLBACK WindowFrame::ViewProc(HWND view, UINT message, WPARAM wparam, LPARAM lparam,
+                                       UINT_PTR id, DWORD_PTR data) {
+  auto* frame = reinterpret_cast<WindowFrame*>(data);
+  if (message == WM_NCHITTEST && frame->Active() && frame->HitTest(lparam) != HTCLIENT) {
+    // Passed on to the frame below, which answers caption, maximize
+    // button or top edge for the same point.
+    return HTTRANSPARENT;
+  }
+  if (message == WM_NCDESTROY) {
+    ::RemoveWindowSubclass(view, ViewProc, id);
+    frame->view_ = nullptr;
+  }
+  return ::DefSubclassProc(view, message, wparam, lparam);
 }
 
 void WindowFrame::Send(const char* method, EncodableValue argument) {
@@ -73,6 +96,14 @@ void WindowFrame::HandleCall(const flutter::MethodCall<EncodableValue>& call,
   if (method == "setCustom") {
     const auto* on = args ? std::get_if<bool>(args) : nullptr;
     SetCustom(on && *on);
+  } else if (method == "setSeeThrough") {
+    const EncodableValue* on = Find(args, "on");
+    const EncodableValue* dark = Find(args, "dark");
+    const bool* on_value = on ? std::get_if<bool>(on) : nullptr;
+    const bool* dark_value = dark ? std::get_if<bool>(dark) : nullptr;
+    SetSeeThrough(on_value && *on_value, dark_value && *dark_value);
+    result->Success(EncodableValue(true));
+    return;
   } else if (method == "minimize") {
     // The shell sees the resulting WM_SIZE, so minimize-to-tray still applies.
     ::ShowWindow(window_, SW_MINIMIZE);
@@ -120,13 +151,60 @@ bool WindowFrame::Active() const {
 
 void WindowFrame::SetCustom(bool on) {
   custom_ = on;
-  // One pixel of glass keeps the shadow and, on Windows 11, the rounded
-  // corners and border.
-  const MARGINS margins{0, 0, on ? 1 : 0, 0};
-  ::DwmExtendFrameIntoClientArea(window_, &margins);
+  ApplyMargins();
   ::SetWindowPos(window_, nullptr, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
   if (!on) SetButton(0);
+}
+
+// One pixel of glass keeps the shadow and, on Windows 11, the rounded
+// corners and border; seeing through, the glass covers the whole window.
+void WindowFrame::ApplyMargins() {
+  const MARGINS margins = see_through_ ? MARGINS{-1, -1, -1, -1} : MARGINS{0, 0, custom_ ? 1 : 0, 0};
+  ::DwmExtendFrameIntoClientArea(window_, &margins);
+}
+
+// The desktop shows, blurred, wherever Flutter leaves the window clear.
+// Windows 11 22H2 and later draw it as their acrylic backdrop, older ones
+// with the blur behind accent.
+void WindowFrame::SetSeeThrough(bool on, bool dark) {
+  see_through_ = on;
+  ApplyMargins();
+  // The acrylic's own tint follows the skin's side, not the system's.
+  if (on) {
+    const BOOL dark_mode = dark ? TRUE : FALSE;
+    ::DwmSetWindowAttribute(window_, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &dark_mode, sizeof(dark_mode));
+  } else {
+    // Back to the system's light or dark title bar.
+    ::SendMessage(window_, WM_DWMCOLORIZATIONCOLORCHANGED, 0, 0);
+  }
+  const int backdrop = on ? 3 /* DWMSBT_TRANSIENTWINDOW */ : 0 /* DWMSBT_AUTO */;
+  const bool system_backdrop = SUCCEEDED(
+      ::DwmSetWindowAttribute(window_, 38 /* DWMWA_SYSTEMBACKDROP_TYPE */, &backdrop, sizeof(backdrop)));
+  if (!system_backdrop) {
+    struct AccentPolicy {
+      int state;
+      int flags;
+      DWORD gradient;
+      int animation;
+    };
+    struct CompositionData {
+      int attribute;
+      void* data;
+      SIZE_T size;
+    };
+    using SetComposition = BOOL(WINAPI*)(HWND, CompositionData*);
+    static const auto set_composition = reinterpret_cast<SetComposition>(
+        ::GetProcAddress(::GetModuleHandle(L"user32.dll"), "SetWindowCompositionAttribute"));
+    if (set_composition) {
+      AccentPolicy accent{on ? 3 /* ACCENT_ENABLE_BLURBEHIND */ : 0, 0, 0, 0};
+      CompositionData data{19 /* WCA_ACCENT_POLICY */, &accent, sizeof(accent)};
+      set_composition(window_, &data);
+    }
+  }
+  ::SetWindowPos(window_, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  ::InvalidateRect(window_, nullptr, TRUE);
 }
 
 void WindowFrame::SetButton(int state) {

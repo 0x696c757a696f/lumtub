@@ -286,7 +286,7 @@ void main() {
   });
 
   test('arranges zones in the saved order and leaves hidden ones out', () {
-    const topics = [ExploreTopic('A', AppIcons.textAa, 'a'), ExploreTopic('B', AppIcons.textAa, 'b'), ExploreTopic('C', AppIcons.textAa, 'c'), ExploreTopic('D', AppIcons.textAa, 'd')];
+    final topics = [ExploreTopic('A', AppIcons.textAa, 'a'), ExploreTopic('B', AppIcons.textAa, 'b'), ExploreTopic('C', AppIcons.textAa, 'c'), ExploreTopic('D', AppIcons.textAa, 'd')];
     expect(arrangeTopics(topics, ['C', 'A'], {'B'}).map((t) => t.label), ['C', 'A', 'D']);
     expect(arrangeTopics(topics, const [], {'A', 'B', 'C', 'D'}).map((t) => t.label), ['A']);
   });

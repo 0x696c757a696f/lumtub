@@ -35,7 +35,7 @@ class YoutubePlaylistPage extends StatelessWidget {
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
           child: Row(children: [
-            IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
+            IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: Icon(AppIcons.arrowLeft)),
             const SizedBox(width: 8),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(playlist.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
@@ -55,7 +55,7 @@ class YoutubePlaylistPage extends StatelessWidget {
               label: Text(tr('Play all')),
             ),
             const SizedBox(width: 8),
-            IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(playlist.url), icon: const Icon(AppIcons.arrowSquareOut)),
+            IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(playlist.url), icon: Icon(AppIcons.arrowSquareOut)),
           ]),
         )),
         if (items.isNotEmpty && !(reversed && loader.hasMore)) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.playList(listId, playlist.title, own, start: item)),

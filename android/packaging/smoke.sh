@@ -4,7 +4,7 @@
 set -uo pipefail
 apk="$1"; out="$2"
 mkdir -p "$out"
-adb wait-for-device
+timeout 240 adb wait-for-device || { echo "::error::The emulator did not come up"; exit 1; }
 until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do sleep 2; done
 adb shell settings put global window_animation_scale 0
 adb install -r "$apk" || exit 1

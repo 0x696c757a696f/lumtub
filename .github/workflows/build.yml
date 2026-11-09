@@ -931,7 +931,8 @@ jobs:
           yes | "$sdk/sdkmanager" --licenses > /dev/null; "$sdk/sdkmanager" --channel=3 "$newest" > /dev/null || true
           tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
           echo "build-tools: $(basename "$tools")"; "$tools/apksigner" version || true
-          "$tools/apksigner" sign --help 2>&1 | grep -iE 'v3|v4|pqc|ml-?dsa|lineage' || true
+          "$tools/apksigner" sign --help 2>&1 || true
+          "$tools/apksigner" rotate --help 2>&1 || true
           "$tools/apksigner" verify -v "dist/Lumtub_${LUMTUB_VERSION}_android-arm64-v8a.apk" | grep -iE 'Verified using|Number of signers' || true
           rm -f android/release.jks android/key.properties
 
@@ -943,12 +944,13 @@ jobs:
           yes | "$sdk/sdkmanager" --licenses > /dev/null
           "$sdk/sdkmanager" "emulator" "system-images;android-34;google_apis;x86_64" > /dev/null
           echo no | "$sdk/avdmanager" create avd -n smoke -k "system-images;android-34;google_apis;x86_64" -d pixel_6
-          nohup "$ANDROID_HOME/emulator/emulator" -avd smoke -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          nohup "$ANDROID_HOME/emulator/emulator" -avd smoke -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -no-metrics -accel on > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          sleep 20; tail -20 "$RUNNER_TEMP/emulator.log"
 
       - name: Android - smoke test
         run: |
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
-          timeout 600 android/packaging/smoke.sh dist/Lumtub_*_android-x86_64.apk "$RUNNER_TEMP/smoke"
+          timeout 600 android/packaging/smoke.sh dist/Lumtub_*_android-x86_64.apk "$RUNNER_TEMP/smoke" || { echo "--- emulator log"; tail -60 "$RUNNER_TEMP/emulator.log"; exit 1; }
 
       - name: Android - upload smoke test
         if: always()

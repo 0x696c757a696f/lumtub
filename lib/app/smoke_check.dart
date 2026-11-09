@@ -117,6 +117,8 @@ extension SmokeCheck on AppController {
       }
     }
     logInfo('Showcase history: ${history.length} videos');
+    // The watched videos stay off the home page, so 为你推荐 is what shows.
+    await savePreferences(preferences.copyWith(homeShowRecent: false, homeShowContinue: false));
     await refreshHomeFeed(force: true);
   }
 
@@ -152,6 +154,8 @@ extension SmokeCheck on AppController {
     }
 
     await saveAppearance(appearance.copyWith(themeMode: ThemeMode.dark));
+    // The pointer out of the way, where it raises no tooltip (Linux only).
+    await File('$_showcase/xdo-park').writeAsString('mousemove --window %W 1270 700');
     await part('home-reasons', () async {
       await refreshHomeFeed(force: true);
       navigate(PageMode.home);

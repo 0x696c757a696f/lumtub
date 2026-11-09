@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/app/app_controller.dart';
 import 'package:lumtub/comment_danmaku.dart';
 import 'package:lumtub/danmaku.dart';
 import 'package:lumtub/youtube_comments.dart';
@@ -36,5 +37,11 @@ void main() {
     expect(const DanmakuSettings().comments, isTrue);
     expect(DanmakuSettings.fromJson(const DanmakuSettings(comments: false).toJson()).comments, isFalse);
     expect(DanmakuSettings.fromJson({'enabled': true}).comments, isTrue);
+  });
+
+  test('turning 弹幕 on with nothing playing changes only the setting', () async {
+    final controller = AppController()..ready = true;
+    await controller.setDanmaku(const DanmakuSettings(enabled: true));
+    expect(controller.preferences.danmaku.enabled, isTrue);
   });
 }

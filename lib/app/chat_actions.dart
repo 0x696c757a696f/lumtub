@@ -86,10 +86,11 @@ extension ChatActions on AppController {
         return;
       }
     }
+    if (key == null || item == null) return;
     if (chat) {
       _danmaku?.add(replayChat);
     } else {
-      _loadCommentDanmaku(item!);
+      _loadCommentDanmaku(item);
       if (_commentDanmakuFor == item.id) _danmaku?.add(_commentDanmaku);
     }
   }

@@ -77,9 +77,9 @@ class SkinLibrary extends ChangeNotifier {
     final folder = _folder;
     if (folder == null) throw const FormatException('There is no skins folder');
     await folder.create(recursive: true);
-    final staging = await Directory('${folder.path}${Platform.pathSeparator}.import').create();
+    final staging = await folder.createTemp('.import-');
     try {
-      final unpacked = await Directory('${staging.path}${Platform.pathSeparator}${DateTime.now().microsecondsSinceEpoch}').create();
+      final unpacked = await Directory('${staging.path}${Platform.pathSeparator}skin').create();
       if (path.toLowerCase().endsWith('.zip')) {
         await extractZip(File(path), unpacked);
       } else {

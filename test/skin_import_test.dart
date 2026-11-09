@@ -40,9 +40,10 @@ void main() {
     expect(skins.listSync().map((e) => e.uri.pathSegments.where((s) => s.isNotEmpty).last).toSet(), {'my-paper', 'shared-skin'});
 
     final wrong = File('${temp.path}/x.jsonc')..writeAsStringSync(skinText('paper'));
-    expect(() => SkinLibrary.instance.importFile(wrong.path), throwsFormatException);
+    await expectLater(SkinLibrary.instance.importFile(wrong.path), throwsFormatException);
     final empty = File('${temp.path}/y.json')..writeAsStringSync('{}');
-    expect(() => SkinLibrary.instance.importFile(empty.path), throwsFormatException);
+    await expectLater(SkinLibrary.instance.importFile(empty.path), throwsFormatException);
+    expect(skins.listSync(), hasLength(2));
   });
 
   test('on a TV a skin without a focused look gets a ring in its accent', () {

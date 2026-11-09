@@ -1,0 +1,84 @@
+name: Issues
+
+# Keeps the issue list tidy without anyone watching it: a bug report that
+# came without its log is asked for one and marked `needs info`; the mark
+# goes when the reporter answers; an issue still waiting for its reporter
+# after 30 days is reminded, and closed 14 days later (reopening is one
+# click). Nothing else is closed by itself.
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+  schedule:
+    - cron: '11 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  ask-for-log:
+    if: >-
+      github.event_name == 'issues' &&
+      contains(github.event.issue.labels.*.name, 'bug')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask for the log when it is missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          set -euo pipefail
+          # The form puts each answer under its "### Label" heading.
+          log=$(awk '/^### /{section=$0; next} section ~ /^### Log/' <<< "$BODY" | grep -v '^[[:space:]]*$' | grep -vF '_No response_' || true)
+          if [ -n "$log" ]; then exit 0; fi
+          gh label create 'needs info' --color FBCA04 --description 'Waiting for the reporter' 2>/dev/null || true
+          gh issue edit "$NUMBER" --add-label 'needs info'
+          gh issue comment "$NUMBER" --body-file - <<'TEXT'
+          Thanks for the report! Could you attach Lumtub's log? It says what went wrong far better than a description can, and holds no passwords or stream addresses.
+
+          In Lumtub: Settings › About › Error log. Or attach the file:
+          - Windows: `%LOCALAPPDATA%\Lumtub\logs\lumtub.log`
+          - macOS: `~/Library/Application Support/Lumtub/logs/lumtub.log`
+          - Linux: `~/.local/share/lumtub/logs/lumtub.log`
+
+          感谢反馈！能附上 Lumtub 的日志吗？它比文字描述更能说明哪里出了问题，里面不含密码和视频地址。在 Lumtub 里：设置 › 关于 › 错误日志，或者直接附上上面路径里的文件。
+          TEXT
+
+  answered:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      !github.event.issue.pull_request &&
+      github.event.comment.user.login == github.event.issue.user.login &&
+      contains(github.event.issue.labels.*.name, 'needs info')
+    runs-on: ubuntu-latest
+    steps:
+      - name: The reporter answered
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue edit "$NUMBER" --remove-label 'needs info'
+          gh issue edit "$NUMBER" --remove-label stale 2>/dev/null || true
+
+  stale:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@1e223db275d687790206a7acac4d1a11bd6fe629 # v10.4.0
+        with:
+          only-labels: needs info
+          days-before-stale: 30
+          days-before-close: 14
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+          stale-issue-label: stale
+          stale-issue-message: >-
+            This has been waiting for more information for a month. It will be closed in two weeks
+            unless there is an answer; it can be reopened at any time.
+            这个问题等补充信息已经一个月了，两周内没有回复会自动关闭，之后随时可以重新打开。
+          close-issue-reason: not_planned

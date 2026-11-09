@@ -1,0 +1,14 @@
+# How GitHub groups the notes it writes for a release that has no
+# release-notes/<version>.md (the monthly automatic release, for one).
+changelog:
+  exclude:
+    authors:
+      - dependabot
+      - dependabot[bot]
+      - github-actions
+      - github-actions[bot]
+  categories:
+    - title: Fixes
+      labels: [bug]
+    - title: Changes
+      labels: ['*']

@@ -171,15 +171,17 @@ pub fn info(player: &Value, settings: &Settings) -> Option<Value> {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_quick_request(id: *const u8, len: usize) -> *mut c_char {
     let id = unsafe { crate::taste::text(id, len) };
-    crate::taste::give_json(&json!({
-        "body": request(id),
-        "headers": {
-            "X-YouTube-Client-Name": CLIENT_ID.to_string(),
-            "X-YouTube-Client-Version": CLIENT_VERSION,
-            "User-Agent": USER_AGENT,
-            "Origin": "https://www.youtube.com"
-        }
-    }))
+    crate::taste::give_json(&json!({"body": request(id), "headers": headers()}))
+}
+
+/// The headers the `/player` request goes with.
+pub fn headers() -> Value {
+    json!({
+        "X-YouTube-Client-Name": CLIENT_ID.to_string(),
+        "X-YouTube-Client-Version": CLIENT_VERSION,
+        "User-Agent": USER_AGENT,
+        "Origin": "https://www.youtube.com"
+    })
 }
 
 /// [info] for the `/player` answer [player] and the format policy settings

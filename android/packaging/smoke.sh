@@ -18,3 +18,34 @@ grep -E 'flutter|Lumtub|AndroidRuntime|DEBUG' "$out/logcat.txt" | tail -80
 if [ -z "$pid" ]; then echo "::error::Lumtub is not running 45 s after start"; exit 1; fi
 if grep -q 'FATAL EXCEPTION\|Fatal signal' "$out/logcat.txt"; then echo "::error::Lumtub crashed"; exit 1; fi
 echo "Lumtub is running (pid $pid)"
+
+# Pictures and a short video for people to look at: a phone, a tablet and a
+# TV sized screen. Nothing here decides whether the test passed.
+shot() { adb exec-out screencap -p > "$out/$1.png"; }
+adb shell screenrecord --time-limit 75 --bit-rate 6000000 /sdcard/phone.mp4 &
+rec=$!
+sleep 2
+adb shell input swipe 540 1700 540 900 400; sleep 4; shot phone-scrolled
+adb shell input swipe 540 900 540 1700 400; sleep 4
+adb shell input tap 540 650; sleep 30; shot phone-watch
+adb shell input keyevent KEYCODE_BACK; sleep 6; shot phone-back
+wait "$rec" 2> /dev/null
+adb pull /sdcard/phone.mp4 "$out/phone.mp4" > /dev/null 2>&1
+
+adb shell settings put system accelerometer_rotation 0
+for form in "tablet 2560x1600 320" "tv 1920x1080 240"; do
+  set -- $form
+  adb shell wm size "$2"; adb shell wm density "$3"; sleep 12
+  shot "$1-home"
+  adb shell input keyevent KEYCODE_DPAD_DOWN; sleep 1
+  adb shell input keyevent KEYCODE_DPAD_RIGHT; sleep 2; shot "$1-focus"
+done
+adb shell screenrecord --time-limit 40 --bit-rate 6000000 /sdcard/tv.mp4 &
+rec=$!
+sleep 2
+for key in DOWN DOWN RIGHT RIGHT RIGHT DOWN LEFT; do adb shell input keyevent "KEYCODE_DPAD_$key"; sleep 2; done
+adb shell input keyevent KEYCODE_DPAD_CENTER; sleep 20; shot tv-watch
+wait "$rec" 2> /dev/null
+adb pull /sdcard/tv.mp4 "$out/tv.mp4" > /dev/null 2>&1
+adb shell wm size reset; adb shell wm density reset
+ls -l "$out"

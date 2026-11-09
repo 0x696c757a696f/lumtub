@@ -1,0 +1,246 @@
+// Millennium Desktop: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 千禧桌面：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "desktop",
+  "name": "Millennium Desktop",
+  "names": {
+    "zh-Hans": "千禧桌面",
+    "zh-Hant": "千禧桌面"
+  },
+  "description": "Grey raised edges, blue title bars and a teal desk, as on late-90s computers",
+  "descriptions": {
+    "zh-Hans": "灰色立体边框、蓝色标题栏和青色桌面，像 90 年代末的电脑",
+    "zh-Hant": "灰色立體邊框、藍色標題列和青色桌面，像 90 年代末的電腦"
+  },
+  "brightness": "light",
+  "text": {
+    "monoFont": "VT323"
+  },
+  "colors": {
+    "page": "#c0c0c0",
+    "text": "#000000",
+    "muted": "#2a2a2a",
+    "accent": "#000080",
+    "onAccent": "#ffffff",
+    "border": "#808080",
+    "card": "#ffffff",
+    "selected": "#000080",
+    "onSelected": "#ffffff",
+    "reason": "#7a0040"
+  },
+  "shape": {
+    "cardRadius": 0,
+    "controlRadius": 0,
+    "thumbnailRadius": 0
+  },
+  "window": {
+    "background": [
+      "#3a6ea5",
+      {
+        "pattern": {
+          "type": "dots",
+          "color": "#ffffff1f",
+          "spacing": 4,
+          "size": 1
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 26,
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#000080",
+              "#0a68b0"
+            ]
+          }
+        }
+      },
+      "inactive": {
+        "fill": {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#606060",
+              "#8a8a8a"
+            ]
+          }
+        }
+      },
+      "text": "#ffffff",
+      "inactiveText": "#ffffff",
+      "buttons": {
+        "size": [
+          22,
+          18
+        ],
+        "icon": "#000000",
+        "surface": {
+          "fill": "#c0c0c0",
+          "bevel": {
+            "light": "#ffffff",
+            "dark": "#000000",
+            "innerLight": "#dfdfdf",
+            "innerDark": "#808080",
+            "width": 1
+          }
+        },
+        "close": {
+          "fill": "#c0c0c0",
+          "bevel": {
+            "light": "#ffffff",
+            "dark": "#000000",
+            "innerLight": "#dfdfdf",
+            "innerDark": "#808080",
+            "width": 1
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#c0c0c0",
+        "border": {
+          "color": "#808080",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "text": "#000000",
+      "highlight": "#000080",
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#c0c0c0",
+        "border": "#000000"
+      }
+    },
+    "topBar": {
+      "fill": "#c0c0c0",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#000000",
+        "innerLight": "#dfdfdf",
+        "innerDark": "#808080",
+        "width": 1
+      }
+    },
+    "sideBar": {
+      "fill": "#c0c0c0",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#000000",
+        "innerLight": "#dfdfdf",
+        "innerDark": "#808080",
+        "width": 1
+      }
+    },
+    "statusBar": {
+      "fill": "#c0c0c0",
+      "bevel": {
+        "light": "#808080",
+        "dark": "#ffffff",
+        "width": 1
+      }
+    }
+  },
+  "controls": {
+    "button": {
+      "fill": "#c0c0c0",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#000000",
+        "innerLight": "#dfdfdf",
+        "innerDark": "#808080",
+        "width": 1
+      }
+    },
+    "buttonText": "#000000",
+    "primaryButton": {
+      "fill": "#c0c0c0",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#000000",
+        "innerLight": "#dfdfdf",
+        "innerDark": "#808080",
+        "width": 1
+      },
+      "border": "#000000"
+    },
+    "primaryButtonText": "#000000",
+    "chip": {
+      "fill": "#c0c0c0",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#000000",
+        "innerLight": "#dfdfdf",
+        "innerDark": "#808080",
+        "width": 1
+      }
+    },
+    "chipSelected": {
+      "fill": "#000080",
+      "bevel": {
+        "light": "#000000",
+        "dark": "#ffffff",
+        "width": 1
+      }
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": "#000080",
+      "border": "#ffffff"
+    },
+    "navSelectedText": "#ffffff",
+    "navText": "#000000"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff",
+      "bevel": {
+        "light": "#808080",
+        "dark": "#ffffff",
+        "innerLight": "#404040",
+        "innerDark": "#dfdfdf"
+      },
+      "focused": {
+        "fill": "#ffffe1"
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#c0c0c0",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#000000",
+        "innerLight": "#dfdfdf",
+        "innerDark": "#808080",
+        "width": 1
+      }
+    },
+    "durationBadge": "#000000",
+    "durationText": "#00ff00"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Press Start 2P",
+    "size": 18,
+    "fill": "#000080",
+    "badge": {
+      "fill": "#d4006f",
+      "border": "#000000",
+      "radius": 0
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "player": {
+    "progress": "#000080"
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

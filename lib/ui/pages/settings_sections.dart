@@ -33,6 +33,8 @@ import '../player_shortcuts.dart';
 import '../shortcut_settings.dart';
 import '../motion.dart';
 import '../palettes.dart';
+import '../../skins/skin_library.dart';
+import 'skins_page.dart';
 import '../theme.dart';
 import 'account_settings.dart';
 import 'relay_servers_page.dart';
@@ -928,6 +930,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                   if (hours != null) saveLooks(controller.appearance.copyWith(darkStart: hours.$1, darkEnd: hours.$2));
                 },
               )),
+        SettingEntry(tr('Skins'), (context) => NormalItem(
+              title: tr('Skins'),
+              subtitle: tr('Current: {0}', [SkinLibrary.instance.byId(appearance.skin)?.nameIn(currentLanguage.tag) ?? tr('Standard')]),
+              leading: _icon(AppIcons.paintBrush),
+              onTap: () => openSkins(context, controller),
+            ), subtitle: tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')),
         SettingEntry(tr('Color scheme'), (context) => NormalItem(
               title: tr('Color scheme'),
               subtitle: tr('Current: {0}', [paletteOf(appearance.palette)?.name ?? tr('Neutral (default)')]),

@@ -41,6 +41,19 @@ flutter:
   uses-material-design: true
   assets:
     - assets/l10n/
+    # Built-in skins and the template users start from (skins/README.md).
+    - skins/aero/
+    - skins/chrome/
+    - skins/candy/
+    - skins/disc/
+    - skins/messenger/
+    - skins/player/
+    - skins/desktop/
+    - skins/sixteen/
+    - skins/onebit/
+    - skins/platinum/
+    - skins/handheld/
+    - skins/template/
   fonts:
     # One bundled default face keeps the Windows package small (SIL OFL 1.1,
     # assets/fonts/OFL.txt). Flutter uses this Regular face for every weight;
@@ -52,6 +65,29 @@ flutter:
     - family: Lumtub Quotes
       fonts:
         - asset: assets/fonts/LumtubQuotes-Regular.ttf
+    # Display faces for the built-in skins (SIL OFL 1.1, skins/fonts/OFL-*.txt).
+    # Baloo 2 and Exo 2 are cut to one weight and Latin letters.
+    - family: Audiowide
+      fonts:
+        - asset: skins/fonts/Audiowide-Regular.ttf
+    - family: VT323
+      fonts:
+        - asset: skins/fonts/VT323-Regular.ttf
+    - family: Silkscreen
+      fonts:
+        - asset: skins/fonts/Silkscreen-Regular.ttf
+    - family: Press Start 2P
+      fonts:
+        - asset: skins/fonts/PressStart2P-Regular.ttf
+    - family: Baloo 2
+      fonts:
+        - asset: skins/fonts/Baloo2-ExtraBold.ttf
+          weight: 800
+    - family: Exo 2
+      fonts:
+        - asset: skins/fonts/Exo2-ExtraBoldItalic.ttf
+          weight: 800
+          style: italic
     # Phosphor icons (MIT, assets/fonts/phosphor/LICENSE).
     - family: Phosphor
       fonts:

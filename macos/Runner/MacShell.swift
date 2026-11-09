@@ -22,15 +22,79 @@ final class MacShell: NSObject, NSWindowDelegate {
   private var dragMonitor: Any?
   private var awake: IOPMAssertionID = 0
 
+  /// The app's own title bar (lib/window_frame.dart), on a channel of its
+  /// own. The last left press is kept for `performDrag`, as the platform
+  /// message arrives after the event is over.
+  private let frameChannel: FlutterMethodChannel
+  private var customFrame = false
+  private var pressMonitor: Any?
+  private var lastPress: NSEvent?
+  private var reportedMaximized = false
+
   init(window: NSWindow, messenger: FlutterBinaryMessenger) {
     channel = FlutterMethodChannel(name: "lumtub/windows_shell", binaryMessenger: messenger)
+    frameChannel = FlutterMethodChannel(name: "lumtub/window_frame", binaryMessenger: messenger)
     self.window = window
     super.init()
     window.delegate = self
     channel.setMethodCallHandler { [weak self] call, result in
       self?.handle(call, result: result)
     }
+    frameChannel.setMethodCallHandler { [weak self] call, result in
+      self?.handleFrame(call, result: result)
+    }
+    pressMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+      self?.lastPress = event
+      return event
+    }
     attachCommands()
+  }
+
+  // MARK: Own title bar
+
+  private func handleFrame(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let window else {
+      result(FlutterMethodNotImplemented)
+      return
+    }
+    switch call.method {
+    case "state":
+      result(["maximized": window.isZoomed, "active": window.isKeyWindow])
+      return
+    case "setCustom":
+      customFrame = call.arguments as? Bool ?? false
+      if pipBefore == nil { applyFrame(to: window) }
+    case "minimize":
+      window.miniaturize(nil)
+    case "toggleMaximize":
+      window.zoom(nil)
+    case "close":
+      window.performClose(nil)
+    case "startDrag":
+      let current = NSApp.currentEvent?.type == .leftMouseDown ? NSApp.currentEvent : lastPress
+      if NSEvent.pressedMouseButtons & 1 != 0, let event = current { window.performDrag(with: event) }
+    case "startResize", "setCaption":
+      break
+    default:
+      result(FlutterMethodNotImplemented)
+      return
+    }
+    result(nil)
+  }
+
+  /// The title bar is hidden and the content runs under it, keeping the
+  /// system's shadow, edges and zoom.
+  private func applyFrame(to window: NSWindow) {
+    window.titlebarAppearsTransparent = customFrame
+    window.titleVisibility = customFrame ? .hidden : .visible
+    if customFrame {
+      window.styleMask.insert(.fullSizeContentView)
+    } else {
+      window.styleMask.remove(.fullSizeContentView)
+    }
+    for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
+      window.standardWindowButton(kind)?.isHidden = customFrame
+    }
   }
 
   private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -205,6 +269,7 @@ final class MacShell: NSObject, NSWindowDelegate {
     window.minSize = before.minSize
     window.level = keepOnTop ? .floating : .normal
     window.setFrame(before.frame, display: true)
+    applyFrame(to: window)
     refocus(window)
   }
 
@@ -295,6 +360,20 @@ final class MacShell: NSObject, NSWindowDelegate {
   }
 
   // MARK: NSWindowDelegate
+
+  func windowDidResize(_ notification: Notification) {
+    guard let window, window.isZoomed != reportedMaximized else { return }
+    reportedMaximized = window.isZoomed
+    frameChannel.invokeMethod("maximized", arguments: reportedMaximized)
+  }
+
+  func windowDidBecomeKey(_ notification: Notification) {
+    frameChannel.invokeMethod("active", arguments: true)
+  }
+
+  func windowDidResignKey(_ notification: Notification) {
+    frameChannel.invokeMethod("active", arguments: false)
+  }
 
   func windowShouldClose(_ sender: NSWindow) -> Bool {
     guard closeToTray else { return true }

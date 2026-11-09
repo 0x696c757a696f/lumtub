@@ -16,6 +16,8 @@ class AppDirectories {
   final Directory cache;
   final Directory components;
   final Directory logs;
+  /// Skins the user added, one folder each (lib/skins/skin_library.dart).
+  Directory get skins => Directory('${root.path}${Platform.pathSeparator}skins');
 
   const AppDirectories({
     required this.root,

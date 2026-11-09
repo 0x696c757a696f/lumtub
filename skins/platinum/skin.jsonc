@@ -1,0 +1,325 @@
+// Platinum: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 白金灰：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "lumtubSkin": 1,
+  "id": "platinum",
+  "name": "Platinum",
+  "names": {
+    "zh-Hans": "白金灰",
+    "zh-Hant": "白金灰"
+  },
+  "description": "Soft grey bevels, grooved title bars and a lavender highlight",
+  "descriptions": {
+    "zh-Hans": "柔和的灰色立体边、横纹标题栏和淡紫色高亮",
+    "zh-Hant": "柔和的灰色立體邊、橫紋標題列和淡紫色高亮"
+  },
+  "brightness": "light",
+  "text": {
+    "displayFont": "Exo 2",
+    "monoFont": "Audiowide"
+  },
+  "colors": {
+    "page": "#dddddd",
+    "text": "#111111",
+    "muted": "#454545",
+    "accent": "#3a3ac8",
+    "onAccent": "#ffffff",
+    "border": "#888888",
+    "card": "#eeeeee",
+    "selected": "#ccccff",
+    "onSelected": "#000000",
+    "reason": "#2e2eb0"
+  },
+  "shape": {
+    "cardRadius": 3,
+    "controlRadius": 5,
+    "thumbnailRadius": 2
+  },
+  "window": {
+    "background": [
+      "#6b7ba6",
+      {
+        "pattern": {
+          "type": "dots",
+          "color": "#ffffff14",
+          "spacing": 3,
+          "size": 1
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 24,
+      "surface": {
+        "fill": [
+          "#dddddd",
+          {
+            "pattern": {
+              "type": "lines",
+              "color": "#999999",
+              "spacing": 3,
+              "size": 1
+            }
+          }
+        ],
+        "border": {
+          "color": "#555555",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#dddddd"
+      },
+      "text": "#111111",
+      "align": "center",
+      "buttons": {
+        "size": [
+          18,
+          18
+        ],
+        "icon": "#222222",
+        "surface": {
+          "fill": {
+            "linear": {
+              "angle": 135,
+              "colors": [
+                "#ffffff",
+                "#aaaaaa"
+              ]
+            }
+          },
+          "border": "#444444",
+          "pressed": {
+            "fill": {
+              "linear": {
+                "angle": 135,
+                "colors": [
+                  "#888888",
+                  "#cccccc"
+                ]
+              }
+            }
+          }
+        },
+        "close": {
+          "fill": {
+            "linear": {
+              "angle": 135,
+              "colors": [
+                "#ffffff",
+                "#aaaaaa"
+              ]
+            }
+          },
+          "border": "#444444",
+          "pressed": {
+            "fill": {
+              "linear": {
+                "angle": 135,
+                "colors": [
+                  "#888888",
+                  "#cccccc"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#eeeeee",
+              "#cccccc"
+            ]
+          }
+        },
+        "border": {
+          "color": "#666666",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "text": "#000000",
+      "highlight": "#3a3ac8",
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#eeeeee",
+        "border": "#444444"
+      },
+      "clock": true
+    },
+    "topBar": {
+      "fill": "#dddddd",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#999999"
+      },
+      "border": {
+        "color": "#666666",
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#dddddd",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#999999"
+      }
+    },
+    "statusBar": {
+      "fill": "#dddddd",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#999999"
+      }
+    }
+  },
+  "controls": {
+    "button": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#f4f4f4",
+            "#d4d4d4"
+          ]
+        }
+      },
+      "border": "#444444",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#aaaaaa"
+      }
+    },
+    "buttonText": "#111111",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#f4f4f4",
+            "#d4d4d4"
+          ]
+        }
+      },
+      "border": {
+        "color": "#222222",
+        "width": 2
+      },
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#aaaaaa"
+      }
+    },
+    "primaryButtonText": "#111111",
+    "chip": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#f4f4f4",
+            "#d4d4d4"
+          ]
+        }
+      },
+      "border": "#444444"
+    },
+    "chipSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#5a5ae0",
+            "#3a3ac8"
+          ]
+        }
+      },
+      "border": "#222222",
+      "bevel": {
+        "light": "#c8c8ff",
+        "dark": "#2a2a90"
+      }
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": "#ccccff",
+      "border": "#6666cc"
+    },
+    "navSelectedText": "#000000",
+    "navText": "#222222"
+  },
+  "cards": {
+    "video": {
+      "fill": "#eeeeee",
+      "border": "#888888",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#bbbbbb"
+      },
+      "hover": {
+        "fill": "#ccccff",
+        "border": "#3a3ac8"
+      },
+      "focused": {
+        "border": {
+          "color": "#3a3ac8",
+          "width": 2
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#dddddd",
+      "border": "#444444",
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#999999"
+      }
+    },
+    "durationBadge": "#222222",
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Exo 2",
+    "size": 22,
+    "fill": "#222222",
+    "shadow": "#ffffff",
+    "badge": {
+      "fill": {
+        "linear": {
+          "angle": 135,
+          "colors": [
+            "#7a7aff",
+            "#3a3ac8"
+          ]
+        }
+      },
+      "gloss": 0.4,
+      "border": "#555555"
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "player": {
+    "progress": {
+      "pattern": {
+        "type": "lines",
+        "color": "#3a3ac8",
+        "spacing": 6,
+        "size": 3,
+        "angle": 45
+      }
+    }
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

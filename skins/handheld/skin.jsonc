@@ -1,0 +1,193 @@
+// Handheld: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 点阵掌机：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "lumtubSkin": 1,
+  "id": "handheld",
+  "name": "Handheld",
+  "names": {
+    "zh-Hans": "点阵掌机",
+    "zh-Hant": "點陣掌機"
+  },
+  "description": "Four shades of green on a dot-matrix screen",
+  "descriptions": {
+    "zh-Hans": "点阵液晶屏上的四阶绿色",
+    "zh-Hant": "點陣液晶屏上的四階綠色"
+  },
+  "brightness": "light",
+  "text": {
+    "displayFont": "Press Start 2P",
+    "monoFont": "Press Start 2P"
+  },
+  "colors": {
+    "page": "#9bbc0f",
+    "text": "#0f380f",
+    "muted": "#0f380f",
+    "accent": "#0f380f",
+    "onAccent": "#9bbc0f",
+    "border": "#0f380f",
+    "card": "#9bbc0f",
+    "selected": "#0f380f",
+    "onSelected": "#9bbc0f",
+    "reason": "#0f380f"
+  },
+  "shape": {
+    "cardRadius": 0,
+    "controlRadius": 0,
+    "thumbnailRadius": 0
+  },
+  "window": {
+    "background": [
+      "#8bac0f",
+      {
+        "pattern": {
+          "type": "grid",
+          "color": "#0f380f14",
+          "spacing": 3,
+          "size": 1
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 26,
+      "surface": {
+        "fill": "#306230",
+        "border": {
+          "color": "#0f380f",
+          "width": 3,
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#4a7a3a"
+      },
+      "text": "#d4ec6a",
+      "buttons": {
+        "size": [
+          30,
+          22
+        ],
+        "icon": "#d4ec6a",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#0f380f"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#0f380f"
+          }
+        }
+      }
+    },
+    "topBar": {
+      "fill": "#306230",
+      "border": {
+        "color": "#0f380f",
+        "width": 4,
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#306230",
+      "border": {
+        "color": "#0f380f",
+        "width": 4,
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#306230",
+      "border": {
+        "color": "#0f380f",
+        "width": 4,
+        "sides": [
+          "top"
+        ]
+      }
+    }
+  },
+  "controls": {
+    "button": {
+      "fill": "#9bbc0f",
+      "border": {
+        "color": "#0f380f",
+        "width": 3
+      },
+      "pressed": {
+        "fill": "#8bac0f"
+      }
+    },
+    "buttonText": "#0f380f",
+    "primaryButton": "#0f380f",
+    "primaryButtonText": "#9bbc0f",
+    "chip": {
+      "fill": "#9bbc0f",
+      "border": {
+        "color": "#0f380f",
+        "width": 3
+      }
+    },
+    "chipSelected": "#0f380f",
+    "chipSelectedText": "#9bbc0f",
+    "navSelected": "#9bbc0f",
+    "navSelectedText": "#0f380f",
+    "navText": "#d4ec6a"
+  },
+  "cards": {
+    "video": {
+      "fill": "#9bbc0f",
+      "border": {
+        "color": "#0f380f",
+        "width": 3
+      },
+      "hover": {
+        "fill": "#8bac0f"
+      },
+      "focused": {
+        "border": {
+          "color": "#0f380f",
+          "width": 5
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#9bbc0f",
+      "border": {
+        "color": "#0f380f",
+        "width": 3
+      }
+    },
+    "durationBadge": "#0f380f",
+    "durationText": "#9bbc0f"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Press Start 2P",
+    "size": 18,
+    "fill": "#d4ec6a",
+    "badge": {
+      "fill": "#9bbc0f",
+      "border": {
+        "color": "#0f380f",
+        "width": 3
+      },
+      "radius": 0
+    },
+    "badgeIcon": "#0f380f"
+  },
+  "player": {
+    "progress": "#0f380f"
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

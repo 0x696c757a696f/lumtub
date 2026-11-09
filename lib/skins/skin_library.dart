@@ -1,0 +1,127 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+
+import '../app_log.dart';
+import 'jsonc.dart';
+import 'skin.dart';
+
+/// The skins Lumtub knows: its own, from skins/ in the repository, and the ones in the
+/// user's skins folder, one folder per skin with a skin.jsonc in it. The
+/// folder is watched, so a skin being edited shows its changes on save.
+class SkinLibrary extends ChangeNotifier {
+  SkinLibrary._();
+  static final instance = SkinLibrary._();
+
+  /// The built-in skins, in the order Settings shows them.
+  static const builtInIds = ['aero', 'chrome', 'candy', 'disc', 'messenger', 'player', 'desktop', 'sixteen', 'onebit', 'platinum', 'handheld'];
+
+  List<Skin> _builtIn = const [];
+  List<Skin> _user = const [];
+  Map<String, String> _errors = const {};
+  Directory? _folder;
+  StreamSubscription<FileSystemEvent>? _watch;
+  Timer? _debounce;
+  final _loadedFonts = <String>{};
+
+  /// Changes whenever the skins are read again, so themes built from them
+  /// are rebuilt.
+  int revision = 0;
+
+  List<Skin> get builtIn => _builtIn;
+  List<Skin> get user => _user;
+  /// Skin folders that could not be read, with why.
+  Map<String, String> get errors => _errors;
+  Directory? get folder => _folder;
+
+  /// The skin [id] names; a user's skin wins over a built-in one of the same id.
+  Skin? byId(String id) {
+    if (id.isEmpty) return null;
+    for (final s in _user) {
+      if (s.id == id) return s;
+    }
+    for (final s in _builtIn) {
+      if (s.id == id) return s;
+    }
+    return null;
+  }
+
+  Future<void> load({Directory? folder, AssetBundle? bundle}) async {
+    _folder = folder;
+    final assets = bundle ?? rootBundle;
+    final builtIn = <Skin>[];
+    for (final id in builtInIds) {
+      try {
+        builtIn.add(Skin.parse(decodeJsonc(await assets.loadString('skins/$id/skin.jsonc')), folder: 'skins/$id', builtIn: true));
+      } catch (e) {
+        logError('Built-in skin $id could not be read', e);
+      }
+    }
+    _builtIn = builtIn;
+    await _readUser();
+    if (folder != null) _startWatching(folder);
+  }
+
+  Future<void> reload() async {
+    await _readUser();
+    notifyListeners();
+  }
+
+  Future<void> _readUser() async {
+    final folder = _folder;
+    final skins = <Skin>[];
+    final errors = <String, String>{};
+    if (folder != null) {
+      try {
+        if (!await folder.exists()) await folder.create(recursive: true);
+        final dirs = await folder.list().where((e) => e is Directory).cast<Directory>().toList()
+          ..sort((a, b) => a.path.compareTo(b.path));
+        for (final dir in dirs) {
+          final file = File('${dir.path}${Platform.pathSeparator}skin.jsonc');
+          if (!await file.exists()) continue;
+          try {
+            final skin = Skin.parse(decodeJsonc(await file.readAsString()), folder: dir.path, builtIn: false);
+            await _loadFonts(skin);
+            skins.add(skin);
+            if (skin.warnings.isNotEmpty) logInfo('Skin ${skin.id}: ${skin.warnings.join('; ')}');
+          } catch (e) {
+            errors[dir.path] = e is FormatException ? e.message : '$e';
+          }
+        }
+      } catch (e) {
+        logError('Could not read the skins folder', e);
+      }
+    }
+    _user = skins;
+    _errors = errors;
+    revision++;
+  }
+
+  Future<void> _loadFonts(Skin skin) async {
+    for (final MapEntry(key: family, value: name) in skin.fontFiles.entries) {
+      final path = skin.file(name);
+      // Flutter cannot unload a font, so each file is read once a run.
+      if (!_loadedFonts.add('$family\n$path')) continue;
+      try {
+        final bytes = await File(path).readAsBytes();
+        await (FontLoader(family)..addFont(Future.value(ByteData.sublistView(bytes)))).load();
+      } catch (e) {
+        skin.warn('font "$family" ($name) could not be read');
+      }
+    }
+  }
+
+  void _startWatching(Directory folder) {
+    unawaited(_watch?.cancel());
+    try {
+      _watch = folder.watch(recursive: true).listen((_) {
+        _debounce?.cancel();
+        _debounce = Timer(const Duration(milliseconds: 400), () => unawaited(reload()));
+      }, onError: (Object _) {});
+    } catch (_) {
+      // Some file systems cannot be watched; Settings has a reload button.
+    }
+  }
+}

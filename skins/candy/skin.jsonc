@@ -1,0 +1,320 @@
+// Candy Shell: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 糖果壳：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "lumtubSkin": 1,
+  "id": "candy",
+  "name": "Candy Shell",
+  "names": {
+    "zh-Hans": "糖果壳",
+    "zh-Hant": "糖果殼"
+  },
+  "description": "See-through coloured plastic with fine stripes, like a translucent computer case",
+  "descriptions": {
+    "zh-Hans": "带细条纹的半透明彩色塑料，像透明外壳的电脑",
+    "zh-Hant": "帶細條紋的半透明彩色塑膠，像透明外殼的電腦"
+  },
+  "brightness": "light",
+  "text": {
+    "displayFont": "Baloo 2",
+    "monoFont": "Audiowide"
+  },
+  "colors": {
+    "page": "#e3f4f6",
+    "text": "#10283a",
+    "muted": "#3f5a6b",
+    "accent": "#00788a",
+    "onAccent": "#ffffff",
+    "border": "#9ad3db",
+    "card": "#ffffff",
+    "selected": "#ffe2c4",
+    "onSelected": "#10283a",
+    "reason": "#006f80"
+  },
+  "shape": {
+    "cardRadius": 22,
+    "controlRadius": 16,
+    "thumbnailRadius": 16
+  },
+  "window": {
+    "background": [
+      "#e3f4f6",
+      {
+        "pattern": {
+          "type": "lines",
+          "color": "#ffffff59",
+          "spacing": 7,
+          "size": 2,
+          "angle": 90
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": [
+          {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f7f91",
+                "#006070"
+              ]
+            }
+          },
+          {
+            "pattern": {
+              "type": "lines",
+              "color": "#ffffff2e",
+              "spacing": 6,
+              "size": 2,
+              "angle": 90
+            }
+          }
+        ],
+        "border": {
+          "color": "#ffffffb3",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#3f8f9a"
+      },
+      "text": "#ffffff",
+      "inactiveText": "#ffffffe6",
+      "buttons": {
+        "size": [
+          36,
+          24
+        ],
+        "icon": "#ffffff",
+        "surface": {
+          "fill": "transparent",
+          "radius": 12,
+          "hover": {
+            "fill": "#ffffff40"
+          },
+          "pressed": {
+            "fill": "#00000033"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "radius": 12,
+          "hover": {
+            "fill": "#ff6a00"
+          },
+          "pressed": {
+            "fill": "#c45200"
+          }
+        }
+      }
+    },
+    "topBar": {
+      "fill": [
+        {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#0f7f91",
+              "#006070"
+            ]
+          }
+        },
+        {
+          "pattern": {
+            "type": "lines",
+            "color": "#ffffff2e",
+            "spacing": 6,
+            "size": 2,
+            "angle": 90
+          }
+        }
+      ],
+      "border": {
+        "color": "#ffffffb3",
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": [
+        {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#ff9a3c",
+              "#e86a00"
+            ]
+          }
+        },
+        {
+          "pattern": {
+            "type": "lines",
+            "color": "#ffffff38",
+            "spacing": 6,
+            "size": 2
+          }
+        }
+      ],
+      "border": {
+        "color": "#ffffffb3",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#3fc4d4",
+            "#007f95"
+          ]
+        }
+      },
+      "border": {
+        "color": "#ffffff",
+        "sides": [
+          "top"
+        ]
+      }
+    }
+  },
+  "controls": {
+    "button": {
+      "fill": "#ffffffb3",
+      "border": "#00879c59",
+      "hover": {
+        "fill": "#ffffffe6"
+      }
+    },
+    "buttonText": "#10283a",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffb060",
+            "#f07a10"
+          ]
+        }
+      },
+      "gloss": 0.6,
+      "border": "#b85600"
+    },
+    "primaryButtonText": "#2a1000",
+    "chip": {
+      "fill": "#ffffffb3",
+      "border": "#00879c59"
+    },
+    "chipSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#0f7f91",
+            "#005a68"
+          ]
+        }
+      },
+      "gloss": 0.5,
+      "border": "#005866"
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": "#ffffffe6",
+      "border": {
+        "color": "#ff9a3c4d",
+        "width": 3,
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "navSelectedText": "#a84600",
+    "navText": "#3a1800"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff8c",
+      "border": {
+        "color": "#ffffffe6",
+        "width": 2
+      },
+      "shadow": [
+        {
+          "color": "#00879c2e",
+          "y": 6
+        },
+        {
+          "color": "#00648226",
+          "y": 10,
+          "blur": 20
+        }
+      ],
+      "hover": {
+        "border": {
+          "color": "#ff9a3c",
+          "width": 3
+        }
+      },
+      "focused": {
+        "border": {
+          "color": "#c85400",
+          "width": 3
+        }
+      }
+    },
+    "padding": 8,
+    "panel": {
+      "fill": "#ffffffcc",
+      "border": {
+        "color": "#ffffff",
+        "width": 2
+      }
+    },
+    "durationBadge": {
+      "fill": "#10283acc"
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "Lumtub",
+    "font": "Baloo 2",
+    "size": 26,
+    "fill": "#ffffff",
+    "shadow": "#00505f80",
+    "badge": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffb35a",
+            "#ff7a00"
+          ]
+        }
+      },
+      "gloss": 0.7,
+      "border": "#ffffffcc"
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "player": {
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#00b4c8",
+          "#7be3ee"
+        ]
+      }
+    }
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

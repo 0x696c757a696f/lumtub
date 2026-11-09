@@ -39,6 +39,7 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   shell_ = std::make_unique<WindowsShell>(GetHandle(), flutter_controller_->engine()->messenger());
+  frame_ = std::make_unique<WindowFrame>(GetHandle(), flutter_controller_->engine()->messenger());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -55,6 +56,7 @@ bool FlutterWindow::OnCreate() {
 
 void FlutterWindow::OnDestroy() {
   shell_ = nullptr;
+  frame_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -70,6 +72,11 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   // own handling of WM_CLOSE (which asks Dart whether to exit).
   LRESULT shell_result = 0;
   if (shell_ && shell_->HandleMessage(message, wparam, lparam, &shell_result)) {
+    return shell_result;
+  }
+
+  // The app's own title bar answers the frame's hit tests before Flutter.
+  if (frame_ && frame_->HandleMessage(message, wparam, lparam, &shell_result)) {
     return shell_result;
   }
 

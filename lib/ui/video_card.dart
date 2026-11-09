@@ -15,6 +15,7 @@ import '../youtube_account.dart' show RemotePlaylist;
 import 'common.dart';
 import 'pages/downloads_page.dart';
 import 'skeleton.dart';
+import 'skin_paint.dart';
 import 'theme.dart';
 import '../l10n/l10n.dart';
 import 'motion.dart';
@@ -484,7 +485,9 @@ class _VideoCardState extends State<VideoCard> {
       if (item.channel.isNotEmpty) item.channel,
       if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
     ].join(' · ');
-    // A picture and text on the page, as YouTube shows them: no box round.
+    // A picture and text on the page, as YouTube shows them: no box round,
+    // unless a skin puts cards on a surface.
+    final skin = context.skin;
     final card = Card(
       color: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: AppStyle.cardRadius),
@@ -500,7 +503,7 @@ class _VideoCardState extends State<VideoCard> {
           AspectRatio(
             aspectRatio: 16 / 9,
             child: ClipRRect(
-              borderRadius: AppStyle.thumbnailRadius,
+              borderRadius: context.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
                 AnimatedScale(
                   scale: _hovered ? 1.04 : 1,
@@ -567,10 +570,10 @@ class _VideoCardState extends State<VideoCard> {
                   height: _reasonHeight,
                   child: Row(children: [
                     if (reason.isNotEmpty) ...[
-                      Icon(AppIcons.sparkle, size: 12, color: colors.primary),
+                      Icon(AppIcons.sparkle, size: 12, color: skin?.colors.reason ?? colors.primary),
                       const SizedBox(width: 4),
                     ],
-                    Expanded(child: Text(reason, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary))),
+                    Expanded(child: Text(reason, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: skin?.colors.reason ?? colors.primary))),
                   ]),
                 ),
             ]),
@@ -584,7 +587,15 @@ class _VideoCardState extends State<VideoCard> {
         const SingleActivator(LogicalKeyboardKey.f10, shift: true): _menu,
       },
       child: Stack(children: [
-        card,
+        if (skin?.videoCard case final surface?)
+          SkinBox(
+            surface: surface.forState(hovered: _hovered, focused: _focused),
+            radius: context.cardRadius.topLeft.x,
+            padding: EdgeInsets.all(skin!.videoCardPadding),
+            child: card,
+          )
+        else
+          card,
         if (_focused)
           Positioned.fill(child: IgnorePointer(child: DecoratedBox(decoration: BoxDecoration(
             borderRadius: AppStyle.cardRadius,
@@ -650,13 +661,16 @@ class DurationBadge extends StatelessWidget {
   final Color? color;
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(color: color ?? Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(4)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          child: Text(label, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500, fontFeatures: [FontFeature.tabularFigures()])),
-        ),
-      );
+  Widget build(BuildContext context) {
+    final skin = context.skin;
+    final surface = color == null ? skin?.durationBadge : null;
+    final text = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: Text(label, style: TextStyle(fontSize: 12, color: surface != null ? skin!.durationText ?? Colors.white : Colors.white, fontWeight: FontWeight.w500, fontFamily: skin?.monoFont, fontFeatures: const [FontFeature.tabularFigures()])),
+    );
+    if (surface != null) return SkinBox(surface: surface, radius: 4, child: text);
+    return DecoratedBox(decoration: BoxDecoration(color: color ?? Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(4)), child: text);
+  }
 }
 
 /// The mark on a members-only video, in the green YouTube gives it.

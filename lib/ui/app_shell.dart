@@ -311,7 +311,8 @@ class _AppShellState extends State<AppShell> {
                     if (_controller.mini && _controller.playing != null)
                       Positioned.fill(child: MiniPlayer(controller: _controller)),
                   ])),
-                  if (_controller.appearance.showStatusBar) _StatusBar(controller: _controller),
+                  // No status line on phones, tablets and TVs: the room goes to the page.
+                  if (_controller.appearance.showStatusBar && !touchFirst) _StatusBar(controller: _controller),
                 ]))),
                 bottomNavigationBar: rail ? null : NavigationBar(
                   height: 64,
@@ -447,12 +448,12 @@ class _TopBar extends StatelessWidget {
               ]),
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: wide ? 16 : 8),
           Expanded(child: Center(child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
             child: SizedBox(height: 40, child: _SearchField(app: controller, controller: searchText, focusNode: searchFocus, enabled: ready, onSubmit: onSubmit)),
           ))),
-          const SizedBox(width: 16),
+          SizedBox(width: wide ? 16 : 4),
           IconButton(
             tooltip: keyNames(controller.incognito ? tr('Incognito mode is on; click to turn it off (Ctrl+Shift+N)') : tr("Incognito mode: don't record watching and searching (Ctrl+Shift+N)")),
             isSelected: controller.incognito,
@@ -461,7 +462,8 @@ class _TopBar extends StatelessWidget {
             icon: const Icon(AppIcons.eyeSlash),
             selectedIcon: const Icon(AppIcons.eyeSlashFill),
           ),
-          IconButton(
+          // Phones and TVs have no yt-dlp or ffmpeg to update.
+          if (!touchFirst) IconButton(
             tooltip: tr('Check for component updates'),
             onPressed: ready && !controller.checking ? controller.checkUpdates : null,
             icon: controller.checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.arrowLineDown),

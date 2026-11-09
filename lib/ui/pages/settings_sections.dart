@@ -1084,7 +1084,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: appearance.darkWatchPage,
               onChanged: (v) => saveLooks(appearance.copyWith(darkWatchPage: v)),
             )),
-        SettingEntry(tr('Show bottom status bar'), (context) => SwitchItem(
+        if (!touchFirst) SettingEntry(tr('Show bottom status bar'), (context) => SwitchItem(
               title: tr('Show bottom status bar'),
               subtitle: tr('libmpv version and status at the bottom of the window'),
               leading: _icon(AppIcons.lineSegment),

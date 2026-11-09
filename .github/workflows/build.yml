@@ -987,18 +987,6 @@ jobs:
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
           timeout 600 android/packaging/smoke.sh dist/Lumtub_*_android-x86_64.apk "$RUNNER_TEMP/smoke" || { echo "--- emulator log"; tail -60 "$RUNNER_TEMP/emulator.log"; exit 1; }
 
-      - name: Android - pictures to the android-shots branch
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        continue-on-error: true
-        run: |
-          sha=$(git rev-parse --short HEAD)
-          git checkout -q --orphan android-shots
-          git rm -rfq . && git clean -fdxq
-          cp "$RUNNER_TEMP"/smoke/*.png "$RUNNER_TEMP"/smoke/*.mp4 . 2> /dev/null || true
-          git add -A
-          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Android pictures of $sha"
-          git push -f origin android-shots
-
       - name: Android - upload smoke test
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -1012,6 +1000,18 @@ jobs:
         with:
           name: Lumtub-android-apk
           path: dist/*.apk
+
+      - name: Android - pictures to the android-shots branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        run: |
+          sha=$(git rev-parse --short HEAD)
+          git checkout -q --orphan android-shots
+          git rm -rfq . && git clean -fdxq
+          cp "$RUNNER_TEMP"/smoke/*.png "$RUNNER_TEMP"/smoke/*.mp4 . 2> /dev/null || true
+          git add -A
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Android pictures of $sha"
+          git push -f origin android-shots
 
   release:
     name: Release

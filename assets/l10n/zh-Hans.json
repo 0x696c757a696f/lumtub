@@ -3035,6 +3035,17 @@
   "How to make a skin": "如何制作皮肤",
   "The guide, the format and the pitfalls to avoid": "说明、文件格式和避坑指南",
   "Use the system title bar": "使用系统标题栏",
-  "Keep the usual window frame instead of the one a skin draws": "保留系统的窗口边框，不用皮肤自己画的",
-  "Problems found": "发现的问题"
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "保留系统的窗口边框，不用皮肤自己画的标题栏和菜单栏",
+  "Problems found": "发现的问题",
+  "Color schemes": "配色方案",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "这些配色跟随浅色/深色模式，保留 Lumtub 自己的形状；变的是颜色，标题栏和菜单栏也换成同样的颜色。",
+  "Hide the title bar": "隐藏标题栏",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "窗口按钮移到菜单栏里，只对有菜单栏的皮肤有效",
+  "Light and dark": "浅色 · 深色",
+  "Light only": "仅浅色",
+  "Dark only": "仅深色",
+  "Glass": "玻璃",
+  "{0}% solid": "不透明度 {0}%",
+  "See the desktop through the window": "透出桌面",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "风景让开，窗口透出后面的桌面，系统支持时还会带模糊。低占用模式下不可用"
 }

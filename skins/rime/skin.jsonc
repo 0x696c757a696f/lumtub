@@ -1,0 +1,46 @@
+// Rime: one of Lumtub's colour schemes as a skin. It follows the theme
+// mode: "colors" are the light side, "overrides.dark" the dark one.
+// 雾凇：Lumtub 的配色方案之一。跟随浅色/深色模式："colors" 是浅色，"overrides.dark" 是深色。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "rime",
+  "name": "Rime",
+  "names": {
+    "zh-Hans": "雾凇",
+    "zh-Hant": "霧凇"
+  },
+  "description": "Ice blue, with cards bright as frost",
+  "descriptions": {
+    "zh-Hans": "冰蓝底色，卡片像结了霜一样亮",
+    "zh-Hant": "冰藍底色，卡片像結了霜一樣明亮"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "colors": {
+    "page": "#e6eff4",
+    "text": "#13202a",
+    "accent": "#0a7391",
+    "card": "#fafdfe",
+    "selected": "#cfe6ef"
+  },
+  "window": {
+    "titleBar": {
+      "height": 32
+    },
+    "menuBar": {}
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#0d1920",
+        "text": "#daebf2",
+        "accent": "#52c3e0",
+        "card": "#16262f",
+        "selected": "#1c3a47"
+      }
+    }
+  }
+}

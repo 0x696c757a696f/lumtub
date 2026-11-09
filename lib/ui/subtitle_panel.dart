@@ -32,7 +32,7 @@ Future<void> showSubtitlePanel(BuildContext context, AppController controller, P
               Navigator.of(inner).pop();
               onList != null ? onList() : unawaited(showSubtitleList(context, controller, player));
             },
-            icon: const Icon(AppIcons.textAlignLeft, size: 18),
+            icon: Icon(AppIcons.textAlignLeft, size: 18),
             label: Text(tr('Subtitle list')),
           ),
         ),
@@ -42,7 +42,7 @@ Future<void> showSubtitlePanel(BuildContext context, AppController controller, P
               Navigator.of(context).pop();
               onSettings();
             },
-            icon: const Icon(AppIcons.slidersHorizontal, size: 18),
+            icon: Icon(AppIcons.slidersHorizontal, size: 18),
             label: Text(tr('Subtitle settings')),
           ),
         ),
@@ -233,7 +233,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
               else
                 TextButton.icon(
                   onPressed: () => setState(() => _allLanguages = true),
-                  icon: const Icon(AppIcons.caretDown, size: 18),
+                  icon: Icon(AppIcons.caretDown, size: 18),
                   label: Text(tr('More languages ({0})', [shownTranslated.length])),
                 ),
             ],
@@ -249,7 +249,7 @@ class _SubtitlePanelState extends State<_SubtitlePanel> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: TextField(
-            decoration: InputDecoration(isDense: true, prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Search language, e.g. Chinese, ja')),
+            decoration: InputDecoration(isDense: true, prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Search language, e.g. Chinese, ja')),
             onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
           ),
         ),
@@ -384,7 +384,7 @@ class _SpeechOfferState extends State<SpeechOffer> {
             ] else if (controller.canRecognizeSpeech)
               FilledButton.tonalIcon(
                 onPressed: job == null ? _run : null,
-                icon: const Icon(AppIcons.waveform, size: 18),
+                icon: Icon(AppIcons.waveform, size: 18),
                 label: Text(tr('Make subtitles with speech recognition')),
               )
             else ...[
@@ -396,7 +396,7 @@ class _SpeechOfferState extends State<SpeechOffer> {
                   await openTranslationSettings(context, controller);
                   if (mounted) setState(() {});
                 },
-                icon: const Icon(AppIcons.gear, size: 18),
+                icon: Icon(AppIcons.gear, size: 18),
                 label: Text(tr('Set up speech recognition')),
               ),
             ],

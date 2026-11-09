@@ -74,10 +74,13 @@
       },
       "text": "#000000",
       "align": "center",
+      "titlePlate": "#ffffff",
       "buttons": {
+        "placement": "split",
+        "glyphs": "classic",
         "size": [
-          18,
-          16
+          14,
+          14
         ],
         "icon": "#000000",
         "surface": {
@@ -97,6 +100,10 @@
       }
     },
     "menuBar": {
+      "position": "top",
+      "appMenu": true,
+      "underlineKeys": false,
+      "height": 22,
       "surface": {
         "fill": "#ffffff",
         "border": {

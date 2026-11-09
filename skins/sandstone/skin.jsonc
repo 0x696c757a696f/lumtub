@@ -1,0 +1,48 @@
+// Sandstone: one of Lumtub's colour schemes as a skin. It follows the theme
+// mode: "colors" are the light side, "overrides.dark" the dark one.
+// 砂岩：Lumtub 的配色方案之一。跟随浅色/深色模式："colors" 是浅色，"overrides.dark" 是深色。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "sandstone",
+  "name": "Sandstone",
+  "names": {
+    "zh-Hans": "砂岩",
+    "zh-Hant": "砂岩"
+  },
+  "description": "Warm sand, with terracotta in what is raised",
+  "descriptions": {
+    "zh-Hans": "暖沙底色，凸起处透出赤陶色",
+    "zh-Hant": "暖沙底色，凸起處透出赤陶色"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "colors": {
+    "page": "#f3e9df",
+    "text": "#2b2019",
+    "accent": "#a14a22",
+    "chrome": "#e9dacb",
+    "selected": "#ebcdb8",
+    "tint": 0.06
+  },
+  "window": {
+    "titleBar": {
+      "height": 32
+    },
+    "menuBar": {}
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#1e1611",
+        "text": "#efe2d8",
+        "accent": "#e88e5f",
+        "chrome": "#17100c",
+        "selected": "#3f2619",
+        "tint": 0.06
+      }
+    }
+  }
+}

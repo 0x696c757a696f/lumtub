@@ -10,16 +10,19 @@ import 'app_directories.dart';
 import 'app_window.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
+import 'ui/skin_paint.dart' show SkinGlass;
 import 'keep_awake.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
 import 'skins/skin_library.dart';
 import 'ui/app_shell.dart';
 import 'ui/frame_stats.dart';
+import 'ui/app_icons.dart';
 import 'ui/motion.dart';
 import 'ui/smooth_wheel.dart';
 import 'ui/palettes.dart';
 import 'ui/theme.dart';
+import 'ui/window_chrome.dart';
 import 'windows_shell.dart';
 
 Future<void> main() async {
@@ -94,7 +97,7 @@ class _LumtubAppState extends State<LumtubApp> {
       ..maximumSizeBytes = (appearance.lowResource ? 24 : 64) << 20;
     final warmth = appearance.warmthAt(DateTime.now());
     final skin = SkinLibrary.instance.byId(appearance.skin);
-    final key = (appearance.themeKey(accent), Motion.reduced, warmth, SkinLibrary.instance.revision, skin);
+    final key = (appearance.themeKey(accent), Motion.reduced, warmth, SkinLibrary.instance.revision, skin, appearance.glassOpacity);
     if (key == _themeKey) return;
     _themeKey = key;
     ThemeData build(Brightness brightness, {bool highContrast = false}) => buildAppTheme(
@@ -108,8 +111,11 @@ class _LumtubAppState extends State<LumtubApp> {
           highContrast: highContrast,
           palette: paletteOf(appearance.palette),
           warmth: warmth,
-          skin: highContrast ? null : skin,
+          skin: highContrast ? null : skin?.forBrightness(brightness),
+          plain: appearance.lowResource,
         );
+    _useFilledIcons(skin?.icons.filled ?? false);
+    _useGlass(skin?.glass ?? false ? appearance.glassOpacity.clamp(skin!.glassMin, 1).toDouble() : 1);
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
     _lightContrast = build(Brightness.light, highContrast: true);
@@ -223,7 +229,7 @@ class _LumtubAppState extends State<LumtubApp> {
               _matchTitleBar(Theme.of(context));
               return MediaQuery(
                 data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale), disableAnimations: media.disableAnimations || Motion.reduced),
-                child: child!,
+                child: WindowChrome(controller: widget.controller, title: appName, child: child!),
               );
             },
             home: _pages,
@@ -241,6 +247,31 @@ Locale? _materialLocale(Locale? locale) =>
     locale == null || GlobalMaterialLocalizations.delegate.isSupported(locale) ? locale : const Locale('en');
 
 Object? _titleBar;
+
+/// Switches every icon between outlined and filled, as the skin asks, and
+/// redraws the whole window so widgets built earlier pick up the change.
+void _useGlass(double opacity) {
+  if (SkinGlass.opacity == opacity) return;
+  SkinGlass.opacity = opacity;
+  _rebuildAll();
+}
+
+void _useFilledIcons(bool filled) {
+  if (AppIcons.filled == filled) return;
+  AppIcons.filled = filled;
+  _rebuildAll();
+}
+
+void _rebuildAll() {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    void rebuild(Element element) {
+      element.markNeedsBuild();
+      element.visitChildren(rebuild);
+    }
+
+    WidgetsBinding.instance.rootElement?.visitChildren(rebuild);
+  });
+}
 
 /// The Windows title bar in the page's own colours, so the window reads as
 /// one surface in light and dark themes.

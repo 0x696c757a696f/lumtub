@@ -48,7 +48,7 @@ class _Panel extends StatelessWidget {
                 child: Row(children: [
                   Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
                   ...actions,
-                  IconButton(tooltip: tr('Close'), onPressed: () => Navigator.of(context).pop(), icon: const Icon(AppIcons.x)),
+                  IconButton(tooltip: tr('Close'), onPressed: () => Navigator.of(context).pop(), icon: Icon(AppIcons.x)),
                 ]),
               ),
               Expanded(child: builder(context)),
@@ -197,7 +197,7 @@ class PanelLink extends StatelessWidget {
         leading: Icon(icon, size: 20),
         title: Text(label),
         subtitle: detail == null ? null : Text(detail!, style: TextStyle(color: Theme.of(context).colorScheme.outline, fontSize: 12)),
-        trailing: opens ? const Icon(AppIcons.caretRight) : null,
+        trailing: opens ? Icon(AppIcons.caretRight) : null,
         onTap: onTap,
       );
 }

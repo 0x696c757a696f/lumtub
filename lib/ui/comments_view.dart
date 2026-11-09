@@ -96,10 +96,10 @@ class _CommentsSectionState extends State<CommentsSection> {
           autofocus: true,
           decoration: InputDecoration(
             isDense: true,
-            prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20),
+            prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20),
             hintText: tr('Search comment text or authors'),
             border: const OutlineInputBorder(),
-            suffixIcon: IconButton(tooltip: tr('Close search'), icon: const Icon(AppIcons.x, size: 18), onPressed: _toggleSearch),
+            suffixIcon: IconButton(tooltip: tr('Close search'), icon: Icon(AppIcons.x, size: 18), onPressed: _toggleSearch),
           ),
           onChanged: (text) => setState(() => _words = commentQueryWords(text)),
         ),
@@ -213,7 +213,7 @@ class _CommentsSectionState extends State<CommentsSection> {
               final search = IconButton(
                 tooltip: tr('Search comments'),
                 isSelected: _searching,
-                icon: const Icon(AppIcons.magnifyingGlass),
+                icon: Icon(AppIcons.magnifyingGlass),
                 onPressed: _toggleSearch,
               );
               final immersive = ImmersiveTranslationSwitch(controller: widget.controller);
@@ -414,7 +414,7 @@ class _CommentComposerState extends State<CommentComposer> {
           if (widget.thanksFor case final videoId?)
             IconButton(
               tooltip: tr('Super Thanks: pay and comment on YouTube in your browser'),
-              icon: const Icon(AppIcons.handHeart, size: 16),
+              icon: Icon(AppIcons.handHeart, size: 16),
               onPressed: () => unawaited(openExternal('https://www.youtube.com/watch?v=$videoId')),
             ),
           const Spacer(),

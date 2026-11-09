@@ -208,12 +208,25 @@ class _BarPainter extends CustomPainter {
 
     bar(0, 1, const Color(0x33FFFFFF));
     bar(0, buffered, color.withValues(alpha: 0.4));
-    for (final (start, end, segmentColor) in segments) {
-      bar(start, end, segmentColor);
-    }
     bar(0, played, color, shader: gradient?.createShader(Offset(0, top) & Size(size.width, barHeight)));
-    // Chapter gaps across the bar, as on YouTube.
+    // Segments (SponsorBlock, the A-B loop) lie over the played part too, so
+    // a skin's colours never hide them: darker where already played, with
+    // dark ends that part them from a played colour close to theirs.
     final divider = Paint()..color = const Color(0xCC000000);
+    for (final (start, end, segmentColor) in segments) {
+      if (end <= start) continue;
+      final split = played.clamp(start, end);
+      if (split > start) {
+        canvas.drawRect(Rect.fromLTRB(start * size.width, top, split * size.width, top + barHeight), Paint()..color = Color.alphaBlend(const Color(0x59000000), segmentColor));
+      }
+      if (end > split) {
+        canvas.drawRect(Rect.fromLTRB(split * size.width, top, end * size.width, top + barHeight), Paint()..color = segmentColor);
+      }
+      for (final x in [start * size.width, end * size.width]) {
+        canvas.drawRect(Rect.fromLTRB(x - 0.75, top, x + 0.75, top + barHeight), divider);
+      }
+    }
+    // Chapter gaps across the bar, as on YouTube.
     for (final chapter in chapters) {
       final x = chapter * size.width;
       canvas.drawRect(Rect.fromLTRB(x - 1, top - 0.5, x + 1, top + barHeight + 0.5), divider);

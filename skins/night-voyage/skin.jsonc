@@ -1,0 +1,48 @@
+// Night Voyage: one of Lumtub's colour schemes as a skin. It follows the theme
+// mode: "colors" are the light side, "overrides.dark" the dark one.
+// 夜航：Lumtub 的配色方案之一。跟随浅色/深色模式："colors" 是浅色，"overrides.dark" 是深色。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "night-voyage",
+  "name": "Night Voyage",
+  "names": {
+    "zh-Hans": "夜航",
+    "zh-Hant": "夜航"
+  },
+  "description": "A navy cabin with amber lamps at night",
+  "descriptions": {
+    "zh-Hans": "海军蓝的船舱，夜里亮起琥珀灯",
+    "zh-Hant": "海軍藍的船艙，夜裡亮起琥珀燈"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "colors": {
+    "page": "#edf0f8",
+    "text": "#131a2d",
+    "accent": "#2c4baa",
+    "chrome": "#dde3f2",
+    "selected": "#ccd5ee",
+    "tint": 0.05
+  },
+  "window": {
+    "titleBar": {
+      "height": 32
+    },
+    "menuBar": {}
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#0d1631",
+        "text": "#e2e7f5",
+        "accent": "#f2b04a",
+        "chrome": "#09102a",
+        "card": "#15204a",
+        "selected": "#2a2f4a"
+      }
+    }
+  }
+}

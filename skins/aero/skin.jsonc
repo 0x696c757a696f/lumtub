@@ -15,7 +15,7 @@
     "zh-Hans": "天蓝玻璃、果冻按钮和漂浮的水泡泡",
     "zh-Hant": "天藍玻璃、果凍按鈕和漂浮的水泡泡"
   },
-  "brightness": "light",
+  "brightness": "auto",
   "text": {
     "displayFont": "Baloo 2",
     "monoFont": "Audiowide"
@@ -23,7 +23,7 @@
   "colors": {
     "page": "#e6f7ff",
     "text": "#0d2a3d",
-    "muted": "#3f6475",
+    "muted": "#2f4b58",
     "accent": "#0874b0",
     "onAccent": "#ffffff",
     "border": "#a9d7ec",
@@ -38,59 +38,16 @@
     "thumbnailRadius": 14
   },
   "window": {
+    "glass": {
+      "min": 1.00
+    },
     "background": [
       {
-        "linear": {
-          "angle": 180,
-          "colors": [
-            "#8fd8ff",
-            "#c8eeff",
-            "#f2fbff",
-            "#dff8e4"
-          ],
-          "stops": [
-            0,
-            0.35,
-            0.7,
-            1
-          ]
-        }
-      },
-      {
-        "radial": {
-          "center": [
-            0.5,
-            1.25
-          ],
-          "radius": 0.6,
-          "colors": [
-            "#7fe08acc",
-            "#7fe08a00"
-          ]
-        }
-      },
-      {
-        "radial": {
-          "center": [
-            0.85,
-            0.0
-          ],
-          "radius": 0.45,
-          "colors": [
-            "#fffffff2",
-            "#ffffff00"
-          ]
-        }
+        "image": "day.jpg",
+        "fit": "cover"
       }
     ],
-    "decorations": [
-      {
-        "type": "bubbles",
-        "count": 9,
-        "color": "#78dcff59",
-        "seed": 11
-      }
-    ],
+    "decorations": [],
     "titleBar": {
       "height": 30,
       "surface": {
@@ -210,7 +167,9 @@
           "top"
         ]
       }
-    }
+    },
+    "statusBarText": "#0d2a3d",
+    "veil": 0.7
   },
   "controls": {
     "button": {
@@ -301,7 +260,11 @@
       ]
     },
     "navSelectedText": "#075f91",
-    "navText": "#2f5566"
+    "navText": "#0d2a3d"
+  },
+  "icons": {
+    "style": "fill",
+    "effect": "gel"
   },
   "cards": {
     "video": {
@@ -372,6 +335,22 @@
     "badgeIcon": "#ffffff"
   },
   "player": {
+    // A silver capsule with a blue glass screen and a big glossy play ball.
+    // 银色胶囊机身，蓝色玻璃屏，中间一个大的圆形播放球。
+    "style": "deck",
+    "deck": {
+      "shape": "capsule",
+      "body": ["#fbfcfd", "#dfe5ec", "#b9c3cf", "#d6dde5"],
+      "rim": "#7b8796",
+      "screen": "#0a3a6a",
+      "screenText": "#a8ecff",
+      "button": ["#d6f2ff", "#256cb8"],
+      "glyph": "#ffffff",
+      "play": ["#e2fbff", "#106ead"],
+      "playGlyph": "#ffffff",
+      "groove": "#7d8a99",
+      "fill": "#2fb4ff"
+    },
     "progress": {
       "linear": {
         "angle": 90,
@@ -384,5 +363,291 @@
     }
   },
   "author": "Lumtub",
-  "license": "CC0-1.0"
+  "license": "CC0-1.0",
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#042230",
+        "text": "#c2dcee",
+        "muted": "#84a6b6",
+        "accent": "#0874b0",
+        "onAccent": "#ffffff",
+        "border": "#1c495d",
+        "card": "#0f0f0f",
+        "selected": "#052d42",
+        "onSelected": "#aed1e8",
+        "reason": "#549ac1"
+      },
+      "window": {
+        "veil": 0.90,
+        "background": [
+          {
+            "image": "night.jpg",
+            "fit": "cover"
+          }
+        ],
+        "decorations": [],
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#0f0f0f",
+                  "#042233",
+                  "#0c3345"
+                ]
+              }
+            },
+            "border": {
+              "color": "#205a75",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "inactive": {
+            "fill": "#081d27"
+          },
+          "text": "#c2dcee",
+          "buttons": {
+            "size": [
+              36,
+              24
+            ],
+            "icon": "#56849d",
+            "surface": {
+              "fill": "transparent",
+              "radius": 13,
+              "hover": {
+                "fill": {
+                  "linear": {
+                    "angle": 180,
+                    "colors": [
+                      "#ffffff",
+                      "#b8e6fb"
+                    ]
+                  }
+                },
+                "gloss": 0.6
+              },
+              "pressed": {
+                "fill": "#9fd8f2"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "radius": 13,
+              "hover": {
+                "fill": {
+                  "linear": {
+                    "angle": 180,
+                    "colors": [
+                      "#ff9b9b",
+                      "#d4262e"
+                    ]
+                  }
+                },
+                "gloss": 0.6
+              },
+              "pressed": {
+                "fill": "#a81b22"
+              }
+            }
+          }
+        },
+        "topBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0fff",
+                "#04202fff"
+              ]
+            }
+          },
+          "border": {
+            "color": "#224f65",
+            "sides": [
+              "bottom"
+            ]
+          },
+          "shadow": [
+            {
+              "color": "#1e78aa1f",
+              "y": 2,
+              "blur": 10
+            }
+          ]
+        },
+        "sideBar": {
+          "fill": "#0f0f0fbb",
+          "border": {
+            "color": "#0f0f0fff",
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0fff",
+                "#0c2d3cff"
+              ]
+            }
+          },
+          "border": {
+            "color": "#224f65",
+            "sides": [
+              "top"
+            ]
+          }
+        },
+        "topBarText": "#aed1e8",
+        "statusBarText": "#c2dcee"
+      },
+      "controls": {
+        "button": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0fff",
+                "#092836ff"
+              ]
+            }
+          },
+          "border": "#1c4a60",
+          "hover": {
+            "fill": "#0f0f0f"
+          }
+        },
+        "buttonText": "#aed1e8",
+        "primaryButton": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#1775b5",
+                "#06548a"
+              ]
+            }
+          },
+          "gloss": 0.7,
+          "border": "#064a7a",
+          "hover": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#1a80c2",
+                  "#085e98"
+                ]
+              }
+            }
+          }
+        },
+        "primaryButtonText": "#ffffff",
+        "chip": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0fff",
+                "#092533ff"
+              ]
+            }
+          },
+          "border": "#1c4a60"
+        },
+        "chipSelected": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#278222",
+                "#1a6418"
+              ]
+            }
+          },
+          "gloss": 0.7,
+          "border": "#155a14"
+        },
+        "chipSelectedText": "#ffffff",
+        "navSelected": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#ffffffff",
+                "#d6f0fd"
+              ]
+            }
+          },
+          "gloss": 0.5,
+          "border": "#ffffff",
+          "shadow": [
+            {
+              "color": "#1e8cc895",
+              "y": 2,
+              "blur": 10
+            }
+          ]
+        },
+        "navSelectedText": "#075f91",
+        "navText": "#c2dcee"
+      },
+      "cards": {
+        "video": {
+          "fill": "#0f0f0fe1",
+          "border": "#0f0f0fff",
+          "shadow": [
+            {
+              "color": "#1e78aa26",
+              "y": 6,
+              "blur": 16
+            }
+          ],
+          "hover": {
+            "border": {
+              "color": "#0d729c",
+              "width": 2
+            }
+          },
+          "focused": {
+            "border": {
+              "color": "#4eb2e9",
+              "width": 3
+            }
+          }
+        },
+        "padding": 8,
+        "panel": {
+          "fill": "#0f0f0fff",
+          "border": "#0f0f0f"
+        },
+        "durationBadge": {
+          "fill": "#0d2a3dff",
+          "border": "#ffffffc8"
+        },
+        "durationText": "#ffffff"
+      },
+      "logo": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#1e82b1",
+              "#55aee9"
+            ]
+          }
+        },
+        "shadow": "#0f0f0f"
+      }
+    }
+  }
 }

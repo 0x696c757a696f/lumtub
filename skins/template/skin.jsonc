@@ -35,7 +35,8 @@
 //                      fit: cover, contain, fill, tile; "opacity": 0–1.
 //                      Only on window.background. 只能用在 window.background。
 //                  { "pattern": { "type": "dots", "color": "#0002", "spacing": 4, "size": 1 } }
-//                      type: lines, grid, dots, checker, scanlines; "angle" rotates.
+//                      type: lines, grid, dots, checker, scanlines, stitch (seams
+//                      "spacing" in from top and bottom), grain (wood); "angle" rotates.
 //                Where a list of paints is allowed they are painted first to
 //                last, so later ones lie on top. 可以写成列表，后面的盖在前面的上面。
 // surface 表面:  how a box is drawn (bars, cards, buttons):
@@ -128,6 +129,11 @@
   // light or dark: which way Material widgets without a skin colour lean,
   // and what the system is told for its own dialogs.
   // light 或 dark：没被皮肤指定颜色的控件按哪种走，也会告诉系统用哪种对话框。
+  // "auto" follows Lumtub's light/dark mode: the file is the light side and
+  // "overrides": { "dark": { .. } } is laid over it in dark mode (see the
+  // colour schemes in skins/rice-paper and others).
+  // "auto" 跟随浅色/深色模式：文件本身是浅色，深色时叠加 "overrides": { "dark": { .. } }
+  //（可以参考 skins/rice-paper 等配色方案）。
   "brightness": "light",
 
   // Fonts in this folder: family name → file. Use them by family name below.
@@ -167,7 +173,16 @@
     "selected": "#d8eeff",
     "onSelected": "#10233a",
     // The line under a recommended video saying why. 推荐理由那行字。
-    "reason": "#0873ad"
+    "reason": "#0873ad",
+    // Top bar and side rail, when window.topBar / sideBar are not given.
+    // 没写 window.topBar / sideBar 时，顶栏和侧栏的底色。
+    "chrome": "#e3f0fa",
+    // 0–0.3: how much of the accent fields and menus take on.
+    // 0–0.3：输入框和菜单带多少强调色。
+    "tint": 0,
+    // Borders and secondary text as strong as can be (high contrast).
+    // 边框和次要文字加到最强（高对比）。
+    "strong": false
   },
 
   "shape": {
@@ -188,7 +203,11 @@
     // Ornaments over the background, under the content. Left out in low
     // resource mode. "above": true draws one over the content too.
     // 背景之上、内容之下的装饰；低占用模式下不画。"above": true 会画在内容上面。
-    // type: bubbles, sparkles, perspectiveGrid, beam, pattern
+    // type: scene, bubbles, sparkles, perspectiveGrid, beam, waves, pattern
+    // { "type": "scene", "scene": "meadow" } paints a whole landscape:
+    // meadow, sky, underwater, aurora or city; "night": true for its night.
+    // { "type": "scene", "scene": "meadow" } 画一整幅景色：meadow 草原、sky 蓝天、
+    // underwater 水下、aurora 极光、city 未来城；"night": true 是夜晚版。
     "decorations": [
       { "type": "bubbles", "count": 6, "color": "#78dcff59" },
       { "type": "sparkles", "count": 4, "color": "#ffffff", "glow": "#7fd0ff" }
@@ -196,10 +215,14 @@
     ],
 
     // The title bar drawn by Lumtub instead of the system's, on computers
-    // only. Minimise, maximise and close are always at the right. Users
-    // can switch back to the system title bar in Settings.
-    // 由 Lumtub 自己画的标题栏（只在电脑上）。最小化、最大化、关闭始终在右边。
-    // 用户可以在设置里换回系统标题栏。
+    // only. Minimise, maximise and close sit at the right, unless
+    // "placement": "left" puts close, minimise, maximise at the left, and
+    // "split" puts close alone at the left and the other two at the right,
+    // as on older desktops. Users can switch back to the system title bar
+    // in Settings.
+    // 由 Lumtub 自己画的标题栏（只在电脑上）。最小化、最大化、关闭默认在右边；
+    // "placement": "left" 时改为左边，依次是关闭、最小化、最大化；"split" 时关闭单独在左边，
+    // 另外两个在右边，像更老的桌面。用户可以在设置里换回系统标题栏。
     "titleBar": {
       "enabled": true,
       "height": 30,
@@ -210,11 +233,20 @@
       // left or center 标题靠左或居中
       "align": "left",
       "icon": true,
+      // A plain patch under the title so it stands clear of stripes.
+      // 标题下面垫一块纯色，避开条纹。
+      // "titlePlate": "#ffffff",
       "buttons": {
         "size": [40, 26],
         "icon": "#10233a",
         "surface": { "fill": "transparent", "hover": { "fill": "#0000001a" }, "pressed": { "fill": "#00000033" } },
-        "close": { "fill": "transparent", "hover": { "fill": "#e81123" }, "pressed": { "fill": "#a50e1a" } }
+        "close": { "fill": "transparent", "hover": { "fill": "#e81123" }, "pressed": { "fill": "#a50e1a" } },
+        // "minimize" and "maximize" give those two a look of their own;
+        // "glyphs": "hover" shows the signs only under the pointer;
+        // "classic" draws an empty close box, a box in a box and two lines.
+        // "minimize"、"maximize" 可以单独设样子；"glyphs": "hover" 鼠标移上去才显示符号；
+        // "classic" 画空的关闭框、框中框和两条横线。
+        "placement": "right"
       }
     },
 
@@ -231,14 +263,56 @@
       "menu": { "fill": "#ffffff", "border": "#9fc9e6" },
       "underlineKeys": true,
       // A clock at the right end. 右端显示时钟。
-      "clock": false
+      "clock": false,
+      // "top" puts the menus above the title bar, along the top of the
+      // window; its empty part then moves the window too. "appMenu": true
+      // adds a first menu named after the app in bold (About, Settings,
+      // Quit). Without "surface" both bars take colors.chrome.
+      // "top" 把菜单放到标题栏上面、窗口最顶上，空白处也能拖动窗口。"appMenu": true
+      // 会在最前面加一个粗体的应用菜单（关于、设置、退出）。不写 "surface" 时两条栏都用 colors.chrome。
+      "position": "title",
+      "appMenu": false,
+      "height": 26
     },
+
+    // true lets users make the bars, side rail, cards and panels clearer
+    // in Settings › Skins › Glass, so the background shows through. Keep
+    // text readable on the background itself too.
+    // true 时用户可以在 设置 › 皮肤 › 玻璃 里调低栏、侧栏、卡片和面板的不透明度，透出背景。
+    // 这时文字直接放在背景上也要看得清。
+    "glass": false,
+    // { "min": 0.6 } instead of true sets the clearest the glass may go.
+    // 写成 { "min": 0.6 } 可以限定最透明能调到多少。
+
+    // 0–0.9: the page colour laid over the backdrop under the pages, so
+    // text there reads over a busy picture.
+    // 0–0.9：在页面下面垫一层页面底色，背景再花，上面的字也看得清。
+    "veil": 0,
 
     // The bar with the logo and search box. 有 logo 和搜索框的那一栏。
     "topBar": { "fill": "#ffffffb3", "border": { "color": "#b9d4ea", "sides": ["bottom"] } },
     // The page list at the left. 左边的页面列表。
     "sideBar": { "fill": "#ffffff73", "border": { "color": "#ffffff", "sides": ["right"] } },
     "statusBar": { "fill": "#ffffffb3", "border": { "color": "#b9d4ea", "sides": ["top"] } },
+    // The pages as tabs on a phone or in a narrow window, in place of the
+    // side rail; leave it out for Lumtub's own bottom bar. "position":
+    // "bottom" or "top" (under the top bar). "selected" is what the page
+    // shown sits on, "indicator" a line under it (over it at the bottom).
+    // "labels": "text" leaves out the icons; "caps" writes the words in
+    // capitals.
+    // 手机或窄窗口里代替侧栏的页面标签栏；不写就用 Lumtub 自己的底部栏。"position"：
+    // "bottom" 在底部，"top" 在顶栏下面。"selected" 是当前页下面的底，"indicator" 是
+    // 当前页的指示线（在底部时画在上沿）。"labels": "text" 不要图标，"caps" 文字大写。
+    "tabs": {
+      "position": "bottom",
+      "surface": { "fill": "#ffffffcc", "border": { "color": "#b9d4ea", "sides": ["top"] } },
+      "selected": { "fill": "#cfe6fb", "radius": 6 },
+      "text": "#4a6278",
+      "selectedText": "#0b4f8a",
+      "labels": "below",
+      "caps": false,
+      "height": 56
+    },
     // Icons on the top bar and the status line's text; give them when the
     // bars are much darker or lighter than the page.
     // 顶栏图标和状态栏文字的颜色；顶栏、状态栏比页面深很多或浅很多时一定要写。
@@ -247,6 +321,10 @@
   },
 
   "controls": {
+    // What a click looks like: wash (the control darkens at once), ripple
+    // (a ring spreads from the pointer) or glow (an accent-coloured wash).
+    // 点击效果：wash 整块变暗、ripple 水波纹、glow 发光。
+    "press": "wash",
     // Ordinary buttons. 普通按钮。
     "button": { "fill": { "linear": { "angle": 180, "colors": ["#ffffff", "#ddeefa"] } }, "border": "#9fc9e6", "hover": { "fill": "#ffffff" } },
     "buttonText": "#10233a",
@@ -276,6 +354,14 @@
     "durationText": "#ffffff"
   },
 
+  // Icons. "style": "fill" draws every icon filled; "effect" gives them a
+  // skeuomorphic finish: emboss (raised), engrave (pressed in), gel (shine
+  // and shadow) or glow ("glow": colour, the accent when left out). Effects
+  // are left out in Low resource mode.
+  // 图标。"style": "fill" 让所有图标用实心；"effect" 加拟物效果：emboss 浮雕、engrave 凹刻、
+  // gel 凝胶（高光加阴影）、glow 发光（"glow" 写颜色，不写就用强调色）。低占用模式下不画效果。
+  "icons": { "style": "regular", "effect": "none" },
+
   "logo": {
     // Leave out for "Lumtub". 不写就显示 "Lumtub"。
     "text": "LUMTUB",
@@ -296,6 +382,12 @@
     "style": "default",
     // The played part of the progress bar. 进度条已播放的部分。
     "progress": { "linear": { "angle": 90, "colors": ["#19b8ff", "#8df27a"] } }
+    // With "style": "deck" 用 deck 样式时写 "deck": { "shape": "capsule" | "slab" |
+    // "wave" | "boombox" | "oval", "body": [colours top to bottom 从上到下],
+    // "clear": 0-0.8, "screen", "screenText", "button": [light, deep 浅, 深],
+    // "glyph", "play": [light, deep], "playGlyph", "groove", "fill",
+    // "speakers": true, "glow" }. Sign colours need 3:1 on the deep colour.
+    // 按钮符号要在深色上有 3:1 对比度。
     // With "style": "lcd" 用 lcd 样式时还可以写：
     // "frame":    { ..surface.. },  — round the picture 画面外框
     // "lcd":      { ..surface.. },  — the display 显示屏
@@ -306,6 +398,8 @@
   // What should differ on a kind of device: desktop, mobile, tablet, tv.
   // Laid over the rest of the file, field by field.
   // 按设备区分的设置：desktop、mobile、tablet、tv。会逐个字段覆盖上面的设置。
+  // With "brightness": "auto", "light" and "dark" work the same way.
+  // "brightness" 为 "auto" 时，"light" 和 "dark" 也这样用。
   "overrides": {
     "tv": {
       "shape": { "cardRadius": 20 },

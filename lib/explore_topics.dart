@@ -156,7 +156,7 @@ class CustomTopic {
 /// Video zones, each with about 8-14 sub-categories of one level, the most
 /// watched first. Searches mix Chinese and English words so that YouTube's
 /// videos from other countries come up too.
-const popularTopics = <ExploreTopic>[
+final popularTopics = <ExploreTopic>[
   ExploreTopic('All', AppIcons.squaresFour, '', mix: true),
   ExploreTopic('Education', AppIcons.graduationCap, '知识 科普', subs: [
     ExploreSub('Popular science', '科普'),
@@ -388,7 +388,7 @@ const popularTopics = <ExploreTopic>[
 
 /// Live zones, streams that are on now; about 6-10 sub-categories each, as
 /// fewer streams are on at a time.
-const liveTopics = <ExploreTopic>[
+final liveTopics = <ExploreTopic>[
   ExploreTopic('All', AppIcons.squaresFour, '', mix: true),
   ExploreTopic('Gaming live streams', AppIcons.gameController, '游戏 直播', subs: [
     ExploreSub("Let's plays", 'gameplay live'),

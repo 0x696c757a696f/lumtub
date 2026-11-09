@@ -23,7 +23,7 @@ Future<void> showSubtitleStylePanel(BuildContext context, AppController controll
               Navigator.of(inner).pop();
               openSubtitleSettings(context, controller);
             },
-            icon: const Icon(AppIcons.slidersHorizontal, size: 18),
+            icon: Icon(AppIcons.slidersHorizontal, size: 18),
             label: Text(tr('All subtitle settings')),
           ),
         ),
@@ -153,7 +153,7 @@ class _StylePanelState extends State<_StylePanel> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: OutlinedButton.icon(
           onPressed: () => _save(_controller.settings.withDefaultSubtitleStyle()),
-          icon: const Icon(AppIcons.arrowCounterClockwise, size: 18),
+          icon: Icon(AppIcons.arrowCounterClockwise, size: 18),
           label: Text(tr('Restore default style')),
         ),
       ),

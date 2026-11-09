@@ -38,6 +38,22 @@ class Skin {
 
   late final Brightness brightness = _raw['brightness'] == 'dark' ? Brightness.dark : Brightness.light;
 
+  /// The dark side of a skin whose "brightness" is "auto": it follows the
+  /// theme mode, light or dark, with `overrides.dark` laid over it there.
+  Skin? _dark;
+  bool get followsThemeMode => _dark != null || _light != null;
+  Skin? _light;
+
+  /// This skin as drawn in [mode]: the dark side of an "auto" skin in dark
+  /// mode, otherwise itself.
+  Skin forBrightness(Brightness mode) => mode == Brightness.dark ? (_dark ?? this) : (_light ?? this);
+
+  /// Whether the skin draws the side rail, or leaves it as Lumtub's own.
+  bool get drawsRail => sideBar != null || navSelected != null;
+
+  /// Whether the skin has its own logo, or keeps Lumtub's.
+  bool get hasLogo => _map(_raw['logo']).isNotEmpty;
+
   /// Font families to load from files in the skin's folder.
   late final Map<String, String> fontFiles = _strings(_raw['fonts']);
 
@@ -62,6 +78,26 @@ class Skin {
   late final SkinSurface? topBar = SkinSurface.parse(_window['topBar'], this);
   late final SkinSurface? sideBar = SkinSurface.parse(_window['sideBar'], this);
   late final SkinSurface? statusBar = SkinSurface.parse(_window['statusBar'], this);
+  /// Whether the user may make the bars, rail, cards and panels clearer, so
+  /// the sky or water behind shows through: `window.glass`.
+  late final bool glass = _window['glass'] == true || _window['glass'] is Map;
+  /// The clearest the glass may go, 0.3 to 1: `window.glass.min`, higher for
+  /// a skin with dark or busy parts behind its bars.
+  late final double glassMin = (_num(_map(_window['glass'])['min']) ?? 0.3).clamp(0.3, 1).toDouble();
+  /// How much of the page colour lies over the backdrop under the pages,
+  /// 0 to 0.9, so text there reads over a busy picture: `window.veil`.
+  late final double veil = (_num(_window['veil']) ?? 0).clamp(0, 0.9).toDouble();
+
+  void _glaze() {
+    if (!glass) return;
+    for (final s in [titleBar?.surface, titleBar?.inactive, menuBar?.surface, topBar, sideBar, statusBar, tabs?.bar, videoCard, panel]) {
+      s?.glass = true;
+    }
+  }
+
+  /// The row of pages on a phone, or in a narrow window, in place of the
+  /// side rail; null keeps Lumtub's own bottom bar.
+  late final SkinTabs? tabs = SkinTabs.parse(_window['tabs'], this);
   /// Icons on the top bar; colors.text unless that is hard to see on it.
   late final Color? topBarText = _readable(colorOf(_window['topBarText'], 'window.topBarText'), topBar, 'window.topBarText', fallback: colors.text, min: 3);
   /// The status line's text.
@@ -93,6 +129,18 @@ class Skin {
 
   late final SkinLogo logo = SkinLogo._(_map(_raw['logo']), this);
   late final SkinPlayer player = SkinPlayer._(_map(_raw['player']), this);
+  late final SkinIcons icons = SkinIcons._(_map(_raw['icons']), this);
+  /// What a press looks like: wash (the control darkens at once), ripple
+  /// (a ring spreads from the finger) or glow (an accent-coloured wash).
+  late final String press = switch (_str(_map(_raw['controls'])['press'])) {
+    'ripple' => 'ripple',
+    'glow' => 'glow',
+    null || 'wash' => 'wash',
+    final other => () {
+        warn('controls.press "$other" is unknown (wash, ripple, glow)');
+        return 'wash';
+      }(),
+  };
 
   /// The file a picture or font named in the skin is in.
   String file(String name) => builtIn ? '$folder/$name' : '$folder${folder.contains('\\') ? '\\' : '/'}${name.replaceAll('/', folder.contains('\\') ? '\\' : '/')}';
@@ -132,9 +180,23 @@ class Skin {
     if (id is! String || !RegExp(r'^[a-z0-9][a-z0-9._-]{0,63}$').hasMatch(id)) {
       throw const FormatException('"id" must be lower case letters, digits, dots, dashes or underscores');
     }
-    final skin = Skin._(id, _withOverrides(json, formFactor), folder, builtIn, []);
-    // Touch everything now, so mistakes show as warnings when it is
-    // loaded, not later while drawing.
+    if (json['brightness'] == 'auto') {
+      Skin side(String mode) {
+        final merged = _deepMerge(_withOverrides(json, formFactor), {..._map(_map(json['overrides'])[mode]), 'brightness': mode});
+        return _checked(Skin._(id, merged, folder, builtIn, []));
+      }
+      final light = side('light'), dark = side('dark');
+      light.warnings.addAll(dark.warnings.map((w) => 'dark: $w'));
+      light._dark = dark;
+      dark._light = light;
+      return light;
+    }
+    return _checked(Skin._(id, _withOverrides(json, formFactor), folder, builtIn, []));
+  }
+
+  // Touch everything now, so mistakes show as warnings when it is loaded,
+  // not later while drawing.
+  static Skin _checked(Skin skin) {
     skin
       ..colors
       ..shape
@@ -142,6 +204,9 @@ class Skin {
       ..decorations
       ..titleBar
       ..menuBar
+      ..tabs
+      ..icons
+      ..press
       ..topBar
       ..sideBar
       ..statusBar
@@ -156,6 +221,7 @@ class Skin {
       ..durationBadge
       ..logo
       ..player
+      ..player.deck?.glyph
       ..buttonText
       ..primaryButtonText
       ..chipSelectedText
@@ -163,7 +229,8 @@ class Skin {
       ..navText
       ..durationText
       ..topBarText
-      ..statusBarText;
+      ..statusBarText
+      .._glaze();
     return skin;
   }
 
@@ -230,6 +297,10 @@ class SkinColors {
     final chosen = selected == null ? page : Color.alphaBlend(selected!, page);
     onSelected = onSelectedRaw == null ? null : skin.readableOn(onSelectedRaw, chosen, 'colors.onSelected');
     if (selected != null && onSelectedRaw == null) skin.readableOn(text, chosen, 'colors.text on colors.selected');
+    chrome = skin.colorOf(m['chrome'], 'colors.chrome');
+    if (chrome != null) skin.readableOn(text, Color.alphaBlend(chrome!, page), 'colors.text on colors.chrome');
+    tint = ((m['tint'] is num ? m['tint'] as num : 0).toDouble()).clamp(0.0, 0.3);
+    strong = m['strong'] == true;
     final reasonRaw = skin.colorOf(m['reason'], 'colors.reason');
     reason = reasonRaw == null ? null : skin.readableOn(reasonRaw, card == null ? page : Color.alphaBlend(card!, page), 'colors.reason');
   }
@@ -252,6 +323,13 @@ class SkinColors {
   late final Color? onSelected;
   /// The line under a recommended video saying why.
   late final Color? reason;
+  /// The top bar and side rail round the page, where the skin draws no
+  /// surface of its own for them.
+  late final Color? chrome;
+  /// How much of the accent fields, menus and placeholders take on, 0–0.3.
+  late final double tint;
+  /// Borders and secondary text as strong as can be.
+  late final bool strong;
 }
 
 class SkinShape {
@@ -361,7 +439,7 @@ class ImagePaint extends SkinPaint {
 /// A repeating pixel pattern.
 class PatternPaint extends SkinPaint {
   const PatternPaint(this.type, this.color, {required this.spacing, required this.size, required this.angle});
-  static const types = {'lines', 'grid', 'dots', 'checker', 'scanlines'};
+  static const types = {'lines', 'grid', 'dots', 'checker', 'scanlines', 'stitch', 'grain'};
   final String type;
   final Color color;
   final double spacing;
@@ -407,6 +485,9 @@ class SkinSurface {
   final SkinSurface? pressed;
   /// Reached with the keyboard or a TV remote's arrows.
   final SkinSurface? focused;
+  /// A pane of glass: the bars, side rail, cards and panels of a skin that
+  /// lets its glass be made clearer ([Skin.glass]).
+  bool glass = false;
 
   static SkinSurface? parse(Object? value, Skin skin) {
     if (value == null) return null;
@@ -458,7 +539,7 @@ class SkinSurface {
   /// This surface with [over]'s fields where it has them.
   SkinSurface merge(SkinSurface? over) => over == null
       ? this
-      : SkinSurface._(
+      : (SkinSurface._(
           fill: over.fill.isNotEmpty ? over.fill : fill,
           border: over.border ?? border,
           borderWidth: over.border != null ? over.borderWidth : borderWidth,
@@ -468,7 +549,7 @@ class SkinSurface {
           shadows: over.shadows.isNotEmpty ? over.shadows : shadows,
           gloss: over.gloss > 0 ? over.gloss : gloss,
           glow: over.glow ?? glow,
-        );
+        )..glass = glass);
 
   /// The look while pointed at or pressed. A pressed bevel sinks in unless
   /// the skin says otherwise.
@@ -556,11 +637,20 @@ sealed class SkinDecoration {
         return PerspectiveGridDecoration(color: color ?? const Color(0x55FF3FD2), spacing: _num(value['spacing']) ?? 48, horizon: (_num(value['horizon']) ?? 0.55).clamp(0, 1).toDouble(), above: above);
       case 'beam':
         return BeamDecoration(color: color ?? const Color(0x59FFFFFF), angle: _num(value['angle']) ?? -10, position: (_num(value['position']) ?? 0.45).toDouble(), above: above);
+      case 'waves':
+        return WavesDecoration(count: (_num(value['count']) ?? 3).round().clamp(1, 8), color: color ?? const Color(0x4D3FC8FF), seed: (_num(value['seed']) ?? 5).round(), position: (_num(value['position']) ?? 0.8).clamp(0, 1).toDouble(), above: above);
+      case 'scene':
+        final name = _str(value['scene']);
+        if (!sceneNames.contains(name)) {
+          skin.warn('scene "$name" is unknown (${sceneNames.join(', ')})');
+          return null;
+        }
+        return SceneDecoration(scene: name!, night: value['night'] == true, seed: (_num(value['seed']) ?? 3).round(), above: false);
       case 'pattern':
         final paint = SkinPaint.parse({'pattern': {...value, 'type': value['pattern']}}, skin);
         return paint is PatternPaint ? PatternDecoration(paint, fade: _str(value['fade']), above: above) : null;
     }
-    skin.warn('decoration type "$type" is unknown (bubbles, sparkles, perspectiveGrid, beam, pattern)');
+    skin.warn('decoration type "$type" is unknown (scene, bubbles, sparkles, perspectiveGrid, beam, waves, pattern)');
     return null;
   }
 }
@@ -595,6 +685,28 @@ class BeamDecoration extends SkinDecoration {
   final double position;
 }
 
+/// Glossy ribbons swept across the window, as on the water and glass
+/// wallpapers of the late 2000s.
+/// The landscapes a skin can have painted behind it.
+const sceneNames = ['meadow', 'sky', 'underwater', 'aurora', 'city', 'collage'];
+
+/// A whole landscape behind everything: lib/ui/skin_scenes.dart.
+class SceneDecoration extends SkinDecoration {
+  const SceneDecoration({required this.scene, required this.night, required this.seed, required super.above});
+  final String scene;
+  final bool night;
+  final int seed;
+}
+
+class WavesDecoration extends SkinDecoration {
+  const WavesDecoration({required this.count, required this.color, required this.seed, required this.position, required super.above});
+  final int count;
+  final Color color;
+  final int seed;
+  /// Where the ribbons sit, from 0 (top) to 1 (bottom).
+  final double position;
+}
+
 class PatternDecoration extends SkinDecoration {
   const PatternDecoration(this.paint, {this.fade, required super.above});
   final PatternPaint paint;
@@ -604,7 +716,7 @@ class PatternDecoration extends SkinDecoration {
 
 /// The title bar the app draws itself, with its window buttons.
 class SkinTitleBar {
-  SkinTitleBar._(this.height, this.surface, this.inactive, this.text, this.inactiveText, this.align, this.button, this.buttonIcon, this.closeButton, this.buttonSize, this.buttonsLeft, this.icon);
+  SkinTitleBar._(this.height, this.surface, this.inactive, this.text, this.inactiveText, this.align, this.button, this.buttonIcon, this.closeButton, this.buttonSize, this.buttonsLeft, this.icon, this.minimizeButton, this.maximizeButton, this.glyphsOnHover, this.buttonsSplit, this.classicGlyphs, this.titlePlate);
   final double height;
   final SkinSurface surface;
   final SkinSurface? inactive;
@@ -616,15 +728,31 @@ class SkinTitleBar {
   final Color buttonIcon;
   final SkinSurface? closeButton;
   final Size buttonSize;
+  /// Close, minimise and maximise at the left, in that order, as on the
+  /// desktops of around 2001; otherwise minimise, maximise, close at the
+  /// right.
   final bool buttonsLeft;
   /// Whether the app's icon is drawn at the start.
   final bool icon;
+  /// Looks of their own for minimise and maximise; [button] when null.
+  final SkinSurface? minimizeButton;
+  final SkinSurface? maximizeButton;
+  /// The signs on the buttons show only under the pointer.
+  final bool glyphsOnHover;
+  /// Close alone at the left, minimise and maximise at the right, as on
+  /// the desktops of the late 1980s and 1990s.
+  final bool buttonsSplit;
+  /// The plain boxes of those desktops: an empty close box, a box in a box
+  /// to maximise and two lines to minimise.
+  final bool classicGlyphs;
+  /// A plain patch under the title, so it stands clear of stripes.
+  final Color? titlePlate;
 
   static SkinTitleBar? parse(Object? value, Skin skin) {
     if (value is! Map<String, Object?> || value['enabled'] == false) return null;
     final buttons = _map(value['buttons']);
     final size = _list(buttons['size']);
-    final surface = SkinSurface.parse(value['surface'], skin) ?? SkinSurface._(fill: [SolidPaint(skin.colors.page)]);
+    final surface = SkinSurface.parse(value['surface'], skin) ?? SkinSurface._(fill: [SolidPaint(skin.colors.chrome ?? skin.colors.page)]);
     final inactive = SkinSurface.parse(value['inactive'], skin);
     final page = skin.colors.page;
     final bar = surface.tones(page);
@@ -644,13 +772,76 @@ class SkinTitleBar {
       Size(size.isNotEmpty ? _num(size[0]) ?? 40 : 40, size.length > 1 ? _num(size[1]) ?? 24 : 24),
       _str(buttons['placement']) == 'left',
       value['icon'] != false,
+      SkinSurface.parse(buttons['minimize'], skin),
+      SkinSurface.parse(buttons['maximize'], skin),
+      _str(buttons['glyphs']) == 'hover',
+      _str(buttons['placement']) == 'split',
+      _str(buttons['glyphs']) == 'classic',
+      skin.colorOf(value['titlePlate'], 'titleBar.titlePlate'),
+    );
+  }
+}
+
+/// The pages as tabs on a phone: along the bottom, as on the phones of
+/// around 2010 with a glossy bar and a lit square round the page shown, or
+/// under the top bar, as words with a line under the page shown.
+class SkinTabs {
+  SkinTabs._(this.top, this.bar, this.selected, this.text, this.selectedText, this.indicator, this.textOnly, this.caps, this.height);
+  /// Under the top bar instead of along the bottom.
+  final bool top;
+  final SkinSurface bar;
+  /// What the page shown sits on; null for nothing but [indicator].
+  final SkinSurface? selected;
+  final Color text;
+  final Color selectedText;
+  /// A line under the page shown (at the top edge of the item for a
+  /// bottom bar).
+  final Color? indicator;
+  /// Words only, no icons.
+  final bool textOnly;
+  /// Words in capitals.
+  final bool caps;
+  final double height;
+
+  static SkinTabs? parse(Object? value, Skin skin) {
+    if (value is! Map<String, Object?> || value['enabled'] == false) return null;
+    final top = switch (_str(value['position'])) {
+      'top' => true,
+      null || 'bottom' => false,
+      final other => () {
+          skin.warn('window.tabs.position "$other" is unknown (bottom, top)');
+          return false;
+        }(),
+    };
+    final page = skin.colors.page;
+    final bar = SkinSurface.parse(value['surface'], skin) ?? SkinSurface._(fill: [SolidPaint(skin.colors.chrome ?? skin.colors.card ?? page)]);
+    final selected = SkinSurface.parse(value['selected'], skin);
+    final barMid = Color.alphaBlend(bar.baseColor ?? page, page);
+    final text = skin.readableOnAll(skin.colorOf(value['text'], 'window.tabs.text') ?? skin.colors.muted ?? skin.colors.text, bar.tones(page), 'window.tabs.text');
+    final selectedText = skin.readableOnAll(
+      skin.colorOf(value['selectedText'], 'window.tabs.selectedText') ?? skin.colors.accent,
+      selected?.tones(barMid) ?? bar.tones(page),
+      'window.tabs.selectedText',
+      min: 3,
+    );
+    final indicator = skin.colorOf(value['indicator'], 'window.tabs.indicator');
+    return SkinTabs._(
+      top,
+      bar,
+      selected,
+      text,
+      selectedText,
+      indicator,
+      _str(value['labels']) == 'text',
+      value['caps'] == true,
+      (_num(value['height']) ?? (top ? 44 : 56)).clamp(32, 80).toDouble(),
     );
   }
 }
 
 /// A row of text menus (File, View, Help…) drawn by the app.
 class SkinMenuBar {
-  SkinMenuBar._(this.surface, this.text, this.highlight, this.highlightText, this.menu, this.underlineKeys, this.clock);
+  SkinMenuBar._(this.surface, this.text, this.highlight, this.highlightText, this.menu, this.underlineKeys, this.clock, this.top, this.appMenu, this.height);
   final SkinSurface? surface;
   final Color text;
   final SkinSurface? highlight;
@@ -661,10 +852,18 @@ class SkinMenuBar {
   final bool underlineKeys;
   /// A clock at the right end.
   final bool clock;
+  /// Drawn above the title bar, along the top of the window, as on a
+  /// desktop whose menus sit at the top of the screen.
+  final bool top;
+  /// A first menu named after the app, in bold, holding About, Settings
+  /// and Quit.
+  final bool appMenu;
+  final double height;
 
   static SkinMenuBar? parse(Object? value, Skin skin) {
     if (value is! Map<String, Object?> || value['enabled'] == false) return null;
-    final surface = SkinSurface.parse(value['surface'], skin);
+    final chrome = skin.colors.chrome;
+    final surface = SkinSurface.parse(value['surface'], skin) ?? (chrome == null ? null : SkinSurface._(fill: [SolidPaint(chrome)]));
     final highlight = SkinSurface.parse(value['highlight'], skin);
     List<Color> on(SkinSurface? s) => s?.tones(skin.colors.page) ?? [skin.colors.page];
     final highlightText = skin.colorOf(value['highlightText'], 'menuBar.highlightText');
@@ -677,6 +876,9 @@ class SkinMenuBar {
       SkinSurface.parse(value['menu'], skin),
       value['underlineKeys'] != false,
       value['clock'] == true,
+      _str(value['position']) == 'top',
+      value['appMenu'] == true,
+      (_num(value['height']) ?? 26).clamp(18, 40).toDouble(),
     );
   }
 }
@@ -707,9 +909,51 @@ class SkinLogo {
   final Color? badgeIcon;
 }
 
+/// How icons are drawn: outlined or filled, and with a raised, glossy or
+/// glowing finish for a skeuomorphic look.
+class SkinIcons {
+  SkinIcons._(Map<String, Object?> m, Skin skin)
+      : filled = _str(m['style']) == 'fill',
+        effect = switch (_str(m['effect'])) {
+          final e? when const ['emboss', 'engrave', 'gel', 'glow'].contains(e) => e,
+          final e? when e != 'none' => _unknownEffect(skin, e),
+          _ => 'none',
+        },
+        glow = skin.colorOf(m['glow'], 'icons.glow');
+
+  static String _unknownEffect(Skin skin, String effect) {
+    skin.warn('icons.effect "$effect" is unknown (none, emboss, engrave, gel, glow)');
+    return 'none';
+  }
+
+  /// Every icon in its filled form.
+  final bool filled;
+  /// none, emboss (lit from above, raised), engrave (pressed in), gel (a
+  /// soft shine and shadow) or glow.
+  final String effect;
+  /// The glow's colour; the accent when left out.
+  final Color? glow;
+
+  /// The shadows that give icons their finish, on [page] colours with
+  /// [accent] for the glow.
+  List<Shadow>? shadows(Brightness brightness, Color accent) {
+    final dark = brightness == Brightness.dark;
+    final light = Colors.white.withValues(alpha: dark ? 0.25 : 0.85);
+    final shade = Colors.black.withValues(alpha: dark ? 0.7 : 0.35);
+    return switch (effect) {
+      'emboss' => [Shadow(color: light, offset: const Offset(-0.6, -0.8)), Shadow(color: shade, offset: const Offset(0.6, 1), blurRadius: 1)],
+      'engrave' => [Shadow(color: shade, offset: const Offset(0, -0.8)), Shadow(color: light, offset: const Offset(0, 1))],
+      'gel' => [Shadow(color: shade.withValues(alpha: shade.a * 0.8), offset: const Offset(0, 1.5), blurRadius: 2.5), Shadow(color: light, offset: const Offset(0, -0.5), blurRadius: 0.5)],
+      'glow' => [Shadow(color: (glow ?? accent).withValues(alpha: 0.85), blurRadius: 6)],
+      _ => null,
+    };
+  }
+}
+
 class SkinPlayer {
   SkinPlayer._(Map<String, Object?> m, Skin skin)
-      : style = _str(m['style']) == 'lcd' ? 'lcd' : 'default',
+      : style = switch (_str(m['style'])) { 'lcd' => 'lcd', 'deck' => 'deck', _ => 'default' },
+        deck = _str(m['style']) == 'deck' ? SkinDeck._(_map(m['deck']), skin) : null,
         frame = SkinSurface.parse(m['frame'], skin),
         progress = SkinPaint.listOf(m['progress'], skin),
         lcd = SkinSurface.parse(m['lcd'], skin),
@@ -719,8 +963,10 @@ class SkinPlayer {
         lcdFont = _str(m['lcdFont']) ?? 'VT323';
 
   /// default, or lcd: a display with the time, scrolling title and a
-  /// spectrum under the picture, as on late-90s media players.
+  /// spectrum under the picture, as on late-90s media players; or deck: a
+  /// player body of its own under the picture ([deck]).
   final String style;
+  final SkinDeck? deck;
   /// What surrounds the picture on the watch page.
   final SkinSurface? frame;
   /// The played part of the progress bar.
@@ -732,6 +978,66 @@ class SkinPlayer {
   /// The display's face; VT323 comes with Lumtub.
   final String lcdFont;
 }
+
+/// The body a "deck" player is drawn as, under the picture: its outline,
+/// what it is made of, its little screen and its buttons.
+class SkinDeck {
+  SkinDeck._(Map<String, Object?> m, Skin skin)
+      : shape = switch (_str(m['shape'])) {
+          final s? when shapes.contains(s) => s,
+          final s? => () {
+              skin.warn('player.deck.shape "$s" is unknown (${shapes.join(', ')})');
+              return 'capsule';
+            }(),
+          _ => 'capsule',
+        },
+        body = _orDefault(_colors(m['body'], skin), const [Color(0xFFF6F8FA), Color(0xFFC9D2DC), Color(0xFF9AA6B4)]),
+        rim = skin.colorOf(m['rim'], 'player.deck.rim') ?? const Color(0xFF7F8C9C),
+        clear = (_num(m['clear']) ?? 0).clamp(0, 0.8).toDouble(),
+        screen = skin.colorOf(m['screen'], 'player.deck.screen') ?? const Color(0xFF0B3A66),
+        button = _orDefault(_colors(m['button'], skin), const [Color(0xFFBFE8FF), Color(0xFF2A7AD0)]),
+        play = _orDefault(_colors(m['play'], skin), const [Color(0xFFD8FFD0), Color(0xFF2E9A2E)]),
+        groove = skin.colorOf(m['groove'], 'player.deck.groove') ?? const Color(0xFF5A6878),
+        fill = skin.colorOf(m['fill'], 'player.deck.fill') ?? const Color(0xFF3AB0FF),
+        speakers = m['speakers'] == true,
+        glow = skin.colorOf(m['glow'], 'player.deck.glow') {
+    screenText = skin.readableOn(skin.colorOf(m['screenText'], 'player.deck.screenText') ?? const Color(0xFF9FE8FF), screen, 'player.deck.screenText');
+    glyph = skin.readableOnAll(skin.colorOf(m['glyph'], 'player.deck.glyph') ?? const Color(0xFFFFFFFF), underGlyph(button), 'player.deck.glyph', min: 3);
+    playGlyph = skin.readableOnAll(skin.colorOf(m['playGlyph'], 'player.deck.playGlyph') ?? const Color(0xFFFFFFFF), underGlyph(play), 'player.deck.playGlyph', min: 3);
+  }
+
+  static const shapes = ['capsule', 'slab', 'wave', 'boombox', 'oval'];
+
+  /// What a button's sign lies on: the deep colour in the middle, and where
+  /// the light colour glowing up from the bottom reaches it.
+  static List<Color> underGlyph(List<Color> button) => [button.last, Color.lerp(button.last, button.first, 0.3)!];
+
+  /// capsule: a pill with round ends; slab: a flat, square-cornered unit;
+  /// wave: its top edge rolls like water; boombox: a carry handle and round
+  /// speakers at both ends; oval: a wide ellipse with the buttons in a
+  /// round cluster.
+  final String shape;
+  /// The body's colours from top to bottom: metal, pearl or plastic.
+  final List<Color> body;
+  final Color rim;
+  /// How see-through the body is, 0 to 0.8, as tinted clear plastic.
+  final double clear;
+  final Color screen;
+  late final Color screenText;
+  /// The small round buttons, top to bottom.
+  final List<Color> button;
+  late final Color glyph;
+  /// The big play button.
+  final List<Color> play;
+  late final Color playGlyph;
+  final Color groove;
+  final Color fill;
+  final bool speakers;
+  /// A light round the buttons, as smoked glass skins have.
+  final Color? glow;
+}
+
+List<Color> _orDefault(List<Color> colors, List<Color> fallback) => colors.length >= 2 ? colors : colors.length == 1 ? [colors.first, colors.first] : fallback;
 
 String? _str(Object? v) => v is String && v.isNotEmpty ? v : null;
 double? _num(Object? v) => v is num ? v.toDouble() : null;

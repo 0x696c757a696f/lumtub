@@ -52,7 +52,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 <td align="center"><img src="docs/screenshots/zh/home-reasons.png" alt="For you in the Chinese interface"><br>72 interface languages</td>
 </tr>
 <tr>
-<td align="center"><img src="docs/screenshots/danmaku.jpg" alt="Live chat flying across a live stream as danmaku"><br>Live chat as danmaku</td>
+<td align="center"><img src="docs/screenshots/danmaku.jpg" alt="Live chat with emoji flying across a guinea pig live stream as danmaku"><br>Live chat as danmaku</td>
 <td align="center"><img src="docs/screenshots/zh/subtitles.jpg" alt="The original subtitle with a Chinese translation above it"><br>Two subtitles at once, in any pair of languages</td>
 <td align="center"><img src="docs/screenshots/watch.png" alt="Lumtub playing a video, with Up next beside it"><br>mpv playback with Up next beside it</td>
 </tr>

@@ -200,10 +200,17 @@ class Voice:
         if self.zh is None:
             from misaki import zh
             self.zh = zh.ZHG2P()
-        out = self.zh(text)
-        out = out[0] if isinstance(out, tuple) else out
-        # Latin words such as YouTube stay as letters; read them in English.
-        return re.sub(r'[A-Za-z][A-Za-z0-9]*', lambda m: self.kokoro.tokenizer.phonemize(m[0], 'en-us'), out)
+        # Latin words such as YouTube are read in English, the rest in
+        # Chinese; split before converting, as the Chinese phonemes are
+        # written with Latin letters too.
+        out = []
+        for i, part in enumerate(re.split(r'([A-Za-z][A-Za-z0-9]*)', text)):
+            if i % 2:
+                out.append(self.kokoro.tokenizer.phonemize(part, 'en-us'))
+            elif part:
+                said = self.zh(part)
+                out.append(said[0] if isinstance(said, tuple) else said)
+        return ''.join(out)
 
     def say(self, lang, voice, text):
         if lang == 'zh':

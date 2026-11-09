@@ -1,0 +1,230 @@
+// One Bit: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 黑白点阵：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "onebit",
+  "name": "One Bit",
+  "names": {
+    "zh-Hans": "黑白点阵",
+    "zh-Hant": "黑白點陣"
+  },
+  "description": "Pure black and white: striped title bars, dotted desk and one-pixel lines",
+  "descriptions": {
+    "zh-Hans": "纯黑白：条纹标题栏、网点桌面和一像素的线",
+    "zh-Hant": "純黑白：條紋標題列、網點桌面和一像素的線"
+  },
+  "brightness": "light",
+  "text": {
+    "displayFont": "Silkscreen",
+    "monoFont": "Silkscreen"
+  },
+  "colors": {
+    "page": "#ffffff",
+    "text": "#000000",
+    "muted": "#000000",
+    "accent": "#000000",
+    "onAccent": "#ffffff",
+    "border": "#000000",
+    "card": "#ffffff",
+    "selected": "#000000",
+    "onSelected": "#ffffff",
+    "reason": "#000000"
+  },
+  "shape": {
+    "cardRadius": 0,
+    "controlRadius": 8,
+    "thumbnailRadius": 0
+  },
+  "window": {
+    "background": [
+      "#ffffff",
+      {
+        "pattern": {
+          "type": "checker",
+          "color": "#000000",
+          "spacing": 1
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 24,
+      "surface": {
+        "fill": [
+          "#ffffff",
+          {
+            "pattern": {
+              "type": "lines",
+              "color": "#000000",
+              "spacing": 3,
+              "size": 1
+            }
+          }
+        ],
+        "border": {
+          "color": "#000000",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#ffffff"
+      },
+      "text": "#000000",
+      "align": "center",
+      "buttons": {
+        "size": [
+          18,
+          16
+        ],
+        "icon": "#000000",
+        "surface": {
+          "fill": "#ffffff",
+          "border": "#000000",
+          "pressed": {
+            "fill": "#000000"
+          }
+        },
+        "close": {
+          "fill": "#ffffff",
+          "border": "#000000",
+          "pressed": {
+            "fill": "#000000"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#ffffff",
+        "border": {
+          "color": "#000000",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "text": "#000000",
+      "highlight": "#000000",
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#ffffff",
+        "border": "#000000"
+      }
+    },
+    "topBar": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "sides": [
+          "top"
+        ]
+      }
+    }
+  },
+  "controls": {
+    "button": {
+      "fill": "#ffffff",
+      "border": "#000000",
+      "pressed": {
+        "fill": "#000000"
+      }
+    },
+    "buttonText": "#000000",
+    "primaryButton": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "width": 3
+      }
+    },
+    "primaryButtonText": "#000000",
+    "chip": {
+      "fill": "#ffffff",
+      "border": "#000000"
+    },
+    "chipSelected": "#000000",
+    "chipSelectedText": "#ffffff",
+    "navSelected": "#000000",
+    "navSelectedText": "#ffffff",
+    "navText": "#000000"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff",
+      "border": "#000000",
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 2,
+          "y": 2
+        }
+      ],
+      "hover": {
+        "border": {
+          "color": "#000000",
+          "width": 2
+        }
+      },
+      "focused": {
+        "border": {
+          "color": "#000000",
+          "width": 3
+        }
+      }
+    },
+    "padding": 4,
+    "panel": {
+      "fill": "#ffffff",
+      "border": "#000000",
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 2,
+          "y": 2
+        }
+      ]
+    },
+    "durationBadge": {
+      "fill": "#ffffff",
+      "border": "#000000"
+    },
+    "durationText": "#000000"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Silkscreen",
+    "size": 22,
+    "fill": "#000000",
+    "badge": {
+      "fill": "#000000",
+      "radius": 6
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "player": {
+    "progress": "#000000"
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

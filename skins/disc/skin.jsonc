@@ -1,0 +1,326 @@
+// Disc Menu: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 光碟菜单：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "disc",
+  "name": "Disc Menu",
+  "names": {
+    "zh-Hans": "光碟菜单",
+    "zh-Hant": "光碟選單"
+  },
+  "description": "Deep blue haze, light streaks and glowing orbs, like a DVD or console menu",
+  "descriptions": {
+    "zh-Hans": "深蓝雾气、光带和发光的球，像 DVD 或游戏机菜单",
+    "zh-Hant": "深藍霧氣、光帶和發光的球，像 DVD 或遊戲機選單"
+  },
+  "brightness": "dark",
+  "text": {
+    "displayFont": "Exo 2",
+    "monoFont": "Audiowide"
+  },
+  "colors": {
+    "page": "#04102c",
+    "text": "#e8f2ff",
+    "muted": "#9cb8dc",
+    "accent": "#6fd0ff",
+    "onAccent": "#001226",
+    "border": "#1d3c72",
+    "card": "#0b1d48",
+    "selected": "#13336e",
+    "onSelected": "#ffffff",
+    "reason": "#6fd0ff"
+  },
+  "shape": {
+    "cardRadius": 12,
+    "controlRadius": 99,
+    "thumbnailRadius": 10
+  },
+  "window": {
+    "background": [
+      {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#020818",
+            "#061a44",
+            "#02081a"
+          ],
+          "stops": [
+            0,
+            0.6,
+            1
+          ]
+        }
+      },
+      {
+        "radial": {
+          "center": [
+            0.3,
+            0.4
+          ],
+          "radius": 0.6,
+          "colors": [
+            "#285ac88c",
+            "#285ac800"
+          ]
+        }
+      },
+      {
+        "radial": {
+          "center": [
+            0.85,
+            0.8
+          ],
+          "radius": 0.4,
+          "colors": [
+            "#783cdc59",
+            "#783cdc00"
+          ]
+        }
+      }
+    ],
+    "decorations": [
+      {
+        "type": "beam",
+        "color": "#bfe6ff59",
+        "angle": -10,
+        "position": 0.42
+      },
+      {
+        "type": "bubbles",
+        "count": 7,
+        "color": "#6ec8ff40",
+        "seed": 21
+      },
+      {
+        "type": "sparkles",
+        "count": 6,
+        "color": "#cfeaff",
+        "glow": "#6fd0ff",
+        "seed": 9
+      }
+    ],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#0e2a66cc",
+              "#020818"
+            ]
+          }
+        },
+        "border": {
+          "color": "#6ec8ff59",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#06122c"
+      },
+      "text": "#e8f2ff",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#cfeaff",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#6ec8ff33"
+          },
+          "pressed": {
+            "fill": "#6ec8ff33"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#e81123"
+          },
+          "pressed": {
+            "fill": "#a50e1a"
+          }
+        }
+      }
+    },
+    "topBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#0a1e50a6",
+            "#02081866"
+          ]
+        }
+      },
+      "border": {
+        "color": "#6ec8ff66",
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#02081859",
+      "border": {
+        "color": "#6ec8ff40",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#02081899",
+      "border": {
+        "color": "#6ec8ff4d",
+        "sides": [
+          "top"
+        ]
+      }
+    }
+  },
+  "controls": {
+    "button": {
+      "fill": "#6ec8ff17",
+      "border": "#6ec8ff59",
+      "hover": {
+        "glow": "#6fd0ff8c",
+        "border": "#cfeaff"
+      }
+    },
+    "buttonText": "#cfeaff",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#9fdcff",
+            "#3a8ae6"
+          ]
+        }
+      },
+      "glow": "#6fd0ff99",
+      "border": "#cfeaff"
+    },
+    "primaryButtonText": "#001226",
+    "chip": {
+      "fill": "#6ec8ff14",
+      "border": "#6ec8ff59"
+    },
+    "chipSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#b5e4ff",
+            "#4a9ae6"
+          ]
+        }
+      },
+      "glow": "#6fd0ff99",
+      "border": "#e0f3ff"
+    },
+    "chipSelectedText": "#001226",
+    "navSelected": {
+      "fill": {
+        "radial": {
+          "center": [
+            0.5,
+            0.5
+          ],
+          "radius": 0.6,
+          "colors": [
+            "#6ec8ff59",
+            "#6ec8ff00"
+          ]
+        }
+      },
+      "glow": "#6fd0ff40"
+    },
+    "navSelectedText": "#ffffff",
+    "navText": "#9cb8dc"
+  },
+  "cards": {
+    "video": {
+      "fill": "#0a1e5059",
+      "border": "#6ec8ff40",
+      "hover": {
+        "border": "#cfeaff",
+        "glow": "#6fd0ff8c"
+      },
+      "focused": {
+        "border": {
+          "color": "#cfeaff",
+          "width": 2
+        },
+        "glow": "#6fd0ff"
+      }
+    },
+    "padding": 8,
+    "panel": {
+      "fill": "#0b1d48e6",
+      "border": "#6ec8ff4d"
+    },
+    "durationBadge": {
+      "fill": "#020818d9",
+      "border": "#6ec8ff66"
+    },
+    "durationText": "#cfeaff"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Exo 2",
+    "size": 22,
+    "fill": {
+      "linear": {
+        "angle": 180,
+        "colors": [
+          "#ffffff",
+          "#9fdcff",
+          "#3a7fd0",
+          "#cfeaff"
+        ]
+      }
+    },
+    "glow": "#6fd0ff",
+    "badge": {
+      "fill": {
+        "radial": {
+          "center": [
+            0.5,
+            0.5
+          ],
+          "radius": 0.7,
+          "colors": [
+            "#ffffff",
+            "#9fdcff",
+            "#3a7fd0"
+          ]
+        }
+      },
+      "glow": "#6fd0ff"
+    },
+    "badgeIcon": "#001226"
+  },
+  "player": {
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#1e6ed0",
+          "#9fdcff"
+        ]
+      }
+    }
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

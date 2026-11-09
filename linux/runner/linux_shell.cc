@@ -12,6 +12,7 @@
 namespace {
 
 constexpr char kChannel[] = "lumtub/windows_shell";
+constexpr char kFrameChannel[] = "lumtub/window_frame";
 constexpr char kMprisPath[] = "/org/mpris/MediaPlayer2";
 
 // libayatana-appindicator3, loaded when the system has it.
@@ -64,6 +65,13 @@ struct Shell {
 
   // The screen saver held off while a video plays.
   guint inhibit = 0;
+
+  // The app's own title bar (lib/window_frame.dart), on a channel of its
+  // own. Wayland starts a move or resize only from the press that began it,
+  // so the last left press is kept.
+  FlMethodChannel* frame_channel = nullptr;
+  bool custom_frame = false;
+  GdkEvent* press = nullptr;
 };
 
 Shell shell;
@@ -85,6 +93,15 @@ void Send(const char* method, FlValue* argument) {
     return;
   }
   fl_method_channel_invoke_method(shell.channel, method, argument, nullptr, nullptr, nullptr);
+  fl_value_unref(argument);
+}
+
+void SendFrame(const char* method, FlValue* argument) {
+  if (shell.frame_channel == nullptr) {
+    fl_value_unref(argument);
+    return;
+  }
+  fl_method_channel_invoke_method(shell.frame_channel, method, argument, nullptr, nullptr, nullptr);
   fl_value_unref(argument);
 }
 
@@ -211,6 +228,12 @@ void HookHeaderBar() {
 // A minimised window goes to the tray; without a tray it stays minimised.
 // Wayland tells no window that it was minimised, so there it stays too.
 gboolean OnWindowState(GtkWidget*, GdkEventWindowState* event, gpointer) {
+  if (event->changed_mask & GDK_WINDOW_STATE_MAXIMIZED) {
+    SendFrame("maximized", fl_value_new_bool((event->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) != 0));
+  }
+  if (event->changed_mask & GDK_WINDOW_STATE_FOCUSED) {
+    SendFrame("active", fl_value_new_bool((event->new_window_state & GDK_WINDOW_STATE_FOCUSED) != 0));
+  }
   g_idle_add(+[](gpointer) -> gboolean {
     HookHeaderBar();
     return G_SOURCE_REMOVE;
@@ -493,7 +516,7 @@ void ExitPip(bool keep_on_top) {
   gtk_window_get_position(window, &shell.last_x, &shell.last_y);
   shell.has_last = true;
   KeepAspect(0);
-  gtk_window_set_decorated(window, TRUE);
+  gtk_window_set_decorated(window, !shell.custom_frame);
   gtk_window_set_keep_above(window, keep_on_top);
   shell.above = keep_on_top;
   if (shell.was_maximized) {
@@ -539,6 +562,101 @@ void SetKeepAwake(bool on) {
     gtk_application_uninhibit(application, shell.inhibit);
     shell.inhibit = 0;
   }
+}
+
+// ---- Own title bar ---------------------------------------------------------
+
+// Removes the system title bar (the header bar too); the bar and the edges
+// are Flutter's, which asks for moves and resizes below.
+void SetCustomFrame(bool on) {
+  shell.custom_frame = on;
+  if (shell.pip) return;
+  GtkWidget* bar = gtk_window_get_titlebar(shell.window);
+  if (bar != nullptr) gtk_widget_set_visible(bar, !on);
+  gtk_window_set_decorated(shell.window, !on);
+}
+
+GdkWindowEdge EdgeOf(const std::string& name) {
+  if (name == "top") return GDK_WINDOW_EDGE_NORTH;
+  if (name == "bottom") return GDK_WINDOW_EDGE_SOUTH;
+  if (name == "left") return GDK_WINDOW_EDGE_WEST;
+  if (name == "right") return GDK_WINDOW_EDGE_EAST;
+  if (name == "topLeft") return GDK_WINDOW_EDGE_NORTH_WEST;
+  if (name == "topRight") return GDK_WINDOW_EDGE_NORTH_EAST;
+  if (name == "bottomLeft") return GDK_WINDOW_EDGE_SOUTH_WEST;
+  return GDK_WINDOW_EDGE_SOUTH_EAST;
+}
+
+// Moves, or resizes from [edge], with the pointer from the press that is
+// going on.
+void BeginFrameDrag(bool resize, GdkWindowEdge edge) {
+  GtkWindow* window = shell.window;
+  if (window == nullptr) return;
+  int x = 0, y = 0;
+  guint32 time = GDK_CURRENT_TIME;
+  if (shell.press != nullptr) {
+    x = static_cast<int>(shell.press->button.x_root);
+    y = static_cast<int>(shell.press->button.y_root);
+    time = shell.press->button.time;
+  } else {
+    GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(window));
+    gdk_device_get_position(gdk_seat_get_pointer(gdk_display_get_default_seat(display)), nullptr, &x, &y);
+  }
+  if (resize) {
+    gtk_window_begin_resize_drag(window, edge, 1, x, y, time);
+  } else {
+    gtk_window_begin_move_drag(window, 1, x, y, time);
+  }
+}
+
+void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
+  const std::string method = fl_method_call_get_name(call);
+  FlValue* args = fl_method_call_get_args(call);
+  GtkWindow* window = shell.window;
+  if (window == nullptr) {
+    fl_method_call_respond_not_implemented(call, nullptr);
+    return;
+  }
+  if (method == "state") {
+    g_autoptr(FlValue) state = fl_value_new_map();
+    fl_value_set_string_take(state, "maximized", fl_value_new_bool(gtk_window_is_maximized(window)));
+    fl_value_set_string_take(state, "active", fl_value_new_bool(gtk_window_is_active(window)));
+    fl_method_call_respond_success(call, state, nullptr);
+    return;
+  }
+  if (method == "setCustom") {
+    SetCustomFrame(BoolValue(args));
+  } else if (method == "minimize") {
+    OnMinimizeButton(nullptr, nullptr);
+  } else if (method == "toggleMaximize") {
+    if (gtk_window_is_maximized(window)) {
+      gtk_window_unmaximize(window);
+    } else {
+      gtk_window_maximize(window);
+    }
+  } else if (method == "close") {
+    // The same delete-event as the system button, so close-to-tray applies.
+    gtk_window_close(window);
+  } else if (method == "startDrag") {
+    BeginFrameDrag(false, GDK_WINDOW_EDGE_NORTH);
+  } else if (method == "startResize") {
+    const bool named = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING;
+    BeginFrameDrag(true, EdgeOf(named ? fl_value_get_string(args) : ""));
+  } else if (method == "setCaption") {
+    // Hit-testing is Windows' own.
+  } else {
+    fl_method_call_respond_not_implemented(call, nullptr);
+    return;
+  }
+  fl_method_call_respond_success(call, nullptr, nullptr);
+}
+
+gboolean OnViewButtonPress(GtkWidget*, GdkEventButton* event, gpointer) {
+  if (event->type == GDK_BUTTON_PRESS && event->button == 1) {
+    if (shell.press != nullptr) gdk_event_free(shell.press);
+    shell.press = gdk_event_copy(reinterpret_cast<GdkEvent*>(event));
+  }
+  return FALSE;
 }
 
 void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
@@ -629,6 +747,9 @@ void linux_shell_connect(FlView* view) {
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
   shell.channel = fl_method_channel_new(fl_engine_get_binary_messenger(engine), kChannel, FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(shell.channel, HandleCall, nullptr, nullptr);
+  shell.frame_channel = fl_method_channel_new(fl_engine_get_binary_messenger(engine), kFrameChannel, FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(shell.frame_channel, HandleFrameCall, nullptr, nullptr);
+  g_signal_connect(view, "button-press-event", G_CALLBACK(OnViewButtonPress), nullptr);
 }
 
 void linux_shell_present() {

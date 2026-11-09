@@ -1,0 +1,250 @@
+// Sixteen Colours: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 十六色：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "sixteen",
+  "name": "Sixteen Colours",
+  "names": {
+    "zh-Hans": "十六色",
+    "zh-Hant": "十六色"
+  },
+  "description": "A flat teal desk, white windows with thick black frames and sixteen colours",
+  "descriptions": {
+    "zh-Hans": "纯青色桌面、粗黑边框的白窗口，只有十六种颜色",
+    "zh-Hant": "純青色桌面、粗黑邊框的白視窗，只有十六種顏色"
+  },
+  "brightness": "light",
+  "text": {
+    "monoFont": "VT323"
+  },
+  "colors": {
+    "page": "#ffffff",
+    "text": "#000000",
+    "muted": "#000080",
+    "accent": "#000080",
+    "onAccent": "#ffffff",
+    "border": "#000000",
+    "card": "#ffffff",
+    "selected": "#000080",
+    "onSelected": "#ffffff",
+    "reason": "#800080"
+  },
+  "shape": {
+    "cardRadius": 0,
+    "controlRadius": 0,
+    "thumbnailRadius": 0
+  },
+  "window": {
+    "background": [
+      "#008080"
+    ],
+    "titleBar": {
+      "height": 26,
+      "surface": {
+        "fill": "#000080",
+        "border": {
+          "color": "#000000",
+          "width": 2,
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#ffffff"
+      },
+      "text": "#ffffff",
+      "inactiveText": "#000000",
+      "align": "center",
+      "buttons": {
+        "size": [
+          26,
+          24
+        ],
+        "icon": "#000000",
+        "surface": {
+          "fill": "#c0c0c0",
+          "border": "#000000",
+          "bevel": {
+            "light": "#ffffff",
+            "dark": "#808080",
+            "width": 2
+          }
+        },
+        "close": {
+          "fill": "#c0c0c0",
+          "border": "#000000",
+          "bevel": {
+            "light": "#ffffff",
+            "dark": "#808080",
+            "width": 2
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#ffffff",
+        "border": {
+          "color": "#000000",
+          "width": 2,
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "text": "#000000",
+      "highlight": "#000080",
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#ffffff",
+        "border": {
+          "color": "#000000",
+          "width": 2
+        }
+      }
+    },
+    "topBar": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "width": 2,
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "width": 2,
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "width": 2,
+        "sides": [
+          "top"
+        ]
+      }
+    }
+  },
+  "controls": {
+    "button": {
+      "fill": "#c0c0c0",
+      "border": {
+        "color": "#000000",
+        "width": 2
+      },
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#808080",
+        "width": 2
+      }
+    },
+    "buttonText": "#000000",
+    "primaryButton": {
+      "fill": "#c0c0c0",
+      "border": {
+        "color": "#000000",
+        "width": 3
+      },
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#808080",
+        "width": 2
+      }
+    },
+    "primaryButtonText": "#000000",
+    "chip": {
+      "fill": "#c0c0c0",
+      "border": {
+        "color": "#000000",
+        "width": 2
+      },
+      "bevel": {
+        "light": "#ffffff",
+        "dark": "#808080",
+        "width": 2
+      }
+    },
+    "chipSelected": {
+      "fill": "#000080",
+      "border": {
+        "color": "#000000",
+        "width": 2
+      }
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": "#000080",
+    "navSelectedText": "#ffffff",
+    "navText": "#000000"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "width": 2
+      },
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 4,
+          "y": 4
+        }
+      ],
+      "hover": {
+        "fill": "#ffff00"
+      },
+      "focused": {
+        "fill": "#ffff00"
+      }
+    },
+    "padding": 4,
+    "panel": {
+      "fill": "#ffffff",
+      "border": {
+        "color": "#000000",
+        "width": 2
+      },
+      "shadow": [
+        {
+          "color": "#000000",
+          "x": 6,
+          "y": 6
+        }
+      ]
+    },
+    "durationBadge": "#000000",
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Press Start 2P",
+    "size": 17,
+    "fill": "#000000",
+    "badge": {
+      "fill": "#ff0000",
+      "border": {
+        "color": "#000000",
+        "width": 2
+      },
+      "radius": 0
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "player": {
+    "progress": "#000080"
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

@@ -13,6 +13,7 @@ import 'appearance_settings.dart';
 import 'keep_awake.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
+import 'skins/skin_library.dart';
 import 'ui/app_shell.dart';
 import 'ui/frame_stats.dart';
 import 'ui/motion.dart';
@@ -48,8 +49,10 @@ Future<void> main() async {
   AppearanceSettingsStore? store;
   var appearance = const AppearanceSettings();
   try {
-    store = AppearanceSettingsStore(await AppDirectories.create());
+    final directories = await AppDirectories.create();
+    store = AppearanceSettingsStore(directories);
     appearance = await store.load();
+    await SkinLibrary.instance.load(folder: directories.skins);
   } catch (_) {
     // Directories are created again, with errors reported, during startup.
   }
@@ -90,7 +93,8 @@ class _LumtubAppState extends State<LumtubApp> {
       ..maximumSize = appearance.lowResource ? 120 : 300
       ..maximumSizeBytes = (appearance.lowResource ? 24 : 64) << 20;
     final warmth = appearance.warmthAt(DateTime.now());
-    final key = (appearance.themeKey(accent), Motion.reduced, warmth);
+    final skin = SkinLibrary.instance.byId(appearance.skin);
+    final key = (appearance.themeKey(accent), Motion.reduced, warmth, SkinLibrary.instance.revision, skin);
     if (key == _themeKey) return;
     _themeKey = key;
     ThemeData build(Brightness brightness, {bool highContrast = false}) => buildAppTheme(
@@ -104,11 +108,16 @@ class _LumtubAppState extends State<LumtubApp> {
           highContrast: highContrast,
           palette: paletteOf(appearance.palette),
           warmth: warmth,
+          skin: highContrast ? null : skin,
         );
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
     _lightContrast = build(Brightness.light, highContrast: true);
     _darkContrast = build(Brightness.dark, highContrast: true);
+  }
+
+  void _skinsChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -117,6 +126,7 @@ class _LumtubAppState extends State<LumtubApp> {
     final controller = widget.controller;
     _shown = _shownOf(controller);
     controller.addListener(_rebuildIfShownChanged);
+    SkinLibrary.instance.addListener(_skinsChanged);
     unawaited(controller.initialize());
     _clock = Timer.periodic(const Duration(minutes: 1), (_) {
       final appearance = controller.appearance;
@@ -181,6 +191,7 @@ class _LumtubAppState extends State<LumtubApp> {
   @override
   void dispose() {
     widget.controller.removeListener(_rebuildIfShownChanged);
+    SkinLibrary.instance.removeListener(_skinsChanged);
     _lifecycle.dispose();
     _clock?.cancel();
     _shell?.dispose();

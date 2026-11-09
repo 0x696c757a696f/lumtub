@@ -42,9 +42,9 @@ class ThemePreset {
   final DynamicSchemeVariant variant;
   final bool pureBlack;
 
-  bool isApplied(AppearanceSettings a) => a.palette.isEmpty && !a.systemAccent && a.accentIndex < 0 && a.customAccent == seed && a.schemeVariant == variant && a.pureBlack == pureBlack;
+  bool isApplied(AppearanceSettings a) => a.skin.isEmpty && a.palette.isEmpty && !a.systemAccent && a.accentIndex < 0 && a.customAccent == seed && a.schemeVariant == variant && a.pureBlack == pureBlack;
 
-  AppearanceSettings applyTo(AppearanceSettings a) => a.copyWith(palette: '', systemAccent: false, accentIndex: -1, customAccent: seed, schemeVariant: variant, pureBlack: pureBlack);
+  AppearanceSettings applyTo(AppearanceSettings a) => a.copyWith(skin: '', palette: '', systemAccent: false, accentIndex: -1, customAccent: seed, schemeVariant: variant, pureBlack: pureBlack);
 }
 
 const themePresets = [
@@ -224,6 +224,11 @@ class AppearanceSettings {
   final AppLanguage language;
   /// A [Palette] id from lib/ui/palettes.dart, or '' for the neutral one.
   final String palette;
+  /// A skin id (lib/skins), or '' for none. A skin sets the whole look and
+  /// comes before [palette], the accent and the theme mode.
+  final String skin;
+  /// Under a skin with its own title bar: keep the system's instead.
+  final bool systemTitleBar;
   final EyeCare eyeCare;
   /// How warm 护眼暖色 makes the window, 0.1 to 1: the colour
   /// temperature of the light, from 6040 K down to 1900 K
@@ -265,6 +270,8 @@ class AppearanceSettings {
     this.showStatusBar = true,
     this.language = AppLanguage.system,
     this.palette = '',
+    this.skin = '',
+    this.systemTitleBar = false,
     this.eyeCare = EyeCare.off,
     this.warmth = 0.4,
     this.eyeCareStart = 20,
@@ -341,6 +348,8 @@ class AppearanceSettings {
     bool? showStatusBar,
     AppLanguage? language,
     String? palette,
+    String? skin,
+    bool? systemTitleBar,
     EyeCare? eyeCare,
     double? warmth,
     int? eyeCareStart,
@@ -370,6 +379,8 @@ class AppearanceSettings {
         showStatusBar: showStatusBar ?? this.showStatusBar,
         language: language ?? this.language,
         palette: palette ?? this.palette,
+        skin: skin ?? this.skin,
+        systemTitleBar: systemTitleBar ?? this.systemTitleBar,
         eyeCare: eyeCare ?? this.eyeCare,
         warmth: warmth ?? this.warmth,
         eyeCareStart: eyeCareStart ?? this.eyeCareStart,
@@ -385,7 +396,7 @@ class AppearanceSettings {
   String? get font => fontFamily == autoFont ? (systemFitsBundledFont() ? bundledFont : null) : fontFamily;
 
   /// What a theme is built from; themes are rebuilt only when it changes.
-  Object themeKey(Color seed) => (seed, schemeVariant, pureBlack, compact, font, transition, palette);
+  Object themeKey(Color seed) => (seed, schemeVariant, pureBlack, compact, font, transition, palette, skin);
 
   Map<String, dynamic> toJson() => {
         'themeMode': themeMode.name,
@@ -407,6 +418,8 @@ class AppearanceSettings {
         'showStatusBar': showStatusBar,
         'language': language.tag,
         'palette': palette,
+        'skin': skin,
+        'systemTitleBar': systemTitleBar,
         'eyeCare': eyeCare.name,
         'warmth': warmth,
         'eyeCareStart': eyeCareStart,
@@ -451,6 +464,8 @@ class AppearanceSettings {
       showStatusBar: raw['showStatusBar'] != false,
       language: AppLanguage.parse(raw['language']),
       palette: raw['palette'] is String ? raw['palette'] as String : '',
+      skin: raw['skin'] is String ? raw['skin'] as String : '',
+      systemTitleBar: raw['systemTitleBar'] == true,
       eyeCare: _byName(EyeCare.values, raw['eyeCare'], EyeCare.off),
       warmth: raw['warmth'] is num ? (raw['warmth'] as num).toDouble().clamp(0.1, 1.0) : 0.4,
       eyeCareStart: _hour(raw['eyeCareStart'], 20),

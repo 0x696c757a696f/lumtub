@@ -15,6 +15,7 @@ import '../youtube_account.dart' show RemotePlaylist;
 import 'common.dart';
 import 'pages/downloads_page.dart';
 import 'skeleton.dart';
+import 'skin_paint.dart';
 import 'theme.dart';
 import '../l10n/l10n.dart';
 import 'motion.dart';
@@ -67,11 +68,15 @@ String titleFor(VideoItem item) => deArrow.titleOf(item.id, item.title);
 /// The 推荐原因 line under a recommended card.
 const _reasonHeight = 20.0;
 
-({int columns, double itemHeight}) gridLayoutFor(double width) {
+/// [padding] is the space a skin leaves round each video card.
+({int columns, double itemHeight}) gridLayoutFor(double width, {double padding = 0}) {
   final columns = max(1, ((width + AppStyle.cardSpacing) / (videoCardMinWidth + AppStyle.cardSpacing)).floor());
   final itemWidth = (width - AppStyle.cardSpacing * (columns - 1)) / columns;
-  return (columns: columns, itemHeight: itemWidth * 9 / 16 + _cardInfoHeight);
+  return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight + 2 * padding);
 }
+
+/// The space the current skin leaves round each video card.
+double skinCardPadding(BuildContext context) => context.skin?.videoCard == null ? 0 : context.skin!.videoCardPadding;
 
 /// Makes the app's library actions (favorites, playlists, channels, watch
 /// progress) available to every card below it without passing them down.
@@ -120,7 +125,7 @@ class SliverVideoGrid extends StatelessWidget {
                 ),
               )
             : SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent);
+          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context));
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,
@@ -340,7 +345,7 @@ class SliverSkeletonGrid extends StatelessWidget {
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent);
+          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context));
           final width = constraints.crossAxisExtent;
           return SliverToBoxAdapter(child: Skeleton(child: SizedBox(
             width: width,
@@ -484,7 +489,9 @@ class _VideoCardState extends State<VideoCard> {
       if (item.channel.isNotEmpty) item.channel,
       if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
     ].join(' · ');
-    // A picture and text on the page, as YouTube shows them: no box round.
+    // A picture and text on the page, as YouTube shows them: no box round,
+    // unless a skin puts cards on a surface.
+    final skin = context.skin;
     final card = Card(
       color: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: AppStyle.cardRadius),
@@ -500,7 +507,7 @@ class _VideoCardState extends State<VideoCard> {
           AspectRatio(
             aspectRatio: 16 / 9,
             child: ClipRRect(
-              borderRadius: AppStyle.thumbnailRadius,
+              borderRadius: context.thumbnailRadius,
               child: Stack(fit: StackFit.expand, children: [
                 AnimatedScale(
                   scale: _hovered ? 1.04 : 1,
@@ -567,10 +574,10 @@ class _VideoCardState extends State<VideoCard> {
                   height: _reasonHeight,
                   child: Row(children: [
                     if (reason.isNotEmpty) ...[
-                      Icon(AppIcons.sparkle, size: 12, color: colors.primary),
+                      Icon(AppIcons.sparkle, size: 12, color: skin?.colors.reason ?? colors.primary),
                       const SizedBox(width: 4),
                     ],
-                    Expanded(child: Text(reason, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary))),
+                    Expanded(child: Text(reason, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: skin?.colors.reason ?? colors.primary))),
                   ]),
                 ),
             ]),
@@ -584,7 +591,15 @@ class _VideoCardState extends State<VideoCard> {
         const SingleActivator(LogicalKeyboardKey.f10, shift: true): _menu,
       },
       child: Stack(children: [
-        card,
+        if (skin?.videoCard case final surface?)
+          SkinBox(
+            surface: surface.forState(hovered: _hovered, focused: _focused),
+            radius: context.cardRadius.topLeft.x,
+            padding: EdgeInsets.all(skin!.videoCardPadding),
+            child: card,
+          )
+        else
+          card,
         if (_focused)
           Positioned.fill(child: IgnorePointer(child: DecoratedBox(decoration: BoxDecoration(
             borderRadius: AppStyle.cardRadius,
@@ -650,13 +665,16 @@ class DurationBadge extends StatelessWidget {
   final Color? color;
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(color: color ?? Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(4)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          child: Text(label, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500, fontFeatures: [FontFeature.tabularFigures()])),
-        ),
-      );
+  Widget build(BuildContext context) {
+    final skin = context.skin;
+    final surface = color == null ? skin?.durationBadge : null;
+    final text = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: Text(label, style: TextStyle(fontSize: 12, color: surface != null ? skin!.durationText ?? Colors.white : Colors.white, fontWeight: FontWeight.w500, fontFamily: skin?.monoFont, fontFeatures: const [FontFeature.tabularFigures()])),
+    );
+    if (surface != null) return SkinBox(surface: surface, radius: 4, child: text);
+    return DecoratedBox(decoration: BoxDecoration(color: color ?? Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(4)), child: text);
+  }
 }
 
 /// The mark on a members-only video, in the green YouTube gives it.

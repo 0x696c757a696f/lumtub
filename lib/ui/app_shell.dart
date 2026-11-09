@@ -31,6 +31,10 @@ import 'motion.dart';
 import 'player_shortcuts.dart';
 import 'app_icons.dart';
 import 'block_lists_prompt.dart';
+import 'skin_chrome.dart';
+import 'skin_paint.dart';
+import '../skins/skin_library.dart';
+import '../window_frame.dart';
 
 const appName = 'Lumtub';
 
@@ -136,6 +140,72 @@ class _AppShellState extends State<AppShell> {
     }
   }
 
+  SettingsCategory? _takeOpenOn() {
+    final category = _openOn;
+    _openOn = null;
+    return category;
+  }
+
+  bool? _customFrame;
+
+  /// Takes the system title bar away while a skin draws its own, and gives
+  /// it back when not.
+  void _useCustomFrame(bool on) {
+    if (_customFrame == on || (!on && _customFrame == null)) {
+      _customFrame = on;
+      return;
+    }
+    _customFrame = on;
+    unawaited(WindowFrame.setCustom(on));
+  }
+
+  /// The menus of a skin's menu bar: what the window's buttons and
+  /// shortcuts already do, gathered under File, View, Play and Help.
+  List<SkinMenu> _menus() {
+    final c = _controller;
+    final primary = Platform.isMacOS ? (LogicalKeyboardKey key, {bool shift = false}) => SingleActivator(key, meta: true, shift: shift) : (LogicalKeyboardKey key, {bool shift = false}) => SingleActivator(key, control: true, shift: shift);
+    final player = c.player;
+    final appearance = c.appearance;
+    void save(AppearanceSettings next) => unawaited(c.saveAppearance(next));
+    return [
+      SkinMenu(tr('&File'), [
+        SkinMenuEntry(tr('&Search or open a link…'), _focusSearch, shortcut: primary(LogicalKeyboardKey.keyK)),
+        SkinMenuEntry(tr('&Downloads'), () => c.navigate(PageMode.downloads)),
+        SkinMenuEntry(tr('&Incognito mode'), () => c.setIncognito(!c.incognito), shortcut: primary(LogicalKeyboardKey.keyN, shift: true), checked: c.incognito),
+        const SkinMenuEntry.divider(),
+        SkinMenuEntry(tr('S&ettings'), () => openSettings(context, c)),
+        const SkinMenuEntry.divider(),
+        SkinMenuEntry(tr('E&xit'), () => unawaited(WindowFrame.close())),
+      ]),
+      SkinMenu(tr('&View'), [
+        for (final (i, d) in _destinations.indexed) SkinMenuEntry(d.$4, () => _select(i), checked: _selectedIndex == i && !c.onWatchPage),
+        const SkinMenuEntry.divider(),
+        SkinMenuEntry(tr('&Back'), _back, shortcut: const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true)),
+        const SkinMenuEntry.divider(),
+        SkinMenuEntry(tr('&Compact mode'), () => save(appearance.copyWith(compact: !appearance.compact)), checked: appearance.compact),
+        SkinMenuEntry(tr('&Status bar'), () => save(appearance.copyWith(showStatusBar: !appearance.showStatusBar)), checked: appearance.showStatusBar),
+      ]),
+      SkinMenu(tr('&Play'), [
+        SkinMenuEntry(tr('&Play or pause'), player == null ? null : () => unawaited(player.playOrPause())),
+        SkinMenuEntry(tr('&Next video'), c.playing == null ? null : () => unawaited(c.playNext())),
+        SkinMenuEntry(tr('P&revious video'), c.playing == null ? null : () => unawaited(c.playPrevious())),
+        const SkinMenuEntry.divider(),
+        SkinMenuEntry(tr('&Mute'), player == null ? null : () => unawaited(c.toggleMute())),
+        SkinMenuEntry(tr('Picture in p&icture'), c.playing == null ? null : () => c.setPip(true)),
+        SkinMenuEntry(tr('&Audio only'), c.playing == null ? null : () => unawaited(c.toggleAudioOnly())),
+      ]),
+      SkinMenu(tr('&Help'), [
+        SkinMenuEntry(tr('&Skins folder'), () {
+          final folder = SkinLibrary.instance.folder;
+          if (folder != null) unawaited(openInExplorer(folder.path));
+        }),
+        SkinMenuEntry(tr('How to &make a skin'), () => unawaited(openExternal('https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md'))),
+        const SkinMenuEntry.divider(),
+        SkinMenuEntry(tr('&About Lumtub'), () => openSettings(context, c, category: SettingsCategory.about)),
+      ]),
+    ];
+  }
+
   /// Goes back to the previous page or video.
   void _back() {
     if (_controller.canGoBack) _controller.goBack();
@@ -174,13 +244,20 @@ class _AppShellState extends State<AppShell> {
                 return PipView(controller: _controller);
               }
               final wide = constraints.maxWidth >= 720;
+              final skin = context.skin;
+              final ownTitleBar = usesSkinTitleBar(skin, systemTitleBar: _controller.appearance.systemTitleBar);
+              _useCustomFrame(ownTitleBar);
+              final menus = skin?.menuBar != null ? _menus() : const <SkinMenu>[];
               final rail = switch (_controller.appearance.navigation) {
                 NavigationStyle.auto => wide,
                 NavigationStyle.rail => true,
                 NavigationStyle.bottom => false,
               };
+              Widget page(Widget child) => skin == null ? child : SkinBackdrop(skin: skin, plain: _controller.appearance.lowResource, child: child);
               final scaffold = Scaffold(
-                body: Column(children: [
+                body: page(Column(children: [
+                  if (ownTitleBar) SkinTitleBarView(bar: skin!.titleBar!, title: appName),
+                  if (skin?.menuBar case final bar?) CallbackShortcuts(bindings: menuShortcuts(menus), child: SkinMenuBarView(bar: bar, menus: menus, clock: bar.clock)),
                   _TopBar(
                     wide: wide,
                     controller: _controller,
@@ -190,7 +267,14 @@ class _AppShellState extends State<AppShell> {
                   ),
                   Expanded(child: Stack(children: [
                     Row(children: [
-                      if (rail)
+                      if (rail && skin != null)
+                        SkinRail(
+                          skin: skin,
+                          destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
+                          selected: _selectedIndex,
+                          onSelected: _select,
+                        )
+                      else if (rail)
                         NavigationRail(
                           backgroundColor: context.tones.chrome,
                           selectedIndex: _selectedIndex,
@@ -216,7 +300,7 @@ class _AppShellState extends State<AppShell> {
                       Positioned.fill(child: MiniPlayer(controller: _controller)),
                   ])),
                   if (_controller.appearance.showStatusBar) _StatusBar(controller: _controller),
-                ]),
+                ])),
                 bottomNavigationBar: rail ? null : NavigationBar(
                   height: 64,
                   selectedIndex: _selectedIndex ?? 0,
@@ -229,13 +313,14 @@ class _AppShellState extends State<AppShell> {
               // 关灯 darkens the whole window but the player, under dialogs
               // and menus, which are routes above the shell.
               final watching = _controller.onWatchPage && !_controller.mini && _controller.videoController != null;
+              final framed = ownTitleBar ? ResizeEdges(child: scaffold) : scaffold;
               return ValueListenableBuilder(
                 valueListenable: lightsOff,
                 builder: (context, off, child) => Stack(fit: StackFit.expand, children: [
                   child!,
                   if (off && watching) Positioned.fill(child: LightsOffLayer(dim: _controller.preferences.lightsOffDim / 100)),
                 ]),
-                child: scaffold,
+                child: framed,
               );
             }),
           ),
@@ -264,15 +349,21 @@ class _AppShellState extends State<AppShell> {
       PageMode.channel => ChannelPage(controller: controller),
       PageMode.playlist => PlaylistDetailPage(controller: controller),
       PageMode.youtubePlaylist => YoutubePlaylistPage(controller: controller),
-      PageMode.settings => SettingsPage(controller: controller, initial: SmokeCheck.requested ? SettingsCategory.style : SettingsCategory.account),
+      PageMode.settings => SettingsPage(controller: controller, initial: _takeOpenOn() ?? (SmokeCheck.requested ? SettingsCategory.style : SettingsCategory.account)),
     };
   }
 }
 
 /// Opens 设置. While a video is open it goes over the watch page, so the
 /// video keeps playing and 返回 comes back to it.
-void openSettings(BuildContext context, AppController controller) {
-  if (!controller.onWatchPage) return controller.navigate(PageMode.settings);
+/// The section 设置 opens on next, once.
+SettingsCategory? _openOn;
+
+void openSettings(BuildContext context, AppController controller, {SettingsCategory? category}) {
+  if (!controller.onWatchPage) {
+    _openOn = category;
+    return controller.navigate(PageMode.settings);
+  }
   unawaited(Navigator.of(context).push(MaterialPageRoute<void>(
     builder: (context) {
       void back() => Navigator.of(context).maybePop();
@@ -282,7 +373,7 @@ void openSettings(BuildContext context, AppController controller) {
           onPointerDown: (event) {
             if (event.buttons == kBackMouseButton) back();
           },
-          child: Focus(autofocus: true, child: Scaffold(appBar: AppBar(title: Text(tr('Settings'))), body: SettingsPage(controller: controller))),
+          child: Focus(autofocus: true, child: Scaffold(appBar: AppBar(title: Text(tr('Settings'))), body: SettingsPage(controller: controller, initial: category ?? SettingsCategory.account))),
         ),
       );
     },
@@ -301,10 +392,14 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final ready = controller.ready;
+    final skin = context.skin;
     return Container(
-      color: context.tones.chrome,
+      decoration: skin?.topBar != null ? SurfaceDecoration.of(context, skin!.topBar!) : BoxDecoration(color: context.tones.chrome),
       height: AppStyle.topBarHeight,
-      child: Padding(
+      child: _onTopBar(
+        context,
+        skin?.topBar == null ? null : skin?.topBarText,
+        Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(children: [
           InkWell(
@@ -312,7 +407,7 @@ class _TopBar extends StatelessWidget {
             onTap: () => controller.navigate(PageMode.home),
             child: Padding(
               padding: const EdgeInsets.all(4),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
+              child: skin != null ? SkinWordmark(skin: skin, name: appName, showName: wide) : Row(mainAxisSize: MainAxisSize.min, children: [
                 Container(
                   width: 30,
                   height: 30,
@@ -355,6 +450,17 @@ class _TopBar extends StatelessWidget {
           AccountButton(account: controller.account, onOpenSettings: () => openSettings(context, controller)),
         ]),
       ),
+      ),
+    );
+  }
+
+  /// [child] with its icon buttons drawn in [color], when a skin gives one.
+  static Widget _onTopBar(BuildContext context, Color? color, Widget child) {
+    if (color == null) return child;
+    final theme = Theme.of(context);
+    return IconButtonTheme(
+      data: IconButtonThemeData(style: IconButton.styleFrom(foregroundColor: color, disabledForegroundColor: color.withValues(alpha: 0.45)).merge(theme.iconButtonTheme.style)),
+      child: IconTheme.merge(data: IconThemeData(color: color), child: child),
     );
   }
 }
@@ -575,9 +681,12 @@ class _StatusBar extends StatelessWidget {
       width: double.infinity,
       height: 26,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(color: context.tones.chrome, border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
+      decoration: switch (context.skin?.statusBar) {
+        final surface? => SurfaceDecoration.of(context, surface),
+        null => BoxDecoration(color: context.tones.chrome, border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
+      },
       alignment: Alignment.centerLeft,
-      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 12)),
+      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.skin?.statusBarText ?? context.colors.outline, fontSize: 12, fontFamily: context.skin?.monoFont)),
     );
   }
 }

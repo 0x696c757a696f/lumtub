@@ -37,6 +37,7 @@ class VideoProgressBar extends StatefulWidget {
     required this.total,
     required this.onSeek,
     required this.color,
+    this.playedGradient,
     this.segments = const [],
     this.chapterStarts = const [],
     this.labelOf,
@@ -49,6 +50,8 @@ class VideoProgressBar extends StatefulWidget {
   final Duration total;
   final ValueChanged<Duration> onSeek;
   final Color color;
+  /// Paints the played part instead of [color], as a skin may ask.
+  final Gradient? playedGradient;
   final List<ProgressSegment> segments;
   /// Where chapters begin; the bar shows a gap at each.
   final List<Duration> chapterStarts;
@@ -121,6 +124,7 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
                       chapters: [for (final start in widget.chapterStarts) if (start > Duration.zero) _fractionOf(start)],
                       pointer: pointer,
                       color: widget.color,
+                      gradient: widget.playedGradient,
                       active: pointer != null,
                     ),
                   ),
@@ -175,7 +179,7 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
 }
 
 class _BarPainter extends CustomPainter {
-  const _BarPainter({required this.played, required this.buffered, required this.segments, this.chapters = const [], required this.pointer, required this.color, required this.active});
+  const _BarPainter({required this.played, required this.buffered, required this.segments, this.chapters = const [], required this.pointer, required this.color, this.gradient, required this.active});
 
   final double played;
   final double buffered;
@@ -184,6 +188,7 @@ class _BarPainter extends CustomPainter {
   final double? pointer;
   final Color color;
   final bool active;
+  final Gradient? gradient;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -191,11 +196,13 @@ class _BarPainter extends CustomPainter {
     final barHeight = active ? VideoProgressBar.barHeight + 1.5 : VideoProgressBar.barHeight;
     final centerY = size.height / 2;
     final top = centerY - barHeight / 2;
-    void bar(double from, double to, Color color) {
+    void bar(double from, double to, Color color, {Shader? shader}) {
       if (to <= from) return;
       canvas.drawRRect(
         RRect.fromLTRBR(from * size.width, top, to * size.width, top + barHeight, const Radius.circular(cap)),
-        Paint()..color = color,
+        Paint()
+          ..color = color
+          ..shader = shader,
       );
     }
 
@@ -204,7 +211,7 @@ class _BarPainter extends CustomPainter {
     for (final (start, end, segmentColor) in segments) {
       bar(start, end, segmentColor);
     }
-    bar(0, played, color);
+    bar(0, played, color, shader: gradient?.createShader(Offset(0, top) & Size(size.width, barHeight)));
     // Chapter gaps across the bar, as on YouTube.
     final divider = Paint()..color = const Color(0xCC000000);
     for (final chapter in chapters) {
@@ -242,7 +249,7 @@ class _BarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BarPainter old) =>
-      old.played != played || old.buffered != buffered || old.pointer != pointer || old.color != color || old.active != active || !listEquals(old.segments, segments) || !listEquals(old.chapters, chapters);
+      old.played != played || old.buffered != buffered || old.pointer != pointer || old.color != color || old.gradient != gradient || old.active != active || !listEquals(old.segments, segments) || !listEquals(old.chapters, chapters);
 }
 
 /// The "most replayed" curve: a smooth filled area, faint enough to leave

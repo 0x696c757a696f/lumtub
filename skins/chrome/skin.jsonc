@@ -1,0 +1,345 @@
+// Chrome Cyber: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 镀铬赛博：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "chrome",
+  "name": "Chrome Cyber",
+  "names": {
+    "zh-Hans": "镀铬赛博",
+    "zh-Hant": "鍍鉻賽博"
+  },
+  "description": "Black and violet with neon edges, a perspective grid and chrome letters",
+  "descriptions": {
+    "zh-Hans": "黑紫底色、霓虹边光、透视网格和镀铬字",
+    "zh-Hant": "黑紫底色、霓虹邊光、透視網格和鍍鉻字"
+  },
+  "brightness": "dark",
+  "text": {
+    "displayFont": "Audiowide",
+    "monoFont": "Audiowide"
+  },
+  "colors": {
+    "page": "#0a0814",
+    "text": "#eef0ff",
+    "muted": "#a3a8d0",
+    "accent": "#ff4fd8",
+    "onAccent": "#16001a",
+    "border": "#3a2f66",
+    "card": "#171329",
+    "selected": "#2a1a45",
+    "onSelected": "#ffffff",
+    "reason": "#3ee8ff"
+  },
+  "shape": {
+    "cardRadius": 16,
+    "controlRadius": 99,
+    "thumbnailRadius": 12
+  },
+  "window": {
+    "background": [
+      {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#07060f",
+            "#120a24"
+          ]
+        }
+      },
+      {
+        "radial": {
+          "center": [
+            0.9,
+            -0.05
+          ],
+          "radius": 0.55,
+          "colors": [
+            "#a35cff59",
+            "#a35cff00"
+          ]
+        }
+      },
+      {
+        "radial": {
+          "center": [
+            0.0,
+            1.0
+          ],
+          "radius": 0.5,
+          "colors": [
+            "#18e3ff2e",
+            "#18e3ff00"
+          ]
+        }
+      }
+    ],
+    "decorations": [
+      {
+        "type": "perspectiveGrid",
+        "color": "#ff3fd255",
+        "spacing": 56,
+        "horizon": 0.6
+      },
+      {
+        "type": "sparkles",
+        "count": 5,
+        "color": "#ffffff",
+        "glow": "#ff3fd2",
+        "seed": 5
+      }
+    ],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#2a2d40",
+              "#0d0d16"
+            ]
+          }
+        },
+        "border": {
+          "color": "#ff3fd280",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#14141e"
+      },
+      "text": "#eef0ff",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#cfd3ff",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#ffffff1f"
+          },
+          "pressed": {
+            "fill": "#ffffff1f"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#ff2b6e"
+          },
+          "pressed": {
+            "fill": "#b8154a"
+          }
+        }
+      }
+    },
+    "topBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#2a2d40",
+            "#14151f",
+            "#1e2130"
+          ]
+        }
+      },
+      "border": {
+        "color": "#ff3fd280",
+        "sides": [
+          "bottom"
+        ]
+      },
+      "shadow": [
+        {
+          "color": "#ff3fd22e",
+          "y": 4,
+          "blur": 20
+        }
+      ]
+    },
+    "sideBar": {
+      "fill": "#140f288c",
+      "border": {
+        "color": "#a98cff40",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#1a1b28",
+            "#0b0b12"
+          ]
+        }
+      },
+      "border": {
+        "color": "#ff3fd260",
+        "sides": [
+          "top"
+        ]
+      }
+    }
+  },
+  "controls": {
+    "button": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#22243a",
+            "#101120"
+          ]
+        }
+      },
+      "border": "#a98cff59",
+      "hover": {
+        "glow": "#22e6ff80",
+        "border": "#22e6ff"
+      }
+    },
+    "buttonText": "#d6d9ff",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ff8de6",
+            "#d040b0"
+          ]
+        }
+      },
+      "glow": "#ff3fd299",
+      "border": "#ff9bea"
+    },
+    "primaryButtonText": "#16001a",
+    "chip": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#22243a",
+            "#101120"
+          ]
+        }
+      },
+      "border": "#a98cff4d"
+    },
+    "chipSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#7af3ff",
+            "#0fa9c9"
+          ]
+        }
+      },
+      "glow": "#22e6ff8c",
+      "border": "#22e6ff"
+    },
+    "chipSelectedText": "#001018",
+    "navSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ff3fd240",
+            "#22e6ff1f"
+          ]
+        }
+      },
+      "border": "#ff3fd299",
+      "glow": "#ff3fd259"
+    },
+    "navSelectedText": "#ffffff",
+    "navText": "#a3a8d0"
+  },
+  "cards": {
+    "video": {
+      "fill": "#1a1434a6",
+      "border": "#a98cff40",
+      "hover": {
+        "border": "#22e6ff",
+        "glow": "#22e6ff8c"
+      },
+      "focused": {
+        "border": {
+          "color": "#22e6ff",
+          "width": 2
+        },
+        "glow": "#22e6ff"
+      }
+    },
+    "padding": 8,
+    "panel": {
+      "fill": "#171329e6",
+      "border": "#a98cff59"
+    },
+    "durationBadge": {
+      "fill": "#05040bd9",
+      "border": "#22e6ff80"
+    },
+    "durationText": "#7af3ff"
+  },
+  "logo": {
+    "text": "LUMTUB",
+    "font": "Audiowide",
+    "size": 21,
+    "fill": {
+      "linear": {
+        "angle": 180,
+        "colors": [
+          "#ffffff",
+          "#ffb8f0",
+          "#7a2bd6",
+          "#7af3ff",
+          "#ffffff"
+        ]
+      }
+    },
+    "glow": "#ff3fd2",
+    "badge": {
+      "fill": {
+        "radial": {
+          "center": [
+            0.5,
+            0.6
+          ],
+          "radius": 0.6,
+          "colors": [
+            "#ff6fc4",
+            "#3b1a8a"
+          ]
+        }
+      },
+      "gloss": 0.6,
+      "border": "#ffffffcc"
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "player": {
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#ff2bd6",
+          "#a35cff",
+          "#18e3ff"
+        ]
+      }
+    }
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

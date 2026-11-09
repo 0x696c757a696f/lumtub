@@ -605,7 +605,7 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Wrap(spacing: 12, runSpacing: 12, children: [
             for (final palette in palettes)
-              PaletteCard(palette: palette, selected: appearance.palette == palette.id, onTap: () => save(controller.appearance.copyWith(palette: palette.id))),
+              PaletteCard(palette: palette, selected: appearance.palette == palette.id, onTap: () => save(controller.appearance.copyWith(skin: '', palette: palette.id))),
           ]),
         ),
         _tip(context, tr('A color scheme changes the background, text and accent of the whole window, in light and dark. Choosing a theme or color below goes back to the neutral scheme.')),
@@ -639,11 +639,11 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
           enabled: windows != null,
           leading: Checkbox(
             value: appearance.systemAccent,
-            onChanged: windows == null ? null : (v) => save(appearance.copyWith(palette: '', systemAccent: v ?? false)),
+            onChanged: windows == null ? null : (v) => save(appearance.copyWith(skin: '', palette: '', systemAccent: v ?? false)),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
           ),
-          onTap: windows == null ? null : () => save(appearance.copyWith(palette: '', systemAccent: !appearance.systemAccent)),
+          onTap: windows == null ? null : () => save(appearance.copyWith(skin: '', palette: '', systemAccent: !appearance.systemAccent)),
         ),
         AnimatedSize(
           duration: Motion.of(const Duration(milliseconds: 200)),
@@ -662,10 +662,10 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
                           content: SlideColorPicker(color: Color(appearance.customAccent)),
                         ),
                       );
-                      if (color != null) save(controller.appearance.copyWith(palette: '', accentIndex: -1, customAccent: color.toARGB32()));
+                      if (color != null) save(controller.appearance.copyWith(skin: '', palette: '', accentIndex: -1, customAccent: color.toARGB32()));
                     }),
                     for (var i = 0; i < accentChoices.length; i++)
-                      swatch(accentChoices[i].$2, accentChoices[i].$1, appearance.accentIndex == i, () => save(controller.appearance.copyWith(palette: '', accentIndex: i))),
+                      swatch(accentChoices[i].$2, accentChoices[i].$1, appearance.accentIndex == i, () => save(controller.appearance.copyWith(skin: '', palette: '', accentIndex: i))),
                   ]),
                 ),
         ),

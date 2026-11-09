@@ -20,3 +20,14 @@ updates:
       rust:
         patterns: ['*']
     open-pull-requests-limit: 5
+
+  # The Android Gradle plugin, Kotlin and AndroidX; the Android job in Build
+  # judges them.
+  - package-ecosystem: gradle
+    directory: /android
+    schedule:
+      interval: weekly
+    groups:
+      android:
+        patterns: ['*']
+    open-pull-requests-limit: 5

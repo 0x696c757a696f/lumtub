@@ -1,0 +1,62 @@
+name: Upstream updates
+
+# Once a week, looks for newer versions of what build.yml pins (libmpv for
+# Linux, FFmpeg for macOS, appimagetool). Those go to the deps/upstream
+# branch, Build checks them there, smoke tests included, and Merge
+# dependency updates brings them into main once it passes. The media_kit
+# copies under vendor/ carry Lumtub's own changes, so a newer media_kit
+# opens an issue instead.
+on:
+  schedule:
+    - cron: '37 5 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+  issues: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+      - name: Look for newer versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/upstream.py
+      - name: Push and build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then exit 0; fi
+          git diff
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c deps/upstream
+          git commit -qaF "$RUNNER_TEMP/upstream-commit.txt"
+          git push --force origin deps/upstream
+          gh workflow run build.yml --ref deps/upstream
+      - name: Report what needs reading
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          title='Newer media_kit to merge into vendor/'
+          issue=$(gh issue list --state open --label automation --search "in:title \"$title\"" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -n1)
+          notes="$RUNNER_TEMP/upstream-notes.md"
+          if [ ! -s "$notes" ]; then
+            if [ -n "$issue" ]; then gh issue close "$issue" --comment 'vendor/ is current again.'; fi
+            exit 0
+          fi
+          body=$(printf 'These packages are vendored with Lumtub'"'"'s changes (see each LUMTUB.md), so they are not updated by themselves:\n\n%s\n' "$(cat "$notes")")
+          if [ -n "$issue" ]; then
+            gh issue edit "$issue" --body "$body"
+          else
+            gh label create automation --color BFD4F2 --description 'Reported by the repository automation' 2>/dev/null || true
+            gh issue create --title "$title" --label automation --body "$body"
+          fi

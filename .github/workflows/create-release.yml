@@ -52,14 +52,26 @@ jobs:
             echo "pubspec.yaml must declare a stable semantic version, found: $pubspec_version" >&2
             exit 1
           }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # A version already released moves on by itself: the next patch
+          # version, with the next build number, committed to main first.
+          if [[ -n "$(git tag --list "v$pubspec_version-*")" ]]; then
+            IFS=. read -r major minor patch <<< "$pubspec_version"
+            build=$(sed -n 's/^version: *[^+[:space:]]*+\([0-9][0-9]*\).*/\1/p' pubspec.yaml)
+            next="$major.$minor.$((patch + 1))"
+            sed -i "s/^version: .*/version: $next+$(( ${build:-0} + 1 ))/" pubspec.yaml
+            git commit -qm "Lumtub $next" pubspec.yaml
+            git push origin HEAD:main
+            echo "$pubspec_version was released already; main now says $next."
+            pubspec_version=$next
+          fi
           commit=$(git rev-parse --short=7 HEAD)
           tag="v$pubspec_version-$commit"
           git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1 && {
             echo "Tag $tag already exists" >&2
             exit 1
           }
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git tag -a "$tag" -m "Lumtub $tag"
           git push origin "$tag"
           echo 'release=true' >> "$GITHUB_OUTPUT"

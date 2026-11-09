@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Listoj de {0}",
   "Lists of {0}; those of {1} are used after a restart": "Listoj de {0}; tiuj de {1} estos uzataj post restartigo",
   "Skin background": "Fono de haŭto",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Bildoj kaj pejzaĝo de la haŭto malantaŭ la paĝoj; malŝaltite restas ebena koloro"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Bildoj kaj pejzaĝo de la haŭto malantaŭ la paĝoj; malŝaltite restas ebena koloro",
+  "Suggest a channel or report a mistake": "Sugesti kanalon aŭ raporti eraron",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "La listoj estas publikaj en GitHub, kaj ĉiu rajtas aldoni al ili. Ĉiu enskribo bezonas publikan fonton"
 }

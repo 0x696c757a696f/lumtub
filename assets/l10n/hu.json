@@ -3117,5 +3117,7 @@
   "Lists of {0}": "{0} szerinti listák",
   "Lists of {0}; those of {1} are used after a restart": "{0} szerinti listák; a(z) {1} szerintiek újraindítás után lépnek életbe",
   "Skin background": "Téma háttere",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "A téma képei és tájképe az oldalak mögött; kikapcsolva egyszínű marad"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "A téma képei és tájképe az oldalak mögött; kikapcsolva egyszínű marad",
+  "Suggest a channel or report a mistake": "Csatorna javasolása vagy hiba jelentése",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "A listák nyilvánosak a GitHubon, és bárki hozzáadhat új elemeket. Minden bejegyzéshez nyilvános forrás kell"
 }

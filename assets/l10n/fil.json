@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Mga list noong {0}",
   "Lists of {0}; those of {1} are used after a restart": "Mga list noong {0}; ang sa {1} ay gagamitin pagkatapos ng restart",
   "Skin background": "Background ng skin",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Ang mga larawan at tanawin ng skin sa likod ng mga pahina; kapag naka-off, plain na kulay"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Ang mga larawan at tanawin ng skin sa likod ng mga pahina; kapag naka-off, plain na kulay",
+  "Suggest a channel or report a mistake": "Magmungkahi ng channel o mag-ulat ng pagkakamali",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Pampubliko ang mga listahan sa GitHub, at kahit sino ay maaaring magdagdag. Bawat entry ay nangangailangan ng pampublikong source"
 }

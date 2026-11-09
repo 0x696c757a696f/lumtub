@@ -3117,5 +3117,7 @@
   "Lists of {0}": "{0} tarihli listeler",
   "Lists of {0}; those of {1} are used after a restart": "{0} tarihli listeler; {1} tarihlileri yeniden başlatmadan sonra kullanılır",
   "Skin background": "Tema arka planı",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Sayfaların arkasında temanın resimleri ve manzarası; kapalıyken düz renk kalır"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Sayfaların arkasında temanın resimleri ve manzarası; kapalıyken düz renk kalır",
+  "Suggest a channel or report a mistake": "Kanal öner veya hata bildir",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listeler GitHub'da herkese açıktır ve herkes ekleme yapabilir. Her girdi için herkese açık bir kaynak gerekir"
 }

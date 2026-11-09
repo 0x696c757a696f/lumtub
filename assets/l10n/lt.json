@@ -3117,5 +3117,7 @@
   "Lists of {0}": "{0} sąrašai",
   "Lists of {0}; those of {1} are used after a restart": "{0} sąrašai; {1} sąrašai bus naudojami po paleidimo iš naujo",
   "Skin background": "Dizaino fonas",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Dizaino paveikslėliai ir peizažas už puslapių; išjungus lieka vienspalvis fonas"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Dizaino paveikslėliai ir peizažas už puslapių; išjungus lieka vienspalvis fonas",
+  "Suggest a channel or report a mistake": "Pasiūlyti kanalą arba pranešti apie klaidą",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Sąrašai vieši GitHub, ir bet kas gali juos papildyti. Kiekvienam įrašui reikalingas viešas šaltinis"
 }

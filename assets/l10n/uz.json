@@ -3117,5 +3117,7 @@
   "Lists of {0}": "{0} dagi roʻyxatlar",
   "Lists of {0}; those of {1} are used after a restart": "{0} dagi roʻyxatlar; {1} dagilari qayta ishga tushirilgach ishlatiladi",
   "Skin background": "Mavzu foni",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Sahifalar orqasida mavzuning rasmlari va manzarasi; oʻchirilsa, oddiy rang qoladi"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Sahifalar orqasida mavzuning rasmlari va manzarasi; oʻchirilsa, oddiy rang qoladi",
+  "Suggest a channel or report a mistake": "Kanal taklif qilish yoki xatoni xabar qilish",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Ro‘yxatlar GitHub’da ochiq va istalgan kishi qo‘shishi mumkin. Har bir yozuv ochiq manbani talab qiladi"
 }

@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Listy z {0}",
   "Lists of {0}; those of {1} are used after a restart": "Listy z {0}; listy z {1} będą użyte po ponownym uruchomieniu",
   "Skin background": "Tło skórki",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Obrazy i krajobraz skórki za stronami; wyłączone zostawia jednolity kolor"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Obrazy i krajobraz skórki za stronami; wyłączone zostawia jednolity kolor",
+  "Suggest a channel or report a mistake": "Zaproponuj kanał lub zgłoś błąd",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listy są publiczne na GitHubie i każdy może je uzupełniać. Każdy wpis wymaga publicznego źródła"
 }

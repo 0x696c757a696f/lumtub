@@ -3117,5 +3117,7 @@
   "Lists of {0}": "{0}-ի ցանկեր",
   "Lists of {0}; those of {1} are used after a restart": "{0}-ի ցանկեր․ {1}-ինները կօգտագործվեն վերագործարկումից հետո",
   "Skin background": "Սկինի ֆոն",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Սկինի նկարներն ու լանդշաֆտը էջերի հետևում․ անջատվածի դեպքում մնում է սովորական գույն"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Սկինի նկարներն ու լանդշաֆտը էջերի հետևում․ անջատվածի դեպքում մնում է սովորական գույն",
+  "Suggest a channel or report a mistake": "Առաջարկել ալիք կամ հայտնել սխալի մասին",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Ցանկերը հանրային են GitHub-ում, և ցանկացած մարդ կարող է ավելացնել դրանցում։ Յուրաքանչյուր գրառում պահանջում է հանրային աղբյուր"
 }

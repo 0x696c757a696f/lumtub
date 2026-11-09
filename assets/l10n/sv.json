@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Listor från {0}",
   "Lists of {0}; those of {1} are used after a restart": "Listor från {0}; de från {1} används efter en omstart",
   "Skin background": "Skalbakgrund",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Skalets bilder och landskap bakom sidorna; av ger en enfärgad bakgrund"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Skalets bilder och landskap bakom sidorna; av ger en enfärgad bakgrund",
+  "Suggest a channel or report a mistake": "Föreslå en kanal eller rapportera ett fel",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listorna är offentliga på GitHub och vem som helst kan lägga till poster. Varje post kräver en offentlig källa"
 }

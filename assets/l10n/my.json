@@ -3117,5 +3117,7 @@
   "Lists of {0}": "{0} ရက်စွဲ စာရင်းများ",
   "Lists of {0}; those of {1} are used after a restart": "{0} ရက်စွဲ စာရင်းများ၊ {1} ရက်စွဲ စာရင်းများကို ပြန်စတင်ပြီးနောက် အသုံးပြုမည်",
   "Skin background": "စကင် နောက်ခံ",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "စာမျက်နှာများနောက်ရှိ စကင်၏ ပုံများနှင့် ရှုခင်း၊ ပိတ်ထားလျှင် ရိုးရိုးအရောင်သာ ကျန်မည်"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "စာမျက်နှာများနောက်ရှိ စကင်၏ ပုံများနှင့် ရှုခင်း၊ ပိတ်ထားလျှင် ရိုးရိုးအရောင်သာ ကျန်မည်",
+  "Suggest a channel or report a mistake": "ချန်နယ်အကြံပြုရန် သို့မဟုတ် အမှားတင်ပြရန်",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "စာရင်းများသည် GitHub တွင် အများသိမြင်နိုင်ပြီး မည်သူမဆို ထည့်သွင်းနိုင်သည်။ ထည့်သွင်းမှုတိုင်းတွင် အများပြည်သူသိမြင်နိုင်သော ရင်းမြစ်လိုအပ်သည်"
 }

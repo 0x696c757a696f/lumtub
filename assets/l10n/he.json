@@ -3117,5 +3117,7 @@
   "Lists of {0}": "רשימות מ-{0}",
   "Lists of {0}; those of {1} are used after a restart": "רשימות מ-{0}; הרשימות מ-{1} ייכנסו לשימוש לאחר הפעלה מחדש",
   "Skin background": "רקע ערכת הנושא",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "תמונות ונוף של ערכת הנושא מאחורי הדפים; כבוי משאיר צבע אחיד"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "תמונות ונוף של ערכת הנושא מאחורי הדפים; כבוי משאיר צבע אחיד",
+  "Suggest a channel or report a mistake": "הציעו ערוץ או דווחו על טעות",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "הרשימות פומביות ב-GitHub וכל אחד יכול להוסיף להן. כל רשומה דורשת מקור פומבי"
 }

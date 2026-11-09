@@ -3117,5 +3117,7 @@
   "Lists of {0}": "{0} का सूचीहरू",
   "Lists of {0}; those of {1} are used after a restart": "{0} का सूचीहरू; {1} का सूचीहरू पुनः सुरु गरेपछि प्रयोग हुन्छन्",
   "Skin background": "स्किन पृष्ठभूमि",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "पृष्ठहरूको पछाडि स्किनका तस्बिर र दृश्य; बन्द गर्दा सादा रङ रहन्छ"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "पृष्ठहरूको पछाडि स्किनका तस्बिर र दृश्य; बन्द गर्दा सादा रङ रहन्छ",
+  "Suggest a channel or report a mistake": "च्यानल सुझाउनुहोस् वा गल्ती रिपोर्ट गर्नुहोस्",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "सूचीहरू GitHub मा सार्वजनिक छन् र जो कोहीले थप्न सक्छ। प्रत्येक प्रविष्टिलाई सार्वजनिक स्रोत चाहिन्छ"
 }

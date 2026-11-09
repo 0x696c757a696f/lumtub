@@ -174,6 +174,7 @@ Future<void> openBlockedGroups(BuildContext context, AppController controller) =
         _header(context, tr('Groups to block')),
         ..._groupTiles(context, controller, blockedGroups, media: false),
         _tip(context, tr('Tap a group to see its whole list and untick entries one by one. Only channel names, @handles and channel IDs are matched, never titles or descriptions, and the list stays on this computer. To block more, use Home & search › Title keyword filter, or Privacy › Blocked channels.')),
+        _suggestTile(),
       ];
     });
 
@@ -192,8 +193,17 @@ Future<void> openStateMedia(BuildContext context, AppController controller) => _
         _header(context, tr('Groups to block')),
         ..._groupTiles(context, controller, stateMedia, media: true),
         _tip(context, tr('The list stays on this computer. Add any channel it misses under Privacy › Blocked channels.')),
+        _suggestTile(),
       ];
     });
+
+/// Opens the repository's form for adding a channel to a block list or taking one off.
+Widget _suggestTile() => ListTile(
+      leading: Icon(AppIcons.arrowSquareOut),
+      title: Text(tr('Suggest a channel or report a mistake')),
+      subtitle: Text(tr('The lists are public on GitHub, and anyone can add to them. Every entry needs a public source')),
+      onTap: () => openExternal('https://github.com/0x696c757a696f/lumtub/issues/new?template=block_list.yml'),
+    );
 
 /// [prefs] with [group] ticked or not.
 AppPreferences _withGroup(AppPreferences prefs, BlockedGroup group, bool on, {required bool media}) {

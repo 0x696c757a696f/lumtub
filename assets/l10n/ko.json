@@ -3117,5 +3117,7 @@
   "Lists of {0}": "{0} 목록",
   "Lists of {0}; those of {1} are used after a restart": "{0} 목록, {1} 목록은 다시 시작한 후 사용됩니다",
   "Skin background": "스킨 배경",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "페이지 뒤에 스킨의 그림과 풍경을 표시합니다. 끄면 단색이 됩니다"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "페이지 뒤에 스킨의 그림과 풍경을 표시합니다. 끄면 단색이 됩니다",
+  "Suggest a channel or report a mistake": "채널 제안 또는 오류 신고",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "목록은 GitHub에 공개되어 있으며 누구나 추가할 수 있습니다. 모든 항목에는 공개 출처가 필요합니다"
 }

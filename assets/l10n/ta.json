@@ -3117,5 +3117,7 @@
   "Lists of {0}": "{0} தேதியின் பட்டியல்கள்",
   "Lists of {0}; those of {1} are used after a restart": "{0} தேதியின் பட்டியல்கள்; {1} தேதியவை மறுதொடக்கத்திற்குப் பிறகு பயன்படுத்தப்படும்",
   "Skin background": "தீம் பின்னணி",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "பக்கங்களுக்குப் பின்னால் தீமின் படங்களும் நிலக்காட்சியும்; முடக்கினால் சாதாரண நிறம் இருக்கும்"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "பக்கங்களுக்குப் பின்னால் தீமின் படங்களும் நிலக்காட்சியும்; முடக்கினால் சாதாரண நிறம் இருக்கும்",
+  "Suggest a channel or report a mistake": "சேனலைப் பரிந்துரைக்கவும் அல்லது பிழையைப் புகாரளிக்கவும்",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "பட்டியல்கள் GitHub இல் பொதுவில் உள்ளன, யார் வேண்டுமானாலும் சேர்க்கலாம். ஒவ்வொரு பதிவுக்கும் பொது ஆதாரம் தேவை"
 }

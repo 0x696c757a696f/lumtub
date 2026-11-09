@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Izinhlu zka-{0}",
   "Lists of {0}; those of {1} are used after a restart": "Izinhlu zka-{0}; ezika-{1} zisetshenziswa ngemuva kokuqala kabusha",
   "Skin background": "Ingemuva yesindikimba",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Izithombe nobuhle bendawo besindikimba ngemuva kwamakhasi; uma kuvaliwe kusala umbala ongenalutho"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Izithombe nobuhle bendawo besindikimba ngemuva kwamakhasi; uma kuvaliwe kusala umbala ongenalutho",
+  "Suggest a channel or report a mistake": "Phakamisa isiteshi noma babika iphutha",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Uhlu luyasesidlangalaleni ku-GitHub futhi noma ubani angangeza kulo. Okufakiwe ngakunye kudinga umthombo osesidlangalaleni"
 }

@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Listas do {0}",
   "Lists of {0}; those of {1} are used after a restart": "Listas do {0}; as do {1} úsanse despois de reiniciar",
   "Skin background": "Fondo do tema",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "As imaxes e a paisaxe do tema detrás das páxinas; desactivado deixa unha cor lisa"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "As imaxes e a paisaxe do tema detrás das páxinas; desactivado deixa unha cor lisa",
+  "Suggest a channel or report a mistake": "Suxerir unha canle ou informar dun erro",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "As listas son públicas en GitHub e calquera pode engadir elementos. Cada entrada precisa dunha fonte pública"
 }

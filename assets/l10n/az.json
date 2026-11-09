@@ -3117,5 +3117,7 @@
   "Lists of {0}": "{0} tarixli siyahılar",
   "Lists of {0}; those of {1} are used after a restart": "{0} tarixli siyahılar; {1} tarixli siyahılar yenidən başladıqdan sonra istifadə olunur",
   "Skin background": "Skin fonu",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Skinin şəkilləri və mənzərəsi səhifələrin arxasında; söndürüldükdə sadə rəng qalır"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Skinin şəkilləri və mənzərəsi səhifələrin arxasında; söndürüldükdə sadə rəng qalır",
+  "Suggest a channel or report a mistake": "Kanal təklif edin və ya xəta barədə bildirin",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Siyahılar GitHub-da açıqdır və hər kəs onlara əlavə edə bilər. Hər qeyd üçün açıq mənbə tələb olunur"
 }

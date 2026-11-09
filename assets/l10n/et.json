@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Loendid kuupäevast {0}",
   "Lists of {0}; those of {1} are used after a restart": "Loendid kuupäevast {0}; kuupäeva {1} loendeid kasutatakse pärast taaskäivitust",
   "Skin background": "Skini taust",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Skini pildid ja maastik lehtede taga; väljas jääb tavaline värv"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Skini pildid ja maastik lehtede taga; väljas jääb tavaline värv",
+  "Suggest a channel or report a mistake": "Soovita kanalit või teata veast",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Loendid on GitHubis avalikud ja igaüks võib neid täiendada. Iga kirje vajab avalikku allikat"
 }

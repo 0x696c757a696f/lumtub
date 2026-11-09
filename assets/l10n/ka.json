@@ -3117,5 +3117,7 @@
   "Lists of {0}": "სიები {0}-დან",
   "Lists of {0}; those of {1} are used after a restart": "სიები {0}-დან; {1}-ის სიები გამოიყენება გადატვირთვის შემდეგ",
   "Skin background": "სკინის ფონი",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "სკინის სურათები და პეიზაჟი გვერდების უკან; გამორთვისას რჩება ჩვეულებრივი ფერი"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "სკინის სურათები და პეიზაჟი გვერდების უკან; გამორთვისას რჩება ჩვეულებრივი ფერი",
+  "Suggest a channel or report a mistake": "შესთავაზეთ არხი ან შეგვატყობინეთ შეცდომის შესახებ",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "სიები საჯაროა GitHub-ზე და ნებისმიერს შეუძლია მათში დამატება. თითოეულ ჩანაწერს სჭირდება საჯარო წყარო"
 }

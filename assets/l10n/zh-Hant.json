@@ -3117,5 +3117,7 @@
   "Lists of {0}": "清單日期：{0}",
   "Lists of {0}; those of {1} are used after a restart": "清單日期：{0}；{1} 的新清單重新啟動後生效",
   "Skin background": "皮膚背景",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "頁面後面顯示皮膚的圖片和風景；關閉後只留純色"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "頁面後面顯示皮膚的圖片和風景；關閉後只留純色",
+  "Suggest a channel or report a mistake": "推薦頻道或回報誤列",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "清單公開在 GitHub 上，任何人都可以補充。每個條目都要有公開來源"
 }

@@ -3117,5 +3117,7 @@
   "Lists of {0}": "รายการของ {0}",
   "Lists of {0}; those of {1} are used after a restart": "รายการของ {0} ส่วนรายการของ {1} จะใช้หลังเริ่มใหม่",
   "Skin background": "พื้นหลังสกิน",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "รูปภาพและทิวทัศน์ของสกินที่อยู่หลังหน้า ปิดไว้จะเหลือเป็นสีพื้น"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "รูปภาพและทิวทัศน์ของสกินที่อยู่หลังหน้า ปิดไว้จะเหลือเป็นสีพื้น",
+  "Suggest a channel or report a mistake": "แนะนำช่องหรือรายงานข้อผิดพลาด",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "รายการเป็นสาธารณะบน GitHub และใครก็เพิ่มได้ ทุกรายการต้องมีแหล่งที่มาสาธารณะ"
 }

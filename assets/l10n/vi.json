@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Danh sách ngày {0}",
   "Lists of {0}; those of {1} are used after a restart": "Danh sách ngày {0}; danh sách ngày {1} được dùng sau khi khởi động lại",
   "Skin background": "Nền chủ đề",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Hình ảnh và phong cảnh của chủ đề phía sau các trang; tắt sẽ để lại màu trơn"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Hình ảnh và phong cảnh của chủ đề phía sau các trang; tắt sẽ để lại màu trơn",
+  "Suggest a channel or report a mistake": "Đề xuất kênh hoặc báo lỗi",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Các danh sách được công khai trên GitHub và ai cũng có thể thêm vào. Mỗi mục cần có nguồn công khai"
 }

@@ -3117,5 +3117,7 @@
   "Lists of {0}": "ລາຍການຂອງ {0}",
   "Lists of {0}; those of {1} are used after a restart": "ລາຍການຂອງ {0}; ລາຍການຂອງ {1} ຈະຖືກໃຊ້ຫຼັງຈາກເລີ່ມໃໝ່",
   "Skin background": "ພື້ນຫຼັງສະກິນ",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "ຮູບພາບ ແລະ ທິວທັດຂອງສະກິນຢູ່ຫຼັງໜ້າ; ປິດແລ້ວຈະເຫຼືອສີທຳມະດາ"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "ຮູບພາບ ແລະ ທິວທັດຂອງສະກິນຢູ່ຫຼັງໜ້າ; ປິດແລ້ວຈະເຫຼືອສີທຳມະດາ",
+  "Suggest a channel or report a mistake": "ແນະນຳຊ່ອງ ຫຼື ລາຍງານຄວາມຜິດພາດ",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "ລາຍການເປັນສາທາລະນະໃນ GitHub ແລະທຸກຄົນສາມາດເພີ່ມໄດ້. ແຕ່ລະລາຍການຕ້ອງມີແຫຼ່ງທີ່ມາສາທາລະນະ"
 }

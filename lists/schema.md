@@ -2,15 +2,15 @@
 
 Each list is one file, `<category>/<id>.txt`. `lumtub-lists check lists` reads them all as the app will; CI runs it on every pull request and prints what changed. A removed record's key goes in `retired.txt` and is never used again.
 
-Anyone can suggest a channel: open a pull request that edits these files, or an issue with the "Block list entry" form. Every entry needs a public source.
+Anyone can suggest a channel: open a pull request that edits these files, or an issue with the "Block list entry" form. Every entry needs a public source. [README.md](README.md) explains both ways step by step.
 
 ## Categories
 
 | tier | categories | new install |
 |---|---|---|
 | P0 safety | `financial-scams`, `malware-phishing`, `medical-fraud` | on, with the default action |
-| P1 quality | `ai-slop`, `clickbait-reuploads`, `religion` | off, offered on first run |
-| P2 viewpoint | `state-media`, `influence-operations`, `new-age`, `misinformation-farms`, `deceptive-marketing` | off, offered on first run |
+| P1 quality | `ai-slop`, `clickbait-reuploads`, `religion` | off; turned on in Settings |
+| P2 viewpoint | `state-media`, `influence-operations`, `new-age`, `misinformation-farms`, `deceptive-marketing` | off; turned on in Settings |
 
 Only a list of P0 categories may be `default: on`. P0 lists take no `topic` and only confirmed records. A confirmed record needs a `source`: its own on P0 lists, its own or the list's elsewhere. A removed record whose key is not added to `retired.txt` fails the check.
 

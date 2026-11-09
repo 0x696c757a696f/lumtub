@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Seznamy z {0}",
   "Lists of {0}; those of {1} are used after a restart": "Seznamy z {0}; ty z {1} se použijí po restartu",
   "Skin background": "Pozadí skinu",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Obrázky a krajina skinu za stránkami; po vypnutí zůstane jednobarevné pozadí"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Obrázky a krajina skinu za stránkami; po vypnutí zůstane jednobarevné pozadí",
+  "Suggest a channel or report a mistake": "Navrhnout kanál nebo nahlásit chybu",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Seznamy jsou veřejné na GitHubu a může do nich přispívat kdokoli. Každý záznam vyžaduje veřejný zdroj"
 }

@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Orodha za {0}",
   "Lists of {0}; those of {1} are used after a restart": "Orodha za {0}; za {1} zitatumika baada ya kuanzisha upya",
   "Skin background": "Mandharinyuma ya mandhari",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Picha na mandhari ya asili ya mandhari nyuma ya kurasa; ikizimwa inabaki rangi ya kawaida"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Picha na mandhari ya asili ya mandhari nyuma ya kurasa; ikizimwa inabaki rangi ya kawaida",
+  "Suggest a channel or report a mistake": "Pendekeza kituo au ripoti kosa",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Orodha ni za umma kwenye GitHub na yeyote anaweza kuongeza. Kila kipengee kinahitaji chanzo cha umma"
 }

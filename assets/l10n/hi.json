@@ -3117,5 +3117,7 @@
   "Lists of {0}": "{0} की सूचियाँ",
   "Lists of {0}; those of {1} are used after a restart": "{0} की सूचियाँ; {1} की सूचियाँ रीस्टार्ट के बाद उपयोग होंगी",
   "Skin background": "स्किन बैकग्राउंड",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "पेजों के पीछे स्किन की तस्वीरें और लैंडस्केप; बंद करने पर सादा रंग रहता है"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "पेजों के पीछे स्किन की तस्वीरें और लैंडस्केप; बंद करने पर सादा रंग रहता है",
+  "Suggest a channel or report a mistake": "चैनल सुझाएँ या गलती की रिपोर्ट करें",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "सूचियाँ GitHub पर सार्वजनिक हैं और कोई भी इनमें जोड़ सकता है। हर प्रविष्टि के लिए एक सार्वजनिक स्रोत ज़रूरी है"
 }

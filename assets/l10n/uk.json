@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Списки від {0}",
   "Lists of {0}; those of {1} are used after a restart": "Списки від {0}; списки від {1} буде використано після перезапуску",
   "Skin background": "Тло теми",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Малюнки й пейзаж теми за сторінками; вимкнено залишає звичайний колір"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Малюнки й пейзаж теми за сторінками; вимкнено залишає звичайний колір",
+  "Suggest a channel or report a mistake": "Запропонувати канал або повідомити про помилку",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Списки загальнодоступні на GitHub, і доповнювати їх може кожен. Для кожного запису потрібне публічне джерело"
 }

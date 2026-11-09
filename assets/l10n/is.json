@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Listar frá {0}",
   "Lists of {0}; those of {1} are used after a restart": "Listar frá {0}; listar frá {1} verða notaðir eftir endurræsingu",
   "Skin background": "Bakgrunnur þema",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Myndir og landslag þemans á bak við síðurnar; slökkt skilur eftir einlitan bakgrunn"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Myndir og landslag þemans á bak við síðurnar; slökkt skilur eftir einlitan bakgrunn",
+  "Suggest a channel or report a mistake": "Stinga upp á rás eða tilkynna villu",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listarnir eru opinberir á GitHub og hver sem er getur bætt við þá. Hver færsla þarf opinbera heimild"
 }

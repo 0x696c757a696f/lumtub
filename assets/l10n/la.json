@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Indices diei {0}",
   "Lists of {0}; those of {1} are used after a restart": "Indices diei {0}; indices diei {1} post renovationem adhibentur",
   "Skin background": "Tergum pellis",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Imagines et regio pellis post paginas; exstinctum colorem simplicem relinquit"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Imagines et regio pellis post paginas; exstinctum colorem simplicem relinquit",
+  "Suggest a channel or report a mistake": "Suggere canalem vel errorem refer",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Indices publici sunt in GitHub, et quivis addere potest. Omnis inscriptio fontem publicum requirit"
 }

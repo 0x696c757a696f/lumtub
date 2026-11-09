@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Saraksti no {0}",
   "Lists of {0}; those of {1} are used after a restart": "Saraksti no {0}; saraksti no {1} tiks izmantoti pēc pārstartēšanas",
   "Skin background": "Apvalka fons",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Apvalka attēli un ainava aiz lapām; izslēdzot paliek vienkrāsains fons"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Apvalka attēli un ainava aiz lapām; izslēdzot paliek vienkrāsains fons",
+  "Suggest a channel or report a mistake": "Ieteikt kanālu vai ziņot par kļūdu",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Saraksti ir publiski pieejami GitHub, un tiem var pievienot ikviens. Katram ierakstam nepieciešams publisks avots"
 }

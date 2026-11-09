@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Списки от {0}",
   "Lists of {0}; those of {1} are used after a restart": "Списки от {0}; списки от {1} будут использованы после перезапуска",
   "Skin background": "Фон скина",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Картинки и пейзаж скина за страницами; при выключении остаётся обычный цвет"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Картинки и пейзаж скина за страницами; при выключении остаётся обычный цвет",
+  "Suggest a channel or report a mistake": "Предложить канал или сообщить об ошибке",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Списки общедоступны на GitHub, и добавлять в них может каждый. Для каждой записи нужен публичный источник"
 }

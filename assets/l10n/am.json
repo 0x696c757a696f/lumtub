@@ -3117,5 +3117,7 @@
   "Lists of {0}": "የ{0} ዝርዝሮች",
   "Lists of {0}; those of {1} are used after a restart": "የ{0} ዝርዝሮች፤ የ{1} ዝርዝሮች ከዳግም ማስጀመር በኋላ ይጠቀማሉ",
   "Skin background": "የስኪን ዳራ",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "የስኪኑ ምስሎች እና መልክዓ ምድር ከገጾቹ ጀርባ፤ ሲጠፋ ተራ ቀለም ይቀራል"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "የስኪኑ ምስሎች እና መልክዓ ምድር ከገጾቹ ጀርባ፤ ሲጠፋ ተራ ቀለም ይቀራል",
+  "Suggest a channel or report a mistake": "ቻናል ጠቁም ወይም ስህተት ሪፖርት አድርግ",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "ዝርዝሮቹ በGitHub ላይ ለሁሉም ክፍት ናቸው፣ ማንም ሊጨምርባቸው ይችላል። እያንዳንዱ ግቤት ይፋዊ ምንጭ ያስፈልገዋል"
 }

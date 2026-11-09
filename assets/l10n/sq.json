@@ -3117,5 +3117,7 @@
   "Lists of {0}": "Listat e {0}",
   "Lists of {0}; those of {1} are used after a restart": "Listat e {0}; ato të {1} përdoren pas rinisjes",
   "Skin background": "Sfondi i skinit",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Imazhet dhe peizazhi i skinit pas faqeve; i çaktivizuar lë një ngjyrë të thjeshtë"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Imazhet dhe peizazhi i skinit pas faqeve; i çaktivizuar lë një ngjyrë të thjeshtë",
+  "Suggest a channel or report a mistake": "Sugjeroni një kanal ose raportoni një gabim",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listat janë publike në GitHub dhe çdokush mund të shtojë. Çdo regjistrim kërkon një burim publik"
 }

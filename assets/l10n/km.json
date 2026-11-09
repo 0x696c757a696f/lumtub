@@ -3117,5 +3117,7 @@
   "Lists of {0}": "បញ្ជីនៃ {0}",
   "Lists of {0}; those of {1} are used after a restart": "បញ្ជីនៃ {0}; បញ្ជីនៃ {1} នឹងប្រើបន្ទាប់ពីចាប់ផ្ដើមឡើងវិញ",
   "Skin background": "ផ្ទៃខាងក្រោយស្គីន",
-  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "រូបភាព និងទេសភាពរបស់ស្គីននៅពីក្រោយទំព័រ; បិទនឹងនៅសល់ពណ៌ធម្មតា"
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "រូបភាព និងទេសភាពរបស់ស្គីននៅពីក្រោយទំព័រ; បិទនឹងនៅសល់ពណ៌ធម្មតា",
+  "Suggest a channel or report a mistake": "ស្នើឆានែល ឬរាយការណ៍កំហុស",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "បញ្ជីទាំងនេះជាសាធារណៈនៅលើ GitHub ហើយនរណាម្នាក់ក៏អាចបន្ថែមបានដែរ។ ធាតុនីមួយៗត្រូវការប្រភពសាធារណៈ"
 }

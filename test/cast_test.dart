@@ -117,6 +117,11 @@ void main() {
       // Without URLBase the description's own address is the base.
       final relative = parseDeviceDescription(_description.replaceAll(RegExp(r'<URLBase>.*</URLBase>'), ''), Uri.parse('http://10.0.0.5:49152/dev/desc.xml'));
       expect(relative.avTransport?.controlUrl.toString(), 'http://10.0.0.5:49152/upnp/control/AVTransport');
+      // Lebo (乐播) receivers give a bare "_urn:…" path.
+      final lebo = parseDeviceDescription(
+          _description.replaceAll(RegExp(r'<URLBase>.*</URLBase>'), '').replaceAll('/upnp/control/AVTransport', '_urn:schemas-upnp-org:service:AVTransport_control'),
+          Uri.parse('http://10.0.0.6:49152/description.xml'));
+      expect(lebo.avTransport?.controlUrl.toString(), 'http://10.0.0.6:49152/_urn:schemas-upnp-org:service:AVTransport_control');
     });
 
     test('keeps the cast format chosen for each device', () {

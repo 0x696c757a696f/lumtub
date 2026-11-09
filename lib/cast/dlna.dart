@@ -92,11 +92,22 @@ DlnaDescription parseDeviceDescription(String xml, Uri location) {
     final type = xmlText(block[1]!, 'serviceType');
     final control = xmlText(block[1]!, 'controlURL');
     if (type == null || control == null || control.isEmpty) continue;
-    services.add(UpnpService(type, base.resolve(control)));
+    services.add(UpnpService(type, controlAddress(base, control)));
   }
   final name = xmlText(xml, 'friendlyName');
   final about = [name, for (final tag in ['manufacturer', 'modelName', 'modelDescription']) xmlText(xml, tag)].whereType<String>().join(' ');
   return DlnaDescription(name: name == null || name.isEmpty ? location.host : name, udn: xmlText(xml, 'UDN') ?? location.toString(), services: services, apple: looksApple(about));
+}
+
+/// Where a service's [control] path points from [base]. Lebo (乐播)
+/// receivers write a bare `_urn:…` path, which reads as a bad scheme; it is a
+/// path next to the description.
+Uri controlAddress(Uri base, String control) {
+  try {
+    return base.resolve(control);
+  } on FormatException {
+    return base.resolve('./$control');
+  }
 }
 
 /// Whether a renderer described as [about] runs on Apple's systems.

@@ -1,0 +1,85 @@
+name: YouTube canary
+
+# Plays a few long-standing videos the way Lumtub does, every day, so a
+# change on YouTube's side is noticed before users notice it: the quick
+# start (the Rust core's visionOS /player request, the only way Android
+# finds streams) and the newest yt-dlp nightly with Deno, as the desktop
+# apps use them. GitHub's machines are often turned away by YouTube's bot
+# check; that teaches nothing about Lumtub and only shows as a warning.
+# Anything else that goes wrong fails the run, and Retry and report opens
+# an issue once it keeps failing.
+#
+# It also reads each new yt-dlp release's notes and opens an issue listing
+# its YouTube changes, as the quick start copies yt-dlp's visionOS client.
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  # Me at the zoo; Big Buck Bunny 60 fps 4K; a music video with many formats.
+  VIDEOS: jNQXAC9IVRw aqz-KE-bpKQ dQw4w9WgXcQ
+
+jobs:
+  play:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: canary
+
+      - name: Build the checker
+        run: |
+          rustup update stable
+          cargo build --manifest-path native/lumtub_core/Cargo.toml --release --bin lumtub-canary
+
+      - name: Get the newest yt-dlp nightly and Deno
+        run: |
+          set -euo pipefail
+          tools="$RUNNER_TEMP/tools"
+          mkdir -p "$tools"
+          curl -fsSL --retry 5 --retry-all-errors -o "$tools/yt-dlp" https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download/yt-dlp_linux
+          chmod +x "$tools/yt-dlp"
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/deno.zip" https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip
+          unzip -q -o "$RUNNER_TEMP/deno.zip" -d "$tools"
+          echo "yt-dlp $("$tools/yt-dlp" --version), $("$tools/deno" --version | head -n1)"
+
+      - name: Play
+        run: python3 .github/scripts/canary.py native/lumtub_core/target/release/lumtub-canary "$RUNNER_TEMP/tools" $VIDEOS
+
+  yt-dlp-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report YouTube changes in a new yt-dlp release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          release=$(gh api repos/yt-dlp/yt-dlp/releases/latest)
+          tag=$(jq -r .tag_name <<< "$release")
+          published=$(date -d "$(jq -r .published_at <<< "$release")" +%s)
+          if (( $(date +%s) - published > 3 * 24 * 3600 )); then echo "yt-dlp $tag is not new."; exit 0; fi
+          changes=$(jq -r .body <<< "$release" | grep -i 'ie/youtube' || true)
+          if [ -z "$changes" ]; then echo "yt-dlp $tag changes nothing for YouTube."; exit 0; fi
+          title="yt-dlp $tag changes YouTube extraction"
+          if gh issue list --state all --label automation --search "in:title \"$title\"" --json title --jq '.[].title' | grep -qxF "$title"; then
+            echo "Already reported."; exit 0
+          fi
+          watch=$(grep -iE 'visionos|client|player|po.?token|signature|nsig|n challenge|sabr' <<< "$changes" || true)
+          body=$(printf 'yt-dlp %s (%s) changes these YouTube parts. Lumtub picks the new yt-dlp up by itself; the quick start (native/lumtub_core/src/quick.rs) copies yt-dlp'"'"'s visionOS client and may need to follow.\n\n%s\n' "$tag" "$(jq -r .html_url <<< "$release")" "$changes")
+          if [ -n "$watch" ]; then
+            body=$(printf '%s\n\nWorth a look for the quick start:\n%s\n' "$body" "$watch")
+          fi
+          gh label create automation --color BFD4F2 --description 'Reported by the repository automation' 2>/dev/null || true
+          gh issue create --title "$title" --label automation --body "$body"

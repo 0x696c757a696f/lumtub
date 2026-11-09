@@ -3,7 +3,10 @@ name: Merge dependency updates
 # Merges a Dependabot pull request once its build has passed. Major version
 # bumps of Dart packages are left for review, since they often need code
 # changes the build alone cannot judge. Refreshed lockfiles (see
-# lockfiles.yml) go into main the same way, when main has not moved since.
+# lockfiles.yml) and newer pinned tools (see upstream.yml) go into main the
+# same way, when main has not moved since. Weblate's translation pull
+# requests are merged too when they touch nothing but assets/l10n; the
+# tests check every translation keeps its placeholders.
 on:
   workflow_run:
     workflows: [Build]
@@ -44,7 +47,7 @@ jobs:
     if: >-
       github.event.workflow_run.event == 'workflow_dispatch' &&
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'deps/lockfiles' &&
+      (github.event.workflow_run.head_branch == 'deps/lockfiles' || github.event.workflow_run.head_branch == 'deps/upstream') &&
       github.event.workflow_run.triggering_actor.login == 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -55,10 +58,35 @@ jobs:
       - name: Bring into main
         env:
           SHA: ${{ github.event.workflow_run.head_sha }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           set -euo pipefail
-          git fetch -q origin deps/lockfiles
-          if [ "$(git rev-parse origin/deps/lockfiles)" != "$SHA" ]; then echo "deps/lockfiles moved on; the next build merges it."; exit 0; fi
-          if ! git merge-base --is-ancestor HEAD "$SHA"; then echo "main moved on; tomorrow's refresh starts from it."; exit 0; fi
+          git fetch -q origin "$BRANCH"
+          if [ "$(git rev-parse "origin/$BRANCH")" != "$SHA" ]; then echo "$BRANCH moved on; the next build merges it."; exit 0; fi
+          if ! git merge-base --is-ancestor HEAD "$SHA"; then echo "main moved on; the next refresh starts from it."; exit 0; fi
           git push origin "$SHA:refs/heads/main"
-          git push origin --delete deps/lockfiles
+          git push origin --delete "$BRANCH"
+
+  translations:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.actor.login == 'weblate'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          number=$(gh pr list --repo "$REPO" --author weblate --state open --json number,headRefOid --jq ".[] | select(.headRefOid == \"$SHA\") | .number" | head -n1)
+          if [ -z "$number" ]; then echo "No open Weblate pull request at $SHA."; exit 0; fi
+          others=$(gh pr view "$number" --repo "$REPO" --json files --jq '.files[].path' | grep -v '^assets/l10n/[A-Za-z0-9_-]*\.json$' || true)
+          if [ -n "$others" ]; then
+            echo "#$number also changes files outside assets/l10n; left for review:"
+            echo "$others"
+            exit 0
+          fi
+          gh pr merge "$number" --repo "$REPO" --squash --match-head-commit "$SHA"

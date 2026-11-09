@@ -931,6 +931,7 @@ jobs:
           yes | "$sdk/sdkmanager" --licenses > /dev/null; "$sdk/sdkmanager" --channel=3 "$newest" > /dev/null || true
           tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
           echo "build-tools: $(basename "$tools")"; "$tools/apksigner" version || true
+          echo "JDKs: ${JAVA_HOME_21_X64:-} ${JAVA_HOME_25_X64:-}"; ls /usr/lib/jvm || true
           "$tools/apksigner" sign --help 2>&1 | grep -n -B3 -A14 -iE 'hybrid|pqc|v3\.2|ml-?dsa' | head -150 || true
           "$tools/apksigner" verify -v "dist/Lumtub_${LUMTUB_VERSION}_android-arm64-v8a.apk" | grep -iE 'Verified using|Number of signers' || true
           rm -f android/release.jks android/key.properties

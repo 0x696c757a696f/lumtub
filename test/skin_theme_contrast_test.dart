@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,9 +16,17 @@ import 'package:lumtub/ui/theme.dart';
 void main() {
   final dirs = Directory('skins').listSync().whereType<Directory>().where((d) => File('${d.path}/skin.jsonc').existsSync() && !d.path.endsWith('template'));
   Color solid(Color c, Color under) => Color.alphaBlend(c, under);
+  // A picture behind: its colours averaged over patches about as big as a
+  // line of text.
+  Future<List<Color>> picture(String path) async {
+    final codec = await ui.instantiateImageCodec(File(path).readAsBytesSync(), targetWidth: 48, targetHeight: 27);
+    final image = (await codec.getNextFrame()).image;
+    final bytes = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+    return [for (var i = 0; i < bytes.lengthInBytes; i += 4) Color.fromARGB(255, bytes.getUint8(i), bytes.getUint8(i + 1), bytes.getUint8(i + 2))];
+  }
 
   for (final dir in dirs) {
-    test('${dir.path} keeps chosen things readable', () {
+    test('${dir.path} keeps chosen things readable', () async {
       final skin = Skin.parse(decodeJsonc(File('${dir.path}/skin.jsonc').readAsStringSync()), folder: dir.path, builtIn: true);
       for (final mode in Brightness.values) {
         final side = skin.forBrightness(mode);
@@ -42,6 +51,10 @@ void main() {
           // Every colour of the backdrop the glass can lie over.
           final behind = <Color>[page];
           for (final paint in side.background) {
+            if (paint is ImagePaint) {
+              behind.addAll(await picture(paint.path));
+              continue;
+            }
             final colors = switch (paint) {
               SolidPaint(:final color) => [color],
               LinearPaint(:final colors) => colors,

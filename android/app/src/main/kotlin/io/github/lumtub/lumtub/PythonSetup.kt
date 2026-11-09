@@ -56,7 +56,10 @@ object PythonSetup {
         val id = context.resources.getIdentifier("ytdlp", "raw", context.packageName)
         if (id == 0) return null
         val out = File(context.cacheDir, "yt-dlp-bundled")
-        if (!out.exists()) {
+        @Suppress("DEPRECATION")
+        val installed = context.packageManager.getPackageInfo(context.packageName, 0).lastUpdateTime
+        // A newer app brings a newer yt-dlp.
+        if (!out.exists() || out.lastModified() < installed) {
             val partial = File(context.cacheDir, "yt-dlp-bundled.partial")
             context.resources.openRawResource(id).use { input -> partial.outputStream().use { input.copyTo(it) } }
             partial.renameTo(out)

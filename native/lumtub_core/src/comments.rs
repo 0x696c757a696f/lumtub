@@ -26,8 +26,9 @@ pub(crate) fn plain_text(node: Option<&Value>) -> String {
     }
 }
 
-/// Custom emoji in a text: the shortcut written in it, such as
-/// `:face-blue-smiling:`, and the address of its picture.
+/// Emoji in a text and the addresses of their pictures: a custom one by the
+/// shortcut written in it, such as `:face-blue-smiling:`, a Unicode one by
+/// itself, for systems whose emoji font lacks the newer ones.
 pub type Emojis = BTreeMap<String, String>;
 
 /// What an `emoji` run reads as: a Unicode emoji as itself, a custom one
@@ -36,7 +37,11 @@ pub type Emojis = BTreeMap<String, String>;
 pub(crate) fn emoji_run(emoji: &Value, emojis: &mut Emojis) -> String {
     let id = emoji.get("emojiId").map(display).unwrap_or_default();
     let custom = emoji.get("isCustomEmoji") == Some(&Value::Bool(true));
+    let picture = at(emoji, &["image", "thumbnails"]).and_then(Value::as_array).and_then(|t| t.iter().filter_map(|t| https(t.get("url"))).next_back());
     if !custom && !id.is_empty() && !id.is_ascii() {
+        if let Some(url) = picture {
+            emojis.insert(id.clone(), url);
+        }
         return id;
     }
     let label = at(emoji, &["accessibility", "accessibilityData", "label"]).map(display).unwrap_or_default();
@@ -45,7 +50,6 @@ pub(crate) fn emoji_run(emoji: &Value, emojis: &mut Emojis) -> String {
         None if !label.is_empty() => label,
         None => id,
     };
-    let picture = at(emoji, &["image", "thumbnails"]).and_then(Value::as_array).and_then(|t| t.iter().filter_map(|t| https(t.get("url"))).next_back());
     if let Some(url) = picture
         && !name.is_empty()
     {

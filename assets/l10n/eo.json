@@ -3107,14 +3107,15 @@
   "Dark only": "Nur malhela",
   "Glass": "Vitro",
   "{0}% solid": "{0}% maldiafana",
-  "See the desktop through the window": "Vidi la labortablon tra la fenestro",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "La pejzaĝo flankeniĝas kaj la labortablo travidiĝas tra la fenestro, malklara kie la sistemo kapablas. Malŝaltita en Ŝparreĝimo",
   "Color schemes": "Kolorskemoj",
   "Library": "Biblioteko",
   "Add a skin from a file": "Aldoni haŭton el dosiero",
   "A skin.jsonc, or a zip of a skin's folder": "Dosiero skin.jsonc, aŭ zip de la dosierujo de haŭto",
   "Added {0}": "{0} aldonita",
   "This is not a skin: {0}": "Ĉi tio ne estas haŭto: {0}",
-  "See the wallpaper through the app": "Vidi la ekranfonon tra la apo",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "La pejzaĝo flankiĝas kaj la ekranfono de la hejmekrano travidiĝas, malklarigita kie la sistemo kapablas. Efikas je la sekva starto de Lumtub. Malŝaltita en Ŝparreĝimo"
+  "Update block lists automatically": "Aŭtomate ĝisdatigi blokajn listojn",
+  "Lists of {0}": "Listoj de {0}",
+  "Lists of {0}; those of {1} are used after a restart": "Listoj de {0}; tiuj de {1} estos uzataj post restartigo",
+  "Skin background": "Fono de haŭto",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Bildoj kaj pejzaĝo de la haŭto malantaŭ la paĝoj; malŝaltite restas ebena koloro"
 }

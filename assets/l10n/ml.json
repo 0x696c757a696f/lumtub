@@ -3107,14 +3107,15 @@
   "Dark only": "ഡാർക്ക് മാത്രം",
   "Glass": "ഗ്ലാസ്",
   "{0}% solid": "{0}% അതാര്യം",
-  "See the desktop through the window": "വിൻഡോയിലൂടെ ഡെസ്ക്ടോപ്പ് കാണുക",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ലാൻഡ്സ്കേപ്പ് മാറിനിൽക്കുകയും ഡെസ്ക്ടോപ്പ് വിൻഡോയിലൂടെ തെളിയുകയും ചെയ്യുന്നു, സിസ്റ്റം അനുവദിക്കുന്നിടത്ത് മങ്ങിയ രൂപത്തിൽ. കുറഞ്ഞ റിസോഴ്‌സ് മോഡിൽ ഓഫ്",
   "Color schemes": "വർണ്ണ സ്കീമുകൾ",
   "Library": "ലൈബ്രറി",
   "Add a skin from a file": "ഫയലിൽ നിന്ന് സ്കിൻ ചേർക്കുക",
   "A skin.jsonc, or a zip of a skin's folder": "ഒരു skin.jsonc, അല്ലെങ്കിൽ സ്കിന്നിന്റെ ഫോൾഡറിന്റെ zip",
   "Added {0}": "{0} ചേർത്തു",
   "This is not a skin: {0}": "ഇത് സ്കിൻ അല്ല: {0}",
-  "See the wallpaper through the app": "ആപ്പിലൂടെ വാൾപേപ്പർ കാണുക",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "ലാൻഡ്‌സ്‌കേപ്പ് മാറിനിൽക്കുകയും ഹോം സ്ക്രീനിന്റെ വാൾപേപ്പർ തെളിഞ്ഞുവരികയും ചെയ്യുന്നു, സിസ്റ്റത്തിന് കഴിയുന്നിടത്ത് മങ്ങിയതായി. അടുത്ത തവണ Lumtub ആരംഭിക്കുമ്പോൾ പ്രാബല്യത്തിൽ വരും. കുറഞ്ഞ റിസോഴ്‌സ് മോഡിൽ ഓഫ്"
+  "Update block lists automatically": "ബ്ലോക്ക് ലിസ്റ്റുകൾ സ്വയമേവ അപ്‌ഡേറ്റ് ചെയ്യുക",
+  "Lists of {0}": "{0}-ലെ ലിസ്റ്റുകൾ",
+  "Lists of {0}; those of {1} are used after a restart": "{0}-ലെ ലിസ്റ്റുകൾ; {1}-ലേത് റീസ്റ്റാർട്ടിന് ശേഷം ഉപയോഗിക്കും",
+  "Skin background": "സ്കിൻ പശ്ചാത്തലം",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "പേജുകൾക്ക് പിന്നിൽ സ്കിനിന്റെ ചിത്രങ്ങളും ലാൻഡ്സ്കേപ്പും; ഓഫ് ആയാൽ സാധാരണ നിറം മാത്രം"
 }

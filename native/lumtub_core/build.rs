@@ -22,6 +22,17 @@ fn main() {
         }
     }
     out.push_str("];\n");
+    // The lists' version: LUMTUB_LISTS_VERSION when set, else the commit
+    // time of the source, which the lists workflow publishes them under.
+    println!("cargo:rerun-if-env-changed=LUMTUB_LISTS_VERSION");
+    let head = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.git/HEAD");
+    println!("cargo:rerun-if-changed={}", head.display());
+    let version = std::env::var("LUMTUB_LISTS_VERSION").ok().filter(|v| v.parse::<u64>().is_ok()).or_else(|| {
+        let out = std::process::Command::new("git").args(["log", "-1", "--format=%ct"]).current_dir(env!("CARGO_MANIFEST_DIR")).output().ok()?;
+        let text = String::from_utf8(out.stdout).ok()?.trim().to_string();
+        text.parse::<u64>().is_ok().then_some(text)
+    });
+    println!("cargo:rustc-env=LUMTUB_LISTS_VERSION={}", version.unwrap_or_else(|| "0".into()));
     let target = Path::new(&std::env::var("OUT_DIR").unwrap()).join("lists_files.rs");
     std::fs::write(target, out).unwrap();
 }

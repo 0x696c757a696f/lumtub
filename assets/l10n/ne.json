@@ -3107,14 +3107,15 @@
   "Dark only": "गाढा मात्र",
   "Glass": "सिसा",
   "{0}% solid": "{0}% ठोस",
-  "See the desktop through the window": "विन्डोबाट डेस्कटप हेर्नुहोस्",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "दृश्य छेउमा सर्छ र प्रणालीले सक्ने ठाउँमा धमिलो पारेर विन्डोबाट डेस्कटप देखिन्छ। कम स्रोत मोडमा बन्द",
   "Color schemes": "रङ योजनाहरू",
   "Library": "पुस्तकालय",
   "Add a skin from a file": "फाइलबाट स्किन थप्नुहोस्",
   "A skin.jsonc, or a zip of a skin's folder": "एउटा skin.jsonc, वा स्किनको फोल्डरको zip",
   "Added {0}": "{0} थपियो",
   "This is not a skin: {0}": "यो स्किन होइन: {0}",
-  "See the wallpaper through the app": "एपबाट वालपेपर हेर्नुहोस्",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "ल्यान्डस्केप छेउमा सर्छ र होम स्क्रिनको वालपेपर देखिन्छ, प्रणालीले सक्ने ठाउँमा धमिलो पारेर। Lumtub अर्को पटक सुरु हुँदा लागू हुन्छ। कम स्रोत मोडमा बन्द"
+  "Update block lists automatically": "ब्लक सूचीहरू स्वतः अपडेट गर्नुहोस्",
+  "Lists of {0}": "{0} का सूचीहरू",
+  "Lists of {0}; those of {1} are used after a restart": "{0} का सूचीहरू; {1} का सूचीहरू पुनः सुरु गरेपछि प्रयोग हुन्छन्",
+  "Skin background": "स्किन पृष्ठभूमि",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "पृष्ठहरूको पछाडि स्किनका तस्बिर र दृश्य; बन्द गर्दा सादा रङ रहन्छ"
 }

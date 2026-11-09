@@ -3107,14 +3107,15 @@
   "Dark only": "ጨለማ ብቻ",
   "Glass": "ብርጭቆ",
   "{0}% solid": "{0}% ድፍን",
-  "See the desktop through the window": "ዴስክቶፑን በመስኮቱ በኩል እይ",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "መልክዓ ምድሩ ዘወር ይላል፤ ሲስተሙ በሚችልበት ጊዜ ደብዘዝ ብሎ ዴስክቶፑ ይታያል። በዝቅተኛ ሀብት ሁነታ ይጠፋል",
   "Color schemes": "የቀለም አሠራሮች",
   "Library": "ቤተ-መጽሐፍት",
   "Add a skin from a file": "ከፋይል ስኪን ያክሉ",
   "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc ወይም የስኪን አቃፊ zip",
   "Added {0}": "{0} ታክሏል",
   "This is not a skin: {0}": "ይህ ስኪን አይደለም፦ {0}",
-  "See the wallpaper through the app": "ልጣፉን በመተግበሪያው በኩል ይመልከቱ",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "መልክዓ ምድሩ ገለል ይላል እና የመነሻ ማያ ገጹ ልጣፍ ይታያል፣ ሲስተሙ በሚችልበት ቦታ ደብዛዛ ሆኖ። Lumtub በሚቀጥለው ጊዜ ሲጀምር ተግባራዊ ይሆናል። በዝቅተኛ ሀብት ሁነታ ጠፍቷል"
+  "Update block lists automatically": "የማገጃ ዝርዝሮችን በራስ-ሰር አዘምን",
+  "Lists of {0}": "የ{0} ዝርዝሮች",
+  "Lists of {0}; those of {1} are used after a restart": "የ{0} ዝርዝሮች፤ የ{1} ዝርዝሮች ከዳግም ማስጀመር በኋላ ይጠቀማሉ",
+  "Skin background": "የስኪን ዳራ",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "የስኪኑ ምስሎች እና መልክዓ ምድር ከገጾቹ ጀርባ፤ ሲጠፋ ተራ ቀለም ይቀራል"
 }

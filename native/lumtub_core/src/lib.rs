@@ -44,10 +44,11 @@ pub mod cast_webm;
 pub mod roots;
 pub mod pac;
 pub mod lists;
+pub mod lists_update;
 pub mod process_cpu;
 
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    38
+    39
 }

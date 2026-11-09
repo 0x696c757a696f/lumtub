@@ -3107,14 +3107,15 @@
   "Dark only": "Csak sötét",
   "Glass": "Üveg",
   "{0}% solid": "{0}% átlátszatlan",
-  "See the desktop through the window": "Az asztal látszik az ablakon át",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "A táj félrehúzódik, és az asztal átlátszik, elmosva, ahol a rendszer tudja. Alacsony erőforrás-használatú módban kikapcsolva",
   "Color schemes": "Színsémák",
   "Library": "Könyvtár",
   "Add a skin from a file": "Téma hozzáadása fájlból",
   "A skin.jsonc, or a zip of a skin's folder": "Egy skin.jsonc vagy egy téma mappájának zip-je",
   "Added {0}": "Hozzáadva: {0}",
   "This is not a skin: {0}": "Ez nem téma: {0}",
-  "See the wallpaper through the app": "A háttérkép átlátszása az alkalmazáson",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "A táj félreáll, és átlátszik a kezdőképernyő háttérképe, elmosva, ahol a rendszer tudja. A Lumtub következő indításakor lép életbe. Alacsony erőforrás-használatú módban kikapcsolva"
+  "Update block lists automatically": "Tiltólisták automatikus frissítése",
+  "Lists of {0}": "{0} szerinti listák",
+  "Lists of {0}; those of {1} are used after a restart": "{0} szerinti listák; a(z) {1} szerintiek újraindítás után lépnek életbe",
+  "Skin background": "Téma háttere",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "A téma képei és tájképe az oldalak mögött; kikapcsolva egyszínű marad"
 }

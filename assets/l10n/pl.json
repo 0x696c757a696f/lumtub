@@ -3107,14 +3107,15 @@
   "Dark only": "Tylko ciemny",
   "Glass": "Szkło",
   "{0}% solid": "{0}% krycia",
-  "See the desktop through the window": "Pokaż pulpit przez okno",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Krajobraz ustępuje, a pulpit prześwituje przez okno, rozmyty tam, gdzie system na to pozwala. Wyłączone w trybie niskiego zużycia zasobów",
   "Color schemes": "Schematy kolorów",
   "Library": "Biblioteka",
   "Add a skin from a file": "Dodaj skórkę z pliku",
   "A skin.jsonc, or a zip of a skin's folder": "Plik skin.jsonc lub zip z folderem skórki",
   "Added {0}": "Dodano: {0}",
   "This is not a skin: {0}": "To nie jest skórka: {0}",
-  "See the wallpaper through the app": "Pokaż tapetę przez aplikację",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Krajobraz odsuwa się, a przez niego prześwituje tapeta ekranu głównego, rozmyta tam, gdzie system to potrafi. Zadziała po następnym uruchomieniu Lumtub. Wyłączone w Trybie niskiego zużycia zasobów"
+  "Update block lists automatically": "Automatycznie aktualizuj listy blokowania",
+  "Lists of {0}": "Listy z {0}",
+  "Lists of {0}; those of {1} are used after a restart": "Listy z {0}; listy z {1} będą użyte po ponownym uruchomieniu",
+  "Skin background": "Tło skórki",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Obrazy i krajobraz skórki za stronami; wyłączone zostawia jednolity kolor"
 }

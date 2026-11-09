@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app/app_controller.dart';
 import 'app_directories.dart';
+import 'blocked_groups.dart';
 import 'app_window.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
@@ -56,6 +57,7 @@ Future<void> main() async {
   var appearance = const AppearanceSettings();
   try {
     final directories = await AppDirectories.create();
+    BlockLists.folder = directories.data.path;
     store = AppearanceSettingsStore(directories);
     appearance = await store.load();
     await SkinLibrary.instance.load(folder: directories.skins);

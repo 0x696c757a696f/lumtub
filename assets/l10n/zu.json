@@ -3107,14 +3107,15 @@
   "Dark only": "Okumnyama kuphela",
   "Glass": "Ingilazi",
   "{0}% solid": "{0}% eqinile",
-  "See the desktop through the window": "Bona ideskithophu ngewindi",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Indawo ehlezi iyasuka futhi ideskithophu iyabonakala, ifiphele lapho uhlelo lukwazi. Ivaliwe kuModi yezinsiza ezincane",
   "Color schemes": "Izinhlelo zemibala",
   "Library": "Umtapo",
   "Add a skin from a file": "Engeza isindikimba kufayela",
   "A skin.jsonc, or a zip of a skin's folder": "I-skin.jsonc, noma i-zip yefolda yesindikimba",
   "Added {0}": "{0} yengeziwe",
   "This is not a skin: {0}": "Lesi akusona isindikimba: {0}",
-  "See the wallpaper through the app": "Bona iphephadonga ngeshashalazi lohlelo",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Isimo sezwe sinyakazela eceleni futhi iphephadonga lesikrini sasekhaya liyabonakala, lifiphele lapho uhlelo lukwazi. Kuqala ukusebenza ngesikhathi esilandelayo uma i-Lumtub iqala. Kucishiwe kuModi yezinsiza ezincane"
+  "Update block lists automatically": "Buyekeza ngokuzenzakalelayo izinhlu zokuvimba",
+  "Lists of {0}": "Izinhlu zka-{0}",
+  "Lists of {0}; those of {1} are used after a restart": "Izinhlu zka-{0}; ezika-{1} zisetshenziswa ngemuva kokuqala kabusha",
+  "Skin background": "Ingemuva yesindikimba",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Izithombe nobuhle bendawo besindikimba ngemuva kwamakhasi; uma kuvaliwe kusala umbala ongenalutho"
 }

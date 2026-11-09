@@ -3107,14 +3107,15 @@
   "Dark only": "Yalnız tünd",
   "Glass": "Şüşə",
   "{0}% solid": "{0}% qeyri-şəffaf",
-  "See the desktop through the window": "Masaüstünü pəncərədən gör",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Mənzərə kənara çəkilir və masaüstü pəncərədən görünür, sistem imkan verdikdə bulanıq şəkildə. Aşağı resurs rejimində söndürülür",
   "Color schemes": "Rəng sxemləri",
   "Library": "Kitabxana",
   "Add a skin from a file": "Fayldan skin əlavə et",
   "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc və ya skin qovluğunun zip faylı",
   "Added {0}": "{0} əlavə edildi",
   "This is not a skin: {0}": "Bu skin deyil: {0}",
-  "See the wallpaper through the app": "Divar kağızını tətbiqin arxasından göstər",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Mənzərə kənara çəkilir və ana ekranın divar kağızı görünür, sistem imkan verdiyi yerdə bulanıq şəkildə. Lumtub növbəti dəfə başlayanda qüvvəyə minir. Aşağı resurs rejimində söndürülür"
+  "Update block lists automatically": "Bloklama siyahılarını avtomatik yenilə",
+  "Lists of {0}": "{0} tarixli siyahılar",
+  "Lists of {0}; those of {1} are used after a restart": "{0} tarixli siyahılar; {1} tarixli siyahılar yenidən başladıqdan sonra istifadə olunur",
+  "Skin background": "Skin fonu",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Skinin şəkilləri və mənzərəsi səhifələrin arxasında; söndürüldükdə sadə rəng qalır"
 }

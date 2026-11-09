@@ -3107,14 +3107,15 @@
   "Dark only": "Yalnızca koyu",
   "Glass": "Cam",
   "{0}% solid": "%{0} opak",
-  "See the desktop through the window": "Masaüstünü pencerenin arkasından göster",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Manzara çekilir ve masaüstü görünür, sistem destekliyorsa bulanık olarak. Düşük kaynak modunda kapalıdır",
   "Color schemes": "Renk düzenleri",
   "Library": "Kitaplık",
   "Add a skin from a file": "Dosyadan tema ekle",
   "A skin.jsonc, or a zip of a skin's folder": "Bir skin.jsonc veya tema klasörünün zip dosyası",
   "Added {0}": "{0} eklendi",
   "This is not a skin: {0}": "Bu bir tema değil: {0}",
-  "See the wallpaper through the app": "Duvar kağıdını uygulamanın arkasından göster",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Manzara kenara çekilir ve ana ekranın duvar kağıdı görünür, sistemin desteklediği yerde bulanık. Lumtub bir sonraki açılışta etkinleşir. Düşük kaynak modunda kapalıdır"
+  "Update block lists automatically": "Engelleme listelerini otomatik güncelle",
+  "Lists of {0}": "{0} tarihli listeler",
+  "Lists of {0}; those of {1} are used after a restart": "{0} tarihli listeler; {1} tarihlileri yeniden başlatmadan sonra kullanılır",
+  "Skin background": "Tema arka planı",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Sayfaların arkasında temanın resimleri ve manzarası; kapalıyken düz renk kalır"
 }

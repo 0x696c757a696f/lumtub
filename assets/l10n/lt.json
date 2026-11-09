@@ -3107,14 +3107,15 @@
   "Dark only": "Tik tamsi",
   "Glass": "Stiklas",
   "{0}% solid": "{0}% vientiso",
-  "See the desktop through the window": "Matyti darbalaukį pro langą",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Peizažas pasitraukia, o pro langą matyti darbalaukis, kur sistema leidžia – išblukintas. Išjungta mažų išteklių režimu",
   "Color schemes": "Spalvų schemos",
   "Library": "Biblioteka",
   "Add a skin from a file": "Pridėti dizainą iš failo",
   "A skin.jsonc, or a zip of a skin's folder": "Failas skin.jsonc arba dizaino aplanko zip",
   "Added {0}": "Pridėta: {0}",
   "This is not a skin: {0}": "Tai nėra dizainas: {0}",
-  "See the wallpaper through the app": "Rodyti ekrano foną per programą",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Peizažas pasitraukia, ir prasimuša pagrindinio ekrano fonas, išsklaidytas ten, kur sistema gali. Įsigalioja kitą kartą paleidus „Lumtub“. Išjungta Mažų išteklių režimu"
+  "Update block lists automatically": "Automatiškai atnaujinti blokavimo sąrašus",
+  "Lists of {0}": "{0} sąrašai",
+  "Lists of {0}; those of {1} are used after a restart": "{0} sąrašai; {1} sąrašai bus naudojami po paleidimo iš naujo",
+  "Skin background": "Dizaino fonas",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Dizaino paveikslėliai ir peizažas už puslapių; išjungus lieka vienspalvis fonas"
 }

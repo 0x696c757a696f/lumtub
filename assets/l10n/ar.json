@@ -3107,14 +3107,15 @@
   "Dark only": "داكن فقط",
   "Glass": "زجاج",
   "{0}% solid": "{0}% معتم",
-  "See the desktop through the window": "رؤية سطح المكتب عبر النافذة",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "يتنحى المشهد ويظهر سطح المكتب من خلف النافذة، مع تمويه حيث يدعمه النظام. معطل في وضع الموارد المنخفضة",
   "Color schemes": "أنظمة الألوان",
   "Library": "المكتبة",
   "Add a skin from a file": "إضافة سمة من ملف",
   "A skin.jsonc, or a zip of a skin's folder": "ملف skin.jsonc أو ملف zip لمجلد السمة",
   "Added {0}": "تمت إضافة {0}",
   "This is not a skin: {0}": "هذه ليست سمة: {0}",
-  "See the wallpaper through the app": "عرض الخلفية من خلال التطبيق",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "تتراجع المناظر الطبيعية وتظهر خلفية الشاشة الرئيسية من خلفها، مع تمويه حيث يدعم النظام ذلك. يسري عند التشغيل التالي لـ Lumtub. متوقف في وضع الموارد المنخفضة"
+  "Update block lists automatically": "تحديث قوائم الحظر تلقائيًا",
+  "Lists of {0}": "قوائم {0}",
+  "Lists of {0}; those of {1} are used after a restart": "قوائم {0}؛ وتُستخدم قوائم {1} بعد إعادة التشغيل",
+  "Skin background": "خلفية السمة",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "صور السمة ومناظرها خلف الصفحات؛ عند الإيقاف يبقى لون عادي"
 }

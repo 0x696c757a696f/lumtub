@@ -351,6 +351,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.megaphone),
               onTap: () => openStateMedia(context, controller),
             ), subtitle: tr('CGTN CCTV RT government propaganda state media')),
+        SettingEntry(tr('Update block lists automatically'), (context) => SwitchItem(
+              title: tr('Update block lists automatically'),
+              subtitle: _blockListsVersion(controller),
+              leading: _icon(AppIcons.arrowsClockwise),
+              value: prefs.updateBlockLists,
+              onChanged: (v) => savePrefs(prefs.copyWith(updateBlockLists: v)),
+            )),
         SettingEntry(tr('Clear Not interested'), (context) => NormalItem(
               title: tr('Clear "Not interested" list'),
               subtitle: tr('{0} videos', [controller.homeFeed?.notInterested.videos.length ?? 0]),
@@ -1640,4 +1647,18 @@ class _X11ModeSwitchState extends State<_X11ModeSwitch> {
 String _keysOf(AppPreferences prefs, PlayerAction a, PlayerAction b) {
   final keys = shortcutKeys(prefs.shortcutKeys);
   return [for (final action in [a, b]) keys[action]!.map((k) => k.label).join(', ')].where((k) => k.isNotEmpty).join(' / ');
+}
+
+/// When the block lists in use were changed, and the downloaded ones a
+/// restart brings in.
+String _blockListsVersion(AppController controller) {
+  String day(int seconds) {
+    final t = DateTime.fromMillisecondsSinceEpoch(seconds * 1000).toLocal();
+    return '${t.year}-${t.month.toString().padLeft(2, '0')}-${t.day.toString().padLeft(2, '0')}';
+  }
+
+  final now = BlockLists.instance.version;
+  final waiting = controller.blockListUpdates?.waiting;
+  final current = now > 0 ? day(now) : '?';
+  return waiting != null ? tr('Lists of {0}; those of {1} are used after a restart', [current, day(waiting)]) : tr('Lists of {0}', [current]);
 }

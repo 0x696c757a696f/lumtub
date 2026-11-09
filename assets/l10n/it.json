@@ -3107,14 +3107,15 @@
   "Dark only": "Solo scuro",
   "Glass": "Vetro",
   "{0}% solid": "{0}% pieno",
-  "See the desktop through the window": "Vedi il desktop attraverso la finestra",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Il paesaggio si sposta e il desktop traspare, sfocato dove il sistema lo consente. Disattivato in Modalità a basso consumo",
   "Color schemes": "Combinazioni di colori",
   "Library": "Libreria",
   "Add a skin from a file": "Aggiungi una skin da file",
   "A skin.jsonc, or a zip of a skin's folder": "Un skin.jsonc, o uno zip della cartella di una skin",
   "Added {0}": "{0} aggiunta",
   "This is not a skin: {0}": "Questa non è una skin: {0}",
-  "See the wallpaper through the app": "Mostra lo sfondo attraverso l'app",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Il paesaggio si fa da parte e si vede lo sfondo della schermata Home, sfocato dove il sistema può. Ha effetto al prossimo avvio di Lumtub. Disattivato in modalità risparmio risorse"
+  "Update block lists automatically": "Aggiorna automaticamente le liste di blocco",
+  "Lists of {0}": "Liste del {0}",
+  "Lists of {0}; those of {1} are used after a restart": "Liste del {0}; quelle del {1} vengono usate dopo un riavvio",
+  "Skin background": "Sfondo del tema",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Immagini e paesaggio del tema dietro le pagine; se disattivato resta un colore pieno"
 }

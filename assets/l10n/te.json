@@ -3107,14 +3107,15 @@
   "Dark only": "ముదురు మాత్రమే",
   "Glass": "గ్లాస్",
   "{0}% solid": "{0}% ఘనం",
-  "See the desktop through the window": "విండో గుండా డెస్క్‌టాప్‌ను చూడండి",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ప్రకృతి దృశ్యం పక్కకు తొలగి డెస్క్‌టాప్ కనిపిస్తుంది, సిస్టమ్ అనుమతిస్తే మసకబారుతుంది. తక్కువ వనరుల మోడ్‌లో ఆఫ్",
   "Color schemes": "రంగుల పథకాలు",
   "Library": "లైబ్రరీ",
   "Add a skin from a file": "ఫైల్ నుండి థీమ్‌ను జోడించండి",
   "A skin.jsonc, or a zip of a skin's folder": "ఒక skin.jsonc, లేదా థీమ్ ఫోల్డర్ యొక్క zip",
   "Added {0}": "{0} జోడించబడింది",
   "This is not a skin: {0}": "ఇది థీమ్ కాదు: {0}",
-  "See the wallpaper through the app": "యాప్ ద్వారా వాల్‌పేపర్‌ను చూడండి",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "ల్యాండ్‌స్కేప్ పక్కకు తొలగి హోమ్ స్క్రీన్ వాల్‌పేపర్ కనిపిస్తుంది, సిస్టమ్ చేయగలిగిన చోట బ్లర్ చేసి. తదుపరిసారి Lumtub ప్రారంభమైనప్పుడు అమల్లోకి వస్తుంది. తక్కువ వనరుల మోడ్‌లో ఆఫ్"
+  "Update block lists automatically": "బ్లాక్ జాబితాలను స్వయంచాలకంగా అప్‌డేట్ చేయండి",
+  "Lists of {0}": "{0} నాటి జాబితాలు",
+  "Lists of {0}; those of {1} are used after a restart": "{0} నాటి జాబితాలు; {1} నాటివి రీస్టార్ట్ తర్వాత ఉపయోగించబడతాయి",
+  "Skin background": "థీమ్ నేపథ్యం",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "పేజీల వెనుక థీమ్ చిత్రాలు మరియు ల్యాండ్‌స్కేప్; ఆఫ్ చేస్తే సాదా రంగు ఉంటుంది"
 }

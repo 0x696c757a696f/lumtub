@@ -3107,14 +3107,15 @@
   "Dark only": "Hanya gelap",
   "Glass": "Kaca",
   "{0}% solid": "{0}% pekat",
-  "See the desktop through the window": "Lihat desktop menembus jendela",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Pemandangan menyingkir dan desktop terlihat menembus jendela, dengan efek buram jika didukung sistem. Nonaktif di Mode hemat sumber daya",
   "Color schemes": "Skema warna",
   "Library": "Pustaka",
   "Add a skin from a file": "Tambah skin dari file",
   "A skin.jsonc, or a zip of a skin's folder": "File skin.jsonc, atau zip folder skin",
   "Added {0}": "{0} ditambahkan",
   "This is not a skin: {0}": "Ini bukan skin: {0}",
-  "See the wallpaper through the app": "Lihat wallpaper melalui aplikasi",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Lanskap bergeser dan wallpaper layar utama terlihat tembus, diburamkan jika didukung sistem. Berlaku saat Lumtub dimulai berikutnya. Nonaktif di Mode hemat sumber daya"
+  "Update block lists automatically": "Perbarui daftar blokir secara otomatis",
+  "Lists of {0}": "Daftar per {0}",
+  "Lists of {0}; those of {1} are used after a restart": "Daftar per {0}; daftar per {1} dipakai setelah dimulai ulang",
+  "Skin background": "Latar skin",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Gambar dan lanskap skin di belakang halaman; nonaktif menyisakan warna polos"
 }

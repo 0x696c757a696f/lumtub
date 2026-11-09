@@ -3108,13 +3108,14 @@
   "Dark only": "仅深色",
   "Glass": "玻璃",
   "{0}% solid": "不透明度 {0}%",
-  "See the desktop through the window": "透出桌面",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "风景让开，窗口透出后面的桌面，系统支持时还会带模糊。低占用模式下不可用",
   "Library": "媒体库",
   "Add a skin from a file": "从文件添加皮肤",
   "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc，或皮肤文件夹打成的 zip",
   "Added {0}": "已添加 {0}",
   "This is not a skin: {0}": "这不是皮肤：{0}",
-  "See the wallpaper through the app": "透出桌面壁纸",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "风景让开，透出主屏幕的壁纸，系统支持时会模糊。下次启动 Lumtub 时生效。低占用模式下关闭"
+  "Update block lists automatically": "自动更新屏蔽列表",
+  "Lists of {0}": "列表日期：{0}",
+  "Lists of {0}; those of {1} are used after a restart": "列表日期：{0}；{1} 的新列表重启后生效",
+  "Skin background": "皮肤背景",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "页面后面显示皮肤的图片和风景；关掉后只留纯色"
 }

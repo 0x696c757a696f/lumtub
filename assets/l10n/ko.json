@@ -3107,14 +3107,15 @@
   "Dark only": "다크 전용",
   "Glass": "유리",
   "{0}% solid": "불투명도 {0}%",
-  "See the desktop through the window": "창 너머로 바탕 화면 보기",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "풍경이 물러나고 창 너머로 바탕 화면이 비칩니다. 시스템이 지원하면 흐림 효과도 적용됩니다. 저사양 모드에서는 꺼집니다",
   "Color schemes": "색 구성",
   "Library": "보관함",
   "Add a skin from a file": "파일에서 스킨 추가",
   "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc 또는 스킨 폴더를 압축한 zip",
   "Added {0}": "{0} 추가됨",
   "This is not a skin: {0}": "스킨이 아닙니다: {0}",
-  "See the wallpaper through the app": "배경화면 비치게 하기",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "풍경이 물러나고 홈 화면의 배경화면이 비칩니다. 시스템이 지원하면 흐리게 표시됩니다. 다음에 Lumtub을 시작할 때 적용됩니다. 저사양 모드에서는 꺼짐"
+  "Update block lists automatically": "차단 목록 자동 업데이트",
+  "Lists of {0}": "{0} 목록",
+  "Lists of {0}; those of {1} are used after a restart": "{0} 목록, {1} 목록은 다시 시작한 후 사용됩니다",
+  "Skin background": "스킨 배경",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "페이지 뒤에 스킨의 그림과 풍경을 표시합니다. 끄면 단색이 됩니다"
 }

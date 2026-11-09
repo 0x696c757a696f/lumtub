@@ -3107,14 +3107,15 @@
   "Dark only": "Aðeins dökkt",
   "Glass": "Gler",
   "{0}% solid": "{0}% ógegnsætt",
-  "See the desktop through the window": "Sjá skjáborðið í gegnum gluggann",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Landslagið víkur og skjáborðið sést í gegn, óskýrt þar sem kerfið getur. Slökkt í sparnaðarstillingu",
   "Color schemes": "Litasamsetningar",
   "Library": "Safn",
   "Add a skin from a file": "Bæta við þema úr skrá",
   "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc eða zip af möppu þema",
   "Added {0}": "{0} bætt við",
   "This is not a skin: {0}": "Þetta er ekki þema: {0}",
-  "See the wallpaper through the app": "Sjá bakgrunninn í gegnum appið",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Landslagið víkur og bakgrunnur heimaskjásins skín í gegn, óskýr þar sem kerfið getur það. Tekur gildi næst þegar Lumtub er ræst. Slökkt í Sparnaðarstillingu"
+  "Update block lists automatically": "Uppfæra bannlista sjálfkrafa",
+  "Lists of {0}": "Listar frá {0}",
+  "Lists of {0}; those of {1} are used after a restart": "Listar frá {0}; listar frá {1} verða notaðir eftir endurræsingu",
+  "Skin background": "Bakgrunnur þema",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Myndir og landslag þemans á bak við síðurnar; slökkt skilur eftir einlitan bakgrunn"
 }

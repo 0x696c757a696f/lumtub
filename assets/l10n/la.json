@@ -3107,14 +3107,15 @@
   "Dark only": "Obscurum tantum",
   "Glass": "Vitrum",
   "{0}% solid": "{0}% solidum",
-  "See the desktop through the window": "Mensam per fenestram videre",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Prospectus cedit et mensa per fenestram apparet, obscurata ubi systema potest. In Modo parco exstinctum",
   "Color schemes": "Schemata colorum",
   "Library": "Bibliotheca",
   "Add a skin from a file": "Pellem ex tabella addere",
   "A skin.jsonc, or a zip of a skin's folder": "Tabella skin.jsonc, vel zip plicae pellis",
   "Added {0}": "{0} additum",
   "This is not a skin: {0}": "Haec pellis non est: {0}",
-  "See the wallpaper through the app": "Tapetum per applicationem videre",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Prospectus cedit et tapetum scaenae domesticae perlucet, obscuratum ubi systema potest. Valet cum Lumtub proxime incipit. In Modo parco exstinctum"
+  "Update block lists automatically": "Indices obstructionis sponte renovare",
+  "Lists of {0}": "Indices diei {0}",
+  "Lists of {0}; those of {1} are used after a restart": "Indices diei {0}; indices diei {1} post renovationem adhibentur",
+  "Skin background": "Tergum pellis",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Imagines et regio pellis post paginas; exstinctum colorem simplicem relinquit"
 }

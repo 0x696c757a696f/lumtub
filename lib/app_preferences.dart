@@ -60,6 +60,7 @@ class AppPreferences {
     this.exploreHeardOnly = true,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
+    this.updateBlockLists = true,
     this.blockGroups = false,
     this.allowedGroups = const [],
     this.blockStateMedia = false,
@@ -159,6 +160,8 @@ class AppPreferences {
   final bool exploreHeardOnly;
   final int minDurationMinutes;
   final bool hideWatched;
+  /// Fetches the signed block lists once a day (lib/block_list_updates.dart).
+  final bool updateBlockLists;
   /// Hides the lists of lists/religion from recommendations, explore and
   /// search, unless a search names the channel exactly. Off for a new
   /// install; turned on in settings.
@@ -403,6 +406,7 @@ class AppPreferences {
     bool? exploreHeardOnly,
     int? minDurationMinutes,
     bool? hideWatched,
+    bool? updateBlockLists,
     bool? blockGroups,
     List<String>? allowedGroups,
     bool? blockStateMedia,
@@ -485,6 +489,7 @@ class AppPreferences {
         exploreHeardOnly: exploreHeardOnly ?? this.exploreHeardOnly,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
+        updateBlockLists: updateBlockLists ?? this.updateBlockLists,
         blockGroups: blockGroups ?? this.blockGroups,
         allowedGroups: allowedGroups ?? this.allowedGroups,
         blockStateMedia: blockStateMedia ?? this.blockStateMedia,
@@ -568,6 +573,7 @@ class AppPreferences {
         'exploreHeardOnlyV2': exploreHeardOnly,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
+        'updateBlockLists': updateBlockLists,
         'blockGroups': blockGroups,
         'allowedGroups': allowedGroups,
         'blockStateMedia': blockStateMedia,
@@ -697,6 +703,7 @@ class AppPreferences {
       exploreHeardOnly: flag('exploreHeardOnlyV2', d.exploreHeardOnly),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
+      updateBlockLists: flag('updateBlockLists', d.updateBlockLists),
       // Saved before new installs started with it off and asked.
       blockGroups: flag('blockGroups', true),
       blockStateMedia: flag('blockStateMedia', d.blockStateMedia),

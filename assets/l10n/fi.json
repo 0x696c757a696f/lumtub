@@ -3107,14 +3107,15 @@
   "Dark only": "Vain tumma",
   "Glass": "Lasi",
   "{0}% solid": "{0} % peittävä",
-  "See the desktop through the window": "Näytä työpöytä ikkunan läpi",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Maisema väistyy ja työpöytä näkyy läpi, sumennettuna jos järjestelmä sallii. Pois käytöstä vähäisten resurssien tilassa",
   "Color schemes": "Värimaailmat",
   "Library": "Kirjasto",
   "Add a skin from a file": "Lisää teema tiedostosta",
   "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc tai teeman kansion zip",
   "Added {0}": "Lisätty: {0}",
   "This is not a skin: {0}": "Tämä ei ole teema: {0}",
-  "See the wallpaper through the app": "Näytä taustakuva sovelluksen läpi",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Maisema väistyy ja aloitusnäytön taustakuva näkyy läpi, sumennettuna siellä missä järjestelmä pystyy. Tulee voimaan, kun Lumtub käynnistyy seuraavan kerran. Pois käytöstä Vähäisten resurssien tilassa"
+  "Update block lists automatically": "Päivitä estolistat automaattisesti",
+  "Lists of {0}": "Listat päivämäärältä {0}",
+  "Lists of {0}; those of {1} are used after a restart": "Listat päivämäärältä {0}; päivämäärän {1} listat otetaan käyttöön uudelleenkäynnistyksen jälkeen",
+  "Skin background": "Teeman tausta",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Teeman kuvat ja maisema sivujen takana; pois päältä jää tasainen väri"
 }

@@ -3107,14 +3107,15 @@
   "Dark only": "ມືດເທົ່ານັ້ນ",
   "Glass": "ແກ້ວ",
   "{0}% solid": "ທຶບ {0}%",
-  "See the desktop through the window": "ເບິ່ງເດັສທັອບຜ່ານປ່ອງຢ້ຽມ",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ທິວທັດຖອຍອອກ ແລ້ວເດັສທັອບສະແດງຜ່ານປ່ອງຢ້ຽມ, ມົວຖ້າລະບົບຮອງຮັບ. ປິດໃນໂໝດໃຊ້ຊັບພະຍາກອນຕ່ຳ",
   "Color schemes": "ຊຸດສີ",
   "Library": "ຫ້ອງສະໝຸດ",
   "Add a skin from a file": "ເພີ່ມສະກິນຈາກໄຟລ໌",
   "A skin.jsonc, or a zip of a skin's folder": "ໄຟລ໌ skin.jsonc ຫຼື zip ຂອງໂຟນເດີສະກິນ",
   "Added {0}": "ເພີ່ມ {0} ແລ້ວ",
   "This is not a skin: {0}": "ນີ້ບໍ່ແມ່ນສະກິນ: {0}",
-  "See the wallpaper through the app": "ເບິ່ງພາບພື້ນຫຼັງຜ່ານແອັບ",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "ພາບທິວທັດຖອຍອອກ ແລະ ພາບພື້ນຫຼັງຂອງໜ້າຈໍຫຼັກສະແດງອອກມາ, ມົວໃນບ່ອນທີ່ລະບົບເຮັດໄດ້. ມີຜົນເມື່ອເລີ່ມ Lumtub ຄັ້ງຕໍ່ໄປ. ປິດໃນໂໝດໃຊ້ຊັບພະຍາກອນຕ່ຳ"
+  "Update block lists automatically": "ອັບເດດລາຍການບລັອກອັດຕະໂນມັດ",
+  "Lists of {0}": "ລາຍການຂອງ {0}",
+  "Lists of {0}; those of {1} are used after a restart": "ລາຍການຂອງ {0}; ລາຍການຂອງ {1} ຈະຖືກໃຊ້ຫຼັງຈາກເລີ່ມໃໝ່",
+  "Skin background": "ພື້ນຫຼັງສະກິນ",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "ຮູບພາບ ແລະ ທິວທັດຂອງສະກິນຢູ່ຫຼັງໜ້າ; ປິດແລ້ວຈະເຫຼືອສີທຳມະດາ"
 }

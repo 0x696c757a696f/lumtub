@@ -3107,14 +3107,15 @@
   "Dark only": "Зөвхөн харанхуй",
   "Glass": "Шил",
   "{0}% solid": "{0}% тунгалаггүй",
-  "See the desktop through the window": "Цонхоор ширээний дэлгэцийг харах",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Ландшафт хажуу тийш гарч, систем дэмжих газарт бүдгэрүүлсэн ширээний дэлгэц цонхоор харагдана. Бага нөөцийн горимд идэвхгүй",
   "Color schemes": "Өнгөний схемүүд",
   "Library": "Номын сан",
   "Add a skin from a file": "Файлаас загвар нэмэх",
   "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc эсвэл загварын хавтасны zip",
   "Added {0}": "{0} нэмэгдлээ",
   "This is not a skin: {0}": "Энэ загвар биш: {0}",
-  "See the wallpaper through the app": "Дэвсгэр зургийг аппаар дамжуулан харах",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Ландшафт хажуу тийш зайлж, үндсэн дэлгэцийн дэвсгэр зураг харагдана, систем боломжтой газартаа бүдэгрүүлнэ. Lumtub дараагийн удаа эхлэхэд хүчинтэй болно. Бага нөөцийн горимд унтраастай"
+  "Update block lists automatically": "Хориглох жагсаалтыг автоматаар шинэчлэх",
+  "Lists of {0}": "{0}-ны жагсаалтууд",
+  "Lists of {0}; those of {1} are used after a restart": "{0}-ны жагсаалтууд; {1}-ны жагсаалтыг дахин эхлүүлсний дараа ашиглана",
+  "Skin background": "Загварын дэвсгэр",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Хуудсын ард загварын зураг, байгалийн дүр; унтраавал энгийн өнгө үлдэнэ"
 }

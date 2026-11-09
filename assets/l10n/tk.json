@@ -3107,14 +3107,15 @@
   "Dark only": "Diňe garaňky",
   "Glass": "Aýna",
   "{0}% solid": "{0}% dykyz",
-  "See the desktop through the window": "Penjireden iş stolyny gör",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Landşaft çetleşýär, iş stoly görünýär, ulgam goldasa bulaşyk bolýar. Pes serişde režiminde ýapyk",
   "Color schemes": "Reňk shemalary",
   "Library": "Kitaphana",
   "Add a skin from a file": "Faýldan tema goş",
   "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc ýa-da tema bukjasynyň zip-i",
   "Added {0}": "{0} goşuldy",
   "This is not a skin: {0}": "Bu tema däl: {0}",
-  "See the wallpaper through the app": "Diwar kagyzyny programma arkaly gör",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Landşaft gapdala çekilýär we baş ekranyň diwar kagyzy görünýär, ulgam başarýan ýerinde bulanyk. Lumtub indiki gezek başlanda güýje girýär. Pes serişde režiminde öçürilen"
+  "Update block lists automatically": "Bloklama sanawlaryny awtomatiki täzele",
+  "Lists of {0}": "{0} sanawlary",
+  "Lists of {0}; those of {1} are used after a restart": "{0} sanawlary; {1} sanawlary gaýtadan açylandan soň ulanylar",
+  "Skin background": "Tema fony",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Sahypalaryň aňyrsyndaky temanyň suratlary we landşafty; öçürilende ýönekeý reňk galýar"
 }

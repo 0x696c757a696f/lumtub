@@ -3107,14 +3107,15 @@
   "Dark only": "இருண்ட மட்டும்",
   "Glass": "கண்ணாடி",
   "{0}% solid": "{0}% திடம்",
-  "See the desktop through the window": "சாளரம் வழியாக டெஸ்க்டாப்பைக் காட்டு",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "நிலக்காட்சி விலகி, சாளரம் வழியாக டெஸ்க்டாப் தெரியும்; கணினி ஆதரித்தால் மங்கலாகவும் இருக்கும். குறைந்த வளப் பயன்முறையில் அணைந்திருக்கும்",
   "Color schemes": "வண்ணத் திட்டங்கள்",
   "Library": "நூலகம்",
   "Add a skin from a file": "கோப்பிலிருந்து தீம் சேர்",
   "A skin.jsonc, or a zip of a skin's folder": "ஒரு skin.jsonc, அல்லது தீமின் கோப்புறையின் zip",
   "Added {0}": "{0} சேர்க்கப்பட்டது",
   "This is not a skin: {0}": "இது தீம் அல்ல: {0}",
-  "See the wallpaper through the app": "செயலி வழியாக வால்பேப்பரைப் பார்",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "நிலக்காட்சி ஒதுங்கி, முகப்புத் திரையின் வால்பேப்பர் தெரியும்; சாதனம் ஆதரிக்கும் இடங்களில் மங்கலாக. அடுத்த முறை Lumtub தொடங்கும்போது நடைமுறைக்கு வரும். குறைந்த வளப் பயன்முறையில் அணைக்கப்படும்"
+  "Update block lists automatically": "தடுப்புப் பட்டியல்களைத் தானாகப் புதுப்பி",
+  "Lists of {0}": "{0} தேதியின் பட்டியல்கள்",
+  "Lists of {0}; those of {1} are used after a restart": "{0} தேதியின் பட்டியல்கள்; {1} தேதியவை மறுதொடக்கத்திற்குப் பிறகு பயன்படுத்தப்படும்",
+  "Skin background": "தீம் பின்னணி",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "பக்கங்களுக்குப் பின்னால் தீமின் படங்களும் நிலக்காட்சியும்; முடக்கினால் சாதாரண நிறம் இருக்கும்"
 }

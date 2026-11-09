@@ -3107,14 +3107,15 @@
   "Dark only": "ಡಾರ್ಕ್ ಮಾತ್ರ",
   "Glass": "ಗಾಜು",
   "{0}% solid": "{0}% ಘನ",
-  "See the desktop through the window": "ವಿಂಡೋ ಮೂಲಕ ಡೆಸ್ಕ್‌ಟಾಪ್ ನೋಡಿ",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ದೃಶ್ಯ ಪಕ್ಕಕ್ಕೆ ಸರಿದು ಡೆಸ್ಕ್‌ಟಾಪ್ ವಿಂಡೋ ಮೂಲಕ ಕಾಣಿಸುತ್ತದೆ, ಸಿಸ್ಟಮ್ ಬೆಂಬಲಿಸಿದರೆ ಮಬ್ಬಾಗಿ. ಕಡಿಮೆ ಸಂಪನ್ಮೂಲ ಮೋಡ್‌ನಲ್ಲಿ ಆಫ್ ಆಗಿರುತ್ತದೆ",
   "Color schemes": "ಬಣ್ಣ ಯೋಜನೆಗಳು",
   "Library": "ಲೈಬ್ರರಿ",
   "Add a skin from a file": "ಫೈಲ್‌ನಿಂದ ಸ್ಕಿನ್ ಸೇರಿಸಿ",
   "A skin.jsonc, or a zip of a skin's folder": "ಒಂದು skin.jsonc, ಅಥವಾ ಸ್ಕಿನ್‌ನ ಫೋಲ್ಡರ್‌ನ zip",
   "Added {0}": "{0} ಸೇರಿಸಲಾಗಿದೆ",
   "This is not a skin: {0}": "ಇದು ಸ್ಕಿನ್ ಅಲ್ಲ: {0}",
-  "See the wallpaper through the app": "ಆ್ಯಪ್ ಮೂಲಕ ವಾಲ್‌ಪೇಪರ್ ನೋಡಿ",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "ಭೂದೃಶ್ಯ ಪಕ್ಕಕ್ಕೆ ಸರಿದು ಹೋಮ್ ಸ್ಕ್ರೀನ್‌ನ ವಾಲ್‌ಪೇಪರ್ ಕಾಣುತ್ತದೆ, ಸಿಸ್ಟಮ್‌ಗೆ ಸಾಧ್ಯವಿರುವಲ್ಲಿ ಮಸುಕಾಗಿ. ಮುಂದಿನ ಬಾರಿ Lumtub ಪ್ರಾರಂಭವಾದಾಗ ಜಾರಿಗೆ ಬರುತ್ತದೆ. ಕಡಿಮೆ ಸಂಪನ್ಮೂಲ ಮೋಡ್‌ನಲ್ಲಿ ಆಫ್"
+  "Update block lists automatically": "ಬ್ಲಾಕ್ ಪಟ್ಟಿಗಳನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ನವೀಕರಿಸಿ",
+  "Lists of {0}": "{0} ರ ಪಟ್ಟಿಗಳು",
+  "Lists of {0}; those of {1} are used after a restart": "{0} ರ ಪಟ್ಟಿಗಳು; {1} ರ ಪಟ್ಟಿಗಳನ್ನು ಮರುಪ್ರಾರಂಭದ ನಂತರ ಬಳಸಲಾಗುತ್ತದೆ",
+  "Skin background": "ಸ್ಕಿನ್ ಹಿನ್ನೆಲೆ",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "ಪುಟಗಳ ಹಿಂದೆ ಸ್ಕಿನ್‌ನ ಚಿತ್ರಗಳು ಮತ್ತು ಭೂದೃಶ್ಯ; ಆಫ್ ಮಾಡಿದರೆ ಸರಳ ಬಣ್ಣ ಉಳಿಯುತ್ತದೆ"
 }

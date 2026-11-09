@@ -3107,14 +3107,15 @@
   "Dark only": "Dark lang",
   "Glass": "Salamin",
   "{0}% solid": "{0}% solid",
-  "See the desktop through the window": "Tanawin ang desktop sa pamamagitan ng window",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Umaatras ang tanawin at lumilitaw ang desktop sa likod, may blur kung kaya ng system. Naka-off sa Low resource mode",
   "Color schemes": "Mga color scheme",
   "Library": "Library",
   "Add a skin from a file": "Magdagdag ng skin mula sa file",
   "A skin.jsonc, or a zip of a skin's folder": "Isang skin.jsonc, o zip ng folder ng skin",
   "Added {0}": "Naidagdag ang {0}",
   "This is not a skin: {0}": "Hindi ito skin: {0}",
-  "See the wallpaper through the app": "Tingnan ang wallpaper sa likod ng app",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Umaalis ang landscape at lumilitaw ang wallpaper ng home screen, blurred kung kaya ng system. Magkakabisa sa susunod na pagbukas ng Lumtub. Naka-off sa Low resource mode"
+  "Update block lists automatically": "Awtomatikong i-update ang mga block list",
+  "Lists of {0}": "Mga list noong {0}",
+  "Lists of {0}; those of {1} are used after a restart": "Mga list noong {0}; ang sa {1} ay gagamitin pagkatapos ng restart",
+  "Skin background": "Background ng skin",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Ang mga larawan at tanawin ng skin sa likod ng mga pahina; kapag naka-off, plain na kulay"
 }

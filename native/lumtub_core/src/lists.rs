@@ -4,19 +4,20 @@
 use std::collections::HashSet;
 use std::fmt;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// What happens to a channel a list matches.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Action {
+    #[default]
     Hide,
     Quiet,
     Demote,
     Label,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Status {
     Confirmed,
@@ -45,7 +46,8 @@ pub fn tier(category: &str) -> Option<u8> {
 }
 
 /// One channel of a list, with every way it is matched.
-#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Record {
     pub slug: String,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -73,7 +75,8 @@ fn is_confirmed(status: &Option<Status>) -> bool {
 }
 
 /// One list file.
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct List {
     pub id: String,
     pub name: String,

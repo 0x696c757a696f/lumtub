@@ -3107,14 +3107,15 @@
   "Dark only": "Лише темна",
   "Glass": "Скло",
   "{0}% solid": "{0}% непрозорості",
-  "See the desktop through the window": "Бачити робочий стіл крізь вікно",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Краєвид відступає, і крізь вікно видно робочий стіл, розмитий, де це підтримує система. У режимі економії ресурсів вимкнено",
   "Color schemes": "Колірні схеми",
   "Library": "Бібліотека",
   "Add a skin from a file": "Додати тему з файлу",
   "A skin.jsonc, or a zip of a skin's folder": "Файл skin.jsonc або zip із текою теми",
   "Added {0}": "Додано: {0}",
   "This is not a skin: {0}": "Це не тема: {0}",
-  "See the wallpaper through the app": "Показувати шпалери крізь застосунок",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Краєвид відсувається, і крізь нього видно шпалери головного екрана, розмиті там, де система це вміє. Набуває чинності під час наступного запуску Lumtub. Вимкнено в режимі економії ресурсів"
+  "Update block lists automatically": "Автоматично оновлювати списки блокування",
+  "Lists of {0}": "Списки від {0}",
+  "Lists of {0}; those of {1} are used after a restart": "Списки від {0}; списки від {1} буде використано після перезапуску",
+  "Skin background": "Тло теми",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Малюнки й пейзаж теми за сторінками; вимкнено залишає звичайний колір"
 }

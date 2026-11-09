@@ -3107,14 +3107,15 @@
   "Dark only": "အမှောင်သီးသန့်",
   "Glass": "ဖန်",
   "{0}% solid": "{0}% မပြတ်သားမှု",
-  "See the desktop through the window": "ဝင်းဒိုးမှတစ်ဆင့် ဒက်စ်တော့ကို မြင်ရန်",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ရှုခင်းက ဘေးဖယ်ပေးပြီး စနစ်က ပံ့ပိုးနိုင်လျှင် ဝါးဝါးဖြင့် ဝင်းဒိုးကြားမှ ဒက်စ်တော့ကို မြင်ရမည်။ အရင်းအမြစ်သက်သာမုဒ်တွင် ပိတ်ထားသည်",
   "Color schemes": "အရောင်စုံပုံစံများ",
   "Library": "စာကြည့်တိုက်",
   "Add a skin from a file": "ဖိုင်မှ စကင်ထည့်ရန်",
   "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc ဖိုင် သို့မဟုတ် စကင်ဖိုလ်ဒါ၏ zip",
   "Added {0}": "{0} ကို ထည့်ပြီးပါပြီ",
   "This is not a skin: {0}": "ဤသည်မှာ စကင်မဟုတ်ပါ- {0}",
-  "See the wallpaper through the app": "အက်ပ်ကြားမှ နောက်ခံပုံကို ကြည့်ရန်",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "ရှုခင်းက ဘေးဖယ်ပေးပြီး ပင်မစကရင်၏ နောက်ခံပုံ ပေါ်လာသည်၊ စနစ်လုပ်နိုင်သည့်နေရာတွင် ဝါးထားသည်။ Lumtub နောက်တစ်ကြိမ် စတင်သောအခါ အသက်ဝင်မည်။ အရင်းအမြစ်သက်သာမုဒ်တွင် ပိတ်ထားသည်"
+  "Update block lists automatically": "ပိတ်ဆို့စာရင်းများကို အလိုအလျောက် အပ်ဒိတ်လုပ်ရန်",
+  "Lists of {0}": "{0} ရက်စွဲ စာရင်းများ",
+  "Lists of {0}; those of {1} are used after a restart": "{0} ရက်စွဲ စာရင်းများ၊ {1} ရက်စွဲ စာရင်းများကို ပြန်စတင်ပြီးနောက် အသုံးပြုမည်",
+  "Skin background": "စကင် နောက်ခံ",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "စာမျက်နှာများနောက်ရှိ စကင်၏ ပုံများနှင့် ရှုခင်း၊ ပိတ်ထားလျှင် ရိုးရိုးအရောင်သာ ကျန်မည်"
 }

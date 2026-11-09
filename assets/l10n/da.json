@@ -3107,14 +3107,15 @@
   "Dark only": "Kun mørk",
   "Glass": "Glas",
   "{0}% solid": "{0} % dækkende",
-  "See the desktop through the window": "Se skrivebordet gennem vinduet",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Landskabet viger, og skrivebordet skinner igennem, sløret hvor systemet kan. Slået fra i ressourcebesparende tilstand",
   "Color schemes": "Farveskemaer",
   "Library": "Bibliotek",
   "Add a skin from a file": "Tilføj et skin fra en fil",
   "A skin.jsonc, or a zip of a skin's folder": "En skin.jsonc eller en zip af et skins mappe",
   "Added {0}": "{0} tilføjet",
   "This is not a skin: {0}": "Det er ikke et skin: {0}",
-  "See the wallpaper through the app": "Se baggrundsbilledet gennem appen",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Landskabet viger, og startskærmens baggrundsbillede skinner igennem, sløret hvor systemet kan. Træder i kraft næste gang Lumtub starter. Slået fra i Ressourcebesparende tilstand"
+  "Update block lists automatically": "Opdater blokeringslister automatisk",
+  "Lists of {0}": "Lister fra {0}",
+  "Lists of {0}; those of {1} are used after a restart": "Lister fra {0}; dem fra {1} bruges efter en genstart",
+  "Skin background": "Skin-baggrund",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Skinnets billeder og landskab bag siderne; slået fra giver en ensfarvet baggrund"
 }

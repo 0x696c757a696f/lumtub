@@ -59,7 +59,8 @@ class NativeCore {
         liveChat = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_live_chat'),
         youtubeListing = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_youtube_listing'),
         hwDecoders = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_hw_decoders'),
-        blockLists = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_lists'),
+        blockLists = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_lists_in'),
+        blockListsTake = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_lists_take'),
         systemProxy = library.lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>('lumtub_system_proxy'),
         pacProxy = library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_pac_proxy'),
         relayStart = library.lookupFunction<Uint16 Function(), int Function()>('lumtub_relay_start'),
@@ -192,9 +193,13 @@ class NativeCore {
   final Pointer<Utf8> Function(Pointer<Uint8> body, int length) youtubeListing;
   /// The graphics adapter and the tallest picture it decodes per codec.
   final Pointer<Utf8> Function() hwDecoders;
-  /// The block lists under lists/ that the library was built with, as
-  /// JSON (native/lumtub_core/src/lists.rs).
-  final Pointer<Utf8> Function() blockLists;
+  /// The block lists in use, as JSON `{version, built, downloaded, lists}`:
+  /// a newer signed download in the folder of `{folder}`, else those under
+  /// lists/ the library was built with (native/lumtub_core/src/lists_update.rs).
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) blockLists;
+  /// Checks a downloaded lists.json `{file, signature, folder}` and keeps it
+  /// when newer: `{version, lists, records, newer}` or `{error}`.
+  final Pointer<Utf8> Function(Pointer<Uint8> json, int length) blockListsTake;
   /// Windows' proxy setting as JSON `{enabled, server, pac}`; null elsewhere.
   final Pointer<Utf8> Function() systemProxy;
   /// The proxy a PAC script names, as JSON `{proxy}` or `{error}`; blocks

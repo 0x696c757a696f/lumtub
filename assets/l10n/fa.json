@@ -3107,14 +3107,15 @@
   "Dark only": "فقط تیره",
   "Glass": "شیشه",
   "{0}% solid": "‎{0}٪ مات",
-  "See the desktop through the window": "دیدن میزکار از پشت پنجره",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "منظره کنار می‌رود و میزکار از پشت پنجره دیده می‌شود، و اگر سیستم پشتیبانی کند محو هم می‌شود. در حالت کم‌مصرف خاموش است",
   "Color schemes": "طرح‌های رنگ",
   "Library": "کتابخانه",
   "Add a skin from a file": "افزودن پوسته از فایل",
   "A skin.jsonc, or a zip of a skin's folder": "یک فایل skin.jsonc یا zip پوشه پوسته",
   "Added {0}": "{0} افزوده شد",
   "This is not a skin: {0}": "این یک پوسته نیست: {0}",
-  "See the wallpaper through the app": "دیدن تصویر زمینه از پشت برنامه",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "منظره کنار می‌رود و تصویر زمینه صفحه اصلی دیده می‌شود، در جایی که سیستم بتواند محو شده. در دفعه بعد که Lumtub شروع شود اعمال می‌شود. در حالت کم‌مصرف خاموش است"
+  "Update block lists automatically": "به‌روزرسانی خودکار فهرست‌های مسدودسازی",
+  "Lists of {0}": "فهرست‌های {0}",
+  "Lists of {0}; those of {1} are used after a restart": "فهرست‌های {0}؛ فهرست‌های {1} پس از راه‌اندازی مجدد استفاده می‌شوند",
+  "Skin background": "پس‌زمینه پوسته",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "تصاویر و منظره پوسته پشت صفحه‌ها؛ در حالت خاموش رنگ ساده می‌ماند"
 }

@@ -11,19 +11,35 @@ import 'native_core.dart';
 /// matched, never titles or descriptions: other channels' reports about a
 /// group, and searches for its names, stay.
 class BlockLists {
-  BlockLists._(this.all);
+  BlockLists._(this.all, {this.version = 0, this.downloaded = false});
 
-  /// Every list in lists/, read once from lumtub_core; none without it.
-  static final BlockLists instance = BlockLists._(_read());
+  /// Where a downloaded, signed lists.json is kept; set before the lists
+  /// are first read.
+  static String? folder;
+
+  /// Every list in use, read once from lumtub_core; none without it. A
+  /// newer download (lib/block_list_updates.dart) is used from the next
+  /// start.
+  static final BlockLists instance = _read();
 
   final List<BlockedGroup> all;
+  /// When the lists were last changed, in seconds since 1970; 0 when not
+  /// known.
+  final int version;
+  /// Whether they came from a download rather than this build.
+  final bool downloaded;
 
-  static List<BlockedGroup> _read() {
+  static BlockLists _read() {
     final core = NativeCore.instance;
-    final text = core?.take(core.blockLists());
-    if (text == null) return const [];
-    final lists = (jsonDecode(text) as Map<String, dynamic>)['lists'] as List<dynamic>;
-    return [for (final list in lists) BlockedGroup.fromJson(list as Map<String, dynamic>)];
+    final text = core?.take(core.withText(jsonEncode({'folder': folder ?? ''}), core.blockLists));
+    if (text == null) return BlockLists._(const []);
+    final json = jsonDecode(text) as Map<String, dynamic>;
+    final lists = json['lists'] as List<dynamic>;
+    return BlockLists._(
+      [for (final list in lists) BlockedGroup.fromJson(list as Map<String, dynamic>)],
+      version: (json['version'] as num?)?.toInt() ?? 0,
+      downloaded: json['downloaded'] == true,
+    );
   }
 
   List<BlockedGroup> inCategory(String category) => [for (final list in all) if (list.categories.contains(category)) list];

@@ -276,17 +276,23 @@
     },
 
     // true lets users make the bars, side rail, cards and panels clearer
-    // in Settings › Skins › Glass, so the background shows through. Keep
-    // text readable on the background itself too.
-    // true 时用户可以在 设置 › 皮肤 › 玻璃 里调低栏、侧栏、卡片和面板的不透明度，透出背景。
+    // in Settings › Skins › Glass (down to 30%), so the background shows
+    // through. Keep text readable on the background itself too.
+    // true 时用户可以在 设置 › 皮肤 › 玻璃 里调低栏、侧栏、卡片和面板的不透明度（最低 30%），透出背景。
     // 这时文字直接放在背景上也要看得清。
     "glass": false,
-    // { "min": 0.6 } instead of true sets the clearest the glass may go.
-    // 写成 { "min": 0.6 } 可以限定最透明能调到多少。
+    // { "min": 0.6 } instead of true names the clearest glass at which all
+    // text still reads; the slider still goes to 30%, and below this level
+    // the veil thins with the glass.
+    // 写成 { "min": 0.6 } 表示调到多透明时文字仍然都看得清；滑块照样能调到 30%，
+    // 低于这个值时下面的 veil 也会跟着变淡。
 
-    // 0–0.9: the page colour laid over the backdrop under the pages, so
-    // text there reads over a busy picture.
-    // 0–0.9：在页面下面垫一层页面底色，背景再花，上面的字也看得清。
+    // 0–0.9: the page colour laid over the backdrop under the pages, such
+    // as the video lists, so text there reads over a busy picture. Clearer
+    // glass than "min" thins it. With Skin background off only the page
+    // colour is drawn.
+    // 0–0.9：在页面（比如视频列表）下面垫一层页面底色，背景再花，上面的字也看得清。
+    // 玻璃调得比 "min" 更透明时它会变淡。关掉“皮肤背景”时只画页面底色。
     "veil": 0,
 
     // The bar with the logo and search box. 有 logo 和搜索框的那一栏。

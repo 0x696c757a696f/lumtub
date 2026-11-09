@@ -3107,14 +3107,15 @@
   "Dark only": "Iluna soilik",
   "Glass": "Beira",
   "{0}% solid": "% {0} opakoa",
-  "See the desktop through the window": "Ikusi mahaigaina leihoaren bidez",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Paisaia alde batera egiten da eta mahaigaina ikusten da, lausotuta sistemak onartzen duenean. Baliabide gutxiko moduan desaktibatuta",
   "Color schemes": "Kolore-eskemak",
   "Library": "Liburutegia",
   "Add a skin from a file": "Gehitu azala fitxategi batetik",
   "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc bat, edo azalaren karpetaren zip bat",
   "Added {0}": "{0} gehituta",
   "This is not a skin: {0}": "Hau ez da azal bat: {0}",
-  "See the wallpaper through the app": "Ikusi horma-papera aplikazioaren bidez",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Paisaia alde batera egiten da eta hasierako pantailaren horma-papera ageri da, lausotuta sistemak ahal duen tokian. Lumtub hurrengoan abiaraztean izango du eragina. Desaktibatuta Baliabide gutxiko moduan"
+  "Update block lists automatically": "Eguneratu blokeo-zerrendak automatikoki",
+  "Lists of {0}": "{0} datako zerrendak",
+  "Lists of {0}; those of {1} are used after a restart": "{0} datako zerrendak; {1} datakoak berrabiarazi ondoren erabiliko dira",
+  "Skin background": "Azalaren atzealdea",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Azalaren irudiak eta paisaia orrien atzean; desaktibatuta kolore soila geratzen da"
 }

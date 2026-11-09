@@ -3107,14 +3107,15 @@
   "Dark only": "ਸਿਰਫ਼ ਗੂੜ੍ਹਾ",
   "Glass": "ਸ਼ੀਸ਼ਾ",
   "{0}% solid": "{0}% ਠੋਸ",
-  "See the desktop through the window": "ਵਿੰਡੋ ਰਾਹੀਂ ਡੈਸਕਟਾਪ ਵੇਖੋ",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ਦ੍ਰਿਸ਼ ਇੱਕ ਪਾਸੇ ਹੋ ਜਾਂਦਾ ਹੈ ਅਤੇ ਜਿੱਥੇ ਸਿਸਟਮ ਮਨਜ਼ੂਰ ਕਰੇ ਉੱਥੇ ਧੁੰਦਲਾ ਕਰਕੇ ਡੈਸਕਟਾਪ ਵਿੰਡੋ ਵਿੱਚੋਂ ਦਿਸਦਾ ਹੈ। ਘੱਟ ਸਰੋਤ ਮੋਡ ਵਿੱਚ ਬੰਦ",
   "Color schemes": "ਰੰਗ ਸਕੀਮਾਂ",
   "Library": "ਲਾਇਬ੍ਰੇਰੀ",
   "Add a skin from a file": "ਫ਼ਾਈਲ ਤੋਂ ਸਕਿਨ ਜੋੜੋ",
   "A skin.jsonc, or a zip of a skin's folder": "ਇੱਕ skin.jsonc, ਜਾਂ ਸਕਿਨ ਦੇ ਫ਼ੋਲਡਰ ਦੀ zip",
   "Added {0}": "{0} ਜੋੜੀ ਗਈ",
   "This is not a skin: {0}": "ਇਹ ਸਕਿਨ ਨਹੀਂ ਹੈ: {0}",
-  "See the wallpaper through the app": "ਐਪ ਰਾਹੀਂ ਵਾਲਪੇਪਰ ਵੇਖੋ",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "ਲੈਂਡਸਕੇਪ ਇੱਕ ਪਾਸੇ ਹੋ ਜਾਂਦਾ ਹੈ ਅਤੇ ਹੋਮ ਸਕ੍ਰੀਨ ਦਾ ਵਾਲਪੇਪਰ ਦਿਸਦਾ ਹੈ, ਜਿੱਥੇ ਸਿਸਟਮ ਕਰ ਸਕੇ ਉੱਥੇ ਧੁੰਦਲਾ। Lumtub ਦੇ ਅਗਲੀ ਵਾਰ ਸ਼ੁਰੂ ਹੋਣ 'ਤੇ ਲਾਗੂ ਹੋਵੇਗਾ। ਘੱਟ ਸਰੋਤ ਮੋਡ ਵਿੱਚ ਬੰਦ"
+  "Update block lists automatically": "ਬਲਾਕ ਸੂਚੀਆਂ ਆਪਣੇ-ਆਪ ਅੱਪਡੇਟ ਕਰੋ",
+  "Lists of {0}": "{0} ਦੀਆਂ ਸੂਚੀਆਂ",
+  "Lists of {0}; those of {1} are used after a restart": "{0} ਦੀਆਂ ਸੂਚੀਆਂ; {1} ਦੀਆਂ ਸੂਚੀਆਂ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਤੋਂ ਬਾਅਦ ਵਰਤੀਆਂ ਜਾਣਗੀਆਂ",
+  "Skin background": "ਸਕਿਨ ਬੈਕਗ੍ਰਾਊਂਡ",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "ਸਫ਼ਿਆਂ ਦੇ ਪਿੱਛੇ ਸਕਿਨ ਦੀਆਂ ਤਸਵੀਰਾਂ ਅਤੇ ਲੈਂਡਸਕੇਪ; ਬੰਦ ਹੋਣ 'ਤੇ ਸਾਦਾ ਰੰਗ ਰਹਿੰਦਾ ਹੈ"
 }

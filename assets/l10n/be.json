@@ -3107,14 +3107,15 @@
   "Dark only": "Толькі цёмная",
   "Glass": "Шкло",
   "{0}% solid": "{0}% непразрыстасці",
-  "See the desktop through the window": "Бачыць працоўны стол праз акно",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Краявід адступае, і праз акно відаць працоўны стол, размыты там, дзе гэта дазваляе сістэма. Выключана ў рэжыме эканоміі рэсурсаў",
   "Color schemes": "Колеравыя схемы",
   "Library": "Бібліятэка",
   "Add a skin from a file": "Дадаць скін з файла",
   "A skin.jsonc, or a zip of a skin's folder": "Файл skin.jsonc або zip з папкай скіна",
   "Added {0}": "Дададзена: {0}",
   "This is not a skin: {0}": "Гэта не скін: {0}",
-  "See the wallpaper through the app": "Паказваць шпалеры праз праграму",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Пейзаж адсоўваецца, і праз яго бачныя шпалеры галоўнага экрана, размытыя там, дзе гэта магчыма. Уступае ў сілу пры наступным запуску Lumtub. Выключана ў рэжыме эканоміі рэсурсаў"
+  "Update block lists automatically": "Аўтаматычна абнаўляць спісы блакіроўкі",
+  "Lists of {0}": "Спісы ад {0}",
+  "Lists of {0}; those of {1} are used after a restart": "Спісы ад {0}; спісы ад {1} будуць выкарыстаны пасля перазапуску",
+  "Skin background": "Фон скіна",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Малюнкі і пейзаж скіна за старонкамі; пры выключэнні застаецца звычайны колер"
 }

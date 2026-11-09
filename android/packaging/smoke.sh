@@ -22,13 +22,13 @@ echo "Lumtub is running (pid $pid)"
 # Pictures and a short video for people to look at: a phone, a tablet and a
 # TV sized screen. Nothing here decides whether the test passed.
 shot() { adb exec-out screencap -p > "$out/$1.png"; }
-adb shell screenrecord --time-limit 75 --bit-rate 6000000 /sdcard/phone.mp4 &
+adb shell screenrecord --time-limit 30 --bit-rate 6000000 /sdcard/phone.mp4 &
 rec=$!
 sleep 2
 adb shell input swipe 540 1700 540 900 400; sleep 4; shot phone-scrolled
 adb shell input swipe 540 900 540 1700 400; sleep 4
-adb shell input tap 540 650; sleep 30; shot phone-watch
-adb shell input keyevent KEYCODE_BACK; sleep 6; shot phone-back
+adb shell input swipe 540 1700 540 500 300; sleep 5; shot phone-more
+adb shell input swipe 540 500 540 1700 300; sleep 4
 wait "$rec" 2> /dev/null
 adb pull /sdcard/phone.mp4 "$out/phone.mp4" > /dev/null 2>&1
 
@@ -40,11 +40,11 @@ for form in "tablet 2560x1600 320" "tv 1920x1080 240"; do
   adb shell input keyevent KEYCODE_DPAD_DOWN; sleep 1
   adb shell input keyevent KEYCODE_DPAD_RIGHT; sleep 2; shot "$1-focus"
 done
-adb shell screenrecord --time-limit 40 --bit-rate 6000000 /sdcard/tv.mp4 &
+adb shell screenrecord --time-limit 25 --bit-rate 6000000 /sdcard/tv.mp4 &
 rec=$!
 sleep 2
 for key in DOWN DOWN RIGHT RIGHT RIGHT DOWN LEFT; do adb shell input keyevent "KEYCODE_DPAD_$key"; sleep 2; done
-adb shell input keyevent KEYCODE_DPAD_CENTER; sleep 20; shot tv-watch
+sleep 4
 wait "$rec" 2> /dev/null
 adb pull /sdcard/tv.mp4 "$out/tv.mp4" > /dev/null 2>&1
 adb shell wm size reset; adb shell wm density reset

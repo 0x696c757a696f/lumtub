@@ -34,6 +34,16 @@ class MainActivity : FlutterActivity() {
         this.channel = channel
         PlaybackService.listener = { method, argument -> runOnUiThread { channel.invokeMethod(method, argument) } }
         channel.setMethodCallHandler { call, result -> result.success(handle(call)) }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lumtub/python").setMethodCallHandler { call, result ->
+            if (call.method != "prepare") return@setMethodCallHandler result.notImplemented()
+            // Unpacking the first time takes a few seconds: not on the UI thread.
+            Thread {
+                val answer = runCatching { PythonSetup.prepare(applicationContext) }
+                runOnUiThread {
+                    answer.fold({ result.success(it) }, { result.error("python", it.toString(), null) })
+                }
+            }.start()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

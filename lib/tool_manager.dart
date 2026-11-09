@@ -5,7 +5,9 @@ import 'dart:io';
 import 'dart:isolate';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show debugPrint;
 
+import 'android_python.dart';
 import 'app_directories.dart';
 import 'app_log.dart';
 import 'ffmpeg_component.dart';
@@ -93,9 +95,9 @@ class ToolManager {
   }
 
   Future<ToolPaths> ensureReady() async {
-    // Android: libmpv comes inside the APK and nothing is downloaded;
-    // without yt-dlp, streams come from the core (quick.rs) alone.
-    if (Platform.isAndroid) return const ToolPaths(mpv: '', ytDlp: '', deno: null);
+    // Android: libmpv comes inside the APK; yt-dlp runs with the APK's
+    // Python, and without it streams come from the core (quick.rs) alone.
+    if (Platform.isAndroid) return ToolPaths(mpv: '', ytDlp: await _androidYtDlp(), deno: null);
     if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) throw UnsupportedError('Lumtub runs on Windows, Linux, macOS and Android.');
     // The runner already loaded a downloaded libmpv when one was selected;
     // Dart has to open that same copy.
@@ -127,6 +129,39 @@ class ToolManager {
       throw StateError('Required components could not be installed.');
     }
     return ToolPaths(mpv: mpv, ytDlp: ready.ytDlp, deno: ready.deno);
+  }
+
+  /// The newest yt-dlp, the one inside the APK installed the first time;
+  /// '' when Python cannot run.
+  Future<String> _androidYtDlp() async {
+    final AndroidPython? python;
+    try {
+      python = await AndroidPython.prepare();
+    } catch (e) {
+      logWarn('Python for yt-dlp could not be prepared: $e');
+      return '';
+    }
+    if (python == null) return '';
+    final found = discover()?.ytDlp;
+    if (found != null && found.isNotEmpty) return found;
+    final bundled = python.bundledYtDlp;
+    if (bundled == null) return '';
+    try {
+      status('Preparing yt-dlp…');
+      final check = await runWithTimeout(bundled, ['--version'], timeout: const Duration(seconds: 60));
+      if (check.exitCode != 0) throw StateError('${check.stderr}'.trim());
+      final tag = _safeTag('${check.stdout}'.trim());
+      final dest = Directory('${root.path}${_separator}yt-dlp$_separator$tag');
+      await dest.create(recursive: true);
+      final file = await File(bundled).copy('${dest.path}${_separator}yt-dlp');
+      // In the system log, where the emulator test looks for it.
+      debugPrint('Lumtub: yt-dlp $tag runs with Python');
+      return file.path;
+    } catch (e) {
+      debugPrint('Lumtub: yt-dlp does not run: $e');
+      logWarn('The bundled yt-dlp does not run: $e');
+      return '';
+    }
   }
 
   String get _bundledMpv => '${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}libmpv-2.dll';
@@ -198,7 +233,7 @@ class ToolManager {
   /// release.
   bool get _ytDlpIsSingleFile {
     final yt = discover()?.ytDlp;
-    if (yt == null || yt.isEmpty) return false;
+    if (Platform.isAndroid || yt == null || yt.isEmpty) return false;
     return !Directory('${File(yt).parent.path}${_separator}_internal').existsSync();
   }
 
@@ -215,7 +250,7 @@ class ToolManager {
 
   Future<void> checkUpdates({bool force = false}) async {
     // Android has no yt-dlp, Deno or ffmpeg to keep current: streams come from the core.
-    if (Platform.isAndroid || Platform.isIOS) return;
+    if (Platform.isIOS || Platform.isAndroid && AndroidPython.current == null) return;
     final stamp = File('${root.path}${Platform.pathSeparator}last_update_check.txt');
     // The single-file yt-dlp is replaced as soon as possible, but a failed
     // try waits an hour, as does any check that failed, rather than costing
@@ -228,9 +263,11 @@ class ToolManager {
     }
     final errors = <String>[];
     for (final task in <(String, Future<void> Function())>[
-      ('yt-dlp', _installYtDlp), ('Deno', _installDeno), if (!_systemMpv) ('libmpv', _installLibmpv),
+      ('yt-dlp', _installYtDlp),
+      if (!Platform.isAndroid) ('Deno', _installDeno),
+      if (!_systemMpv) ('libmpv', _installLibmpv),
       // Never installed by an update check: only kept current once the user has it.
-      ('ffmpeg', () => installFfmpeg(onlyIfInstalled: true)),
+      if (!Platform.isAndroid) ('ffmpeg', () => installFfmpeg(onlyIfInstalled: true)),
     ]) {
       try {
         status('Check for {0} updates…', [task.$1]);
@@ -416,11 +453,13 @@ class ToolManager {
     final release = await _release('yt-dlp/yt-dlp-nightly-builds');
     final tag = _safeTag(release['tag_name']);
     final group = Directory('${root.path}${_separator}yt-dlp');
-    await _removeSingleFileYtDlp(group);
+    if (!Platform.isAndroid) await _removeSingleFileYtDlp(group);
     var dest = Directory('${group.path}$_separator$tag');
     // A version rolled back by the user is not installed again.
     if (await File('${dest.path}$_separator$_failedMarker').exists()) return;
     if (await File('${dest.path}$_separator${_exe('yt-dlp')}').exists()) {
+      // Android's is the zip app, which Python runs as it is.
+      if (Platform.isAndroid) return;
       if (await Directory('${dest.path}${_separator}_internal').exists()) return;
       // The same release as the single-file build in use, unpacked, beside
       // it: the running one cannot be replaced, and the newer name wins.
@@ -448,6 +487,11 @@ class ToolManager {
   /// unpacks itself to a temp folder on every start, which costs a second
   /// of CPU and a second process for each search or channel page.
   Future<File> _downloadYtDlp(Map<String, dynamic> release, Directory into) async {
+    if (Platform.isAndroid) {
+      final app = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'));
+      await into.create(recursive: true);
+      return app.rename('${into.path}${_separator}yt-dlp');
+    }
     final archive = await _downloadVerified(_asset(release, (name) => name == ytDlpFolderAsset), Directory('${root.path}${_separator}downloads'));
     await into.create(recursive: true);
     await _extractZip(archive, into);
@@ -478,7 +522,9 @@ class ToolManager {
     }
   }
 
-  static String get ytDlpFolderAsset => Platform.isWindows
+  static String get ytDlpFolderAsset => Platform.isAndroid
+      ? 'yt-dlp'
+      : Platform.isWindows
       ? 'yt-dlp_win.zip'
       : Platform.isMacOS
           ? 'yt-dlp_macos.zip'

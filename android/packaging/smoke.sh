@@ -18,6 +18,9 @@ grep -E 'flutter|Lumtub|AndroidRuntime|DEBUG' "$out/logcat.txt" | tail -80
 if [ -z "$pid" ]; then echo "::error::Lumtub is not running 45 s after start"; exit 1; fi
 if grep -q 'FATAL EXCEPTION\|Fatal signal' "$out/logcat.txt"; then echo "::error::Lumtub crashed"; exit 1; fi
 echo "Lumtub is running (pid $pid)"
+# yt-dlp, run by the APK's Python, answers its version on first start.
+grep -E 'Lumtub: yt-dlp' "$out/logcat.txt" || true
+if ! grep -q 'Lumtub: yt-dlp .* runs with Python' "$out/logcat.txt"; then echo "::error::yt-dlp did not run with the bundled Python"; exit 1; fi
 
 # Pictures and a short video for people to look at: a phone, a tablet and a
 # TV sized screen. Nothing here decides whether the test passed.

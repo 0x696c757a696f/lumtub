@@ -27,6 +27,13 @@ enum DownloadQuality {
     // is chosen to fit them.
     return h.isEmpty ? 'bv*+ba/b' : 'bv*$h+ba/b$h/b';
   }
+
+  /// The best picture alone and AAC sound, as separate files, picture
+  /// first, for a download joined without ffmpeg (which takes no Opus).
+  String joinFormat() {
+    final h = maxHeight == null ? '' : '[height<=$maxHeight]';
+    return 'bv$h/bv,ba[acodec^=mp4a]/ba[ext=m4a]';
+  }
 }
 
 enum DownloadStatus { queued, downloading, paused, done, failed, cancelled }

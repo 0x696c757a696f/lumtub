@@ -46,13 +46,16 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName(if (release) "release" else "debug")
+            proguardFiles("proguard-rules.pro")
         }
     }
 
     packaging {
         jniLibs {
-            // Stored uncompressed and page aligned, so they load in place.
-            useLegacyPackaging = false
+            // Unpacked at install: yt-dlp's Python (libpython.so) is started
+            // as a program, which Android allows only from the app's
+            // library folder on disk.
+            useLegacyPackaging = true
         }
     }
 }
@@ -69,4 +72,7 @@ flutter {
 
 dependencies {
     implementation("androidx.annotation:annotation:1.11.0")
+    // Only its Python, QuickJS and yt-dlp files are used
+    // (PythonSetup.kt); its Kotlin and the libraries that needs are not.
+    implementation("io.github.junkfood02.youtubedl-android:library:0.18.1") { isTransitive = false }
 }

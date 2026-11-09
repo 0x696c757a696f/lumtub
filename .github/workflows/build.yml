@@ -848,7 +848,7 @@ jobs:
     env:
       FLUTTER_VERSION: 3.47.7
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -970,6 +970,32 @@ jobs:
         run: |
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
           timeout 600 android/packaging/smoke.sh dist/Lumtub_*_android-x86_64.apk "$RUNNER_TEMP/smoke" || { echo "--- emulator log"; tail -60 "$RUNNER_TEMP/emulator.log"; exit 1; }
+
+      - name: Android - hybrid signature (v3.2) trial with throwaway keys
+        continue-on-error: true
+        env:
+          KEYSTORE_PASSWORD: trial-only
+        run: |
+          trial="$RUNNER_TEMP/hybrid"; mkdir -p "$trial"
+          python3 -m venv "$trial/venv" && "$trial/venv/bin/pip" -q install cryptography
+          "$trial/venv/bin/python" android/packaging/hybrid-keys.py "$trial"
+          "$JAVA_HOME_25_X64/bin/keytool" -genkeypair -keystore "$trial/k0.jks" -storetype PKCS12 -storepass "$KEYSTORE_PASSWORD" \
+            -alias lumtub -keyalg EC -groupname secp384r1 -sigalg SHA384withECDSA -dname "CN=Lumtub trial" -validity 365
+          tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          JAVA_HOME="$JAVA_HOME_25_X64" PATH="$JAVA_HOME_25_X64/bin:$PATH" android/packaging/sign-hybrid.sh \
+            "$tools/apksigner" dist/Lumtub_*_android-x86_64.apk "$trial/hybrid.apk" "$trial/k0.jks" "$trial"
+
+      - name: Android - pictures to the android-shots branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        run: |
+          sha=$(git rev-parse --short HEAD)
+          git checkout -q --orphan android-shots
+          git rm -rfq . && git clean -fdxq
+          cp "$RUNNER_TEMP"/smoke/*.png "$RUNNER_TEMP"/smoke/*.mp4 . 2> /dev/null || true
+          git add -A
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Android pictures of $sha"
+          git push -f origin android-shots
 
       - name: Android - upload smoke test
         if: always()

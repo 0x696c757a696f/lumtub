@@ -24,6 +24,7 @@ import '../summary_dialog.dart';
 import '../theater_mode.dart';
 import '../skeleton.dart';
 import '../theme.dart';
+import '../skin_deck.dart';
 import '../skin_lcd.dart';
 import '../skin_paint.dart';
 import '../warm_layer.dart';
@@ -361,7 +362,7 @@ class _Player extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final picture = _picture(context);
-    if (skin == null || (skin.player.frame == null && skin.player.style != 'lcd')) return picture;
+    if (skin == null || (skin.player.frame == null && skin.player.style == 'default')) return picture;
     final frame = skin.player.frame;
     final playing = controller.playing;
     return SkinBox(
@@ -377,6 +378,13 @@ class _Player extends StatelessWidget {
             title: playing?.title ?? '',
             subtitle: playing?.channel ?? '',
             still: controller.appearance.lowResource,
+          ),
+        if (skin.player.deck case final deck?)
+          SkinDeckView(
+            deck: deck,
+            player: controller.player,
+            title: playing?.title ?? '',
+            onSeek: controller.seek,
           ),
       ]),
     );

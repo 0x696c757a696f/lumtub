@@ -221,6 +221,7 @@ class Skin {
       ..durationBadge
       ..logo
       ..player
+      ..player.deck?.glyph
       ..buttonText
       ..primaryButtonText
       ..chipSelectedText
@@ -687,7 +688,7 @@ class BeamDecoration extends SkinDecoration {
 /// Glossy ribbons swept across the window, as on the water and glass
 /// wallpapers of the late 2000s.
 /// The landscapes a skin can have painted behind it.
-const sceneNames = ['meadow', 'sky', 'underwater', 'aurora', 'city'];
+const sceneNames = ['meadow', 'sky', 'underwater', 'aurora', 'city', 'collage'];
 
 /// A whole landscape behind everything: lib/ui/skin_scenes.dart.
 class SceneDecoration extends SkinDecoration {
@@ -951,7 +952,8 @@ class SkinIcons {
 
 class SkinPlayer {
   SkinPlayer._(Map<String, Object?> m, Skin skin)
-      : style = _str(m['style']) == 'lcd' ? 'lcd' : 'default',
+      : style = switch (_str(m['style'])) { 'lcd' => 'lcd', 'deck' => 'deck', _ => 'default' },
+        deck = _str(m['style']) == 'deck' ? SkinDeck._(_map(m['deck']), skin) : null,
         frame = SkinSurface.parse(m['frame'], skin),
         progress = SkinPaint.listOf(m['progress'], skin),
         lcd = SkinSurface.parse(m['lcd'], skin),
@@ -961,8 +963,10 @@ class SkinPlayer {
         lcdFont = _str(m['lcdFont']) ?? 'VT323';
 
   /// default, or lcd: a display with the time, scrolling title and a
-  /// spectrum under the picture, as on late-90s media players.
+  /// spectrum under the picture, as on late-90s media players; or deck: a
+  /// player body of its own under the picture ([deck]).
   final String style;
+  final SkinDeck? deck;
   /// What surrounds the picture on the watch page.
   final SkinSurface? frame;
   /// The played part of the progress bar.
@@ -974,6 +978,66 @@ class SkinPlayer {
   /// The display's face; VT323 comes with Lumtub.
   final String lcdFont;
 }
+
+/// The body a "deck" player is drawn as, under the picture: its outline,
+/// what it is made of, its little screen and its buttons.
+class SkinDeck {
+  SkinDeck._(Map<String, Object?> m, Skin skin)
+      : shape = switch (_str(m['shape'])) {
+          final s? when shapes.contains(s) => s,
+          final s? => () {
+              skin.warn('player.deck.shape "$s" is unknown (${shapes.join(', ')})');
+              return 'capsule';
+            }(),
+          _ => 'capsule',
+        },
+        body = _orDefault(_colors(m['body'], skin), const [Color(0xFFF6F8FA), Color(0xFFC9D2DC), Color(0xFF9AA6B4)]),
+        rim = skin.colorOf(m['rim'], 'player.deck.rim') ?? const Color(0xFF7F8C9C),
+        clear = (_num(m['clear']) ?? 0).clamp(0, 0.8).toDouble(),
+        screen = skin.colorOf(m['screen'], 'player.deck.screen') ?? const Color(0xFF0B3A66),
+        button = _orDefault(_colors(m['button'], skin), const [Color(0xFFBFE8FF), Color(0xFF2A7AD0)]),
+        play = _orDefault(_colors(m['play'], skin), const [Color(0xFFD8FFD0), Color(0xFF2E9A2E)]),
+        groove = skin.colorOf(m['groove'], 'player.deck.groove') ?? const Color(0xFF5A6878),
+        fill = skin.colorOf(m['fill'], 'player.deck.fill') ?? const Color(0xFF3AB0FF),
+        speakers = m['speakers'] == true,
+        glow = skin.colorOf(m['glow'], 'player.deck.glow') {
+    screenText = skin.readableOn(skin.colorOf(m['screenText'], 'player.deck.screenText') ?? const Color(0xFF9FE8FF), screen, 'player.deck.screenText');
+    glyph = skin.readableOnAll(skin.colorOf(m['glyph'], 'player.deck.glyph') ?? const Color(0xFFFFFFFF), underGlyph(button), 'player.deck.glyph', min: 3);
+    playGlyph = skin.readableOnAll(skin.colorOf(m['playGlyph'], 'player.deck.playGlyph') ?? const Color(0xFFFFFFFF), underGlyph(play), 'player.deck.playGlyph', min: 3);
+  }
+
+  static const shapes = ['capsule', 'slab', 'wave', 'boombox', 'oval'];
+
+  /// What a button's sign lies on: the deep colour in the middle, and where
+  /// the light colour glowing up from the bottom reaches it.
+  static List<Color> underGlyph(List<Color> button) => [button.last, Color.lerp(button.last, button.first, 0.3)!];
+
+  /// capsule: a pill with round ends; slab: a flat, square-cornered unit;
+  /// wave: its top edge rolls like water; boombox: a carry handle and round
+  /// speakers at both ends; oval: a wide ellipse with the buttons in a
+  /// round cluster.
+  final String shape;
+  /// The body's colours from top to bottom: metal, pearl or plastic.
+  final List<Color> body;
+  final Color rim;
+  /// How see-through the body is, 0 to 0.8, as tinted clear plastic.
+  final double clear;
+  final Color screen;
+  late final Color screenText;
+  /// The small round buttons, top to bottom.
+  final List<Color> button;
+  late final Color glyph;
+  /// The big play button.
+  final List<Color> play;
+  late final Color playGlyph;
+  final Color groove;
+  final Color fill;
+  final bool speakers;
+  /// A light round the buttons, as smoked glass skins have.
+  final Color? glow;
+}
+
+List<Color> _orDefault(List<Color> colors, List<Color> fallback) => colors.length >= 2 ? colors : colors.length == 1 ? [colors.first, colors.first] : fallback;
 
 String? _str(Object? v) => v is String && v.isNotEmpty ? v : null;
 double? _num(Object? v) => v is num ? v.toDouble() : null;

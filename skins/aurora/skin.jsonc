@@ -370,6 +370,24 @@
     "badgeIcon": "#ffffff"
   },
   "player": {
+    // Smoked black glass, the buttons lit cyan from inside.
+    // 烟黑玻璃机身，按钮从里面透出青色光。
+    "style": "deck",
+    "deck": {
+      "shape": "slab",
+      "body": ["#3a4656", "#141c28", "#0a1018"],
+      "clear": 0.15,
+      "rim": "#000000",
+      "screen": "#02121a",
+      "screenText": "#6fffd8",
+      "button": ["#3a5a70", "#0c1e2c"],
+      "glyph": "#9ff8ff",
+      "play": ["#2a8a9a", "#063848"],
+      "playGlyph": "#e6ffff",
+      "groove": "#05090e",
+      "fill": "#3fe8b8",
+      "glow": "#3fe8d8"
+    },
     "progress": {
       "linear": {
         "angle": 90,

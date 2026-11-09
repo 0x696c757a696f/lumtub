@@ -373,6 +373,23 @@
     "badgeIcon": "#ffffff"
   },
   "player": {
+    // Brushed silver and white, slim as a hi-fi unit.
+    // 拉丝银加白色，扁平的高级音响样子。
+    "style": "deck",
+    "deck": {
+      "shape": "slab",
+      "body": ["#f4f6f8", "#d2d8de", "#aeb7c0"],
+      "rim": "#7f8a95",
+      "screen": "#0e2a38",
+      "screenText": "#9fe8ff",
+      "button": ["#ffffff", "#9aa6b2"],
+      "glyph": "#14324a",
+      "play": ["#d8fff0", "#187449"],
+      "playGlyph": "#ffffff",
+      "groove": "#8a96a2",
+      "fill": "#3ac4ff",
+      "speakers": true
+    },
     "progress": {
       "linear": {
         "angle": 90,

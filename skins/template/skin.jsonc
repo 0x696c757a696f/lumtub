@@ -382,6 +382,12 @@
     "style": "default",
     // The played part of the progress bar. 进度条已播放的部分。
     "progress": { "linear": { "angle": 90, "colors": ["#19b8ff", "#8df27a"] } }
+    // With "style": "deck" 用 deck 样式时写 "deck": { "shape": "capsule" | "slab" |
+    // "wave" | "boombox" | "oval", "body": [colours top to bottom 从上到下],
+    // "clear": 0-0.8, "screen", "screenText", "button": [light, deep 浅, 深],
+    // "glyph", "play": [light, deep], "playGlyph", "groove", "fill",
+    // "speakers": true, "glow" }. Sign colours need 3:1 on the deep colour.
+    // 按钮符号要在深色上有 3:1 对比度。
     // With "style": "lcd" 用 lcd 样式时还可以写：
     // "frame":    { ..surface.. },  — round the picture 画面外框
     // "lcd":      { ..surface.. },  — the display 显示屏

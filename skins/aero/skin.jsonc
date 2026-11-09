@@ -380,6 +380,22 @@
     "badgeIcon": "#ffffff"
   },
   "player": {
+    // A silver capsule with a blue glass screen and a big glossy play ball.
+    // 银色胶囊机身，蓝色玻璃屏，中间一个大的圆形播放球。
+    "style": "deck",
+    "deck": {
+      "shape": "capsule",
+      "body": ["#fbfcfd", "#dfe5ec", "#b9c3cf", "#d6dde5"],
+      "rim": "#7b8796",
+      "screen": "#0a3a6a",
+      "screenText": "#a8ecff",
+      "button": ["#d6f2ff", "#256cb8"],
+      "glyph": "#ffffff",
+      "play": ["#e2fbff", "#106ead"],
+      "playGlyph": "#ffffff",
+      "groove": "#7d8a99",
+      "fill": "#2fb4ff"
+    },
     "progress": {
       "linear": {
         "angle": 90,

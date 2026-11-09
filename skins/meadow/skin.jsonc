@@ -373,6 +373,22 @@
     "badgeIcon": "#ffffff"
   },
   "player": {
+    // Pearl-white plastic, an oval body and green jelly buttons.
+    // 珍珠白塑料椭圆机身，青绿色果冻按钮，绿色屏。
+    "style": "deck",
+    "deck": {
+      "shape": "oval",
+      "body": ["#ffffff", "#f1f6f2", "#d9e6dc", "#eef4ef"],
+      "rim": "#9fb4a4",
+      "screen": "#1d4a1a",
+      "screenText": "#c8ff9a",
+      "button": ["#e2ffcf", "#2c791d"],
+      "glyph": "#ffffff",
+      "play": ["#f0ffd8", "#247917"],
+      "playGlyph": "#ffffff",
+      "groove": "#9fb4a4",
+      "fill": "#5fd03a"
+    },
     "progress": {
       "linear": {
         "angle": 90,

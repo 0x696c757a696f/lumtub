@@ -532,9 +532,10 @@
         "style": {
           "enum": [
             "default",
-            "lcd"
+            "lcd",
+            "deck"
           ],
-          "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+          "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
         },
         "frame": {
           "$ref": "#/$defs/surface"
@@ -568,6 +569,78 @@
         "spectrum": {
           "type": "boolean",
           "description": "The level meter on the display. 显示屏上的电平条。"
+        },
+        "deck": {
+          "type": "object",
+          "description": "With style deck: the player body under the picture. 播放器机身。",
+          "properties": {
+            "shape": {
+              "enum": [
+                "capsule",
+                "slab",
+                "wave",
+                "boombox",
+                "oval"
+              ],
+              "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+            },
+            "body": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/color"
+              },
+              "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+            },
+            "rim": {
+              "$ref": "#/$defs/color"
+            },
+            "clear": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.8,
+              "description": "How see-through the body is. 机身透明度。"
+            },
+            "screen": {
+              "$ref": "#/$defs/color"
+            },
+            "screenText": {
+              "$ref": "#/$defs/color"
+            },
+            "button": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/color"
+              },
+              "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+            },
+            "glyph": {
+              "$ref": "#/$defs/color"
+            },
+            "play": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/color"
+              },
+              "description": "The big play button. 大播放键。"
+            },
+            "playGlyph": {
+              "$ref": "#/$defs/color"
+            },
+            "groove": {
+              "$ref": "#/$defs/color"
+            },
+            "fill": {
+              "$ref": "#/$defs/color"
+            },
+            "speakers": {
+              "type": "boolean",
+              "description": "Round speakers at both ends. 两端圆形喇叭。"
+            },
+            "glow": {
+              "$ref": "#/$defs/color"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -1081,9 +1154,10 @@
                 "style": {
                   "enum": [
                     "default",
-                    "lcd"
+                    "lcd",
+                    "deck"
                   ],
-                  "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
                 },
                 "frame": {
                   "$ref": "#/$defs/surface"
@@ -1117,6 +1191,78 @@
                 "spectrum": {
                   "type": "boolean",
                   "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
@@ -1630,9 +1776,10 @@
                 "style": {
                   "enum": [
                     "default",
-                    "lcd"
+                    "lcd",
+                    "deck"
                   ],
-                  "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
                 },
                 "frame": {
                   "$ref": "#/$defs/surface"
@@ -1666,6 +1813,78 @@
                 "spectrum": {
                   "type": "boolean",
                   "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
@@ -2179,9 +2398,10 @@
                 "style": {
                   "enum": [
                     "default",
-                    "lcd"
+                    "lcd",
+                    "deck"
                   ],
-                  "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
                 },
                 "frame": {
                   "$ref": "#/$defs/surface"
@@ -2215,6 +2435,78 @@
                 "spectrum": {
                   "type": "boolean",
                   "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
@@ -2728,9 +3020,10 @@
                 "style": {
                   "enum": [
                     "default",
-                    "lcd"
+                    "lcd",
+                    "deck"
                   ],
-                  "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
                 },
                 "frame": {
                   "$ref": "#/$defs/surface"
@@ -2764,6 +3057,78 @@
                 "spectrum": {
                   "type": "boolean",
                   "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
@@ -3277,9 +3642,10 @@
                 "style": {
                   "enum": [
                     "default",
-                    "lcd"
+                    "lcd",
+                    "deck"
                   ],
-                  "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
                 },
                 "frame": {
                   "$ref": "#/$defs/surface"
@@ -3313,6 +3679,78 @@
                 "spectrum": {
                   "type": "boolean",
                   "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
@@ -3826,9 +4264,10 @@
                 "style": {
                   "enum": [
                     "default",
-                    "lcd"
+                    "lcd",
+                    "deck"
                   ],
-                  "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
                 },
                 "frame": {
                   "$ref": "#/$defs/surface"
@@ -3862,6 +4301,78 @@
                 "spectrum": {
                   "type": "boolean",
                   "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
@@ -4284,7 +4795,8 @@
             "sky",
             "underwater",
             "aurora",
-            "city"
+            "city",
+            "collage"
           ],
           "description": "With type scene: the landscape. 景色。"
         },

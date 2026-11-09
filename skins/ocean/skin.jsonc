@@ -362,6 +362,23 @@
     "badgeIcon": "#ffffff"
   },
   "player": {
+    // Clear aqua plastic with a rolling top edge, like the frame of a fish
+    // tank; the buttons are bubbles. 半透明水蓝塑料，上沿像水波，按钮像气泡。
+    "style": "deck",
+    "deck": {
+      "shape": "wave",
+      "body": ["#bff6ff", "#5fd6ec", "#1aa6c8"],
+      "clear": 0.15,
+      "rim": "#0e7a96",
+      "screen": "#063a4e",
+      "screenText": "#9ff6ff",
+      "button": ["#eaffff", "#13718b"],
+      "glyph": "#ffffff",
+      "play": ["#e6ffff", "#0a7299"],
+      "playGlyph": "#ffffff",
+      "groove": "#0e6a84",
+      "fill": "#7ff0ff"
+    },
     "progress": {
       "linear": {
         "angle": 90,

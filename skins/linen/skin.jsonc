@@ -1,0 +1,451 @@
+// Linen & Leather: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 亚麻皮革：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "linen",
+  "name": "Linen & Leather",
+  "names": {
+    "zh-Hans": "亚麻皮革",
+    "zh-Hant": "亞麻皮革"
+  },
+  "description": "Grey linen behind everything, a stitched leather bar and glassy buttons, from the years when screens copied real materials",
+  "descriptions": {
+    "zh-Hans": "灰色亚麻布纹打底，带缝线的皮革顶栏和玻璃质感按钮，屏幕还在模仿真实材质的那几年",
+    "zh-Hant": "灰色亞麻布紋打底，帶縫線的皮革頂欄和玻璃質感按鈕，螢幕還在模仿真實材質的那幾年"
+  },
+  "brightness": "light",
+  "colors": {
+    "page": "#d7d9dc",
+    "text": "#1d1f22",
+    "muted": "#4a4e54",
+    "accent": "#1f5fbf",
+    "onAccent": "#ffffff",
+    "border": "#a2a7ae",
+    "card": "#f7f7f8",
+    "selected": "#cdddf5",
+    "onSelected": "#0d2a55",
+    "reason": "#1f5fbf"
+  },
+  "shape": {
+    "cardRadius": 8,
+    "controlRadius": 8,
+    "thumbnailRadius": 4
+  },
+  "window": {
+    "background": [
+      "#8e9399",
+      {
+        "pattern": {
+          "type": "grid",
+          "color": "#ffffff17",
+          "spacing": 3,
+          "size": 1
+        }
+      },
+      {
+        "pattern": {
+          "type": "grid",
+          "color": "#0000000f",
+          "spacing": 3,
+          "size": 1,
+          "angle": 45
+        }
+      },
+      {
+        "radial": {
+          "center": [
+            0.5,
+            0.0
+          ],
+          "radius": 0.9,
+          "colors": [
+            "#ffffff2e",
+            "#ffffff00"
+          ]
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 28,
+      "surface": {
+        "fill": [
+          {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#7a4a2a",
+                "#5a3219",
+                "#4a2812"
+              ],
+              "stops": [
+                0,
+                0.55,
+                1
+              ]
+            }
+          },
+          {
+            "pattern": {
+              "type": "dots",
+              "color": "#00000026",
+              "spacing": 3,
+              "size": 1
+            }
+          },
+          {
+            "pattern": {
+              "type": "stitch",
+              "color": "#f2d9b399",
+              "spacing": 4,
+              "size": 1
+            }
+          }
+        ],
+        "border": {
+          "color": "#2a160a",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": [
+          {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#8a6a52",
+                "#6a4c36"
+              ]
+            }
+          }
+        ]
+      },
+      "text": "#fff4e6",
+      "inactiveText": "#e3d2bf",
+      "align": "center",
+      "buttons": {
+        "size": [
+          34,
+          22
+        ],
+        "icon": "#fff4e6",
+        "surface": {
+          "fill": "transparent",
+          "radius": 5,
+          "hover": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#a0704a",
+                  "#6e4022"
+                ]
+              }
+            },
+            "gloss": 0.5
+          },
+          "pressed": {
+            "fill": "#3a1f0d"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "radius": 5,
+          "hover": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#e86a5a",
+                  "#a8241a"
+                ]
+              }
+            },
+            "gloss": 0.5
+          },
+          "pressed": {
+            "fill": "#7a160e"
+          }
+        }
+      }
+    },
+    "topBar": {
+      "fill": [
+        {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#b6c3d6",
+              "#8297b6",
+              "#6d84a8"
+            ],
+            "stops": [
+              0,
+              0.5,
+              1
+            ]
+          }
+        }
+      ],
+      "gloss": 0.45,
+      "border": {
+        "color": "#2d3f5c",
+        "sides": [
+          "bottom"
+        ]
+      },
+      "shadow": [
+        {
+          "color": "#00000040",
+          "y": 2,
+          "blur": 5
+        }
+      ]
+    },
+    "sideBar": {
+      "fill": [
+        {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#f1f2f4",
+              "#dfe1e4"
+            ]
+          }
+        }
+      ],
+      "border": {
+        "color": "#9aa0a8",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#c9ccd1",
+            "#aeb2b8"
+          ]
+        }
+      },
+      "border": {
+        "color": "#7d838b",
+        "sides": [
+          "top"
+        ]
+      }
+    },
+    "topBarText": "#13233f",
+    "statusBarText": "#1d1f22"
+  },
+  "controls": {
+    "press": "wash",
+    "button": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffff",
+            "#e6e8eb",
+            "#d4d7db"
+          ],
+          "stops": [
+            0,
+            0.5,
+            1
+          ]
+        }
+      },
+      "gloss": 0.6,
+      "border": "#8d939b",
+      "radius": 8,
+      "shadow": [
+        {
+          "color": "#ffffffb3",
+          "y": 1,
+          "blur": 0
+        }
+      ],
+      "pressed": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#c4c8cd",
+              "#e2e4e7"
+            ]
+          }
+        }
+      }
+    },
+    "buttonText": "#1d1f22",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#2c6cc8",
+            "#174d9e",
+            "#0f3a78"
+          ],
+          "stops": [
+            0,
+            0.5,
+            1
+          ]
+        }
+      },
+      "gloss": 0.7,
+      "border": "#123f82",
+      "radius": 8,
+      "pressed": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#174d9e",
+              "#2a6ad0"
+            ]
+          }
+        }
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffff",
+            "#dfe2e6"
+          ]
+        }
+      },
+      "border": "#9aa0a8",
+      "radius": 99
+    },
+    "chipSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#2c6cc8",
+            "#123f82"
+          ]
+        }
+      },
+      "gloss": 0.7,
+      "border": "#123f82",
+      "radius": 99
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#2c6cc8",
+            "#123f82"
+          ]
+        }
+      },
+      "gloss": 0.6,
+      "border": "#123f82",
+      "radius": 8
+    },
+    "navSelectedText": "#ffffff",
+    "navText": "#2d3136"
+  },
+  "cards": {
+    "video": {
+      "fill": "#f7f7f8",
+      "border": "#b4b9c0",
+      "radius": 8,
+      "shadow": [
+        {
+          "color": "#00000040",
+          "y": 3,
+          "blur": 8
+        }
+      ],
+      "hover": {
+        "border": {
+          "color": "#1f5fbf",
+          "width": 2
+        }
+      },
+      "focused": {
+        "border": {
+          "color": "#1f5fbf",
+          "width": 3
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#f7f7f8f2",
+      "border": "#a2a7ae"
+    },
+    "durationBadge": {
+      "fill": "#1d1f22d9",
+      "radius": 4
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "Lumtub",
+    "size": 24,
+    "fill": {
+      "linear": {
+        "angle": 180,
+        "colors": [
+          "#ffffff",
+          "#dfe6f2"
+        ]
+      }
+    },
+    "shadow": "#1d2b45",
+    "badge": {
+      "fill": {
+        "radial": {
+          "center": [
+            0.5,
+            0.8
+          ],
+          "radius": 0.7,
+          "colors": [
+            "#8fbcff",
+            "#1a54ad"
+          ]
+        }
+      },
+      "gloss": 0.85,
+      "border": "#123f82",
+      "radius": 7
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "icons": {
+    "style": "fill",
+    "effect": "gel"
+  },
+  "player": {
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#7fb2ff",
+          "#1f5fbf"
+        ]
+      }
+    }
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

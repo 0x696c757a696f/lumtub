@@ -92,6 +92,7 @@ anything else out and Lumtub draws it the usual way.
 | `cards` | Video cards, panels, the duration badge. 视频卡片、面板、时长角标。 |
 | `logo` | The word mark: text, font, gradient, outline, glow, badge. 标志。 |
 | `icons` | `style`: `regular`/`fill`; `effect`: `none`, `emboss`, `engrave`, `gel`, `glow`. 图标实心与拟物效果。 |
+| `controls.press` | `wash`, `ripple` or `glow`: what a click looks like. 点击效果：变暗、水波纹、发光。 |
 | `player` | Frame, progress bar; `"style": "lcd"` for a 90s media player display. 播放器。 |
 | `overrides` | Changes for `desktop`, `mobile`, `tablet` or `tv`. 按设备覆盖。 |
 
@@ -254,6 +255,11 @@ own shapes; only the colours change. 跟随浅色/深色模式，保留 Lumtub �
 | `onebit` | One Bit | 黑白点阵 | black and white bitmap screens, ~1984 |
 | `platinum` | Platinum | 白金灰 | late-90s platinum grey |
 | `pinstripe` | Pinstripe Gel | 细条纹凝胶 | early-2000s pinstripes and gel, menus along the top |
+| `metal` | Brushed Metal | 金属拟物 | first touch phones: steel, gloss, orange glow |
+| `holo` | Ice Neon | 冰蓝霓虹 | dark panels and ice-blue lines, ~2012 phones |
+| `paper` | Paper Cards | 纸片阴影 | paper cards, coloured bar and ripples, ~2015 phones |
+| `linen` | Linen & Leather | 亚麻皮革 | linen, stitched leather and glass buttons |
+| `shelf` | Wooden Shelf | 木纹书架 | wood grain, cream paper, a metal slider |
 | `handheld` | Handheld | 点阵掌机 | green dot-matrix handhelds, ~1989 |
 
 Fonts in [`fonts/`](fonts/) are under the SIL Open Font License 1.1; each

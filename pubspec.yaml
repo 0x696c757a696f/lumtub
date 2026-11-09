@@ -62,6 +62,11 @@ flutter:
     - skins/onebit/
     - skins/platinum/
     - skins/pinstripe/
+    - skins/metal/
+    - skins/holo/
+    - skins/paper/
+    - skins/linen/
+    - skins/shelf/
     - skins/handheld/
     - skins/template/
   fonts:

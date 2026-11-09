@@ -312,8 +312,13 @@ ThemeData buildAppTheme(
     canvasColor: scheme.surface,
     visualDensity: compact ? VisualDensity.compact : VisualDensity.standard,
     // No ripples: a flat wash that comes in at once on press.
-    splashFactory: FlatPress.splashFactory,
-    splashColor: skin == null ? scheme.onSurface.withValues(alpha: 0.14) : Color.alphaBlend(scheme.primary.withValues(alpha: 0.18), scheme.onSurface.withValues(alpha: 0.08)),
+    splashFactory: skin?.press == 'ripple' ? InkRipple.splashFactory : FlatPress.splashFactory,
+    splashColor: switch (skin?.press) {
+      null => scheme.onSurface.withValues(alpha: 0.14),
+      'glow' => scheme.primary.withValues(alpha: 0.38),
+      'ripple' => scheme.onSurface.withValues(alpha: 0.16),
+      _ => Color.alphaBlend(scheme.primary.withValues(alpha: 0.18), scheme.onSurface.withValues(alpha: 0.08)),
+    },
     // Hover has to show on every row and button, on a skin's busy page too.
     hoverColor: skin == null ? scheme.onSurface.withValues(alpha: 0.07) : Color.alphaBlend(scheme.primary.withValues(alpha: 0.10), scheme.onSurface.withValues(alpha: 0.04)),
     highlightColor: Colors.transparent,

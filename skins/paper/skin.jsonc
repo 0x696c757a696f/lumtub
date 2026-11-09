@@ -1,0 +1,253 @@
+// Paper Cards: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 纸片阴影：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "paper",
+  "name": "Paper Cards",
+  "names": {
+    "zh-Hans": "纸片阴影",
+    "zh-Hant": "紙片陰影"
+  },
+  "description": "White paper cards with soft shadows, a bold coloured top bar and ripples where you tap, as phones looked around 2015",
+  "descriptions": {
+    "zh-Hans": "白色纸片卡片和柔和阴影，醒目的彩色顶栏，点到哪里哪里起水波纹，像 2015 年前后的手机",
+    "zh-Hant": "白色紙片卡片和柔和陰影，醒目的彩色頂欄，點到哪裡哪裡起水波紋，像 2015 年前後的手機"
+  },
+  "brightness": "light",
+  "colors": {
+    "page": "#eeeeee",
+    "text": "#212121",
+    "muted": "#5f5f5f",
+    "accent": "#c2185b",
+    "onAccent": "#ffffff",
+    "border": "#dcdcdc",
+    "card": "#ffffff",
+    "selected": "#e3e6f6",
+    "onSelected": "#1a237e",
+    "reason": "#3949ab"
+  },
+  "shape": {
+    "cardRadius": 2,
+    "controlRadius": 2,
+    "thumbnailRadius": 0
+  },
+  "window": {
+    "background": [
+      "#eeeeee"
+    ],
+    "titleBar": {
+      "height": 26,
+      "surface": {
+        "fill": "#283593"
+      },
+      "inactive": {
+        "fill": "#3f4a9e"
+      },
+      "text": "#ffffff",
+      "inactiveText": "#d0d4f0",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#ffffff",
+        "surface": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#ffffff26"
+          },
+          "pressed": {
+            "fill": "#ffffff40"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "hover": {
+            "fill": "#e53935"
+          },
+          "pressed": {
+            "fill": "#b71c1c"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#3949ab"
+      },
+      "text": "#ffffff",
+      "highlight": {
+        "fill": "#1a237e"
+      },
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#ffffff",
+        "border": "#e0e0e0",
+        "radius": 2,
+        "shadow": [
+          {
+            "color": "#00000040",
+            "y": 4,
+            "blur": 10
+          }
+        ]
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": "#3949ab",
+      "shadow": [
+        {
+          "color": "#00000047",
+          "y": 2,
+          "blur": 5
+        }
+      ]
+    },
+    "sideBar": {
+      "fill": "#fafafa",
+      "border": {
+        "color": "#e0e0e0",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#fafafa",
+      "border": {
+        "color": "#e0e0e0",
+        "sides": [
+          "top"
+        ]
+      }
+    },
+    "topBarText": "#ffffff",
+    "statusBarText": "#5f5f5f"
+  },
+  "controls": {
+    "press": "ripple",
+    "button": {
+      "fill": "#ffffff",
+      "radius": 2,
+      "shadow": [
+        {
+          "color": "#00000033",
+          "y": 1,
+          "blur": 3
+        }
+      ],
+      "hover": {
+        "fill": "#f5f5f5"
+      }
+    },
+    "buttonText": "#283593",
+    "primaryButton": {
+      "fill": "#c2185b",
+      "radius": 2,
+      "shadow": [
+        {
+          "color": "#00000040",
+          "y": 2,
+          "blur": 4
+        }
+      ],
+      "hover": {
+        "fill": "#ad1457"
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": "#e0e0e0",
+      "radius": 16
+    },
+    "chipSelected": {
+      "fill": "#3949ab",
+      "radius": 16
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": "#e8eaf6",
+      "radius": 2
+    },
+    "navSelectedText": "#283593",
+    "navText": "#5f5f5f"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffff",
+      "radius": 2,
+      "shadow": [
+        {
+          "color": "#00000029",
+          "y": 1,
+          "blur": 3
+        },
+        {
+          "color": "#0000001f",
+          "y": 1,
+          "blur": 2
+        }
+      ],
+      "hover": {
+        "shadow": [
+          {
+            "color": "#00000038",
+            "y": 6,
+            "blur": 12
+          }
+        ]
+      },
+      "focused": {
+        "border": {
+          "color": "#3949ab",
+          "width": 3
+        }
+      }
+    },
+    "padding": 0,
+    "panel": {
+      "fill": "#ffffff",
+      "shadow": [
+        {
+          "color": "#00000029",
+          "y": 1,
+          "blur": 3
+        }
+      ]
+    },
+    "durationBadge": {
+      "fill": "#000000b3",
+      "radius": 2
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "Lumtub",
+    "size": 24,
+    "fill": "#ffffff",
+    "badge": {
+      "fill": "#c2185b",
+      "radius": 99,
+      "shadow": [
+        {
+          "color": "#00000047",
+          "y": 2,
+          "blur": 4
+        }
+      ]
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "icons": {
+    "style": "fill",
+    "effect": "none"
+  },
+  "player": {
+    "progress": "#e91e63"
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

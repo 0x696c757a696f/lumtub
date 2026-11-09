@@ -110,6 +110,17 @@ class Skin {
   late final SkinLogo logo = SkinLogo._(_map(_raw['logo']), this);
   late final SkinPlayer player = SkinPlayer._(_map(_raw['player']), this);
   late final SkinIcons icons = SkinIcons._(_map(_raw['icons']), this);
+  /// What a press looks like: wash (the control darkens at once), ripple
+  /// (a ring spreads from the finger) or glow (an accent-coloured wash).
+  late final String press = switch (_str(_map(_raw['controls'])['press'])) {
+    'ripple' => 'ripple',
+    'glow' => 'glow',
+    null || 'wash' => 'wash',
+    final other => () {
+        warn('controls.press "$other" is unknown (wash, ripple, glow)');
+        return 'wash';
+      }(),
+  };
 
   /// The file a picture or font named in the skin is in.
   String file(String name) => builtIn ? '$folder/$name' : '$folder${folder.contains('\\') ? '\\' : '/'}${name.replaceAll('/', folder.contains('\\') ? '\\' : '/')}';
@@ -174,6 +185,7 @@ class Skin {
       ..titleBar
       ..menuBar
       ..icons
+      ..press
       ..topBar
       ..sideBar
       ..statusBar
@@ -404,7 +416,7 @@ class ImagePaint extends SkinPaint {
 /// A repeating pixel pattern.
 class PatternPaint extends SkinPaint {
   const PatternPaint(this.type, this.color, {required this.spacing, required this.size, required this.angle});
-  static const types = {'lines', 'grid', 'dots', 'checker', 'scanlines'};
+  static const types = {'lines', 'grid', 'dots', 'checker', 'scanlines', 'stitch', 'grain'};
   final String type;
   final Color color;
   final double spacing;

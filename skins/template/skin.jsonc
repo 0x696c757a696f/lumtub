@@ -35,7 +35,8 @@
 //                      fit: cover, contain, fill, tile; "opacity": 0–1.
 //                      Only on window.background. 只能用在 window.background。
 //                  { "pattern": { "type": "dots", "color": "#0002", "spacing": 4, "size": 1 } }
-//                      type: lines, grid, dots, checker, scanlines; "angle" rotates.
+//                      type: lines, grid, dots, checker, scanlines, stitch (seams
+//                      "spacing" in from top and bottom), grain (wood); "angle" rotates.
 //                Where a list of paints is allowed they are painted first to
 //                last, so later ones lie on top. 可以写成列表，后面的盖在前面的上面。
 // surface 表面:  how a box is drawn (bars, cards, buttons):
@@ -275,6 +276,10 @@
   },
 
   "controls": {
+    // What a click looks like: wash (the control darkens at once), ripple
+    // (a ring spreads from the pointer) or glow (an accent-coloured wash).
+    // 点击效果：wash 整块变暗、ripple 水波纹、glow 发光。
+    "press": "wash",
     // Ordinary buttons. 普通按钮。
     "button": { "fill": { "linear": { "angle": 180, "colors": ["#ffffff", "#ddeefa"] } }, "border": "#9fc9e6", "hover": { "fill": "#ffffff" } },
     "buttonText": "#10233a",

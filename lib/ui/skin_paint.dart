@@ -62,6 +62,23 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
         }
       }
       canvas.drawPoints(PointMode.points, points, paint..strokeWidth = size);
+    case 'stitch':
+      // Dashed seams [spacing] in from the top and bottom, as on leather.
+      final dash = math.max(2.0, size * 3);
+      for (final y in [rect.top + step, rect.bottom - step - size]) {
+        for (var x = rect.left + step; x < rect.right - step; x += dash * 2) {
+          canvas.drawRect(Rect.fromLTWH(x, y, math.min(dash, rect.right - step - x), size), paint);
+        }
+      }
+    case 'grain':
+      // Uneven lines, as the grain of wood.
+      final random = math.Random(7);
+      for (var y = cover.top; y < cover.bottom; y += step * (0.5 + random.nextDouble())) {
+        final alpha = 0.35 + random.nextDouble() * 0.65;
+        canvas.drawRect(Rect.fromLTWH(cover.left, y, cover.width, size * (0.6 + random.nextDouble() * 0.8)), Paint()
+          ..color = p.color.withValues(alpha: p.color.a * alpha)
+          ..shader = fade);
+      }
     case 'checker':
       final path = Path();
       var row = 0;

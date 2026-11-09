@@ -1,0 +1,271 @@
+// Ice Neon: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 冰蓝霓虹：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "holo",
+  "name": "Ice Neon",
+  "names": {
+    "zh-Hans": "冰蓝霓虹",
+    "zh-Hant": "冰藍霓虹"
+  },
+  "description": "Near-black panels, thin ice-blue lines and square edges, the dark sci-fi look of phones around 2012",
+  "descriptions": {
+    "zh-Hans": "近黑的面板、冰蓝细线和方正的边角，2012 年前后手机那种深色科幻感",
+    "zh-Hant": "近黑的面板、冰藍細線和方正的邊角，2012 年前後手機那種深色科幻感"
+  },
+  "brightness": "dark",
+  "colors": {
+    "page": "#101214",
+    "text": "#e9f6fb",
+    "muted": "#9fb3bb",
+    "accent": "#33b5e5",
+    "onAccent": "#001e29",
+    "border": "#26343a",
+    "card": "#171b1e",
+    "selected": "#0f3a4a",
+    "onSelected": "#e9f6fb",
+    "reason": "#5fc8ee"
+  },
+  "shape": {
+    "cardRadius": 2,
+    "controlRadius": 2,
+    "thumbnailRadius": 0
+  },
+  "window": {
+    "background": [
+      {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#0b0c0e",
+            "#14181b"
+          ]
+        }
+      },
+      {
+        "radial": {
+          "center": [
+            0.5,
+            -0.2
+          ],
+          "radius": 0.7,
+          "colors": [
+            "#33b5e51f",
+            "#33b5e500"
+          ]
+        }
+      }
+    ],
+    "decorations": [
+      {
+        "type": "pattern",
+        "pattern": "grid",
+        "color": "#33b5e50d",
+        "spacing": 48,
+        "size": 1
+      }
+    ],
+    "titleBar": {
+      "height": 28,
+      "surface": {
+        "fill": "#000000",
+        "border": {
+          "color": "#33b5e5",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#0b0c0e"
+      },
+      "text": "#e9f6fb",
+      "inactiveText": "#7d8e95",
+      "buttons": {
+        "size": [
+          40,
+          26
+        ],
+        "icon": "#cfe9f3",
+        "surface": {
+          "fill": "transparent",
+          "radius": 0,
+          "hover": {
+            "fill": "#33b5e533"
+          },
+          "pressed": {
+            "fill": "#33b5e566"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "radius": 0,
+          "hover": {
+            "fill": "#cc0000"
+          },
+          "pressed": {
+            "fill": "#8a0000"
+          }
+        }
+      }
+    },
+    "menuBar": {
+      "surface": {
+        "fill": "#0b0c0e",
+        "border": {
+          "color": "#26343a",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "text": "#cfe9f3",
+      "highlight": {
+        "fill": "#33b5e566"
+      },
+      "highlightText": "#ffffff",
+      "menu": {
+        "fill": "#1b1f22f7",
+        "border": "#33b5e5",
+        "radius": 0
+      },
+      "underlineKeys": true
+    },
+    "topBar": {
+      "fill": "#000000e6",
+      "border": {
+        "color": "#33b5e5",
+        "width": 2,
+        "sides": [
+          "bottom"
+        ]
+      }
+    },
+    "sideBar": {
+      "fill": "#0b0c0ee6",
+      "border": {
+        "color": "#26343a",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": "#000000",
+      "border": {
+        "color": "#26343a",
+        "sides": [
+          "top"
+        ]
+      }
+    },
+    "topBarText": "#e9f6fb",
+    "statusBarText": "#9fb3bb"
+  },
+  "controls": {
+    "press": "glow",
+    "button": {
+      "fill": "#1d2226",
+      "border": "#3a4a51",
+      "radius": 2,
+      "hover": {
+        "fill": "#24343c",
+        "border": "#33b5e5"
+      },
+      "pressed": {
+        "fill": "#33b5e540"
+      }
+    },
+    "buttonText": "#e9f6fb",
+    "primaryButton": {
+      "fill": "#0a4f6a",
+      "border": "#33b5e5",
+      "radius": 2,
+      "glow": "#33b5e5",
+      "hover": {
+        "fill": "#0d6286"
+      },
+      "pressed": {
+        "fill": "#33b5e566"
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": "#1d2226",
+      "border": "#3a4a51",
+      "radius": 2
+    },
+    "chipSelected": {
+      "fill": "#0a4f6a",
+      "border": "#33b5e5",
+      "radius": 2
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": "#33b5e526",
+      "border": {
+        "color": "#33b5e5",
+        "width": 3,
+        "sides": [
+          "left"
+        ]
+      },
+      "radius": 0
+    },
+    "navSelectedText": "#7fd3f2",
+    "navText": "#a9bcc3"
+  },
+  "cards": {
+    "video": {
+      "fill": "#171b1e",
+      "border": "#26343a",
+      "radius": 2,
+      "hover": {
+        "border": {
+          "color": "#33b5e5",
+          "width": 1
+        }
+      },
+      "focused": {
+        "border": {
+          "color": "#33b5e5",
+          "width": 3
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#14181bf2",
+      "border": "#26343a"
+    },
+    "durationBadge": {
+      "fill": "#000000d9",
+      "radius": 0
+    },
+    "durationText": "#e9f6fb"
+  },
+  "logo": {
+    "text": "Lumtub",
+    "size": 24,
+    "fill": "#e9f6fb",
+    "glow": "#33b5e5",
+    "badge": {
+      "fill": "#000000",
+      "border": "#33b5e5",
+      "radius": 2
+    },
+    "badgeIcon": "#33b5e5"
+  },
+  "icons": {
+    "style": "regular",
+    "effect": "glow",
+    "glow": "#33b5e5"
+  },
+  "player": {
+    "progress": "#33b5e5"
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

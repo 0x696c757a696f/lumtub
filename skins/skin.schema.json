@@ -260,7 +260,10 @@
                   "description": "Close."
                 },
                 "placement": {
-                  "enum": ["right", "left"],
+                  "enum": [
+                    "right",
+                    "left"
+                  ],
                   "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                 },
                 "minimize": {
@@ -270,7 +273,10 @@
                   "$ref": "#/$defs/surface"
                 },
                 "glyphs": {
-                  "enum": ["always", "hover"],
+                  "enum": [
+                    "always",
+                    "hover"
+                  ],
                   "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                 }
               },
@@ -385,6 +391,14 @@
         },
         "navText": {
           "$ref": "#/$defs/color"
+        },
+        "press": {
+          "enum": [
+            "wash",
+            "ripple",
+            "glow"
+          ],
+          "description": "What a press looks like: wash (darkens at once), ripple (spreads from the finger), glow (accent wash). 点击效果：整块变暗、水波纹、发光。"
         }
       },
       "additionalProperties": false
@@ -769,7 +783,10 @@
                           "description": "Close."
                         },
                         "placement": {
-                          "enum": ["right", "left"],
+                          "enum": [
+                            "right",
+                            "left"
+                          ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
                         "minimize": {
@@ -779,7 +796,10 @@
                           "$ref": "#/$defs/surface"
                         },
                         "glyphs": {
-                          "enum": ["always", "hover"],
+                          "enum": [
+                            "always",
+                            "hover"
+                          ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
@@ -1278,7 +1298,10 @@
                           "description": "Close."
                         },
                         "placement": {
-                          "enum": ["right", "left"],
+                          "enum": [
+                            "right",
+                            "left"
+                          ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
                         "minimize": {
@@ -1288,7 +1311,10 @@
                           "$ref": "#/$defs/surface"
                         },
                         "glyphs": {
-                          "enum": ["always", "hover"],
+                          "enum": [
+                            "always",
+                            "hover"
+                          ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
@@ -1787,7 +1813,10 @@
                           "description": "Close."
                         },
                         "placement": {
-                          "enum": ["right", "left"],
+                          "enum": [
+                            "right",
+                            "left"
+                          ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
                         "minimize": {
@@ -1797,7 +1826,10 @@
                           "$ref": "#/$defs/surface"
                         },
                         "glyphs": {
-                          "enum": ["always", "hover"],
+                          "enum": [
+                            "always",
+                            "hover"
+                          ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
@@ -2296,7 +2328,10 @@
                           "description": "Close."
                         },
                         "placement": {
-                          "enum": ["right", "left"],
+                          "enum": [
+                            "right",
+                            "left"
+                          ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
                         "minimize": {
@@ -2306,7 +2341,10 @@
                           "$ref": "#/$defs/surface"
                         },
                         "glyphs": {
-                          "enum": ["always", "hover"],
+                          "enum": [
+                            "always",
+                            "hover"
+                          ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
@@ -2805,7 +2843,10 @@
                           "description": "Close."
                         },
                         "placement": {
-                          "enum": ["right", "left"],
+                          "enum": [
+                            "right",
+                            "left"
+                          ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
                         "minimize": {
@@ -2815,7 +2856,10 @@
                           "$ref": "#/$defs/surface"
                         },
                         "glyphs": {
-                          "enum": ["always", "hover"],
+                          "enum": [
+                            "always",
+                            "hover"
+                          ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
@@ -3314,7 +3358,10 @@
                           "description": "Close."
                         },
                         "placement": {
-                          "enum": ["right", "left"],
+                          "enum": [
+                            "right",
+                            "left"
+                          ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
                         "minimize": {
@@ -3324,7 +3371,10 @@
                           "$ref": "#/$defs/surface"
                         },
                         "glyphs": {
-                          "enum": ["always", "hover"],
+                          "enum": [
+                            "always",
+                            "hover"
+                          ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
@@ -3746,6 +3796,8 @@
                     "grid",
                     "dots",
                     "checker",
+                    "stitch",
+                    "grain",
                     "scanlines"
                   ]
                 },
@@ -3969,6 +4021,8 @@
             "grid",
             "dots",
             "checker",
+            "stitch",
+            "grain",
             "scanlines"
           ]
         },

@@ -1,0 +1,417 @@
+// Wooden Shelf: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 木纹书架：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "shelf",
+  "name": "Wooden Shelf",
+  "names": {
+    "zh-Hans": "木纹书架",
+    "zh-Hant": "木紋書架"
+  },
+  "description": "Warm wood grain, cream paper cards and a brushed metal slider on what is chosen",
+  "descriptions": {
+    "zh-Hans": "温暖的木纹底色、米黄纸张卡片，选中项像一块拉丝金属滑块",
+    "zh-Hant": "溫暖的木紋底色、米黃紙張卡片，選中項像一塊拉絲金屬滑塊"
+  },
+  "brightness": "light",
+  "colors": {
+    "page": "#c89a64",
+    "text": "#2a1a0c",
+    "muted": "#3f2a15",
+    "accent": "#5e2406",
+    "onAccent": "#ffffff",
+    "border": "#8c6236",
+    "card": "#fbf4e4",
+    "selected": "#efe0c2",
+    "onSelected": "#2a1a0c",
+    "reason": "#7a3810"
+  },
+  "shape": {
+    "cardRadius": 4,
+    "controlRadius": 6,
+    "thumbnailRadius": 2
+  },
+  "window": {
+    "background": [
+      {
+        "linear": {
+          "angle": 90,
+          "colors": [
+            "#d3a670",
+            "#b9864f",
+            "#c99a62"
+          ],
+          "stops": [
+            0,
+            0.5,
+            1
+          ]
+        }
+      },
+      {
+        "pattern": {
+          "type": "grain",
+          "color": "#5a341466",
+          "spacing": 7,
+          "size": 2
+        }
+      },
+      {
+        "pattern": {
+          "type": "grain",
+          "color": "#ffffff1f",
+          "spacing": 11,
+          "size": 1
+        }
+      }
+    ],
+    "titleBar": {
+      "height": 28,
+      "surface": {
+        "fill": [
+          {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#5a3a20",
+                "#3d2511"
+              ]
+            }
+          },
+          {
+            "pattern": {
+              "type": "grain",
+              "color": "#00000033",
+              "spacing": 5,
+              "size": 1
+            }
+          }
+        ],
+        "border": {
+          "color": "#1f1208",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#7a5a3e",
+              "#5c4128"
+            ]
+          }
+        }
+      },
+      "text": "#fbefd9",
+      "inactiveText": "#e2cfb2",
+      "align": "center",
+      "buttons": {
+        "size": [
+          34,
+          22
+        ],
+        "icon": "#fbefd9",
+        "surface": {
+          "fill": "transparent",
+          "radius": 5,
+          "hover": {
+            "fill": "#ffffff26"
+          },
+          "pressed": {
+            "fill": "#00000040"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "radius": 5,
+          "hover": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#e86a5a",
+                  "#a8241a"
+                ]
+              }
+            },
+            "gloss": 0.5
+          },
+          "pressed": {
+            "fill": "#7a160e"
+          }
+        }
+      }
+    },
+    "topBar": {
+      "fill": [
+        {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#6e4826",
+              "#4a2d14"
+            ]
+          }
+        },
+        {
+          "pattern": {
+            "type": "grain",
+            "color": "#00000029",
+            "spacing": 6,
+            "size": 1
+          }
+        }
+      ],
+      "border": {
+        "color": "#1f1208",
+        "sides": [
+          "bottom"
+        ]
+      },
+      "shadow": [
+        {
+          "color": "#00000059",
+          "y": 3,
+          "blur": 6
+        }
+      ]
+    },
+    "sideBar": {
+      "fill": [
+        {
+          "linear": {
+            "angle": 90,
+            "colors": [
+              "#5a3a20",
+              "#432a14"
+            ]
+          }
+        },
+        {
+          "pattern": {
+            "type": "grain",
+            "color": "#0000002e",
+            "spacing": 6,
+            "size": 1
+          }
+        }
+      ],
+      "border": {
+        "color": "#1f1208",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#4a2d14",
+            "#3a220f"
+          ]
+        }
+      },
+      "border": {
+        "color": "#1f1208",
+        "sides": [
+          "top"
+        ]
+      }
+    },
+    "topBarText": "#fbefd9",
+    "statusBarText": "#f1dfc2"
+  },
+  "controls": {
+    "press": "wash",
+    "button": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#fbf4e4",
+            "#ead9b8"
+          ]
+        }
+      },
+      "border": "#8c6236",
+      "radius": 6,
+      "shadow": [
+        {
+          "color": "#00000033",
+          "y": 1,
+          "blur": 2
+        }
+      ],
+      "pressed": {
+        "fill": "#dcc79f"
+      }
+    },
+    "buttonText": "#2a1a0c",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#a24c18",
+            "#6e2c08"
+          ]
+        }
+      },
+      "gloss": 0.5,
+      "border": "#4e1f05",
+      "radius": 6
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": "#fbf4e4",
+      "border": "#8c6236",
+      "radius": 6
+    },
+    "chipSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#a24c18",
+            "#6e2c08"
+          ]
+        }
+      },
+      "border": "#4e1f05",
+      "radius": 6
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": [
+        {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#f4f5f6",
+              "#c6c9cd",
+              "#e3e5e8"
+            ],
+            "stops": [
+              0,
+              0.55,
+              1
+            ]
+          }
+        },
+        {
+          "pattern": {
+            "type": "lines",
+            "color": "#ffffff40",
+            "spacing": 2,
+            "size": 1
+          }
+        }
+      ],
+      "gloss": 0.4,
+      "border": "#6b6f75",
+      "radius": 6,
+      "shadow": [
+        {
+          "color": "#00000059",
+          "y": 2,
+          "blur": 4
+        }
+      ]
+    },
+    "navSelectedText": "#1d1f22",
+    "navText": "#f1dfc2"
+  },
+  "cards": {
+    "video": {
+      "fill": "#fbf4e4",
+      "border": "#a37a4c",
+      "radius": 4,
+      "shadow": [
+        {
+          "color": "#3a1f0a59",
+          "y": 4,
+          "blur": 8
+        }
+      ],
+      "hover": {
+        "border": {
+          "color": "#8a3f12",
+          "width": 2
+        }
+      },
+      "focused": {
+        "border": {
+          "color": "#8a3f12",
+          "width": 3
+        }
+      }
+    },
+    "padding": 6,
+    "panel": {
+      "fill": "#fbf4e4f2",
+      "border": "#8c6236"
+    },
+    "durationBadge": {
+      "fill": "#2a1a0cd9",
+      "radius": 3
+    },
+    "durationText": "#fbf4e4"
+  },
+  "logo": {
+    "text": "Lumtub",
+    "size": 24,
+    "fill": {
+      "linear": {
+        "angle": 180,
+        "colors": [
+          "#fff6e6",
+          "#e8cfa6"
+        ]
+      }
+    },
+    "shadow": "#1f1208",
+    "badge": {
+      "fill": {
+        "radial": {
+          "center": [
+            0.5,
+            0.8
+          ],
+          "radius": 0.7,
+          "colors": [
+            "#f4f5f6",
+            "#8d9198"
+          ]
+        }
+      },
+      "gloss": 0.7,
+      "border": "#4a4e54",
+      "radius": 7
+    },
+    "badgeIcon": "#2a1a0c"
+  },
+  "icons": {
+    "style": "fill",
+    "effect": "emboss"
+  },
+  "player": {
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#e0a060",
+          "#8a3f12"
+        ]
+      }
+    }
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0"
+}

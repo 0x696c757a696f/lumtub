@@ -8,6 +8,11 @@ enum UserFolder { videos, pictures }
 /// (user-dirs.dirs, translated names included), else ~/Videos and
 /// ~/Pictures. Null without a home folder.
 String? userFolder(UserFolder kind, {Map<String, String>? environment, bool? windows, bool? mac}) {
+  // Android: the shared Movies and Pictures folders, which an app may
+  // write its own files to (Android 10 with requestLegacyExternalStorage).
+  if (environment == null && windows == null && mac == null && Platform.isAndroid) {
+    return '/storage/emulated/0/${kind == UserFolder.videos ? 'Movies' : 'Pictures'}';
+  }
   final env = environment ?? Platform.environment;
   final isWindows = windows ?? Platform.isWindows;
   final isMac = mac ?? Platform.isMacOS;

@@ -43,7 +43,9 @@ class AppDirectories {
     final localAppData = env['LOCALAPPDATA'];
     final dataHome = env['XDG_DATA_HOME'];
     final userHome = env['HOME'];
-    final root = home != null && home.trim().isNotEmpty
+    final root = Platform.isAndroid || Platform.isIOS
+        ? await getApplicationSupportDirectory()
+        : home != null && home.trim().isNotEmpty
         ? Directory(home)
         : Platform.isLinux && dataHome != null && dataHome.startsWith('/')
         ? Directory('$dataHome/lumtub')

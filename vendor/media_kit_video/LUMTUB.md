@@ -1,5 +1,8 @@
 # media_kit_video 2.0.1, patched for Lumtub
 
+`android/` is unchanged from 2.0.1; `pubspec.yaml` registers it again for
+the Android build.
+
 Copied from pub.dev (MIT, see LICENSE) with the Windows, Linux and macOS
 plugins kept (`linux/` is unchanged from 2.0.1).
 The changes, marked "Lumtub" in the code:

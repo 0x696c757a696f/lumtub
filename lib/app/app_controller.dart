@@ -1651,10 +1651,16 @@ class AppController extends ChangeNotifier with _ExploreState {
       if (resolved) {
         try {
           final streams = _repository!.streams;
-          var pending = streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly, live: item.isLive);
+          // Without yt-dlp (Android) the core's answer is the only one.
+          if (streams.ytDlpPath.isEmpty) {
+            if (item.isLive || item.membersOnly) throw StateError('Live streams and members-only videos need yt-dlp, which this version does not have yet');
+            video = await streams.quick(item.id, format, FormatPolicy.settingsJson(_playback));
+            if (video == null) throw StateError('YouTube gave no streams this version can play');
+          }
+          var pending = video != null ? Future.value(video) : streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly, live: item.isLive);
           // The first open of a video also asks YouTube directly; whichever
           // answers first starts it. A reopen after a failure waits for yt-dlp.
-          if (_quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
+          if (video == null && _quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
             _quickSerial = serial;
             final full = pending;
             pending = Future.any([

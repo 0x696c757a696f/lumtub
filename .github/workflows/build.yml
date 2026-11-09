@@ -842,6 +842,119 @@ jobs:
           path: Lumtub_*_macos-x64.dmg
           if-no-files-found: error
 
+  android:
+    name: Android
+    runs-on: ubuntu-24.04
+    env:
+      FLUTTER_VERSION: 3.47.7
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Android - install Flutter stable SDK
+        run: |
+          archive="$RUNNER_TEMP/flutter.tar.xz"
+          curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz"
+          tar -xJf "$archive" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+
+      - name: Android - SDK, NDK and Java
+        run: |
+          # The runner image carries the SDK; r28 or newer for 16 KB pages.
+          ndk="$ANDROID_NDK_LATEST_HOME"
+          echo "NDK: $ndk"
+          echo "ANDROID_NDK_HOME=$ndk" >> "$GITHUB_ENV"
+          echo "$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_PATH"
+          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+
+      - name: Android - install the Rust toolchain
+        run: |
+          rustup update stable
+          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+          cargo install cargo-ndk --locked
+
+      - name: Android - cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: android
+
+      - name: Android - build the Rust core
+        run: android/packaging/build-core.sh
+
+      - name: Android - get packages
+        run: flutter pub get
+
+      - name: Android - determine package version
+        run: |
+          base=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)
+          if [ "${GITHUB_REF#refs/tags/v}" != "$GITHUB_REF" ]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            version="$base-$(echo "$GITHUB_SHA" | cut -c1-7)"
+          fi
+          echo "$version" | grep -Eq '^[0-9A-Za-z.+-]+$' || { echo "Unexpected version: $version"; exit 1; }
+          echo "LUMTUB_VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Android - release key
+        env:
+          KEYSTORE: ${{ secrets.LUMTUB_ANDROID_KEYSTORE }}
+          KEYSTORE_PASSWORD: ${{ secrets.LUMTUB_ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          # Without the secrets the debug key signs (pull requests from forks).
+          if [ -z "$KEYSTORE" ]; then echo "::warning::No release key: the APKs are signed with a debug key"; exit 0; fi
+          echo "$KEYSTORE" | base64 -d > android/release.jks
+          printf 'storeFile=release.jks\nstorePassword=%s\nkeyAlias=lumtub\nkeyPassword=%s\n' "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > android/key.properties
+
+      - name: Android - build APKs
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
+        run: |
+          flutter build apk --release --split-per-abi --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=android --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
+          mkdir -p dist
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "dist/Lumtub_${LUMTUB_VERSION}_android-$abi.apk"
+          done
+          tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          for apk in dist/*.apk; do
+            echo "$(basename "$apk"): $(stat -c %s "$apk") bytes"
+            # 16 KB page alignment of the uncompressed native libraries.
+            "$tools/zipalign" -c -P 16 -v 4 "$apk" | grep -E '\.so|Verification' | tail -12
+          done
+          rm -f android/release.jks android/key.properties
+
+      - name: Android - start an emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
+          yes | "$sdk/sdkmanager" --licenses > /dev/null
+          "$sdk/sdkmanager" "emulator" "system-images;android-34;google_apis;x86_64" > /dev/null
+          echo no | "$sdk/avdmanager" create avd -n smoke -k "system-images;android-34;google_apis;x86_64" -d pixel_6
+          nohup "$ANDROID_HOME/emulator/emulator" -avd smoke -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot > "$RUNNER_TEMP/emulator.log" 2>&1 &
+
+      - name: Android - smoke test
+        run: |
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
+          timeout 600 android/packaging/smoke.sh dist/Lumtub_*_android-x86_64.apk "$RUNNER_TEMP/smoke"
+
+      - name: Android - upload smoke test
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Android-smoke
+          path: ${{ runner.temp }}/smoke
+          if-no-files-found: ignore
+
+      - name: Android - upload APKs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Lumtub-android-apk
+          path: dist/*.apk
+
   release:
     name: Release
     needs: [windows, linux, macos]

@@ -29,6 +29,12 @@ windows = { version = "0.62.2", features = [
   "Win32_Graphics_Dxgi_Common",
 ] }
 
+# The system's TLS (SChannel, Secure Transport, OpenSSL) everywhere but
+# Android, which has no OpenSSL for apps: there rustls checks against the
+# system's certificate authorities (roots.rs).
+[target.'cfg(not(target_os = "android"))'.dependencies]
+reqwest = { version = "0.13", default-features = false, features = ["native-tls"] }
+
 [target.'cfg(unix)'.dependencies]
 libc = "0.2.191"
 
@@ -46,7 +52,7 @@ panic = "abort"
 strip = true
 
 [dependencies]
-reqwest = { version = "0.13", default-features = false, features = ["native-tls", "http2", "gzip", "brotli", "deflate", "socks", "system-proxy", "rustls-no-provider"] }
+reqwest = { version = "0.13", default-features = false, features = ["http2", "gzip", "brotli", "deflate", "socks", "system-proxy", "rustls-no-provider"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 webpki-root-certs = "1"
 bytes = "1"

@@ -6,12 +6,12 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/The_Epoch_Times
 
-:wen-zhao-tan-gu-lun-jin | ^文昭谈古论今 | ^文昭談古論今
-:wen-zhao-si-xu-fei-yang | ^文昭思绪飞扬 | ^文昭思緒飛揚
+:wen-zhao-tan-gu-lun-jin | UCjsQt9uzGF8m6ERcOQxqxYg | @%E6%96%87%E6%98%AD%E8%AB%87%E5%8F%A4%E8%AB%96%E4%BB%8A | ^文昭谈古论今 | ^文昭談古論今
+:wen-zhao-si-xu-fei-yang | UCXc2XWCAdJ1A4KZzzADInzQ | @%E6%96%87%E6%98%AD%E6%80%9D%E7%B7%92%E9%A3%9B%E6%8F%9A | ^文昭思绪飞扬 | ^文昭思緒飛揚
 :jiang-feng-shi-ke | ^江峰时刻 | ^江峯時刻 | ^江峰時刻
 :jiang-feng-shi-jie | ^江峰·视界 | ^江峯·視界 | ^江峰·視界 | ^江峰视界 | ^江峯視界 | ^江峰視界
 :jiang-feng-ao-miao | ^江峰·奥妙 | ^江峯·奧妙 | ^江峰·奧妙 | ^江峰奥妙 | ^江峯奧妙 | ^江峰奧妙
-:jiang-feng-du-shu-hui | @jiangfengreading | ^江峰读书会 | ^江峯讀書會 | ^江峰讀書會
+:jiang-feng-du-shu-hui | UC18I_krBItpXyPtQleYZ8Dw | @jiangfengreading | ^江峰读书会 | ^江峯讀書會 | ^江峰讀書會
 :tian-liang-shi-fen | ^天亮时分 | ^天亮時分
 :tian-liang-lun-zheng | ^天亮论政 | ^天亮論政
 :zhang-tianliang | @TianliangZhang | ^章天亮 | ^Tianliang Zhang | ^Zhang Tianliang
@@ -20,58 +20,58 @@
 :shi-tao-ju-jiao | ^石涛聚焦 | ^石濤聚焦
 :shi-tao-ping-shu | ^石涛评述 | ^石濤評述
 :tao-ge-kan-dian-ying | ^涛哥侃电影 | ^濤哥侃電影
-:li-tianxiao | ^李天笑
+:li-tianxiao | UCAtCw9onrlWoPkkHW0wlBOg | @%E6%9D%8E%E5%A4%A9%E7%AC%91-p9y | ^李天笑
 :xie-tian | ^谢田 | ^謝田
 :zhong-yuan | ^钟原 | ^鍾原
-:xia-xiaoqiang | ^夏小强 | ^夏小強
+:xia-xiaoqiang | UCVIr0XqwgOYMaSzsFqYne1A | @%E5%A4%8F%E5%B0%8F%E5%BC%BA-n9z | ^夏小强 | ^夏小強
 :cheng-xiaorong | ^程晓容 | ^程曉容
 :facts-matter-with-roman-balmakov | ^Facts Matter With Roman Balmakov | ^Roman Balmakov
 :eye-opener-with-michael-lewis | ^Eye Opener With Michael Lewis
 :crossroads-with-joshua-philipp | ^Crossroads with Joshua Philipp | ^Joshua Philipp
 :trevor-loudon | ^Trevor Loudon
-:brendon-fallon | ^Brendon Fallon
-:xin-wen-kan-dian | ^新闻看点 | ^新聞看點
+:brendon-fallon | UCYMUxzXTpYz16-Dhqx-dO-g | @brendonfallon4171 | ^Brendon Fallon
+:xin-wen-kan-dian | UC-0QjLL-apKuvZAbfbpA9Dw | @%E6%96%B0%E8%81%9E%E7%9C%8B%E9%BB%9E | ^新闻看点 | ^新聞看點
 :li-muyang | ^李沐阳 | ^李沐陽
 :mu-yang-kan-dian | ^沐阳看点 | ^沐陽看點
-:yuan-jian-kuai-ping | ^远见快评 | ^遠見快評
+:yuan-jian-kuai-ping | UCKVO0GNQ1f3Wzhn4BuZ0rdQ | @Tang-h5r | ^远见快评 | ^遠見快評
 :tang-jingyuan | ^唐靖远 | ^唐靖遠
 :jing-yuan-kai-jiang | @jingyuantalk | ^靖远开讲 | ^靖遠開講
 :da-yu-pai-an-jing-qi | ^大宇拍案惊奇 | ^大宇拍案驚奇
 :xin-wen-pai-an-jing-qi | ^新闻拍案惊奇 | ^新聞拍案驚奇
 :dayu-life | ^大宇Life
-:fang-fei-shi-jian | @fangfeitime | ^方菲时间 | ^方菲時間
+:fang-fei-shi-jian | UCNcZAhkdRR0oZegCB9u7seQ | @fangfeitime | ^方菲时间 | ^方菲時間
 :fang-wei-shi-jian | ^方伟时间 | ^方偉時間
 :shi-jie-de-shi-zi-lu-kou | ^世界的十字路口
-:shi-shi-jin-sao-miao | ^时事金扫描 | ^時事金掃描
+:shi-shi-jin-sao-miao | UC63bXJHDil9BVGBHroYFJng | @%E6%99%82%E4%BA%8B%E9%87%91%E6%8E%83%E6%8F%8F | ^时事金扫描 | ^時事金掃描
 :heng-he-guan-dian | ^横河观点 | ^橫河觀點
-:qin-peng-zheng-jing-guan-cha | ^秦鹏政经观察 | ^秦鵬政經觀察
+:qin-peng-zheng-jing-guan-cha | UCjix7du7PHahnSJm8dctzDA | @Insight008 | ^秦鹏政经观察 | ^秦鵬政經觀察
 :jie-sen-shi-jiao | ^杰森视角 | ^傑森視角
 :lao-beijing-cha-guan | @beijingteahouse | ^老北京茶馆 | ^老北京茶館
 :lin-lan-dui-hua | ^林澜对话 | ^林瀾對話
 :shi-shan-shi-dian | ^石山视点 | ^石山視點
 :jing-ying-lun-tan | ^菁英论坛 | ^菁英論壇
-:wei-yu-kan-shi-jian | ^薇羽看世间 | ^薇羽看世間
+:wei-yu-kan-shi-jian | UCpG17Giz_CLK0jWLPG9O5Kw | @weiyuksj | ^薇羽看世间 | ^薇羽看世間
 :xiao-ming-kan-shi-jie | ^萧茗看世界 | ^蕭茗看世界
 :xue-er-zhu-bo | ^雪儿主播 | ^雪兒主播
 :xin-wen-zui-chao-dian | ^新闻最嘲点 | ^新聞最嘲點
 :jiang-guangyu | ^姜光宇
-:li-jun-gong-zuo-shi | ^李军工作室 | ^李軍工作室
+:li-jun-gong-zuo-shi | UCCyyvppkImJR2JprkGKCWEA | @Lijun_Studios | ^李军工作室 | ^李軍工作室
 :da-lu-xin-wen-jie-du | ^大陆新闻解毒 | ^大陸新聞解毒
 :tan-suo-shi-fen | ^探索时分 | ^探索時分
 :zhou-ziding | ^周子定
 :ma-ke-shi-kong | ^马克时空 | ^馬克時空
-:xiao-tan-feng-yun | ^笑谈风云 | ^笑談風雲
-:wei-jie-zhi-mi-fu-yao | ^未解之谜·扶摇 | ^未解之謎·扶搖 | ^未解之谜 扶摇 | ^未解之謎 扶搖
-:xin-xiang-ya-ju | ^馨香雅句
+:xiao-tan-feng-yun | UCquQMNxsLLlCEP_w-HxSetg | @%E7%AC%91%E8%AB%87%E9%A2%A8%E9%9B%B2 | ^笑谈风云 | ^笑談風雲
+:wei-jie-zhi-mi-fu-yao | UCzvQZ1p_-AXgAWiyHhE7CxQ | @%E6%9C%AA%E8%A7%A3%E4%B9%8B%E8%AC%8E%C2%B7%E6%89%B6%E6%90%96 | ^未解之谜·扶摇 | ^未解之謎·扶搖 | ^未解之谜 扶摇 | ^未解之謎 扶搖
+:xin-xiang-ya-ju | UC70x9lkpK4iGBldTZBMiPSA | @%E9%A6%A8%E9%A6%99%E9%9B%85%E5%8F%A5 | ^馨香雅句
 :gu-yun-liu-fang | ^古韵流芳 | ^古韻流芳
-:wen-shi-da-guan-yuan | ^文史大观园 | ^文史大觀園
+:wen-shi-da-guan-yuan | UCs2k4ajLJHDjtuurTfUnXuA | @Cultural_History | ^文史大观园 | ^文史大觀園
 :tan-gu-lun-jin-hua-zhong-yi | ^谈古论今话中医 | ^談古論今話中醫
 :hu-naiwen-kai-jiang | ^胡乃文开讲 | ^胡乃文開講
 :she-health | ^她健康 | ^She Health
 :tian-ting-xiao-zi | ^天庭小子
-:xiao-qian-kun | ^小乾坤
+:xiao-qian-kun | UCsnpYvx02DcQFoAC-gg5C9A | @%E5%B0%8F%E4%B9%BE%E5%9D%A4-s3g | ^小乾坤
 :china-uncensored | @ChinaUncensored | ^China Uncensored
-:china-unscripted | @ChinaUnscripted | ^China Unscripted
+:china-unscripted | UCvr1DclUsRzNYXWOWJ7eVLQ | @ChinaUnscripted | ^China Unscripted
 :wenzhaoofficial | @wenzhaoofficial
 :wenzhaostudio | @wenzhaostudio
 :realjiangfeng | @realjiangfeng

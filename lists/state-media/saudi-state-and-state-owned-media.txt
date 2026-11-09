@@ -8,9 +8,9 @@
 ! note: The Saudi Press Agency and others are state media; Al Arabiya and MBC belong to state-owned groups. Korea's MBC shares the name, so MBC alone is not matched
 ! source: https://en.wikipedia.org/wiki/Saudi_Press_Agency
 
-:saudi-press-agency | =SPA | ^Saudi Press Agency
-:saudi-broadcasting-authority | =SBA | ^Saudi Broadcasting Authority
-:al-saudiya | ^Al Saudiya
+:saudi-press-agency | UCkrjqrC-pa96fYmZqJieEzQ | @saudipressagency3774 | =SPA | ^Saudi Press Agency
+:saudi-broadcasting-authority | UC1FFHDdDGPmlsN4MIOrrHJw | @Sbaofficiaal | =SBA | ^Saudi Broadcasting Authority
+:al-saudiya | UCqoy1eZa6hMltGbu7dCa3GQ | @AlSaudiya-j1q | ^Al Saudiya
 :al-ekhbariya | =الإخبارية | ^Al Ekhbariya
 :al-arabiya | =العربية | ^Al Arabiya
 :al-hadath | =الحدث | ^Al Hadath

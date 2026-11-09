@@ -6,5 +6,5 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Manmin_Central_Church
 
-:manmin-central-church | ^万民中央教会 | ^萬民中央教會 | ^Manmin Central Church
+:manmin-central-church | UCNfQHgucYWZv2dN5BXFOV2w | @manmincentralchurch1900 | ^万民中央教会 | ^萬民中央教會 | ^Manmin Central Church
 :jaerock-lee | ^李载禄 | ^李載祿 | ^Jaerock Lee

@@ -17,7 +17,7 @@
 :ruptly | ^Ruptly
 :rossiya-1 | ^Россия 1 | ^Rossiya 1
 :rossiya-24 | ^Россия 24 | ^Rossiya 24
-:rossiya-k | ^Россия К
+:rossiya-k | UCPWjiAULzvh0Kc4Mf-N3jHQ | @%D0%A0%D0%9E%D0%A1%D0%A1%D0%98%D0%AF%D0%9A-%D1%8C8%D1%83 | ^Россия К
 :vgtrk | ^ВГТРК | ^VGTRK
 :vesti | ^Вести | ^Vesti
 :channel-one-russia | ^Первый канал | ^Channel One Russia | ^俄罗斯第一频道

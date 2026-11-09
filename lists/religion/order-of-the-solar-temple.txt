@@ -6,4 +6,4 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Order_of_the_Solar_Temple
 
-:solar-temple | ^太阳圣殿 | ^太陽聖殿 | ^Solar Temple
+:solar-temple | UC_Oe0z1V8a3IFf53k6HvUZw | @TheWoundedFoot | ^太阳圣殿 | ^太陽聖殿 | ^Solar Temple

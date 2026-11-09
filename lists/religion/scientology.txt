@@ -6,6 +6,6 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Scientology
 
-:scientology | ^科学神教 | ^科學神教 | ^山达基 | ^山達基 | ^Scientology
+:scientology | UCTODir8fjkXwRvbTC6_DQjw | @scientology | ^科学神教 | ^科學神教 | ^山达基 | ^山達基 | ^Scientology
 :dianetics | ^戴尼提 | ^Dianetics
 :l-ron-hubbard | ^L. Ron Hubbard

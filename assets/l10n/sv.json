@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0} % täckande",
   "See the desktop through the window": "Se skrivbordet genom fönstret",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Landskapet viker undan och skrivbordet syns genom fönstret, suddigt där systemet klarar det. Av i resurssnålt läge",
-  "Color schemes": "Färgscheman"
+  "Color schemes": "Färgscheman",
+  "Library": "Bibliotek",
+  "Add a skin from a file": "Lägg till ett skal från en fil",
+  "A skin.jsonc, or a zip of a skin's folder": "En skin.jsonc, eller en zip av ett skals mapp",
+  "Added {0}": "{0} har lagts till",
+  "This is not a skin: {0}": "Det här är inte ett skal: {0}",
+  "See the wallpaper through the app": "Se bakgrundsbilden genom appen",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Landskapet viker undan och startskärmens bakgrundsbild lyser igenom, oskarp där systemet kan. Börjar gälla nästa gång Lumtub startar. Av i Resurssnålt läge"
 }

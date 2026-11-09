@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% անթափանց",
   "See the desktop through the window": "Տեսնել աշխատասեղանը պատուհանի միջով",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Բնապատկերը մի կողմ է քաշվում, և աշխատասեղանը երևում է պատուհանի միջով՝ համակարգի հնարավորության դեպքում լղոզված։ Անջատված է Ցածր ռեսուրսների ռեժիմում",
-  "Color schemes": "Գունային սխեմաներ"
+  "Color schemes": "Գունային սխեմաներ",
+  "Library": "Գրադարան",
+  "Add a skin from a file": "Ավելացնել սկին ֆայլից",
+  "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc կամ սկինի թղթապանակի zip",
+  "Added {0}": "{0}՝ ավելացվեց",
+  "This is not a skin: {0}": "Սա սկին չէ՝ {0}",
+  "See the wallpaper through the app": "Ցույց տալ պաստառը հավելվածի միջով",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Լանդշաֆտը մի կողմ է քաշվում, և երևում է հիմնական էկրանի պաստառը՝ մշուշված, որտեղ համակարգը կարող է։ Ուժի մեջ կմտնի Lumtub-ի հաջորդ գործարկմանը։ Անջատված է Ցածր ռեսուրսների ռեժիմում"
 }

@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% imara",
   "See the desktop through the window": "Ona eneo-kazi kupitia dirisha",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Mandhari ya nje hujitenga na eneo-kazi huonekana kupitia dirisha, likiwa na ukungu mfumo unapoweza. Imezimwa katika hali ya rasilimali chache",
-  "Color schemes": "Mipangilio ya rangi"
+  "Color schemes": "Mipangilio ya rangi",
+  "Library": "Maktaba",
+  "Add a skin from a file": "Ongeza mandhari kutoka faili",
+  "A skin.jsonc, or a zip of a skin's folder": "Faili ya skin.jsonc, au zip ya folda ya mandhari",
+  "Added {0}": "{0} imeongezwa",
+  "This is not a skin: {0}": "Hii si mandhari: {0}",
+  "See the wallpaper through the app": "Ona mandhari-nyuma kupitia programu",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Mandhari ya mandhari-ardhi hujiweka kando na mandhari-nyuma ya skrini ya kwanza huonekana, ikififishwa mfumo unapoweza. Itaanza kutumika Lumtub itakapofunguliwa tena. Imezimwa katika Hali ya rasilimali chache"
 }

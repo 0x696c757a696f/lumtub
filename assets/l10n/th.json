@@ -3111,5 +3111,12 @@
   "{0}% solid": "ทึบ {0}%",
   "See the desktop through the window": "มองเห็นเดสก์ท็อปผ่านหน้าต่าง",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ภาพทิวทัศน์จะหลบไปเผยให้เห็นเดสก์ท็อปด้านหลัง และเบลอได้หากระบบรองรับ ปิดในโหมดประหยัดทรัพยากร",
-  "Color schemes": "ชุดสี"
+  "Color schemes": "ชุดสี",
+  "Library": "คลัง",
+  "Add a skin from a file": "เพิ่มสกินจากไฟล์",
+  "A skin.jsonc, or a zip of a skin's folder": "ไฟล์ skin.jsonc หรือ zip ของโฟลเดอร์สกิน",
+  "Added {0}": "เพิ่ม {0} แล้ว",
+  "This is not a skin: {0}": "นี่ไม่ใช่สกิน: {0}",
+  "See the wallpaper through the app": "มองเห็นวอลเปเปอร์ผ่านแอป",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "ภาพทิวทัศน์เลื่อนออก และวอลเปเปอร์หน้าจอหลักปรากฏขึ้น โดยเบลอในที่ที่ระบบรองรับ จะมีผลเมื่อเปิด Lumtub ครั้งถัดไป ปิดอยู่ในโหมดประหยัดทรัพยากร"
 }

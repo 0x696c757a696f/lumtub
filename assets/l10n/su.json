@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% pekat",
   "See the desktop through the window": "Tempo desktop tina jandela",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Lanskapna mundur sarta desktop katingali tina jandela, burem upama sistemna sanggup. Pareum dina mode sumber daya low",
-  "Color schemes": "Skéma warna"
+  "Color schemes": "Skéma warna",
+  "Library": "Perpustakaan",
+  "Add a skin from a file": "Tambahkeun skin tina koropak",
+  "A skin.jsonc, or a zip of a skin's folder": "Koropak skin.jsonc, atawa zip tina polder skin",
+  "Added {0}": "{0} geus ditambahkeun",
+  "This is not a skin: {0}": "Ieu lain skin: {0}",
+  "See the wallpaper through the app": "Tingali wallpaper ngaliwatan aplikasi",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Lanskap mundur sarta wallpaper layar utama katingali tembus, dibaurkeun upami sistem tiasa. Lumaku nalika Lumtub dibuka deui. Pareum dina Mode sumber daya low"
 }

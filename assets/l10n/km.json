@@ -3111,5 +3111,12 @@
   "{0}% solid": "ស្រអាប់ {0}%",
   "See the desktop through the window": "មើលឃើញផ្ទៃតុតាមរយៈបង្អួច",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ទេសភាពរើចេញ ហើយផ្ទៃតុលេចតាមបង្អួច ព្រិលៗ ប្រសិនបើប្រព័ន្ធអាចធ្វើបាន។ បិទនៅក្នុងម៉ូដប្រើធនធានតិច",
-  "Color schemes": "ក្បាច់ពណ៌"
+  "Color schemes": "ក្បាច់ពណ៌",
+  "Library": "បណ្ណាល័យ",
+  "Add a skin from a file": "បន្ថែមស្គីនពីឯកសារ",
+  "A skin.jsonc, or a zip of a skin's folder": "ឯកសារ skin.jsonc ឬ zip នៃថតស្គីន",
+  "Added {0}": "បានបន្ថែម {0}",
+  "This is not a skin: {0}": "នេះមិនមែនជាស្គីនទេ៖ {0}",
+  "See the wallpaper through the app": "មើលផ្ទាំងរូបភាពតាមរយៈកម្មវិធី",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "ទេសភាពរើចេញ ហើយផ្ទាំងរូបភាពអេក្រង់ដើមលេចឡើង ព្រិលនៅកន្លែងដែលប្រព័ន្ធអាចធ្វើបាន។ មានប្រសិទ្ធភាពពេល Lumtub ចាប់ផ្តើមលើកក្រោយ។ បិទនៅក្នុងម៉ូដប្រើធនធានតិច"
 }

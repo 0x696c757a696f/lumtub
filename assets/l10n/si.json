@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% ඝන",
   "See the desktop through the window": "කවුළුව හරහා ඩෙස්ක්ටොපය බලන්න",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "භූමි දර්ශනය ඉවත් වී කවුළුව හරහා ඩෙස්ක්ටොපය පෙනේ; පද්ධතියට හැකි තැන අපැහැදිලි වේ. අඩු සම්පත් ප්‍රකාරයේ අක්‍රියයි",
-  "Color schemes": "වර්ණ ක්‍රම"
+  "Color schemes": "වර්ණ ක්‍රම",
+  "Library": "පුස්තකාලය",
+  "Add a skin from a file": "ගොනුවකින් ස්කින් එකක් එක් කරන්න",
+  "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc එකක්, හෝ ස්කින් එකේ ෆෝල්ඩරයේ zip එකක්",
+  "Added {0}": "{0} එක් කරන ලදී",
+  "This is not a skin: {0}": "මෙය ස්කින් එකක් නොවේ: {0}",
+  "See the wallpaper through the app": "යෙදුම හරහා වෝල්පේපරය බලන්න",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "භූමි දර්ශනය පසෙකට වී මුල් තිරයේ වෝල්පේපරය පෙනේ, පද්ධතියට හැකි තැන බොඳ කර. Lumtub ඊළඟ වරට ආරම්භ වූ විට බලපැවැත්වේ. අඩු සම්පත් ප්‍රකාරයේදී අක්‍රියයි"
 }

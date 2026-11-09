@@ -3111,5 +3111,12 @@
   "{0}% solid": "‏{0}% אטימות",
   "See the desktop through the window": "לראות את שולחן העבודה דרך החלון",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "הנוף זז הצידה ושולחן העבודה נראה מבעד לחלון, מטושטש כשהמערכת תומכת בכך. כבוי במצב צריכת משאבים נמוכה",
-  "Color schemes": "ערכות צבעים"
+  "Color schemes": "ערכות צבעים",
+  "Library": "ספרייה",
+  "Add a skin from a file": "הוספת ערכת נושא מקובץ",
+  "A skin.jsonc, or a zip of a skin's folder": "קובץ skin.jsonc, או zip של תיקיית ערכת נושא",
+  "Added {0}": "{0} נוסף",
+  "This is not a skin: {0}": "זו לא ערכת נושא: {0}",
+  "See the wallpaper through the app": "הצגת הטפט דרך האפליקציה",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "הנוף זז הצידה והטפט של מסך הבית נראה מבעדו, מטושטש היכן שהמערכת מסוגלת. ייכנס לתוקף בהפעלה הבאה של Lumtub. כבוי במצב צריכת משאבים נמוכה"
 }

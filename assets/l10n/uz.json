@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% zich",
   "See the desktop through the window": "Ish stolini oyna orqali ko'rish",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Manzara chetga chiqadi va ish stoli ko'rinadi, tizim qo'llasa xiralashgan holda. Kam resurs rejimida o'chiq",
-  "Color schemes": "Ranglar sxemalari"
+  "Color schemes": "Ranglar sxemalari",
+  "Library": "Kutubxona",
+  "Add a skin from a file": "Fayldan mavzu qo‘shish",
+  "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc yoki mavzu papkasining zip fayli",
+  "Added {0}": "{0} qo‘shildi",
+  "This is not a skin: {0}": "Bu mavzu emas: {0}",
+  "See the wallpaper through the app": "Ekran fonini ilova orqali ko‘rish",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Manzara chetga suriladi va bosh ekranning foni ko‘rinadi, tizim imkon bergan joyda xiralashtiriladi. Lumtub keyingi safar ishga tushganda kuchga kiradi. Kam resurs rejimida o‘chiq"
 }

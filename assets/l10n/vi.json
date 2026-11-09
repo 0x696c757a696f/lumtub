@@ -3111,5 +3111,12 @@
   "{0}% solid": "Đục {0}%",
   "See the desktop through the window": "Nhìn thấy màn hình nền qua cửa sổ",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Phong cảnh lùi ra để lộ màn hình nền phía sau, có làm mờ nếu hệ thống hỗ trợ. Tắt trong chế độ tiết kiệm tài nguyên",
-  "Color schemes": "Bảng màu"
+  "Color schemes": "Bảng màu",
+  "Library": "Thư viện",
+  "Add a skin from a file": "Thêm chủ đề từ tệp",
+  "A skin.jsonc, or a zip of a skin's folder": "Tệp skin.jsonc hoặc tệp zip của thư mục chủ đề",
+  "Added {0}": "Đã thêm {0}",
+  "This is not a skin: {0}": "Đây không phải chủ đề: {0}",
+  "See the wallpaper through the app": "Xem hình nền xuyên qua ứng dụng",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Phong cảnh lùi sang một bên và hình nền màn hình chính hiện ra, được làm mờ nếu hệ thống hỗ trợ. Có hiệu lực vào lần khởi động Lumtub tiếp theo. Tắt trong Chế độ tiết kiệm tài nguyên"
 }

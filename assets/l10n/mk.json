@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% непровидно",
   "See the desktop through the window": "Работната површина се гледа низ прозорецот",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Пејзажот се повлекува и низ прозорецот се гледа работната површина, замаглена каде што системот може. Исклучено во режим на мала потрошувачка",
-  "Color schemes": "Шеми на бои"
+  "Color schemes": "Шеми на бои",
+  "Library": "Библиотека",
+  "Add a skin from a file": "Додај тема од датотека",
+  "A skin.jsonc, or a zip of a skin's folder": "Датотека skin.jsonc или zip од папката на темата",
+  "Added {0}": "Додадено: {0}",
+  "This is not a skin: {0}": "Ова не е тема: {0}",
+  "See the wallpaper through the app": "Прикажи ја позадината низ апликацијата",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Пејзажот се повлекува, а позадината на почетниот екран се гледа низ него, заматена каде што системот може. Важи при следното стартување на Lumtub. Исклучено во Режим на мала потрошувачка"
 }

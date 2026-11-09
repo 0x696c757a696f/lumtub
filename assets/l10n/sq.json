@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% i plotë",
   "See the desktop through the window": "Shiko desktopin përmes dritares",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Peizazhi çlirohet dhe desktopi duket përmes dritares, i turbullt aty ku e lejon sistemi. Joaktiv në modalitetin me burime të ulëta",
-  "Color schemes": "Skemat e ngjyrave"
+  "Color schemes": "Skemat e ngjyrave",
+  "Library": "Libraria",
+  "Add a skin from a file": "Shto një skinë nga skedari",
+  "A skin.jsonc, or a zip of a skin's folder": "Një skin.jsonc, ose një zip i dosjes së skinës",
+  "Added {0}": "U shtua {0}",
+  "This is not a skin: {0}": "Kjo nuk është skinë: {0}",
+  "See the wallpaper through the app": "Shiko sfondin përmes aplikacionit",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Peizazhi zhvendoset anash dhe sfondi i ekranit kryesor shfaqet përmes, i turbullt aty ku e mundëson sistemi. Zbatohet herën tjetër që niset Lumtub. I çaktivizuar te Modaliteti me burime të ulëta"
 }

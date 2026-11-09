@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% അതാര്യം",
   "See the desktop through the window": "വിൻഡോയിലൂടെ ഡെസ്ക്ടോപ്പ് കാണുക",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ലാൻഡ്സ്കേപ്പ് മാറിനിൽക്കുകയും ഡെസ്ക്ടോപ്പ് വിൻഡോയിലൂടെ തെളിയുകയും ചെയ്യുന്നു, സിസ്റ്റം അനുവദിക്കുന്നിടത്ത് മങ്ങിയ രൂപത്തിൽ. കുറഞ്ഞ റിസോഴ്‌സ് മോഡിൽ ഓഫ്",
-  "Color schemes": "വർണ്ണ സ്കീമുകൾ"
+  "Color schemes": "വർണ്ണ സ്കീമുകൾ",
+  "Library": "ലൈബ്രറി",
+  "Add a skin from a file": "ഫയലിൽ നിന്ന് സ്കിൻ ചേർക്കുക",
+  "A skin.jsonc, or a zip of a skin's folder": "ഒരു skin.jsonc, അല്ലെങ്കിൽ സ്കിന്നിന്റെ ഫോൾഡറിന്റെ zip",
+  "Added {0}": "{0} ചേർത്തു",
+  "This is not a skin: {0}": "ഇത് സ്കിൻ അല്ല: {0}",
+  "See the wallpaper through the app": "ആപ്പിലൂടെ വാൾപേപ്പർ കാണുക",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "ലാൻഡ്‌സ്‌കേപ്പ് മാറിനിൽക്കുകയും ഹോം സ്ക്രീനിന്റെ വാൾപേപ്പർ തെളിഞ്ഞുവരികയും ചെയ്യുന്നു, സിസ്റ്റത്തിന് കഴിയുന്നിടത്ത് മങ്ങിയതായി. അടുത്ത തവണ Lumtub ആരംഭിക്കുമ്പോൾ പ്രാബല്യത്തിൽ വരും. കുറഞ്ഞ റിസോഴ്‌സ് മോഡിൽ ഓഫ്"
 }

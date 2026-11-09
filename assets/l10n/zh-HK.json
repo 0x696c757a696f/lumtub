@@ -3117,5 +3117,6 @@
   "Added {0}": "已加入 {0}",
   "This is not a skin: {0}": "這不是皮膚：{0}",
   "See the wallpaper through the app": "透出桌面牆紙",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "風景讓開，透出主畫面的牆紙，系統支援時會模糊。下次啟動 Lumtub 時生效。低佔用模式下關閉"
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "風景讓開，透出主畫面的牆紙，系統支援時會模糊。下次啟動 Lumtub 時生效。低佔用模式下關閉",
+  "Library": "媒體庫"
 }

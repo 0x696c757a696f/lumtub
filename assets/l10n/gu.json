@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% ઘન",
   "See the desktop through the window": "વિન્ડોમાંથી ડેસ્કટૉપ જુઓ",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "દૃશ્ય બાજુ પર હટે છે અને ડેસ્કટૉપ આરપાર દેખાય છે, સિસ્ટમ સપોર્ટ કરે ત્યાં ઝાંખું પણ. ઓછા સંસાધન મોડમાં બંધ",
-  "Color schemes": "રંગ યોજનાઓ"
+  "Color schemes": "રંગ યોજનાઓ",
+  "Library": "લાઇબ્રેરી",
+  "Add a skin from a file": "ફાઇલમાંથી સ્કિન ઉમેરો",
+  "A skin.jsonc, or a zip of a skin's folder": "એક skin.jsonc, અથવા સ્કિનના ફોલ્ડરની zip",
+  "Added {0}": "{0} ઉમેરાયું",
+  "This is not a skin: {0}": "આ સ્કિન નથી: {0}",
+  "See the wallpaper through the app": "એપ દ્વારા વૉલપેપર જુઓ",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "લેન્ડસ્કેપ બાજુ પર ખસે છે અને હોમ સ્ક્રીનનું વૉલપેપર દેખાય છે, જ્યાં સિસ્ટમ કરી શકે ત્યાં ઝાંખું. આગલી વખતે Lumtub શરૂ થશે ત્યારે લાગુ થશે. ઓછા સંસાધન મોડમાં બંધ"
 }

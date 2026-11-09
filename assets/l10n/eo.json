@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% maldiafana",
   "See the desktop through the window": "Vidi la labortablon tra la fenestro",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "La pejzaĝo flankeniĝas kaj la labortablo travidiĝas tra la fenestro, malklara kie la sistemo kapablas. Malŝaltita en Ŝparreĝimo",
-  "Color schemes": "Kolorskemoj"
+  "Color schemes": "Kolorskemoj",
+  "Library": "Biblioteko",
+  "Add a skin from a file": "Aldoni haŭton el dosiero",
+  "A skin.jsonc, or a zip of a skin's folder": "Dosiero skin.jsonc, aŭ zip de la dosierujo de haŭto",
+  "Added {0}": "{0} aldonita",
+  "This is not a skin: {0}": "Ĉi tio ne estas haŭto: {0}",
+  "See the wallpaper through the app": "Vidi la ekranfonon tra la apo",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "La pejzaĝo flankiĝas kaj la ekranfono de la hejmekrano travidiĝas, malklarigita kie la sistemo kapablas. Efikas je la sekva starto de Lumtub. Malŝaltita en Ŝparreĝimo"
 }

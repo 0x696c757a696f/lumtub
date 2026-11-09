@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% ठोस",
   "See the desktop through the window": "विंडो के आर-पार डेस्कटॉप देखें",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "दृश्य किनारे हट जाता है और डेस्कटॉप आर-पार दिखता है, सिस्टम सपोर्ट करे तो धुंधला भी। कम संसाधन मोड में बंद",
-  "Color schemes": "रंग योजनाएँ"
+  "Color schemes": "रंग योजनाएँ",
+  "Library": "लाइब्रेरी",
+  "Add a skin from a file": "फ़ाइल से स्किन जोड़ें",
+  "A skin.jsonc, or a zip of a skin's folder": "एक skin.jsonc, या स्किन के फ़ोल्डर की zip",
+  "Added {0}": "{0} जोड़ा गया",
+  "This is not a skin: {0}": "यह स्किन नहीं है: {0}",
+  "See the wallpaper through the app": "ऐप के आर-पार वॉलपेपर देखें",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "लैंडस्केप किनारे हट जाता है और होम स्क्रीन का वॉलपेपर दिखता है, जहाँ सिस्टम कर सके वहाँ धुंधला। अगली बार Lumtub शुरू होने पर लागू होगा। कम संसाधन मोड में बंद"
 }

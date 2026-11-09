@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% opac",
   "See the desktop through the window": "Vezi desktopul prin fereastră",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Peisajul se dă la o parte, iar desktopul se vede prin fereastră, estompat unde sistemul permite. Dezactivat în modul resurse reduse",
-  "Color schemes": "Scheme de culori"
+  "Color schemes": "Scheme de culori",
+  "Library": "Bibliotecă",
+  "Add a skin from a file": "Adaugă un skin dintr-un fișier",
+  "A skin.jsonc, or a zip of a skin's folder": "Un skin.jsonc sau un zip cu folderul unui skin",
+  "Added {0}": "{0} adăugat",
+  "This is not a skin: {0}": "Acesta nu este un skin: {0}",
+  "See the wallpaper through the app": "Vezi fundalul prin aplicație",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Peisajul se retrage, iar fundalul ecranului de pornire se vede prin transparență, estompat acolo unde sistemul poate. Se aplică la următoarea pornire a Lumtub. Dezactivat în Mod resurse reduse"
 }

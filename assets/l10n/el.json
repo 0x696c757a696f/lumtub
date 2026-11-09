@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% αδιαφάνεια",
   "See the desktop through the window": "Δες την επιφάνεια εργασίας μέσα από το παράθυρο",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Το τοπίο παραμερίζει και η επιφάνεια εργασίας φαίνεται μέσα από το παράθυρο, θολή όπου το επιτρέπει το σύστημα. Απενεργοποιείται στη λειτουργία χαμηλής κατανάλωσης πόρων",
-  "Color schemes": "Συνδυασμοί χρωμάτων"
+  "Color schemes": "Συνδυασμοί χρωμάτων",
+  "Library": "Βιβλιοθήκη",
+  "Add a skin from a file": "Προσθήκη skin από αρχείο",
+  "A skin.jsonc, or a zip of a skin's folder": "Ένα skin.jsonc ή ένα zip του φακέλου ενός skin",
+  "Added {0}": "Προστέθηκε: {0}",
+  "This is not a skin: {0}": "Αυτό δεν είναι skin: {0}",
+  "See the wallpaper through the app": "Δείτε την ταπετσαρία μέσα από την εφαρμογή",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Το τοπίο παραμερίζει και η ταπετσαρία της αρχικής οθόνης φαίνεται από πίσω, θολωμένη όπου μπορεί το σύστημα. Ισχύει στην επόμενη εκκίνηση του Lumtub. Απενεργοποιημένο στη Λειτουργία χαμηλής κατανάλωσης πόρων"
 }

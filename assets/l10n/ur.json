@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% ٹھوس",
   "See the desktop through the window": "ونڈو کے آر پار ڈیسک ٹاپ دیکھیں",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "منظر ہٹ جاتا ہے اور ڈیسک ٹاپ نظر آتا ہے، جہاں سسٹم اجازت دے وہاں دھندلا۔ کم وسائل موڈ میں بند",
-  "Color schemes": "رنگوں کی اسکیمیں"
+  "Color schemes": "رنگوں کی اسکیمیں",
+  "Library": "لائبریری",
+  "Add a skin from a file": "فائل سے تھیم شامل کریں",
+  "A skin.jsonc, or a zip of a skin's folder": "ایک skin.jsonc، یا تھیم کے فولڈر کی zip",
+  "Added {0}": "{0} شامل کر دیا گیا",
+  "This is not a skin: {0}": "یہ تھیم نہیں ہے: {0}",
+  "See the wallpaper through the app": "ایپ کے آر پار وال پیپر دیکھیں",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "لینڈ اسکیپ ایک طرف ہٹ جاتا ہے اور ہوم اسکرین کا وال پیپر نظر آتا ہے، جہاں سسٹم کر سکے وہاں دھندلا۔ Lumtub کے اگلی بار شروع ہونے پر نافذ ہوگا۔ کم وسائل موڈ میں بند"
 }

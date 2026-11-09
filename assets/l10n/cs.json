@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0} % neprůhledné",
   "See the desktop through the window": "Vidět plochu skrz okno",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Krajina ustoupí a skrz okno je vidět plocha, rozmazaná tam, kde to systém umí. V režimu nízké spotřeby vypnuto",
-  "Color schemes": "Barevná schémata"
+  "Color schemes": "Barevná schémata",
+  "Library": "Knihovna",
+  "Add a skin from a file": "Přidat skin ze souboru",
+  "A skin.jsonc, or a zip of a skin's folder": "Soubor skin.jsonc nebo zip složky skinu",
+  "Added {0}": "Přidáno: {0}",
+  "This is not a skin: {0}": "Toto není skin: {0}",
+  "See the wallpaper through the app": "Zobrazit tapetu skrz aplikaci",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Krajina ustoupí a skrz prosvítá tapeta domovské obrazovky, rozmazaná tam, kde to systém umí. Projeví se při příštím spuštění Lumtub. V režimu nízké spotřeby vypnuto"
 }

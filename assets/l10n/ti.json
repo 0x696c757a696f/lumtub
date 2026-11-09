@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% ጽቡቕ",
   "See the desktop through the window": "ዴስክቶፕ ብመስኮት ርአ",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ቦታ ዓይኒ ይግላል፡ ዴስክቶፕ ይርአ፡ ስርዓት እንተደገፈ ድብዝዝ ይብል። ኣብ ትሑት ሃብቲ ኩነታት ጠፊኡ",
-  "Color schemes": "ቅዲታት ሕብሪ"
+  "Color schemes": "ቅዲታት ሕብሪ",
+  "Library": "ቤተ-ማዕከን",
+  "Add a skin from a file": "ካብ ፋይል ቅዲ ወስኽ",
+  "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc ወይ zip ናይ ፎልደር ቅዲ",
+  "Added {0}": "{0} ተወሲኹ",
+  "This is not a skin: {0}": "እዚ ቅዲ ኣይኮነን፦ {0}",
+  "See the wallpaper through the app": "ወረቐት ናይ ድሕሪት ብመተግበሪ ርኣይ",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "እቲ ርእሰ-ምድሪ ጎኒ ይሓልፍን ወረቐት ናይ ድሕሪት ናይ መእተዊ ስክሪን ይርአይን፣ እቲ ስርዓት ኣብ ዝኽእለሉ ድማ ድዱዕ ይኸውን። ኣብ ዝቕጽል ጊዜ Lumtub ክጅምር ከሎ ይሰርሕ። ኣብ ትሑት ሃብቲ ኩነታት ጠፊኡ"
 }

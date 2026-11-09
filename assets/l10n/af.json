@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% ondeursigtig",
   "See the desktop through the window": "Sien die lessenaar deur die venster",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Die landskap staan eenkant en die lessenaar wys deur, waar moontlik vervaag deur die stelsel. Af in Lae-hulpbronmodus",
-  "Color schemes": "Kleurskemas"
+  "Color schemes": "Kleurskemas",
+  "Library": "Biblioteek",
+  "Add a skin from a file": "Voeg 'n skin vanaf 'n lêer by",
+  "A skin.jsonc, or a zip of a skin's folder": "'n skin.jsonc, of 'n zip van 'n skin se vouer",
+  "Added {0}": "{0} bygevoeg",
+  "This is not a skin: {0}": "Dit is nie 'n skin nie: {0}",
+  "See the wallpaper through the app": "Sien die muurpapier deur die toepassing",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Die landskap staan eenkant en die tuisskerm se muurpapier skyn deur, vervaag waar die stelsel kan. Tree in werking by die volgende keer wat Lumtub begin. Af in Lae-hulpbronmodus"
 }

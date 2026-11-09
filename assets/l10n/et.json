@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% läbipaistmatu",
   "See the desktop through the window": "Näita akna kaudu töölauda",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Maastik astub kõrvale ja töölaud paistab läbi, hägustatuna, kui süsteem seda toetab. Vähese ressursi režiimis väljas",
-  "Color schemes": "Värviskeemid"
+  "Color schemes": "Värviskeemid",
+  "Library": "Meediakogu",
+  "Add a skin from a file": "Lisa skin failist",
+  "A skin.jsonc, or a zip of a skin's folder": "Fail skin.jsonc või skini kausta zip",
+  "Added {0}": "Lisatud: {0}",
+  "This is not a skin: {0}": "See ei ole skin: {0}",
+  "See the wallpaper through the app": "Näita taustapilti rakenduse kaudu",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Maastik astub kõrvale ja avakuva taustapilt paistab läbi, kus süsteem võimaldab, hägustatult. Jõustub Lumtubi järgmisel käivitamisel. Vähese ressursi režiimis väljas"
 }

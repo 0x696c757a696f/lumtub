@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% გაუმჭვირვალე",
   "See the desktop through the window": "სამუშაო მაგიდის დანახვა ფანჯრიდან",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ლანდშაფტი გვერდზე იწევს და სამუშაო მაგიდა ჩანს ფანჯრიდან, ბუნდოვნად, სადაც სისტემა იძლევა. გამორთულია დაბალი რესურსების რეჟიმში",
-  "Color schemes": "ფერთა სქემები"
+  "Color schemes": "ფერთა სქემები",
+  "Library": "ბიბლიოთეკა",
+  "Add a skin from a file": "სკინის დამატება ფაილიდან",
+  "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc ან სკინის საქაღალდის zip",
+  "Added {0}": "დაემატა {0}",
+  "This is not a skin: {0}": "ეს სკინი არ არის: {0}",
+  "See the wallpaper through the app": "ფონის დანახვა აპში გავლით",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "პეიზაჟი განზე გადგება და მთავარი ეკრანის ფონი ჩანს, გაბუნდოვანებული იქ, სადაც სისტემას შეუძლია. ძალაში შედის Lumtub-ის შემდეგი გაშვებისას. გამორთულია დაბალი რესურსების რეჟიმში"
 }

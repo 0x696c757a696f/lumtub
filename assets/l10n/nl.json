@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% dekkend",
   "See the desktop through the window": "Het bureaublad door het venster zien",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Het landschap maakt plaats en het bureaublad schijnt door het venster, waar mogelijk vervaagd. Uit in de modus voor weinig bronnen",
-  "Color schemes": "Kleurenschema's"
+  "Color schemes": "Kleurenschema's",
+  "Library": "Bibliotheek",
+  "Add a skin from a file": "Skin toevoegen uit bestand",
+  "A skin.jsonc, or a zip of a skin's folder": "Een skin.jsonc, of een zip van de map van een skin",
+  "Added {0}": "{0} toegevoegd",
+  "This is not a skin: {0}": "Dit is geen skin: {0}",
+  "See the wallpaper through the app": "Achtergrond door de app heen zien",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Het landschap maakt plaats en de achtergrond van het startscherm schijnt erdoorheen, onscherp waar het systeem dat kan. Gaat in bij de volgende start van Lumtub. Uit in Modus voor weinig bronnen"
 }

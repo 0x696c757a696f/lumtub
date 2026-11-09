@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% অস্বচ্ছ",
   "See the desktop through the window": "উইন্ডোর ভেতর দিয়ে ডেস্কটপ দেখুন",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ল্যান্ডস্কেপ সরে যায় এবং সিস্টেম পারলে ঝাপসা করে উইন্ডোর ভেতর দিয়ে ডেস্কটপ দেখা যায়। কম রিসোর্স মোডে বন্ধ থাকে",
-  "Color schemes": "রঙের স্কিম"
+  "Color schemes": "রঙের স্কিম",
+  "Library": "লাইব্রেরি",
+  "Add a skin from a file": "ফাইল থেকে স্কিন যোগ করুন",
+  "A skin.jsonc, or a zip of a skin's folder": "একটি skin.jsonc, অথবা স্কিনের ফোল্ডারের zip",
+  "Added {0}": "{0} যোগ করা হয়েছে",
+  "This is not a skin: {0}": "এটি স্কিন নয়: {0}",
+  "See the wallpaper through the app": "অ্যাপের মধ্য দিয়ে ওয়ালপেপার দেখুন",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "ল্যান্ডস্কেপ সরে যায় এবং হোম স্ক্রিনের ওয়ালপেপার ফুটে ওঠে, সিস্টেম যেখানে পারে সেখানে ঝাপসা করে। পরের বার Lumtub চালু হলে কার্যকর হবে। কম রিসোর্স মোডে বন্ধ"
 }

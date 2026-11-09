@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% pekat",
   "See the desktop through the window": "Deleng desktop liwat jendhela",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Pemandangan nyingkir lan desktop katon liwat jendhela, burem yen sistem bisa. Mati ing Mode sumber daya sithik",
-  "Color schemes": "Skema werna"
+  "Color schemes": "Skema werna",
+  "Library": "Perpustakaan",
+  "Add a skin from a file": "Tambah skin saka berkas",
+  "A skin.jsonc, or a zip of a skin's folder": "Berkas skin.jsonc, utawa zip folder skin",
+  "Added {0}": "{0} wis ditambahake",
+  "This is not a skin: {0}": "Iki dudu skin: {0}",
+  "See the wallpaper through the app": "Deleng wallpaper liwat aplikasi",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Lanskap geser lan wallpaper layar ngarep katon tembus, diburamake yen sistem bisa. Mlaku nalika Lumtub diwiwiti sabanjure. Mati ing Mode sumber daya sithik"
 }

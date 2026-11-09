@@ -507,9 +507,9 @@
   "overrides": {
     "dark": {
       "colors": {
-        "page": "#142a0b",
-        "text": "#e3f2e6",
-        "muted": "#92ac97",
+        "page": "#0b252a",
+        "text": "#f1f8f2",
+        "muted": "#d4e1d7",
         "accent": "#6aa462",
         "onAccent": "#2b2b2b",
         "border": "#355d28",
@@ -519,7 +519,7 @@
         "reason": "#6aa462"
       },
       "window": {
-        "veil": 0.90,
+        "veil": 0.72,
         "background": [
           {
             "image": "night.jpg",
@@ -648,7 +648,7 @@
           }
         },
         "topBarText": "#bcdfc3",
-        "statusBarText": "#e3f2e6"
+        "statusBarText": "#f1f8f2"
       },
       "controls": {
         "button": {
@@ -739,7 +739,7 @@
           ]
         },
         "navSelectedText": "#1f6b16",
-        "navText": "#e3f2e6"
+        "navText": "#f1f8f2"
       },
       "cards": {
         "video": {

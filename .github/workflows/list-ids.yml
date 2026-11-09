@@ -31,6 +31,7 @@ jobs:
         run: |
           python3 .github/scripts/list_ids.py lists "$RUNNER_TEMP/report.md" ${LIMIT:+--limit "$LIMIT"}
           cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
+          awk '/^## The same channel/{on=1} /^## Several/{on=0} on' "$RUNNER_TEMP/report.md"
 
       - name: Install the Rust toolchain
         run: |

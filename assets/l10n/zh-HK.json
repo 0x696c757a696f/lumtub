@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "診斷 網絡 測試 代理 proxy 出口 IP 位址 連線",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv 同圖片經由佢連線 SOCKS 代理",
   "{0} by the decoder, {1} by the display": "解碼器 {0}，顯示 {1}",
-  "{0} dropped": "丟幀 {0}"
+  "{0} dropped": "丟幀 {0}",
+  "Rotate": "旋轉"
 }

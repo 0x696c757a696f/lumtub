@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnostics network test proxy exit address koneksyon",
   "libmpv and pictures reach the SOCKS proxy through it": "Nakakarating ang libmpv at mga larawan sa SOCKS proxy sa pamamagitan nito",
   "{0} by the decoder, {1} by the display": "{0} ng decoder, {1} ng display",
-  "{0} dropped": "{0} na-drop"
+  "{0} dropped": "{0} na-drop",
+  "Rotate": "I-rotate"
 }

@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "ການວິນິໄສ ທົດສອບເຄືອຂ່າຍ ໂປຣຄຊີ proxy ທີ່ຢູ່ຂາອອກ ການເຊື່ອມຕໍ່",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv ແລະ ຮູບພາບເຂົ້າເຖິງໂປຣຄຊີ SOCKS ຜ່ານມັນ",
   "{0} by the decoder, {1} by the display": "{0} ໂດຍຕົວຖອດລະຫັດ, {1} ໂດຍຈໍສະແດງຜົນ",
-  "{0} dropped": "{0} ຕົກ"
+  "{0} dropped": "{0} ຕົກ",
+  "Rotate": "ໝຸນ"
 }

@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnostica probatio retis procurator inscriptio exitus nexus",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv et imagines per eum ad procuratorem SOCKS perveniunt",
   "{0} by the decoder, {1} by the display": "{0} a decodere, {1} ab exhibitione",
-  "{0} dropped": "{0} omissae"
+  "{0} dropped": "{0} omissae",
+  "Rotate": "Verte"
 }

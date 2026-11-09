@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "การวินิจฉัย เครือข่าย ทดสอบ พร็อกซี proxy ที่อยู่ขาออก การเชื่อมต่อ",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv และรูปภาพเชื่อมต่อกับพร็อกซี SOCKS ผ่านบริดจ์นี้",
   "{0} by the decoder, {1} by the display": "{0} โดยตัวถอดรหัส, {1} โดยจอแสดงผล",
-  "{0} dropped": "ตกหล่น {0}"
+  "{0} dropped": "ตกหล่น {0}",
+  "Rotate": "หมุน"
 }

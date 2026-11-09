@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnostik uji jaringan proxy alamat keluar koneksi",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv dan gambar mencapai proxy SOCKS melaluinya",
   "{0} by the decoder, {1} by the display": "{0} oleh dekoder, {1} oleh layar",
-  "{0} dropped": "{0} terlewat"
+  "{0} dropped": "{0} terlewat",
+  "Rotate": "Putar"
 }

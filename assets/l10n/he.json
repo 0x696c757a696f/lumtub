@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "אבחון רשת בדיקה פרוקסי proxy כתובת יציאה חיבור",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv והתמונות מגיעים דרכו לפרוקסי SOCKS",
   "{0} by the decoder, {1} by the display": "{0} במפענח, {1} בתצוגה",
-  "{0} dropped": "{0} נשמטו"
+  "{0} dropped": "{0} נשמטו",
+  "Rotate": "סיבוב"
 }

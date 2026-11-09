@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "დიაგნოსტიკა ქსელის ტესტი პროქსი proxy გასვლის მისამართი კავშირი",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv და სურათები მისი მეშვეობით აღწევენ SOCKS პროქსის",
   "{0} by the decoder, {1} by the display": "{0} დეკოდერით, {1} ეკრანით",
-  "{0} dropped": "{0} გამოტოვებული"
+  "{0} dropped": "{0} გამოტოვებული",
+  "Rotate": "შემობრუნება"
 }

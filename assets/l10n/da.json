@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnostik netværk test proxy udgangsadresse forbindelse",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv og billeder når SOCKS-proxyen gennem den",
   "{0} by the decoder, {1} by the display": "{0} af dekoderen, {1} af skærmen",
-  "{0} dropped": "{0} tabt"
+  "{0} dropped": "{0} tabt",
+  "Rotate": "Rotér"
 }

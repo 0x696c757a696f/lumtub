@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "greining netpróf milliþjónn proxy útgönguvistfang tenging",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv og myndir ná til SOCKS-milliþjónsins í gegnum hana",
   "{0} by the decoder, {1} by the display": "{0} af afkóðaranum, {1} af skjánum",
-  "{0} dropped": "{0} féllu niður"
+  "{0} dropped": "{0} féllu niður",
+  "Rotate": "Snúa"
 }

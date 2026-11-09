@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnostika võrk test puhverserver proxy väljumisaadress ühendus",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv ja pildid jõuavad SOCKS-puhverserverini selle kaudu",
   "{0} by the decoder, {1} by the display": "{0} dekooderi poolt, {1} ekraani poolt",
-  "{0} dropped": "{0} vahele jäänud"
+  "{0} dropped": "{0} vahele jäänud",
+  "Rotate": "Pööra"
 }

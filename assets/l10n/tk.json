@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnostika ulgam synag proksi proxy çykyş salgysy birikme",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv we suratlar ol arkaly SOCKS proksisine ýetýär",
   "{0} by the decoder, {1} by the display": "Dekoder {0}, ekran {1}",
-  "{0} dropped": "{0} gaçdy"
+  "{0} dropped": "{0} gaçdy",
+  "Rotate": "Aýlaň"
 }

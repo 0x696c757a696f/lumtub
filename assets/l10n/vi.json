@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "chẩn đoán mạng kiểm tra proxy địa chỉ đầu ra kết nối",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv và hình ảnh kết nối tới proxy SOCKS qua đó",
   "{0} by the decoder, {1} by the display": "{0} do bộ giải mã, {1} do màn hình",
-  "{0} dropped": "Bỏ {0}"
+  "{0} dropped": "Bỏ {0}",
+  "Rotate": "Xoay"
 }

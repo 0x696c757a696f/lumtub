@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnostika tīkla tests starpniekserveris proxy izejas adrese savienojums",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv un attēli ar tā palīdzību sasniedz SOCKS starpniekserveri",
   "{0} by the decoder, {1} by the display": "{0} dekoderis, {1} displejs",
-  "{0} dropped": "{0} izlaisti"
+  "{0} dropped": "{0} izlaisti",
+  "Rotate": "Pagriezt"
 }

@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "ការវិនិច្ឆ័យ តេស្តបណ្ដាញ ប្រូកស៊ី proxy អាសយដ្ឋានចេញ ការតភ្ជាប់",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv និងរូបភាពទៅដល់ប្រូកស៊ី SOCKS តាមរយៈវា",
   "{0} by the decoder, {1} by the display": "{0} ដោយឧបករណ៍ឌិកូដ {1} ដោយអេក្រង់",
-  "{0} dropped": "{0} ធ្លាក់"
+  "{0} dropped": "{0} ធ្លាក់",
+  "Rotate": "បង្វិល"
 }

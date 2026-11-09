@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnosticare rețea test proxy adresă de ieșire conexiune",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv și imaginile ajung prin ea la proxy-ul SOCKS",
   "{0} by the decoder, {1} by the display": "{0} de decodor, {1} de afișaj",
-  "{0} dropped": "{0} pierdute"
+  "{0} dropped": "{0} pierdute",
+  "Rotate": "Rotește"
 }

@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnozo reto provo prokurilo proxy elira adreso konekto",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv kaj bildoj atingas la SOCKS-prokurilon per ĝi",
   "{0} by the decoder, {1} by the display": "{0} per la malkodilo, {1} per la ekrano",
-  "{0} dropped": "{0} perditaj"
+  "{0} dropped": "{0} perditaj",
+  "Rotate": "Turni"
 }

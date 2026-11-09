@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "ዲያግኖስቲክስ መርበብ ፈተና ፕሮክሲ proxy ናይ ምውጻእ ኣድራሻ ሕብረት",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpvን ስእልታትን ብእኡ ኣቢሉ ናብ SOCKS ፕሮክሲ ይበጽሑ",
   "{0} by the decoder, {1} by the display": "{0} ብዲኮደር፣ {1} ብመዕሸኒ",
-  "{0} dropped": "{0} ጠፊኡ"
+  "{0} dropped": "{0} ጠፊኡ",
+  "Rotate": "ኣዙር"
 }

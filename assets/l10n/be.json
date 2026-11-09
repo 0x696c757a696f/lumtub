@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "дыягностыка сетка тэст проксі proxy адрас выхаду злучэнне",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv і відарысы падключаюцца праз яго да проксі SOCKS",
   "{0} by the decoder, {1} by the display": "{0} дэкодэрам, {1} дысплеем",
-  "{0} dropped": "Прапушчана {0}"
+  "{0} dropped": "Прапушчана {0}",
+  "Rotate": "Павярнуць"
 }

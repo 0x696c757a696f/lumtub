@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "uchunguzi mtandao jaribio proksi proxy anwani ya kutokea muunganisho",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv na picha hufikia proksi ya SOCKS kupitia hilo",
   "{0} by the decoder, {1} by the display": "{0} na kisimbuaji, {1} na skrini",
-  "{0} dropped": "{0} zimepotea"
+  "{0} dropped": "{0} zimepotea",
+  "Rotate": "Zungusha"
 }

@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "診断 ネットワーク テスト プロキシ proxy 出口 アドレス 接続",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv と画像はこれを通じて SOCKS プロキシに接続します",
   "{0} by the decoder, {1} by the display": "デコーダ {0}、ディスプレイ {1}",
-  "{0} dropped": "{0} コマ落ち"
+  "{0} dropped": "{0} コマ落ち",
+  "Rotate": "回転"
 }

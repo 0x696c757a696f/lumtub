@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "ડાયગ્નોસ્ટિક્સ નેટવર્ક ટેસ્ટ પ્રોક્સી proxy બહાર નીકળવાનું સરનામું કનેક્શન",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv અને ચિત્રો તેના દ્વારા SOCKS પ્રોક્સી સુધી પહોંચે છે",
   "{0} by the decoder, {1} by the display": "ડિકોડર દ્વારા {0}, ડિસ્પ્લે દ્વારા {1}",
-  "{0} dropped": "{0} છૂટી"
+  "{0} dropped": "{0} છૂટી",
+  "Rotate": "ફેરવો"
 }

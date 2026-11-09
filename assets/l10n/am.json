@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "ምርመራ አውታረ መረብ ሙከራ proxy መውጫ አድራሻ ግንኙነት",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv እና ምስሎች በእሱ በኩል SOCKS proxy ይደርሳሉ",
   "{0} by the decoder, {1} by the display": "{0} በዲኮደር፣ {1} በማሳያ",
-  "{0} dropped": "{0} ተጥለዋል"
+  "{0} dropped": "{0} ተጥለዋል",
+  "Rotate": "አሽከርክር"
 }

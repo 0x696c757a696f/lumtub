@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "ukuxilonga inethiwekhi ukuhlola proxy ikheli lokuphuma uxhumano",
   "libmpv and pictures reach the SOCKS proxy through it": "I-libmpv nezithombe zifinyelela ku-proxy ye-SOCKS ngayo",
   "{0} by the decoder, {1} by the display": "{0} yisidikhodi, {1} yisibonisi",
-  "{0} dropped": "{0} alahlekile"
+  "{0} dropped": "{0} alahlekile",
+  "Rotate": "Zungezisa"
 }

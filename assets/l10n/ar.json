@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "تشخيص شبكة اختبار proxy وكيل عنوان خروج اتصال",
   "libmpv and pictures reach the SOCKS proxy through it": "يصل libmpv والصور إلى وكيل SOCKS عبره",
   "{0} by the decoder, {1} by the display": "{0} بواسطة المفكّك، {1} بواسطة العرض",
-  "{0} dropped": "{0} مفقودة"
+  "{0} dropped": "{0} مفقودة",
+  "Rotate": "تدوير"
 }

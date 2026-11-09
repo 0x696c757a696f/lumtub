@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "ရောဂါရှာဖွေခြင်း ကွန်ရက်စမ်းသပ် ပရောက်စီ proxy ထွက်ပေါက်လိပ်စာ ချိတ်ဆက်မှု",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv နှင့် ပုံများသည် ၎င်းမှတစ်ဆင့် SOCKS ပရောက်စီသို့ ရောက်သည်",
   "{0} by the decoder, {1} by the display": "ဒီကုဒ်ဒါက {0}၊ ဖန်သားပြင်က {1}",
-  "{0} dropped": "{0} ကျသွားသည်"
+  "{0} dropped": "{0} ကျသွားသည်",
+  "Rotate": "လှည့်ရန်"
 }

@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnostika síť test proxy výstupní adresa připojení",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv a obrázky se přes něj dostanou k proxy SOCKS",
   "{0} by the decoder, {1} by the display": "{0} dekodérem, {1} displejem",
-  "{0} dropped": "{0} zahozeno"
+  "{0} dropped": "{0} zahozeno",
+  "Rotate": "Otočit"
 }

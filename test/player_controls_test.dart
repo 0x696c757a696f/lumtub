@@ -342,6 +342,21 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('a long press held while the video changes gives the next one its speed back', (tester) async {
+    await pump(tester);
+    player.state = player.state.copyWith(playing: true, rate: 1);
+    final gesture = await tester.startGesture(tester.getRect(find.byType(PlayerControls)).center + const Offset(150, 0));
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(player.state.rate, 2);
+    controller.playing = const VideoItem(id: 'jNQXAC9IVRw', title: 'Next', channel: 'Channel', url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw');
+    controller.notifyListeners();
+    await tester.pump();
+    expect(player.state.rate, 1);
+    await gesture.up();
+    await tester.pump(const Duration(seconds: 4));
+    expect(player.state.rate, 1);
+  });
+
   testWidgets('the lights button toggles 关灯', (tester) async {
     await pump(tester);
     lightsOff.value = false;

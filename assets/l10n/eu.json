@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnostikoak sarea proba proxy irteera-helbidea konexioa",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv eta irudiak SOCKS proxyra haren bidez iristen dira",
   "{0} by the decoder, {1} by the display": "{0} deskodetzaileak, {1} pantailak",
-  "{0} dropped": "{0} jausi"
+  "{0} dropped": "{0} jausi",
+  "Rotate": "Biratu"
 }

@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "عیب‌یابی شبکه آزمون پروکسی proxy نشانی خروجی اتصال",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv و تصاویر از طریق آن به پروکسی SOCKS می‌رسند",
   "{0} by the decoder, {1} by the display": "{0} توسط رمزگشا، {1} توسط نمایشگر",
-  "{0} dropped": "{0} ازدست‌رفته"
+  "{0} dropped": "{0} ازدست‌رفته",
+  "Rotate": "چرخش"
 }

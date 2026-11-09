@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnostiikka verkko testi välityspalvelin proxy poistumisosoite yhteys",
   "libmpv and pictures reach the SOCKS proxy through it": "libmpv ja kuvat yltävät SOCKS-välityspalvelimeen sen kautta",
   "{0} by the decoder, {1} by the display": "{0} dekooderilta, {1} näytöltä",
-  "{0} dropped": "{0} pudotettu"
+  "{0} dropped": "{0} pudotettu",
+  "Rotate": "Kierrä"
 }

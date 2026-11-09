@@ -3052,5 +3052,6 @@
   "diagnostics network test proxy exit address connection": "diagnosztika hálózat teszt proxy kilépési cím kapcsolat",
   "libmpv and pictures reach the SOCKS proxy through it": "a libmpv és a képek ezen keresztül érik el a SOCKS-proxyt",
   "{0} by the decoder, {1} by the display": "{0} a dekóderben, {1} a kijelzőn",
-  "{0} dropped": "{0} eldobva"
+  "{0} dropped": "{0} eldobva",
+  "Rotate": "Elforgatás"
 }

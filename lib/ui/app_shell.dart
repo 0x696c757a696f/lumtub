@@ -255,6 +255,9 @@ class _AppShellState extends State<AppShell> {
               };
               Widget page(Widget child) => skin == null ? child : SkinBackdrop(skin: skin, plain: _controller.appearance.lowResource, child: child);
               final scaffold = Scaffold(
+                // The skin's backdrop is drawn under the main window only;
+                // pages pushed over it keep the theme's solid page colour.
+                backgroundColor: skin == null ? null : Colors.transparent,
                 body: page(Column(children: [
                   if (ownTitleBar) SkinTitleBarView(bar: skin!.titleBar!, title: appName),
                   if (skin?.menuBar case final bar?) CallbackShortcuts(bindings: menuShortcuts(menus), child: SkinMenuBarView(bar: bar, menus: menus, clock: bar.clock)),

@@ -289,7 +289,7 @@ ThemeData buildAppTheme(
     fontFamilyFallback: fallback,
     colorScheme: scheme,
     // A skin paints the page itself, under everything (SkinBackdrop).
-    scaffoldBackgroundColor: skin != null ? Colors.transparent : scheme.surface,
+    scaffoldBackgroundColor: scheme.surface,
     canvasColor: scheme.surface,
     visualDensity: compact ? VisualDensity.compact : VisualDensity.standard,
     // No ink ripples: a flat wash on hover and press.

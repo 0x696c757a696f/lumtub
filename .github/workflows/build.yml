@@ -48,7 +48,6 @@ jobs:
             install_arch: arm64
     runs-on: ${{ matrix.runner }}
     env:
-      FLUTTER_VERSION: 3.47.7
       PACKAGE_ARCH: ${{ matrix.package_arch }}
       MPV_ARCH: ${{ matrix.mpv_arch }}
       RUNTIME_ARCH: ${{ matrix.runtime_arch }}
@@ -109,6 +108,10 @@ jobs:
           if ($release.tag_name -notmatch '^[0-9A-Za-z._-]{1,100}$') { throw "Unexpected libmpv tag: $($release.tag_name)" }
           $release.tag_name | Out-File -FilePath (Join-Path $env:RUNNER_TEMP 'libmpv-tag.txt') -Encoding ascii -NoNewline
           Write-Host "Verified $($release.tag_name): $($asset.name), SHA-256, and $($library.FullName)"
+
+      - name: Windows - read the Flutter version
+        shell: bash
+        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
 
       - name: Windows - install Flutter stable SDK
         shell: pwsh
@@ -436,7 +439,6 @@ jobs:
     runs-on: ${{ matrix.runner }}
     container: ubuntu:22.04
     env:
-      FLUTTER_VERSION: 3.47.7
       PACKAGE_ARCH: ${{ matrix.package_arch }}
       DEBIAN_FRONTEND: noninteractive
       # libmpv 0.41 with FFmpeg 9 and libplacebo, built on Ubuntu 22.04 by
@@ -457,6 +459,10 @@ jobs:
         with:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
+
+      - name: Linux - read the Flutter version
+        shell: bash
+        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
 
       - name: Linux - install Flutter stable SDK
         run: |
@@ -685,7 +691,6 @@ jobs:
     # packing a DMG thinned to each.
     runs-on: macos-15
     env:
-      FLUTTER_VERSION: 3.47.7
       FFMPEG_TAG: n8.0
     permissions:
       contents: read
@@ -694,6 +699,10 @@ jobs:
         with:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
+
+      - name: macOS - read the Flutter version
+        shell: bash
+        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
 
       - name: macOS - install Flutter stable SDK
         run: |
@@ -854,12 +863,14 @@ jobs:
   android:
     name: Android
     runs-on: ubuntu-24.04
-    env:
-      FLUTTER_VERSION: 3.47.7
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Android - read the Flutter version
+        shell: bash
+        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
 
       - name: Android - install Flutter stable SDK
         run: |

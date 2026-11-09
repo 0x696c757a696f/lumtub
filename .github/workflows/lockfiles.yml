@@ -2,7 +2,8 @@ name: Refresh lockfiles
 
 # Dependabot raises direct dependencies only; this moves every package in
 # pubspec.lock and Cargo.lock to the newest version the constraints allow,
-# and takes the newest Chrome Root Store.
+# takes the newest Chrome Root Store and the newest stable Flutter
+# (.flutter-version, read by every build job).
 # The result goes to the deps/lockfiles branch and Build checks it; Merge
 # dependency updates then brings it into main.
 on:
@@ -17,12 +18,18 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    env:
-      FLUTTER_VERSION: 3.47.7
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: main
+      - name: Newest Flutter stable
+        run: |
+          set -euo pipefail
+          version=$(curl -sSfL https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json | jq -r '.current_release.stable as $h | .releases[] | select(.hash == $h) | .version')
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Unexpected Flutter version: $version"; exit 1; }
+          echo "$version" > .flutter-version
+          echo "FLUTTER_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Flutter $version"
       - name: Flutter
         run: |
           curl -sSfL "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz" | tar -xJ -C "$RUNNER_TEMP"
@@ -48,7 +55,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git switch -c deps/lockfiles
-          git add -A native/lumtub_core/roots
+          git add -A native/lumtub_core/roots .flutter-version
           git commit -qam "Refresh lockfiles"
           git push --force origin deps/lockfiles
           gh workflow run build.yml --ref deps/lockfiles

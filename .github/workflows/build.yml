@@ -385,7 +385,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed.' }
 
       - name: Windows - README pictures
-        if: matrix.package_arch == 'x64'
+        if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
         continue-on-error: true
         shell: pwsh
         run: |
@@ -397,7 +397,7 @@ jobs:
           windows/packaging/showcase.ps1 (Resolve-Path "$package/lumtub.exe").Path "$env:RUNNER_TEMP/shots"
 
       - name: Windows - upload README pictures
-        if: matrix.package_arch == 'x64'
+        if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: readme-shots-windows
@@ -588,7 +588,7 @@ jobs:
           linux/packaging/smoke.sh Lumtub_*_linux-$PACKAGE_ARCH.AppImage "$RUNNER_TEMP/smoke"
 
       - name: Linux - README pictures
-        if: matrix.package_arch == 'x64'
+        if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
         run: |
           message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
           if echo "$message" | grep -qF '[showcase]'; then
@@ -597,7 +597,7 @@ jobs:
           fi
 
       - name: Linux - upload README pictures
-        if: matrix.package_arch == 'x64'
+        if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: readme-shots-linux
@@ -627,6 +627,8 @@ jobs:
     # pictures the Windows x64, Linux x64 and macOS jobs took of the app's
     # pages to the readme-shots branch, one folder per system.
     needs: [windows, linux, macos]
+    # Never for a release tag: its squashed message carries the pull request's [showcase].
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -826,6 +828,7 @@ jobs:
           macos/packaging/smoke.sh Lumtub_*_macos-x64.dmg "$RUNNER_TEMP/smoke-intel"
 
       - name: macOS - README pictures
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         continue-on-error: true
         run: |
           message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)

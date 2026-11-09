@@ -203,7 +203,11 @@
     // Ornaments over the background, under the content. Left out in low
     // resource mode. "above": true draws one over the content too.
     // 背景之上、内容之下的装饰；低占用模式下不画。"above": true 会画在内容上面。
-    // type: bubbles, sparkles, perspectiveGrid, beam, waves, pattern
+    // type: scene, bubbles, sparkles, perspectiveGrid, beam, waves, pattern
+    // { "type": "scene", "scene": "meadow" } paints a whole landscape:
+    // meadow, sky, underwater, aurora or city; "night": true for its night.
+    // { "type": "scene", "scene": "meadow" } 画一整幅景色：meadow 草原、sky 蓝天、
+    // underwater 水下、aurora 极光、city 未来城；"night": true 是夜晚版。
     "decorations": [
       { "type": "bubbles", "count": 6, "color": "#78dcff59" },
       { "type": "sparkles", "count": 4, "color": "#ffffff", "glow": "#7fd0ff" }
@@ -277,6 +281,13 @@
     // true 时用户可以在 设置 › 皮肤 › 玻璃 里调低栏、侧栏、卡片和面板的不透明度，透出背景。
     // 这时文字直接放在背景上也要看得清。
     "glass": false,
+    // { "min": 0.6 } instead of true sets the clearest the glass may go.
+    // 写成 { "min": 0.6 } 可以限定最透明能调到多少。
+
+    // 0–0.9: the page colour laid over the backdrop under the pages, so
+    // text there reads over a busy picture.
+    // 0–0.9：在页面下面垫一层页面底色，背景再花，上面的字也看得清。
+    "veil": 0,
 
     // The bar with the logo and search box. 有 logo 和搜索框的那一栏。
     "topBar": { "fill": "#ffffffb3", "border": { "color": "#b9d4ea", "sides": ["bottom"] } },

@@ -397,7 +397,6 @@
         "statusBarText": "#999999"
       },
       "controls": {
-        "press": "ripple",
         "button": {
           "fill": "#0f0f0f",
           "radius": 2,

@@ -294,7 +294,7 @@ class _AppShellState extends State<AppShell> {
                         duration: Motion.of(Ease.fade),
                         // Keyed per page so each page's list keeps its scroll position
                         // (PageStorage) when the user comes back to it.
-                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _content())),
+                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _veiled(skin, _content()))),
                       )),
                     ]),
                     // The video keeps playing over the pages; the watch page
@@ -328,6 +328,13 @@ class _AppShellState extends State<AppShell> {
           ),
         ),
       );
+
+  /// A skin with a busy picture behind lays some of its page colour over
+  /// it under the pages, so what is written on them reads.
+  Widget _veiled(Skin? skin, Widget page) {
+    if (skin == null || skin.veil == 0 || _controller.appearance.lowResource) return page;
+    return ColoredBox(color: skin.colors.page.withValues(alpha: skin.veil), child: page);
+  }
 
   String get _pageKey => !_controller.ready ? 'setup' : _controller.onWatchPage ? 'watch' : switch (_controller.mode) {
         PageMode.channel => 'channel:${_controller.channel?.id}',

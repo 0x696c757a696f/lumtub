@@ -80,18 +80,9 @@
     ],
     "decorations": [
       {
-        "type": "waves",
-        "count": 3,
-        "color": "#3fe8b840",
-        "seed": 12,
-        "position": 0.25
-      },
-      {
-        "type": "sparkles",
-        "count": 8,
-        "color": "#e8fbff",
-        "glow": "#4fd6ff",
-        "seed": 17
+        "type": "scene",
+        "scene": "aurora",
+        "seed": 3
       }
     ],
     "titleBar": {
@@ -212,7 +203,8 @@
           "top"
         ]
       }
-    }
+    },
+    "veil": 0.7
   },
   "controls": {
     "button": {

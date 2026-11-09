@@ -23,7 +23,7 @@
   "colors": {
     "page": "#e6f7ff",
     "text": "#0d2a3d",
-    "muted": "#3f6475",
+    "muted": "#2f4b58",
     "accent": "#0874b0",
     "onAccent": "#ffffff",
     "border": "#a9d7ec",
@@ -38,7 +38,9 @@
     "thumbnailRadius": 14
   },
   "window": {
-    "glass": true,
+    "glass": {
+      "min": 0.6
+    },
     "background": [
       {
         "linear": {
@@ -86,10 +88,9 @@
     ],
     "decorations": [
       {
-        "type": "bubbles",
-        "count": 9,
-        "color": "#78dcff59",
-        "seed": 11
+        "type": "scene",
+        "scene": "sky",
+        "seed": 3
       }
     ],
     "titleBar": {
@@ -212,7 +213,8 @@
         ]
       }
     },
-    "statusBarText": "#0d2a3d"
+    "statusBarText": "#0d2a3d",
+    "veil": 0.7
   },
   "controls": {
     "button": {
@@ -395,7 +397,7 @@
     "dark": {
       "colors": {
         "page": "#042230",
-        "text": "#aed1e8",
+        "text": "#c2dcee",
         "muted": "#84a6b6",
         "accent": "#0874b0",
         "onAccent": "#ffffff",
@@ -453,10 +455,10 @@
         ],
         "decorations": [
           {
-            "type": "bubbles",
-            "count": 9,
-            "color": "#0b678859",
-            "seed": 11
+            "type": "scene",
+            "scene": "sky",
+            "night": true,
+            "seed": 3
           }
         ],
         "titleBar": {
@@ -482,7 +484,7 @@
           "inactive": {
             "fill": "#081d27"
           },
-          "text": "#aed1e8",
+          "text": "#c2dcee",
           "buttons": {
             "size": [
               36,
@@ -580,7 +582,7 @@
           }
         },
         "topBarText": "#aed1e8",
-        "statusBarText": "#aed1e8"
+        "statusBarText": "#c2dcee"
       },
       "controls": {
         "button": {
@@ -671,7 +673,7 @@
           ]
         },
         "navSelectedText": "#075f91",
-        "navText": "#aed1e8"
+        "navText": "#c2dcee"
       },
       "cards": {
         "video": {

@@ -88,7 +88,9 @@ anything else out and Lumtub draws it the usual way.
 | `window.titleBar` | The window frame drawn by Lumtub (computers only). 标题栏（仅电脑）。 |
 | `window.menuBar` | File, View, Play, Help with Alt keys (computers only); `position: "top"` puts it above the title bar, `appMenu` adds a bold app menu first. 菜单栏（仅电脑）；`position: "top"` 放到标题栏上面，`appMenu` 在最前面加粗体应用菜单。 |
 | `window.topBar`, `sideBar`, `statusBar` | The search row, navigation, status line; `topBarText` and `statusBarText` colour what is on them. 顶栏、侧栏、状态栏及其文字颜色。 |
-| `window.glass` | `true` lets users make the bars, rail, cards and panels clearer so the background shows through; text must then read on the background too. `true` 时用户可以调低栏、侧栏、卡片、面板的不透明度透出背景，文字放在背景上也要看得清。 |
+| `window.decorations` `scene` | A whole painted landscape behind everything: `meadow`, `sky`, `underwater`, `aurora`, `city`; `"night": true` for the night version. 整幅背景景色：草原、蓝天、水下、极光、未来城；`"night": true` 是夜晚版。 |
+| `window.veil` | 0–0.9 of the page colour laid over the backdrop under the pages, so text reads over a busy picture. 在页面下面垫一层页面底色，景色再花文字也看得清。 |
+| `window.glass` | `true` (or `{"min": 0.6}`, the clearest it may go) lets users make the bars, rail, cards and panels clearer so the background shows through; text must then read on the background too. `true` 时用户可以调低栏、侧栏、卡片、面板的不透明度透出背景，文字放在背景上也要看得清。 |
 | `window.tabs` | Tabs for the pages on a phone or in a narrow window, at the bottom or under the top bar (`position`), with `selected`, `indicator`, `labels: "text"` and `caps`. 手机或窄窗口的页面标签栏，在底部或顶栏下面（`position`），可设 `selected`、`indicator`、`labels: "text"`、`caps`。 |
 | `controls` | Buttons, the main button, chips, fields, navigation. 按钮、标签、输入框、导航。 |
 | `cards` | Video cards, panels, the duration badge. 视频卡片、面板、时长角标。 |
@@ -246,6 +248,7 @@ own shapes; only the colours change. 跟随浅色/深色模式，保留 Lumtub �
 | `aero` | Bubble Gel | 泡泡凝胶 | glossy aqua and green, 2006–2010 |
 | `ocean` | Ocean Glass | 海洋玻璃 | teal water glass, bubbles and waves |
 | `meadow` | Sunny Meadow | 晴空草原 | blue sky, green grass, lens glints |
+| `city` | Green Tomorrow | 绿色未来城 | glass towers with terrace gardens, wind turbines and a train over green hills |
 | `aurora` | Aurora Glass | 极光玻璃 | dark glass under northern lights |
 | `chrome` | Chrome Cyber | 镀铬赛博 | chrome, neon, perspective grid, ~2000 |
 | `candy` | Candy Shell | 糖果壳 | translucent coloured plastic, 1998–2001 |

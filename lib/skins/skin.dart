@@ -80,7 +80,13 @@ class Skin {
   late final SkinSurface? statusBar = SkinSurface.parse(_window['statusBar'], this);
   /// Whether the user may make the bars, rail, cards and panels clearer, so
   /// the sky or water behind shows through: `window.glass`.
-  late final bool glass = _window['glass'] == true;
+  late final bool glass = _window['glass'] == true || _window['glass'] is Map;
+  /// The clearest the glass may go, 0.3 to 1: `window.glass.min`, higher for
+  /// a skin with dark or busy parts behind its bars.
+  late final double glassMin = (_num(_map(_window['glass'])['min']) ?? 0.3).clamp(0.3, 1).toDouble();
+  /// How much of the page colour lies over the backdrop under the pages,
+  /// 0 to 0.9, so text there reads over a busy picture: `window.veil`.
+  late final double veil = (_num(_window['veil']) ?? 0).clamp(0, 0.9).toDouble();
 
   void _glaze() {
     if (!glass) return;
@@ -632,11 +638,18 @@ sealed class SkinDecoration {
         return BeamDecoration(color: color ?? const Color(0x59FFFFFF), angle: _num(value['angle']) ?? -10, position: (_num(value['position']) ?? 0.45).toDouble(), above: above);
       case 'waves':
         return WavesDecoration(count: (_num(value['count']) ?? 3).round().clamp(1, 8), color: color ?? const Color(0x4D3FC8FF), seed: (_num(value['seed']) ?? 5).round(), position: (_num(value['position']) ?? 0.8).clamp(0, 1).toDouble(), above: above);
+      case 'scene':
+        final name = _str(value['scene']);
+        if (!sceneNames.contains(name)) {
+          skin.warn('scene "$name" is unknown (${sceneNames.join(', ')})');
+          return null;
+        }
+        return SceneDecoration(scene: name!, night: value['night'] == true, seed: (_num(value['seed']) ?? 3).round(), above: false);
       case 'pattern':
         final paint = SkinPaint.parse({'pattern': {...value, 'type': value['pattern']}}, skin);
         return paint is PatternPaint ? PatternDecoration(paint, fade: _str(value['fade']), above: above) : null;
     }
-    skin.warn('decoration type "$type" is unknown (bubbles, sparkles, perspectiveGrid, beam, waves, pattern)');
+    skin.warn('decoration type "$type" is unknown (scene, bubbles, sparkles, perspectiveGrid, beam, waves, pattern)');
     return null;
   }
 }
@@ -673,6 +686,17 @@ class BeamDecoration extends SkinDecoration {
 
 /// Glossy ribbons swept across the window, as on the water and glass
 /// wallpapers of the late 2000s.
+/// The landscapes a skin can have painted behind it.
+const sceneNames = ['meadow', 'sky', 'underwater', 'aurora', 'city'];
+
+/// A whole landscape behind everything: lib/ui/skin_scenes.dart.
+class SceneDecoration extends SkinDecoration {
+  const SceneDecoration({required this.scene, required this.night, required this.seed, required super.above});
+  final String scene;
+  final bool night;
+  final int seed;
+}
+
 class WavesDecoration extends SkinDecoration {
   const WavesDecoration({required this.count, required this.color, required this.seed, required this.position, required super.above});
   final int count;

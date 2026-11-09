@@ -5,6 +5,7 @@ import 'dart:ui' show PointMode;
 import 'package:flutter/material.dart';
 
 import '../skins/skin.dart';
+import 'skin_scenes.dart';
 import 'theme.dart';
 
 /// Paints one [SkinPaint] layer (not pictures, which [SkinLayers] shows as
@@ -344,6 +345,8 @@ class SkinDecorationPainter extends CustomPainter {
           _beam(canvas, size, d);
         case WavesDecoration():
           _waves(canvas, size, d);
+        case SceneDecoration(:final scene, :final night, :final seed):
+          ScenePainter(SkinScene.byName(scene)!, night: night, seed: seed).paint(canvas, size);
         case PatternDecoration(:final paint, :final fade):
           final shader = switch (fade) {
             'top' => LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [paint.color.withValues(alpha: 0), paint.color]).createShader(rect),

@@ -22,8 +22,8 @@
   },
   "colors": {
     "page": "#eefbe9",
-    "text": "#14301a",
-    "muted": "#4a6650",
+    "text": "#08140b",
+    "muted": "#384c3c",
     "accent": "#2a7d1f",
     "onAccent": "#ffffff",
     "border": "#b5dfa8",
@@ -81,18 +81,9 @@
     ],
     "decorations": [
       {
-        "type": "waves",
-        "count": 2,
-        "color": "#7fe06a59",
-        "seed": 9,
-        "position": 0.88
-      },
-      {
-        "type": "sparkles",
-        "count": 5,
-        "color": "#ffffff",
-        "glow": "#fff7a8",
-        "seed": 6
+        "type": "scene",
+        "scene": "meadow",
+        "seed": 3
       }
     ],
     "titleBar": {
@@ -118,7 +109,7 @@
       "inactive": {
         "fill": "#eef8fd"
       },
-      "text": "#0d2a3d",
+      "text": "#06121a",
       "buttons": {
         "size": [
           36,
@@ -215,7 +206,8 @@
         ]
       }
     },
-    "statusBarText": "#14301a"
+    "statusBarText": "#08140b",
+    "veil": 0.7
   },
   "controls": {
     "button": {
@@ -306,7 +298,7 @@
       ]
     },
     "navSelectedText": "#1f6b16",
-    "navText": "#14301a"
+    "navText": "#08140b"
   },
   "icons": {
     "style": "fill",
@@ -398,7 +390,7 @@
     "dark": {
       "colors": {
         "page": "#142a0b",
-        "text": "#bcdfc3",
+        "text": "#e3f2e6",
         "muted": "#92ac97",
         "accent": "#6aa462",
         "onAccent": "#2b2b2b",
@@ -451,18 +443,10 @@
         ],
         "decorations": [
           {
-            "type": "waves",
-            "count": 2,
-            "color": "#3b902959",
-            "seed": 9,
-            "position": 0.88
-          },
-          {
-            "type": "sparkles",
-            "count": 5,
-            "color": "#0f0f0f",
-            "glow": "#fff7a8",
-            "seed": 6
+            "type": "scene",
+            "scene": "meadow",
+            "night": true,
+            "seed": 3
           }
         ],
         "titleBar": {
@@ -488,7 +472,7 @@
           "inactive": {
             "fill": "#081d27"
           },
-          "text": "#aed1e8",
+          "text": "#dcecf5",
           "buttons": {
             "size": [
               36,
@@ -586,7 +570,7 @@
           }
         },
         "topBarText": "#bcdfc3",
-        "statusBarText": "#bcdfc3"
+        "statusBarText": "#e3f2e6"
       },
       "controls": {
         "button": {
@@ -677,7 +661,7 @@
           ]
         },
         "navSelectedText": "#1f6b16",
-        "navText": "#bcdfc3"
+        "navText": "#e3f2e6"
       },
       "cards": {
         "video": {

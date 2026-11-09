@@ -450,7 +450,6 @@
         "statusBarText": "#495b62"
       },
       "controls": {
-        "press": "glow",
         "button": {
           "fill": "#c8ced3",
           "border": "#a4b3ba",

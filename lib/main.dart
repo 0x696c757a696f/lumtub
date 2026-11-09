@@ -115,7 +115,7 @@ class _LumtubAppState extends State<LumtubApp> {
           plain: appearance.lowResource,
         );
     _useFilledIcons(skin?.icons.filled ?? false);
-    _useGlass(skin?.glass ?? false ? appearance.glassOpacity : 1);
+    _useGlass(skin?.glass ?? false ? appearance.glassOpacity.clamp(skin!.glassMin, 1).toDouble() : 1);
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
     _lightContrast = build(Brightness.light, highContrast: true);

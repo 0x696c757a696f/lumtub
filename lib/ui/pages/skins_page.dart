@@ -93,9 +93,8 @@ class _SkinsPage extends StatelessWidget {
                 leading: Icon(AppIcons.drop),
                 title: Text(tr('Glass')),
                 subtitle: Slider(
-                  value: appearance.glassOpacity,
-                  min: SkinGlass.min,
-                  divisions: 7,
+                  value: appearance.glassOpacity.clamp(context.skin!.glassMin, 1),
+                  min: context.skin!.glassMin,
                   label: tr('{0}% solid', [(appearance.glassOpacity * 100).round()]),
                   onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(glassOpacity: v)),
                 ),

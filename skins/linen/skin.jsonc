@@ -748,7 +748,6 @@
         "statusBarText": "#cccfd3"
       },
       "controls": {
-        "press": "wash",
         "button": {
           "fill": {
             "linear": {

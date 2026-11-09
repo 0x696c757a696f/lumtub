@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/skins/jsonc.dart';
 import 'package:lumtub/skins/skin.dart';
-import 'package:lumtub/ui/skin_paint.dart';
+import 'package:lumtub/ui/skin_scenes.dart';
 import 'package:lumtub/ui/theme.dart';
 
 /// The colours the app's widgets put on top of each other, for every
@@ -51,10 +51,25 @@ void main() {
               behind.add(Color.alphaBlend(c, behind.first));
             }
           }
+          // A painted landscape behind: every colour it is made of.
+          for (final d in side.decorations.whereType<SceneDecoration>()) {
+            behind.addAll(sceneTones(SkinScene.byName(d.scene)!, night: d.night));
+          }
+          // Text on the pages lies over the landscape through the veil.
+          if (side.veil > 0) {
+            for (final under in behind) {
+              final bg = Color.alphaBlend(page.withValues(alpha: side.veil), under);
+              expect(contrastRatio(side.colors.text, bg), greaterThanOrEqualTo(4.45), reason: 'page text through the veil in ${mode.name}: on $bg');
+              if (side.colors.muted case final muted?) {
+                expect(contrastRatio(muted, bg), greaterThanOrEqualTo(4.45), reason: 'muted text through the veil in ${mode.name}: on $bg');
+              }
+            }
+          }
           List<Color> clear(SkinSurface? s) => [
                 for (final under in behind) ...[
-                  under,
-                  for (final c in s?.tones(const Color(0x00000000)) ?? <Color>[]) Color.alphaBlend(c.withValues(alpha: c.a * SkinGlass.min), under),
+                  // With no pane of its own the text lies on the picture.
+                  if (s == null || s.tones(const Color(0x00000000)).isEmpty) under,
+                  for (final c in s?.tones(const Color(0x00000000)) ?? <Color>[]) Color.alphaBlend(c.withValues(alpha: c.a * side.glassMin), under),
                 ],
               ];
           final glassPairs = <String, (Color?, SkinSurface?, double)>{

@@ -23,7 +23,7 @@
   "colors": {
     "page": "#e3f8f7",
     "text": "#0b2b2e",
-    "muted": "#3a6266",
+    "muted": "#2c4a4c",
     "accent": "#007a78",
     "onAccent": "#ffffff",
     "border": "#9fd8d6",
@@ -38,7 +38,9 @@
     "thumbnailRadius": 14
   },
   "window": {
-    "glass": true,
+    "glass": {
+      "min": 0.8
+    },
     "background": [
       {
         "linear": {
@@ -67,17 +69,9 @@
     ],
     "decorations": [
       {
-        "type": "waves",
-        "count": 3,
-        "color": "#2fb6c64d",
-        "seed": 4,
-        "position": 0.82
-      },
-      {
-        "type": "bubbles",
-        "count": 12,
-        "color": "#5fe0e659",
-        "seed": 21
+        "type": "scene",
+        "scene": "underwater",
+        "seed": 3
       }
     ],
     "titleBar": {
@@ -200,7 +194,9 @@
         ]
       }
     },
-    "statusBarText": "#0b2b2e"
+    "statusBarText": "#0b2b2e",
+    "veil": 0.7,
+    "topBarText": "#020808"
   },
   "controls": {
     "button": {
@@ -422,17 +418,10 @@
         ],
         "decorations": [
           {
-            "type": "waves",
-            "count": 3,
-            "color": "#3fb5c34d",
-            "seed": 4,
-            "position": 0.82
-          },
-          {
-            "type": "bubbles",
-            "count": 12,
-            "color": "#24949a59",
-            "seed": 21
+            "type": "scene",
+            "scene": "underwater",
+            "night": true,
+            "seed": 3
           }
         ],
         "titleBar": {

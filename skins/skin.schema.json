@@ -363,8 +363,29 @@
           "description": "Status line text, 4.5:1. 状态栏文字。"
         },
         "glass": {
-          "type": "boolean",
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "number",
+                  "minimum": 0.3,
+                  "maximum": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          ],
           "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+        },
+        "veil": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.9,
+          "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
         }
       },
       "additionalProperties": false
@@ -899,8 +920,29 @@
                   "description": "Status line text, 4.5:1. 状态栏文字。"
                 },
                 "glass": {
-                  "type": "boolean",
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
                   "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
                 }
               },
               "additionalProperties": false
@@ -1427,8 +1469,29 @@
                   "description": "Status line text, 4.5:1. 状态栏文字。"
                 },
                 "glass": {
-                  "type": "boolean",
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
                   "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
                 }
               },
               "additionalProperties": false
@@ -1955,8 +2018,29 @@
                   "description": "Status line text, 4.5:1. 状态栏文字。"
                 },
                 "glass": {
-                  "type": "boolean",
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
                   "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
                 }
               },
               "additionalProperties": false
@@ -2483,8 +2567,29 @@
                   "description": "Status line text, 4.5:1. 状态栏文字。"
                 },
                 "glass": {
-                  "type": "boolean",
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
                   "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
                 }
               },
               "additionalProperties": false
@@ -3011,8 +3116,29 @@
                   "description": "Status line text, 4.5:1. 状态栏文字。"
                 },
                 "glass": {
-                  "type": "boolean",
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
                   "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
                 }
               },
               "additionalProperties": false
@@ -3539,8 +3665,29 @@
                   "description": "Status line text, 4.5:1. 状态栏文字。"
                 },
                 "glass": {
-                  "type": "boolean",
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
                   "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
                 }
               },
               "additionalProperties": false
@@ -4070,6 +4217,7 @@
       "properties": {
         "type": {
           "enum": [
+            "scene",
             "bubbles",
             "sparkles",
             "perspectiveGrid",
@@ -4129,6 +4277,20 @@
         "above": {
           "type": "boolean",
           "description": "Drawn over the content instead of under it. 画在内容上面。"
+        },
+        "scene": {
+          "enum": [
+            "meadow",
+            "sky",
+            "underwater",
+            "aurora",
+            "city"
+          ],
+          "description": "With type scene: the landscape. 景色。"
+        },
+        "night": {
+          "type": "boolean",
+          "description": "With type scene: the night version. 夜晚版。"
         }
       },
       "required": [

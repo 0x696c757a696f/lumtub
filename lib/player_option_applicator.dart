@@ -7,6 +7,18 @@ import 'package:media_kit/media_kit.dart';
 import 'player_settings.dart';
 
 class PlayerOptionApplicator {
+  /// Whether a PipeWire server is running for this user. mpv 0.41's
+  /// PipeWire output crashes when PipeWire cannot start in the client
+  /// (only its library installed: no plugins or no client.conf).
+  static final bool pipeWireRunning = () {
+    final env = Platform.environment;
+    final remote = env['PIPEWIRE_REMOTE'] ?? 'pipewire-0';
+    if (remote.startsWith('/')) return File(remote).existsSync() || Link(remote).existsSync();
+    final runtime = env['PIPEWIRE_RUNTIME_DIR'] ?? env['XDG_RUNTIME_DIR'] ?? '';
+    if (runtime.isEmpty) return false;
+    return FileSystemEntity.typeSync('$runtime/$remote') != FileSystemEntityType.notFound;
+  }();
+
   static Map<String, String> optionsFor(PlayerSettings settings) {
     final light = settings.strategy == PlaybackStrategy.lowResource;
     final subtitles = settings.subtitleMode != SubtitleMode.off;
@@ -14,10 +26,9 @@ class PlayerOptionApplicator {
     return {
       'hwdec': settings.hwdec,
       'hwdec-codecs': defaultHwdecCodecs,
-      // The AppImage's own libpipewire, used when the system has none, has
-      // no SPA plugins and no daemon to talk to: mpv's PipeWire output would
-      // crash starting. Such a system plays through PulseAudio or ALSA.
-      if (Platform.isLinux && Platform.environment['LUMTUB_NO_PIPEWIRE'] == '1') 'ao': 'pulse,alsa,null',
+      // With no PipeWire server mpv's PipeWire output can crash starting;
+      // such a system plays through PulseAudio or ALSA.
+      if (Platform.isLinux && !pipeWireRunning) 'ao': 'pulse,alsa,null',
       if (Platform.isWindows) 'd3d11va-zero-copy': settings.d3d11vaZeroCopy ? 'yes' : 'no',
       'vd-lavc-dr': settings.directRendering,
       // Not 'no': mpv reads that as -1, which inverts the audio clock

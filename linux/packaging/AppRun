@@ -19,8 +19,6 @@ for dir in "$here"/usr/bin/lib/fallback/*/; do
     [ -n "$found" ] && continue
   fi
   extra="$extra${extra:+:}${dir%/}"
-  # Ours has no plugins or daemon; Lumtub then leaves PipeWire out.
-  [ "$name" = libpipewire-0.3.so.0 ] && export LUMTUB_NO_PIPEWIRE=1
 done
 if [ -n "$extra" ]; then
   LD_LIBRARY_PATH="$extra${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"

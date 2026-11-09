@@ -25,6 +25,12 @@
     "accent": "#0047cc",
     "strong": true
   },
+  "window": {
+    "titleBar": {
+      "height": 32
+    },
+    "menuBar": {}
+  },
   "overrides": {
     "dark": {
       "colors": {

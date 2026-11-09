@@ -125,7 +125,7 @@ class _ExplorePageState extends State<ExplorePage> {
             showSelectedIcon: false,
             segments: [
               ButtonSegment(value: ExploreSection.popular, label: Text(ExploreSection.popular.label), icon: const Icon(AppIcons.filmReelFill, size: 18)),
-              ButtonSegment(value: ExploreSection.live, label: Text(ExploreSection.live.label), icon: const Icon(AppIcons.broadcast, size: 18)),
+              ButtonSegment(value: ExploreSection.live, label: Text(ExploreSection.live.label), icon: Icon(AppIcons.broadcast, size: 18)),
             ],
             // 宗教与信仰 shows as part of the half it was opened from.
             selected: {controller.exploreHalf},
@@ -161,8 +161,8 @@ class _ExplorePageState extends State<ExplorePage> {
                         onSelected: (_) => controller.setExplore(topic: i),
                       ),
                     ),
-                  IconButton(tooltip: tr('Add'), icon: const Icon(AppIcons.plus, size: 18), onPressed: () => _addTopic(context, section)),
-                  IconButton(tooltip: tr('Manage'), icon: const Icon(AppIcons.slidersHorizontal, size: 18), onPressed: () => _manageTopics(context, section)),
+                  IconButton(tooltip: tr('Add'), icon: Icon(AppIcons.plus, size: 18), onPressed: () => _addTopic(context, section)),
+                  IconButton(tooltip: tr('Manage'), icon: Icon(AppIcons.slidersHorizontal, size: 18), onPressed: () => _manageTopics(context, section)),
                 ]),
               ),
             ]),
@@ -277,7 +277,7 @@ class _ExplorePageState extends State<ExplorePage> {
             ),
             if (topic.mix)
               ActionChip(
-                avatar: const Icon(AppIcons.arrowsClockwise, size: 18),
+                avatar: Icon(AppIcons.arrowsClockwise, size: 18),
                 label: Text(tr('Shuffle')),
                 onPressed: loading ? null : controller.refreshExplore,
               ),
@@ -301,7 +301,7 @@ class _ExplorePageState extends State<ExplorePage> {
               message: tr('Keep looking further, or try another category or a wider duration and region'),
               action: FilledButton.icon(
                 onPressed: controller.searchExploreFurther,
-                icon: const Icon(AppIcons.magnifyingGlass),
+                icon: Icon(AppIcons.magnifyingGlass),
                 label: Text(tr('Keep looking')),
               ),
             ))
@@ -318,7 +318,7 @@ class _ExplorePageState extends State<ExplorePage> {
               action: loader != null && loader.hasMore
                   ? FilledButton.icon(
                       onPressed: () => loader.loadMore(),
-                      icon: const Icon(AppIcons.magnifyingGlass),
+                      icon: Icon(AppIcons.magnifyingGlass),
                       label: Text(tr('Keep looking')),
                     )
                   : null,
@@ -458,7 +458,7 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
                   key: ValueKey(topic.key),
                   dense: true,
                   contentPadding: EdgeInsets.zero,
-                  leading: ReorderableDragStartListener(index: i, child: const Padding(padding: EdgeInsets.all(4), child: Icon(AppIcons.dotsSixVertical))),
+                  leading: ReorderableDragStartListener(index: i, child: Padding(padding: EdgeInsets.all(4), child: Icon(AppIcons.dotsSixVertical))),
                   title: Row(children: [
                     Icon(topic.icon, size: 20, color: shown ? null : context.colors.outline),
                     const SizedBox(width: 8),
@@ -467,7 +467,7 @@ class _ManageTopicsDialogState extends State<_ManageTopicsDialog> {
                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                     IconButton(
                       tooltip: tr('Pinned'),
-                      icon: const Icon(AppIcons.alignTop),
+                      icon: Icon(AppIcons.alignTop),
                       onPressed: i == 0 ? null : () => setState(() => _topics.insert(0, _topics.removeAt(i))),
                     ),
                     Switch(

@@ -26,6 +26,12 @@
     "chrome": "#dfe5ed",
     "selected": "#ccd6e4"
   },
+  "window": {
+    "titleBar": {
+      "height": 32
+    },
+    "menuBar": {}
+  },
   "overrides": {
     "dark": {
       "colors": {

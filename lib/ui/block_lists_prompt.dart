@@ -31,7 +31,7 @@ Future<void> askBlockLists(BuildContext context, AppController controller) async
               ),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
-                secondary: const Icon(AppIcons.megaphone),
+                secondary: Icon(AppIcons.megaphone),
                 title: Text(tr('Block state propaganda media')),
                 value: media,
                 onChanged: (v) => setState(() => media = v == true),

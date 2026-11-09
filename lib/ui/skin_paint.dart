@@ -146,7 +146,10 @@ void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius) {
   }
   if (s.gloss > 0) {
     // The shine of gel: a white wash over the top half, brightest at the top.
-    final shine = Rect.fromLTRB(rect.left + rect.width * 0.04, rect.top + 1, rect.right - rect.width * 0.04, rect.top + rect.height * 0.5);
+    // Rounded gel keeps the shine off its curved sides; a square bar is lit
+    // edge to edge, or its ends look a different colour.
+    final inset = radius <= 0 ? 0.0 : math.min(rect.width * 0.04, radius);
+    final shine = Rect.fromLTRB(rect.left + inset, rect.top + 1, rect.right - inset, rect.top + rect.height * 0.5);
     final r = math.min(radius, shine.height);
     canvas.drawRRect(
       RRect.fromRectAndCorners(shine, topLeft: Radius.circular(r), topRight: Radius.circular(r), bottomLeft: Radius.circular(r * 0.5), bottomRight: Radius.circular(r * 0.5)),
@@ -308,6 +311,8 @@ class SkinDecorationPainter extends CustomPainter {
           _perspectiveGrid(canvas, size, d);
         case BeamDecoration():
           _beam(canvas, size, d);
+        case WavesDecoration():
+          _waves(canvas, size, d);
         case PatternDecoration(:final paint, :final fade):
           final shader = switch (fade) {
             'top' => LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [paint.color.withValues(alpha: 0), paint.color]).createShader(rect),
@@ -324,7 +329,9 @@ class SkinDecorationPainter extends CustomPainter {
     for (var i = 0; i < d.count; i++) {
       // Bubbles keep to the edges, where the content is thinnest.
       final edge = random.nextBool();
-      final x = edge ? (random.nextBool() ? random.nextDouble() * 0.12 : 0.88 + random.nextDouble() * 0.12) : random.nextDouble();
+      // The left edge holds the side rail's labels, so bubbles there sit
+      // just to its right.
+      final x = edge ? (random.nextBool() ? 0.08 + random.nextDouble() * 0.08 : 0.88 + random.nextDouble() * 0.12) : 0.08 + random.nextDouble() * 0.92;
       final y = edge ? random.nextDouble() : (random.nextBool() ? random.nextDouble() * 0.15 : 0.85 + random.nextDouble() * 0.15);
       final r = 8 + random.nextDouble() * 40;
       final c = Offset(x * size.width, y * size.height);
@@ -375,6 +382,42 @@ class SkinDecorationPainter extends CustomPainter {
     for (var t = 1.0; t > 0.02; t *= 0.78) {
       final y = horizon + (size.height - horizon) * t;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  void _waves(Canvas canvas, Size size, WavesDecoration d) {
+    final random = math.Random(d.seed);
+    for (var i = 0; i < d.count; i++) {
+      final base = size.height * d.position + (random.nextDouble() - 0.5) * size.height * 0.2;
+      final amplitude = size.height * (0.04 + random.nextDouble() * 0.06);
+      final thickness = size.height * (0.05 + random.nextDouble() * 0.08);
+      final phase = random.nextDouble() * math.pi * 2;
+      final turns = 0.6 + random.nextDouble() * 0.8;
+      double y(double x, double shift) => base + shift + math.sin(x / size.width * math.pi * 2 * turns + phase) * amplitude;
+      const steps = 48;
+      final top = Path()..moveTo(0, y(0, 0));
+      final ribbon = Path()..moveTo(0, y(0, 0));
+      for (var s = 1; s <= steps; s++) {
+        final x = size.width * s / steps;
+        top.lineTo(x, y(x, 0));
+        ribbon.lineTo(x, y(x, 0));
+      }
+      for (var s = steps; s >= 0; s--) {
+        final x = size.width * s / steps;
+        ribbon.lineTo(x, y(x, thickness * (0.6 + 0.4 * math.cos(x / size.width * math.pi + phase))));
+      }
+      ribbon.close();
+      final bounds = Rect.fromLTRB(0, base - amplitude, size.width, base + amplitude + thickness);
+      canvas.drawPath(ribbon, Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [d.color, d.color.withValues(alpha: 0)],
+        ).createShader(bounds));
+      canvas.drawPath(top, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = Colors.white.withValues(alpha: 0.7));
     }
   }
 

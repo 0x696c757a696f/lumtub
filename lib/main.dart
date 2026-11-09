@@ -16,10 +16,12 @@ import 'network_proxy.dart';
 import 'skins/skin_library.dart';
 import 'ui/app_shell.dart';
 import 'ui/frame_stats.dart';
+import 'ui/app_icons.dart';
 import 'ui/motion.dart';
 import 'ui/smooth_wheel.dart';
 import 'ui/palettes.dart';
 import 'ui/theme.dart';
+import 'ui/window_chrome.dart';
 import 'windows_shell.dart';
 
 Future<void> main() async {
@@ -109,7 +111,9 @@ class _LumtubAppState extends State<LumtubApp> {
           palette: paletteOf(appearance.palette),
           warmth: warmth,
           skin: highContrast ? null : skin?.forBrightness(brightness),
+          plain: appearance.lowResource,
         );
+    _useFilledIcons(skin?.icons.filled ?? false);
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
     _lightContrast = build(Brightness.light, highContrast: true);
@@ -223,7 +227,7 @@ class _LumtubAppState extends State<LumtubApp> {
               _matchTitleBar(Theme.of(context));
               return MediaQuery(
                 data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale), disableAnimations: media.disableAnimations || Motion.reduced),
-                child: child!,
+                child: WindowChrome(controller: widget.controller, title: appName, child: child!),
               );
             },
             home: _pages,
@@ -241,6 +245,21 @@ Locale? _materialLocale(Locale? locale) =>
     locale == null || GlobalMaterialLocalizations.delegate.isSupported(locale) ? locale : const Locale('en');
 
 Object? _titleBar;
+
+/// Switches every icon between outlined and filled, as the skin asks, and
+/// redraws the whole window so widgets built earlier pick up the change.
+void _useFilledIcons(bool filled) {
+  if (AppIcons.filled == filled) return;
+  AppIcons.filled = filled;
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    void rebuild(Element element) {
+      element.markNeedsBuild();
+      element.visitChildren(rebuild);
+    }
+
+    WidgetsBinding.instance.rootElement?.visitChildren(rebuild);
+  });
+}
 
 /// The Windows title bar in the page's own colours, so the window reads as
 /// one surface in light and dark themes.

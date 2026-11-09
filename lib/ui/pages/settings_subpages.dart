@@ -86,14 +86,14 @@ Future<void> openBlockedChannels(BuildContext context, AppController controller)
             ),
           for (final channel in prefs.blockedChannels)
             ListTile(
-              leading: const Icon(AppIcons.userMinus),
+              leading: Icon(AppIcons.userMinus),
               title: Text(channel.name.isEmpty ? channel.id : channel.name),
               subtitle: Text(channel.id, style: outline),
               trailing: TextButton(onPressed: () => controller.unblockChannel(channel.id), child: Text(tr('Remove'))),
             ),
           for (final name in prefs.blockedChannelNames)
             ListTile(
-              leading: const Icon(AppIcons.userMinus),
+              leading: Icon(AppIcons.userMinus),
               title: Text(name),
               subtitle: Text(tr('Blocked by name'), style: outline),
               trailing: TextButton(onPressed: () => controller.unblockChannelName(name), child: Text(tr('Remove'))),
@@ -107,7 +107,7 @@ Future<void> openBlockedChannels(BuildContext context, AppController controller)
             ),
           for (final channel in prefs.unrecommendedChannels)
             ListTile(
-              leading: const Icon(AppIcons.thumbsDown),
+              leading: Icon(AppIcons.thumbsDown),
               title: Text(channel.name.isEmpty ? channel.id : channel.name),
               subtitle: Text(channel.id, style: outline),
               trailing: TextButton(onPressed: () => controller.setRecommendChannel(channel, true), child: Text(tr('Recommend again'))),
@@ -118,7 +118,7 @@ Future<void> openBlockedChannels(BuildContext context, AppController controller)
       actions: [
         Builder(builder: (context) => TextButton.icon(
               onPressed: () => _addBlockedChannel(context, controller),
-              icon: const Icon(AppIcons.plus),
+              icon: Icon(AppIcons.plus),
               label: Text(tr('Add')),
             )),
         const SizedBox(width: 8),
@@ -182,7 +182,7 @@ Future<void> openStateMedia(BuildContext context, AppController controller) => _
       void save(AppPreferences next) => controller.savePreferences(next);
       return [
         SwitchListTile(
-          secondary: const Icon(AppIcons.megaphone),
+          secondary: Icon(AppIcons.megaphone),
           title: Text(tr('Block state propaganda media')),
           subtitle: Text(tr('Channels and videos of the government propaganda outlets below are hidden from recommendations, Explore, related videos and search')),
           value: prefs.blockStateMedia,
@@ -234,7 +234,7 @@ List<Widget> _groupTiles(BuildContext context, AppController controller, List<Bl
             overflow: TextOverflow.ellipsis,
             style: TextStyle(color: context.colors.outline, fontSize: 12),
           ),
-          trailing: const Icon(AppIcons.caretRight),
+          trailing: Icon(AppIcons.caretRight),
           onTap: () => _openGroupEntries(context, controller, group, media: media),
         );
       }),
@@ -330,9 +330,9 @@ Future<void> openPlaySpeed(BuildContext context, AppController controller) {
       builder: (context) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Padding(padding: const EdgeInsets.all(12), child: Text('${trimSpeed(speed)}x', style: Theme.of(context).textTheme.titleMedium)),
-          ListTile(leading: const Icon(AppIcons.checkCircle), title: Text(tr('Set as default speed')), onTap: () => Navigator.pop(context, 0)),
+          ListTile(leading: Icon(AppIcons.checkCircle), title: Text(tr('Set as default speed')), onTap: () => Navigator.pop(context, 0)),
           ListTile(
-            leading: const Icon(AppIcons.trash),
+            leading: Icon(AppIcons.trash),
             title: Text(tr('Delete this item')),
             enabled: settings.speeds.length > 1 && speed != settings.defaultSpeed,
             onTap: () => Navigator.pop(context, 1),
@@ -415,21 +415,21 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
             NormalItem(
               title: tr('Font'),
               subtitle: subtitleFontLabel(font),
-              leading: const Icon(AppIcons.textAUnderline),
+              leading: Icon(AppIcons.textAUnderline),
               enabled: enabled,
               onTap: () => pickSubtitleFont(context, font, setFont),
             ),
             NormalItem(
               title: tr('Size'),
               subtitle: '${scale.toStringAsFixed(1)}×',
-              leading: const Icon(AppIcons.textAa),
+              leading: Icon(AppIcons.textAa),
               enabled: enabled,
               onTap: () => pickWithSlider(context, title: tr('Size'), value: scale, min: 0.5, max: 3, divisions: 25, suffix: '×', precise: 1, onSelected: (v) => setScale((v * 10).round() / 10)),
             ),
             NormalItem(
               title: tr('Color'),
               subtitle: subtitleColorLabel(color),
-              leading: const Icon(AppIcons.palette),
+              leading: Icon(AppIcons.palette),
               trailing: Container(width: 20, height: 20, decoration: BoxDecoration(color: Color(0xFF000000 | color), shape: BoxShape.circle, border: Border.all(color: context.colors.outlineVariant))),
               enabled: enabled,
               onTap: () => pickSubtitleColor(context, color, setColor),
@@ -437,7 +437,7 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
             NormalItem(
               title: tr('Opacity'),
               subtitle: percent(opacity),
-              leading: const Icon(AppIcons.drop),
+              leading: Icon(AppIcons.drop),
               enabled: enabled,
               onTap: () => pickSubtitleOpacity(context, opacity, setOpacity),
             ),
@@ -446,21 +446,21 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
       return [
         PopupItem<SubtitleMode>(
           title: tr('Turn on subtitles automatically'),
-          leading: const Icon(AppIcons.subtitles),
+          leading: Icon(AppIcons.subtitles),
           value: settings.subtitleMode,
           values: [for (final m in SubtitleMode.values) (m, m.label)],
           onSelected: (v) => save(settings.copyWith(subtitleMode: v)),
         ),
         PopupItem<Object>(
           title: tr('First subtitle language'),
-          leading: const Icon(AppIcons.translate),
+          leading: Icon(AppIcons.translate),
           value: settings.subtitleOriginal ? PlayerSettings.originalSubtitle : settings.subtitleLanguage,
           values: [(PlayerSettings.originalSubtitle, tr("Video's own language")), for (final l in SubtitleLanguage.values) (l, l.label)],
           onSelected: (v) => save(v is SubtitleLanguage ? settings.copyWith(subtitleLanguage: v, subtitleOriginal: false) : settings.copyWith(subtitleOriginal: true)),
         ),
         PopupItem<String>(
           title: tr('Second subtitle language'),
-          leading: const Icon(AppIcons.closedCaptioning),
+          leading: Icon(AppIcons.closedCaptioning),
           value: const {PlayerSettings.originalSubtitle, PlayerSettings.interfaceSubtitle}.contains(settings.secondarySubtitleLanguage) ? settings.secondarySubtitleLanguage : secondary?.code ?? '',
           values: [
             ('', tr('Never')),
@@ -506,39 +506,39 @@ Future<void> openSubtitleSettings(BuildContext context, AppController controller
         SwitchItem(
           title: tr('Subtitles rendered by mpv (libass)'),
           subtitle: tr('Supports styled subtitles; when off, the UI draws them, using fewer resources'),
-          leading: const Icon(AppIcons.stack),
+          leading: Icon(AppIcons.stack),
           value: settings.libassSubtitles,
           onChanged: (v) => save(settings.copyWith(libassSubtitles: v)),
         ),
         NormalItem(
           title: tr('Subtitle position'),
           subtitle: tr('Current: {0}% (100 is the bottom of the frame)', [settings.subtitlePosition]),
-          leading: const Icon(AppIcons.alignBottom),
+          leading: Icon(AppIcons.alignBottom),
           onTap: () => pickWithSlider(context, title: tr('Subtitle position'), value: settings.subtitlePosition.toDouble(), min: 0, max: 100, divisions: 100, suffix: '%', onSelected: (v) => save(now().copyWith(subtitlePosition: v.round()))),
         ),
         NormalItem(
           title: tr('Outline thickness'),
           subtitle: tr('Current: {0}', [settings.subtitleBorder.toStringAsFixed(1)]),
-          leading: const Icon(AppIcons.rectangleDashed),
+          leading: Icon(AppIcons.rectangleDashed),
           onTap: () => pickWithSlider(context, title: tr('Outline thickness'), value: settings.subtitleBorder, min: 0, max: 8, divisions: 16, suffix: '', precise: 1, onSelected: (v) => save(now().copyWith(subtitleBorder: v))),
         ),
         SwitchItem(
           title: tr('Background box'),
           subtitle: tr('Add a semi-transparent black background behind subtitles instead of an outline'),
-          leading: const Icon(AppIcons.rectangle),
+          leading: Icon(AppIcons.rectangle),
           value: settings.subtitleBackground,
           onChanged: (v) => save(settings.copyWith(subtitleBackground: v)),
         ),
         SwitchItem(
           title: tr('Bold'),
-          leading: const Icon(AppIcons.textB),
+          leading: Icon(AppIcons.textB),
           value: settings.subtitleBold,
           onChanged: (v) => save(settings.copyWith(subtitleBold: v)),
         ),
         NormalItem(
           title: tr('Restore default style'),
           subtitle: tr('Microsoft YaHei, a white first subtitle and a smaller light gold second one'),
-          leading: const Icon(AppIcons.arrowCounterClockwise),
+          leading: Icon(AppIcons.arrowCounterClockwise),
           onTap: () => save(now().withDefaultSubtitleStyle()),
         ),
         _tip(context, tr('Subtitles are fetched by yt-dlp; auto-generated subtitles are used when no manual ones exist. Language and enable settings take effect from the next video; styles apply immediately.')),
@@ -554,13 +554,13 @@ Future<void> openSponsorBlock(BuildContext context, AppController controller) =>
         SwitchItem(
           title: tr('Enable SponsorBlock'),
           subtitle: tr('Automatically skip sponsors, self-promotion and other segments'),
-          leading: const Icon(AppIcons.airplaneTakeoff),
+          leading: Icon(AppIcons.airplaneTakeoff),
           value: settings.sponsorBlock,
           onChanged: (v) => save(settings.copyWith(sponsorBlock: v)),
         ),
         SwitchItem(
           title: tr('Show a notice when skipping'),
-          leading: const Icon(AppIcons.bell),
+          leading: Icon(AppIcons.bell),
           value: settings.sponsorNotice,
           enabled: settings.sponsorBlock,
           onChanged: (v) => save(settings.copyWith(sponsorNotice: v)),
@@ -621,14 +621,14 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
         _header(context, tr('Custom')),
         PopupItem<ThemeMode>(
           title: tr('Theme mode'),
-          leading: const Icon(AppIcons.flashlight),
+          leading: Icon(AppIcons.flashlight),
           value: appearance.themeMode,
           values: themeModes,
           onSelected: (mode) => save(appearance.copyWith(themeMode: mode)),
         ),
         PopupItem<DynamicSchemeVariant>(
           title: tr('Palette style'),
-          leading: const Icon(AppIcons.palette),
+          leading: Icon(AppIcons.palette),
           value: appearance.schemeVariant,
           values: [for (final e in schemeVariantNames.entries) (e.key, e.value)],
           onSelected: (v) => save(appearance.copyWith(schemeVariant: v)),
@@ -754,7 +754,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextField(
                     onChanged: (value) => setState(() => _query = value),
-                    decoration: InputDecoration(prefixIcon: const Icon(AppIcons.magnifyingGlass), hintText: tr('Search installed fonts')),
+                    decoration: InputDecoration(prefixIcon: Icon(AppIcons.magnifyingGlass), hintText: tr('Search installed fonts')),
                   ),
                 ),
                 if (_systemFonts == null)
@@ -830,7 +830,7 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
             ),
           ),
           SizedBox(width: 64, child: Text('$value$suffix', textAlign: TextAlign.end)),
-          IconButton(tooltip: tr('Reset'), icon: const Icon(AppIcons.arrowCounterClockwise, size: 20), onPressed: value == 0 ? null : onReset),
+          IconButton(tooltip: tr('Reset'), icon: Icon(AppIcons.arrowCounterClockwise, size: 20), onPressed: value == 0 ? null : onReset),
         ]),
       );
 
@@ -900,16 +900,16 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
             if (!Platform.isWindows) tools.libmpvLabel else tr('{0}: {1}', [libmpv.usesDownload ? tr('Updated') : tr('Built-in'), current?.label ?? tr('Unknown version')]),
             if (pendingRestart) tr('Uses {0} after restart', [next.label]),
           ].join('\n'),
-          leading: const Icon(AppIcons.filmSlate),
+          leading: Icon(AppIcons.filmSlate),
           trailing: libmpv.usesDownload || pendingRestart ? TextButton(onPressed: controller.rollBackLibmpv, child: Text(tr('Revert to built-in'))) : null,
         ),
         NormalItem(
           title: 'yt-dlp',
           subtitle: tools.ytDlpVersion ?? tr('Not installed'),
-          leading: const Icon(AppIcons.terminal),
+          leading: Icon(AppIcons.terminal),
           trailing: tools.canRollBackYtDlp ? TextButton(onPressed: controller.rollBackYtDlp, child: Text(tr('Roll back to previous version'))) : null,
         ),
-        NormalItem(title: 'Deno', subtitle: tools.denoVersion ?? tr('Not installed'), leading: const Icon(AppIcons.code)),
+        NormalItem(title: 'Deno', subtitle: tools.denoVersion ?? tr('Not installed'), leading: Icon(AppIcons.code)),
         NormalItem(
           title: 'ffmpeg',
           subtitle: controller.installingFfmpeg
@@ -917,7 +917,7 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
               : tools.ffmpegVersion == null
                   ? tr('Not installed (installed on demand when merging high-quality downloads)')
                   : tr('{0} · {1} on disk', [tools.ffmpegVersion!, formatBytes(tools.ffmpegBytes ?? 0)]),
-          leading: const Icon(AppIcons.gitMerge),
+          leading: Icon(AppIcons.gitMerge),
           trailing: controller.installingFfmpeg || ToolManager.bundledFfmpegDirectory != null
               ? null
               : Row(mainAxisSize: MainAxisSize.min, children: [
@@ -928,7 +928,7 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
         NormalItem(
           title: controller.checking ? tr('Checking for updates…') : tr('Check for updates now'),
           subtitle: tr('Downloads only from the official GitHub Release and verifies SHA-256. Takes effect after restart'),
-          leading: const Icon(AppIcons.arrowLineDown),
+          leading: Icon(AppIcons.arrowLineDown),
           enabled: !controller.checking,
           onTap: controller.checkUpdates,
         ),
@@ -953,7 +953,7 @@ List<SettingEntry> aboutEntries(AppController controller) => [
               const SizedBox(height: 8),
               ListTile(
                 title: Text(tr('Current version')),
-                leading: const Icon(AppIcons.gitCommit),
+                leading: Icon(AppIcons.gitCommit),
                 trailing: Text(appVersion, style: TextStyle(fontSize: 14, color: context.colors.outline)),
                 onTap: () => copyText(context, appVersion, tr('Version number copied')),
               ),
@@ -990,7 +990,7 @@ List<SettingEntry> aboutEntries(AppController controller) => [
         return NormalItem(
           title: title,
           subtitle: subtitle,
-          leading: const Icon(AppIcons.clockClockwise),
+          leading: Icon(AppIcons.clockClockwise),
           onTap: () async {
             if (updater?.ready != null) return controller.restartToUpdate();
             if (progress != null || (updater?.checking ?? false)) return;
@@ -1012,25 +1012,25 @@ List<SettingEntry> aboutEntries(AppController controller) => [
       SettingEntry(tr('Source code'), (context) => NormalItem(
             title: tr('GitHub repository'),
             subtitle: 'github.com/0x696c757a696f/lumtub',
-            leading: const Icon(AppIcons.code),
+            leading: Icon(AppIcons.code),
             onTap: () => openExternal(_repository),
           ), subtitle: tr('GitHub source code')),
       SettingEntry(tr('Feedback'), (context) => NormalItem(
             title: tr('Feedback'),
             subtitle: tr('File an issue on GitHub with the diagnostics and error log attached'),
-            leading: const Icon(AppIcons.chatCenteredText),
+            leading: Icon(AppIcons.chatCenteredText),
             onTap: () => openExternal('$_repository/issues/new/choose'),
           ), subtitle: 'issue bug'),
       SettingEntry(tr('Error log'), (context) => NormalItem(
             title: tr('Error log'),
             subtitle: tr('Stored only on this device. Sign-in credentials and stream URLs are never saved'),
-            leading: const Icon(AppIcons.bug),
+            leading: Icon(AppIcons.bug),
             onTap: () => openLogs(context, controller),
           ), subtitle: tr('Log')),
       SettingEntry(tr('Log level'), (context) => NormalItem(
             title: tr('Log level'),
             subtitle: tr('Now: {0}. Set it to Debug for a while to track a problem down; it records more detail', [labelOf(_logLevels, controller.preferences.logLevel)]),
-            leading: const Icon(AppIcons.slidersHorizontal),
+            leading: Icon(AppIcons.slidersHorizontal),
             onTap: () => pickFromDialog<LogLevel>(context,
                 title: tr('Log level'),
                 value: controller.preferences.logLevel,
@@ -1040,13 +1040,13 @@ List<SettingEntry> aboutEntries(AppController controller) => [
       SettingEntry(tr('Copy diagnostics'), (context) => NormalItem(
             title: tr('Copy diagnostics'),
             subtitle: tr('Version, system, graphics card, components and playback settings'),
-            leading: const Icon(AppIcons.copy),
+            leading: Icon(AppIcons.copy),
             onTap: () => copyText(context, controller.diagnostics(), tr('Diagnostics copied')),
           ), subtitle: tr('feedback issues')),
       SettingEntry(tr('Open source licenses'), (context) => NormalItem(
             title: tr('Open source licenses'),
             subtitle: tr('GPLv3; parts of the UI are adapted from PiliNara, playback is built on mpv, media_kit and yt-dlp'),
-            leading: const Icon(AppIcons.gavel),
+            leading: Icon(AppIcons.gavel),
             onTap: () => showLicensePage(context: context, applicationName: 'Lumtub', applicationVersion: appVersion),
           ), subtitle: 'PiliNara mpv media_kit yt-dlp license'),
     ];

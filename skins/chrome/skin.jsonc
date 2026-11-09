@@ -265,6 +265,10 @@
     "navSelectedText": "#ffffff",
     "navText": "#a3a8d0"
   },
+  "icons": {
+    "style": "regular",
+    "effect": "glow"
+  },
   "cards": {
     "video": {
       "fill": "#1a1434a6",

@@ -84,13 +84,14 @@ anything else out and Lumtub draws it the usual way.
 | `fonts` | Font files in the skin folder: `{ "My Font": "fonts/my.ttf" }`. 自带字体文件。 |
 | `shape` | Corner radius of cards, controls and thumbnails. 圆角。 |
 | `window.background` | One paint or a list: colours, gradients, a picture, patterns. 窗口背景。 |
-| `window.decorations` | `bubbles`, `sparkles`, `perspectiveGrid`, `beam`, `pattern`. 装饰。 |
+| `window.decorations` | `bubbles`, `sparkles`, `perspectiveGrid`, `beam`, `waves` (glossy ribbons, `position` 0–1), `pattern`. 装饰。 |
 | `window.titleBar` | The window frame drawn by Lumtub (computers only). 标题栏（仅电脑）。 |
-| `window.menuBar` | File, View, Play, Help with Alt keys (computers only). 菜单栏（仅电脑）。 |
+| `window.menuBar` | File, View, Play, Help with Alt keys (computers only); `position: "top"` puts it above the title bar, `appMenu` adds a bold app menu first. 菜单栏（仅电脑）；`position: "top"` 放到标题栏上面，`appMenu` 在最前面加粗体应用菜单。 |
 | `window.topBar`, `sideBar`, `statusBar` | The search row, navigation, status line; `topBarText` and `statusBarText` colour what is on them. 顶栏、侧栏、状态栏及其文字颜色。 |
 | `controls` | Buttons, the main button, chips, fields, navigation. 按钮、标签、输入框、导航。 |
 | `cards` | Video cards, panels, the duration badge. 视频卡片、面板、时长角标。 |
 | `logo` | The word mark: text, font, gradient, outline, glow, badge. 标志。 |
+| `icons` | `style`: `regular`/`fill`; `effect`: `none`, `emboss`, `engrave`, `gel`, `glow`. 图标实心与拟物效果。 |
 | `player` | Frame, progress bar; `"style": "lcd"` for a 90s media player display. 播放器。 |
 | `overrides` | Changes for `desktop`, `mobile`, `tablet` or `tv`. 按设备覆盖。 |
 
@@ -240,6 +241,9 @@ own shapes; only the colours change. 跟随浅色/深色模式，保留 Lumtub �
 | id | Name | 名称 | Era 年代 |
 | --- | --- | --- | --- |
 | `aero` | Bubble Gel | 泡泡凝胶 | glossy aqua and green, 2006–2010 |
+| `ocean` | Ocean Glass | 海洋玻璃 | teal water glass, bubbles and waves |
+| `meadow` | Sunny Meadow | 晴空草原 | blue sky, green grass, lens glints |
+| `aurora` | Aurora Glass | 极光玻璃 | dark glass under northern lights |
 | `chrome` | Chrome Cyber | 镀铬赛博 | chrome, neon, perspective grid, ~2000 |
 | `candy` | Candy Shell | 糖果壳 | translucent coloured plastic, 1998–2001 |
 | `disc` | Disc Menu | 光碟菜单 | DVD and game console menus, ~2002 |
@@ -249,6 +253,7 @@ own shapes; only the colours change. 跟随浅色/深色模式，保留 Lumtub �
 | `sixteen` | Sixteen Colours | 十六色 | 16-colour desktops, ~1990 |
 | `onebit` | One Bit | 黑白点阵 | black and white bitmap screens, ~1984 |
 | `platinum` | Platinum | 白金灰 | late-90s platinum grey |
+| `pinstripe` | Pinstripe Gel | 细条纹凝胶 | early-2000s pinstripes and gel, menus along the top |
 | `handheld` | Handheld | 点阵掌机 | green dot-matrix handhelds, ~1989 |
 
 Fonts in [`fonts/`](fonts/) are under the SIL Open Font License 1.1; each

@@ -366,7 +366,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(icon: const Icon(AppIcons.plusCircle), onPressed: _addItem, tooltip: tr('Add')),
+            IconButton(icon: Icon(AppIcons.plusCircle), onPressed: _addItem, tooltip: tr('Add')),
           ]),
           const SizedBox(height: 12),
           if (_items.isEmpty)
@@ -394,7 +394,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
                         onTapOutside: (_) => _commitEdit(index),
                       ),
                       trailing: IconButton(
-                        icon: const Icon(AppIcons.trash, size: 20),
+                        icon: Icon(AppIcons.trash, size: 20),
                         onPressed: () => _removeItem(index),
                         tooltip: tr('Delete'),
                       ),

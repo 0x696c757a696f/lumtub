@@ -49,6 +49,9 @@ flutter:
     - skins/sandstone/
     - skins/high-contrast/
     - skins/aero/
+    - skins/ocean/
+    - skins/meadow/
+    - skins/aurora/
     - skins/chrome/
     - skins/candy/
     - skins/disc/
@@ -58,6 +61,7 @@ flutter:
     - skins/sixteen/
     - skins/onebit/
     - skins/platinum/
+    - skins/pinstripe/
     - skins/handheld/
     - skins/template/
   fonts:

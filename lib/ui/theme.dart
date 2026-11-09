@@ -1,3 +1,4 @@
+import 'flat_press.dart';
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
@@ -176,6 +177,7 @@ ThemeData buildAppTheme(
   Palette? palette,
   double warmth = 0,
   Skin? skin,
+  bool plain = false,
 }) {
   if (skin != null) {
     brightness = skin.brightness;
@@ -244,8 +246,8 @@ ThemeData buildAppTheme(
   const flat = WidgetStatePropertyAll(0.0);
   // A quiet grey wash on hover and press, the same on every control.
   final overlay = WidgetStateProperty.resolveWith<Color?>((states) {
-    if (states.contains(WidgetState.pressed)) return scheme.onSurface.withValues(alpha: 0.10);
-    if (states.contains(WidgetState.hovered) || states.contains(WidgetState.focused)) return scheme.onSurface.withValues(alpha: 0.06);
+    if (states.contains(WidgetState.pressed)) return scheme.onSurface.withValues(alpha: 0.18);
+    if (states.contains(WidgetState.hovered) || states.contains(WidgetState.focused)) return scheme.onSurface.withValues(alpha: 0.08);
     return null;
   });
   // The main button is the text colour filled: black on light, white on
@@ -253,7 +255,11 @@ ThemeData buildAppTheme(
   final solid = ButtonStyle(
     backgroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled) ? scheme.onSurface.withValues(alpha: 0.12) : scheme.onSurface),
     foregroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.disabled) ? scheme.onSurface.withValues(alpha: 0.38) : scheme.surface),
-    overlayColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.pressed) || states.contains(WidgetState.hovered) ? scheme.surface.withValues(alpha: 0.12) : null),
+    overlayColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.pressed)
+        ? scheme.surface.withValues(alpha: 0.26)
+        : states.contains(WidgetState.hovered)
+            ? scheme.surface.withValues(alpha: 0.14)
+            : null),
     elevation: flat,
     side: focusRing,
     textStyle: buttonText,
@@ -270,14 +276,25 @@ ThemeData buildAppTheme(
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
       side: focusRing,
       shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius))),
-      backgroundBuilder: (context, states, child) => DecoratedBox(
-        decoration: SurfaceDecoration.of(
-          context,
-          surface.forState(hovered: states.contains(WidgetState.hovered), pressed: states.contains(WidgetState.pressed)),
-          radius: radius,
-        ),
-        child: Opacity(opacity: states.contains(WidgetState.disabled) ? 0.5 : 1, child: child),
-      ),
+      backgroundBuilder: (context, states, child) {
+        final pressed = states.contains(WidgetState.pressed);
+        final hovered = states.contains(WidgetState.hovered);
+        // A skin that gives no pressed or hover look still answers: a
+        // darker or lighter wash over its own surface.
+        final wash = pressed && surface.pressed == null
+            ? Colors.black.withValues(alpha: 0.16)
+            : hovered && !pressed && surface.hover == null
+                ? Colors.white.withValues(alpha: 0.14)
+                : null;
+        return DecoratedBox(
+          decoration: SurfaceDecoration.of(context, surface.forState(hovered: hovered, pressed: pressed), radius: radius),
+          position: DecorationPosition.background,
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: wash, borderRadius: BorderRadius.circular(radius)),
+            child: Opacity(opacity: states.contains(WidgetState.disabled) ? 0.5 : 1, child: child),
+          ),
+        );
+      },
     );
   }
 
@@ -288,15 +305,19 @@ ThemeData buildAppTheme(
     // Characters a chosen Windows font lacks come from the bundled one.
     fontFamilyFallback: fallback,
     colorScheme: scheme,
-    // A skin paints the page itself, under everything (SkinBackdrop).
-    scaffoldBackgroundColor: scheme.surface,
+    // A skin paints the page itself, under every page (WindowChrome).
+    scaffoldBackgroundColor: skin == null ? scheme.surface : Colors.transparent,
+    // A skin's icon finish (emboss, gel, glow); left out in Low resource mode.
+    iconTheme: IconThemeData(color: dark ? Colors.white : Colors.black87, shadows: plain ? null : skin?.icons.shadows(brightness, scheme.primary)),
     canvasColor: scheme.surface,
     visualDensity: compact ? VisualDensity.compact : VisualDensity.standard,
-    // No ink ripples: a flat wash on hover and press.
-    splashFactory: NoSplash.splashFactory,
-    hoverColor: scheme.onSurface.withValues(alpha: 0.05),
+    // No ripples: a flat wash that comes in at once on press.
+    splashFactory: FlatPress.splashFactory,
+    splashColor: skin == null ? scheme.onSurface.withValues(alpha: 0.14) : Color.alphaBlend(scheme.primary.withValues(alpha: 0.18), scheme.onSurface.withValues(alpha: 0.08)),
+    // Hover has to show on every row and button, on a skin's busy page too.
+    hoverColor: skin == null ? scheme.onSurface.withValues(alpha: 0.07) : Color.alphaBlend(scheme.primary.withValues(alpha: 0.10), scheme.onSurface.withValues(alpha: 0.04)),
     highlightColor: Colors.transparent,
-    focusColor: scheme.onSurface.withValues(alpha: 0.08),
+    focusColor: skin == null ? scheme.onSurface.withValues(alpha: 0.10) : scheme.primary.withValues(alpha: 0.16),
     appBarTheme: AppBarTheme(
       elevation: 0,
       scrolledUnderElevation: 0,

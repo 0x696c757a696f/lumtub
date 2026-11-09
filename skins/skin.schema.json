@@ -299,6 +299,22 @@
             },
             "clock": {
               "type": "boolean"
+            },
+            "position": {
+              "enum": [
+                "title",
+                "top"
+              ],
+              "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+            },
+            "appMenu": {
+              "type": "boolean",
+              "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+            },
+            "height": {
+              "type": "number",
+              "minimum": 18,
+              "maximum": 40
             }
           },
           "additionalProperties": false,
@@ -785,6 +801,22 @@
                     },
                     "clock": {
                       "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
                     }
                   },
                   "additionalProperties": false,
@@ -1271,6 +1303,22 @@
                     },
                     "clock": {
                       "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
                     }
                   },
                   "additionalProperties": false,
@@ -1757,6 +1805,22 @@
                     },
                     "clock": {
                       "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
                     }
                   },
                   "additionalProperties": false,
@@ -2243,6 +2307,22 @@
                     },
                     "clock": {
                       "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
                     }
                   },
                   "additionalProperties": false,
@@ -2729,6 +2809,22 @@
                     },
                     "clock": {
                       "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
                     }
                   },
                   "additionalProperties": false,
@@ -3215,6 +3311,22 @@
                     },
                     "clock": {
                       "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
                     }
                   },
                   "additionalProperties": false,
@@ -3425,6 +3537,33 @@
     },
     "$schema": {
       "type": "string"
+    },
+    "icons": {
+      "type": "object",
+      "description": "How icons are drawn. 图标的画法。",
+      "properties": {
+        "style": {
+          "enum": [
+            "regular",
+            "fill"
+          ],
+          "description": "fill: every icon filled. fill：所有图标用实心。"
+        },
+        "effect": {
+          "enum": [
+            "none",
+            "emboss",
+            "engrave",
+            "gel",
+            "glow"
+          ],
+          "description": "A finish for a skeuomorphic look; left out in Low resource mode. 拟物效果：浮雕、凹刻、凝胶、发光；低占用模式下不画。"
+        },
+        "glow": {
+          "$ref": "#/$defs/color"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,
@@ -3743,6 +3882,7 @@
             "sparkles",
             "perspectiveGrid",
             "beam",
+            "waves",
             "pattern"
           ]
         },

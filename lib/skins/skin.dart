@@ -109,6 +109,7 @@ class Skin {
 
   late final SkinLogo logo = SkinLogo._(_map(_raw['logo']), this);
   late final SkinPlayer player = SkinPlayer._(_map(_raw['player']), this);
+  late final SkinIcons icons = SkinIcons._(_map(_raw['icons']), this);
 
   /// The file a picture or font named in the skin is in.
   String file(String name) => builtIn ? '$folder/$name' : '$folder${folder.contains('\\') ? '\\' : '/'}${name.replaceAll('/', folder.contains('\\') ? '\\' : '/')}';
@@ -172,6 +173,7 @@ class Skin {
       ..decorations
       ..titleBar
       ..menuBar
+      ..icons
       ..topBar
       ..sideBar
       ..statusBar
@@ -597,11 +599,13 @@ sealed class SkinDecoration {
         return PerspectiveGridDecoration(color: color ?? const Color(0x55FF3FD2), spacing: _num(value['spacing']) ?? 48, horizon: (_num(value['horizon']) ?? 0.55).clamp(0, 1).toDouble(), above: above);
       case 'beam':
         return BeamDecoration(color: color ?? const Color(0x59FFFFFF), angle: _num(value['angle']) ?? -10, position: (_num(value['position']) ?? 0.45).toDouble(), above: above);
+      case 'waves':
+        return WavesDecoration(count: (_num(value['count']) ?? 3).round().clamp(1, 8), color: color ?? const Color(0x4D3FC8FF), seed: (_num(value['seed']) ?? 5).round(), position: (_num(value['position']) ?? 0.8).clamp(0, 1).toDouble(), above: above);
       case 'pattern':
         final paint = SkinPaint.parse({'pattern': {...value, 'type': value['pattern']}}, skin);
         return paint is PatternPaint ? PatternDecoration(paint, fade: _str(value['fade']), above: above) : null;
     }
-    skin.warn('decoration type "$type" is unknown (bubbles, sparkles, perspectiveGrid, beam, pattern)');
+    skin.warn('decoration type "$type" is unknown (bubbles, sparkles, perspectiveGrid, beam, waves, pattern)');
     return null;
   }
 }
@@ -636,6 +640,17 @@ class BeamDecoration extends SkinDecoration {
   final double position;
 }
 
+/// Glossy ribbons swept across the window, as on the water and glass
+/// wallpapers of the late 2000s.
+class WavesDecoration extends SkinDecoration {
+  const WavesDecoration({required this.count, required this.color, required this.seed, required this.position, required super.above});
+  final int count;
+  final Color color;
+  final int seed;
+  /// Where the ribbons sit, from 0 (top) to 1 (bottom).
+  final double position;
+}
+
 class PatternDecoration extends SkinDecoration {
   const PatternDecoration(this.paint, {this.fade, required super.above});
   final PatternPaint paint;
@@ -665,7 +680,7 @@ class SkinTitleBar {
     if (value is! Map<String, Object?> || value['enabled'] == false) return null;
     final buttons = _map(value['buttons']);
     final size = _list(buttons['size']);
-    final surface = SkinSurface.parse(value['surface'], skin) ?? SkinSurface._(fill: [SolidPaint(skin.colors.page)]);
+    final surface = SkinSurface.parse(value['surface'], skin) ?? SkinSurface._(fill: [SolidPaint(skin.colors.chrome ?? skin.colors.page)]);
     final inactive = SkinSurface.parse(value['inactive'], skin);
     final page = skin.colors.page;
     final bar = surface.tones(page);
@@ -691,7 +706,7 @@ class SkinTitleBar {
 
 /// A row of text menus (File, View, Help…) drawn by the app.
 class SkinMenuBar {
-  SkinMenuBar._(this.surface, this.text, this.highlight, this.highlightText, this.menu, this.underlineKeys, this.clock);
+  SkinMenuBar._(this.surface, this.text, this.highlight, this.highlightText, this.menu, this.underlineKeys, this.clock, this.top, this.appMenu, this.height);
   final SkinSurface? surface;
   final Color text;
   final SkinSurface? highlight;
@@ -702,10 +717,18 @@ class SkinMenuBar {
   final bool underlineKeys;
   /// A clock at the right end.
   final bool clock;
+  /// Drawn above the title bar, along the top of the window, as on a
+  /// desktop whose menus sit at the top of the screen.
+  final bool top;
+  /// A first menu named after the app, in bold, holding About, Settings
+  /// and Quit.
+  final bool appMenu;
+  final double height;
 
   static SkinMenuBar? parse(Object? value, Skin skin) {
     if (value is! Map<String, Object?> || value['enabled'] == false) return null;
-    final surface = SkinSurface.parse(value['surface'], skin);
+    final chrome = skin.colors.chrome;
+    final surface = SkinSurface.parse(value['surface'], skin) ?? (chrome == null ? null : SkinSurface._(fill: [SolidPaint(chrome)]));
     final highlight = SkinSurface.parse(value['highlight'], skin);
     List<Color> on(SkinSurface? s) => s?.tones(skin.colors.page) ?? [skin.colors.page];
     final highlightText = skin.colorOf(value['highlightText'], 'menuBar.highlightText');
@@ -718,6 +741,9 @@ class SkinMenuBar {
       SkinSurface.parse(value['menu'], skin),
       value['underlineKeys'] != false,
       value['clock'] == true,
+      _str(value['position']) == 'top',
+      value['appMenu'] == true,
+      (_num(value['height']) ?? 26).clamp(18, 40).toDouble(),
     );
   }
 }
@@ -746,6 +772,47 @@ class SkinLogo {
   /// The round or square mark with the play triangle.
   final SkinSurface? badge;
   final Color? badgeIcon;
+}
+
+/// How icons are drawn: outlined or filled, and with a raised, glossy or
+/// glowing finish for a skeuomorphic look.
+class SkinIcons {
+  SkinIcons._(Map<String, Object?> m, Skin skin)
+      : filled = _str(m['style']) == 'fill',
+        effect = switch (_str(m['effect'])) {
+          final e? when const ['emboss', 'engrave', 'gel', 'glow'].contains(e) => e,
+          final e? when e != 'none' => _unknownEffect(skin, e),
+          _ => 'none',
+        },
+        glow = skin.colorOf(m['glow'], 'icons.glow');
+
+  static String _unknownEffect(Skin skin, String effect) {
+    skin.warn('icons.effect "$effect" is unknown (none, emboss, engrave, gel, glow)');
+    return 'none';
+  }
+
+  /// Every icon in its filled form.
+  final bool filled;
+  /// none, emboss (lit from above, raised), engrave (pressed in), gel (a
+  /// soft shine and shadow) or glow.
+  final String effect;
+  /// The glow's colour; the accent when left out.
+  final Color? glow;
+
+  /// The shadows that give icons their finish, on [page] colours with
+  /// [accent] for the glow.
+  List<Shadow>? shadows(Brightness brightness, Color accent) {
+    final dark = brightness == Brightness.dark;
+    final light = Colors.white.withValues(alpha: dark ? 0.25 : 0.85);
+    final shade = Colors.black.withValues(alpha: dark ? 0.7 : 0.35);
+    return switch (effect) {
+      'emboss' => [Shadow(color: light, offset: const Offset(-0.6, -0.8)), Shadow(color: shade, offset: const Offset(0.6, 1), blurRadius: 1)],
+      'engrave' => [Shadow(color: shade, offset: const Offset(0, -0.8)), Shadow(color: light, offset: const Offset(0, 1))],
+      'gel' => [Shadow(color: shade.withValues(alpha: shade.a * 0.8), offset: const Offset(0, 1.5), blurRadius: 2.5), Shadow(color: light, offset: const Offset(0, -0.5), blurRadius: 0.5)],
+      'glow' => [Shadow(color: (glow ?? accent).withValues(alpha: 0.85), blurRadius: 6)],
+      _ => null,
+    };
+  }
 }
 
 class SkinPlayer {

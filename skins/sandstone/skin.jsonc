@@ -27,6 +27,12 @@
     "selected": "#ebcdb8",
     "tint": 0.06
   },
+  "window": {
+    "titleBar": {
+      "height": 32
+    },
+    "menuBar": {}
+  },
   "overrides": {
     "dark": {
       "colors": {

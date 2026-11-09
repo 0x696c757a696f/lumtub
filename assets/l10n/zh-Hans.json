@@ -3035,8 +3035,8 @@
   "How to make a skin": "如何制作皮肤",
   "The guide, the format and the pitfalls to avoid": "说明、文件格式和避坑指南",
   "Use the system title bar": "使用系统标题栏",
-  "Keep the usual window frame instead of the one a skin draws": "保留系统的窗口边框，不用皮肤自己画的",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "保留系统的窗口边框，不用皮肤自己画的标题栏和菜单栏",
   "Problems found": "发现的问题",
   "Color schemes": "配色方案",
-  "These follow light and dark mode and keep Lumtub's own shapes; only the colours change.": "这些跟随浅色/深色模式，保留 Lumtub 原本的形状，只换颜色。"
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "这些配色跟随浅色/深色模式，保留 Lumtub 自己的形状；变的是颜色，标题栏和菜单栏也换成同样的颜色。"
 }

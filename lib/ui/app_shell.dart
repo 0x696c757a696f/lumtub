@@ -25,6 +25,7 @@ import 'mini_player.dart';
 import 'pip_view.dart';
 import 'theme.dart';
 import 'video_card.dart';
+import 'window_chrome.dart';
 import '../l10n/l10n.dart';
 import 'frame_stats.dart';
 import 'motion.dart';
@@ -71,6 +72,9 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
     _frames;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) WindowChrome.menus.value = _menus;
+    });
     _notices = _controller.notices.listen((message) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     });
@@ -112,6 +116,7 @@ class _AppShellState extends State<AppShell> {
 
   @override
   void dispose() {
+    if (WindowChrome.menus.value == _menus) WindowChrome.menus.value = null;
     unawaited(_notices?.cancel());
     unawaited(_waylandTop?.cancel());
     unawaited(_finished?.cancel());
@@ -146,36 +151,29 @@ class _AppShellState extends State<AppShell> {
     return category;
   }
 
-  bool? _customFrame;
-
-  /// Takes the system title bar away while a skin draws its own, and gives
-  /// it back when not.
-  void _useCustomFrame(bool on) {
-    if (_customFrame == on || (!on && _customFrame == null)) {
-      _customFrame = on;
-      return;
-    }
-    _customFrame = on;
-    unawaited(WindowFrame.setCustom(on));
-  }
-
   /// The menus of a skin's menu bar: what the window's buttons and
   /// shortcuts already do, gathered under File, View, Play and Help.
-  List<SkinMenu> _menus() {
+  List<SkinMenu> _menus({required bool appMenu}) {
     final c = _controller;
     final primary = Platform.isMacOS ? (LogicalKeyboardKey key, {bool shift = false}) => SingleActivator(key, meta: true, shift: shift) : (LogicalKeyboardKey key, {bool shift = false}) => SingleActivator(key, control: true, shift: shift);
     final player = c.player;
     final appearance = c.appearance;
     void save(AppearanceSettings next) => unawaited(c.saveAppearance(next));
+    final settings = SkinMenuEntry(tr('S&ettings'), () => openSettings(context, c), shortcut: primary(LogicalKeyboardKey.comma));
+    final exit = SkinMenuEntry(tr('E&xit'), () => unawaited(WindowFrame.close()), shortcut: appMenu ? primary(LogicalKeyboardKey.keyQ) : null);
+    final about = SkinMenuEntry(tr('&About Lumtub'), () => openSettings(context, c, category: SettingsCategory.about));
     return [
+      if (appMenu) SkinMenu(appName, [about, const SkinMenuEntry.divider(), settings, const SkinMenuEntry.divider(), exit], bold: true),
       SkinMenu(tr('&File'), [
         SkinMenuEntry(tr('&Search or open a link…'), _focusSearch, shortcut: primary(LogicalKeyboardKey.keyK)),
         SkinMenuEntry(tr('&Downloads'), () => c.navigate(PageMode.downloads)),
         SkinMenuEntry(tr('&Incognito mode'), () => c.setIncognito(!c.incognito), shortcut: primary(LogicalKeyboardKey.keyN, shift: true), checked: c.incognito),
-        const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('S&ettings'), () => openSettings(context, c)),
-        const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('E&xit'), () => unawaited(WindowFrame.close())),
+        if (!appMenu) ...[
+          const SkinMenuEntry.divider(),
+          settings,
+          const SkinMenuEntry.divider(),
+          exit,
+        ],
       ]),
       SkinMenu(tr('&View'), [
         for (final (i, d) in _destinations.indexed) SkinMenuEntry(d.$4, () => _select(i), checked: _selectedIndex == i && !c.onWatchPage),
@@ -200,8 +198,10 @@ class _AppShellState extends State<AppShell> {
           if (folder != null) unawaited(openInExplorer(folder.path));
         }),
         SkinMenuEntry(tr('How to &make a skin'), () => unawaited(openExternal('https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md'))),
-        const SkinMenuEntry.divider(),
-        SkinMenuEntry(tr('&About Lumtub'), () => openSettings(context, c, category: SettingsCategory.about)),
+        if (!appMenu) ...[
+          const SkinMenuEntry.divider(),
+          about,
+        ],
       ]),
     ];
   }
@@ -245,22 +245,13 @@ class _AppShellState extends State<AppShell> {
               }
               final wide = constraints.maxWidth >= 720;
               final skin = context.skin;
-              final ownTitleBar = usesSkinTitleBar(skin, systemTitleBar: _controller.appearance.systemTitleBar);
-              _useCustomFrame(ownTitleBar);
-              final menus = skin?.menuBar != null ? _menus() : const <SkinMenu>[];
               final rail = switch (_controller.appearance.navigation) {
                 NavigationStyle.auto => wide,
                 NavigationStyle.rail => true,
                 NavigationStyle.bottom => false,
               };
-              Widget page(Widget child) => skin == null ? child : SkinBackdrop(skin: skin, plain: _controller.appearance.lowResource, child: child);
               final scaffold = Scaffold(
-                // The skin's backdrop is drawn under the main window only;
-                // pages pushed over it keep the theme's solid page colour.
-                backgroundColor: skin == null ? null : Colors.transparent,
-                body: page(Column(children: [
-                  if (ownTitleBar) SkinTitleBarView(bar: skin!.titleBar!, title: appName),
-                  if (skin?.menuBar case final bar?) CallbackShortcuts(bindings: menuShortcuts(menus), child: SkinMenuBarView(bar: bar, menus: menus, clock: bar.clock)),
+                body: Column(children: [
                   _TopBar(
                     wide: wide,
                     controller: _controller,
@@ -303,7 +294,7 @@ class _AppShellState extends State<AppShell> {
                       Positioned.fill(child: MiniPlayer(controller: _controller)),
                   ])),
                   if (_controller.appearance.showStatusBar) _StatusBar(controller: _controller),
-                ])),
+                ]),
                 bottomNavigationBar: rail ? null : NavigationBar(
                   height: 64,
                   selectedIndex: _selectedIndex ?? 0,
@@ -316,14 +307,13 @@ class _AppShellState extends State<AppShell> {
               // 关灯 darkens the whole window but the player, under dialogs
               // and menus, which are routes above the shell.
               final watching = _controller.onWatchPage && !_controller.mini && _controller.videoController != null;
-              final framed = ownTitleBar ? ResizeEdges(child: scaffold) : scaffold;
               return ValueListenableBuilder(
                 valueListenable: lightsOff,
                 builder: (context, off, child) => Stack(fit: StackFit.expand, children: [
                   child!,
                   if (off && watching) Positioned.fill(child: LightsOffLayer(dim: _controller.preferences.lightsOffDim / 100)),
                 ]),
-                child: framed,
+                child: scaffold,
               );
             }),
           ),
@@ -435,19 +425,19 @@ class _TopBar extends StatelessWidget {
             isSelected: controller.incognito,
             style: controller.incognito ? IconButton.styleFrom(backgroundColor: colors.tertiaryContainer, foregroundColor: colors.onTertiaryContainer) : null,
             onPressed: () => controller.setIncognito(!controller.incognito),
-            icon: const Icon(AppIcons.eyeSlash),
+            icon: Icon(AppIcons.eyeSlash),
             selectedIcon: const Icon(AppIcons.eyeSlashFill),
           ),
           IconButton(
             tooltip: tr('Check for component updates'),
             onPressed: ready && !controller.checking ? controller.checkUpdates : null,
-            icon: controller.checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.arrowLineDown),
+            icon: controller.checking ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.arrowLineDown),
           ),
           IconButton(
             tooltip: tr('Settings'),
             isSelected: controller.mode == PageMode.settings && !controller.onWatchPage,
             onPressed: () => openSettings(context, controller),
-            icon: const Icon(AppIcons.gear),
+            icon: Icon(AppIcons.gear),
             selectedIcon: const Icon(AppIcons.gearFill),
           ),
           AccountButton(account: controller.account, onOpenSettings: () => openSettings(context, controller)),
@@ -587,7 +577,7 @@ class _SearchFieldState extends State<_SearchField> {
               decoration: InputDecoration(
                 hintText: tr('Search YouTube, or paste a video link'),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                prefixIcon: const Icon(AppIcons.magnifyingGlass),
+                prefixIcon: Icon(AppIcons.magnifyingGlass),
                 suffixIcon: controller.text.isEmpty
                     ? Padding(
                         padding: const EdgeInsets.only(right: 12),
@@ -595,7 +585,7 @@ class _SearchFieldState extends State<_SearchField> {
                       )
                     : IconButton(
                         tooltip: tr('Clear'),
-                        icon: const Icon(AppIcons.x, size: 20),
+                        icon: Icon(AppIcons.x, size: 20),
                         onPressed: () {
                           controller.clear();
                           setState(() {});
@@ -629,7 +619,7 @@ class _SearchFieldState extends State<_SearchField> {
                           leading: Icon(option.recent ? AppIcons.clockCounterClockwiseFill : AppIcons.magnifyingGlass, size: 20),
                           title: Text(option.text, maxLines: 1, overflow: TextOverflow.ellipsis),
                           trailing: option.recent
-                              ? IconButton(tooltip: tr('Delete this entry'), icon: const Icon(AppIcons.x, size: 18), onPressed: () => _remove(option.text))
+                              ? IconButton(tooltip: tr('Delete this entry'), icon: Icon(AppIcons.x, size: 18), onPressed: () => _remove(option.text))
                               : null,
                           onTap: () => onSelected(option),
                         );
@@ -657,7 +647,7 @@ class _SetupView extends StatelessWidget {
         error: true,
         title: tr('Component installation ran into a problem'),
         message: error,
-        action: FilledButton.icon(onPressed: controller.retryInitialize, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('Retry'))),
+        action: FilledButton.icon(onPressed: controller.retryInitialize, icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Retry'))),
       );
     }
     return StatusView(

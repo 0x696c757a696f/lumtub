@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../skins/skin.dart';
 import '../window_frame.dart';
 import 'app_icons.dart';
+import 'motion.dart';
 import 'skin_paint.dart';
 import 'theme.dart';
 
@@ -104,6 +105,7 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
 
   @override
   void dispose() {
+    SkinMenuBarView.menusAbove.removeListener(_report);
     if (Platform.isWindows) WindowFrame.setCaption(height: 0);
     super.dispose();
   }
@@ -114,13 +116,24 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
     return box.localToGlobal(Offset.zero) & box.size;
   }
 
+  final _self = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    SkinMenuBarView.menusAbove.addListener(_report);
+  }
+
   void _report() {
     if (!Platform.isWindows || !mounted) return;
     final max = _rectOf(_maximize);
+    // A menu bar drawn above the title bar is part of the caption, except
+    // where its menus are.
+    final bottom = _rectOf(_self)?.bottom ?? widget.bar.height;
     WindowFrame.setCaption(
-      height: widget.bar.height,
+      height: bottom,
       maximizeButton: max,
-      interactive: [_rectOf(_minimize), _rectOf(_close)].nonNulls.toList(),
+      interactive: [_rectOf(_minimize), _rectOf(_close), SkinMenuBarView.menusAbove.value].nonNulls.toList(),
     );
   }
 
@@ -168,7 +181,7 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
           // On Windows the system moves the window from the caption itself.
           onPanStart: Platform.isWindows ? null : (_) => unawaited(WindowFrame.startDrag()),
           onDoubleTap: Platform.isWindows ? null : () => unawaited(WindowFrame.toggleMaximize()),
-          child: SizedBox(height: bar.height, child: SkinBox(surface: surface, child: row)),
+          child: SizedBox(key: _self, height: bar.height, child: SkinBox(surface: surface, child: row)),
         );
       },
     );
@@ -275,9 +288,11 @@ class _GlyphPainter extends CustomPainter {
 
 /// One menu of [SkinMenuBarView]: '&' marks the letter Alt opens it with.
 class SkinMenu {
-  const SkinMenu(this.label, this.entries);
+  const SkinMenu(this.label, this.entries, {this.bold = false});
   final String label;
   final List<SkinMenuEntry> entries;
+  /// The app's own menu, named in bold.
+  final bool bold;
 }
 
 class SkinMenuEntry {
@@ -296,53 +311,101 @@ class SkinMenuEntry {
 
 /// The text menus under the title bar, drawn by the app in the skin's
 /// colours: Alt and a menu's underlined letter open it, arrows move.
-class SkinMenuBarView extends StatelessWidget {
+class SkinMenuBarView extends StatefulWidget {
   const SkinMenuBarView({super.key, required this.bar, required this.menus, this.clock = false});
   final SkinMenuBar bar;
   final List<SkinMenu> menus;
   final bool clock;
 
+  /// Where the menus of a bar drawn above the title bar are, so the title
+  /// bar leaves them clickable when it reports the caption.
+  static final menusAbove = ValueNotifier<Rect?>(null);
+
+  @override
+  State<SkinMenuBarView> createState() => _SkinMenuBarViewState();
+}
+
+class _SkinMenuBarViewState extends State<SkinMenuBarView> {
+  final _first = GlobalKey();
+  final _last = GlobalKey();
+
+  @override
+  void dispose() {
+    if (widget.bar.top) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => SkinMenuBarView.menusAbove.value = null);
+    }
+    super.dispose();
+  }
+
+  void _report() {
+    if (!mounted || !widget.bar.top) return;
+    final first = _first.currentContext?.findRenderObject();
+    final last = _last.currentContext?.findRenderObject();
+    if (first is! RenderBox || last is! RenderBox || !first.hasSize || !last.hasSize) return;
+    final start = first.localToGlobal(Offset.zero);
+    final end = last.localToGlobal(last.size.bottomRight(Offset.zero));
+    SkinMenuBarView.menusAbove.value = Rect.fromPoints(start, end);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bar = widget.bar;
+    if (bar.top) WidgetsBinding.instance.addPostFrameCallback((_) => _report());
     final colors = context.colors;
     final menuSurface = bar.menu;
     final menuColor = menuSurface?.baseColor ?? colors.surface;
+    final menuRadius = menuSurface?.radius ?? 0;
     final highlight = bar.highlight?.baseColor ?? colors.primary;
     final highlightText = bar.highlightText ?? colors.onPrimary;
-    final textStyle = WidgetStatePropertyAll(Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 13, fontWeight: FontWeight.w400));
+    final base = Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 13, fontWeight: FontWeight.w400);
+    final textStyle = WidgetStatePropertyAll(base);
     final itemText = ThemeData.estimateBrightnessForColor(Color.alphaBlend(menuColor, colors.surface)) == Brightness.dark ? Colors.white : Colors.black;
+    bool lit(Set<WidgetState> s) => s.contains(WidgetState.hovered) || s.contains(WidgetState.focused) || s.contains(WidgetState.pressed);
     final itemStyle = ButtonStyle(
       foregroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.disabled)
           ? itemText.withValues(alpha: 0.4)
-          : s.contains(WidgetState.hovered) || s.contains(WidgetState.focused)
+          : lit(s)
               ? highlightText
               : itemText),
-      backgroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.hovered) || s.contains(WidgetState.focused) ? highlight : null),
+      backgroundColor: WidgetStateProperty.resolveWith((s) => !s.contains(WidgetState.disabled) && lit(s) ? highlight : null),
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-      shape: const WidgetStatePropertyAll(RoundedRectangleBorder()),
+      mouseCursor: const WidgetStatePropertyAll(SystemMouseCursors.basic),
+      shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(menuRadius > 0 ? 4 : 0))),
       minimumSize: const WidgetStatePropertyAll(Size(180, 30)),
       textStyle: textStyle,
     );
     final barStyle = ButtonStyle(
-      foregroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.hovered) || s.contains(WidgetState.focused) || s.contains(WidgetState.pressed) ? highlightText : bar.text),
-      backgroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.hovered) || s.contains(WidgetState.focused) || s.contains(WidgetState.pressed) ? highlight : Colors.transparent),
+      foregroundColor: WidgetStateProperty.resolveWith((s) => lit(s) ? highlightText : bar.text),
+      backgroundColor: WidgetStateProperty.resolveWith((s) => lit(s) ? highlight : Colors.transparent),
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+      mouseCursor: const WidgetStatePropertyAll(SystemMouseCursors.basic),
       shape: const WidgetStatePropertyAll(RoundedRectangleBorder()),
       padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 10)),
-      minimumSize: const WidgetStatePropertyAll(Size(0, 24)),
+      minimumSize: WidgetStatePropertyAll(Size(0, bar.height - 2)),
       textStyle: textStyle,
     );
     final menuStyle = MenuStyle(
       backgroundColor: WidgetStatePropertyAll(menuColor),
-      elevation: const WidgetStatePropertyAll(4),
-      shape: WidgetStatePropertyAll(RoundedRectangleBorder(side: BorderSide(color: menuSurface?.border ?? colors.outline))),
-      padding: const WidgetStatePropertyAll(EdgeInsets.all(2)),
+      elevation: WidgetStatePropertyAll(menuSurface?.shadows.isNotEmpty ?? false ? 8 : 4),
+      shadowColor: WidgetStatePropertyAll(menuSurface?.shadows.firstOrNull?.color ?? Colors.black),
+      shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+        side: BorderSide(color: menuSurface?.border ?? colors.outline),
+        // Menus hang from the bar: square at the top, round below.
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(menuRadius)),
+      )),
+      padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: menuRadius > 0 ? 4 : 2, vertical: menuRadius > 0 ? 4 : 2)),
     );
-    Widget label(String text) => bar.underlineKeys ? MenuAcceleratorLabel(text) : Text(text.replaceAll('&', ''));
-    return SkinBox(
+    Widget label(String text, {bool bold = false}) {
+      final style = bold ? const TextStyle(fontWeight: FontWeight.w700) : null;
+      if (bar.underlineKeys) return DefaultTextStyle.merge(style: style, child: MenuAcceleratorLabel(text));
+      return Text(text.replaceAll('&', ''), style: style);
+    }
+
+    final menus = widget.menus;
+    Widget content = SkinBox(
       surface: bar.surface,
       child: SizedBox(
-        height: 26,
+        height: bar.height,
         child: Row(children: [
           Expanded(child: MenuBar(
             style: const MenuStyle(
@@ -352,8 +415,9 @@ class SkinMenuBarView extends StatelessWidget {
               shape: WidgetStatePropertyAll(RoundedRectangleBorder()),
             ),
             children: [
-              for (final menu in menus)
+              for (final (i, menu) in menus.indexed)
                 SubmenuButton(
+                  key: i == 0 ? _first : i == menus.length - 1 ? _last : null,
                   style: barStyle,
                   menuStyle: menuStyle,
                   menuChildren: [
@@ -369,14 +433,25 @@ class SkinMenuBarView extends StatelessWidget {
                           child: label(entry.label),
                         ),
                   ],
-                  child: label(menu.label),
+                  child: label(menu.label, bold: menu.bold),
                 ),
             ],
           )),
-          if (clock) Padding(padding: const EdgeInsets.only(right: 10), child: _Clock(color: bar.text)),
+          if (widget.clock) Padding(padding: const EdgeInsets.only(right: 10), child: _Clock(color: bar.text)),
         ]),
       ),
     );
+    // Along the top of the window the empty part of the bar moves the
+    // window, as the title bar does. Windows does that from the caption.
+    if (bar.top && !Platform.isWindows && WindowFrame.supported) {
+      content = GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onPanStart: (_) => unawaited(WindowFrame.startDrag()),
+        onDoubleTap: () => unawaited(WindowFrame.toggleMaximize()),
+        child: content,
+      );
+    }
+    return content;
   }
 }
 
@@ -428,6 +503,8 @@ class SkinRail extends StatelessWidget {
       surface: skin.sideBar,
       child: SizedBox(
         width: 84,
+        // The rail runs the full height of the window, not just its items.
+        height: double.infinity,
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: Space.m, horizontal: Space.s),
           child: Column(children: [
@@ -468,23 +545,40 @@ class _RailItem extends StatefulWidget {
 
 class _RailItemState extends State<_RailItem> {
   bool _hover = false;
+  bool _pressed = false;
+  bool _focused = false;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-        button: true,
-        selected: widget.selected,
-        label: widget.label,
-        child: FocusableActionDetector(
-          mouseCursor: SystemMouseCursors.click,
-          onShowHoverHighlight: (v) => setState(() => _hover = v),
-          actions: {ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) => widget.onTap())},
-          child: GestureDetector(
-            onTap: widget.onTap,
+  Widget build(BuildContext context) {
+    final wash = _pressed ? 0.22 : _hover ? 0.12 : 0.0;
+    return Semantics(
+      button: true,
+      selected: widget.selected,
+      label: widget.label,
+      child: FocusableActionDetector(
+        mouseCursor: SystemMouseCursors.click,
+        onShowHoverHighlight: (v) => setState(() => _hover = v),
+        onShowFocusHighlight: (v) => setState(() => _focused = v),
+        actions: {ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) => widget.onTap())},
+        child: GestureDetector(
+          onTap: widget.onTap,
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapUp: (_) => setState(() => _pressed = false),
+          onTapCancel: () => setState(() => _pressed = false),
+          // Pressed, the item sinks a little; with the remote's focus it
+          // stands out with a ring.
+          child: AnimatedScale(
+            scale: _pressed ? 0.94 : _focused ? 1.04 : 1,
+            duration: Motion.of(const Duration(milliseconds: 90)),
             child: SkinBox(
-              surface: widget.surface?.forState(hovered: _hover),
+              surface: widget.surface?.forState(hovered: _hover, pressed: _pressed),
               radius: widget.radius,
               child: Container(
-                color: widget.surface == null && _hover ? widget.color.withValues(alpha: 0.08) : null,
+                decoration: BoxDecoration(
+                  color: wash == 0 || (widget.surface != null && !_pressed) ? null : widget.color.withValues(alpha: wash),
+                  borderRadius: BorderRadius.circular(widget.radius),
+                  border: _focused ? Border.all(color: widget.color, width: 2.5) : null,
+                ),
                 padding: const EdgeInsets.symmetric(vertical: Space.s),
                 width: double.infinity,
                 child: Column(children: [
@@ -496,7 +590,9 @@ class _RailItemState extends State<_RailItem> {
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 /// Linux draws no frame round a window without the system title bar, so

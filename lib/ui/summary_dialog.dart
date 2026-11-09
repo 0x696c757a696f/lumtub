@@ -140,7 +140,7 @@ class _SummaryDialogState extends State<_SummaryDialog> {
           ),
         // Without subtitles the summary came from the description only.
         if (controller.canSummarize && !AppController.hasOwnSubtitles(controller.details) && !_speechDone && controller.canRecognizeSpeech && controller.speechJob.value == null && (summary != null || _error != null))
-          TextButton.icon(onPressed: _fromSpeech, icon: const Icon(AppIcons.waveform, size: 18), label: Text(tr('Summarize again with speech recognition'))),
+          TextButton.icon(onPressed: _fromSpeech, icon: Icon(AppIcons.waveform, size: 18), label: Text(tr('Summarize again with speech recognition'))),
         if (summary != null) TextButton(onPressed: () => copyText(context, summary, tr('Summary copied')), child: Text(tr('Copy'))),
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Close'))),
       ],

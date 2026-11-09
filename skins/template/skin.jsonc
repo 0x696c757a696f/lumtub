@@ -202,7 +202,7 @@
     // Ornaments over the background, under the content. Left out in low
     // resource mode. "above": true draws one over the content too.
     // 背景之上、内容之下的装饰；低占用模式下不画。"above": true 会画在内容上面。
-    // type: bubbles, sparkles, perspectiveGrid, beam, pattern
+    // type: bubbles, sparkles, perspectiveGrid, beam, waves, pattern
     "decorations": [
       { "type": "bubbles", "count": 6, "color": "#78dcff59" },
       { "type": "sparkles", "count": 4, "color": "#ffffff", "glow": "#7fd0ff" }
@@ -245,7 +245,16 @@
       "menu": { "fill": "#ffffff", "border": "#9fc9e6" },
       "underlineKeys": true,
       // A clock at the right end. 右端显示时钟。
-      "clock": false
+      "clock": false,
+      // "top" puts the menus above the title bar, along the top of the
+      // window; its empty part then moves the window too. "appMenu": true
+      // adds a first menu named after the app in bold (About, Settings,
+      // Quit). Without "surface" both bars take colors.chrome.
+      // "top" 把菜单放到标题栏上面、窗口最顶上，空白处也能拖动窗口。"appMenu": true
+      // 会在最前面加一个粗体的应用菜单（关于、设置、退出）。不写 "surface" 时两条栏都用 colors.chrome。
+      "position": "title",
+      "appMenu": false,
+      "height": 26
     },
 
     // The bar with the logo and search box. 有 logo 和搜索框的那一栏。
@@ -289,6 +298,14 @@
     "durationBadge": { "fill": "#10233acc" },
     "durationText": "#ffffff"
   },
+
+  // Icons. "style": "fill" draws every icon filled; "effect" gives them a
+  // skeuomorphic finish: emboss (raised), engrave (pressed in), gel (shine
+  // and shadow) or glow ("glow": colour, the accent when left out). Effects
+  // are left out in Low resource mode.
+  // 图标。"style": "fill" 让所有图标用实心；"effect" 加拟物效果：emboss 浮雕、engrave 凹刻、
+  // gel 凝胶（高光加阴影）、glow 发光（"glow" 写颜色，不写就用强调色）。低占用模式下不画效果。
+  "icons": { "style": "regular", "effect": "none" },
 
   "logo": {
     // Leave out for "Lumtub". 不写就显示 "Lumtub"。

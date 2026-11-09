@@ -27,6 +27,12 @@
     "selected": "#ccd5ee",
     "tint": 0.05
   },
+  "window": {
+    "titleBar": {
+      "height": 32
+    },
+    "menuBar": {}
+  },
   "overrides": {
     "dark": {
       "colors": {

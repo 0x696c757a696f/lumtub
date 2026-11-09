@@ -11,6 +11,7 @@ import '../../skins/skin_library.dart';
 import '../../window_frame.dart';
 import '../app_icons.dart';
 import '../common.dart';
+import '../motion.dart';
 import '../skin_paint.dart';
 import '../theme.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
@@ -26,6 +27,8 @@ Future<void> openSkins(BuildContext context, AppController controller) =>
 class _SkinsPage extends StatelessWidget {
   const _SkinsPage({required this.controller});
   final AppController controller;
+
+  static bool get _desktop => Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
   Future<void> _newSkin(BuildContext context) async {
     final library = SkinLibrary.instance;
@@ -76,7 +79,7 @@ class _SkinsPage extends StatelessWidget {
           return ListView(padding: const EdgeInsets.only(bottom: 40), children: [
             _header(context, tr('Color schemes')),
             grid([for (final s in library.builtIn) if (s.followsThemeMode) s], standard: true),
-            _tip(context, tr('These follow light and dark mode and keep Lumtub\'s own shapes; only the colours change.')),
+            _tip(context, tr('These follow light and dark mode and keep Lumtub\'s own shapes; the colours change, and the title bar and menu bar take the same colours.')),
             _header(context, tr('Built-in skins')),
             grid([for (final s in library.builtIn) if (!s.followsThemeMode) s]),
             _tip(context, tr('A skin changes the colours, shapes, window frame and decorations. Warm light and Low resource mode still work: warm light tints skins too, and Low resource mode leaves out their decorations.')),
@@ -85,35 +88,37 @@ class _SkinsPage extends StatelessWidget {
               grid(library.user),
             ],
             _header(context, tr('Make your own')),
-            NormalItem(
+            // Phones, tablets and TVs have no folder to open or editor to
+            // write a skin in.
+            if (_desktop) NormalItem(
               title: tr('New skin'),
               subtitle: tr('Copies the commented template into your skins folder and opens it'),
-              leading: const Icon(AppIcons.plus),
+              leading: Icon(AppIcons.plus),
               onTap: () => unawaited(_newSkin(context)),
             ),
-            NormalItem(
+            if (_desktop) NormalItem(
               title: tr('Open skins folder'),
               subtitle: library.folder?.path ?? '',
-              leading: const Icon(AppIcons.folderOpen),
+              leading: Icon(AppIcons.folderOpen),
               onTap: library.folder == null ? null : () => unawaited(openInExplorer(library.folder!.path)),
             ),
             NormalItem(
               title: tr('Reload skins'),
               subtitle: tr('Saved changes show by themselves; this is for folders that cannot be watched'),
-              leading: const Icon(AppIcons.arrowClockwise),
+              leading: Icon(AppIcons.arrowClockwise),
               onTap: () => unawaited(library.reload()),
             ),
             NormalItem(
               title: tr('How to make a skin'),
               subtitle: tr('The guide, the format and the pitfalls to avoid'),
-              leading: const Icon(AppIcons.question),
+              leading: Icon(AppIcons.question),
               onTap: () => unawaited(openExternal(_guide)),
             ),
             if (WindowFrame.supported)
               SwitchItem(
                 title: tr('Use the system title bar'),
-                subtitle: tr('Keep the usual window frame instead of the one a skin draws'),
-                leading: const Icon(AppIcons.browsers),
+                subtitle: tr('Keep the usual window frame instead of the title bar and menu bar a skin draws'),
+                leading: Icon(AppIcons.browsers),
                 value: appearance.systemTitleBar,
                 onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(systemTitleBar: v)),
               ),
@@ -200,13 +205,17 @@ class SkinCard extends StatelessWidget {
       ColoredBox(color: skin.colors.page),
       SkinLayers(skin.background),
       Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (skin.menuBar case final menu? when menu.top)
+          box(menu.surface, skin.colors.page, height: 9, child: Row(children: [
+            for (var i = 0; i < 3; i++) Padding(padding: const EdgeInsets.only(left: 5), child: Container(width: 12, height: 2, color: menu.text)),
+          ])),
         box(bar?.surface ?? skin.topBar, skin.colors.chrome ?? Color.lerp(skin.colors.page, skin.colors.text, 0.08)!, height: 14, child: Row(children: [
           const SizedBox(width: 5),
           Container(width: 22, height: 3, color: bar?.text ?? skin.colors.text),
           const Spacer(),
           for (var i = 0; i < 3; i++) Padding(padding: const EdgeInsets.only(right: 3), child: Container(width: 6, height: 6, decoration: BoxDecoration(border: Border.all(color: bar?.buttonIcon ?? skin.colors.text, width: 1)))),
         ])),
-        if (skin.menuBar case final menu?)
+        if (skin.menuBar case final menu? when !menu.top)
           box(menu.surface, skin.colors.page, height: 9, child: Row(children: [
             for (var i = 0; i < 3; i++) Padding(padding: const EdgeInsets.only(left: 5), child: Container(width: 12, height: 2, color: menu.text)),
           ])),
@@ -238,8 +247,11 @@ class SkinCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => _Lift(builder: (context, hovered, focused) => _card(context, hovered, focused));
+
+  Widget _card(BuildContext context, bool hovered, bool focused) {
     final colors = context.colors;
+    final lit = hovered || focused;
     return Semantics(
       button: true,
       selected: selected,
@@ -247,17 +259,31 @@ class SkinCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
+        onHover: _Lift.hoverOf(context),
+        onFocusChange: _Lift.focusOf(context),
         child: SizedBox(
           width: 168,
           child: Column(children: [
-            Container(
-              height: 104,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: selected ? colors.primary : colors.outlineVariant, width: selected ? 2.5 : 1),
+            AnimatedScale(
+              // Under the pointer or the remote's focus the preview comes
+              // forward a little.
+              scale: focused ? 1.06 : hovered ? 1.03 : 1,
+              duration: Motion.of(const Duration(milliseconds: 140)),
+              curve: Curves.easeOut,
+              child: AnimatedContainer(
+                duration: Motion.of(const Duration(milliseconds: 140)),
+                height: 104,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: selected || focused ? colors.primary : hovered ? colors.onSurfaceVariant : colors.outlineVariant,
+                    width: focused ? 3.5 : selected ? 2.5 : hovered ? 1.5 : 1,
+                  ),
+                  boxShadow: lit ? [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 12, offset: const Offset(0, 4))] : null,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: _preview(context),
               ),
-              clipBehavior: Clip.antiAlias,
-              child: _preview(context),
             ),
             const SizedBox(height: 4),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -271,4 +297,33 @@ class SkinCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Keeps whether its child is under the pointer or has the focus, for the
+/// small lift of a card.
+class _Lift extends StatefulWidget {
+  const _Lift({required this.builder});
+  final Widget Function(BuildContext context, bool hovered, bool focused) builder;
+
+  static ValueChanged<bool> hoverOf(BuildContext context) => context.findAncestorStateOfType<_LiftState>()!._hover;
+  static ValueChanged<bool> focusOf(BuildContext context) => context.findAncestorStateOfType<_LiftState>()!._focus;
+
+  @override
+  State<_Lift> createState() => _LiftState();
+}
+
+class _LiftState extends State<_Lift> {
+  bool _hovered = false;
+  bool _focused = false;
+
+  void _hover(bool v) {
+    if (v != _hovered) setState(() => _hovered = v);
+  }
+
+  void _focus(bool v) {
+    if (v != _focused) setState(() => _focused = v);
+  }
+
+  @override
+  Widget build(BuildContext context) => Builder(builder: (context) => widget.builder(context, _hovered, _focused));
 }

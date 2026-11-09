@@ -26,6 +26,12 @@
     "card": "#fafdfe",
     "selected": "#cfe6ef"
   },
+  "window": {
+    "titleBar": {
+      "height": 32
+    },
+    "menuBar": {}
+  },
   "overrides": {
     "dark": {
       "colors": {

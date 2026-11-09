@@ -70,7 +70,7 @@ class LiveChatListState extends State<LiveChatList> {
           child: Center(
             child: FilledButton.tonalIcon(
               onPressed: _toLatest,
-              icon: const Icon(AppIcons.caretDown, size: 16),
+              icon: Icon(AppIcons.caretDown, size: 16),
               label: Text(waiting > 0 ? tr('{0} new messages', [waiting]) : tr('Back to the latest')),
             ),
           ),

@@ -63,7 +63,7 @@ class AccountSettings extends StatelessWidget {
                       child: Wrap(spacing: 8, runSpacing: 8, children: [
                         FilledButton.tonalIcon(
                           onPressed: account.syncing ? null : account.sync,
-                          icon: account.syncing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.arrowsCounterClockwise),
+                          icon: account.syncing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(AppIcons.arrowsCounterClockwise),
                           label: Text(tr('Sync now')),
                         ),
                         OutlinedButton(onPressed: () => _confirmSignOut(context, account), child: Text(tr('Sign out'))),
@@ -82,7 +82,7 @@ class AccountSettings extends StatelessWidget {
                     subtitle: Text(account.client == null ? tr('This build has no built-in Google client. Enter your own client below first.') : tr('After signing in you can import subscriptions, playlists and liked videos, and also like, comment, save to playlists and subscribe.')),
                     trailing: FilledButton.icon(
                       onPressed: account.client == null ? null : account.signIn,
-                      icon: const Icon(AppIcons.signIn),
+                      icon: Icon(AppIcons.signIn),
                       label: Text(tr('Sign in')),
                     ),
                   ),
@@ -263,7 +263,7 @@ class _TvSignInTile extends StatelessWidget {
                 : Row(children: [
                     Text(tr('TV code: ')),
                     SelectableText(code, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2)),
-                    IconButton(tooltip: tr('Copy'), icon: const Icon(AppIcons.copySimple, size: 18), onPressed: () => copyText(context, code, tr('TV code copied'))),
+                    IconButton(tooltip: tr('Copy'), icon: Icon(AppIcons.copySimple, size: 18), onPressed: () => copyText(context, code, tr('TV code copied'))),
                   ]),
             subtitle: Text(tr('Open {0} in a browser, sign in to Google and enter the TV code above. This page continues by itself once you are done.', [sign.address])),
             trailing: Wrap(spacing: 8, children: [
@@ -312,7 +312,7 @@ class _ClientSettingsState extends State<_ClientSettings> {
     final candidate = OAuthClientConfig(_id.text.trim(), _secret.text.trim());
     return ExpansionTile(
       key: const PageStorageKey('expand:client'),
-      leading: const Icon(AppIcons.key),
+      leading: Icon(AppIcons.key),
       title: Text(tr('Custom Google client')),
       subtitle: Text(custom
           ? tr('Using your own client')
@@ -331,12 +331,12 @@ class _ClientSettingsState extends State<_ClientSettings> {
         Wrap(spacing: 8, children: [
           TextButton.icon(
             onPressed: () => openExternal(YouTubeApiException.enableApiUrl),
-            icon: const Icon(AppIcons.arrowSquareOut, size: 18),
+            icon: Icon(AppIcons.arrowSquareOut, size: 18),
             label: Text(tr('Enable YouTube Data API v3')),
           ),
           TextButton.icon(
             onPressed: () => openExternal('https://console.cloud.google.com/apis/credentials'),
-            icon: const Icon(AppIcons.arrowSquareOut, size: 18),
+            icon: Icon(AppIcons.arrowSquareOut, size: 18),
             label: Text(tr('Create OAuth client')),
           ),
         ]),
@@ -407,7 +407,7 @@ class AccountButton extends StatelessWidget {
       onSelected: (value) => value == 'sync' ? account.sync() : onOpenSettings(),
       itemBuilder: (context) => [
         PopupMenuItem(enabled: false, child: Text(name.isEmpty ? tr('YouTube account') : name, style: context.text.titleSmall)),
-        PopupMenuItem(value: 'sync', enabled: !account.syncing, child: ListTile(dense: true, leading: const Icon(AppIcons.arrowsCounterClockwise), title: Text(account.syncing ? tr('Syncing…') : tr('Sync subscriptions and playlists')))),
+        PopupMenuItem(value: 'sync', enabled: !account.syncing, child: ListTile(dense: true, leading: Icon(AppIcons.arrowsCounterClockwise), title: Text(account.syncing ? tr('Syncing…') : tr('Sync subscriptions and playlists')))),
         PopupMenuItem(value: 'settings', child: ListTile(dense: true, leading: Icon(AppIcons.userGear), title: Text(tr('Account settings')))),
       ],
     );

@@ -303,6 +303,10 @@
     "navSelectedText": "#075f91",
     "navText": "#2f5566"
   },
+  "icons": {
+    "style": "fill",
+    "effect": "gel"
+  },
   "cards": {
     "video": {
       "fill": "#ffffff99",

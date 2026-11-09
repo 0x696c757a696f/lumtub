@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../window_chrome.dart';
 import '../../app/app_controller.dart';
 import '../../appearance_settings.dart' show bundledFont;
 import '../../models.dart';
@@ -196,7 +197,7 @@ class _WatchPageState extends State<WatchPage> {
                       // chat starts as high as the video.
                       child: _ReplayChatPanel(
                         controller: controller,
-                        trailing: IconButton(tooltip: tr('Hide chat'), icon: const Icon(AppIcons.caretRight, size: 18), onPressed: () => theaterChatOpen.value = false),
+                        trailing: IconButton(tooltip: tr('Hide chat'), icon: Icon(AppIcons.caretRight, size: 18), onPressed: () => theaterChatOpen.value = false),
                       ),
                     ),
                   ),
@@ -206,7 +207,7 @@ class _WatchPageState extends State<WatchPage> {
                   padding: const EdgeInsets.only(top: 4, right: 4),
                   child: Align(
                     alignment: Alignment.topCenter,
-                    child: IconButton(tooltip: tr('Show chat'), icon: const Icon(AppIcons.chats, size: 20), onPressed: () => theaterChatOpen.value = true),
+                    child: IconButton(tooltip: tr('Show chat'), icon: Icon(AppIcons.chats, size: 20), onPressed: () => theaterChatOpen.value = true),
                   ),
                 ),
             ]);
@@ -299,14 +300,14 @@ class _Toolbar extends StatelessWidget {
             itemBuilder: (context) => [
               for (final order in PlayOrder.values) CheckedPopupMenuItem(value: order, checked: order == settings.playOrder, child: Text(order.label)),
             ],
-            child: Chip(avatar: const Icon(AppIcons.repeat, size: 18), label: Text(settings.playOrder.label)),
+            child: Chip(avatar: Icon(AppIcons.repeat, size: 18), label: Text(settings.playOrder.label)),
           ),
           _RatingButtons(controller: controller),
           if (library != null) ...[
             IconButton(
               tooltip: favorite ? tr('Remove from favorites') : tr('Favorites'),
               isSelected: favorite,
-              icon: const Icon(AppIcons.heart),
+              icon: Icon(AppIcons.heart),
               selectedIcon: Icon(AppIcons.heartFill, color: context.colors.primary),
               onPressed: () => library.toggleFavorite(item),
             ),
@@ -315,17 +316,17 @@ class _Toolbar extends StatelessWidget {
               icon: Icon(later ? AppIcons.clockFill : AppIcons.clock, color: later ? context.colors.primary : null),
               onPressed: () => library.toggleWatchLater(item),
             ),
-            IconButton(tooltip: tr('Add to playlist'), icon: const Icon(AppIcons.listPlus), onPressed: () => showAddToPlaylist(context, controller, item)),
+            IconButton(tooltip: tr('Add to playlist'), icon: Icon(AppIcons.listPlus), onPressed: () => showAddToPlaylist(context, controller, item)),
             if (controller.account?.signedIn ?? false)
-              IconButton(tooltip: tr('Save to YouTube playlist'), icon: const Icon(AppIcons.filmReel), onPressed: () => showSaveToYoutube(context, controller, item)),
+              IconButton(tooltip: tr('Save to YouTube playlist'), icon: Icon(AppIcons.filmReel), onPressed: () => showSaveToYoutube(context, controller, item)),
           ],
           if (controller.downloads != null && !item.isLive)
-            IconButton(tooltip: tr('Downloads'), icon: const Icon(AppIcons.downloadSimple), onPressed: () => showDownloadChoice(context, controller, item)),
+            IconButton(tooltip: tr('Downloads'), icon: Icon(AppIcons.downloadSimple), onPressed: () => showDownloadChoice(context, controller, item)),
           if (!item.isLive)
-            IconButton(tooltip: tr('AI summary'), icon: const Icon(AppIcons.sparkle), onPressed: () => showVideoSummary(context, controller)),
-          IconButton(tooltip: tr('Copy link'), icon: const Icon(AppIcons.link), onPressed: () => copyText(context, item.url, tr('Link copied'))),
-          IconButton(tooltip: tr('Open in browser'), icon: const Icon(AppIcons.arrowSquareOut), onPressed: () => openExternal(item.url)),
-          IconButton(tooltip: tr('Keyboard shortcuts'), icon: const Icon(AppIcons.keyboard), onPressed: () => showShortcutHelp(context, controller.preferences)),
+            IconButton(tooltip: tr('AI summary'), icon: Icon(AppIcons.sparkle), onPressed: () => showVideoSummary(context, controller)),
+          IconButton(tooltip: tr('Copy link'), icon: Icon(AppIcons.link), onPressed: () => copyText(context, item.url, tr('Link copied'))),
+          IconButton(tooltip: tr('Open in browser'), icon: Icon(AppIcons.arrowSquareOut), onPressed: () => openExternal(item.url)),
+          IconButton(tooltip: tr('Keyboard shortcuts'), icon: Icon(AppIcons.keyboard), onPressed: () => showShortcutHelp(context, controller.preferences)),
         ],
       ),
       if (decoded)
@@ -346,7 +347,7 @@ class _BackRow extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: TextButton.icon(onPressed: onBack, icon: const Icon(AppIcons.arrowLeft), label: Text(tr('Back'))),
+          child: TextButton.icon(onPressed: onBack, icon: Icon(AppIcons.arrowLeft), label: Text(tr('Back'))),
         ),
       );
 }
@@ -408,6 +409,14 @@ class _Player extends StatelessWidget {
                     ),
                   ),
                   subtitleViewConfiguration: subtitleViewFor(controller.settings, secondary: controller.secondarySubtitle?.label),
+                  onEnterFullscreen: () {
+                    WindowChrome.fullscreen.value = true;
+                    return defaultEnterNativeFullscreen();
+                  },
+                  onExitFullscreen: () {
+                    WindowChrome.fullscreen.value = false;
+                    return defaultExitNativeFullscreen();
+                  },
                 ),
               ),
               if (controller.waitingForStart && controller.playing != null)

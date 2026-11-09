@@ -213,7 +213,7 @@ class PostCommentsPanel extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
           child: Row(children: [
             Expanded(child: Text(tr('Post comments'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
-            IconButton(tooltip: tr('Close (Esc)'), icon: const Icon(AppIcons.x), onPressed: onClose),
+            IconButton(tooltip: tr('Close (Esc)'), icon: Icon(AppIcons.x), onPressed: onClose),
           ]),
         ),
         if (post.text.isNotEmpty)
@@ -315,11 +315,11 @@ class PostCard extends StatelessWidget {
           const SizedBox(width: 16),
           TextButton.icon(
             onPressed: onComments,
-            icon: const Icon(AppIcons.chatCircle, size: 16),
+            icon: Icon(AppIcons.chatCircle, size: 16),
             label: Text(post.comments.isEmpty ? tr('Comments') : post.comments, style: const TextStyle(fontSize: 12)),
           ),
           const Spacer(),
-          TextButton.icon(onPressed: () => openExternal(post.url), icon: const Icon(AppIcons.arrowSquareOut, size: 16), label: Text(tr('View in browser'))),
+          TextButton.icon(onPressed: () => openExternal(post.url), icon: Icon(AppIcons.arrowSquareOut, size: 16), label: Text(tr('View in browser'))),
         ]),
       ]),
     ));
@@ -416,14 +416,14 @@ class _ChannelSearchFieldState extends State<_ChannelSearchField> {
         decoration: InputDecoration(
           isDense: true,
           hintText: _posts ? tr("Search this channel's posts") : tr('Search videos in this channel'),
-          prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20),
+          prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20),
           suffixIcon: ListenableBuilder(
             listenable: _text,
             builder: (context, _) => _text.text.isEmpty
                 ? const SizedBox.shrink()
                 : IconButton(
                     tooltip: tr('Clear'),
-                    icon: const Icon(AppIcons.x, size: 18),
+                    icon: Icon(AppIcons.x, size: 18),
                     onPressed: () {
                       _text.clear();
                       widget.controller.searchChannel('');
@@ -448,7 +448,7 @@ class ChannelHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
       child: Row(children: [
-        if (onBack != null) IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: const Icon(AppIcons.arrowLeft)),
+        if (onBack != null) IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: onBack, icon: Icon(AppIcons.arrowLeft)),
         const SizedBox(width: 8),
         ChannelAvatar(name: name, radius: 28, image: channel.avatar, channelId: channel.id),
         const SizedBox(width: 16),
@@ -459,7 +459,7 @@ class ChannelHeader extends StatelessWidget {
         ])),
         FollowButton(controller: controller, channel: channel),
         const SizedBox(width: 8),
-        IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(channel.url), icon: const Icon(AppIcons.arrowSquareOut)),
+        IconButton(tooltip: tr('Open in browser'), onPressed: () => openExternal(channel.url), icon: Icon(AppIcons.arrowSquareOut)),
         ChannelMenuButton(controller: controller, channel: channel),
       ]),
     );
@@ -563,7 +563,7 @@ class ChannelMenuButton extends StatelessWidget {
         PopupMenuItem(value: value, child: ListTile(dense: true, leading: Icon(icon), title: Text(label)));
     return PopupMenuButton<String>(
       tooltip: tr('More'),
-      icon: const Icon(AppIcons.dotsThreeVertical),
+      icon: Icon(AppIcons.dotsThreeVertical),
       itemBuilder: (context) => [
         unrecommended
             ? entry('recommend', AppIcons.thumbsUp, tr('Recommend this channel again'))
@@ -597,7 +597,7 @@ class FollowButton extends StatelessWidget {
     }
 
     return following
-        ? FilledButton.tonalIcon(onPressed: toggle, icon: const Icon(AppIcons.check), label: Text(tr('Following')))
-        : FilledButton.icon(onPressed: toggle, icon: const Icon(AppIcons.plus), label: Text(tr('Follow')));
+        ? FilledButton.tonalIcon(onPressed: toggle, icon: Icon(AppIcons.check), label: Text(tr('Following')))
+        : FilledButton.icon(onPressed: toggle, icon: Icon(AppIcons.plus), label: Text(tr('Follow')));
   }
 }

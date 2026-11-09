@@ -49,7 +49,7 @@ class _WatchStatsPageState extends State<_WatchStatsPage> {
     final recording = widget.controller.preferences.recordHistory;
     return Scaffold(
       appBar: AppBar(title: Text(tr('Watch statistics')), actions: [
-        IconButton(tooltip: tr('Clear watch statistics'), icon: const Icon(AppIcons.trash), onPressed: _clear),
+        IconButton(tooltip: tr('Clear watch statistics'), icon: Icon(AppIcons.trash), onPressed: _clear),
       ]),
       body: FutureBuilder<WatchStats?>(
         future: _stats,

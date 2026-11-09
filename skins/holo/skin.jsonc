@@ -15,7 +15,7 @@
     "zh-Hans": "近黑的面板、冰蓝细线和方正的边角，2012 年前后手机那种深色科幻感",
     "zh-Hant": "近黑的面板、冰藍細線和方正的邊角，2012 年前後手機那種深色科幻感"
   },
-  "brightness": "dark",
+  "brightness": "auto",
   "colors": {
     "page": "#101214",
     "text": "#e9f6fb",
@@ -285,5 +285,255 @@
     "progress": "#33b5e5"
   },
   "author": "Lumtub",
-  "license": "CC0-1.0"
+  "license": "CC0-1.0",
+  "overrides": {
+    "light": {
+      "colors": {
+        "page": "#d8dbdf",
+        "text": "#0b212a",
+        "muted": "#495b62",
+        "accent": "#247fa0",
+        "onAccent": "#030404",
+        "border": "#b6c6cc",
+        "card": "#cfd5d9",
+        "selected": "#a3d3e5",
+        "onSelected": "#0b212a",
+        "reason": "#2e6275"
+      },
+      "window": {
+        "tabs": {
+          "position": "top",
+          "height": 48,
+          "labels": "text",
+          "caps": true,
+          "surface": {
+            "fill": "#ccd1d5",
+            "border": {
+              "color": "#b6c6cc",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "text": "#495b62",
+          "selectedText": "#0b212a",
+          "indicator": "#2795bd"
+        },
+        "background": [
+          {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#dddfe3",
+                "#d1d7dc"
+              ]
+            }
+          },
+          {
+            "radial": {
+              "center": [
+                0.5,
+                -0.2
+              ],
+              "radius": 0.7,
+              "colors": [
+                "#2795bd1f",
+                "#2795bd00"
+              ]
+            }
+          }
+        ],
+        "decorations": [
+          {
+            "type": "pattern",
+            "pattern": "grid",
+            "color": "#2795bd0d",
+            "spacing": 48,
+            "size": 1
+          }
+        ],
+        "titleBar": {
+          "height": 28,
+          "surface": {
+            "fill": "#ebebeb",
+            "border": {
+              "color": "#2795bd",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "inactive": {
+            "fill": "#dddfe3"
+          },
+          "text": "#0b212a",
+          "inactiveText": "#6b797f",
+          "buttons": {
+            "size": [
+              40,
+              26
+            ],
+            "icon": "#667277",
+            "surface": {
+              "fill": "transparent",
+              "radius": 0,
+              "hover": {
+                "fill": "#33b5e533"
+              },
+              "pressed": {
+                "fill": "#33b5e566"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "radius": 0,
+              "hover": {
+                "fill": "#cc0000"
+              },
+              "pressed": {
+                "fill": "#8a0000"
+              }
+            }
+          }
+        },
+        "menuBar": {
+          "surface": {
+            "fill": "#dddfe3",
+            "border": {
+              "color": "#b6c6cc",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "text": "#14323e",
+          "highlight": {
+            "fill": "#33b5e566"
+          },
+          "highlightText": "#3e3e3e",
+          "menu": {
+            "fill": "#ccd1d5f7",
+            "border": "#2795bd",
+            "radius": 0
+          },
+          "underlineKeys": true
+        },
+        "topBar": {
+          "fill": "#ebebebe6",
+          "border": {
+            "color": "#2795bd",
+            "width": 2,
+            "sides": [
+              "bottom"
+            ]
+          }
+        },
+        "sideBar": {
+          "fill": "#dddfe3e6",
+          "border": {
+            "color": "#b6c6cc",
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": "#ebebeb",
+          "border": {
+            "color": "#b6c6cc",
+            "sides": [
+              "top"
+            ]
+          }
+        },
+        "topBarText": "#0b212a",
+        "statusBarText": "#495b62"
+      },
+      "controls": {
+        "press": "glow",
+        "button": {
+          "fill": "#c8ced3",
+          "border": "#a4b3ba",
+          "radius": 2,
+          "hover": {
+            "fill": "#b4c6ce",
+            "border": "#2795bd"
+          },
+          "pressed": {
+            "fill": "#2795bd40"
+          }
+        },
+        "buttonText": "#0b212a",
+        "primaryButton": {
+          "fill": "#0a4f6a",
+          "border": "#33b5e5",
+          "radius": 2,
+          "glow": "#33b5e5",
+          "hover": {
+            "fill": "#0d6286"
+          },
+          "pressed": {
+            "fill": "#33b5e566"
+          }
+        },
+        "primaryButtonText": "#ffffff",
+        "chip": {
+          "fill": "#c8ced3",
+          "border": "#a4b3ba",
+          "radius": 2
+        },
+        "chipSelected": {
+          "fill": "#0a4f6a",
+          "border": "#33b5e5",
+          "radius": 2
+        },
+        "chipSelectedText": "#ffffff",
+        "navSelected": {
+          "fill": "#33b5e526",
+          "border": {
+            "color": "#33b5e5",
+            "width": 3,
+            "sides": [
+              "left"
+            ]
+          },
+          "radius": 0
+        },
+        "navSelectedText": "#2b4953",
+        "navText": "#42545a"
+      },
+      "cards": {
+        "video": {
+          "fill": "#cfd5d9",
+          "border": "#b6c6cc",
+          "radius": 2,
+          "hover": {
+            "border": {
+              "color": "#2795bd",
+              "width": 1
+            }
+          },
+          "focused": {
+            "border": {
+              "color": "#2795bd",
+              "width": 3
+            }
+          }
+        },
+        "padding": 6,
+        "panel": {
+          "fill": "#d1d7dcf2",
+          "border": "#b6c6cc"
+        },
+        "durationBadge": {
+          "fill": "#000000d9",
+          "radius": 0
+        },
+        "durationText": "#e9f6fb"
+      },
+      "logo": {
+        "fill": "#0b212a"
+      }
+    }
+  }
 }

@@ -9,6 +9,7 @@ import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Rational
+import android.view.Display
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import io.flutter.embedding.android.FlutterActivity
@@ -113,9 +114,41 @@ class MainActivity : FlutterActivity() {
             "isTv" -> return packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK) ||
                 !packageManager.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)
             "moveToBack" -> moveTaskToBack(true)
+            "setFrameRate" -> fitFrameRate((call.arguments as? Number)?.toDouble() ?: 0.0)
             "isMetered" -> return (getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager).isActiveNetworkMetered
         }
         return null
+    }
+
+    /** The screen's mode before Lumtub asked for another. */
+    private var ownMode: Display.Mode? = null
+
+    /**
+     * Asks for a display mode of the same size whose refresh rate the
+     * video's [fps] divides (24 Hz for a film), the fewest repeats first;
+     * none when the screen's own mode already fits or nothing does.
+     */
+    private fun fitFrameRate(fps: Double) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        @Suppress("DEPRECATION")
+        val display = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display else windowManager.defaultDisplay) ?: return
+        if (window.attributes.preferredDisplayModeId == 0) ownMode = display.mode
+        val own = ownMode ?: display.mode
+        fun repeats(mode: Display.Mode): Int? {
+            val ratio = mode.refreshRate / fps
+            val whole = Math.round(ratio).toInt()
+            return if (whole >= 1 && Math.abs(ratio - whole) < 0.01 * whole) whole else null
+        }
+        val id = when {
+            fps < 1 -> 0
+            repeats(own) != null -> 0
+            else -> display.supportedModes
+                .filter { it.physicalWidth == own.physicalWidth && it.physicalHeight == own.physicalHeight }
+                .mapNotNull { mode -> repeats(mode)?.let { mode to it } }
+                .minByOrNull { it.second }?.first?.modeId ?: 0
+        }
+        if (window.attributes.preferredDisplayModeId == id) return
+        window.attributes = window.attributes.also { it.preferredDisplayModeId = id }
     }
 
     /** Android allows ratios from 1:2.39 to 2.39:1. */

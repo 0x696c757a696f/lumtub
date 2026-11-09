@@ -128,6 +128,9 @@ class WindowsShellSync {
   bool _autoPip = false;
   (bool, bool)? _tray;
   Duration _duration = Duration.zero;
+  /// The playing video's frame rate as mpv reads it, and the one the
+  /// screen was last asked to fit (0: its own choice).
+  double _fps = 0, _fitted = 0;
 
   void _button(String button) {
     final player = controller.player;
@@ -172,12 +175,22 @@ class WindowsShellSync {
       _autoPip = autoPip;
       AppWindow.setAutoPip(autoPip);
     }
+    if (Platform.isAndroid) _fitFrameRate();
     final hasNext = video != null && controller.hasNext, hasPrevious = controller.hasPrevious;
     if (hasNext != _hasNext || hasPrevious != _hasPrevious) {
       _hasNext = hasNext;
       _hasPrevious = hasPrevious;
       unawaited(shell.setButtons(next: hasNext, previous: hasPrevious));
     }
+  }
+
+  /// Android: a screen that offers several refresh rates switches to one
+  /// the video's frame rate divides, while a video plays.
+  void _fitFrameRate() {
+    final want = controller.preferences.matchFrameRate && controller.playing != null ? _fps : 0.0;
+    if ((want - _fitted).abs() < 0.01) return;
+    _fitted = want;
+    unawaited(const MethodChannel('lumtub/windows_shell').invokeMethod<void>('setFrameRate', want).catchError((Object _) {}));
   }
 
   void _status(bool playing) {
@@ -189,6 +202,14 @@ class WindowsShellSync {
 
   void _attach(Player player) {
     _player = player;
+    final platform = player.platform;
+    if (Platform.isAndroid && platform is NativePlayer) {
+      // Only noted here: awaiting the player in mpv's callback stalls it.
+      unawaited(platform.observeProperty('container-fps', (value) async {
+        _fps = double.tryParse(value) ?? 0;
+        _fitFrameRate();
+      }).catchError((Object _) {}));
+    }
     _duration = player.state.duration;
     _subscriptions.addAll([
       player.stream.playing.listen(_status),

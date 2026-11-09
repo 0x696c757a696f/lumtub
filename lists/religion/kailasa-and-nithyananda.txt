@@ -6,42 +6,33 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Nithyananda
 
-:kailasa | @kailasacountry | =KAILASA | =United States of KAILASA | =凯拉萨 | =凱拉薩
-:nithyananda | @SriNithyananda | =KAILASA's SPH Nithyananda | =Nithyananda | =尼希亚南达 | =尼希亞南達
-:kailasa-news | @KAILASANews | =KAILASA News
+:kailasa | UC4Y4ALe-fJA7epugfiwZsXg | @kailasacountry | =KAILASA | =United States of KAILASA | =凯拉萨 | =凱拉薩
+:nithyananda | UC9OM-qeiYIPtAkBe9veG5uw | @SriNithyananda | =KAILASA's SPH Nithyananda | =Nithyananda | =尼希亚南达 | =尼希亞南達
+:kailasa-news | UCY83L4ntOaUWxoE0Zhyh3bQ | @KAILASANews | =KAILASA News
 :nithyananda-yoga | @nithyanandayogachinese | @nithyanandayoga | =KAILASA's Nithyananda Yoga | ^凯拉萨的尼希亚南达瑜伽 | ^凱拉薩的尼希亞南達瑜伽
-:nithyananda-chinese | @NithyanandaChinese | ^Kailaasa - Chinese | ^KAILASA's SPH Nithyananda - Chinese
-:nithyananda-gurukul-chinese | @eGurukulChineseTW | ^Chinese Nithyananda Gurukul
+:nithyananda-chinese | UCVBKDnjkM0fRH39HXWq076A | @srinithyananda.chinese | @NithyanandaChinese | ^Kailaasa - Chinese | ^KAILASA's SPH Nithyananda - Chinese
+:nithyananda-gurukul-chinese | UCaVSEA4F8Ef-mF-sZV9reQA | @eGurukulChineseTW | ^Chinese Nithyananda Gurukul
 :kailasa-los-angeles-chinese | @KailasaLAChinese | ^凯拉萨洛杉矶中文频道 | ^凱拉薩洛杉磯中文頻道
 :kailasa-taiwan | @taiwankailasa1314 | @shrikailasaintaiwan9676 | ^台灣凱拉薩 SHRIKAILASA IN TAIWAN
-:paramashivasena-chinese | ^Paramashivasena Chinese
+:paramashivasena-chinese | UCrjORLNlPHXLkl7fLvvJugA | @ParamashivasenaChinese | ^Paramashivasena Chinese
 :kailasa-taiwan-joyful-living | ^凱拉薩超意識喜悅生活館
 :enriching-spirituality | UCfpYf941C5RH-YeXarZDO3w | @enrichingspirituality4444 | ^Enriching Spirituality
 :words-of-abundance | ^Words of Abundance
 :hinduism-now | @HinduismNow | ^Hinduism Now
 :the-avatar-clicks | @TheAvatarClick | ^The Avatar Clicks
 :kailasas-nithyananda-keerthanalaya | ^KAILASA's Nithyananda Keerthanalaya
-:kailasas-nithyananda-real-reels | ^KAILASA's Nithyananda Real Reels
-:kailasas-nithyananda-top-secrets | ^KAILASA's Nithyananda Top Secrets
-:autobiography-of-the-avatar-from-kailasa | ^Autobiography of the Avatar from KAILASA
+:kailasas-nithyananda-real-reels | UCxQgt_kpxsHW9feECsw3T-Q | @kailasareels | ^KAILASA's Nithyananda Real Reels
+:kailasas-nithyananda-top-secrets | UCt2sCanam3FRn0Ld-qBRt9w | @kailasasnithyanandatopsecr838 | ^KAILASA's Nithyananda Top Secrets
+:autobiography-of-the-avatar-from-kailasa | UCUCjPGxUDlNwdCudDD93UHg | @autobiographyoftheavatarfr144 | ^Autobiography of the Avatar from KAILASA
 :kailasa-nepal | @KailasaNepal | ^KAILASA NEPAL
 :kailasamusic | @kailasamusic
 :kailasasphtamil | @KailasaSPHTamil
 :ucewpzibpfgb8s53fzn-w4mg | UCewpZIBPFGB8S53fZn-W4mg
-:ucvbkdnjkm0frh39hxwq076a | UCVBKDnjkM0fRH39HXWq076A
 :ucjvd52ohdaepql5gv2ov0sa | UCjvd52oHdaEpqL5GV2oV0SA
-:ucavsea4f8ef-mf-szv9reqa | UCaVSEA4F8Ef-mF-sZV9reQA
-:ucrjorlnlphxlkl7flvvjuga | UCrjORLNlPHXLkl7fLvvJugA
 :ucehxmbxvvd9hxx77pk2ibxw | UCeHXmbXVVd9hXX77Pk2Ibxw
-:uc9om-qeiyiptakbe9veg5uw | UC9OM-qeiYIPtAkBe9veG5uw
-:ucy83l4ntoauwxoe0zhyh3bq | UCY83L4ntOaUWxoE0Zhyh3bQ
 :ucx3e-k5vknuahmpdx-epsra | UCx3e_K5VKnUAhmPdx_EpsRA
-:uc4y4ale-fja7epugfiwzsxg | UC4Y4ALe-fJA7epugfiwZsXg
-:ucucjpgxudlnwdcuddd93uhg | UCUCjPGxUDlNwdCudDD93UHg
 :ucfwruxdi5dyhxg9ynag5ixq | UCfwruXdi5dyHxg9YNaG5IXQ
 :ucszwulh2dyz1d45bgo7h9qa | UCszwulh2dYz1d45bGo7h9qA
-:ucxqgt-kpxshw9feecsw3t-q | UCxQgt_kpxsHW9feECsw3T-Q
-:uct2scanam3frn0ld-qbrt9w | UCt2sCanam3FRn0Ld-qBRt9w
 :ucgdmywir2xbzokymfknd-mg | UCgDMywiR2XbZOkYmFknD-mg
 :uc2s7zbdrkpuzt03dvucvjnq | UC2S7ZBdRKPUzT03dVUCvjnQ
 :ucu7lp32xedomusmh0qn3oyq | UCu7lP32xedomuSmh0qn3oYQ

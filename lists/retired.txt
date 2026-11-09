@@ -565,3 +565,21 @@ world-mission-society-church-of-god/xd9e8f4b9
 world-mission-society-church-of-god/xe819684f
 yuandun-famen/xbb667fc6
 yuandun-famen/xec7a381f
+# 2026-11-09: same-channel records found by the channel id search merged.
+additional-spiritual-and-religious-channels/uc8aqzc9ij7ggptu3u5mcj7a
+additional-spiritual-and-religious-channels/uc-zy8y8bc3bcojatb8tncqq
+falun-gong-linked-hosts-and-shows/jiangfengyangsheng
+falun-gong-linked-hosts-and-shows/tianliang-times
+falun-gong-linked-hosts-and-shows/muyangopinion
+falun-gong-linked-hosts-and-shows/dayutalk
+falun-gong-linked-hosts-and-shows/dayushow
+falun-gong/uchy4xobo9z03nceb6pl-yzg
+kailasa-and-nithyananda/uc4y4ale-fja7epugfiwzsxg
+kailasa-and-nithyananda/uc9om-qeiyiptakbe9veg5uw
+kailasa-and-nithyananda/ucy83l4ntoauwxoe0zhyh3bq
+kailasa-and-nithyananda/ucvbkdnjkm0frh39hxwq076a
+kailasa-and-nithyananda/ucavsea4f8ef-mf-szv9reqa
+kailasa-and-nithyananda/ucrjorlnlphxlkl7flvvjuga
+kailasa-and-nithyananda/ucxqgt-kpxshw9feecsw3t-q
+kailasa-and-nithyananda/uct2scanam3frn0ld-qbrt9w
+kailasa-and-nithyananda/ucucjpgxudlnwdcuddd93uhg

@@ -14,7 +14,7 @@
 :ntd | @NTDCHINESE | @ntdaptv | @ntdnews | @NTDSpanish | ^新唐人 | ^NTD Television | ^NTD
 :epoch-headlines | ^纪元头条 | ^紀元頭條
 :jinwen | ^中国禁闻 | ^中國禁聞
-:news-decoded | ^新闻大破解 | ^新聞大破解
+:news-decoded | UCHY4xOBo9z03nceB6Pl-yzg | @News_Insight | ^新闻大破解 | ^新聞大破解
 :sound-of-hope | @soh_tv | ^希望之声 | ^希望之聲 | ^SOH | ^Sound of Hope
 :kan-zhongguo | @kzg | ^看中国 | ^看中國
 :vision-times | ^Vision Times
@@ -40,4 +40,3 @@
 :health-1-1 | ^健康1+1
 :ganjing-world | ^干净世界 | ^乾淨世界 | ^Gan Jing World | ^GanJing World
 :ucak-sbmzp79a4k2caqqodlq | UCAk-SBMZp79a4k2CAqqoDLQ
-:uchy4xobo9z03nceb6pl-yzg | UCHY4xOBo9z03nceB6Pl-yzg

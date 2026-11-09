@@ -10,7 +10,7 @@
 :guan-yin-citta | =心灵法门 | =心靈法門 | =Guan Yin Citta
 :lu-tai-chang | =卢台长 | =盧台長
 :true-buddha-school | =真佛宗 | =True Buddha School
-:rulai-zong | =佛教如來宗
+:rulai-zong | UC8AqZc9Ij7GGptu3U5Mcj7A | @rulaibuddhism | =佛教如來宗
 :miao-chan-shifu | =妙禪師父
 :yin-xin-fo-fa | =印心佛法
 :cgm | =CGM基督教福音宣教會
@@ -39,7 +39,7 @@
 :mooji | @Moojiji | @Moojiitaliano | =Mooji
 :isha-foundation | @ishafoundation | =Isha Foundation
 :eckankar | @eckankar | =ECKANKAR
-:chuang-zao-feng-sheng | =创造丰盛 | =創造豐盛
+:chuang-zao-feng-sheng | UC-zY8Y8BC3bcOjAtb8tnCqQ | =创造丰盛 | =創造豐盛
 :abraham-hicks | =Abraham-Hicks
 :access-consciousness | @accessconsciousness | =Access Consciousness
 :thetahealing | UCREBjyI4qKwRHxOgCzuDA5g | @ThetaHealingPro | @ThetaHealingVianna | =ThetaHealing
@@ -47,7 +47,6 @@
 :pranic-healing | =Pranic Healing
 :putimalaysia | @PutiMalaysia
 :sadhguru-chinese | @SadhguruChinese | @sadhgurutraditionalchinese
-:uc8aqzc9ij7ggptu3u5mcj7a | UC8AqZc9Ij7GGptu3U5Mcj7A
 :ucjat3xga5s2qizsygvd2cia | UCJAt3XGA5S2qiZSygvd2cIA
 :ucpdi-gkjdpkv1mzfnlwyc5w | UCPDI_GKjDpKV1mzFnLwyC5w
 :ucuk4yvtfvwkdzcem9p6kwaa | UCuk4yvTFVwkdZCEM9p6KWaA
@@ -88,7 +87,6 @@
 :ucxonu8qnflim00yxuyv17rq | UCxONu8QnFlim00YxUYv17RQ
 :uchryrqwgp7jnuez6yd2suxg | UCHRyrQWgP7JNuEZ6yd2sUXg
 :uckv-ujdqw5gqx5hkr76yrjg | UCKv-uJdqW5gQx5HkR76yRJg
-:uc-zy8y8bc3bcojatb8tncqq | UC-zY8Y8BC3bcOjAtb8tnCqQ
 :uca9ff3xvwgkbjklq-4-nwbq | UCA9ff3XVWgKBjklq-4_NWbQ
 :ucnavqwhxftadvqcyucbwogg | UCnAvqWHXFtadVQCyUcBwOGg
 :uccjpnud3tri2cl-2mudrhbg | UCCJPNud3Tri2CL-2MuDrhBg

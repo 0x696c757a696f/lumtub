@@ -7,7 +7,7 @@
 
 :xi-an-guancha | ^西岸观察 | ^西岸觀察
     status: unproven
-:jinquan-kan-shijie | ^金泉看世界
+:jinquan-kan-shijie | UCjqNTyJB_hQb-v3GWChDzfw | @hanzicangtianji-jinquan | ^金泉看世界
     status: unproven
 :wenrui-kan-shijie | ^文睿看世界
     status: unproven
@@ -17,27 +17,27 @@
     status: unproven
 :xin-shiye | ^新视野 | ^新視野
     status: unproven
-:caijing-xiang-qian-kan | ^财经向前看 | ^財經向前看
+:caijing-xiang-qian-kan | UCTVND8wMyzE14pHFuU8SKOA | @finance_note | ^财经向前看 | ^財經向前看
     status: unproven
 :huiyue-kan-jinxi | ^慧月瞰今昔
     status: unproven
 :aozhou-shenghuo-tai | ^澳洲生活台 | ^澳洲生活臺
     status: unproven
-:jizai-xianggang | ^纪载香港 | ^紀載香港
+:jizai-xianggang | UCRf5-WvYzmVJRyR6P02ZI7g | @%E7%B4%80%E8%BC%89%E9%A6%99%E6%B8%AF | ^纪载香港 | ^紀載香港
     status: unproven
-:gongmin-laohei | ^公民老黑
+:gongmin-laohei | UCtLgwBOza-dnuaBg6W6YXog | @laohei | ^公民老黑
     status: unproven
-:ziling-jiang-gushi | ^紫菱讲故事 | ^紫菱講故事
+:ziling-jiang-gushi | UCQKPaqvfUupC_PU8xURFIzQ | @%E7%B4%AB%E8%8F%B1%E8%AC%9B%E6%95%85%E4%BA%8B | ^紫菱讲故事 | ^紫菱講故事
     status: unproven
 :xin-bu-xin-you-ni | ^信不信由你
     status: unproven
 :jingxiang-shijie | ^镜像世界 | ^鏡像世界 | ^映象世界
     status: unproven
-:xinqi-shijie | ^新奇世界
+:xinqi-shijie | UCqULcRo6mHFL2y6mxZrhSZg | @%E6%96%B0%E5%A5%87%E4%B8%96%E7%95%8C-o8v | ^新奇世界
     status: unproven
-:zhenyan-zhenyu | ^珍言真语 | ^珍言真語
+:zhenyan-zhenyu | UC-rMyi5JlAvMRNpCgRNhZTQ | @ZhenYanZhenYu | ^珍言真语 | ^珍言真語
     status: unproven
 :zhengzhi-zhuojian | ^正知卓见 | ^正知卓見
     status: unproven
-:qingtou-shijie | ^清透世界
+:qingtou-shijie | UCD6H5HohLmLzkdg_e6_M_6g | @yinlongli6276 | ^清透世界
     status: unproven

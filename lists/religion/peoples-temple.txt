@@ -6,6 +6,6 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Peoples_Temple
 
-:peoples-temple | ^人民圣殿 | ^人民聖殿 | ^Peoples Temple | ^People's Temple | ^People’s Temple
+:peoples-temple | UCmas22On_Rqya_vLEeWwpqQ | @PeoplesTemple | ^人民圣殿 | ^人民聖殿 | ^Peoples Temple | ^People's Temple | ^People’s Temple
 :jonestown | ^琼斯镇 | ^瓊斯鎮 | ^Jonestown
 :jim-jones | ^Jim Jones

@@ -16,6 +16,6 @@
 :ont | =ONT | ^ОНТ
 :stv | =STV | ^СТВ
 :pervyi-informatsionnyi | ^Первый информационный
-:radio-belarus | ^Radio Belarus | ^Радио Беларусь
-:belarus-segodnya | ^Belarus Segodnya | ^СБ Беларусь сегодня | ^СБ. Беларусь сегодня
+:radio-belarus | UC89Cojt8XSIUBoAtnABsQxw | @radiobelarus1389 | ^Radio Belarus | ^Радио Беларусь
+:belarus-segodnya | UC0xT3Ec-OfEWvUs1tqutTnA | @Belarus-x5m | ^Belarus Segodnya | ^СБ Беларусь сегодня | ^СБ. Беларусь сегодня
 :zvyazda | ^Звязда

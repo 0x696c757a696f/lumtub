@@ -6,7 +6,7 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/World_Mission_Society_Church_of_God
 
-:mother-god | ^母亲上帝 | ^母親上帝 | ^God the Mother
+:mother-god | UC-_M8goVLzgzCMGmHo42syQ | @JerusalemMother_en | ^母亲上帝 | ^母親上帝 | ^God the Mother
 :ahn-sang-hong | ^安商洪 | ^Ahnsahnghong
 :zahng-gil-jah | ^张吉子 | ^張吉子 | ^Zahng Gil-jah
 :world-mission-society | ^世界福音宣教协会 | ^世界福音宣教協會 | ^World Mission Society

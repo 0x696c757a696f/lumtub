@@ -11,11 +11,11 @@
     reviewed: 2026-11-08
 :voice-of-vietnam | =VOV | ^Voice of Vietnam
     reviewed: 2026-11-08
-:vov-news | ^VOV News
+:vov-news | UCD7svI6xmhOUGCnEt0v7iNQ | @vovnews3107 | ^VOV News
     reviewed: 2026-11-08
 :vovtv | ^VOVTV
     reviewed: 2026-11-08
 :nhan-dan | ^Nhân Dân
     reviewed: 2026-11-08
-:vietnamplus | ^VietnamPlus
+:vietnamplus | UCdCwV12NxKN2z5TIpiUtGmg | @vietnamplus | ^VietnamPlus
     reviewed: 2026-11-08

@@ -7,16 +7,16 @@
 ! note: State-run media and ruling-party papers
 ! source: https://en.wikipedia.org/wiki/China_Media_Group
 
-:cgtn | ^CGTN | ^China Global Television | ^中国国际电视台
-:cctv | ^CCTV | ^央视 | ^中国中央电视台 | ^中央电视台 | ^中央广播电视总台
+:cgtn | UCgrNz-aDmcr2uuto8_DL2jg | @cgtn | ^CGTN | ^China Global Television | ^中国国际电视台
+:cctv | UCJcVq-roTUBBqhPfPbH4U3Q | @CCTVChatfield | ^CCTV | ^央视 | ^中国中央电视台 | ^中央电视台 | ^中央广播电视总台
 :china-media-group | =CMG | ^China Media Group
 :china-daily | ^China Daily | ^中国日报
 :global-times | ^Global Times | ^环球时报 | ^環球時報
 :xinhua | ^Xinhua | ^China Xinhua | ^新华社 | ^新華社 | ^新华网
 :new-china-tv | ^New China TV
 :peoples-daily | ^People's Daily | ^People’s Daily | ^人民日报 | ^人民日報
-:people-com-cn | ^人民网
-:china-news-service | ^China News Service | ^中国新闻社 | ^中新社
+:people-com-cn | UCSRvJiQYtGPkNOBKGCOpGVA | @Renminwang | ^人民网
+:china-news-service | UCpbfXQsYBJTwq5lCkwGIeuQ | @cnsvideo | ^China News Service | ^中国新闻社 | ^中新社
 :chinanews | ^ChinaNews | ^中国新闻网 | ^中國新聞網 | ^中新网
 :cri | =CRI | ^China Radio International | ^中国国际广播电台
 :cri-online | ^国际在线
@@ -25,13 +25,13 @@
 :china-org-cn | =中国网 | ^China.org.cn
 :reference-news | ^参考消息 | ^Reference News
 :guangming-daily | ^光明日报
-:economic-daily | ^经济日报
+:economic-daily | UCc7P-hJSGSOhbnCMISiADMw | @%E7%BB%8F%E6%B5%8E%E6%97%A5%E6%8A%A5 | ^经济日报
 :china-youth-daily | ^中国青年报
 :ipanda | ^iPanda | ^熊猫频道
-:china-military-online | ^中国军网
+:china-military-online | UC-56DqgG987rFpeYBFDOZ6Q | @%E4%B8%AD%E5%9B%BD%E5%86%9B%E7%BD%9112 | ^中国军网
 :pla-daily | ^解放军报 | ^PLA Daily
 :ta-kung-pao | ^大公报 | ^大公報 | ^Ta Kung Pao
-:wen-wei-po | ^文汇报 | ^文匯報 | ^Wen Wei Po
+:wen-wei-po | UCipsRIUyYONCQ8OdV_DRNxg | @wenweipo2023 | ^文汇报 | ^文匯報 | ^Wen Wei Po
 :ta-kung-wen-wei | ^大公文汇 | ^大公文匯
 :cnr | =CNR
 :cgtn-arabic-channel | UCQmJk0ErE_FiorcLBsDKORA | @CGTNArabic

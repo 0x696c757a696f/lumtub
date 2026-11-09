@@ -6,6 +6,6 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Eastern_Lightning
 
-:church-of-almighty-god | ^全能神 | ^东方闪电 | ^東方閃電 | ^实际神 | ^實際神 | ^Church of Almighty God | ^Eastern Lightning
+:church-of-almighty-god | UCpWXEN_SkX75LyxRCM9rMwQ | @easternlightning8318 | ^全能神 | ^东方闪电 | ^東方閃電 | ^实际神 | ^實際神 | ^Church of Almighty God | ^Eastern Lightning
 :word-appears-in-the-flesh | ^The Word Appears in the Flesh
     reviewed: 2026-11-08

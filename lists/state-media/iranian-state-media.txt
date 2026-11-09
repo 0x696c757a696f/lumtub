@@ -17,6 +17,6 @@
 :sahar-tv | ^Sahar TV
 :al-kawthar | ^Al-Kawthar | ^Al Kawthar
 :fars-news | ^Fars News
-:tasnim | ^Tasnim
-:mehr-news | ^Mehr News
+:tasnim | UCg9ya_4sI6u_6A5zXtLgq6w | @solacefulmemoirs | ^Tasnim
+:mehr-news | UCvSZK7QYdrNA7-3kfXRi4Ng | @mehrnews7257 | ^Mehr News
 :isna | =ISNA

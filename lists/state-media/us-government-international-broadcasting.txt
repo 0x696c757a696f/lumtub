@@ -13,7 +13,7 @@
 :rferl | ^Radio Free Europe | ^RFE/RL | ^Radio Liberty | ^Радио Свобода | ^Radio Svoboda
 :current-time | ^Current Time | ^Настоящее время
 :marti | ^Radio Martí | ^TV Martí | ^Martí Noticias
-:alhurra | ^Alhurra | ^الحرة
+:alhurra | UCJJsH0QEXvTxl3BnCvQBlNw | @alhurra6067 | ^Alhurra | ^الحرة
 :radio-sawa | ^Radio Sawa
-:middle-east-broadcasting-networks | =MBN | ^Middle East Broadcasting Networks
+:middle-east-broadcasting-networks | UC7Yy2NChypvyR4InlpSi7TA | @mbn2503 | =MBN | ^Middle East Broadcasting Networks
 :office-of-cuba-broadcasting | =OCB

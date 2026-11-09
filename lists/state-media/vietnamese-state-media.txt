@@ -15,7 +15,7 @@
     reviewed: 2026-11-08
 :vovtv | ^VOVTV
     reviewed: 2026-11-08
-:nhan-dan | ^Nhân Dân
+:nhan-dan | UCD8cBUXkEjTQR9fAP1NSY5Q | @Nhandan6 | ^Nhân Dân
     reviewed: 2026-11-08
 :vietnamplus | UCdCwV12NxKN2z5TIpiUtGmg | @vietnamplus | ^VietnamPlus
     reviewed: 2026-11-08

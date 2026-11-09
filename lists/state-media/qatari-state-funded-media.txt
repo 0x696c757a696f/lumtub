@@ -13,6 +13,6 @@
 :qatar-tv | ^Qatar TV
 :qatar-media-corporation | =QMC | ^Qatar Media Corporation
 :qatar-news-agency | =QNA | ^Qatar News Agency
-:al-kass | ^Al Kass
+:al-kass | UCxHKFPDgtij8cmjIWEDZERA | @AlKass-cu9gt | ^Al Kass
 :al-jazeera-english-channel | UCNye-wNBqNL5ZzHSJj3l8Bg | @aljazeeraenglish
     reviewed: 2026-11-08

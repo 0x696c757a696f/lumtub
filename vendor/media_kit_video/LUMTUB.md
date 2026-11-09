@@ -53,3 +53,8 @@ The changes, marked "Lumtub" in the code:
   `common/darwin/`): when no accelerated OpenGL pixel format, context or
   texture cache can be made (a Mac virtual machine), the video is drawn in
   software instead of the app stopping on a nil value or `exit(1)`.
+- `linux/texture_gl.cc`: each frame mpv draws is copied into a second
+  texture, and the EGLImage Flutter reads refers to that one, not to mpv's
+  render target. On Mesa (Intel Xe2, Mesa 25) a texture an EGLImage is made
+  from stops receiving mpv's drawing, and the video stayed black. Taken from
+  media-kit/media-kit#1464 (Starfallan/media-kit 85f0a69).

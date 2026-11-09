@@ -18,9 +18,7 @@ For **Windows, Linux, macOS and Android** (phones, tablets and TVs).
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
-<img src="docs/screenshots/subtitles.jpg" alt="An Italian talk with the Italian subtitle and its English translation shown together" width="860">
-
-https://github.com/user-attachments/assets/4ec072a1-6496-46b2-bcba-9b29df811646
+https://github.com/user-attachments/assets/97e3ce09-8e66-43fe-9125-bff1b3dcb3fe
 
 [What's different](#what-makes-lumtub-different) · [Features](#features) · [Get it](#get-it) · [Privacy](#privacy-what-stays-local-and-what-doesnt) · [FAQ](#faq) · [Support](#support-lumtub)
 

@@ -3119,5 +3119,11 @@
   "Skin background": "Apvalka fons",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Apvalka attēli un ainava aiz lapām; izslēdzot paliek vienkrāsains fons",
   "Suggest a channel or report a mistake": "Ieteikt kanālu vai ziņot par kļūdu",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Saraksti ir publiski pieejami GitHub, un tiem var pievienot ikviens. Katram ierakstam nepieciešams publisks avots"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Saraksti ir publiski pieejami GitHub, un tiem var pievienot ikviens. Katram ierakstam nepieciešams publisks avots",
+  "Preparing yt-dlp…": "Notiek yt-dlp sagatavošana…",
+  "Match the frame rate": "Pielāgot kadru nomaiņas ātrumu",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Atskaņojot video, ekrāns pārslēdzas uz atbilstošu atsvaidzes intensitāti, lai kustība būtu vienmērīga; televizori uz brīdi var kļūt tumši",
+  "refresh rate fps TV": "atsvaidzes intensitāte fps TV televizors",
+  "Tap to install it": "Pieskarieties, lai instalētu",
+  "Tap to download and install": "Pieskarieties, lai lejupielādētu un instalētu"
 }

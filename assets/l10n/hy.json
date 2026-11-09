@@ -3119,5 +3119,11 @@
   "Skin background": "Սկինի ֆոն",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Սկինի նկարներն ու լանդշաֆտը էջերի հետևում․ անջատվածի դեպքում մնում է սովորական գույն",
   "Suggest a channel or report a mistake": "Առաջարկել ալիք կամ հայտնել սխալի մասին",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Ցանկերը հանրային են GitHub-ում, և ցանկացած մարդ կարող է ավելացնել դրանցում։ Յուրաքանչյուր գրառում պահանջում է հանրային աղբյուր"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Ցանկերը հանրային են GitHub-ում, և ցանկացած մարդ կարող է ավելացնել դրանցում։ Յուրաքանչյուր գրառում պահանջում է հանրային աղբյուր",
+  "Preparing yt-dlp…": "yt-dlp-ի նախապատրաստում…",
+  "Match the frame rate": "Համապատասխանեցնել կադրերի հաճախականությանը",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Տեսանյութի նվագարկման ժամանակ էկրանը անցնում է դրան համապատասխան թարմացման հաճախականության, որպեսզի շարժումը հարթ լինի. հեռուստացույցները կարող են մի պահ մթագնել",
+  "refresh rate fps TV": "թարմացման հաճախականություն fps հեռուստացույց TV",
+  "Tap to install it": "Հպեք՝ տեղադրելու համար",
+  "Tap to download and install": "Հպեք՝ ներբեռնելու և տեղադրելու համար"
 }

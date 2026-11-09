@@ -3119,5 +3119,11 @@
   "Skin background": "پس‌زمینه پوسته",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "تصاویر و منظره پوسته پشت صفحه‌ها؛ در حالت خاموش رنگ ساده می‌ماند",
   "Suggest a channel or report a mistake": "پیشنهاد کانال یا گزارش اشتباه",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "فهرست‌ها در GitHub عمومی هستند و هر کسی می‌تواند به آن‌ها اضافه کند. هر مورد به یک منبع عمومی نیاز دارد"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "فهرست‌ها در GitHub عمومی هستند و هر کسی می‌تواند به آن‌ها اضافه کند. هر مورد به یک منبع عمومی نیاز دارد",
+  "Preparing yt-dlp…": "در حال آماده‌سازی yt-dlp…",
+  "Match the frame rate": "تطبیق نرخ فریم",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "هنگام پخش ویدیو، صفحه‌نمایش به نرخ نوسازی مناسب آن تغییر می‌کند تا حرکت یکنواخت باشد؛ ممکن است تلویزیون‌ها لحظه‌ای تاریک شوند",
+  "refresh rate fps TV": "نرخ نوسازی fps تلویزیون",
+  "Tap to install it": "برای نصب ضربه بزنید",
+  "Tap to download and install": "برای دانلود و نصب ضربه بزنید"
 }

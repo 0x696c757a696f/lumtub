@@ -3119,5 +3119,11 @@
   "Skin background": "Nền chủ đề",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Hình ảnh và phong cảnh của chủ đề phía sau các trang; tắt sẽ để lại màu trơn",
   "Suggest a channel or report a mistake": "Đề xuất kênh hoặc báo lỗi",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Các danh sách được công khai trên GitHub và ai cũng có thể thêm vào. Mỗi mục cần có nguồn công khai"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Các danh sách được công khai trên GitHub và ai cũng có thể thêm vào. Mỗi mục cần có nguồn công khai",
+  "Preparing yt-dlp…": "Đang chuẩn bị yt-dlp…",
+  "Match the frame rate": "Khớp tốc độ khung hình",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Khi phát video, màn hình chuyển sang tần số quét phù hợp để chuyển động mượt mà; TV có thể tối đi trong chốc lát",
+  "refresh rate fps TV": "tần số quét tốc độ khung hình fps TV",
+  "Tap to install it": "Nhấn để cài đặt",
+  "Tap to download and install": "Nhấn để tải xuống và cài đặt"
 }

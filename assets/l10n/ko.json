@@ -3119,5 +3119,11 @@
   "Skin background": "스킨 배경",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "페이지 뒤에 스킨의 그림과 풍경을 표시합니다. 끄면 단색이 됩니다",
   "Suggest a channel or report a mistake": "채널 제안 또는 오류 신고",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "목록은 GitHub에 공개되어 있으며 누구나 추가할 수 있습니다. 모든 항목에는 공개 출처가 필요합니다"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "목록은 GitHub에 공개되어 있으며 누구나 추가할 수 있습니다. 모든 항목에는 공개 출처가 필요합니다",
+  "Preparing yt-dlp…": "yt-dlp 준비 중…",
+  "Match the frame rate": "프레임 속도 맞추기",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "동영상을 재생하는 동안 화면이 동영상에 맞는 주사율로 전환되어 움직임이 부드러워집니다. TV는 화면이 잠시 꺼질 수 있습니다",
+  "refresh rate fps TV": "주사율 새로고침 빈도 fps 프레임 TV",
+  "Tap to install it": "탭하여 설치",
+  "Tap to download and install": "탭하여 다운로드 및 설치"
 }

@@ -3119,5 +3119,11 @@
   "Skin background": "Pozadie skinu",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Obrázky a krajina skinu za stránkami; po vypnutí zostane jednofarebné pozadie",
   "Suggest a channel or report a mistake": "Navrhnúť kanál alebo nahlásiť chybu",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Zoznamy sú verejné na GitHube a môže do nich prispievať ktokoľvek. Každý záznam vyžaduje verejný zdroj"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Zoznamy sú verejné na GitHube a môže do nich prispievať ktokoľvek. Každý záznam vyžaduje verejný zdroj",
+  "Preparing yt-dlp…": "Pripravuje sa yt-dlp…",
+  "Match the frame rate": "Prispôsobiť snímkovú frekvenciu",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Počas prehrávania videa sa obrazovka prepne na vhodnú obnovovaciu frekvenciu, takže pohyb je plynulý; televízory môžu na chvíľu stmavnúť",
+  "refresh rate fps TV": "obnovovacia frekvencia fps TV televízor",
+  "Tap to install it": "Ťuknutím nainštalujete",
+  "Tap to download and install": "Ťuknutím stiahnete a nainštalujete"
 }

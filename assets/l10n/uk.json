@@ -3119,5 +3119,11 @@
   "Skin background": "Тло теми",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Малюнки й пейзаж теми за сторінками; вимкнено залишає звичайний колір",
   "Suggest a channel or report a mistake": "Запропонувати канал або повідомити про помилку",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Списки загальнодоступні на GitHub, і доповнювати їх може кожен. Для кожного запису потрібне публічне джерело"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Списки загальнодоступні на GitHub, і доповнювати їх може кожен. Для кожного запису потрібне публічне джерело",
+  "Preparing yt-dlp…": "Підготовка yt-dlp…",
+  "Match the frame rate": "Підлаштовувати частоту кадрів",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Під час відтворення відео екран перемикається на відповідну частоту оновлення, тож рух плавний; телевізори можуть на мить потемніти",
+  "refresh rate fps TV": "частота оновлення fps ТВ телевізор",
+  "Tap to install it": "Торкніться, щоб установити",
+  "Tap to download and install": "Торкніться, щоб завантажити й установити"
 }

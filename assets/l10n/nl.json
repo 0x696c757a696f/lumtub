@@ -3119,5 +3119,11 @@
   "Skin background": "Skin-achtergrond",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Afbeeldingen en landschap van de skin achter de pagina's; uit laat een effen kleur",
   "Suggest a channel or report a mistake": "Stel een kanaal voor of meld een fout",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "De lijsten zijn openbaar op GitHub en iedereen kan eraan bijdragen. Elk item heeft een openbare bron nodig"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "De lijsten zijn openbaar op GitHub en iedereen kan eraan bijdragen. Elk item heeft een openbare bron nodig",
+  "Preparing yt-dlp…": "yt-dlp voorbereiden…",
+  "Match the frame rate": "Framerate aanpassen",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Tijdens het afspelen van een video schakelt het scherm over naar een passende verversingsfrequentie, zodat beweging vloeiend is; tv's kunnen even zwart worden",
+  "refresh rate fps TV": "verversingsfrequentie framerate fps tv",
+  "Tap to install it": "Tik om te installeren",
+  "Tap to download and install": "Tik om te downloaden en te installeren"
 }

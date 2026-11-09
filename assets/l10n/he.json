@@ -3119,5 +3119,11 @@
   "Skin background": "רקע ערכת הנושא",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "תמונות ונוף של ערכת הנושא מאחורי הדפים; כבוי משאיר צבע אחיד",
   "Suggest a channel or report a mistake": "הציעו ערוץ או דווחו על טעות",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "הרשימות פומביות ב-GitHub וכל אחד יכול להוסיף להן. כל רשומה דורשת מקור פומבי"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "הרשימות פומביות ב-GitHub וכל אחד יכול להוסיף להן. כל רשומה דורשת מקור פומבי",
+  "Preparing yt-dlp…": "מכין את yt-dlp…",
+  "Match the frame rate": "התאמת קצב הפריימים",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "בזמן הפעלת סרטון, המסך עובר לקצב רענון שמתאים לו, כך שהתנועה חלקה; טלוויזיות עשויות להחשיך לרגע",
+  "refresh rate fps TV": "קצב רענון fps טלוויזיה TV",
+  "Tap to install it": "הקש כדי להתקין",
+  "Tap to download and install": "הקש כדי להוריד ולהתקין"
 }

@@ -3119,5 +3119,11 @@
   "Skin background": "Azalaren atzealdea",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Azalaren irudiak eta paisaia orrien atzean; desaktibatuta kolore soila geratzen da",
   "Suggest a channel or report a mistake": "Iradoki kanal bat edo jakinarazi akats bat",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Zerrendak GitHub-en publikoak dira eta edonork gehi dezake. Sarrera bakoitzak iturri publiko bat behar du"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Zerrendak GitHub-en publikoak dira eta edonork gehi dezake. Sarrera bakoitzak iturri publiko bat behar du",
+  "Preparing yt-dlp…": "yt-dlp prestatzen…",
+  "Match the frame rate": "Egokitu fotograma-abiadura",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Bideoa erreproduzitzen den bitartean, pantaila egokia den freskatze-maiztasunera aldatzen da, mugimendua leuna izan dadin; telebistak une batez ilundu daitezke",
+  "refresh rate fps TV": "freskatze-maiztasuna fps TB telebista",
+  "Tap to install it": "Sakatu instalatzeko",
+  "Tap to download and install": "Sakatu deskargatu eta instalatzeko"
 }

@@ -3119,5 +3119,11 @@
   "Skin background": "خلفية السمة",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "صور السمة ومناظرها خلف الصفحات؛ عند الإيقاف يبقى لون عادي",
   "Suggest a channel or report a mistake": "اقترح قناة أو أبلغ عن خطأ",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "القوائم عامة على GitHub ويمكن لأي شخص الإضافة إليها. يتطلب كل إدخال مصدرًا عامًا"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "القوائم عامة على GitHub ويمكن لأي شخص الإضافة إليها. يتطلب كل إدخال مصدرًا عامًا",
+  "Preparing yt-dlp…": "جارٍ تجهيز yt-dlp…",
+  "Match the frame rate": "مطابقة معدل الإطارات",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "أثناء تشغيل فيديو، تنتقل الشاشة إلى معدل تحديث يناسبه لتكون الحركة سلسة؛ وقد تُظلم شاشات التلفزيون للحظة",
+  "refresh rate fps TV": "معدل التحديث fps تلفزيون",
+  "Tap to install it": "انقر للتثبيت",
+  "Tap to download and install": "انقر للتنزيل والتثبيت"
 }

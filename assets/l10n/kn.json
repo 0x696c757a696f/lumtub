@@ -3119,5 +3119,11 @@
   "Skin background": "ಸ್ಕಿನ್ ಹಿನ್ನೆಲೆ",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "ಪುಟಗಳ ಹಿಂದೆ ಸ್ಕಿನ್‌ನ ಚಿತ್ರಗಳು ಮತ್ತು ಭೂದೃಶ್ಯ; ಆಫ್ ಮಾಡಿದರೆ ಸರಳ ಬಣ್ಣ ಉಳಿಯುತ್ತದೆ",
   "Suggest a channel or report a mistake": "ಚಾನಲ್ ಸೂಚಿಸಿ ಅಥವಾ ತಪ್ಪನ್ನು ವರದಿ ಮಾಡಿ",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "ಪಟ್ಟಿಗಳು GitHub ನಲ್ಲಿ ಸಾರ್ವಜನಿಕವಾಗಿವೆ ಮತ್ತು ಯಾರು ಬೇಕಾದರೂ ಸೇರಿಸಬಹುದು. ಪ್ರತಿಯೊಂದು ನಮೂದಿಗೆ ಸಾರ್ವಜನಿಕ ಮೂಲ ಅಗತ್ಯ"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "ಪಟ್ಟಿಗಳು GitHub ನಲ್ಲಿ ಸಾರ್ವಜನಿಕವಾಗಿವೆ ಮತ್ತು ಯಾರು ಬೇಕಾದರೂ ಸೇರಿಸಬಹುದು. ಪ್ರತಿಯೊಂದು ನಮೂದಿಗೆ ಸಾರ್ವಜನಿಕ ಮೂಲ ಅಗತ್ಯ",
+  "Preparing yt-dlp…": "yt-dlp ಸಿದ್ಧಪಡಿಸಲಾಗುತ್ತಿದೆ…",
+  "Match the frame rate": "ಫ್ರೇಮ್ ರೇಟ್‌ಗೆ ಹೊಂದಿಸಿ",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ವೀಡಿಯೊ ಪ್ಲೇ ಆಗುವಾಗ ಪರದೆಯು ಅದಕ್ಕೆ ಹೊಂದುವ ರಿಫ್ರೆಶ್ ರೇಟ್‌ಗೆ ಬದಲಾಗುತ್ತದೆ, ಇದರಿಂದ ಚಲನೆ ಸುಗಮವಾಗಿರುತ್ತದೆ; ಟಿವಿಗಳು ಒಂದು ಕ್ಷಣ ಕಪ್ಪಾಗಬಹುದು",
+  "refresh rate fps TV": "ರಿಫ್ರೆಶ್ ರೇಟ್ fps ಟಿವಿ",
+  "Tap to install it": "ಸ್ಥಾಪಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+  "Tap to download and install": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ ಸ್ಥಾಪಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ"
 }

@@ -3119,5 +3119,11 @@
   "Skin background": "Fundal skin",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Imaginile și peisajul skinului în spatele paginilor; dezactivat lasă o culoare simplă",
   "Suggest a channel or report a mistake": "Sugerează un canal sau raportează o greșeală",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listele sunt publice pe GitHub și oricine poate adăuga la ele. Fiecare intrare necesită o sursă publică"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listele sunt publice pe GitHub și oricine poate adăuga la ele. Fiecare intrare necesită o sursă publică",
+  "Preparing yt-dlp…": "Se pregătește yt-dlp…",
+  "Match the frame rate": "Potrivește rata de cadre",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "În timpul redării unui videoclip, ecranul trece la o rată de reîmprospătare potrivită, astfel încât mișcarea să fie fluidă; televizoarele se pot întuneca pentru o clipă",
+  "refresh rate fps TV": "rată de reîmprospătare fps TV televizor",
+  "Tap to install it": "Atinge pentru a o instala",
+  "Tap to download and install": "Atinge pentru a descărca și instala"
 }

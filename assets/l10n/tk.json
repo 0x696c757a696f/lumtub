@@ -3119,5 +3119,11 @@
   "Skin background": "Tema fony",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Sahypalaryň aňyrsyndaky temanyň suratlary we landşafty; öçürilende ýönekeý reňk galýar",
   "Suggest a channel or report a mistake": "Kanal teklip ediň ýa-da ýalňyşlyk habar beriň",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Sanawlar GitHub-da açyk we islendik adam goşup biler. Her bir ýazgy açyk çeşme talap edýär"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Sanawlar GitHub-da açyk we islendik adam goşup biler. Her bir ýazgy açyk çeşme talap edýär",
+  "Preparing yt-dlp…": "yt-dlp taýýarlanýar…",
+  "Match the frame rate": "Kadr tizligini deňeşdir",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Wideo oýnalanda ekran oňa laýyk täzelenme ýygylygyna geçýär, şeýdip hereket ýumşak bolýar; telewizorlar bir salym garaňkylanmagy mümkin",
+  "refresh rate fps TV": "täzelenme ýygylygy fps TV telewizor",
+  "Tap to install it": "Gurnamak üçin basyň",
+  "Tap to download and install": "Ýükläp almak we gurnamak üçin basyň"
 }

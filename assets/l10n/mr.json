@@ -3119,5 +3119,11 @@
   "Skin background": "स्किन बॅकग्राउंड",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "पानांमागे स्किनची चित्रे आणि लँडस्केप; बंद केल्यास साधा रंग राहतो",
   "Suggest a channel or report a mistake": "चॅनेल सुचवा किंवा चूक कळवा",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "याद्या GitHub वर सार्वजनिक आहेत आणि कोणीही त्यात भर घालू शकतो. प्रत्येक नोंदीसाठी सार्वजनिक स्रोत आवश्यक आहे"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "याद्या GitHub वर सार्वजनिक आहेत आणि कोणीही त्यात भर घालू शकतो. प्रत्येक नोंदीसाठी सार्वजनिक स्रोत आवश्यक आहे",
+  "Preparing yt-dlp…": "yt-dlp तयार करत आहे…",
+  "Match the frame rate": "फ्रेम रेटशी जुळवा",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "व्हिडिओ प्ले होत असताना स्क्रीन त्याला योग्य अशा रिफ्रेश रेटवर स्विच होते, त्यामुळे हालचाल सुरळीत दिसते; टीव्ही क्षणभर काळा होऊ शकतो",
+  "refresh rate fps TV": "रिफ्रेश रेट fps टीव्ही",
+  "Tap to install it": "इंस्टॉल करण्यासाठी टॅप करा",
+  "Tap to download and install": "डाउनलोड आणि इंस्टॉल करण्यासाठी टॅप करा"
 }

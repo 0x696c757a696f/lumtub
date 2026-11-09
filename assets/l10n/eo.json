@@ -3119,5 +3119,11 @@
   "Skin background": "Fono de haŭto",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Bildoj kaj pejzaĝo de la haŭto malantaŭ la paĝoj; malŝaltite restas ebena koloro",
   "Suggest a channel or report a mistake": "Sugesti kanalon aŭ raporti eraron",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "La listoj estas publikaj en GitHub, kaj ĉiu rajtas aldoni al ili. Ĉiu enskribo bezonas publikan fonton"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "La listoj estas publikaj en GitHub, kaj ĉiu rajtas aldoni al ili. Ĉiu enskribo bezonas publikan fonton",
+  "Preparing yt-dlp…": "Preparante yt-dlp…",
+  "Match the frame rate": "Kongrui la kadran rapidon",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Dum video ludiĝas, la ekrano ŝanĝiĝas al taŭga refreŝiga rapido, tiel ke movado estas glata; televidiloj povas mallumiĝi momente",
+  "refresh rate fps TV": "refreŝiga rapido fps televidilo TV",
+  "Tap to install it": "Tuŝetu por instali ĝin",
+  "Tap to download and install": "Tuŝetu por elŝuti kaj instali"
 }

@@ -3119,5 +3119,11 @@
   "Skin background": "Ingemuva yesindikimba",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Izithombe nobuhle bendawo besindikimba ngemuva kwamakhasi; uma kuvaliwe kusala umbala ongenalutho",
   "Suggest a channel or report a mistake": "Phakamisa isiteshi noma babika iphutha",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Uhlu luyasesidlangalaleni ku-GitHub futhi noma ubani angangeza kulo. Okufakiwe ngakunye kudinga umthombo osesidlangalaleni"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Uhlu luyasesidlangalaleni ku-GitHub futhi noma ubani angangeza kulo. Okufakiwe ngakunye kudinga umthombo osesidlangalaleni",
+  "Preparing yt-dlp…": "Ilungiselela i-yt-dlp…",
+  "Match the frame rate": "Fanisa izinga lezithombe",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Ngenkathi ividiyo idlala, isikrini siguqukela erejini yokuvuselela efanelekile, ukuze ukunyakaza kube bushelelezi; ama-TV angaba mnyama okwesikhashana",
+  "refresh rate fps TV": "izinga lokuvuselela fps TV",
+  "Tap to install it": "Thepha ukuze uyifake",
+  "Tap to download and install": "Thepha ukuze udawunilode futhi ufake"
 }

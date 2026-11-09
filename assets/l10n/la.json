@@ -3119,5 +3119,11 @@
   "Skin background": "Tergum pellis",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Imagines et regio pellis post paginas; exstinctum colorem simplicem relinquit",
   "Suggest a channel or report a mistake": "Suggere canalem vel errorem refer",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Indices publici sunt in GitHub, et quivis addere potest. Omnis inscriptio fontem publicum requirit"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Indices publici sunt in GitHub, et quivis addere potest. Omnis inscriptio fontem publicum requirit",
+  "Preparing yt-dlp…": "yt-dlp praeparatur…",
+  "Match the frame rate": "Celeritatem tabularum aequare",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Dum video agitur, tabula ad frequentiam renovationis aptam transit, ut motus aequabilis sit; televisiones ad momentum obscurari possunt",
+  "refresh rate fps TV": "frequentia renovationis fps televisio TV",
+  "Tap to install it": "Tange ut instruas",
+  "Tap to download and install": "Tange ut deferas et instruas"
 }

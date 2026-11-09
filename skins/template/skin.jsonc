@@ -268,6 +268,25 @@
     // The page list at the left. 左边的页面列表。
     "sideBar": { "fill": "#ffffff73", "border": { "color": "#ffffff", "sides": ["right"] } },
     "statusBar": { "fill": "#ffffffb3", "border": { "color": "#b9d4ea", "sides": ["top"] } },
+    // The pages as tabs on a phone or in a narrow window, in place of the
+    // side rail; leave it out for Lumtub's own bottom bar. "position":
+    // "bottom" or "top" (under the top bar). "selected" is what the page
+    // shown sits on, "indicator" a line under it (over it at the bottom).
+    // "labels": "text" leaves out the icons; "caps" writes the words in
+    // capitals.
+    // 手机或窄窗口里代替侧栏的页面标签栏；不写就用 Lumtub 自己的底部栏。"position"：
+    // "bottom" 在底部，"top" 在顶栏下面。"selected" 是当前页下面的底，"indicator" 是
+    // 当前页的指示线（在底部时画在上沿）。"labels": "text" 不要图标，"caps" 文字大写。
+    "tabs": {
+      "position": "bottom",
+      "surface": { "fill": "#ffffffcc", "border": { "color": "#b9d4ea", "sides": ["top"] } },
+      "selected": { "fill": "#cfe6fb", "radius": 6 },
+      "text": "#4a6278",
+      "selectedText": "#0b4f8a",
+      "labels": "below",
+      "caps": false,
+      "height": 56
+    },
     // Icons on the top bar and the status line's text; give them when the
     // bars are much darker or lighter than the page.
     // 顶栏图标和状态栏文字的颜色；顶栏、状态栏比页面深很多或浅很多时一定要写。

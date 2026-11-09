@@ -72,6 +72,26 @@ void main() {
     expect(dark.forBrightness(Brightness.light), same(skin));
   });
 
+  test('phone tabs go along the bottom or under the top bar', () {
+    Skin read(Map<String, Object?> tabs) => Skin.parse({
+          'lumtubSkin': 1,
+          'id': 'x',
+          'name': 'X',
+          'colors': {'page': '#ffffff', 'text': '#000000', 'accent': '#0047cc'},
+          'window': {'tabs': tabs},
+        }, folder: '', builtIn: false);
+    final bottom = read({'surface': '#111111', 'text': '#222222'});
+    expect(bottom.tabs!.top, isFalse);
+    // Dark grey on near black is hard to read, so it is replaced.
+    expect(bottom.warnings, isNotEmpty);
+    final top = read({'position': 'top', 'labels': 'text', 'caps': true, 'indicator': '#33b5e5'});
+    expect(top.tabs!.top, isTrue);
+    expect(top.tabs!.textOnly, isTrue);
+    expect(top.tabs!.caps, isTrue);
+    expect(top.warnings, isEmpty);
+    expect(read({'enabled': false}).tabs, isNull);
+  });
+
   test('a saved colour scheme becomes its skin', () {
     expect(paletteSkinId('ricePaper'), 'rice-paper');
     expect(SkinLibrary.colorSchemeIds, containsAll([for (final p in palettes) paletteSkinId(p.id)]));

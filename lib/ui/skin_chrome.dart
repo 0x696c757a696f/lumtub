@@ -614,6 +614,149 @@ class _RailItemState extends State<_RailItem> {
   }
 }
 
+/// The pages as a row of tabs, along the bottom or under the top bar, in
+/// the skin's own look.
+class SkinTabBar extends StatelessWidget {
+  const SkinTabBar({super.key, required this.tabs, required this.destinations, required this.selected, required this.onSelected});
+  final SkinTabs tabs;
+  final List<(IconData, IconData, String)> destinations;
+  final int? selected;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = context.controlRadius.topLeft.x;
+    final items = [
+      for (var i = 0; i < destinations.length; i++)
+        _TabItem(
+          tabs: tabs,
+          icon: i == selected ? destinations[i].$2 : destinations[i].$1,
+          label: destinations[i].$3,
+          selected: i == selected,
+          radius: radius,
+          onTap: () => onSelected(i),
+        ),
+    ];
+    final bottomInset = tabs.top ? 0.0 : MediaQuery.paddingOf(context).bottom;
+    return SkinBox(
+      surface: tabs.bar,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        child: SizedBox(
+          height: tabs.height,
+          width: double.infinity,
+          child: tabs.top
+              // Words along the top scroll when they don't all fit.
+              ? LayoutBuilder(builder: (context, constraints) {
+                  final each = constraints.maxWidth / items.length;
+                  return each >= 88
+                      ? Row(children: [for (final item in items) Expanded(child: item)])
+                      : ListView(scrollDirection: Axis.horizontal, children: [for (final item in items) SizedBox(width: 96, child: item)]);
+                })
+              : Row(children: [for (final item in items) Expanded(child: item)]),
+        ),
+      ),
+    );
+  }
+}
+
+class _TabItem extends StatefulWidget {
+  const _TabItem({required this.tabs, required this.icon, required this.label, required this.selected, required this.radius, required this.onTap});
+  final SkinTabs tabs;
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final double radius;
+  final VoidCallback onTap;
+
+  @override
+  State<_TabItem> createState() => _TabItemState();
+}
+
+class _TabItemState extends State<_TabItem> {
+  bool _hover = false;
+  bool _pressed = false;
+  bool _focused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final tabs = widget.tabs;
+    final color = widget.selected ? tabs.selectedText : tabs.text;
+    final wash = _pressed ? 0.20 : _hover ? 0.10 : 0.0;
+    final label = Text(
+      tabs.caps ? widget.label.toUpperCase() : widget.label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontSize: tabs.textOnly ? 13 : 11,
+        color: color,
+        letterSpacing: tabs.caps ? 0.6 : null,
+        fontWeight: widget.selected ? FontWeight.w700 : FontWeight.w500,
+      ),
+    );
+    final content = tabs.textOnly
+        ? Center(child: label)
+        : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(widget.icon, color: color, size: 24),
+            const SizedBox(height: 2),
+            label,
+          ]);
+    final line = tabs.indicator;
+    return Semantics(
+      button: true,
+      selected: widget.selected,
+      label: widget.label,
+      child: FocusableActionDetector(
+        mouseCursor: SystemMouseCursors.click,
+        onShowHoverHighlight: (v) => setState(() => _hover = v),
+        onShowFocusHighlight: (v) => setState(() => _focused = v),
+        actions: {ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) => widget.onTap())},
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapUp: (_) => setState(() => _pressed = false),
+          onTapCancel: () => setState(() => _pressed = false),
+          child: Stack(children: [
+            Positioned.fill(
+              child: Padding(
+                padding: widget.tabs.selected == null ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                child: AnimatedScale(
+                  scale: _pressed ? 0.94 : 1,
+                  duration: Motion.of(const Duration(milliseconds: 90)),
+                  child: SkinBox(
+                    surface: widget.selected ? tabs.selected?.forState(hovered: _hover, pressed: _pressed) : null,
+                    radius: widget.radius,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: wash == 0 || (widget.selected && tabs.selected != null && !_pressed) ? null : tabs.text.withValues(alpha: wash),
+                        borderRadius: BorderRadius.circular(widget.radius),
+                        border: _focused ? Border.all(color: color, width: 2.5) : null,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: content,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (line != null && widget.selected)
+              Positioned(
+                left: tabs.top ? 6 : 14,
+                right: tabs.top ? 6 : 14,
+                top: tabs.top ? null : 0,
+                bottom: tabs.top ? 0 : null,
+                height: tabs.top ? 4 : 3,
+                child: ColoredBox(color: line),
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
 /// Linux draws no frame round a window without the system title bar, so
 /// its edges and corners are made to resize it here.
 class ResizeEdges extends StatelessWidget {

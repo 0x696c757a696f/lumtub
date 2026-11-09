@@ -88,6 +88,7 @@ anything else out and Lumtub draws it the usual way.
 | `window.titleBar` | The window frame drawn by Lumtub (computers only). 标题栏（仅电脑）。 |
 | `window.menuBar` | File, View, Play, Help with Alt keys (computers only); `position: "top"` puts it above the title bar, `appMenu` adds a bold app menu first. 菜单栏（仅电脑）；`position: "top"` 放到标题栏上面，`appMenu` 在最前面加粗体应用菜单。 |
 | `window.topBar`, `sideBar`, `statusBar` | The search row, navigation, status line; `topBarText` and `statusBarText` colour what is on them. 顶栏、侧栏、状态栏及其文字颜色。 |
+| `window.tabs` | Tabs for the pages on a phone or in a narrow window, at the bottom or under the top bar (`position`), with `selected`, `indicator`, `labels: "text"` and `caps`. 手机或窄窗口的页面标签栏，在底部或顶栏下面（`position`），可设 `selected`、`indicator`、`labels: "text"`、`caps`。 |
 | `controls` | Buttons, the main button, chips, fields, navigation. 按钮、标签、输入框、导航。 |
 | `cards` | Video cards, panels, the duration badge. 视频卡片、面板、时长角标。 |
 | `logo` | The word mark: text, font, gradient, outline, glow, badge. 标志。 |
@@ -121,7 +122,7 @@ editors and checkers.
    `buttonText`/`button`, `primaryButtonText`/`primaryButton`,
    `chipSelectedText`/`chipSelected`, `navText`/`sideBar`,
    `titleBar.text`/`titleBar.surface`, `titleBar.buttons.icon`, `topBarText`/`topBar`, `statusBarText`/`statusBar`,
-   `menuBar.text`/`menuBar.surface`.
+   `menuBar.text`/`menuBar.surface`, `tabs.text`/`tabs.surface`, `tabs.selectedText`/`tabs.selected`.
 
    **对比度按「一对」检查。** Lumtub 会拿每个文字、图标颜色去比它实际所在的底色，渐变的每一段都算：
    文字要 4.5:1，图标和强调色要 3:1。不合格的会换成黑或白，并列在「发现的问题」里。

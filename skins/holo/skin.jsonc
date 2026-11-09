@@ -34,6 +34,24 @@
     "thumbnailRadius": 0
   },
   "window": {
+    "tabs": {
+      "position": "top",
+      "height": 48,
+      "labels": "text",
+      "caps": true,
+      "surface": {
+        "fill": "#1b1f22",
+        "border": {
+          "color": "#26343a",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "text": "#9fb3bb",
+      "selectedText": "#e9f6fb",
+      "indicator": "#33b5e5"
+    },
     "background": [
       {
         "linear": {

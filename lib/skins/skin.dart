@@ -78,6 +78,9 @@ class Skin {
   late final SkinSurface? topBar = SkinSurface.parse(_window['topBar'], this);
   late final SkinSurface? sideBar = SkinSurface.parse(_window['sideBar'], this);
   late final SkinSurface? statusBar = SkinSurface.parse(_window['statusBar'], this);
+  /// The row of pages on a phone, or in a narrow window, in place of the
+  /// side rail; null keeps Lumtub's own bottom bar.
+  late final SkinTabs? tabs = SkinTabs.parse(_window['tabs'], this);
   /// Icons on the top bar; colors.text unless that is hard to see on it.
   late final Color? topBarText = _readable(colorOf(_window['topBarText'], 'window.topBarText'), topBar, 'window.topBarText', fallback: colors.text, min: 3);
   /// The status line's text.
@@ -184,6 +187,7 @@ class Skin {
       ..decorations
       ..titleBar
       ..menuBar
+      ..tabs
       ..icons
       ..press
       ..topBar
@@ -723,6 +727,63 @@ class SkinTitleBar {
       SkinSurface.parse(buttons['minimize'], skin),
       SkinSurface.parse(buttons['maximize'], skin),
       _str(buttons['glyphs']) == 'hover',
+    );
+  }
+}
+
+/// The pages as tabs on a phone: along the bottom, as on the phones of
+/// around 2010 with a glossy bar and a lit square round the page shown, or
+/// under the top bar, as words with a line under the page shown.
+class SkinTabs {
+  SkinTabs._(this.top, this.bar, this.selected, this.text, this.selectedText, this.indicator, this.textOnly, this.caps, this.height);
+  /// Under the top bar instead of along the bottom.
+  final bool top;
+  final SkinSurface bar;
+  /// What the page shown sits on; null for nothing but [indicator].
+  final SkinSurface? selected;
+  final Color text;
+  final Color selectedText;
+  /// A line under the page shown (at the top edge of the item for a
+  /// bottom bar).
+  final Color? indicator;
+  /// Words only, no icons.
+  final bool textOnly;
+  /// Words in capitals.
+  final bool caps;
+  final double height;
+
+  static SkinTabs? parse(Object? value, Skin skin) {
+    if (value is! Map<String, Object?> || value['enabled'] == false) return null;
+    final top = switch (_str(value['position'])) {
+      'top' => true,
+      null || 'bottom' => false,
+      final other => () {
+          skin.warn('window.tabs.position "$other" is unknown (bottom, top)');
+          return false;
+        }(),
+    };
+    final page = skin.colors.page;
+    final bar = SkinSurface.parse(value['surface'], skin) ?? SkinSurface._(fill: [SolidPaint(skin.colors.chrome ?? skin.colors.card ?? page)]);
+    final selected = SkinSurface.parse(value['selected'], skin);
+    final barMid = Color.alphaBlend(bar.baseColor ?? page, page);
+    final text = skin.readableOnAll(skin.colorOf(value['text'], 'window.tabs.text') ?? skin.colors.muted ?? skin.colors.text, bar.tones(page), 'window.tabs.text');
+    final selectedText = skin.readableOnAll(
+      skin.colorOf(value['selectedText'], 'window.tabs.selectedText') ?? skin.colors.accent,
+      selected?.tones(barMid) ?? bar.tones(page),
+      'window.tabs.selectedText',
+      min: 3,
+    );
+    final indicator = skin.colorOf(value['indicator'], 'window.tabs.indicator');
+    return SkinTabs._(
+      top,
+      bar,
+      selected,
+      text,
+      selectedText,
+      indicator,
+      _str(value['labels']) == 'text',
+      value['caps'] == true,
+      (_num(value['height']) ?? (top ? 44 : 56)).clamp(32, 80).toDouble(),
     );
   }
 }

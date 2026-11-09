@@ -34,6 +34,54 @@
     "thumbnailRadius": 3
   },
   "window": {
+    "tabs": {
+      "position": "top",
+      "height": 60,
+      "surface": {
+        "fill": [
+          {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#4a4f56",
+                "#2a2e33"
+              ]
+            }
+          }
+        ],
+        "border": {
+          "color": "#0e0f11",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "selected": {
+        "fill": [
+          {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#f4f5f7",
+                "#c3c7cc"
+              ]
+            }
+          },
+          {
+            "pattern": {
+              "type": "lines",
+              "color": "#ffffff33",
+              "spacing": 2,
+              "size": 1
+            }
+          }
+        ],
+        "radius": 4
+      },
+      "text": "#d6d9dd",
+      "selectedText": "#16181b",
+      "indicator": "#ff9a1f"
+    },
     "background": [
       {
         "linear": {

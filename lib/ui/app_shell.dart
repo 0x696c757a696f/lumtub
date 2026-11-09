@@ -35,6 +35,7 @@ import 'block_lists_prompt.dart';
 import 'skin_chrome.dart';
 import 'skin_paint.dart';
 import '../skins/skin_library.dart';
+import '../skins/skin.dart';
 import '../window_frame.dart';
 
 const appName = 'Lumtub';
@@ -250,6 +251,13 @@ class _AppShellState extends State<AppShell> {
                 NavigationStyle.rail => true,
                 NavigationStyle.bottom => false,
               };
+              final tabs = rail ? null : skin?.tabs;
+              Widget tabBar(SkinTabs tabs) => SkinTabBar(
+                    tabs: tabs,
+                    destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
+                    selected: _selectedIndex,
+                    onSelected: _select,
+                  );
               final scaffold = Scaffold(
                 body: Column(children: [
                   _TopBar(
@@ -259,6 +267,7 @@ class _AppShellState extends State<AppShell> {
                     searchFocus: _searchFocus,
                     onSubmit: _submitSearch,
                   ),
+                  if (tabs != null && tabs.top) tabBar(tabs),
                   Expanded(child: Stack(children: [
                     Row(children: [
                       if (rail && skin != null && skin.drawsRail)
@@ -295,7 +304,7 @@ class _AppShellState extends State<AppShell> {
                   ])),
                   if (_controller.appearance.showStatusBar) _StatusBar(controller: _controller),
                 ]),
-                bottomNavigationBar: rail ? null : NavigationBar(
+                bottomNavigationBar: rail || (tabs != null && tabs.top) ? null : tabs != null ? tabBar(tabs) : NavigationBar(
                   height: 64,
                   selectedIndex: _selectedIndex ?? 0,
                   onDestinationSelected: _select,

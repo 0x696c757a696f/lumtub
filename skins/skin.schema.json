@@ -345,6 +345,9 @@
           "$ref": "#/$defs/surface",
           "description": "Bottom status line."
         },
+        "tabs": {
+          "$ref": "#/$defs/tabs"
+        },
         "topBarText": {
           "$ref": "#/$defs/color",
           "description": "Icons on the top bar, 3:1. 顶栏图标。"
@@ -868,6 +871,9 @@
                   "$ref": "#/$defs/surface",
                   "description": "Bottom status line."
                 },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
+                },
                 "topBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Icons on the top bar, 3:1. 顶栏图标。"
@@ -1382,6 +1388,9 @@
                 "statusBar": {
                   "$ref": "#/$defs/surface",
                   "description": "Bottom status line."
+                },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
                 },
                 "topBarText": {
                   "$ref": "#/$defs/color",
@@ -1898,6 +1907,9 @@
                   "$ref": "#/$defs/surface",
                   "description": "Bottom status line."
                 },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
+                },
                 "topBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Icons on the top bar, 3:1. 顶栏图标。"
@@ -2412,6 +2424,9 @@
                 "statusBar": {
                   "$ref": "#/$defs/surface",
                   "description": "Bottom status line."
+                },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
                 },
                 "topBarText": {
                   "$ref": "#/$defs/color",
@@ -2928,6 +2943,9 @@
                   "$ref": "#/$defs/surface",
                   "description": "Bottom status line."
                 },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
+                },
                 "topBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Icons on the top bar, 3:1. 顶栏图标。"
@@ -3442,6 +3460,9 @@
                 "statusBar": {
                   "$ref": "#/$defs/surface",
                   "description": "Bottom status line."
+                },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
                 },
                 "topBarText": {
                   "$ref": "#/$defs/color",
@@ -4045,6 +4066,59 @@
       ],
       "additionalProperties": false,
       "description": "Left out in Low resource mode: never put anything needed here. 低占用模式下不画，别放有用的信息。"
+    },
+    "tabs": {
+      "type": "object",
+      "description": "The pages as tabs on a phone or in a narrow window, in place of the side rail. 手机或窄窗口里代替侧栏的页面标签栏。",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "position": {
+          "enum": [
+            "bottom",
+            "top"
+          ],
+          "description": "bottom: along the bottom; top: under the top bar. bottom 在底部，top 在顶栏下面。"
+        },
+        "surface": {
+          "$ref": "#/$defs/surface",
+          "description": "The bar. 标签栏本身。"
+        },
+        "selected": {
+          "$ref": "#/$defs/surface",
+          "description": "What the page shown sits on. 当前页下面的底。"
+        },
+        "text": {
+          "$ref": "#/$defs/color",
+          "description": "Labels, 4.5:1. 标签文字。"
+        },
+        "selectedText": {
+          "$ref": "#/$defs/color",
+          "description": "The page shown, 3:1. 当前页文字和图标。"
+        },
+        "indicator": {
+          "$ref": "#/$defs/color",
+          "description": "A line under the page shown (over it for a bottom bar). 当前页的指示线。"
+        },
+        "labels": {
+          "enum": [
+            "below",
+            "text"
+          ],
+          "description": "below: icon over the word; text: words only. below 图标在上文字在下；text 只有文字。"
+        },
+        "caps": {
+          "type": "boolean",
+          "description": "Words in capitals. 文字大写。"
+        },
+        "height": {
+          "type": "number",
+          "minimum": 32,
+          "maximum": 80
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

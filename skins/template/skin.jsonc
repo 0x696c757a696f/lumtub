@@ -103,6 +103,9 @@
 // 或者在 设置 › 外观 › 皮肤 里看，所有警告都会列出来。
 // ─────────────────────────────────────────────────────────────────────────
 {
+  // Lets editors complete and check this file. 让编辑器自动补全和检查。
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+
   // The file format. Always 1 for now. 文件格式版本，目前固定为 1。
   "lumtubSkin": 1,
 
@@ -235,7 +238,12 @@
     "topBar": { "fill": "#ffffffb3", "border": { "color": "#b9d4ea", "sides": ["bottom"] } },
     // The page list at the left. 左边的页面列表。
     "sideBar": { "fill": "#ffffff73", "border": { "color": "#ffffff", "sides": ["right"] } },
-    "statusBar": { "fill": "#ffffffb3", "border": { "color": "#b9d4ea", "sides": ["top"] } }
+    "statusBar": { "fill": "#ffffffb3", "border": { "color": "#b9d4ea", "sides": ["top"] } },
+    // Icons on the top bar and the status line's text; give them when the
+    // bars are much darker or lighter than the page.
+    // 顶栏图标和状态栏文字的颜色；顶栏、状态栏比页面深很多或浅很多时一定要写。
+    "topBarText": "#10233a",
+    "statusBarText": "#4a6278"
   },
 
   "controls": {
@@ -290,9 +298,9 @@
     "progress": { "linear": { "angle": 90, "colors": ["#19b8ff", "#8df27a"] } }
     // With "style": "lcd" 用 lcd 样式时还可以写：
     // "frame":    { ..surface.. },  — round the picture 画面外框
-    // "controls": { ..surface.. },  — the bar the buttons sit on 按钮所在的条
     // "lcd":      { ..surface.. },  — the display 显示屏
-    // "lcdText":  "#7dff5a", "lcdAccent": "#ffb02e", "spectrum": true
+    // "lcdText":  "#7dff5a", "lcdAccent": "#ffb02e", "spectrum": true,
+    // "lcdFont":  "VT323"            — the display's font 显示屏字体
   },
 
   // What should differ on a kind of device: desktop, mobile, tablet, tv.

@@ -2,6 +2,7 @@
 // field, and skins/README.md how to make your own.
 // 十六色：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
 {
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
   "lumtubSkin": 1,
   "id": "sixteen",
   "name": "Sixteen Colours",

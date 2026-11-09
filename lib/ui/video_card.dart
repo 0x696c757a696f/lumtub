@@ -68,11 +68,15 @@ String titleFor(VideoItem item) => deArrow.titleOf(item.id, item.title);
 /// The 推荐原因 line under a recommended card.
 const _reasonHeight = 20.0;
 
-({int columns, double itemHeight}) gridLayoutFor(double width) {
+/// [padding] is the space a skin leaves round each video card.
+({int columns, double itemHeight}) gridLayoutFor(double width, {double padding = 0}) {
   final columns = max(1, ((width + AppStyle.cardSpacing) / (videoCardMinWidth + AppStyle.cardSpacing)).floor());
   final itemWidth = (width - AppStyle.cardSpacing * (columns - 1)) / columns;
-  return (columns: columns, itemHeight: itemWidth * 9 / 16 + _cardInfoHeight);
+  return (columns: columns, itemHeight: (itemWidth - 2 * padding) * 9 / 16 + _cardInfoHeight + 2 * padding);
 }
+
+/// The space the current skin leaves round each video card.
+double skinCardPadding(BuildContext context) => context.skin?.videoCard == null ? 0 : context.skin!.videoCardPadding;
 
 /// Makes the app's library actions (favorites, playlists, channels, watch
 /// progress) available to every card below it without passing them down.
@@ -121,7 +125,7 @@ class SliverVideoGrid extends StatelessWidget {
                 ),
               )
             : SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent);
+          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context));
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: layout.columns,
@@ -341,7 +345,7 @@ class SliverSkeletonGrid extends StatelessWidget {
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: SliverLayoutBuilder(builder: (context, constraints) {
-          final layout = gridLayoutFor(constraints.crossAxisExtent);
+          final layout = gridLayoutFor(constraints.crossAxisExtent, padding: skinCardPadding(context));
           final width = constraints.crossAxisExtent;
           return SliverToBoxAdapter(child: Skeleton(child: SizedBox(
             width: width,

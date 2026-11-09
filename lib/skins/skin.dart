@@ -62,6 +62,10 @@ class Skin {
   late final SkinSurface? topBar = SkinSurface.parse(_window['topBar'], this);
   late final SkinSurface? sideBar = SkinSurface.parse(_window['sideBar'], this);
   late final SkinSurface? statusBar = SkinSurface.parse(_window['statusBar'], this);
+  /// Icons on the top bar; colors.text unless that is hard to see on it.
+  late final Color? topBarText = _readable(colorOf(_window['topBarText'], 'window.topBarText'), topBar, 'window.topBarText', fallback: colors.text, min: 3);
+  /// The status line's text.
+  late final Color? statusBarText = _readable(colorOf(_window['statusBarText'], 'window.statusBarText'), statusBar, 'window.statusBarText', fallback: colors.muted ?? colors.text);
 
   late final Map<String, Object?> _controls = _map(_raw['controls']);
   late final SkinSurface? button = SkinSurface.parse(_controls['button'], this);
@@ -151,7 +155,15 @@ class Skin {
       ..panel
       ..durationBadge
       ..logo
-      ..player;
+      ..player
+      ..buttonText
+      ..primaryButtonText
+      ..chipSelectedText
+      ..navSelectedText
+      ..navText
+      ..durationText
+      ..topBarText
+      ..statusBarText;
     return skin;
   }
 
@@ -700,11 +712,11 @@ class SkinPlayer {
       : style = _str(m['style']) == 'lcd' ? 'lcd' : 'default',
         frame = SkinSurface.parse(m['frame'], skin),
         progress = SkinPaint.listOf(m['progress'], skin),
-        controls = SkinSurface.parse(m['controls'], skin),
         lcd = SkinSurface.parse(m['lcd'], skin),
         lcdText = skin.colorOf(m['lcdText'], 'player.lcdText') ?? const Color(0xFF7DFF5A),
         lcdAccent = skin.colorOf(m['lcdAccent'], 'player.lcdAccent') ?? const Color(0xFFFFB02E),
-        spectrum = m['spectrum'] != false;
+        spectrum = m['spectrum'] != false,
+        lcdFont = _str(m['lcdFont']) ?? 'VT323';
 
   /// default, or lcd: a display with the time, scrolling title and a
   /// spectrum under the picture, as on late-90s media players.
@@ -713,12 +725,12 @@ class SkinPlayer {
   final SkinSurface? frame;
   /// The played part of the progress bar.
   final List<SkinPaint> progress;
-  /// The bar the buttons sit on.
-  final SkinSurface? controls;
   final SkinSurface? lcd;
   final Color lcdText;
   final Color lcdAccent;
   final bool spectrum;
+  /// The display's face; VT323 comes with Lumtub.
+  final String lcdFont;
 }
 
 String? _str(Object? v) => v is String && v.isNotEmpty ? v : null;

@@ -2,6 +2,7 @@
 // field, and skins/README.md how to make your own.
 // 千禧聊天：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
 {
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
   "lumtubSkin": 1,
   "id": "messenger",
   "name": "Millennium Chat",
@@ -177,10 +178,10 @@
         "linear": {
           "angle": 180,
           "colors": [
-            "#5aa2f0",
-            "#2a74dc",
-            "#1d6ad0",
-            "#4b95ea"
+            "#3a7ad6",
+            "#1d5cc0",
+            "#134ea8",
+            "#2a6fd0"
           ]
         }
       },
@@ -224,7 +225,8 @@
           "top"
         ]
       }
-    }
+    },
+    "topBarText": "#ffffff"
   },
   "controls": {
     "button": {

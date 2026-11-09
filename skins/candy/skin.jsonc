@@ -2,6 +2,7 @@
 // field, and skins/README.md how to make your own.
 // 糖果壳：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
 {
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
   "lumtubSkin": 1,
   "id": "candy",
   "name": "Candy Shell",
@@ -172,8 +173,8 @@
         "linear": {
           "angle": 180,
           "colors": [
-            "#3fc4d4",
-            "#007f95"
+            "#0f7f91",
+            "#006070"
           ]
         }
       },
@@ -183,7 +184,9 @@
           "top"
         ]
       }
-    }
+    },
+    "topBarText": "#ffffff",
+    "statusBarText": "#ffffff"
   },
   "controls": {
     "button": {

@@ -51,6 +51,8 @@ import 'lights_off.dart';
 import 'theater_mode.dart';
 import 'video_box.dart';
 import 'video_aspect.dart';
+import 'theme.dart';
+import '../skins/skin.dart';
 import '../l10n/l10n.dart';
 import '../video_codec.dart' show heightLabel;
 import 'motion.dart';
@@ -678,7 +680,17 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   Widget _bottomBar(BuildContext context, bool fullscreen) {
-    final primary = Theme.of(context).colorScheme.inversePrimary;
+    final skinned = context.skin?.player.progress.lastOrNull;
+    final primary = switch (skinned) {
+      SolidPaint(:final color) => color,
+      LinearPaint(:final colors) || RadialPaint(:final colors) => colors.last,
+      _ => Theme.of(context).colorScheme.inversePrimary,
+    };
+    final playedGradient = switch (skinned) {
+      final LinearPaint p => p.gradient,
+      RadialPaint(:final colors, :final stops) => LinearGradient(colors: colors, stops: stops),
+      _ => null,
+    };
     // Built here, once per rebuild of the bar, not on every position event.
     final segments = [
       for (final s in _controller.segments) ProgressSegment(s.start, s.end, _segmentColors[s.category] ?? const Color(0xFF00D400)),
@@ -704,6 +716,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
               buffered: _player.state.buffer,
               total: _player.state.duration,
               color: primary,
+              playedGradient: playedGradient,
               segments: segments,
               chapterStarts: chapterStarts,
               preview: _preview,

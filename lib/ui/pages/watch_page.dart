@@ -23,6 +23,8 @@ import '../summary_dialog.dart';
 import '../theater_mode.dart';
 import '../skeleton.dart';
 import '../theme.dart';
+import '../skin_lcd.dart';
+import '../skin_paint.dart';
 import '../warm_layer.dart';
 import '../translatable.dart';
 import '../play_queue_panel.dart';
@@ -355,11 +357,35 @@ class _Player extends StatelessWidget {
   final GlobalKey<VideoState> videoKey;
 
   @override
-  Widget build(BuildContext context) => AspectRatio(
+  Widget build(BuildContext context) {
+    final skin = context.skin;
+    final picture = _picture(context);
+    if (skin == null || (skin.player.frame == null && skin.player.style != 'lcd')) return picture;
+    final frame = skin.player.frame;
+    final playing = controller.playing;
+    return SkinBox(
+      surface: frame,
+      radius: frame == null ? 0 : context.cardRadius.topLeft.x + 6,
+      padding: frame == null ? null : const EdgeInsets.all(10),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        picture,
+        if (skin.player.style == 'lcd')
+          SkinLcd(
+            skin: skin,
+            player: controller.player,
+            title: playing?.title ?? '',
+            subtitle: playing?.channel ?? '',
+            still: controller.appearance.lowResource,
+          ),
+      ]),
+    );
+  }
+
+  Widget _picture(BuildContext context) => AspectRatio(
         key: lightsOffHole,
         aspectRatio: 16 / 9,
         child: ClipRRect(
-          borderRadius: AppStyle.cardRadius,
+          borderRadius: context.cardRadius,
           child: ColoredBox(
             color: Colors.black,
             // As in PiliNara: the video and its controls repaint apart, so

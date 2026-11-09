@@ -309,6 +309,7 @@ class SkinMenuBarView extends StatelessWidget {
     final menuColor = menuSurface?.baseColor ?? colors.surface;
     final highlight = bar.highlight?.baseColor ?? colors.primary;
     final highlightText = bar.highlightText ?? colors.onPrimary;
+    final textStyle = WidgetStatePropertyAll(Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 13, fontWeight: FontWeight.w400));
     final itemText = ThemeData.estimateBrightnessForColor(Color.alphaBlend(menuColor, colors.surface)) == Brightness.dark ? Colors.white : Colors.black;
     final itemStyle = ButtonStyle(
       foregroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.disabled)
@@ -320,7 +321,7 @@ class SkinMenuBarView extends StatelessWidget {
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
       shape: const WidgetStatePropertyAll(RoundedRectangleBorder()),
       minimumSize: const WidgetStatePropertyAll(Size(180, 30)),
-      textStyle: const WidgetStatePropertyAll(TextStyle(fontSize: 13)),
+      textStyle: textStyle,
     );
     final barStyle = ButtonStyle(
       foregroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.hovered) || s.contains(WidgetState.focused) || s.contains(WidgetState.pressed) ? highlightText : bar.text),
@@ -329,7 +330,7 @@ class SkinMenuBarView extends StatelessWidget {
       shape: const WidgetStatePropertyAll(RoundedRectangleBorder()),
       padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 10)),
       minimumSize: const WidgetStatePropertyAll(Size(0, 24)),
-      textStyle: const WidgetStatePropertyAll(TextStyle(fontSize: 13)),
+      textStyle: textStyle,
     );
     final menuStyle = MenuStyle(
       backgroundColor: WidgetStatePropertyAll(menuColor),

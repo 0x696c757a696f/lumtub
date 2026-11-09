@@ -396,7 +396,10 @@ class _TopBar extends StatelessWidget {
     return Container(
       decoration: skin?.topBar != null ? SurfaceDecoration.of(context, skin!.topBar!) : BoxDecoration(color: context.tones.chrome),
       height: AppStyle.topBarHeight,
-      child: Padding(
+      child: _onTopBar(
+        context,
+        skin?.topBar == null ? null : skin?.topBarText,
+        Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(children: [
           InkWell(
@@ -447,6 +450,17 @@ class _TopBar extends StatelessWidget {
           AccountButton(account: controller.account, onOpenSettings: () => openSettings(context, controller)),
         ]),
       ),
+      ),
+    );
+  }
+
+  /// [child] with its icon buttons drawn in [color], when a skin gives one.
+  static Widget _onTopBar(BuildContext context, Color? color, Widget child) {
+    if (color == null) return child;
+    final theme = Theme.of(context);
+    return IconButtonTheme(
+      data: IconButtonThemeData(style: IconButton.styleFrom(foregroundColor: color, disabledForegroundColor: color.withValues(alpha: 0.45)).merge(theme.iconButtonTheme.style)),
+      child: IconTheme.merge(data: IconThemeData(color: color), child: child),
     );
   }
 }
@@ -672,7 +686,7 @@ class _StatusBar extends StatelessWidget {
         null => BoxDecoration(color: context.tones.chrome, border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
       },
       alignment: Alignment.centerLeft,
-      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colors.outline, fontSize: 12, fontFamily: context.skin?.monoFont)),
+      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.skin?.statusBarText ?? context.colors.outline, fontSize: 12, fontFamily: context.skin?.monoFont)),
     );
   }
 }

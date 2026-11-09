@@ -2,9 +2,9 @@
 
 # ▶ Lumtub — Watch YouTube your way.
 
-**A desktop YouTube client with mpv playback, on-device recommendations you can understand and control, bilingual subtitles and live chat as danmaku on the video.**<br>
+**A YouTube client with mpv playback, on-device recommendations you can understand and control, bilingual subtitles and live chat as danmaku on the video.**<br>
 Watch without signing in; connect your account only when you want to interact.<br>
-For **Windows, Linux and macOS**.
+For **Windows, Linux, macOS and Android** (phones, tablets and TVs).
 
 **English** · [简体中文](README.zh-Hans.md)
 
@@ -124,11 +124,15 @@ These are also found in other YouTube clients, and all are opt-in here:
 | `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 |
 | `macos-arm64` DMG | Macs with Apple silicon (M1 and later) |
 | `macos-x64` DMG | Intel Macs |
+| `android-arm64-v8a` APK | Most Android phones, tablets and TVs (Android 7.0 or newer) — **pick this if unsure** |
+| `android-armeabi-v7a` APK | Older 32-bit Android devices and many low-cost TV boxes |
+| `android-x86_64` APK | Android emulators and x86 Chromebooks |
 
 File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place.<br>
-The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.
+The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
+**Android (preview):** open the APK and allow installing from your browser or file manager when asked. Lumtub tells you when a new version is out; install it the same way. Live streams, members-only videos and downloads don't work on Android yet.
 
 **macOS:** open the DMG and drag Lumtub into Applications. Lumtub is not notarized by Apple yet, so macOS stops it the first time it opens. Either run this once in Terminal:
 
@@ -181,7 +185,7 @@ Sponsors pay for the time to build it.
 
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/Sponsor_on_GitHub-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" height="44"></a>
 
-**Monthly sponsors** decide what comes next: Android, a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
+**Monthly sponsors** decide what comes next: a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
 One-time gifts of any amount are just as welcome. The same page is in the app under Settings › About › Support development.
 
 </div>

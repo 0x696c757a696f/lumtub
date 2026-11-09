@@ -2,9 +2,9 @@
 
 # ▶ Lumtub：按你的方式看 YouTube
 
-**桌面 YouTube 客户端：mpv 播放，本机计算、看得懂也调得动的推荐，双语字幕，直播聊天变成弹幕。**<br>
+**YouTube 客户端：mpv 播放，本机计算、看得懂也调得动的推荐，双语字幕，直播聊天变成弹幕。**<br>
 不登录也能看；只有想点赞、评论时才需要连接账号。<br>
-支持 **Windows、Linux 和 macOS**。
+支持 **Windows、Linux、macOS 和 Android**（手机、平板和电视）。
 
 [English](README.md) · **简体中文**
 
@@ -113,11 +113,15 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 | `linux-arm64` AppImage | ARM64 Linux，例如树莓派 5 |
 | `macos-arm64` DMG | Apple 芯片的 Mac（M1 及以后） |
 | `macos-x64` DMG | Intel 芯片的 Mac |
+| `android-arm64-v8a` APK | 大多数 Android 手机、平板和电视（Android 7.0 及以上）。**不确定就选这个** |
+| `android-armeabi-v7a` APK | 较老的 32 位 Android 设备和不少廉价电视盒子 |
+| `android-x86_64` APK | Android 模拟器和 x86 Chromebook |
 
 文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
 **Windows：**用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。<br>
 **Linux：**给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。<br>
-第一次启动时会从 GitHub 下载 yt-dlp 和 Deno，之后 Lumtub 会自己保持更新。
+第一次启动时会从 GitHub 下载 yt-dlp 和 Deno，之后 Lumtub 会自己保持更新。<br>
+**Android（预览版）：**打开 APK，按提示允许浏览器或文件管理器安装应用。有新版本时 Lumtub 会提醒你，用同样的方法安装即可。Android 上暂时还不能看直播、会员专属视频，也不能下载。
 
 **macOS：**打开 DMG，把 Lumtub 拖进“应用程序”。Lumtub 还没有经过 Apple 公证，所以第一次打开时会被 macOS 拦下。可以在终端里运行一次：
 
@@ -169,7 +173,7 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/%E5%9C%A8_GitHub_%E4%B8%8A%E8%B5%9E%E5%8A%A9-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="在 GitHub 上赞助" height="44"></a>
 
-**每月赞助者**决定接下来做什么：Android 版、让 Windows 安装时不再警告的代码签名证书，以及 Apple 公证。<br>
+**每月赞助者**决定接下来做什么：让 Windows 安装时不再警告的代码签名证书，以及 Apple 公证。<br>
 任何金额的一次性赞助同样欢迎。应用里的 设置 › 关于 › 支持开发 也是同一个页面。
 
 </div>

@@ -21,6 +21,7 @@ import 'ui/smooth_wheel.dart';
 import 'ui/palettes.dart';
 import 'ui/theme.dart';
 import 'windows_shell.dart';
+import 'device.dart';
 
 Future<void> main() async {
   FrameStats.sinceStart.start();
@@ -57,6 +58,7 @@ Future<void> main() async {
     // Directories are created again, with errors reported, during startup.
   }
   setLanguage(appearance.language);
+  await Device.load();
   runApp(LumtubApp(controller: AppController(appearance: appearance, appearanceStore: store)));
   unawaited(WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) => logInfo('First frame shown ${FrameStats.sinceStart.elapsedMilliseconds} ms after start')));
 }

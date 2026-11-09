@@ -35,6 +35,7 @@ import 'skin_chrome.dart';
 import 'skin_paint.dart';
 import '../skins/skin_library.dart';
 import '../window_frame.dart';
+import '../device.dart';
 
 const appName = 'Lumtub';
 
@@ -216,6 +217,8 @@ class _AppShellState extends State<AppShell> {
     return index < 0 ? null : index;
   }
 
+  bool _tvFocused = false;
+
   @override
   Widget build(BuildContext context) => CallbackShortcuts(
         bindings: {
@@ -239,6 +242,10 @@ class _AppShellState extends State<AppShell> {
             listenable: _controller,
             builder: (context, _) => LayoutBuilder(builder: (context, constraints) {
               _frames.rebuilt();
+              if (_controller.ready && !_tvFocused) {
+                _tvFocused = true;
+                Device.focusFirstOnTv();
+              }
               // Picture in picture shows the video alone.
               if (_controller.pip && _controller.playing != null && _controller.videoController != null) {
                 return PipView(controller: _controller);

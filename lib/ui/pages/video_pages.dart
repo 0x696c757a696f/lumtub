@@ -54,7 +54,7 @@ class HomeFeedPage extends StatelessWidget {
         if (showFeed) ...[
           SliverToBoxAdapter(child: PageHeader(
             tr('For you'),
-            subtitle: feed.loading && feed.items.isEmpty ? tr('Picking from your watch history…') : tr('Picked on this device from what you watch; right-click a video for "Not interested"'),
+            subtitle: feed.loading && feed.items.isEmpty ? tr('Picking from your watch history…') : touchFirst ? null : tr('Picked on this device from what you watch; right-click a video for "Not interested"'),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
               TextButton.icon(onPressed: feed.items.isEmpty ? null : controller.shuffleHomeFeed, icon: const Icon(AppIcons.shuffle, size: 18), label: Text(tr('Shuffle'))),
               IconButton(
@@ -116,7 +116,7 @@ class _FocusHome extends StatelessWidget {
             const SizedBox(height: 8),
             Text(tr('No videos on the home page. Search for what you want to watch, or open Subscriptions and Watch later.'), textAlign: TextAlign.center, style: TextStyle(color: colors.outline, height: 1.5)),
             const SizedBox(height: 16),
-            FilledButton.icon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(keyNames(tr('Search (Ctrl+K)')))),
+            FilledButton.icon(onPressed: onFocusSearch, icon: const Icon(AppIcons.magnifyingGlass), label: Text(touchFirst ? tr('Search') : keyNames(tr('Search (Ctrl+K)')))),
             const SizedBox(height: 8),
             Wrap(spacing: 8, alignment: WrapAlignment.center, children: [
               TextButton(onPressed: () => controller.navigate(PageMode.subscriptions), child: Text(tr('Subscriptions'))),
@@ -151,7 +151,7 @@ class _Welcome extends StatelessWidget {
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(tr('What do you want to watch?'), style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: colors.onSurface)),
                 const SizedBox(height: 4),
-                Text(keyNames(tr('Search YouTube, or paste a video link to play it. Press Ctrl+K to search anytime.')), style: TextStyle(color: colors.onSurfaceVariant)),
+                Text(touchFirst ? tr('Search YouTube, or paste a video link') : keyNames(tr('Search YouTube, or paste a video link to play it. Press Ctrl+K to search anytime.')), style: TextStyle(color: colors.onSurfaceVariant)),
               ])),
               const SizedBox(width: 16),
               Icon(AppIcons.magnifyingGlass, size: 40, color: colors.onSurfaceVariant),

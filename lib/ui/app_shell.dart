@@ -315,6 +315,8 @@ class _AppShellState extends State<AppShell> {
                 ]))),
                 bottomNavigationBar: rail ? null : NavigationBar(
                   height: 64,
+                  // Six labels do not fit a phone's width side by side.
+                  labelBehavior: MediaQuery.sizeOf(context).width < 600 ? NavigationDestinationLabelBehavior.onlyShowSelected : null,
                   selectedIndex: _selectedIndex ?? 0,
                   onDestinationSelected: _select,
                   destinations: [
@@ -609,7 +611,9 @@ class _SearchFieldState extends State<_SearchField> {
                 hintText: tr('Search YouTube, or paste a video link'),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 prefixIcon: const Icon(AppIcons.magnifyingGlass),
-                suffixIcon: controller.text.isEmpty
+                suffixIcon: controller.text.isEmpty && touchFirst
+                    ? null
+                    : controller.text.isEmpty
                     ? Padding(
                         padding: const EdgeInsets.only(right: 12),
                         child: Center(widthFactor: 1, child: Text(keyNames('Ctrl+K'), style: TextStyle(fontSize: 12, color: context.colors.outline))),

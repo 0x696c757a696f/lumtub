@@ -22,6 +22,8 @@ echo "Lumtub is running (pid $pid)"
 # Pictures and a short video for people to look at: a phone, a tablet and a
 # TV sized screen. Nothing here decides whether the test passed.
 shot() { adb exec-out screencap -p > "$out/$1.png"; }
+# The first run asks about block lists; Back closes that dialog.
+adb shell input keyevent KEYCODE_BACK; sleep 3; shot home-ready
 adb shell screenrecord --time-limit 30 --bit-rate 6000000 /sdcard/phone.mp4 &
 rec=$!
 sleep 2

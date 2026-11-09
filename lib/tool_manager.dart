@@ -214,6 +214,8 @@ class ToolManager {
   }
 
   Future<void> checkUpdates({bool force = false}) async {
+    // Android has no yt-dlp, Deno or ffmpeg to keep current: streams come from the core.
+    if (Platform.isAndroid || Platform.isIOS) return;
     final stamp = File('${root.path}${Platform.pathSeparator}last_update_check.txt');
     // The single-file yt-dlp is replaced as soon as possible, but a failed
     // try waits an hour, as does any check that failed, rather than costing

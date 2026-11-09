@@ -231,7 +231,7 @@ class VideoRepository {
     Stream<String> ytDlp() => region == null || region.isEmpty ? _lines(listingArguments(url)) : _regionLines(url, region);
     final web = this.web;
     if (web == null || !YoutubeListing.available) return Listing(ytDlp);
-    return Listing(() => YoutubeListing.orElse(() => web.search(query.trim(), sp: sp ?? filter.sp, region: region), ytDlp));
+    return Listing(() => YoutubeListing.orElse(() => web.search(query.trim(), sp: sp ?? filter.sp, region: region), ytDlp, videos: true));
   }
 
   /// The videos [first] finds, or a search for [query] when it finds none

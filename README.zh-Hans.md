@@ -18,7 +18,7 @@
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![翻译状态](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
-<img src="docs/screenshots/zh/home-reasons.png" alt="为你推荐，每个视频下面写着推荐原因" width="860">
+<img src="docs/screenshots/zh/subtitles.jpg" alt="意大利语访谈，同时显示意大利语原文字幕和中文翻译" width="860">
 
 [有什么不同](#有什么不同) · [功能](#功能) · [下载](#下载) · [隐私](#隐私哪些留在本机哪些会发出去) · [常见问题](#常见问题) · [支持](#支持-lumtub)
 
@@ -39,6 +39,10 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 ## 功能
 
 <table>
+<tr>
+<td align="center" width="50%"><img src="docs/screenshots/zh/home-reasons.png" alt="为你推荐，每个视频下面写着推荐原因"><br><b>每条推荐都写明原因</b></td>
+<td align="center" width="50%"><img src="docs/screenshots/danmaku.jpg" alt="直播聊天变成弹幕从画面上飞过"><br><b>直播聊天变弹幕</b></td>
+</tr>
 <tr>
 <td align="center" width="50%"><img src="docs/screenshots/zh/explore-language.png" alt="探索页的科学分区，只看说日语的视频"><br><b>按视频里真正说的语言探索</b></td>
 <td align="center" width="50%"><img src="docs/screenshots/tour.gif" alt="在十套配色间切换"><br><b>十套配色，浅色深色</b></td>

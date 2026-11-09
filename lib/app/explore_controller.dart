@@ -40,6 +40,9 @@ mixin _ExploreState {
 /// How long a zone's list shown lately can be shown again.
 const _keepExplore = Duration(minutes: 15);
 
+/// The same for live streams, which start and end all the time.
+const _keepLiveExplore = Duration(minutes: 2);
+
 /// The explore page's actions: its zones, filters and loading.
 extension ExploreActions on AppController {
   List<WordFilter> get exploreFormats => AppController.formatsOf(exploreSection);
@@ -274,7 +277,7 @@ extension ExploreActions on AppController {
       return;
     }
     if (_recentExplore.remove(_exploreKey) case (final at, final loader)) {
-      if (DateTime.now().difference(at) < _keepExplore) {
+      if (DateTime.now().difference(at) < (exploreSection.isLive ? _keepLiveExplore : _keepExplore)) {
         logDebug(() => 'Explore ${exploreSection.name} · ${exploreTopicNow.label}: shown again from ${DateTime.now().difference(at).inSeconds} s ago');
         _update(() => explore = loader..addListener(_passOn('explore')));
         return;

@@ -18,7 +18,7 @@ For **Windows, Linux and macOS**.
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
-<img src="docs/screenshots/watch.png" alt="Lumtub playing a video, with Up next beside it" width="860">
+<img src="docs/screenshots/subtitles.jpg" alt="An Italian talk with the Italian subtitle and its English translation shown together" width="860">
 
 https://github.com/user-attachments/assets/4ec072a1-6496-46b2-bcba-9b29df811646
 
@@ -50,6 +50,11 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 <td align="center"><img src="docs/screenshots/home-reasons.png" alt="For you, with the reason under every video"><br>Every recommendation says why</td>
 <td align="center"><img src="docs/screenshots/explore-language.png" alt="Explore's science zone filtered to videos spoken in Italian"><br>Explore by the language actually spoken</td>
 <td align="center"><img src="docs/screenshots/zh/home-reasons.png" alt="For you in the Chinese interface"><br>72 interface languages</td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/danmaku.jpg" alt="Live chat flying across a live stream as danmaku"><br>Live chat as danmaku</td>
+<td align="center"><img src="docs/screenshots/zh/subtitles.jpg" alt="The original subtitle with a Chinese translation above it"><br>Two subtitles at once, in any pair of languages</td>
+<td align="center"><img src="docs/screenshots/watch.png" alt="Lumtub playing a video, with Up next beside it"><br>mpv playback with Up next beside it</td>
 </tr>
 <tr>
 <td align="center"><img src="docs/screenshots/search.png" alt="Search results with channels and playlists"><br>Search that finds channels and playlists too</td>

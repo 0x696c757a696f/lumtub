@@ -42,11 +42,11 @@ STORY = {
     },
     'zh': {
         'voice': 'zf_xiaoxiao',
-        'brand': (['Lumtub，', '为桌面打造的 YouTube 客户端。'], '为桌面打造的 YouTube 客户端'),
-        'subtitles': ('双语字幕，任选两种语言同时显示。', '双语字幕', ['任选两种语言', '边播边翻译']),
-        'danmaku': ('直播聊天变成弹幕，从画面上飞过。', '弹幕', ['直播聊天', '聊天回放']),
-        'home': ('推荐只在你自己的电脑上计算，每张卡片都说明原因。', '会解释自己的推荐', ['只在本机计算', '每张卡片说明原因']),
-        'palettes': ('十套配色，七十二种界面语言。', '换成你喜欢的样子', ['10 套配色', '72 种语言']),
+        'brand': (['Lumtub，', '桌面上的 YouTube。'], '为桌面打造的 YouTube 客户端'),
+        'subtitles': ('双语字幕，两种语言一起显示。', '双语字幕', ['任选两种语言', '边播边翻译']),
+        'danmaku': ('直播聊天，变成弹幕飞过画面。', '弹幕', ['直播聊天', '聊天回放']),
+        'home': ('推荐在本机计算，每条都写明原因。', '会解释自己的推荐', ['只在本机计算', '每张卡片说明原因']),
+        'palettes': ('十套配色，七十二种语言。', '换成你喜欢的样子', ['10 套配色', '72 种语言']),
         'outro': (['免费、开源、没有广告。'], '免费 · 开源 · 无广告', '免费下载'),
     },
 }
@@ -55,6 +55,11 @@ STORY = {
 # interface language, else the English one), or a stretch of the recorded
 # tour at a playback speed.
 SCREENS = [('subtitles', 'watch-subtitles'), ('danmaku', 'danmaku'), ('home', 'home-reasons'), ('palettes', 2.5)]
+
+# Pictures taken on a real computer, which win over the showcase's: CI
+# runners are refused YouTube's subtitles and live chat.
+TAKEN = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'docs', 'screenshots')
+TAKEN_NAMES = {'watch-subtitles': 'subtitles', 'danmaku': 'danmaku'}
 
 
 def ease_out(x):
@@ -250,8 +255,12 @@ def build(story, voice, scenes, lang, folder):
 
 def picture(folder, name, lang):
     """The showcase's picture [name] in [lang]'s interface, else in English."""
-    for file in ([f'{name}-zh-Hans.png'] if lang == 'zh' else []) + [f'{name}.png']:
-        path = os.path.join(folder, file)
+    files = [os.path.join(folder, f'{name}-zh-Hans.png')] if lang == 'zh' else []
+    files.append(os.path.join(folder, f'{name}.png'))
+    if name in TAKEN_NAMES:
+        taken = TAKEN_NAMES[name]
+        files[:0] = ([os.path.join(TAKEN, 'zh', f'{taken}.jpg')] if lang == 'zh' else []) + [os.path.join(TAKEN, f'{taken}.jpg')]
+    for path in files:
         if os.path.exists(path):
             img = Image.open(path).convert('RGB')
             # Cut to 16:9 around the middle, as the tour's frames are.

@@ -162,4 +162,13 @@ void main() {
 
     await expectLater(YoutubeListing.orElse(partial, fallback), emitsInOrder(['web', emitsError(isStateError)]));
   });
+
+  test('a search that finds only channels still asks yt-dlp', () async {
+    Stream<String> fallback() => Stream.value('fallback');
+    const channel = '{"_type":"url","ie_key":"YoutubeTab","url":"https://www.youtube.com/@a"}';
+    const video = '{"_type":"url","ie_key":"Youtube","url":"https://www.youtube.com/watch?v=a"}';
+    expect(await YoutubeListing.orElse(() => Stream.value(channel), fallback, videos: true).toList(), [channel, 'fallback']);
+    expect(await YoutubeListing.orElse(() => Stream.fromIterable([channel, video]), fallback, videos: true).toList(), [channel, video]);
+    expect(await YoutubeListing.orElse(() => Stream.value(channel), fallback).toList(), [channel]);
+  });
 }

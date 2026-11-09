@@ -520,6 +520,7 @@ class SkinSurface {
             spreadRadius: _num(s['spread']) ?? 0,
           ),
     ];
+    final hover = SkinSurface.parse(value['hover'], skin);
     return SkinSurface._(
       fill: SkinPaint.listOf(value['fill'], skin),
       border: border,
@@ -530,10 +531,19 @@ class SkinSurface {
       shadows: shadows,
       gloss: (_num(value['gloss']) ?? 0).clamp(0, 1).toDouble(),
       glow: skin.colorOf(value['glow'], 'glow'),
-      hover: SkinSurface.parse(value['hover'], skin),
+      hover: hover,
       pressed: SkinSurface.parse(value['pressed'], skin),
-      focused: SkinSurface.parse(value['focused'], skin),
+      focused: SkinSurface.parse(value['focused'], skin) ?? _remoteFocus(hover, skin),
     );
+  }
+
+  /// On a TV the remote's arrows are the only pointer, and a hover look is
+  /// often too faint to find from the sofa: a skin that gives no focused
+  /// look gets its hover look with a ring and glow in its accent.
+  static SkinSurface? _remoteFocus(SkinSurface? hover, Skin skin) {
+    if (Skin.formFactor != 'tv') return null;
+    final ring = SkinSurface._(fill: const [], border: skin.colors.accent, borderWidth: 3, glow: skin.colors.accent);
+    return hover?.merge(ring) ?? ring;
   }
 
   /// This surface with [over]'s fields where it has them.

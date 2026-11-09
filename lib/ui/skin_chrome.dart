@@ -693,7 +693,7 @@ class _RailItemState extends State<_RailItem> {
             scale: _pressed ? 0.94 : _focused ? 1.04 : 1,
             duration: Motion.of(const Duration(milliseconds: 90)),
             child: SkinBox(
-              surface: widget.surface?.forState(hovered: _hover, pressed: _pressed),
+              surface: widget.surface?.forState(hovered: _hover, pressed: _pressed, focused: _focused),
               radius: widget.radius,
               child: Container(
                 decoration: BoxDecoration(

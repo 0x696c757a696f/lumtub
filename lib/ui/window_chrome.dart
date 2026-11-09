@@ -96,7 +96,7 @@ class _WindowChromeState extends State<WindowChrome> {
             ],
             Expanded(child: child!),
           ]);
-          final wantsDesk = skin != null && skin.glass && appearance.seeThrough && !appearance.lowResource && WindowFrame.supported;
+          final wantsDesk = skin != null && skin.glass && appearance.seeThrough && !appearance.lowResource && WindowFrame.canSeeThrough;
           _useSeeThrough(wantsDesk, skin?.brightness == Brightness.dark);
           if (skin != null) content = SkinBackdrop(skin: skin, plain: appearance.lowResource, seeThrough: wantsDesk && _canSeeThrough, child: content);
           if (ownTitleBar && !bare) content = ResizeEdges(child: content);

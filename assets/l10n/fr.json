@@ -2990,5 +2990,11 @@
   "{0} was taken from \"{1}\"": "{0} a été retiré de « {1} »",
   "{0} were found, and your filters and settings left all of them out": "{0} trouvés, mais vos filtres et paramètres les ont tous exclus",
   "{0}: {1} s": "{0} : {1} s",
-  "Library": "Bibliothèque"
+  "Library": "Bibliothèque",
+  "Add a skin from a file": "Ajouter un skin depuis un fichier",
+  "A skin.jsonc, or a zip of a skin's folder": "Un skin.jsonc, ou un zip du dossier d'un skin",
+  "Added {0}": "{0} ajouté",
+  "This is not a skin: {0}": "Ce n'est pas un skin : {0}",
+  "See the wallpaper through the app": "Laisser voir le fond d'écran",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Le paysage s'efface et le fond d'écran de l'accueil apparaît, flouté quand le système le permet. Prend effet au prochain démarrage de Lumtub. Désactivé en mode économie de ressources"
 }

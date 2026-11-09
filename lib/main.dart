@@ -50,6 +50,8 @@ Future<void> main() async {
   } catch (e) {
     logError('Could not read the translations', e);
   }
+  // Before the skins: a skin's overrides depend on the kind of device.
+  await Device.load();
   AppearanceSettingsStore? store;
   var appearance = const AppearanceSettings();
   try {
@@ -61,7 +63,6 @@ Future<void> main() async {
     // Directories are created again, with errors reported, during startup.
   }
   setLanguage(appearance.language);
-  await Device.load();
   runApp(LumtubApp(controller: AppController(appearance: appearance, appearanceStore: store)));
   unawaited(WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) => logInfo('First frame shown ${FrameStats.sinceStart.elapsedMilliseconds} ms after start')));
 }

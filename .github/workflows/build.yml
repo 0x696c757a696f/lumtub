@@ -924,6 +924,10 @@ jobs:
             # 16 KB page alignment of the uncompressed native libraries.
             "$tools/zipalign" -c -P 16 -v 4 "$apk" | grep -E '\.so|Verification' | tail -12
           done
+          # Which signature schemes this apksigner knows (v3.2 adds ML-DSA beside the classic key).
+          echo "build-tools: $(basename "$tools")"; "$tools/apksigner" version || true
+          "$tools/apksigner" sign --help 2>&1 | grep -iE 'v3|v4|pqc|ml-?dsa|lineage' || true
+          "$tools/apksigner" verify -v "dist/Lumtub_${LUMTUB_VERSION}_android-arm64-v8a.apk" | grep -iE 'Verified using|Number of signers' || true
           rm -f android/release.jks android/key.properties
 
       - name: Android - start an emulator

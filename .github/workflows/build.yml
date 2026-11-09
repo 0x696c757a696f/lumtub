@@ -492,6 +492,13 @@ jobs:
           echo "liblumtub_core.so: $(stat -c %s "$core") bytes"
           echo "LUMTUB_CORE_DLL=$core" >> "$GITHUB_ENV"
 
+      # GitHub's release downloads time out now and then; keep them between runs.
+      - name: Linux - cache downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .linux-downloads
+          key: linux-downloads-${{ matrix.package_arch }}-${{ env.MPV_RELEASE }}-v1
+
       - name: Linux - download libmpv
         run: |
           case "$PACKAGE_ARCH" in
@@ -499,8 +506,9 @@ jobs:
             arm64) arch=arm64; sum=d0ae5dbf8fed6e63353f1d1614c4ee55edb1eac41d625090dbef196027a479ed ;;
           esac
           name="libmpv-0.41.0-linux-$arch-gpl-$MPV_RELEASE"
-          archive="$RUNNER_TEMP/$name.tar.gz"
-          curl -fsSL --retry 8 --retry-all-errors -o "$archive" "https://github.com/jason-yau/mpv-prebuilt/releases/download/$MPV_RELEASE/$name.tar.gz"
+          mkdir -p .linux-downloads
+          archive="$PWD/.linux-downloads/$name.tar.gz"
+          [ -s "$archive" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$archive" "https://github.com/jason-yau/mpv-prebuilt/releases/download/$MPV_RELEASE/$name.tar.gz"
           echo "$sum  $archive" | sha256sum -c -
           tar -xzf "$archive" -C "$RUNNER_TEMP"
           mv "$RUNNER_TEMP/$name" "$RUNNER_TEMP/mpv"
@@ -554,14 +562,14 @@ jobs:
             echo "The AppDir needs $newest, newer than Ubuntu 22.04's glibc 2.35." >&2
             exit 1
           fi
-          tool="$RUNNER_TEMP/appimagetool"
-          curl -fsSL --retry 5 --retry-all-errors -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-$APPIMAGE_ARCH.AppImage"
+          tool="$PWD/.linux-downloads/appimagetool-$APPIMAGE_ARCH"
+          [ -s "$tool" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-$APPIMAGE_ARCH.AppImage"
           echo "$APPIMAGETOOL_SHA256  $tool" | sha256sum -c -
           chmod +x "$tool"
           # No FUSE in the container: the tool unpacks itself and runs.
           # The runtime appimagetool would fetch itself, with retries.
-          runtime="$RUNNER_TEMP/runtime"
-          curl -fsSL --retry 5 --retry-all-errors -o "$runtime" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$APPIMAGE_ARCH"
+          runtime="$PWD/.linux-downloads/runtime-$APPIMAGE_ARCH"
+          [ -s "$runtime" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$runtime" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$APPIMAGE_ARCH"
           APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$APPIMAGE_ARCH" "$tool" --runtime-file "$runtime" --no-appstream "$RUNNER_TEMP/AppDir" "Lumtub_${LUMTUB_VERSION}_linux-$PACKAGE_ARCH.AppImage"
           ls -l Lumtub_*.AppImage
 

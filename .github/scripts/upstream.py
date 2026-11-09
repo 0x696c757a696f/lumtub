@@ -82,6 +82,30 @@ def ffmpeg(text, changes):
     return text.replace(pinned[0], f"FFMPEG_TAG: {newest}")
 
 
+def ffmpeg_prebuilt(text, changes):
+    """macOS FFmpeg from dfloresc/ffmpeg-macos-builds, pinned by release and checksums."""
+    pinned = re.search(r"FFMPEG_RELEASE: (v[\w.-]+)", text)
+    if not pinned:
+        return text
+    release = get("https://api.github.com/repos/dfloresc/ffmpeg-macos-builds/releases/latest")
+    tag = release["tag_name"]
+    if tag == pinned[1] or not re.fullmatch(r"v\d+(\.\d+)*(-\d+)?", tag) or version(tag) <= version(pinned[1]):
+        return text
+    sums = {}
+    for asset in release["assets"]:
+        m = re.fullmatch(rf"ffmpeg-{re.escape(tag[1:])}-lgpl-macos-(arm64|x86_64)\.tar\.xz", asset["name"])
+        if m:
+            sums[m[1]] = sha256(asset)
+    if set(sums) != {"arm64", "x86_64"}:
+        print(f"ffmpeg-macos-builds {tag} lacks the LGPL arm64 and x86_64 archives; skipped.")
+        return text
+    text = text.replace(pinned[0], f"FFMPEG_RELEASE: {tag}")
+    for arch, digest in sums.items():
+        text = re.sub(rf"(\b{arch}\) sum=)[0-9a-f]{{64}}", rf"\g<1>{digest}", text)
+    changes.append(f"macOS FFmpeg {pinned[1]} -> {tag}")
+    return text
+
+
 def appimagetool(text, changes):
     """appimagetool, pinned by release and checksums."""
     pinned = re.search(r"appimagetool/releases/download/([\d.]+)/", text)
@@ -137,7 +161,7 @@ def main():
     with open(BUILD, encoding="utf-8") as f:
         text = f.read()
     changes, notes = [], []
-    for check in (mpv_prebuilt, ffmpeg, appimagetool):
+    for check in (mpv_prebuilt, ffmpeg, ffmpeg_prebuilt, appimagetool):
         try:
             text = check(text, changes)
         except Exception as e:

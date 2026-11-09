@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} とスクロールホイール: 1 段階あたり {1}%",
   "{0} was taken from \"{1}\"": "{0} を「{1}」から移しました",
   "{0} were found, and your filters and settings left all of them out": "{0} 件見つかりましたが、フィルターと設定によりすべて除外されました",
-  "{0}: {1} s": "{0}: {1} 秒"
+  "{0}: {1} s": "{0}: {1} 秒",
+  "Library": "ライブラリ"
 }

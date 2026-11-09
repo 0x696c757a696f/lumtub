@@ -31,6 +31,8 @@ adb shell input swipe 540 1700 540 900 400; sleep 4; shot phone-scrolled
 adb shell input swipe 540 900 540 1700 400; sleep 4
 adb shell input swipe 540 1700 540 500 300; sleep 5; shot phone-more
 adb shell input swipe 540 500 540 1700 300; sleep 4
+adb shell input tap 945 2330; sleep 5; shot phone-library
+adb shell input tap 135 2330; sleep 3
 wait "$rec" 2> /dev/null
 adb pull /sdcard/phone.mp4 "$out/phone.mp4" > /dev/null 2>&1
 

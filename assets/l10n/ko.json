@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} 및 스크롤 휠: 단계당 {1}%",
   "{0} was taken from \"{1}\"": "{0}을(를) “{1}”에서 가져왔습니다",
   "{0} were found, and your filters and settings left all of them out": "{0}개를 찾았지만 필터와 설정 때문에 모두 제외되었습니다",
-  "{0}: {1} s": "{0}: {1}초"
+  "{0}: {1} s": "{0}: {1}초",
+  "Library": "보관함"
 }

@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} und Mausrad: {1} % pro Schritt",
   "{0} was taken from \"{1}\"": "{0} wurde aus „{1}“ übernommen",
   "{0} were found, and your filters and settings left all of them out": "{0} gefunden, aber deine Filter und Einstellungen haben alle ausgeblendet",
-  "{0}: {1} s": "{0}: {1} s"
+  "{0}: {1} s": "{0}: {1} s",
+  "Library": "Mediathek"
 }

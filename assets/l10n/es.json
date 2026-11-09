@@ -2989,5 +2989,6 @@
   "{0} and scroll wheel: {1}% per step": "{0} y rueda del ratón: {1} % por paso",
   "{0} was taken from \"{1}\"": "{0} se tomó de «{1}»",
   "{0} were found, and your filters and settings left all of them out": "Se encontraron {0}, pero tus filtros y ajustes los excluyeron todos",
-  "{0}: {1} s": "{0}: {1} s"
+  "{0}: {1} s": "{0}: {1} s",
+  "Library": "Biblioteca"
 }

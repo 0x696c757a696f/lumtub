@@ -68,6 +68,15 @@ class _AppShellState extends State<AppShell> {
     (PageMode.downloads, AppIcons.arrowCircleDown, AppIcons.arrowCircleDownFill, tr('Downloads')),
   ];
 
+  /// The bottom bar has room for four: History, Playlists and Downloads share
+  /// one Library tab, with a switch at the top of each of those pages.
+  static const _library = {PageMode.history, PageMode.playlists, PageMode.downloads};
+  static final _bottomDestinations = [
+    ..._destinations.where((d) => !_library.contains(d.$1)),
+    (PageMode.history, AppIcons.bookOpen, AppIcons.bookOpenFill, tr('Library')),
+  ];
+  PageMode _lastLibrary = PageMode.history;
+
   @override
   void initState() {
     super.initState();
@@ -212,6 +221,40 @@ class _AppShellState extends State<AppShell> {
     if (_controller.canGoBack) _controller.goBack();
   }
 
+  int get _bottomIndex {
+    if (_library.contains(_controller.mode)) return _bottomDestinations.length - 1;
+    final index = _bottomDestinations.indexWhere((d) => d.$1 == _controller.mode);
+    return index < 0 ? 0 : index;
+  }
+
+  void _selectBottom(int index) {
+    if (index == _bottomDestinations.length - 1) {
+      _controller.navigate(_library.contains(_controller.mode) ? _controller.mode : _lastLibrary);
+    } else {
+      _select(_destinations.indexWhere((d) => d.$1 == _bottomDestinations[index].$1));
+    }
+  }
+
+  /// History, Playlists and Downloads under the bottom bar's Library tab.
+  Widget _libraryTabs(Widget page) => Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: SegmentedButton<PageMode>(
+            showSelectedIcon: false,
+            segments: [
+              for (final d in _destinations.where((d) => _library.contains(d.$1)))
+                ButtonSegment(value: d.$1, label: Text(d.$4, overflow: TextOverflow.ellipsis)),
+            ],
+            selected: {_controller.mode},
+            onSelectionChanged: (picked) {
+              _lastLibrary = picked.first;
+              _controller.navigate(picked.first);
+            },
+          ),
+        ),
+        Expanded(child: page),
+      ]);
+
   int? get _selectedIndex {
     final index = _destinations.indexWhere((d) => d.$1 == _controller.mode);
     return index < 0 ? null : index;
@@ -303,7 +346,7 @@ class _AppShellState extends State<AppShell> {
                         duration: Motion.of(Ease.fade),
                         // Keyed per page so each page's list keeps its scroll position
                         // (PageStorage) when the user comes back to it.
-                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: _content())),
+                        child: KeyedSubtree(key: PageStorageKey<String>(_pageKey), child: VideoActions(controller: _controller, child: !rail && !_controller.onWatchPage && _library.contains(_controller.mode) ? _libraryTabs(_content()) : _content())),
                       )),
                     ]),
                     // The video keeps playing over the pages; the watch page
@@ -318,10 +361,10 @@ class _AppShellState extends State<AppShell> {
                   height: 64,
                   // Six labels do not fit a phone's width side by side.
                   labelBehavior: MediaQuery.sizeOf(context).width < 600 ? NavigationDestinationLabelBehavior.onlyShowSelected : null,
-                  selectedIndex: _selectedIndex ?? 0,
-                  onDestinationSelected: _select,
+                  selectedIndex: _bottomIndex,
+                  onDestinationSelected: _selectBottom,
                   destinations: [
-                    for (final d in _destinations) NavigationDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: d.$4),
+                    for (final d in _bottomDestinations) NavigationDestination(icon: Icon(d.$2), selectedIcon: Icon(d.$3), label: d.$4),
                   ],
                 ),
               );

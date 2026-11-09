@@ -181,8 +181,8 @@ ThemeData buildAppTheme(
     brightness = skin.brightness;
     highContrast = false;
     final c = skin.colors;
-    final tones = PaletteTones(c.page, c.text, c.accent, card: c.card, indicator: c.selected);
-    palette = Palette('skin:${skin.id}', skin.id, '', tones, tones);
+    final tones = PaletteTones(c.page, c.text, c.accent, card: c.card, indicator: c.selected, chrome: c.chrome, glow: c.tint);
+    palette = Palette('skin:${skin.id}', skin.id, '', tones, tones, strong: c.strong);
   }
   final dark = brightness == Brightness.dark;
   final shape = skin?.shape;
@@ -196,7 +196,7 @@ ThemeData buildAppTheme(
     // Windows' high contrast themes: borders and secondary text as strong as text.
     scheme = scheme.copyWith(outline: scheme.onSurface, outlineVariant: scheme.onSurfaceVariant, surface: dark ? Colors.black : Colors.white);
   } else if (palette != null) {
-    scheme = paletteScheme(scheme, palette, brightness, pureBlack: skin == null && pureBlack);
+    scheme = paletteScheme(scheme, palette, brightness, pureBlack: (skin == null || skin.followsThemeMode) && pureBlack);
     if (skin != null) {
       final c = skin.colors;
       scheme = scheme.copyWith(
@@ -210,7 +210,7 @@ ThemeData buildAppTheme(
   } else {
     scheme = _neutralScheme(scheme, seed, brightness, pureBlack: pureBlack);
   }
-  var chrome = highContrast || skin != null ? null : paletteChrome(palette, brightness, pureBlack: pureBlack);
+  var chrome = highContrast || (skin != null && skin.followsThemeMode && dark && pureBlack) ? null : skin != null ? skin.colors.chrome : paletteChrome(palette, brightness, pureBlack: pureBlack);
   if (warmth > 0 && !highContrast) {
     scheme = warmScheme(scheme, warmth);
     if (chrome != null) chrome = warmColor(chrome, warmth);

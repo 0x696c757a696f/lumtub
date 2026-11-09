@@ -32,10 +32,11 @@ void main() {
     expect(buildAppTheme(Colors.red, Brightness.dark, palette: paletteOf('ricePaper'), pureBlack: true).colorScheme.surface, Colors.black);
   });
 
-  test('appearance keeps palette, schedules, warmth and layout', () {
-    const a = AppearanceSettings(palette: 'rime', eyeCare: EyeCare.hours, warmth: 0.6, eyeCareStart: 21, eyeCareEnd: 6, darkSchedule: DarkSchedule.sun, lowResource: true, layout: VideoLayout.text);
+  test('appearance keeps the colour scheme (now a skin), schedules, warmth and layout', () {
+    const a = AppearanceSettings(palette: 'nightVoyage', eyeCare: EyeCare.hours, warmth: 0.6, eyeCareStart: 21, eyeCareEnd: 6, darkSchedule: DarkSchedule.sun, lowResource: true, layout: VideoLayout.text);
     final b = AppearanceSettings.fromJson(a.toJson());
-    expect((b.palette, b.eyeCare, b.warmth, b.eyeCareStart, b.eyeCareEnd, b.darkSchedule, b.lowResource, b.layout), ('rime', EyeCare.hours, 0.6, 21, 6, DarkSchedule.sun, true, VideoLayout.text));
+    expect((b.palette, b.skin), ('', 'night-voyage'));
+    expect((b.eyeCare, b.warmth, b.eyeCareStart, b.eyeCareEnd, b.darkSchedule, b.lowResource, b.layout), (EyeCare.hours, 0.6, 21, 6, DarkSchedule.sun, true, VideoLayout.text));
     expect(b.effectiveThumbnails, ThumbnailQuality.medium);
     expect(b.effectiveMotion, MotionPreference.reduced);
     expect(const AppearanceSettings().palette, '');

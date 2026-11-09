@@ -74,8 +74,11 @@ class _SkinsPage extends StatelessWidget {
             for (final MapEntry(key: path, value: error) in library.errors.entries) (path, error),
           ];
           return ListView(padding: const EdgeInsets.only(bottom: 40), children: [
+            _header(context, tr('Color schemes')),
+            grid([for (final s in library.builtIn) if (s.followsThemeMode) s], standard: true),
+            _tip(context, tr('These follow light and dark mode and keep Lumtub\'s own shapes; only the colours change.')),
             _header(context, tr('Built-in skins')),
-            grid(library.builtIn, standard: true),
+            grid([for (final s in library.builtIn) if (!s.followsThemeMode) s]),
             _tip(context, tr('A skin changes the colours, shapes, window frame and decorations. Warm light and Low resource mode still work: warm light tints skins too, and Low resource mode leaves out their decorations.')),
             if (library.user.isNotEmpty) ...[
               _header(context, tr('Your skins')),
@@ -158,8 +161,19 @@ class SkinCard extends StatelessWidget {
 
   Widget _preview(BuildContext context) {
     final skin = this.skin;
+    if (skin != null && skin.followsThemeMode) {
+      return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Expanded(child: ClipRect(child: _drawn(context, skin.forBrightness(Brightness.light)))),
+        Expanded(child: ClipRect(child: _drawn(context, skin.forBrightness(Brightness.dark)))),
+      ]);
+    }
+    return _drawn(context, skin);
+  }
+
+  Widget _drawn(BuildContext context, Skin? skin) {
     if (skin == null) {
-      final colors = context.colors;
+      // Lumtub's own neutral look, whatever is chosen now.
+      const colors = ColorScheme.light(surface: Colors.white, onSurface: Color(0xFF18181B), surfaceContainer: Color(0xFFF4F4F5));
       return ColoredBox(
         color: colors.surface,
         child: Padding(
@@ -186,7 +200,7 @@ class SkinCard extends StatelessWidget {
       ColoredBox(color: skin.colors.page),
       SkinLayers(skin.background),
       Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        box(bar?.surface ?? skin.topBar, skin.colors.accent, height: 14, child: Row(children: [
+        box(bar?.surface ?? skin.topBar, skin.colors.chrome ?? Color.lerp(skin.colors.page, skin.colors.text, 0.08)!, height: 14, child: Row(children: [
           const SizedBox(width: 5),
           Container(width: 22, height: 3, color: bar?.text ?? skin.colors.text),
           const Spacer(),

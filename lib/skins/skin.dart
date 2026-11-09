@@ -38,6 +38,22 @@ class Skin {
 
   late final Brightness brightness = _raw['brightness'] == 'dark' ? Brightness.dark : Brightness.light;
 
+  /// The dark side of a skin whose "brightness" is "auto": it follows the
+  /// theme mode, light or dark, with `overrides.dark` laid over it there.
+  Skin? _dark;
+  bool get followsThemeMode => _dark != null || _light != null;
+  Skin? _light;
+
+  /// This skin as drawn in [mode]: the dark side of an "auto" skin in dark
+  /// mode, otherwise itself.
+  Skin forBrightness(Brightness mode) => mode == Brightness.dark ? (_dark ?? this) : (_light ?? this);
+
+  /// Whether the skin draws the side rail, or leaves it as Lumtub's own.
+  bool get drawsRail => sideBar != null || navSelected != null;
+
+  /// Whether the skin has its own logo, or keeps Lumtub's.
+  bool get hasLogo => _map(_raw['logo']).isNotEmpty;
+
   /// Font families to load from files in the skin's folder.
   late final Map<String, String> fontFiles = _strings(_raw['fonts']);
 
@@ -132,9 +148,23 @@ class Skin {
     if (id is! String || !RegExp(r'^[a-z0-9][a-z0-9._-]{0,63}$').hasMatch(id)) {
       throw const FormatException('"id" must be lower case letters, digits, dots, dashes or underscores');
     }
-    final skin = Skin._(id, _withOverrides(json, formFactor), folder, builtIn, []);
-    // Touch everything now, so mistakes show as warnings when it is
-    // loaded, not later while drawing.
+    if (json['brightness'] == 'auto') {
+      Skin side(String mode) {
+        final merged = _deepMerge(_withOverrides(json, formFactor), {..._map(_map(json['overrides'])[mode]), 'brightness': mode});
+        return _checked(Skin._(id, merged, folder, builtIn, []));
+      }
+      final light = side('light'), dark = side('dark');
+      light.warnings.addAll(dark.warnings.map((w) => 'dark: $w'));
+      light._dark = dark;
+      dark._light = light;
+      return light;
+    }
+    return _checked(Skin._(id, _withOverrides(json, formFactor), folder, builtIn, []));
+  }
+
+  // Touch everything now, so mistakes show as warnings when it is loaded,
+  // not later while drawing.
+  static Skin _checked(Skin skin) {
     skin
       ..colors
       ..shape
@@ -230,6 +260,10 @@ class SkinColors {
     final chosen = selected == null ? page : Color.alphaBlend(selected!, page);
     onSelected = onSelectedRaw == null ? null : skin.readableOn(onSelectedRaw, chosen, 'colors.onSelected');
     if (selected != null && onSelectedRaw == null) skin.readableOn(text, chosen, 'colors.text on colors.selected');
+    chrome = skin.colorOf(m['chrome'], 'colors.chrome');
+    if (chrome != null) skin.readableOn(text, Color.alphaBlend(chrome!, page), 'colors.text on colors.chrome');
+    tint = ((m['tint'] is num ? m['tint'] as num : 0).toDouble()).clamp(0.0, 0.3);
+    strong = m['strong'] == true;
     final reasonRaw = skin.colorOf(m['reason'], 'colors.reason');
     reason = reasonRaw == null ? null : skin.readableOn(reasonRaw, card == null ? page : Color.alphaBlend(card!, page), 'colors.reason');
   }
@@ -252,6 +286,13 @@ class SkinColors {
   late final Color? onSelected;
   /// The line under a recommended video saying why.
   late final Color? reason;
+  /// The top bar and side rail round the page, where the skin draws no
+  /// surface of its own for them.
+  late final Color? chrome;
+  /// How much of the accent fields, menus and placeholders take on, 0–0.3.
+  late final double tint;
+  /// Borders and secondary text as strong as can be.
+  late final bool strong;
 }
 
 class SkinShape {

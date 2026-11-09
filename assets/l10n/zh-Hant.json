@@ -3030,5 +3030,7 @@
   "The guide, the format and the pitfalls to avoid": "說明、檔案格式和避坑指南",
   "Use the system title bar": "使用系統標題列",
   "Keep the usual window frame instead of the one a skin draws": "保留系統的視窗邊框，不用皮膚自己畫的",
-  "Problems found": "發現的問題"
+  "Problems found": "發現的問題",
+  "Color schemes": "配色方案",
+  "These follow light and dark mode and keep Lumtub's own shapes; only the colours change.": "這些跟隨淺色/深色模式，保留 Lumtub 原本的形狀，只換顏色。"
 }

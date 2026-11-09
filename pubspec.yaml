@@ -38,6 +38,16 @@ flutter:
   assets:
     - assets/l10n/
     # Built-in skins and the template users start from (skins/README.md).
+    - skins/rice-paper/
+    - skins/candlelight/
+    - skins/ink-bamboo/
+    - skins/rime/
+    - skins/pine-soot/
+    - skins/night-voyage/
+    - skins/dusk-hills/
+    - skins/falling-petals/
+    - skins/sandstone/
+    - skins/high-contrast/
     - skins/aero/
     - skins/chrome/
     - skins/candy/

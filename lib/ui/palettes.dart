@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../appearance_settings.dart' show paletteSkinId;
 import '../l10n/l10n.dart';
 
 /// One side of a [Palette]. The page, its text and the accent; optionally
@@ -81,6 +82,9 @@ const palettes = [
       PaletteTones(Color(0xFF1E1611), Color(0xFFEFE2D8), Color(0xFFE88E5F), chrome: Color(0xFF17100C), glow: 0.06, indicator: Color(0xFF3F2619))),
   Palette('highContrast', 'High Contrast', 'Pure black and white, the clearest text and borders', PaletteTones(Color(0xFFFFFFFF), Color(0xFF000000), Color(0xFF0047CC)), PaletteTones(Color(0xFF000000), Color(0xFFFFFFFF), Color(0xFFFFD60A)), strong: true),
 ];
+
+/// The colour scheme [skin] is, if it is one.
+Palette? paletteForSkin(String skin) => palettes.where((p) => paletteSkinId(p.id) == skin).firstOrNull;
 
 /// The palette [id] names, none for the default neutral one.
 Palette? paletteOf(String id) => palettes.where((p) => p.id == id).firstOrNull;

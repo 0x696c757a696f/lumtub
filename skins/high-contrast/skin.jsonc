@@ -1,0 +1,38 @@
+// High Contrast: one of Lumtub's colour schemes as a skin. It follows the theme
+// mode: "colors" are the light side, "overrides.dark" the dark one.
+// 高对比：Lumtub 的配色方案之一。跟随浅色/深色模式："colors" 是浅色，"overrides.dark" 是深色。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "high-contrast",
+  "name": "High Contrast",
+  "names": {
+    "zh-Hans": "高对比",
+    "zh-Hant": "高對比"
+  },
+  "description": "Pure black and white, the clearest text and borders",
+  "descriptions": {
+    "zh-Hans": "纯黑纯白，边框和文字最清楚",
+    "zh-Hant": "純黑純白，邊框和文字最清楚"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "colors": {
+    "page": "#ffffff",
+    "text": "#000000",
+    "accent": "#0047cc",
+    "strong": true
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#000000",
+        "text": "#ffffff",
+        "accent": "#ffd60a",
+        "strong": true
+      }
+    }
+  }
+}

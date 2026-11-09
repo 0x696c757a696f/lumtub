@@ -1,5 +1,6 @@
 #include "window_frame.h"
 
+#include <commctrl.h>
 #include <dwmapi.h>
 
 #include <cmath>
@@ -60,6 +61,28 @@ WindowFrame::WindowFrame(HWND window, flutter::BinaryMessenger* messenger) : win
 
 WindowFrame::~WindowFrame() {
   channel_->SetMethodCallHandler(nullptr);
+  if (view_) ::RemoveWindowSubclass(view_, ViewProc, 1);
+}
+
+void WindowFrame::AttachView(HWND view) {
+  if (view_) ::RemoveWindowSubclass(view_, ViewProc, 1);
+  view_ = view;
+  if (view_) ::SetWindowSubclass(view_, ViewProc, 1, reinterpret_cast<DWORD_PTR>(this));
+}
+
+LRESULT CALLBACK WindowFrame::ViewProc(HWND view, UINT message, WPARAM wparam, LPARAM lparam,
+                                       UINT_PTR id, DWORD_PTR data) {
+  auto* frame = reinterpret_cast<WindowFrame*>(data);
+  if (message == WM_NCHITTEST && frame->Active() && frame->HitTest(lparam) != HTCLIENT) {
+    // Passed on to the frame below, which answers caption, maximize
+    // button or top edge for the same point.
+    return HTTRANSPARENT;
+  }
+  if (message == WM_NCDESTROY) {
+    ::RemoveWindowSubclass(view, ViewProc, id);
+    frame->view_ = nullptr;
+  }
+  return ::DefSubclassProc(view, message, wparam, lparam);
 }
 
 void WindowFrame::Send(const char* method, EncodableValue argument) {

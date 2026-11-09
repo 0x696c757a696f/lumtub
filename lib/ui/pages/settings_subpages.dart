@@ -605,7 +605,7 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Wrap(spacing: 12, runSpacing: 12, children: [
             for (final palette in palettes)
-              PaletteCard(palette: palette, selected: appearance.palette == palette.id, onTap: () => save(controller.appearance.copyWith(skin: '', palette: palette.id))),
+              PaletteCard(palette: palette, selected: appearance.skin == paletteSkinId(palette.id), onTap: () => save(controller.appearance.copyWith(skin: paletteSkinId(palette.id), palette: ''))),
           ]),
         ),
         _tip(context, tr('A color scheme changes the background, text and accent of the whole window, in light and dark. Choosing a theme or color below goes back to the neutral scheme.')),

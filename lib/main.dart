@@ -108,7 +108,7 @@ class _LumtubAppState extends State<LumtubApp> {
           highContrast: highContrast,
           palette: paletteOf(appearance.palette),
           warmth: warmth,
-          skin: highContrast ? null : skin,
+          skin: highContrast ? null : skin?.forBrightness(brightness),
         );
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);

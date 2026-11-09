@@ -1,0 +1,40 @@
+// Pine Soot: one of Lumtub's colour schemes as a skin. It follows the theme
+// mode: "colors" are the light side, "overrides.dark" the dark one.
+// 松烟：Lumtub 的配色方案之一。跟随浅色/深色模式："colors" 是浅色，"overrides.dark" 是深色。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "pine-soot",
+  "name": "Pine Soot",
+  "names": {
+    "zh-Hans": "松烟",
+    "zh-Hant": "松煙"
+  },
+  "description": "Slate blue-grey, with a deeper side rail and top bar",
+  "descriptions": {
+    "zh-Hans": "石板蓝灰，侧边栏和顶栏深一层",
+    "zh-Hant": "石板藍灰色，側邊欄和頂端列深一層"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "colors": {
+    "page": "#eef1f5",
+    "text": "#19202a",
+    "accent": "#3b61a4",
+    "chrome": "#dfe5ed",
+    "selected": "#ccd6e4"
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#161c25",
+        "text": "#dfe5ee",
+        "accent": "#82a6e8",
+        "chrome": "#10151c",
+        "selected": "#26324a"
+      }
+    }
+  }
+}

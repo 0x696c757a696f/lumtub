@@ -38,7 +38,7 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 # Add dependency libraries and include directories. Add any application-specific
 # dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
-target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
+target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib" "comctl32.lib")
 target_link_libraries(${BINARY_NAME} PRIVATE "dbghelp.lib")
 target_link_libraries(${BINARY_NAME} PRIVATE "dwrite.lib")
 # The media overlay uses C++/WinRT (headers from the Windows SDK), which needs

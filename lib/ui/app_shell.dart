@@ -267,7 +267,7 @@ class _AppShellState extends State<AppShell> {
                   ),
                   Expanded(child: Stack(children: [
                     Row(children: [
-                      if (rail && skin != null)
+                      if (rail && skin != null && skin.drawsRail)
                         SkinRail(
                           skin: skin,
                           destinations: [for (final d in _destinations) (d.$2, d.$3, d.$4)],
@@ -407,7 +407,7 @@ class _TopBar extends StatelessWidget {
             onTap: () => controller.navigate(PageMode.home),
             child: Padding(
               padding: const EdgeInsets.all(4),
-              child: skin != null ? SkinWordmark(skin: skin, name: appName, showName: wide) : Row(mainAxisSize: MainAxisSize.min, children: [
+              child: skin != null && skin.hasLogo ? SkinWordmark(skin: skin, name: appName, showName: wide) : Row(mainAxisSize: MainAxisSize.min, children: [
                 Container(
                   width: 30,
                   height: 30,

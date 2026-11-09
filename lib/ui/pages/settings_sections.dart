@@ -925,7 +925,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')),
         SettingEntry(tr('Color scheme'), (context) => NormalItem(
               title: tr('Color scheme'),
-              subtitle: tr('Current: {0}', [paletteOf(appearance.palette)?.name ?? tr('Neutral (default)')]),
+              subtitle: tr('Current: {0}', [paletteForSkin(appearance.skin)?.name ?? tr('Neutral (default)')]),
               leading: _icon(AppIcons.palette),
               onTap: () => openColorSelect(context, controller),
             ), subtitle: tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')),
@@ -1001,7 +1001,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             ), subtitle: tr('spacing density')),
         SettingEntry(tr('App theme'), (context) => NormalItem(
               title: tr('App theme'),
-              subtitle: switch (paletteOf(appearance.palette)) {
+              subtitle: switch (paletteForSkin(appearance.skin)) {
                 final palette? => tr('Set by the {0} color scheme', [palette.name]),
                 null => tr('Current: {0} · {1}', [appearance.accentLabel, schemeVariantNames[appearance.schemeVariant]]),
               },

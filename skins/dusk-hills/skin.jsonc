@@ -1,0 +1,40 @@
+// Dusk Hills: one of Lumtub's colour schemes as a skin. It follows the theme
+// mode: "colors" are the light side, "overrides.dark" the dark one.
+// 暮山：Lumtub 的配色方案之一。跟随浅色/深色模式："colors" 是浅色，"overrides.dark" 是深色。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "dusk-hills",
+  "name": "Dusk Hills",
+  "names": {
+    "zh-Hans": "暮山",
+    "zh-Hant": "暮山"
+  },
+  "description": "Grey-violet hills, with a sunset glow on what is chosen",
+  "descriptions": {
+    "zh-Hans": "灰紫山色，选中处是一抹晚霞",
+    "zh-Hant": "灰紫山色，選取處是一抹晚霞"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "colors": {
+    "page": "#f0ebf4",
+    "text": "#221c2c",
+    "accent": "#6a4db5",
+    "chrome": "#e5ddee",
+    "selected": "#f5dccf"
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#181322",
+        "text": "#e8e2f0",
+        "accent": "#ac8eec",
+        "chrome": "#120e1a",
+        "selected": "#3e2c3a"
+      }
+    }
+  }
+}

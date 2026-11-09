@@ -15,8 +15,12 @@ class SkinLibrary extends ChangeNotifier {
   SkinLibrary._();
   static final instance = SkinLibrary._();
 
+  /// Lumtub's colour schemes as skins: they follow the theme mode and keep
+  /// Lumtub's own shapes.
+  static const colorSchemeIds = ['rice-paper', 'candlelight', 'ink-bamboo', 'rime', 'pine-soot', 'night-voyage', 'dusk-hills', 'falling-petals', 'sandstone', 'high-contrast'];
+
   /// The built-in skins, in the order Settings shows them.
-  static const builtInIds = ['aero', 'chrome', 'candy', 'disc', 'messenger', 'player', 'desktop', 'sixteen', 'onebit', 'platinum', 'handheld'];
+  static const builtInIds = [...colorSchemeIds, 'aero', 'chrome', 'candy', 'disc', 'messenger', 'player', 'desktop', 'sixteen', 'onebit', 'platinum', 'handheld'];
 
   List<Skin> _builtIn = const [];
   List<Skin> _user = const [];

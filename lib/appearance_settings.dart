@@ -463,8 +463,13 @@ class AppearanceSettings {
       darkWatchPage: raw['darkWatchPage'] == true,
       showStatusBar: raw['showStatusBar'] != false,
       language: AppLanguage.parse(raw['language']),
-      palette: raw['palette'] is String ? raw['palette'] as String : '',
-      skin: raw['skin'] is String ? raw['skin'] as String : '',
+      // The colour schemes are skins now: a saved one becomes its skin.
+      palette: '',
+      skin: switch ((raw['skin'], raw['palette'])) {
+        (final String skin, _) when skin.isNotEmpty => skin,
+        (_, final String palette) when palette.isNotEmpty => paletteSkinId(palette),
+        _ => '',
+      },
       systemTitleBar: raw['systemTitleBar'] == true,
       eyeCare: _byName(EyeCare.values, raw['eyeCare'], EyeCare.off),
       warmth: raw['warmth'] is num ? (raw['warmth'] as num).toDouble().clamp(0.1, 1.0) : 0.4,
@@ -512,3 +517,6 @@ class AppearanceSettingsStore {
     await file.writeAsString(jsonEncode(settings.toJson()), flush: true);
   }
 }
+
+/// The skin a colour scheme saved before 0.2.30 became: ricePaper → rice-paper.
+String paletteSkinId(String palette) => palette.replaceAllMapped(RegExp('[A-Z]'), (m) => '-${m[0]!.toLowerCase()}');

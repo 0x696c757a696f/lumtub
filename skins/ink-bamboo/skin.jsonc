@@ -1,0 +1,42 @@
+// Ink Bamboo: one of Lumtub's colour schemes as a skin. It follows the theme
+// mode: "colors" are the light side, "overrides.dark" the dark one.
+// 墨竹：Lumtub 的配色方案之一。跟随浅色/深色模式："colors" 是浅色，"overrides.dark" 是深色。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "ink-bamboo",
+  "name": "Ink Bamboo",
+  "names": {
+    "zh-Hans": "墨竹",
+    "zh-Hant": "墨竹"
+  },
+  "description": "Plain white cards on bamboo green",
+  "descriptions": {
+    "zh-Hans": "竹青底色上的素白卡片",
+    "zh-Hant": "竹青底色上的素白卡片"
+  },
+  "author": "Lumtub",
+  "version": "1.0",
+  "license": "CC0-1.0",
+  "brightness": "auto",
+  "colors": {
+    "page": "#e9efe6",
+    "text": "#18201b",
+    "accent": "#2b6e4e",
+    "chrome": "#dde7d9",
+    "card": "#f6f8f3",
+    "selected": "#cfe0cb"
+  },
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#111813",
+        "text": "#dfe8e1",
+        "accent": "#6cbc8f",
+        "chrome": "#0c120e",
+        "card": "#1a231d",
+        "selected": "#223a2b"
+      }
+    }
+  }
+}

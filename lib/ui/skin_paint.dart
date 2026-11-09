@@ -260,7 +260,9 @@ class SkinBackdrop extends StatelessWidget {
     Widget warm(Widget child) => warmth == null ? child : ColorFiltered(colorFilter: ColorFilter.mode(warmth, BlendMode.modulate), child: child);
     return Stack(fit: StackFit.expand, children: [
       RepaintBoundary(child: warm(Stack(fit: StackFit.expand, children: [
-        ColoredBox(color: skin.colors.page),
+        // Pure black in dark mode replaces the page of a skin that follows
+        // the theme mode, as it does Lumtub's own.
+        ColoredBox(color: skin.followsThemeMode && Theme.of(context).colorScheme.surface == Colors.black ? Colors.black : skin.colors.page),
         if (skin.background.isNotEmpty) SkinLayers(skin.background),
         if (below.isNotEmpty) CustomPaint(painter: SkinDecorationPainter(below)),
       ]))),

@@ -1,8 +1,10 @@
 import 'dart:io';
-import 'dart:ui' show Color;
+import 'dart:ui' show Brightness, Color;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/appearance_settings.dart' show paletteSkinId;
 import 'package:lumtub/skins/jsonc.dart';
+import 'package:lumtub/ui/palettes.dart' show palettes;
 import 'package:lumtub/skins/skin.dart';
 import 'package:lumtub/skins/skin_library.dart';
 
@@ -41,6 +43,8 @@ void main() {
           ..navText
           ..durationText;
         expect(skin.warnings, isEmpty);
+        // A skin that follows the theme mode has a dark side, checked too.
+        expect(skin.forBrightness(Brightness.dark).brightness, skin.followsThemeMode ? Brightness.dark : skin.brightness);
         for (final name in skin.fontFiles.values) {
           expect(File(skin.file(name)).existsSync(), isTrue, reason: name);
         }
@@ -48,4 +52,28 @@ void main() {
       });
     }
   }
+
+  test('an auto skin follows the theme mode with its dark overrides', () {
+    final skin = Skin.parse({
+      'lumtubSkin': 1,
+      'id': 'x',
+      'name': 'X',
+      'brightness': 'auto',
+      'colors': {'page': '#ffffff', 'text': '#000000', 'accent': '#0047cc'},
+      'overrides': {
+        'dark': {'colors': {'page': '#000000', 'text': '#ffffff', 'accent': '#ffd60a'}},
+      },
+    }, folder: '', builtIn: false);
+    expect(skin.followsThemeMode, isTrue);
+    expect(skin.brightness, Brightness.light);
+    final dark = skin.forBrightness(Brightness.dark);
+    expect(dark.brightness, Brightness.dark);
+    expect(dark.colors.page, const Color(0xFF000000));
+    expect(dark.forBrightness(Brightness.light), same(skin));
+  });
+
+  test('a saved colour scheme becomes its skin', () {
+    expect(paletteSkinId('ricePaper'), 'rice-paper');
+    expect(SkinLibrary.colorSchemeIds, containsAll([for (final p in palettes) paletteSkinId(p.id)]));
+  });
 }

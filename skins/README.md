@@ -78,7 +78,8 @@ anything else out and Lumtub draws it the usual way.
 
 | Part 部分 | What it is 是什么 |
 | --- | --- |
-| `colors` | Page, text, muted text, accent, borders, cards, selection. 底色、文字、强调色等。 |
+| `brightness` | `light`, `dark`, or `auto` to follow light/dark mode with `overrides.dark`. 浅色、深色，或 `auto` 跟随模式。 |
+| `colors` | Page, text, muted text, accent, borders, cards, selection, `chrome` for the bars. 底色、文字、强调色、顶栏侧栏底色等。 |
 | `text` | `font`, `displayFont` (headings, logo), `monoFont` (times). 字体。 |
 | `fonts` | Font files in the skin folder: `{ "My Font": "fonts/my.ttf" }`. 自带字体文件。 |
 | `shape` | Corner radius of cards, controls and thumbnails. 圆角。 |
@@ -227,6 +228,14 @@ open a pull request that adds `skins/<id>/` with:
   folder to `assets` in `pubspec.yaml`. 把 id 加进内置列表，文件夹加进 `pubspec.yaml`。
 
 ## Built-in skins 内置皮肤
+
+**Colour schemes 配色方案** follow light and dark mode and keep Lumtub's
+own shapes; only the colours change. 跟随浅色/深色模式，保留 Lumtub 原本的形状，只换颜色：
+`rice-paper` 宣纸, `candlelight` 烛光, `ink-bamboo` 墨竹, `rime` 雾凇, `pine-soot` 松烟,
+`night-voyage` 夜航, `dusk-hills` 暮山, `falling-petals` 樱落, `sandstone` 砂岩,
+`high-contrast` 高对比.
+
+**Era skins 年代皮肤**:
 
 | id | Name | 名称 | Era 年代 |
 | --- | --- | --- | --- |

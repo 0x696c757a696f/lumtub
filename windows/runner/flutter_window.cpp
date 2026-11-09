@@ -41,6 +41,7 @@ bool FlutterWindow::OnCreate() {
   shell_ = std::make_unique<WindowsShell>(GetHandle(), flutter_controller_->engine()->messenger());
   frame_ = std::make_unique<WindowFrame>(GetHandle(), flutter_controller_->engine()->messenger());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
+  frame_->AttachView(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();

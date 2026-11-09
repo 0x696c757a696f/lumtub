@@ -80,12 +80,18 @@
       "text": "#1a1a1a",
       "inactiveText": "#6b6b6b",
       "align": "center",
+      "icon": false,
+      // Round gel buttons at the left: close, minimise, maximise. Their
+      // signs show under the pointer.
+      // 左边的圆形凝胶按钮：关闭、最小化、最大化；鼠标移上去才显示符号。
       "buttons": {
+        "placement": "left",
+        "glyphs": "hover",
         "size": [
-          30,
-          26
+          15,
+          15
         ],
-        "icon": "#2d3a4a",
+        "icon": "#3b2a12",
         "surface": {
           "fill": {
             "radial": {
@@ -95,14 +101,14 @@
               ],
               "radius": 0.7,
               "colors": [
-                "#e9f2fb",
-                "#a9bfd6"
+                "#c9f2a8",
+                "#4ea83a"
               ]
             }
           },
           "radius": 99,
-          "gloss": 0.7,
-          "border": "#7d8fa3",
+          "gloss": 0.75,
+          "border": "#2f7a22",
           "hover": {
             "fill": {
               "radial": {
@@ -112,15 +118,52 @@
                 ],
                 "radius": 0.7,
                 "colors": [
-                  "#d6ebff",
-                  "#7fb0e6"
+                  "#d8f8bd",
+                  "#5cb948"
                 ]
               }
             },
-            "gloss": 0.7
+            "gloss": 0.75
           },
           "pressed": {
-            "fill": "#7fa3c9"
+            "fill": "#3b8a2c"
+          }
+        },
+        "minimize": {
+          "fill": {
+            "radial": {
+              "center": [
+                0.5,
+                0.8
+              ],
+              "radius": 0.7,
+              "colors": [
+                "#ffe9a6",
+                "#e0a225"
+              ]
+            }
+          },
+          "radius": 99,
+          "gloss": 0.75,
+          "border": "#a8740f",
+          "hover": {
+            "fill": {
+              "radial": {
+                "center": [
+                  0.5,
+                  0.8
+                ],
+                "radius": 0.7,
+                "colors": [
+                  "#fff0bf",
+                  "#eab03a"
+                ]
+              }
+            },
+            "gloss": 0.75
+          },
+          "pressed": {
+            "fill": "#c08718"
           }
         },
         "close": {
@@ -132,14 +175,14 @@
               ],
               "radius": 0.7,
               "colors": [
-                "#fde3e1",
-                "#e2a19b"
+                "#ffb3aa",
+                "#d9473b"
               ]
             }
           },
           "radius": 99,
-          "gloss": 0.7,
-          "border": "#a9605a",
+          "gloss": 0.75,
+          "border": "#a52b22",
           "hover": {
             "fill": {
               "radial": {
@@ -149,15 +192,15 @@
                 ],
                 "radius": 0.7,
                 "colors": [
-                  "#ff9a90",
-                  "#c9302a"
+                  "#ffc4bc",
+                  "#e45a4e"
                 ]
               }
             },
-            "gloss": 0.7
+            "gloss": 0.75
           },
           "pressed": {
-            "fill": "#a8261f"
+            "fill": "#b8332a"
           }
         }
       }

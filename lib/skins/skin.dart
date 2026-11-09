@@ -660,7 +660,7 @@ class PatternDecoration extends SkinDecoration {
 
 /// The title bar the app draws itself, with its window buttons.
 class SkinTitleBar {
-  SkinTitleBar._(this.height, this.surface, this.inactive, this.text, this.inactiveText, this.align, this.button, this.buttonIcon, this.closeButton, this.buttonSize, this.buttonsLeft, this.icon);
+  SkinTitleBar._(this.height, this.surface, this.inactive, this.text, this.inactiveText, this.align, this.button, this.buttonIcon, this.closeButton, this.buttonSize, this.buttonsLeft, this.icon, this.minimizeButton, this.maximizeButton, this.glyphsOnHover);
   final double height;
   final SkinSurface surface;
   final SkinSurface? inactive;
@@ -672,9 +672,17 @@ class SkinTitleBar {
   final Color buttonIcon;
   final SkinSurface? closeButton;
   final Size buttonSize;
+  /// Close, minimise and maximise at the left, in that order, as on the
+  /// desktops of around 2001; otherwise minimise, maximise, close at the
+  /// right.
   final bool buttonsLeft;
   /// Whether the app's icon is drawn at the start.
   final bool icon;
+  /// Looks of their own for minimise and maximise; [button] when null.
+  final SkinSurface? minimizeButton;
+  final SkinSurface? maximizeButton;
+  /// The signs on the buttons show only under the pointer.
+  final bool glyphsOnHover;
 
   static SkinTitleBar? parse(Object? value, Skin skin) {
     if (value is! Map<String, Object?> || value['enabled'] == false) return null;
@@ -700,6 +708,9 @@ class SkinTitleBar {
       Size(size.isNotEmpty ? _num(size[0]) ?? 40 : 40, size.length > 1 ? _num(size[1]) ?? 24 : 24),
       _str(buttons['placement']) == 'left',
       value['icon'] != false,
+      SkinSurface.parse(buttons['minimize'], skin),
+      SkinSurface.parse(buttons['maximize'], skin),
+      _str(buttons['glyphs']) == 'hover',
     );
   }
 }

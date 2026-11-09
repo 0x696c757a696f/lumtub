@@ -210,10 +210,11 @@
     ],
 
     // The title bar drawn by Lumtub instead of the system's, on computers
-    // only. Minimise, maximise and close are always at the right. Users
+    // only. Minimise, maximise and close sit at the right, unless
+    // "placement": "left" puts close, minimise, maximise at the left. Users
     // can switch back to the system title bar in Settings.
-    // 由 Lumtub 自己画的标题栏（只在电脑上）。最小化、最大化、关闭始终在右边。
-    // 用户可以在设置里换回系统标题栏。
+    // 由 Lumtub 自己画的标题栏（只在电脑上）。最小化、最大化、关闭默认在右边；
+    // "placement": "left" 时改为左边，依次是关闭、最小化、最大化。用户可以在设置里换回系统标题栏。
     "titleBar": {
       "enabled": true,
       "height": 30,
@@ -228,7 +229,11 @@
         "size": [40, 26],
         "icon": "#10233a",
         "surface": { "fill": "transparent", "hover": { "fill": "#0000001a" }, "pressed": { "fill": "#00000033" } },
-        "close": { "fill": "transparent", "hover": { "fill": "#e81123" }, "pressed": { "fill": "#a50e1a" } }
+        "close": { "fill": "transparent", "hover": { "fill": "#e81123" }, "pressed": { "fill": "#a50e1a" } },
+        // "minimize" and "maximize" give those two a look of their own;
+        // "glyphs": "hover" shows the signs only under the pointer.
+        // "minimize"、"maximize" 可以单独设样子；"glyphs": "hover" 鼠标移上去才显示符号。
+        "placement": "right"
       }
     },
 

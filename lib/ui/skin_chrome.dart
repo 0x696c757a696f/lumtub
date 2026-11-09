@@ -147,35 +147,47 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
         final surface = active ? bar.surface : bar.inactive ?? bar.surface;
         final text = active ? bar.text : bar.inactiveText ?? bar.text.withValues(alpha: 0.6);
         final title = Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w700));
-        final buttons = Row(mainAxisSize: MainAxisSize.min, children: [
-          _WindowButton(key: _minimize, bar: bar, icon: _Glyph.minimize, tooltip: MaterialLocalizations.of(context).collapsedHint, onPressed: WindowFrame.minimize),
-          const SizedBox(width: 2),
-          ValueListenableBuilder(
-            valueListenable: WindowFrame.maximized,
-            builder: (context, maximized, _) => ValueListenableBuilder(
-              valueListenable: WindowFrame.maximizeButton,
-              builder: (context, state, _) => _WindowButton(
-                key: _maximize,
-                bar: bar,
-                icon: maximized ? _Glyph.restore : _Glyph.maximize,
-                onPressed: WindowFrame.toggleMaximize,
-                forced: state,
-              ),
+        final minimize = _WindowButton(key: _minimize, bar: bar, icon: _Glyph.minimize, tooltip: MaterialLocalizations.of(context).collapsedHint, onPressed: WindowFrame.minimize);
+        final maximize = ValueListenableBuilder(
+          valueListenable: WindowFrame.maximized,
+          builder: (context, maximized, _) => ValueListenableBuilder(
+            valueListenable: WindowFrame.maximizeButton,
+            builder: (context, state, _) => _WindowButton(
+              key: _maximize,
+              bar: bar,
+              icon: maximized ? _Glyph.restore : _Glyph.maximize,
+              onPressed: WindowFrame.toggleMaximize,
+              forced: state,
             ),
           ),
-          const SizedBox(width: 2),
-          _WindowButton(key: _close, bar: bar, icon: _Glyph.close, close: true, onPressed: WindowFrame.close),
-        ]);
-        final row = Row(children: [
-          if (bar.icon) ...[
-            const SizedBox(width: 6),
-            Icon(AppIcons.playFill, size: 16, color: text),
-          ],
-          const SizedBox(width: 8),
-          Expanded(child: bar.align == 'center' ? Center(child: title) : title),
-          buttons,
-          const SizedBox(width: 3),
-        ]);
+        );
+        final close = _WindowButton(key: _close, bar: bar, icon: _Glyph.close, close: true, onPressed: WindowFrame.close);
+        final gap = SizedBox(width: bar.buttonsLeft ? 7 : 2);
+        final buttons = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: bar.buttonsLeft ? [close, gap, minimize, gap, maximize] : [minimize, gap, maximize, gap, close],
+        );
+        final appIcon = [
+          const SizedBox(width: 6),
+          Icon(AppIcons.playFill, size: 16, color: text),
+        ];
+        final row = bar.buttonsLeft
+            ? Row(children: [
+                const SizedBox(width: 9),
+                buttons,
+                if (bar.icon) ...appIcon,
+                const SizedBox(width: 8),
+                Expanded(child: bar.align == 'center' ? Center(child: title) : title),
+                // Balances the buttons so a centred title sits in the middle.
+                if (bar.align == 'center') SizedBox(width: bar.buttonSize.width * 3 + 23),
+              ])
+            : Row(children: [
+                if (bar.icon) ...appIcon,
+                const SizedBox(width: 8),
+                Expanded(child: bar.align == 'center' ? Center(child: title) : title),
+                buttons,
+                const SizedBox(width: 3),
+              ]);
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           // On Windows the system moves the window from the caption itself.
@@ -214,7 +226,12 @@ class _WindowButtonState extends State<_WindowButton> {
     final forced = widget.forced ?? WindowButtonState.none;
     final hovered = _hover || forced == WindowButtonState.hover;
     final pressed = _pressed || forced == WindowButtonState.pressed;
-    final base = widget.close ? bar.closeButton ?? bar.button : bar.button;
+    final base = switch (widget.icon) {
+      _ when widget.close => bar.closeButton ?? bar.button,
+      _Glyph.minimize => bar.minimizeButton ?? bar.button,
+      _Glyph.maximize || _Glyph.restore => bar.maximizeButton ?? bar.button,
+      _ => bar.button,
+    };
     final surface = base?.forState(hovered: hovered, pressed: pressed);
     final size = bar.buttonSize;
     return MouseRegion(
@@ -238,7 +255,9 @@ class _WindowButtonState extends State<_WindowButton> {
             child: DecoratedBox(
               // Without a skinned button, a plain wash shows the pointer.
               decoration: BoxDecoration(color: surface != null || !(hovered || pressed) ? null : (widget.close ? const Color(0xFFE81123) : bar.buttonIcon.withValues(alpha: pressed ? 0.2 : 0.1))),
-              child: CustomPaint(painter: _GlyphPainter(widget.icon, widget.close && surface == null && hovered ? Colors.white : bar.buttonIcon)),
+              child: bar.glyphsOnHover && !hovered && !pressed
+                  ? null
+                  : CustomPaint(painter: _GlyphPainter(widget.icon, widget.close && surface == null && hovered ? Colors.white : bar.buttonIcon)),
             ),
           ),
         ),

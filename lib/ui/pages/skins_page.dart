@@ -88,6 +88,18 @@ class _SkinsPage extends StatelessWidget {
               values: themeModes,
               onSelected: (mode) => controller.saveAppearance(controller.appearance.copyWith(themeMode: mode, darkSchedule: DarkSchedule.off)),
             ),
+            if (context.skin?.glass ?? false)
+              ListTile(
+                leading: Icon(AppIcons.drop),
+                title: Text(tr('Glass')),
+                subtitle: Slider(
+                  value: appearance.glassOpacity,
+                  min: SkinGlass.min,
+                  divisions: 7,
+                  label: tr('{0}% solid', [(appearance.glassOpacity * 100).round()]),
+                  onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(glassOpacity: v)),
+                ),
+              ),
             _header(context, tr('Color schemes')),
             grid([for (final s in library.builtIn) if (schemes.contains(s.id)) s], standard: true),
             _tip(context, tr('These follow light and dark mode and keep Lumtub\'s own shapes; the colours change, and the title bar and menu bar take the same colours.')),

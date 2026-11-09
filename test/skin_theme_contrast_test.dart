@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/skins/jsonc.dart';
 import 'package:lumtub/skins/skin.dart';
+import 'package:lumtub/ui/skin_paint.dart';
 import 'package:lumtub/ui/theme.dart';
 
 /// The colours the app's widgets put on top of each other, for every
@@ -34,6 +35,43 @@ void main() {
         };
         for (final MapEntry(key: what, value: (fg, bg, min)) in pairs.entries) {
           expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05), reason: '$what in ${mode.name}');
+        }
+        // Glass made as clear as it goes still keeps what is on it readable.
+        if (side.glass) {
+          // Every colour of the backdrop the glass can lie over.
+          final behind = <Color>[page];
+          for (final paint in side.background) {
+            final colors = switch (paint) {
+              SolidPaint(:final color) => [color],
+              LinearPaint(:final colors) => colors,
+              RadialPaint(:final colors) => colors,
+              _ => const <Color>[],
+            };
+            for (final c in colors) {
+              behind.add(Color.alphaBlend(c, behind.first));
+            }
+          }
+          List<Color> clear(SkinSurface? s) => [
+                for (final under in behind) ...[
+                  under,
+                  for (final c in s?.tones(const Color(0x00000000)) ?? <Color>[]) Color.alphaBlend(c.withValues(alpha: c.a * SkinGlass.min), under),
+                ],
+              ];
+          final glassPairs = <String, (Color?, SkinSurface?, double)>{
+            'top bar icons': (side.topBarText, side.topBar, 3),
+            'rail labels': (side.navText, side.sideBar, 4.5),
+            'status line': (side.statusBarText, side.statusBar, 4.5),
+            'title': (side.titleBar?.text, side.titleBar?.surface, 4.5),
+            'menus': (side.menuBar?.text, side.menuBar?.surface, 4.5),
+            'tabs': (side.tabs?.text, side.tabs?.bar, 4.5),
+            'card text': (side.colors.text, side.videoCard, 4.5),
+          };
+          for (final MapEntry(key: what, value: (fg, surface, min)) in glassPairs.entries) {
+            if (fg == null) continue;
+            for (final bg in clear(surface)) {
+              expect(contrastRatio(solid(fg, bg), bg), greaterThanOrEqualTo(min - 0.05), reason: '$what on clear glass in ${mode.name}: $fg on $bg');
+            }
+          }
         }
       }
     });

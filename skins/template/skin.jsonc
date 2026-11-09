@@ -271,6 +271,13 @@
       "height": 26
     },
 
+    // true lets users make the bars, side rail, cards and panels clearer
+    // in Settings › Skins › Glass, so the background shows through. Keep
+    // text readable on the background itself too.
+    // true 时用户可以在 设置 › 皮肤 › 玻璃 里调低栏、侧栏、卡片和面板的不透明度，透出背景。
+    // 这时文字直接放在背景上也要看得清。
+    "glass": false,
+
     // The bar with the logo and search box. 有 logo 和搜索框的那一栏。
     "topBar": { "fill": "#ffffffb3", "border": { "color": "#b9d4ea", "sides": ["bottom"] } },
     // The page list at the left. 左边的页面列表。

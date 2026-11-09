@@ -78,6 +78,17 @@ class Skin {
   late final SkinSurface? topBar = SkinSurface.parse(_window['topBar'], this);
   late final SkinSurface? sideBar = SkinSurface.parse(_window['sideBar'], this);
   late final SkinSurface? statusBar = SkinSurface.parse(_window['statusBar'], this);
+  /// Whether the user may make the bars, rail, cards and panels clearer, so
+  /// the sky or water behind shows through: `window.glass`.
+  late final bool glass = _window['glass'] == true;
+
+  void _glaze() {
+    if (!glass) return;
+    for (final s in [titleBar?.surface, titleBar?.inactive, menuBar?.surface, topBar, sideBar, statusBar, tabs?.bar, videoCard, panel]) {
+      s?.glass = true;
+    }
+  }
+
   /// The row of pages on a phone, or in a narrow window, in place of the
   /// side rail; null keeps Lumtub's own bottom bar.
   late final SkinTabs? tabs = SkinTabs.parse(_window['tabs'], this);
@@ -211,7 +222,8 @@ class Skin {
       ..navText
       ..durationText
       ..topBarText
-      ..statusBarText;
+      ..statusBarText
+      .._glaze();
     return skin;
   }
 
@@ -466,6 +478,9 @@ class SkinSurface {
   final SkinSurface? pressed;
   /// Reached with the keyboard or a TV remote's arrows.
   final SkinSurface? focused;
+  /// A pane of glass: the bars, side rail, cards and panels of a skin that
+  /// lets its glass be made clearer ([Skin.glass]).
+  bool glass = false;
 
   static SkinSurface? parse(Object? value, Skin skin) {
     if (value == null) return null;
@@ -517,7 +532,7 @@ class SkinSurface {
   /// This surface with [over]'s fields where it has them.
   SkinSurface merge(SkinSurface? over) => over == null
       ? this
-      : SkinSurface._(
+      : (SkinSurface._(
           fill: over.fill.isNotEmpty ? over.fill : fill,
           border: over.border ?? border,
           borderWidth: over.border != null ? over.borderWidth : borderWidth,
@@ -527,7 +542,7 @@ class SkinSurface {
           shadows: over.shadows.isNotEmpty ? over.shadows : shadows,
           gloss: over.gloss > 0 ? over.gloss : gloss,
           glow: over.glow ?? glow,
-        );
+        )..glass = glass);
 
   /// The look while pointed at or pressed. A pressed bevel sinks in unless
   /// the skin says otherwise.

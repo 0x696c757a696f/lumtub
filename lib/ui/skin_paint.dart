@@ -94,16 +94,24 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
 
 /// A box drawn as a [SkinSurface]: shadow, glow, fill, shine, bevel and
 /// border, inside [radius] unless the surface sets its own.
+/// How clear the glass of a glass skin is drawn, 0.3 to 1: its own look at 1.
+abstract final class SkinGlass {
+  static double opacity = 1;
+  static const min = 0.3;
+}
+
 class SurfaceDecoration extends Decoration {
-  const SurfaceDecoration(this.surface, {this.radius = 0, this.warmth});
+  const SurfaceDecoration(this.surface, {this.radius = 0, this.warmth, this.clarity = 1});
   final SkinSurface surface;
   final double radius;
   /// 护眼暖色's tint, multiplied into everything drawn.
   final Color? warmth;
+  /// How much of the fill is drawn: below 1 the backdrop shows through.
+  final double clarity;
 
   /// [surface] in [context]'s 护眼暖色.
   factory SurfaceDecoration.of(BuildContext context, SkinSurface surface, {double radius = 0}) =>
-      SurfaceDecoration(surface, radius: radius, warmth: context.pictureWarmth);
+      SurfaceDecoration(surface, radius: radius, warmth: context.pictureWarmth, clarity: surface.glass ? SkinGlass.opacity : 1);
 
   double get _radius => surface.radius ?? radius;
 
@@ -120,10 +128,10 @@ class SurfaceDecoration extends Decoration {
   BoxPainter createBoxPainter([VoidCallback? onChanged]) => _SurfacePainter(this);
 
   @override
-  bool operator ==(Object other) => other is SurfaceDecoration && identical(other.surface, surface) && other.radius == radius && other.warmth == warmth;
+  bool operator ==(Object other) => other is SurfaceDecoration && identical(other.surface, surface) && other.radius == radius && other.warmth == warmth && other.clarity == clarity;
 
   @override
-  int get hashCode => Object.hash(identityHashCode(surface), radius, warmth);
+  int get hashCode => Object.hash(identityHashCode(surface), radius, warmth, clarity);
 }
 
 class _SurfacePainter extends BoxPainter {
@@ -137,16 +145,16 @@ class _SurfacePainter extends BoxPainter {
     final rect = offset & size;
     if (decoration.warmth case final tint?) {
       canvas.saveLayer(rect.inflate(24), Paint()..colorFilter = ColorFilter.mode(tint, BlendMode.modulate));
-      paintSurface(canvas, rect, decoration.surface, decoration._radius);
+      paintSurface(canvas, rect, decoration.surface, decoration._radius, clarity: decoration.clarity);
       canvas.restore();
     } else {
-      paintSurface(canvas, rect, decoration.surface, decoration._radius);
+      paintSurface(canvas, rect, decoration.surface, decoration._radius, clarity: decoration.clarity);
     }
   }
 }
 
 /// Paints [s] into [rect] with corners of [radius].
-void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius) {
+void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius, {double clarity = 1}) {
   final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
   for (final shadow in s.shadows) {
     canvas.drawRRect(rrect.shift(shadow.offset).inflate(shadow.spreadRadius), shadow.toPaint());
@@ -156,7 +164,13 @@ void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius) {
       ..color = glow
       ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 10));
   }
-  canvas.save();
+  // Clearer glass: the fill, shine and bevel drawn at [clarity]; the edges
+  // stay as they are so the pane keeps its shape.
+  if (clarity < 1) {
+    canvas.saveLayer(rect, Paint()..color = Color.fromRGBO(0, 0, 0, clarity));
+  } else {
+    canvas.save();
+  }
   if (radius > 0) canvas.clipRRect(rrect);
   for (final layer in s.fill) {
     paintSkinLayer(canvas, rect, layer);

@@ -361,6 +361,10 @@
         "statusBarText": {
           "$ref": "#/$defs/color",
           "description": "Status line text, 4.5:1. 状态栏文字。"
+        },
+        "glass": {
+          "type": "boolean",
+          "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
         }
       },
       "additionalProperties": false
@@ -893,6 +897,10 @@
                 "statusBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "type": "boolean",
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
                 }
               },
               "additionalProperties": false
@@ -1417,6 +1425,10 @@
                 "statusBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "type": "boolean",
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
                 }
               },
               "additionalProperties": false
@@ -1941,6 +1953,10 @@
                 "statusBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "type": "boolean",
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
                 }
               },
               "additionalProperties": false
@@ -2465,6 +2481,10 @@
                 "statusBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "type": "boolean",
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
                 }
               },
               "additionalProperties": false
@@ -2989,6 +3009,10 @@
                 "statusBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "type": "boolean",
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
                 }
               },
               "additionalProperties": false
@@ -3513,6 +3537,10 @@
                 "statusBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "type": "boolean",
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
                 }
               },
               "additionalProperties": false

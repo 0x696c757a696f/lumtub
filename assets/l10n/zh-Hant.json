@@ -3037,5 +3037,7 @@
   "The window buttons move into the menu bar. Only for skins with a menu bar": "視窗按鈕移到選單列裡，只對有選單列的皮膚有效",
   "Light and dark": "淺色 · 深色",
   "Light only": "僅淺色",
-  "Dark only": "僅深色"
+  "Dark only": "僅深色",
+  "Glass": "玻璃",
+  "{0}% solid": "不透明度 {0}%"
 }

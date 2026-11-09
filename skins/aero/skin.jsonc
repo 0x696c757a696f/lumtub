@@ -38,6 +38,7 @@
     "thumbnailRadius": 14
   },
   "window": {
+    "glass": true,
     "background": [
       {
         "linear": {
@@ -210,7 +211,8 @@
           "top"
         ]
       }
-    }
+    },
+    "statusBarText": "#0d2a3d"
   },
   "controls": {
     "button": {
@@ -301,7 +303,7 @@
       ]
     },
     "navSelectedText": "#075f91",
-    "navText": "#2f5566"
+    "navText": "#0d2a3d"
   },
   "icons": {
     "style": "fill",
@@ -409,7 +411,7 @@
             "linear": {
               "angle": 180,
               "colors": [
-                "#0a5075",
+                "#0a4d71",
                 "#063448",
                 "#031c27",
                 "#0f3216"
@@ -430,7 +432,7 @@
               ],
               "radius": 0.6,
               "colors": [
-                "#287f32cc",
+                "#1d5d25cc",
                 "#287f3200"
               ]
             }
@@ -576,7 +578,9 @@
               "top"
             ]
           }
-        }
+        },
+        "topBarText": "#aed1e8",
+        "statusBarText": "#aed1e8"
       },
       "controls": {
         "button": {
@@ -667,7 +671,7 @@
           ]
         },
         "navSelectedText": "#075f91",
-        "navText": "#90b5c5"
+        "navText": "#aed1e8"
       },
       "cards": {
         "video": {

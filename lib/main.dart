@@ -10,6 +10,7 @@ import 'app_directories.dart';
 import 'app_window.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
+import 'ui/skin_paint.dart' show SkinGlass;
 import 'keep_awake.dart';
 import 'l10n/l10n.dart';
 import 'network_proxy.dart';
@@ -96,7 +97,7 @@ class _LumtubAppState extends State<LumtubApp> {
       ..maximumSizeBytes = (appearance.lowResource ? 24 : 64) << 20;
     final warmth = appearance.warmthAt(DateTime.now());
     final skin = SkinLibrary.instance.byId(appearance.skin);
-    final key = (appearance.themeKey(accent), Motion.reduced, warmth, SkinLibrary.instance.revision, skin);
+    final key = (appearance.themeKey(accent), Motion.reduced, warmth, SkinLibrary.instance.revision, skin, appearance.glassOpacity);
     if (key == _themeKey) return;
     _themeKey = key;
     ThemeData build(Brightness brightness, {bool highContrast = false}) => buildAppTheme(
@@ -114,6 +115,7 @@ class _LumtubAppState extends State<LumtubApp> {
           plain: appearance.lowResource,
         );
     _useFilledIcons(skin?.icons.filled ?? false);
+    _useGlass(skin?.glass ?? false ? appearance.glassOpacity : 1);
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
     _lightContrast = build(Brightness.light, highContrast: true);
@@ -248,9 +250,19 @@ Object? _titleBar;
 
 /// Switches every icon between outlined and filled, as the skin asks, and
 /// redraws the whole window so widgets built earlier pick up the change.
+void _useGlass(double opacity) {
+  if (SkinGlass.opacity == opacity) return;
+  SkinGlass.opacity = opacity;
+  _rebuildAll();
+}
+
 void _useFilledIcons(bool filled) {
   if (AppIcons.filled == filled) return;
   AppIcons.filled = filled;
+  _rebuildAll();
+}
+
+void _rebuildAll() {
   WidgetsBinding.instance.addPostFrameCallback((_) {
     void rebuild(Element element) {
       element.markNeedsBuild();

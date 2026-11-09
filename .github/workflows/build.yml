@@ -943,7 +943,26 @@ jobs:
           sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
           yes | "$sdk/sdkmanager" --licenses > /dev/null
           "$sdk/sdkmanager" "emulator" "system-images;android-34;google_apis;x86_64" > /dev/null
-          echo no | "$sdk/avdmanager" create avd -n smoke -k "system-images;android-34;google_apis;x86_64" -d pixel_6
+          # Written by hand: this avdmanager cannot read the SDK's newer XML and makes nothing.
+          avd="$HOME/.android/avd"; mkdir -p "$avd/smoke.avd"
+          printf 'avd.ini.encoding=UTF-8\npath=%s/smoke.avd\ntarget=android-34\n' "$avd" > "$avd/smoke.ini"
+          cat > "$avd/smoke.avd/config.ini" <<'INI'
+          AvdId=smoke
+          abi.type=x86_64
+          hw.cpu.arch=x86_64
+          image.sysdir.1=system-images/android-34/google_apis/x86_64/
+          tag.id=google_apis
+          hw.lcd.width=1080
+          hw.lcd.height=2400
+          hw.lcd.density=420
+          hw.ramSize=4096
+          disk.dataPartition.size=6G
+          hw.keyboard=yes
+          hw.dPad=yes
+          hw.gpu.enabled=yes
+          hw.gpu.mode=swiftshader_indirect
+          INI
+          sed -i 's/^ *//' "$avd/smoke.avd/config.ini"
           nohup "$ANDROID_HOME/emulator/emulator" -avd smoke -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -no-metrics -accel on > "$RUNNER_TEMP/emulator.log" 2>&1 &
           sleep 20; tail -20 "$RUNNER_TEMP/emulator.log"
 

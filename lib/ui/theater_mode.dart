@@ -5,6 +5,6 @@ import 'package:flutter/foundation.dart';
 /// session, like YouTube keeps it per browser.
 final theaterMode = ValueNotifier(false);
 
-/// In 剧场模式 a video with a chat shows it as a column beside the video,
-/// as Twitch does; closed, the video takes the whole width.
+/// In 剧场模式 a wide window shows comments, up next and any chat as a
+/// column beside the video; folded, the video takes the whole width.
 final theaterChatOpen = ValueNotifier(true);

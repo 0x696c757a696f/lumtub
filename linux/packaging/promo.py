@@ -37,6 +37,7 @@ STORY = {
         'danmaku': ('Live chat flies across the picture, as danmaku.', 'Danmaku', ['Live chat', 'Chat replay']),
         'home': ('Recommendations are worked out on your own computer, and every card says why.',
                  'A feed that explains itself', ['Worked out on your PC', 'Every card says why']),
+        'skins': ('Eleven skins, from Y2K gloss to one-bit pixels, or make your own.', 'Skins', ['11 built in', 'Make your own']),
         'palettes': ('Ten palettes, and seventy-two languages.', 'Make it yours', ['10 palettes', '72 languages']),
         'outro': (['Free. Open source. No ads.'], 'Free · Open source · No ads', 'Download free'),
     },
@@ -46,6 +47,7 @@ STORY = {
         'subtitles': ('双语字幕，两种语言一起显示。', '双语字幕', ['任选两种语言', '边播边翻译']),
         'danmaku': ('直播聊天，变成弹幕飞过画面。', '弹幕', ['直播聊天', '聊天回放']),
         'home': ('推荐在本机计算，每条都写明原因。', '会解释自己的推荐', ['只在本机计算', '每张卡片说明原因']),
+        'skins': ('十一套皮肤，从千禧光泽到黑白点阵，也能自己做。', '皮肤', ['内置 11 套', '可以自己做']),
         'palettes': ('十套配色，七十二种语言。', '换成你喜欢的样子', ['10 套配色', '72 种语言']),
         'outro': (['免费、开源、没有广告。'], '免费 · 开源 · 无广告', '免费下载'),
     },
@@ -54,7 +56,7 @@ STORY = {
 # What each scene shows: a picture the showcase took (named for the
 # interface language, else the English one), or a stretch of the recorded
 # tour at a playback speed.
-SCREENS = [('subtitles', 'watch-subtitles'), ('danmaku', 'danmaku'), ('home', 'home-reasons'), ('palettes', 2.5)]
+SCREENS = [('subtitles', 'watch-subtitles'), ('danmaku', 'danmaku'), ('home', 'home-reasons'), ('skins', 'skin-aero'), ('palettes', 2.5)]
 
 # Pictures taken on a real computer, which win over the showcase's: CI
 # runners are refused YouTube's subtitles and live chat.

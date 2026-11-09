@@ -61,6 +61,11 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 <td align="center"><img src="docs/screenshots/settings.png" alt="Appearance settings"><br>Palettes, warm light, compact and low-resource modes</td>
 <td align="center"><img src="docs/screenshots/tour.gif" alt="Switching between the ten palettes"><br>Ten palettes, light and dark</td>
 </tr>
+<tr>
+<td align="center"><img src="docs/screenshots/skin-aero.png" alt="The home page in the glossy Bubble Gel skin"><br>Skins: Bubble Gel</td>
+<td align="center"><img src="docs/screenshots/skin-player.png" alt="The home page in the Millennium Player skin with its LCD display"><br>Millennium Player, with an LCD display</td>
+<td align="center"><img src="docs/screenshots/skin-onebit.png" alt="The home page in the black-and-white One-bit skin"><br>One-bit pixels, or make your own</td>
+</tr>
 </table>
 
 ### 🧠 Recommendations and discovery
@@ -97,6 +102,7 @@ These are also found in other YouTube clients, and all are opt-in here:
 - **SponsorBlock**, **DeArrow** titles and thumbnails, **Return YouTube Dislike**, hide all Shorts, and an AI filter that hides videos labelled as AI and channels on community AI-slop lists.
 - Proxy support (system, HTTP or SOCKS5), optional encrypted DNS, and Piped or Invidious servers as a fallback.
 - **72 interface languages**, right to left included, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
+- **Skins** that change the whole look, eleven built in from Y2K gloss to one-bit pixels, with their own title bar and menu bar if you like. Anyone can make one: a commented `skin.jsonc` file, checked for readable contrast. See [skins/README.md](skins/README.md).
 - Ten palettes, light and dark, plus an optional warm light, fonts and card sizes.
 - Block any channel, or just stop it being recommended.
 - Signed automatic updates for the app, yt-dlp and libmpv, with rollback if a new component breaks.

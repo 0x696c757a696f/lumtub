@@ -211,6 +211,20 @@ extension SmokeCheck on AppController {
     });
     await setDanmaku(danmakuBefore);
     await saveSettings(settingsBefore);
+
+    // A few skins on the home page.
+    await part('skins', () async {
+      final before = appearance;
+      navigate(PageMode.home);
+      try {
+        for (final skin in const ['aero', 'player', 'onebit']) {
+          await saveAppearance(before.copyWith(skin: skin));
+          await shot('skin-$skin$suffix', settle: const Duration(seconds: 4));
+        }
+      } finally {
+        await saveAppearance(before);
+      }
+    });
   }
 
   /// A recorded walk through the app's pages for the promo video; no video

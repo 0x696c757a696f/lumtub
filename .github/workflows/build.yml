@@ -13,6 +13,8 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main]
+    # Pictures and text alone need no new build.
+    paths-ignore: ['**.md', 'docs/**']
 
 # A newer push to a pull request makes its earlier run moot.
 concurrency:

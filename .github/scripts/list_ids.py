@@ -7,7 +7,9 @@ record lead to exactly one channel, its id and @handle are added to the
 record; such a channel is already matched by the name, so nothing more is
 blocked, but the record keeps working after the channel is renamed. When
 they lead to several channels, nothing is added and the record is listed
-for a person to look at.
+for a person to look at. A channel that another record of the same list
+already names is not added either: the two records are probably the same
+channel, and the report lists them to merge by hand.
 
 Usage: list_ids.py LISTS_DIR REPORT_FILE [--limit N]
 """
@@ -72,12 +74,24 @@ def main():
     lists = Path(sys.argv[1])
     report_path = Path(sys.argv[2])
     limit = int(sys.argv[sys.argv.index('--limit') + 1]) if '--limit' in sys.argv else None
-    added, unclear, none, asked = [], [], [], 0
+    added, unclear, none, same, asked = [], [], [], [], 0
     cache = {}
     for path in sorted(lists.glob('*/*.txt')):
         lines = path.read_text(encoding='utf-8').split('\n')
         list_id = next((l.split(':', 1)[1].strip() for l in lines if l.startswith('! id:')), path.stem)
         changed = False
+        # Every channel id and @handle the list's records already name.
+        taken = {}
+        for line in lines:
+            if line.startswith(':'):
+                slug = SPLIT.split(line)[0].strip()[1:]
+                for c in (p.strip() for p in SPLIT.split(line)[1:]):
+                    if c.startswith('UC') or c.startswith('@'):
+                        taken.setdefault(c.casefold(), slug)
+            else:
+                word = line.split('#', 1)[0].strip()
+                if word.startswith('@') or re.fullmatch(r'UC[\w-]{22}', word):
+                    taken.setdefault(word.casefold(), re.sub(r'[^a-z0-9]+', '-', word.lower()).strip('-'))
         for i, line in enumerate(lines):
             if not line.startswith(':'):
                 continue
@@ -103,6 +117,13 @@ def main():
             key = f'{list_id}/{slug}'
             if len(ids) == 1:
                 channel_id, handle = next(iter(ids.items()))
+                other = taken.get(channel_id.casefold()) or (handle and taken.get(f'@{handle}'.casefold()))
+                if other and other != slug:
+                    same.append(f'{key}: {", ".join(names)} → {channel_id} @{handle}, already {list_id}/{other}')
+                    continue
+                taken[channel_id.casefold()] = slug
+                if handle:
+                    taken.setdefault(f'@{handle}'.casefold(), slug)
                 extra = [channel_id]
                 if handle and f'@{handle}'.casefold() not in (c.casefold() for c in conditions):
                     extra.append(f'@{handle}')
@@ -118,10 +139,13 @@ def main():
     report = [
         f'# Channel ids for the block lists',
         '',
-        f'{asked} names searched. {len(added)} records got an id, {len(unclear)} have several channels of that name, {len(none)} found no channel of that exact name.',
+        f'{asked} names searched. {len(added)} records got an id, {len(same)} are the same channel as another record, {len(unclear)} have several channels of that name, {len(none)} found no channel of that exact name.',
         '',
         '## Added',
         *[f'- {a}' for a in added],
+        '',
+        '## The same channel as another record (merge by hand)',
+        *[f'- {s}' for s in same],
         '',
         '## Several channels of that name (left for a person)',
         *[f'- {u}' for u in unclear],

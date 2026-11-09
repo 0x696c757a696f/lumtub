@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show MethodChannel, PlatformException;
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
@@ -17,7 +18,12 @@ const appPackage = String.fromEnvironment('LUMTUB_PACKAGE');
 
 /// The release file this build updates from. The Mac app is built once for
 /// both CPUs and shipped thinned to each, so it asks for the one it runs on.
-String get updatePackage => appPackage == 'macos' ? 'macos-${Abi.current() == Abi.macosArm64 ? 'arm64' : 'x64'}' : appPackage;
+String get updatePackage => switch (appPackage) {
+      'macos' => 'macos-${Abi.current() == Abi.macosArm64 ? 'arm64' : 'x64'}',
+      // One APK per processor type, like the ones CI builds.
+      'android' => 'android-${switch (Abi.current()) { Abi.androidArm64 => 'arm64-v8a', Abi.androidArm => 'armeabi-v7a', _ => 'x86_64' }}',
+      _ => appPackage,
+    };
 
 /// When this build's commit was made, from CI.
 final appBuilt = DateTime.tryParse(const String.fromEnvironment('LUMTUB_BUILT'));
@@ -70,7 +76,7 @@ class AppUpdater extends ChangeNotifier {
   static bool get portable => File('${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}portable.txt').existsSync();
 
   /// Whether this build can install updates itself.
-  static bool get canInstall => (Platform.isWindows || appImage != null || macApp != null) && appPackage.isNotEmpty && appBuilt != null;
+  static bool get canInstall => (Platform.isWindows || Platform.isAndroid || appImage != null || macApp != null) && appPackage.isNotEmpty && appBuilt != null;
 
   /// The app bundle this macOS build runs from, which an update replaces,
   /// when Lumtub may write the folder it is in.
@@ -95,14 +101,15 @@ class AppUpdater extends ChangeNotifier {
   void start({required bool Function() download}) {
     // Cleaning first: it deletes what is in the folder, and the first
     // download writes there.
-    unawaited(_cleanUp().then((_) => check(download: download())));
+    unawaited(_cleanUp().then((_) => check(download: download(), automatic: true)));
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(hours: 6), (_) => check(download: download()));
+    _timer = Timer.periodic(const Duration(hours: 6), (_) => check(download: download(), automatic: true));
   }
 
   /// Asks GitHub for the latest release and, with [download], fetches its
-  /// package in the background.
-  Future<void> check({bool download = false}) async {
+  /// package in the background; an [automatic] one not over a metered
+  /// (mobile) connection on Android.
+  Future<void> check({bool download = false, bool automatic = false}) async {
     if (checking) return;
     checking = true;
     error = null;
@@ -126,7 +133,17 @@ class AppUpdater extends ChangeNotifier {
       checking = false;
       notifyListeners();
     }
-    if (download) await this.download();
+    if (download && !(automatic && await _metered())) await this.download();
+  }
+
+  /// Whether Android says the connection is metered, as mobile data is.
+  static Future<bool> _metered() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('isMetered') ?? false;
+    } on PlatformException {
+      return false;
+    }
   }
 
   /// Downloads and verifies the available package, in the background.
@@ -194,6 +211,7 @@ class AppUpdater extends ChangeNotifier {
   Future<bool> install({bool relaunch = false}) async {
     final file = ready;
     if (file == null || !await file.exists()) return false;
+    if (Platform.isAndroid) return _installApk(file);
     final executable = Platform.resolvedExecutable;
     final portable = file.path.endsWith('.zip');
     try {
@@ -241,6 +259,22 @@ class AppUpdater extends ChangeNotifier {
         installError = e is FileSystemException ? (e.osError?.message ?? e.message) : '$e';
         notifyListeners();
       }
+      return false;
+    }
+  }
+
+  /// Hands the APK to Android's installer, which asks the user and then
+  /// replaces the running app. The file stays ready in case they say no.
+  Future<bool> _installApk(File file) async {
+    try {
+      await const MethodChannel('lumtub/windows_shell').invokeMethod<void>('installApk', file.path);
+      installError = null;
+      logInfo('Handed Lumtub ${available?.version ?? ''} to the Android installer');
+      return true;
+    } on PlatformException catch (e) {
+      installError = e.message ?? e.code;
+      logWarn('Could not start the Android installer: $installError');
+      notifyListeners();
       return false;
     }
   }

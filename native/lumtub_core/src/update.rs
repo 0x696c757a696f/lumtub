@@ -74,7 +74,8 @@ pub fn is_newer(current: &str, tag: &str, published: Option<i64>, built: Option<
 }
 
 /// The file of a release for [package] (such as `windows-x64-v3`): the
-/// portable ZIP or the installer; for Linux (`linux-x64`), the AppImage.
+/// portable ZIP or the installer; for Linux (`linux-x64`), the AppImage;
+/// for Android (`android-arm64-v8a`), the APK.
 pub fn asset_of<'a>(release: &'a Value, package: &str, portable: bool) -> Option<&'a Value> {
     if package.is_empty() {
         return None;
@@ -83,6 +84,8 @@ pub fn asset_of<'a>(release: &'a Value, package: &str, portable: bool) -> Option
         format!("_{package}.AppImage")
     } else if package.starts_with("macos-") {
         format!("_{package}.dmg")
+    } else if package.starts_with("android-") {
+        format!("_{package}.apk")
     } else if portable {
         format!("_{package}.zip")
     } else {
@@ -384,6 +387,9 @@ mod tests {
                 {"name": "Lumtub_0.2.2-1234567_linux-x64.AppImage"},
                 {"name": "Lumtub_0.2.2-1234567_macos-arm64.dmg"},
                 {"name": "Lumtub_0.2.2-1234567_macos-x64.dmg"},
+                {"name": "Lumtub_0.2.2-1234567_android-arm64-v8a.apk.sig"},
+                {"name": "Lumtub_0.2.2-1234567_android-arm64-v8a.apk"},
+                {"name": "Lumtub_0.2.2-1234567_android-armeabi-v7a.apk"},
             ],
         })
     }
@@ -399,6 +405,9 @@ mod tests {
         assert_eq!(name("linux-arm64", false), None);
         assert_eq!(name("macos-arm64", false), Some("Lumtub_0.2.2-1234567_macos-arm64.dmg"));
         assert_eq!(name("macos-x64", false), Some("Lumtub_0.2.2-1234567_macos-x64.dmg"));
+        assert_eq!(name("android-arm64-v8a", false), Some("Lumtub_0.2.2-1234567_android-arm64-v8a.apk"));
+        assert_eq!(name("android-armeabi-v7a", false), Some("Lumtub_0.2.2-1234567_android-armeabi-v7a.apk"));
+        assert_eq!(name("android-x86_64", false), None);
         assert_eq!(name("windows-arm64", false), None);
         assert_eq!(name("", false), None);
     }

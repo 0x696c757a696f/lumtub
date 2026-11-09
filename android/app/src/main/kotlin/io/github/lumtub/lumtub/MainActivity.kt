@@ -5,6 +5,7 @@ import android.app.PictureInPictureParams
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Rational
@@ -21,6 +22,8 @@ import io.flutter.plugin.common.MethodChannel
  * the media notification and lock screen controls (PlaybackService),
  * keeping the screen on, and the system's picture in picture.
  */
+private const val LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
+
 class MainActivity : FlutterActivity() {
     private var channel: MethodChannel? = null
 
@@ -33,7 +36,18 @@ class MainActivity : FlutterActivity() {
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lumtub/windows_shell")
         this.channel = channel
         PlaybackService.listener = { method, argument -> runOnUiThread { channel.invokeMethod(method, argument) } }
-        channel.setMethodCallHandler { call, result -> result.success(handle(call)) }
+        channel.setMethodCallHandler { call, result ->
+            if (call.method == "askLocalNetwork") return@setMethodCallHandler askLocalNetwork(result)
+            if (call.method == "installApk") {
+                // Copying the APK into the installer takes a moment.
+                Thread {
+                    val done = runCatching { ApkInstaller.install(applicationContext, call.arguments as String) }
+                    runOnUiThread { done.fold({ result.success(null) }, { result.error("install", it.message ?: it.toString(), null) }) }
+                }.start()
+                return@setMethodCallHandler
+            }
+            result.success(handle(call))
+        }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lumtub/python").setMethodCallHandler { call, result ->
             if (call.method != "prepare") return@setMethodCallHandler result.notImplemented()
             // Unpacking the first time takes a few seconds: not on the UI thread.
@@ -99,6 +113,7 @@ class MainActivity : FlutterActivity() {
             "isTv" -> return packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK) ||
                 !packageManager.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)
             "moveToBack" -> moveTaskToBack(true)
+            "isMetered" -> return (getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager).isActiveNetworkMetered
         }
         return null
     }
@@ -137,6 +152,29 @@ class MainActivity : FlutterActivity() {
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         channel?.invokeMethod("pip", isInPictureInPictureMode)
+    }
+
+    private var localNetworkAnswer: MethodChannel.Result? = null
+
+    /**
+     * From Android 17 an app reaches devices on the local network (TVs to
+     * cast to) only once the user allows it; answers whether it may.
+     */
+    private fun askLocalNetwork(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < 37 || checkSelfPermission(LOCAL_NETWORK) == PackageManager.PERMISSION_GRANTED) {
+            return result.success(true)
+        }
+        if (localNetworkAnswer != null) return result.success(false)
+        localNetworkAnswer = result
+        requestPermissions(arrayOf(LOCAL_NETWORK), 2)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 2) {
+            localNetworkAnswer?.success(grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED)
+            localNetworkAnswer = null
+        }
     }
 
     private var askedForNotifications = false

@@ -1154,6 +1154,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   Future<void> restartToUpdate() async {
     final updater = appUpdater;
     if (updater == null || updater.ready == null) return;
+    // Android's installer asks first, then replaces the running app itself.
+    if (Platform.isAndroid) {
+      await updater.install();
+      return;
+    }
     // The installer starts first and waits for Lumtub to end, so a declined
     // administrator prompt leaves Lumtub running as it was.
     if (!await updater.install(relaunch: true)) return;
@@ -3137,7 +3142,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   Future<void> shutdown({bool install = true}) async {
     if (_shutDown) return;
     _shutDown = true;
-    if (install) await appUpdater?.install();
+    // Android installs only when asked: its installer shows a dialog.
+    if (install && !Platform.isAndroid) await appUpdater?.install();
     _saveProgress();
     _countWatchTime(flush: true);
     await (watchTime?.save() ?? Future.value(), channelPlayback?.save() ?? Future.value()).wait;

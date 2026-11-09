@@ -383,12 +383,10 @@ jobs:
         if: matrix.package_arch == 'x64'
         continue-on-error: true
         shell: pwsh
-        env:
-          RELEASE_BUILD: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
           $message = git log -1 --format=%B HEAD^2 2> $null
           if ($LASTEXITCODE -ne 0) { $message = git log -1 --format=%B HEAD }
-          if ($env:RELEASE_BUILD -ne 'true' -and -not (($message -join "`n").Contains('[showcase]'))) { exit 0 }
+          if (-not (($message -join "`n").Contains('[showcase]'))) { exit 0 }
           Set-DisplayResolution -Width 1920 -Height 1080 -Force -ErrorAction SilentlyContinue
           $package = "Lumtub_$env:LUMTUB_VERSION`_windows-$env:PACKAGE_ARCH"
           windows/packaging/showcase.ps1 (Resolve-Path "$package/lumtub.exe").Path "$env:RUNNER_TEMP/shots"
@@ -575,11 +573,9 @@ jobs:
 
       - name: Linux - README pictures
         if: matrix.package_arch == 'x64'
-        env:
-          RELEASE_BUILD: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
           message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
-          if [ "$RELEASE_BUILD" = true ] || echo "$message" | grep -qF '[showcase]'; then
+          if echo "$message" | grep -qF '[showcase]'; then
             apt-get install -y --no-install-recommends xdotool fonts-noto-core fonts-noto-cjk bc
             linux/packaging/showcase.sh Lumtub_*_linux-x64.AppImage "$RUNNER_TEMP/shots"
           fi
@@ -611,10 +607,9 @@ jobs:
 
   showcase:
     name: README pictures
-    # Runs for a release build and for a commit whose message contains
-    # [showcase], never otherwise: pushes the pictures the Windows x64,
-    # Linux x64 and macOS jobs took of the app's pages to the readme-shots
-    # branch, one folder per system.
+    # Runs only for a commit whose message contains [showcase]: pushes the
+    # pictures the Windows x64, Linux x64 and macOS jobs took of the app's
+    # pages to the readme-shots branch, one folder per system.
     needs: [windows, linux, macos]
     runs-on: ubuntu-24.04
     permissions:
@@ -625,10 +620,8 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Check whether pictures are wanted
         id: wanted
-        env:
-          RELEASE_BUILD: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
-          if [ "$RELEASE_BUILD" = true ] || git log -1 --format=%B | grep -qF '[showcase]'; then echo "run=true" >> "$GITHUB_OUTPUT"; fi
+          if git log -1 --format=%B | grep -qF '[showcase]'; then echo "run=true" >> "$GITHUB_OUTPUT"; fi
       - if: steps.wanted.outputs.run == 'true'
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
@@ -810,11 +803,9 @@ jobs:
 
       - name: macOS - README pictures
         continue-on-error: true
-        env:
-          RELEASE_BUILD: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
           message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
-          if [ "$RELEASE_BUILD" = true ] || echo "$message" | grep -qF '[showcase]'; then
+          if echo "$message" | grep -qF '[showcase]'; then
             macos/packaging/showcase.sh Lumtub_*_macos-arm64.dmg "$RUNNER_TEMP/shots"
           fi
 

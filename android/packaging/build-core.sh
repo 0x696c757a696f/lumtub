@@ -4,6 +4,7 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 out="$root/android/app/src/main/jniLibs"
+mkdir -p "$out"
 cd "$root/native/lumtub_core"
 cargo ndk --platform 24 -t arm64-v8a -t armeabi-v7a -t x86_64 -o "$out" build --release --lib
 # Every library must load on devices with 16 KB pages.

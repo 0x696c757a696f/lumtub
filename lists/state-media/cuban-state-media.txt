@@ -8,7 +8,7 @@
 ! source: https://en.wikipedia.org/wiki/Mass_media_in_Cuba
 
 :cubadebate | UCXCgMWmwx-6BbCyVThijKQQ | @cubadebatecu | ^Cubadebate
-:canal-caribe | ^Canal Caribe
+:canal-caribe | UCG4OI7ugDOnfo2tgWJFyvMw | @canalcaribecuba | ^Canal Caribe
 :television-cubana | ^Televisión Cubana | ^TV Cubana
 :cubavision | UCKS734Qv_szW0_tovqR9ZmA | @CubavisionCuba | ^Cubavisión
 :prensa-latina | ^Prensa Latina

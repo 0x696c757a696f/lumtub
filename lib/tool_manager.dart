@@ -33,13 +33,13 @@ class ToolManager {
   final AppDirectories directories;
   /// Shows a message, and writes it to the log in English.
   final void Function(String shown, String logged) report;
-  ToolManager(this.directories, this.report);
+  ToolManager(this.directories, this.report, {http.Client? client}) : _client = client ?? appHttpClient();
 
   void status(String text, [List<Object?> args = const []]) => report(tr(text, args), trLog(text, args));
 
   late final Directory root;
   late final LibmpvState libmpv;
-  final http.Client _client = appHttpClient();
+  final http.Client _client;
 
   static final _separator = Platform.pathSeparator;
 
@@ -359,9 +359,7 @@ class ToolManager {
     final temp = File('${file.path}.download');
     if (await temp.exists()) await temp.delete();
     try {
-      final request = http.Request('GET', uri);
-      request.headers['User-Agent'] = _userAgent;
-      final result = await _client.send(request).timeout(const Duration(seconds: 30));
+      final result = await _sendRetrying(uri);
       if (result.statusCode != 200) throw HttpException('Download failed: HTTP ${result.statusCode}');
       final sink = temp.openWrite();
       try {
@@ -383,6 +381,21 @@ class ToolManager {
     } catch (_) {
       if (await temp.exists()) await temp.delete();
       rethrow;
+    }
+  }
+
+  /// GitHub's downloads answer 502 to 504 now and then; such answers, and
+  /// 429, are asked again a few times before the last one is returned.
+  Future<http.StreamedResponse> _sendRetrying(Uri uri) async {
+    const waits = [Duration(seconds: 2), Duration(seconds: 5), Duration(seconds: 10)];
+    for (var attempt = 0; ; attempt++) {
+      final request = http.Request('GET', uri);
+      request.headers['User-Agent'] = _userAgent;
+      final result = await _client.send(request).timeout(const Duration(seconds: 30));
+      final busy = result.statusCode == 429 || (result.statusCode >= 502 && result.statusCode <= 504);
+      if (!busy || attempt >= waits.length) return result;
+      await result.stream.drain<void>();
+      await Future<void>.delayed(waits[attempt]);
     }
   }
 

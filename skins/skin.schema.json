@@ -379,13 +379,13 @@
               "additionalProperties": false
             }
           ],
-          "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+          "description": "Let the user make the bars, rail, cards and panels clearer, down to 30%, so the background shows through (Settings › Skins › Glass). {\"min\": n} is the clearest glass at which all text still reads; below it the veil thins too. 允许用户调低栏、侧栏、卡片和面板的不透明度（最低 30%），透出背景。{\"min\": n} 是文字仍然看得清的最透明程度，低于它时 veil 也会变淡。"
         },
         "veil": {
           "type": "number",
           "minimum": 0,
           "maximum": 0.9,
-          "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
+          "description": "Page colour over the backdrop under the pages, so text reads over a busy picture; thins with glass clearer than glass.min. 页面下面垫的一层底色，玻璃比 glass.min 更透明时会变淡。"
         }
       },
       "additionalProperties": false
@@ -1009,13 +1009,13 @@
                       "additionalProperties": false
                     }
                   ],
-                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                  "description": "Let the user make the bars, rail, cards and panels clearer, down to 30%, so the background shows through (Settings › Skins › Glass). {\"min\": n} is the clearest glass at which all text still reads; below it the veil thins too. 允许用户调低栏、侧栏、卡片和面板的不透明度（最低 30%），透出背景。{\"min\": n} 是文字仍然看得清的最透明程度，低于它时 veil 也会变淡。"
                 },
                 "veil": {
                   "type": "number",
                   "minimum": 0,
                   "maximum": 0.9,
-                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture; thins with glass clearer than glass.min. 页面下面垫的一层底色，玻璃比 glass.min 更透明时会变淡。"
                 }
               },
               "additionalProperties": false
@@ -1631,13 +1631,13 @@
                       "additionalProperties": false
                     }
                   ],
-                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                  "description": "Let the user make the bars, rail, cards and panels clearer, down to 30%, so the background shows through (Settings › Skins › Glass). {\"min\": n} is the clearest glass at which all text still reads; below it the veil thins too. 允许用户调低栏、侧栏、卡片和面板的不透明度（最低 30%），透出背景。{\"min\": n} 是文字仍然看得清的最透明程度，低于它时 veil 也会变淡。"
                 },
                 "veil": {
                   "type": "number",
                   "minimum": 0,
                   "maximum": 0.9,
-                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture; thins with glass clearer than glass.min. 页面下面垫的一层底色，玻璃比 glass.min 更透明时会变淡。"
                 }
               },
               "additionalProperties": false
@@ -2253,13 +2253,13 @@
                       "additionalProperties": false
                     }
                   ],
-                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                  "description": "Let the user make the bars, rail, cards and panels clearer, down to 30%, so the background shows through (Settings › Skins › Glass). {\"min\": n} is the clearest glass at which all text still reads; below it the veil thins too. 允许用户调低栏、侧栏、卡片和面板的不透明度（最低 30%），透出背景。{\"min\": n} 是文字仍然看得清的最透明程度，低于它时 veil 也会变淡。"
                 },
                 "veil": {
                   "type": "number",
                   "minimum": 0,
                   "maximum": 0.9,
-                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture; thins with glass clearer than glass.min. 页面下面垫的一层底色，玻璃比 glass.min 更透明时会变淡。"
                 }
               },
               "additionalProperties": false
@@ -2875,13 +2875,13 @@
                       "additionalProperties": false
                     }
                   ],
-                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                  "description": "Let the user make the bars, rail, cards and panels clearer, down to 30%, so the background shows through (Settings › Skins › Glass). {\"min\": n} is the clearest glass at which all text still reads; below it the veil thins too. 允许用户调低栏、侧栏、卡片和面板的不透明度（最低 30%），透出背景。{\"min\": n} 是文字仍然看得清的最透明程度，低于它时 veil 也会变淡。"
                 },
                 "veil": {
                   "type": "number",
                   "minimum": 0,
                   "maximum": 0.9,
-                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture; thins with glass clearer than glass.min. 页面下面垫的一层底色，玻璃比 glass.min 更透明时会变淡。"
                 }
               },
               "additionalProperties": false
@@ -3497,13 +3497,13 @@
                       "additionalProperties": false
                     }
                   ],
-                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                  "description": "Let the user make the bars, rail, cards and panels clearer, down to 30%, so the background shows through (Settings › Skins › Glass). {\"min\": n} is the clearest glass at which all text still reads; below it the veil thins too. 允许用户调低栏、侧栏、卡片和面板的不透明度（最低 30%），透出背景。{\"min\": n} 是文字仍然看得清的最透明程度，低于它时 veil 也会变淡。"
                 },
                 "veil": {
                   "type": "number",
                   "minimum": 0,
                   "maximum": 0.9,
-                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture; thins with glass clearer than glass.min. 页面下面垫的一层底色，玻璃比 glass.min 更透明时会变淡。"
                 }
               },
               "additionalProperties": false
@@ -4119,13 +4119,13 @@
                       "additionalProperties": false
                     }
                   ],
-                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                  "description": "Let the user make the bars, rail, cards and panels clearer, down to 30%, so the background shows through (Settings › Skins › Glass). {\"min\": n} is the clearest glass at which all text still reads; below it the veil thins too. 允许用户调低栏、侧栏、卡片和面板的不透明度（最低 30%），透出背景。{\"min\": n} 是文字仍然看得清的最透明程度，低于它时 veil 也会变淡。"
                 },
                 "veil": {
                   "type": "number",
                   "minimum": 0,
                   "maximum": 0.9,
-                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture; thins with glass clearer than glass.min. 页面下面垫的一层底色，玻璃比 glass.min 更透明时会变淡。"
                 }
               },
               "additionalProperties": false

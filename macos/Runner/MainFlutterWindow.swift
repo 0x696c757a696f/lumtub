@@ -5,26 +5,11 @@ class MainFlutterWindow: NSWindow {
   private(set) var shell: MacShell?
   private var flutterViewController: FlutterViewController?
   var flutterView: NSView? { flutterViewController?.view }
-  /// The blurred desktop behind Flutter while a glass skin sees through.
-  private let behind = NSVisualEffectView()
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     self.flutterViewController = flutterViewController
-    // Flutter's view sits in a plain container, over the desktop blur.
-    let container = NSViewController()
-    container.view = NSView(frame: flutterViewController.view.frame)
-    container.addChild(flutterViewController)
-    behind.frame = container.view.bounds
-    behind.autoresizingMask = [.width, .height]
-    behind.blendingMode = .behindWindow
-    behind.state = .followsWindowActiveState
-    behind.isHidden = true
-    container.view.addSubview(behind)
-    flutterViewController.view.frame = container.view.bounds
-    flutterViewController.view.autoresizingMask = [.width, .height]
-    container.view.addSubview(flutterViewController.view)
-    self.contentViewController = container
+    self.contentViewController = flutterViewController
     self.initialFirstResponder = flutterViewController.view
     self.makeFirstResponder(flutterViewController.view)
     self.setFrame(MainFlutterWindow.firstFrame(for: self), display: true)
@@ -44,17 +29,6 @@ class MainFlutterWindow: NSWindow {
     var frame = window.frameRect(forContentRect: NSRect(origin: .zero, size: content))
     frame.origin = NSPoint(x: visible.midX - frame.width / 2, y: visible.midY - frame.height / 2)
     return frame
-  }
-
-  /// The desktop shows, blurred, wherever Flutter leaves the window clear.
-  func setSeeThrough(_ on: Bool, dark: Bool) {
-    behind.material = .underWindowBackground
-    behind.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
-    behind.isHidden = !on
-    isOpaque = !on
-    backgroundColor = on ? .clear : .windowBackgroundColor
-    flutterViewController?.backgroundColor = on ? .clear : .black
-    invalidateShadow()
   }
 
   // Picture in picture makes the window borderless, which by default

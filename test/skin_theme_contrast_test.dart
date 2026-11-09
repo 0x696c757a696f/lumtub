@@ -6,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumtub/skins/jsonc.dart';
 import 'package:lumtub/skins/skin.dart';
 import 'package:lumtub/ui/skin_scenes.dart';
-import 'package:lumtub/ui/skin_paint.dart';
 import 'package:lumtub/ui/theme.dart';
 
 /// The colours the app's widgets put on top of each other, for every
@@ -68,11 +67,6 @@ void main() {
           // A painted landscape behind: every colour it is made of.
           for (final d in side.decorations.whereType<SceneDecoration>()) {
             behind.addAll(sceneTones(SkinScene.byName(d.scene)!, night: d.night));
-          }
-          // Seeing through to the desktop, any wallpaper lies under a tint
-          // of the page colour.
-          for (final grey in [0x00, 0x40, 0x80, 0xc0, 0xff]) {
-            behind.add(Color.alphaBlend(page.withValues(alpha: SkinGlass.desk), Color.fromARGB(255, grey, grey, grey)));
           }
           // Text on the pages lies over the landscape through the veil.
           if (side.veil > 0) {

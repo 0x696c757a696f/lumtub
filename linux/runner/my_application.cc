@@ -49,13 +49,6 @@ static void my_application_activate(GApplication* application) {
     }
   }
 #endif
-  // A window with an alpha channel, so a glass skin can let the desktop
-  // through; Flutter paints it opaque until then.
-  GdkVisual* rgba = gdk_screen_get_rgba_visual(gtk_window_get_screen(window));
-  if (rgba != nullptr && gdk_screen_is_composited(gtk_window_get_screen(window))) {
-    gtk_widget_set_visual(GTK_WIDGET(window), rgba);
-    gtk_widget_set_app_paintable(GTK_WIDGET(window), TRUE);
-  }
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));

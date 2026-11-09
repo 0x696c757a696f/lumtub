@@ -7,35 +7,14 @@
 ! suggested: no
 ! note: The Saudi Press Agency and others are state media; Al Arabiya and MBC belong to state-owned groups. Korea's MBC shares the name, so MBC alone is not matched
 ! source: https://en.wikipedia.org/wiki/Saudi_Press_Agency
-! legacy: 沙特官方及国家控股媒体
 
-:saudi-press-agency | ^Saudi Press Agency
-    legacy: 沙特官方及国家控股媒体/channel/Saudi Press Agency
-:saudi-broadcasting-authority | ^Saudi Broadcasting Authority
-    legacy: 沙特官方及国家控股媒体/channel/Saudi Broadcasting Authority
+:saudi-press-agency | =SPA | ^Saudi Press Agency
+:saudi-broadcasting-authority | =SBA | ^Saudi Broadcasting Authority
 :al-saudiya | ^Al Saudiya
-    legacy: 沙特官方及国家控股媒体/channel/Al Saudiya
-:al-ekhbariya | ^Al Ekhbariya
-    legacy: 沙特官方及国家控股媒体/channel/Al Ekhbariya
-:al-arabiya | ^Al Arabiya
-    legacy: 沙特官方及国家控股媒体/channel/Al Arabiya
-:al-hadath | ^Al Hadath
-    legacy: 沙特官方及国家控股媒体/channel/Al Hadath
+:al-ekhbariya | =الإخبارية | ^Al Ekhbariya
+:al-arabiya | =العربية | ^Al Arabiya
+:al-hadath | =الحدث | ^Al Hadath
 :mbc-group | ^MBC Group
-    legacy: 沙特官方及国家控股媒体/channel/MBC Group
 :asharq-news | ^Asharq News
-    legacy: 沙特官方及国家控股媒体/channel/Asharq News
 :asharq-al-awsat | ^Asharq Al-Awsat
-    legacy: 沙特官方及国家控股媒体/channel/Asharq Al-Awsat
 :arab-news | ^Arab News
-    legacy: 沙特官方及国家控股媒体/channel/Arab News
-:spa | =SPA
-    legacy: 沙特官方及国家控股媒体/exact/SPA
-:sba | =SBA
-    legacy: 沙特官方及国家控股媒体/exact/SBA
-:xf4140f4c | =الإخبارية
-    legacy: 沙特官方及国家控股媒体/exact/الإخبارية
-:x1d32e3f7 | =العربية
-    legacy: 沙特官方及国家控股媒体/exact/العربية
-:x9b1b2c5d | =الحدث
-    legacy: 沙特官方及国家控股媒体/exact/الحدث

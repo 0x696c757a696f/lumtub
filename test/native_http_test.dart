@@ -18,6 +18,7 @@ void main() {
     late HttpServer server;
     late Uri base;
     final hold = Completer<void>();
+    var sentEndless = 0;
 
     setUpAll(() async {
       NativeHttp.configure();
@@ -40,6 +41,12 @@ void main() {
               response.add(List.filled(32 * 1024, i));
               await response.flush();
             }
+          case '/endless':
+            for (var i = 0; i < 512; i++) {
+              response.add(List.filled(64 * 1024, i % 256));
+              await response.flush();
+              sentEndless += 64 * 1024;
+            }
           case '/redirect':
             response.redirect(base.replace(path: '/echo'));
             return;
@@ -54,6 +61,31 @@ void main() {
     tearDownAll(() async {
       hold.complete();
       await server.close(force: true);
+    });
+
+    test('a paused reader holds the download back instead of filling memory', () async {
+      final client = NativeHttpClient();
+      final response = await client.send(http.Request('GET', base.replace(path: '/endless')));
+      var read = 0;
+      var paused = false;
+      final done = Completer<void>();
+      late StreamSubscription<List<int>> reading;
+      reading = response.stream.listen((piece) {
+        read += piece.length;
+        if (read >= 64 * 1024 && !paused) {
+          paused = true;
+          reading.pause();
+        }
+      }, onDone: done.complete);
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      expect(reading.isPaused, isTrue);
+      // 32 MiB would be through a loopback socket in this time; with the
+      // reader paused only the core's window and the sockets' buffers are.
+      expect(sentEndless, lessThan(16 * 1024 * 1024));
+      reading.resume();
+      await done.future;
+      expect(read, 512 * 64 * 1024);
+      client.close();
     });
 
     test('is the app client when the core is there', () {

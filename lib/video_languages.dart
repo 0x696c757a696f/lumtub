@@ -279,8 +279,10 @@ class VideoLanguages {
   /// leave out every video while YouTube does not answer. Lines go out as
   /// their answers come in, a few lookups ahead of the reader.
   ///
-  /// With [heardOnly], a video only passes when its audio or automatic
-  /// captions say so. After [giveUpAfter] videos with none kept, it stops;
+  /// With [heardOnly], a video passes when its audio or automatic captions
+  /// say so. Only when YouTube hardly ever tells does a title judge, and
+  /// then only one that is the same asked in English and in [language], so
+  /// never a translation. After [giveUpAfter] videos with none kept, it stops;
   /// [done] hears how many were asked about and kept.
   Stream<String> only(
     Stream<String> lines,
@@ -338,6 +340,10 @@ class VideoLanguages {
           kept++;
           return shown;
         }
+        // Asked in English and in [language], YouTube named the video
+        // differently: a translated title, which says nothing of the
+        // speech. Without hearing, such a video never passes.
+        if (heardOnly && (spoken == null || (spoken.title.isNotEmpty && spoken.title != item.title))) return null;
         if (strict) {
           held.add(shown);
           return null;

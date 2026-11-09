@@ -77,6 +77,7 @@ import '../format_policy.dart';
 import '../memory_trim.dart';
 import '../video_codec.dart';
 import '../community_posts.dart';
+import '../block_list_updates.dart';
 import '../blocked_groups.dart';
 import '../explore_filters.dart';
 import '../explore_topics.dart';
@@ -146,6 +147,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   bool checking = false;
   /// Lumtub's own updates; null until the components are ready.
   AppUpdater? appUpdater;
+
+  /// Daily download of the signed block lists; set once ready.
+  BlockListUpdates? blockListUpdates;
   String status = tr('Preparing the Windows native player…');
   /// Startup failure; the setup screen shows it with a retry button.
   String? error;
@@ -1121,6 +1125,7 @@ class AppController extends ChangeNotifier with _ExploreState {
         if (_disposed) return;
         if (preferences.autoCheckUpdates) unawaited(manager.checkUpdates());
         if (preferences.autoCheckUpdates || preferences.autoUpdateApp) updater.start(download: () => preferences.autoUpdateApp);
+        (blockListUpdates = BlockListUpdates(client: _http, data: directories.data, cache: directories.cache)).start(wanted: () => preferences.updateBlockLists);
         unawaited(_refreshCacheSize());
         unawaited(_trimThumbnails());
       });
@@ -3178,6 +3183,7 @@ class AppController extends ChangeNotifier with _ExploreState {
     unawaited(_flushAppearance());
     _thumbnailTrimTimer?.cancel();
     _afterStart?.cancel();
+    blockListUpdates?.stop();
     for (final subscription in _playerSubscriptions) {
       unawaited(subscription.cancel());
     }

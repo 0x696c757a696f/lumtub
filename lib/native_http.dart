@@ -103,12 +103,16 @@ class _Bindings {
       : init = library.lookupFunction<Void Function(Pointer<NativeFunction<Int8 Function(Int64, Pointer<Dart_CObject>)>>), void Function(Pointer<NativeFunction<Int8 Function(Int64, Pointer<Dart_CObject>)>>)>('lumtub_http_init'),
         configure = library.lookupFunction<Void Function(Pointer<Uint8>, Size), void Function(Pointer<Uint8>, int)>('lumtub_http_configure'),
         send = library.lookupFunction<Bool Function(Int64, Int64, Pointer<Uint8>, Size, Pointer<Uint8>, Size), bool Function(int, int, Pointer<Uint8>, int, Pointer<Uint8>, int)>('lumtub_http_send'),
-        cancel = library.lookupFunction<Void Function(Int64), void Function(int)>('lumtub_http_cancel');
+        cancel = library.lookupFunction<Void Function(Int64), void Function(int)>('lumtub_http_cancel'),
+        take = library.providesSymbol('lumtub_http_take') ? library.lookupFunction<Void Function(Int64, Int64), void Function(int, int)>('lumtub_http_take') : null;
 
   final void Function(Pointer<NativeFunction<Int8 Function(Int64, Pointer<Dart_CObject>)>>) init;
   final void Function(Pointer<Uint8>, int) configure;
   final bool Function(int id, int port, Pointer<Uint8> json, int length, Pointer<Uint8> body, int bodyLength) send;
   final void Function(int id) cancel;
+  /// Tells the core the body's reader has taken so many more bytes, so it
+  /// sends more; a core without it does not wait.
+  final void Function(int id, int bytes)? take;
 }
 
 /// A request waiting for its head, then streaming its body.
@@ -131,8 +135,17 @@ class _Pending {
       // As dart:io joins repeated headers.
       headers[name] = headers.containsKey(name) ? '${headers[name]},$value' : value;
     }
+    // A piece counts as taken once it reaches the reader: while the reader
+    // is paused, or before anyone listens, the core sends no more.
+    final take = NativeHttp._native?.take;
+    final stream = take == null
+        ? body.stream
+        : body.stream.map((piece) {
+            take(id, piece.length);
+            return piece;
+          });
     response.complete(http.StreamedResponse(
-      body.stream,
+      stream,
       status,
       // Null for a body the core decompresses.
       contentLength: length,

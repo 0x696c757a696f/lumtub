@@ -9,6 +9,7 @@ import '../theme.dart';
 import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
+import '../skin_paint.dart';
 
 /// 设置 › Piped 服务器 / Invidious 实例: choose automatic selection or one
 /// server, measure them all, and download the public list again.
@@ -71,10 +72,10 @@ class _RelayServersPageState extends State<_RelayServersPage> {
     final colors = context.colors;
     final updated = _piped.catalogUpdatedAt;
     return Scaffold(
-      appBar: AppBar(title: Text(_isPiped ? tr('Piped servers') : tr('Invidious instance')), actions: [
+      appBar: SkinAppBar(AppBar(title: Text(_isPiped ? tr('Piped servers') : tr('Invidious instance')), actions: [
         IconButton(tooltip: tr('Speed test'), icon: Icon(AppIcons.gauge), onPressed: _busy == null ? () => _run(tr('Testing speed…'), _piped.remeasure) : null),
         IconButton(tooltip: tr('Update list'), icon: Icon(AppIcons.arrowsClockwise), onPressed: _busy == null ? _update : null),
-      ]),
+      ])),
       body: ListenableBuilder(
         listenable: widget.controller,
         builder: (context, _) {

@@ -4,6 +4,7 @@ import '../../l10n/l10n.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../app_icons.dart';
+import '../skin_paint.dart';
 
 const sponsorsPage = 'https://github.com/sponsors/0x696c757a696f';
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
@@ -35,7 +36,7 @@ class _SupportPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Support development'))),
+      appBar: SkinAppBar(AppBar(title: Text(tr('Support development')))),
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(

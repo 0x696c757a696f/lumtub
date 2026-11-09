@@ -2964,7 +2964,6 @@
   "0-9 and the media keys stay as they are.": "0-9 和媒體鍵不能更改。",
   "0-9 and the media keys stay as they are; press another key.": "0-9 和媒體鍵不能更改，請換一個鍵。",
   "Add a key": "新增按鍵",
-  "Block lists": "封鎖清單",
   "Channel's emoji": "頻道表情",
   "Choose the keys for seeking, volume, fullscreen and more": "設定快轉快退、音量、全螢幕等功能的按鍵",
   "Comments that name a moment": "帶時間點的評論",
@@ -2972,7 +2971,6 @@
   "Emoji": "表情",
   "Exit fullscreen, or else go back": "退出全螢幕，不在全螢幕時返回",
   "Live chat, chat replays and comments that name a moment fly across the picture": "直播聊天、聊天重播和寫了時間點的評論會從畫面上飄過",
-  "Lumtub can leave some channels out of recommendations, Explore and search. Nothing is blocked unless you tick it, and you can change this later in Settings.": "Lumtub 可以把某些頻道從推薦、探索和搜尋裡去掉。不勾選就不會封鎖任何頻道，之後也可以在設定裡修改。",
   "On videos without a chat, a comment such as \"1:23 the best part\" flies at 1:23": "沒有聊天的影片裡，像「1:23 這段最好看」這樣的評論會在 1:23 飄過",
   "Press a key": "按下按鍵",
   "Press the key or key combination to use.": "按下要使用的鍵或組合鍵。",
@@ -3104,8 +3102,6 @@
   "Dark only": "僅深色",
   "Glass": "玻璃",
   "{0}% solid": "不透明度 {0}%",
-  "See the desktop through the window": "透出桌面",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "風景讓開，視窗透出後面的桌面，系統支援時還會帶模糊。低佔用模式下無法使用",
   "Smileys": "笑臉",
   "Gestures": "手勢",
   "Hearts": "心形",
@@ -3117,6 +3113,11 @@
   "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc，或皮膚資料夾打成的 zip",
   "Added {0}": "已加入 {0}",
   "This is not a skin: {0}": "這不是皮膚：{0}",
-  "See the wallpaper through the app": "透出桌面桌布",
-  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "風景讓開，透出主畫面的桌布，系統支援時會模糊。下次啟動 Lumtub 時生效。低占用模式下關閉"
+  "Update block lists automatically": "自動更新封鎖清單",
+  "Lists of {0}": "清單日期：{0}",
+  "Lists of {0}; those of {1} are used after a restart": "清單日期：{0}；{1} 的新清單重新啟動後生效",
+  "Skin background": "皮膚背景",
+  "The skin's pictures and landscape behind the pages; off leaves a plain colour": "頁面後面顯示皮膚的圖片和風景；關閉後只留純色",
+  "Suggest a channel or report a mistake": "推薦頻道或回報誤列",
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "清單公開在 GitHub 上，任何人都可以補充。每個條目都要有公開來源"
 }

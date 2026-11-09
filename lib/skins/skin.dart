@@ -81,8 +81,9 @@ class Skin {
   /// Whether the user may make the bars, rail, cards and panels clearer, so
   /// the sky or water behind shows through: `window.glass`.
   late final bool glass = _window['glass'] == true || _window['glass'] is Map;
-  /// The clearest the glass may go, 0.3 to 1: `window.glass.min`, higher for
-  /// a skin with dark or busy parts behind its bars.
+  /// The clearest the glass stays readable at, 0.3 to 1: `window.glass.min`,
+  /// higher for a skin with dark or busy parts behind its bars. The slider
+  /// still goes down to 0.3; this is what the contrast test holds to.
   late final double glassMin = (_num(_map(_window['glass'])['min']) ?? 0.3).clamp(0.3, 1).toDouble();
   /// How much of the page colour lies over the backdrop under the pages,
   /// 0 to 0.9, so text there reads over a busy picture: `window.veil`.

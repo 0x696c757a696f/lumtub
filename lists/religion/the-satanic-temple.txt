@@ -8,7 +8,4 @@
 ! topic: 撒旦圣殿
 ! source: https://en.wikipedia.org/wiki/The_Satanic_Temple
 
-:the-satanic-temple | ^The Satanic Temple
-:satanic-temple | ^Satanic Temple
-:zh-hans | ^撒旦圣殿
-:zh-hant | ^撒旦聖殿
+:the-satanic-temple | ^The Satanic Temple | ^Satanic Temple | ^撒旦圣殿 | ^撒旦聖殿

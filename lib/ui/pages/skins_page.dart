@@ -59,7 +59,7 @@ class _SkinsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final library = SkinLibrary.instance;
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Skins'))),
+      appBar: SkinAppBar(AppBar(title: Text(tr('Skins')))),
       body: ListenableBuilder(
         listenable: Listenable.merge([controller, library]),
         builder: (context, _) {
@@ -94,22 +94,19 @@ class _SkinsPage extends StatelessWidget {
                 leading: Icon(AppIcons.drop),
                 title: Text(tr('Glass')),
                 subtitle: Slider(
-                  value: appearance.glassOpacity.clamp(context.skin!.glassMin, 1),
-                  min: context.skin!.glassMin,
+                  value: appearance.glassOpacity.clamp(SkinGlass.min, 1),
+                  min: SkinGlass.min,
                   label: tr('{0}% solid', [(appearance.glassOpacity * 100).round()]),
                   onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(glassOpacity: v)),
                 ),
               ),
-            if ((context.skin?.glass ?? false) && WindowFrame.canSeeThrough)
+            if (context.skin != null)
               SwitchItem(
-                title: WindowFrame.supported ? tr('See the desktop through the window') : tr('See the wallpaper through the app'),
-                subtitle: WindowFrame.supported
-                    ? tr('The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode')
-                    : tr('The landscape steps aside and the home screen\'s wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode'),
-                leading: Icon(AppIcons.monitorArrowUp),
-                value: appearance.seeThrough,
-                enabled: !appearance.lowResource,
-                onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(seeThrough: v)),
+                title: tr('Skin background'),
+                subtitle: tr("The skin's pictures and landscape behind the pages; off leaves a plain colour"),
+                leading: Icon(AppIcons.image),
+                value: appearance.skinBackground,
+                onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(skinBackground: v)),
               ),
             _header(context, tr('Color schemes')),
             grid([for (final s in library.builtIn) if (schemes.contains(s.id)) s], standard: true),

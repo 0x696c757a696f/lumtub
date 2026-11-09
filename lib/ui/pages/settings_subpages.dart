@@ -37,6 +37,7 @@ import 'translation_settings_page.dart';
 import '../../l10n/l10n.dart';
 import '../motion.dart';
 import '../app_icons.dart';
+import '../skin_paint.dart';
 
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
 
@@ -44,7 +45,7 @@ const _repository = 'https://github.com/0x696c757a696f/lumtub';
 Future<void> _push(BuildContext context, AppController controller, String title, List<Widget> Function(BuildContext context) children, {List<Widget>? actions}) =>
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => Scaffold(
-        appBar: AppBar(title: Text(title), actions: actions),
+        appBar: SkinAppBar(AppBar(title: Text(title), actions: actions)),
         body: ListenableBuilder(
           listenable: controller,
           builder: (context, _) => ListView(padding: const EdgeInsets.only(bottom: 40), children: children(context)),
@@ -173,6 +174,7 @@ Future<void> openBlockedGroups(BuildContext context, AppController controller) =
         _header(context, tr('Groups to block')),
         ..._groupTiles(context, controller, blockedGroups, media: false),
         _tip(context, tr('Tap a group to see its whole list and untick entries one by one. Only channel names, @handles and channel IDs are matched, never titles or descriptions, and the list stays on this computer. To block more, use Home & search › Title keyword filter, or Privacy › Blocked channels.')),
+        _suggestTile(),
       ];
     });
 
@@ -191,15 +193,18 @@ Future<void> openStateMedia(BuildContext context, AppController controller) => _
         _header(context, tr('Groups to block')),
         ..._groupTiles(context, controller, stateMedia, media: true),
         _tip(context, tr('The list stays on this computer. Add any channel it misses under Privacy › Blocked channels.')),
+        _suggestTile(),
       ];
     });
 
-/// [prefs] with [group] ticked or not.
-AppPreferences _withGroup(AppPreferences prefs, BlockedGroup group, bool on, {required bool media}) {
-  List<String> toggled(List<String> list, bool add) => add ? {...list, group.name}.toList() : [...list.where((n) => n != group.name)];
-  if (!group.onByDefault) return prefs.copyWith(enabledGroups: toggled(prefs.enabledGroups, on));
-  return media ? prefs.copyWith(allowedMedia: toggled(prefs.allowedMedia, !on)) : prefs.copyWith(allowedGroups: toggled(prefs.allowedGroups, !on));
-}
+/// Opens the repository's form for adding a channel to a block list or taking one off.
+Widget _suggestTile() => ListTile(
+      leading: Icon(AppIcons.arrowSquareOut),
+      title: Text(tr('Suggest a channel or report a mistake')),
+      subtitle: Text(tr('The lists are public on GitHub, and anyone can add to them. Every entry needs a public source')),
+      onTap: () => openExternal('https://github.com/0x696c757a696f/lumtub/issues/new?template=block_list.yml'),
+    );
+
 
 /// One row per group: a tick for the whole group, and a tap for its list.
 List<Widget> _groupTiles(BuildContext context, AppController controller, List<BlockedGroup> groups, {required bool media}) {
@@ -216,7 +221,7 @@ List<Widget> _groupTiles(BuildContext context, AppController controller, List<Bl
           enabled: enabled,
           leading: Checkbox(
             value: prefs.groupOn(group, media: media),
-            onChanged: enabled ? (on) => controller.savePreferences(_withGroup(prefs, group, on == true, media: media)) : null,
+            onChanged: enabled ? (on) => controller.savePreferences(prefs.withGroup(group, on == true, media: media)) : null,
           ),
           title: Text(group.label),
           subtitle: Text(
@@ -258,7 +263,7 @@ Future<void> _openGroupEntries(BuildContext context, AppController controller, B
         title: Text(tr('Block this group')),
         subtitle: Text(media ? tr('Needs "Block state propaganda media" on') : tr('Needs "Block controversial religious groups" on')),
         value: prefs.groupOn(group, media: media),
-        onChanged: (on) => controller.savePreferences(_withGroup(prefs, group, on, media: media)),
+        onChanged: (on) => controller.savePreferences(prefs.withGroup(group, on, media: media)),
       ),
       for (final kind in BlockKind.values)
         if (entries.where((e) => e.kind == kind).toList() case final list when list.isNotEmpty) ...[
@@ -717,7 +722,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(tr('App font'))),
+        appBar: SkinAppBar(AppBar(title: Text(tr('App font')))),
         body: ListenableBuilder(
           listenable: widget.controller,
           builder: (context, _) {
@@ -828,7 +833,7 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
   Widget build(BuildContext context) {
     final controller = widget.controller;
     return Scaffold(
-      appBar: AppBar(
+      appBar: SkinAppBar(AppBar(
         title: Text(tr('Video and A/V sync adjustments')),
         actions: [
           TextButton(
@@ -847,7 +852,7 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
           ),
           const SizedBox(width: 8),
         ],
-      ),
+      )),
       body: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
         _header(context, tr('Video')),
         for (final (key, label) in pictureProperties)
@@ -1134,7 +1139,7 @@ class _LogsPageState extends State<_LogsPage> {
         if (levels[i].index <= _shown.index) (lines[i], levels[i]),
     ];
     return Scaffold(
-      appBar: AppBar(
+      appBar: SkinAppBar(AppBar(
         title: Text(tr('Logs')),
         actions: [
           PopupMenuButton<int>(
@@ -1153,7 +1158,7 @@ class _LogsPageState extends State<_LogsPage> {
           ),
           const SizedBox(width: 4),
         ],
-      ),
+      )),
       body: text == null
           ? const Center(child: CircularProgressIndicator())
           : Column(children: [

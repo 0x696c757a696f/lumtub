@@ -178,6 +178,9 @@
     "thumbnailRadius": 0
   },
   "window": {
+    // The checkered desk only shows faintly under the pages, so text on
+    // them reads.
+    "veil": 0.9,
     "background": [
       "#ffffff",
       {

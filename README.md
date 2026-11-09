@@ -103,6 +103,7 @@ These are also found in other YouTube clients, and all are opt-in here:
 - **Skins** that change the whole look, 23 built in, from Y2K gloss and Frutiger Aero scenes to one-bit pixels, with their own title bar and menu bar if you like. Anyone can make one: a commented `skin.jsonc` file, checked for readable contrast. See [skins/README.md](skins/README.md).
 - Ten colour schemes, light and dark, plus an optional warm light, fonts and card sizes.
 - Block any channel, or just stop it being recommended.
+- **Block lists** for controversial religious groups and state propaganda media, off until you turn them on. They are public files in [lists/](lists/), updated daily with signatures, and anyone can suggest a channel or report a mistake. See [lists/README.md](lists/README.md).
 - Signed automatic updates for the app, yt-dlp and libmpv, with rollback if a new component breaks.
 
 ## Get it
@@ -190,7 +191,7 @@ One-time gifts of any amount are just as welcome. The same page is in the app un
 
 Other ways to give, crypto included, are in [SPONSORING.md](SPONSORING.md).
 
-Can't give money? ⭐ Star the repository, tell a friend, [report a bug or suggest an idea](https://github.com/0x696c757a696f/lumtub/issues), or [translate Lumtub](https://hosted.weblate.org/engage/lumtub/). It all helps.
+Can't give money? ⭐ Star the repository, tell a friend, [report a bug or suggest an idea](https://github.com/0x696c757a696f/lumtub/issues), [suggest a channel for the block lists](lists/README.md#suggesting-a-change), or [translate Lumtub](https://hosted.weblate.org/engage/lumtub/). It all helps.
 
 ---
 

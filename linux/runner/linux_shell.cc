@@ -614,34 +614,6 @@ void BeginFrameDrag(bool resize, GdkWindowEdge edge) {
   }
 }
 
-// The desktop shows wherever Flutter leaves the window clear: only with a
-// compositor and the alpha visual set up at start. KDE on X11 also blurs
-// it.
-bool SetSeeThrough(bool on) {
-  GtkWidget* window = GTK_WIDGET(shell.window);
-  GdkScreen* screen = gtk_widget_get_screen(window);
-  const bool possible = shell.view != nullptr && gdk_screen_is_composited(screen) &&
-                        gtk_widget_get_visual(window) == gdk_screen_get_rgba_visual(screen);
-  const bool clear = on && possible;
-  if (shell.view != nullptr) {
-    GdkRGBA background{0, 0, 0, clear ? 0.0 : 1.0};
-    fl_view_set_background_color(shell.view, &background);
-  }
-#ifdef GDK_WINDOWING_X11
-  GdkWindow* surface = gtk_widget_get_window(window);
-  if (surface != nullptr && GDK_IS_X11_WINDOW(surface)) {
-    GdkAtom blur = gdk_atom_intern_static_string("_KDE_NET_WM_BLUR_BEHIND_REGION");
-    if (clear) {
-      gdk_property_change(surface, blur, gdk_atom_intern_static_string("CARDINAL"), 32, GDK_PROP_MODE_REPLACE, nullptr, 0);
-    } else {
-      gdk_property_delete(surface, blur);
-    }
-  }
-#endif
-  gtk_widget_queue_draw(window);
-  return clear;
-}
-
 void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
   const std::string method = fl_method_call_get_name(call);
   FlValue* args = fl_method_call_get_args(call);
@@ -675,10 +647,6 @@ void HandleFrameCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
   } else if (method == "startResize") {
     const bool named = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING;
     BeginFrameDrag(true, EdgeOf(named ? fl_value_get_string(args) : ""));
-  } else if (method == "setSeeThrough") {
-    g_autoptr(FlValue) answer = fl_value_new_bool(SetSeeThrough(BoolArg(args, "on")));
-    fl_method_call_respond_success(call, answer, nullptr);
-    return;
   } else if (method == "setCaption") {
     // Hit-testing is Windows' own.
   } else {

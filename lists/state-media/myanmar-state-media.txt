@@ -7,9 +7,7 @@
 ! note: Government radio and television run by MRTV
 ! source: https://en.wikipedia.org/wiki/Media_of_Myanmar
 
-:mrtv | ^MRTV
-    reviewed: 2026-11-08
-:myanma-radio-and-television | ^Myanma Radio and Television
+:mrtv | ^MRTV | ^Myanma Radio and Television
     reviewed: 2026-11-08
 :radio-myanmar | ^Radio Myanmar
     reviewed: 2026-11-08

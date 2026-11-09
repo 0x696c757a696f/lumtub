@@ -245,14 +245,15 @@ void main() {
     }
     await pumpEventQueue();
     // Each find shows as its page ends, while the next one is read.
-    expect(loader.items.map((v) => v.title), ['0', '3']);
+    expect(loader.items.map((v) => v.title), ['3', '0']);
     expect(loader.loading, isTrue);
     for (var i = 4; i < 7; i++) {
       lines.add(_video(i));
     }
     await lines.close();
     await pumpEventQueue();
-    expect(loader.items.map((v) => v.title), ['0', '3', '6']);
+    // A better find moves up among those this load added.
+    expect(loader.items.map((v) => v.title), ['6', '3', '0']);
     expect(loader.loading, isFalse);
   });
 

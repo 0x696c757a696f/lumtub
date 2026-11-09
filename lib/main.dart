@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app/app_controller.dart';
 import 'app_directories.dart';
+import 'blocked_groups.dart';
 import 'app_window.dart';
 import 'app_log.dart';
 import 'appearance_settings.dart';
@@ -56,6 +57,7 @@ Future<void> main() async {
   var appearance = const AppearanceSettings();
   try {
     final directories = await AppDirectories.create();
+    BlockLists.folder = directories.data.path;
     store = AppearanceSettingsStore(directories);
     appearance = await store.load();
     await SkinLibrary.instance.load(folder: directories.skins);
@@ -118,7 +120,7 @@ class _LumtubAppState extends State<LumtubApp> {
           plain: appearance.lowResource,
         );
     _useFilledIcons(skin?.icons.filled ?? false);
-    _useGlass(skin?.glass ?? false ? appearance.glassOpacity.clamp(skin!.glassMin, 1).toDouble() : 1);
+    _useGlass(skin?.glass ?? false ? appearance.glassOpacity.clamp(SkinGlass.min, 1).toDouble() : 1);
     _light = build(Brightness.light);
     _dark = build(Brightness.dark);
     _lightContrast = build(Brightness.light, highContrast: true);

@@ -8,14 +8,22 @@
 //! `[id, 0, status, headers_json, content_length, final_url]` once the head is in,
 //! `[id, 1, bytes]` for each piece of the body, `[id, 2]` at the end and
 //! `[id, 3, message]` on failure. A request can be cancelled by id.
+//!
+//! The body flows only as fast as Dart reads it: Dart reports the bytes its
+//! reader has taken with `lumtub_http_take`, and no more than [WINDOW]
+//! bytes are ever posted and not yet taken. Until then the network is not
+//! read either, so a slow reader slows the download instead of piling it
+//! up in memory.
 
 use std::collections::HashMap;
 use std::ffi::{CString, c_char};
-use std::sync::{LazyLock, Mutex, RwLock};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock, Mutex, RwLock};
 use std::time::Duration;
 
 use serde::Deserialize;
 use tokio::runtime::Runtime;
+use tokio::sync::Notify;
 use tokio::task::AbortHandle;
 
 use crate::taste::text;
@@ -153,6 +161,36 @@ pub(crate) fn client() -> reqwest::Client {
 static CLIENT: LazyLock<RwLock<reqwest::Client>> = LazyLock::new(|| RwLock::new(build(&Settings { proxy: None, system: true, dns: Default::default(), roots: Default::default() })));
 static RUNNING: LazyLock<Mutex<HashMap<i64, AbortHandle>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
+/// How much of a body may be posted to Dart and not yet taken by its reader.
+pub(crate) const WINDOW: u64 = 1024 * 1024;
+
+/// How long a body may wait for its reader before the request is dropped.
+const UNREAD: Duration = Duration::from_secs(300);
+
+/// How far Dart's reader has got with one body.
+#[derive(Default)]
+struct Flow {
+    taken: AtomicU64,
+    moved: Notify,
+}
+
+impl Flow {
+    /// Waits until no more than [WINDOW] of [posted] bytes are untaken.
+    async fn room(&self, posted: u64) {
+        loop {
+            let moved = self.moved.notified();
+            tokio::pin!(moved);
+            moved.as_mut().enable();
+            if posted.saturating_sub(self.taken.load(Ordering::Acquire)) <= WINDOW {
+                return;
+            }
+            moved.await;
+        }
+    }
+}
+
+static FLOWS: LazyLock<Mutex<HashMap<i64, Arc<Flow>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+
 #[derive(Deserialize)]
 struct Request {
     method: String,
@@ -165,7 +203,7 @@ struct Request {
 /// big download is not one message per network read.
 const PIECE: usize = 64 * 1024;
 
-async fn run(id: i64, port: i64, request: Request, body: Vec<u8>) {
+async fn run(id: i64, port: i64, request: Request, body: Vec<u8>, flow: Arc<Flow>) {
     let client = CLIENT.read().unwrap_or_else(|e| e.into_inner()).clone();
     let method = reqwest::Method::from_bytes(request.method.as_bytes()).unwrap_or(reqwest::Method::GET);
     let mut builder = client.request(method, &request.url);
@@ -199,7 +237,14 @@ async fn run(id: i64, port: i64, request: Request, body: Vec<u8>) {
     // What has arrived goes on at once, so a slow stream is not held back;
     // reads already waiting are joined first, up to [PIECE].
     let mut ended = false;
+    let mut posted = 0u64;
     while !ended {
+        // A body nobody reads any more is let go after a while, so its
+        // connection does not stay held.
+        if tokio::time::timeout(UNREAD, flow.room(posted)).await.is_err() {
+            post(port, vec![Item::Int(id), Item::Int(3), Item::Text("the body was not read for 5 minutes".into())]);
+            return;
+        }
         let mut piece = match response.chunk().await {
             Ok(Some(bytes)) => bytes.to_vec(),
             Ok(None) => break,
@@ -222,6 +267,7 @@ async fn run(id: i64, port: i64, request: Request, body: Vec<u8>) {
                 Err(_) => break,
             }
         }
+        posted += piece.len() as u64;
         if !post(port, vec![Item::Int(id), Item::Int(1), Item::Bytes(piece)]) {
             return;
         }
@@ -286,9 +332,12 @@ pub unsafe extern "C" fn lumtub_http_send(id: i64, port: i64, json: *const u8, l
         return false;
     };
     let body = if body.is_null() || body_length == 0 { Vec::new() } else { unsafe { std::slice::from_raw_parts(body, body_length) }.to_vec() };
+    let flow = Arc::new(Flow::default());
+    FLOWS.lock().unwrap_or_else(|e| e.into_inner()).insert(id, flow.clone());
     let task = RUNTIME.spawn(async move {
-        run(id, port, request, body).await;
+        run(id, port, request, body, flow).await;
         RUNNING.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
+        FLOWS.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
     });
     let mut running = RUNNING.lock().unwrap_or_else(|e| e.into_inner());
     if !task.is_finished() {
@@ -303,11 +352,45 @@ pub extern "C" fn lumtub_http_cancel(id: i64) {
     if let Some(task) = RUNNING.lock().unwrap_or_else(|e| e.into_inner()).remove(&id) {
         task.abort();
     }
+    FLOWS.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
+}
+
+/// Dart's reader has taken [bytes] more of request [id]'s body.
+#[unsafe(no_mangle)]
+pub extern "C" fn lumtub_http_take(id: i64, bytes: i64) {
+    let flow = FLOWS.lock().unwrap_or_else(|e| e.into_inner()).get(&id).cloned();
+    if let Some(flow) = flow {
+        flow.taken.fetch_add(bytes.max(0) as u64, Ordering::Release);
+        flow.moved.notify_waiters();
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_body_waits_for_its_reader() {
+        runtime().block_on(async {
+            let flow = Arc::new(Flow::default());
+            // Within the window there is room at once.
+            tokio::time::timeout(Duration::from_millis(50), flow.room(WINDOW)).await.unwrap();
+            // Beyond it, only once the reader has taken enough.
+            let waiting = tokio::spawn({
+                let flow = flow.clone();
+                async move { flow.room(WINDOW + 10).await }
+            });
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            assert!(!waiting.is_finished());
+            flow.taken.fetch_add(5, Ordering::Release);
+            flow.moved.notify_waiters();
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            assert!(!waiting.is_finished(), "5 of the 10 bytes over are not enough");
+            flow.taken.fetch_add(5, Ordering::Release);
+            flow.moved.notify_waiters();
+            tokio::time::timeout(Duration::from_secs(1), waiting).await.unwrap().unwrap();
+        });
+    }
 
     #[test]
     fn cobject_layout_matches_dart() {

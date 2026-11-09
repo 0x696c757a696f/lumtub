@@ -1,7 +1,8 @@
 name: Block lists
 
 # Reads every list strictly and prints what a pull request changes. Runs
-# without secrets; signing happens on main only, in a later job.
+# without secrets; on main the publish job then signs lists.json and puts
+# it on the `lists` release, which Lumtub checks once a day.
 on:
   pull_request:
     branches: [main]
@@ -14,6 +15,8 @@ on:
     branches: [main]
     paths:
       - 'lists/**'
+      - 'native/lumtub_core/src/lists.rs'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -59,3 +62,55 @@ jobs:
             "$tool" check lists --base "$RUNNER_TEMP/base/lists"
             echo '```'
           } | tee -a "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Publish lists
+    needs: check
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-lists
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install the Rust toolchain
+        run: |
+          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: lists
+
+      - name: Build, sign and publish lists.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LUMTUB_UPDATE_KEY: ${{ secrets.LUMTUB_UPDATE_KEY }}
+        run: |
+          if [[ -z "$LUMTUB_UPDATE_KEY" ]]; then
+            echo "::error::The LUMTUB_UPDATE_KEY secret is not set; the lists cannot be signed."
+            exit 1
+          fi
+          # The version is when the lists last changed; an app carries the
+          # commit time of the source it was built from, which is never
+          # earlier, so it takes only lists newer than its own.
+          version=$(git log -1 --format=%ct -- lists native/lumtub_core/src/lists.rs)
+          cargo build --manifest-path native/lumtub_core/Cargo.toml --release --bin lumtub-lists --bin lumtub-sign
+          tools=native/lumtub_core/target/release
+          mkdir -p "$RUNNER_TEMP/out"
+          "$tools/lumtub-lists" build lists "$RUNNER_TEMP/out/lists.json" "$version"
+          "$tools/lumtub-sign" "$RUNNER_TEMP/out/lists.json"
+          if ! gh release view lists --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create lists --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
+              --title 'Block lists' --notes 'The block lists of lists/, compiled and signed. Lumtub checks this release once a day; it is not an app release.'
+          fi
+          gh release upload lists "$RUNNER_TEMP/out/lists.json" "$RUNNER_TEMP/out/lists.json.sig" --repo "$GITHUB_REPOSITORY" --clobber
+          echo "Published block lists version $version ($(date -u -d "@$version" +%Y-%m-%dT%H:%MZ))" | tee -a "$GITHUB_STEP_SUMMARY"

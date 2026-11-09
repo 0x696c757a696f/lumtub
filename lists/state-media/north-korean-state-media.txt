@@ -6,57 +6,14 @@
 ! default: off
 ! note: Uriminzokkiri and other outward-facing outlets stopped in 2024; listed to block old channels
 ! source: https://en.wikipedia.org/wiki/Korean_Central_Television
-! legacy: 朝鲜官方媒体
 
-:kctv | ^KCTV
-    legacy: 朝鲜官方媒体/channel/KCTV
-:korean-central-television | ^Korean Central Television
-    legacy: 朝鲜官方媒体/channel/Korean Central Television
-:tv | ^조선중앙TV
-    legacy: 朝鲜官方媒体/channel/조선중앙TV
-:x7c9c335b | ^조선중앙텔레비죤
-    legacy: 朝鲜官方媒体/channel/조선중앙텔레비죤
-:xb86aefb8 | ^朝鲜中央电视台
-    legacy: 朝鲜官方媒体/channel/朝鲜中央电视台
-:x2097a898 | ^朝鮮中央電視台
-    legacy: 朝鲜官方媒体/channel/朝鮮中央電視台
-:kcna | ^KCNA
-    legacy: 朝鲜官方媒体/channel/KCNA
-:korean-central-news-agency | ^Korean Central News Agency
-    legacy: 朝鲜官方媒体/channel/Korean Central News Agency
-:x9b4a0bea | ^조선중앙통신
-    legacy: 朝鲜官方媒体/channel/조선중앙통신
-:x2960fafa | ^朝鲜中央通讯社
-    legacy: 朝鲜官方媒体/channel/朝鲜中央通讯社
-:rodong-sinmun | ^Rodong Sinmun
-    legacy: 朝鲜官方媒体/channel/Rodong Sinmun
-:x40976f66 | ^로동신문
-    legacy: 朝鲜官方媒体/channel/로동신문
-:xeef3f15b | ^劳动新闻
-    legacy: 朝鲜官方媒体/channel/劳动新闻
-:xea108866 | ^勞動新聞
-    legacy: 朝鲜官方媒体/channel/勞動新聞
-:voice-of-korea | ^Voice of Korea
-    legacy: 朝鲜官方媒体/channel/Voice of Korea
-:x95e1d235 | ^조선의 소리
-    legacy: 朝鲜官方媒体/channel/조선의 소리
-:xeb28dcc7 | ^朝鲜之声
-    legacy: 朝鲜官方媒体/channel/朝鲜之声
-:korean-central-broadcasting | ^Korean Central Broadcasting
-    legacy: 朝鲜官方媒体/channel/Korean Central Broadcasting
-:x8b333089 | ^조선중앙방송
-    legacy: 朝鲜官方媒体/channel/조선중앙방송
-:naenara | ^Naenara
-    legacy: 朝鲜官方媒体/channel/Naenara
-:xa60ae78f | ^내나라
-    legacy: 朝鲜官方媒体/channel/내나라
-:uriminzokkiri | ^Uriminzokkiri
-    legacy: 朝鲜官方媒体/channel/Uriminzokkiri
-:x90afcae2 | ^우리민족끼리
-    legacy: 朝鲜官方媒体/channel/우리민족끼리
+:kctv | ^KCTV | ^Korean Central Television | ^조선중앙TV | ^조선중앙텔레비죤 | ^朝鲜中央电视台 | ^朝鮮中央電視台
+:kcna | ^KCNA | ^Korean Central News Agency | ^조선중앙통신 | ^朝鲜中央通讯社
+:rodong-sinmun | ^Rodong Sinmun | ^로동신문 | ^劳动新闻 | ^勞動新聞
+:voice-of-korea | ^Voice of Korea | ^조선의 소리 | ^朝鲜之声
+:korean-central-broadcasting | ^Korean Central Broadcasting | ^조선중앙방송
+:naenara | ^Naenara | ^내나라
+:uriminzokkiri | ^Uriminzokkiri | ^우리민족끼리
 :dprk-today | ^DPRK Today
-    legacy: 朝鲜官方媒体/channel/DPRK Today
 :ryomyong | ^Ryomyong
-    legacy: 朝鲜官方媒体/channel/Ryomyong
 :arirang-meari | ^Arirang Meari
-    legacy: 朝鲜官方媒体/channel/Arirang Meari

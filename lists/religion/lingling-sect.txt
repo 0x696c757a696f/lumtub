@@ -5,9 +5,5 @@
 ! action: hide
 ! default: off
 ! source: https://zh.wikipedia.org/wiki/灵灵教
-! legacy: 灵灵教
 
-:xe5b8be7c | ^灵灵教
-    legacy: 灵灵教/channel/灵灵教
-:xbb36619e | ^靈靈教
-    legacy: 灵灵教/channel/靈靈教
+:lingling-sect | ^灵灵教 | ^靈靈教

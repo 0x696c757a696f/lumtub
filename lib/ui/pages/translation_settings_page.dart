@@ -8,12 +8,13 @@ import '../../translation_services.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../app_icons.dart';
 import '../translatable.dart' show TranslationView;
+import '../skin_paint.dart';
 
 /// 设置 › 翻译与 AI: the service behind 翻译 and translated subtitles, and
 /// the one AI interface that AI 翻译 and AI 总结 share.
 Future<void> openTranslationSettings(BuildContext context, AppController controller) => Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => Scaffold(
-        appBar: AppBar(title: Text(tr('Translation & AI'))),
+        appBar: SkinAppBar(AppBar(title: Text(tr('Translation & AI')))),
         body: ListenableBuilder(
           listenable: controller,
           builder: (context, _) => ListView(padding: const EdgeInsets.only(bottom: 40), children: _items(context, controller)),

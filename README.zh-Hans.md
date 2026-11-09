@@ -92,6 +92,7 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 - **皮肤**：换掉整个界面的样子，内置二十三套，从千禧年的光泽风格、Frutiger Aero 风景到黑白点阵，还可以用皮肤自己的标题栏和菜单栏。人人都能做皮肤：写一个带注释的 `skin.jsonc` 就行，颜色对比度会自动检查。见 [skins/README.md](skins/README.md)。
 - 十套配色，浅色深色，可选护眼暖光、字体和卡片大小。
 - 屏蔽任意频道，或只是不再推荐它。
+- **屏蔽列表**：争议宗教团体和官方宣传媒体，默认不开，自己在设置里打开。列表是 [lists/](lists/) 里公开的文件，每天带签名自动更新，谁都可以建议加入频道或报告误列。见 [lists/README.md](lists/README.md#怎么贡献)。
 - 应用、yt-dlp 和 libmpv 都有签名的自动更新，新组件出问题时会自动回退。
 
 ## 下载
@@ -178,7 +179,7 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 其他赞助方式（包括加密货币）见 [SPONSORING.md](SPONSORING.md)。
 
-不方便出钱？给仓库点个 ⭐，推荐给朋友，[报告问题或提建议](https://github.com/0x696c757a696f/lumtub/issues)，或者[帮忙翻译 Lumtub](https://hosted.weblate.org/engage/lumtub/)，都很有帮助。
+不方便出钱？给仓库点个 ⭐，推荐给朋友，[报告问题或提建议](https://github.com/0x696c757a696f/lumtub/issues)，[给屏蔽列表推荐频道](lists/README.md#怎么贡献)，或者[帮忙翻译 Lumtub](https://hosted.weblate.org/engage/lumtub/)，都很有帮助。
 
 ---
 

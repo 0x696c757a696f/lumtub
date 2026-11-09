@@ -157,7 +157,7 @@ void main() {
     expect(find.textContaining('Channel names · '), findsOneWidget);
     await tester.tap(find.widgetWithText(CheckboxListTile, '文昭谈古论今'));
     await tester.pump();
-    expect(controller.preferences.allowedEntries.single, endsWith('/channel/文昭谈古论今'));
+    expect(controller.preferences.allowedEntries.single, startsWith('falun-gong-linked-hosts-and-shows/'));
     expect(controller.preferences.blocksChannel('文昭談古論今'), isFalse);
     expect(controller.preferences.blocksChannel('江峰时刻'), isTrue);
     await tester.tap(find.text('Untick all'));

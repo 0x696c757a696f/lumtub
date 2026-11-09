@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import 'device.dart';
 
 /// Which edge or corner of the window a resize starts from.
 enum WindowEdge { top, bottom, left, right, topLeft, topRight, bottomLeft, bottomRight }
@@ -26,10 +25,6 @@ abstract final class WindowFrame {
   /// Windows, Linux (X11 and Wayland) and macOS.
   static bool get supported => Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
-  /// Whether the desktop, or on a phone or tablet the home screen's
-  /// wallpaper, can show through. TVs have no wallpaper behind apps.
-  static bool get canSeeThrough => supported || (Platform.isAndroid && !Device.tv);
-
   /// Whether the system title bar is currently removed.
   static bool get custom => _custom;
 
@@ -41,19 +36,6 @@ abstract final class WindowFrame {
     _custom = on;
     await _invoke('setCustom', on);
     await _refresh();
-  }
-
-  /// Lets the desktop show wherever Flutter leaves the window clear; [dark]
-  /// tints the system's blur. Answers whether the window can.
-  static Future<bool> setSeeThrough({required bool on, bool dark = false}) async {
-    if (!canSeeThrough) return false;
-    try {
-      return await _channel.invokeMethod<bool>('setSeeThrough', {'on': on, 'dark': dark}) ?? false;
-    } on MissingPluginException {
-      return false;
-    } on PlatformException {
-      return false;
-    }
   }
 
   static Future<void> minimize() => _invoke('minimize');

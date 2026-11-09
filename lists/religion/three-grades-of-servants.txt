@@ -4,11 +4,6 @@
 ! category: religion
 ! action: hide
 ! default: off
-! legacy: 三班仆人派
 
-:x2fb57f32 | ^三班仆人
-    legacy: 三班仆人派/channel/三班仆人
-    status: unproven
-:xb6847e2d | ^三班僕人
-    legacy: 三班仆人派/channel/三班僕人
+:three-grades-of-servants | ^三班仆人 | ^三班僕人
     status: unproven

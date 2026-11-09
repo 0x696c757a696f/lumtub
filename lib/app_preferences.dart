@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'ai_filter.dart';
+import 'block_list_renames.dart';
 import 'app_log.dart';
 
 import 'app_directories.dart';
@@ -60,11 +61,11 @@ class AppPreferences {
     this.exploreHeardOnly = true,
     this.minDurationMinutes = 0,
     this.hideWatched = false,
+    this.updateBlockLists = true,
     this.blockGroups = false,
     this.allowedGroups = const [],
     this.blockStateMedia = false,
     this.blockOtherLists = true,
-    this.listsAsked = false,
     this.allowedMedia = const [],
     this.reversedPlaylists = const [],
     this.castMaxHeight = 1080,
@@ -160,9 +161,11 @@ class AppPreferences {
   final bool exploreHeardOnly;
   final int minDurationMinutes;
   final bool hideWatched;
+  /// Fetches the signed block lists once a day (lib/block_list_updates.dart).
+  final bool updateBlockLists;
   /// Hides the lists of lists/religion from recommendations, explore and
   /// search, unless a search names the channel exactly. Off for a new
-  /// install until the first run asks ([listsAsked]).
+  /// install; turned on in settings.
   final bool blockGroups;
   /// [BlockedGroup.name]s the user unticked, so they show.
   final List<String> allowedGroups;
@@ -174,9 +177,6 @@ class AppPreferences {
   /// Hides the lists of every other category of lists/ (scams, malware,
   /// fake cures and the rest), of which only safety lists start ticked.
   final bool blockOtherLists;
-  /// Whether the first run asked which block lists to turn on; true for
-  /// preferences saved before it asked.
-  final bool listsAsked;
   /// Playlists shown and played last to first (倒序), by id.
   final List<String> reversedPlaylists;
   /// 投屏画质: the tallest picture sent to a TV, 1080, 2160 or 4320. Above
@@ -333,8 +333,23 @@ class AppPreferences {
   /// Whether [group] is ticked. A list of [otherLists] starts ticked only
   /// when its file says `default: on`.
   bool groupOn(BlockedGroup group, {bool media = false}) {
-    if (otherLists.contains(group)) return group.defaultOn ? !allowedGroups.contains(group.name) : enabledGroups.contains(group.name);
-    return group.onByDefault ? !(media ? allowedMedia : allowedGroups).contains(group.name) : enabledGroups.contains(group.name);
+    // A choice the user made stands whatever a later version of the lists
+    // makes the default: ticked groups are kept in [enabledGroups], unticked
+    // ones in [allowedGroups] (or [allowedMedia]), and a tick moves a group
+    // from one to the other.
+    final ticked = enabledGroups.contains(group.name);
+    final unticked = (media ? allowedMedia : allowedGroups).contains(group.name);
+    if (ticked != unticked) return ticked;
+    if (otherLists.contains(group)) return group.defaultOn ? !unticked : ticked;
+    return group.onByDefault ? !unticked : ticked;
+  }
+
+  /// These preferences with [group] ticked or not, remembered as the
+  /// user's own choice.
+  AppPreferences withGroup(BlockedGroup group, bool on, {bool media = false}) {
+    List<String> toggled(List<String> list, bool add) => add ? {...list, group.name}.toList() : [...list.where((n) => n != group.name)];
+    final unticked = toggled(media ? allowedMedia : allowedGroups, !on);
+    return copyWith(enabledGroups: toggled(enabledGroups, on), allowedGroups: media ? null : unticked, allowedMedia: media ? unticked : null);
   }
 
   ({BlockMatcher groups, BlockMatcher media, BlockMatcher others}) get _matchers => _matcherCache[this] ??= (
@@ -407,12 +422,12 @@ class AppPreferences {
     bool? exploreHeardOnly,
     int? minDurationMinutes,
     bool? hideWatched,
+    bool? updateBlockLists,
     bool? blockGroups,
     List<String>? allowedGroups,
     bool? blockStateMedia,
     List<String>? allowedMedia,
     bool? blockOtherLists,
-    bool? listsAsked,
     List<String>? reversedPlaylists,
     int? castMaxHeight,
     Map<String, String>? castFormats,
@@ -490,12 +505,12 @@ class AppPreferences {
         exploreHeardOnly: exploreHeardOnly ?? this.exploreHeardOnly,
         minDurationMinutes: minDurationMinutes ?? this.minDurationMinutes,
         hideWatched: hideWatched ?? this.hideWatched,
+        updateBlockLists: updateBlockLists ?? this.updateBlockLists,
         blockGroups: blockGroups ?? this.blockGroups,
         allowedGroups: allowedGroups ?? this.allowedGroups,
         blockStateMedia: blockStateMedia ?? this.blockStateMedia,
         allowedMedia: allowedMedia ?? this.allowedMedia,
         blockOtherLists: blockOtherLists ?? this.blockOtherLists,
-        listsAsked: listsAsked ?? this.listsAsked,
         reversedPlaylists: reversedPlaylists ?? this.reversedPlaylists,
         castMaxHeight: castMaxHeight ?? this.castMaxHeight,
         castFormats: castFormats ?? this.castFormats,
@@ -574,12 +589,12 @@ class AppPreferences {
         'exploreHeardOnlyV2': exploreHeardOnly,
         'minDurationMinutes': minDurationMinutes,
         'hideWatched': hideWatched,
+        'updateBlockLists': updateBlockLists,
         'blockGroups': blockGroups,
         'allowedGroups': allowedGroups,
         'blockStateMedia': blockStateMedia,
         'allowedMedia': allowedMedia,
         'blockOtherLists': blockOtherLists,
-        'listsAsked': listsAsked,
         'reversedPlaylists': reversedPlaylists,
         'castMaxHeight': castMaxHeight,
         'castFormats': castFormats,
@@ -681,8 +696,8 @@ class AppPreferences {
       blockedChannels: channelList('blockedChannels'),
       blockedKeywords: strings('blockedKeywords'),
       unrecommendedChannels: channelList('unrecommendedChannels'),
-      allowedGroups: strings('allowedGroups'),
-      allowedMedia: strings('allowedMedia'),
+      allowedGroups: renamedBlockLists(strings('allowedGroups')),
+      allowedMedia: renamedBlockLists(strings('allowedMedia')),
       reversedPlaylists: strings('reversedPlaylists'),
       castMaxHeight: number('castMaxHeight', d.castMaxHeight, 1080, 4320),
       castFormats: {
@@ -690,8 +705,8 @@ class AppPreferences {
           for (final MapEntry(:key, :value) in formats.entries)
             if (value case 'ts' || 'hls' || 'mp4' || 'mkv') key: value as String,
       },
-      enabledGroups: strings('enabledGroups'),
-      allowedEntries: strings('allowedEntries'),
+      enabledGroups: renamedBlockLists(strings('enabledGroups')),
+      allowedEntries: renamedBlockEntries(strings('allowedEntries')),
       blockedChannelNames: strings('blockedChannelNames'),
       exploreCustomTopics: topics,
       exploreOrder: keyLists('exploreOrder'),
@@ -704,11 +719,11 @@ class AppPreferences {
       exploreHeardOnly: flag('exploreHeardOnlyV2', d.exploreHeardOnly),
       minDurationMinutes: number('minDurationMinutes', 0, 0, 120),
       hideWatched: flag('hideWatched', d.hideWatched),
+      updateBlockLists: flag('updateBlockLists', d.updateBlockLists),
       // Saved before new installs started with it off and asked.
       blockGroups: flag('blockGroups', true),
       blockStateMedia: flag('blockStateMedia', d.blockStateMedia),
       blockOtherLists: flag('blockOtherLists', d.blockOtherLists),
-      listsAsked: flag('listsAsked', true),
       filterSubscriptions: flag('filterSubscriptions', d.filterSubscriptions),
       homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
       homeShowRecent: flag('homeShowRecent', d.homeShowRecent),

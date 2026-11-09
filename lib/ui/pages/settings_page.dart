@@ -16,6 +16,7 @@ import '../theme.dart';
 import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
+import '../skin_paint.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.controller, this.initial = SettingsCategory.account});
@@ -129,7 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
         } else {
           Navigator.of(context).push(MaterialPageRoute<void>(
             builder: (context) => Scaffold(
-              appBar: AppBar(title: Text(category.title)),
+              appBar: SkinAppBar(AppBar(title: Text(category.title))),
               body: _Entries(controller: _controller, category: category),
             ),
           ));

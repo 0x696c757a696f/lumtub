@@ -408,6 +408,9 @@ extension ExploreActions on AppController {
           // Each video is looked up for the language filter: shown as
           // found rather than gathered pages ahead.
           readAhead: !spoken,
+          // Most watched ranks from a wider choice: more of the listing is
+          // read before a page shows, so fewer better videos turn up later.
+          gather: taste == null && mode.byViews ? 3 : 1.5,
           // Upcoming streams and replays are few among a date-sorted
           // search's videos: a few pages are read, then the page offers to
           // keep looking rather than reading on unasked.

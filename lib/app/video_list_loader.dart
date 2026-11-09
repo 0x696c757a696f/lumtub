@@ -13,7 +13,7 @@ import '../friendly_error.dart';
 /// them. One [Listing] serves every page, so each page continues where the
 /// last one stopped.
 class VideoListLoader extends ChangeNotifier {
-  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1, this.readAhead = true, this.pages = 25, this.name, this.dropped});
+  VideoListLoader(this._open, {this.pageSize = 20, this.limit, this.where, this.matches, this.rank, this.fill = 1, this.readAhead = true, this.gather = 1.5, this.pages = 25, this.name, this.dropped});
 
   final Listing Function() _open;
   final int pageSize;
@@ -36,6 +36,10 @@ class VideoListLoader extends ChangeNotifier {
   /// each entry costs a lookup, such as the explore language filter: what
   /// was found then shows as it is found.
   final bool readAhead;
+  /// With [readAhead], candidates are gathered until this many pages'
+  /// worth wait (reading at most twice that many pages more), so the best
+  /// shows first from a wider choice.
+  final double gather;
   /// At most this many pages are read for one [loadMore] while the filters
   /// leave nothing to show; the next [loadMore] reads on from there.
   final int pages;
@@ -59,6 +63,11 @@ class VideoListLoader extends ChangeNotifier {
   final _seen = <String>{};
   /// Ranked candidates not shown yet.
   final _pool = <(VideoItem, double)>[];
+  /// The rank of each video shown, so the ones a [loadMore] is still adding
+  /// can be ordered again as better ones arrive.
+  final _scores = <String, double>{};
+  /// Where the videos the current [loadMore] adds begin.
+  int _roundStart = 0;
   bool _disposed = false;
   /// Entries read from the listing so far, shown or not.
   int _read = 0;
@@ -114,6 +123,7 @@ class VideoListLoader extends ChangeNotifier {
   void loadMore({bool retry = false}) {
     if (loading || !hasMore || (error != null && !retry)) return;
     if (rank != null && _pool.isNotEmpty && error == null && (_listing == null || _listing!.done)) {
+      _roundStart = items.length;
       _showFromPool();
       hasMore = _pool.isNotEmpty;
       _notify();
@@ -133,6 +143,7 @@ class VideoListLoader extends ChangeNotifier {
     loading = true;
     error = null;
     _cause = null;
+    _roundStart = items.length;
     _notify();
     _page(_listing!, count, 0, 0);
   }
@@ -189,7 +200,7 @@ class VideoListLoader extends ChangeNotifier {
         // candidates shows first.
         final wanting = order == null
             ? (matches != null || where != null) && shown < fill
-            : (_pool.length < fill && (matches != null || where != null)) || (readAhead && _pool.length < pageSize + pageSize ~/ 2 && skipped < 3);
+            : (_pool.length < fill && (matches != null || where != null)) || (readAhead && _pool.length < (pageSize * gather).ceil() && skipped < (gather * 2).ceil());
         if (error == null && more && wanting && skipped < pages - 1 && !_disposed) {
           // What was found so far shows while the next page is read.
           if (pendingVideos.isNotEmpty && (order == null || !readAhead)) {
@@ -236,15 +247,27 @@ class VideoListLoader extends ChangeNotifier {
     );
   }
 
-  /// Shows the best page of the candidates gathered.
+  /// Shows the best page of the candidates gathered. Without [readAhead]
+  /// finds show while a [loadMore] is still reading, so the videos it has
+  /// added so far are ordered again with each new find: a better one found
+  /// later moves up among them instead of landing below worse ones.
   void _showFromPool() {
     if (_pool.isEmpty) return;
+    final reorder = !readAhead && _roundStart < items.length;
+    if (reorder) {
+      _pool.addAll([for (final item in items.sublist(_roundStart)) (item, _scores[item.id] ?? double.negativeInfinity)]);
+      items = items.sublist(0, _roundStart);
+    }
     _pool.sort((a, b) => b.$2.compareTo(a.$2));
-    final room = limit == null ? pageSize : max(0, min(pageSize, limit! - items.length));
-    final shown = _pool.take(room).map((e) => e.$1).toList();
+    final page = reorder ? max(pageSize, _pool.length) : pageSize;
+    final room = limit == null ? page : max(0, min(page, limit! - items.length));
+    final shown = _pool.take(room).toList();
     _pool.removeRange(0, shown.length);
     if (limit != null && items.length + shown.length >= limit!) _pool.clear();
-    items = [...items, ...shown];
+    for (final (item, score) in shown) {
+      _scores[item.id] = score;
+    }
+    items = [...items, for (final (item, _) in shown) item];
   }
 
   void _notify() {

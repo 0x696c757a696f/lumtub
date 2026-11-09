@@ -7,32 +7,12 @@
 ! suggested: no
 ! note: Al Jazeera is funded by Qatar's government with some editorial autonomy, unlike the official news agency
 ! source: https://en.wikipedia.org/wiki/Al_Jazeera_Media_Network
-! legacy: 卡塔尔国家资助媒体
 
-:al-jazeera | ^Al Jazeera
-    legacy: 卡塔尔国家资助媒体/channel/Al Jazeera
-:xb8e13dfb | ^الجزيرة
-    legacy: 卡塔尔国家资助媒体/channel/الجزيرة
-:x4e32a26c | ^半岛电视台
-    legacy: 卡塔尔国家资助媒体/channel/半岛电视台
-:xfd80b86b | ^半島電視台
-    legacy: 卡塔尔国家资助媒体/channel/半島電視台
-:aj | ^AJ+
-    legacy: 卡塔尔国家资助媒体/channel/AJ+
-:aj-plus | ^AJ Plus
-    legacy: 卡塔尔国家资助媒体/channel/AJ Plus
+:al-jazeera | ^Al Jazeera | ^الجزيرة | ^半岛电视台 | ^半島電視台
+:aj-plus | ^AJ+ | ^AJ Plus
 :qatar-tv | ^Qatar TV
-    legacy: 卡塔尔国家资助媒体/channel/Qatar TV
-:qatar-media-corporation | ^Qatar Media Corporation
-    legacy: 卡塔尔国家资助媒体/channel/Qatar Media Corporation
-:qatar-news-agency | ^Qatar News Agency
-    legacy: 卡塔尔国家资助媒体/channel/Qatar News Agency
+:qatar-media-corporation | =QMC | ^Qatar Media Corporation
+:qatar-news-agency | =QNA | ^Qatar News Agency
 :al-kass | ^Al Kass
-    legacy: 卡塔尔国家资助媒体/channel/Al Kass
-:qna | =QNA
-    legacy: 卡塔尔国家资助媒体/exact/QNA
-:qmc | =QMC
-    legacy: 卡塔尔国家资助媒体/exact/QMC
-
 :al-jazeera-english-channel | UCNye-wNBqNL5ZzHSJj3l8Bg | @aljazeeraenglish
     reviewed: 2026-11-08

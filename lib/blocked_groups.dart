@@ -11,19 +11,46 @@ import 'native_core.dart';
 /// matched, never titles or descriptions: other channels' reports about a
 /// group, and searches for its names, stay.
 class BlockLists {
-  BlockLists._(this.all);
+  BlockLists._(this.all, {this.version = 0, this.downloaded = false});
 
-  /// Every list in lists/, read once from lumtub_core; none without it.
-  static final BlockLists instance = BlockLists._(_read());
+  /// Where a downloaded, signed lists.json is kept; set before the lists
+  /// are first read.
+  static String? folder;
+
+  /// Every list in use, read once from lumtub_core; none without it. A
+  /// newer download (lib/block_list_updates.dart) is used from the next
+  /// start.
+  static final BlockLists instance = _read();
 
   final List<BlockedGroup> all;
+  /// When the lists were last changed, in seconds since 1970; 0 when not
+  /// known.
+  final int version;
+  /// Whether they came from a download rather than this build.
+  final bool downloaded;
 
-  static List<BlockedGroup> _read() {
+  static BlockLists _read() {
     final core = NativeCore.instance;
-    final text = core?.take(core.blockLists());
-    if (text == null) return const [];
-    final lists = (jsonDecode(text) as Map<String, dynamic>)['lists'] as List<dynamic>;
-    return [for (final list in lists) BlockedGroup.fromJson(list as Map<String, dynamic>)];
+    final text = core?.take(core.withText(jsonEncode({'folder': folder ?? ''}), core.blockLists));
+    if (text == null) return BlockLists._(const []);
+    final json = jsonDecode(text) as Map<String, dynamic>;
+    final lists = json['lists'] as List<dynamic>;
+    return BlockLists._(
+      [for (final list in lists) BlockedGroup.fromJson(list as Map<String, dynamic>)],
+      version: (json['version'] as num?)?.toInt() ?? 0,
+      downloaded: json['downloaded'] == true,
+    );
+  }
+
+  /// The signature of the verified download kept in [folder], newer than
+  /// this build or not; null when there is none or it does not verify.
+  static List<int>? keptSignature(String folder) {
+    final core = NativeCore.instance;
+    final text = core?.take(core.withText(jsonEncode({'folder': folder}), core.blockLists));
+    if (text == null) return null;
+    final hex = (jsonDecode(text) as Map<String, dynamic>)['signature'];
+    if (hex is! String || hex.length.isOdd) return null;
+    return [for (var i = 0; i < hex.length; i += 2) int.parse(hex.substring(i, i + 2), radix: 16)];
   }
 
   List<BlockedGroup> inCategory(String category) => [for (final list in all) if (list.categories.contains(category)) list];
@@ -63,8 +90,7 @@ class BlockedGroup {
 
   factory BlockedGroup.fromJson(Map<String, dynamic> json) {
     final id = json['id'] as String;
-    final legacy = (json['legacy'] as List<dynamic>?)?.cast<String>() ?? const [];
-    final name = legacy.isNotEmpty ? legacy.first : id;
+    final name = id;
     List<String> strings(Object? value) => (value as List<dynamic>?)?.cast<String>() ?? const [];
     return BlockedGroup(
       name: name,
@@ -82,8 +108,8 @@ class BlockedGroup {
     );
   }
 
-  /// Saved in the preferences when the user ticks or unticks it: the name
-  /// it had before the lists were files (`legacy` in its file), else its id.
+  /// Saved in the preferences when the user ticks or unticks it: the list
+  /// file's id (older names are carried over by block_list_renames.dart).
   final String name;
   /// The list file's id.
   final String id;
@@ -131,12 +157,11 @@ class BlockEntry {
             : handles.isNotEmpty
                 ? (BlockKind.handle, handles)
                 : (BlockKind.id, ids);
-    final legacy = strings('legacy');
     return BlockEntry(
       group,
       kind,
       [...forms, if (kind != BlockKind.exact) ...names, if (kind != BlockKind.handle) ...handles, if (kind != BlockKind.id) ...ids],
-      key: legacy.isNotEmpty ? legacy.first : '$list/${record['slug']}',
+      key: '$list/${record['slug']}',
       prefixes: prefixes,
       names: names,
       handles: handles,

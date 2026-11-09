@@ -31,7 +31,6 @@ import 'frame_stats.dart';
 import 'motion.dart';
 import 'player_shortcuts.dart';
 import 'app_icons.dart';
-import 'block_lists_prompt.dart';
 import 'skin_chrome.dart';
 import 'skin_paint.dart';
 import '../skins/skin_library.dart';
@@ -105,11 +104,6 @@ class _AppShellState extends State<AppShell> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(NativeCore.missingMessage), duration: const Duration(minutes: 1), showCloseIcon: true));
         }
-      });
-    }
-    if (!_controller.preferences.listsAsked && !SmokeCheck.requested) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(askBlockLists(context, _controller));
       });
     }
     _finished = _controller.finishedDownloads.listen((task) {
@@ -398,7 +392,7 @@ class _AppShellState extends State<AppShell> {
   /// it under the pages, so what is written on them reads.
   Widget _veiled(Skin? skin, Widget page) {
     if (skin == null || skin.veil == 0 || _controller.appearance.lowResource) return page;
-    return ColoredBox(color: skin.colors.page.withValues(alpha: skin.veil), child: page);
+    return ColoredBox(color: skin.colors.page.withValues(alpha: skin.veil * SkinGlass.thinning(skin)), child: page);
   }
 
   String get _pageKey => !_controller.ready ? 'setup' : _controller.onWatchPage ? 'watch' : switch (_controller.mode) {
@@ -447,7 +441,7 @@ void openSettings(BuildContext context, AppController controller, {SettingsCateg
           onPointerDown: (event) {
             if (event.buttons == kBackMouseButton) back();
           },
-          child: Focus(autofocus: true, child: Scaffold(appBar: AppBar(title: Text(tr('Settings'))), body: SettingsPage(controller: controller, initial: category ?? SettingsCategory.account))),
+          child: Focus(autofocus: true, child: Scaffold(appBar: SkinAppBar(AppBar(title: Text(tr('Settings')))), body: SettingsPage(controller: controller, initial: category ?? SettingsCategory.account))),
         ),
       );
     },

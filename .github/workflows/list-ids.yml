@@ -1,0 +1,68 @@
+name: Block list channel ids
+
+# Run by hand. Searches YouTube for the channels of block list records that
+# only have names, adds the id and @handle of a channel whose title is that
+# name exactly and unambiguously, and pushes the result to a new
+# list-ids-<run> branch for a pull request. The report lists the names that
+# matched several channels or none, for a person to look at.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: Most names to search (empty for all)
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  ids:
+    name: Find channel ids
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Search YouTube for the named channels
+        env:
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          python3 .github/scripts/list_ids.py lists "$RUNNER_TEMP/report.md" ${LIMIT:+--limit "$LIMIT"}
+          cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install the Rust toolchain
+        run: |
+          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Check the lists
+        run: |
+          cargo build --manifest-path native/lumtub_core/Cargo.toml --release --bin lumtub-lists
+          native/lumtub_core/target/release/lumtub-lists check lists
+
+      - name: Push the branch
+        run: |
+          if git diff --quiet -- lists; then
+            echo "No ids were added." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          branch="list-ids-$GITHUB_RUN_ID"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git add lists
+          git commit -q -F - <<EOF
+          Block lists: channel ids for records named only
+
+          $(head -n 3 "$RUNNER_TEMP/report.md" | tail -n 1)
+          EOF
+          git push -q origin "$branch"
+          echo "Pushed $branch; open a pull request from it." | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the report
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: list-ids-report
+          path: ${{ runner.temp }}/report.md

@@ -5,15 +5,12 @@ import android.app.PictureInPictureParams
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.util.Rational
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import io.flutter.embedding.android.FlutterActivity
-import io.flutter.embedding.android.FlutterActivityLaunchConfigs.BackgroundMode
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -37,38 +34,6 @@ class MainActivity : FlutterActivity() {
         this.channel = channel
         PlaybackService.listener = { method, argument -> runOnUiThread { channel.invokeMethod(method, argument) } }
         channel.setMethodCallHandler { call, result -> result.success(handle(call)) }
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lumtub/window_frame").setMethodCallHandler { call, result ->
-            when (call.method) {
-                "setSeeThrough" -> result.success(setSeeThrough(call.argument<Boolean>("on") ?: false, call.argument<Boolean>("dark") ?: false))
-                else -> result.notImplemented()
-            }
-        }
-    }
-
-    /**
-     * A see-through Flutter view costs a texture view instead of a surface
-     * view, so the app only starts see-through when it was see-through
-     * when last closed; switching it on takes effect at the next start.
-     */
-    private val seeThroughAtStart by lazy { getSharedPreferences("window", MODE_PRIVATE).getBoolean("seeThrough", false) }
-
-    override fun getBackgroundMode(): BackgroundMode = if (seeThroughAtStart) BackgroundMode.transparent else BackgroundMode.opaque
-
-    /** Shows the home screen's wallpaper where Flutter leaves the app clear, blurred where the system can. */
-    private fun setSeeThrough(on: Boolean, dark: Boolean): Boolean {
-        getSharedPreferences("window", MODE_PRIVATE).edit().putBoolean("seeThrough", on).apply()
-        val shown = on && seeThroughAtStart
-        if (shown) {
-            window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
-            window.setBackgroundDrawable(ColorDrawable(if (dark) Color.BLACK else Color.WHITE))
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            window.setBackgroundBlurRadius(if (shown && windowManager.isCrossWindowBlurEnabled) 48 else 0)
-        }
-        return shown
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

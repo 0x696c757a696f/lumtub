@@ -5,9 +5,5 @@
 ! action: hide
 ! default: off
 ! source: https://en.wikipedia.org/wiki/South_China_Church
-! legacy: 华南教会
 
-:xb2953882 | ^华南教会
-    legacy: 华南教会/channel/华南教会
-:xa755bc7c | ^華南教會
-    legacy: 华南教会/channel/華南教會
+:south-china-church | ^华南教会 | ^華南教會

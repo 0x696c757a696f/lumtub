@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
@@ -21,6 +22,7 @@ import '../player_controls.dart';
 import '../player_shortcuts.dart';
 import '../screenshot_action.dart';
 import '../summary_dialog.dart';
+import '../subtitle_list_panel.dart';
 import '../theater_mode.dart';
 import '../skeleton.dart';
 import '../theme.dart';
@@ -73,6 +75,7 @@ class _WatchPageState extends State<WatchPage> {
   @override
   void dispose() {
     unawaited(_playing?.cancel());
+    subtitleListBeside = false;
     super.dispose();
   }
 
@@ -125,10 +128,12 @@ class _WatchPageState extends State<WatchPage> {
           final theater = theaterMode.value;
           final item = controller.playing;
           final hasChat = item?.isLive == true || item?.liveStatus == 'was_live';
-          // 剧场模式 with a chat keeps it beside the video, as Twitch does.
-          final sideChat = theater && hasChat && outer.maxWidth >= 900;
-          final chatOpen = sideChat && theaterChatOpen.value;
-          final constraints = chatOpen ? outer.copyWith(maxWidth: outer.maxWidth - _theaterChatWidth) : outer;
+          // 剧场模式 in a wide window keeps comments, up next and the chat
+          // in a column beside the video, which can be folded away.
+          final sidePanel = theater && outer.maxWidth >= 900;
+          subtitleListBeside = sidePanel || (!theater && outer.maxWidth >= 1080);
+          final panelOpen = sidePanel && theaterChatOpen.value;
+          final constraints = panelOpen ? outer.copyWith(maxWidth: outer.maxWidth - _theaterChatWidth) : outer;
           // 剧场模式 gives the video the whole width and stacks the panels below.
           final wide = !theater && constraints.maxWidth >= 1080;
           final mainWidth = wide ? constraints.maxWidth - _sidePanelWidth - AppStyle.pagePadding * 3 : constraints.maxWidth - AppStyle.pagePadding * 2;
@@ -144,11 +149,11 @@ class _WatchPageState extends State<WatchPage> {
                   controller: controller,
                   videoId: item.id,
                   onSeek: (position) => controller.seek(position),
-                  scrollable: wide,
-                  sliver: !wide,
+                  scrollable: wide || panelOpen,
+                  sliver: !wide && !panelOpen,
                   padding: wide ? const EdgeInsets.fromLTRB(4, 0, 4, AppStyle.pagePadding) : EdgeInsets.zero,
                 );
-          final replayChat = hasChat && !sideChat ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide) : null;
+          final replayChat = hasChat ? _ReplayChatPanel(controller: controller, shrinkWrap: !wide && !panelOpen) : null;
           final main = <Widget>[
             if (!theater) _BackRow(onBack: controller.goBack),
             Center(child: SizedBox(width: playerWidth, child: _Player(controller: controller, videoKey: _video))),
@@ -167,9 +172,11 @@ class _WatchPageState extends State<WatchPage> {
             // are built as they scroll into view, not all at once.
             const margin = AppStyle.pagePadding;
             final rest = [
-              if (replayChat != null) ...[const SizedBox(height: 24), replayChat],
-              const SizedBox(height: 24),
-              _UpNext(controller: controller, shrinkWrap: true),
+              if (!panelOpen) ...[
+                if (replayChat != null) ...[const SizedBox(height: 24), replayChat],
+                const SizedBox(height: 24),
+                _UpNext(controller: controller, shrinkWrap: true),
+              ],
             ];
             final page = CustomScrollView(slivers: [
               // In 剧场模式 the player goes edge to edge.
@@ -178,27 +185,30 @@ class _WatchPageState extends State<WatchPage> {
                 padding: EdgeInsets.fromLTRB(margin, theater ? 12 : 0, margin, 0),
                 sliver: SliverList.list(children: theater ? main.skip(1).toList() : main),
               ),
-              if (comments != null) ...[
+              if (comments != null && !panelOpen) ...[
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 SliverPadding(padding: const EdgeInsets.symmetric(horizontal: margin), sliver: comments),
               ],
               SliverPadding(padding: const EdgeInsets.fromLTRB(margin, 0, margin, margin), sliver: SliverList.list(children: rest)),
             ]);
-            if (!sideChat) return page;
+            if (!sidePanel) return page;
             return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Expanded(child: page),
-              if (chatOpen)
+              if (panelOpen)
                 SizedBox(
                   width: _theaterChatWidth,
                   child: DecoratedBox(
                     decoration: BoxDecoration(border: Border(left: BorderSide(color: context.colors.outlineVariant))),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-                      // The hide button sits in the chat's own title row, so the
-                      // chat starts as high as the video.
-                      child: _ReplayChatPanel(
+                      // The fold button sits in the tab row, so the panel
+                      // starts as high as the video.
+                      child: _SidePanel(
                         controller: controller,
-                        trailing: IconButton(tooltip: tr('Hide chat'), icon: Icon(AppIcons.caretRight, size: 18), onPressed: () => theaterChatOpen.value = false),
+                        comments: comments,
+                        replayChat: replayChat,
+                        chatFirst: true,
+                        trailing: IconButton(tooltip: tr('Collapse'), icon: Icon(AppIcons.caretRight, size: 18), onPressed: () => theaterChatOpen.value = false),
                       ),
                     ),
                   ),
@@ -208,7 +218,7 @@ class _WatchPageState extends State<WatchPage> {
                   padding: const EdgeInsets.only(top: 4, right: 4),
                   child: Align(
                     alignment: Alignment.topCenter,
-                    child: IconButton(tooltip: tr('Show chat'), icon: Icon(AppIcons.chats, size: 20), onPressed: () => theaterChatOpen.value = true),
+                    child: IconButton(tooltip: tr('Expand'), icon: Icon(AppIcons.sidebar, size: 20), onPressed: () => theaterChatOpen.value = true),
                   ),
                 ),
             ]);
@@ -561,30 +571,82 @@ class _DescriptionState extends State<_Description> {
   }
 }
 
-/// 接下来播放 and 评论 as tabs beside the player. The comments load when
-/// their tab is first opened and stay loaded while the video plays.
-class _SidePanel extends StatelessWidget {
-  const _SidePanel({required this.controller, required this.comments, this.replayChat});
+/// 接下来播放, 评论, the chat and the subtitle list as tabs beside the
+/// player. The comments load when their tab is first opened and stay
+/// loaded while the video plays. The tab chosen is kept for the next video.
+class _SidePanel extends StatefulWidget {
+  const _SidePanel({required this.controller, required this.comments, this.replayChat, this.chatFirst = false, this.trailing});
   final AppController controller;
   final Widget? comments;
   final Widget? replayChat;
+  /// The chat as the first tab, as a live stream in 剧场模式 wants it.
+  final bool chatFirst;
+  /// At the end of the tab row.
+  final Widget? trailing;
+
+  @override
+  State<_SidePanel> createState() => _SidePanelState();
+}
+
+class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
+  TabController? _tabs;
+  List<String> _ids = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    sidePanelTab.addListener(_asked);
+  }
+
+  @override
+  void dispose() {
+    sidePanelTab.removeListener(_asked);
+    _tabs?.dispose();
+    super.dispose();
+  }
+
+  /// Another part of the page asked for a tab, such as the player's
+  /// subtitle list button.
+  void _asked() {
+    final index = _ids.indexOf(sidePanelTab.value ?? '');
+    final tabs = _tabs;
+    if (index >= 0 && tabs != null && tabs.index != index) tabs.animateTo(index);
+  }
+
+  TabController _controllerFor(List<String> ids) {
+    if (_tabs != null && listEquals(ids, _ids)) return _tabs!;
+    final was = _tabs == null ? sidePanelTab.value : _ids[_tabs!.index];
+    _tabs?.dispose();
+    _ids = ids;
+    final tabs = TabController(length: ids.length, vsync: this, initialIndex: max(0, ids.indexOf(was ?? '')));
+    tabs.addListener(() {
+      if (!tabs.indexIsChanging) sidePanelTab.value = _ids[tabs.index];
+    });
+    return _tabs = tabs;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final controller = widget.controller;
+    final player = controller.player;
+    final chat = widget.replayChat == null ? null : ('chat', tr('Chat'), _KeepAlive(child: widget.replayChat!));
+    final subtitles = player != null && (controller.details?.subtitles.isNotEmpty == true || controller.secondarySubtitle != null);
     final tabs = [
-      (controller.playingList != null ? tr('Playlist') : tr('Up next'), _UpNext(controller: controller)),
-      if (comments case final comments?) (tr('Comments'), _KeepAlive(child: comments)),
-      if (replayChat case final chat?) (tr('Chat'), _KeepAlive(child: chat)),
+      if (widget.chatFirst && chat != null) chat,
+      ('next', controller.playingList != null ? tr('Playlist') : tr('Up next'), _UpNext(controller: controller)),
+      if (widget.comments case final comments?) ('comments', tr('Comments'), _KeepAlive(child: comments)),
+      if (!widget.chatFirst && chat != null) chat,
+      if (subtitles) ('subtitles', tr('Subtitles'), _KeepAlive(child: Padding(padding: const EdgeInsets.only(top: 4), child: SubtitleList(key: ValueKey('subtitles:${controller.playing?.id}'), controller: controller, player: player)))),
     ];
-    return DefaultTabController(
-      key: ValueKey(tabs.length),
-      length: tabs.length,
-      child: Column(children: [
-        TabBar(dividerColor: Colors.transparent, tabs: [for (final (label, _) in tabs) Tab(height: 40, text: label)]),
-        const SizedBox(height: 8),
-        Expanded(child: TabBarView(children: [for (final (_, view) in tabs) view])),
+    final tabController = _controllerFor([for (final (id, _, _) in tabs) id]);
+    return Column(children: [
+      Row(children: [
+        Expanded(child: TabBar(controller: tabController, isScrollable: tabs.length > 3, tabAlignment: tabs.length > 3 ? TabAlignment.start : null, dividerColor: Colors.transparent, tabs: [for (final (_, label, _) in tabs) Tab(height: 40, text: label)])),
+        if (widget.trailing case final trailing?) trailing,
       ]),
-    );
+      const SizedBox(height: 8),
+      Expanded(child: TabBarView(controller: tabController, children: [for (final (_, _, view) in tabs) view])),
+    ]);
   }
 }
 
@@ -610,11 +672,9 @@ class _KeepAliveState extends State<_KeepAlive> with AutomaticKeepAliveClientMix
 }
 
 class _ReplayChatPanel extends StatelessWidget {
-  const _ReplayChatPanel({required this.controller, this.shrinkWrap = false, this.trailing});
+  const _ReplayChatPanel({required this.controller, this.shrinkWrap = false});
   final AppController controller;
   final bool shrinkWrap;
-  /// At the end of the title row.
-  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(listenable: controller.chatMessages, builder: (context, _) => _build(context));
@@ -629,7 +689,6 @@ class _ReplayChatPanel extends StatelessWidget {
         Expanded(child: Text(tr(live ? 'Chat' : 'Chat replay'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
         if (messages.any((m) => m.color != null) || controller.chatTicker.isNotEmpty) SuperChatHighlightSwitch(controller: controller),
         ImmersiveTranslationSwitch(controller: controller),
-        if (trailing != null) trailing!,
       ]),
       const SizedBox(height: 8),
       if (live && controller.chatTicker.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: 8), child: SuperChatStrip(controller: controller)),

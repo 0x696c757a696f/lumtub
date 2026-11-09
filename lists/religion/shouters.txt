@@ -5,9 +5,6 @@
 ! action: hide
 ! default: off
 ! source: https://zh.wikipedia.org/wiki/呼喊派
-! legacy: 呼喊派
 
-:xa3814598 | ^呼喊派
-    legacy: 呼喊派/channel/呼喊派
-:xbaeedc10 | ^常受教
-    legacy: 呼喊派/channel/常受教
+:shouters | ^呼喊派
+:witness-lee | ^常受教

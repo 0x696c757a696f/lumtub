@@ -5,7 +5,5 @@
 ! action: hide
 ! default: off
 ! source: https://zh.wikipedia.org/wiki/主神教
-! legacy: 主神教
 
-:xa2a8cff8 | ^主神教
-    legacy: 主神教/channel/主神教
+:lord-god-sect | ^主神教

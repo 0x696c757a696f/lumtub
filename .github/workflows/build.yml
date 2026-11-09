@@ -385,7 +385,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed.' }
 
       - name: Windows - README pictures
-        if: matrix.package_arch == 'x64'
+        if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
         continue-on-error: true
         shell: pwsh
         run: |
@@ -397,7 +397,7 @@ jobs:
           windows/packaging/showcase.ps1 (Resolve-Path "$package/lumtub.exe").Path "$env:RUNNER_TEMP/shots"
 
       - name: Windows - upload README pictures
-        if: matrix.package_arch == 'x64'
+        if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: readme-shots-windows
@@ -582,12 +582,13 @@ jobs:
           ls -l Lumtub_*.AppImage
 
       - name: Linux - smoke test the AppImage
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri libegl1 libgles2 ffmpeg imagemagick gdb
           linux/packaging/smoke.sh Lumtub_*_linux-$PACKAGE_ARCH.AppImage "$RUNNER_TEMP/smoke"
 
       - name: Linux - README pictures
-        if: matrix.package_arch == 'x64'
+        if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
         run: |
           message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
           if echo "$message" | grep -qF '[showcase]'; then
@@ -596,7 +597,7 @@ jobs:
           fi
 
       - name: Linux - upload README pictures
-        if: matrix.package_arch == 'x64'
+        if: matrix.package_arch == 'x64' && !startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: readme-shots-linux
@@ -604,7 +605,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Linux - upload smoke test results
-        if: always()
+        if: always() && !startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: smoke-linux-${{ matrix.package_arch }}
@@ -626,6 +627,8 @@ jobs:
     # pictures the Windows x64, Linux x64 and macOS jobs took of the app's
     # pages to the readme-shots branch, one folder per system.
     needs: [windows, linux, macos]
+    # Never for a release tag: its squashed message carries the pull request's [showcase].
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -814,15 +817,18 @@ jobs:
           macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg-x86_64" "$ffmpeg_version" "Lumtub_${LUMTUB_VERSION}_macos-x64.dmg" x86_64
 
       - name: macOS - smoke test the Apple silicon DMG
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: macos/packaging/smoke.sh Lumtub_*_macos-arm64.dmg "$RUNNER_TEMP/smoke"
 
       - name: macOS - smoke test the Intel DMG under Rosetta
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         continue-on-error: true
         run: |
           arch -x86_64 /usr/bin/true || softwareupdate --install-rosetta --agree-to-license
           macos/packaging/smoke.sh Lumtub_*_macos-x64.dmg "$RUNNER_TEMP/smoke-intel"
 
       - name: macOS - README pictures
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         continue-on-error: true
         run: |
           message=$(git log -1 --format=%B HEAD^2 2> /dev/null || git log -1 --format=%B HEAD)
@@ -838,7 +844,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: macOS - upload smoke test results
-        if: always()
+        if: always() && !startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: smoke-macos
@@ -979,6 +985,7 @@ jobs:
           rm -f android/release.jks android/key.properties
 
       - name: Android - start an emulator
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
@@ -1014,12 +1021,13 @@ jobs:
           sleep 20; tail -20 "$RUNNER_TEMP/emulator.log"
 
       - name: Android - smoke test
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
           timeout 600 android/packaging/smoke.sh dist/Lumtub_*_android-x86_64.apk "$RUNNER_TEMP/smoke" || { echo "--- emulator log"; tail -60 "$RUNNER_TEMP/emulator.log"; exit 1; }
 
       - name: Android - upload smoke test
-        if: always()
+        if: always() && !startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Android-smoke

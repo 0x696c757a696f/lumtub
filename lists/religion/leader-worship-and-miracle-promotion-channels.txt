@@ -7,171 +7,52 @@
 ! source: https://en.wikipedia.org/wiki/Dera_Sacha_Sauda
 ! source: https://en.wikipedia.org/wiki/Benny_Hinn
 ! source: https://en.wikipedia.org/wiki/Shepherd_Bushiri
-! legacy: 领袖神化与神迹宣传频道
 
-:saint-msg | =Saint MSG
-    legacy: 领袖神化与神迹宣传频道/exact/Saint MSG
-:dera-sacha-sauda | =Dera Sacha Sauda
-    legacy: 领袖神化与神迹宣传频道/exact/Dera Sacha Sauda
+:dera-sacha-sauda | =Saint MSG | =Dera Sacha Sauda
 :kalki | =KALKI
-    legacy: 领袖神化与神迹宣传频道/exact/KALKI
 :sri-amma-bhagavan | =Sri Amma Bhagavan
-    legacy: 领袖神化与神迹宣传频道/exact/Sri Amma Bhagavan
 :dr-and-master-sha | =Dr and Master Sha
-    legacy: 领袖神化与神迹宣传频道/exact/Dr and Master Sha
-:shri-mataji-teachings | =Shri Mataji Teachings
-    legacy: 领袖神化与神迹宣传频道/exact/Shri Mataji Teachings
-:shri-mataji-excerpts | =Shri Mataji Excerpts
-    legacy: 领袖神化与神迹宣传频道/exact/Shri Mataji Excerpts
-:sahaja-workshop | =Sahaja Workshop
-    legacy: 领袖神化与神迹宣传频道/exact/Sahaja Workshop
-:bhakti-marga | =Bhakti Marga
-    legacy: 领袖神化与神迹宣传频道/exact/Bhakti Marga
+:sahaja-yoga | =Shri Mataji Teachings | =Shri Mataji Excerpts | =Sahaja Workshop
+:bhakti-marga | @BhaktiMarga1008 | =Bhakti Marga
 :awakening-with-brahma-kumaris | =Awakening with Brahma Kumaris
-    legacy: 领袖神化与神迹宣传频道/exact/Awakening with Brahma Kumaris
-:benny-hinn-ministries | =Benny Hinn Ministries
-    legacy: 领袖神化与神迹宣传频道/exact/Benny Hinn Ministries
-:this-is-your-day | =This Is Your Day
-    legacy: 领袖神化与神迹宣传频道/exact/This Is Your Day
-:prophet-shepherd-bushiri | =Prophet Shepherd Bushiri
-    legacy: 领袖神化与神迹宣传频道/exact/Prophet Shepherd Bushiri
-:shepherd-bushiri-sermon | =Shepherd Bushiri Sermon
-    legacy: 领袖神化与神迹宣传频道/exact/Shepherd Bushiri Sermon
+:benny-hinn | =Benny Hinn Ministries | =This Is Your Day
+:shepherd-bushiri | =Prophet Shepherd Bushiri | =Shepherd Bushiri Sermon
 :the-jesus-nation-rsa | =The Jesus Nation RSA
-    legacy: 领袖神化与神迹宣传频道/exact/The Jesus Nation RSA
-:uebert-angel | =Uebert Angel
-    legacy: 领袖神化与神迹宣传频道/exact/Uebert Angel
-:uebert-angel-highlight | =Uebert Angel Highlight
-    legacy: 领袖神化与神迹宣传频道/exact/Uebert Angel Highlight
+:uebert-angel | =Uebert Angel | =Uebert Angel Highlight
 :goodnews-city | =GoodNews City
-    legacy: 领袖神化与神迹宣传频道/exact/GoodNews City
-:copeland-ministries | =Copeland Ministries
-    legacy: 领袖神化与神迹宣传频道/exact/Copeland Ministries
-:kenneth-copeland-africa | =Kenneth Copeland Africa
-    legacy: 领袖神化与神迹宣传频道/exact/Kenneth Copeland Africa
+:kenneth-copeland | =Copeland Ministries | =Kenneth Copeland Africa
 :prophet-jeremiah-dreamfarm | =Prophet Jeremiah DreamFarm
-    legacy: 领袖神化与神迹宣传频道/exact/Prophet Jeremiah DreamFarm
 :loveworld-philippines | =LoveWorld Philippines
-    legacy: 领袖神化与神迹宣传频道/exact/LoveWorld Philippines
 :kingdom-of-jesus-christ | =Kingdom of Jesus Christ
-    legacy: 领袖神化与神迹宣传频道/exact/Kingdom of Jesus Christ
-:happy-science-official | ^Happy Science Official
-    legacy: 领袖神化与神迹宣传频道/channel/Happy Science Official
-:happy-science-india | ^Happy Science India
-    legacy: 领袖神化与神迹宣传频道/channel/Happy Science India
-:happy-science-europe | ^Happy Science Europe
-    legacy: 领袖神化与神迹宣传频道/channel/Happy Science Europe
-:the-church-of-almighty-god | ^The Church of Almighty God
-    legacy: 领袖神化与神迹宣传频道/channel/The Church of Almighty God
-:shincheonji-church-of-jesus | ^Shincheonji Church of Jesus
-    legacy: 领袖神化与神迹宣传频道/channel/Shincheonji Church of Jesus
-:god-the-mother | ^God the Mother
-    legacy: 领袖神化与神迹宣传频道/channel/God the Mother
-:newsong-church-of-god | ^Newsong, Church of God
-    legacy: 领袖神化与神迹宣传频道/channel/Newsong, Church of God
-:newsong-guide | ^Newsong Guide
-    legacy: 领袖神化与神迹宣传频道/channel/Newsong Guide
-:asez-wao | ^ASEZ WAO
-    legacy: 领袖神化与神迹宣传频道/channel/ASEZ WAO
-:familyfed-media | ^FamilyFed Media
-    legacy: 领袖神化与神迹宣传频道/channel/FamilyFed Media
-:family-federation-eume | ^Family Federation EUME
-    legacy: 领袖神化与神迹宣传频道/channel/Family Federation EUME
-:divine-principle | ^Divine Principle
-    legacy: 领袖神化与神迹宣传频道/channel/Divine Principle
-:rael-the-last-prophet | ^Rael: The Last Prophet
-    legacy: 领袖神化与神迹宣传频道/channel/Rael: The Last Prophet
-:raelian-movement-north-america | ^Raelian Movement - North America
-    legacy: 领袖神化与神迹宣传频道/channel/Raelian Movement - North America
-:australian-raelian-movement | ^Australian Raelian Movement
-    legacy: 领袖神化与神迹宣传频道/channel/Australian Raelian Movement
-:thechurchofalmightygod | @TheChurchofAlmightyGod
-    legacy: 领袖神化与神迹宣传频道/handle/@TheChurchofAlmightyGod
-:churchofalmightygodmalaysia | @ChurchofAlmightyGodMalaysia
-    legacy: 领袖神化与神迹宣传频道/handle/@ChurchofAlmightyGodMalaysia
-:shincheonjichurch-zh | @ShincheonjiChurch_zh
-    legacy: 领袖神化与神迹宣传频道/handle/@ShincheonjiChurch_zh
-:wmscog-zh | @wmscog_zh
-    legacy: 领袖神化与神迹宣传频道/handle/@wmscog_zh
-:wmscog-hk | @wmscog_hk
-    legacy: 领袖神化与神迹宣传频道/handle/@wmscog_hk
-:wmscog-mo | @wmscog_mo
-    legacy: 领袖神化与神迹宣传频道/handle/@wmscog_mo
-:jerusalemmother | @JerusalemMother
-    legacy: 领袖神化与神迹宣传频道/handle/@JerusalemMother
-:jerusalemmother-en | @JerusalemMother_en
-    legacy: 领袖神化与神迹宣传频道/handle/@JerusalemMother_en
-:wmscog | @WMSCOG
-    legacy: 领袖神化与神迹宣传频道/handle/@WMSCOG
-:wmscog-us | @wmscog_us
-    legacy: 领袖神化与神迹宣传频道/handle/@wmscog_us
-:wmscog-uk | @wmscog_uk
-    legacy: 领袖神化与神迹宣传频道/handle/@wmscog_uk
-:wmscog-sa | @wmscog_sa
-    legacy: 领袖神化与神迹宣传频道/handle/@wmscog_sa
-:wmscog-newsong | @wmscog_newsong
-    legacy: 领袖神化与神迹宣传频道/handle/@wmscog_newsong
-:wmscog-guide | @wmscog_guide
-    legacy: 领袖神化与神迹宣传频道/handle/@wmscog_guide
-:asezwao | @ASEZWAO
-    legacy: 领袖神化与神迹宣传频道/handle/@ASEZWAO
-:uctaiwan | @uctaiwan
-    legacy: 领袖神化与神迹宣传频道/handle/@uctaiwan
-:ffwputaiwan | @ffwputaiwan
-    legacy: 领袖神化与神迹宣传频道/handle/@ffwputaiwan
-:ffwp-taichung | @ffwp_taichung
-    legacy: 领袖神化与神迹宣传频道/handle/@ffwp_taichung
-:familyfedmedia | @FamilyFedMedia
-    legacy: 领袖神化与神迹宣传频道/handle/@FamilyFedMedia
-:familyfederationeume | @FamilyFederationEUME
-    legacy: 领袖神化与神迹宣传频道/handle/@FamilyFederationEUME
-:divineprinciple7796 | @divineprinciple7796
-    legacy: 领袖神化与神迹宣传频道/handle/@divineprinciple7796
-:twraelianmovement | @twRaelianMovement
-    legacy: 领袖神化与神迹宣传频道/handle/@twRaelianMovement
+:happy-science | ^Happy Science Official | ^Happy Science India | ^Happy Science Europe
+:church-of-almighty-god | @TheChurchofAlmightyGod | @ChurchofAlmightyGodMalaysia | ^The Church of Almighty God
+:shincheonji | @ShincheonjiChurch_zh | ^Shincheonji Church of Jesus
+:wmscog | @wmscog_zh | @wmscog_hk | @wmscog_mo | @JerusalemMother | @JerusalemMother_en | @WMSCOG | @wmscog_us | @wmscog_uk | @wmscog_sa | @wmscog_newsong | @wmscog_guide | ^God the Mother | ^Newsong, Church of God | ^Newsong Guide
+:asez-wao | @ASEZWAO | ^ASEZ WAO
+:familyfed-media | @FamilyFedMedia | ^FamilyFed Media
+:family-federation-eume | @FamilyFederationEUME | ^Family Federation EUME
+:divine-principle | @divineprinciple7796 | ^Divine Principle
+:rael | @Rael_Official | ^Rael: The Last Prophet
+:raelian-movement-north-america | @raelianmovement-northamerica | ^Raelian Movement - North America
+:australian-raelian-movement | @australianraelianmovement8033 | ^Australian Raelian Movement
+:family-federation-taiwan | @uctaiwan | @ffwputaiwan | @ffwp_taichung
+:raelian-movement-taiwan | @twRaelianMovement
 :online3765 | @online3765
-    legacy: 领袖神化与神迹宣传频道/handle/@online3765
-:rael-official | @Rael_Official
-    legacy: 领袖神化与神迹宣传频道/handle/@Rael_Official
-:raelianmovement-northamerica | @raelianmovement-northamerica
-    legacy: 领袖神化与神迹宣传频道/handle/@raelianmovement-northamerica
-:australianraelianmovement8033 | @australianraelianmovement8033
-    legacy: 领袖神化与神迹宣传频道/handle/@australianraelianmovement8033
 :raeltv-korea | @RaelTV-Korea
-    legacy: 领袖神化与神迹宣传频道/handle/@RaelTV-Korea
-:bhaktimarga1008 | @BhaktiMarga1008
-    legacy: 领袖神化与神迹宣传频道/handle/@BhaktiMarga1008
 :ucjfyq7yjh8voh9cqzkndciq | UCjfyq7YJH8VoH9cqZKndcIQ
-    legacy: 领袖神化与神迹宣传频道/id/UCjfyq7YJH8VoH9cqZKndcIQ
 :uce2wpyjpqaikzlxnim13gua | UCE2wpyJPQAiKZLxNim13gUA
-    legacy: 领袖神化与神迹宣传频道/id/UCE2wpyJPQAiKZLxNim13gUA
 :ucs-f7kba8szkh-ehengpusq | UCS_f7kBa8szKH_eHEngPUSQ
-    legacy: 领袖神化与神迹宣传频道/id/UCS_f7kBa8szKH_eHEngPUSQ
 :uchcreh2vweukiig6ho3ejjg | UChcrEH2VWEukIiG6HO3eJJg
-    legacy: 领袖神化与神迹宣传频道/id/UChcrEH2VWEukIiG6HO3eJJg
 :ucioibk9rs5dv5j66huipsuq | UCioiBk9rS5Dv5j66hUipsuQ
-    legacy: 领袖神化与神迹宣传频道/id/UCioiBk9rS5Dv5j66hUipsuQ
 :ucqc-jkqwthmsdfiy-xst55g | UCqc-JKqWTHMSdfiy_Xst55g
-    legacy: 领袖神化与神迹宣传频道/id/UCqc-JKqWTHMSdfiy_Xst55g
 :ucq36ler6qdmbmdqburisgcw | UCQ36leR6qdmBMdqbURisGcw
-    legacy: 领袖神化与神迹宣传频道/id/UCQ36leR6qdmBMdqbURisGcw
 :ucivteymedjdabqyh9oipnya | UCIvtEYMedJDaBQYH9oipNyA
-    legacy: 领袖神化与神迹宣传频道/id/UCIvtEYMedJDaBQYH9oipNyA
 :ucx7glgign1ahkqjbbwctjeq | UCx7GlGIgN1aHKqjBBwctJEQ
-    legacy: 领袖神化与神迹宣传频道/id/UCx7GlGIgN1aHKqjBBwctJEQ
 :ucb-yl8goqssakenrllt-0q | UCB_-yL8GoqssAkENRllT-0Q
-    legacy: 领袖神化与神迹宣传频道/id/UCB_-yL8GoqssAkENRllT-0Q
 :uc6qpjakeoqqtdzzyjgt2meg | UC6qpjAkeOQqtdZzyjGt2MEg
-    legacy: 领袖神化与神迹宣传频道/id/UC6qpjAkeOQqtdZzyjGt2MEg
 :ucxa8j3oakhdkp6mkp5rtrqa | UCxA8J3oAkhdKp6MKP5rTRQA
-    legacy: 领袖神化与神迹宣传频道/id/UCxA8J3oAkhdKp6MKP5rTRQA
 :ucg1wahkfxi-zbxo3cl6dohg | UCG1wAHkfxi_zBxo3cL6dohg
-    legacy: 领袖神化与神迹宣传频道/id/UCG1wAHkfxi_zBxo3cL6dohg
 :ucgtmbm285tamjqg-tky6xdw | UCGTMbm285tAmJqG-TKY6XDw
-    legacy: 领袖神化与神迹宣传频道/id/UCGTMbm285tAmJqG-TKY6XDw
 :ucw0zf2psbg-ayzof4oevsba | UCW0zF2PSbG_AYzoF4OEVsbA
-    legacy: 领袖神化与神迹宣传频道/id/UCW0zF2PSbG_AYzoF4OEVsbA
 :ucwyry-jrhq5weblk2vszlrw | UCWyRY-jRhq5WEBlk2VszLRw
-    legacy: 领袖神化与神迹宣传频道/id/UCWyRY-jRhq5WEBlk2VszLRw
 :ucjxhxs-4-o7qmlwgbn8pvsq | UCJxHxs-4-O7qmlWgBn8pvsQ
-    legacy: 领袖神化与神迹宣传频道/id/UCJxHxs-4-O7qmlWgBn8pvsQ

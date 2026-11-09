@@ -367,9 +367,9 @@
   "overrides": {
     "dark": {
       "colors": {
-        "page": "#042230",
-        "text": "#c2dcee",
-        "muted": "#84a6b6",
+        "page": "#0a192a",
+        "text": "#e0eef6",
+        "muted": "#c4d8e3",
         "accent": "#0874b0",
         "onAccent": "#ffffff",
         "border": "#1c495d",
@@ -379,7 +379,7 @@
         "reason": "#549ac1"
       },
       "window": {
-        "veil": 0.90,
+        "veil": 0.71,
         "background": [
           {
             "image": "night.jpg",
@@ -410,7 +410,7 @@
           "inactive": {
             "fill": "#081d27"
           },
-          "text": "#c2dcee",
+          "text": "#e0eef6",
           "buttons": {
             "size": [
               36,
@@ -508,7 +508,7 @@
           }
         },
         "topBarText": "#aed1e8",
-        "statusBarText": "#c2dcee"
+        "statusBarText": "#e0eef6"
       },
       "controls": {
         "button": {
@@ -599,7 +599,7 @@
           ]
         },
         "navSelectedText": "#075f91",
-        "navText": "#c2dcee"
+        "navText": "#e0eef6"
       },
       "cards": {
         "video": {

@@ -37,10 +37,10 @@ fn sha256(bytes: &[u8]) -> String {
     Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect()
 }
 
-/// Reads [json] after checking [signature] against it, and that its lists
-/// hang together.
-fn read_signed(json: &[u8], signature: &[u8]) -> Result<Owned, String> {
-    if !signing::verify_with(signing::PUBLIC_KEYS, NAME, &sha256(json), signature) {
+/// Reads [json] after checking [signature] against it with [keys], and that
+/// its lists hang together.
+fn read_signed(keys: &[u8], json: &[u8], signature: &[u8]) -> Result<Owned, String> {
+    if !signing::verify_with(keys, NAME, &sha256(json), signature) {
         return Err("the signature does not match".into());
     }
     let owned: Owned = serde_json::from_slice(json).map_err(|e| format!("it does not read: {e}"))?;
@@ -62,20 +62,58 @@ fn read_signed(json: &[u8], signature: &[u8]) -> Result<Owned, String> {
     Ok(owned)
 }
 
-fn stored(folder: &Path) -> Option<Owned> {
-    let json = std::fs::read(folder.join(NAME)).ok()?;
-    let signature = std::fs::read(folder.join(format!("{NAME}.sig"))).ok()?;
-    read_signed(&json, &signature).ok()
+/// The file a download is kept in: the signature's length (4 bytes, little
+/// endian), the signature, then the json. One file, so it is replaced
+/// whole or not at all.
+pub const KEPT: &str = "lists.signed";
+
+fn join(json: &[u8], signature: &[u8]) -> Vec<u8> {
+    let mut kept = Vec::with_capacity(4 + signature.len() + json.len());
+    kept.extend_from_slice(&(signature.len() as u32).to_le_bytes());
+    kept.extend_from_slice(signature);
+    kept.extend_from_slice(json);
+    kept
+}
+
+fn split(kept: &[u8]) -> Option<(&[u8], &[u8])> {
+    let length = u32::from_le_bytes(kept.get(..4)?.try_into().ok()?) as usize;
+    let signature = kept.get(4..4usize.checked_add(length)?)?;
+    Some((&kept[4 + length..], signature))
+}
+
+/// The download kept in [folder] and its signature, when the pair verifies.
+fn stored(keys: &[u8], folder: &Path) -> Option<(Owned, Vec<u8>)> {
+    let kept = std::fs::read(folder.join(KEPT)).ok()?;
+    let (json, signature) = split(&kept)?;
+    Some((read_signed(keys, json, signature).ok()?, signature.to_vec()))
+}
+
+/// What is in use from [folder].
+struct InUse {
+    version: u64,
+    built: String,
+    lists: Vec<List>,
+    downloaded: bool,
+    /// The signature of the verified download kept there, newer or not, so
+    /// a check can tell the same file is published.
+    signature: Option<Vec<u8>>,
+}
+
+fn in_use(keys: &[u8], folder: &Path) -> InUse {
+    match stored(keys, folder) {
+        Some((owned, signature)) if owned.version > built_version() => {
+            InUse { version: owned.version, built: owned.built, lists: owned.lists, downloaded: true, signature: Some(signature) }
+        }
+        found => InUse { version: built_version(), built: String::new(), lists: lists::built_in().to_vec(), downloaded: false, signature: found.map(|(_, s)| s) },
+    }
 }
 
 /// The lists to use: a downloaded file in [folder] when it is newer than
 /// the built-in lists, else those. Answers (version, built, lists,
 /// downloaded).
 pub fn current(folder: &Path) -> (u64, String, Vec<List>, bool) {
-    match stored(folder) {
-        Some(owned) if owned.version > built_version() => (owned.version, owned.built, owned.lists, true),
-        _ => (built_version(), String::new(), lists::built_in().to_vec(), false),
-    }
+    let used = in_use(signing::PUBLIC_KEYS, folder);
+    (used.version, used.built, used.lists, used.downloaded)
 }
 
 /// What taking a download did.
@@ -89,26 +127,23 @@ pub struct Taken {
 }
 
 /// Checks the downloaded [json] and [signature] and, when newer than the
-/// lists in use from [folder], writes both there (each to a temporary file
-/// first, then renamed over the old one).
+/// lists in use from [folder], keeps both there in one file (written beside
+/// it first, then renamed over the old one).
 pub fn take(json: &[u8], signature: &[u8], folder: &Path) -> Result<Taken, String> {
-    let owned = read_signed(json, signature)?;
+    take_with(signing::PUBLIC_KEYS, json, signature, folder)
+}
+
+fn take_with(keys: &[u8], json: &[u8], signature: &[u8], folder: &Path) -> Result<Taken, String> {
+    let owned = read_signed(keys, json, signature)?;
     let records = owned.lists.iter().map(|l| l.records.len()).sum();
-    let taken = Taken { version: owned.version, lists: owned.lists.len(), records, newer: owned.version > current(folder).0 };
+    let taken = Taken { version: owned.version, lists: owned.lists.len(), records, newer: owned.version > in_use(keys, folder).version };
     if !taken.newer {
         return Ok(taken);
     }
     std::fs::create_dir_all(folder).map_err(|e| e.to_string())?;
-    let write = |name: &str, bytes: &[u8]| -> Result<(), String> {
-        let temporary = folder.join(format!("{name}.new"));
-        std::fs::write(&temporary, bytes).map_err(|e| format!("{name}: {e}"))?;
-        std::fs::rename(&temporary, folder.join(name)).map_err(|e| format!("{name}: {e}"))
-    };
-    // The signature last: until it is in place the pair does not verify,
-    // and the built-in lists are used.
-    let _ = std::fs::remove_file(folder.join(format!("{NAME}.sig")));
-    write(NAME, json)?;
-    write(&format!("{NAME}.sig"), signature)?;
+    let temporary = folder.join(format!("{KEPT}.new"));
+    std::fs::write(&temporary, join(json, signature)).map_err(|e| format!("{KEPT}: {e}"))?;
+    std::fs::rename(&temporary, folder.join(KEPT)).map_err(|e| format!("{KEPT}: {e}"))?;
     Ok(taken)
 }
 
@@ -117,11 +152,14 @@ struct Bundle<'a> {
     version: u64,
     built: &'a str,
     downloaded: bool,
+    /// Hex of the signature of the verified download kept, if any.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    signature: Option<String>,
     lists: &'a [List],
 }
 
 /// The lists in use with their version, `{version, built, downloaded,
-/// lists}`, [json] being `{"folder": "..."}`.
+/// signature?, lists}`, [json] being `{"folder": "..."}`.
 ///
 /// # Safety
 /// [json] must point to [length] bytes of UTF-8.
@@ -132,12 +170,13 @@ pub unsafe extern "C" fn lumtub_lists_in(json: *const u8, length: usize) -> *mut
         folder: String,
     }
     let folder = serde_json::from_str::<Ask>(unsafe { text(json, length) }).map(|a| a.folder).unwrap_or_default();
-    let (version, built, lists, downloaded) = if folder.is_empty() {
-        (built_version(), String::new(), lists::built_in().to_vec(), false)
+    let used = if folder.is_empty() {
+        InUse { version: built_version(), built: String::new(), lists: lists::built_in().to_vec(), downloaded: false, signature: None }
     } else {
-        current(Path::new(&folder))
+        in_use(signing::PUBLIC_KEYS, Path::new(&folder))
     };
-    give_json(&Bundle { version, built: &built, downloaded, lists: &lists })
+    let signature = used.signature.map(|s| s.iter().map(|b| format!("{b:02x}")).collect());
+    give_json(&Bundle { version: used.version, built: &used.built, downloaded: used.downloaded, signature, lists: &used.lists })
 }
 
 /// Takes a downloaded update, [json] being `{file, signature, folder}`
@@ -195,28 +234,84 @@ mod tests {
         assert_eq!(owned.lists, lists::built_in());
     }
 
+    fn keys() -> Vec<u8> {
+        signing::public_keys(&SECRET)
+    }
+
     #[test]
     fn signatures_and_content_are_checked() {
         let json = bundle(u64::MAX);
-        let keys = signing::public_keys(&SECRET);
-        assert!(signing::verify_with(&keys, NAME, &sha256(&json), &signed(&json)));
+        assert!(read_signed(&keys(), &json, &signed(&json)).is_ok());
         // The shipped keys are not the test key: a test signature is refused.
-        assert_eq!(read_signed(&json, &signed(&json)).err().as_deref(), Some("the signature does not match"));
-        assert!(read_signed(&json, &[0; signing::SIGNATURE_LENGTH]).is_err());
+        assert_eq!(read_signed(signing::PUBLIC_KEYS, &json, &signed(&json)).err().as_deref(), Some("the signature does not match"));
+        assert!(read_signed(&keys(), &json, &[0; signing::SIGNATURE_LENGTH]).is_err());
+        let mut changed = json.clone();
+        changed[10] ^= 1;
+        assert!(read_signed(&keys(), &changed, &signed(&json)).is_err());
     }
 
     #[test]
     fn a_folder_without_a_download_uses_the_built_in_lists() {
         let dir = folder("none");
-        let (version, _, lists, downloaded) = current(&dir);
-        assert_eq!(version, built_version());
-        assert_eq!(lists, lists::built_in());
-        assert!(!downloaded);
-        // A file whose signature does not hold is ignored.
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join(NAME), bundle(u64::MAX)).unwrap();
-        std::fs::write(dir.join(format!("{NAME}.sig")), vec![0; signing::SIGNATURE_LENGTH]).unwrap();
-        assert!(!current(&dir).3);
+        let used = in_use(&keys(), &dir);
+        assert_eq!(used.version, built_version());
+        assert_eq!(used.lists, lists::built_in());
+        assert!(!used.downloaded && used.signature.is_none());
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_taken_download_is_used_after_a_restart() {
+        let dir = folder("taken");
+        let json = bundle(u64::MAX - 1);
+        let taken = take_with(&keys(), &json, &signed(&json), &dir).unwrap();
+        assert!(taken.newer);
+        assert!(!dir.join(format!("{KEPT}.new")).exists());
+        let used = in_use(&keys(), &dir);
+        assert_eq!(used.version, u64::MAX - 1);
+        assert!(used.downloaded);
+        assert_eq!(used.signature, Some(signed(&json)));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn an_older_or_the_same_version_is_not_taken() {
+        let dir = folder("rollback");
+        let newer = bundle(u64::MAX - 1);
+        take_with(&keys(), &newer, &signed(&newer), &dir).unwrap();
+        for version in [u64::MAX - 1, u64::MAX - 2, 1] {
+            let json = bundle(version);
+            assert!(!take_with(&keys(), &json, &signed(&json), &dir).unwrap().newer);
+        }
+        assert_eq!(in_use(&keys(), &dir).version, u64::MAX - 1);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_damaged_or_cut_file_is_ignored() {
+        let dir = folder("damaged");
+        let json = bundle(u64::MAX - 1);
+        take_with(&keys(), &json, &signed(&json), &dir).unwrap();
+        let whole = std::fs::read(dir.join(KEPT)).unwrap();
+        for bad in [whole[..whole.len() - 1].to_vec(), whole[..3].to_vec(), Vec::new(), {
+            let mut flipped = whole.clone();
+            let last = flipped.len() - 2;
+            flipped[last] ^= 1;
+            flipped
+        }, {
+            let mut long = whole.clone();
+            long[..4].copy_from_slice(&u32::MAX.to_le_bytes());
+            long
+        }] {
+            std::fs::write(dir.join(KEPT), &bad).unwrap();
+            let used = in_use(&keys(), &dir);
+            assert!(!used.downloaded && used.signature.is_none(), "a damaged file must not count");
+            assert_eq!(used.lists, lists::built_in());
+        }
+        // A write cut short leaves only the file beside it; the kept one stays.
+        std::fs::write(dir.join(KEPT), &whole).unwrap();
+        std::fs::write(dir.join(format!("{KEPT}.new")), &whole[..100]).unwrap();
+        assert!(in_use(&keys(), &dir).downloaded);
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
@@ -225,6 +320,7 @@ mod tests {
         let dir = folder("refused");
         let json = bundle(u64::MAX);
         assert!(take(&json, &signed(&json), &dir).is_err());
-        assert!(!dir.join(NAME).exists());
+        assert!(take_with(&keys(), &json, &[0; signing::SIGNATURE_LENGTH], &dir).is_err());
+        assert!(!dir.join(KEPT).exists());
     }
 }

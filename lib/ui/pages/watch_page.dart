@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
@@ -21,6 +22,7 @@ import '../player_controls.dart';
 import '../player_shortcuts.dart';
 import '../screenshot_action.dart';
 import '../summary_dialog.dart';
+import '../subtitle_list_panel.dart';
 import '../theater_mode.dart';
 import '../skeleton.dart';
 import '../theme.dart';
@@ -73,6 +75,7 @@ class _WatchPageState extends State<WatchPage> {
   @override
   void dispose() {
     unawaited(_playing?.cancel());
+    subtitleListBeside = false;
     super.dispose();
   }
 
@@ -128,6 +131,7 @@ class _WatchPageState extends State<WatchPage> {
           // 剧场模式 in a wide window keeps comments, up next and the chat
           // in a column beside the video, which can be folded away.
           final sidePanel = theater && outer.maxWidth >= 900;
+          subtitleListBeside = sidePanel || (!theater && outer.maxWidth >= 1080);
           final panelOpen = sidePanel && theaterChatOpen.value;
           final constraints = panelOpen ? outer.copyWith(maxWidth: outer.maxWidth - _theaterChatWidth) : outer;
           // 剧场模式 gives the video the whole width and stacks the panels below.
@@ -567,9 +571,10 @@ class _DescriptionState extends State<_Description> {
   }
 }
 
-/// 接下来播放 and 评论 as tabs beside the player. The comments load when
-/// their tab is first opened and stay loaded while the video plays.
-class _SidePanel extends StatelessWidget {
+/// 接下来播放, 评论, the chat and the subtitle list as tabs beside the
+/// player. The comments load when their tab is first opened and stay
+/// loaded while the video plays. The tab chosen is kept for the next video.
+class _SidePanel extends StatefulWidget {
   const _SidePanel({required this.controller, required this.comments, this.replayChat, this.chatFirst = false, this.trailing});
   final AppController controller;
   final Widget? comments;
@@ -580,26 +585,68 @@ class _SidePanel extends StatelessWidget {
   final Widget? trailing;
 
   @override
+  State<_SidePanel> createState() => _SidePanelState();
+}
+
+class _SidePanelState extends State<_SidePanel> with TickerProviderStateMixin {
+  TabController? _tabs;
+  List<String> _ids = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    sidePanelTab.addListener(_asked);
+  }
+
+  @override
+  void dispose() {
+    sidePanelTab.removeListener(_asked);
+    _tabs?.dispose();
+    super.dispose();
+  }
+
+  /// Another part of the page asked for a tab, such as the player's
+  /// subtitle list button.
+  void _asked() {
+    final index = _ids.indexOf(sidePanelTab.value ?? '');
+    final tabs = _tabs;
+    if (index >= 0 && tabs != null && tabs.index != index) tabs.animateTo(index);
+  }
+
+  TabController _controllerFor(List<String> ids) {
+    if (_tabs != null && listEquals(ids, _ids)) return _tabs!;
+    final was = _tabs == null ? sidePanelTab.value : _ids[_tabs!.index];
+    _tabs?.dispose();
+    _ids = ids;
+    final tabs = TabController(length: ids.length, vsync: this, initialIndex: max(0, ids.indexOf(was ?? '')));
+    tabs.addListener(() {
+      if (!tabs.indexIsChanging) sidePanelTab.value = _ids[tabs.index];
+    });
+    return _tabs = tabs;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final chat = replayChat == null ? null : (tr('Chat'), _KeepAlive(child: replayChat!));
+    final controller = widget.controller;
+    final player = controller.player;
+    final chat = widget.replayChat == null ? null : ('chat', tr('Chat'), _KeepAlive(child: widget.replayChat!));
+    final subtitles = player != null && (controller.details?.subtitles.isNotEmpty == true || controller.secondarySubtitle != null);
     final tabs = [
-      if (chatFirst && chat != null) chat,
-      (controller.playingList != null ? tr('Playlist') : tr('Up next'), _UpNext(controller: controller)),
-      if (comments case final comments?) (tr('Comments'), _KeepAlive(child: comments)),
-      if (!chatFirst && chat != null) chat,
+      if (widget.chatFirst && chat != null) chat,
+      ('next', controller.playingList != null ? tr('Playlist') : tr('Up next'), _UpNext(controller: controller)),
+      if (widget.comments case final comments?) ('comments', tr('Comments'), _KeepAlive(child: comments)),
+      if (!widget.chatFirst && chat != null) chat,
+      if (subtitles) ('subtitles', tr('Subtitles'), _KeepAlive(child: Padding(padding: const EdgeInsets.only(top: 4), child: SubtitleList(key: ValueKey('subtitles:${controller.playing?.id}'), controller: controller, player: player)))),
     ];
-    return DefaultTabController(
-      key: ValueKey(tabs.length),
-      length: tabs.length,
-      child: Column(children: [
-        Row(children: [
-          Expanded(child: TabBar(dividerColor: Colors.transparent, tabs: [for (final (label, _) in tabs) Tab(height: 40, text: label)])),
-          if (trailing case final trailing?) trailing,
-        ]),
-        const SizedBox(height: 8),
-        Expanded(child: TabBarView(children: [for (final (_, view) in tabs) view])),
+    final tabController = _controllerFor([for (final (id, _, _) in tabs) id]);
+    return Column(children: [
+      Row(children: [
+        Expanded(child: TabBar(controller: tabController, isScrollable: tabs.length > 3, tabAlignment: tabs.length > 3 ? TabAlignment.start : null, dividerColor: Colors.transparent, tabs: [for (final (_, label, _) in tabs) Tab(height: 40, text: label)])),
+        if (widget.trailing case final trailing?) trailing,
       ]),
-    );
+      const SizedBox(height: 8),
+      Expanded(child: TabBarView(controller: tabController, children: [for (final (_, _, view) in tabs) view])),
+    ]);
   }
 }
 

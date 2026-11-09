@@ -332,8 +332,23 @@ class AppPreferences {
   /// Whether [group] is ticked. A list of [otherLists] starts ticked only
   /// when its file says `default: on`.
   bool groupOn(BlockedGroup group, {bool media = false}) {
-    if (otherLists.contains(group)) return group.defaultOn ? !allowedGroups.contains(group.name) : enabledGroups.contains(group.name);
-    return group.onByDefault ? !(media ? allowedMedia : allowedGroups).contains(group.name) : enabledGroups.contains(group.name);
+    // A choice the user made stands whatever a later version of the lists
+    // makes the default: ticked groups are kept in [enabledGroups], unticked
+    // ones in [allowedGroups] (or [allowedMedia]), and a tick moves a group
+    // from one to the other.
+    final ticked = enabledGroups.contains(group.name);
+    final unticked = (media ? allowedMedia : allowedGroups).contains(group.name);
+    if (ticked != unticked) return ticked;
+    if (otherLists.contains(group)) return group.defaultOn ? !unticked : ticked;
+    return group.onByDefault ? !unticked : ticked;
+  }
+
+  /// These preferences with [group] ticked or not, remembered as the
+  /// user's own choice.
+  AppPreferences withGroup(BlockedGroup group, bool on, {bool media = false}) {
+    List<String> toggled(List<String> list, bool add) => add ? {...list, group.name}.toList() : [...list.where((n) => n != group.name)];
+    final unticked = toggled(media ? allowedMedia : allowedGroups, !on);
+    return copyWith(enabledGroups: toggled(enabledGroups, on), allowedGroups: media ? null : unticked, allowedMedia: media ? unticked : null);
   }
 
   ({BlockMatcher groups, BlockMatcher media, BlockMatcher others}) get _matchers => _matcherCache[this] ??= (

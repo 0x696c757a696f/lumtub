@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'blocked_groups.dart';
 import 'native_core.dart';
 
 /// Fetches the block lists the repository publishes on its `lists`
@@ -12,12 +13,15 @@ import 'native_core.dart';
 /// app's own update keys) and keeps the file only when it is newer than
 /// the lists in use; it is read at the next start.
 class BlockListUpdates {
-  BlockListUpdates({required http.Client client, required Directory data, required Directory cache})
+  BlockListUpdates({required http.Client client, required Directory data, required Directory cache, List<int>? Function(String folder)? keptSignature})
       : _client = client,
         _data = data,
-        _cache = cache;
+        _cache = cache,
+        _keptSignature = keptSignature ?? BlockLists.keptSignature;
 
   final http.Client _client;
+  /// The signature of the verified download kept in a folder, if any.
+  final List<int>? Function(String folder) _keptSignature;
   final Directory _data;
   final Directory _cache;
   Timer? _timer;
@@ -52,9 +56,11 @@ class BlockListUpdates {
       final headers = {'User-Agent': 'Lumtub/$appVersion'};
       final signature = await _client.get(Uri.parse('$_base/lists.json.sig'), headers: headers).timeout(const Duration(seconds: 30));
       if (signature.statusCode != 200) throw HttpException('HTTP ${signature.statusCode} for lists.json.sig');
-      // The same signature is the same file: nothing more to fetch.
-      final kept = File('${_data.path}${Platform.pathSeparator}lists.json.sig');
-      if (await kept.exists() && _same(await kept.readAsBytes(), signature.bodyBytes)) {
+      // The same signature as the kept file, which verifies, is the same
+      // file: nothing more to fetch. A kept file that is missing or
+      // damaged has none, so the lists are fetched again.
+      final kept = _keptSignature(_data.path);
+      if (kept != null && _same(kept, signature.bodyBytes)) {
         logInfo('Block lists are up to date');
       } else {
         final lists = await _client.get(Uri.parse('$_base/lists.json'), headers: headers).timeout(const Duration(minutes: 2));

@@ -42,6 +42,17 @@ class BlockLists {
     );
   }
 
+  /// The signature of the verified download kept in [folder], newer than
+  /// this build or not; null when there is none or it does not verify.
+  static List<int>? keptSignature(String folder) {
+    final core = NativeCore.instance;
+    final text = core?.take(core.withText(jsonEncode({'folder': folder}), core.blockLists));
+    if (text == null) return null;
+    final hex = (jsonDecode(text) as Map<String, dynamic>)['signature'];
+    if (hex is! String || hex.length.isOdd) return null;
+    return [for (var i = 0; i < hex.length; i += 2) int.parse(hex.substring(i, i + 2), radix: 16)];
+  }
+
   List<BlockedGroup> inCategory(String category) => [for (final list in all) if (list.categories.contains(category)) list];
 }
 

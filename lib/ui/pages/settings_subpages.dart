@@ -205,12 +205,6 @@ Widget _suggestTile() => ListTile(
       onTap: () => openExternal('https://github.com/0x696c757a696f/lumtub/issues/new?template=block_list.yml'),
     );
 
-/// [prefs] with [group] ticked or not.
-AppPreferences _withGroup(AppPreferences prefs, BlockedGroup group, bool on, {required bool media}) {
-  List<String> toggled(List<String> list, bool add) => add ? {...list, group.name}.toList() : [...list.where((n) => n != group.name)];
-  if (!group.onByDefault) return prefs.copyWith(enabledGroups: toggled(prefs.enabledGroups, on));
-  return media ? prefs.copyWith(allowedMedia: toggled(prefs.allowedMedia, !on)) : prefs.copyWith(allowedGroups: toggled(prefs.allowedGroups, !on));
-}
 
 /// One row per group: a tick for the whole group, and a tap for its list.
 List<Widget> _groupTiles(BuildContext context, AppController controller, List<BlockedGroup> groups, {required bool media}) {
@@ -227,7 +221,7 @@ List<Widget> _groupTiles(BuildContext context, AppController controller, List<Bl
           enabled: enabled,
           leading: Checkbox(
             value: prefs.groupOn(group, media: media),
-            onChanged: enabled ? (on) => controller.savePreferences(_withGroup(prefs, group, on == true, media: media)) : null,
+            onChanged: enabled ? (on) => controller.savePreferences(prefs.withGroup(group, on == true, media: media)) : null,
           ),
           title: Text(group.label),
           subtitle: Text(
@@ -269,7 +263,7 @@ Future<void> _openGroupEntries(BuildContext context, AppController controller, B
         title: Text(tr('Block this group')),
         subtitle: Text(media ? tr('Needs "Block state propaganda media" on') : tr('Needs "Block controversial religious groups" on')),
         value: prefs.groupOn(group, media: media),
-        onChanged: (on) => controller.savePreferences(_withGroup(prefs, group, on, media: media)),
+        onChanged: (on) => controller.savePreferences(prefs.withGroup(group, on, media: media)),
       ),
       for (final kind in BlockKind.values)
         if (entries.where((e) => e.kind == kind).toList() case final list when list.isNotEmpty) ...[

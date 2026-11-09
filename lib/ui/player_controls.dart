@@ -874,6 +874,14 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
   }
 
   Future<void> _openSubtitleList(BuildContext context) async {
+    // Beside the video there is room for the list, which then leaves the
+    // picture uncovered.
+    if (subtitleListBeside && !isFullscreen(context)) {
+      if (theaterMode.value) theaterChatOpen.value = true;
+      sidePanelTab.value = null;
+      sidePanelTab.value = 'subtitles';
+      return;
+    }
     _menuOpened();
     await showSubtitleList(context, _controller, _player);
     _menuClosed();

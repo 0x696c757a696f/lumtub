@@ -157,6 +157,19 @@ void main() {
     final kept = await languages.only(Stream.fromIterable(lines), ExploreLanguage.en, heardOnly: true).toList();
     expect(kept, hasLength(50), reason: 'none could be heard, so the titles decide');
   }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
+  test('hearing gives way only to titles that are not translations', () async {
+    // The uploader gave the English video an Italian title: asked in
+    // Italian, YouTube answers with it and with no captions or audio.
+    final client = MockClient((request) async => http.Response.bytes(utf8.encode(jsonEncode({
+          'playabilityStatus': {'status': 'OK'},
+          'videoDetails': {'title': 'Una lunga passeggiata nella città vecchia di Edimburgo di notte', 'shortDescription': ''},
+        })), 200));
+    final languages = VideoLanguages(client);
+    String id(int i) => 't${i.toString().padLeft(10, '0')}';
+    final lines = [for (var i = 0; i < 50; i++) _video(id(i), 'A long walk through the old town of Edinburgh at night')];
+    expect(await languages.only(Stream.fromIterable(lines), ExploreLanguage.it, heardOnly: true).toList(), isEmpty);
+    expect(await languages.only(Stream.fromIterable(lines), ExploreLanguage.it).toList(), hasLength(50), reason: 'without hearing only, the title judges');
+  }, skip: NativeCore.instance == null ? 'needs LUMTUB_CORE_DLL' : null);
   test('stops asking for a while once YouTube leaves the video out', () async {
     var calls = 0;
     final client = MockClient((request) async {

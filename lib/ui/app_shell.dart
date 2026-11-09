@@ -107,10 +107,14 @@ class _AppShellState extends State<AppShell> {
         }
       });
     }
-    if (!_controller.preferences.listsAsked && !SmokeCheck.requested) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(askBlockLists(context, _controller));
-      });
+    // The saved preferences are read after the first frame; until then
+    // they are the defaults, which have not asked.
+    if (!SmokeCheck.requested) {
+      if (_controller.preferencesLoaded) {
+        _askListsIfNew();
+      } else {
+        _controller.addListener(_askListsOnceLoaded);
+      }
     }
     _finished = _controller.finishedDownloads.listen((task) {
       final path = task.filePath;
@@ -125,8 +129,22 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
+  void _askListsOnceLoaded() {
+    if (!_controller.preferencesLoaded) return;
+    _controller.removeListener(_askListsOnceLoaded);
+    _askListsIfNew();
+  }
+
+  void _askListsIfNew() {
+    if (_controller.preferences.listsAsked) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(askBlockLists(context, _controller));
+    });
+  }
+
   @override
   void dispose() {
+    _controller.removeListener(_askListsOnceLoaded);
     if (WindowChrome.menus.value == _menus) WindowChrome.menus.value = null;
     unawaited(_notices?.cancel());
     unawaited(_waylandTop?.cancel());

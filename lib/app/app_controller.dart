@@ -622,6 +622,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   AppPreferences preferences = const AppPreferences();
   AppPreferencesStore? _preferencesStore;
 
+  /// Whether [preferences] are the saved ones rather than the defaults
+  /// used before they are read.
+  bool get preferencesLoaded => _preferencesStore != null;
+
   AppController({this.appearance = const AppearanceSettings(), AppearanceSettingsStore? appearanceStore}) : _appearanceStore = appearanceStore {
     deArrow.configure(_http, titles: () => settings.deArrowTitles, thumbnails: () => settings.deArrowThumbnails);
     _applyAppearanceGlobals(appearance);

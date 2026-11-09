@@ -3119,5 +3119,11 @@
   "Skin background": "Latar skin",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Gambar dan lanskap skin di belakang halaman; nonaktif menyisakan warna polos",
   "Suggest a channel or report a mistake": "Sarankan saluran atau laporkan kesalahan",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Daftar ini bersifat publik di GitHub dan siapa pun dapat menambahkannya. Setiap entri memerlukan sumber publik"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Daftar ini bersifat publik di GitHub dan siapa pun dapat menambahkannya. Setiap entri memerlukan sumber publik",
+  "Preparing yt-dlp…": "Menyiapkan yt-dlp…",
+  "Match the frame rate": "Samakan kecepatan bingkai",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Saat video diputar, layar beralih ke kecepatan refresh yang sesuai agar gerakan mulus; TV mungkin menjadi gelap sesaat",
+  "refresh rate fps TV": "kecepatan refresh fps TV",
+  "Tap to install it": "Ketuk untuk memasangnya",
+  "Tap to download and install": "Ketuk untuk mengunduh dan memasang"
 }

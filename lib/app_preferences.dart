@@ -100,6 +100,7 @@ class AppPreferences {
     this.audioOnlyInBackground = false,
     this.closeToTray = false,
     this.minimizeToTray = false,
+    this.matchFrameRate = true,
     this.keyboardShortcuts = true,
     this.seekSeconds = 5,
     this.longSeekSeconds = 10,
@@ -241,6 +242,9 @@ class AppPreferences {
   final bool closeToTray;
   /// Minimising the window hides it to the tray icon.
   final bool minimizeToTray;
+  /// Android: the screen switches to a refresh rate that fits the video's
+  /// frame rate while it plays, as TVs do for films.
+  final bool matchFrameRate;
   final bool keyboardShortcuts;
   final int seekSeconds;
   final int longSeekSeconds;
@@ -461,6 +465,7 @@ class AppPreferences {
     bool? audioOnlyInBackground,
     bool? closeToTray,
     bool? minimizeToTray,
+    bool? matchFrameRate,
     bool? keyboardShortcuts,
     int? seekSeconds,
     int? longSeekSeconds,
@@ -544,6 +549,7 @@ class AppPreferences {
         audioOnlyInBackground: audioOnlyInBackground ?? this.audioOnlyInBackground,
         closeToTray: closeToTray ?? this.closeToTray,
         minimizeToTray: minimizeToTray ?? this.minimizeToTray,
+        matchFrameRate: matchFrameRate ?? this.matchFrameRate,
         keyboardShortcuts: keyboardShortcuts ?? this.keyboardShortcuts,
         seekSeconds: seekSeconds ?? this.seekSeconds,
         longSeekSeconds: longSeekSeconds ?? this.longSeekSeconds,
@@ -628,6 +634,7 @@ class AppPreferences {
         'audioOnlyInBackground': audioOnlyInBackground,
         'closeToTray': closeToTray,
         'minimizeToTray': minimizeToTray,
+        'matchFrameRate': matchFrameRate,
         'keyboardShortcuts': keyboardShortcuts,
         'seekSeconds': seekSeconds,
         'longSeekSeconds': longSeekSeconds,
@@ -751,6 +758,7 @@ class AppPreferences {
       audioOnlyInBackground: flag('audioOnlyInBackground', d.audioOnlyInBackground),
       closeToTray: flag('closeToTray', d.closeToTray),
       minimizeToTray: flag('minimizeToTray', d.minimizeToTray),
+      matchFrameRate: flag('matchFrameRate', d.matchFrameRate),
       keyboardShortcuts: flag('keyboardShortcuts', d.keyboardShortcuts),
       seekSeconds: number('seekSeconds', 5, 1, 60),
       longSeekSeconds: number('longSeekSeconds', 10, 1, 120),

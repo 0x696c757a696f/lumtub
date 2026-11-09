@@ -3119,5 +3119,11 @@
   "Skin background": "Bakgrunnur þema",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Myndir og landslag þemans á bak við síðurnar; slökkt skilur eftir einlitan bakgrunn",
   "Suggest a channel or report a mistake": "Stinga upp á rás eða tilkynna villu",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listarnir eru opinberir á GitHub og hver sem er getur bætt við þá. Hver færsla þarf opinbera heimild"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listarnir eru opinberir á GitHub og hver sem er getur bætt við þá. Hver færsla þarf opinbera heimild",
+  "Preparing yt-dlp…": "Undirbý yt-dlp…",
+  "Match the frame rate": "Laga rammatíðni að myndskeiði",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Meðan myndskeið er spilað skiptir skjárinn yfir á endurnýjunartíðni sem hentar því, svo hreyfingin verði jöfn; sjónvörp geta orðið svört andartak",
+  "refresh rate fps TV": "endurnýjunartíðni fps sjónvarp TV",
+  "Tap to install it": "Ýttu til að setja upp",
+  "Tap to download and install": "Ýttu til að sækja og setja upp"
 }

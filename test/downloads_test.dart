@@ -115,7 +115,8 @@ void main() {
       }
     });
 
-    DownloadManager manager({String? ffmpeg, List<SkipSegment> segments = const []}) => _track(managers, DownloadManager(
+    final joined = <List<String>>[];
+    DownloadManager manager({String? ffmpeg, List<SkipSegment> segments = const [], Future<({String? path, String? error})> Function(String video, String audio, String stem)? join}) => _track(managers, DownloadManager(
           file: File('${dir.path}/downloads.json'),
           ytDlpPath: 'yt-dlp',
           defaultDirectory: '${dir.path}/videos',
@@ -130,6 +131,7 @@ void main() {
           options: () => const DownloadOptions(proxy: 'http://127.0.0.1:7890', deno: 'deno.exe', subtitleLanguages: '(zh|en).*', autoSubtitles: true),
           sponsorSegments: (id) async => segments,
           onFinished: finished.add,
+          join: join,
         ));
 
     Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 80));
@@ -263,6 +265,50 @@ void main() {
 
       final audio = manager().arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.audio, directory: 'D'));
       expect(audio, isNot(contains('--write-subs')));
+    });
+
+    test('without ffmpeg but with a joiner, the two streams come as files that are joined into one', () async {
+      joined.clear();
+      final m = manager(join: (video, audio, stem) async {
+        joined.add([video, audio, stem]);
+        final out = '$stem.webm';
+        File(out).writeAsStringSync('joined');
+        return (path: out, error: null);
+      });
+      expect(m.canMerge, isTrue);
+      final best = m.arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.p720, directory: 'D'));
+      expect(best[best.indexOf('--format') + 1], "bv[height<=720]/bv,ba[acodec~='^(opus|mp4a|ac-3|ec-3)']/ba[ext=m4a]");
+      expect(best, containsAllInOrder(['-o', '%(title).80B [%(id)s].f%(format_id)s.%(ext)s']));
+      expect(best, containsAllInOrder(['-o', 'infojson:%(title).80B [%(id)s].%(ext)s', '-o', 'subtitle:%(title).80B [%(id)s].%(ext)s']));
+      expect(best, isNot(contains('--merge-output-format')));
+      final audio = m.arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.audio, directory: 'D'));
+      expect(audio[audio.indexOf('--format') + 1], 'ba[ext=m4a]/ba');
+
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      await until(() => processes.isNotEmpty);
+      final picture = File('${dir.path}/videos/Video [aaaaaaaaaaa].f137.mp4')..createSync(recursive: true);
+      final sound = File('${dir.path}/videos/Video [aaaaaaaaaaa].f251.webm')..createSync(recursive: true);
+      processes[0].out('lumtub-file|${picture.path}');
+      processes[0].out('lumtub-file|${sound.path}');
+      await processes[0].exit(0);
+      final task = m.taskFor('aaaaaaaaaaa')!;
+      await until(() => task.status == DownloadStatus.done);
+      expect(task.status, DownloadStatus.done);
+      expect(joined.single, [picture.path, sound.path, '${dir.path}/videos/Video [aaaaaaaaaaa]']);
+      expect(task.filePath, '${dir.path}/videos/Video [aaaaaaaaaaa].webm');
+      expect(picture.existsSync() || sound.existsSync(), isFalse);
+
+      final fails = manager(join: (video, audio, stem) async => (path: null, error: 'sound other than AAC, Opus or Dolby'));
+      fails.add(video('ccccccccccc'), DownloadQuality.best);
+      await until(() => processes.length > 1);
+      final p = File('${dir.path}/videos/Video [ccccccccccc].f248.webm')..createSync(recursive: true);
+      final a = File('${dir.path}/videos/Video [ccccccccccc].f251.webm')..createSync(recursive: true);
+      processes[1].out('lumtub-file|${p.path}');
+      processes[1].out('lumtub-file|${a.path}');
+      await processes[1].exit(0);
+      final failed = fails.taskFor('ccccccccccc')!;
+      await until(() => failed.status == DownloadStatus.failed);
+      expect(failed.error, 'sound other than AAC, Opus or Dolby');
     });
 
     test('progress ticks reach only the progress listenable, at most twice a second', () async {

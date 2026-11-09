@@ -3119,5 +3119,11 @@
   "Skin background": "Mandharinyuma ya mandhari",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Picha na mandhari ya asili ya mandhari nyuma ya kurasa; ikizimwa inabaki rangi ya kawaida",
   "Suggest a channel or report a mistake": "Pendekeza kituo au ripoti kosa",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Orodha ni za umma kwenye GitHub na yeyote anaweza kuongeza. Kila kipengee kinahitaji chanzo cha umma"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Orodha ni za umma kwenye GitHub na yeyote anaweza kuongeza. Kila kipengee kinahitaji chanzo cha umma",
+  "Preparing yt-dlp…": "Inatayarisha yt-dlp…",
+  "Match the frame rate": "Linganisha kasi ya fremu",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Video inapocheza, skrini hubadilika hadi kasi ya kuonyesha upya inayoifaa, ili mwendo uwe laini; TV zinaweza kuwa giza kwa muda mfupi",
+  "refresh rate fps TV": "kasi ya kuonyesha upya fps TV",
+  "Tap to install it": "Gusa ili kusakinisha",
+  "Tap to download and install": "Gusa ili kupakua na kusakinisha"
 }

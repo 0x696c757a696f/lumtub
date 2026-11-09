@@ -11,5 +11,5 @@
     reviewed: 2026-11-08
 :idman-tv | ^Idman TV
     reviewed: 2026-11-08
-:medeniyyet-tv | ^Medeniyyet TV
+:medeniyyet-tv | UCvBrkIru-Kwws9gWwJOx8dA | @medeniyyettv7163 | ^Medeniyyet TV
     reviewed: 2026-11-08

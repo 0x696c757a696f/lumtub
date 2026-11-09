@@ -31,6 +31,7 @@ jobs:
         run: |
           python3 .github/scripts/list_ids.py lists "$RUNNER_TEMP/report.md" ${LIMIT:+--limit "$LIMIT"}
           cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
+          awk '/^## The same channel/{on=1} /^## Several/{on=0} on' "$RUNNER_TEMP/report.md"
 
       - name: Install the Rust toolchain
         run: |
@@ -62,6 +63,7 @@ jobs:
           echo "Pushed $branch; open a pull request from it." | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Keep the report
+        if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: list-ids-report

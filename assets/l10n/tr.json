@@ -3119,5 +3119,11 @@
   "Skin background": "Tema arka planı",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Sayfaların arkasında temanın resimleri ve manzarası; kapalıyken düz renk kalır",
   "Suggest a channel or report a mistake": "Kanal öner veya hata bildir",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listeler GitHub'da herkese açıktır ve herkes ekleme yapabilir. Her girdi için herkese açık bir kaynak gerekir"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listeler GitHub'da herkese açıktır ve herkes ekleme yapabilir. Her girdi için herkese açık bir kaynak gerekir",
+  "Preparing yt-dlp…": "yt-dlp hazırlanıyor…",
+  "Match the frame rate": "Kare hızını eşleştir",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Video oynatılırken ekran, hareketin akıcı olması için videoya uygun yenileme hızına geçer; TV'ler kısa süreliğine kararabilir",
+  "refresh rate fps TV": "yenileme hızı fps TV televizyon",
+  "Tap to install it": "Yüklemek için dokunun",
+  "Tap to download and install": "İndirip yüklemek için dokunun"
 }

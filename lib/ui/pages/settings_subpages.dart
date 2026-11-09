@@ -961,7 +961,11 @@ List<SettingEntry> aboutEntries(AppController controller) => [
         final String title, subtitle;
         if (updater?.ready != null) {
           title = tr('Version {0} downloaded', [release?.version ?? '']);
-          subtitle = updater?.installError != null ? tr("The installer didn't start: {0}. Click to try again", [updater!.installError!]) : tr('Installs when Lumtub closes; click to restart and update now');
+          subtitle = updater?.installError != null
+              ? tr("The installer didn't start: {0}. Click to try again", [updater!.installError!])
+              : Platform.isAndroid
+                  ? tr('Tap to install it')
+                  : tr('Installs when Lumtub closes; click to restart and update now');
         } else if (progress != null) {
           title = tr('Downloading version {0}…', [release?.version ?? '']);
           subtitle = '${(progress * 100).round()}%';
@@ -977,7 +981,9 @@ List<SettingEntry> aboutEntries(AppController controller) => [
               ? tr('Click to open the GitHub Release download.')
               : updater?.error != null
                   ? tr('Download failed: {0}. Click to retry', [updater!.error!])
-                  : tr('Click to download; it installs when Lumtub closes');
+                  : Platform.isAndroid
+                      ? tr('Tap to download and install')
+                      : tr('Click to download; it installs when Lumtub closes');
         } else {
           title = tr('Check for updates');
           subtitle = updater?.error == null ? tr('Checked at startup and every 6 hours; you can also check now.') : tr('Could not check for app updates: {0}', [updater!.error!]);

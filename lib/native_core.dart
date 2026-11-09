@@ -6,6 +6,7 @@ import 'dart:math';
 
 import 'package:ffi/ffi.dart';
 
+import 'android_python.dart';
 import 'app_log.dart';
 import 'l10n/l10n.dart';
 
@@ -314,6 +315,31 @@ class NativeCore {
 
   int Function()? _processCpu;
 
+  /// Joins a downloaded picture and sound without ffmpeg into [stem] plus
+  /// the extension that fits them (.mp4, or .webm/.mkv for Opus sound);
+  /// the path written, or why not. It reads and writes the whole video,
+  /// so run it on another isolate.
+  static ({String? path, String? error}) join(String video, String audio, String stem) {
+    final core = instance;
+    if (core == null) return (path: null, error: 'lumtub_core is missing');
+    try {
+      final call = core._join ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_join');
+      final answer = core.take(core.withText(jsonEncode({'video': video, 'audio': audio, 'out': stem}), call));
+      final map = answer == null ? null : jsonDecode(answer);
+      if (map is Map && map['path'] is String) return (path: map['path'] as String, error: null);
+      return (path: null, error: map is Map ? '${map['error']}' : 'the files could not be joined');
+    } on ArgumentError {
+      return (path: null, error: 'lumtub_core is too old to join files');
+    } on FormatException {
+      return (path: null, error: 'lumtub_core is too old to join files');
+    }
+  }
+
+  /// Whether this core can [join] files.
+  static bool get canJoin => instance?.library.providesSymbol('lumtub_join') ?? false;
+
+  Pointer<Utf8> Function(Pointer<Uint8>, int)? _join;
+
   /// Calls [call] with [text] as UTF-8 in native memory.
   T withText<T>(String text, T Function(Pointer<Uint8> bytes, int length) call) => withBytes(utf8.encode(text), call);
 
@@ -353,6 +379,7 @@ class ProcessTree implements Process {
   /// A [background] tree runs below normal priority, its first process in
   /// Windows' efficiency mode: for downloads, which nobody waits on.
   static Future<Process> start(String executable, List<String> arguments, {Map<String, String>? environment, String? workingDirectory, bool background = false}) async {
+    if (AndroidPython.runs(executable)) (executable, arguments, environment) = AndroidPython.current!.command(executable, arguments, environment);
     final process = await Process.start(executable, arguments, environment: environment, workingDirectory: workingDirectory);
     final tree = adopt(process);
     if (background && tree is ProcessTree) NativeCore.instance?._background(tree._job, process.pid);

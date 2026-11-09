@@ -3119,5 +3119,11 @@
   "Skin background": "Background ng skin",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Ang mga larawan at tanawin ng skin sa likod ng mga pahina; kapag naka-off, plain na kulay",
   "Suggest a channel or report a mistake": "Magmungkahi ng channel o mag-ulat ng pagkakamali",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Pampubliko ang mga listahan sa GitHub, at kahit sino ay maaaring magdagdag. Bawat entry ay nangangailangan ng pampublikong source"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Pampubliko ang mga listahan sa GitHub, at kahit sino ay maaaring magdagdag. Bawat entry ay nangangailangan ng pampublikong source",
+  "Preparing yt-dlp…": "Inihahanda ang yt-dlp…",
+  "Match the frame rate": "Itugma ang frame rate",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Habang may nagpe-play na video, lilipat ang screen sa refresh rate na akma rito para pantay ang galaw; maaaring saglit na dumilim ang mga TV",
+  "refresh rate fps TV": "refresh rate fps TV",
+  "Tap to install it": "I-tap para i-install ito",
+  "Tap to download and install": "I-tap para i-download at i-install"
 }

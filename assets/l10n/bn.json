@@ -3119,5 +3119,11 @@
   "Skin background": "স্কিনের ব্যাকগ্রাউন্ড",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "পৃষ্ঠাগুলির পেছনে স্কিনের ছবি ও ল্যান্ডস্কেপ; বন্ধ থাকলে সাধারণ রঙ থাকে",
   "Suggest a channel or report a mistake": "চ্যানেল প্রস্তাব করুন বা ভুল রিপোর্ট করুন",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "তালিকাগুলো GitHub-এ সর্বজনীন এবং যে কেউ এতে যোগ করতে পারেন। প্রতিটি এন্ট্রির জন্য একটি সর্বজনীন সূত্র প্রয়োজন"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "তালিকাগুলো GitHub-এ সর্বজনীন এবং যে কেউ এতে যোগ করতে পারেন। প্রতিটি এন্ট্রির জন্য একটি সর্বজনীন সূত্র প্রয়োজন",
+  "Preparing yt-dlp…": "yt-dlp প্রস্তুত করা হচ্ছে…",
+  "Match the frame rate": "ফ্রেম রেটের সাথে মেলান",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ভিডিও চলার সময় স্ক্রিন সেটির উপযোগী রিফ্রেশ রেটে বদলে যায়, ফলে গতি মসৃণ থাকে; টিভি কিছুক্ষণের জন্য অন্ধকার হয়ে যেতে পারে",
+  "refresh rate fps TV": "রিফ্রেশ রেট fps টিভি",
+  "Tap to install it": "ইনস্টল করতে ট্যাপ করুন",
+  "Tap to download and install": "ডাউনলোড ও ইনস্টল করতে ট্যাপ করুন"
 }

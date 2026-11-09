@@ -824,14 +824,22 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               enabled: !prefs.pauseOnMinimize,
               onChanged: (v) => savePrefs(prefs.copyWith(audioOnlyInBackground: v)),
             ), subtitle: tr('Background playback')),
-        SettingEntry(tr('Minimize to tray on close'), (context) => SwitchItem(
+        if (Platform.isAndroid)
+          SettingEntry(tr('Match the frame rate'), (context) => SwitchItem(
+                title: tr('Match the frame rate'),
+                subtitle: tr('While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment'),
+                leading: _icon(AppIcons.monitorPlay),
+                value: prefs.matchFrameRate,
+                onChanged: (v) => savePrefs(prefs.copyWith(matchFrameRate: v)),
+              ), subtitle: tr('refresh rate fps TV')),
+        if (!Platform.isAndroid) SettingEntry(tr('Minimize to tray on close'), (context) => SwitchItem(
               title: tr('Minimize to tray on close'),
               subtitle: tr('The close button hides the window to the tray icon and playback continues; exit from the tray menu'),
               leading: _icon(AppIcons.layout),
               value: prefs.closeToTray,
               onChanged: (v) => savePrefs(prefs.copyWith(closeToTray: v)),
             ), subtitle: tr('tray background playback')),
-        SettingEntry(tr('Minimize to tray'), (context) => SwitchItem(
+        if (!Platform.isAndroid) SettingEntry(tr('Minimize to tray'), (context) => SwitchItem(
               title: tr('Minimize to tray'),
               subtitle: tr('Minimizing hides the window to the tray icon and takes it off the taskbar; click the icon to bring it back'),
               leading: _icon(AppIcons.minus),

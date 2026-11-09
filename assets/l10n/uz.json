@@ -3119,5 +3119,11 @@
   "Skin background": "Mavzu foni",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Sahifalar orqasida mavzuning rasmlari va manzarasi; oʻchirilsa, oddiy rang qoladi",
   "Suggest a channel or report a mistake": "Kanal taklif qilish yoki xatoni xabar qilish",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Ro‘yxatlar GitHub’da ochiq va istalgan kishi qo‘shishi mumkin. Har bir yozuv ochiq manbani talab qiladi"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Ro‘yxatlar GitHub’da ochiq va istalgan kishi qo‘shishi mumkin. Har bir yozuv ochiq manbani talab qiladi",
+  "Preparing yt-dlp…": "yt-dlp tayyorlanmoqda…",
+  "Match the frame rate": "Kadr chastotasiga moslash",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Video ijro etilayotganda ekran unga mos yangilanish chastotasiga o‘tadi, shunda harakat silliq bo‘ladi; televizorlar bir lahzaga qorayishi mumkin",
+  "refresh rate fps TV": "yangilanish chastotasi fps TV televizor",
+  "Tap to install it": "O‘rnatish uchun bosing",
+  "Tap to download and install": "Yuklab olish va o‘rnatish uchun bosing"
 }

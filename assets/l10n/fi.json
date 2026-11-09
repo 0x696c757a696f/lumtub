@@ -3119,5 +3119,11 @@
   "Skin background": "Teeman tausta",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Teeman kuvat ja maisema sivujen takana; pois päältä jää tasainen väri",
   "Suggest a channel or report a mistake": "Ehdota kanavaa tai ilmoita virheestä",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Luettelot ovat julkisia GitHubissa, ja kuka tahansa voi lisätä niihin. Jokainen merkintä tarvitsee julkisen lähteen"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Luettelot ovat julkisia GitHubissa, ja kuka tahansa voi lisätä niihin. Jokainen merkintä tarvitsee julkisen lähteen",
+  "Preparing yt-dlp…": "Valmistellaan yt-dlp:tä…",
+  "Match the frame rate": "Sovita kuvataajuus",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Videon toiston ajaksi näyttö vaihtaa sopivaan virkistystaajuuteen, jotta liike on tasaista; televisiot voivat pimentyä hetkeksi",
+  "refresh rate fps TV": "virkistystaajuus fps TV televisio",
+  "Tap to install it": "Asenna napauttamalla",
+  "Tap to download and install": "Lataa ja asenna napauttamalla"
 }

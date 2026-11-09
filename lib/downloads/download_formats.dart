@@ -36,6 +36,10 @@ class DownloadAudioFormat {
   bool get isAac => codec.toLowerCase().startsWith('mp4a');
   bool get isOpus => codec.toLowerCase().startsWith('opus');
   bool get isVorbis => codec.toLowerCase().startsWith('vorbis');
+  bool get isDolby => codec.toLowerCase().startsWith('ac-3') || codec.toLowerCase().startsWith('ec-3');
+
+  /// Whether lumtub_core can join this sound with a picture.
+  bool get joins => isAac || isOpus || isDolby;
 }
 
 /// The streams a video offers for download, read from yt-dlp's

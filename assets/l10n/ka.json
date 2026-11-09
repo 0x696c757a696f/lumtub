@@ -3119,5 +3119,11 @@
   "Skin background": "სკინის ფონი",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "სკინის სურათები და პეიზაჟი გვერდების უკან; გამორთვისას რჩება ჩვეულებრივი ფერი",
   "Suggest a channel or report a mistake": "შესთავაზეთ არხი ან შეგვატყობინეთ შეცდომის შესახებ",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "სიები საჯაროა GitHub-ზე და ნებისმიერს შეუძლია მათში დამატება. თითოეულ ჩანაწერს სჭირდება საჯარო წყარო"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "სიები საჯაროა GitHub-ზე და ნებისმიერს შეუძლია მათში დამატება. თითოეულ ჩანაწერს სჭირდება საჯარო წყარო",
+  "Preparing yt-dlp…": "yt-dlp-ის მომზადება…",
+  "Match the frame rate": "კადრების სიხშირესთან შესაბამისობა",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ვიდეოს დაკვრისას ეკრანი მას შესაფერის განახლების სიხშირეზე გადადის, რათა მოძრაობა თანაბარი იყოს; ტელევიზორები შეიძლება წამით დაბნელდეს",
+  "refresh rate fps TV": "განახლების სიხშირე fps ტელევიზორი TV",
+  "Tap to install it": "შეეხეთ დასაინსტალირებლად",
+  "Tap to download and install": "შეეხეთ ჩამოსატვირთად და დასაინსტალირებლად"
 }

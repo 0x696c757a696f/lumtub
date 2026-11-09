@@ -3119,5 +3119,11 @@
   "Skin background": "Skin-Hintergrund",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Bilder und Landschaft des Skins hinter den Seiten; aus lässt eine einfarbige Fläche",
   "Suggest a channel or report a mistake": "Kanal vorschlagen oder Fehler melden",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Die Listen sind öffentlich auf GitHub und jeder kann Einträge hinzufügen. Jeder Eintrag braucht eine öffentliche Quelle"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Die Listen sind öffentlich auf GitHub und jeder kann Einträge hinzufügen. Jeder Eintrag braucht eine öffentliche Quelle",
+  "Preparing yt-dlp…": "yt-dlp wird vorbereitet…",
+  "Match the frame rate": "Bildrate anpassen",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Während ein Video läuft, wechselt der Bildschirm zu einer passenden Bildwiederholrate, damit Bewegungen gleichmäßig wirken; Fernseher können kurz dunkel werden",
+  "refresh rate fps TV": "Bildwiederholrate Bildrate fps TV Fernseher",
+  "Tap to install it": "Zum Installieren tippen",
+  "Tap to download and install": "Zum Herunterladen und Installieren tippen"
 }

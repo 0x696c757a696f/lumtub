@@ -3119,5 +3119,11 @@
   "Skin background": "സ്കിൻ പശ്ചാത്തലം",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "പേജുകൾക്ക് പിന്നിൽ സ്കിനിന്റെ ചിത്രങ്ങളും ലാൻഡ്സ്കേപ്പും; ഓഫ് ആയാൽ സാധാരണ നിറം മാത്രം",
   "Suggest a channel or report a mistake": "ചാനൽ നിർദ്ദേശിക്കുക അല്ലെങ്കിൽ തെറ്റ് റിപ്പോർട്ട് ചെയ്യുക",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "ലിസ്റ്റുകൾ GitHub-ൽ പൊതുവായതാണ്, ആർക്കും ചേർക്കാം. ഓരോ എൻട്രിക്കും ഒരു പൊതു ഉറവിടം ആവശ്യമാണ്"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "ലിസ്റ്റുകൾ GitHub-ൽ പൊതുവായതാണ്, ആർക്കും ചേർക്കാം. ഓരോ എൻട്രിക്കും ഒരു പൊതു ഉറവിടം ആവശ്യമാണ്",
+  "Preparing yt-dlp…": "yt-dlp തയ്യാറാക്കുന്നു…",
+  "Match the frame rate": "ഫ്രെയിം റേറ്റുമായി പൊരുത്തപ്പെടുത്തുക",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "വീഡിയോ പ്ലേ ചെയ്യുമ്പോൾ സ്ക്രീൻ അതിന് അനുയോജ്യമായ റിഫ്രഷ് റേറ്റിലേക്ക് മാറുന്നതിനാൽ ചലനം സുഗമമാകും; ടിവികൾ ഒരു നിമിഷം ഇരുണ്ടേക്കാം",
+  "refresh rate fps TV": "റിഫ്രഷ് റേറ്റ് fps ടിവി",
+  "Tap to install it": "ഇൻസ്റ്റാൾ ചെയ്യാൻ ടാപ്പ് ചെയ്യുക",
+  "Tap to download and install": "ഡൗൺലോഡ് ചെയ്ത് ഇൻസ്റ്റാൾ ചെയ്യാൻ ടാപ്പ് ചെയ്യുക"
 }

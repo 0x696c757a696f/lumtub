@@ -41,6 +41,7 @@ pub mod airplay;
 pub mod cast;
 pub mod cast_mkv;
 pub mod cast_webm;
+pub mod join;
 pub mod roots;
 pub mod pac;
 pub mod lists;
@@ -50,5 +51,5 @@ pub mod process_cpu;
 /// The version of this library's exports, bumped when one changes.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_core_version() -> u32 {
-    40
+    42
 }

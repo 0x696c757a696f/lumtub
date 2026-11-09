@@ -3119,5 +3119,11 @@
   "Skin background": "థీమ్ నేపథ్యం",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "పేజీల వెనుక థీమ్ చిత్రాలు మరియు ల్యాండ్‌స్కేప్; ఆఫ్ చేస్తే సాదా రంగు ఉంటుంది",
   "Suggest a channel or report a mistake": "ఛానెల్‌ను సూచించండి లేదా తప్పును నివేదించండి",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "జాబితాలు GitHub లో పబ్లిక్‌గా ఉన్నాయి, ఎవరైనా జోడించవచ్చు. ప్రతి ఎంట్రీకి పబ్లిక్ మూలం అవసరం"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "జాబితాలు GitHub లో పబ్లిక్‌గా ఉన్నాయి, ఎవరైనా జోడించవచ్చు. ప్రతి ఎంట్రీకి పబ్లిక్ మూలం అవసరం",
+  "Preparing yt-dlp…": "yt-dlp సిద్ధం చేస్తోంది…",
+  "Match the frame rate": "ఫ్రేమ్ రేట్‌కు సరిపోల్చండి",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "వీడియో ప్లే అవుతున్నప్పుడు స్క్రీన్ దానికి సరిపడే రిఫ్రెష్ రేట్‌కు మారుతుంది, దీనివల్ల కదలిక సాఫీగా ఉంటుంది; టీవీలు క్షణకాలం నల్లగా మారవచ్చు",
+  "refresh rate fps TV": "రిఫ్రెష్ రేట్ fps టీవీ",
+  "Tap to install it": "ఇన్‌స్టాల్ చేయడానికి నొక్కండి",
+  "Tap to download and install": "డౌన్‌లోడ్ చేసి ఇన్‌స్టాల్ చేయడానికి నొక్కండి"
 }

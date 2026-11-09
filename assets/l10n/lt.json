@@ -3119,5 +3119,11 @@
   "Skin background": "Dizaino fonas",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Dizaino paveikslėliai ir peizažas už puslapių; išjungus lieka vienspalvis fonas",
   "Suggest a channel or report a mistake": "Pasiūlyti kanalą arba pranešti apie klaidą",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Sąrašai vieši GitHub, ir bet kas gali juos papildyti. Kiekvienam įrašui reikalingas viešas šaltinis"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Sąrašai vieši GitHub, ir bet kas gali juos papildyti. Kiekvienam įrašui reikalingas viešas šaltinis",
+  "Preparing yt-dlp…": "Ruošiamas yt-dlp…",
+  "Match the frame rate": "Suderinti kadrų dažnį",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Kai leidžiamas vaizdo įrašas, ekranas persijungia į jam tinkamą atnaujinimo dažnį, todėl judesys sklandus; televizoriai gali akimirkai užgesti",
+  "refresh rate fps TV": "atnaujinimo dažnis fps TV televizorius",
+  "Tap to install it": "Palieskite, kad įdiegtumėte",
+  "Tap to download and install": "Palieskite, kad atsisiųstumėte ir įdiegtumėte"
 }

@@ -8,7 +8,7 @@
 ! note: WAM is state media; Sky News Arabia is state-linked rather than a government body
 ! source: https://en.wikipedia.org/wiki/Emirates_News_Agency
 
-:emirates-news-agency | =WAM | ^Emirates News Agency | ^阿联酋通讯社
+:emirates-news-agency | UCFuuiOEWjN2k_Vw81Trzavg | @WamLV | =WAM | ^Emirates News Agency | ^阿联酋通讯社
 :abu-dhabi-media | ^Abu Dhabi Media
 :abu-dhabi-tv | ^Abu Dhabi TV
 :dubai-media | ^Dubai Media

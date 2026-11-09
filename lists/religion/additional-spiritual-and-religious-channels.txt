@@ -10,28 +10,28 @@
 :guan-yin-citta | =心灵法门 | =心靈法門 | =Guan Yin Citta
 :lu-tai-chang | =卢台长 | =盧台長
 :true-buddha-school | =真佛宗 | =True Buddha School
-:rulai-zong | =佛教如來宗
+:rulai-zong | UC8AqZc9Ij7GGptu3U5Mcj7A | @rulaibuddhism | =佛教如來宗
 :miao-chan-shifu | =妙禪師父
 :yin-xin-fo-fa | =印心佛法
 :cgm | =CGM基督教福音宣教會
 :providence | =攝理教
 :manmin | =Manmin
 :gcntv | =GCNTV
-:twin-flames-universe | =Twin Flames Universe
+:twin-flames-universe | UCB7nWJNfafFSxjT1bicjV9w | @TwinFlamesUniverse | =Twin Flames Universe
 :jeff-and-shaleia | =Jeff and Shaleia
 :adidam | =Adidam | =Adi Da Samraj
-:summit-lighthouse | =Summit Lighthouse
-:ascended-master-teachings | =Ascended Master Teachings
-:jinbodhi | @jinbodhi-en | @jinbodhi-kr | @jinbodhi-vn | =金菩提 | =JinBodhi
-:bodhi-meditation | @BodhiMeditation | @BodhiMeditationKR | =Bodhi Meditation
+:summit-lighthouse | UC7sahnqD8be85F-XEiBMLrA | @summitlighthouse | =Summit Lighthouse
+:ascended-master-teachings | UCwUWmW__5cGARrhiPq6QL_w | @AscendedMastersTeachings | =Ascended Master Teachings
+:jinbodhi | UCSJ50A_crxC0jiJEIBITC_Q | @jinbodhi93 | @jinbodhi-en | @jinbodhi-kr | @jinbodhi-vn | =金菩提 | =JinBodhi
+:bodhi-meditation | UC4w1wI6C18dtb6AyqeC8STw | @Bodhi-Meditation | @BodhiMeditation | @BodhiMeditationKR | =Bodhi Meditation
 :energy-bagua | @EnergyBagua | @EnergyBaguaEn | @EnergyBaguaID | =Energy Bagua | =八卦内功 | =八卦內功
 :church-of-almighty-god | =全能神教会 | =全能神教會 | =The Church of Almighty God | =Eastern Lightning
 :nithyananda | =Nithyananda
-:shrikailasa | =SHRIKAILASA
-:la-luz-del-mundo | @IglesiaLaLuzdelMundo | @Radiolldmhoy | =La Luz del Mundo
+:shrikailasa | UCKn1kLPxbbFCKXAC5yQn4ZA | @shrikailasa4254 | =SHRIKAILASA
+:la-luz-del-mundo | UC6XhrgxRN0V7QfWZiRWTzKg | @IglesiaLaLuzdelMundo | @Radiolldmhoy | =La Luz del Mundo
 :alph-lukau | @PastorAlphLukauofficial | @Official_AMITV | =Alph Lukau | =Alleluia Ministries
 :emmanuel-tv | @EmmanuelTV-Live | =Emmanuel TV
-:the-last-reformation | @TheLastReformation | @thelastreformationfrance | @thelastreformationuk | =The Last Reformation
+:the-last-reformation | UCJXcYb9zYJ8_QA3Bcg5Fe2g | @TheLastReformation | @thelastreformationfrance | @thelastreformationuk | =The Last Reformation
 :ramthas-school-of-enlightenment | @RSEWebTeam | @KRSERADIO | =Ramtha’s School of Enlightenment
 :kryon | @kryonleecarroll3491 | =Kryon
 :bashar-higher-mind | @BasharHigherMind99 | =Bashar Higher Mind
@@ -39,15 +39,14 @@
 :mooji | @Moojiji | @Moojiitaliano | =Mooji
 :isha-foundation | @ishafoundation | =Isha Foundation
 :eckankar | @eckankar | =ECKANKAR
-:chuang-zao-feng-sheng | =创造丰盛 | =創造豐盛
+:chuang-zao-feng-sheng | UC-zY8Y8BC3bcOjAtb8tnCqQ | =创造丰盛 | =創造豐盛
 :abraham-hicks | =Abraham-Hicks
 :access-consciousness | @accessconsciousness | =Access Consciousness
-:thetahealing | @ThetaHealingVianna | =ThetaHealing
+:thetahealing | UCREBjyI4qKwRHxOgCzuDA5g | @ThetaHealingPro | @ThetaHealingVianna | =ThetaHealing
 :bruno-gr-ning | =Bruno Gröning
 :pranic-healing | =Pranic Healing
 :putimalaysia | @PutiMalaysia
 :sadhguru-chinese | @SadhguruChinese | @sadhgurutraditionalchinese
-:uc8aqzc9ij7ggptu3u5mcj7a | UC8AqZc9Ij7GGptu3U5Mcj7A
 :ucjat3xga5s2qizsygvd2cia | UCJAt3XGA5S2qiZSygvd2cIA
 :ucpdi-gkjdpkv1mzfnlwyc5w | UCPDI_GKjDpKV1mzFnLwyC5w
 :ucuk4yvtfvwkdzcem9p6kwaa | UCuk4yvTFVwkdZCEM9p6KWaA
@@ -88,7 +87,6 @@
 :ucxonu8qnflim00yxuyv17rq | UCxONu8QnFlim00YxUYv17RQ
 :uchryrqwgp7jnuez6yd2suxg | UCHRyrQWgP7JNuEZ6yd2sUXg
 :uckv-ujdqw5gqx5hkr76yrjg | UCKv-uJdqW5gQx5HkR76yRJg
-:uc-zy8y8bc3bcojatb8tncqq | UC-zY8Y8BC3bcOjAtb8tnCqQ
 :uca9ff3xvwgkbjklq-4-nwbq | UCA9ff3XVWgKBjklq-4_NWbQ
 :ucnavqwhxftadvqcyucbwogg | UCnAvqWHXFtadVQCyUcBwOGg
 :uccjpnud3tri2cl-2mudrhbg | UCCJPNud3Tri2CL-2MuDrhBg

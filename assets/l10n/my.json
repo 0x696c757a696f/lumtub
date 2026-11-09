@@ -3119,5 +3119,11 @@
   "Skin background": "စကင် နောက်ခံ",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "စာမျက်နှာများနောက်ရှိ စကင်၏ ပုံများနှင့် ရှုခင်း၊ ပိတ်ထားလျှင် ရိုးရိုးအရောင်သာ ကျန်မည်",
   "Suggest a channel or report a mistake": "ချန်နယ်အကြံပြုရန် သို့မဟုတ် အမှားတင်ပြရန်",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "စာရင်းများသည် GitHub တွင် အများသိမြင်နိုင်ပြီး မည်သူမဆို ထည့်သွင်းနိုင်သည်။ ထည့်သွင်းမှုတိုင်းတွင် အများပြည်သူသိမြင်နိုင်သော ရင်းမြစ်လိုအပ်သည်"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "စာရင်းများသည် GitHub တွင် အများသိမြင်နိုင်ပြီး မည်သူမဆို ထည့်သွင်းနိုင်သည်။ ထည့်သွင်းမှုတိုင်းတွင် အများပြည်သူသိမြင်နိုင်သော ရင်းမြစ်လိုအပ်သည်",
+  "Preparing yt-dlp…": "yt-dlp ကို ပြင်ဆင်နေသည်…",
+  "Match the frame rate": "ဖရိန်နှုန်းနှင့် ကိုက်ညီစေရန်",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ဗီဒီယိုဖွင့်နေစဉ် ရွေ့လျားမှုချောမွေ့စေရန် မျက်နှာပြင်သည် ၎င်းနှင့်ကိုက်ညီသော ပြန်လည်စတင်နှုန်းသို့ ပြောင်းပေးသည်၊ ရုပ်မြင်သံကြားများ ခဏမှောင်သွားနိုင်သည်",
+  "refresh rate fps TV": "ပြန်လည်စတင်နှုန်း fps တီဗီ TV",
+  "Tap to install it": "ထည့်သွင်းရန် ထိပါ",
+  "Tap to download and install": "ဒေါင်းလုဒ်လုပ်ပြီး ထည့်သွင်းရန် ထိပါ"
 }

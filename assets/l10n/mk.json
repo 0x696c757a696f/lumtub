@@ -3119,5 +3119,11 @@
   "Skin background": "Позадина на темата",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Сликите и пејзажот на темата зад страниците; исклучено остава обична боја",
   "Suggest a channel or report a mistake": "Предложете канал или пријавете грешка",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Списоците се јавни на GitHub и секој може да додава. Секој запис бара јавен извор"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Списоците се јавни на GitHub и секој може да додава. Секој запис бара јавен извор",
+  "Preparing yt-dlp…": "Се подготвува yt-dlp…",
+  "Match the frame rate": "Усогласи ја брзината на кадри",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Додека се репродуцира видео, екранот се префрлува на соодветна брзина на освежување за движењето да биде мазно; телевизорите може за миг да потемнат",
+  "refresh rate fps TV": "брзина на освежување fps ТВ телевизор",
+  "Tap to install it": "Допрете за да се инсталира",
+  "Tap to download and install": "Допрете за преземање и инсталирање"
 }

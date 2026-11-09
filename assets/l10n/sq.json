@@ -3119,5 +3119,11 @@
   "Skin background": "Sfondi i skinit",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Imazhet dhe peizazhi i skinit pas faqeve; i çaktivizuar lë një ngjyrë të thjeshtë",
   "Suggest a channel or report a mistake": "Sugjeroni një kanal ose raportoni një gabim",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listat janë publike në GitHub dhe çdokush mund të shtojë. Çdo regjistrim kërkon një burim publik"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listat janë publike në GitHub dhe çdokush mund të shtojë. Çdo regjistrim kërkon një burim publik",
+  "Preparing yt-dlp…": "Po përgatitet yt-dlp…",
+  "Match the frame rate": "Përshtat shpejtësinë e kuadrove",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Gjatë luajtjes së një videoje, ekrani kalon në një shpejtësi rifreskimi të përshtatshme, që lëvizja të jetë e qetë; televizorët mund të errësohen për një çast",
+  "refresh rate fps TV": "shpejtësia e rifreskimit fps TV televizor",
+  "Tap to install it": "Prek për ta instaluar",
+  "Tap to download and install": "Prek për ta shkarkuar dhe instaluar"
 }

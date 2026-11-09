@@ -3119,5 +3119,11 @@
   "Skin background": "የስኪን ዳራ",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "የስኪኑ ምስሎች እና መልክዓ ምድር ከገጾቹ ጀርባ፤ ሲጠፋ ተራ ቀለም ይቀራል",
   "Suggest a channel or report a mistake": "ቻናል ጠቁም ወይም ስህተት ሪፖርት አድርግ",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "ዝርዝሮቹ በGitHub ላይ ለሁሉም ክፍት ናቸው፣ ማንም ሊጨምርባቸው ይችላል። እያንዳንዱ ግቤት ይፋዊ ምንጭ ያስፈልገዋል"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "ዝርዝሮቹ በGitHub ላይ ለሁሉም ክፍት ናቸው፣ ማንም ሊጨምርባቸው ይችላል። እያንዳንዱ ግቤት ይፋዊ ምንጭ ያስፈልገዋል",
+  "Preparing yt-dlp…": "yt-dlp በመዘጋጀት ላይ…",
+  "Match the frame rate": "የፍሬም ፍጥነቱን አዛምድ",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ቪዲዮ በሚጫወትበት ጊዜ ማያ ገጹ ከቪዲዮው ጋር ወደሚስማማ የማደስ ፍጥነት ይቀየራል፤ ስለዚህ እንቅስቃሴው ወጥ ይሆናል፤ ቴሌቪዥኖች ለአፍታ ሊጨልሙ ይችላሉ",
+  "refresh rate fps TV": "የማደስ ፍጥነት fps ቴሌቪዥን",
+  "Tap to install it": "ለመጫን ይንኩ",
+  "Tap to download and install": "ለማውረድ እና ለመጫን ይንኩ"
 }

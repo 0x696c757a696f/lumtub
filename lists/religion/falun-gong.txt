@@ -14,13 +14,13 @@
 :ntd | @NTDCHINESE | @ntdaptv | @ntdnews | @NTDSpanish | ^新唐人 | ^NTD Television | ^NTD
 :epoch-headlines | ^纪元头条 | ^紀元頭條
 :jinwen | ^中国禁闻 | ^中國禁聞
-:news-decoded | ^新闻大破解 | ^新聞大破解
+:news-decoded | UCHY4xOBo9z03nceB6Pl-yzg | @News_Insight | ^新闻大破解 | ^新聞大破解
 :sound-of-hope | @soh_tv | ^希望之声 | ^希望之聲 | ^SOH | ^Sound of Hope
 :kan-zhongguo | @kzg | ^看中国 | ^看中國
 :vision-times | ^Vision Times
 :apollo-net | ^阿波罗新闻网 | ^阿波羅新聞網 | ^阿波罗网 | ^阿波羅網
-:renminbao | ^人民报 | ^人民報
-:zhengjian | ^正见网 | ^正見網
+:renminbao | UCFLJkn78gQViXxbplQyz3XA | @%E4%BA%BA%E6%B0%91%E5%A0%B1-o1x | ^人民报 | ^人民報
+:zhengjian | UC40T0Oz3ZV5ZAsQ3Cw7cOuQ | @zhengjian2009 | ^正见网 | ^正見網
 :woipfg | ^追查国际 | ^追查國際 | ^WOIPFG
 :quit-ccp-service-center | ^全球退党服务中心 | ^全球退黨服務中心
 :china-in-focus | @ChinainFocusNTD | ^China in Focus
@@ -28,10 +28,10 @@
 :american-thought-leaders | ^American Thought Leaders
 :china-observer | @ChinaObserver0 | ^China Observer
 :china-insights | @chinainsights4458 | ^China Insights
-:hot-topic-dialogue | ^热点互动 | ^熱點互動
+:hot-topic-dialogue | UCAa9oah8kGEDteKSHKVhK0A | @%E7%83%AD%E7%82%B9%E4%BA%92%E5%8A%A8-s8f | ^热点互动 | ^熱點互動
 :mainland-news-analysis | ^大陆新闻解读 | ^大陸新聞解讀
 :china-decoded | ^中国解密 | ^中國解密
-:true-views | ^真观点 | ^真觀點
+:true-views | UCAwVpzgGI9sEu4O4ZlB5ZWQ | @zhenguandian | ^真观点 | ^真觀點
 :legendary-era | ^传奇时代 | ^傳奇時代
 :we-tell-the-future | ^我们告诉未来 | ^我們告訴未來
 :nine-commentaries | ^九评共产党 | ^九評共產黨
@@ -40,4 +40,3 @@
 :health-1-1 | ^健康1+1
 :ganjing-world | ^干净世界 | ^乾淨世界 | ^Gan Jing World | ^GanJing World
 :ucak-sbmzp79a4k2caqqodlq | UCAk-SBMZp79a4k2CAqqoDLQ
-:uchy4xobo9z03nceb6pl-yzg | UCHY4xOBo9z03nceB6Pl-yzg

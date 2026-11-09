@@ -3119,5 +3119,11 @@
   "Skin background": "Skin-baggrund",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Skinnets billeder og landskab bag siderne; slået fra giver en ensfarvet baggrund",
   "Suggest a channel or report a mistake": "Foreslå en kanal eller rapportér en fejl",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listerne er offentlige på GitHub, og alle kan tilføje til dem. Hvert element kræver en offentlig kilde"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Listerne er offentlige på GitHub, og alle kan tilføje til dem. Hvert element kræver en offentlig kilde",
+  "Preparing yt-dlp…": "Klargør yt-dlp…",
+  "Match the frame rate": "Tilpas billedfrekvensen",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Når en video afspilles, skifter skærmen til en opdateringshastighed, der passer, så bevægelser bliver jævne; tv kan blive sorte et øjeblik",
+  "refresh rate fps TV": "opdateringshastighed fps tv",
+  "Tap to install it": "Tryk for at installere den",
+  "Tap to download and install": "Tryk for at downloade og installere"
 }

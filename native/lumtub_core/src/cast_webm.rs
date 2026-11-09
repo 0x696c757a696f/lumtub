@@ -1,6 +1,6 @@
-//! YouTube's VP9 pictures come as WebM; the cast server repackages them
-//! into MP4 fragments as they are read. This reads a WebM head (its track
-//! and the `Cues` index of its clusters) and one cluster's frames.
+//! YouTube's VP9 pictures and Opus sound come as WebM; the cast server
+//! repackages them as they are read. This reads a WebM head (its track and
+//! the `Cues` index of its clusters) and one cluster's frames.
 
 /// What the head of a WebM file says, in the cast server's terms.
 #[derive(Debug, Clone, PartialEq)]
@@ -16,6 +16,21 @@ pub struct Head {
     pub frame: u32,
     /// Each cluster: its offset in the file and its start in seconds.
     pub clusters: Vec<(u64, f64)>,
+    /// Set when the track is Opus sound rather than a VP9 picture.
+    pub opus: Option<Opus>,
+}
+
+/// An Opus sound track as Matroska describes it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Opus {
+    /// `OpusHead`, the track's CodecPrivate.
+    pub private: Vec<u8>,
+    pub rate: f64,
+    pub channels: u8,
+    /// Nanoseconds the decoder must drop at the start, and decode before a
+    /// sought position.
+    pub delay: u64,
+    pub preroll: u64,
 }
 
 #[derive(Debug, PartialEq)]
@@ -55,6 +70,11 @@ const BITS: u32 = 0x55B2;
 const RANGE: u32 = 0x55B9;
 const TRANSFER: u32 = 0x55BA;
 const PRIMARIES: u32 = 0x55BB;
+const AUDIO: u32 = 0xE1;
+const SAMPLING: u32 = 0xB5;
+const CHANNELS: u32 = 0x9F;
+const CODEC_DELAY: u32 = 0x56AA;
+const SEEK_PREROLL: u32 = 0x56BB;
 const CUES: u32 = 0x1C53_BB6B;
 const CUE_POINT: u32 = 0xBB;
 const CUE_TIME: u32 = 0xB3;
@@ -123,6 +143,13 @@ fn uint(b: &[u8], e: Element) -> Option<u64> {
     (bytes.len() <= 8).then(|| bytes.iter().fold(0u64, |v, &x| (v << 8) | x as u64))
 }
 
+fn float(b: &[u8], e: Element) -> Option<f64> {
+    match b.get(e.data..e.end)? {
+        &[a, b, c, d] => Some(f32::from_be_bytes([a, b, c, d]) as f64),
+        bytes => Some(f64::from_be_bytes(bytes.try_into().ok()?)),
+    }
+}
+
 fn find(b: &[u8], parent: Element, id: u32) -> Option<Element> {
     children(b, parent.data, parent.end.min(b.len())).into_iter().find(|e| e.id == id && e.end <= b.len())
 }
@@ -131,8 +158,8 @@ pub fn is_webm(b: &[u8]) -> bool {
     b.len() >= 4 && u32::from_be_bytes([b[0], b[1], b[2], b[3]]) == EBML
 }
 
-/// Reads the head of a WebM file of `total` bytes: its VP9 track and the
-/// clusters its `Cues` index lists.
+/// Reads the head of a WebM file of `total` bytes: its VP9 or Opus track
+/// and the clusters its `Cues` index lists.
 pub fn read_head(b: &[u8], total: u64) -> Read {
     let Some(ebml) = element(b, 0).filter(|e| e.id == EBML) else { return Read::Unusable("not WebM") };
     let Some(segment) = element(b, ebml.end).filter(|e| e.id == SEGMENT) else {
@@ -169,14 +196,33 @@ fn head(b: &[u8], segment: u64, scale: u64, tracks: Element, cues: Element, tota
         return Read::Unusable("unusual timecode scale");
     }
     let timescale = (1_000_000_000 / scale) as u32;
-    let Some(entry) = children(b, tracks.data, tracks.end).into_iter().find(|e| e.id == TRACK_ENTRY && find(b, *e, TRACK_TYPE).and_then(|t| uint(b, t)) == Some(1)) else {
-        return Read::Unusable("no picture track");
+    let entries = children(b, tracks.data, tracks.end);
+    let kind = |e: &Element| find(b, *e, TRACK_TYPE).and_then(|t| uint(b, t));
+    let Some(entry) = entries.iter().copied().find(|e| e.id == TRACK_ENTRY && kind(e) == Some(1)).or_else(|| entries.iter().copied().find(|e| e.id == TRACK_ENTRY && kind(e) == Some(2))) else {
+        return Read::Unusable("no picture or sound track");
     };
     let codec = find(b, entry, CODEC_ID).and_then(|c| b.get(c.data..c.end));
+    let Some(number) = find(b, entry, TRACK_NUMBER).and_then(|n| uint(b, n)) else { return Read::Unusable("no track number") };
+    if kind(&entry) == Some(2) {
+        if codec != Some(b"A_OPUS") {
+            return Read::Unusable("sound other than Opus");
+        }
+        let Some(private) = find(b, entry, CODEC_PRIVATE).and_then(|p| b.get(p.data..p.end)).filter(|p| p.starts_with(b"OpusHead")) else {
+            return Read::Unusable("no OpusHead");
+        };
+        let audio = find(b, entry, AUDIO);
+        let rate = audio.and_then(|a| find(b, a, SAMPLING)).and_then(|e| float(b, e)).unwrap_or(48_000.0);
+        let channels = audio.and_then(|a| find(b, a, CHANNELS)).and_then(|e| uint(b, e)).unwrap_or(2) as u8;
+        let nanoseconds = |id| find(b, entry, id).and_then(|e| uint(b, e)).unwrap_or(0);
+        let opus = Opus { private: private.to_vec(), rate, channels, delay: nanoseconds(CODEC_DELAY), preroll: nanoseconds(SEEK_PREROLL) };
+        let frame = find(b, entry, DEFAULT_DURATION).and_then(|d| uint(b, d)).map_or(0, |ns| (ns / scale) as u32);
+        return clusters(b, segment, timescale, number, cues, total).map_or(Read::Unusable("empty index"), |clusters| {
+            Read::Head(Box::new(Head { number, timescale, width: 0, height: 0, vpcc: Vec::new(), frame, clusters, opus: Some(opus) }))
+        });
+    }
     if codec != Some(b"V_VP9") {
         return Read::Unusable("not VP9");
     }
-    let Some(number) = find(b, entry, TRACK_NUMBER).and_then(|n| uint(b, n)) else { return Read::Unusable("no track number") };
     let Some(video) = find(b, entry, VIDEO) else { return Read::Unusable("no picture size") };
     let dimension = |id| find(b, video, id).and_then(|e| uint(b, e)).and_then(|v| u16::try_from(v).ok());
     let (Some(width), Some(height)) = (dimension(PIXEL_WIDTH), dimension(PIXEL_HEIGHT)) else { return Read::Unusable("no picture size") };
@@ -211,6 +257,14 @@ fn head(b: &[u8], segment: u64, scale: u64, tracks: Element, cues: Element, tota
     let mut vpcc = vec![1, 0, 0, 0, profile, level, (bits << 4) | (1 << 1) | u8::from(full), primaries, transfer, matrix, 0, 0];
     vpcc.splice(0..0, [0, 0, 0, 20, b'v', b'p', b'c', b'C']);
     let frame = find(b, entry, DEFAULT_DURATION).and_then(|d| uint(b, d)).map_or(0, |ns| (ns / scale) as u32);
+    match clusters(b, segment, timescale, number, cues, total) {
+        Some(clusters) => Read::Head(Box::new(Head { number, timescale, width, height, vpcc, frame, clusters, opus: None })),
+        None => Read::Unusable("empty index"),
+    }
+}
+
+/// The clusters `cues` lists for track `number`: offset and start in seconds.
+fn clusters(b: &[u8], segment: u64, timescale: u32, number: u64, cues: Element, total: u64) -> Option<Vec<(u64, f64)>> {
     let mut points = Vec::new();
     for point in children(b, cues.data, cues.end).into_iter().filter(|e| e.id == CUE_POINT) {
         let Some(time) = find(b, point, CUE_TIME).and_then(|t| uint(b, t)) else { continue };
@@ -226,10 +280,7 @@ fn head(b: &[u8], segment: u64, scale: u64, tracks: Element, cues: Element, tota
     points.sort_by_key(|p| p.0);
     points.dedup_by_key(|p| p.0);
     points.retain(|p| p.0 < total);
-    if points.is_empty() {
-        return Read::Unusable("empty index");
-    }
-    Read::Head(Box::new(Head { number, timescale, width, height, vpcc, frame, clusters: points }))
+    (!points.is_empty()).then_some(points)
 }
 
 /// The frames of `track` in one whole cluster, in file order.
@@ -266,7 +317,7 @@ fn block(b: &[u8], e: Element, track: u64, base: u64, key: Option<bool>, found: 
     let relative = i16::from_be_bytes([*b.get(at).ok_or("bad block")?, *b.get(at + 1).ok_or("bad block")?]);
     let flags = *b.get(at + 2).ok_or("bad block")?;
     if flags & 0x06 != 0 {
-        return Err("laced picture frames");
+        return Err("laced frames");
     }
     let start = at + 3;
     let time = (base as i64 + relative as i64).max(0) as u64;

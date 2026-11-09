@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/services.dart';
 
 import 'airplay.dart';
 import 'cast_device.dart';
@@ -11,7 +14,17 @@ import 'dlna.dart';
 Stream<CastDevice> discoverCastDevices({Duration timeout = const Duration(seconds: 6), AirPlayPairings? pairings}) {
   final controller = StreamController<CastDevice>();
   final subscriptions = <StreamSubscription<CastDevice>>[];
-  controller.onListen = () {
+  var cancelled = false;
+  controller.onListen = () async {
+    // Android 17 asks the user before an app may reach the local network.
+    if (Platform.isAndroid) {
+      try {
+        await const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('askLocalNetwork');
+      } on PlatformException {
+        // Searched anyway; nothing is found without it.
+      }
+      if (cancelled) return;
+    }
     var open = 3;
     void done() {
       if (--open == 0) unawaited(controller.close());
@@ -22,6 +35,7 @@ Stream<CastDevice> discoverCastDevices({Duration timeout = const Duration(second
     }
   };
   controller.onCancel = () async {
+    cancelled = true;
     for (final s in subscriptions) {
       await s.cancel();
     }

@@ -8,11 +8,11 @@
 ! note: Al Jazeera is funded by Qatar's government with some editorial autonomy, unlike the official news agency
 ! source: https://en.wikipedia.org/wiki/Al_Jazeera_Media_Network
 
-:al-jazeera | ^Al Jazeera | ^الجزيرة | ^半岛电视台 | ^半島電視台
+:al-jazeera | UCm_a-Ze81vsAWY4W0Ga1GLg | @aljazeera9823 | ^Al Jazeera | ^الجزيرة | ^半岛电视台 | ^半島電視台
 :aj-plus | ^AJ+ | ^AJ Plus
 :qatar-tv | ^Qatar TV
 :qatar-media-corporation | =QMC | ^Qatar Media Corporation
 :qatar-news-agency | =QNA | ^Qatar News Agency
-:al-kass | ^Al Kass
+:al-kass | UCxHKFPDgtij8cmjIWEDZERA | @AlKass-cu9gt | ^Al Kass
 :al-jazeera-english-channel | UCNye-wNBqNL5ZzHSJj3l8Bg | @aljazeeraenglish
     reviewed: 2026-11-08

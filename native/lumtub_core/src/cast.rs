@@ -95,6 +95,9 @@ pub struct Track {
 enum Codec {
     Avc { length: usize, sps: Vec<Vec<u8>>, pps: Vec<Vec<u8>> },
     Aac { profile: u8, frequency: u8, channels: u8 },
+    Opus(cast_webm::Opus),
+    /// Dolby Digital (AC-3) or Dolby Digital Plus (E-AC-3).
+    Dolby { plus: bool, rate: u32, channels: u8 },
     Other,
 }
 
@@ -288,6 +291,21 @@ fn codec(data: &[u8], stsd: Atom) -> Codec {
                 return Codec::Other;
             };
             aac_config(&data[esds.body + 4..esds.end]).unwrap_or(Codec::Other)
+        }
+        b"ac-3" | b"ec-3" => {
+            let plus = &entry.kind == b"ec-3";
+            let rate = be32(data, entry.body + 24).map_or(48_000, |r| r >> 16);
+            let mut channels = be16(data, entry.body + 16).unwrap_or(2) as u8;
+            let config = if plus { b"dec3" } else { b"dac3" };
+            if let Some(c) = atoms(data, entry.body + 28, entry.end).into_iter().find(|a| &a.kind == config && a.end <= data.len()) {
+                // acmod and lfeon of the (first) independent stream.
+                let at = if plus { c.body + 3 } else { c.body + 1 };
+                if let Some(&b) = data.get(at).filter(|_| at < c.end) {
+                    let (acmod, lfe) = if plus { ((b >> 1) & 7, b & 1) } else { ((b >> 3) & 7, (b >> 2) & 1) };
+                    channels = [2, 1, 2, 3, 3, 4, 4, 5][acmod as usize] + lfe;
+                }
+            }
+            Codec::Dolby { plus, rate, channels }
         }
         _ => Codec::Other,
     }
@@ -492,8 +510,28 @@ fn read_traf(data: &[u8], moof: Atom, traf: Atom, base: u64, defaults: Defaults,
 // ---- WebM pictures ----
 
 /// A WebM picture track as the MP4 writer takes it: a `trak` with a `vp09`
-/// sample entry, and its clusters as segments.
+/// sample entry, and its clusters as segments. An Opus sound track goes
+/// only into Matroska, so it has no `trak`.
 fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
+    let segments = head
+        .clusters
+        .iter()
+        .enumerate()
+        .map(|(i, &(offset, start))| Segment { offset, size: head.clusters.get(i + 1).map_or(total, |n| n.0) - offset, start })
+        .collect();
+    if let Some(opus) = &head.opus {
+        return Track {
+            trak: Vec::new(),
+            mvhd: Vec::new(),
+            timescale: head.timescale,
+            video: false,
+            codec: Codec::Opus(opus.clone()),
+            defaults: Defaults::default(),
+            shift: 0,
+            segments,
+            webm: Some((head.number, head.frame)),
+        };
+    }
     let mut trak = Vec::new();
     put_box(&mut trak, b"trak", |o| {
         put_box(o, b"tkhd", |o| {
@@ -565,12 +603,6 @@ fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
         o.extend_from_slice(&[0; 24]);
         o.extend_from_slice(&2u32.to_be_bytes());
     });
-    let segments = head
-        .clusters
-        .iter()
-        .enumerate()
-        .map(|(i, &(offset, start))| Segment { offset, size: head.clusters.get(i + 1).map_or(total, |n| n.0) - offset, start })
-        .collect();
     Track {
         trak,
         mvhd,
@@ -852,6 +884,9 @@ fn put_box(out: &mut Vec<u8>, kind: &[u8; 4], body: impl FnOnce(&mut Vec<u8>)) {
 
 /// How Matroska names a track's codec, from its sample entry.
 fn mkv_track(track: &Track) -> Result<cast_mkv::TrackInfo, String> {
+    if let Codec::Opus(opus) = &track.codec {
+        return Ok(cast_mkv::TrackInfo { codec: "A_OPUS", private: Some(opus.private.clone()), video: None, audio: Some((opus.rate, opus.channels)), delay: opus.delay, preroll: opus.preroll });
+    }
     let data = &track.trak;
     let trak = atoms(data, 0, data.len()).into_iter().next().ok_or("no trak")?;
     let stsd = path(data, trak, &[b"mdia", b"minf", b"stbl", b"stsd"]).ok_or("no stsd")?;
@@ -865,12 +900,15 @@ fn mkv_track(track: &Track) -> Result<cast_mkv::TrackInfo, String> {
             b"av01" => ("V_AV1", Some(config(entry.body + 78, b"av1C").ok_or("no av1C")?)),
             _ => return Err("a picture MKV does not take here".into()),
         };
-        return Ok(cast_mkv::TrackInfo { codec, private, video: Some(size), audio: None });
+        return Ok(cast_mkv::TrackInfo { codec, private, video: Some(size), audio: None, delay: 0, preroll: 0 });
     }
-    let Codec::Aac { profile, frequency, channels } = track.codec else { return Err("sound other than AAC".into()) };
+    if let Codec::Dolby { plus, rate, channels } = track.codec {
+        return Ok(cast_mkv::TrackInfo { codec: if plus { "A_EAC3" } else { "A_AC3" }, private: None, video: None, audio: Some((rate as f64, channels)), delay: 0, preroll: 0 });
+    }
+    let Codec::Aac { profile, frequency, channels } = track.codec else { return Err("sound other than AAC, Opus or Dolby".into()) };
     const RATES: [u32; 13] = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
     let bits = ((profile as u16 + 1) << 11) | ((frequency as u16) << 7) | ((channels as u16) << 3);
-    Ok(cast_mkv::TrackInfo { codec: "A_AAC", private: Some(bits.to_be_bytes().to_vec()), video: None, audio: Some((RATES[frequency as usize] as f64, channels)) })
+    Ok(cast_mkv::TrackInfo { codec: "A_AAC", private: Some(bits.to_be_bytes().to_vec()), video: None, audio: Some((RATES[frequency as usize] as f64, channels)), delay: 0, preroll: 0 })
 }
 
 /// `trak` with its `tkhd` track id set to `id`.
@@ -1183,6 +1221,15 @@ fn ticks90(ticks: u64, timescale: u32) -> u64 {
 
 // ---- the stream ----
 
+/// What a saved Matroska file's head still needs once it is whole.
+struct Saved {
+    segment: usize,
+    duration_at: Option<usize>,
+    cues_at: Option<usize>,
+    duration: f64,
+    cues: u64,
+}
+
 /// What a session streams: both tracks' heads and where to start.
 pub struct Session {
     video_target: Target,
@@ -1214,12 +1261,27 @@ impl Session {
         if matches!(ask.kind, Kind::Ts | Kind::Hls) && (!matches!(video.codec, Codec::Avc { .. }) || !matches!(audio.codec, Codec::Aac { .. })) {
             return Err("only H.264 with AAC goes into a transport stream".into());
         }
+        if ask.kind != Kind::Mkv && matches!(audio.codec, Codec::Opus(_)) {
+            return Err("Opus sound goes only into Matroska".into());
+        }
         if ask.kind == Kind::Mkv {
             mkv_track(&video)?;
             mkv_track(&audio)?;
         }
         let addresses = [Address::new(ask.video.url.clone()), Address::new(ask.audio.url.clone())];
         Ok(Session { video_target: ask.video, audio_target: ask.audio, addresses, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, duration: ask.duration_ms as f64 / 1000.0, subtitles: ask.subtitles.filter(|s| !s.cues.is_empty()), generation: AtomicU64::new(0), made: Mutex::new(VecDeque::new()) })
+    }
+
+    /// The file name extension a saved stream takes: `webm` when Matroska
+    /// holds only what WebM allows.
+    pub fn extension(&self) -> &'static str {
+        match self.kind {
+            Kind::Mp4 => "mp4",
+            Kind::Ts => "ts",
+            Kind::Hls => "m3u8",
+            Kind::Mkv if self.subtitles.is_none() && matches!(self.audio.codec, Codec::Opus(_)) && mkv_track(&self.video).is_ok_and(|v| matches!(v.codec, "V_VP9" | "V_AV1")) => "webm",
+            Kind::Mkv => "mkv",
+        }
     }
 
     /// Where the stream really starts, in seconds: the keyframe at or
@@ -1381,10 +1443,44 @@ impl Session {
     pub fn stream(&self, fetch: &Arc<dyn Fetch>, into: &mut dyn Write) -> Result<(), String> {
         let stop = Arc::new(AtomicBool::new(false));
         std::thread::scope(|scope| {
-            let result = self.write(scope, fetch, &stop, into);
+            let result = self.write(scope, fetch, &stop, into, false);
             stop.store(true, Ordering::Relaxed);
-            result
+            result.map(|_| ())
         })
+    }
+
+    /// Writes the whole stream into `file`; a Matroska file then gets its
+    /// size, length and index filled in, so it seeks like any other.
+    pub fn save(&self, fetch: &Arc<dyn Fetch>, file: &mut std::fs::File) -> Result<(), String> {
+        use std::io::{Seek, SeekFrom};
+        let stop = Arc::new(AtomicBool::new(false));
+        let saved = {
+            let mut writer = std::io::BufWriter::with_capacity(1 << 20, &mut *file);
+            let saved = std::thread::scope(|scope| {
+                let result = self.write(scope, fetch, &stop, &mut writer, true);
+                stop.store(true, Ordering::Relaxed);
+                result
+            });
+            let saved = saved.map_err(|e| if e.is_empty() { "could not write the file".to_string() } else { e })?;
+            writer.flush().map_err(|e| e.to_string())?;
+            saved
+        };
+        let Some(saved) = saved else { return Ok(()) };
+        let length = file.seek(SeekFrom::End(0)).map_err(|e| e.to_string())?;
+        let mut size = (length - saved.segment as u64).to_be_bytes();
+        size[0] = 0x01;
+        let mut put = |at: usize, bytes: &[u8]| -> Result<(), String> {
+            file.seek(SeekFrom::Start(at as u64)).map_err(|e| e.to_string())?;
+            file.write_all(bytes).map_err(|e| e.to_string())
+        };
+        put(saved.segment - 8, &size)?;
+        if let Some(at) = saved.duration_at {
+            put(at, &saved.duration.to_be_bytes())?;
+        }
+        if let Some(at) = saved.cues_at {
+            put(at, &saved.cues.to_be_bytes())?;
+        }
+        file.flush().map_err(|e| e.to_string())
     }
 
     /// Whether YouTube refused one of the addresses and the app has not
@@ -1407,7 +1503,9 @@ impl Session {
         renewed
     }
 
-    fn write<'s>(&'s self, scope: &'s std::thread::Scope<'s, '_>, fetch: &Arc<dyn Fetch>, stop: &Arc<AtomicBool>, into: &mut dyn Write) -> Result<(), String> {
+    /// Writes the stream; for a Matroska `file`, also its index at the end,
+    /// and returns what goes back into its head.
+    fn write<'s>(&'s self, scope: &'s std::thread::Scope<'s, '_>, fetch: &Arc<dyn Fetch>, stop: &Arc<AtomicBool>, into: &mut dyn Write, file: bool) -> Result<Option<Saved>, String> {
         let generation = self.generation.fetch_add(1, Ordering::SeqCst) + 1;
         let current = || self.generation.load(Ordering::SeqCst) == generation;
         let first_video = segment_at(&self.video, self.start);
@@ -1443,19 +1541,19 @@ impl Session {
                 let (picture, sound) = (mkv_track(&self.video)?, mkv_track(&self.audio)?);
                 let from = seconds;
                 let length = if self.duration > from { (self.duration - from) * 1000.0 } else { 0.0 };
-                out.extend_from_slice(&cast_mkv::head(&picture, &sound, self.subtitles.as_ref().map(|s| s.language.as_str()), length));
-                into.write_all(&out).map_err(|_| String::new())?;
-                out.clear();
+                let head = cast_mkv::head(&picture, &sound, self.subtitles.as_ref().map(|s| s.language.as_str()), length, file);
+                into.write_all(&head.bytes).map_err(|_| String::new())?;
+                let mut end = 0i64;
                 let from_ms = (from * 1000.0).round() as i64;
                 let mut cues = self.subtitles.iter().flat_map(|s| s.cues.iter()).filter(|c| c.1 as i64 > from_ms).peekable();
-                let mut clusters = cast_mkv::Clusters::default();
+                let mut clusters = cast_mkv::Clusters::after(&head);
                 let timescales = [self.video.timescale, self.audio.timescale];
                 let shifts = [self.video.shift as i64, self.audio.shift as i64];
                 let ms = |ticks: i64, i: usize| ticks * 1000 / timescales[i] as i64;
                 let mut at = [0usize, 0usize];
                 loop {
                     if !current() {
-                        return Ok(());
+                        return Ok(None);
                     }
                     let time = |f: &Option<Fragment>, i: usize, at: usize| f.as_ref().and_then(|f| f.samples.get(at)).map(|s| ms(s.time as i64 - rebase[i] as i64, i));
                     let pick = match (time(&v, 0, at[0]), time(&a, 1, at[1])) {
@@ -1473,6 +1571,7 @@ impl Session {
                         clusters.text(&mut out, start, (end - start).max(1) as u64, &cue.2);
                     }
                     clusters.frame(&mut out, if pick == 0 { cast_mkv::VIDEO } else { cast_mkv::AUDIO }, shown, pick == 1 || s.sync, &f.data[s.at..s.at + s.size]);
+                    end = end.max(shown + ms(s.duration as i64, pick));
                     at[pick] += 1;
                     if out.len() >= 64 << 10 {
                         into.write_all(&out).map_err(|_| String::new())?;
@@ -1487,8 +1586,14 @@ impl Session {
                         at[1] = 0;
                     }
                 }
-                clusters.flush(&mut out);
+                if !file {
+                    clusters.flush(&mut out);
+                    into.write_all(&out).map_err(|_| String::new())?;
+                    return Ok(None);
+                }
+                let cues = clusters.finish(&mut out);
                 into.write_all(&out).map_err(|_| String::new())?;
+                return Ok(Some(Saved { segment: head.segment, duration_at: head.duration_at, cues_at: head.cues_at, duration: end as f64, cues }));
             }
             Kind::Mp4 => {
                 out.extend_from_slice(&mp4_head(&self.video, &self.audio));
@@ -1496,7 +1601,7 @@ impl Session {
                 let timescales = [self.video.timescale, self.audio.timescale];
                 loop {
                     if !current() {
-                        return Ok(());
+                        return Ok(None);
                     }
                     let start = |f: &Option<Fragment>, i: usize| {
                         f.as_ref().and_then(|f| f.samples.first()).map(|s| s.time.saturating_sub(rebase[i]) as f64 / timescales[i] as f64)
@@ -1524,7 +1629,7 @@ impl Session {
                 let mut at = [0usize, 0usize];
                 loop {
                     if !current() {
-                        return Ok(());
+                        return Ok(None);
                     }
                     let time = |f: &Option<Fragment>, i: usize, at: usize, timescale: u32| {
                         f.as_ref().and_then(|f| f.samples.get(at)).map(|s| ticks90(s.time.saturating_sub(rebase[i]), timescale))
@@ -1565,7 +1670,7 @@ impl Session {
                 into.write_all(&out).map_err(|_| String::new())?;
             }
         }
-        Ok(())
+        Ok(None)
     }
 }
 

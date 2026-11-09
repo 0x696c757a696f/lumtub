@@ -3119,5 +3119,11 @@
   "Skin background": "Загварын дэвсгэр",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Хуудсын ард загварын зураг, байгалийн дүр; унтраавал энгийн өнгө үлдэнэ",
   "Suggest a channel or report a mistake": "Суваг санал болгох эсвэл алдаа мэдээлэх",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Жагсаалтууд GitHub дээр нийтэд нээлттэй бөгөөд хэн ч нэмж болно. Бүх бичилтэд нийтэд нээлттэй эх сурвалж шаардлагатай"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Жагсаалтууд GitHub дээр нийтэд нээлттэй бөгөөд хэн ч нэмж болно. Бүх бичилтэд нийтэд нээлттэй эх сурвалж шаардлагатай",
+  "Preparing yt-dlp…": "yt-dlp бэлдэж байна…",
+  "Match the frame rate": "Кадрын давтамжид тааруулах",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Видео тоглох үед дэлгэц түүнд тохирсон шинэчлэлтийн давтамж руу шилжиж, хөдөлгөөн жигд болно; зурагт хором зуур харанхуйлж болно",
+  "refresh rate fps TV": "шинэчлэлтийн давтамж fps зурагт ТВ",
+  "Tap to install it": "Суулгахын тулд товшино уу",
+  "Tap to download and install": "Татаж аваад суулгахын тулд товшино уу"
 }

@@ -3119,5 +3119,11 @@
   "Skin background": "Skini taust",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Skini pildid ja maastik lehtede taga; väljas jääb tavaline värv",
   "Suggest a channel or report a mistake": "Soovita kanalit või teata veast",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Loendid on GitHubis avalikud ja igaüks võib neid täiendada. Iga kirje vajab avalikku allikat"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Loendid on GitHubis avalikud ja igaüks võib neid täiendada. Iga kirje vajab avalikku allikat",
+  "Preparing yt-dlp…": "yt-dlp'd ettevalmistatakse…",
+  "Match the frame rate": "Sobita kaadrisagedus",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Video esitamise ajal lülitub ekraan sobivale värskendussagedusele, nii et liikumine on ühtlane; teleri ekraan võib hetkeks mustaks minna",
+  "refresh rate fps TV": "värskendussagedus fps TV teler",
+  "Tap to install it": "Puuduta selle installimiseks",
+  "Tap to download and install": "Puuduta allalaadimiseks ja installimiseks"
 }

@@ -232,9 +232,11 @@ class _LumtubAppState extends State<LumtubApp> {
             builder: (context, child) {
               final media = MediaQuery.of(context);
               _matchTitleBar(Theme.of(context));
+              final chrome = WindowChrome(controller: widget.controller, title: appName, child: child!);
               return MediaQuery(
-                data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale), disableAnimations: media.disableAnimations || Motion.reduced),
-                child: WindowChrome(controller: widget.controller, title: appName, child: child!),
+                // A TV is read from across the room: text a size larger.
+                data: media.copyWith(textScaler: _ScaledTextScaler(media.textScaler, appearance.textScale * (Device.tv ? _tvText : 1)), disableAnimations: media.disableAnimations || Motion.reduced),
+                child: Device.tv ? _TvFrame(child: chrome) : chrome,
               );
             },
             home: _pages,
@@ -292,6 +294,26 @@ void _matchTitleBar(ThemeData theme) {
         text: scheme.onSurface.toARGB32(),
         dark: scheme.brightness == Brightness.dark,
       ));
+}
+
+/// How much larger text is on a TV.
+const _tvText = 1.15;
+
+/// Keeps pages inside the part of a TV picture every set shows: some
+/// still cut the edges off (overscan). A video in full screen fills it all.
+class _TvFrame extends StatelessWidget {
+  const _TvFrame({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: ValueListenableBuilder<bool>(
+          valueListenable: WindowChrome.fullscreen,
+          builder: (context, fullscreen, child) => Padding(padding: fullscreen ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 48, vertical: 27), child: child),
+          child: child,
+        ),
+      );
 }
 
 class _ScaledTextScaler extends TextScaler {

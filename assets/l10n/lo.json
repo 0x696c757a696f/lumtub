@@ -3119,5 +3119,11 @@
   "Skin background": "ພື້ນຫຼັງສະກິນ",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "ຮູບພາບ ແລະ ທິວທັດຂອງສະກິນຢູ່ຫຼັງໜ້າ; ປິດແລ້ວຈະເຫຼືອສີທຳມະດາ",
   "Suggest a channel or report a mistake": "ແນະນຳຊ່ອງ ຫຼື ລາຍງານຄວາມຜິດພາດ",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "ລາຍການເປັນສາທາລະນະໃນ GitHub ແລະທຸກຄົນສາມາດເພີ່ມໄດ້. ແຕ່ລະລາຍການຕ້ອງມີແຫຼ່ງທີ່ມາສາທາລະນະ"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "ລາຍການເປັນສາທາລະນະໃນ GitHub ແລະທຸກຄົນສາມາດເພີ່ມໄດ້. ແຕ່ລະລາຍການຕ້ອງມີແຫຼ່ງທີ່ມາສາທາລະນະ",
+  "Preparing yt-dlp…": "ກຳລັງກະກຽມ yt-dlp…",
+  "Match the frame rate": "ໃຫ້ກົງກັບອັດຕາເຟຣມ",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ເວລາວິດີໂອກຳລັງຫຼິ້ນ ໜ້າຈໍຈະປ່ຽນໄປໃຊ້ອັດຕາຣີເຟຣຊທີ່ເໝາະສົມ ເພື່ອໃຫ້ການເຄື່ອນໄຫວລຽບ; ໂທລະທັດອາດມືດຊົ່ວຄາວ",
+  "refresh rate fps TV": "ອັດຕາຣີເຟຣຊ fps ໂທລະທັດ TV",
+  "Tap to install it": "ແຕະເພື່ອຕິດຕັ້ງ",
+  "Tap to download and install": "ແຕະເພື່ອດາວໂຫຼດ ແລະ ຕິດຕັ້ງ"
 }

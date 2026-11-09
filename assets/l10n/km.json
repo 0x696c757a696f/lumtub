@@ -3119,5 +3119,11 @@
   "Skin background": "ផ្ទៃខាងក្រោយស្គីន",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "រូបភាព និងទេសភាពរបស់ស្គីននៅពីក្រោយទំព័រ; បិទនឹងនៅសល់ពណ៌ធម្មតា",
   "Suggest a channel or report a mistake": "ស្នើឆានែល ឬរាយការណ៍កំហុស",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "បញ្ជីទាំងនេះជាសាធារណៈនៅលើ GitHub ហើយនរណាម្នាក់ក៏អាចបន្ថែមបានដែរ។ ធាតុនីមួយៗត្រូវការប្រភពសាធារណៈ"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "បញ្ជីទាំងនេះជាសាធារណៈនៅលើ GitHub ហើយនរណាម្នាក់ក៏អាចបន្ថែមបានដែរ។ ធាតុនីមួយៗត្រូវការប្រភពសាធារណៈ",
+  "Preparing yt-dlp…": "កំពុងរៀបចំ yt-dlp…",
+  "Match the frame rate": "ផ្គូផ្គងអត្រាស៊ុម",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "នៅពេលវីដេអូកំពុងចាក់ អេក្រង់នឹងប្តូរទៅអត្រាផ្ទុកឡើងវិញដែលសមស្រប ដើម្បីឱ្យចលនារលូន ទូរទស្សន៍អាចងងឹតមួយភ្លែត",
+  "refresh rate fps TV": "អត្រាផ្ទុកឡើងវិញ fps ទូរទស្សន៍ TV",
+  "Tap to install it": "ចុចដើម្បីដំឡើង",
+  "Tap to download and install": "ចុចដើម្បីទាញយក និងដំឡើង"
 }

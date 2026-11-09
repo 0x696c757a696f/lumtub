@@ -3119,5 +3119,11 @@
   "Skin background": "Φόντο skin",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Οι εικόνες και το τοπίο του skin πίσω από τις σελίδες· απενεργοποιημένο αφήνει απλό χρώμα",
   "Suggest a channel or report a mistake": "Προτείνετε ένα κανάλι ή αναφέρετε ένα λάθος",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Οι λίστες είναι δημόσιες στο GitHub και μπορεί να προσθέσει σε αυτές οποιοσδήποτε. Κάθε καταχώριση χρειάζεται δημόσια πηγή"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Οι λίστες είναι δημόσιες στο GitHub και μπορεί να προσθέσει σε αυτές οποιοσδήποτε. Κάθε καταχώριση χρειάζεται δημόσια πηγή",
+  "Preparing yt-dlp…": "Προετοιμασία του yt-dlp…",
+  "Match the frame rate": "Προσαρμογή στον ρυθμό καρέ",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Κατά την αναπαραγωγή βίντεο, η οθόνη αλλάζει σε ρυθμό ανανέωσης που ταιριάζει, ώστε η κίνηση να είναι ομαλή· οι τηλεοράσεις μπορεί να μαυρίσουν για μια στιγμή",
+  "refresh rate fps TV": "ρυθμός ανανέωσης fps τηλεόραση TV",
+  "Tap to install it": "Πατήστε για εγκατάσταση",
+  "Tap to download and install": "Πατήστε για λήψη και εγκατάσταση"
 }

@@ -98,6 +98,10 @@ class DownloadSelection {
     return 'b[height<=$height][ext=mp4]/b[height<=$height]/b[ext=mp4]/b';
   }
 
+  /// The two streams as separate files, picture first, for a download
+  /// joined without ffmpeg.
+  String joinFormat() => '$videoId,$audioId';
+
   /// Extra arguments for the container, none when nothing is merged.
   List<String> containerArguments({required bool merge}) =>
       merge && needsMerge ? ['--merge-output-format', container.name] : const [];

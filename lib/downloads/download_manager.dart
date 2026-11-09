@@ -108,6 +108,7 @@ class DownloadManager extends ChangeNotifier {
     this.ffmpegDirectory,
     this.sponsorSegments,
     this.onFinished,
+    this.join,
   })  : _directory = defaultDirectory,
         _start = start ?? _backgroundStart;
 
@@ -127,6 +128,11 @@ class DownloadManager extends ChangeNotifier {
   final Future<List<SkipSegment>> Function(String videoId)? sponsorSegments;
   /// Called once a download's file is complete.
   final void Function(DownloadTask task)? onFinished;
+  /// Joins a picture and a sound file into one without ffmpeg (Android,
+  /// which cannot start one): null when done, else why not.
+  /// Joins the picture and sound into the stem plus the extension that
+  /// fits them; the path written, or why not.
+  final Future<({String? path, String? error})> Function(String video, String audio, String stem)? join;
 
   String _directory;
   DownloadDefaults _defaults = const DownloadDefaults();
@@ -152,7 +158,16 @@ class DownloadManager extends ChangeNotifier {
   DownloadDefaults get defaults => _defaults;
 
   /// Whether ffmpeg is there to merge video and audio streams.
-  bool get canMerge => ffmpegDirectory?.call() != null;
+  bool get canMerge => join != null || ffmpegDirectory?.call() != null;
+
+  /// Whether [task]'s picture and sound come as two files for [join].
+  bool _joins(DownloadTask task) =>
+      join != null && ffmpegDirectory?.call() == null && !(task.selection?.audioOnly ?? task.quality.audioOnly) && (task.selection?.needsMerge ?? true);
+
+  /// The name yt-dlp gives each stream of a joined download, and what
+  /// the joined file is called.
+  static const _joinedPart = '%(title).80B [%(id)s].f%(format_id)s.%(ext)s';
+  static final _partSuffix = RegExp(r'\.f[^.\\/]+\.[^.\\/]+$');
 
   /// The folder for downloads when none was chosen: Lumtub in the user's
   /// videos folder (Videos, or Movies on macOS).
@@ -338,6 +353,7 @@ class DownloadManager extends ChangeNotifier {
     final ffmpeg = ffmpegDirectory?.call();
     final selection = task.selection;
     final audio = selection?.audioOnly ?? task.quality.audioOnly;
+    final joins = _joins(task);
     return [
       '--no-warnings',
       '--newline',
@@ -352,15 +368,19 @@ class DownloadManager extends ChangeNotifier {
       if (o.deno != null) ...['--js-runtimes', 'deno:${o.deno!}'],
       if (o.proxy != null) ...['--proxy', o.proxy!],
       '--paths', task.directory,
-      '-o', '%(title).80B [%(id)s].%(ext)s',
+      '-o', joins ? _joinedPart : '%(title).80B [%(id)s].%(ext)s',
+      // One sidecar and one set of subtitles for the joined file.
+      if (joins) ...['-o', 'infojson:%(title).80B [%(id)s].%(ext)s', '-o', 'subtitle:%(title).80B [%(id)s].%(ext)s'],
       '--progress-template', DownloadProgress.progressTemplate,
       '--print', DownloadProgress.filePrint,
       '--write-info-json',
-      '--format', selection?.format(merge: ffmpeg != null) ?? task.quality.format(merge: ffmpeg != null),
+      '--format', joins ? selection?.joinFormat() ?? task.quality.joinFormat() : selection?.format(merge: ffmpeg != null) ?? task.quality.format(merge: ffmpeg != null),
       // The container was chosen with the streams; the streams are copied,
       // never re-encoded. Otherwise MP4 plays everywhere and MKV takes the
       // codecs MP4 cannot hold.
-      if (selection != null)
+      if (joins)
+        ...const <String>[]
+      else if (selection != null)
         ...selection.containerArguments(merge: ffmpeg != null)
       else if (ffmpeg != null && !audio)
         ...['--merge-output-format', 'mp4/mkv'],
@@ -380,7 +400,7 @@ class DownloadManager extends ChangeNotifier {
 
   Future<void> _run(DownloadTask task) async {
     final id = task.id;
-    String? printed;
+    final printed = <String>[];
     final errors = <String>[];
     int exitCode;
     try {
@@ -404,7 +424,7 @@ class DownloadManager extends ChangeNotifier {
         }
         final path = DownloadProgress.parseFile(text);
         if (path != null) {
-          printed = path;
+          printed.add(path);
         } else if (text.trim().isNotEmpty) {
           errors.add(text.trim());
           if (errors.length > 20) errors.removeAt(0);
@@ -450,8 +470,26 @@ class DownloadManager extends ChangeNotifier {
     }
   }
 
-  Future<void> _finish(DownloadTask task, String? printed) async {
-    var path = printed;
+  Future<void> _finish(DownloadTask task, List<String> printed) async {
+    var path = printed.lastOrNull;
+    if (_joins(task) && printed.length >= 2) {
+      final joined = await join!(printed.first, printed.last, printed.first.replaceFirst(_partSuffix, ''));
+      final out = joined.path;
+      if (out == null) {
+        task.status = DownloadStatus.failed;
+        task.speed = null;
+        task.error = joined.error ?? tr('The downloaded file was not found');
+        return;
+      }
+      for (final part in printed) {
+        try {
+          await File(part).delete();
+        } on FileSystemException {
+          // Left for the user.
+        }
+      }
+      path = out;
+    }
     if (path == null || !File(path).existsSync()) path = _findMedia(task);
     if (path == null) {
       task.status = DownloadStatus.failed;

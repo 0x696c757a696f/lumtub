@@ -7,7 +7,7 @@
 ! note: teleSUR is funded by several governments, not Venezuela's alone
 ! source: https://en.wikipedia.org/wiki/Venezolana_de_Televisi%C3%B3n
 
-:telesur | ^teleSUR
+:telesur | UCEXKaswCHMJmOIdR8HrZy9Q | @teleSURtv.net.e | ^teleSUR
 :vtv | =VTV | ^Venezolana de Televisión
 :tves | ^TVes
 :vive-tv | ^ViVe TV

@@ -3119,5 +3119,11 @@
   "Skin background": "พื้นหลังสกิน",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "รูปภาพและทิวทัศน์ของสกินที่อยู่หลังหน้า ปิดไว้จะเหลือเป็นสีพื้น",
   "Suggest a channel or report a mistake": "แนะนำช่องหรือรายงานข้อผิดพลาด",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "รายการเป็นสาธารณะบน GitHub และใครก็เพิ่มได้ ทุกรายการต้องมีแหล่งที่มาสาธารณะ"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "รายการเป็นสาธารณะบน GitHub และใครก็เพิ่มได้ ทุกรายการต้องมีแหล่งที่มาสาธารณะ",
+  "Preparing yt-dlp…": "กำลังเตรียม yt-dlp…",
+  "Match the frame rate": "จับคู่อัตราเฟรม",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ขณะเล่นวิดีโอ หน้าจอจะสลับไปใช้อัตรารีเฟรชที่เหมาะสม ทำให้การเคลื่อนไหวลื่นไหล ทีวีอาจดับไปชั่วครู่",
+  "refresh rate fps TV": "อัตรารีเฟรช เฟรมเรต fps ทีวี TV",
+  "Tap to install it": "แตะเพื่อติดตั้ง",
+  "Tap to download and install": "แตะเพื่อดาวน์โหลดและติดตั้ง"
 }

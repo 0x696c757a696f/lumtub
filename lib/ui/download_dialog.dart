@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../downloads/download_formats.dart';
@@ -200,7 +202,9 @@ class _DownloadDialogState extends State<DownloadDialog> {
                 })),
         ]),
       ],
-      if (video != null) ...[
+      // Android joins the streams in lumtub_core, which picks the container
+      // from the codecs.
+      if (video != null && !Platform.isAndroid) ...[
         const SizedBox(height: 12),
         _section(context, tr('Container'), [
           for (final c in DownloadContainer.values)
@@ -236,7 +240,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
         : [
             s.codec!.label,
             heightLabel(s.height!, _formats?.video.where((f) => f.id == s.videoId).firstOrNull?.fps),
-            _container == DownloadContainer.auto ? tr('Automatic container ({0})', [s.container.label]) : s.container.label,
+            if (!Platform.isAndroid) _container == DownloadContainer.auto ? tr('Automatic container ({0})', [s.container.label]) : s.container.label,
           ];
     if (s.size != null) parts.add(approximateSize(s.size!));
     return tr('Current selection: {0}', [parts.join(' · ')]);

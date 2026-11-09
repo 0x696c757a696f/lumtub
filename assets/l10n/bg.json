@@ -3119,5 +3119,11 @@
   "Skin background": "Фон на скина",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "Картините и пейзажът на скина зад страниците; изключено оставя обикновен цвят",
   "Suggest a channel or report a mistake": "Предложете канал или съобщете за грешка",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Списъците са публични в GitHub и всеки може да добавя към тях. Всеки запис изисква публичен източник"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "Списъците са публични в GitHub и всеки може да добавя към тях. Всеки запис изисква публичен източник",
+  "Preparing yt-dlp…": "Подготовка на yt-dlp…",
+  "Match the frame rate": "Съобразяване с кадровата честота",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Докато се възпроизвежда видео, екранът превключва на подходяща честота на опресняване, така че движението е плавно; телевизорите може за миг да притъмнеят",
+  "refresh rate fps TV": "честота на опресняване fps ТВ телевизор",
+  "Tap to install it": "Докоснете, за да инсталирате",
+  "Tap to download and install": "Докоснете, за да изтеглите и инсталирате"
 }

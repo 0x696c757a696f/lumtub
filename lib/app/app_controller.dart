@@ -1154,6 +1154,11 @@ class AppController extends ChangeNotifier with _ExploreState {
   Future<void> restartToUpdate() async {
     final updater = appUpdater;
     if (updater == null || updater.ready == null) return;
+    // Android's installer asks first, then replaces the running app itself.
+    if (Platform.isAndroid) {
+      await updater.install();
+      return;
+    }
     // The installer starts first and waits for Lumtub to end, so a declined
     // administrator prompt leaves Lumtub running as it was.
     if (!await updater.install(relaunch: true)) return;
@@ -1218,6 +1223,8 @@ class AppController extends ChangeNotifier with _ExploreState {
         },
         defaultDirectory: DownloadManager.defaultDirectoryFor(Platform.environment, '${directories.data.path}${Platform.pathSeparator}downloads'),
         environment: () => _repository!.processEnvironment,
+        // Android cannot start an ffmpeg: lumtub_core joins the streams.
+        join: Platform.isAndroid && NativeCore.canJoin ? (video, audio, out) => Isolate.run(() => NativeCore.join(video, audio, out)) : null,
         ffmpegDirectory: () {
           final env = _repository!.processEnvironment;
           final path = env.entries.where((e) => e.key.toUpperCase() == 'PATH').firstOrNull?.value;
@@ -1298,7 +1305,13 @@ class AppController extends ChangeNotifier with _ExploreState {
     // Automatic picks follow the playback order, so a download is in a codec
     // this PC decodes well; the quality strategy takes the best picture.
     final preference = settings.strategy == PlaybackStrategy.quality ? const <VideoCodec>[] : FormatPolicy.codecOrder(settings);
-    return DownloadFormats.parseInBackground(info, preference: preference);
+    final formats = await DownloadFormats.parseInBackground(info, preference: preference);
+    // Android joins the streams in lumtub_core, which takes AAC, Opus and
+    // Dolby sound.
+    if (Platform.isAndroid && formats.audio.any((a) => a.joins)) {
+      return DownloadFormats(formats.video, [for (final a in formats.audio) if (a.joins) a], preference: formats.preference);
+    }
+    return formats;
   }
 
   /// The proxy everything currently goes through.
@@ -1700,16 +1713,25 @@ class AppController extends ChangeNotifier with _ExploreState {
       if (resolved) {
         try {
           final streams = _repository!.streams;
-          // Without yt-dlp (Android) the core's answer is the only one.
-          if (streams.ytDlpPath.isEmpty) {
-            if (item.isLive || item.membersOnly) throw StateError('Live streams and members-only videos need yt-dlp, which this version does not have yet');
-            video = await streams.quick(item.id, format, FormatPolicy.settingsJson(_playback));
-            if (video == null) throw StateError('YouTube gave no streams this version can play');
+          // Android asks the core first: yt-dlp runs in Python there, which
+          // costs a phone seconds of work, so it only steps in when the core
+          // has no answer, and for live and members-only videos.
+          if (Platform.isAndroid) {
+            if (!item.isLive && !item.membersOnly) {
+              try {
+                video = await streams.quick(item.id, format, FormatPolicy.settingsJson(_playback));
+              } catch (e) {
+                logWarn('Quick start of ${item.id} failed: $e');
+              }
+            }
+            if (video == null && streams.ytDlpPath.isEmpty) {
+              throw StateError(item.isLive || item.membersOnly ? 'Live streams and members-only videos need yt-dlp, which could not be started' : 'YouTube gave no streams this version can play');
+            }
           }
           var pending = video != null ? Future.value(video) : streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly, live: item.isLive);
           // The first open of a video also asks YouTube directly; whichever
           // answers first starts it. A reopen after a failure waits for yt-dlp.
-          if (video == null && _quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
+          if (video == null && !Platform.isAndroid && _quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
             _quickSerial = serial;
             final full = pending;
             pending = Future.any([
@@ -1728,6 +1750,11 @@ class AppController extends ChangeNotifier with _ExploreState {
           if (!failure.retryable) {
             // libmpv's ytdl_hook would ask YouTube again and fail the same way.
             if (_serversMayHelp(failure.kind)) return await _fallBack(item, serial, failure, start: start, play: play);
+            if (serial == _playSerial) _fail(item, failure);
+            return false;
+          }
+          // libmpv cannot start yt-dlp on Android.
+          if (Platform.isAndroid) {
             if (serial == _playSerial) _fail(item, failure);
             return false;
           }
@@ -3116,7 +3143,8 @@ class AppController extends ChangeNotifier with _ExploreState {
   Future<void> shutdown({bool install = true}) async {
     if (_shutDown) return;
     _shutDown = true;
-    if (install) await appUpdater?.install();
+    // Android installs only when asked: its installer shows a dialog.
+    if (install && !Platform.isAndroid) await appUpdater?.install();
     _saveProgress();
     _countWatchTime(flush: true);
     await (watchTime?.save() ?? Future.value(), channelPlayback?.save() ?? Future.value()).wait;

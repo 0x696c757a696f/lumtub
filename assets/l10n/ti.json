@@ -3119,5 +3119,11 @@
   "Skin background": "ድሕረ-ባይታ ቅዲ",
   "The skin's pictures and landscape behind the pages; off leaves a plain colour": "ስእልታትን መልክዓ-ምድርን ናይቲ ቅዲ ድሕሪ ገጻት፤ እንተዘቊይሩ ተራ ቀለም ይተርፍ",
   "Suggest a channel or report a mistake": "ጭናል ሕበር ወይ ጌጋ ሪፖርት ግበር",
-  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "እቲ ዝርዝራት ኣብ GitHub ኩሉ ሰብ ዝርእዮ እዩ፣ ዝኾነ ሰብ ክውስኽ ይኽእል። ነፍሲ ወከፍ መእተዊ ህዝባዊ ምንጪ የድልዮ"
+  "The lists are public on GitHub, and anyone can add to them. Every entry needs a public source": "እቲ ዝርዝራት ኣብ GitHub ኩሉ ሰብ ዝርእዮ እዩ፣ ዝኾነ ሰብ ክውስኽ ይኽእል። ነፍሲ ወከፍ መእተዊ ህዝባዊ ምንጪ የድልዮ",
+  "Preparing yt-dlp…": "yt-dlp ይዳሎ ኣሎ…",
+  "Match the frame rate": "ናይ ፍሬም ፍጥነት ኣተኣሳስር",
+  "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ቪድዮ ኣብ ዝጻወተሉ እዋን ስክሪን ንዚሰማምዕ ናይ ምሕዳስ ፍጥነት ይቕይር፣ ኣንቀሳቕሳኡ ድማ ምዕሩይ ይኸውን፤ ቲቪታት ን ሓጺር እዋን ክጸልሙ ይኽእሉ",
+  "refresh rate fps TV": "ናይ ምሕዳስ ፍጥነት fps ቲቪ",
+  "Tap to install it": "ንምትካል ጠውቕ",
+  "Tap to download and install": "ንምውራድን ንምትካልን ጠውቕ"
 }

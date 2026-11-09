@@ -984,7 +984,12 @@ jobs:
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
           sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
           yes | "$sdk/sdkmanager" --licenses > /dev/null
-          "$sdk/sdkmanager" "emulator" "system-images;android-34;google_apis;x86_64" > /dev/null
+          # A download cut short leaves a broken archive; ask again.
+          for try in 1 2 3; do
+            "$sdk/sdkmanager" "emulator" "system-images;android-34;google_apis;x86_64" > /dev/null && break
+            [ "$try" = 3 ] && exit 1
+            sleep 20
+          done
           # Written by hand: this avdmanager cannot read the SDK's newer XML and makes nothing.
           avd="$HOME/.android/avd"; mkdir -p "$avd/smoke.avd"
           printf 'avd.ini.encoding=UTF-8\npath=%s/smoke.avd\ntarget=android-34\n' "$avd" > "$avd/smoke.ini"

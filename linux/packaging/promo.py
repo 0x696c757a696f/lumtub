@@ -32,18 +32,18 @@ URL = 'github.com/0x696c757a696f/lumtub'
 STORY = {
     'en': {
         'voice': 'af_heart',
-        'brand': (['Lumtub.', 'YouTube, made for your desktop.'], 'YouTube, made for your desktop'),
+        'brand': (['Lumtub.', 'YouTube for your computer, phone and TV.'], 'YouTube for computer, phone and TV'),
         'subtitles': ('Two subtitles at once, in any two languages.', 'Bilingual subtitles', ['Any two languages', 'Translated as it plays']),
         'danmaku': ('Live chat flies across the picture, as danmaku.', 'Danmaku', ['Live chat', 'Chat replay']),
-        'home': ('Recommendations are worked out on your own computer, and every card says why.',
-                 'A feed that explains itself', ['Worked out on your PC', 'Every card says why']),
+        'home': ('Recommendations are worked out on your own device, and every card says why.',
+                 'A feed that explains itself', ['Worked out on your device', 'Every card says why']),
         'skins': ('Twenty-three skins, from Y2K gloss to one-bit pixels, or make your own.', 'Skins', ['23 built in', 'Make your own']),
         'palettes': ('Ten palettes, and seventy-two languages.', 'Make it yours', ['10 palettes', '72 languages']),
         'outro': (['Free. Open source. No ads.'], 'Free · Open source · No ads', 'Download free'),
     },
     'zh': {
         'voice': 'zf_xiaoxiao',
-        'brand': (['Lumtub，', '桌面上的 YouTube。'], '为桌面打造的 YouTube 客户端'),
+        'brand': (['Lumtub，', '电脑、手机、电视上的 YouTube。'], '为电脑、手机和电视打造的 YouTube 客户端'),
         'subtitles': ('双语字幕，两种语言一起显示。', '双语字幕', ['任选两种语言', '边播边翻译']),
         'danmaku': ('直播聊天，变成弹幕飞过画面。', '弹幕', ['直播聊天', '聊天回放']),
         'home': ('推荐在本机计算，每条都写明原因。', '会解释自己的推荐', ['只在本机计算', '每张卡片说明原因']),

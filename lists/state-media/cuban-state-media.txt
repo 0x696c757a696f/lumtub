@@ -6,31 +6,15 @@
 ! default: off
 ! note: State television, news agency and Communist Party papers
 ! source: https://en.wikipedia.org/wiki/Mass_media_in_Cuba
-! legacy: 古巴官方媒体
 
 :cubadebate | ^Cubadebate
-    legacy: 古巴官方媒体/channel/Cubadebate
 :canal-caribe | ^Canal Caribe
-    legacy: 古巴官方媒体/channel/Canal Caribe
-:televisi-n-cubana | ^Televisión Cubana
-    legacy: 古巴官方媒体/channel/Televisión Cubana
-:tv-cubana | ^TV Cubana
-    legacy: 古巴官方媒体/channel/TV Cubana
-:cubavisi-n | ^Cubavisión
-    legacy: 古巴官方媒体/channel/Cubavisión
+:television-cubana | ^Televisión Cubana | ^TV Cubana
+:cubavision | ^Cubavisión
 :prensa-latina | ^Prensa Latina
-    legacy: 古巴官方媒体/channel/Prensa Latina
 :granma | ^Granma
-    legacy: 古巴官方媒体/channel/Granma
-:agencia-cubana-de-noticias | ^Agencia Cubana de Noticias
-    legacy: 古巴官方媒体/channel/Agencia Cubana de Noticias
+:acn | =ACN | ^Agencia Cubana de Noticias
 :radio-habana-cuba | ^Radio Habana Cuba
-    legacy: 古巴官方媒体/channel/Radio Habana Cuba
 :radio-rebelde | ^Radio Rebelde
-    legacy: 古巴官方媒体/channel/Radio Rebelde
 :juventud-rebelde | ^Juventud Rebelde
-    legacy: 古巴官方媒体/channel/Juventud Rebelde
 :canal-habana | ^Canal Habana
-    legacy: 古巴官方媒体/channel/Canal Habana
-:acn | =ACN
-    legacy: 古巴官方媒体/exact/ACN

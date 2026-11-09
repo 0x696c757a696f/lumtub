@@ -165,7 +165,7 @@ void main() {
     expect(ids(controller.visible(items)), 'c');
     // Channels the user follows stay in the subscription feed.
     expect(ids(controller.visible(items, subscriptions: true)), 'abc');
-    controller.preferences = controller.preferences.copyWith(allowedGroups: ['法轮功']);
+    controller.preferences = controller.preferences.copyWith(allowedGroups: ['falun-gong']);
     expect(ids(controller.visible(items)), 'abc');
     controller.preferences = controller.preferences.copyWith(allowedGroups: [], blockGroups: false);
     expect(ids(controller.visible(items)), 'abc');
@@ -181,7 +181,7 @@ void main() {
     expect(isStateMediaChannel('BBC News'), isFalse);
     expect(isStateMediaChannel('NHK WORLD-JAPAN'), isFalse);
     expect(isStateMediaChannel('Rick Talks CGTN'), isFalse);
-    expect(isStateMediaChannel('VOA News', {'美国政府国际广播'}), isFalse);
+    expect(isStateMediaChannel('VOA News', {'us-government-international-broadcasting'}), isFalse);
     VideoItem video(String id, String channel) => VideoItem(id: id.padRight(11, '0'), title: 'News', channel: channel, url: '');
     final items = [video('a', 'CGTN'), video('b', 'BBC News'), video('c', 'VOA Chinese'), video('d', 'Some Vlog')];
     final controller = AppController();
@@ -192,7 +192,7 @@ void main() {
     expect(ids(controller.visible(items)), 'bcd');
     controller.debugQuery = 'CGTN';
     expect(ids(controller.visible(items, search: true)), 'abcd');
-    controller.preferences = controller.preferences.copyWith(enabledGroups: ['美国政府国际广播']);
+    controller.preferences = controller.preferences.copyWith(enabledGroups: ['us-government-international-broadcasting']);
     expect(ids(controller.visible(items)), 'bd');
     // One entry can be unticked on its own.
     final cgtn = stateMedia.expand((g) => g.entries).firstWhere((e) => e.label == 'CGTN');
@@ -200,7 +200,7 @@ void main() {
     expect(ids(controller.visible(items)), 'abd');
     final restored = AppPreferences.fromJson(jsonDecode(jsonEncode(controller.preferences.toJson())));
     expect(restored.blockStateMedia, isTrue);
-    expect(restored.enabledGroups, ['美国政府国际广播']);
+    expect(restored.enabledGroups, ['us-government-international-broadcasting']);
     expect(restored.allowedEntries, [cgtn.key]);
   });
 
@@ -214,11 +214,11 @@ void main() {
     // A title naming a host is not enough; only his channel is.
     expect(prefs.blocksGroup(VideoItem(id: 'x'.padRight(11, '0'), title: '采访文昭谈古论今', channel: 'BBC News 中文', url: '')), isFalse);
     expect(prefs.blocksChannel('西岸觀察'), isTrue);
-    expect(prefs.copyWith(allowedGroups: ['法轮功相关（待核实）']).blocksChannel('西岸观察'), isFalse);
-    final wenzhao = blockedGroups.firstWhere((g) => g.name == '法轮功相关自媒体').entries.firstWhere((e) => e.label == '文昭谈古论今');
+    expect(prefs.copyWith(allowedGroups: ['falun-gong-linked-unproven']).blocksChannel('西岸观察'), isFalse);
+    final wenzhao = blockedGroups.firstWhere((g) => g.name == 'falun-gong-linked-hosts-and-shows').entries.firstWhere((e) => e.label == '文昭谈古论今');
     expect(wenzhao.forms, contains('文昭談古論今'));
     expect(prefs.copyWith(allowedEntries: [wenzhao.key]).blocksChannel('文昭談古論今'), isFalse);
-    expect(prefs.copyWith(allowedGroups: ['法轮功相关自媒体']).blocksChannel('江峰时刻'), isFalse);
+    expect(prefs.copyWith(allowedGroups: ['falun-gong-linked-hosts-and-shows']).blocksChannel('江峰时刻'), isFalse);
     expect(prefs.blocksChannel('BBC News 中文'), isFalse);
   });
 
@@ -243,12 +243,12 @@ void main() {
 
     final back = AppPreferences.fromJson(jsonDecode(jsonEncode(controller.preferences.copyWith(
       unrecommendedChannels: [ewtn],
-      allowedGroups: ['NXIVM'],
+      allowedGroups: ['nxivm'],
       blockedChannelNames: ['X'],
       blockGroups: false,
     ).toJson())));
     expect(back.unrecommendedChannels.single.name, 'EWTN');
-    expect(back.allowedGroups, ['NXIVM']);
+    expect(back.allowedGroups, ['nxivm']);
     expect(back.blockedChannelNames, ['X']);
     expect(back.blockGroups, isFalse);
     expect(const AppPreferences().blockGroups, isFalse);
@@ -278,7 +278,7 @@ void main() {
     expect(namesBlockedGroup(video('Almighty God, we pray', 'EWTN')), isFalse);
     expect(namesBlockedGroup(video('Sermon', 'Twin Flames Universe')), isTrue);
     expect(namesBlockedGroup(video('Sermon', 'Unrelated channel').withChannel(const ChannelRef('UC8AqZc9Ij7GGptu3U5Mcj7A', 'Unrelated channel'))), isTrue);
-    expect(prefs.copyWith(allowedGroups: ['补充的灵性导师与宗教频道']).blocksChannel('Twin Flames Universe'), isFalse);
+    expect(prefs.copyWith(allowedGroups: ['additional-spiritual-and-religious-channels']).blocksChannel('Twin Flames Universe'), isFalse);
     expect(namesBlockedGroup(video('Twin Flames Universe investigation', 'DW Documentary')), isFalse);
     expect(namesBlockedGroup(video('天主教的七件圣事', '梵蒂冈新闻')), isFalse);
   });

@@ -7,6 +7,17 @@ import 'package:lumtub/native_core.dart';
 VideoItem _from(String channel) => VideoItem.fromJson({'id': 'aaaaaaaaaaa', 'title': 'x', 'channel': channel});
 
 void main() {
+  test('choices saved by older versions move to the lists and entries now', () {
+    final prefs = AppPreferences.fromJson({
+      'enabledGroups': ['中国官方媒体'],
+      'allowedGroups': ['法轮功'],
+      'allowedEntries': ['中国官方媒体/channel/央视', '中国官方媒体/channel/CCTV', 'chinese-state-media/xed6ee24c'],
+    });
+    expect(prefs.enabledGroups, ['chinese-state-media']);
+    expect(prefs.allowedGroups, ['falun-gong']);
+    expect(prefs.allowedEntries, ['chinese-state-media/cctv'], reason: 'the names of one channel are one entry now');
+  });
+
   test('a ticked or unticked group stays so when an update changes its default', () {
     BlockedGroup group(bool suggested) => BlockedGroup(name: 'g', id: 'g', label: 'G', entries: const [], categories: const ['religion'], onByDefault: suggested);
     for (final first in [true, false]) {

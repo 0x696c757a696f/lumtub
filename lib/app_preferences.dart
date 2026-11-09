@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'ai_filter.dart';
+import 'block_list_renames.dart';
 import 'app_log.dart';
 
 import 'app_directories.dart';
@@ -695,8 +696,8 @@ class AppPreferences {
       blockedChannels: channelList('blockedChannels'),
       blockedKeywords: strings('blockedKeywords'),
       unrecommendedChannels: channelList('unrecommendedChannels'),
-      allowedGroups: strings('allowedGroups'),
-      allowedMedia: strings('allowedMedia'),
+      allowedGroups: renamedBlockLists(strings('allowedGroups')),
+      allowedMedia: renamedBlockLists(strings('allowedMedia')),
       reversedPlaylists: strings('reversedPlaylists'),
       castMaxHeight: number('castMaxHeight', d.castMaxHeight, 1080, 4320),
       castFormats: {
@@ -704,8 +705,8 @@ class AppPreferences {
           for (final MapEntry(:key, :value) in formats.entries)
             if (value case 'ts' || 'hls' || 'mp4' || 'mkv') key: value as String,
       },
-      enabledGroups: strings('enabledGroups'),
-      allowedEntries: strings('allowedEntries'),
+      enabledGroups: renamedBlockLists(strings('enabledGroups')),
+      allowedEntries: renamedBlockEntries(strings('allowedEntries')),
       blockedChannelNames: strings('blockedChannelNames'),
       exploreCustomTopics: topics,
       exploreOrder: keyLists('exploreOrder'),

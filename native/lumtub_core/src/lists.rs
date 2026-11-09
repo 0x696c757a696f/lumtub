@@ -66,8 +66,6 @@ pub struct Record {
     pub reviewed: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub legacy: Vec<String>,
 }
 
 fn is_confirmed(status: &Option<Status>) -> bool {
@@ -96,8 +94,6 @@ pub struct List {
     pub note: Option<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub sources: Vec<String>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub legacy: Vec<String>,
     pub records: Vec<Record>,
 }
 
@@ -147,6 +143,14 @@ fn fields(line: &str) -> Result<Vec<String>, String> {
 
 /// Parses one list file. [file_id] is its name without `.txt`, which the
 /// `id` header must repeat.
+/// The slug of a channel given on a line of its own: its handle or id in
+/// lowercase, other signs as -.
+fn bare_slug(token: &str) -> String {
+    let token = token.strip_prefix('@').unwrap_or(token);
+    let slug: String = token.chars().map(|c| if c.is_ascii_alphanumeric() { c.to_ascii_lowercase() } else { '-' }).collect();
+    slug.trim_matches('-').to_string()
+}
+
 pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
     let mut errors = Vec::new();
     let mut err = |line: usize, message: String| errors.push(ListError { line, message });
@@ -164,7 +168,6 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
     let mut note = None;
     let mut topics = Vec::new();
     let mut sources = Vec::new();
-    let mut legacy = Vec::new();
     let mut records: Vec<Record> = Vec::new();
     let mut slugs = HashSet::new();
     let mut seen = HashSet::new();
@@ -195,7 +198,8 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
                 "reviewed" if date_ok(&value) => record.reviewed = Some(value),
                 "reviewed" => err(line, "reviewed is a date as YYYY-MM-DD".into()),
                 "note" => record.note = Some(value),
-                "legacy" => record.legacy.push(value),
+                // Older files named the keys saved before 0.2.31; read and ignored.
+                "legacy" => {}
                 other => err(line, format!("unknown attribute {other}")),
             }
             continue;
@@ -244,7 +248,7 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
                 "topic" => err(line, "an empty topic".into()),
                 "source" if value.starts_with("https://") || value.starts_with("http://") => sources.push(value),
                 "source" => err(line, "a source is an http or https address".into()),
-                "legacy" => legacy.push(value),
+                "legacy" => {}
                 _ => match key.strip_prefix("name.") {
                     Some(lang) if !lang.is_empty() => names.push((lang.to_string(), value)),
                     _ => err(line, format!("unknown header {key}")),
@@ -252,18 +256,38 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
             }
             continue;
         }
-        let Some(rest) = raw.strip_prefix(':') else {
-            err(line, "a record starts with :slug".into());
-            continue;
-        };
-        let parts = match fields(rest) {
-            Ok(parts) => parts,
-            Err(message) => {
-                err(line, message);
+        // A channel on a line of its own, by @handle or id, as in other
+        // block lists: its slug comes from the handle or id, and a comment
+        // after it becomes its note.
+        let mut bare_note = None;
+        let parts = if raw.starts_with('@') || raw.starts_with("UC") {
+            let (token, after) = raw.split_once(char::is_whitespace).unwrap_or((raw, ""));
+            let after = after.trim();
+            if !after.is_empty() {
+                match after.strip_prefix('#') {
+                    Some(comment) if !comment.trim().is_empty() => bare_note = Some(comment.trim().to_string()),
+                    Some(_) => {}
+                    None => {
+                        err(line, format!("after {token} only a # comment may follow"));
+                        continue;
+                    }
+                }
+            }
+            vec![bare_slug(token), token.to_string()]
+        } else {
+            let Some(rest) = raw.strip_prefix(':') else {
+                err(line, "a record starts with :slug, @handle or a UC… channel id".into());
                 continue;
+            };
+            match fields(rest) {
+                Ok(parts) => parts,
+                Err(message) => {
+                    err(line, message);
+                    continue;
+                }
             }
         };
-        let mut record = Record { slug: parts[0].clone(), ..Record::default() };
+        let mut record = Record { slug: parts[0].clone(), note: bare_note, ..Record::default() };
         if !slug_ok(&record.slug) {
             err(line, format!("the slug {:?} is not lowercase letters, digits and -", record.slug));
         } else if !slugs.insert(record.slug.clone()) {
@@ -366,7 +390,7 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
     if !errors.is_empty() {
         return Err(errors);
     }
-    Ok(List { id, name, names, categories, action, default_on, suggested, topics, note, sources, legacy, records })
+    Ok(List { id, name, names, categories, action, default_on, suggested, topics, note, sources, records })
 }
 
 fn date_ok(text: &str) -> bool {
@@ -589,7 +613,27 @@ pub fn check_all(lists: &[List], retired: &HashSet<String>) -> Vec<String> {
 mod tests {
     use super::*;
 
-    const EXAMPLE: &str = "! id: falun-gong-media\n! name: Falun Gong media\n! name.zh-Hans: 法轮功媒体\n! category: religion\n! action: hide\n! default: off\n! topic: 法轮功\n! topic: Falun Gong\n! legacy: 法轮功\n\n# The paper\n:epoch-times | UCxxxxxxxxxxxxxxxxxxxxxx | @EpochTimes | =The Epoch Times | =大纪元 | =大紀元\n    source: https://example.org/a\n    reviewed: 2026-11-08\n    legacy: 法轮功/channel/大纪元\n:ntd | @NTDTelevision | ^新唐人 | ^NTD\n    status: unproven\n";
+    const EXAMPLE: &str = "! id: falun-gong-media\n! name: Falun Gong media\n! name.zh-Hans: 法轮功媒体\n! category: religion\n! action: hide\n! default: off\n! topic: 法轮功\n! topic: Falun Gong\n\n# The paper\n:epoch-times | UCxxxxxxxxxxxxxxxxxxxxxx | @EpochTimes | =The Epoch Times | =大纪元 | =大紀元\n    source: https://example.org/a\n    reviewed: 2026-11-08\n:ntd | @NTDTelevision | ^新唐人 | ^NTD\n    status: unproven\n";
+
+    #[test]
+    fn a_channel_alone_on_its_line_gets_a_slug_and_its_comment() {
+        let text = "! id: x\n! name: X\n! category: religion\n! action: hide\n! default: off\n! source: https://example.org\n\n@Some.Channel_1  # runs the shows\nUCxxxxxxxxxxxxxxxxxxxxxx\n";
+        let list = parse(text, "x").unwrap();
+        assert_eq!(list.records[0].slug, "some-channel-1");
+        assert_eq!(list.records[0].handles, vec!["some.channel_1"]);
+        assert_eq!(list.records[0].note.as_deref(), Some("runs the shows"));
+        assert_eq!(list.records[1].slug, "ucxxxxxxxxxxxxxxxxxxxxxx");
+        assert_eq!(list.records[1].ids, vec!["UCxxxxxxxxxxxxxxxxxxxxxx"]);
+        assert!(parse("! id: x\n! name: X\n! category: religion\n! action: hide\n! default: off\n\n@a b\n", "x").is_err());
+    }
+
+    #[test]
+    fn the_template_reads_and_checks() {
+        let text = include_str!("../../../lists/template.txt");
+        let list = parse(text, "example-group").unwrap_or_else(|e| panic!("{e:?}"));
+        assert_eq!(list.records.len(), 4);
+        assert!(check_all(&[list], &Default::default()).is_empty());
+    }
 
     #[test]
     fn reads_headers_records_and_attributes() {
@@ -600,7 +644,6 @@ mod tests {
         assert_eq!(list.action, Action::Hide);
         assert!(!list.default_on);
         assert_eq!(list.topics, vec!["法轮功", "Falun Gong"]);
-        assert_eq!(list.legacy, vec!["法轮功"]);
         let epoch = &list.records[0];
         assert_eq!(epoch.slug, "epoch-times");
         assert_eq!(epoch.ids, vec!["UCxxxxxxxxxxxxxxxxxxxxxx"]);
@@ -608,7 +651,6 @@ mod tests {
         assert_eq!(epoch.names, vec!["The Epoch Times", "大纪元", "大紀元"]);
         assert_eq!(epoch.sources, vec!["https://example.org/a"]);
         assert_eq!(epoch.reviewed.as_deref(), Some("2026-11-08"));
-        assert_eq!(epoch.legacy, vec!["法轮功/channel/大纪元"]);
         let ntd = &list.records[1];
         assert_eq!(ntd.prefixes, vec!["新唐人", "NTD"]);
         assert_eq!(ntd.status, Some(Status::Unproven));

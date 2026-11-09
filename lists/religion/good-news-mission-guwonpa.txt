@@ -5,23 +5,7 @@
 ! action: hide
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Good_News_Mission
-! legacy: 救赎派
 
-:xd45ab74c | ^救赎派
-    legacy: 救赎派/channel/救赎派
-:xd5844ae4 | ^救贖派
-    legacy: 救赎派/channel/救贖派
-:x12a9faf1 | ^朴玉洙
-    legacy: 救赎派/channel/朴玉洙
-:xd371671d | ^樸玉洙
-    legacy: 救赎派/channel/樸玉洙
-:xfcf923f2 | ^基督教福音浸信会
-    legacy: 救赎派/channel/基督教福音浸信会
-:x161f134d | ^基督教福音浸信會
-    legacy: 救赎派/channel/基督教福音浸信會
-:good-news-mission | ^Good News Mission
-    legacy: 救赎派/channel/Good News Mission
-:ock-soo-park | ^Ock Soo Park
-    legacy: 救赎派/channel/Ock Soo Park
-:guwonpa | ^Guwonpa
-    legacy: 救赎派/channel/Guwonpa
+:guwonpa | ^救赎派 | ^救贖派 | ^Guwonpa
+:ock-soo-park | ^朴玉洙 | ^樸玉洙 | ^Ock Soo Park
+:good-news-mission | ^基督教福音浸信会 | ^基督教福音浸信會 | ^Good News Mission

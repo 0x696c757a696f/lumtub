@@ -7,25 +7,11 @@
 ! suggested: no
 ! note: WAM is state media; Sky News Arabia is state-linked rather than a government body
 ! source: https://en.wikipedia.org/wiki/Emirates_News_Agency
-! legacy: 阿联酋官方及国家关联媒体
 
-:emirates-news-agency | ^Emirates News Agency
-    legacy: 阿联酋官方及国家关联媒体/channel/Emirates News Agency
-:x7662933d | ^阿联酋通讯社
-    legacy: 阿联酋官方及国家关联媒体/channel/阿联酋通讯社
+:emirates-news-agency | =WAM | ^Emirates News Agency | ^阿联酋通讯社
 :abu-dhabi-media | ^Abu Dhabi Media
-    legacy: 阿联酋官方及国家关联媒体/channel/Abu Dhabi Media
 :abu-dhabi-tv | ^Abu Dhabi TV
-    legacy: 阿联酋官方及国家关联媒体/channel/Abu Dhabi TV
 :dubai-media | ^Dubai Media
-    legacy: 阿联酋官方及国家关联媒体/channel/Dubai Media
 :dubai-tv | ^Dubai TV
-    legacy: 阿联酋官方及国家关联媒体/channel/Dubai TV
 :al-emarat-tv | ^Al Emarat TV
-    legacy: 阿联酋官方及国家关联媒体/channel/Al Emarat TV
-:sky-news-arabia | ^Sky News Arabia
-    legacy: 阿联酋官方及国家关联媒体/channel/Sky News Arabia
-:xcd06dff2 | ^سكاي نيوز عربية
-    legacy: 阿联酋官方及国家关联媒体/channel/سكاي نيوز عربية
-:wam | =WAM
-    legacy: 阿联酋官方及国家关联媒体/exact/WAM
+:sky-news-arabia | ^Sky News Arabia | ^سكاي نيوز عربية

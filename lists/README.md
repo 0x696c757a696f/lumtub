@@ -10,6 +10,7 @@ The lists are the files in this folder, one file per group:
 - [`state-media/`](state-media/): state propaganda media
 - [`retired.txt`](retired.txt): keys of removed entries, which are never used again
 - [`schema.md`](schema.md): the file format, the categories and the evidence each one needs
+- [`template.txt`](template.txt): a filled-in list file to copy
 
 When a change to these files is merged, GitHub Actions checks every list, compiles them into one `lists.json`, signs it with the same keys as Lumtub's own updates and publishes it on the [`lists` release](https://github.com/0x696c757a696f/lumtub/releases/tag/lists). Lumtub fetches it once a day and uses it from the next start, so a fix reaches everyone without a new app version. Settings › Home & search settings › Update block lists automatically turns this off.
 
@@ -21,11 +22,17 @@ Anyone can suggest a channel to add, or report one listed by mistake. Every entr
 
 **With a pull request:**
 
-1. Fork the repository and edit the list's file here (or add a new file; see [`schema.md`](schema.md)).
-2. Add one line per channel, with its channel id (`UC…`) or @handle wherever you can, and a `source:` line under it:
+1. Fork the repository and edit the list's file here, or copy [`template.txt`](template.txt) to start a new list.
+2. Add one line per channel. The simplest is its @handle or channel id (`UC…`, on the channel's About page), with a comment if you like:
 
    ```
-   :epoch-times | UCxxxxxxxxxxxxxxxxxxxxxx | @EpochTimes | =The Epoch Times
+   @EpochTimes  # the group's newspaper
+   ```
+
+   When a channel goes by several names, put them all on one line, and add a `source:` line under it when the list's own source does not cover it:
+
+   ```
+   :epoch-times | UCxxxxxxxxxxxxxxxxxxxxxx | @EpochTimes | =The Epoch Times | =大纪元
        source: https://en.wikipedia.org/wiki/The_Epoch_Times
        reviewed: 2026-11-09
    ```
@@ -49,6 +56,7 @@ Lumtub 可以隐藏争议宗教团体和官方宣传媒体的频道。默认什�
 - [`state-media/`](state-media/)：官方宣传媒体
 - [`retired.txt`](retired.txt)：已删除条目的键，永远不再使用
 - [`schema.md`](schema.md)：文件格式、分类和每类需要的证据（英文）
+- [`template.txt`](template.txt)：填好的示例文件，复制它就能新建列表
 
 改动合并后，GitHub Actions 会检查所有列表，编译成一个 `lists.json`，用和 Lumtub 自身更新相同的密钥签名，发布到 [`lists` 发布页](https://github.com/0x696c757a696f/lumtub/releases/tag/lists)。Lumtub 每天检查一次，下次启动时生效，所以修正不用等新版本就能到每个人手里。设置 › 首页与搜索设置 › 自动更新屏蔽列表 可以关掉。
 
@@ -60,8 +68,8 @@ Lumtub 可以隐藏争议宗教团体和官方宣传媒体的频道。默认什�
 
 **提交 pull request：**
 
-1. Fork 仓库，编辑这里对应列表的文件（或者新建一个文件，格式见 [`schema.md`](schema.md)）。
-2. 每个频道一行，尽量写上频道 ID（`UC…`）或 @handle，下面加一行 `source:` 写来源，例子见上面英文部分。
+1. Fork 仓库，编辑这里对应列表的文件；新建列表就复制 [`template.txt`](template.txt)。
+2. 每个频道一行。最简单的是只写它的 @handle 或频道 ID（`UC…`，在频道“简介”里），后面可以用 `#` 加注释，比如 `@EpochTimes  # 该团体的报纸`。同一个频道有好几个名字时，全写在一行里；列表本身的来源不能说明它时，下面加一行 `source:`。例子见上面英文部分。
 3. 开 pull request。Block lists 检查会按应用的读法读一遍所有文件，并在运行摘要里列出你的改动加了什么、删了什么。前缀写错、频道 ID 格式不对或 slug 重复都会失败。
 4. 删除条目时，删掉那一行，并把它的键（`列表id/slug`）加进 `retired.txt`。
 

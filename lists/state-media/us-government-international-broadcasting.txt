@@ -7,53 +7,13 @@
 ! suggested: no
 ! note: Funded by the US Agency for Global Media with editorial independence in law, unlike media whose content a government controls
 ! source: https://en.wikipedia.org/wiki/United_States_Agency_for_Global_Media
-! legacy: 美国政府国际广播
 
-:voa | ^VOA
-    legacy: 美国政府国际广播/channel/VOA
-:voice-of-america | ^Voice of America
-    legacy: 美国政府国际广播/channel/Voice of America
-:x6da55d89 | ^美国之音
-    legacy: 美国政府国际广播/channel/美国之音
-:x3a0fd113 | ^美國之音
-    legacy: 美国政府国际广播/channel/美國之音
-:radio-free-asia | ^Radio Free Asia
-    legacy: 美国政府国际广播/channel/Radio Free Asia
-:x69b048e6 | ^自由亚洲电台
-    legacy: 美国政府国际广播/channel/自由亚洲电台
-:xc36afd1c | ^自由亞洲電台
-    legacy: 美国政府国际广播/channel/自由亞洲電台
-:radio-free-europe | ^Radio Free Europe
-    legacy: 美国政府国际广播/channel/Radio Free Europe
-:rfe-rl | ^RFE/RL
-    legacy: 美国政府国际广播/channel/RFE/RL
-:radio-liberty | ^Radio Liberty
-    legacy: 美国政府国际广播/channel/Radio Liberty
-:x9efa0840 | ^Радио Свобода
-    legacy: 美国政府国际广播/channel/Радио Свобода
-:radio-svoboda | ^Radio Svoboda
-    legacy: 美国政府国际广播/channel/Radio Svoboda
-:current-time | ^Current Time
-    legacy: 美国政府国际广播/channel/Current Time
-:x8cf66e7c | ^Настоящее время
-    legacy: 美国政府国际广播/channel/Настоящее время
-:radio-mart | ^Radio Martí
-    legacy: 美国政府国际广播/channel/Radio Martí
-:tv-mart | ^TV Martí
-    legacy: 美国政府国际广播/channel/TV Martí
-:mart-noticias | ^Martí Noticias
-    legacy: 美国政府国际广播/channel/Martí Noticias
-:alhurra | ^Alhurra
-    legacy: 美国政府国际广播/channel/Alhurra
-:xec41e322 | ^الحرة
-    legacy: 美国政府国际广播/channel/الحرة
+:voice-of-america | ^VOA | ^Voice of America | ^美国之音 | ^美國之音
+:radio-free-asia | =RFA | ^Radio Free Asia | ^自由亚洲电台 | ^自由亞洲電台
+:rferl | ^Radio Free Europe | ^RFE/RL | ^Radio Liberty | ^Радио Свобода | ^Radio Svoboda
+:current-time | ^Current Time | ^Настоящее время
+:marti | ^Radio Martí | ^TV Martí | ^Martí Noticias
+:alhurra | ^Alhurra | ^الحرة
 :radio-sawa | ^Radio Sawa
-    legacy: 美国政府国际广播/channel/Radio Sawa
-:middle-east-broadcasting-networks | ^Middle East Broadcasting Networks
-    legacy: 美国政府国际广播/channel/Middle East Broadcasting Networks
-:rfa | =RFA
-    legacy: 美国政府国际广播/exact/RFA
-:ocb | =OCB
-    legacy: 美国政府国际广播/exact/OCB
-:mbn | =MBN
-    legacy: 美国政府国际广播/exact/MBN
+:middle-east-broadcasting-networks | =MBN | ^Middle East Broadcasting Networks
+:office-of-cuba-broadcasting | =OCB

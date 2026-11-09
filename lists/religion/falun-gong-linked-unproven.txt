@@ -4,59 +4,40 @@
 ! category: religion
 ! action: hide
 ! default: off
-! legacy: 法轮功相关（待核实）
 
-:x8dbe752f | ^西岸观察 | ^西岸觀察
-    legacy: 法轮功相关（待核实）/channel/西岸观察
+:xi-an-guancha | ^西岸观察 | ^西岸觀察
     status: unproven
-:x2d424de8 | ^金泉看世界
-    legacy: 法轮功相关（待核实）/channel/金泉看世界
+:jinquan-kan-shijie | ^金泉看世界
     status: unproven
-:x74dae0dc | ^文睿看世界
-    legacy: 法轮功相关（待核实）/channel/文睿看世界
+:wenrui-kan-shijie | ^文睿看世界
     status: unproven
-:x196ccf0a | ^有冇搞错 | ^有冇搞錯
-    legacy: 法轮功相关（待核实）/channel/有冇搞错
+:you-mo-gao-cuo | ^有冇搞错 | ^有冇搞錯
     status: unproven
-:xd3e61352 | ^纪元生活 | ^紀元生活
-    legacy: 法轮功相关（待核实）/channel/纪元生活
+:jiyuan-shenghuo | ^纪元生活 | ^紀元生活
     status: unproven
-:xeca2d731 | ^新视野 | ^新視野
-    legacy: 法轮功相关（待核实）/channel/新视野
+:xin-shiye | ^新视野 | ^新視野
     status: unproven
-:x2bfcea4f | ^财经向前看 | ^財經向前看
-    legacy: 法轮功相关（待核实）/channel/财经向前看
+:caijing-xiang-qian-kan | ^财经向前看 | ^財經向前看
     status: unproven
-:xb30bb0e2 | ^慧月瞰今昔
-    legacy: 法轮功相关（待核实）/channel/慧月瞰今昔
+:huiyue-kan-jinxi | ^慧月瞰今昔
     status: unproven
-:xcb443ce8 | ^澳洲生活台 | ^澳洲生活臺
-    legacy: 法轮功相关（待核实）/channel/澳洲生活台
+:aozhou-shenghuo-tai | ^澳洲生活台 | ^澳洲生活臺
     status: unproven
-:x7d1f20b2 | ^纪载香港 | ^紀載香港
-    legacy: 法轮功相关（待核实）/channel/纪载香港
+:jizai-xianggang | ^纪载香港 | ^紀載香港
     status: unproven
-:xd2719382 | ^公民老黑
-    legacy: 法轮功相关（待核实）/channel/公民老黑
+:gongmin-laohei | ^公民老黑
     status: unproven
-:x8c37749b | ^紫菱讲故事 | ^紫菱講故事
-    legacy: 法轮功相关（待核实）/channel/紫菱讲故事
+:ziling-jiang-gushi | ^紫菱讲故事 | ^紫菱講故事
     status: unproven
-:xf2ea5131 | ^信不信由你
-    legacy: 法轮功相关（待核实）/channel/信不信由你
+:xin-bu-xin-you-ni | ^信不信由你
     status: unproven
-:xaeeb550c | ^镜像世界 | ^鏡像世界 | ^映象世界
-    legacy: 法轮功相关（待核实）/channel/镜像世界
+:jingxiang-shijie | ^镜像世界 | ^鏡像世界 | ^映象世界
     status: unproven
-:x4aa14dc0 | ^新奇世界
-    legacy: 法轮功相关（待核实）/channel/新奇世界
+:xinqi-shijie | ^新奇世界
     status: unproven
-:x7a09e712 | ^珍言真语 | ^珍言真語
-    legacy: 法轮功相关（待核实）/channel/珍言真语
+:zhenyan-zhenyu | ^珍言真语 | ^珍言真語
     status: unproven
-:x48a59c27 | ^正知卓见 | ^正知卓見
-    legacy: 法轮功相关（待核实）/channel/正知卓见
+:zhengzhi-zhuojian | ^正知卓见 | ^正知卓見
     status: unproven
-:x09fdd9e5 | ^清透世界
-    legacy: 法轮功相关（待核实）/channel/清透世界
+:qingtou-shijie | ^清透世界
     status: unproven

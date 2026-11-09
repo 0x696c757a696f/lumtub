@@ -5,21 +5,7 @@
 ! action: hide
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Scientology
-! legacy: 科学教
 
-:xebee6120 | ^科学神教
-    legacy: 科学教/channel/科学神教
-:xac378b9a | ^科學神教
-    legacy: 科学教/channel/科學神教
-:x24603dbd | ^山达基
-    legacy: 科学教/channel/山达基
-:x5ec15ea7 | ^山達基
-    legacy: 科学教/channel/山達基
-:xda4270fe | ^戴尼提
-    legacy: 科学教/channel/戴尼提
-:scientology | ^Scientology
-    legacy: 科学教/channel/Scientology
-:dianetics | ^Dianetics
-    legacy: 科学教/channel/Dianetics
+:scientology | ^科学神教 | ^科學神教 | ^山达基 | ^山達基 | ^Scientology
+:dianetics | ^戴尼提 | ^Dianetics
 :l-ron-hubbard | ^L. Ron Hubbard
-    legacy: 科学教/channel/L. Ron Hubbard

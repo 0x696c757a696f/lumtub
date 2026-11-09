@@ -5,21 +5,8 @@
 ! action: hide
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Jehovah%27s_Witnesses
-! legacy: 耶和华见证人
 
-:x0a837306 | ^耶和华见证人
-    legacy: 耶和华见证人/channel/耶和华见证人
-:x2e713d59 | ^耶和華見證人
-    legacy: 耶和华见证人/channel/耶和華見證人
-:x75fe3e75 | ^守望台
-    legacy: 耶和华见证人/channel/守望台
-:x7aec5de7 | ^守望臺
-    legacy: 耶和华见证人/channel/守望臺
-:jehovahs-witness | ^Jehovah's Witness
-    legacy: 耶和华见证人/channel/Jehovah's Witness
-:jehovahs-witness-channel | ^Jehovah’s Witness
-    legacy: 耶和华见证人/channel/Jehovah’s Witness
+:jehovahs-witnesses | ^耶和华见证人 | ^耶和華見證人 | ^Jehovah's Witness | ^Jehovah’s Witness
+:watchtower | ^守望台 | ^守望臺
 :jw-org | ^JW.org
-    legacy: 耶和华见证人/channel/JW.org
 :jw-broadcasting | ^JW Broadcasting
-    legacy: 耶和华见证人/channel/JW Broadcasting

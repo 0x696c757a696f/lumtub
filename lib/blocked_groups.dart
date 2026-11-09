@@ -90,8 +90,7 @@ class BlockedGroup {
 
   factory BlockedGroup.fromJson(Map<String, dynamic> json) {
     final id = json['id'] as String;
-    final legacy = (json['legacy'] as List<dynamic>?)?.cast<String>() ?? const [];
-    final name = legacy.isNotEmpty ? legacy.first : id;
+    final name = id;
     List<String> strings(Object? value) => (value as List<dynamic>?)?.cast<String>() ?? const [];
     return BlockedGroup(
       name: name,
@@ -109,8 +108,8 @@ class BlockedGroup {
     );
   }
 
-  /// Saved in the preferences when the user ticks or unticks it: the name
-  /// it had before the lists were files (`legacy` in its file), else its id.
+  /// Saved in the preferences when the user ticks or unticks it: the list
+  /// file's id (older names are carried over by block_list_renames.dart).
   final String name;
   /// The list file's id.
   final String id;
@@ -158,12 +157,11 @@ class BlockEntry {
             : handles.isNotEmpty
                 ? (BlockKind.handle, handles)
                 : (BlockKind.id, ids);
-    final legacy = strings('legacy');
     return BlockEntry(
       group,
       kind,
       [...forms, if (kind != BlockKind.exact) ...names, if (kind != BlockKind.handle) ...handles, if (kind != BlockKind.id) ...ids],
-      key: legacy.isNotEmpty ? legacy.first : '$list/${record['slug']}',
+      key: '$list/${record['slug']}',
       prefixes: prefixes,
       names: names,
       handles: handles,

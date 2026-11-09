@@ -6,17 +6,10 @@
 ! default: off
 ! note: Some are run by the government, others by the ruling party or family
 ! source: https://en.wikipedia.org/wiki/Canal_6_(Nicaragua)
-! legacy: 尼加拉瓜官方媒体
 
 :canal-6-nicaragua | ^Canal 6 Nicaragua
-    legacy: 尼加拉瓜官方媒体/channel/Canal 6 Nicaragua
 :el-19-digital | ^El 19 Digital
-    legacy: 尼加拉瓜官方媒体/channel/El 19 Digital
 :el-19-tv | ^El 19 TV
-    legacy: 尼加拉瓜官方媒体/channel/El 19 TV
 :radio-nicaragua | ^Radio Nicaragua
-    legacy: 尼加拉瓜官方媒体/channel/Radio Nicaragua
 :la-nueva-radio-ya | ^La Nueva Radio Ya
-    legacy: 尼加拉瓜官方媒体/channel/La Nueva Radio Ya
 :barricada | =Barricada
-    legacy: 尼加拉瓜官方媒体/exact/Barricada

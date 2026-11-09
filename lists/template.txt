@@ -1,0 +1,50 @@
+# Template for a new block list. Copy it to <category>/<id>.txt, for
+# example religion/example-group.txt, fill it in and delete these comments.
+# The full format is in schema.md; README.md says how to send it.
+#
+# 新屏蔽列表的模板。复制成 <分类>/<id>.txt，比如 religion/example-group.txt，
+# 填好后删掉这些注释。完整格式见 schema.md，怎么提交见 README.md。
+
+# The header: one "! key: value" per line, before the first channel.
+# 文件头：每行一个 "! 键: 值"，写在第一个频道之前。
+! id: example-group
+! name: Example Group
+! name.zh-Hans: 示例团体
+! name.zh-Hant: 示例團體
+! category: religion
+! action: hide
+! default: off
+! note: One line shown in settings: who runs these channels
+! source: https://en.wikipedia.org/wiki/Example
+
+# The simplest entry: the channel's @handle or channel id (UC…, on its About
+# page) alone on a line, with a comment after # if you like.
+# 最简单的写法：一行一个频道的 @handle 或频道 ID（UC 开头，在频道“简介”
+# 里），后面可以用 # 加注释。
+@ExampleNews  # the group's news channel / 该团体的新闻频道
+UCyyyyyyyyyyyyyyyyyyyyyy  # its English channel / 英文频道
+
+# The full form, for a channel known by several names or one that needs its
+# own source:
+# 完整写法，用于有多个名字或需要单独写来源的频道：
+# One line per channel: ":slug" and then every way to recognise it, split by
+# "|". The channel id (UC…, on the channel's About page) never changes and
+# is the best; the @handle comes next. "=" is the exact channel name, "^" a
+# name that may carry a suffix such as "Example TV English".
+# Indented lines under it: where the evidence is, when it was checked.
+#
+# 每个频道一行：先写 ":slug"，再用 "|" 列出认出它的各种方式。频道 ID
+# （UC 开头，在频道的“简介”里）永远不变，最可靠；其次是 @handle。"=" 是
+# 完整的频道名，"^" 是可能带后缀的名字，比如 "Example TV English"。
+# 下面缩进的行写证据来源和核对日期。
+:example-tv | UCxxxxxxxxxxxxxxxxxxxxxx | @ExampleTV | =Example TV | ^示例电视台 | ^示例電視台
+    source: https://en.wikipedia.org/wiki/Example_TV
+    reviewed: 2026-11-09
+
+# A channel tied to the group by weaker evidence: "status: unproven" ships
+# it unticked, so a user decides.
+# 证据较弱的频道加 "status: unproven"，默认不勾选，由用户决定。
+:example-founder | @ExampleFounder | =Example Founder
+    status: unproven
+    source: https://example.org/report
+    reviewed: 2026-11-09

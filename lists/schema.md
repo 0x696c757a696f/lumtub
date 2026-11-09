@@ -16,14 +16,18 @@ Only a list of P0 categories may be `default: on`. P0 lists take no `topic` and 
 
 ## Syntax
 
-UTF-8 without a BOM. LF line ends. Three kinds of line:
+UTF-8 without a BOM. LF line ends. [template.txt](template.txt) is a filled-in example to copy. These kinds of line:
 
 ```
 ! key: value                      list header (only before the first record)
-:slug | cond | cond | ...         one channel
+@handle  # comment                one channel by its @handle (the comment is optional)
+UCxxxxxxxxxxxxxxxxxxxxxx  # ...   one channel by its channel id
+:slug | cond | cond | ...         one channel with several conditions
     key: value                    attribute of the record above (indented)
 # comment                         ignored; blank lines are ignored too
 ```
+
+A channel on a line of its own gets its handle or id, in lowercase with other signs as `-`, as its slug, and the comment after it as its note. Use the `:slug` form when a channel is known by several names or handles: all the ways to recognise one channel belong on one line.
 
 ### Header keys
 
@@ -38,11 +42,10 @@ UTF-8 without a BOM. LF line ends. Three kinds of line:
 | `topic` | no, repeatable | Words a search names this list's subject by, such as `法轮功`, `Falun Gong`, `Russia Today` (see Searches). Not allowed on P0 lists. |
 | `note` | no | One line shown in settings, such as "Funded by the US Agency for Global Media with editorial independence in law". |
 | `source` | no, repeatable | URL of the evidence for the list as a whole. |
-| `legacy` | migration only | Old `BlockedGroup.name`, such as `法轮功`, so saved choices move over. |
 
 ### Records
 
-- A record starts with `:slug`, its stable id, `[a-z0-9-]+`. It must be unique within the file. The full key is `list-id/slug`, such as `falun-gong-media/epoch-times`. The key never changes. A renamed channel keeps its slug, and a removed slug is never reused.
+- A `:slug` record starts with its stable id, `[a-z0-9-]+`. It must be unique within the file. The full key is `list-id/slug`, such as `falun-gong-media/epoch-times`. The key never changes. A renamed channel keeps its slug, and a removed slug is never reused.
 - The conditions follow, separated by `|`. A channel matches if any condition matches; their order does not matter.
 - Spaces around each field are dropped. Spaces inside a name are kept.
 - Each condition starts with a fixed prefix:
@@ -65,7 +68,6 @@ UTF-8 without a BOM. LF line ends. Three kinds of line:
 | `source` | Evidence URL (repeatable). |
 | `reviewed` | `YYYY-MM-DD` of the last check. |
 | `note` | Why this channel belongs to the list, if not obvious. |
-| `legacy` | Old `BlockEntry.key` values this record replaces (repeatable; migration only). |
 
 ### Name start (`^`)
 
@@ -86,12 +88,10 @@ A CJK name that really appears with suffixes gets its channel id or `=` forms in
 ! topic: Falun Gong
 ! note: Media the Falun Gong founded or runs
 ! source: https://example.org/evidence
-! legacy: 法轮功
 
 :epoch-times | UCxxxxxxxxxxxxxxxxxxxxxx | @EpochTimes | =The Epoch Times | =大纪元 | =大紀元
     source: https://example.org/epoch-times
     reviewed: 2026-11-08
-    legacy: 法轮功/channel/大纪元
 :ntd | @NTDTelevision | ^新唐人 | ^NTD
 ```
 

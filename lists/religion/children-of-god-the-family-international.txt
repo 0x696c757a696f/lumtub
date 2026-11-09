@@ -5,13 +5,7 @@
 ! action: hide
 ! default: off
 ! source: https://en.wikipedia.org/wiki/The_Family_International
-! legacy: 天父的儿女
 
-:xc9cad444 | ^天父的儿女
-    legacy: 天父的儿女/channel/天父的儿女
-:xc2c09911 | ^天父的兒女
-    legacy: 天父的儿女/channel/天父的兒女
+:children-of-god | ^天父的儿女 | ^天父的兒女
 :family-international | ^Family International
-    legacy: 天父的儿女/channel/Family International
 :david-berg | ^David Berg
-    legacy: 天父的儿女/channel/David Berg

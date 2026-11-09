@@ -5,9 +5,6 @@
 ! action: hide
 ! default: off
 ! source: https://en.wikipedia.org/wiki/NXIVM
-! legacy: NXIVM
 
 :nxivm | ^NXIVM
-    legacy: NXIVM/channel/NXIVM
 :keith-raniere | ^Keith Raniere
-    legacy: NXIVM/channel/Keith Raniere

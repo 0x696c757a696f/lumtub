@@ -64,7 +64,6 @@ class AppPreferences {
     this.allowedGroups = const [],
     this.blockStateMedia = false,
     this.blockOtherLists = true,
-    this.listsAsked = false,
     this.allowedMedia = const [],
     this.reversedPlaylists = const [],
     this.castMaxHeight = 1080,
@@ -162,7 +161,7 @@ class AppPreferences {
   final bool hideWatched;
   /// Hides the lists of lists/religion from recommendations, explore and
   /// search, unless a search names the channel exactly. Off for a new
-  /// install until the first run asks ([listsAsked]).
+  /// install; turned on in settings.
   final bool blockGroups;
   /// [BlockedGroup.name]s the user unticked, so they show.
   final List<String> allowedGroups;
@@ -174,9 +173,6 @@ class AppPreferences {
   /// Hides the lists of every other category of lists/ (scams, malware,
   /// fake cures and the rest), of which only safety lists start ticked.
   final bool blockOtherLists;
-  /// Whether the first run asked which block lists to turn on; true for
-  /// preferences saved before it asked.
-  final bool listsAsked;
   /// Playlists shown and played last to first (倒序), by id.
   final List<String> reversedPlaylists;
   /// 投屏画质: the tallest picture sent to a TV, 1080, 2160 or 4320. Above
@@ -412,7 +408,6 @@ class AppPreferences {
     bool? blockStateMedia,
     List<String>? allowedMedia,
     bool? blockOtherLists,
-    bool? listsAsked,
     List<String>? reversedPlaylists,
     int? castMaxHeight,
     Map<String, String>? castFormats,
@@ -495,7 +490,6 @@ class AppPreferences {
         blockStateMedia: blockStateMedia ?? this.blockStateMedia,
         allowedMedia: allowedMedia ?? this.allowedMedia,
         blockOtherLists: blockOtherLists ?? this.blockOtherLists,
-        listsAsked: listsAsked ?? this.listsAsked,
         reversedPlaylists: reversedPlaylists ?? this.reversedPlaylists,
         castMaxHeight: castMaxHeight ?? this.castMaxHeight,
         castFormats: castFormats ?? this.castFormats,
@@ -579,7 +573,6 @@ class AppPreferences {
         'blockStateMedia': blockStateMedia,
         'allowedMedia': allowedMedia,
         'blockOtherLists': blockOtherLists,
-        'listsAsked': listsAsked,
         'reversedPlaylists': reversedPlaylists,
         'castMaxHeight': castMaxHeight,
         'castFormats': castFormats,
@@ -708,7 +701,6 @@ class AppPreferences {
       blockGroups: flag('blockGroups', true),
       blockStateMedia: flag('blockStateMedia', d.blockStateMedia),
       blockOtherLists: flag('blockOtherLists', d.blockOtherLists),
-      listsAsked: flag('listsAsked', true),
       filterSubscriptions: flag('filterSubscriptions', d.filterSubscriptions),
       homeShowContinue: flag('homeShowContinue', d.homeShowContinue),
       homeShowRecent: flag('homeShowRecent', d.homeShowRecent),

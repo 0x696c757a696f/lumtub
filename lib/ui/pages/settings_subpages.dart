@@ -37,6 +37,7 @@ import 'translation_settings_page.dart';
 import '../../l10n/l10n.dart';
 import '../motion.dart';
 import '../app_icons.dart';
+import '../skin_paint.dart';
 
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
 
@@ -44,7 +45,7 @@ const _repository = 'https://github.com/0x696c757a696f/lumtub';
 Future<void> _push(BuildContext context, AppController controller, String title, List<Widget> Function(BuildContext context) children, {List<Widget>? actions}) =>
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => Scaffold(
-        appBar: AppBar(title: Text(title), actions: actions),
+        appBar: SkinAppBar(AppBar(title: Text(title), actions: actions)),
         body: ListenableBuilder(
           listenable: controller,
           builder: (context, _) => ListView(padding: const EdgeInsets.only(bottom: 40), children: children(context)),
@@ -717,7 +718,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(tr('App font'))),
+        appBar: SkinAppBar(AppBar(title: Text(tr('App font')))),
         body: ListenableBuilder(
           listenable: widget.controller,
           builder: (context, _) {
@@ -828,7 +829,7 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
   Widget build(BuildContext context) {
     final controller = widget.controller;
     return Scaffold(
-      appBar: AppBar(
+      appBar: SkinAppBar(AppBar(
         title: Text(tr('Video and A/V sync adjustments')),
         actions: [
           TextButton(
@@ -847,7 +848,7 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
           ),
           const SizedBox(width: 8),
         ],
-      ),
+      )),
       body: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
         _header(context, tr('Video')),
         for (final (key, label) in pictureProperties)
@@ -1134,7 +1135,7 @@ class _LogsPageState extends State<_LogsPage> {
         if (levels[i].index <= _shown.index) (lines[i], levels[i]),
     ];
     return Scaffold(
-      appBar: AppBar(
+      appBar: SkinAppBar(AppBar(
         title: Text(tr('Logs')),
         actions: [
           PopupMenuButton<int>(
@@ -1153,7 +1154,7 @@ class _LogsPageState extends State<_LogsPage> {
           ),
           const SizedBox(width: 4),
         ],
-      ),
+      )),
       body: text == null
           ? const Center(child: CircularProgressIndicator())
           : Column(children: [

@@ -252,10 +252,8 @@ void main() {
     expect(back.blockedChannelNames, ['X']);
     expect(back.blockGroups, isFalse);
     expect(const AppPreferences().blockGroups, isFalse);
-    expect(const AppPreferences().listsAsked, isFalse);
     // Preferences saved before the first-run question keep blocking.
     expect(AppPreferences.fromJson({}).blockGroups, isTrue);
-    expect(AppPreferences.fromJson({}).listsAsked, isTrue);
   });
 
   test('block lists hide the blocked channel only, never other channels\' videos naming it', () {

@@ -59,7 +59,7 @@ class _SkinsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final library = SkinLibrary.instance;
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Skins'))),
+      appBar: SkinAppBar(AppBar(title: Text(tr('Skins')))),
       body: ListenableBuilder(
         listenable: Listenable.merge([controller, library]),
         builder: (context, _) {
@@ -94,8 +94,8 @@ class _SkinsPage extends StatelessWidget {
                 leading: Icon(AppIcons.drop),
                 title: Text(tr('Glass')),
                 subtitle: Slider(
-                  value: appearance.glassOpacity.clamp(context.skin!.glassMin, 1),
-                  min: context.skin!.glassMin,
+                  value: appearance.glassOpacity.clamp(SkinGlass.min, 1),
+                  min: SkinGlass.min,
                   label: tr('{0}% solid', [(appearance.glassOpacity * 100).round()]),
                   onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(glassOpacity: v)),
                 ),

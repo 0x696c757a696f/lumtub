@@ -2994,8 +2994,6 @@
   "Choose the keys for seeking, volume, fullscreen and more": "设置快进快退、音量、全屏等功能的按键",
   "mouse back": "鼠标 返回",
   "{0} were found, and your filters and settings left all of them out": "找到了 {0} 个，但都被你的筛选和设置排除了",
-  "Block lists": "屏蔽列表",
-  "Lumtub can leave some channels out of recommendations, Explore and search. Nothing is blocked unless you tick it, and you can change this later in Settings.": "Lumtub 可以把某些频道从推荐、探索和搜索里去掉。不勾选就不会屏蔽任何频道，以后也可以在设置里修改。",
   "The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.": "电视还没有来向 Lumtub 取视频。如果一直不开始播放，可能是这台电脑的防火墙挡住了 Lumtub，请允许它在当前网络中通信。",
   "Cast format": "投屏格式",
   "Pair with {0}": "与 {0} 配对",

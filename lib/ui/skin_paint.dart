@@ -102,6 +102,14 @@ abstract final class SkinGlass {
   /// Seeing through to the desktop: how much of the skin's page colour is
   /// still laid over it, so text stays readable on any wallpaper.
   static const desk = 0.7;
+
+  /// How much of a skin's page colour stays over the backdrop under the
+  /// pages ([Skin.veil], [desk]): all of it down to the clearest glass the
+  /// skin keeps readable ([Skin.glassMin]), less below that.
+  static double thinning(Skin skin) => skin.glass && opacity < skin.glassMin ? opacity / skin.glassMin : 1;
+
+  /// [desk] for [skin], thinned by clearer glass.
+  static double deskFor(Skin skin) => desk * thinning(skin);
 }
 
 class SurfaceDecoration extends Decoration {
@@ -304,7 +312,7 @@ class SkinBackdrop extends StatelessWidget {
         // Pure black in dark mode replaces the page of a skin that follows
         // the theme mode, as it does Lumtub's own.
         if (seeThrough)
-          ColoredBox(color: skin.colors.page.withValues(alpha: SkinGlass.desk))
+          ColoredBox(color: skin.colors.page.withValues(alpha: SkinGlass.deskFor(skin)))
         else
           ColoredBox(color: skin.followsThemeMode && Theme.of(context).colorScheme.surface == Colors.black ? Colors.black : skin.colors.page),
         if (skin.background.isNotEmpty && !seeThrough) SkinLayers(skin.background),
@@ -482,4 +490,29 @@ class SkinDecorationPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(SkinDecorationPainter old) => !identical(old.decorations, decorations);
+}
+
+/// A page's [bar] drawn on the skin's top bar, glass included, with its
+/// text colour; Lumtub's own bar without a skin.
+class SkinAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const SkinAppBar(this.bar, {super.key});
+  final AppBar bar;
+
+  @override
+  Size get preferredSize => bar.preferredSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.skin;
+    final top = skin?.topBar;
+    if (skin == null || top == null) return bar;
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: SurfaceDecoration.of(context, top),
+      child: Theme(
+        data: theme.copyWith(appBarTheme: theme.appBarTheme.copyWith(backgroundColor: Colors.transparent, foregroundColor: skin.topBarText)),
+        child: bar,
+      ),
+    );
+  }
 }

@@ -31,7 +31,6 @@ import 'frame_stats.dart';
 import 'motion.dart';
 import 'player_shortcuts.dart';
 import 'app_icons.dart';
-import 'block_lists_prompt.dart';
 import 'skin_chrome.dart';
 import 'skin_paint.dart';
 import '../skins/skin_library.dart';
@@ -107,15 +106,6 @@ class _AppShellState extends State<AppShell> {
         }
       });
     }
-    // The saved preferences are read after the first frame; until then
-    // they are the defaults, which have not asked.
-    if (!SmokeCheck.requested) {
-      if (_controller.preferencesLoaded) {
-        _askListsIfNew();
-      } else {
-        _controller.addListener(_askListsOnceLoaded);
-      }
-    }
     _finished = _controller.finishedDownloads.listen((task) {
       final path = task.filePath;
       if (!mounted || path == null) return;
@@ -129,22 +119,8 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
-  void _askListsOnceLoaded() {
-    if (!_controller.preferencesLoaded) return;
-    _controller.removeListener(_askListsOnceLoaded);
-    _askListsIfNew();
-  }
-
-  void _askListsIfNew() {
-    if (_controller.preferences.listsAsked) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) unawaited(askBlockLists(context, _controller));
-    });
-  }
-
   @override
   void dispose() {
-    _controller.removeListener(_askListsOnceLoaded);
     if (WindowChrome.menus.value == _menus) WindowChrome.menus.value = null;
     unawaited(_notices?.cancel());
     unawaited(_waylandTop?.cancel());
@@ -416,7 +392,7 @@ class _AppShellState extends State<AppShell> {
   /// it under the pages, so what is written on them reads.
   Widget _veiled(Skin? skin, Widget page) {
     if (skin == null || skin.veil == 0 || _controller.appearance.lowResource) return page;
-    return ColoredBox(color: skin.colors.page.withValues(alpha: skin.veil), child: page);
+    return ColoredBox(color: skin.colors.page.withValues(alpha: skin.veil * SkinGlass.thinning(skin)), child: page);
   }
 
   String get _pageKey => !_controller.ready ? 'setup' : _controller.onWatchPage ? 'watch' : switch (_controller.mode) {
@@ -465,7 +441,7 @@ void openSettings(BuildContext context, AppController controller, {SettingsCateg
           onPointerDown: (event) {
             if (event.buttons == kBackMouseButton) back();
           },
-          child: Focus(autofocus: true, child: Scaffold(appBar: AppBar(title: Text(tr('Settings'))), body: SettingsPage(controller: controller, initial: category ?? SettingsCategory.account))),
+          child: Focus(autofocus: true, child: Scaffold(appBar: SkinAppBar(AppBar(title: Text(tr('Settings')))), body: SettingsPage(controller: controller, initial: category ?? SettingsCategory.account))),
         ),
       );
     },

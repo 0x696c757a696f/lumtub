@@ -9,6 +9,7 @@ import '../../watch_time.dart';
 import '../../widgets/pilinara_settings_tiles.dart' show confirmDialog;
 import '../theme.dart';
 import '../app_icons.dart';
+import '../skin_paint.dart';
 
 /// [seconds] as 1 小时 5 分 or 12 分钟.
 String watchDuration(int seconds) {
@@ -48,9 +49,9 @@ class _WatchStatsPageState extends State<_WatchStatsPage> {
   Widget build(BuildContext context) {
     final recording = widget.controller.preferences.recordHistory;
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Watch statistics')), actions: [
+      appBar: SkinAppBar(AppBar(title: Text(tr('Watch statistics')), actions: [
         IconButton(tooltip: tr('Clear watch statistics'), icon: Icon(AppIcons.trash), onPressed: _clear),
-      ]),
+      ])),
       body: FutureBuilder<WatchStats?>(
         future: _stats,
         builder: (context, snapshot) {

@@ -3099,6 +3099,17 @@
   "How to make a skin": "Jinsi ya kutengeneza mandhari",
   "The guide, the format and the pitfalls to avoid": "Mwongozo, muundo na makosa ya kuepuka",
   "Use the system title bar": "Tumia upau wa kichwa wa mfumo",
-  "Keep the usual window frame instead of the one a skin draws": "Weka fremu ya kawaida ya dirisha badala ya ile inayochorwa na mandhari",
-  "Problems found": "Matatizo yaliyopatikana"
+  "Problems found": "Matatizo yaliyopatikana",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Weka fremu ya kawaida ya dirisha badala ya upau wa kichwa na upau wa menyu unaochorwa na mandhari",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Hizi hufuata hali ya nyepesi na nyeusi na kuhifadhi maumbo ya Lumtub yenyewe; rangi hubadilika, na upau wa kichwa na upau wa menyu huchukua rangi hizo hizo.",
+  "Hide the title bar": "Ficha upau wa kichwa",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Vitufe vya dirisha huhamia kwenye upau wa menyu. Kwa mandhari zenye upau wa menyu tu",
+  "Light and dark": "Nyepesi na nyeusi",
+  "Light only": "Nyepesi tu",
+  "Dark only": "Nyeusi tu",
+  "Glass": "Kioo",
+  "{0}% solid": "{0}% imara",
+  "See the desktop through the window": "Ona eneo-kazi kupitia dirisha",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Mandhari ya nje hujitenga na eneo-kazi huonekana kupitia dirisha, likiwa na ukungu mfumo unapoweza. Imezimwa katika hali ya rasilimali chache",
+  "Color schemes": "Mipangilio ya rangi"
 }

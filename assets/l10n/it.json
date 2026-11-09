@@ -3099,6 +3099,17 @@
   "How to make a skin": "Come creare un tema",
   "The guide, the format and the pitfalls to avoid": "La guida, il formato e le insidie da evitare",
   "Use the system title bar": "Usa la barra del titolo di sistema",
-  "Keep the usual window frame instead of the one a skin draws": "Mantieni la normale cornice della finestra invece di quella disegnata da un tema",
-  "Problems found": "Problemi trovati"
+  "Problems found": "Problemi trovati",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Mantieni la solita cornice della finestra invece della barra del titolo e della barra dei menu disegnate da un tema",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Questi seguono la modalità chiara e scura e mantengono le forme di Lumtub; cambiano i colori, e la barra del titolo e la barra dei menu prendono gli stessi colori.",
+  "Hide the title bar": "Nascondi la barra del titolo",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "I pulsanti della finestra passano nella barra dei menu. Solo per i temi con barra dei menu",
+  "Light and dark": "Chiaro e scuro",
+  "Light only": "Solo chiaro",
+  "Dark only": "Solo scuro",
+  "Glass": "Vetro",
+  "{0}% solid": "{0}% pieno",
+  "See the desktop through the window": "Vedi il desktop attraverso la finestra",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Il paesaggio si sposta e il desktop traspare, sfocato dove il sistema lo consente. Disattivato in Modalità a basso consumo",
+  "Color schemes": "Combinazioni di colori"
 }

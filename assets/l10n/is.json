@@ -3099,6 +3099,17 @@
   "How to make a skin": "Hvernig á að búa til þema",
   "The guide, the format and the pitfalls to avoid": "Leiðbeiningar, snið og gildrur sem ber að forðast",
   "Use the system title bar": "Nota titilrönd kerfisins",
-  "Keep the usual window frame instead of the one a skin draws": "Halda venjulegum gluggaramma í stað þess sem þema teiknar",
-  "Problems found": "Vandamál fundust"
+  "Problems found": "Vandamál fundust",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Nota venjulega gluggarammann í stað titilrandar og valmyndarstikku sem þema teiknar",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Þetta fylgir ljósri og dökkri stillingu og heldur eigin formum Lumtub; aðeins litirnir breytast og titilrönd og valmyndarstika fá sömu liti.",
+  "Hide the title bar": "Fela titilrönd",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Gluggahnappar fara á valmyndarstikuna. Aðeins fyrir þemu með valmyndarstiku",
+  "Light and dark": "Ljóst og dökkt",
+  "Light only": "Aðeins ljóst",
+  "Dark only": "Aðeins dökkt",
+  "Glass": "Gler",
+  "{0}% solid": "{0}% ógegnsætt",
+  "See the desktop through the window": "Sjá skjáborðið í gegnum gluggann",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Landslagið víkur og skjáborðið sést í gegn, óskýrt þar sem kerfið getur. Slökkt í sparnaðarstillingu",
+  "Color schemes": "Litasamsetningar"
 }

@@ -91,7 +91,7 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 - **SponsorBlock**、**DeArrow** 标题和缩略图、**Return YouTube Dislike**、隐藏所有 Shorts，以及隐藏标注为 AI 生成的视频和社区 AI 垃圾内容名单上频道的 AI 过滤。
 - 代理（系统、HTTP 或 SOCKS5）、可选的加密 DNS，以及作为备用的 Piped 或 Invidious 服务器。
 - **72 种界面语言**，包括从右到左的文字，默认跟随系统语言。欢迎在 [Weblate](https://hosted.weblate.org/engage/lumtub/) 上改进翻译。
-- **皮肤**：换掉整个界面的样子，内置十一套，从千禧年的光泽风格到黑白点阵，还可以用皮肤自己的标题栏和菜单栏。人人都能做皮肤：写一个带注释的 `skin.jsonc` 就行，颜色对比度会自动检查。见 [skins/README.md](skins/README.md)。
+- **皮肤**：换掉整个界面的样子，内置二十三套，从千禧年的光泽风格、Frutiger Aero 风景到黑白点阵，还可以用皮肤自己的标题栏和菜单栏。人人都能做皮肤：写一个带注释的 `skin.jsonc` 就行，颜色对比度会自动检查。见 [skins/README.md](skins/README.md)。
 - 十套配色，浅色深色，可选护眼暖光、字体和卡片大小。
 - 屏蔽任意频道，或只是不再推荐它。
 - 应用、yt-dlp 和 libmpv 都有签名的自动更新，新组件出问题时会自动回退。

@@ -3099,6 +3099,17 @@
   "How to make a skin": "Cum să creezi un skin",
   "The guide, the format and the pitfalls to avoid": "Ghidul, formatul și capcanele de evitat",
   "Use the system title bar": "Folosește bara de titlu a sistemului",
-  "Keep the usual window frame instead of the one a skin draws": "Păstrează cadrul obișnuit al ferestrei în loc de cel desenat de un skin",
-  "Problems found": "Probleme găsite"
+  "Problems found": "Probleme găsite",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Păstrează cadrul obișnuit al ferestrei în loc de bara de titlu și bara de meniu desenate de un skin",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Acestea urmează modul luminos și întunecat și păstrează formele proprii Lumtub; se schimbă culorile, iar bara de titlu și bara de meniu preiau aceleași culori.",
+  "Hide the title bar": "Ascunde bara de titlu",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Butoanele ferestrei se mută în bara de meniu. Doar pentru skinurile cu bară de meniu",
+  "Light and dark": "Luminos și întunecat",
+  "Light only": "Doar luminos",
+  "Dark only": "Doar întunecat",
+  "Glass": "Sticlă",
+  "{0}% solid": "{0}% opac",
+  "See the desktop through the window": "Vezi desktopul prin fereastră",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Peisajul se dă la o parte, iar desktopul se vede prin fereastră, estompat unde sistemul permite. Dezactivat în modul resurse reduse",
+  "Color schemes": "Scheme de culori"
 }

@@ -3099,6 +3099,17 @@
   "How to make a skin": "Kuidas luua skin",
   "The guide, the format and the pitfalls to avoid": "Juhend, vorming ja lõksud, mida vältida",
   "Use the system title bar": "Kasuta süsteemi tiitliriba",
-  "Keep the usual window frame instead of the one a skin draws": "Säilita tavaline akna raam skini joonistatu asemel",
-  "Problems found": "Leitud probleemid"
+  "Problems found": "Leitud probleemid",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Kasuta tavalist akna raami skini joonistatud tiitliriba ja menüüriba asemel",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Need järgivad hele- ja tumedat režiimi ning säilitavad Lumtubi enda kujud; muutuvad värvid, ja tiitliriba ning menüüriba võtavad samad värvid.",
+  "Hide the title bar": "Peida tiitliriba",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Akna nupud liiguvad menüüribale. Ainult menüüribaga skinidele",
+  "Light and dark": "Hele ja tume",
+  "Light only": "Ainult hele",
+  "Dark only": "Ainult tume",
+  "Glass": "Klaas",
+  "{0}% solid": "{0}% läbipaistmatu",
+  "See the desktop through the window": "Näita akna kaudu töölauda",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Maastik astub kõrvale ja töölaud paistab läbi, hägustatuna, kui süsteem seda toetab. Vähese ressursi režiimis väljas",
+  "Color schemes": "Värviskeemid"
 }

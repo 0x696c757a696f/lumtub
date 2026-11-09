@@ -102,8 +102,8 @@ These are also found in other YouTube clients, and all are opt-in here:
 - **SponsorBlock**, **DeArrow** titles and thumbnails, **Return YouTube Dislike**, hide all Shorts, and an AI filter that hides videos labelled as AI and channels on community AI-slop lists.
 - Proxy support (system, HTTP or SOCKS5), optional encrypted DNS, and Piped or Invidious servers as a fallback.
 - **72 interface languages**, right to left included, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
-- **Skins** that change the whole look, eleven built in from Y2K gloss to one-bit pixels, with their own title bar and menu bar if you like. Anyone can make one: a commented `skin.jsonc` file, checked for readable contrast. See [skins/README.md](skins/README.md).
-- Ten palettes, light and dark, plus an optional warm light, fonts and card sizes.
+- **Skins** that change the whole look, 23 built in, from Y2K gloss and Frutiger Aero scenes to one-bit pixels, with their own title bar and menu bar if you like. Anyone can make one: a commented `skin.jsonc` file, checked for readable contrast. See [skins/README.md](skins/README.md).
+- Ten colour schemes, light and dark, plus an optional warm light, fonts and card sizes.
 - Block any channel, or just stop it being recommended.
 - Signed automatic updates for the app, yt-dlp and libmpv, with rollback if a new component breaks.
 

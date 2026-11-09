@@ -3099,6 +3099,17 @@
   "How to make a skin": "Mavzu qanday yaratiladi",
   "The guide, the format and the pitfalls to avoid": "Qo'llanma, format va qochish kerak bo'lgan xatolar",
   "Use the system title bar": "Tizim sarlavha panelidan foydalanish",
-  "Keep the usual window frame instead of the one a skin draws": "Mavzu chizadigan ramka o'rniga odatiy oyna ramkasini saqlash",
-  "Problems found": "Topilgan muammolar"
+  "Problems found": "Topilgan muammolar",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Mavzu chizadigan sarlavha va menyu paneli o'rniga odatiy oyna ramkasini saqlash",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Bular och va qorong'i rejimga mos keladi va Lumtub'ning o'z shakllarini saqlaydi; faqat ranglar o'zgaradi, sarlavha va menyu paneli ham xuddi shu ranglarni oladi.",
+  "Hide the title bar": "Sarlavha panelini yashirish",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Oyna tugmalari menyu paneliga o'tadi. Faqat menyu panelli mavzular uchun",
+  "Light and dark": "Och va qorong'i",
+  "Light only": "Faqat och",
+  "Dark only": "Faqat qorong'i",
+  "Glass": "Shisha",
+  "{0}% solid": "{0}% zich",
+  "See the desktop through the window": "Ish stolini oyna orqali ko'rish",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Manzara chetga chiqadi va ish stoli ko'rinadi, tizim qo'llasa xiralashgan holda. Kam resurs rejimida o'chiq",
+  "Color schemes": "Ranglar sxemalari"
 }

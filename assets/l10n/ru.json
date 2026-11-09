@@ -3099,6 +3099,17 @@
   "How to make a skin": "Как создать скин",
   "The guide, the format and the pitfalls to avoid": "Руководство, формат и подводные камни, которых стоит избегать",
   "Use the system title bar": "Использовать системный заголовок окна",
-  "Keep the usual window frame instead of the one a skin draws": "Оставить обычную рамку окна вместо той, что рисует скин",
-  "Problems found": "Найденные проблемы"
+  "Problems found": "Найденные проблемы",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Оставить обычную рамку окна вместо заголовка и строки меню, которые рисует скин",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Эти схемы следуют светлому и тёмному режиму и сохраняют собственные формы Lumtub; меняются цвета, а заголовок окна и строка меню получают те же цвета.",
+  "Hide the title bar": "Скрыть заголовок окна",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Кнопки окна переносятся в строку меню. Только для скинов со строкой меню",
+  "Light and dark": "Светлая и тёмная",
+  "Light only": "Только светлая",
+  "Dark only": "Только тёмная",
+  "Glass": "Стекло",
+  "{0}% solid": "{0}% непрозрачности",
+  "See the desktop through the window": "Показывать рабочий стол сквозь окно",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Пейзаж уходит, и сквозь окно виден рабочий стол, размытый там, где это позволяет система. Отключено в режиме экономии ресурсов",
+  "Color schemes": "Цветовые схемы"
 }

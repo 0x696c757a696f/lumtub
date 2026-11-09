@@ -3099,6 +3099,17 @@
   "How to make a skin": "ስኪን እንዴት እንደሚሠራ",
   "The guide, the format and the pitfalls to avoid": "መመሪያው፣ ቅርጸቱ እና ማስወገድ ያለባቸው ችግሮች",
   "Use the system title bar": "የሥርዓቱን የርዕስ አሞሌ ተጠቀም",
-  "Keep the usual window frame instead of the one a skin draws": "ስኪን ከሚስለው ክፈፍ ይልቅ የተለመደውን የመስኮት ክፈፍ አቆይ",
-  "Problems found": "የተገኙ ችግሮች"
+  "Problems found": "የተገኙ ችግሮች",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "ስኪን የሚስለውን የርዕስ አሞሌና የምናሌ አሞሌ ትተህ የተለመደውን የመስኮት ፍሬም አቆይ",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "እነዚህ የብርሃንና የጨለማ ሁነታን ይከተላሉ፤ የLumtubን የራሱን ቅርጾች ይጠብቃሉ፤ ቀለሞች ይለወጣሉ፣ የርዕስ አሞሌና የምናሌ አሞሌም ተመሳሳይ ቀለሞችን ይወስዳሉ።",
+  "Hide the title bar": "የርዕስ አሞሌን ደብቅ",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "የመስኮት አዝራሮች ወደ ምናሌ አሞሌ ይገባሉ። የምናሌ አሞሌ ላላቸው ስኪኖች ብቻ",
+  "Light and dark": "ብርሃንና ጨለማ",
+  "Light only": "ብርሃን ብቻ",
+  "Dark only": "ጨለማ ብቻ",
+  "Glass": "ብርጭቆ",
+  "{0}% solid": "{0}% ድፍን",
+  "See the desktop through the window": "ዴስክቶፑን በመስኮቱ በኩል እይ",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "መልክዓ ምድሩ ዘወር ይላል፤ ሲስተሙ በሚችልበት ጊዜ ደብዘዝ ብሎ ዴስክቶፑ ይታያል። በዝቅተኛ ሀብት ሁነታ ይጠፋል",
+  "Color schemes": "የቀለም አሠራሮች"
 }

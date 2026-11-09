@@ -3099,6 +3099,17 @@
   "How to make a skin": "Як створити тему",
   "The guide, the format and the pitfalls to avoid": "Посібник, формат і підводні камені",
   "Use the system title bar": "Використовувати системний заголовок вікна",
-  "Keep the usual window frame instead of the one a skin draws": "Залишити звичайну рамку вікна замість тієї, яку малює тема",
-  "Problems found": "Знайдені проблеми"
+  "Problems found": "Знайдені проблеми",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Залишити звичайну рамку вікна замість заголовка й рядка меню, які малює тема",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Ці теми слідують світлому й темному режиму та зберігають власні форми Lumtub; змінюються кольори, а заголовок і рядок меню беруть ті самі кольори.",
+  "Hide the title bar": "Сховати заголовок вікна",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Кнопки вікна переходять до рядка меню. Лише для тем із рядком меню",
+  "Light and dark": "Світла й темна",
+  "Light only": "Лише світла",
+  "Dark only": "Лише темна",
+  "Glass": "Скло",
+  "{0}% solid": "{0}% непрозорості",
+  "See the desktop through the window": "Бачити робочий стіл крізь вікно",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Краєвид відступає, і крізь вікно видно робочий стіл, розмитий, де це підтримує система. У режимі економії ресурсів вимкнено",
+  "Color schemes": "Колірні схеми"
 }

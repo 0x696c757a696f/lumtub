@@ -3099,6 +3099,17 @@
   "How to make a skin": "Slik lager du et skin",
   "The guide, the format and the pitfalls to avoid": "Veiledningen, formatet og fallgruvene du bør unngå",
   "Use the system title bar": "Bruk systemets tittellinje",
-  "Keep the usual window frame instead of the one a skin draws": "Behold den vanlige vindusrammen i stedet for den et skin tegner",
-  "Problems found": "Problemer funnet"
+  "Problems found": "Problemer funnet",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Behold den vanlige vindusrammen i stedet for tittellinjen og menylinjen en skin tegner",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Disse følger lys og mørk modus og beholder Lumtubs egne former; det er fargene som endres, og tittellinjen og menylinjen får de samme fargene.",
+  "Hide the title bar": "Skjul tittellinjen",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Vindusknappene flyttes til menylinjen. Bare for skin med menylinje",
+  "Light and dark": "Lys og mørk",
+  "Light only": "Bare lys",
+  "Dark only": "Bare mørk",
+  "Glass": "Glass",
+  "{0}% solid": "{0} % dekkende",
+  "See the desktop through the window": "Se skrivebordet gjennom vinduet",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Landskapet viker, og skrivebordet synes gjennom vinduet, uskarpt der systemet kan. Av i ressursbesparende modus",
+  "Color schemes": "Fargevalg"
 }

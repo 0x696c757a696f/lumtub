@@ -3099,6 +3099,17 @@
   "How to make a skin": "Miten teema tehdään",
   "The guide, the format and the pitfalls to avoid": "Opas, muoto ja vältettävät sudenkuopat",
   "Use the system title bar": "Käytä järjestelmän otsikkopalkkia",
-  "Keep the usual window frame instead of the one a skin draws": "Säilytä tavallinen ikkunakehys teeman piirtämän sijaan",
-  "Problems found": "Löydetyt ongelmat"
+  "Problems found": "Löydetyt ongelmat",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Käytä tavallista ikkunakehystä teeman piirtämän otsikkopalkin ja valikkopalkin sijaan",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Nämä noudattavat vaaleaa ja tummaa tilaa ja säilyttävät Lumtubin omat muodot; värit muuttuvat, ja otsikkopalkki ja valikkopalkki saavat samat värit.",
+  "Hide the title bar": "Piilota otsikkopalkki",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Ikkunapainikkeet siirtyvät valikkopalkkiin. Vain teemoille, joissa on valikkopalkki",
+  "Light and dark": "Vaalea ja tumma",
+  "Light only": "Vain vaalea",
+  "Dark only": "Vain tumma",
+  "Glass": "Lasi",
+  "{0}% solid": "{0} % peittävä",
+  "See the desktop through the window": "Näytä työpöytä ikkunan läpi",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Maisema väistyy ja työpöytä näkyy läpi, sumennettuna jos järjestelmä sallii. Pois käytöstä vähäisten resurssien tilassa",
+  "Color schemes": "Värimaailmat"
 }

@@ -3099,6 +3099,17 @@
   "How to make a skin": "Quomodo pellem facere",
   "The guide, the format and the pitfalls to avoid": "Ductus, forma et errores vitandi",
   "Use the system title bar": "Uti titulo systematis",
-  "Keep the usual window frame instead of the one a skin draws": "Marginem fenestrae solitum retinere, non eum quem pellis pingit",
-  "Problems found": "Problemata inventa"
+  "Problems found": "Problemata inventa",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Fenestrae marginem usitatum serva, non titulum et tabulam menu quae pellis pingit",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Haec modum lucidum et obscurum sequuntur et formas Lumtub proprias servant; colores tantum mutantur, et titulus tabulaque menu eosdem colores accipiunt.",
+  "Hide the title bar": "Titulum celare",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Claves fenestrae in tabulam menu transeunt. Pellibus tantum cum tabula menu",
+  "Light and dark": "Lucidum et obscurum",
+  "Light only": "Lucidum tantum",
+  "Dark only": "Obscurum tantum",
+  "Glass": "Vitrum",
+  "{0}% solid": "{0}% solidum",
+  "See the desktop through the window": "Mensam per fenestram videre",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Prospectus cedit et mensa per fenestram apparet, obscurata ubi systema potest. In Modo parco exstinctum",
+  "Color schemes": "Schemata colorum"
 }

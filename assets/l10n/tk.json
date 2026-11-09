@@ -3099,6 +3099,17 @@
   "How to make a skin": "Tema nähili döredilýär",
   "The guide, the format and the pitfalls to avoid": "Gollanma, format we gaça durmaly ýalňyşlyklar",
   "Use the system title bar": "Ulgamyň ady setirini ulan",
-  "Keep the usual window frame instead of the one a skin draws": "Tema çekýän çarçuwanyň ýerine adaty penjire çarçuwasyny sakla",
-  "Problems found": "Tapylan problemalar"
+  "Problems found": "Tapylan problemalar",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Temanyň çyzýan sözbaşy setiri we menýu setiri ýerine adaty penjire çarçuwasyny saklamak",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Bular açyk we garaňky režime eýerýär we Lumtub-yň öz görnüşlerini saklaýar; reňkler üýtgeýär, sözbaşy setiri bilen menýu setiri hem şol reňkleri alýar.",
+  "Hide the title bar": "Sözbaşy setirini gizle",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Penjire düwmeleri menýu setirine geçýär. Diňe menýu setirli temalar üçin",
+  "Light and dark": "Açyk we garaňky",
+  "Light only": "Diňe açyk",
+  "Dark only": "Diňe garaňky",
+  "Glass": "Aýna",
+  "{0}% solid": "{0}% dykyz",
+  "See the desktop through the window": "Penjireden iş stolyny gör",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Landşaft çetleşýär, iş stoly görünýär, ulgam goldasa bulaşyk bolýar. Pes serişde režiminde ýapyk",
+  "Color schemes": "Reňk shemalary"
 }

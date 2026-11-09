@@ -3099,6 +3099,17 @@
   "How to make a skin": "Jak vytvořit skin",
   "The guide, the format and the pitfalls to avoid": "Průvodce, formát a úskalí, kterým se vyhnout",
   "Use the system title bar": "Použít systémové záhlaví",
-  "Keep the usual window frame instead of the one a skin draws": "Zachovat obvyklý rám okna místo toho, který kreslí skin",
-  "Problems found": "Nalezené problémy"
+  "Problems found": "Nalezené problémy",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Ponechat obvyklý rám okna místo záhlaví a lišty nabídek, které si kreslí skin",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Tyto se řídí světlým a tmavým režimem a zachovávají vlastní tvary Lumtubu; mění se barvy a záhlaví i lišta nabídek dostanou stejné barvy.",
+  "Hide the title bar": "Skrýt záhlaví",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Tlačítka okna se přesunou do lišty nabídek. Jen pro skiny s lištou nabídek",
+  "Light and dark": "Světlý i tmavý",
+  "Light only": "Jen světlý",
+  "Dark only": "Jen tmavý",
+  "Glass": "Sklo",
+  "{0}% solid": "{0} % neprůhledné",
+  "See the desktop through the window": "Vidět plochu skrz okno",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Krajina ustoupí a skrz okno je vidět plocha, rozmazaná tam, kde to systém umí. V režimu nízké spotřeby vypnuto",
+  "Color schemes": "Barevná schémata"
 }

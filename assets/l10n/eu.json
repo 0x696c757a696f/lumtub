@@ -3099,6 +3099,17 @@
   "How to make a skin": "Nola egin azal bat",
   "The guide, the format and the pitfalls to avoid": "Gida, formatua eta saihestu beharreko erroreak",
   "Use the system title bar": "Erabili sistemaren titulu-barra",
-  "Keep the usual window frame instead of the one a skin draws": "Mantendu leihoaren ohiko markoa, azalak marrazten duenaren ordez",
-  "Problems found": "Aurkitutako arazoak"
+  "Problems found": "Aurkitutako arazoak",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Erabili leihoaren ohiko markoa, azalak marrazten duen titulu-barraren eta menu-barraren ordez",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Hauek modu argia eta iluna jarraitzen dituzte eta Lumtuben forma propioak mantentzen dituzte; koloreak aldatzen dira, eta titulu-barrak eta menu-barrak kolore berdinak hartzen dituzte.",
+  "Hide the title bar": "Ezkutatu titulu-barra",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Leihoaren botoiak menu-barrara pasatzen dira. Menu-barra duten azalentzat bakarrik",
+  "Light and dark": "Argia eta iluna",
+  "Light only": "Argia soilik",
+  "Dark only": "Iluna soilik",
+  "Glass": "Beira",
+  "{0}% solid": "% {0} opakoa",
+  "See the desktop through the window": "Ikusi mahaigaina leihoaren bidez",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Paisaia alde batera egiten da eta mahaigaina ikusten da, lausotuta sistemak onartzen duenean. Baliabide gutxiko moduan desaktibatuta",
+  "Color schemes": "Kolore-eskemak"
 }

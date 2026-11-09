@@ -3099,6 +3099,17 @@
   "How to make a skin": "איך יוצרים ערכת נושא",
   "The guide, the format and the pitfalls to avoid": "המדריך, הפורמט והמלכודות שכדאי להימנע מהן",
   "Use the system title bar": "שימוש בשורת הכותרת של המערכת",
-  "Keep the usual window frame instead of the one a skin draws": "שמירת מסגרת החלון הרגילה במקום זו שערכת הנושא מציירת",
-  "Problems found": "בעיות שנמצאו"
+  "Problems found": "בעיות שנמצאו",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "להשאיר את מסגרת החלון הרגילה במקום שורת הכותרת ושורת התפריטים שערכת נושא מציירת",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "אלה עוקבות אחרי מצב בהיר וכהה ושומרות על הצורות של Lumtub עצמה; הצבעים משתנים, ושורת הכותרת ושורת התפריטים מקבלות את אותם צבעים.",
+  "Hide the title bar": "הסתרת שורת הכותרת",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "כפתורי החלון עוברים לשורת התפריטים. רק לערכות נושא עם שורת תפריטים",
+  "Light and dark": "בהיר וכהה",
+  "Light only": "בהיר בלבד",
+  "Dark only": "כהה בלבד",
+  "Glass": "זכוכית",
+  "{0}% solid": "‏{0}% אטימות",
+  "See the desktop through the window": "לראות את שולחן העבודה דרך החלון",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "הנוף זז הצידה ושולחן העבודה נראה מבעד לחלון, מטושטש כשהמערכת תומכת בכך. כבוי במצב צריכת משאבים נמוכה",
+  "Color schemes": "ערכות צבעים"
 }

@@ -3099,6 +3099,17 @@
   "How to make a skin": "ਸਕਿਨ ਕਿਵੇਂ ਬਣਾਈਏ",
   "The guide, the format and the pitfalls to avoid": "ਗਾਈਡ, ਫਾਰਮੈਟ ਅਤੇ ਬਚਣ ਵਾਲੀਆਂ ਗਲਤੀਆਂ",
   "Use the system title bar": "ਸਿਸਟਮ ਦੀ ਸਿਰਲੇਖ ਪੱਟੀ ਵਰਤੋ",
-  "Keep the usual window frame instead of the one a skin draws": "ਸਕਿਨ ਵੱਲੋਂ ਬਣਾਏ ਫ੍ਰੇਮ ਦੀ ਥਾਂ ਆਮ ਵਿੰਡੋ ਫ੍ਰੇਮ ਰੱਖੋ",
-  "Problems found": "ਮਿਲੀਆਂ ਸਮੱਸਿਆਵਾਂ"
+  "Problems found": "ਮਿਲੀਆਂ ਸਮੱਸਿਆਵਾਂ",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "ਸਕਿਨ ਵੱਲੋਂ ਬਣਾਈ ਸਿਰਲੇਖ ਪੱਟੀ ਅਤੇ ਮੇਨੂ ਪੱਟੀ ਦੀ ਥਾਂ ਆਮ ਵਿੰਡੋ ਫ਼ਰੇਮ ਰੱਖੋ",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "ਇਹ ਹਲਕੇ ਅਤੇ ਗੂੜ੍ਹੇ ਮੋਡ ਦੇ ਨਾਲ ਚੱਲਦੇ ਹਨ ਅਤੇ Lumtub ਦੇ ਆਪਣੇ ਆਕਾਰ ਰੱਖਦੇ ਹਨ; ਰੰਗ ਬਦਲਦੇ ਹਨ, ਅਤੇ ਸਿਰਲੇਖ ਪੱਟੀ ਤੇ ਮੇਨੂ ਪੱਟੀ ਵੀ ਉਹੀ ਰੰਗ ਲੈਂਦੀਆਂ ਹਨ।",
+  "Hide the title bar": "ਸਿਰਲੇਖ ਪੱਟੀ ਲੁਕਾਓ",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "ਵਿੰਡੋ ਬਟਨ ਮੇਨੂ ਪੱਟੀ ਵਿੱਚ ਚਲੇ ਜਾਂਦੇ ਹਨ। ਸਿਰਫ਼ ਮੇਨੂ ਪੱਟੀ ਵਾਲੀਆਂ ਸਕਿਨਾਂ ਲਈ",
+  "Light and dark": "ਹਲਕਾ ਅਤੇ ਗੂੜ੍ਹਾ",
+  "Light only": "ਸਿਰਫ਼ ਹਲਕਾ",
+  "Dark only": "ਸਿਰਫ਼ ਗੂੜ੍ਹਾ",
+  "Glass": "ਸ਼ੀਸ਼ਾ",
+  "{0}% solid": "{0}% ਠੋਸ",
+  "See the desktop through the window": "ਵਿੰਡੋ ਰਾਹੀਂ ਡੈਸਕਟਾਪ ਵੇਖੋ",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ਦ੍ਰਿਸ਼ ਇੱਕ ਪਾਸੇ ਹੋ ਜਾਂਦਾ ਹੈ ਅਤੇ ਜਿੱਥੇ ਸਿਸਟਮ ਮਨਜ਼ੂਰ ਕਰੇ ਉੱਥੇ ਧੁੰਦਲਾ ਕਰਕੇ ਡੈਸਕਟਾਪ ਵਿੰਡੋ ਵਿੱਚੋਂ ਦਿਸਦਾ ਹੈ। ਘੱਟ ਸਰੋਤ ਮੋਡ ਵਿੱਚ ਬੰਦ",
+  "Color schemes": "ਰੰਗ ਸਕੀਮਾਂ"
 }

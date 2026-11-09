@@ -3099,6 +3099,17 @@
   "How to make a skin": "Hogyan készíthető téma",
   "The guide, the format and the pitfalls to avoid": "Az útmutató, a formátum és a kerülendő buktatók",
   "Use the system title bar": "Rendszer címsorának használata",
-  "Keep the usual window frame instead of the one a skin draws": "A szokásos ablakkeret megtartása a téma által rajzolt helyett",
-  "Problems found": "Talált problémák"
+  "Problems found": "Talált problémák",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "A megszokott ablakkeret használata a téma által rajzolt címsor és menüsor helyett",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Ezek követik a világos és sötét módot, és megtartják a Lumtub saját formáit; a színek változnak, a címsor és a menüsor is ugyanezeket a színeket kapja.",
+  "Hide the title bar": "Címsor elrejtése",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Az ablak gombjai a menüsorba kerülnek. Csak menüsoros témákhoz",
+  "Light and dark": "Világos és sötét",
+  "Light only": "Csak világos",
+  "Dark only": "Csak sötét",
+  "Glass": "Üveg",
+  "{0}% solid": "{0}% átlátszatlan",
+  "See the desktop through the window": "Az asztal látszik az ablakon át",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "A táj félrehúzódik, és az asztal átlátszik, elmosva, ahol a rendszer tudja. Alacsony erőforrás-használatú módban kikapcsolva",
+  "Color schemes": "Színsémák"
 }

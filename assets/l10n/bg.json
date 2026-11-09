@@ -3099,6 +3099,17 @@
   "How to make a skin": "Как да направя скин",
   "The guide, the format and the pitfalls to avoid": "Ръководството, форматът и клопките, които да избягвате",
   "Use the system title bar": "Използване на системната заглавна лента",
-  "Keep the usual window frame instead of the one a skin draws": "Запазване на обичайната рамка на прозореца вместо тази, която скинът рисува",
-  "Problems found": "Намерени проблеми"
+  "Problems found": "Намерени проблеми",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Запази обичайната рамка на прозореца вместо заглавната лента и лентата с менюта, които скинът рисува сам",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Те следват светлия и тъмния режим и запазват собствените форми на Lumtub; променят се цветовете, а заглавната лента и лентата с менюта получават същите цветове.",
+  "Hide the title bar": "Скриване на заглавната лента",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Бутоните на прозореца се преместват в лентата с менюта. Само за скинове с лента с менюта",
+  "Light and dark": "Светла и тъмна",
+  "Light only": "Само светла",
+  "Dark only": "Само тъмна",
+  "Glass": "Стъкло",
+  "{0}% solid": "{0}% плътност",
+  "See the desktop through the window": "Виж работния плот през прозореца",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Пейзажът се отдръпва и работният плот се вижда през прозореца, размит там, където системата позволява. Изключено в режим с ниско потребление",
+  "Color schemes": "Цветови схеми"
 }

@@ -3099,6 +3099,17 @@
   "How to make a skin": "Si të krijosh një skin",
   "The guide, the format and the pitfalls to avoid": "Udhëzuesi, formati dhe kurthet që duhen shmangur",
   "Use the system title bar": "Përdor shiritin e titullit të sistemit",
-  "Keep the usual window frame instead of the one a skin draws": "Mbaj kornizën e zakonshme të dritares në vend të asaj që vizaton një skinë",
-  "Problems found": "Probleme të gjetura"
+  "Problems found": "Probleme të gjetura",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Mbaj kornizën e zakonshme të dritares në vend të shiritit të titullit dhe shiritit të menusë që vizaton një skin",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Këto ndjekin modalitetin e çelët dhe të errët dhe ruajnë format e veta të Lumtub; ndryshojnë ngjyrat, ndërsa shiriti i titullit dhe shiriti i menusë marrin të njëjtat ngjyra.",
+  "Hide the title bar": "Fshih shiritin e titullit",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Butonat e dritares zhvendosen te shiriti i menusë. Vetëm për skinat me shirit menuje",
+  "Light and dark": "E çelët dhe e errët",
+  "Light only": "Vetëm e çelët",
+  "Dark only": "Vetëm e errët",
+  "Glass": "Xham",
+  "{0}% solid": "{0}% i plotë",
+  "See the desktop through the window": "Shiko desktopin përmes dritares",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Peizazhi çlirohet dhe desktopi duket përmes dritares, i turbullt aty ku e lejon sistemi. Joaktiv në modalitetin me burime të ulëta",
+  "Color schemes": "Skemat e ngjyrave"
 }

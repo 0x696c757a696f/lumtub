@@ -3099,6 +3099,17 @@
   "How to make a skin": "Cara membuat skin",
   "The guide, the format and the pitfalls to avoid": "Panduan, format, dan jebakan yang perlu dihindari",
   "Use the system title bar": "Gunakan bilah judul sistem",
-  "Keep the usual window frame instead of the one a skin draws": "Pertahankan bingkai jendela biasa, bukan yang digambar skin",
-  "Problems found": "Masalah ditemukan"
+  "Problems found": "Masalah ditemukan",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Pakai bingkai jendela biasa, bukan bilah judul dan bilah menu buatan skin",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Warna ini mengikuti mode terang dan gelap serta mempertahankan bentuk asli Lumtub; hanya warnanya yang berubah, dan bilah judul serta bilah menu ikut berwarna sama.",
+  "Hide the title bar": "Sembunyikan bilah judul",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Tombol jendela pindah ke bilah menu. Hanya untuk skin dengan bilah menu",
+  "Light and dark": "Terang dan gelap",
+  "Light only": "Hanya terang",
+  "Dark only": "Hanya gelap",
+  "Glass": "Kaca",
+  "{0}% solid": "{0}% pekat",
+  "See the desktop through the window": "Lihat desktop menembus jendela",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Pemandangan menyingkir dan desktop terlihat menembus jendela, dengan efek buram jika didukung sistem. Nonaktif di Mode hemat sumber daya",
+  "Color schemes": "Skema warna"
 }

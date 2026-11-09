@@ -3099,6 +3099,17 @@
   "How to make a skin": "स्किन कैसे बनाएँ",
   "The guide, the format and the pitfalls to avoid": "गाइड, फ़ॉर्मैट और बचने योग्य गलतियाँ",
   "Use the system title bar": "सिस्टम टाइटल बार इस्तेमाल करें",
-  "Keep the usual window frame instead of the one a skin draws": "स्किन की बनाई विंडो फ़्रेम के बजाय सामान्य विंडो फ़्रेम रखें",
-  "Problems found": "मिली समस्याएँ"
+  "Problems found": "मिली समस्याएँ",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "स्किन द्वारा बनाए गए टाइटल बार और मेन्यू बार की जगह सामान्य विंडो फ़्रेम रखें",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "ये लाइट और डार्क मोड के साथ चलती हैं और Lumtub के अपने आकार बनाए रखती हैं; रंग बदलते हैं, और टाइटल बार व मेन्यू बार भी वही रंग लेते हैं।",
+  "Hide the title bar": "टाइटल बार छिपाएँ",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "विंडो के बटन मेन्यू बार में चले जाते हैं। सिर्फ़ मेन्यू बार वाली स्किन के लिए",
+  "Light and dark": "लाइट और डार्क",
+  "Light only": "सिर्फ़ लाइट",
+  "Dark only": "सिर्फ़ डार्क",
+  "Glass": "काँच",
+  "{0}% solid": "{0}% ठोस",
+  "See the desktop through the window": "विंडो के आर-पार डेस्कटॉप देखें",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "दृश्य किनारे हट जाता है और डेस्कटॉप आर-पार दिखता है, सिस्टम सपोर्ट करे तो धुंधला भी। कम संसाधन मोड में बंद",
+  "Color schemes": "रंग योजनाएँ"
 }

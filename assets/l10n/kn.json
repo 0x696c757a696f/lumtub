@@ -3099,6 +3099,17 @@
   "How to make a skin": "ಸ್ಕಿನ್ ಮಾಡುವುದು ಹೇಗೆ",
   "The guide, the format and the pitfalls to avoid": "ಮಾರ್ಗದರ್ಶಿ, ಸ್ವರೂಪ ಮತ್ತು ತಪ್ಪಿಸಬೇಕಾದ ತಪ್ಪುಗಳು",
   "Use the system title bar": "ಸಿಸ್ಟಮ್ ಶೀರ್ಷಿಕೆ ಪಟ್ಟಿಯನ್ನು ಬಳಸಿ",
-  "Keep the usual window frame instead of the one a skin draws": "ಸ್ಕಿನ್ ಚಿತ್ರಿಸುವ ಫ್ರೇಮ್ ಬದಲು ಸಾಮಾನ್ಯ ವಿಂಡೋ ಫ್ರೇಮ್ ಇರಿಸಿ",
-  "Problems found": "ಕಂಡುಬಂದ ಸಮಸ್ಯೆಗಳು"
+  "Problems found": "ಕಂಡುಬಂದ ಸಮಸ್ಯೆಗಳು",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "ಸ್ಕಿನ್ ಚಿತ್ರಿಸುವ ಶೀರ್ಷಿಕೆ ಪಟ್ಟಿ ಮತ್ತು ಮೆನು ಪಟ್ಟಿಯ ಬದಲು ಸಾಮಾನ್ಯ ವಿಂಡೋ ಚೌಕಟ್ಟನ್ನು ಉಳಿಸಿ",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "ಇವು ಲೈಟ್ ಮತ್ತು ಡಾರ್ಕ್ ಮೋಡ್ ಅನ್ನು ಅನುಸರಿಸುತ್ತವೆ ಮತ್ತು Lumtub ನ ಸ್ವಂತ ಆಕಾರಗಳನ್ನು ಉಳಿಸಿಕೊಳ್ಳುತ್ತವೆ; ಬಣ್ಣಗಳು ಮಾತ್ರ ಬದಲಾಗುತ್ತವೆ, ಶೀರ್ಷಿಕೆ ಪಟ್ಟಿ ಮತ್ತು ಮೆನು ಪಟ್ಟಿಯೂ ಅದೇ ಬಣ್ಣಗಳನ್ನು ಪಡೆಯುತ್ತವೆ.",
+  "Hide the title bar": "ಶೀರ್ಷಿಕೆ ಪಟ್ಟಿಯನ್ನು ಮರೆಮಾಡಿ",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "ವಿಂಡೋ ಬಟನ್‌ಗಳು ಮೆನು ಪಟ್ಟಿಗೆ ಸರಿಯುತ್ತವೆ. ಮೆನು ಪಟ್ಟಿ ಇರುವ ಸ್ಕಿನ್‌ಗಳಿಗೆ ಮಾತ್ರ",
+  "Light and dark": "ಲೈಟ್ ಮತ್ತು ಡಾರ್ಕ್",
+  "Light only": "ಲೈಟ್ ಮಾತ್ರ",
+  "Dark only": "ಡಾರ್ಕ್ ಮಾತ್ರ",
+  "Glass": "ಗಾಜು",
+  "{0}% solid": "{0}% ಘನ",
+  "See the desktop through the window": "ವಿಂಡೋ ಮೂಲಕ ಡೆಸ್ಕ್‌ಟಾಪ್ ನೋಡಿ",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ದೃಶ್ಯ ಪಕ್ಕಕ್ಕೆ ಸರಿದು ಡೆಸ್ಕ್‌ಟಾಪ್ ವಿಂಡೋ ಮೂಲಕ ಕಾಣಿಸುತ್ತದೆ, ಸಿಸ್ಟಮ್ ಬೆಂಬಲಿಸಿದರೆ ಮಬ್ಬಾಗಿ. ಕಡಿಮೆ ಸಂಪನ್ಮೂಲ ಮೋಡ್‌ನಲ್ಲಿ ಆಫ್ ಆಗಿರುತ್ತದೆ",
+  "Color schemes": "ಬಣ್ಣ ಯೋಜನೆಗಳು"
 }

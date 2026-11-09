@@ -3099,6 +3099,17 @@
   "How to make a skin": "தீம் உருவாக்குவது எப்படி",
   "The guide, the format and the pitfalls to avoid": "வழிகாட்டி, வடிவம், தவிர்க்க வேண்டிய சிக்கல்கள்",
   "Use the system title bar": "கணினியின் தலைப்புப் பட்டியைப் பயன்படுத்து",
-  "Keep the usual window frame instead of the one a skin draws": "தீம் வரையும் சட்டகத்திற்குப் பதிலாக வழக்கமான சாளரச் சட்டகத்தை வைத்திரு",
-  "Problems found": "கண்டறியப்பட்ட சிக்கல்கள்"
+  "Problems found": "கண்டறியப்பட்ட சிக்கல்கள்",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "தீம் வரையும் தலைப்புப் பட்டி மற்றும் மெனு பட்டிக்குப் பதிலாக வழக்கமான சாளரச் சட்டத்தை வைத்திரு",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "இவை வெளிர் மற்றும் இருண்ட பயன்முறையைப் பின்பற்றி Lumtub-இன் சொந்த வடிவங்களை வைத்திருக்கும்; நிறங்கள் மாறும், தலைப்புப் பட்டியும் மெனு பட்டியும் அதே நிறங்களைப் பெறும்.",
+  "Hide the title bar": "தலைப்புப் பட்டியை மறை",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "சாளரப் பொத்தான்கள் மெனு பட்டிக்கு நகரும். மெனு பட்டி உள்ள தீம்களுக்கு மட்டும்",
+  "Light and dark": "வெளிர் மற்றும் இருண்ட",
+  "Light only": "வெளிர் மட்டும்",
+  "Dark only": "இருண்ட மட்டும்",
+  "Glass": "கண்ணாடி",
+  "{0}% solid": "{0}% திடம்",
+  "See the desktop through the window": "சாளரம் வழியாக டெஸ்க்டாப்பைக் காட்டு",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "நிலக்காட்சி விலகி, சாளரம் வழியாக டெஸ்க்டாப் தெரியும்; கணினி ஆதரித்தால் மங்கலாகவும் இருக்கும். குறைந்த வளப் பயன்முறையில் அணைந்திருக்கும்",
+  "Color schemes": "வண்ணத் திட்டங்கள்"
 }

@@ -3099,6 +3099,17 @@
   "How to make a skin": "Comment créer un thème",
   "The guide, the format and the pitfalls to avoid": "Le guide, le format et les pièges à éviter",
   "Use the system title bar": "Utiliser la barre de titre du système",
-  "Keep the usual window frame instead of the one a skin draws": "Conserver le cadre de fenêtre habituel au lieu de celui que dessine un thème",
-  "Problems found": "Problèmes détectés"
+  "Problems found": "Problèmes détectés",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Garder le cadre de fenêtre habituel au lieu de la barre de titre et de la barre de menus dessinées par un thème",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Ces palettes suivent le mode clair et sombre et gardent les formes propres à Lumtub ; seules les couleurs changent, et la barre de titre et la barre de menus prennent les mêmes couleurs.",
+  "Hide the title bar": "Masquer la barre de titre",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Les boutons de la fenêtre passent dans la barre de menus. Uniquement pour les thèmes avec barre de menus",
+  "Light and dark": "Clair et sombre",
+  "Light only": "Clair uniquement",
+  "Dark only": "Sombre uniquement",
+  "Glass": "Verre",
+  "{0}% solid": "{0} % opaque",
+  "See the desktop through the window": "Voir le bureau à travers la fenêtre",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Le paysage s'efface et le bureau apparaît en transparence, avec du flou quand le système le permet. Désactivé en mode économe en ressources",
+  "Color schemes": "Palettes de couleurs"
 }

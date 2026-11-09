@@ -3099,6 +3099,17 @@
   "How to make a skin": "Indlela yokwenza isindikimba",
   "The guide, the format and the pitfalls to avoid": "Umhlahlandlela, ifomethi nezingibe okufanele ugweme",
   "Use the system title bar": "Sebenzisa ibha yesihloko yesistimu",
-  "Keep the usual window frame instead of the one a skin draws": "Gcina uhlaka lwewindi olujwayelekile esikhundleni salolo isindikimba esilidwebayo",
-  "Problems found": "Izinkinga ezitholakele"
+  "Problems found": "Izinkinga ezitholakele",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Gcina ifreyimu evamile yewindi esikhundleni sebha yesihloko nebha yemenyu edwetshwa isikhumba",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Lokhu kulandela imodi ekhanyayo nemnyama futhi kugcina izimo zika-Lumtub; imibala iyashintsha, futhi ibha yesihloko nebha yemenyu kuthatha imibala efanayo.",
+  "Hide the title bar": "Fihla ibha yesihloko",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Izinkinobho zewindi ziya ebha yemenyu. Kuphela ezikhumbeni ezinebha yemenyu",
+  "Light and dark": "Okukhanyayo nokumnyama",
+  "Light only": "Okukhanyayo kuphela",
+  "Dark only": "Okumnyama kuphela",
+  "Glass": "Ingilazi",
+  "{0}% solid": "{0}% eqinile",
+  "See the desktop through the window": "Bona ideskithophu ngewindi",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Indawo ehlezi iyasuka futhi ideskithophu iyabonakala, ifiphele lapho uhlelo lukwazi. Ivaliwe kuModi yezinsiza ezincane",
+  "Color schemes": "Izinhlelo zemibala"
 }

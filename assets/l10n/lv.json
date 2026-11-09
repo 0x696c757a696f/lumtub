@@ -3099,6 +3099,17 @@
   "How to make a skin": "Kā izveidot apvalku",
   "The guide, the format and the pitfalls to avoid": "Ceļvedis, formāts un kļūdas, no kurām izvairīties",
   "Use the system title bar": "Izmantot sistēmas virsraksta joslu",
-  "Keep the usual window frame instead of the one a skin draws": "Saglabāt ierasto loga rāmi apvalka zīmētā vietā",
-  "Problems found": "Atrastās problēmas"
+  "Problems found": "Atrastās problēmas",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Saglabāt ierasto loga rāmi, nevis apvalka zīmēto virsraksta joslu un izvēlņu joslu",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Šīs shēmas seko gaišajam un tumšajam režīmam un saglabā Lumtub formas; mainās krāsas, un virsraksta josla ar izvēlņu joslu iegūst tās pašas krāsas.",
+  "Hide the title bar": "Paslēpt virsraksta joslu",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Loga pogas pārceļas uz izvēlņu joslu. Tikai apvalkiem ar izvēlņu joslu",
+  "Light and dark": "Gaišs un tumšs",
+  "Light only": "Tikai gaišs",
+  "Dark only": "Tikai tumšs",
+  "Glass": "Stikls",
+  "{0}% solid": "{0}% necaurspīdīgs",
+  "See the desktop through the window": "Redzēt darbvirsmu caur logu",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Ainava atkāpjas, un caur logu redzama darbvirsma, ja sistēma to atbalsta – izplūdusi. Zema resursu patēriņa režīmā izslēgts",
+  "Color schemes": "Krāsu shēmas"
 }

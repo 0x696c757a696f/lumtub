@@ -3099,6 +3099,17 @@
   "How to make a skin": "تھیم کیسے بنائیں",
   "The guide, the format and the pitfalls to avoid": "گائیڈ، فارمیٹ اور بچنے کی غلطیاں",
   "Use the system title bar": "سسٹم ٹائٹل بار استعمال کریں",
-  "Keep the usual window frame instead of the one a skin draws": "تھیم کے بنائے فریم کے بجائے معمول کا ونڈو فریم رکھیں",
-  "Problems found": "ملنے والے مسائل"
+  "Problems found": "ملنے والے مسائل",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "اسکن کے بنائے ہوئے ٹائٹل بار اور مینو بار کی جگہ معمول کا ونڈو فریم رکھیں",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "یہ ہلکے اور گہرے موڈ کے مطابق چلتے ہیں اور Lumtub کی اپنی شکلیں برقرار رکھتے ہیں؛ صرف رنگ بدلتے ہیں، اور ٹائٹل بار اور مینو بار بھی وہی رنگ لیتے ہیں۔",
+  "Hide the title bar": "ٹائٹل بار چھپائیں",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "ونڈو کے بٹن مینو بار میں چلے جاتے ہیں۔ صرف مینو بار والی اسکنز کے لیے",
+  "Light and dark": "ہلکا اور گہرا",
+  "Light only": "صرف ہلکا",
+  "Dark only": "صرف گہرا",
+  "Glass": "شیشہ",
+  "{0}% solid": "{0}% ٹھوس",
+  "See the desktop through the window": "ونڈو کے آر پار ڈیسک ٹاپ دیکھیں",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "منظر ہٹ جاتا ہے اور ڈیسک ٹاپ نظر آتا ہے، جہاں سسٹم اجازت دے وہاں دھندلا۔ کم وسائل موڈ میں بند",
+  "Color schemes": "رنگوں کی اسکیمیں"
 }

@@ -3099,6 +3099,17 @@
   "How to make a skin": "థీమ్‌ను ఎలా తయారు చేయాలి",
   "The guide, the format and the pitfalls to avoid": "గైడ్, ఫార్మాట్, నివారించాల్సిన తప్పులు",
   "Use the system title bar": "సిస్టమ్ టైటిల్ బార్‌ను ఉపయోగించు",
-  "Keep the usual window frame instead of the one a skin draws": "థీమ్ గీసే ఫ్రేమ్‌కు బదులు సాధారణ విండో ఫ్రేమ్‌ను ఉంచు",
-  "Problems found": "కనుగొన్న సమస్యలు"
+  "Problems found": "కనుగొన్న సమస్యలు",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "సిస్టమ్ విండో ఫ్రేమ్‌ను ఉంచండి, థీమ్ గీసే టైటిల్ బార్, మెనూ బార్ వద్దు",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "ఇవి లేత/ముదురు మోడ్‌ను అనుసరిస్తాయి, Lumtub ఆకారాలను అలాగే ఉంచుతాయి; రంగులు మారతాయి, టైటిల్ బార్, మెనూ బార్ కూడా అవే రంగులను తీసుకుంటాయి.",
+  "Hide the title bar": "టైటిల్ బార్‌ను దాచు",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "విండో బటన్లు మెనూ బార్‌లోకి వెళ్తాయి. మెనూ బార్ ఉన్న థీమ్‌లకు మాత్రమే",
+  "Light and dark": "లేత మరియు ముదురు",
+  "Light only": "లేత మాత్రమే",
+  "Dark only": "ముదురు మాత్రమే",
+  "Glass": "గ్లాస్",
+  "{0}% solid": "{0}% ఘనం",
+  "See the desktop through the window": "విండో గుండా డెస్క్‌టాప్‌ను చూడండి",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ప్రకృతి దృశ్యం పక్కకు తొలగి డెస్క్‌టాప్ కనిపిస్తుంది, సిస్టమ్ అనుమతిస్తే మసకబారుతుంది. తక్కువ వనరుల మోడ్‌లో ఆఫ్",
+  "Color schemes": "రంగుల పథకాలు"
 }

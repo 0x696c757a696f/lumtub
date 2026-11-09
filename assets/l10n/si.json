@@ -3099,6 +3099,17 @@
   "How to make a skin": "ස්කින් එකක් සාදන ආකාරය",
   "The guide, the format and the pitfalls to avoid": "මාර්ගෝපදේශය, ආකෘතිය සහ මග හැරිය යුතු අන්තරායන්",
   "Use the system title bar": "පද්ධතියේ මාතෘකා තීරුව භාවිතා කරන්න",
-  "Keep the usual window frame instead of the one a skin draws": "ස්කින් එකක් අඳින රාමුව වෙනුවට සාමාන්‍ය කවුළු රාමුව තබා ගන්න",
-  "Problems found": "සොයාගත් ගැටලු"
+  "Problems found": "සොයාගත් ගැටලු",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "ස්කින් එකක් අඳින මාතෘකා තීරුව සහ මෙනු තීරුව වෙනුවට සාමාන්‍ය කවුළු රාමුව තබාගන්න",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "මේවා ලා සහ අඳුරු ප්‍රකාරය අනුගමනය කරමින් Lumtub හි තමන්ගේම හැඩතල තබාගනී; වර්ණ වෙනස් වන අතර මාතෘකා තීරුවත් මෙනු තීරුවත් එම වර්ණම ගනී.",
+  "Hide the title bar": "මාතෘකා තීරුව සඟවන්න",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "කවුළු බොත්තම් මෙනු තීරුවට ගමන් කරයි. මෙනු තීරුවක් ඇති ස්කින් සඳහා පමණි",
+  "Light and dark": "ලා සහ අඳුරු",
+  "Light only": "ලා පමණි",
+  "Dark only": "අඳුරු පමණි",
+  "Glass": "වීදුරු",
+  "{0}% solid": "{0}% ඝන",
+  "See the desktop through the window": "කවුළුව හරහා ඩෙස්ක්ටොපය බලන්න",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "භූමි දර්ශනය ඉවත් වී කවුළුව හරහා ඩෙස්ක්ටොපය පෙනේ; පද්ධතියට හැකි තැන අපැහැදිලි වේ. අඩු සම්පත් ප්‍රකාරයේ අක්‍රියයි",
+  "Color schemes": "වර්ණ ක්‍රම"
 }

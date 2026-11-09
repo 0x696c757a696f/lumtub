@@ -3099,6 +3099,17 @@
   "How to make a skin": "Як стварыць скін",
   "The guide, the format and the pitfalls to avoid": "Кіраўніцтва, фармат і памылкі, якіх варта пазбягаць",
   "Use the system title bar": "Выкарыстоўваць сістэмны радок загалоўка",
-  "Keep the usual window frame instead of the one a skin draws": "Захаваць звычайную рамку акна замест той, што малюе скін",
-  "Problems found": "Знойдзены праблемы"
+  "Problems found": "Знойдзены праблемы",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Пакінуць звычайную рамку акна замест радка загалоўка і радка меню, якія малюе скін",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Яны сочаць за светлым і цёмным рэжымам і захоўваюць уласныя формы Lumtub; змяняюцца колеры, а радок загалоўка і радок меню атрымліваюць тыя ж колеры.",
+  "Hide the title bar": "Схаваць радок загалоўка",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Кнопкі акна пераходзяць у радок меню. Толькі для скінаў з радком меню",
+  "Light and dark": "Светлая і цёмная",
+  "Light only": "Толькі светлая",
+  "Dark only": "Толькі цёмная",
+  "Glass": "Шкло",
+  "{0}% solid": "{0}% непразрыстасці",
+  "See the desktop through the window": "Бачыць працоўны стол праз акно",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Краявід адступае, і праз акно відаць працоўны стол, размыты там, дзе гэта дазваляе сістэма. Выключана ў рэжыме эканоміі рэсурсаў",
+  "Color schemes": "Колеравыя схемы"
 }

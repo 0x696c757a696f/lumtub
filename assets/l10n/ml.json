@@ -3099,6 +3099,17 @@
   "How to make a skin": "സ്കിൻ ഉണ്ടാക്കുന്നത് എങ്ങനെ",
   "The guide, the format and the pitfalls to avoid": "ഗൈഡ്, ഫോർമാറ്റ്, ഒഴിവാക്കേണ്ട അബദ്ധങ്ങൾ",
   "Use the system title bar": "സിസ്റ്റം ടൈറ്റിൽ ബാർ ഉപയോഗിക്കുക",
-  "Keep the usual window frame instead of the one a skin draws": "സ്കിൻ വരയ്ക്കുന്ന ഫ്രെയിമിന് പകരം സാധാരണ വിൻഡോ ഫ്രെയിം നിലനിർത്തുക",
-  "Problems found": "കണ്ടെത്തിയ പ്രശ്നങ്ങൾ"
+  "Problems found": "കണ്ടെത്തിയ പ്രശ്നങ്ങൾ",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "സ്കിൻ വരയ്ക്കുന്ന ടൈറ്റിൽ ബാറിനും മെനു ബാറിനും പകരം സാധാരണ വിൻഡോ ഫ്രെയിം നിലനിർത്തുക",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "ഇവ ലൈറ്റ്, ഡാർക്ക് മോഡുകൾ പിന്തുടരുകയും Lumtub-ന്റെ സ്വന്തം രൂപങ്ങൾ നിലനിർത്തുകയും ചെയ്യുന്നു; നിറങ്ങൾ മാറുന്നു, ടൈറ്റിൽ ബാറും മെനു ബാറും അതേ നിറങ്ങൾ സ്വീകരിക്കുന്നു.",
+  "Hide the title bar": "ടൈറ്റിൽ ബാർ മറയ്ക്കുക",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "വിൻഡോ ബട്ടണുകൾ മെനു ബാറിലേക്ക് മാറുന്നു. മെനു ബാർ ഉള്ള സ്കിനുകൾക്ക് മാത്രം",
+  "Light and dark": "ലൈറ്റും ഡാർക്കും",
+  "Light only": "ലൈറ്റ് മാത്രം",
+  "Dark only": "ഡാർക്ക് മാത്രം",
+  "Glass": "ഗ്ലാസ്",
+  "{0}% solid": "{0}% അതാര്യം",
+  "See the desktop through the window": "വിൻഡോയിലൂടെ ഡെസ്ക്ടോപ്പ് കാണുക",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ലാൻഡ്സ്കേപ്പ് മാറിനിൽക്കുകയും ഡെസ്ക്ടോപ്പ് വിൻഡോയിലൂടെ തെളിയുകയും ചെയ്യുന്നു, സിസ്റ്റം അനുവദിക്കുന്നിടത്ത് മങ്ങിയ രൂപത്തിൽ. കുറഞ്ഞ റിസോഴ്‌സ് മോഡിൽ ഓഫ്",
+  "Color schemes": "വർണ്ണ സ്കീമുകൾ"
 }

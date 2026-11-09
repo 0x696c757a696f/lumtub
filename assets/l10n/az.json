@@ -3099,6 +3099,17 @@
   "How to make a skin": "Skin necə yaradılır",
   "The guide, the format and the pitfalls to avoid": "Bələdçi, format və qaçınmalı olduğunuz tələlər",
   "Use the system title bar": "Sistem başlıq panelindən istifadə et",
-  "Keep the usual window frame instead of the one a skin draws": "Skinin çəkdiyi çərçivə əvəzinə adi pəncərə çərçivəsini saxla",
-  "Problems found": "Tapılan problemlər"
+  "Problems found": "Tapılan problemlər",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Skinin özünün çəkdiyi başlıq paneli və menyu paneli əvəzinə adi pəncərə çərçivəsini saxla",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Bunlar açıq və tünd rejimi izləyir və Lumtub-un öz formalarını saxlayır; rənglər dəyişir, başlıq paneli və menyu paneli də eyni rəngləri alır.",
+  "Hide the title bar": "Başlıq panelini gizlət",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Pəncərə düymələri menyu panelinə köçür. Yalnız menyu paneli olan skinlər üçün",
+  "Light and dark": "Açıq və tünd",
+  "Light only": "Yalnız açıq",
+  "Dark only": "Yalnız tünd",
+  "Glass": "Şüşə",
+  "{0}% solid": "{0}% qeyri-şəffaf",
+  "See the desktop through the window": "Masaüstünü pəncərədən gör",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Mənzərə kənara çəkilir və masaüstü pəncərədən görünür, sistem imkan verdikdə bulanıq şəkildə. Aşağı resurs rejimində söndürülür",
+  "Color schemes": "Rəng sxemləri"
 }

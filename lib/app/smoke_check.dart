@@ -287,7 +287,7 @@ extension SmokeCheck on AppController {
         ('', ThemeMode.dark),
       ];
       for (final (palette, mode) in looks) {
-        await saveAppearance(appearance.copyWith(palette: palette, themeMode: mode));
+        await saveAppearance(appearance.copyWith(skin: palette.isEmpty ? '' : paletteSkinId(palette), palette: '', themeMode: mode));
         await wait(1.2);
       }
 

@@ -3099,6 +3099,17 @@
   "How to make a skin": "စကင်ပြုလုပ်နည်း",
   "The guide, the format and the pitfalls to avoid": "လမ်းညွှန်၊ ဖော်မတ်နှင့် ရှောင်ရန် အမှားများ",
   "Use the system title bar": "စနစ်၏ ခေါင်းစဉ်ဘားကို သုံးရန်",
-  "Keep the usual window frame instead of the one a skin draws": "စကင်က ဆွဲထားသည့်ဘောင်အစား ပုံမှန်ဝင်းဒိုးဘောင်ကို ထားရှိရန်",
-  "Problems found": "တွေ့ရှိသော ပြဿနာများ"
+  "Problems found": "တွေ့ရှိသော ပြဿနာများ",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "စကင်က ဆွဲထားသော ခေါင်းစဉ်ဘားနှင့် မီနူးဘားအစား ပုံမှန်ဝင်းဒိုးဘောင်ကို ထားရှိရန်",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "ဤအရောင်များသည် အလင်းနှင့် အမှောင်မုဒ်ကို လိုက်ပြီး Lumtub ၏ ပုံသဏ္ဌာန်ကို ထိန်းထားသည်၊ အရောင်များသာ ပြောင်းလဲပြီး ခေါင်းစဉ်ဘားနှင့် မီနူးဘားလည်း အရောင်တူ ဖြစ်သွားသည်။",
+  "Hide the title bar": "ခေါင်းစဉ်ဘားကို ဝှက်ရန်",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "ဝင်းဒိုးခလုတ်များ မီနူးဘားထဲသို့ ရွှေ့သွားမည်။ မီနူးဘားပါသော စကင်များအတွက်သာ",
+  "Light and dark": "အလင်းနှင့် အမှောင်",
+  "Light only": "အလင်းသီးသန့်",
+  "Dark only": "အမှောင်သီးသန့်",
+  "Glass": "ဖန်",
+  "{0}% solid": "{0}% မပြတ်သားမှု",
+  "See the desktop through the window": "ဝင်းဒိုးမှတစ်ဆင့် ဒက်စ်တော့ကို မြင်ရန်",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ရှုခင်းက ဘေးဖယ်ပေးပြီး စနစ်က ပံ့ပိုးနိုင်လျှင် ဝါးဝါးဖြင့် ဝင်းဒိုးကြားမှ ဒက်စ်တော့ကို မြင်ရမည်။ အရင်းအမြစ်သက်သာမုဒ်တွင် ပိတ်ထားသည်",
+  "Color schemes": "အရောင်စုံပုံစံများ"
 }

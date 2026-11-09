@@ -3099,6 +3099,17 @@
   "How to make a skin": "របៀបបង្កើតស្គីន",
   "The guide, the format and the pitfalls to avoid": "មគ្គុទ្ទេសក៍ ទ្រង់ទ្រាយ និងកំហុសដែលត្រូវជៀសវាង",
   "Use the system title bar": "ប្រើរបារចំណងជើងរបស់ប្រព័ន្ធ",
-  "Keep the usual window frame instead of the one a skin draws": "រក្សាស៊ុមបង្អួចធម្មតា ជំនួសឱ្យស៊ុមដែលស្គីនគូរ",
-  "Problems found": "បញ្ហាដែលបានរកឃើញ"
+  "Problems found": "បញ្ហាដែលបានរកឃើញ",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "រក្សាស៊ុមបង្អួចធម្មតា ជំនួសរបារចំណងជើង និងរបារម៉ឺនុយដែលស្គីនគូរ",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "ទាំងនេះតាមរបៀបស្រាល និងងងឹត ហើយរក្សារូបរាងរបស់ Lumtub៖ មានតែពណ៌ទេដែលប្តូរ រីឯរបារចំណងជើង និងរបារម៉ឺនុយក៏យកពណ៌ដូចគ្នា។",
+  "Hide the title bar": "លាក់របារចំណងជើង",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "ប៊ូតុងបង្អួចផ្លាស់ទៅរបារម៉ឺនុយ។ សម្រាប់តែស្គីនដែលមានរបារម៉ឺនុយ",
+  "Light and dark": "ស្រាល និងងងឹត",
+  "Light only": "ស្រាលតែប៉ុណ្ណោះ",
+  "Dark only": "ងងឹតតែប៉ុណ្ណោះ",
+  "Glass": "កញ្ចក់",
+  "{0}% solid": "ស្រអាប់ {0}%",
+  "See the desktop through the window": "មើលឃើញផ្ទៃតុតាមរយៈបង្អួច",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ទេសភាពរើចេញ ហើយផ្ទៃតុលេចតាមបង្អួច ព្រិលៗ ប្រសិនបើប្រព័ន្ធអាចធ្វើបាន។ បិទនៅក្នុងម៉ូដប្រើធនធានតិច",
+  "Color schemes": "ក្បាច់ពណ៌"
 }

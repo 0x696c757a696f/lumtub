@@ -3099,6 +3099,17 @@
   "How to make a skin": "Så här skapar du ett skal",
   "The guide, the format and the pitfalls to avoid": "Guiden, formatet och fallgroparna att undvika",
   "Use the system title bar": "Använd systemets namnlist",
-  "Keep the usual window frame instead of the one a skin draws": "Behåll den vanliga fönsterramen i stället för den som ett skal ritar",
-  "Problems found": "Problem som hittades"
+  "Problems found": "Problem som hittades",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Behåll den vanliga fönsterramen i stället för namnlisten och menyraden som ett skal ritar",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Dessa följer ljust och mörkt läge och behåller Lumtubs egna former; färgerna ändras, och namnlisten och menyraden får samma färger.",
+  "Hide the title bar": "Dölj namnlisten",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Fönsterknapparna flyttas till menyraden. Bara för skal med menyrad",
+  "Light and dark": "Ljust och mörkt",
+  "Light only": "Bara ljust",
+  "Dark only": "Bara mörkt",
+  "Glass": "Glas",
+  "{0}% solid": "{0} % täckande",
+  "See the desktop through the window": "Se skrivbordet genom fönstret",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Landskapet viker undan och skrivbordet syns genom fönstret, suddigt där systemet klarar det. Av i resurssnålt läge",
+  "Color schemes": "Färgscheman"
 }

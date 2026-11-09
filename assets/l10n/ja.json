@@ -3099,6 +3099,17 @@
   "How to make a skin": "スキンの作り方",
   "The guide, the format and the pitfalls to avoid": "ガイド、形式、避けるべき落とし穴",
   "Use the system title bar": "システムのタイトルバーを使う",
-  "Keep the usual window frame instead of the one a skin draws": "スキンが描画するフレームの代わりに通常のウィンドウフレームを使います",
-  "Problems found": "見つかった問題"
+  "Problems found": "見つかった問題",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "スキンが描くタイトルバーとメニューバーの代わりに、通常のウィンドウ枠を使う",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "ライト/ダークに従い、Lumtub 本来の形のまま、色だけが変わります。タイトルバーとメニューバーも同じ色になります。",
+  "Hide the title bar": "タイトルバーを隠す",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "ウィンドウのボタンがメニューバーに移ります。メニューバーのあるスキンのみ",
+  "Light and dark": "ライト・ダーク両対応",
+  "Light only": "ライトのみ",
+  "Dark only": "ダークのみ",
+  "Glass": "ガラス",
+  "{0}% solid": "不透明度 {0}%",
+  "See the desktop through the window": "ウィンドウ越しにデスクトップを見る",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "風景が退き、ウィンドウ越しにデスクトップが見えます。対応環境ではぼかしも入ります。低リソースモードではオフ",
+  "Color schemes": "配色"
 }

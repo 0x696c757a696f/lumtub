@@ -3099,6 +3099,17 @@
   "How to make a skin": "Cara nyieun skin",
   "The guide, the format and the pitfalls to avoid": "Pituduh, format jeung bubuhan anu kudu dihindari",
   "Use the system title bar": "Paké bar judul sistem",
-  "Keep the usual window frame instead of the one a skin draws": "Tetep paké pigura jandéla biasa, lain anu digambar ku skin",
-  "Problems found": "Masalah kapanggih"
+  "Problems found": "Masalah kapanggih",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Pake pigura jandela biasa gaganti bar judul jeung bar ménu anu digambar ku skin",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Ieu nuturkeun mode caang jeung poék tur nahan wangun asli Lumtub; warnana robah, bar judul jeung bar ménu ogé nyokot warna nu sarua.",
+  "Hide the title bar": "Sumputkeun bar judul",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Tombol jandela pindah ka bar ménu. Ngan keur skin nu boga bar ménu",
+  "Light and dark": "Caang jeung poék",
+  "Light only": "Caang wungkul",
+  "Dark only": "Poék wungkul",
+  "Glass": "Kaca",
+  "{0}% solid": "{0}% pekat",
+  "See the desktop through the window": "Tempo desktop tina jandela",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Lanskapna mundur sarta desktop katingali tina jandela, burem upama sistemna sanggup. Pareum dina mode sumber daya low",
+  "Color schemes": "Skéma warna"
 }

@@ -166,7 +166,7 @@ class _DiagnosticsDialogState extends State<_DiagnosticsDialog> {
       ),
       actions: [
         TextButton.icon(
-          icon: const Icon(AppIcons.copy, size: 18),
+          icon: Icon(AppIcons.copy, size: 18),
           onPressed: () async {
             await Clipboard.setData(ClipboardData(text: _report));
             if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Copied'))));

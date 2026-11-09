@@ -3099,6 +3099,17 @@
   "How to make a skin": "স্কিন কীভাবে বানাবেন",
   "The guide, the format and the pitfalls to avoid": "গাইড, ফরম্যাট এবং যেসব ফাঁদ এড়াতে হবে",
   "Use the system title bar": "সিস্টেমের টাইটেল বার ব্যবহার করুন",
-  "Keep the usual window frame instead of the one a skin draws": "স্কিনের আঁকা ফ্রেমের বদলে স্বাভাবিক উইন্ডো ফ্রেম রাখুন",
-  "Problems found": "পাওয়া সমস্যা"
+  "Problems found": "পাওয়া সমস্যা",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "স্কিনের নিজে আঁকা টাইটেল বার ও মেনু বারের বদলে স্বাভাবিক উইন্ডো ফ্রেম রাখুন",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "এগুলো লাইট ও ডার্ক মোড অনুসরণ করে এবং Lumtub-এর নিজস্ব আকার ধরে রাখে; রং বদলায়, আর টাইটেল বার ও মেনু বারও একই রং নেয়।",
+  "Hide the title bar": "টাইটেল বার লুকান",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "উইন্ডোর বোতামগুলো মেনু বারে চলে যায়। শুধু মেনু বার আছে এমন স্কিনের জন্য",
+  "Light and dark": "লাইট ও ডার্ক",
+  "Light only": "শুধু লাইট",
+  "Dark only": "শুধু ডার্ক",
+  "Glass": "গ্লাস",
+  "{0}% solid": "{0}% অস্বচ্ছ",
+  "See the desktop through the window": "উইন্ডোর ভেতর দিয়ে ডেস্কটপ দেখুন",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ল্যান্ডস্কেপ সরে যায় এবং সিস্টেম পারলে ঝাপসা করে উইন্ডোর ভেতর দিয়ে ডেস্কটপ দেখা যায়। কম রিসোর্স মোডে বন্ধ থাকে",
+  "Color schemes": "রঙের স্কিম"
 }

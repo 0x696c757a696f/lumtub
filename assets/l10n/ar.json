@@ -3099,6 +3099,17 @@
   "How to make a skin": "كيفية إنشاء سمة",
   "The guide, the format and the pitfalls to avoid": "الدليل والتنسيق والمزالق التي يجب تجنبها",
   "Use the system title bar": "استخدام شريط عنوان النظام",
-  "Keep the usual window frame instead of the one a skin draws": "الاحتفاظ بإطار النافذة المعتاد بدلًا من الذي ترسمه السمة",
-  "Problems found": "المشكلات المكتشفة"
+  "Problems found": "المشكلات المكتشفة",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "الإبقاء على إطار النافذة المعتاد بدل شريط العنوان وشريط القوائم اللذين يرسمهما المظهر",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "تتبع هذه الأنظمة الوضع الفاتح والداكن وتحتفظ بأشكال Lumtub الخاصة؛ تتغير الألوان فقط، ويأخذ شريط العنوان وشريط القوائم الألوان نفسها.",
+  "Hide the title bar": "إخفاء شريط العنوان",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "تنتقل أزرار النافذة إلى شريط القوائم. للمظاهر التي لها شريط قوائم فقط",
+  "Light and dark": "فاتح وداكن",
+  "Light only": "فاتح فقط",
+  "Dark only": "داكن فقط",
+  "Glass": "زجاج",
+  "{0}% solid": "{0}% معتم",
+  "See the desktop through the window": "رؤية سطح المكتب عبر النافذة",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "يتنحى المشهد ويظهر سطح المكتب من خلف النافذة، مع تمويه حيث يدعمه النظام. معطل في وضع الموارد المنخفضة",
+  "Color schemes": "أنظمة الألوان"
 }

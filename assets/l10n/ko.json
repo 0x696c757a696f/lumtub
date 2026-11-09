@@ -3099,6 +3099,17 @@
   "How to make a skin": "스킨 만드는 방법",
   "The guide, the format and the pitfalls to avoid": "가이드, 형식, 피해야 할 함정",
   "Use the system title bar": "시스템 제목 표시줄 사용",
-  "Keep the usual window frame instead of the one a skin draws": "스킨이 그리는 프레임 대신 일반 창 프레임을 유지합니다",
-  "Problems found": "발견된 문제"
+  "Problems found": "발견된 문제",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "스킨이 그리는 제목 표시줄과 메뉴 표시줄 대신 기본 창 테두리를 유지합니다",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "라이트/다크 모드를 따르며 Lumtub 고유의 모양은 그대로 두고 색만 바뀝니다. 제목 표시줄과 메뉴 표시줄도 같은 색이 됩니다.",
+  "Hide the title bar": "제목 표시줄 숨기기",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "창 버튼이 메뉴 표시줄로 이동합니다. 메뉴 표시줄이 있는 스킨에서만 적용됩니다",
+  "Light and dark": "라이트 · 다크",
+  "Light only": "라이트 전용",
+  "Dark only": "다크 전용",
+  "Glass": "유리",
+  "{0}% solid": "불투명도 {0}%",
+  "See the desktop through the window": "창 너머로 바탕 화면 보기",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "풍경이 물러나고 창 너머로 바탕 화면이 비칩니다. 시스템이 지원하면 흐림 효과도 적용됩니다. 저사양 모드에서는 꺼집니다",
+  "Color schemes": "색 구성"
 }

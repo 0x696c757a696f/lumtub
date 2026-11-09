@@ -3099,6 +3099,17 @@
   "How to make a skin": "Jak utworzyć skórkę",
   "The guide, the format and the pitfalls to avoid": "Przewodnik, format i pułapki, których należy unikać",
   "Use the system title bar": "Użyj systemowego paska tytułu",
-  "Keep the usual window frame instead of the one a skin draws": "Zachowaj zwykłą ramkę okna zamiast tej rysowanej przez skórkę",
-  "Problems found": "Znalezione problemy"
+  "Problems found": "Znalezione problemy",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Zachowaj zwykłą ramkę okna zamiast paska tytułu i paska menu rysowanych przez skórkę",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Te schematy podążają za trybem jasnym i ciemnym i zachowują własne kształty Lumtub; zmieniają się kolory, a pasek tytułu i pasek menu przyjmują te same barwy.",
+  "Hide the title bar": "Ukryj pasek tytułu",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "Przyciski okna przenoszą się na pasek menu. Tylko dla skórek z paskiem menu",
+  "Light and dark": "Jasny i ciemny",
+  "Light only": "Tylko jasny",
+  "Dark only": "Tylko ciemny",
+  "Glass": "Szkło",
+  "{0}% solid": "{0}% krycia",
+  "See the desktop through the window": "Pokaż pulpit przez okno",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Krajobraz ustępuje, a pulpit prześwituje przez okno, rozmyty tam, gdzie system na to pozwala. Wyłączone w trybie niskiego zużycia zasobów",
+  "Color schemes": "Schematy kolorów"
 }

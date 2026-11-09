@@ -3099,6 +3099,17 @@
   "How to make a skin": "Een skin maken",
   "The guide, the format and the pitfalls to avoid": "De handleiding, het formaat en de valkuilen die je moet vermijden",
   "Use the system title bar": "De systeemtitelbalk gebruiken",
-  "Keep the usual window frame instead of the one a skin draws": "Het gebruikelijke vensterframe behouden in plaats van het frame dat een skin tekent",
-  "Problems found": "Gevonden problemen"
+  "Problems found": "Gevonden problemen",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "Behoud het gewone vensterkader in plaats van de titelbalk en menubalk die een skin tekent",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "Deze volgen de lichte en donkere modus en behouden de eigen vormen van Lumtub; alleen de kleuren veranderen, en de titelbalk en menubalk krijgen dezelfde kleuren.",
+  "Hide the title bar": "De titelbalk verbergen",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "De vensterknoppen verhuizen naar de menubalk. Alleen voor skins met een menubalk",
+  "Light and dark": "Licht en donker",
+  "Light only": "Alleen licht",
+  "Dark only": "Alleen donker",
+  "Glass": "Glas",
+  "{0}% solid": "{0}% dekkend",
+  "See the desktop through the window": "Het bureaublad door het venster zien",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Het landschap maakt plaats en het bureaublad schijnt door het venster, waar mogelijk vervaagd. Uit in de modus voor weinig bronnen",
+  "Color schemes": "Kleurenschema's"
 }

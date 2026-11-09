@@ -263,7 +263,7 @@ class _CastDialogState extends State<_CastDialog> {
                     onTap: () => _pick(device),
                     trailing: PopupMenuButton<String>(
                       tooltip: tr('Cast format'),
-                      icon: const Icon(AppIcons.dotsThreeVertical),
+                      icon: Icon(AppIcons.dotsThreeVertical),
                       onSelected: (format) => _setFormat(device, format),
                       itemBuilder: (context) => [
                         for (final format in const ['', 'ts', 'hls', 'mp4', 'mkv'])

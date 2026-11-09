@@ -3099,6 +3099,17 @@
   "How to make a skin": "วิธีสร้างสกิน",
   "The guide, the format and the pitfalls to avoid": "คู่มือ รูปแบบ และข้อผิดพลาดที่ควรเลี่ยง",
   "Use the system title bar": "ใช้แถบชื่อเรื่องของระบบ",
-  "Keep the usual window frame instead of the one a skin draws": "คงกรอบหน้าต่างปกติไว้ แทนกรอบที่สกินวาด",
-  "Problems found": "ปัญหาที่พบ"
+  "Problems found": "ปัญหาที่พบ",
+  "Keep the usual window frame instead of the title bar and menu bar a skin draws": "ใช้กรอบหน้าต่างปกติ แทนแถบชื่อเรื่องและแถบเมนูที่สกินวาดเอง",
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "สีเหล่านี้เปลี่ยนตามโหมดสว่าง/มืดและคงรูปทรงเดิมของ Lumtub เปลี่ยนเฉพาะสี โดยแถบชื่อเรื่องและแถบเมนูก็ใช้สีเดียวกัน",
+  "Hide the title bar": "ซ่อนแถบชื่อเรื่อง",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "ปุ่มหน้าต่างจะย้ายไปอยู่ในแถบเมนู ใช้ได้เฉพาะสกินที่มีแถบเมนู",
+  "Light and dark": "สว่างและมืด",
+  "Light only": "สว่างเท่านั้น",
+  "Dark only": "มืดเท่านั้น",
+  "Glass": "กระจก",
+  "{0}% solid": "ทึบ {0}%",
+  "See the desktop through the window": "มองเห็นเดสก์ท็อปผ่านหน้าต่าง",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "ภาพทิวทัศน์จะหลบไปเผยให้เห็นเดสก์ท็อปด้านหลัง และเบลอได้หากระบบรองรับ ปิดในโหมดประหยัดทรัพยากร",
+  "Color schemes": "ชุดสี"
 }

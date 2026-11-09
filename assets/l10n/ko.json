@@ -2989,5 +2989,12 @@
   "{0} and scroll wheel: {1}% per step": "{0} 및 스크롤 휠: 단계당 {1}%",
   "{0} was taken from \"{1}\"": "{0}을(를) “{1}”에서 가져왔습니다",
   "{0} were found, and your filters and settings left all of them out": "{0}개를 찾았지만 필터와 설정 때문에 모두 제외되었습니다",
-  "{0}: {1} s": "{0}: {1}초"
+  "{0}: {1} s": "{0}: {1}초",
+  "Library": "보관함",
+  "Add a skin from a file": "파일에서 스킨 추가",
+  "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc 또는 스킨 폴더를 압축한 zip",
+  "Added {0}": "{0} 추가됨",
+  "This is not a skin: {0}": "스킨이 아닙니다: {0}",
+  "See the wallpaper through the app": "배경화면 비치게 하기",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "풍경이 물러나고 홈 화면의 배경화면이 비칩니다. 시스템이 지원하면 흐리게 표시됩니다. 다음에 Lumtub을 시작할 때 적용됩니다. 저사양 모드에서는 꺼짐"
 }

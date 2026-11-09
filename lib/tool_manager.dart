@@ -23,7 +23,7 @@ class ToolPaths {
   const ToolPaths({required this.mpv, required this.ytDlp, this.deno});
   List<String> get executableDirectories => [
         if (mpv.isNotEmpty && Platform.isWindows) File(mpv).parent.path,
-        File(ytDlp).parent.path,
+        if (ytDlp.isNotEmpty) File(ytDlp).parent.path,
         if (deno != null) File(deno!).parent.path,
       ];
 }
@@ -93,7 +93,10 @@ class ToolManager {
   }
 
   Future<ToolPaths> ensureReady() async {
-    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) throw UnsupportedError('Lumtub runs on Windows, Linux and macOS.');
+    // Android: libmpv comes inside the APK and nothing is downloaded;
+    // without yt-dlp, streams come from the core (quick.rs) alone.
+    if (Platform.isAndroid) return const ToolPaths(mpv: '', ytDlp: '', deno: null);
+    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) throw UnsupportedError('Lumtub runs on Windows, Linux, macOS and Android.');
     // The runner already loaded a downloaded libmpv when one was selected;
     // Dart has to open that same copy.
     final mpv = _systemMpv ? _linuxMpv : libmpv.loadedPath ?? _bundledMpv;
@@ -211,6 +214,8 @@ class ToolManager {
   }
 
   Future<void> checkUpdates({bool force = false}) async {
+    // Android has no yt-dlp, Deno or ffmpeg to keep current: streams come from the core.
+    if (Platform.isAndroid || Platform.isIOS) return;
     final stamp = File('${root.path}${Platform.pathSeparator}last_update_check.txt');
     // The single-file yt-dlp is replaced as soon as possible, but a failed
     // try waits an hour, as does any check that failed, rather than costing

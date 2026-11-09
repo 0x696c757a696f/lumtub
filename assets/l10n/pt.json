@@ -2989,5 +2989,12 @@
   "{0} and scroll wheel: {1}% per step": "{0} e roda do mouse: {1}% por passo",
   "{0} was taken from \"{1}\"": "{0} foi retirado de “{1}”",
   "{0} were found, and your filters and settings left all of them out": "{0} encontrados, mas seus filtros e configurações excluíram todos",
-  "{0}: {1} s": "{0}: {1} s"
+  "{0}: {1} s": "{0}: {1} s",
+  "Library": "Biblioteca",
+  "Add a skin from a file": "Adicionar um skin de um arquivo",
+  "A skin.jsonc, or a zip of a skin's folder": "Um skin.jsonc ou um zip da pasta de um skin",
+  "Added {0}": "{0} adicionado",
+  "This is not a skin: {0}": "Isto não é um skin: {0}",
+  "See the wallpaper through the app": "Mostrar o papel de parede através do app",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "A paisagem sai e o papel de parede da tela inicial aparece, desfocado quando o sistema permite. Vale a partir da próxima vez que o Lumtub abrir. Desligado no modo de poucos recursos"
 }

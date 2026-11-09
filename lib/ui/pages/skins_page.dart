@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/app_controller.dart';
@@ -99,10 +100,12 @@ class _SkinsPage extends StatelessWidget {
                   onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(glassOpacity: v)),
                 ),
               ),
-            if ((context.skin?.glass ?? false) && WindowFrame.supported)
+            if ((context.skin?.glass ?? false) && WindowFrame.canSeeThrough)
               SwitchItem(
-                title: tr('See the desktop through the window'),
-                subtitle: tr('The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode'),
+                title: WindowFrame.supported ? tr('See the desktop through the window') : tr('See the wallpaper through the app'),
+                subtitle: WindowFrame.supported
+                    ? tr('The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode')
+                    : tr('The landscape steps aside and the home screen\'s wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode'),
                 leading: Icon(AppIcons.monitorArrowUp),
                 value: appearance.seeThrough,
                 enabled: !appearance.lowResource,
@@ -132,6 +135,12 @@ class _SkinsPage extends StatelessWidget {
               subtitle: library.folder?.path ?? '',
               leading: Icon(AppIcons.folderOpen),
               onTap: library.folder == null ? null : () => unawaited(openInExplorer(library.folder!.path)),
+            ),
+            if (!_desktop) NormalItem(
+              title: tr('Add a skin from a file'),
+              subtitle: tr('A skin.jsonc, or a zip of a skin\'s folder'),
+              leading: Icon(AppIcons.plus),
+              onTap: () => unawaited(_importSkin(context)),
             ),
             NormalItem(
               title: tr('Reload skins'),
@@ -174,6 +183,19 @@ class _SkinsPage extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+Future<void> _importSkin(BuildContext context) async {
+  final file = await openFile(acceptedTypeGroups: const [XTypeGroup(label: 'Skin', extensions: ['zip', 'jsonc', 'json'])]);
+  if (file == null || !context.mounted) return;
+  try {
+    final id = await SkinLibrary.instance.importFile(file.path);
+    if (!context.mounted) return;
+    final skin = SkinLibrary.instance.byId(id);
+    _say(context, tr('Added {0}', [skin?.nameIn(currentLanguage.tag) ?? id]));
+  } catch (e) {
+    if (context.mounted) _say(context, tr('This is not a skin: {0}', [e is FormatException ? e.message : '$e']));
   }
 }
 

@@ -147,14 +147,17 @@ final _media = {LogicalKeyboardKey.mediaPlayPause, LogicalKeyboardKey.mediaPlay,
 /// The keys each action has out of the box.
 Map<PlayerAction, List<KeyCombo>> defaultShortcutKeys() {
   final mac = Platform.isMacOS;
+  // A TV remote's OK button plays and pauses; its up and down arrows move
+  // to the controls, as the TV sets the volume itself.
+  final android = Platform.isAndroid;
   return {
-    PlayerAction.playPause: const [KeyCombo(LogicalKeyboardKey.space), KeyCombo(LogicalKeyboardKey.keyK)],
+    PlayerAction.playPause: [const KeyCombo(LogicalKeyboardKey.space), const KeyCombo(LogicalKeyboardKey.keyK), if (android) const KeyCombo(LogicalKeyboardKey.select)],
     PlayerAction.seekBack: const [KeyCombo(LogicalKeyboardKey.arrowLeft)],
     PlayerAction.seekForward: const [KeyCombo(LogicalKeyboardKey.arrowRight)],
     PlayerAction.longSeekBack: const [KeyCombo(LogicalKeyboardKey.keyJ)],
     PlayerAction.longSeekForward: const [KeyCombo(LogicalKeyboardKey.keyL)],
-    PlayerAction.volumeUp: const [KeyCombo(LogicalKeyboardKey.arrowUp)],
-    PlayerAction.volumeDown: const [KeyCombo(LogicalKeyboardKey.arrowDown)],
+    PlayerAction.volumeUp: [if (!android) const KeyCombo(LogicalKeyboardKey.arrowUp)],
+    PlayerAction.volumeDown: [if (!android) const KeyCombo(LogicalKeyboardKey.arrowDown)],
     PlayerAction.mute: const [KeyCombo(LogicalKeyboardKey.keyM)],
     PlayerAction.slower: const [KeyCombo(LogicalKeyboardKey.comma, shift: true)],
     PlayerAction.faster: const [KeyCombo(LogicalKeyboardKey.period, shift: true)],

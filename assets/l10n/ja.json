@@ -2989,5 +2989,12 @@
   "{0} and scroll wheel: {1}% per step": "{0} とスクロールホイール: 1 段階あたり {1}%",
   "{0} was taken from \"{1}\"": "{0} を「{1}」から移しました",
   "{0} were found, and your filters and settings left all of them out": "{0} 件見つかりましたが、フィルターと設定によりすべて除外されました",
-  "{0}: {1} s": "{0}: {1} 秒"
+  "{0}: {1} s": "{0}: {1} 秒",
+  "Library": "ライブラリ",
+  "Add a skin from a file": "ファイルからスキンを追加",
+  "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc、またはスキンのフォルダーの zip",
+  "Added {0}": "{0} を追加しました",
+  "This is not a skin: {0}": "スキンではありません: {0}",
+  "See the wallpaper through the app": "壁紙を透かして表示",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "風景が退き、ホーム画面の壁紙が透けて見えます。システムが対応していればぼかします。次に Lumtub を起動したときに有効になります。低リソースモードではオフ"
 }

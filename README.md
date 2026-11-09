@@ -47,6 +47,11 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 <td align="center"><img src="docs/screenshots/linux.png" alt="The Explore page on Linux in the dark theme"><br><b>Linux</b></td>
 </tr>
 <tr>
+<td align="center"><img src="docs/screenshots/home-reasons.png" alt="For you, with the reason under every video"><br>Every recommendation says why</td>
+<td align="center"><img src="docs/screenshots/explore-language.png" alt="Explore's science zone filtered to videos spoken in Italian"><br>Explore by the language actually spoken</td>
+<td align="center"><img src="docs/screenshots/zh/home-reasons.png" alt="For you in the Chinese interface"><br>72 interface languages</td>
+</tr>
+<tr>
 <td align="center"><img src="docs/screenshots/search.png" alt="Search results with channels and playlists"><br>Search that finds channels and playlists too</td>
 <td align="center"><img src="docs/screenshots/settings.png" alt="Appearance settings"><br>Palettes, warm light, compact and low-resource modes</td>
 <td align="center"><img src="docs/screenshots/tour.gif" alt="Switching between the ten palettes"><br>Ten palettes, light and dark</td>

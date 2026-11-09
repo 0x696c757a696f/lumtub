@@ -130,7 +130,9 @@ class DownloadManager extends ChangeNotifier {
   final void Function(DownloadTask task)? onFinished;
   /// Joins a picture and a sound file into one without ffmpeg (Android,
   /// which cannot start one): null when done, else why not.
-  final Future<String?> Function(String video, String audio, String out)? join;
+  /// Joins the picture and sound into the stem plus the extension that
+  /// fits them; the path written, or why not.
+  final Future<({String? path, String? error})> Function(String video, String audio, String stem)? join;
 
   String _directory;
   DownloadDefaults _defaults = const DownloadDefaults();
@@ -471,12 +473,12 @@ class DownloadManager extends ChangeNotifier {
   Future<void> _finish(DownloadTask task, List<String> printed) async {
     var path = printed.lastOrNull;
     if (_joins(task) && printed.length >= 2) {
-      final out = printed.first.replaceFirst(_partSuffix, '.mp4');
-      final error = await join!(printed.first, printed.last, out);
-      if (error != null) {
+      final joined = await join!(printed.first, printed.last, printed.first.replaceFirst(_partSuffix, ''));
+      final out = joined.path;
+      if (out == null) {
         task.status = DownloadStatus.failed;
         task.speed = null;
-        task.error = error;
+        task.error = joined.error ?? tr('The downloaded file was not found');
         return;
       }
       for (final part in printed) {

@@ -1306,9 +1306,10 @@ class AppController extends ChangeNotifier with _ExploreState {
     // this PC decodes well; the quality strategy takes the best picture.
     final preference = settings.strategy == PlaybackStrategy.quality ? const <VideoCodec>[] : FormatPolicy.codecOrder(settings);
     final formats = await DownloadFormats.parseInBackground(info, preference: preference);
-    // Android joins the streams in lumtub_core, which takes AAC sound only.
-    if (Platform.isAndroid && formats.audio.any((a) => a.isAac)) {
-      return DownloadFormats(formats.video, [for (final a in formats.audio) if (a.isAac) a], preference: formats.preference);
+    // Android joins the streams in lumtub_core, which takes AAC, Opus and
+    // Dolby sound.
+    if (Platform.isAndroid && formats.audio.any((a) => a.joins)) {
+      return DownloadFormats(formats.video, [for (final a in formats.audio) if (a.joins) a], preference: formats.preference);
     }
     return formats;
   }

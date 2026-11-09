@@ -28,3 +28,10 @@ by macos/packaging/build-ffmpeg.sh. FFmpeg is licensed under the GNU
 Lesser General Public License version 2.1 or later; this build enables no
 GPL or nonfree parts. Its source code is available at
 https://ffmpeg.org/download.html.
+
+The Linux AppImage includes libmpv 0.41 (https://mpv.io) with FFmpeg,
+libplacebo, libass, dav1d and the other libraries linked into it, as built
+by https://github.com/jason-yau/mpv-prebuilt (GPL build, release named in
+usr/share/doc/libmpv/manifest.txt). mpv in this build is licensed under the
+GNU General Public License version 2 or later; the licenses of everything
+it contains are in usr/share/doc/libmpv/licenses.

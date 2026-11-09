@@ -437,7 +437,10 @@ jobs:
       FLUTTER_VERSION: 3.47.7
       PACKAGE_ARCH: ${{ matrix.package_arch }}
       DEBIAN_FRONTEND: noninteractive
-      MPV_TAG: v0.35.1
+      # libmpv 0.41 with FFmpeg 9 and libplacebo, built on Ubuntu 22.04 by
+      # jason-yau/mpv-prebuilt's GitHub Actions; the GPL build, which keeps
+      # X11, VA-API and VDPAU. Pinned by checksum.
+      MPV_RELEASE: "20260906162952"
     permissions:
       contents: read
     steps:
@@ -445,14 +448,8 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends ca-certificates curl git unzip xz-utils zip file patchelf binutils \
-            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libfontconfig-dev libssl-dev desktop-file-utils python3
-          # What libmpv is built with (see build-mpv.sh).
-          apt-get install -y --no-install-recommends meson \
-            libavcodec-dev libavformat-dev libavutil-dev libavfilter-dev libavdevice-dev libswscale-dev libswresample-dev \
-            libass-dev libva-dev libvdpau-dev libdrm-dev libgbm-dev libegl-dev libgl-dev \
-            libx11-dev libxext-dev libxinerama-dev libxrandr-dev libxss-dev libxpresent-dev libxv-dev libxkbcommon-dev \
-            libwayland-dev wayland-protocols libpulse-dev libasound2-dev \
-            liblcms2-dev libuchardet-dev libjpeg-dev zlib1g-dev
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libfontconfig-dev libssl-dev desktop-file-utils python3 \
+            libepoxy-dev
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -495,24 +492,24 @@ jobs:
           echo "liblumtub_core.so: $(stat -c %s "$core") bytes"
           echo "LUMTUB_CORE_DLL=$core" >> "$GITHUB_ENV"
 
-      - name: Linux - restore libmpv
-        id: mpv-cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/mpv
-          key: linux-${{ matrix.package_arch }}-mpv-${{ env.MPV_TAG }}-ubuntu22.04-${{ hashFiles('linux/packaging/build-mpv.sh') }}
-
-      - name: Linux - build libmpv
-        if: steps.mpv-cache.outputs.cache-hit != 'true'
+      - name: Linux - download libmpv
         run: |
-          git clone --quiet --depth 1 --branch "$MPV_TAG" https://github.com/mpv-player/mpv.git "$RUNNER_TEMP/mpv-src"
-          git -C "$RUNNER_TEMP/mpv-src" rev-parse HEAD
-          linux/packaging/build-mpv.sh "$RUNNER_TEMP/mpv-src" "$RUNNER_TEMP/mpv"
-
-      - name: Linux - use the built libmpv
-        run: |
+          case "$PACKAGE_ARCH" in
+            x64) arch=x86_64; sum=a5822547f23cd47921c81d878aa3b3d2c76301c5b6b48343c18b6340896f8a0d ;;
+            arm64) arch=arm64; sum=d0ae5dbf8fed6e63353f1d1614c4ee55edb1eac41d625090dbef196027a479ed ;;
+          esac
+          name="libmpv-0.41.0-linux-$arch-gpl-$MPV_RELEASE"
+          archive="$RUNNER_TEMP/$name.tar.gz"
+          curl -fsSL --retry 8 --retry-all-errors -o "$archive" "https://github.com/jason-yau/mpv-prebuilt/releases/download/$MPV_RELEASE/$name.tar.gz"
+          echo "$sum  $archive" | sha256sum -c -
+          tar -xzf "$archive" -C "$RUNNER_TEMP"
+          mv "$RUNNER_TEMP/$name" "$RUNNER_TEMP/mpv"
+          cat "$RUNNER_TEMP/mpv/manifest.txt"
+          # FFmpeg, libplacebo and the rest are inside libmpv; the private
+          # requirements only matter for static linking and are not installed.
+          sed -i '/^Requires.private:/d' "$RUNNER_TEMP/mpv/lib/pkgconfig/mpv.pc"
           echo "PKG_CONFIG_PATH=$RUNNER_TEMP/mpv/lib/pkgconfig" >> "$GITHUB_ENV"
-          ls -l "$RUNNER_TEMP/mpv/lib"
+          PKG_CONFIG_PATH="$RUNNER_TEMP/mpv/lib/pkgconfig" pkg-config --modversion --libs mpv
 
       - name: Linux - get packages
         run: flutter pub get
@@ -547,6 +544,8 @@ jobs:
           # Only here, so the smoke test finds nothing but what the AppImage carries.
           LD_LIBRARY_PATH="$RUNNER_TEMP/mpv/lib" linux/packaging/make-appdir.sh "$bundle" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/AppDir"
           cp LICENSE NOTICE "$RUNNER_TEMP/AppDir/usr/bin/"
+          mkdir -p "$RUNNER_TEMP/AppDir/usr/share/doc/libmpv"
+          cp -r "$RUNNER_TEMP/mpv/licenses" "$RUNNER_TEMP/mpv/manifest.txt" "$RUNNER_TEMP/AppDir/usr/share/doc/libmpv/"
           # Nothing bundled may need a newer glibc than the build system's.
           newest=$(find "$RUNNER_TEMP/AppDir" -type f -exec sh -c 'file -b "$1" | grep -q ^ELF && objdump -T "$1"' _ {} \; 2>/dev/null \
             | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)

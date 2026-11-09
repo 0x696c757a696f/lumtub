@@ -60,10 +60,22 @@ class _WindowChromeState extends State<WindowChrome> {
           final menuBar = !bare && WindowFrame.supported && !appearance.systemTitleBar ? skin?.menuBar : null;
           final menus = menuBar == null ? const <SkinMenu>[] : WindowChrome.menus.value?.call(appMenu: menuBar.appMenu) ?? const <SkinMenu>[];
           Widget menuView(SkinMenuBar bar) => CallbackShortcuts(bindings: menuShortcuts(menus), child: SkinMenuBarView(bar: bar, menus: menus, clock: bar.clock));
+          // With the title bar hidden, the menu bar takes its place and
+          // holds the window buttons.
+          final merged = ownTitleBar && !bare && appearance.hideTitleBar && menuBar != null && menus.isNotEmpty;
           Widget content = Column(children: [
-            if (menuBar case final bar? when bar.top && menus.isNotEmpty) menuView(bar),
-            if (ownTitleBar && !bare) SkinTitleBarView(bar: skin!.titleBar!, title: widget.title),
-            if (menuBar case final bar? when !bar.top && menus.isNotEmpty) menuView(bar),
+            if (merged)
+              SkinTitleBarView(
+                bar: skin!.titleBar!,
+                title: widget.title,
+                menuBar: menuBar,
+                menus: CallbackShortcuts(bindings: menuShortcuts(menus), child: SkinMenuBarView(bar: menuBar, menus: menus, clock: menuBar.clock, embedded: true)),
+              )
+            else ...[
+              if (menuBar case final bar? when bar.top && menus.isNotEmpty) menuView(bar),
+              if (ownTitleBar && !bare) SkinTitleBarView(bar: skin!.titleBar!, title: widget.title),
+              if (menuBar case final bar? when !bar.top && menus.isNotEmpty) menuView(bar),
+            ],
             Expanded(child: child!),
           ]);
           if (skin != null) content = SkinBackdrop(skin: skin, plain: appearance.lowResource, child: content);

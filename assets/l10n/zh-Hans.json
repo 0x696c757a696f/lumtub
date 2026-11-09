@@ -3038,5 +3038,7 @@
   "Keep the usual window frame instead of the title bar and menu bar a skin draws": "保留系统的窗口边框，不用皮肤自己画的标题栏和菜单栏",
   "Problems found": "发现的问题",
   "Color schemes": "配色方案",
-  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "这些配色跟随浅色/深色模式，保留 Lumtub 自己的形状；变的是颜色，标题栏和菜单栏也换成同样的颜色。"
+  "These follow light and dark mode and keep Lumtub's own shapes; the colours change, and the title bar and menu bar take the same colours.": "这些配色跟随浅色/深色模式，保留 Lumtub 自己的形状；变的是颜色，标题栏和菜单栏也换成同样的颜色。",
+  "Hide the title bar": "隐藏标题栏",
+  "The window buttons move into the menu bar. Only for skins with a menu bar": "窗口按钮移到菜单栏里，只对有菜单栏的皮肤有效"
 }

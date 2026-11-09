@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -90,9 +91,14 @@ abstract final class SkinSurfaceDefaults {
 /// on Windows the system does both from the caption area reported to it,
 /// which keeps snapping and Windows 11's snap layouts.
 class SkinTitleBarView extends StatefulWidget {
-  const SkinTitleBarView({super.key, required this.bar, required this.title});
+  const SkinTitleBarView({super.key, required this.bar, required this.title, this.menuBar, this.menus});
   final SkinTitleBar bar;
   final String title;
+  /// With the title bar hidden, the menu bar takes its place: [menus] are
+  /// drawn where the title was, in [menuBar]'s colours and height, and the
+  /// window buttons sit beside them.
+  final SkinMenuBar? menuBar;
+  final Widget? menus;
 
   @override
   State<SkinTitleBarView> createState() => _SkinTitleBarViewState();
@@ -144,7 +150,9 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
     return ValueListenableBuilder(
       valueListenable: WindowFrame.active,
       builder: (context, active, _) {
-        final surface = active ? bar.surface : bar.inactive ?? bar.surface;
+        final merged = widget.menuBar;
+        final surface = merged != null ? merged.surface ?? bar.surface : active ? bar.surface : bar.inactive ?? bar.surface;
+        final height = merged == null ? bar.height : math.max(merged.height, bar.buttonSize.height + 4);
         final text = active ? bar.text : bar.inactiveText ?? bar.text.withValues(alpha: 0.6);
         final title = Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w700));
         final minimize = _WindowButton(key: _minimize, bar: bar, icon: _Glyph.minimize, tooltip: MaterialLocalizations.of(context).collapsedHint, onPressed: WindowFrame.minimize);
@@ -163,15 +171,26 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
         );
         final close = _WindowButton(key: _close, bar: bar, icon: _Glyph.close, close: true, onPressed: WindowFrame.close);
         final gap = SizedBox(width: bar.buttonsLeft ? 7 : 2);
-        final buttons = Row(
-          mainAxisSize: MainAxisSize.min,
-          children: bar.buttonsLeft ? [close, gap, minimize, gap, maximize] : [minimize, gap, maximize, gap, close],
+        // Pointing at any of them shows the signs on all three, as on the
+        // desktops these buttons come from.
+        final buttons = MouseRegion(
+          onEnter: (_) => _WindowButton.group.value = true,
+          onExit: (_) => _WindowButton.group.value = false,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: bar.buttonsLeft ? [close, gap, minimize, gap, maximize] : [minimize, gap, maximize, gap, close],
+          ),
         );
         final appIcon = [
           const SizedBox(width: 6),
           Icon(AppIcons.playFill, size: 16, color: text),
         ];
-        final row = bar.buttonsLeft
+        final menus = widget.menus;
+        final row = menus != null
+            ? Row(children: bar.buttonsLeft
+                ? [const SizedBox(width: 9), buttons, const SizedBox(width: 6), Expanded(child: menus)]
+                : [Expanded(child: menus), buttons, const SizedBox(width: 3)])
+            : bar.buttonsLeft
             ? Row(children: [
                 const SizedBox(width: 9),
                 buttons,
@@ -193,7 +212,7 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
           // On Windows the system moves the window from the caption itself.
           onPanStart: Platform.isWindows ? null : (_) => unawaited(WindowFrame.startDrag()),
           onDoubleTap: Platform.isWindows ? null : () => unawaited(WindowFrame.toggleMaximize()),
-          child: SizedBox(key: _self, height: bar.height, child: SkinBox(surface: surface, child: row)),
+          child: SizedBox(key: _self, height: height, child: SkinBox(surface: surface, child: row)),
         );
       },
     );
@@ -204,6 +223,9 @@ enum _Glyph { minimize, maximize, restore, close }
 
 class _WindowButton extends StatefulWidget {
   const _WindowButton({super.key, required this.bar, required this.icon, required this.onPressed, this.close = false, this.forced, this.tooltip});
+  /// Whether the pointer is over the window buttons, any of them.
+  static final group = ValueNotifier(false);
+
   final SkinTitleBar bar;
   final _Glyph icon;
   final Future<void> Function() onPressed;
@@ -217,6 +239,22 @@ class _WindowButton extends StatefulWidget {
 }
 
 class _WindowButtonState extends State<_WindowButton> {
+  @override
+  void initState() {
+    super.initState();
+    _WindowButton.group.addListener(_changed);
+  }
+
+  @override
+  void dispose() {
+    _WindowButton.group.removeListener(_changed);
+    super.dispose();
+  }
+
+  void _changed() {
+    if (mounted && widget.bar.glyphsOnHover) setState(() {});
+  }
+
   bool _hover = false;
   bool _pressed = false;
 
@@ -255,8 +293,8 @@ class _WindowButtonState extends State<_WindowButton> {
             child: DecoratedBox(
               // Without a skinned button, a plain wash shows the pointer.
               decoration: BoxDecoration(color: surface != null || !(hovered || pressed) ? null : (widget.close ? const Color(0xFFE81123) : bar.buttonIcon.withValues(alpha: pressed ? 0.2 : 0.1))),
-              child: bar.glyphsOnHover && !hovered && !pressed
-                  ? null
+              child: bar.glyphsOnHover
+                  ? (hovered || pressed || _WindowButton.group.value ? CustomPaint(painter: _GlyphPainter(widget.icon, bar.buttonIcon.withValues(alpha: 0.75), small: true)) : null)
                   : CustomPaint(painter: _GlyphPainter(widget.icon, widget.close && surface == null && hovered ? Colors.white : bar.buttonIcon)),
             ),
           ),
@@ -268,12 +306,34 @@ class _WindowButtonState extends State<_WindowButton> {
 
 /// The window buttons' signs, in pixel lines so they stay crisp in any skin.
 class _GlyphPainter extends CustomPainter {
-  _GlyphPainter(this.glyph, this.color);
+  _GlyphPainter(this.glyph, this.color, {this.small = false});
   final _Glyph glyph;
   final Color color;
+  /// Fine signs inside small round buttons: a cross, a dash and a plus.
+  final bool small;
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (small) {
+      final p = Paint()
+        ..color = color
+        ..strokeWidth = math.max(1.1, size.shortestSide / 12)
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+      final c = size.center(Offset.zero);
+      final r = size.shortestSide * 0.21;
+      switch (glyph) {
+        case _Glyph.close:
+          canvas.drawLine(c + Offset(-r, -r), c + Offset(r, r), p);
+          canvas.drawLine(c + Offset(r, -r), c + Offset(-r, r), p);
+        case _Glyph.minimize:
+          canvas.drawLine(c + Offset(-r * 1.2, 0), c + Offset(r * 1.2, 0), p);
+        case _Glyph.maximize || _Glyph.restore:
+          canvas.drawLine(c + Offset(-r * 1.2, 0), c + Offset(r * 1.2, 0), p);
+          canvas.drawLine(c + Offset(0, -r * 1.2), c + Offset(0, r * 1.2), p);
+      }
+      return;
+    }
     final p = Paint()
       ..color = color
       ..strokeWidth = 1.4
@@ -302,7 +362,7 @@ class _GlyphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_GlyphPainter old) => old.glyph != glyph || old.color != color;
+  bool shouldRepaint(_GlyphPainter old) => old.glyph != glyph || old.color != color || old.small != small;
 }
 
 /// One menu of [SkinMenuBarView]: '&' marks the letter Alt opens it with.
@@ -331,10 +391,13 @@ class SkinMenuEntry {
 /// The text menus under the title bar, drawn by the app in the skin's
 /// colours: Alt and a menu's underlined letter open it, arrows move.
 class SkinMenuBarView extends StatefulWidget {
-  const SkinMenuBarView({super.key, required this.bar, required this.menus, this.clock = false});
+  const SkinMenuBarView({super.key, required this.bar, required this.menus, this.clock = false, this.embedded = false});
   final SkinMenuBar bar;
   final List<SkinMenu> menus;
   final bool clock;
+  /// Drawn inside the title bar, which then is hidden: no surface or
+  /// dragging of its own.
+  final bool embedded;
 
   /// Where the menus of a bar drawn above the title bar are, so the title
   /// bar leaves them clickable when it reports the caption.
@@ -350,14 +413,14 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
 
   @override
   void dispose() {
-    if (widget.bar.top) {
+    if (widget.bar.top || widget.embedded) {
       WidgetsBinding.instance.addPostFrameCallback((_) => SkinMenuBarView.menusAbove.value = null);
     }
     super.dispose();
   }
 
   void _report() {
-    if (!mounted || !widget.bar.top) return;
+    if (!mounted || !(widget.bar.top || widget.embedded)) return;
     final first = _first.currentContext?.findRenderObject();
     final last = _last.currentContext?.findRenderObject();
     if (first is! RenderBox || last is! RenderBox || !first.hasSize || !last.hasSize) return;
@@ -369,7 +432,7 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
   @override
   Widget build(BuildContext context) {
     final bar = widget.bar;
-    if (bar.top) WidgetsBinding.instance.addPostFrameCallback((_) => _report());
+    if (bar.top || widget.embedded) WidgetsBinding.instance.addPostFrameCallback((_) => _report());
     final colors = context.colors;
     final menuSurface = bar.menu;
     final menuColor = menuSurface?.baseColor ?? colors.surface;
@@ -422,7 +485,7 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
 
     final menus = widget.menus;
     Widget content = SkinBox(
-      surface: bar.surface,
+      surface: widget.embedded ? null : bar.surface,
       child: SizedBox(
         height: bar.height,
         child: Row(children: [
@@ -462,7 +525,7 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
     );
     // Along the top of the window the empty part of the bar moves the
     // window, as the title bar does. Windows does that from the caption.
-    if (bar.top && !Platform.isWindows && WindowFrame.supported) {
+    if (bar.top && !widget.embedded && !Platform.isWindows && WindowFrame.supported) {
       content = GestureDetector(
         behavior: HitTestBehavior.translucent,
         onPanStart: (_) => unawaited(WindowFrame.startDrag()),

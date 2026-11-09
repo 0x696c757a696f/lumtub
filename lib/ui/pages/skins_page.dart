@@ -122,6 +122,14 @@ class _SkinsPage extends StatelessWidget {
                 value: appearance.systemTitleBar,
                 onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(systemTitleBar: v)),
               ),
+            if (WindowFrame.supported && !appearance.systemTitleBar)
+              SwitchItem(
+                title: tr('Hide the title bar'),
+                subtitle: tr('The window buttons move into the menu bar. Only for skins with a menu bar'),
+                leading: Icon(AppIcons.rows),
+                value: appearance.hideTitleBar,
+                onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(hideTitleBar: v)),
+              ),
             if (problems.isNotEmpty) ...[
               _header(context, tr('Problems found')),
               for (final (name, text) in problems)

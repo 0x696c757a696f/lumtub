@@ -934,13 +934,7 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               subtitle: tr('Current: {0}', [SkinLibrary.instance.byId(appearance.skin)?.nameIn(currentLanguage.tag) ?? tr('Standard')]),
               leading: _icon(AppIcons.paintBrush),
               onTap: () => openSkins(context, controller),
-            ), subtitle: tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')),
-        SettingEntry(tr('Color scheme'), (context) => NormalItem(
-              title: tr('Color scheme'),
-              subtitle: tr('Current: {0}', [paletteForSkin(appearance.skin)?.name ?? tr('Neutral (default)')]),
-              leading: _icon(AppIcons.palette),
-              onTap: () => openColorSelect(context, controller),
-            ), subtitle: tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')),
+            ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')}'),
         SettingEntry(tr('Warm light'), (context) => NormalItem(
               title: tr('Warm light'),
               subtitle: tr('Now: {0}. Lays a warm light over the whole window, video included, with less blue; black stays black and white turns warm like paper', [_eyeCareLabel(appearance)]),

@@ -30,7 +30,6 @@ import '../../widgets/pilinara_settings_tiles.dart';
 import '../common.dart';
 import '../subtitle_style.dart';
 import '../theme.dart';
-import '../palettes.dart';
 import '../theme_preset_card.dart';
 import 'settings_sections.dart';
 import 'support_page.dart';
@@ -600,15 +599,6 @@ Future<void> openColorSelect(BuildContext context, AppController controller) => 
           );
       final windows = controller.windowsAccent;
       return [
-        _header(context, tr('Color scheme')),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Wrap(spacing: 12, runSpacing: 12, children: [
-            for (final palette in palettes)
-              PaletteCard(palette: palette, selected: appearance.skin == paletteSkinId(palette.id), onTap: () => save(controller.appearance.copyWith(skin: paletteSkinId(palette.id), palette: ''))),
-          ]),
-        ),
-        _tip(context, tr('A color scheme changes the background, text and accent of the whole window, in light and dark. Choosing a theme or color below goes back to the neutral scheme.')),
         _header(context, tr('Theme presets')),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),

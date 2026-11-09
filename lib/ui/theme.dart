@@ -340,7 +340,9 @@ ThemeData buildAppTheme(
     ),
     listTileTheme: ListTileThemeData(
       shape: RoundedRectangleBorder(borderRadius: controlRadius),
-      selectedColor: scheme.onSurface,
+      // What is chosen sits on secondaryContainer, so it takes the colour
+      // made to be read on it.
+      selectedColor: scheme.onSecondaryContainer,
       selectedTileColor: scheme.secondaryContainer,
       iconColor: scheme.onSurfaceVariant,
       dense: compact ? true : null,
@@ -350,7 +352,7 @@ ThemeData buildAppTheme(
       backgroundColor: Colors.transparent,
       indicatorColor: scheme.secondaryContainer,
       indicatorShape: RoundedRectangleBorder(borderRadius: controlRadius),
-      selectedIconTheme: IconThemeData(color: scheme.onSurface),
+      selectedIconTheme: IconThemeData(color: scheme.onSecondaryContainer),
       unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
       selectedLabelTextStyle: font(TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: scheme.onSurface)),
       unselectedLabelTextStyle: font(TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
@@ -441,7 +443,7 @@ ThemeData buildAppTheme(
         side: WidgetStatePropertyAll(border),
         shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: controlRadius)),
         backgroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? scheme.secondaryContainer : null),
-        foregroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? scheme.onSurface : scheme.onSurfaceVariant),
+        foregroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? scheme.onSecondaryContainer : scheme.onSurfaceVariant),
         overlayColor: overlay,
       ),
     ),

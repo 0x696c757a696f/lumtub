@@ -212,10 +212,13 @@
 
     // The title bar drawn by Lumtub instead of the system's, on computers
     // only. Minimise, maximise and close sit at the right, unless
-    // "placement": "left" puts close, minimise, maximise at the left. Users
-    // can switch back to the system title bar in Settings.
+    // "placement": "left" puts close, minimise, maximise at the left, and
+    // "split" puts close alone at the left and the other two at the right,
+    // as on older desktops. Users can switch back to the system title bar
+    // in Settings.
     // 由 Lumtub 自己画的标题栏（只在电脑上）。最小化、最大化、关闭默认在右边；
-    // "placement": "left" 时改为左边，依次是关闭、最小化、最大化。用户可以在设置里换回系统标题栏。
+    // "placement": "left" 时改为左边，依次是关闭、最小化、最大化；"split" 时关闭单独在左边，
+    // 另外两个在右边，像更老的桌面。用户可以在设置里换回系统标题栏。
     "titleBar": {
       "enabled": true,
       "height": 30,
@@ -226,14 +229,19 @@
       // left or center 标题靠左或居中
       "align": "left",
       "icon": true,
+      // A plain patch under the title so it stands clear of stripes.
+      // 标题下面垫一块纯色，避开条纹。
+      // "titlePlate": "#ffffff",
       "buttons": {
         "size": [40, 26],
         "icon": "#10233a",
         "surface": { "fill": "transparent", "hover": { "fill": "#0000001a" }, "pressed": { "fill": "#00000033" } },
         "close": { "fill": "transparent", "hover": { "fill": "#e81123" }, "pressed": { "fill": "#a50e1a" } },
         // "minimize" and "maximize" give those two a look of their own;
-        // "glyphs": "hover" shows the signs only under the pointer.
-        // "minimize"、"maximize" 可以单独设样子；"glyphs": "hover" 鼠标移上去才显示符号。
+        // "glyphs": "hover" shows the signs only under the pointer;
+        // "classic" draws an empty close box, a box in a box and two lines.
+        // "minimize"、"maximize" 可以单独设样子；"glyphs": "hover" 鼠标移上去才显示符号；
+        // "classic" 画空的关闭框、框中框和两条横线。
         "placement": "right"
       }
     },

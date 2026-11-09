@@ -154,7 +154,10 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
         final surface = merged != null ? merged.surface ?? bar.surface : active ? bar.surface : bar.inactive ?? bar.surface;
         final height = merged == null ? bar.height : math.max(merged.height, bar.buttonSize.height + 4);
         final text = active ? bar.text : bar.inactiveText ?? bar.text.withValues(alpha: 0.6);
-        final title = Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w700));
+        Widget title = Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w700));
+        if (bar.titlePlate case final plate?) {
+          title = ColoredBox(color: plate, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: title));
+        }
         final minimize = _WindowButton(key: _minimize, bar: bar, icon: _Glyph.minimize, tooltip: MaterialLocalizations.of(context).collapsedHint, onPressed: WindowFrame.minimize);
         final maximize = ValueListenableBuilder(
           valueListenable: WindowFrame.maximized,
@@ -186,6 +189,21 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
           Icon(AppIcons.playFill, size: 16, color: text),
         ];
         final menus = widget.menus;
+        // Close at the left, the other two at the right.
+        final split = [minimize, const SizedBox(width: 4), maximize];
+        if (bar.buttonsSplit) {
+          return _frame(surface, height, menus != null
+              ? Row(children: [const SizedBox(width: 8), close, const SizedBox(width: 8), Expanded(child: menus), ...split, const SizedBox(width: 8)])
+              : Row(children: [
+                  const SizedBox(width: 8),
+                  close,
+                  const SizedBox(width: 4),
+                  Expanded(child: bar.align == 'center' ? Center(child: title) : title),
+                  const SizedBox(width: 4),
+                  ...split,
+                  const SizedBox(width: 8),
+                ]));
+        }
         final row = menus != null
             ? Row(children: bar.buttonsLeft
                 ? [const SizedBox(width: 9), buttons, const SizedBox(width: 6), Expanded(child: menus)]
@@ -207,16 +225,18 @@ class _SkinTitleBarViewState extends State<SkinTitleBarView> {
                 buttons,
                 const SizedBox(width: 3),
               ]);
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          // On Windows the system moves the window from the caption itself.
-          onPanStart: Platform.isWindows ? null : (_) => unawaited(WindowFrame.startDrag()),
-          onDoubleTap: Platform.isWindows ? null : () => unawaited(WindowFrame.toggleMaximize()),
-          child: SizedBox(key: _self, height: height, child: SkinBox(surface: surface, child: row)),
-        );
+        return _frame(surface, height, row);
       },
     );
   }
+
+  Widget _frame(SkinSurface surface, double height, Widget row) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        // On Windows the system moves the window from the caption itself.
+        onPanStart: Platform.isWindows ? null : (_) => unawaited(WindowFrame.startDrag()),
+        onDoubleTap: Platform.isWindows ? null : () => unawaited(WindowFrame.toggleMaximize()),
+        child: SizedBox(key: _self, height: height, child: SkinBox(surface: surface, child: row)),
+      );
 }
 
 enum _Glyph { minimize, maximize, restore, close }
@@ -295,7 +315,7 @@ class _WindowButtonState extends State<_WindowButton> {
               decoration: BoxDecoration(color: surface != null || !(hovered || pressed) ? null : (widget.close ? const Color(0xFFE81123) : bar.buttonIcon.withValues(alpha: pressed ? 0.2 : 0.1))),
               child: bar.glyphsOnHover
                   ? (hovered || pressed || _WindowButton.group.value ? CustomPaint(painter: _GlyphPainter(widget.icon, bar.buttonIcon.withValues(alpha: 0.75), small: true)) : null)
-                  : CustomPaint(painter: _GlyphPainter(widget.icon, widget.close && surface == null && hovered ? Colors.white : bar.buttonIcon)),
+                  : CustomPaint(painter: _GlyphPainter(widget.icon, widget.close && surface == null && hovered ? Colors.white : bar.buttonIcon, classic: bar.classicGlyphs)),
             ),
           ),
         ),
@@ -306,7 +326,9 @@ class _WindowButtonState extends State<_WindowButton> {
 
 /// The window buttons' signs, in pixel lines so they stay crisp in any skin.
 class _GlyphPainter extends CustomPainter {
-  _GlyphPainter(this.glyph, this.color, {this.small = false});
+  _GlyphPainter(this.glyph, this.color, {this.small = false, this.classic = false});
+  /// Boxes and lines instead of signs.
+  final bool classic;
   final _Glyph glyph;
   final Color color;
   /// Fine signs inside small round buttons: a cross, a dash and a plus.
@@ -314,6 +336,24 @@ class _GlyphPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (classic) {
+      final p = Paint()
+        ..color = color
+        ..strokeWidth = 1
+        ..style = PaintingStyle.stroke
+        ..isAntiAlias = false;
+      final box = (Offset.zero & size).deflate(2.5);
+      switch (glyph) {
+        case _Glyph.close:
+          break;
+        case _Glyph.maximize || _Glyph.restore:
+          canvas.drawRect(Rect.fromLTWH(box.left, box.top, box.width * 0.55, box.height * 0.55), p);
+        case _Glyph.minimize:
+          canvas.drawLine(Offset(box.left, box.center.dy - 1.5), Offset(box.right, box.center.dy - 1.5), p);
+          canvas.drawLine(Offset(box.left, box.center.dy + 1.5), Offset(box.right, box.center.dy + 1.5), p);
+      }
+      return;
+    }
     if (small) {
       final p = Paint()
         ..color = color
@@ -362,7 +402,7 @@ class _GlyphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_GlyphPainter old) => old.glyph != glyph || old.color != color || old.small != small;
+  bool shouldRepaint(_GlyphPainter old) => old.glyph != glyph || old.color != color || old.small != small || old.classic != classic;
 }
 
 /// One menu of [SkinMenuBarView]: '&' marks the letter Alt opens it with.

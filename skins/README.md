@@ -256,6 +256,7 @@ own shapes; only the colours change. 跟随浅色/深色模式，保留 Lumtub �
 | `onebit` | One Bit | 黑白点阵 | black and white bitmap screens, ~1984 |
 | `platinum` | Platinum | 白金灰 | late-90s platinum grey |
 | `pinstripe` | Pinstripe Gel | 细条纹凝胶 | early-2000s pinstripes and gel, menus along the top |
+| `silver` | Brushed Silver | 银色一体 | late-2000s grey bars joined into one, light menu bar on top, blue-grey sidebar |
 | `metal` | Brushed Metal | 金属拟物 | first touch phones: steel, gloss, orange glow |
 | `holo` | Ice Neon | 冰蓝霓虹 | dark panels and ice-blue lines, ~2012 phones |
 | `paper` | Paper Cards | 纸片阴影 | paper cards, coloured bar and ripples, ~2015 phones |

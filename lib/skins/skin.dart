@@ -676,7 +676,7 @@ class PatternDecoration extends SkinDecoration {
 
 /// The title bar the app draws itself, with its window buttons.
 class SkinTitleBar {
-  SkinTitleBar._(this.height, this.surface, this.inactive, this.text, this.inactiveText, this.align, this.button, this.buttonIcon, this.closeButton, this.buttonSize, this.buttonsLeft, this.icon, this.minimizeButton, this.maximizeButton, this.glyphsOnHover);
+  SkinTitleBar._(this.height, this.surface, this.inactive, this.text, this.inactiveText, this.align, this.button, this.buttonIcon, this.closeButton, this.buttonSize, this.buttonsLeft, this.icon, this.minimizeButton, this.maximizeButton, this.glyphsOnHover, this.buttonsSplit, this.classicGlyphs, this.titlePlate);
   final double height;
   final SkinSurface surface;
   final SkinSurface? inactive;
@@ -699,6 +699,14 @@ class SkinTitleBar {
   final SkinSurface? maximizeButton;
   /// The signs on the buttons show only under the pointer.
   final bool glyphsOnHover;
+  /// Close alone at the left, minimise and maximise at the right, as on
+  /// the desktops of the late 1980s and 1990s.
+  final bool buttonsSplit;
+  /// The plain boxes of those desktops: an empty close box, a box in a box
+  /// to maximise and two lines to minimise.
+  final bool classicGlyphs;
+  /// A plain patch under the title, so it stands clear of stripes.
+  final Color? titlePlate;
 
   static SkinTitleBar? parse(Object? value, Skin skin) {
     if (value is! Map<String, Object?> || value['enabled'] == false) return null;
@@ -727,6 +735,9 @@ class SkinTitleBar {
       SkinSurface.parse(buttons['minimize'], skin),
       SkinSurface.parse(buttons['maximize'], skin),
       _str(buttons['glyphs']) == 'hover',
+      _str(buttons['placement']) == 'split',
+      _str(buttons['glyphs']) == 'classic',
+      skin.colorOf(value['titlePlate'], 'titleBar.titlePlate'),
     );
   }
 }

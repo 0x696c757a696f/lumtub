@@ -262,7 +262,8 @@
                 "placement": {
                   "enum": [
                     "right",
-                    "left"
+                    "left",
+                    "split"
                   ],
                   "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                 },
@@ -275,12 +276,17 @@
                 "glyphs": {
                   "enum": [
                     "always",
-                    "hover"
+                    "hover",
+                    "classic"
                   ],
                   "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                 }
               },
               "additionalProperties": false
+            },
+            "titlePlate": {
+              "$ref": "#/$defs/color",
+              "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
             }
           },
           "additionalProperties": false,
@@ -788,7 +794,8 @@
                         "placement": {
                           "enum": [
                             "right",
-                            "left"
+                            "left",
+                            "split"
                           ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
@@ -801,12 +808,17 @@
                         "glyphs": {
                           "enum": [
                             "always",
-                            "hover"
+                            "hover",
+                            "classic"
                           ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
                       "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
                     }
                   },
                   "additionalProperties": false,
@@ -1306,7 +1318,8 @@
                         "placement": {
                           "enum": [
                             "right",
-                            "left"
+                            "left",
+                            "split"
                           ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
@@ -1319,12 +1332,17 @@
                         "glyphs": {
                           "enum": [
                             "always",
-                            "hover"
+                            "hover",
+                            "classic"
                           ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
                       "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
                     }
                   },
                   "additionalProperties": false,
@@ -1824,7 +1842,8 @@
                         "placement": {
                           "enum": [
                             "right",
-                            "left"
+                            "left",
+                            "split"
                           ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
@@ -1837,12 +1856,17 @@
                         "glyphs": {
                           "enum": [
                             "always",
-                            "hover"
+                            "hover",
+                            "classic"
                           ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
                       "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
                     }
                   },
                   "additionalProperties": false,
@@ -2342,7 +2366,8 @@
                         "placement": {
                           "enum": [
                             "right",
-                            "left"
+                            "left",
+                            "split"
                           ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
@@ -2355,12 +2380,17 @@
                         "glyphs": {
                           "enum": [
                             "always",
-                            "hover"
+                            "hover",
+                            "classic"
                           ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
                       "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
                     }
                   },
                   "additionalProperties": false,
@@ -2860,7 +2890,8 @@
                         "placement": {
                           "enum": [
                             "right",
-                            "left"
+                            "left",
+                            "split"
                           ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
@@ -2873,12 +2904,17 @@
                         "glyphs": {
                           "enum": [
                             "always",
-                            "hover"
+                            "hover",
+                            "classic"
                           ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
                       "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
                     }
                   },
                   "additionalProperties": false,
@@ -3378,7 +3414,8 @@
                         "placement": {
                           "enum": [
                             "right",
-                            "left"
+                            "left",
+                            "split"
                           ],
                           "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
                         },
@@ -3391,12 +3428,17 @@
                         "glyphs": {
                           "enum": [
                             "always",
-                            "hover"
+                            "hover",
+                            "classic"
                           ],
                           "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
                       "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
                     }
                   },
                   "additionalProperties": false,

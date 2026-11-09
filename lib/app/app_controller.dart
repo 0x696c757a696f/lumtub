@@ -1574,7 +1574,8 @@ class AppController extends ChangeNotifier with _ExploreState {
     final read = Stopwatch()..start();
     final folder = File(Platform.resolvedExecutable).parent.path;
     final mpv = paths?.mpv;
-    final bytes = await Isolate.run(_readingPlayerFiles(folder, mpv));
+    // Android's executable is the system's app_process, in a folder apps may not list.
+    final bytes = Platform.isAndroid || Platform.isIOS ? 0 : await Isolate.run(_readingPlayerFiles(folder, mpv));
     logDebug(() => 'Read ${bytes >> 20} MB of player files in ${read.elapsedMilliseconds} ms');
     final directories = this.directories;
     if (directories != null) {

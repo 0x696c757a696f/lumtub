@@ -912,28 +912,44 @@ jobs:
         env:
           GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
+          KEYSTORE_PASSWORD: ${{ secrets.LUMTUB_ANDROID_KEYSTORE_PASSWORD }}
+          HYBRID_CLASSICAL_KEY: ${{ secrets.LUMTUB_ANDROID_HYBRID_CLASSICAL_KEY }}
+          HYBRID_CLASSICAL_CERT: ${{ secrets.LUMTUB_ANDROID_HYBRID_CLASSICAL_CERT }}
+          HYBRID_PQC_KEY: ${{ secrets.LUMTUB_ANDROID_HYBRID_PQC_KEY }}
+          HYBRID_PQC_CERT: ${{ secrets.LUMTUB_ANDROID_HYBRID_PQC_CERT }}
         run: |
           flutter build apk --release --split-per-abi --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=android --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
           mkdir -p dist
           for abi in arm64-v8a armeabi-v7a x86_64; do
             cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "dist/Lumtub_${LUMTUB_VERSION}_android-$abi.apk"
           done
-          tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          # APK Signature Scheme v3.2 (classical EC + ML-DSA-65, checked from
+          # Android 17 on) needs apksigner 37 on a JDK that knows ML-DSA.
+          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
+          yes | "$sdk/sdkmanager" --licenses > /dev/null || true
+          "$sdk/sdkmanager" --channel=3 "build-tools;37.0.0-rc2" > /dev/null
+          tools="$ANDROID_HOME/build-tools/37.0.0-rc2"
+          if [ -f android/release.jks ] && [ -n "$HYBRID_PQC_KEY" ]; then
+            keys="$RUNNER_TEMP/hybrid"; mkdir -p "$keys"
+            echo "$HYBRID_CLASSICAL_KEY" | base64 -d > "$keys/hybrid-classical.pk8"
+            echo "$HYBRID_CLASSICAL_CERT" | base64 -d > "$keys/hybrid-classical.x509.der"
+            echo "$HYBRID_PQC_KEY" | base64 -d > "$keys/hybrid-pqc.pk8"
+            echo "$HYBRID_PQC_CERT" | base64 -d > "$keys/hybrid-pqc.x509.der"
+            for apk in dist/*.apk; do
+              echo "== $(basename "$apk")"
+              JAVA_HOME="$JAVA_HOME_25_X64" PATH="$JAVA_HOME_25_X64/bin:$PATH" android/packaging/sign-hybrid.sh \
+                "$tools/apksigner" "$apk" "$apk.signed" android/release.jks "$keys"
+              mv "$apk.signed" "$apk"
+            done
+            rm -rf "$keys"
+          else
+            echo "::warning::No hybrid (ML-DSA) keys: the APKs carry no v3.2 signature"
+          fi
           for apk in dist/*.apk; do
             echo "$(basename "$apk"): $(stat -c %s "$apk") bytes"
             # 16 KB page alignment of the uncompressed native libraries.
             "$tools/zipalign" -c -P 16 -v 4 "$apk" | grep -E '\.so|Verification' | tail -12
           done
-          # Which signature schemes the newest apksigner knows (v3.2 adds ML-DSA beside the classic key).
-          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
-          newest=$("$sdk/sdkmanager" --list --include_obsolete --channel=3 2>/dev/null | grep -oE 'build-tools;[0-9][^ |]*' | sort -uV | tail -1)
-          echo "newest build-tools: $newest"
-          yes | "$sdk/sdkmanager" --licenses > /dev/null; "$sdk/sdkmanager" --channel=3 "$newest" > /dev/null || true
-          tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
-          echo "build-tools: $(basename "$tools")"; "$tools/apksigner" version || true
-          echo "JDKs: ${JAVA_HOME_21_X64:-} ${JAVA_HOME_25_X64:-}"; ls /usr/lib/jvm || true
-          "$tools/apksigner" sign --help 2>&1 | grep -n -B3 -A14 -iE 'hybrid|pqc|v3\.2|ml-?dsa' | head -150 || true
-          "$tools/apksigner" verify -v "dist/Lumtub_${LUMTUB_VERSION}_android-arm64-v8a.apk" | grep -iE 'Verified using|Number of signers' || true
           rm -f android/release.jks android/key.properties
 
       - name: Android - start an emulator
@@ -970,20 +986,6 @@ jobs:
         run: |
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
           timeout 600 android/packaging/smoke.sh dist/Lumtub_*_android-x86_64.apk "$RUNNER_TEMP/smoke" || { echo "--- emulator log"; tail -60 "$RUNNER_TEMP/emulator.log"; exit 1; }
-
-      - name: Android - hybrid signature (v3.2) trial with throwaway keys
-        continue-on-error: true
-        env:
-          KEYSTORE_PASSWORD: trial-only
-        run: |
-          trial="$RUNNER_TEMP/hybrid"; mkdir -p "$trial"
-          python3 -m venv "$trial/venv" && "$trial/venv/bin/pip" -q install cryptography
-          "$trial/venv/bin/python" android/packaging/hybrid-keys.py "$trial"
-          "$JAVA_HOME_25_X64/bin/keytool" -genkeypair -keystore "$trial/k0.jks" -storetype PKCS12 -storepass "$KEYSTORE_PASSWORD" \
-            -alias lumtub -keyalg EC -groupname secp384r1 -sigalg SHA384withECDSA -dname "CN=Lumtub trial" -validity 365
-          tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
-          JAVA_HOME="$JAVA_HOME_25_X64" PATH="$JAVA_HOME_25_X64/bin:$PATH" android/packaging/sign-hybrid.sh \
-            "$tools/apksigner" dist/Lumtub_*_android-x86_64.apk "$trial/hybrid.apk" "$trial/k0.jks" "$trial"
 
       - name: Android - pictures to the android-shots branch
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository

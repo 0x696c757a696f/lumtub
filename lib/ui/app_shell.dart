@@ -653,7 +653,8 @@ class _SearchFieldState extends State<_SearchField> {
               onChanged: (_) => setState(() => _picking = false),
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
-                hintText: tr('Search YouTube, or paste a video link'),
+                // A phone's box is too narrow for the whole sentence.
+                hintText: touchFirst && MediaQuery.sizeOf(context).width < 600 ? tr('Search') : tr('Search YouTube, or paste a video link'),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 prefixIcon: const Icon(AppIcons.magnifyingGlass),
                 suffixIcon: controller.text.isEmpty && touchFirst

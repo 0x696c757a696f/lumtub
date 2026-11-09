@@ -14,6 +14,10 @@ class PlayerOptionApplicator {
     return {
       'hwdec': settings.hwdec,
       'hwdec-codecs': defaultHwdecCodecs,
+      // The AppImage's own libpipewire, used when the system has none, has
+      // no SPA plugins and no daemon to talk to: mpv's PipeWire output would
+      // crash starting. Such a system plays through PulseAudio or ALSA.
+      if (Platform.isLinux && Platform.environment['LUMTUB_NO_PIPEWIRE'] == '1') 'ao': 'pulse,alsa,null',
       if (Platform.isWindows) 'd3d11va-zero-copy': settings.d3d11vaZeroCopy ? 'yes' : 'no',
       'vd-lavc-dr': settings.directRendering,
       // Not 'no': mpv reads that as -1, which inverts the audio clock

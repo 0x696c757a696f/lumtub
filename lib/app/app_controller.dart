@@ -294,6 +294,12 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (on) _noteWaylandTop();
   }
 
+  /// Android began or ended picture in picture itself.
+  void pipChangedBySystem(bool on) {
+    AppWindow.pipChangedBySystem(on);
+    if (on != pip) _update(() => pip = on);
+  }
+
   VideoOutputSize? _outputSize;
 
   /// [owner] shows the video in [box], in physical pixels; libmpv draws it

@@ -263,6 +263,16 @@ class AppWindow {
 
   /// Puts the window back where and how it was before [enterPip]: its
   /// caption, size, position and maximized state.
+  /// Android ended or started its own picture in picture (the user closed
+  /// or expanded the window, or left the app while a video played).
+  static void pipChangedBySystem(bool on) => _nativePip = on;
+
+  /// Android: whether leaving the app now puts the video in picture in
+  /// picture.
+  static void setAutoPip(bool on) {
+    if (Platform.isAndroid) _call('setAutoPip', on);
+  }
+
   static bool exitPip({bool keepOnTop = false}) {
     if (_native) {
       if (!_nativePip) return false;

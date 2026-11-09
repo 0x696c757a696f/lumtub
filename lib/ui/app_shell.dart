@@ -247,7 +247,10 @@ class _AppShellState extends State<AppShell> {
               final skin = context.skin;
               final ownTitleBar = usesSkinTitleBar(skin, systemTitleBar: _controller.appearance.systemTitleBar);
               _useCustomFrame(ownTitleBar);
-              final menus = skin?.menuBar != null ? _menus() : const <SkinMenu>[];
+              // Phones, tablets and TVs have no menu bar: the skin brings
+              // its colours, fonts and controls only.
+              final menuBar = WindowFrame.supported ? skin?.menuBar : null;
+              final menus = menuBar != null ? _menus() : const <SkinMenu>[];
               final rail = switch (_controller.appearance.navigation) {
                 NavigationStyle.auto => wide,
                 NavigationStyle.rail => true,
@@ -255,9 +258,11 @@ class _AppShellState extends State<AppShell> {
               };
               Widget page(Widget child) => skin == null ? child : SkinBackdrop(skin: skin, plain: _controller.appearance.lowResource, child: child);
               final scaffold = Scaffold(
-                body: page(Column(children: [
+                // Below Android's status bar and camera cutout; the
+                // navigation bar keeps clear of the gesture bar itself.
+                body: page(SafeArea(bottom: rail, left: rail, right: rail, top: !WindowFrame.supported, child: Column(children: [
                   if (ownTitleBar) SkinTitleBarView(bar: skin!.titleBar!, title: appName),
-                  if (skin?.menuBar case final bar?) CallbackShortcuts(bindings: menuShortcuts(menus), child: SkinMenuBarView(bar: bar, menus: menus, clock: bar.clock)),
+                  if (menuBar case final bar?) CallbackShortcuts(bindings: menuShortcuts(menus), child: SkinMenuBarView(bar: bar, menus: menus, clock: bar.clock)),
                   _TopBar(
                     wide: wide,
                     controller: _controller,
@@ -300,7 +305,7 @@ class _AppShellState extends State<AppShell> {
                       Positioned.fill(child: MiniPlayer(controller: _controller)),
                   ])),
                   if (_controller.appearance.showStatusBar) _StatusBar(controller: _controller),
-                ])),
+                ]))),
                 bottomNavigationBar: rail ? null : NavigationBar(
                   height: 64,
                   selectedIndex: _selectedIndex ?? 0,
@@ -313,7 +318,19 @@ class _AppShellState extends State<AppShell> {
               // 关灯 darkens the whole window but the player, under dialogs
               // and menus, which are routes above the shell.
               final watching = _controller.onWatchPage && !_controller.mini && _controller.videoController != null;
-              final framed = ownTitleBar ? ResizeEdges(child: scaffold) : scaffold;
+              final framed = ownTitleBar
+                  ? ResizeEdges(child: scaffold)
+                  // Android's back button and gesture go back through the
+                  // pages first; on the first page they leave the app.
+                  : WindowFrame.supported
+                  ? scaffold
+                  : PopScope(
+                      canPop: !_controller.canGoBack,
+                      onPopInvokedWithResult: (didPop, _) {
+                        if (!didPop) _back();
+                      },
+                      child: scaffold,
+                    );
               return ValueListenableBuilder(
                 valueListenable: lightsOff,
                 builder: (context, off, child) => Stack(fit: StackFit.expand, children: [

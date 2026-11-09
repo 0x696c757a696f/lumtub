@@ -99,6 +99,9 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
 abstract final class SkinGlass {
   static double opacity = 1;
   static const min = 0.3;
+  /// Seeing through to the desktop: how much of the skin's page colour is
+  /// still laid over it, so text stays readable on any wallpaper.
+  static const desk = 0.7;
 }
 
 class SurfaceDecoration extends Decoration {
@@ -281,15 +284,18 @@ class _LayerPainter extends CustomPainter {
 /// Under 低占用模式 ([plain]) the ornaments are left out. 护眼暖色 tints
 /// it all like the video.
 class SkinBackdrop extends StatelessWidget {
-  const SkinBackdrop({super.key, required this.skin, required this.child, this.plain = false});
+  const SkinBackdrop({super.key, required this.skin, required this.child, this.plain = false, this.seeThrough = false});
   final Skin skin;
   final Widget child;
   final bool plain;
+  /// The desktop is behind the window: only a tint of the page colour
+  /// is laid over it, without the skin's pictures and landscape.
+  final bool seeThrough;
 
   @override
   Widget build(BuildContext context) {
     final decorations = plain ? const <SkinDecoration>[] : skin.decorations;
-    final below = decorations.where((d) => !d.above).toList();
+    final below = decorations.where((d) => !d.above && !(seeThrough && d is SceneDecoration)).toList();
     final above = decorations.where((d) => d.above).toList();
     final warmth = context.pictureWarmth;
     Widget warm(Widget child) => warmth == null ? child : ColorFiltered(colorFilter: ColorFilter.mode(warmth, BlendMode.modulate), child: child);
@@ -297,8 +303,11 @@ class SkinBackdrop extends StatelessWidget {
       RepaintBoundary(child: warm(Stack(fit: StackFit.expand, children: [
         // Pure black in dark mode replaces the page of a skin that follows
         // the theme mode, as it does Lumtub's own.
-        ColoredBox(color: skin.followsThemeMode && Theme.of(context).colorScheme.surface == Colors.black ? Colors.black : skin.colors.page),
-        if (skin.background.isNotEmpty) SkinLayers(skin.background),
+        if (seeThrough)
+          ColoredBox(color: skin.colors.page.withValues(alpha: SkinGlass.desk))
+        else
+          ColoredBox(color: skin.followsThemeMode && Theme.of(context).colorScheme.surface == Colors.black ? Colors.black : skin.colors.page),
+        if (skin.background.isNotEmpty && !seeThrough) SkinLayers(skin.background),
         if (below.isNotEmpty) CustomPaint(painter: SkinDecorationPainter(below)),
       ]))),
       child,

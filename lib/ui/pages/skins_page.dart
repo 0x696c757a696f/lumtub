@@ -99,6 +99,15 @@ class _SkinsPage extends StatelessWidget {
                   onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(glassOpacity: v)),
                 ),
               ),
+            if ((context.skin?.glass ?? false) && WindowFrame.supported)
+              SwitchItem(
+                title: tr('See the desktop through the window'),
+                subtitle: tr('The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode'),
+                leading: Icon(AppIcons.monitorArrowUp),
+                value: appearance.seeThrough,
+                enabled: !appearance.lowResource,
+                onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(seeThrough: v)),
+              ),
             _header(context, tr('Color schemes')),
             grid([for (final s in library.builtIn) if (schemes.contains(s.id)) s], standard: true),
             _tip(context, tr('These follow light and dark mode and keep Lumtub\'s own shapes; the colours change, and the title bar and menu bar take the same colours.')),

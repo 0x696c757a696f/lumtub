@@ -38,6 +38,8 @@ class WindowFrame {
                   std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void Send(const char* method, flutter::EncodableValue argument);
   void SetCustom(bool on);
+  void SetSeeThrough(bool on, bool dark);
+  void ApplyMargins();
   bool Active() const;
   LRESULT HitTest(LPARAM lparam);
   static LRESULT CALLBACK ViewProc(HWND view, UINT message, WPARAM wparam, LPARAM lparam,
@@ -50,6 +52,7 @@ class WindowFrame {
   HWND view_ = nullptr;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
   bool custom_ = false;
+  bool see_through_ = false;
   double caption_height_ = 0;
   bool has_maximize_ = false;
   Box maximize_;

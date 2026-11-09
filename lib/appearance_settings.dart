@@ -234,6 +234,9 @@ class AppearanceSettings {
   final bool hideTitleBar;
   /// Under a glass skin: how solid its panes are, 0.3 to 1.
   final double glassOpacity;
+  /// Under a glass skin on a computer: the window lets the desktop through,
+  /// blurred where the system can.
+  final bool seeThrough;
   final EyeCare eyeCare;
   /// How warm 护眼暖色 makes the window, 0.1 to 1: the colour
   /// temperature of the light, from 6040 K down to 1900 K
@@ -279,6 +282,7 @@ class AppearanceSettings {
     this.systemTitleBar = false,
     this.hideTitleBar = false,
     this.glassOpacity = 1,
+    this.seeThrough = false,
     this.eyeCare = EyeCare.off,
     this.warmth = 0.4,
     this.eyeCareStart = 20,
@@ -359,6 +363,7 @@ class AppearanceSettings {
     bool? systemTitleBar,
     bool? hideTitleBar,
     double? glassOpacity,
+    bool? seeThrough,
     EyeCare? eyeCare,
     double? warmth,
     int? eyeCareStart,
@@ -392,6 +397,7 @@ class AppearanceSettings {
         systemTitleBar: systemTitleBar ?? this.systemTitleBar,
         hideTitleBar: hideTitleBar ?? this.hideTitleBar,
         glassOpacity: glassOpacity ?? this.glassOpacity,
+        seeThrough: seeThrough ?? this.seeThrough,
         eyeCare: eyeCare ?? this.eyeCare,
         warmth: warmth ?? this.warmth,
         eyeCareStart: eyeCareStart ?? this.eyeCareStart,
@@ -433,6 +439,7 @@ class AppearanceSettings {
         'systemTitleBar': systemTitleBar,
         'hideTitleBar': hideTitleBar,
         'glassOpacity': glassOpacity,
+        'seeThrough': seeThrough,
         'eyeCare': eyeCare.name,
         'warmth': warmth,
         'eyeCareStart': eyeCareStart,
@@ -486,6 +493,7 @@ class AppearanceSettings {
       systemTitleBar: raw['systemTitleBar'] == true,
       hideTitleBar: raw['hideTitleBar'] == true,
       glassOpacity: raw['glassOpacity'] is num ? (raw['glassOpacity'] as num).toDouble().clamp(0.3, 1.0) : 1,
+      seeThrough: raw['seeThrough'] == true,
       eyeCare: _byName(EyeCare.values, raw['eyeCare'], EyeCare.off),
       warmth: raw['warmth'] is num ? (raw['warmth'] as num).toDouble().clamp(0.1, 1.0) : 0.4,
       eyeCareStart: _hour(raw['eyeCareStart'], 20),

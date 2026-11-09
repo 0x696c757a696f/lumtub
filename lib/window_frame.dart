@@ -37,6 +37,19 @@ abstract final class WindowFrame {
     await _refresh();
   }
 
+  /// Lets the desktop show wherever Flutter leaves the window clear; [dark]
+  /// tints the system's blur. Answers whether the window can.
+  static Future<bool> setSeeThrough({required bool on, bool dark = false}) async {
+    if (!supported) return false;
+    try {
+      return await _channel.invokeMethod<bool>('setSeeThrough', {'on': on, 'dark': dark}) ?? false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
   static Future<void> minimize() => _invoke('minimize');
 
   static Future<void> toggleMaximize() => _invoke('toggleMaximize');

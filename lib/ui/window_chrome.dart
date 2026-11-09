@@ -32,6 +32,24 @@ class WindowChrome extends StatefulWidget {
 
 class _WindowChromeState extends State<WindowChrome> {
   bool? _customFrame;
+  (bool, bool)? _seeThrough;
+  bool _canSeeThrough = false;
+
+  /// Clears the window to the desktop under a glass skin when asked, and
+  /// makes it solid again otherwise. The backdrop goes clear only once the
+  /// window said it can.
+  void _useSeeThrough(bool on, bool dark) {
+    final next = (on, dark);
+    if (_seeThrough == next || (!on && _seeThrough == null)) {
+      _seeThrough = next;
+      return;
+    }
+    _seeThrough = next;
+    unawaited(WindowFrame.setSeeThrough(on: on, dark: dark).then((can) {
+      if (!mounted || _seeThrough != next || _canSeeThrough == (on && can)) return;
+      setState(() => _canSeeThrough = on && can);
+    }));
+  }
   late final _changes = Listenable.merge([widget.controller, WindowChrome.menus, WindowChrome.fullscreen]);
 
   /// Takes the system title bar away while a skin draws its own, and gives
@@ -78,7 +96,9 @@ class _WindowChromeState extends State<WindowChrome> {
             ],
             Expanded(child: child!),
           ]);
-          if (skin != null) content = SkinBackdrop(skin: skin, plain: appearance.lowResource, child: content);
+          final wantsDesk = skin != null && skin.glass && appearance.seeThrough && !appearance.lowResource && WindowFrame.supported;
+          _useSeeThrough(wantsDesk, skin?.brightness == Brightness.dark);
+          if (skin != null) content = SkinBackdrop(skin: skin, plain: appearance.lowResource, seeThrough: wantsDesk && _canSeeThrough, child: content);
           if (ownTitleBar && !bare) content = ResizeEdges(child: content);
           // Above the navigator there is no page yet: the bars get the text
           // style and ink a page would give them, and an overlay of their

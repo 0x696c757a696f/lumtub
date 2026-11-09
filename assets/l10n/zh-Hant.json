@@ -3039,5 +3039,7 @@
   "Light only": "僅淺色",
   "Dark only": "僅深色",
   "Glass": "玻璃",
-  "{0}% solid": "不透明度 {0}%"
+  "{0}% solid": "不透明度 {0}%",
+  "See the desktop through the window": "透出桌面",
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "風景讓開，視窗透出後面的桌面，系統支援時還會帶模糊。低佔用模式下無法使用"
 }

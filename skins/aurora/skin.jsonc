@@ -38,7 +38,7 @@
     "thumbnailRadius": 14
   },
   "window": {
-    "glass": true,
+    "glass": { "min": 0.5 },
     "background": [
       {
         "linear": {

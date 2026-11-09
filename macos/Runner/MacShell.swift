@@ -73,6 +73,11 @@ final class MacShell: NSObject, NSWindowDelegate {
     case "startDrag":
       let current = NSApp.currentEvent?.type == .leftMouseDown ? NSApp.currentEvent : lastPress
       if NSEvent.pressedMouseButtons & 1 != 0, let event = current { window.performDrag(with: event) }
+    case "setSeeThrough":
+      let arguments = call.arguments as? [String: Any] ?? [:]
+      (window as? MainFlutterWindow)?.setSeeThrough(arguments["on"] as? Bool ?? false, dark: arguments["dark"] as? Bool ?? false)
+      result(true)
+      return
     case "startResize", "setCaption":
       break
     default:
@@ -256,7 +261,7 @@ final class MacShell: NSObject, NSWindowDelegate {
   /// A changed style mask can take the keyboard from the Flutter view.
   private func refocus(_ window: NSWindow) {
     window.makeKeyAndOrderFront(nil)
-    if let view = window.contentViewController?.view { window.makeFirstResponder(view) }
+    if let view = (window as? MainFlutterWindow)?.flutterView ?? window.contentViewController?.view { window.makeFirstResponder(view) }
   }
 
   private func exitPip(keepOnTop: Bool) {

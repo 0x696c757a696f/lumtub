@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/app_controller.dart';
+import '../../appearance_settings.dart';
 import '../../l10n/l10n.dart';
 import '../../skins/skin.dart';
 import '../../skins/skin_library.dart';
@@ -16,6 +17,7 @@ import '../skin_paint.dart';
 import '../theme.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import 'downloads_page.dart' show openInExplorer;
+import 'settings_sections.dart' show themeModes;
 
 const _guide = 'https://github.com/0x696c757a696f/lumtub/blob/main/skins/README.md';
 
@@ -76,12 +78,21 @@ class _SkinsPage extends StatelessWidget {
               if (skin.warnings.isNotEmpty) (skin.nameIn(language), skin.warnings.join('\n')),
             for (final MapEntry(key: path, value: error) in library.errors.entries) (path, error),
           ];
+          final schemes = SkinLibrary.colorSchemeIds.toSet();
           return ListView(padding: const EdgeInsets.only(bottom: 40), children: [
+            // Skins with both sides take light or dark from here.
+            PopupItem<ThemeMode>(
+              title: tr('Theme mode'),
+              leading: Icon(AppIcons.sunHorizon),
+              value: appearance.themeMode,
+              values: themeModes,
+              onSelected: (mode) => controller.saveAppearance(controller.appearance.copyWith(themeMode: mode, darkSchedule: DarkSchedule.off)),
+            ),
             _header(context, tr('Color schemes')),
-            grid([for (final s in library.builtIn) if (s.followsThemeMode) s], standard: true),
+            grid([for (final s in library.builtIn) if (schemes.contains(s.id)) s], standard: true),
             _tip(context, tr('These follow light and dark mode and keep Lumtub\'s own shapes; the colours change, and the title bar and menu bar take the same colours.')),
             _header(context, tr('Built-in skins')),
-            grid([for (final s in library.builtIn) if (!s.followsThemeMode) s]),
+            grid([for (final s in library.builtIn) if (!schemes.contains(s.id)) s]),
             _tip(context, tr('A skin changes the colours, shapes, window frame and decorations. Warm light and Low resource mode still work: warm light tints skins too, and Low resource mode leaves out their decorations.')),
             if (library.user.isNotEmpty) ...[
               _header(context, tr('Your skins')),
@@ -298,6 +309,11 @@ class SkinCard extends StatelessWidget {
               if (selected) ...[Icon(AppIcons.checkCircleFill, size: 14, color: colors.primary), const SizedBox(width: 4)],
               Flexible(child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: selected ? colors.primary : colors.onSurfaceVariant, fontWeight: selected ? FontWeight.w600 : null))),
             ]),
+            if (skin case final skin?)
+              Text(
+                skin.followsThemeMode ? tr('Light and dark') : skin.brightness == Brightness.dark ? tr('Dark only') : tr('Light only'),
+                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: colors.onSurfaceVariant),
+              ),
             if (note case final note? when note.isNotEmpty)
               Tooltip(message: note, child: Text(note, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: colors.outline))),
           ]),

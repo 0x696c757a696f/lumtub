@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../app/app_controller.dart';
+import '../cast/airplay.dart';
 import '../cast/cast_device.dart';
 import '../cast/cast_discovery.dart';
 import '../l10n/l10n.dart';
@@ -18,16 +19,29 @@ Future<void> showCastDialog(BuildContext context, AppController controller) =>
     showDialog<void>(context: context, builder: (_) => _CastDialog(controller: controller, messenger: ScaffoldMessenger.of(context)));
 
 /// Pauses the local player, hands the video to [device] at the current
-/// position and tells what went wrong in a short message.
-Future<void> castTo(AppController controller, CastDevice device, ScaffoldMessengerState messenger) async {
+/// position and tells what went wrong in a short message. An AirPlay
+/// receiver that wants its PIN is paired first, in a dialog on [navigator].
+Future<void> castTo(AppController controller, CastDevice device, ScaffoldMessengerState messenger, {NavigatorState? navigator}) async {
   final player = controller.player;
   if (player == null) return;
+  if (device is AirPlayDevice && device.needsPin && await controller.airPlayPairings.of(device.id) == null) {
+    if (navigator == null || !await _pairAirPlay(device, navigator, messenger)) return;
+  }
   messenger.showSnackBar(SnackBar(content: Text(tr('Casting to {0}…', [device.name]))));
   final wasPlaying = player.state.playing;
   try {
     final media = await controller.castMedia(player.state.position, device);
     await player.pause();
-    await controller.cast.start(device, media, videoId: controller.playing?.id);
+    try {
+      await controller.cast.start(device, media, videoId: controller.playing?.id);
+    } on AirPlayPinNeeded {
+      messenger.hideCurrentSnackBar();
+      if (device is! AirPlayDevice || navigator == null || !await _pairAirPlay(device, navigator, messenger)) {
+        if (wasPlaying) unawaited(player.play());
+        return;
+      }
+      await controller.cast.start(device, media, videoId: controller.playing?.id);
+    }
     messenger.hideCurrentSnackBar();
   } on CastException catch (e) {
     if (wasPlaying) unawaited(player.play());
@@ -35,6 +49,86 @@ Future<void> castTo(AppController controller, CastDevice device, ScaffoldMesseng
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(tr('Cannot cast: {0}', [e.message]))));
   }
+}
+
+/// Has [device] show a PIN and pairs with the one typed in; false when the
+/// user gave up or the device would not pair.
+Future<bool> _pairAirPlay(AirPlayDevice device, NavigatorState navigator, ScaffoldMessengerState messenger) async {
+  void fail(CastException e) => messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(tr('Pairing failed: {0}', [e.message]))));
+  int pairing;
+  try {
+    pairing = await device.startPairing();
+  } on CastException catch (e) {
+    fail(e);
+    return false;
+  }
+  while (true) {
+    if (!navigator.mounted) return false;
+    final pin = await showDialog<String>(context: navigator.context, builder: (_) => _PinDialog(name: device.name));
+    if (pin == null) return false;
+    try {
+      await device.finishPairing(pairing, pin);
+      return true;
+    } on CastException catch (e) {
+      fail(e);
+      // The PIN is used up either way; the TV shows a new one.
+      try {
+        pairing = await device.startPairing();
+      } on CastException catch (e) {
+        fail(e);
+        return false;
+      }
+    }
+  }
+}
+
+class _PinDialog extends StatefulWidget {
+  const _PinDialog({required this.name});
+  final String name;
+
+  @override
+  State<_PinDialog> createState() => _PinDialogState();
+}
+
+class _PinDialogState extends State<_PinDialog> {
+  final _pin = TextEditingController();
+
+  @override
+  void dispose() {
+    _pin.dispose();
+    super.dispose();
+  }
+
+  void _done() {
+    if (_pin.text.trim().isNotEmpty) Navigator.of(context).pop(_pin.text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(tr('Pair with {0}', [widget.name])),
+        content: SizedBox(
+          width: 320,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(tr('Enter the PIN shown on the TV.'), style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _pin,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              maxLength: 8,
+              style: const TextStyle(fontSize: 24, letterSpacing: 8),
+              decoration: const InputDecoration(counterText: ''),
+              onSubmitted: (_) => _done(),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('Cancel'))),
+          FilledButton(onPressed: _done, child: Text(tr('Pair'))),
+        ],
+      );
 }
 
 /// Ends casting; the local player waits where the device stopped.
@@ -75,7 +169,7 @@ class _CastDialogState extends State<_CastDialog> {
       _devices.clear();
       _searching = true;
     });
-    _search = discoverCastDevices().listen(
+    _search = discoverCastDevices(pairings: widget.controller.airPlayPairings).listen(
       (device) {
         if (mounted) setState(() => _devices.add(device));
       },
@@ -85,9 +179,25 @@ class _CastDialogState extends State<_CastDialog> {
     );
   }
 
+  static String? _formatName(String? format) => switch (format) {
+        'ts' => 'MPEG-TS',
+        'hls' => 'HLS',
+        'mp4' => 'MP4',
+        'mkv' => 'MKV',
+        _ => null,
+      };
+
+  Future<void> _setFormat(CastDevice device, String format) async {
+    final prefs = widget.controller.preferences;
+    final formats = {...prefs.castFormats}..remove(device.id);
+    if (format.isNotEmpty) formats[device.id] = format;
+    await widget.controller.savePreferences(prefs.copyWith(castFormats: formats));
+    if (mounted) setState(() {});
+  }
+
   void _pick(CastDevice device) {
-    Navigator.of(context).pop();
-    unawaited(castTo(widget.controller, device, widget.messenger));
+    final navigator = Navigator.of(context)..pop();
+    unawaited(castTo(widget.controller, device, widget.messenger, navigator: navigator));
   }
 
   @override
@@ -143,10 +253,23 @@ class _CastDialogState extends State<_CastDialog> {
               child: ListView(shrinkWrap: true, children: [
                 for (final device in _devices)
                   ListTile(
-                    leading: Icon(device.protocol == CastProtocol.chromecast ? AppIcons.screencast : AppIcons.television),
+                    leading: Icon(switch (device.protocol) {
+                      CastProtocol.chromecast => AppIcons.screencast,
+                      CastProtocol.airplay => AppIcons.airplay,
+                      CastProtocol.dlna => AppIcons.television,
+                    }),
                     title: Text(device.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: Text(device.protocol == CastProtocol.chromecast ? 'Chromecast' : 'DLNA'),
+                    subtitle: Text([const {CastProtocol.chromecast: 'Chromecast', CastProtocol.airplay: 'AirPlay', CastProtocol.dlna: 'DLNA'}[device.protocol]!, if (_formatName(widget.controller.preferences.castFormats[device.id]) case final format?) format].join(' · ')),
                     onTap: () => _pick(device),
+                    trailing: PopupMenuButton<String>(
+                      tooltip: tr('Cast format'),
+                      icon: Icon(AppIcons.dotsThreeVertical),
+                      onSelected: (format) => _setFormat(device, format),
+                      itemBuilder: (context) => [
+                        for (final format in const ['', 'ts', 'hls', 'mp4', 'mkv'])
+                          CheckedPopupMenuItem(value: format, checked: (widget.controller.preferences.castFormats[device.id] ?? '') == format, child: Text(_formatName(format) ?? tr('Auto'))),
+                      ],
+                    ),
                   ),
               ]),
             ),

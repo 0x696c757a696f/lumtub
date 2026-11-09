@@ -51,8 +51,10 @@ import '../channel_playback.dart';
 import '../speech_subtitles.dart';
 import '../video_summary.dart';
 import '../watch_time.dart';
+import '../cast/airplay.dart';
 import '../cast/cast_device.dart';
 import '../cast/cast_stream.dart';
+import '../cast/dlna.dart';
 import '../invidious_streams.dart';
 import '../piped_streams.dart';
 import '../search_options.dart';
@@ -112,6 +114,7 @@ part 'picture_health.dart';
 part 'chat_actions.dart';
 part 'subtitle_actions.dart';
 part 'smoke_check.dart';
+part 'diagnostics.dart';
 
 enum PageMode { home, explore, subscriptions, history, playlists, downloads, settings, channel, playlist, youtubePlaylist }
 
@@ -403,6 +406,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The TV or Chromecast the video is cast to, if any.
   final cast = CastController();
 
+  /// The keys kept from pairing with AirPlay receivers.
+  final airPlayPairings = AirPlayPairings();
+
   /// What to cast of [playing] to [device]: the picture and sound streams
   /// joined by lumtub_core when YouTube has a better picture apart than
   /// together (up to 1080p), else one progressive mp4 with sound, from the
@@ -482,7 +488,18 @@ class AppController extends ChangeNotifier with _ExploreState {
     final port = core.castStart();
     if (port == 0) throw StateError('the cast server could not listen');
     final here = await _addressFacing(device);
-    final ts = device.protocol == CastProtocol.dlna && split.fitsTransportStream;
+    // Apple's players take a transport stream only as HLS; TVs take it whole.
+    // A format chosen for the device wins; TS and HLS carry H.264 and AAC only.
+    final kind = switch (preferences.castFormats[device.id]) {
+      'ts' || 'hls' when !split.fitsTransportStream => 'mp4',
+      final String chosen => chosen,
+      null when device.protocol == CastProtocol.dlna && split.fitsTransportStream => device is DlnaDevice && device.apple ? 'hls' : 'ts',
+      null when device.protocol == CastProtocol.airplay && split.fitsTransportStream => 'hls',
+      null => 'mp4',
+    };
+    // HLS and MKV carry the lines inside the stream, timed from the start
+    // of the video; there no other subtitle file goes with them.
+    final inside = (kind == 'hls' || kind == 'mkv') && subtitles.cues.isNotEmpty;
     final agent = info['http_headers'] is Map ? (info['http_headers'] as Map)['User-Agent']?.toString() : null;
     final duration = info['duration'] is num ? Duration(milliseconds: ((info['duration'] as num) * 1000).round()) : null;
     Map<String, dynamic> target(String url, int size) => {'url': url, 'size': size, if (agent != null) 'userAgent': agent, if (proxy.url != null) 'proxy': proxy.url};
@@ -512,9 +529,15 @@ class AppController extends ChangeNotifier with _ExploreState {
     // The device may take a while to load; the watch ends once it was seen
     // casting this video and no longer is, or if it never started.
     var seen = false;
+    var asked = false;
     _castWatch = Timer.periodic(const Duration(seconds: 5), (timer) {
       for (final line in (jsonDecode(core.castLog() ?? '[]') as List).cast<String>()) {
+        asked |= line.contains(' asked ');
         logInfo(line);
+      }
+      if (!asked && timer.tick == 4) {
+        logWarn('Cast: ${device.name} has not asked for the stream in 20 s');
+        _notice(tr('The TV has not asked Lumtub for the video yet. If it does not start, a firewall on this computer may be blocking Lumtub; allow it on this network.'));
       }
       final casting = cast.active && cast.videoId == videoId;
       seen |= casting;
@@ -527,29 +550,42 @@ class AppController extends ChangeNotifier with _ExploreState {
       final soon = expires != null && expires.difference(DateTime.now()) < const Duration(minutes: 20);
       if (!renewing && (soon || core.castExpired())) unawaited(renew());
     });
-    Future<CastMedia> from(Duration at) async {
+    Future<CastMedia> from(Duration at, {bool again = false}) async {
       final split = current;
       final ask = jsonEncode({
         'video': target(split.video, split.videoSize),
         'audio': target(split.audio, split.audioSize),
         'startMs': at.inMilliseconds,
-        'kind': ts ? 'ts' : 'mp4',
+        'kind': kind,
+        if (duration != null) 'durationMs': duration.inMilliseconds,
+        if (inside)
+          'subtitles': {
+            'language': subtitles.language ?? '',
+            'cues': [for (final cue in subtitles.cues) [cue.start.inMilliseconds, cue.end.inMilliseconds, cue.text]],
+          },
       });
       final answer = jsonDecode(await _castRegister(ask)) as Map<String, dynamic>;
+      // An address YouTube refuses at once is asked for anew, once.
+      if (!again && answer['path'] is! String && '${answer['error']}'.contains(RegExp(r'answered 4(03|10)'))) {
+        logWarn('Cast: YouTube refused the stream addresses (${answer['error']}); resolving again');
+        final before = current;
+        await renew();
+        if (!identical(before, current)) return from(at, again: true);
+      }
       final path = answer['path'];
       if (path is! String) throw StateError('${answer['error']}');
       final begins = Duration(milliseconds: (((answer['start'] as num?) ?? 0) * 1000).round());
-      logInfo('Casting ${split.height}p${split.fps} ${split.codec} joined by lumtub_core from ${begins.inSeconds} s as ${ts ? 'MPEG-TS' : 'MP4'}');
+      logInfo('Casting ${split.height}p${split.fps} ${split.codec} joined by lumtub_core from ${begins.inSeconds} s as ${const {'hls': 'HLS', 'ts': 'MPEG-TS', 'mkv': 'MKV'}[kind] ?? 'MP4'}${inside ? ' with ${subtitles.cues.length} subtitle lines inside' : ''}');
       // The device counts time from where this stream begins.
       CastSubtitles? lines;
-      if (subtitles.cues.isNotEmpty) {
+      if (subtitles.cues.isNotEmpty && !(inside && device.protocol != CastProtocol.chromecast)) {
         try {
           lines = await CastSubtitleServer.instance.register(subtitles.cues, host: here, offset: begins, language: subtitles.language);
         } catch (e) {
           logWarn('Cast: could not serve the subtitles: $e');
         }
       }
-      return CastMedia(url: 'http://$here:$port$path', title: title, mime: ts ? 'video/mpeg' : 'video/mp4', offset: begins, duration: duration, restart: from, subtitles: lines);
+      return CastMedia(url: 'http://$here:$port$path', title: title, mime: const {'hls': 'application/vnd.apple.mpegurl', 'ts': 'video/mpeg', 'mkv': 'video/x-matroska'}[kind] ?? 'video/mp4', offset: begins, duration: duration, restart: from, subtitles: lines);
     }
 
     return from(start);
@@ -1094,6 +1130,7 @@ class AppController extends ChangeNotifier with _ExploreState {
       _useTranslator();
       _translationKeyFile = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}translation-keys.bin'), SecretProtector.forThisSystem());
       unawaited(_loadTranslationKeys());
+      airPlayPairings.file = SecureJsonFile(File('${directories.data.path}${Platform.pathSeparator}airplay-pairings.bin'), SecretProtector.forThisSystem());
       logInfo('Components ready · libmpv ${manager.libmpv.current?.label ?? 'bundled'} · yt-dlp ${manager.ytDlpVersion ?? '?'} · ${paths.mpv}');
     } catch (e) {
       _update(() {
@@ -2751,6 +2788,9 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// The audio outputs libmpv reports, "auto" first.
   List<AudioDevice> get audioDevices => player?.state.audioDevices ?? const [];
 
+  /// The codec and height the playback test plays at, while it runs.
+  PlayerSettings? _benchmark;
+
   String get _format => FormatPolicy.expression(_playback);
 
   String? get _formatSort => FormatPolicy.formatSort(_playback);
@@ -2758,6 +2798,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// [settings] as playback picks streams with them: automatic quality is
   /// capped at the tallest display.
   PlayerSettings get _playback {
+    if (_benchmark case final fixed?) return fixed;
     final playback = FormatPolicy.forDisplay(settings, _displayHeight);
     if (_droppedCap == 0 || settings.maxHeight != 0 || (playback.maxHeight > 0 && playback.maxHeight <= _droppedCap)) return playback;
     return playback.copyWith(maxHeight: _droppedCap);

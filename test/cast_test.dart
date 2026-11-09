@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lumtub/app_preferences.dart';
 import 'package:lumtub/cast/cast_controller.dart';
 import 'package:lumtub/cast/cast_device.dart';
 import 'package:lumtub/cast/cast_stream.dart';
@@ -116,6 +117,27 @@ void main() {
       // Without URLBase the description's own address is the base.
       final relative = parseDeviceDescription(_description.replaceAll(RegExp(r'<URLBase>.*</URLBase>'), ''), Uri.parse('http://10.0.0.5:49152/dev/desc.xml'));
       expect(relative.avTransport?.controlUrl.toString(), 'http://10.0.0.5:49152/upnp/control/AVTransport');
+      // Lebo (乐播) receivers give a bare "_urn:…" path.
+      final lebo = parseDeviceDescription(
+          _description.replaceAll(RegExp(r'<URLBase>.*</URLBase>'), '').replaceAll('/upnp/control/AVTransport', '_urn:schemas-upnp-org:service:AVTransport_control'),
+          Uri.parse('http://10.0.0.6:49152/description.xml'));
+      expect(lebo.avTransport?.controlUrl.toString(), 'http://10.0.0.6:49152/_urn:schemas-upnp-org:service:AVTransport_control');
+    });
+
+    test('keeps the cast format chosen for each device', () {
+      final saved = AppPreferences.fromJson(jsonDecode(jsonEncode(const AppPreferences(castFormats: {'uuid:tv': 'mp4', 'uuid:phone': 'hls'}).toJson())) as Map<String, dynamic>);
+      expect(saved.castFormats, {'uuid:tv': 'mp4', 'uuid:phone': 'hls'});
+      expect(AppPreferences.fromJson({'castFormats': {'a': 'webm', 'b': 'ts', 'c': 'mkv'}}).castFormats, {'b': 'ts', 'c': 'mkv'});
+    });
+
+    test('tells renderers on Apple devices from TVs', () {
+      expect(parseDeviceDescription(_description, Uri.parse('http://192.168.1.20:8080/desc.xml')).apple, isFalse);
+      expect(looksApple('iPhone - Nero Receiver'), isTrue);
+      expect(looksApple('电视助手: iPhone'), isTrue);
+      expect(looksApple('Living room Mac mini'), isTrue);
+      expect(looksApple('Bedroom (tvOS 18) Infuse'), isTrue);
+      expect(looksApple('Samsung QN90 Smart TV'), isFalse);
+      expect(looksApple('Machine room TV'), isFalse);
     });
 
     test('builds a SOAP envelope with escaped arguments', () {

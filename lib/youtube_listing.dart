@@ -117,12 +117,14 @@ class YoutubeListing {
   }
 
   /// The lines of [web], or of [fallback] when [web] fails or finds nothing
-  /// before its first line. A failure after that ends the listing.
-  static Stream<String> orElse(Stream<String> Function() web, Stream<String> Function() fallback) async* {
+  /// before its first line. A failure after that ends the listing. With
+  /// [videos], only a video counts as found: a search that turns up
+  /// channels alone still asks [fallback].
+  static Stream<String> orElse(Stream<String> Function() web, Stream<String> Function() fallback, {bool videos = false}) async* {
     var any = false;
     try {
       await for (final line in web()) {
-        any = true;
+        any = any || !videos || line.contains('"ie_key":"Youtube"');
         yield line;
       }
     } catch (e) {

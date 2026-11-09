@@ -295,6 +295,20 @@ class NativeCore {
     return core?.take(core.hwDecoders());
   }
 
+  /// Processor time this process has used, libmpv's decoding included, in
+  /// milliseconds; null without the core.
+  static int? processCpuMs() {
+    final core = instance;
+    if (core == null) return null;
+    try {
+      return (core._processCpu ??= core.library.lookupFunction<Uint64 Function(), int Function()>('lumtub_process_cpu_ms'))();
+    } on ArgumentError {
+      return null;
+    }
+  }
+
+  int Function()? _processCpu;
+
   /// Calls [call] with [text] as UTF-8 in native memory.
   T withText<T>(String text, T Function(Pointer<Uint8> bytes, int length) call) => withBytes(utf8.encode(text), call);
 

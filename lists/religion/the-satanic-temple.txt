@@ -1,0 +1,14 @@
+! id: the-satanic-temple
+! name: The Satanic Temple
+! name.zh-Hans: 撒旦圣殿
+! category: religion
+! action: hide
+! default: off
+! topic: The Satanic Temple
+! topic: 撒旦圣殿
+! source: https://en.wikipedia.org/wiki/The_Satanic_Temple
+
+:the-satanic-temple | ^The Satanic Temple
+:satanic-temple | ^Satanic Temple
+:zh-hans | ^撒旦圣殿
+:zh-hant | ^撒旦聖殿

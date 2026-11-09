@@ -5,6 +5,8 @@ import 'dart:ui' as ui;
 import 'package:ffi/ffi.dart';
 import 'package:flutter/widgets.dart';
 
+import 'emoji_text.dart';
+
 /// A piece of a 弹幕 message: text, a YouTube emoji picture, or a Unicode
 /// emoji drawn in colour.
 sealed class DanmakuPart {
@@ -33,8 +35,9 @@ bool _isEmoji(String cluster) {
   return false;
 }
 
-/// [text] split into parts, YouTube's emoji shortcuts in [emojis] becoming
-/// their pictures; null when it has no emoji and libass can draw it.
+/// [text] split into parts, the emoji in [emojis] (shortcuts, and Unicode
+/// emoji YouTube sent pictures of) becoming their pictures; null when it
+/// has no emoji and libass can draw it.
 List<DanmakuPart>? danmakuParts(String text, Map<String, String> emojis) {
   final parts = <DanmakuPart>[];
   var plain = StringBuffer();
@@ -56,10 +59,9 @@ List<DanmakuPart>? danmakuParts(String text, Map<String, String> emojis) {
     }
   }
 
-  final names = [for (final name in emojis.keys) if (name.isNotEmpty) RegExp.escape(name)];
   var at = 0;
-  if (names.isNotEmpty) {
-    for (final match in RegExp(names.join('|')).allMatches(text)) {
+  if (emojis.keys.any((name) => name.isNotEmpty)) {
+    for (final match in emojiPattern(emojis.keys).allMatches(text)) {
       addText(text.substring(at, match.start));
       flush();
       parts.add(DanmakuEmojiPicture(emojis[match[0]]!));

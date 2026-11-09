@@ -77,6 +77,15 @@ pub fn tracking(player: &Value) -> Option<Tracking> {
     Some(Tracking { ei: field("ei")?, vm: field("vm")?, of: field("of")?, length })
 }
 
+/// What a `player` answer without tracking says instead: its playability
+/// status and reason, and the parts it holds.
+pub fn why_not(player: &Value) -> String {
+    let status = at(player, &["playabilityStatus", "status"]).and_then(Value::as_str).unwrap_or("no status");
+    let reason = at(player, &["playabilityStatus", "reason"]).and_then(Value::as_str).unwrap_or("");
+    let parts = player.as_object().map(|o| o.keys().cloned().collect::<Vec<_>>().join(",")).unwrap_or_default();
+    format!("{status}{}{reason}; {parts}", if reason.is_empty() { "" } else { ": " })
+}
+
 /// The two `api/stats` addresses for [watched] as SmartTube builds them:
 /// the record (from where watching started) and the watch time. Near the
 /// end (less than 5% left) both say `final=1`, which marks it watched.
@@ -129,7 +138,7 @@ async fn report(port: i64, watched: Watched) {
         Err(e) => return fail(e.to_string()),
     };
     let Some(tracking) = player.as_ref().and_then(tracking) else {
-        return fail("no tracking in the player answer".into());
+        return fail(format!("no tracking in the player answer ({})", player.as_ref().map(why_not).unwrap_or_else(|| "not JSON".into())));
     };
     for url in stats(&base, &watched, &tracking, &nonce) {
         match request(url).send().await {
@@ -170,6 +179,13 @@ mod tests {
     fn reads_the_tracking_values() {
         assert_eq!(tracking(&player()), Some(Tracking { ei: "EI%3D".into(), vm: "VM_1".into(), of: "OF".into(), length: 600.0 }));
         assert_eq!(tracking(&json!({})), None);
+    }
+
+    #[test]
+    fn says_why_there_is_no_tracking() {
+        let answer = json!({"responseContext": {}, "playabilityStatus": {"status": "LOGIN_REQUIRED", "reason": "Sign in to confirm you're not a bot"}});
+        assert_eq!(why_not(&answer), "LOGIN_REQUIRED: Sign in to confirm you're not a bot; responseContext,playabilityStatus");
+        assert_eq!(why_not(&json!({})), "no status; ");
     }
 
     #[test]

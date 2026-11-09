@@ -259,7 +259,8 @@ class _LiveChatInputState extends State<LiveChatInput> {
           IconButton(
             tooltip: tr('Super Chat: pay and send on YouTube in your browser'),
             icon: Icon(AppIcons.handHeart, size: 18),
-            onPressed: () => unawaited(openExternal('https://www.youtube.com/watch?v=${widget.videoId}')),
+            // The pop-out chat, where YouTube keeps the Super Chat button.
+            onPressed: () => unawaited(openExternal('https://www.youtube.com/live_chat?is_popout=1&v=${widget.videoId}')),
           ),
           IconButton.filledTonal(
             tooltip: tr('Send'),

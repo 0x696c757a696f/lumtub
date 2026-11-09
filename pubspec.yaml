@@ -1,7 +1,7 @@
 name: lumtub
 description: A lightweight native Windows YouTube player built with Flutter and libmpv.
 publish_to: none
-version: 0.2.29+31
+version: 0.2.30+32
 
 environment:
   sdk: '>=3.6.0 <4.0.0'
@@ -27,6 +27,10 @@ dev_dependencies:
 
 # A copy of media_kit_video with one Windows fix; see vendor/media_kit_video/LUMTUB.md.
 dependency_overrides:
+  # A copy of media_kit that lists audio devices on Linux only with a
+  # PipeWire server running; see vendor/media_kit/LUMTUB.md.
+  media_kit:
+    path: vendor/media_kit
   media_kit_video:
     path: vendor/media_kit_video
   # A copy of media_kit_libs_windows_video that can build for Windows ARM64.

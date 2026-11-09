@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// [text] with each custom emoji shortcut in [emojis] (such as
-/// `:face-blue-smiling:`) drawn as its picture, the size of the text.
+/// [text] with each emoji in [emojis] (a shortcut such as
+/// `:face-blue-smiling:`, or a Unicode emoji YouTube sent a picture of)
+/// drawn as its picture, the size of the text.
 List<InlineSpan> emojiSpans(BuildContext context, String text, Map<String, String> emojis, {TextStyle? style}) {
-  if (emojis.isEmpty || !text.contains(':')) return [TextSpan(text: text, style: style)];
+  if (emojis.isEmpty) return [TextSpan(text: text, style: style)];
   final size = (style?.fontSize ?? DefaultTextStyle.of(context).style.fontSize ?? 14) * 1.4;
   final pixels = (size * MediaQuery.devicePixelRatioOf(context)).round();
-  final pattern = RegExp([for (final name in emojis.keys) RegExp.escape(name)].join('|'));
+  final pattern = emojiPattern(emojis.keys);
   final spans = <InlineSpan>[];
   var start = 0;
   for (final match in pattern.allMatches(text)) {
@@ -29,4 +30,11 @@ List<InlineSpan> emojiSpans(BuildContext context, String text, Map<String, Strin
   }
   if (start < text.length) spans.add(TextSpan(text: text.substring(start), style: style));
   return spans;
+}
+
+/// The names in [names] as one pattern, longest first, so that an emoji
+/// with a skin tone is found whole rather than as its plain emoji.
+RegExp emojiPattern(Iterable<String> names) {
+  final sorted = [for (final name in names) if (name.isNotEmpty) name]..sort((a, b) => b.length.compareTo(a.length));
+  return RegExp(sorted.map(RegExp.escape).join('|'));
 }

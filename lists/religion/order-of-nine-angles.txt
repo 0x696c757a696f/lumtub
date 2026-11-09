@@ -1,0 +1,14 @@
+! id: order-of-nine-angles
+! name: Order of Nine Angles
+! name.zh-Hans: 九角会
+! category: religion
+! action: hide
+! default: off
+! topic: Order of Nine Angles
+! topic: O9A
+! source: https://en.wikipedia.org/wiki/Order_of_Nine_Angles
+
+:order-of-nine-angles | ^Order of Nine Angles | ^Order of the Nine Angles
+:o9a | ^O9A | ^ONA Official
+:zh-hans | ^九角会
+:zh-hant | ^九角會

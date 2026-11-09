@@ -22,9 +22,19 @@ The Phosphor icon fonts (assets/fonts/phosphor, from the phosphor_flutter
 2.1.0 package) are Copyright 2020-2021 Phosphor Icons, licensed under the
 MIT License (assets/fonts/phosphor/LICENSE).
 
-The macOS app includes ffmpeg and ffprobe built from the FFmpeg source
-(https://ffmpeg.org, tag named in Contents/Resources/ffmpeg-version.txt)
-by macos/packaging/build-ffmpeg.sh. FFmpeg is licensed under the GNU
+The macOS app includes ffmpeg and ffprobe with the FFmpeg libraries they
+load (Contents/Frameworks/libav*, libsw*), from the LGPL builds of
+https://github.com/dfloresc/ffmpeg-macos-builds (release named in
+Contents/Resources/ffmpeg-version.txt). FFmpeg is licensed under the GNU
 Lesser General Public License version 2.1 or later; this build enables no
-GPL or nonfree parts. Its source code is available at
-https://ffmpeg.org/download.html.
+GPL or nonfree parts. The libraries linked into it (dav1d, libvpx, libaom,
+Opus, LAME) keep their own licenses, copied to
+Contents/Resources/ffmpeg-licenses. Source code is available at
+https://ffmpeg.org/download.html and from that project.
+
+The Linux AppImage includes libmpv 0.41 (https://mpv.io) with FFmpeg,
+libplacebo, libass, dav1d and the other libraries linked into it, as built
+by https://github.com/jason-yau/mpv-prebuilt (GPL build, release named in
+usr/share/doc/libmpv/manifest.txt). mpv in this build is licensed under the
+GNU General Public License version 2 or later; the licenses of everything
+it contains are in usr/share/doc/libmpv/licenses.

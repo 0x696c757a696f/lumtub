@@ -27,6 +27,7 @@ import '../../video_codec.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../../windows_video_info.dart';
 import '../common.dart';
+import '../diagnostics_dialog.dart';
 import '../format_policy_dialogs.dart';
 import '../player_shortcuts.dart';
 import '../shortcut_settings.dart';
@@ -451,6 +452,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 if (result != null && result.isNotEmpty) save(controller.settings.copyWith(hwdec: result.join(',')));
               },
             ), subtitle: 'hwdec D3D11VA D3D12VA DXVA2 NVDEC Vulkan AMF QSV'),
+        SettingEntry(tr('Playback test'), (context) => NormalItem(
+              title: tr('Playback test'),
+              subtitle: tr('Plays a test video as H.264, VP9 and AV1 and measures processor use, memory, dropped frames and the decoder used'),
+              leading: _icon(AppIcons.speedometer),
+              onTap: () => showDiagnostics(context, controller, playback: true),
+            ), subtitle: tr('benchmark performance CPU hardware decoding diagnostics')),
         if (Platform.isWindows) SettingEntry(tr('D3D11VA zero-copy'), (context) => SwitchItem(
               title: tr('D3D11VA zero-copy'),
               subtitle: tr("This is mpv's --d3d11va-zero-copy and only works with d3d11va. For other decoders, pick a mode without -copy for zero-copy"),
@@ -608,6 +615,12 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 },
               ),
             ), subtitle: tr('DNS DoH DNS-over-HTTPS Cloudflare Google Quad9 encrypted poisoning')),
+        SettingEntry(tr('Network check'), (context) => NormalItem(
+              title: tr('Network check'),
+              subtitle: tr('Tries the YouTube API, stream extraction, video servers, subtitles and thumbnails one by one, and shows whether each went through the proxy and where it came out'),
+              leading: _icon(AppIcons.globe),
+              onTap: () => showDiagnostics(context, controller),
+            ), subtitle: tr('diagnostics network test proxy exit address connection')),
         SettingEntry(tr('Certificate authorities'), (context) {
           final roots = [
             ('system', tr('System (default)')),

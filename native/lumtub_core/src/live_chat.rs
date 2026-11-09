@@ -371,7 +371,7 @@ mod tests {
         }}}});
         let custom = &lines(&json!({"actions": [custom]}).to_string())[0];
         assert_eq!(custom.text, "\u{1F600} :_wave:");
-        assert_eq!(custom.emojis, Emojis::from([(":_wave:".into(), "https://yt3/l".into())]));
+        assert_eq!(custom.emojis, Emojis::from([(":_wave:".into(), "https://yt3/l".into()), ("\u{1F600}".into(), "https://e/g".into())]));
         assert_eq!((sticker.kind, sticker.offset_ms, sticker.amount.as_deref(), sticker.sticker_url.as_deref()), (Kind::PaidSticker, None, Some("$5.00"), Some("https://s/1")));
         assert_eq!((sticker.color, sticker.ticker_seconds), (Some(0xFF1DE9B6), Some(120)));
         let tiers = [0xFF1E88E5u32, 0xFF00E5FF, 0xFF1DE9B6, 0xFFFFCA28, 0xFFF57C00, 0xFFE91E63, 0xFFE62117].map(ticker_seconds);

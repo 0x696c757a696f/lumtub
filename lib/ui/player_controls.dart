@@ -170,6 +170,7 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
     videoFit.removeListener(_applyFit);
     _controller.removeListener(_syncVideo);
     KeepAwake.hold(this, false);
+    _holdSpeed(false);
     _transform.dispose();
     for (final subscription in _subscriptions) {
       unawaited(subscription.cancel());
@@ -194,6 +195,9 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
       _heatmap = null;
       _preview = null;
       _transform.reset();
+      // A long press held while the video changed must not leave the next
+      // one fast.
+      _holdSpeed(false);
       if (mounted) setState(() {});
     } else if (_infoRead == id) {
       return;
@@ -939,6 +943,13 @@ class _PlayerControlsState extends State<PlayerControls> with SingleTickerProvid
           values: [for (final f in VideoFit.values) (f, f.label)],
           onSelected: (f) => videoFit.value = f,
         ),
+      ),
+      PanelChoices<int>(
+        label: tr('Rotate'),
+        icon: AppIcons.arrowClockwise,
+        value: _transform.rotation,
+        values: [for (final r in PictureTransform.rotations) (r, '$r°')],
+        onSelected: (r) => unawaited(_transform.setRotation(r)),
       ),
       PanelChoices<double>(
         label: tr('Zoom'),

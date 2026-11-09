@@ -2,9 +2,11 @@
 
 # ▶ Lumtub — Watch YouTube your way.
 
-**A desktop YouTube client with mpv playback, on-device recommendations you can understand and control, bilingual subtitles and live chat as danmaku on the video.**<br>
+**A YouTube client with mpv playback, on-device recommendations you can understand and control, bilingual subtitles and live chat as danmaku on the video.**<br>
 Watch without signing in; connect your account only when you want to interact.<br>
-For **Windows, Linux and macOS**.
+For **Windows, Linux, macOS and Android** (phones, tablets and TVs).
+
+**English** · [简体中文](README.zh-Hans.md)
 
 [![Download](https://img.shields.io/github/v/release/0x696c757a696f/lumtub?include_prereleases&label=Download&style=for-the-badge&color=E53935)](https://github.com/0x696c757a696f/lumtub/releases/latest)
 [![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/0x696c757a696f)
@@ -16,7 +18,7 @@ For **Windows, Linux and macOS**.
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
-<img src="docs/screenshots/watch.png" alt="Lumtub playing a video, with Up next beside it" width="860">
+<img src="docs/screenshots/subtitles.jpg" alt="An Italian talk with the Italian subtitle and its English translation shown together" width="860">
 
 https://github.com/user-attachments/assets/4ec072a1-6496-46b2-bcba-9b29df811646
 
@@ -45,9 +47,24 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 <td align="center"><img src="docs/screenshots/linux.png" alt="The Explore page on Linux in the dark theme"><br><b>Linux</b></td>
 </tr>
 <tr>
+<td align="center"><img src="docs/screenshots/home-reasons.png" alt="For you, with the reason under every video"><br>Every recommendation says why</td>
+<td align="center"><img src="docs/screenshots/explore-language.png" alt="Explore's science zone filtered to videos spoken in Italian"><br>Explore by the language actually spoken</td>
+<td align="center"><img src="docs/screenshots/zh/home-reasons.png" alt="For you in the Chinese interface"><br>72 interface languages</td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/danmaku.jpg" alt="Live chat with emoji flying across a guinea pig live stream as danmaku"><br>Live chat as danmaku</td>
+<td align="center"><img src="docs/screenshots/zh/subtitles.jpg" alt="The original subtitle with a Chinese translation above it"><br>Two subtitles at once, in any pair of languages</td>
+<td align="center"><img src="docs/screenshots/watch.png" alt="Lumtub playing a video, with Up next beside it"><br>mpv playback with Up next beside it</td>
+</tr>
+<tr>
 <td align="center"><img src="docs/screenshots/search.png" alt="Search results with channels and playlists"><br>Search that finds channels and playlists too</td>
 <td align="center"><img src="docs/screenshots/settings.png" alt="Appearance settings"><br>Palettes, warm light, compact and low-resource modes</td>
 <td align="center"><img src="docs/screenshots/tour.gif" alt="Switching between the ten palettes"><br>Ten palettes, light and dark</td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/skin-aero.png" alt="The home page in the glossy Bubble Gel skin"><br>Skins: Bubble Gel</td>
+<td align="center"><img src="docs/screenshots/skin-player.png" alt="The home page in the Millennium Player skin with its LCD display"><br>Millennium Player, with an LCD display</td>
+<td align="center"><img src="docs/screenshots/skin-onebit.png" alt="The home page in the black-and-white One-bit skin"><br>One-bit pixels, or make your own</td>
 </tr>
 </table>
 
@@ -62,7 +79,8 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 - Hardware decoding matched to your GPU; live streams at their best quality, starting at the live edge.
 - Theater mode, mini player, borderless picture-in-picture, lights off, A-B loop, storyboard previews and the "most replayed" heatmap.
 - Speed and volume remembered per channel; background playback with media keys and a tray icon.
-- **Cast** to Chromecast and DLNA TVs.
+- **Cast** to Chromecast and DLNA TVs, and to AirPlay receivers (preview).
+- **Diagnostics:** a network check of the proxy, exit addresses and each kind of request, and a built-in playback test of H.264, VP9 and AV1 on your computer (processor, memory, dropped frames).
 - **Downloads:** pick any format YouTube serves, joined without re-encoding, and play it offline in Lumtub.
 
 ### 💬 Subtitles and translation
@@ -73,6 +91,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 ### 🔴 Live
 - Danmaku for live chat and replays, or a chat that keeps up: newest at the bottom, translate any message, write in chat after signing in.
 - Live markers on your subscriptions.
+- Super Chat and channel memberships open YouTube's payment pages in your browser.
 
 ### 🔐 Accounts only if you want them
 - Google, TV-code or browser sign-in for subscriptions, playlists, likes, comments, community posts, polls and **members-only videos** you have access to.
@@ -83,7 +102,8 @@ These are also found in other YouTube clients, and all are opt-in here:
 - **SponsorBlock**, **DeArrow** titles and thumbnails, **Return YouTube Dislike**, hide all Shorts, and an AI filter that hides videos labelled as AI and channels on community AI-slop lists.
 - Proxy support (system, HTTP or SOCKS5), optional encrypted DNS, and Piped or Invidious servers as a fallback.
 - **72 interface languages**, right to left included, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
-- Ten palettes, light and dark, plus an optional warm light, fonts and card sizes.
+- **Skins** that change the whole look, 23 built in, from Y2K gloss and Frutiger Aero scenes to one-bit pixels, with their own title bar and menu bar if you like. Anyone can make one: a commented `skin.jsonc` file, checked for readable contrast. See [skins/README.md](skins/README.md).
+- Ten colour schemes, light and dark, plus an optional warm light, fonts and card sizes.
 - Block any channel, or just stop it being recommended.
 - Signed automatic updates for the app, yt-dlp and libmpv, with rollback if a new component breaks.
 
@@ -104,11 +124,15 @@ These are also found in other YouTube clients, and all are opt-in here:
 | `linux-arm64` AppImage | ARM64 Linux, such as a Raspberry Pi 5 |
 | `macos-arm64` DMG | Macs with Apple silicon (M1 and later) |
 | `macos-x64` DMG | Intel Macs |
+| `android-arm64-v8a` APK | Most Android phones, tablets and TVs (Android 7.0 or newer) — **pick this if unsure** |
+| `android-armeabi-v7a` APK | Older 32-bit Android devices and many low-cost TV boxes |
+| `android-x86_64` APK | Android emulators and x86 Chromebooks |
 
 File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
 **Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place.<br>
-The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.
+The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
+**Android (preview):** open the APK and allow installing from your browser or file manager when asked. Lumtub tells you when a new version is out; install it the same way. Live streams, members-only videos and downloads don't work on Android yet.
 
 **macOS:** open the DMG and drag Lumtub into Applications. Lumtub is not notarized by Apple yet, so macOS stops it the first time it opens. Either run this once in Terminal:
 
@@ -161,25 +185,12 @@ Sponsors pay for the time to build it.
 
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/Sponsor_on_GitHub-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" height="44"></a>
 
-**Monthly sponsors** decide what comes next: Android, a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
+**Monthly sponsors** decide what comes next: a code-signing certificate so Windows stops warning on install, and Apple notarization.<br>
 One-time gifts of any amount are just as welcome. The same page is in the app under Settings › About › Support development.
 
 </div>
 
-<details>
-<summary><b>Pay with crypto</b> (check that the coin and network match the address; funds sent on the wrong chain cannot be recovered)</summary>
-
-| Coin | Network | Address |
-|---|---|---|
-| ETH · USDC · USDT | Any EVM chain (Ethereum, Arbitrum, Base, Optimism, Polygon, BNB Chain…) | `0x619FeeF5986b9ed8E75D7CFD67AdB575355b9F80` |
-| BTC | Taproot | `bc1p7jf7pzep76cld4pd6xmtfjckpn6qamdqc2rhjus64re2cvuc72sqdwszqc` |
-| BTC | Native SegWit | `bc1q4rp3ag5lmnyy8eqwjm9s4xx62uulfr6n43ycvc` |
-| BTC | Nested SegWit | `3Lu1yzQYfNZLpvh2dt6T6NuRbtwQkJHmT6` |
-| BTC | Legacy | `123mpbi91xQitVkh9oosY4VczFqJB9kjDQ` |
-| USDT | Tron (TRC-20) | `TBHXcP2ReM5sqpRDTyrL1UWtcSmYeyrmnB` |
-| USDT | Solana (SPL) | `4s6uaauKCgwSNVzb5Lq1kxUe9dpm8V64D6FPw7hTwrQ6` |
-
-</details>
+Other ways to give, crypto included, are in [SPONSORING.md](SPONSORING.md).
 
 Can't give money? ⭐ Star the repository, tell a friend, [report a bug or suggest an idea](https://github.com/0x696c757a696f/lumtub/issues), or [translate Lumtub](https://hosted.weblate.org/engage/lumtub/). It all helps.
 

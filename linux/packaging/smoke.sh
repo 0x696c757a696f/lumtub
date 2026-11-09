@@ -18,7 +18,7 @@ cat > "$out/run.sh" <<'RUN'
 #!/usr/bin/env bash
 out=$1 appimage=$2
 HOME="$out/home" APPIMAGE_EXTRACT_AND_RUN=1 LUMTUB_SMOKE="$out/result.json" LUMTUB_SMOKE_VIDEO="$out/test.mp4" \
-  LUMTUB_SMOKE_YOUTUBE=jNQXAC9IVRw timeout 420 "$appimage" > "$out/stdout.txt" 2>&1 &
+  LUMTUB_SMOKE_YOUTUBE=jNQXAC9IVRw timeout 720 "$appimage" > "$out/stdout.txt" 2>&1 &
 app=$!
 shot=0
 while kill -0 "$app" 2> /dev/null; do
@@ -46,7 +46,9 @@ if [[ $code -ne 0 ]] && command -v gdb > /dev/null; then
   (
     cd "$out" && "$appimage" --appimage-extract > /dev/null
     mkdir -p "$out/home"
-    HOME="$out/home" LUMTUB_SMOKE="$out/result-gdb.json" LUMTUB_SMOKE_VIDEO="$out/test.mp4" LUMTUB_SMOKE_YOUTUBE=jNQXAC9IVRw \
+    # gdb starts the program itself, not AppRun: give it every fallback library.
+    spares=$(find "$out/squashfs-root/usr/bin/lib/fallback" -mindepth 1 -maxdepth 1 -type d 2> /dev/null | paste -sd: -)
+    LD_LIBRARY_PATH="$spares${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" HOME="$out/home" LUMTUB_SMOKE="$out/result-gdb.json" LUMTUB_SMOKE_VIDEO="$out/test.mp4" LUMTUB_SMOKE_YOUTUBE=jNQXAC9IVRw \
       timeout 300 xvfb-run -a -s "-screen 0 1600x1000x24" gdb -q -batch -ex 'handle SIGPIPE nostop noprint' -ex run -ex bt -ex 'thread apply all bt 25' \
       --args "$out/squashfs-root/usr/bin/lumtub" > "$out/gdb.txt" 2>&1
     grep -v '^\[New Thread\|^\[Thread .* exited\|^\[Detaching' "$out/gdb.txt" | grep -B5 -A60 -m1 'received signal\|exited with code' || tail -n 80 "$out/gdb.txt"

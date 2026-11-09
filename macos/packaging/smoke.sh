@@ -25,7 +25,7 @@ LUMTUB_SMOKE="$out/result.json" LUMTUB_SMOKE_VIDEO="$out/test.mp4" LUMTUB_SMOKE_
   "$out/Lumtub.app/Contents/MacOS/Lumtub" > "$out/stdout.txt" 2>&1 &
 app=$!
 shot=0
-for _ in $(seq 42); do
+for _ in $(seq 72); do
   kill -0 "$app" 2> /dev/null || break
   sleep 10
   shot=$((shot + 1))

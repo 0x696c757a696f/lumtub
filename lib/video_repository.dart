@@ -231,7 +231,7 @@ class VideoRepository {
     Stream<String> ytDlp() => region == null || region.isEmpty ? _lines(listingArguments(url)) : _regionLines(url, region);
     final web = this.web;
     if (web == null || !YoutubeListing.available) return Listing(ytDlp);
-    return Listing(() => YoutubeListing.orElse(() => web.search(query.trim(), sp: sp ?? filter.sp, region: region), ytDlp));
+    return Listing(() => YoutubeListing.orElse(() => web.search(query.trim(), sp: sp ?? filter.sp, region: region), ytDlp, videos: true));
   }
 
   /// The videos [first] finds, or a search for [query] when it finds none
@@ -394,6 +394,9 @@ class VideoRepository {
   Listing channelSearch(ChannelRef channel, String query) =>
       _listing('${channel.url}/search?query=${Uri.encodeQueryComponent(query.trim())}', channel: channel);
 
+  /// Whether yt-dlp's [error] says a channel has no such tab.
+  static bool missingTab(String error) => RegExp(r'This channel does not have an? \w+ tab').hasMatch(error);
+
   Listing _listing(String url, {ChannelRef? channel}) =>
       Listing(() => _lines(listingArguments(url)), channel: channel);
 
@@ -410,6 +413,9 @@ class VideoRepository {
       await errors.cancel();
       if (exitCode != 0) {
         final err = stderr.toString().trim();
+        // A channel without that tab (no videos, no Shorts) has nothing to
+        // list; it is not a failure.
+        if (missingTab(err)) return;
         throw StateError(err.isEmpty ? 'yt-dlp exited with code $exitCode' : err);
       }
     } finally {

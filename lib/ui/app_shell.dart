@@ -61,7 +61,7 @@ class _AppShellState extends State<AppShell> {
   AppController get _controller => widget.controller;
   late final _frames = FrameStats.start(() => _controller.onWatchPage ? (_controller.mini ? 'mini player' : 'watch') : _controller.mode.name, causes: () => _controller.rebuildCauses);
 
-  static final _destinations = [
+  static List<(PageMode, IconData, IconData, String)> get _destinations => [
     (PageMode.home, AppIcons.house, AppIcons.houseFill, tr('Home')),
     (PageMode.explore, AppIcons.compass, AppIcons.compassFill, tr('Explore')),
     (PageMode.subscriptions, AppIcons.stack, AppIcons.stackFill, tr('Subscriptions')),

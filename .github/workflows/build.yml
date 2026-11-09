@@ -13,6 +13,8 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main]
+    # Pictures and text alone need no new build.
+    paths-ignore: ['**.md', 'docs/**']
 
 # A newer push to a pull request makes its earlier run moot.
 concurrency:
@@ -46,7 +48,6 @@ jobs:
             install_arch: arm64
     runs-on: ${{ matrix.runner }}
     env:
-      FLUTTER_VERSION: 3.47.7
       PACKAGE_ARCH: ${{ matrix.package_arch }}
       MPV_ARCH: ${{ matrix.mpv_arch }}
       RUNTIME_ARCH: ${{ matrix.runtime_arch }}
@@ -107,6 +108,10 @@ jobs:
           if ($release.tag_name -notmatch '^[0-9A-Za-z._-]{1,100}$') { throw "Unexpected libmpv tag: $($release.tag_name)" }
           $release.tag_name | Out-File -FilePath (Join-Path $env:RUNNER_TEMP 'libmpv-tag.txt') -Encoding ascii -NoNewline
           Write-Host "Verified $($release.tag_name): $($asset.name), SHA-256, and $($library.FullName)"
+
+      - name: Windows - read the Flutter version
+        shell: bash
+        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
 
       - name: Windows - install Flutter stable SDK
         shell: pwsh
@@ -434,10 +439,12 @@ jobs:
     runs-on: ${{ matrix.runner }}
     container: ubuntu:22.04
     env:
-      FLUTTER_VERSION: 3.47.7
       PACKAGE_ARCH: ${{ matrix.package_arch }}
       DEBIAN_FRONTEND: noninteractive
-      MPV_TAG: v0.35.1
+      # libmpv 0.41 with FFmpeg 9 and libplacebo, built on Ubuntu 22.04 by
+      # jason-yau/mpv-prebuilt's GitHub Actions; the GPL build, which keeps
+      # X11, VA-API and VDPAU. Pinned by checksum.
+      MPV_RELEASE: "20260906162952"
     permissions:
       contents: read
     steps:
@@ -445,19 +452,17 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends ca-certificates curl git unzip xz-utils zip file patchelf binutils \
-            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libfontconfig-dev libssl-dev desktop-file-utils python3
-          # What libmpv is built with (see build-mpv.sh).
-          apt-get install -y --no-install-recommends meson \
-            libavcodec-dev libavformat-dev libavutil-dev libavfilter-dev libavdevice-dev libswscale-dev libswresample-dev \
-            libass-dev libva-dev libvdpau-dev libdrm-dev libgbm-dev libegl-dev libgl-dev \
-            libx11-dev libxext-dev libxinerama-dev libxrandr-dev libxss-dev libxpresent-dev libxv-dev libxkbcommon-dev \
-            libwayland-dev wayland-protocols libpulse-dev libasound2-dev \
-            liblcms2-dev libuchardet-dev libjpeg-dev zlib1g-dev
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libfontconfig-dev libssl-dev desktop-file-utils python3 \
+            libepoxy-dev libasound2 libpulse0
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
+
+      - name: Linux - read the Flutter version
+        shell: bash
+        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
 
       - name: Linux - install Flutter stable SDK
         run: |
@@ -495,24 +500,32 @@ jobs:
           echo "liblumtub_core.so: $(stat -c %s "$core") bytes"
           echo "LUMTUB_CORE_DLL=$core" >> "$GITHUB_ENV"
 
-      - name: Linux - restore libmpv
-        id: mpv-cache
+      # GitHub's release downloads time out now and then; keep them between runs.
+      - name: Linux - cache downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ${{ runner.temp }}/mpv
-          key: linux-${{ matrix.package_arch }}-mpv-${{ env.MPV_TAG }}-ubuntu22.04-${{ hashFiles('linux/packaging/build-mpv.sh') }}
+          path: .linux-downloads
+          key: linux-downloads-${{ matrix.package_arch }}-${{ env.MPV_RELEASE }}-v1
 
-      - name: Linux - build libmpv
-        if: steps.mpv-cache.outputs.cache-hit != 'true'
+      - name: Linux - download libmpv
         run: |
-          git clone --quiet --depth 1 --branch "$MPV_TAG" https://github.com/mpv-player/mpv.git "$RUNNER_TEMP/mpv-src"
-          git -C "$RUNNER_TEMP/mpv-src" rev-parse HEAD
-          linux/packaging/build-mpv.sh "$RUNNER_TEMP/mpv-src" "$RUNNER_TEMP/mpv"
-
-      - name: Linux - use the built libmpv
-        run: |
+          case "$PACKAGE_ARCH" in
+            x64) arch=x86_64; sum=a5822547f23cd47921c81d878aa3b3d2c76301c5b6b48343c18b6340896f8a0d ;;
+            arm64) arch=arm64; sum=d0ae5dbf8fed6e63353f1d1614c4ee55edb1eac41d625090dbef196027a479ed ;;
+          esac
+          name="libmpv-0.41.0-linux-$arch-gpl-$MPV_RELEASE"
+          mkdir -p .linux-downloads
+          archive="$PWD/.linux-downloads/$name.tar.gz"
+          [ -s "$archive" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$archive" "https://github.com/jason-yau/mpv-prebuilt/releases/download/$MPV_RELEASE/$name.tar.gz"
+          echo "$sum  $archive" | sha256sum -c -
+          tar -xzf "$archive" -C "$RUNNER_TEMP"
+          mv "$RUNNER_TEMP/$name" "$RUNNER_TEMP/mpv"
+          cat "$RUNNER_TEMP/mpv/manifest.txt"
+          # FFmpeg, libplacebo and the rest are inside libmpv; the private
+          # requirements only matter for static linking and are not installed.
+          sed -i '/^Requires.private:/d' "$RUNNER_TEMP/mpv/lib/pkgconfig/mpv.pc"
           echo "PKG_CONFIG_PATH=$RUNNER_TEMP/mpv/lib/pkgconfig" >> "$GITHUB_ENV"
-          ls -l "$RUNNER_TEMP/mpv/lib"
+          PKG_CONFIG_PATH="$RUNNER_TEMP/mpv/lib/pkgconfig" pkg-config --modversion --libs mpv
 
       - name: Linux - get packages
         run: flutter pub get
@@ -547,6 +560,8 @@ jobs:
           # Only here, so the smoke test finds nothing but what the AppImage carries.
           LD_LIBRARY_PATH="$RUNNER_TEMP/mpv/lib" linux/packaging/make-appdir.sh "$bundle" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/AppDir"
           cp LICENSE NOTICE "$RUNNER_TEMP/AppDir/usr/bin/"
+          mkdir -p "$RUNNER_TEMP/AppDir/usr/share/doc/libmpv"
+          cp -r "$RUNNER_TEMP/mpv/licenses" "$RUNNER_TEMP/mpv/manifest.txt" "$RUNNER_TEMP/AppDir/usr/share/doc/libmpv/"
           # Nothing bundled may need a newer glibc than the build system's.
           newest=$(find "$RUNNER_TEMP/AppDir" -type f -exec sh -c 'file -b "$1" | grep -q ^ELF && objdump -T "$1"' _ {} \; 2>/dev/null \
             | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)
@@ -555,14 +570,14 @@ jobs:
             echo "The AppDir needs $newest, newer than Ubuntu 22.04's glibc 2.35." >&2
             exit 1
           fi
-          tool="$RUNNER_TEMP/appimagetool"
-          curl -fsSL --retry 5 --retry-all-errors -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-$APPIMAGE_ARCH.AppImage"
+          tool="$PWD/.linux-downloads/appimagetool-$APPIMAGE_ARCH"
+          [ -s "$tool" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-$APPIMAGE_ARCH.AppImage"
           echo "$APPIMAGETOOL_SHA256  $tool" | sha256sum -c -
           chmod +x "$tool"
           # No FUSE in the container: the tool unpacks itself and runs.
           # The runtime appimagetool would fetch itself, with retries.
-          runtime="$RUNNER_TEMP/runtime"
-          curl -fsSL --retry 5 --retry-all-errors -o "$runtime" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$APPIMAGE_ARCH"
+          runtime="$PWD/.linux-downloads/runtime-$APPIMAGE_ARCH"
+          [ -s "$runtime" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$runtime" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$APPIMAGE_ARCH"
           APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$APPIMAGE_ARCH" "$tool" --runtime-file "$runtime" --no-appstream "$RUNNER_TEMP/AppDir" "Lumtub_${LUMTUB_VERSION}_linux-$PACKAGE_ARCH.AppImage"
           ls -l Lumtub_*.AppImage
 
@@ -676,8 +691,9 @@ jobs:
     # packing a DMG thinned to each.
     runs-on: macos-15
     env:
-      FLUTTER_VERSION: 3.47.7
-      FFMPEG_TAG: n8.0
+      # LGPL ffmpeg and ffprobe for each CPU, from
+      # https://github.com/dfloresc/ffmpeg-macos-builds; sums from its SHA256SUMS.
+      FFMPEG_RELEASE: v9.0.1-1
     permissions:
       contents: read
     steps:
@@ -685,6 +701,10 @@ jobs:
         with:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
+
+      - name: macOS - read the Flutter version
+        shell: bash
+        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
 
       - name: macOS - install Flutter stable SDK
         run: |
@@ -742,19 +762,19 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
         run: flutter build macos --release --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=macos --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
 
-      - name: macOS - restore ffmpeg
-        id: ffmpeg-cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/ffmpeg
-          key: macos-ffmpeg-${{ env.FFMPEG_TAG }}-${{ hashFiles('macos/packaging/build-ffmpeg.sh') }}
-
-      - name: macOS - build ffmpeg
-        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+      - name: macOS - download ffmpeg
         run: |
-          git clone --quiet --depth 1 --branch "$FFMPEG_TAG" https://github.com/FFmpeg/FFmpeg.git "$RUNNER_TEMP/ffmpeg-src"
-          git -C "$RUNNER_TEMP/ffmpeg-src" rev-parse HEAD
-          macos/packaging/build-ffmpeg.sh "$RUNNER_TEMP/ffmpeg-src" "$RUNNER_TEMP/ffmpeg"
+          for arch in arm64 x86_64; do
+            case $arch in
+              arm64) sum=d0ea5ea43a5adfa5d01d4137c9e5a61728b800a812f12917a26fd7af0c14c03a ;;
+              x86_64) sum=d63ad731cbf1eb71c2055130fedfbd7e49edd60a9815ab763e72ba802c1ac666 ;;
+            esac
+            name="ffmpeg-${FFMPEG_RELEASE#v}-lgpl-macos-$arch"
+            curl -sSfL --retry 4 -o "$RUNNER_TEMP/$name.tar.xz" "https://github.com/dfloresc/ffmpeg-macos-builds/releases/download/$FFMPEG_RELEASE/$name.tar.xz"
+            echo "$sum  $RUNNER_TEMP/$name.tar.xz" | shasum -a 256 -c -
+            tar -xJf "$RUNNER_TEMP/$name.tar.xz" -C "$RUNNER_TEMP"
+            mv "$RUNNER_TEMP/$name" "$RUNNER_TEMP/ffmpeg-$arch"
+          done
 
       - name: macOS - import the signing certificate
         env:
@@ -788,9 +808,10 @@ jobs:
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
           app=build/macos/Build/Products/Release/Lumtub.app
-          ffmpeg_version="FFmpeg ${FFMPEG_TAG#n} (LGPL)"
-          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg" "$ffmpeg_version" "Lumtub_${LUMTUB_VERSION}_macos-arm64.dmg" arm64
-          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg" "$ffmpeg_version" "Lumtub_${LUMTUB_VERSION}_macos-x64.dmg" x86_64
+          release=${FFMPEG_RELEASE#v}
+          ffmpeg_version="FFmpeg ${release%-*} (LGPL, dfloresc/ffmpeg-macos-builds $FFMPEG_RELEASE)"
+          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg-arm64" "$ffmpeg_version" "Lumtub_${LUMTUB_VERSION}_macos-arm64.dmg" arm64
+          macos/packaging/package.sh "$app" "$LUMTUB_CORE_DLL" "$RUNNER_TEMP/ffmpeg-x86_64" "$ffmpeg_version" "Lumtub_${LUMTUB_VERSION}_macos-x64.dmg" x86_64
 
       - name: macOS - smoke test the Apple silicon DMG
         run: macos/packaging/smoke.sh Lumtub_*_macos-arm64.dmg "$RUNNER_TEMP/smoke"
@@ -845,12 +866,14 @@ jobs:
   android:
     name: Android
     runs-on: ubuntu-24.04
-    env:
-      FLUTTER_VERSION: 3.47.7
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Android - read the Flutter version
+        shell: bash
+        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
 
       - name: Android - install Flutter stable SDK
         run: |
@@ -961,7 +984,12 @@ jobs:
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
           sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
           yes | "$sdk/sdkmanager" --licenses > /dev/null
-          "$sdk/sdkmanager" "emulator" "system-images;android-34;google_apis;x86_64" > /dev/null
+          # A download cut short leaves a broken archive; ask again.
+          for try in 1 2 3; do
+            "$sdk/sdkmanager" "emulator" "system-images;android-34;google_apis;x86_64" > /dev/null && break
+            [ "$try" = 3 ] && exit 1
+            sleep 20
+          done
           # Written by hand: this avdmanager cannot read the SDK's newer XML and makes nothing.
           avd="$HOME/.android/avd"; mkdir -p "$avd/smoke.avd"
           printf 'avd.ini.encoding=UTF-8\npath=%s/smoke.avd\ntarget=android-34\n' "$avd" > "$avd/smoke.ini"

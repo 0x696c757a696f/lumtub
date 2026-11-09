@@ -924,7 +924,7 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
         ),
         _tip(context, tr("New libmpv falls back to the built-in version automatically if it fails. If videos won't play after a yt-dlp update, you can roll back to the previous version.")),
         if (Platform.isMacOS)
-          _tip(context, tr('The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.'))
+          _tip(context, tr('The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.'))
         else
           _tip(context, tr('ffmpeg is an optional component used only to merge high-quality video and audio, and is never downloaded automatically. It is the LGPL build from zhongfly/mpv-winbuild (or from BtbN/FFmpeg-Builds where that cannot be installed); source code: https://ffmpeg.org/download.html.')),
       ];

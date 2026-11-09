@@ -17,6 +17,17 @@ void main() {
     ]);
   });
 
+  test("Unicode emoji YouTube sent pictures of are drawn from them, skin tones whole", () {
+    final parts = danmakuParts('🫛 and 👍🏽 👍', const {'🫛': 'https://e/pea', '👍': 'https://e/up', '👍🏽': 'https://e/up-tone'})!;
+    expect(parts.map((p) => switch (p) { DanmakuText(:final text) => 'T($text)', DanmakuEmojiPicture(:final url) => 'P($url)', DanmakuEmojiGlyph(:final emoji) => 'E($emoji)' }), [
+      'P(https://e/pea)',
+      'T( and )',
+      'P(https://e/up-tone)',
+      'T( )',
+      'P(https://e/up)',
+    ]);
+  });
+
   testWidgets('a message is drawn as an outlined line as tall as its lane', (tester) async {
     final painter = DanmakuPainter(font: 'Noto Sans CJK SC', size: 52, opacity: 1);
     final parts = danmakuParts('ok 😂', const {})!;

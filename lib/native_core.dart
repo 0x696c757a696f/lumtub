@@ -249,6 +249,17 @@ class NativeCore {
   static String get missingMessage => tr('This install is incomplete: {0} is missing, so recommendations and blocking are off and quality uses the defaults. Please reinstall Lumtub.', [fileName]);
 
   static NativeCore? _load() {
+    // Android loads it by name from the APK's lib/<abi>/.
+    if (Platform.isAndroid) {
+      try {
+        final core = NativeCore._(DynamicLibrary.open(fileName));
+        AppLog.nativeRedact = (message) => core.take(core.withText(message, core.redact)) ?? message;
+        return core;
+      } catch (e) {
+        logWarn('Could not load $fileName: $e');
+        return null;
+      }
+    }
     final paths = [
       if (Platform.environment['LUMTUB_CORE_DLL'] case final path? when path.isNotEmpty) path,
       '${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}$fileName',

@@ -3111,5 +3111,11 @@
   "Glass": "玻璃",
   "{0}% solid": "不透明度 {0}%",
   "See the desktop through the window": "透出桌面",
-  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "風景讓開，視窗透出後面的桌面，系統支援時還會帶模糊。低佔用模式下無法使用"
+  "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "風景讓開，視窗透出後面的桌面，系統支援時還會帶模糊。低佔用模式下無法使用",
+  "Add a skin from a file": "從檔案加入皮膚",
+  "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc，或皮膚資料夾打成的 zip",
+  "Added {0}": "已加入 {0}",
+  "This is not a skin: {0}": "這不是皮膚：{0}",
+  "See the wallpaper through the app": "透出桌面牆紙",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "風景讓開，透出主畫面的牆紙，系統支援時會模糊。下次啟動 Lumtub 時生效。低佔用模式下關閉"
 }

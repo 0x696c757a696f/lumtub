@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
@@ -48,6 +49,8 @@ class WindowsShell {
   /// previous or stop.
   void Function(String button)? onButton;
   void Function(Duration position)? onSeek;
+  /// Android's picture in picture began or ended.
+  void Function(bool on)? onPip;
 
   DateTime? _lastTimeline;
 
@@ -57,6 +60,8 @@ class WindowsShell {
         onButton?.call(call.arguments as String);
       case 'seek':
         onSeek?.call(Duration(milliseconds: call.arguments as int));
+      case 'pip':
+        onPip?.call(call.arguments == true);
     }
     return null;
   }
@@ -108,7 +113,8 @@ class WindowsShellSync {
   WindowsShellSync(this.controller, this.shell) {
     shell
       ..onButton = _button
-      ..onSeek = (position) => unawaited(controller.seek(position));
+      ..onSeek = ((position) => unawaited(controller.seek(position)))
+      ..onPip = controller.pipChangedBySystem;
     controller.addListener(_changed);
     _changed();
   }
@@ -119,6 +125,7 @@ class WindowsShellSync {
   final List<StreamSubscription<Object?>> _subscriptions = [];
   String? _videoId;
   bool? _hasNext, _hasPrevious;
+  bool _autoPip = false;
   (bool, bool)? _tray;
   Duration _duration = Duration.zero;
 
@@ -158,6 +165,13 @@ class WindowsShellSync {
         _status(player?.state.playing ?? false);
       }
     }
+    // Android: going home while a video plays on the watch page keeps it
+    // in picture in picture.
+    final autoPip = Platform.isAndroid && video != null && controller.onWatchPage && !controller.mini && (player?.state.playing ?? false);
+    if (autoPip != _autoPip) {
+      _autoPip = autoPip;
+      AppWindow.setAutoPip(autoPip);
+    }
     final hasNext = video != null && controller.hasNext, hasPrevious = controller.hasPrevious;
     if (hasNext != _hasNext || hasPrevious != _hasPrevious) {
       _hasNext = hasNext;
@@ -167,6 +181,7 @@ class WindowsShellSync {
   }
 
   void _status(bool playing) {
+    if (Platform.isAndroid) _changed();
     if (_videoId == null) return;
     unawaited(shell.setStatus(playing ? 'playing' : 'paused'));
     unawaited(shell.setTimeline(_player?.state.position ?? Duration.zero, _duration, force: true));

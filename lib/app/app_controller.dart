@@ -297,6 +297,12 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (on) _noteWaylandTop();
   }
 
+  /// Android began or ended picture in picture itself.
+  void pipChangedBySystem(bool on) {
+    AppWindow.pipChangedBySystem(on);
+    if (on != pip) _update(() => pip = on);
+  }
+
   VideoOutputSize? _outputSize;
 
   /// [owner] shows the video in [box], in physical pixels; libmpv draws it
@@ -1605,7 +1611,8 @@ class AppController extends ChangeNotifier with _ExploreState {
     final read = Stopwatch()..start();
     final folder = File(Platform.resolvedExecutable).parent.path;
     final mpv = paths?.mpv;
-    final bytes = await Isolate.run(_readingPlayerFiles(folder, mpv));
+    // Android's executable is the system's app_process, in a folder apps may not list.
+    final bytes = Platform.isAndroid || Platform.isIOS ? 0 : await Isolate.run(_readingPlayerFiles(folder, mpv));
     logDebug(() => 'Read ${bytes >> 20} MB of player files in ${read.elapsedMilliseconds} ms');
     final directories = this.directories;
     if (directories != null) {
@@ -1688,10 +1695,16 @@ class AppController extends ChangeNotifier with _ExploreState {
       if (resolved) {
         try {
           final streams = _repository!.streams;
-          var pending = streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly, live: item.isLive);
+          // Without yt-dlp (Android) the core's answer is the only one.
+          if (streams.ytDlpPath.isEmpty) {
+            if (item.isLive || item.membersOnly) throw StateError('Live streams and members-only videos need yt-dlp, which this version does not have yet');
+            video = await streams.quick(item.id, format, FormatPolicy.settingsJson(_playback));
+            if (video == null) throw StateError('YouTube gave no streams this version can play');
+          }
+          var pending = video != null ? Future.value(video) : streams.resolve(item.id, format, formatSort: formatSort, membersOnly: item.membersOnly, live: item.isLive);
           // The first open of a video also asks YouTube directly; whichever
           // answers first starts it. A reopen after a failure waits for yt-dlp.
-          if (_quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
+          if (video == null && _quickSerial != serial && !item.isLive && !item.membersOnly && !streams.resolved(item.id, format)) {
             _quickSerial = serial;
             final full = pending;
             pending = Future.any([

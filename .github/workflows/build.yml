@@ -851,9 +851,183 @@ jobs:
           path: Lumtub_*_macos-x64.dmg
           if-no-files-found: error
 
+  android:
+    name: Android
+    runs-on: ubuntu-24.04
+    env:
+      FLUTTER_VERSION: 3.47.7
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Android - install Flutter stable SDK
+        run: |
+          archive="$RUNNER_TEMP/flutter.tar.xz"
+          curl -fsSL --retry 5 --retry-all-errors -o "$archive" "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz"
+          tar -xJf "$archive" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+
+      - name: Android - SDK, NDK and Java
+        run: |
+          # The runner image carries the SDK; r28 or newer for 16 KB pages.
+          ndk="$ANDROID_NDK_LATEST_HOME"
+          echo "NDK: $ndk"
+          echo "ANDROID_NDK_HOME=$ndk" >> "$GITHUB_ENV"
+          echo "$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_PATH"
+          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+
+      - name: Android - install the Rust toolchain
+        run: |
+          rustup update stable
+          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+          cargo install cargo-ndk --locked
+
+      - name: Android - cache Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: native/lumtub_core
+          key: android
+
+      - name: Android - build the Rust core
+        run: android/packaging/build-core.sh
+
+      - name: Android - get packages
+        run: flutter pub get
+
+      - name: Android - determine package version
+        run: |
+          base=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)
+          if [ "${GITHUB_REF#refs/tags/v}" != "$GITHUB_REF" ]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            version="$base-$(echo "$GITHUB_SHA" | cut -c1-7)"
+          fi
+          echo "$version" | grep -Eq '^[0-9A-Za-z.+-]+$' || { echo "Unexpected version: $version"; exit 1; }
+          echo "LUMTUB_VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Android - release key
+        env:
+          KEYSTORE: ${{ secrets.LUMTUB_ANDROID_KEYSTORE }}
+          KEYSTORE_PASSWORD: ${{ secrets.LUMTUB_ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          # Without the secrets the debug key signs (pull requests from forks).
+          if [ -z "$KEYSTORE" ]; then echo "::warning::No release key: the APKs are signed with a debug key"; exit 0; fi
+          echo "$KEYSTORE" | base64 -d > android/release.jks
+          printf 'storeFile=release.jks\nstorePassword=%s\nkeyAlias=lumtub\nkeyPassword=%s\n' "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > android/key.properties
+
+      - name: Android - build APKs
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.YTPLUS_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.YTPLUS_GOOGLE_CLIENT_SECRET }}
+          KEYSTORE_PASSWORD: ${{ secrets.LUMTUB_ANDROID_KEYSTORE_PASSWORD }}
+          HYBRID_CLASSICAL_KEY: ${{ secrets.LUMTUB_ANDROID_HYBRID_CLASSICAL_KEY }}
+          HYBRID_CLASSICAL_CERT: ${{ secrets.LUMTUB_ANDROID_HYBRID_CLASSICAL_CERT }}
+          HYBRID_PQC_KEY: ${{ secrets.LUMTUB_ANDROID_HYBRID_PQC_KEY }}
+          HYBRID_PQC_CERT: ${{ secrets.LUMTUB_ANDROID_HYBRID_PQC_CERT }}
+        run: |
+          flutter build apk --release --split-per-abi --dart-define=LUMTUB_VERSION="$LUMTUB_VERSION" --dart-define=LUMTUB_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" --dart-define=LUMTUB_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" --dart-define=LUMTUB_PACKAGE=android --dart-define=LUMTUB_BUILT="$(git log -1 --format=%cI)"
+          mkdir -p dist
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "dist/Lumtub_${LUMTUB_VERSION}_android-$abi.apk"
+          done
+          # APK Signature Scheme v3.2 (classical EC + ML-DSA-65, checked from
+          # Android 17 on) needs apksigner 37 on a JDK that knows ML-DSA.
+          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
+          yes | "$sdk/sdkmanager" --licenses > /dev/null || true
+          "$sdk/sdkmanager" --channel=3 "build-tools;37.0.0-rc2" > /dev/null
+          tools="$ANDROID_HOME/build-tools/37.0.0-rc2"
+          if [ -f android/release.jks ] && [ -n "$HYBRID_PQC_KEY" ]; then
+            keys="$RUNNER_TEMP/hybrid"; mkdir -p "$keys"
+            echo "$HYBRID_CLASSICAL_KEY" | base64 -d > "$keys/hybrid-classical.pk8"
+            echo "$HYBRID_CLASSICAL_CERT" | base64 -d > "$keys/hybrid-classical.x509.der"
+            echo "$HYBRID_PQC_KEY" | base64 -d > "$keys/hybrid-pqc.pk8"
+            echo "$HYBRID_PQC_CERT" | base64 -d > "$keys/hybrid-pqc.x509.der"
+            for apk in dist/*.apk; do
+              echo "== $(basename "$apk")"
+              JAVA_HOME="$JAVA_HOME_25_X64" PATH="$JAVA_HOME_25_X64/bin:$PATH" android/packaging/sign-hybrid.sh \
+                "$tools/apksigner" "$apk" "$apk.signed" android/release.jks "$keys"
+              mv "$apk.signed" "$apk"
+            done
+            rm -rf "$keys"
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "::error::A release needs the release keystore and the hybrid (ML-DSA) keys"
+            exit 1
+          else
+            echo "::warning::No hybrid (ML-DSA) keys: the APKs carry no v3.2 signature"
+          fi
+          for apk in dist/*.apk; do
+            echo "$(basename "$apk"): $(stat -c %s "$apk") bytes"
+            # 16 KB page alignment of the uncompressed native libraries.
+            "$tools/zipalign" -c -P 16 -v 4 "$apk" | grep -E '\.so|Verification' | tail -12
+          done
+          rm -f android/release.jks android/key.properties
+
+      - name: Android - start an emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
+          yes | "$sdk/sdkmanager" --licenses > /dev/null
+          "$sdk/sdkmanager" "emulator" "system-images;android-34;google_apis;x86_64" > /dev/null
+          # Written by hand: this avdmanager cannot read the SDK's newer XML and makes nothing.
+          avd="$HOME/.android/avd"; mkdir -p "$avd/smoke.avd"
+          printf 'avd.ini.encoding=UTF-8\npath=%s/smoke.avd\ntarget=android-34\n' "$avd" > "$avd/smoke.ini"
+          cat > "$avd/smoke.avd/config.ini" <<'INI'
+          AvdId=smoke
+          abi.type=x86_64
+          hw.cpu.arch=x86_64
+          image.sysdir.1=system-images/android-34/google_apis/x86_64/
+          tag.id=google_apis
+          hw.lcd.width=1080
+          hw.lcd.height=2400
+          hw.lcd.density=420
+          hw.ramSize=4096
+          disk.dataPartition.size=6G
+          hw.keyboard=yes
+          hw.dPad=yes
+          hw.gpu.enabled=yes
+          hw.gpu.mode=swiftshader_indirect
+          INI
+          sed -i 's/^ *//' "$avd/smoke.avd/config.ini"
+          nohup "$ANDROID_HOME/emulator/emulator" -avd smoke -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -no-metrics -accel on > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          sleep 20; tail -20 "$RUNNER_TEMP/emulator.log"
+
+      - name: Android - smoke test
+        run: |
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
+          timeout 600 android/packaging/smoke.sh dist/Lumtub_*_android-x86_64.apk "$RUNNER_TEMP/smoke" || { echo "--- emulator log"; tail -60 "$RUNNER_TEMP/emulator.log"; exit 1; }
+
+      - name: Android - upload smoke test
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Android-smoke
+          path: ${{ runner.temp }}/smoke
+          if-no-files-found: ignore
+
+      - name: Android - upload APKs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Lumtub-android-apk
+          path: dist/*.apk
+
+      - name: Android - pictures to the android-shots branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        run: |
+          sha=$(git rev-parse --short HEAD)
+          git checkout -q --orphan android-shots
+          git rm -rfq . && git clean -fdxq
+          cp "$RUNNER_TEMP"/smoke/*.png "$RUNNER_TEMP"/smoke/*.mp4 . 2> /dev/null || true
+          git add -A
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "Android pictures of $sha"
+          git push -f origin android-shots
+
   release:
     name: Release
-    needs: [windows, linux, macos]
+    needs: [windows, linux, macos, android]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -867,7 +1041,7 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: dist
-          pattern: Lumtub-{windows,linux,macos}-*
+          pattern: Lumtub-{windows,linux,macos,android}-*
           merge-multiple: true
       - name: Windows - sign update packages
         env:
@@ -881,7 +1055,7 @@ jobs:
           fi
           rustup update stable
           shopt -s nullglob
-          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg
+          cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg dist/*.apk
       - name: Windows - publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

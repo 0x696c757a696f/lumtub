@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0} % opaque",
   "See the desktop through the window": "Voir le bureau à travers la fenêtre",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Le paysage s'efface et le bureau apparaît en transparence, avec du flou quand le système le permet. Désactivé en mode économe en ressources",
-  "Color schemes": "Palettes de couleurs"
+  "Color schemes": "Palettes de couleurs",
+  "Library": "Bibliothèque",
+  "Add a skin from a file": "Ajouter un skin depuis un fichier",
+  "A skin.jsonc, or a zip of a skin's folder": "Un skin.jsonc, ou un zip du dossier d'un skin",
+  "Added {0}": "{0} ajouté",
+  "This is not a skin: {0}": "Ce n'est pas un skin : {0}",
+  "See the wallpaper through the app": "Laisser voir le fond d'écran",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Le paysage s'efface et le fond d'écran de l'accueil apparaît, flouté quand le système le permet. Prend effet au prochain démarrage de Lumtub. Désactivé en mode économie de ressources"
 }

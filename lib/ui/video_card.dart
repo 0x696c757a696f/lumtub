@@ -187,6 +187,7 @@ class VideoRow extends StatelessWidget {
       borderRadius: AppStyle.controlRadius,
       onTap: onOpen,
       onSecondaryTapUp: (details) => _menu(context, details.globalPosition),
+      onLongPress: () => _menu(context, _centreOf(context)),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: Space.s, horizontal: Space.xs),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -503,6 +504,7 @@ class _VideoCardState extends State<VideoCard> {
         onHover: _pointerOver,
         onFocusChange: _focus,
         onSecondaryTapUp: (details) => _menu(details.globalPosition),
+        onLongPress: () => _menu(_centreOf(context)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           AspectRatio(
             aspectRatio: 16 / 9,
@@ -733,6 +735,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
       borderRadius: AppStyle.cardRadius,
       onTap: onOpen,
       onSecondaryTapUp: (details) => showVideoMenu(context, item, details.globalPosition, onOpen: onOpen),
+      onLongPress: () => showVideoMenu(context, item, _centreOf(context), onOpen: onOpen),
       child: Padding(
         padding: const EdgeInsets.all(4),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -963,4 +966,10 @@ Future<String?> promptText(BuildContext context, {required String title, require
       ],
     ),
   ).whenComplete(text.dispose);
+}
+
+/// Where a long press opens a card's menu: its middle.
+Offset _centreOf(BuildContext context) {
+  final box = context.findRenderObject() as RenderBox?;
+  return box == null ? Offset.zero : box.localToGlobal(box.size.center(Offset.zero));
 }

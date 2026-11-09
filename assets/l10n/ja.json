@@ -3111,5 +3111,12 @@
   "{0}% solid": "不透明度 {0}%",
   "See the desktop through the window": "ウィンドウ越しにデスクトップを見る",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "風景が退き、ウィンドウ越しにデスクトップが見えます。対応環境ではぼかしも入ります。低リソースモードではオフ",
-  "Color schemes": "配色"
+  "Color schemes": "配色",
+  "Library": "ライブラリ",
+  "Add a skin from a file": "ファイルからスキンを追加",
+  "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc、またはスキンのフォルダーの zip",
+  "Added {0}": "{0} を追加しました",
+  "This is not a skin: {0}": "スキンではありません: {0}",
+  "See the wallpaper through the app": "壁紙を透かして表示",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "風景が退き、ホーム画面の壁紙が透けて見えます。システムが対応していればぼかします。次に Lumtub を起動したときに有効になります。低リソースモードではオフ"
 }

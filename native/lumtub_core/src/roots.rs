@@ -45,9 +45,36 @@ pub fn set(roots: Roots) -> bool {
     changed
 }
 
-/// The authorities [roots] names, none for the system's.
+/// Android's own authorities, which every app trusts: one PEM file each in
+/// /system/etc/security/cacerts (and the APEX copy that replaces it from
+/// Android 14). Mozilla's list when neither can be read.
+#[cfg(target_os = "android")]
+static ANDROID: LazyLock<Arc<RootCertStore>> = LazyLock::new(|| {
+    let mut certs = Vec::new();
+    for folder in ["/apex/com.android.conscrypt/cacerts", "/system/etc/security/cacerts"] {
+        let Ok(entries) = std::fs::read_dir(folder) else { continue };
+        for entry in entries.flatten() {
+            if let Ok(bytes) = std::fs::read(entry.path()) {
+                certs.extend(CertificateDer::pem_slice_iter(&bytes).flatten());
+            }
+        }
+        if !certs.is_empty() {
+            break;
+        }
+    }
+    if certs.is_empty() {
+        return MOZILLA.clone();
+    }
+    store(certs)
+});
+
+/// The authorities [roots] names, none for the system's (on Android, its
+/// store read by rustls).
 fn list(roots: Roots) -> Option<Arc<RootCertStore>> {
     match roots {
+        #[cfg(target_os = "android")]
+        Roots::System => Some(ANDROID.clone()),
+        #[cfg(not(target_os = "android"))]
         Roots::System => None,
         Roots::Mozilla => Some(MOZILLA.clone()),
         Roots::Google => Some(GOOGLE.clone()),

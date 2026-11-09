@@ -287,7 +287,7 @@ ThemeData buildAppTheme(
                 ? Colors.white.withValues(alpha: 0.14)
                 : null;
         return DecoratedBox(
-          decoration: SurfaceDecoration.of(context, surface.forState(hovered: hovered, pressed: pressed), radius: radius),
+          decoration: SurfaceDecoration.of(context, surface.forState(hovered: hovered, pressed: pressed, focused: states.contains(WidgetState.focused)), radius: radius),
           position: DecorationPosition.background,
           child: DecoratedBox(
             decoration: BoxDecoration(color: wash, borderRadius: BorderRadius.circular(radius)),

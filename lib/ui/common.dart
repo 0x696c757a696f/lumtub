@@ -198,4 +198,7 @@ Color chipForeground(BuildContext context, bool selected) {
 
 /// [text] naming keys as this system's keyboard does: ⌘ and ⌥ on a Mac for
 /// Ctrl and Alt.
+/// Phones, tablets and TVs: no keyboard shortcuts or right-click to mention.
+final bool touchFirst = Platform.isAndroid || Platform.isIOS;
+
 String keyNames(String text) => Platform.isMacOS ? text.replaceAll('Ctrl + ', '⌘ + ').replaceAll('Ctrl+', '⌘').replaceAll('Alt + ', '⌥ + ').replaceAll('Alt+', '⌥') : text;

@@ -24,6 +24,7 @@ import 'ui/palettes.dart';
 import 'ui/theme.dart';
 import 'ui/window_chrome.dart';
 import 'windows_shell.dart';
+import 'device.dart';
 
 Future<void> main() async {
   FrameStats.sinceStart.start();
@@ -49,6 +50,8 @@ Future<void> main() async {
   } catch (e) {
     logError('Could not read the translations', e);
   }
+  // Before the skins: a skin's overrides depend on the kind of device.
+  await Device.load();
   AppearanceSettingsStore? store;
   var appearance = const AppearanceSettings();
   try {
@@ -143,7 +146,7 @@ class _LumtubAppState extends State<LumtubApp> {
         _now = now;
       }
     });
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) _shell = WindowsShellSync(controller, WindowsShell());
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid) _shell = WindowsShellSync(controller, WindowsShell());
     if (controller.appearance.systemAccent) unawaited(controller.refreshWindowsAccent());
     // Closing the window ends the process without disposing widgets, so the
     // player and unsaved progress are released here first.

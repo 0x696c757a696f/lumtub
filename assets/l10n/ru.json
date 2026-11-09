@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% непрозрачности",
   "See the desktop through the window": "Показывать рабочий стол сквозь окно",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "Пейзаж уходит, и сквозь окно виден рабочий стол, размытый там, где это позволяет система. Отключено в режиме экономии ресурсов",
-  "Color schemes": "Цветовые схемы"
+  "Color schemes": "Цветовые схемы",
+  "Library": "Библиотека",
+  "Add a skin from a file": "Добавить скин из файла",
+  "A skin.jsonc, or a zip of a skin's folder": "skin.jsonc или zip-архив папки скина",
+  "Added {0}": "Добавлено: {0}",
+  "This is not a skin: {0}": "Это не скин: {0}",
+  "See the wallpaper through the app": "Показывать обои сквозь приложение",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "Пейзаж уступает место, и сквозь приложение видны обои главного экрана, размытые, если система умеет. Вступит в силу при следующем запуске Lumtub. Выключено в режиме экономии ресурсов"
 }

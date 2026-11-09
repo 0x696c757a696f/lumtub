@@ -3111,5 +3111,12 @@
   "{0}% solid": "{0}% sólido",
   "See the desktop through the window": "Ver el escritorio a través de la ventana",
   "The landscape steps aside and the desktop shows through, blurred where the system can. Off in Low resource mode": "El paisaje se aparta y el escritorio se ve a través, con desenfoque cuando el sistema lo permite. Desactivado en el modo de bajo consumo",
-  "Color schemes": "Combinaciones de colores"
+  "Color schemes": "Combinaciones de colores",
+  "Library": "Biblioteca",
+  "Add a skin from a file": "Añadir un skin desde un archivo",
+  "A skin.jsonc, or a zip of a skin's folder": "Un skin.jsonc, o un zip de la carpeta de un skin",
+  "Added {0}": "{0} añadido",
+  "This is not a skin: {0}": "Esto no es un skin: {0}",
+  "See the wallpaper through the app": "Dejar ver el fondo de pantalla",
+  "The landscape steps aside and the home screen's wallpaper shows through, blurred where the system can. Takes effect the next time Lumtub starts. Off in Low resource mode": "El paisaje se aparta y se ve el fondo de pantalla de inicio, desenfocado cuando el sistema puede. Se aplica la próxima vez que se inicie Lumtub. Desactivado en el modo de bajo consumo"
 }

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../app_log.dart';
+import '../ffmpeg_component.dart' show extractZip;
 import 'jsonc.dart';
 import 'skin.dart';
 
@@ -66,6 +67,41 @@ class SkinLibrary extends ChangeNotifier {
     _builtIn = builtIn;
     await _readUser();
     if (folder != null) _startWatching(folder);
+  }
+
+  /// Copies a skin into the skins folder, for phones, tablets and TVs,
+  /// which have no folder to drop it in: a skin.jsonc on its own, or a zip
+  /// of a skin's folder (with or without the folder itself in it). Answers
+  /// the skin's id; throws a [FormatException] for a file that is not one.
+  Future<String> importFile(String path) async {
+    final folder = _folder;
+    if (folder == null) throw const FormatException('There is no skins folder');
+    await folder.create(recursive: true);
+    final staging = await folder.createTemp('.import-');
+    try {
+      final unpacked = await Directory('${staging.path}${Platform.pathSeparator}skin').create();
+      if (path.toLowerCase().endsWith('.zip')) {
+        await extractZip(File(path), unpacked);
+      } else {
+        await File(path).copy('${unpacked.path}${Platform.pathSeparator}skin.jsonc');
+      }
+      // The skin.jsonc nearest the top is the skin; its folder is copied.
+      final found = await unpacked.list(recursive: true).where((e) => e is File && e.uri.pathSegments.last == 'skin.jsonc').cast<File>().toList();
+      if (found.isEmpty) throw const FormatException('No skin.jsonc in this file');
+      found.sort((a, b) => a.uri.pathSegments.length.compareTo(b.uri.pathSegments.length));
+      final source = found.first.parent;
+      final skin = Skin.parse(decodeJsonc(await found.first.readAsString()), folder: source.path, builtIn: false);
+      if (builtInIds.contains(skin.id)) throw FormatException('"${skin.id}" is the name of a built-in skin');
+      final target = Directory('${folder.path}${Platform.pathSeparator}${skin.id}');
+      if (await target.exists()) await target.delete(recursive: true);
+      await source.rename(target.path);
+      await reload();
+      return skin.id;
+    } finally {
+      try {
+        await staging.delete(recursive: true);
+      } catch (_) {}
+    }
   }
 
   Future<void> reload() async {

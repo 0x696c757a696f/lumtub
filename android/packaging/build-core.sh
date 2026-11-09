@@ -9,6 +9,6 @@ cd "$root/native/lumtub_core"
 cargo ndk --platform 24 -t arm64-v8a -t armeabi-v7a -t x86_64 -o "$out" build --release --lib
 # Every library must load on devices with 16 KB pages.
 for so in "$out"/*/*.so; do
-  align=$(llvm-readelf -lW "$so" 2>/dev/null | awk '$1 == "LOAD" { print $NF; exit }')
+  align=$(llvm-readelf -lW "$so" 2>/dev/null | awk '$1 == "LOAD" && !a { a = $NF } END { print a }')
   echo "$(basename "$(dirname "$so")")/$(basename "$so"): $(stat -c %s "$so") bytes, LOAD align $align"
 done

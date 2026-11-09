@@ -72,8 +72,8 @@ class _RelayServersPageState extends State<_RelayServersPage> {
     final updated = _piped.catalogUpdatedAt;
     return Scaffold(
       appBar: AppBar(title: Text(_isPiped ? tr('Piped servers') : tr('Invidious instance')), actions: [
-        IconButton(tooltip: tr('Speed test'), icon: const Icon(AppIcons.gauge), onPressed: _busy == null ? () => _run(tr('Testing speed…'), _piped.remeasure) : null),
-        IconButton(tooltip: tr('Update list'), icon: const Icon(AppIcons.arrowsClockwise), onPressed: _busy == null ? _update : null),
+        IconButton(tooltip: tr('Speed test'), icon: Icon(AppIcons.gauge), onPressed: _busy == null ? () => _run(tr('Testing speed…'), _piped.remeasure) : null),
+        IconButton(tooltip: tr('Update list'), icon: Icon(AppIcons.arrowsClockwise), onPressed: _busy == null ? _update : null),
       ]),
       body: ListenableBuilder(
         listenable: widget.controller,

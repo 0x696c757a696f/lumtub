@@ -52,8 +52,10 @@
     "brightness": {
       "enum": [
         "light",
-        "dark"
-      ]
+        "dark",
+        "auto"
+      ],
+      "description": "auto follows Lumtub's light/dark mode, with overrides.dark (and overrides.light) laid over it. auto 跟随浅色/深色模式。"
     },
     "fonts": {
       "type": "object",
@@ -131,6 +133,20 @@
         "reason": {
           "$ref": "#/$defs/color",
           "description": "Why a video is recommended. 推荐理由。"
+        },
+        "chrome": {
+          "$ref": "#/$defs/color",
+          "description": "Top bar and side rail where the skin draws no surface for them. 顶栏和侧栏底色。"
+        },
+        "tint": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.3,
+          "description": "How much of the accent fields and menus take on. 输入框和菜单带多少强调色。"
+        },
+        "strong": {
+          "type": "boolean",
+          "description": "Borders and secondary text as strong as can be. 边框和次要文字最强。"
         }
       },
       "additionalProperties": false,
@@ -246,12 +262,31 @@
                 "placement": {
                   "enum": [
                     "right",
-                    "left"
+                    "left",
+                    "split"
                   ],
-                  "description": "Default right: minimize, maximize, close. 默认在右。"
+                  "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
+                },
+                "minimize": {
+                  "$ref": "#/$defs/surface"
+                },
+                "maximize": {
+                  "$ref": "#/$defs/surface"
+                },
+                "glyphs": {
+                  "enum": [
+                    "always",
+                    "hover",
+                    "classic"
+                  ],
+                  "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                 }
               },
               "additionalProperties": false
+            },
+            "titlePlate": {
+              "$ref": "#/$defs/color",
+              "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
             }
           },
           "additionalProperties": false,
@@ -283,6 +318,22 @@
             },
             "clock": {
               "type": "boolean"
+            },
+            "position": {
+              "enum": [
+                "title",
+                "top"
+              ],
+              "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+            },
+            "appMenu": {
+              "type": "boolean",
+              "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+            },
+            "height": {
+              "type": "number",
+              "minimum": 18,
+              "maximum": 40
             }
           },
           "additionalProperties": false,
@@ -300,6 +351,9 @@
           "$ref": "#/$defs/surface",
           "description": "Bottom status line."
         },
+        "tabs": {
+          "$ref": "#/$defs/tabs"
+        },
         "topBarText": {
           "$ref": "#/$defs/color",
           "description": "Icons on the top bar, 3:1. 顶栏图标。"
@@ -307,6 +361,31 @@
         "statusBarText": {
           "$ref": "#/$defs/color",
           "description": "Status line text, 4.5:1. 状态栏文字。"
+        },
+        "glass": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "number",
+                  "minimum": 0.3,
+                  "maximum": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          ],
+          "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+        },
+        "veil": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.9,
+          "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
         }
       },
       "additionalProperties": false
@@ -346,6 +425,14 @@
         },
         "navText": {
           "$ref": "#/$defs/color"
+        },
+        "press": {
+          "enum": [
+            "wash",
+            "ripple",
+            "glow"
+          ],
+          "description": "What a press looks like: wash (darkens at once), ripple (spreads from the finger), glow (accent wash). 点击效果：整块变暗、水波纹、发光。"
         }
       },
       "additionalProperties": false
@@ -445,9 +532,10 @@
         "style": {
           "enum": [
             "default",
-            "lcd"
+            "lcd",
+            "deck"
           ],
-          "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+          "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
         },
         "frame": {
           "$ref": "#/$defs/surface"
@@ -481,6 +569,78 @@
         "spectrum": {
           "type": "boolean",
           "description": "The level meter on the display. 显示屏上的电平条。"
+        },
+        "deck": {
+          "type": "object",
+          "description": "With style deck: the player body under the picture. 播放器机身。",
+          "properties": {
+            "shape": {
+              "enum": [
+                "capsule",
+                "slab",
+                "wave",
+                "boombox",
+                "oval"
+              ],
+              "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+            },
+            "body": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/color"
+              },
+              "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+            },
+            "rim": {
+              "$ref": "#/$defs/color"
+            },
+            "clear": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.8,
+              "description": "How see-through the body is. 机身透明度。"
+            },
+            "screen": {
+              "$ref": "#/$defs/color"
+            },
+            "screenText": {
+              "$ref": "#/$defs/color"
+            },
+            "button": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/color"
+              },
+              "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+            },
+            "glyph": {
+              "$ref": "#/$defs/color"
+            },
+            "play": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/color"
+              },
+              "description": "The big play button. 大播放键。"
+            },
+            "playGlyph": {
+              "$ref": "#/$defs/color"
+            },
+            "groove": {
+              "$ref": "#/$defs/color"
+            },
+            "fill": {
+              "$ref": "#/$defs/color"
+            },
+            "speakers": {
+              "type": "boolean",
+              "description": "Round speakers at both ends. 两端圆形喇叭。"
+            },
+            "glow": {
+              "$ref": "#/$defs/color"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -603,6 +763,20 @@
                 "reason": {
                   "$ref": "#/$defs/color",
                   "description": "Why a video is recommended. 推荐理由。"
+                },
+                "chrome": {
+                  "$ref": "#/$defs/color",
+                  "description": "Top bar and side rail where the skin draws no surface for them. 顶栏和侧栏底色。"
+                },
+                "tint": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.3,
+                  "description": "How much of the accent fields and menus take on. 输入框和菜单带多少强调色。"
+                },
+                "strong": {
+                  "type": "boolean",
+                  "description": "Borders and secondary text as strong as can be. 边框和次要文字最强。"
                 }
               },
               "additionalProperties": false,
@@ -718,12 +892,31 @@
                         "placement": {
                           "enum": [
                             "right",
-                            "left"
+                            "left",
+                            "split"
                           ],
-                          "description": "Default right: minimize, maximize, close. 默认在右。"
+                          "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
+                        },
+                        "minimize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "maximize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "glyphs": {
+                          "enum": [
+                            "always",
+                            "hover",
+                            "classic"
+                          ],
+                          "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
                       "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
                     }
                   },
                   "additionalProperties": false,
@@ -755,6 +948,22 @@
                     },
                     "clock": {
                       "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
                     }
                   },
                   "additionalProperties": false,
@@ -772,6 +981,9 @@
                   "$ref": "#/$defs/surface",
                   "description": "Bottom status line."
                 },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
+                },
                 "topBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Icons on the top bar, 3:1. 顶栏图标。"
@@ -779,6 +991,31 @@
                 "statusBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
                 }
               },
               "additionalProperties": false
@@ -917,9 +1154,10 @@
                 "style": {
                   "enum": [
                     "default",
-                    "lcd"
+                    "lcd",
+                    "deck"
                   ],
-                  "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
                 },
                 "frame": {
                   "$ref": "#/$defs/surface"
@@ -953,6 +1191,78 @@
                 "spectrum": {
                   "type": "boolean",
                   "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
@@ -1075,6 +1385,20 @@
                 "reason": {
                   "$ref": "#/$defs/color",
                   "description": "Why a video is recommended. 推荐理由。"
+                },
+                "chrome": {
+                  "$ref": "#/$defs/color",
+                  "description": "Top bar and side rail where the skin draws no surface for them. 顶栏和侧栏底色。"
+                },
+                "tint": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.3,
+                  "description": "How much of the accent fields and menus take on. 输入框和菜单带多少强调色。"
+                },
+                "strong": {
+                  "type": "boolean",
+                  "description": "Borders and secondary text as strong as can be. 边框和次要文字最强。"
                 }
               },
               "additionalProperties": false,
@@ -1190,12 +1514,31 @@
                         "placement": {
                           "enum": [
                             "right",
-                            "left"
+                            "left",
+                            "split"
                           ],
-                          "description": "Default right: minimize, maximize, close. 默认在右。"
+                          "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
+                        },
+                        "minimize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "maximize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "glyphs": {
+                          "enum": [
+                            "always",
+                            "hover",
+                            "classic"
+                          ],
+                          "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
                       "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
                     }
                   },
                   "additionalProperties": false,
@@ -1227,6 +1570,22 @@
                     },
                     "clock": {
                       "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
                     }
                   },
                   "additionalProperties": false,
@@ -1244,6 +1603,9 @@
                   "$ref": "#/$defs/surface",
                   "description": "Bottom status line."
                 },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
+                },
                 "topBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Icons on the top bar, 3:1. 顶栏图标。"
@@ -1251,6 +1613,31 @@
                 "statusBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
                 }
               },
               "additionalProperties": false
@@ -1389,9 +1776,10 @@
                 "style": {
                   "enum": [
                     "default",
-                    "lcd"
+                    "lcd",
+                    "deck"
                   ],
-                  "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
                 },
                 "frame": {
                   "$ref": "#/$defs/surface"
@@ -1425,6 +1813,78 @@
                 "spectrum": {
                   "type": "boolean",
                   "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
@@ -1547,6 +2007,20 @@
                 "reason": {
                   "$ref": "#/$defs/color",
                   "description": "Why a video is recommended. 推荐理由。"
+                },
+                "chrome": {
+                  "$ref": "#/$defs/color",
+                  "description": "Top bar and side rail where the skin draws no surface for them. 顶栏和侧栏底色。"
+                },
+                "tint": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.3,
+                  "description": "How much of the accent fields and menus take on. 输入框和菜单带多少强调色。"
+                },
+                "strong": {
+                  "type": "boolean",
+                  "description": "Borders and secondary text as strong as can be. 边框和次要文字最强。"
                 }
               },
               "additionalProperties": false,
@@ -1662,12 +2136,31 @@
                         "placement": {
                           "enum": [
                             "right",
-                            "left"
+                            "left",
+                            "split"
                           ],
-                          "description": "Default right: minimize, maximize, close. 默认在右。"
+                          "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
+                        },
+                        "minimize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "maximize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "glyphs": {
+                          "enum": [
+                            "always",
+                            "hover",
+                            "classic"
+                          ],
+                          "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
                       "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
                     }
                   },
                   "additionalProperties": false,
@@ -1699,6 +2192,22 @@
                     },
                     "clock": {
                       "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
                     }
                   },
                   "additionalProperties": false,
@@ -1716,6 +2225,9 @@
                   "$ref": "#/$defs/surface",
                   "description": "Bottom status line."
                 },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
+                },
                 "topBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Icons on the top bar, 3:1. 顶栏图标。"
@@ -1723,6 +2235,31 @@
                 "statusBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
                 }
               },
               "additionalProperties": false
@@ -1861,9 +2398,10 @@
                 "style": {
                   "enum": [
                     "default",
-                    "lcd"
+                    "lcd",
+                    "deck"
                   ],
-                  "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
                 },
                 "frame": {
                   "$ref": "#/$defs/surface"
@@ -1897,6 +2435,78 @@
                 "spectrum": {
                   "type": "boolean",
                   "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
@@ -2019,6 +2629,20 @@
                 "reason": {
                   "$ref": "#/$defs/color",
                   "description": "Why a video is recommended. 推荐理由。"
+                },
+                "chrome": {
+                  "$ref": "#/$defs/color",
+                  "description": "Top bar and side rail where the skin draws no surface for them. 顶栏和侧栏底色。"
+                },
+                "tint": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.3,
+                  "description": "How much of the accent fields and menus take on. 输入框和菜单带多少强调色。"
+                },
+                "strong": {
+                  "type": "boolean",
+                  "description": "Borders and secondary text as strong as can be. 边框和次要文字最强。"
                 }
               },
               "additionalProperties": false,
@@ -2134,12 +2758,31 @@
                         "placement": {
                           "enum": [
                             "right",
-                            "left"
+                            "left",
+                            "split"
                           ],
-                          "description": "Default right: minimize, maximize, close. 默认在右。"
+                          "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
+                        },
+                        "minimize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "maximize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "glyphs": {
+                          "enum": [
+                            "always",
+                            "hover",
+                            "classic"
+                          ],
+                          "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
                         }
                       },
                       "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
                     }
                   },
                   "additionalProperties": false,
@@ -2171,6 +2814,22 @@
                     },
                     "clock": {
                       "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
                     }
                   },
                   "additionalProperties": false,
@@ -2188,6 +2847,9 @@
                   "$ref": "#/$defs/surface",
                   "description": "Bottom status line."
                 },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
+                },
                 "topBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Icons on the top bar, 3:1. 顶栏图标。"
@@ -2195,6 +2857,31 @@
                 "statusBarText": {
                   "$ref": "#/$defs/color",
                   "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
                 }
               },
               "additionalProperties": false
@@ -2333,9 +3020,10 @@
                 "style": {
                   "enum": [
                     "default",
-                    "lcd"
+                    "lcd",
+                    "deck"
                   ],
-                  "description": "lcd: a display with time, scrolling title and spectrum. 液晶屏样式。"
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
                 },
                 "frame": {
                   "$ref": "#/$defs/surface"
@@ -2369,6 +3057,1322 @@
                 "spectrum": {
                   "type": "boolean",
                   "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "light": {
+          "type": "object",
+          "description": "Deep-merged over the skin on this kind of device. 在这类设备上深度合并覆盖。",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "names": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "By language tag: zh-Hans, zh-Hant, ja… 按语言。"
+            },
+            "description": {
+              "type": "string"
+            },
+            "descriptions": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "author": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "license": {
+              "type": "string",
+              "description": "SPDX id, e.g. CC0-1.0. 许可证。"
+            },
+            "brightness": {
+              "enum": [
+                "light",
+                "dark"
+              ]
+            },
+            "fonts": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Family name → .ttf/.otf file in the skin's folder. 字体名 → 文件。"
+            },
+            "text": {
+              "type": "object",
+              "properties": {
+                "font": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "All text; null keeps the user's font. 正文字体，null 用用户的。"
+                },
+                "displayFont": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Headings and the logo. 标题和 logo。"
+                },
+                "monoFont": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Times, durations, numbers. 时间和数字。"
+                }
+              },
+              "additionalProperties": false
+            },
+            "colors": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "$ref": "#/$defs/color",
+                  "description": "Window background, also under pictures. 窗口底色。"
+                },
+                "text": {
+                  "$ref": "#/$defs/color",
+                  "description": "Body text, 4.5:1 on page. 正文。"
+                },
+                "muted": {
+                  "$ref": "#/$defs/color",
+                  "description": "Second-line text. 次要文字。"
+                },
+                "accent": {
+                  "$ref": "#/$defs/color",
+                  "description": "Switches, sliders, links; 3:1 on page. 强调色。"
+                },
+                "onAccent": {
+                  "$ref": "#/$defs/color",
+                  "description": "Text on the accent. 强调色上的文字。"
+                },
+                "border": {
+                  "$ref": "#/$defs/color",
+                  "description": "Lines between things. 分隔线。"
+                },
+                "card": {
+                  "$ref": "#/$defs/color",
+                  "description": "Card and dialog colour. 卡片颜色。"
+                },
+                "selected": {
+                  "$ref": "#/$defs/color",
+                  "description": "Selected rows. 选中行。"
+                },
+                "onSelected": {
+                  "$ref": "#/$defs/color",
+                  "description": "Text on selected rows. 选中行文字。"
+                },
+                "reason": {
+                  "$ref": "#/$defs/color",
+                  "description": "Why a video is recommended. 推荐理由。"
+                },
+                "chrome": {
+                  "$ref": "#/$defs/color",
+                  "description": "Top bar and side rail where the skin draws no surface for them. 顶栏和侧栏底色。"
+                },
+                "tint": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.3,
+                  "description": "How much of the accent fields and menus take on. 输入框和菜单带多少强调色。"
+                },
+                "strong": {
+                  "type": "boolean",
+                  "description": "Borders and secondary text as strong as can be. 边框和次要文字最强。"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "page",
+                "text"
+              ]
+            },
+            "shape": {
+              "type": "object",
+              "properties": {
+                "cardRadius": {
+                  "type": "number",
+                  "description": "Cards, panels, menus, dialogs.",
+                  "minimum": 0
+                },
+                "controlRadius": {
+                  "type": "number",
+                  "description": "Buttons, fields, chips; large = pills.",
+                  "minimum": 0
+                },
+                "thumbnailRadius": {
+                  "type": "number",
+                  "description": "Video pictures.",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "window": {
+              "type": "object",
+              "properties": {
+                "background": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/paint"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/paint"
+                      }
+                    }
+                  ],
+                  "description": "Behind everything. 最底层背景。"
+                },
+                "decorations": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/decoration"
+                  }
+                },
+                "titleBar": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "height": {
+                      "type": "number",
+                      "description": "20–60.",
+                      "minimum": 20,
+                      "maximum": 60
+                    },
+                    "surface": {
+                      "$ref": "#/$defs/surface",
+                      "description": "Active window. 活动窗口。"
+                    },
+                    "inactive": {
+                      "$ref": "#/$defs/surface",
+                      "description": "Other window focused. 非活动窗口。"
+                    },
+                    "text": {
+                      "$ref": "#/$defs/color",
+                      "description": "Title, 4.5:1."
+                    },
+                    "inactiveText": {
+                      "$ref": "#/$defs/color",
+                      "description": "3:1."
+                    },
+                    "align": {
+                      "enum": [
+                        "left",
+                        "center"
+                      ]
+                    },
+                    "icon": {
+                      "type": "boolean"
+                    },
+                    "buttons": {
+                      "type": "object",
+                      "properties": {
+                        "size": {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "minItems": 2,
+                          "maxItems": 2
+                        },
+                        "icon": {
+                          "$ref": "#/$defs/color",
+                          "description": "Glyphs, 3:1."
+                        },
+                        "surface": {
+                          "$ref": "#/$defs/surface",
+                          "description": "Minimize and maximize."
+                        },
+                        "close": {
+                          "$ref": "#/$defs/surface",
+                          "description": "Close."
+                        },
+                        "placement": {
+                          "enum": [
+                            "right",
+                            "left",
+                            "split"
+                          ],
+                          "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
+                        },
+                        "minimize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "maximize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "glyphs": {
+                          "enum": [
+                            "always",
+                            "hover",
+                            "classic"
+                          ],
+                          "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "description": "Computers only; drawn by Lumtub instead of the system. 只在电脑上，替代系统标题栏。"
+                },
+                "menuBar": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "surface": {
+                      "$ref": "#/$defs/surface"
+                    },
+                    "text": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "highlight": {
+                      "$ref": "#/$defs/surface"
+                    },
+                    "highlightText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "menu": {
+                      "$ref": "#/$defs/surface"
+                    },
+                    "underlineKeys": {
+                      "type": "boolean"
+                    },
+                    "clock": {
+                      "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
+                    }
+                  },
+                  "additionalProperties": false,
+                  "description": "File / View / Play / Help, with Alt keys. Computers only. 菜单栏，只在电脑上。"
+                },
+                "topBar": {
+                  "$ref": "#/$defs/surface",
+                  "description": "Search bar row."
+                },
+                "sideBar": {
+                  "$ref": "#/$defs/surface",
+                  "description": "Navigation rail."
+                },
+                "statusBar": {
+                  "$ref": "#/$defs/surface",
+                  "description": "Bottom status line."
+                },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
+                },
+                "topBarText": {
+                  "$ref": "#/$defs/color",
+                  "description": "Icons on the top bar, 3:1. 顶栏图标。"
+                },
+                "statusBarText": {
+                  "$ref": "#/$defs/color",
+                  "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
+                }
+              },
+              "additionalProperties": false
+            },
+            "controls": {
+              "type": "object",
+              "properties": {
+                "button": {
+                  "$ref": "#/$defs/surface"
+                },
+                "buttonText": {
+                  "$ref": "#/$defs/color"
+                },
+                "primaryButton": {
+                  "$ref": "#/$defs/surface"
+                },
+                "primaryButtonText": {
+                  "$ref": "#/$defs/color"
+                },
+                "chip": {
+                  "$ref": "#/$defs/surface"
+                },
+                "chipSelected": {
+                  "$ref": "#/$defs/surface"
+                },
+                "chipSelectedText": {
+                  "$ref": "#/$defs/color"
+                },
+                "field": {
+                  "$ref": "#/$defs/surface"
+                },
+                "navSelected": {
+                  "$ref": "#/$defs/surface"
+                },
+                "navSelectedText": {
+                  "$ref": "#/$defs/color"
+                },
+                "navText": {
+                  "$ref": "#/$defs/color"
+                }
+              },
+              "additionalProperties": false
+            },
+            "cards": {
+              "type": "object",
+              "properties": {
+                "video": {
+                  "$ref": "#/$defs/surface"
+                },
+                "padding": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "panel": {
+                  "$ref": "#/$defs/surface"
+                },
+                "durationBadge": {
+                  "$ref": "#/$defs/surface"
+                },
+                "durationText": {
+                  "$ref": "#/$defs/color"
+                }
+              },
+              "additionalProperties": false
+            },
+            "logo": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "font": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "size": {
+                  "type": "number"
+                },
+                "fill": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/paint"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/paint"
+                      }
+                    }
+                  ]
+                },
+                "stroke": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/color"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "shadow": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/color"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "glow": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/color"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "badge": {
+                  "$ref": "#/$defs/surface"
+                },
+                "badgeIcon": {
+                  "$ref": "#/$defs/color"
+                }
+              },
+              "additionalProperties": false
+            },
+            "player": {
+              "type": "object",
+              "properties": {
+                "style": {
+                  "enum": [
+                    "default",
+                    "lcd",
+                    "deck"
+                  ],
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
+                },
+                "frame": {
+                  "$ref": "#/$defs/surface"
+                },
+                "progress": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/paint"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/paint"
+                      }
+                    }
+                  ]
+                },
+                "lcdFont": {
+                  "type": "string",
+                  "description": "Font of the display; VT323 by default. 显示屏字体。"
+                },
+                "lcd": {
+                  "$ref": "#/$defs/surface"
+                },
+                "lcdText": {
+                  "$ref": "#/$defs/color"
+                },
+                "lcdAccent": {
+                  "$ref": "#/$defs/color"
+                },
+                "spectrum": {
+                  "type": "boolean",
+                  "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "dark": {
+          "type": "object",
+          "description": "Deep-merged over the skin on this kind of device. 在这类设备上深度合并覆盖。",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "names": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "By language tag: zh-Hans, zh-Hant, ja… 按语言。"
+            },
+            "description": {
+              "type": "string"
+            },
+            "descriptions": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "author": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "license": {
+              "type": "string",
+              "description": "SPDX id, e.g. CC0-1.0. 许可证。"
+            },
+            "brightness": {
+              "enum": [
+                "light",
+                "dark"
+              ]
+            },
+            "fonts": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Family name → .ttf/.otf file in the skin's folder. 字体名 → 文件。"
+            },
+            "text": {
+              "type": "object",
+              "properties": {
+                "font": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "All text; null keeps the user's font. 正文字体，null 用用户的。"
+                },
+                "displayFont": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Headings and the logo. 标题和 logo。"
+                },
+                "monoFont": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Times, durations, numbers. 时间和数字。"
+                }
+              },
+              "additionalProperties": false
+            },
+            "colors": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "$ref": "#/$defs/color",
+                  "description": "Window background, also under pictures. 窗口底色。"
+                },
+                "text": {
+                  "$ref": "#/$defs/color",
+                  "description": "Body text, 4.5:1 on page. 正文。"
+                },
+                "muted": {
+                  "$ref": "#/$defs/color",
+                  "description": "Second-line text. 次要文字。"
+                },
+                "accent": {
+                  "$ref": "#/$defs/color",
+                  "description": "Switches, sliders, links; 3:1 on page. 强调色。"
+                },
+                "onAccent": {
+                  "$ref": "#/$defs/color",
+                  "description": "Text on the accent. 强调色上的文字。"
+                },
+                "border": {
+                  "$ref": "#/$defs/color",
+                  "description": "Lines between things. 分隔线。"
+                },
+                "card": {
+                  "$ref": "#/$defs/color",
+                  "description": "Card and dialog colour. 卡片颜色。"
+                },
+                "selected": {
+                  "$ref": "#/$defs/color",
+                  "description": "Selected rows. 选中行。"
+                },
+                "onSelected": {
+                  "$ref": "#/$defs/color",
+                  "description": "Text on selected rows. 选中行文字。"
+                },
+                "reason": {
+                  "$ref": "#/$defs/color",
+                  "description": "Why a video is recommended. 推荐理由。"
+                },
+                "chrome": {
+                  "$ref": "#/$defs/color",
+                  "description": "Top bar and side rail where the skin draws no surface for them. 顶栏和侧栏底色。"
+                },
+                "tint": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.3,
+                  "description": "How much of the accent fields and menus take on. 输入框和菜单带多少强调色。"
+                },
+                "strong": {
+                  "type": "boolean",
+                  "description": "Borders and secondary text as strong as can be. 边框和次要文字最强。"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "page",
+                "text"
+              ]
+            },
+            "shape": {
+              "type": "object",
+              "properties": {
+                "cardRadius": {
+                  "type": "number",
+                  "description": "Cards, panels, menus, dialogs.",
+                  "minimum": 0
+                },
+                "controlRadius": {
+                  "type": "number",
+                  "description": "Buttons, fields, chips; large = pills.",
+                  "minimum": 0
+                },
+                "thumbnailRadius": {
+                  "type": "number",
+                  "description": "Video pictures.",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "window": {
+              "type": "object",
+              "properties": {
+                "background": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/paint"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/paint"
+                      }
+                    }
+                  ],
+                  "description": "Behind everything. 最底层背景。"
+                },
+                "decorations": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/decoration"
+                  }
+                },
+                "titleBar": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "height": {
+                      "type": "number",
+                      "description": "20–60.",
+                      "minimum": 20,
+                      "maximum": 60
+                    },
+                    "surface": {
+                      "$ref": "#/$defs/surface",
+                      "description": "Active window. 活动窗口。"
+                    },
+                    "inactive": {
+                      "$ref": "#/$defs/surface",
+                      "description": "Other window focused. 非活动窗口。"
+                    },
+                    "text": {
+                      "$ref": "#/$defs/color",
+                      "description": "Title, 4.5:1."
+                    },
+                    "inactiveText": {
+                      "$ref": "#/$defs/color",
+                      "description": "3:1."
+                    },
+                    "align": {
+                      "enum": [
+                        "left",
+                        "center"
+                      ]
+                    },
+                    "icon": {
+                      "type": "boolean"
+                    },
+                    "buttons": {
+                      "type": "object",
+                      "properties": {
+                        "size": {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "minItems": 2,
+                          "maxItems": 2
+                        },
+                        "icon": {
+                          "$ref": "#/$defs/color",
+                          "description": "Glyphs, 3:1."
+                        },
+                        "surface": {
+                          "$ref": "#/$defs/surface",
+                          "description": "Minimize and maximize."
+                        },
+                        "close": {
+                          "$ref": "#/$defs/surface",
+                          "description": "Close."
+                        },
+                        "placement": {
+                          "enum": [
+                            "right",
+                            "left",
+                            "split"
+                          ],
+                          "description": "Default right: minimize, maximize, close. left: close, minimize, maximize. 默认在右；left 时依次为关闭、最小化、最大化。"
+                        },
+                        "minimize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "maximize": {
+                          "$ref": "#/$defs/surface"
+                        },
+                        "glyphs": {
+                          "enum": [
+                            "always",
+                            "hover",
+                            "classic"
+                          ],
+                          "description": "hover: the signs show only under the pointer. hover：鼠标移上去才显示符号。"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "titlePlate": {
+                      "$ref": "#/$defs/color",
+                      "description": "A plain patch under the title, clear of stripes. 标题下面垫一块纯色。"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "description": "Computers only; drawn by Lumtub instead of the system. 只在电脑上，替代系统标题栏。"
+                },
+                "menuBar": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "surface": {
+                      "$ref": "#/$defs/surface"
+                    },
+                    "text": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "highlight": {
+                      "$ref": "#/$defs/surface"
+                    },
+                    "highlightText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "menu": {
+                      "$ref": "#/$defs/surface"
+                    },
+                    "underlineKeys": {
+                      "type": "boolean"
+                    },
+                    "clock": {
+                      "type": "boolean"
+                    },
+                    "position": {
+                      "enum": [
+                        "title",
+                        "top"
+                      ],
+                      "description": "top: above the title bar, along the top of the window. top：放在标题栏上面、窗口最顶上。"
+                    },
+                    "appMenu": {
+                      "type": "boolean",
+                      "description": "A first menu named after the app, in bold, with About, Settings and Quit. 第一个菜单是粗体的应用名，含关于、设置、退出。"
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 18,
+                      "maximum": 40
+                    }
+                  },
+                  "additionalProperties": false,
+                  "description": "File / View / Play / Help, with Alt keys. Computers only. 菜单栏，只在电脑上。"
+                },
+                "topBar": {
+                  "$ref": "#/$defs/surface",
+                  "description": "Search bar row."
+                },
+                "sideBar": {
+                  "$ref": "#/$defs/surface",
+                  "description": "Navigation rail."
+                },
+                "statusBar": {
+                  "$ref": "#/$defs/surface",
+                  "description": "Bottom status line."
+                },
+                "tabs": {
+                  "$ref": "#/$defs/tabs"
+                },
+                "topBarText": {
+                  "$ref": "#/$defs/color",
+                  "description": "Icons on the top bar, 3:1. 顶栏图标。"
+                },
+                "statusBarText": {
+                  "$ref": "#/$defs/color",
+                  "description": "Status line text, 4.5:1. 状态栏文字。"
+                },
+                "glass": {
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number",
+                          "minimum": 0.3,
+                          "maximum": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ],
+                  "description": "Let the user make the bars, rail, cards and panels clearer, so the background shows through (Settings › Skins › Glass). 允许用户调低栏、侧栏、卡片和面板的不透明度，透出背景。"
+                },
+                "veil": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.9,
+                  "description": "Page colour over the backdrop under the pages, so text reads over a busy picture. 页面下面垫的一层底色。"
+                }
+              },
+              "additionalProperties": false
+            },
+            "controls": {
+              "type": "object",
+              "properties": {
+                "button": {
+                  "$ref": "#/$defs/surface"
+                },
+                "buttonText": {
+                  "$ref": "#/$defs/color"
+                },
+                "primaryButton": {
+                  "$ref": "#/$defs/surface"
+                },
+                "primaryButtonText": {
+                  "$ref": "#/$defs/color"
+                },
+                "chip": {
+                  "$ref": "#/$defs/surface"
+                },
+                "chipSelected": {
+                  "$ref": "#/$defs/surface"
+                },
+                "chipSelectedText": {
+                  "$ref": "#/$defs/color"
+                },
+                "field": {
+                  "$ref": "#/$defs/surface"
+                },
+                "navSelected": {
+                  "$ref": "#/$defs/surface"
+                },
+                "navSelectedText": {
+                  "$ref": "#/$defs/color"
+                },
+                "navText": {
+                  "$ref": "#/$defs/color"
+                }
+              },
+              "additionalProperties": false
+            },
+            "cards": {
+              "type": "object",
+              "properties": {
+                "video": {
+                  "$ref": "#/$defs/surface"
+                },
+                "padding": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "panel": {
+                  "$ref": "#/$defs/surface"
+                },
+                "durationBadge": {
+                  "$ref": "#/$defs/surface"
+                },
+                "durationText": {
+                  "$ref": "#/$defs/color"
+                }
+              },
+              "additionalProperties": false
+            },
+            "logo": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "font": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "size": {
+                  "type": "number"
+                },
+                "fill": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/paint"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/paint"
+                      }
+                    }
+                  ]
+                },
+                "stroke": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/color"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "shadow": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/color"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "glow": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/color"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "badge": {
+                  "$ref": "#/$defs/surface"
+                },
+                "badgeIcon": {
+                  "$ref": "#/$defs/color"
+                }
+              },
+              "additionalProperties": false
+            },
+            "player": {
+              "type": "object",
+              "properties": {
+                "style": {
+                  "enum": [
+                    "default",
+                    "lcd",
+                    "deck"
+                  ],
+                  "description": "lcd: a display with time, scrolling title and spectrum; deck: a player body under the picture. 液晶屏样式；deck 机身样式。"
+                },
+                "frame": {
+                  "$ref": "#/$defs/surface"
+                },
+                "progress": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/paint"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/paint"
+                      }
+                    }
+                  ]
+                },
+                "lcdFont": {
+                  "type": "string",
+                  "description": "Font of the display; VT323 by default. 显示屏字体。"
+                },
+                "lcd": {
+                  "$ref": "#/$defs/surface"
+                },
+                "lcdText": {
+                  "$ref": "#/$defs/color"
+                },
+                "lcdAccent": {
+                  "$ref": "#/$defs/color"
+                },
+                "spectrum": {
+                  "type": "boolean",
+                  "description": "The level meter on the display. 显示屏上的电平条。"
+                },
+                "deck": {
+                  "type": "object",
+                  "description": "With style deck: the player body under the picture. 播放器机身。",
+                  "properties": {
+                    "shape": {
+                      "enum": [
+                        "capsule",
+                        "slab",
+                        "wave",
+                        "boombox",
+                        "oval"
+                      ],
+                      "description": "capsule 胶囊, slab 扁平, wave 波浪上沿, boombox 手提音箱, oval 椭圆。"
+                    },
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Body colours, top to bottom. 机身颜色，从上到下。"
+                    },
+                    "rim": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "clear": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8,
+                      "description": "How see-through the body is. 机身透明度。"
+                    },
+                    "screen": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "screenText": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "button": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "Small buttons, top and bottom colour. 小按钮颜色。"
+                    },
+                    "glyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "play": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/color"
+                      },
+                      "description": "The big play button. 大播放键。"
+                    },
+                    "playGlyph": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "groove": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "fill": {
+                      "$ref": "#/$defs/color"
+                    },
+                    "speakers": {
+                      "type": "boolean",
+                      "description": "Round speakers at both ends. 两端圆形喇叭。"
+                    },
+                    "glow": {
+                      "$ref": "#/$defs/color"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
@@ -2381,6 +4385,33 @@
     },
     "$schema": {
       "type": "string"
+    },
+    "icons": {
+      "type": "object",
+      "description": "How icons are drawn. 图标的画法。",
+      "properties": {
+        "style": {
+          "enum": [
+            "regular",
+            "fill"
+          ],
+          "description": "fill: every icon filled. fill：所有图标用实心。"
+        },
+        "effect": {
+          "enum": [
+            "none",
+            "emboss",
+            "engrave",
+            "gel",
+            "glow"
+          ],
+          "description": "A finish for a skeuomorphic look; left out in Low resource mode. 拟物效果：浮雕、凹刻、凝胶、发光；低占用模式下不画。"
+        },
+        "glow": {
+          "$ref": "#/$defs/color"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,
@@ -2514,6 +4545,8 @@
                     "grid",
                     "dots",
                     "checker",
+                    "stitch",
+                    "grain",
                     "scanlines"
                   ]
                 },
@@ -2695,10 +4728,12 @@
       "properties": {
         "type": {
           "enum": [
+            "scene",
             "bubbles",
             "sparkles",
             "perspectiveGrid",
             "beam",
+            "waves",
             "pattern"
           ]
         },
@@ -2736,6 +4771,8 @@
             "grid",
             "dots",
             "checker",
+            "stitch",
+            "grain",
             "scanlines"
           ]
         },
@@ -2751,6 +4788,21 @@
         "above": {
           "type": "boolean",
           "description": "Drawn over the content instead of under it. 画在内容上面。"
+        },
+        "scene": {
+          "enum": [
+            "meadow",
+            "sky",
+            "underwater",
+            "aurora",
+            "city",
+            "collage"
+          ],
+          "description": "With type scene: the landscape. 景色。"
+        },
+        "night": {
+          "type": "boolean",
+          "description": "With type scene: the night version. 夜晚版。"
         }
       },
       "required": [
@@ -2758,6 +4810,59 @@
       ],
       "additionalProperties": false,
       "description": "Left out in Low resource mode: never put anything needed here. 低占用模式下不画，别放有用的信息。"
+    },
+    "tabs": {
+      "type": "object",
+      "description": "The pages as tabs on a phone or in a narrow window, in place of the side rail. 手机或窄窗口里代替侧栏的页面标签栏。",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "position": {
+          "enum": [
+            "bottom",
+            "top"
+          ],
+          "description": "bottom: along the bottom; top: under the top bar. bottom 在底部，top 在顶栏下面。"
+        },
+        "surface": {
+          "$ref": "#/$defs/surface",
+          "description": "The bar. 标签栏本身。"
+        },
+        "selected": {
+          "$ref": "#/$defs/surface",
+          "description": "What the page shown sits on. 当前页下面的底。"
+        },
+        "text": {
+          "$ref": "#/$defs/color",
+          "description": "Labels, 4.5:1. 标签文字。"
+        },
+        "selectedText": {
+          "$ref": "#/$defs/color",
+          "description": "The page shown, 3:1. 当前页文字和图标。"
+        },
+        "indicator": {
+          "$ref": "#/$defs/color",
+          "description": "A line under the page shown (over it for a bottom bar). 当前页的指示线。"
+        },
+        "labels": {
+          "enum": [
+            "below",
+            "text"
+          ],
+          "description": "below: icon over the word; text: words only. below 图标在上文字在下；text 只有文字。"
+        },
+        "caps": {
+          "type": "boolean",
+          "description": "Words in capitals. 文字大写。"
+        },
+        "height": {
+          "type": "number",
+          "minimum": 32,
+          "maximum": 80
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

@@ -1,0 +1,653 @@
+// Millennium Aquarium: a built-in Lumtub skin. skins/template/skin.jsonc explains every
+// field, and skins/README.md how to make your own.
+// 千禧水族箱：Lumtub 内置皮肤。每个字段的说明见 skins/template/skin.jsonc，自己做皮肤见 skins/README.md。
+{
+  "$schema": "https://raw.githubusercontent.com/0x696c757a696f/lumtub/main/skins/skin.schema.json",
+  "lumtubSkin": 1,
+  "id": "aquarium",
+  "name": "Millennium Aquarium",
+  "names": {
+    "zh-Hans": "千禧水族箱",
+    "zh-Hant": "千禧水族箱"
+  },
+  "description": "A collage of the 2000s: shining discs, a crystal ball with a city and fish, glass stars, gel balls and a silver boombox player",
+  "descriptions": {
+    "zh-Hans": "千禧年代的拼贴：彩虹光碟、装着城市和金鱼的水晶球、玻璃星星、绿玻璃球和银色手提音箱播放器",
+    "zh-Hant": "千禧年代的拼貼：彩虹光碟、裝著城市和金魚的水晶球、玻璃星星、綠玻璃球和銀色手提音箱播放器"
+  },
+  "brightness": "auto",
+  "text": {
+    "displayFont": "Baloo 2",
+    "monoFont": "Audiowide"
+  },
+  "colors": {
+    "page": "#e6f7ff",
+    "text": "#0d2a3d",
+    "muted": "#2f4b58",
+    "accent": "#0874b0",
+    "onAccent": "#ffffff",
+    "border": "#a9d7ec",
+    "card": "#ffffff",
+    "selected": "#cfeeff",
+    "onSelected": "#0d2a3d",
+    "reason": "#0a6fa6"
+  },
+  "shape": {
+    "cardRadius": 20,
+    "controlRadius": 99,
+    "thumbnailRadius": 14
+  },
+  "window": {
+    "glass": {
+      "min": 0.80
+    },
+    "background": [
+      {
+        "image": "day.jpg",
+        "fit": "cover"
+      }
+    ],
+    "decorations": [],
+    "titleBar": {
+      "height": 30,
+      "surface": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#ffffff",
+              "#e3f5ff",
+              "#c9eafa"
+            ]
+          }
+        },
+        "border": {
+          "color": "#8ccbe8",
+          "sides": [
+            "bottom"
+          ]
+        }
+      },
+      "inactive": {
+        "fill": "#eef8fd"
+      },
+      "text": "#0d2a3d",
+      "buttons": {
+        "size": [
+          36,
+          24
+        ],
+        "icon": "#0d4f73",
+        "surface": {
+          "fill": "transparent",
+          "radius": 13,
+          "hover": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#ffffff",
+                  "#b8e6fb"
+                ]
+              }
+            },
+            "gloss": 0.6
+          },
+          "pressed": {
+            "fill": "#9fd8f2"
+          }
+        },
+        "close": {
+          "fill": "transparent",
+          "radius": 13,
+          "hover": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#ff9b9b",
+                  "#d4262e"
+                ]
+              }
+            },
+            "gloss": 0.6
+          },
+          "pressed": {
+            "fill": "#a81b22"
+          }
+        }
+      }
+    },
+    "topBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffffe6",
+            "#e8f7ffcc"
+          ]
+        }
+      },
+      "border": {
+        "color": "#9fcfe6",
+        "sides": [
+          "bottom"
+        ]
+      },
+      "shadow": [
+        {
+          "color": "#1e78aa1f",
+          "y": 2,
+          "blur": 10
+        }
+      ]
+    },
+    "sideBar": {
+      "fill": "#ffffffb8",
+      "border": {
+        "color": "#ffffffe6",
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "statusBar": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#ffffffd9",
+            "#d4eefad9"
+          ]
+        }
+      },
+      "border": {
+        "color": "#9fcfe6",
+        "sides": [
+          "top"
+        ]
+      }
+    },
+    "statusBarText": "#0d2a3d",
+    "veil": 0.7
+  },
+  "controls": {
+    "button": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#fffffff2",
+            "#dcf2fce6"
+          ]
+        }
+      },
+      "border": "#a6d6ec",
+      "hover": {
+        "fill": "#ffffff"
+      }
+    },
+    "buttonText": "#0d2a3d",
+    "primaryButton": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#1775b5",
+            "#06548a"
+          ]
+        }
+      },
+      "gloss": 0.7,
+      "border": "#064a7a",
+      "hover": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#1a80c2",
+              "#085e98"
+            ]
+          }
+        }
+      }
+    },
+    "primaryButtonText": "#ffffff",
+    "chip": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#fffffff2",
+            "#e0f3fce6"
+          ]
+        }
+      },
+      "border": "#a6d6ec"
+    },
+    "chipSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#278222",
+            "#1a6418"
+          ]
+        }
+      },
+      "gloss": 0.7,
+      "border": "#155a14"
+    },
+    "chipSelectedText": "#ffffff",
+    "navSelected": {
+      "fill": {
+        "linear": {
+          "angle": 180,
+          "colors": [
+            "#fffffff2",
+            "#d6f0fd"
+          ]
+        }
+      },
+      "gloss": 0.5,
+      "border": "#ffffff",
+      "shadow": [
+        {
+          "color": "#1e8cc84d",
+          "y": 2,
+          "blur": 10
+        }
+      ]
+    },
+    "navSelectedText": "#075f91",
+    "navText": "#0d2a3d"
+  },
+  "icons": {
+    "style": "fill",
+    "effect": "gel"
+  },
+  "cards": {
+    "video": {
+      "fill": "#ffffffc8",
+      "border": "#fffffff2",
+      "shadow": [
+        {
+          "color": "#1e78aa26",
+          "y": 6,
+          "blur": 16
+        }
+      ],
+      "hover": {
+        "border": {
+          "color": "#5fd0ff",
+          "width": 2
+        }
+      },
+      "focused": {
+        "border": {
+          "color": "#0874b0",
+          "width": 3
+        }
+      }
+    },
+    "padding": 8,
+    "panel": {
+      "fill": "#ffffffcc",
+      "border": "#ffffff"
+    },
+    "durationBadge": {
+      "fill": "#0d2a3dcc",
+      "border": "#ffffff80"
+    },
+    "durationText": "#ffffff"
+  },
+  "logo": {
+    "text": "Lumtub",
+    "font": "Baloo 2",
+    "size": 26,
+    "fill": {
+      "linear": {
+        "angle": 180,
+        "colors": [
+          "#43b8ee",
+          "#0868a8"
+        ]
+      }
+    },
+    "shadow": "#ffffff",
+    "badge": {
+      "fill": {
+        "radial": {
+          "center": [
+            0.5,
+            0.75
+          ],
+          "radius": 0.7,
+          "colors": [
+            "#a8ff7a",
+            "#13782c"
+          ]
+        }
+      },
+      "gloss": 0.8,
+      "border": "#ffffff"
+    },
+    "badgeIcon": "#ffffff"
+  },
+  "player": {
+    // A silver boombox with round speakers at both ends and a carry handle.
+    // 银色手提音箱，两端是圆形喇叭，上面有提手。
+    "style": "deck",
+    "deck": {
+      "shape": "boombox",
+      "body": ["#fbfcfd", "#dfe5ec", "#aab5c2", "#cfd7e0"],
+      "rim": "#6f7c8c",
+      "screen": "#0a2a5a",
+      "screenText": "#9fe0ff",
+      "button": ["#cfe6ff", "#2a5fd0"],
+      "glyph": "#ffffff",
+      "play": ["#d8f6ff", "#176cc6"],
+      "playGlyph": "#ffffff",
+      "groove": "#6f7c8c",
+      "fill": "#3ab0ff"
+    },
+    "progress": {
+      "linear": {
+        "angle": 90,
+        "colors": [
+          "#19b8ff",
+          "#5fe0ff",
+          "#8df27a"
+        ]
+      }
+    }
+  },
+  "author": "Lumtub",
+  "license": "CC0-1.0",
+  "overrides": {
+    "dark": {
+      "colors": {
+        "page": "#042230",
+        "text": "#c2dcee",
+        "muted": "#84a6b6",
+        "accent": "#0874b0",
+        "onAccent": "#ffffff",
+        "border": "#1c495d",
+        "card": "#0f0f0f",
+        "selected": "#052d42",
+        "onSelected": "#aed1e8",
+        "reason": "#549ac1"
+      },
+      "window": {
+        "veil": 0.90,
+        "background": [
+          {
+            "image": "night.jpg",
+            "fit": "cover"
+          }
+        ],
+        "decorations": [],
+        "titleBar": {
+          "height": 30,
+          "surface": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#0f0f0f",
+                  "#042233",
+                  "#0c3345"
+                ]
+              }
+            },
+            "border": {
+              "color": "#205a75",
+              "sides": [
+                "bottom"
+              ]
+            }
+          },
+          "inactive": {
+            "fill": "#081d27"
+          },
+          "text": "#c2dcee",
+          "buttons": {
+            "size": [
+              36,
+              24
+            ],
+            "icon": "#56849d",
+            "surface": {
+              "fill": "transparent",
+              "radius": 13,
+              "hover": {
+                "fill": {
+                  "linear": {
+                    "angle": 180,
+                    "colors": [
+                      "#ffffff",
+                      "#b8e6fb"
+                    ]
+                  }
+                },
+                "gloss": 0.6
+              },
+              "pressed": {
+                "fill": "#9fd8f2"
+              }
+            },
+            "close": {
+              "fill": "transparent",
+              "radius": 13,
+              "hover": {
+                "fill": {
+                  "linear": {
+                    "angle": 180,
+                    "colors": [
+                      "#ff9b9b",
+                      "#d4262e"
+                    ]
+                  }
+                },
+                "gloss": 0.6
+              },
+              "pressed": {
+                "fill": "#a81b22"
+              }
+            }
+          }
+        },
+        "topBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0fe6",
+                "#04202fe6"
+              ]
+            }
+          },
+          "border": {
+            "color": "#224f65",
+            "sides": [
+              "bottom"
+            ]
+          },
+          "shadow": [
+            {
+              "color": "#1e78aa1f",
+              "y": 2,
+              "blur": 10
+            }
+          ]
+        },
+        "sideBar": {
+          "fill": "#081430dc",
+          "border": {
+            "color": "#0f0f0fe6",
+            "sides": [
+              "right"
+            ]
+          }
+        },
+        "statusBar": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0fee",
+                "#0c2d3cee"
+              ]
+            }
+          },
+          "border": {
+            "color": "#224f65",
+            "sides": [
+              "top"
+            ]
+          }
+        },
+        "topBarText": "#aed1e8",
+        "statusBarText": "#c2dcee"
+      },
+      "controls": {
+        "button": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0ff2",
+                "#092836e6"
+              ]
+            }
+          },
+          "border": "#1c4a60",
+          "hover": {
+            "fill": "#0f0f0f"
+          }
+        },
+        "buttonText": "#aed1e8",
+        "primaryButton": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#1775b5",
+                "#06548a"
+              ]
+            }
+          },
+          "gloss": 0.7,
+          "border": "#064a7a",
+          "hover": {
+            "fill": {
+              "linear": {
+                "angle": 180,
+                "colors": [
+                  "#1a80c2",
+                  "#085e98"
+                ]
+              }
+            }
+          }
+        },
+        "primaryButtonText": "#ffffff",
+        "chip": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#0f0f0ff2",
+                "#092533e6"
+              ]
+            }
+          },
+          "border": "#1c4a60"
+        },
+        "chipSelected": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#278222",
+                "#1a6418"
+              ]
+            }
+          },
+          "gloss": 0.7,
+          "border": "#155a14"
+        },
+        "chipSelectedText": "#ffffff",
+        "navSelected": {
+          "fill": {
+            "linear": {
+              "angle": 180,
+              "colors": [
+                "#fffffff2",
+                "#d6f0fd"
+              ]
+            }
+          },
+          "gloss": 0.5,
+          "border": "#ffffff",
+          "shadow": [
+            {
+              "color": "#1e8cc84d",
+              "y": 2,
+              "blur": 10
+            }
+          ]
+        },
+        "navSelectedText": "#075f91",
+        "navText": "#c2dcee"
+      },
+      "cards": {
+        "video": {
+          "fill": "#0a1430dc",
+          "border": "#0f0f0ff2",
+          "shadow": [
+            {
+              "color": "#1e78aa26",
+              "y": 6,
+              "blur": 16
+            }
+          ],
+          "hover": {
+            "border": {
+              "color": "#0d729c",
+              "width": 2
+            }
+          },
+          "focused": {
+            "border": {
+              "color": "#4eb2e9",
+              "width": 3
+            }
+          }
+        },
+        "padding": 8,
+        "panel": {
+          "fill": "#0a1430e6",
+          "border": "#0f0f0f"
+        },
+        "durationBadge": {
+          "fill": "#0d2a3dcc",
+          "border": "#ffffff80"
+        },
+        "durationText": "#ffffff"
+      },
+      "logo": {
+        "fill": {
+          "linear": {
+            "angle": 180,
+            "colors": [
+              "#1e82b1",
+              "#55aee9"
+            ]
+          }
+        },
+        "shadow": "#0f0f0f"
+      }
+    }
+  }
+}

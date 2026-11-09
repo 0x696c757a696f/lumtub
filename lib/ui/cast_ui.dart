@@ -212,7 +212,7 @@ class _CastDialogState extends State<_CastDialog> {
           builder: (context, _) => Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             if (cast.device case final current?)
               ListTile(
-                leading: const Icon(AppIcons.airplay),
+                leading: Icon(AppIcons.airplay),
                 title: Text(tr('Casting to {0}', [current.name])),
                 trailing: TextButton(
                   onPressed: () {
@@ -331,7 +331,7 @@ class _CastBarState extends State<CastBar> {
                     icon: Icon(playing ? AppIcons.pauseFill : AppIcons.playFill),
                     onPressed: () => unawaited(cast.togglePlay()),
                   ),
-                  TextButton.icon(onPressed: () => unawaited(stopCasting(widget.controller)), icon: const Icon(AppIcons.screencast, size: 18), label: Text(tr('Stop casting'))),
+                  TextButton.icon(onPressed: () => unawaited(stopCasting(widget.controller)), icon: Icon(AppIcons.screencast, size: 18), label: Text(tr('Stop casting'))),
                 ]),
                 Row(children: [
                   Text(formatPlaybackTime(Duration(milliseconds: (seconds * 1000).round())), style: context.text.labelMedium),

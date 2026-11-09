@@ -23,6 +23,11 @@ class WindowFrame {
   // true, with the result in |result|, when it did.
   bool HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRESULT* result);
 
+  // Flutter's view is a child window covering the whole client area, so
+  // the hit tests for the bar reach it, not the frame. Hooked here, it
+  // lets the bar's parts through to the frame.
+  void AttachView(HWND view);
+
  private:
   // A rectangle in logical pixels, from the client area's top left.
   struct Box {
@@ -33,15 +38,21 @@ class WindowFrame {
                   std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void Send(const char* method, flutter::EncodableValue argument);
   void SetCustom(bool on);
+  void SetSeeThrough(bool on, bool dark);
+  void ApplyMargins();
   bool Active() const;
   LRESULT HitTest(LPARAM lparam);
+  static LRESULT CALLBACK ViewProc(HWND view, UINT message, WPARAM wparam, LPARAM lparam,
+                                   UINT_PTR id, DWORD_PTR data);
   void SetButton(int state);
   void ReportMaximized(bool maximized);
   void ReportActive(bool active);
 
   HWND window_;
+  HWND view_ = nullptr;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
   bool custom_ = false;
+  bool see_through_ = false;
   double caption_height_ = 0;
   bool has_maximize_ = false;
   Box maximize_;

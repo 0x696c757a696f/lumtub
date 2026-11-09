@@ -107,7 +107,7 @@ class _Hero extends StatelessWidget {
           FilledButton.icon(
             style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEA4AAA), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
             onPressed: () => openExternal(sponsorsPage),
-            icon: const Icon(AppIcons.heart, size: 20),
+            icon: Icon(AppIcons.heart, size: 20),
             label: Text(tr('Sponsor on GitHub')),
           ),
           Text(tr('Monthly or one-time, any amount'), style: text.bodyMedium?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
@@ -184,7 +184,7 @@ class _AddressRow extends StatelessWidget {
               SelectableText(address.address, style: TextStyle(fontFamily: 'Consolas', fontFamilyFallback: const ['monospace'], fontSize: 12, color: colors.onSurfaceVariant)),
             ]),
           ),
-          IconButton(tooltip: tr('Copy address'), icon: const Icon(AppIcons.copySimple, size: 20), onPressed: () => copyText(context, address.address, tr('Address copied'))),
+          IconButton(tooltip: tr('Copy address'), icon: Icon(AppIcons.copySimple, size: 20), onPressed: () => copyText(context, address.address, tr('Address copied'))),
         ]),
       ),
     );
@@ -202,7 +202,7 @@ class _Way extends StatelessWidget {
         leading: Icon(icon, color: context.colors.primary),
         title: Text(title),
         subtitle: Text(subtitle),
-        trailing: const Icon(AppIcons.arrowSquareOut, size: 18),
+        trailing: Icon(AppIcons.arrowSquareOut, size: 18),
         onTap: () => openExternal(url),
       );
 }

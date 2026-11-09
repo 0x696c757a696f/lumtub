@@ -51,7 +51,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
         message: tr('Tap "Follow" on a player or channel page, and the channel\'s new videos will show up here. You can also sign in with Google to import your YouTube subscriptions. Your follow list is stored only on this device.'),
         action: controller.account?.signedIn ?? false
             ? null
-            : FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: const Icon(AppIcons.signIn), label: Text(tr('Sign in and import subscriptions'))),
+            : FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: Icon(AppIcons.signIn), label: Text(tr('Sign in and import subscriptions'))),
       );
     }
     final group = library.channelGroups.contains(_group) ? _group : null;
@@ -99,7 +99,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
         subtitle: tr('{0} channels · Saved on this device only', [channels.length]),
         trailing: library.loadingFeed
             ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
-            : TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
+            : TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
       )),
       SliverToBoxAdapter(child: _GroupChips(
         groups: library.channelGroups,
@@ -124,7 +124,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
             TextButton(onPressed: () => _select(null), child: Text(tr('Show all'))),
             FilledButton.tonalIcon(
               onPressed: () => controller.openChannel(selected),
-              icon: const Icon(AppIcons.caretRight),
+              icon: Icon(AppIcons.caretRight),
               label: Text(tr('Open channel')),
             ),
           ]),
@@ -227,20 +227,20 @@ class _ManageGroups extends StatelessWidget {
                     for (final group in library.channelGroups)
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: const Icon(AppIcons.folder),
+                        leading: Icon(AppIcons.folder),
                         title: Text(group.name),
                         subtitle: Text(tr('{0} channels', [group.channels.length])),
                         onTap: () => showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels)),
                         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                           IconButton(
                             tooltip: tr('Rename'),
-                            icon: const Icon(AppIcons.pencilLine),
+                            icon: Icon(AppIcons.pencilLine),
                             onPressed: () async {
                               final name = await _askName(context, initial: group.name);
                               if (name != null && name.trim().isNotEmpty) library.renameGroup(group, name);
                             },
                           ),
-                          IconButton(tooltip: tr('Delete group'), icon: const Icon(AppIcons.trash), onPressed: () => library.removeGroup(group)),
+                          IconButton(tooltip: tr('Delete group'), icon: Icon(AppIcons.trash), onPressed: () => library.removeGroup(group)),
                         ]),
                       ),
                   ]),
@@ -253,7 +253,7 @@ class _ManageGroups extends StatelessWidget {
                 final group = library.addGroup(name);
                 await showDialog<void>(context: context, builder: (_) => _GroupChannels(library: library, group: group, channels: channels));
               },
-              icon: const Icon(AppIcons.plus),
+              icon: Icon(AppIcons.plus),
               label: Text(tr('New group')),
             ),
             TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Done'))),
@@ -290,7 +290,7 @@ class _GroupChannelsState extends State<_GroupChannels> {
           height: 480,
           child: Column(children: [
             TextField(
-              decoration: InputDecoration(isDense: true, prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Filter channels'), border: const OutlineInputBorder()),
+              decoration: InputDecoration(isDense: true, prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Filter channels'), border: const OutlineInputBorder()),
               onChanged: (v) => setState(() => _filter = v.trim()),
             ),
             const SizedBox(height: 8),
@@ -567,7 +567,7 @@ class _AllChannelsState extends State<_AllChannels> {
               autofocus: true,
               onChanged: (value) => setState(() => _query = value),
               decoration: InputDecoration(
-                prefixIcon: const Icon(AppIcons.magnifyingGlass),
+                prefixIcon: Icon(AppIcons.magnifyingGlass),
                 hintText: tr('Search {0} followed channels', [widget.channels.length]),
               ),
             ),
@@ -584,7 +584,7 @@ class _AllChannelsState extends State<_AllChannels> {
                         title: Text(channel.name.isEmpty ? channel.id : channel.name, maxLines: 1, overflow: TextOverflow.ellipsis),
                         trailing: IconButton(
                           tooltip: tr('Open channel'),
-                          icon: const Icon(AppIcons.arrowSquareOut),
+                          icon: Icon(AppIcons.arrowSquareOut),
                           onPressed: () {
                             Navigator.pop(context);
                             widget.onOpen(channel);
@@ -627,7 +627,7 @@ class PlaylistsPage extends StatelessWidget {
             final name = await promptText(context, title: tr('New playlist'), hint: tr('Playlist name'), confirm: tr('Create'));
             if (name != null) library.createPlaylist(name);
           },
-          icon: const Icon(AppIcons.plus),
+          icon: Icon(AppIcons.plus),
           label: Text(tr('New')),
         ),
       )),
@@ -667,7 +667,7 @@ class PlaylistsPage extends StatelessWidget {
         subtitle: tr('Playlists saved on YouTube'),
         trailing: controller.tvPlaylistsLoading
             ? const Padding(padding: EdgeInsets.all(8), child: SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)))
-            : TextButton.icon(onPressed: controller.loadTvPlaylists, icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
+            : TextButton.icon(onPressed: controller.loadTvPlaylists, icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
       )),
       SliverVideoLayout(
         count: lists.length,
@@ -814,7 +814,7 @@ class PlaylistDetailPage extends StatelessWidget {
       SliverToBoxAdapter(child: Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
         child: Row(children: [
-          IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: const Icon(AppIcons.arrowLeft)),
+          IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: Icon(AppIcons.arrowLeft)),
           const SizedBox(width: 8),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
@@ -833,12 +833,12 @@ class PlaylistDetailPage extends StatelessWidget {
           ),
           if (later && items.isNotEmpty) ...[
             const SizedBox(width: 4),
-            TextButton.icon(onPressed: () => _clearLater(context, library), icon: const Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
+            TextButton.icon(onPressed: () => _clearLater(context, library), icon: Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
           ],
           if (playlist != null) ...[
             const SizedBox(width: 4),
-            IconButton(tooltip: tr('Rename'), onPressed: () => _rename(context, library, playlist), icon: const Icon(AppIcons.pencilSimple)),
-            IconButton(tooltip: tr('Delete playlist'), onPressed: () => _delete(context, library, playlist), icon: const Icon(AppIcons.trash)),
+            IconButton(tooltip: tr('Rename'), onPressed: () => _rename(context, library, playlist), icon: Icon(AppIcons.pencilSimple)),
+            IconButton(tooltip: tr('Delete playlist'), onPressed: () => _delete(context, library, playlist), icon: Icon(AppIcons.trash)),
           ],
         ]),
       )),

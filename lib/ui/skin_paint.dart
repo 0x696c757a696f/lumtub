@@ -5,6 +5,7 @@ import 'dart:ui' show PointMode;
 import 'package:flutter/material.dart';
 
 import '../skins/skin.dart';
+import 'skin_scenes.dart';
 import 'theme.dart';
 
 /// Paints one [SkinPaint] layer (not pictures, which [SkinLayers] shows as
@@ -62,6 +63,23 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
         }
       }
       canvas.drawPoints(PointMode.points, points, paint..strokeWidth = size);
+    case 'stitch':
+      // Dashed seams [spacing] in from the top and bottom, as on leather.
+      final dash = math.max(2.0, size * 3);
+      for (final y in [rect.top + step, rect.bottom - step - size]) {
+        for (var x = rect.left + step; x < rect.right - step; x += dash * 2) {
+          canvas.drawRect(Rect.fromLTWH(x, y, math.min(dash, rect.right - step - x), size), paint);
+        }
+      }
+    case 'grain':
+      // Uneven lines, as the grain of wood.
+      final random = math.Random(7);
+      for (var y = cover.top; y < cover.bottom; y += step * (0.5 + random.nextDouble())) {
+        final alpha = 0.35 + random.nextDouble() * 0.65;
+        canvas.drawRect(Rect.fromLTWH(cover.left, y, cover.width, size * (0.6 + random.nextDouble() * 0.8)), Paint()
+          ..color = p.color.withValues(alpha: p.color.a * alpha)
+          ..shader = fade);
+      }
     case 'checker':
       final path = Path();
       var row = 0;
@@ -77,16 +95,27 @@ void _paintPattern(Canvas canvas, Rect rect, PatternPaint p, {Shader? fade}) {
 
 /// A box drawn as a [SkinSurface]: shadow, glow, fill, shine, bevel and
 /// border, inside [radius] unless the surface sets its own.
+/// How clear the glass of a glass skin is drawn, 0.3 to 1: its own look at 1.
+abstract final class SkinGlass {
+  static double opacity = 1;
+  static const min = 0.3;
+  /// Seeing through to the desktop: how much of the skin's page colour is
+  /// still laid over it, so text stays readable on any wallpaper.
+  static const desk = 0.7;
+}
+
 class SurfaceDecoration extends Decoration {
-  const SurfaceDecoration(this.surface, {this.radius = 0, this.warmth});
+  const SurfaceDecoration(this.surface, {this.radius = 0, this.warmth, this.clarity = 1});
   final SkinSurface surface;
   final double radius;
   /// 护眼暖色's tint, multiplied into everything drawn.
   final Color? warmth;
+  /// How much of the fill is drawn: below 1 the backdrop shows through.
+  final double clarity;
 
   /// [surface] in [context]'s 护眼暖色.
   factory SurfaceDecoration.of(BuildContext context, SkinSurface surface, {double radius = 0}) =>
-      SurfaceDecoration(surface, radius: radius, warmth: context.pictureWarmth);
+      SurfaceDecoration(surface, radius: radius, warmth: context.pictureWarmth, clarity: surface.glass ? SkinGlass.opacity : 1);
 
   double get _radius => surface.radius ?? radius;
 
@@ -103,10 +132,10 @@ class SurfaceDecoration extends Decoration {
   BoxPainter createBoxPainter([VoidCallback? onChanged]) => _SurfacePainter(this);
 
   @override
-  bool operator ==(Object other) => other is SurfaceDecoration && identical(other.surface, surface) && other.radius == radius && other.warmth == warmth;
+  bool operator ==(Object other) => other is SurfaceDecoration && identical(other.surface, surface) && other.radius == radius && other.warmth == warmth && other.clarity == clarity;
 
   @override
-  int get hashCode => Object.hash(identityHashCode(surface), radius, warmth);
+  int get hashCode => Object.hash(identityHashCode(surface), radius, warmth, clarity);
 }
 
 class _SurfacePainter extends BoxPainter {
@@ -120,16 +149,16 @@ class _SurfacePainter extends BoxPainter {
     final rect = offset & size;
     if (decoration.warmth case final tint?) {
       canvas.saveLayer(rect.inflate(24), Paint()..colorFilter = ColorFilter.mode(tint, BlendMode.modulate));
-      paintSurface(canvas, rect, decoration.surface, decoration._radius);
+      paintSurface(canvas, rect, decoration.surface, decoration._radius, clarity: decoration.clarity);
       canvas.restore();
     } else {
-      paintSurface(canvas, rect, decoration.surface, decoration._radius);
+      paintSurface(canvas, rect, decoration.surface, decoration._radius, clarity: decoration.clarity);
     }
   }
 }
 
 /// Paints [s] into [rect] with corners of [radius].
-void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius) {
+void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius, {double clarity = 1}) {
   final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
   for (final shadow in s.shadows) {
     canvas.drawRRect(rrect.shift(shadow.offset).inflate(shadow.spreadRadius), shadow.toPaint());
@@ -139,14 +168,23 @@ void paintSurface(Canvas canvas, Rect rect, SkinSurface s, double radius) {
       ..color = glow
       ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 10));
   }
-  canvas.save();
+  // Clearer glass: the fill, shine and bevel drawn at [clarity]; the edges
+  // stay as they are so the pane keeps its shape.
+  if (clarity < 1) {
+    canvas.saveLayer(rect, Paint()..color = Color.fromRGBO(0, 0, 0, clarity));
+  } else {
+    canvas.save();
+  }
   if (radius > 0) canvas.clipRRect(rrect);
   for (final layer in s.fill) {
     paintSkinLayer(canvas, rect, layer);
   }
   if (s.gloss > 0) {
     // The shine of gel: a white wash over the top half, brightest at the top.
-    final shine = Rect.fromLTRB(rect.left + rect.width * 0.04, rect.top + 1, rect.right - rect.width * 0.04, rect.top + rect.height * 0.5);
+    // Rounded gel keeps the shine off its curved sides; a square bar is lit
+    // edge to edge, or its ends look a different colour.
+    final inset = radius <= 0 ? 0.0 : math.min(rect.width * 0.04, radius);
+    final shine = Rect.fromLTRB(rect.left + inset, rect.top + 1, rect.right - inset, rect.top + rect.height * 0.5);
     final r = math.min(radius, shine.height);
     canvas.drawRRect(
       RRect.fromRectAndCorners(shine, topLeft: Radius.circular(r), topRight: Radius.circular(r), bottomLeft: Radius.circular(r * 0.5), bottomRight: Radius.circular(r * 0.5)),
@@ -246,22 +284,30 @@ class _LayerPainter extends CustomPainter {
 /// Under 低占用模式 ([plain]) the ornaments are left out. 护眼暖色 tints
 /// it all like the video.
 class SkinBackdrop extends StatelessWidget {
-  const SkinBackdrop({super.key, required this.skin, required this.child, this.plain = false});
+  const SkinBackdrop({super.key, required this.skin, required this.child, this.plain = false, this.seeThrough = false});
   final Skin skin;
   final Widget child;
   final bool plain;
+  /// The desktop is behind the window: only a tint of the page colour
+  /// is laid over it, without the skin's pictures and landscape.
+  final bool seeThrough;
 
   @override
   Widget build(BuildContext context) {
     final decorations = plain ? const <SkinDecoration>[] : skin.decorations;
-    final below = decorations.where((d) => !d.above).toList();
+    final below = decorations.where((d) => !d.above && !(seeThrough && d is SceneDecoration)).toList();
     final above = decorations.where((d) => d.above).toList();
     final warmth = context.pictureWarmth;
     Widget warm(Widget child) => warmth == null ? child : ColorFiltered(colorFilter: ColorFilter.mode(warmth, BlendMode.modulate), child: child);
     return Stack(fit: StackFit.expand, children: [
       RepaintBoundary(child: warm(Stack(fit: StackFit.expand, children: [
-        ColoredBox(color: skin.colors.page),
-        if (skin.background.isNotEmpty) SkinLayers(skin.background),
+        // Pure black in dark mode replaces the page of a skin that follows
+        // the theme mode, as it does Lumtub's own.
+        if (seeThrough)
+          ColoredBox(color: skin.colors.page.withValues(alpha: SkinGlass.desk))
+        else
+          ColoredBox(color: skin.followsThemeMode && Theme.of(context).colorScheme.surface == Colors.black ? Colors.black : skin.colors.page),
+        if (skin.background.isNotEmpty && !seeThrough) SkinLayers(skin.background),
         if (below.isNotEmpty) CustomPaint(painter: SkinDecorationPainter(below)),
       ]))),
       child,
@@ -306,6 +352,10 @@ class SkinDecorationPainter extends CustomPainter {
           _perspectiveGrid(canvas, size, d);
         case BeamDecoration():
           _beam(canvas, size, d);
+        case WavesDecoration():
+          _waves(canvas, size, d);
+        case SceneDecoration(:final scene, :final night, :final seed):
+          ScenePainter(SkinScene.byName(scene)!, night: night, seed: seed).paint(canvas, size);
         case PatternDecoration(:final paint, :final fade):
           final shader = switch (fade) {
             'top' => LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [paint.color.withValues(alpha: 0), paint.color]).createShader(rect),
@@ -322,7 +372,9 @@ class SkinDecorationPainter extends CustomPainter {
     for (var i = 0; i < d.count; i++) {
       // Bubbles keep to the edges, where the content is thinnest.
       final edge = random.nextBool();
-      final x = edge ? (random.nextBool() ? random.nextDouble() * 0.12 : 0.88 + random.nextDouble() * 0.12) : random.nextDouble();
+      // The left edge holds the side rail's labels, so bubbles there sit
+      // just to its right.
+      final x = edge ? (random.nextBool() ? 0.08 + random.nextDouble() * 0.08 : 0.88 + random.nextDouble() * 0.12) : 0.08 + random.nextDouble() * 0.92;
       final y = edge ? random.nextDouble() : (random.nextBool() ? random.nextDouble() * 0.15 : 0.85 + random.nextDouble() * 0.15);
       final r = 8 + random.nextDouble() * 40;
       final c = Offset(x * size.width, y * size.height);
@@ -373,6 +425,42 @@ class SkinDecorationPainter extends CustomPainter {
     for (var t = 1.0; t > 0.02; t *= 0.78) {
       final y = horizon + (size.height - horizon) * t;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  void _waves(Canvas canvas, Size size, WavesDecoration d) {
+    final random = math.Random(d.seed);
+    for (var i = 0; i < d.count; i++) {
+      final base = size.height * d.position + (random.nextDouble() - 0.5) * size.height * 0.2;
+      final amplitude = size.height * (0.04 + random.nextDouble() * 0.06);
+      final thickness = size.height * (0.05 + random.nextDouble() * 0.08);
+      final phase = random.nextDouble() * math.pi * 2;
+      final turns = 0.6 + random.nextDouble() * 0.8;
+      double y(double x, double shift) => base + shift + math.sin(x / size.width * math.pi * 2 * turns + phase) * amplitude;
+      const steps = 48;
+      final top = Path()..moveTo(0, y(0, 0));
+      final ribbon = Path()..moveTo(0, y(0, 0));
+      for (var s = 1; s <= steps; s++) {
+        final x = size.width * s / steps;
+        top.lineTo(x, y(x, 0));
+        ribbon.lineTo(x, y(x, 0));
+      }
+      for (var s = steps; s >= 0; s--) {
+        final x = size.width * s / steps;
+        ribbon.lineTo(x, y(x, thickness * (0.6 + 0.4 * math.cos(x / size.width * math.pi + phase))));
+      }
+      ribbon.close();
+      final bounds = Rect.fromLTRB(0, base - amplitude, size.width, base + amplitude + thickness);
+      canvas.drawPath(ribbon, Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [d.color, d.color.withValues(alpha: 0)],
+        ).createShader(bounds));
+      canvas.drawPath(top, Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = Colors.white.withValues(alpha: 0.7));
     }
   }
 

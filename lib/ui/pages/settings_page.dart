@@ -72,11 +72,11 @@ class _SettingsPageState extends State<SettingsPage> {
             filled: true,
             fillColor: theme.colorScheme.onInverseSurface,
             hintText: tr('Search settings'),
-            prefixIcon: const Icon(AppIcons.magnifyingGlass, size: 20),
+            prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20),
             suffixIcon: searching
                 ? IconButton(
                     tooltip: tr('Clear'),
-                    icon: const Icon(AppIcons.x, size: 18),
+                    icon: Icon(AppIcons.x, size: 18),
                     onPressed: () => setState(() {
                       _search.clear();
                       _query = '';
@@ -99,7 +99,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _tile(context, SettingsCategory.account, wide: wide),
         if (_controller.account?.signedIn ?? false)
           ListTile(
-            leading: const Icon(AppIcons.signOut),
+            leading: Icon(AppIcons.signOut),
             title: Text(tr('Sign out'), style: theme.textTheme.titleMedium),
             onTap: () async {
               if (await confirmDialog(context, title: tr('Sign out?'), content: tr('The Google sign-in credentials saved on this device will be deleted. Subscriptions and playlists stay on this device.'), confirm: tr('Sign out'))) {

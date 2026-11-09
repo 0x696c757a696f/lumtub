@@ -42,7 +42,22 @@ flutter:
   assets:
     - assets/l10n/
     # Built-in skins and the template users start from (skins/README.md).
+    - skins/rice-paper/
+    - skins/candlelight/
+    - skins/ink-bamboo/
+    - skins/rime/
+    - skins/pine-soot/
+    - skins/night-voyage/
+    - skins/dusk-hills/
+    - skins/falling-petals/
+    - skins/sandstone/
+    - skins/high-contrast/
     - skins/aero/
+    - skins/ocean/
+    - skins/meadow/
+    - skins/city/
+    - skins/aquarium/
+    - skins/aurora/
     - skins/chrome/
     - skins/candy/
     - skins/disc/
@@ -52,6 +67,13 @@ flutter:
     - skins/sixteen/
     - skins/onebit/
     - skins/platinum/
+    - skins/pinstripe/
+    - skins/silver/
+    - skins/metal/
+    - skins/holo/
+    - skins/paper/
+    - skins/linen/
+    - skins/shelf/
     - skins/handheld/
     - skins/template/
   fonts:

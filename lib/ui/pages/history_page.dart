@@ -67,14 +67,14 @@ class _HistoryPageState extends State<HistoryPage> {
                   child: Text(allSelected ? tr('Untick all') : tr('Tick all')),
                 ),
                 const SizedBox(width: 4),
-                FilledButton.icon(onPressed: _selected.isEmpty ? null : _deleteSelected, icon: const Icon(AppIcons.trash), label: Text(tr('Delete selected'))),
+                FilledButton.icon(onPressed: _selected.isEmpty ? null : _deleteSelected, icon: Icon(AppIcons.trash), label: Text(tr('Delete selected'))),
                 const SizedBox(width: 4),
                 TextButton(onPressed: _stopSelecting, child: Text(tr('Done'))),
               ])
             : Row(mainAxisSize: MainAxisSize.min, children: [
-                TextButton.icon(onPressed: () => openWatchStats(context, widget.controller), icon: const Icon(AppIcons.chartLineUp), label: Text(tr('Watch statistics'))),
-                TextButton.icon(onPressed: () => setState(() => _selecting = true), icon: const Icon(AppIcons.listChecks), label: Text(tr('Select'))),
-                TextButton.icon(onPressed: () => _confirmClear(context), icon: const Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
+                TextButton.icon(onPressed: () => openWatchStats(context, widget.controller), icon: Icon(AppIcons.chartLineUp), label: Text(tr('Watch statistics'))),
+                TextButton.icon(onPressed: () => setState(() => _selecting = true), icon: Icon(AppIcons.listChecks), label: Text(tr('Select'))),
+                TextButton.icon(onPressed: () => _confirmClear(context), icon: Icon(AppIcons.trashSimple), label: Text(tr('Clear all'))),
               ]),
       )),
       if (signedIn) SliverToBoxAdapter(child: _sourceChips()),
@@ -85,10 +85,10 @@ class _HistoryPageState extends State<HistoryPage> {
           child: TextField(
             controller: _search,
             decoration: InputDecoration(
-              prefixIcon: const Icon(AppIcons.magnifyingGlass),
+              prefixIcon: Icon(AppIcons.magnifyingGlass),
               hintText: tr('Search history by title or channel'),
               isDense: true,
-              suffixIcon: _query.isEmpty ? null : IconButton(tooltip: tr('Clear'), icon: const Icon(AppIcons.x), onPressed: () => setState(() {
+              suffixIcon: _query.isEmpty ? null : IconButton(tooltip: tr('Clear'), icon: Icon(AppIcons.x), onPressed: () => setState(() {
                     _search.clear();
                     _query = '';
                   })),
@@ -156,8 +156,8 @@ class _HistoryPageState extends State<HistoryPage> {
           tr('Watch history'),
           subtitle: tr('Watch history in your YouTube account'),
           trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            TextButton.icon(onPressed: () => openExternal('https://www.youtube.com/feed/history'), icon: const Icon(AppIcons.arrowSquareOut), label: Text(tr('Manage on YouTube'))),
-            TextButton.icon(onPressed: () => controller.openYoutubeHistory(reload: true), icon: const Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
+            TextButton.icon(onPressed: () => openExternal('https://www.youtube.com/feed/history'), icon: Icon(AppIcons.arrowSquareOut), label: Text(tr('Manage on YouTube'))),
+            TextButton.icon(onPressed: () => controller.openYoutubeHistory(reload: true), icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
           ]),
         )),
         SliverToBoxAdapter(child: _sourceChips()),

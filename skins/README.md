@@ -78,19 +78,26 @@ anything else out and Lumtub draws it the usual way.
 
 | Part 部分 | What it is 是什么 |
 | --- | --- |
-| `colors` | Page, text, muted text, accent, borders, cards, selection. 底色、文字、强调色等。 |
+| `brightness` | `light`, `dark`, or `auto` to follow light/dark mode with `overrides.dark`. 浅色、深色，或 `auto` 跟随模式。 |
+| `colors` | Page, text, muted text, accent, borders, cards, selection, `chrome` for the bars. 底色、文字、强调色、顶栏侧栏底色等。 |
 | `text` | `font`, `displayFont` (headings, logo), `monoFont` (times). 字体。 |
 | `fonts` | Font files in the skin folder: `{ "My Font": "fonts/my.ttf" }`. 自带字体文件。 |
 | `shape` | Corner radius of cards, controls and thumbnails. 圆角。 |
 | `window.background` | One paint or a list: colours, gradients, a picture, patterns. 窗口背景。 |
-| `window.decorations` | `bubbles`, `sparkles`, `perspectiveGrid`, `beam`, `pattern`. 装饰。 |
+| `window.decorations` | `bubbles`, `sparkles`, `perspectiveGrid`, `beam`, `waves` (glossy ribbons, `position` 0–1), `pattern`. 装饰。 |
 | `window.titleBar` | The window frame drawn by Lumtub (computers only). 标题栏（仅电脑）。 |
-| `window.menuBar` | File, View, Play, Help with Alt keys (computers only). 菜单栏（仅电脑）。 |
+| `window.menuBar` | File, View, Play, Help with Alt keys (computers only); `position: "top"` puts it above the title bar, `appMenu` adds a bold app menu first. 菜单栏（仅电脑）；`position: "top"` 放到标题栏上面，`appMenu` 在最前面加粗体应用菜单。 |
 | `window.topBar`, `sideBar`, `statusBar` | The search row, navigation, status line; `topBarText` and `statusBarText` colour what is on them. 顶栏、侧栏、状态栏及其文字颜色。 |
+| `window.decorations` `scene` | A whole painted landscape behind everything: `meadow`, `sky`, `underwater`, `aurora`, `city`, `collage`; `"night": true` for the night version. 整幅背景景色：草原、蓝天、水下、极光、未来城、千禧拼贴；`"night": true` 是夜晚版。 |
+| `window.veil` | 0–0.9 of the page colour laid over the backdrop under the pages, so text reads over a busy picture. 在页面下面垫一层页面底色，景色再花文字也看得清。 |
+| `window.glass` | `true` (or `{"min": 0.6}`, the clearest it may go) lets users make the bars, rail, cards and panels clearer so the background shows through; text must then read on the background too. `true` 时用户可以调低栏、侧栏、卡片、面板的不透明度透出背景，文字放在背景上也要看得清。 |
+| `window.tabs` | Tabs for the pages on a phone or in a narrow window, at the bottom or under the top bar (`position`), with `selected`, `indicator`, `labels: "text"` and `caps`. 手机或窄窗口的页面标签栏，在底部或顶栏下面（`position`），可设 `selected`、`indicator`、`labels: "text"`、`caps`。 |
 | `controls` | Buttons, the main button, chips, fields, navigation. 按钮、标签、输入框、导航。 |
 | `cards` | Video cards, panels, the duration badge. 视频卡片、面板、时长角标。 |
 | `logo` | The word mark: text, font, gradient, outline, glow, badge. 标志。 |
-| `player` | Frame, progress bar; `"style": "lcd"` for a 90s media player display. 播放器。 |
+| `icons` | `style`: `regular`/`fill`; `effect`: `none`, `emboss`, `engrave`, `gel`, `glow`. 图标实心与拟物效果。 |
+| `controls.press` | `wash`, `ripple` or `glow`: what a click looks like. 点击效果：变暗、水波纹、发光。 |
+| `player` | Frame, progress bar; `"style": "lcd"` for a 90s media player display; `"style": "deck"` with `deck` for a player body of its own under the picture (shape capsule, slab, wave, boombox or oval; body colours, screen, gel buttons; the screen text and button signs are checked for contrast). 播放器；`deck` 是画面下方的播放器机身。 |
 | `overrides` | Changes for `desktop`, `mobile`, `tablet` or `tv`. 按设备覆盖。 |
 
 Colours are `#RGB`, `#RRGGBB` or `#RRGGBBAA` with alpha **last**, as in CSS.
@@ -118,7 +125,7 @@ editors and checkers.
    `buttonText`/`button`, `primaryButtonText`/`primaryButton`,
    `chipSelectedText`/`chipSelected`, `navText`/`sideBar`,
    `titleBar.text`/`titleBar.surface`, `titleBar.buttons.icon`, `topBarText`/`topBar`, `statusBarText`/`statusBar`,
-   `menuBar.text`/`menuBar.surface`.
+   `menuBar.text`/`menuBar.surface`, `tabs.text`/`tabs.surface`, `tabs.selectedText`/`tabs.selected`.
 
    **对比度按「一对」检查。** Lumtub 会拿每个文字、图标颜色去比它实际所在的底色，渐变的每一段都算：
    文字要 4.5:1，图标和强调色要 3:1。不合格的会换成黑或白，并列在「发现的问题」里。
@@ -228,9 +235,21 @@ open a pull request that adds `skins/<id>/` with:
 
 ## Built-in skins 内置皮肤
 
+**Colour schemes 配色方案** follow light and dark mode and keep Lumtub's
+own shapes; only the colours change. 跟随浅色/深色模式，保留 Lumtub 原本的形状，只换颜色：
+`rice-paper` 宣纸, `candlelight` 烛光, `ink-bamboo` 墨竹, `rime` 雾凇, `pine-soot` 松烟,
+`night-voyage` 夜航, `dusk-hills` 暮山, `falling-petals` 樱落, `sandstone` 砂岩,
+`high-contrast` 高对比.
+
+**Era skins 年代皮肤**:
+
 | id | Name | 名称 | Era 年代 |
 | --- | --- | --- | --- |
 | `aero` | Bubble Gel | 泡泡凝胶 | glossy aqua and green, 2006–2010 |
+| `ocean` | Ocean Glass | 海洋玻璃 | teal water glass, bubbles and waves |
+| `meadow` | Sunny Meadow | 晴空草原 | blue sky, green grass, lens glints |
+| `city` | Green Tomorrow | 绿色未来城 | glass towers with terrace gardens, wind turbines and a train over green hills |
+| `aurora` | Aurora Glass | 极光玻璃 | dark glass under northern lights |
 | `chrome` | Chrome Cyber | 镀铬赛博 | chrome, neon, perspective grid, ~2000 |
 | `candy` | Candy Shell | 糖果壳 | translucent coloured plastic, 1998–2001 |
 | `disc` | Disc Menu | 光碟菜单 | DVD and game console menus, ~2002 |
@@ -240,6 +259,13 @@ open a pull request that adds `skins/<id>/` with:
 | `sixteen` | Sixteen Colours | 十六色 | 16-colour desktops, ~1990 |
 | `onebit` | One Bit | 黑白点阵 | black and white bitmap screens, ~1984 |
 | `platinum` | Platinum | 白金灰 | late-90s platinum grey |
+| `pinstripe` | Pinstripe Gel | 细条纹凝胶 | early-2000s pinstripes and gel, menus along the top |
+| `silver` | Brushed Silver | 银色一体 | late-2000s grey bars joined into one, light menu bar on top, blue-grey sidebar |
+| `metal` | Brushed Metal | 金属拟物 | first touch phones: steel, gloss, orange glow |
+| `holo` | Ice Neon | 冰蓝霓虹 | dark panels and ice-blue lines, ~2012 phones |
+| `paper` | Paper Cards | 纸片阴影 | paper cards, coloured bar and ripples, ~2015 phones |
+| `linen` | Linen & Leather | 亚麻皮革 | linen, stitched leather and glass buttons |
+| `shelf` | Wooden Shelf | 木纹书架 | wood grain, cream paper, a metal slider |
 | `handheld` | Handheld | 点阵掌机 | green dot-matrix handhelds, ~1989 |
 
 Fonts in [`fonts/`](fonts/) are under the SIL Open Font License 1.1; each

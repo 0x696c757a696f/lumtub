@@ -156,12 +156,12 @@ class DownloadsPage extends StatelessWidget {
           trailing: Wrap(spacing: 8, children: [
             OutlinedButton.icon(
               onPressed: () => _changeDirectory(context, manager),
-              icon: const Icon(AppIcons.folderOpen),
+              icon: Icon(AppIcons.folderOpen),
               label: Text(tr('Change location')),
             ),
             FilledButton.tonalIcon(
               onPressed: () => unawaited(openInExplorer(manager.directory)),
-              icon: const Icon(AppIcons.arrowSquareOut),
+              icon: Icon(AppIcons.arrowSquareOut),
               label: Text(tr('Open folder')),
             ),
           ]),

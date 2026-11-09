@@ -311,6 +311,10 @@
     "navSelectedText": "#1b2b4a",
     "navText": "#1b2b4a"
   },
+  "icons": {
+    "style": "fill",
+    "effect": "gel"
+  },
   "cards": {
     "video": {
       "fill": {

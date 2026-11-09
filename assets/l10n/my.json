@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (zero-copy)",
   "VideoToolbox (copy-back)": "VideoToolbox (copy-back)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "ထည့်သွင်းမှု မပြည့်စုံပါ- ffmpeg ပျောက်နေသည်။ Lumtub ကို ပြန်လည်ထည့်သွင်းပါ။",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "macOS ဗားရှင်းတွင် ffmpeg ပါဝင်ပြီး အရည်အသွေးမြင့် ဗီဒီယိုနှင့် အသံကို ပေါင်းရန်သာ သုံးသည်။ FFmpeg ရင်းမြစ်ကုဒ်မှ LGPL အရ တည်ဆောက်ထားပြီး container ဖော်မတ်များသာပါဝင်ကာ ကိုဒက်များ မပါဝင်ပါ။ ရင်းမြစ်ကုဒ်- https://ffmpeg.org/download.html။",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "macOS ဗားရှင်းတွင် ffmpeg ပါဝင်ပြီး အရည်အသွေးမြင့် ဗီဒီယိုနှင့် အသံကို ပေါင်းရန်သာ သုံးသည်။ ၎င်းသည် dfloresc/ffmpeg-macos-builds မှ FFmpeg 9 ၏ LGPL ဗားရှင်းဖြစ်သည်၊ ရင်းမြစ်ကုဒ်- https://ffmpeg.org/download.html။",
   "The status updates only after a video in that format has played.": "ထိုဖော်မတ်ဖြင့် ဗီဒီယိုတစ်ခုကို တကယ်ဖွင့်ပြီးမှသာ အခြေအနေကို အပ်ဒိတ်လုပ်သည်။",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

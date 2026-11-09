@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (സീറോ-കോപ്പി)",
   "VideoToolbox (copy-back)": "VideoToolbox (കോപ്പി-ബാക്ക്)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "പാക്കേജ് അപൂർണ്ണമാണ്: ffmpeg ഇല്ല. ദയവായി Lumtub വീണ്ടും ഇൻസ്റ്റാൾ ചെയ്യുക.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "macOS പതിപ്പിനൊപ്പം ffmpeg വരുന്നു, ഉയർന്ന ഗുണനിലവാരമുള്ള വീഡിയോയും ഓഡിയോയും ചേർക്കാൻ മാത്രം ഉപയോഗിക്കുന്നു. ഇത് FFmpeg സോഴ്സിൽ നിന്ന് LGPL പ്രകാരം കണ്ടെയ്നർ ഫോർമാറ്റുകൾ മാത്രം ഉൾപ്പെടുത്തി, കോഡെക്കുകൾ ഇല്ലാതെ നിർമ്മിച്ചതാണ്. സോഴ്സ് കോഡ്: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "macOS പതിപ്പിനൊപ്പം ffmpeg വരുന്നു, ഉയർന്ന ഗുണനിലവാരമുള്ള വീഡിയോയും ഓഡിയോയും ചേർക്കാൻ മാത്രം ഉപയോഗിക്കുന്നു. ഇത് dfloresc/ffmpeg-macos-builds-ലെ FFmpeg 9-ന്റെ LGPL ബിൽഡാണ്; സോഴ്സ് കോഡ്: https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "ആ ഫോർമാറ്റിലുള്ള ഒരു വീഡിയോ പ്ലേ ചെയ്തതിനു ശേഷം മാത്രമേ നില അപ്‌ഡേറ്റ് ആകൂ.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

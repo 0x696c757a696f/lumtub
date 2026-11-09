@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (nullkoopiaga)",
   "VideoToolbox (copy-back)": "VideoToolbox (tagasikopeerimisega)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "Pakett on poolik: puudub ffmpeg. Paigaldage Lumtub uuesti.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "macOS-i versioonil on ffmpeg kaasas ning seda kasutatakse ainult kõrge kvaliteediga video ja heli ühendamiseks. See on ehitatud FFmpegi lähtekoodist LGPL-i all ainult konteinerivormingutega, ilma koodekiteta. Lähtekood: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "macOS-i versioonil on ffmpeg kaasas ning seda kasutatakse ainult kõrge kvaliteediga video ja heli ühendamiseks. See on FFmpeg 9 LGPL-i versioon aadressilt dfloresc/ffmpeg-macos-builds; lähtekood: https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "Olek uueneb alles pärast selles vormingus video esitamist.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

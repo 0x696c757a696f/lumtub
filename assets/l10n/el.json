@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (μηδενική αντιγραφή)",
   "VideoToolbox (copy-back)": "VideoToolbox (αντιγραφή πίσω)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "Το πακέτο είναι ελλιπές: λείπει το ffmpeg. Εγκαταστήστε ξανά το Lumtub.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "Η έκδοση για macOS περιλαμβάνει το ffmpeg, που χρησιμοποιείται μόνο για τη συγχώνευση βίντεο και ήχου υψηλής ποιότητας. Έχει δημιουργηθεί από τον πηγαίο κώδικα του FFmpeg υπό την LGPL, μόνο με μορφές περιεκτών και χωρίς κωδικοποιητές. Πηγαίος κώδικας: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "Η έκδοση για macOS περιλαμβάνει το ffmpeg, που χρησιμοποιείται μόνο για τη συγχώνευση βίντεο και ήχου υψηλής ποιότητας. Πρόκειται για την έκδοση LGPL του FFmpeg 9 από το dfloresc/ffmpeg-macos-builds· πηγαίος κώδικας: https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "Η κατάσταση ενημερώνεται μόνο αφού αναπαραχθεί ένα βίντεο στην αντίστοιχη μορφή.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

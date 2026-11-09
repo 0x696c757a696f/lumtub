@@ -4,7 +4,8 @@
 #   package.sh <Lumtub.app> <liblumtub_core.dylib> <ffmpeg folder> <ffmpeg version> <dmg> [arm64|x86_64]
 #
 # The app is built for both CPUs; given a CPU, the DMG holds a copy thinned
-# to it, about half the size.
+# to it, about half the size. The ffmpeg folder is an unpacked release of
+# dfloresc/ffmpeg-macos-builds for that CPU (bin/, lib/, LICENSES/).
 #
 # With APPLE_SIGN_IDENTITY set (a Developer ID Application certificate in
 # the keychain), the app is signed with the hardened runtime, and with
@@ -23,7 +24,6 @@ here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../.." && pwd)
 
 cp "$core" "$app/Contents/Frameworks/"
-cp "$ffmpeg/ffmpeg" "$ffmpeg/ffprobe" "$app/Contents/MacOS/"
 printf '%s\n' "$ffmpeg_version" > "$app/Contents/Resources/ffmpeg-version.txt"
 cp "$root/LICENSE" "$root/NOTICE" "$app/Contents/Resources/"
 if [[ -n "$arch" ]]; then
@@ -31,6 +31,25 @@ if [[ -n "$arch" ]]; then
   ditto --arch "$arch" "$app" "$thin"
   app=$thin
 fi
+
+# ffmpeg and ffprobe load their libraries from @rpath, which points at
+# ../lib in the release; here the libraries go in Frameworks, under the
+# names the programs ask for, without the symlinks.
+rm -f "$app/Contents/MacOS/ffmpeg" "$app/Contents/MacOS/ffprobe" "$app/Contents/Frameworks/"libav*.dylib "$app/Contents/Frameworks/"libsw*.dylib
+cp "$ffmpeg/bin/ffmpeg" "$ffmpeg/bin/ffprobe" "$app/Contents/MacOS/"
+ffmpeg_libs=()
+for tool in ffmpeg ffprobe; do
+  while read -r name; do
+    ffmpeg_libs+=("$name")
+  done < <(otool -L "$app/Contents/MacOS/$tool" | sed -n 's|^[[:space:]]*@rpath/\([^ ]*\) .*|\1|p')
+  install_name_tool -delete_rpath @executable_path/../lib "$app/Contents/MacOS/$tool" 2>/dev/null || true
+  install_name_tool -add_rpath @executable_path/../Frameworks "$app/Contents/MacOS/$tool"
+done
+for name in $(printf '%s\n' "${ffmpeg_libs[@]}" | sort -u); do
+  cp -L "$ffmpeg/lib/$name" "$app/Contents/Frameworks/$name"
+done
+rm -rf "$app/Contents/Resources/ffmpeg-licenses"
+cp -R "$ffmpeg/LICENSES" "$app/Contents/Resources/ffmpeg-licenses"
 
 identity=${APPLE_SIGN_IDENTITY:-}
 if [[ -n "$identity" ]]; then
@@ -40,7 +59,7 @@ else
   codesign --force --deep --sign - "$app"
 fi
 codesign --verify --deep --strict "$app"
-for binary in "$app/Contents/MacOS/"* "$app/Contents/Frameworks/liblumtub_core.dylib"; do
+for binary in "$app/Contents/MacOS/"* "$app/Contents/Frameworks/"*.dylib; do
   lipo -info "$binary"
 done
 

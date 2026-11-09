@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (bez kopírovania)",
   "VideoToolbox (copy-back)": "VideoToolbox (so spätným kopírovaním)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "Inštalácia je neúplná: chýba ffmpeg. Nainštalujte Lumtub znova.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "Verzia pre macOS obsahuje ffmpeg, ktorý slúži iba na zlúčenie videa a zvuku vo vysokej kvalite. Je zostavený zo zdrojového kódu FFmpeg pod licenciou LGPL, len s formátmi kontajnerov, bez kodekov. Zdrojový kód: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "Verzia pre macOS obsahuje ffmpeg, ktorý slúži iba na zlúčenie videa a zvuku vo vysokej kvalite. Je to verzia LGPL FFmpeg 9 z dfloresc/ffmpeg-macos-builds; zdrojový kód: https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "Stav sa aktualizuje až po prehraní videa v danom formáte.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox（零拷貝）",
   "VideoToolbox (copy-back)": "VideoToolbox（回拷）",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "安裝包不完整：缺少 ffmpeg。請重新安裝 Lumtub。",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "macOS 版自帶 ffmpeg，只用於合併高畫質影片和音訊：從 FFmpeg 原始碼按 LGPL 建置，只含封裝格式，不含編解碼器，原始碼見 https://ffmpeg.org/download.html。",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "macOS 版自帶 ffmpeg，只用於合併高畫質影片和音訊，是 dfloresc/ffmpeg-macos-builds 提供的 FFmpeg 9 的 LGPL 版本，原始碼請見 https://ffmpeg.org/download.html。",
   "The status updates only after a video in that format has played.": "狀態只在實際播放對應編碼後更新。",
   "PingFang": "蘋方",
   "Hiragino Sans GB": "冬青黑體",

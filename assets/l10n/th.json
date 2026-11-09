@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (ไม่คัดลอก)",
   "VideoToolbox (copy-back)": "VideoToolbox (คัดลอกกลับ)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "แพ็กเกจไม่สมบูรณ์: ไม่มี ffmpeg โปรดติดตั้ง Lumtub ใหม่",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "Lumtub สำหรับ macOS มาพร้อม ffmpeg ซึ่งใช้เฉพาะรวมวิดีโอคุณภาพสูงกับเสียง สร้างจากซอร์สโค้ด FFmpeg ภายใต้ LGPL โดยมีเฉพาะรูปแบบคอนเทนเนอร์ ไม่มีโคเดก ซอร์สโค้ดดูได้ที่ https://ffmpeg.org/download.html",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "รุ่นสำหรับ macOS มาพร้อม ffmpeg ซึ่งใช้เฉพาะรวมวิดีโอคุณภาพสูงกับเสียง เป็นรุ่น LGPL ของ FFmpeg 9 จาก dfloresc/ffmpeg-macos-builds ซอร์สโค้ดดูได้ที่ https://ffmpeg.org/download.html",
   "The status updates only after a video in that format has played.": "สถานะจะอัปเดตหลังจากเล่นวิดีโอในรูปแบบนั้นจริงเท่านั้น",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

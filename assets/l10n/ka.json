@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (კოპირების გარეშე)",
   "VideoToolbox (copy-back)": "VideoToolbox (უკან კოპირებით)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "ინსტალაცია არასრულია: ffmpeg აკლია. გთხოვთ, ხელახლა დააინსტალიროთ Lumtub.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "macOS-ის ვერსიას ffmpeg თან ახლავს და გამოიყენება მხოლოდ მაღალი ხარისხის ვიდეოსა და აუდიოს შესაერთებლად. აგებულია FFmpeg-ის საწყისი კოდიდან LGPL ლიცენზიით, მხოლოდ კონტეინერის ფორმატებით, კოდეკების გარეშე. საწყისი კოდი: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "macOS-ის ვერსიას ffmpeg თან ახლავს და გამოიყენება მხოლოდ მაღალი ხარისხის ვიდეოსა და აუდიოს შესაერთებლად. ეს არის dfloresc/ffmpeg-macos-builds-დან FFmpeg 9-ის LGPL ვერსია; საწყისი კოდი: https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "სტატუსი განახლდება მხოლოდ მას შემდეგ, რაც ამ ფორმატის ვიდეო რეალურად დაიკვრება.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (ללא העתקה)",
   "VideoToolbox (copy-back)": "VideoToolbox (עם העתקה חוזרת)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "החבילה לא שלמה: ffmpeg חסר. התקינו מחדש את Lumtub.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "גרסת macOS כוללת ffmpeg, המשמש רק לחיבור וידאו ושמע באיכות גבוהה. הוא נבנה ממקור FFmpeg ברישיון LGPL עם פורמטי אריזה בלבד, ללא קודקים. קוד המקור: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "גרסת macOS כוללת ffmpeg, המשמש רק לחיבור וידאו ושמע באיכות גבוהה. זוהי גרסת LGPL של FFmpeg 9 מ-dfloresc/ffmpeg-macos-builds; קוד המקור: https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "המצב מתעדכן רק לאחר שסרטון בפורמט הזה הופעל.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

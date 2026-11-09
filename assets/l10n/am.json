@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (ያለ መቅዳት)",
   "VideoToolbox (copy-back)": "VideoToolbox (ወደ ኋላ መቅዳት)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "ጥቅሉ ያልተሟላ ነው፦ ffmpeg ጠፍቷል። እባክዎ Lumtubን እንደገና ይጫኑ።",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "የ macOS ስሪት ከ ffmpeg ጋር ይመጣል፣ ከፍተኛ ጥራት ያለው ቪዲዮ እና ድምፅ ለማገናኘት ብቻ ያገለግላል። ከ FFmpeg ምንጭ በ LGPL ስር የተገነባ ነው፣ የመያዣ ቅርጸቶች ብቻ እንጂ ኮዴኮች የሉትም። የምንጭ ኮድ፦ https://ffmpeg.org/download.html።",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "የ macOS ስሪት ከ ffmpeg ጋር ይመጣል፣ ከፍተኛ ጥራት ያለው ቪዲዮ እና ድምፅ ለማገናኘት ብቻ ያገለግላል። ከ dfloresc/ffmpeg-macos-builds የ FFmpeg 9 የ LGPL ግንባታ ነው፤ የምንጭ ኮድ፦ https://ffmpeg.org/download.html።",
   "The status updates only after a video in that format has played.": "ሁኔታው የሚዘምነው በዚያ ቅርጸት ያለ ቪዲዮ ከተጫወተ በኋላ ብቻ ነው።",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

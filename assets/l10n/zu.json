@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (engenakhophi)",
   "VideoToolbox (copy-back)": "VideoToolbox (ikhophi ibuyela emuva)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "Iphakheji alipheleli: i-ffmpeg ayikho. Sicela ufake i-Lumtub kabusha.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "Inguqulo ye-macOS iza ne-ffmpeg, esetshenziswa kuphela ukujoyina ividiyo nomsindo wekhwalithi ephezulu. Yakhiwe kusuka emthonjeni we-FFmpeg ngaphansi kwe-LGPL ngamafomethi esitsha kuphela, ayinawo amakhodeki. Ikhodi yomthombo: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "Inguqulo ye-macOS iza ne-ffmpeg, esetshenziswa kuphela ukujoyina ividiyo nomsindo wekhwalithi ephezulu. Yinguqulo ye-LGPL ye-FFmpeg 9 evela ku-dfloresc/ffmpeg-macos-builds; ikhodi yomthombo: https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "Isimo sivuseleleka kuphela ngemva kokuba ividiyo yefomethi efanayo isidlalwe.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

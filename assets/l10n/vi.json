@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (không sao chép)",
   "VideoToolbox (copy-back)": "VideoToolbox (sao chép ngược)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "Gói cài đặt không đầy đủ: thiếu ffmpeg. Vui lòng cài đặt lại Lumtub.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "Phiên bản macOS có sẵn ffmpeg, chỉ dùng để ghép video và âm thanh chất lượng cao. Được dựng từ mã nguồn FFmpeg theo giấy phép LGPL, chỉ có định dạng đóng gói, không có codec. Mã nguồn xem tại https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "Phiên bản macOS có sẵn ffmpeg, chỉ dùng để ghép video và âm thanh chất lượng cao. Đây là bản LGPL của FFmpeg 9 từ dfloresc/ffmpeg-macos-builds; mã nguồn xem tại https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "Trạng thái chỉ được cập nhật sau khi một video ở định dạng tương ứng đã được phát.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

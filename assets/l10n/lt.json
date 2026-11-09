@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (be kopijavimo)",
   "VideoToolbox (copy-back)": "VideoToolbox (su kopijavimu atgal)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "Diegimo paketas neišsamus: trūksta ffmpeg. Iš naujo įdiekite Lumtub.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "„macOS“ versijoje ffmpeg pateikiamas kartu ir naudojamas tik aukštos kokybės vaizdui ir garsui sujungti. Jis sukurtas iš FFmpeg šaltinio pagal LGPL, tik su konteinerio formatais, be kodekų. Šaltinio kodas: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "„macOS“ versijoje ffmpeg pateikiamas kartu ir naudojamas tik aukštos kokybės vaizdui ir garsui sujungti. Tai FFmpeg 9 LGPL versija iš dfloresc/ffmpeg-macos-builds; šaltinio kodas: https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "Būsena atnaujinama tik po to, kai buvo paleistas vaizdo įrašas tokiu formatu.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

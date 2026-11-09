@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (göçürmesiz)",
   "VideoToolbox (copy-back)": "VideoToolbox (yzyna göçürme)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "Paket doly däl: ffmpeg ýok. Lumtub-y gaýtadan guruň.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "macOS wersiýasy ffmpeg bilen gelýär we ol diňe ýokary hilli wideo bilen sesi birleşdirmek üçin ulanylýar. Ol FFmpeg çeşme kodundan LGPL boýunça guralýar, diňe konteýner formatlaryny öz içine alýar, kodekler ýok. Çeşme kody: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "macOS wersiýasy ffmpeg bilen gelýär we ol diňe ýokary hilli wideo bilen sesi birleşdirmek üçin ulanylýar. Bu dfloresc/ffmpeg-macos-builds çeşmesindäki FFmpeg 9-yň LGPL wersiýasydyr; çeşme kody: https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "Ýagdaý diňe şol formatdaky wideo oýnadylandan soň täzelenýär.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

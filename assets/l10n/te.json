@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (జీరో-కాపీ)",
   "VideoToolbox (copy-back)": "VideoToolbox (కాపీ-బ్యాక్)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "ప్యాకేజీ అసంపూర్ణంగా ఉంది: ffmpeg లేదు. దయచేసి Lumtubను మళ్లీ ఇన్‌స్టాల్ చేయండి.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "macOS వెర్షన్‌తో ffmpeg వస్తుంది, ఇది అధిక నాణ్యత వీడియో మరియు ఆడియోను కలపడానికి మాత్రమే ఉపయోగించబడుతుంది. ఇది LGPL కింద FFmpeg సోర్స్ నుండి నిర్మించబడింది, కంటైనర్ ఫార్మాట్‌లు మాత్రమే ఉన్నాయి, కోడెక్‌లు లేవు. సోర్స్ కోడ్: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "macOS వెర్షన్‌తో ffmpeg వస్తుంది, ఇది అధిక నాణ్యత వీడియో మరియు ఆడియోను కలపడానికి మాత్రమే ఉపయోగించబడుతుంది. ఇది dfloresc/ffmpeg-macos-builds నుండి FFmpeg 9 యొక్క LGPL బిల్డ్; సోర్స్ కోడ్: https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "ఆ ఫార్మాట్‌లో వీడియో ప్లే అయిన తర్వాత మాత్రమే స్థితి అప్‌డేట్ అవుతుంది.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

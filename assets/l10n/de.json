@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox (Zero-Copy)",
   "VideoToolbox (copy-back)": "VideoToolbox (Copy-back)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "Das Paket ist unvollständig: ffmpeg fehlt. Bitte installiere Lumtub neu.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "Die macOS-Version bringt ffmpeg mit, das nur zum Zusammenführen von hochwertigem Video und Audio dient. Es wird aus dem FFmpeg-Quellcode unter der LGPL gebaut, enthält nur Containerformate und keine Codecs. Quellcode: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "Die macOS-Version bringt ffmpeg mit, das nur zum Zusammenführen von hochwertigem Video und Audio dient. Es ist die LGPL-Version von FFmpeg 9 von dfloresc/ffmpeg-macos-builds; Quellcode: https://ffmpeg.org/download.html.",
   "The status updates only after a video in that format has played.": "Der Status wird erst aktualisiert, nachdem ein Video in diesem Format abgespielt wurde.",
   "PingFang": "PingFang",
   "Hiragino Sans GB": "Hiragino Sans GB",

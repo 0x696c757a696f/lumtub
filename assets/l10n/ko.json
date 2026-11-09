@@ -2796,7 +2796,7 @@
   "VideoToolbox (zero-copy)": "VideoToolbox(제로 카피)",
   "VideoToolbox (copy-back)": "VideoToolbox(카피백)",
   "The package is incomplete: ffmpeg is missing. Please reinstall Lumtub.": "설치 패키지가 불완전합니다. ffmpeg이 없습니다. Lumtub을 다시 설치해 주세요.",
-  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is built from the FFmpeg source under the LGPL with container formats only, no codecs. Source code: https://ffmpeg.org/download.html.": "macOS 버전에는 ffmpeg이 포함되어 있으며 고화질 영상과 오디오를 합칠 때만 사용합니다. FFmpeg 소스 코드를 LGPL로 빌드했으며 컨테이너 형식만 포함하고 코덱은 포함하지 않습니다. 소스 코드: https://ffmpeg.org/download.html.",
+  "The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.": "macOS 버전에는 ffmpeg이 포함되어 있으며 고화질 영상과 오디오를 합칠 때만 사용합니다. dfloresc/ffmpeg-macos-builds의 FFmpeg 9 LGPL 빌드이며, 소스 코드는 https://ffmpeg.org/download.html에서 볼 수 있습니다.",
   "The status updates only after a video in that format has played.": "해당 형식의 동영상이 실제로 재생된 후에만 상태가 업데이트됩니다.",
   "PingFang": "PingFang SC",
   "Hiragino Sans GB": "Hiragino Sans GB",

@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "የሃይማኖቶች ውይይት",
   "Lutheran": "ሉተራን",
   "Show a notice when skipping": "ሲዘለል ማሳወቂያ አሳይ",
+  "Cut them out of downloads": "ከውርዶች ቁረጣቸው",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "የወረዱ ቪዲዮዎች እነዚህን ክፍሎች ያስወግዳሉ፣ እንደገና ሳይቀየሩ በቁልፍ ፍሬሞች ላይ ይቆረጣሉ",
   "Segment types to skip": "የሚዘለሉ የክፍል ዓይነቶች",
   "The dislike count is Return YouTube Dislike's estimate": "የአልወደድኩም ቆጠራ የ Return YouTube Dislike ግምት ነው",
   "Track {0}": "ትራክ {0}",

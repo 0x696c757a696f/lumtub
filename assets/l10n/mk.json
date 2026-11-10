@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Меѓуверска дискусија",
   "Lutheran": "Лутерани",
   "Show a notice when skipping": "Прикажи известување при прескокнување",
+  "Cut them out of downloads": "Исечи ги од преземањата",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Преземените видеа ги изоставаат овие сегменти, исечени на клучни кадри без повторно кодирање",
   "Segment types to skip": "Типови сегменти за прескокнување",
   "The dislike count is Return YouTube Dislike's estimate": "Бројот на несвиѓања е проценка од Return YouTube Dislike",
   "Track {0}": "Звучна патека {0}",

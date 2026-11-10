@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Tarpreliginės diskusijos",
   "Lutheran": "Liuteronai",
   "Show a notice when skipping": "Praleidžiant rodyti pranešimą",
+  "Cut them out of downloads": "Iškirpti iš atsisiuntimų",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Atsisiųstuose vaizdo įrašuose šių atkarpų nebus, iškerpama ties pagrindiniais kadrais neperkoduojant",
   "Segment types to skip": "Praleidžiamų fragmentų tipai",
   "The dislike count is Return YouTube Dislike's estimate": "Nepatiktukų skaičius yra Return YouTube Dislike apskaičiuotas įvertis",
   "Track {0}": "Takelis {0}",

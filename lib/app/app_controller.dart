@@ -1236,6 +1236,7 @@ class AppController extends ChangeNotifier with _ExploreState {
           cacheDirectory: _repository?.cacheDirectory,
           subtitleLanguages: settings.subtitleLanguage.ytDlpLangs,
           autoSubtitles: settings.subtitleMode == SubtitleMode.always,
+          cutSponsors: settings.sponsorBlock && settings.sponsorCut,
         ),
         sponsorSegments: (id) => _sponsorBlock.segments(id, settings.sponsorCategories),
       );

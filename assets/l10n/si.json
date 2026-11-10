@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "අන්තර්-ආගමික සාකච්ඡාව",
   "Lutheran": "ලූතරන්",
   "Show a notice when skipping": "මඟ හරින විට දැනුම්දීමක් පෙන්වන්න",
+  "Cut them out of downloads": "බාගැනීම් වලින් කපා ඉවත් කරන්න",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "බාගත් වීඩියෝවල මෙම කොටස් නොමැත, නැවත කේතනය නොකර යතුරු රාමු වලදී කපනු ලැබේ",
   "Segment types to skip": "මඟ හැරිය යුතු කොටස් වර්ග",
   "The dislike count is Return YouTube Dislike's estimate": "අප්‍රිය ගණන Return YouTube Dislike හි ඇස්තමේන්තුවකි",
   "Track {0}": "ධාවන පථය {0}",

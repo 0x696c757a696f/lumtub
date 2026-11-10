@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Vallások közötti vita",
   "Lutheran": "Evangélikus",
   "Show a notice when skipping": "Értesítés megjelenítése kihagyáskor",
+  "Cut them out of downloads": "Kivágás a letöltésekből",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "A letöltött videókból kimaradnak ezek a szakaszok, kulcskockáknál vágva, újrakódolás nélkül",
   "Segment types to skip": "Kihagyandó szakaszfajták",
   "The dislike count is Return YouTube Dislike's estimate": "A Nem tetszik szám a Return YouTube Dislike becslése",
   "Track {0}": "Sáv: {0}",

@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "跨宗教討論",
   "Lutheran": "路德宗",
   "Show a notice when skipping": "跳過時顯示提示",
+  "Cut them out of downloads": "下載時剪掉這些片段",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "下載的影片不含這些片段，在關鍵影格處剪開，不重新編碼",
   "Segment types to skip": "跳過的片段型別",
   "The dislike count is Return YouTube Dislike's estimate": "踩數是 Return YouTube Dislike 的估算",
   "Track {0}": "軌道 {0}",

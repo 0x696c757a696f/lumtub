@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Discuții interreligioase",
   "Lutheran": "Luterani",
   "Show a notice when skipping": "Afișează o notificare la omitere",
+  "Cut them out of downloads": "Taie-le din descărcări",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Videoclipurile descărcate omit aceste segmente, tăiate la cadre cheie fără recodare",
   "Segment types to skip": "Tipuri de segmente omise",
   "The dislike count is Return YouTube Dislike's estimate": "Numărul de dislike-uri este o estimare Return YouTube Dislike",
   "Track {0}": "Pista {0}",

@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Interfaith na talakayan",
   "Lutheran": "Lutheran",
   "Show a notice when skipping": "Magpakita ng abiso kapag nilalaktawan",
+  "Cut them out of downloads": "Alisin sa mga download",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Hindi isasama ang mga segment na ito sa na-download na video, pinutol sa keyframe nang hindi muling ine-encode",
   "Segment types to skip": "Mga uri ng segment na lalaktawan",
   "The dislike count is Return YouTube Dislike's estimate": "Tantiya ng Return YouTube Dislike ang bilang ng dislike",
   "Track {0}": "Track {0}",

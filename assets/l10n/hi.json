@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "अंतरधार्मिक चर्चा",
   "Lutheran": "लूथरन",
   "Show a notice when skipping": "छोड़ते समय सूचना दिखाएँ",
+  "Cut them out of downloads": "डाउनलोड से काट दें",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "डाउनलोड किए गए वीडियो में ये हिस्से नहीं रहेंगे, बिना दोबारा एन्कोड किए कीफ़्रेम पर काटे जाते हैं",
   "Segment types to skip": "छोड़े जाने वाले खंडों के प्रकार",
   "The dislike count is Return YouTube Dislike's estimate": "नापसंद की संख्या Return YouTube Dislike का अनुमान है",
   "Track {0}": "ट्रैक {0}",

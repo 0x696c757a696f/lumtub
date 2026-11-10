@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Mezináboženská diskuse",
   "Lutheran": "Luteráni",
   "Show a notice when skipping": "Při přeskočení zobrazit upozornění",
+  "Cut them out of downloads": "Vystřihnout ze stažených videí",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Stažená videa tyto úseky vynechají, střih proběhne na klíčových snímcích bez nového kódování",
   "Segment types to skip": "Typy přeskakovaných úseků",
   "The dislike count is Return YouTube Dislike's estimate": "Počet „nelíbí se mi“ je odhad z Return YouTube Dislike",
   "Track {0}": "Stopa {0}",

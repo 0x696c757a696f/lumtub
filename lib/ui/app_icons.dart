@@ -230,6 +230,7 @@ abstract final class AppIcons {
   static IconData get robot => filled ? const IconData(0xe762, fontFamily: 'Phosphor Fill') : const IconData(0xe762, fontFamily: 'Phosphor');
   static IconData get rows => filled ? const IconData(0xe5a2, fontFamily: 'Phosphor Fill') : const IconData(0xe5a2, fontFamily: 'Phosphor');
   static IconData get scanSmiley => filled ? const IconData(0xebb4, fontFamily: 'Phosphor Fill') : const IconData(0xebb4, fontFamily: 'Phosphor');
+  static IconData get scissors => filled ? const IconData(0xeae0, fontFamily: 'Phosphor Fill') : const IconData(0xeae0, fontFamily: 'Phosphor');
   static IconData get screencast => filled ? const IconData(0xe404, fontFamily: 'Phosphor Fill') : const IconData(0xe404, fontFamily: 'Phosphor');
   static IconData get scroll => filled ? const IconData(0xeb7a, fontFamily: 'Phosphor Fill') : const IconData(0xeb7a, fontFamily: 'Phosphor');
   static IconData get sealCheck => filled ? const IconData(0xe606, fontFamily: 'Phosphor Fill') : const IconData(0xe606, fontFamily: 'Phosphor');

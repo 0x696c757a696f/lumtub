@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Ingxoxo phakathi kwezinkolo",
   "Lutheran": "AmaLuthela",
   "Show a notice when skipping": "Bonisa isaziso uma kweqiwa",
+  "Cut them out of downloads": "Kusike kokulandiwe",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Amavidiyo alandiwe ashiya lezi zingxenye, asikwe kuzinhlaka ezibalulekile ngaphandle kokubhala kabusha",
   "Segment types to skip": "Izinhlobo zezingxenye ezizeqiwa",
   "The dislike count is Return YouTube Dislike's estimate": "Inani lokungathandi liwukulinganisa kwe-Return YouTube Dislike",
   "Track {0}": "Umzila {0}",

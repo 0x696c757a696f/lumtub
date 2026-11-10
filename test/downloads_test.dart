@@ -8,6 +8,7 @@ import 'package:lumtub/downloads/download_manager.dart';
 import 'package:lumtub/downloads/download_models.dart';
 import 'package:lumtub/downloads/download_selection.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/sponsor_block.dart';
 
 class FakeProcess implements Process {
@@ -116,7 +117,7 @@ void main() {
     });
 
     final joined = <List<String>>[];
-    DownloadManager manager({List<SkipSegment> segments = const [], Future<({String? path, String? error})> Function(JoinRequest request)? join, Future<List<int>?> Function(String id)? cover}) => _track(managers, DownloadManager(
+    DownloadManager manager({List<SkipSegment> segments = const [], Future<Joined> Function(JoinRequest request)? join, Future<List<int>?> Function(String id)? cover, bool cutSponsors = false}) => _track(managers, DownloadManager(
           file: File('${dir.path}/downloads.json'),
           ytDlpPath: 'yt-dlp',
           defaultDirectory: '${dir.path}/videos',
@@ -127,7 +128,7 @@ void main() {
             lastEnvironment = environment ?? {};
             return process;
           },
-          options: () => const DownloadOptions(proxy: 'http://127.0.0.1:7890', deno: 'deno.exe', subtitleLanguages: '(zh|en).*', autoSubtitles: true),
+          options: () => DownloadOptions(proxy: 'http://127.0.0.1:7890', deno: 'deno.exe', subtitleLanguages: '(zh|en).*', autoSubtitles: true, cutSponsors: cutSponsors),
           sponsorSegments: (id) async => segments,
           onFinished: finished.add,
           join: join,
@@ -272,7 +273,7 @@ void main() {
         joined.add([r.video, r.audio, r.stem, r.container]);
         final out = '${r.stem}.webm';
         File(out).writeAsStringSync('joined');
-        return (path: out, error: null);
+        return (path: out, error: null, cut: const <(Duration, Duration)>[]);
       });
       expect(m.canMerge, isTrue);
       final best = m.arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.p720, directory: 'D'));
@@ -317,7 +318,7 @@ void main() {
       await until(() => m.taskFor('bbbbbbbbbbb')!.status == DownloadStatus.done);
       expect(joined.last.last, 'mp4');
 
-      final fails = manager(join: (r) async => (path: null, error: 'sound other than AAC, Opus or Dolby'));
+      final fails = manager(join: (r) async => (path: null, error: 'sound other than AAC, Opus or Dolby', cut: const <(Duration, Duration)>[]));
       fails.add(video('ccccccccccc'), DownloadQuality.best);
       await until(() => processes.length > 2);
       final p = File('${dir.path}/videos/Video [ccccccccccc].f248.webm')..createSync(recursive: true);
@@ -328,6 +329,48 @@ void main() {
       final failed = fails.taskFor('ccccccccccc')!;
       await until(() => failed.status == DownloadStatus.failed);
       expect(failed.error, 'sound other than AAC, Opus or Dolby');
+    });
+
+    test('cut sponsor segments leave the file, and the saved times move past them', () async {
+      const sec = Duration(seconds: 1);
+      final segments = [SkipSegment(sec * 10, sec * 20, 'sponsor'), SkipSegment(sec * 50, sec * 60, 'selfpromo')];
+      final requests = <JoinRequest>[];
+      final m = manager(segments: segments, cutSponsors: true, join: (r) async {
+        requests.add(r);
+        final out = '${r.stem}.mp4';
+        File(out).writeAsStringSync('joined');
+        // The core cut 12 s to 18 s of the first (its keyframes) and nothing of the second.
+        return (path: out, error: null, cut: [(sec * 12, sec * 18)]);
+      });
+      m.add(video('aaaaaaaaaaa'), DownloadQuality.best);
+      await until(() => processes.isNotEmpty);
+      final picture = File('${dir.path}/videos/Video [aaaaaaaaaaa].f137.mp4')..createSync(recursive: true);
+      final sound = File('${dir.path}/videos/Video [aaaaaaaaaaa].f140.m4a')..createSync(recursive: true);
+      File('${dir.path}/videos/Video [aaaaaaaaaaa].info.json').writeAsStringSync(jsonEncode({
+        'id': 'aaaaaaaaaaa',
+        'duration': 100,
+        'chapters': [
+          {'start_time': 0, 'end_time': 14, 'title': 'One'},
+          {'start_time': 14, 'end_time': 17, 'title': 'Ad'},
+          {'start_time': 17, 'end_time': 100, 'title': 'Two'},
+        ],
+      }));
+      processes[0].out('lumtub-file|${picture.path}');
+      processes[0].out('lumtub-file|${sound.path}');
+      await processes[0].exit(0);
+      final task = m.taskFor('aaaaaaaaaaa')!;
+      await until(() => task.status == DownloadStatus.done);
+      expect(requests.single.toJson()['cut'], [[10.0, 20.0], [50.0, 60.0]]);
+      final local = LocalVideo.read(File(task.filePath!));
+      expect(local.info['duration'], 94);
+      expect([for (final c in local.info['chapters'] as List) [c['title'], c['start_time'], c['end_time']]], [['One', 0, 12], ['Two', 12, 94]]);
+      expect([for (final s in local.segments) (s.start, s.end, s.category)], [(sec * 10, sec * 14, 'sponsor'), (sec * 44, sec * 54, 'selfpromo')]);
+    });
+
+    test('times move past cut stretches', () {
+      const sec = Duration(seconds: 1);
+      final cut = [(sec * 2, sec * 6), (sec * 10, sec * 12)];
+      expect([for (final t in [0, 2, 4, 6, 8, 11, 20]) DownloadManager.shiftPastCuts(sec * t, cut).inSeconds], [0, 2, 2, 2, 4, 6, 14]);
     });
 
     test('progress ticks reach only the progress listenable, at most twice a second', () async {

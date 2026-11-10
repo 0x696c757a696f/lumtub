@@ -1397,7 +1397,6 @@ struct Saved {
     cues: u64,
 }
 
-/// What a session streams: both tracks' heads and where to start.
 /// Stretches left out of a saved file, in ms from its start: each from a
 /// picture keyframe to a later one, so nothing is encoded again.
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -1455,7 +1454,7 @@ impl Cuts {
     }
 
     /// `cues` (ms) moved to where they land, those wholly left out dropped.
-    fn cues(&self, cues: &[(u64, u64, String)]) -> Vec<(u64, u64, String)> {
+    pub fn cues(&self, cues: &[(u64, u64, String)]) -> Vec<(u64, u64, String)> {
         cues.iter()
             .filter_map(|(start, end, text)| {
                 let (start, end) = (self.map(*start as i64), self.map(*end as i64));
@@ -1465,6 +1464,7 @@ impl Cuts {
     }
 }
 
+/// What a session streams: both tracks' heads and where to start.
 pub struct Session {
     video_target: Target,
     audio_target: Target,

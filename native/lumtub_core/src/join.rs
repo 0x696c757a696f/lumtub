@@ -116,7 +116,8 @@ pub fn join(video: &str, audio: &str, stem: &str, container: &str, extra: &Extra
         session = session.with_extras(extra.read());
     }
     session = session.with_cut(extra.cut.clone());
-    let cut = session.cuts().stretches().to_vec();
+    let cuts = session.cuts();
+    let cut = cuts.stretches().to_vec();
     if container == "webm" && session.extension() != "webm" {
         return Err("WebM takes only VP9 or AV1 with Opus".into());
     }
@@ -132,7 +133,33 @@ pub fn join(video: &str, audio: &str, stem: &str, container: &str, extra: &Extra
     if result.is_err() {
         let _ = std::fs::remove_file(&part);
     }
-    result.map(|_| Joined { path: out, cut })
+    result?;
+    if !cuts.is_empty() {
+        for text in &extra.subtitles {
+            shift_file(&text.path, &cuts);
+        }
+    }
+    Ok(Joined { path: out, cut })
+}
+
+/// Rewrites the subtitle file at `path` (kept beside the joined file) with
+/// its lines moved past what `cuts` left out, as WebVTT or, for `.srt`, SRT.
+fn shift_file(path: &str, cuts: &crate::cast::Cuts) {
+    let Ok(source) = std::fs::read(path) else { return };
+    let cues: Vec<(u64, u64, String)> = crate::subtitles::cues(&String::from_utf8_lossy(&source)).into_iter().map(|c| (c.start, c.end, c.text)).collect();
+    if cues.is_empty() {
+        return;
+    }
+    let srt = path.to_ascii_lowercase().ends_with(".srt");
+    let time = |ms: u64| format!("{:02}:{:02}:{:02}{}{:03}", ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, if srt { ',' } else { '.' }, ms % 1000);
+    let mut out = if srt { String::new() } else { "WEBVTT\n\n".to_string() };
+    for (i, (start, end, text)) in cuts.cues(&cues).into_iter().enumerate() {
+        if srt {
+            out.push_str(&format!("{}\n", i + 1));
+        }
+        out.push_str(&format!("{} --> {}\n{}\n\n", time(start), time(end), text.trim_end()));
+    }
+    let _ = std::fs::write(path, out);
 }
 
 /// Joins JSON `{video, audio, out, container?, subtitles?: [{path,
@@ -183,6 +210,22 @@ mod tests {
             cover: Some(format!("{dir}/cover.jpg")),
             cut: Vec::new(),
         }
+    }
+
+    #[test]
+    fn moves_subtitle_files_past_cuts() {
+        let dir = std::env::temp_dir().join(format!("lumtub-shift-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let cuts = crate::cast::Cuts::snap(&[(2.0, 6.0)], &[0, 2000, 4000, 6000, 8000]);
+        let vtt = dir.join("a.en.vtt").to_string_lossy().into_owned();
+        std::fs::write(&vtt, "WEBVTT\n\n00:00:01.000 --> 00:00:01.500\nBefore\n\n00:00:03.000 --> 00:00:04.000\nCut\n\n00:00:07.000 --> 00:00:08.000\nAfter\n").unwrap();
+        shift_file(&vtt, &cuts);
+        assert_eq!(std::fs::read_to_string(&vtt).unwrap(), "WEBVTT\n\n00:00:01.000 --> 00:00:01.500\nBefore\n\n00:00:03.000 --> 00:00:04.000\nAfter\n\n");
+        let srt = dir.join("a.de.srt").to_string_lossy().into_owned();
+        std::fs::write(&srt, "1\n00:00:07,250 --> 00:00:09,000\nNach\n").unwrap();
+        shift_file(&srt, &cuts);
+        assert_eq!(std::fs::read_to_string(&srt).unwrap(), "1\n00:00:03,250 --> 00:00:05,000\nNach\n\n");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     /// Joins the sample files of cast's test (LUMTUB_CAST_SAMPLES) from disk:

@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Dinara maslahat",
   "Lutheran": "Lýuteran",
   "Show a notice when skipping": "Böküp geçilende habar görkez",
+  "Cut them out of downloads": "Göçürilenlerden kes",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Göçürilen wideolarda bu bölekler bolmaz, gaýtadan kodlamazdan esasy kadrlarda kesilýär",
   "Segment types to skip": "Böküp geçiljek bölek görnüşleri",
   "The dislike count is Return YouTube Dislike's estimate": "Halamazlyk sany Return YouTube Dislike-yň çaklamasydyr",
   "Track {0}": "Ses ýoly {0}",

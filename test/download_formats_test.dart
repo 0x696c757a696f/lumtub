@@ -9,6 +9,7 @@ import 'package:lumtub/downloads/download_manager.dart';
 import 'package:lumtub/downloads/download_models.dart';
 import 'package:lumtub/downloads/download_selection.dart';
 import 'package:lumtub/models.dart';
+import 'package:lumtub/native_core.dart';
 import 'package:lumtub/ui/download_dialog.dart';
 import 'package:lumtub/video_codec.dart';
 
@@ -219,7 +220,7 @@ void main() {
     });
 
     final item = VideoItem(id: 'aaaaaaaaaaa', title: 'T', channel: 'C', url: 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
-    Future<({String? path, String? error})> joiner(JoinRequest request) async => (path: null, error: null);
+    Future<Joined> joiner(JoinRequest request) async => (path: null, error: null, cut: const <(Duration, Duration)>[]);
     DownloadManager manager({bool join = false}) => DownloadManager(
         file: File('${dir.path}/downloads.json'),
         ytDlpPath: 'yt-dlp',

@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "نقاش بين الأديان",
   "Lutheran": "اللوثرية",
   "Show a notice when skipping": "إظهار إشعار عند التخطي",
+  "Cut them out of downloads": "قصّها من التنزيلات",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "تُحذف هذه المقاطع من الفيديوهات المنزّلة، وتُقص عند الإطارات الرئيسية دون إعادة ترميز",
   "Segment types to skip": "أنواع المقاطع التي تُتخطى",
   "The dislike count is Return YouTube Dislike's estimate": "عدد عدم الإعجاب تقدير من Return YouTube Dislike",
   "Track {0}": "المسار {0}",

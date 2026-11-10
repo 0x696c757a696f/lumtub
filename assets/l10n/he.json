@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "דיון בין-דתי",
   "Lutheran": "לותרנים",
   "Show a notice when skipping": "הצגת הודעה בעת דילוג",
+  "Cut them out of downloads": "לחתוך אותם מההורדות",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "סרטונים שהורדו לא יכללו מקטעים אלה, שנחתכים בפריימי מפתח ללא קידוד מחדש",
   "Segment types to skip": "סוגי קטעים לדילוג",
   "The dislike count is Return YouTube Dislike's estimate": "מספר סימוני לא אהבתי הוא הערכה של Return YouTube Dislike",
   "Track {0}": "רצועה {0}",

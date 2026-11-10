@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "گفت‌وگوی میان‌ادیانی",
   "Lutheran": "لوتری",
   "Show a notice when skipping": "نمایش اعلان هنگام رد کردن",
+  "Cut them out of downloads": "حذف از دانلودها",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "ویدیوهای دانلودشده این بخش‌ها را ندارند و بدون رمزگذاری دوباره در فریم‌های کلیدی بریده می‌شوند",
   "Segment types to skip": "نوع بخش‌هایی که رد می‌شوند",
   "The dislike count is Return YouTube Dislike's estimate": "تعداد نپسندیدن‌ها تخمین Return YouTube Dislike است",
   "Track {0}": "قطعه {0}",

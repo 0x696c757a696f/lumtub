@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Tværreligiøs diskussion",
   "Lutheran": "Luthersk",
   "Show a notice when skipping": "Vis en meddelelse ved overspringning",
+  "Cut them out of downloads": "Klip dem ud af downloads",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Downloadede videoer udelader disse segmenter, klippet ved nøglebilleder uden ny kodning",
   "Segment types to skip": "Segmenttyper, der springes over",
   "The dislike count is Return YouTube Dislike's estimate": "Antallet af dislikes er et skøn fra Return YouTube Dislike",
   "Track {0}": "Spor {0}",

@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Starpreliģiju diskusija",
   "Lutheran": "Luterānisms",
   "Show a notice when skipping": "Rādīt paziņojumu, izlaižot",
+  "Cut them out of downloads": "Izgriezt no lejupielādēm",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Lejupielādētajos video šo fragmentu nebūs, tie izgriezti pie atslēgkadriem bez pārkodēšanas",
   "Segment types to skip": "Izlaižamo fragmentu veidi",
   "The dislike count is Return YouTube Dislike's estimate": "Nepatīk skaits ir Return YouTube Dislike aplēse",
   "Track {0}": "Celiņš {0}",

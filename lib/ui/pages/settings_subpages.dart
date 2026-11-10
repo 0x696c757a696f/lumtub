@@ -568,6 +568,14 @@ Future<void> openSponsorBlock(BuildContext context, AppController controller) =>
           enabled: settings.sponsorBlock,
           onChanged: (v) => save(settings.copyWith(sponsorNotice: v)),
         ),
+        SwitchItem(
+          title: tr('Cut them out of downloads'),
+          subtitle: tr('Downloaded videos leave these segments out, cut at keyframes without encoding again'),
+          leading: Icon(AppIcons.scissors),
+          value: settings.sponsorCut,
+          enabled: settings.sponsorBlock,
+          onChanged: (v) => save(settings.copyWith(sponsorCut: v)),
+        ),
         _header(context, tr('Segment types to skip')),
         for (final MapEntry(key: category, value: (name, description)) in sponsorCategoryNames.entries)
           CheckboxListTile(

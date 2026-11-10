@@ -19,7 +19,7 @@ import '../user_folders.dart';
 
 /// Per-call settings the manager reads when a download starts.
 class DownloadOptions {
-  const DownloadOptions({this.proxy, this.deno, this.cacheDirectory, this.subtitleLanguages, this.autoSubtitles = false});
+  const DownloadOptions({this.proxy, this.deno, this.cacheDirectory, this.subtitleLanguages, this.autoSubtitles = false, this.cutSponsors = false});
   /// yt-dlp's `--proxy` value, see `NetworkProxy.ytDlpValue`.
   final String? proxy;
   final String? deno;
@@ -28,6 +28,8 @@ class DownloadOptions {
   final String? subtitleLanguages;
   /// Also save automatic captions.
   final bool autoSubtitles;
+  /// Leave the SponsorBlock segments out of joined files.
+  final bool cutSponsors;
 }
 
 typedef ProcessStarter = Future<Process> Function(String executable, List<String> arguments, {Map<String, String>? environment});
@@ -128,7 +130,7 @@ class DownloadManager extends ChangeNotifier {
   final void Function(DownloadTask task)? onFinished;
   /// Joins a picture and a sound file into one without ffmpeg; the path
   /// written, or why not.
-  final Future<({String? path, String? error})> Function(JoinRequest request)? join;
+  final Future<Joined> Function(JoinRequest request)? join;
   /// The cover picture (JPEG) of a video, to put inside a joined file.
   final Future<List<int>?> Function(String videoId)? cover;
 
@@ -453,7 +455,10 @@ class DownloadManager extends ChangeNotifier {
 
   Future<void> _finish(DownloadTask task, List<String> printed) async {
     var path = printed.lastOrNull;
+    List<SkipSegment>? segments;
+    var cut = const <(Duration, Duration)>[];
     if (_joins(task) && printed.length >= 2) {
+      if (options?.call().cutSponsors ?? false) segments = await _segments(task);
       final stem = printed.first.replaceFirst(_partSuffix, '');
       final container = task.selection?.container.name ?? 'auto';
       File? coverFile;
@@ -473,6 +478,7 @@ class DownloadManager extends ChangeNotifier {
         subtitles: subtitleFilesOf(stem),
         title: task.item.title,
         cover: coverFile?.path,
+        cut: [for (final s in segments ?? const <SkipSegment>[]) (s.start, s.end)],
       ));
       try {
         await coverFile?.delete();
@@ -494,6 +500,7 @@ class DownloadManager extends ChangeNotifier {
         }
       }
       path = out;
+      cut = joined.cut;
     }
     if (path == null || !File(path).existsSync()) path = _findMedia(task);
     if (path == null) {
@@ -507,7 +514,7 @@ class DownloadManager extends ChangeNotifier {
     task.eta = null;
     task.downloaded = task.total ?? task.downloaded;
     try {
-      await _writeSidecar(task, path);
+      await _writeSidecar(task, path, segments ?? await _segments(task), cut);
     } catch (e) {
       logError('Could not save the offline info of ${task.id}', e);
     }
@@ -538,29 +545,64 @@ class DownloadManager extends ChangeNotifier {
     'id', 'title', 'channel', 'uploader', 'channel_url', 'channel_id', 'upload_date', 'view_count', 'like_count', 'description', 'duration', 'chapters', 'webpage_url', 'vcodec',
   ];
 
+  Future<List<SkipSegment>> _segments(DownloadTask task) async {
+    try {
+      return await sponsorSegments?.call(task.id) ?? const [];
+    } catch (_) {
+      // Nothing skipped or cut then.
+      return const [];
+    }
+  }
+
   /// Cuts yt-dlp's `.info.json` down to what the watch page shows (its
   /// format list is large and its addresses expire) and adds the
-  /// SponsorBlock segments, so playback can restore both offline.
-  Future<void> _writeSidecar(DownloadTask task, String media) async {
+  /// SponsorBlock segments, so playback can restore both offline. Times
+  /// are moved past the stretches [cut] out of the file, and segments
+  /// wholly cut are left out.
+  Future<void> _writeSidecar(DownloadTask task, String media, List<SkipSegment> segments, List<(Duration, Duration)> cut) async {
     final sidecar = LocalVideo.sidecarOf(media);
     var full = <String, dynamic>{};
     if (sidecar.existsSync()) {
       final data = await decodeJsonInBackground(await sidecar.readAsString());
       if (data is Map<String, dynamic>) full = data;
     }
-    List<SkipSegment> segments = const [];
-    try {
-      segments = await sponsorSegments?.call(task.id) ?? const [];
-    } catch (_) {
-      // Playback skips nothing offline then.
+    final kept = <Map<String, Object>>[];
+    for (final s in segments) {
+      final start = shiftPastCuts(s.start, cut), end = shiftPastCuts(s.end, cut);
+      if (end > start) kept.add({'start': start.inMilliseconds, 'end': end.inMilliseconds, 'category': s.category});
     }
     await sidecar.writeAsString(jsonEncode({
       for (final key in _sidecarKeys)
-        if (full[key] != null) key: full[key],
-      'lumtub': {
-        'sponsorblock': [for (final s in segments) {'start': s.start.inMilliseconds, 'end': s.end.inMilliseconds, 'category': s.category}],
-      },
+        if (full[key] != null) key: key == 'chapters' && cut.isNotEmpty ? shiftChapters(full[key], cut) : key == 'duration' && cut.isNotEmpty && full[key] is num ? _shiftSeconds(full[key] as num, cut) : full[key],
+      'lumtub': {'sponsorblock': kept},
     }), flush: true);
+  }
+
+  /// Where [at] lands once the stretches [cut] (in order) are left out: a
+  /// time inside one lands where it starts.
+  static Duration shiftPastCuts(Duration at, List<(Duration, Duration)> cut) {
+    var shifted = at;
+    for (final (from, to) in cut) {
+      if (at >= to) {
+        shifted -= to - from;
+      } else if (at > from) {
+        shifted -= at - from;
+      }
+    }
+    return shifted;
+  }
+
+  static double _shiftSeconds(num seconds, List<(Duration, Duration)> cut) =>
+      shiftPastCuts(Duration(milliseconds: (seconds * 1000).round()), cut).inMilliseconds / 1000;
+
+  /// yt-dlp's chapter list moved past [cut]; chapters wholly cut are left out.
+  static Object? shiftChapters(Object? chapters, List<(Duration, Duration)> cut) {
+    if (chapters is! List) return chapters;
+    return [
+      for (final c in chapters.whereType<Map>())
+        if (c['start_time'] is num && c['end_time'] is num)
+          if ((_shiftSeconds(c['start_time'] as num, cut), _shiftSeconds(c['end_time'] as num, cut)) case (final start, final end) when end > start) {...c, 'start_time': start, 'end_time': end},
+    ];
   }
 
   /// The media file of [task] in its folder, by the `[id]` in its name.
@@ -630,7 +672,7 @@ class DownloadManager extends ChangeNotifier {
 /// A picture and a sound file for the core to join, and what goes inside
 /// besides.
 class JoinRequest {
-  const JoinRequest({required this.video, required this.audio, required this.stem, this.container = 'auto', this.subtitles = const [], this.title, this.cover});
+  const JoinRequest({required this.video, required this.audio, required this.stem, this.container = 'auto', this.subtitles = const [], this.title, this.cover, this.cut = const []});
   final String video;
   final String audio;
   /// The joined file's path without its extension.
@@ -641,6 +683,8 @@ class JoinRequest {
   final String? title;
   /// A JPEG file.
   final String? cover;
+  /// Stretches to leave out; the core narrows each to keyframes inside it.
+  final List<(Duration, Duration)> cut;
 
   Map<String, Object?> toJson() => {
         'video': video,
@@ -650,5 +694,6 @@ class JoinRequest {
         'subtitles': [for (final s in subtitles) {'path': s.path, 'language': s.language}],
         if (title != null) 'title': title,
         if (cover != null) 'cover': cover,
+        if (cut.isNotEmpty) 'cut': [for (final (from, to) in cut) [from.inMilliseconds / 1000, to.inMilliseconds / 1000]],
       };
 }

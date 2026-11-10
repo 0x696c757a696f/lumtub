@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Διαθρησκευτική συζήτηση",
   "Lutheran": "Λουθηρανοί",
   "Show a notice when skipping": "Εμφάνιση ειδοποίησης κατά την παράλειψη",
+  "Cut them out of downloads": "Αποκοπή από τις λήψεις",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Τα βίντεο που λαμβάνονται παραλείπουν αυτά τα τμήματα, με κοπή σε βασικά καρέ χωρίς επανακωδικοποίηση",
   "Segment types to skip": "Τύποι τμημάτων προς παράλειψη",
   "The dislike count is Return YouTube Dislike's estimate": "Ο αριθμός «Δεν μου αρέσει» είναι εκτίμηση του Return YouTube Dislike",
   "Track {0}": "Κομμάτι {0}",

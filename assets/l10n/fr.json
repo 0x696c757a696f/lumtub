@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Discussion interreligieuse",
   "Lutheran": "Luthéranisme",
   "Show a notice when skipping": "Afficher une notification lors d'un saut",
+  "Cut them out of downloads": "Les couper des téléchargements",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Les vidéos téléchargées omettent ces segments, coupés aux images clés sans réencodage",
   "Segment types to skip": "Types de segments à ignorer",
   "The dislike count is Return YouTube Dislike's estimate": "Le nombre de « je n'aime pas » est une estimation de Return YouTube Dislike",
   "Track {0}": "Piste {0}",

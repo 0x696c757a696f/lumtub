@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Междурелигиозни дискусии",
   "Lutheran": "Лутеранство",
   "Show a notice when skipping": "Показване на съобщение при прескачане",
+  "Cut them out of downloads": "Изрязване от изтеглянията",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Изтеглените видеоклипове пропускат тези сегменти, изрязани при ключови кадри без прекодиране",
   "Segment types to skip": "Видове прескачани сегменти",
   "The dislike count is Return YouTube Dislike's estimate": "Броят нехаресвания е приблизителна оценка на Return YouTube Dislike",
   "Track {0}": "Запис {0}",

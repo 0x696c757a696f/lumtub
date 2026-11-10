@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "종교 간 토론",
   "Lutheran": "루터교",
   "Show a notice when skipping": "건너뛸 때 알림 표시",
+  "Cut them out of downloads": "다운로드에서 잘라내기",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "다운로드한 동영상에서 이 구간을 뺍니다. 다시 인코딩하지 않고 키프레임에서 자릅니다",
   "Segment types to skip": "건너뛸 구간 유형",
   "The dislike count is Return YouTube Dislike's estimate": "싫어요 수는 Return YouTube Dislike의 추정치입니다",
   "Track {0}": "트랙 {0}",

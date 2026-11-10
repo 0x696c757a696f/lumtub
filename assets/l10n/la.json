@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Disputatio interreligiosa",
   "Lutheran": "Lutherani",
   "Show a notice when skipping": "Notam monstrare cum transilitur",
+  "Cut them out of downloads": "Ex demissis excidere",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Video demissa has partes omittunt, ad imagines principales sine nova codificatione excisas",
   "Segment types to skip": "Genera segmentorum transiliendorum",
   "The dislike count is Return YouTube Dislike's estimate": "Numerus improbationum est aestimatio Return YouTube Dislike",
   "Track {0}": "Vestigium {0}",

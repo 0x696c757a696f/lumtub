@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Dinlərarası müzakirə",
   "Lutheran": "Lüteran",
   "Show a notice when skipping": "Keçərkən bildiriş göstər",
+  "Cut them out of downloads": "Endirmələrdən kəs",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Endirilən videolarda bu seqmentlər olmur, yenidən kodlaşdırmadan açar kadrlarda kəsilir",
   "Segment types to skip": "Keçiləcək seqment növləri",
   "The dislike count is Return YouTube Dislike's estimate": "Bəyənməmə sayı Return YouTube Dislike-ın təxminidir",
   "Track {0}": "Trek {0}",

@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Diskutim ndërfetar",
   "Lutheran": "Luteranët",
   "Show a notice when skipping": "Shfaq njoftim kur anashkalohet",
+  "Cut them out of downloads": "Prije nga shkarkimet",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Videot e shkarkuara i lënë jashtë këto segmente, të prera në kuadro kyçe pa rikodim",
   "Segment types to skip": "Llojet e segmenteve për t'u anashkaluar",
   "The dislike count is Return YouTube Dislike's estimate": "Numri i \"nuk më pëlqen\" është vlerësim i Return YouTube Dislike",
   "Track {0}": "Pista {0}",

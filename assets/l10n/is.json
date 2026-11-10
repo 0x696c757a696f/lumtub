@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Umræða milli trúarbragða",
   "Lutheran": "Lúterskir",
   "Show a notice when skipping": "Sýna tilkynningu þegar hlutum er sleppt",
+  "Cut them out of downloads": "Klippa úr niðurhali",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Sótt myndbönd sleppa þessum bútum, klippt við lykilramma án endurkóðunar",
   "Segment types to skip": "Tegundir hluta sem er sleppt",
   "The dislike count is Return YouTube Dislike's estimate": "Fjöldi mislíkana er áætlun frá Return YouTube Dislike",
   "Track {0}": "Rás {0}",

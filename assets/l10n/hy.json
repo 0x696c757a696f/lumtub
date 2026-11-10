@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Միջկրոնական քննարկում",
   "Lutheran": "Լյութերականներ",
   "Show a notice when skipping": "Բաց թողնելիս ցուցադրել ծանուցում",
+  "Cut them out of downloads": "Կտրել ներբեռնումներից",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Ներբեռնված տեսանյութերում այս հատվածները չեն լինի, կտրվում են հիմնական կադրերում առանց վերակոդավորման",
   "Segment types to skip": "Բաց թողնվող հատվածների տեսակներ",
   "The dislike count is Return YouTube Dislike's estimate": "Չհավանումների թիվը Return YouTube Dislike-ի գնահատականն է",
   "Track {0}": "Ձայներգ {0}",

@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Interreligieuze discussie",
   "Lutheran": "Luthers",
   "Show a notice when skipping": "Melding tonen bij overslaan",
+  "Cut them out of downloads": "Uit downloads knippen",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Gedownloade video's laten deze segmenten weg, geknipt op keyframes zonder opnieuw te coderen",
   "Segment types to skip": "Over te slaan soorten fragmenten",
   "The dislike count is Return YouTube Dislike's estimate": "Het aantal dislikes is een schatting van Return YouTube Dislike",
   "Track {0}": "Spoor {0}",

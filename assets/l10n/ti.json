@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "ዘተ ኣብ መንጎ ኣምልኾታት",
   "Lutheran": "ሉተራን",
   "Show a notice when skipping": "ኣብ እዋን ምሕላፍ መልእኽቲ ኣርኢ",
+  "Cut them out of downloads": "ካብ ዝወረዱ ቁረጾም",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "ዝወረዱ ቪድዮታት ነዞም ክፋላት ኣይሕዙን፣ ብዘይ ዳግማይ ምቕያር ኣብ ቀንዲ ፍሬማት ይቑረጹ",
   "Segment types to skip": "ዓይነታት ክፋላት ዝሕለፉ",
   "The dislike count is Return YouTube Dislike's estimate": "ብዝሒ ዘይፍተዉ ግምት Return YouTube Dislike እዩ",
   "Track {0}": "ትራክ {0}",

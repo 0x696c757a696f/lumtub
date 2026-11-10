@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Dinlararo muhokamalar",
   "Lutheran": "Lyuteranlik",
   "Show a notice when skipping": "O'tkazib yuborilganda xabar ko'rsatish",
+  "Cut them out of downloads": "Yuklab olinganlardan qirqish",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Yuklab olingan videolarda bu qismlar bo‘lmaydi, qayta kodlamasdan kalit kadrlarda qirqiladi",
   "Segment types to skip": "O'tkaziladigan qism turlari",
   "The dislike count is Return YouTube Dislike's estimate": "Yoqmadi soni Return YouTube Dislike'ning taxminiy hisobi",
   "Track {0}": "{0}-trek",

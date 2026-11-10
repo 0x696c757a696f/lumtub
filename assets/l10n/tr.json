@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Dinlerarası tartışma",
   "Lutheran": "Lüteriyen",
   "Show a notice when skipping": "Atlarken bildirim göster",
+  "Cut them out of downloads": "İndirmelerden kes",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "İndirilen videolar bu bölümleri içermez, yeniden kodlamadan ana karelerde kesilir",
   "Segment types to skip": "Atlanacak bölüm türleri",
   "The dislike count is Return YouTube Dislike's estimate": "Beğenmeme sayısı Return YouTube Dislike'ın tahminidir",
   "Track {0}": "Parça {0}",

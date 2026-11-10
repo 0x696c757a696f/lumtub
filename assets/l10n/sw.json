@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Majadiliano ya dini mbalimbali",
   "Lutheran": "Walutheri",
   "Show a notice when skipping": "Onyesha arifa wakati wa kuruka",
+  "Cut them out of downloads": "Zikate kutoka kwenye vipakuliwa",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Video zilizopakuliwa haziweki sehemu hizi, zikikatwa kwenye fremu kuu bila kusimba upya",
   "Segment types to skip": "Aina za sehemu za kuruka",
   "The dislike count is Return YouTube Dislike's estimate": "Idadi ya kutopenda ni makadirio ya Return YouTube Dislike",
   "Track {0}": "Wimbo {0}",

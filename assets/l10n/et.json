@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Religioonidevaheline arutelu",
   "Lutheran": "Luterlus",
   "Show a notice when skipping": "Näita vahelejätmisel teadet",
+  "Cut them out of downloads": "Lõika allalaadimistest välja",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Allalaaditud videotes neid lõike pole, need lõigatakse võtmekaadritest ilma uuesti kodeerimata",
   "Segment types to skip": "Vahelejäetavad lõigutüübid",
   "The dislike count is Return YouTube Dislike's estimate": "Mittemeeldimiste arv on Return YouTube Dislike'i hinnang",
   "Track {0}": "Rada {0}",

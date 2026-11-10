@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Thảo luận liên tôn giáo",
   "Lutheran": "Luther giáo",
   "Show a notice when skipping": "Hiện thông báo khi bỏ qua",
+  "Cut them out of downloads": "Cắt khỏi video tải xuống",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Video tải xuống sẽ bỏ các đoạn này, cắt tại khung hình chính mà không mã hóa lại",
   "Segment types to skip": "Các loại đoạn cần bỏ qua",
   "The dislike count is Return YouTube Dislike's estimate": "Số lượt không thích là ước tính của Return YouTube Dislike",
   "Track {0}": "Bản nhạc {0}",

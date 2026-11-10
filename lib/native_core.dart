@@ -10,6 +10,10 @@ import 'android_python.dart';
 import 'app_log.dart';
 import 'l10n/l10n.dart';
 
+/// A joined file, or why not, and the stretches (from, to) of the
+/// original left out of it.
+typedef Joined = ({String? path, String? error, List<(Duration, Duration)> cut});
+
 /// lumtub_core, the Rust library built from native/lumtub_core and
 /// shipped next to lumtub.exe. The recommendations, the format policy,
 /// the filters (block lists, Shorts, language, bait) and the download
@@ -316,22 +320,30 @@ class NativeCore {
   int Function()? _processCpu;
 
   /// Joins a downloaded picture and sound without ffmpeg, as [request]
-  /// (`{video, audio, out, container, subtitles, title, cover}`, see
-  /// JoinRequest) asks; the path written, or why not. It reads and writes
-  /// the whole video, so run it on another isolate.
-  static ({String? path, String? error}) join(Map<String, Object?> request) {
+  /// (`{video, audio, out, container, subtitles, title, cover, cut}`, see
+  /// JoinRequest) asks; the path written and the stretches left out, or
+  /// why not. It reads and writes the whole video, so run it on another
+  /// isolate.
+  static Joined join(Map<String, Object?> request) {
+    const none = <(Duration, Duration)>[];
     final core = instance;
-    if (core == null) return (path: null, error: 'lumtub_core is missing');
+    if (core == null) return (path: null, error: 'lumtub_core is missing', cut: none);
     try {
       final call = core._join ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_join');
       final answer = core.take(core.withText(jsonEncode(request), call));
       final map = answer == null ? null : jsonDecode(answer);
-      if (map is Map && map['path'] is String) return (path: map['path'] as String, error: null);
-      return (path: null, error: map is Map ? '${map['error']}' : 'the files could not be joined');
+      if (map is Map && map['path'] is String) {
+        final cut = [
+          for (final c in (map['cut'] as List? ?? const []).whereType<List>())
+            if (c.length == 2 && c[0] is int && c[1] is int) (Duration(milliseconds: c[0] as int), Duration(milliseconds: c[1] as int)),
+        ];
+        return (path: map['path'] as String, error: null, cut: cut);
+      }
+      return (path: null, error: map is Map ? '${map['error']}' : 'the files could not be joined', cut: none);
     } on ArgumentError {
-      return (path: null, error: 'lumtub_core is too old to join files');
+      return (path: null, error: 'lumtub_core is too old to join files', cut: none);
     } on FormatException {
-      return (path: null, error: 'lumtub_core is too old to join files');
+      return (path: null, error: 'lumtub_core is too old to join files', cut: none);
     }
   }
 

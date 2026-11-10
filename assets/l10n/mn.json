@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Шашин хоорондын хэлэлцүүлэг",
   "Lutheran": "Лютеран",
   "Show a notice when skipping": "Алгасахад мэдэгдэл харуулах",
+  "Cut them out of downloads": "Татсан бичлэгээс хайчлах",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Татсан видеонд эдгээр хэсэг орохгүй, дахин кодлохгүйгээр түлхүүр кадр дээр хайчилна",
   "Segment types to skip": "Алгасах хэсгийн төрөл",
   "The dislike count is Return YouTube Dislike's estimate": "Таалагдаагүйн тоо нь Return YouTube Dislike-ийн тооцоо юм",
   "Track {0}": "Дараалал {0}",

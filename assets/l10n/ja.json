@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "宗教間の議論",
   "Lutheran": "ルター派",
   "Show a notice when skipping": "スキップ時に通知を表示",
+  "Cut them out of downloads": "ダウンロードからカットする",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "ダウンロードした動画からこれらの区間を除きます。再エンコードせずキーフレームで切ります",
   "Segment types to skip": "スキップするセグメントの種類",
   "The dislike count is Return YouTube Dislike's estimate": "低評価数は Return YouTube Dislike による推定値です",
   "Track {0}": "トラック {0}",

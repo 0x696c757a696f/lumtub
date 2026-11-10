@@ -1407,6 +1407,8 @@
   "Interfaith discussion": "Erlijioarteko eztabaida",
   "Lutheran": "Luteranoak",
   "Show a notice when skipping": "Erakutsi jakinarazpena saltatzean",
+  "Cut them out of downloads": "Moztu deskargetatik",
+  "Downloaded videos leave these segments out, cut at keyframes without encoding again": "Deskargatutako bideoek segmentu hauek kanpoan uzten dituzte, gako-fotogrametan moztuta berriro kodetu gabe",
   "Segment types to skip": "Saltatu beharreko zati-motak",
   "The dislike count is Return YouTube Dislike's estimate": "Gustatu ez zaizkionen kopurua Return YouTube Dislike-ren kalkulua da",
   "Track {0}": "{0}. pista",

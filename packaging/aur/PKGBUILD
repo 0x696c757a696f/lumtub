@@ -17,7 +17,7 @@ noextract=("Lumtub_${pkgver}-${_commit}_linux-x64.AppImage" "Lumtub_${pkgver}-${
 source=('lumtub.png' 'io.github.lumtub.lumtub.desktop')
 source_x86_64=("Lumtub_${pkgver}-${_commit}_linux-x64.AppImage::https://github.com/0x696c757a696f/lumtub/releases/download/v${pkgver}-${_commit}/Lumtub_${pkgver}-${_commit}_linux-x64.AppImage")
 source_aarch64=("Lumtub_${pkgver}-${_commit}_linux-arm64.AppImage::https://github.com/0x696c757a696f/lumtub/releases/download/v${pkgver}-${_commit}/Lumtub_${pkgver}-${_commit}_linux-arm64.AppImage")
-sha256sums=('45e00520389500c9a3dd0bfc8054799f996d7eddb54575c4e8413aa9a8bf0a8e'
+sha256sums=('fea1844321dba3bbb865f0d28e4f335ba7eb6942a6abe6e998f9f738b0bc0949'
             '13ebd4dcb37a307e14d4931c0edd5c98d8c0286d56c16d5b9f59c60919599a03')
 sha256sums_x86_64=('0000000000000000000000000000000000000000000000000000000000000000')
 sha256sums_aarch64=('0000000000000000000000000000000000000000000000000000000000000000')

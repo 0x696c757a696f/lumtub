@@ -8,7 +8,16 @@ import 'package:lumtub/support_reminder.dart';
 void main() {
   late Directory dir;
   setUp(() => dir = Directory.systemTemp.createTempSync('reminder'));
-  tearDown(() => dir.deleteSync(recursive: true));
+  tearDown(() async {
+    // Windows may still hold a file the last save wrote.
+    for (var attempt = 0; attempt < 10; attempt++) {
+      try {
+        return dir.deleteSync(recursive: true);
+      } on FileSystemException {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+    }
+  });
 
   Future<SupportReminder> reload(SupportReminder reminder, File file) async {
     await reminder.saved;
@@ -76,6 +85,6 @@ void main() {
     await tester.tap(find.text("Don't ask again"));
     await tester.pumpAndSettle();
     expect(reminder.enabled, isFalse);
-    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
   });
 }

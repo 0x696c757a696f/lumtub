@@ -117,8 +117,8 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 | `android-x86_64` APK | Android 模拟器和 x86 Chromebook |
 
 文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
-**Windows：**用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。<br>
-**Linux：**给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。<br>
+**Windows：**用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。Lumtub 需要 Microsoft Visual C++ 运行库；如果 Windows 提示缺少 `MSVCP140.dll` 或 `VCRUNTIME140_1.dll` 等文件，请安装它（[x64](https://aka.ms/vs/17/release/vc_redist.x64.exe)、[ARM64](https://aka.ms/vs/17/release/vc_redist.arm64.exe)）后再打开 Lumtub。<br>
+**Linux：**给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。<br>
 第一次启动时会从 GitHub 下载 yt-dlp 和 Deno，之后 Lumtub 会自己保持更新。<br>
 **Android（预览版）：**打开 APK，按提示允许浏览器或文件管理器安装应用。有新版本时 Lumtub 会提醒你，用同样的方法安装即可。Android 上暂时还不能看直播、会员专属视频，也不能下载。
 

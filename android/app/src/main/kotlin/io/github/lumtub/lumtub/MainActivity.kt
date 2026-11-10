@@ -24,6 +24,7 @@ import io.flutter.plugin.common.MethodChannel
  * keeping the screen on, and the system's picture in picture.
  */
 private const val LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
+private const val WEB_SIGN_IN = 7341
 
 class MainActivity : FlutterActivity() {
     private var channel: MethodChannel? = null
@@ -32,6 +33,9 @@ class MainActivity : FlutterActivity() {
     private var autoPip = false
     private var pipAspect = Rational(16, 9)
 
+    /** Waiting for WebSignInActivity: answered with its file, or null. */
+    private var signingIn: MethodChannel.Result? = null
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lumtub/windows_shell")
@@ -39,6 +43,13 @@ class MainActivity : FlutterActivity() {
         PlaybackService.listener = { method, argument -> runOnUiThread { channel.invokeMethod(method, argument) } }
         channel.setMethodCallHandler { call, result ->
             if (call.method == "askLocalNetwork") return@setMethodCallHandler askLocalNetwork(result)
+            if (call.method == "webSignIn") {
+                signingIn?.success(null)
+                signingIn = result
+                @Suppress("DEPRECATION")
+                startActivityForResult(Intent(this, WebSignInActivity::class.java), WEB_SIGN_IN)
+                return@setMethodCallHandler
+            }
             if (call.method == "installApk") {
                 // Copying the APK into the installer takes a moment.
                 Thread {
@@ -64,6 +75,16 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         PlaybackService.createChannel(this)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != WEB_SIGN_IN) return
+        val path = if (resultCode == RESULT_OK) data?.getStringExtra(WebSignInActivity.PATH) else null
+        signingIn?.success(path)
+        signingIn = null
     }
 
     private fun handle(call: MethodCall): Any? {

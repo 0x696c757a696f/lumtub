@@ -549,6 +549,15 @@ class HistoryStore {
     }
     await _write();
   }
+
+  /// Gives a remembered video the length its player found, when the list
+  /// it came from had none.
+  Future<void> fillDuration(String id, int seconds) async {
+    final at = items.indexWhere((item) => item.id == id);
+    if (at < 0 || items[at].duration != null) return;
+    items[at] = items[at].withDuration(seconds);
+    await _write();
+  }
 }
 
 /// One source of [VideoRepository.interleave], read ahead into [lines].

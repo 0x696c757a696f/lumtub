@@ -452,11 +452,12 @@ pub unsafe extern "C" fn lumtub_web_import(port: i64, json: *const u8, length: u
                 return Err("no youtube.com cookies".to_owned());
             }
             let guard = keep(&jar, hello)?;
-            if delete {
-                shred(&path);
-            }
             Ok((jar.len(), guard))
         })();
+        // A file meant to go never stays, signed in or not.
+        if delete {
+            shred(&path);
+        }
         answer(port, kept);
     });
     true

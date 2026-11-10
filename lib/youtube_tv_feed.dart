@@ -56,6 +56,8 @@ class YoutubeTvFeed {
     if (_native == null) return;
     Map<String, Object?> body = {'browseId': browseId};
     final seen = <String>{};
+    // Read afresh, so a row's "Today" is never kept past its day.
+    if (browseId == history) historyDays.clear();
     for (var page = 0; page < pages; page++) {
       final answer = await signIn.post('browse', body);
       if (answer == null) return;

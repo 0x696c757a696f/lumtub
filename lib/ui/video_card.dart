@@ -103,11 +103,14 @@ class SliverVideoGrid extends StatelessWidget {
   final String? removeLabel;
   /// A line under each card saying why it is there, by video id.
   final Map<String, String>? reasons;
-  /// When each video was watched, by id, shown on its picture.
+  /// When each video was watched, by id, as a line under its card.
   final Map<String, String>? watched;
 
   @override
-  Widget build(BuildContext context) => SliverPadding(
+  Widget build(BuildContext context) {
+    // Room for the watched line only when some card has one.
+    final watched = this.watched != null && items.any((item) => this.watched![item.id] != null) ? this.watched : null;
+    return SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: videoLayout != VideoLayout.grid
             ? SliverFixedExtentList(
@@ -154,6 +157,7 @@ class SliverVideoGrid extends StatelessWidget {
           );
         }),
       );
+  }
 }
 
 /// What [SliverVideoGrid.watched] shows for each time: "3 days ago".

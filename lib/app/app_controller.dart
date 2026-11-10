@@ -1548,9 +1548,10 @@ class AppController extends ChangeNotifier with _ExploreState {
       // Marked live while it opened, when the list did not know.
       final opened = playing?.id == item.id ? playing! : item;
       if (preferences.recordHistory && !incognito) {
-        // A link or a list without lengths leaves the card without one.
-        final length = player.state.duration;
-        await _history?.record(opened.duration == null && !opened.isLive && length > Duration.zero ? opened.withDuration(length.inSeconds) : opened);
+        await _history?.record(opened);
+        // A link or a list without lengths leaves the card without one; the
+        // player's own length is taken once this video reports it.
+        if (opened.duration == null && !opened.isLive) unawaited(_fillDuration(opened.id, serial));
       }
       if (start != null && at == null) _notice(tr('Resume from {0}', [_clock(start)]));
       final next = upNext.firstOrNull;
@@ -1625,6 +1626,17 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// subtitles from the saved extraction without asking YouTube again.
   /// [resolved] false, or a failed resolution, leaves everything to
   /// ytdl_hook as before.
+  Future<void> _fillDuration(String id, int serial) async {
+    final player = this.player;
+    if (player == null) return;
+    try {
+      final length = await player.stream.duration.firstWhere((length) => length > Duration.zero).timeout(const Duration(minutes: 1));
+      if (serial == _playSerial && playing?.id == id) await _history?.fillDuration(id, length.inSeconds);
+    } on Object {
+      // Never reported: the card stays without a length.
+    }
+  }
+
   Future<bool> _open(VideoItem item, int serial, {Duration? start, bool play = true, bool resolved = true, bool piped = true, bool allowLocal = true}) async {
     // Opened again (reconnecting, another quality): the subtitles shown
     // come back, as the new file starts with none of the ones added.

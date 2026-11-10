@@ -3,6 +3,8 @@ package io.github.lumtub.lumtub
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -32,6 +34,8 @@ class WebSignInActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         forget()
+        // One an earlier sign-in left when the app was closed under it.
+        File(noBackupFilesDir, FILE).delete()
         val web = WebView(this)
         this.web = web
         web.settings.javaScriptEnabled = true
@@ -51,6 +55,10 @@ class WebSignInActivity : Activity() {
             }
         }
         val root = FrameLayout(this)
+        // No white flash in dark mode before Google's page draws.
+        val night = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        root.setBackgroundColor(if (night) Color.BLACK else Color.WHITE)
+        web.setBackgroundColor(if (night) Color.BLACK else Color.WHITE)
         root.addView(web, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         root.setOnApplyWindowInsetsListener { view, insets ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -75,7 +83,7 @@ class WebSignInActivity : Activity() {
         val names = cookies.split(';').map { it.substringBefore('=').trim() }.toSet()
         if ("SAPISID" !in names && "__Secure-3PAPISID" !in names) return
         done = true
-        val file = File(noBackupFilesDir, "web-sign-in.txt")
+        val file = File(noBackupFilesDir, FILE)
         file.writeText(cookies)
         file.setReadable(false, false)
         file.setReadable(true, true)
@@ -110,6 +118,7 @@ class WebSignInActivity : Activity() {
 
     companion object {
         const val PATH = "path"
+        private const val FILE = "web-sign-in.txt"
 
         private const val SIGN_IN = "https://accounts.google.com/ServiceLogin?service=youtube&passive=true" +
             "&continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26next%3Dhttps%253A%252F%252Fm.youtube.com%252F"

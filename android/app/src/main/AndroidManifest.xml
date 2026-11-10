@@ -47,6 +47,7 @@
         <activity
             android:name=".WebSignInActivity"
             android:exported="false"
+            android:launchMode="singleTop"
             android:theme="@style/NormalTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|screenLayout|density|uiMode"
             android:windowSoftInputMode="adjustResize"/>

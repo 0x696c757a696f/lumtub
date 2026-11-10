@@ -272,7 +272,7 @@ void main() {
     expect(player.state.playing, before);
   });
 
-  testWidgets('a control reached with the keyboard has focus and a name, and Enter or Space activates it', (tester) async {
+  testWidgets('a control reached with the keyboard has focus and a name, Enter activates it and Space still plays or pauses', (tester) async {
     final semantics = tester.ensureSemantics();
     await pump(tester);
     expect(find.bySemanticsLabel('Play/Pause (Space)'), findsWidgets);

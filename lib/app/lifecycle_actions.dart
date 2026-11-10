@@ -2,6 +2,10 @@ part of 'app_controller.dart';
 
 /// Starting the app up, updating it and shutting it down.
 extension LifecycleActions on AppController {
+  /// Writes the watch history now, for when the app may be ended without
+  /// [shutdown] (Android in the background).
+  Future<void> flushHistory() => _history?.flush() ?? Future.value();
+
   Future<void> initialize() async {
     try {
       final directories = await AppDirectories.create();

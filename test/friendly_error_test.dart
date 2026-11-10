@@ -48,4 +48,12 @@ void main() {
     expect(unknown, isNot(contains('Python')));
     expect(unknown, contains('logs'));
   });
+
+  test('download failures with a more exact cause are not called unavailable', () {
+    expect(friendlyDownloadError('ERROR: [youtube] x: Sign in to confirm your age. This video may be inappropriate for some users.'), contains('age-restricted'));
+    expect(friendlyDownloadError('ERROR: [youtube] x: Video unavailable. The uploader has not made this video available in your country'), contains('region'));
+    expect(friendlyDownloadError('ERROR: [youtube] x: Requested format is not available'), contains('format'));
+    expect(friendlyDownloadError('ERROR: ffmpeg is not available'), contains('ffmpeg'));
+    expect(friendlyDownloadError('ERROR: [youtube] x: Sign in to confirm you’re not a bot'), contains('bot'));
+  });
 }

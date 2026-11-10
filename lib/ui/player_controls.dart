@@ -1131,7 +1131,6 @@ class _HoverState extends State<_Hover> {
             SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
             SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
             SingleActivator(LogicalKeyboardKey.select): ActivateIntent(),
-            SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
           },
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,

@@ -10,11 +10,9 @@ extension PlaybackOpening on AppController {
   /// subtitles from the saved extraction without asking YouTube again.
   /// [resolved] false, or a failed resolution, leaves everything to
   /// ytdl_hook as before.
-  Future<void> _fillDuration(String id, int serial) async {
-    final player = this.player;
-    if (player == null) return;
+  Future<void> _fillDuration(String id, int serial, Future<Duration> reported) async {
     try {
-      final length = await player.stream.duration.firstWhere((length) => length > Duration.zero).timeout(const Duration(minutes: 1));
+      final length = await reported;
       if (serial == _playSerial && playing?.id == id) await _history?.fillDuration(id, length.inSeconds);
     } on Object {
       // Never reported: the card stays without a length.

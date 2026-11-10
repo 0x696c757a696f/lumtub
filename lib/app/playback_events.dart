@@ -76,6 +76,10 @@ extension PlaybackEvents on AppController {
     // Held until a translated subtitle shown by itself is ready, so the
     // first lines are not missed; other subtitles load as it plays.
     final hold = preferences.autoPlay && settings.subtitleMode != SubtitleMode.off && !item.isLive;
+    // Listened for before opening, so a length reported while it opens
+    // still counts, and the last video's never does.
+    final length = item.duration == null && !item.isLive ? player.stream.duration.firstWhere((length) => length > Duration.zero).timeout(const Duration(minutes: 1)) : null;
+    unawaited(length?.then((_) {}, onError: (_) {}));
     if (await _open(item, serial, start: start, play: preferences.autoPlay && !hold) && serial == _playSerial) {
       if (hold) unawaited(_playOnceSubtitlesReady(serial));
       await _applyChannelPlayback(item, player);
@@ -85,7 +89,7 @@ extension PlaybackEvents on AppController {
         await _history?.record(opened);
         // A link or a list without lengths leaves the card without one; the
         // player's own length is taken once this video reports it.
-        if (opened.duration == null && !opened.isLive) unawaited(_fillDuration(opened.id, serial));
+        if (length != null && opened.duration == null && !opened.isLive) unawaited(_fillDuration(opened.id, serial, length));
       }
       if (start != null && at == null) _notice(tr('Resume from {0}', [AppController._clock(start)]));
       final next = upNext.firstOrNull;

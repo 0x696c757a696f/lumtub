@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:http/http.dart' as http;
 
@@ -566,7 +567,9 @@ class HistoryStore {
     final at = items.indexWhere((item) => item.id == id);
     if (at < 0 || items[at].duration != null) return Future.value();
     items[at] = items[at].withDuration(seconds);
-    return _saveNow();
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 300), () => unawaited(_saveNow()));
+    return Future.value();
   }
 
   /// Completes when every change so far is on disk.
@@ -578,15 +581,21 @@ class HistoryStore {
     _saveTimer = null;
     return _writes.run(() async {
       try {
-        await writeFileAtomic(file, jsonEncode([
+        final data = [
           for (final item in items) {...item.toJson(), if (watched[item.id] case final at?) 'watched_at': at.toUtc().toIso8601String()},
-        ]));
+        ];
+        // A long history is megabytes of text: made away from the UI.
+        await writeFileAtomic(file, data.length > 200 ? await _encodeAway(data) : jsonEncode(data));
       } catch (e) {
         logError('Could not save the watch history', e);
       }
     });
   }
 }
+
+/// [data] as JSON, made on another isolate; a function of its own so the
+/// closure sent there holds nothing but the list.
+Future<String> _encodeAway(List<Map<String, dynamic>> data) => Isolate.run(() => jsonEncode(data));
 
 /// One source of [VideoRepository.interleave], read ahead into [lines].
 class _Feed {

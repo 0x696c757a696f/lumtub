@@ -554,6 +554,7 @@ class DownloadManager extends ChangeNotifier {
     final id = task.id;
     final printed = <String>[];
     final errors = <String>[];
+    String? shown;
     int exitCode;
     try {
       await Directory(task.directory).create(recursive: true);
@@ -591,7 +592,11 @@ class DownloadManager extends ChangeNotifier {
       exitCode = await process.exitCode;
       await Future.wait(done);
     } catch (e) {
-      errors.add(e is FileSystemException ? friendlyFileError(e) : '$e');
+      if (e is FileSystemException) {
+        shown = friendlyFileError(e);
+      } else {
+        errors.add('$e');
+      }
       exitCode = -1;
     }
     _processes.remove(id);
@@ -603,7 +608,7 @@ class DownloadManager extends ChangeNotifier {
       task.status = DownloadStatus.failed;
       task.speed = null;
       final raw = errors.lastWhere((e) => e.startsWith('ERROR'), orElse: () => errors.isEmpty ? 'yt-dlp exited with code $exitCode' : errors.last);
-      task.error = friendlyDownloadError(raw);
+      task.error = shown ?? friendlyDownloadError(raw);
     }
     if (_wipe.remove(id)) await _deleteFiles(task);
     _active.remove(id);

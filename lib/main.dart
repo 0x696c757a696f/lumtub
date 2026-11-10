@@ -161,6 +161,7 @@ class _LumtubAppState extends State<LumtubApp> {
       // Minimising hides the window; "pause on minimise" resumes only what it
       // paused itself.
       onHide: () {
+        unawaited(controller.flushHistory());
         controller.cast.windowHidden = true;
         KeepAwake.hidden = true;
         unawaited(controller.setBackgroundAudioOnly(true));

@@ -246,7 +246,7 @@ class HomeFeed extends ChangeNotifier {
       ..addAll(candidates);
     _taken
       ..clear()
-      ..addAll(sources.history.map((item) => item.id));
+      ..addAll(sources.history.take(200).map((item) => item.id));
     _placed.clear();
     _seed = 0;
     if (keep) {

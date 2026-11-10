@@ -3116,5 +3116,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Nalika video diputer, layar ngalih ka laju refresh nu cocog pikeun gerakan anu lemes; TV bisa poék sakedap",
   "refresh rate fps TV": "laju refresh fps TV",
   "Tap to install it": "Toél pikeun masang",
-  "Tap to download and install": "Toél pikeun ngundeur jeung masang"
+  "Tap to download and install": "Toél pikeun ngundeur jeung masang",
+  "1 minute ago": "1 menit kapengker",
+  "{0} minutes ago": "{0} menit kapengker",
+  "1 hour ago": "1 jam kapengker",
+  "{0} hours ago": "{0} jam kapengker",
+  "1 day ago": "1 poé kapengker",
+  "{0} days ago": "{0} poé kapengker",
+  "1 week ago": "1 minggu kapengker",
+  "{0} weeks ago": "{0} minggu kapengker",
+  "1 month ago": "1 bulan kapengker",
+  "{0} months ago": "{0} bulan kapengker",
+  "1 year ago": "1 taun kapengker",
+  "{0} years ago": "{0} taun kapengker"
 }

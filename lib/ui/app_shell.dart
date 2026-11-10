@@ -17,6 +17,7 @@ import 'pages/explore_page.dart';
 import 'pages/library_pages.dart';
 import 'pages/settings_page.dart';
 import 'pages/settings_sections.dart';
+import 'pages/support_page.dart';
 import 'pages/video_pages.dart';
 import 'pages/watch_page.dart';
 import 'pages/youtube_playlist_page.dart';
@@ -56,6 +57,7 @@ class _AppShellState extends State<AppShell> {
   StreamSubscription<String>? _notices;
   StreamSubscription<void>? _waylandTop;
   StreamSubscription<DownloadTask>? _finished;
+  Timer? _supportCheck;
 
   AppController get _controller => widget.controller;
   late final _frames = FrameStats.start(() => _controller.onWatchPage ? (_controller.mini ? 'mini player' : 'watch') : _controller.mode.name, causes: () => _controller.rebuildCauses);
@@ -106,6 +108,7 @@ class _AppShellState extends State<AppShell> {
         }
       });
     }
+    _supportCheck = Timer.periodic(const Duration(minutes: 3), (_) => _askForSupport());
     _finished = _controller.finishedDownloads.listen((task) {
       final path = task.filePath;
       if (!mounted || path == null) return;
@@ -125,9 +128,21 @@ class _AppShellState extends State<AppShell> {
     unawaited(_notices?.cancel());
     unawaited(_waylandTop?.cancel());
     unawaited(_finished?.cancel());
+    _supportCheck?.cancel();
     _searchText.dispose();
     _searchFocus.dispose();
     super.dispose();
+  }
+
+  /// Asks about supporting Lumtub when it is due, and only while nothing
+  /// plays and no dialog or other page is open.
+  void _askForSupport() {
+    final reminder = _controller.supportReminder;
+    if (reminder == null || !mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+    final now = DateTime.now();
+    reminder.used(now);
+    if (!reminder.due(now) || _controller.playing != null || ModalRoute.of(context)?.isCurrent == false) return;
+    unawaited(askForSupport(context, reminder));
   }
 
   void _focusSearch() {

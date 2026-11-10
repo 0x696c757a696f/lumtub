@@ -107,6 +107,7 @@ import '../youtube_player_probe.dart';
 import 'video_list_loader.dart';
 import '../l10n/l10n.dart';
 import '../friendly_error.dart';
+import '../support_reminder.dart';
 
 part 'explore_controller.dart';
 part 'navigation_actions.dart';
@@ -135,6 +136,9 @@ enum PageMode { home, explore, subscriptions, history, playlists, downloads, set
 class AppController extends ChangeNotifier with _ExploreState {
   HistoryStore? _history;
   AppDirectories? directories;
+
+  /// Now and then asks whether to support Lumtub; null until started.
+  SupportReminder? supportReminder;
   CacheManager? _cacheManager;
   PlayerSettingsStore? _settingsStore;
   ToolManager? _tools;

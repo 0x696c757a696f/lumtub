@@ -1000,6 +1000,17 @@ List<SettingEntry> aboutEntries(AppController controller) => [
             leading: const Icon(AppIcons.heartFill, color: Color(0xFFEA4AAA)),
             onTap: () => openSupport(context),
           ), subtitle: tr('sponsor donate support')),
+      SettingEntry(tr('Support reminder'), (context) {
+        final reminder = controller.supportReminder;
+        return StatefulBuilder(builder: (context, setState) => SwitchItem(
+              title: tr('Support reminder'),
+              subtitle: tr('Now and then, at most once every two months, ask whether to support Lumtub'),
+              leading: Icon(AppIcons.bell),
+              value: reminder?.enabled ?? false,
+              enabled: reminder != null,
+              onChanged: (v) => setState(() => reminder?.enabled = v),
+            ));
+      }, subtitle: tr('sponsor donate support reminder')),
       SettingEntry(tr('Source code'), (context) => NormalItem(
             title: tr('GitHub repository'),
             subtitle: 'github.com/0x696c757a696f/lumtub',

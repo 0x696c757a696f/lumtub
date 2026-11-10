@@ -28,7 +28,9 @@ extension LifecycleActions on AppController {
       final settingsStore = PlayerSettingsStore(directories);
       final preferencesStore = AppPreferencesStore(directories);
       // Separate files: read together rather than one after another.
-      final (_, _, _, settings, preferences, _, _) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load(), channelPlayback.load(), watchTime.load()).wait;
+      final supportReminder = SupportReminder(File('${directories.config.path}${Platform.pathSeparator}support_reminder.json'));
+      final (_, _, _, settings, preferences, _, _, _) = await (history.initialize(), notInterested.load(), libraryStore.load(), settingsStore.load(), preferencesStore.load(), channelPlayback.load(), watchTime.load(), supportReminder.load()).wait;
+      this.supportReminder = supportReminder..used(DateTime.now());
       AppLog.level = preferences.logLevel;
       this.channelPlayback = channelPlayback;
       this.watchTime = watchTime;

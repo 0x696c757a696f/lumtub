@@ -41,7 +41,7 @@ class SuperChatHighlightSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final on = controller.preferences.superChatHighlights;
     return IconButton(
-      tooltip: on ? tr('Super Chats in colour and pinned on top: on') : tr('Super Chats in colour and pinned on top: off'),
+      tooltip: on ? tr('Super Chats in color and pinned on top: on') : tr('Super Chats in color and pinned on top: off'),
       isSelected: on,
       icon: Icon(on ? AppIcons.handHeartFill : AppIcons.handHeart, size: 18),
       onPressed: () {

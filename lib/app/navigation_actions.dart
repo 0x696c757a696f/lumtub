@@ -135,6 +135,7 @@ extension NavigationActions on AppController {
     channel = ref;
     channelQuery = null;
     channelTab = ChannelTab.videos;
+    channelSort = ChannelSort.latest;
     channelVideos = VideoListLoader(() => repository.channelVideos(ref))
       ..addListener(_passOn('channel'))
       ..loadMore();
@@ -148,6 +149,7 @@ extension NavigationActions on AppController {
     if (repository == null || ref == null) return;
     _update(() {
       channelTab = tab;
+      channelSort = ChannelSort.latest;
       channelQuery = null;
       channelVideos?.dispose();
       channelVideos = null;
@@ -161,6 +163,21 @@ extension NavigationActions on AppController {
           ..addListener(_passOn('channel'))
           ..loadMore();
       }
+    });
+  }
+
+  /// Lists the open channel tab in [sort] order.
+  void setChannelSort(ChannelSort sort) {
+    final repository = _repository;
+    final ref = channel;
+    if (repository == null || ref == null || sort == channelSort) return;
+    _update(() {
+      channelSort = sort;
+      final tab = channelTab;
+      channelVideos?.dispose();
+      channelVideos = VideoListLoader(() => repository.channelTab(ref, tab, sort: sort))
+        ..addListener(_passOn('channel'))
+        ..loadMore();
     });
   }
 
@@ -199,7 +216,7 @@ extension NavigationActions on AppController {
           unawaited(channelPosts!.loadMore());
         } else {
           final tab = channelTab;
-          channelVideos = VideoListLoader(() => repository.channelTab(ref, tab))
+          channelVideos = VideoListLoader(() => repository.channelTab(ref, tab, sort: channelSort))
             ..addListener(_passOn('channel'))
             ..loadMore();
         }

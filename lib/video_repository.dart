@@ -6,6 +6,7 @@ import 'dart:isolate';
 import 'package:http/http.dart' as http;
 
 import 'app_directories.dart';
+import 'channel_sort.dart';
 import 'app_log.dart';
 import 'background_json.dart';
 import 'live_chat_repository.dart';
@@ -344,11 +345,11 @@ class VideoRepository {
 
   /// One tab of [channel]: uploads, Shorts, live streams, playlists or
   /// podcasts.
-  Listing channelTab(ChannelRef channel, ChannelTab tab) {
+  Listing channelTab(ChannelRef channel, ChannelTab tab, {ChannelSort sort = ChannelSort.latest}) {
     final url = '${channel.url}${tab.path ?? '/videos'}';
     final web = this.web;
     if (web != null && YoutubeListing.available && YoutubeListing.hasTab(tab)) {
-      return Listing(() => YoutubeListing.orElse(() => web.channelTab(channel.id, tab), () => _lines(listingArguments(url))), channel: channel);
+      return Listing(() => YoutubeListing.orElse(() => web.channelTab(channel.id, tab, sort: sort), () => _lines(listingArguments(url))), channel: channel);
     }
     if (tab != ChannelTab.playlists && tab != ChannelTab.podcasts) return _listing(url, channel: channel);
     return Listing(() => _expandingLines(url), channel: channel);

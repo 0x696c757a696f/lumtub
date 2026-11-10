@@ -3143,5 +3143,6 @@
   "The chosen format isn't available for this video; pick another": "该视频没有所选的格式，请换一个",
   "ffmpeg is needed for this download but was not found": "此下载需要 ffmpeg，但没有找到",
   "The download failed; see the logs for details": "下载失败，详情见日志",
-  "see the logs for details": "详情见日志"
+  "see the logs for details": "详情见日志",
+  "Oldest": "最早"
 }

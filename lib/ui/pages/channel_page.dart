@@ -9,6 +9,7 @@ import '../../app/app_controller.dart';
 import '../../app/posts_loader.dart';
 import '../../app/video_list_loader.dart';
 import '../../channel_avatar_lookup.dart';
+import '../../channel_sort.dart';
 import '../../community_posts.dart';
 import '../../models.dart';
 import '../../thumbnail_cache.dart';
@@ -112,6 +113,14 @@ class _ChannelPageState extends State<ChannelPage> {
             SizedBox(width: math.min(240, MediaQuery.sizeOf(context).width * 0.4), child: _ChannelSearchField(key: ValueKey((channel.id, controller.channelQuery == null)), controller: controller)),
           ]),
         )),
+        if (!searching && posts == null && (tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live))
+          SliverToBoxAdapter(child: Padding(
+            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
+            child: Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final value in ChannelSort.values)
+                ChoiceChip(label: Text(value.label), selected: controller.channelSort == value, onSelected: (_) => controller.setChannelSort(value)),
+            ]),
+          )),
         if (posts != null) ..._postSlivers(context, posts, wide, shown) else ..._listingSlivers(context, loader!, tab, searching),
         const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
       ]),

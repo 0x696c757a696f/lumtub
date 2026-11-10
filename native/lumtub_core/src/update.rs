@@ -132,8 +132,18 @@ fn parent(path: &str) -> &str {
 }
 
 /// A PowerShell single-quoted string.
+/// [value] as a PowerShell single-quoted string; PowerShell also takes the
+/// curly single quotes as quotes, so each is doubled too.
 fn quote(value: &str) -> String {
-    format!("'{}'", value.replace('\'', "''"))
+    let mut out = String::from("'");
+    for c in value.chars() {
+        if matches!(c, '\'' | '\u{2018}' | '\u{2019}' | '\u{201A}' | '\u{201B}') {
+            out.push(c);
+        }
+        out.push(c);
+    }
+    out.push('\'');
+    out
 }
 
 #[derive(Deserialize)]
@@ -317,6 +327,11 @@ pub unsafe extern "C" fn lumtub_update_script(json: *const u8, length: usize) ->
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn quoted_values_cannot_close_the_string() {
+        assert_eq!(super::quote("a'b\u{2019}c"), "'a''b\u{2019}\u{2019}c'");
+    }
+
     use super::*;
     use serde_json::json;
 

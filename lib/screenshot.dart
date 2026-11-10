@@ -65,15 +65,16 @@ Future<void> copyImageToClipboard(File file) async {
     return;
   }
   if (!Platform.isWindows) return;
-  final path = file.path.replaceAll("'", "''");
   try {
+    // The path (which holds the video's title) goes in by environment, never
+    // into the command text: PowerShell also reads curly quotes as quotes.
     await Process.run('powershell.exe', [
       '-STA',
       '-NoProfile',
       '-NonInteractive',
       '-Command',
-      "Add-Type -AssemblyName System.Windows.Forms,System.Drawing; \$i=[System.Drawing.Image]::FromFile('$path'); [System.Windows.Forms.Clipboard]::SetImage(\$i); \$i.Dispose()",
-    ]).timeout(const Duration(seconds: 10));
+      r"Add-Type -AssemblyName System.Windows.Forms,System.Drawing; $i=[System.Drawing.Image]::FromFile($env:LUMTUB_SHOT); [System.Windows.Forms.Clipboard]::SetImage($i); $i.Dispose()",
+    ], environment: {'LUMTUB_SHOT': file.path}).timeout(const Duration(seconds: 10));
   } catch (_) {
     // The file is saved; the clipboard is a convenience.
   }

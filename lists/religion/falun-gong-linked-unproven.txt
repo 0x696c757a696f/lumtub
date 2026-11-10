@@ -41,3 +41,19 @@
     status: unproven
 :qingtou-shijie | UCD6H5HohLmLzkdg_e6_M_6g | @yinlongli6276 | ^清透世界
     status: unproven
+:xin-wen-wu-ren-xing | ^新闻五人行 | ^新聞五人行
+    status: unproven
+:shi-shi-guan-xin | ^世事关心 | ^世事關心
+    status: unproven
+:fu-yao-hui-ke-shi | ^扶摇会客室 | ^扶搖會客室
+    status: unproven
+:tou-shi-jin-hua-lun | ^透视进化论 | ^透視進化論
+    status: unproven
+:shi-guang-zhi-mi | ^时光之谜 | ^時光之謎
+    status: unproven
+:women-xuyao-zhenxiang | ^我们需要真相 | ^我們需要真相 | ^We Need Truth
+    status: unproven
+:edge-of-wonder | ^Edge of Wonder
+    status: unproven
+:zhao-pei | ^赵培 | ^趙培
+    status: unproven

@@ -11,7 +11,7 @@
 :minghui | @MinghuiTV | ^明慧网 | ^明慧網 | ^Minghui | ^明慧
 :shen-yun | @shenyun | ^神韵艺术团 | ^神韻藝術團 | ^Shen Yun | ^神韵 | ^神韻
 :epoch-times | @epochtimesdigital | ^大纪元 | ^大紀元 | ^The Epoch Times | ^Epoch Times | ^EpochTV | ^Epoch Health
-:ntd | UCnk79D1LrciHiJLPYY_81hw | @NTDCHINESE | @ntdaptv | @ntdnews | @NTDSpanish | ^新唐人 | ^NTD Television | ^NTD
+:ntd | @NTDCHINESE | @ntdaptv | @ntdnews | @NTDSpanish | ^新唐人 | ^NTD Television | ^NTD
 :epoch-headlines | ^纪元头条 | ^紀元頭條
 :jinwen | ^中国禁闻 | ^中國禁聞
 :news-decoded | UCHY4xOBo9z03nceB6Pl-yzg | @News_Insight | ^新闻大破解 | ^新聞大破解
@@ -40,3 +40,11 @@
 :health-1-1 | ^健康1+1
 :ganjing-world | ^干净世界 | ^乾淨世界 | ^Gan Jing World | ^GanJing World
 :ucak-sbmzp79a4k2caqqodlq | UCAk-SBMZp79a4k2CAqqoDLQ
+
+:xin-wen-da-shi-ye | UCnk79D1LrciHiJLPYY_81hw | ^新闻大视野 | ^新聞大視野
+:bai-nian-zhen-xiang | ^百年真相
+:huan-qiu-zhi-ji | ^环球直击 | ^環球直擊
+:xin-wen-da-jia-tan | ^新闻大家谈 | ^新聞大家談
+:off-the-great-wall | ^Off the Great Wall
+:new-century-film | ^新世纪影视 | ^新世紀影視
+:fei-tian | ^飞天艺术学院 | ^飛天藝術學院 | ^飞天大学 | ^飛天大學 | ^Fei Tian College | ^Fei Tian Academy

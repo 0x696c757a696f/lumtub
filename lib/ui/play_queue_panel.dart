@@ -22,7 +22,7 @@ class PlayQueuePanel extends StatelessWidget {
         child: Row(children: [
           Text(tr('Play queue'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(width: 8),
-          Text(tr('{0}', [items.length]), style: TextStyle(color: context.colors.outline, fontSize: 12)),
+          Text('${items.length}', style: TextStyle(color: context.colors.outline, fontSize: 12)),
           const Spacer(),
           TextButton(onPressed: controller.clearQueue, child: Text(tr('Clear all'))),
         ]),

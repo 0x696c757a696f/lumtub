@@ -317,10 +317,13 @@ class DownloadManager extends ChangeNotifier {
   void retry(String id) {
     final task = taskFor(id);
     if (task == null || (task.status != DownloadStatus.failed && task.status != DownloadStatus.cancelled)) return;
+    // A failed download resumes its .part file, so the bar keeps its place until new progress arrives; a cancelled one was wiped.
+    if (task.status == DownloadStatus.cancelled) {
+      task.downloaded = 0;
+      task.total = null;
+    }
     task.status = DownloadStatus.queued;
     task.error = null;
-    task.downloaded = 0;
-    task.total = null;
     _changed();
   }
 

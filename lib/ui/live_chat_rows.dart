@@ -7,6 +7,7 @@ import '../l10n/l10n.dart';
 import '../live_chat.dart';
 import '../models.dart';
 import 'app_icons.dart';
+import 'common.dart';
 import 'emoji_text.dart';
 import 'live_chat_input.dart';
 import 'pages/channel_page.dart';
@@ -69,7 +70,7 @@ class ChatMessageRow extends StatelessWidget {
 
   Widget _build(BuildContext context, Color? tier) {
     final colors = context.colors;
-    final time = message.offset == null ? '' : chatClock(message.offset!);
+    final time = message.offset == null ? '' : formatPlaybackTime(message.offset!);
     final openAuthor = _openAuthor(controller, message);
     final name = message.author.isEmpty ? tr('System message') : message.author;
     final Widget picture = switch (message.kind) {
@@ -145,12 +146,6 @@ class ChatMessageRow extends StatelessWidget {
       ),
     ));
   }
-}
-
-/// `1:23` or `1:02:03`.
-String chatClock(Duration value) {
-  final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
-  return value.inHours > 0 ? '${value.inHours}:${value.inMinutes.remainder(60).toString().padLeft(2, '0')}:$seconds' : '${value.inMinutes}:$seconds';
 }
 
 /// The recent Super Chats of a live chat in a row over it, as on YouTube:

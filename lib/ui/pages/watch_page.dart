@@ -761,7 +761,7 @@ class _UpNext extends StatelessWidget {
       if (controller.playingList != null)
         PlayingListPanel(controller: controller, trailing: autoplay, shrinkWrap: shrinkWrap)
       else
-        _header(context, tr('Up next'), items.isEmpty ? null : tr('{0}', [items.length]), trailing: autoplay),
+        _header(context, tr('Up next'), items.isEmpty ? null : '${items.length}', trailing: autoplay),
       if (controller.playingList != null)
         const SizedBox.shrink()
       else if (items.isEmpty)

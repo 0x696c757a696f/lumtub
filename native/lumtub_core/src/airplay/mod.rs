@@ -18,11 +18,16 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
+use std::time::{Duration, Instant};
+
+/// How long a PIN may take to be typed after the TV shows it.
+const PAIRING_LIFE: Duration = Duration::from_secs(300);
 
 struct Pairing {
     conn: Conn,
     salt: Vec<u8>,
     server: Vec<u8>,
+    since: Instant,
 }
 
 #[derive(Default)]
@@ -102,11 +107,25 @@ pub fn handle(ask: &str) -> Json {
                     .map_err(|e| format!("could not reach the device: {e}"))?;
                 let (salt, server) = pairing::start(&mut conn)?;
                 let id = next();
-                state()
-                    .lock()
-                    .unwrap()
-                    .pairings
-                    .insert(id, Pairing { conn, salt, server });
+                // A new pairing replaces the earlier ones, which the TV has
+                // abandoned; they are closed outside the lock.
+                let old: Vec<Pairing> = {
+                    let mut s = state().lock().unwrap();
+                    let old = s.pairings.drain().map(|(_, p)| p).collect();
+                    s.pairings.insert(
+                        id,
+                        Pairing {
+                            conn,
+                            salt,
+                            server,
+                            since: Instant::now(),
+                        },
+                    );
+                    old
+                };
+                for p in old {
+                    p.conn.shutdown();
+                }
                 Ok(json!({ "pairing": id }))
             }
             Ask::PairFinish { pairing: id, pin } => {
@@ -116,6 +135,10 @@ pub fn handle(ask: &str) -> Json {
                     .pairings
                     .remove(&id)
                     .ok_or("pairing ended; start again")?;
+                if p.since.elapsed() > PAIRING_LIFE {
+                    p.conn.shutdown();
+                    return Err("pairing ended; start again".into());
+                }
                 let credentials = pairing::finish(&mut p.conn, &p.salt, &p.server, pin.trim())?;
                 p.conn.shutdown();
                 Ok(json!({ "credentials": credentials.text() }))
@@ -135,11 +158,15 @@ pub fn handle(ask: &str) -> Json {
                 };
                 let played = Player::play(address(&a)?, auth, v2, &url, position)?;
                 let id = next();
-                let mut s = state().lock().unwrap();
-                for (_, old) in s.players.drain() {
-                    old.close();
+                let old: Vec<Arc<Player>> = {
+                    let mut s = state().lock().unwrap();
+                    let old = s.players.drain().map(|(_, p)| p).collect();
+                    s.players.insert(id, Arc::new(played));
+                    old
+                };
+                for p in old {
+                    p.close();
                 }
-                s.players.insert(id, Arc::new(played));
                 Ok(json!({ "session": id }))
             }
             Ask::Status { session } => {
@@ -151,7 +178,8 @@ pub fn handle(ask: &str) -> Json {
             Ask::Rate { session, value } => player(session)?.rate(value).map(|_| json!({})),
             Ask::Seek { session, seconds } => player(session)?.seek(seconds).map(|_| json!({})),
             Ask::Stop { session } => {
-                if let Some(p) = state().lock().unwrap().players.remove(&session) {
+                let removed = state().lock().unwrap().players.remove(&session);
+                if let Some(p) = removed {
                     p.stop();
                 }
                 Ok(json!({}))

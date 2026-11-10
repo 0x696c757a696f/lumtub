@@ -29,11 +29,24 @@ pub struct Conn {
     buffer: Vec<u8>,
 }
 
-/// Where a message's head ends and how long its body is.
-pub fn message_end(data: &[u8]) -> Option<(usize, usize)> {
-    let head = data.windows(4).position(|w| w == b"\r\n\r\n")? + 4;
+const MAX_HEAD: usize = 64 << 10;
+const MAX_BODY: usize = 1 << 20;
+
+/// Where a message's head ends and how long its body is. `None` until the
+/// head is complete; an error when the head or body would be unreasonably big.
+pub fn message_end(data: &[u8]) -> Result<Option<(usize, usize)>, String> {
+    let Some(end) = data.windows(4).position(|w| w == b"\r\n\r\n") else {
+        if data.len() > MAX_HEAD {
+            return Err("the message head is too long".into());
+        }
+        return Ok(None);
+    };
+    let head = end + 4;
+    if head > MAX_HEAD {
+        return Err("the message head is too long".into());
+    }
     let text = String::from_utf8_lossy(&data[..head]);
-    let length = text
+    let length: usize = text
         .lines()
         .find_map(|l| {
             l.split_once(':')
@@ -41,7 +54,12 @@ pub fn message_end(data: &[u8]) -> Option<(usize, usize)> {
                 .and_then(|(_, v)| v.trim().parse().ok())
         })
         .unwrap_or(0);
-    Some((head, length))
+    if length > MAX_BODY {
+        return Err("the message body is too long".into());
+    }
+    head.checked_add(length)
+        .ok_or_else(|| "the message is too long".to_string())?;
+    Ok(Some((head, length)))
 }
 
 /// The first line and the headers of a message head.
@@ -117,7 +135,7 @@ impl Conn {
     fn answer(&mut self) -> Result<Response, String> {
         let mut chunk = [0u8; 16 << 10];
         loop {
-            if let Some((head, length)) = message_end(&self.buffer)
+            if let Some((head, length)) = message_end(&self.buffer)?
                 && self.buffer.len() >= head + length
             {
                 let (first, headers) = parse_head(&self.buffer[..head - 4]);
@@ -153,5 +171,30 @@ impl Conn {
 
     pub fn shutdown(&self) {
         let _ = self.stream.shutdown(std::net::Shutdown::Both);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn message_end_reads_length() {
+        let m = b"RTSP/1.0 200 OK\r\nContent-Length: 5\r\n\r\nhello";
+        assert_eq!(message_end(m).unwrap(), Some((m.len() - 5, 5)));
+        assert_eq!(message_end(b"RTSP/1.0 200 OK\r\nCont").unwrap(), None);
+    }
+
+    #[test]
+    fn message_end_rejects_huge_length() {
+        let m = b"HTTP/1.1 200 OK\r\nContent-Length: 18446744073709551615\r\n\r\n";
+        assert!(message_end(m).is_err());
+        let m = b"HTTP/1.1 200 OK\r\nContent-Length: 99999999\r\n\r\n";
+        assert!(message_end(m).is_err());
+    }
+
+    #[test]
+    fn message_end_rejects_endless_head() {
+        assert!(message_end(&vec![b'a'; MAX_HEAD + 1]).is_err());
     }
 }

@@ -463,10 +463,13 @@ fn block(
         return Err("laced frames");
     }
     let start = at + 3;
-    let time = (base as i64 + relative as i64).max(0) as u64;
+    let size = e.end.checked_sub(start).ok_or("short block")?;
+    let time = (base.min(i64::MAX as u64) as i64)
+        .saturating_add(relative as i64)
+        .max(0) as u64;
     found.push(Frame {
         at: start,
-        size: e.end - start,
+        size,
         time,
         key: key.unwrap_or(flags & 0x80 != 0),
     });
@@ -494,5 +497,18 @@ mod tests {
         )
         .unwrap();
         assert_eq!(unknown.end, usize::MAX);
+    }
+
+    #[test]
+    fn a_block_shorter_than_its_header_is_an_error() {
+        let cluster = [
+            0x1F, 0x43, 0xB6, 0x75, 0x8A, 0xE7, 0x81, 0x00, 0xA3, 0x82, 0x81, 0x00, 0xA3, 0x80,
+            0x81,
+        ];
+        assert!(frames(&cluster, 1).is_err());
+        let whole = [
+            0x1F, 0x43, 0xB6, 0x75, 0x89, 0xE7, 0x81, 0x00, 0xA3, 0x84, 0x81, 0x00, 0x00, 0x80,
+        ];
+        assert_eq!(frames(&whole, 1).unwrap().len(), 1);
     }
 }

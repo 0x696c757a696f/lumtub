@@ -114,10 +114,10 @@ void main() {
     final again = TranslationConfig.fromJson(jsonDecode(jsonEncode(config.toJson())));
     expect(again, config);
     expect(again.effectiveSpeechBaseUrl, 'https://api.openai.com/v1');
-    expect(speechKeyFor(config, const {'ai': 'sk'}), 'sk');
-    expect(speechReady(config, const {'ai': 'sk'}), isTrue);
+    expect(speechKeyFor(config, const {'ai@api.openai.com': 'sk'}), 'sk');
+    expect(speechReady(config, const {'ai@api.openai.com': 'sk'}), isTrue);
     expect(speechReady(const TranslationConfig(), const {'ai': 'sk'}), isFalse);
-    expect(speechReady(const TranslationConfig(), const {'speech': 'gsk'}), isTrue);
+    expect(speechReady(const TranslationConfig(), const {'speech@api.groq.com': 'gsk'}), isTrue);
     expect(config.cacheScope, const TranslationConfig(aiPreset: 'openai').cacheScope);
   });
 }

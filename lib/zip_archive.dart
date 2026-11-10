@@ -24,8 +24,9 @@ final _crcTable = List<int>.generate(256, (n) {
 /// Folders, links and paths leaving [into] are skipped; files the archive
 /// marks executable are made executable off Windows. Returns the paths
 /// written, relative to [into]. Throws a [FormatException] for a damaged
-/// archive or a failed CRC check.
-Future<List<String>> extractZip(File archive, Directory into, {String? Function(String name)? select}) async {
+/// archive, a failed CRC check or one over the limits: [maxEntries] files,
+/// [maxEntryBytes] unpacked for each and [maxTotalBytes] for all.
+Future<List<String>> extractZip(File archive, Directory into, {String? Function(String name)? select, int maxEntries = 20000, int maxEntryBytes = 1 << 30, int maxTotalBytes = 3 << 30}) async {
   final raf = await archive.open();
   try {
     final length = await raf.length();
@@ -45,12 +46,17 @@ Future<List<String>> extractZip(File archive, Directory into, {String? Function(
     final dirSize = end.getUint32(12, Endian.little);
     final dirOffset = end.getUint32(16, Endian.little);
     if (count == 0xFFFF || dirSize == 0xFFFFFFFF || dirOffset == 0xFFFFFFFF) throw const FormatException('Zip64 is not supported');
+    if (count > maxEntries) throw const FormatException('Too many files in the zip');
+    if (dirSize > 16 << 20 || dirSize < count * 46 || dirOffset + dirSize > length) throw const FormatException('Damaged zip directory');
     await raf.setPosition(dirOffset);
-    final directory = ByteData.sublistView(await raf.read(dirSize));
+    final read = await raf.read(dirSize);
+    if (read.length != dirSize) throw const FormatException('Damaged zip directory');
+    final directory = ByteData.sublistView(read);
     final bytes = directory.buffer.asUint8List(directory.offsetInBytes, directory.lengthInBytes);
     final written = <String>[];
     final executable = <String>[];
     var p = 0;
+    var unpacked = 0;
     for (var i = 0; i < count; i++) {
       if (p + 46 > directory.lengthInBytes || directory.getUint32(p, Endian.little) != 0x02014b50) throw const FormatException('Damaged zip directory');
       final madeOnUnix = directory.getUint8(p + 5) == 3;
@@ -62,6 +68,7 @@ Future<List<String>> extractZip(File archive, Directory into, {String? Function(
       final skip = nameLength + directory.getUint16(p + 30, Endian.little) + directory.getUint16(p + 32, Endian.little);
       final mode = madeOnUnix ? directory.getUint32(p + 38, Endian.little) >> 16 : 0;
       final offset = directory.getUint32(p + 42, Endian.little);
+      if (p + 46 + skip > directory.lengthInBytes) throw const FormatException('Damaged zip directory');
       final name = utf8.decode(bytes.sublist(p + 46, p + 46 + nameLength), allowMalformed: true).replaceAll('\\', '/');
       p += 46 + skip;
       if (name.endsWith('/') || (madeOnUnix && mode & 0xF000 != 0 && mode & 0xF000 != 0x8000)) continue;
@@ -69,11 +76,15 @@ Future<List<String>> extractZip(File archive, Directory into, {String? Function(
       if (path == null) continue;
       final parts = path.split('/');
       if (path.startsWith('/') || parts.any((part) => part.isEmpty || part == '.' || part == '..' || part.contains(':'))) continue;
+      if (size > maxEntryBytes || (unpacked += size) > maxTotalBytes) throw const FormatException('The zip unpacks to too much');
       await raf.setPosition(offset);
-      final local = ByteData.sublistView(await raf.read(30));
+      final header = await raf.read(30);
+      if (header.length != 30) throw const FormatException('Damaged zip entry');
+      final local = ByteData.sublistView(header);
       if (local.getUint32(0, Endian.little) != 0x04034b50) throw const FormatException('Damaged zip entry');
       final start = offset + 30 + local.getUint16(26, Endian.little) + local.getUint16(28, Endian.little);
       if (method != 0 && method != 8) throw FormatException('Unsupported zip compression $method');
+      if (start + packed > length) throw const FormatException('Damaged zip entry');
       final target = File([into.path, ...parts].join(Platform.pathSeparator));
       await target.parent.create(recursive: true);
       var checksum = 0;
@@ -83,13 +94,18 @@ Future<List<String>> extractZip(File archive, Directory into, {String? Function(
         Stream<List<int>> data = archive.openRead(start, start + packed);
         if (method == 8) data = data.transform(ZLibDecoder(raw: true));
         await for (final chunk in data) {
-          checksum = crc32(chunk, checksum);
           total += chunk.length;
+          // A bomb is stopped at the size the archive states, not after it.
+          if (total > size) throw FormatException('Zip entry $name is larger than it says');
+          checksum = crc32(chunk, checksum);
           sink.add(chunk);
         }
-      } finally {
+      } catch (_) {
         await sink.close();
+        if (await target.exists()) await target.delete();
+        rethrow;
       }
+      await sink.close();
       if (total != size || checksum != crc) {
         await target.delete();
         throw FormatException('Zip entry $name is damaged');

@@ -45,15 +45,16 @@ List<Widget> _items(BuildContext context, AppController controller) {
           Expanded(child: Text(text, style: TextStyle(color: colors.outline, fontSize: 12, height: 1.5))),
         ]),
       );
-  Widget keyItem(TranslationService of, {bool optional = false}) {
-    final saved = controller.translationKeys[of.name] ?? '';
+  Widget keyItem(TranslationService of, {bool optional = false, String? name}) {
+    final keyName = name ?? of.name;
+    final saved = controller.translationKeys[keyName] ?? '';
     return NormalItem(
       title: optional ? tr('API key (optional)') : tr('API key'),
       subtitle: saved.isEmpty ? tr('Not set') : tr('Set ({0})', [_masked(saved)]),
       leading: const Icon(AppIcons.keyFill),
       onTap: () async {
         final typed = await showDialog<String>(context: context, builder: (context) => _KeyDialog(title: tr('API key for {0}', [of.label]), initial: saved));
-        if (typed != null) await controller.saveTranslationKey(of, typed);
+        if (typed != null) await controller.saveApiKey(keyName, typed);
       },
     );
   }
@@ -158,7 +159,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
           if (typed != null) saveConfig((c) => c.copyWith(aiModel: typed.trim()));
         },
       ),
-      keyItem(TranslationService.ai, optional: ai.id == 'ollama' || ai.id == 'custom'),
+      keyItem(TranslationService.ai, optional: ai.id == 'ollama' || ai.id == 'custom', name: aiKeyName(config)),
     const SizedBox(height: 8),
     Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -228,7 +229,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     textItem(tr('Model'), config.speechModel, config.effectiveSpeechModel.isEmpty ? tr('Not set') : config.effectiveSpeechModel, AppIcons.cpuFill,
         config.speech.model, (v) => saveConfig((c) => c.copyWith(speechModel: v))),
     Builder(builder: (context) {
-      final own = controller.translationKeys['speech'] ?? '';
+      final own = controller.translationKeys[speechKeyName(config)] ?? '';
       final shared = own.isEmpty && speechKeyFor(config, controller.translationKeys).isNotEmpty;
       return NormalItem(
         title: config.speech.id == 'custom' ? tr('API key (optional)') : tr('API key'),
@@ -236,7 +237,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
         leading: const Icon(AppIcons.keyFill),
         onTap: () async {
           final typed = await showDialog<String>(context: context, builder: (context) => _KeyDialog(title: tr('Speech recognition API key'), initial: own));
-          if (typed != null) await controller.saveApiKey('speech', typed);
+          if (typed != null) await controller.saveApiKey(speechKeyName(config), typed);
         },
       );
     }),

@@ -143,7 +143,7 @@ class InvidiousStreams extends RelayServers {
         if (response.statusCode != 200 || data is! Map<String, dynamic>) {
           throw StateError(data is Map && data['error'] != null ? '${data['error']}' : 'HTTP ${response.statusCode}');
         }
-        return parseInvidiousVideo(candidate, data);
+        return await parseInvidiousVideo(candidate, data).withoutPrivateHosts();
       } catch (e) {
         lastError = e;
         logWarn('Invidious instance $candidate could not resolve $videoId: $e');

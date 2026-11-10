@@ -206,12 +206,41 @@ class AppUpdater extends ChangeNotifier {
       await sig.writeAsBytes(response.bodyBytes);
       final path = file.path, sigPath = sig.path;
       final error = await Isolate.run(() => verifyUpdate(file: path, name: name, signature: sigPath));
-      await sig.delete();
       if (error != null) throw FormatException(error);
     } catch (_) {
-      if (await file.exists()) await file.delete();
+      await _discard(file);
       rethrow;
     }
+  }
+
+  static Future<void> _discard(File file) async {
+    for (final f in [file, File('${file.path}.sig')]) {
+      try {
+        if (await f.exists()) await f.delete();
+      } catch (_) {}
+    }
+  }
+
+  /// Checks the package against the `.sig` saved at download once more,
+  /// right before it is installed, in case the file changed on disk since.
+  /// Deletes it and returns false when it no longer holds.
+  Future<bool> _recheck(File file) async {
+    final name = available?.asset?['name']?.toString() ?? file.path.split(Platform.pathSeparator).last;
+    final sigPath = '${file.path}.sig', path = file.path;
+    String? error;
+    try {
+      error = await File(sigPath).exists() ? await Isolate.run(() => verifyUpdate(file: path, name: name, signature: sigPath)) : 'The update signature is missing';
+    } catch (e) {
+      error = '$e';
+    }
+    if (error == null) return true;
+    logWarn('The downloaded Lumtub update failed its check before installing: $error');
+    await _discard(file);
+    rejected = available?.version;
+    ready = null;
+    installError = tr('see the logs for details');
+    notifyListeners();
+    return false;
   }
 
   /// Installs the downloaded package once this process has ended, and
@@ -225,6 +254,7 @@ class AppUpdater extends ChangeNotifier {
   Future<bool> install({bool relaunch = false}) async {
     final file = ready;
     if (file == null || !await file.exists()) return false;
+    if (!await _recheck(file)) return false;
     if (Platform.isAndroid) return _installApk(file);
     final executable = Platform.resolvedExecutable;
     final portable = file.path.endsWith('.zip');

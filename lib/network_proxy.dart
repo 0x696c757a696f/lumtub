@@ -38,10 +38,25 @@ class NetworkProxy {
   /// connection, null leaves yt-dlp to find the Windows proxy itself.
   String? ytDlpValue(ProxyMode mode) => mode == ProxyMode.off ? '' : url;
 
-  /// `host:port` for dart:io's `PROXY` rule.
+  /// `[user:password@]host:port` for dart:io's `PROXY` rule.
   String? get hostPort {
     final uri = url == null ? null : Uri.tryParse(url!);
-    return uri == null || uri.host.isEmpty || !uri.hasPort ? null : '${uri.host}:${uri.port}';
+    if (uri == null || uri.host.isEmpty || !uri.hasPort) return null;
+    return '${uri.userInfo.isEmpty ? '' : '${uri.userInfo}@'}${uri.host}:${uri.port}';
+  }
+
+  /// [arguments] for yt-dlp without the credentials of a `--proxy` address,
+  /// which would show in the process list; they go to the child as the
+  /// proxy environment variables instead, added to [environment].
+  static (List<String>, Map<String, String>?) hideCredentials(List<String> arguments, Map<String, String>? environment) {
+    final at = arguments.indexOf('--proxy');
+    if (at < 0 || at + 1 >= arguments.length || !RegExp(r'//[^@/]*@').hasMatch(arguments[at + 1])) return (arguments, environment);
+    final value = arguments[at + 1];
+    final rest = [...arguments]..removeRange(at, at + 2);
+    return (rest, {
+      ...?environment,
+      for (final name in ['ALL_PROXY', 'HTTPS_PROXY', 'HTTP_PROXY', 'all_proxy', 'https_proxy', 'http_proxy']) name: value,
+    });
   }
 
   /// Normalises what a person typed, such as `127.0.0.1:7890` or
@@ -53,7 +68,7 @@ class NetworkProxy {
     final uri = Uri.tryParse(value);
     if (uri == null || uri.host.isEmpty || !uri.hasPort || uri.port <= 0) return null;
     if (!{'http', 'socks5', 'socks5h', 'socks4', 'socks4a'}.contains(uri.scheme)) return null;
-    final login = uri.scheme.startsWith('socks') && uri.userInfo.isNotEmpty ? '${uri.userInfo}@' : '';
+    final login = uri.userInfo.isNotEmpty ? '${uri.userInfo}@' : '';
     return '${uri.scheme}://$login${uri.host.contains(':') ? '[${uri.host}]' : uri.host}:${uri.port}';
   }
 

@@ -143,8 +143,16 @@ class Skin {
       }(),
   };
 
-  /// The file a picture or font named in the skin is in.
-  String file(String name) => builtIn ? '$folder/$name' : '$folder${folder.contains('\\') ? '\\' : '/'}${name.replaceAll('/', folder.contains('\\') ? '\\' : '/')}';
+  /// Whether [name] stays inside the skin's folder: a relative path of plain
+  /// parts, without `..`, a drive or a leading slash.
+  static bool insideFolder(String name) {
+    final parts = name.split(RegExp(r'[\\/]'));
+    return name.isNotEmpty && parts.every((part) => part.isNotEmpty && part != '.' && part != '..' && !part.contains(':') && !part.contains('\u0000'));
+  }
+
+  /// The file a picture or font named in the skin is in, or null when the
+  /// name leads out of the skin's folder.
+  String? file(String name) => !insideFolder(name) ? null : builtIn ? '$folder/$name' : '$folder${folder.contains('\\') ? '\\' : '/'}${name.replaceAll('/', folder.contains('\\') ? '\\' : '/')}';
 
   void warn(String message) => warnings.add(message);
 
@@ -382,7 +390,9 @@ sealed class SkinPaint {
       );
     }
     if (value['image'] case final String name) {
-      return ImagePaint(skin.file(name), builtIn: skin.builtIn, fit: _str(value['fit']) ?? 'cover', opacity: (_num(value['opacity']) ?? 1).clamp(0, 1).toDouble());
+      final path = skin.file(name);
+      if (path == null) return _bad(skin, 'image "$name" must be a file inside the skin folder');
+      return ImagePaint(path, builtIn: skin.builtIn, fit: _str(value['fit']) ?? 'cover', opacity: (_num(value['opacity']) ?? 1).clamp(0, 1).toDouble());
     }
     if (value['pattern'] case final Map<String, Object?> m) {
       final color = skin.colorOf(m['color'], 'pattern.color');

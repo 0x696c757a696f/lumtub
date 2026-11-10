@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import '../subtitle_cues.dart';
 
@@ -53,7 +54,8 @@ String toVtt(List<SubtitleCue> cues) {
 }
 
 /// Serves the subtitles of what is cast on this PC's network address. The
-/// TV asks for them itself; Chromecast's receiver needs CORS to read them.
+/// TV asks for them itself; Chromecast's receiver needs CORS to read them,
+/// so any page may, but only given the unguessable address.
 class CastSubtitleServer {
   CastSubtitleServer._();
   static final instance = CastSubtitleServer._();
@@ -72,7 +74,10 @@ class CastSubtitleServer {
       server.listen(_answer);
     }
     final lines = cuesFrom(cues, offset);
-    final name = 'sub${++_serial}';
+    // A random path part, so another device on the network cannot guess the address.
+    final random = Random.secure();
+    final token = List.generate(16, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+    final name = '$token/sub${++_serial}';
     _files['/$name.vtt'] = (type: 'text/vtt; charset=utf-8', body: utf8.encode(toVtt(lines)));
     _files['/$name.srt'] = (type: 'application/x-subrip; charset=utf-8', body: utf8.encode(toSrt(lines)));
     while (_files.length > 8) {

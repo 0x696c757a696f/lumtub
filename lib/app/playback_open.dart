@@ -483,6 +483,7 @@ extension PlaybackOpening on AppController {
         logError('The graphics device keeps getting lost; leaving the video output as it is', reason);
         _notice(tr('The graphics driver keeps resetting; please restart Lumtub'));
       }
+      _remakingOutput = false;
       return;
     }
     final again = _outputRemade.isNotEmpty;

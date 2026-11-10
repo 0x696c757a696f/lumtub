@@ -6,6 +6,7 @@ import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 
+import 'app_directories.dart';
 import 'native_core.dart';
 import 'app_log.dart';
 
@@ -26,9 +27,10 @@ class WatchTime {
   static String dayOf(DateTime time) => '${time.year.toString().padLeft(4, '0')}-${time.month.toString().padLeft(2, '0')}-${time.day.toString().padLeft(2, '0')}';
 
   Future<void> load() async {
+    if (!await file.exists()) return;
     try {
       final data = jsonDecode(await file.readAsString());
-      if (data is! Map) return;
+      if (data is! Map) throw const FormatException('Not a JSON object');
       for (final MapEntry(:key, :value) in (data['days'] is Map ? data['days'] as Map : const {}).entries) {
         if (value is! Map) continue;
         _days['$key'] = {for (final MapEntry(key: channel, value: seconds) in value.entries) if (seconds is num && seconds > 0) '$channel': seconds.round()};
@@ -36,8 +38,10 @@ class WatchTime {
       for (final MapEntry(:key, :value) in (data['names'] is Map ? data['names'] as Map : const {}).entries) {
         if (value is String) _names['$key'] = value;
       }
-    } catch (_) {
-      // None yet, or damaged: start empty.
+    } catch (e) {
+      _days.clear();
+      _names.clear();
+      await setBrokenFileAside(file, e);
     }
   }
 

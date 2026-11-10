@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'app_directories.dart';
 import 'background_json.dart';
 import 'models.dart';
 import 'l10n/l10n.dart';
@@ -64,7 +65,7 @@ class LibraryStore {
     if (!await file.exists()) return;
     try {
       final data = await decodeJsonInBackground(await file.readAsString());
-      if (data is! Map) return;
+      if (data is! Map) throw const FormatException('Not a JSON object');
       favorites.addAll(_items(data['favorites']));
       watchLater.addAll(_items(data['watchLater']));
       for (final raw in data['playlists'] is List ? data['playlists'] as List : const []) {
@@ -98,8 +99,17 @@ class LibraryStore {
         }
         finishedVersion++;
       }
-    } catch (_) {
-      // A damaged file starts an empty library rather than blocking startup.
+    } catch (e) {
+      // A damaged file starts an empty library rather than blocking startup;
+      // it is kept aside so the next save does not overwrite it.
+      favorites.clear();
+      watchLater.clear();
+      playlists.clear();
+      channels.clear();
+      channelGroups.clear();
+      liveVideos.clear();
+      _progress.clear();
+      await setBrokenFileAside(file, e);
     }
   }
 

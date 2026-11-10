@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'channel_sort.dart';
 import 'native_core.dart';
 import 'video_repository.dart';
 import 'youtube_web.dart';
@@ -29,7 +30,7 @@ class YoutubeListing {
 
   /// The uploads, Shorts, live streams or playlists of channel
   /// [channelId].
-  Stream<String> channelTab(String channelId, ChannelTab tab) => _pages('browse', {
+  Stream<String> channelTab(String channelId, ChannelTab tab, {ChannelSort sort = ChannelSort.latest}) => _pages('browse', {
         'browseId': channelId,
         'params': switch (tab) {
           ChannelTab.shorts => 'EgZzaG9ydHPyBgUKA5oBAA%3D%3D',
@@ -37,7 +38,7 @@ class YoutubeListing {
           ChannelTab.playlists => 'EglwbGF5bGlzdHPyBgQKAkIA',
           _ => 'EgZ2aWRlb3PyBgQKAjoA',
         },
-      });
+      }, sort: sort == ChannelSort.latest ? null : sort.chip);
 
   /// The videos of playlist [id].
   Stream<String> playlist(String id) => _pages('browse', {'browseId': 'VL$id'});
@@ -46,12 +47,14 @@ class YoutubeListing {
   static bool hasTab(ChannelTab tab) => tab == ChannelTab.videos || tab == ChannelTab.shorts || tab == ChannelTab.live || tab == ChannelTab.playlists;
 
   // A results page runs to a megabyte.
-  static Future<Object?> _readInBackground(List<int> bytes) => Isolate.run(() {
+  static Future<Object?> _readInBackground(List<int> bytes, {bool chips = false}) => Isolate.run(() {
         final core = NativeCore.instance!;
-        return jsonDecode(core.take(core.withBytes(bytes, core.youtubeListing)) ?? 'null');
+        final read = jsonDecode(core.take(core.withBytes(bytes, core.youtubeListing)) ?? 'null');
+        if (chips && read is Map<String, dynamic>) read['sortChips'] = sortChipTokens(jsonDecode(utf8.decode(bytes)));
+        return read;
       });
 
-  Stream<String> _pages(String endpoint, Map<String, Object> first, {String? region, Set<String>? followed}) async* {
+  Stream<String> _pages(String endpoint, Map<String, Object> first, {String? region, Set<String>? followed, String? sort}) async* {
     final seen = <String>{};
     // Rows (a channel's playlist sections) show their first few items;
     // each whole row is read after the page that showed it.
@@ -85,8 +88,18 @@ class YoutubeListing {
           )
           .timeout(const Duration(seconds: 20));
       if (response.statusCode != 200) throw StateError('YouTube $endpoint returned HTTP ${response.statusCode}');
-      final read = await _readInBackground(response.bodyBytes);
+      final read = await _readInBackground(response.bodyBytes, chips: sort != null && page == 0);
       if (read is! Map<String, dynamic>) throw const FormatException('Unexpected YouTube response');
+      if (sort != null && page == 0) {
+        // The sorted list is the chip's own; the default page is shown only
+        // when YouTube offers no such chip.
+        final token = (read['sortChips'] as Map?)?[sort];
+        if (token is String) {
+          tokens.add(token);
+          body = {'continuation': token};
+          continue;
+        }
+      }
       var added = 0;
       for (final entry in (read['entries'] as List).cast<Map<String, dynamic>>()) {
         final id = entry['id'];

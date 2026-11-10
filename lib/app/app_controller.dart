@@ -49,6 +49,7 @@ import '../cast/cast_subtitles.dart';
 import '../cast/cast_controller.dart';
 import '../channel_avatar_lookup.dart';
 import '../channel_playback.dart';
+import '../channel_sort.dart';
 import '../speech_subtitles.dart';
 import '../video_summary.dart';
 import '../watch_time.dart';
@@ -224,6 +225,7 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// The channel page's tab, and its posts when that tab is open.
   ChannelTab channelTab = ChannelTab.videos;
+  ChannelSort channelSort = ChannelSort.latest;
   PostsLoader? channelPosts;
   late final _posts = CommunityPosts(_http, signIn: comments);
 

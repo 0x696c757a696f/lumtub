@@ -407,6 +407,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.hideWatched,
               onChanged: (v) => savePrefs(prefs.copyWith(hideWatched: v)),
             )),
+        SettingEntry(tr('Hide members-only videos'), (context) => SwitchItem(
+              title: tr('Hide members-only videos'),
+              subtitle: tr('Videos only channel members can watch are left out of lists'),
+              leading: _icon(AppIcons.eyeSlash),
+              value: prefs.hideMembersOnly,
+              onChanged: (v) => savePrefs(prefs.copyWith(hideMembersOnly: v)),
+            ), subtitle: tr('members only membership')),
       ],
     SettingsCategory.subscriptions => [
         SettingEntry(tr('Refresh automatically when opening Subscriptions'), (context) => SwitchItem(

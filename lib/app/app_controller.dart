@@ -110,6 +110,7 @@ import 'video_list_loader.dart';
 import '../l10n/l10n.dart';
 import '../friendly_error.dart';
 import '../support_reminder.dart';
+import '../channel_handle.dart';
 
 part 'explore_controller.dart';
 part 'navigation_actions.dart';

@@ -276,11 +276,17 @@ class _CommentTile extends StatelessWidget {
     final small = TextStyle(color: colors.outline, fontSize: 12);
     final thread = loader.replies[comment.id];
     final channelId = comment.channelId;
-    final canOpen = channelId != null && ChannelRef.isValidId(channelId);
+    final known = channelId != null && ChannelRef.isValidId(channelId);
+    // Some answers (the TV app's) name the author only by @handle.
+    final canOpen = known || comment.author.startsWith('@');
     void openAuthor() {
       // From a page over the app (a post's comments), go back to it first.
       if (ModalRoute.of(context) case final route? when !route.isFirst) Navigator.of(context).pop();
-      controller.openChannel(ChannelRef(channelId!, comment.author.replaceFirst(RegExp(r'^@'), '')));
+      if (known) {
+        controller.openChannel(ChannelRef(channelId, comment.author.replaceFirst(RegExp(r'^@'), '')));
+      } else {
+        unawaited(controller.openChannelByHandle(comment.author));
+      }
     }
     return Padding(
       padding: EdgeInsetsDirectional.only(top: 8, bottom: 8, start: reply ? 44 : 0),

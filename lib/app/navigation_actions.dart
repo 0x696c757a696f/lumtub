@@ -125,6 +125,17 @@ extension NavigationActions on AppController {
   }
 
   /// Opens [ref]'s page with its uploads.
+  /// Opens the channel of [handle] (`@name`), looking its id up first; for
+  /// lists that name a channel only by its handle.
+  Future<void> openChannelByHandle(String handle) async {
+    final id = await channelIdOfHandle(_http, handle);
+    if (id == null) {
+      _notice(tr('Could not find the channel {0}', [handle]));
+      return;
+    }
+    openChannel(ChannelRef(id, handle.replaceFirst(RegExp(r'^@'), '')));
+  }
+
   void openChannel(ChannelRef ref) {
     final repository = _repository;
     if (repository == null) return;

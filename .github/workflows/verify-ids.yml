@@ -13,11 +13,4 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - run: |
-          python3 .github/scripts/verify_ids.py lists "$RUNNER_TEMP/verified"
-          cat "$RUNNER_TEMP/verified.md" >> "$GITHUB_STEP_SUMMARY"
-          cat "$RUNNER_TEMP/verified.md"
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: verified-ids
-          path: ${{ runner.temp }}/verified.*
+      - run: python3 .github/scripts/verify_ids.py @chinainsights4458 @epochtimesdigital @ntdaptv @NTDSpanish @taiwankailasa1314 @cgtn @NTDCHINESE

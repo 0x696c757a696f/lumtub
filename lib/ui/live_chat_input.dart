@@ -82,9 +82,9 @@ class _ChatMessageTranslateButtonState extends State<ChatMessageTranslateButton>
         child: Stack(children: [
           widget.child,
           if (_hover && widget.message.text.trim().isNotEmpty)
-            Positioned(
+            PositionedDirectional(
               top: 0,
-              right: 0,
+              end: 0,
               child: ValueListenableBuilder(
                 valueListenable: asked,
                 builder: (context, on, _) => IconButton(

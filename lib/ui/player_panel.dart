@@ -32,11 +32,11 @@ class _Panel extends StatelessWidget {
     final theme = Theme.of(context);
     final size = MediaQuery.sizeOf(context);
     return Align(
-      alignment: Alignment.centerRight,
+      alignment: AlignmentDirectional.centerEnd,
       child: Material(
         elevation: 2,
         color: theme.colorScheme.surface,
-        shape: Border(left: BorderSide(color: theme.colorScheme.outlineVariant)),
+        shape: BorderDirectional(start: BorderSide(color: theme.colorScheme.outlineVariant)),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
           width: width.clamp(0, size.width - 24).toDouble(),

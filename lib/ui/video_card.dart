@@ -327,8 +327,8 @@ class PlaylistCard extends StatelessWidget {
                   ))
                 else
                   ColoredBox(color: colors.surfaceContainerHighest),
-                Positioned(
-                  right: 0,
+                PositionedDirectional(
+                  end: 0,
                   top: 0,
                   bottom: 0,
                   width: 96,
@@ -583,7 +583,7 @@ class _VideoCardState extends State<VideoCard> {
                   PositionedDirectional(end: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
                 if (item.membersOnly) const PositionedDirectional(start: 8, bottom: 8, child: MembersOnlyBadge()),
                 _ProgressBar(item: item),
-                if (_hovered) Positioned(top: 8, right: 8, child: _QuickActions(item: item, onMore: _menu)),
+                if (_hovered) PositionedDirectional(top: 8, end: 8, child: _QuickActions(item: item, onMore: _menu)),
               ]),
             ),
           ),
@@ -1027,7 +1027,10 @@ class MetaLine extends StatelessWidget {
       lead: [if (upcomingStart != null) upcomingStart, if (item.channel.isNotEmpty) item.channel].join(' · '),
       tail: [
         if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
-        if (!item.isLive && !item.isUpcoming && item.published != null) formatAgo(item.published!),
+        if (!item.isLive && !item.isUpcoming && item.published != null)
+          formatAgo(item.published!)
+        else if (!item.isLive && !item.isUpcoming && item.age != null)
+          item.age!,
         if (extra != null) extra,
       ].join(' · '),
       style: style,

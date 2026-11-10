@@ -547,6 +547,12 @@ jobs:
           echo "liblumtub_core.so: $(stat -c %s "$core") bytes"
           echo "LUMTUB_CORE_DLL=$core" >> "$GITHUB_ENV"
 
+      # Real servers: Cloudflare must agree on X25519MLKEM768 in every
+      # certificate mode; what YouTube's hosts agree on is printed.
+      - name: Linux - post-quantum TLS against real servers
+        if: matrix.package_arch == 'x64'
+        run: cargo test --manifest-path native/lumtub_core/Cargo.toml --release --lib tls::tests::live -- --ignored --nocapture --test-threads 1
+
       # GitHub's release downloads time out now and then; keep them between runs.
       - name: Linux - cache downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

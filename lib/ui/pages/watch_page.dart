@@ -11,6 +11,7 @@ import '../../app/app_controller.dart';
 import '../../appearance_settings.dart' show bundledFont;
 import '../../models.dart';
 import '../../player_settings.dart';
+import '../../timestamp_link.dart';
 import '../../youtube_account.dart' show VideoRating;
 import '../comments_view.dart';
 import '../cast_ui.dart';
@@ -340,6 +341,21 @@ class _Toolbar extends StatelessWidget {
           if (!item.isLive)
             IconButton(tooltip: tr('AI summary'), icon: Icon(AppIcons.sparkle), onPressed: () => showVideoSummary(context, controller)),
           IconButton(tooltip: tr('Copy link'), icon: Icon(AppIcons.link), onPressed: () => copyText(context, item.url, tr('Link copied'))),
+          if (!item.isLive && controller.player != null)
+            StreamBuilder<bool>(
+              stream: controller.player!.stream.position.map((p) => p.inSeconds > 0).distinct(),
+              initialData: controller.player!.state.position.inSeconds > 0,
+              builder: (context, started) => started.data != true
+                  ? const SizedBox.shrink()
+                  : IconButton(
+                      tooltip: tr('Copy link at current time'),
+                      icon: Icon(AppIcons.clock),
+                      onPressed: () {
+                        final link = timestampLink(item.id, controller.player?.state.position ?? Duration.zero);
+                        if (link != null) copyText(context, link, tr('Link copied'));
+                      },
+                    ),
+            ),
           IconButton(tooltip: tr('Open in browser'), icon: Icon(AppIcons.arrowSquareOut), onPressed: () => openExternal(item.url)),
           IconButton(tooltip: tr('Keyboard shortcuts'), icon: Icon(AppIcons.keyboard), onPressed: () => showShortcutHelp(context, controller.preferences)),
         ],

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/l10n.dart';
+import '../../support_reminder.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../app_icons.dart';
 import '../skin_paint.dart';
 
 const sponsorsPage = 'https://github.com/sponsors/0x696c757a696f';
+
+/// Afdian (爱发电), which takes Alipay and WeChat Pay.
+const afdianPage = 'https://afdian.com/a/linmuqingfeng';
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
 
 /// A crypto address and the networks it takes.
@@ -28,6 +32,30 @@ const List<_Address> _stablecoins = [
 
 /// 关于 › 支持开发: GitHub Sponsors first, then crypto and other ways to help.
 Future<void> openSupport(BuildContext context) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => const _SupportPage()));
+
+/// Asks, now and then, whether to support Lumtub. Answering in any way
+/// counts as asked; "Don't ask again" turns the reminder off.
+Future<void> askForSupport(BuildContext context, SupportReminder reminder) async {
+  reminder.asked(DateTime.now());
+  final answer = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      icon: const Icon(AppIcons.heartFill, color: Color(0xFFEA4AAA)),
+      title: Text(tr('Enjoying Lumtub?')),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Text(tr('Lumtub is free and open source, with no ads and no tracking. If it is useful to you, a donation helps keep it maintained and keep up with changes on YouTube. This comes up at most once every two months.'), style: const TextStyle(height: 1.5)),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(tr("Don't ask again"))),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('Later'))),
+        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(tr('Support'))),
+      ],
+    ),
+  );
+  if (answer == false) reminder.enabled = false;
+  if (answer == true && context.mounted) await openSupport(context);
+}
 
 class _SupportPage extends StatelessWidget {
   const _SupportPage();
@@ -111,6 +139,12 @@ class _Hero extends StatelessWidget {
             icon: Icon(AppIcons.heart, size: 20),
             label: Text(tr('Sponsor on GitHub')),
           ),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(foregroundColor: colors.onPrimaryContainer, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
+            onPressed: () => openExternal(afdianPage),
+            icon: Icon(AppIcons.heart, size: 20),
+            label: const Text('爱发电 Afdian'),
+          ),
           Text(tr('Monthly or one-time, any amount'), style: text.bodyMedium?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
         ]),
       ]),
@@ -173,7 +207,7 @@ class _AddressRow extends StatelessWidget {
     return InkWell(
       onTap: () => copyText(context, address.address, tr('Address copied')),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
         child: Row(children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

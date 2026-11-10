@@ -137,6 +137,10 @@ pub struct Video {
     pub live: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub members_only: bool,
+    /// How long ago it was published, as YouTube wrote it in the language
+    /// asked for ("3 days ago").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub age: Option<String>,
 }
 
 /// Whether a listed video carries YouTube's members-only badge, whose style
@@ -191,6 +195,7 @@ fn compact(node: &Map<String, Value>) -> Option<Video> {
         view_count: count(&text_of(node.get("viewCountText"))),
         live: badges.contains("直播") || badges.to_uppercase().contains("LIVE") || watching,
         members_only: members_only_in(node),
+        age: Some(text_of(node.get("publishedTimeText"))).filter(|t| !t.is_empty()),
     })
 }
 
@@ -218,6 +223,14 @@ fn lockup(value: &Value) -> Option<Video> {
     // The first row names the channel; the next holds views and age.
     let channel = parts.first().cloned().unwrap_or_default();
     let view_count = parts.iter().skip(1).find_map(|part| count(part));
+    // After the views comes the age, which holds no count of its own.
+    let age = parts
+        .iter()
+        .skip(1)
+        .skip_while(|part| count(part).is_none())
+        .skip(1)
+        .find(|part| count(part).is_none())
+        .cloned();
     let mut badges = Vec::new();
     fn badges_in(node: &Value, out: &mut Vec<String>) {
         match node {
@@ -245,6 +258,7 @@ fn lockup(value: &Value) -> Option<Video> {
             .iter()
             .any(|b| b.contains("直播") || b.to_uppercase() == "LIVE"),
         members_only: members_only(value),
+        age,
     })
 }
 
@@ -679,7 +693,7 @@ fn original_audio(formats: &[Value]) -> Option<&str> {
 /// The `acont` of a format's `xtags`: original, dubbed, dubbed-auto or
 /// descriptive. They come as `key=value:key=value` text, or as base64 of
 /// a protobuf list of key and value strings.
-fn audio_content(xtags: &str) -> Option<String> {
+pub(crate) fn audio_content(xtags: &str) -> Option<String> {
     if let Some(value) = xtags
         .split(':')
         .find_map(|pair| pair.strip_prefix("acont="))
@@ -1109,7 +1123,8 @@ mod tests {
             {"compactVideoRenderer": {
                 "videoId": "aaaaaaaaaaa", "title": {"simpleText": "Old"},
                 "longBylineText": {"runs": [{"text": "Chan", "navigationEndpoint": {"browseEndpoint": {"browseId": "UCabc"}}}]},
-                "lengthText": {"simpleText": "10:00"}, "viewCountText": {"simpleText": "1,000 views"}
+                "lengthText": {"simpleText": "10:00"}, "viewCountText": {"simpleText": "1,000 views"},
+                "publishedTimeText": {"simpleText": "2 weeks ago"}
             }},
             {"lockupViewModel": {
                 "contentId": "bbbbbbbbbbb", "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
@@ -1143,7 +1158,8 @@ mod tests {
                 duration: Some(600),
                 view_count: Some(1000),
                 live: false,
-                members_only: false
+                members_only: false,
+                age: Some("2 weeks ago".into())
             }
         );
         assert_eq!(
@@ -1156,10 +1172,12 @@ mod tests {
                 duration: Some(3723),
                 view_count: Some(120_000),
                 live: false,
-                members_only: false
+                members_only: false,
+                age: Some("3天前".into())
             }
         );
         assert!(videos[2].live);
+        assert_eq!(videos[2].age, None);
         assert!(videos.iter().all(|v| !v.members_only));
     }
 

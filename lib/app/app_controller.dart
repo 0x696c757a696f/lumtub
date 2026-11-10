@@ -23,6 +23,7 @@ import '../app_preferences.dart';
 import '../play_queue.dart';
 import '../video_languages.dart';
 import '../playback_failure.dart';
+import '../skip_silence.dart';
 import '../playback_recovery.dart';
 import '../library_store.dart';
 import '../secure_store.dart';
@@ -49,6 +50,7 @@ import '../cast/cast_subtitles.dart';
 import '../cast/cast_controller.dart';
 import '../channel_avatar_lookup.dart';
 import '../channel_playback.dart';
+import '../channel_sort.dart';
 import '../speech_subtitles.dart';
 import '../video_summary.dart';
 import '../watch_time.dart';
@@ -107,6 +109,8 @@ import '../youtube_player_probe.dart';
 import 'video_list_loader.dart';
 import '../l10n/l10n.dart';
 import '../friendly_error.dart';
+import '../support_reminder.dart';
+import '../channel_handle.dart';
 
 part 'explore_controller.dart';
 part 'navigation_actions.dart';
@@ -119,6 +123,7 @@ part 'diagnostics.dart';
 part 'playback_open.dart';
 part 'playback_events.dart';
 part 'playback_controls.dart';
+part 'skip_silence_actions.dart';
 part 'queue_actions.dart';
 part 'video_details.dart';
 part 'cast_actions.dart';
@@ -135,6 +140,9 @@ enum PageMode { home, explore, subscriptions, history, playlists, downloads, set
 class AppController extends ChangeNotifier with _ExploreState {
   HistoryStore? _history;
   AppDirectories? directories;
+
+  /// Now and then asks whether to support Lumtub; null until started.
+  SupportReminder? supportReminder;
   CacheManager? _cacheManager;
   PlayerSettingsStore? _settingsStore;
   ToolManager? _tools;
@@ -220,6 +228,7 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   /// The channel page's tab, and its posts when that tab is open.
   ChannelTab channelTab = ChannelTab.videos;
+  ChannelSort channelSort = ChannelSort.latest;
   PostsLoader? channelPosts;
   late final _posts = CommunityPosts(_http, signIn: comments);
 
@@ -413,6 +422,7 @@ class AppController extends ChangeNotifier with _ExploreState {
   }
 
   int _playSerial = 0;
+  final _silence = SilenceSkipper();
   String? _query;
   final _playerSubscriptions = <StreamSubscription<Object?>>[];
   double _volumeBeforeMute = 100;
@@ -715,6 +725,10 @@ class AppController extends ChangeNotifier with _ExploreState {
   /// a network that is down.
   static bool _serversMayHelp(FailureKind kind) =>
       const {FailureKind.rateLimited, FailureKind.botCheck, FailureKind.challenge, FailureKind.forbidden, FailureKind.unknown}.contains(kind);
+
+  /// [_serversMayHelp] for [kind], and the user allows falling back to
+  /// Piped and Invidious when YouTube refuses.
+  bool _mayFallBack(FailureKind kind) => settings.relayFallback && _serversMayHelp(kind);
 
   bool _remakingOutput = false;
   final _outputRemade = <DateTime>[];

@@ -18,6 +18,7 @@ import '../../app_preferences.dart';
 import '../../appearance_settings.dart';
 import '../../decoder_status.dart';
 import '../../encrypted_dns.dart';
+import '../../native_core.dart';
 import '../../network_proxy.dart';
 import '../../piped_streams.dart';
 import '../../player_settings.dart';
@@ -41,6 +42,7 @@ import '../theme.dart';
 import 'account_settings.dart';
 import 'relay_servers_page.dart';
 import 'settings_subpages.dart';
+import 'subscription_import_dialog.dart';
 import 'translation_settings_page.dart';
 import 'watch_stats_page.dart';
 import '../../l10n/l10n.dart';
@@ -406,6 +408,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               value: prefs.hideWatched,
               onChanged: (v) => savePrefs(prefs.copyWith(hideWatched: v)),
             )),
+        SettingEntry(tr('Hide members-only videos'), (context) => SwitchItem(
+              title: tr('Hide members-only videos'),
+              subtitle: tr('Videos only channel members can watch are left out of lists'),
+              leading: _icon(AppIcons.eyeSlash),
+              value: prefs.hideMembersOnly,
+              onChanged: (v) => savePrefs(prefs.copyWith(hideMembersOnly: v)),
+            ), subtitle: tr('members only membership')),
       ],
     SettingsCategory.subscriptions => [
         SettingEntry(tr('Refresh automatically when opening Subscriptions'), (context) => SwitchItem(
@@ -434,6 +443,15 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               subtitle: tr('Following {0} channels', [controller.library?.channels.length ?? 0]),
               leading: _icon(AppIcons.arrowsClockwise),
               onTap: () => controller.library?.refreshFeed(force: true),
+            )),
+        SettingEntry(tr('Import from file'), (context) => NormalItem(
+              title: tr('Import from file'),
+              subtitle: tr('Import subscriptions from a NewPipe, FreeTube or Google Takeout file; nothing is uploaded'),
+              leading: _icon(AppIcons.downloadSimple),
+              onTap: () {
+                final library = controller.library;
+                if (library != null) importSubscriptionsFromFile(context, library);
+              },
             )),
       ],
     SettingsCategory.video => [
@@ -567,6 +585,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
                 },
               ),
             ), subtitle: tr('Piped Invidious server rate limit instance instance 429')),
+        SettingEntry(tr('Fall back to Piped or Invidious when YouTube refuses'), (context) => SwitchItem(
+              title: tr('Fall back to Piped or Invidious when YouTube refuses'),
+              subtitle: tr('When YouTube answers with a bot check, a rate limit or a refusal, play the video from a public Piped or Invidious server instead. That server learns which video you watch. When off, the error is shown instead'),
+              leading: _icon(AppIcons.hardDrives),
+              value: settings.relayFallback,
+              onChanged: (v) => save(settings.copyWith(relayFallback: v)),
+            ), subtitle: tr('Piped Invidious fallback privacy bot check 429')),
         SettingEntry(tr('Piped servers'), (context) => NormalItem(
               title: tr('Piped servers'),
               subtitle: settings.playbackSource == PlaybackSource.pipedCustom ? tr('Current: {0}', [settings.pipedServer]) : tr('Current: automatically picks the fastest server. You can run a speed test or choose manually; the list updates daily'),
@@ -643,6 +668,25 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
             onTap: () => pickFromDialog<String>(context, title: tr('Certificate authorities'), value: settings.certificateRoots, values: roots, onSelected: (value) => save(settings.copyWith(certificateRoots: value))),
           );
         }, subtitle: tr('certificate CA root TLS HTTPS Mozilla Google Chrome Firefox')),
+        SettingEntry(tr('Post-quantum encryption'), (context) {
+          final modes = [
+            ('prefer', tr('Prefer (default)')),
+            ('off', tr('Off')),
+            ('require', tr('Require')),
+          ];
+          return NormalItem(
+            title: tr('Post-quantum encryption'),
+            subtitle: tr("Now: {0}. HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) offer the X25519MLKEM768 key exchange first, which a future quantum computer can't break; servers without it use a classic exchange. Require refuses servers without it and TLS 1.2. Video players' and yt-dlp's own connections are not covered", [labelOf(modes, settings.postQuantum)]),
+            leading: _icon(AppIcons.lockSimple),
+            onTap: () => pickFromDialog<String>(context, title: tr('Post-quantum encryption'), value: settings.postQuantum, values: modes, onSelected: (value) => save(settings.copyWith(postQuantum: value))),
+          );
+        }, subtitle: tr('post-quantum quantum ML-KEM Kyber X25519MLKEM768 TLS 1.3 key exchange')),
+        SettingEntry(tr('Key exchange by site'), (context) => NormalItem(
+              title: tr('Key exchange by site'),
+              subtitle: tr('What each site agreed on the last time Lumtub connected to it'),
+              leading: _icon(AppIcons.key),
+              onTap: () => _showTlsSeen(context),
+            ), subtitle: tr('post-quantum TLS key exchange X25519MLKEM768 sites hosts')),
         SettingEntry(tr('Buffering mode'), (context) => NormalItem(
               title: tr('Buffering mode'),
               subtitle: tr('Current: {0}. Memory only, nothing written to disk', [labelOf(_cacheModes, settings.cacheMode)]),
@@ -718,6 +762,13 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.gauge),
               onTap: () => openPlaySpeed(context, controller),
             ), subtitle: tr('Playback speed')),
+        SettingEntry(tr('Skip silence'), (context) => SwitchItem(
+              title: tr('Skip silence'),
+              subtitle: tr('Plays silent stretches of a video faster. Not used for livestreams; the speed menu may show 4X while it skips'),
+              leading: _icon(AppIcons.gauge),
+              value: settings.skipSilence,
+              onChanged: (v) => save(settings.copyWith(skipSilence: v)),
+            ), subtitle: tr('Silence skip silent pauses faster')),
         SettingEntry(tr('Remember speed and volume per channel'), (context) => SwitchItem(
               title: tr('Remember speed and volume per channel'),
               subtitle: tr("The speed and volume you set on a channel's videos are used again the next time that channel plays"),
@@ -1577,6 +1628,36 @@ Future<String?> _editDnsUrl(BuildContext context, String current) async {
 }
 
 /// Looks www.youtube.com up over [server] and says how it went.
+Future<void> _showTlsSeen(BuildContext context) => showDialog<void>(
+      context: context,
+      builder: (context) {
+        final seen = NativeCore.tlsSeen();
+        final colors = context.colors;
+        return AlertDialog(
+          title: Text(tr('Key exchange by site')),
+          content: SizedBox(
+            width: dialogWidth(context, 480),
+            child: seen.isEmpty
+                ? Text(tr('No HTTPS connection yet since Lumtub started'))
+                : ListView(
+                    shrinkWrap: true,
+                    children: [
+                      for (final site in seen)
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(site.postQuantum ? AppIcons.lockSimple : AppIcons.lockOpen, size: 18, color: site.postQuantum ? colors.primary : colors.outline),
+                          title: Text(site.host),
+                          subtitle: Text(site.postQuantum ? tr('{0}, post-quantum', [site.group]) : tr('{0}, not post-quantum', [site.group])),
+                        ),
+                    ],
+                  ),
+          ),
+          actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('Close')))],
+        );
+      },
+    );
+
 Future<void> _testDns(BuildContext context, DnsServer server) async {
   final messenger = ScaffoldMessenger.of(context);
   messenger.showSnackBar(SnackBar(content: Text(tr('Testing {0}…', [server.name])), duration: const Duration(seconds: 10)));

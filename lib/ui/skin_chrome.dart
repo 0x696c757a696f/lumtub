@@ -443,6 +443,10 @@ class SkinMenuBarView extends StatefulWidget {
   /// bar leaves them clickable when it reports the caption.
   static final menusAbove = ValueNotifier<Rect?>(null);
 
+  /// The bar whose menus [menusAbove] holds, so a bar going away clears
+  /// only its own and never those of the bar that replaced it.
+  static Object? _menusAboveOwner;
+
   @override
   State<SkinMenuBarView> createState() => _SkinMenuBarViewState();
 }
@@ -453,8 +457,11 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
 
   @override
   void dispose() {
-    if (widget.bar.top || widget.embedded) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => SkinMenuBarView.menusAbove.value = null);
+    if (SkinMenuBarView._menusAboveOwner == this) {
+      SkinMenuBarView._menusAboveOwner = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (SkinMenuBarView._menusAboveOwner == null) SkinMenuBarView.menusAbove.value = null;
+      });
     }
     super.dispose();
   }
@@ -462,10 +469,11 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
   void _report() {
     if (!mounted || !(widget.bar.top || widget.embedded)) return;
     final first = _first.currentContext?.findRenderObject();
-    final last = _last.currentContext?.findRenderObject();
+    final last = (_last.currentContext ?? _first.currentContext)?.findRenderObject();
     if (first is! RenderBox || last is! RenderBox || !first.hasSize || !last.hasSize) return;
     final start = first.localToGlobal(Offset.zero);
     final end = last.localToGlobal(last.size.bottomRight(Offset.zero));
+    SkinMenuBarView._menusAboveOwner = this;
     SkinMenuBarView.menusAbove.value = Rect.fromPoints(start, end);
   }
 
@@ -559,7 +567,7 @@ class _SkinMenuBarViewState extends State<SkinMenuBarView> {
                 ),
             ],
           )),
-          if (widget.clock) Padding(padding: const EdgeInsets.only(right: 10), child: _Clock(color: bar.text)),
+          if (widget.clock) Padding(padding: const EdgeInsetsDirectional.only(end: 10), child: _Clock(color: bar.text)),
         ]),
       ),
     );

@@ -1,0 +1,31 @@
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter/material.dart';
+
+import '../../app/library_controller.dart';
+import '../../app/subscription_import_actions.dart';
+import '../../l10n/l10n.dart';
+import '../../subscription_import.dart';
+
+/// Asks for a NewPipe, FreeTube or Google Takeout file, follows its channels
+/// and says what happened. The file is read here and goes nowhere else.
+Future<void> importSubscriptionsFromFile(BuildContext context, LibraryController library) async {
+  final messenger = ScaffoldMessenger.of(context);
+  void say(String message) => messenger.showSnackBar(SnackBar(content: Text(message)));
+  final SubscriptionImport data;
+  try {
+    final file = await openFile(acceptedTypeGroups: [
+      XTypeGroup(label: tr('Subscription export'), extensions: const ['json', 'db', 'csv', 'opml', 'xml', 'txt'])
+    ]);
+    if (file == null) return;
+    data = parseSubscriptions(await file.readAsBytes());
+  } catch (_) {
+    say(tr('Could not open the file'));
+    return;
+  }
+  if (data.channels.isEmpty) {
+    say(tr('No YouTube channels were found in this file. Use a NewPipe, FreeTube or Google Takeout subscriptions export.'));
+    return;
+  }
+  final outcome = followImported(library, data);
+  say(tr('Imported: {0} added, {1} already followed, {2} skipped', [outcome.added, outcome.already, outcome.skipped]));
+}

@@ -31,6 +31,9 @@ class VideoItem {
   /// Listed with YouTube's members-only badge: only the channel's members
   /// can watch it.
   final bool membersOnly;
+  /// How long ago it was published, as YouTube wrote it in the interface's
+  /// language, for lists that give no time to work it out from.
+  final String? age;
 
   bool get isLive => liveStatus == 'is_live';
   /// What a card shows: people watching for a live stream, else views.
@@ -54,6 +57,7 @@ class VideoItem {
     this.description,
     this.isShortListing = false,
     this.membersOnly = false,
+    this.age,
   });
 
   /// This video credited to [ref], keeping the known name when [ref] has none.
@@ -74,6 +78,7 @@ class VideoItem {
         description: description,
         isShortListing: isShortListing,
         membersOnly: membersOnly,
+        age: age,
       );
 
   /// This video with [status] as its `live_status`, such as `is_live`.
@@ -94,6 +99,7 @@ class VideoItem {
         description: description,
         isShortListing: isShortListing,
         membersOnly: membersOnly,
+        age: age,
       );
 
   /// This video with [seconds] as its length.
@@ -114,6 +120,7 @@ class VideoItem {
         description: description,
         isShortListing: isShortListing,
         membersOnly: membersOnly,
+        age: age,
       );
 
   ChannelRef? get channelRef => channelId == null ? null : ChannelRef(channelId!, channel);
@@ -150,6 +157,7 @@ class VideoItem {
         if (description != null) 'description': description,
         if (isShortListing) 'is_short': true,
         if (membersOnly) 'availability': 'subscriber_only',
+        if (age != null) 'age': age,
       };
 
   // Compiled once: every listing entry and saved item comes through here.
@@ -198,6 +206,7 @@ class VideoItem {
       description: description is String && description.isNotEmpty ? description.substring(0, description.length < 120 ? description.length : 120) : null,
       isShortListing: map['is_short'] == true || listed.contains('/shorts/'),
       membersOnly: map['availability'] == 'subscriber_only',
+      age: map['age'] is String ? map['age'] as String : null,
     );
   }
 

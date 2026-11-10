@@ -84,12 +84,13 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 ### 🔐 账号只在你需要时使用
 - 支持 Google、电视验证码或浏览器登录，用于订阅、播放列表、点赞、评论、社区帖子、投票，以及你有权观看的**会员专属视频**。
 - 登录凭据加密保存在你的电脑上：Windows 用 TPM 或 Windows Hello 保护，Linux 和 macOS 用系统钥匙串。
+- **抗量子加密**：Lumtub 自己发起的 HTTPS 连接（YouTube 页面和数据、视频中转、加密 DNS、更新）在服务器支持时使用 X25519MLKEM768 混合密钥交换，YouTube 已经支持。设置 › 网络里能看到每个网站商定的方式，也可以改成必须或关闭。播放器和 yt-dlp 自己的连接不在其中。
 
 ### 其他内置功能
 这些在别的 YouTube 客户端里也有，在这里都需要手动开启：
 - **SponsorBlock**、**DeArrow** 标题和缩略图、**Return YouTube Dislike**、隐藏所有 Shorts，以及隐藏标注为 AI 生成的视频和社区 AI 垃圾内容名单上频道的 AI 过滤。
 - 代理（系统、HTTP 或 SOCKS5）、可选的加密 DNS，以及作为备用的 Piped 或 Invidious 服务器。
-- **72 种界面语言**，包括从右到左的文字，默认跟随系统语言。欢迎在 [Weblate](https://hosted.weblate.org/engage/lumtub/) 上改进翻译。
+- **82 种界面语言**，包括从右到左的文字，默认跟随系统语言。欢迎在 [Weblate](https://hosted.weblate.org/engage/lumtub/) 上改进翻译。
 - **皮肤**：换掉整个界面的样子，内置二十三套，从千禧年的光泽风格、Frutiger Aero 风景到黑白点阵，还可以用皮肤自己的标题栏和菜单栏。人人都能做皮肤：写一个带注释的 `skin.jsonc` 就行，颜色对比度会自动检查。见 [skins/README.md](skins/README.md)。
 - 十套配色，浅色深色，可选护眼暖光、字体和卡片大小。
 - 屏蔽任意频道，或只是不再推荐它。
@@ -172,13 +173,14 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 赞助支付的是开发它的时间。
 
 <a href="https://github.com/sponsors/0x696c757a696f"><img src="https://img.shields.io/badge/%E5%9C%A8_GitHub_%E4%B8%8A%E8%B5%9E%E5%8A%A9-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="在 GitHub 上赞助" height="44"></a>
+<a href="https://afdian.com/a/linmuqingfeng"><img src="https://img.shields.io/badge/%E5%9C%A8%E7%88%B1%E5%8F%91%E7%94%B5%E4%B8%8A%E8%B5%9E%E5%8A%A9-%E2%9D%A4-946CE6?style=for-the-badge" alt="在爱发电上赞助" height="44"></a>
 
 **每月赞助者**决定接下来做什么：让 Windows 安装时不再警告的代码签名证书，以及 Apple 公证。<br>
 任何金额的一次性赞助同样欢迎。应用里的 设置 › 关于 › 支持开发 也是同一个页面。
 
 </div>
 
-其他赞助方式（包括加密货币）见 [SPONSORING.md](SPONSORING.md)。
+国内用户可以用[爱发电](https://afdian.com/a/linmuqingfeng)，支持支付宝和微信支付，每月 6、15、30 或 100 元，名字会写进 [支持者名单](SPONSORING.md#supporters)。其他赞助方式（包括加密货币）见 [SPONSORING.md](SPONSORING.md)。
 
 不方便出钱？给仓库点个 ⭐，推荐给朋友，[报告问题或提建议](https://github.com/0x696c757a696f/lumtub/issues)，[给屏蔽列表推荐频道](lists/README.md#怎么贡献)，或者[帮忙翻译 Lumtub](https://hosted.weblate.org/engage/lumtub/)，都很有帮助。
 

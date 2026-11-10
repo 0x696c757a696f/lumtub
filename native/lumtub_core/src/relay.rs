@@ -84,7 +84,7 @@ pub trait Fetch: Send + Sync {
 /// HTTP with the app's TLS, one client per proxy and certificate list.
 #[derive(Default)]
 pub struct Web {
-    clients: Mutex<HashMap<(Option<String>, crate::roots::Roots), reqwest::Client>>,
+    clients: Mutex<HashMap<(Option<String>, crate::tls::Tls), reqwest::Client>>,
 }
 
 /// How long YouTube may take to start answering.
@@ -92,8 +92,8 @@ const ANSWER_WAIT: Duration = Duration::from_secs(20);
 
 impl Web {
     fn client(&self, proxy: &Option<String>) -> Result<reqwest::Client, String> {
-        let roots = crate::roots::current();
-        let key = (proxy.clone(), roots);
+        let tls = crate::tls::current();
+        let key = (proxy.clone(), tls);
         let mut clients = self.clients.lock().unwrap_or_else(|e| e.into_inner());
         if let Some(client) = clients.get(&key) {
             return Ok(client.clone());
@@ -119,7 +119,7 @@ impl Web {
         // The system's certificate store unless another list was chosen, as
         // libmpv and the rest of the app: a proxy or security tool that
         // inspects HTTPS installs its own root there.
-        let client = crate::roots::apply(builder, roots)
+        let client = crate::tls::apply(builder, tls)
             .build()
             .map_err(|e| e.to_string())?;
         clients.insert(key, client.clone());

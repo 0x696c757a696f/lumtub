@@ -167,7 +167,7 @@ extension PlaybackOpening on AppController {
           final failure = PlaybackFailure.classify(['$e']);
           if (!failure.retryable) {
             // libmpv's ytdl_hook would ask YouTube again and fail the same way.
-            if (AppController._serversMayHelp(failure.kind)) return await _fallBack(item, serial, failure, start: start, play: play);
+            if (_mayFallBack(failure.kind)) return await _fallBack(item, serial, failure, start: start, play: play);
             if (serial == _playSerial) _fail(item, failure);
             return false;
           }
@@ -203,6 +203,14 @@ extension PlaybackOpening on AppController {
       _openedDirect = direct != null ? item.id : null;
       final split = live && video != null && relay != null && _liveSplitOff != item.id ? _liveSplitAddress(video, relay) : null;
       _liveSplit = split != null ? item.id : null;
+      // Which TLS carries the streams: only the core's relay uses the
+      // post-quantum setting.
+      final path = split != null || _relayed == item.id
+          ? (relay is NativeRelay ? "the core's relay" : "the Dart relay")
+          : direct != null
+              ? "libmpv's own connection"
+              : "libmpv and yt-dlp's own connections";
+      logInfo('Streams of ${item.id} go through $path');
       final platform = player.platform;
       if (platform is NativePlayer) {
         // A live stream plays from one HLS stream with picture and sound

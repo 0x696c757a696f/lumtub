@@ -105,5 +105,6 @@ VideoItem videoFromCore(Map<String, dynamic> v) {
     url: 'https://www.youtube.com/watch?v=$id',
     liveStatus: v['live'] == true ? 'is_live' : null,
     membersOnly: v['membersOnly'] == true,
+    age: v['age'] as String?,
   );
 }

@@ -421,8 +421,16 @@ class PlayerSettings {
   /// The certificate authorities the app's HTTPS trusts: `system` (the
   /// system's store), `mozilla` or `google`.
   final String certificateRoots;
+  /// The post-quantum key exchange on the core's connections: 'prefer',
+  /// 'off' or 'require'.
+  final String postQuantum;
   /// Where playback streams come from: YouTube directly by default.
   final PlaybackSource playbackSource;
+  /// Play from public Piped or Invidious servers when YouTube refuses a
+  /// video, which tells them what is watched.
+  final bool relayFallback;
+  /// Skip silent stretches by playing them faster.
+  final bool skipSilence;
   /// The Piped API server for [PlaybackSource.pipedCustom].
   final String pipedServer;
   /// The Invidious instance for [PlaybackSource.invidiousCustom].
@@ -496,7 +504,10 @@ class PlayerSettings {
     this.dnsServer = '',
     this.dnsCustomUrl = '',
     this.certificateRoots = 'system',
+    this.postQuantum = 'prefer',
     this.playbackSource = PlaybackSource.youtube,
+    this.relayFallback = true,
+    this.skipSilence = false,
     this.pipedServer = '',
     this.invidiousServer = '',
     this.directRendering = 'auto',
@@ -566,7 +577,10 @@ class PlayerSettings {
     String? dnsServer,
     String? dnsCustomUrl,
     String? certificateRoots,
+    String? postQuantum,
     PlaybackSource? playbackSource,
+    bool? relayFallback,
+    bool? skipSilence,
     String? pipedServer,
     String? invidiousServer,
     String? directRendering,
@@ -628,7 +642,10 @@ class PlayerSettings {
         dnsServer: dnsServer ?? this.dnsServer,
         dnsCustomUrl: dnsCustomUrl ?? this.dnsCustomUrl,
         certificateRoots: certificateRoots ?? this.certificateRoots,
+        postQuantum: postQuantum ?? this.postQuantum,
         playbackSource: playbackSource ?? this.playbackSource,
+        relayFallback: relayFallback ?? this.relayFallback,
+        skipSilence: skipSilence ?? this.skipSilence,
         pipedServer: pipedServer ?? this.pipedServer,
         invidiousServer: invidiousServer ?? this.invidiousServer,
         directRendering: directRendering ?? this.directRendering,
@@ -694,7 +711,10 @@ class PlayerSettings {
         'dnsServer': dnsServer,
         'dnsCustomUrl': dnsCustomUrl,
         'certificateRoots': certificateRoots,
+        'postQuantum': postQuantum,
         'playbackSourceV2': playbackSource.name,
+        'relayFallback': relayFallback,
+        'skipSilence': skipSilence,
         'pipedServer': pipedServer,
         'invidiousServer': invidiousServer,
         'directRendering': directRendering,
@@ -868,6 +888,8 @@ class PlayerSettings {
       deArrowThumbnails: raw['deArrowThumbnails'] == true,
       sponsorCategories: categories,
       sponsorNotice: raw['sponsorNotice'] != false,
+      relayFallback: raw['relayFallback'] != false,
+      skipSilence: raw['skipSilence'] == true,
       sponsorCut: raw['sponsorCut'] == true,
       cachePath: path != null && path.trim().isNotEmpty ? path : null,
       cacheLimitGb: raw['cacheLimitGb'] == null ? null : number('cacheLimitGb', 1, 1, 100),
@@ -880,6 +902,7 @@ class PlayerSettings {
       dnsServer: raw['dnsServer']?.toString() ?? '',
       dnsCustomUrl: raw['dnsCustomUrl']?.toString() ?? '',
       certificateRoots: const ['mozilla', 'google'].contains(raw['certificateRoots']) ? raw['certificateRoots'] as String : 'system',
+      postQuantum: const ['off', 'require'].contains(raw['postQuantum']) ? raw['postQuantum'] as String : 'prefer',
       // V2: the default became direct YouTube (2026-10-21); the old key held
       // the old default for everyone who never chose.
       playbackSource: _enumByName(PlaybackSource.values, raw['playbackSourceV2'], PlaybackSource.youtube),

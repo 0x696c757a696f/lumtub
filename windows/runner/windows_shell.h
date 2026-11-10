@@ -32,6 +32,7 @@ class WindowsShell {
   void ShowFromTray();
   void HideToTray();
   void ShowTrayMenu();
+  bool AddTrayIcon();
   void RemoveTrayIcon();
   // Shows the icon resource |id| on the window, the taskbar and the tray.
   void SetAppIcon(int id);

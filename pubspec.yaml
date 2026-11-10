@@ -41,6 +41,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/l10n/
+    # Settings › Appearance › App icon (lib/windows_shell.dart).
+    - assets/app_icons/
     # Built-in skins and the template users start from (skins/README.md).
     - skins/rice-paper/
     - skins/candlelight/

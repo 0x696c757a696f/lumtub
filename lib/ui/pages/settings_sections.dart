@@ -1429,7 +1429,7 @@ class _AdvancedOptions extends StatelessWidget {
         option('volume-max', '${settings.volumeMax}', tr('Max volume'), tr('Immediately')),
         option('audio-device', settings.audioDevice, tr('Audio output device'), tr('Immediately')),
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
             child: OutlinedButton.icon(onPressed: onReset, icon: Icon(AppIcons.arrowCounterClockwise), label: Text(tr('Restore all player defaults'))),

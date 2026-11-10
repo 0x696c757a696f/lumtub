@@ -127,7 +127,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     const SizedBox(height: 8),
     Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Align(alignment: Alignment.centerLeft, child: _TestButton(controller: controller)),
+      child: Align(alignment: AlignmentDirectional.centerStart, child: _TestButton(controller: controller)),
     ),
     header(tr('AI interface')),
     tip(tr('AI translation and AI summary share this one interface (OpenAI-compatible /chat/completions). Text is sent only when you use AI translation or click AI summary.')),
@@ -161,7 +161,7 @@ List<Widget> _items(BuildContext context, AppController controller) {
     const SizedBox(height: 8),
     Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Align(alignment: Alignment.centerLeft, child: _TestButton(controller: controller, ai: true)),
+      child: Align(alignment: AlignmentDirectional.centerStart, child: _TestButton(controller: controller, ai: true)),
     ),
     if (service == TranslationService.ai) ...[
       header(tr('AI translation')),

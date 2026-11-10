@@ -18,11 +18,11 @@ class PlayQueuePanel extends StatelessWidget {
     final items = controller.playQueue.items;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
       Padding(
-        padding: const EdgeInsets.fromLTRB(4, 0, 0, 4),
+        padding: const EdgeInsetsDirectional.fromSTEB(4, 0, 0, 4),
         child: Row(children: [
           Text(tr('Play queue'), style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(width: 8),
-          Text(tr('{0}', [items.length]), style: TextStyle(color: context.colors.outline, fontSize: 12)),
+          Text('${items.length}', style: TextStyle(color: context.colors.outline, fontSize: 12)),
           const Spacer(),
           TextButton(onPressed: controller.clearQueue, child: Text(tr('Clear all'))),
         ]),
@@ -38,7 +38,7 @@ class PlayQueuePanel extends StatelessWidget {
           return Row(key: ValueKey(item.id), children: [
             Expanded(child: CompactVideoTile(item: item, thumbnails: controller.thumbnailDirectory, onOpen: () => controller.playQueued(item))),
             IconButton(tooltip: tr('Remove from queue'), visualDensity: VisualDensity.compact, onPressed: () => controller.removeQueued(item.id), icon: Icon(AppIcons.x, size: 18)),
-            ReorderableDragStartListener(index: i, child: Padding(padding: EdgeInsets.only(right: 4), child: Icon(AppIcons.equals, size: 20))),
+            ReorderableDragStartListener(index: i, child: Padding(padding: EdgeInsetsDirectional.only(end: 4), child: Icon(AppIcons.equals, size: 20))),
           ]);
         },
       ),

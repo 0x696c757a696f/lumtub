@@ -173,7 +173,7 @@ class _TranslationViewState extends State<TranslationView> {
     switch (widget.style) {
       case TranslationStyle.quote:
         return Container(
-          padding: const EdgeInsets.only(left: 8),
+          padding: const EdgeInsetsDirectional.only(start: 8),
           decoration: BoxDecoration(border: Border(left: BorderSide(color: colors.primary.withValues(alpha: 0.6), width: 2))),
           child: child,
         );

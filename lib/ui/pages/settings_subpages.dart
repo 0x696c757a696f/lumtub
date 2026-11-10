@@ -373,7 +373,7 @@ Future<void> openPlaySpeed(BuildContext context, AppController controller) {
         ),
         ListTile(title: Text(tr('Default speed')), subtitle: Text('${trimSpeed(settings.defaultSpeed)}x')),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 8, 0),
           child: Row(children: [
             Text(tr('Speed list'), style: Theme.of(context).textTheme.titleMedium),
             const Spacer(),
@@ -817,7 +817,7 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
       }, audioDelayMs: _audioDelay));
 
   Widget _slider(String label, int value, int min, int max, String suffix, ValueChanged<int> onChanged, VoidCallback onReset) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 4, 8, 4),
         child: Row(children: [
           SizedBox(width: 72, child: Text(label)),
           Expanded(

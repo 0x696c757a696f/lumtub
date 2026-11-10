@@ -83,7 +83,7 @@ class ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
       decoration: BoxDecoration(color: colors.errorContainer, borderRadius: AppStyle.cardRadius),
       child: Row(children: [
         Icon(AppIcons.warningCircle, color: colors.onErrorContainer, size: 20),
@@ -127,12 +127,23 @@ class PageHeader extends StatelessWidget {
       );
 }
 
+String twoDigits(int n) => n.toString().padLeft(2, '0');
+
 String formatPlaybackTime(Duration value) {
   final hours = value.inHours;
-  final minutes = value.inMinutes.remainder(60).toString().padLeft(2, '0');
-  final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
+  final minutes = twoDigits(value.inMinutes.remainder(60));
+  final seconds = twoDigits(value.inSeconds.remainder(60));
   return hours > 0 ? '$hours:$minutes:$seconds' : '${value.inMinutes}:$seconds';
 }
+
+/// Like [formatPlaybackTime] but with the minutes always two digits: `01:23`.
+String formatClock(Duration d) {
+  final h = d.inHours, m = d.inMinutes % 60, s = d.inSeconds % 60;
+  return h > 0 ? '$h:${twoDigits(m)}:${twoDigits(s)}' : '${twoDigits(m)}:${twoDigits(s)}';
+}
+
+/// `09:05`.
+String formatHourMinute(DateTime t) => '${twoDigits(t.hour)}:${twoDigits(t.minute)}';
 
 /// How long ago [date] was, as YouTube puts it under a video: 3 days ago.
 String formatAgo(DateTime date, {DateTime? now}) {
@@ -156,7 +167,7 @@ String formatDate(DateTime date) => tr('{1}/{2}/{0}', [date.year, date.month, da
 /// An exact local start time for an upcoming stream.
 String formatScheduledStart(DateTime date) {
   final local = date.toLocal();
-  final time = '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  final time = formatHourMinute(local);
   return '${formatDate(local)} $time';
 }
 

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 
 import '../skins/skin.dart';
+import 'common.dart';
 import 'scene_props.dart';
 import 'theme.dart';
 
@@ -105,7 +106,7 @@ class _SkinDeckViewState extends State<SkinDeckView> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    _Screen(deck: d, time: '${_clock(_dragging == null ? _position : _duration * _dragging!)} / ${_clock(_duration)}', title: narrow ? '' : widget.title),
+                    _Screen(deck: d, time: '${formatClock(_dragging == null ? _position : _duration * _dragging!)} / ${formatClock(_duration)}', title: narrow ? '' : widget.title),
                     const SizedBox(height: 7),
                     _Groove(
                       deck: d,
@@ -125,12 +126,6 @@ class _SkinDeckViewState extends State<SkinDeckView> {
       ),
     );
   }
-}
-
-String _clock(Duration d) {
-  final h = d.inHours, m = d.inMinutes % 60, s = d.inSeconds % 60;
-  String two(int n) => n.toString().padLeft(2, '0');
-  return h > 0 ? '$h:${two(m)}:${two(s)}' : '${two(m)}:${two(s)}';
 }
 
 /// The outline of each deck shape inside [rect].

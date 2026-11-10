@@ -397,7 +397,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
     return Row(children: [
       Expanded(child: _row(ordered, selected, latest, fresh, live)),
       Padding(
-        padding: const EdgeInsets.only(right: AppStyle.pagePadding - 4),
+        padding: const EdgeInsetsDirectional.only(end: AppStyle.pagePadding - 4),
         child: showAll,
       ),
     ]);
@@ -441,7 +441,7 @@ class _ChannelStripState extends State<_ChannelStrip> {
           child: ListView(
             controller: _scroll,
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.only(left: AppStyle.pagePadding - 4),
+            padding: const EdgeInsetsDirectional.only(start: AppStyle.pagePadding - 4),
             children: _items(ordered, selected, latest, fresh, live),
           ),
         ),
@@ -492,7 +492,7 @@ class _StripItem extends StatelessWidget {
                   )),
                 )
               else if (fresh)
-                Positioned(right: 2, top: 2, child: Container(
+                PositionedDirectional(end: 2, top: 2, child: Container(
                   width: 10,
                   height: 10,
                   decoration: BoxDecoration(color: colors.primary, shape: BoxShape.circle, border: Border.all(color: colors.surface, width: 2)),
@@ -812,7 +812,7 @@ class PlaylistDetailPage extends StatelessWidget {
             : library.removeFromPlaylist(playlist!, item);
     return CustomScrollView(key: const PageStorageKey('list'), slivers: [
       SliverToBoxAdapter(child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
+        padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 8, AppStyle.pagePadding, 16),
         child: Row(children: [
           IconButton(tooltip: keyNames(tr('Back (Alt+←)')), onPressed: controller.goBack, icon: Icon(AppIcons.arrowLeft)),
           const SizedBox(width: 8),

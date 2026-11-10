@@ -7,6 +7,7 @@ import '../l10n/l10n.dart';
 import '../live_chat.dart';
 import '../models.dart';
 import 'app_icons.dart';
+import 'common.dart';
 import 'emoji_text.dart';
 import 'live_chat_input.dart';
 import 'pages/channel_page.dart';
@@ -41,7 +42,7 @@ class SuperChatHighlightSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final on = controller.preferences.superChatHighlights;
     return IconButton(
-      tooltip: on ? tr('Super Chats in colour and pinned on top: on') : tr('Super Chats in colour and pinned on top: off'),
+      tooltip: on ? tr('Super Chats in color and pinned on top: on') : tr('Super Chats in color and pinned on top: off'),
       isSelected: on,
       icon: Icon(on ? AppIcons.handHeartFill : AppIcons.handHeart, size: 18),
       onPressed: () {
@@ -69,7 +70,7 @@ class ChatMessageRow extends StatelessWidget {
 
   Widget _build(BuildContext context, Color? tier) {
     final colors = context.colors;
-    final time = message.offset == null ? '' : chatClock(message.offset!);
+    final time = message.offset == null ? '' : formatPlaybackTime(message.offset!);
     final openAuthor = _openAuthor(controller, message);
     final name = message.author.isEmpty ? tr('System message') : message.author;
     final Widget picture = switch (message.kind) {
@@ -92,7 +93,7 @@ class ChatMessageRow extends StatelessWidget {
       const SizedBox(width: 8),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          if (kindIcon != null) Padding(padding: const EdgeInsets.only(right: 4), child: Icon(kindIcon, size: 14, color: tier ?? colors.outline)),
+          if (kindIcon != null) Padding(padding: const EdgeInsetsDirectional.only(end: 4), child: Icon(kindIcon, size: 14, color: tier ?? colors.outline)),
           Flexible(
             child: MouseRegion(
               cursor: openAuthor == null ? MouseCursor.defer : SystemMouseCursors.click,
@@ -111,7 +112,7 @@ class ChatMessageRow extends StatelessWidget {
                     decoration: BoxDecoration(color: tier, borderRadius: BorderRadius.circular(6)),
                     child: Text(amount, style: TextStyle(color: _onTier(tier), fontWeight: FontWeight.w700, fontSize: 12)),
                   ),
-          if (time.isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8), child: Text(time, style: TextStyle(color: colors.outline, fontSize: 12))),
+          if (time.isNotEmpty) Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: Text(time, style: TextStyle(color: colors.outline, fontSize: 12))),
         ]),
         if (message.text.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: SelectionArea(child: Text.rich(TextSpan(children: emojiSpans(context, message.text, message.emojis))))),
         if (message.text.isNotEmpty) ChatMessageTranslation(controller: controller, message: message),
@@ -145,12 +146,6 @@ class ChatMessageRow extends StatelessWidget {
       ),
     ));
   }
-}
-
-/// `1:23` or `1:02:03`.
-String chatClock(Duration value) {
-  final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
-  return value.inHours > 0 ? '${value.inHours}:${value.inMinutes.remainder(60).toString().padLeft(2, '0')}:$seconds' : '${value.inMinutes}:$seconds';
 }
 
 /// The recent Super Chats of a live chat in a row over it, as on YouTube:
@@ -211,7 +206,7 @@ class _SuperChatStripState extends State<SuperChatStrip> {
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(4, 4, 10, 4),
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 10, 4),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   ChannelAvatar(name: message.author.replaceFirst(RegExp(r'^@'), ''), image: message.authorAvatar, radius: 12),
                   const SizedBox(width: 6),

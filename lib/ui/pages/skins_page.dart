@@ -103,17 +103,17 @@ class _SkinsPage extends StatelessWidget {
             if (context.skin != null)
               SwitchItem(
                 title: tr('Skin background'),
-                subtitle: tr("The skin's pictures and landscape behind the pages; off leaves a plain colour"),
+                subtitle: tr("The skin's pictures and landscape behind the pages; off leaves a plain color"),
                 leading: Icon(AppIcons.image),
                 value: appearance.skinBackground,
                 onChanged: (v) => controller.saveAppearance(controller.appearance.copyWith(skinBackground: v)),
               ),
             _header(context, tr('Color schemes')),
             grid([for (final s in library.builtIn) if (schemes.contains(s.id)) s], standard: true),
-            _tip(context, tr('These follow light and dark mode and keep Lumtub\'s own shapes; the colours change, and the title bar and menu bar take the same colours.')),
+            _tip(context, tr('These follow light and dark mode and keep Lumtub\'s own shapes; the colors change, and the title bar and menu bar take the same colors.')),
             _header(context, tr('Built-in skins')),
             grid([for (final s in library.builtIn) if (!schemes.contains(s.id)) s]),
-            _tip(context, tr('A skin changes the colours, shapes, window frame and decorations. Warm light and Low resource mode still work: warm light tints skins too, and Low resource mode leaves out their decorations.')),
+            _tip(context, tr('A skin changes the colors, shapes, window frame and decorations. Warm light and Low resource mode still work: warm light tints skins too, and Low resource mode leaves out their decorations.')),
             if (library.user.isNotEmpty) ...[
               _header(context, tr('Your skins')),
               grid(library.user),

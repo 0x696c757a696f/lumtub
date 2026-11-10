@@ -134,10 +134,10 @@ class _ExplorePageState extends State<ExplorePage> {
         )),
         if (section.isFaith)
           SliverToBoxAdapter(child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding - 8, 0, AppStyle.pagePadding, 4),
+            padding: const EdgeInsetsDirectional.fromSTEB(AppStyle.pagePadding - 8, 0, AppStyle.pagePadding, 4),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Padding(
-                padding: const EdgeInsets.only(left: 8),
+                padding: const EdgeInsetsDirectional.only(start: 8),
                 child: SegmentedButton<ExploreSection>(
                   showSelectedIcon: false,
                   segments: [for (final s in ExploreSection.faithTabs) ButtonSegment(value: s, label: Text(s.label))],
@@ -147,7 +147,7 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
               const SizedBox(height: 10),
               Padding(
-                padding: const EdgeInsets.only(left: 8),
+                padding: const EdgeInsetsDirectional.only(start: 8),
                 child: Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
                   for (final (i, faith) in controller.exploreTopicsFor(section).indexed)
                     GestureDetector(
@@ -557,7 +557,7 @@ class _TopicStripState extends State<TopicStrip> {
     return Column(children: [
       Expanded(child: ListView(
         controller: _scroll,
-        padding: const EdgeInsets.fromLTRB(8, 12, 4, 8),
+        padding: const EdgeInsetsDirectional.fromSTEB(8, 12, 4, 8),
         children: [
           for (final (i, topic) in widget.topics.indexed)
             _RailTile(
@@ -571,7 +571,7 @@ class _TopicStripState extends State<TopicStrip> {
       if (_extras.isNotEmpty) ...[
         const Divider(height: 1, indent: 12, endIndent: 12),
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 4, 4, 8),
+          padding: const EdgeInsetsDirectional.fromSTEB(8, 4, 4, 8),
           child: Column(children: [for (final (topic, onTap) in _extras) _RailTile(topic: topic, selected: false, onTap: onTap, quiet: true)]),
         ),
       ],

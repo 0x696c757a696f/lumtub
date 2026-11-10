@@ -1398,6 +1398,73 @@ struct Saved {
 }
 
 /// What a session streams: both tracks' heads and where to start.
+/// Stretches left out of a saved file, in ms from its start: each from a
+/// picture keyframe to a later one, so nothing is encoded again.
+#[derive(Default, Clone, Debug, PartialEq)]
+pub struct Cuts(Vec<(i64, i64)>);
+
+impl Cuts {
+    /// The stretches `asked` (seconds) narrowed to `keyframes` (ms, in
+    /// order): from the first keyframe at or after a stretch's start to the
+    /// last at or before its end, so no more than asked is left out. A
+    /// stretch with no two keyframes in it stays.
+    pub fn snap(asked: &[(f64, f64)], keyframes: &[i64]) -> Cuts {
+        let mut cuts: Vec<(i64, i64)> = asked
+            .iter()
+            .filter_map(|&(from, to)| {
+                let (from, to) = ((from * 1000.0).round() as i64, (to * 1000.0).round() as i64);
+                let start = *keyframes.iter().find(|&&k| k >= from)?;
+                let end = *keyframes.iter().rev().find(|&&k| k <= to)?;
+                (end > start).then_some((start, end))
+            })
+            .collect();
+        cuts.sort();
+        let mut merged: Vec<(i64, i64)> = Vec::new();
+        for (start, end) in cuts {
+            match merged.last_mut() {
+                Some(last) if start <= last.1 => last.1 = last.1.max(end),
+                _ => merged.push((start, end)),
+            }
+        }
+        Cuts(merged)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn stretches(&self) -> &[(i64, i64)] {
+        &self.0
+    }
+
+    /// Whether `ms` falls in a stretch left out.
+    fn inside(&self, ms: i64) -> bool {
+        self.0.iter().any(|&(a, b)| a <= ms && ms < b)
+    }
+
+    /// How much is left out before `ms`.
+    fn before(&self, ms: i64) -> i64 {
+        self.0.iter().filter(|&&(_, b)| b <= ms).map(|&(a, b)| b - a).sum()
+    }
+
+    /// Where `ms` lands in the file once the stretches are out: a time in
+    /// one lands where it starts.
+    pub fn map(&self, ms: i64) -> i64 {
+        let ms = self.0.iter().find(|&&(a, b)| a <= ms && ms < b).map_or(ms, |&(a, _)| a);
+        ms - self.before(ms)
+    }
+
+    /// `cues` (ms) moved to where they land, those wholly left out dropped.
+    fn cues(&self, cues: &[(u64, u64, String)]) -> Vec<(u64, u64, String)> {
+        cues.iter()
+            .filter_map(|(start, end, text)| {
+                let (start, end) = (self.map(*start as i64), self.map(*end as i64));
+                (end > start).then(|| (start as u64, end as u64, text.clone()))
+            })
+            .collect()
+    }
+}
+
 pub struct Session {
     video_target: Target,
     audio_target: Target,
@@ -1412,6 +1479,8 @@ pub struct Session {
     matroska: bool,
     /// What a saved file carries besides: subtitle tracks, title, cover.
     extras: crate::embed::Extras,
+    /// Stretches (seconds) to leave out of a saved file.
+    cut: Vec<(f64, f64)>,
     /// Raised by each request, so an older one for the same session stops.
     generation: AtomicU64,
     /// HLS segments made last, as players often ask for one twice.
@@ -1437,7 +1506,7 @@ impl Session {
             mkv_track(&audio)?;
         }
         let addresses = [Address::new(ask.video.url.clone()), Address::new(ask.audio.url.clone())];
-        Ok(Session { video_target: ask.video, audio_target: ask.audio, addresses, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, duration: ask.duration_ms as f64 / 1000.0, subtitles: ask.subtitles.filter(|s| !s.cues.is_empty()), matroska: false, extras: crate::embed::Extras::default(), generation: AtomicU64::new(0), made: Mutex::new(VecDeque::new()) })
+        Ok(Session { video_target: ask.video, audio_target: ask.audio, addresses, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, duration: ask.duration_ms as f64 / 1000.0, subtitles: ask.subtitles.filter(|s| !s.cues.is_empty()), matroska: false, extras: crate::embed::Extras::default(), cut: Vec::new(), generation: AtomicU64::new(0), made: Mutex::new(VecDeque::new()) })
     }
 
     /// Names Matroska so, never WebM, for a file the user asked to be MKV.
@@ -1450,6 +1519,24 @@ impl Session {
     pub fn with_extras(mut self, extras: crate::embed::Extras) -> Self {
         self.extras = extras;
         self
+    }
+
+    /// Leaves `stretches` (seconds) out of a saved file, as far as
+    /// keyframes allow; [Session::cuts] says what that comes to.
+    pub fn with_cut(mut self, stretches: Vec<(f64, f64)>) -> Self {
+        self.cut = stretches;
+        self
+    }
+
+    /// What a saved file leaves out, in ms from its start.
+    pub fn cuts(&self) -> Cuts {
+        if self.cut.is_empty() {
+            return Cuts::default();
+        }
+        let first = segment_at(&self.video, self.start);
+        let from = self.video.segments[first].start;
+        let keyframes: Vec<i64> = self.video.segments[first..].iter().map(|s| ((s.start - from) * 1000.0).round() as i64).collect();
+        Cuts::snap(&self.cut.iter().map(|&(a, b)| (a - from, b - from)).collect::<Vec<_>>(), &keyframes)
     }
 
     /// Every subtitle track a Matroska stream carries.
@@ -1719,6 +1806,7 @@ impl Session {
             a = next_fragment(&audio)?;
         }
         let rebase = [origin, audio_origin];
+        let cuts = if file { self.cuts() } else { Cuts::default() };
         let mut out = Vec::with_capacity(1 << 20);
         match self.kind {
             Kind::Hls => return Err("an HLS session is read segment by segment".into()),
@@ -1758,15 +1846,20 @@ impl Session {
                         (Some(x), Some(y)) => usize::from(y < x),
                     };
                     let (f, s) = if pick == 0 { (v.as_ref().unwrap(), v.as_ref().unwrap().samples[at[0]]) } else { (a.as_ref().unwrap(), a.as_ref().unwrap().samples[at[1]]) };
-                    let shown = ms(s.time as i64 - rebase[pick] as i64 + s.offset as i64 - shifts[pick], pick).max(0);
                     let decoded = ms(s.time as i64 - rebase[pick] as i64, pick);
+                    let left = cuts.before(decoded);
+                    let shown = (ms(s.time as i64 - rebase[pick] as i64 + s.offset as i64 - shifts[pick], pick) - left).max(0);
                     while let Some(cue) = cues.next_if(|c| (c.0 as i64 - from_ms) <= decoded) {
-                        let start = (cue.0 as i64 - from_ms).max(0);
-                        let end = cue.1 as i64 - from_ms;
-                        clusters.text(&mut out, cue.3, start, (end - start).max(1) as u64, cue.2);
+                        let start = cuts.map((cue.0 as i64 - from_ms).max(0));
+                        let end = cuts.map(cue.1 as i64 - from_ms);
+                        if end > start {
+                            clusters.text(&mut out, cue.3, start, (end - start) as u64, cue.2);
+                        }
                     }
-                    clusters.frame(&mut out, if pick == 0 { cast_mkv::VIDEO } else { cast_mkv::AUDIO }, shown, pick == 1 || s.sync, &f.data[s.at..s.at + s.size]);
-                    end = end.max(shown + ms(s.duration as i64, pick));
+                    if !cuts.inside(decoded) {
+                        clusters.frame(&mut out, if pick == 0 { cast_mkv::VIDEO } else { cast_mkv::AUDIO }, shown, pick == 1 || s.sync, &f.data[s.at..s.at + s.size]);
+                        end = end.max(shown + ms(s.duration as i64, pick));
+                    }
                     at[pick] += 1;
                     if out.len() >= 64 << 10 {
                         into.write_all(&out).map_err(|_| String::new())?;
@@ -1799,7 +1892,7 @@ impl Session {
                 // the picture and sound it goes with.
                 if file {
                     for (i, text) in texts.iter().enumerate() {
-                        let fragment = text_fragment(&text.cues);
+                        let fragment = text_fragment(&if cuts.is_empty() { text.cues.clone() } else { cuts.cues(&text.cues) });
                         mp4_fragment(&mut out, sequence, 3 + i as u32, &fragment, &fragment.samples, 0);
                         sequence += 1;
                     }
@@ -1820,8 +1913,26 @@ impl Session {
                     };
                     let (slot, source) = if pick == 0 { (&mut v, &video) } else { (&mut a, &audio) };
                     if let Some(f) = slot.as_ref() {
-                        mp4_fragment(&mut out, sequence, pick as u32 + 1, f, &f.samples, rebase[pick]);
-                        sequence += 1;
+                        if cuts.is_empty() {
+                            mp4_fragment(&mut out, sequence, pick as u32 + 1, f, &f.samples, rebase[pick]);
+                            sequence += 1;
+                        } else {
+                            // Each run of samples kept, moved back by what was left out before it.
+                            let timescale = timescales[pick] as i64;
+                            let decoded = |s: &Sample| (s.time as i64 - rebase[pick] as i64) * 1000 / timescale;
+                            let mut from = 0;
+                            while from < f.samples.len() {
+                                if cuts.inside(decoded(&f.samples[from])) {
+                                    from += 1;
+                                    continue;
+                                }
+                                let to = (from..f.samples.len()).find(|&i| cuts.inside(decoded(&f.samples[i]))).unwrap_or(f.samples.len());
+                                let back = (cuts.before(decoded(&f.samples[from])) * timescale / 1000) as u64;
+                                mp4_fragment(&mut out, sequence, pick as u32 + 1, f, &f.samples[from..to], rebase[pick] + back);
+                                sequence += 1;
+                                from = to;
+                            }
+                        }
                     }
                     into.write_all(&out).map_err(|_| String::new())?;
                     out.clear();
@@ -2149,6 +2260,23 @@ pub extern "C" fn lumtub_cast_log() -> *mut c_char {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cuts_snap_to_keyframes_inside_what_was_asked() {
+        let keyframes = [0, 2000, 4000, 6000, 8000, 10_000];
+        // 1.5 s to 7 s: from the keyframe at 2 s to the one at 6 s.
+        let cuts = Cuts::snap(&[(1.5, 7.0)], &keyframes);
+        assert_eq!(cuts.stretches(), &[(2000, 6000)]);
+        // Too short to hold two keyframes: nothing left out.
+        assert!(Cuts::snap(&[(2.5, 3.9)], &keyframes).is_empty());
+        // Overlapping stretches merge.
+        assert_eq!(Cuts::snap(&[(0.0, 4.0), (3.0, 8.5)], &keyframes).stretches(), &[(0, 8000)]);
+        assert_eq!(cuts.map(1000), 1000);
+        assert_eq!(cuts.map(3000), 2000);
+        assert_eq!(cuts.map(7000), 3000);
+        assert!(cuts.inside(2000) && !cuts.inside(6000));
+        assert_eq!(cuts.cues(&[(500, 1500, "a".into()), (2500, 5000, "b".into()), (5500, 9000, "c".into())]), vec![(500, 1500, "a".into()), (2000, 5000, "c".into())]);
+    }
 
     /// Serves local files like googlevideo serves streams: each reply cut
     /// after `cut` bytes when set, and an address holding `expired` refused.

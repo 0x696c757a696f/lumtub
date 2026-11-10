@@ -65,6 +65,15 @@ pub struct Extra {
     /// A JPEG or PNG file.
     #[serde(default)]
     pub cover: Option<String>,
+    /// Stretches to leave out, in seconds (SponsorBlock's segments).
+    #[serde(default)]
+    pub cut: Vec<(f64, f64)>,
+}
+
+/// A joined file and what it leaves out, in ms from its start.
+pub struct Joined {
+    pub path: String,
+    pub cut: Vec<(i64, i64)>,
 }
 
 impl Extra {
@@ -90,7 +99,7 @@ impl Extra {
 /// with `extra` inside where the container takes it (WebM takes none),
 /// and returns that path. The file is written beside as `.part` and
 /// renamed when whole.
-pub fn join(video: &str, audio: &str, stem: &str, container: &str, extra: &Extra) -> Result<String, String> {
+pub fn join(video: &str, audio: &str, stem: &str, container: &str, extra: &Extra) -> Result<Joined, String> {
     let fetch: Arc<dyn Fetch> = Arc::new(Files);
     let kind = match container {
         "mp4" => Kind::Mp4,
@@ -106,6 +115,8 @@ pub fn join(video: &str, audio: &str, stem: &str, container: &str, extra: &Extra
     if container != "webm" {
         session = session.with_extras(extra.read());
     }
+    session = session.with_cut(extra.cut.clone());
+    let cut = session.cuts().stretches().to_vec();
     if container == "webm" && session.extension() != "webm" {
         return Err("WebM takes only VP9 or AV1 with Opus".into());
     }
@@ -121,13 +132,14 @@ pub fn join(video: &str, audio: &str, stem: &str, container: &str, extra: &Extra
     if result.is_err() {
         let _ = std::fs::remove_file(&part);
     }
-    result.map(|_| out)
+    result.map(|_| Joined { path: out, cut })
 }
 
 /// Joins JSON `{video, audio, out, container?, subtitles?: [{path,
-/// language, name}], title?, cover?}`, `out` without its extension; answers
-/// `{"path": …}` when done, else `{"error": …}`. It reads and writes the
-/// whole video, so call it off the UI thread.
+/// language, name}], title?, cover?, cut?: [[from, to] s…]}`, `out`
+/// without its extension; answers `{"path": …, "cut": [[from, to] ms…]}`
+/// when done, else `{"error": …}`. It reads and writes the whole video, so
+/// call it off the UI thread.
 ///
 /// # Safety
 /// [json] points at [length] readable bytes.
@@ -145,7 +157,7 @@ pub unsafe extern "C" fn lumtub_join(json: *const u8, length: usize) -> *mut c_c
     }
     let answer = serde_json::from_str::<Request>(unsafe { text(json, length) }).map_err(|e| e.to_string()).and_then(|r| join(&r.video, &r.audio, &r.out, &r.container, &r.extra));
     give(match answer {
-        Ok(path) => serde_json::json!({ "path": path }).to_string(),
+        Ok(joined) => serde_json::json!({ "path": joined.path, "cut": joined.cut }).to_string(),
         Err(error) => serde_json::json!({ "error": error }).to_string(),
     })
 }
@@ -169,6 +181,7 @@ mod tests {
             ],
             title: Some("A title".into()),
             cover: Some(format!("{dir}/cover.jpg")),
+            cut: Vec::new(),
         }
     }
 
@@ -196,19 +209,23 @@ mod tests {
                 continue;
             }
             let stem = format!("{dir}/joined-{}-{}", picture.replace('.', "_"), sound.replace('.', "_"));
-            let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &stem, "auto", &Extra::default()).expect("join");
+            let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &stem, "auto", &Extra::default()).expect("join").path;
             assert_eq!(out, format!("{stem}.{extension}"));
             assert!(std::fs::metadata(&out).unwrap().len() > 100_000);
             assert!(!std::path::Path::new(&format!("{out}.part")).exists());
             for asked in ["mp4", "mkv"] {
-                let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-as"), asked, &Extra::default()).expect("join as asked");
+                let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-as"), asked, &Extra::default()).expect("join as asked").path;
                 assert_eq!(out, format!("{stem}-as.{asked}"));
             }
             let webm = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-as"), "webm", &Extra::default());
             assert_eq!(webm.is_ok(), extension == "webm", "{picture} {sound} as WebM");
+            let cut = Extra { cut: vec![(4.0, 13.0)], ..Extra::default() };
+            let joined = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-cut"), "auto", &cut).expect("join with a cut");
+            assert!(!joined.cut.is_empty(), "{picture}: keyframes inside 4 s to 13 s");
+            assert!(joined.cut.iter().all(|&(a, b)| a >= 4000 && b <= 13_000 && b > a));
             let extra = extras(&dir);
             for asked in ["mp4", "mkv", "auto"] {
-                let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-extra-{asked}"), asked, &extra).expect("join with extras");
+                let out = join(&format!("{dir}/{picture}"), &format!("{dir}/{sound}"), &format!("{stem}-extra-{asked}"), asked, &extra).expect("join with extras").path;
                 assert!(!out.ends_with(".webm"), "a WebM takes no subtitles: {out}");
                 let bytes = std::fs::read(&out).unwrap();
                 let has = |needle: &[u8]| bytes.windows(needle.len()).any(|w| w == needle);

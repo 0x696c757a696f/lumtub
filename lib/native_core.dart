@@ -336,10 +336,30 @@ class NativeCore {
     }
   }
 
+  /// [audio] (WebM or fragmented MP4) cut into parts of about [every],
+  /// named [stem] plus a number, by copying whole clusters or fragments;
+  /// each part's file and start, or why not. Run it on another isolate.
+  static ({List<({String path, double start})>? parts, String? error}) cutAudio(String audio, String stem, Duration every) {
+    final core = instance;
+    if (core == null) return (parts: null, error: 'lumtub_core is missing');
+    try {
+      final call = core._cutAudio ??= core.library.lookupFunction<Pointer<Utf8> Function(Pointer<Uint8>, Size), Pointer<Utf8> Function(Pointer<Uint8>, int)>('lumtub_cut_audio');
+      final answer = core.take(core.withText(jsonEncode({'input': audio, 'stem': stem, 'every': every.inMilliseconds / 1000}), call));
+      final map = answer == null ? null : jsonDecode(answer);
+      if (map is Map && map['parts'] is List) {
+        return (parts: [for (final p in (map['parts'] as List).cast<Map>()) (path: p['path'] as String, start: (p['start'] as num).toDouble())], error: null);
+      }
+      return (parts: null, error: map is Map ? '${map['error']}' : 'the audio could not be cut');
+    } on ArgumentError {
+      return (parts: null, error: 'lumtub_core is too old to cut audio');
+    }
+  }
+
   /// Whether this core can [join] files.
   static bool get canJoin => instance?.library.providesSymbol('lumtub_join') ?? false;
 
   Pointer<Utf8> Function(Pointer<Uint8>, int)? _join;
+  Pointer<Utf8> Function(Pointer<Uint8>, int)? _cutAudio;
 
   /// Calls [call] with [text] as UTF-8 in native memory.
   T withText<T>(String text, T Function(Pointer<Uint8> bytes, int length) call) => withBytes(utf8.encode(text), call);

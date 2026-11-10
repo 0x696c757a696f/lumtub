@@ -42,6 +42,7 @@ pub mod cast;
 pub mod cast_mkv;
 pub mod cast_webm;
 pub mod join;
+pub mod cut;
 pub mod roots;
 pub mod pac;
 pub mod lists;

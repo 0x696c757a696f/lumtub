@@ -57,28 +57,24 @@ void main() {
     expect(await failure(200, {'text': 'only text'}), 'This speech recognition service returns no timing, so it cannot make subtitles');
   });
 
-  test('reads where each part starts from ffmpeg\'s segment list', () {
-    final parts = SpeechAudio.parseSegmentList('part000.webm,0.000000,600.020000\npart001.webm,600.020000,1201.5\n', dir);
-    expect(parts.map((p) => p.offset), [Duration.zero, const Duration(milliseconds: 600020)]);
-    expect(parts.last.file.path, endsWith('part001.webm'));
-  });
-
   test('fetches the smallest audio stream with yt-dlp', () {
     final args = SpeechAudio.arguments('abc', dir, proxy: 'socks5://p', deno: 'deno.exe');
     expect(args, containsAllInOrder(['--format', 'wa[acodec=opus]/wa/ba']));
+    expect(args, containsAllInOrder(['--fixup', 'never']));
     expect(args, containsAllInOrder(['--proxy', 'socks5://p']));
     expect(args, containsAllInOrder(['--js-runtimes', 'deno:deno.exe']));
     expect(args.last, 'https://www.youtube.com/watch?v=abc');
   });
 
-  test('a long video without ffmpeg asks for it and keeps the audio for the next try', () async {
+  test('a long video is cut by lumtub_core, and the audio is kept when it cannot be', () async {
     final runs = File('${dir.path}/runs');
     final fake = File('${dir.path}/yt-dlp.sh')
       ..writeAsStringSync('#!/bin/sh\necho run >> ${runs.path}\nhead -c 21000000 /dev/zero > ${dir.path}/work/audio.webm\necho "3600.0|${dir.path}/work/audio.webm"\n');
     await Process.run('chmod', ['+x', fake.path]);
     Future<List<SpeechPart>> fetch() => SpeechAudio.fetch('abc', Directory('${dir.path}/work'), ytDlp: fake.path, environment: const {});
-    await expectLater(fetch(), throwsA(isA<SpeechNeedsFfmpeg>()));
-    await expectLater(fetch(), throwsA(isA<SpeechNeedsFfmpeg>()));
+    final notAudio = throwsA(isA<TranslationException>().having((e) => e.message, 'message', 'Could not split the audio'));
+    await expectLater(fetch(), notAudio);
+    await expectLater(fetch(), notAudio);
     expect(runs.readAsLinesSync(), hasLength(1));
   }, skip: Platform.isWindows ? 'uses a shell script for yt-dlp' : null);
 

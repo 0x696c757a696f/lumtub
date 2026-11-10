@@ -14,6 +14,7 @@ import '../theme.dart';
 import '../playlist_order_button.dart';
 import '../video_card.dart';
 import 'channel_page.dart';
+import 'subscription_import_dialog.dart';
 import 'explore_page.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
@@ -48,10 +49,12 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       return StatusView(
         icon: AppIcons.stack,
         title: tr('No followed channels yet'),
-        message: tr('Tap "Follow" on a player or channel page, and the channel\'s new videos will show up here. You can also sign in with Google to import your YouTube subscriptions. Your follow list is stored only on this device.'),
-        action: controller.account?.signedIn ?? false
-            ? null
-            : FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: Icon(AppIcons.signIn), label: Text(tr('Sign in and import subscriptions'))),
+        message: tr('Tap "Follow" on a player or channel page, and the channel\'s new videos will show up here. You can also import your follow list from a NewPipe, FreeTube or Google Takeout file, or sign in with Google to import your YouTube subscriptions. Your follow list is stored only on this device.'),
+        action: Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: [
+          FilledButton.icon(onPressed: () => importSubscriptionsFromFile(context, library), icon: Icon(AppIcons.downloadSimple), label: Text(tr('Import from file'))),
+          if (!(controller.account?.signedIn ?? false))
+            FilledButton.tonalIcon(onPressed: () => controller.navigate(PageMode.settings), icon: Icon(AppIcons.signIn), label: Text(tr('Sign in and import subscriptions'))),
+        ]),
       );
     }
     final group = library.channelGroups.contains(_group) ? _group : null;
@@ -99,7 +102,10 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
         subtitle: tr('{0} channels · Saved on this device only', [channels.length]),
         trailing: library.loadingFeed
             ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
-            : TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
+            : Row(mainAxisSize: MainAxisSize.min, children: [
+                IconButton(onPressed: () => importSubscriptionsFromFile(context, library), icon: Icon(AppIcons.downloadSimple), tooltip: tr('Import from file')),
+                TextButton.icon(onPressed: () => library.refreshFeed(force: true), icon: Icon(AppIcons.arrowsClockwise), label: Text(tr('Refresh'))),
+              ]),
       )),
       SliverToBoxAdapter(child: _GroupChips(
         groups: library.channelGroups,

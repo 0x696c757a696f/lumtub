@@ -13,7 +13,7 @@
 :belarus-5 | ^Belarus 5 | ^Беларусь 5
 :belta | ^BelTA | ^БелТА
 :belteleradiocompany | =BTRC | ^Belteleradiocompany | ^Белтелерадиокомпания
-:ont | =ONT | ^ОНТ
+:ont | UCnZKrxWB5aNj4OJ6lO92byA | @youtubecomby | =ONT | ^ОНТ
 :stv | =STV | ^СТВ
 :pervyi-informatsionnyi | ^Первый информационный
 :radio-belarus | UC89Cojt8XSIUBoAtnABsQxw | @radiobelarus1389 | ^Radio Belarus | ^Радио Беларусь

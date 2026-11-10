@@ -13,7 +13,7 @@
 :al-saudiya | UCqoy1eZa6hMltGbu7dCa3GQ | @AlSaudiya-j1q | ^Al Saudiya
 :al-ekhbariya | =الإخبارية | ^Al Ekhbariya
 :al-arabiya | =العربية | ^Al Arabiya
-:al-hadath | =الحدث | ^Al Hadath
+:al-hadath | UCydC421a6tBJPeBa1hwRZYg | @alhadath4 | =الحدث | ^Al Hadath
 :mbc-group | ^MBC Group
 :asharq-news | ^Asharq News
 :asharq-al-awsat | ^Asharq Al-Awsat

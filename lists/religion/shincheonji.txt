@@ -6,5 +6,5 @@
 ! default: off
 ! source: https://en.wikipedia.org/wiki/Shincheonji
 
-:shincheonji | ^新天地 | ^Shincheonji
+:shincheonji | UCDZor6pRj_813mXuqLdFP2g | @NeverOrder | ^新天地 | ^Shincheonji
 :lee-man-hee | ^李万熙 | ^李萬熙 | ^Lee Man-hee

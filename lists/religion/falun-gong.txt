@@ -42,9 +42,9 @@
 :ucak-sbmzp79a4k2caqqodlq | UCAk-SBMZp79a4k2CAqqoDLQ
 
 :xin-wen-da-shi-ye | UCnk79D1LrciHiJLPYY_81hw | ^新闻大视野 | ^新聞大視野
-:bai-nian-zhen-xiang | ^百年真相
+:bai-nian-zhen-xiang | UCJ0WwxWijk8NemAqLtqj4Sw | @%E7%99%BE%E5%B9%B4%E7%9C%9F%E7%9B%B8 | ^百年真相
 :huan-qiu-zhi-ji | ^环球直击 | ^環球直擊
 :xin-wen-da-jia-tan | ^新闻大家谈 | ^新聞大家談
-:off-the-great-wall | ^Off the Great Wall
-:new-century-film | ^新世纪影视 | ^新世紀影視
+:off-the-great-wall | UChtzdESO4SYaxY5sNTdwl3w | @NTDOffTheGreatWall | ^Off the Great Wall
+:new-century-film | UC_3m3VSxzRMbnZt-rQ5H5Xg | @NCF | ^新世纪影视 | ^新世紀影視
 :fei-tian | ^飞天艺术学院 | ^飛天藝術學院 | ^飞天大学 | ^飛天大學 | ^Fei Tian College | ^Fei Tian Academy

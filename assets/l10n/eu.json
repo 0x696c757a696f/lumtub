@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "kuantikoaren-osteko TLS gako-trukea X25519MLKEM768 guneak ostalariak",
   "No HTTPS connection yet since Lumtub started": "Lumtub abiatu zenetik ez dago HTTPS konexiorik oraindik",
   "{0}, post-quantum": "{0}, kuantikoaren osteko",
-  "{0}, not post-quantum": "{0}, kuantikoaren osteko ez"
+  "{0}, not post-quantum": "{0}, kuantikoaren osteko ez",
+  "Serbian": "serbiera",
+  "Croatian": "kroaziera",
+  "Slovenian": "esloveniera",
+  "Bosnian": "bosniera",
+  "Catalan": "katalana",
+  "Kazakh": "kazakhera",
+  "Kyrgyz": "kirgizera",
+  "Assamese": "assamera",
+  "Odia": "odia"
 }

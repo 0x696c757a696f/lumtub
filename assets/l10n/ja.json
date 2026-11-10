@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "耐量子 TLS 鍵交換 X25519MLKEM768 サイト ホスト",
   "No HTTPS connection yet since Lumtub started": "Lumtub の起動後、HTTPS 接続はまだありません",
   "{0}, post-quantum": "{0}、耐量子",
-  "{0}, not post-quantum": "{0}、耐量子ではない"
+  "{0}, not post-quantum": "{0}、耐量子ではない",
+  "Serbian": "セルビア語",
+  "Croatian": "クロアチア語",
+  "Slovenian": "スロベニア語",
+  "Bosnian": "ボスニア語",
+  "Catalan": "カタルーニャ語",
+  "Kazakh": "カザフ語",
+  "Kyrgyz": "キルギス語",
+  "Assamese": "アッサム語",
+  "Odia": "オリヤー語"
 }

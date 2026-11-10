@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "pasca-kuantum TLS ijol-ijolan-kunci X25519MLKEM768 situs host",
   "No HTTPS connection yet since Lumtub started": "Durung ana sambungan HTTPS wiwit Lumtub diwiwiti",
   "{0}, post-quantum": "{0}, pasca-kuantum",
-  "{0}, not post-quantum": "{0}, dudu pasca-kuantum"
+  "{0}, not post-quantum": "{0}, dudu pasca-kuantum",
+  "Serbian": "Serbia",
+  "Croatian": "Kroasia",
+  "Slovenian": "Slovenia",
+  "Bosnian": "Bosnia",
+  "Catalan": "Katalan",
+  "Kazakh": "Kazakh",
+  "Kyrgyz": "Kirgiz",
+  "Assamese": "Assam",
+  "Odia": "Odia"
 }

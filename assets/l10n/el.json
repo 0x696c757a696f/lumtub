@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "μετακβαντικό TLS ανταλλαγή-κλειδιών X25519MLKEM768 ιστότοποι διακομιστές",
   "No HTTPS connection yet since Lumtub started": "Δεν υπάρχει ακόμη σύνδεση HTTPS από την εκκίνηση του Lumtub",
   "{0}, post-quantum": "{0}, μετακβαντικό",
-  "{0}, not post-quantum": "{0}, όχι μετακβαντικό"
+  "{0}, not post-quantum": "{0}, όχι μετακβαντικό",
+  "Serbian": "Σερβικά",
+  "Croatian": "Κροατικά",
+  "Slovenian": "Σλοβενικά",
+  "Bosnian": "Βοσνιακά",
+  "Catalan": "Καταλανικά",
+  "Kazakh": "Καζακικά",
+  "Kyrgyz": "Κιργιζικά",
+  "Assamese": "Ασαμικά",
+  "Odia": "Ορίγια"
 }

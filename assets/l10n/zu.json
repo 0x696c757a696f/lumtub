@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "ngemuva-kwe-quantum TLS ukushintshana kokhiye X25519MLKEM768 amasayithi ama-host",
   "No HTTPS connection yet since Lumtub started": "Akukho uxhumo lwe-HTTPS kusukela i-Lumtub iqala",
   "{0}, post-quantum": "{0}, ngemuva kwe-quantum",
-  "{0}, not post-quantum": "{0}, hhayi ngemuva kwe-quantum"
+  "{0}, not post-quantum": "{0}, hhayi ngemuva kwe-quantum",
+  "Serbian": "isi-Serbian",
+  "Croatian": "isi-Croatian",
+  "Slovenian": "isi-Slovenian",
+  "Bosnian": "isi-Bosnian",
+  "Catalan": "isi-Catalan",
+  "Kazakh": "isi-Kazakh",
+  "Kyrgyz": "isi-Kyrgyz",
+  "Assamese": "isi-Assamese",
+  "Odia": "isi-Odia"
 }

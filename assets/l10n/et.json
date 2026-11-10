@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "kvantjärgne TLS võtmevahetus X25519MLKEM768 saidid hostid",
   "No HTTPS connection yet since Lumtub started": "Lumtubi käivitamisest saati pole veel HTTPS-ühendusi olnud",
   "{0}, post-quantum": "{0}, kvantjärgne",
-  "{0}, not post-quantum": "{0}, mitte kvantjärgne"
+  "{0}, not post-quantum": "{0}, mitte kvantjärgne",
+  "Serbian": "serbia",
+  "Croatian": "horvaadi",
+  "Slovenian": "sloveeni",
+  "Bosnian": "bosnia",
+  "Catalan": "katalaani",
+  "Kazakh": "kasahhi",
+  "Kyrgyz": "kirgiisi",
+  "Assamese": "assami",
+  "Odia": "odia"
 }

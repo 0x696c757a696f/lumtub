@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "skammtaöruggt TLS lyklaskipti X25519MLKEM768 vefsvæði gestgjafar",
   "No HTTPS connection yet since Lumtub started": "Engin HTTPS-tenging enn síðan Lumtub ræsti",
   "{0}, post-quantum": "{0}, skammtaöruggt",
-  "{0}, not post-quantum": "{0}, ekki skammtaöruggt"
+  "{0}, not post-quantum": "{0}, ekki skammtaöruggt",
+  "Serbian": "serbneska",
+  "Croatian": "króatíska",
+  "Slovenian": "slóvenska",
+  "Bosnian": "bosníska",
+  "Catalan": "katalónska",
+  "Kazakh": "kasakska",
+  "Kyrgyz": "kirgisíska",
+  "Assamese": "assamska",
+  "Odia": "óría"
 }

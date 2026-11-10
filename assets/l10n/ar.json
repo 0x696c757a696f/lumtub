@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "مقاوم-للكم TLS تبادل-المفاتيح X25519MLKEM768 مواقع مضيفات",
   "No HTTPS connection yet since Lumtub started": "لا يوجد اتصال HTTPS منذ بدء تشغيل Lumtub",
   "{0}, post-quantum": "{0}، مقاوم للكم",
-  "{0}, not post-quantum": "{0}، غير مقاوم للكم"
+  "{0}, not post-quantum": "{0}، غير مقاوم للكم",
+  "Serbian": "الصربية",
+  "Croatian": "الكرواتية",
+  "Slovenian": "السلوفينية",
+  "Bosnian": "البوسنية",
+  "Catalan": "الكتالانية",
+  "Kazakh": "الكازاخية",
+  "Kyrgyz": "القرغيزية",
+  "Assamese": "الأسامية",
+  "Odia": "الأوديا"
 }

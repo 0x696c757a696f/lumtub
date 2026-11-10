@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "ក្រោយកង់ទិច TLS ការផ្លាស់ប្តូរសោ X25519MLKEM768 គេហទំព័រ ម៉ាស៊ីនបម្រើ",
   "No HTTPS connection yet since Lumtub started": "មិនទាន់មានការតភ្ជាប់ HTTPS ចាប់តាំងពី Lumtub ចាប់ផ្តើម",
   "{0}, post-quantum": "{0}, ក្រោយកង់ទិច",
-  "{0}, not post-quantum": "{0}, មិនមែនក្រោយកង់ទិច"
+  "{0}, not post-quantum": "{0}, មិនមែនក្រោយកង់ទិច",
+  "Serbian": "ស៊ែប៊ី",
+  "Croatian": "ក្រូអាត",
+  "Slovenian": "ស្លូវ៉ានី",
+  "Bosnian": "បូស្នី",
+  "Catalan": "កាតាឡាន",
+  "Kazakh": "កាហ្សាក់",
+  "Kyrgyz": "កៀហ្ស៊ីស",
+  "Assamese": "អាសាមីស",
+  "Odia": "អូឌីយ៉ា"
 }

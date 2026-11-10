@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "ຫຼັງຄວອນຕັມ TLS ການແລກປ່ຽນກະແຈ X25519MLKEM768 ເວັບໄຊ ໂຮສ",
   "No HTTPS connection yet since Lumtub started": "ຍັງບໍ່ມີການເຊື່ອມຕໍ່ HTTPS ຕັ້ງແຕ່ Lumtub ເລີ່ມ",
   "{0}, post-quantum": "{0}, ຫຼັງຄວອນຕັມ",
-  "{0}, not post-quantum": "{0}, ບໍ່ແມ່ນຫຼັງຄວອນຕັມ"
+  "{0}, not post-quantum": "{0}, ບໍ່ແມ່ນຫຼັງຄວອນຕັມ",
+  "Serbian": "ເຊີເບຍ",
+  "Croatian": "ໂຄຣເອເຊຍ",
+  "Slovenian": "ສະໂລເວເນຍ",
+  "Bosnian": "ບອສເນຍ",
+  "Catalan": "ຄາຕາລັນ",
+  "Kazakh": "ຄາຊັກ",
+  "Kyrgyz": "ເຄີກີສ",
+  "Assamese": "ອັດຊາມີ",
+  "Odia": "ໂອເດຍ"
 }

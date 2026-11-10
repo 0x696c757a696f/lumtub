@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "hậu lượng tử TLS trao đổi khóa X25519MLKEM768 trang web máy chủ",
   "No HTTPS connection yet since Lumtub started": "Chưa có kết nối HTTPS nào kể từ khi Lumtub khởi động",
   "{0}, post-quantum": "{0}, hậu lượng tử",
-  "{0}, not post-quantum": "{0}, không hậu lượng tử"
+  "{0}, not post-quantum": "{0}, không hậu lượng tử",
+  "Serbian": "Tiếng Serbia",
+  "Croatian": "Tiếng Croatia",
+  "Slovenian": "Tiếng Slovenia",
+  "Bosnian": "Tiếng Bosnia",
+  "Catalan": "Tiếng Catalan",
+  "Kazakh": "Tiếng Kazakh",
+  "Kyrgyz": "Tiếng Kyrgyz",
+  "Assamese": "Tiếng Assam",
+  "Odia": "Tiếng Odia"
 }

@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "pēckvantu TLS atslēgu-apmaiņa X25519MLKEM768 vietnes resursdatori",
   "No HTTPS connection yet since Lumtub started": "Kopš Lumtub palaišanas vēl nav bijis neviena HTTPS savienojuma",
   "{0}, post-quantum": "{0}, pēckvantu",
-  "{0}, not post-quantum": "{0}, nav pēckvantu"
+  "{0}, not post-quantum": "{0}, nav pēckvantu",
+  "Serbian": "serbu",
+  "Croatian": "horvātu",
+  "Slovenian": "slovēņu",
+  "Bosnian": "bosniešu",
+  "Catalan": "katalāņu",
+  "Kazakh": "kazahu",
+  "Kyrgyz": "kirgīzu",
+  "Assamese": "asamiešu",
+  "Odia": "odiju"
 }

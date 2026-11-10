@@ -84,12 +84,13 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 ### 🔐 账号只在你需要时使用
 - 支持 Google、电视验证码或浏览器登录，用于订阅、播放列表、点赞、评论、社区帖子、投票，以及你有权观看的**会员专属视频**。
 - 登录凭据加密保存在你的电脑上：Windows 用 TPM 或 Windows Hello 保护，Linux 和 macOS 用系统钥匙串。
+- **抗量子加密**：Lumtub 自己发起的 HTTPS 连接（YouTube 页面和数据、视频中转、加密 DNS、更新）在服务器支持时使用 X25519MLKEM768 混合密钥交换，YouTube 已经支持。设置 › 网络里能看到每个网站商定的方式，也可以改成必须或关闭。播放器和 yt-dlp 自己的连接不在其中。
 
 ### 其他内置功能
 这些在别的 YouTube 客户端里也有，在这里都需要手动开启：
 - **SponsorBlock**、**DeArrow** 标题和缩略图、**Return YouTube Dislike**、隐藏所有 Shorts，以及隐藏标注为 AI 生成的视频和社区 AI 垃圾内容名单上频道的 AI 过滤。
 - 代理（系统、HTTP 或 SOCKS5）、可选的加密 DNS，以及作为备用的 Piped 或 Invidious 服务器。
-- **72 种界面语言**，包括从右到左的文字，默认跟随系统语言。欢迎在 [Weblate](https://hosted.weblate.org/engage/lumtub/) 上改进翻译。
+- **82 种界面语言**，包括从右到左的文字，默认跟随系统语言。欢迎在 [Weblate](https://hosted.weblate.org/engage/lumtub/) 上改进翻译。
 - **皮肤**：换掉整个界面的样子，内置二十三套，从千禧年的光泽风格、Frutiger Aero 风景到黑白点阵，还可以用皮肤自己的标题栏和菜单栏。人人都能做皮肤：写一个带注释的 `skin.jsonc` 就行，颜色对比度会自动检查。见 [skins/README.md](skins/README.md)。
 - 十套配色，浅色深色，可选护眼暖光、字体和卡片大小。
 - 屏蔽任意频道，或只是不再推荐它。

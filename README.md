@@ -48,7 +48,7 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 <tr>
 <td align="center"><img src="docs/screenshots/home-reasons.png" alt="For you, with the reason under every video"><br>Every recommendation says why</td>
 <td align="center"><img src="docs/screenshots/explore-language.png" alt="Explore's science zone filtered to videos spoken in Italian"><br>Explore by the language actually spoken</td>
-<td align="center"><img src="docs/screenshots/zh/home-reasons.png" alt="For you in the Chinese interface"><br>72 interface languages</td>
+<td align="center"><img src="docs/screenshots/zh/home-reasons.png" alt="For you in the Chinese interface"><br>82 interface languages</td>
 </tr>
 <tr>
 <td align="center"><img src="docs/screenshots/danmaku.jpg" alt="Live chat with emoji flying across a guinea pig live stream as danmaku"><br>Live chat as danmaku</td>
@@ -95,12 +95,13 @@ Lumtub is free and open source, with no ads, no accounts of its own and no telem
 ### 🔐 Accounts only if you want them
 - Google, TV-code or browser sign-in for subscriptions, playlists, likes, comments, community posts, polls and **members-only videos** you have access to.
 - Credentials are encrypted on your computer, protected by TPM or Windows Hello on Windows and the keyring on Linux and macOS.
+- **Post-quantum encryption:** HTTPS connections Lumtub makes itself (YouTube's pages and data, the stream relay, encrypted DNS, updates) use the hybrid X25519MLKEM768 key exchange where the server supports it, as YouTube's do. Settings › Network shows what each site agreed on, and can require it or turn it off. The video player's and yt-dlp's own connections are not covered.
 
 ### Also built in
 These are also found in other YouTube clients, and all are opt-in here:
 - **SponsorBlock**, **DeArrow** titles and thumbnails, **Return YouTube Dislike**, hide all Shorts, and an AI filter that hides videos labelled as AI and channels on community AI-slop lists.
 - Proxy support (system, HTTP or SOCKS5), optional encrypted DNS, and Piped or Invidious servers as a fallback.
-- **72 interface languages**, right to left included, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
+- **82 interface languages**, right to left included, following your system language. Improve them on [Weblate](https://hosted.weblate.org/engage/lumtub/).
 - **Skins** that change the whole look, 23 built in, from Y2K gloss and Frutiger Aero scenes to one-bit pixels, with their own title bar and menu bar if you like. Anyone can make one: a commented `skin.jsonc` file, checked for readable contrast. See [skins/README.md](skins/README.md).
 - Ten colour schemes, light and dark, plus an optional warm light, fonts and card sizes.
 - Block any channel, or just stop it being recommended.

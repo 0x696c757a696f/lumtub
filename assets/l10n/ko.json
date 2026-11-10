@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "양자내성 TLS 키교환 X25519MLKEM768 사이트 호스트",
   "No HTTPS connection yet since Lumtub started": "Lumtub 시작 후 아직 HTTPS 연결이 없습니다",
   "{0}, post-quantum": "{0}, 양자내성",
-  "{0}, not post-quantum": "{0}, 양자내성 아님"
+  "{0}, not post-quantum": "{0}, 양자내성 아님",
+  "Serbian": "세르비아어",
+  "Croatian": "크로아티아어",
+  "Slovenian": "슬로베니아어",
+  "Bosnian": "보스니아어",
+  "Catalan": "카탈로니아어",
+  "Kazakh": "카자흐어",
+  "Kyrgyz": "키르기스어",
+  "Assamese": "아삼어",
+  "Odia": "오리야어"
 }

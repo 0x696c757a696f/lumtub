@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "ድሕሪ-ኳንተም TLS ልውውጥ ቀሊሕ X25519MLKEM768 ጣቢያታት ሆስትስ",
   "No HTTPS connection yet since Lumtub started": "ካብ Lumtub ጀሚሩ ገና HTTPS ርክብ የለን",
   "{0}, post-quantum": "{0}, ድሕሪ-ኳንተም",
-  "{0}, not post-quantum": "{0}, ድሕሪ-ኳንተም ኣይኮነን"
+  "{0}, not post-quantum": "{0}, ድሕሪ-ኳንተም ኣይኮነን",
+  "Serbian": "ሰርቢያኛ",
+  "Croatian": "ክሮኤሽያኛ",
+  "Slovenian": "ስሎቬንኛ",
+  "Bosnian": "ቦስኒያኛ",
+  "Catalan": "ካታላንኛ",
+  "Kazakh": "ካዛክኛ",
+  "Kyrgyz": "ኪርጊዝኛ",
+  "Assamese": "አሳሜዝኛ",
+  "Odia": "ኦዲያ"
 }

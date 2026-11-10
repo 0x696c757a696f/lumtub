@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "հետկվանտային TLS բանալիների-փոխանակում X25519MLKEM768 կայքեր հոսթեր",
   "No HTTPS connection yet since Lumtub started": "Lumtub-ի գործարկումից ի վեր HTTPS կապ դեռ չկա",
   "{0}, post-quantum": "{0}, հետկվանտային",
-  "{0}, not post-quantum": "{0}, ոչ հետկվանտային"
+  "{0}, not post-quantum": "{0}, ոչ հետկվանտային",
+  "Serbian": "սերբերեն",
+  "Croatian": "խորվաթերեն",
+  "Slovenian": "սլովեներեն",
+  "Bosnian": "բոսնիերեն",
+  "Catalan": "կատալաներեն",
+  "Kazakh": "ղազախերեն",
+  "Kyrgyz": "ղրղզերեն",
+  "Assamese": "ասամերեն",
+  "Odia": "օրիա"
 }

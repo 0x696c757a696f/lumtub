@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "baada-ya-kuantamu TLS ubadilishanaji wa funguo X25519MLKEM768 tovuti wenyeji",
   "No HTTPS connection yet since Lumtub started": "Hakuna muunganisho wa HTTPS bado tangu Lumtub ilipoanza",
   "{0}, post-quantum": "{0}, baada ya kuantamu",
-  "{0}, not post-quantum": "{0}, si baada ya kuantamu"
+  "{0}, not post-quantum": "{0}, si baada ya kuantamu",
+  "Serbian": "Kiserbia",
+  "Croatian": "Kikroeshia",
+  "Slovenian": "Kislovenia",
+  "Bosnian": "Kibosnia",
+  "Catalan": "Kikatalani",
+  "Kazakh": "Kikazakh",
+  "Kyrgyz": "Kikirigizi",
+  "Assamese": "Kiassam",
+  "Odia": "Kiodia"
 }

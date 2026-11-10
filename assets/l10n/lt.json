@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "postkvantinis TLS raktų-mainai X25519MLKEM768 svetainės šeimininkai",
   "No HTTPS connection yet since Lumtub started": "Nuo Lumtub paleidimo dar nebuvo HTTPS ryšių",
   "{0}, post-quantum": "{0}, postkvantinis",
-  "{0}, not post-quantum": "{0}, nepostkvantinis"
+  "{0}, not post-quantum": "{0}, nepostkvantinis",
+  "Serbian": "serbų",
+  "Croatian": "kroatų",
+  "Slovenian": "slovėnų",
+  "Bosnian": "bosnių",
+  "Catalan": "katalonų",
+  "Kazakh": "kazachų",
+  "Kyrgyz": "kirgizų",
+  "Assamese": "asamų",
+  "Odia": "odijų"
 }

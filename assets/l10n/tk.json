@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "kwantdan-soňky TLS açar alyşygy X25519MLKEM768 sahypalar hostlar",
   "No HTTPS connection yet since Lumtub started": "Lumtub başlanaly bäri entek HTTPS birikmesi ýok",
   "{0}, post-quantum": "{0}, kwantdan soňky",
-  "{0}, not post-quantum": "{0}, kwantdan soňky däl"
+  "{0}, not post-quantum": "{0}, kwantdan soňky däl",
+  "Serbian": "serb",
+  "Croatian": "horwat",
+  "Slovenian": "sloven",
+  "Bosnian": "bosniýa",
+  "Catalan": "katalan",
+  "Kazakh": "gazak",
+  "Kyrgyz": "gyrgyz",
+  "Assamese": "assam",
+  "Odia": "odia"
 }

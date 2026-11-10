@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "postkvantové TLS výměna-klíčů X25519MLKEM768 weby hostitelé",
   "No HTTPS connection yet since Lumtub started": "Od spuštění Lumtub zatím žádné spojení HTTPS",
   "{0}, post-quantum": "{0}, postkvantové",
-  "{0}, not post-quantum": "{0}, nepostkvantové"
+  "{0}, not post-quantum": "{0}, nepostkvantové",
+  "Serbian": "srbština",
+  "Croatian": "chorvatština",
+  "Slovenian": "slovinština",
+  "Bosnian": "bosenština",
+  "Catalan": "katalánština",
+  "Kazakh": "kazaština",
+  "Kyrgyz": "kyrgyzština",
+  "Assamese": "ásámština",
+  "Odia": "urijština"
 }

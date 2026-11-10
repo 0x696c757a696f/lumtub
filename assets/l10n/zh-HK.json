@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "後量子 抗量子 TLS 金鑰交換 X25519MLKEM768 網站 主機",
   "No HTTPS connection yet since Lumtub started": "Lumtub 啟動後仍未有 HTTPS 連線",
   "{0}, post-quantum": "{0}，後量子",
-  "{0}, not post-quantum": "{0}，非後量子"
+  "{0}, not post-quantum": "{0}，非後量子",
+  "Serbian": "塞爾維亞語",
+  "Croatian": "克羅地亞語",
+  "Slovenian": "斯洛文尼亞語",
+  "Bosnian": "波斯尼亞語",
+  "Catalan": "加泰羅尼亞語",
+  "Kazakh": "哈薩克語",
+  "Kyrgyz": "吉爾吉斯語",
+  "Assamese": "阿薩姆語",
+  "Odia": "奧里亞語"
 }

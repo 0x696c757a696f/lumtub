@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "post-cuantic TLS schimb de chei X25519MLKEM768 site-uri gazde",
   "No HTTPS connection yet since Lumtub started": "Încă nicio conexiune HTTPS de la pornirea Lumtub",
   "{0}, post-quantum": "{0}, post-cuantic",
-  "{0}, not post-quantum": "{0}, non post-cuantic"
+  "{0}, not post-quantum": "{0}, non post-cuantic",
+  "Serbian": "sârbă",
+  "Croatian": "croată",
+  "Slovenian": "slovenă",
+  "Bosnian": "bosniacă",
+  "Catalan": "catalană",
+  "Kazakh": "kazahă",
+  "Kyrgyz": "kârgâză",
+  "Assamese": "asameză",
+  "Odia": "odia"
 }

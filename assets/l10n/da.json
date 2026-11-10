@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "post-kvante TLS nøgleudveksling X25519MLKEM768 websteder værter",
   "No HTTPS connection yet since Lumtub started": "Ingen HTTPS-forbindelse endnu, siden Lumtub startede",
   "{0}, post-quantum": "{0}, post-kvante",
-  "{0}, not post-quantum": "{0}, ikke post-kvante"
+  "{0}, not post-quantum": "{0}, ikke post-kvante",
+  "Serbian": "serbisk",
+  "Croatian": "kroatisk",
+  "Slovenian": "slovensk",
+  "Bosnian": "bosnisk",
+  "Catalan": "catalansk",
+  "Kazakh": "kasakhisk",
+  "Kyrgyz": "kirgisisk",
+  "Assamese": "assamesisk",
+  "Odia": "odia"
 }

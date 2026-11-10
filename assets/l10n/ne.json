@@ -3154,5 +3154,14 @@
   "post-quantum TLS key exchange X25519MLKEM768 sites hosts": "क्वान्टम-पछिको TLS कुञ्जी आदानप्रदान X25519MLKEM768 साइटहरू होस्टहरू",
   "No HTTPS connection yet since Lumtub started": "Lumtub सुरु भएदेखि अहिलेसम्म HTTPS जडान भएको छैन",
   "{0}, post-quantum": "{0}, क्वान्टम-पछिको",
-  "{0}, not post-quantum": "{0}, क्वान्टम-पछिको होइन"
+  "{0}, not post-quantum": "{0}, क्वान्टम-पछिको होइन",
+  "Serbian": "सर्बियाली",
+  "Croatian": "क्रोएसियाली",
+  "Slovenian": "स्लोभेनियाली",
+  "Bosnian": "बोस्नियाली",
+  "Catalan": "क्याटालान",
+  "Kazakh": "कजाख",
+  "Kyrgyz": "किर्गिज",
+  "Assamese": "असमिया",
+  "Odia": "उडिया"
 }

@@ -41,6 +41,7 @@ import '../theme.dart';
 import 'account_settings.dart';
 import 'relay_servers_page.dart';
 import 'settings_subpages.dart';
+import 'subscription_import_dialog.dart';
 import 'translation_settings_page.dart';
 import 'watch_stats_page.dart';
 import '../../l10n/l10n.dart';
@@ -434,6 +435,15 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               subtitle: tr('Following {0} channels', [controller.library?.channels.length ?? 0]),
               leading: _icon(AppIcons.arrowsClockwise),
               onTap: () => controller.library?.refreshFeed(force: true),
+            )),
+        SettingEntry(tr('Import from file'), (context) => NormalItem(
+              title: tr('Import from file'),
+              subtitle: tr('Import subscriptions from a NewPipe, FreeTube or Google Takeout file; nothing is uploaded'),
+              leading: _icon(AppIcons.downloadSimple),
+              onTap: () {
+                final library = controller.library;
+                if (library != null) importSubscriptionsFromFile(context, library);
+              },
             )),
       ],
     SettingsCategory.video => [

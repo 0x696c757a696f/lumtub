@@ -60,6 +60,14 @@ void main() {
     expect(await logText(), contains('appearance.json could not be read'));
   });
 
+  test('the app icon is saved and an unknown one falls back to the classic icon', () async {
+    final store = AppearanceSettingsStore(directories);
+    await store.save(const AppearanceSettings(appIcon: AppIcon.sunlight));
+    expect((await store.load()).appIcon, AppIcon.sunlight);
+    expect(const AppearanceSettings().appIcon, AppIcon.classic);
+    expect(AppearanceSettings.fromJson({'appIcon': 'neon'}).appIcon, AppIcon.classic);
+  });
+
   test('a missing file gives defaults without a backup or a warning', () async {
     expect((await AppPreferencesStore(directories).load()).hideShorts, isFalse);
     expect(config('preferences.json.broken').existsSync(), isFalse);

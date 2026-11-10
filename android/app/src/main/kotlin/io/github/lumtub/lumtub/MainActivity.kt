@@ -2,6 +2,7 @@ package io.github.lumtub.lumtub
 
 import android.Manifest
 import android.app.PictureInPictureParams
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -97,6 +98,28 @@ class MainActivity : FlutterActivity() {
         signingIn = null
     }
 
+    /**
+     * Shows the sunlight or the classic icon on the home screen by turning
+     * on one launcher alias and off the other; the launcher may take a
+     * moment to redraw it.
+     */
+    private fun setAppIcon(sunlight: Boolean) {
+        val want = if (sunlight) "SunlightIcon" else "ClassicIcon"
+        for (name in listOf("ClassicIcon", "SunlightIcon")) {
+            val component = ComponentName(this, "${MainActivity::class.java.name.substringBeforeLast('.')}.$name")
+            val state = if (name == want) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+            val current = packageManager.getComponentEnabledSetting(component)
+            val on = current == PackageManager.COMPONENT_ENABLED_STATE_ENABLED ||
+                (current == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT && name == "ClassicIcon")
+            if (on == (name == want)) continue
+            try {
+                packageManager.setComponentEnabledSetting(component, state, PackageManager.DONT_KILL_APP)
+            } catch (e: Exception) {
+                // An older build without the alias: keep the icon it has.
+            }
+        }
+    }
+
     private fun handle(call: MethodCall): Any? {
         when (call.method) {
             "setMetadata" -> {
@@ -152,6 +175,7 @@ class MainActivity : FlutterActivity() {
                 }
             }
             "moveToBack" -> moveTaskToBack(true)
+            "setAppIcon" -> setAppIcon(call.arguments == "sunlight")
             "setFrameRate" -> fitFrameRate((call.arguments as? Number)?.toDouble() ?: 0.0)
             "isMetered" -> return (getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager).isActiveNetworkMetered
         }

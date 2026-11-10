@@ -3190,5 +3190,13 @@
   "Fall back to Piped or Invidious when YouTube refuses": "YouTube 拒绝时改用 Piped 或 Invidious",
   "When YouTube answers with a bot check, a rate limit or a refusal, play the video from a public Piped or Invidious server instead. That server learns which video you watch. When off, the error is shown instead": "当 YouTube 要求验证、限流或拒绝时，改从公共 Piped 或 Invidious 服务器播放。该服务器会知道你在看哪个视频。关闭后将直接显示错误",
   "Piped Invidious fallback privacy bot check 429": "Piped Invidious 回退 隐私 机器人验证 429",
-  "720p H.264, for a slow network or an older TV": "720p H.264，适合网络慢或比较旧的电视"
+  "720p H.264, for a slow network or an older TV": "720p H.264，适合网络慢或比较旧的电视",
+  "App icon": "应用图标",
+  "Classic": "经典",
+  "Sunlight": "阳光",
+  "Current: {0}. {1}": "当前：{0}。{1}",
+  "The home screen icon; your launcher may take a moment to show it": "桌面上的图标，启动器可能要过一会儿才会换过来",
+  "Shown in the Dock while Lumtub runs; when it is closed the Dock shows the classic one": "Lumtub 运行时在程序坞里显示；退出后程序坞显示经典图标",
+  "The icon on the window, taskbar and tray; the installed program keeps the classic one": "窗口、任务栏和托盘上的图标；安装的程序文件仍是经典图标",
+  "logo launcher dock taskbar tray icon": "图标 标志 启动器 程序坞 任务栏 托盘"
 }

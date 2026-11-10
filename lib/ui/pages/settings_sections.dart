@@ -1016,6 +1016,29 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               leading: _icon(AppIcons.paintBrush),
               onTap: () => openSkins(context, controller),
             ), subtitle: '${tr('skin theme y2k retro aero chrome pixel classic window frame title bar menu bar')} ${tr('color scheme theme rice paper candlelight ink bamboo rime pine soot night voyage dusk hills falling petals sandstone high contrast')}'),
+        if (Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isAndroid)
+          SettingEntry(tr('App icon'), (context) => NormalItem(
+                title: tr('App icon'),
+                subtitle: tr('Current: {0}. {1}', [
+                  appearance.appIcon.label,
+                  Platform.isAndroid
+                      ? tr('The home screen icon; your launcher may take a moment to show it')
+                      : Platform.isMacOS
+                          ? tr('Shown in the Dock while Lumtub runs; when it is closed the Dock shows the classic one')
+                          : tr('The icon on the window, taskbar and tray; the installed program keeps the classic one'),
+                ]),
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image.asset(appearance.appIcon.preview, width: 24, height: 24, filterQuality: FilterQuality.medium),
+                ),
+                onTap: () => pickFromDialog<AppIcon>(
+                  context,
+                  title: tr('App icon'),
+                  value: appearance.appIcon,
+                  values: _enumValues(AppIcon.values, (i) => i.label),
+                  onSelected: (icon) => saveLooks(controller.appearance.copyWith(appIcon: icon)),
+                ),
+              ), subtitle: tr('logo launcher dock taskbar tray icon')),
         SettingEntry(tr('Warm light'), (context) => NormalItem(
               title: tr('Warm light'),
               subtitle: tr('Now: {0}. Lays a warm light over the whole window, video included, with less blue; black stays black and white turns warm like paper', [_eyeCareLabel(appearance)]),

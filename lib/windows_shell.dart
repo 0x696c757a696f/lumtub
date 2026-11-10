@@ -6,6 +6,7 @@ import 'package:media_kit/media_kit.dart';
 
 import 'app/app_controller.dart';
 import 'app_window.dart';
+import 'appearance_settings.dart';
 import 'kwin_keep_above.dart';
 import 'l10n/l10n.dart';
 
@@ -105,6 +106,23 @@ class WindowsShell {
         'next': tr('Next'),
         'exit': tr('Exit'),
       });
+
+  /// Shows [icon] on the window, taskbar and tray (Windows, Linux), in the
+  /// Dock while Lumtub runs (macOS), or on the home screen (Android).
+  Future<void> setAppIcon(AppIcon icon) async {
+    if (Platform.isMacOS) {
+      Uint8List? png;
+      if (icon != AppIcon.classic) {
+        try {
+          png = (await rootBundle.load('assets/app_icons/${icon.name}-mac.png')).buffer.asUint8List();
+        } catch (_) {
+          return;
+        }
+      }
+      return _send('setAppIcon', {'name': icon.name, 'png': png});
+    }
+    return _send('setAppIcon', icon.name);
+  }
 }
 
 /// Keeps a [WindowsShell] in step with the controller's playback, and turns
@@ -127,6 +145,7 @@ class WindowsShellSync {
   bool? _hasNext, _hasPrevious;
   bool _autoPip = false;
   (bool, bool)? _tray;
+  AppIcon? _icon;
   Duration _duration = Duration.zero;
   /// The playing video's frame rate as mpv reads it, and the one the
   /// screen was last asked to fit (0: its own choice).
@@ -156,6 +175,11 @@ class WindowsShellSync {
       _tray = tray;
       unawaited(shell.setTray(enabled: tray.$1, minimize: tray.$2));
       if (AppWindow.onWayland) unawaited(KWinMinimizeWatch.set(tray.$2));
+    }
+    final icon = controller.appearance.appIcon;
+    if (icon != _icon) {
+      _icon = icon;
+      unawaited(shell.setAppIcon(icon));
     }
     final video = controller.playing;
     if (video?.id != _videoId) {

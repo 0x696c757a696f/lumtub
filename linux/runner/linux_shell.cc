@@ -28,6 +28,7 @@ using IndicatorNew = void* (*)(const char*, const char*, int, const char*);
 using IndicatorSetStatus = void (*)(void*, int);
 using IndicatorSetMenu = void (*)(void*, GtkMenu*);
 using IndicatorSetTitle = void (*)(void*, const char*);
+using IndicatorSetIcon = void (*)(void*, const char*, const char*);
 constexpr int kCategoryApplicationStatus = 0;
 constexpr int kStatusPassive = 0;
 constexpr int kStatusActive = 1;
@@ -49,6 +50,9 @@ struct Shell {
   IndicatorSetStatus indicator_set_status = nullptr;
   IndicatorSetMenu indicator_set_menu = nullptr;
   IndicatorSetTitle indicator_set_title = nullptr;
+  IndicatorSetIcon indicator_set_icon = nullptr;
+  // The icon file in data/ without .png: lumtub, or lumtub-sunlight.
+  std::string icon_name = "lumtub";
   void* indicator = nullptr;
   GtkWidget* menu = nullptr;
 
@@ -100,7 +104,7 @@ std::string ExecutableDirectory() {
   return full.substr(0, full.rfind('/'));
 }
 
-std::string IconPath() { return ExecutableDirectory() + "/data/lumtub.png"; }
+std::string IconPath() { return ExecutableDirectory() + "/data/" + shell.icon_name + ".png"; }
 
 void Send(const char* method, FlValue* argument) {
   if (shell.channel == nullptr) {
@@ -137,6 +141,7 @@ bool LoadIndicator() {
   shell.indicator_set_status = reinterpret_cast<IndicatorSetStatus>(dlsym(library, "app_indicator_set_status"));
   shell.indicator_set_menu = reinterpret_cast<IndicatorSetMenu>(dlsym(library, "app_indicator_set_menu"));
   shell.indicator_set_title = reinterpret_cast<IndicatorSetTitle>(dlsym(library, "app_indicator_set_title"));
+  shell.indicator_set_icon = reinterpret_cast<IndicatorSetIcon>(dlsym(library, "app_indicator_set_icon_full"));
   if (shell.indicator_new == nullptr || shell.indicator_set_status == nullptr || shell.indicator_set_menu == nullptr) {
     shell.indicator_new = nullptr;
     return false;
@@ -200,7 +205,7 @@ bool ShowTrayIcon() {
     // An icon name looked up in the app's own folder: tray hosts read a
     // name with a theme path, not every one reads a file path.
     const std::string folder = ExecutableDirectory() + "/data";
-    shell.indicator = shell.indicator_new("lumtub", "lumtub", kCategoryApplicationStatus, folder.c_str());
+    shell.indicator = shell.indicator_new("lumtub", shell.icon_name.c_str(), kCategoryApplicationStatus, folder.c_str());
     if (shell.indicator == nullptr) return false;
     if (shell.indicator_set_title != nullptr) shell.indicator_set_title(shell.indicator, "Lumtub");
     BuildMenu();
@@ -768,6 +773,15 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
     }
     // With either tray option on, the icon stays while the window is open too.
     if (shell.close_to_tray || shell.minimize_to_tray) ShowTrayIcon();
+  } else if (method == "setAppIcon") {
+    const std::string name = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_STRING && std::string(fl_value_get_string(args)) == "sunlight"
+                                 ? "lumtub-sunlight"
+                                 : "lumtub";
+    if (name != shell.icon_name) {
+      shell.icon_name = name;
+      if (shell.window != nullptr) gtk_window_set_icon_from_file(shell.window, IconPath().c_str(), nullptr);
+      if (shell.indicator != nullptr && shell.indicator_set_icon != nullptr) shell.indicator_set_icon(shell.indicator, name.c_str(), "Lumtub");
+    }
   } else if (method == "setMetadata") {
     shell.title = StringArg(args, "title");
     shell.artist = StringArg(args, "artist");

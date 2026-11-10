@@ -408,7 +408,7 @@ class PlayerSettings {
   /// `--d3d11va-zero-copy`.
   final bool d3d11vaZeroCopy;
   /// libmpv draws subtitles itself (libass), so the mpv subtitle options
-  /// apply; off, Flutter draws them over the video. Takes effect on restart.
+  /// apply; off, Flutter draws them over the video. Switches at once.
   final bool libassSubtitles;
   /// How yt-dlp, libmpv and the app reach YouTube.
   final ProxyMode proxyMode;

@@ -11,7 +11,7 @@
 :minghui | @MinghuiTV | ^明慧网 | ^明慧網 | ^Minghui | ^明慧
 :shen-yun | @shenyun | ^神韵艺术团 | ^神韻藝術團 | ^Shen Yun | ^神韵 | ^神韻
 :epoch-times | @epochtimesdigital | ^大纪元 | ^大紀元 | ^The Epoch Times | ^Epoch Times | ^EpochTV | ^Epoch Health
-:ntd | @NTDCHINESE | @ntdaptv | @ntdnews | @NTDSpanish | ^新唐人 | ^NTD Television | ^NTD
+:ntd | UCnk79D1LrciHiJLPYY_81hw | @NTDCHINESE | @ntdaptv | @ntdnews | @NTDSpanish | ^新唐人 | ^NTD Television | ^NTD
 :epoch-headlines | ^纪元头条 | ^紀元頭條
 :jinwen | ^中国禁闻 | ^中國禁聞
 :news-decoded | UCHY4xOBo9z03nceB6Pl-yzg | @News_Insight | ^新闻大破解 | ^新聞大破解

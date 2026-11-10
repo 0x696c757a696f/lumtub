@@ -49,8 +49,6 @@
     status: unproven
 :tou-shi-jin-hua-lun | ^透视进化论 | ^透視進化論
     status: unproven
-:shi-guang-zhi-mi | ^时光之谜 | ^時光之謎
-    status: unproven
 :women-xuyao-zhenxiang | ^我们需要真相 | ^我們需要真相 | ^We Need Truth
     status: unproven
 :edge-of-wonder | ^Edge of Wonder

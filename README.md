@@ -129,7 +129,7 @@ These are also found in other YouTube clients, and all are opt-in here:
 | `android-x86_64` APK | Android emulators and x86 Chromebooks |
 
 File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
-**Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Lumtub needs the Microsoft Visual C++ Redistributable; if Windows says a DLL such as `MSVCP140.dll` or `VCRUNTIME140_1.dll` is missing, install it ([x64](https://aka.ms/vs/17/release/vc_redist.x64.exe), [ARM64](https://aka.ms/vs/17/release/vc_redist.arm64.exe)) and start Lumtub again.<br>
+**Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
 **Android (preview):** open the APK and allow installing from your browser or file manager when asked. New versions install from inside Lumtub; Android asks you to confirm. Live streams and downloads work too, through the yt-dlp built into the app; members-only videos don't play on Android yet.

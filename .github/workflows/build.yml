@@ -350,6 +350,29 @@ jobs:
           "$tag`n$env:RUNTIME_ARCH`n" | Out-File -FilePath (Join-Path $releaseDir 'libmpv-version.txt') -Encoding ascii -NoNewline
           Write-Host "Replaced the bundled DLL with $($library.FullName)"
 
+      # A fresh Windows has no Visual C++ runtime, and lumtub.exe, the Flutter
+      # engine and the Rust core need it. Microsoft allows shipping the
+      # redistributable DLLs next to the program; they come from the Visual
+      # Studio that built the app, so they are never older than it needs.
+      - name: Windows - bundle the Visual C++ runtime
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $install = & $vswhere -latest -products * -property installationPath
+          if (-not $install) { throw 'Visual Studio not found.' }
+          $arch = if ($env:BUILD_DIR -eq 'arm64') { 'arm64' } else { 'x64' }
+          $redist = Join-Path $install 'VC\Redist\MSVC'
+          $crt = Get-ChildItem -LiteralPath $redist -Directory | Where-Object { $_.Name -match '^\d+(\.\d+)+$' } |
+            Sort-Object { [version]$_.Name } -Descending |
+            ForEach-Object { Get-ChildItem -LiteralPath (Join-Path $_.FullName $arch) -Directory -Filter 'Microsoft.VC*.CRT' -ErrorAction SilentlyContinue } |
+            Select-Object -First 1
+          if (-not $crt) { throw "No $arch Visual C++ runtime under $redist." }
+          Write-Host "Visual C++ runtime from $($crt.FullName)"
+          $releaseDir = Join-Path "build/windows/$env:BUILD_DIR/runner" 'Release'
+          Copy-Item -Path (Join-Path $crt.FullName '*.dll') -Destination $releaseDir -Force
+          Get-ChildItem -LiteralPath $releaseDir -Filter '*.dll' | Where-Object { $_.Name -match '^(msvcp|vcruntime|concrt)' } | ForEach-Object { Write-Host "$($_.Name) $($_.VersionInfo.FileVersion)" }
+
       - name: Windows - package portable distribution
         shell: pwsh
         run: |
@@ -368,6 +391,30 @@ jobs:
           $marker = Join-Path $env:RUNNER_TEMP 'portable.txt'
           "Lumtub keeps its settings, cache and logs in the userdata folder next to this file.`r`nDelete this file to keep them in %LOCALAPPDATA%\Lumtub instead.`r`n" | Out-File -FilePath $marker -Encoding ascii -NoNewline
           Compress-Archive -Update -Path $marker -DestinationPath "$package.zip"
+
+      - name: Windows - check the Visual C++ runtime is bundled
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $package = (Resolve-Path "Lumtub_$env:LUMTUB_VERSION`_windows-$env:PACKAGE_ARCH").Path
+          foreach ($name in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
+            if (-not (Test-Path -LiteralPath (Join-Path $package $name))) { throw "$name is missing from the package." }
+          }
+          # Whatever runtime DLL any bundled program imports must be bundled too.
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $install = & $vswhere -latest -products * -property installationPath
+          $dumpbin = Get-ChildItem -LiteralPath $install -Filter dumpbin.exe -File -Recurse | Select-Object -First 1
+          if (-not $dumpbin) { throw 'dumpbin.exe not found.' }
+          $missing = @()
+          foreach ($file in Get-ChildItem -LiteralPath $package -Recurse -Include *.dll, *.exe) {
+            $dependents = & $dumpbin.FullName /dependents $file.FullName | Out-String
+            foreach ($m in [regex]::Matches($dependents, '(?im)^\s+((?:msvcp|vcruntime|concrt|vccorlib|vcomp)\d+\w*\.dll)\s*$')) {
+              $name = $m.Groups[1].Value
+              if (-not (Test-Path -LiteralPath (Join-Path $package $name))) { $missing += "$($file.Name) needs $name" }
+            }
+          }
+          if ($missing) { throw ('Not bundled: ' + (($missing | Sort-Object -Unique) -join '; ')) }
+          Write-Host 'The Visual C++ runtime is bundled.'
 
       - name: Windows - build installer
         shell: pwsh

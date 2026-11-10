@@ -2002,7 +2002,7 @@ struct Shared {
 }
 
 /// How long the server keeps listening after the last stream was read.
-const IDLE: Duration = Duration::from_secs(5 * 60);
+const IDLE: Duration = Duration::from_secs(2 * 60 * 60);
 
 /// What decides when the listener closes for being idle.
 struct Gate {

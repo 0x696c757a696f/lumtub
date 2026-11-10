@@ -8,13 +8,13 @@
 
 :wen-zhao-tan-gu-lun-jin | UCjsQt9uzGF8m6ERcOQxqxYg | @%E6%96%87%E6%98%AD%E8%AB%87%E5%8F%A4%E8%AB%96%E4%BB%8A | ^文昭谈古论今 | ^文昭談古論今
 :wen-zhao-si-xu-fei-yang | UCXc2XWCAdJ1A4KZzzADInzQ | @%E6%96%87%E6%98%AD%E6%80%9D%E7%B7%92%E9%A3%9B%E6%8F%9A | ^文昭思绪飞扬 | ^文昭思緒飛揚
-:jiang-feng-shi-ke | ^江峰时刻 | ^江峯時刻 | ^江峰時刻
+:jiang-feng-shi-ke | UCa6ERCDt3GzkvLye32ar89w | @JiangFengTimes | ^江峰时刻 | ^江峯時刻 | ^江峰時刻
 :jiang-feng-shi-jie | ^江峰·视界 | ^江峯·視界 | ^江峰·視界 | ^江峰视界 | ^江峯視界 | ^江峰視界
 :jiang-feng-ao-miao | UCCDCmJcvbDzY3ccyJHK_NtA | @jiangfengyangsheng | ^江峰·奥妙 | ^江峯·奧妙 | ^江峰·奧妙 | ^江峰奥妙 | ^江峯奧妙 | ^江峰奧妙
 :jiang-feng-du-shu-hui | UC18I_krBItpXyPtQleYZ8Dw | @jiangfengreading | ^江峰读书会 | ^江峯讀書會 | ^江峰讀書會
 :tian-liang-shi-fen | UCjvjNeHndz4PGs9JXhzdHqw | @TianLiangTimes | ^天亮时分 | ^天亮時分 | ^Tianliang Times
 :tian-liang-lun-zheng | ^天亮论政 | ^天亮論政
-:zhang-tianliang | @TianliangZhang | ^章天亮 | ^Tianliang Zhang | ^Zhang Tianliang
+:zhang-tianliang | UCeAMIRsask6nmeUNYa4XZxw | @TianliangZhang | ^章天亮 | ^Tianliang Zhang | ^Zhang Tianliang
 :chen-pokong | ^陈破空 | ^陳破空 | ^Chen Pokong
 :shi-tao-ju-jiao | ^石涛聚焦 | ^石濤聚焦
 :shi-tao-ping-shu | ^石涛评述 | ^石濤評述
@@ -34,12 +34,12 @@
 :mu-yang-kan-dian | UCeWpOJVoHdptWjEJGFdbCCw | @MuyangOpinion | ^沐阳看点 | ^沐陽看點
 :yuan-jian-kuai-ping | UCKVO0GNQ1f3Wzhn4BuZ0rdQ | @Tang-h5r | ^远见快评 | ^遠見快評
 :tang-jingyuan | ^唐靖远 | ^唐靖遠
-:jing-yuan-kai-jiang | @jingyuantalk | ^靖远开讲 | ^靖遠開講
+:jing-yuan-kai-jiang | UCglhcbubTpQK8MYAAfC_zqw | @jingyuantalk | ^靖远开讲 | ^靖遠開講
 :da-yu-pai-an-jing-qi | UC7OSuLli5V7b4J6J02n6zlg | @dayutalk | ^大宇拍案惊奇 | ^大宇拍案驚奇
 :xin-wen-pai-an-jing-qi | UCOLfSutoyLeSggX7oLbrBDQ | @DayuShow | ^新闻拍案惊奇 | ^新聞拍案驚奇
 :dayu-life | ^大宇Life
 :fang-fei-shi-jian | UCNcZAhkdRR0oZegCB9u7seQ | @fangfeitime | ^方菲时间 | ^方菲時間
-:fang-wei-shi-jian | ^方伟时间 | ^方偉時間
+:fang-wei-shi-jian | UCu8NUZsXxH8WV330dr7rm0g | @FangWeiTime | ^方伟时间 | ^方偉時間
 :shi-jie-de-shi-zi-lu-kou | ^世界的十字路口
 :shi-shi-jin-sao-miao | UC63bXJHDil9BVGBHroYFJng | @%E6%99%82%E4%BA%8B%E9%87%91%E6%8E%83%E6%8F%8F | ^时事金扫描 | ^時事金掃描
 :heng-he-guan-dian | ^横河观点 | ^橫河觀點
@@ -71,9 +71,13 @@
 :xiao-qian-kun | UCsnpYvx02DcQFoAC-gg5C9A | @%E5%B0%8F%E4%B9%BE%E5%9D%A4-s3g | ^小乾坤
 :china-uncensored | @ChinaUncensored | ^China Uncensored
 :china-unscripted | UCvr1DclUsRzNYXWOWJ7eVLQ | @ChinaUnscripted | ^China Unscripted
-:wenzhaoofficial | @wenzhaoofficial
-:wenzhaostudio | @wenzhaostudio
+:wenzhaoofficial | UCtAIPjABiQD3qjlEl1T5VpA | @wenzhaoofficial
+:wenzhaostudio | UCTu_hTaVf3DJMpMIyOAq2Ew | @wenzhaostudio
 :realjiangfeng | @realjiangfeng
-:muyangshow | @MuYangShow
+:muyangshow | UCPMqbkR35zZV1ysWGXJPW-w | @MuYangShow
 :cantomuyang | @cantomuyang
 :ucxptuwjp9wl-z0xme5norla | UCxPTUWjp9wl_z0XmE5noRLA
+:canto-jingyuan | UC-0LAcbTZPHuFetyBjlFHfg | @CantoJingyuan | ^【粵】靖遠開講
+:shi-tao-tv-2 | UC6zxZTv5ZbMmEg5GqBmXAUQ | @TVNo-pp7br | ^「石濤.TV」No.02
+:shi-tao-tv-3 | UC65R_SZZwaJtd9cphyQGwgQ | @TVNo-dy2wx | ^「石濤.TV」 No.03 | ^「石濤.TV」No.03
+:shi-guang-zhi-mi | UC9VhA1Yp8JUj4ZMWVsRqfOA | @weiyutime | ^时光之谜 | ^時光之謎

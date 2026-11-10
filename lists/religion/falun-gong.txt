@@ -11,11 +11,11 @@
 :minghui | @MinghuiTV | ^明慧网 | ^明慧網 | ^Minghui | ^明慧
 :shen-yun | @shenyun | ^神韵艺术团 | ^神韻藝術團 | ^Shen Yun | ^神韵 | ^神韻
 :epoch-times | @epochtimesdigital | ^大纪元 | ^大紀元 | ^The Epoch Times | ^Epoch Times | ^EpochTV | ^Epoch Health
-:ntd | @NTDCHINESE | @ntdaptv | @ntdnews | @NTDSpanish | ^新唐人 | ^NTD Television | ^NTD
+:ntd | UCdbvc-yJ4JQjNGTgFiJIZNA | @NTDCHINESE | @NTDSpanish | ^新唐人 | ^NTD Television | ^NTD
 :epoch-headlines | ^纪元头条 | ^紀元頭條
 :jinwen | ^中国禁闻 | ^中國禁聞
 :news-decoded | UCHY4xOBo9z03nceB6Pl-yzg | @News_Insight | ^新闻大破解 | ^新聞大破解
-:sound-of-hope | @soh_tv | ^希望之声 | ^希望之聲 | ^SOH | ^Sound of Hope
+:sound-of-hope | UCk89pEd76qutMB08hVSY49Q | @soh_tv | ^希望之声 | ^希望之聲 | ^SOH | ^Sound of Hope
 :kan-zhongguo | @kzg | ^看中国 | ^看中國
 :vision-times | ^Vision Times
 :apollo-net | ^阿波罗新闻网 | ^阿波羅新聞網 | ^阿波罗网 | ^阿波羅網
@@ -23,9 +23,9 @@
 :zhengjian | UC40T0Oz3ZV5ZAsQ3Cw7cOuQ | @zhengjian2009 | ^正见网 | ^正見網
 :woipfg | ^追查国际 | ^追查國際 | ^WOIPFG
 :quit-ccp-service-center | ^全球退党服务中心 | ^全球退黨服務中心
-:china-in-focus | @ChinainFocusNTD | ^China in Focus
+:china-in-focus | UCBOqkAGTtzZVmKvY4SwdZ2g | @ChinainFocusNTD | ^China in Focus
 :facts-matter | @FactsMatterRoman | ^Facts Matter
-:american-thought-leaders | ^American Thought Leaders
+:american-thought-leaders | UCmWhuFRkZKu0g-e1xrlakVA | @AmericanThoughtLeaders | ^American Thought Leaders
 :china-observer | @ChinaObserver0 | ^China Observer
 :china-insights | @chinainsights4458 | ^China Insights
 :hot-topic-dialogue | UCAa9oah8kGEDteKSHKVhK0A | @%E7%83%AD%E7%82%B9%E4%BA%92%E5%8A%A8-s8f | ^热点互动 | ^熱點互動
@@ -38,5 +38,21 @@
 :culture-of-the-party | ^漫谈党文化 | ^漫談黨文化
 :century-of-red-tragedy | ^百年红祸 | ^百年紅禍
 :health-1-1 | ^健康1+1
-:ganjing-world | ^干净世界 | ^乾淨世界 | ^Gan Jing World | ^GanJing World
+:ganjing-world | UC65WCSRnGYWNuXQeuUHVPYA | @ganjingworld-official | ^干净世界 | ^乾淨世界 | ^Gan Jing World | ^GanJing World
 :ucak-sbmzp79a4k2caqqodlq | UCAk-SBMZp79a4k2CAqqoDLQ
+
+:xin-wen-da-shi-ye | UCnk79D1LrciHiJLPYY_81hw | ^新闻大视野 | ^新聞大視野
+:bai-nian-zhen-xiang | UCJ0WwxWijk8NemAqLtqj4Sw | @%E7%99%BE%E5%B9%B4%E7%9C%9F%E7%9B%B8 | ^百年真相
+:huan-qiu-zhi-ji | ^环球直击 | ^環球直擊
+:xin-wen-da-jia-tan | ^新闻大家谈 | ^新聞大家談
+:off-the-great-wall | UChtzdESO4SYaxY5sNTdwl3w | @NTDOffTheGreatWall | ^Off the Great Wall
+:new-century-film | UC_3m3VSxzRMbnZt-rQ5H5Xg | @NCF | ^新世纪影视 | ^新世紀影視
+:fei-tian | ^飞天艺术学院 | ^飛天藝術學院 | ^飞天大学 | ^飛天大學 | ^Fei Tian College | ^Fei Tian Academy
+
+:ntd-english | UC8Ioh4atNDO5a0Vy2qFmauQ | @ntdtv
+:ntd-news | UCjz-4y6ts-VF2KSQX-jsnVg | @ntdnews
+:ntd-asia-pacific | UCi4AGjvmSMB9Nn6oyFPYPeQ | @ntdaptv | ^新唐人電視台-亞太 | ^新唐人电视台-亚太
+:epoch-times-english | UCeLc4heXqG9dtL7jiPHMBfQ | @TheEpochTimesNews
+:epoch-times-taiwan | UCApkp-DRCG3ioHRepJU85tw | @EpochtimesTw | ^台灣大紀元時報 | ^台湾大纪元时报
+:epoch-times-hong-kong | UCBRcyI55pANUU4Ofia75yEg | @EpochTimes-HK | ^香港大紀元新唐人聯合新聞頻道
+:news-insight-on-demand | UCk4wDPuGBx6IjWlDeNKch2w | @News_Insight_II | ^新聞大破解隨選 | ^新闻大破解随选

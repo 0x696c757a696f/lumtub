@@ -3128,5 +3128,6 @@
   "1 month ago": "1 hónappal ezelőtt",
   "{0} months ago": "{0} hónappal ezelőtt",
   "1 year ago": "1 évvel ezelőtt",
-  "{0} years ago": "{0} évvel ezelőtt"
+  "{0} years ago": "{0} évvel ezelőtt",
+  "Watched {0}": "Megtekintve: {0}"
 }

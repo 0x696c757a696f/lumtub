@@ -140,23 +140,26 @@ fn playlist(tile: &Value) -> Option<Value> {
     }))
 }
 
-/// Every tile under [node], in order, skipping the rows the TV app marks as
+/// Every tile under [node], in order, with the title of the row it is in
+/// (the day, on the history page), skipping the rows the TV app marks as
 /// Shorts when [shorts] is false.
-fn tiles<'a>(node: &'a Value, shorts: bool, out: &mut Vec<&'a Value>) {
+fn tiles<'a>(node: &'a Value, shorts: bool, shelf: Option<&str>, out: &mut Vec<(&'a Value, Option<String>)>) {
     match node {
         Value::Object(map) => {
             if let Some(tile) = map.get("tileRenderer") {
-                out.push(tile);
+                out.push((tile, shelf.map(str::to_owned)));
                 return;
             }
             if !shorts && map.get("tvhtml5ShelfRendererType").and_then(Value::as_str) == Some("TVHTML5_SHELF_RENDERER_TYPE_SHORTS") {
                 return;
             }
+            let title = map.get("headerRenderer").and_then(|header| find(header, "title")).map(|title| text_of(Some(title))).filter(|t| !t.trim().is_empty());
+            let shelf = title.as_deref().or(shelf);
             for value in map.values() {
-                tiles(value, shorts, out);
+                tiles(value, shorts, shelf, out);
             }
         }
-        Value::Array(list) => list.iter().for_each(|v| tiles(v, shorts, out)),
+        Value::Array(list) => list.iter().for_each(|v| tiles(v, shorts, shelf, out)),
         _ => {}
     }
 }
@@ -201,11 +204,14 @@ pub fn page(response: &Value, shorts: bool) -> Page {
             tab.get("content")
         })
         .unwrap_or(response);
-    tiles(root, shorts, &mut found);
+    tiles(root, shorts, None, &mut found);
     let mut page = Page { continuation: continuation(root).or_else(|| continuation(response)), ..Default::default() };
     let mut seen = std::collections::HashSet::new();
-    for tile in found {
-        if let Some(entry) = video(tile) {
+    for (tile, shelf) in found {
+        if let Some(mut entry) = video(tile) {
+            if let (Some(shelf), Some(map)) = (shelf, entry.as_object_mut()) {
+                map.insert("shelf".into(), shelf.into());
+            }
             if entry.get("id").and_then(Value::as_str).is_some_and(|id| seen.insert(id.to_owned())) {
                 page.entries.push(entry);
             }
@@ -254,6 +260,20 @@ mod tests {
                 {"menuNavigationItemRenderer": {"navigationEndpoint": {"browseEndpoint": {"browseId": "UCIGSeb72lRj7Jxlwt63OmMQ"}}}}
             ]}}}}
         }})
+    }
+
+    #[test]
+    fn history_entries_carry_the_day_of_their_row() {
+        let shelf = |title: &str, ids: &[&str]| json!({"shelfRenderer": {
+            "headerRenderer": {"shelfHeaderRenderer": {"title": {"runs": [{"text": title}]}}},
+            "content": {"horizontalListRenderer": {"items": ids.iter().map(|id| tile(id, json!([]))).collect::<Vec<_>>()}}
+        }});
+        let history = json!({"contents": {"tvBrowseRenderer": {"content": {"tvSurfaceContentRenderer": {"content": {"sectionListRenderer": {
+            "contents": [shelf("Today", &["aaaaaaaaaaa", "bbbbbbbbbbb"]), shelf("Nov 3", &["ccccccccccc", "aaaaaaaaaaa"])]
+        }}}}}}});
+        let page = page(&history, false);
+        let days: Vec<(&str, &str)> = page.entries.iter().map(|e| (e["id"].as_str().unwrap(), e["shelf"].as_str().unwrap())).collect();
+        assert_eq!(days, vec![("aaaaaaaaaaa", "Today"), ("bbbbbbbbbbb", "Today"), ("ccccccccccc", "Nov 3")]);
     }
 
     #[test]

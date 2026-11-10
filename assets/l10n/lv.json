@@ -3128,5 +3128,6 @@
   "1 month ago": "pirms 1 mēneša",
   "{0} months ago": "pirms {0} mēnešiem",
   "1 year ago": "pirms 1 gada",
-  "{0} years ago": "pirms {0} gadiem"
+  "{0} years ago": "pirms {0} gadiem",
+  "Watched {0}": "Skatīts: {0}"
 }

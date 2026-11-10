@@ -3128,5 +3128,6 @@
   "1 month ago": "1 kuukausi sitten",
   "{0} months ago": "{0} kuukautta sitten",
   "1 year ago": "1 vuosi sitten",
-  "{0} years ago": "{0} vuotta sitten"
+  "{0} years ago": "{0} vuotta sitten",
+  "Watched {0}": "Katsottu: {0}"
 }

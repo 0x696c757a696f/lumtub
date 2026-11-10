@@ -218,6 +218,20 @@ void main() {
       expect(filterHistory(videos, '  ').length, 5);
     });
 
+    test('remembers when each video was watched across restarts', () async {
+      expect(history.watched.keys, containsAll(videos.map((v) => v.id)));
+      final again = HistoryStore(history.directories);
+      await again.initialize();
+      expect(again.watched[videos.first.id]!.difference(history.watched[videos.first.id]!).inSeconds.abs(), lessThan(1));
+      await again.remove({videos.first.id});
+      expect(again.watched.containsKey(videos.first.id), isFalse);
+    });
+
+    testWidgets('cards show when each video was watched', (tester) async {
+      await pump(tester, HistoryPage(controller: controller));
+      expect(find.text('Watched Just now'), findsNWidgets(5));
+    });
+
     testWidgets('searches, then selects several and deletes them', (tester) async {
       await pump(tester, HistoryPage(controller: controller));
       expect(find.byType(VideoCard), findsNWidgets(5));

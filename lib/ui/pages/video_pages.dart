@@ -30,6 +30,7 @@ class HomeFeedPage extends StatelessWidget {
     final unfinished = library == null || !prefs.homeShowContinue
         ? const <VideoItem>[]
         : controller.history.where((item) => library.progressOf(item.id)?.resumable ?? false).take(showFeed ? 4 : 8).toList();
+    final watched = watchedLabels(controller.watchedTimes);
     return NearEndListener(
       // The feed goes on: the next page loads before the end is reached.
       enabled: showFeed,
@@ -39,7 +40,7 @@ class HomeFeedPage extends StatelessWidget {
         if (recent.isEmpty && unfinished.isEmpty && !showFeed) SliverToBoxAdapter(child: _Welcome(onFocusSearch: onFocusSearch)),
         if (unfinished.isNotEmpty) ...[
           SliverToBoxAdapter(child: PageHeader(tr('Continue watching'), subtitle: tr('Pick up where you left off'))),
-          SliverVideoGrid(items: unfinished, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: unfinished)),
+          SliverVideoGrid(items: unfinished, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: unfinished), watched: watched),
           const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
         ],
         if (recent.isNotEmpty) ...[
@@ -48,7 +49,7 @@ class HomeFeedPage extends StatelessWidget {
             subtitle: tr('From your watch history on this device'),
             trailing: TextButton(onPressed: () => controller.navigate(PageMode.history), child: Text(tr('View all'))),
           )),
-          SliverVideoGrid(items: recent, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: recent)),
+          SliverVideoGrid(items: recent, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: recent), watched: watched),
           const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
         ],
         if (showFeed) ...[

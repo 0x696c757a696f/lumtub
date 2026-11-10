@@ -768,6 +768,9 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   List<VideoItem> get history => _history?.items ?? const [];
 
+  /// When each video of [history] was last played, by id.
+  Map<String, DateTime> get watchedTimes => _history?.watched ?? const {};
+
   late final _liveProbe = YoutubePlayerProbe(_http);
   DateTime? _historyLiveChecked;
 
@@ -1542,12 +1545,16 @@ class AppController extends ChangeNotifier with _ExploreState {
     if (await _open(item, serial, start: start, play: preferences.autoPlay && !hold) && serial == _playSerial) {
       if (hold) unawaited(_playOnceSubtitlesReady(serial));
       await _applyChannelPlayback(item, player);
-      if (preferences.recordHistory && !incognito) await _history?.record(item);
+      // Marked live while it opened, when the list did not know.
+      final opened = playing?.id == item.id ? playing! : item;
+      if (preferences.recordHistory && !incognito) {
+        // A link or a list without lengths leaves the card without one.
+        final length = player.state.duration;
+        await _history?.record(opened.duration == null && !opened.isLive && length > Duration.zero ? opened.withDuration(length.inSeconds) : opened);
+      }
       if (start != null && at == null) _notice(tr('Resume from {0}', [_clock(start)]));
       final next = upNext.firstOrNull;
       if (next != null) prefetch(next);
-      // Marked live while it opened, when the list did not know.
-      final opened = playing?.id == item.id ? playing! : item;
       if (opened.isLive) {
         _startCurrentChat(opened, serial);
       } else if (item.liveStatus == 'was_live') {

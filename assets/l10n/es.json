@@ -3128,5 +3128,6 @@
   "1 month ago": "hace 1 mes",
   "{0} months ago": "hace {0} meses",
   "1 year ago": "hace 1 año",
-  "{0} years ago": "hace {0} años"
+  "{0} years ago": "hace {0} años",
+  "Watched {0}": "Visto: {0}"
 }

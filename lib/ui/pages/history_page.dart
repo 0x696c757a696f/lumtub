@@ -121,6 +121,7 @@ class _HistoryPageState extends State<HistoryPage> {
           onOpen: (item) => controller.play(item, from: items),
           onRemove: (item) => controller.removeFromHistory({item.id}),
           removeLabel: tr('Delete from history'),
+          watched: watchedLabels(controller.watchedTimes),
         ),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
@@ -161,7 +162,7 @@ class _HistoryPageState extends State<HistoryPage> {
           ]),
         )),
         SliverToBoxAdapter(child: _sourceChips()),
-        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
+        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items), watched: controller.tvFeed?.historyDays),
         if (loader.loading) ...[
           if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
           SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),

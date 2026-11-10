@@ -3128,5 +3128,6 @@
   "1 month ago": "pred 1 mes.",
   "{0} months ago": "pred {0} mes.",
   "1 year ago": "pred 1 r.",
-  "{0} years ago": "pred {0} r."
+  "{0} years ago": "pred {0} r.",
+  "Watched {0}": "Pozreté: {0}"
 }

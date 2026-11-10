@@ -487,6 +487,9 @@ class HistoryStore {
 
   late File file;
   final List<VideoItem> items = [];
+  /// When each video in [items] was last played, by id; entries saved by
+  /// an older Lumtub have none.
+  final Map<String, DateTime> watched = {};
 
   Future<void> initialize() async {
     file = File('${directories.data.path}${Platform.pathSeparator}watch_history.json');
@@ -496,7 +499,11 @@ class HistoryStore {
       if (data is List) {
         for (final value in data) {
           try {
-            if (value is Map<String, dynamic>) items.add(VideoItem.fromJson(value));
+            if (value is Map<String, dynamic>) {
+              final item = VideoItem.fromJson(value);
+              items.add(item);
+              if (DateTime.tryParse('${value['watched_at'] ?? ''}') case final at?) watched[item.id] = at.toLocal();
+            }
           } catch (_) {}
         }
       }
@@ -505,16 +512,22 @@ class HistoryStore {
 
   Future<void> clear() async {
     items.clear();
+    watched.clear();
     await file.writeAsString('[]', flush: true);
   }
 
   /// Forgets the videos with these ids.
   Future<void> remove(Set<String> ids) async {
     items.removeWhere((item) => ids.contains(item.id));
+    watched.removeWhere((id, _) => ids.contains(id));
     await _write();
   }
 
-  Future<void> _write() => file.writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()), flush: true);
+  Future<void> _write() => file.writeAsString(
+      jsonEncode([
+        for (final item in items) {...item.toJson(), if (watched[item.id] case final at?) 'watched_at': at.toUtc().toIso8601String()},
+      ]),
+      flush: true);
 
   /// Sets the live status of the videos with these ids.
   Future<void> setLiveStatus(Map<String, String?> states) async {
@@ -527,7 +540,13 @@ class HistoryStore {
   Future<void> record(VideoItem item) async {
     items.removeWhere((other) => other.id == item.id);
     items.insert(0, item);
-    if (items.length > 60) items.removeRange(60, items.length);
+    watched[item.id] = DateTime.now();
+    if (items.length > 60) {
+      for (final old in items.skip(60)) {
+        watched.remove(old.id);
+      }
+      items.removeRange(60, items.length);
+    }
     await _write();
   }
 }

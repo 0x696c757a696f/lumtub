@@ -19,6 +19,10 @@ class YoutubeTvFeed {
 
   final SignedInnerTube signIn;
 
+  /// The day each video of the watch history was watched, by id, as the
+  /// history page's rows name it in the account's language ("Today").
+  final Map<String, String> historyDays = {};
+
   static const home = 'default';
   static const history = 'FEhistory';
   static const watchLater = 'VLWL';
@@ -60,7 +64,10 @@ class YoutubeTvFeed {
       if (data == null) throw StateError('YouTube sent a page that is not JSON for $browseId');
       for (final entry in (data['entries'] as List? ?? const []).whereType<Map>()) {
         final id = '${entry['id'] ?? ''}';
-        if (seen.add(id)) yield jsonEncode(entry);
+        final day = entry.remove('shelf');
+        if (!seen.add(id)) continue;
+        if (browseId == history && day is String) historyDays[id] = day;
+        yield jsonEncode(entry);
       }
       for (final list in (data['playlists'] as List? ?? const []).whereType<Map>()) {
         final id = '${list['id'] ?? ''}';

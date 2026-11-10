@@ -3128,5 +3128,6 @@
   "1 month ago": "1 mies. temu",
   "{0} months ago": "{0} mies. temu",
   "1 year ago": "1 rok temu",
-  "{0} years ago": "{0} lat temu"
+  "{0} years ago": "{0} lat temu",
+  "Watched {0}": "Obejrzano: {0}"
 }

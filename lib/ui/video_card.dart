@@ -94,7 +94,7 @@ class VideoActions extends InheritedWidget {
 /// A lazily built grid of video cards as a sliver, so pages can put headers
 /// above it in the same scroll view.
 class SliverVideoGrid extends StatelessWidget {
-  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reasons});
+  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reasons, this.watched});
   final List<VideoItem> items;
   final void Function(VideoItem item) onOpen;
   final Directory? thumbnails;
@@ -103,13 +103,15 @@ class SliverVideoGrid extends StatelessWidget {
   final String? removeLabel;
   /// A line under each card saying why it is there, by video id.
   final Map<String, String>? reasons;
+  /// When each video was watched, by id, shown on its picture.
+  final Map<String, String>? watched;
 
   @override
   Widget build(BuildContext context) => SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: videoLayout != VideoLayout.grid
             ? SliverFixedExtentList(
-                itemExtent: VideoRow.heightFor(videoLayout, reason: reasons != null),
+                itemExtent: VideoRow.heightFor(videoLayout, reason: reasons != null) + (watched == null ? 0 : _reasonHeight),
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => VideoRow(
                     key: ValueKey(items[i].id),
@@ -120,6 +122,7 @@ class SliverVideoGrid extends StatelessWidget {
                     onRemove: onRemove == null ? null : () => onRemove!(items[i]),
                     removeLabel: removeLabel,
                     reason: reasons == null ? null : reasons![items[i].id] ?? '',
+                    watched: watched?[items[i].id],
                   ),
                   childCount: items.length,
                 ),
@@ -131,7 +134,7 @@ class SliverVideoGrid extends StatelessWidget {
               crossAxisCount: layout.columns,
               mainAxisSpacing: AppStyle.cardSpacing,
               crossAxisSpacing: AppStyle.cardSpacing,
-              mainAxisExtent: layout.itemHeight + (reasons == null ? 0 : _reasonHeight),
+              mainAxisExtent: layout.itemHeight + (reasons == null ? 0 : _reasonHeight) + (watched == null ? 0 : _reasonHeight),
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) => VideoCard(
@@ -144,6 +147,7 @@ class SliverVideoGrid extends StatelessWidget {
                 onRemove: onRemove == null ? null : () => onRemove!(items[i]),
                 removeLabel: removeLabel,
                 reason: reasons == null ? null : reasons![items[i].id] ?? '',
+                watched: watched?[items[i].id],
               ),
               childCount: items.length,
             ),
@@ -152,11 +156,14 @@ class SliverVideoGrid extends StatelessWidget {
       );
 }
 
+/// What [SliverVideoGrid.watched] shows for each time: "3 days ago".
+Map<String, String> watchedLabels(Map<String, DateTime> times) => {for (final MapEntry(:key, :value) in times.entries) key: formatAgo(value)};
+
 /// A video as one row of a list: a small thumbnail or none, the title, the
 /// channel and views, for 列表 and 纯文字. Fewer and smaller pictures than
 /// the grid, so long lists scroll lighter.
 class VideoRow extends StatelessWidget {
-  const VideoRow({super.key, required this.item, required this.layout, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason});
+  const VideoRow({super.key, required this.item, required this.layout, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason, this.watched});
   final VideoItem item;
   final VideoLayout layout;
   final VoidCallback onOpen;
@@ -164,6 +171,7 @@ class VideoRow extends StatelessWidget {
   final VoidCallback? onRemove;
   final String? removeLabel;
   final String? reason;
+  final String? watched;
 
   static const _thumbWidth = 168.0;
 
@@ -227,6 +235,7 @@ class VideoRow extends StatelessWidget {
               ],
               Expanded(child: meta),
             ]),
+            if (watched case final watched?) Padding(padding: const EdgeInsets.only(top: Space.xs), child: WatchedLine(watched)),
             if (reason case final reason? when reason.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: Space.xs),
@@ -375,7 +384,7 @@ class _CardSkeleton extends StatelessWidget {
 
 /// Thumbnail-on-top video card with hover zoom and a right-click menu.
 class VideoCard extends StatefulWidget {
-  const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason});
+  const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason, this.watched});
   final VideoItem item;
   final VoidCallback onOpen;
   final Directory? thumbnails;
@@ -384,6 +393,8 @@ class VideoCard extends StatefulWidget {
   final String? removeLabel;
   /// Why the card is recommended; null leaves the line out.
   final String? reason;
+  /// When the video was watched, shown on its picture.
+  final String? watched;
 
   @override
   State<VideoCard> createState() => _VideoCardState();
@@ -560,6 +571,7 @@ class _VideoCardState extends State<VideoCard> {
               Flexible(child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
               const SizedBox(height: Space.xs),
               meta,
+              if (widget.watched case final watched?) SizedBox(height: _reasonHeight, child: WatchedLine(watched)),
               if (widget.reason case final reason?)
                 SizedBox(
                   height: _reasonHeight,
@@ -665,6 +677,24 @@ class DurationBadge extends StatelessWidget {
     );
     if (surface != null) return SkinBox(surface: surface, radius: 4, child: text);
     return DecoratedBox(decoration: BoxDecoration(color: color ?? Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(4)), child: text);
+  }
+}
+
+/// When a video in the watch history was watched, on a line of its own so
+/// that a long channel name never pushes it out.
+class WatchedLine extends StatelessWidget {
+  const WatchedLine(this.when, {super.key});
+  /// "2 hours ago", or the day as YouTube's history names it.
+  final String when;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.colors.outline;
+    return Row(children: [
+      Icon(AppIcons.clockCounterClockwise, size: 12, color: color),
+      const SizedBox(width: 4),
+      Expanded(child: Text(tr('Watched {0}', [when]), maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: TextStyle(fontSize: 12, color: color))),
+    ]);
   }
 }
 
@@ -986,6 +1016,21 @@ class MetaLine extends StatelessWidget {
   final String tail;
   final TextStyle style;
 
+  /// What the channel keeps of a line [width] wide: all it needs, up to a
+  /// third, however long the rest.
+  double _leadRoom(BuildContext context, double width) {
+    if (lead.isEmpty) return 0;
+    final painter = TextPainter(
+      text: TextSpan(text: lead, style: DefaultTextStyle.of(context).style.merge(style)),
+      maxLines: 1,
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout();
+    final needed = painter.width.ceilToDouble();
+    painter.dispose();
+    return needed < width / 3 ? needed : width / 3;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (lead.isEmpty && tail.isEmpty) return Text('YouTube', maxLines: 1, style: style);
@@ -994,7 +1039,7 @@ class MetaLine extends StatelessWidget {
         if (lead.isNotEmpty) Flexible(child: Text(lead, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style)),
         if (tail.isNotEmpty)
           ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: box.maxWidth),
+            constraints: BoxConstraints(maxWidth: box.maxWidth - _leadRoom(context, box.maxWidth)),
             child: Text(lead.isEmpty ? tail : ' · $tail', maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style),
           ),
       ]),

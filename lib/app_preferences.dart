@@ -114,7 +114,6 @@ class AppPreferences {
     this.expandDescription = false,
     this.autoCheckUpdates = true,
     this.autoUpdateApp = true,
-    this.skipFfmpegPrompt = false,
     this.translateLanguage = '',
     this.translation = const TranslationConfig(),
     this.subtitlesByService = false,
@@ -265,8 +264,6 @@ class AppPreferences {
   /// Download new Lumtub versions in the background and install them when
   /// Lumtub closes.
   final bool autoUpdateApp;
-  /// The user chose single-file downloads and not to be asked to install ffmpeg.
-  final bool skipFfmpegPrompt;
   /// The language 翻译 turns text into (a TranslationLanguage code); empty
   /// follows the interface's language.
   final String translateLanguage;
@@ -479,7 +476,6 @@ class AppPreferences {
     bool? expandDescription,
     bool? autoCheckUpdates,
     bool? autoUpdateApp,
-    bool? skipFfmpegPrompt,
     String? translateLanguage,
     TranslationConfig? translation,
     bool? subtitlesByService,
@@ -563,7 +559,6 @@ class AppPreferences {
         expandDescription: expandDescription ?? this.expandDescription,
         autoCheckUpdates: autoCheckUpdates ?? this.autoCheckUpdates,
         autoUpdateApp: autoUpdateApp ?? this.autoUpdateApp,
-        skipFfmpegPrompt: skipFfmpegPrompt ?? this.skipFfmpegPrompt,
         translateLanguage: translateLanguage ?? this.translateLanguage,
         translation: translation ?? this.translation,
         subtitlesByService: subtitlesByService ?? this.subtitlesByService,
@@ -648,7 +643,6 @@ class AppPreferences {
         'expandDescription': expandDescription,
         'autoCheckUpdates': autoCheckUpdates,
         'autoUpdateApp': autoUpdateApp,
-        'skipFfmpegPrompt': skipFfmpegPrompt,
         'translateLanguageV2': translateLanguage,
         'translation': translation.toJson(),
         'subtitlesByService': subtitlesByService,
@@ -772,7 +766,6 @@ class AppPreferences {
       expandDescription: flag('expandDescription', d.expandDescription),
       autoCheckUpdates: flag('autoCheckUpdates', d.autoCheckUpdates),
       autoUpdateApp: flag('autoUpdateApp', d.autoUpdateApp),
-      skipFfmpegPrompt: flag('skipFfmpegPrompt', d.skipFfmpegPrompt),
       // Simplified Chinese was the default before Windows' language was
       // followed, so a value saved then follows Windows too.
       translateLanguage: raw.containsKey('translateLanguageV2')

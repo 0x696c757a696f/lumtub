@@ -105,7 +105,6 @@ class DownloadManager extends ChangeNotifier {
     ProcessStarter? start,
     this.environment,
     this.options,
-    this.ffmpegDirectory,
     this.sponsorSegments,
     this.onFinished,
     this.join,
@@ -122,8 +121,6 @@ class DownloadManager extends ChangeNotifier {
   final ProcessStarter _start;
   final Map<String, String> Function()? environment;
   final DownloadOptions Function()? options;
-  /// The folder holding ffmpeg, or null without it.
-  final String? Function()? ffmpegDirectory;
   /// SponsorBlock segments to keep with a finished download.
   final Future<List<SkipSegment>> Function(String videoId)? sponsorSegments;
   /// Called once a download's file is complete.
@@ -156,8 +153,8 @@ class DownloadManager extends ChangeNotifier {
   /// What the download dialog chose last, offered again next time.
   DownloadDefaults get defaults => _defaults;
 
-  /// Whether ffmpeg is there to merge video and audio streams.
-  bool get canMerge => join != null || ffmpegDirectory?.call() != null;
+  /// Whether video and audio streams can be joined into one file.
+  bool get canMerge => join != null;
 
   /// Whether [task]'s picture and sound come as two files for [join].
   bool _joins(DownloadTask task) =>
@@ -173,15 +170,6 @@ class DownloadManager extends ChangeNotifier {
   static String defaultDirectoryFor(Map<String, String> env, String fallback) {
     final videos = userFolder(UserFolder.videos, environment: env);
     return videos == null ? fallback : '$videos${Platform.pathSeparator}Lumtub';
-  }
-
-  /// The directory holding ffmpeg among [directories] and `PATH`, or null.
-  static String? findFfmpeg(Iterable<String> directories, String? path) {
-    final name = Platform.isWindows ? 'ffmpeg.exe' : 'ffmpeg';
-    for (final dir in [...directories, ...?path?.split(Platform.isWindows ? ';' : ':')]) {
-      if (dir.isNotEmpty && File('$dir${Platform.pathSeparator}$name').existsSync()) return dir;
-    }
-    return null;
   }
 
   // Persistence.
@@ -349,7 +337,6 @@ class DownloadManager extends ChangeNotifier {
   /// yt-dlp's arguments for [task].
   List<String> arguments(DownloadTask task) {
     final o = options?.call() ?? const DownloadOptions();
-    final ffmpeg = ffmpegDirectory?.call();
     final selection = task.selection;
     final audio = selection?.audioOnly ?? task.quality.audioOnly;
     final joins = _joins(task);
@@ -373,18 +360,10 @@ class DownloadManager extends ChangeNotifier {
       '--progress-template', DownloadProgress.progressTemplate,
       '--print', DownloadProgress.filePrint,
       '--write-info-json',
-      '--format', joins ? selection?.joinFormat() ?? task.quality.joinFormat() : selection?.format(merge: ffmpeg != null) ?? task.quality.format(merge: ffmpeg != null),
-      // The container was chosen with the streams; the streams are copied,
-      // never re-encoded. Otherwise MP4 plays everywhere and MKV takes the
-      // codecs MP4 cannot hold.
-      if (joins)
-        ...const <String>[]
-      else if (selection != null)
-        ...selection.containerArguments(merge: ffmpeg != null)
-      else if (ffmpeg != null && !audio)
-        ...['--merge-output-format', 'mp4/mkv'],
-      // The core reads the streams as YouTube sends them.
-      if (joins) ...['--fixup', 'never'] else if (ffmpeg != null) ...['--ffmpeg-location', ffmpeg],
+      '--format', joins ? selection?.joinFormat() ?? task.quality.joinFormat() : selection?.format() ?? task.quality.format(),
+      // Files are kept as YouTube sends them, which the core reads; yt-dlp
+      // never runs an ffmpeg it may find on PATH.
+      '--fixup', 'never',
       if (!audio && o.subtitleLanguages != null) ...[
         '--write-subs',
         if (o.autoSubtitles) '--write-auto-subs',

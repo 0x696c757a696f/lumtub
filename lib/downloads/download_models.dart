@@ -2,9 +2,9 @@ import '../l10n/l10n.dart';
 import '../models.dart';
 import 'download_selection.dart';
 
-/// What to download. Without ffmpeg yt-dlp cannot merge a video stream with
-/// an audio stream, so the video qualities then take the best single-file
-/// (progressive) format, which on YouTube is usually 360p.
+/// What to download. The core joins a video stream with an audio stream;
+/// without it the video qualities take the best single-file (progressive)
+/// format, which on YouTube is usually 360p.
 enum DownloadQuality {
   best('Best quality', null),
   p1080('1080p', 1080),
@@ -18,18 +18,15 @@ enum DownloadQuality {
   final int? maxHeight;
   final bool audioOnly;
 
-  /// yt-dlp's `--format`. [merge]: ffmpeg is available to join streams.
-  String format({required bool merge}) {
+  /// yt-dlp's `--format` when nothing is joined: audio, or a single file.
+  String format() {
     if (audioOnly) return 'ba[ext=m4a]/ba';
     final h = maxHeight == null ? '' : '[height<=$maxHeight]';
-    if (!merge) return h.isEmpty ? 'b[ext=mp4]/b' : 'b$h[ext=mp4]/b$h/b[ext=mp4]/b';
-    // The best streams whatever their codec (AV1, VP9, Opus); the container
-    // is chosen to fit them.
-    return h.isEmpty ? 'bv*+ba/b' : 'bv*$h+ba/b$h/b';
+    return h.isEmpty ? 'b[ext=mp4]/b' : 'b$h[ext=mp4]/b$h/b[ext=mp4]/b';
   }
 
-  /// The best picture alone and AAC sound, as separate files, picture
-  /// first, for a download joined without ffmpeg (which takes no Opus).
+  /// The best picture alone and sound the core joins (Opus, AAC, Dolby),
+  /// as separate files, picture first.
   String joinFormat() {
     final h = maxHeight == null ? '' : '[height<=$maxHeight]';
     return "bv$h/bv,ba[acodec~='^(opus|mp4a|ac-3|ec-3)']/ba[ext=m4a]";

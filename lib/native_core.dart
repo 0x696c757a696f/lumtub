@@ -387,7 +387,7 @@ class NativeCore {
   }
 }
 
-/// [process] and everything it starts (yt-dlp's ffmpeg and Deno), kept in
+/// [process] and everything it starts (yt-dlp's Deno), kept in
 /// a job object: [kill] ends all of them, and whatever is still running
 /// when [process] exits, or when Lumtub itself exits or crashes, ends too.
 /// Without lumtub_core.dll it is [process] alone.

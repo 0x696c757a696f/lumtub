@@ -12,7 +12,6 @@ import '../../l10n/l10n.dart';
 import '../../models.dart';
 import '../../system_env.dart';
 import '../download_dialog.dart';
-import '../ffmpeg_dialog.dart';
 import '../common.dart';
 import '../theme.dart';
 import '../app_icons.dart';
@@ -25,14 +24,13 @@ Future<void> showDownloadChoice(BuildContext context, AppController controller, 
       title: item.title,
       loadFormats: () => controller.downloadFormats(item.id),
       defaults: controller.downloads?.defaults ?? const DownloadDefaults(),
-      canMerge: controller.downloads?.canMerge ?? false,
       onCover: () => unawaited(_saveExtra(context, controller, () => controller.saveCover(item))),
       onSubtitles: () => unawaited(_chooseSubtitle(context, controller, item)),
     ),
   );
   if (choice == null || !context.mounted) return;
   if (choice.defaults != null) unawaited(controller.downloads?.setDefaults(choice.defaults!));
-  if (await ensureFfmpegForDownload(context, controller, choice.quality)) controller.download(item, choice.quality, selection: choice.selection);
+  controller.download(item, choice.quality, selection: choice.selection);
 }
 
 /// Runs [save] and says where the file went, with a button to show it.

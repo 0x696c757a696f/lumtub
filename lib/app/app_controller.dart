@@ -70,7 +70,6 @@ import '../chunked_relay.dart';
 import '../player_option_applicator.dart';
 import '../power.dart';
 import '../player_settings.dart';
-import '../ffmpeg_component.dart';
 import '../thumbnail_trim.dart';
 import '../tool_manager.dart';
 import '../format_policy.dart';
@@ -1225,11 +1224,6 @@ class AppController extends ChangeNotifier with _ExploreState {
         environment: () => _repository!.processEnvironment,
         // lumtub_core joins the streams, so no ffmpeg is needed.
         join: NativeCore.canJoin ? (video, audio, out, container) => Isolate.run(() => NativeCore.join(video, audio, out, container: container)) : null,
-        ffmpegDirectory: () {
-          final env = _repository!.processEnvironment;
-          final path = env.entries.where((e) => e.key.toUpperCase() == 'PATH').firstOrNull?.value;
-          return DownloadManager.findFfmpeg([if (_tools?.ffmpegDirectory != null) _tools!.ffmpegDirectory!, ...paths.executableDirectories, '${directories.components.path}${Platform.pathSeparator}ffmpeg'], path);
-        },
         options: () => DownloadOptions(
           proxy: proxy.ytDlpValue(settings.proxyMode),
           deno: paths.deno,
@@ -3096,12 +3090,6 @@ class AppController extends ChangeNotifier with _ExploreState {
 
   ToolManager? get tools => _tools;
 
-  /// Download progress (0..1, null when unknown) while ffmpeg installs.
-  double? ffmpegProgress;
-  bool installingFfmpeg = false;
-
-  /// Whether ffmpeg is there, so downloads can merge video and audio.
-  bool get ffmpegInstalled => downloads?.canMerge ?? false;
 
   /// Whether a crop check for a changed picture size is already scheduled.
   bool _cropFitting = false;

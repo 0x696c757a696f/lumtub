@@ -83,7 +83,7 @@ def ffmpeg(text, changes):
 
 
 def ffmpeg_prebuilt(text, changes):
-    """macOS FFmpeg from dfloresc/ffmpeg-macos-builds, pinned by release and checksums."""
+    """macOS FFmpeg for the smoke test, from dfloresc/ffmpeg-macos-builds, pinned by release and checksum."""
     pinned = re.search(r"FFMPEG_RELEASE: (v[\w.-]+)", text)
     if not pinned:
         return text
@@ -93,15 +93,13 @@ def ffmpeg_prebuilt(text, changes):
         return text
     sums = {}
     for asset in release["assets"]:
-        m = re.fullmatch(rf"ffmpeg-{re.escape(tag[1:])}-lgpl-macos-(arm64|x86_64)\.tar\.xz", asset["name"])
-        if m:
-            sums[m[1]] = sha256(asset)
-    if set(sums) != {"arm64", "x86_64"}:
-        print(f"ffmpeg-macos-builds {tag} lacks the LGPL arm64 and x86_64 archives; skipped.")
+        if asset["name"] == f"ffmpeg-{tag[1:]}-lgpl-macos-arm64.tar.xz":
+            sums["arm64"] = sha256(asset)
+    if "arm64" not in sums:
+        print(f"ffmpeg-macos-builds {tag} lacks the LGPL arm64 archive; skipped.")
         return text
     text = text.replace(pinned[0], f"FFMPEG_RELEASE: {tag}")
-    for arch, digest in sums.items():
-        text = re.sub(rf"(\b{arch}\) sum=)[0-9a-f]{{64}}", rf"\g<1>{digest}", text)
+    text = re.sub(r'(echo ")[0-9a-f]{64}(  \$RUNNER_TEMP/\$name\.tar\.xz")', rf"\g<1>{sums['arm64']}\g<2>", text)
     changes.append(f"macOS FFmpeg {pinned[1]} -> {tag}")
     return text
 

@@ -200,56 +200,6 @@ extension SettingsActions on AppController {
     _notice(tr('Reverted to the previous yt-dlp. Restart Lumtub to apply.'));
   }
 
-  /// Whether starting a download in [quality] merges, goes single-file or
-  /// needs to ask about installing ffmpeg first.
-  FfmpegChoice ffmpegChoice(DownloadQuality quality) =>
-      ffmpegChoiceFor(quality, installed: ffmpegInstalled, declined: preferences.skipFfmpegPrompt);
-
-  /// Remembers that the user wants single-file downloads without being asked.
-  Future<void> declineFfmpegPrompt() => savePreferences(preferences.copyWith(skipFfmpegPrompt: true));
-
-  /// The size of the ffmpeg download in bytes, or null when unknown.
-  Future<int?> ffmpegDownloadSize() async {
-    try {
-      return await _tools?.ffmpegDownloadSize();
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// Installs or updates ffmpeg; true when it is usable afterwards.
-  Future<bool> installFfmpeg() async {
-    final tools = _tools;
-    if (tools == null || installingFfmpeg) return false;
-    _update(() {
-      installingFfmpeg = true;
-      ffmpegProgress = null;
-    });
-    try {
-      await tools.installFfmpeg(onProgress: (received, total) {
-        final fraction = total == null || total == 0 ? null : received / total;
-        if (fraction == null || fraction - (ffmpegProgress ?? 0) >= 0.01) _update(() => ffmpegProgress = fraction);
-      });
-      if (preferences.skipFfmpegPrompt) await savePreferences(preferences.copyWith(skipFfmpegPrompt: false));
-      return true;
-    } catch (e) {
-      logError('ffmpeg installation failed', e);
-      _notice(tr('Could not install ffmpeg: {0}', [e]));
-      return false;
-    } finally {
-      _update(() => installingFfmpeg = false);
-    }
-  }
-
-  Future<void> removeFfmpeg() async {
-    try {
-      await _tools?.removeFfmpeg();
-    } on FileSystemException catch (e) {
-      _notice(tr('Could not remove ffmpeg (it may be in use): {0}', [e.message]));
-    }
-    _update(() {});
-  }
-
   Future<void> checkUpdates() async {
     if (checking || _tools == null) return;
     _update(() => checking = true);

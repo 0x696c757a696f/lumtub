@@ -74,14 +74,13 @@ void main() {
     });
   });
 
-  test('formats depend on quality and ffmpeg', () {
-    expect(DownloadQuality.audio.format(merge: false), 'ba[ext=m4a]/ba');
-    expect(DownloadQuality.best.format(merge: true), 'bv*+ba/b');
-    expect(DownloadQuality.p1080.format(merge: true), contains('bv*[height<=1080]'));
-    expect(DownloadQuality.p720.format(merge: true), contains('height<=720'));
-    // Without ffmpeg nothing may ask for a merge.
+  test('formats depend on quality and whether the core joins', () {
+    expect(DownloadQuality.audio.format(), 'ba[ext=m4a]/ba');
+    expect(DownloadQuality.p1080.joinFormat(), startsWith('bv[height<=1080]/bv,'));
+    expect(DownloadQuality.p720.format(), contains('height<=720'));
+    // yt-dlp never merges: nothing may ask for it.
     for (final q in DownloadQuality.values) {
-      expect(q.format(merge: false), isNot(contains('+')));
+      expect(q.format(), isNot(contains('+')));
     }
   });
 
@@ -117,7 +116,7 @@ void main() {
     });
 
     final joined = <List<String>>[];
-    DownloadManager manager({String? ffmpeg, List<SkipSegment> segments = const [], Future<({String? path, String? error})> Function(String video, String audio, String stem, String container)? join}) => _track(managers, DownloadManager(
+    DownloadManager manager({List<SkipSegment> segments = const [], Future<({String? path, String? error})> Function(String video, String audio, String stem, String container)? join}) => _track(managers, DownloadManager(
           file: File('${dir.path}/downloads.json'),
           ytDlpPath: 'yt-dlp',
           defaultDirectory: '${dir.path}/videos',
@@ -128,7 +127,6 @@ void main() {
             lastEnvironment = environment ?? {};
             return process;
           },
-          ffmpegDirectory: () => ffmpeg,
           options: () => const DownloadOptions(proxy: 'http://127.0.0.1:7890', deno: 'deno.exe', subtitleLanguages: '(zh|en).*', autoSubtitles: true),
           sponsorSegments: (id) async => segments,
           onFinished: finished.add,
@@ -249,7 +247,7 @@ void main() {
       expect(m.tasks, hasLength(1));
     });
 
-    test('arguments carry the proxy, Deno, format and subtitles; ffmpeg enables merging', () {
+    test('arguments carry the proxy, Deno, format and subtitles, and never let yt-dlp run ffmpeg', () {
       final without = manager().arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.best, directory: 'D'));
       expect(without, containsAllInOrder(['--proxy', 'http://127.0.0.1:7890']));
       expect(without, containsAllInOrder(['--js-runtimes', 'deno:deno.exe']));
@@ -257,20 +255,16 @@ void main() {
       expect(without, containsAll(['--write-subs', '--write-auto-subs', '--write-info-json', '--newline']));
       expect(without, isNot(contains('--merge-output-format')));
       expect(without[without.indexOf('--format') + 1], isNot(contains('+')));
+      expect(without, containsAllInOrder(['--fixup', 'never']));
       expect(without.last, 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
-
-      final merged = manager(ffmpeg: 'F').arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.best, directory: 'D'));
-      expect(merged, containsAllInOrder(['--merge-output-format', 'mp4/mkv']));
-      expect(merged, containsAllInOrder(['--ffmpeg-location', 'F']));
-      expect(merged[merged.indexOf('--format') + 1], contains('+'));
 
       final audio = manager().arguments(DownloadTask(item: video('aaaaaaaaaaa'), quality: DownloadQuality.audio, directory: 'D'));
       expect(audio, isNot(contains('--write-subs')));
     });
 
-    test('with a joiner, the two streams come as files that are joined into one, ffmpeg or not', () async {
+    test('with a joiner, the two streams come as files that are joined into one', () async {
       joined.clear();
-      final m = manager(ffmpeg: 'F', join: (video, audio, stem, container) async {
+      final m = manager(join: (video, audio, stem, container) async {
         joined.add([video, audio, stem, container]);
         final out = '$stem.webm';
         File(out).writeAsStringSync('joined');

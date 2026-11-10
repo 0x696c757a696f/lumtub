@@ -15,7 +15,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../app_updater.dart';
-import '../../tool_manager.dart';
 import '../../app/app_controller.dart';
 import '../../app_log.dart';
 import '../../app_preferences.dart';
@@ -906,21 +905,6 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
         ),
         NormalItem(title: 'Deno', subtitle: tools.denoVersion ?? tr('Not installed'), leading: Icon(AppIcons.code)),
         NormalItem(
-          title: 'ffmpeg',
-          subtitle: controller.installingFfmpeg
-              ? tr('Installing… {0}', [controller.ffmpegProgress == null ? '' : '${(controller.ffmpegProgress! * 100).round()}%'])
-              : tools.ffmpegVersion == null
-                  ? tr('Not installed (installed on demand when merging high-quality downloads)')
-                  : tr('{0} · {1} on disk', [tools.ffmpegVersion!, formatBytes(tools.ffmpegBytes ?? 0)]),
-          leading: Icon(AppIcons.gitMerge),
-          trailing: controller.installingFfmpeg || ToolManager.bundledFfmpegDirectory != null
-              ? null
-              : Row(mainAxisSize: MainAxisSize.min, children: [
-                  TextButton(onPressed: controller.installFfmpeg, child: Text(tools.ffmpegVersion == null ? tr('Install') : tr('Update'))),
-                  if (tools.ffmpegVersion != null) TextButton(onPressed: controller.removeFfmpeg, child: Text(tr('Remove'))),
-                ]),
-        ),
-        NormalItem(
           title: controller.checking ? tr('Checking for updates…') : tr('Check for updates now'),
           subtitle: tr('Downloads only from the official GitHub Release and verifies SHA-256. Takes effect after restart'),
           leading: Icon(AppIcons.arrowLineDown),
@@ -928,10 +912,6 @@ Future<void> openComponents(BuildContext context, AppController controller) => _
           onTap: controller.checkUpdates,
         ),
         _tip(context, tr("New libmpv falls back to the built-in version automatically if it fails. If videos won't play after a yt-dlp update, you can roll back to the previous version.")),
-        if (Platform.isMacOS)
-          _tip(context, tr('The macOS version comes with ffmpeg, used only to join high-quality video and audio. It is the LGPL build of FFmpeg 9 from dfloresc/ffmpeg-macos-builds; source code: https://ffmpeg.org/download.html.'))
-        else
-          _tip(context, tr('ffmpeg is an optional component used only to merge high-quality video and audio, and is never downloaded automatically. It is the LGPL build from zhongfly/mpv-winbuild (or from BtbN/FFmpeg-Builds where that cannot be installed); source code: https://ffmpeg.org/download.html.')),
       ];
     });
 

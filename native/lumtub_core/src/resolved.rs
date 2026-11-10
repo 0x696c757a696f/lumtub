@@ -75,11 +75,16 @@ fn tracks(info: &Value) -> Vec<&Value> {
 
 fn query<'a>(url: &'a str, key: &str) -> Option<&'a str> {
     let query = url.split_once('?')?.1.split('#').next()?;
-    query.split('&').find_map(|pair| pair.strip_prefix(key)?.strip_prefix('='))
+    query
+        .split('&')
+        .find_map(|pair| pair.strip_prefix(key)?.strip_prefix('='))
 }
 
 fn streams(info: &Value, tracks: &[&Value]) -> Option<Vec<Stream>> {
-    if info.get("is_live") == Some(&Value::Bool(true)) || info.get("live_status").and_then(Value::as_str) == Some("is_live") || tracks.is_empty() {
+    if info.get("is_live") == Some(&Value::Bool(true))
+        || info.get("live_status").and_then(Value::as_str) == Some("is_live")
+        || tracks.is_empty()
+    {
         return None;
     }
     tracks
@@ -88,10 +93,16 @@ fn streams(info: &Value, tracks: &[&Value]) -> Option<Vec<Stream>> {
             let url = track.get("url").and_then(Value::as_str).unwrap_or("");
             let protocol = track.get("protocol").and_then(Value::as_str).unwrap_or("");
             let fragmented = track.get("fragments").is_some_and(|f| !f.is_null());
-            if fragmented || !(protocol == "https" || protocol == "http") || !url.starts_with("http") {
+            if fragmented
+                || !(protocol == "https" || protocol == "http")
+                || !url.starts_with("http")
+            {
                 return None;
             }
-            Some(Stream { url: url.to_owned(), size: track.get("filesize").and_then(Value::as_u64) })
+            Some(Stream {
+                url: url.to_owned(),
+                size: track.get("filesize").and_then(Value::as_u64),
+            })
         })
         .collect()
 }
@@ -99,20 +110,53 @@ fn streams(info: &Value, tracks: &[&Value]) -> Option<Vec<Stream>> {
 pub fn summary(info: &Value, ask: &Ask) -> Summary {
     let tracks = tracks(info);
     let limit = ask.fetched + 3600;
-    let expire = tracks.first().and_then(|t| t.get("url")?.as_str()).and_then(|url| query(url, "expire")?.parse::<i64>().ok());
+    let expire = tracks
+        .first()
+        .and_then(|t| t.get("url")?.as_str())
+        .and_then(|url| query(url, "expire")?.parse::<i64>().ok());
     let mut clients: Vec<String> = Vec::new();
     for track in &tracks {
-        let client = track.get("url").and_then(Value::as_str).and_then(|u| query(u, "c")).unwrap_or("?").to_owned();
+        let client = track
+            .get("url")
+            .and_then(Value::as_str)
+            .and_then(|u| query(u, "c"))
+            .unwrap_or("?")
+            .to_owned();
         if !clients.contains(&client) {
             clients.push(client);
         }
     }
-    let formats = tracks.iter().map(|t| t.get("format_id").map(|v| v.as_str().map_or_else(|| v.to_string(), str::to_owned)).unwrap_or_else(|| "null".into())).collect();
+    let formats = tracks
+        .iter()
+        .map(|t| {
+            t.get("format_id")
+                .map(|v| v.as_str().map_or_else(|| v.to_string(), str::to_owned))
+                .unwrap_or_else(|| "null".into())
+        })
+        .collect();
     let mut by_height: Vec<(u32, Vec<Codec>)> = Vec::new();
     let mut all = Vec::new();
-    for format in info.get("formats").and_then(Value::as_array).into_iter().flatten() {
-        let Some(height) = format.get("height").and_then(Value::as_u64).filter(|h| *h > 0).map(|h| h as u32) else { continue };
-        let Some(codec) = format.get("vcodec").and_then(Value::as_str).and_then(Codec::of) else { continue };
+    for format in info
+        .get("formats")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let Some(height) = format
+            .get("height")
+            .and_then(Value::as_u64)
+            .filter(|h| *h > 0)
+            .map(|h| h as u32)
+        else {
+            continue;
+        };
+        let Some(codec) = format
+            .get("vcodec")
+            .and_then(Value::as_str)
+            .and_then(Codec::of)
+        else {
+            continue;
+        };
         if ask.cap > 0 && height > ask.cap {
             continue;
         }
@@ -125,10 +169,24 @@ pub fn summary(info: &Value, ask: &Ask) -> Summary {
     let allows = |codec: &Codec| !ask.disabled.contains(codec);
     let mut heights: Vec<u32> = Vec::new();
     let mut frame_rates: BTreeMap<u32, u32> = BTreeMap::new();
-    for format in info.get("formats").and_then(Value::as_array).into_iter().flatten() {
-        let height = format.get("height").and_then(Value::as_u64).filter(|h| *h > 0).map(|h| h as u32);
-        let codec = format.get("vcodec").and_then(Value::as_str).filter(|c| *c != "none");
-        let (Some(height), Some(codec)) = (height, codec) else { continue };
+    for format in info
+        .get("formats")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let height = format
+            .get("height")
+            .and_then(Value::as_u64)
+            .filter(|h| *h > 0)
+            .map(|h| h as u32);
+        let codec = format
+            .get("vcodec")
+            .and_then(Value::as_str)
+            .filter(|c| *c != "none");
+        let (Some(height), Some(codec)) = (height, codec) else {
+            continue;
+        };
         if !all.contains(&height) {
             all.push(height);
         }
@@ -136,7 +194,11 @@ pub fn summary(info: &Value, ask: &Ask) -> Summary {
             if !heights.contains(&height) {
                 heights.push(height);
             }
-            let fps = format.get("fps").and_then(Value::as_f64).filter(|f| f.is_finite() && *f > 30.5).map(|f| f.round() as u32);
+            let fps = format
+                .get("fps")
+                .and_then(Value::as_f64)
+                .filter(|f| f.is_finite() && *f > 30.5)
+                .map(|f| f.round() as u32);
             if let Some(fps) = fps {
                 let most = frame_rates.entry(height).or_insert(fps);
                 *most = (*most).max(fps);
@@ -147,15 +209,28 @@ pub fn summary(info: &Value, ask: &Ask) -> Summary {
     all.sort_unstable_by(|a, b| b.cmp(a));
     let lost = (|| {
         let tallest = by_height.iter().map(|(h, _)| *h).max()?;
-        let allowed: Vec<u32> = by_height.iter().filter(|(_, c)| c.iter().any(allows)).map(|(h, _)| *h).collect();
+        let allowed: Vec<u32> = by_height
+            .iter()
+            .filter(|(_, c)| c.iter().any(allows))
+            .map(|(h, _)| *h)
+            .collect();
         if allowed.is_empty() || allowed.contains(&tallest) {
             return None;
         }
         let mut codecs = by_height.iter().find(|(h, _)| *h == tallest)?.1.clone();
         codecs.sort_by_key(|c| Codec::ALL.iter().position(|a| a == c));
-        Some(Lost { height: tallest, codecs, playing: allowed.into_iter().max()? })
+        Some(Lost {
+            height: tallest,
+            codecs,
+            playing: allowed.into_iter().max()?,
+        })
     })();
-    let user_agent = tracks.iter().copied().chain(std::iter::once(info)).find_map(|t| t.get("http_headers")?.get("User-Agent")).map(|v| v.as_str().map_or_else(|| v.to_string(), str::to_owned));
+    let user_agent = tracks
+        .iter()
+        .copied()
+        .chain(std::iter::once(info))
+        .find_map(|t| t.get("http_headers")?.get("User-Agent"))
+        .map(|v| v.as_str().map_or_else(|| v.to_string(), str::to_owned));
     Summary {
         expires: expire.map_or(limit, |e| (e - 900).min(limit)),
         clients,
@@ -172,7 +247,10 @@ pub fn summary(info: &Value, ask: &Ask) -> Summary {
 /// An mpv EDL address playing [addresses] as one video, the way mpv's
 /// ytdl_hook builds it.
 pub fn edl(addresses: &[String]) -> String {
-    let parts: Vec<String> = addresses.iter().map(|a| format!("!new_stream;!no_clip;!no_chapters;%{}%{a}", a.len())).collect();
+    let parts: Vec<String> = addresses
+        .iter()
+        .map(|a| format!("!new_stream;!no_clip;!no_chapters;%{}%{a}", a.len()))
+        .collect();
     format!("edl://{}", parts.join(";"))
 }
 
@@ -182,8 +260,14 @@ pub fn edl(addresses: &[String]) -> String {
 /// # Safety
 /// Both must point to that many bytes of UTF-8.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_resolved(info: *const u8, info_len: usize, ask: *const u8, ask_len: usize) -> *mut c_char {
-    let ask: Ask = serde_json::from_str(unsafe { crate::taste::text(ask, ask_len) }).unwrap_or_default();
+pub unsafe extern "C" fn lumtub_resolved(
+    info: *const u8,
+    info_len: usize,
+    ask: *const u8,
+    ask_len: usize,
+) -> *mut c_char {
+    let ask: Ask =
+        serde_json::from_str(unsafe { crate::taste::text(ask, ask_len) }).unwrap_or_default();
     match serde_json::from_str::<Value>(unsafe { crate::taste::text(info, info_len) }) {
         Ok(info) if info.is_object() => crate::taste::give_json(&summary(&info, &ask)),
         _ => std::ptr::null_mut(),
@@ -234,17 +318,35 @@ mod tests {
             {"height": 1440, "vcodec": "vp09.00.50.08", "fps": 50}
         ]});
         let s = summary(&info, &Ask::default());
-        assert_eq!(s.frame_rates, BTreeMap::from([(720, 60), (1080, 60), (1440, 50)]));
+        assert_eq!(
+            s.frame_rates,
+            BTreeMap::from([(720, 60), (1080, 60), (1440, 50)])
+        );
         let json = serde_json::to_value(&s).unwrap();
-        assert_eq!(json["frameRates"], json!({"720": 60, "1080": 60, "1440": 50}));
+        assert_eq!(
+            json["frameRates"],
+            json!({"720": 60, "1080": 60, "1440": 50})
+        );
         // A disabled codec's frames do not count.
-        let s = summary(&info, &Ask { disabled: vec![Codec::Vp9], ..Ask::default() });
+        let s = summary(
+            &info,
+            &Ask {
+                disabled: vec![Codec::Vp9],
+                ..Ask::default()
+            },
+        );
         assert_eq!(s.frame_rates, BTreeMap::from([(720, 60)]));
     }
 
     #[test]
     fn reads_heights_expiry_and_streams() {
-        let s = summary(&info(), &Ask { fetched: 1_900_000_000, ..Ask::default() });
+        let s = summary(
+            &info(),
+            &Ask {
+                fetched: 1_900_000_000,
+                ..Ask::default()
+            },
+        );
         assert_eq!(s.heights, [2160, 1080]);
         assert_eq!(s.all_heights, [2160, 1080]);
         assert_eq!(s.expires, 1_900_002_700);
@@ -256,16 +358,33 @@ mod tests {
         assert_eq!(streams[0].size, Some(1000));
         assert_eq!(streams[1].size, None);
         // A far expiry is capped at an hour after fetching.
-        let late = summary(&info(), &Ask { fetched: 1_800_000_000, ..Ask::default() });
+        let late = summary(
+            &info(),
+            &Ask {
+                fetched: 1_800_000_000,
+                ..Ask::default()
+            },
+        );
         assert_eq!(late.expires, 1_800_003_600);
     }
 
     #[test]
     fn says_what_disabled_codecs_cost() {
-        let ask = Ask { disabled: vec![Codec::Av1, Codec::Vp9], fetched: 0, cap: 0 };
+        let ask = Ask {
+            disabled: vec![Codec::Av1, Codec::Vp9],
+            fetched: 0,
+            cap: 0,
+        };
         let s = summary(&info(), &ask);
         assert_eq!(s.heights, [1080]);
-        assert_eq!(s.lost, Some(Lost { height: 2160, codecs: vec![Codec::Av1, Codec::Vp9], playing: 1080 }));
+        assert_eq!(
+            s.lost,
+            Some(Lost {
+                height: 2160,
+                codecs: vec![Codec::Av1, Codec::Vp9],
+                playing: 1080
+            })
+        );
         assert_eq!(summary(&info(), &Ask { cap: 1080, ..ask }).lost, None);
     }
 
@@ -287,6 +406,9 @@ mod tests {
 
     #[test]
     fn builds_edl_with_byte_lengths() {
-        assert_eq!(edl(&["https://a/é".into(), "https://b".into()]), "edl://!new_stream;!no_clip;!no_chapters;%12%https://a/é;!new_stream;!no_clip;!no_chapters;%9%https://b");
+        assert_eq!(
+            edl(&["https://a/é".into(), "https://b".into()]),
+            "edl://!new_stream;!no_clip;!no_chapters;%12%https://a/é;!new_stream;!no_clip;!no_chapters;%9%https://b"
+        );
     }
 }

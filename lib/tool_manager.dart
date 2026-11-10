@@ -120,7 +120,9 @@ class ToolManager {
       } catch (e) {
         try {
           denoFailed.writeAsStringSync('$e');
-        } catch (_) {}
+        } catch (e) {
+          logDebug(() => 'Could not write the Deno failure note: $e');
+        }
         status('Deno is unavailable for now. You can retry later from tool updates: {0}', [e]);
       }
     }
@@ -195,7 +197,9 @@ class ToolManager {
             break search;
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not search a tool version folder: $e');
+      }
     }
     _found[key] = (folders, found);
     return found;
@@ -304,7 +308,9 @@ class ToolManager {
     if (sums != null && (response.statusCode == 403 || response.statusCode == 429)) {
       try {
         return await _releaseFromSums(repository, sums, tag: tag);
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not read the release checksums: $e');
+      }
     }
     throw HttpException('GitHub API HTTP ${response.statusCode} for $repository');
   }

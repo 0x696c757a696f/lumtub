@@ -999,7 +999,9 @@ int _readPlayerFiles(String folder, String? mpv) {
       } finally {
         handle.closeSync();
       }
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'Could not read a library file to warm the disk cache: $e');
+    }
   }
   return total;
 }

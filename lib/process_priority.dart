@@ -1,5 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
+import 'app_log.dart';
 
 /// Lowers a helper process to below-normal priority so that yt-dlp parsing
 /// pages in the background never competes with the interface or playback.
@@ -9,7 +10,9 @@ void lowerPriority(int pid) {
   if (Platform.isWindows) return _setPriority(pid, _belowNormalPriorityClass);
   try {
     _setPriorityUnix(_prioProcess, pid, 5);
-  } catch (_) {}
+  } catch (e) {
+    logDebug(() => 'Could not lower the process priority: $e');
+  }
 }
 
 /// Puts a process lowered with [lowerPriority] back to normal, for example
@@ -27,7 +30,9 @@ void _setPriority(int pid, int priorityClass) {
     if (handle == nullptr) return;
     _setPriorityClass(handle, priorityClass);
     _closeHandle(handle);
-  } catch (_) {}
+  } catch (e) {
+    logDebug(() => 'Could not lower the process priority: $e');
+  }
 }
 
 const _processSetInformation = 0x0200;

@@ -13,8 +13,8 @@
 //! from YouTube in chunks the way the loopback relay reads them. Only
 //! registered sessions are served, under random tokens.
 
-use crate::{cast_mkv, cast_webm};
 use crate::relay::{Fetch, Stop, Target, Web, drain, read_request, request};
+use crate::{cast_mkv, cast_webm};
 use serde::Deserialize;
 use std::collections::{HashMap, VecDeque};
 use std::io::{BufReader, ErrorKind, Read, Write};
@@ -96,11 +96,23 @@ pub struct Track {
 
 #[derive(Debug, Clone, PartialEq)]
 enum Codec {
-    Avc { length: usize, sps: Vec<Vec<u8>>, pps: Vec<Vec<u8>> },
-    Aac { profile: u8, frequency: u8, channels: u8 },
+    Avc {
+        length: usize,
+        sps: Vec<Vec<u8>>,
+        pps: Vec<Vec<u8>>,
+    },
+    Aac {
+        profile: u8,
+        frequency: u8,
+        channels: u8,
+    },
     Opus(cast_webm::Opus),
     /// Dolby Digital (AC-3) or Dolby Digital Plus (E-AC-3).
-    Dolby { plus: bool, rate: u32, channels: u8 },
+    Dolby {
+        plus: bool,
+        rate: u32,
+        channels: u8,
+    },
     Other,
 }
 
@@ -180,7 +192,12 @@ fn atoms(data: &[u8], from: usize, to: usize) -> Vec<Atom> {
             break;
         }
         let end = at.saturating_add(size);
-        found.push(Atom { kind, start: at, body, end });
+        found.push(Atom {
+            kind,
+            start: at,
+            body,
+            end,
+        });
         if end > to {
             break;
         }
@@ -190,11 +207,15 @@ fn atoms(data: &[u8], from: usize, to: usize) -> Vec<Atom> {
 }
 
 fn child(data: &[u8], parent: Atom, kind: &[u8; 4]) -> Option<Atom> {
-    atoms(data, parent.body, parent.end.min(data.len())).into_iter().find(|a| &a.kind == kind && a.end <= data.len())
+    atoms(data, parent.body, parent.end.min(data.len()))
+        .into_iter()
+        .find(|a| &a.kind == kind && a.end <= data.len())
 }
 
 fn path(data: &[u8], parent: Atom, kinds: &[&[u8; 4]]) -> Option<Atom> {
-    kinds.iter().try_fold(parent, |atom, kind| child(data, atom, kind))
+    kinds
+        .iter()
+        .try_fold(parent, |atom, kind| child(data, atom, kind))
 }
 
 fn whole(data: &[u8], atom: Atom) -> Vec<u8> {
@@ -222,7 +243,9 @@ pub fn read_head(data: &[u8]) -> Head {
         match &atom.kind {
             b"moov" => moov = Some(atom),
             b"sidx" => {
-                let Some(moov) = moov else { return Head::Unusable("no moov before the index") };
+                let Some(moov) = moov else {
+                    return Head::Unusable("no moov before the index");
+                };
                 return match track(data, moov, atom) {
                     Ok(track) => Head::Track(Box::new(track)),
                     Err(why) => Head::Unusable(why),
@@ -256,7 +279,11 @@ fn track(data: &[u8], moov: Atom, sidx: Atom) -> Result<Track, &'static str> {
     let codec = codec(data, stsd);
     let defaults = path(data, moov, &[b"mvex", b"trex"])
         .and_then(|trex| {
-            Some(Defaults { duration: be32(data, trex.body + 12)?, size: be32(data, trex.body + 16)?, flags: be32(data, trex.body + 20)? })
+            Some(Defaults {
+                duration: be32(data, trex.body + 12)?,
+                size: be32(data, trex.body + 16)?,
+                flags: be32(data, trex.body + 20)?,
+            })
         })
         .unwrap_or_default();
     let shift = path(data, trak, &[b"edts", b"elst"])
@@ -276,21 +303,39 @@ fn track(data: &[u8], moov: Atom, sidx: Atom) -> Result<Track, &'static str> {
     if segments.is_empty() {
         return Err("empty index");
     }
-    Ok(Track { trak: whole(data, trak), mvhd: whole(data, mvhd), timescale, video, codec, defaults, shift, segments, webm: None })
+    Ok(Track {
+        trak: whole(data, trak),
+        mvhd: whole(data, mvhd),
+        timescale,
+        video,
+        codec,
+        defaults,
+        shift,
+        segments,
+        webm: None,
+    })
 }
 
 fn codec(data: &[u8], stsd: Atom) -> Codec {
     let entries = atoms(data, stsd.body + 8, stsd.end.min(data.len()));
-    let Some(entry) = entries.first().filter(|e| e.end <= data.len()) else { return Codec::Other };
+    let Some(entry) = entries.first().filter(|e| e.end <= data.len()) else {
+        return Codec::Other;
+    };
     match &entry.kind {
         b"avc1" | b"avc3" => {
-            let Some(avcc) = atoms(data, entry.body + 78, entry.end).into_iter().find(|a| &a.kind == b"avcC" && a.end <= data.len()) else {
+            let Some(avcc) = atoms(data, entry.body + 78, entry.end)
+                .into_iter()
+                .find(|a| &a.kind == b"avcC" && a.end <= data.len())
+            else {
                 return Codec::Other;
             };
             avc_config(&data[avcc.body..avcc.end]).unwrap_or(Codec::Other)
         }
         b"mp4a" => {
-            let Some(esds) = atoms(data, entry.body + 28, entry.end).into_iter().find(|a| &a.kind == b"esds" && a.end <= data.len()) else {
+            let Some(esds) = atoms(data, entry.body + 28, entry.end)
+                .into_iter()
+                .find(|a| &a.kind == b"esds" && a.end <= data.len())
+            else {
                 return Codec::Other;
             };
             aac_config(&data[esds.body + 4..esds.end]).unwrap_or(Codec::Other)
@@ -300,15 +345,26 @@ fn codec(data: &[u8], stsd: Atom) -> Codec {
             let rate = be32(data, entry.body + 24).map_or(48_000, |r| r >> 16);
             let mut channels = be16(data, entry.body + 16).unwrap_or(2) as u8;
             let config = if plus { b"dec3" } else { b"dac3" };
-            if let Some(c) = atoms(data, entry.body + 28, entry.end).into_iter().find(|a| &a.kind == config && a.end <= data.len()) {
+            if let Some(c) = atoms(data, entry.body + 28, entry.end)
+                .into_iter()
+                .find(|a| &a.kind == config && a.end <= data.len())
+            {
                 // acmod and lfeon of the (first) independent stream.
                 let at = if plus { c.body + 3 } else { c.body + 1 };
                 if let Some(&b) = data.get(at).filter(|_| at < c.end) {
-                    let (acmod, lfe) = if plus { ((b >> 1) & 7, b & 1) } else { ((b >> 3) & 7, (b >> 2) & 1) };
+                    let (acmod, lfe) = if plus {
+                        ((b >> 1) & 7, b & 1)
+                    } else {
+                        ((b >> 3) & 7, (b >> 2) & 1)
+                    };
                     channels = [2, 1, 2, 3, 3, 4, 4, 5][acmod as usize] + lfe;
                 }
             }
-            Codec::Dolby { plus, rate, channels }
+            Codec::Dolby {
+                plus,
+                rate,
+                channels,
+            }
         }
         _ => Codec::Other,
     }
@@ -383,7 +439,11 @@ fn aac_config(b: &[u8]) -> Option<Codec> {
     if !(1..=4).contains(&object) || frequency >= 13 || channels == 0 || channels > 7 {
         return None;
     }
-    Some(Codec::Aac { profile: object - 1, frequency, channels })
+    Some(Codec::Aac {
+        profile: object - 1,
+        frequency,
+        channels,
+    })
 }
 
 fn index(data: &[u8], sidx: Atom) -> Option<Vec<Segment>> {
@@ -407,7 +467,11 @@ fn index(data: &[u8], sidx: Atom) -> Option<Vec<Segment>> {
             return None;
         }
         let size = (reference & 0x7fff_ffff) as u64;
-        segments.push(Segment { offset, size, start: time as f64 / timescale });
+        segments.push(Segment {
+            offset,
+            size,
+            start: time as f64 / timescale,
+        });
         offset += size;
         time += duration as u64;
         at += 12;
@@ -421,11 +485,17 @@ fn index(data: &[u8], sidx: Atom) -> Option<Vec<Segment>> {
 /// segment's offset in its file, for a `tfhd` that gives an absolute one.
 fn fragment(data: Vec<u8>, base: u64, defaults: Defaults) -> Result<Fragment, &'static str> {
     let mut samples = Vec::new();
-    for moof in atoms(&data, 0, data.len()).into_iter().filter(|a| &a.kind == b"moof") {
+    for moof in atoms(&data, 0, data.len())
+        .into_iter()
+        .filter(|a| &a.kind == b"moof")
+    {
         if moof.end > data.len() {
             return Err("fragment cut short");
         }
-        for traf in atoms(&data, moof.body, moof.end).into_iter().filter(|a| &a.kind == b"traf") {
+        for traf in atoms(&data, moof.body, moof.end)
+            .into_iter()
+            .filter(|a| &a.kind == b"traf")
+        {
             read_traf(&data, moof, traf, base, defaults, &mut samples)?;
         }
     }
@@ -437,13 +507,23 @@ fn fragment(data: Vec<u8>, base: u64, defaults: Defaults) -> Result<Fragment, &'
     Ok(Fragment { data, samples })
 }
 
-fn read_traf(data: &[u8], moof: Atom, traf: Atom, base: u64, defaults: Defaults, samples: &mut Vec<Sample>) -> Result<(), &'static str> {
+fn read_traf(
+    data: &[u8],
+    moof: Atom,
+    traf: Atom,
+    base: u64,
+    defaults: Defaults,
+    samples: &mut Vec<Sample>,
+) -> Result<(), &'static str> {
     let tfhd = child(data, traf, b"tfhd").ok_or("no tfhd")?;
     let flags = be32(data, tfhd.body).ok_or("short tfhd")? & 0xff_ffff;
     let mut at = tfhd.body + 8;
     let mut start = moof.start as u64;
     if flags & 0x01 != 0 {
-        start = be64(data, at).ok_or("short tfhd")?.checked_sub(base).ok_or("base before the segment")?;
+        start = be64(data, at)
+            .ok_or("short tfhd")?
+            .checked_sub(base)
+            .ok_or("base before the segment")?;
         at += 8;
     }
     if flags & 0x02 != 0 {
@@ -470,7 +550,10 @@ fn read_traf(data: &[u8], moof: Atom, traf: Atom, base: u64, defaults: Defaults,
         None => samples.last().map_or(0, |s| s.time + s.duration as u64),
     };
     let mut next = start;
-    for trun in atoms(data, traf.body, traf.end).into_iter().filter(|a| &a.kind == b"trun") {
+    for trun in atoms(data, traf.body, traf.end)
+        .into_iter()
+        .filter(|a| &a.kind == b"trun")
+    {
         let b = &data[trun.body..trun.end.min(data.len())];
         let version = b[0];
         let flags = be32(b, 0).ok_or("short trun")? & 0xff_ffff;
@@ -498,11 +581,26 @@ fn read_traf(data: &[u8], moof: Atom, traf: Atom, base: u64, defaults: Defaults,
             let duration = field(0x100)?.unwrap_or(d.duration);
             let size = field(0x200)?.unwrap_or(d.size) as usize;
             let mut sample_flags = field(0x400)?.unwrap_or(d.flags);
-            if i == 0 && let Some(f) = first_flags {
+            if i == 0
+                && let Some(f) = first_flags
+            {
                 sample_flags = f;
             }
-            let offset = field(0x800)?.map_or(0, |v| if version == 0 { v.min(i32::MAX as u32) as i32 } else { v as i32 });
-            samples.push(Sample { at: usize::try_from(next).map_err(|_| "offset too large")?, size, time, duration, offset, sync: sample_flags & 0x0001_0000 == 0 });
+            let offset = field(0x800)?.map_or(0, |v| {
+                if version == 0 {
+                    v.min(i32::MAX as u32) as i32
+                } else {
+                    v as i32
+                }
+            });
+            samples.push(Sample {
+                at: usize::try_from(next).map_err(|_| "offset too large")?,
+                size,
+                time,
+                duration,
+                offset,
+                sync: sample_flags & 0x0001_0000 == 0,
+            });
             next += size as u64;
             time += duration as u64;
         }
@@ -520,7 +618,11 @@ fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
         .clusters
         .iter()
         .enumerate()
-        .map(|(i, &(offset, start))| Segment { offset, size: head.clusters.get(i + 1).map_or(total, |n| n.0) - offset, start })
+        .map(|(i, &(offset, start))| Segment {
+            offset,
+            size: head.clusters.get(i + 1).map_or(total, |n| n.0) - offset,
+            start,
+        })
         .collect();
     if let Some(opus) = &head.opus {
         return Track {
@@ -535,20 +637,24 @@ fn webm_track(head: &cast_webm::Head, total: u64) -> Track {
             webm: Some((head.number, head.frame)),
         };
     }
-    let trak = trak_box(head.timescale, Media::Picture(head.width, head.height), |o| {
-        put_box(o, b"vp09", |o| {
-            o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
-            o.extend_from_slice(&[0; 16]);
-            o.extend_from_slice(&head.width.to_be_bytes());
-            o.extend_from_slice(&head.height.to_be_bytes());
-            o.extend_from_slice(&0x0048_0000u32.to_be_bytes());
-            o.extend_from_slice(&0x0048_0000u32.to_be_bytes());
-            o.extend_from_slice(&[0, 0, 0, 0, 0, 1]);
-            o.extend_from_slice(&[0; 32]);
-            o.extend_from_slice(&[0, 0x18, 0xff, 0xff]);
-            o.extend_from_slice(&head.vpcc);
-        });
-    });
+    let trak = trak_box(
+        head.timescale,
+        Media::Picture(head.width, head.height),
+        |o| {
+            put_box(o, b"vp09", |o| {
+                o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
+                o.extend_from_slice(&[0; 16]);
+                o.extend_from_slice(&head.width.to_be_bytes());
+                o.extend_from_slice(&head.height.to_be_bytes());
+                o.extend_from_slice(&0x0048_0000u32.to_be_bytes());
+                o.extend_from_slice(&0x0048_0000u32.to_be_bytes());
+                o.extend_from_slice(&[0, 0, 0, 0, 0, 1]);
+                o.extend_from_slice(&[0; 32]);
+                o.extend_from_slice(&[0, 0x18, 0xff, 0xff]);
+                o.extend_from_slice(&head.vpcc);
+            });
+        },
+    );
     let mut mvhd = Vec::new();
     put_box(&mut mvhd, b"mvhd", |o| {
         o.extend_from_slice(&[0; 12]);
@@ -596,13 +702,31 @@ fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> V
             o.extend_from_slice(&1u32.to_be_bytes());
             o.extend_from_slice(&[0; 4 + 4 + 8 + 2]);
             // Subtitle tracks share an alternate group: one shows at a time.
-            o.extend_from_slice(&(if matches!(media, Media::Text(_)) { 2u16 } else { 0 }).to_be_bytes());
-            o.extend_from_slice(&(if matches!(media, Media::Sound) { 0x0100u16 } else { 0 }).to_be_bytes());
+            o.extend_from_slice(
+                &(if matches!(media, Media::Text(_)) {
+                    2u16
+                } else {
+                    0
+                })
+                .to_be_bytes(),
+            );
+            o.extend_from_slice(
+                &(if matches!(media, Media::Sound) {
+                    0x0100u16
+                } else {
+                    0
+                })
+                .to_be_bytes(),
+            );
             o.extend_from_slice(&[0; 2]);
             for v in [0x0001_0000u32, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000] {
                 o.extend_from_slice(&v.to_be_bytes());
             }
-            let (width, height) = if let Media::Picture(w, h) = media { (w, h) } else { (0, 0) };
+            let (width, height) = if let Media::Picture(w, h) = media {
+                (w, h)
+            } else {
+                (0, 0)
+            };
             o.extend_from_slice(&((width as u32) << 16).to_be_bytes());
             o.extend_from_slice(&((height as u32) << 16).to_be_bytes());
         });
@@ -611,8 +735,14 @@ fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> V
                 o.extend_from_slice(&[0; 12]);
                 o.extend_from_slice(&timescale.to_be_bytes());
                 o.extend_from_slice(&[0, 0, 0, 0]);
-                let language = if let Media::Text(l) = media { crate::embed::iso639_2t(l) } else { "und" };
-                let packed = language.bytes().fold(0u16, |v, c| (v << 5) | (c.wrapping_sub(0x60) as u16 & 0x1f));
+                let language = if let Media::Text(l) = media {
+                    crate::embed::iso639_2t(l)
+                } else {
+                    "und"
+                };
+                let packed = language
+                    .bytes()
+                    .fold(0u16, |v, c| (v << 5) | (c.wrapping_sub(0x60) as u16 & 0x1f));
                 o.extend_from_slice(&packed.to_be_bytes());
                 o.extend_from_slice(&[0, 0]);
             });
@@ -638,7 +768,9 @@ fn trak_box(timescale: u32, media: Media, entry: impl FnOnce(&mut Vec<u8>)) -> V
             }
             put_box(o, b"minf", |o| {
                 match media {
-                    Media::Picture(..) => put_box(o, b"vmhd", |o| o.extend_from_slice(&[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])),
+                    Media::Picture(..) => put_box(o, b"vmhd", |o| {
+                        o.extend_from_slice(&[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])
+                    }),
                     Media::Sound => put_box(o, b"smhd", |o| o.extend_from_slice(&[0; 8])),
                     Media::Text(_) => put_box(o, b"nmhd", |o| o.extend_from_slice(&[0; 4])),
                 }
@@ -696,11 +828,21 @@ fn text_fragment(cues: &[(u64, u64, String)]) -> Fragment {
         let text = &text.as_bytes()[..text.len().min(u16::MAX as usize)];
         data.extend_from_slice(&(text.len() as u16).to_be_bytes());
         data.extend_from_slice(text);
-        samples.push(Sample { at: start, size: data.len() - start, time, duration: duration.min(u32::MAX as u64) as u32, offset: 0, sync: true });
+        samples.push(Sample {
+            at: start,
+            size: data.len() - start,
+            time,
+            duration: duration.min(u32::MAX as u64) as u32,
+            offset: 0,
+            sync: true,
+        });
     };
     for (i, (start, end, text)) in cues.iter().enumerate() {
         let start = (*start).max(at);
-        let end = cues.get(i + 1).map_or(*end, |next| (*end).min(next.0)).max(start + 1);
+        let end = cues
+            .get(i + 1)
+            .map_or(*end, |next| (*end).min(next.0))
+            .max(start + 1);
         if start > at {
             sample(&mut data, "", at, start - at);
         }
@@ -744,7 +886,12 @@ fn mp4_metadata(title: Option<&str>, cover: Option<&[u8]>) -> Vec<u8> {
                     item(o, b"\xa9nam", 1, title.as_bytes());
                 }
                 if let Some(cover) = cover {
-                    item(o, b"covr", if crate::embed::is_png(cover) { 14 } else { 13 }, cover);
+                    item(
+                        o,
+                        b"covr",
+                        if crate::embed::is_png(cover) { 14 } else { 13 },
+                        cover,
+                    );
                 }
             });
         });
@@ -756,8 +903,14 @@ fn mp4_metadata(title: Option<&str>, cover: Option<&[u8]>) -> Vec<u8> {
 /// (big-endian, without the magic and version).
 fn opus_trak(opus: &cast_webm::Opus, timescale: u32) -> Vec<u8> {
     let head = &opus.private;
-    let le16 = |at: usize| head.get(at..at + 2).map_or(0, |b| u16::from_le_bytes([b[0], b[1]]));
-    let le32 = |at: usize| head.get(at..at + 4).map_or(0, |b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]));
+    let le16 = |at: usize| {
+        head.get(at..at + 2)
+            .map_or(0, |b| u16::from_le_bytes([b[0], b[1]]))
+    };
+    let le32 = |at: usize| {
+        head.get(at..at + 4)
+            .map_or(0, |b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+    };
     trak_box(timescale, Media::Sound, |o| {
         put_box(o, b"Opus", |o| {
             o.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 1]);
@@ -788,7 +941,14 @@ fn webm_fragment(data: Vec<u8>, number: u64, frame: u32) -> Result<Fragment, &'s
             Some(next) if next.time > f.time => (next.time - f.time) as u32,
             _ => samples.last().map_or(frame, |s| s.duration).max(1),
         };
-        samples.push(Sample { at: f.at, size: f.size, time: f.time, duration, offset: 0, sync: f.key });
+        samples.push(Sample {
+            at: f.at,
+            size: f.size,
+            time: f.time,
+            duration,
+            offset: 0,
+            sync: f.key,
+        });
     }
     Ok(Fragment { data, samples })
 }
@@ -807,11 +967,19 @@ pub struct Address {
 
 impl Address {
     fn new(url: String) -> Arc<Address> {
-        Arc::new(Address { url: Mutex::new(url), expired: AtomicBool::new(false), renewable: true })
+        Arc::new(Address {
+            url: Mutex::new(url),
+            expired: AtomicBool::new(false),
+            renewable: true,
+        })
     }
 
     fn fixed(url: String) -> Arc<Address> {
-        Arc::new(Address { url: Mutex::new(url), expired: AtomicBool::new(false), renewable: false })
+        Arc::new(Address {
+            url: Mutex::new(url),
+            expired: AtomicBool::new(false),
+            renewable: false,
+        })
     }
 
     fn get(&self) -> String {
@@ -838,8 +1006,22 @@ struct Reader {
 }
 
 impl Reader {
-    fn new(fetch: Arc<dyn Fetch>, target: &Target, address: Arc<Address>, stop: Arc<AtomicBool>, position: u64) -> Self {
-        Reader { fetch, target: target.clone(), address, stop, position, body: None, ahead: None }
+    fn new(
+        fetch: Arc<dyn Fetch>,
+        target: &Target,
+        address: Arc<Address>,
+        stop: Arc<AtomicBool>,
+        position: u64,
+    ) -> Self {
+        Reader {
+            fetch,
+            target: target.clone(),
+            address,
+            stop,
+            position,
+            body: None,
+            ahead: None,
+        }
     }
 
     fn last_of(&self, from: u64) -> u64 {
@@ -850,7 +1032,9 @@ impl Reader {
     fn open(&self, from: u64, last: u64) -> Opening {
         let (fetch, mut target) = (self.fetch.clone(), self.target.clone());
         target.url = self.address.get();
-        std::thread::spawn(move || request(fetch.as_ref(), &target, from, last).map(|body| drain(body, last + 1 - from)))
+        std::thread::spawn(move || {
+            request(fetch.as_ref(), &target, from, last).map(|body| drain(body, last + 1 - from))
+        })
     }
 
     /// The reply for the chunk at the current position: the one asked for
@@ -868,7 +1052,10 @@ impl Reader {
                 _ => (self.open(from, last), false),
             };
             let tried = self.address.get();
-            match pending.join().unwrap_or_else(|_| Err(Stop::Upstream("failed".into()))) {
+            match pending
+                .join()
+                .unwrap_or_else(|_| Err(Stop::Upstream("failed".into())))
+            {
                 Ok(body) => {
                     self.body = Some((body, last));
                     if last + 1 < self.target.size {
@@ -885,7 +1072,9 @@ impl Reader {
                     self.address.expired.store(true, Ordering::SeqCst);
                     while self.address.get() == tried {
                         if waited >= RENEW_WAIT || self.stop.load(Ordering::Relaxed) {
-                            return Err(format!("YouTube answered {status} and no new address came"));
+                            return Err(format!(
+                                "YouTube answered {status} and no new address came"
+                            ));
                         }
                         std::thread::sleep(Duration::from_millis(500));
                         waited += Duration::from_millis(500);
@@ -910,7 +1099,9 @@ impl Reader {
             if self.body.is_none() {
                 self.next_body()?;
             }
-            let Some((body, last)) = self.body.as_mut() else { return Err("no body".into()) };
+            let Some((body, last)) = self.body.as_mut() else {
+                return Err("no body".into());
+            };
             let last = *last;
             match body.read(&mut out[filled..]) {
                 Ok(0) => {
@@ -959,11 +1150,22 @@ pub fn fetch_head(fetch: &Arc<dyn Fetch>, target: &Target) -> Result<Track, Stri
     let mut want = (64u64 << 10).min(target.size);
     let address = Address::fixed(target.url.clone());
     loop {
-        let mut reader = Reader::new(fetch.clone(), &Target { chunk: want.max(1), ..target.clone() }, address.clone(), Arc::new(AtomicBool::new(false)), 0);
+        let mut reader = Reader::new(
+            fetch.clone(),
+            &Target {
+                chunk: want.max(1),
+                ..target.clone()
+            },
+            address.clone(),
+            Arc::new(AtomicBool::new(false)),
+            0,
+        );
         let data = reader.take(want)?;
         let head = if cast_webm::is_webm(&data) {
             match cast_webm::read_head(&data, target.size) {
-                cast_webm::Read::Head(head) => Head::Track(Box::new(webm_track(&head, target.size))),
+                cast_webm::Read::Head(head) => {
+                    Head::Track(Box::new(webm_track(&head, target.size)))
+                }
                 cast_webm::Read::More(more) => Head::More(more),
                 cast_webm::Read::Unusable(why) => Head::Unusable(why),
             }
@@ -989,7 +1191,12 @@ const AHEAD: usize = 2;
 
 /// Reads `track`'s fragments from segment `first` on its own thread, up to
 /// [AHEAD] ahead of the stream; empty fragments are skipped.
-fn produce<'s>(scope: &'s std::thread::Scope<'s, '_>, track: &'s Track, mut reader: Reader, first: usize) -> std::sync::mpsc::Receiver<Result<Fragment, String>> {
+fn produce<'s>(
+    scope: &'s std::thread::Scope<'s, '_>,
+    track: &'s Track,
+    mut reader: Reader,
+    first: usize,
+) -> std::sync::mpsc::Receiver<Result<Fragment, String>> {
     let (tx, rx) = std::sync::mpsc::sync_channel(AHEAD);
     scope.spawn(move || {
         let mut next = first;
@@ -1000,7 +1207,9 @@ fn produce<'s>(scope: &'s std::thread::Scope<'s, '_>, track: &'s Track, mut read
             } else {
                 reader.seek(segment.offset);
                 reader.take(segment.size).and_then(|data| match track.webm {
-                    Some((number, frame)) => webm_fragment(data, number, frame).map_err(String::from),
+                    Some((number, frame)) => {
+                        webm_fragment(data, number, frame).map_err(String::from)
+                    }
                     None => fragment(data, segment.offset, track.defaults).map_err(String::from),
                 })
             };
@@ -1021,7 +1230,9 @@ fn produce<'s>(scope: &'s std::thread::Scope<'s, '_>, track: &'s Track, mut read
     rx
 }
 
-fn next_fragment(fragments: &std::sync::mpsc::Receiver<Result<Fragment, String>>) -> Result<Option<Fragment>, String> {
+fn next_fragment(
+    fragments: &std::sync::mpsc::Receiver<Result<Fragment, String>>,
+) -> Result<Option<Fragment>, String> {
     match fragments.recv() {
         Ok(read) => read.map(Some),
         Err(_) => Ok(None),
@@ -1030,7 +1241,11 @@ fn next_fragment(fragments: &std::sync::mpsc::Receiver<Result<Fragment, String>>
 
 /// The segment holding `seconds`: the last that starts at or before it.
 fn segment_at(track: &Track, seconds: f64) -> usize {
-    track.segments.iter().rposition(|s| s.start <= seconds + 1e-6).unwrap_or(0)
+    track
+        .segments
+        .iter()
+        .rposition(|s| s.start <= seconds + 1e-6)
+        .unwrap_or(0)
 }
 
 // ---- writing ----
@@ -1047,36 +1262,104 @@ fn put_box(out: &mut Vec<u8>, kind: &[u8; 4], body: impl FnOnce(&mut Vec<u8>)) {
 /// How Matroska names a track's codec, from its sample entry.
 fn mkv_track(track: &Track) -> Result<cast_mkv::TrackInfo, String> {
     if let Codec::Opus(opus) = &track.codec {
-        return Ok(cast_mkv::TrackInfo { codec: "A_OPUS", private: Some(opus.private.clone()), video: None, audio: Some((opus.rate, opus.channels)), delay: opus.delay, preroll: opus.preroll });
+        return Ok(cast_mkv::TrackInfo {
+            codec: "A_OPUS",
+            private: Some(opus.private.clone()),
+            video: None,
+            audio: Some((opus.rate, opus.channels)),
+            delay: opus.delay,
+            preroll: opus.preroll,
+        });
     }
     let data = &track.trak;
-    let trak = atoms(data, 0, data.len()).into_iter().next().ok_or("no trak")?;
+    let trak = atoms(data, 0, data.len())
+        .into_iter()
+        .next()
+        .ok_or("no trak")?;
     let stsd = path(data, trak, &[b"mdia", b"minf", b"stbl", b"stsd"]).ok_or("no stsd")?;
-    let entry = atoms(data, stsd.body + 8, stsd.end.min(data.len())).into_iter().next().filter(|e| e.end <= data.len()).ok_or("no sample entry")?;
-    let config = |from: usize, kind: &[u8; 4]| atoms(data, from, entry.end).into_iter().find(|a| &a.kind == kind && a.end <= data.len()).map(|a| data[a.body..a.end].to_vec());
+    let entry = atoms(data, stsd.body + 8, stsd.end.min(data.len()))
+        .into_iter()
+        .next()
+        .filter(|e| e.end <= data.len())
+        .ok_or("no sample entry")?;
+    let config = |from: usize, kind: &[u8; 4]| {
+        atoms(data, from, entry.end)
+            .into_iter()
+            .find(|a| &a.kind == kind && a.end <= data.len())
+            .map(|a| data[a.body..a.end].to_vec())
+    };
     if track.video {
-        let size = (be16(data, entry.body + 24).unwrap_or(0), be16(data, entry.body + 26).unwrap_or(0));
+        let size = (
+            be16(data, entry.body + 24).unwrap_or(0),
+            be16(data, entry.body + 26).unwrap_or(0),
+        );
         let (codec, private) = match &entry.kind {
-            b"avc1" | b"avc3" => ("V_MPEG4/ISO/AVC", Some(config(entry.body + 78, b"avcC").ok_or("no avcC")?)),
+            b"avc1" | b"avc3" => (
+                "V_MPEG4/ISO/AVC",
+                Some(config(entry.body + 78, b"avcC").ok_or("no avcC")?),
+            ),
             b"vp09" => ("V_VP9", None),
-            b"av01" => ("V_AV1", Some(config(entry.body + 78, b"av1C").ok_or("no av1C")?)),
+            b"av01" => (
+                "V_AV1",
+                Some(config(entry.body + 78, b"av1C").ok_or("no av1C")?),
+            ),
             _ => return Err("a picture MKV does not take here".into()),
         };
-        return Ok(cast_mkv::TrackInfo { codec, private, video: Some(size), audio: None, delay: 0, preroll: 0 });
+        return Ok(cast_mkv::TrackInfo {
+            codec,
+            private,
+            video: Some(size),
+            audio: None,
+            delay: 0,
+            preroll: 0,
+        });
     }
-    if let Codec::Dolby { plus, rate, channels } = track.codec {
-        return Ok(cast_mkv::TrackInfo { codec: if plus { "A_EAC3" } else { "A_AC3" }, private: None, video: None, audio: Some((rate as f64, channels)), delay: 0, preroll: 0 });
+    if let Codec::Dolby {
+        plus,
+        rate,
+        channels,
+    } = track.codec
+    {
+        return Ok(cast_mkv::TrackInfo {
+            codec: if plus { "A_EAC3" } else { "A_AC3" },
+            private: None,
+            video: None,
+            audio: Some((rate as f64, channels)),
+            delay: 0,
+            preroll: 0,
+        });
     }
-    let Codec::Aac { profile, frequency, channels } = track.codec else { return Err("sound other than AAC, Opus or Dolby".into()) };
-    const RATES: [u32; 13] = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
+    let Codec::Aac {
+        profile,
+        frequency,
+        channels,
+    } = track.codec
+    else {
+        return Err("sound other than AAC, Opus or Dolby".into());
+    };
+    const RATES: [u32; 13] = [
+        96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350,
+    ];
     let bits = ((profile as u16 + 1) << 11) | ((frequency as u16) << 7) | ((channels as u16) << 3);
-    Ok(cast_mkv::TrackInfo { codec: "A_AAC", private: Some(bits.to_be_bytes().to_vec()), video: None, audio: Some((RATES[frequency as usize] as f64, channels)), delay: 0, preroll: 0 })
+    Ok(cast_mkv::TrackInfo {
+        codec: "A_AAC",
+        private: Some(bits.to_be_bytes().to_vec()),
+        video: None,
+        audio: Some((RATES[frequency as usize] as f64, channels)),
+        delay: 0,
+        preroll: 0,
+    })
 }
 
 /// `trak` with its `tkhd` track id set to `id`.
 fn renumbered(trak: &[u8], id: u32) -> Vec<u8> {
     let mut trak = trak.to_vec();
-    let outer = Atom { kind: *b"trak", start: 0, body: 8, end: trak.len() };
+    let outer = Atom {
+        kind: *b"trak",
+        start: 0,
+        body: 8,
+        end: trak.len(),
+    };
     if let Some(tkhd) = child(&trak, outer, b"tkhd") {
         let at = tkhd.body + if trak[tkhd.body] == 1 { 20 } else { 12 };
         if at + 4 <= tkhd.end {
@@ -1089,7 +1372,13 @@ fn renumbered(trak: &[u8], id: u32) -> Vec<u8> {
 /// The start of a fragmented MP4 holding both tracks: picture as track 1,
 /// sound as track 2, and `texts` (language) as tracks 3 on, with `extra`
 /// metadata.
-fn mp4_head(video: &Track, audio: &Track, texts: &[&str], title: Option<&str>, cover: Option<&[u8]>) -> Vec<u8> {
+fn mp4_head(
+    video: &Track,
+    audio: &Track,
+    texts: &[&str],
+    title: Option<&str>,
+    cover: Option<&[u8]>,
+) -> Vec<u8> {
     let mut out = Vec::new();
     put_box(&mut out, b"ftyp", |o| {
         o.extend_from_slice(b"isom");
@@ -1127,7 +1416,14 @@ fn mp4_head(video: &Track, audio: &Track, texts: &[&str], title: Option<&str>, c
 
 /// One `moof` and `mdat` for `samples` of `fragment`, decode times moved
 /// back by `rebase`.
-fn mp4_fragment(out: &mut Vec<u8>, sequence: u32, track: u32, fragment: &Fragment, samples: &[Sample], rebase: u64) {
+fn mp4_fragment(
+    out: &mut Vec<u8>,
+    sequence: u32,
+    track: u32,
+    fragment: &Fragment,
+    samples: &[Sample],
+    rebase: u64,
+) {
     let Some(first) = samples.first() else { return };
     let moof_start = out.len();
     let mut offset_at = 0;
@@ -1187,7 +1483,11 @@ fn crc32(data: &[u8]) -> u32 {
     for &byte in data {
         crc ^= (byte as u32) << 24;
         for _ in 0..8 {
-            crc = if crc & 0x8000_0000 != 0 { (crc << 1) ^ 0x04c1_1db7 } else { crc << 1 };
+            crc = if crc & 0x8000_0000 != 0 {
+                (crc << 1) ^ 0x04c1_1db7
+            } else {
+                crc << 1
+            };
         }
     }
     crc
@@ -1202,7 +1502,10 @@ fn timestamp(out: &mut Vec<u8>, marker: u8, t: u64) {
 
 impl TsWriter {
     fn new() -> Self {
-        TsWriter { counters: HashMap::new(), packets: 0 }
+        TsWriter {
+            counters: HashMap::new(),
+            packets: 0,
+        }
     }
 
     fn counter(&mut self, pid: u16) -> u8 {
@@ -1214,7 +1517,14 @@ impl TsWriter {
 
     /// `payload` split into packets of `pid`; the first carries `pcr` and the
     /// random access flag when given.
-    fn packetize(&mut self, out: &mut Vec<u8>, pid: u16, payload: &[u8], pcr: Option<u64>, random: bool) {
+    fn packetize(
+        &mut self,
+        out: &mut Vec<u8>,
+        pid: u16,
+        payload: &[u8],
+        pcr: Option<u64>,
+        random: bool,
+    ) {
         let mut at = 0;
         let mut first = true;
         while at < payload.len() || first {
@@ -1235,7 +1545,12 @@ impl TsWriter {
                     adaptation.push(0);
                 }
             }
-            let room = 184 - if adaptation.is_empty() { 0 } else { adaptation.len() + 1 };
+            let room = 184
+                - if adaptation.is_empty() {
+                    0
+                } else {
+                    adaptation.len() + 1
+                };
             let left = payload.len() - at;
             let mut take = left.min(room);
             // Fill the last packet with stuffing in its adaptation field.
@@ -1276,7 +1591,12 @@ impl TsWriter {
 
     fn header(&mut self, pid: u16, start: bool, adaptation: bool) -> [u8; 4] {
         let counter = self.counter(pid);
-        [0x47, (if start { 0x40 } else { 0 }) | ((pid >> 8) as u8 & 0x1f), pid as u8, (if adaptation { 0x30 } else { 0x10 }) | counter]
+        [
+            0x47,
+            (if start { 0x40 } else { 0 }) | ((pid >> 8) as u8 & 0x1f),
+            pid as u8,
+            (if adaptation { 0x30 } else { 0x10 }) | counter,
+        ]
     }
 
     fn section(&mut self, out: &mut Vec<u8>, pid: u16, table: u8, id: u16, body: &[u8]) {
@@ -1292,7 +1612,12 @@ impl TsWriter {
         payload.extend_from_slice(&section);
         payload.resize(184, 0xff);
         let counter = self.counter(pid);
-        out.extend_from_slice(&[0x47, 0x40 | ((pid >> 8) as u8 & 0x1f), pid as u8, 0x10 | counter]);
+        out.extend_from_slice(&[
+            0x47,
+            0x40 | ((pid >> 8) as u8 & 0x1f),
+            pid as u8,
+            0x10 | counter,
+        ]);
         out.extend_from_slice(&payload);
         self.packets += 1;
     }
@@ -1313,19 +1638,35 @@ impl TsWriter {
         self.section(out, PID_PMT, 0x02, 1, &pmt);
     }
 
-    fn video(&mut self, out: &mut Vec<u8>, codec: &Codec, data: &[u8], sync: bool, dts: u64, pts: u64) {
-        let Codec::Avc { length, sps, pps } = codec else { return };
+    fn video(
+        &mut self,
+        out: &mut Vec<u8>,
+        codec: &Codec,
+        data: &[u8],
+        sync: bool,
+        dts: u64,
+        pts: u64,
+    ) {
+        let Codec::Avc { length, sps, pps } = codec else {
+            return;
+        };
         let mut es = vec![0, 0, 0, 1, 0x09, 0xf0];
         let mut nals = Vec::new();
         let mut at = 0;
         while at + length <= data.len() {
-            let n = data[at..at + length].iter().fold(0usize, |n, &b| (n << 8) | b as usize);
+            let n = data[at..at + length]
+                .iter()
+                .fold(0usize, |n, &b| (n << 8) | b as usize);
             at += length;
-            let Some(nal) = data.get(at..at + n) else { break };
+            let Some(nal) = data.get(at..at + n) else {
+                break;
+            };
             at += n;
             nals.push(nal);
         }
-        let has_sets = nals.iter().any(|n| n.first().is_some_and(|b| b & 0x1f == 7));
+        let has_sets = nals
+            .iter()
+            .any(|n| n.first().is_some_and(|b| b & 0x1f == 7));
         for nal in nals {
             let kind = nal.first().map_or(0, |b| b & 0x1f);
             if kind == 9 {
@@ -1357,7 +1698,14 @@ impl TsWriter {
     }
 
     fn audio(&mut self, out: &mut Vec<u8>, codec: &Codec, data: &[u8], pts: u64) {
-        let Codec::Aac { profile, frequency, channels } = *codec else { return };
+        let Codec::Aac {
+            profile,
+            frequency,
+            channels,
+        } = *codec
+        else {
+            return;
+        };
         let length = data.len() + 7;
         if length > 0x1fff {
             return;
@@ -1443,13 +1791,21 @@ impl Cuts {
 
     /// How much is left out before `ms`.
     fn before(&self, ms: i64) -> i64 {
-        self.0.iter().filter(|&&(_, b)| b <= ms).map(|&(a, b)| b - a).sum()
+        self.0
+            .iter()
+            .filter(|&&(_, b)| b <= ms)
+            .map(|&(a, b)| b - a)
+            .sum()
     }
 
     /// Where `ms` lands in the file once the stretches are out: a time in
     /// one lands where it starts.
     pub fn map(&self, ms: i64) -> i64 {
-        let ms = self.0.iter().find(|&&(a, b)| a <= ms && ms < b).map_or(ms, |&(a, _)| a);
+        let ms = self
+            .0
+            .iter()
+            .find(|&&(a, b)| a <= ms && ms < b)
+            .map_or(ms, |&(a, _)| a);
         ms - self.before(ms)
     }
 
@@ -1494,19 +1850,43 @@ impl Session {
             let audio = fetch_head(fetch, &ask.audio);
             (video.join().unwrap_or_else(|_| Err("failed".into())), audio)
         });
-        let (video, audio) = (video.map_err(|e| format!("picture: {e}"))?, audio.map_err(|e| format!("sound: {e}"))?);
+        let (video, audio) = (
+            video.map_err(|e| format!("picture: {e}"))?,
+            audio.map_err(|e| format!("sound: {e}"))?,
+        );
         if !video.video || audio.video {
             return Err("tracks swapped".into());
         }
-        if matches!(ask.kind, Kind::Ts | Kind::Hls) && (!matches!(video.codec, Codec::Avc { .. }) || !matches!(audio.codec, Codec::Aac { .. })) {
+        if matches!(ask.kind, Kind::Ts | Kind::Hls)
+            && (!matches!(video.codec, Codec::Avc { .. })
+                || !matches!(audio.codec, Codec::Aac { .. }))
+        {
             return Err("only H.264 with AAC goes into a transport stream".into());
         }
         if ask.kind == Kind::Mkv {
             mkv_track(&video)?;
             mkv_track(&audio)?;
         }
-        let addresses = [Address::new(ask.video.url.clone()), Address::new(ask.audio.url.clone())];
-        Ok(Session { video_target: ask.video, audio_target: ask.audio, addresses, video, audio, start: ask.start_ms as f64 / 1000.0, kind: ask.kind, duration: ask.duration_ms as f64 / 1000.0, subtitles: ask.subtitles.filter(|s| !s.cues.is_empty()), matroska: false, extras: crate::embed::Extras::default(), cut: Vec::new(), generation: AtomicU64::new(0), made: Mutex::new(VecDeque::new()) })
+        let addresses = [
+            Address::new(ask.video.url.clone()),
+            Address::new(ask.audio.url.clone()),
+        ];
+        Ok(Session {
+            video_target: ask.video,
+            audio_target: ask.audio,
+            addresses,
+            video,
+            audio,
+            start: ask.start_ms as f64 / 1000.0,
+            kind: ask.kind,
+            duration: ask.duration_ms as f64 / 1000.0,
+            subtitles: ask.subtitles.filter(|s| !s.cues.is_empty()),
+            matroska: false,
+            extras: crate::embed::Extras::default(),
+            cut: Vec::new(),
+            generation: AtomicU64::new(0),
+            made: Mutex::new(VecDeque::new()),
+        })
     }
 
     /// Names Matroska so, never WebM, for a file the user asked to be MKV.
@@ -1535,13 +1915,26 @@ impl Session {
         }
         let first = segment_at(&self.video, self.start);
         let from = self.video.segments[first].start;
-        let keyframes: Vec<i64> = self.video.segments[first..].iter().map(|s| ((s.start - from) * 1000.0).round() as i64).collect();
-        Cuts::snap(&self.cut.iter().map(|&(a, b)| (a - from, b - from)).collect::<Vec<_>>(), &keyframes)
+        let keyframes: Vec<i64> = self.video.segments[first..]
+            .iter()
+            .map(|s| ((s.start - from) * 1000.0).round() as i64)
+            .collect();
+        Cuts::snap(
+            &self
+                .cut
+                .iter()
+                .map(|&(a, b)| (a - from, b - from))
+                .collect::<Vec<_>>(),
+            &keyframes,
+        )
     }
 
     /// Every subtitle track a Matroska stream carries.
     fn texts(&self) -> Vec<&Subtitles> {
-        self.subtitles.iter().chain(self.extras.texts.iter()).collect()
+        self.subtitles
+            .iter()
+            .chain(self.extras.texts.iter())
+            .collect()
     }
 
     /// The file name extension a saved stream takes: `webm` when Matroska
@@ -1551,7 +1944,16 @@ impl Session {
             Kind::Mp4 => "mp4",
             Kind::Ts => "ts",
             Kind::Hls => "m3u8",
-            Kind::Mkv if !self.matroska && self.texts().is_empty() && self.extras.cover.is_none() && matches!(self.audio.codec, Codec::Opus(_)) && mkv_track(&self.video).is_ok_and(|v| matches!(v.codec, "V_VP9" | "V_AV1")) => "webm",
+            Kind::Mkv
+                if !self.matroska
+                    && self.texts().is_empty()
+                    && self.extras.cover.is_none()
+                    && matches!(self.audio.codec, Codec::Opus(_))
+                    && mkv_track(&self.video)
+                        .is_ok_and(|v| matches!(v.codec, "V_VP9" | "V_AV1")) =>
+            {
+                "webm"
+            }
             Kind::Mkv => "mkv",
         }
     }
@@ -1577,8 +1979,16 @@ impl Session {
         let segments = &self.video.segments;
         let first = segment_at(&self.video, self.start);
         let last = segments.last().map_or(0.0, |s| s.start);
-        let typical = if segments.len() > 1 { last / (segments.len() - 1) as f64 } else { 5.0 };
-        let end = if self.duration > last { self.duration } else { last + typical };
+        let typical = if segments.len() > 1 {
+            last / (segments.len() - 1) as f64
+        } else {
+            5.0
+        };
+        let end = if self.duration > last {
+            self.duration
+        } else {
+            last + typical
+        };
         (first..segments.len())
             .map(|i| {
                 let start = segments[i].start;
@@ -1592,12 +2002,23 @@ impl Session {
     /// naming the picture's playlist and a WebVTT rendition; else the
     /// picture's playlist itself.
     pub fn master(&self, token: &str) -> String {
-        let Some(subtitles) = &self.subtitles else { return self.playlist(&format!("{token}/")) };
+        let Some(subtitles) = &self.subtitles else {
+            return self.playlist(&format!("{token}/"));
+        };
         let seconds = self.duration.max(1.0);
-        let bandwidth = ((self.video_target.size + self.audio_target.size) as f64 * 8.0 / seconds).round() as u64;
+        let bandwidth = ((self.video_target.size + self.audio_target.size) as f64 * 8.0 / seconds)
+            .round() as u64;
         let language = subtitles.language.replace('"', "");
-        let name = if language.is_empty() { "Subtitles".to_string() } else { language.clone() };
-        let language = if language.is_empty() { String::new() } else { format!(",LANGUAGE=\"{language}\"") };
+        let name = if language.is_empty() {
+            "Subtitles".to_string()
+        } else {
+            language.clone()
+        };
+        let language = if language.is_empty() {
+            String::new()
+        } else {
+            format!(",LANGUAGE=\"{language}\"")
+        };
         format!(
             "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"subs\",NAME=\"{name}\"{language},DEFAULT=YES,AUTOSELECT=YES,FORCED=NO,URI=\"{token}/subtitles.m3u8\"\n#EXT-X-STREAM-INF:BANDWIDTH={},SUBTITLES=\"subs\"\n{token}/video.m3u8\n",
             bandwidth.max(1)
@@ -1607,20 +2028,39 @@ impl Session {
     /// The subtitles' playlist: one WebVTT file for the whole stream.
     pub fn subtitle_playlist(&self) -> String {
         let length: f64 = self.hls_segments().iter().map(|s| s.2).sum();
-        format!("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-PLAYLIST-TYPE:VOD\n#EXT-X-TARGETDURATION:{}\n#EXT-X-MEDIA-SEQUENCE:0\n#EXTINF:{length:.3},\nsubtitles.vtt\n#EXT-X-ENDLIST\n", length.ceil() as u64)
+        format!(
+            "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-PLAYLIST-TYPE:VOD\n#EXT-X-TARGETDURATION:{}\n#EXT-X-MEDIA-SEQUENCE:0\n#EXTINF:{length:.3},\nsubtitles.vtt\n#EXT-X-ENDLIST\n",
+            length.ceil() as u64
+        )
     }
 
     /// The subtitles as WebVTT, timed like the segments: a time from the
     /// start of the video is that far past the segments' base timestamp.
     pub fn vtt(&self) -> String {
         let mut out = format!("WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:{TS_BASE},LOCAL:00:00:00.000\n\n");
-        let clock = |ms: u64| format!("{:02}:{:02}:{:02}.{:03}", ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, ms % 1000);
+        let clock = |ms: u64| {
+            format!(
+                "{:02}:{:02}:{:02}.{:03}",
+                ms / 3_600_000,
+                ms / 60_000 % 60,
+                ms / 1000 % 60,
+                ms % 1000
+            )
+        };
         let from = (self.starts_at() * 1000.0) as u64;
         for (start, end, text) in self.subtitles.iter().flat_map(|s| s.cues.iter()) {
             let text = text.replace("-->", "->");
-            let text = text.lines().filter(|l| !l.trim().is_empty()).collect::<Vec<_>>().join("\n");
+            let text = text
+                .lines()
+                .filter(|l| !l.trim().is_empty())
+                .collect::<Vec<_>>()
+                .join("\n");
             if *end > from && !text.is_empty() {
-                out.push_str(&format!("{} --> {}\n{text}\n\n", clock(*start), clock(*end)));
+                out.push_str(&format!(
+                    "{} --> {}\n{text}\n\n",
+                    clock(*start),
+                    clock(*end)
+                ));
             }
         }
         out
@@ -1632,7 +2072,9 @@ impl Session {
     pub fn playlist(&self, prefix: &str) -> String {
         let segments = self.hls_segments();
         let longest = segments.iter().map(|s| s.2).fold(1.0f64, f64::max).ceil() as u64;
-        let mut out = format!("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-PLAYLIST-TYPE:VOD\n#EXT-X-TARGETDURATION:{longest}\n#EXT-X-MEDIA-SEQUENCE:0\n");
+        let mut out = format!(
+            "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-PLAYLIST-TYPE:VOD\n#EXT-X-TARGETDURATION:{longest}\n#EXT-X-MEDIA-SEQUENCE:0\n"
+        );
         for (index, _, length) in segments {
             out.push_str(&format!("#EXTINF:{length:.3},\n{prefix}{index}.ts\n"));
         }
@@ -1643,25 +2085,46 @@ impl Session {
     /// The picture's fragment `index` and the sound that goes with it, as
     /// a transport stream timed from the start of the video, so segments
     /// follow on from each other.
-    pub fn hls_segment(&self, fetch: &Arc<dyn Fetch>, index: usize) -> Result<Arc<Vec<u8>>, String> {
+    pub fn hls_segment(
+        &self,
+        fetch: &Arc<dyn Fetch>,
+        index: usize,
+    ) -> Result<Arc<Vec<u8>>, String> {
         if let Some((_, made)) = self.made.lock().unwrap().iter().find(|(i, _)| *i == index) {
             return Ok(made.clone());
         }
-        let (_, start, length) = *self.hls_segments().iter().find(|s| s.0 == index).ok_or("no such segment")?;
-        let end = if index + 1 < self.video.segments.len() { start + length } else { f64::MAX };
-        let stop = Arc::new(AtomicBool::new(false));
-        let read = |which: usize, track: &Track, target: &Target, i: usize| -> Result<Fragment, String> {
-            let segment = track.segments[i];
-            if segment.size > FRAGMENT_LIMIT {
-                return Err("fragment too large".into());
-            }
-            let mut reader = Reader::new(fetch.clone(), target, self.addresses[which].clone(), stop.clone(), segment.offset);
-            let data = reader.take(segment.size)?;
-            match track.webm {
-                Some((number, frame)) => webm_fragment(data, number, frame).map_err(String::from),
-                None => fragment(data, segment.offset, track.defaults).map_err(String::from),
-            }
+        let (_, start, length) = *self
+            .hls_segments()
+            .iter()
+            .find(|s| s.0 == index)
+            .ok_or("no such segment")?;
+        let end = if index + 1 < self.video.segments.len() {
+            start + length
+        } else {
+            f64::MAX
         };
+        let stop = Arc::new(AtomicBool::new(false));
+        let read =
+            |which: usize, track: &Track, target: &Target, i: usize| -> Result<Fragment, String> {
+                let segment = track.segments[i];
+                if segment.size > FRAGMENT_LIMIT {
+                    return Err("fragment too large".into());
+                }
+                let mut reader = Reader::new(
+                    fetch.clone(),
+                    target,
+                    self.addresses[which].clone(),
+                    stop.clone(),
+                    segment.offset,
+                );
+                let data = reader.take(segment.size)?;
+                match track.webm {
+                    Some((number, frame)) => {
+                        webm_fragment(data, number, frame).map_err(String::from)
+                    }
+                    None => fragment(data, segment.offset, track.defaults).map_err(String::from),
+                }
+            };
         let picture = read(0, &self.video, &self.video_target, index)?;
         let (ats, from, until) = (self.audio.timescale as f64, start, end);
         let mut sound = Vec::new();
@@ -1671,33 +2134,66 @@ impl Session {
                 break;
             }
             let f = read(1, &self.audio, &self.audio_target, i)?;
-            let kept: Vec<Sample> = f.samples.iter().copied().filter(|s| {
-                let at = s.time as f64 / ats;
-                at >= from - 1e-6 && at < until - 1e-6
-            }).collect();
-            sound.push(Fragment { data: f.data, samples: kept });
+            let kept: Vec<Sample> = f
+                .samples
+                .iter()
+                .copied()
+                .filter(|s| {
+                    let at = s.time as f64 / ats;
+                    at >= from - 1e-6 && at < until - 1e-6
+                })
+                .collect();
+            sound.push(Fragment {
+                data: f.data,
+                samples: kept,
+            });
             i += 1;
         }
-        let shift = [ticks90(self.video.shift, self.video.timescale), ticks90(self.audio.shift, self.audio.timescale)];
+        let shift = [
+            ticks90(self.video.shift, self.video.timescale),
+            ticks90(self.audio.shift, self.audio.timescale),
+        ];
         let mut out = Vec::with_capacity(picture.data.len() + (1 << 16));
         let mut ts = TsWriter::new();
         ts.tables(&mut out);
-        let video_times: Vec<u64> = picture.samples.iter().map(|s| (TS_BASE + ticks90(s.time, self.video.timescale)).saturating_sub(shift[0])).collect();
+        let video_times: Vec<u64> = picture
+            .samples
+            .iter()
+            .map(|s| (TS_BASE + ticks90(s.time, self.video.timescale)).saturating_sub(shift[0]))
+            .collect();
         let audio: Vec<(&Fragment, Sample, u64)> = sound
             .iter()
             .flat_map(|f| f.samples.iter().map(move |s| (f, *s)))
-            .map(|(f, s)| (f, s, (TS_BASE + ticks90(s.time, self.audio.timescale)).saturating_sub(shift[1])))
+            .map(|(f, s)| {
+                (
+                    f,
+                    s,
+                    (TS_BASE + ticks90(s.time, self.audio.timescale)).saturating_sub(shift[1]),
+                )
+            })
             .collect();
         let (mut v, mut a) = (0, 0);
         while v < picture.samples.len() || a < audio.len() {
             if v < picture.samples.len() && (a >= audio.len() || video_times[v] <= audio[a].2) {
                 let s = picture.samples[v];
                 let composition = ticks90(s.offset.max(0) as u64, self.video.timescale);
-                ts.video(&mut out, &self.video.codec, &picture.data[s.at..s.at + s.size], s.sync, video_times[v], video_times[v] + composition);
+                ts.video(
+                    &mut out,
+                    &self.video.codec,
+                    &picture.data[s.at..s.at + s.size],
+                    s.sync,
+                    video_times[v],
+                    video_times[v] + composition,
+                );
                 v += 1;
             } else {
                 let (f, s, pts) = audio[a];
-                ts.audio(&mut out, &self.audio.codec, &f.data[s.at..s.at + s.size], pts);
+                ts.audio(
+                    &mut out,
+                    &self.audio.codec,
+                    &f.data[s.at..s.at + s.size],
+                    pts,
+                );
                 a += 1;
             }
         }
@@ -1733,7 +2229,13 @@ impl Session {
                 stop.store(true, Ordering::Relaxed);
                 result
             });
-            let saved = saved.map_err(|e| if e.is_empty() { "could not write the file".to_string() } else { e })?;
+            let saved = saved.map_err(|e| {
+                if e.is_empty() {
+                    "could not write the file".to_string()
+                } else {
+                    e
+                }
+            })?;
             writer.flush().map_err(|e| e.to_string())?;
             saved
         };
@@ -1742,7 +2244,8 @@ impl Session {
         let mut size = (length - saved.segment as u64).to_be_bytes();
         size[0] = 0x01;
         let mut put = |at: usize, bytes: &[u8]| -> Result<(), String> {
-            file.seek(SeekFrom::Start(at as u64)).map_err(|e| e.to_string())?;
+            file.seek(SeekFrom::Start(at as u64))
+                .map_err(|e| e.to_string())?;
             file.write_all(bytes).map_err(|e| e.to_string())
         };
         put(saved.segment - 8, &size)?;
@@ -1758,7 +2261,9 @@ impl Session {
     /// Whether YouTube refused one of the addresses and the app has not
     /// brought a new one yet.
     pub fn expired(&self) -> bool {
-        self.addresses.iter().any(|a| a.expired.load(Ordering::SeqCst))
+        self.addresses
+            .iter()
+            .any(|a| a.expired.load(Ordering::SeqCst))
     }
 
     /// Replaces the address `old` with `new`; whether it was one of these.
@@ -1777,26 +2282,51 @@ impl Session {
 
     /// Writes the stream; for a Matroska `file`, also its index at the end,
     /// and returns what goes back into its head.
-    fn write<'s>(&'s self, scope: &'s std::thread::Scope<'s, '_>, fetch: &Arc<dyn Fetch>, stop: &Arc<AtomicBool>, into: &mut dyn Write, file: bool) -> Result<Option<Saved>, String> {
+    fn write<'s>(
+        &'s self,
+        scope: &'s std::thread::Scope<'s, '_>,
+        fetch: &Arc<dyn Fetch>,
+        stop: &Arc<AtomicBool>,
+        into: &mut dyn Write,
+        file: bool,
+    ) -> Result<Option<Saved>, String> {
         let generation = self.generation.fetch_add(1, Ordering::SeqCst) + 1;
         let current = || self.generation.load(Ordering::SeqCst) == generation;
         let first_video = segment_at(&self.video, self.start);
         let reader = |i: usize, target: &Target, track: &Track, first: usize| {
             let offset = track.segments.get(first).map_or(0, |s| s.offset);
-            Reader::new(fetch.clone(), target, self.addresses[i].clone(), stop.clone(), offset)
+            Reader::new(
+                fetch.clone(),
+                target,
+                self.addresses[i].clone(),
+                stop.clone(),
+                offset,
+            )
         };
-        let video = produce(scope, &self.video, reader(0, &self.video_target, &self.video, first_video), first_video);
+        let video = produce(
+            scope,
+            &self.video,
+            reader(0, &self.video_target, &self.video, first_video),
+            first_video,
+        );
         let mut v = next_fragment(&video)?;
         // The picture starts at its first keyframe; the sound at the same time.
         if let Some(f) = v.as_mut() {
             let keyframe = f.samples.iter().position(|s| s.sync).unwrap_or(0);
             f.samples.drain(..keyframe);
         }
-        let Some(origin) = v.as_ref().and_then(|f| f.samples.first()).map(|s| s.time) else { return Err("no picture".into()) };
+        let Some(origin) = v.as_ref().and_then(|f| f.samples.first()).map(|s| s.time) else {
+            return Err("no picture".into());
+        };
         let seconds = origin as f64 / self.video.timescale as f64;
         let audio_origin = (seconds * self.audio.timescale as f64).round() as u64;
         let first_audio = segment_at(&self.audio, seconds);
-        let audio = produce(scope, &self.audio, reader(1, &self.audio_target, &self.audio, first_audio), first_audio);
+        let audio = produce(
+            scope,
+            &self.audio,
+            reader(1, &self.audio_target, &self.audio, first_audio),
+            first_audio,
+        );
         let mut a = next_fragment(&audio)?;
         while let Some(f) = a.as_mut() {
             f.samples.retain(|s| s.time >= audio_origin);
@@ -1813,10 +2343,21 @@ impl Session {
             Kind::Mkv => {
                 let (picture, sound) = (mkv_track(&self.video)?, mkv_track(&self.audio)?);
                 let from = seconds;
-                let length = if self.duration > from { (self.duration - from) * 1000.0 } else { 0.0 };
+                let length = if self.duration > from {
+                    (self.duration - from) * 1000.0
+                } else {
+                    0.0
+                };
                 let texts = self.texts();
-                let names: Vec<(&str, &str)> = texts.iter().map(|t| (t.language.as_str(), t.name.as_str())).collect();
-                let extra = cast_mkv::Extra { texts: &names, title: self.extras.title.as_deref(), cover: self.extras.cover.as_deref() };
+                let names: Vec<(&str, &str)> = texts
+                    .iter()
+                    .map(|t| (t.language.as_str(), t.name.as_str()))
+                    .collect();
+                let extra = cast_mkv::Extra {
+                    texts: &names,
+                    title: self.extras.title.as_deref(),
+                    cover: self.extras.cover.as_deref(),
+                };
                 let head = cast_mkv::head(&picture, &sound, extra, length, file, self.matroska);
                 into.write_all(&head.bytes).map_err(|_| String::new())?;
                 let mut end = 0i64;
@@ -1824,7 +2365,11 @@ impl Session {
                 let mut all: Vec<(u64, u64, &str, u64)> = texts
                     .iter()
                     .enumerate()
-                    .flat_map(|(i, t)| t.cues.iter().map(move |c| (c.0, c.1, c.2.as_str(), cast_mkv::TEXT + i as u64)))
+                    .flat_map(|(i, t)| {
+                        t.cues
+                            .iter()
+                            .map(move |c| (c.0, c.1, c.2.as_str(), cast_mkv::TEXT + i as u64))
+                    })
                     .filter(|c| c.1 as i64 > from_ms)
                     .collect();
                 all.sort_by_key(|c| (c.0, c.3));
@@ -1838,18 +2383,30 @@ impl Session {
                     if !current() {
                         return Ok(None);
                     }
-                    let time = |f: &Option<Fragment>, i: usize, at: usize| f.as_ref().and_then(|f| f.samples.get(at)).map(|s| ms(s.time as i64 - rebase[i] as i64, i));
+                    let time = |f: &Option<Fragment>, i: usize, at: usize| {
+                        f.as_ref()
+                            .and_then(|f| f.samples.get(at))
+                            .map(|s| ms(s.time as i64 - rebase[i] as i64, i))
+                    };
                     let pick = match (time(&v, 0, at[0]), time(&a, 1, at[1])) {
                         (None, None) => break,
                         (Some(_), None) => 0,
                         (None, Some(_)) => 1,
                         (Some(x), Some(y)) => usize::from(y < x),
                     };
-                    let (Some(f), index) = (if pick == 0 { v.as_ref() } else { a.as_ref() }, at[pick]) else { return Err("no samples".into()) };
+                    let (Some(f), index) =
+                        (if pick == 0 { v.as_ref() } else { a.as_ref() }, at[pick])
+                    else {
+                        return Err("no samples".into());
+                    };
                     let s = f.samples[index];
                     let decoded = ms(s.time as i64 - rebase[pick] as i64, pick);
                     let left = cuts.before(decoded);
-                    let shown = (ms(s.time as i64 - rebase[pick] as i64 + s.offset as i64 - shifts[pick], pick) - left).max(0);
+                    let shown = (ms(
+                        s.time as i64 - rebase[pick] as i64 + s.offset as i64 - shifts[pick],
+                        pick,
+                    ) - left)
+                        .max(0);
                     while let Some(cue) = cues.next_if(|c| (c.0 as i64 - from_ms) <= decoded) {
                         let start = cuts.map((cue.0 as i64 - from_ms).max(0));
                         let end = cuts.map(cue.1 as i64 - from_ms);
@@ -1858,7 +2415,17 @@ impl Session {
                         }
                     }
                     if !cuts.inside(decoded) {
-                        clusters.frame(&mut out, if pick == 0 { cast_mkv::VIDEO } else { cast_mkv::AUDIO }, shown, pick == 1 || s.sync, &f.data[s.at..s.at + s.size]);
+                        clusters.frame(
+                            &mut out,
+                            if pick == 0 {
+                                cast_mkv::VIDEO
+                            } else {
+                                cast_mkv::AUDIO
+                            },
+                            shown,
+                            pick == 1 || s.sync,
+                            &f.data[s.at..s.at + s.size],
+                        );
                         end = end.max(shown + ms(s.duration as i64, pick));
                     }
                     at[pick] += 1;
@@ -1882,19 +2449,42 @@ impl Session {
                 }
                 let cues = clusters.finish(&mut out);
                 into.write_all(&out).map_err(|_| String::new())?;
-                return Ok(Some(Saved { segment: head.segment, duration_at: head.duration_at, cues_at: head.cues_at, duration: end as f64, cues }));
+                return Ok(Some(Saved {
+                    segment: head.segment,
+                    duration_at: head.duration_at,
+                    cues_at: head.cues_at,
+                    duration: end as f64,
+                    cues,
+                }));
             }
             Kind::Mp4 => {
                 let texts = self.texts();
                 let languages: Vec<&str> = texts.iter().map(|t| t.language.as_str()).collect();
-                out.extend_from_slice(&mp4_head(&self.video, &self.audio, &languages, self.extras.title.as_deref(), self.extras.cover.as_deref()));
+                out.extend_from_slice(&mp4_head(
+                    &self.video,
+                    &self.audio,
+                    &languages,
+                    self.extras.title.as_deref(),
+                    self.extras.cover.as_deref(),
+                ));
                 let mut sequence = 1u32;
                 // Each subtitle track whole, first: a player reads it before
                 // the picture and sound it goes with.
                 if file {
                     for (i, text) in texts.iter().enumerate() {
-                        let fragment = text_fragment(&if cuts.is_empty() { text.cues.clone() } else { cuts.cues(&text.cues) });
-                        mp4_fragment(&mut out, sequence, 3 + i as u32, &fragment, &fragment.samples, 0);
+                        let fragment = text_fragment(&if cuts.is_empty() {
+                            text.cues.clone()
+                        } else {
+                            cuts.cues(&text.cues)
+                        });
+                        mp4_fragment(
+                            &mut out,
+                            sequence,
+                            3 + i as u32,
+                            &fragment,
+                            &fragment.samples,
+                            0,
+                        );
                         sequence += 1;
                     }
                 }
@@ -1904,7 +2494,9 @@ impl Session {
                         return Ok(None);
                     }
                     let start = |f: &Option<Fragment>, i: usize| {
-                        f.as_ref().and_then(|f| f.samples.first()).map(|s| s.time.saturating_sub(rebase[i]) as f64 / timescales[i] as f64)
+                        f.as_ref()
+                            .and_then(|f| f.samples.first())
+                            .map(|s| s.time.saturating_sub(rebase[i]) as f64 / timescales[i] as f64)
                     };
                     let pick = match (start(&v, 0), start(&a, 1)) {
                         (None, None) => break,
@@ -1912,24 +2504,47 @@ impl Session {
                         (None, Some(_)) => 1,
                         (Some(x), Some(y)) => usize::from(y < x),
                     };
-                    let (slot, source) = if pick == 0 { (&mut v, &video) } else { (&mut a, &audio) };
+                    let (slot, source) = if pick == 0 {
+                        (&mut v, &video)
+                    } else {
+                        (&mut a, &audio)
+                    };
                     if let Some(f) = slot.as_ref() {
                         if cuts.is_empty() {
-                            mp4_fragment(&mut out, sequence, pick as u32 + 1, f, &f.samples, rebase[pick]);
+                            mp4_fragment(
+                                &mut out,
+                                sequence,
+                                pick as u32 + 1,
+                                f,
+                                &f.samples,
+                                rebase[pick],
+                            );
                             sequence += 1;
                         } else {
                             // Each run of samples kept, moved back by what was left out before it.
                             let timescale = timescales[pick] as i64;
-                            let decoded = |s: &Sample| (s.time as i64 - rebase[pick] as i64) * 1000 / timescale;
+                            let decoded = |s: &Sample| {
+                                (s.time as i64 - rebase[pick] as i64) * 1000 / timescale
+                            };
                             let mut from = 0;
                             while from < f.samples.len() {
                                 if cuts.inside(decoded(&f.samples[from])) {
                                     from += 1;
                                     continue;
                                 }
-                                let to = (from..f.samples.len()).find(|&i| cuts.inside(decoded(&f.samples[i]))).unwrap_or(f.samples.len());
-                                let back = (cuts.before(decoded(&f.samples[from])) * timescale / 1000) as u64;
-                                mp4_fragment(&mut out, sequence, pick as u32 + 1, f, &f.samples[from..to], rebase[pick] + back);
+                                let to = (from..f.samples.len())
+                                    .find(|&i| cuts.inside(decoded(&f.samples[i])))
+                                    .unwrap_or(f.samples.len());
+                                let back = (cuts.before(decoded(&f.samples[from])) * timescale
+                                    / 1000) as u64;
+                                mp4_fragment(
+                                    &mut out,
+                                    sequence,
+                                    pick as u32 + 1,
+                                    f,
+                                    &f.samples[from..to],
+                                    rebase[pick] + back,
+                                );
                                 sequence += 1;
                                 from = to;
                             }
@@ -1943,33 +2558,61 @@ impl Session {
             Kind::Ts => {
                 let mut ts = TsWriter::new();
                 ts.tables(&mut out);
-                let shift = [ticks90(self.video.shift, self.video.timescale), ticks90(self.audio.shift, self.audio.timescale)];
+                let shift = [
+                    ticks90(self.video.shift, self.video.timescale),
+                    ticks90(self.audio.shift, self.audio.timescale),
+                ];
                 let mut at = [0usize, 0usize];
                 loop {
                     if !current() {
                         return Ok(None);
                     }
                     let time = |f: &Option<Fragment>, i: usize, at: usize, timescale: u32| {
-                        f.as_ref().and_then(|f| f.samples.get(at)).map(|s| ticks90(s.time.saturating_sub(rebase[i]), timescale))
+                        f.as_ref()
+                            .and_then(|f| f.samples.get(at))
+                            .map(|s| ticks90(s.time.saturating_sub(rebase[i]), timescale))
                     };
-                    let pick = match (time(&v, 0, at[0], self.video.timescale), time(&a, 1, at[1], self.audio.timescale)) {
+                    let pick = match (
+                        time(&v, 0, at[0], self.video.timescale),
+                        time(&a, 1, at[1], self.audio.timescale),
+                    ) {
                         (None, None) => break,
                         (Some(_), None) => 0,
                         (None, Some(_)) => 1,
                         (Some(x), Some(y)) => usize::from(y < x),
                     };
                     if pick == 0 {
-                        let Some(f) = v.as_ref() else { return Err("no samples".into()) };
+                        let Some(f) = v.as_ref() else {
+                            return Err("no samples".into());
+                        };
                         let s = f.samples[at[0]];
-                        let dts = (TS_BASE + ticks90(s.time.saturating_sub(rebase[0]), self.video.timescale)).saturating_sub(shift[0]);
+                        let dts = (TS_BASE
+                            + ticks90(s.time.saturating_sub(rebase[0]), self.video.timescale))
+                        .saturating_sub(shift[0]);
                         let composition = ticks90(s.offset.max(0) as u64, self.video.timescale);
-                        ts.video(&mut out, &self.video.codec, &f.data[s.at..s.at + s.size], s.sync, dts, dts + composition);
+                        ts.video(
+                            &mut out,
+                            &self.video.codec,
+                            &f.data[s.at..s.at + s.size],
+                            s.sync,
+                            dts,
+                            dts + composition,
+                        );
                         at[0] += 1;
                     } else {
-                        let Some(f) = a.as_ref() else { return Err("no samples".into()) };
+                        let Some(f) = a.as_ref() else {
+                            return Err("no samples".into());
+                        };
                         let s = f.samples[at[1]];
-                        let pts = (TS_BASE + ticks90(s.time.saturating_sub(rebase[1]), self.audio.timescale)).saturating_sub(shift[1]);
-                        ts.audio(&mut out, &self.audio.codec, &f.data[s.at..s.at + s.size], pts);
+                        let pts = (TS_BASE
+                            + ticks90(s.time.saturating_sub(rebase[1]), self.audio.timescale))
+                        .saturating_sub(shift[1]);
+                        ts.audio(
+                            &mut out,
+                            &self.audio.codec,
+                            &f.data[s.at..s.at + s.size],
+                            pts,
+                        );
                         at[1] += 1;
                     }
                     if out.len() >= 64 << 10 {
@@ -2024,7 +2667,9 @@ impl Gate {
     /// for the idle time; the sessions go with it. Whether it was closed.
     fn close_if_idle(&self, shared: &Mutex<Shared>) -> bool {
         let mut running = self.running.lock().unwrap();
-        let Some((port, stop)) = running.as_ref() else { return false };
+        let Some((port, stop)) = running.as_ref() else {
+            return false;
+        };
         let mut shared = shared.lock().unwrap();
         if self.open.load(Ordering::SeqCst) > 0 || self.last.lock().unwrap().elapsed() < self.idle {
             return false;
@@ -2033,7 +2678,10 @@ impl Gate {
         shared.order.clear();
         stop.store(true, Ordering::SeqCst);
         // Wakes the accept loop, which then drops the listener.
-        let _ = TcpStream::connect_timeout(&std::net::SocketAddr::from(([127, 0, 0, 1], *port)), Duration::from_secs(1));
+        let _ = TcpStream::connect_timeout(
+            &std::net::SocketAddr::from(([127, 0, 0, 1], *port)),
+            Duration::from_secs(1),
+        );
         *running = None;
         true
     }
@@ -2067,8 +2715,17 @@ impl Server {
     }
 
     fn start_idle(fetch: Arc<dyn Fetch>, idle: Duration) -> std::io::Result<Server> {
-        let gate = Arc::new(Gate { idle, running: Mutex::new(None), open: AtomicUsize::new(0), last: Mutex::new(Instant::now()) });
-        let server = Server { shared: Arc::new(Mutex::new(Shared::default())), fetch, gate };
+        let gate = Arc::new(Gate {
+            idle,
+            running: Mutex::new(None),
+            open: AtomicUsize::new(0),
+            last: Mutex::new(Instant::now()),
+        });
+        let server = Server {
+            shared: Arc::new(Mutex::new(Shared::default())),
+            fetch,
+            gate,
+        };
         server.listen()?;
         Ok(server)
     }
@@ -2083,45 +2740,61 @@ impl Server {
         let port = listener.local_addr()?.port();
         let stop = Arc::new(AtomicBool::new(false));
         self.gate.touch();
-        let (shared, fetch, gate, stopped) = (self.shared.clone(), self.fetch.clone(), self.gate.clone(), stop.clone());
-        std::thread::Builder::new().name("cast".into()).spawn(move || {
-            for client in listener.incoming().flatten() {
-                if stopped.load(Ordering::SeqCst) {
-                    break;
+        let (shared, fetch, gate, stopped) = (
+            self.shared.clone(),
+            self.fetch.clone(),
+            self.gate.clone(),
+            stop.clone(),
+        );
+        std::thread::Builder::new()
+            .name("cast".into())
+            .spawn(move || {
+                for client in listener.incoming().flatten() {
+                    if stopped.load(Ordering::SeqCst) {
+                        break;
+                    }
+                    gate.touch();
+                    if gate.open.load(Ordering::SeqCst) >= MAX_CONNECTIONS {
+                        continue;
+                    }
+                    gate.open.fetch_add(1, Ordering::SeqCst);
+                    let (shared, fetch, done) = (shared.clone(), fetch.clone(), gate.clone());
+                    let spawned = std::thread::Builder::new()
+                        .name("cast-client".into())
+                        .spawn(move || {
+                            serve(client, &shared, &fetch);
+                            done.touch();
+                            done.open.fetch_sub(1, Ordering::SeqCst);
+                        });
+                    if spawned.is_err() {
+                        gate.open.fetch_sub(1, Ordering::SeqCst);
+                    }
                 }
-                gate.touch();
-                if gate.open.load(Ordering::SeqCst) >= MAX_CONNECTIONS {
-                    continue;
-                }
-                gate.open.fetch_add(1, Ordering::SeqCst);
-                let (shared, fetch, done) = (shared.clone(), fetch.clone(), gate.clone());
-                let spawned = std::thread::Builder::new().name("cast-client".into()).spawn(move || {
-                    serve(client, &shared, &fetch);
-                    done.touch();
-                    done.open.fetch_sub(1, Ordering::SeqCst);
-                });
-                if spawned.is_err() {
-                    gate.open.fetch_sub(1, Ordering::SeqCst);
-                }
-            }
-        })?;
+            })?;
         let (shared, gate, stopped) = (self.shared.clone(), self.gate.clone(), stop.clone());
         let poll = (self.gate.idle / 10).clamp(Duration::from_millis(10), Duration::from_secs(10));
-        std::thread::Builder::new().name("cast-idle".into()).spawn(move || {
-            while !stopped.load(Ordering::SeqCst) {
-                std::thread::sleep(poll);
-                if gate.close_if_idle(&shared) {
-                    break;
+        std::thread::Builder::new()
+            .name("cast-idle".into())
+            .spawn(move || {
+                while !stopped.load(Ordering::SeqCst) {
+                    std::thread::sleep(poll);
+                    if gate.close_if_idle(&shared) {
+                        break;
+                    }
                 }
-            }
-        })?;
+            })?;
         *running = Some((port, stop));
         Ok(port)
     }
 
     /// The port, or 0 while the listener is closed.
     pub fn port(&self) -> u16 {
-        self.gate.running.lock().unwrap().as_ref().map_or(0, |(port, _)| *port)
+        self.gate
+            .running
+            .lock()
+            .unwrap()
+            .as_ref()
+            .map_or(0, |(port, _)| *port)
     }
 
     /// Reads both files' heads and keeps the session; its path, such as
@@ -2140,23 +2813,40 @@ impl Server {
                 shared.sessions.remove(&old);
             }
         }
-        Ok((format!("/{token}.{}", match kind {
-            Kind::Ts => "ts",
-            Kind::Mp4 => "mp4",
-            Kind::Hls => "m3u8",
-            Kind::Mkv => "mkv",
-        }), start))
+        Ok((
+            format!(
+                "/{token}.{}",
+                match kind {
+                    Kind::Ts => "ts",
+                    Kind::Mp4 => "mp4",
+                    Kind::Hls => "m3u8",
+                    Kind::Mkv => "mkv",
+                }
+            ),
+            start,
+        ))
     }
 
     /// Whether a session's address was refused and waits for a new one.
     pub fn expired(&self) -> bool {
-        self.shared.lock().unwrap().sessions.values().any(|s| s.expired())
+        self.shared
+            .lock()
+            .unwrap()
+            .sessions
+            .values()
+            .any(|s| s.expired())
     }
 
     /// Gives every session streaming from `old` the address `new`; how
     /// many did.
     pub fn renew(&self, old: &str, new: &str) -> usize {
-        self.shared.lock().unwrap().sessions.values().filter(|s| s.renew(old, new)).count()
+        self.shared
+            .lock()
+            .unwrap()
+            .sessions
+            .values()
+            .filter(|s| s.renew(old, new))
+            .count()
     }
 
     pub fn take_log(&self) -> Vec<String> {
@@ -2167,28 +2857,54 @@ impl Server {
 fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &Arc<dyn Fetch>) {
     let _ = client.set_read_timeout(Some(Duration::from_secs(30)));
     let _ = client.set_write_timeout(Some(Duration::from_secs(60)));
-    let peer = client.peer_addr().map(|a| a.ip().to_string()).unwrap_or_default();
-    let Ok(mut writer) = client.try_clone() else { return };
+    let peer = client
+        .peer_addr()
+        .map(|a| a.ip().to_string())
+        .unwrap_or_default();
+    let Ok(mut writer) = client.try_clone() else {
+        return;
+    };
     let mut reader = BufReader::new(client);
     let Some((method, path, headers)) = read_request(&mut reader) else {
         log(shared, format!("{peer} connected but sent no request"));
         return;
     };
-    let token = path.trim_start_matches('/').split(['.', '?', '/']).next().unwrap_or("").to_string();
+    let token = path
+        .trim_start_matches('/')
+        .split(['.', '?', '/'])
+        .next()
+        .unwrap_or("")
+        .to_string();
     let session = shared.lock().unwrap().sessions.get(&token).cloned();
     let asked = describe_request(&peer, &method, &path, &headers);
     let Some(session) = session.filter(|_| method == "GET" || method == "HEAD") else {
         log(shared, format!("{asked}: answered 404"));
-        let _ = writer.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        let _ = writer
+            .write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
         return;
     };
     if session.kind == Kind::Hls {
-        let segment = path.trim_start_matches('/').split_once('/').map(|(_, rest)| rest.split(['.', '?']).next().unwrap_or(""));
+        let segment = path
+            .trim_start_matches('/')
+            .split_once('/')
+            .map(|(_, rest)| rest.split(['.', '?']).next().unwrap_or(""));
         let body = match segment {
-            None => Ok((Arc::new(session.master(&token).into_bytes()), "application/vnd.apple.mpegurl")),
-            Some("video") => Ok((Arc::new(session.playlist("").into_bytes()), "application/vnd.apple.mpegurl")),
-            Some("subtitles") if path.contains(".vtt") => Ok((Arc::new(session.vtt().into_bytes()), "text/vtt; charset=utf-8")),
-            Some("subtitles") => Ok((Arc::new(session.subtitle_playlist().into_bytes()), "application/vnd.apple.mpegurl")),
+            None => Ok((
+                Arc::new(session.master(&token).into_bytes()),
+                "application/vnd.apple.mpegurl",
+            )),
+            Some("video") => Ok((
+                Arc::new(session.playlist("").into_bytes()),
+                "application/vnd.apple.mpegurl",
+            )),
+            Some("subtitles") if path.contains(".vtt") => Ok((
+                Arc::new(session.vtt().into_bytes()),
+                "text/vtt; charset=utf-8",
+            )),
+            Some("subtitles") => Ok((
+                Arc::new(session.subtitle_playlist().into_bytes()),
+                "application/vnd.apple.mpegurl",
+            )),
             Some(index) => match index.parse::<usize>() {
                 Ok(index) => session.hls_segment(fetch, index).map(|b| (b, "video/mp2t")),
                 Err(_) => Err("no such segment".to_string()),
@@ -2198,9 +2914,17 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &Arc<dyn Fetch>) {
             Ok((body, mime)) => {
                 let (status, part) = byte_range(headers.get("range"), body.len());
                 log(shared, format!("{asked}: answered {status}"));
-                let mut head = format!("HTTP/1.1 {status}\r\nContent-Type: {mime}\r\nContent-Length: {}\r\nAccept-Ranges: bytes\r\nConnection: close\r\n", part.len());
+                let mut head = format!(
+                    "HTTP/1.1 {status}\r\nContent-Type: {mime}\r\nContent-Length: {}\r\nAccept-Ranges: bytes\r\nConnection: close\r\n",
+                    part.len()
+                );
                 if status == "206 Partial Content" {
-                    head.push_str(&format!("Content-Range: bytes {}-{}/{}\r\n", part.start, part.end.max(1) - 1, body.len()));
+                    head.push_str(&format!(
+                        "Content-Range: bytes {}-{}/{}\r\n",
+                        part.start,
+                        part.end.max(1) - 1,
+                        body.len()
+                    ));
                 }
                 head.push_str("\r\n");
                 if writer.write_all(head.as_bytes()).is_ok() && method == "GET" {
@@ -2209,7 +2933,9 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &Arc<dyn Fetch>) {
             }
             Err(e) => {
                 log(shared, format!("{asked}: answered 502 ({e})"));
-                let _ = writer.write_all(b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+                let _ = writer.write_all(
+                    b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+                );
             }
         }
         let _ = writer.flush();
@@ -2217,12 +2943,18 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &Arc<dyn Fetch>) {
         return;
     }
     log(shared, format!("{asked}: answered 200"));
-    let mut head = format!("HTTP/1.1 200 OK\r\nContent-Type: {}\r\nCache-Control: no-cache\r\nConnection: close\r\n", session.mime());
+    let mut head = format!(
+        "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nCache-Control: no-cache\r\nConnection: close\r\n",
+        session.mime()
+    );
     head.push_str("transferMode.dlna.org: Streaming\r\ncontentFeatures.dlna.org: DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000\r\n\r\n");
     if writer.write_all(head.as_bytes()).is_err() || method == "HEAD" {
         return;
     }
-    log(shared, format!("Casting to {peer} from {:.1} s", session.start));
+    log(
+        shared,
+        format!("Casting to {peer} from {:.1} s", session.start),
+    );
     let mut out = std::io::BufWriter::with_capacity(256 << 10, &mut writer);
     match session.stream(fetch, &mut out) {
         Ok(()) => log(shared, format!("Cast stream to {peer} ended")),
@@ -2238,9 +2970,16 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &Arc<dyn Fetch>) {
 /// header: one range, or the whole body.
 fn byte_range(range: Option<&String>, len: usize) -> (&'static str, std::ops::Range<usize>) {
     let whole = ("200 OK", 0..len);
-    let Some(spec) = range.and_then(|r| r.strip_prefix("bytes=")) else { return whole };
-    let Some((a, b)) = spec.split_once('-') else { return whole };
-    let (start, end) = match (a.trim().parse::<usize>().ok(), b.trim().parse::<usize>().ok()) {
+    let Some(spec) = range.and_then(|r| r.strip_prefix("bytes=")) else {
+        return whole;
+    };
+    let Some((a, b)) = spec.split_once('-') else {
+        return whole;
+    };
+    let (start, end) = match (
+        a.trim().parse::<usize>().ok(),
+        b.trim().parse::<usize>().ok(),
+    ) {
         (Some(a), Some(b)) => (a, b.saturating_add(1).min(len)),
         (Some(a), None) => (a, len),
         (None, Some(n)) => (len.saturating_sub(n), len),
@@ -2253,14 +2992,24 @@ fn byte_range(range: Option<&String>, len: usize) -> (&'static str, std::ops::Ra
 }
 
 /// One request for the log: who asked what, and how, with no address.
-fn describe_request(peer: &str, method: &str, path: &str, headers: &HashMap<String, String>) -> String {
-    let kind = path.rsplit_once('.').map_or("", |(_, ext)| ext.split('?').next().unwrap_or(""));
+fn describe_request(
+    peer: &str,
+    method: &str,
+    path: &str,
+    headers: &HashMap<String, String>,
+) -> String {
+    let kind = path
+        .rsplit_once('.')
+        .map_or("", |(_, ext)| ext.split('?').next().unwrap_or(""));
     let mut line = format!("{peer} asked {method} for a .{kind} stream");
     if let Some(range) = headers.get("range") {
         line.push_str(&format!(", range {range}"));
     }
     if let Some(agent) = headers.get("user-agent") {
-        line.push_str(&format!(", user agent {}", agent.chars().take(80).collect::<String>()));
+        line.push_str(&format!(
+            ", user agent {}",
+            agent.chars().take(80).collect::<String>()
+        ));
     }
     line
 }
@@ -2291,7 +3040,8 @@ pub unsafe extern "C" fn lumtub_cast_register(json: *const u8, len: usize) -> *m
     let answer = match SERVER.get() {
         None => Err("not started".to_string()),
         Some(server) if server.port() == 0 => Err("not started".to_string()),
-        Some(server) => match serde_json::from_str::<Ask>(unsafe { crate::taste::text(json, len) }) {
+        Some(server) => match serde_json::from_str::<Ask>(unsafe { crate::taste::text(json, len) })
+        {
             Ok(ask) => server.register(ask),
             Err(e) => Err(e.to_string()),
         },
@@ -2322,8 +3072,16 @@ struct Renewal {
 /// [json] points at [len] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_cast_renew(json: *const u8, len: usize) -> u32 {
-    let (Some(server), Ok(renewals)) = (SERVER.get(), serde_json::from_str::<Vec<Renewal>>(unsafe { crate::taste::text(json, len) })) else { return 0 };
-    renewals.iter().map(|r| server.renew(&r.old, &r.new) as u32).sum()
+    let (Some(server), Ok(renewals)) = (
+        SERVER.get(),
+        serde_json::from_str::<Vec<Renewal>>(unsafe { crate::taste::text(json, len) }),
+    ) else {
+        return 0;
+    };
+    renewals
+        .iter()
+        .map(|r| server.renew(&r.old, &r.new) as u32)
+        .sum()
 }
 
 /// The server's log lines since the last call, as a JSON array.
@@ -2346,12 +3104,22 @@ mod tests {
         // Too short to hold two keyframes: nothing left out.
         assert!(Cuts::snap(&[(2.5, 3.9)], &keyframes).is_empty());
         // Overlapping stretches merge.
-        assert_eq!(Cuts::snap(&[(0.0, 4.0), (3.0, 8.5)], &keyframes).stretches(), &[(0, 8000)]);
+        assert_eq!(
+            Cuts::snap(&[(0.0, 4.0), (3.0, 8.5)], &keyframes).stretches(),
+            &[(0, 8000)]
+        );
         assert_eq!(cuts.map(1000), 1000);
         assert_eq!(cuts.map(3000), 2000);
         assert_eq!(cuts.map(7000), 3000);
         assert!(cuts.inside(2000) && !cuts.inside(6000));
-        assert_eq!(cuts.cues(&[(500, 1500, "a".into()), (2500, 5000, "b".into()), (5500, 9000, "c".into())]), vec![(500, 1500, "a".into()), (2000, 5000, "c".into())]);
+        assert_eq!(
+            cuts.cues(&[
+                (500, 1500, "a".into()),
+                (2500, 5000, "b".into()),
+                (5500, 9000, "c".into())
+            ]),
+            vec![(500, 1500, "a".into()), (2000, 5000, "c".into())]
+        );
     }
 
     /// Serves local files like googlevideo serves streams: each reply cut
@@ -2379,11 +3147,23 @@ mod tests {
     }
 
     fn files(data: HashMap<String, Vec<u8>>) -> Arc<dyn Fetch> {
-        Arc::new(Files { data, cut: None, expired: None })
+        Arc::new(Files {
+            data,
+            cut: None,
+            expired: None,
+        })
     }
 
     fn target(name: &str, size: usize) -> Target {
-        Target { url: format!("{name}?x"), size: size as u64, user_agent: None, mime: None, proxy: None, chunk: 1 << 20, live: None }
+        Target {
+            url: format!("{name}?x"),
+            size: size as u64,
+            user_agent: None,
+            mime: None,
+            proxy: None,
+            chunk: 1 << 20,
+            live: None,
+        }
     }
 
     fn sample(dir: &str, name: &str) -> Option<Vec<u8>> {
@@ -2392,11 +3172,30 @@ mod tests {
 
     #[test]
     fn reads_avc_and_aac_configs() {
-        let avcc = [1, 0x64, 0, 0x1f, 0xff, 0xe1, 0, 3, 0x67, 1, 2, 1, 0, 2, 0x68, 9];
-        assert_eq!(avc_config(&avcc), Some(Codec::Avc { length: 4, sps: vec![vec![0x67, 1, 2]], pps: vec![vec![0x68, 9]] }));
+        let avcc = [
+            1, 0x64, 0, 0x1f, 0xff, 0xe1, 0, 3, 0x67, 1, 2, 1, 0, 2, 0x68, 9,
+        ];
+        assert_eq!(
+            avc_config(&avcc),
+            Some(Codec::Avc {
+                length: 4,
+                sps: vec![vec![0x67, 1, 2]],
+                pps: vec![vec![0x68, 9]]
+            })
+        );
         // ES_Descriptor > DecoderConfig (mp4a, AAC) > AudioSpecificConfig LC 44.1 kHz stereo.
-        let esds = [3, 25, 0, 1, 0, 4, 17, 0x40, 0x15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 2, 0x12, 0x10, 6, 1, 2];
-        assert_eq!(aac_config(&esds), Some(Codec::Aac { profile: 1, frequency: 4, channels: 2 }));
+        let esds = [
+            3, 25, 0, 1, 0, 4, 17, 0x40, 0x15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 2, 0x12, 0x10,
+            6, 1, 2,
+        ];
+        assert_eq!(
+            aac_config(&esds),
+            Some(Codec::Aac {
+                profile: 1,
+                frequency: 4,
+                channels: 2
+            })
+        );
     }
 
     #[test]
@@ -2419,12 +3218,31 @@ mod tests {
     /// (and `-map 0:a` for `a.mp4`); the joined files are left there.
     #[test]
     fn joins_dash_files() {
-        let Ok(dir) = std::env::var("LUMTUB_CAST_SAMPLES") else { return };
-        let (Some(v), Some(a)) = (sample(&dir, "v.mp4"), sample(&dir, "a.mp4")) else { return };
-        let both = HashMap::from([("v.mp4".to_string(), v.clone()), ("a.mp4".to_string(), a.clone())]);
+        let Ok(dir) = std::env::var("LUMTUB_CAST_SAMPLES") else {
+            return;
+        };
+        let (Some(v), Some(a)) = (sample(&dir, "v.mp4"), sample(&dir, "a.mp4")) else {
+            return;
+        };
+        let both = HashMap::from([
+            ("v.mp4".to_string(), v.clone()),
+            ("a.mp4".to_string(), a.clone()),
+        ]);
         let files = files(both.clone());
-        for (kind, start, name) in [(Kind::Mp4, 0, "out.mp4"), (Kind::Ts, 0, "out.ts"), (Kind::Mp4, 9_500, "seek.mp4"), (Kind::Ts, 9_500, "seek.ts")] {
-            let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: start, kind, duration_ms: 0, subtitles: None };
+        for (kind, start, name) in [
+            (Kind::Mp4, 0, "out.mp4"),
+            (Kind::Ts, 0, "out.ts"),
+            (Kind::Mp4, 9_500, "seek.mp4"),
+            (Kind::Ts, 9_500, "seek.ts"),
+        ] {
+            let ask = Ask {
+                video: target("v.mp4", v.len()),
+                audio: target("a.mp4", a.len()),
+                start_ms: start,
+                kind,
+                duration_ms: 0,
+                subtitles: None,
+            };
             let session = Session::new(ask, &files).expect("session");
             let mut out = Vec::new();
             session.stream(&files, &mut out).expect("stream");
@@ -2432,24 +3250,73 @@ mod tests {
             assert!(out.len() > 100_000);
         }
         // VP9 from WebM and AV1 from MP4, each with the AAC sound.
-        for (picture, start, name) in [("vp9.webm", 0, "vp9.mp4"), ("vp9.webm", 7_000, "vp9-seek.mp4"), ("av1.mp4", 0, "av1-out.mp4")] {
-            let Some(p) = sample(&dir, picture) else { continue };
-            let files = super::tests::files(HashMap::from([(picture.to_string(), p.clone()), ("a.mp4".to_string(), a.clone())]));
-            let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: start, kind: Kind::Mp4, duration_ms: 0, subtitles: None };
+        for (picture, start, name) in [
+            ("vp9.webm", 0, "vp9.mp4"),
+            ("vp9.webm", 7_000, "vp9-seek.mp4"),
+            ("av1.mp4", 0, "av1-out.mp4"),
+        ] {
+            let Some(p) = sample(&dir, picture) else {
+                continue;
+            };
+            let files = super::tests::files(HashMap::from([
+                (picture.to_string(), p.clone()),
+                ("a.mp4".to_string(), a.clone()),
+            ]));
+            let ask = Ask {
+                video: target(picture, p.len()),
+                audio: target("a.mp4", a.len()),
+                start_ms: start,
+                kind: Kind::Mp4,
+                duration_ms: 0,
+                subtitles: None,
+            };
             let session = Session::new(ask, &files).expect("session");
             let mut out = Vec::new();
             session.stream(&files, &mut out).expect("stream");
             std::fs::write(format!("{dir}/{name}"), &out).unwrap();
             assert!(out.len() > 100_000);
-            let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Ts, duration_ms: 0, subtitles: None };
+            let ask = Ask {
+                video: target(picture, p.len()),
+                audio: target("a.mp4", a.len()),
+                start_ms: 0,
+                kind: Kind::Ts,
+                duration_ms: 0,
+                subtitles: None,
+            };
             assert!(Session::new(ask, &files).is_err());
         }
         // As Matroska with a subtitle track: H.264, VP9 from WebM and AV1.
-        let lines = || Some(Subtitles { language: "en".into(), name: String::new(), cues: vec![(500, 2_500, "First line".into()), (8_000, 12_000, "Second\nline".into())] });
-        for (picture, start, name) in [("v.mp4", 0, "out.mkv"), ("v.mp4", 9_500, "seek.mkv"), ("vp9.webm", 0, "vp9.mkv"), ("av1.mp4", 0, "av1.mkv")] {
-            let Some(p) = sample(&dir, picture) else { continue };
-            let files = super::tests::files(HashMap::from([(picture.to_string(), p.clone()), ("a.mp4".to_string(), a.clone())]));
-            let ask = Ask { video: target(picture, p.len()), audio: target("a.mp4", a.len()), start_ms: start, kind: Kind::Mkv, duration_ms: 20_000, subtitles: lines() };
+        let lines = || {
+            Some(Subtitles {
+                language: "en".into(),
+                name: String::new(),
+                cues: vec![
+                    (500, 2_500, "First line".into()),
+                    (8_000, 12_000, "Second\nline".into()),
+                ],
+            })
+        };
+        for (picture, start, name) in [
+            ("v.mp4", 0, "out.mkv"),
+            ("v.mp4", 9_500, "seek.mkv"),
+            ("vp9.webm", 0, "vp9.mkv"),
+            ("av1.mp4", 0, "av1.mkv"),
+        ] {
+            let Some(p) = sample(&dir, picture) else {
+                continue;
+            };
+            let files = super::tests::files(HashMap::from([
+                (picture.to_string(), p.clone()),
+                ("a.mp4".to_string(), a.clone()),
+            ]));
+            let ask = Ask {
+                video: target(picture, p.len()),
+                audio: target("a.mp4", a.len()),
+                start_ms: start,
+                kind: Kind::Mkv,
+                duration_ms: 20_000,
+                subtitles: lines(),
+            };
             let session = Session::new(ask, &files).expect("session");
             let mut out = Vec::new();
             session.stream(&files, &mut out).expect("stream");
@@ -2458,14 +3325,36 @@ mod tests {
         }
         // Replies cut short every 300 kB, and an address refused until renewed.
         let reference = std::fs::read(format!("{dir}/out.mp4")).unwrap();
-        let cutting: Arc<dyn Fetch> = Arc::new(Files { data: both.clone(), cut: Some(300_000), expired: None });
-        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0, subtitles: None };
+        let cutting: Arc<dyn Fetch> = Arc::new(Files {
+            data: both.clone(),
+            cut: Some(300_000),
+            expired: None,
+        });
+        let ask = Ask {
+            video: target("v.mp4", v.len()),
+            audio: target("a.mp4", a.len()),
+            start_ms: 0,
+            kind: Kind::Mp4,
+            duration_ms: 0,
+            subtitles: None,
+        };
         let session = Session::new(ask, &cutting).expect("session");
         let mut out = Vec::new();
         session.stream(&cutting, &mut out).expect("stream");
         assert_eq!(out, reference);
-        let expiring: Arc<dyn Fetch> = Arc::new(Files { data: both.clone(), cut: None, expired: Some("old=1") });
-        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0, subtitles: None };
+        let expiring: Arc<dyn Fetch> = Arc::new(Files {
+            data: both.clone(),
+            cut: None,
+            expired: Some("old=1"),
+        });
+        let ask = Ask {
+            video: target("v.mp4", v.len()),
+            audio: target("a.mp4", a.len()),
+            start_ms: 0,
+            kind: Kind::Mp4,
+            duration_ms: 0,
+            subtitles: None,
+        };
         let session = Arc::new(Session::new(ask, &files).expect("session"));
         session.renew("v.mp4?x", "v.mp4?old=1");
         let renewer = {
@@ -2485,20 +3374,38 @@ mod tests {
         // While a session is registered nothing can renew it, so a refused
         // address fails at once.
         let started = std::time::Instant::now();
-        let ask = Ask { video: target("v.mp4?old=1", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0, subtitles: None };
+        let ask = Ask {
+            video: target("v.mp4?old=1", v.len()),
+            audio: target("a.mp4", a.len()),
+            start_ms: 0,
+            kind: Kind::Mp4,
+            duration_ms: 0,
+            subtitles: None,
+        };
         let refused = Session::new(ask, &expiring).err().expect("refused");
         assert_eq!(refused, "picture: YouTube answered 403");
         assert!(started.elapsed() < Duration::from_secs(5));
         // The same stream through the server, as a TV reads it.
         let server = Server::start(files.clone()).expect("listen");
-        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Ts, duration_ms: 0, subtitles: None };
+        let ask = Ask {
+            video: target("v.mp4", v.len()),
+            audio: target("a.mp4", a.len()),
+            start_ms: 0,
+            kind: Kind::Ts,
+            duration_ms: 0,
+            subtitles: None,
+        };
         let (path, start) = server.register(ask).expect("register");
         assert_eq!(start, 0.0);
         let mut client = TcpStream::connect(("127.0.0.1", server.port())).unwrap();
         write!(client, "GET {path} HTTP/1.1\r\nHost: x\r\n\r\n").unwrap();
         let mut answer = Vec::new();
         client.read_to_end(&mut answer).unwrap();
-        let body = answer.windows(4).position(|w| w == b"\r\n\r\n").map(|at| &answer[at + 4..]).unwrap();
+        let body = answer
+            .windows(4)
+            .position(|w| w == b"\r\n\r\n")
+            .map(|at| &answer[at + 4..])
+            .unwrap();
         assert!(answer.starts_with(b"HTTP/1.1 200 OK\r\nContent-Type: video/mpeg"));
         assert_eq!(body, std::fs::read(format!("{dir}/out.ts")).unwrap());
         // As an HLS playlist of segments, each read as a whole or in part.
@@ -2508,9 +3415,19 @@ mod tests {
             let mut answer = Vec::new();
             client.read_to_end(&mut answer).unwrap();
             let at = answer.windows(4).position(|w| w == b"\r\n\r\n").unwrap();
-            (String::from_utf8_lossy(&answer[..at]).to_string(), answer[at + 4..].to_vec())
+            (
+                String::from_utf8_lossy(&answer[..at]).to_string(),
+                answer[at + 4..].to_vec(),
+            )
         };
-        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Hls, duration_ms: 20_000, subtitles: None };
+        let ask = Ask {
+            video: target("v.mp4", v.len()),
+            audio: target("a.mp4", a.len()),
+            start_ms: 0,
+            kind: Kind::Hls,
+            duration_ms: 20_000,
+            subtitles: None,
+        };
         let (path, _) = server.register(ask).expect("register");
         assert!(path.ends_with(".m3u8"));
         let (head, playlist) = get(&path, "");
@@ -2523,22 +3440,45 @@ mod tests {
         let mut joined = Vec::new();
         for name in &names {
             let (head, body) = get(&format!("/{name}"), "");
-            assert!(head.starts_with("HTTP/1.1 200 OK") && head.contains("video/mp2t") && head.contains(&format!("Content-Length: {}", body.len())), "{head}");
+            assert!(
+                head.starts_with("HTTP/1.1 200 OK")
+                    && head.contains("video/mp2t")
+                    && head.contains(&format!("Content-Length: {}", body.len())),
+                "{head}"
+            );
             assert!(body.len() % 188 == 0 && body[0] == 0x47);
             std::fs::create_dir_all(format!("{dir}/{token}")).unwrap();
             std::fs::write(format!("{dir}/{name}"), &body).unwrap();
             joined.extend_from_slice(&body);
         }
         let (head, part) = get(&format!("/{}", names[0]), "Range: bytes=0-1\r\n");
-        assert!(head.starts_with("HTTP/1.1 206") && head.contains("Content-Range: bytes 0-1/"), "{head}");
+        assert!(
+            head.starts_with("HTTP/1.1 206") && head.contains("Content-Range: bytes 0-1/"),
+            "{head}"
+        );
         assert_eq!(part.len(), 2);
         std::fs::write(format!("{dir}/hls-joined.ts"), &joined).unwrap();
         // With subtitles, a master playlist names the picture's and theirs.
-        let ask = Ask { video: target("v.mp4", v.len()), audio: target("a.mp4", a.len()), start_ms: 0, kind: Kind::Hls, duration_ms: 20_000, subtitles: lines() };
+        let ask = Ask {
+            video: target("v.mp4", v.len()),
+            audio: target("a.mp4", a.len()),
+            start_ms: 0,
+            kind: Kind::Hls,
+            duration_ms: 20_000,
+            subtitles: lines(),
+        };
         let (path, _) = server.register(ask).expect("register");
-        let token = path.trim_start_matches('/').trim_end_matches(".m3u8").to_string();
+        let token = path
+            .trim_start_matches('/')
+            .trim_end_matches(".m3u8")
+            .to_string();
         let master = String::from_utf8(get(&path, "").1).unwrap();
-        assert!(master.contains("TYPE=SUBTITLES") && master.contains(&format!("URI=\"{token}/subtitles.m3u8\"")) && master.contains(&format!("\n{token}/video.m3u8\n")), "{master}");
+        assert!(
+            master.contains("TYPE=SUBTITLES")
+                && master.contains(&format!("URI=\"{token}/subtitles.m3u8\""))
+                && master.contains(&format!("\n{token}/video.m3u8\n")),
+            "{master}"
+        );
         let video = String::from_utf8(get(&format!("/{token}/video.m3u8"), "").1).unwrap();
         assert!(video.contains("\n0.ts\n"), "{video}");
         let (head, segment) = get(&format!("/{token}/0.ts"), "");
@@ -2548,20 +3488,32 @@ mod tests {
         let (head, vtt) = get(&format!("/{token}/subtitles.vtt"), "");
         let vtt = String::from_utf8(vtt).unwrap();
         assert!(head.contains("text/vtt"));
-        assert_eq!(vtt, "WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:180000,LOCAL:00:00:00.000\n\n00:00:00.500 --> 00:00:02.500\nFirst line\n\n00:00:08.000 --> 00:00:12.000\nSecond\nline\n\n");
+        assert_eq!(
+            vtt,
+            "WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:180000,LOCAL:00:00:00.000\n\n00:00:00.500 --> 00:00:02.500\nFirst line\n\n00:00:08.000 --> 00:00:12.000\nSecond\nline\n\n"
+        );
         std::fs::create_dir_all(format!("{dir}/subs")).unwrap();
-        std::fs::write(format!("{dir}/subs/master.m3u8"), master.replace(&format!("{token}/"), "")).unwrap();
+        std::fs::write(
+            format!("{dir}/subs/master.m3u8"),
+            master.replace(&format!("{token}/"), ""),
+        )
+        .unwrap();
         std::fs::write(format!("{dir}/subs/video.m3u8"), &video).unwrap();
         std::fs::write(format!("{dir}/subs/subtitles.m3u8"), &subtitles).unwrap();
         std::fs::write(format!("{dir}/subs/subtitles.vtt"), &vtt).unwrap();
         for name in video.lines().filter(|l| !l.starts_with('#')) {
-            std::fs::write(format!("{dir}/subs/{name}"), get(&format!("/{token}/{name}"), "").1).unwrap();
+            std::fs::write(
+                format!("{dir}/subs/{name}"),
+                get(&format!("/{token}/{name}"), "").1,
+            )
+            .unwrap();
         }
     }
 
     #[test]
     fn closes_when_idle_and_listens_again() {
-        let server = Server::start_idle(files(HashMap::new()), Duration::from_millis(300)).expect("listen");
+        let server =
+            Server::start_idle(files(HashMap::new()), Duration::from_millis(300)).expect("listen");
         let first = server.port();
         assert_ne!(first, 0);
         // A connection that stays open keeps it listening.
@@ -2579,7 +3531,9 @@ mod tests {
         assert_ne!(again, 0);
         assert_eq!(server.port(), again);
         let mut client = TcpStream::connect(("127.0.0.1", again)).unwrap();
-        client.write_all(b"GET /0123456789abcdef.mp4 HTTP/1.1\r\nHost: x\r\n\r\n").unwrap();
+        client
+            .write_all(b"GET /0123456789abcdef.mp4 HTTP/1.1\r\nHost: x\r\n\r\n")
+            .unwrap();
         let mut answer = String::new();
         client.read_to_string(&mut answer).unwrap();
         assert!(answer.starts_with("HTTP/1.1 404"));
@@ -2589,15 +3543,30 @@ mod tests {
     fn serves_a_session_over_http() {
         let mut v = Vec::new();
         put_box(&mut v, b"ftyp", |o| o.extend_from_slice(b"isom"));
-        let server = Server::start(files(HashMap::from([("v.mp4".to_string(), v.clone())]))).expect("listen");
-        let ask = Ask { video: target("v.mp4", v.len()), audio: target("v.mp4", v.len()), start_ms: 0, kind: Kind::Mp4, duration_ms: 0, subtitles: None };
+        let server = Server::start(files(HashMap::from([("v.mp4".to_string(), v.clone())])))
+            .expect("listen");
+        let ask = Ask {
+            video: target("v.mp4", v.len()),
+            audio: target("v.mp4", v.len()),
+            start_ms: 0,
+            kind: Kind::Mp4,
+            duration_ms: 0,
+            subtitles: None,
+        };
         assert!(server.register(ask).unwrap_err().contains("picture"));
         let mut client = TcpStream::connect(("127.0.0.1", server.port())).unwrap();
-        client.write_all(b"GET /0123456789abcdef.mp4 HTTP/1.1\r\nHost: x\r\n\r\n").unwrap();
+        client
+            .write_all(b"GET /0123456789abcdef.mp4 HTTP/1.1\r\nHost: x\r\n\r\n")
+            .unwrap();
         let mut answer = String::new();
         client.read_to_string(&mut answer).unwrap();
         assert!(answer.starts_with("HTTP/1.1 404"));
         let log = server.take_log();
-        assert!(log.iter().any(|l| l.starts_with("127.0.0.1 asked GET for a .mp4 stream") && l.ends_with("answered 404")), "{log:?}");
+        assert!(
+            log.iter()
+                .any(|l| l.starts_with("127.0.0.1 asked GET for a .mp4 stream")
+                    && l.ends_with("answered 404")),
+            "{log:?}"
+        );
     }
 }

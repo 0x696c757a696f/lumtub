@@ -100,7 +100,9 @@ class SkinLibrary extends ChangeNotifier {
     } finally {
       try {
         await staging.delete(recursive: true);
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not remove the skin staging folder: $e');
+      }
     }
   }
 

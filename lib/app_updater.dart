@@ -407,7 +407,9 @@ Future<void> replaceMacApp(File update, String app) async {
   } finally {
     try {
       await mount.delete();
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'Could not remove the update mount folder: $e');
+    }
   }
 }
 

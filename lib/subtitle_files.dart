@@ -9,6 +9,7 @@ import 'translation.dart';
 import 'translation_cache.dart';
 import 'translation_services.dart';
 import 'youtube_web.dart';
+import 'app_log.dart';
 
 /// Subtitles fetched by the app and handed to mpv as files.
 ///
@@ -87,7 +88,9 @@ class SubtitleFiles {
     await (_cleared ??= () async {
       try {
         if (await _folder.exists()) await _folder.delete(recursive: true);
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not clear the subtitle folder: $e');
+      }
     }());
     await _folder.create(recursive: true);
     final file = File('${_folder.path}${Platform.pathSeparator}${_name(key)}.vtt');

@@ -39,7 +39,13 @@ pub struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { font_size: 44.0, duration_ms: 12000.0, area: 0.5, opacity: 0.85, font: "Microsoft YaHei".into() }
+        Settings {
+            font_size: 44.0,
+            duration_ms: 12000.0,
+            area: 0.5,
+            opacity: 0.85,
+            font: "Microsoft YaHei".into(),
+        }
     }
 }
 
@@ -117,8 +123,14 @@ fn literal(text: &str) -> String {
 impl Danmaku {
     pub fn new(settings: Settings) -> Self {
         let line = settings.font_size * 1.25;
-        let count = ((HEIGHT * settings.area.clamp(0.1, 1.0)) / line).floor().max(1.0) as usize;
-        Danmaku { settings, placed: Vec::new(), lanes: vec![None; count] }
+        let count = ((HEIGHT * settings.area.clamp(0.1, 1.0)) / line)
+            .floor()
+            .max(1.0) as usize;
+        Danmaku {
+            settings,
+            placed: Vec::new(),
+            lanes: vec![None; count],
+        }
     }
 
     fn speed(&self, width: f64) -> f64 {
@@ -131,7 +143,8 @@ impl Danmaku {
     /// when longer, reaches the left edge.
     fn fits(&self, before: (f64, f64), start: f64, width: f64) -> bool {
         let (before_start, before_width) = before;
-        let came_in = before_start + (before_width + self.settings.font_size * 0.5) / self.speed(before_width);
+        let came_in = before_start
+            + (before_width + self.settings.font_size * 0.5) / self.speed(before_width);
         let leaves = before_start + self.settings.duration_ms;
         let reaches_left = start + WIDTH / self.speed(width);
         start >= came_in && reaches_left >= leaves
@@ -148,18 +161,31 @@ impl Danmaku {
             _ => text_width(&text, self.settings.font_size),
         };
         let start = message.start_ms;
-        let lane = (0..self.lanes.len()).find(|&i| self.lanes[i].is_none_or(|before| self.fits(before, start, width)));
+        let lane = (0..self.lanes.len())
+            .find(|&i| self.lanes[i].is_none_or(|before| self.fits(before, start, width)));
         let Some(lane) = lane else { return false };
         self.lanes[lane] = Some((start, width));
         let at = self.placed.partition_point(|p| p.start <= start);
-        self.placed.insert(at, Placed { start, width, lane, text, paid: message.paid, picture: message.picture });
+        self.placed.insert(
+            at,
+            Placed {
+                start,
+                width,
+                lane,
+                text,
+                paid: message.paid,
+                picture: message.picture,
+            },
+        );
         true
     }
 
     /// Forgets messages that left the picture before [now], for a chat that
     /// keeps growing.
     pub fn forget_before(&mut self, now: f64) {
-        let gone = self.placed.partition_point(|p| p.start + self.settings.duration_ms < now);
+        let gone = self
+            .placed
+            .partition_point(|p| p.start + self.settings.duration_ms < now);
         self.placed.drain(..gone);
     }
 
@@ -179,7 +205,12 @@ impl Danmaku {
         let border = (size / 30.0).max(1.0);
         let mut out = String::new();
         // An override tag ends at '}' and '\\' starts the next one.
-        let font: String = self.settings.font.chars().filter(|c| !matches!(c, '{' | '}' | '\\' | '\n' | '\r')).collect();
+        let font: String = self
+            .settings
+            .font
+            .chars()
+            .filter(|c| !matches!(c, '{' | '}' | '\\' | '\n' | '\r'))
+            .collect();
         for p in &self.placed[first..] {
             if p.start > now {
                 break;
@@ -219,9 +250,16 @@ pub unsafe extern "C" fn lumtub_danmaku_new(settings: *const u8, length: usize) 
 /// [danmaku] must come from `lumtub_danmaku_new`; [messages] must point to
 /// [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_danmaku_add(danmaku: *mut Danmaku, messages: *const u8, length: usize) -> u32 {
-    let Some(danmaku) = (unsafe { danmaku.as_mut() }) else { return 0 };
-    let messages: Vec<Message> = serde_json::from_str(unsafe { text(messages, length) }).unwrap_or_default();
+pub unsafe extern "C" fn lumtub_danmaku_add(
+    danmaku: *mut Danmaku,
+    messages: *const u8,
+    length: usize,
+) -> u32 {
+    let Some(danmaku) = (unsafe { danmaku.as_mut() }) else {
+        return 0;
+    };
+    let messages: Vec<Message> =
+        serde_json::from_str(unsafe { text(messages, length) }).unwrap_or_default();
     messages.into_iter().map(|m| danmaku.add(m) as u32).sum()
 }
 
@@ -231,8 +269,14 @@ pub unsafe extern "C" fn lumtub_danmaku_add(danmaku: *mut Danmaku, messages: *co
 /// # Safety
 /// [danmaku] must come from `lumtub_danmaku_new`.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_danmaku_frame(danmaku: *mut Danmaku, now_ms: f64, forget: bool) -> *mut c_char {
-    let Some(danmaku) = (unsafe { danmaku.as_mut() }) else { return give(String::new()) };
+pub unsafe extern "C" fn lumtub_danmaku_frame(
+    danmaku: *mut Danmaku,
+    now_ms: f64,
+    forget: bool,
+) -> *mut c_char {
+    let Some(danmaku) = (unsafe { danmaku.as_mut() }) else {
+        return give(String::new());
+    };
     if forget {
         danmaku.forget_before(now_ms);
     }
@@ -253,7 +297,13 @@ mod tests {
     use super::*;
 
     fn message(start_ms: f64, text: &str) -> Message {
-        Message { start_ms, text: text.into(), paid: false, picture: None, width: None }
+        Message {
+            start_ms,
+            text: text.into(),
+            paid: false,
+            picture: None,
+            width: None,
+        }
     }
 
     #[test]
@@ -264,7 +314,15 @@ mod tests {
         assert!(d.frame(1000.0).contains("\\pos(1920.0,"));
         let width = text_width("hello", 44.0);
         let end = d.frame(12999.0);
-        let x: f64 = end.split("\\pos(").nth(1).unwrap().split(',').next().unwrap().parse().unwrap();
+        let x: f64 = end
+            .split("\\pos(")
+            .nth(1)
+            .unwrap()
+            .split(',')
+            .next()
+            .unwrap()
+            .parse()
+            .unwrap();
         assert!(x < -width + 1.0, "{x}");
         assert_eq!(d.frame(13000.0), "");
     }
@@ -276,14 +334,29 @@ mod tests {
             assert!(d.add(message(0.0, &format!("m{i}"))));
         }
         let frame = d.frame(10.0);
-        let ys: Vec<f64> = frame.lines().map(|l| l.split(',').nth(1).unwrap().split(')').next().unwrap().parse().unwrap()).collect();
+        let ys: Vec<f64> = frame
+            .lines()
+            .map(|l| {
+                l.split(',')
+                    .nth(1)
+                    .unwrap()
+                    .split(')')
+                    .next()
+                    .unwrap()
+                    .parse()
+                    .unwrap()
+            })
+            .collect();
         assert_eq!(ys.len(), 3);
         assert!(ys[0] < ys[1] && ys[1] < ys[2]);
     }
 
     #[test]
     fn a_lane_is_reused_once_the_message_before_has_come_in() {
-        let mut d = Danmaku::new(Settings { area: 0.05, ..Settings::default() });
+        let mut d = Danmaku::new(Settings {
+            area: 0.05,
+            ..Settings::default()
+        });
         assert!(d.add(message(0.0, "first")));
         assert!(!d.add(message(10.0, "too soon")));
         assert!(d.add(message(3000.0, "later")));
@@ -293,7 +366,9 @@ mod tests {
     fn a_full_picture_drops_messages_instead_of_overlapping() {
         let mut d = Danmaku::new(Settings::default());
         let lanes = d.lanes.len();
-        let placed = (0..lanes + 5).filter(|i| d.add(message(0.0, &format!("m{i}")))).count();
+        let placed = (0..lanes + 5)
+            .filter(|i| d.add(message(0.0, &format!("m{i}"))))
+            .count();
         assert_eq!(placed, lanes);
     }
 
@@ -318,7 +393,13 @@ mod tests {
     #[test]
     fn a_picture_is_placed_with_its_own_width_and_named_on_its_own_line() {
         let mut d = Danmaku::new(Settings::default());
-        assert!(d.add(Message { start_ms: 0.0, text: ":wave: hi".into(), paid: false, picture: Some(7), width: Some(300.0) }));
+        assert!(d.add(Message {
+            start_ms: 0.0,
+            text: ":wave: hi".into(),
+            paid: false,
+            picture: Some(7),
+            width: Some(300.0)
+        }));
         assert!(d.add(message(0.0, "plain")));
         assert_eq!(d.placed[0].width, 300.0);
         let frame = d.frame(1200.0);

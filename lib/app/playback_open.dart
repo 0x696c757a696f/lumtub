@@ -56,7 +56,9 @@ extension PlaybackOpening on AppController {
       try {
         final shaders = Directory('${directories.cache.path}${Platform.pathSeparator}shaders').listSync().whereType<File>().length;
         logDebug(() => 'Shader cache holds $shaders shaders');
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not count the shader cache: $e');
+      }
     }
     await _measureDecoders();
     var lastInput = DateTime.now();

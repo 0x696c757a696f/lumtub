@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'models.dart';
+import 'app_log.dart';
 
 /// The speed and volume last chosen on each channel's videos, kept in
 /// `data/channel_playback.json` on this computer and used again the next
@@ -75,6 +76,8 @@ class ChannelPlayback {
           key: {if (value.rate != null) 'rate': value.rate, if (value.volume != null) 'volume': value.volume},
       }), flush: true);
       await temp.rename(file.path);
-    } catch (_) {}
+    } catch (e) {
+      logWarn('Could not save the per-channel playback settings: $e');
+    }
   }
 }

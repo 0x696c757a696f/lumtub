@@ -53,7 +53,12 @@ pub struct Exchange {
 
 /// Answers the accessory's salt and public key `B` with the private
 /// number `private` (random, 32 bytes or more).
-pub fn exchange(pin: &str, salt: &[u8], server: &[u8], private: &[u8]) -> Result<Exchange, &'static str> {
+pub fn exchange(
+    pin: &str,
+    salt: &[u8],
+    server: &[u8],
+    private: &[u8],
+) -> Result<Exchange, &'static str> {
     let n = BigUint::parse_bytes(PRIME.as_bytes(), 16).expect("the group's prime");
     let g = BigUint::from(5u32);
     let b = BigUint::from_bytes_be(server);
@@ -73,9 +78,21 @@ pub fn exchange(pin: &str, salt: &[u8], server: &[u8], private: &[u8]) -> Result
     let hn = BigUint::from_bytes_be(&hash(&[&n.to_bytes_be()]));
     let hg = BigUint::from_bytes_be(&hash(&[&g.to_bytes_be()]));
     let xor = (hn ^ hg).to_bytes_be();
-    let proof = hash(&[&xor, &hash(&[USER.as_bytes()]), salt, &big_a.to_bytes_be(), &short(server), &key]);
+    let proof = hash(&[
+        &xor,
+        &hash(&[USER.as_bytes()]),
+        salt,
+        &big_a.to_bytes_be(),
+        &short(server),
+        &key,
+    ]);
     let expected = hash(&[&big_a.to_bytes_be(), &proof, &key]);
-    Ok(Exchange { public: big_a.to_bytes_be(), proof, expected, key })
+    Ok(Exchange {
+        public: big_a.to_bytes_be(),
+        proof,
+        expected,
+        key,
+    })
 }
 
 #[cfg(test)]
@@ -83,7 +100,10 @@ mod tests {
     use super::*;
 
     fn unhex(s: &str) -> Vec<u8> {
-        (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap()).collect()
+        (0..s.len())
+            .step_by(2)
+            .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
+            .collect()
     }
 
     /// The numbers another implementation of the same formulas gives for a
@@ -91,13 +111,26 @@ mod tests {
     #[test]
     fn agrees_with_a_reference() {
         let vector = include_str!("srp_vector.txt");
-        let value = |name: &str| unhex(vector.lines().find_map(|l| l.strip_prefix(&format!("{name} "))).unwrap().trim());
+        let value = |name: &str| {
+            unhex(
+                vector
+                    .lines()
+                    .find_map(|l| l.strip_prefix(&format!("{name} ")))
+                    .unwrap()
+                    .trim(),
+            )
+        };
         let salt: Vec<u8> = (0..16).collect();
         let done = exchange("1234", &salt, &value("B"), &[0x11; 32]).unwrap();
         assert_eq!(done.public, value("A"));
         assert_eq!(done.key, value("K"));
         assert_eq!(done.proof, value("M1"));
         assert_eq!(done.expected, value("M2"));
-        assert_ne!(exchange("1235", &salt, &value("B"), &[0x11; 32]).unwrap().proof, value("M1"));
+        assert_ne!(
+            exchange("1235", &salt, &value("B"), &[0x11; 32])
+                .unwrap()
+                .proof,
+            value("M1")
+        );
     }
 }

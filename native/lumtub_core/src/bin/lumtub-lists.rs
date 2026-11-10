@@ -19,7 +19,12 @@ fn load(dir: &str) -> Result<(Vec<lists::List>, std::collections::HashSet<String
 
 fn run() -> Result<(), String> {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
+    match args
+        .iter()
+        .map(String::as_str)
+        .collect::<Vec<_>>()
+        .as_slice()
+    {
         ["check", dir] => {
             let (all, _) = load(dir)?;
             let records: usize = all.iter().map(|l| l.records.len()).sum();
@@ -30,7 +35,11 @@ fn run() -> Result<(), String> {
             let (all, retired) = load(dir)?;
             // No base folder means the lists are new; a base that does not
             // read is an error, not an empty start.
-            let old = if Path::new(base).is_dir() { load(base).map_err(|e| format!("the base lists: {e}"))?.0 } else { Vec::new() };
+            let old = if Path::new(base).is_dir() {
+                load(base).map_err(|e| format!("the base lists: {e}"))?.0
+            } else {
+                Vec::new()
+            };
             let lines = lists::diff(&old, &all, &retired);
             let problems = lists::unretired(&old, &all, &retired);
             if lines.is_empty() {
@@ -42,14 +51,33 @@ fn run() -> Result<(), String> {
             for problem in &problems {
                 eprintln!("{problem}");
             }
-            if problems.is_empty() { Ok(()) } else { Err(format!("{} removed record(s) missing from retired.txt", problems.len())) }
+            if problems.is_empty() {
+                Ok(())
+            } else {
+                Err(format!(
+                    "{} removed record(s) missing from retired.txt",
+                    problems.len()
+                ))
+            }
         }
         ["build", dir, out, version] => {
-            let version: u64 = version.parse().map_err(|_| format!("{version} is not a version number"))?;
+            let version: u64 = version
+                .parse()
+                .map_err(|_| format!("{version} is not a version number"))?;
             let (all, _) = load(dir)?;
-            let built = std::process::Command::new("date").args(["-u", "+%Y-%m-%dT%H:%M:%SZ"]).output().ok()
-                .and_then(|o| String::from_utf8(o.stdout).ok()).map(|s| s.trim().to_string()).unwrap_or_default();
-            let json = serde_json::to_string(&lists::Bundle { version, built: &built, lists: &all }).map_err(|e| e.to_string())?;
+            let built = std::process::Command::new("date")
+                .args(["-u", "+%Y-%m-%dT%H:%M:%SZ"])
+                .output()
+                .ok()
+                .and_then(|o| String::from_utf8(o.stdout).ok())
+                .map(|s| s.trim().to_string())
+                .unwrap_or_default();
+            let json = serde_json::to_string(&lists::Bundle {
+                version,
+                built: &built,
+                lists: &all,
+            })
+            .map_err(|e| e.to_string())?;
             std::fs::write(out, json).map_err(|e| format!("{out}: {e}"))?;
             println!("Wrote {out}: version {version}, {} lists", all.len());
             Ok(())

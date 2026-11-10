@@ -67,13 +67,17 @@ pub struct Relay {
 }
 
 /// What the relay reads from YouTube: the reply's status and body.
+/// Status, newest fragment number, body.
+type LiveReply = Result<(u16, Option<u64>, Box<dyn Read + Send>), String>;
+
 pub trait Fetch: Send + Sync {
     fn get(&self, target: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String>;
 
     /// [Fetch::get], with the newest fragment of a live stream YouTube
     /// names in `x-head-seqnum`.
-    fn get_live(&self, target: &Target, url: &str) -> Result<(u16, Option<u64>, Box<dyn Read + Send>), String> {
-        self.get(target, url).map(|(status, body)| (status, None, body))
+    fn get_live(&self, target: &Target, url: &str) -> LiveReply {
+        self.get(target, url)
+            .map(|(status, body)| (status, None, body))
     }
 }
 
@@ -115,7 +119,9 @@ impl Web {
         // The system's certificate store unless another list was chosen, as
         // libmpv and the rest of the app: a proxy or security tool that
         // inspects HTTPS installs its own root there.
-        let client = crate::roots::apply(builder, roots).build().map_err(|e| e.to_string())?;
+        let client = crate::roots::apply(builder, roots)
+            .build()
+            .map_err(|e| e.to_string())?;
         clients.insert(key, client.clone());
         Ok(client)
     }
@@ -123,35 +129,34 @@ impl Web {
 
 impl Fetch for Web {
     fn get(&self, target: &Target, url: &str) -> Result<(u16, Box<dyn Read + Send>), String> {
-        self.get_live(target, url).map(|(status, _, body)| (status, body))
+        self.get_live(target, url)
+            .map(|(status, _, body)| (status, body))
     }
 
     /// Read from the backup of a server that failed, and from the backup
     /// at once when this one answers 5xx or not at all (see [crate::backup]).
-    fn get_live(&self, target: &Target, url: &str) -> Result<(u16, Option<u64>, Box<dyn Read + Send>), String> {
+    fn get_live(&self, target: &Target, url: &str) -> LiveReply {
         let url = crate::backup::steer(url);
         let answer = self.ask(target, &url);
         let status = answer.as_ref().ok().map(|(status, _, _)| *status);
-        if crate::backup::worth_backup(status) {
-            if let Some(other) = crate::backup::backup(&url) {
-                if let Ok(reply) = self.ask(target, &other) {
-                    if !crate::backup::worth_backup(Some(reply.0)) {
-                        let why = match &answer {
-                            Ok((status, _, _)) => format!("HTTP {status}"),
-                            Err(e) => e.clone(),
-                        };
-                        crate::backup::avoid(&url, &other, &why);
-                        return Ok(reply);
-                    }
-                }
-            }
+        if crate::backup::worth_backup(status)
+            && let Some(other) = crate::backup::backup(&url)
+            && let Ok(reply) = self.ask(target, &other)
+            && !crate::backup::worth_backup(Some(reply.0))
+        {
+            let why = match &answer {
+                Ok((status, _, _)) => format!("HTTP {status}"),
+                Err(e) => e.clone(),
+            };
+            crate::backup::avoid(&url, &other, &why);
+            return Ok(reply);
         }
         answer
     }
 }
 
 impl Web {
-    fn ask(&self, target: &Target, url: &str) -> Result<(u16, Option<u64>, Box<dyn Read + Send>), String> {
+    fn ask(&self, target: &Target, url: &str) -> LiveReply {
         let client = self.client(&target.proxy)?;
         let mut request = client.get(url);
         if let Some(ua) = &target.user_agent {
@@ -162,8 +167,19 @@ impl Web {
             .map_err(|_| "no answer in 20 s".to_string())?
             .map_err(|e| e.to_string())?;
         let status = reply.status().as_u16();
-        let head = reply.headers().get("x-head-seqnum").and_then(|v| v.to_str().ok()).and_then(|v| v.trim().parse().ok());
-        Ok((status, head, Box::new(Reply { reply, piece: bytes::Bytes::new() })))
+        let head = reply
+            .headers()
+            .get("x-head-seqnum")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.trim().parse().ok());
+        Ok((
+            status,
+            head,
+            Box::new(Reply {
+                reply,
+                piece: bytes::Bytes::new(),
+            }),
+        ))
     }
 }
 
@@ -195,28 +211,35 @@ impl Relay {
         let listener = TcpListener::bind("127.0.0.1:0")?;
         let port = listener.local_addr()?.port();
         let shared = Arc::new(Mutex::new(Shared::default()));
-        let relay = Relay { port, shared: shared.clone() };
-        std::thread::Builder::new().name("relay".into()).spawn(move || {
-            let open = Arc::new(AtomicUsize::new(0));
-            for client in listener.incoming().flatten() {
-                // libmpv keeps a few connections; anything past the cap is
-                // another local program, turned away.
-                if open.load(Ordering::Relaxed) >= MAX_CONNECTIONS {
-                    continue;
+        let relay = Relay {
+            port,
+            shared: shared.clone(),
+        };
+        std::thread::Builder::new()
+            .name("relay".into())
+            .spawn(move || {
+                let open = Arc::new(AtomicUsize::new(0));
+                for client in listener.incoming().flatten() {
+                    // libmpv keeps a few connections; anything past the cap is
+                    // another local program, turned away.
+                    if open.load(Ordering::Relaxed) >= MAX_CONNECTIONS {
+                        continue;
+                    }
+                    open.fetch_add(1, Ordering::Relaxed);
+                    let shared = shared.clone();
+                    let fetch = fetch.clone();
+                    let done = open.clone();
+                    let spawned = std::thread::Builder::new()
+                        .name("relay-client".into())
+                        .spawn(move || {
+                            serve(client, &shared, fetch.as_ref());
+                            done.fetch_sub(1, Ordering::Relaxed);
+                        });
+                    if spawned.is_err() {
+                        open.fetch_sub(1, Ordering::Relaxed);
+                    }
                 }
-                open.fetch_add(1, Ordering::Relaxed);
-                let shared = shared.clone();
-                let fetch = fetch.clone();
-                let done = open.clone();
-                let spawned = std::thread::Builder::new().name("relay-client".into()).spawn(move || {
-                    serve(client, &shared, fetch.as_ref());
-                    done.fetch_sub(1, Ordering::Relaxed);
-                });
-                if spawned.is_err() {
-                    open.fetch_sub(1, Ordering::Relaxed);
-                }
-            }
-        })?;
+            })?;
         Ok(relay)
     }
 
@@ -227,7 +250,8 @@ impl Relay {
     /// A loopback address that serves [target], or none when its size is
     /// unknown (it is needed for seeking).
     pub fn register(&self, mut target: Target) -> Option<String> {
-        if (target.size == 0 && target.live.is_none()) || target.url.is_empty() || target.chunk == 0 {
+        if (target.size == 0 && target.live.is_none()) || target.url.is_empty() || target.chunk == 0
+        {
             return None;
         }
         if target.mime.is_none() {
@@ -256,7 +280,13 @@ impl Relay {
 /// The fragment the live pair [pair] starts at: [behind] fragments before
 /// the newest, [head], for whichever of its streams asks first.
 fn live_start(shared: &Mutex<Shared>, pair: &str, head: u64, behind: &dyn Fn() -> u64) -> u64 {
-    let known = |shared: &Shared| shared.live_starts.iter().find(|(name, _)| name == pair).map(|(_, start)| *start);
+    let known = |shared: &Shared| {
+        shared
+            .live_starts
+            .iter()
+            .find(|(name, _)| name == pair)
+            .map(|(_, start)| *start)
+    };
     if let Some(start) = known(&shared.lock().unwrap()) {
         return start;
     }
@@ -285,11 +315,21 @@ fn log(shared: &Mutex<Shared>, line: String) {
 fn token(url: &str) -> String {
     static COUNT: AtomicU64 = AtomicU64::new(0);
     let mut hash = Sha256::new();
-    hash.update(SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_nanos().to_le_bytes());
+    hash.update(
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+            .to_le_bytes(),
+    );
     hash.update(COUNT.fetch_add(1, Ordering::Relaxed).to_le_bytes());
     hash.update(std::process::id().to_le_bytes());
     hash.update(url.as_bytes());
-    hash.finalize().iter().take(8).map(|b| format!("{b:02x}")).collect()
+    hash.finalize()
+        .iter()
+        .take(8)
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 /// The value of [name] in [url]'s query, percent-decoded.
@@ -307,7 +347,10 @@ pub(crate) fn decode(text: &str) -> String {
     let mut i = 0;
     while i < bytes.len() {
         match bytes[i] {
-            b'%' if i + 2 < bytes.len() => match std::str::from_utf8(&bytes[i + 1..i + 3]).ok().and_then(|h| u8::from_str_radix(h, 16).ok()) {
+            b'%' if i + 2 < bytes.len() => match std::str::from_utf8(&bytes[i + 1..i + 3])
+                .ok()
+                .and_then(|h| u8::from_str_radix(h, 16).ok())
+            {
                 Some(b) => {
                     out.push(b);
                     i += 3;
@@ -348,7 +391,11 @@ pub fn byte_range(header: Option<&str>, size: u64) -> Range {
         (None, Some(suffix)) => (size.saturating_sub(suffix), size - 1),
         (start, to) => (start.unwrap_or(0), to.map_or(size - 1, |t| t.min(size - 1))),
     };
-    if start >= size || start > end { Range::Unsatisfiable } else { Range::Part(start, end) }
+    if start >= size || start > end {
+        Range::Unsatisfiable
+    } else {
+        Range::Part(start, end)
+    }
 }
 
 /// Answers the requests on one connection from libmpv, then closes it
@@ -359,22 +406,40 @@ fn serve(client: TcpStream, shared: &Mutex<Shared>, fetch: &dyn Fetch) {
     // A connection left idle that long holds a place under the cap; libmpv
     // simply opens another when it needs one.
     let _ = client.set_read_timeout(Some(IDLE_TIMEOUT));
-    let Ok(mut writer) = client.try_clone() else { return };
+    let Ok(mut writer) = client.try_clone() else {
+        return;
+    };
     let mut reader = BufReader::new(client);
     answer(&mut reader, &mut writer, shared, fetch);
     let _ = writer.flush();
     let _ = writer.shutdown(Shutdown::Write);
-    let _ = reader.get_ref().set_read_timeout(Some(Duration::from_secs(2)));
+    let _ = reader
+        .get_ref()
+        .set_read_timeout(Some(Duration::from_secs(2)));
     let mut rest = [0u8; 4096];
     while matches!(reader.read(&mut rest), Ok(n) if n > 0) {}
 }
 
-fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mutex<Shared>, fetch: &dyn Fetch) {
+fn answer(
+    reader: &mut BufReader<TcpStream>,
+    writer: &mut TcpStream,
+    shared: &Mutex<Shared>,
+    fetch: &dyn Fetch,
+) {
     let mut buffer = vec![0u8; 256 << 10];
     loop {
-        let Some((method, path, headers)) = read_request(reader) else { return };
-        let keep_open = !headers.get("connection").is_some_and(|v| v.eq_ignore_ascii_case("close"));
-        let target = shared.lock().unwrap().targets.get(path.trim_start_matches('/')).cloned();
+        let Some((method, path, headers)) = read_request(reader) else {
+            return;
+        };
+        let keep_open = !headers
+            .get("connection")
+            .is_some_and(|v| v.eq_ignore_ascii_case("close"));
+        let target = shared
+            .lock()
+            .unwrap()
+            .targets
+            .get(path.trim_start_matches('/'))
+            .cloned();
         let Some(target) = target.filter(|_| method == "GET" || method == "HEAD") else {
             let _ = writer.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n");
             if !keep_open {
@@ -384,20 +449,28 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
         };
         if let Some(pair) = target.live.clone() {
             if method == "GET" {
-                let start = |head: u64, behind: &dyn Fn() -> u64| live_start(shared, &pair, head, behind);
+                let start =
+                    |head: u64, behind: &dyn Fn() -> u64| live_start(shared, &pair, head, behind);
                 crate::relay_live::stream(writer, &target, fetch, start, |line| log(shared, line));
             } else {
                 let mime = target.mime.as_deref().unwrap_or("application/octet-stream");
-                let _ = write!(writer, "HTTP/1.1 200 OK\r\nContent-Type: {mime}\r\nConnection: close\r\n\r\n");
+                let _ = write!(
+                    writer,
+                    "HTTP/1.1 200 OK\r\nContent-Type: {mime}\r\nConnection: close\r\n\r\n"
+                );
             }
             return;
         }
         let size = target.size;
-        let (status, start, end) = match byte_range(headers.get("range").map(String::as_str), size) {
+        let (status, start, end) = match byte_range(headers.get("range").map(String::as_str), size)
+        {
             Range::Whole => ("200 OK", 0, size - 1),
             Range::Part(s, e) => ("206 Partial Content", s, e),
             Range::Unsatisfiable => {
-                let _ = write!(writer, "HTTP/1.1 416 Range Not Satisfiable\r\nContent-Range: bytes */{size}\r\nContent-Length: 0\r\n\r\n");
+                let _ = write!(
+                    writer,
+                    "HTTP/1.1 416 Range Not Satisfiable\r\nContent-Range: bytes */{size}\r\nContent-Length: 0\r\n\r\n"
+                );
                 if !keep_open {
                     return;
                 }
@@ -416,22 +489,35 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
                         Stop::Refused(code, _) => code,
                         _ => 502,
                     };
-                    log(shared, format!("Chunked relay stopped before answering: {}", stop.why()));
-                    let _ = write!(writer, "HTTP/1.1 {code} Upstream Error\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+                    log(
+                        shared,
+                        format!("Chunked relay stopped before answering: {}", stop.why()),
+                    );
+                    let _ = write!(
+                        writer,
+                        "HTTP/1.1 {code} Upstream Error\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                    );
                     return;
                 }
             }
         } else {
             None
         };
-        let mut head = format!("HTTP/1.1 {status}\r\nAccept-Ranges: bytes\r\nContent-Length: {}\r\n", end - start + 1);
+        let mut head = format!(
+            "HTTP/1.1 {status}\r\nAccept-Ranges: bytes\r\nContent-Length: {}\r\n",
+            end - start + 1
+        );
         if status.starts_with("206") {
             head.push_str(&format!("Content-Range: bytes {start}-{end}/{size}\r\n"));
         }
         if let Some(mime) = &target.mime {
             head.push_str(&format!("Content-Type: {mime}\r\n"));
         }
-        head.push_str(if keep_open { "Connection: keep-alive\r\n\r\n" } else { "Connection: close\r\n\r\n" });
+        head.push_str(if keep_open {
+            "Connection: keep-alive\r\n\r\n"
+        } else {
+            "Connection: close\r\n\r\n"
+        });
         if writer.write_all(head.as_bytes()).is_err() {
             return;
         }
@@ -442,7 +528,14 @@ fn answer(reader: &mut BufReader<TcpStream>, writer: &mut TcpStream, shared: &Mu
             continue;
         }
         let done = std::thread::scope(|scope| {
-            let mut ahead = Ahead { scope, fetch, target: &target, next: None, handle: None, first };
+            let mut ahead = Ahead {
+                scope,
+                fetch,
+                target: &target,
+                next: None,
+                handle: None,
+                first,
+            };
             let mut position = start;
             while position <= end {
                 let last = (position + target.chunk - 1).min(end);
@@ -527,7 +620,9 @@ impl Stop {
         match self {
             Stop::Client => "libmpv hung up".into(),
             Stop::Upstream(message) => message.clone(),
-            Stop::Refused(status, detail) if detail.is_empty() => format!("YouTube answered {status}"),
+            Stop::Refused(status, detail) if detail.is_empty() => {
+                format!("YouTube answered {status}")
+            }
             Stop::Refused(status, detail) => format!("YouTube answered {status} ({detail})"),
         }
     }
@@ -551,25 +646,31 @@ struct Drained {
 
 pub(crate) fn drain(mut body: Body, limit: u64) -> Body {
     let (tx, rx) = std::sync::mpsc::sync_channel((limit / PIECE as u64 + 1) as usize);
-    std::thread::spawn(move || loop {
-        let mut piece = vec![0; PIECE];
-        match body.read(&mut piece) {
-            Ok(0) => break,
-            Ok(n) => {
-                piece.truncate(n);
-                // Gone when libmpv hung up; the reply is dropped with it.
-                if tx.send(Ok(piece)).is_err() {
+    std::thread::spawn(move || {
+        loop {
+            let mut piece = vec![0; PIECE];
+            match body.read(&mut piece) {
+                Ok(0) => break,
+                Ok(n) => {
+                    piece.truncate(n);
+                    // Gone when libmpv hung up; the reply is dropped with it.
+                    if tx.send(Ok(piece)).is_err() {
+                        break;
+                    }
+                }
+                Err(e) if e.kind() == ErrorKind::Interrupted => continue,
+                Err(e) => {
+                    let _ = tx.send(Err(e));
                     break;
                 }
             }
-            Err(e) if e.kind() == ErrorKind::Interrupted => continue,
-            Err(e) => {
-                let _ = tx.send(Err(e));
-                break;
-            }
         }
     });
-    Box::new(Drained { pieces: rx, current: Vec::new(), at: 0 })
+    Box::new(Drained {
+        pieces: rx,
+        current: Vec::new(),
+        at: 0,
+    })
 }
 
 impl Read for Drained {
@@ -607,27 +708,50 @@ impl<'s, 'e> Ahead<'s, 'e> {
     fn start(&mut self) {
         if let Some((from, to)) = self.next.take() {
             let (fetch, target) = (self.fetch, self.target);
-            self.handle = Some(self.scope.spawn(move || request(fetch, target, from, to).map(|body| drain(body, to + 1 - from))));
+            self.handle = Some(self.scope.spawn(move || {
+                request(fetch, target, from, to).map(|body| drain(body, to + 1 - from))
+            }));
         }
     }
 }
 
 /// Sends bytes [from] to [to] of the target. A reply YouTube cuts short is
 /// continued from the next missing byte; libmpv sees one unbroken reply.
-fn copy(from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>, buffer: &mut [u8], ahead: &mut Ahead) -> Result<(), Stop> {
+fn copy(
+    from: u64,
+    to: u64,
+    into: &mut impl Write,
+    shared: &Mutex<Shared>,
+    buffer: &mut [u8],
+    ahead: &mut Ahead,
+) -> Result<(), Stop> {
     let (fetch, target) = (ahead.fetch, ahead.target);
     let mut next = from;
     let mut attempt = 0;
     while next <= to {
         // Only this chunk's first request was opened ahead; continuing a
         // broken reply asks anew and leaves the next chunk's request waiting.
-        let pending = if attempt == 0 { ahead.handle.take() } else { None };
-        let opened = if attempt == 0 { ahead.first.take() } else { None };
+        let pending = if attempt == 0 {
+            ahead.handle.take()
+        } else {
+            None
+        };
+        let opened = if attempt == 0 {
+            ahead.first.take()
+        } else {
+            None
+        };
         let prefetched = opened.or_else(|| match pending {
             Some(handle) => match handle.join() {
                 Ok(Ok(body)) => Some(body),
                 Ok(Err(stop @ (Stop::Upstream(_) | Stop::Refused(..)))) => {
-                    log(shared, format!("Prefetch of the next chunk failed ({}), requesting again", stop.why()));
+                    log(
+                        shared,
+                        format!(
+                            "Prefetch of the next chunk failed ({}), requesting again",
+                            stop.why()
+                        ),
+                    );
                     None
                 }
                 _ => None,
@@ -645,14 +769,17 @@ fn copy(from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>, buffe
                 Ok(0) => break,
                 Ok(n) => {
                     let wanted = (to + 1 - next - received).min(n as u64) as usize;
-                    into.write_all(&buffer[..wanted]).map_err(|_| Stop::Client)?;
+                    into.write_all(&buffer[..wanted])
+                        .map_err(|_| Stop::Client)?;
                     received += wanted as u64;
                     if ahead.handle.is_none() && received * 4 >= (to + 1 - from) * 3 {
                         ahead.start();
                     }
                     if wanted < n {
                         // More than asked for would shift every later byte.
-                        return Err(Stop::Upstream(format!("YouTube sent more than bytes {next}-{to}")));
+                        return Err(Stop::Upstream(format!(
+                            "YouTube sent more than bytes {next}-{to}"
+                        )));
                     }
                 }
                 Err(e) if e.kind() == ErrorKind::Interrupted => continue,
@@ -666,16 +793,26 @@ fn copy(from: u64, to: u64, into: &mut impl Write, shared: &Mutex<Shared>, buffe
         if next <= to {
             let why = failure.unwrap_or_else(|| "ended early".into());
             if attempt >= 2 || received == 0 {
-                return Err(Stop::Upstream(format!("YouTube broke off at byte {next} ({why})")));
+                return Err(Stop::Upstream(format!(
+                    "YouTube broke off at byte {next} ({why})"
+                )));
             }
-            log(shared, format!("YouTube reply broke off at byte {next} ({why}), continuing from there"));
+            log(
+                shared,
+                format!("YouTube reply broke off at byte {next} ({why}), continuing from there"),
+            );
         }
         attempt += 1;
     }
     Ok(())
 }
 
-pub(crate) fn request(fetch: &dyn Fetch, target: &Target, from: u64, to: u64) -> Result<Box<dyn Read + Send>, Stop> {
+pub(crate) fn request(
+    fetch: &dyn Fetch,
+    target: &Target,
+    from: u64,
+    to: u64,
+) -> Result<Box<dyn Read + Send>, Stop> {
     // Appended as text: rebuilding the query could re-encode signed values.
     let url = format!("{}&range={from}-{to}", target.url);
     let mut attempt = 0;
@@ -707,18 +844,44 @@ pub(crate) fn request(fetch: &dyn Fetch, target: &Target, from: u64, to: u64) ->
 fn refusal(target: &Target, body: Box<dyn Read + Send>) -> String {
     let mut said = Vec::new();
     let _ = body.take(300).read_to_end(&mut said);
-    let said: String = String::from_utf8_lossy(&said).chars().map(|c| if c.is_control() { ' ' } else { c }).collect();
-    let host = target.url.split("://").nth(1).and_then(|rest| rest.split(['/', '?']).next()).unwrap_or("?");
-    let left = query(&target.url, "expire").and_then(|e| e.parse::<i64>().ok()).map(|e| {
-        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() as i64;
-        format!("{} s", e - now)
-    });
+    let said: String = String::from_utf8_lossy(&said)
+        .chars()
+        .map(|c| if c.is_control() { ' ' } else { c })
+        .collect();
+    let host = target
+        .url
+        .split("://")
+        .nth(1)
+        .and_then(|rest| rest.split(['/', '?']).next())
+        .unwrap_or("?");
+    let left = query(&target.url, "expire")
+        .and_then(|e| e.parse::<i64>().ok())
+        .map(|e| {
+            let now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs() as i64;
+            format!("{} s", e - now)
+        });
     let mut parts = vec![
-        format!("client {}", query(&target.url, "c").unwrap_or_else(|| "?".into())),
+        format!(
+            "client {}",
+            query(&target.url, "c").unwrap_or_else(|| "?".into())
+        ),
         format!("host {host}"),
         format!("expires in {}", left.as_deref().unwrap_or("?")),
-        format!("user agent {}", if target.user_agent.is_some() { "sent" } else { "none" }),
-        format!("proxy {}", if target.proxy.is_some() { "yes" } else { "no" }),
+        format!(
+            "user agent {}",
+            if target.user_agent.is_some() {
+                "sent"
+            } else {
+                "none"
+            }
+        ),
+        format!(
+            "proxy {}",
+            if target.proxy.is_some() { "yes" } else { "no" }
+        ),
     ];
     for name in ["pot", "n", "sig", "lsig"] {
         if query(&target.url, name).is_some() {
@@ -752,8 +915,13 @@ pub extern "C" fn lumtub_relay_start() -> u16 {
 /// [json] points at [len] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_relay_register(json: *const u8, len: usize) -> *mut c_char {
-    let Some(relay) = RELAY.get() else { return std::ptr::null_mut() };
-    match serde_json::from_str::<Target>(unsafe { crate::taste::text(json, len) }).ok().and_then(|t| relay.register(t)) {
+    let Some(relay) = RELAY.get() else {
+        return std::ptr::null_mut();
+    };
+    match serde_json::from_str::<Target>(unsafe { crate::taste::text(json, len) })
+        .ok()
+        .and_then(|t| relay.register(t))
+    {
         Some(address) => crate::taste::give(address),
         None => std::ptr::null_mut(),
     }
@@ -777,8 +945,21 @@ mod tests {
     #[ignore]
     fn fetches_https_with_the_system_roots() {
         let proxy = std::env::var("LUMTUB_TEST_PROXY").ok();
-        let target = Target { url: String::new(), size: 0, user_agent: None, mime: None, proxy, chunk: chunk(), live: None };
-        let (status, mut body) = Web::default().get(&target, "https://static.crates.io/crates/bytes/1.11.1/download").expect("fetch");
+        let target = Target {
+            url: String::new(),
+            size: 0,
+            user_agent: None,
+            mime: None,
+            proxy,
+            chunk: chunk(),
+            live: None,
+        };
+        let (status, mut body) = Web::default()
+            .get(
+                &target,
+                "https://static.crates.io/crates/bytes/1.11.1/download",
+            )
+            .expect("fetch");
         assert_eq!(status, 200);
         let mut bytes = Vec::new();
         body.read_to_end(&mut bytes).unwrap();
@@ -808,7 +989,12 @@ mod tests {
     }
 
     fn fake(size: usize, cut: Option<usize>, status: u16) -> Arc<Fake> {
-        Arc::new(Fake { data: (0..size).map(|i| (i % 251) as u8).collect(), cut, status, calls: Mutex::new(vec![]) })
+        Arc::new(Fake {
+            data: (0..size).map(|i| (i % 251) as u8).collect(),
+            cut,
+            status,
+            calls: Mutex::new(vec![]),
+        })
     }
 
     fn get(address: &str, range: Option<&str>) -> (String, Vec<u8>) {
@@ -816,15 +1002,30 @@ mod tests {
         let (host, path) = path.split_once('/').unwrap();
         let mut stream = TcpStream::connect(host).unwrap();
         let range = range.map_or(String::new(), |r| format!("Range: {r}\r\n"));
-        write!(stream, "GET /{path} HTTP/1.1\r\nHost: {host}\r\n{range}Connection: close\r\n\r\n").unwrap();
+        write!(
+            stream,
+            "GET /{path} HTTP/1.1\r\nHost: {host}\r\n{range}Connection: close\r\n\r\n"
+        )
+        .unwrap();
         let mut all = vec![];
         stream.read_to_end(&mut all).unwrap();
         let split = all.windows(4).position(|w| w == b"\r\n\r\n").unwrap();
-        (String::from_utf8_lossy(&all[..split]).into_owned(), all[split + 4..].to_vec())
+        (
+            String::from_utf8_lossy(&all[..split]).into_owned(),
+            all[split + 4..].to_vec(),
+        )
     }
 
     fn target(size: u64) -> Target {
-        Target { url: "https://example.com/videoplayback?mime=video%2Fwebm&clen=1".into(), size, user_agent: None, mime: None, proxy: None, chunk: CHUNK, live: None }
+        Target {
+            url: "https://example.com/videoplayback?mime=video%2Fwebm&clen=1".into(),
+            size,
+            user_agent: None,
+            mime: None,
+            proxy: None,
+            chunk: CHUNK,
+            live: None,
+        }
     }
 
     #[test]
@@ -835,7 +1036,10 @@ mod tests {
         assert_eq!(byte_range(Some("bytes=-30"), 100), Range::Part(70, 99));
         assert_eq!(byte_range(Some("bytes=100-"), 100), Range::Unsatisfiable);
         assert_eq!(byte_range(Some("bytes=5-2"), 100), Range::Unsatisfiable);
-        assert_eq!(query("https://x/v?a=1&mime=video%2Fmp4", "mime").as_deref(), Some("video/mp4"));
+        assert_eq!(
+            query("https://x/v?a=1&mime=video%2Fmp4", "mime").as_deref(),
+            Some("video/mp4")
+        );
     }
 
     #[test]
@@ -846,7 +1050,10 @@ mod tests {
         let address = relay.register(target(size as u64)).unwrap();
         let (head, body) = get(&address, Some("bytes=100-"));
         assert!(head.starts_with("HTTP/1.1 206"), "{head}");
-        assert!(head.contains(&format!("Content-Range: bytes 100-{}/{size}", size - 1)), "{head}");
+        assert!(
+            head.contains(&format!("Content-Range: bytes 100-{}/{size}", size - 1)),
+            "{head}"
+        );
         assert!(head.contains("Content-Type: video/webm"), "{head}");
         assert_eq!(body, source.data[100..]);
         let calls = source.calls.lock().unwrap();
@@ -892,7 +1099,15 @@ mod tests {
         assert!(body == source.data);
         let mut calls = source.calls.lock().unwrap().clone();
         calls.sort();
-        let mut want: Vec<String> = (0..4u64).map(|i| format!("&range={}-{}", i * CHUNK, ((i + 1) * CHUNK - 1).min(size as u64 - 1))).collect();
+        let mut want: Vec<String> = (0..4u64)
+            .map(|i| {
+                format!(
+                    "&range={}-{}",
+                    i * CHUNK,
+                    ((i + 1) * CHUNK - 1).min(size as u64 - 1)
+                )
+            })
+            .collect();
         want.sort();
         assert_eq!(calls.len(), 4);
         for (c, w) in calls.iter().zip(&want) {
@@ -921,7 +1136,12 @@ mod tests {
         let (head, body) = get(&address, None);
         assert!(head.starts_with("HTTP/1.1 200"), "{head}");
         assert_eq!(body, source.data);
-        assert!(relay.take_log().iter().any(|l| l.contains("broke off at byte 400")));
+        assert!(
+            relay
+                .take_log()
+                .iter()
+                .any(|l| l.contains("broke off at byte 400"))
+        );
     }
 
     #[test]
@@ -949,11 +1169,20 @@ mod tests {
         target.user_agent = Some("ua".into());
         let detail = refusal(&target, Box::new(Cursor::new(b"Forbidden\n".to_vec())));
         assert!(detail.contains("client TVHTML5"), "{detail}");
-        assert!(detail.contains("host rr1---sn-x.googlevideo.com"), "{detail}");
+        assert!(
+            detail.contains("host rr1---sn-x.googlevideo.com"),
+            "{detail}"
+        );
         assert!(detail.contains("user agent sent"), "{detail}");
-        assert!(detail.contains("has sig") && detail.contains("has n") && !detail.contains("has pot"), "{detail}");
+        assert!(
+            detail.contains("has sig") && detail.contains("has n") && !detail.contains("has pot"),
+            "{detail}"
+        );
         assert!(detail.contains("said \"Forbidden\""), "{detail}");
-        assert!(!detail.contains("SECRET") && !detail.contains("abc"), "{detail}");
+        assert!(
+            !detail.contains("SECRET") && !detail.contains("abc"),
+            "{detail}"
+        );
     }
 
     #[test]

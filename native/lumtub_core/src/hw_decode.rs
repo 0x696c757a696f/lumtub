@@ -20,7 +20,11 @@ pub const HEIGHTS: [u32; 4] = [1080, 1440, 2160, 4320];
 
 /// The tallest of [HEIGHTS] that [decodes] accepts, 0 for none.
 pub fn tallest(decodes: impl Fn(u32, u32) -> bool) -> u32 {
-    HEIGHTS.into_iter().filter(|&h| decodes(h * 16 / 9, h)).max().unwrap_or(0)
+    HEIGHTS
+        .into_iter()
+        .filter(|&h| decodes(h * 16 / 9, h))
+        .max()
+        .unwrap_or(0)
 }
 
 #[cfg(windows)]
@@ -34,24 +38,58 @@ pub fn probe() -> Option<Decoders> {
 
     unsafe {
         let mut device = None;
-        D3D11CreateDevice(None, D3D_DRIVER_TYPE_HARDWARE, HMODULE::default(), D3D11_CREATE_DEVICE_VIDEO_SUPPORT, None, D3D11_SDK_VERSION, Some(&mut device), None, None).ok()?;
+        D3D11CreateDevice(
+            None,
+            D3D_DRIVER_TYPE_HARDWARE,
+            HMODULE::default(),
+            D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
+            None,
+            D3D11_SDK_VERSION,
+            Some(&mut device),
+            None,
+            None,
+        )
+        .ok()?;
         let device = device?;
         let adapter = device.cast::<IDXGIDevice>().ok()?.GetAdapter().ok()?;
         let desc = adapter.GetDesc().ok()?;
         let name = String::from_utf16_lossy(&desc.Description);
         let driver = adapter.CheckInterfaceSupport(&IDXGIDevice::IID).map(|v| {
             let v = v as u64;
-            format!("{}.{}.{}.{}", v >> 48, (v >> 32) & 0xffff, (v >> 16) & 0xffff, v & 0xffff)
+            format!(
+                "{}.{}.{}.{}",
+                v >> 48,
+                (v >> 32) & 0xffff,
+                (v >> 16) & 0xffff,
+                v & 0xffff
+            )
         });
-        let adapter = format!("{} ({:04x}:{:04x}) {}", name.trim_end_matches('\0').trim(), desc.VendorId, desc.DeviceId, driver.unwrap_or_default());
+        let adapter = format!(
+            "{} ({:04x}:{:04x}) {}",
+            name.trim_end_matches('\0').trim(),
+            desc.VendorId,
+            desc.DeviceId,
+            driver.unwrap_or_default()
+        );
         let video = device.cast::<ID3D11VideoDevice>().ok()?;
-        let profiles: Vec<GUID> = (0..video.GetVideoDecoderProfileCount()).filter_map(|i| video.GetVideoDecoderProfile(i).ok()).collect();
+        let profiles: Vec<GUID> = (0..video.GetVideoDecoderProfileCount())
+            .filter_map(|i| video.GetVideoDecoderProfile(i).ok())
+            .collect();
         let height = |profile: GUID| {
-            if !profiles.contains(&profile) || !video.CheckVideoDecoderFormat(&profile, DXGI_FORMAT_NV12).is_ok_and(|ok| ok.as_bool()) {
+            if !profiles.contains(&profile)
+                || !video
+                    .CheckVideoDecoderFormat(&profile, DXGI_FORMAT_NV12)
+                    .is_ok_and(|ok| ok.as_bool())
+            {
                 return 0;
             }
             tallest(|width, height| {
-                let desc = D3D11_VIDEO_DECODER_DESC { Guid: profile, SampleWidth: width, SampleHeight: height, OutputFormat: DXGI_FORMAT_NV12 };
+                let desc = D3D11_VIDEO_DECODER_DESC {
+                    Guid: profile,
+                    SampleWidth: width,
+                    SampleHeight: height,
+                    OutputFormat: DXGI_FORMAT_NV12,
+                };
                 video.GetVideoDecoderConfigCount(&desc).is_ok_and(|n| n > 0)
             })
         };
@@ -109,19 +147,49 @@ pub fn probe() -> Option<Decoders> {
         let va = open(c"libva.so.2")?;
         let drm = open(c"libva-drm.so.2")?;
         let get_display: unsafe extern "C" fn(c_int) -> Display = symbol(&drm, c"vaGetDisplayDRM")?;
-        let initialize: unsafe extern "C" fn(Display, *mut c_int, *mut c_int) -> c_int = symbol(&va, c"vaInitialize")?;
+        let initialize: unsafe extern "C" fn(Display, *mut c_int, *mut c_int) -> c_int =
+            symbol(&va, c"vaInitialize")?;
         let terminate: unsafe extern "C" fn(Display) -> c_int = symbol(&va, c"vaTerminate")?;
-        let vendor: unsafe extern "C" fn(Display) -> *const std::ffi::c_char = symbol(&va, c"vaQueryVendorString")?;
-        let max_profiles: unsafe extern "C" fn(Display) -> c_int = symbol(&va, c"vaMaxNumProfiles")?;
-        let query_profiles: unsafe extern "C" fn(Display, *mut c_int, *mut c_int) -> c_int = symbol(&va, c"vaQueryConfigProfiles")?;
-        let max_entrypoints: unsafe extern "C" fn(Display) -> c_int = symbol(&va, c"vaMaxNumEntrypoints")?;
-        let query_entrypoints: unsafe extern "C" fn(Display, c_int, *mut c_int, *mut c_int) -> c_int = symbol(&va, c"vaQueryConfigEntrypoints")?;
-        let get_attributes: unsafe extern "C" fn(Display, c_int, c_int, *mut Attrib, c_int) -> c_int = symbol(&va, c"vaGetConfigAttributes")?;
+        let vendor: unsafe extern "C" fn(Display) -> *const std::ffi::c_char =
+            symbol(&va, c"vaQueryVendorString")?;
+        let max_profiles: unsafe extern "C" fn(Display) -> c_int =
+            symbol(&va, c"vaMaxNumProfiles")?;
+        let query_profiles: unsafe extern "C" fn(Display, *mut c_int, *mut c_int) -> c_int =
+            symbol(&va, c"vaQueryConfigProfiles")?;
+        let max_entrypoints: unsafe extern "C" fn(Display) -> c_int =
+            symbol(&va, c"vaMaxNumEntrypoints")?;
+        let query_entrypoints: unsafe extern "C" fn(
+            Display,
+            c_int,
+            *mut c_int,
+            *mut c_int,
+        ) -> c_int = symbol(&va, c"vaQueryConfigEntrypoints")?;
+        let get_attributes: unsafe extern "C" fn(
+            Display,
+            c_int,
+            c_int,
+            *mut Attrib,
+            c_int,
+        ) -> c_int = symbol(&va, c"vaGetConfigAttributes")?;
 
-        let mut nodes: Vec<_> = std::fs::read_dir("/dev/dri").ok()?.flatten().map(|e| e.path()).filter(|p| p.file_name().is_some_and(|n| n.to_string_lossy().starts_with("renderD"))).collect();
+        let mut nodes: Vec<_> = std::fs::read_dir("/dev/dri")
+            .ok()?
+            .flatten()
+            .map(|e| e.path())
+            .filter(|p| {
+                p.file_name()
+                    .is_some_and(|n| n.to_string_lossy().starts_with("renderD"))
+            })
+            .collect();
         nodes.sort();
         for node in nodes {
-            let Ok(file) = std::fs::OpenOptions::new().read(true).write(true).open(&node) else { continue };
+            let Ok(file) = std::fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(&node)
+            else {
+                continue;
+            };
             let display = get_display(file.as_raw_fd());
             if display.is_null() {
                 continue;
@@ -132,7 +200,11 @@ pub fn probe() -> Option<Decoders> {
                 continue;
             }
             let name = vendor(display);
-            let name = if name.is_null() { String::new() } else { CStr::from_ptr(name).to_string_lossy().into_owned() };
+            let name = if name.is_null() {
+                String::new()
+            } else {
+                CStr::from_ptr(name).to_string_lossy().into_owned()
+            };
             let mut profiles = vec![0; max_profiles(display).max(0) as usize];
             let mut count = 0;
             if query_profiles(display, profiles.as_mut_ptr(), &mut count) != 0 {
@@ -145,14 +217,34 @@ pub fn probe() -> Option<Decoders> {
                 }
                 let mut entrypoints = vec![0; max_entrypoints(display).max(0) as usize];
                 let mut count = 0;
-                if query_entrypoints(display, profile, entrypoints.as_mut_ptr(), &mut count) != 0 || !entrypoints[..count.max(0) as usize].contains(&VLD) {
+                if query_entrypoints(display, profile, entrypoints.as_mut_ptr(), &mut count) != 0
+                    || !entrypoints[..count.max(0) as usize].contains(&VLD)
+                {
                     return 0;
                 }
-                let mut attributes = [Attrib { kind: MAX_WIDTH, value: 0 }, Attrib { kind: MAX_HEIGHT, value: 0 }];
+                let mut attributes = [
+                    Attrib {
+                        kind: MAX_WIDTH,
+                        value: 0,
+                    },
+                    Attrib {
+                        kind: MAX_HEIGHT,
+                        value: 0,
+                    },
+                ];
                 let known = get_attributes(display, profile, VLD, attributes.as_mut_ptr(), 2) == 0;
                 let (width, tall) = (attributes[0].value, attributes[1].value);
                 // Drivers that do not say decode at least 4K.
-                let (width, tall) = if !known || width == NOT_SUPPORTED || tall == NOT_SUPPORTED || width == 0 || tall == 0 { (3840, 2160) } else { (width, tall) };
+                let (width, tall) = if !known
+                    || width == NOT_SUPPORTED
+                    || tall == NOT_SUPPORTED
+                    || width == 0
+                    || tall == 0
+                {
+                    (3840, 2160)
+                } else {
+                    (width, tall)
+                };
                 tallest(|w, h| w <= width && h <= tall)
             };
             let decoders = Decoders {
@@ -189,7 +281,11 @@ pub fn probe() -> Option<Decoders> {
             if codec != H264 {
                 VTRegisterSupplementalVideoDecoderIfAvailable(codec);
             }
-            if VTIsHardwareDecodeSupported(codec) != 0 { height } else { 0 }
+            if VTIsHardwareDecodeSupported(codec) != 0 {
+                height
+            } else {
+                0
+            }
         }
     };
     Some(Decoders {
@@ -205,11 +301,21 @@ fn model() -> String {
     let mut buffer = [0u8; 128];
     let mut size = buffer.len();
     // SAFETY: sysctlbyname writes at most [size] bytes into [buffer].
-    let found = unsafe { libc::sysctlbyname(c"hw.model".as_ptr(), buffer.as_mut_ptr().cast(), &mut size, std::ptr::null_mut(), 0) } == 0;
+    let found = unsafe {
+        libc::sysctlbyname(
+            c"hw.model".as_ptr(),
+            buffer.as_mut_ptr().cast(),
+            &mut size,
+            std::ptr::null_mut(),
+            0,
+        )
+    } == 0;
     if !found {
         return "Mac".into();
     }
-    String::from_utf8_lossy(&buffer[..size]).trim_end_matches('\0').to_string()
+    String::from_utf8_lossy(&buffer[..size])
+        .trim_end_matches('\0')
+        .to_string()
 }
 
 #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]

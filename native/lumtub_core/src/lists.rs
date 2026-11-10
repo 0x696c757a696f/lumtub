@@ -42,7 +42,10 @@ pub const CATEGORIES: [(&str, u8); 11] = [
 
 /// The tier of [category], if it is one.
 pub fn tier(category: &str) -> Option<u8> {
-    CATEGORIES.iter().find(|(c, _)| *c == category).map(|(_, t)| *t)
+    CATEGORIES
+        .iter()
+        .find(|(c, _)| *c == category)
+        .map(|(_, t)| *t)
 }
 
 /// One channel of a list, with every way it is matched.
@@ -111,13 +114,20 @@ impl fmt::Display for ListError {
 }
 
 fn slug_ok(text: &str) -> bool {
-    !text.is_empty() && text.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+    !text.is_empty()
+        && text
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
 }
 
 /// Whether [text] is a YouTube channel id: UC and 22 characters of the
 /// URL-safe base 64 alphabet.
 pub fn channel_id_ok(text: &str) -> bool {
-    text.len() == 24 && text.starts_with("UC") && text.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+    text.len() == 24
+        && text.starts_with("UC")
+        && text
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
 }
 
 /// [line] cut at each `|` that is not escaped, with `\|` and `\\` undone
@@ -147,7 +157,16 @@ fn fields(line: &str) -> Result<Vec<String>, String> {
 /// lowercase, other signs as -.
 fn bare_slug(token: &str) -> String {
     let token = token.strip_prefix('@').unwrap_or(token);
-    let slug: String = token.chars().map(|c| if c.is_ascii_alphanumeric() { c.to_ascii_lowercase() } else { '-' }).collect();
+    let slug: String = token
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() {
+                c.to_ascii_lowercase()
+            } else {
+                '-'
+            }
+        })
+        .collect();
     slug.trim_matches('-').to_string()
 }
 
@@ -191,9 +210,14 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
                 "status" => match value.as_str() {
                     "confirmed" => record.status = Some(Status::Confirmed),
                     "unproven" => record.status = Some(Status::Unproven),
-                    _ => err(line, format!("status is confirmed or unproven, not {value}")),
+                    _ => err(
+                        line,
+                        format!("status is confirmed or unproven, not {value}"),
+                    ),
                 },
-                "source" if value.starts_with("https://") || value.starts_with("http://") => record.sources.push(value),
+                "source" if value.starts_with("https://") || value.starts_with("http://") => {
+                    record.sources.push(value)
+                }
                 "source" => err(line, "a source is an http or https address".into()),
                 "reviewed" if date_ok(&value) => record.reviewed = Some(value),
                 "reviewed" => err(line, "reviewed is a date as YYYY-MM-DD".into()),
@@ -231,7 +255,10 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
                     "quiet" => action = Some(Action::Quiet),
                     "demote" => action = Some(Action::Demote),
                     "label" => action = Some(Action::Label),
-                    _ => err(line, format!("action is hide, quiet, demote or label, not {value}")),
+                    _ => err(
+                        line,
+                        format!("action is hide, quiet, demote or label, not {value}"),
+                    ),
                 },
                 "default" => match value.as_str() {
                     "on" => default_on = Some(true),
@@ -246,7 +273,9 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
                 "note" => note = Some(value),
                 "topic" if !value.is_empty() => topics.push(value),
                 "topic" => err(line, "an empty topic".into()),
-                "source" if value.starts_with("https://") || value.starts_with("http://") => sources.push(value),
+                "source" if value.starts_with("https://") || value.starts_with("http://") => {
+                    sources.push(value)
+                }
                 "source" => err(line, "a source is an http or https address".into()),
                 "legacy" => {}
                 _ => match key.strip_prefix("name.") {
@@ -265,7 +294,9 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
             let after = after.trim();
             if !after.is_empty() {
                 match after.strip_prefix('#') {
-                    Some(comment) if !comment.trim().is_empty() => bare_note = Some(comment.trim().to_string()),
+                    Some(comment) if !comment.trim().is_empty() => {
+                        bare_note = Some(comment.trim().to_string())
+                    }
                     Some(_) => {}
                     None => {
                         err(line, format!("after {token} only a # comment may follow"));
@@ -276,7 +307,10 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
             vec![bare_slug(token), token.to_string()]
         } else {
             let Some(rest) = raw.strip_prefix(':') else {
-                err(line, "a record starts with :slug, @handle or a UC… channel id".into());
+                err(
+                    line,
+                    "a record starts with :slug, @handle or a UC… channel id".into(),
+                );
                 continue;
             };
             match fields(rest) {
@@ -287,9 +321,19 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
                 }
             }
         };
-        let mut record = Record { slug: parts[0].clone(), note: bare_note, ..Record::default() };
+        let mut record = Record {
+            slug: parts[0].clone(),
+            note: bare_note,
+            ..Record::default()
+        };
         if !slug_ok(&record.slug) {
-            err(line, format!("the slug {:?} is not lowercase letters, digits and -", record.slug));
+            err(
+                line,
+                format!(
+                    "the slug {:?} is not lowercase letters, digits and -",
+                    record.slug
+                ),
+            );
         } else if !slugs.insert(record.slug.clone()) {
             err(line, format!("the slug {} is used twice", record.slug));
         }
@@ -327,13 +371,29 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
         if parts.len() < 2 {
             err(line, format!("the record {} matches nothing", record.slug));
         }
-        let conditions = record.ids.iter().map(|i| format!("id:{i}"))
+        let conditions = record
+            .ids
+            .iter()
+            .map(|i| format!("id:{i}"))
             .chain(record.handles.iter().map(|h| format!("@{h}")))
-            .chain(record.names.iter().map(|n| format!("={}", n.to_lowercase())))
-            .chain(record.prefixes.iter().map(|p| format!("^{}", p.to_lowercase())));
+            .chain(
+                record
+                    .names
+                    .iter()
+                    .map(|n| format!("={}", n.to_lowercase())),
+            )
+            .chain(
+                record
+                    .prefixes
+                    .iter()
+                    .map(|p| format!("^{}", p.to_lowercase())),
+            );
         for condition in conditions {
             if !seen.insert(condition.clone()) {
-                err(line, format!("{condition} is already in another record of this list"));
+                err(
+                    line,
+                    format!("{condition} is already in another record of this list"),
+                );
             }
         }
         records.push(record);
@@ -357,10 +417,16 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
         }),
     );
     if !id.is_empty() && id != file_id {
-        err(1, format!("the id {id} differs from the file name {file_id}"));
+        err(
+            1,
+            format!("the id {id} differs from the file name {file_id}"),
+        );
     }
     if !id.is_empty() && !slug_ok(&id) {
-        err(1, format!("the id {id} is not lowercase letters, digits and -"));
+        err(
+            1,
+            format!("the id {id} is not lowercase letters, digits and -"),
+        );
     }
     if categories.is_empty() {
         err(1, "the category header is missing".into());
@@ -370,32 +436,79 @@ pub fn parse(text: &str, file_id: &str) -> Result<List, Vec<ListError>> {
     }
     let safety = !categories.is_empty() && categories.iter().all(|c| tier(c) == Some(0));
     if default_on && !safety {
-        err(1, "only a list of safety categories alone may be on by default".into());
+        err(
+            1,
+            "only a list of safety categories alone may be on by default".into(),
+        );
     }
     if safety && !topics.is_empty() {
-        err(1, "a safety list has no topic: searches about scams must not bring the scams up".into());
+        err(
+            1,
+            "a safety list has no topic: searches about scams must not bring the scams up".into(),
+        );
     }
     if safety {
-        for record in records.iter().filter(|r| r.status == Some(Status::Unproven)) {
-            err(1, format!("the record {} is unproven, and a safety list takes confirmed records only", record.slug));
+        for record in records
+            .iter()
+            .filter(|r| r.status == Some(Status::Unproven))
+        {
+            err(
+                1,
+                format!(
+                    "the record {} is unproven, and a safety list takes confirmed records only",
+                    record.slug
+                ),
+            );
         }
     }
-    for record in records.iter().filter(|r| r.status != Some(Status::Unproven) && r.sources.is_empty()) {
+    for record in records
+        .iter()
+        .filter(|r| r.status != Some(Status::Unproven) && r.sources.is_empty())
+    {
         if safety {
-            err(1, format!("the record {} has no source, and every record of a safety list needs its own", record.slug));
+            err(
+                1,
+                format!(
+                    "the record {} has no source, and every record of a safety list needs its own",
+                    record.slug
+                ),
+            );
         } else if sources.is_empty() {
-            err(1, format!("the record {} is confirmed but neither it nor the list has a source", record.slug));
+            err(
+                1,
+                format!(
+                    "the record {} is confirmed but neither it nor the list has a source",
+                    record.slug
+                ),
+            );
         }
     }
     if !errors.is_empty() {
         return Err(errors);
     }
-    Ok(List { id, name, names, categories, action, default_on, suggested, topics, note, sources, records })
+    Ok(List {
+        id,
+        name,
+        names,
+        categories,
+        action,
+        default_on,
+        suggested,
+        topics,
+        note,
+        sources,
+        records,
+    })
 }
 
 fn date_ok(text: &str) -> bool {
     let b = text.as_bytes();
-    b.len() == 10 && b[4] == b'-' && b[7] == b'-' && b.iter().enumerate().all(|(i, c)| i == 4 || i == 7 || c.is_ascii_digit())
+    b.len() == 10
+        && b[4] == b'-'
+        && b[7] == b'-'
+        && b.iter()
+            .enumerate()
+            .all(|(i, c)| i == 4 || i == 7 || c.is_ascii_digit())
 }
 
 /// The compiled form of every list, as the app reads it.
@@ -411,25 +524,47 @@ pub struct Bundle<'a> {
 pub fn load_dir(dir: &std::path::Path) -> Result<(Vec<List>, HashSet<String>), Vec<String>> {
     let mut problems = Vec::new();
     let retired = match std::fs::read_to_string(dir.join("retired.txt")) {
-        Ok(text) => text.lines().map(str::trim).filter(|l| !l.is_empty() && !l.starts_with('#')).map(String::from).collect(),
+        Ok(text) => text
+            .lines()
+            .map(str::trim)
+            .filter(|l| !l.is_empty() && !l.starts_with('#'))
+            .map(String::from)
+            .collect(),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => HashSet::new(),
         Err(e) => return Err(vec![format!("retired.txt: {e}")]),
     };
     let mut folders: Vec<_> = match std::fs::read_dir(dir) {
-        Ok(entries) => entries.filter_map(Result::ok).filter(|e| e.path().is_dir()).map(|e| e.path()).collect(),
+        Ok(entries) => entries
+            .filter_map(Result::ok)
+            .filter(|e| e.path().is_dir())
+            .map(|e| e.path())
+            .collect(),
         Err(e) => return Err(vec![format!("{}: {e}", dir.display())]),
     };
     folders.sort();
     let mut files = Vec::new();
     for folder in folders {
-        let category = folder.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_string();
-        let mut paths: Vec<_> = std::fs::read_dir(&folder).into_iter().flatten().filter_map(Result::ok).map(|e| e.path()).collect();
+        let category = folder
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or_default()
+            .to_string();
+        let mut paths: Vec<_> = std::fs::read_dir(&folder)
+            .into_iter()
+            .flatten()
+            .filter_map(Result::ok)
+            .map(|e| e.path())
+            .collect();
         paths.sort();
         if paths.is_empty() {
             files.push((category.clone(), String::new(), Ok(String::new())));
         }
         for file in paths {
-            let name = file.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_string();
+            let name = file
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or_default()
+                .to_string();
             let text = match std::fs::read(&file).map(String::from_utf8) {
                 Ok(Ok(text)) => Ok(text),
                 Ok(Err(_)) => Err("not UTF-8".to_string()),
@@ -438,16 +573,28 @@ pub fn load_dir(dir: &std::path::Path) -> Result<(Vec<List>, HashSet<String>), V
             files.push((category.clone(), name, text));
         }
     }
-    let (lists, mut found) = parse_files(files.iter().map(|(c, n, t)| (c.as_str(), n.as_str(), t.as_ref().map(String::as_str).map_err(String::as_str))));
+    let (lists, mut found) = parse_files(files.iter().map(|(c, n, t)| {
+        (
+            c.as_str(),
+            n.as_str(),
+            t.as_ref().map(String::as_str).map_err(String::as_str),
+        )
+    }));
     problems.append(&mut found);
     problems.extend(check_all(&lists, &retired));
-    if problems.is_empty() { Ok((lists, retired)) } else { Err(problems) }
+    if problems.is_empty() {
+        Ok((lists, retired))
+    } else {
+        Err(problems)
+    }
 }
 
 /// Parses list files given as (category folder, file name, text or the
 /// reason it could not be read). A folder with no files comes with an
 /// empty file name, so that an unknown folder is still reported.
-pub fn parse_files<'a>(files: impl IntoIterator<Item = (&'a str, &'a str, Result<&'a str, &'a str>)>) -> (Vec<List>, Vec<String>) {
+pub fn parse_files<'a>(
+    files: impl IntoIterator<Item = (&'a str, &'a str, Result<&'a str, &'a str>)>,
+) -> (Vec<List>, Vec<String>) {
     let mut lists = Vec::new();
     let mut problems = Vec::new();
     let mut unknown = HashSet::new();
@@ -475,7 +622,9 @@ pub fn parse_files<'a>(files: impl IntoIterator<Item = (&'a str, &'a str, Result
         };
         match parse(text, file_id) {
             Ok(list) if !list.categories.iter().any(|c| c == category) => {
-                problems.push(format!("{shown}: the list is not in the {category} category"));
+                problems.push(format!(
+                    "{shown}: the list is not in the {category} category"
+                ));
             }
             Ok(list) => lists.push(list),
             Err(errors) => problems.extend(errors.iter().map(|e| format!("{shown}: {e}"))),
@@ -498,11 +647,18 @@ pub fn built_in() -> &'static [List] {
 /// The built-in lists as JSON (a [Bundle] with version 0), for the app.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_lists() -> *mut std::ffi::c_char {
-    crate::taste::give_json(&Bundle { version: 0, built: "", lists: built_in() })
+    crate::taste::give_json(&Bundle {
+        version: 0,
+        built: "",
+        lists: built_in(),
+    })
 }
 
 fn conditions(record: &Record) -> Vec<String> {
-    let mut all: Vec<String> = record.ids.iter().cloned()
+    let mut all: Vec<String> = record
+        .ids
+        .iter()
+        .cloned()
         .chain(record.handles.iter().map(|h| format!("@{h}")))
         .chain(record.names.iter().map(|n| format!("={n}")))
         .chain(record.prefixes.iter().map(|p| format!("^{p}")))
@@ -520,7 +676,9 @@ pub fn unretired(old: &[List], new: &[List], retired: &HashSet<String>) -> Vec<S
         let now = new.iter().find(|n| n.id == list.id);
         for record in &list.records {
             let key = format!("{}/{}", list.id, record.slug);
-            if !now.is_some_and(|n| n.records.iter().any(|r| r.slug == record.slug)) && !retired.contains(&key) {
+            if !now.is_some_and(|n| n.records.iter().any(|r| r.slug == record.slug))
+                && !retired.contains(&key)
+            {
                 problems.push(format!("{key} was removed but is not in retired.txt"));
             }
         }
@@ -534,25 +692,54 @@ pub fn unretired(old: &[List], new: &[List], retired: &HashSet<String>) -> Vec<S
 pub fn diff(old: &[List], new: &[List], retired: &HashSet<String>) -> Vec<String> {
     let mut lines = Vec::new();
     for list in old.iter().filter(|o| !new.iter().any(|n| n.id == o.id)) {
-        lines.push(format!("- list {} ({} records)", list.id, list.records.len()));
+        lines.push(format!(
+            "- list {} ({} records)",
+            list.id,
+            list.records.len()
+        ));
     }
     for list in new {
         let Some(before) = old.iter().find(|o| o.id == list.id) else {
-            lines.push(format!("+ list {} ({} records, {:?}, {})", list.id, list.records.len(), list.action, if list.default_on { "on" } else { "off" }));
+            lines.push(format!(
+                "+ list {} ({} records, {:?}, {})",
+                list.id,
+                list.records.len(),
+                list.action,
+                if list.default_on { "on" } else { "off" }
+            ));
             continue;
         };
         if before.action != list.action {
-            lines.push(format!("~ list {} action {:?} -> {:?}", list.id, before.action, list.action));
+            lines.push(format!(
+                "~ list {} action {:?} -> {:?}",
+                list.id, before.action, list.action
+            ));
         }
         if before.default_on != list.default_on {
-            lines.push(format!("~ list {} default {} -> {}", list.id, before.default_on, list.default_on));
+            lines.push(format!(
+                "~ list {} default {} -> {}",
+                list.id, before.default_on, list.default_on
+            ));
         }
         if before.categories != list.categories {
-            lines.push(format!("~ list {} category {} -> {}", list.id, before.categories.join(","), list.categories.join(",")));
+            lines.push(format!(
+                "~ list {} category {} -> {}",
+                list.id,
+                before.categories.join(","),
+                list.categories.join(",")
+            ));
         }
-        for record in before.records.iter().filter(|r| !list.records.iter().any(|n| n.slug == r.slug)) {
+        for record in before
+            .records
+            .iter()
+            .filter(|r| !list.records.iter().any(|n| n.slug == r.slug))
+        {
             let key = format!("{}/{}", list.id, record.slug);
-            let note = if retired.contains(&key) { "" } else { " (not in retired.txt)" };
+            let note = if retired.contains(&key) {
+                ""
+            } else {
+                " (not in retired.txt)"
+            };
             lines.push(format!("- {key}{note}"));
         }
         for record in &list.records {
@@ -563,13 +750,26 @@ pub fn diff(old: &[List], new: &[List], retired: &HashSet<String>) -> Vec<String
                 Some(was) => {
                     let was = conditions(was);
                     let added: Vec<_> = now.iter().filter(|c| !was.contains(c)).cloned().collect();
-                    let removed: Vec<_> = was.iter().filter(|c| !now.contains(c)).cloned().collect();
+                    let removed: Vec<_> =
+                        was.iter().filter(|c| !now.contains(c)).cloned().collect();
                     if !added.is_empty() || !removed.is_empty() {
-                        lines.push(format!("~ {key}: +[{}] -[{}]", added.join(" | "), removed.join(" | ")));
+                        lines.push(format!(
+                            "~ {key}: +[{}] -[{}]",
+                            added.join(" | "),
+                            removed.join(" | ")
+                        ));
                     }
-                    let was = before.records.iter().find(|r| r.slug == record.slug).unwrap();
+                    let was = before
+                        .records
+                        .iter()
+                        .find(|r| r.slug == record.slug)
+                        .unwrap();
                     if was.status != record.status {
-                        lines.push(format!("~ {key} status {:?} -> {:?}", was.status.unwrap_or(Status::Confirmed), record.status.unwrap_or(Status::Confirmed)));
+                        lines.push(format!(
+                            "~ {key} status {:?} -> {:?}",
+                            was.status.unwrap_or(Status::Confirmed),
+                            record.status.unwrap_or(Status::Confirmed)
+                        ));
                     }
                     for source in record.sources.iter().filter(|s| !was.sources.contains(s)) {
                         lines.push(format!("~ {key} + source {source}"));
@@ -578,7 +778,11 @@ pub fn diff(old: &[List], new: &[List], retired: &HashSet<String>) -> Vec<String
                         lines.push(format!("~ {key} - source {source}"));
                     }
                     if was.reviewed != record.reviewed {
-                        lines.push(format!("~ {key} reviewed {} -> {}", was.reviewed.as_deref().unwrap_or("-"), record.reviewed.as_deref().unwrap_or("-")));
+                        lines.push(format!(
+                            "~ {key} reviewed {} -> {}",
+                            was.reviewed.as_deref().unwrap_or("-"),
+                            record.reviewed.as_deref().unwrap_or("-")
+                        ));
                     }
                     if was.note != record.note {
                         lines.push(format!("~ {key} note changed"));
@@ -639,7 +843,10 @@ mod tests {
     fn reads_headers_records_and_attributes() {
         let list = parse(EXAMPLE, "falun-gong-media").unwrap();
         assert_eq!(list.name, "Falun Gong media");
-        assert_eq!(list.names, vec![("zh-Hans".to_string(), "法轮功媒体".to_string())]);
+        assert_eq!(
+            list.names,
+            vec![("zh-Hans".to_string(), "法轮功媒体".to_string())]
+        );
         assert_eq!(list.categories, vec!["religion"]);
         assert_eq!(list.action, Action::Hide);
         assert!(!list.default_on);
@@ -660,7 +867,10 @@ mod tests {
     fn spaces_stay_inside_names_and_pipes_can_be_escaped() {
         let text = "! id: a\n! name: A\n! category: new-age\n! action: quiet\n! default: off\n:x |  =Jeff and Shaleia  | =A \\| B | =C \\\\ D\r\n    source: https://example.org/x\n";
         let list = parse(text, "a").unwrap();
-        assert_eq!(list.records[0].names, vec!["Jeff and Shaleia", "A | B", "C \\ D"]);
+        assert_eq!(
+            list.records[0].names,
+            vec!["Jeff and Shaleia", "A | B", "C \\ D"]
+        );
     }
 
     #[test]
@@ -681,7 +891,10 @@ mod tests {
             "line 1: the id b differs from the file name a",
             "line 1: only a list of safety categories alone may be on by default",
         ] {
-            assert!(messages.iter().any(|m| m == expected), "missing {expected:?} in {messages:#?}");
+            assert!(
+                messages.iter().any(|m| m == expected),
+                "missing {expected:?} in {messages:#?}"
+            );
         }
     }
 
@@ -700,13 +913,21 @@ mod tests {
         let retired = HashSet::from(["falun-gong-media/ntd".to_string()]);
         let problems = check_all(&[list.clone(), list], &retired);
         assert!(problems.contains(&"the list id falun-gong-media is used twice".to_string()));
-        assert!(problems.contains(&"falun-gong-media/ntd was retired and cannot be used again".to_string()));
+        assert!(
+            problems
+                .contains(&"falun-gong-media/ntd was retired and cannot be used again".to_string())
+        );
     }
 
     #[test]
     fn compiles_to_json_without_empty_fields() {
         let list = parse(EXAMPLE, "falun-gong-media").unwrap();
-        let json = serde_json::to_value(Bundle { version: 7, built: "2026-11-08T00:00:00Z", lists: std::slice::from_ref(&list) }).unwrap();
+        let json = serde_json::to_value(Bundle {
+            version: 7,
+            built: "2026-11-08T00:00:00Z",
+            lists: std::slice::from_ref(&list),
+        })
+        .unwrap();
         assert_eq!(json["version"], 7);
         let ntd = &json["lists"][0]["records"][1];
         assert_eq!(ntd["status"], "unproven");
@@ -718,17 +939,49 @@ mod tests {
     fn safety_lists_alone_start_on_and_take_no_topic_or_unproven_record() {
         let ok = "! id: s\n! name: S\n! category: financial-scams, malware-phishing\n! action: hide\n! default: on\n:a | UCaaaaaaaaaaaaaaaaaaaaaa\n    source: https://example.org/a\n";
         assert!(parse(ok, "s").unwrap().default_on);
-        let unsourced = ok.replace("    source: https://example.org/a\n", "").replace("! default: on\n", "! default: on\n! source: https://example.org/list\n");
-        let messages: Vec<String> = parse(&unsourced, "s").unwrap_err().into_iter().map(|e| e.message).collect();
-        assert_eq!(messages, vec!["the record a has no source, and every record of a safety list needs its own"]);
+        let unsourced = ok
+            .replace("    source: https://example.org/a\n", "")
+            .replace(
+                "! default: on\n",
+                "! default: on\n! source: https://example.org/list\n",
+            );
+        let messages: Vec<String> = parse(&unsourced, "s")
+            .unwrap_err()
+            .into_iter()
+            .map(|e| e.message)
+            .collect();
+        assert_eq!(
+            messages,
+            vec!["the record a has no source, and every record of a safety list needs its own"]
+        );
         let bad = "! id: s\n! name: S\n! category: financial-scams\n! action: hide\n! default: on\n! topic: crypto\n:a | UCaaaaaaaaaaaaaaaaaaaaaa\n    status: unproven\n";
-        let messages: Vec<String> = parse(bad, "s").unwrap_err().into_iter().map(|e| e.message).collect();
-        assert!(messages.iter().any(|m| m.starts_with("a safety list has no topic")));
-        assert!(messages.contains(&"the record a is unproven, and a safety list takes confirmed records only".to_string()));
+        let messages: Vec<String> = parse(bad, "s")
+            .unwrap_err()
+            .into_iter()
+            .map(|e| e.message)
+            .collect();
+        assert!(
+            messages
+                .iter()
+                .any(|m| m.starts_with("a safety list has no topic"))
+        );
+        assert!(messages.contains(
+            &"the record a is unproven, and a safety list takes confirmed records only".to_string()
+        ));
         let mixed = "! id: m\n! name: M\n! category: medical-fraud, new-age\n! action: quiet\n! default: on\n:a | =A\n";
-        let messages: Vec<String> = parse(mixed, "m").unwrap_err().into_iter().map(|e| e.message).collect();
-        assert!(messages.contains(&"only a list of safety categories alone may be on by default".to_string()));
-        assert!(messages.contains(&"the record a is confirmed but neither it nor the list has a source".to_string()));
+        let messages: Vec<String> = parse(mixed, "m")
+            .unwrap_err()
+            .into_iter()
+            .map(|e| e.message)
+            .collect();
+        assert!(
+            messages.contains(
+                &"only a list of safety categories alone may be on by default".to_string()
+            )
+        );
+        assert!(messages.contains(
+            &"the record a is confirmed but neither it nor the list has a source".to_string()
+        ));
     }
 
     #[test]
@@ -738,22 +991,50 @@ mod tests {
         std::fs::create_dir_all(dir.join("religion")).unwrap();
         std::fs::write(dir.join("religion/falun-gong-media.txt"), EXAMPLE).unwrap();
         let (old, _) = load_dir(&dir).unwrap();
-        let changed = EXAMPLE.replace(" | ^NTD\n", "\n").replace(":epoch-times", ":the-paper") + ":shen-yun | @ShenYun\n    source: https://example.org/s\n";
+        let changed = EXAMPLE
+            .replace(" | ^NTD\n", "\n")
+            .replace(":epoch-times", ":the-paper")
+            + ":shen-yun | @ShenYun\n    source: https://example.org/s\n";
         std::fs::write(dir.join("religion/falun-gong-media.txt"), changed).unwrap();
         std::fs::write(dir.join("retired.txt"), "falun-gong-media/epoch-times\n").unwrap();
         let (new, retired) = load_dir(&dir).unwrap();
         let lines = diff(&old, &new, &retired);
         assert!(unretired(&old, &new, &retired).is_empty());
-        assert_eq!(unretired(&old, &new, &HashSet::new()), vec!["falun-gong-media/epoch-times was removed but is not in retired.txt"]);
-        assert!(lines.contains(&"- falun-gong-media/epoch-times".to_string()), "{lines:#?}");
-        assert!(lines.contains(&"+ falun-gong-media/shen-yun: @shenyun".to_string()), "{lines:#?}");
-        assert!(lines.contains(&"~ falun-gong-media/ntd: +[] -[^NTD]".to_string()), "{lines:#?}");
+        assert_eq!(
+            unretired(&old, &new, &HashSet::new()),
+            vec!["falun-gong-media/epoch-times was removed but is not in retired.txt"]
+        );
+        assert!(
+            lines.contains(&"- falun-gong-media/epoch-times".to_string()),
+            "{lines:#?}"
+        );
+        assert!(
+            lines.contains(&"+ falun-gong-media/shen-yun: @shenyun".to_string()),
+            "{lines:#?}"
+        );
+        assert!(
+            lines.contains(&"~ falun-gong-media/ntd: +[] -[^NTD]".to_string()),
+            "{lines:#?}"
+        );
         std::fs::create_dir_all(dir.join("sports")).unwrap();
         std::fs::create_dir_all(dir.join("state-media")).unwrap();
-        std::fs::write(dir.join("state-media/falun-gong-media.txt"), EXAMPLE.replace(":epoch-times", ":epoch")).unwrap();
+        std::fs::write(
+            dir.join("state-media/falun-gong-media.txt"),
+            EXAMPLE.replace(":epoch-times", ":epoch"),
+        )
+        .unwrap();
         let problems = load_dir(&dir).unwrap_err();
-        assert!(problems.contains(&"sports/ is not a category".to_string()), "{problems:#?}");
-        assert!(problems.contains(&"state-media/falun-gong-media.txt: the list is not in the state-media category".to_string()), "{problems:#?}");
+        assert!(
+            problems.contains(&"sports/ is not a category".to_string()),
+            "{problems:#?}"
+        );
+        assert!(
+            problems.contains(
+                &"state-media/falun-gong-media.txt: the list is not in the state-media category"
+                    .to_string()
+            ),
+            "{problems:#?}"
+        );
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }

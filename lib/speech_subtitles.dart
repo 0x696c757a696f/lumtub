@@ -195,7 +195,9 @@ class SpeechSubtitleStore {
           return (file: entity, language: name.substring(videoId.length + 1, name.length - 4));
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'Could not look for a speech subtitle file: $e');
+    }
     return null;
   }
 
@@ -211,7 +213,9 @@ class SpeechSubtitleStore {
           await old.delete();
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'Could not clear old speech subtitle files: $e');
+    }
     return file;
   }
 }

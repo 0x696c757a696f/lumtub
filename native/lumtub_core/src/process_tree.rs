@@ -11,17 +11,18 @@ mod imp {
     use std::mem::{size_of, zeroed};
     use std::ptr::null;
     use windows_sys::Win32::Foundation::{CloseHandle, HANDLE};
+    use windows_sys::Win32::System::JobObjects::JOB_OBJECT_LIMIT_PRIORITY_CLASS;
     use windows_sys::Win32::System::JobObjects::{
-        AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
-        SetInformationJobObject, TerminateJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
-        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation,
+        SetInformationJobObject, TerminateJobObject,
     };
     use windows_sys::Win32::System::Threading::{
-        GetCurrentProcess, OpenProcess, ProcessPowerThrottling, SetProcessInformation, BELOW_NORMAL_PRIORITY_CLASS,
-        PROCESS_POWER_THROTTLING_CURRENT_VERSION, PROCESS_POWER_THROTTLING_EXECUTION_SPEED, PROCESS_POWER_THROTTLING_STATE,
-        PROCESS_SET_INFORMATION, PROCESS_SET_QUOTA, PROCESS_TERMINATE,
+        BELOW_NORMAL_PRIORITY_CLASS, GetCurrentProcess, OpenProcess,
+        PROCESS_POWER_THROTTLING_CURRENT_VERSION, PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
+        PROCESS_POWER_THROTTLING_STATE, PROCESS_SET_INFORMATION, PROCESS_SET_QUOTA,
+        PROCESS_TERMINATE, ProcessPowerThrottling, SetProcessInformation,
     };
-    use windows_sys::Win32::System::JobObjects::JOB_OBJECT_LIMIT_PRIORITY_CLASS;
 
     pub fn adopt(pid: u32) -> isize {
         unsafe {
@@ -67,16 +68,28 @@ mod imp {
         let state = PROCESS_POWER_THROTTLING_STATE {
             Version: PROCESS_POWER_THROTTLING_CURRENT_VERSION,
             ControlMask: PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
-            StateMask: if on { PROCESS_POWER_THROTTLING_EXECUTION_SPEED } else { 0 },
+            StateMask: if on {
+                PROCESS_POWER_THROTTLING_EXECUTION_SPEED
+            } else {
+                0
+            },
         };
-        unsafe { SetProcessInformation(process, ProcessPowerThrottling, &state as *const _ as *const _, size_of::<PROCESS_POWER_THROTTLING_STATE>() as u32) != 0 }
+        unsafe {
+            SetProcessInformation(
+                process,
+                ProcessPowerThrottling,
+                &state as *const _ as *const _,
+                size_of::<PROCESS_POWER_THROTTLING_STATE>() as u32,
+            ) != 0
+        }
     }
 
     pub fn background(job: isize, pid: u32) -> bool {
         unsafe {
             // Everything in the job, ffmpeg included, below normal priority.
             let mut limits: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = zeroed();
-            limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_PRIORITY_CLASS;
+            limits.BasicLimitInformation.LimitFlags =
+                JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_PRIORITY_CLASS;
             limits.BasicLimitInformation.PriorityClass = BELOW_NORMAL_PRIORITY_CLASS;
             let prioritised = SetInformationJobObject(
                 job as HANDLE,
@@ -125,20 +138,33 @@ mod imp {
 
     /// The "job" is the first process's id.
     pub fn adopt(pid: u32) -> isize {
-        let Ok(root) = libc::pid_t::try_from(pid) else { return 0 };
-        let Some(started) = started(root) else { return 0 };
-        trees().get_or_insert_with(HashMap::new).insert(root, vec![(root, started)]);
+        let Ok(root) = libc::pid_t::try_from(pid) else {
+            return 0;
+        };
+        let Some(started) = started(root) else {
+            return 0;
+        };
+        trees()
+            .get_or_insert_with(HashMap::new)
+            .insert(root, vec![(root, started)]);
         WATCH.call_once(|| {
             // Lumtub quitting ends the trees, as closing its job objects does
             // on Windows.
             unsafe { libc::atexit(end_all) };
-            let _ = std::thread::Builder::new().name("lumtub-tree".into()).spawn(|| loop {
-                std::thread::sleep(Duration::from_secs(1));
-                let roots: Vec<_> = trees().as_ref().map(|t| t.keys().copied().collect()).unwrap_or_default();
-                for root in roots {
-                    grow(root);
-                }
-            });
+            let _ = std::thread::Builder::new()
+                .name("lumtub-tree".into())
+                .spawn(|| {
+                    loop {
+                        std::thread::sleep(Duration::from_secs(1));
+                        let roots: Vec<_> = trees()
+                            .as_ref()
+                            .map(|t| t.keys().copied().collect())
+                            .unwrap_or_default();
+                        for root in roots {
+                            grow(root);
+                        }
+                    }
+                });
         });
         pid as isize
     }
@@ -146,7 +172,10 @@ mod imp {
     extern "C" fn end_all() {
         // Never waits at exit for a lock some thread may keep.
         let Ok(held) = TREES.try_lock() else { return };
-        let roots: Vec<_> = held.as_ref().map(|t| t.keys().copied().collect()).unwrap_or_default();
+        let roots: Vec<_> = held
+            .as_ref()
+            .map(|t| t.keys().copied().collect())
+            .unwrap_or_default();
         drop(held);
         for root in roots {
             close(root as isize);
@@ -155,7 +184,9 @@ mod imp {
 
     /// Adds the processes started since by the tree's members.
     fn grow(root: libc::pid_t) {
-        let Some(mut members) = trees().as_ref().and_then(|t| t.get(&root).cloned()) else { return };
+        let Some(mut members) = trees().as_ref().and_then(|t| t.get(&root).cloned()) else {
+            return;
+        };
         let mut i = 0;
         while i < members.len() {
             let (pid, start) = members[i];
@@ -182,8 +213,15 @@ mod imp {
     /// The members of the tree still running: those seen before and their
     /// descendants now, each stopped so none starts another meanwhile.
     fn stop_all(root: libc::pid_t) -> Vec<libc::pid_t> {
-        let known = trees().as_ref().and_then(|t| t.get(&root).cloned()).unwrap_or_else(|| started(root).map(|s| vec![(root, s)]).unwrap_or_default());
-        let mut tree: Vec<libc::pid_t> = known.iter().filter(|(pid, start)| started(*pid) == Some(*start)).map(|m| m.0).collect();
+        let known = trees()
+            .as_ref()
+            .and_then(|t| t.get(&root).cloned())
+            .unwrap_or_else(|| started(root).map(|s| vec![(root, s)]).unwrap_or_default());
+        let mut tree: Vec<libc::pid_t> = known
+            .iter()
+            .filter(|(pid, start)| started(*pid) == Some(*start))
+            .map(|m| m.0)
+            .collect();
         for pid in &tree {
             unsafe { libc::kill(*pid, libc::SIGSTOP) };
         }
@@ -201,7 +239,9 @@ mod imp {
     }
 
     pub fn kill(job: isize, _code: u32) -> bool {
-        let Ok(root) = libc::pid_t::try_from(job) else { return false };
+        let Ok(root) = libc::pid_t::try_from(job) else {
+            return false;
+        };
         if root <= 1 {
             return false;
         }
@@ -214,7 +254,9 @@ mod imp {
 
     /// The first process has ended: what it left running is ended too.
     pub fn close(job: isize) {
-        let Ok(root) = libc::pid_t::try_from(job) else { return };
+        let Ok(root) = libc::pid_t::try_from(job) else {
+            return;
+        };
         if root <= 1 {
             return;
         }
@@ -245,9 +287,18 @@ mod imp {
         let mut info: libc::proc_bsdinfo = unsafe { std::mem::zeroed() };
         let size = std::mem::size_of::<libc::proc_bsdinfo>() as libc::c_int;
         // SAFETY: [info] is a proc_bsdinfo of the size given.
-        let got = unsafe { libc::proc_pidinfo(pid, libc::PROC_PIDTBSDINFO, 0, (&mut info as *mut libc::proc_bsdinfo).cast(), size) };
+        let got = unsafe {
+            libc::proc_pidinfo(
+                pid,
+                libc::PROC_PIDTBSDINFO,
+                0,
+                (&mut info as *mut libc::proc_bsdinfo).cast(),
+                size,
+            )
+        };
         // SZOMB is 5.
-        (got == size && info.pbi_status != 5).then(|| info.pbi_start_tvsec * 1_000_000 + info.pbi_start_tvusec)
+        (got == size && info.pbi_status != 5)
+            .then(|| info.pbi_start_tvsec * 1_000_000 + info.pbi_start_tvusec)
     }
 
     #[cfg(not(any(target_os = "linux", target_os = "macos")))]
@@ -266,7 +317,9 @@ mod imp {
 
     #[cfg(target_os = "linux")]
     pub fn children(parent: libc::pid_t) -> Vec<libc::pid_t> {
-        let Ok(entries) = std::fs::read_dir("/proc") else { return Vec::new() };
+        let Ok(entries) = std::fs::read_dir("/proc") else {
+            return Vec::new();
+        };
         entries
             .flatten()
             .filter_map(|entry| entry.file_name().to_str()?.parse::<libc::pid_t>().ok())
@@ -287,12 +340,24 @@ mod imp {
     pub fn children(parent: libc::pid_t) -> Vec<libc::pid_t> {
         const PROC_PPID_ONLY: u32 = 6;
         unsafe extern "C" {
-            fn proc_listpids(kind: u32, info: u32, buffer: *mut libc::c_void, size: libc::c_int) -> libc::c_int;
+            fn proc_listpids(
+                kind: u32,
+                info: u32,
+                buffer: *mut libc::c_void,
+                size: libc::c_int,
+            ) -> libc::c_int;
         }
         let mut pids = vec![0 as libc::pid_t; 4096];
         let size = (pids.len() * std::mem::size_of::<libc::pid_t>()) as libc::c_int;
         // The answer is in bytes.
-        let bytes = unsafe { proc_listpids(PROC_PPID_ONLY, parent as u32, pids.as_mut_ptr().cast(), size) };
+        let bytes = unsafe {
+            proc_listpids(
+                PROC_PPID_ONLY,
+                parent as u32,
+                pids.as_mut_ptr().cast(),
+                size,
+            )
+        };
         if bytes <= 0 {
             return Vec::new();
         }
@@ -369,7 +434,10 @@ mod tests {
     use std::time::{Duration, Instant};
 
     fn alive(pid: u32) -> bool {
-        let out = Command::new("tasklist").args(["/FI", &format!("PID eq {pid}"), "/NH"]).output().unwrap();
+        let out = Command::new("tasklist")
+            .args(["/FI", &format!("PID eq {pid}"), "/NH"])
+            .output()
+            .unwrap();
         String::from_utf8_lossy(&out.stdout).contains(&pid.to_string())
     }
 
@@ -388,7 +456,9 @@ mod tests {
         let job = lumtub_tree_adopt(child.id());
         assert_ne!(job, 0);
         let mut line = String::new();
-        BufReader::new(child.stdout.as_mut().unwrap()).read_line(&mut line).unwrap();
+        BufReader::new(child.stdout.as_mut().unwrap())
+            .read_line(&mut line)
+            .unwrap();
         let grandchild: u32 = line.trim().parse().unwrap();
         assert!(alive(grandchild));
         (child, job, grandchild)
@@ -436,7 +506,10 @@ mod tests {
 
     #[test]
     fn killing_a_tree_ends_the_processes_it_started() {
-        let mut shell = Command::new("sh").args(["-c", "sleep 30 & sleep 30 & wait"]).spawn().unwrap();
+        let mut shell = Command::new("sh")
+            .args(["-c", "sleep 30 & sleep 30 & wait"])
+            .spawn()
+            .unwrap();
         let root = shell.id();
         let deadline = Instant::now() + Duration::from_secs(5);
         while super::imp::children(root as libc::pid_t).len() < 2 && Instant::now() < deadline {
@@ -450,16 +523,27 @@ mod tests {
         std::thread::sleep(Duration::from_millis(100));
         for pid in sleepers {
             let state = std::fs::read_to_string(format!("/proc/{pid}/stat")).unwrap_or_default();
-            assert!(state.is_empty() || state.contains(") Z"), "{pid} still runs: {state}");
+            assert!(
+                state.is_empty() || state.contains(") Z"),
+                "{pid} still runs: {state}"
+            );
         }
     }
 
     #[test]
     fn closing_a_tree_ends_what_its_first_process_left_running() {
-        let mut shell = Command::new("sh").args(["-c", "sleep 30 & echo $!; sleep 2.5"]).stdout(std::process::Stdio::piped()).spawn().unwrap();
+        let mut shell = Command::new("sh")
+            .args(["-c", "sleep 30 & echo $!; sleep 2.5"])
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+            .unwrap();
         let job = super::lumtub_tree_adopt(shell.id());
         let mut line = String::new();
-        std::io::BufRead::read_line(&mut std::io::BufReader::new(shell.stdout.take().unwrap()), &mut line).unwrap();
+        std::io::BufRead::read_line(
+            &mut std::io::BufReader::new(shell.stdout.take().unwrap()),
+            &mut line,
+        )
+        .unwrap();
         let orphan: libc::pid_t = line.trim().parse().unwrap();
         shell.wait().unwrap();
         // Handed to init now, no longer a child of the tree.
@@ -469,4 +553,3 @@ mod tests {
         assert!(super::imp::started(orphan).is_none(), "{orphan} still runs");
     }
 }
-

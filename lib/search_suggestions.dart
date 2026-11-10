@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'l10n/l10n.dart';
+import 'app_log.dart';
 
 /// Searches typed before, kept on this computer only, newest first.
 class SearchHistory {
@@ -39,7 +40,9 @@ class SearchHistory {
     try {
       await file.parent.create(recursive: true);
       await file.writeAsString(jsonEncode(list));
-    } catch (_) {}
+    } catch (e) {
+      logWarn('Could not save the search suggestions: $e');
+    }
   }
 }
 
@@ -72,7 +75,9 @@ class SearchSuggestions {
     try {
       final data = jsonDecode(body);
       if (data is List && data.length > 1 && data[1] is List) return [for (final s in data[1] as List) if (s is String) s];
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'The suggestion answer could not be read: $e');
+    }
     return const [];
   }
 }

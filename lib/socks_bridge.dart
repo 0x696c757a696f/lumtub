@@ -4,6 +4,7 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'native_core.dart';
+import 'app_log.dart';
 
 /// A local HTTP proxy that forwards through a SOCKS proxy. libmpv and
 /// dart:io can only use HTTP proxies, so a SOCKS setting reaches them as
@@ -115,7 +116,9 @@ class DartSocksBridge implements SocksBridge {
       try {
         client.add(latin1.encode('HTTP/1.1 ${e.status} ${e.status == 502 ? 'Bad Gateway' : 'Bad Request'}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n'));
         await client.flush();
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not send the proxy error answer: $e');
+      }
     } catch (_) {
       // The client went away.
     } finally {

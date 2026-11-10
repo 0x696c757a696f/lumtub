@@ -514,7 +514,9 @@ extension SubtitleActions on AppController {
         try {
           final title = platform is NativePlayer ? (await mpvSubtitleTracks(platform))[secondaryTrackId]?.title : null;
           if (title != null && secondarySubtitle!.label != title) secondarySubtitle = null;
-        } catch (_) {}
+        } catch (e) {
+          logDebug(() => 'Could not check the secondary subtitle title: $e');
+        }
       }
       await syncMainSubtitle();
       _update(() {});
@@ -605,7 +607,9 @@ extension SubtitleActions on AppController {
       speechJob.value = null;
       try {
         if (await folder.exists()) await folder.delete(recursive: true);
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not remove the speech subtitle folder: $e');
+      }
     }
   }
 }

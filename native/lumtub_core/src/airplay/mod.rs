@@ -44,14 +44,39 @@ fn next() -> u64 {
 #[derive(Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
 enum Ask {
-    PairStart { address: String },
-    PairFinish { pairing: u64, pin: String },
+    PairStart {
+        address: String,
+    },
+    PairFinish {
+        pairing: u64,
+        pin: String,
+    },
     #[serde(rename_all = "camelCase")]
-    Play { address: String, credentials: Option<String>, #[serde(default)] transient: bool, #[serde(default)] v2: bool, url: String, #[serde(default)] position: f64 },
-    Status { session: u64 },
-    Rate { session: u64, value: f64 },
-    Seek { session: u64, seconds: f64 },
-    Stop { session: u64 },
+    Play {
+        address: String,
+        credentials: Option<String>,
+        #[serde(default)]
+        transient: bool,
+        #[serde(default)]
+        v2: bool,
+        url: String,
+        #[serde(default)]
+        position: f64,
+    },
+    Status {
+        session: u64,
+    },
+    Rate {
+        session: u64,
+        value: f64,
+    },
+    Seek {
+        session: u64,
+        seconds: f64,
+    },
+    Stop {
+        session: u64,
+    },
 }
 
 fn address(text: &str) -> Result<SocketAddr, String> {
@@ -59,7 +84,13 @@ fn address(text: &str) -> Result<SocketAddr, String> {
 }
 
 fn player(id: u64) -> Result<Arc<Player>, String> {
-    state().lock().unwrap().players.get(&id).cloned().ok_or_else(|| "no such session".to_string())
+    state()
+        .lock()
+        .unwrap()
+        .players
+        .get(&id)
+        .cloned()
+        .ok_or_else(|| "no such session".to_string())
 }
 
 /// Carries out one request; blocks while the device answers.
@@ -67,19 +98,36 @@ pub fn handle(ask: &str) -> Json {
     let answer = (|| -> Result<Json, String> {
         match serde_json::from_str::<Ask>(ask).map_err(|e| e.to_string())? {
             Ask::PairStart { address: a } => {
-                let mut conn = Conn::open(address(&a)?).map_err(|e| format!("could not reach the device: {e}"))?;
+                let mut conn = Conn::open(address(&a)?)
+                    .map_err(|e| format!("could not reach the device: {e}"))?;
                 let (salt, server) = pairing::start(&mut conn)?;
                 let id = next();
-                state().lock().unwrap().pairings.insert(id, Pairing { conn, salt, server });
+                state()
+                    .lock()
+                    .unwrap()
+                    .pairings
+                    .insert(id, Pairing { conn, salt, server });
                 Ok(json!({ "pairing": id }))
             }
             Ask::PairFinish { pairing: id, pin } => {
-                let mut p = state().lock().unwrap().pairings.remove(&id).ok_or("pairing ended; start again")?;
+                let mut p = state()
+                    .lock()
+                    .unwrap()
+                    .pairings
+                    .remove(&id)
+                    .ok_or("pairing ended; start again")?;
                 let credentials = pairing::finish(&mut p.conn, &p.salt, &p.server, pin.trim())?;
                 p.conn.shutdown();
                 Ok(json!({ "credentials": credentials.text() }))
             }
-            Ask::Play { address: a, credentials, transient, v2, url, position } => {
+            Ask::Play {
+                address: a,
+                credentials,
+                transient,
+                v2,
+                url,
+                position,
+            } => {
                 let auth = match credentials.as_deref() {
                     Some(c) => Auth::Paired(Credentials::parse(c).ok_or("unreadable credentials")?),
                     None if transient => Auth::Transient,
@@ -96,7 +144,9 @@ pub fn handle(ask: &str) -> Json {
             }
             Ask::Status { session } => {
                 let st = player(session)?.status()?;
-                Ok(json!({ "position": st.position, "duration": st.duration, "rate": st.rate, "ready": st.ready, "error": st.error }))
+                Ok(
+                    json!({ "position": st.position, "duration": st.duration, "rate": st.rate, "ready": st.ready, "error": st.error }),
+                )
             }
             Ask::Rate { session, value } => player(session)?.rate(value).map(|_| json!({})),
             Ask::Seek { session, seconds } => player(session)?.seek(seconds).map(|_| json!({})),
@@ -134,13 +184,24 @@ mod tests {
     /// Against a receiver given in LUMTUB_AIRPLAY_FAKE (address, PIN 1111).
     #[test]
     fn plays_on_a_receiver() {
-        let Ok(address) = std::env::var("LUMTUB_AIRPLAY_FAKE") else { return };
+        let Ok(address) = std::env::var("LUMTUB_AIRPLAY_FAKE") else {
+            return;
+        };
         let v2 = std::env::var("LUMTUB_AIRPLAY_V1").is_err();
-        let pairing = ask(json!({ "op": "pairStart", "address": address }))["pairing"].as_u64().unwrap();
-        let wrong = handle(&json!({ "op": "pairFinish", "pairing": pairing, "pin": "0000" }).to_string());
+        let pairing = ask(json!({ "op": "pairStart", "address": address }))["pairing"]
+            .as_u64()
+            .unwrap();
+        let wrong =
+            handle(&json!({ "op": "pairFinish", "pairing": pairing, "pin": "0000" }).to_string());
         assert!(wrong.get("error").is_some());
-        let pairing = ask(json!({ "op": "pairStart", "address": address }))["pairing"].as_u64().unwrap();
-        let credentials = ask(json!({ "op": "pairFinish", "pairing": pairing, "pin": " 1111 " }))["credentials"].as_str().unwrap().to_string();
+        let pairing = ask(json!({ "op": "pairStart", "address": address }))["pairing"]
+            .as_u64()
+            .unwrap();
+        let credentials =
+            ask(json!({ "op": "pairFinish", "pairing": pairing, "pin": " 1111 " }))["credentials"]
+                .as_str()
+                .unwrap()
+                .to_string();
         let session = ask(json!({ "op": "play", "address": address, "credentials": credentials, "v2": v2, "url": "http://127.0.0.1:1/x.m3u8", "position": 12.5 }))["session"].as_u64().unwrap();
         ask(json!({ "op": "rate", "session": session, "value": 0.0 }));
         ask(json!({ "op": "seek", "session": session, "seconds": 30.0 }));
@@ -151,10 +212,17 @@ mod tests {
         assert_eq!(status["ready"], true);
         std::thread::sleep(std::time::Duration::from_millis(4500));
         ask(json!({ "op": "stop", "session": session }));
-        assert!(handle(&json!({ "op": "status", "session": session }).to_string()).get("error").is_some());
+        assert!(
+            handle(&json!({ "op": "status", "session": session }).to_string())
+                .get("error")
+                .is_some()
+        );
         if v2 {
             let session = ask(json!({ "op": "play", "address": address, "transient": true, "v2": true, "url": "http://127.0.0.1:1/y.m3u8" }))["session"].as_u64().unwrap();
-            assert_eq!(ask(json!({ "op": "status", "session": session }))["position"], 0.0);
+            assert_eq!(
+                ask(json!({ "op": "status", "session": session }))["position"],
+                0.0
+            );
             ask(json!({ "op": "stop", "session": session }));
         }
     }

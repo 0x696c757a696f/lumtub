@@ -22,7 +22,7 @@ use std::net::{Shutdown, TcpListener, TcpStream};
 use std::os::raw::c_char;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 /// Sessions kept; older ones stop being served.
 const KEEP: usize = 4;
@@ -910,7 +910,7 @@ impl Reader {
             if self.body.is_none() {
                 self.next_body()?;
             }
-            let (body, last) = self.body.as_mut().unwrap();
+            let Some((body, last)) = self.body.as_mut() else { return Err("no body".into()) };
             let last = *last;
             match body.read(&mut out[filled..]) {
                 Ok(0) => {
@@ -1845,7 +1845,8 @@ impl Session {
                         (None, Some(_)) => 1,
                         (Some(x), Some(y)) => usize::from(y < x),
                     };
-                    let (f, s) = if pick == 0 { (v.as_ref().unwrap(), v.as_ref().unwrap().samples[at[0]]) } else { (a.as_ref().unwrap(), a.as_ref().unwrap().samples[at[1]]) };
+                    let (Some(f), index) = (if pick == 0 { v.as_ref() } else { a.as_ref() }, at[pick]) else { return Err("no samples".into()) };
+                    let s = f.samples[index];
                     let decoded = ms(s.time as i64 - rebase[pick] as i64, pick);
                     let left = cuts.before(decoded);
                     let shown = (ms(s.time as i64 - rebase[pick] as i64 + s.offset as i64 - shifts[pick], pick) - left).max(0);
@@ -1958,14 +1959,14 @@ impl Session {
                         (Some(x), Some(y)) => usize::from(y < x),
                     };
                     if pick == 0 {
-                        let f = v.as_ref().unwrap();
+                        let Some(f) = v.as_ref() else { return Err("no samples".into()) };
                         let s = f.samples[at[0]];
                         let dts = (TS_BASE + ticks90(s.time.saturating_sub(rebase[0]), self.video.timescale)).saturating_sub(shift[0]);
                         let composition = ticks90(s.offset.max(0) as u64, self.video.timescale);
                         ts.video(&mut out, &self.video.codec, &f.data[s.at..s.at + s.size], s.sync, dts, dts + composition);
                         at[0] += 1;
                     } else {
-                        let f = a.as_ref().unwrap();
+                        let Some(f) = a.as_ref() else { return Err("no samples".into()) };
                         let s = f.samples[at[1]];
                         let pts = (TS_BASE + ticks90(s.time.saturating_sub(rebase[1]), self.audio.timescale)).saturating_sub(shift[1]);
                         ts.audio(&mut out, &self.audio.codec, &f.data[s.at..s.at + s.size], pts);
@@ -2000,10 +2001,48 @@ struct Shared {
     log: VecDeque<String>,
 }
 
+/// How long the server keeps listening after the last stream was read.
+const IDLE: Duration = Duration::from_secs(5 * 60);
+
+/// What decides when the listener closes for being idle.
+struct Gate {
+    idle: Duration,
+    /// The listener while there is one: its port and the flag that ends it.
+    running: Mutex<Option<(u16, Arc<AtomicBool>)>>,
+    /// Open connections, and when one was last accepted, finished or a
+    /// session registered.
+    open: AtomicUsize,
+    last: Mutex<Instant>,
+}
+
+impl Gate {
+    fn touch(&self) {
+        *self.last.lock().unwrap() = Instant::now();
+    }
+
+    /// Closes the listener when no connection is open and nothing happened
+    /// for the idle time; the sessions go with it. Whether it was closed.
+    fn close_if_idle(&self, shared: &Mutex<Shared>) -> bool {
+        let mut running = self.running.lock().unwrap();
+        let Some((port, stop)) = running.as_ref() else { return false };
+        let mut shared = shared.lock().unwrap();
+        if self.open.load(Ordering::SeqCst) > 0 || self.last.lock().unwrap().elapsed() < self.idle {
+            return false;
+        }
+        shared.sessions.clear();
+        shared.order.clear();
+        stop.store(true, Ordering::SeqCst);
+        // Wakes the accept loop, which then drops the listener.
+        let _ = TcpStream::connect_timeout(&std::net::SocketAddr::from(([127, 0, 0, 1], *port)), Duration::from_secs(1));
+        *running = None;
+        true
+    }
+}
+
 pub struct Server {
-    port: u16,
     shared: Arc<Mutex<Shared>>,
     fetch: Arc<dyn Fetch>,
+    gate: Arc<Gate>,
 }
 
 fn log(shared: &Mutex<Shared>, line: String) {
@@ -2021,34 +2060,68 @@ fn token() -> Option<String> {
 }
 
 impl Server {
-    /// Listens on every interface, on a random port.
+    /// Listens on every interface, on a random port, until nothing has
+    /// been cast for [IDLE]; [Server::listen] opens it again.
     pub fn start(fetch: Arc<dyn Fetch>) -> std::io::Result<Server> {
-        let listener = TcpListener::bind("0.0.0.0:0")?;
-        let port = listener.local_addr()?.port();
-        let shared = Arc::new(Mutex::new(Shared::default()));
-        let server = Server { port, shared: shared.clone(), fetch: fetch.clone() };
-        std::thread::Builder::new().name("cast".into()).spawn(move || {
-            let open = Arc::new(AtomicUsize::new(0));
-            for client in listener.incoming().flatten() {
-                if open.load(Ordering::Relaxed) >= MAX_CONNECTIONS {
-                    continue;
-                }
-                open.fetch_add(1, Ordering::Relaxed);
-                let (shared, fetch, done) = (shared.clone(), fetch.clone(), open.clone());
-                let spawned = std::thread::Builder::new().name("cast-client".into()).spawn(move || {
-                    serve(client, &shared, &fetch);
-                    done.fetch_sub(1, Ordering::Relaxed);
-                });
-                if spawned.is_err() {
-                    open.fetch_sub(1, Ordering::Relaxed);
-                }
-            }
-        })?;
+        Self::start_idle(fetch, IDLE)
+    }
+
+    fn start_idle(fetch: Arc<dyn Fetch>, idle: Duration) -> std::io::Result<Server> {
+        let gate = Arc::new(Gate { idle, running: Mutex::new(None), open: AtomicUsize::new(0), last: Mutex::new(Instant::now()) });
+        let server = Server { shared: Arc::new(Mutex::new(Shared::default())), fetch, gate };
+        server.listen()?;
         Ok(server)
     }
 
+    /// The port, opening the listener again when it was closed for being idle.
+    pub fn listen(&self) -> std::io::Result<u16> {
+        let mut running = self.gate.running.lock().unwrap();
+        if let Some((port, _)) = running.as_ref() {
+            return Ok(*port);
+        }
+        let listener = TcpListener::bind("0.0.0.0:0")?;
+        let port = listener.local_addr()?.port();
+        let stop = Arc::new(AtomicBool::new(false));
+        self.gate.touch();
+        let (shared, fetch, gate, stopped) = (self.shared.clone(), self.fetch.clone(), self.gate.clone(), stop.clone());
+        std::thread::Builder::new().name("cast".into()).spawn(move || {
+            for client in listener.incoming().flatten() {
+                if stopped.load(Ordering::SeqCst) {
+                    break;
+                }
+                gate.touch();
+                if gate.open.load(Ordering::SeqCst) >= MAX_CONNECTIONS {
+                    continue;
+                }
+                gate.open.fetch_add(1, Ordering::SeqCst);
+                let (shared, fetch, done) = (shared.clone(), fetch.clone(), gate.clone());
+                let spawned = std::thread::Builder::new().name("cast-client".into()).spawn(move || {
+                    serve(client, &shared, &fetch);
+                    done.touch();
+                    done.open.fetch_sub(1, Ordering::SeqCst);
+                });
+                if spawned.is_err() {
+                    gate.open.fetch_sub(1, Ordering::SeqCst);
+                }
+            }
+        })?;
+        let (shared, gate, stopped) = (self.shared.clone(), self.gate.clone(), stop.clone());
+        let poll = (self.gate.idle / 10).clamp(Duration::from_millis(10), Duration::from_secs(10));
+        std::thread::Builder::new().name("cast-idle".into()).spawn(move || {
+            while !stopped.load(Ordering::SeqCst) {
+                std::thread::sleep(poll);
+                if gate.close_if_idle(&shared) {
+                    break;
+                }
+            }
+        })?;
+        *running = Some((port, stop));
+        Ok(port)
+    }
+
+    /// The port, or 0 while the listener is closed.
     pub fn port(&self) -> u16 {
-        self.port
+        self.gate.running.lock().unwrap().as_ref().map_or(0, |(port, _)| *port)
     }
 
     /// Reads both files' heads and keeps the session; its path, such as
@@ -2059,6 +2132,7 @@ impl Server {
         let start = session.starts_at();
         let token = token().ok_or("no randomness")?;
         let mut shared = self.shared.lock().unwrap();
+        self.gate.touch();
         shared.sessions.insert(token.clone(), Arc::new(session));
         shared.order.push_back(token.clone());
         while shared.order.len() > KEEP {
@@ -2193,14 +2267,15 @@ fn describe_request(peer: &str, method: &str, path: &str, headers: &HashMap<Stri
 
 static SERVER: OnceLock<Server> = OnceLock::new();
 
-/// Starts the server once; its port, or 0 when it could not listen.
+/// Starts the server, or opens it again after it closed for being idle; its
+/// port, or 0 when it could not listen.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_cast_start() -> u16 {
     if let Some(server) = SERVER.get() {
-        return server.port();
+        return server.listen().unwrap_or(0);
     }
     match Server::start(Arc::new(Web::default())) {
-        Ok(server) => SERVER.get_or_init(|| server).port(),
+        Ok(server) => SERVER.get_or_init(|| server).listen().unwrap_or(0),
         Err(_) => 0,
     }
 }
@@ -2215,6 +2290,7 @@ pub extern "C" fn lumtub_cast_start() -> u16 {
 pub unsafe extern "C" fn lumtub_cast_register(json: *const u8, len: usize) -> *mut c_char {
     let answer = match SERVER.get() {
         None => Err("not started".to_string()),
+        Some(server) if server.port() == 0 => Err("not started".to_string()),
         Some(server) => match serde_json::from_str::<Ask>(unsafe { crate::taste::text(json, len) }) {
             Ok(ask) => server.register(ask),
             Err(e) => Err(e.to_string()),
@@ -2481,6 +2557,32 @@ mod tests {
         for name in video.lines().filter(|l| !l.starts_with('#')) {
             std::fs::write(format!("{dir}/subs/{name}"), get(&format!("/{token}/{name}"), "").1).unwrap();
         }
+    }
+
+    #[test]
+    fn closes_when_idle_and_listens_again() {
+        let server = Server::start_idle(files(HashMap::new()), Duration::from_millis(300)).expect("listen");
+        let first = server.port();
+        assert_ne!(first, 0);
+        // A connection that stays open keeps it listening.
+        let held = TcpStream::connect(("127.0.0.1", first)).unwrap();
+        std::thread::sleep(Duration::from_millis(600));
+        assert_eq!(server.port(), first);
+        drop(held);
+        let started = Instant::now();
+        while server.port() != 0 {
+            assert!(started.elapsed() < Duration::from_secs(5), "never closed");
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert!(TcpStream::connect(("127.0.0.1", first)).is_err());
+        let again = server.listen().expect("listen again");
+        assert_ne!(again, 0);
+        assert_eq!(server.port(), again);
+        let mut client = TcpStream::connect(("127.0.0.1", again)).unwrap();
+        client.write_all(b"GET /0123456789abcdef.mp4 HTTP/1.1\r\nHost: x\r\n\r\n").unwrap();
+        let mut answer = String::new();
+        client.read_to_string(&mut answer).unwrap();
+        assert!(answer.starts_with("HTTP/1.1 404"));
     }
 
     #[test]

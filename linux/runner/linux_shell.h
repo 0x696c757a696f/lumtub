@@ -13,6 +13,10 @@
 // the tray comes before Flutter's own handling of the close button.
 void linux_shell_attach(GtkWindow* window);
 
+// Sets the window's default size, and puts it where it was left last time
+// (size only on Wayland, which places windows itself).
+void linux_shell_restore_window(GtkWindow* window);
+
 // Hooks the method channel up to the view's engine.
 void linux_shell_connect(FlView* view);
 

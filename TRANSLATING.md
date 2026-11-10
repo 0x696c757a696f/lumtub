@@ -19,8 +19,14 @@ so it is the list of keys to start from:
 }
 ```
 
-To translate into German, copy `zh-Hans.json` to `de.json` and replace each
-value with German:
+To start a language, make an English template, in which every value is
+still the English text, and translate each value. With Python 3:
+
+```
+python .github/scripts/l10n_template.py assets/l10n/de.json
+```
+
+For German the values then become:
 
 ```json
 {
@@ -32,8 +38,9 @@ value with German:
 - Never change a key. A key that is not in `zh-Hans.json` is an error.
 - Keep every placeholder (`{0}`, `{1}` …). Their order may change.
 - Keep line breaks (`\n`) where the English has them.
-- Leave a value empty (`""`) or remove the line if you have not translated
-  it yet. Missing strings are shown in English; in traditional Chinese
+- Remove the line (or leave the value empty, `""`) for every string you have
+  not translated; a line that still holds the English text counts as
+  translated. Missing strings are shown in English; in traditional Chinese
   (`zh-Hant`, `zh-HK`) they are shown in simplified Chinese first.
 - Product and format names stay as they are: YouTube, Lumtub, yt-dlp,
   FFmpeg, libmpv, H.264, VP9, AV1, SponsorBlock, DeArrow.

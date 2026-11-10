@@ -447,9 +447,9 @@ class VideoState extends State<Video> with WidgetsBindingObserver {
                     ),
                   ),
                 ),
-                if (videoViewParameters.subtitleViewConfiguration.visible &&
-                    !(widget.controller.player.platform?.configuration.libass ??
-                        false))
+                // Lumtub: the configuration alone says whether this view
+                // draws, as libass can be switched while the player runs.
+                if (videoViewParameters.subtitleViewConfiguration.visible)
                   Positioned.fill(
                     child: SubtitleView(
                       controller: widget.controller,

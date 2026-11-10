@@ -500,6 +500,23 @@ extension SubtitleActions on AppController {
     }
   }
 
+  /// Moves libmpv's second subtitle to just above the main one in [lines],
+  /// so a main subtitle on two or more lines does not run into it.
+  void _placeSecondary(Player player, List<String> lines) {
+    if (!settings.libassSubtitles || secondaryTrackId == 'no' || !identical(player, this.player)) return;
+    final platform = player.platform;
+    if (platform is! NativePlayer) return;
+    final width = player.state.width ?? 0, height = player.state.height ?? 0;
+    final position = LibassLayout.secondaryPosition(
+      lines.isEmpty ? '' : lines.first,
+      position: settings.subtitlePosition,
+      scale: settings.subtitleScale,
+      aspect: width > 0 && height > 0 ? width / height : 16 / 9,
+    );
+    // Only scheduled: this runs while media_kit handles an mpv event.
+    unawaited(platform.setProperty('secondary-sub-pos', '$position').catchError((Object e) => logDebug(() => 'Could not move the second subtitle: $e')));
+  }
+
   /// Reads the subtitles mpv shows after the current mpv event is handled.
   void _followSubtitles(Player player) {
     if (_subtitlesFollowing) return;

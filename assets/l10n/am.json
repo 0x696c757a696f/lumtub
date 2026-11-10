@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ቪዲዮ በሚጫወትበት ጊዜ ማያ ገጹ ከቪዲዮው ጋር ወደሚስማማ የማደስ ፍጥነት ይቀየራል፤ ስለዚህ እንቅስቃሴው ወጥ ይሆናል፤ ቴሌቪዥኖች ለአፍታ ሊጨልሙ ይችላሉ",
   "refresh rate fps TV": "የማደስ ፍጥነት fps ቴሌቪዥን",
   "Tap to install it": "ለመጫን ይንኩ",
-  "Tap to download and install": "ለማውረድ እና ለመጫን ይንኩ"
+  "Tap to download and install": "ለማውረድ እና ለመጫን ይንኩ",
+  "1 minute ago": "ከ1 ደቂቃ በፊት",
+  "{0} minutes ago": "ከ{0} ደቂቃዎች በፊት",
+  "1 hour ago": "ከ1 ሰዓት በፊት",
+  "{0} hours ago": "ከ{0} ሰዓቶች በፊት",
+  "1 day ago": "ከ1 ቀን በፊት",
+  "{0} days ago": "ከ{0} ቀናት በፊት",
+  "1 week ago": "ከ1 ሳምንት በፊት",
+  "{0} weeks ago": "ከ{0} ሳምንታት በፊት",
+  "1 month ago": "ከ1 ወር በፊት",
+  "{0} months ago": "ከ{0} ወራት በፊት",
+  "1 year ago": "ከ1 ዓመት በፊት",
+  "{0} years ago": "ከ{0} ዓመታት በፊት"
 }

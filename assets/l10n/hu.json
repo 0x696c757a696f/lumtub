@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Videólejátszás közben a képernyő a videóhoz illő frissítési gyakoriságra vált, így a mozgás egyenletes; a tévék egy pillanatra elsötétülhetnek",
   "refresh rate fps TV": "frissítési gyakoriság fps TV tévé",
   "Tap to install it": "Koppintson a telepítéshez",
-  "Tap to download and install": "Koppintson a letöltéshez és telepítéshez"
+  "Tap to download and install": "Koppintson a letöltéshez és telepítéshez",
+  "1 minute ago": "1 perccel ezelőtt",
+  "{0} minutes ago": "{0} perccel ezelőtt",
+  "1 hour ago": "1 órával ezelőtt",
+  "{0} hours ago": "{0} órával ezelőtt",
+  "1 day ago": "1 nappal ezelőtt",
+  "{0} days ago": "{0} nappal ezelőtt",
+  "1 week ago": "1 héttel ezelőtt",
+  "{0} weeks ago": "{0} héttel ezelőtt",
+  "1 month ago": "1 hónappal ezelőtt",
+  "{0} months ago": "{0} hónappal ezelőtt",
+  "1 year ago": "1 évvel ezelőtt",
+  "{0} years ago": "{0} évvel ezelőtt"
 }

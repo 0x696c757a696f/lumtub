@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "أثناء تشغيل فيديو، تنتقل الشاشة إلى معدل تحديث يناسبه لتكون الحركة سلسة؛ وقد تُظلم شاشات التلفزيون للحظة",
   "refresh rate fps TV": "معدل التحديث fps تلفزيون",
   "Tap to install it": "انقر للتثبيت",
-  "Tap to download and install": "انقر للتنزيل والتثبيت"
+  "Tap to download and install": "انقر للتنزيل والتثبيت",
+  "1 minute ago": "قبل دقيقة واحدة",
+  "{0} minutes ago": "قبل {0} دقيقة",
+  "1 hour ago": "قبل ساعة واحدة",
+  "{0} hours ago": "قبل {0} ساعة",
+  "1 day ago": "قبل يوم واحد",
+  "{0} days ago": "قبل {0} يومًا",
+  "1 week ago": "قبل أسبوع واحد",
+  "{0} weeks ago": "قبل {0} أسبوعًا",
+  "1 month ago": "قبل شهر واحد",
+  "{0} months ago": "قبل {0} شهرًا",
+  "1 year ago": "قبل سنة واحدة",
+  "{0} years ago": "قبل {0} سنة"
 }

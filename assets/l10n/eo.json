@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Dum video ludiĝas, la ekrano ŝanĝiĝas al taŭga refreŝiga rapido, tiel ke movado estas glata; televidiloj povas mallumiĝi momente",
   "refresh rate fps TV": "refreŝiga rapido fps televidilo TV",
   "Tap to install it": "Tuŝetu por instali ĝin",
-  "Tap to download and install": "Tuŝetu por elŝuti kaj instali"
+  "Tap to download and install": "Tuŝetu por elŝuti kaj instali",
+  "1 minute ago": "antaŭ 1 minuto",
+  "{0} minutes ago": "antaŭ {0} minutoj",
+  "1 hour ago": "antaŭ 1 horo",
+  "{0} hours ago": "antaŭ {0} horoj",
+  "1 day ago": "antaŭ 1 tago",
+  "{0} days ago": "antaŭ {0} tagoj",
+  "1 week ago": "antaŭ 1 semajno",
+  "{0} weeks ago": "antaŭ {0} semajnoj",
+  "1 month ago": "antaŭ 1 monato",
+  "{0} months ago": "antaŭ {0} monatoj",
+  "1 year ago": "antaŭ 1 jaro",
+  "{0} years ago": "antaŭ {0} jaroj"
 }

@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Video inapocheza, skrini hubadilika hadi kasi ya kuonyesha upya inayoifaa, ili mwendo uwe laini; TV zinaweza kuwa giza kwa muda mfupi",
   "refresh rate fps TV": "kasi ya kuonyesha upya fps TV",
   "Tap to install it": "Gusa ili kusakinisha",
-  "Tap to download and install": "Gusa ili kupakua na kusakinisha"
+  "Tap to download and install": "Gusa ili kupakua na kusakinisha",
+  "1 minute ago": "dakika 1 iliyopita",
+  "{0} minutes ago": "dakika {0} zilizopita",
+  "1 hour ago": "saa 1 iliyopita",
+  "{0} hours ago": "saa {0} zilizopita",
+  "1 day ago": "siku 1 iliyopita",
+  "{0} days ago": "siku {0} zilizopita",
+  "1 week ago": "wiki 1 iliyopita",
+  "{0} weeks ago": "wiki {0} zilizopita",
+  "1 month ago": "mwezi 1 uliopita",
+  "{0} months ago": "miezi {0} iliyopita",
+  "1 year ago": "mwaka 1 uliopita",
+  "{0} years ago": "miaka {0} iliyopita"
 }

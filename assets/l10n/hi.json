@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "वीडियो चलने के दौरान स्क्रीन उसके अनुसार रिफ़्रेश रेट पर स्विच हो जाती है, जिससे गति सहज रहती है; टीवी कुछ पल के लिए काला हो सकता है",
   "refresh rate fps TV": "रिफ़्रेश रेट fps टीवी",
   "Tap to install it": "इंस्टॉल करने के लिए टैप करें",
-  "Tap to download and install": "डाउनलोड और इंस्टॉल करने के लिए टैप करें"
+  "Tap to download and install": "डाउनलोड और इंस्टॉल करने के लिए टैप करें",
+  "1 minute ago": "1 मिनट पहले",
+  "{0} minutes ago": "{0} मिनट पहले",
+  "1 hour ago": "1 घंटे पहले",
+  "{0} hours ago": "{0} घंटे पहले",
+  "1 day ago": "1 दिन पहले",
+  "{0} days ago": "{0} दिन पहले",
+  "1 week ago": "1 सप्ताह पहले",
+  "{0} weeks ago": "{0} सप्ताह पहले",
+  "1 month ago": "1 माह पहले",
+  "{0} months ago": "{0} माह पहले",
+  "1 year ago": "1 वर्ष पहले",
+  "{0} years ago": "{0} वर्ष पहले"
 }

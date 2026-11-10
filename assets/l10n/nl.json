@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Tijdens het afspelen van een video schakelt het scherm over naar een passende verversingsfrequentie, zodat beweging vloeiend is; tv's kunnen even zwart worden",
   "refresh rate fps TV": "verversingsfrequentie framerate fps tv",
   "Tap to install it": "Tik om te installeren",
-  "Tap to download and install": "Tik om te downloaden en te installeren"
+  "Tap to download and install": "Tik om te downloaden en te installeren",
+  "1 minute ago": "1 minuut geleden",
+  "{0} minutes ago": "{0} minuten geleden",
+  "1 hour ago": "1 uur geleden",
+  "{0} hours ago": "{0} uur geleden",
+  "1 day ago": "1 dag geleden",
+  "{0} days ago": "{0} dagen geleden",
+  "1 week ago": "1 week geleden",
+  "{0} weeks ago": "{0} weken geleden",
+  "1 month ago": "1 maand geleden",
+  "{0} months ago": "{0} maanden geleden",
+  "1 year ago": "1 jaar geleden",
+  "{0} years ago": "{0} jaar geleden"
 }

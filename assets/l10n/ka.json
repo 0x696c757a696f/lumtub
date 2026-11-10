@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ვიდეოს დაკვრისას ეკრანი მას შესაფერის განახლების სიხშირეზე გადადის, რათა მოძრაობა თანაბარი იყოს; ტელევიზორები შეიძლება წამით დაბნელდეს",
   "refresh rate fps TV": "განახლების სიხშირე fps ტელევიზორი TV",
   "Tap to install it": "შეეხეთ დასაინსტალირებლად",
-  "Tap to download and install": "შეეხეთ ჩამოსატვირთად და დასაინსტალირებლად"
+  "Tap to download and install": "შეეხეთ ჩამოსატვირთად და დასაინსტალირებლად",
+  "1 minute ago": "1 წუთის წინ",
+  "{0} minutes ago": "{0} წუთის წინ",
+  "1 hour ago": "1 საათის წინ",
+  "{0} hours ago": "{0} საათის წინ",
+  "1 day ago": "1 დღის წინ",
+  "{0} days ago": "{0} დღის წინ",
+  "1 week ago": "1 კვირის წინ",
+  "{0} weeks ago": "{0} კვირის წინ",
+  "1 month ago": "1 თვის წინ",
+  "{0} months ago": "{0} თვის წინ",
+  "1 year ago": "1 წლის წინ",
+  "{0} years ago": "{0} წლის წინ"
 }

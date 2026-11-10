@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Durante a reprodução de um vídeo, a tela muda para uma taxa de atualização compatível, deixando o movimento fluido; TVs podem escurecer por um instante",
   "refresh rate fps TV": "taxa de atualização fps TV",
   "Tap to install it": "Toque para instalar",
-  "Tap to download and install": "Toque para baixar e instalar"
+  "Tap to download and install": "Toque para baixar e instalar",
+  "1 minute ago": "há 1 minuto",
+  "{0} minutes ago": "há {0} minutos",
+  "1 hour ago": "há 1 hora",
+  "{0} hours ago": "há {0} horas",
+  "1 day ago": "há 1 dia",
+  "{0} days ago": "há {0} dias",
+  "1 week ago": "há 1 semana",
+  "{0} weeks ago": "há {0} semanas",
+  "1 month ago": "há 1 mês",
+  "{0} months ago": "há {0} meses",
+  "1 year ago": "há 1 ano",
+  "{0} years ago": "há {0} anos"
 }

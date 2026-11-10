@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Κατά την αναπαραγωγή βίντεο, η οθόνη αλλάζει σε ρυθμό ανανέωσης που ταιριάζει, ώστε η κίνηση να είναι ομαλή· οι τηλεοράσεις μπορεί να μαυρίσουν για μια στιγμή",
   "refresh rate fps TV": "ρυθμός ανανέωσης fps τηλεόραση TV",
   "Tap to install it": "Πατήστε για εγκατάσταση",
-  "Tap to download and install": "Πατήστε για λήψη και εγκατάσταση"
+  "Tap to download and install": "Πατήστε για λήψη και εγκατάσταση",
+  "1 minute ago": "πριν από 1 λεπτό",
+  "{0} minutes ago": "πριν από {0} λεπτά",
+  "1 hour ago": "πριν από 1 ώρα",
+  "{0} hours ago": "πριν από {0} ώρες",
+  "1 day ago": "πριν από 1 ημέρα",
+  "{0} days ago": "πριν από {0} ημέρες",
+  "1 week ago": "πριν από 1 εβδομάδα",
+  "{0} weeks ago": "πριν από {0} εβδομάδες",
+  "1 month ago": "πριν από 1 μήνα",
+  "{0} months ago": "πριν από {0} μήνες",
+  "1 year ago": "πριν από 1 έτος",
+  "{0} years ago": "πριν από {0} έτη"
 }

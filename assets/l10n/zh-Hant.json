@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "播放影片時，螢幕會切換為適合的更新率，讓動態更流暢；電視可能會短暫黑屏",
   "refresh rate fps TV": "更新率 幀率 fps 電視 TV",
   "Tap to install it": "點選即可安裝",
-  "Tap to download and install": "點選即可下載並安裝"
+  "Tap to download and install": "點選即可下載並安裝",
+  "1 minute ago": "1 分鐘前",
+  "{0} minutes ago": "{0} 分鐘前",
+  "1 hour ago": "1 小時前",
+  "{0} hours ago": "{0} 小時前",
+  "1 day ago": "1 天前",
+  "{0} days ago": "{0} 天前",
+  "1 week ago": "1 週前",
+  "{0} weeks ago": "{0} 週前",
+  "1 month ago": "1 個月前",
+  "{0} months ago": "{0} 個月前",
+  "1 year ago": "1 年前",
+  "{0} years ago": "{0} 年前"
 }

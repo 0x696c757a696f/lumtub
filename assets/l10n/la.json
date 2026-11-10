@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Dum video agitur, tabula ad frequentiam renovationis aptam transit, ut motus aequabilis sit; televisiones ad momentum obscurari possunt",
   "refresh rate fps TV": "frequentia renovationis fps televisio TV",
   "Tap to install it": "Tange ut instruas",
-  "Tap to download and install": "Tange ut deferas et instruas"
+  "Tap to download and install": "Tange ut deferas et instruas",
+  "1 minute ago": "abhinc 1 minutam",
+  "{0} minutes ago": "abhinc {0} minutas",
+  "1 hour ago": "abhinc 1 horam",
+  "{0} hours ago": "abhinc {0} horas",
+  "1 day ago": "abhinc 1 diem",
+  "{0} days ago": "abhinc {0} dies",
+  "1 week ago": "abhinc 1 hebdomadem",
+  "{0} weeks ago": "abhinc {0} hebdomades",
+  "1 month ago": "abhinc 1 mensem",
+  "{0} months ago": "abhinc {0} menses",
+  "1 year ago": "abhinc 1 annum",
+  "{0} years ago": "abhinc {0} annos"
 }

@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Videon toiston ajaksi näyttö vaihtaa sopivaan virkistystaajuuteen, jotta liike on tasaista; televisiot voivat pimentyä hetkeksi",
   "refresh rate fps TV": "virkistystaajuus fps TV televisio",
   "Tap to install it": "Asenna napauttamalla",
-  "Tap to download and install": "Lataa ja asenna napauttamalla"
+  "Tap to download and install": "Lataa ja asenna napauttamalla",
+  "1 minute ago": "1 minuutti sitten",
+  "{0} minutes ago": "{0} minuuttia sitten",
+  "1 hour ago": "1 tunti sitten",
+  "{0} hours ago": "{0} tuntia sitten",
+  "1 day ago": "1 päivä sitten",
+  "{0} days ago": "{0} päivää sitten",
+  "1 week ago": "1 viikko sitten",
+  "{0} weeks ago": "{0} viikkoa sitten",
+  "1 month ago": "1 kuukausi sitten",
+  "{0} months ago": "{0} kuukautta sitten",
+  "1 year ago": "1 vuosi sitten",
+  "{0} years ago": "{0} vuotta sitten"
 }

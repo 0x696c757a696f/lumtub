@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "בזמן הפעלת סרטון, המסך עובר לקצב רענון שמתאים לו, כך שהתנועה חלקה; טלוויזיות עשויות להחשיך לרגע",
   "refresh rate fps TV": "קצב רענון fps טלוויזיה TV",
   "Tap to install it": "הקש כדי להתקין",
-  "Tap to download and install": "הקש כדי להוריד ולהתקין"
+  "Tap to download and install": "הקש כדי להוריד ולהתקין",
+  "1 minute ago": "לפני דקה",
+  "{0} minutes ago": "לפני {0} דקות",
+  "1 hour ago": "לפני שעה",
+  "{0} hours ago": "לפני {0} שעות",
+  "1 day ago": "לפני יום 1",
+  "{0} days ago": "לפני {0} ימים",
+  "1 week ago": "לפני שבוע",
+  "{0} weeks ago": "לפני {0} שבועות",
+  "1 month ago": "לפני חודש",
+  "{0} months ago": "לפני {0} חודשים",
+  "1 year ago": "לפני שנה",
+  "{0} years ago": "לפני {0} שנים"
 }

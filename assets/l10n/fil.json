@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Habang may nagpe-play na video, lilipat ang screen sa refresh rate na akma rito para pantay ang galaw; maaaring saglit na dumilim ang mga TV",
   "refresh rate fps TV": "refresh rate fps TV",
   "Tap to install it": "I-tap para i-install ito",
-  "Tap to download and install": "I-tap para i-download at i-install"
+  "Tap to download and install": "I-tap para i-download at i-install",
+  "1 minute ago": "1 minuto ang nakalipas",
+  "{0} minutes ago": "{0} minuto ang nakalipas",
+  "1 hour ago": "1 oras ang nakalipas",
+  "{0} hours ago": "{0} oras ang nakalipas",
+  "1 day ago": "1 araw ang nakalipas",
+  "{0} days ago": "{0} araw ang nakalipas",
+  "1 week ago": "1 linggo ang nakalipas",
+  "{0} weeks ago": "{0} linggo ang nakalipas",
+  "1 month ago": "1 buwan ang nakalipas",
+  "{0} months ago": "{0} buwan ang nakalipas",
+  "1 year ago": "1 taon ang nakalipas",
+  "{0} years ago": "{0} taon ang nakalipas"
 }

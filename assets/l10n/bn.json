@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ভিডিও চলার সময় স্ক্রিন সেটির উপযোগী রিফ্রেশ রেটে বদলে যায়, ফলে গতি মসৃণ থাকে; টিভি কিছুক্ষণের জন্য অন্ধকার হয়ে যেতে পারে",
   "refresh rate fps TV": "রিফ্রেশ রেট fps টিভি",
   "Tap to install it": "ইনস্টল করতে ট্যাপ করুন",
-  "Tap to download and install": "ডাউনলোড ও ইনস্টল করতে ট্যাপ করুন"
+  "Tap to download and install": "ডাউনলোড ও ইনস্টল করতে ট্যাপ করুন",
+  "1 minute ago": "1 মিনিট আগে",
+  "{0} minutes ago": "{0} মিনিট আগে",
+  "1 hour ago": "1 ঘন্টা আগে",
+  "{0} hours ago": "{0} ঘন্টা আগে",
+  "1 day ago": "1 দিন আগে",
+  "{0} days ago": "{0} দিন আগে",
+  "1 week ago": "1 সপ্তাহ আগে",
+  "{0} weeks ago": "{0} সপ্তাহ আগে",
+  "1 month ago": "1 মাস আগে",
+  "{0} months ago": "{0} মাস আগে",
+  "1 year ago": "1 বছর পূর্বে",
+  "{0} years ago": "{0} বছর পূর্বে"
 }

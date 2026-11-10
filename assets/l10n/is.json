@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Meðan myndskeið er spilað skiptir skjárinn yfir á endurnýjunartíðni sem hentar því, svo hreyfingin verði jöfn; sjónvörp geta orðið svört andartak",
   "refresh rate fps TV": "endurnýjunartíðni fps sjónvarp TV",
   "Tap to install it": "Ýttu til að setja upp",
-  "Tap to download and install": "Ýttu til að sækja og setja upp"
+  "Tap to download and install": "Ýttu til að sækja og setja upp",
+  "1 minute ago": "fyrir 1 mínútu",
+  "{0} minutes ago": "fyrir {0} mínútum",
+  "1 hour ago": "fyrir 1 klukkustund",
+  "{0} hours ago": "fyrir {0} klukkustundum",
+  "1 day ago": "fyrir 1 degi",
+  "{0} days ago": "fyrir {0} dögum",
+  "1 week ago": "fyrir 1 viku",
+  "{0} weeks ago": "fyrir {0} vikum",
+  "1 month ago": "fyrir 1 mánuði",
+  "{0} months ago": "fyrir {0} mánuðum",
+  "1 year ago": "fyrir 1 ári",
+  "{0} years ago": "fyrir {0} árum"
 }

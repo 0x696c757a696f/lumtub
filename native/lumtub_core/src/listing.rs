@@ -28,6 +28,26 @@ fn text_of(node: &Value, keys: &[&str]) -> Option<String> {
 }
 
 /// Counts such as `1,234 views`, `1.2M subscribers` or `No views`.
+/// How long ago YouTube's English time text says, in seconds: "3 days
+/// ago", "Streamed 2 weeks ago", "1.2M views • 15 years ago".
+pub fn ago(text: &str) -> Option<u64> {
+    let words: Vec<&str> = text.split_whitespace().collect();
+    let at = words.iter().position(|w| w.eq_ignore_ascii_case("ago"))?;
+    let (number, unit) = (words.get(at.checked_sub(2)?)?, words.get(at - 1)?.to_ascii_lowercase());
+    let n: u64 = number.parse().ok()?;
+    let unit = match unit.trim_end_matches('s') {
+        "second" | "sec" => 1,
+        "minute" | "min" => 60,
+        "hour" | "hr" => 3_600,
+        "day" => 86_400,
+        "week" | "wk" => 7 * 86_400,
+        "month" | "mo" => 30 * 86_400,
+        "year" | "yr" => 365 * 86_400,
+        _ => return None,
+    };
+    n.checked_mul(unit)
+}
+
 pub fn count(text: &str) -> Option<u64> {
     let text = text.trim();
     if text.as_bytes().get(..3).is_some_and(|p| p.eq_ignore_ascii_case(b"no ")) {
@@ -117,6 +137,9 @@ fn video(renderer: &Value) -> Option<Value> {
     let views_text = text_of(renderer, &["viewCountText", "shortViewCountText", "videoInfo"]).unwrap_or_default();
     let views = count(&views_text);
     let live = matches!(live_status, Some("is_live" | "is_upcoming"));
+    // About when it was published, as yt-dlp's approximate_date gives it.
+    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+    let published = if live { None } else { ago(&time_text).and_then(|seconds| now.checked_sub(seconds)) };
     let channel = text_of(renderer, &["ownerText", "shortBylineText"]);
     let handle = browse_ids(renderer.get("shortBylineText")).find_map(|e| {
         at(e, &["commandMetadata", "webCommandMetadata", "url"]).or_else(|| at(e, &["browseEndpoint", "canonicalBaseUrl"]))?.as_str().and_then(handle_from_url)
@@ -134,6 +157,7 @@ fn video(renderer: &Value) -> Option<Value> {
         ("uploader", opt(channel)),
         ("uploader_id", opt(handle)),
         ("release_timestamp", opt(scheduled)),
+        ("timestamp", opt(published)),
         (if live { "concurrent_view_count" } else { "view_count" }, opt(views)),
         ("live_status", opt(live_status)),
         ("availability", opt(members_only(renderer).then_some("subscriber_only"))),
@@ -405,6 +429,16 @@ mod tests {
     use super::*;
 
     #[test]
+    fn reads_how_long_ago() {
+        assert_eq!(ago("3 days ago"), Some(3 * 86_400));
+        assert_eq!(ago("Streamed 2 weeks ago"), Some(14 * 86_400));
+        assert_eq!(ago("1.7B views • 15 years ago"), Some(15 * 365 * 86_400));
+        assert_eq!(ago("1 hour ago"), Some(3_600));
+        assert_eq!(ago("Premiered Jan 3, 2020"), None);
+        assert_eq!(ago("ago"), None);
+    }
+
+    #[test]
     fn reads_counts_as_yt_dlp_does() {
         assert_eq!(count("1,234,567 views"), Some(1_234_567));
         assert_eq!(count("1.2M views"), Some(1_200_000));
@@ -471,9 +505,12 @@ mod tests {
         assert_eq!(channel["uploader_id"], "@chan");
         assert_eq!(channel["channel_follower_count"], 1_200_000);
         assert_eq!(channel["thumbnails"][1]["url"], "//yt3.ggpht.com/l");
-        let video = &page.entries[1];
+        let mut video = page.entries[1].clone();
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+        let published = video.as_object_mut().unwrap().remove("timestamp").and_then(|t| t.as_u64()).unwrap();
+        assert!(now - published >= 3 * 86_400 && now - published < 3 * 86_400 + 60);
         assert_eq!(
-            video,
+            &video,
             &json!({
                 "_type": "url", "ie_key": "Youtube", "id": "abcdefghijk", "url": "https://www.youtube.com/watch?v=abcdefghijk",
                 "title": "A video", "description": "Snippet", "duration": 754, "channel_id": "UCxxxxxxxxxxxxxxxxxxxxxx",

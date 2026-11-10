@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ขณะเล่นวิดีโอ หน้าจอจะสลับไปใช้อัตรารีเฟรชที่เหมาะสม ทำให้การเคลื่อนไหวลื่นไหล ทีวีอาจดับไปชั่วครู่",
   "refresh rate fps TV": "อัตรารีเฟรช เฟรมเรต fps ทีวี TV",
   "Tap to install it": "แตะเพื่อติดตั้ง",
-  "Tap to download and install": "แตะเพื่อดาวน์โหลดและติดตั้ง"
+  "Tap to download and install": "แตะเพื่อดาวน์โหลดและติดตั้ง",
+  "1 minute ago": "1 นาทีที่ผ่านมา",
+  "{0} minutes ago": "{0} นาทีที่ผ่านมา",
+  "1 hour ago": "1 ชั่วโมงที่ผ่านมา",
+  "{0} hours ago": "{0} ชั่วโมงที่ผ่านมา",
+  "1 day ago": "1 วันที่ผ่านมา",
+  "{0} days ago": "{0} วันที่ผ่านมา",
+  "1 week ago": "1 สัปดาห์ที่ผ่านมา",
+  "{0} weeks ago": "{0} สัปดาห์ที่ผ่านมา",
+  "1 month ago": "1 เดือนที่ผ่านมา",
+  "{0} months ago": "{0} เดือนที่ผ่านมา",
+  "1 year ago": "1 ปีที่แล้ว",
+  "{0} years ago": "{0} ปีที่แล้ว"
 }

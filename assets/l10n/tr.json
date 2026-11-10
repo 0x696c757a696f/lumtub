@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Video oynatılırken ekran, hareketin akıcı olması için videoya uygun yenileme hızına geçer; TV'ler kısa süreliğine kararabilir",
   "refresh rate fps TV": "yenileme hızı fps TV televizyon",
   "Tap to install it": "Yüklemek için dokunun",
-  "Tap to download and install": "İndirip yüklemek için dokunun"
+  "Tap to download and install": "İndirip yüklemek için dokunun",
+  "1 minute ago": "1 dakika önce",
+  "{0} minutes ago": "{0} dakika önce",
+  "1 hour ago": "1 saat önce",
+  "{0} hours ago": "{0} saat önce",
+  "1 day ago": "1 gün önce",
+  "{0} days ago": "{0} gün önce",
+  "1 week ago": "1 hafta önce",
+  "{0} weeks ago": "{0} hafta önce",
+  "1 month ago": "1 ay önce",
+  "{0} months ago": "{0} ay önce",
+  "1 year ago": "1 yıl önce",
+  "{0} years ago": "{0} yıl önce"
 }

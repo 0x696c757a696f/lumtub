@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ವೀಡಿಯೊ ಪ್ಲೇ ಆಗುವಾಗ ಪರದೆಯು ಅದಕ್ಕೆ ಹೊಂದುವ ರಿಫ್ರೆಶ್ ರೇಟ್‌ಗೆ ಬದಲಾಗುತ್ತದೆ, ಇದರಿಂದ ಚಲನೆ ಸುಗಮವಾಗಿರುತ್ತದೆ; ಟಿವಿಗಳು ಒಂದು ಕ್ಷಣ ಕಪ್ಪಾಗಬಹುದು",
   "refresh rate fps TV": "ರಿಫ್ರೆಶ್ ರೇಟ್ fps ಟಿವಿ",
   "Tap to install it": "ಸ್ಥಾಪಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
-  "Tap to download and install": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ ಸ್ಥಾಪಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ"
+  "Tap to download and install": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ ಸ್ಥಾಪಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+  "1 minute ago": "1 ನಿಮಿಷದ ಹಿಂದೆ",
+  "{0} minutes ago": "{0} ನಿಮಿಷಗಳ ಹಿಂದೆ",
+  "1 hour ago": "1 ಗಂಟೆ ಹಿಂದೆ",
+  "{0} hours ago": "{0} ಗಂಟೆಗಳ ಹಿಂದೆ",
+  "1 day ago": "1 ದಿನದ ಹಿಂದೆ",
+  "{0} days ago": "{0} ದಿನಗಳ ಹಿಂದೆ",
+  "1 week ago": "1 ವಾರದ ಹಿಂದೆ",
+  "{0} weeks ago": "{0} ವಾರಗಳ ಹಿಂದೆ",
+  "1 month ago": "1 ತಿಂಗಳ ಹಿಂದೆ",
+  "{0} months ago": "{0} ತಿಂಗಳುಗಳ ಹಿಂದೆ",
+  "1 year ago": "1 ವರ್ಷದ ಹಿಂದೆ",
+  "{0} years ago": "{0} ವರ್ಷಗಳ ಹಿಂದೆ"
 }

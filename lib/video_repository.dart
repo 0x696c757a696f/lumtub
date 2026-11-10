@@ -219,6 +219,7 @@ class VideoRepository {
         '--extractor-retries', '3',
         '--flat-playlist',
         '--lazy-playlist',
+        '--extractor-args', 'youtubetab:approximate_date',
         '--dump-json',
         '--', url,
       ];

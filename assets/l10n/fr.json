@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Pendant la lecture d'une vidéo, l'écran passe à une fréquence de rafraîchissement adaptée pour fluidifier le mouvement ; les téléviseurs peuvent s'éteindre un instant",
   "refresh rate fps TV": "fréquence de rafraîchissement ips fps TV téléviseur",
   "Tap to install it": "Appuyez pour l'installer",
-  "Tap to download and install": "Appuyez pour télécharger et installer"
+  "Tap to download and install": "Appuyez pour télécharger et installer",
+  "1 minute ago": "il y a 1 minute",
+  "{0} minutes ago": "il y a {0} minutes",
+  "1 hour ago": "il y a 1 heure",
+  "{0} hours ago": "il y a {0} heures",
+  "1 day ago": "il y a 1 jour",
+  "{0} days ago": "il y a {0} jours",
+  "1 week ago": "il y a 1 semaine",
+  "{0} weeks ago": "il y a {0} semaines",
+  "1 month ago": "il y a 1 mois",
+  "{0} months ago": "il y a {0} mois",
+  "1 year ago": "il y a 1 an",
+  "{0} years ago": "il y a {0} ans"
 }

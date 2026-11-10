@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Video ijro etilayotganda ekran unga mos yangilanish chastotasiga o‘tadi, shunda harakat silliq bo‘ladi; televizorlar bir lahzaga qorayishi mumkin",
   "refresh rate fps TV": "yangilanish chastotasi fps TV televizor",
   "Tap to install it": "O‘rnatish uchun bosing",
-  "Tap to download and install": "Yuklab olish va o‘rnatish uchun bosing"
+  "Tap to download and install": "Yuklab olish va o‘rnatish uchun bosing",
+  "1 minute ago": "1 daqiqa oldin",
+  "{0} minutes ago": "{0} daqiqa oldin",
+  "1 hour ago": "1 soat oldin",
+  "{0} hours ago": "{0} soat oldin",
+  "1 day ago": "1 kun oldin",
+  "{0} days ago": "{0} kun oldin",
+  "1 week ago": "1 hafta oldin",
+  "{0} weeks ago": "{0} hafta oldin",
+  "1 month ago": "1 oy oldin",
+  "{0} months ago": "{0} oy oldin",
+  "1 year ago": "1 yil oldin",
+  "{0} years ago": "{0} yil oldin"
 }

@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ເວລາວິດີໂອກຳລັງຫຼິ້ນ ໜ້າຈໍຈະປ່ຽນໄປໃຊ້ອັດຕາຣີເຟຣຊທີ່ເໝາະສົມ ເພື່ອໃຫ້ການເຄື່ອນໄຫວລຽບ; ໂທລະທັດອາດມືດຊົ່ວຄາວ",
   "refresh rate fps TV": "ອັດຕາຣີເຟຣຊ fps ໂທລະທັດ TV",
   "Tap to install it": "ແຕະເພື່ອຕິດຕັ້ງ",
-  "Tap to download and install": "ແຕະເພື່ອດາວໂຫຼດ ແລະ ຕິດຕັ້ງ"
+  "Tap to download and install": "ແຕະເພື່ອດາວໂຫຼດ ແລະ ຕິດຕັ້ງ",
+  "1 minute ago": "1 ນາທີກ່ອນ",
+  "{0} minutes ago": "{0} ນາທີກ່ອນ",
+  "1 hour ago": "1 ຊົ່ວໂມງກ່ອນ",
+  "{0} hours ago": "{0} ຊົ່ວໂມງກ່ອນ",
+  "1 day ago": "1 ມື້ກ່ອນ",
+  "{0} days ago": "{0} ມື້ກ່ອນ",
+  "1 week ago": "1 ອາທິດກ່ອນ",
+  "{0} weeks ago": "{0} ອາທິດກ່ອນ",
+  "1 month ago": "1 ເດືອນກ່ອນ",
+  "{0} months ago": "{0} ເດືອນກ່ອນ",
+  "1 year ago": "1 ປີກ່ອນ",
+  "{0} years ago": "{0} ປີກ່ອນ"
 }

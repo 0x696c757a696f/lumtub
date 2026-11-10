@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "播放视频时，屏幕切换到和视频帧率相配的刷新率，画面运动更均匀；电视切换时可能会黑屏一下",
   "refresh rate fps TV": "刷新率 帧率 电视",
   "Tap to install it": "点按即可安装",
-  "Tap to download and install": "点按下载并安装"
+  "Tap to download and install": "点按下载并安装",
+  "1 minute ago": "1分钟前",
+  "{0} minutes ago": "{0}分钟前",
+  "1 hour ago": "1小时前",
+  "{0} hours ago": "{0}小时前",
+  "1 day ago": "1天前",
+  "{0} days ago": "{0}天前",
+  "1 week ago": "1周前",
+  "{0} weeks ago": "{0}周前",
+  "1 month ago": "1个月前",
+  "{0} months ago": "{0}个月前",
+  "1 year ago": "1年前",
+  "{0} years ago": "{0}年前"
 }

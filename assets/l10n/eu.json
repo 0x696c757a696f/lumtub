@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Bideoa erreproduzitzen den bitartean, pantaila egokia den freskatze-maiztasunera aldatzen da, mugimendua leuna izan dadin; telebistak une batez ilundu daitezke",
   "refresh rate fps TV": "freskatze-maiztasuna fps TB telebista",
   "Tap to install it": "Sakatu instalatzeko",
-  "Tap to download and install": "Sakatu deskargatu eta instalatzeko"
+  "Tap to download and install": "Sakatu deskargatu eta instalatzeko",
+  "1 minute ago": "duela 1 minutu",
+  "{0} minutes ago": "duela {0} minutu",
+  "1 hour ago": "duela 1 ordu",
+  "{0} hours ago": "duela {0} ordu",
+  "1 day ago": "duela 1 egun",
+  "{0} days ago": "duela {0} egun",
+  "1 week ago": "duela 1 aste",
+  "{0} weeks ago": "duela {0} aste",
+  "1 month ago": "duela 1 hilabete",
+  "{0} months ago": "duela {0} hilabete",
+  "1 year ago": "duela 1 urte",
+  "{0} years ago": "duela {0} urte"
 }

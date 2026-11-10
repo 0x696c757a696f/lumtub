@@ -181,6 +181,7 @@ class VideoRow extends StatelessWidget {
       if (upcomingStart != null) upcomingStart,
       if (item.channel.isNotEmpty) item.channel,
       if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
+      if (!item.isLive && !item.isUpcoming && item.published != null) formatAgo(item.published!),
       if (text && status == null && item.durationLabel.isNotEmpty) item.durationLabel,
     ].join(' · ');
     return InkWell(
@@ -489,6 +490,7 @@ class _VideoCardState extends State<VideoCard> {
       if (upcomingStart != null) upcomingStart,
       if (item.channel.isNotEmpty) item.channel,
       if (item.audience case final count?) tr(item.isLive ? '{0} watching' : '{0} views', [formatCount(count)]),
+      if (!item.isLive && !item.isUpcoming && item.published != null) formatAgo(item.published!),
     ].join(' · ');
     // A picture and text on the page, as YouTube shows them: no box round,
     // unless a skin puts cards on a surface.

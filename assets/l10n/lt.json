@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Kai leidžiamas vaizdo įrašas, ekranas persijungia į jam tinkamą atnaujinimo dažnį, todėl judesys sklandus; televizoriai gali akimirkai užgesti",
   "refresh rate fps TV": "atnaujinimo dažnis fps TV televizorius",
   "Tap to install it": "Palieskite, kad įdiegtumėte",
-  "Tap to download and install": "Palieskite, kad atsisiųstumėte ir įdiegtumėte"
+  "Tap to download and install": "Palieskite, kad atsisiųstumėte ir įdiegtumėte",
+  "1 minute ago": "prieš 1 min.",
+  "{0} minutes ago": "prieš {0} min.",
+  "1 hour ago": "prieš 1 val.",
+  "{0} hours ago": "prieš {0} val.",
+  "1 day ago": "prieš 1 d.",
+  "{0} days ago": "prieš {0} d.",
+  "1 week ago": "prieš 1 sav.",
+  "{0} weeks ago": "prieš {0} sav.",
+  "1 month ago": "prieš 1 mėn.",
+  "{0} months ago": "prieš {0} mėn.",
+  "1 year ago": "prieš 1 m.",
+  "{0} years ago": "prieš {0} m."
 }

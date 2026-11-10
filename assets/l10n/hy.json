@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Տեսանյութի նվագարկման ժամանակ էկրանը անցնում է դրան համապատասխան թարմացման հաճախականության, որպեսզի շարժումը հարթ լինի. հեռուստացույցները կարող են մի պահ մթագնել",
   "refresh rate fps TV": "թարմացման հաճախականություն fps հեռուստացույց TV",
   "Tap to install it": "Հպեք՝ տեղադրելու համար",
-  "Tap to download and install": "Հպեք՝ ներբեռնելու և տեղադրելու համար"
+  "Tap to download and install": "Հպեք՝ ներբեռնելու և տեղադրելու համար",
+  "1 minute ago": "1 րոպե առաջ",
+  "{0} minutes ago": "{0} րոպե առաջ",
+  "1 hour ago": "1 ժամ առաջ",
+  "{0} hours ago": "{0} ժամ առաջ",
+  "1 day ago": "1 օր առաջ",
+  "{0} days ago": "{0} օր առաջ",
+  "1 week ago": "1 շաբաթ առաջ",
+  "{0} weeks ago": "{0} շաբաթ առաջ",
+  "1 month ago": "1 ամիս առաջ",
+  "{0} months ago": "{0} ամիս առաջ",
+  "1 year ago": "1 տարի առաջ",
+  "{0} years ago": "{0} տարի առաջ"
 }

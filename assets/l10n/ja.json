@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "動画の再生中は、動画に合ったリフレッシュレートに画面を切り替えて、動きを滑らかにします。テレビでは一瞬画面が暗くなることがあります",
   "refresh rate fps TV": "リフレッシュレート フレームレート fps テレビ TV",
   "Tap to install it": "タップしてインストール",
-  "Tap to download and install": "タップしてダウンロードとインストール"
+  "Tap to download and install": "タップしてダウンロードとインストール",
+  "1 minute ago": "1 分前",
+  "{0} minutes ago": "{0} 分前",
+  "1 hour ago": "1 時間前",
+  "{0} hours ago": "{0} 時間前",
+  "1 day ago": "1 日前",
+  "{0} days ago": "{0} 日前",
+  "1 week ago": "1 週間前",
+  "{0} weeks ago": "{0} 週間前",
+  "1 month ago": "1 か月前",
+  "{0} months ago": "{0} か月前",
+  "1 year ago": "1 年前",
+  "{0} years ago": "{0} 年前"
 }

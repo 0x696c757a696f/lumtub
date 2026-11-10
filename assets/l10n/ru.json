@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Во время воспроизведения видео экран переключается на подходящую частоту обновления, чтобы движение было плавным; телевизоры могут ненадолго потемнеть",
   "refresh rate fps TV": "частота обновления герц fps ТВ телевизор",
   "Tap to install it": "Нажмите, чтобы установить",
-  "Tap to download and install": "Нажмите, чтобы скачать и установить"
+  "Tap to download and install": "Нажмите, чтобы скачать и установить",
+  "1 minute ago": "1 мин. назад",
+  "{0} minutes ago": "{0} мин. назад",
+  "1 hour ago": "1 ч назад",
+  "{0} hours ago": "{0} ч назад",
+  "1 day ago": "1 дн. назад",
+  "{0} days ago": "{0} дн. назад",
+  "1 week ago": "1 нед. назад",
+  "{0} weeks ago": "{0} нед. назад",
+  "1 month ago": "1 мес. назад",
+  "{0} months ago": "{0} мес. назад",
+  "1 year ago": "1 год назад",
+  "{0} years ago": "{0} лет назад"
 }

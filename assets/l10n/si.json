@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "වීඩියෝවක් වාදනය වන විට තිරය එයට ගැළපෙන නැවුම් කිරීමේ අනුපාතයකට මාරු වන අතර, එමගින් චලනය සුමට වේ; රූපවාහිනී ටික වේලාවකට අඳුරු විය හැක",
   "refresh rate fps TV": "නැවුම් කිරීමේ අනුපාතය fps රූපවාහිනී TV",
   "Tap to install it": "ස්ථාපනය කිරීමට තට්ටු කරන්න",
-  "Tap to download and install": "බාගත කර ස්ථාපනය කිරීමට තට්ටු කරන්න"
+  "Tap to download and install": "බාගත කර ස්ථාපනය කිරීමට තට්ටු කරන්න",
+  "1 minute ago": "මිනිත්තු 1කට පෙර",
+  "{0} minutes ago": "මිනිත්තු {0}කට පෙර",
+  "1 hour ago": "පැය 1කට පෙර",
+  "{0} hours ago": "පැය {0}කට පෙර",
+  "1 day ago": "දින 1කට පෙර",
+  "{0} days ago": "දින {0}කට පෙර",
+  "1 week ago": "සති 1කට පෙර",
+  "{0} weeks ago": "සති {0}කට පෙර",
+  "1 month ago": "මාස 1කට පෙර",
+  "{0} months ago": "මාස {0}කට පෙර",
+  "1 year ago": "වසර 1කට පෙර",
+  "{0} years ago": "වසර {0}කට පෙර"
 }

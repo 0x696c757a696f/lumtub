@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Når en video spilles av, bytter skjermen til en oppdateringsfrekvens som passer, slik at bevegelser blir jevne; TV-er kan bli svarte et øyeblikk",
   "refresh rate fps TV": "oppdateringsfrekvens fps TV",
   "Tap to install it": "Trykk for å installere den",
-  "Tap to download and install": "Trykk for å laste ned og installere"
+  "Tap to download and install": "Trykk for å laste ned og installere",
+  "1 minute ago": "for 1 minutt siden",
+  "{0} minutes ago": "for {0} minutter siden",
+  "1 hour ago": "for 1 time siden",
+  "{0} hours ago": "for {0} timer siden",
+  "1 day ago": "for 1 døgn siden",
+  "{0} days ago": "for {0} døgn siden",
+  "1 week ago": "for 1 uke siden",
+  "{0} weeks ago": "for {0} uker siden",
+  "1 month ago": "for 1 måned siden",
+  "{0} months ago": "for {0} måneder siden",
+  "1 year ago": "for 1 år siden",
+  "{0} years ago": "for {0} år siden"
 }

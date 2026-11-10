@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "भिडियो चलिरहेको बेला स्क्रिन त्यसलाई मिल्ने रिफ्रेस दरमा बदलिन्छ, जसले गर्दा गति सहज हुन्छ; टिभी केही क्षणका लागि अँध्यारो हुन सक्छ",
   "refresh rate fps TV": "रिफ्रेस दर fps टिभी",
   "Tap to install it": "इन्स्टल गर्न ट्याप गर्नुहोस्",
-  "Tap to download and install": "डाउनलोड र इन्स्टल गर्न ट्याप गर्नुहोस्"
+  "Tap to download and install": "डाउनलोड र इन्स्टल गर्न ट्याप गर्नुहोस्",
+  "1 minute ago": "1 मिनेट पहिले",
+  "{0} minutes ago": "{0} मिनेट पहिले",
+  "1 hour ago": "1 घण्टा पहिले",
+  "{0} hours ago": "{0} घण्टा पहिले",
+  "1 day ago": "1 दिन पहिले",
+  "{0} days ago": "{0} दिन पहिले",
+  "1 week ago": "1 हप्ता पहिले",
+  "{0} weeks ago": "{0} हप्ता पहिले",
+  "1 month ago": "1 महिना पहिले",
+  "{0} months ago": "{0} महिना पहिले",
+  "1 year ago": "1 वर्ष अघि",
+  "{0} years ago": "{0} वर्ष अघि"
 }

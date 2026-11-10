@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "వీడియో ప్లే అవుతున్నప్పుడు స్క్రీన్ దానికి సరిపడే రిఫ్రెష్ రేట్‌కు మారుతుంది, దీనివల్ల కదలిక సాఫీగా ఉంటుంది; టీవీలు క్షణకాలం నల్లగా మారవచ్చు",
   "refresh rate fps TV": "రిఫ్రెష్ రేట్ fps టీవీ",
   "Tap to install it": "ఇన్‌స్టాల్ చేయడానికి నొక్కండి",
-  "Tap to download and install": "డౌన్‌లోడ్ చేసి ఇన్‌స్టాల్ చేయడానికి నొక్కండి"
+  "Tap to download and install": "డౌన్‌లోడ్ చేసి ఇన్‌స్టాల్ చేయడానికి నొక్కండి",
+  "1 minute ago": "1 నిమిషం క్రితం",
+  "{0} minutes ago": "{0} నిమిషాల క్రితం",
+  "1 hour ago": "1 గంట క్రితం",
+  "{0} hours ago": "{0} గంటల క్రితం",
+  "1 day ago": "1 రోజు క్రితం",
+  "{0} days ago": "{0} రోజుల క్రితం",
+  "1 week ago": "1 వారం క్రితం",
+  "{0} weeks ago": "{0} వారాల క్రితం",
+  "1 month ago": "1 నెల క్రితం",
+  "{0} months ago": "{0} నెలల క్రితం",
+  "1 year ago": "1 సంవత్సరం క్రితం",
+  "{0} years ago": "{0} సంవత్సరాల క్రితం"
 }

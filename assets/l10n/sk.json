@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Počas prehrávania videa sa obrazovka prepne na vhodnú obnovovaciu frekvenciu, takže pohyb je plynulý; televízory môžu na chvíľu stmavnúť",
   "refresh rate fps TV": "obnovovacia frekvencia fps TV televízor",
   "Tap to install it": "Ťuknutím nainštalujete",
-  "Tap to download and install": "Ťuknutím stiahnete a nainštalujete"
+  "Tap to download and install": "Ťuknutím stiahnete a nainštalujete",
+  "1 minute ago": "pred 1 min",
+  "{0} minutes ago": "pred {0} min",
+  "1 hour ago": "pred 1 h",
+  "{0} hours ago": "pred {0} h",
+  "1 day ago": "pred 1 d.",
+  "{0} days ago": "pred {0} d.",
+  "1 week ago": "pred 1 týž.",
+  "{0} weeks ago": "pred {0} týž.",
+  "1 month ago": "pred 1 mes.",
+  "{0} months ago": "pred {0} mes.",
+  "1 year ago": "pred 1 r.",
+  "{0} years ago": "pred {0} r."
 }

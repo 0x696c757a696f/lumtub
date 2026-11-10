@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "هنگام پخش ویدیو، صفحه‌نمایش به نرخ نوسازی مناسب آن تغییر می‌کند تا حرکت یکنواخت باشد؛ ممکن است تلویزیون‌ها لحظه‌ای تاریک شوند",
   "refresh rate fps TV": "نرخ نوسازی fps تلویزیون",
   "Tap to install it": "برای نصب ضربه بزنید",
-  "Tap to download and install": "برای دانلود و نصب ضربه بزنید"
+  "Tap to download and install": "برای دانلود و نصب ضربه بزنید",
+  "1 minute ago": "1 دقیقه پیش",
+  "{0} minutes ago": "{0} دقیقه پیش",
+  "1 hour ago": "1 ساعت پیش",
+  "{0} hours ago": "{0} ساعت پیش",
+  "1 day ago": "1 روز پیش",
+  "{0} days ago": "{0} روز پیش",
+  "1 week ago": "1 هفته پیش",
+  "{0} weeks ago": "{0} هفته پیش",
+  "1 month ago": "1 ماه پیش",
+  "{0} months ago": "{0} ماه پیش",
+  "1 year ago": "1 سال پیش",
+  "{0} years ago": "{0} سال پیش"
 }

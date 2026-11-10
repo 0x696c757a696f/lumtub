@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Ngenkathi ividiyo idlala, isikrini siguqukela erejini yokuvuselela efanelekile, ukuze ukunyakaza kube bushelelezi; ama-TV angaba mnyama okwesikhashana",
   "refresh rate fps TV": "izinga lokuvuselela fps TV",
   "Tap to install it": "Thepha ukuze uyifake",
-  "Tap to download and install": "Thepha ukuze udawunilode futhi ufake"
+  "Tap to download and install": "Thepha ukuze udawunilode futhi ufake",
+  "1 minute ago": "1 iminithi eledlule",
+  "{0} minutes ago": "{0} amaminithi edlule",
+  "1 hour ago": "1 ihora eledlule",
+  "{0} hours ago": "emahoreni angu-{0} edlule",
+  "1 day ago": "osukwini olungu-1 olwedlule",
+  "{0} days ago": "ezinsukwini ezingu-{0} ezedlule.",
+  "1 week ago": "evikini elingu-1 eledlule",
+  "{0} weeks ago": "amaviki angu-{0} edlule",
+  "1 month ago": "1 inyanga edlule",
+  "{0} months ago": "{0} izinyanga ezedlule",
+  "1 year ago": "1 unyaka odlule",
+  "{0} years ago": "{0} iminyaka edlule"
 }

@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Докато се възпроизвежда видео, екранът превключва на подходяща честота на опресняване, така че движението е плавно; телевизорите може за миг да притъмнеят",
   "refresh rate fps TV": "честота на опресняване fps ТВ телевизор",
   "Tap to install it": "Докоснете, за да инсталирате",
-  "Tap to download and install": "Докоснете, за да изтеглите и инсталирате"
+  "Tap to download and install": "Докоснете, за да изтеглите и инсталирате",
+  "1 minute ago": "преди 1 минута",
+  "{0} minutes ago": "преди {0} минути",
+  "1 hour ago": "преди 1 час",
+  "{0} hours ago": "преди {0} часа",
+  "1 day ago": "преди 1 ден",
+  "{0} days ago": "преди {0} дни",
+  "1 week ago": "преди 1 седмица",
+  "{0} weeks ago": "преди {0} седмици",
+  "1 month ago": "преди 1 месец",
+  "{0} months ago": "преди {0} месеца",
+  "1 year ago": "преди 1 година",
+  "{0} years ago": "преди {0} години"
 }

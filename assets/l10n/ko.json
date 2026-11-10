@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "동영상을 재생하는 동안 화면이 동영상에 맞는 주사율로 전환되어 움직임이 부드러워집니다. TV는 화면이 잠시 꺼질 수 있습니다",
   "refresh rate fps TV": "주사율 새로고침 빈도 fps 프레임 TV",
   "Tap to install it": "탭하여 설치",
-  "Tap to download and install": "탭하여 다운로드 및 설치"
+  "Tap to download and install": "탭하여 다운로드 및 설치",
+  "1 minute ago": "1분 전",
+  "{0} minutes ago": "{0}분 전",
+  "1 hour ago": "1시간 전",
+  "{0} hours ago": "{0}시간 전",
+  "1 day ago": "1일 전",
+  "{0} days ago": "{0}일 전",
+  "1 week ago": "1주 전",
+  "{0} weeks ago": "{0}주 전",
+  "1 month ago": "1개월 전",
+  "{0} months ago": "{0}개월 전",
+  "1 year ago": "1년 전",
+  "{0} years ago": "{0}년 전"
 }

@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "ဗီဒီယိုဖွင့်နေစဉ် ရွေ့လျားမှုချောမွေ့စေရန် မျက်နှာပြင်သည် ၎င်းနှင့်ကိုက်ညီသော ပြန်လည်စတင်နှုန်းသို့ ပြောင်းပေးသည်၊ ရုပ်မြင်သံကြားများ ခဏမှောင်သွားနိုင်သည်",
   "refresh rate fps TV": "ပြန်လည်စတင်နှုန်း fps တီဗီ TV",
   "Tap to install it": "ထည့်သွင်းရန် ထိပါ",
-  "Tap to download and install": "ဒေါင်းလုဒ်လုပ်ပြီး ထည့်သွင်းရန် ထိပါ"
+  "Tap to download and install": "ဒေါင်းလုဒ်လုပ်ပြီး ထည့်သွင်းရန် ထိပါ",
+  "1 minute ago": "ပြီးခဲ့သည့် 1 မိနစ်",
+  "{0} minutes ago": "ပြီးခဲ့သည့် {0} မိနစ်",
+  "1 hour ago": "ပြီးခဲ့သည့် 1 နာရီ",
+  "{0} hours ago": "ပြီးခဲ့သည့် {0} နာရီ",
+  "1 day ago": "ပြီးခဲ့သည့် 1 ရက်",
+  "{0} days ago": "ပြီးခဲ့သည့် {0} ရက်",
+  "1 week ago": "ပြီးခဲ့သည့် 1 ပတ်",
+  "{0} weeks ago": "ပြီးခဲ့သည့် {0} ပတ်",
+  "1 month ago": "ပြီးခဲ့သည့် 1 လ",
+  "{0} months ago": "ပြီးခဲ့သည့် {0} လ",
+  "1 year ago": "ပြီးခဲ့သည့် 1 နှစ်",
+  "{0} years ago": "ပြီးခဲ့သည့် {0} နှစ်"
 }

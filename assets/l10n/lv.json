@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Atskaņojot video, ekrāns pārslēdzas uz atbilstošu atsvaidzes intensitāti, lai kustība būtu vienmērīga; televizori uz brīdi var kļūt tumši",
   "refresh rate fps TV": "atsvaidzes intensitāte fps TV televizors",
   "Tap to install it": "Pieskarieties, lai instalētu",
-  "Tap to download and install": "Pieskarieties, lai lejupielādētu un instalētu"
+  "Tap to download and install": "Pieskarieties, lai lejupielādētu un instalētu",
+  "1 minute ago": "pirms 1 minūtes",
+  "{0} minutes ago": "pirms {0} minūtēm",
+  "1 hour ago": "pirms 1 stundas",
+  "{0} hours ago": "pirms {0} stundām",
+  "1 day ago": "pirms 1 dienas",
+  "{0} days ago": "pirms {0} dienām",
+  "1 week ago": "pirms 1 nedēļas",
+  "{0} weeks ago": "pirms {0} nedēļām",
+  "1 month ago": "pirms 1 mēneša",
+  "{0} months ago": "pirms {0} mēnešiem",
+  "1 year ago": "pirms 1 gada",
+  "{0} years ago": "pirms {0} gadiem"
 }

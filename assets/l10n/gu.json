@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "વીડિયો ચાલતો હોય ત્યારે સ્ક્રીન તેને અનુરૂપ રિફ્રેશ રેટ પર સ્વિચ થાય છે, જેથી ગતિ સરળ રહે; ટીવી થોડી વાર માટે અંધારું થઈ શકે છે",
   "refresh rate fps TV": "રિફ્રેશ રેટ fps ટીવી",
   "Tap to install it": "ઇન્સ્ટૉલ કરવા માટે ટૅપ કરો",
-  "Tap to download and install": "ડાઉનલોડ અને ઇન્સ્ટૉલ કરવા માટે ટૅપ કરો"
+  "Tap to download and install": "ડાઉનલોડ અને ઇન્સ્ટૉલ કરવા માટે ટૅપ કરો",
+  "1 minute ago": "1 મિનિટ પહેલાં",
+  "{0} minutes ago": "{0} મિનિટ પહેલાં",
+  "1 hour ago": "1 કલાક પહેલાં",
+  "{0} hours ago": "{0} કલાક પહેલાં",
+  "1 day ago": "1 દિવસ પહેલાં",
+  "{0} days ago": "{0} દિવસ પહેલાં",
+  "1 week ago": "1 અઠવાડિયા પહેલાં",
+  "{0} weeks ago": "{0} અઠવાડિયા પહેલાં",
+  "1 month ago": "1 મહિના પહેલાં",
+  "{0} months ago": "{0} મહિના પહેલાં",
+  "1 year ago": "1 વર્ષ પહેલાં",
+  "{0} years ago": "{0} વર્ષ પહેલાં"
 }

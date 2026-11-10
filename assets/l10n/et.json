@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Video esitamise ajal lülitub ekraan sobivale värskendussagedusele, nii et liikumine on ühtlane; teleri ekraan võib hetkeks mustaks minna",
   "refresh rate fps TV": "värskendussagedus fps TV teler",
   "Tap to install it": "Puuduta selle installimiseks",
-  "Tap to download and install": "Puuduta allalaadimiseks ja installimiseks"
+  "Tap to download and install": "Puuduta allalaadimiseks ja installimiseks",
+  "1 minute ago": "1 minuti eest",
+  "{0} minutes ago": "{0} minuti eest",
+  "1 hour ago": "1 tunni eest",
+  "{0} hours ago": "{0} tunni eest",
+  "1 day ago": "1 päeva eest",
+  "{0} days ago": "{0} päeva eest",
+  "1 week ago": "1 nädala eest",
+  "{0} weeks ago": "{0} nädala eest",
+  "1 month ago": "1 kuu eest",
+  "{0} months ago": "{0} kuu eest",
+  "1 year ago": "1 aasta eest",
+  "{0} years ago": "{0} aasta eest"
 }

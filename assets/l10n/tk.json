@@ -3125,5 +3125,17 @@
   "While a video plays, the screen switches to a refresh rate that fits it, so motion is even; TVs may go dark for a moment": "Wideo oýnalanda ekran oňa laýyk täzelenme ýygylygyna geçýär, şeýdip hereket ýumşak bolýar; telewizorlar bir salym garaňkylanmagy mümkin",
   "refresh rate fps TV": "täzelenme ýygylygy fps TV telewizor",
   "Tap to install it": "Gurnamak üçin basyň",
-  "Tap to download and install": "Ýükläp almak we gurnamak üçin basyň"
+  "Tap to download and install": "Ýükläp almak we gurnamak üçin basyň",
+  "1 minute ago": "1 minut öň",
+  "{0} minutes ago": "{0} minut öň",
+  "1 hour ago": "1 sagat öň",
+  "{0} hours ago": "{0} sagat öň",
+  "1 day ago": "1 gün öň",
+  "{0} days ago": "{0} gün öň",
+  "1 week ago": "1 hepde öň",
+  "{0} weeks ago": "{0} hepde öň",
+  "1 month ago": "1 aý öň",
+  "{0} months ago": "{0} aý öň",
+  "1 year ago": "1 ýyl öň",
+  "{0} years ago": "{0} ýyl öň"
 }

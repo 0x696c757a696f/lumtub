@@ -167,7 +167,7 @@ extension PlaybackOpening on AppController {
           final failure = PlaybackFailure.classify(['$e']);
           if (!failure.retryable) {
             // libmpv's ytdl_hook would ask YouTube again and fail the same way.
-            if (AppController._serversMayHelp(failure.kind)) return await _fallBack(item, serial, failure, start: start, play: play);
+            if (_mayFallBack(failure.kind)) return await _fallBack(item, serial, failure, start: start, play: play);
             if (serial == _playSerial) _fail(item, failure);
             return false;
           }

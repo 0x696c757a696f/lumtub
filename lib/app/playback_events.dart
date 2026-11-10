@@ -83,6 +83,7 @@ extension PlaybackEvents on AppController {
     if (await _open(item, serial, start: start, play: preferences.autoPlay && !hold) && serial == _playSerial) {
       if (hold) unawaited(_playOnceSubtitlesReady(serial));
       await _applyChannelPlayback(item, player);
+      unawaited(_syncSilenceSkipping(player));
       // Marked live while it opened, when the list did not know.
       final opened = playing?.id == item.id ? playing! : item;
       if (preferences.recordHistory && !incognito) {
@@ -167,6 +168,8 @@ extension PlaybackEvents on AppController {
         secondaryTrackId = value.isEmpty || value == 'false' ? 'no' : value;
         _followSubtitles(player);
       }).catchError((Object e) => logWarn('Could not follow the second subtitle: $e')));
+      // Only schedules the speed change, like the listeners above.
+      unawaited(platform.observeProperty(SilenceSkipper.property, (value) async => _onSilenceMetadata(player, value)).catchError((Object e) => logWarn('Could not watch for silence: $e')));
     }
     _playerSubscriptions.addAll([
       player.stream.width.listen(videoSize),
@@ -175,7 +178,9 @@ extension PlaybackEvents on AppController {
         _updateEfficiency();
         _countWatchTime();
       }),
-      player.stream.rate.listen((rate) => _rememberPlayback(rate: rate)),
+      player.stream.rate.listen((rate) {
+        if (_silence.observeRate(rate)) _rememberPlayback(rate: rate);
+      }),
       player.stream.volume.listen((volume) => _rememberPlayback(volume: volume)),
       // A second of playback proves a downloaded libmpv works on this PC.
       player.stream.position.listen((position) {
@@ -300,7 +305,7 @@ extension PlaybackEvents on AppController {
       final failure = PlaybackFailure.classify(viaRelay ? [message] : [message, ..._recentErrors]);
       final position = _lastPosition > Duration.zero ? _lastPosition : null;
       if (viaRelay) {
-        if (!failure.retryable && !AppController._serversMayHelp(failure.kind)) {
+        if (!failure.retryable && !_mayFallBack(failure.kind)) {
           _fail(item, failure);
           return;
         }
@@ -310,7 +315,7 @@ extension PlaybackEvents on AppController {
         return;
       }
       if (!failure.retryable) {
-        AppController._serversMayHelp(failure.kind) ? unawaited(_fallBack(item, _playSerial, failure, start: position)) : _fail(item, failure);
+        _mayFallBack(failure.kind) ? unawaited(_fallBack(item, _playSerial, failure, start: position)) : _fail(item, failure);
         return;
       }
       if (_openedResolved == item.id) {
@@ -323,7 +328,7 @@ extension PlaybackEvents on AppController {
         return;
       }
       // Resolved again and still refused: the servers are the last way.
-      AppController._serversMayHelp(failure.kind) ? unawaited(_fallBack(item, _playSerial, failure, start: position)) : _fail(item, failure);
+      _mayFallBack(failure.kind) ? unawaited(_fallBack(item, _playSerial, failure, start: position)) : _fail(item, failure);
     } else if (PlaybackRecovery.isNetworkError(message)) {
       final failure = PlaybackFailure.classify([message, ..._recentErrors]);
       if (failure.retryable) {

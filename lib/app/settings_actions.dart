@@ -239,6 +239,7 @@ extension SettingsActions on AppController {
     if (this.player case final playing?) _refitCrop(playing);
     await store.save(next);
     _update(() => settings = next);
+    if (next.skipSilence != oldSettings.skipSilence || next.audioFilter != oldSettings.audioFilter) unawaited(_syncSilenceSkipping(player));
     // The video playing skips by the new SponsorBlock choice too.
     if (next.sponsorBlock != oldSettings.sponsorBlock || !setEquals(next.sponsorCategories, oldSettings.sponsorCategories)) {
       _update(() => _segments = const []);

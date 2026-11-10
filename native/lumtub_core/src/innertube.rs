@@ -693,7 +693,7 @@ fn original_audio(formats: &[Value]) -> Option<&str> {
 /// The `acont` of a format's `xtags`: original, dubbed, dubbed-auto or
 /// descriptive. They come as `key=value:key=value` text, or as base64 of
 /// a protobuf list of key and value strings.
-fn audio_content(xtags: &str) -> Option<String> {
+pub(crate) fn audio_content(xtags: &str) -> Option<String> {
     if let Some(value) = xtags
         .split(':')
         .find_map(|pair| pair.strip_prefix("acont="))

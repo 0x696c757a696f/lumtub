@@ -118,12 +118,12 @@ Lumtub 免费开源，没有广告，没有自己的账号体系，也不收集�
 | `android-x86_64` APK | Android 模拟器和 x86 Chromebook |
 
 文件名格式为 `Lumtub_<版本>_<平台>`，例如 `Lumtub_0.2.30-abc1234_windows-x64-v3-setup.exe`。<br>
-**Windows：**用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。Lumtub 需要 Microsoft Visual C++ 运行库；如果 Windows 提示缺少 `MSVCP140.dll` 或 `VCRUNTIME140_1.dll` 等文件，请安装它（[x64](https://aka.ms/vs/17/release/vc_redist.x64.exe)、[ARM64](https://aka.ms/vs/17/release/vc_redist.arm64.exe)）后再打开 Lumtub。<br>
-**Linux：**给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。<br>
+**Windows**：用安装程序安装，或解压便携版后运行 `lumtub.exe`。不需要管理员权限。Lumtub 需要 Microsoft Visual C++ 运行库；如果 Windows 提示缺少 `MSVCP140.dll` 或 `VCRUNTIME140_1.dll` 等文件，请安装它（[x64](https://aka.ms/vs/17/release/vc_redist.x64.exe)、[ARM64](https://aka.ms/vs/17/release/vc_redist.arm64.exe)）后再打开 Lumtub。<br>
+**Linux**：给 AppImage 加上执行权限（`chmod +x Lumtub_*.AppImage`）后运行。它会原地自动更新。如果提示缺少 FUSE，请安装发行版的 `fuse3` 软件包，或用 `--appimage-extract-and-run` 参数启动。<br>
 第一次启动时会从 GitHub 下载 yt-dlp 和 Deno，之后 Lumtub 会自己保持更新。<br>
-**Android（预览版）：**打开 APK，按提示允许浏览器或文件管理器安装应用。新版本可以在 Lumtub 里直接安装，Android 会请你确认一次。直播和下载也都能用，靠的是应用里自带的 yt-dlp；会员专属视频在 Android 上暂时还不能看。
+**Android（预览版）**：打开 APK，按提示允许浏览器或文件管理器安装应用。新版本可以在 Lumtub 里直接安装，Android 会请你确认一次。直播和下载也都能用，靠的是应用里自带的 yt-dlp；会员专属视频在 Android 上暂时还不能看。
 
-**macOS：**打开 DMG，把 Lumtub 拖进“应用程序”。Lumtub 还没有经过 Apple 公证，所以第一次打开时会被 macOS 拦下。可以在终端里运行一次：
+**macOS**：打开 DMG，把 Lumtub 拖进“应用程序”。Lumtub 还没有经过 Apple 公证，所以第一次打开时会被 macOS 拦下。可以在终端里运行一次：
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/Lumtub.app
@@ -146,23 +146,23 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 ## 常见问题
 
-**免费吗？**免费，并且会一直免费。没有广告，没有付费版，不卖数据。开发靠[赞助](#支持-lumtub)。
+**免费吗？** 免费，并且会一直免费。没有广告，没有付费版，不卖数据。开发靠[赞助](#支持-lumtub)。
 
-**YouTube 改了东西会不会用不了？**有时会短暂失效。Lumtub 会自动更新 yt-dlp，通常几天内就会修好。
+**YouTube 改了东西会不会用不了？** 有时会短暂失效。Lumtub 会自动更新 yt-dlp，通常几天内就会修好。
 
-**需要 Google 账号吗？**不需要。除了点赞、评论、同步这些账号功能，其他都能在不登录时使用。
+**需要 Google 账号吗？** 不需要。除了点赞、评论、同步这些账号功能，其他都能在不登录时使用。
 
-**所有功能都免费吗？**Lumtub 本身免费。部分可选的 AI 功能（翻译、语音转字幕、总结）使用第三方服务或你自己的 API 密钥，这些服务商可能收费。
+**所有功能都免费吗？** Lumtub 本身免费。部分可选的 AI 功能（翻译、语音转字幕、总结）使用第三方服务或你自己的 API 密钥，这些服务商可能收费。
 
-**数据存在哪里？**Windows 在 `%LOCALAPPDATA%\Lumtub`，便携版在 `lumtub.exe` 旁边的 `userdata` 文件夹。Linux 在 `~/.local/share/lumtub`，macOS 在 `~/Library/Application Support/Lumtub`。设置可以导出和导入。
+**数据存在哪里？** Windows 在 `%LOCALAPPDATA%\Lumtub`，便携版在 `lumtub.exe` 旁边的 `userdata` 文件夹。Linux 在 `~/.local/share/lumtub`，macOS 在 `~/Library/Application Support/Lumtub`。设置可以导出和导入。
 
-**支持哪些 Linux？**glibc 2.35 或更新的发行版：Ubuntu 22.04、Debian 12、Fedora 36 及以后。不支持 Ubuntu 20.04 及更早版本，也不支持 Alpine 等 musl 系统。NixOS 上请用 `appimage-run` 启动。
+**支持哪些 Linux？** glibc 2.35 或更新的发行版：Ubuntu 22.04、Debian 12、Fedora 36 及以后。不支持 Ubuntu 20.04 及更早版本，也不支持 Alpine 等 musl 系统。NixOS 上请用 `appimage-run` 启动。
 
-**为什么 GNOME 上没有托盘图标？**GNOME 只有装了 AppIndicator 扩展才显示托盘图标。Ubuntu 已经自带；Fedora 等原版 GNOME 请安装 [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/)。没有它时，关闭或最小化到托盘会改为普通的最小化。
+**为什么 GNOME 上没有托盘图标？** GNOME 只有装了 AppIndicator 扩展才显示托盘图标。Ubuntu 已经自带；Fedora 等原版 GNOME 请安装 [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/)。没有它时，关闭或最小化到托盘会改为普通的最小化。
 
-**为什么 Linux 上会忘记登录？**Lumtub 把登录信息加密存在系统钥匙串（GNOME Keyring 或 KWallet）里。没有钥匙串的桌面，例如只装了窗口管理器的系统，需要安装并运行 `gnome-keyring` 或 `kwallet`。
+**为什么 Linux 上会忘记登录？** Lumtub 把登录信息加密存在系统钥匙串（GNOME Keyring 或 KWallet）里。没有钥匙串的桌面，例如只装了窗口管理器的系统，需要安装并运行 `gnome-keyring` 或 `kwallet`。
 
-**它以前叫 YTPlus 吗？**是的，2026 年 10 月之前叫 YTPlus。更新后设置、媒体库和登录都会保留。
+**它以前叫 YTPlus 吗？** 是的，2026 年 10 月之前叫 YTPlus。更新后设置、媒体库和登录都会保留。
 
 ## 支持 Lumtub
 

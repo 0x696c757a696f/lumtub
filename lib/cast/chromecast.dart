@@ -101,7 +101,7 @@ CastMessage decodeCastMessage(Uint8List bytes) {
         varint();
       case 2:
         final length = varint();
-        if (i + length > bytes.length) throw const FormatException('truncated field');
+        if (length < 0 || length > bytes.length - i) throw const FormatException('truncated field');
         if (tag >> 3 != 7) strings[tag >> 3] = utf8.decode(bytes.sublist(i, i + length), allowMalformed: true);
         i += length;
       case 1:
@@ -244,6 +244,10 @@ class ChromecastDevice implements CastDevice {
     try {
       messages = _reader.add(data);
     } on FormatException {
+      _socket?.destroy();
+      _lost();
+      return;
+    } on RangeError {
       _socket?.destroy();
       _lost();
       return;

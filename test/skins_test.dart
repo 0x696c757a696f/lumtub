@@ -46,7 +46,7 @@ void main() {
         // A skin that follows the theme mode has a dark side, checked too.
         expect(skin.forBrightness(Brightness.dark).brightness, skin.followsThemeMode ? Brightness.dark : skin.brightness);
         for (final name in skin.fontFiles.values) {
-          expect(File(skin.file(name)).existsSync(), isTrue, reason: name);
+          expect(File(skin.file(name)!).existsSync(), isTrue, reason: name);
         }
         Skin.formFactor = 'desktop';
       });

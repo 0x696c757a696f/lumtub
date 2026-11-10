@@ -9,7 +9,7 @@ use std::io::{BufWriter, Read, Seek, SeekFrom, Write};
 
 use serde::Deserialize;
 
-use crate::cast_webm::{element, CLUSTER};
+use crate::cast_webm::{CLUSTER, element};
 use crate::taste::{give, text};
 
 const EBML: u32 = 0x1A45_DFA3;
@@ -38,12 +38,15 @@ struct Piece {
 fn read_at(file: &mut File, at: u64, length: usize) -> Result<Vec<u8>, String> {
     file.seek(SeekFrom::Start(at)).map_err(|e| e.to_string())?;
     let mut bytes = Vec::with_capacity(length);
-    file.take(length as u64).read_to_end(&mut bytes).map_err(|e| e.to_string())?;
+    file.take(length as u64)
+        .read_to_end(&mut bytes)
+        .map_err(|e| e.to_string())?;
     Ok(bytes)
 }
 
 fn copy(file: &mut File, from: u64, to: u64, out: &mut impl Write) -> Result<(), String> {
-    file.seek(SeekFrom::Start(from)).map_err(|e| e.to_string())?;
+    file.seek(SeekFrom::Start(from))
+        .map_err(|e| e.to_string())?;
     let copied = std::io::copy(&mut file.take(to - from), out).map_err(|e| e.to_string())?;
     if copied != to - from {
         return Err("the file ends early".into());
@@ -86,7 +89,13 @@ fn groups(pieces: &[Piece], every: f64) -> Vec<std::ops::Range<usize>> {
     groups
 }
 
-fn webm(file: &mut File, total: u64, stem: &str, extension: &str, every: f64) -> Result<Vec<Part>, String> {
+fn webm(
+    file: &mut File,
+    total: u64,
+    stem: &str,
+    extension: &str,
+    every: f64,
+) -> Result<Vec<Part>, String> {
     let at = |file: &mut File, at: u64| -> Result<(crate::cast_webm::Element, Vec<u8>), String> {
         let bytes = read_at(file, at, 12)?;
         let e = element(&bytes, 0).ok_or("damaged WebM")?;
@@ -98,7 +107,11 @@ fn webm(file: &mut File, total: u64, stem: &str, extension: &str, every: f64) ->
     if segment.id != SEGMENT {
         return Err("no segment".into());
     }
-    let segment_end = if segment.end == usize::MAX { total } else { (head_end + segment.end as u64).min(total) };
+    let segment_end = if segment.end == usize::MAX {
+        total
+    } else {
+        (head_end + segment.end as u64).min(total)
+    };
     let (mut info, mut tracks, mut scale) = (None, None, 1_000_000u64);
     let mut pieces = Vec::new();
     let mut position = head_end + segment.data as u64;
@@ -114,9 +127,13 @@ fn webm(file: &mut File, total: u64, stem: &str, extension: &str, every: f64) ->
                 let mut kept = Vec::new();
                 let mut inner = e.data;
                 while inner < bytes.len() {
-                    let Some(c) = element(&bytes, inner).filter(|c| c.end <= bytes.len()) else { break };
+                    let Some(c) = element(&bytes, inner).filter(|c| c.end <= bytes.len()) else {
+                        break;
+                    };
                     if c.id == TIMECODE_SCALE {
-                        scale = bytes[c.data..c.end].iter().fold(0u64, |v, &x| (v << 8) | x as u64);
+                        scale = bytes[c.data..c.end]
+                            .iter()
+                            .fold(0u64, |v, &x| (v << 8) | x as u64);
                     }
                     if c.id != DURATION {
                         kept.extend_from_slice(&bytes[inner..c.end]);
@@ -128,9 +145,17 @@ fn webm(file: &mut File, total: u64, stem: &str, extension: &str, every: f64) ->
             TRACKS => tracks = Some(read_at(file, position, e.end)?),
             CLUSTER => {
                 let header = read_at(file, position, e.data + 12)?;
-                let stamp = element(&header, e.data).filter(|t| t.id == TIMESTAMP && t.end <= header.len()).ok_or("cluster without a timestamp")?;
-                let time = header[stamp.data..stamp.end].iter().fold(0u64, |v, &x| (v << 8) | x as u64);
-                pieces.push(Piece { from: position, to: end.min(total), time });
+                let stamp = element(&header, e.data)
+                    .filter(|t| t.id == TIMESTAMP && t.end <= header.len())
+                    .ok_or("cluster without a timestamp")?;
+                let time = header[stamp.data..stamp.end]
+                    .iter()
+                    .fold(0u64, |v, &x| (v << 8) | x as u64);
+                pieces.push(Piece {
+                    from: position,
+                    to: end.min(total),
+                    time,
+                });
             }
             _ => {}
         }
@@ -146,9 +171,16 @@ fn webm(file: &mut File, total: u64, stem: &str, extension: &str, every: f64) ->
         let base = pieces[group.start].time;
         let path = format!("{stem}{n:03}.{extension}");
         let mut out = BufWriter::new(File::create(&path).map_err(|e| e.to_string())?);
-        let write = |out: &mut BufWriter<File>, bytes: &[u8]| out.write_all(bytes).map_err(|e| e.to_string());
+        let write = |out: &mut BufWriter<File>, bytes: &[u8]| {
+            out.write_all(bytes).map_err(|e| e.to_string())
+        };
         copy(file, 0, head_end, &mut out)?;
-        write(&mut out, &[0x18, 0x53, 0x80, 0x67, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])?;
+        write(
+            &mut out,
+            &[
+                0x18, 0x53, 0x80, 0x67, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+            ],
+        )?;
         write(&mut out, &[0x15, 0x49, 0xA9, 0x66])?;
         write(&mut out, &size8(info.len() as u64))?;
         write(&mut out, &info)?;
@@ -170,7 +202,10 @@ fn webm(file: &mut File, total: u64, stem: &str, extension: &str, every: f64) ->
             copy(file, piece.from + stamp.end as u64, piece.to, &mut out)?;
         }
         out.flush().map_err(|e| e.to_string())?;
-        parts.push(Part { path, start: base as f64 / ticks });
+        parts.push(Part {
+            path,
+            start: base as f64 / ticks,
+        });
     }
     Ok(parts)
 }
@@ -192,7 +227,10 @@ fn mp4_box(file: &mut File, at: u64, total: u64) -> Result<([u8; 4], u64, u64), 
     let kind = [h[4], h[5], h[6], h[7]];
     let (body, end) = match size {
         0 => (at + 8, total),
-        1 if h.len() >= 16 => (at + 16, at + u64::from_be_bytes(h[8..16].try_into().unwrap())),
+        1 if h.len() >= 16 => (
+            at + 16,
+            at + u64::from_be_bytes(h[8..16].try_into().unwrap()),
+        ),
         n if n >= 8 => (at + 8, at + n),
         _ => return Err("damaged MP4".into()),
     };
@@ -239,7 +277,13 @@ fn be(bytes: &[u8]) -> u64 {
     bytes.iter().fold(0u64, |v, &x| (v << 8) | x as u64)
 }
 
-fn mp4(file: &mut File, total: u64, stem: &str, extension: &str, every: f64) -> Result<Vec<Part>, String> {
+fn mp4(
+    file: &mut File,
+    total: u64,
+    stem: &str,
+    extension: &str,
+    every: f64,
+) -> Result<Vec<Part>, String> {
     let (mut head, mut timescale) = (Vec::new(), 0u32);
     let mut pieces = Vec::new();
     let mut at = 0;
@@ -251,19 +295,34 @@ fn mp4(file: &mut File, total: u64, stem: &str, extension: &str, every: f64) -> 
             b"moov" => {
                 head.push((at, end));
                 let moov = read_at(file, at, (end - at) as usize)?;
-                let mdhd = moov.windows(4).position(|w| w == b"mdhd").ok_or("no mdhd")?;
+                let mdhd = moov
+                    .windows(4)
+                    .position(|w| w == b"mdhd")
+                    .ok_or("no mdhd")?;
                 let version = moov[mdhd + 4];
                 let field = mdhd + 4 + if version == 1 { 20 } else { 12 };
-                timescale = u32::from_be_bytes(moov.get(field..field + 4).ok_or("damaged mdhd")?.try_into().unwrap());
+                timescale = u32::from_be_bytes(
+                    moov.get(field..field + 4)
+                        .ok_or("damaged mdhd")?
+                        .try_into()
+                        .unwrap(),
+                );
             }
             b"moof" => {
                 let moof = read_at(file, at, (end - at) as usize)?;
-                let time = decode_times(&moof).first().map(|&(p, w)| be(&moof[p..p + w])).ok_or("fragment without a decode time")?;
+                let time = decode_times(&moof)
+                    .first()
+                    .map(|&(p, w)| be(&moof[p..p + w]))
+                    .ok_or("fragment without a decode time")?;
                 pending = Some((at, time));
             }
             b"mdat" => {
                 if let Some((from, time)) = pending.take() {
-                    pieces.push(Piece { from, to: end, time });
+                    pieces.push(Piece {
+                        from,
+                        to: end,
+                        time,
+                    });
                 }
             }
             _ => {}
@@ -277,7 +336,10 @@ fn mp4(file: &mut File, total: u64, stem: &str, extension: &str, every: f64) -> 
         return Err("not fragmented".into());
     }
     let mut parts = Vec::new();
-    for (n, group) in groups(&pieces, every * timescale as f64).into_iter().enumerate() {
+    for (n, group) in groups(&pieces, every * timescale as f64)
+        .into_iter()
+        .enumerate()
+    {
         let base = pieces[group.start].time;
         let path = format!("{stem}{n:03}.{extension}");
         let mut out = BufWriter::new(File::create(&path).map_err(|e| e.to_string())?);
@@ -297,7 +359,10 @@ fn mp4(file: &mut File, total: u64, stem: &str, extension: &str, every: f64) -> 
             copy(file, moof_end, piece.to, &mut out)?;
         }
         out.flush().map_err(|e| e.to_string())?;
-        parts.push(Part { path, start: base as f64 / timescale as f64 });
+        parts.push(Part {
+            path,
+            start: base as f64 / timescale as f64,
+        });
     }
     Ok(parts)
 }
@@ -315,7 +380,9 @@ pub unsafe extern "C" fn lumtub_cut_audio(json: *const u8, length: usize) -> *mu
         stem: String,
         every: f64,
     }
-    let answer = serde_json::from_str::<Request>(unsafe { text(json, length) }).map_err(|e| e.to_string()).and_then(|r| cut(&r.input, &r.stem, r.every));
+    let answer = serde_json::from_str::<Request>(unsafe { text(json, length) })
+        .map_err(|e| e.to_string())
+        .and_then(|r| cut(&r.input, &r.stem, r.every));
     give(match answer {
         Ok(parts) => serde_json::json!({ "parts": parts.iter().map(|p| serde_json::json!({ "path": p.path, "start": p.start })).collect::<Vec<_>>() }).to_string(),
         Err(error) => serde_json::json!({ "error": error }).to_string(),
@@ -328,7 +395,14 @@ mod tests {
 
     #[test]
     fn groups_pieces_by_time() {
-        let pieces: Vec<Piece> = [0u64, 4, 8, 12, 16, 20, 24].iter().map(|&time| Piece { from: 0, to: 0, time }).collect();
+        let pieces: Vec<Piece> = [0u64, 4, 8, 12, 16, 20, 24]
+            .iter()
+            .map(|&time| Piece {
+                from: 0,
+                to: 0,
+                time,
+            })
+            .collect();
         assert_eq!(groups(&pieces, 10.0), vec![0..3, 3..6, 6..7]);
         assert_eq!(groups(&pieces, 100.0), vec![0..7]);
     }
@@ -348,11 +422,32 @@ mod tests {
     /// A WebM of one Opus-like track: a cluster every 2 s, each with one
     /// block whose byte is the cluster's number.
     fn webm_file(path: &str) {
-        let mut segment = ebml(&[0x15, 0x49, 0xA9, 0x66], &[ebml(&[0x2A, 0xD7, 0xB1], &[0x0F, 0x42, 0x40]), ebml(&[0x44, 0x89], &20000f64.to_be_bytes())].concat());
-        segment.extend(ebml(&[0x16, 0x54, 0xAE, 0x6B], &ebml(&[0xAE], &[ebml(&[0xD7], &[1]), ebml(&[0x83], &[2]), ebml(&[0x86], b"A_OPUS")].concat())));
+        let mut segment = ebml(
+            &[0x15, 0x49, 0xA9, 0x66],
+            &[
+                ebml(&[0x2A, 0xD7, 0xB1], &[0x0F, 0x42, 0x40]),
+                ebml(&[0x44, 0x89], &20000f64.to_be_bytes()),
+            ]
+            .concat(),
+        );
+        segment.extend(ebml(
+            &[0x16, 0x54, 0xAE, 0x6B],
+            &ebml(
+                &[0xAE],
+                &[
+                    ebml(&[0xD7], &[1]),
+                    ebml(&[0x83], &[2]),
+                    ebml(&[0x86], b"A_OPUS"),
+                ]
+                .concat(),
+            ),
+        ));
         for n in 0..10u8 {
             let time = (n as u16 * 2000).to_be_bytes();
-            segment.extend(ebml(&[0x1F, 0x43, 0xB6, 0x75], &[ebml(&[0xE7], &time), ebml(&[0xA3], &[0x81, 0, 0, 0x80, n])].concat()));
+            segment.extend(ebml(
+                &[0x1F, 0x43, 0xB6, 0x75],
+                &[ebml(&[0xE7], &time), ebml(&[0xA3], &[0x81, 0, 0, 0x80, n])].concat(),
+            ));
         }
         let mut file = ebml(&[0x1A, 0x45, 0xDF, 0xA3], &ebml(&[0x42, 0x82], b"webm"));
         file.extend(ebml(&[0x18, 0x53, 0x80, 0x67], &segment));
@@ -373,12 +468,22 @@ mod tests {
         mdhd.extend_from_slice(&1000u32.to_be_bytes());
         mdhd.extend_from_slice(&[0; 8]);
         let mut file = mp4_box(b"ftyp", b"iso6\0\0\0\0");
-        file.extend(mp4_box(b"moov", &mp4_box(b"trak", &mp4_box(b"mdia", &mp4_box(b"mdhd", &mdhd)))));
+        file.extend(mp4_box(
+            b"moov",
+            &mp4_box(b"trak", &mp4_box(b"mdia", &mp4_box(b"mdhd", &mdhd))),
+        ));
         file.extend(mp4_box(b"sidx", &[0; 12]));
         for n in 0..10u8 {
             let mut tfdt = vec![1, 0, 0, 0];
             tfdt.extend_from_slice(&(n as u64 * 2000).to_be_bytes());
-            file.extend(mp4_box(b"moof", &[mp4_box(b"mfhd", &[0; 8]), mp4_box(b"traf", &mp4_box(b"tfdt", &tfdt))].concat()));
+            file.extend(mp4_box(
+                b"moof",
+                &[
+                    mp4_box(b"mfhd", &[0; 8]),
+                    mp4_box(b"traf", &mp4_box(b"tfdt", &tfdt)),
+                ]
+                .concat(),
+            ));
             file.extend(mp4_box(b"mdat", &[n]));
         }
         std::fs::write(path, file).unwrap();
@@ -393,14 +498,25 @@ mod tests {
         mp4_file(&format!("{dir}/a.m4a"));
         for name in ["a.webm", "a.m4a"] {
             let parts = cut(&format!("{dir}/{name}"), &format!("{dir}/{name}-"), 5.0).expect(name);
-            assert_eq!(parts.iter().map(|p| p.start).collect::<Vec<_>>(), [0.0, 6.0, 12.0, 18.0], "{name}");
-            assert!(parts[1].path.ends_with(&format!("{name}-001.{}", name.rsplit('.').next().unwrap())));
+            assert_eq!(
+                parts.iter().map(|p| p.start).collect::<Vec<_>>(),
+                [0.0, 6.0, 12.0, 18.0],
+                "{name}"
+            );
+            assert!(
+                parts[1]
+                    .path
+                    .ends_with(&format!("{name}-001.{}", name.rsplit('.').next().unwrap()))
+            );
             for (i, part) in parts.iter().enumerate() {
                 let bytes = std::fs::read(&part.path).unwrap();
                 if name.ends_with("webm") {
                     // Info lost its Duration; the first cluster starts at 0.
                     assert!(!bytes.windows(2).any(|w| w == [0x44, 0x89]));
-                    let cluster = bytes.windows(4).position(|w| w == [0x1F, 0x43, 0xB6, 0x75]).unwrap();
+                    let cluster = bytes
+                        .windows(4)
+                        .position(|w| w == [0x1F, 0x43, 0xB6, 0x75])
+                        .unwrap();
                     let stamp = element(&bytes, cluster + 12).unwrap();
                     assert_eq!(&bytes[stamp.data..stamp.end], &[0, 0]);
                 } else {
@@ -420,7 +536,9 @@ mod tests {
     /// Cuts the sample sound files (LUMTUB_CAST_SAMPLES: o.webm, a.mp4).
     #[test]
     fn cuts_files_on_disk() {
-        let Ok(dir) = std::env::var("LUMTUB_CAST_SAMPLES") else { return };
+        let Ok(dir) = std::env::var("LUMTUB_CAST_SAMPLES") else {
+            return;
+        };
         for name in ["o.webm", "a.mp4"] {
             let input = format!("{dir}/{name}");
             if !std::path::Path::new(&input).exists() {

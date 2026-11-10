@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
@@ -94,7 +95,7 @@ class VideoActions extends InheritedWidget {
 /// A lazily built grid of video cards as a sliver, so pages can put headers
 /// above it in the same scroll view.
 class SliverVideoGrid extends StatelessWidget {
-  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reasons});
+  const SliverVideoGrid({super.key, required this.items, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reasons, this.watched});
   final List<VideoItem> items;
   final void Function(VideoItem item) onOpen;
   final Directory? thumbnails;
@@ -103,13 +104,18 @@ class SliverVideoGrid extends StatelessWidget {
   final String? removeLabel;
   /// A line under each card saying why it is there, by video id.
   final Map<String, String>? reasons;
+  /// When each video was watched, by id, as a line under its card.
+  final Map<String, String>? watched;
 
   @override
-  Widget build(BuildContext context) => SliverPadding(
+  Widget build(BuildContext context) {
+    // Room for the watched line only when some card has one.
+    final watched = this.watched != null && items.any((item) => this.watched![item.id] != null) ? this.watched : null;
+    return SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppStyle.pagePadding),
         sliver: videoLayout != VideoLayout.grid
             ? SliverFixedExtentList(
-                itemExtent: VideoRow.heightFor(videoLayout, reason: reasons != null),
+                itemExtent: VideoRow.heightFor(videoLayout, reason: reasons != null) + (watched == null ? 0 : _reasonHeight),
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => VideoRow(
                     key: ValueKey(items[i].id),
@@ -120,6 +126,7 @@ class SliverVideoGrid extends StatelessWidget {
                     onRemove: onRemove == null ? null : () => onRemove!(items[i]),
                     removeLabel: removeLabel,
                     reason: reasons == null ? null : reasons![items[i].id] ?? '',
+                    watched: watched?[items[i].id],
                   ),
                   childCount: items.length,
                 ),
@@ -131,7 +138,7 @@ class SliverVideoGrid extends StatelessWidget {
               crossAxisCount: layout.columns,
               mainAxisSpacing: AppStyle.cardSpacing,
               crossAxisSpacing: AppStyle.cardSpacing,
-              mainAxisExtent: layout.itemHeight + (reasons == null ? 0 : _reasonHeight),
+              mainAxisExtent: layout.itemHeight + (reasons == null ? 0 : _reasonHeight) + (watched == null ? 0 : _reasonHeight),
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) => VideoCard(
@@ -144,19 +151,36 @@ class SliverVideoGrid extends StatelessWidget {
                 onRemove: onRemove == null ? null : () => onRemove!(items[i]),
                 removeLabel: removeLabel,
                 reason: reasons == null ? null : reasons![items[i].id] ?? '',
+                watched: watched?[items[i].id],
               ),
               childCount: items.length,
             ),
           );
         }),
       );
+  }
+}
+
+/// What [SliverVideoGrid.watched] shows for each time: "3 days ago", made
+/// only for the cards asked about, so a long history costs nothing extra.
+Map<String, String> watchedLabels(Map<String, DateTime> times) => _WatchedLabels(times);
+
+class _WatchedLabels extends UnmodifiableMapBase<String, String> {
+  _WatchedLabels(this._times);
+  final Map<String, DateTime> _times;
+
+  @override
+  String? operator [](Object? key) => switch (_times[key]) { final at? => formatAgo(at), null => null };
+
+  @override
+  Iterable<String> get keys => _times.keys;
 }
 
 /// A video as one row of a list: a small thumbnail or none, the title, the
 /// channel and views, for 列表 and 纯文字. Fewer and smaller pictures than
 /// the grid, so long lists scroll lighter.
 class VideoRow extends StatelessWidget {
-  const VideoRow({super.key, required this.item, required this.layout, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason});
+  const VideoRow({super.key, required this.item, required this.layout, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason, this.watched});
   final VideoItem item;
   final VideoLayout layout;
   final VoidCallback onOpen;
@@ -164,6 +188,7 @@ class VideoRow extends StatelessWidget {
   final VoidCallback? onRemove;
   final String? removeLabel;
   final String? reason;
+  final String? watched;
 
   static const _thumbWidth = 168.0;
 
@@ -202,10 +227,10 @@ class VideoRow extends StatelessWidget {
                       errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                     ),
                     if (status != null)
-                      Positioned(right: 4, bottom: 4, child: DurationBadge(status, color: item.isLive ? const Color(0xFFCC0000) : null))
+                      PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(status, color: item.isLive ? const Color(0xFFCC0000) : null))
                     else if (item.durationLabel.isNotEmpty)
-                      Positioned(right: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
-                    if (item.membersOnly) const Positioned(left: 4, bottom: 4, child: MembersOnlyBadge()),
+                      PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
+                    if (item.membersOnly) const PositionedDirectional(start: 4, bottom: 4, child: MembersOnlyBadge()),
                     _ProgressBar(item: item),
                   ]),
                 ),
@@ -227,6 +252,7 @@ class VideoRow extends StatelessWidget {
               ],
               Expanded(child: meta),
             ]),
+            if (watched case final watched?) Padding(padding: const EdgeInsets.only(top: Space.xs), child: WatchedLine(watched)),
             if (reason case final reason? when reason.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: Space.xs),
@@ -375,7 +401,7 @@ class _CardSkeleton extends StatelessWidget {
 
 /// Thumbnail-on-top video card with hover zoom and a right-click menu.
 class VideoCard extends StatefulWidget {
-  const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason});
+  const VideoCard({super.key, required this.item, required this.onOpen, this.thumbnails, this.onRemove, this.removeLabel, this.reason, this.watched});
   final VideoItem item;
   final VoidCallback onOpen;
   final Directory? thumbnails;
@@ -384,6 +410,8 @@ class VideoCard extends StatefulWidget {
   final String? removeLabel;
   /// Why the card is recommended; null leaves the line out.
   final String? reason;
+  /// When the video was watched, shown on its picture.
+  final String? watched;
 
   @override
   State<VideoCard> createState() => _VideoCardState();
@@ -391,8 +419,9 @@ class VideoCard extends StatefulWidget {
 
 class _VideoCardState extends State<VideoCard> {
   bool _hovered = false;
-  /// Reached with the keyboard: it previews and shows its actions as a
-  /// pointer resting on it would, with an outline to show where focus is.
+  /// Reached with the keyboard: it shows its actions as a pointer resting
+  /// on it would, with an outline to show where focus is, but does not
+  /// prefetch or preview.
   bool _focused = false;
   bool _pointer = false;
   Timer? _prefetch;
@@ -413,7 +442,7 @@ class _VideoCardState extends State<VideoCard> {
     _prefetch?.cancel();
     _preview?.cancel();
     // 低占用模式 loads nothing until a video is opened.
-    if (!value || lowResourceMode) return;
+    if (!value || !_pointer || lowResourceMode) return;
     if (!widget.item.membersOnly) _prefetch = Timer(const Duration(milliseconds: 700), () => VideoActions.of(context)?.prefetch(widget.item, hover: true));
     if (widget.item.isLive || widget.item.isUpcoming) return;
     _preview = Timer(const Duration(milliseconds: 700), () {
@@ -433,6 +462,10 @@ class _VideoCardState extends State<VideoCard> {
   void _focus(bool value) {
     setState(() => _focused = value);
     _hover(_pointer || _focused);
+    if (!_pointer) {
+      _prefetch?.cancel();
+      _preview?.cancel();
+    }
   }
 
   /// The menu, at the card's middle when opened from the keyboard.
@@ -545,10 +578,10 @@ class _VideoCardState extends State<VideoCard> {
                   ])),
                 ],
                 if (item.isLive || item.isUpcoming)
-                  Positioned(right: 8, bottom: 8, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
+                  PositionedDirectional(end: 8, bottom: 8, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
                 else if (item.durationLabel.isNotEmpty)
-                  Positioned(right: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
-                if (item.membersOnly) const Positioned(left: 8, bottom: 8, child: MembersOnlyBadge()),
+                  PositionedDirectional(end: 8, bottom: 8, child: DurationBadge(item.durationLabel)),
+                if (item.membersOnly) const PositionedDirectional(start: 8, bottom: 8, child: MembersOnlyBadge()),
                 _ProgressBar(item: item),
                 if (_hovered) Positioned(top: 8, right: 8, child: _QuickActions(item: item, onMore: _menu)),
               ]),
@@ -560,6 +593,7 @@ class _VideoCardState extends State<VideoCard> {
               Flexible(child: Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.38, fontWeight: FontWeight.w500, color: colors.onSurface))),
               const SizedBox(height: Space.xs),
               meta,
+              if (widget.watched case final watched?) SizedBox(height: _reasonHeight, child: WatchedLine(watched)),
               if (widget.reason case final reason?)
                 SizedBox(
                   height: _reasonHeight,
@@ -620,7 +654,7 @@ class _QuickActionsState extends State<_QuickActions> {
     final item = widget.item;
     final later = library?.isWatchLater(item.id) ?? false;
     Widget button(IconData icon, String tip, VoidCallback onPressed) => Padding(
-          padding: const EdgeInsets.only(left: 4),
+          padding: const EdgeInsetsDirectional.only(start: 4),
           child: Tooltip(
             message: tip,
             child: Material(
@@ -665,6 +699,24 @@ class DurationBadge extends StatelessWidget {
     );
     if (surface != null) return SkinBox(surface: surface, radius: 4, child: text);
     return DecoratedBox(decoration: BoxDecoration(color: color ?? Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(4)), child: text);
+  }
+}
+
+/// When a video in the watch history was watched, on a line of its own so
+/// that a long channel name never pushes it out.
+class WatchedLine extends StatelessWidget {
+  const WatchedLine(this.when, {super.key});
+  /// "2 hours ago", or the day as YouTube's history names it.
+  final String when;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.colors.outline;
+    return Row(children: [
+      Icon(AppIcons.clockCounterClockwise, size: 12, color: color),
+      const SizedBox(width: 4),
+      Expanded(child: Text(tr('Watched {0}', [when]), maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: TextStyle(fontSize: 12, color: color))),
+    ]);
   }
 }
 
@@ -743,10 +795,10 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
                     errorBuilder: (context, _, __) => ColoredBox(color: colors.surfaceContainerHighest),
                   ),
                   if (item.isLive || item.isUpcoming)
-                    Positioned(right: 4, bottom: 4, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
+                    PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(item.isLive ? tr('Live now') : tr('Upcoming live'), color: item.isLive ? const Color(0xFFCC0000) : null))
                   else if (item.durationLabel.isNotEmpty)
-                    Positioned(right: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
-                  if (item.membersOnly) const Positioned(left: 4, bottom: 4, child: MembersOnlyBadge()),
+                    PositionedDirectional(end: 4, bottom: 4, child: DurationBadge(item.durationLabel)),
+                  if (item.membersOnly) const PositionedDirectional(start: 4, bottom: 4, child: MembersOnlyBadge()),
                   _ProgressBar(item: item),
                 ]),
               ),
@@ -758,7 +810,7 @@ class _CompactVideoTileState extends State<CompactVideoTile> {
             const SizedBox(height: 4),
             if (upcomingStart != null)
               Text(upcomingStart, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.primary, fontWeight: FontWeight.w500)),
-            Text(item.channel.isEmpty ? 'YouTube' : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
+            Text(item.channel.isEmpty ? tr('YouTube') : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
           ])),
         ]),
       ),
@@ -986,15 +1038,30 @@ class MetaLine extends StatelessWidget {
   final String tail;
   final TextStyle style;
 
+  /// What the channel keeps of a line [width] wide: all it needs, up to a
+  /// third, however long the rest.
+  double _leadRoom(BuildContext context, double width) {
+    if (lead.isEmpty) return 0;
+    final painter = TextPainter(
+      text: TextSpan(text: lead, style: DefaultTextStyle.of(context).style.merge(style)),
+      maxLines: 1,
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout();
+    final needed = painter.width.ceilToDouble();
+    painter.dispose();
+    return needed < width / 3 ? needed : width / 3;
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (lead.isEmpty && tail.isEmpty) return Text('YouTube', maxLines: 1, style: style);
+    if (lead.isEmpty && tail.isEmpty) return Text(tr('YouTube'), maxLines: 1, style: style);
     return LayoutBuilder(
       builder: (context, box) => Row(children: [
         if (lead.isNotEmpty) Flexible(child: Text(lead, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style)),
         if (tail.isNotEmpty)
           ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: box.maxWidth),
+            constraints: BoxConstraints(maxWidth: box.maxWidth - _leadRoom(context, box.maxWidth)),
             child: Text(lead.isEmpty ? tail : ' · $tail', maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false, style: style),
           ),
       ]),

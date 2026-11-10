@@ -135,7 +135,7 @@ void main() {
     test('needs an AI service with its key, except a local one', () {
       final client = MockClient((_) async => _reply(''));
       expect(aiServiceFor(const TranslationConfig(aiPreset: 'openai'), const {}, client), isNull);
-      expect(aiServiceFor(const TranslationConfig(aiPreset: 'openai'), const {'ai': 'k'}, client), isNotNull);
+      expect(aiServiceFor(const TranslationConfig(aiPreset: 'openai'), const {'ai@api.openai.com': 'k'}, client), isNotNull);
       expect(aiServiceFor(const TranslationConfig(aiPreset: 'ollama'), const {}, client), isNotNull);
     });
   });

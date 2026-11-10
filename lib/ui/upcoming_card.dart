@@ -34,7 +34,16 @@ class UpcomingCard extends StatefulWidget {
   State<UpcomingCard> createState() => _UpcomingCardState();
 }
 
-class _UpcomingCardState extends State<UpcomingCard> {
+/// The headline and the line under it, rebuilt every second on their own.
+class _Countdown extends StatefulWidget {
+  const _Countdown({required this.start});
+  final DateTime? start;
+
+  @override
+  State<_Countdown> createState() => _CountdownState();
+}
+
+class _CountdownState extends State<_Countdown> {
   Timer? _tick;
 
   @override
@@ -54,6 +63,25 @@ class _UpcomingCardState extends State<UpcomingCard> {
     final start = widget.start;
     final left = start?.difference(DateTime.now());
     final late = left != null && left < -const Duration(minutes: 1);
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      Text(
+        late ? tr('Starting soon') : startsIn(left),
+        style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()]),
+      ),
+      if (start != null) ...[
+        const SizedBox(height: 8),
+        Text(
+          late ? tr('Scheduled for {0}, waiting for the stream to begin', [formatScheduledStart(start)]) : tr('Starts {0}', [formatScheduledStart(start)]),
+          style: const TextStyle(color: Color(0xDDFFFFFF), fontSize: 14),
+        ),
+      ],
+    ]);
+  }
+}
+
+class _UpcomingCardState extends State<UpcomingCard> {
+  @override
+  Widget build(BuildContext context) {
     const white = Colors.white;
     return Stack(fit: StackFit.expand, children: [
       // The blur stays in its own layer, so the spinner and the countdown
@@ -93,17 +121,7 @@ class _UpcomingCardState extends State<UpcomingCard> {
                 ]),
               ),
               const SizedBox(height: 16),
-              Text(
-                late ? tr('Starting soon') : startsIn(left),
-                style: const TextStyle(color: white, fontSize: 30, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()]),
-              ),
-              if (start != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  late ? tr('Scheduled for {0}, waiting for the stream to begin', [formatScheduledStart(start)]) : tr('Starts {0}', [formatScheduledStart(start)]),
-                  style: const TextStyle(color: Color(0xDDFFFFFF), fontSize: 14),
-                ),
-              ],
+              _Countdown(start: widget.start),
               const SizedBox(height: 24),
               Row(mainAxisSize: MainAxisSize.min, children: [
                 const RepaintBoundary(child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xAAFFFFFF)))),

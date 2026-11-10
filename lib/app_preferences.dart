@@ -793,16 +793,20 @@ class AppPreferencesStore {
   final File file;
 
   Future<AppPreferences> load() async {
+    if (!await file.exists()) return const AppPreferences();
     try {
       return AppPreferences.fromJson(jsonDecode(await file.readAsString()));
-    } catch (_) {
+    } catch (e) {
+      await setBrokenFileAside(file, e);
       return const AppPreferences();
     }
   }
 
-  Future<void> save(AppPreferences preferences) async {
-    await file.parent.create(recursive: true);
-    await file.writeAsString(jsonEncode(preferences.toJson()), flush: true);
+  final _writes = WriteQueue();
+
+  Future<void> save(AppPreferences preferences) {
+    final text = jsonEncode(preferences.toJson());
+    return _writes.run(() => writeFileAtomic(file, text));
   }
 }
 

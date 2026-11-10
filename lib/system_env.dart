@@ -1,6 +1,7 @@
 import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
+import 'package:flutter/services.dart';
 
 import 'app_log.dart';
 
@@ -58,9 +59,19 @@ Future<void> restartApp() async {
 
 /// Opens [target], a web address, file or folder, with the desktop's
 /// default program (xdg-open). Does nothing on Windows, which has its own
-/// ways.
+/// ways. On Android only web addresses open, in the browser; there is no
+/// file manager to hand a folder to.
 Future<void> openWithDesktop(String target) async {
   if (Platform.isWindows) return;
+  if (Platform.isAndroid) {
+    if (!target.startsWith('http://') && !target.startsWith('https://')) return;
+    try {
+      await const MethodChannel('lumtub/windows_shell').invokeMethod<void>('openUrl', target);
+    } catch (e) {
+      logWarn('Could not open $target: $e');
+    }
+    return;
+  }
   try {
     await Process.start(Platform.isMacOS ? 'open' : 'xdg-open', [target], mode: ProcessStartMode.detached);
   } catch (e) {

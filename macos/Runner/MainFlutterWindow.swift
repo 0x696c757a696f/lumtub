@@ -15,6 +15,8 @@ class MainFlutterWindow: NSWindow {
     self.setFrame(MainFlutterWindow.firstFrame(for: self), display: true)
     self.title = "Lumtub"
     self.minSize = NSSize(width: 480, height: 360)
+    // Restores the size and place saved last time, over the first frame, and keeps saving them.
+    self.setFrameAutosaveName("LumtubMainWindow")
 
     RegisterGeneratedPlugins(registry: flutterViewController)
     shell = MacShell(window: self, messenger: flutterViewController.engine.binaryMessenger)

@@ -37,7 +37,10 @@ fn ml_dsa_key(seed: &[u8; 32]) -> ExpandedSigningKey<MlDsa65> {
 /// The public keys of [secret], the Ed25519 seed then the ML-DSA-65 seed.
 pub fn public_keys(secret: &[u8; 64]) -> Vec<u8> {
     let (ed, ml) = split(secret);
-    let mut keys = ed25519_dalek::SigningKey::from_bytes(ed).verifying_key().to_bytes().to_vec();
+    let mut keys = ed25519_dalek::SigningKey::from_bytes(ed)
+        .verifying_key()
+        .to_bytes()
+        .to_vec();
     keys.extend_from_slice(&ml_dsa_key(ml).verifying_key().encode());
     keys
 }
@@ -51,8 +54,16 @@ fn split(secret: &[u8; 64]) -> (&[u8; 32], &[u8; 32]) {
 pub fn sign(secret: &[u8; 64], name: &str, sha256: &str) -> Vec<u8> {
     let (ed, ml) = split(secret);
     let message = message(name, sha256);
-    let mut signature = ed25519_dalek::SigningKey::from_bytes(ed).sign(&message).to_bytes().to_vec();
-    signature.extend_from_slice(&ml_dsa_key(ml).sign_deterministic(&message, CONTEXT).unwrap().encode());
+    let mut signature = ed25519_dalek::SigningKey::from_bytes(ed)
+        .sign(&message)
+        .to_bytes()
+        .to_vec();
+    signature.extend_from_slice(
+        &ml_dsa_key(ml)
+            .sign_deterministic(&message, CONTEXT)
+            .unwrap()
+            .encode(),
+    );
     signature
 }
 
@@ -73,16 +84,28 @@ pub fn verify_with(keys: &[u8], name: &str, sha256: &str, signature: &[u8]) -> b
     let Ok(ml_key) = EncodedVerifyingKey::<MlDsa65>::try_from(ml_key) else {
         return false;
     };
-    let ml_ok = Signature::<MlDsa65>::try_from(ml_signature).is_ok_and(|ml_signature| VerifyingKey::<MlDsa65>::decode(&ml_key).verify_with_context(&message, CONTEXT, &ml_signature));
+    let ml_ok = Signature::<MlDsa65>::try_from(ml_signature).is_ok_and(|ml_signature| {
+        VerifyingKey::<MlDsa65>::decode(&ml_key).verify_with_context(
+            &message,
+            CONTEXT,
+            &ml_signature,
+        )
+    });
     ed_ok && ml_ok
 }
 
 /// Checks the downloaded package [file] (its name as the release lists it,
 /// [name]) against the `.sig` file [signature].
 pub fn verify_file(file: &str, name: &str, signature: &str) -> Result<(), String> {
-    let signature = std::fs::read(signature).map_err(|e| format!("Could not read the signature: {e}"))?;
-    let sha256 = crate::hashes::file_sha256(file).map_err(|e| format!("Could not read the package: {e}"))?;
-    if verify_with(PUBLIC_KEYS, name, &sha256, &signature) { Ok(()) } else { Err("The update's signature does not match".into()) }
+    let signature =
+        std::fs::read(signature).map_err(|e| format!("Could not read the signature: {e}"))?;
+    let sha256 =
+        crate::hashes::file_sha256(file).map_err(|e| format!("Could not read the package: {e}"))?;
+    if verify_with(PUBLIC_KEYS, name, &sha256, &signature) {
+        Ok(())
+    } else {
+        Err("The update's signature does not match".into())
+    }
 }
 
 /// Checks a downloaded update, [json] being `{file, name, signature}`
@@ -99,6 +122,10 @@ pub unsafe extern "C" fn lumtub_update_verify(json: *const u8, length: usize) ->
         file: String,
         name: String,
         signature: String,
+        /// The version offered and the one running: when both are given the
+        /// package must be that version and newer than this build.
+        version: Option<String>,
+        current: Option<String>,
     }
     #[derive(Serialize)]
     struct Answer {
@@ -108,11 +135,25 @@ pub unsafe extern "C" fn lumtub_update_verify(json: *const u8, length: usize) ->
         error: Option<String>,
     }
     let answer = match serde_json::from_str::<Ask>(unsafe { text(json, length) }) {
-        Ok(ask) => match verify_file(&ask.file, &ask.name, &ask.signature) {
-            Ok(()) => Answer { ok: Some(true), error: None },
-            Err(error) => Answer { ok: None, error: Some(error) },
+        Ok(ask) => match (|| {
+            if let (Some(version), Some(current)) = (&ask.version, &ask.current) {
+                crate::update::check_package(&ask.name, version, current)?;
+            }
+            verify_file(&ask.file, &ask.name, &ask.signature)
+        })() {
+            Ok(()) => Answer {
+                ok: Some(true),
+                error: None,
+            },
+            Err(error) => Answer {
+                ok: None,
+                error: Some(error),
+            },
         },
-        Err(e) => Answer { ok: None, error: Some(e.to_string()) },
+        Err(e) => Answer {
+            ok: None,
+            error: Some(e.to_string()),
+        },
     };
     give_json(&answer)
 }
@@ -138,8 +179,18 @@ mod tests {
     fn another_package_or_architecture_fails() {
         let keys = public_keys(&SECRET);
         let signature = sign(&SECRET, NAME, SHA);
-        assert!(!verify_with(&keys, &NAME.replace("x64", "arm64"), SHA, &signature));
-        assert!(!verify_with(&keys, NAME, &SHA.replace('9', "8"), &signature));
+        assert!(!verify_with(
+            &keys,
+            &NAME.replace("x64", "arm64"),
+            SHA,
+            &signature
+        ));
+        assert!(!verify_with(
+            &keys,
+            NAME,
+            &SHA.replace('9', "8"),
+            &signature
+        ));
     }
 
     #[test]
@@ -153,7 +204,12 @@ mod tests {
         ml_only.extend_from_slice(&good[ED25519_LENGTH..]);
         assert!(!verify_with(&keys, NAME, SHA, &ed_only));
         assert!(!verify_with(&keys, NAME, SHA, &ml_only));
-        assert!(!verify_with(&keys, NAME, SHA, &good[..SIGNATURE_LENGTH - 1]));
+        assert!(!verify_with(
+            &keys,
+            NAME,
+            SHA,
+            &good[..SIGNATURE_LENGTH - 1]
+        ));
     }
 
     #[test]
@@ -165,7 +221,9 @@ mod tests {
     #[test]
     fn the_shipped_keys_are_whole() {
         assert_eq!(PUBLIC_KEYS.len(), 32 + 1952);
-        assert!(ed25519_dalek::VerifyingKey::from_bytes(PUBLIC_KEYS[..32].try_into().unwrap()).is_ok());
+        assert!(
+            ed25519_dalek::VerifyingKey::from_bytes(PUBLIC_KEYS[..32].try_into().unwrap()).is_ok()
+        );
     }
 
     #[test]

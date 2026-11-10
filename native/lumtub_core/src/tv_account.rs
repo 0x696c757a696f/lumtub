@@ -48,7 +48,12 @@ pub struct Credential {
     pub client_secret: String,
 }
 
-static ACCOUNT: LazyLock<Mutex<Account>> = LazyLock::new(|| Mutex::new(Account { base: "https://www.youtube.com".into(), ..Default::default() }));
+static ACCOUNT: LazyLock<Mutex<Account>> = LazyLock::new(|| {
+    Mutex::new(Account {
+        base: "https://www.youtube.com".into(),
+        ..Default::default()
+    })
+});
 
 /// Bumped by every new sign-in and by cancelling, so an older wait stops.
 static ATTEMPT: AtomicU64 = AtomicU64::new(0);
@@ -104,7 +109,11 @@ pub fn tv_body(body: &Value, hl: &str, gl: &str) -> Value {
 /// What a token answer says.
 #[derive(Debug, PartialEq)]
 pub enum TokenAnswer {
-    Tokens { access: String, refresh: Option<String>, seconds: u64 },
+    Tokens {
+        access: String,
+        refresh: Option<String>,
+        seconds: u64,
+    },
     Pending,
     SlowDown,
     Denied,
@@ -125,8 +134,14 @@ pub fn read_token_answer(answer: &Value) -> TokenAnswer {
         None => match answer.get("access_token").and_then(Value::as_str) {
             Some(access) => TokenAnswer::Tokens {
                 access: access.to_owned(),
-                refresh: answer.get("refresh_token").and_then(Value::as_str).map(str::to_owned),
-                seconds: answer.get("expires_in").and_then(Value::as_u64).unwrap_or(3600),
+                refresh: answer
+                    .get("refresh_token")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned),
+                seconds: answer
+                    .get("expires_in")
+                    .and_then(Value::as_u64)
+                    .unwrap_or(3600),
             },
             None => TokenAnswer::Failed("no access_token".into()),
         },
@@ -161,9 +176,17 @@ pub fn client_in_script(script: &str) -> Option<(String, String)> {
         let id = &rest[..end];
         let after = rest[end + 1..].trim_start_matches(',').trim_start();
         let secret = after.split_once(":\"").and_then(|(name, value)| {
-            let name_ok = !name.is_empty() && name.chars().all(|c| c == '$' || c == '_' || c.is_ascii_alphanumeric());
+            let name_ok = !name.is_empty()
+                && name
+                    .chars()
+                    .all(|c| c == '$' || c == '_' || c.is_ascii_alphanumeric());
             let secret = &value[..value.find('"')?];
-            (name_ok && !secret.is_empty() && secret.chars().all(|c| c == '_' || c == '-' || c.is_ascii_alphanumeric())).then_some(secret)
+            (name_ok
+                && !secret.is_empty()
+                && secret
+                    .chars()
+                    .all(|c| c == '_' || c == '-' || c.is_ascii_alphanumeric()))
+            .then_some(secret)
         });
         if id.ends_with(".apps.googleusercontent.com")
             && let Some(secret) = secret
@@ -180,11 +203,25 @@ pub fn script_in_page(page: &str) -> Option<String> {
     let tail = &page[at..];
     let start = tail.find("src=\"")? + 5;
     let src = &tail[start..start + tail[start..].find('"')?];
-    Some(if src.starts_with("//") { format!("https:{src}") } else if src.starts_with('/') { format!("https://www.youtube.com{src}") } else { src.to_owned() })
+    Some(if src.starts_with("//") {
+        format!("https:{src}")
+    } else if src.starts_with('/') {
+        format!("https://www.youtube.com{src}")
+    } else {
+        src.to_owned()
+    })
 }
 
 async fn get(url: &str) -> Option<String> {
-    let response = client().get(url).header("User-Agent", TV_USER_AGENT).header("Referer", "https://www.youtube.com/tv").header("Accept-Language", "en-US").timeout(Duration::from_secs(20)).send().await.ok()?;
+    let response = client()
+        .get(url)
+        .header("User-Agent", TV_USER_AGENT)
+        .header("Referer", "https://www.youtube.com/tv")
+        .header("Accept-Language", "en-US")
+        .timeout(Duration::from_secs(20))
+        .send()
+        .await
+        .ok()?;
     response.status().is_success().then_some(())?;
     response.text().await.ok()
 }
@@ -195,7 +232,12 @@ async fn tv_client(base: &str) -> (String, String) {
     let found = async {
         let page = get(&format!("{base}/tv")).await?;
         let script = script_in_page(&page)?;
-        let script = if script.starts_with("https://www.youtube.com") && base != "https://www.youtube.com" { script.replacen("https://www.youtube.com", base, 1) } else { script };
+        let script =
+            if script.starts_with("https://www.youtube.com") && base != "https://www.youtube.com" {
+                script.replacen("https://www.youtube.com", base, 1)
+            } else {
+                script
+            };
         client_in_script(&get(&script).await?)
     }
     .await;
@@ -204,13 +246,24 @@ async fn tv_client(base: &str) -> (String, String) {
 
 fn device_id() -> String {
     let mut bytes = [0u8; 16];
-    let seed = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0) ^ (std::process::id() as u128) << 64;
+    let seed = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0)
+        ^ (std::process::id() as u128) << 64;
     let digest = <sha2::Sha256 as sha2::Digest>::digest(seed.to_le_bytes());
     bytes.copy_from_slice(&digest[..16]);
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
     let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-    format!("{}-{}-{}-{}-{}", &hex[..8], &hex[8..12], &hex[12..16], &hex[16..20], &hex[20..])
+    format!(
+        "{}-{}-{}-{}-{}",
+        &hex[..8],
+        &hex[8..12],
+        &hex[12..16],
+        &hex[16..20],
+        &hex[20..]
+    )
 }
 
 /// The steps of a sign-in, posted to Dart: `[0, code, address]` once the
@@ -231,14 +284,33 @@ async fn sign_in(port: i64, attempt: u64) {
             return;
         }
     };
-    let (Some(code), Some(user_code)) = (device.get("device_code").and_then(Value::as_str), device.get("user_code").and_then(Value::as_str)) else {
+    let (Some(code), Some(user_code)) = (
+        device.get("device_code").and_then(Value::as_str),
+        device.get("user_code").and_then(Value::as_str),
+    ) else {
         post(port, vec![Item::Int(2), Item::Text("no code".into())]);
         return;
     };
-    let address = device.get("verification_url").and_then(Value::as_str).unwrap_or("https://www.youtube.com/activate");
-    post(port, vec![Item::Int(0), Item::Text(user_code.into()), Item::Text(address.into())]);
+    let address = device
+        .get("verification_url")
+        .and_then(Value::as_str)
+        .unwrap_or("https://www.youtube.com/activate");
+    post(
+        port,
+        vec![
+            Item::Int(0),
+            Item::Text(user_code.into()),
+            Item::Text(address.into()),
+        ],
+    );
     let mut wait = Duration::from_secs(device.get("interval").and_then(Value::as_u64).unwrap_or(5));
-    let until = Instant::now() + Duration::from_secs(device.get("expires_in").and_then(Value::as_u64).unwrap_or(1800));
+    let until = Instant::now()
+        + Duration::from_secs(
+            device
+                .get("expires_in")
+                .and_then(Value::as_u64)
+                .unwrap_or(1800),
+        );
     loop {
         tokio::time::sleep(wait).await;
         if ATTEMPT.load(Ordering::SeqCst) != attempt {
@@ -259,15 +331,31 @@ async fn sign_in(port: i64, attempt: u64) {
             return;
         }
         match answer.map(|a| read_token_answer(&a)) {
-            Ok(TokenAnswer::Pending) => continue,
+            // A dropped connection says nothing about the sign-in: keep asking
+            // until the code expires.
+            Ok(TokenAnswer::Pending) | Err(_) => continue,
             Ok(TokenAnswer::SlowDown) => wait += Duration::from_secs(5),
-            Ok(TokenAnswer::Tokens { access, refresh: Some(refresh), seconds }) => {
-                let credential = Credential { refresh, client_id: client_id.clone(), client_secret: client_secret.clone() };
+            Ok(TokenAnswer::Tokens {
+                access,
+                refresh: Some(refresh),
+                seconds,
+            }) => {
+                let credential = Credential {
+                    refresh,
+                    client_id: client_id.clone(),
+                    client_secret: client_secret.clone(),
+                };
                 let saved = {
                     let mut account = account();
                     account.refresh = Some(credential.clone());
-                    account.access = Some((access, Instant::now() + Duration::from_secs(seconds.saturating_sub(60))));
-                    account.file.clone().map(|file| store::save(&file, &credential))
+                    account.access = Some((
+                        access,
+                        Instant::now() + Duration::from_secs(seconds.saturating_sub(60)),
+                    ));
+                    account
+                        .file
+                        .clone()
+                        .map(|file| store::save(&file, &credential))
                 };
                 match saved {
                     Some(Err(why)) => post(port, vec![Item::Int(2), Item::Text(why)]),
@@ -276,7 +364,10 @@ async fn sign_in(port: i64, attempt: u64) {
                 return;
             }
             Ok(TokenAnswer::Tokens { .. }) => {
-                post(port, vec![Item::Int(2), Item::Text("no refresh_token".into())]);
+                post(
+                    port,
+                    vec![Item::Int(2), Item::Text("no refresh_token".into())],
+                );
                 return;
             }
             Ok(TokenAnswer::Denied) => {
@@ -291,7 +382,7 @@ async fn sign_in(port: i64, attempt: u64) {
                 post(port, vec![Item::Int(2), Item::Text("invalid_grant".into())]);
                 return;
             }
-            Ok(TokenAnswer::Failed(why)) | Err(why) => {
+            Ok(TokenAnswer::Failed(why)) => {
                 post(port, vec![Item::Int(2), Item::Text(why)]);
                 return;
             }
@@ -310,12 +401,13 @@ pub(crate) enum NoToken {
 pub(crate) async fn access_token() -> Result<String, NoToken> {
     let (refresh, base) = {
         let account = account();
+        let refresh = account.refresh.clone().ok_or(NoToken::SignedOut)?;
         if let Some((token, until)) = &account.access
             && Instant::now() < *until
         {
             return Ok(token.clone());
         }
-        (account.refresh.clone().ok_or(NoToken::SignedOut)?, account.base.clone())
+        (refresh, account.base.clone())
     };
     let answer = send(
         format!("{base}/o/oauth2/token"),
@@ -324,8 +416,17 @@ pub(crate) async fn access_token() -> Result<String, NoToken> {
     .await
     .map_err(NoToken::Failed)?;
     match read_token_answer(&answer) {
-        TokenAnswer::Tokens { access, seconds, .. } => {
-            account().access = Some((access.clone(), Instant::now() + Duration::from_secs(seconds.saturating_sub(60))));
+        TokenAnswer::Tokens {
+            access, seconds, ..
+        } => {
+            let mut account = account();
+            if account.refresh.as_ref() != Some(&refresh) {
+                return Err(NoToken::SignedOut);
+            }
+            account.access = Some((
+                access.clone(),
+                Instant::now() + Duration::from_secs(seconds.saturating_sub(60)),
+            ));
             Ok(access)
         }
         TokenAnswer::Revoked => {
@@ -378,7 +479,13 @@ const ENDPOINTS: [&str; 9] = [
 /// when the sign-in was revoked (now signed out), `[-3, why]` on failure.
 async fn innertube(port: i64, request: InnerTubeRequest) {
     if !ENDPOINTS.contains(&request.endpoint.as_str()) {
-        post(port, vec![Item::Int(-3), Item::Text(format!("endpoint {} is not allowed", request.endpoint))]);
+        post(
+            port,
+            vec![
+                Item::Int(-3),
+                Item::Text(format!("endpoint {} is not allowed", request.endpoint)),
+            ],
+        );
         return;
     }
     let token = match access_token().await {
@@ -399,7 +506,10 @@ async fn innertube(port: i64, request: InnerTubeRequest) {
     let base = account().base.clone();
     let body = tv_body(&request.body, &request.hl, &request.gl);
     let sent = client()
-        .post(format!("{base}/youtubei/v1/{}?prettyPrint=false", request.endpoint))
+        .post(format!(
+            "{base}/youtubei/v1/{}?prettyPrint=false",
+            request.endpoint
+        ))
         .bearer_auth(token)
         .header("User-Agent", TV_USER_AGENT)
         .header("Accept-Language", request.language)
@@ -438,7 +548,9 @@ async fn innertube(port: i64, request: InnerTubeRequest) {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_tv_open(json: *const u8, length: usize) -> bool {
     let options: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
-    let Some(folder) = options.get("folder").and_then(Value::as_str) else { return false };
+    let Some(folder) = options.get("folder").and_then(Value::as_str) else {
+        return false;
+    };
     let file = PathBuf::from(folder).join("youtube-tv.bin");
     let mut account = account();
     if let Some(base) = options.get("base").and_then(Value::as_str) {
@@ -488,7 +600,8 @@ pub extern "C" fn lumtub_tv_signed_in() -> bool {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_tv_innertube(port: i64, json: *const u8, length: usize) -> bool {
-    let Ok(request) = serde_json::from_str::<InnerTubeRequest>(unsafe { text(json, length) }) else {
+    let Ok(request) = serde_json::from_str::<InnerTubeRequest>(unsafe { text(json, length) })
+    else {
         return false;
     };
     runtime().spawn(innertube(port, request));
@@ -508,7 +621,13 @@ mod store {
     pub fn load(file: &Path) -> Option<Credential> {
         let data = protect::unprotect(&std::fs::read(file).ok()?)?;
         let value: Value = serde_json::from_slice(&data).ok()?;
-        let field = |key: &str| value.get(key).and_then(Value::as_str).filter(|t| !t.is_empty()).map(str::to_owned);
+        let field = |key: &str| {
+            value
+                .get(key)
+                .and_then(Value::as_str)
+                .filter(|t| !t.is_empty())
+                .map(str::to_owned)
+        };
         Some(Credential {
             refresh: field("refresh_token")?,
             // A sign-in saved before the client was kept is the known one's.
@@ -526,29 +645,58 @@ mod store {
     #[cfg(windows)]
     mod protect {
         use windows_sys::Win32::Foundation::{HLOCAL, LocalFree};
-        use windows_sys::Win32::Security::Cryptography::{CRYPT_INTEGER_BLOB, CRYPTPROTECT_UI_FORBIDDEN, CryptProtectData, CryptUnprotectData};
+        use windows_sys::Win32::Security::Cryptography::{
+            CRYPT_INTEGER_BLOB, CRYPTPROTECT_UI_FORBIDDEN, CryptProtectData, CryptUnprotectData,
+        };
 
         // The app's earlier name; the Dart side used the same, so a sign-in
         // saved by it still opens.
         const ENTROPY: &[u8] = b"YTPlus account v1";
 
         fn run(data: &[u8], seal: bool) -> Option<Vec<u8>> {
-            let input = CRYPT_INTEGER_BLOB { cbData: data.len() as u32, pbData: data.as_ptr() as *mut u8 };
-            let entropy = CRYPT_INTEGER_BLOB { cbData: ENTROPY.len() as u32, pbData: ENTROPY.as_ptr() as *mut u8 };
-            let mut output = CRYPT_INTEGER_BLOB { cbData: 0, pbData: std::ptr::null_mut() };
+            let input = CRYPT_INTEGER_BLOB {
+                cbData: data.len() as u32,
+                pbData: data.as_ptr() as *mut u8,
+            };
+            let entropy = CRYPT_INTEGER_BLOB {
+                cbData: ENTROPY.len() as u32,
+                pbData: ENTROPY.as_ptr() as *mut u8,
+            };
+            let mut output = CRYPT_INTEGER_BLOB {
+                cbData: 0,
+                pbData: std::ptr::null_mut(),
+            };
             // SAFETY: the blobs point to live buffers; the output is freed below.
             let ok = unsafe {
                 if seal {
-                    CryptProtectData(&input, std::ptr::null(), &entropy, std::ptr::null(), std::ptr::null(), CRYPTPROTECT_UI_FORBIDDEN, &mut output)
+                    CryptProtectData(
+                        &input,
+                        std::ptr::null(),
+                        &entropy,
+                        std::ptr::null(),
+                        std::ptr::null(),
+                        CRYPTPROTECT_UI_FORBIDDEN,
+                        &mut output,
+                    )
                 } else {
-                    CryptUnprotectData(&input, std::ptr::null_mut(), &entropy, std::ptr::null(), std::ptr::null(), CRYPTPROTECT_UI_FORBIDDEN, &mut output)
+                    CryptUnprotectData(
+                        &input,
+                        std::ptr::null_mut(),
+                        &entropy,
+                        std::ptr::null(),
+                        std::ptr::null(),
+                        CRYPTPROTECT_UI_FORBIDDEN,
+                        &mut output,
+                    )
                 }
             };
             if ok == 0 || output.pbData.is_null() {
                 return None;
             }
             // SAFETY: Windows filled [output] with cbData bytes.
-            let bytes = unsafe { std::slice::from_raw_parts(output.pbData, output.cbData as usize) }.to_vec();
+            let bytes =
+                unsafe { std::slice::from_raw_parts(output.pbData, output.cbData as usize) }
+                    .to_vec();
             unsafe { LocalFree(output.pbData as HLOCAL) };
             Some(bytes)
         }
@@ -589,7 +737,11 @@ mod tests {
 
     #[test]
     fn builds_the_tv_apps_request() {
-        let body = tv_body(&json!({"videoId": "x", "context": {"client": {"clientName": "WEB"}}}), "zh-CN", "CN");
+        let body = tv_body(
+            &json!({"videoId": "x", "context": {"client": {"clientName": "WEB"}}}),
+            "zh-CN",
+            "CN",
+        );
         assert_eq!(body["context"]["client"]["clientName"], "TVHTML5");
         assert_eq!(body["context"]["client"]["hl"], "zh-CN");
         assert_eq!(body["videoId"], "x");
@@ -598,20 +750,42 @@ mod tests {
 
     #[test]
     fn reads_the_client_from_the_tv_apps_page_and_script() {
-        assert_eq!(script_in_page(r#"<script id="base-js" src="/s/_/kabuki/base.js" nonce="x"></script>"#).as_deref(), Some("https://www.youtube.com/s/_/kabuki/base.js"));
+        assert_eq!(
+            script_in_page(r#"<script id="base-js" src="/s/_/kabuki/base.js" nonce="x"></script>"#)
+                .as_deref(),
+            Some("https://www.youtube.com/s/_/kabuki/base.js")
+        );
         let script = r#"a={clientId:"nope",b:"x"};c={clientId:"861-abc.apps.googleusercontent.com",
 $q:"Sec_ret-1"}"#;
-        assert_eq!(client_in_script(script), Some(("861-abc.apps.googleusercontent.com".into(), "Sec_ret-1".into())));
+        assert_eq!(
+            client_in_script(script),
+            Some((
+                "861-abc.apps.googleusercontent.com".into(),
+                "Sec_ret-1".into()
+            ))
+        );
         assert_eq!(client_in_script("nothing here"), None);
     }
 
     #[test]
     fn reads_token_answers() {
-        assert_eq!(read_token_answer(&json!({"error": "authorization_pending"})), TokenAnswer::Pending);
-        assert_eq!(read_token_answer(&json!({"error": "invalid_grant"})), TokenAnswer::Revoked);
         assert_eq!(
-            read_token_answer(&json!({"access_token": "a", "refresh_token": "r", "expires_in": 100})),
-            TokenAnswer::Tokens { access: "a".into(), refresh: Some("r".into()), seconds: 100 }
+            read_token_answer(&json!({"error": "authorization_pending"})),
+            TokenAnswer::Pending
+        );
+        assert_eq!(
+            read_token_answer(&json!({"error": "invalid_grant"})),
+            TokenAnswer::Revoked
+        );
+        assert_eq!(
+            read_token_answer(
+                &json!({"access_token": "a", "refresh_token": "r", "expires_in": 100})
+            ),
+            TokenAnswer::Tokens {
+                access: "a".into(),
+                refresh: Some("r".into()),
+                seconds: 100
+            }
         );
     }
 
@@ -620,7 +794,11 @@ $q:"Sec_ret-1"}"#;
         let folder = std::env::temp_dir().join(format!("lumtub-tv-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
         let file = folder.join("youtube-tv.bin");
-        let credential = Credential { refresh: "secret".into(), client_id: "id".into(), client_secret: "s".into() };
+        let credential = Credential {
+            refresh: "secret".into(),
+            client_id: "id".into(),
+            client_secret: "s".into(),
+        };
         store::save(&file, &credential).unwrap();
         assert_eq!(store::load(&file), Some(credential));
         std::fs::remove_dir_all(&folder).unwrap();

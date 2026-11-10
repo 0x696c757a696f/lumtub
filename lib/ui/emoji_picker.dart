@@ -106,7 +106,7 @@ class _EmojiGrid extends StatelessWidget {
                 onTap: emoji.locked ? null : () => pick(emoji.shortcut),
                 child: Opacity(
                   opacity: emoji.locked ? 0.35 : 1,
-                  child: Image.network(emoji.url, width: 24, height: 24, errorBuilder: (context, _, __) => Text(emoji.shortcut, style: const TextStyle(fontSize: 9))),
+                  child: Image.network(emoji.url, width: 24, height: 24, cacheWidth: (24 * MediaQuery.devicePixelRatioOf(context)).round(), cacheHeight: (24 * MediaQuery.devicePixelRatioOf(context)).round(), errorBuilder: (context, _, __) => Text(emoji.shortcut, style: const TextStyle(fontSize: 9))),
                 ),
               ),
           ]),

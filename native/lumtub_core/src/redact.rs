@@ -6,7 +6,14 @@ use std::os::raw::c_char;
 use crate::taste::{give, text};
 
 /// Names whose values are secret, in queries, forms and JSON.
-const SECRETS: [&str; 6] = ["access_token", "refresh_token", "id_token", "client_secret", "code", "token"];
+const SECRETS: [&str; 6] = [
+    "access_token",
+    "refresh_token",
+    "id_token",
+    "client_secret",
+    "code",
+    "token",
+];
 
 fn is_host(c: char) -> bool {
     c.is_ascii_alphanumeric() || matches!(c, '_' | '.' | '-')
@@ -20,7 +27,9 @@ fn starts_with_ignore_case(s: &str, name: &str) -> bool {
 /// The length of the text that shows `s` is a secret's name and separator,
 /// such as `refresh_token=` or `"access_token": "`.
 fn secret_prefix(s: &str) -> Option<usize> {
-    let name = SECRETS.iter().find(|name| starts_with_ignore_case(s, name))?;
+    let name = SECRETS
+        .iter()
+        .find(|name| starts_with_ignore_case(s, name))?;
     let mut at = name.len();
     let rest = |at: usize| s[at..].chars().next();
     if matches!(rest(at), Some('"' | '\'')) {
@@ -88,7 +97,11 @@ pub fn redact(message: &str) -> String {
         if !s[scheme..end].ends_with("googlevideo.com") || !s[end..].starts_with('/') {
             return None;
         }
-        Some((end + 1, end + 1 + run(&s[end + 1..], |c| !c.is_whitespace()), "…"))
+        Some((
+            end + 1,
+            end + 1 + run(&s[end + 1..], |c| !c.is_whitespace()),
+            "…",
+        ))
     });
     let text = replace(&text, |s| {
         let keep = secret_prefix(s)?;
@@ -124,7 +137,14 @@ mod tests {
             {\"access_token\": \"ya29.zzz\"} Authorization: Bearer ya29.qqq \
             Failed to open https://rr3---sn-abc.googlevideo.com/videoplayback?expire=1&sig=ABC";
         let redacted = redact(line);
-        for secret in ["4/0Ab-secret", "1//abc", "ya29.zzz", "ya29.qqq", "sig=ABC", "expire=1"] {
+        for secret in [
+            "4/0Ab-secret",
+            "1//abc",
+            "ya29.zzz",
+            "ya29.qqq",
+            "sig=ABC",
+            "expire=1",
+        ] {
             assert!(!redacted.contains(secret), "{secret} in {redacted}");
         }
         assert_eq!(
@@ -136,7 +156,14 @@ mod tests {
 
     #[test]
     fn leaves_other_text_alone() {
-        for line in ["播放失败 dQw4w9WgXcQ", "token", "code: ", "https://www.youtube.com/watch?v=x", "Bearer", "http://googlevideo.com"] {
+        for line in [
+            "播放失败 dQw4w9WgXcQ",
+            "token",
+            "code: ",
+            "https://www.youtube.com/watch?v=x",
+            "Bearer",
+            "http://googlevideo.com",
+        ] {
             assert_eq!(redact(line), line);
         }
     }
@@ -144,6 +171,9 @@ mod tests {
     #[test]
     fn ignores_case_of_names() {
         assert_eq!(redact("Client_Secret = 'abc'"), "Client_Secret = '***'");
-        assert_eq!(redact("authorization: bearer\tXYZ"), "authorization: bearer\t***");
+        assert_eq!(
+            redact("authorization: bearer\tXYZ"),
+            "authorization: bearer\t***"
+        );
     }
 }

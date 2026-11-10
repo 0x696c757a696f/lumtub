@@ -9,7 +9,8 @@ use std::path::Path;
 use std::process::ExitCode;
 
 fn secret() -> Result<[u8; 64], String> {
-    let hex = std::env::var("LUMTUB_UPDATE_KEY").map_err(|_| "LUMTUB_UPDATE_KEY is not set".to_string())?;
+    let hex = std::env::var("LUMTUB_UPDATE_KEY")
+        .map_err(|_| "LUMTUB_UPDATE_KEY is not set".to_string())?;
     let hex = hex.trim();
     if hex.len() != 128 || !hex.bytes().all(|b| b.is_ascii_hexdigit()) {
         return Err("LUMTUB_UPDATE_KEY must be 128 hex digits".into());
@@ -27,7 +28,8 @@ fn run() -> Result<(), String> {
     if let [flag, out] = args.as_slice()
         && flag == "--public"
     {
-        return std::fs::write(out, signing::public_keys(&secret)).map_err(|e| format!("{out}: {e}"));
+        return std::fs::write(out, signing::public_keys(&secret))
+            .map_err(|e| format!("{out}: {e}"));
     }
     if args.is_empty() {
         return Err("usage: lumtub-sign FILE... | --public OUT".into());
@@ -37,7 +39,10 @@ fn run() -> Result<(), String> {
         return Err("LUMTUB_UPDATE_KEY does not match the public keys in keys/update.pub".into());
     }
     for file in &args {
-        let name = Path::new(file).file_name().and_then(|n| n.to_str()).ok_or_else(|| format!("{file}: no file name"))?;
+        let name = Path::new(file)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .ok_or_else(|| format!("{file}: no file name"))?;
         let sha256 = file_sha256(file).map_err(|e| format!("{file}: {e}"))?;
         let signature = signing::sign(&secret, name, &sha256);
         if !signing::verify_with(signing::PUBLIC_KEYS, name, &sha256, &signature) {

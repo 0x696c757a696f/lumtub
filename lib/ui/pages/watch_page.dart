@@ -175,7 +175,6 @@ class _WatchPageState extends State<WatchPage> {
               if (!panelOpen) ...[
                 if (replayChat != null) ...[const SizedBox(height: 24), replayChat],
                 const SizedBox(height: 24),
-                _UpNext(controller: controller, shrinkWrap: true),
               ],
             ];
             final page = CustomScrollView(slivers: [
@@ -189,7 +188,10 @@ class _WatchPageState extends State<WatchPage> {
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 SliverPadding(padding: const EdgeInsets.symmetric(horizontal: margin), sliver: comments),
               ],
-              SliverPadding(padding: const EdgeInsets.fromLTRB(margin, 0, margin, margin), sliver: SliverList.list(children: rest)),
+              SliverPadding(padding: const EdgeInsets.fromLTRB(margin, 0, margin, margin), sliver: SliverMainAxisGroup(slivers: [
+                SliverList.list(children: rest),
+                if (!panelOpen) ..._UpNext(controller: controller, shrinkWrap: true).slivers(context),
+              ])),
             ]);
             if (!sidePanel) return page;
             return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -215,7 +217,7 @@ class _WatchPageState extends State<WatchPage> {
                 )
               else
                 Padding(
-                  padding: const EdgeInsets.only(top: 4, right: 4),
+                  padding: const EdgeInsetsDirectional.only(top: 4, end: 4),
                   child: Align(
                     alignment: Alignment.topCenter,
                     child: IconButton(tooltip: tr('Expand'), icon: Icon(AppIcons.sidebar, size: 20), onPressed: () => theaterChatOpen.value = true),
@@ -226,7 +228,7 @@ class _WatchPageState extends State<WatchPage> {
           return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, AppStyle.pagePadding), children: main)),
             SizedBox(width: _sidePanelWidth, child: Padding(
-              padding: const EdgeInsets.only(right: AppStyle.pagePadding, top: 8),
+              padding: const EdgeInsetsDirectional.only(end: AppStyle.pagePadding, top: 8),
               child: _SidePanel(controller: controller, comments: comments, replayChat: replayChat),
             )),
           ]);
@@ -344,7 +346,7 @@ class _Toolbar extends StatelessWidget {
       ),
       if (decoded)
         Padding(
-          padding: const EdgeInsets.only(top: 8, left: 4),
+          padding: const EdgeInsetsDirectional.only(top: 8, start: 4),
           child: Text(tr('Decoding: {0} · {1}', [controller.currentCodec, controller.currentHwdec]), style: TextStyle(fontSize: 12, color: context.colors.outline)),
         ),
     ]);
@@ -357,7 +359,7 @@ class _BackRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Align(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: TextButton.icon(onPressed: onBack, icon: Icon(AppIcons.arrowLeft), label: Text(tr('Back'))),
@@ -476,12 +478,12 @@ class _Details extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       Row(children: [
-        ChannelAvatar(name: channel.isEmpty ? 'YouTube' : channel, image: channelRef?.avatar, channelId: channelRef?.id),
+        ChannelAvatar(name: channel.isEmpty ? tr('YouTube') : channel, image: channelRef?.avatar, channelId: channelRef?.id),
         const SizedBox(width: 12),
         // The name and its link take the free space, so the follow button
         // and menu sit at the right edge.
         Expanded(child: Row(children: [
-          Flexible(child: Text(channel.isEmpty ? 'YouTube' : channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall)),
+          Flexible(child: Text(channel.isEmpty ? tr('YouTube') : channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.text.titleSmall)),
           const SizedBox(width: 8),
           if (channelRef != null)
             TextButton(onPressed: () => controller.openChannel(channelRef), child: Text(tr('View channel')))
@@ -737,13 +739,15 @@ class _ReplayChatPanel extends StatelessWidget {
 
 final _chatRows = Expando<Widget>();
 
+@visibleForTesting
+Widget upNextForTest(AppController controller) => _UpNext(controller: controller);
+
 class _UpNext extends StatelessWidget {
   const _UpNext({required this.controller, this.shrinkWrap = false});
   final AppController controller;
   final bool shrinkWrap;
 
-  @override
-  Widget build(BuildContext context) {
+  List<Widget> slivers(BuildContext context) {
     final items = controller.upNext;
     final related = controller.related;
     // What 接下来播放 already lists is not repeated under 相关视频.
@@ -756,40 +760,46 @@ class _UpNext extends StatelessWidget {
         child: Switch(value: controller.settings.playOrder == PlayOrder.autoPlayRelated, onChanged: (on) => unawaited(controller.setAutoplayNext(on))),
       ),
     ]);
-    final children = <Widget>[
+    final head = <Widget>[
       if (controller.playQueue.isNotEmpty) ...[PlayQueuePanel(controller: controller), const SizedBox(height: 16)],
       if (controller.playingList != null)
         PlayingListPanel(controller: controller, trailing: autoplay, shrinkWrap: shrinkWrap)
       else
-        _header(context, tr('Up next'), items.isEmpty ? null : tr('{0}', [items.length]), trailing: autoplay),
-      if (controller.playingList != null)
-        const SizedBox.shrink()
-      else if (items.isEmpty)
+        _header(context, tr('Up next'), items.isEmpty ? null : '${items.length}', trailing: autoplay),
+      if (controller.playingList == null && items.isEmpty)
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
           child: Text(
             relatedItems.isEmpty ? tr("You've reached the end of the queue. When playing videos from search results, playlists or watch history, the following videos appear here.") : controller.settings.autoplayNext ? tr("You've reached the end of the queue. Autoplay will continue with the related videos below.") : tr("You've reached the end of the queue. Turn on Autoplay to play the related videos below next."),
             style: TextStyle(color: context.colors.onSurfaceVariant, height: 1.5),
           ),
-        )
-      else
-        for (final item in shrinkWrap ? items.take(20) : items) _tile(item, null),
+        ),
+    ];
+    final tail = <Widget>[
       if (related != null) ...[
-        const SizedBox(height: 16),
-        _header(context, tr('Related videos'), tr('Search by title')),
-        for (final item in relatedItems) _tile(item, relatedItems),
         if (related.loading && relatedItems.isEmpty)
           const Padding(padding: EdgeInsets.all(12), child: LinearProgressIndicator())
         else if (related.error != null)
           Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: ErrorBanner(tr("Couldn't load related videos"), onRetry: () => related.loadMore(retry: true))),
       ],
     ];
-    if (shrinkWrap) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: children);
-    return ListView(padding: const EdgeInsets.only(bottom: AppStyle.pagePadding), children: children);
+    // Slivers, so a long list builds only the tiles on screen.
+    return [
+      SliverList.list(children: head),
+      if (controller.playingList == null && items.isNotEmpty) SliverList.builder(itemCount: items.length, itemBuilder: (context, i) => _tile(items[i], null)),
+      if (related != null) ...[
+        SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.only(top: 16), child: _header(context, tr('Related videos'), tr('Search by title')))),
+        SliverList.builder(itemCount: relatedItems.length, itemBuilder: (context, i) => _tile(relatedItems[i], relatedItems)),
+      ],
+      SliverList.list(children: tail),
+    ];
   }
 
+  @override
+  Widget build(BuildContext context) => CustomScrollView(slivers: [...slivers(context), const SliverPadding(padding: EdgeInsets.only(bottom: AppStyle.pagePadding))]);
+
   Widget _header(BuildContext context, String title, String? note, {Widget? trailing}) => Padding(
-        padding: EdgeInsets.fromLTRB(4, 0, trailing == null ? 4 : 0, 8),
+        padding: EdgeInsetsDirectional.fromSTEB(4, 0, trailing == null ? 4 : 0, 8),
         child: Row(children: [
           Text(title, style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
           if (note != null) ...[const SizedBox(width: 8), Text(note, style: TextStyle(color: context.colors.outline, fontSize: 12))],

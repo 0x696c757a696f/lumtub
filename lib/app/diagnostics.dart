@@ -100,7 +100,9 @@ extension Diagnostics on AppController {
       try {
         await timed(() => Socket.connect(uri.host, uri.port, timeout: const Duration(seconds: 4)).then((s) => s.destroy()), (_, ms) => add(NetworkCheck(tr('Proxy'), ok: true, ms: ms, route: proxy.redacted ?? '')),
             (e, ms) => add(NetworkCheck(tr('Proxy'), ok: false, ms: ms, route: proxy.redacted ?? '', detail: tr('The proxy cannot be reached; nothing goes direct instead. {0}', [diagnosticText(e)]))));
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'The proxy check failed: $e');
+      }
       if (proxy.isSocks) {
         final endpoint = proxyEndpoint ?? '';
         final bridged = endpoint.isNotEmpty && endpoint != '127.0.0.1:1';
@@ -117,7 +119,9 @@ extension Diagnostics on AppController {
           if (trace != null) exits[name] = trace.ip;
           add(NetworkCheck(name, ok: trace != null, ms: ms, route: route, detail: trace == null ? tr('No address in the answer') : '${trace.ip}${trace.country.isEmpty ? '' : ' · ${trace.country}'}'));
         }, (e, ms) => add(NetworkCheck(name, ok: false, ms: ms, route: route, detail: diagnosticText(e))));
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'A network check failed: $e');
+      }
     }
 
     final trace = Uri.parse('https://www.cloudflare.com/cdn-cgi/trace');
@@ -155,7 +159,9 @@ extension Diagnostics on AppController {
           },
           (e, ms) => add(NetworkCheck(tr('YouTube API'), ok: false, ms: ms, route: _appRoute, detail: diagnosticText(e))),
         );
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'A network check failed: $e');
+      }
     }
 
     // yt-dlp, then the servers its answer points at.
@@ -166,7 +172,9 @@ extension Diagnostics on AppController {
       try {
         info = await timed(() => repository.streams.resolve(_testVideo, _format, formatSort: _formatSort).then((r) => r.info), (_, ms) => add(NetworkCheck(tr('Stream extraction (yt-dlp)'), ok: true, ms: ms, route: _ytDlpRoute)),
             (e, ms) => add(NetworkCheck(tr('Stream extraction (yt-dlp)'), ok: false, ms: ms, route: _ytDlpRoute, detail: diagnosticText(e))));
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'A network check failed: $e');
+      }
     }
     final formats = info?['formats'] is List ? (info!['formats'] as List).whereType<Map>() : const <Map>[];
     final stream = formats.where((f) => '${f['url']}'.contains('googlevideo.com') && f['protocol'] == 'https').lastOrNull?['url']?.toString();
@@ -181,11 +189,15 @@ extension Diagnostics on AppController {
       try {
         await timed(() => _http.get(Uri.parse(stream), headers: headers).timeout(const Duration(seconds: 20)), (r, ms) => add(NetworkCheck(tr('Video servers (relay)'), ok: r.statusCode == 206 || r.statusCode == 200, ms: ms, route: _appRoute, detail: 'HTTP ${r.statusCode} · $host · ${speed(r.bodyBytes.length, ms)}')),
             (e, ms) => add(NetworkCheck(tr('Video servers (relay)'), ok: false, ms: ms, route: _appRoute, detail: diagnosticText(e))));
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'A network check failed: $e');
+      }
       try {
         await timed(() => _ioGet(Uri.parse(stream), headers: headers), (bytes, ms) => add(NetworkCheck(tr('Video servers (player)'), ok: true, ms: ms, route: _playerRoute, detail: '$host · ${speed(bytes.length, ms)}')),
             (e, ms) => add(NetworkCheck(tr('Video servers (player)'), ok: false, ms: ms, route: _playerRoute, detail: diagnosticText(e))));
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'A network check failed: $e');
+      }
     }
 
     // Subtitles, from the same answer.
@@ -203,14 +215,18 @@ extension Diagnostics on AppController {
       try {
         await timed(() => _http.get(Uri.parse(captions!)).timeout(const Duration(seconds: 10)), (r, ms) => add(NetworkCheck(tr('Subtitles'), ok: r.statusCode == 200, ms: ms, route: _appRoute, detail: 'HTTP ${r.statusCode}')),
             (e, ms) => add(NetworkCheck(tr('Subtitles'), ok: false, ms: ms, route: _appRoute, detail: diagnosticText(e))));
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'A network check failed: $e');
+      }
     }
 
     // Pictures load the way Flutter's images do.
     try {
       await timed(() => _ioGet(Uri.parse('https://i.ytimg.com/vi/$_testVideo/mqdefault.jpg')), (bytes, ms) => add(NetworkCheck(tr('Thumbnails'), ok: bytes.isNotEmpty, ms: ms, route: _playerRoute, detail: '${bytes.length >> 10} KB')),
           (e, ms) => add(NetworkCheck(tr('Thumbnails'), ok: false, ms: ms, route: _playerRoute, detail: diagnosticText(e))));
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'A network check failed: $e');
+    }
     logInfo('Network check: ${results.where((r) => r.ok || r.skipped).length} of ${results.length} passed');
     return results;
   }

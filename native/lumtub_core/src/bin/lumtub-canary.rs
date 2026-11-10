@@ -23,7 +23,10 @@ fn check(path: &str) -> ExitCode {
         }
     };
     let Ok(player) = serde_json::from_str::<Value>(&text) else {
-        println!("broken: the answer is not JSON: {}", text.chars().take(200).collect::<String>());
+        println!(
+            "broken: the answer is not JSON: {}",
+            text.chars().take(200).collect::<String>()
+        );
         return ExitCode::from(1);
     };
     let playability = &player["playabilityStatus"];
@@ -38,14 +41,20 @@ fn check(path: &str) -> ExitCode {
         println!("broken: playability {status}: {reason}");
         return ExitCode::from(1);
     }
-    let adaptive = player["streamingData"]["adaptiveFormats"].as_array().map(Vec::as_slice).unwrap_or_default();
+    let adaptive = player["streamingData"]["adaptiveFormats"]
+        .as_array()
+        .map(Vec::as_slice)
+        .unwrap_or_default();
     if adaptive.is_empty() {
         println!("broken: no adaptive formats");
         return ExitCode::from(1);
     }
     let ciphered = adaptive.iter().filter(|f| f.get("url").is_none()).count();
     if ciphered > 0 {
-        println!("broken: {ciphered} of {} formats need YouTube's JavaScript", adaptive.len());
+        println!(
+            "broken: {ciphered} of {} formats need YouTube's JavaScript",
+            adaptive.len()
+        );
         return ExitCode::from(1);
     }
     let Some(info) = quick::info(&player, &Settings::default()) else {
@@ -65,13 +74,22 @@ fn check(path: &str) -> ExitCode {
             }
         })
         .collect();
-    println!("ok: {} formats, picked {}", adaptive.len(), picked.join(" + "));
+    println!(
+        "ok: {} formats, picked {}",
+        adaptive.len(),
+        picked.join(" + ")
+    );
     ExitCode::SUCCESS
 }
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
+    match args
+        .iter()
+        .map(String::as_str)
+        .collect::<Vec<_>>()
+        .as_slice()
+    {
         ["body", id] => {
             println!("{}", quick::request(id));
             ExitCode::SUCCESS

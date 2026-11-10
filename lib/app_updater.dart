@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show MethodChannel, PlatformException;
 import 'package:http/http.dart' as http;
 
 import 'app_log.dart';
+import 'friendly_error.dart';
 import 'l10n/l10n.dart';
 import 'native_core.dart';
 
@@ -71,6 +72,10 @@ class AppUpdater extends ChangeNotifier {
   /// downloaded again, and the settings page sends to GitHub instead.
   String? rejected;
   Timer? _timer;
+  /// GitHub's ETag for the last answer and that answer, so a check can ask
+  /// "has it changed?" and an unchanged one (HTTP 304) costs no rate limit.
+  String? _etag;
+  Map<String, dynamic>? _latest;
 
   /// The portable package keeps a portable.txt next to lumtub.exe.
   static bool get portable => File('${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}portable.txt').existsSync();
@@ -117,17 +122,26 @@ class AppUpdater extends ChangeNotifier {
     try {
       final response = await _client.get(
         Uri.https('api.github.com', '/repos/0x696c757a696f/lumtub/releases/latest'),
-        headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'Lumtub/$appVersion'},
+        headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'Lumtub/$appVersion', if (_etag != null && _latest != null) 'If-None-Match': _etag!},
       ).timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
-      final json = jsonDecode(response.body);
+      final Object? json;
+      if (response.statusCode == 304 && _latest != null) {
+        json = _latest;
+      } else {
+        if (response.statusCode != 200) throw HttpException('GitHub returned HTTP ${response.statusCode}');
+        json = jsonDecode(response.body);
+        if (json is Map<String, dynamic>) {
+          _latest = json;
+          _etag = response.headers['etag'];
+        }
+      }
       if (json is! Map<String, dynamic>) throw const FormatException('Invalid GitHub release response');
       final offer = offerOf(json, current: appVersion, built: appBuilt, package: updatePackage, portable: portable);
       available = offer;
       if (offer == null) ready = null;
       logInfo(offer != null ? 'Lumtub update available: ${offer.version}' : 'Lumtub is up to date ($appVersion)');
     } catch (e) {
-      error = '$e';
+      error = friendlyError(e);
       logWarn('Could not check Lumtub updates: $e');
     } finally {
       checking = false;
@@ -171,7 +185,7 @@ class AppUpdater extends ChangeNotifier {
       ready = file;
       logInfo('Lumtub ${available!.version} downloaded; it installs when Lumtub closes');
     } catch (e) {
-      error = '$e';
+      error = friendlyError(e);
       logWarn('Could not download the Lumtub update: $e');
     } finally {
       progress = null;
@@ -190,14 +204,43 @@ class AppUpdater extends ChangeNotifier {
       if (response.statusCode != 200) throw HttpException('Signature download failed: HTTP ${response.statusCode}');
       final sig = File('${file.path}.sig');
       await sig.writeAsBytes(response.bodyBytes);
-      final path = file.path, sigPath = sig.path;
-      final error = await Isolate.run(() => verifyUpdate(file: path, name: name, signature: sigPath));
-      await sig.delete();
+      final path = file.path, sigPath = sig.path, version = available?.version;
+      final error = await Isolate.run(() => verifyUpdate(file: path, name: name, signature: sigPath, version: version, current: appVersion));
       if (error != null) throw FormatException(error);
     } catch (_) {
-      if (await file.exists()) await file.delete();
+      await _discard(file);
       rethrow;
     }
+  }
+
+  static Future<void> _discard(File file) async {
+    for (final f in [file, File('${file.path}.sig')]) {
+      try {
+        if (await f.exists()) await f.delete();
+      } catch (_) {}
+    }
+  }
+
+  /// Checks the package against the `.sig` saved at download once more,
+  /// right before it is installed, in case the file changed on disk since.
+  /// Deletes it and returns false when it no longer holds.
+  Future<bool> _recheck(File file) async {
+    final name = available?.asset?['name']?.toString() ?? file.path.split(Platform.pathSeparator).last;
+    final sigPath = '${file.path}.sig', path = file.path, version = available?.version;
+    String? error;
+    try {
+      error = await File(sigPath).exists() ? await Isolate.run(() => verifyUpdate(file: path, name: name, signature: sigPath, version: version, current: appVersion)) : 'The update signature is missing';
+    } catch (e) {
+      error = '$e';
+    }
+    if (error == null) return true;
+    logWarn('The downloaded Lumtub update failed its check before installing: $error');
+    await _discard(file);
+    rejected = available?.version;
+    ready = null;
+    installError = tr('see the logs for details');
+    notifyListeners();
+    return false;
   }
 
   /// Installs the downloaded package once this process has ended, and
@@ -211,6 +254,7 @@ class AppUpdater extends ChangeNotifier {
   Future<bool> install({bool relaunch = false}) async {
     final file = ready;
     if (file == null || !await file.exists()) return false;
+    if (!await _recheck(file)) return false;
     if (Platform.isAndroid) return _installApk(file);
     final executable = Platform.resolvedExecutable;
     final portable = file.path.endsWith('.zip');
@@ -233,7 +277,7 @@ class AppUpdater extends ChangeNotifier {
         if (result == null) throw StateError('No native core');
         if (result['ok'] != true) {
           logWarn('Could not start the Lumtub installer${result['elevated'] == true ? ' as administrator' : ''}: ${result['error']}');
-          installError = result['elevated'] == true ? tr('Administrator rights are needed to install into this folder') : '${result['error']}';
+          installError = result['elevated'] == true ? tr('Administrator rights are needed to install into this folder') : tr('see the logs for details');
           notifyListeners();
           return false;
         }
@@ -256,7 +300,7 @@ class AppUpdater extends ChangeNotifier {
     } catch (e) {
       logWarn('Could not start the Lumtub update: $e');
       if (appImage != null || macApp != null) {
-        installError = e is FileSystemException ? (e.osError?.message ?? e.message) : '$e';
+        installError = friendlyFileError(e);
         notifyListeners();
       }
       return false;
@@ -272,8 +316,8 @@ class AppUpdater extends ChangeNotifier {
       logInfo('Handed Lumtub ${available?.version ?? ''} to the Android installer');
       return true;
     } on PlatformException catch (e) {
-      installError = e.message ?? e.code;
-      logWarn('Could not start the Android installer: $installError');
+      logWarn('Could not start the Android installer: ${e.message ?? e.code}');
+      installError = tr('see the logs for details');
       notifyListeners();
       return false;
     }
@@ -393,7 +437,9 @@ Future<void> replaceMacApp(File update, String app) async {
   } finally {
     try {
       await mount.delete();
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'Could not remove the update mount folder: $e');
+    }
   }
 }
 
@@ -412,10 +458,14 @@ AppRelease? offerOf(Map<String, dynamic> release, {required String current, Date
 /// Why the package [file] (listed as [name]) fails its `.sig` file
 /// [signature], or null when both signatures hold. It reads the whole
 /// package, so run it on another isolate.
-String? verifyUpdate({required String file, required String name, required String signature}) {
+/// With [version] (the release offered) the package's name must carry that
+/// version, newer than [current], so a signed older package can't be passed
+/// off as an update.
+String? verifyUpdate({required String file, required String name, required String signature, String? version, String? current}) {
   final core = NativeCore.instance;
   if (core == null) return 'The native core is missing';
-  final answer = jsonDecode(core.take(core.withText(jsonEncode({'file': file, 'name': name, 'signature': signature}), core.updateVerify)) ?? 'null');
+  final ask = {'file': file, 'name': name, 'signature': signature, if (version != null) 'version': version, if (version != null && current != null && RegExp(r'^v?\d+\.\d+\.\d+').hasMatch(current)) 'current': current};
+  final answer = jsonDecode(core.take(core.withText(jsonEncode(ask), core.updateVerify)) ?? 'null');
   if (answer is Map && answer['ok'] == true) return null;
   return answer is Map ? '${answer['error']}' : 'Could not check the signature';
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app/app_controller.dart';
 import '../l10n/l10n.dart';
@@ -173,8 +174,8 @@ class _TranslationViewState extends State<TranslationView> {
     switch (widget.style) {
       case TranslationStyle.quote:
         return Container(
-          padding: const EdgeInsets.only(left: 8),
-          decoration: BoxDecoration(border: Border(left: BorderSide(color: colors.primary.withValues(alpha: 0.6), width: 2))),
+          padding: const EdgeInsetsDirectional.only(start: 8),
+          decoration: BoxDecoration(border: BorderDirectional(start: BorderSide(color: colors.primary.withValues(alpha: 0.6), width: 2))),
           child: child,
         );
       case TranslationStyle.plain:
@@ -196,11 +197,17 @@ class _TranslationViewState extends State<TranslationView> {
           child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), child: child),
         );
       case TranslationStyle.blur:
-        // Hidden until the pointer is over it or it is tapped, for
-        // listening practice.
-        return MouseRegion(
-          onEnter: (_) => setState(() => _revealed = true),
-          onExit: (_) => setState(() => _revealed = false),
+        // Hidden until the pointer is over it, it has keyboard focus or it
+        // is tapped (Enter, Space or Select on focus), for listening practice.
+        return FocusableActionDetector(
+          onShowHoverHighlight: (over) => setState(() => _revealed = over),
+          onFocusChange: (focused) => setState(() => _revealed = focused),
+          actions: {ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) => setState(() => _revealed = !_revealed))},
+          shortcuts: const {
+            SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+            SingleActivator(LogicalKeyboardKey.select): ActivateIntent(),
+            SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+          },
           child: GestureDetector(
             onTap: () => setState(() => _revealed = !_revealed),
             child: ImageFiltered(

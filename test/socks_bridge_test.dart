@@ -232,7 +232,7 @@ void _tests(bool native) {
 
   test('SOCKS settings keep their login and are recognised', () {
     expect(NetworkProxy.normalize('socks5h://me:p%40ss@h:1080'), 'socks5h://me:p%40ss@h:1080');
-    expect(NetworkProxy.normalize('http://me:x@h:1'), 'http://h:1');
+    expect(NetworkProxy.normalize('http://me:x@h:1'), 'http://me:x@h:1');
     expect(const NetworkProxy('socks5://me:x@h:1').isSocks, isTrue);
     expect(const NetworkProxy('socks5://me:x@h:1').redacted, 'socks5://h:1');
     expect(const NetworkProxy('http://h:1').isSocks, isFalse);

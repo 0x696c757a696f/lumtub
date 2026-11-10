@@ -1,5 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
+import 'app_log.dart';
 
 /// Hands memory the process has freed back to the system.
 ///
@@ -23,7 +24,9 @@ void releaseFreedMemory() {
     } finally {
       _free(heaps);
     }
-  } catch (_) {}
+  } catch (e) {
+    logDebug(() => 'Heap trimming failed: $e');
+  }
 }
 
 void _releaseUnix() {
@@ -35,7 +38,9 @@ void _releaseUnix() {
       // Absent outside glibc, as on musl.
       process.lookupFunction<Int32 Function(Size), int Function(int)>('malloc_trim')(0);
     }
-  } catch (_) {}
+  } catch (e) {
+    logDebug(() => 'malloc_trim is not available: $e');
+  }
 }
 
 final _kernel32 = DynamicLibrary.open('kernel32.dll');

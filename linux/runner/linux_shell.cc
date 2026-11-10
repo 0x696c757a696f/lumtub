@@ -5,12 +5,16 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cstdio>
 #include <cstdlib>
 #include <set>
 #include <string>
 
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
+#endif
+#ifdef GDK_WINDOWING_WAYLAND
+#include <gdk/gdkwayland.h>
 #endif
 
 namespace {
@@ -77,6 +81,12 @@ struct Shell {
   FlMethodChannel* frame_channel = nullptr;
   bool custom_frame = false;
   GdkEvent* press = nullptr;
+
+  // The window's size and place when it is neither maximised nor picture in
+  // picture, kept in <data dir>/config/window.txt.
+  bool has_normal = false;
+  int normal_x = 0, normal_y = 0, normal_width = 0, normal_height = 0;
+  guint save_timer = 0;
 };
 
 Shell shell;
@@ -201,7 +211,72 @@ bool HideToTray() {
   return true;
 }
 
+// ---- Window size and place ------------------------------------------------
+
+constexpr int kMinWidth = 480, kMinHeight = 360;
+
+std::string WindowStateFile() {
+  const char* home = getenv("LUMTUB_HOME");
+  const char* data = getenv("XDG_DATA_HOME");
+  const char* user = getenv("HOME");
+  std::string root;
+  if (home != nullptr && home[0] != '\0') {
+    root = home;
+  } else if (data != nullptr && data[0] == '/') {
+    root = std::string(data) + "/lumtub";
+  } else if (user != nullptr && user[0] == '/') {
+    root = std::string(user) + "/.local/share/lumtub";
+  } else {
+    return "";
+  }
+  return root + "/config/window.txt";
+}
+
+bool OnWayland() {
+#ifdef GDK_WINDOWING_WAYLAND
+  return GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default());
+#else
+  return false;
+#endif
+}
+
+void SaveWindowState() {
+  if (shell.window == nullptr || shell.pip || !shell.has_normal) return;
+  GdkWindow* surface = gtk_widget_get_window(GTK_WIDGET(shell.window));
+  if (surface != nullptr && (gdk_window_get_state(surface) & GDK_WINDOW_STATE_FULLSCREEN)) return;
+  const std::string path = WindowStateFile();
+  if (path.empty()) return;
+  g_autofree gchar* directory = g_path_get_dirname(path.c_str());
+  g_mkdir_with_parents(directory, 0755);
+  FILE* file = fopen(path.c_str(), "w");
+  if (file == nullptr) return;
+  fprintf(file, "%d %d %d %d %d\n", shell.normal_width, shell.normal_height, shell.normal_x, shell.normal_y, gtk_window_is_maximized(shell.window) ? 1 : 0);
+  fclose(file);
+}
+
+void SaveWindowStateSoon() {
+  if (shell.save_timer != 0) return;
+  shell.save_timer = g_timeout_add(1000, +[](gpointer) -> gboolean {
+    shell.save_timer = 0;
+    SaveWindowState();
+    return G_SOURCE_REMOVE;
+  }, nullptr);
+}
+
+gboolean OnConfigure(GtkWidget*, GdkEventConfigure*, gpointer) {
+  GtkWindow* window = shell.window;
+  if (window == nullptr || shell.pip || gtk_window_is_maximized(window)) return FALSE;
+  GdkWindow* surface = gtk_widget_get_window(GTK_WIDGET(window));
+  if (surface == nullptr || (gdk_window_get_state(surface) & (GDK_WINDOW_STATE_FULLSCREEN | GDK_WINDOW_STATE_TILED))) return FALSE;
+  gtk_window_get_size(window, &shell.normal_width, &shell.normal_height);
+  gtk_window_get_position(window, &shell.normal_x, &shell.normal_y);
+  shell.has_normal = true;
+  SaveWindowStateSoon();
+  return FALSE;
+}
+
 gboolean OnDelete(GtkWidget*, GdkEvent*, gpointer) {
+  SaveWindowState();
   if (!shell.close_to_tray) return FALSE;
   // Without a tray Lumtub keeps running minimised, as it would in the tray.
   if (!HideToTray()) gtk_window_iconify(shell.window);
@@ -234,6 +309,7 @@ void HookHeaderBar() {
 // Wayland tells no window that it was minimised, so there it stays too.
 gboolean OnWindowState(GtkWidget*, GdkEventWindowState* event, gpointer) {
   if (event->changed_mask & GDK_WINDOW_STATE_MAXIMIZED) {
+    SaveWindowStateSoon();
     SendFrame("maximized", fl_value_new_bool((event->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) != 0));
   }
   if (event->changed_mask & GDK_WINDOW_STATE_FOCUSED) {
@@ -742,9 +818,41 @@ void linux_shell_attach(GtkWindow* window) {
   if (getenv("LUMTUB_X11") != nullptr) unsetenv("GDK_BACKEND");
   g_signal_connect(window, "delete-event", G_CALLBACK(OnDelete), nullptr);
   g_signal_connect(window, "window-state-event", G_CALLBACK(OnWindowState), nullptr);
+  g_signal_connect(window, "configure-event", G_CALLBACK(OnConfigure), nullptr);
   g_signal_connect(window, "map", G_CALLBACK(+[](GtkWidget*, gpointer) { HookHeaderBar(); }), nullptr);
   gtk_window_set_icon_from_file(window, IconPath().c_str(), nullptr);
   StartMpris();
+}
+
+void linux_shell_restore_window(GtkWindow* window) {
+  gtk_window_set_default_size(window, 1280, 720);
+  const std::string path = WindowStateFile();
+  if (path.empty()) return;
+  FILE* file = fopen(path.c_str(), "r");
+  if (file == nullptr) return;
+  int width = 0, height = 0, x = 0, y = 0, maximized = 0;
+  const int read = fscanf(file, "%d %d %d %d %d", &width, &height, &x, &y, &maximized);
+  fclose(file);
+  if (read != 5 || width < kMinWidth || height < kMinHeight || width > 16384 || height > 16384) return;
+  gtk_window_set_default_size(window, width, height);
+  shell.normal_width = width;
+  shell.normal_height = height;
+  shell.normal_x = x;
+  shell.normal_y = y;
+  shell.has_normal = true;
+  // Wayland compositors place windows themselves, so only the size is kept.
+  if (!OnWayland()) {
+    // Skip a place on a screen that is no longer there.
+    GdkDisplay* display = gdk_display_get_default();
+    bool visible = false;
+    for (int i = 0; display != nullptr && i < gdk_display_get_n_monitors(display); i++) {
+      GdkRectangle area, window_area = {x, y, width, height}, overlap;
+      gdk_monitor_get_workarea(gdk_display_get_monitor(display, i), &area);
+      if (gdk_rectangle_intersect(&area, &window_area, &overlap) && overlap.width >= 120 && overlap.height >= 60) visible = true;
+    }
+    if (visible) gtk_window_move(window, x, y);
+  }
+  if (maximized) gtk_window_maximize(window);
 }
 
 void linux_shell_connect(FlView* view) {

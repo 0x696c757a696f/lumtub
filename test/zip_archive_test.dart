@@ -94,5 +94,43 @@ void main() {
       final junk = File('${temp.path}/junk.zip')..writeAsBytesSync(List.filled(100, 7));
       await expectLater(extractZip(junk, out), throwsFormatException);
     });
+    test('enforces the entry, size and directory limits', () async {
+      final out = Directory('${temp.path}/out')..createSync();
+      final two = File('${temp.path}/two.zip')..writeAsBytesSync(_zip({'a': exe, 'b': exe}));
+      await expectLater(extractZip(two, out, maxEntries: 1), throwsFormatException);
+      await expectLater(extractZip(two, out, maxEntryBytes: 100), throwsFormatException);
+      await expectLater(extractZip(two, out, maxTotalBytes: 6000), throwsFormatException);
+      expect(await extractZip(two, out, maxTotalBytes: 10000), ['a', 'b']);
+    });
+
+    test('stops at the size an entry states', () async {
+      final bytes = _zip({'bomb': List.filled(100000, 0)});
+      final data = ByteData.sublistView(bytes);
+      var at = 0;
+      while (data.getUint32(at, Endian.little) != 0x02014b50) {
+        at++;
+      }
+      data.setUint32(at + 24, 10, Endian.little);
+      final archive = File('${temp.path}/bomb.zip')..writeAsBytesSync(bytes);
+      final out = Directory('${temp.path}/out')..createSync();
+      await expectLater(extractZip(archive, out), throwsFormatException);
+      expect(File('${out.path}/bomb').existsSync(), isFalse);
+    });
+
+    test('refuses names and directories that run past their data', () async {
+      final out = Directory('${temp.path}/out')..createSync();
+      final bytes = _zip({'name.txt': exe});
+      var data = ByteData.sublistView(bytes);
+      var at = 0;
+      while (data.getUint32(at, Endian.little) != 0x02014b50) {
+        at++;
+      }
+      data.setUint16(at + 28, 60000, Endian.little);
+      await expectLater(extractZip(File('${temp.path}/n.zip')..writeAsBytesSync(bytes), out), throwsFormatException);
+      final big = _zip({'name.txt': exe});
+      data = ByteData.sublistView(big);
+      data.setUint32(big.length - 22 + 12, 0x7FFFFFFF, Endian.little);
+      await expectLater(extractZip(File('${temp.path}/d.zip')..writeAsBytesSync(big), out), throwsFormatException);
+    });
   });
 }

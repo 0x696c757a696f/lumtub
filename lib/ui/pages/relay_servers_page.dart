@@ -9,6 +9,7 @@ import '../theme.dart';
 import 'settings_sections.dart';
 import '../../l10n/l10n.dart';
 import '../app_icons.dart';
+import '../common.dart';
 import '../skin_paint.dart';
 
 /// 设置 › Piped 服务器 / Invidious 实例: choose automatic selection or one
@@ -105,7 +106,7 @@ class _RelayServersPageState extends State<_RelayServersPage> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
               child: Text(
                 '${_busy ?? tr('{0} in all, {1} reachable', [servers.length, servers.where((s) => _piped.timingOf(s) != null).length])}'
-                '${updated == null ? '' : tr(' · list updated {0}/{1} at {2}', [updated.month, updated.day, '${updated.hour.toString().padLeft(2, '0')}:${updated.minute.toString().padLeft(2, '0')}'])}',
+                '${updated == null ? '' : tr(' · list updated {0}/{1} at {2}', [updated.month, updated.day, formatHourMinute(updated)])}',
                 style: Theme.of(context).textTheme.titleSmall!.copyWith(color: colors.primary),
               ),
             ),

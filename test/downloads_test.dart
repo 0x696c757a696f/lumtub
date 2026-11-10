@@ -279,7 +279,7 @@ void main() {
       await settle();
       final task = m.taskFor('aaaaaaaaaaa')!;
       expect(task.status, DownloadStatus.failed);
-      expect(task.error, contains('Video unavailable'));
+      expect(task.error, contains("isn't available"));
       expect(m.add(video('aaaaaaaaaaa'), DownloadQuality.audio), isNotNull);
       expect(m.tasks, hasLength(1));
     });

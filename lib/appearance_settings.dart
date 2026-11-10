@@ -528,16 +528,20 @@ class AppearanceSettingsStore {
   AppearanceSettingsStore(AppDirectories directories) : file = File('${directories.config.path}${Platform.pathSeparator}appearance.json');
 
   Future<AppearanceSettings> load() async {
+    if (!await file.exists()) return const AppearanceSettings();
     try {
       return AppearanceSettings.fromJson(jsonDecode(await file.readAsString()));
-    } catch (_) {
+    } catch (e) {
+      await setBrokenFileAside(file, e);
       return const AppearanceSettings();
     }
   }
 
-  Future<void> save(AppearanceSettings settings) async {
-    await file.parent.create(recursive: true);
-    await file.writeAsString(jsonEncode(settings.toJson()), flush: true);
+  final _writes = WriteQueue();
+
+  Future<void> save(AppearanceSettings settings) {
+    final text = jsonEncode(settings.toJson());
+    return _writes.run(() => writeFileAtomic(file, text));
   }
 }
 

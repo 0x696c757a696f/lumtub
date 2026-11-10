@@ -79,4 +79,22 @@ void main() {
     expect(lists.map((list) => (list.id, list.title)), [('PLxxxxxxxxxxxxxxxx', 'Title PLxxxxxxxxxxxxxxxx')]);
     expect(lists.single, isA<PlaylistResult>());
   }, skip: !core);
+
+  test('history rows name the day each video was watched; other pages keep none', () async {
+    Map<String, Object?> page() => {
+          'contents': {'tvBrowseRenderer': {'content': {'tvSurfaceContentRenderer': {'content': {'sectionListRenderer': {
+            'contents': [
+              {'shelfRenderer': {'headerRenderer': {'shelfHeaderRenderer': {'title': {'simpleText': '今天'}}}, 'content': {'horizontalListRenderer': {'items': [_tile('aaaaaaaaaaa')]}}}},
+              {'shelfRenderer': {'headerRenderer': {'shelfHeaderRenderer': {'title': {'simpleText': '11月3日'}}}, 'content': {'horizontalListRenderer': {'items': [_tile('bbbbbbbbbbb')]}}}},
+            ],
+          }}}}}},
+        };
+    final history = YoutubeTvFeed(_FakeSignIn([page()]));
+    final lines = await history.lines(YoutubeTvFeed.history).toList();
+    expect(history.historyDays, {'aaaaaaaaaaa': '今天', 'bbbbbbbbbbb': '11月3日'});
+    expect(lines.every((line) => !line.contains('shelf')), isTrue);
+    final home = YoutubeTvFeed(_FakeSignIn([page()]));
+    await home.videos(YoutubeTvFeed.home);
+    expect(home.historyDays, isEmpty);
+  }, skip: !core);
 }

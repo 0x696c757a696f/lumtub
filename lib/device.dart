@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'app_log.dart';
 import 'skins/skin.dart';
 
 /// What kind of device Lumtub runs on, beyond the operating system.
@@ -18,7 +19,9 @@ class Device {
     if (Platform.isAndroid) {
       try {
         tv = await const MethodChannel('lumtub/windows_shell').invokeMethod<bool>('isTv') ?? false;
-      } catch (_) {}
+      } catch (e) {
+        logWarn('Could not ask whether this is a TV: $e');
+      }
     }
     Skin.formFactor = tv ? 'tv' : tablet ? 'tablet' : 'mobile';
   }

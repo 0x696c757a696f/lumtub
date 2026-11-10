@@ -185,7 +185,9 @@ class ChunkedRelay implements StreamRelay {
       if (e is _Upstream || e is! IOException) logWarn('Chunked relay stopped: $e');
       try {
         await response.close();
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not close the relay response: $e');
+      }
     }
   }
 

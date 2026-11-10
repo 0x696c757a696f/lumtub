@@ -7,6 +7,7 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'l10n/l10n.dart';
 import 'system_env.dart';
+import 'app_log.dart';
 
 /// Read-only access to the account's YouTube data, as older versions asked.
 const youtubeReadonlyScope = 'https://www.googleapis.com/auth/youtube.readonly';
@@ -171,11 +172,15 @@ class GoogleAuth {
         await request.response.close();
         continue;
       }
-      final ok = query['state'] == state && query['code'] != null;
+      if (query['state'] != state) {
+        request.response.statusCode = HttpStatus.badRequest;
+        await request.response.close();
+        continue;
+      }
+      final ok = query['code'] != null;
       request.response.headers.contentType = ContentType.html;
       request.response.write(_page(ok ? tr('Signed in successfully') : tr("Sign-in wasn't completed"), ok ? tr('You can close this page and return to Lumtub.') : tr('Go back to Lumtub and try again.')));
       await request.response.close();
-      if (query['state'] != state) throw OAuthException(tr('Sign-in callback verification failed. Please try again'));
       final error = query['error'];
       if (error != null) throw OAuthException(error == 'access_denied' ? tr('Authorization revoked') : tr('Google refused the sign-in: {0}', [error]));
       return query['code']!;
@@ -190,7 +195,9 @@ class GoogleAuth {
   Future<void> revoke(String token) async {
     try {
       await _client.post(revokeEndpoint, body: {'token': token}).timeout(const Duration(seconds: 10));
-    } catch (_) {}
+    } catch (e) {
+      logWarn('Could not revoke the sign-in token: $e');
+    }
   }
 
   Future<OAuthTokens> _token(Map<String, String> fields, {String? previousRefreshToken}) async {
@@ -210,7 +217,9 @@ class GoogleAuth {
     try {
       final data = jsonDecode(body);
       if (data is Map && data['error'] is String) return data['error'] as String;
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'The error answer is not JSON: $e');
+    }
     return tr('HTTP error');
   }
 

@@ -174,13 +174,13 @@ class _CommentsSectionState extends State<CommentsSection> {
       tile(comment),
       if (_replyingTo == comment.id)
         Padding(
-          padding: const EdgeInsets.only(left: 44, bottom: 8),
+          padding: const EdgeInsetsDirectional.only(start: 44, bottom: 8),
           child: CommentComposer(hint: tr('Reply to {0}…', [comment.author]), autofocus: true, onSubmit: (text) => _reply(comment, text), onCancel: () => setState(() => _replyingTo = null)),
         ),
       if (thread != null) ...[
         for (final reply in thread.replies) tile(reply, reply: true),
         Padding(
-          padding: const EdgeInsets.only(left: 44),
+          padding: const EdgeInsetsDirectional.only(start: 44),
           child: thread.loading
               ? const Padding(padding: EdgeInsets.all(8), child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
               : error != null
@@ -283,7 +283,7 @@ class _CommentTile extends StatelessWidget {
       controller.openChannel(ChannelRef(channelId!, comment.author.replaceFirst(RegExp(r'^@'), '')));
     }
     return Padding(
-      padding: EdgeInsets.only(top: 8, bottom: 8, left: reply ? 44 : 0),
+      padding: EdgeInsetsDirectional.only(top: 8, bottom: 8, start: reply ? 44 : 0),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         InkWell(
           customBorder: const CircleBorder(),

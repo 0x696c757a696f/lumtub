@@ -47,6 +47,10 @@ class PlaybackService : Service() {
 
         private var state = State()
         private var service: PlaybackService? = null
+        // The service was asked for (it has not started yet), or Android refused
+        // it: the timeline ticks then do not build the notification again.
+        private var requested = false
+        private var denied = false
         private var session: MediaSession? = null
         private var artwork: Pair<String, Bitmap?>? = null
         private val main = Handler(Looper.getMainLooper())
@@ -79,7 +83,7 @@ class PlaybackService : Service() {
             }
             // Only a change the notification shows rebuilds it.
             if (before.status != state.status || before.title != state.title || before.artist != state.artist ||
-                before.next != state.next || before.previous != state.previous || service == null) {
+                before.next != state.next || before.previous != state.previous || (service == null && !requested && !denied)) {
                 show(app)
             }
         }
@@ -91,6 +95,8 @@ class PlaybackService : Service() {
                 it.stopSelf()
             }
             service = null
+            requested = false
+            denied = false
             context.getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION)
         }
 
@@ -164,12 +170,15 @@ class PlaybackService : Service() {
             val running = service
             if (running == null) {
                 val intent = Intent(context, PlaybackService::class.java)
+                requested = true
                 try {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(intent)
                     else context.startService(intent)
                 } catch (e: Exception) {
                     // Not allowed from the background (Android 12): the
                     // notification alone, without keeping the app alive.
+                    requested = false
+                    denied = true
                     context.getSystemService(NotificationManager::class.java)?.notify(NOTIFICATION, notification)
                 }
             } else {
@@ -224,6 +233,8 @@ class PlaybackService : Service() {
             }
         }
         service = this
+        requested = false
+        denied = false
         val notification = build(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)

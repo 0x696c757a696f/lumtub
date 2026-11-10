@@ -23,13 +23,21 @@ fn time(stamp: &str) -> Option<u64> {
         return None;
     }
     let (secs, frac) = parts.last()?.split_once('.')?;
-    if secs.len() != 2 || frac.is_empty() || frac.len() > 3 || !frac.bytes().all(|b| b.is_ascii_digit()) {
+    if secs.len() != 2
+        || frac.is_empty()
+        || frac.len() > 3
+        || !frac.bytes().all(|b| b.is_ascii_digit())
+    {
         return None;
     }
     let seconds: u64 = secs.parse().ok()?;
     let millis: u64 = format!("{frac:0<3}").parse().ok()?;
     let minutes: u64 = parts[parts.len() - 2].parse().ok()?;
-    let hours: u64 = if parts.len() == 3 { parts[0].parse().ok()? } else { 0 };
+    let hours: u64 = if parts.len() == 3 {
+        parts[0].parse().ok()?
+    } else {
+        0
+    };
     Some(((hours * 60 + minutes) * 60 + seconds) * 1000 + millis)
 }
 
@@ -64,7 +72,12 @@ fn clean(line: &str) -> String {
             _ => out.push(c),
         }
     }
-    out.replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&").trim().to_string()
+    out.replace("&nbsp;", " ")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&amp;", "&")
+        .trim()
+        .to_string()
 }
 
 /// The cues of a WebVTT or SRT file in time order, each on one line.
@@ -76,30 +89,46 @@ pub fn cues(source: &str) -> Vec<Cue> {
     let mut previous: Option<String> = None;
     for block in normalized.split("\n\n") {
         let lines: Vec<&str> = block.split('\n').collect();
-        let Some((at, (start, end))) = lines.iter().enumerate().find_map(|(i, l)| timing(l).map(|t| (i, t))) else {
+        let Some((at, (start, end))) = lines
+            .iter()
+            .enumerate()
+            .find_map(|(i, l)| timing(l).map(|t| (i, t)))
+        else {
             continue;
         };
-        let mut body: Vec<String> = lines[at + 1..].iter().map(|l| clean(l)).filter(|l| !l.is_empty()).collect();
+        let mut body: Vec<String> = lines[at + 1..]
+            .iter()
+            .map(|l| clean(l))
+            .filter(|l| !l.is_empty())
+            .collect();
         if previous.is_some() && body.first() == previous.as_ref() {
             body.remove(0);
         }
         let Some(last) = body.last() else { continue };
         previous = Some(last.clone());
-        out.push(Cue { start, end, text: body.join(" ") });
+        out.push(Cue {
+            start,
+            end,
+            text: body.join(" "),
+        });
     }
     out.sort_by_key(|c| c.start);
     out
 }
 
-static SIMPLIFIED: LazyLock<HashSet<char>> =
-    LazyLock::new(|| "这们来时会说为国后还与对过开关体学发点从个么见长门问间听车东边头实现话让认没给经样张导书买卖钱电视频网层万专业亿".chars().collect());
-static TRADITIONAL: LazyLock<HashSet<char>> =
-    LazyLock::new(|| "這們來時會說為國後還與對過開關體學發點從個麼見長門問間聽車東邊頭實現話讓認沒給經樣張導書買賣錢電視頻網層萬專業億".chars().collect());
+static SIMPLIFIED: LazyLock<HashSet<char>> = LazyLock::new(|| {
+    "这们来时会说为国后还与对过开关体学发点从个么见长门问间听车东边头实现话让认没给经样张导书买卖钱电视频网层万专业亿".chars().collect()
+});
+static TRADITIONAL: LazyLock<HashSet<char>> = LazyLock::new(|| {
+    "這們來時會說為國後還與對過開關體學發點從個麼見長門問間聽車東邊頭實現話讓認沒給經樣張導書買賣錢電視頻網層萬專業億".chars().collect()
+});
 const ENGLISH: &[&str] = &[
-    "the", "a", "an", "and", "or", "but", "is", "are", "was", "were", "be", "been", "to", "of", "in", "on", "at", "for", "with", "this", "that", "it", "i",
-    "you", "he", "she", "we", "they", "my", "your", "not", "no", "so", "just", "have", "has", "do", "does", "did", "what", "how", "can", "will", "would",
-    "if", "all", "from", "like", "me", "his", "her", "their", "there", "about", "one", "more", "video", "when", "love", "it's", "i'm", "don't", "really",
-    "great", "thanks", "good", "very", "who", "why", "out", "up", "get", "know", "see", "think",
+    "the", "a", "an", "and", "or", "but", "is", "are", "was", "were", "be", "been", "to", "of",
+    "in", "on", "at", "for", "with", "this", "that", "it", "i", "you", "he", "she", "we", "they",
+    "my", "your", "not", "no", "so", "just", "have", "has", "do", "does", "did", "what", "how",
+    "can", "will", "would", "if", "all", "from", "like", "me", "his", "her", "their", "there",
+    "about", "one", "more", "video", "when", "love", "it's", "i'm", "don't", "really", "great",
+    "thanks", "good", "very", "who", "why", "out", "up", "get", "know", "see", "think",
 ];
 
 fn is_letter(c: char) -> bool {
@@ -107,18 +136,27 @@ fn is_letter(c: char) -> bool {
     if c < 0x80 {
         return (0x41..=0x5A).contains(&c) || (0x61..=0x7A).contains(&c);
     }
-    !((0x2000..=0x2BFF).contains(&c) || (0x3000..=0x303F).contains(&c) || (0xFF00..=0xFF20).contains(&c) || c >= 0x1F000)
+    !((0x2000..=0x2BFF).contains(&c)
+        || (0x3000..=0x303F).contains(&c)
+        || (0xFF00..=0xFF20).contains(&c)
+        || c >= 0x1F000)
 }
 
 fn han(c: u32) -> bool {
-    (0x4E00..=0x9FFF).contains(&c) || (0x3400..=0x4DBF).contains(&c) || (0xF900..=0xFAFF).contains(&c)
+    (0x4E00..=0x9FFF).contains(&c)
+        || (0x3400..=0x4DBF).contains(&c)
+        || (0xF900..=0xFAFF).contains(&c)
 }
 
 /// A guess from the script alone at whether [source] is in [target] (a
 /// translation language code such as `zh-CN`). Latin-script languages
 /// other than English are never recognised.
 pub fn looks_like(source: &str, target: &str) -> bool {
-    let letters: Vec<u32> = source.chars().filter(|&c| is_letter(c)).map(|c| c as u32).collect();
+    let letters: Vec<u32> = source
+        .chars()
+        .filter(|&c| is_letter(c))
+        .map(|c| c as u32)
+        .collect();
     if letters.len() < 2 {
         return false;
     }
@@ -134,10 +172,20 @@ pub fn looks_like(source: &str, target: &str) -> bool {
             }
             let simplified = source.chars().filter(|c| SIMPLIFIED.contains(c)).count();
             let traditional = source.chars().filter(|c| TRADITIONAL.contains(c)).count();
-            if target == "zh-CN" { simplified >= traditional } else { traditional >= simplified && (traditional > 0 || simplified == 0) }
+            if target == "zh-CN" {
+                simplified >= traditional
+            } else {
+                traditional >= simplified && (traditional > 0 || simplified == 0)
+            }
         }
         "ja" => kana > 0.0 && hans + kana >= share,
-        "ko" => count(&|c| (0xAC00..=0xD7AF).contains(&c) || (0x1100..=0x11FF).contains(&c) || (0x3130..=0x318F).contains(&c)) >= share,
+        "ko" => {
+            count(&|c| {
+                (0xAC00..=0xD7AF).contains(&c)
+                    || (0x1100..=0x11FF).contains(&c)
+                    || (0x3130..=0x318F).contains(&c)
+            }) >= share
+        }
         "ru" => range(0x0400, 0x04FF) >= share,
         "ar" => range(0x0600, 0x06FF) >= share,
         "th" => range(0x0E00, 0x0E7F) >= share,
@@ -147,8 +195,13 @@ pub fn looks_like(source: &str, target: &str) -> bool {
                 return false;
             }
             let lower = source.to_lowercase();
-            let words: Vec<&str> = lower.split(|c: char| !(c.is_ascii_alphabetic() || c == '\'')).filter(|w| !w.is_empty()).collect();
-            words.len() >= 3 && words.iter().filter(|w| ENGLISH.contains(w)).count() as f64 >= words.len() as f64 * 0.2
+            let words: Vec<&str> = lower
+                .split(|c: char| !(c.is_ascii_alphabetic() || c == '\''))
+                .filter(|w| !w.is_empty())
+                .collect();
+            words.len() >= 3
+                && words.iter().filter(|w| ENGLISH.contains(w)).count() as f64
+                    >= words.len() as f64 * 0.2
         }
         _ => false,
     }
@@ -161,7 +214,10 @@ pub fn looks_like(source: &str, target: &str) -> bool {
 /// [source] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_subtitle_cues(source: *const u8, length: usize) -> *mut c_char {
-    let list: Vec<serde_json::Value> = cues(unsafe { text(source, length) }).into_iter().map(|c| serde_json::json!([c.start, c.end, c.text])).collect();
+    let list: Vec<serde_json::Value> = cues(unsafe { text(source, length) })
+        .into_iter()
+        .map(|c| serde_json::json!([c.start, c.end, c.text]))
+        .collect();
     give(serde_json::Value::Array(list).to_string())
 }
 
@@ -170,8 +226,15 @@ pub unsafe extern "C" fn lumtub_subtitle_cues(source: *const u8, length: usize) 
 /// # Safety
 /// [source] and [target] must point to their lengths of UTF-8.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_looks_like(source: *const u8, length: usize, target: *const u8, target_length: usize) -> bool {
-    looks_like(unsafe { text(source, length) }, unsafe { text(target, target_length) })
+pub unsafe extern "C" fn lumtub_looks_like(
+    source: *const u8,
+    length: usize,
+    target: *const u8,
+    target_length: usize,
+) -> bool {
+    looks_like(unsafe { text(source, length) }, unsafe {
+        text(target, target_length)
+    })
 }
 
 #[cfg(test)]
@@ -183,10 +246,28 @@ mod tests {
         let vtt = "WEBVTT\n\n00:00:01.000 --> 00:00:02.500 align:start\n<c>Hello</c> &amp; hi\n\n00:00:02.500 --> 00:00:04.000\nHello &amp; hi\nworld\n";
         assert_eq!(
             cues(vtt),
-            vec![Cue { start: 1000, end: 2500, text: "Hello & hi".into() }, Cue { start: 2500, end: 4000, text: "world".into() }]
+            vec![
+                Cue {
+                    start: 1000,
+                    end: 2500,
+                    text: "Hello & hi".into()
+                },
+                Cue {
+                    start: 2500,
+                    end: 4000,
+                    text: "world".into()
+                }
+            ]
         );
         let srt = "1\r\n01:02:03,040 --> 01:02:04,5\r\n{\\an8}Line one\r\nLine two\r\n\r\n";
-        assert_eq!(cues(srt), vec![Cue { start: 3_723_040, end: 3_724_500, text: "Line one Line two".into() }]);
+        assert_eq!(
+            cues(srt),
+            vec![Cue {
+                start: 3_723_040,
+                end: 3_724_500,
+                text: "Line one Line two".into()
+            }]
+        );
         assert!(cues("[Script Info]\nDialogue: 0,0:00:01.00").is_empty());
     }
 

@@ -5,8 +5,10 @@ import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 
+import '../app_directories.dart';
 import '../app_log.dart';
 import '../background_json.dart';
+import '../friendly_error.dart';
 import '../l10n/l10n.dart';
 import '../models.dart';
 import '../process_priority.dart';
@@ -115,6 +117,10 @@ class LocalVideo {
 
 /// The download queue: runs up to [maxConcurrent] yt-dlp processes, keeps the
 /// list in [file] and finds the downloaded files for playback.
+class _NoList {
+  const _NoList();
+}
+
 class DownloadManager extends ChangeNotifier {
   DownloadManager({
     required this.file,
@@ -209,6 +215,7 @@ class DownloadManager extends ChangeNotifier {
 
   Future<void> load() async {
     try {
+      if (!await file.exists()) throw const _NoList();
       final data = jsonDecode(await file.readAsString());
       if (data is Map) {
         final dir = data['directory']?.toString();
@@ -222,8 +229,10 @@ class DownloadManager extends ChangeNotifier {
           tasks.add(task);
         }
       }
-    } catch (_) {
-      // No list yet, or an unreadable one: start empty.
+    } on _NoList {
+      // No list yet: start empty.
+    } catch (e) {
+      await setBrokenFileAside(file, e);
     }
     notifyListeners();
     _pump();
@@ -252,8 +261,7 @@ class DownloadManager extends ChangeNotifier {
 
   Future<void> _write() async {
     try {
-      await file.parent.create(recursive: true);
-      await file.writeAsString(jsonEncode({'directory': _directory, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()}), flush: true);
+      await writeFileAtomic(file, jsonEncode({'directory': _directory, 'defaults': _defaults.toJson(), 'tasks': tasks.map((t) => t.toJson()).toList()}));
     } on FileSystemException catch (e) {
       logError('Could not save the download list', e);
     }
@@ -317,10 +325,13 @@ class DownloadManager extends ChangeNotifier {
   void retry(String id) {
     final task = taskFor(id);
     if (task == null || (task.status != DownloadStatus.failed && task.status != DownloadStatus.cancelled)) return;
+    // A failed download resumes its .part file, so the bar keeps its place until new progress arrives; a cancelled one was wiped.
+    if (task.status == DownloadStatus.cancelled) {
+      task.downloaded = 0;
+      task.total = null;
+    }
     task.status = DownloadStatus.queued;
     task.error = null;
-    task.downloaded = 0;
-    task.total = null;
     _changed();
   }
 
@@ -441,7 +452,7 @@ class DownloadManager extends ChangeNotifier {
         await Directory(task.directory).create(recursive: true);
         _recordings[id] = await recorder.start(id, stem);
       } catch (e) {
-        error = '$e';
+        error = friendlyFileError(e);
       }
       final recording = _recordings[id];
       if (recording != null) {
@@ -543,6 +554,7 @@ class DownloadManager extends ChangeNotifier {
     final id = task.id;
     final printed = <String>[];
     final errors = <String>[];
+    String? shown;
     int exitCode;
     try {
       await Directory(task.directory).create(recursive: true);
@@ -580,7 +592,11 @@ class DownloadManager extends ChangeNotifier {
       exitCode = await process.exitCode;
       await Future.wait(done);
     } catch (e) {
-      errors.add('$e');
+      if (e is FileSystemException) {
+        shown = friendlyFileError(e);
+      } else {
+        errors.add('$e');
+      }
       exitCode = -1;
     }
     _processes.remove(id);
@@ -591,7 +607,8 @@ class DownloadManager extends ChangeNotifier {
     } else {
       task.status = DownloadStatus.failed;
       task.speed = null;
-      task.error = errors.lastWhere((e) => e.startsWith('ERROR'), orElse: () => errors.isEmpty ? tr('yt-dlp exited with code {0}', [exitCode]) : errors.last);
+      final raw = errors.lastWhere((e) => e.startsWith('ERROR'), orElse: () => errors.isEmpty ? 'yt-dlp exited with code $exitCode' : errors.last);
+      task.error = shown ?? friendlyDownloadError(raw);
     }
     if (_wipe.remove(id)) await _deleteFiles(task);
     _active.remove(id);

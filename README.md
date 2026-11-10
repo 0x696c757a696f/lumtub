@@ -15,6 +15,7 @@ For **Windows, Linux, macOS and Android** (phones, tablets and TVs).
 ![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-0078D4?logo=windows)
 ![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux&logoColor=black)
 ![macOS](https://img.shields.io/badge/macOS-Apple%20silicon%20%7C%20Intel-000000?logo=apple)
+![Android](https://img.shields.io/badge/Android-phone%20%7C%20tablet%20%7C%20TV-3DDC84?logo=android&logoColor=white)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Translation status](https://hosted.weblate.org/widget/lumtub/svg-badge.svg)](https://hosted.weblate.org/engage/lumtub/)
 
@@ -128,10 +129,10 @@ These are also found in other YouTube clients, and all are opt-in here:
 | `android-x86_64` APK | Android emulators and x86 Chromebooks |
 
 File names follow `Lumtub_<version>_<platform>`, for example `Lumtub_0.2.29-abc1234_windows-x64-v3-setup.exe`.<br>
-**Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed. Lumtub needs the Microsoft Visual C++ Redistributable; if Windows says a DLL such as `MSVCP140.dll` or `VCRUNTIME140_1.dll` is missing, install it ([x64](https://aka.ms/vs/17/release/vc_redist.x64.exe), [ARM64](https://aka.ms/vs/17/release/vc_redist.arm64.exe)) and start Lumtub again.<br>
+**Windows:** use the installer, or unzip the portable version and run `lumtub.exe`. No administrator rights needed.<br>
 **Linux:** make the AppImage executable (`chmod +x Lumtub_*.AppImage`) and run it. It updates itself in place. If it says FUSE is missing, install your distribution's `fuse3` package, or start it with `--appimage-extract-and-run`.<br>
 The first start downloads yt-dlp and Deno from GitHub; after that Lumtub keeps itself up to date.<br>
-**Android (preview):** open the APK and allow installing from your browser or file manager when asked. Lumtub tells you when a new version is out; install it the same way. Live streams, members-only videos and downloads don't work on Android yet.
+**Android (preview):** open the APK and allow installing from your browser or file manager when asked. New versions install from inside Lumtub; Android asks you to confirm. Live streams and downloads work too, through the yt-dlp built into the app; members-only videos don't play on Android yet.
 
 **macOS:** open the DMG and drag Lumtub into Applications. Lumtub is not notarized by Apple yet, so macOS stops it the first time it opens. Either run this once in Terminal:
 
@@ -227,7 +228,7 @@ Source strings are English wrapped in `tr('…')`; translations, simplified Chin
 
 Lumtub is licensed under the GNU General Public License, version 3 or later (`GPL-3.0-or-later`).
 
-The settings tiles in `lib/widgets/pilinara_settings_tiles.dart` are adapted from [PiliNara](https://github.com/Starfallan/PiliNara), copyright its contributors, and remain under GPL-3.0-or-later; parts of Lumtub's interface follow PiliNara's design. `vendor/pilinara-settings/` and `vendor/pilinara-player/` are unmodified PiliNara snapshots kept for reference and not built. `vendor/media_kit_video/` is a modified copy of media_kit_video (see its `LUMTUB.md`).
+The settings tiles in `lib/widgets/pilinara_settings_tiles.dart` are adapted from [PiliNara](https://github.com/Starfallan/PiliNara), copyright its contributors, and remain under GPL-3.0-or-later; parts of Lumtub's interface follow PiliNara's design. `vendor/pilinara-settings/` is an unmodified PiliNara snapshot kept for reference and not built; the rest of PiliNara is at the repository linked above. `vendor/media_kit_video/` is a modified copy of media_kit_video (see its `LUMTUB.md`).
 
 Built on [media_kit](https://github.com/media-kit/media-kit), [mpv](https://mpv.io), [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [FFmpeg](https://ffmpeg.org). AI channel lists come from [KillSlop](https://killslop.app) (CC BY-SA 4.0) and [AiSList](https://github.com/Override92/AiSList) (CC BY-NC 4.0), downloaded at runtime and not shipped with Lumtub. The bundled Noto Sans SC font is under the SIL Open Font License 1.1 (`assets/fonts/OFL.txt`); the Phosphor icon fonts are under the MIT License (`assets/fonts/phosphor/LICENSE`). Other packages and components keep their own licenses; see `NOTICE` before redistributing.
 

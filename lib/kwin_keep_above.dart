@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'app_log.dart';
 
 /// Keeping Lumtub's window above the others on KDE Plasma under Wayland,
 /// where a program cannot do it itself: a short KWin script, loaded over
@@ -43,7 +44,9 @@ for (const window of windows) {
     } finally {
       try {
         await folder.delete(recursive: true);
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not remove the KWin script folder: $e');
+      }
     }
   }
 
@@ -94,6 +97,8 @@ if (workspace.windowList) {
       final id = loaded == null ? null : KWinKeepAbove.scriptId(loaded);
       if (id == null || id < 0) return;
       await KWinKeepAbove._call('/Scripting/Script$id', 'org.kde.kwin.Script.run', const []) ?? await KWinKeepAbove._call('/$id', 'org.kde.kwin.Script.run', const []);
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'Could not run the KWin keep-above script: $e');
+    }
   }
 }

@@ -13,11 +13,16 @@ use crate::taste::{give, text};
 fn clock(ms: u64) -> String {
     let seconds = ms / 1000;
     let (h, m, s) = (seconds / 3600, seconds / 60 % 60, seconds % 60);
-    if h > 0 { format!("{h}:{m:02}:{s:02}") } else { format!("{m}:{s:02}") }
+    if h > 0 {
+        format!("{h}:{m:02}:{s:02}")
+    } else {
+        format!("{m}:{s:02}")
+    }
 }
 
 fn ends_sentence(line: &str) -> bool {
-    line.trim_end().ends_with(['.', '!', '?', '。', '！', '？', '…'])
+    line.trim_end()
+        .ends_with(['.', '!', '?', '。', '！', '？', '…'])
 }
 
 fn wide(c: char) -> bool {
@@ -45,7 +50,9 @@ pub fn paragraphs(cues: &[Cue]) -> Vec<String> {
         }
         if current.is_empty() {
             started = cue.start;
-        } else if !(current.chars().last().is_some_and(wide) || line.chars().next().is_some_and(wide)) {
+        } else if !(current.chars().last().is_some_and(wide)
+            || line.chars().next().is_some_and(wide))
+        {
             current.push(' ');
         }
         current.push_str(line);
@@ -122,14 +129,29 @@ fn day_text(number: i64) -> String {
 /// seconds of each of the last [span] days and the channels watched most
 /// in them.
 pub fn watch_stats(input: &Value) -> Value {
-    let today = input.get("today").and_then(Value::as_str).and_then(day_number).unwrap_or(0);
-    let span = input.get("span").and_then(Value::as_i64).unwrap_or(30).clamp(1, 366);
+    let today = input
+        .get("today")
+        .and_then(Value::as_str)
+        .and_then(day_number)
+        .unwrap_or(0);
+    let span = input
+        .get("span")
+        .and_then(Value::as_i64)
+        .unwrap_or(30)
+        .clamp(1, 366);
     let names = input.get("names").and_then(Value::as_object);
     let mut daily: HashMap<i64, u64> = HashMap::new();
     let mut channels: HashMap<&str, u64> = HashMap::new();
     let (mut week, mut month, mut total) = (0u64, 0u64, 0u64);
-    for (day, watched) in input.get("days").and_then(Value::as_object).into_iter().flatten() {
-        let Some(number) = day_number(day) else { continue };
+    for (day, watched) in input
+        .get("days")
+        .and_then(Value::as_object)
+        .into_iter()
+        .flatten()
+    {
+        let Some(number) = day_number(day) else {
+            continue;
+        };
         let age = today - number;
         for (channel, seconds) in watched.as_object().into_iter().flatten() {
             let seconds = seconds.as_u64().unwrap_or(0);
@@ -144,13 +166,30 @@ pub fn watch_stats(input: &Value) -> Value {
             }
         }
     }
-    let days: Vec<Value> = (0..span).rev().map(|age| json!([day_text(today - age), daily.get(&(today - age)).copied().unwrap_or(0)])).collect();
+    let days: Vec<Value> = (0..span)
+        .rev()
+        .map(|age| {
+            json!([
+                day_text(today - age),
+                daily.get(&(today - age)).copied().unwrap_or(0)
+            ])
+        })
+        .collect();
     let mut top: Vec<(&str, u64)> = channels.into_iter().filter(|(_, s)| *s > 0).collect();
     top.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(b.0)));
     let top: Vec<Value> = top
         .into_iter()
         .take(10)
-        .map(|(key, seconds)| json!([key, names.and_then(|n| n.get(key)).and_then(Value::as_str).unwrap_or(""), seconds]))
+        .map(|(key, seconds)| {
+            json!([
+                key,
+                names
+                    .and_then(|n| n.get(key))
+                    .and_then(Value::as_str)
+                    .unwrap_or(""),
+                seconds
+            ])
+        })
         .collect();
     json!({
         "today": daily.get(&today).copied().unwrap_or(0),
@@ -165,7 +204,13 @@ pub fn watch_stats(input: &Value) -> Value {
 
 /// `HH:MM:SS.mmm`, as WebVTT writes times.
 fn vtt_time(ms: u64) -> String {
-    format!("{:02}:{:02}:{:02}.{:03}", ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, ms % 1000)
+    format!(
+        "{:02}:{:02}:{:02}.{:03}",
+        ms / 3_600_000,
+        ms / 60_000 % 60,
+        ms / 1000 % 60,
+        ms % 1000
+    )
 }
 
 /// [text] in pieces of about [size] characters, broken after punctuation
@@ -184,14 +229,23 @@ fn pieces(text: &str, size: usize) -> Vec<String> {
         if end < chars.len() {
             let low = start + target * 2 / 3;
             let high = (start + target * 4 / 3).min(chars.len() - 1);
-            let good = |c: char| matches!(c, '，' | '。' | '！' | '？' | '、' | '；' | ',' | '.' | '!' | '?' | ';');
+            let good = |c: char| {
+                matches!(
+                    c,
+                    '，' | '。' | '！' | '？' | '、' | '；' | ',' | '.' | '!' | '?' | ';'
+                )
+            };
             if let Some(at) = (low..=high).find(|&i| good(chars[i])) {
                 end = at + 1;
             } else if let Some(at) = (low..=high).rev().find(|&i| chars[i] == ' ') {
                 end = at;
             }
         }
-        let piece: String = chars[start..end].iter().collect::<String>().trim().to_string();
+        let piece: String = chars[start..end]
+            .iter()
+            .collect::<String>()
+            .trim()
+            .to_string();
         if !piece.is_empty() {
             out.push(piece);
         }
@@ -207,23 +261,58 @@ fn pieces(text: &str, size: usize) -> Vec<String> {
 /// filled with made-up words is left out and long sentences are split.
 pub fn speech_vtt(input: &Value) -> String {
     let mut cues: Vec<(u64, u64, String)> = Vec::new();
-    for part in input.get("parts").and_then(Value::as_array).into_iter().flatten() {
+    for part in input
+        .get("parts")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
         let offset = part.get("offset").and_then(Value::as_u64).unwrap_or(0);
-        for segment in part.get("segments").and_then(Value::as_array).into_iter().flatten() {
-            let text = segment.get("text").and_then(Value::as_str).unwrap_or("").split_whitespace().collect::<Vec<_>>().join(" ");
-            let quiet = segment.get("no_speech_prob").and_then(Value::as_f64).unwrap_or(0.0) > 0.8;
+        for segment in part
+            .get("segments")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
+            let text = segment
+                .get("text")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .split_whitespace()
+                .collect::<Vec<_>>()
+                .join(" ");
+            let quiet = segment
+                .get("no_speech_prob")
+                .and_then(Value::as_f64)
+                .unwrap_or(0.0)
+                > 0.8;
             if text.is_empty() || quiet {
                 continue;
             }
-            let second = |name: &str| (segment.get(name).and_then(Value::as_f64).unwrap_or(0.0).max(0.0) * 1000.0) as u64;
+            let second = |name: &str| {
+                (segment
+                    .get(name)
+                    .and_then(Value::as_f64)
+                    .unwrap_or(0.0)
+                    .max(0.0)
+                    * 1000.0) as u64
+            };
             let start = offset + second("start");
             let end = (offset + second("end")).max(start + 500);
             let size = if text.chars().any(wide) { 22 } else { 48 };
             let parts = pieces(&text, size);
-            let total: usize = parts.iter().map(|p| p.chars().count()).sum::<usize>().max(1);
+            let total: usize = parts
+                .iter()
+                .map(|p| p.chars().count())
+                .sum::<usize>()
+                .max(1);
             let mut at = start;
             for (i, piece) in parts.iter().enumerate() {
-                let next = if i + 1 == parts.len() { end } else { at + (end - start) * piece.chars().count() as u64 / total as u64 };
+                let next = if i + 1 == parts.len() {
+                    end
+                } else {
+                    at + (end - start) * piece.chars().count() as u64 / total as u64
+                };
                 cues.push((at, next.max(at + 300), piece.clone()));
                 at = next;
             }
@@ -236,7 +325,12 @@ pub fn speech_vtt(input: &Value) -> String {
         if let Some(next) = cues.get(i + 1) {
             end = end.min(next.0.max(start + 300));
         }
-        out.push_str(&format!("{} --> {}\n{}\n\n", vtt_time(start), vtt_time(end), text));
+        out.push_str(&format!(
+            "{} --> {}\n{}\n\n",
+            vtt_time(start),
+            vtt_time(end),
+            text
+        ));
     }
     out
 }
@@ -259,8 +353,16 @@ pub unsafe extern "C" fn lumtub_speech_vtt(json: *const u8, length: usize) -> *m
 pub unsafe extern "C" fn lumtub_summary_transcript(json: *const u8, length: usize) -> *mut c_char {
     let input: Value = serde_json::from_str(unsafe { text(json, length) }).unwrap_or(Value::Null);
     let source = input.get("source").and_then(Value::as_str).unwrap_or("");
-    let budget = input.get("budget").and_then(Value::as_u64).unwrap_or(12_000).max(500) as usize;
-    let most = input.get("most").and_then(Value::as_u64).unwrap_or(8).max(1) as usize;
+    let budget = input
+        .get("budget")
+        .and_then(Value::as_u64)
+        .unwrap_or(12_000)
+        .max(500) as usize;
+    let most = input
+        .get("most")
+        .and_then(Value::as_u64)
+        .unwrap_or(8)
+        .max(1) as usize;
     give(transcript(source, budget, most).to_string())
 }
 
@@ -279,7 +381,11 @@ mod tests {
     use super::*;
 
     fn cue(start: u64, end: u64, text: &str) -> Cue {
-        Cue { start, end, text: text.into() }
+        Cue {
+            start,
+            end,
+            text: text.into(),
+        }
     }
 
     #[test]
@@ -292,17 +398,39 @@ mod tests {
             cue(12_000, 13_000, "世界"),
             cue(3_700_000, 3_701_000, "an hour in"),
         ]);
-        assert_eq!(lines, vec!["[0:00] hello there this is a test.", "[0:09] after a pause你好世界", "[1:01:40] an hour in"]);
+        assert_eq!(
+            lines,
+            vec![
+                "[0:00] hello there this is a test.",
+                "[0:09] after a pause你好世界",
+                "[1:01:40] an hour in"
+            ]
+        );
     }
 
     #[test]
     fn cuts_the_transcript_into_pieces() {
-        let source: String = (0..40).map(|i| format!("{:02}:{:02}.000 --> {:02}:{:02}.500\nline number {i}.\n\n", i * 5 / 60, i * 5 % 60, i * 5 / 60, i * 5 % 60 + 4)).collect();
+        let source: String = (0..40)
+            .map(|i| {
+                format!(
+                    "{:02}:{:02}.000 --> {:02}:{:02}.500\nline number {i}.\n\n",
+                    i * 5 / 60,
+                    i * 5 % 60,
+                    i * 5 / 60,
+                    i * 5 % 60 + 4
+                )
+            })
+            .collect();
         let source = format!("WEBVTT\n\n{source}");
         let answer = transcript(&source, 60, 3);
         let chunks = answer["chunks"].as_array().unwrap();
         assert_eq!(chunks.len(), 3);
-        assert!(chunks[0].as_str().unwrap().starts_with("[0:00] line number 0."));
+        assert!(
+            chunks[0]
+                .as_str()
+                .unwrap()
+                .starts_with("[0:00] line number 0.")
+        );
         assert_eq!(answer["cut"], true);
         let whole = transcript(&source, 100_000, 3);
         assert_eq!(whole["chunks"].as_array().unwrap().len(), 1);
@@ -334,7 +462,10 @@ mod tests {
     fn counts_days_both_ways() {
         assert_eq!(day_number("1970-01-01"), Some(0));
         assert_eq!(day_text(day_number("2024-02-29").unwrap()), "2024-02-29");
-        assert_eq!(day_text(day_number("2026-10-27").unwrap() + 5), "2026-11-01");
+        assert_eq!(
+            day_text(day_number("2026-10-27").unwrap() + 5),
+            "2026-11-01"
+        );
         assert_eq!(day_number("2026-13-01"), None);
     }
 

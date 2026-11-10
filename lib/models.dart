@@ -96,6 +96,26 @@ class VideoItem {
         membersOnly: membersOnly,
       );
 
+  /// This video with [seconds] as its length.
+  VideoItem withDuration(int seconds) => VideoItem(
+        id: id,
+        title: title,
+        channel: channel,
+        duration: seconds,
+        url: url,
+        viewCount: viewCount,
+        watching: watching,
+        channelId: channelId,
+        published: published,
+        liveStatus: liveStatus,
+        scheduledStart: scheduledStart,
+        width: width,
+        height: height,
+        description: description,
+        isShortListing: isShortListing,
+        membersOnly: membersOnly,
+      );
+
   ChannelRef? get channelRef => channelId == null ? null : ChannelRef(channelId!, channel);
 
   /// The thumbnail size to load, a YouTube file name such as `hqdefault`;

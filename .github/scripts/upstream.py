@@ -1,7 +1,8 @@
 """Finds newer versions of the pieces build.yml pins; see upstream.yml.
 
 Pieces CI can judge on its own (libmpv for Linux, FFmpeg for macOS,
-appimagetool) are moved to their newest version in build.yml directly, and
+appimagetool) are moved to their newest version in .github/pins.env, which
+build.yml reads (the workflow token cannot push changes to workflow files), and
 the change is described in $RUNNER_TEMP/upstream-commit.txt. Pieces that
 need reading first (the media_kit copies under vendor/, which carry Lumtub's
 own changes) are listed in $RUNNER_TEMP/upstream-notes.md.
@@ -14,7 +15,7 @@ import re
 import subprocess
 import urllib.request
 
-BUILD = ".github/workflows/build.yml"
+BUILD = ".github/pins.env"
 TEMP = os.environ.get("RUNNER_TEMP", ".")
 
 
@@ -40,7 +41,7 @@ def sha256(asset):
 
 def mpv_prebuilt(text, changes):
     """Linux libmpv from jason-yau/mpv-prebuilt, pinned by release and checksums."""
-    pinned = re.search(r'MPV_RELEASE: "(\d+)"', text)
+    pinned = re.search(r"^MPV_RELEASE=(\d+)$", text, re.M)
     if not pinned:
         return text
     release = get("https://api.github.com/repos/jason-yau/mpv-prebuilt/releases/latest")
@@ -55,19 +56,18 @@ def mpv_prebuilt(text, changes):
         print(f"mpv-prebuilt {release['tag_name']} lacks the GPL x86_64 and arm64 archives; skipped.")
         return text
     mpv = assets["x86_64"][0]
-    old = re.search(r'name="libmpv-([\d.]+)-linux-', text)[1]
-    text = text.replace(pinned[0], f'MPV_RELEASE: "{release["tag_name"]}"')
-    text = text.replace(f'name="libmpv-{old}-linux-', f'name="libmpv-{mpv}-linux-')
-    text = re.sub(r"libmpv [\d.]+ with", f"libmpv {mpv} with", text, count=1)
+    old = re.search(r"^MPV_VERSION=([\d.]+)$", text, re.M)[1]
+    text = text.replace(pinned[0], f"MPV_RELEASE={release['tag_name']}")
+    text = re.sub(r"^MPV_VERSION=[\d.]+$", f"MPV_VERSION={mpv}", text, flags=re.M)
     for arch in ("x86_64", "arm64"):
-        text = re.sub(rf"(arch={arch}; sum=)[0-9a-f]{{64}}", rf"\g<1>{assets[arch][1]}", text)
+        text = re.sub(rf"^(MPV_SHA256_{arch.upper()}=)[0-9a-f]{{64}}$", rf"\g<1>{assets[arch][1]}", text, flags=re.M)
     changes.append(f"Linux libmpv {old} ({pinned[1]}) -> {mpv} ({release['tag_name']})")
     return text
 
 
 def ffmpeg(text, changes):
     """macOS FFmpeg, built from a release tag."""
-    pinned = re.search(r"FFMPEG_TAG: (n[\d.]+)", text)
+    pinned = re.search(r"^FFMPEG_TAG=(n[\d.]+)$", text, re.M)
     if not pinned:
         return text
     tags = subprocess.run(
@@ -79,12 +79,12 @@ def ffmpeg(text, changes):
     if version(newest) <= version(pinned[1]):
         return text
     changes.append(f"macOS FFmpeg {pinned[1]} -> {newest}")
-    return text.replace(pinned[0], f"FFMPEG_TAG: {newest}")
+    return text.replace(pinned[0], f"FFMPEG_TAG={newest}")
 
 
 def ffmpeg_prebuilt(text, changes):
     """macOS FFmpeg for the smoke test, from dfloresc/ffmpeg-macos-builds, pinned by release and checksum."""
-    pinned = re.search(r"FFMPEG_RELEASE: (v[\w.-]+)", text)
+    pinned = re.search(r"^FFMPEG_RELEASE=(v[\w.-]+)$", text, re.M)
     if not pinned:
         return text
     release = get("https://api.github.com/repos/dfloresc/ffmpeg-macos-builds/releases/latest")
@@ -98,15 +98,15 @@ def ffmpeg_prebuilt(text, changes):
     if "arm64" not in sums:
         print(f"ffmpeg-macos-builds {tag} lacks the LGPL arm64 archive; skipped.")
         return text
-    text = text.replace(pinned[0], f"FFMPEG_RELEASE: {tag}")
-    text = re.sub(r'(echo ")[0-9a-f]{64}(  \$RUNNER_TEMP/\$name\.tar\.xz")', rf"\g<1>{sums['arm64']}\g<2>", text)
+    text = text.replace(pinned[0], f"FFMPEG_RELEASE={tag}")
+    text = re.sub(r"^(FFMPEG_ARM64_SHA256=)[0-9a-f]{64}$", rf"\g<1>{sums['arm64']}", text, flags=re.M)
     changes.append(f"macOS FFmpeg {pinned[1]} -> {tag}")
     return text
 
 
 def appimagetool(text, changes):
     """appimagetool, pinned by release and checksums."""
-    pinned = re.search(r"appimagetool/releases/download/([\d.]+)/", text)
+    pinned = re.search(r"^APPIMAGETOOL_VERSION=([\d.]+)$", text, re.M)
     if not pinned:
         return text
     releases = get("https://api.github.com/repos/AppImage/appimagetool/releases?per_page=30")
@@ -124,11 +124,9 @@ def appimagetool(text, changes):
     if set(sums) != {"x86_64", "aarch64"}:
         print(f"appimagetool {newest['tag_name']} lacks x86_64 and aarch64 builds; skipped.")
         return text
-    text = text.replace(pinned[0], f"appimagetool/releases/download/{newest['tag_name']}/")
+    text = text.replace(pinned[0], f"APPIMAGETOOL_VERSION={newest['tag_name']}")
     for arch, digest in sums.items():
-        text = re.sub(
-            rf"(appimage_arch: {arch}\n\s+appimagetool_sha256: )[0-9a-f]{{64}}", rf"\g<1>{digest}", text
-        )
+        text = re.sub(rf"^(APPIMAGETOOL_SHA256_{arch.upper()}=)[0-9a-f]{{64}}$", rf"\g<1>{digest}", text, flags=re.M)
     changes.append(f"appimagetool {pinned[1]} -> {newest['tag_name']}")
     return text
 

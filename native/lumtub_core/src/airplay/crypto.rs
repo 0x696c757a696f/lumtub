@@ -43,7 +43,10 @@ pub fn read_tlv(data: &[u8]) -> HashMap<u8, Vec<u8>> {
     while at + 2 <= data.len() {
         let (kind, length) = (data[at], data[at + 1] as usize);
         let end = (at + 2 + length).min(data.len());
-        found.entry(kind).or_default().extend_from_slice(&data[at + 2..end]);
+        found
+            .entry(kind)
+            .or_default()
+            .extend_from_slice(&data[at + 2..end]);
         at = end;
     }
     found
@@ -74,13 +77,18 @@ fn key(bytes: &[u8; 32]) -> LessSafeKey {
 
 pub fn seal(secret: &[u8; 32], label: &[u8; 8], data: &[u8]) -> Vec<u8> {
     let mut out = data.to_vec();
-    key(secret).seal_in_place_append_tag(nonce(*label), Aad::empty(), &mut out).expect("sealed");
+    key(secret)
+        .seal_in_place_append_tag(nonce(*label), Aad::empty(), &mut out)
+        .expect("sealed");
     out
 }
 
 pub fn open(secret: &[u8; 32], label: &[u8; 8], data: &[u8]) -> Option<Vec<u8>> {
     let mut out = data.to_vec();
-    let length = key(secret).open_in_place(nonce(*label), Aad::empty(), &mut out).ok()?.len();
+    let length = key(secret)
+        .open_in_place(nonce(*label), Aad::empty(), &mut out)
+        .ok()?
+        .len();
     out.truncate(length);
     Some(out)
 }
@@ -101,7 +109,13 @@ const TAG: usize = 16;
 
 impl Framing {
     pub fn new(write: &[u8; 32], read: &[u8; 32]) -> Self {
-        Framing { write: key(write), read: key(read), sent: 0, received: 0, pending: Vec::new() }
+        Framing {
+            write: key(write),
+            read: key(read),
+            sent: 0,
+            received: 0,
+            pending: Vec::new(),
+        }
     }
 
     pub fn encrypt(&mut self, data: &[u8]) -> Vec<u8> {
@@ -109,7 +123,13 @@ impl Framing {
         for chunk in data.chunks(FRAME) {
             let length = (chunk.len() as u16).to_le_bytes();
             let mut frame = chunk.to_vec();
-            self.write.seal_in_place_append_tag(nonce(self.sent.to_le_bytes()), Aad::from(length), &mut frame).expect("sealed");
+            self.write
+                .seal_in_place_append_tag(
+                    nonce(self.sent.to_le_bytes()),
+                    Aad::from(length),
+                    &mut frame,
+                )
+                .expect("sealed");
             self.sent += 1;
             out.extend_from_slice(&length);
             out.extend_from_slice(&frame);
@@ -132,7 +152,15 @@ impl Framing {
             }
             let mut frame: Vec<u8> = self.pending[2..2 + length + TAG].to_vec();
             let aad = [self.pending[0], self.pending[1]];
-            let plain = self.read.open_in_place(nonce(self.received.to_le_bytes()), Aad::from(aad), &mut frame).ok()?.len();
+            let plain = self
+                .read
+                .open_in_place(
+                    nonce(self.received.to_le_bytes()),
+                    Aad::from(aad),
+                    &mut frame,
+                )
+                .ok()?
+                .len();
             self.received += 1;
             out.extend_from_slice(&frame[..plain]);
             self.pending.drain(..2 + length + TAG);
@@ -159,7 +187,10 @@ mod tests {
     fn hkdf_matches_another_implementation() {
         // As Python's cryptography library derives it.
         let out = hkdf("salt", "info", b"secret");
-        assert_eq!(hex(&out), "90e269f053d383c4b2070be93238adf358f3d67bd7b17ca3de95f10a50a8385e");
+        assert_eq!(
+            hex(&out),
+            "90e269f053d383c4b2070be93238adf358f3d67bd7b17ca3de95f10a50a8385e"
+        );
     }
 
     #[test]

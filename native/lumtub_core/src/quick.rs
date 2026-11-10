@@ -7,7 +7,7 @@
 
 use std::ffi::c_char;
 
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 use crate::format_policy::{Audio, Codec, Settings};
 
@@ -65,12 +65,23 @@ fn format(raw: &Value) -> Option<Format<'_>> {
     if !video && !mime.starts_with("audio/") {
         return None;
     }
-    let codec = mime.split_once("codecs=\"")?.1.split(['"', ',']).next()?.trim().to_owned();
+    let codec = mime
+        .split_once("codecs=\"")?
+        .1
+        .split(['"', ','])
+        .next()?
+        .trim()
+        .to_owned();
     let track = raw.get("audioTrack");
     // Dubbed tracks, and the loudness-normalised copies of a track, are
     // never the default; the original is, or the only one.
-    let drc = raw.get("isDrc").and_then(Value::as_bool) == Some(true) || raw.get("xtags").and_then(Value::as_str).is_some_and(|x| x.contains("drc"));
-    let default_audio = !drc && track.is_none_or(|t| t.get("audioIsDefault").and_then(Value::as_bool) == Some(true));
+    let drc = raw.get("isDrc").and_then(Value::as_bool) == Some(true)
+        || raw
+            .get("xtags")
+            .and_then(Value::as_str)
+            .is_some_and(|x| x.contains("drc"));
+    let default_audio = !drc
+        && track.is_none_or(|t| t.get("audioIsDefault").and_then(Value::as_bool) == Some(true));
     Some(Format {
         raw,
         itag: number(raw.get("itag"))?.to_string(),
@@ -79,7 +90,9 @@ fn format(raw: &Value) -> Option<Format<'_>> {
         video,
         height: number(raw.get("height")).unwrap_or(0) as u32,
         fps: number(raw.get("fps")).unwrap_or(0) as u32,
-        bitrate: number(raw.get("bitrate")).or_else(|| number(raw.get("averageBitrate"))).unwrap_or(0),
+        bitrate: number(raw.get("bitrate"))
+            .or_else(|| number(raw.get("averageBitrate")))
+            .unwrap_or(0),
         default_audio,
     })
 }
@@ -191,9 +204,20 @@ pub fn headers() -> Value {
 /// # Safety
 /// Both must point to that many bytes of UTF-8.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_quick_info(player: *const u8, player_len: usize, settings: *const u8, settings_len: usize) -> *mut c_char {
-    let settings: Settings = serde_json::from_str(unsafe { crate::taste::text(settings, settings_len) }).unwrap_or_default();
-    let Ok(player) = serde_json::from_str::<Value>(unsafe { crate::taste::text(player, player_len) }) else { return std::ptr::null_mut() };
+pub unsafe extern "C" fn lumtub_quick_info(
+    player: *const u8,
+    player_len: usize,
+    settings: *const u8,
+    settings_len: usize,
+) -> *mut c_char {
+    let settings: Settings =
+        serde_json::from_str(unsafe { crate::taste::text(settings, settings_len) })
+            .unwrap_or_default();
+    let Ok(player) =
+        serde_json::from_str::<Value>(unsafe { crate::taste::text(player, player_len) })
+    else {
+        return std::ptr::null_mut();
+    };
     match info(&player, &settings) {
         Some(info) => crate::taste::give_json(&info),
         None => std::ptr::null_mut(),
@@ -203,7 +227,7 @@ pub unsafe extern "C" fn lumtub_quick_info(player: *const u8, player_len: usize,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resolved::{summary, Ask};
+    use crate::resolved::{Ask, summary};
 
     fn stream(itag: u32, mime: &str, height: u32, bitrate: u64) -> Value {
         let mut f = json!({"itag": itag, "url": format!("https://rr1.googlevideo.com/videoplayback?expire=1900003600&c=VISIONOS&itag={itag}"), "mimeType": mime, "bitrate": bitrate, "contentLength": "1000"});
@@ -233,7 +257,12 @@ mod tests {
     }
 
     fn picked(info: &Value) -> Vec<String> {
-        info["requested_formats"].as_array().unwrap().iter().map(|f| f["format_id"].as_str().unwrap().to_owned()).collect()
+        info["requested_formats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|f| f["format_id"].as_str().unwrap().to_owned())
+            .collect()
     }
 
     fn settings(json: &str) -> Settings {
@@ -247,7 +276,11 @@ mod tests {
         assert_eq!(picked(&auto), ["137", "251"]);
         let vp9 = info(&player(), &settings(r#"{"hardware":["vp9"]}"#)).unwrap();
         assert_eq!(picked(&vp9), ["313", "251"]);
-        let no_vp9 = info(&player(), &settings(r#"{"hardware":["av1"],"disabled":["vp9"]}"#)).unwrap();
+        let no_vp9 = info(
+            &player(),
+            &settings(r#"{"hardware":["av1"],"disabled":["vp9"]}"#),
+        )
+        .unwrap();
         assert_eq!(picked(&no_vp9), ["399", "251"]);
         let low = info(&player(), &settings(r#"{"maxHeight":720,"audio":"low"}"#)).unwrap();
         assert_eq!(picked(&low), ["136", "250"]);
@@ -256,7 +289,13 @@ mod tests {
     #[test]
     fn plays_directly_through_the_resolved_summary() {
         let info = info(&player(), &settings(r#"{"maxHeight":1080}"#)).unwrap();
-        let s = summary(&info, &Ask { fetched: 1_900_000_000, ..Ask::default() });
+        let s = summary(
+            &info,
+            &Ask {
+                fetched: 1_900_000_000,
+                ..Ask::default()
+            },
+        );
         assert_eq!(s.clients, ["VISIONOS"]);
         assert_eq!(s.streams.unwrap().len(), 2);
         assert_eq!(s.all_heights, [2160, 1080, 720]);
@@ -266,7 +305,9 @@ mod tests {
     #[test]
     fn prefers_the_original_audio_track() {
         let mut p = player();
-        let list = p["streamingData"]["adaptiveFormats"].as_array_mut().unwrap();
+        let list = p["streamingData"]["adaptiveFormats"]
+            .as_array_mut()
+            .unwrap();
         let mut dub = stream(251, "audio/webm; codecs=\"opus\"", 0, 160_000);
         dub["audioTrack"] = json!({"audioIsDefault": false});
         list.push(dub);
@@ -287,7 +328,10 @@ mod tests {
         refused["playabilityStatus"]["status"] = json!("LOGIN_REQUIRED");
         assert!(info(&refused, &s).is_none());
         let mut ciphered = player();
-        ciphered["streamingData"]["adaptiveFormats"][0].as_object_mut().unwrap().remove("url");
+        ciphered["streamingData"]["adaptiveFormats"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("url");
         assert!(info(&ciphered, &s).is_none());
         assert!(info(&player(), &settings(r#"{"disabled":["h264","vp9","av1"]}"#)).is_none());
     }

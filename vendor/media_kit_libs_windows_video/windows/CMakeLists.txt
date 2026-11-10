@@ -199,6 +199,8 @@ if(LUMTUB_ARM64)
   return()
 endif()
 
+# Lumtub: the archive's zlib.dll is a debug build (it needs VCRUNTIME140D.dll,
+# which no user has) and nothing in it imports zlib.dll, so it is left out.
 set(
   media_kit_libs_windows_video_bundled_libraries
   "${LIBMPV_SRC}/libmpv-2.dll"
@@ -207,6 +209,5 @@ set(
   "${ANGLE_SRC}/libGLESv2.dll"
   "${ANGLE_SRC}/vk_swiftshader.dll"
   "${ANGLE_SRC}/vulkan-1.dll"
-  "${ANGLE_SRC}/zlib.dll"
   PARENT_SCOPE
 )

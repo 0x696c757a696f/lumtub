@@ -33,6 +33,7 @@ body:
         - Windows
         - macOS
         - Linux
+        - Android
     validations:
       required: true
   - type: textarea
@@ -50,4 +51,4 @@ body:
       description: |
         Settings › About › Error log, or attach the file. It holds no passwords or stream addresses.
         设置 › 关于 › 错误日志，或者直接附上日志文件。日志里不含密码和视频地址。
-        Windows: `%LOCALAPPDATA%\Lumtub\logs\lumtub.log` · macOS: `~/Library/Application Support/Lumtub/logs/lumtub.log` · Linux: `~/.local/share/lumtub/logs/lumtub.log`
+        Windows: `%LOCALAPPDATA%\Lumtub\logs\lumtub.log` · macOS: `~/Library/Application Support/Lumtub/logs/lumtub.log` · Linux: `~/.local/share/lumtub/logs/lumtub.log` · Android: the log is in the app's private folder, so use the in-app Error log › Copy log / Android 上日志在应用私有目录，请用应用内的 错误日志 › 复制日志

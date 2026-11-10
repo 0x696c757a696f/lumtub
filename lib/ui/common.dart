@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -83,12 +84,12 @@ class ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
       decoration: BoxDecoration(color: colors.errorContainer, borderRadius: AppStyle.cardRadius),
       child: Row(children: [
         Icon(AppIcons.warningCircle, color: colors.onErrorContainer, size: 20),
         const SizedBox(width: 12),
-        Expanded(child: Text(message, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.onErrorContainer))),
+        Expanded(child: SelectableText(message, maxLines: 8, style: TextStyle(color: colors.onErrorContainer))),
         if (onRetry != null) TextButton(onPressed: onRetry, child: Text(retryLabel ?? tr('Retry'))),
       ]),
     );
@@ -127,12 +128,23 @@ class PageHeader extends StatelessWidget {
       );
 }
 
+String twoDigits(int n) => n.toString().padLeft(2, '0');
+
 String formatPlaybackTime(Duration value) {
   final hours = value.inHours;
-  final minutes = value.inMinutes.remainder(60).toString().padLeft(2, '0');
-  final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
+  final minutes = twoDigits(value.inMinutes.remainder(60));
+  final seconds = twoDigits(value.inSeconds.remainder(60));
   return hours > 0 ? '$hours:$minutes:$seconds' : '${value.inMinutes}:$seconds';
 }
+
+/// Like [formatPlaybackTime] but with the minutes always two digits: `01:23`.
+String formatClock(Duration d) {
+  final h = d.inHours, m = d.inMinutes % 60, s = d.inSeconds % 60;
+  return h > 0 ? '$h:${twoDigits(m)}:${twoDigits(s)}' : '${twoDigits(m)}:${twoDigits(s)}';
+}
+
+/// `09:05`.
+String formatHourMinute(DateTime t) => '${twoDigits(t.hour)}:${twoDigits(t.minute)}';
 
 /// How long ago [date] was, as YouTube puts it under a video: 3 days ago.
 String formatAgo(DateTime date, {DateTime? now}) {
@@ -156,14 +168,25 @@ String formatDate(DateTime date) => tr('{1}/{2}/{0}', [date.year, date.month, da
 /// An exact local start time for an upcoming stream.
 String formatScheduledStart(DateTime date) {
   final local = date.toLocal();
-  final time = '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  final time = formatHourMinute(local);
   return '${formatDate(local)} $time';
+}
+
+/// A dialog body's width: [wanted], or less on a screen too narrow for it
+/// (the dialog's own margins and padding take 128).
+double dialogWidth(BuildContext context, [double wanted = 420]) => math.max(200.0, math.min(wanted, MediaQuery.sizeOf(context).width - 128));
+
+/// [url] as an http(s) link, or null for anything else, such as a folder
+/// path, which `openInExplorer` opens.
+Uri? webLink(String url) {
+  final uri = Uri.tryParse(url);
+  return uri == null || (uri.scheme != 'https' && uri.scheme != 'http') ? null : uri;
 }
 
 /// Opens a web link in the default browser.
 Future<void> openExternal(String url) async {
-  final uri = Uri.tryParse(url);
-  if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) return;
+  final uri = webLink(url);
+  if (uri == null) return;
   if (!Platform.isWindows) return openWithDesktop(uri.toString());
   // rundll32 passes the whole address on; explorer.exe can drop everything
   // after the first '&'.

@@ -15,7 +15,9 @@ fn numbers(version: &str) -> Option<[u64; 3]> {
     let major = parts.next()?.parse().ok()?;
     let minor = parts.next()?.parse().ok()?;
     let rest = parts.next()?;
-    let digits = rest.find(|c: char| !c.is_ascii_digit()).unwrap_or(rest.len());
+    let digits = rest
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(rest.len());
     Some([major, minor, rest[..digits].parse().ok()?])
 }
 
@@ -23,13 +25,24 @@ fn numbers(version: &str) -> Option<[u64; 3]> {
 /// `2026-10-25T09:39:05Z` or git's `2026-10-25T17:39:05+08:00`.
 pub fn unix_seconds(time: &str) -> Option<i64> {
     let b = time.as_bytes();
-    if b.len() < 20 || b[4] != b'-' || b[7] != b'-' || !matches!(b[10], b'T' | b't' | b' ') || b[13] != b':' || b[16] != b':' {
+    if b.len() < 20
+        || b[4] != b'-'
+        || b[7] != b'-'
+        || !matches!(b[10], b'T' | b't' | b' ')
+        || b[13] != b':'
+        || b[16] != b':'
+    {
         return None;
     }
     let field = |from: usize, to: usize| time.get(from..to)?.parse::<i64>().ok();
     let (year, month, day) = (field(0, 4)?, field(5, 7)?, field(8, 10)?);
     let (hour, minute, second) = (field(11, 13)?, field(14, 16)?, field(17, 19)?);
-    if !(1..=12).contains(&month) || !(1..=31).contains(&day) || hour > 23 || minute > 59 || second > 60 {
+    if !(1..=12).contains(&month)
+        || !(1..=31).contains(&day)
+        || hour > 23
+        || minute > 59
+        || second > 60
+    {
         return None;
     }
     let mut zone = &time[19..];
@@ -91,13 +104,50 @@ pub fn asset_of<'a>(release: &'a Value, package: &str, portable: bool) -> Option
     } else {
         format!("_{package}-setup.exe")
     };
-    release.get("assets")?.as_array()?.iter().find(|asset| asset.get("name").and_then(Value::as_str).is_some_and(|name| name.ends_with(&suffix)))
+    release.get("assets")?.as_array()?.iter().find(|asset| {
+        asset
+            .get("name")
+            .and_then(Value::as_str)
+            .is_some_and(|name| name.ends_with(&suffix))
+    })
+}
+
+/// The version in a package's file name, `Lumtub_<version>_<package>.<ext>`.
+pub fn package_version(name: &str) -> Option<&str> {
+    let rest = name.strip_prefix("Lumtub_")?;
+    let (version, _) = rest.split_once('_')?;
+    (!version.is_empty()).then_some(version)
+}
+
+/// Whether the package [name] is the [offered] version and is newer than
+/// the [current] build: a signed name cannot be moved to another release,
+/// and an older signed package cannot be installed as an update.
+pub fn check_package(name: &str, offered: &str, current: &str) -> Result<(), String> {
+    let offered = offered.strip_prefix('v').unwrap_or(offered);
+    let Some(version) = package_version(name) else {
+        return Err("The update's file name has no version".into());
+    };
+    if version != offered {
+        return Err("The update's package is not the version offered".into());
+    }
+    let (Some(have), Some(next)) = (numbers(current), numbers(version)) else {
+        return Err("The update's version could not be read".into());
+    };
+    let current = current.strip_prefix('v').unwrap_or(current);
+    if next < have || (next == have && version == current) {
+        return Err("The update is not newer than this version".into());
+    }
+    Ok(())
 }
 
 /// The signature file published next to [asset].
 pub fn signature_of<'a>(release: &'a Value, asset: &Value) -> Option<&'a Value> {
     let name = format!("{}.sig", asset.get("name")?.as_str()?);
-    release.get("assets")?.as_array()?.iter().find(|other| other.get("name").and_then(Value::as_str) == Some(&name))
+    release
+        .get("assets")?
+        .as_array()?
+        .iter()
+        .find(|other| other.get("name").and_then(Value::as_str) == Some(&name))
 }
 
 #[derive(Serialize, Debug, PartialEq)]
@@ -111,16 +161,38 @@ pub struct Offer<'a> {
 }
 
 /// The update [release] offers the running build, if it is newer.
-pub fn offer<'a>(release: &'a Value, current: &str, built: Option<i64>, package: &str, portable: bool) -> Option<Offer<'a>> {
-    let tag = release.get("tag_name").and_then(Value::as_str).unwrap_or_default();
-    let published = release.get("published_at").and_then(Value::as_str).and_then(unix_seconds);
+pub fn offer<'a>(
+    release: &'a Value,
+    current: &str,
+    built: Option<i64>,
+    package: &str,
+    portable: bool,
+) -> Option<Offer<'a>> {
+    let tag = release
+        .get("tag_name")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let published = release
+        .get("published_at")
+        .and_then(Value::as_str)
+        .and_then(unix_seconds);
     if !is_newer(current, tag, published, built) {
         return None;
     }
-    let asset = asset_of(release, package, portable);
+    let version = tag.strip_prefix('v').unwrap_or(tag);
+    let asset = asset_of(release, package, portable).filter(|asset| {
+        asset
+            .get("name")
+            .and_then(Value::as_str)
+            .and_then(package_version)
+            == Some(version)
+    });
     Some(Offer {
         version: tag.strip_prefix('v').unwrap_or(tag),
-        page: release.get("html_url").and_then(Value::as_str).unwrap_or_default(),
+        page: release
+            .get("html_url")
+            .and_then(Value::as_str)
+            .unwrap_or_default(),
         asset,
         signature: asset.and_then(|asset| signature_of(release, asset)),
     })
@@ -132,8 +204,18 @@ fn parent(path: &str) -> &str {
 }
 
 /// A PowerShell single-quoted string.
+/// [value] as a PowerShell single-quoted string; PowerShell also takes the
+/// curly single quotes as quotes, so each is doubled too.
 fn quote(value: &str) -> String {
-    format!("'{}'", value.replace('\'', "''"))
+    let mut out = String::from("'");
+    for c in value.chars() {
+        if matches!(c, '\'' | '\u{2018}' | '\u{2019}' | '\u{201A}' | '\u{201B}') {
+            out.push(c);
+        }
+        out.push(c);
+    }
+    out.push('\'');
+    out
 }
 
 #[derive(Deserialize)]
@@ -160,13 +242,19 @@ pub fn script(install: &Install) -> String {
     let mut lines = vec![
         "$ErrorActionPreference = 'Stop'".to_owned(),
         "try {".to_owned(),
-        format!("  Wait-Process -Id {} -Timeout 120 -ErrorAction SilentlyContinue", install.process_id),
+        format!(
+            "  Wait-Process -Id {} -Timeout 120 -ErrorAction SilentlyContinue",
+            install.process_id
+        ),
     ];
     if install.portable {
         lines.extend([
             "  $unpacked = Join-Path $env:TEMP ('lumtub-update-' + [guid]::NewGuid())".to_owned(),
             format!("  Expand-Archive -LiteralPath {package} -DestinationPath $unpacked -Force"),
-            format!("  Copy-Item -Path (Join-Path $unpacked '*') -Destination {} -Recurse -Force", quote(folder)),
+            format!(
+                "  Copy-Item -Path (Join-Path $unpacked '*') -Destination {} -Recurse -Force",
+                quote(folder)
+            ),
             "  Remove-Item -LiteralPath $unpacked -Recurse -Force".to_owned(),
         ]);
     } else {
@@ -184,13 +272,18 @@ pub fn script(install: &Install) -> String {
     }
     lines.extend([
         format!("  Remove-Item -LiteralPath {package} -Force"),
-        format!("  \"$(Get-Date -Format o) updated\" | Out-File -FilePath {log} -Append -Encoding utf8"),
+        format!(
+            "  \"$(Get-Date -Format o) updated\" | Out-File -FilePath {log} -Append -Encoding utf8"
+        ),
         "} catch {".to_owned(),
         format!("  \"$(Get-Date -Format o) $_\" | Out-File -FilePath {log} -Append -Encoding utf8"),
         "}".to_owned(),
     ]);
     if install.relaunch {
-        lines.push(format!("Start-Process -FilePath {}", quote(&install.executable)));
+        lines.push(format!(
+            "Start-Process -FilePath {}",
+            quote(&install.executable)
+        ));
     }
     lines.join("\r\n")
 }
@@ -216,7 +309,13 @@ pub unsafe extern "C" fn lumtub_update_offer(json: *const u8, length: usize) -> 
     let Ok(ask) = serde_json::from_str::<Ask>(unsafe { text(json, length) }) else {
         return std::ptr::null_mut();
     };
-    give_json(&offer(&ask.release, &ask.current, ask.built, &ask.package, ask.portable))
+    give_json(&offer(
+        &ask.release,
+        &ask.current,
+        ask.built,
+        &ask.package,
+        ask.portable,
+    ))
 }
 
 /// The installer's arguments: silent, into [folder], waiting for Lumtub's
@@ -245,7 +344,7 @@ fn writable(folder: &str) -> bool {
 
 #[cfg(windows)]
 fn shell_execute(file: &str, arguments: &str, elevate: bool) -> Result<(), String> {
-    use windows_sys::Win32::UI::Shell::{ShellExecuteExW, SEE_MASK_NOASYNC, SHELLEXECUTEINFOW};
+    use windows_sys::Win32::UI::Shell::{SEE_MASK_NOASYNC, SHELLEXECUTEINFOW, ShellExecuteExW};
     use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
     fn wide(value: &str) -> Vec<u16> {
         value.encode_utf16().chain(std::iter::once(0)).collect()
@@ -296,7 +395,12 @@ pub unsafe extern "C" fn lumtub_update_launch(json: *const u8, length: usize) ->
         return std::ptr::null_mut();
     };
     let elevate = !writable(&launch.folder);
-    let arguments = setup_arguments(&launch.package, &launch.folder, launch.process_id, launch.relaunch);
+    let arguments = setup_arguments(
+        &launch.package,
+        &launch.folder,
+        launch.process_id,
+        launch.relaunch,
+    );
     give_json(&match shell_execute(&launch.package, &arguments, elevate) {
         Ok(()) => serde_json::json!({"ok": true, "elevated": elevate}),
         Err(error) => serde_json::json!({"error": error, "elevated": elevate}),
@@ -317,6 +421,11 @@ pub unsafe extern "C" fn lumtub_update_script(json: *const u8, length: usize) ->
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn quoted_values_cannot_close_the_string() {
+        assert_eq!(super::quote("a'b\u{2019}c"), "'a''b\u{2019}\u{2019}c'");
+    }
+
     use super::*;
     use serde_json::json;
 
@@ -324,7 +433,12 @@ mod tests {
 
     #[test]
     fn installer_arguments_wait_log_and_relaunch() {
-        let args = setup_arguments(r"C:\cache\updates\Lumtub_0.2.6_windows-x64-setup.exe", r"D:\Program Files\lumtub", 42, true);
+        let args = setup_arguments(
+            r"C:\cache\updates\Lumtub_0.2.6_windows-x64-setup.exe",
+            r"D:\Program Files\lumtub",
+            42,
+            true,
+        );
         assert_eq!(
             args,
             r#"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /DIR="D:\Program Files\lumtub" /LOG="C:\cache\updates\setup.log" /WAITPID=42 /UPDATELOG="C:\cache\updates\update.log" /RELAUNCH=1"#
@@ -355,15 +469,35 @@ mod tests {
         assert!(is_newer("0.2.1-72ec49d", "v0.2.2-1234567", None, None));
         assert!(is_newer("0.2.1-72ec49d", "v0.3.0-1234567", None, None));
         assert!(is_newer("0.9.9-72ec49d", "v1.0.0-1234567", None, None));
-        assert!(!is_newer("0.2.1-72ec49d", "v0.2.0-1234567", Some(BUILT + 86_400), Some(BUILT)));
+        assert!(!is_newer(
+            "0.2.1-72ec49d",
+            "v0.2.0-1234567",
+            Some(BUILT + 86_400),
+            Some(BUILT)
+        ));
         assert!(!is_newer("1.0.0-72ec49d", "v0.10.0-1234567", None, None));
     }
 
     #[test]
     fn the_same_version_is_newer_only_from_a_later_commit() {
-        assert!(!is_newer("0.2.1-72ec49d", "v0.2.1-72ec49d", Some(BUILT + 3600), Some(BUILT)));
-        assert!(is_newer("0.2.1-aaaaaaa", "v0.2.1-72ec49d", Some(BUILT + 3600), Some(BUILT)));
-        assert!(!is_newer("0.2.1-aaaaaaa", "v0.2.1-72ec49d", Some(BUILT - 3600), Some(BUILT)));
+        assert!(!is_newer(
+            "0.2.1-72ec49d",
+            "v0.2.1-72ec49d",
+            Some(BUILT + 3600),
+            Some(BUILT)
+        ));
+        assert!(is_newer(
+            "0.2.1-aaaaaaa",
+            "v0.2.1-72ec49d",
+            Some(BUILT + 3600),
+            Some(BUILT)
+        ));
+        assert!(!is_newer(
+            "0.2.1-aaaaaaa",
+            "v0.2.1-72ec49d",
+            Some(BUILT - 3600),
+            Some(BUILT)
+        ));
         assert!(!is_newer("0.2.1-aaaaaaa", "v0.2.1-72ec49d", None, None));
     }
 
@@ -397,16 +531,42 @@ mod tests {
     #[test]
     fn picks_the_package_file() {
         let release = release();
-        let name = |package, portable| asset_of(&release, package, portable).and_then(|a| a["name"].as_str());
-        assert_eq!(name("windows-x64", false), Some("Lumtub_0.2.2-1234567_windows-x64-setup.exe"));
-        assert_eq!(name("windows-x64", true), Some("Lumtub_0.2.2-1234567_windows-x64.zip"));
-        assert_eq!(name("windows-x64-v3", true), Some("Lumtub_0.2.2-1234567_windows-x64-v3.zip"));
-        assert_eq!(name("linux-x64", false), Some("Lumtub_0.2.2-1234567_linux-x64.AppImage"));
+        let name = |package, portable| {
+            asset_of(&release, package, portable).and_then(|a| a["name"].as_str())
+        };
+        assert_eq!(
+            name("windows-x64", false),
+            Some("Lumtub_0.2.2-1234567_windows-x64-setup.exe")
+        );
+        assert_eq!(
+            name("windows-x64", true),
+            Some("Lumtub_0.2.2-1234567_windows-x64.zip")
+        );
+        assert_eq!(
+            name("windows-x64-v3", true),
+            Some("Lumtub_0.2.2-1234567_windows-x64-v3.zip")
+        );
+        assert_eq!(
+            name("linux-x64", false),
+            Some("Lumtub_0.2.2-1234567_linux-x64.AppImage")
+        );
         assert_eq!(name("linux-arm64", false), None);
-        assert_eq!(name("macos-arm64", false), Some("Lumtub_0.2.2-1234567_macos-arm64.dmg"));
-        assert_eq!(name("macos-x64", false), Some("Lumtub_0.2.2-1234567_macos-x64.dmg"));
-        assert_eq!(name("android-arm64-v8a", false), Some("Lumtub_0.2.2-1234567_android-arm64-v8a.apk"));
-        assert_eq!(name("android-armeabi-v7a", false), Some("Lumtub_0.2.2-1234567_android-armeabi-v7a.apk"));
+        assert_eq!(
+            name("macos-arm64", false),
+            Some("Lumtub_0.2.2-1234567_macos-arm64.dmg")
+        );
+        assert_eq!(
+            name("macos-x64", false),
+            Some("Lumtub_0.2.2-1234567_macos-x64.dmg")
+        );
+        assert_eq!(
+            name("android-arm64-v8a", false),
+            Some("Lumtub_0.2.2-1234567_android-arm64-v8a.apk")
+        );
+        assert_eq!(
+            name("android-armeabi-v7a", false),
+            Some("Lumtub_0.2.2-1234567_android-armeabi-v7a.apk")
+        );
         assert_eq!(name("android-x86_64", false), None);
         assert_eq!(name("windows-arm64", false), None);
         assert_eq!(name("", false), None);
@@ -418,11 +578,30 @@ mod tests {
         let offered = offer(&release, "0.2.1-72ec49d", Some(BUILT), "windows-x64", false).unwrap();
         assert_eq!(offered.version, "0.2.2-1234567");
         assert!(offered.page.ends_with("v0.2.2-1234567"));
-        assert_eq!(offered.asset.unwrap()["name"], "Lumtub_0.2.2-1234567_windows-x64-setup.exe");
-        assert_eq!(offered.signature.unwrap()["name"], "Lumtub_0.2.2-1234567_windows-x64-setup.exe.sig");
-        assert_eq!(offer(&release, "0.2.1-72ec49d", Some(BUILT), "windows-x64", true).unwrap().signature, None);
-        assert_eq!(offer(&release, "0.2.2-1234567", Some(BUILT), "windows-x64", false), None);
-        assert_eq!(offer(&release, "0.2.2-aaaaaaa", Some(BUILT), "windows-x64", false).unwrap().version, "0.2.2-1234567");
+        assert_eq!(
+            offered.asset.unwrap()["name"],
+            "Lumtub_0.2.2-1234567_windows-x64-setup.exe"
+        );
+        assert_eq!(
+            offered.signature.unwrap()["name"],
+            "Lumtub_0.2.2-1234567_windows-x64-setup.exe.sig"
+        );
+        assert_eq!(
+            offer(&release, "0.2.1-72ec49d", Some(BUILT), "windows-x64", true)
+                .unwrap()
+                .signature,
+            None
+        );
+        assert_eq!(
+            offer(&release, "0.2.2-1234567", Some(BUILT), "windows-x64", false),
+            None
+        );
+        assert_eq!(
+            offer(&release, "0.2.2-aaaaaaa", Some(BUILT), "windows-x64", false)
+                .unwrap()
+                .version,
+            "0.2.2-1234567"
+        );
     }
 
     #[test]
@@ -453,9 +632,31 @@ mod tests {
             portable: true,
             relaunch: true,
         });
-        assert!(script.contains(r"Expand-Archive -LiteralPath 'C:\it''s\Lumtub_0.2.2_windows-x64.zip'"));
+        assert!(
+            script.contains(r"Expand-Archive -LiteralPath 'C:\it''s\Lumtub_0.2.2_windows-x64.zip'")
+        );
         assert!(script.contains(r"-Destination 'C:\Lumtub'"));
         assert!(!script.contains("/VERYSILENT"));
         assert!(script.ends_with(r"Start-Process -FilePath 'C:\Lumtub\lumtub.exe'"));
+    }
+
+    #[test]
+    fn a_package_must_be_the_offered_newer_version() {
+        let name = "Lumtub_0.2.3-abc1234_windows-x64.zip";
+        assert_eq!(package_version(name), Some("0.2.3-abc1234"));
+        assert!(check_package(name, "v0.2.3-abc1234", "0.2.2-1111111").is_ok());
+        assert!(check_package(name, "0.2.4-abc1234", "0.2.2-1111111").is_err());
+        assert!(check_package(name, "0.2.3-abc1234", "0.2.4-1111111").is_err());
+        assert!(check_package(name, "0.2.3-abc1234", "0.2.3-abc1234").is_err());
+        assert!(check_package(name, "0.2.3-abc1234", "0.2.3-1111111").is_ok());
+        assert!(check_package("setup.exe", "0.2.3-abc1234", "0.2.2").is_err());
+    }
+
+    #[test]
+    fn an_asset_of_another_version_is_not_offered() {
+        let mut release = release();
+        release["tag_name"] = json!("v0.2.3-7654321");
+        let offered = offer(&release, "0.2.1-0000000", None, "windows-x64", false).unwrap();
+        assert!(offered.asset.is_none());
     }
 }

@@ -6,6 +6,7 @@ import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 
 import 'app_log.dart';
 import 'l10n/l10n.dart';
@@ -112,6 +113,10 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
   void signInWithBrowser({bool presence = true}) {
     final native = _native;
     if (native == null || waiting) return;
+    if (Platform.isAndroid) {
+      unawaited(_signInInApp());
+      return;
+    }
     _start((port) => _withText(jsonEncode({'hello': presence}), (p, n) => native.browserSignIn(port.sendPort.nativePort, p, n)));
   }
 
@@ -121,6 +126,28 @@ class YoutubeWebSignIn extends ChangeNotifier implements WebInnerTube, MembersCo
     final native = _native;
     if (native == null || waiting) return;
     _start((port) => _withText(jsonEncode({'path': path, 'hello': presence, 'delete': delete}), (p, n) => native.import(port.sendPort.nativePort, p, n)));
+  }
+
+  /// Android: no other app's cookies can be read, so Google's sign-in
+  /// opens in a page of Lumtub's own (WebSignInActivity.kt), which hands
+  /// over the youtube.com cookies as a file and then forgets them.
+  Future<void> _signInInApp() async {
+    error = null;
+    waiting = true;
+    _notify();
+    String? path;
+    try {
+      path = await const MethodChannel('lumtub/windows_shell').invokeMethod<String>('webSignIn');
+    } catch (e) {
+      logWarn('The in-app sign-in failed: $e');
+    }
+    waiting = false;
+    if (path == null) {
+      error = _why('closed before signing in');
+      _notify();
+      return;
+    }
+    importFile(path, presence: false, delete: true);
   }
 
   void _start(bool Function(ReceivePort port) begin) {

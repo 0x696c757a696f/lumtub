@@ -114,7 +114,7 @@ class _AppShellState extends State<AppShell> {
         duration: const Duration(seconds: 8),
         // With an action Flutter keeps a snack bar until it is closed.
         persist: false,
-        action: SnackBarAction(label: tr('Show in folder'), onPressed: () => unawaited(openInExplorer(path, select: true))),
+        action: Platform.isAndroid ? null : SnackBarAction(label: tr('Show in folder'), onPressed: () => unawaited(openInExplorer(path, select: true))),
       ));
     });
   }
@@ -659,7 +659,7 @@ class _SearchFieldState extends State<_SearchField> {
                     ? null
                     : controller.text.isEmpty
                     ? Padding(
-                        padding: const EdgeInsets.only(right: 12),
+                        padding: const EdgeInsetsDirectional.only(end: 12),
                         child: Center(widthFactor: 1, child: Text(keyNames('Ctrl+K'), style: TextStyle(fontSize: 12, color: context.colors.outline))),
                       )
                     : IconButton(
@@ -674,7 +674,7 @@ class _SearchFieldState extends State<_SearchField> {
               ),
             ),
             optionsViewBuilder: (context, onSelected, options) => Align(
-              alignment: Alignment.topLeft,
+              alignment: AlignmentDirectional.topStart,
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Material(
@@ -757,7 +757,7 @@ class _StatusBar extends StatelessWidget {
         final surface? => SurfaceDecoration.of(context, surface),
         null => BoxDecoration(color: context.tones.chrome, border: Border(top: BorderSide(color: context.colors.outlineVariant.withValues(alpha: 0.4)))),
       },
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.skin?.statusBarText ?? context.colors.outline, fontSize: 12, fontFamily: context.skin?.monoFont)),
     );
   }

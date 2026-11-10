@@ -9,6 +9,7 @@ import '../app_preferences.dart' show SubtitleListMode;
 import '../l10n/l10n.dart';
 import '../models.dart' show SubtitleOption;
 import '../subtitle_cues.dart';
+import 'common.dart';
 import 'motion.dart';
 import 'player_panel.dart';
 import 'app_icons.dart';
@@ -42,6 +43,7 @@ class _SubtitleListState extends State<SubtitleList> {
   /// Following the playing line stops while the person scrolls.
   bool _follow = true;
   String _query = '';
+  Timer? _typing;
   final _currentKey = GlobalKey();
 
   late SubtitleOption? _second = widget.controller.secondarySubtitle;
@@ -94,6 +96,7 @@ class _SubtitleListState extends State<SubtitleList> {
     widget.controller.removeListener(_secondChanged);
     _trackChanges?.cancel();
     _positions?.cancel();
+    _typing?.cancel();
     _scroll.dispose();
     super.dispose();
   }
@@ -136,12 +139,6 @@ class _SubtitleListState extends State<SubtitleList> {
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(tr('Subtitle copied')), duration: const Duration(seconds: 1)));
   }
 
-  static String _clock(Duration d) {
-    final h = d.inHours, m = d.inMinutes % 60, s = d.inSeconds % 60;
-    String two(int n) => n.toString().padLeft(2, '0');
-    return h > 0 ? '$h:${two(m)}:${two(s)}' : '${two(m)}:${two(s)}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -169,12 +166,18 @@ class _SubtitleListState extends State<SubtitleList> {
         ];
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, _bothOn ? 4 : 16, 8),
+            padding: EdgeInsetsDirectional.fromSTEB(16, 0, _bothOn ? 4 : 16, 8),
             child: Row(children: [
               Expanded(
                 child: TextField(
                   decoration: InputDecoration(isDense: true, prefixIcon: Icon(AppIcons.magnifyingGlass, size: 20), hintText: tr('Search subtitles')),
-                  onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+                  onChanged: (v) {
+                    // Filtering thousands of lines waits for a pause in typing.
+                    _typing?.cancel();
+                    _typing = Timer(const Duration(milliseconds: 250), () {
+                      if (mounted) setState(() => _query = v.trim().toLowerCase());
+                    });
+                  },
                 ),
               ),
               if (_bothOn) _modeMenu(colors),
@@ -208,11 +211,11 @@ class _SubtitleListState extends State<SubtitleList> {
                           unawaited(widget.controller.seek(cue.start));
                         },
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
+                          padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 4, 8),
                           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             SizedBox(
                               width: 52,
-                              child: Text(_clock(cue.start), style: TextStyle(fontSize: 12, color: playing ? colors.primary : colors.outline, fontFeatures: const [FontFeature.tabularFigures()])),
+                              child: Text(formatClock(cue.start), style: TextStyle(fontSize: 12, color: playing ? colors.primary : colors.outline, fontFeatures: const [FontFeature.tabularFigures()])),
                             ),
                             Expanded(
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [

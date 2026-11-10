@@ -53,11 +53,15 @@ pub struct Message {
 /// Chat text: `simpleText`, or runs of text and emoji, custom emoji's
 /// pictures going to [emojis].
 fn chat_text(node: Option<&Value>, emojis: &mut Emojis) -> String {
-    let Some(Value::Object(map)) = node else { return String::new() };
+    let Some(Value::Object(map)) = node else {
+        return String::new();
+    };
     if let Some(Value::String(simple)) = map.get("simpleText") {
         return simple.clone();
     }
-    let Some(Value::Array(runs)) = map.get("runs") else { return String::new() };
+    let Some(Value::Array(runs)) = map.get("runs") else {
+        return String::new();
+    };
     runs.iter()
         .filter(|run| run.is_object())
         .map(|run| {
@@ -74,7 +78,13 @@ fn chat_text(node: Option<&Value>, emojis: &mut Emojis) -> String {
 
 /// The last thumbnail address under [node]'s `thumbnails`.
 fn last_thumbnail(node: Option<&Value>) -> Option<String> {
-    node?.get("thumbnails")?.as_array()?.iter().filter_map(|t| t.get("url")?.as_str()).next_back().map(str::to_owned)
+    node?
+        .get("thumbnails")?
+        .as_array()?
+        .iter()
+        .filter_map(|t| t.get("url")?.as_str())
+        .next_back()
+        .map(str::to_owned)
 }
 
 fn integer(value: Option<&Value>) -> Option<i64> {
@@ -89,16 +99,25 @@ fn message(item: &Value, offset_ms: Option<i64>) -> Option<Message> {
         ("liveChatMembershipItemRenderer", Kind::Membership),
         ("liveChatViewerEngagementMessageRenderer", Kind::System),
     ];
-    let (kind, renderer) = KINDS.iter().find_map(|(key, kind)| item.get(*key).filter(|r| r.is_object()).map(|r| (*kind, r)))?;
+    let (kind, renderer) = KINDS
+        .iter()
+        .find_map(|(key, kind)| item.get(*key).filter(|r| r.is_object()).map(|r| (*kind, r)))?;
     let id = renderer.get("id").map(display).unwrap_or_default();
     if id.is_empty() {
         return None;
     }
     let mut emojis = Emojis::new();
-    let text = ["message", "headerSubtext", "headerPrimaryText"].iter().map(|key| chat_text(renderer.get(*key), &mut emojis)).find(|t| !t.is_empty()).unwrap_or_default();
+    let text = ["message", "headerSubtext", "headerPrimaryText"]
+        .iter()
+        .map(|key| chat_text(renderer.get(*key), &mut emojis))
+        .find(|t| !t.is_empty())
+        .unwrap_or_default();
     let mut ignored = Emojis::new();
     let amount = chat_text(renderer.get("purchaseAmountText"), &mut ignored);
-    let color = ["bodyBackgroundColor", "backgroundColor"].iter().find_map(|key| integer(renderer.get(*key))).and_then(|c| u32::try_from(c).ok());
+    let color = ["bodyBackgroundColor", "backgroundColor"]
+        .iter()
+        .find_map(|key| integer(renderer.get(*key)))
+        .and_then(|c| u32::try_from(c).ok());
     Some(Message {
         id,
         kind,
@@ -106,7 +125,10 @@ fn message(item: &Value, offset_ms: Option<i64>) -> Option<Message> {
         offset_ms,
         timestamp_usec: integer(renderer.get("timestampUsec")),
         author: chat_text(renderer.get("authorName"), &mut ignored),
-        author_channel_id: renderer.get("authorExternalChannelId").filter(|v| !v.is_null()).map(display),
+        author_channel_id: renderer
+            .get("authorExternalChannelId")
+            .filter(|v| !v.is_null())
+            .map(display),
         author_avatar: last_thumbnail(renderer.get("authorPhoto").filter(|p| p.is_object())),
         amount: (!amount.is_empty()).then_some(amount),
         sticker_url: last_thumbnail(renderer.get("sticker").filter(|s| s.is_object())),
@@ -120,7 +142,8 @@ fn message(item: &Value, offset_ms: Option<i64>) -> Option<Message> {
 /// colour of its amount tier: blue and cyan not at all, green 2 minutes,
 /// yellow 5, orange 10, magenta 30 and red an hour.
 fn ticker_seconds(argb: u32) -> u32 {
-    let [r, g, b] = [(argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF].map(|c| c as f32 / 255.0);
+    let [r, g, b] =
+        [(argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF].map(|c| c as f32 / 255.0);
     let (max, min) = (r.max(g).max(b), r.min(g).min(b));
     if max - min < 0.1 {
         return 120;
@@ -146,16 +169,36 @@ fn ticker_seconds(argb: u32) -> u32 {
 /// The chat items of one yt-dlp `live_chat` line. Status actions without a
 /// chat item and unknown renderers are left out.
 pub fn line(line: &str) -> Vec<Message> {
-    let Ok(raw) = serde_json::from_str::<Value>(line) else { return Vec::new() };
-    let action = raw.get("replayChatItemAction").filter(|r| r.is_object()).unwrap_or(&raw);
+    let Ok(raw) = serde_json::from_str::<Value>(line) else {
+        return Vec::new();
+    };
+    let action = raw
+        .get("replayChatItemAction")
+        .filter(|r| r.is_object())
+        .unwrap_or(&raw);
     let offset_ms = integer(action.get("videoOffsetTimeMsec"));
-    let Some(Value::Array(actions)) = action.get("actions") else { return Vec::new() };
-    actions.iter().filter_map(|entry| entry.get("addChatItemAction")?.get("item").filter(|i| i.is_object())).filter_map(|item| message(item, offset_ms)).collect()
+    let Some(Value::Array(actions)) = action.get("actions") else {
+        return Vec::new();
+    };
+    actions
+        .iter()
+        .filter_map(|entry| {
+            entry
+                .get("addChatItemAction")?
+                .get("item")
+                .filter(|i| i.is_object())
+        })
+        .filter_map(|item| message(item, offset_ms))
+        .collect()
 }
 
 /// The chat items of every line of [contents].
 pub fn lines(contents: &str) -> Vec<Message> {
-    contents.lines().filter(|l| !l.trim().is_empty()).flat_map(line).collect()
+    contents
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .flat_map(line)
+        .collect()
 }
 
 /// [lines] as JSON.
@@ -172,7 +215,10 @@ fn find_object<'a>(node: &'a Value, name: &str) -> Option<&'a Value> {
     match node {
         Value::Object(map) => match map.get(name) {
             Some(found @ Value::Object(_)) => Some(found),
-            _ => map.values().filter(|v| v.is_object() || v.is_array()).find_map(|v| find_object(v, name)),
+            _ => map
+                .values()
+                .filter(|v| v.is_object() || v.is_array())
+                .find_map(|v| find_object(v, name)),
         },
         Value::Array(list) => list.iter().find_map(|v| find_object(v, name)),
         _ => None,
@@ -211,7 +257,10 @@ fn find_array<'a>(node: &'a Value, name: &str) -> Option<&'a Vec<Value>> {
     match node {
         Value::Object(map) => match map.get(name) {
             Some(Value::Array(found)) => Some(found),
-            _ => map.values().filter(|v| v.is_object() || v.is_array()).find_map(|v| find_array(v, name)),
+            _ => map
+                .values()
+                .filter(|v| v.is_object() || v.is_array())
+                .find_map(|v| find_array(v, name)),
         },
         Value::Array(list) => list.iter().find_map(|v| find_array(v, name)),
         _ => None,
@@ -220,31 +269,61 @@ fn find_array<'a>(node: &'a Value, name: &str) -> Option<&'a Vec<Value>> {
 
 /// The channel emoji listed in a chat answer (`emojis` of the live chat).
 fn chat_emojis(answer: &Value) -> Vec<ChatEmoji> {
-    let Some(list) = find_array(answer, "emojis") else { return Vec::new() };
+    let Some(list) = find_array(answer, "emojis") else {
+        return Vec::new();
+    };
     list.iter()
         .filter(|e| e.get("isCustomEmoji").and_then(Value::as_bool) == Some(true))
         .filter_map(|e| {
             let id = e.get("emojiId")?.as_str()?.to_owned();
-            let shortcut = e.get("shortcuts")?.as_array()?.iter().filter_map(Value::as_str).find(|s| s.starts_with(':') && s.ends_with(':'))?.to_owned();
-            let url = e.pointer("/image/thumbnails")?.as_array()?.last()?.get("url")?.as_str()?;
-            let url = if url.starts_with("//") { format!("https:{url}") } else { url.to_owned() };
+            let shortcut = e
+                .get("shortcuts")?
+                .as_array()?
+                .iter()
+                .filter_map(Value::as_str)
+                .find(|s| s.starts_with(':') && s.ends_with(':'))?
+                .to_owned();
+            let url = e
+                .pointer("/image/thumbnails")?
+                .as_array()?
+                .last()?
+                .get("url")?
+                .as_str()?;
+            let url = if url.starts_with("//") {
+                format!("https:{url}")
+            } else {
+                url.to_owned()
+            };
             let locked = e.get("isLocked").and_then(Value::as_bool).unwrap_or(false);
-            Some(ChatEmoji { id, shortcut, url, locked })
+            Some(ChatEmoji {
+                id,
+                shortcut,
+                url,
+                locked,
+            })
         })
         .collect()
 }
 
 pub fn composer(answer: &Value) -> Composer {
-    let continuation = find_object(answer, "liveChatRenderer").and_then(|chat| find_string(chat, "continuation"));
+    let continuation =
+        find_object(answer, "liveChatRenderer").and_then(|chat| find_string(chat, "continuation"));
     let params = find_object(answer, "liveChatMessageInputRenderer")
         .and_then(|input| find_object(input, "sendLiveChatMessageEndpoint"))
         .and_then(|endpoint| endpoint.get("params")?.as_str().map(str::to_owned));
     let restricted = if params.is_some() {
         None
     } else {
-        find_object(answer, "liveChatRestrictedParticipationRenderer").map(|r| text_of(r.get("message"))).filter(|t| !t.is_empty())
+        find_object(answer, "liveChatRestrictedParticipationRenderer")
+            .map(|r| text_of(r.get("message")))
+            .filter(|t| !t.is_empty())
     };
-    Composer { continuation, params, restricted, emojis: chat_emojis(answer) }
+    Composer {
+        continuation,
+        params,
+        restricted,
+        emojis: chat_emojis(answer),
+    }
 }
 
 #[derive(Deserialize)]
@@ -266,7 +345,10 @@ fn segments(text: &str, emojis: &std::collections::HashMap<String, String>) -> V
     let mut rest = text;
     while let Some(start) = rest.find(':') {
         let after = &rest[start + 1..];
-        let found = after.find(':').map(|end| &rest[start..start + end + 2]).filter(|code| emojis.contains_key(*code));
+        let found = after
+            .find(':')
+            .map(|end| &rest[start..start + end + 2])
+            .filter(|code| emojis.contains_key(*code));
         match found {
             Some(code) => {
                 plain.push_str(&rest[..start]);
@@ -304,7 +386,8 @@ fn send_body(send: &Send) -> Value {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_live_chat_composer(json: *const u8, length: usize) -> *mut c_char {
-    let answer = serde_json::from_str::<Value>(unsafe { text(json, length) }).unwrap_or(Value::Null);
+    let answer =
+        serde_json::from_str::<Value>(unsafe { text(json, length) }).unwrap_or(Value::Null);
     give_json(&composer(&answer))
 }
 
@@ -371,10 +454,36 @@ mod tests {
         }}}});
         let custom = &lines(&json!({"actions": [custom]}).to_string())[0];
         assert_eq!(custom.text, "\u{1F600} :_wave:");
-        assert_eq!(custom.emojis, Emojis::from([(":_wave:".into(), "https://yt3/l".into()), ("\u{1F600}".into(), "https://e/g".into())]));
-        assert_eq!((sticker.kind, sticker.offset_ms, sticker.amount.as_deref(), sticker.sticker_url.as_deref()), (Kind::PaidSticker, None, Some("$5.00"), Some("https://s/1")));
-        assert_eq!((sticker.color, sticker.ticker_seconds), (Some(0xFF1DE9B6), Some(120)));
-        let tiers = [0xFF1E88E5u32, 0xFF00E5FF, 0xFF1DE9B6, 0xFFFFCA28, 0xFFF57C00, 0xFFE91E63, 0xFFE62117].map(ticker_seconds);
+        assert_eq!(
+            custom.emojis,
+            Emojis::from([
+                (":_wave:".into(), "https://yt3/l".into()),
+                ("\u{1F600}".into(), "https://e/g".into())
+            ])
+        );
+        assert_eq!(
+            (
+                sticker.kind,
+                sticker.offset_ms,
+                sticker.amount.as_deref(),
+                sticker.sticker_url.as_deref()
+            ),
+            (Kind::PaidSticker, None, Some("$5.00"), Some("https://s/1"))
+        );
+        assert_eq!(
+            (sticker.color, sticker.ticker_seconds),
+            (Some(0xFF1DE9B6), Some(120))
+        );
+        let tiers = [
+            0xFF1E88E5u32,
+            0xFF00E5FF,
+            0xFF1DE9B6,
+            0xFFFFCA28,
+            0xFFF57C00,
+            0xFFE91E63,
+            0xFFE62117,
+        ]
+        .map(ticker_seconds);
         assert_eq!(tiers, [0, 0, 120, 300, 600, 1800, 3600]);
     }
 
@@ -385,12 +494,31 @@ mod tests {
         assert_eq!(composer(&next).continuation.as_deref(), Some("0ofMyAN"));
         let chat = json!({"continuationContents": {"liveChatContinuation": {"actionPanel": {"liveChatMessageInputRenderer": {
             "sendButton": {"buttonRenderer": {"serviceEndpoint": {"sendLiveChatMessageEndpoint": {"params": "Q2lrcU"}}}}}}}}});
-        assert_eq!(composer(&chat), Composer { continuation: None, params: Some("Q2lrcU".into()), restricted: None, emojis: vec![] });
+        assert_eq!(
+            composer(&chat),
+            Composer {
+                continuation: None,
+                params: Some("Q2lrcU".into()),
+                restricted: None,
+                emojis: vec![]
+            }
+        );
         let members = json!({"continuationContents": {"liveChatContinuation": {"actionPanel": {"liveChatRestrictedParticipationRenderer": {
             "message": {"runs": [{"text": "Chat is in "}, {"text": "members-only mode"}]}}}}}});
-        assert_eq!(composer(&members).restricted.as_deref(), Some("Chat is in members-only mode"));
-        let body = send_body(&Send { params: "p".into(), text: "hi".into(), client_message_id: "c".into(), emojis: Default::default() });
-        assert_eq!(body, json!({"params": "p", "clientMessageId": "c", "richMessage": {"textSegments": [{"text": "hi"}]}}));
+        assert_eq!(
+            composer(&members).restricted.as_deref(),
+            Some("Chat is in members-only mode")
+        );
+        let body = send_body(&Send {
+            params: "p".into(),
+            text: "hi".into(),
+            client_message_id: "c".into(),
+            emojis: Default::default(),
+        });
+        assert_eq!(
+            body,
+            json!({"params": "p", "clientMessageId": "c", "richMessage": {"textSegments": [{"text": "hi"}]}})
+        );
     }
 
     #[test]
@@ -400,15 +528,38 @@ mod tests {
             {"emojiId": "UCx/vip", "shortcuts": [":_vip:"], "isCustomEmoji": true, "isLocked": true, "image": {"thumbnails": [{"url": "https://yt3/v"}]}},
             {"emojiId": "\u{1F600}", "shortcuts": [":grinning:"], "image": {"thumbnails": [{"url": "https://e/g"}]}}
         ]}}});
-        assert_eq!(composer(&chat).emojis, vec![
-            ChatEmoji { id: "UCx/wave".into(), shortcut: ":_wave:".into(), url: "https://yt3/l".into(), locked: false },
-            ChatEmoji { id: "UCx/vip".into(), shortcut: ":_vip:".into(), url: "https://yt3/v".into(), locked: true },
-        ]);
-        let emojis = std::collections::HashMap::from([(":_wave:".to_string(), "UCx/wave".to_string())]);
-        assert_eq!(segments("hi :_wave::_wave: at 10:30 :_nope: 😀", &emojis), vec![
-            json!({"text": "hi "}), json!({"emojiId": "UCx/wave"}), json!({"emojiId": "UCx/wave"}), json!({"text": " at 10:30 :_nope: 😀"}),
-        ]);
-        assert_eq!(segments(":_wave:", &emojis), vec![json!({"emojiId": "UCx/wave"})]);
+        assert_eq!(
+            composer(&chat).emojis,
+            vec![
+                ChatEmoji {
+                    id: "UCx/wave".into(),
+                    shortcut: ":_wave:".into(),
+                    url: "https://yt3/l".into(),
+                    locked: false
+                },
+                ChatEmoji {
+                    id: "UCx/vip".into(),
+                    shortcut: ":_vip:".into(),
+                    url: "https://yt3/v".into(),
+                    locked: true
+                },
+            ]
+        );
+        let emojis =
+            std::collections::HashMap::from([(":_wave:".to_string(), "UCx/wave".to_string())]);
+        assert_eq!(
+            segments("hi :_wave::_wave: at 10:30 :_nope: 😀", &emojis),
+            vec![
+                json!({"text": "hi "}),
+                json!({"emojiId": "UCx/wave"}),
+                json!({"emojiId": "UCx/wave"}),
+                json!({"text": " at 10:30 :_nope: 😀"}),
+            ]
+        );
+        assert_eq!(
+            segments(":_wave:", &emojis),
+            vec![json!({"emojiId": "UCx/wave"})]
+        );
         assert_eq!(segments("a:b", &emojis), vec![json!({"text": "a:b"})]);
     }
 }

@@ -11,7 +11,10 @@ use std::time::Duration;
 /// The first proxy the script names, as an address the app takes:
 /// `http://host:port`, `socks5h://host:port` or `socks4a://host:port`.
 pub fn proxy_in(script: &str) -> Option<String> {
-    let words: Vec<&str> = script.split(|c: char| c.is_whitespace() || matches!(c, '"' | '\'' | ';' | '+' | '(' | ')' | ',')).filter(|w| !w.is_empty()).collect();
+    let words: Vec<&str> = script
+        .split(|c: char| c.is_whitespace() || matches!(c, '"' | '\'' | ';' | '+' | '(' | ')' | ','))
+        .filter(|w| !w.is_empty())
+        .collect();
     words.windows(2).find_map(|pair| {
         let scheme = match pair[0] {
             "PROXY" | "HTTP" => "http",
@@ -22,7 +25,10 @@ pub fn proxy_in(script: &str) -> Option<String> {
         let address = pair[1];
         let (host, port) = address.rsplit_once(':')?;
         let port: u16 = port.parse().ok()?;
-        let host_ok = !host.is_empty() && host.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '[' | ']' | ':'));
+        let host_ok = !host.is_empty()
+            && host
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '[' | ']' | ':'));
         (host_ok && port > 0).then(|| format!("{scheme}://{host}:{port}"))
     })
 }
@@ -31,14 +37,21 @@ pub fn proxy_in(script: &str) -> Option<String> {
 /// directly, as the proxy tool serves it on this PC.
 pub fn fetch(url: &str) -> Result<String, String> {
     if let Some(path) = url.strip_prefix("file://") {
-        let path = path.strip_prefix('/').filter(|p| p.as_bytes().get(1) == Some(&b':')).unwrap_or(path);
+        let path = path
+            .strip_prefix('/')
+            .filter(|p| p.as_bytes().get(1) == Some(&b':'))
+            .unwrap_or(path);
         let path = path.replace("%20", " ");
         return std::fs::read_to_string(path).map_err(|e| e.to_string());
     }
     if !url.starts_with("http://") && !url.starts_with("https://") {
         return Err("not an http, https or file address".into());
     }
-    let client = reqwest::Client::builder().no_proxy().timeout(Duration::from_secs(5)).build().map_err(|e| e.to_string())?;
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .timeout(Duration::from_secs(5))
+        .build()
+        .map_err(|e| e.to_string())?;
     crate::http::runtime().block_on(async {
         let response = client.get(url).send().await.map_err(|e| e.to_string())?;
         if !response.status().is_success() {
@@ -76,11 +89,20 @@ mod tests {
         let clash = r#"function FindProxyForURL(url, host) { if (isPlainHostName(host)) return "DIRECT"; return "PROXY 127.0.0.1:7890; SOCKS5 127.0.0.1:7890; DIRECT"; }"#;
         assert_eq!(proxy_in(clash).as_deref(), Some("http://127.0.0.1:7890"));
         let shadowsocks = "var proxy = \"SOCKS5 127.0.0.1:1080; SOCKS 127.0.0.1:1080; DIRECT;\";\nvar rules = [\"||youtube.com\"];";
-        assert_eq!(proxy_in(shadowsocks).as_deref(), Some("socks5h://127.0.0.1:1080"));
+        assert_eq!(
+            proxy_in(shadowsocks).as_deref(),
+            Some("socks5h://127.0.0.1:1080")
+        );
         let joined = "return 'PROXY ' + '10.0.0.2:3128';";
         assert_eq!(proxy_in(joined).as_deref(), Some("http://10.0.0.2:3128"));
-        assert_eq!(proxy_in("function FindProxyForURL(u, h) { return \"DIRECT\"; }"), None);
-        assert_eq!(proxy_in("// PROXY settings below\nreturn \"PROXY proxy.lan:8080\";").as_deref(), Some("http://proxy.lan:8080"));
+        assert_eq!(
+            proxy_in("function FindProxyForURL(u, h) { return \"DIRECT\"; }"),
+            None
+        );
+        assert_eq!(
+            proxy_in("// PROXY settings below\nreturn \"PROXY proxy.lan:8080\";").as_deref(),
+            Some("http://proxy.lan:8080")
+        );
     }
 
     #[test]
@@ -90,7 +112,10 @@ mod tests {
         let file = dir.join("proxy.pac");
         std::fs::write(&file, "return \"SOCKS5 127.0.0.1:10808\";").unwrap();
         let script = fetch(&format!("file://{}", file.display())).unwrap();
-        assert_eq!(proxy_in(&script).as_deref(), Some("socks5h://127.0.0.1:10808"));
+        assert_eq!(
+            proxy_in(&script).as_deref(),
+            Some("socks5h://127.0.0.1:10808")
+        );
         std::fs::remove_dir_all(dir).unwrap();
     }
 }

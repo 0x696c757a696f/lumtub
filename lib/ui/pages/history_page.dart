@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../app/app_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../models.dart';
+import '../../video_repository.dart' show historyLimit;
 import '../common.dart';
 import '../theme.dart';
 import '../video_card.dart';
@@ -51,7 +52,7 @@ class _HistoryPageState extends State<HistoryPage> {
     final signedIn = controller.tvFeed?.available ?? false;
     if (signedIn && _youtube) return _youtubeHistory(context);
     if (all.isEmpty && !signedIn) {
-      return StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to 60 entries.'));
+      return StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to {0} entries.', [historyLimit]));
     }
     final items = filterHistory(all, _query);
     _selected.removeWhere((id) => !all.any((item) => item.id == id));
@@ -80,7 +81,7 @@ class _HistoryPageState extends State<HistoryPage> {
       if (signedIn) SliverToBoxAdapter(child: _sourceChips()),
       SliverToBoxAdapter(child: Padding(
         padding: const EdgeInsets.fromLTRB(AppStyle.pagePadding, 0, AppStyle.pagePadding, 16),
-        child: Align(alignment: Alignment.centerLeft, child: ConstrainedBox(
+        child: Align(alignment: AlignmentDirectional.centerStart, child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: TextField(
             controller: _search,
@@ -98,7 +99,7 @@ class _HistoryPageState extends State<HistoryPage> {
         )),
       )),
       if (all.isEmpty)
-        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to 60 entries.')))
+        SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.clockCounterClockwiseFill, title: tr('No watch history yet'), message: tr('Played videos are saved on this device, up to {0} entries.', [historyLimit])))
       else if (items.isEmpty)
         SliverFillRemaining(hasScrollBody: false, child: StatusView(icon: AppIcons.magnifyingGlassMinus, title: tr('No matching history'), message: tr('Try other keywords.')))
       else if (_selecting)
@@ -121,6 +122,7 @@ class _HistoryPageState extends State<HistoryPage> {
           onOpen: (item) => controller.play(item, from: items),
           onRemove: (item) => controller.removeFromHistory({item.id}),
           removeLabel: tr('Delete from history'),
+          watched: watchedLabels(controller.watchedTimes),
         ),
       const SliverToBoxAdapter(child: SizedBox(height: AppStyle.pagePadding)),
     ]);
@@ -161,7 +163,7 @@ class _HistoryPageState extends State<HistoryPage> {
           ]),
         )),
         SliverToBoxAdapter(child: _sourceChips()),
-        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items)),
+        if (items.isNotEmpty) SliverVideoGrid(items: items, thumbnails: controller.thumbnailDirectory, onOpen: (item) => controller.play(item, from: items), watched: controller.tvFeed?.historyDays),
         if (loader.loading) ...[
           if (items.isNotEmpty) const SliverToBoxAdapter(child: SizedBox(height: AppStyle.cardSpacing)),
           SliverSkeletonGrid(rows: items.isEmpty ? 3 : 1),
@@ -239,7 +241,7 @@ class _SelectRow extends StatelessWidget {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(titleFor(item), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: colors.onSurface)),
             const SizedBox(height: 4),
-            Text(item.channel.isEmpty ? 'YouTube' : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
+            Text(item.channel.isEmpty ? tr('YouTube') : item.channel, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: colors.outline)),
           ])),
         ]),
       ),

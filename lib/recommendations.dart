@@ -7,6 +7,7 @@ import 'feed_quality.dart';
 import 'library_store.dart' show WatchProgress;
 import 'models.dart';
 import 'native_core.dart';
+import 'app_log.dart';
 
 /// Where a recommended video came from.
 enum RecommendSource {
@@ -222,7 +223,9 @@ class NotInterested {
           if (entry.key is String && entry.value is int) channels[entry.key as String] = entry.value as int;
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      logDebug(() => 'The recommendation history could not be read: $e');
+    }
   }
 
   Future<void> add(VideoItem item) async {
@@ -248,7 +251,9 @@ class NotInterested {
     try {
       await file.parent.create(recursive: true);
       await file.writeAsString(jsonEncode({'videos': videos.toList(), 'channels': channels}));
-    } catch (_) {}
+    } catch (e) {
+      logWarn('Could not save the recommendation history: $e');
+    }
   }
 }
 

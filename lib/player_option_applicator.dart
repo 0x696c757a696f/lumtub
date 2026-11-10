@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:media_kit/media_kit.dart';
 
 import 'player_settings.dart';
+import 'app_log.dart';
 
 class PlayerOptionApplicator {
   /// Whether a PipeWire server is running for this user. mpv 0.41's
@@ -161,7 +162,9 @@ class PlayerOptionApplicator {
       for (final key in fastRendering.keys) {
         try {
           defaults[key] = await platform.getProperty(key);
-        } catch (_) {}
+        } catch (e) {
+          logDebug(() => 'Could not read the mpv default of $key: $e');
+        }
       }
       _mpvDefaults[player] = defaults;
     }
@@ -189,7 +192,9 @@ class PlayerOptionApplicator {
       if (options.containsKey(key) || value == null) continue;
       try {
         await platform.setProperty(key, value);
-      } catch (_) {}
+      } catch (e) {
+        logDebug(() => 'Could not set the mpv option $key: $e');
+      }
     }
     return failed;
   }

@@ -83,20 +83,56 @@ pub(crate) fn post(port: i64, items: Vec<Item>) -> bool {
     let Some(send) = *POST.read().unwrap_or_else(|e| e.into_inner()) else {
         return false;
     };
-    let strings: Vec<Option<CString>> =
-        items.iter().map(|i| if let Item::Text(t) = i { Some(CString::new(t.replace('\0', "")).unwrap_or_default()) } else { None }).collect();
+    let strings: Vec<Option<CString>> = items
+        .iter()
+        .map(|i| {
+            if let Item::Text(t) = i {
+                Some(CString::new(t.replace('\0', "")).unwrap_or_default())
+            } else {
+                None
+            }
+        })
+        .collect();
     let mut objects: Vec<CObject> = items
         .iter()
         .zip(&strings)
         .map(|(item, string)| match item {
-            Item::Int(n) => CObject { kind: K_INT64, value: Value { as_int64: *n } },
-            Item::Text(_) => CObject { kind: K_STRING, value: Value { as_string: string.as_ref().map_or(std::ptr::null(), |s| s.as_ptr()) } },
-            Item::Bytes(b) => CObject { kind: K_TYPED_DATA, value: Value { as_typed_data: TypedData { kind: K_UINT8, length: b.len() as isize, values: b.as_ptr() } } },
-            Item::Null => CObject { kind: K_NULL, value: Value { as_int64: 0 } },
+            Item::Int(n) => CObject {
+                kind: K_INT64,
+                value: Value { as_int64: *n },
+            },
+            Item::Text(_) => CObject {
+                kind: K_STRING,
+                value: Value {
+                    as_string: string.as_ref().map_or(std::ptr::null(), |s| s.as_ptr()),
+                },
+            },
+            Item::Bytes(b) => CObject {
+                kind: K_TYPED_DATA,
+                value: Value {
+                    as_typed_data: TypedData {
+                        kind: K_UINT8,
+                        length: b.len() as isize,
+                        values: b.as_ptr(),
+                    },
+                },
+            },
+            Item::Null => CObject {
+                kind: K_NULL,
+                value: Value { as_int64: 0 },
+            },
         })
         .collect();
     let mut pointers: Vec<*mut CObject> = objects.iter_mut().map(|o| o as *mut CObject).collect();
-    let mut message = CObject { kind: K_ARRAY, value: Value { as_array: Array { length: pointers.len() as isize, values: pointers.as_mut_ptr() } } };
+    let mut message = CObject {
+        kind: K_ARRAY,
+        value: Value {
+            as_array: Array {
+                length: pointers.len() as isize,
+                values: pointers.as_mut_ptr(),
+            },
+        },
+    };
     // SAFETY: every pointer stays alive until the call returns, and the VM
     // copies the message before it does.
     unsafe { send(port, &mut message) }
@@ -128,8 +164,14 @@ fn build(settings: &Settings) -> reqwest::Client {
         .tcp_keepalive(Duration::from_secs(60))
         .http2_adaptive_window(true)
         .redirect(reqwest::redirect::Policy::limited(10));
-    match settings.proxy.as_deref().and_then(|p| reqwest::Proxy::all(p).ok()) {
-        Some(proxy) => builder = builder.proxy(proxy),
+    match settings.proxy.as_deref().filter(|p| !p.trim().is_empty()) {
+        Some(address) => match reqwest::Proxy::all(address) {
+            Ok(proxy) => builder = builder.proxy(proxy),
+            Err(_) => {
+                eprintln!("lumtub: the proxy address could not be read; requests will fail");
+                return blocked();
+            }
+        },
         None if !settings.system => builder = builder.no_proxy(),
         None => {}
     }
@@ -138,7 +180,32 @@ fn build(settings: &Settings) -> reqwest::Client {
     }
     builder = crate::roots::apply(builder, settings.roots);
     // A list of its own is kept even then, rather than the system's store.
-    builder.build().unwrap_or_else(|_| crate::roots::apply(reqwest::Client::builder(), settings.roots).build().unwrap_or_default())
+    builder.build().unwrap_or_else(|_| {
+        crate::roots::apply(reqwest::Client::builder(), settings.roots)
+            .build()
+            .unwrap_or_default()
+    })
+}
+
+/// Resolves nothing, so a client that must not connect cannot.
+struct Refuse;
+
+impl reqwest::dns::Resolve for Refuse {
+    fn resolve(&self, _: reqwest::dns::Name) -> reqwest::dns::Resolving {
+        Box::pin(async { Err(Box::new(std::io::Error::other("no route is allowed")) as Box<_>) })
+    }
+}
+
+/// A client whose every request fails: used when the proxy asked for cannot
+/// be set up, so traffic never leaves directly.
+fn blocked() -> reqwest::Client {
+    let mut builder = reqwest::Client::builder()
+        .dns_resolver(Arc::new(Refuse))
+        .connect_timeout(Duration::from_secs(1));
+    if let Ok(proxy) = reqwest::Proxy::all("http://blocked.invalid:9") {
+        builder = builder.proxy(proxy);
+    }
+    builder.build().unwrap_or_default()
 }
 
 static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
@@ -158,8 +225,16 @@ pub(crate) fn client() -> reqwest::Client {
     CLIENT.read().unwrap_or_else(|e| e.into_inner()).clone()
 }
 
-static CLIENT: LazyLock<RwLock<reqwest::Client>> = LazyLock::new(|| RwLock::new(build(&Settings { proxy: None, system: true, dns: Default::default(), roots: Default::default() })));
-static RUNNING: LazyLock<Mutex<HashMap<i64, AbortHandle>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static CLIENT: LazyLock<RwLock<reqwest::Client>> = LazyLock::new(|| {
+    RwLock::new(build(&Settings {
+        proxy: None,
+        system: true,
+        dns: Default::default(),
+        roots: Default::default(),
+    }))
+});
+static RUNNING: LazyLock<Mutex<HashMap<i64, AbortHandle>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// How much of a body may be posted to Dart and not yet taken by its reader.
 pub(crate) const WINDOW: u64 = 1024 * 1024;
@@ -189,7 +264,8 @@ impl Flow {
     }
 }
 
-static FLOWS: LazyLock<Mutex<HashMap<i64, Arc<Flow>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static FLOWS: LazyLock<Mutex<HashMap<i64, Arc<Flow>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[derive(Deserialize)]
 struct Request {
@@ -205,7 +281,8 @@ const PIECE: usize = 64 * 1024;
 
 async fn run(id: i64, port: i64, request: Request, body: Vec<u8>, flow: Arc<Flow>) {
     let client = CLIENT.read().unwrap_or_else(|e| e.into_inner()).clone();
-    let method = reqwest::Method::from_bytes(request.method.as_bytes()).unwrap_or(reqwest::Method::GET);
+    let method =
+        reqwest::Method::from_bytes(request.method.as_bytes()).unwrap_or(reqwest::Method::GET);
     let mut builder = client.request(method, &request.url);
     for (name, value) in &request.headers {
         builder = builder.header(name.as_str(), value.as_str());
@@ -216,13 +293,26 @@ async fn run(id: i64, port: i64, request: Request, body: Vec<u8>, flow: Arc<Flow
     let mut response = match builder.send().await {
         Ok(r) => r,
         Err(e) => {
-            post(port, vec![Item::Int(id), Item::Int(3), Item::Text(describe(&e))]);
+            post(
+                port,
+                vec![Item::Int(id), Item::Int(3), Item::Text(describe(&e))],
+            );
             return;
         }
     };
-    let headers: Vec<(String, String)> =
-        response.headers().iter().map(|(k, v)| (k.as_str().to_string(), String::from_utf8_lossy(v.as_bytes()).into_owned())).collect();
-    let length = response.content_length().map_or(Item::Null, |n| Item::Int(n as i64));
+    let headers: Vec<(String, String)> = response
+        .headers()
+        .iter()
+        .map(|(k, v)| {
+            (
+                k.as_str().to_string(),
+                String::from_utf8_lossy(v.as_bytes()).into_owned(),
+            )
+        })
+        .collect();
+    let length = response
+        .content_length()
+        .map_or(Item::Null, |n| Item::Int(n as i64));
     let head = vec![
         Item::Int(id),
         Item::Int(0),
@@ -241,15 +331,28 @@ async fn run(id: i64, port: i64, request: Request, body: Vec<u8>, flow: Arc<Flow
     while !ended {
         // A body nobody reads any more is let go after a while, so its
         // connection does not stay held.
-        if tokio::time::timeout(UNREAD, flow.room(posted)).await.is_err() {
-            post(port, vec![Item::Int(id), Item::Int(3), Item::Text("the body was not read for 5 minutes".into())]);
+        if tokio::time::timeout(UNREAD, flow.room(posted))
+            .await
+            .is_err()
+        {
+            post(
+                port,
+                vec![
+                    Item::Int(id),
+                    Item::Int(3),
+                    Item::Text("the body was not read for 5 minutes".into()),
+                ],
+            );
             return;
         }
         let mut piece = match response.chunk().await {
             Ok(Some(bytes)) => bytes.to_vec(),
             Ok(None) => break,
             Err(e) => {
-                post(port, vec![Item::Int(id), Item::Int(3), Item::Text(describe(&e))]);
+                post(
+                    port,
+                    vec![Item::Int(id), Item::Int(3), Item::Text(describe(&e))],
+                );
                 return;
             }
         };
@@ -261,7 +364,10 @@ async fn run(id: i64, port: i64, request: Request, body: Vec<u8>, flow: Arc<Flow
                     break;
                 }
                 Ok(Err(e)) => {
-                    post(port, vec![Item::Int(id), Item::Int(3), Item::Text(describe(&e))]);
+                    post(
+                        port,
+                        vec![Item::Int(id), Item::Int(3), Item::Text(describe(&e))],
+                    );
                     return;
                 }
                 Err(_) => break,
@@ -312,7 +418,11 @@ pub unsafe extern "C" fn lumtub_http_init(post: PostCObject) {
 /// [json] must point to [length] bytes of UTF-8.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_http_configure(json: *const u8, length: usize) {
-    let settings: Settings = serde_json::from_str(unsafe { text(json, length) }).unwrap_or_default();
+    let Ok(settings) = serde_json::from_str::<Settings>(unsafe { text(json, length) }) else {
+        eprintln!("lumtub: the network settings could not be read; requests will fail");
+        *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = blocked();
+        return;
+    };
     crate::roots::set(settings.roots);
     crate::dns::set(settings.dns.clone());
     *CLIENT.write().unwrap_or_else(|e| e.into_inner()) = build(&settings);
@@ -324,19 +434,36 @@ pub unsafe extern "C" fn lumtub_http_configure(json: *const u8, length: usize) {
 /// # Safety
 /// [json] and [body] must point to their lengths of bytes.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn lumtub_http_send(id: i64, port: i64, json: *const u8, length: usize, body: *const u8, body_length: usize) -> bool {
+pub unsafe extern "C" fn lumtub_http_send(
+    id: i64,
+    port: i64,
+    json: *const u8,
+    length: usize,
+    body: *const u8,
+    body_length: usize,
+) -> bool {
     if POST.read().map(|p| p.is_none()).unwrap_or(true) {
         return false;
     }
     let Ok(request) = serde_json::from_str::<Request>(unsafe { text(json, length) }) else {
         return false;
     };
-    let body = if body.is_null() || body_length == 0 { Vec::new() } else { unsafe { std::slice::from_raw_parts(body, body_length) }.to_vec() };
+    let body = if body.is_null() || body_length == 0 {
+        Vec::new()
+    } else {
+        unsafe { std::slice::from_raw_parts(body, body_length) }.to_vec()
+    };
     let flow = Arc::new(Flow::default());
-    FLOWS.lock().unwrap_or_else(|e| e.into_inner()).insert(id, flow.clone());
+    FLOWS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .insert(id, flow.clone());
     let task = RUNTIME.spawn(async move {
         run(id, port, request, body, flow).await;
-        RUNNING.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
+        RUNNING
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .remove(&id);
         FLOWS.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
     });
     let mut running = RUNNING.lock().unwrap_or_else(|e| e.into_inner());
@@ -349,7 +476,11 @@ pub unsafe extern "C" fn lumtub_http_send(id: i64, port: i64, json: *const u8, l
 /// Stops request [id], such as when Dart stops reading its body.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_http_cancel(id: i64) {
-    if let Some(task) = RUNNING.lock().unwrap_or_else(|e| e.into_inner()).remove(&id) {
+    if let Some(task) = RUNNING
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .remove(&id)
+    {
         task.abort();
     }
     FLOWS.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
@@ -358,7 +489,11 @@ pub extern "C" fn lumtub_http_cancel(id: i64) {
 /// Dart's reader has taken [bytes] more of request [id]'s body.
 #[unsafe(no_mangle)]
 pub extern "C" fn lumtub_http_take(id: i64, bytes: i64) {
-    let flow = FLOWS.lock().unwrap_or_else(|e| e.into_inner()).get(&id).cloned();
+    let flow = FLOWS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .get(&id)
+        .cloned();
     if let Some(flow) = flow {
         flow.taken.fetch_add(bytes.max(0) as u64, Ordering::Release);
         flow.moved.notify_waiters();
@@ -374,7 +509,9 @@ mod tests {
         runtime().block_on(async {
             let flow = Arc::new(Flow::default());
             // Within the window there is room at once.
-            tokio::time::timeout(Duration::from_millis(50), flow.room(WINDOW)).await.unwrap();
+            tokio::time::timeout(Duration::from_millis(50), flow.room(WINDOW))
+                .await
+                .unwrap();
             // Beyond it, only once the reader has taken enough.
             let waiting = tokio::spawn({
                 let flow = flow.clone();
@@ -385,10 +522,16 @@ mod tests {
             flow.taken.fetch_add(5, Ordering::Release);
             flow.moved.notify_waiters();
             tokio::time::sleep(Duration::from_millis(50)).await;
-            assert!(!waiting.is_finished(), "5 of the 10 bytes over are not enough");
+            assert!(
+                !waiting.is_finished(),
+                "5 of the 10 bytes over are not enough"
+            );
             flow.taken.fetch_add(5, Ordering::Release);
             flow.moved.notify_waiters();
-            tokio::time::timeout(Duration::from_secs(1), waiting).await.unwrap().unwrap();
+            tokio::time::timeout(Duration::from_secs(1), waiting)
+                .await
+                .unwrap()
+                .unwrap();
         });
     }
 
@@ -401,13 +544,44 @@ mod tests {
 
     #[test]
     fn settings_read_proxy_and_system() {
-        let s: Settings = serde_json::from_str(r#"{"proxy":"socks5://127.0.0.1:1080","system":false}"#).unwrap();
+        let s: Settings =
+            serde_json::from_str(r#"{"proxy":"socks5://127.0.0.1:1080","system":false}"#).unwrap();
         assert_eq!(s.proxy.as_deref(), Some("socks5://127.0.0.1:1080"));
         let _ = build(&s);
-        for proxy in ["socks5h://u:p@127.0.0.1:1080", "socks4a://127.0.0.1:1080", "http://127.0.0.1:8080"] {
+        for proxy in [
+            "socks5h://u:p@127.0.0.1:1080",
+            "socks4a://127.0.0.1:1080",
+            "http://127.0.0.1:8080",
+        ] {
             assert!(reqwest::Proxy::all(proxy).is_ok(), "{proxy}");
         }
         let d: Settings = serde_json::from_str("{}").unwrap();
         assert!(d.proxy.is_none() && !d.system);
+    }
+
+    #[test]
+    fn a_bad_proxy_fails_closed() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/", listener.local_addr().unwrap());
+        listener.set_nonblocking(true).unwrap();
+        let bad = Settings {
+            proxy: Some("not a proxy address".into()),
+            ..Default::default()
+        };
+        let client = build(&bad);
+        let result = runtime().block_on(client.get(&url).send());
+        assert!(result.is_err());
+        assert!(listener.accept().is_err(), "the request went direct");
+    }
+
+    #[test]
+    fn a_blocked_client_never_connects() {
+        assert!(serde_json::from_str::<Settings>("{not json").is_err());
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/", listener.local_addr().unwrap());
+        listener.set_nonblocking(true).unwrap();
+        let result = runtime().block_on(blocked().get(&url).send());
+        assert!(result.is_err());
+        assert!(listener.accept().is_err(), "the request went direct");
     }
 }

@@ -1065,6 +1065,7 @@ class _LiveButton extends StatelessWidget {
   Widget build(BuildContext context) => Tooltip(
         message: tr('Jump to the newest moment (End)'),
         child: _Hover(
+          label: tr('Jump to the newest moment (End)'),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
@@ -1092,6 +1093,7 @@ class _IconButton extends StatelessWidget {
   Widget build(BuildContext context) => Tooltip(
         message: tooltip,
         child: _Hover(
+          label: tooltip,
           onTap: onTap,
           child: SizedBox(width: width, height: 34, child: Icon(icon, size: size, color: active ? Theme.of(context).colorScheme.inversePrimary : Colors.white)),
         ),
@@ -1101,9 +1103,11 @@ class _IconButton extends StatelessWidget {
 /// A pressable area of the bars: the click cursor and a translucent
 /// rounded highlight while the mouse is over it.
 class _Hover extends StatefulWidget {
-  const _Hover({required this.onTap, required this.child});
+  const _Hover({required this.onTap, required this.child, this.label});
   final VoidCallback onTap;
   final Widget child;
+  /// Read out by screen readers; null leaves the child's own text.
+  final String? label;
 
   @override
   State<_Hover> createState() => _HoverState();
@@ -1111,19 +1115,35 @@ class _Hover extends StatefulWidget {
 
 class _HoverState extends State<_Hover> {
   bool _over = false;
+  bool _focused = false;
 
   @override
-  Widget build(BuildContext context) => MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _over = true),
-        onExit: (_) => setState(() => _over = false),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: widget.onTap,
-          child: AnimatedContainer(
-            duration: Motion.of(Ease.fade),
-            decoration: BoxDecoration(color: _over ? Colors.white.withValues(alpha: 0.14) : Colors.transparent, borderRadius: BorderRadius.circular(16)),
-            child: widget.child,
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: widget.label,
+        onTap: widget.onTap,
+        child: FocusableActionDetector(
+          mouseCursor: SystemMouseCursors.click,
+          onShowHoverHighlight: (over) => setState(() => _over = over),
+          onShowFocusHighlight: (focused) => setState(() => _focused = focused),
+          actions: {ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) => widget.onTap())},
+          shortcuts: const {
+            SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+            SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
+            SingleActivator(LogicalKeyboardKey.select): ActivateIntent(),
+          },
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onTap,
+            child: AnimatedContainer(
+              duration: Motion.of(Ease.fade),
+              decoration: BoxDecoration(
+                color: _over || _focused ? Colors.white.withValues(alpha: 0.14) : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                border: _focused ? Border.all(color: Colors.white.withValues(alpha: 0.75), width: 2) : null,
+              ),
+              child: widget.child,
+            ),
           ),
         ),
       );
@@ -1219,16 +1239,13 @@ class _PlayPauseButtonState extends State<_PlayPauseButton> with SingleTickerPro
   @override
   Widget build(BuildContext context) => Tooltip(
         message: tr('Play/Pause (Space)'),
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => unawaited(widget.player.playOrPause()),
-            child: SizedBox(
-              width: 42,
-              height: 34,
-              child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: 20)),
-            ),
+        child: _Hover(
+          label: tr('Play/Pause (Space)'),
+          onTap: () => unawaited(widget.player.playOrPause()),
+          child: SizedBox(
+            width: 42,
+            height: 34,
+            child: Center(child: AnimatedIcon(progress: _animation, icon: AnimatedIcons.play_pause, color: Colors.white, size: 20)),
           ),
         ),
       );
@@ -1298,7 +1315,7 @@ class _PopupMenu<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Tooltip(
         message: tooltip,
-        child: Builder(builder: (context) => _Hover(onTap: () => unawaited(_open(context)), child: child)),
+        child: Builder(builder: (context) => _Hover(label: tooltip, onTap: () => unawaited(_open(context)), child: child)),
       );
 }
 
@@ -1335,7 +1352,8 @@ class _TextMenu<T> extends StatelessWidget {
       );
 }
 
-/// Volume icon that mutes on click and shows a slider on hover.
+/// Volume icon that mutes on click and shows a slider on hover, on focus,
+/// and for a few seconds after a tap (touch has no hover).
 class _VolumeButton extends StatefulWidget {
   const _VolumeButton({required this.player, required this.controller, required this.onMenuOpened, required this.onMenuClosed});
   final Player player;
@@ -1349,18 +1367,37 @@ class _VolumeButton extends StatefulWidget {
 
 class _VolumeButtonState extends State<_VolumeButton> {
   bool _open = false;
+  Timer? _tapTimer;
 
   void _setOpen(bool open) {
-    if (open == _open) return;
+    if (!open) _tapTimer?.cancel();
+    if (open == _open || !mounted) return;
     setState(() => _open = open);
     open ? widget.onMenuOpened() : widget.onMenuClosed();
+  }
+
+  void _tapped() {
+    unawaited(widget.controller.toggleMute());
+    _setOpen(true);
+    _tapTimer?.cancel();
+    _tapTimer = Timer(const Duration(seconds: 4), () => _setOpen(false));
+  }
+
+  @override
+  void dispose() {
+    _tapTimer?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) => MouseRegion(
         onEnter: (_) => _setOpen(true),
         onExit: (_) => _setOpen(false),
-        child: StreamBuilder<double>(
+        child: Focus(
+          canRequestFocus: false,
+          skipTraversal: true,
+          onFocusChange: _setOpen,
+          child: StreamBuilder<double>(
           stream: widget.player.stream.volume,
           initialData: widget.player.state.volume,
           builder: (context, _) {
@@ -1370,7 +1407,7 @@ class _VolumeButtonState extends State<_VolumeButton> {
               _IconButton(
                 tooltip: volume == 0 ? tr('Unmute (M)') : tr('Mute (M)'),
                 icon: volume == 0 ? AppIcons.speakerSlash : (volume < 50 ? AppIcons.speakerLowFill : AppIcons.speakerHighFill),
-                onTap: () => unawaited(widget.controller.toggleMute()),
+                onTap: _tapped,
               ),
               AnimatedSize(
                 duration: Motion.of(Ease.fade),
@@ -1393,6 +1430,7 @@ class _VolumeButtonState extends State<_VolumeButton> {
               ),
             ]);
           },
+          ),
         ),
       );
 }

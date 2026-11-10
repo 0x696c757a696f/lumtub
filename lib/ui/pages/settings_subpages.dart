@@ -10,6 +10,7 @@
 // removed, and the Bilibili-only options (danmaku, long-press speed,
 // dynamic colour on Android) are dropped or replaced by Windows ones.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -30,6 +31,7 @@ import '../common.dart';
 import '../subtitle_style.dart';
 import '../theme.dart';
 import '../theme_preset_card.dart';
+import 'downloads_page.dart' show openInExplorer;
 import 'settings_sections.dart';
 import 'support_page.dart';
 import 'translation_settings_page.dart';
@@ -131,7 +133,7 @@ Future<void> _addBlockedChannel(BuildContext context, AppController controller) 
     builder: (context) => AlertDialog(
       title: Text(tr('Blocked channels')),
       content: SizedBox(
-        width: 420,
+        width: dialogWidth(context, 420),
         child: TextField(
           controller: text,
           autofocus: true,
@@ -373,7 +375,7 @@ Future<void> openPlaySpeed(BuildContext context, AppController controller) {
         ),
         ListTile(title: Text(tr('Default speed')), subtitle: Text('${trimSpeed(settings.defaultSpeed)}x')),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 8, 0),
           child: Row(children: [
             Text(tr('Speed list'), style: Theme.of(context).textTheme.titleMedium),
             const Spacer(),
@@ -817,7 +819,7 @@ class _PictureSettingsPageState extends State<_PictureSettingsPage> {
       }, audioDelayMs: _audioDelay));
 
   Widget _slider(String label, int value, int min, int max, String suffix, ValueChanged<int> onChanged, VoidCallback onReset) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 4, 8, 4),
         child: Row(children: [
           SizedBox(width: 72, child: Text(label)),
           Expanded(
@@ -1140,13 +1142,13 @@ class _LogsPageState extends State<_LogsPage> {
             onSelected: (value) => switch (value) {
               0 => copyText(context, text ?? '', tr('Copied')),
               1 => openExternal('$_repository/issues/new/choose'),
-              2 => _directory == null ? null : openExternal(_directory!.path),
+              2 => _directory == null ? null : unawaited(openInExplorer(_directory!.path)),
               _ => _clear(),
             },
             itemBuilder: (context) => [
               PopupMenuItem(value: 0, child: Text(tr('Copy log'))),
               PopupMenuItem(value: 1, child: Text(tr('Bug reports'))),
-              PopupMenuItem(value: 2, child: Text(tr('Open log folder'))),
+              if (!Platform.isAndroid) PopupMenuItem(value: 2, child: Text(tr('Open log folder'))),
               PopupMenuItem(value: 3, child: Text(tr('Clear logs'))),
             ],
           ),

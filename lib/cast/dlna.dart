@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../app_log.dart';
+import '../network_proxy.dart' show isLocalHost;
 import 'cast_device.dart';
 import 'cast_net.dart';
 
@@ -52,7 +53,8 @@ String xmlUnescape(String text) => text
     .replaceAll('&apos;', "'")
     .replaceAllMapped(RegExp(r'&#(x?)([0-9a-fA-F]+);'), (m) {
       final code = int.tryParse(m[2]!, radix: m[1]!.isEmpty ? 10 : 16);
-      return code == null ? m[0]! : String.fromCharCode(code);
+      final valid = code != null && code > 0 && code <= 0x10FFFF && !(code >= 0xD800 && code <= 0xDFFF);
+      return valid ? String.fromCharCode(code) : m[0]!;
     })
     .replaceAll('&amp;', '&');
 
@@ -82,17 +84,25 @@ class DlnaDescription {
   UpnpService? get avTransport => services.where((s) => s.type.startsWith(avTransportPrefix)).firstOrNull;
 }
 
+/// Whether [a] and [b] name the same host and port.
+bool _sameHost(Uri a, Uri b) => a.host.toLowerCase() == b.host.toLowerCase() && a.port == b.port;
+
 /// Reads the description at [location]; control addresses are made absolute
-/// against `URLBase` or [location].
+/// against `URLBase` or [location]. A `URLBase` or control address on
+/// another host than [location] is ignored, so a device cannot point Lumtub
+/// at some other machine.
 DlnaDescription parseDeviceDescription(String xml, Uri location) {
   final baseText = xmlText(xml, 'URLBase');
-  final base = baseText != null && Uri.tryParse(baseText)?.hasScheme == true ? Uri.parse(baseText) : location;
+  final named = baseText == null ? null : Uri.tryParse(baseText);
+  final base = named != null && named.hasScheme && named.scheme.startsWith('http') && _sameHost(named, location) ? named : location;
   final services = <UpnpService>[];
   for (final block in RegExp(r'<service(?:\s[^>]*)?>([\s\S]*?)</service>').allMatches(xml)) {
     final type = xmlText(block[1]!, 'serviceType');
     final control = xmlText(block[1]!, 'controlURL');
     if (type == null || control == null || control.isEmpty) continue;
-    services.add(UpnpService(type, controlAddress(base, control)));
+    final address = controlAddress(base, control);
+    if (!address.scheme.startsWith('http') || !_sameHost(address, location)) continue;
+    services.add(UpnpService(type, address));
   }
   final name = xmlText(xml, 'friendlyName');
   final about = [name, for (final tag in ['manufacturer', 'modelName', 'modelDescription']) xmlText(xml, tag)].whereType<String>().join(' ');
@@ -333,7 +343,8 @@ Stream<CastDevice> discoverDlna({Duration timeout = const Duration(seconds: 6)})
           if (event != RawSocketEvent.read) return;
           final packet = socket.receive();
           final found = packet == null ? null : parseSsdpResponse(utf8.decode(packet.data, allowMalformed: true));
-          if (found != null && locations.add(found.location.toString())) unawaited(describe(found));
+          // Only devices on this network are asked for their description.
+          if (found != null && isLocalHost(found.location.host) && locations.add(found.location.toString())) unawaited(describe(found));
         });
       } on SocketException catch (e) {
         logWarn('DLNA discovery cannot use $address: ${e.message}');

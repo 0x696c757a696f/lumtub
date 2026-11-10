@@ -350,6 +350,29 @@ jobs:
           "$tag`n$env:RUNTIME_ARCH`n" | Out-File -FilePath (Join-Path $releaseDir 'libmpv-version.txt') -Encoding ascii -NoNewline
           Write-Host "Replaced the bundled DLL with $($library.FullName)"
 
+      # A fresh Windows has no Visual C++ runtime, and lumtub.exe, the Flutter
+      # engine and the Rust core need it. Microsoft allows shipping the
+      # redistributable DLLs next to the program; they come from the Visual
+      # Studio that built the app, so they are never older than it needs.
+      - name: Windows - bundle the Visual C++ runtime
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $install = & $vswhere -latest -products * -property installationPath
+          if (-not $install) { throw 'Visual Studio not found.' }
+          $arch = if ($env:BUILD_DIR -eq 'arm64') { 'arm64' } else { 'x64' }
+          $redist = Join-Path $install 'VC\Redist\MSVC'
+          $crt = Get-ChildItem -LiteralPath $redist -Directory | Where-Object { $_.Name -match '^\d+(\.\d+)+$' } |
+            Sort-Object { [version]$_.Name } -Descending |
+            ForEach-Object { Get-ChildItem -LiteralPath (Join-Path $_.FullName $arch) -Directory -Filter 'Microsoft.VC*.CRT' -ErrorAction SilentlyContinue } |
+            Select-Object -First 1
+          if (-not $crt) { throw "No $arch Visual C++ runtime under $redist." }
+          Write-Host "Visual C++ runtime from $($crt.FullName)"
+          $releaseDir = Join-Path "build/windows/$env:BUILD_DIR/runner" 'Release'
+          Copy-Item -Path (Join-Path $crt.FullName '*.dll') -Destination $releaseDir -Force
+          Get-ChildItem -LiteralPath $releaseDir -Filter '*.dll' | Where-Object { $_.Name -match '^(msvcp|vcruntime|concrt)' } | ForEach-Object { Write-Host "$($_.Name) $($_.VersionInfo.FileVersion)" }
+
       - name: Windows - package portable distribution
         shell: pwsh
         run: |
@@ -368,6 +391,30 @@ jobs:
           $marker = Join-Path $env:RUNNER_TEMP 'portable.txt'
           "Lumtub keeps its settings, cache and logs in the userdata folder next to this file.`r`nDelete this file to keep them in %LOCALAPPDATA%\Lumtub instead.`r`n" | Out-File -FilePath $marker -Encoding ascii -NoNewline
           Compress-Archive -Update -Path $marker -DestinationPath "$package.zip"
+
+      - name: Windows - check the Visual C++ runtime is bundled
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $package = (Resolve-Path "Lumtub_$env:LUMTUB_VERSION`_windows-$env:PACKAGE_ARCH").Path
+          foreach ($name in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
+            if (-not (Test-Path -LiteralPath (Join-Path $package $name))) { throw "$name is missing from the package." }
+          }
+          # Whatever runtime DLL any bundled program imports must be bundled too.
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $install = & $vswhere -latest -products * -property installationPath
+          $dumpbin = Get-ChildItem -LiteralPath $install -Filter dumpbin.exe -File -Recurse | Select-Object -First 1
+          if (-not $dumpbin) { throw 'dumpbin.exe not found.' }
+          $missing = @()
+          foreach ($file in Get-ChildItem -LiteralPath $package -Recurse -Include *.dll, *.exe) {
+            $dependents = & $dumpbin.FullName /dependents $file.FullName | Out-String
+            foreach ($m in [regex]::Matches($dependents, '(?im)^\s+((?:msvcp|vcruntime|concrt|vccorlib|vcomp)\d+\w*\.dll)\s*$')) {
+              $name = $m.Groups[1].Value
+              if (-not (Test-Path -LiteralPath (Join-Path $package $name))) { $missing += "$($file.Name) needs $name" }
+            }
+          }
+          if ($missing) { throw ('Not bundled: ' + (($missing | Sort-Object -Unique) -join '; ')) }
+          Write-Host 'The Visual C++ runtime is bundled.'
 
       - name: Windows - build installer
         shell: pwsh
@@ -427,11 +474,9 @@ jobs:
           - package_arch: x64
             runner: ubuntu-24.04
             appimage_arch: x86_64
-            appimagetool_sha256: 46fdd785094c7f6e545b61afcfb0f3d98d8eab243f644b4b17698c01d06083d1
           - package_arch: arm64
             runner: ubuntu-24.04-arm
             appimage_arch: aarch64
-            appimagetool_sha256: 04f45ea45b5aa07bb2b071aed9dbf7a5185d3953b11b47358c1311f11ea94a96
     # Pinned, so a new default Ubuntu changes nothing; the build itself runs
     # in Ubuntu 22.04, whose glibc 2.35 sets the oldest Linux the AppImage
     # runs on: the oldest Ubuntu LTS in standard support, as AppImageHub
@@ -441,10 +486,6 @@ jobs:
     env:
       PACKAGE_ARCH: ${{ matrix.package_arch }}
       DEBIAN_FRONTEND: noninteractive
-      # libmpv 0.41 with FFmpeg 9 and libplacebo, built on Ubuntu 22.04 by
-      # jason-yau/mpv-prebuilt's GitHub Actions; the GPL build, which keeps
-      # X11, VA-API and VDPAU. Pinned by checksum.
-      MPV_RELEASE: "20260906162952"
     permissions:
       contents: read
     steps:
@@ -460,9 +501,11 @@ jobs:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
-      - name: Linux - read the Flutter version
+      - name: Linux - read the Flutter version and the pinned downloads
         shell: bash
-        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+        run: |
+          echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+          grep -E '^[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
 
       - name: Linux - install Flutter stable SDK
         run: |
@@ -481,7 +524,7 @@ jobs:
 
       - name: Linux - install the Rust toolchain
         run: |
-          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --component rustfmt,clippy --default-toolchain stable --no-modify-path
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           "$HOME/.cargo/bin/rustc" --version
 
@@ -494,6 +537,10 @@ jobs:
       - name: Linux - build the Rust core
         run: |
           manifest=native/lumtub_core/Cargo.toml
+          if [ "${{ matrix.package_arch }}" = x64 ]; then
+            cargo fmt --manifest-path "$manifest" --check
+            cargo clippy --manifest-path "$manifest" --release --all-targets -- -D warnings
+          fi
           cargo test --manifest-path "$manifest" --release
           cargo build --manifest-path "$manifest" --release --lib
           core="$PWD/native/lumtub_core/target/release/liblumtub_core.so"
@@ -510,10 +557,10 @@ jobs:
       - name: Linux - download libmpv
         run: |
           case "$PACKAGE_ARCH" in
-            x64) arch=x86_64; sum=a5822547f23cd47921c81d878aa3b3d2c76301c5b6b48343c18b6340896f8a0d ;;
-            arm64) arch=arm64; sum=d0ae5dbf8fed6e63353f1d1614c4ee55edb1eac41d625090dbef196027a479ed ;;
+            x64) arch=x86_64; sum=$MPV_SHA256_X86_64 ;;
+            arm64) arch=arm64; sum=$MPV_SHA256_ARM64 ;;
           esac
-          name="libmpv-0.41.0-linux-$arch-gpl-$MPV_RELEASE"
+          name="libmpv-$MPV_VERSION-linux-$arch-gpl-$MPV_RELEASE"
           mkdir -p .linux-downloads
           archive="$PWD/.linux-downloads/$name.tar.gz"
           [ -s "$archive" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$archive" "https://github.com/jason-yau/mpv-prebuilt/releases/download/$MPV_RELEASE/$name.tar.gz"
@@ -554,7 +601,6 @@ jobs:
       - name: Linux - package AppImage
         env:
           APPIMAGE_ARCH: ${{ matrix.appimage_arch }}
-          APPIMAGETOOL_SHA256: ${{ matrix.appimagetool_sha256 }}
         run: |
           bundle="build/linux/$PACKAGE_ARCH/release/bundle"
           # Only here, so the smoke test finds nothing but what the AppImage carries.
@@ -570,8 +616,12 @@ jobs:
             echo "The AppDir needs $newest, newer than Ubuntu 22.04's glibc 2.35." >&2
             exit 1
           fi
-          tool="$PWD/.linux-downloads/appimagetool-$APPIMAGE_ARCH"
-          [ -s "$tool" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-$APPIMAGE_ARCH.AppImage"
+          case "$APPIMAGE_ARCH" in
+            x86_64) APPIMAGETOOL_SHA256=$APPIMAGETOOL_SHA256_X86_64 ;;
+            aarch64) APPIMAGETOOL_SHA256=$APPIMAGETOOL_SHA256_AARCH64 ;;
+          esac
+          tool="$PWD/.linux-downloads/appimagetool-$APPIMAGETOOL_VERSION-$APPIMAGE_ARCH"
+          [ -s "$tool" ] || curl -fsSL --retry 10 --retry-delay 10 --retry-all-errors -o "$tool" "https://github.com/AppImage/appimagetool/releases/download/$APPIMAGETOOL_VERSION/appimagetool-$APPIMAGE_ARCH.AppImage"
           echo "$APPIMAGETOOL_SHA256  $tool" | sha256sum -c -
           chmod +x "$tool"
           # No FUSE in the container: the tool unpacks itself and runs.
@@ -693,11 +743,6 @@ jobs:
     # Pinned like the others; Apple silicon, building once for both CPUs and
     # packing a DMG thinned to each.
     runs-on: macos-15
-    env:
-      # An LGPL ffmpeg from https://github.com/dfloresc/ffmpeg-macos-builds
-      # that makes the smoke test's video (the app carries none); sum from
-      # its SHA256SUMS.
-      FFMPEG_RELEASE: v9.0.1-1
     permissions:
       contents: read
     steps:
@@ -706,9 +751,11 @@ jobs:
           # The pull request's own commit, to read whether it asks for README pictures.
           fetch-depth: 2
 
-      - name: macOS - read the Flutter version
+      - name: macOS - read the Flutter version and the pinned downloads
         shell: bash
-        run: echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+        run: |
+          echo "FLUTTER_VERSION=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_ENV"
+          grep -E '^[A-Z0-9_]+=' .github/pins.env >> "$GITHUB_ENV"
 
       - name: macOS - install Flutter stable SDK
         run: |
@@ -771,7 +818,7 @@ jobs:
         run: |
           name="ffmpeg-${FFMPEG_RELEASE#v}-lgpl-macos-arm64"
           curl -sSfL --retry 4 -o "$RUNNER_TEMP/$name.tar.xz" "https://github.com/dfloresc/ffmpeg-macos-builds/releases/download/$FFMPEG_RELEASE/$name.tar.xz"
-          echo "d0ea5ea43a5adfa5d01d4137c9e5a61728b800a812f12917a26fd7af0c14c03a  $RUNNER_TEMP/$name.tar.xz" | shasum -a 256 -c -
+          echo "$FFMPEG_ARM64_SHA256  $RUNNER_TEMP/$name.tar.xz" | shasum -a 256 -c -
           tar -xJf "$RUNNER_TEMP/$name.tar.xz" -C "$RUNNER_TEMP"
           echo "FFMPEG=$RUNNER_TEMP/$name/bin/ffmpeg" >> "$GITHUB_ENV"
 
@@ -1064,7 +1111,7 @@ jobs:
           path: dist
           pattern: Lumtub-{windows,linux,macos,android}-*
           merge-multiple: true
-      - name: Windows - sign update packages
+      - name: Sign all packages
         env:
           LUMTUB_UPDATE_KEY: ${{ secrets.LUMTUB_UPDATE_KEY }}
         run: |
@@ -1077,7 +1124,7 @@ jobs:
           rustup update stable
           shopt -s nullglob
           cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg dist/*.apk
-      - name: Windows - publish GitHub Release
+      - name: Publish the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}

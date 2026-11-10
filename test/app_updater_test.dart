@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:lumtub/app_updater.dart';
 import 'package:lumtub/native_core.dart';
 
@@ -28,6 +31,25 @@ void main() {
     expect(offer.signature!['name'], 'Lumtub_0.2.2-1234567_windows-x64-setup.exe.sig');
     expect(offerOf(release('v0.2.2-1234567', built), current: '0.2.1-72ec49d', built: built, package: 'windows-x64', portable: true)!.asset!['name'], 'Lumtub_0.2.2-1234567_windows-x64.zip');
   }, skip: skip);
+
+  test('asks for the release again with its ETag and keeps the answer on 304', () async {
+    final sent = <String?>[];
+    final client = MockClient((request) async {
+      sent.add(request.headers['If-None-Match']);
+      if (sent.length == 1) return http.Response(jsonEncode(release('v9.9.9-1234567', built)), 200, headers: {'etag': 'W/"abc"'});
+      return http.Response('', 304);
+    });
+    final folder = Directory.systemTemp.createTempSync('updater');
+    addTearDown(() => folder.deleteSync(recursive: true));
+    final updater = AppUpdater(client: client, directory: folder, download: (asset, into, onProgress) async => throw UnimplementedError());
+    await updater.check();
+    final first = updater.available;
+    expect(updater.error, isNull);
+    await updater.check();
+    expect(sent, [null, 'W/"abc"']);
+    expect(updater.error, isNull);
+    expect(updater.available?.version, first?.version);
+  });
 
   test('does not offer the running or an older release', () {
     final later = built.add(const Duration(hours: 1));

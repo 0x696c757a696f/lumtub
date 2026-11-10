@@ -45,7 +45,14 @@ impl Proxy {
         let (user, pass) = login.split_once(':').unwrap_or((login, ""));
         let (host, port) = split_host_port(address)?;
         let decode = |s: &str| crate::relay::decode(&s.replace('+', "%2B"));
-        Some(Proxy { host, port, user: decode(user), pass: decode(pass), v4, remote_dns })
+        Some(Proxy {
+            host,
+            port,
+            user: decode(user),
+            pass: decode(pass),
+            v4,
+            remote_dns,
+        })
     }
 }
 
@@ -67,32 +74,44 @@ pub struct Bridge {
 impl Bridge {
     /// Listens on a random loopback port and forwards through [proxy].
     pub fn start(proxy: Proxy) -> std::io::Result<Bridge> {
-        let address = (proxy.host.as_str(), proxy.port).to_socket_addrs().ok().and_then(|mut a| a.next());
+        let address = (proxy.host.as_str(), proxy.port)
+            .to_socket_addrs()
+            .ok()
+            .and_then(|mut a| a.next());
         let listener = TcpListener::bind("127.0.0.1:0")?;
         let port = listener.local_addr()?.port();
         let stop = Arc::new(AtomicBool::new(false));
         let open = Arc::new(Mutex::new(HashMap::new()));
         let (stopping, tracked) = (stop.clone(), open.clone());
-        let accept = std::thread::Builder::new().name("socks-bridge".into()).spawn(move || {
-            let ids = AtomicU64::new(0);
-            for client in listener.incoming() {
-                if stopping.load(Ordering::SeqCst) {
-                    break;
+        let accept = std::thread::Builder::new()
+            .name("socks-bridge".into())
+            .spawn(move || {
+                let ids = AtomicU64::new(0);
+                for client in listener.incoming() {
+                    if stopping.load(Ordering::SeqCst) {
+                        break;
+                    }
+                    let Ok(client) = client else { continue };
+                    let _ = client.set_nodelay(true);
+                    let id = ids.fetch_add(1, Ordering::Relaxed);
+                    if let Ok(copy) = client.try_clone() {
+                        tracked.lock().unwrap().insert(id, copy);
+                    }
+                    let (proxy, tracked) = (proxy.clone(), tracked.clone());
+                    let _ = std::thread::Builder::new()
+                        .name("socks-client".into())
+                        .spawn(move || {
+                            handle(client, &proxy, address, &tracked, id);
+                            tracked.lock().unwrap().remove(&id);
+                        });
                 }
-                let Ok(client) = client else { continue };
-                let _ = client.set_nodelay(true);
-                let id = ids.fetch_add(1, Ordering::Relaxed);
-                if let Ok(copy) = client.try_clone() {
-                    tracked.lock().unwrap().insert(id, copy);
-                }
-                let (proxy, tracked) = (proxy.clone(), tracked.clone());
-                let _ = std::thread::Builder::new().name("socks-client".into()).spawn(move || {
-                    handle(client, &proxy, address, &tracked, id);
-                    tracked.lock().unwrap().remove(&id);
-                });
-            }
-        })?;
-        Ok(Bridge { port, stop, open, accept: Some(accept) })
+            })?;
+        Ok(Bridge {
+            port,
+            stop,
+            open,
+            accept: Some(accept),
+        })
     }
 
     pub fn port(&self) -> u16 {
@@ -124,8 +143,16 @@ enum Bad {
     Gateway,
 }
 
-fn handle(client: TcpStream, proxy: &Proxy, address: Option<SocketAddr>, open: &Mutex<HashMap<u64, TcpStream>>, id: u64) {
-    let Ok(mut writer) = client.try_clone() else { return };
+fn handle(
+    client: TcpStream,
+    proxy: &Proxy,
+    address: Option<SocketAddr>,
+    open: &Mutex<HashMap<u64, TcpStream>>,
+    id: u64,
+) {
+    let Ok(mut writer) = client.try_clone() else {
+        return;
+    };
     let mut reader = BufReader::new(client);
     let _ = reader.get_ref().set_read_timeout(Some(TIMEOUT));
     let upstream = match open_tunnel(&mut reader, proxy, address) {
@@ -135,12 +162,17 @@ fn handle(client: TcpStream, proxy: &Proxy, address: Option<SocketAddr>, open: &
                 Bad::Request => "400 Bad Request",
                 Bad::Gateway => "502 Bad Gateway",
             };
-            let _ = write!(writer, "HTTP/1.1 {status}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n");
+            let _ = write!(
+                writer,
+                "HTTP/1.1 {status}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
+            );
             let _ = writer.flush();
             let _ = writer.shutdown(Shutdown::Write);
             // Windows resets a connection closed with bytes unread, which
             // could discard the answer before the client reads it.
-            let _ = reader.get_ref().set_read_timeout(Some(Duration::from_secs(2)));
+            let _ = reader
+                .get_ref()
+                .set_read_timeout(Some(Duration::from_secs(2)));
             let mut rest = [0u8; 4096];
             while matches!(reader.read(&mut rest), Ok(n) if n > 0) {}
             return;
@@ -163,7 +195,11 @@ fn handle(client: TcpStream, proxy: &Proxy, address: Option<SocketAddr>, open: &
         open.lock().unwrap().remove(&(id | 1 << 63));
         return;
     }
-    let (Ok(mut up_read), Ok(mut up_write)) = (upstream.try_clone(), upstream.try_clone()) else { return };
+    let (Ok(mut up_read), Ok(mut up_write)) = (upstream.try_clone(), upstream.try_clone()) else {
+        let _ = upstream.shutdown(Shutdown::Both);
+        open.lock().unwrap().remove(&(id | 1 << 63));
+        return;
+    };
     let mut client_read = reader.into_inner();
     let to_upstream = std::thread::spawn(move || {
         pipe(&mut client_read, &mut up_write);
@@ -195,20 +231,37 @@ fn pipe(from: &mut TcpStream, to: &mut TcpStream) {
 
 /// Reads the client's request head and opens the SOCKS tunnel it asks for;
 /// the request to forward for plain HTTP, none for CONNECT.
-fn open_tunnel(reader: &mut BufReader<TcpStream>, proxy: &Proxy, address: Option<SocketAddr>) -> Result<(TcpStream, Option<Vec<u8>>), Bad> {
+fn open_tunnel(
+    reader: &mut BufReader<TcpStream>,
+    proxy: &Proxy,
+    address: Option<SocketAddr>,
+) -> Result<(TcpStream, Option<Vec<u8>>), Bad> {
     let head = read_head(reader).ok_or(Bad::Request)?;
-    let end = head.windows(2).position(|w| w == b"\r\n").ok_or(Bad::Request)?;
+    let end = head
+        .windows(2)
+        .position(|w| w == b"\r\n")
+        .ok_or(Bad::Request)?;
     let line = String::from_utf8_lossy(&head[..end]).into_owned();
     let parts: Vec<&str> = line.split(' ').collect();
-    let [method, target, version] = parts[..] else { return Err(Bad::Request) };
+    let [method, target, version] = parts[..] else {
+        return Err(Bad::Request);
+    };
     let (host, port, forward) = if method.eq_ignore_ascii_case("CONNECT") {
         let (host, port) = split_host_port(target).ok_or(Bad::Request)?;
         (host, port, None)
     } else {
         let rest = target.strip_prefix("http://").ok_or(Bad::Request)?;
-        let (authority, path) = rest.find(['/', '?']).map_or((rest, "/"), |i| (&rest[..i], &rest[i..]));
-        let path = if path.starts_with('?') { format!("/{path}") } else { path.to_string() };
-        let (host, port) = split_host_port(authority).or_else(|| (!authority.is_empty()).then(|| (authority.to_string(), 80))).ok_or(Bad::Request)?;
+        let (authority, path) = rest
+            .find(['/', '?'])
+            .map_or((rest, "/"), |i| (&rest[..i], &rest[i..]));
+        let path = if path.starts_with('?') {
+            format!("/{path}")
+        } else {
+            path.to_string()
+        };
+        let (host, port) = split_host_port(authority)
+            .or_else(|| (!authority.is_empty()).then(|| (authority.to_string(), 80)))
+            .ok_or(Bad::Request)?;
         let mut forward = format!("{method} {path} {version}").into_bytes();
         forward.extend_from_slice(&head[end..]);
         (host, port, Some(forward))
@@ -237,17 +290,27 @@ pub fn connect(proxy: &Proxy, host: &str, port: u16) -> std::io::Result<TcpStrea
 }
 
 /// As [connect], with the proxy's address already resolved when known.
-fn connect_to(proxy: &Proxy, address: Option<SocketAddr>, host: &str, port: u16) -> std::io::Result<TcpStream> {
+fn connect_to(
+    proxy: &Proxy,
+    address: Option<SocketAddr>,
+    host: &str,
+    port: u16,
+) -> std::io::Result<TcpStream> {
     // This PC (the app's own relay) is reached directly: through the proxy,
     // 127.0.0.1 would be the proxy server's own machine.
-    if host.eq_ignore_ascii_case("localhost") || host.parse::<IpAddr>().is_ok_and(|ip| ip.is_loopback()) {
+    if host.eq_ignore_ascii_case("localhost")
+        || host.parse::<IpAddr>().is_ok_and(|ip| ip.is_loopback())
+    {
         let socket = TcpStream::connect((host, port))?;
         socket.set_nodelay(true)?;
         return Ok(socket);
     }
     let address = match address {
         Some(address) => address,
-        None => (proxy.host.as_str(), proxy.port).to_socket_addrs()?.next().ok_or_else(|| err("no address for the SOCKS proxy"))?,
+        None => (proxy.host.as_str(), proxy.port)
+            .to_socket_addrs()?
+            .next()
+            .ok_or_else(|| err("no address for the SOCKS proxy"))?,
     };
     let mut socket = TcpStream::connect_timeout(&address, TIMEOUT)?;
     socket.set_nodelay(true)?;
@@ -307,7 +370,11 @@ fn socks5(socket: &mut TcpStream, proxy: &Proxy, host: &str, port: u16) -> std::
         (0, _) => {}
         _ => return Err(err("SOCKS5 method refused")),
     }
-    let ip = if proxy.remote_dns { host.parse::<IpAddr>().ok() } else { Some(resolve(host, port, false)?) };
+    let ip = if proxy.remote_dns {
+        host.parse::<IpAddr>().ok()
+    } else {
+        Some(resolve(host, port, false)?)
+    };
     let mut request = vec![5, 1, 0];
     match ip {
         Some(IpAddr::V4(v4)) => {
@@ -348,7 +415,11 @@ fn socks5(socket: &mut TcpStream, proxy: &Proxy, host: &str, port: u16) -> std::
 }
 
 fn socks4(socket: &mut TcpStream, proxy: &Proxy, host: &str, port: u16) -> std::io::Result<()> {
-    let ip = if proxy.remote_dns { host.parse::<IpAddr>().ok() } else { Some(resolve(host, port, true)?) };
+    let ip = if proxy.remote_dns {
+        host.parse::<IpAddr>().ok()
+    } else {
+        Some(resolve(host, port, true)?)
+    };
     let mut request = vec![4, 1];
     request.extend_from_slice(&port.to_be_bytes());
     match ip {
@@ -378,7 +449,9 @@ fn socks4(socket: &mut TcpStream, proxy: &Proxy, host: &str, port: u16) -> std::
 /// [url] points at [len] readable bytes.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lumtub_socks_start(url: *const u8, len: usize) -> *mut Bridge {
-    let Some(proxy) = Proxy::parse(unsafe { crate::taste::text(url, len) }) else { return std::ptr::null_mut() };
+    let Some(proxy) = Proxy::parse(unsafe { crate::taste::text(url, len) }) else {
+        return std::ptr::null_mut();
+    };
     Bridge::start(proxy).map_or(std::ptr::null_mut(), |b| Box::into_raw(Box::new(b)))
 }
 
@@ -409,9 +482,22 @@ mod tests {
     #[test]
     fn parses_proxy_urls() {
         let p = Proxy::parse("socks5h://me:p%40ss@127.0.0.1:1080").unwrap();
-        assert_eq!((p.host.as_str(), p.port, p.user.as_str(), p.pass.as_str(), p.v4, p.remote_dns), ("127.0.0.1", 1080, "me", "p@ss", false, true));
+        assert_eq!(
+            (
+                p.host.as_str(),
+                p.port,
+                p.user.as_str(),
+                p.pass.as_str(),
+                p.v4,
+                p.remote_dns
+            ),
+            ("127.0.0.1", 1080, "me", "p@ss", false, true)
+        );
         let p = Proxy::parse("socks4://[::1]:9050/").unwrap();
-        assert_eq!((p.host.as_str(), p.port, p.v4, p.remote_dns), ("::1", 9050, true, false));
+        assert_eq!(
+            (p.host.as_str(), p.port, p.v4, p.remote_dns),
+            ("::1", 9050, true, false)
+        );
         assert_eq!(Proxy::parse("http://127.0.0.1:8080"), None);
         assert_eq!(Proxy::parse("socks5://127.0.0.1"), None);
     }
@@ -429,7 +515,8 @@ mod tests {
         let dead = TcpListener::bind("127.0.0.1:0").unwrap();
         let port = dead.local_addr().unwrap().port();
         drop(dead);
-        let bridge = Bridge::start(Proxy::parse(&format!("socks5://127.0.0.1:{port}")).unwrap()).unwrap();
+        let bridge =
+            Bridge::start(Proxy::parse(&format!("socks5://127.0.0.1:{port}")).unwrap()).unwrap();
         let ask = |request: &str| {
             let mut s = TcpStream::connect(("127.0.0.1", bridge.port())).unwrap();
             s.write_all(request.as_bytes()).unwrap();

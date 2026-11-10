@@ -55,11 +55,23 @@ fn uuid() -> String {
     let mut b = [0u8; 16];
     let _ = getrandom::fill(&mut b);
     let h: String = b.iter().map(|x| format!("{x:02X}")).collect();
-    format!("{}-{}-4{}-{}-{}", &h[0..8], &h[8..12], &h[13..16], &h[16..20], &h[20..32])
+    format!(
+        "{}-{}-4{}-{}-{}",
+        &h[0..8],
+        &h[8..12],
+        &h[13..16],
+        &h[16..20],
+        &h[20..32]
+    )
 }
 
 impl Player {
-    fn exchange(&self, method: &str, uri: &str, body: Option<&Value>) -> Result<super::conn::Response, String> {
+    fn exchange(
+        &self,
+        method: &str,
+        uri: &str,
+        body: Option<&Value>,
+    ) -> Result<super::conn::Response, String> {
         let mut control = self.control.lock().unwrap();
         let cseq = control.cseq;
         control.cseq += 1;
@@ -74,7 +86,13 @@ impl Player {
         if body.is_some() {
             headers.push(("Content-Type", "application/x-apple-binary-plist".into()));
         }
-        control.conn.request(method, uri, if self.v2 { "RTSP/1.0" } else { "HTTP/1.1" }, &headers, &data)
+        control.conn.request(
+            method,
+            uri,
+            if self.v2 { "RTSP/1.0" } else { "HTTP/1.1" },
+            &headers,
+            &data,
+        )
     }
 
     fn http(&self, method: &str, uri: &str, body: &[u8]) -> Result<super::conn::Response, String> {
@@ -85,12 +103,23 @@ impl Player {
             ("X-Apple-Stream-ID", "1".into()),
             ("X-Apple-Session-ID", self.session.clone()),
         ];
-        self.control.lock().unwrap().conn.request(method, uri, "HTTP/1.1", &headers, body)
+        self.control
+            .lock()
+            .unwrap()
+            .conn
+            .request(method, uri, "HTTP/1.1", &headers, body)
     }
 
     /// Connects, verifies and starts `url` at `position` seconds.
-    pub fn play(address: SocketAddr, auth: Auth, v2: bool, url: &str, position: f64) -> Result<Player, String> {
-        let mut conn = Conn::open(address).map_err(|e| format!("could not reach the device: {e}"))?;
+    pub fn play(
+        address: SocketAddr,
+        auth: Auth,
+        v2: bool,
+        url: &str,
+        position: f64,
+    ) -> Result<Player, String> {
+        let mut conn =
+            Conn::open(address).map_err(|e| format!("could not reach the device: {e}"))?;
         let shared: Option<Vec<u8>> = match &auth {
             Auth::None => None,
             Auth::Transient => Some(pairing::transient(&mut conn)?),
@@ -151,12 +180,33 @@ impl Player {
             return Err(format!("the device answered {} to play", answer.code));
         }
         if v2 {
-            let none = dict(vec![("flags", Value::Int(0)), ("value", Value::Int(0)), ("epoch", Value::Int(0)), ("timescale", Value::Int(0))]);
-            player.exchange("PUT", "/setProperty?isInterestedInDateRange", Some(&dict(vec![("value", Value::Bool(true))])))?;
-            player.exchange("PUT", "/setProperty?actionAtItemEnd", Some(&dict(vec![("value", Value::Int(0))])))?;
+            let none = dict(vec![
+                ("flags", Value::Int(0)),
+                ("value", Value::Int(0)),
+                ("epoch", Value::Int(0)),
+                ("timescale", Value::Int(0)),
+            ]);
+            player.exchange(
+                "PUT",
+                "/setProperty?isInterestedInDateRange",
+                Some(&dict(vec![("value", Value::Bool(true))])),
+            )?;
+            player.exchange(
+                "PUT",
+                "/setProperty?actionAtItemEnd",
+                Some(&dict(vec![("value", Value::Int(0))])),
+            )?;
             player.exchange("POST", "/rate?value=1.000000", None)?;
-            player.exchange("PUT", "/setProperty?forwardEndTime", Some(&dict(vec![("value", none.clone())])))?;
-            player.exchange("PUT", "/setProperty?reverseEndTime", Some(&dict(vec![("value", none)])))?;
+            player.exchange(
+                "PUT",
+                "/setProperty?forwardEndTime",
+                Some(&dict(vec![("value", none.clone())])),
+            )?;
+            player.exchange(
+                "PUT",
+                "/setProperty?reverseEndTime",
+                Some(&dict(vec![("value", none)])),
+            )?;
         }
         Ok(player)
     }
@@ -194,7 +244,9 @@ impl Player {
         if answer.code >= 400 {
             return Err(format!("the device answered {} to SETUP", answer.code));
         }
-        let port = bplist::read(&answer.body).and_then(|v| v.get("eventPort").and_then(Value::number)).unwrap_or(0.0) as u16;
+        let port = bplist::read(&answer.body)
+            .and_then(|v| v.get("eventPort").and_then(Value::number))
+            .unwrap_or(0.0) as u16;
         if port != 0 {
             let write = hkdf("Events-Salt", "Events-Read-Encryption-Key", shared);
             let read = hkdf("Events-Salt", "Events-Write-Encryption-Key", shared);
@@ -224,8 +276,17 @@ impl Player {
                 let mut c = control.lock().unwrap();
                 let cseq = c.cseq;
                 c.cseq += 1;
-                let headers = vec![("CSeq", cseq.to_string()), ("DACP-ID", dacp.clone()), ("Active-Remote", remote.to_string()), ("Client-Instance", dacp.clone()), ("User-Agent", USER_AGENT.to_string())];
-                if c.conn.request("POST", "/feedback", "RTSP/1.0", &headers, &[]).is_err() {
+                let headers = vec![
+                    ("CSeq", cseq.to_string()),
+                    ("DACP-ID", dacp.clone()),
+                    ("Active-Remote", remote.to_string()),
+                    ("Client-Instance", dacp.clone()),
+                    ("User-Agent", USER_AGENT.to_string()),
+                ];
+                if c.conn
+                    .request("POST", "/feedback", "RTSP/1.0", &headers, &[])
+                    .is_err()
+                {
                     break;
                 }
             }
@@ -239,7 +300,9 @@ impl Player {
 
     pub fn status(&self) -> Result<Status, String> {
         let answer = self.http("GET", "/playback-info", &[])?;
-        let Some(info) = bplist::read(&answer.body) else { return Ok(Status::default()) };
+        let Some(info) = bplist::read(&answer.body) else {
+            return Ok(Status::default());
+        };
         let number = |k: &str| info.get(k).and_then(Value::number).unwrap_or(0.0);
         let error = info.get("error").map(|e| {
             let code = e.get("code").and_then(Value::number).unwrap_or(0.0);
@@ -249,7 +312,13 @@ impl Player {
             };
             format!("{domain} {code}")
         });
-        Ok(Status { position: number("position"), duration: number("duration"), rate: number("rate"), ready: info.get("readyToPlay") == Some(&Value::Bool(true)), error })
+        Ok(Status {
+            position: number("position"),
+            duration: number("duration"),
+            rate: number("rate"),
+            ready: info.get("readyToPlay") == Some(&Value::Bool(true)),
+            error,
+        })
     }
 
     pub fn rate(&self, rate: f64) -> Result<(), String> {
@@ -261,7 +330,11 @@ impl Player {
     }
 
     fn check(&self, answer: super::conn::Response) -> Result<(), String> {
-        if answer.code >= 400 { Err(format!("the device answered {}", answer.code)) } else { Ok(()) }
+        if answer.code >= 400 {
+            Err(format!("the device answered {}", answer.code))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn stop(&self) {
@@ -282,7 +355,9 @@ impl Drop for Player {
 }
 
 fn ntp_now() -> (u32, u32) {
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default();
     let seconds = (now.as_secs() + 0x83AA_7E80) as u32;
     let fraction = ((now.subsec_nanos() as u64) << 32) / 1_000_000_000;
     (seconds, fraction as u32)
@@ -293,7 +368,9 @@ fn ntp_now() -> (u32, u32) {
 fn answer_timing(socket: UdpSocket, stop: Arc<AtomicBool>) {
     let mut packet = [0u8; 64];
     while !stop.load(Ordering::Relaxed) {
-        let Ok((n, from)) = socket.recv_from(&mut packet) else { continue };
+        let Ok((n, from)) = socket.recv_from(&mut packet) else {
+            continue;
+        };
         if n < 32 {
             continue;
         }
@@ -320,26 +397,46 @@ fn answer_events(mut stream: TcpStream, mut framing: Framing, stop: Arc<AtomicBo
         let n = match stream.read(&mut chunk) {
             Ok(0) => break,
             Ok(n) => n,
-            Err(e) if matches!(e.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut | std::io::ErrorKind::Interrupted) => continue,
+            Err(e)
+                if matches!(
+                    e.kind(),
+                    std::io::ErrorKind::WouldBlock
+                        | std::io::ErrorKind::TimedOut
+                        | std::io::ErrorKind::Interrupted
+                ) =>
+            {
+                continue;
+            }
             Err(_) => break,
         };
-        let Some(more) = framing.decrypt(&chunk[..n]) else { break };
+        let Some(more) = framing.decrypt(&chunk[..n]) else {
+            break;
+        };
         plain.extend(more);
-        while let Some((head, length)) = message_end(&plain) {
+        loop {
+            let (head, length) = match message_end(&plain) {
+                Ok(Some(found)) => found,
+                Ok(None) => break,
+                Err(_) => return,
+            };
             if plain.len() < head + length {
                 break;
             }
             let (first, headers) = parse_head(&plain[..head - 4]);
             plain.drain(..head + length);
             let protocol = first.rsplit(' ').next().unwrap_or("RTSP/1.0").to_string();
-            let mut reply = format!("{protocol} 200 OK\r\nContent-Length: 0\r\nAudio-Latency: 0\r\n");
+            let mut reply =
+                format!("{protocol} 200 OK\r\nContent-Length: 0\r\nAudio-Latency: 0\r\n");
             for (k, v) in &headers {
                 if k.eq_ignore_ascii_case("CSeq") || k.eq_ignore_ascii_case("Server") {
                     reply.push_str(&format!("{k}: {v}\r\n"));
                 }
             }
             reply.push_str("\r\n");
-            if stream.write_all(&framing.encrypt(reply.as_bytes())).is_err() {
+            if stream
+                .write_all(&framing.encrypt(reply.as_bytes()))
+                .is_err()
+            {
                 return;
             }
         }

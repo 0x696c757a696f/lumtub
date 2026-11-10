@@ -26,8 +26,10 @@ import '../../shortcut_bindings.dart';
 import '../../video_codec.dart';
 import '../../widgets/pilinara_settings_tiles.dart';
 import '../../windows_video_info.dart';
+import '../../friendly_error.dart';
 import '../common.dart';
 import '../diagnostics_dialog.dart';
+import 'downloads_page.dart' show openInExplorer;
 import '../format_policy_dialogs.dart';
 import '../player_shortcuts.dart';
 import '../shortcut_settings.dart';
@@ -1217,7 +1219,8 @@ List<SettingEntry> settingEntries(SettingsCategory category, AppController contr
               title: tr('Data location'),
               subtitle: tr('{0}\nSettings, watch history, favorites and downloaded components are stored here and kept when you uninstall.', [controller.directories?.root.path ?? tr('Preparing…')]),
               leading: _icon(AppIcons.archive),
-              onTap: controller.directories == null ? null : () => openExternal(controller.directories!.root.path),
+              // Android has no file manager to hand the folder to.
+              onTap: controller.directories == null || Platform.isAndroid ? null : () => unawaited(openInExplorer(controller.directories!.root.path)),
             )),
       ],
     SettingsCategory.backup => [
@@ -1277,7 +1280,7 @@ Future<void> _exportSettings(BuildContext context, AppController controller) asy
     if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Settings exported'))));
   } catch (e) {
     logError('Could not export settings', e);
-    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Export failed: {0}', [e]))));
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Export failed: {0}', [friendlyFileError(e)]))));
   }
 }
 
@@ -1288,7 +1291,7 @@ Future<void> _importSettings(BuildContext context, AppController controller) asy
   try {
     text = await file.readAsString();
   } catch (e) {
-    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr("Couldn't read file: {0}", [e]))));
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr("Couldn't read file: {0}", [friendlyFileError(e)]))));
     return;
   }
   final ok = await controller.importSettings(text);
@@ -1429,7 +1432,7 @@ class _AdvancedOptions extends StatelessWidget {
         option('volume-max', '${settings.volumeMax}', tr('Max volume'), tr('Immediately')),
         option('audio-device', settings.audioDevice, tr('Audio output device'), tr('Immediately')),
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
             child: OutlinedButton.icon(onPressed: onReset, icon: Icon(AppIcons.arrowCounterClockwise), label: Text(tr('Restore all player defaults'))),
@@ -1508,7 +1511,7 @@ class _ClearDataDialogState extends State<_ClearDataDialog> {
   Widget build(BuildContext context) => AlertDialog(
         title: Text(tr('Clear local data')),
         content: SizedBox(
-          width: 420,
+          width: dialogWidth(context, 420),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             for (final kind in LocalData.values)
               CheckboxListTile(

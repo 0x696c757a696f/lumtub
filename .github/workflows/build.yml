@@ -1064,7 +1064,7 @@ jobs:
           path: dist
           pattern: Lumtub-{windows,linux,macos,android}-*
           merge-multiple: true
-      - name: Windows - sign update packages
+      - name: Sign all packages
         env:
           LUMTUB_UPDATE_KEY: ${{ secrets.LUMTUB_UPDATE_KEY }}
         run: |
@@ -1077,7 +1077,7 @@ jobs:
           rustup update stable
           shopt -s nullglob
           cargo run --quiet --manifest-path native/lumtub_core/Cargo.toml --bin lumtub-sign -- dist/*-setup.exe dist/*.zip dist/*.AppImage dist/*.dmg dist/*.apk
-      - name: Windows - publish GitHub Release
+      - name: Publish the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}

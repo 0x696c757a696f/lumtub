@@ -190,7 +190,7 @@ xattr -dr com.apple.quarantine /Applications/Lumtub.app
 
 Lumtub 以 GNU 通用公共许可证第 3 版或更新版本（`GPL-3.0-or-later`）发布。
 
-`lib/widgets/pilinara_settings_tiles.dart` 中的设置项改编自 [PiliNara](https://github.com/Starfallan/PiliNara)，版权归其贡献者所有，仍以 GPL-3.0-or-later 发布；Lumtub 的部分界面参考了 PiliNara 的设计。`vendor/pilinara-settings/` 和 `vendor/pilinara-player/` 是未经修改的 PiliNara 快照，仅供参考，不参与构建。`vendor/media_kit_video/` 是修改过的 media_kit_video（见其中的 `LUMTUB.md`）。
+`lib/widgets/pilinara_settings_tiles.dart` 中的设置项改编自 [PiliNara](https://github.com/Starfallan/PiliNara)，版权归其贡献者所有，仍以 GPL-3.0-or-later 发布；Lumtub 的部分界面参考了 PiliNara 的设计。`vendor/pilinara-settings/` 是未经修改的 PiliNara 快照，仅供参考，不参与构建；PiliNara 的其余部分见上面链接的仓库。`vendor/media_kit_video/` 是修改过的 media_kit_video（见其中的 `LUMTUB.md`）。
 
 基于 [media_kit](https://github.com/media-kit/media-kit)、[mpv](https://mpv.io)、[yt-dlp](https://github.com/yt-dlp/yt-dlp) 和 [FFmpeg](https://ffmpeg.org) 构建。AI 频道名单来自 [KillSlop](https://killslop.app)（CC BY-SA 4.0）和 [AiSList](https://github.com/Override92/AiSList)（CC BY-NC 4.0），在运行时下载，不随 Lumtub 分发。内置的 Noto Sans SC 字体采用 SIL Open Font License 1.1（`assets/fonts/OFL.txt`）；Phosphor 图标字体采用 MIT 许可证（`assets/fonts/phosphor/LICENSE`）。其他软件包和组件保留各自的许可证；再分发前请参阅 `NOTICE`。
 

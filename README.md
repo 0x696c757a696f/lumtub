@@ -228,7 +228,7 @@ Source strings are English wrapped in `tr('…')`; translations, simplified Chin
 
 Lumtub is licensed under the GNU General Public License, version 3 or later (`GPL-3.0-or-later`).
 
-The settings tiles in `lib/widgets/pilinara_settings_tiles.dart` are adapted from [PiliNara](https://github.com/Starfallan/PiliNara), copyright its contributors, and remain under GPL-3.0-or-later; parts of Lumtub's interface follow PiliNara's design. `vendor/pilinara-settings/` and `vendor/pilinara-player/` are unmodified PiliNara snapshots kept for reference and not built. `vendor/media_kit_video/` is a modified copy of media_kit_video (see its `LUMTUB.md`).
+The settings tiles in `lib/widgets/pilinara_settings_tiles.dart` are adapted from [PiliNara](https://github.com/Starfallan/PiliNara), copyright its contributors, and remain under GPL-3.0-or-later; parts of Lumtub's interface follow PiliNara's design. `vendor/pilinara-settings/` is an unmodified PiliNara snapshot kept for reference and not built; the rest of PiliNara is at the repository linked above. `vendor/media_kit_video/` is a modified copy of media_kit_video (see its `LUMTUB.md`).
 
 Built on [media_kit](https://github.com/media-kit/media-kit), [mpv](https://mpv.io), [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [FFmpeg](https://ffmpeg.org). AI channel lists come from [KillSlop](https://killslop.app) (CC BY-SA 4.0) and [AiSList](https://github.com/Override92/AiSList) (CC BY-NC 4.0), downloaded at runtime and not shipped with Lumtub. The bundled Noto Sans SC font is under the SIL Open Font License 1.1 (`assets/fonts/OFL.txt`); the Phosphor icon fonts are under the MIT License (`assets/fonts/phosphor/LICENSE`). Other packages and components keep their own licenses; see `NOTICE` before redistributing.
 

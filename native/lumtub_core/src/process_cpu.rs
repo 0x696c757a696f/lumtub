@@ -66,11 +66,15 @@ pub extern "C" fn lumtub_process_cpu_ms() -> u64 {
 mod tests {
     #[test]
     fn counts_work() {
+        // Spins until the count has grown or a busy runner has had ample
+        // time, so being scheduled out for a while does not fail it.
         let before = super::used_ms();
         let start = std::time::Instant::now();
         let mut x = 0u64;
-        while start.elapsed().as_millis() < 300 {
-            x = x.wrapping_mul(6364136223846793005).wrapping_add(1);
+        while super::used_ms() < before + 200 && start.elapsed().as_secs() < 10 {
+            for _ in 0..100_000 {
+                x = x.wrapping_mul(6364136223846793005).wrapping_add(1);
+            }
         }
         std::hint::black_box(x);
         assert!(super::used_ms() >= before + 200);

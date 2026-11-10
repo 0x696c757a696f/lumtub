@@ -7,6 +7,9 @@ import '../app_icons.dart';
 import '../skin_paint.dart';
 
 const sponsorsPage = 'https://github.com/sponsors/0x696c757a696f';
+
+/// Afdian (爱发电), which takes Alipay and WeChat Pay.
+const afdianPage = 'https://afdian.com/a/linmuqingfeng';
 const _repository = 'https://github.com/0x696c757a696f/lumtub';
 
 /// A crypto address and the networks it takes.
@@ -110,6 +113,12 @@ class _Hero extends StatelessWidget {
             onPressed: () => openExternal(sponsorsPage),
             icon: Icon(AppIcons.heart, size: 20),
             label: Text(tr('Sponsor on GitHub')),
+          ),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(foregroundColor: colors.onPrimaryContainer, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
+            onPressed: () => openExternal(afdianPage),
+            icon: Icon(AppIcons.heart, size: 20),
+            label: const Text('爱发电 Afdian'),
           ),
           Text(tr('Monthly or one-time, any amount'), style: text.bodyMedium?.copyWith(color: colors.onPrimaryContainer.withValues(alpha: 0.75))),
         ]),

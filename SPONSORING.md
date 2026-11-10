@@ -8,6 +8,10 @@ Lumtub is built by one developer, in the open, with no ads and no tracking. Spon
 
 The same page is in the app under Settings › About › Support development.
 
+## Afdian (爱发电)
+
+[Afdian](https://afdian.com/a/linmuqingfeng) takes Alipay and WeChat Pay, for supporters in China: ¥6, ¥15, ¥30 or ¥100 a month. Supporters are named in the [list below](#supporters).
+
 ## Crypto
 
 Check that the coin and network match the address. Funds sent on the wrong chain cannot be recovered.
@@ -25,3 +29,9 @@ Check that the coin and network match the address. Funds sent on the wrong chain
 ## Without money
 
 Star the repository, tell a friend, [report a bug or suggest an idea](https://github.com/0x696c757a696f/lumtub/issues), or [translate Lumtub](https://hosted.weblate.org/engage/lumtub/).
+
+## Supporters
+
+Thank you to everyone who supports Lumtub. Names are added here by hand, so tell us if yours is missing.
+
+- Be the first.

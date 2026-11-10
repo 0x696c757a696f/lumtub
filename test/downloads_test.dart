@@ -421,7 +421,7 @@ void main() {
       expect(processes, hasLength(2));
       expect(task.status, DownloadStatus.downloading);
       final stem = recorder.stems.single;
-      expect(stem, startsWith('${dir.path}/videos/Video lllllllllll [lllllllllll] '));
+      expect(stem, startsWith('${dir.path}/videos${Platform.pathSeparator}Video lllllllllll [lllllllllll] '));
       m.pause('lllllllllll');
       await until(() => task.status == DownloadStatus.done);
       expect(recorder.stopped, [1]);

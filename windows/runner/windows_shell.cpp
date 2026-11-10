@@ -248,6 +248,8 @@ void WindowsShell::HandleCall(const flutter::MethodCall<EncodableValue>& call,
       next_label_ = Widen(StringArg(args, "next"));
       exit_label_ = Widen(StringArg(args, "exit"));
       if (!close_to_tray_ && !minimize_to_tray_ && tray_icon_) ShowFromTray();
+      // With either tray option on, the icon stays while the window is open too.
+      if (close_to_tray_ || minimize_to_tray_) AddTrayIcon();
     } else if (media_ && method == "setMetadata") {
       media_->SetMetadata(StringArg(args, "title"), StringArg(args, "artist"), StringArg(args, "thumbnail"));
     } else if (media_ && method == "setStatus") {
@@ -270,7 +272,17 @@ void WindowsShell::HandleCall(const flutter::MethodCall<EncodableValue>& call,
 }
 
 bool WindowsShell::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRESULT* result) {
+  // Explorer restarted and lost every tray icon: put Lumtub's back.
+  static const UINT taskbar_created = ::RegisterWindowMessageW(L"TaskbarCreated");
+  if (message == taskbar_created && tray_icon_) {
+    tray_icon_ = false;
+    AddTrayIcon();
+    return false;
+  }
   switch (message) {
+    case WM_DESTROY:
+      RemoveTrayIcon();
+      return false;
     case WM_CLOSE:
       if (!close_to_tray_) return false;
       HideToTray();
@@ -309,6 +321,12 @@ bool WindowsShell::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam, LRE
 }
 
 void WindowsShell::HideToTray() {
+  if (!AddTrayIcon()) return;  // No icon to bring it back: stay open.
+  ::ShowWindow(window_, SW_HIDE);
+}
+
+bool WindowsShell::AddTrayIcon() {
+  if (tray_icon_) return true;
   NOTIFYICONDATAW icon{};
   icon.cbSize = sizeof(icon);
   icon.hWnd = window_;
@@ -317,9 +335,9 @@ void WindowsShell::HideToTray() {
   icon.uCallbackMessage = kTrayMessage;
   icon.hIcon = ::LoadIcon(::GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON));
   wcscpy_s(icon.szTip, L"Lumtub");
-  if (!tray_icon_ && !::Shell_NotifyIconW(NIM_ADD, &icon)) return;  // No icon to bring it back: stay open.
+  if (!::Shell_NotifyIconW(NIM_ADD, &icon)) return false;
   tray_icon_ = true;
-  ::ShowWindow(window_, SW_HIDE);
+  return true;
 }
 
 void WindowsShell::RemoveTrayIcon() {
@@ -333,7 +351,7 @@ void WindowsShell::RemoveTrayIcon() {
 }
 
 void WindowsShell::ShowFromTray() {
-  RemoveTrayIcon();
+  if (!close_to_tray_ && !minimize_to_tray_) RemoveTrayIcon();
   ::ShowWindow(window_, ::IsIconic(window_) ? SW_RESTORE : SW_SHOW);
   ::SetForegroundWindow(window_);
 }

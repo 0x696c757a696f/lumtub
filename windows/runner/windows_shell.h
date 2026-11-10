@@ -32,6 +32,7 @@ class WindowsShell {
   void ShowFromTray();
   void HideToTray();
   void ShowTrayMenu();
+  bool AddTrayIcon();
   void RemoveTrayIcon();
 
   HWND window_;

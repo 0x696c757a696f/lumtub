@@ -145,7 +145,7 @@ bool LoadIndicator() {
 }
 
 void ShowFromTray() {
-  if (shell.indicator != nullptr) shell.indicator_set_status(shell.indicator, kStatusPassive);
+  if (shell.indicator != nullptr && !shell.close_to_tray && !shell.minimize_to_tray) shell.indicator_set_status(shell.indicator, kStatusPassive);
   gtk_widget_show(GTK_WIDGET(shell.window));
   gtk_window_present(shell.window);
 }
@@ -193,9 +193,8 @@ bool TrayRuns() {
   return owned;
 }
 
-// Hides the window behind a tray icon; false when there is no tray to
-// bring it back from, and the window stays open.
-bool HideToTray() {
+// Shows the tray icon; false when there is no tray to show it in.
+bool ShowTrayIcon() {
   if (!TrayRuns() || !LoadIndicator()) return false;
   if (shell.indicator == nullptr) {
     // An icon name looked up in the app's own folder: tray hosts read a
@@ -207,6 +206,13 @@ bool HideToTray() {
     BuildMenu();
   }
   shell.indicator_set_status(shell.indicator, kStatusActive);
+  return true;
+}
+
+// Hides the window behind a tray icon; false when there is no tray to
+// bring it back from, and the window stays open.
+bool HideToTray() {
+  if (!ShowTrayIcon()) return false;
   gtk_widget_hide(GTK_WIDGET(shell.window));
   return true;
 }
@@ -760,6 +766,8 @@ void HandleCall(FlMethodChannel*, FlMethodCall* call, gpointer) {
       if (!shell.close_to_tray && !shell.minimize_to_tray && !gtk_widget_get_visible(GTK_WIDGET(shell.window))) ShowFromTray();
       if (!shell.close_to_tray && !shell.minimize_to_tray) shell.indicator_set_status(shell.indicator, kStatusPassive);
     }
+    // With either tray option on, the icon stays while the window is open too.
+    if (shell.close_to_tray || shell.minimize_to_tray) ShowTrayIcon();
   } else if (method == "setMetadata") {
     shell.title = StringArg(args, "title");
     shell.artist = StringArg(args, "artist");

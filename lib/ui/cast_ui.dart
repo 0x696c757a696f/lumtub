@@ -225,14 +225,20 @@ class _CastDialogState extends State<_CastDialog> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(tr('Cast quality')),
-              subtitle: Text(widget.controller.preferences.castMaxHeight > 1080 ? tr('Above 1080p the picture is VP9 or AV1 at up to 60 fps, which needs a newer TV or Chromecast') : tr('1080p H.264, which nearly every TV plays')),
+              subtitle: Text(switch (widget.controller.preferences.castMaxHeight) {
+                > 1080 => tr('Above 1080p the picture is VP9 or AV1 at up to 60 fps, which needs a newer TV or Chromecast'),
+                < 1080 => tr('720p H.264, for a slow network or an older TV'),
+                _ => tr('1080p H.264, which nearly every TV plays'),
+              }),
               trailing: DropdownButton<int>(
                 value: widget.controller.preferences.castMaxHeight,
                 underline: const SizedBox.shrink(),
                 items: [
+                  const DropdownMenuItem(value: 720, child: Text('720p')),
                   DropdownMenuItem(value: 1080, child: Text(tr('Auto (1080p)'))),
-                  const DropdownMenuItem(value: 2160, child: Text('4K')),
-                  const DropdownMenuItem(value: 4320, child: Text('8K')),
+                  const DropdownMenuItem(value: 1440, child: Text('2K (1440p)')),
+                  const DropdownMenuItem(value: 2160, child: Text('4K (2160p)')),
+                  const DropdownMenuItem(value: 4320, child: Text('8K (4320p)')),
                 ],
                 onChanged: (height) async {
                   if (height == null) return;

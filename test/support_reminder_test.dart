@@ -10,8 +10,8 @@ void main() {
   setUp(() => dir = Directory.systemTemp.createTempSync('reminder'));
   tearDown(() => dir.deleteSync(recursive: true));
 
-  Future<SupportReminder> reload(File file) async {
-    await Future<void>.delayed(const Duration(milliseconds: 50));
+  Future<SupportReminder> reload(SupportReminder reminder, File file) async {
+    await reminder.saved;
     final again = SupportReminder(file);
     await again.load();
     return again;
@@ -34,7 +34,7 @@ void main() {
     expect(reminder.due(first.add(const Duration(days: 59))), isFalse);
     expect(reminder.due(first.add(const Duration(days: 60))), isTrue);
 
-    final again = await reload(file);
+    final again = await reload(reminder, file);
     expect(again.due(first.add(const Duration(days: 59))), isFalse, reason: 'last time kept');
     expect(again.due(first.add(const Duration(days: 60))), isTrue);
   });
@@ -48,7 +48,7 @@ void main() {
     }
     reminder.enabled = false;
     expect(reminder.due(start.add(const Duration(days: 400))), isFalse);
-    final again = await reload(file);
+    final again = await reload(reminder, file);
     expect(again.enabled, isFalse);
     expect(again.due(start.add(const Duration(days: 400))), isFalse);
   });

@@ -443,6 +443,10 @@ void main() {
       final uhd = castSplitFromYtDlp(info, maxHeight: 2160)!;
       expect((uhd.video.split('?').first, uhd.codec, uhd.fitsTransportStream), ('https://g/315', 'vp9', false));
       expect(castSplitFromYtDlp(info, maxHeight: 4320)!.codec, 'av1');
+      final qhd = castSplitFromYtDlp(info, maxHeight: 1440)!;
+      expect((qhd.height, qhd.codec, qhd.videoFormat), (1440, 'h264', '264'));
+      final hd = castSplitFromYtDlp(info, maxHeight: 720)!;
+      expect((hd.height, hd.codec, hd.videoFormat), (720, 'h264', '136'));
       expect((split.videoFormat, split.audioFormat), ('299', '140'));
       final renewed = split.renewedFrom({
         'formats': [

@@ -706,7 +706,7 @@ class AppPreferences {
       allowedGroups: renamedBlockLists(strings('allowedGroups')),
       allowedMedia: renamedBlockLists(strings('allowedMedia')),
       reversedPlaylists: strings('reversedPlaylists'),
-      castMaxHeight: number('castMaxHeight', d.castMaxHeight, 1080, 4320),
+      castMaxHeight: const {720, 1080, 1440, 2160, 4320}.contains(raw['castMaxHeight']) ? raw['castMaxHeight'] as int : d.castMaxHeight,
       castFormats: {
         if (raw['castFormats'] case final Map<String, dynamic> formats)
           for (final MapEntry(:key, :value) in formats.entries)

@@ -71,6 +71,9 @@ class SupportReminder {
     _save();
   }
 
+  /// Completes once every change so far is on disk.
+  Future<void> get saved => _writes.run(() async {});
+
   void _save() {
     final text = jsonEncode({
       if (_first case final first?) 'first': first.millisecondsSinceEpoch,

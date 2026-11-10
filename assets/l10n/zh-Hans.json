@@ -3189,5 +3189,6 @@
   "Silence skip silent pauses faster": "静音 跳过 停顿 加速",
   "Fall back to Piped or Invidious when YouTube refuses": "YouTube 拒绝时改用 Piped 或 Invidious",
   "When YouTube answers with a bot check, a rate limit or a refusal, play the video from a public Piped or Invidious server instead. That server learns which video you watch. When off, the error is shown instead": "当 YouTube 要求验证、限流或拒绝时，改从公共 Piped 或 Invidious 服务器播放。该服务器会知道你在看哪个视频。关闭后将直接显示错误",
-  "Piped Invidious fallback privacy bot check 429": "Piped Invidious 回退 隐私 机器人验证 429"
+  "Piped Invidious fallback privacy bot check 429": "Piped Invidious 回退 隐私 机器人验证 429",
+  "720p H.264, for a slow network or an older TV": "720p H.264，适合网络慢或比较旧的电视"
 }
